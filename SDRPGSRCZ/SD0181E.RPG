@@ -1,0 +1,1626 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Country codes enquiry')                       *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD0181E - Display Country Codes                              *
+      *                                                               *
+      *  Function:  This program displays country codes details       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CTI006             Date 31Mar14               *
+      *  Prev Amend No. MD026677           Date 12May14               *
+      *                 CGL133             Date 01May13               *
+      *                 CGL132             Date 01May13               *
+      *                 MD023678           Date 21Nov13               *
+      *                 MD023056           Date 28Oct13               *
+      *                 CSW213             Date 03Jun13               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER045             Date 20Jul09               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 BUG11806           Date 30Jul06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CER001             Date 25Apr05               *
+      *                 236137             Date 21Sep05               *
+      *                 232543             Date 29Mar05               *
+      *                 CGL032             Date 05Jul04               *
+      *                 CGL014             Date 20Oct03               *
+      *                 CGP001             Date 05Mar04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CPB001             DATE 07Jul99               *
+      *                 CFT004             Date 22Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD003             Date 02JAN98               *
+      *                 S01408             DATE 02AUG96               *
+      *                 S01461             DATE 17JAN94               *
+      *                 S01459             DATE 17JAN94               *
+      *                 S01437             Date 25AUG93               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CTI006 - Trade Finance BF Midas 2.2 Interface                *
+      *  MD026677 - FATCA Agreement Type field does not display a     *
+      *             value during Enquiry function (Recompile)         *
+      *  CGL133 - FATCA Phase 1 - Customers' Identification and       *
+      *           Classification - Enquiry Only                       *
+      *  CGL132 - FATCA Phase 1 - Customers' Identification and       *
+      *           Classification - Master                             *
+      *  MD023678 - IBAN is incorrectly generated due to wrong        *
+      *             BBAN Bank Length                                  *
+      *  MD023056 - Warning error should still allow to continue      *
+      *             transaction of country                            *
+      *  CSW213 - SWIFT Changes 2013                                  *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER045 - German Features - Reporting Bundesbank              *
+      *  BUG11806 - Extension tables processing (recompile).          *
+      *  CSD031 - Enhanced Centralised Static Data                    *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  236137 - Change Control for CGL031                           *
+      *  232453 - Fix to CGL032                                       *
+      *  CGL032 - Automatic Exchange of Information                   *
+      *  CGL014 - Collaterals Processing                              *
+      *  CGP001 - Global Processing                                   *
+      *  CPB001 - 'Private Banking' Module                            *
+      *  CFT004 - Straight Through Processing Phase 2                 *
+      *         - International Bank Account Numbers                  *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - Program removed from SD model.                    *
+      *  S01408 - Addition of core hook:                              *
+      *           - WN0481CCP1 (this is a shared window hook)         *
+      *  S01461 - The Midas Export module processing was removed      *
+      *           and moved to the Eureka platform.                   *
+      *  S01459 - Addition of Midas headerbox.                        *
+      *  S01437 - Add 'Midas Export Location Code' to screen.         *
+      *                                                               *
+      *****************************************************************
+     F*
+     F/COPY WNCPYSRC,SD0181EFPG
+     F*
+     FSD0181E#CF  E                    WORKSTN                        UC
+     F                                              KINFDS INFDS#
+     F                                              KINFSR *PSSR
+      * DSP: Midas SD Country codes enquiry
+      *
+     FSDCTRYL1IF  E           K        DISK                           UC
+     F                                              KINFDS INFDS1
+     F                                              KINFSR *PSSR
+      * RTV : Country Codes             Retrieval index
+      *
+     FSDACTYL1IF  E           K        DISK                           UC                      CSD031
+     F                                              KINFDS ID0003                             CSD031
+     F                                              KINFSR *PSSR                              CSD031
+      * RTV : Country Codes retrieval                                                         CSD031
+      *                                                                                       CSD031
+     FGPCTRYL1IF  E           K        DISK                           UC                      CSD031
+     F                                              KINFDS ID0002                             CSD031
+     F                                              KINFSR *PSSR                              CSD031
+      * RTV : Central Country Codes     Retrieval index                                       CSD031
+      *                                                                                       CSD031
+     FSDMMODL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0001
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Midas module flags retrieval
+      *
+     FMEISOCL1IF  E           K        DISK                           UC                      CSW213
+     F                                              KINFDS ID0004                             CSW213
+     F                                              KINFSR *PSSR                              CSW213
+      ** RTV : Midas ME SWIFT ISO country retrieval                                           CSW213
+      *                                                                                       CSW213
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright array
+     E*
+     E/COPY WNCPYSRC,SD0181EEPG
+     E*
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+     I****/COPY QWINDSRC,FSE1DTA                                          S01229
+     I/COPY QWINDSRC,SD0180GDTA                                           S01229
+     I*
+     I/COPY WNCPYSRC,SD0181EIPG
+     I*
+     IDATALX      DS                           1024                                           CER001
+     I                                        1   2 W1CNCD                                    CER001
+     I                                        3   4 #1ISOC                                    CER001
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   70##JDT
+     I                                        1   10##JCC
+     I                                        2   30##JYY
+     I                                        4   50##JMM
+     I                                        6   70##JDD
+     I                                        8  130##JTM
+     I                                        8   90##JHH
+     I                                       10  110##JNN
+     I                                       12  130##JSS
+      * ABO DEFINE LARGE STRING FOR CL CMD
+     IYARTCM      DS                            512
+     I                                        1   1 DUMMY1
+     ILDA         DS                            256                                           CGP001
+      ** Local data area for database error details                                           CGP001
+      *                                                                                       CGP001
+     I                                      134 141 DBFILE                                    CGP001
+     I                                      142 170 DBKEY                                     CGP001
+     I                                      171 180 DBPGM                                     CGP001
+     I                                      181 1830DBASE                                     CGP001
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+     IINFDS1    E DSY2I1DSP
+      * File information data structure
+      *
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+     ISCSARD    E DSSCSARDPD                                                                  CGP001
+      ** Dummy record format for access to Switchable Features Details                        CGP001
+      *                                                                                       CGP001
+     IDSFDY     E DSDSFDY                                                                     CGP001
+      ** First DS for access programs, short data structure                                   CGP001
+      *                                                                                       CGP001
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+     IID0001      DS                            528
+     IID0002      DS                            528                                           CSD031
+     IID0003      DS                            528                                           CSD031
+      * File information data structure
+      *                                                                                       CSW213
+     IID0004      DS                            528                                           CSW213
+      ** File information data structure                                                      CSW213
+      *
+      /EJECT
+      * Parameter declarations
+     IP1PARM      DS                              2
+      * KEY: Country Codes             Retrieval index
+      * I : RST Country Code
+     I                                        1   2 P1CNCD
+     I            DS
+     I                                        1 132 ZAMSDA
+      * Message data for 'Database Error (ICD)'
+      * Filename
+     I                                        1  10 ZA0001
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           P1PARM           KEY: Country Co
+     C                     PARM           PACCPT  1                                           CSD031
+      *****************************************************************
+      * Initialize
+     C                     EXSR ZZINIT
+      *
+      * Display and process key screen
+     C                     EXSR BADSKY
+      * Terminate program
+     C                     EXSR ZXEXPG
+      *****************************************************************
+      /EJECT
+     CSR         BADSKY    BEGSR
+      *================================================================
+      * Display and process key screen
+      *================================================================
+      * Initialize key screen
+     C                     EXSR MDIZ#K
+      * Bypass first display of key screen is possible
+     C                     MOVEL'Y'       W0BYP   1
+      * Signal start of transaction
+     C                     MOVEL'Y'       W0TRN   1
+      *
+     C           W0TRN     DOWEQ'Y'
+     C           W0TRN     OREQ 'K'
+      * Ensure transaction continues (if reset)
+     C                     MOVEL'Y'       W0TRN   1
+      * Conduct screen conversation
+     C           W0TRN     DOWEQ'Y'
+      * Is bypass key screen still viable?
+     C           W0BYP     IFEQ 'Y'
+     C           #1CNCD    IFEQ *BLANK                     Country Code
+      * One or more key fields is blank
+     C           *IN05     OREQ '1'
+      * HOME: Reset screen fields
+     C                     MOVEL'N'       W0BYP
+     C                     END
+     C                     END
+      * Bypass key screen
+     C           W0BYP     IFNE 'Y'
+      * Display key screen
+     C                     EXSR BBEXFM
+     C                     END
+      * Cancel key screen bypass
+     C                     MOVEL'N'       W0BYP
+      * Process response to key screen
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * HOME: Reset screen fields
+     C   05                CAS            BDHMKY
+      * Check ISO Country Code                                                                CSW213
+     C   15                CAS            CHKISO                                              CSW213
+      * Process key screen input
+     C                     CAS            BEPRKY
+     C                     END
+     C           W0TRN     DOWEQ'R'
+     C                     MOVEL'Y'       W0TRN
+     C                     EXSR BEPRKY
+     C                     END
+      *
+     C                     END
+     C                     END
+      *================================================================
+     CSR         BAEXIT    ENDSR
+      /EJECT
+     CSR         BBEXFM    BEGSR
+      *================================================================
+      * Display key screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GADSAK
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * Set cursor by *SET CURSOR data
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y0SET
+     C                     END
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#RCDKEY
+      * Enable PUTOVR
+     C                     SETON                     86
+      * Test cursor
+     C                     EXSR Y8TST
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         BBEXIT    ENDSR
+      /EJECT
+     CSR         BDHMKY    BEGSR
+      *================================================================
+      * Process HOME key
+      *================================================================
+     C                     MOVEL'N'       W0TRN
+      *================================================================
+     CSR         BDEXIT    ENDSR
+      /EJECT
+     CSR         BEPRKY    BEGSR
+      *================================================================
+      * Process key screen input
+      *================================================================
+      * Initialise detail screen
+     C                     EXSR MAIZ#1
+      * Validate key fields
+     C                     EXSR BFVLKY
+     C           *IN99     CABEQ'1'       BEEXIT
+      * Check for existing record
+     C           KRTV      KLIST
+     C                     KFLD           A4CNCD           Country Code
+      * Setup key
+     C                     MOVEL#1CNCD    A4CNCD           Country Code
+     C           *INU1     IFEQ *ON                                                           CSD031
+     C           KRTV      CHAINGPCTRYL1             9091                                     CSD031
+     C                     ELSE                                                               CSD031
+     C           PACCPT    IFEQ 'Y'                                                           CSD031
+     C           KRTV      CHAINSDACTYL1             9091                                     CSD031
+     C                     ELSE                                                               CSD031
+     C           KRTV      CHAIN@A4REBR              9091  *
+     C                     ENDIF                                                              CSD031
+     C                     ENDIF                                                              CSD031
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     SETON                     99    *
+     C                     GOTO BEEXIT
+     C                     END                             FI 91
+      *
+      * If record does not exist, then signal error
+     C           *IN90     IFEQ '1'
+     C                     SETON                     99    *
+      * Send message 'Country Codes          NF'
+     C                     MOVEL'USR0067' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     EXSR MBFL#1
+      * CALC: Detail screen function fields
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy member SD0181ESFF - Country Codes  * S01212
+     C*
+     C/COPY WNCPYSRC,SD0181ESFF
+     C*
+     C                     END                             *FI
+      * USER: Load detail screen from DBF record
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy member SD0181ELDS - Country Codes  * S01212
+     C*
+     C/COPY WNCPYSRC,SD0181ELDS
+     C*
+     C                     END                             *FI
+     C                     END
+      *
+     C   99                GOTO BEEXIT
+      * No error: Display and process details
+     C                     EXSR CADSDA
+      *
+      *================================================================
+     CSR         BEEXIT    ENDSR
+      /EJECT
+     CSR         BFVLKY    BEGSR
+      *================================================================
+      * Validate key fields
+      *================================================================
+      * Check restriction within
+     C                     EXSR VACKRL
+      * USER: Validate key screen
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy member SD0181EVKS - Country Codes  * S01212
+     C*
+     C/COPY WNCPYSRC,SD0181EVKS
+     C*
+     C                     END                             *FI
+      *================================================================
+     CSR         BFEXIT    ENDSR
+      /EJECT
+     CSR         CADSDA    BEGSR
+      *================================================================
+      * Display and process detail screen
+      *================================================================
+      * Conduct detail screen conversation
+      * - repeat until screen control flag is reset:
+     C           W0TRN     DOWEQ'Y'
+      * Display detail screen
+     C                     EXSR CBEXFM
+      * Process response to detail screen
+     C   03                CAS            ZXEXPG
+      * HOME: Reset screen fields
+      * Process detail screen input
+      * Redisplay previous screen
+     C   12                CAS            CCDSPV
+      * HOME: Reset screen fields
+     C   05                CAS            CCDSPV
+      * Check ISO Country Code                                                                CSW213
+     C   15                CAS            CHKISO                                              CSW213
+      * Process key screen input
+     C                     CAS            CFPRSC
+     C                     END
+      *
+     C                     END
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         CBEXFM    BEGSR
+      *================================================================
+      * Display screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GBDSAD
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * Set cursor by *SET CURSOR data
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y1SET
+     C                     END
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT2
+     C                     EXFMT#RCDDTL1
+      * Enable PUTOVR
+     C                     SETON                     86
+      * Test cursor
+     C                     EXSR Y8TST
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         CBEXIT    ENDSR
+      /EJECT
+     CSR         CCDSPV    BEGSR
+      *================================================================
+      * Redisplay previous screen
+      *================================================================
+      * USER: Process key screen request
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy member SD0181EPKR - Country Codes  * S01212
+     C*
+     C/COPY WNCPYSRC,SD0181EPKR
+     C*
+     C                     END                             *FI
+     C                     MOVEL'USR0790' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C   05                MOVEL'Y'       W0TRN
+     C   12                MOVEL'K'       W0TRN
+      *================================================================
+     CSR         CCEXIT    ENDSR
+      /EJECT
+     CSR         CFPRSC    BEGSR
+      *================================================================
+      * Validate record
+      *================================================================
+      * Confirm/update is not deferred
+     C                     MOVEL'N'       W0DCF   1
+     C                     MOVEL'Y'       W0TRN
+      * Validate details
+     C                     EXSR DCVLDL
+      * QUIT if error:
+     C   99                GOTO CFEXIT
+      * Defer confirm/update requested
+     C           W0DCF     CABEQ'Y'       CFEXIT
+      * Process record:
+     C                     EXSR EBPR##
+      *================================================================
+     CSR         CFEXIT    ENDSR
+      /EJECT
+     CSR         DCVLDL    BEGSR
+      *================================================================
+      * Validate details
+      *================================================================
+      * CALC: Detail screen function fields
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy member SD0181ESFF - Country Codes  * S01212
+     C*
+     C/COPY WNCPYSRC,SD0181ESFF
+     C*
+     C                     END                             *FI
+      * USER: Validate detail screen
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+     C/COPY WNCPYSRC,SD0181EC01
+      *                                                                                       CER001
+     C           ULX004    IFEQ 'Y'                                                           CER001
+     C           ULX043    OREQ 'Y'                                                           CER001
+      *                                                                                       CER001
+     C           LOOP      DOUEQ'N'                                                           CER001
+     C                     MOVE 'N'       LOOP    1                                           CER001
+     C                     MOVE 'N'       W0DCF                                               CER001
+     C                     MOVEL#1CNCD    W1CNCD                                              CER001
+      *                                                                                       CER001
+     C           ULX004    IFEQ 'Y'                                                           CER001
+     C                     CALL 'SD0183'                                                      CER001
+     C                     PARM           @RTNCD  7                                           CER001
+     C                     PARM 'E'       @ACTCD  1                                           CER001
+     C                     PARM           DATALX                                              CER001
+     C                     PARM *BLANK    W0RTN                                               CER001
+      *                                                                                       CER001
+      ** If F12 was pressed in called program                                                 CER001
+      ** or window/DB error                                                                   CER001
+      *                                                                                       CER001
+     C           W0RTN     IFEQ 'USR0790'                                                     CER001
+     C           W0RTN     OREQ 'USR0563'                                                     CER001
+     C           W0RTN     OREQ 'Y2U0004'                                                     CER001
+     C                     MOVE 'Y'       W0DCF                                               CER001
+     C                     ITER                                                               CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+     C           ULX043    IFEQ 'Y'                                                           CER001
+     C                     CALL 'SD0184'                                                      CER001
+     C                     PARM           @RTNCD                                              CER001
+     C                     PARM 'E'       @ACTCD                                              CER001
+     C                     PARM           DATALX                                              CER001
+     C                     PARM *BLANK    W0RTN                                               CER001
+      *                                                                                       CER001
+      ** If F12 was pressed in called program                                                 CER001
+      ** or window/DB error                                                                   CER001
+      *                                                                                       CER001
+     C           W0RTN     IFEQ 'USR0790'                                                     CER001
+     C           W0RTN     OREQ 'USR0563'                                                     CER001
+     C           W0RTN     OREQ 'Y2U0004'                                                     CER001
+     C                     MOVE 'Y'       W0DCF                                               CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+      ** If F12 was pressed in called program                                                 CER001
+      *                                                                                       CER001
+     C           W0RTN     IFEQ 'USR0790'                                                     CER001
+     C                     MOVE 'Y'       LOOP                                                CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+     C                     ENDDO                                                              CER001
+      *                                                                                       CER001
+     C           W0RTN     IFNE *BLANKS                                                       CER001
+     C                     GOTO DCEXIT                                                        CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+      * CASE: WRK.Window required is Yes
+     C           WUD2DD    IFEQ *BLANK                     *IF
+      * WM call Window Manager - Window manager  *
+     C/COPY WNCPYSRC,WN0481CCP1                                           S01408
+     C***********          CALL 'WIND01'                                  S01212
+     C                     CALL 'WN0010'                                  S01212
+     C*********************PARM           ##PGM            Program        S01212
+     C                     PARM ##PGM     UPGM   10        Program        S01212
+     C*********************PARM *BLANK    FKEY    2        Function Key   S01212
+     C                     PARM *BLANK    UFKEY   2        Function Key   S01212
+     C*********************PARM           WUMEST           Action  S01212 S01229
+     C*********************PARM           WUWMAC           Action  S01212 S01229
+     C                     PARM 'E'       UACTCD  1        Action  S01212 S01229
+     C                     PARM           DATA             Trans Data     S01212
+     C                     PARM *BLANK    W0RTN            Return Code    S01212
+     C                     PARM           SPARE 256        Spare Field    LN0355
+      * WM Check Return
+      * CASE: PAR.*Return code is *User QUIT requested
+     C           W0RTN     IFEQ 'Y2U9999'                  *IF
+     C                     MOVELW0RTN     P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     ELSE
+      * CASE: PAR.*Return code is WN Window Error
+     C           W0RTN     IFEQ 'USR0563'                  *IF
+      * Send message 'WN Window Error'
+     C                     MOVEL'USR0563' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DCEXIT                     *QUIT
+     C                     ELSE
+      * CASE: PAR.*Return code is *DBF update error
+     C           W0RTN     IFEQ 'Y2U0004'                  *IF
+      * Send message 'WN Database Error'
+     C                     MOVEL'USR0567' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DCEXIT                     *QUIT
+     C                     ELSE
+      * CASE: PAR.*Return code is *Previous Screen
+     C           W0RTN     IFEQ 'USR0790'                  *IF
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DCEXIT                     *QUIT
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * 00/Copy member SD0181EVDS - Country Codes  * S01212
+     C*
+     C/COPY WNCPYSRC,SD0181EVDS
+     C*
+     C                     END                             *FI
+      * 00/Copy member SD0181EVSW - Country Codes  * S01212
+     C*
+     C/COPY WNCPYSRC,SD0181EVSW
+     C*
+     C                     END                             *FI
+      *                                                                                       CSW213
+      ** Remove the following codes, to prevent displaying of                        CSW213 MD023056
+      ** warning message upon pressing ENTER key                                     CSW213 MD023056
+     C********** CSW213    IFEQ 'Y'                                                  CSW213 MD023056
+     C********** CFT050    OREQ 'Y'                                                  CSW213 MD023056
+     C**********           EXSR CHKISO                                               CSW213 MD023056
+     C**********           ENDIF                                                     CSW213 MD023056
+      *                                                                                       CSW213
+      *================================================================
+     CSR         DCEXIT    ENDSR
+      /EJECT
+     CSR         EBPR##    BEGSR
+      *================================================================
+      * Process record:
+      *================================================================
+      * USER: Perform confirmed action
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy member SD0181EPCA - Country Codes  * S01212
+     C*
+     C/COPY WNCPYSRC,SD0181EPCA
+     C*
+     C                     END                             *FI
+      * Quit if error signalled
+     C   99                GOTO EBEXIT
+      * USER: Process command keys
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy member SD0181EPCK - Country Codes  * S01212
+     C*
+     C/COPY WNCPYSRC,SD0181EPCK
+     C*
+     C                     END                             *FI
+      * Quit if error signalled
+     C   99                GOTO EBEXIT
+      * Restart program for next record
+     C                     MOVEL'N'       W0TRN
+      *================================================================
+     CSR         EBEXIT    ENDSR
+      /EJECT
+     CSR         GADSAK    BEGSR
+      *================================================================
+      * Set key screen conditioning indicators
+      *================================================================
+      *================================================================
+     CSR         GAEXIT    ENDSR
+      /EJECT
+     CSR         GBDSAD    BEGSR
+      *================================================================
+      * Set detail screen conditioning indicators
+      *================================================================
+      * Protect key fields on detail screen
+     C                     SETON                     88    *
+      * Enable key screen
+     C                     SETON                     87    *
+      *================================================================
+     CSR         GBEXIT    ENDSR
+      /EJECT
+     CSR         MAIZ#1    BEGSR
+      *================================================================
+      * Initialise record - except for key fields and "neither" paramete
+      *================================================================
+     C                     MOVEL*BLANK    #1MLOC           Midas Export Va
+     C                     Z-ADD*ZERO     #1LCD            Last Change Dat
+     C                     MOVEL*BLANK    #1TYLC           Type of Last Ch
+     C                     MOVEL*BLANK    #1CNNM           Country Name
+     C           CGP001    IFEQ 'N'                                                           CGP001
+     C                     MOVEL*BLANK    #1ISOC           ISO Country cod
+     C                     ENDIF                                                              CGP001
+     C                     MOVEL*BLANK    #1RGCD           Region Code
+     C                     MOVEL*BLANK    #1BBAN           BBAN tot. lngthCFT004
+     C                     MOVEL*BLANK    #1BBRL           BBAN bank lngthCFT004
+     C                     MOVEL*BLANK    #1CTAY                          CPB001
+     C                     MOVEL*BLANK    #1CTZP                          CPB001
+     C                     MOVEL*BLANK    #1CTWC                          CPB001
+     C           CSD046    IFEQ *ON                                                           CSD031
+     C                     MOVE *BLANK    #1AACC                                              CSD031
+     C                     MOVE *BLANK    #1GPDT                                              CSD031
+     C                     MOVE *BLANK    #1EACC                                              CSD031
+     C                     ENDIF                                                              CSD031
+      ** FATCA fields                                                                         CGL132
+     C                     MOVEL*BLANK    #1FAAT                                              CGL132
+     C                     MOVEL*BLANK    #1FAIN                                              CGL132
+     C/COPY WNCPYSRC,SD0181EC02
+      *================================================================
+     CSR         MAEXIT    ENDSR
+      /EJECT
+     CSR         MBFL#1    BEGSR
+      *================================================================
+      * Move @A4REBR fields to screen
+      *================================================================
+     C                     MOVELA4MLOC    #1MLOC           Midas Export Va
+     C                     Z-ADDA4LCD     #1LCD            Last Change Dat
+     C                     MOVELA4TYLC    #1TYLC           Type of Last Ch
+     C                     MOVELA4CNCD    #1CNCD           Country Code
+     C                     MOVELA4CNNM    #1CNNM           Country Name
+     C                     MOVELA4ISOC    #1ISOC           ISO Country cod
+     C                     MOVELA4RGCD    #1RGCD           Region Code
+     C                     MOVELA4BBAN    #1BBAN           BBAN tot. lngthCFT004
+     C                     MOVELA4BBRL    #1BBRL           BBAN bank lngthCFT004
+     C           *IN85     IFEQ *ON                                       CPB001
+     C                     MOVELA4CTAY    #1CTAY                          CPB001
+     C                     MOVELA4CTZP    #1CTZP                          CPB001
+     C           A4CTWC    IFEQ *ZERO                                     CPB001
+     C                     MOVEL*BLANK    #1CTWC                          CPB001
+     C                     ELSE                                           CPB001
+     C                     MOVELA4CTWC    #1CTWC                          CPB001
+     C                     ENDIF                                          CPB001
+     C                     ENDIF                                          CPB001
+      *                                                                                       CGL014
+     C           *IN84     IFEQ *ON                                                           CGL014
+     C           A4CTWC    IFEQ *ZERO                                                         CGL014
+     C                     MOVEL*BLANK    #1CTWC                                              CGL014
+     C                     ELSE                                                               CGL014
+     C                     MOVELA4CTWC    #1CTWC                                              CGL014
+     C                     ENDIF                                                              CGL014
+     C                     ENDIF                                                              CGL014
+      *                                                                                       CGL032
+      ** If CGL032 is turned on, move the file fields to the screen fields for                CGL032
+      ** End of Tax Year, Reporting Frequency, Currency of Tax and Joint Account              CGL032
+      ** Management respectively.                                                             CGL032
+      *                                                                                       CGL032
+     C           CGL032    IFEQ 'Y'                                                           CGL032
+     C                     MOVE *ON       *IN32                                               CGL032
+      *                                                                                       CGL032
+      ** If End of Tax Year is not entered or zero, blank out this screen field.              CGL032
+      *                                                                                       CGL032
+     C           A4ETXY    IFEQ 0                                                             CGL032
+     C                     MOVE *BLANKS   #1ETXY                                              CGL032
+     C                     ELSE                                                               CGL032
+     C                     MOVE A4ETXY    #1ETXY                                              CGL032
+     C                     ENDIF                                                              CGL032
+      *                                                                                       CGL032
+     C                     MOVE A4RPFQ    #1RPFQ                                              CGL032
+     C**********           MOVE A4TXCY    #1TXCY                                       CGL032 232543
+     C                     MOVE A4JAMG    #1JAMG                                              CGL032
+     C                     ELSE                                                               CGL032
+     C                     MOVE *OFF      *IN32                                               CGL032
+     C                     ENDIF                                                              CGL032
+      *                                                                                       CGL014
+      ** Condition Currency of Tax on CGL031                                                  232543
+      *                                                                                       232543
+     C           CGL031    IFEQ 'Y'                                                           232543
+     C                     MOVE *ON       *IN33                                               232543
+      *                                                                                       232543
+     C                     MOVE A4TXCY    #1TXCY                                              232543
+     C                     MOVE A4CTTX    #1CCTS                                              236137
+     C                     ELSE                                                               232543
+     C                     MOVE *OFF      *IN33                                               232543
+     C                     ENDIF                                                              232543
+      *                                                                                       232543
+     C           CSD046    IFEQ 'Y'                                                           CSD031
+     C                     CALL 'ZDATE2'               90                                     CSD031
+     C                     PARM A4EACC    PDATE   50                                          CSD031
+     C                     PARM 'D'       PDTFMT  1                                           CSD031
+     C                     PARM *ZEROS    PCVTDT  60                                          CSD031
+     C           #1EACC    PARM *BLANKS   PALPDT  7                                           CSD031
+     C           *INU1     IFEQ *ON                                                           CSD031
+     C                     MOVELA4AACC    #1AACC                                              CSD031
+     C                     ELSE                                                               CSD031
+     C                     MOVELA4GPDT    #1GPDT                                              CSD031
+     C                     ENDIF                                                              CSD031
+     C                     ENDIF                                                              CSD031
+      ** Condition display of GRI country code on CER045                                      CER045
+      *                                                                                       CER045
+     C           CER045    IFEQ 'Y'                                                           CER045
+     C                     MOVE *ON       *IN47                                               CER045
+     C                     Z-ADDA4GRIC    #1GRIC           GRI Country Code                   CER045
+     C                     ELSE                                                               CER045
+     C                     MOVE *OFF      *IN47                                               CER045
+     C                     ENDIF                                                              CER045
+      *                                                                                       CER045
+     C           CSW213    IFEQ 'Y'                                                           CSW213
+     C           CFT050    OREQ 'Y'                                                           CSW213
+     C           #1CNCD    CHAINMEISOCL1             90                                       CSW213
+     C           *IN90     IFEQ '0'                                                           CSW213
+     C                     MOVELM3BBLN    #1BBAN                                              CSW213
+     C**********           MOVELM3BILN    #1BBRL                                     CSW213 MD023678
+     C                     MOVELM3TBLN    #1BBRL                                            MD023678
+     C                     ENDIF                                                              CSW213
+     C                     ENDIF                                                              CSW213
+      *                                                                                       CSW213
+      ** FATCA fields                                                                         CGL132
+     C                     MOVELA4FAAT    #1FAAT                                              CGL132
+     C                     MOVELA4FAIN    #1FAIN                                              CGL132
+     C/COPY WNCPYSRC,SD0181EC03
+      *================================================================
+     CSR         MBEXIT    ENDSR
+      /EJECT
+     CSR         MDIZ#K    BEGSR
+      *================================================================
+      * Initialize key screen
+      *================================================================
+     C                     MOVELP1CNCD    #1CNCD           Country Code
+      * USER: Load key screen
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy member SD0181ELKS - Country Codes  * S01212
+     C*
+     C/COPY WNCPYSRC,SD0181ELKS
+     C*
+     C                     END                             *FI
+      *================================================================
+     CSR         MDEXIT    ENDSR
+      /EJECT
+     CSR         SARVGN    BEGSR
+      *================================================================
+      * get practically everythin - MIDAS Modules  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSA     KLIST
+     C                     KFLD           BGMODS           Modules
+      * Move fields to key list
+     C                     MOVE *BLANK    BGMODS           Modules
+     C                     MOVEL'MMOD'    BGMODS           Modules
+     C           KRSSA     CHAIN@BGREC8              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0096' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+      * Setup message data for message
+     C                     MOVEL'SDMMODPD'ZA0001           Filename
+      * Send message 'Database Error (ICD)'
+     C                     MOVEL'USR0377' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     GOTO SAEXIT                     *QUIT
+     C                     GOTO SAEXIT
+     C                     END
+      *
+      * USER: Exit processing
+      * PAR = DB1 By name
+     C                     MOVELBGSDGL    WUSDGL           Standing data/G
+     C                     MOVELBGDLFX    WUDLFX           Dealing: FX
+     C                     MOVELBGSYLN    WUSYLN           Syndicated Loan
+     C                     MOVELBGEXMG    WUEXMG           Exposure Manage
+     C                     MOVELBGCSLN    WUCSLN           Customer Lendin
+     C                     MOVELBGRTBN    WURTBN           Retail Banking
+     C                     MOVELBGMSDL    WUMSDL           Midas/Swift dir
+     C                     MOVELBGSECS    WUSECS           Securities
+     C                     MOVELBGAURC    WUAURC           Auto-reconcilia
+     C                     MOVELBGFDTR    WUFDTR           Funds Transfer
+     C                     MOVELBGFUOP    WUFUOP           Futures & Optio
+     C                     MOVELBGNWMI    WUNWMI           Message Managem
+     C                     MOVELBGFIIN    WUFIIN           FRA/IRS Indicat
+     C                     MOVELBGDLMM    WUDLMM           Dealing: MM
+     C                     MOVELBGTRMG    WUTRMG           Treasury Manage
+     C                     MOVELBGRKMG    WURKMG           Interest Risk M
+     C                     MOVELBGMFIC    WUMFIC           Microfiche
+     C                     MOVELBGIOAC    WUIOAC           Interest on acc
+     C                     MOVELBGCFMT    WUCFMT           Confirmation Ma
+     C                     MOVELBGRCFI    WURCFI           Report Control
+     C                     MOVELBGOPDK    WUOPDK           Optical Disk
+     C                     MOVELBGNUST    WUNUST           History & Audit
+     C                     MOVELBGNZST    WUNZST           Midas Export Da
+     C                     MOVELBGN4ST    WUN4ST           Private BankingCPB001
+     C*                                                                   CPB001
+     C** Sets indicator 85 ON if PB presents                              CPB001
+     C           BGN4ST    IFEQ 'Y'                                       CPB001
+     C                     MOVE *ON       *IN85                           CPB001
+     C                     ELSE                                           CPB001
+     C                     MOVE *OFF      *IN85                           CPB001
+     C                     ENDIF                                          CPB001
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     CSR         SBRVGN    BEGSR
+      *================================================================
+      * Get 'Window required' ind - MIDAS Modules  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSB     KLIST
+     C                     KFLD           BGMODS           Modules
+      * Move fields to key list
+     C                     MOVE *BLANK    BGMODS           Modules
+     C                     MOVEL'MMOD'    BGMODS           Modules
+     C           KRSSB     CHAIN@BGREC8              90    *
+      * Data record not found
+     C   90                MOVEL'USR0096' W0RTN   7
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+      * CASE: DB1.Window processing requir. is Yes
+     C           BGWDPR    IFEQ 'Y'                        *IF
+     C                     MOVEL'Y'       WUWDPR           Window processi
+     C                     END                             *FI
+     C                     END
+      *================================================================
+     CSR         SBEXIT    ENDSR
+      /EJECT
+     CSR         VACKRL    BEGSR
+      *================================================================
+      * Check restriction within
+      *================================================================
+      * Name search required?
+     C                     MOVEL#1CNCD    WK1X01  1
+     C           WK1X01    IFEQ '?'                        Country Code
+     W* Y2W0053 - One or more arguments defaulted to available contexts
+      * Field '(DTL) #1CNCD' defaulted for 'Country Code'.
+     C                     CALL 'SD0180S'              90  Select Country
+     C                     PARM *BLANK    W0RTN   7
+     C           #1CNCD    PARM #1CNCD    WQ0001  2        Country Code
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0180S' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C           W0RTN     ANDNE'Y2U0016'
+     C                     SETON                     99    *
+     C                     END
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      *================================================================
+     CSR         VAEXIT    ENDSR
+      /EJECT
+     CSR         Y0SET     BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y0EXIT    ENDSR
+      /EJECT
+     CSR         Y1SET     BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y1EXIT    ENDSR
+      /EJECT
+     CSR         Y8TST     BEGSR
+      *================================================================
+      * Test cursor
+      *================================================================
+     C           @#DFMT    IFEQ '#RCDKEY'
+      * KEY Screen
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+     C                     END
+     C           @#DFMT    IFEQ '#RCDDTL1'
+      * DETAIL Screen
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+     C                     END
+      *================================================================
+     CSR         Y8EXIT    ENDSR
+      /EJECT
+     CSR         Y9CLR     BEGSR
+      *================================================================
+      * Clear *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y9EXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZHHPKY    BEGSR
+      *================================================================
+      * Display HELP text
+      *================================================================
+      * Signal help request
+     C                     MOVEL'Y'       W0HLP   1
+      *
+      * Extract cursor row and column
+     C           @#RWCL    DIV  256       ZHCSRW  50       Row
+     C                     MVR            ZHCSCL  50       Column
+      *
+      * Save cursor position for redisplay
+     C                     Z-ADDZHCSRW    ZZCSRW  30       Row
+     C                     Z-ADDZHCSCL    ZZCSCL  30       Column
+      *
+      *
+     C                     CALL 'YDDSHPR'
+     C                     PARM ##PGM     W0HPMB 10        Help text sourc
+     C                     PARM *BLANK    YYHPFL 10        Help text file
+     C                     PARM *BLANK    YYHPLB 10        Help text libra
+     C                     PARM           W0RTN   7
+     C                     PARM '*START'  YYHLVN 10        Help label
+     C                     PARM '*NORMAL' YYUSOP 10        Options
+     C                     PARM ZHCSRW    YYRW    50       Row
+     C                     PARM ZHCSCL    YYCL    50       Column
+     C                     PARM 1         YYLGCT  50       # of grps
+     C                     PARM W0GRP     YYLGVN 10        Label grps
+      *
+      * Clear set cursor DDS indicator
+     C  N94                MOVEL'OFF'     WCSRLC
+     C  N94                SETON                     94    *
+      *================================================================
+     CSR         ZHEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel and exit from key screen
+      *================================================================
+      * USER: Exit program processing
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy member SD0181EEPP - Country Codes  * S01212
+     C*
+     C/COPY WNCPYSRC,SD0181EEPP
+     C*
+     C                     END                             *FI
+      * Processing for Fast Exit
+      * CASE: KEY.*CMD key is *Exit
+     C           *IN03     IFEQ '1'                        *IF
+     C                     MOVEL'Y2U9999' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     END                             *FI
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C           W0ICL     IFEQ *BLANK
+     C                     MOVEL'Y'       W0ICL   1        *Initial call
+     C                     ELSE
+     C                     MOVEL'N'       W0ICL
+     C                     END
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+     C                     MOVEL*ZEROS    W0RTW   90
+     C                     MOVEL'400'     W0ENV   3
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+      * Set century digit (If YY prior to 1940 treat as 20YY)
+     C           ##JYY     IFLT 40
+     C                     Z-ADD1         ##JCC
+     C                     ELSE
+     C                     Z-ADD0         ##JCC
+     C                     END
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Obtain default message file
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      * Define work field S01212
+     C                     MOVEL*BLANK    WUMFTS  1
+      * Define work field Window required
+     C                     MOVEL*BLANK    WUD2DD  1
+      * Define work field Midas Run Date
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field Run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUSUC   1
+      * Define work field Date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WUMBIN  1
+      * Define work field Standing data/Gen.Ledger
+     C                     MOVEL*BLANK    WUSDGL  1
+      * Define work field Dealing: FX
+     C                     MOVEL*BLANK    WUDLFX  1
+      * Define work field Syndicated Loans (REDUN)
+     C                     MOVEL*BLANK    WUSYLN  1
+      * Define work field Exposure Management
+     C                     MOVEL*BLANK    WUEXMG  1
+      * Define work field Customer Lending
+     C                     MOVEL*BLANK    WUCSLN  1
+      * Define work field Retail Banking
+     C                     MOVEL*BLANK    WURTBN  1
+      * Define work field Midas/Swift direct link
+     C                     MOVEL*BLANK    WUMSDL  1
+      * Define work field Securities
+     C                     MOVEL*BLANK    WUSECS  1
+      * Define work field Auto-reconciliations
+     C                     MOVEL*BLANK    WUAURC  1
+      * Define work field Funds Transfer
+     C                     MOVEL*BLANK    WUFDTR  1
+      * Define work field Futures & Options
+     C                     MOVEL*BLANK    WUFUOP  1
+      * Define work field Message Management
+     C                     MOVEL*BLANK    WUNWMI  1
+      * Define work field FRA/IRS Indicator
+     C                     MOVEL*BLANK    WUFIIN  1
+      * Define work field Dealing: MM
+     C                     MOVEL*BLANK    WUDLMM  1
+      * Define work field Treasury Management
+     C                     MOVEL*BLANK    WUTRMG  1
+      * Define work field Interest Risk Management
+     C                     MOVEL*BLANK    WURKMG  1
+      * Define work field Microfiche
+     C                     MOVEL*BLANK    WUMFIC  1
+      * Define work field Interest on accounts
+     C                     MOVEL*BLANK    WUIOAC  1
+      * Define work field Confirmation Matching
+     C                     MOVEL*BLANK    WUCFMT  1
+      * Define work field Report Control Facility
+     C                     MOVEL*BLANK    WURCFI  1
+      * Define work field Optical Disk
+     C                     MOVEL*BLANK    WUOPDK  1
+      * Define work field History & Audit Facility
+     C                     MOVEL*BLANK    WUNUST  1
+      * Define work field Midas Export Data Module
+     C                     MOVEL*BLANK    WUNZST  1
+      * Define work field Private Banking                                 CPB001
+     C                     MOVEL*BLANK    WUN4ST  1                       CPB001
+      * Define work field Window processing requir.
+     C                     MOVEL*BLANK    WUWDPR  1
+      * Flag no *SET CURSOR in the program
+     C                     MOVE 'N'       YSETCS  1
+     C                     MOVE *BLANK    WCSRLC  3
+      * Define *Synon program work fields
+     C                     MOVEL*BLANKS   W0CFL  10        *Cursor field
+     C                     Z-ADD*ZEROS    W0CRW   50       *Cursor row
+     C                     Z-ADD*ZEROS    W0CCL   50       *Cursor column
+      * Move main file information to JOB context
+     C                     MOVE @1FFL     ZZFFL  10        Main file name
+     C                     MOVE @1FLB     ZZFLB  10        Main file lib
+     C                     MOVE @1FMB     ZZFMB  10        Main file mbr
+     C                     MOVE ZZFFL     @1FFL  10
+     C                     MOVE ZZFLB     @1FLB  10
+     C                     MOVE ZZFMB     @1FMB  10
+     C                     CALL 'Y2QLVNR'
+     C                     PARM           ZZFFL  10
+     C                     PARM           ZZFLB  10
+     C                     PARM           ZZFQL  21        LIBRARY/FILE
+      * Open files
+     C                     OPEN SD0181E#
+     C           *INU1     IFEQ *ON                                                           CSD031
+     C                     OPEN GPCTRYL1                                                      CSD031
+     C                     ELSE                                                               CSD031
+     C                     OPEN SDCTRYL1
+     C                     OPEN SDACTYL1                                                      CSD031
+     C                     ENDIF                                                              CSD031
+     C                     OPEN SDMMODL1
+     C                     MOVEL'N'       W0PMT   1
+     C                     MOVEL*BLANK    W0GRP   1
+      * USER: Initialize program
+      * Start of S01459
+      * Remove the last amend box
+      * Remove the creation parameters function
+      * SD0181E Precompiler - Country Codes  *
+      * End of S01459
+      * Copyright Statement 1988 - Standard Functions  * copyright
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT  7        RUN DATE
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB           RUNDAY NO.
+     C                     MOVE SUC       WUSUC            SET UP COMPLT
+     C                     MOVE DFF       WUDFF            DTE FMT FLAG
+     C                     MOVE MBIN      WUMBIN           MULTI BR. IND
+      * Start of change S01437.
+      * Determine which Midas modules are present in the system.
+      * get practically everythin - MIDAS Modules  *
+     C                     EXSR SARVGN
+      * End of change S01437.
+     C                     MOVEL'Y'       WUMFTS           S01212
+      * /COPYs
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * Get 'Window required' ind - MIDAS Modules  *
+     C                     EXSR SBRVGN
+      * Data Structure Country - Country Codes  *
+      * 00/Copy member SD0181EFPG - Country Codes  * S01212
+      * 00/Copy member SD0181EEPG - Country Codes  * S01212
+      * 00/Copy member SD0181EIPG - Country Codes  * S01212
+      * 00/Copy member SD0181ECPG - Country Codes  * S01212
+     C*
+     C/COPY WNCPYSRC,SD0181ECPG
+     C*
+      * 00/Copy member SD0181EOPG - Country Codes  * S01212
+     C                     END                             *FI
+      *                                                                   CFT004
+      *** Check if CFT004 is switched on                                  CFT004
+      *                                                                   CFT004
+     C                     CALL 'AOSARDR0'                                CFT004
+     C                     PARM '       ' @RTCD   7                       CFT004
+     C                     PARM '*VERIFY' @OPTN   7                       CFT004
+     C                     PARM 'CFT004'  @SARD   6                       CFT004
+      *                                                                   CFT004
+     C           @RTCD     IFEQ *BLANK                                    CFT004
+     C                     MOVE *ON       *IN31                           CFT004
+     C                     ELSE                                           CFT004
+     C                     MOVE *OFF      *IN31                           CFT004
+     C                     ENDIF                                          CFT004
+      *                                                                   CFT004
+      ** Check if CGL132 is switched on                                                       CGL132
+      *                                                                                       CGL132
+     C                     CALL 'AOSARDR0'                                                    CGL132
+     C                     PARM '       ' @RTCD                                               CGL132
+     C                     PARM '*VERIFY' @OPTN                                               CGL132
+     C                     PARM 'CGL132'  @SARD                                               CGL132
+      *                                                                                       CGL132
+     C           @RTCD     IFEQ *BLANK                                                        CGL132
+     C                     MOVE 'Y'       CGL132  1                                           CGL132
+     C                     ELSE                                                               CGL132
+     C                     MOVE 'N'       CGL132                                              CGL132
+     C                     ENDIF                                                              CGL132
+      *                                                                                       CGL132
+      ** Check if CGL133 is switched on                                                       CGL133
+      *                                                                                       CGL133
+     C                     CALL 'AOSARDR0'                                                    CGL133
+     C                     PARM '       ' @RTCD                                               CGL133
+     C                     PARM '*VERIFY' @OPTN                                               CGL133
+     C                     PARM 'CGL133'  @SARD                                               CGL133
+      *                                                                                       CGL133
+     C           @RTCD     IFEQ *BLANK                                                        CGL133
+     C                     MOVE 'Y'       CGL133  1                                           CGL133
+     C                     ELSE                                                               CGL133
+     C                     MOVE 'N'       CGL133                                              CGL133
+     C                     ENDIF                                                              CGL133
+      *                                                                                       CGL133
+     C           CGL132    IFEQ 'Y'                                                           CGL132
+     C           CGL133    OREQ 'Y'                                                           CGL133
+     C                     MOVE *ON       *IN34                                               CGL132
+     C                     ELSE                                                               CGL132
+     C                     MOVE *OFF      *IN34                                               CGL132
+     C                     ENDIF                                                              CGL132
+      ** Check if enhancement CGL014 (Collaterals Processing) is on                           CGL014
+      *                                                                                       CGL014
+     C                     CALL 'AOSARDR0'                                                    CGL014
+     C                     PARM *BLANKS   PRTCD   7                                           CGL014
+     C                     PARM '*VERIFY' POPTN   7                                           CGL014
+     C                     PARM 'CGL014'  PSARD   6                                           CGL014
+     C           SCSARD    PARM SCSARD    DSFDY                                               CGL014
+      *                                                                                       CGL014
+     C           PRTCD     IFEQ *BLANKS                                                       CGL014
+     C                     MOVE 'Y'       CGL014  1                                           CGL014
+     C                     MOVE *ON       *IN84                                               CGL014
+     C                     ELSE                                                               CGL014
+     C                     MOVE 'N'       CGL014                                              CGL014
+     C                     ENDIF                                                              CGL014
+      *                                                                                       CGP001
+      ** Check if CGP001 is enabled.                                                          CGP001
+      *                                                                                       CGP001
+     C           *NAMVAR   DEFN           LDA                                                 CGP001
+      *                                                                                       CGP001
+     C                     CALL 'AOSARDR0'                                                    CGP001
+     C                     PARM *BLANKS   PRTCD   7                                           CGP001
+     C                     PARM '*VERIFY' POPTN   7                                           CGP001
+     C                     PARM 'CGP001'  PSARD   6                                           CGP001
+     C           SCSARD    PARM *BLANKS   DSFDY                                               CGP001
+      *                                                                                       CGP001
+     C                     MOVE 'N'       CGP001  1                                           CGP001
+     C                     MOVE *OFF      *IN68                                               CGP001
+     C           PRTCD     IFEQ *BLANKS                                                       CGP001
+     C                     MOVE 'Y'       CGP001                                              CGP001
+     C                     MOVE *ON       *IN68                                               CGP001
+      *                                                                                       CGP001
+     C                     ELSE                                                               CGP001
+      *                                                                                       CGP001
+     C           PRTCD     IFNE '*NRF'                                                        CGP001
+     C                     MOVEL'SCSARDPD'DBFILE                                              CGP001
+     C                     MOVEL'CGP001'  DBKEY                                               CGP001
+     C                     MOVEL'07'      DBASE                                               CGP001
+     C                     MOVE *ON       *INU7                                               CGP001
+     C                     MOVE *ON       *INU8                                               CGP001
+     C                     MOVE *ON       *INLR                                               CGP001
+     C                     EXSR *PSSR                                                         CGP001
+     C                     ENDIF                                                              CGP001
+      *                                                                                       CGP001
+     C                     ENDIF                                                              CGP001
+      *                                                                                       CGL032
+      *** Check if CGL032 is switched on                                                      CGL032
+      *                                                                                       CGL032
+     C                     CALL 'AOSARDR0'                                                    CGL032
+     C                     PARM '       ' PRTCD   7                                           CGL032
+     C                     PARM '*VERIFY' POPTN   7                                           CGL032
+     C                     PARM 'CGL032'  PSARD   6                                           CGL032
+      *                                                                                       CGL032
+     C           PRTCD     IFEQ *BLANK                                                        CGL032
+     C                     MOVE 'Y'       CGL032  1                                           CGL032
+     C                     ELSE                                                               CGL032
+     C                     MOVE 'N'       CGL032                                              CGL032
+     C                     ENDIF                                                              CGL032
+      *                                                                                       CGL032
+      *** Check if CGL031 is switched on                                                      232543
+      *                                                                                       232543
+     C                     CALL 'AOSARDR0'                                                    232543
+     C                     PARM '       ' PRTCD   7                                           232543
+     C                     PARM '*VERIFY' POPTN   7                                           232543
+     C                     PARM 'CGL031'  PSARD   6                                           232543
+      *                                                                                       232543
+     C           PRTCD     IFEQ *BLANK                                                        232543
+     C                     MOVE 'Y'       CGL031  1                                           232543
+     C                     ELSE                                                               232543
+     C                     MOVE 'N'       CGL031                                              232543
+     C                     ENDIF                                                              232543
+      *                                                                                       232543
+      *                                                                                       CER001
+      ** Check if ULX004 is enabled.                                                          CER001
+      *                                                                                       CER001
+     C                     CALL 'AOSARDR0'                                                    CER001
+     C                     PARM *BLANKS   PRTCD   7                                           CER001
+     C                     PARM '*VERIFY' POPTN   7                                           CER001
+     C                     PARM 'ULX004'  PSARD   6                                           CER001
+     C           SCSARD    PARM *BLANKS   DSFDY                                               CER001
+      *                                                                                       CER001
+     C           PRTCD     IFEQ *BLANKS                                                       CER001
+     C                     MOVE 'Y'       ULX004  1                                           CER001
+     C                     ELSE                                                               CER001
+     C                     MOVE 'N'       ULX004                                              CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+     C           PRTCD     IFNE *BLANKS                                                       CER001
+     C           PRTCD     ANDNE'*NRF'                                                        CER001
+     C                     MOVEL'SCSARDPD'DBFILE                                              CER001
+     C                     MOVEL'ULX004'  DBKEY                                               CER001
+     C                     Z-ADD1         DBASE                                               CER001
+     C                     MOVE *ON       *INU7                                               CER001
+     C                     MOVE *ON       *INU8                                               CER001
+     C                     MOVE *ON       *INLR                                               CER001
+     C                     EXSR *PSSR                                                         CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+      ** Check if ULX043 is enabled.                                                          CER001
+      *                                                                                       CER001
+     C                     CALL 'AOSARDR0'                                                    CER001
+     C                     PARM *BLANKS   PRTCD   7                                           CER001
+     C                     PARM '*VERIFY' POPTN   7                                           CER001
+     C                     PARM 'ULX043'  PSARD   6                                           CER001
+     C           SCSARD    PARM *BLANKS   DSFDY                                               CER001
+      *                                                                                       CER001
+     C           PRTCD     IFEQ *BLANKS                                                       CER001
+     C                     MOVE 'Y'       ULX043  1                                           CER001
+     C                     ELSE                                                               CER001
+     C                     MOVE 'N'       ULX043                                              CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+     C           PRTCD     IFNE *BLANKS                                                       CER001
+     C           PRTCD     ANDNE'*NRF'                                                        CER001
+     C                     MOVEL'SCSARDPD'DBFILE                                              CER001
+     C                     MOVEL'ULX043'  DBKEY                                               CER001
+     C                     Z-ADD2         DBASE                                               CER001
+     C                     MOVE *ON       *INU7                                               CER001
+     C                     MOVE *ON       *INU8                                               CER001
+     C                     MOVE *ON       *INLR                                               CER001
+     C                     EXSR *PSSR                                                         CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CSD031
+      ** Check if switchable feature CSD046 is on                                             CSD031
+      *                                                                                       CSD031
+     C                     CALL 'AOSARDR0'                                                    CSD031
+     C                     PARM *BLANKS   PRTCD                                               CSD031
+     C                     PARM '*VERIFY 'POPTN                                               CSD031
+     C                     PARM 'CSD046'  PSARD   6                                           CSD031
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSD031
+      *                                                                                       CSD031
+     C           PRTCD     IFNE *BLANKS                                                       CSD031
+     C           PRTCD     ANDNE'*NRF   '                                                     CSD031
+     C           *LOCK     IN   LDA                                                           CSD031
+     C                     MOVEL'SCSARDPD'DBFILE                                              CSD031
+     C                     MOVEL'CSD046  'DBKEY                                               CSD031
+     C                     Z-ADD1         DBASE                                               CSD031
+     C                     OUT  LDA                                                           CSD031
+     C                     EXSR *PSSR                                                         CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C           PRTCD     IFEQ *BLANKS                                                       CSD031
+     C                     MOVE 'Y'       CSD046  1                                           CSD031
+     C                     MOVE *ON       *IN46                                               CSD031
+     C                     ELSE                                                               CSD031
+     C                     MOVE 'N'       CSD046                                              CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     MOVE *INU1     *IN41                                               CSD031
+      *                                                                                       CER045
+      ** Check if CER045 is enabled.                                                          CER045
+     C                     CALL 'AOSARDR0'                                                    CER045
+     C                     PARM *BLANKS   PRTCD   7                                           CER045
+     C                     PARM '*VERIFY' POPTN   7                                           CER045
+     C                     PARM 'CER045'  PSARD   6                                           CER045
+     C           SCSARD    PARM *BLANKS   DSFDY                                               CER045
+      *                                                                                       CER045
+     C           PRTCD     IFEQ *BLANKS                                                       CER045
+     C                     MOVE 'Y'       CER045  1                                           CER045
+     C                     ELSE                                                               CER045
+     C                     MOVE 'N'       CER045                                              CER045
+     C                     ENDIF                                                              CER045
+      *                                                                                       CER045
+     C           PRTCD     IFNE *BLANKS                                                       CER045
+     C           PRTCD     ANDNE'*NRF'                                                        CER045
+     C           *LOCK     IN   LDA                                                           CER045
+     C                     MOVEL'SD0181E' DBPGM                                               CER045
+     C                     MOVEL'SCSARDPD'DBFILE                                              CER045
+     C                     MOVEL'CER045'  DBKEY                                               CER045
+     C                     Z-ADD3         DBASE                                               CER045
+     C                     MOVE *ON       *INU7                                               CER045
+     C                     MOVE *ON       *INU8                                               CER045
+     C                     OUT  LDA                                                           CER045
+     C                     EXSR *PSSR                                                         CER045
+     C                     ENDIF                                                              CER045
+      *                                                                                       CSW213
+      ** Check if SWIFT Changes 2013 (CSW213) is installed                                    CSW213
+      *                                                                                       CSW213
+     C                     CALL 'SWIF2013'                                                    CSW213
+     C                     PARM *BLANKS   PRTCD                                               CSW213
+      *                                                                                       CSW213
+     C           PRTCD     IFEQ 'CSW2013'                                                     CSW213
+     C                     MOVE 'Y'       CSW213  1                                           CSW213
+     C                     ELSE                                                               CSW213
+     C                     MOVE 'N'       CSW213                                              CSW213
+     C                     ENDIF                                                              CSW213
+      *                                                                                       CSW213
+      *** Check if CFT050 is switched on                                                      CSW213
+      *                                                                                       CSW213
+     C                     CALL 'AOSARDR0'                                                    CSW213
+     C                     PARM '       ' PRTCD                                               CSW213
+     C                     PARM '*VERIFY' @OPTN                                               CSW213
+     C                     PARM 'CFT050'  @SARD                                               CSW213
+      *                                                                                       CSW213
+     C           PRTCD     IFEQ *BLANK                                                        CSW213
+     C                     MOVE 'Y'       CFT050  1                                           CSW213
+     C                     ELSE                                                               CSW213
+     C                     MOVE 'N'       CFT050                                              CSW213
+     C                     ENDIF                                                              CSW213
+      *                                                                                       CSW213
+     C                     MOVE '0'       *IN89                                               CSW213
+     C           CSW213    IFEQ 'Y'                                                           CSW213
+     C           CFT050    OREQ 'Y'                                                           CSW213
+     C                     OPEN MEISOCL1                                                      CSW213
+     C                     MOVE '1'       *IN89                                               CSW213
+     C                     ENDIF                                                              CSW213
+      *                                                                                       CSW213
+      ** Controls displaying of BBAN & BANK fields and F15 key                                CSW213
+     C           *IN31     IFEQ '1'                                                           CSW213
+     C           CSW213    ANDEQ'Y'                                                           CSW213
+     C           CFT050    OREQ 'Y'                                                           CSW213
+     C                     MOVE '0'       *IN31                                               CSW213
+     C                     ENDIF                                                              CSW213
+      *                                                                                       CTI006
+      ** Check if CTI006 is enabled.                                                          CTI006
+      *                                                                                       CTI006
+     C                     CALL 'AOSARDR0'                                                    CTI006
+     C                     PARM *BLANKS   PRTCD                                               CTI006
+     C                     PARM '*VERIFY' POPTN                                               CTI006
+     C                     PARM 'CTI006'  PSARD                                               CTI006
+     C           SCSARD    PARM *BLANKS   DSFDY                                               CTI006
+      *                                                                                       CTI006
+     C                     MOVE *OFF      *IN53                                               CTI006
+     C           PRTCD     IFEQ *BLANKS                                                       CTI006
+     C                     MOVE 'Y'       CTI006  1                                           CTI006
+     C                     MOVE *ON       *IN85                                               CTI006
+     C           WUN4ST    IFNE 'Y'                                                           CTI006
+     C                     MOVE *ON       *IN53                                               CTI006
+     C                     ENDIF                                                              CTI006
+     C                     ELSE                                                               CTI006
+     C                     MOVE 'N'       CTI006                                              CTI006
+     C                     ENDIF                                                              CTI006
+      *                                                                                       CTI006
+     C           PRTCD     IFNE *BLANKS                                                       CTI006
+     C           PRTCD     ANDNE'*NRF'                                                        CTI006
+     C           *LOCK     IN   LDA                                                           CTI006
+     C                     MOVEL'SD0181E' DBPGM                                               CTI006
+     C                     MOVEL'SCSARDPD'DBFILE                                              CTI006
+     C                     MOVEL'CTI006'  DBKEY                                               CTI006
+     C                     Z-ADD004       DBASE                                               CTI006
+     C                     OUT  LDA                                                           CTI006
+     C                     EXSR *PSSR                                                         CTI006
+     C                     ENDIF                                                              CTI006
+      *                                                                                       CTI006
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      /EJECT                                                                                  CSW213
+     C           CHKISO    BEGSR                                                              CSW213
+      *================================================================                       CSW213
+      * Check ISO                                                                             CSW213
+      *================================================================                       CSW213
+     C           #1ISOC    CHAINMEISOCL1             90                                       CSW213
+     C           *IN90     IFEQ '1'                                                           CSW213
+     C                     MOVE '1'       *IN99                                               CSW213
+     C                     MOVEL'SDM0158' ZAMSID                                              CSW213
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                              CSW213
+     C                     EXSR ZASNMS                                                        CSW213
+     C                     ELSE                                                               CSW213
+     C           *IN15     IFEQ '1'                                                           CSW213
+     C                     CALL 'ME1740'                                                      CSW213
+     C                     PARM *BLANKS   PRTCD                                               CSW213
+     C                     PARM 'E'       PMODE   1                                           CSW213
+     C                     PARM           #1ISOC                                              CSW213
+     C                     ENDIF                                                              CSW213
+     C                     ENDIF                                                              CSW213
+     C                     ENDSR                                                              CSW213
+      /EJECT
+     CSR         *PSSR     BEGSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+      * Core function specific processing.
+      *
+     C/COPY WNCPYSRC,SD0181EPSC
+      *
+      * Start of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD0181EPS1
+      *
+      * Standard Midas PSSR processing.
+      *
+     C/COPY SDCPYSRC,SDPSSRINT
+      *
+      * End of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD0181EPS2
+      *
+      *================================================================
+     CSR                   ENDSR
+      *================================================================
+     O*
+     O/COPY WNCPYSRC,SD0181EOPG
+     O*
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Misys International Banking Systems Ltd. 2001

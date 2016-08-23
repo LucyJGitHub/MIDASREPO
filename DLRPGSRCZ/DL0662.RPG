@@ -1,0 +1,1548 @@
+     H        1
+     F********************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Deals by customer report - by comp')          *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Dealing Module
+     F*                                                                  *
+     F*       DL0662 - OUTSTANDING DEALS BY CUSTOMER REPORT              *
+     F*                     - BY COMPANY                                 *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      *  Last Amend No. CGL165             Date 17Feb15               *
+      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 05Jul06               *
+     F*                 117314             Date 26May06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 BUG3332            Date 25Jun04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 136233             Date 24May01               *
+      *                 185616             Date 06Apr01               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 133929             Date 11Nov99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 135636             Date 05Oct98               *
+     F*                 101151             DATE 04APR97              *
+     F*                        S01408         DATE  31JUL96              *
+     F*                        090893         DATE  06SEP95              *
+     F*                        050789         DATE  25FEB94              *
+     F*                        E47982         DATE   1FEB93              *
+     F*                        S01378         DATE  15OCT92              *
+     F*                        S01393         DATE  15OCT92              *
+     F*                        AUS018         DATE  14AUG92              *
+     F*                        LN0746         DATE  17SEP90              *
+     F*                        LN0597         DATE  06AUG90              *
+     F*                        LN0217         DATE  21MAY90              *
+     F*                        E296           DATE  04APR90              *
+     F*                        E299           DATE  23MAR90              *
+     F*                        E257           DATE  08MAR90              *
+     F*                        E185           DATE  14DEC89              *
+     F*                        E160           DATE  07DEC89              *
+     F*                        E57            DATE  22NOV89              *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                                  *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance Receive Settlement Instructions             *
+      *           (Recompiled)                                        *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *          (Recompiled)                                         *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+     F*  117314 - The *IN85/86 processing added for 116472 is not     *
+     F*           necessary and can cause overflow errors. Remove it. *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type                              *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  BUG3332 - I/O operation was applied to closed file DL0661P1. *
+      *            Need to consider *IN77 before writing to avoid     *
+      *            I/O error. Apply fix 218972.                       *
+      *  136233 - Wrong amount shown on SALE/PLACING column for       *
+      *           Internal Contract (PS) deals. The amount shown was  *
+      *           the buy amount of the first leg instead of the sell *
+      *           amount of the second leg. Applied fix 128782.       *
+      *           Missing value date on internal loans and deposits.  *
+      *  185616 - No headings are printed in the first page.  On the  *
+      *           following page, wrong page number is displayed.     *
+     F*  133929 - Wrong amount reported under the SALE/PLACING column,*
+     F*           instead of the 2nd leg sell amount it reported the  *
+     F*           1st leg buy amount.  Fix is to move the value of the*
+     F*           1st leg buy amount to variable OUTAM1 instead of    *
+     F*           moving it to OUTAMT.  Applied fix 128782.           *
+     F*  135636 - Pgm is attempting I/O operat on closed printer file.*
+     F*           Amended Output specs to include *IN77 as well.      *
+     F*  101151 - Details are printed before the header when the first*
+     F*           event is arbitrage internal contract (DTYP=PS).     *
+     F*           This is caused by fix 090893. Also header is printed*
+     F*           with no details.                                    *
+     F*  S01408 - Core Hook DL0662CCP2 Added                          *
+     F*         - Core Hook DL0662CCP1 Added                          *
+     F*         - Core Hook DL0662EEP1 Added                          *
+     F*         - Core Hook DL0662FFP1 Added                          *
+     F*  090893 - Amend program to output Deposits and Loans for      *
+     F*           arbitrage internal contracts. New LF EVNT1V2        *
+     F*           created to extract 20V2 (Internal Contract          *
+     F*           loan record) events for this change.                *
+     F*       050789 - Do not 'reverse out' deal amendment PI or PD amts *
+     F*                if the deal amendment vdate is > next working day *
+     F*                as these amounts are no longer added to principle *
+     F*                by DL0400 (E10847/E15988).                        *
+     F*                                                                  *
+     F*       E47982 - CORRECT AUS018 WHICH LED TO ERROR I/O APPLIED     *
+     F*                TO CLOSED FILE; *IN77 WAS REMOVED FROM O-SPECS    *
+     F*                                                                  *
+     F*     S01378 - Facilitates the partial sale of a parcel
+     F*              of negotiable instruments which have been
+     F*              previously input to the system as a single
+     F*              transaction (was MOF53). Include parcel
+     F*              flag on report.
+     F*                                                                  *
+     F*       S01393 - Recompiled for Strategic Risk Management          *
+     F*                Book Code added to PF/EVNTXED                     *
+     F*                                                                  *
+     F*       AUS018 - PROVIDE OPTION OF PRODUCING REPORT FOR FX OR MM   *
+     F*                ONLY AS WELL AS OPTION FOR ALL DEAL TYPES         *
+     F*                                                                  *
+     F*       LN0746 - P1 & AU FILES CHANGED TO SAME NAME AS PROGRAM     *LN0746
+     F*                DUMMY FILES CREATED                               *LN0746
+     F*       LN0597 - CONDITION OUTPUT ON P1 BEING OPEN                 *
+     F*    LN0217 - P1 REPORT SHOULD ONLY SHOW 'END OF REPORT FOR        *LN0217
+     F*             BRANCH', NOT 'END OF REPORT'                         *LN0217
+     F*       E296- SHOULD READ SDBANK WHEN RUN ON EMPTY FILES           *
+     F*       E299- 'AU' REPORT SHOULD NOT WRITE 'END OF REPORT'         *
+     F*       E257- PRINTER FILE SHOULD BE CHANGED TO SYSTEM REPORT      *
+     F*             PRINTER FILE                                         *
+     F*       E185- AU TOTALS INCORRECTLY CALCULATED                     *
+     F*       E160- HEADINGS NOT BEING PRINTED CORRECTLY                  *
+     F*       E57 - CHANGE TO CHECK CMPY REQ. EQUALS ONE OF NEW FIELDS   *
+     F*                                                                  *
+     F*****************************************************************
+     FEVNTXEC IP  E                    DISK
+     FEVNT1JL2IS  E           K        DISK
+     FEVNT1V2 IF  E           K        DISK                               090893
+     FEVNTD   IF  E           K        DISK
+     FDEALS   IF  E           K        DISK                               136233
+     F*                                                                   S01408
+     F/COPY WNCPYSRC,DL0662FFP1                                           S01408
+     F*                                                                   S01408
+     FSDCURRL0IF  E           K        DISK
+     F**DL0662P1O***F***132*****OF*****PRINTER******KINFDS*SPOOL1*****UC    E257
+     F**DL0660P1O***F***132*****OF*****PRINTER******KINFDS*SPOOL1**UCE257 LN0746
+     FDL0662P1O   F     132     OF     PRINTER      KINFDS SPOOL1     UC  LN0746
+     F**DL0662AUO***F***132*****OA*****PRINTER******KINFDS SPOOLU*****      E257
+     F**DL0660AUO***F***132*****OA*****PRINTER******KINFDS SPOOLU*** E257 LN0746
+     FDL0662AUO   F     132     OA     PRINTER      KINFDS SPOOLU         LN0746
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F* 01            S/EVNT1JL2 DETAIL RECORD
+     F* 02            S/EVNTD DETAIL RECORD
+     F*       30      DLNO OF REC READ NOT SAME AS MAIN INPUT
+     F*       31      PRINCIPAL INCREASE
+     F*       32      PRINCIPAL DECREASE
+     F*       33      ETYP 16M1 OR 15M1
+     F*    10         EVENT DATE ZERO IE.CALL DEAL
+     F*    11         NOTICE DAYS ZERO OR NEGATIVE
+     F*    12         OUR DETAILS FOR 'RR', 'RP' AND 'RF' EVENT
+     F*    13         NON FRA/IRS EVENT TYPE
+     F*    14         OUR FLOATING RATE ENTERED
+     F*    15         THEIR FLOATING RATE ENTERED
+     F*    17         THEIR BASE RATE TYPE IS NOT EQUAL TO ZERO
+     F*       18      DEAL TYPE IS 'RF' (FLOOR)
+     F*       20      MATURITY EVENT
+     F*     21-24     OVERFLOW SUB HEADING PRINT CONTROL
+     F*       25      WORK INDICATOR
+     F*       30      ALLOWS FRA, CAPS AND COLLARS TO PRINT AS SALES
+     F*       40      CONTROL 1ST CYCLE PROCESSING
+     F*       41      PRINT HEADINGS ON FIRST CYCLE
+     F*     44-46     INCOMING CURRENCY HAS 0-3 DEC. PLACES.
+     F*     47-51     OUTGOING CURRENCY HAS 0-3 DEC. PLACES.
+     F*       52      PRINT REPORT FOR FX DEAL TYPES                      AUS018
+     F*       53      PRINT REPORT FOR MM DEAL TYPES                      AUS018
+     F*       54      PRINT REPORT FOR ALL DEAL TYPES                     AUS018
+     F*     55-58     CONDITION SUB-HEADINGS OUTPUT
+     F*       60      HASH AMOUNT NEGATIVE
+     F*     61-63     SELECT RECORDS FOR PRINTING
+     F*       61      FX - INCOMING & OUTGOING
+     F*       62      DEAL TYPE ON EVENT IS A PLACING
+     F*       63      DEAL TYPE ON EVENT IS A TAKING
+     F*       64      DEAL TYPE ON EVENT IS A FORWARD RATE AGREEMENT
+     F*       65      DEAL TYPE ON EVENT IS A SINGLE CCY INT. RATE SWAP
+     F*       66      DEAL TYPE ON EVENT IS CROSS CCY INT. RATE SWAP
+     F*       67      DEAL TYPE ON EVENT IS INT. RATE CAP/COLLAR
+     F*       68      FLOOR RATE IS PRESENT
+     F*       69      ACTUAL AVERAGE RATE USED
+     F*       70      RRINT - ZERO
+     F*       73      RWINT- ZERO
+     F*       74      NO DETAILS SELECTED FOR PRINTING - RWRITN - ZERO
+     F********77******CONDITION OUTPUT TO DL0662P1                          E257
+     F********77******CONDITION OUTPUT TO DL0660P1                   E257 LN0746
+     F*       77      CONDITION OUTPUT TO DL0662P1                        LN0746
+     F*       80      SET LOWER LIMIT INDICATOR
+     F*       81      E.O.F. INDICATOR
+     F*       82      OUTPUT 2ND LEG OF INTERNAL DEAL IF TYPE NOT 'MM'    101151
+     F*       83      OUTPUT DEPOSIT/LOAN FOR INT. DEAL IF TYPE NOT 'FX'  101151
+     F*       84      OUTPUT LOAN RECORD OF INTERNAL CONTRACT             101151
+     F********85,86***OUTPUT SUB-HEADING IF THERE ARE STILL RECORDS TO6742117314
+     F****************BE PRINTED.                                   101151117314
+     F*         U7&U8 ERROR ACCESSING BANK DETAILS FILE
+     E                    CPY@    1   1 80
+     E                    CCYA      150  3
+     E                    DPA       150  1 0
+     E*                                                                   S01408
+     E/COPY WNCPYSRC,DL0662EEP1                                           S01408
+     E*                                                                   S01408
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     I*
+     I*    EVENTS FILE - HEADER RECORD.
+     I*
+     IEVNTXECF
+     I*
+     I*
+     I*    EVENTS FILE - DETAIL RECORD.
+     I*
+     IEVT1JL2F    01
+     I                                              CUNR  L1
+     I                                              EDAT            10
+     I                                              NOTD          1111
+     I***************                               ECPY  L2                 E57
+     I                                              COBB  L2                 E57
+     I*
+     I*
+     I*    EVENTS FILE - TRAILER RECORD.
+     I*
+     IEVNTDEDF    02
+     I*
+     I**
+     I**
+     ISPOOL1      DS
+     I**   FILE INFORMATION DATA STRUCTURE
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I**
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** EXTERNAL DS FOR BANK DETAILS
+     I*
+     ISDCOMP    E DSSDCOMPPD
+     I** EXTERNAL DS FOR COMPANY DETAILS
+     I*
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*
+     I/EJECT
+     C**
+     C*                                                                   AUS018
+     C** ENTRY PARAMETER REQUIRED BY RCF                                  AUS018
+     C** PARAMETER ALSO PROVIDED TO SELECT FX, MM OR ALL DEAL TYPES       AUS018
+     C*                                                                   AUS018
+     C           *ENTRY    PLIST
+     C                     PARM           TYPE    2                       AUS018
+     C                     PARM           SEQ     5
+     C                     PARM           BRNCH   3        BRANCH OR ALL
+     C*                                                                   090893
+     C** Define key list for chain to EVNT1V2 file                        090893
+     C*                                                                   090893
+     C           KEY1      KLIST                                          090893
+     C                     KFLD           DLNO                            090893
+     C                     KFLD           ETYPX                           090893
+     C**
+     C   41                SETOF                     41
+     C**   CONDITION SUB-HEADING OUTPUT.
+     C   56                SETOF                     55
+     C   24                SETOF                     2324
+     C**   FIRST CYCLE ONLY - GET BANK DETAILS, & SETUP CCY ARRAYS
+     C   40                GOTO DETAIL
+     C*
+     C                     SETON                     2140
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C* USE ACCESS PROGRAM TO READ THE BANK DETAILS FILE
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG    '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'DBFILE 10        *************
+     C                     MOVEL'001'     DBASE   3        * DBERR 001 *
+     C                     MOVEL@OPTN     DBOPTN  7        ************
+     C                     MOVEL@OPTN     DBKEY  29
+     C                     MOVE '1'       *INLR
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     EXSR *PSSR
+     C                     ELSE
+     C*
+     C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+     C*
+     C           BJDFIN    COMP 'M'                      98MMDDYY, 98 ON
+     C                     END
+     C*
+     C                     EXSR CCYARR
+     C*                                                                   AUS018
+     C** INITIALIZE INDICATORS FOR ENTRY PARAMETER, TYPE                  AUS018
+     C*                                                                   AUS018
+     C                     MOVE '0'       *IN52                           AUS018
+     C                     MOVE '0'       *IN53                           AUS018
+     C                     MOVE '0'       *IN54                           AUS018
+     C***********          SETOF                     86             101151117314
+     C*                                                                   AUS018
+     C** SET INDICATORS TO REFLECT REPORT TYPE (FX, MM OR ALL)            AUS018
+     C** FX=52, MM=53, ALL=54                                             AUS018
+     C*                                                                   AUS018
+     C           TYPE      IFEQ 'FX'                                      AUS018
+     C                     MOVE '1'       *IN52                           AUS018
+     C                     ELSE                                           AUS018
+     C           TYPE      IFEQ 'MM'                                      AUS018
+     C                     MOVE '1'       *IN53                           AUS018
+     C                     ELSE                                           AUS018
+     C                     MOVE '1'       *IN54                           AUS018
+     C                     END                                            AUS018
+     C                     END                                            AUS018
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,DL0662CCP1                                           S01408
+     C*                                                                   S01408
+     C**
+     C**
+     C           DETAIL    TAG                             **  DETAIL  **
+     C*
+     C* SETOFF BUY/SELL CONDITIONING INDICATOR & SALE INDICATOR
+     C*
+     C                     MOVE '0'       *IN75
+     C                     MOVE '0'       *IN30
+     C*
+     C                     SETOF                     21
+     C   22                SETOF                     22
+     C  N42                SETON                     4142
+     C                     SETOF                     646566
+     C                     SETOF                     67
+     C                     SETOF                     26                   090893
+     C                     SETOF                     828384               101151
+     C***********          SETOF                     85             101151117314
+     C**
+     C           *INL2     IFEQ '1'
+     C*********************CLOSEDL0662P1                                    E257
+     C*********************CLOSEDL0660P1                             E257 LN0746
+     C                     CLOSEDL0662P1                                  LN0746
+     C           BRNCH     IFEQ 'ALL'
+     C***********BRNCH     OREQ ECPY                                         E57
+     C           BRNCH     OREQ COBB                                         E57
+     C                     SETON                     77
+     C*********************OPEN DL0662P1                                    E257
+     C*********************OPEN DL0660P1                             E257 LN0746
+     C                     OPEN DL0662P1                                  LN0746
+     C                     Z-ADD0         PAGE
+     C*
+     C                     Z-ADDSFNUM1    ZSNUM   60                      S01117
+     C**   CALL ZSFILE
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C***************      PARM ECPY      @PARM   3                          E57
+     C                     PARM COBB      @PARM   3                          E57
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM *BLANKS   ZSERR   1                       S01117
+     C*                                                                   S01117
+     C** ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM        S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C*
+     C**   TO GET COMPANY NAME APAPTX
+     C                     CALL 'AOCOMPR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C***************      PARM ECPY      @CENB   3                          E57
+     C                     PARM COBB      @CENB   3                          E57
+     C           SDCOMP    PARM SDCOMP    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDCOMPPD'DBFILE 10        *************
+     C                     MOVEL'002'     DBASE   3        * DBERR 002 *
+     C                     MOVEL@OPTN     DBOPTN  7        ************
+     C                     MOVEL@CENB     DBKEY  29
+     C                     MOVE '1'       *INLR
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     EXSR *PSSR
+     C                     END
+     C**
+     C   U8                GOTO END
+     C                     ELSE
+     C                     SETOF                     77
+     C                     END
+     C                     END
+     C  N01                GOTO END
+     C                     SETOF                     616263
+     C**   COUNT RECORDS READ FROM EVENT FILE
+     C           RREAD     ADD  1         RREAD   50
+     C**
+     C**   HASH TOTAL OF DETAIL RECORDS READ.
+     C           EAMT      DIV  1000      ZZAMT        60
+     C   60                Z-SUBZZAMT     ZZAMT
+     C                     Z-ADDRRINT     ZZTOTI
+     C                     Z-ADDRRDEC     ZZTOTD
+     C                     EXSR GLZADD
+     C                     Z-ADDZZTOTI    RRINT  150
+     C                     Z-ADDZZTOTD    RRDEC   30
+     C**
+     C**   TO CONDITION SUB-HEADINGS OUTPUT
+     C   L1                SETOF                     56
+     C   L1                SETON                     55
+     C  N55                SETOF                     56
+     C   22                SETOF                     2122
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,DL0662CCP2                                           S01408
+     C*                                                                   S01408
+     C**
+     C**   SELECT DETAIL RECORDS TO BE PRINTED
+     C                     SETOF                     20
+     C*
+     C** IF DEAL TYPE IS A FLOOR (RF) OUTPUT FLOOR RATE NOT CEILING
+     C*
+     C                     MOVE '0'       *IN18
+     C           DTYP      IFEQ 'RF'
+     C                     MOVE '1'       *IN18
+     C                     END
+     C*
+     C           ETYP      COMP '11V1'                   61 FX
+     C  N61      ETYP      COMP '12V1'                   61
+     C  N61      ETYP      COMP '13V1'                   61
+     C  N61      ETYP      COMP '14V1'                   61
+     C  N61      ETYP      COMP '20V1'                   61
+     C  N61      ETYP      COMP '16M1'                   63 TAKING
+     C  N61      ETYP      COMP '18M1'                   62
+     C  N61N62   ETYP      COMP '15M1'                   62 PLACING
+     C  N61N62   ETYP      COMP '17M1'                   62
+     C*
+     C**  TEST FOR FRA/IRS EVENT TYPES
+     C*
+     C  N61      ETYP      COMP '21O1'                   64 FR TYPE
+     C  N61N64   ETYP      COMP '22O1'                   65 RS TYPE
+     C  N61N64   ETYP      COMP '23O1'                   66 RX TYPE
+     C  N61N64N65ETYP      COMP '24O1'                   67 RR/RP/RF TYPE
+     C   62
+     COR 65
+     COR 66
+     COR 67
+     COR 63                SETON                     20    MATURITY EVENT
+     C  N20      ETYP      COMP '12V1'                   20
+     C  N64
+     CANN65N66N67
+     CANN61N62N63ETYP      COMP '17S1'                   63
+     C*                                                                   AUS018
+     C** IF FX DEAL + FX TO BE PRINTED OR MM DEAL + MM TO BE PRINTED      AUS018
+     C** OR ALL DEALS TO BE PRINTED, SET INDICATORS TO CONDITION          AUS018
+     C** SUB-HEADING OUTPUT AND ADD TO RECORDS OUTPUT COUNT               AUS018
+     C*                                                                   AUS018
+     C           *IN61     IFEQ '1'                                       AUS018
+     C           *IN52     ANDEQ'1'                                       AUS018
+     C           *IN62     OREQ '1'                                       AUS018
+     C           *IN53     ANDEQ'1'                                       AUS018
+     C           *IN63     OREQ '1'                                       AUS018
+     C           *IN53     ANDEQ'1'                                       AUS018
+     C           *IN54     OREQ '1'                                       AUS018
+     C           ETYP      OREQ '20V1'                                    090893
+     C**
+     C**   TO CONDITION SUB-HEADINGS OUTPUT
+     C                     SETON                     21
+     C   55                SETON                     56
+     C                     SETOF                     55
+     C**
+     C**   COUNT RECORDS TO BE PRINTED
+     C*****      RWRITN    ADD  1         RWRITN  50                      E185
+     C   77      RWRITN    ADD  1         RWRITN  50                      E185
+     C**
+     C**   HASH TOTAL OF RECORDS TO BE WRITTEN
+     C                     Z-ADDRWINT     ZZTOTI
+     C                     Z-ADDRWDEC     ZZTOTD
+     C                     EXSR GLZADD
+     C                     Z-ADDZZTOTI    RWINT  150
+     C                     Z-ADDZZTOTD    RWDEC   30
+     C*                                                                   AUS018
+     C                     END                                            AUS018
+     C**
+     C**   SET UP INCOMING & OUTGOING AMOUNTS, & DEC. PLACES FOR EDITING.
+     C                     MOVE '   '     INCCY   3
+     C                     MOVE '   '     OUTCCY  3
+     C                     Z-ADD0         INAMT  130
+     C                     Z-ADD0         OUTAMT 130
+     C**
+     C*    SET OFF O/P INDS. FOR AMOUNTS.
+     C                     SETOF                     444546
+     C                     SETOF                     474849
+     C                     SETOF                     5051
+     C**   IF 61 OR 63, INCOMING AMT IS EVENT AMT, ELSE IS 0.
+     C   61
+     COR 65
+     COR 66
+     COR 63                EXSR INFLDS
+     C**
+     C**   IF 61, OUT GOING AMT IS OTHER AMT, IF 62 IS EVENT AMT, ELSE 0
+     C   61
+     COR 66
+     COR 62                EXSR OUTFLD
+     C*
+     C**   FRA'S, CAPS AND COLLARS SHOWN UNDER PURCHASES WHEN 'OUR
+     C**   BASE RATE TYPE' (UBRTT) EQUALS ZERO - OTHERWISE UNDER SALES.
+     C**   FLOORS SHOWN UNDER PURCHASES WHEN 'OUR BASE RATE TYPE'
+     C**   (UBRTT) IS NOT EQUAL TO ZERO - OTHERWISE UNDER SALES.
+     C*
+     C           DTYP      IFEQ 'FR'                       DEAL IS FRA,
+     C           DTYP      OREQ 'RP'                       CAP OR COLLAR
+     C           DTYP      OREQ 'RR'
+     C*
+     C           UBRTT     IFEQ 0
+     C                     MOVE 'B'       BYSL    1
+     C                     MOVE '1'       *IN75
+     C                     EXSR INFLDS                     PURCHASES
+     C                     ELSE
+     C                     SETON                     30    OUTPUT IND.
+     C                     MOVE 'S'       BYSL
+     C                     MOVE '1'       *IN75
+     C                     EXSR OUTFLD                     SALES
+     C                     END
+     C*
+     C                     END
+     C*
+     C           DTYP      IFEQ 'RF'                       DEAL IS A FLOOR
+     C*
+     C           UBRTT     IFNE 0
+     C                     MOVE 'B'       BYSL
+     C                     MOVE '1'       *IN75
+     C                     EXSR INFLDS                     PURCHASES
+     C                     ELSE
+     C                     SETON                     30    OUTPUT IND.
+     C                     MOVE 'S'       BYSL
+     C                     MOVE '1'       *IN75
+     C                     EXSR OUTFLD                     SALES
+     C                     END
+     C*
+     C                     END
+     C**
+     C**   CONVERT VALUE & MATURITY DATES TO ALPHA FORMAT
+     C  N20                Z-ADDEDAT      ZDAYNO
+     C   20                Z-ADDOTHD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    VDATA   7
+     C  N20                Z-ADDOTHD      ZDAYNO
+     C   20                Z-ADDEDAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    MDATA   7
+     C*
+     C*    BLANK MATURITY DATE IF 2ND LEG OF A
+     C*    POSITION SWAP
+     C           ETYP      COMP '20V1'                   25
+     C   25      FSLI      COMP 2                        25
+     C   25                MOVE '       ' MDATA
+     C*
+     C**  IF NON FRA/IRS EVENT TYPE CONDITION OUTPUT
+     C*
+     C                     SETOF                     13
+     C*
+     C                     MOVEA*IN,61    INDS    3
+     C           INDS      IFNE '000'
+     C                     SETON                     13
+     C                     END
+     C*
+     C**  CHECK IF FLOATING RATE HAS BEEN ENTERED FOR FRA/IRS EVENTS
+     C*
+     C           *IN13     IFEQ '0'
+     C*
+     C           UBRTT     IFNE 0
+     C                     TESTB'0'       UDNSI          14
+     C                     ELSE
+     C                     SETON                         14
+     C                     END
+     C*
+     C           TBRTT     IFNE 0
+     C                     TESTB'0'       TDNSI          15
+     C                     ELSE
+     C                     SETON                         15
+     C                     END
+     C*
+     C                     END
+     C*
+     C** IF RR,RA OR RF EVENT CHECK IF OURS OR THEIR DETAILS TO BE USED
+     C*
+     C           UBRTT     COMP 0                    1212
+     C           TBRTT     COMP 0                    1717
+     C*
+     C           *IN67     IFEQ '1'
+     C*
+     C**  IF OUR DETAILS CHECK FOR FLOOR RATE
+     C*
+     C           *IN12     IFEQ '1'
+     C                     TESTB'4'       UDSTI          68
+     C*
+     C**  AND AVERAGE RATE METHOD
+     C*
+     C                     TESTB'3'       UDSTI          69
+     C                     END
+     C*
+     C**  IF THEIR DETAILS CHECK FOR FLOOR RATE
+     C*
+     C           *IN12     IFEQ '0'
+     C                     TESTB'4'       TDSTI          68
+     C*
+     C**  AND AVERAGE RATE METHOD
+     C*
+     C                     TESTB'3'       TDSTI          69
+     C                     END
+     C*
+     C                     END
+     C*                                                                   090893
+     C** For Arbitrage Internal Contracts, output Deposit and Loan        090893
+     C** records as well.                                                 090893
+     C*                                                                   090893
+     C           ETYP      IFEQ '20V1'                                    090893
+     C           FSLI      ANDEQ2                                         090893
+     C           DTYP      ANDEQ'PS'                                      090893
+     C*                                                                   090893
+     C** Set off *IN61 so that printing of the 2nd leg of the Internal    090893
+     C** Contract will not be done by the RPG logic cycle. Printing       090893
+     C** will be done instead through the EXCPT opcode.                   090893
+     C*                                                                   090893
+     C                     MOVE '1'       *IN26                           090893
+     C                     MOVE '0'       *IN61                           090893
+     C*                                                                   090893
+     C** Output the 2nd leg of the Internal Contract Swap if report       090893
+     C** type is not 'MM'                                                 090893
+     C*                                                                   090893
+     C           *IN53     IFNE '1'                                       090893
+     C***********          EXCPTFXPRT                              090893 101151
+     C                     SETON                     82                   101151
+     C                     END                                            090893
+     C*                                                                   090893
+     C** Output the Deposit/Loan record of Arbitrage Internal Contract    090893
+     C** if report type is not 'FX'                                       090893
+     C*                                                                   090893
+     C           *IN52     IFNE '1'                                       090893
+     C*                                                                   090893
+     C** Output the Deposit record of the Arbitrage Internal Contract     090893
+     C*                                                                   090893
+     C***********          MOVE VDATA     MDATA                    090893 101151
+     C***********          Z-ADDICIR      EXRT                     090893 101151
+     C***********          Z-ADDICAM      INAMT                    090893 101151
+     C           DLNO      CHAINDEALS                90                   136233
+     C           *IN90     IFEQ '0'                                       136233
+     C                     Z-ADDOTDT      ZDAYNO                          136233
+     C                     EXSR ZDATE2                                    136233
+     C                     MOVE ZADATE    VDATA1  7                       136233
+     C                     ELSE                                           136233
+     C                     MOVEL'DEALSDB 'DBFILE 10        *************  136233
+     C                     MOVEL'005'     DBASE   3        * DBERR 005 *  136233
+     C                     MOVELDLNO      DBKEY  29        *************  136233
+     C                     MOVE '1'       *INLR                           136233
+     C                     MOVE '1'       *INU7                           136233
+     C                     MOVE '1'       *INU8                           136233
+     C                     EXSR *PSSR                                     136233
+     C                     END                                            136233
+     C                     MOVE VDATA     MDATA1  7                       101151
+     C                     Z-ADDICIR      EXRT1  138                      101151
+     C                     Z-ADDICAM      INAMT1 130                      101151
+     C*                                                                   090893
+     C***********          EXCPTDPPRT                              090893 101151
+     C                     SETON                     83                   101151
+     C*                                                                   090893
+     C** Output the Loan record of the Arbitrage Internal Contract        090893
+     C*                                                                   090893
+     C                     MOVE '20V2'    ETYPX   4                       090893
+     C*                                                                   090893
+     C** Chain to the events file to get the Loan record of the           090893
+     C** Internal Contract.                                               090893
+     C*                                                                   090893
+     C           KEY1      CHAINEVNT1V2              90                   090893
+     C*                                                                   090893
+     C           *IN90     IFEQ '1'                                       090893
+     C                     MOVEL'EVNT1V2 'DBFILE 10        *************  090893
+     C                     MOVEL'004'     DBASE   3        * DBERR 004 *  090893
+     C                     MOVELDLNO      DBKEY  29        *************  090893
+     C                     MOVE '1'       *INLR                           090893
+     C                     MOVE '1'       *INU7                           090893
+     C                     MOVE '1'       *INU8                           090893
+     C                     EXSR *PSSR                                     090893
+     C                     END                                            090893
+     C*                                                                   090893
+     C** Convert maturity date to alpha format                            090893
+     C*                                                                   090893
+     C                     Z-ADDEDAT      ZDAYNO                          090893
+     C                     EXSR ZDATE2                                    090893
+     C***********          MOVE ZADATE    MDATA                    090893 101151
+     C                     MOVE ZADATE    MDATA2  7                       101151
+     C                     MOVE ECCY      OUTCCY                          090893
+     C***********          Z-ADDICIR      EXRT                     090893 101151
+     C                     Z-ADDICIR      EXRT2  138                      101151
+     C***********          Z-ADDICAM      OUTAMT                   090893 133929
+     C                     Z-ADDICAM      OUTAM1 130                      133929
+     C*                                                                   090893
+     C***********          EXCPTLNPRT                              090893 101151
+     C                     SETON                     84                   101151
+     C*                                                                   090893
+     C                     END                                            090893
+     C                     END                                            090893
+     C**
+     C           END       TAG                             **  END  **
+     C      OF             SETON                     22
+     C   OFN55             SETON                     23
+     C   21 23             SETON                     24
+     C***********                                                   101151117314
+     C***If*printer*overflow, check first if there are still details101151117314
+     C***to*be*written*before writing the sub-headings.             101151117314
+     C***********                                                   101151117314
+     C******OF***          SETON                     86             101151117314
+      *                                                                   185616
+      ** Need to remove this coding to ensure that headings will be       185616
+      ** printed.                                                         185616
+      *                                                                   185616
+     C********** *IN86     IFEQ '1'                                101151 185616
+     C********** *IN52     IFEQ '1'                                101151 185616
+     C********** *IN61     ANDEQ'0'                                101151 185616
+     C********** *IN53     OREQ '1'                                101151 185616
+     C********** *IN62     ANDEQ'0'                                101151 185616
+     C********** *IN63     ANDEQ'0'                                101151 185616
+     C**********           SETON                     85            101151 185616
+     C**********           END                                     101151 185616
+     C**********           END                                     101151 185616
+     C*****N85***          SETOF                     86             101151117314
+     C*
+     C*****CONDITION SUB-HEADINGS ON OVERFLOW
+     C**
+     C**   COMPARE HASH INTEGER FIELDS FOR EDITING.
+     CLR         RRINT     COMP 0                        70
+     CLR         RWINT     COMP 0                        73
+     C**
+     C**   SET 74 IF NO DETAILS REPORTED
+     CLR         RWRITN    COMP 0                        74
+     C**
+     CLR                   Z-ADDSFNUMU    ZSNUM   60                      S01117
+     C**   CALL ZSFILE FOR AUDIT RECORD
+     CLR                   CALL 'ZSFILE'
+     CLR                   PARM           SEQ     5
+     CLR                   PARM *BLANK    @PARM   3
+     CLR                   PARM           SFILEU
+     CLR                   PARM           ZSNUM                           S01117
+     CLR                   PARM *BLANKS   ZSERR   1                       S01117
+     C*                                                                   S01117
+     C** ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM        S01117
+     CLR         ZSERR     IFEQ 'Y'                                       S01117
+     CLR                   SETON                     U7U8                 S01117
+     CLR                   RETRN                                          S01117
+     CLR                   END                                            S01117
+     C*
+     C* READ THE BANK DETAILS FILE (WHEN RUN ON EMPTY FILES)              E296
+     C*                                                                   E296
+     CLRN40                CALL 'AOBANKR0'                                E296
+     C                     PARM '*MSG    '@RTCD   7                       E296
+     C                     PARM '*FIRST  '@OPTN   7                       E296
+     C           SDBANK    PARM SDBANK    DSFDY                           E296
+     C*                                                                   E296
+     CLRN40      @RTCD     IFNE *BLANK                                    E296
+     CLRN40                MOVEL'SDBANKPD'DBFILE 10        *************  E296
+     CLRN40                MOVEL'003'     DBASE   3        * DBERR 003 *  E296
+     CLRN40                MOVEL@OPTN     DBOPTN  7        ************   E296
+     CLRN40                MOVEL@OPTN     DBKEY  29                       E296
+     CLRN40                MOVE '1'       *INU7                           E296
+     CLRN40                MOVE '1'       *INU8                           E296
+     CLRN40                EXSR *PSSR                                     E296
+     CLR                   END                                            E296
+     C********************************************************************
+     C**   INFLDS SR. SETS UP INCOMING AMT & CCY FIELDS & FINDS NBR.
+     C**   OF DECIMAL PLACES FOR EDITING INCOMING AMOUNT
+     C           INFLDS    BEGSR                           **  INFLDS  **
+     C**
+     C                     MOVE ECCY      INCCY
+     C                     MOVE ECCY      XCCY
+     C                     Z-ADDEAMT      INAMT
+     C**
+     C**   FOR EVENT TYPE 16M1 READ EVENT FILE FOR PRINCIPAL
+     C**   INCREASES/DECREASES AND SUB/ADD THESE TO AMOUNT TO BE OUTPUT.
+     C**
+     C           ETYP      COMP '16M1'                   33
+     C  N33                GOTO TAG4
+     C                     Z-ADDDLNO      DLNOD
+     C                     MOVE ETYP      ETYPD
+     C           DLNKEY    KLIST
+     C                     KFLD           DLNOD
+     C                     KFLD           ETYPD
+     C           DLNKEY    SETGTEVNTDEDF               80
+     C   80                SETON                     U7U8LR
+     C           TAG3      TAG
+     C                     SETOF                     313202
+     C                     READ EVNTDEDF                 81
+     C   81
+     CORN02                GOTO TAG4
+     C           DLNOD     COMP DLNO                 3030
+     C      30             GOTO TAG4
+     C           ETYPD     COMP '16V3'                   31
+     C           ETYPD     COMP '16M4'                   32
+     C  N31N32             GOTO TAG3
+     C*                                                                   050789
+     C** No need to add/sub amount if deal amendment value date           050789
+     C** greater than next working day.                                   050789
+     C           EDATD     IFGT BJDNWD                                    050789
+     C                     GOTO TAG3                                      050789
+     C                     END                                            050789
+     C*                                                                   050789
+     C   31      INAMT     SUB  EAMTD     INAMT
+     C   32      INAMT     ADD  EAMTD     INAMT
+     C                     GOTO TAG3
+     C           TAG4      TAG
+     C**
+     C                     EXSR CCYDEP
+     C           XDECP     COMP 1                      4445
+     C           XDECP     COMP 2                    47  46
+     C                     ENDSR
+     C********************************************************************
+     C**   OUTFLD SR. DOES THE SAME FOR OUTGOING AMOUNT & CCY.
+     C           OUTFLD    BEGSR                           **  OUTFLD  **
+     C   66
+     COR 61                MOVE OTHC      OUTCCY
+     C*
+     C   30                                                SALES
+     COR 62                MOVE ECCY      OUTCCY
+     C                     MOVE OUTCCY    XCCY
+     C   66
+     COR 61                Z-ADDOTHA      OUTAMT
+     C   30                                                SALES
+     COR 62                Z-ADDEAMT      OUTAMT
+     C**
+     C**   FOR EVENT TYPE 15M1 READ EVENT FILE FOR PRINCIPAL
+     C**   INCREASES/DECREASES AND SUB/ADD THESE TO AMOUNT TO BE OUTPUT.
+     C**
+     C                     SETOF                     33
+     C   62      ETYP      COMP '15M1'                   33
+     C  N33                GOTO TAG2
+     C                     Z-ADDDLNO      DLNOD
+     C                     MOVE ETYP      ETYPD
+     C           DLNKEY    SETGTEVNTDEDF               80
+     C   80                SETON                     U7U8LR
+     C           TAG1      TAG
+     C                     SETOF                     313202
+     C                     READ EVNTDEDF                 81
+     C   81
+     CORN02                GOTO TAG2
+     C           DLNOD     COMP DLNO                 3030
+     C   30                GOTO TAG2
+     C           ETYPD     COMP '15V3'                   31
+     C           ETYPD     COMP '15M4'                   32
+     C  N31N32             GOTO TAG1
+     C*                                                                   050789
+     C** No need to add/sub amount if deal amendment value date           050789
+     C** greater than next working day.                                   050789
+     C           EDATD     IFGT BJDNWD                                    050789
+     C                     GOTO TAG1                                      050789
+     C                     END                                            050789
+     C*                                                                   050789
+     C   31      OUTAMT    SUB  EAMTD     OUTAMT
+     C   32      OUTAMT    ADD  EAMTD     OUTAMT
+     C                     GOTO TAG1
+     C           TAG2      TAG
+     C**
+     C                     EXSR CCYDEP
+     C           XDECP     COMP 1                      4849
+     C           XDECP     COMP 2                    51  50
+     C                     ENDSR
+     C****
+     C********************************************************************
+     C**
+     C**   SR. TO SET UP AN ARRAY OF CURRENCIES AND AN ARRAY OF
+     C**   DECIMAL PLACES FOR THOSE CURRENCIES.
+     C**
+     C           CCYARR    BEGSR                           *** CCYARR  ***
+     C**
+     C**   SET ARRAY INDEX TO ZERO.
+     C                     Z-ADD0         X       30
+     C**
+     C* ACCESS CURRENCIES FILE
+     C           *LOVAL    SETLLSDCURRL0
+     C**
+     C**   LOOP TO READ CURRENCY DETAIL RECORDS.
+     C           XLOOP     TAG                             ** XLOOP TAG **
+     C                     READ SDCURRL0                 99
+     C**
+     C**   END IF ALL CURRENCY RECORDS PROCESSED
+     C   99                GOTO XEND
+     C**
+     C**   INCREMENT ARRAY INDEX.
+     C           X         ADD  1         X
+     C**
+     C**   MOVE DATA INTO ARRAYS.
+     C                     MOVE A6CYCD    CCYA,X
+     C                     MOVE A6NBDP    DPA,X
+     C**
+     C**   CHECK FOR FULL ARRAY.96 ON IF FULL.
+     C           X         COMP 150                      96
+     C**
+     C**   GO TO READ NEXT RECORD.
+     C  N96                GOTO XLOOP
+     C**
+     C           XEND      TAG                             ** XEND TAG  **
+     C                     ENDSR
+     C**
+     C********************************************************************
+     C**
+     C**   SR. TO OBTAIN NO. OF DECIMAL PLACES FOR A CURRENCY.
+     C**
+     C           CCYDEP    BEGSR                           *** CCYDEP  ***
+     C**
+     C**   SET ARRAY INDEX TO ONE AND RESET ERROR INDICATOR.
+     C                     Z-ADD1         X            99
+     C**
+     C**   INITIALIZE INPUT-OUTPUT FIELDS.
+     C                     Z-ADD0         XDECP   10
+     C                     MOVE XCCY      XCCY    3
+     C**
+     C**   LOOK UP NO. OF DECIMAL PLACES FOR CURRENCY.
+     C**   99 SETON FOR INVALID CURRENCY.
+     C           XCCY      LOKUPCCYA,X                   95
+     C   95                MOVE DPA,X     XDECP
+     C  N95                SETON                     99
+     C**
+     C                     ENDSR
+     C**
+     C********************************************************************
+     C**
+     C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+     C**
+     C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+     C**
+     C           ZDATE2    BEGSR                           *** ZDATE2 ***
+     C**
+     C**   CLEAR DATE FIELDS.
+     C                     Z-ADD0         ZDATE   60
+     C                     MOVEL'       ' ZADATE  7
+     C**
+     C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C**
+     C**   DETERMINE YEAR NUMBER.
+     C**
+     C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+     C           ZDAYNO    SUB  1         ZDAYN1  50   99
+     C   99                GOTO ZDEND2
+     C**
+     C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+     C           ZDAYN1    DIV  1461      ZLYR    20
+     C                     MVR            ZDAYN1           SAVE REMAINING
+     C**                                                   DAYS
+     C**   CALCULATE NUMBER OF REMAINING YEARS.
+     C                     Z-ADD1         ZWRK2   20
+     C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+     C           ZDAYN1    COMP ZYDY,ZWRK2             90
+     C  N90      ZWRK2     ADD  1         ZWRK2
+     C  N90                GOTO ZDTAG1
+     C           ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON
+     C**
+     C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+     C  N91      ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+     C**
+     C**   CALCULATE ACTUAL YEAR NUMBER.
+     C           ZLYR      MULT 4         ZWRK3   30
+     C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+     C                     Z-ADDZWRK3     ZYEAR   20
+     C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+     C**
+     C**   DETERMINE MONTH NUMBER.
+     C**
+     C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+     C                     SETOF                     9293
+     C   91      ZDAYN1    COMP 59                     9293
+     C   91N92   ZDAYN1    SUB  1         ZDAYN1
+     C**
+     C**   CALCULATE MONTH NUMBER.
+     C                     Z-ADD2         ZWRK2
+     C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+     C           ZDAYN1    COMP ZMDY,ZWRK2             94
+     C  N94      ZWRK2     ADD  1         ZWRK2
+     C  N94                GOTO ZDTAG2
+     C           ZWRK2     SUB  1         ZWRK2
+     C**
+     C                     Z-ADDZWRK2     ZMTH    20       MONTH
+     C**
+     C**   DETERMINE DAY OF MONTH.
+     C**
+     C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+     C           ZDAYN1    ADD  1         ZDAYN1
+     C**
+     C**   CALCULATE DAY OF MONTH.
+     C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+     C**
+     C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+     C   93      ZDAY      ADD  1         ZDAY
+     C**
+     C**   FORMAT DATE, DDMMYY OR MMDDYY.
+     C  N98                MOVELZDAY      ZWRK4   40
+     C   98                MOVE ZDAY      ZWRK4
+     C  N98                MOVE ZMTH      ZWRK4
+     C   98                MOVELZMTH      ZWRK4
+     C                     MOVELZWRK4     ZDATE
+     C                     MOVE ZYEAR     ZDATE
+     C**
+     C**   FORMAT ALPHA DATE, DDMMMYY.
+     C           ZDAY      COMP 10                     95
+     C                     MOVELZDAY      ZWRK5   5
+     C   95                MOVEL' '       ZWRK5
+     C                     MOVE ZMNM,ZMTH ZWRK5
+     C                     MOVELZWRK5     ZADATE
+     C                     MOVE ZYEAR     ZADATE
+     C**
+     C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*
+     C**
+     C**
+     C********************************************************************
+     C* SUBROUTINE TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL (ZZTOTI,ZZTOTD)
+     C*   IND '99' IS SET BY AN OVERFLOW ERROR
+     C*
+     CSR         GLZADD    BEGSR                           *** GLZADD ****
+     C*
+     CSR                   Z-ADDZZAMT     ZZAMT  153     91-DEFINE ZZAMT
+     CSR 91                GOTO ZZAEND                     AMT = 0.BYPASS
+     C*
+     C* SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS
+     CSR                   Z-ADDZZAMT     ZZAMTI 150       INTEGER FIELD
+     CSR                   MOVE ZZAMT     ZZAMTD  30       DECIMAL FIELD
+     C* BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW
+     C*
+     CSR                   EXSR GLZSUM
+     CSR         ZZAEND    ENDSR                           ** ZZAEND TAG *
+     C*
+     C********************************************************************
+     C* SUBROUTINE TO CARRY OUT THE ADDITION FOR SUBROUTINES -
+     C*                        GLZADD, GLZSUB, GLZCMP.
+     C*          PARAMETERS PASSED -
+     C*                     I/P ZZAMTI ZZAMTD
+     C*                     O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.
+     C*
+     CSR         GLZSUM    BEGSR                           *** GLZSUM ****
+     C*
+     CSR                   Z-ADDZZTOTI    ZZTOTI 150       DEFINE ZZTOTI
+     CSR                   Z-ADDZZTOTD    ZZTOTD  30       DEFINE ZZTOTD
+     CSR                   SETOF                     919293
+     CSR                   SETOF                     949599
+     C*
+     C*    DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG
+     CSR         ZZAMTI    COMP 0                      9293
+     CSR 93      ZZAMTD    COMP 0                      9293
+     CSR 93                GOTO ZZSEND                     ZERO BYPASS
+     C*
+     C*    DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.
+     CSR         ZZTOTI    COMP 0                      9193
+     CSR 93      ZZTOTD    COMP 0                      9193
+     C*
+     C*    IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.
+     CSR 93                Z-ADDZZAMTI    ZZTOTI
+     CSR 93                Z-ADDZZAMTD    ZZTOTD
+     CSR 93                GOTO ZZSEND                     ZERO BYPASS
+     C*    IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.
+     CSR 91N92
+     CORN91 92             GOTO ZZOFPS
+     C*
+     CSR         ZZAMTD    ADD  ZZTOTD    ZZWK2   40
+     CSR         ZZWK2     COMP 999                  93    '93' = CARRY
+     CSRN93      ZZWK2     COMP -999                   93    INTO INTEGER.
+     C*
+     CSR 93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VE
+     CSR    93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VE
+     CSR 93      ZZTOTI    ADD  ZZWK3     ZZWK3
+     CSRN93      ZZTOTI    ADD  ZZAMTI    ZZWK3
+     C*
+     C* IF THE MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED
+     CSRN92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS.
+     CSR 92      ZZWK3     COMP ZZTOTI               99     NEGATIVE
+     CSRN99                Z-ADDZZWK2     ZZTOTD
+     CSRN99                Z-ADDZZWK3     ZZTOTI
+     C*
+     C* IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT INTACT.
+     CSR 99                Z-ADD0         ZZAMT  153
+     CSR                   GOTO ZZSEND
+     C*
+     C* THE 'SIGNS' ARE DIFFERENT
+     CSR         ZZOFPS    TAG                             ** ZZOFPS TAG**
+     C* IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT
+     C*
+     CSR 92                Z-SUBZZAMTI    ZZAMTI 150
+     CSR 92                Z-SUBZZAMTD    ZZAMTD  30
+     C*
+     C* IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.
+     C*
+     CSR 91                Z-SUBZZTOTI    ZZTOTI
+     CSR 91                Z-SUBZZTOTD    ZZTOTD
+     C* BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.
+     C*
+     CSR         ZZTOTI    COMP ZZAMTI               93  95
+     CSR 95      ZZTOTD    COMP ZZAMTD               93  95
+     C*
+     C* IF ZZTOT EQ. ZZAMT RETURN ZERO.
+     CSR 95                Z-ADD0         ZZTOTI
+     CSR 95                Z-ADD0         ZZTOTD
+     CSR 95                GOTO ZZSEND
+     C*
+     C* IF ZZTOT GT. ZZAMT.
+     CSR 93      ZZAMTD    COMP ZZTOTD               94
+     CSR 93 94   ZZTOTI    SUB  1         ZZTOTI
+     CSR 93 94   ZZTOTD    ADD  1000      ZZWK2
+     CSR 93      ZZTOTI    SUB  ZZAMTI    ZZTOTI
+     CSR 93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD
+     CSR 93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD
+     C*
+     C*
+     C* IF ZZAMT GT. ZZTOT.
+     CSRN93      ZZTOTD    COMP ZZAMTD               94
+     CSRN93 94   ZZAMTI    SUB  1         ZZWK3  150
+     CSRN93 94   ZZAMTD    ADD  1000      ZZWK2
+     CSRN93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI
+     CSRN93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI
+     CSRN93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD
+     CSRN93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD
+     C*
+     C* REVERSE SIGN OF ZZTOT IF LARGER I/P FIELDS WERE NEGATIVE
+     CSR                   SETOF                     94
+     CSR 93 91
+     CORN93 92             SETON                     94
+     CSR 94                Z-SUBZZTOTI    ZZTOTI
+     CSR 94                Z-SUBZZTOTD    ZZTOTD
+     C**
+     C**   RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.
+     CSR 92                Z-SUBZZAMTI    ZZAMTI
+     CSR 92                Z-SUBZZAMTD    ZZAMTD
+     CSR         ZZSEND    TAG                             ** ZZSEND TAG *
+     C**
+     C**   IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.
+     CSR                   SETOF                     96
+     CSR         ZZTOTD    COMP 0                        91
+     CSR 91      ZZTOTI    COMP 0                      96
+     CSR 96                MOVE '.000-'   ZZNEGD  5
+     CSR                   ENDSR                             ** ENDSR **
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     O**DL0662P1H***03***22*77**********                                    E257
+     O**DL0660P1H***03***22*77**********                             E257 LN0746
+     O**DL0662P1H***03***22*77************                         LN0746 101151
+     O*******OR********L2*77**************                                101151
+     O*L0662P1H   03   22 77N85                                     101151117314
+     ODL0662P1H   03   22 77                                              117314
+     O*******OR        L2 77N85                                     101151117314
+     O       OR        L2 77                                              117314
+     O                                   24 'REFERENCE DL0662P1'
+     O                         BJURPT    89
+     O                                  122 'DATE              PAGE'
+     O                         BJMRDT   112
+     O                         PAGE  Z  127
+     O*****   H   04   22 77                                              E160
+     O*****  OR        L2 77                                              E160
+     O*****                              12 'COMPANY'                     E160
+     O***************          ECPY      16                           E57 E160
+     O*****                    COBB      16                           E57 E160
+     O*****                    APAPTX    48                               E160
+     O********H*1******22*77**************                                101151
+     O*******OR********L2*77**************                                101151
+     O********H 1      22 77N85                                     101151117314
+     O*******OR        L2 77N85                                     101151117314
+     O        H 1      22 77                                              117314
+     O       OR        L2 77                                              117314
+     O*                                                                   AUS018
+     O** PRINT APPROPRIATE HEADING TO REFLECT IF REPORT IS FX OR MM ONLY  AUS018
+     O***********                        65 'OUTSTANDING DEALS '          AUS018
+     O*****************52****************62 'OUTSTANDING FX DEALS 'AUS018 101151
+     O*****************53****************62 'OUTSTANDING MM DEALS 'AUS018 101151
+     O                 52                65 'OUTSTANDING FX DEALS '       101151
+     O                 53                65 'OUTSTANDING MM DEALS '       101151
+     O                 54                65 'OUTSTANDING DEALS '          AUS018
+     O                                   76 'BY CUSTOMER'
+     O********H*1******22*77**************                                101151
+     O*******OR********L2*77**************                                101151
+     O********H 1      22 77N85                                     101151117314
+     O*******OR        L2 77N85                                     101151117314
+     O        H 1      22 77                                              117314
+     O       OR        L2 77                                              117314
+     O*                                                                   AUS018
+     O** PRINT APPROPRIATE HEADING TO REFLECT IF REPORT IS FX OR MM ONLY  AUS018
+     O***********                        65 '------------------'          AUS018
+     O*****************52****************62 '---------------------'AUS018 101151
+     O*****************53****************62 '---------------------'AUS018 101151
+     O                 52                65 '---------------------'       101151
+     O                 53                65 '---------------------'       101151
+     O                 54                65 '------------------'          AUS018
+     O                                   76 '-----------'
+     O********H*1******22*77**************                         E160   101151
+     O*******OR********L2*77**************                         E160   101151
+     O********H 1      22 77N85                                     101151117314
+     O*******OR        L2 77N85                                     101151117314
+     O        H 1      22 77                                              117314
+     O       OR        L2 77                                              117314
+     O                                   12 'COMPANY'                     E160
+     O                         COBB      16                               E160
+     O                         APCMNM    48                               E160
+     O        H 2      22NLR 77
+     O*******AND      N85                                           101151117314
+     O*******OR********L2*77**************                                101151
+     O*******OR        L2 77N85                                     101151117314
+     O       OR        L2 77                                              117314
+     O**********                         50 'DEAL   DEAL   VALU'          S01378
+     O**********                         61 'E  MATURITY'                 S01378
+     O***********************************40 'DEAL   DEAL'          S01378 CDL038
+     O                                   38 'DEAL   DEAL'                 CDL038
+     O                                   61 'VALUE  MATURITY'             S01378
+     O                                   86 'PURCHASE/'
+     O                                  126 'SALE/'
+     O        H 1      22NLR 77
+     O*******AND      N85                                           101151117314
+     O*******OR********L2*77**************                                101151
+     O*******OR        L2 77N85                                     101151117314
+     O       OR        L2 77                                              117314
+     O                                   12 'CUSTOMER'
+     O**********                         53 'NUMBER  TYPE    DATE  '      S01378
+     O***********************************40 'NUMBER  TYPE'         S01378 CDL038
+     O                                   38 'NUMBER  TYPE'                CDL038
+     O                                   51 'DATE'                        S01378
+     O                                   65 '  DATE   CCY'
+     O                                  102 'TAKING            RATE '
+     O                                  125 '    CCY        PLACING'
+     O        D 2      56 01 77
+     O       OR        24NLR 01
+     O       AND       77
+     O                         CUNR       6
+     O                         CRNM      27
+     O        D 1      56 01 77
+     O       OR 1      24NLR 01
+     O       AND       77
+     O                         CTWN      17
+     O*                                                                   AUS018
+     O** CONDITION PRINTING OF LINES BASED ON REPORT TYPE SELECTED        AUS018
+     O********D*1      61 01 77                                           AUS018
+     O*******OR*1      62 01 77                                           AUS018
+     O*******OR*1      63 01 77                                           AUS018
+     O*******OR*1      64 01 77                                           AUS018
+     O*******OR*1      65 01 77                                           AUS018
+     O*******OR*1      66 01 77                                           AUS018
+     O*******OR*1      67 01 77                                           AUS018
+     O        D 1      61 01 52                                           AUS018
+     O       AND       77                                                 E47982
+     O       OR 1      62 01 53                                           AUS018
+     O       AND       77                                                 E47982
+     O       OR 1      63 01 53                                           AUS018
+     O       AND       77                                                 E47982
+     O       OR 1      61 01 54                                           AUS018
+     O       AND       77                                                 E47982
+     O       OR 1      62 01 54                                           AUS018
+     O       AND       77                                                 E47982
+     O       OR 1      63 01 54                                           AUS018
+     O       AND       77                                                 E47982
+     O       OR 1      64 01 54                                           AUS018
+     O       AND       77                                                 E47982
+     O       OR 1      65 01 54                                           AUS018
+     O       AND       77                                                 E47982
+     O       OR 1      66 01 54                                           AUS018
+     O       AND       77                                                 E47982
+     O       OR 1      67 01 54                                           AUS018
+     O       AND       77                                                 E47982
+     O**********               DLNO      37                               S01378
+     O**********               DTYP      40                               S01378
+     O**********                         41 '-'                           S01378
+     O**********               DLST      43                               S01378
+     O**********       75      BYSL      44                               S01378
+     O*************************DLNO      34                        S01378 CDL038
+     O*************************DTYP      37                        S01378 CDL038
+     O*************************          38 '-'                    S01378 CDL038
+     O*************************DLST      40                        S01378 CDL038
+     O*****************75******BYSL      42                        S01378 CDL038
+     O*************************PCLI      44                        S01378 CDL038
+     O                         DLNO      32                               CDL038
+     O                         DTYP      35                               CDL038
+     O                                   36 '-'                           CDL038
+     O                         DLST      38                               CDL038
+     O                         CLAS      42                               CDL038
+     O                         PCLI      44                               CDL038
+     O                 75      BYSL      44                               CDL038
+     O                         VDATA     52
+     O                      N10MDATA     61
+     O                      N11NOTD      56
+     O                      N11          61 ' DAYS'
+     O                    10 11          61 'CALL'
+     O                    61 10          61 '       '
+     O                         INCCY     65
+     O                       44INAMT     84 ' ,   ,   ,   , 0 -'
+     O                       45INAMT     86 '   ,   ,   , 0 . -'
+     O                       46INAMT     87 '  ,   ,   , 0 .  -'
+     O                       47INAMT     88 ' ,   ,   , 0 .   -'
+     O                    12N67UBRTT     91
+     O                       13EXRT     106 '   0 .        -'
+     O                N67N13 14UEINR    106 '  0 .       -'
+     O                N18N13 67CLRAT    106 '  0 .       -'
+     O                 18N13 67FLRAT    106 '  0 .       -'
+     O                       13OUTCCY   110
+     O                       30OUTCCY   110
+     O                    13 48OUTAMT   128 ' ,   ,   ,   , 0 -'
+     O                    13 49OUTAMT   130 '   ,   ,   , 0 . -'
+     O                    13 50OUTAMT   131 '  ,   ,   , 0 .  -'
+     O                    13 51OUTAMT   132 ' ,   ,   , 0 .   -'
+     O                    30 48OUTAMT   128 ' ,   ,   ,   , 0 -'
+     O                    30 49OUTAMT   130 '   ,   ,   , 0 . -'
+     O                    30 50OUTAMT   131 '  ,   ,   , 0 .  -'
+     O                    30 51OUTAMT   132 ' ,   ,   , 0 .   -'
+     O********D 1      64 01                                              LN0597
+     O*******OR 1      65 01                                              LN0597
+     O*******OR 1      66 01                                              LN0597
+     O********D 1      64 01 77                                     LN0597AUS018
+     O*******OR 1      65 01 77                                     LN0597AUS018
+     O*******OR 1      66 01 77                                     LN0597AUS018
+     O        D 1      64 01 54                                           AUS018
+     O       AND       77                                                 E47982
+     O       OR 1      65 01 54                                           AUS018
+     O       AND       77                                                 E47982
+     O       OR 1      66 01 54                                           AUS018
+     O       AND       77                                                 E47982
+     O                       17TBRTT     91
+     O                       15TEINR    106 '  0 .       -'
+     O                       66OUTCCY   110
+     O                    66 48OUTAMT   128 ' ,   ,   ,   , 0 -'
+     O                    66 49OUTAMT   130 '   ,   ,   , 0 . -'
+     O                    66 50OUTAMT   131 '  ,   ,   , 0 .  -'
+     O                    66 51OUTAMT   132 ' ,   ,   , 0 .   -'
+     O********D 1      67 01                                              LN0597
+     O********D 1      67 01 77                                     LN0597AUS018
+     O        D 1      67 01 54                                           AUS018
+     O       AND       77                                                 E47982
+     O                      N12TBRTT     91
+     O                       12UBRTT     91
+     O                N12N69 15TEINR    106 '  0 .       -'
+     O                N69 14 12UEINR    106 '  0 .       -'
+     O                       69AACRT    106 '  0 .       -'
+     O        D 1      67 01 68
+     O*******AND      N18                                                 LN0597
+     O*******AND      N18 77                                        LN0597AUS018
+     O*******AND      N18 54                                        AUS018E47982
+     O       AND      N18 54 77                                           E47982
+     O                         FLRAT    106 '  0 .       -'
+     O*                                                                   090893
+     O********E*1**************FXPRT******                         090893 101151
+     O        D 1      82                                                 101151
+     O       AND       77                                                 135636
+     O*************************DLNO      34                        090893 CDL038
+     O*************************DTYP      37                        090893 CDL038
+     O*************************          38 '-'                    090893 CDL038
+     O*************************DLST      40                        090893 CDL038
+     O*************************PCLI      44                        090893 CDL038
+     O                         DLNO      32                               CDL038
+     O                         DTYP      35                               CDL038
+     O                                   36 '-'                           CDL038
+     O                         DLST      38                               CDL038
+     O                         CLAS      42                               CDL038
+     O                         PCLI      44                               CDL038
+     O                         VDATA     52                               090893
+     O                      N10MDATA     61                               090893
+     O                      N11NOTD      56                               090893
+     O                      N11          61 ' DAYS'                       090893
+     O                    26 10          61 '       '                     090893
+     O                         INCCY     65                               090893
+     O                       44INAMT     84 ' ,   ,   ,   , 0 -'          090893
+     O                       45INAMT     86 '   ,   ,   , 0 . -'          090893
+     O                       46INAMT     87 '  ,   ,   , 0 .  -'          090893
+     O                       47INAMT     88 ' ,   ,   , 0 .   -'          090893
+     O                       13EXRT     106 '   0 .        -'             090893
+     O                N67N13 14UEINR    106 '  0 .       -'               090893
+     O                N18N13 67CLRAT    106 '  0 .       -'               090893
+     O                 18N13 67FLRAT    106 '  0 .       -'               090893
+     O                       13OUTCCY   110                               090893
+     O                    13 48OUTAMT   128 ' ,   ,   ,   , 0 -'          090893
+     O                    13 49OUTAMT   130 '   ,   ,   , 0 . -'          090893
+     O                    13 50OUTAMT   131 '  ,   ,   , 0 .  -'          090893
+     O                    13 51OUTAMT   132 ' ,   ,   , 0 .   -'          090893
+     O*                                                                   090893
+     O********E*1**************DPPRT******                         090893 101151
+     O        D 1      83                                                 101151
+     O       AND       77                                                 135636
+     O*************************DLNO      34                        090893 CDL038
+     O*************************DTYP      37                        090893 CDL038
+     O*************************          38 '-'                    090893 CDL038
+     O*************************DLST      40                        090893 CDL038
+     O*************************PCLI      44                        090893 CDL038
+     O                         DLNO      32                               CDL038
+     O                         DTYP      35                               CDL038
+     O                                   36 '-'                           CDL038
+     O                         DLST      38                               CDL038
+     O                         CLAS      42                               CDL038
+     O                         PCLI      44                               CDL038
+     O                         VDATA1    52                               136233
+     O*************************MDATA*****61                        090893 101151
+     O                         MDATA1    61                               101151
+     O                      N11NOTD      56                               090893
+     O                      N11          61 ' DAYS'                       090893
+     O                    26 10          61 '       '                     090893
+     O                         INCCY     65                               090893
+     O***********************44INAMT*****84 ' ,   ,   ,   , 0 -'   090893 101151
+     O***********************45INAMT*****86 '   ,   ,   , 0 . -'   090893 101151
+     O***********************46INAMT*****87 '  ,   ,   , 0 .  -'   090893 101151
+     O***********************47INAMT*****88 ' ,   ,   , 0 .   -'   090893 101151
+     O***********************13EXRT*****106 '   0 .        -'      090893 101151
+     O                       44INAMT1    84 ' ,   ,   ,   , 0 -'          101151
+     O                       45INAMT1    86 '   ,   ,   , 0 . -'          101151
+     O                       46INAMT1    87 '  ,   ,   , 0 .  -'          101151
+     O                       47INAMT1    88 ' ,   ,   , 0 .   -'          101151
+     O                       13EXRT1    106 '   0 .        -'             101151
+     O*                                                                   090893
+     O********E*1**************LNPRT******                         090893 101151
+     O        D 1      84                                                 101151
+     O       AND       77                                                 135636
+     O*************************DLNO      34                        090893 CDL038
+     O*************************DTYP      37                        090893 CDL038
+     O*************************          38 '-'                    090893 CDL038
+     O*************************DLST      40                        090893 CDL038
+     O*************************PCLI      44                        090893 CDL038
+     O                         DLNO      32                               CDL038
+     O                         DTYP      35                               CDL038
+     O                                   36 '-'                           CDL038
+     O                         DLST      38                               CDL038
+     O                         CLAS      42                               CDL038
+     O                         PCLI      44                               CDL038
+     O                         VDATA1    52                               136233
+     O*************************MDATA*****61                        090893 101151
+     O                         MDATA2    61                               101151
+     O                      N11NOTD      56                               090893
+     O                      N11          61 ' DAYS'                       090893
+     O                    26 10          61 '       '                     090893
+     O***********************13EXRT*****106 '   0 .        -'      090893 101151
+     O                       13EXRT2    106 '   0 .        -'             101151
+     O                       13OUTCCY   110                               090893
+     O********************13*48OUTAMT***128 ' ,   ,   ,   , 0 -'   090893 133929
+     O********************13*49OUTAMT***130 '   ,   ,   , 0 . -'   090893 133929
+     O********************13*50OUTAMT***131 '  ,   ,   , 0 .  -'   090893 133929
+     O********************13*51OUTAMT***132 ' ,   ,   , 0 .   -'   090893 133929
+     O                    13 48OUTAM1   128 ' ,   ,   ,   , 0 -'          133929
+     O                    13 49OUTAM1   130 '   ,   ,   , 0 . -'          133929
+     O                    13 50OUTAM1   131 '  ,   ,   , 0 .  -'          133929
+     O                    13 51OUTAM1   132 ' ,   ,   , 0 .   -'          133929
+     O********T   03   LR 85                                        101151117314
+     O********                           24 'REFERENCE DL0661P1'    101151117314
+     O********                 BJURPT    89                         101151117314
+     O********                          122 'DATE              PAGE'101151117314
+     O********                 BJMRDT   112                         101151117314
+     O********                 PAGE  Z  127                         101151117314
+     O********T 1      LR 85                                        101151117314
+     O********                                                      101151117314
+     O***PRINT*APPROPRIATE HEADING TO REFLECT IF REPORT IS FX OR MM ONLY42117314
+     O********         52                65 'OUTSTANDING FX DEALS ' 101151117314
+     O********         53                65 'OUTSTANDING MM DEALS ' 101151117314
+     O********         54                65 'OUTSTANDING DEALS '    101151117314
+     O********                           76 'BY CUSTOMER'           101151117314
+     O********T 1      LR 85                                        101151117314
+     O********                                                      101151117314
+     O***PRINT*APPROPRIATE HEADING TO REFLECT IF REPORT IS FX OR MM ONLY42117314
+     O********         52                65 '---------------------' 101151117314
+     O********         53                65 '---------------------' 101151117314
+     O********         54                65 '------------------'    101151117314
+     O********                           76 '-----------'           101151117314
+     O        T 2      LR U7 U8
+     O       AND       77
+     O                                   24 'REFERENCE DL0662'
+     O                                   62 'PRINT TERMINATED, '
+     O                                   80 'DATABASE IN ERROR'
+     O        T 3      L2 77
+     O*******                            66 '*** END OF COMPANY '
+     O*******                            76 'REPORT ***'
+     O                                   66 '*** END OF REPORT FOR'
+     O                                   78 ' COMPANY ***'
+     O        T   22   LRNU7 74
+     O       AND       77
+     O                                   59 '***   NO DETAILS TO '
+     O                                   71 'REPORT   ***'
+     O******* T 2      LR 77N74                                           LN0217
+     O*******                            72 '*** END OF REPORT ***'       LN0217
+     O**DL0662AUT**203***LR**************                                   E257
+     O**DL0660AUT**203***LR**************                            E257 LN0746
+     ODL0662AUT  203   LR                                                 LN0746
+     O                                   24 'REFERENCE DL0662AU'
+     O                         BJURPT    89
+     O                                  122 'DATE               PAGE'
+     O                         BJMRDT   112
+     O                         PAGE1 Z  127
+     O        T 2      LR
+     O*                                                                   AUS018
+     O** PRINT APPROPRIATE HEADING TO REFLECT IF REPORT IS FX OR MM ONLY  AUS018
+     O***********                        65 'OUTSTANDING DEALS '          AUS018
+     O                 52                62 'OUTSTANDING FX DEALS '       AUS018
+     O                 53                62 'OUTSTANDING MM DEALS '       AUS018
+     O                 54                65 'OUTSTANDING DEALS '          AUS018
+     O                                   76 'BY CUSTOMER'
+     O        T 1      LR
+     O*                                                                   AUS018
+     O** PRINT APPROPRIATE HEADING TO REFLECT IF REPORT IS FX OR MM ONLY  AUS018
+     O***********                        65 '------------------'          AUS018
+     O                 52                62 '---------------------'       AUS018
+     O                 53                62 '---------------------'       AUS018
+     O                 54                65 '------------------'          AUS018
+     O                                   76 '-----------'
+     O        T   20   LRNU7
+     O                                   18 'RUN CONTROLS'
+     O        T 2      LRNU7
+     O                                   59 'NUMBER'
+     O                                   84 'VALUE'
+     O        T 2      LRNU7
+     O                                   32 'SORTED EVENTS FILE RECOR'
+     O                                   40 'DS INPUT'
+     O                         RREAD 3   59
+     O                         RRINT Z   81
+     O                         RRDEC     84
+     O                       70RRDEC 3   84
+     O        T 2      LRNU7
+     O                                   31 'RECORDS LISTED IN THIS '
+     O                                   37 'REPORT'
+     O                         RWRITN3   59
+     O                         RWINT Z   81
+     O                         RWDEC     84
+     O                       73RWDEC 3   84
+     O        T 3      LRNU7 74
+     O                                   63 '***   NO DETAILS TO REPO'
+     O                                   71 'RT   ***'
+     O*****   T 2      LRNU7                                              E299
+     O*****                              71 '*** END OF REPORT ***'       E299
+     O        T 3      LR U7 U8
+     O                                   71 '*** PRINT TERMINATED ***'
+     O        T 1      LR U7 U8
+     O                                   57 'DATABASE ERROR'
+     O                         DBASE     61
+     O                                   67 'FILE'
+     O                         DBFILE    78
+     O        T 13     LR U7 U8
+     O                                   46 'KEY'
+     O                         DBKEY     76
+     O**
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

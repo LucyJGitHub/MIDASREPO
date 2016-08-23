@@ -1,0 +1,207 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT Batch Authorisation WN Controller')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Funds Transfer Module                                *
+      *                                                               *
+      *  FT0802 - Batch Authorisation Prompt Window Program           *
+      *                                                               *
+      *  Function: This program displays a core window which displays *
+      *            the total number of records identified by the      *
+      *            selection criteria entered in program FT0801       *
+      *                                                               *
+      *                                                               *
+      *  Called By: WN0010 - Window Control Program                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Last Amend No. CFT003  *CREATE    Date 05May98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CFT003 - FT Batch Authorisation                              *
+      *           Based on FTH003W0 original references IMP042/HUB01B *
+      *                                                               *
+      *****************************************************************
+     FFTCONTL0IF  E           K        DISK
+     F**  FT Control File
+     F*
+     FFT0802DFCF  E                    WORKSTN
+     F**  Display file for Window
+     F*
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*       51         Error in confirm field                       *
+     F*       60         Chain fail - LF/FTCONTL0                     *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*   INIT  - Initialisation processing                           *
+     F*   PROC  - Process window screen                               *
+     F*   TERM  - Terminate program                                   *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E**  Array containing Copyright statement
+     I/EJECT
+     I*
+     ILDA         DS                            256
+     I**  Data structure for database error
+     I*
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     IPSDS       SDS
+     I** Program status data structure
+     I*
+     I                                     *PROGRAM ##PGM
+     I                                     *PARMS   PGMPRM
+     I                                      244 253 PGMDEV
+     I                                      254 263 PGMUSR
+     I*
+     I** Input data field from calling screen program
+     I*
+     IDATA        DS                           1024
+     I                                        1   1 SCNFRM
+     C/EJECT
+     C*================================================================
+     C*   M A I N   P R O C E S S I N G
+     C*================================================================
+     C** Copyright Statement
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** Entry Parameters
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           ACTN    1
+     C                     PARM           DATA
+     C                     PARM           W0RTN   7
+     C                     PARM           WLEN    30
+     C                     PARM           WWID    30
+     C                     PARM           SROW    30
+     C                     PARM           SCOL    30
+     C                     PARM           TITLE   7
+     C                     PARM           SPARE 256
+     C*
+     C** ZA0340 Error parameter list
+     C           #AERR     PLIST
+     C                     PARM @MSGF     ZAMSGF 10        Message file
+     C                     PARM           ZAMSID 10        Message ID
+     C*
+     C**  Define key list for chaining to FTCONTL0
+     C*
+     C           @HKEYS    KLIST
+     C                     KFLD           PGMUSR
+     C*
+     C**  Define the LDA for error handling
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C**  Initialisation processing
+     C*
+     C                     EXSR INIT
+     C*
+     C**  Read screen and process response
+     C*
+     C                     EXSR PROC
+     C*
+     C                     EXSR TERM
+     C*
+     C*================================================================
+     C/EJECT
+     C*****************************************************************
+     C*
+     C** S/R PROC - Process window screen
+     C** Called by    MAIN PROCESSING
+     C** Calls        TERM
+     C*
+     C           PROC      BEGSR
+     C*
+     C           *IN21     DOWEQ'0'
+     C*
+     C                     WRITE#MSGCTL
+     C                     EXFMTWINDOWF
+     C*
+     C**  Clear messages from program message queue
+     C*
+     C                     CALL 'ZA0250'
+     C*
+     C**  Validate "Confirm" field
+     C*
+     C           SCNFRM    IFNE 'Y'
+     C           SCNFRM    ANDNE'N'
+     C                     MOVE '1'       *IN51
+     C                     MOVEL'FTX0022' ZAMSID
+     C                     CALL 'ZA0340'  #AERR
+     C                     ELSE
+     C                     MOVE '1'       *IN21
+     C                     MOVELSCNFRM    SPARE
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C** S/R INIT - Initialise fields
+     C** Called by   MAIN PROCESSING
+     C** Calls       Nothing
+     C*
+     C           INIT      BEGSR
+     C*
+     C** Establish the message file
+     C*
+     C                     MOVE *BLANK    ZAMSID 10
+     C                     MOVEL'GBXXUSR' @MSGF  10
+     C                     MOVE 'MSG'     @MSGF
+     C*
+     C**  Clear error indicator
+     C*
+     C                     MOVEL'0'       *IN51
+     C*
+     C**  Chain to FT Control File to get the number of FT transactions
+     C**  to be authorised
+     C*
+     C           @HKEYS    CHAINFTCONTL0             60
+     C*
+     C           *IN60     IFEQ '0'
+     C                     Z-ADDCONREC    SNOTRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C** S/R END - Terminate program
+     C** Called by   MAIN PROCESSING
+     C** Calls       Nothing
+     C*
+     C           TERM      BEGSR
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

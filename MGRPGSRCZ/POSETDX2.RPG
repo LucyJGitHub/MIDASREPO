@@ -1,0 +1,133 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MG MT5xx - switch on feature S01401')            *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  POSETDX2 - Position Settlements Extended File Generation     *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CSW210             Date 04May10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 085991 *CREATE     Date 13APR95               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSW210 - SWIFT 2010 Changes (Recompile)                      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  085991 - POSETDX2 not generated                              *
+      *                                                               *
+      *****************************************************************
+     FPOSETD  IF  E                    DISK
+     FPOSETDY2IF  E           K        DISK                      A
+      *
+     F/EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *    01     - Chain/Read end of file indicator                  *
+      *    02     - Chain/Read fail indicator                         *
+      *    U7-U8  -  Data base                                        *
+      *    *INLR  -  End processing                                   *
+      *                                                               *
+      *****************************************************************
+     F/EJECT
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INIT   - Process Insert                                      *
+      *                                                               *
+      *****************************************************************
+     E                    CPY@    1   1 80
+     E/EJECT
+      *****************************************************************
+     ILDA         DS                            256
+      *
+      ** Data structure for data-bAse error processing.
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I/EJECT
+      *****************************************************************
+      *                                                               *
+      * Main processing                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C                     EXSR INIT
+      *
+     C           *IN01     DOWEQ*OFF
+      *
+      ** Check if a record already exists
+      *
+     C           KPOSET    KLIST
+     C                     KFLD           PBCA
+     C                     KFLD           PSSH
+     C                     KFLD           PCPY
+     C                     KFLD           PDUD
+     C                     KFLD           PEVT
+     C           KPOSET    CHAINPOSETDD2             10
+      *
+     C           *IN10     IFEQ '1'
+      *
+     C                     CLEARPOSETDD2
+      *
+     C                     MOVE PBCA      P2PBCA
+     C                     MOVE PSSH      P2PSSH
+     C                     MOVE PCPY      P2PCPY
+     C                     MOVE PDUD      P2PDUD
+     C                     MOVE PEVT      P2PEVT
+      *
+     C                     WRITEPOSETDD2
+     C                     ENDIF
+      *
+     C                     READ POSETD                   01
+     C                     ENDDO
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *****************************************************************
+      *                                                               *
+      * Initial processing                                            *
+      *                                                               *
+     C*****************************************************************
+     C           INIT      BEGSR
+      *
+      ** Copyright Statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Prepare LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+     C                     READ POSETD                 0201
+      *
+     C           *IN02     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'POSETDX2'DBPGM
+     C                     Z-ADD01        DBASE            ************
+     C                     MOVEL'POSETD  'DBFILE           * DBER 001 *
+     C                     MOVEL'        'DBKEY            ************
+     C                     OUT  LDA
+     C                     SETON                     LRU7U8
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,165 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IBLC 2002 RTV MAX length for RCVJRNE Command')
+      *****************************************************************
+      *                                                               *
+      *  Midas - IBLC 2002 Module                                     *
+      *                                                               *
+      *  IL0632A - IBLC 2002 Retrieve Max length of files defined for *
+      *            RCVJRNE                                            *
+      *                                                               *
+      *  Called By: IL0632 - Retrieve loans with Maturity Date Changed*
+      *                                                               *
+      *  Calls    : API QUSLRCD & use user space                      *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CER001             Date 25Apr05               *
+      *  Prev Amend No. ULX043             Date 28Aug01               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  ULX043 - IBLC 2002 Reporting                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     IINPUT       DS
+     I                                        1  20 USSPC
+     I                                        1  10 SPCNM
+     I                                       11  20 SPCLB
+     I                                       21  28 FMTNA
+     I                                       29  48 FILLI
+     I                                       29  38 FILNA
+     I                                       39  48 FILLB
+     I                                       49  49 OVRID
+     I            DS
+     I                                    B   1   40LNDTA
+     I                                    B   5   80STPOS
+     I                                    B   9  120LNSPC
+     I                                    B  13  160LNVAR
+     ILIST        DS
+     I                                    B  25  280RCDLGT
+     IRCVVR       DS
+     I                                    B   1   40OFSET
+     I                                    B   5   80HDRSZ
+     I                                    B   9  120NOENT
+     I                                    B  13  160SZENT
+      *
+      ***  Data structure for data-base processing
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     IERROR       DS
+     I                                    B   1   40BYTPRV
+     I                                    B   5   80BYTAVA
+     I                                        9  15 ERRID
+     I                                       16  16 ER###
+      /EJECT
+      *****************************************************************
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           FILE   10
+     C                     PARM           LGTH    4
+      *
+      *
+     C                     MOVEL'RCDLGHT 'SPCNM
+     C                     MOVEL'QTEMP   'SPCLB
+      *
+      ***  Delete user space for record format list
+      *
+     C                     CLEARERROR                       RESET ERROR CODE
+     C                     Z-ADD16        BYTPRV            LENGHT OF ER DATA
+     C                     CALL 'QUSDLTUS'
+     C                     PARM           USSPC
+     C                     PARM           ERROR
+      *
+     C                     MOVEL'*LIBL'   FILLB
+     C                     MOVELFILE      FILNA
+     C           USRSP     IFEQ ' '
+     C                     Z-ADD1         SAVLGT  40
+      *
+      ***  Create user space for record format list
+      *
+     C                     CALL 'QUSCRTUS'             99
+     C                     PARM           USSPC
+     C                     PARM *BLANK    ATTRIB 10
+     C                     PARM 1024      LNSPC
+     C                     PARM *BLANK    VALUE   1
+     C                     PARM '*ALL    'PUBAUT 10
+     C                     PARM *BLANK    TXT    50
+     C                     MOVE '*YES'    USRSP  10
+     C                     ENDIF
+      *
+      ***  Generate record format list
+      *
+     C                     CLEARERROR                       RESET ERROR CODE
+     C                     Z-ADD16        BYTPRV            LENGHT OF ER DATA
+      *
+     C                     CALL 'QUSLRCD'
+     C                     PARM           USSPC
+     C                     PARM 'RCDL0200'FMTNA
+     C                     PARM           FILLI
+     C                     PARM '0'       OVRID
+     C                     PARM           ERROR
+      *
+     C                     CALL 'QUSRTVUS'
+     C                     PARM           USSPC
+     C                     PARM 125       STPOS
+     C                     PARM 16        LNDTA
+     C                     PARM           RCVVR
+     C                     Z-ADDOFSET     STPOS
+     C                     ADD  1         STPOS
+     C                     Z-ADDSZENT     LNDTA
+      *
+     C                     CALL 'QUSRTVUS'
+     C                     PARM           USSPC
+     C                     PARM           STPOS
+     C                     PARM           LNDTA
+     C                     PARM           LIST
+      *
+     C           BYTAVA    IFNE 0
+     C                     MOVEL'IL0632A' DBPGM            *****************
+     C                     MOVEL*BLANKS   DBFILE           * ERROR API 001 *
+     C                     MOVELERRID     DBKEY            *****************
+     C                     Z-ADD1         DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           RCDLGT    IFGT SAVLGT
+     C                     Z-ADDRCDLGT    SAVLGT
+     C                     MOVE SAVLGT    LGTH
+     C                     ENDIF
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      /EJECT
+      ****************************************************************
+      *  *PSSR  - error Subroutine                                   *
+      *  -------                                                     *
+      *  Called by : on FILE error                                   *
+      *              *INZSR                                          *
+      ****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+     C           DBASE     IFEQ 0
+     C                     Z-ADD999       DBASE
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+      *
+     C                     DUMP
+      *
+     C                     RETRN
+      *
+     C                     ENDSR                           ** *PSSR **
+      *

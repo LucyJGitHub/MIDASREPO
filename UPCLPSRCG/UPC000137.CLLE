@@ -1,0 +1,87 @@
+/*********************************************************************/
+/*OVR    OVRDBF FILE(UPMODSALL) TOFILE(UPMODSPD)                     */
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UP Load UPMODSPD with active creation parm.')   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC000137 - Load UPMODSPD with member whose creation        */
+/*                   parameters are active from UPMODSALL - Control  */
+/*                                                                   */
+/*       Called by: UPC000136                                        */
+/*                                                                   */
+/*       Calls    : UP000137                                         */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. CUP029 *CREATE     Date 23SeP04              */
+/*       Prev Amend No.                    Date                      */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP029 - Cross check module and program sources in a library*/
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&WRKLIB)
+ 
+             DCL        VAR(&WRKLIB)  TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+ 
+             DCLF       FILE(UPMODSALL)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2004')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
+             CHGJOB     SWS(XXXXXX00)
+ 
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+ 
+READNEXT:
+/* Get module member record from UPMODSALL */
+             RCVF
+/* Monitor end of file */
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(END))
+ 
+/* Load UPIRECPRD which is input file in UP000137. */
+             CPYF       FROMFILE(&WRKLIB/&MLFILE) TOFILE(UPIRECPD) +
+                          FROMMBR(&MLNAME) MBROPT(*REPLACE) +
+                          FMTOPT(*CVTSRC)
+ 
+/* Write to UPMODSPD with member record whose creation parameter is active. */
+             CALL       PGM(UP000137) PARM(&MLFILE &MLNAME)
+ 
+/* If error, go to error handling. */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             GOTO       CMDLBL(READNEXT)
+ 
+ ABNOR:
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('UPC000137') MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog and dump for details')
+             MONMSG     MSGID(CPF0000)
+             CALL       PGM(SCC0010) PARM('UPC000137' 'JOBLOG' 'Y')
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+END:
+             ENDPGM

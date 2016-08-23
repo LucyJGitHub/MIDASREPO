@@ -1,0 +1,544 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CB Task Split Create Components/Dependencies')   *
+      *****************************************************************
+      *                                                               *
+      *  Midas  - Close of Business Processing                        *
+      *                                                               *
+      *  CB0101 - Task Split - Create Components/Dependencies.        *
+      *                                                               *
+      *  Function:  This program will duplicate the component records *
+      *             for all Task Split sub-tasks where the sub-task   *
+      *             component has been selected to run in the COB.    *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. MD037383           Date 25May16               *
+      *  Prev Amend No. CGL120             Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 120895             Date 16Aug97               *
+      *                 CCB003 *Create     Date 10Oct96               *
+      *                 xxxxxx             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD037383 - ACCNTAB blank after COB component GLC008140 00001 *
+      *             Stamp Tax (CER049) processing.                    *
+      *             Rework that component to make it 'Task Split'     *
+      *             compliant.                                        *
+      *  CGL120 - GL COB Components Task Split                        *
+      *  120895 - Correct the program name in DBPGM                   *
+      *  CCB003 - COB Performance Enhancements - Task Split           *
+      *                                                               *
+      *****************************************************************
+     FCBCMPNLCIF  E           K        DISK         KINFSR *PSSR
+     FCBCOMSL0UF  E           K        DISK         KINFSR *PSSR A
+     FCBDEPSPDO   E                    DISK         KINFSR *PSSR
+     FCBDPRLL1IF  E           K        DISK         KINFSR *PSSR
+     FCBDPRLL2IF  E           K        DISK         KINFSR *PSSR
+     FCBMUTXL0UF  E           K        DISK         KINFSR *PSSR A
+     FCBMUTXL1IF  E           K        DISK         KINFSR *PSSR
+     F            CBMEXCD0                          KRENAMECBMUTXD0
+     FCB0101AUO   E                    PRINTER                        UC
+      ********************************************************************
+     E                    CPY@    1   1 80
+     E                    EX        100  1               Execution Parameters
+      ********************************************************************
+      ** Rename fields for CBMUTXL1
+     ICBMUTXD0
+     I              DKCOTT                          WDKCTT
+     I              DKCSEQ                          WDKCEQ
+     I              DKMEUN                          WDKMUN
+     I              DKMECN                          WDKMCN
+     I              DKMECS                          WDKMCS
+      *
+     IUUDS1       DS
+     I                                        1   5 UA15A
+     I                                        1   10UA11N                                   MD037383
+     I                                        2   20UA22N
+     I                                        3   50UA35N
+     I                                        4   50UA45N
+     I                                        4   40UA44N                                   MD037383
+     I                                        5   50UA55N                                     CGL120
+      *
+     IUUERR       DS
+     I                                        1  10 UUFLD1
+     I                                       11  15 UUFLD2
+     I                                       16  18 UUFLD3
+      *
+     I@CURRC    E DSCBCOMSL0
+      *
+     I@OLDRC      DS                            270
+      *
+      ** Program Status Data Structure
+     IPSDS       SDS
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *
+     ISDBANK    E DSSDBANKPD
+      **  External data structures for Bank Details
+      *
+     IDSFDY     E DSDSFDY
+      * Data Structures used by Access Programs
+      *                                                                                       CGL120
+     IDSFLDS      DS                                                                          CGL120
+     I                                    B   1   20UUNQSV                                    CGL120
+     I                                        1   2 UUNQSX                                    CGL120
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *
+      ** Initial processing
+     C                     EXSR INIT
+      *
+      ** Main processing
+     C                     Z-ADD256       UUNQSV                                              CGL120
+     C                     EXSR MAIN
+      *
+      ** End processing
+     C                     EXSR END
+      *
+      ********************************************************************
+      * MAIN - Main Processing
+      ********************************************************************
+     C           MAIN      BEGSR
+      *
+     C           KKEY01    KLIST
+     C                     KFLD           DHCOTT
+     C                     KFLD           DHCSEQ
+      *
+      ** CBCMPNLC is a logical file for task split components only.
+     C                     READ CBCMPNLC                 50
+      *
+     C           *IN50     DOWEQ'0'
+      *
+      ** Check if component required today
+     C           KKEY01    CHAINCBCOMSL0             54
+      *
+     C           *IN54     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE DHCOTT    UUFLD1
+     C                     MOVE DHCSEQ    UUFLD2
+     C                     MOVEL'CBCOMSL0'DBFILE           ************
+     C                     MOVELUUERR     DBKEY            * DBERR 01 *
+     C                     Z-ADD1         DBASE            ************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** The number of Task Split jobs must be at least one
+     C           DHTSNO    IFEQ 0
+     C           *LOCK     IN   LDA
+     C                     MOVE DHCOTT    UUFLD1
+     C                     MOVE DHCSEQ    UUFLD2
+     C                     MOVEL'CBCOMSL0'DBFILE           ************
+     C                     MOVELUUERR     DBKEY            * DBERR 08 *
+     C                     Z-ADD8         DBASE            ************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Process if component required today
+     C           DHCRQD    IFEQ 'Y'
+     C                     EXSR TODAY
+     C                     ENDIF
+      *
+     C                     READ CBCMPNLC                 50
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      ********************************************************************
+      * TODAY - Processing for components running today
+      ********************************************************************
+     C           TODAY     BEGSR
+      *
+      ** Save original values for future chains
+     C                     MOVE DHCOTT    SAVNAM
+     C                     MOVE DHCSEQ    SAVSEQ
+     C                     MOVE DHCPRM    SAVPRM
+      *
+     C                     Z-ADD1         UCOUNT  30
+      *
+      ** Loop the number of task split jobs minus 1
+     C           DHTSNO    SUB  1         UTIMES  30
+      *
+     C**********           DO   UTIMES                                                        CGL120
+     C                     DO   UTIMES    I       50                                          CGL120
+      *
+      ** Create CBCOMSL0 record
+     C                     EXSR CRTREC
+      *
+      ** Create 'dependent upon' CBDEPSPD record.
+     C                     EXSR SRDEP1
+      *
+      ** Create 'depending upon' CBDEPSPD record.
+     C                     EXSR SRDEP2
+      *
+      ** Check mututally exclusive components
+     C                     EXSR SRMEXC
+      *
+      ** Update CBCOMSL0 record
+     C                     MOVEL@CURRC    @OLDRC    P
+     C                     EXSR SRCOMA
+     C                     MOVEL@OLDRC    @CURRC    P
+      *
+     C                     ADD  1         UCOUNT
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      ********************************************************************
+      * CRTREC - Write CBCOMSL0 record
+      ********************************************************************
+     C           CRTREC    BEGSR
+      *
+      ** Increment Component Sequence number
+     C                     MOVE DHCSEQ    UA15A
+     C********** UA22N     IFEQ 0                                                           MD037383
+     C           I         IFEQ 1                                                           MD037383
+     C/COPY WNCPYSRC,CB0101C001
+     C********** UA45N     IFEQ 1                                                             CGL120
+     C           UA55N     IFLE 9                                                             CGL120
+     C**********           Z-ADD1         UA22N                                               CGL120
+     C           UA44N     IFEQ 0                                                           MD037383
+     C                     Z-ADDUA55N     UA22N                                               CGL120
+     C                     Z-ADD1         UA55N                                               CGL120
+     C                     ELSE                                                             MD037383
+     C                     Z-ADDUA44N     UA11N                                             MD037383
+     C                     Z-ADDUA55N     UA22N                                             MD037383
+     C                     Z-ADD0         UA44N                                             MD037383
+     C                     Z-ADD1         UA55N                                             MD037383
+     C                     ENDIF                                                            MD037383
+     C                     ELSE
+     C                     Z-ADD2         UA22N
+     C                     ENDIF
+     C/COPY WNCPYSRC,CB0101C002
+     C                     ELSE
+     C                     ADD  1         UA35N
+     C                     ENDIF
+     C                     MOVE UA15A     DHCSEQ
+      *
+      ** Change the number of outstanding dependencies
+     C                     Z-ADD1         DHCODP
+      *
+      ** Establish execution parameters
+     C                     MOVEASAVPRM    EX        P
+      *
+      ** Scan for the first blank
+     C           ' '       SCAN SAVPRM    #A      30     55
+      *
+     C           *IN55     IFEQ '0'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CBCOMSL0'DBFILE           ************
+     C                     MOVELSAVPRM    DBKEY            * DBERR 02 *
+     C                     Z-ADD2         DBASE            ************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** There may be 1 or more blanks - scan for the beginning of hex
+     C           'X'       SCAN SAVPRM:#A #B      30     56
+      *
+     C           *IN56     IFEQ '0'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CBCOMSL0'DBFILE           ************
+     C                     MOVELSAVPRM    DBKEY            * DBERR 03 *
+     C                     Z-ADD3         DBASE            ************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Replace component sequence in execution parameters
+     C                     ADD  2         #B
+     C                     MOVEADHCSEQ    EX,#B
+     C                     MOVEAEX        DHCPRM    P
+      *
+      ** Write CBCOMSL0 record
+     C                     WRITE@DHREGG
+      *
+     C                     ENDSR
+      ********************************************************************
+      * SRDEP1 - Write 'dependent upon' CBDEPSPD record
+      ********************************************************************
+     C           SRDEP1    BEGSR
+      *
+      ** Use the Component Name/Sequence Number to obtain the
+      ** DEPENDENT UPON component from CBDPRLL1.
+      *
+     C                     MOVE '001'     UONE    3
+      *
+     C           KKEY02    KLIST
+     C                     KFLD           SAVNAM           Component Name
+     C                     KFLD           SAVSEQ           Component Sequence No
+     C                     KFLD           UONE             Always '001'
+      *
+     C           KKEY02    CHAINCBDPRLL1             51
+      *
+     C           *IN51     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE SAVNAM    UUFLD1
+     C                     MOVE SAVSEQ    UUFLD2
+     C                     MOVE UONE      UUFLD3
+     C                     MOVEL'CBDPRLL1'DBFILE           ************
+     C                     MOVELUUERR     DBKEY            * DBERR 04 *
+     C                     Z-ADD4         DBASE            ************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE DHCSEQ    DIDSOS
+     C                     MOVE '001'     DIDRUN
+      *
+     C                     WRITECBDPRLD0
+      *
+     C                     ENDSR
+      ********************************************************************
+      * SRDEP2 - Write 'depending upon' CBDEPSPD record
+      ********************************************************************
+     C           SRDEP2    BEGSR
+      *
+      ** Use the Component Name/Sequence Number to obtain the
+      ** DEPENDING UPON component from CBDPRLL2.
+      *
+     C           KKEY03    KLIST
+     C                     KFLD           SAVNAM           Component Name
+     C                     KFLD           SAVSEQ           Component Sequence No
+      *
+     C           KKEY03    CHAINCBDPRLL2             52
+      *
+     C           *IN52     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE SAVNAM    UUFLD1
+     C                     MOVE SAVSEQ    UUFLD2
+     C                     MOVEL'CBDPRLL2'DBFILE           ************
+     C                     MOVELUUERR     DBKEY            * DBERR 05 *
+     C                     Z-ADD5         DBASE            ************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Increment the Unique number by 1
+     C                     MOVE DHCSEQ    DIDDOS
+     C                     MOVE UCOUNT    DIDRUN
+      *
+     C                     WRITECBDPRLD0
+      *
+     C                     ENDSR
+      ********************************************************************
+      * SRMEXC - Check for mututally exclusive component
+      ********************************************************************
+     C           SRMEXC    BEGSR
+      *
+     C           KKEY05    KLIST
+     C                     KFLD           SAVNAM
+     C                     KFLD           SAVSEQ
+     C           KKEY06    KLIST
+     C                     KFLD           UCNAME
+     C                     KFLD           USEQN
+     C**********           KFLD           UUNIQ                                               CGL120
+     C                     KFLD           UMECN                                               CGL120
+     C                     KFLD           UMECS                                               CGL120
+      *                                                                                       CGL120
+     C           KKEY07    KLIST
+     C                     KFLD           UCNAME
+     C                     KFLD           USEQN
+      *
+     C                     MOVE SAVNAM    UCNAME
+     C                     MOVE SAVSEQ    USEQN
+      *
+     C           KKEY05    SETLLCBMUTXL1
+     C           KKEY05    READECBMUTXL1                 57
+      *
+     C           *IN57     DOWEQ'0'
+      *
+      ** Write a new record with component on left-hand side
+      ** only if record does not already exist
+      *
+     C                     MOVE SAVNAM    UCNAME
+     C                     MOVE DHCSEQ    USEQN
+     C**********           MOVE WDKMUN    UUNIQ                                               CGL120
+     C                     MOVE WDKMCN    UMECN                                               CGL120
+     C                     MOVE WDKMCS    UMECS                                               CGL120
+      *                                                                                       CGL120
+     C           KKEY06    CHAINCBMUTXL0            N58
+      *
+      ** Load fields with renamed versions from CBMUTXL1
+      *
+     C           *IN58     IFEQ '1'
+     C                     MOVE WDKCTT    DKCOTT
+     C                     MOVE DHCSEQ    DKCSEQ
+     C**********           MOVE WDKMUN    DKMEUN                                              CGL120
+     C                     ADD  1         UUNQSV                                              CGL120
+     C                     MOVE UUNQSX    DKMEUN                                              CGL120
+     C                     MOVE WDKMCN    DKMECN
+     C                     MOVE WDKMCS    DKMECS
+      *
+     C                     WRITECBMEXCD0
+     C                     ENDIF
+      *
+      ** Write a new record with component on right hand side
+      ** only if record does not already exist
+      *
+     C                     MOVE WDKMCN    UCNAME
+     C                     MOVE WDKMCS    USEQN
+     C**********           Z-ADD0         UUNQSV                                              CGL120
+     C                     MOVE '0'       *IN59
+      *
+     C                     Z-ADD0         WKNQSV  20                                          CGL120
+     C           KKEY07    SETLLCBMUTXL0
+     C           KKEY07    READECBMUTXL0            N    58
+      *
+      ** Search for mutually exclusive record that relates to the
+      ** task split component being duplicated
+      *
+     C           *IN58     DOWEQ'0'
+     C**********           MOVE DKMEUN    UUNQSV  20                                          CGL120
+     C           DKMECN    IFEQ SAVNAM
+     C           DKMECS    ANDEQDHCSEQ
+     C                     MOVEA'11'      *IN,58
+     C                     ENDIF
+     C           *IN58     IFEQ '0'
+     C           KKEY07    READECBMUTXL0            N    58
+     C                     ENDIF
+     C                     ENDDO
+      *
+      ** Indicator 59 denotes that no mutually exclusive record
+      ** was found for the details on the right hand side of the
+      ** previously written M.E. record.(at least not one where
+      ** the right hand side fields were for the component being
+      ** duplicated)
+      *
+     C           *IN59     IFEQ '0'
+     C                     MOVE UCNAME    DKCOTT
+     C                     MOVE USEQN     DKCSEQ
+     C                     ADD  1         UUNQSV
+     C**********           MOVE UUNQSV    DKMEUN                                              CGL120
+     C                     MOVE UUNQSX    DKMEUN                                              CGL120
+      *                                                                                       CGL120
+      ** Check that record key is unique                                                      CGL120
+      *                                                                                       CGL120
+     C                     MOVE DKCOTT    UCNAME                                              CGL120
+     C                     MOVE DKCSEQ    USEQN                                               CGL120
+     C                     MOVE DKMEUN    UUNIQ                                               CGL120
+     C           KKEY06    CHAINCBMUTXL0            N58                                       CGL120
+     C           *IN58     DOWEQ*OFF                                                          CGL120
+     C                     ADD  1         UUNQSV                                              CGL120
+     C                     MOVE UUNQSX    DKMEUN                                              CGL120
+     C                     MOVE DKMEUN    UUNIQ                                               CGL120
+     C           KKEY06    CHAINCBMUTXL0            N58                                       CGL120
+     C                     ENDDO                                                              CGL120
+      *                                                                                       CGL120
+     C                     MOVE SAVNAM    DKMECN
+     C                     MOVE DHCSEQ    DKMECS
+      *
+     C                     WRITECBMEXCD0
+     C                     ENDIF
+      *
+     C           KKEY05    READECBMUTXL1                 57
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      ********************************************************************
+      * SRCOMA - Amend CBCOMSL0 record.
+      ********************************************************************
+     C           SRCOMA    BEGSR
+      *
+     C           KKEY04    KLIST
+     C                     KFLD           DIDSON
+     C                     KFLD           DIDSOS
+      *
+     C           KKEY04    CHAINCBCOMSL0             53
+      *
+     C           *IN53     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE DIDSON    UUFLD1
+     C                     MOVE DIDSOS    UUFLD2
+     C                     MOVEL'CBCOMSL0'DBFILE           ************
+     C                     MOVELUUERR     DBKEY            * DBERR 06 *
+     C                     Z-ADD6         DBASE            ************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Add 1 to value of oustanding dependencies
+     C                     ADD  1         DHCODP
+      *
+     C                     UPDAT@DHREGG
+      *
+     C                     ENDSR
+      ********************************************************************
+      * INIT - Initialisation
+      ********************************************************************
+     C           INIT      BEGSR
+      *
+      ** Set up copyright parameter
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Define LDA
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Define work fields
+     C           *LIKE     DEFN DHCOTT    SAVNAM
+     C           *LIKE     DEFN DHCSEQ    SAVSEQ
+     C           *LIKE     DEFN DHCOTT    UCNAME
+     C           *LIKE     DEFN DHCSEQ    USEQN
+     C           *LIKE     DEFN DKMEUN    UUNIQ                                               CGL120
+     C           *LIKE     DEFN DHCPRM    SAVPRM
+     C           *LIKE     DEFN DKMECN    UMECN                                               CGL120
+     C           *LIKE     DEFN DKMECS    UMECS                                               CGL120
+      *
+      ** Retrieve Bank details
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     MOVELWOPTN     DBKEY            * DBERR 07 *
+     C                     Z-ADD7         DBASE            ************
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C/COPY WNCPYSRC,CB0101C003
+      *
+     C                     ENDSR
+      ********************************************************************
+      * END - Terminate
+      ********************************************************************
+     C           END       BEGSR
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      ********************************************************************
+      * *PSSR - Output Audit report and End Program.
+      ********************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C***********          MOVEL'RE1132'  DBPGM     P                     120895
+     C                     MOVEL'CB0101'  DBPGM     P                     120895
+      *
+     C                     OPEN CB0101AU
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     CLOSECB0101AU
+     C                     OUT  LDA
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      ********************************************************************
+** CPY@ - Object copyright
+(c) Misys International Banking Systems Ltd. 2001

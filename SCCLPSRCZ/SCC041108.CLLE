@@ -1,0 +1,76 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SC Input cycle initiation - C LE')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC041108 - Input Cycle Initiation LE                       */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. AR1089839          Date 19Feb13              */
+/*       Prev Amend No. CSC056  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR1089839 - COBOP and 2.1 source clashes                    */
+/*       CSC056 - COB Restructure - SC COB Optimisation Phase 1      */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&LESTAT) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&LETEMP) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2012')
+ 
+/* Global Monitor Message */
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             RTVDTAARA  DTAARA(LETEMP *ALL) RTNVAR(&LETEMP)
+             RTVDTAARA  DTAARA(LESTAT *ALL) RTNVAR(&LESTAT)
+             IF         COND(%SUBSTRING(&LESTAT 14 1) = 'Y') +
+                          THEN(CALL PGM(LEC1101))
+             CHGVAR     VAR(&LESTAT) VALUE(&LETEMP)
+             CHGVAR     VAR(%SUBSTRING(&LESTAT 13 5)) VALUE('NNNNN')
+             CHGDTAARA  DTAARA(LESTAT *ALL) VALUE(&LESTAT)
+/**********  RUNSQL     SQL('UPDATE MTRANZ SET NAVT = 2 , NOIL = 0, +*/                /*AR1089839*/
+/**********               HLIW = 0, HLID = 0, NODL = 0, HLDW = 0, +*/                  /*AR1089839*/
+/**********               HLDD = 0')                               */                  /*AR1089839*/
+             SCRUNSQL   SQL('UPDATE MTRANZ SET NAVT = 2 , NOIL = 0, +
+                          HLIW = 0, HLID = 0, NODL = 0, HLDW = 0, +
+                          HLDD = 0')                                                   /*AR1089839*/
+ 
+/* Successful completion */
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/* Database error processing */
+ 
+DBETAG:
+ 
+/* Retrieve database error information from LDA */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+               SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ)
+             ENDDO
+ 
+/* Abnormal error processing */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+             SNDPGMMSG  MSG('Program SCC041108 ended abnormally.') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+ENDPGM:
+             ENDPGM

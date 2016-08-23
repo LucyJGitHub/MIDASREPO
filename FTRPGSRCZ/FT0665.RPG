@@ -1,0 +1,1027 @@
+     H        1   D
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT Bankers Authorisations')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas   FUNDS TRANSFER MODULE
+     F*                                                               *
+     F*  FT0665 - BANKERS AUTHORISATIONS                              *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. BUG15201           Date 30Oct07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CFT032             Date 11Sep06               *
+      *                 CDL049             Date 07Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CFT009             Date 01Jun00               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CFT014             Date 25May00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 175479             Date 08Feb00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01435             Date 08Sep93               *
+     F*                  S01414            DATE  29MAR93              *
+     F*                  S01117            DATE  09OCT90              *   S01117
+     F*                  S01194            DATE  09OCT90              *   S01194
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  BUG15201 - Encounter Database Errors (Recompile)             *
+      *  CFT032 - Account line in field 50k in MT103 (recompile)      *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CFT009 - FT Fees and Charge Development-Recompiled           *
+      *  CFT014 - Straight-through Processing Phase 2 MT103           *
+      *           Messages Generation for FT. Recompile only.         *
+      *  175479 - Recompiled over changes in OTPAYDD                  *
+     F*  S01435 - Incoming Message Management.                        *
+     F*  S01414 - Book Code and Profit Centre Incorporation.          *
+     F*           Rename of profit centre field on ACCNTABF           *
+     F*  S01117 - RELEASE 10 MULTIBRANCHING CHANGES                   *   S01117
+     F*  S01194 - STANDING DATA CHANGES                               *   S01194
+     F*****************************************************************
+     FPRFP6   IP  E           K        DISK
+      ***************                                                     S01435
+      ***************  Remove file reference                              S01435
+      ***************                                                     S01435
+     F*CLINT***IF**E**         K        DISK                              S01435
+     F************CLINTCAF                          KIGNORE               S01435
+     F************CLINTCBF                          KIGNORE               S01435
+     F************CLINTC1F                          KIGNORE               S01435
+     F*ACNUMA**IF**E**         K        DISK                              S01435
+     F*FT0665P2O***E********************PRINTER                           S01117
+     FFT0665AUO   E                    PRINTER      KINFDS SPOOL2         S01117
+     F*FT0665P1O***E********************PRINTER                           S01117
+     FFT0665P1O   E                    PRINTER      KINFDS SPOOL1         S01117
+     FTABFP   IF  E           K        DISK
+     F*           TABTB10F                          KIGNORE
+     F            TABTB11F                          KIGNORE
+     F            TABTB20F                          KIGNORE
+     F*           TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F************TABLETJF                          KIGNORE               S01117
+     F*           TABLETLF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F*
+     F/EJECT
+     F*
+     F****************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                      *
+     F****************************************************************
+     F* 01              RECORD READ FROM OTPAYDDF.                   *
+     F* 02              RECORD READ FROM CQPACDDF.                   *
+     F*                                                              *
+     F*       06        CHEQUE AMOUNT HAS 0 D.P.                     *
+     F*       07        CHEQUE AMOUNT HAS 1 D.P.                     *
+     F*       08        CHEQUE AMOUNT HAS 2 D.P.                     *
+     F*       09        CHEQUE AMOUNT HAS 3 D.P.                     *
+     F*                                                              *
+     F*       10        UNSUCCESSFUL CHAIN TO TABFP.                 *
+     F*       20        UNSUCCESSFUL CHAIN TO CLINT.                 *
+     F*       30        UNSUCCESSFUL CHAIN TO ACNUMA.                *
+     F*                                                              *
+     F*       40        FIRST CYCLE COMPLETED.                       *
+     F*       50        INPUT CYCLE.                                 *
+     F*       60        MULTIPLE REC FOR SAME DATE/CURRENCY.         *
+     F*                                                              *
+     F*       78        ) DATA                                       *
+     F*       U7        ) BASE                                       *
+     F*       U8        ) ERROR.                                     *
+     F*             LR  LAST RECORD (TERMINATE PROGRAM).             *
+     F*                                                              *
+     F*  N.B:- 90-99    STANDARD SUBROUTINE INDICATORS.              *
+     F****************************************************************
+     F*
+     F/EJECT
+     E                    CPY@    1   1 80
+     E*
+     E                    ZYDY    4   4  4 0             ZDATE1 YEAR
+     E                    ZMDY   13  13  3 0             ZDATE1 MONTH
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     E*
+     E/EJECT
+     I*
+     IOTPAYDDF    01
+     ICQPACDDF    02
+     I*                                                                   S01414
+     I* Rename of ACCNTABF Profit Centre to avoid overwriting             S01414
+     I*                                                                   S01414
+      ***************                                                     S01435
+      ***************  Remove file reference                              S01435
+      ***************                                                     S01435
+     I*ACCNTABF*******                                                    S01414
+     I**************PRFC                            ACPRFC                S01414
+     I*
+     IDLDA        DS                            256
+     I*
+     I**********************************************
+     I*       DATA STRUCTURE USED IN THE EVENT     *
+     I*                    OF DATABASE ERRORS.     *
+     I**********************************************
+     I*
+     I**************************************134 138 DBFILE                S01194
+     I**************************************139 167 DBKEY                 S01194
+     I**************************************168 175 DBPGM                 S01194
+     I**************************************176 177 DBASE                 S01194
+     I                                      134 141 DBFILE                S01194
+     I                                      142 170 DBKEY                 S01194
+     I                                      171 180 DBPGM                 S01194
+     I                                      181 1830DBASE                 S01194
+     I*                                                                   S01117
+     I** INFDS for P1 printer file .                                      S01117
+     ISPOOL1      DS                                                      S01117
+     I                                       83  92 SFILE1                S01117
+     I                                    B 123 1240SFNUM1                S01117
+     I*                                                                   S01117
+     I** INFDS for AU printer file                                        S01117
+     ISPOOL2      DS                                                      S01117
+     I                                       83  92 SFILE2                S01117
+     I                                    B 123 1240SFNUM2                S01117
+     I*                                                                   S01117
+     I** Data structure for Destination branch code                       S01117
+     IDST1        DS                             35                       S01117
+     I                                       16  18 DST1BC                S01117
+     I*                                                                   S01117
+     I** Data structure for Remitting Bank branch code                    S01117
+     IRBK1        DS                             35                       S01117
+     I                                       16  18 RBK1BC                S01117
+     I*                                                                   S01117
+     IRUNDAT      DS                             13                       S01117
+     I* DATA STRUCTURE TO RETRIEVE MULTIBRANCH INDICATOR                  S01117
+     I                                       13  13 @MBIN                 S01117
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     IDSPGM     ESDSY2PGDSP                                               S01435
+      *                                                                   S01435
+      ** Program data structure                                           S01435
+      *                                                                   S01435
+      /EJECT                                                              S01435
+     IW8FT        DS                            128                       S01435
+      *                                                                   S01435
+      * Address data structure                                            S01435
+      *                                                                   S01435
+      * Currency                                                          S01435
+     I                                        1   3 W8CCY                 S01435
+      * Settlement Type                                                   S01435
+     I                                        4   5 W8STMT                S01435
+      * Mandatory Text - convert BIC identifiers                          S01435
+     I                                        6   6 W8MTXT                S01435
+      * Message Tag                                                       S01435
+     I                                        7  11 W8MTAG                S01435
+      * Construct of data in field                                        S01435
+     I                                       12  12 W8TYPE                S01435
+      * Number of Lines available                                         S01435
+     I                                       13  140W8NLIN                S01435
+      * Network and Message Type                                          S01435
+     I                                       15  20 W8NWRK                S01435
+     I                                       21  23 W8MTPY                S01435
+      * Calling Program                                                   S01435
+     I                                       24  33 W8CPGM                S01435
+      * Action *PRINT/*ENQ/*MSG GEN                                       S01435
+     I                                       34  41 W8ACT                 S01435
+      * Critical reporting - Database error if 'Y'                        S01435
+      * If no BIC directory and BIC entered no error                      S01435
+     I                                       42  42 W8CRIT                S01435
+      * Force Midas Address - where possible                              S01435
+     I                                       43  43 W8MADD                S01435
+      * If Retail get first address from account                          S01435
+     I                                       44  44 W8RTAD                S01435
+      * Alternative Address                                               S01435
+     I                                       45  45 W8ALTN                S01435
+      * Address type selected in W0MSG                                    S01435
+     I                                       46  46 W8ADTP                S01435
+      *                                                                   S01435
+     C/COPY FTCPYSRC,SFTADDRI                                             S01435
+      *                                                                   S01435
+      * Address data structure                                            S01435
+      *                                                                   S01435
+     I*
+     I/EJECT
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C***********************
+     C*    FIRST CYCLE.     *
+     C***********************
+     C*
+     C           *IN40     IFEQ '0'                         N*IN40
+     C                     SETOF                     LR     LR IND
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           RMODE   1
+     C                     PARM           @PSEQ   5                       S01117
+     C           RMODE     COMP 'I'                      50
+     C*
+     C*********************EXSR ZSYSTM                                    S01117
+     C                     EXSR SYSTEM                                    S01117
+     C*
+     C           *IN99     IFEQ '1'                         ))))))))))))))
+     C*********************MOVE 'TABFP'   DBFNAM  5         )))  DATA  )))S01194
+     C*********************MOVELZTABKY    DBERKY 39         )))  BASE  )))S01194
+     C*********************MOVE '01'      DBERR#  2         ))) ERROR  )))S01194
+     C                     MOVEL'TABTB10' DBFNAM  8         )))        )))S01194
+     C                     MOVELZTABKY    DBERKY 29         )))        )))S01194
+     C                     MOVE '01'      DBERR#  3         )))        )))S01194
+     C                     EXSR DBERR                       )))   01   )))
+     C                     END                              ))))))))))))))
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN           RUNDAT                          S01117
+     C                     IN   RUNDAT                                    S01117
+     C*                                                                   S01117
+     C** CALL ZSFILE TO LOG SPOOL FILE DETAILS FOR DETAIL REPORT          S01117
+     C*                                                                   S01117
+     C                     Z-ADDSFNUM1    ZSNO                            S01117
+     C                     MOVELSFILE1    ZSFL                            S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           @PSEQ                           S01117
+     C                     PARM *BLANKS   ZENT                            S01117
+     C                     PARM           ZSFL                            S01117
+     C                     PARM           ZSNO                            S01117
+     C                     PARM *BLANKS   ZERR                            S01117
+     C*                                                                   S01117
+     C* ABORT PROGRAM IF ZERR IS NOT BLANK                                S01117
+     C*                                                                   S01117
+     C           ZERR      IFNE *BLANKS                                   S01117
+     C                     SETON                     U7U8LR               S01117
+     C           *LOCK     IN   DLDA                                      S01117
+     C                     MOVEL'FT0665'  DBPGM            ***************S01117
+     C                     MOVEL'FT0665P1'DBKEY            ** DBERR  12 **S01117
+     C                     MOVEL'ZSFILE'  DBFILE           ***************S01117
+     C                     Z-ADD12        DBASE                           S01117
+     C                     OUT  DLDA                                      S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C*
+     C                     SETON                     40     1ST CYCLE DONE
+     C                     Z-ADD1         PPAGE   40
+     C                     EXSR TIMESR
+     C                     END                              END *IN40
+     C*
+     C**************************************************
+     C*    SETUP FIELDS COMMON TO OTPAYDD & CQPACDD.   *
+     C**************************************************
+     C*
+     C                     MOVE *BLANKS   ZTABKY
+     C                     MOVEL'20'      ZTABKY
+     C                     MOVELPCCY      KEY4    4
+     C                     MOVE '1'       KEY4
+     C                     MOVE KEY4      ZTABKY
+     C*
+     C           ZTABKY    CHAINTABFP                10
+     C  N10      RECI      COMP 'D'                  1010
+     C*
+     C           *IN10     IFEQ '1'                         ))))))))))))))
+     C*********************MOVE 'TABFP'   DBFNAM            ))))))))))))))S01194
+     C                     MOVEL'TABTG10' DBFNAM            )))  DATA  )))S01194
+     C                     MOVELZTABKY    DBERKY            )))  BASE  )))
+     C                     MOVE '02'      DBERR#            ))) ERROR  )))
+     C                     EXSR DBERR                       )))   02   )))
+     C                     END                              ))))))))))))))
+     C*
+     C                     MOVELPVDT      NEWREC  8
+     C                     MOVE PCCY      NEWREC
+     C           NEWREC    COMP OLDREC                   60
+     C  N60                Z-ADD0         MREC    10
+     C   60                ADD  1         MREC
+     C*
+     C           MREC      IFGT 1
+     C                     Z-ADD0         MREC
+     C                     SETOF                     60
+     C                     END                             END MREC > 1
+     C*
+     C                     SETOF                     0607
+     C                     SETOF                     0809
+     C           CDP       ADD  6         X       10
+     C                     MOVE '1'       *IN,X
+     C*
+     C*******************************
+     C*    SENDERS CORRESPONDENT.   *
+     C*******************************
+     C*
+     C                     MOVE *BLANKS   SPT1   35
+     C                     MOVE *BLANKS   SPT2   35
+     C                     MOVE *BLANKS   SPT3   35
+     C                     MOVE *BLANKS   SPT4   35
+     C                     MOVE *BLANKS   SPT5   35
+     C*
+     C                     MOVE SNCT      SPTP    1
+     C                     MOVELSNCO      SPT1
+     C                     MOVELPCCY      XCCY                            S01435
+     C*
+     C                     EXSR FSTPSR
+     C*
+     C                     MOVE SPT1      SCO1   35
+     C                     MOVE SPT2      SCO2   35
+     C                     MOVE SPT3      SCO3   35
+     C                     MOVE SPT4      SCO4   35
+     C                     MOVE SPT5      SCO5   35
+     C*
+     C*********************************
+     C*    RECEIVERS CORRESPONDENT.   *
+     C*********************************
+     C*
+     C                     MOVE *BLANKS   SPT1
+     C                     MOVE *BLANKS   SPT2
+     C                     MOVE *BLANKS   SPT3
+     C                     MOVE *BLANKS   SPT4
+     C                     MOVE *BLANKS   SPT5
+     C*
+     C                     MOVE RCRT      SPTP
+     C                     MOVE RCO1      SPT1
+     C                     MOVE RCO2      SPT2
+     C                     MOVE RCO3      SPT3
+     C                     MOVE RCO4      SPT4
+     C                     MOVE RCO5      SPT5
+     C*
+     C                     EXSR FSTPSR
+     C*
+     C                     MOVE SPT1      RCO1
+     C                     MOVE SPT2      RCO2
+     C                     MOVE SPT3      RCO3
+     C                     MOVE SPT4      RCO4
+     C                     MOVE SPT5      RCO5
+     C*
+     C*****************************
+     C*    'ACCOUNT WITH' BANK.   *
+     C*****************************
+     C*
+     C                     MOVE *BLANKS   SPT1
+     C                     MOVE *BLANKS   SPT2
+     C                     MOVE *BLANKS   SPT3
+     C                     MOVE *BLANKS   SPT4
+     C                     MOVE *BLANKS   SPT5
+     C*
+     C                     MOVE ACBT      SPTP
+     C                     MOVE ACB1      SPT1
+     C                     MOVE ACB2      SPT2
+     C                     MOVE ACB3      SPT3
+     C                     MOVE ACB4      SPT4
+     C                     MOVE ACB5      SPT5
+     C*
+     C                     EXSR FSTPSR
+     C*
+     C                     MOVE SPT1      ACB1
+     C                     MOVE SPT2      ACB2
+     C                     MOVE SPT3      ACB3
+     C                     MOVE SPT4      ACB4
+     C                     MOVE SPT5      ACB5
+     C*
+     C/EJECT
+     C*
+     C************************************
+     C*    RECORD READ FROM OTPAYDD.     *
+     C************************************
+     C*
+     C           *IN01     IFEQ '1'
+     C*
+     C**********************
+     C*    DESTINATION.    *
+     C**********************
+     C*
+     C                     MOVE *BLANKS   SPT1
+     C                     MOVE *BLANKS   SPT2
+     C                     MOVE *BLANKS   SPT3
+     C                     MOVE *BLANKS   SPT4
+     C                     MOVE *BLANKS   SPT5
+     C*
+     C                     MOVE DSTT      SPTP
+     C                     MOVE DST1      SPT1
+     C                     MOVE DST2      SPT2
+     C                     MOVE DST3      SPT3
+     C                     MOVE DST4      SPT4
+     C*
+     C                     EXSR FSTPSR
+     C*
+     C                     MOVE SPT1      DST1
+     C                     MOVE SPT2      DST2
+     C                     MOVE SPT3      DST3
+     C                     MOVE SPT4      DST4
+     C                     MOVE SPT5      DST5   35
+     C*                                                                   S01117
+     C** IF MULTIBRANCHING OFF, DONT DISPLAY BRCH CODE FOR FULL ACCOUNT   S01117
+     C*                                                                   S01117
+     C           @MBIN     IFEQ 'N'                                       S01117
+     C           DSTT      ANDEQ'G'                                       S01117
+     C                     MOVE *BLANKS   DST1BC                          S01117
+     C                     END                                            S01117
+     C*
+     C******************************
+     C*    BENEFICIARY CUSTOMER.   *
+     C******************************
+     C*
+     C                     MOVE *BLANKS   SPT1
+     C                     MOVE *BLANKS   SPT2
+     C                     MOVE *BLANKS   SPT3
+     C                     MOVE *BLANKS   SPT4
+     C                     MOVE *BLANKS   SPT5
+     C*
+     C                     MOVE BNCT      SPTP
+     C                     MOVELPCCY      XCCY                            S01435
+     C                     MOVE BNC1      SPT1
+     C                     MOVE BNC2      SPT2
+     C                     MOVE BNC3      SPT3
+     C                     MOVE BNC4      SPT4
+     C                     MOVE BNC5      SPT5
+     C*
+     C                     EXSR FSTPSR
+     C*
+     C                     MOVE SPT1      BNC1
+     C                     MOVE SPT2      BNC2
+     C                     MOVE SPT3      BNC3
+     C                     MOVE SPT4      BNC4
+     C                     MOVE SPT5      BNC5
+     C*
+     C**********************************
+     C*    CALCULATE RECORD AMOUNT.    *
+     C**********************************
+     C*
+     C           ADDC      IFNE 'A'
+     C           CDRT      ANDEQ' '
+     C           PYAM      SUB  TXCH      RAMT   150
+     C           RAMT      SUB  CQCH      RAMT
+     C           RAMT      SUB  CSTA      RAMT
+     C           RAMT      SUB  SPCH      RAMT
+     C           RAMT      SUB  MSCH      RAMT
+     C           RAMT      SUB  TRCM      RAMT
+     C*
+     C                     ELSE                             'Y' OR N' '
+     C*
+     C                     Z-ADDPYAM      RAMT
+     C                     END                              END N'Y' & ' '
+     C*
+     C   06                MOVE RAMT      RAMT0  130
+     C   07                MOVE RAMT      RAMT1  131
+     C   08                MOVE RAMT      RAMT2  132
+     C   09                MOVE RAMT      RAMT3  133
+     C*
+     C                     Z-ADDPVDT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    VDATE
+     C  N60                WRITEP1HEAD
+     C                     WRITEOUTPAY
+     C  N60                ADD  1         PPAGE
+     C                     ADD  1         RCOUNT
+     C                     MOVE NEWREC    OLDREC  8
+     C                     ELSE                             N*IN01
+     C*
+     C/EJECT
+     C*
+     C************************************
+     C*    RECORD READ FROM CQPACDD.     *
+     C************************************
+     C*
+     C           *IN02     IFEQ '1'
+     C*
+     C************************
+     C*    REMITTING BANK.   *
+     C************************
+     C*
+     C                     MOVE *BLANKS   SPT1
+     C                     MOVE *BLANKS   SPT2
+     C                     MOVE *BLANKS   SPT3
+     C                     MOVE *BLANKS   SPT4
+     C                     MOVE *BLANKS   SPT5
+     C*
+     C                     MOVE RBKT      SPTP
+     C                     MOVE RBK1      SPT1
+     C                     MOVE RBK2      SPT2
+     C                     MOVE RBK3      SPT3
+     C                     MOVE RBK4      SPT4
+     C*
+     C                     EXSR FSTPSR
+     C*
+     C                     MOVE SPT1      RBK1
+     C                     MOVE SPT2      RBK2
+     C                     MOVE SPT3      RBK3
+     C                     MOVE SPT4      RBK4
+     C                     MOVE SPT5      RBK5   35
+     C*                                                                   S01117
+     C** IF MULTIBRANCHING OFF, DONT DISPLAY BRCH CODE FOR FULL ACCOUNT   S01117
+     C*                                                                   S01117
+     C           @MBIN     IFEQ 'N'                                       S01117
+     C           RBKT      ANDEQ'G'                                       S01117
+     C                     MOVEL*BLANKS   RBK1BC                          S01117
+     C                     END                                            S01117
+     C*
+     C**********************************
+     C*    CALCULATE RECORD AMOUNT.    *
+     C**********************************
+     C*
+     C                     Z-ADDPRRM      RAMT
+     C*
+     C   06                MOVE RAMT      RAMT0
+     C   07                MOVE RAMT      RAMT1
+     C   08                MOVE RAMT      RAMT2
+     C   09                MOVE RAMT      RAMT3
+     C*
+     C                     Z-ADDPVDT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    VDATE
+     C  N60                WRITEP1HEAD
+     C                     WRITECHQTBP
+     C  N60                ADD  1         PPAGE
+     C                     ADD  1         RCOUNT
+     C                     MOVE NEWREC    OLDREC
+     C*
+     C                     END                              END *IN02
+     C*
+     C                     END                              END *IN01
+     C*
+     C/EJECT
+     C*
+     C**********************************
+     C*    LAST RECORD PROCESSING.     *
+     C**********************************
+     C*
+     CLR         *IN40     IFEQ '0'                         LRN40
+     C*LR*******************EXSR ZSYSTM                                   S01117
+     CLR                   EXSR SYSTEM                                    S01117
+     C*
+     CLR         *IN99     IFEQ '1'                         ))))))))))))))
+     C*LR******************MOVE 'TABFP'   DBFNAM            ))))))))))))))S01194
+     CLR                   MOVEL'TABTB10' DBFNAM            )))  DATA  )))S01194
+     CLR                   MOVELZTABKY    DBERKY            )))  BASE  )))
+     CLR                   MOVE '10'      DBERR#            ))) ERROR  )))
+     CLR                   EXSR DBERR                       )))   10   )))
+     CLR                   END                              ))))))))))))))
+     C*
+     CLR                   END                              END LRN40
+     C*
+     CLR                   Z-ADD0         PAGE                            S01117
+     C*LR******************WRITEP2HEAD                                    S01117
+     CLR                   WRITEAUHEAD                                    S01117
+     C*
+     C/EJECT
+     C*
+     C********************************************************************
+     C*
+     C*          SUBROUTINE TO ACCESS INSTALLATION
+     C*                     CONTROL DATA RECORD.
+     C*
+     C***********ZSYSTM****BEGSR                            *** ZSYSTM ***S01117
+     C           SYSTEM    BEGSR                            *** SYSTEM ***S01117
+     C*                                                                   S01117
+     C** CALL ZSFILE TO LOG SPOOL FILE DETAILS FOR AUDIT REPORT           S01117
+     C*                                                                   S01117
+     C                     Z-ADDSFNUM2    ZSNO                            S01117
+     C                     MOVELSFILE2    ZSFL                            S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           @PSEQ                           S01117
+     C                     PARM *BLANKS   ZENT    3                       S01117
+     C                     PARM           ZSFL   10                       S01117
+     C                     PARM           ZSNO    60                      S01117
+     C                     PARM *BLANKS   ZERR    1                       S01117
+     C*                                                                   S01117
+     C* ABORT PROGRAM IF ZERR IS NOT BLANK                                S01117
+     C*                                                                   S01117
+     C           ZERR      IFNE *BLANKS                                   S01117
+     C                     SETON                     U7U8LR               S01117
+     C           *LOCK     IN   DLDA                                      S01117
+     C                     MOVEL'FT0665'  DBPGM            ***************S01117
+     C                     MOVEL'FT0665AU'DBKEY            ** DBERR  11 **S01117
+     C                     MOVEL'ZSFILE'  DBFILE           ***************S01117
+     C                     Z-ADD11        DBASE                           S01117
+     C                     OUT  DLDA                                      S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C*
+     C**   SET UP KEY FOR INSTALLATION CONTROL RECORD.
+     C                     MOVEL'01      'ZTABKY 12
+     C                     MOVE '  10'    ZTABKY
+     C**
+     C           ZTABKY    CHAINTABFP                99    ON NOT THERE
+     C  N99      RECI      COMP 'D'                  9999  ON, IS DELETED
+     C**
+     C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+     C           DATF      COMP 'M'                      98MMDDYY, 98 ON
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*               SUBROUTINE TO CONVERT A DAY
+     C*                    NUMBER TO DATE FORMATS.
+     C*
+     C*         N.B.:- 2000, BEING DIVISIBLE BY 400
+     C*                IS A LEAP YEAR.
+     C*
+     C           ZDATE2    BEGSR                            *** ZDATE2 ***
+     C*
+     C**   CLEAR DATE FIELDS.
+     C                     Z-ADD0         ZDATE   60
+3816 C                     MOVEL'       ' ZADATE  7
+3817 C**
+3818 C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+3819 C                     Z-ADDZDAYNO    ZDAYNO  50
+3820 C**
+3821 C**   DETERMINE YEAR NUMBER.
+3822 C**
+3823 C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+3824 C           ZDAYNO    SUB  1         ZDAYN1  50   99
+3825 C   99                GOTO ZDEND2
+3826 C**
+3827 C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+3828 C           ZDAYN1    DIV  1461      ZLYR    20
+3829 C                     MVR            ZDAYN1           SAVE REMAINING
+3830 C**                                                   DAYS
+3831 C**   CALCULATE NUMBER OF REMAINING YEARS.
+3832 C                     Z-ADD1         ZWRK2   20
+3833 C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+3834 C           ZDAYN1    COMP ZYDY,ZWRK2             90
+3835 C  N90      ZWRK2     ADD  1         ZWRK2
+3836 C  N90                GOTO ZDTAG1
+3837 C           ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON
+3838 C**
+3839 C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+3840 C  N91      ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+3841 C**
+3842 C**   CALCULATE ACTUAL YEAR NUMBER.
+3843 C           ZLYR      MULT 4         ZWRK3   30
+3844 C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+3845 C                     Z-ADDZWRK3     ZYEAR   20
+3846 C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+3847 C**
+3848 C**   DETERMINE MONTH NUMBER.
+3849 C**
+3850 C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+3851 C                     SETOF                     9293
+3852 C   91      ZDAYN1    COMP 59                     9293
+3853 C   91N92   ZDAYN1    SUB  1         ZDAYN1
+3854 C**
+3855 C**   CALCULATE MONTH NUMBER.
+3856 C                     Z-ADD2         ZWRK2
+3857 C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+3858 C           ZDAYN1    COMP ZMDY,ZWRK2             94
+3859 C  N94      ZWRK2     ADD  1         ZWRK2
+3860 C  N94                GOTO ZDTAG2
+3861 C           ZWRK2     SUB  1         ZWRK2
+3862 C**
+3863 C                     Z-ADDZWRK2     ZMTH    20       MONTH
+3864 C**
+3865 C**   DETERMINE DAY OF MONTH.
+3866 C**
+3867 C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+3868 C           ZDAYN1    ADD  1         ZDAYN1
+3869 C**
+3870 C**   CALCULATE DAY OF MONTH.
+3871 C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+3872 C**
+3873 C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+3874 C   93      ZDAY      ADD  1         ZDAY
+3875 C**
+3876 C**   FORMAT DATE, DDMMYY OR MMDDYY.
+3877 C  N98                MOVELZDAY      ZWRK4   40
+3878 C   98                MOVE ZDAY      ZWRK4
+3879 C  N98                MOVE ZMTH      ZWRK4
+3880 C   98                MOVELZMTH      ZWRK4
+3881 C                     MOVELZWRK4     ZDATE
+3882 C                     MOVE ZYEAR     ZDATE
+3883 C**
+3884 C**   FORMAT ALPHA DATE, DDMMMYY.
+3885 C           ZDAY      COMP 10                     95
+3886 C                     MOVELZDAY      ZWRK5   5
+3887 C   95                MOVEL' '       ZWRK5
+3888 C                     MOVE ZMNM,ZMTH ZWRK5
+3889 C                     MOVELZWRK5     ZADATE
+3890 C                     MOVE ZYEAR     ZADATE
+     C*
+     C           ZDEND2    ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*          FORMAT SETTLEMENT PARTY SUBROUTINE.
+     C*
+     C           FSTPSR    BEGSR                            *** FSTPSR ***
+     C*
+     C**********************
+     C*    NOT ENTERED     *
+     C**********************
+     C*
+     C           SPTP      IFEQ ' '                        B001
+     C                     MOVE *BLANK    SPT1
+     C                     END                             E001
+      *                                                                   S01435
+      *  Remove old code and replace with call to FT0315                  S01435
+      *                                                                   S01435
+      **********                                                          S01435
+     C**********************                                              S01435
+     C*****FULL*NOSTRO.    *                                              S01435
+     C**********************                                              S01435
+     C**********                                                          S01435
+     C********** SPTP      IFEQ 'F'                                       S01435
+     C**********           MOVE *BLANKS   ZTABKY                          S01435
+     C**********           MOVEL'70'      ZTABKY                          S01435
+     C**********           MOVELSPT1      KEY5    5                       S01435
+     C**********           MOVE KEY5      ZTABKY                          S01435
+     C**********           MOVE *BLANK    SPT1                            S01435
+     C**********           MOVELKEY5      SPT1                            S01435
+     C**********                                                          S01435
+     C********** ZTABKY    CHAINTABFP                10                   S01435
+     C**N10***** RECI      COMP 'D'                  1010                 S01435
+     C**********                                                          S01435
+     C********** *IN10     IFEQ '1'                         ))))))))))))))S01435
+     C*********************MOVE 'TABFP'   DBFNAM            ))))))))S01194S01435
+     C**********           MOVEL'TABLETL' DBFNAM            )))  DATS01194S01435
+     C**********           MOVELZTABKY    DBERKY            )))  BASE  )))S01435
+     C**********           MOVE '03'      DBERR#            ))) ERROR  )))S01435
+     C**********           EXSR DBERR                       )))   03   )))S01435
+     C**********           END                              ))))))))))))))S01435
+     C**********                                                          S01435
+     C********** CNUM      CHAINCLINT                20                   S01435
+     C**N20***** RECI      COMP 'D'                  2020                 S01435
+     C**********                                                          S01435
+     C********** *IN20     IFEQ '1'                         ))))))))))))))S01435
+     C*********************MOVE 'CLINT'   DBFNAM            ))))))))S01194S01435
+     C**********           MOVEL'CLINT'   DBFNAM            )))  DATS01194S01435
+     C**********           MOVELCNUM      DBERKY            )))  BASE  )))S01435
+     C**********           MOVE '04'      DBERR#            ))) ERROR  )))S01435
+     C**********           EXSR DBERR                       )))   04   )))S01435
+     C**********           END                              ))))))))))))))S01435
+     C**********                                                          S01435
+     C**********           EXSR MOUTSR                                    S01435
+     C**********           ELSE                             SPTP <> 'F'   S01435
+     C**********                                                          S01435
+     C************************                                            S01435
+     C*****NOSTRO NUMBER.    *                                            S01435
+     C************************                                            S01435
+     C**********                                                          S01435
+     C********** SPTP      IFEQ 'N'                                       S01435
+     C**********           MOVE *BLANKS   ZTABKY                          S01435
+     C**********           MOVEL'70'      ZTABKY                          S01435
+     C**********           MOVELSPT1      KEY2    2                       S01435
+     C**********           MOVELPCCY      KEY5    5                       S01435
+     C**********           MOVE KEY2      KEY5                            S01435
+     C**********           MOVE KEY5      ZTABKY                          S01435
+     C**********           MOVE *BLANK    SPT1                            S01435
+     C**********           MOVELKEY2      SPT1                            S01435
+     C**********                                                          S01435
+     C********** ZTABKY    CHAINTABFP                10                   S01435
+     C**N10***** RECI      COMP 'D'                  1010                 S01435
+     C**********                                                          S01435
+     C********** *IN10     IFEQ '1'                         ))))))))))))))S01435
+     C*********************MOVE 'TABFP'   DBFNAM            ))))))))S01194S01435
+     C**********           MOVEL'TABLETL' DBFNAM            )))  DATS01194S01435
+     C**********           MOVELZTABKY    DBERKY            )))  BASE  )))S01435
+     C**********           MOVE '05'      DBERR#            ))) ERROR  )))S01435
+     C**********           EXSR DBERR                       )))   05   )))S01435
+     C**********           END                              ))))))))))))))S01435
+     C**********                                                          S01435
+     C********** CNUM      CHAINCLINT                20                   S01435
+     C**N20***** RECI      COMP 'D'                  2020                 S01435
+     C**********                                                          S01435
+     C********** *IN20     IFEQ '1'                         ))))))))))))))S01435
+     C*********************MOVE 'CLINT'   DBFNAM            ))))))))S01194S01435
+     C**********           MOVEL'CLINT'   DBFNAM            )))  DATS01194S01435
+     C**********           MOVELCNUM      DBERKY            )))  BASE  )))S01435
+     C**********           MOVE '06'      DBERR#            ))) ERROR  )))S01435
+     C**********           EXSR DBERR                       )))   06   )))S01435
+     C**********           END                              ))))))))))))))S01435
+     C**********                                                          S01435
+     C**********           EXSR MOUTSR                                    S01435
+     C**********           ELSE                             SPTP <> 'N'   S01435
+     C**********                                                          S01435
+     C*************************                                           S01435
+     C*****RETAIL ACCOUNT.    *                                           S01435
+     C*************************                                           S01435
+     C**********                                                          S01435
+     C********** SPTP      IFEQ 'R'                                       S01435
+     C**********           MOVELSPT1      KEY10  100                      S01435
+     C**********           MOVE *BLANK    SPT1                            S01435
+     C**********           MOVELKEY10     SPT1                            S01435
+     C**********                                                          S01435
+     C********** KEY10     CHAINACNUMA               30                   S01435
+     C**N30***** RECI      COMP 'D'                  3030                 S01435
+     C**********                                                          S01435
+     C********** *IN30     IFEQ '1'                         ))))))))))))))S01435
+     C*********************MOVE 'ACNUM'   DBFNAM            ))))))))S01194S01435
+     C**********           MOVEL'ACNUMA'  DBFNAM            )))  DATS01194S01435
+     C**********           MOVELKEY10     DBERKY            )))  BASE  )))S01435
+     C**********           MOVE '07'      DBERR#            ))) ERROR  )))S01435
+     C**********           EXSR DBERR                       )))   07   )))S01435
+     C**********           END                              ))))))))))))))S01435
+     C**********                                                          S01435
+     C********** CNUM      CHAINCLINT                20                   S01435
+     C**N20***** RECI      COMP 'D'                  2020                 S01435
+     C**********                                                          S01435
+     C********** *IN20     IFEQ '1'                         ))))))))))))))S01435
+     C*********************MOVE 'CLINT'   DBFNAM            ))))))))S01194S01435
+     C**********           MOVEL'CLINT'   DBFNAM            )))  DATS01194S01435
+     C**********           MOVELCNUM      DBERKY            )))  BASE  )))S01435
+     C**********           MOVE '08'      DBERR#            ))) ERROR  )))S01435
+     C**********           EXSR DBERR                       )))   08   )))S01435
+     C**********           END                              ))))))))))))))S01435
+     C**********                                                          S01435
+     C**********           EXSR MOUTSR                                    S01435
+     C**********           ELSE                             SPTP <> 'R'   S01435
+     C**********                                                          S01435
+     C*************************                                           S01435
+     C*****FULL*ACCOUNT OR    *                                           S01435
+     C*****PARTIAL ACCOUNT    *                                           S01435
+     C*****OR*CUSTOMER.       *                                           S01435
+     C*************************                                           S01435
+     C**********                                                          S01435
+     C********** SPTP      IFEQ 'G'                                       S01435
+     C********** SPTP      OREQ 'P'                                       S01435
+     C********** SPTP      OREQ 'C'                                       S01435
+     C**********           MOVELSPT1      KEY6    60                      S01435
+     C**********                                                          S01435
+     C********** KEY6      CHAINCLINT                20                   S01435
+     C**N20***** RECI      COMP 'D'                  2020                 S01435
+     C**********                                                          S01435
+     C********** *IN20     IFEQ '1'                         ))))))))))))))S01435
+     C*********************MOVE 'CLINT'   DBFNAM            ))))))))S01194S01435
+     C**********           MOVEL'CLINT'   DBFNAM            )))  DATS01194S01435
+     C**********           MOVELKEY6      DBERKY            )))  BASE  )))S01435
+     C**********           MOVE '09'      DBERR#            ))) ERROR  )))S01435
+     C**********           EXSR DBERR                       )))   09   )))S01435
+     C**********           END                              ))))))))))))))S01435
+     C**********                                                          S01435
+     C**********           EXSR MOUTSR                                    S01435
+     C**********           ELSE                             N'G'/N'P'/N'C'S01435
+     C**********                                                          S01435
+     C**************************                                          S01435
+     C*****SWIFT ACCOUNT OR    *                                          S01435
+     C*****FULL*ADDRESS.       *                                          S01435
+     C**************************                                          S01435
+     C**********                                                          S01435
+     C********** SPTP      IFEQ 'S'                                       S01435
+     C********** SPTP      OREQ 'A'                                       S01435
+     C**********                                                          S01435
+     C**********           MOVE SPT2      CNA1                            S01435
+     C**********           MOVE SPT3      CNA2                            S01435
+     C**********           MOVE SPT4      CNA3                            S01435
+     C**********           MOVE SPT5      CNA4                            S01435
+     C**********                                                          S01435
+     C**********           EXSR MOUTSR                                    S01435
+     C**********           END                              END 'S'/'A'   S01435
+     C**********                                                          S01435
+     C**********           END                              END 'G'/'P'/'CS01435
+     C**********                                                          S01435
+     C**********           END                              END 'R'       S01435
+     C**********                                                          S01435
+     C**********           END                              END 'N'       S01435
+     C**********                                                          S01435
+     C**********           END                              END 'F'       S01435
+      *                                                                   S01435
+      * Use FT0315 to format text for D address type                      S01435
+      *                                                                   S01435
+      *                                                                   S01435
+      *  Set up general parameters                                        S01435
+      *                                                                   S01435
+     C           *LIKE     DEFN PCCY      XCCY                            S01435
+      *                                                                   S01435
+     C                     CLEARW8FT                                      S01435
+     C                     MOVEL*BLANKS   W8STMT                          S01435
+     C                     MOVELXCCY      W8CCY                           S01435
+     C                     MOVEL##PGM     W8CPGM                          S01435
+     C                     MOVEL'*MSG  '  W8ACT                           S01435
+     C                     Z-ADD5         W8NLIN                          S01435
+     C                     MOVEL'Y'       W8MTXT                          S01435
+      *                                                                   S01435
+      *  Format data to be translated                                     S01435
+      *                                                                   S01435
+     C                     MOVELSPTP      W8TYPE                          S01435
+     C                     MOVEL*BLANKS   W8LINS                          S01435
+     C                     MOVELSPT1      ADCHK1                          S01435
+     C                     MOVELSPT2      ADCHK2                          S01435
+     C                     MOVELSPT3      ADCHK3                          S01435
+     C                     MOVELSPT4      ADCHK4                          S01435
+     C                     MOVELSPT5      ADCHK5                          S01435
+     C                     MOVELADDRSS    W8LINS                          S01435
+      *                                                                   S01435
+      * Call expansion program                                            S01435
+      *                                                                   S01435
+     C                     CALL 'FT0315'               3030               S01435
+     C                     PARM           W8RTN   7                       S01435
+     C                     PARM           W8FT                            S01435
+     C                     PARM           W8LINS256                       S01435
+     C                     PARM           W8RPT 256                       S01435
+     C                     PARM           W8MSG 256                       S01435
+     C                     PARM           W8SCR 256                       S01435
+      *                                                                   S01435
+      *  Check if database error occurred                                 S01435
+      *                                                                   S01435
+     C           *IN30     IFEQ '1'                                       S01435
+     C           W8RTN     ORNE *BLANKS                                   S01435
+     C                     MOVE '089'     DBERR#             * * * * * * *S01435
+     C                     MOVEL'*CALL'   DBERKY             * DBERR 089 *S01435
+     C                     MOVEL'FT0315'  DBFNAM             * * * * * * *S01435
+     C                     EXSR DBERR                                     S01435
+     C                     END                                            S01435
+      *                                                                   S01435
+     C                     MOVELW8RPT     ADDRSS                          S01435
+     C                     MOVELADCHK1    SPT1                            S01435
+     C                     MOVELADCHK2    SPT2                            S01435
+     C                     MOVELADCHK3    SPT3                            S01435
+     C                     MOVELADCHK4    SPT4                            S01435
+     C                     MOVELADCHK5    SPT5                            S01435
+      *                                                                   S01435
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+      ***************                                                     S01435
+      ***************  Subroutine removed                                 S01435
+      ***************                                                     S01435
+     C********************************************************************S01435
+     C***************                                                     S01435
+     C***********SUBROUTINE TO SET UP OUTPUT FIELDS.                      S01435
+     C***************                                                     S01435
+     C***********MOUTSR    BEGSR                            *** MOUTSR ***S01435
+     C***************                                                     S01435
+     C***************      MOVE CNA1      SPT2                            S01435
+     C***************      MOVE CNA2      SPT3                            S01435
+     C***************      MOVE CNA3      SPT4                            S01435
+     C***************      MOVE CNA4      SPT5                            S01435
+     C***************                                                     S01435
+     C***************      ENDSR                                          S01435
+     C***************                                                     S01435
+     C********************************************************************S01435
+     C/EJECT
+     C********************************************************************
+     C*
+     C*          SUBROUTINE TO SET UP DATA STRUCTURE
+     C*                     FOR DATABASE ERRORS.
+     C*
+     C* ERROR  CAUSE
+     C*   01   VALID I.C.R.-1 RECORD NOT FOUND (IC).
+     C*   02   VALID CURRENCY RECORD NOT FOUND.
+     C*
+     C*   03   VALID CUSTOMER RECORD NOT FOUND  ( FULL )
+     C*   04   UNSUCCESSFUL CHAIN TO LF/CLINT   (NOSTRO)
+     C*
+     C*   05   VALID CUSTOMER RECORD NOT FOUND  (NOSTRO)
+     C*   06   UNSUCCESSFUL CHAIN TO LF/CLINT   (NUMBER)
+     C*
+     C*   07   UNSUCCESSFUL CHAIN TO LF/ACNUMA  (RETAIL )
+     C*   08   UNSUCCESSFUL CHAIN TO LF/CLINT   (ACCOUNT)
+     C*
+     C*                                       (FULL A/C
+     C*   09   UNSUCCESSFUL CHAIN TO LF/CLINT (PARTIAL A/C
+     C*                                       (CUSTOMER
+     C*
+     C*   10   VALID I.C.R.-1 RECORD NOT FOUND (LR).
+     C*
+     C           DBERR     BEGSR                             *** DBERR ***
+     C*
+     C           *NAMVAR   DEFN LDA       DLDA
+     C           *LOCK     IN   DLDA
+     C                     MOVEL'FT0665'  DBPGM            ) SET UP
+     C*********************MOVE DBFNAM    DBFILE           ) DATA BASE    S01194
+     C                     MOVELDBFNAM    DBFILE                          S01194
+     C                     MOVELDBERKY    DBKEY            ) ERROR
+     C                     MOVE DBERR#    DBASE            ) FIELDS
+     C                     OUT  DLDA
+     C                     SETON                     U7U8LR
+     C                     SETON                     78
+     C*********************MOVE 'FT0665'  DBPROG  6                       S01117
+     C                     EXSR TIMESR
+     C                     Z-ADD0         PAGE                            S01117
+     C*********************WRITEP2HEAD                                    S01117
+     C                     WRITEAUHEAD                                    S01117
+     C                     DUMP
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C*******************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*               SUBROUTINE TO ACCESS TIME OF DAY.
+     C*
+     C           TIMESR    BEGSR                            *** TIMESR ***
+     C*
+     C                     TIME           TIME    60
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     O*
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

@@ -1,0 +1,175 @@
+     H        1   D
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas HF Restore gap dates')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - History and Audit Facility Module
+     F*                                                               *
+     F*  HF0160 - HF Restore Gap Dates                                *
+     F*                                                               *
+     F*  Function:  This program allows the user to define the        *
+     F*             report layouts of input cycle monitor reports     *
+     F*             and COB reports for a particular item file.       *
+     F*                                                               *
+     F*  Called By: HFC0160 - Restore Gap Dates.                      *
+     F*                                                               *
+     F*  Calls: HFC0161 - Check and update DATASPY/BAT user layouts.  *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  LAST AMEND NO. S01379             DATE 22SEP92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+     F*  S01379 - New program for HAF.                                *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FHF0160DFCF  E                    WORKSTN
+     F*
+     F******************************************************************
+     F*       F U N C T I O N  O F  I N D I C A T O R S
+     F*
+     F*       03       CMD/3 (EXIT) IS PRESSED
+     F*       80       ERROR ON USER LAYOUT FOR COB-AUDIT
+     F*       81       ERROR ON USER LAYOUT FOR IC-AUDIT
+     E*-----------------------------------------------------------------
+     E**                  T A B L E S
+     E*
+     E                    CPY@    1   1 80
+     E*
+     E** Array containing Copyright statement
+     E*
+     E*-----------------------------------------------------------------
+     I*
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+      *
+     I*---------------------------------------------------------------
+     C/EJECT
+     C** Set up copyright parameter
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+     C                     MOVE AGMRDT    SRUNA            RUN DATE
+     C                     MOVE USER      SUSER
+     C                     MOVELWSID      SWSID
+      *
+      *
+     C                     MOVEL'HF0160'  SPGMQ  10
+     C                     MOVEL*BLANKS   SSFKY   4
+     C                     MOVE *BLANKS   WUMSID  7        Message Identif
+     C                     MOVEL'HFMSGF'  WUMSGF 10        Message File Na
+      *
+      *
+     C           START     TAG
+      *
+     C                     WRITEHF0160C0
+     C                     EXFMTHF0160F1
+      *
+      ** Clear program of messages
+      *
+     C                     CALL 'SCC0250'
+     C                     MOVEA'00'      *IN,80
+      *
+      ** ADD 'J' TO START OF ITEM NAME
+      *
+     C                     MOVE *BLANKS   ITEM   10
+     C                     MOVEL'J'       ITEM
+     C                     MOVE ITEM9     ITEM
+      *
+     C   03                SETON                     LR
+     C   03                GOTO ENDPGM
+      *
+      **
+      *
+     C                     MOVEL'C'       OK
+      *
+     C                     CALL 'HFC0161'
+     C                     PARM           OK      1
+     C                     PARM           AUD1
+     C                     PARM           AUD2
+     C                     PARM           ITEM
+      *
+     C           OK        IFEQ '1'
+     C           OK        OREQ '3'
+     C                     MOVEL'HAF0043' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001           Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002           Message File Na
+     C                     SETON                     80
+     C                     END
+      *
+     C           OK        IFEQ '2'
+     C           OK        OREQ '3'
+     C                     MOVEL'HAF0044' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     SETON                     81
+     C                     END
+      *
+     C           OK        IFEQ '1'
+     C           OK        OREQ '2'
+     C           OK        OREQ '3'
+     C                     GOTO START
+     C                     END
+      *
+     C           OK        IFEQ 'C'
+     C                     MOVEL'Y'       OK                           tif
+      *
+     C                     CALL 'HFC0161'
+     C                     PARM           OK
+     C                     PARM           AUD1
+     C                     PARM           AUD2
+     C                     PARM           ITEM
+      *
+     C                     MOVE *BLANKS   ITEM9
+     C                     MOVE *BLANKS   AUD1
+     C                     MOVE *BLANKS   AUD2
+      *
+     C                     MOVEL'HAF0045' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001           Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002           Message File Na
+      *
+     C                     GOTO START
+      *
+     C                     END
+      *
+     C           ENDPGM    TAG
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

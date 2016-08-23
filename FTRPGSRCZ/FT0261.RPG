@@ -1,0 +1,2536 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT Update balances for non-authorised')          *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - FUNDS TRANSFER MODULE                            *
+     F*                                                                  *
+     F*  FT0261 - Update Shadow balances for Non-Authorised Transactions *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      *  Last Amend No. CAP212             Date 15Sep14               *
+      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *                 CLE134             Date 01Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CAP205             Date 03Mar10               *
+      *                 CAP204             Date 09Feb10               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CFT032             Date 11Sep06               *
+      *                 CDL049             Date 07Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CFT009             Date 14Jul00               *
+      *                 CFT014             Date 25May00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CFT004             Date 09Aug99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                  142590             DATE  16Mar99                *
+     F*                  S01499             DATE  06JUN94                *
+     F*                  S01494             DATE  25MAY94                *
+     F*                  068320             DATE  17MAR94                *
+     F*                  S01435             DATE  08SEP93                *
+     F*                  041693             DATE  05JAN93                *
+     F*                  045014             DATE  07DEC92                *
+     F*                  042779             DATE  10NOV92                *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+      *                                                               *
+      *  CAP212 - FT Nostro Transfer API (Recompile)                  *
+      *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *  CAP205 - Teller Related APIs - Account Balance Check         *
+      *  CAP204 - Teller Related APIs - Account Transfer              *
+      *  CFT032 - Account line in field 50X in MT103                  *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*     CFT009 - FT Fees and Charge Development
+      *  CFT014 - Straight-through Processing Phase 2 MT103 Messages  *
+      *           Generation for FT.                                  *
+     F*     CFT004 - Straight Through Processing Phase 2                 *
+     F*            - International Bank Account Numbers                  *
+     F*     142590 - Re-compiled over changed logical files NONAUBB and  *
+     F*            - NONAUOB                                             *
+     F*     S01499 - BLI V.A.T. Processing                               *
+     F*     S01494 - BLI Funds Transfer Enhancements                     *
+     F*     068320 - Allow for Charge movements                          *
+     F*     S01435 - Incoming Message Management.                        *
+     F*     041693 - Delivered as part of fix.                           *
+     F*                                                                  *
+     F*     045014 - Add primary transaction reference to error msg.     *
+     F*              Call FT0005 to get FT Control Data
+     F*                                                                  *
+     F*     042779 - New program to update shadow files for non-         *
+     F*              authorised transactions                             *
+     F*                                                                  *
+     F*****************************************************************
+     F*                                                                  *
+     F*  FUNCTION OF INDICATORS                                          *
+     F*                                                                  *
+     F*  01    OTPAYDD                                                   *
+     F*  02    INPAYDD                                                   *
+     F*  03    CQPACDD                                                   *
+     F*  04    CQCODDD                                                   *
+     F*  05    NTRANDD                                                   *
+     F*  50    First cycle                                               *
+     F*  90    Chain fail                                                *
+     F*                                                                  *
+     F********************************************************************
+     FNONAUBB IP  E           K        DISK
+     F                                              KINFSR SRFILE
+      *
+      * Define Non-Authorised transactions
+      *
+     FCQPAC   IF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+     F            CQPACDDF                          KIGNORE
+      *
+      * Define Cheques to be paid details
+      *
+     FCQCOD   IF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+     F            CQCODDDF                          KIGNORE
+      *                                                                   CFT009
+      *                                                                   CFT009
+     FINPAYXL0IF  E           K        DISK                               CFT009
+      *                                                                   CFT009
+      *                                                                   CFT009
+     FOTPAYXL0IF  E           K        DISK                               CFT009
+      *                                                                   CFT009
+      *
+      * Define Cheques to be collected details
+      *
+     FSDBANKL1IF  E           K        DISK         KINFSR SRFILE     UC
+     F            @BJREEF                           KRENAME@BANKL1        045014
+      *                                                                   CFT014
+      ** Incoming Payments Details extension file                         CFT014
+      *                                                                   CFT014
+     FINPAYXL2IF  E           K        DISK         KINFSR SRFILE     UC  CFT014
+      *                                                                   CFT014
+      ** Outgoing Payments Details extension file                         CFT014
+      *                                                                   CFT014
+     FOTPAYXL2IF  E           K        DISK         KINFSR SRFILE     UC  CFT014
+      *
+      * Define SDBANKL1 for base currency
+     F/COPY WNCPYSRC,FT0261F001
+      *
+     F/EJECT
+      *
+      *  Copyright table
+      *
+     E                    CPY@    1   1 80
+      *
+      *  Error texts
+      *
+     E                    ERR@    1   3 80
+      *
+      *  Subroutine stack
+      *
+     E                    @STK       20 10
+     E/EJECT
+      *
+      *   Define record formats to be recognised
+      *
+     IOTPAYDDF    01
+     IINPAYDDF    02
+     ICQCODDDF    03
+     ICQPACDDF    04
+     INTRANDDF    05
+     I              TFRF                            PREF
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      *  Program data structure
+      *
+     IDSPGM     ESDSY2PGDSP
+      *
+      *  Send message data structure
+      *
+     IDBDTA       DS
+     I                                        1  10 DBPGM
+     I                                       11  20 DBFILE
+     I                                       21  50 DBKEY
+     I                                       51  550DBERNB
+     I                                       56 135 DBNARR
+     I                                      136 145 DBSTK
+     I                                      146 175 DBPREF                045014
+      *
+      *  Calling parameter data structure for AOSPOSU0
+      *
+     IC#DTA       DS                            256
+     I                                        1   1 C#ATYP
+     I**********                              2  19 C#ACCT                                    CGL029
+     I**********                              2   70C#CNU1                                    CSD027
+     I                                        2   7 C#CNU1                                    CSD027
+     I                                        8  10 C#CCY1
+     I**********                             11  140C#ACO1                                    CGL029
+     I                                       15  160C#ACS1
+     I                                       17  19 C#BRC1                031876
+     I                                        2   30C#NOSN
+     I                                        2   6 C#NOS
+     I                                        2  110C#ACNO
+     I**********                              2   70C#CNUM                                    CSD027
+     I                                        2   7 C#CNUM                                    CSD027
+     I**********                              8  110C#ACOD                                    CGL029
+     I                                       12  130C#ACSQ
+     I                                       14  16 C#BRCA
+     I                                       24  24 C#IO
+     I                                       25  27 C#CCY
+     I                                       28  29 C#TRYP
+     I                                       30  59 C#NARR
+     I                                       60  670C#CHQN
+     I                                       68  82 C#PREF
+     I                                       83  88 C#TRN
+     I                                    P  89  960C#AMT
+     I                                       97  97 C#PRON
+     I                                       98  98 C#OLPS
+     I                                       99  99 C#MEMS
+     I                                      100 100 C#RSAC
+     I                                      101 102 C#MOD
+     I                                      103 104 C#OLRC
+     I                                      105 105 C#FTOV
+     I                                    P 106 1080C#VDAT
+     I                                    P 109 1110C#PSTD
+     I                                      121 1300C#ACO1                                    CGL029
+     I                                      131 1400C#ACOD                                    CGL029
+     I                                      141 160 C#OTR1                                    CAP204
+     I                                      161 161 C#MTYP                                    CAP205
+      *                                                                                       CLE134
+      ** Exception Reference Id/Number                                                        CLE134
+      *                                                                                       CLE134
+     I                                      162 164 C#XRFI                                    CLE134
+     I                                      165 1740C#XRFN                                    CLE134
+     I/COPY WNCPYSRC,FT0261I002
+      *                                                                                       CGL029
+      ** Full General Ledger - CNUM/CCY/ACOD/ACSQ                                             CGL029
+      *                                                                                       CGL029
+     I            DS                                                                          CGL029
+     I                                        1  240C#ACCT                                    CGL029
+     I**********                              1   60W#CNU1                             CGL029 CSD027
+     I                                        1   6 W#CNU1                                    CSD027
+     I                                        7   9 W#CCY1                                    CGL029
+     I                                       10  190W#ACO1                                    CGL029
+     I                                       20  210W#ACS1                                    CGL029
+     I                                       22  24 W#BRC1                                    CGL029
+      *
+      *  Calling parameter data structure for AOCCYCV0
+      *
+     ID#DTA       DS                            256
+      *                                       From Currency & amount
+     I                                        1   3 D#FCCY
+     I                                    P   4  110D#FAMT
+      *                                       To Currency & amount
+     I                                       12  14 D#TCCY
+     I                                    P  15  220D#TAMT
+      *                                       Rate and multi/div ind.
+     I                                       23  23 I#MDIN
+     I                                    P  24  368I#RATE
+      *                            Output     Rate and multi/div ind.
+      *                                       If no in rate
+     I                                       37  37 O#MDIN
+     I                                    P  38  508O#RATE
+      *                                                                   045014
+      *  Input parameters data structure from FT0005                      045014
+      *                                                                   045014
+     IC#CNTL      DS                            256                       045014
+     I                                        1   1 C#PDTI                045014
+     I                                        2   3 C#CCYI                045014
+     I                                        4   4 C#GLUI                045014
+     I                                        5   5 C#TPCI                045014
+     I*                                                                   S01494
+     IDSFDY     E DSDSFDY                                                 S01494
+     I** Data Structure for Access Program                                S01494
+     I*                                                                   S01494
+     I**                                                                  S01494
+     ISCSARD    E DSSCSARDPD                                              S01494
+     I** External data structure for SAR file details                     S01494
+      *                                                                   045014
+     IDSSDY     E DSDSSDY                                                 CFT004
+     I*                                                                   CFT004
+     I** Second DS for access programs, long data structure               CFT004
+     I*                                                                   CFT004
+     I*                                                                   CFT004
+     I** Data structure for AOIBANR4                                      CFT004
+     I*                                                                   CFT004
+     I***ACNT***     DS                            485                                 CFT004 CGL029
+     IACNT        DS                            573                                           CGL029
+     I**********                              2   70S4CNUM                             CFT004 CSD027
+     I                                        2   7 S4CNUM                                    CSD027
+     I                                        8  10 S4CCY                 CFT004
+     I**********                             11  140S4ACOD                             CFT004 CGL029
+     I                                       11  140QQACOD                                    CGL029
+     I                                       15  160S4ACSQ                CFT004
+     I                                       23  25 S4BRCA                CFT004
+     I                                      554 5630S4ACOD                                    CGL029
+     I/COPY WNCPYSRC,FT0261I001
+     I/EJECT
+      *
+      *  Entry parameter list
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      * Initialise program
+      *
+     C           *IN50     IFEQ '0'
+     C                     EXSR SRINIT
+     C                     END
+      *                                                                   045014
+      *  Reset primary transaction reference                              045014
+      *                                                                   045014
+     C                     MOVEL*BLANKS   W0PREF                          045014
+      *
+      * Call subroutine depending on record read
+      *
+     C   01                EXSR OTPAY
+     C   02                EXSR INPAY
+     C   03                EXSR CQCO
+     C   04                EXSR CQPA
+     C   05                EXSR NTRAN
+      *
+      *  Update database if necessary
+      *
+     C                     EXSR SRUPDT
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      * Last record processing
+      *
+     CLR                   EXSR SRLR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  INPAY    : Process Incoming Payments                         *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         INPAY     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'INPAY '  @STK,Q
+      *                                                                   045014
+      *  Set up primary transaction reference                             045014
+      *                                                                   045014
+     C                     MOVELPREF      W0PREF                          045014
+      *                                                                   S01435
+      *  Only process if level 1 is complete                              S01435
+      *                                                                   S01435
+     C           INLVL1    CABNE'Y'       INPAYX                          S01435
+      *                                                                   CFT014
+      ** Retrieve Incoming Payment details extension record.              CFT014
+      *                                                                   CFT014
+     C           CFT014    IFEQ 'Y'                                       CFT014
+     C           PREF      CHAININPAYXL2             89                   CFT014
+      *                                                                   CFT014
+      ** No record found or is not live.                                  CFT014
+      *                                                                   CFT014
+     C           *IN89     IFEQ *ON                                       CFT014
+     C           *IN89     OREQ *OFF                                      CFT014
+     C           INRECI    ANDNE'D'                                       CFT014
+     C                     Z-ADD019       W0ERNB                          CFT014
+     C                     MOVELPREF      W0KEY                           CFT014
+     C                     MOVEL'INPAYXL2'W0FILE                          CFT014
+     C                     MOVELERR@,3    W0NARR                          CFT014
+     C                     EXSR SRERR                                     CFT014
+     C                     ENDIF                                          CFT014
+     C                     ENDIF                                          CFT014
+     C/COPY WNCPYSRC,FT0261C010
+      *
+      *  Move fields to C#DTA structure and call AOSPOSU0
+      *
+      *         S E T T L E    I N S T R U C T I O N S
+      *
+     C                     CLEARC#DTA
+      *                                                                   CFT014
+     C           CFT014    IFEQ 'Y'                                       CFT014
+     C           INTRIT    ANDNE*BLANK                                    CFT014
+      *                                                                   CFT014
+     C                     MOVELINTRIT    C#ATYP                          CFT014
+      *                                                                   CFT014
+      ** IBAN account.                                                    CFT014
+      *                                                                   CFT014
+     C           CFT004    IFEQ 'Y'                                       CFT014
+     C           INTRIT    ANDEQ'I'                                       CFT014
+     C                     CALL 'AOIBANR4'                                CFT014
+     C                     PARM *BLANK    P@RTCD                          CFT014
+     C                     PARM '*KEY   ' P@OPTN                          CFT014
+     C                     PARM INTRIB    P@IBAN                          CFT014
+     C           ACNT      PARM *BLANKS   DSSDY                           CFT014
+      *                                                                   CFT014
+     C           P@RTCD    IFNE *BLANK                                    CFT014
+     C                     Z-ADD015       W0ERNB                          CFT014
+     C                     MOVELP@IBAN    W0KEY                           CFT014
+     C                     MOVEL'ACCNTL6' W0FILE                          CFT014
+     C                     MOVELERR@,3    W0NARR                          CFT014
+     C                     EXSR SRERR                                     CFT014
+     C                     ENDIF                                          CFT014
+      *                                                                   CFT014
+     C**********           Z-ADDS4CNUM    C#CNU1                                       CFT014 CSD027
+     C                     MOVE S4CNUM    C#CNU1                                              CSD027
+     C                     MOVE S4CCY     C#CCY1                          CFT014
+     C                     Z-ADDS4ACOD    C#ACO1                          CFT014
+     C                     Z-ADDS4ACSQ    C#ACS1                          CFT014
+     C                     MOVE S4BRCA    C#BRC1                          CFT014
+      *                                                                   CFT014
+      ** General Ledger, Full Nostro or Retail acount.                    CFT014
+      *                                                                   CFT014
+     C                     ELSE                                           CFT014
+     C                     MOVELINTRIB    C#ACCT                          CFT014
+     C                     EXSR SRFLGL                                                        CGL029
+      *                                                                   CFT014
+     C                     ENDIF                                          CFT014
+      *                                                                   CFT014
+     C                     ELSE                                           CFT014
+      *                                                                   CFT014
+     C***********RCRT      IFNE *BLANKS                                   CFT014
+     C***********          MOVELRCRT      C#ATYP                          CFT014
+     C***********          MOVELRCCO      C#ACCT                          CFT014
+      *                                                                   CFT014
+     C           INRCRT    IFNE *BLANK                                    CFT014
+      *                                                                   CFT014
+     C                     MOVELINRCRT    C#ATYP                          CFT014
+      *                                                                   CFT014
+      ** IBAN account.                                                    CFT014
+      *                                                                   CFT014
+     C           CFT004    IFEQ 'Y'                                       CFT014
+     C           INTRIT    ANDEQ'I'                                       CFT014
+     C                     MOVE INRCO1    P@IBAN                          CFT014
+     C                     CALL 'AOIBANR4'                                CFT014
+     C                     PARM *BLANK    P@RTCD                          CFT014
+     C                     PARM '*KEY   ' P@OPTN                          CFT014
+     C                     PARM           P@IBAN                          CFT014
+     C           ACNT      PARM *BLANKS   DSSDY                           CFT014
+      *                                                                   CFT014
+     C           P@RTCD    IFNE *BLANK                                    CFT014
+     C                     Z-ADD016       W0ERNB                          CFT014
+     C                     MOVELP@IBAN    W0KEY                           CFT014
+     C                     MOVEL'ACCNTL6' W0FILE                          CFT014
+     C                     MOVELERR@,3    W0NARR                          CFT014
+     C                     EXSR SRERR                                     CFT014
+     C                     ENDIF                                          CFT014
+      *                                                                   CFT014
+     C**********           Z-ADDS4CNUM    C#CNU1                                       CFT014 CSD027
+     C                     MOVE S4CNUM    C#CNU1                                              CSD027
+     C                     MOVE S4CCY     C#CCY1                          CFT014
+     C                     Z-ADDS4ACOD    C#ACO1                          CFT014
+     C                     Z-ADDS4ACSQ    C#ACS1                          CFT014
+     C                     MOVE S4BRCA    C#BRC1                          CFT014
+      *                                                                   CFT014
+     C                     ELSE                                           CFT014
+     C                     MOVELINRCO1    C#ACCT                          CFT014
+     C                     EXSR SRFLGL                                                        CGL029
+      *                                                                   CFT014
+     C                     ENDIF                                          CFT014
+      *                                                                   CFT014
+     C                     ELSE
+     C                     MOVELSNTP      C#ATYP
+     C                     MOVELSND1      C#ACCT
+     C                     EXSR SRFLGL                                                        CGL029
+     C                     END
+      *                                                                   CFT014
+     C                     ENDIF                                          CFT014
+      *                                                                   CFT014
+     C/COPY WNCPYSRC,FT0261C003
+     C                     Z-ADDSLDT      C#VDAT
+     C/COPY WNCPYSRC,FT0261C004
+      *                                                                   045014
+      * Set posting date according to FT Control Data                     045014
+      *                                                                   045014
+     C           C#PDTI    IFEQ 'I'                                       045014
+     C                     Z-ADDBJRDNB    C#PSTD                          045014
+     C                     ELSE                                           045014
+     C           C#PDTI    IFEQ 'E'                                       045014
+     C                     Z-ADDSLDT      C#PSTD                          045014
+     C                     ELSE                                           045014
+     C           SLDT      IFLT PVDT                                      045014
+     C                     Z-ADDSLDT      C#PSTD                          045014
+     C                     ELSE                                           045014
+     C                     Z-ADDPVDT      C#PSTD                          045014
+     C                     END                                            045014
+     C                     END                                            045014
+     C                     END                                            045014
+      *                                                                   045014
+     C***********          Z-ADDSLDT      C#PSTD                          045014
+     C                     MOVEL'I'       C#IO
+     C                     MOVELSMCY      C#CCY
+     C                     MOVELPYTP      C#TRYP
+     C                     MOVELPREF      C#PREF
+     C                     Z-ADDSMAM      C#AMT
+     C                     MOVEL'FT'      C#MOD
+     C                     MOVEL'01'      C#OLRC
+     C***********          MOVEL'Y'       C#FTOV                          045014
+     C                     MOVEL##FTOV    C#FTOV                          045014
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL'F'       C#MTYP                                              CAP205
+     C                     ENDIF                                                              CAP205
+      *
+      *  Call AOSPOSU0
+      *
+     C                     CALL 'AOSPOSU0'             9090
+     C           R#RTN     PARM *BLANKS   O#RTN   7
+     C                     PARM '*ADD    'W0ACT   8
+     C                     PARM C#DTA     O#DTA 256
+      *
+     C           *IN90     IFEQ '1'
+     C           R#RTN     ORNE *BLANKS
+     C                     MOVEL'*CALL   'W0FILE
+     C                     MOVEL'AOSPOSU0'W0KEY
+     C                     Z-ADD1         W0ERNB
+     C                     MOVELERR@,1    W0NARR
+     C                     EXSR SRERR
+     C                     END
+     C/COPY WNCPYSRC,FT0261C017
+      *
+      *         P A Y          I N S T R U C T I O N S
+      *
+      *  Only execute if Outgoing Payment not generated
+      *
+     C           OPIN      IFNE 'Y'
+     C                     CLEARC#DTA
+     C           ACBT      IFNE *BLANKS
+     C                     MOVELACBT      C#ATYP
+     C                     MOVELACBK      C#ACCT
+     C                     EXSR SRFLGL                                                        CGL029
+     C                     MOVELACBB      C#BRCA
+     C                     ELSE
+     C                     MOVELBNCT      C#ATYP
+      *                                                                   CFT004
+      *** If CFT004 is on and the beneficiary field contains an IBAN      CFT004
+      *                                                                   CFT004
+     C           CFT004    IFEQ 'Y'                                       CFT004
+     C           BNCT      ANDEQ'I'                                       CFT004
+     C           34        SUBSTBNC1:2    BIBAN  34                       CFT004
+      *                                                                   CFT004
+     C                     CALL 'AOIBANR4'                                CFT004
+     C                     PARM           P@RTCD                          CFT004
+     C                     PARM '*KEY   ' P@OPTN                          CFT004
+     C                     PARM BIBAN     P@IBAN 34                       CFT004
+     C           ACNT      PARM *BLANKS   DSSDY                           CFT004
+      *                                                                   CFT004
+     C**********           Z-ADDS4CNUM    C#CNU1                                       CFT004 CSD027
+     C                     MOVE S4CNUM    C#CNU1                                              CSD027
+     C                     MOVE S4CCY     C#CCY1                          CFT004
+     C                     Z-ADDS4ACOD    C#ACO1                          CFT004
+     C                     Z-ADDS4ACSQ    C#ACS1                          CFT004
+     C                     MOVE S4BRCA    C#BRC1                          CFT004
+     C                     ELSE                                           CFT004
+     C                     MOVELBNC1      C#ACCT
+     C                     EXSR SRFLGL                                                        CGL029
+     C                     ENDIF                                          CFT004
+      *                                                                   CFT004
+     C                     END
+     C                     Z-ADDPVDT      C#VDAT
+      *                                                                   045014
+      * Set posting date according to FT Control Data                     045014
+      *                                                                   045014
+     C           C#PDTI    IFEQ 'I'                                       045014
+     C                     Z-ADDBJRDNB    C#PSTD                          045014
+     C                     ELSE                                           045014
+     C           C#PDTI    IFEQ 'E'                                       045014
+     C                     Z-ADDPVDT      C#PSTD                          045014
+     C                     ELSE                                           045014
+     C           SLDT      IFLT PVDT                                      045014
+     C                     Z-ADDSLDT      C#PSTD                          045014
+     C                     ELSE                                           045014
+     C                     Z-ADDPVDT      C#PSTD                          045014
+     C                     END                                            045014
+     C                     END                                            045014
+     C                     END                                            045014
+      *                                                                   045014
+     C***********          Z-ADDPVDT      C#PSTD                          045014
+     C                     MOVEL'O'       C#IO
+     C                     MOVELPCCY      C#CCY
+     C                     MOVELPYTP      C#TRYP
+     C                     MOVELPREF      C#PREF
+     C                     Z-SUBPYAM      C#AMT
+     C                     MOVEL'FT'      C#MOD
+     C                     MOVEL'01'      C#OLRC
+     C***********          MOVEL'Y'       C#FTOV                          045014
+     C                     MOVEL##FTOV    C#FTOV                          045014
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL'F'       C#MTYP                                              CAP205
+     C                     ENDIF                                                              CAP205
+      *
+      *  Call AOSPOSU0
+      *
+     C                     CALL 'AOSPOSU0'             9090
+     C           R#RTN     PARM *BLANKS   O#RTN   7
+     C                     PARM '*ADD    'W0ACT   8
+     C                     PARM C#DTA     O#DTA 256
+      *
+     C           *IN90     IFEQ '1'
+     C           R#RTN     ORNE *BLANKS
+     C                     MOVEL'*CALL   'W0FILE
+     C                     MOVEL'AOSPOSU0'W0KEY
+     C                     Z-ADD2         W0ERNB
+     C                     MOVELERR@,1    W0NARR
+     C                     EXSR SRERR
+     C                     END
+     C                     END
+     C/COPY WNCPYSRC,FT0261C018
+      *                                                                   068320
+      *  Move fields to C#DTA structure and call AOSPOSU0                 068320
+      *                                                                   068320
+     C                     CLEARC#DTA                                     068320
+      *                                                                   068320
+      *  If add use Receiver's Correspondent and Sender                   068320
+      *                                                                   068320
+     C                     SELEC                                          068320
+     C           CDRT      WHNE *BLANKS                                   068320
+     C                     MOVELCDRT      C#ATYP                          068320
+     C                     MOVELCDRO      C#ACCT                          068320
+     C                     EXSR SRFLGL                                                        CGL029
+     C                     MOVELCDBR      C#BRCA                          068320
+     C                     MOVELBJCYCD    C#CCY                           068320
+      *                                                                                       CFT120
+      ** For a Nostro or a Partial A/c, replace base ccy with charges                         CFT120
+      ** to DR of ccy if used                                                                 CFT120
+      *                                                                                       CFT120
+     C           CDRT      IFEQ 'N'                                                           CFT120
+     C           CDRT      OREQ 'P'                                                           CFT120
+     C           INCDRC    IFNE *BLANKS                                                       CFT120
+     C           CFT120    ANDEQ'Y'                                                           CFT120
+     C                     MOVE INCDRC    C#CCY                                               CFT120
+     C                     ENDIF                                                              CFT120
+     C                     ENDIF                                                              CFT120
+      *                                                                                       CFT120
+     C/COPY WNCPYSRC,FT0261C001
+     C           ADDC      IFEQ 'A'                                       068320
+     C                     Z-ADDSLDT      C#VDAT                          068320
+     C                     ELSE                                           068320
+     C                     Z-ADDPVDT      C#VDAT                          068320
+     C                     END                                            068320
+     C           ADDC      WHEQ 'A'                                       068320
+     C                     MOVELSMCY      C#CCY                           068320
+      *                                                                   CFT014
+      ** Consider Third Reimbursement Institution.                        CFT014
+      *                                                                   CFT014
+     C           CFT014    IFEQ 'Y'                                       CFT014
+     C           INTRIT    ANDNE*BLANK                                    CFT014
+      *                                                                   CFT014
+     C                     MOVELINTRIT    C#ATYP                          CFT014
+      *                                                                   CFT014
+      ** IBAN account.                                                    CFT014
+      *                                                                   CFT014
+     C           CFT004    IFEQ 'Y'                                       CFT014
+     C           INTRIT    ANDEQ'I'                                       CFT014
+     C                     CALL 'AOIBANR4'                                CFT014
+     C                     PARM *BLANK    P@RTCD                          CFT014
+     C                     PARM '*KEY   ' P@OPTN                          CFT014
+     C                     PARM INTRIB    P@IBAN                          CFT014
+     C           ACNT      PARM *BLANKS   DSSDY                           CFT014
+      *                                                                   CFT014
+     C           P@RTCD    IFNE *BLANK                                    CFT014
+     C                     Z-ADD017       W0ERNB                          CFT014
+     C                     MOVELP@IBAN    W0KEY                           CFT014
+     C                     MOVEL'ACCNTL6' W0FILE                          CFT014
+     C                     MOVELERR@,3    W0NARR                          CFT014
+     C                     EXSR SRERR                                     CFT014
+     C                     ENDIF                                          CFT014
+      *                                                                   CFT014
+     C**********           Z-ADDS4CNUM    C#CNU1                                       CFT014 CSD027
+     C                     MOVE S4CNUM    C#CNU1                                              CSD027
+     C                     MOVE S4CCY     C#CCY1                          CFT014
+     C                     Z-ADDS4ACOD    C#ACO1                          CFT014
+     C                     Z-ADDS4ACSQ    C#ACS1                          CFT014
+     C                     MOVE S4BRCA    C#BRC1                          CFT014
+      *                                                                   CFT014
+      ** General Ledger, Full Nostro or Retail acount.                    CFT014
+      *                                                                   CFT014
+     C                     ELSE                                           CFT014
+     C                     MOVELINTRIB    C#ACCT                          CFT014
+     C                     EXSR SRFLGL                                                        CGL029
+      *                                                                   CFT014
+     C                     ENDIF                                          CFT014
+      *                                                                   CFT014
+     C                     ELSE                                           CFT014
+      *                                                                   CFT014
+     C***********RCRT      IFNE *BLANKS                            068320 CFT014
+     C***********          MOVELRCRT      C#ATYP                   068320 CFT014
+     C***********          MOVELRCCO      C#ACCT                   068320 CFT014
+      *                                                                   CFT014
+     C           INRCRT    IFNE *BLANK                                    CFT014
+      *                                                                   CFT014
+     C                     MOVELINRCRT    C#ATYP                          CFT014
+      *                                                                   CFT014
+      ** IBAN account.                                                    CFT014
+      *                                                                   CFT014
+     C           CFT004    IFEQ 'Y'                                       CFT014
+     C           INTRIT    ANDEQ'I'                                       CFT014
+     C           34        SUBSTINRCO1:2  P@IBAN                          CFT014
+     C                     CALL 'AOIBANR4'                                CFT014
+     C                     PARM *BLANK    P@RTCD                          CFT014
+     C                     PARM '*KEY   ' P@OPTN                          CFT014
+     C                     PARM           P@IBAN                          CFT014
+     C           ACNT      PARM *BLANKS   DSSDY                           CFT014
+      *                                                                   CFT014
+     C           P@RTCD    IFNE *BLANK                                    CFT014
+     C                     Z-ADD018       W0ERNB                          CFT014
+     C                     MOVELP@IBAN    W0KEY                           CFT014
+     C                     MOVEL'ACCNTL6' W0FILE                          CFT014
+     C                     MOVELERR@,3    W0NARR                          CFT014
+     C                     EXSR SRERR                                     CFT014
+     C                     ENDIF                                          CFT014
+      *                                                                   CFT014
+     C**********           Z-ADDS4CNUM    C#CNU1                                       CFT014 CSD027
+     C                     MOVE S4CNUM    C#CNU1                                              CSD027
+     C                     MOVE S4CCY     C#CCY1                          CFT014
+     C                     Z-ADDS4ACOD    C#ACO1                          CFT014
+     C                     Z-ADDS4ACSQ    C#ACS1                          CFT014
+     C                     MOVE S4BRCA    C#BRC1                          CFT014
+      *                                                                   CFT014
+     C                     ELSE                                           CFT014
+     C                     MOVELINRCO1    C#ACCT                          CFT014
+     C                     EXSR SRFLGL                                                        CGL029
+      *                                                                   CFT014
+     C                     ENDIF                                          CFT014
+      *                                                                   CFT014
+     C                     ELSE                                           068320
+     C                     MOVELSNTP      C#ATYP                          068320
+     C                     MOVELSND1      C#ACCT                          068320
+     C                     EXSR SRFLGL                                                        CGL029
+     C                     END                                            068320
+     C/COPY WNCPYSRC,FT0261C013
+      *                                                                   CFT014
+     C                     ENDIF                                          CFT014
+      *                                                                   CFT014
+     C                     Z-ADDSLDT      C#VDAT                          068320
+     C                     OTHER                                          068320
+      *                                                                   068320
+      *  If deduct use Account with Bank and Beneficiary                  068320
+      *                                                                   068320
+     C                     MOVELPCCY      C#CCY                           068320
+     C           ACBT      IFNE *BLANKS                                   068320
+     C                     MOVELACBT      C#ATYP                          068320
+     C                     MOVELACBK      C#ACCT                          068320
+     C                     EXSR SRFLGL                                                        CGL029
+     C                     MOVELACBB      C#BRCA                          068320
+     C                     ELSE                                           068320
+     C                     MOVELBNCT      C#ATYP                          068320
+     C                     MOVELBNC1      C#ACCT                          068320
+     C                     EXSR SRFLGL                                                        CGL029
+     C                     END                                            068320
+     C                     Z-ADDPVDT      C#VDAT                          068320
+     C                     END                                            068320
+      *                                                                   068320
+      * Set posting date according to FT Control Data                     068320
+      *                                                                   068320
+     C           C#PDTI    IFEQ 'I'                                       068320
+     C                     Z-ADDBJRDNB    C#PSTD                          068320
+     C                     ELSE                                           068320
+     C           C#PDTI    IFEQ 'E'                                       068320
+     C           ADDC      IFEQ 'A'                                       068320
+     C                     Z-ADDSLDT      C#PSTD                          068320
+     C                     ELSE                                           068320
+     C                     Z-ADDPVDT      C#PSTD                          068320
+     C                     END                                            068320
+     C                     ELSE                                           068320
+     C           SLDT      IFLT PVDT                                      068320
+     C                     Z-ADDSLDT      C#PSTD                          068320
+     C                     ELSE                                           068320
+     C                     Z-ADDPVDT      C#PSTD                          068320
+     C                     END                                            068320
+     C                     END                                            068320
+     C                     END                                            068320
+      *                                                                   068320
+     C                     MOVEL'I'       C#IO                            068320
+     C                     MOVELPYTP      C#TRYP                          068320
+     C                     MOVELPREF      C#PREF                          068320
+     C                     MOVEL'FT'      C#MOD                           068320
+     C                     MOVEL'01'      C#OLRC                          068320
+     C                     MOVEL##FTOV    C#FTOV                          068320
+      *                                                                   CFT009
+      ** If core switchable feature CFT009 is on then calc extra chgs     CFT009
+      *                                                                   CFT009
+     C           CFT009    IFEQ *ON                                       CFT009
+      *                                                                   CFT009
+      *                                                                   CFT009
+     C           PREF      CHAININPAYXL0             90                   CFT009
+      *                                                                   CFT009
+     C           *IN90     IFEQ '1'                                       CFT009
+     C                     MOVEL'INPAYXPD'W0FILE                          CFT009
+     C                     MOVEL'*ONLY'   W0KEY                           CFT009
+     C                     Z-ADD5         W0ERNB                          CFT009
+     C                     MOVELERR@,1    W0NARR                          CFT009
+     C                     EXSR SRERR                                     CFT009
+     C                     ENDIF                                          CFT009
+      *                                                                   CFT009
+     C           TXCH      ADD  CQCH      C#AMT                           CFT009
+     C                     ADD  ADCH      C#AMT                           CFT009
+     C                     ADD  TLCH      C#AMT                           CFT009
+     C                     ADD  MSCH      C#AMT                           CFT009
+     C                     ADD  TRCM      C#AMT                           CFT009
+     C                     ADD  INCHCM    C#AMT                           CFT009
+     C                     ADD  MSC01     C#AMT                           CFT009
+     C                     ADD  MSC02     C#AMT                           CFT009
+     C                     ADD  MSC03     C#AMT                           CFT009
+     C                     ADD  MSC04     C#AMT                           CFT009
+     C                     ADD  MSC05     C#AMT                           CFT009
+     C           CFT010    IFEQ *ON                                       CFT009
+     C                     ADD  INVATT    C#AMT                           CFT009
+     C                     ENDIF                                          CFT009
+     C                     ELSE                                           CFT009
+      *                                                                   068320
+      * Calculate charge amount (always debit)                            068320
+      *                                                                   068320
+     C           TXCH      ADD  CQCH      C#AMT                           068320
+     C                     ADD  ADCH      C#AMT                           068320
+     C                     ADD  TLCH      C#AMT                           068320
+     C                     ADD  MSCH      C#AMT                           068320
+     C                     ADD  TRCM      C#AMT                           068320
+     C*                                                                   S01494
+     C** Add FX/Change Commission                                         S01494
+     C*                                                                   S01494
+     C                     ADD  INCHCM    C#AMT                           S01494
+     C*                                                                   S01499
+     C** Add V.A.T.                                                       S01499
+     C*                                                                   S01499
+     C                     ADD  INVATT    C#AMT                           S01499
+     C                     ENDIF                                          CFT009
+      *                                                                   068320
+     C           C#AMT     CABEQ0         INPAYX                          068320
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL'F'       C#MTYP                                              CAP205
+     C                     ENDIF                                                              CAP205
+      *                                                                   068320
+      *  Call AOSPOSU0                                                    068320
+      *                                                                   068320
+     C                     CALL 'AOSPOSU0'             9090               068320
+     C           R#RTN     PARM *BLANKS   O#RTN   7                       068320
+     C                     PARM '*ADD    'W0ACT   8                       068320
+     C                     PARM C#DTA     O#DTA 256                       068320
+      *                                                                   068320
+     C           *IN90     IFEQ '1'                                       068320
+     C           R#RTN     ORNE *BLANKS                                   068320
+     C                     MOVEL'*CALL   'W0FILE                          068320
+     C                     MOVEL'AOSPOSU0'W0KEY                           068320
+     C                     Z-ADD942       W0ERNB                          068320
+     C                     MOVELERR@,1    W0NARR                          068320
+     C                     EXSR SRERR                                     068320
+     C                     END                                            068320
+     C/COPY WNCPYSRC,FT0261C019
+      *
+      *  Unwind subroutine stack name
+      *
+     C           INPAYX    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  OTPAY    : Process Outgoing Payments                         *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         OTPAY     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     MOVE *BLANKS   WORC1  34                                           CFT032
+     C                     ADD  1         Q
+     C                     MOVEL'OTPAY '  @STK,Q
+      *
+      *  Only process if level 1 is complete
+      *
+     C           LVL1      CABNE'Y'       OTPAYX
+      *                                                                   045014
+      *  Set up primary transaction reference                             045014
+      *                                                                   045014
+     C                     MOVELPREF      W0PREF                          045014
+      *                                                                   CFT014
+      ** Retrieve Outgoing Payment details extension record.              CFT014
+      *                                                                   CFT014
+     C           CFT014    IFEQ 'Y'                                       CFT014
+     C           PREF      CHAINOTPAYXL2             89                   CFT014
+      *                                                                   CFT014
+      ** No record found or is not live.                                  CFT014
+      *                                                                   CFT014
+     C           *IN89     IFEQ *ON                                       CFT014
+     C           *IN89     OREQ *OFF                                      CFT014
+     C           OPRECI    ANDNE'D'                                       CFT014
+     C                     Z-ADD020       W0ERNB                          CFT014
+     C                     MOVELPREF      W0KEY                           CFT014
+     C                     MOVEL'OTPAYXL2'W0FILE                          CFT014
+     C                     MOVELERR@,3    W0NARR                          CFT014
+     C                     EXSR SRERR                                     CFT014
+     C                     ENDIF                                          CFT014
+     C                     ENDIF                                          CFT014
+      *
+      *  Move fields to C#DTA structure and call AOSPOSU0
+      *
+      *         S E T T L E    I N S T R U C T I O N S
+      *
+      *  Only execute if Outgoing Payment not generated
+      *
+     C/COPY WNCPYSRC,FT0261C011
+     C           OPIN      IFNE 'Y'
+     C                     CLEARC#DTA
+     C           ORBT      IFNE *BLANKS
+     C                     MOVELORBT      C#ATYP
+     C                     MOVELORBK      C#ACCT
+     C                     EXSR SRFLGL                                                        CGL029
+     C                     MOVELORBB      C#BRCA
+     C                     ELSE
+     C                     MOVELORCT      C#ATYP
+     C                     MOVELORC1      C#ACCT
+     C                     EXSR SRFLGL                                                        CGL029
+      *                                                                                       CFT032
+     C                     MOVELORC1      WSLASH  1                                           CFT032
+     C           WSLASH    IFEQ '/'                                                           CFT032
+     C           34        SUBSTORC1:2    WORC1                                               CFT032
+     C                     ELSE                                                               CFT032
+     C                     MOVELORC1      WORC1                                               CFT032
+     C                     ENDIF                                                              CFT032
+     C                     MOVELWORC1     C#ACCT                                              CFT032
+     C           ORCT      IFEQ 'I'                                                           CFT032
+     C                     CALL 'AOIBANR4'                                                    CFT032
+     C                     PARM *BLANK    P@RTCD                                              CFT032
+     C                     PARM '*KEY   ' P@OPTN                                              CFT032
+     C                     PARM WORC1     P@IBAN                                              CFT032
+     C           ACNT      PARM *BLANKS   DSSDY                                               CFT032
+      *                                                                                       CFT032
+     C           P@RTCD    IFNE *BLANK                                                        CFT032
+     C                     Z-ADD21        W0ERNB                                              CFT032
+     C                     MOVELP@IBAN    W0KEY                                               CFT032
+     C                     MOVEL'ACCNTL6' W0FILE                                              CFT032
+     C                     MOVELERR@,3    W0NARR                                              CFT032
+     C                     EXSR SRERR                                                         CFT032
+     C                     ENDIF                                                              CFT032
+      *                                                                                       CFT032
+     C                     MOVE S4CNUM    W#CNU1                                              CFT032
+     C                     MOVE S4CCY     W#CCY1                                              CFT032
+     C                     Z-ADDS4ACOD    W#ACO1                                              CFT032
+     C                     Z-ADDS4ACSQ    W#ACS1                                              CFT032
+     C                     MOVE S4BRCA    W#BRC1                                              CFT032
+     C                     ENDIF                                                              CFT032
+      *                                                                                       CFT032
+     C                     END
+     C/COPY WNCPYSRC,FT0261C005
+     C                     Z-ADDSLDT      C#VDAT
+     C/COPY WNCPYSRC,FT0261C006
+      *                                                                   045014
+      * Set posting date according to FT Control Data                     045014
+      *                                                                   045014
+     C           C#PDTI    IFEQ 'I'                                       045014
+     C                     Z-ADDBJRDNB    C#PSTD                          045014
+     C                     ELSE                                           045014
+     C           C#PDTI    IFEQ 'E'                                       045014
+     C                     Z-ADDSLDT      C#PSTD                          045014
+     C                     ELSE                                           045014
+     C           SLDT      IFLT PVDT                                      045014
+     C                     Z-ADDSLDT      C#PSTD                          045014
+     C                     ELSE                                           045014
+     C                     Z-ADDPVDT      C#PSTD                          045014
+     C                     END                                            045014
+     C                     END                                            045014
+     C                     END                                            045014
+      *                                                                   045014
+     C***********          Z-ADDSLDT      C#PSTD                          045014
+     C                     MOVEL'I'       C#IO
+     C                     MOVELSMCY      C#CCY
+     C                     MOVELPYTP      C#TRYP
+     C                     MOVELPREF      C#PREF
+     C                     Z-ADDSMAM      C#AMT
+     C                     MOVEL'FT'      C#MOD
+     C                     MOVEL'01'      C#OLRC
+     C***********          MOVEL'Y'       C#FTOV                          045014
+     C                     MOVEL##FTOV    C#FTOV                          045014
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL'F'       C#MTYP                                              CAP205
+     C                     ENDIF                                                              CAP205
+      *
+      *  Call AOSPOSU0
+      *
+     C                     CALL 'AOSPOSU0'             9090
+     C           R#RTN     PARM *BLANKS   O#RTN   7
+     C                     PARM '*ADD    'W0ACT   8
+     C                     PARM C#DTA     O#DTA 256
+      *
+     C           *IN90     IFEQ '1'
+     C           R#RTN     ORNE *BLANKS
+     C                     MOVEL'*CALL   'W0FILE
+     C                     MOVEL'AOSPOSU0'W0KEY
+     C                     Z-ADD1         W0ERNB
+     C                     MOVELERR@,1    W0NARR
+     C                     EXSR SRERR
+     C                     END
+     C                     END
+     C/COPY WNCPYSRC,FT0261C020
+      *
+      *         P A Y          I N S T R U C T I O N S
+      *
+     C                     CLEARC#DTA
+     C           SNCT      IFNE *BLANKS
+     C                     MOVELSNCT      C#ATYP
+     C                     MOVELSNCO      C#ACCT
+     C                     EXSR SRFLGL                                                        CGL029
+     C                     ELSE
+     C                     MOVELDSTT      C#ATYP
+     C                     MOVELDST1      C#ACCT
+     C                     EXSR SRFLGL                                                        CGL029
+     C                     END
+     C/COPY WNCPYSRC,FT0261C014
+     C                     Z-ADDPVDT      C#VDAT
+      *                                                                   045014
+      * Set posting date according to FT Control Data                     045014
+      *                                                                   045014
+     C           C#PDTI    IFEQ 'I'                                       045014
+     C                     Z-ADDBJRDNB    C#PSTD                          045014
+     C                     ELSE                                           045014
+     C           C#PDTI    IFEQ 'E'                                       045014
+     C                     Z-ADDPVDT      C#PSTD                          045014
+     C                     ELSE                                           045014
+     C           SLDT      IFLT PVDT                                      045014
+     C                     Z-ADDSLDT      C#PSTD                          045014
+     C                     ELSE                                           045014
+     C                     Z-ADDPVDT      C#PSTD                          045014
+     C                     END                                            045014
+     C                     END                                            045014
+     C                     END                                            045014
+      *                                                                   045014
+     C***********          Z-ADDPVDT      C#PSTD                          045014
+     C                     MOVEL'O'       C#IO
+     C                     MOVELPCCY      C#CCY
+     C                     MOVELPYTP      C#TRYP
+     C                     MOVELPREF      C#PREF
+     C                     Z-SUBPYAM      C#AMT
+     C                     MOVEL'FT'      C#MOD
+     C                     MOVEL'01'      C#OLRC
+     C***********          MOVEL'Y'       C#FTOV                          045014
+     C                     MOVEL##FTOV    C#FTOV                          045014
+      *                                                                   CFT014
+      ** Increase amount by the Receiver's Charges Remitted, if present.  CFT014
+      *                                                                   CFT014
+     C           CFT014    IFEQ 'Y'                                       CFT014
+     C           OPRCRM    ANDNE*ZERO                                     CFT014
+     C                     SUB  OPRCRM    C#AMT                           CFT014
+     C                     ENDIF                                          CFT014
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL'F'       C#MTYP                                              CAP205
+     C                     ENDIF                                                              CAP205
+      *
+      *  Call AOSPOSU0
+      *
+     C                     CALL 'AOSPOSU0'             9090
+     C           R#RTN     PARM *BLANKS   O#RTN   7
+     C                     PARM '*ADD    'W0ACT   8
+     C                     PARM C#DTA     O#DTA 256
+      *
+     C           *IN90     IFEQ '1'
+     C           R#RTN     ORNE *BLANKS
+     C                     MOVEL'*CALL   'W0FILE
+     C                     MOVEL'AOSPOSU0'W0KEY
+     C                     Z-ADD2         W0ERNB
+     C                     MOVELERR@,1    W0NARR
+     C                     EXSR SRERR
+     C                     END
+     C/COPY WNCPYSRC,FT0261C021
+      *                                                                   068320
+      *  Move fields to C#DTA structure and call AOSPOSU0                 068320
+      *                                                                   068320
+     C                     CLEARC#DTA                                     068320
+     C                     Z-ADD0         WRCRM  110                      CFT014
+      *                                                                   068320
+      *  If add use Receiver's Correspondent and Sender                   068320
+      *                                                                   068320
+     C                     SELEC                                          068320
+     C           CDRT      WHNE *BLANKS                                   068320
+     C                     MOVELCDRT      C#ATYP                          068320
+     C                     MOVELCDRO      C#ACCT                          068320
+     C                     EXSR SRFLGL                                                        CGL029
+     C                     MOVELCDBR      C#BRCA                          068320
+     C                     MOVELBJCYCD    C#CCY                           068320
+      *                                                                                       CFT120
+      ** For a Nostro or a Partial A/c, replace base ccy with charges                         CFT120
+      ** to DR of ccy if used                                                                 CFT120
+      *                                                                                       CFT120
+     C           CDRT      IFEQ 'N'                                                           CFT120
+     C           CDRT      OREQ 'P'                                                           CFT120
+     C           OPCDRC    IFNE *BLANKS                                                       CFT120
+     C           CFT120    ANDEQ'Y'                                                           CFT120
+     C                     MOVE OPCDRC    C#CCY                                               CFT120
+     C                     ENDIF                                                              CFT120
+     C                     ENDIF                                                              CFT120
+      *                                                                                       CFT120
+     C/COPY WNCPYSRC,FT0261C002
+     C           ADDC      IFEQ 'A'                                       068320
+     C                     Z-ADDSLDT      C#VDAT                          068320
+     C           CFT014    IFEQ 'Y'                                       CFT014
+     C           OPRCSQ    ANDNE*ZERO                                     CFT014
+     C                     Z-ADDOPRCSQ    WRCRM                           CFT014
+     C                     ENDIF                                          CFT014
+     C                     ELSE                                           068320
+     C                     Z-ADDPVDT      C#VDAT                          068320
+     C                     END                                            068320
+     C           ADDC      WHEQ 'A'                                       068320
+     C                     MOVELSMCY      C#CCY                           068320
+     C           ORBT      IFNE *BLANKS                                   068320
+     C                     MOVELORBT      C#ATYP                          068320
+     C                     MOVELORBK      C#ACCT                          068320
+     C                     EXSR SRFLGL                                                        CGL029
+     C                     MOVELORBB      C#BRCA                          068320
+     C                     ELSE                                           068320
+     C                     MOVELORCT      C#ATYP                          068320
+     C                     MOVELORC1      C#ACCT                          068320
+     C                     EXSR SRFLGL                                                        CGL029
+      *                                                                                       CFT032
+     C                     MOVELORC1      WSLASH                                              CFT032
+     C           WSLASH    IFEQ '/'                                                           CFT032
+     C           34        SUBSTORC1:2    WORC1                                               CFT032
+     C                     ELSE                                                               CFT032
+     C                     MOVELORC1      WORC1                                               CFT032
+     C                     ENDIF                                                              CFT032
+     C                     MOVELWORC1     C#ACCT                                              CFT032
+     C           ORCT      IFEQ 'I'                                                           CFT032
+     C                     CALL 'AOIBANR4'                                                    CFT032
+     C                     PARM *BLANK    P@RTCD                                              CFT032
+     C                     PARM '*KEY   ' P@OPTN                                              CFT032
+     C                     PARM WORC1     P@IBAN                                              CFT032
+     C           ACNT      PARM *BLANKS   DSSDY                                               CFT032
+      *                                                                                       CFT032
+     C           P@RTCD    IFNE *BLANK                                                        CFT032
+     C                     Z-ADD21        W0ERNB                                              CFT032
+     C                     MOVELP@IBAN    W0KEY                                               CFT032
+     C                     MOVEL'ACCNTL6' W0FILE                                              CFT032
+     C                     MOVELERR@,3    W0NARR                                              CFT032
+     C                     EXSR SRERR                                                         CFT032
+     C                     ENDIF                                                              CFT032
+      *                                                                                       CFT032
+     C                     MOVE S4CNUM    W#CNU1                                              CFT032
+     C                     MOVE S4CCY     W#CCY1                                              CFT032
+     C                     Z-ADDS4ACOD    W#ACO1                                              CFT032
+     C                     Z-ADDS4ACSQ    W#ACS1                                              CFT032
+     C                     MOVE S4BRCA    W#BRC1                                              CFT032
+     C                     ENDIF                                                              CFT032
+      *                                                                                       CFT032
+     C                     END                                            068320
+     C/COPY WNCPYSRC,FT0261C015
+     C                     Z-ADDSLDT      C#VDAT                          068320
+      *                                                                   CFT014
+     C           CFT014    IFEQ 'Y'                                       CFT014
+     C           OPRCSC    ANDNE*ZERO                                     CFT014
+     C                     Z-ADDOPRCSC    WRCRM                           CFT014
+     C                     ENDIF                                          CFT014
+      *                                                                   CFT014
+     C                     OTHER                                          068320
+      *                                                                   068320
+      *  If deduct use Account with Bank and Beneficiary                  068320
+      *                                                                   068320
+     C                     MOVELPCCY      C#CCY                           068320
+     C           SNCT      IFNE *BLANKS                                   068320
+     C                     MOVELSNCT      C#ATYP                          068320
+     C                     MOVELSNCO      C#ACCT                          068320
+     C                     EXSR SRFLGL                                                        CGL029
+     C                     ELSE                                           068320
+     C                     MOVELDSTT      C#ATYP                          068320
+     C                     MOVELDST1      C#ACCT                          068320
+     C                     EXSR SRFLGL                                                        CGL029
+     C                     END                                            068320
+     C/COPY WNCPYSRC,FT0261C016
+     C                     Z-ADDPVDT      C#VDAT                          068320
+     C                     END                                            068320
+      *                                                                   068320
+      * Set posting date according to FT Control Data                     068320
+      *                                                                   068320
+     C           C#PDTI    IFEQ 'I'                                       068320
+     C                     Z-ADDBJRDNB    C#PSTD                          068320
+     C                     ELSE                                           068320
+     C           C#PDTI    IFEQ 'E'                                       068320
+     C           ADDC      IFEQ 'A'                                       068320
+     C                     Z-ADDSLDT      C#PSTD                          068320
+     C                     ELSE                                           068320
+     C                     Z-ADDPVDT      C#PSTD                          068320
+     C                     END                                            068320
+     C                     ELSE                                           068320
+     C           SLDT      IFLT PVDT                                      068320
+     C                     Z-ADDSLDT      C#PSTD                          068320
+     C                     ELSE                                           068320
+     C                     Z-ADDPVDT      C#PSTD                          068320
+     C                     END                                            068320
+     C                     END                                            068320
+     C                     END                                            068320
+      *                                                                   068320
+     C                     MOVEL'I'       C#IO                            068320
+     C                     MOVELPYTP      C#TRYP                          068320
+     C                     MOVELPREF      C#PREF                          068320
+     C                     MOVEL'FT'      C#MOD                           068320
+     C                     MOVEL'01'      C#OLRC                          068320
+     C                     MOVEL##FTOV    C#FTOV                          068320
+      *                                                                   CFT009
+      ** If core switchable feature CFT009 is on then calc extra chgs     CFT009
+      *                                                                   CFT009
+     C           CFT009    IFEQ *ON                                       CFT009
+      *                                                                   CFT009
+     C           PREF      CHAINOTPAYXL0             89                   CFT009
+      *                                                                   CFT009
+     C           *IN90     IFEQ '1'                                       CFT009
+     C                     MOVEL'OTPAYXPD'W0FILE                          CFT009
+     C                     MOVEL'*ONLY'   W0KEY                           CFT009
+     C                     Z-ADD6         W0ERNB                          CFT009
+     C                     MOVELERR@,1    W0NARR                          CFT009
+     C                     EXSR SRERR                                     CFT009
+     C                     ENDIF                                          CFT009
+      *                                                                   CFT009
+     C           TXCH      ADD  CQCH      C#AMT                           CFT009
+     C                     ADD  CSTA      C#AMT                           CFT009
+     C                     ADD  SPCH      C#AMT                           CFT009
+     C                     ADD  MSCH      C#AMT                           CFT009
+     C                     ADD  TRCM      C#AMT                           CFT009
+     C                     ADD  OPCHCM    C#AMT                           CFT009
+     C                     ADD  MISC01    C#AMT                           CFT009
+     C                     ADD  MISC02    C#AMT                           CFT009
+     C                     ADD  MISC03    C#AMT                           CFT009
+     C                     ADD  MISC04    C#AMT                           CFT009
+     C                     ADD  MISC05    C#AMT                           CFT009
+     C           CFT010    IFEQ *ON                                       CFT009
+     C                     ADD  OPVATT    C#AMT                           CFT009
+     C                     ENDIF                                          CFT009
+     C                     ELSE                                           CFT009
+      *                                                                   068320
+      * Calculate charge amount (always debit)                            068320
+      *                                                                   068320
+     C           TXCH      ADD  CQCH      C#AMT                           068320
+     C                     ADD  CSTA      C#AMT                           068320
+     C                     ADD  SPCH      C#AMT                           068320
+     C                     ADD  MSCH      C#AMT                           068320
+     C                     ADD  TRCM      C#AMT                           068320
+     C*                                                                   S01494
+     C** Add FX/Change Commission                                         S01494
+     C*                                                                   S01494
+     C                     ADD  OPCHCM    C#AMT                           S01494
+     C*                                                                   S01499
+     C** Add V.A.T.                                                       S01499
+     C*                                                                   S01499
+     C                     ADD  OPVATT    C#AMT                           S01499
+     C                     ENDIF                                          CFT009
+      *                                                                   CFT014
+      ** Include Receiver's Charges Remitted.                             CFT014
+      *                                                                   CFT014
+     C           CFT014    IFEQ 'Y'                                       CFT014
+     C                     ADD  WRCRM     C#AMT                           CFT014
+     C                     ENDIF                                          CFT014
+      *                                                                   068320
+     C           C#AMT     CABEQ0         OTPAYX                          068320
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL'F'       C#MTYP                                              CAP205
+     C                     ENDIF                                                              CAP205
+      *                                                                   068320
+      *  Call AOSPOSU0                                                    068320
+      *                                                                   068320
+     C                     CALL 'AOSPOSU0'             9090               068320
+     C           R#RTN     PARM *BLANKS   O#RTN   7                       068320
+     C                     PARM '*ADD    'W0ACT   8                       068320
+     C                     PARM C#DTA     O#DTA 256                       068320
+      *                                                                   068320
+     C           *IN90     IFEQ '1'                                       068320
+     C           R#RTN     ORNE *BLANKS                                   068320
+     C                     MOVEL'*CALL   'W0FILE                          068320
+     C                     MOVEL'AOSPOSU0'W0KEY                           068320
+     C                     Z-ADD952       W0ERNB                          068320
+     C                     MOVELERR@,1    W0NARR                          068320
+     C                     EXSR SRERR                                     068320
+     C                     END                                            068320
+     C/COPY WNCPYSRC,FT0261C022
+      *
+      *  Unwind subroutine stack name
+      *
+     C           OTPAYX    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  CQCO     : Process Cheques for collection                    *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         CQCO      BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'CQCO  '  @STK,Q
+      *                                                                   045014
+      *  Set up primary transaction reference                             045014
+      *                                                                   045014
+     C                     MOVELPREF      W0PREF                          045014
+      *
+      *  Move fields to C#DTA structure and call AOSPOSU0
+      *
+      *         D E B I T      I N S T R U C T I O N S
+      *
+     C                     CLEARC#DTA
+     C           RCRT      IFNE *BLANKS
+     C                     MOVELRCRT      C#ATYP
+     C                     MOVELRCCO      C#ACCT
+     C                     EXSR SRFLGL                                                        CGL029
+     C                     ELSE
+     C                     MOVELCOBT      C#ATYP
+     C                     MOVELCOB1      C#ACCT
+     C                     EXSR SRFLGL                                                        CGL029
+     C                     END
+     C/COPY WNCPYSRC,FT0261C007
+     C                     Z-ADDSLDT      C#VDAT
+     C/COPY WNCPYSRC,FT0261C008
+      *                                                                   045014
+      * Set posting date according to FT Control Data                     045014
+      *                                                                   045014
+     C           C#PDTI    IFEQ 'I'                                       045014
+     C                     Z-ADDBJRDNB    C#PSTD                          045014
+     C                     ELSE                                           045014
+     C                     Z-ADDSLDT      C#PSTD                          045014
+     C                     END                                            045014
+      *                                                                   045014
+     C***********          Z-ADDSLDT      C#PSTD                          045014
+     C                     MOVEL'I'       C#IO
+     C                     MOVELSMCY      C#CCY
+     C                     MOVELPYTP      C#TRYP
+     C                     MOVELPREF      C#PREF
+     C                     Z-ADDTOCL      C#AMT
+     C                     MOVEL'FT'      C#MOD
+     C                     MOVEL'01'      C#OLRC
+     C***********          MOVEL'Y'       C#FTOV                          045014
+     C                     MOVEL##FTOV    C#FTOV                          045014
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL'F'       C#MTYP                                              CAP205
+     C                     ENDIF                                                              CAP205
+      *
+      *  Call AOSPOSU0
+      *
+     C                     CALL 'AOSPOSU0'             9090
+     C           R#RTN     PARM *BLANKS   O#RTN   7
+     C                     PARM '*ADD    'W0ACT   8
+     C                     PARM C#DTA     O#DTA 256
+      *
+     C           *IN90     IFEQ '1'
+     C           R#RTN     ORNE *BLANKS
+     C                     MOVEL'*CALL   'W0FILE
+     C                     MOVEL'AOSPOSU0'W0KEY
+     C                     Z-ADD1         W0ERNB
+     C                     MOVELERR@,1    W0NARR
+     C                     EXSR SRERR
+     C                     END
+     C/COPY WNCPYSRC,FT0261C023
+      *
+      *  Process detail records
+      *
+     C                     EXSR CQCOC
+      *
+      *  Unwind subroutine stack name
+      *
+     C           CQCOX     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  CQPA     : Process Cheques to be paid                        *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         CQPA      BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'CQPA  '  @STK,Q
+      *                                                                   045014
+      *  Set up primary transaction reference                             045014
+      *                                                                   045014
+     C                     MOVELPREF      W0PREF                          045014
+      *
+      *  Move fields to C#DTA structure and call AOSPOSU0
+      *
+      *         C R E D I T    I N S T R U C T I O N S
+      *
+     C                     CLEARC#DTA
+     C           SNCT      IFNE *BLANKS
+     C                     MOVELSNCT      C#ATYP
+     C                     MOVELSNCO      C#ACCT
+     C                     EXSR SRFLGL                                                        CGL029
+     C                     ELSE
+     C                     MOVELRBKT      C#ATYP
+     C                     MOVELRBK1      C#ACCT
+     C                     EXSR SRFLGL                                                        CGL029
+     C                     END
+     C                     Z-ADDPVDT      C#VDAT
+      *                                                                   045014
+      * Set posting date according to FT Control Data                     045014
+      *                                                                   045014
+     C           C#PDTI    IFEQ 'I'                                       045014
+     C                     Z-ADDBJRDNB    C#PSTD                          045014
+     C                     ELSE                                           045014
+     C                     Z-ADDPVDT      C#PSTD                          045014
+     C                     END                                            045014
+      *                                                                   045014
+     C***********          Z-ADDPVDT      C#PSTD                          045014
+     C                     MOVEL'O'       C#IO
+     C                     MOVELPCCY      C#CCY
+     C                     MOVELPYTP      C#TRYP
+     C                     MOVELPREF      C#PREF
+     C                     Z-SUBPRRM      C#AMT
+     C                     MOVEL'FT'      C#MOD
+     C                     MOVEL'01'      C#OLRC
+     C***********          MOVEL'Y'       C#FTOV                          045014
+     C                     MOVEL##FTOV    C#FTOV                          045014
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL'F'       C#MTYP                                              CAP205
+     C                     ENDIF                                                              CAP205
+      *
+      *  Call AOSPOSU0
+      *
+     C                     CALL 'AOSPOSU0'             9090
+     C           R#RTN     PARM *BLANKS   O#RTN   7
+     C                     PARM '*ADD    'W0ACT   8
+     C                     PARM C#DTA     O#DTA 256
+      *
+     C           *IN90     IFEQ '1'
+     C           R#RTN     ORNE *BLANKS
+     C                     MOVEL'*CALL   'W0FILE
+     C                     MOVEL'AOSPOSU0'W0KEY
+     C                     Z-ADD2         W0ERNB
+     C                     MOVELERR@,1    W0NARR
+     C                     EXSR SRERR
+     C                     END
+     C/COPY WNCPYSRC,FT0261C024
+      *
+      *  Process detail records
+      *
+     C                     EXSR CQPAD
+      *
+      *  Unwind subroutine stack name
+      *
+     C           CQPAX     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  NTRAN    : Process Nostro Transfers                          *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         NTRAN     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'NTRAN '  @STK,Q
+      *                                                                   045014
+      *  Set up primary transaction reference                             045014
+      *                                                                   045014
+     C                     MOVELPREF      W0PREF                          045014
+      *
+      *  Move fields to C#DTA structure and call AOSPOSU0
+      *
+      *         S E T T L E    I N S T R U C T I O N S
+      *
+      *
+      * A C C O U N T   W I T H   B A N K
+      *
+     C                     CLEARC#DTA
+     C                     MOVEL'N'       C#ATYP
+     C                     MOVELACBN      C#ACCT
+     C                     EXSR SRFLGL                                                        CGL029
+     C                     Z-ADDVDAT      C#VDAT
+      *                                                                   045014
+      * Set posting date according to FT Control Data                     045014
+      *                                                                   045014
+     C           C#PDTI    IFEQ 'I'                                       045014
+     C                     Z-ADDBJRDNB    C#PSTD                          045014
+     C                     ELSE                                           045014
+     C                     Z-ADDVDAT      C#PSTD                          045014
+     C                     END                                            045014
+      *                                                                   045014
+     C***********          Z-ADDVDAT      C#PSTD                          045014
+     C                     MOVEL' '       C#IO
+     C                     MOVELCCY       C#CCY
+     C                     MOVELPYTP      C#TRYP
+     C                     MOVELPREF      C#PREF
+     C                     Z-ADDAMNT      C#AMT
+     C                     MOVEL'FT'      C#MOD
+     C                     MOVEL'01'      C#OLRC
+     C***********          MOVEL'Y'       C#FTOV                          045014
+     C                     MOVEL##FTOV    C#FTOV                          045014
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL'S'       C#MTYP                                              CAP205
+     C                     ENDIF                                                              CAP205
+      *
+      *  Call AOSPOSU0
+      *
+     C                     CALL 'AOSPOSU0'             9090
+     C           R#RTN     PARM *BLANKS   O#RTN   7
+     C                     PARM '*ADD    'W0ACT   8
+     C                     PARM C#DTA     O#DTA 256
+      *
+     C           *IN90     IFEQ '1'
+     C           R#RTN     ORNE *BLANKS
+     C                     MOVEL'*CALL   'W0FILE
+     C                     MOVEL'AOSPOSU0'W0KEY
+     C                     Z-ADD1         W0ERNB
+     C                     MOVELERR@,1    W0NARR
+     C                     EXSR SRERR
+     C                     END
+     C/COPY WNCPYSRC,FT0261C025
+      *
+      *         P A Y          I N S T R U C T I O N S
+      *
+      *
+      * D E S T I N A T I O N
+      *
+     C                     CLEARC#DTA
+     C                     MOVEL'N'       C#ATYP
+     C                     MOVELDEST      C#ACCT
+     C                     EXSR SRFLGL                                                        CGL029
+     C                     Z-ADDVDAT      C#VDAT
+      *                                                                   045014
+      * Set posting date according to FT Control Data                     045014
+      *                                                                   045014
+     C           C#PDTI    IFEQ 'I'                                       045014
+     C                     Z-ADDBJRDNB    C#PSTD                          045014
+     C                     ELSE                                           045014
+     C                     Z-ADDVDAT      C#PSTD                          045014
+     C                     END                                            045014
+      *                                                                   045014
+     C***********          Z-ADDVDAT      C#PSTD                          045014
+     C                     MOVEL' '       C#IO
+     C                     MOVELCCY       C#CCY
+     C                     MOVELPYTP      C#TRYP
+     C                     MOVELPREF      C#PREF
+     C                     Z-SUBAMNT      C#AMT
+     C                     MOVEL'FT'      C#MOD
+     C                     MOVEL'01'      C#OLRC
+     C***********          MOVEL'Y'       C#FTOV                          045014
+     C                     MOVEL##FTOV    C#FTOV                          045014
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL'S'       C#MTYP                                              CAP205
+     C                     ENDIF                                                              CAP205
+      *
+      *  Call AOSPOSU0
+      *
+     C                     CALL 'AOSPOSU0'             9090
+     C           R#RTN     PARM *BLANKS   O#RTN   7
+     C                     PARM '*ADD    'W0ACT   8
+     C                     PARM C#DTA     O#DTA 256
+      *
+     C           *IN90     IFEQ '1'
+     C           R#RTN     ORNE *BLANKS
+     C                     MOVEL'*CALL   'W0FILE
+     C                     MOVEL'AOSPOSU0'W0KEY
+     C                     Z-ADD2         W0ERNB
+     C                     MOVELERR@,1    W0NARR
+     C                     EXSR SRERR
+     C                     END
+     C/COPY WNCPYSRC,FT0261C026
+      *
+      *  Unwind subroutine stack name
+      *
+     C           NTRANX    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  CQCOC    : Process Cheques for collection cheques            *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         CQCOC     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'CQCOC '  @STK,Q
+      *
+      * Read all non deleted cheques
+      *
+     C           PREF      SETLLCQCOCDDF
+     C           PREF      READECQCOCDDF                 89
+     C           *IN89     DOWEQ'0'
+     C           RECI      IFEQ 'D'
+      *
+      * Calculate Credit currency equivalent
+      *
+     C           MDIN      IFEQ 0
+     C                     MOVEL'D'       I#MDIN
+     C                     ELSE
+     C                     MOVEL'M'       I#MDIN
+     C                     END
+     C                     Z-ADDRATE      I#RATE
+     C                     Z-ADDCQAM      D#FAMT
+     C                     MOVELSMCY      D#FCCY
+     C                     MOVELCRCY      D#TCCY
+     C                     CALL 'AOCCYCV0'             9090
+     C           R#RTN     PARM *BLANKS   O#RTN   7
+     C                     PARM '*F*T*RAT'W0ACT   8
+     C           D#DTA     PARM D#DTA     O#DTA 256
+      *
+     C           *IN90     IFEQ '1'
+     C           R#RTN     ORNE *BLANKS
+     C                     MOVEL'*CALL   'W0FILE
+     C                     MOVEL'AOCCYCV0'W0KEY
+     C                     Z-ADD1         W0ERNB
+     C                     MOVELERR@,1    W0NARR
+     C                     EXSR SRERR
+     C                     END
+      *
+      *         C R E D I T    I N S T R U C T I O N S
+      *
+     C                     Z-ADDD#TAMT    W#AMT  150
+     C                     CLEARC#DTA
+     C                     MOVELCRPT      C#ATYP
+     C                     MOVELCRPY      C#ACCT
+     C                     EXSR SRFLGL                                                        CGL029
+     C                     Z-ADDCRVD      C#VDAT
+     C                     MOVELCRBR      C#BRCA
+      *                                                                   045014
+      * Set posting date according to FT Control Data                     045014
+      *                                                                   045014
+     C           C#PDTI    IFEQ 'I'                                       045014
+     C                     Z-ADDBJRDNB    C#PSTD                          045014
+     C                     ELSE                                           045014
+     C           C#PDTI    IFEQ 'E'                                       045014
+     C                     Z-ADDCRVD      C#PSTD                          045014
+     C                     ELSE                                           045014
+     C           SLDT      IFLT CRVD                                      045014
+     C                     Z-ADDSLDT      C#PSTD                          045014
+     C                     ELSE                                           045014
+     C                     Z-ADDCRVD      C#PSTD                          045014
+     C                     END                                            045014
+     C                     END                                            045014
+     C                     END                                            045014
+      *                                                                   045014
+     C***********          Z-ADDCRVD      C#PSTD                          045014
+     C                     MOVEL'O'       C#IO
+     C                     MOVELCRCY      C#CCY
+     C                     MOVELPYTP      C#TRYP
+     C                     MOVELPREF      C#PREF
+     C                     Z-SUBW#AMT     C#AMT
+     C                     MOVEL'FT'      C#MOD
+     C                     MOVEL'01'      C#OLRC
+     C***********          MOVEL'Y'       C#FTOV                          045014
+     C                     MOVEL##FTOV    C#FTOV                          045014
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL'F'       C#MTYP                                              CAP205
+     C                     ENDIF                                                              CAP205
+      *
+      *  Call AOSPOSU0
+      *
+     C                     CALL 'AOSPOSU0'             9090
+     C           R#RTN     PARM *BLANKS   O#RTN   7
+     C                     PARM '*ADD    'W0ACT   8
+     C                     PARM C#DTA     O#DTA 256
+      *
+     C           *IN90     IFEQ '1'
+     C           R#RTN     ORNE *BLANKS
+     C                     MOVEL'*CALL   'W0FILE
+     C                     MOVEL'AOSPOSU0'W0KEY
+     C                     Z-ADD2         W0ERNB
+     C                     MOVELERR@,1    W0NARR
+     C                     EXSR SRERR
+     C                     END
+     C/COPY WNCPYSRC,FT0261C027
+      *
+      *  Update database if necessary
+      *
+     C                     EXSR SRUPDT
+      *
+     C                     END
+      *
+      *  Read another record
+      *
+     C           PREF      READECQCOCDDF                 89
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           CQCOCX    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  CQPAD    : Process Cheques to be paid cheques                *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         CQPAD     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'CQPAD '  @STK,Q
+      *
+      * Read all non deleted cheques
+      *
+     C           PREF      SETLLCQPADDDF
+     C           PREF      READECQPADDDF                 89
+     C           *IN89     DOWEQ'0'                        B001
+     C           RECI      IFEQ 'D'                        B002
+      *
+      * Calculate Debit currency equivalent
+      *
+     C           MDIN      IFEQ 0
+     C                     MOVEL'D'       I#MDIN
+     C                     ELSE
+     C                     MOVEL'M'       I#MDIN
+     C                     END
+     C                     Z-ADDRATE      I#RATE
+     C                     Z-ADDCQAM      D#FAMT
+     C                     MOVELPCCY      D#FCCY
+     C                     MOVELDRCY      D#TCCY
+     C                     CALL 'AOCCYCV0'             9090
+     C           R#RTN     PARM *BLANKS   O#RTN   7
+     C                     PARM '*F*T*RAT'W0ACT   8
+     C           D#DTA     PARM D#DTA     O#DTA 256
+      *
+     C           *IN90     IFEQ '1'
+     C           R#RTN     ORNE *BLANKS
+     C                     MOVEL'*CALL   'W0FILE
+     C                     MOVEL'AOCCYCV0'W0KEY
+     C                     Z-ADD1         W0ERNB
+     C                     MOVELERR@,1    W0NARR
+     C                     EXSR SRERR
+     C                     END
+      *
+      *         D E B I T      I N S T R U C T I O N S
+      *
+     C                     Z-ADDD#TAMT    W#AMT  150
+     C                     CLEARC#DTA
+     C                     MOVELDRPT      C#ATYP
+     C                     MOVELDRPY      C#ACCT
+     C                     EXSR SRFLGL                                                        CGL029
+     C                     Z-ADDDRVD      C#VDAT
+     C                     MOVELDRBR      C#BRCA
+      *                                                                   045014
+      * Set posting date according to FT Control Data                     045014
+      *                                                                   045014
+     C           C#PDTI    IFEQ 'I'                                       045014
+     C                     Z-ADDBJRDNB    C#PSTD                          045014
+     C                     ELSE                                           045014
+     C           C#PDTI    IFEQ 'E'                                       045014
+     C                     Z-ADDDRVD      C#PSTD                          045014
+     C                     ELSE                                           045014
+     C           PVDT      IFLT DRVD                                      045014
+     C                     Z-ADDPVDT      C#PSTD                          045014
+     C                     ELSE                                           045014
+     C                     Z-ADDDRVD      C#PSTD                          045014
+     C                     END                                            045014
+     C                     END                                            045014
+     C                     END                                            045014
+      *                                                                   045014
+     C***********          Z-ADDDRVD      C#PSTD                          045014
+     C                     MOVEL'I'       C#IO
+     C                     MOVELDRCY      C#CCY
+     C                     MOVELPYTP      C#TRYP
+     C                     MOVELPREF      C#PREF
+     C                     Z-ADDW#AMT     C#AMT
+     C                     MOVEL'FT'      C#MOD
+     C                     MOVEL'01'      C#OLRC
+     C***********          MOVEL'Y'       C#FTOV                          045014
+     C                     MOVEL##FTOV    C#FTOV                          045014
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL'F'       C#MTYP                                              CAP205
+     C                     ENDIF                                                              CAP205
+      *
+      *  Call AOSPOSU0
+      *
+     C                     CALL 'AOSPOSU0'             9090
+     C           R#RTN     PARM *BLANKS   O#RTN   7
+     C                     PARM '*ADD    'W0ACT   8
+     C                     PARM C#DTA     O#DTA 256
+      *
+     C           *IN90     IFEQ '1'
+     C           R#RTN     ORNE *BLANKS
+     C                     MOVEL'*CALL   'W0FILE
+     C                     MOVEL'AOSPOSU0'W0KEY
+     C                     Z-ADD2         W0ERNB
+     C                     MOVELERR@,1    W0NARR
+     C                     EXSR SRERR
+     C                     END
+     C/COPY WNCPYSRC,FT0261C028
+      *
+      *  Update database if necessary
+      *
+     C                     EXSR SRUPDT
+      *
+      * If Charges to the Debit of are entered process as well
+      *
+     C***********CDRO      IFNE 0                                                             CSD027
+     C           CDRO      IFNE *BLANKS                                                       CSD027
+     C                     Z-ADDTRCH      W#AMT
+     C                     ADD  COLH      W#AMT
+     C                     ADD  CSTH      W#AMT
+     C*                                                                   S01494
+     C** Add FX/Change Commission                                         S01494
+     C*                                                                   S01494
+     C                     ADD  PDCHCM    W#AMT                           S01494
+     C*                                                                   S01499
+     C** Add V.A.T.                                                       S01499
+     C*                                                                   S01499
+      *                                                                   CFT009
+      ** If core switchable feature CFT010 is on then calc extra chgs     CFT009
+      *                                                                   CFT009
+     C           CFT009    IFEQ *ON                                       CFT009
+     C           CFT010    ANDEQ*ON                                       CFT009
+     C                     ADD  PDVATT    W#AMT                           S01499
+     C                     ENDIF                                          CFT009
+     C*                                                                   S01499
+     C                     CLEARC#DTA
+     C                     MOVELCDRT      C#ATYP
+     C                     MOVELCDRO      C#ACCT
+     C                     EXSR SRFLGL                                                        CGL029
+     C                     MOVELCDBR      C#BRCA
+     C                     Z-ADDDRVD      C#VDAT
+     C                     Z-ADDDRVD      C#PSTD
+     C                     MOVEL'I'       C#IO
+     C                     MOVELBJCYCD    C#CCY
+     C                     MOVELPYTP      C#TRYP
+     C                     MOVELPREF      C#PREF
+     C                     Z-ADDW#AMT     C#AMT
+     C                     MOVEL'FT'      C#MOD
+     C                     MOVEL'01'      C#OLRC
+     C***********          MOVEL'Y'       C#FTOV                          045014
+     C                     MOVEL##FTOV    C#FTOV                          045014
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL'F'       C#MTYP                                              CAP205
+     C                     ENDIF                                                              CAP205
+      *
+      *  Call AOSPOSU0 to add data
+      *
+     C                     CALL 'AOSPOSU0'             9090
+     C           R#RTN     PARM *BLANKS   O#RTN   7
+     C                     PARM '*ADD    'W0ACT   8
+     C                     PARM C#DTA     O#DTA 256
+      *
+     C           *IN90     IFEQ '1'
+     C           R#RTN     ORNE *BLANKS
+     C                     MOVEL'*CALL   'W0FILE
+     C                     MOVEL'AOSPOSU0'W0KEY
+     C                     Z-ADD4         W0ERNB
+     C                     MOVELERR@,1    W0NARR
+     C                     EXSR SRERR
+     C                     END
+     C/COPY WNCPYSRC,FT0261C029
+      *
+      *  Update database if necessary
+      *
+     C                     EXSR SRUPDT
+      *
+     C                     END
+     C                     END
+      *
+      *  Read another record
+      *
+     C           PREF      READECQPADDDF                 89
+     C                     END
+     C*
+      *
+      *  Unwind subroutine stack name
+      *
+     C           CQPADX    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRUPDT   : Update database if necessary                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRUPDT    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRUPDT'  @STK,Q
+      *
+      * Update changes on every 10th record read
+      *
+     C                     CLEARC#DTA
+     C                     ADD  1         @@UPD   10
+     C           @@UPD     IFEQ 0
+      *
+      *  Call AOSPOSU0
+      *
+     C                     CALL 'AOSPOSU0'             9090
+     C           R#RTN     PARM *BLANKS   O#RTN   7
+     C                     PARM '*UPDATE 'W0ACT   8
+     C                     PARM C#DTA     O#DTA 256
+      *
+     C           *IN90     IFEQ '1'
+     C           R#RTN     ORNE *BLANKS
+     C                     MOVEL'*CALL   'W0FILE
+     C                     MOVEL'AOSPOSU0'W0KEY
+     C                     Z-ADD1         W0ERNB
+     C                     MOVELERR@,1    W0NARR
+     C                     EXSR SRERR
+     C                     END
+     C/COPY WNCPYSRC,FT0261C030
+      *
+      **********                                                                       CFT009 CFT120
+      ***Access*SAR details file to determine if CFT009 is switched ON                 CFT009 CFT120
+      **********                                                                       CFT009 CFT120
+     C**********           CALL 'AOSARDR0'                                             CFT009 CFT120
+     C**********           PARM *BLANKS   P@RTCD  7                                    CFT009 CFT120
+     C**********           PARM '*VERIFY' P@OPTN  7                                    CFT009 CFT120
+     C**********           PARM 'CFT009'  P@SARD  6                                    CFT009 CFT120
+     C********** SCSARD    PARM SCSARD    DSFDY                                        CFT009 CFT120
+     C**********           MOVE 'N'       CFT009  1                                    CFT009 CFT120
+      **********                                                                       CFT009 CFT120
+      ***If*core feature is switched ON, set a variable field to                       CFT009 CFT120
+      ***condition the rest of the processing                                          CFT009 CFT120
+      **********                                                                       CFT009 CFT120
+     C********** P@RTCD    IFEQ *BLANKS                                                CFT009 CFT120
+     C**********           MOVE 'Y'       CFT009                                       CFT009 CFT120
+     C**********           ELSE                                                        CFT009 CFT120
+      **********                                                                       CFT009 CFT120
+      ***else,*database error (return code other than *NRF)                            CFT009 CFT120
+      **********                                                                       CFT009 CFT120
+     C********** P@RTCD    IFNE '*NRF   '                                              CFT009 CFT120
+     C**********           MOVEL'SCSARDPD'W0FILE                                       CFT009 CFT120
+     C**********           MOVEL'*CALL'   W0KEY            ***************             CFT009 CFT120
+     C**********           Z-ADD7         W0ERNB           * DB ERROR 07 *             CFT009 CFT120
+     C**********           MOVELERR@,1    W0NARR           ***************             CFT009 CFT120
+     C**********           EXSR SRERR                                                  CFT009 CFT120
+     C**********           ENDIF                                                       CFT009 CFT120
+     C**********           ENDIF                                                       CFT009 CFT120
+      **********                                                                       CFT009 CFT120
+      ***Access*SAR details file to determine if CFT010 is switched ON                 CFT009 CFT120
+      **********                                                                       CFT009 CFT120
+     C**********           CALL 'AOSARDR0'                                             CFT009 CFT120
+     C**********           PARM *BLANKS   P@RTCD  7                                    CFT009 CFT120
+     C**********           PARM '*VERIFY' P@OPTN  7                                    CFT009 CFT120
+     C**********           PARM 'CFT010'  P@SARD  6                                    CFT009 CFT120
+     C********** SCSARD    PARM SCSARD    DSFDY                                        CFT009 CFT120
+     C**********           MOVE 'N'       CFT010  1                                    CFT009 CFT120
+      **********                                                                       CFT009 CFT120
+      ***If*core feature is switched ON, set a variable field to                       CFT009 CFT120
+      ***condition the rest of the processing                                          CFT009 CFT120
+      **********                                                                       CFT009 CFT120
+     C********** P@RTCD    IFEQ *BLANKS                                                CFT009 CFT120
+     C**********           MOVE 'Y'       CFT010                                       CFT009 CFT120
+     C**********           ELSE                                                        CFT009 CFT120
+      **********                                                                       CFT009 CFT120
+      ***else,*database error (return code other than *NRF)                            CFT009 CFT120
+      **********                                                                       CFT009 CFT120
+     C********** P@RTCD    IFNE '*NRF   '                                              CFT009 CFT120
+     C**********           MOVEL'SCSARDPD'W0FILE                                       CFT009 CFT120
+     C**********           MOVEL'*CALL'   W0KEY            ***************             CFT009 CFT120
+     C**********           Z-ADD8         W0ERNB           * DB ERROR 08 *             CFT009 CFT120
+     C**********           MOVELERR@,1    W0NARR           ***************             CFT009 CFT120
+     C**********           EXSR SRERR                                                  CFT009 CFT120
+     C**********           ENDIF                                                       CFT009 CFT120
+     C**********           ENDIF                                                       CFT009 CFT120
+      *  Clear arrays in AOSPOSU0
+      *
+     C                     CLEARC#DTA
+     C                     CALL 'AOSPOSU0'             9090
+     C           R#RTN     PARM *BLANKS   O#RTN   7
+     C                     PARM '*CLEAR  'W0ACT   8
+     C                     PARM C#DTA     O#DTA 256
+      *
+     C           *IN90     IFEQ '1'
+     C           R#RTN     ORNE *BLANKS
+     C                     MOVEL'*CALL   'W0FILE
+     C                     MOVEL'AOSPOSU0'W0KEY
+     C                     Z-ADD2         W0ERNB
+     C                     MOVELERR@,1    W0NARR
+     C                     EXSR SRERR
+     C                     END
+     C/COPY WNCPYSRC,FT0261C031
+     C                     END
+      *
+      * Commit changes on every 1000th record read
+      *
+     C                     CLEARC#DTA
+     C                     ADD  1         @@CMT   30
+     C           @@CMT     IFEQ 0
+      *
+      *  Call AOSPOSU0
+      *
+     C                     CALL 'AOSPOSU0'             9090
+     C           R#RTN     PARM *BLANKS   O#RTN   7
+     C                     PARM '*COMMIT 'W0ACT   8
+     C                     PARM C#DTA     O#DTA 256
+      *
+     C           *IN90     IFEQ '1'
+     C           R#RTN     ORNE *BLANKS
+     C                     MOVEL'*CALL   'W0FILE
+     C                     MOVEL'AOSPOSU0'W0KEY
+     C                     Z-ADD3         W0ERNB
+     C                     MOVELERR@,1    W0NARR
+     C                     EXSR SRERR
+     C                     END
+     C                     END
+     C/COPY WNCPYSRC,FT0261C032
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXUPDT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRLR     : Last record processing                            *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRLR      BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRLR  '  @STK,Q
+      *
+      *  If error reported and exit
+      *
+     C           W0RTN     CABEQ'*ERROR*' EXLR
+      *
+      *  Update all data stored in AOSPOSU0
+      *
+     C                     CLEARC#DTA
+      *
+      *  Call AOSPOSU0
+      *
+     C                     CALL 'AOSPOSU0'             9090
+     C           R#RTN     PARM *BLANKS   O#RTN   7
+     C                     PARM '*UPDATE 'W0ACT   8
+     C                     PARM C#DTA     O#DTA 256
+      *
+     C           *IN90     IFEQ '1'
+     C           R#RTN     ORNE *BLANKS
+     C                     MOVEL'*CALL   'W0FILE
+     C                     MOVEL'AOSPOSU0'W0KEY
+     C                     Z-ADD1         W0ERNB
+     C                     MOVELERR@,1    W0NARR
+     C                     EXSR SRERR
+     C                     END
+     C/COPY WNCPYSRC,FT0261C033
+      *
+      *  Clear arrays in AOSPOSU0
+      *
+     C                     CLEARC#DTA
+     C                     CALL 'AOSPOSU0'             9090
+     C           R#RTN     PARM *BLANKS   O#RTN   7
+     C                     PARM '*CLEAR  'W0ACT   8
+     C                     PARM C#DTA     O#DTA 256
+      *
+     C           *IN90     IFEQ '1'
+     C           R#RTN     ORNE *BLANKS
+     C                     MOVEL'*CALL   'W0FILE
+     C                     MOVEL'AOSPOSU0'W0KEY
+     C                     Z-ADD2         W0ERNB
+     C                     MOVELERR@,1    W0NARR
+     C                     EXSR SRERR
+     C                     END
+     C/COPY WNCPYSRC,FT0261C034
+      *
+      * Commit changes
+      *
+     C                     CLEARC#DTA
+      *
+      *  Call AOSPOSU0
+      *
+     C                     CALL 'AOSPOSU0'             9090
+     C           R#RTN     PARM *BLANKS   O#RTN   7
+     C                     PARM '*COMMIT 'W0ACT   8
+     C                     PARM C#DTA     O#DTA 256
+      *
+     C           *IN90     IFEQ '1'
+     C           R#RTN     ORNE *BLANKS
+     C                     MOVEL'*CALL   'W0FILE
+     C                     MOVEL'AOSPOSU0'W0KEY
+     C                     Z-ADD3         W0ERNB
+     C                     MOVELERR@,1    W0NARR
+     C                     EXSR SRERR
+     C                     END
+     C/COPY WNCPYSRC,FT0261C035
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXLR      TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************                       CGL029
+      *                                                               *                       CGL029
+      *  SRFLGL - Sobroutine to assess full General Ledger.           *                       CGL029
+      *                                                               *                       CGL029
+      *****************************************************************                       CGL029
+      *                                                                                       CGL029
+     C           SRFLGL    BEGSR                                                              CGL029
+      *                                                                                       CGL029
+     C                     MOVELW#CNU1    C#CNU1                                              CGL029
+     C                     MOVELW#CCY1    C#CCY1                                              CGL029
+     C                     MOVELW#ACO1    C#ACO1                                              CGL029
+     C                     MOVELW#ACS1    C#ACS1                                              CGL029
+     C                     MOVELW#BRC1    C#BRC1                                              CGL029
+      *                                                                                       CGL029
+     C                     ENDSR                                                              CGL029
+      *                                                                                       CGL029
+     C/EJECT                                                                                  CGL029
+      *****************************************************************
+      *                                                               *
+      *  SRERR    : Report error and close down program               *
+      *                                                               *
+      *  CALLED BY: All subroutines                                   *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         SRERR     BEGSR
+      *
+      *  Dump program
+      *
+     C                     DUMP
+      *
+      *  Send message to MOPERQ
+      *
+     C                     MOVEL*BLANKS   DBDTA
+     C                     MOVEL'FT0261  'DBPGM
+     C                     MOVEL@STK,Q    DBSTK
+     C                     MOVELW0KEY     DBKEY
+     C                     MOVELW0ERNB    DBERNB
+     C                     MOVELW0FILE    DBFILE
+     C                     MOVELW0PREF    DBPREF                          045014
+     C           W0NARR    IFEQ *BLANKS
+     C                     MOVELERR@,1    DBNARR
+     C                     ELSE
+     C                     MOVELW0NARR    DBNARR
+     C                     END
+      *
+     C                     CALL 'AOCREPT'              9090
+     C                     PARM 'MEM5000' #MSGID  7
+     C                     PARM 'MIDAS  ' #MSGF  10
+     C                     PARM *BLANKS   #MSGFL 10
+     C                     PARM DBDTA     #MSGDT256
+     C                     PARM '*PRV'    #MSGR   5
+     C                     PARM '*'       #PRGM  10
+     C                     PARM 'MOPERQ ' #MSGQ  10
+     C                     PARM '*INFO  ' #MSGT   7
+      *
+      *  Close down program
+      *
+     C                     SETON                     LR
+     C                     MOVEL'*ERROR*' W0RTN
+     C                     RETRN
+      *
+     CSR         EXERR     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFILE   : *PSSR routine for all files                       *
+      *                                                               *
+      *  CALLED BY: IBM controlled - invalid access to file           *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRFILE    BEGSR
+      *
+      *  Dump program
+      *
+     C                     DUMP
+      *
+      *  If called again seton LR and return
+      *
+     C           @@FILE    IFNE *BLANKS
+     C                     MOVEL'1'       *INLR
+     C                     RETRN
+     C                     END
+     C                     MOVEL'Y'       @@FILE  1
+      *
+      *  Send message to MOPERQ
+      *
+     C                     MOVEL*BLANKS   DBDTA
+     C                     MOVEL'FT0261  'DBPGM
+     C                     MOVEL@STK,Q    DBSTK
+     C                     MOVEL##ERST    DBKEY
+     C                     MOVEL1         DBERNB
+     C                     MOVEL##ERFL    DBFILE
+     C                     MOVELERR@,2    DBNARR
+     C                     MOVELW0PREF    DBPREF                          045014
+      *
+     C                     CALL 'AOCREPT'              9090
+     C                     PARM 'MEM5000' #MSGID
+     C                     PARM 'MIDAS  ' #MSGF
+     C                     PARM *BLANKS   #MSGFL
+     C                     PARM DBDTA     #MSGDT
+     C                     PARM '*PRV'    #MSGR
+     C                     PARM '*'       #PRGM
+     C                     PARM 'MOPERQ ' #MSGQ
+     C                     PARM '*INFO  ' #MSGT
+      *
+      *  Close down program
+      *
+     C                     SETON                     LR
+     C                     MOVEL'*ERROR*' W0RTN
+     C                     RETRN
+      *
+     CSR         EXFILE    ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *  Define W0 database error variables
+      *
+     C           *LIKE     DEFN DBFILE    W0FILE
+     C           *LIKE     DEFN DBKEY     W0KEY
+     C           *LIKE     DEFN DBERNB    W0ERNB
+     C           *LIKE     DEFN DBNARR    W0NARR
+     C           *LIKE     DEFN DBPREF    W0PREF
+      *
+      *  Open CQPAC file for Cheques to be paid details
+      *
+     C                     OPEN CQPAC
+      *
+      *  Open CQCOD file for Cheques for collection details
+      *
+     C                     OPEN CQCOD
+      *
+      *  Open SDBANKL1 file for base currency
+      *
+     C                     OPEN SDBANKL1
+      *
+     C                     MOVEL'BANK'    BJBANK
+     C           BJBANK    CHAIN@BANKL1              9090
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'SDBANKL1'W0FILE
+     C                     MOVEL'*ONLY'   W0KEY
+     C                     Z-ADD1         W0ERNB
+     C                     MOVELERR@,3    W0NARR
+     C                     EXSR SRERR
+     C                     END
+     C                     CLOSESDBANKL1
+     C*                                                                   S01494
+     C** Access SAR details file to determine if S01494 is switched ON    S01494
+     C*                                                                   S01494
+     C                     CALL 'AOSARDR0'                                S01494
+     C                     PARM *BLANKS   P@RTCD  7                       S01494
+     C                     PARM '*VERIFY' P@OPTN  7                       S01494
+     C                     PARM 'S01494'  P@SARD  6                       S01494
+     C           SCSARD    PARM SCSARD    DSFDY                           S01494
+     C                     MOVE 'N'       S01494  1                       S01494
+     C*                                                                   S01494
+     C** If core feature is switched ON, set a variable field to          S01494
+     C** condition the rest of the processing                             S01494
+     C*                                                                   S01494
+     C           P@RTCD    IFEQ *BLANKS                                   S01494
+     C                     MOVE 'Y'       S01494                          S01494
+     C                     ELSE                                           S01494
+     C*                                                                   S01494
+     C** else, database error (return code other than *NRF)               S01494
+     C*                                                                   S01494
+     C           P@RTCD    IFNE '*NRF   '                                 S01494
+     C                     MOVEL'SCSARDPD'W0FILE                          S01494
+     C                     MOVEL'*CALL'   W0KEY            ***************S01494
+     C                     Z-ADD6         W0ERNB           * DB ERROR 06 *S01494
+     C                     MOVELERR@,1    W0NARR           ***************S01494
+     C                     EXSR SRERR                                     S01494
+     C                     END                                            S01494
+     C                     END                                            S01494
+     C*                                                                   S01499
+     C** Access SAR details file to determine if S01499 is switched ON    S01499
+     C*                                                                   S01499
+     C                     CALL 'AOSARDR0'                                S01499
+     C                     PARM *BLANKS   P@RTCD  7                       S01499
+     C                     PARM '*VERIFY' P@OPTN  7                       S01499
+     C                     PARM 'S01499'  P@SARD  6                       S01499
+     C           SCSARD    PARM SCSARD    DSFDY                           S01499
+     C                     MOVE 'N'       S01499  1                       S01499
+     C*                                                                   S01499
+     C** If core feature is switched ON, set a variable field to          S01499
+     C** condition the rest of the processing                             S01499
+     C*                                                                   S01499
+     C           P@RTCD    IFEQ *BLANKS                                   S01499
+     C                     MOVE 'Y'       S01499                          S01499
+     C                     ELSE                                           S01499
+     C*                                                                   S01499
+     C** else, database error (return code other than *NRF)               S01499
+     C*                                                                   S01499
+     C           P@RTCD    IFNE '*NRF   '                                 S01499
+     C                     MOVEL'SCSARDPD'W0FILE                          S01499
+     C                     MOVEL'*CALL'   W0KEY            ***************S01499
+     C                     Z-ADD7         W0ERNB           * DB ERROR 07 *S01499
+     C                     MOVELERR@,1    W0NARR           ***************S01499
+     C                     EXSR SRERR                                     S01499
+     C                     END                                            S01499
+     C                     END                                            S01499
+     C/COPY WNCPYSRC,FT0261C012
+      *                                                                   CFT004
+      *** Check if CFT004 is switched on                                  CFT004
+      *                                                                   CFT004
+     C                     CALL 'AOSARDR0'                                CFT004
+     C                     PARM '       ' @RTCD   7                       CFT004
+     C                     PARM '*VERIFY' @OPTN   7                       CFT004
+     C                     PARM 'CFT004'  @SARD   6                       CFT004
+      *                                                                   CFT004
+     C           @RTCD     IFEQ *BLANK                                    CFT004
+     C                     MOVE 'Y'       CFT004  1                       CFT004
+     C                     ELSE                                           CFT004
+     C                     MOVE 'N'       CFT004                          CFT004
+     C                     ENDIF                                          CFT004
+      *                                                                   CFT014
+      ** Access SAR details file to determine if CFT014 is switched ON.   CFT014
+      *                                                                   CFT014
+     C                     CALL 'AOSARDR0'                                CFT014
+     C                     PARM *BLANKS   P@RTCD                          CFT014
+     C                     PARM '*VERIFY' P@OPTN                          CFT014
+     C                     PARM 'CFT014'  P@SARD                          CFT014
+     C           SCSARD    PARM SCSARD    DSFDY                           CFT014
+      *                                                                   CFT014
+      ** If core feature is switched ON, set a variable field to          CFT014
+      ** condition the rest of the processing.                            CFT014
+      *                                                                   CFT014
+     C           P@RTCD    IFEQ *BLANKS                                   CFT014
+     C                     MOVE 'Y'       CFT014  1                       CFT014
+     C                     OPEN INPAYXL2                                  CFT014
+     C                     OPEN OTPAYXL2                                  CFT014
+     C                     ELSE                                           CFT014
+      *                                                                   CFT014
+      ** Else, database error (return code other than *NRF).              CFT014
+      *                                                                   CFT014
+     C           P@RTCD    IFNE '*NRF   '                                 CFT014
+     C                     Z-ADD014       W0ERNB                          CFT014
+     C                     MOVEL'CFT014'  W0KEY                           CFT014
+     C                     MOVEL'SCSARDPD'W0FILE                          CFT014
+     C                     MOVELERR@,1    W0NARR                          CFT014
+     C                     EXSR SRERR                                     CFT014
+     C                     ENDIF                                          CFT014
+     C                     ENDIF                                          CFT014
+      *                                                                                       CAP205
+      ** Determine if SAR CAP205 is installed                                                 CAP205
+      *                                                                                       CAP205
+     C                     MOVEL'N'       CAP205  1                                           CAP205
+     C                     CALL 'AOSARDR0'                                                    CAP205
+     C                     PARM *BLANKS   P@RTCD                                              CAP205
+     C                     PARM '*VERIFY' P@OPTN                                              CAP205
+     C                     PARM 'CAP205'  P@SARD                                              CAP205
+     C           SCSARD    PARM SCSARD    DSFDY                                               CAP205
+      *                                                                                       CAP205
+     C           P@RTCD    IFNE *BLANKS                                                       CAP205
+     C           P@RTCD    ANDNE'*NRF   '                                                     CAP205
+     C                     Z-ADD022       W0ERNB                                              CAP205
+     C                     MOVEL'CAP205'  W0KEY                                               CAP205
+     C                     MOVEL'SCSARDPD'W0FILE                                              CAP205
+     C                     MOVELERR@,1    W0NARR                                              CAP205
+     C                     EXSR SRERR                                                         CAP205
+     C                     ENDIF                                                              CAP205
+      *                                                                                       CAP205
+     C           P@RTCD    IFEQ *BLANKS                                                       CAP205
+     C                     MOVEL'Y'       CAP205                                              CAP205
+     C                     ENDIF                                                              CAP205
+      *                                                                                       CAP205
+     C/COPY WNCPYSRC,FT0261C036
+      *                                                                                       CFT120
+      ** Determine if SAR CFT120 is installed                                                 CFT120
+      *                                                                                       CFT120
+     C                     MOVEL'N'       CFT120  1                                           CFT120
+     C                     CALL 'AOSARDR0'                                                    CFT120
+     C                     PARM *BLANKS   P@RTCD                                              CFT120
+     C                     PARM '*VERIFY' P@OPTN                                              CFT120
+     C                     PARM 'CFT120'  P@SARD                                              CFT120
+     C           SCSARD    PARM SCSARD    DSFDY                                               CFT120
+      *                                                                                       CFT120
+     C           P@RTCD    IFNE *BLANKS                                                       CFT120
+     C           P@RTCD    ANDNE'*NRF   '                                                     CFT120
+     C                     Z-ADD023       W0ERNB                                              CFT120
+     C                     MOVEL'CFT120'  W0KEY                                               CFT120
+     C                     MOVEL'SCSARDPD'W0FILE                                              CFT120
+     C                     MOVELERR@,1    W0NARR                                              CFT120
+     C                     EXSR SRERR                                                         CFT120
+     C                     ENDIF                                                              CFT120
+      *                                                                                       CFT120
+     C           P@RTCD    IFEQ *BLANKS                                                       CFT120
+     C                     MOVEL'Y'       CFT120                                              CFT120
+     C                     ENDIF                                                              CFT120
+      *                                                                                       CFT120
+      ** Access SAR details file to determine if CFT009 is switched ON                        CFT120
+      *                                                                                       CFT120
+     C                     CALL 'AOSARDR0'                                                    CFT120
+     C                     PARM *BLANKS   P@RTCD  7                                           CFT120
+     C                     PARM '*VERIFY' P@OPTN  7                                           CFT120
+     C                     PARM 'CFT009'  P@SARD  6                                           CFT120
+     C           SCSARD    PARM SCSARD    DSFDY                                               CFT120
+     C                     MOVE '0'       CFT009  1                                           CFT120
+      *                                                                                       CFT120
+      ** If core feature is switched ON, set a variable field to                              CFT120
+      ** condition the rest of the processing                                                 CFT120
+      *                                                                                       CFT120
+     C           P@RTCD    IFEQ *BLANKS                                                       CFT120
+     C                     MOVE '1'       CFT009                                              CFT120
+     C                     ELSE                                                               CFT120
+      *                                                                                       CFT120
+      ** else, database error (return code other than *NRF)                                   CFT120
+      *                                                                                       CFT120
+     C           P@RTCD    IFNE '*NRF   '                                                     CFT120
+     C                     MOVEL'SCSARDPD'W0FILE                                              CFT120
+     C                     MOVEL'*CALL'   W0KEY            ***************                    CFT120
+     C                     Z-ADD7         W0ERNB           * DB ERROR 07 *                    CFT120
+     C                     MOVELERR@,1    W0NARR           ***************                    CFT120
+     C                     EXSR SRERR                                                         CFT120
+     C                     ENDIF                                                              CFT120
+     C                     ENDIF                                                              CFT120
+      *                                                                                       CFT120
+      ** Access SAR details file to determine if CFT010 is switched ON                        CFT120
+      *                                                                                       CFT120
+     C                     CALL 'AOSARDR0'                                                    CFT120
+     C                     PARM *BLANKS   P@RTCD  7                                           CFT120
+     C                     PARM '*VERIFY' P@OPTN  7                                           CFT120
+     C                     PARM 'CFT010'  P@SARD  6                                           CFT120
+     C           SCSARD    PARM SCSARD    DSFDY                                               CFT120
+     C                     MOVE '0'       CFT010  1                                           CFT120
+      *                                                                                       CFT120
+      ** If core feature is switched ON, set a variable field to                              CFT120
+      ** condition the rest of the processing                                                 CFT120
+      *                                                                                       CFT120
+     C           P@RTCD    IFEQ *BLANKS                                                       CFT120
+     C                     MOVE '1'       CFT010                                              CFT120
+     C                     ELSE                                                               CFT120
+      *                                                                                       CFT120
+      ** else, database error (return code other than *NRF)                                   CFT120
+      *                                                                                       CFT120
+     C           P@RTCD    IFNE '*NRF   '                                                     CFT120
+     C                     MOVEL'SCSARDPD'W0FILE                                              CFT120
+     C                     MOVEL'*CALL'   W0KEY            ***************                    CFT120
+     C                     Z-ADD8         W0ERNB           * DB ERROR 08 *                    CFT120
+     C                     MOVELERR@,1    W0NARR           ***************                    CFT120
+     C                     EXSR SRERR                                                         CFT120
+     C                     ENDIF                                                              CFT120
+     C                     ENDIF                                                              CFT120
+      *
+      *  Clear arrays in AOSPOSU0
+      *
+     C                     CLEARC#DTA
+     C                     CALL 'AOSPOSU0'             9090
+     C           R#RTN     PARM *BLANKS   O#RTN   7
+     C                     PARM '*CLEAR  'W0ACT   8
+     C                     PARM C#DTA     O#DTA 256
+      *
+     C           *IN90     IFEQ '1'
+     C           R#RTN     ORNE *BLANKS
+     C                     MOVEL'*CALL   'W0FILE
+     C                     MOVEL'AOSPOSU0'W0KEY
+     C                     Z-ADD2         W0ERNB
+     C                     MOVELERR@,1    W0NARR
+     C                     EXSR SRERR
+     C                     END
+     C/COPY WNCPYSRC,FT0261C037
+      *                                                                   045014
+      * Access FT Control data                                            045014
+      *                                                                   045014
+     C                     CALL 'FT0005'               9090               045014
+     C           R#RTN     PARM *BLANKS   O#RTN   7                       045014
+     C           C#CNTL    PARM           O#DTA 256                       045014
+      *                                                                   045014
+     C           *IN90     IFEQ '1'                                       045014
+     C           R#RTN     ORNE *BLANKS                                   045014
+     C                     MOVEL'*CALL   'W0FILE
+     C                     MOVEL'FT0005'  W0KEY
+     C                     Z-ADD3         W0ERNB
+     C                     MOVELERR@,1    W0NARR
+     C                     EXSR SRERR
+     C                     END                                            045014
+      *                                                                   045014
+      * Set up posting date indicator                                     045014
+      *                                                                   045014
+     C           C#GLUI    IFEQ 'I'                                       045014
+     C                     MOVEL'Y'       ##FTOV  1                       045014
+     C                     ELSE                                           045014
+     C                     MOVEL*BLANKS   ##FTOV                          045014
+     C                     END                                            045014
+      *
+      *  Indicate that set up is complete
+      *
+     C                     SETON                     50
+     C                     Z-ADD0         W#AMT  150
+     C                     MOVEL*BLANKS   R#RTN   7
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C/COPY WNCPYSRC,FT0261C009
+      *
+     CSR                   ENDSR
+     C/EJECT
+**  CPY@ table
+(c) Misys International Banking Systems Ltd. 2001
+**  Error text
+Error occurred on call to program - see dumps for further details
+File access error occurred - see dump for full details - see key for opcode
+Record not found or marked as deleted

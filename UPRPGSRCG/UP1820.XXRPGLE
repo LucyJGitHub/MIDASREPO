@@ -1,0 +1,404 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+      *****************************************************************
+/*X*IA***OVRDBF*FILE(WPCF1)*TOFILE(UPWPCFTPD)**************************                       CUP021
+/*X*IB***OVRDBF*FILE(WPCF2)*TOFILE(UPWPCFTPD)**************************                       CUP021
+/*S*D****RPGBASEBND****************************************************                       CUP021
+/*E*I****ALWNULL(*USRCTL)**********************************************                       CUP021
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bridge                                               *
+      *                                                               *
+      *  UP1820 - Build Action File for T_WIPCF                       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *                                                               *
+      *  Last Amend No. CUP021  *REDUNDANT Date 11Feb11               *
+      *  Prev Amend No. BUG27884           Date 08Jul10               *
+      *                 BUG15793           Date 01Feb08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 CUP037  *CREATE    Date 04Dec06               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CUP021 - Rewrite of Action File processing                   *
+      *  BUG27884 - Applied 15793.                                    *
+      *  BUG15793 - Action file utility for T_WIPCF not functioning   *
+      *             when Global Zone = 'GLOBAL'                       *
+      *  CUP037 - Action File for T_WIPCF.                            *
+      *                                                               *
+      *****************************************************************
+      * Function of indicators
+      *
+      *       20      End of file
+      *       21 - 23 Null indicators for key fields
+      *       30      Chain - record not found
+      *       69      Read, write or chain fail
+      *       70 - 87 Indicators for changed fields
+      *
+     FWPCF1     IF   E             DISK    INFSR(*PSSR)
+     FWPCF2     IF   E           K DISK    INFSR(*PSSR)
+     F                                     RENAME(UPWPCFTPD:WPCFF) PREFIX(X)
+     FUPWPCFPD  O    E             DISK    INFSR(*PSSR)
+      *
+      /EJECT
+     D LDA           E DS           256    EXTNAME(LDA)
+      *
+      * Local data area for database error details
+      * *LOCK IN LDA immediately before and OUT LDA immediately
+      * after each database error handling.
+      *
+      *                                     134 141 DBFILE
+      *       Defines:                      142 170 DBKEY
+      *                                     171 180 DBPGM
+      *                                     181 1830DBASE
+      *
+     D PSDS           SDS
+      *
+      * Program Status Data Structure.
+      *
+     D  PGM              *PROC
+     D  WSID                 244    253
+     D  USER                 254    263
+      *
+      *
+     C     *ENTRY        PLIST
+     C                   PARM                    MODE              1
+      *
+     C     COMP          KLIST
+     C                   KFLD      *IN21         WC_API
+     C                   KFLD      *IN22         WC_SYSTEM
+     C                   KFLD      *IN23         WC_ZONE
+      *
+     C                   READ      WPCF1                                6920
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C     *IN20         DOWEQ     '0'
+     C                   EVAL      *IN21  = %NULLIND(WC_API)
+     C                   EVAL      *IN22  = %NULLIND(WC_SYSTEM)
+     C                   EVAL      *IN23  = %NULLIND(WC_ZONE)
+     C                   IF        WC_ZONE = '*REFZONE' or
+     C                             WC_ZONE = *blanks or
+     C                             WC_ZONE = 'GLOBAL' or                                    BUG15793
+     C                             *IN23 = *ON
+     C     COMP          CHAIN     WPCFF                              3069
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+      * If record not found then record has been deleted or added
+      *  depending on mode.
+     C     *IN30         IFEQ      *ON
+     C                   MOVE      MODE          WCACTC
+     C                   EVAL      WC_ID     =  999999999
+     C                   WRITE     UPWPCFD0                             69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDIF
+      *
+      * Need to find differences but this should only be run once;
+      *  run only if mode is 'Delete'.
+     C     MODE          IFEQ      'D'
+      *
+      * If record found then look for any differences; only look in
+      *  fields that have data all of the time.
+     C     *IN30         IFEQ      *OFF
+     C                   MOVE      'A'           WCACTC
+      * Category
+     C     WC_CAT        IFNE      XWC_CAT
+     C                   SETON                                        70
+     C                   ELSE
+     C                   IF        %NULLIND(WC_CAT) <> %NULLIND(XWC_CAT)
+     C                   SETON                                        75
+     C                   ENDIF
+     C                   ENDIF
+      * New BO trans writing wflow step
+     C     WC_BONSTP     IFNE      XWC_BONSTP
+     C                   SETON                                        71
+     C                   ELSE
+     C                   IF        %NULLIND(WC_BONSTP) <> %NULLIND(XWC_BONSTP)
+     C                   SETON                                        75
+     C                   ENDIF
+     C                   ENDIF
+      * Amd BO trans writing wflow step
+     C     WC_BOASTP     IFNE      XWC_BOASTP
+     C                   SETON                                        72
+     C                   ELSE
+     C                   IF        %NULLIND(WC_BOASTP) <> %NULLIND(XWC_BOASTP)
+     C                   SETON                                        75
+     C                   ENDIF
+     C                   ENDIF
+      * API action code
+     C     WC_BOAC       IFNE      XWC_BOAC
+     C                   SETON                                        73
+     C                   ELSE
+     C                   IF        %NULLIND(WC_BOAC) <> %NULLIND(XWC_BOAC)
+     C                   SETON                                        75
+     C                   ENDIF
+     C                   ENDIF
+      * Insert action code
+     C     WC_BOACNE     IFNE      XWC_BOACNE
+     C                   SETON                                        74
+     C                   ELSE
+     C                   IF        %NULLIND(WC_BOACNE) <> %NULLIND(XWC_BOACNE)
+     C                   SETON                                        75
+     C                   ENDIF
+     C                   ENDIF
+      * Amend action code
+     C     WC_BOACAM     IFNE      XWC_BOACAM
+     C                   SETON                                        75
+     C                   ELSE
+     C                   IF        %NULLIND(WC_BOACAM) <> %NULLIND(XWC_BOACAM)
+     C                   SETON                                        75
+     C                   ENDIF
+     C                   ENDIF
+      * Authorise action code
+     C     WC_BOACAU     IFNE      XWC_BOACAU
+     C                   SETON                                        76
+     C                   ELSE
+     C                   IF        %NULLIND(WC_BOACAU) <> %NULLIND(XWC_BOACAU)
+     C                   SETON                                        76
+     C                   ENDIF
+     C                   ENDIF
+      * Close action code
+     C     WC_BOACCL     IFNE      XWC_BOACCL
+     C                   SETON                                        77
+     C                   ELSE
+     C                   IF        %NULLIND(WC_BOACCL) <> %NULLIND(XWC_BOACCL)
+     C                   SETON                                        77
+     C                   ENDIF
+     C                   ENDIF
+      * Delete action code
+     C     WC_BOACDE     IFNE      XWC_BOACDE
+     C                   SETON                                        78
+     C                   ELSE
+     C                   IF        %NULLIND(WC_BOACDE) <> %NULLIND(XWC_BOACDE)
+     C                   SETON                                        78
+     C                   ENDIF
+     C                   ENDIF
+      * Reverse action code
+     C     WC_BOACRE     IFNE      XWC_BOACRE
+     C                   SETON                                        79
+     C                   ELSE
+     C                   IF        %NULLIND(WC_BOACRE) <> %NULLIND(XWC_BOACRE)
+     C                   SETON                                        79
+     C                   ENDIF
+     C                   ENDIF
+      * Change action code
+     C     WC_BOACCH     IFNE      XWC_BOACCH
+     C                   SETON                                        80
+     C                   ELSE
+     C                   IF        %NULLIND(WC_BOACCH) <> %NULLIND(XWC_BOACCH)
+     C                   SETON                                        80
+     C                   ENDIF
+     C                   ENDIF
+      * Input user own authorisation
+     C     WC_AUTOA      IFNE      XWC_AUTOA
+     C                   SETON                                        81
+     C                   ELSE
+     C                   IF        %NULLIND(WC_AUTOA) <> %NULLIND(XWC_AUTOA)
+     C                   SETON                                        81
+     C                   ENDIF
+     C                   ENDIF
+      * Authorisation level (eyes)
+     C     WC_AUTLVL     IFNE      XWC_AUTLVL
+     C                   SETON                                        82
+     C                   ELSE
+     C                   IF        %NULLIND(WC_AUTLVL) <> %NULLIND(XWC_AUTLVL)
+     C                   SETON                                        82
+     C                   ENDIF
+     C                   ENDIF
+      * BO field name 1
+     C     WC_BOFLD1     IFNE      XWC_BOFLD1
+     C                   SETON                                        83
+     C                   ELSE
+     C                   IF        %NULLIND(WC_BOFLD1) <> %NULLIND(XWC_BOFLD1)
+     C                   SETON                                        83
+     C                   ENDIF
+     C                   ENDIF
+      * BO field name 2
+     C     WC_BOFLD2     IFNE      XWC_BOFLD2
+     C                   SETON                                        84
+     C                   ELSE
+     C                   IF        %NULLIND(WC_BOFLD2) <> %NULLIND(XWC_BOFLD2)
+     C                   SETON                                        84
+     C                   ENDIF
+     C                   ENDIF
+      * BO field name 3
+     C     WC_BOFLD3     IFNE      XWC_BOFLD3
+     C                   SETON                                        85
+     C                   ELSE
+     C                   IF        %NULLIND(WC_BOFLD3) <> %NULLIND(XWC_BOFLD3)
+     C                   SETON                                        85
+     C                   ENDIF
+     C                   ENDIF
+      * BO field name 4
+     C     WC_BOFLD4     IFNE      XWC_BOFLD4
+     C                   SETON                                        86
+     C                   ELSE
+     C                   IF        %NULLIND(WC_BOFLD4) <> %NULLIND(XWC_BOFLD4)
+     C                   SETON                                        86
+     C                   ENDIF
+     C                   ENDIF
+      * BO field name 5
+     C     WC_BOFLD5     IFNE      XWC_BOFLD5
+     C                   SETON                                        87
+     C                   ELSE
+     C                   IF        %NULLIND(WC_BOFLD5) <> %NULLIND(XWC_BOFLD5)
+     C                   SETON                                        87
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   MOVEA     *IN(70)       INTEST           18
+     C                   MOVE      INTEST        INTNUM           18 0
+      * If any indicators are set on then write record.
+     C     INTNUM        IFNE      0
+     C                   EVAL      WC_ID     =  999999999
+     C                   WRITE     UPWPCFD0                             69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+      * Set values to write second record.
+     C                   EVAL      WC_ID     =  999999999
+     C                   IF        NOT %NULLIND(XWC_API)
+     C                   EVAL      WC_API    = XWC_API
+     C                   ENDIF
+     C                   IF        NOT %NULLIND(XWC_CAT)
+     C                   EVAL      WC_CAT    = XWC_CAT
+     C                   ENDIF
+     C                   IF        NOT %NULLIND(XWC_BONSTP)
+     C                   EVAL      WC_BONSTP = XWC_BONSTP
+     C                   ENDIF
+     C                   IF        NOT %NULLIND(XWC_BOASTP)
+     C                   EVAL      WC_BOASTP = XWC_BOASTP
+     C                   ENDIF
+     C                   IF        NOT %NULLIND(XWC_BOAC)
+     C                   EVAL      WC_BOAC   = XWC_BOAC
+     C                   ENDIF
+     C                   IF        NOT %NULLIND(XWC_BOACNE)
+     C                   EVAL      WC_BOACNE = XWC_BOACNE
+     C                   ENDIF
+     C                   IF        NOT %NULLIND(XWC_BOACAM)
+     C                   EVAL      WC_BOACAM = XWC_BOACAM
+     C                   ENDIF
+     C                   IF        NOT %NULLIND(XWC_BOACAU)
+     C                   EVAL      WC_BOACAU = XWC_BOACAU
+     C                   ENDIF
+     C                   IF        NOT %NULLIND(XWC_BOACCL)
+     C                   EVAL      WC_BOACCL = XWC_BOACCL
+     C                   ENDIF
+     C                   IF        NOT %NULLIND(XWC_BOACDE)
+     C                   EVAL      WC_BOACDE = XWC_BOACDE
+     C                   ENDIF
+     C                   IF        NOT %NULLIND(XWC_BOACRE)
+     C                   EVAL      WC_BOACRE = XWC_BOACRE
+     C                   ENDIF
+     C                   IF        NOT %NULLIND(XWC_BOACCH)
+     C                   EVAL      WC_BOACCH = XWC_BOACCH
+     C                   ENDIF
+     C                   IF        NOT %NULLIND(XWC_AUTOA)
+     C                   EVAL      WC_AUTOA  = XWC_AUTOA
+     C                   ENDIF
+     C                   IF        NOT %NULLIND(XWC_AUTLVL)
+     C                   EVAL      WC_AUTLVL = XWC_AUTLVL
+     C                   ENDIF
+     C                   IF        NOT %NULLIND(XWC_SYSTEM)
+     C                   EVAL      WC_SYSTEM = XWC_SYSTEM
+     C                   ENDIF
+     C                   IF        NOT %NULLIND(XWC_ZONE)
+     C                   EVAL      WC_ZONE   = XWC_ZONE
+     C                   ENDIF
+     C                   IF        NOT %NULLIND(XWC_BOFLD1)
+     C                   EVAL      WC_BOFLD1 = XWC_BOFLD1
+     C                   ENDIF
+     C                   IF        NOT %NULLIND(XWC_BOFLD2)
+     C                   EVAL      WC_BOFLD2 = XWC_BOFLD2
+     C                   ENDIF
+     C                   IF        NOT %NULLIND(XWC_BOFLD3)
+     C                   EVAL      WC_BOFLD3 = XWC_BOFLD3
+     C                   ENDIF
+     C                   IF        NOT %NULLIND(XWC_BOFLD4)
+     C                   EVAL      WC_BOFLD4 = XWC_BOFLD4
+     C                   ENDIF
+     C                   IF        NOT %NULLIND(XWC_BOFLD5)
+     C                   EVAL      WC_BOFLD5 = XWC_BOFLD5
+     C                   ENDIF
+     C                   EVAL      %NULLIND(WC_API)    = %NULLIND(XWC_API)
+     C                   EVAL      %NULLIND(WC_CAT)    = %NULLIND(XWC_CAT)
+     C                   EVAL      %NULLIND(WC_BONSTP) = %NULLIND(XWC_BONSTP)
+     C                   EVAL      %NULLIND(WC_BOASTP) = %NULLIND(XWC_BOASTP)
+     C                   EVAL      %NULLIND(WC_BOAC)   = %NULLIND(XWC_BOAC)
+     C                   EVAL      %NULLIND(WC_BOACNE) = %NULLIND(XWC_BOACNE)
+     C                   EVAL      %NULLIND(WC_BOACAM) = %NULLIND(XWC_BOACAM)
+     C                   EVAL      %NULLIND(WC_BOACAU) = %NULLIND(XWC_BOACAU)
+     C                   EVAL      %NULLIND(WC_BOACCL) = %NULLIND(XWC_BOACCL)
+     C                   EVAL      %NULLIND(WC_BOACDE) = %NULLIND(XWC_BOACDE)
+     C                   EVAL      %NULLIND(WC_BOACRE) = %NULLIND(XWC_BOACRE)
+     C                   EVAL      %NULLIND(WC_BOACCH) = %NULLIND(XWC_BOACCH)
+     C                   EVAL      %NULLIND(WC_AUTOA)  = %NULLIND(XWC_AUTOA)
+     C                   EVAL      %NULLIND(WC_AUTLVL) = %NULLIND(XWC_AUTLVL)
+     C                   EVAL      %NULLIND(WC_ZONE)   = %NULLIND(XWC_ZONE)
+     C                   EVAL      %NULLIND(WC_SYSTEM) = %NULLIND(XWC_SYSTEM)
+     C                   EVAL      %NULLIND(WC_BOFLD1) = %NULLIND(XWC_BOFLD1)
+     C                   EVAL      %NULLIND(WC_BOFLD2) = %NULLIND(XWC_BOFLD2)
+     C                   EVAL      %NULLIND(WC_BOFLD3) = %NULLIND(XWC_BOFLD3)
+     C                   EVAL      %NULLIND(WC_BOFLD4) = %NULLIND(XWC_BOFLD4)
+     C                   EVAL      %NULLIND(WC_BOFLD5) = %NULLIND(XWC_BOFLD5)
+      *
+     C                   WRITE     UPWPCFD0                             69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   ENDIF
+     C                   ENDIF
+      *
+      * Read next record
+     C                   MOVEA     '0000000000'  *IN(70)
+     C                   MOVEA     '0000000000'  *IN(80)
+      *
+     C                   ENDIF
+      *
+     C                   READ      WPCF1                                6920
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   ENDDO
+      *
+     C     ENDPGM        TAG
+     C                   SETON                                        LR
+     C                   RETURN
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: None                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *PSSR         BEGSR                                                  ** *PSSR SR **
+      *
+     C     @RUN          IFEQ      *BLANK
+     C                   MOVE      'Y'           @RUN              1
+     C                   DUMP
+     C                   END
+      *
+     C                   SETON                                        U7U8LR
+     C                   RETURN
+      *
+     C                   ENDSR
+      *
+      ********************************************************************

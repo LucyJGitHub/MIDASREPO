@@ -1,0 +1,202 @@
+     C****************************************************************
+     C* SUB-ROUTINE - ZYCE
+     C*
+     C* For Australian Yield Formulae - Determine whether the passed
+     C* date is in the cum- or ex- coupon date range for this security.
+     C* (Coupon date is a cum-coupon date)
+     C****************************************************************
+     C*
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No.  CSE071                   Date 19Jul05
+      *  Prev Amend No.  211407                   Date 08Nov02
+      *                  CSE035                   Date 22Apr02
+      * Midas Release 4 --------------- Base -------------------------*
+     C*                  S01195                   Date 13Nov90
+     C*                  S01232                   Date 15Oct89
+     C*
+     C****************************************************************
+     C*
+      *  CSE071 - Multiple Holidays Re Securities
+      *  211407 - Call ZLCD1 in First Coupon Period to calculate logical
+      *           LCD with reference to FCPN and coupon array
+      *  CSE035 - NX/NNX Coupon Payment Processing
+     C*  S01195 - Holiday Processing : call to XDATE replaced by ZBKDT.
+     C*  S01232 - CREATED FOR AUSTRALIAN YIELD MODIFICATION
+     C*
+     C****************************************************************
+     C*  INPUT
+     C*  =====
+     C*
+     C*  WRKD (5,0) - Date to be checked against next coupon date.
+     C*  NCD  (5,0) - Next coupon date
+     C*  SECTY/LF record for security
+     C*
+     C*  OUTPUT
+     C*  ======
+     C*
+     C*  SCUMEX (1)  - CUM/EX indicator - value is 'C' or 'X'.
+     C*
+     C*  CALLS
+     C*  =====
+     C*
+     C***XDATE3**                                                         S01195
+     C*  ZBKDT                                                            S01195
+     C*
+     C****************************************************************
+     C*
+     C           ZYCE      BEGSR
+     C*          ----
+      *****************************************************************   CSE035
+      *                                                               *   CSE035
+      *  CSE035 - NX/NNX Coupon Payment Processing                   *    CSE035
+      *                                                               *   CSE035
+      *****************************************************************   CSE035
+      *                                                                   CSE035
+      *  INPUT                                                            CSE035
+      *  FCPN (5,0) - First coupon date from SECTY                        CSE035
+      *                                                                   CSE035
+      *  OUTPUT                                                           CSE035
+      *  SCUMEX (1)  - CUM/EX indicator - value is 'C','X','N' or 'D'     CSE035
+      *                                                                   CSE035
+     C           CSE035    IFEQ 'Y'                                       CSE035
+     C                     Z-ADDECD       WECD    50                      CSE035
+     C                     Z-ADDWRKD      ECD                             CSE035
+     C*                                                                   CSE035
+     C* CALL ZLCD + ZNCD TO DETERMINE NEXT AND LAST COUPON DATES          CSE035
+     C                     Z-ADDNCD       @NCD    50                      CSE035
+     C                     EXSR ZNCD                                      CSE035
+     C                     Z-ADDNCD       NCDD5   50                      CSE035
+     C                     Z-ADD@NCD      NCD                             CSE035
+     C                     Z-ADDZZLCD     @LCD    50                      CSE035
+     C           NCDD5     SUB  1         ZECD                            CSE035
+     C                     EXSR ZLCD                                      CSE035
+     C                     Z-ADDZZLCD     LCDD5   50                      CSE035
+     C                     Z-ADD@LCD      ZZLCD                           CSE035
+     C*                                                                   CSE035
+     C                     Z-ADDWECD      ECD                             CSE035
+     C                     END                                            CSE035
+      *                                                                   CSE035
+     C           WRKD      IFLT FCPN                                      CSE035
+     C           CSE035    ANDEQ'Y'                                       CSE035
+      *                                                                   CSE035
+     C           PROT      ANDEQ'1'                                       CSE035
+     C           SYBS      ANDEQ'AU'                                      211407
+      *                                                                   211407
+      ** Setup BJDFIN in case SDBANKPD not read                           211407
+     C           BJDFIN    IFEQ ' '                                  B2   211407
+     C           *IN98     IFEQ *ON                                  B3   211407
+     C                     MOVE 'M'       BJDFIN  1                       211407
+     C                     ELSE                                      X3   211407
+     C                     MOVE 'D'       BJDFIN                          211407
+     C                     ENDIF                                     E3   211407
+     C                     ENDIF                                     E2   211407
+      *                                                                   211407
+      ** If WRKD is less than the FCPN, get the logical LCD with refer-   211407
+      ** erence to the FCPN from the coupon array by calling ZLCD1.       211407
+      *                                                                   211407
+     C                     CALL 'ZLCD1'                                   211407
+      *                                                                   211407
+      * INPUTS                                                            211407
+     C                     PARM           ISSD                            211407
+     C                     PARM           ITLD                            211407
+     C                     PARM           FCPN                            211407
+     C                     PARM           MATY                            211407
+     C                     PARM           CDDS                            211407
+     C                     PARM           CRDS                            211407
+     C                     PARM           ZECD                            211407
+     C                     PARM           BJDFIN                          211407
+     C                     PARM           NMCY                            211407
+     C                     PARM           SITP                            211407
+     C                     PARM           BCNV                            211407
+      ** Effect of Holidays on Dates                                      CSE071
+     C                     PARM           HCY1                            CSE071
+     C                     PARM           HCY2                            CSE071
+     C                     PARM           HCY3                            CSE071
+     C                     PARM           HCY4                            CSE071
+     C                     PARM           HCY5                            CSE071
+     C                     PARM           HCY6                            CSE071
+     C                     PARM           HCY7                            CSE071
+     C                     PARM           HCY8                            CSE071
+     C                     PARM           HCY9                            CSE071
+      *                                                                   211407
+      * OUTPUTS                                                           211407
+     C                     PARM           ZZLCD1  50                      211407
+      *                                                                   211407
+      *                                                                   211407
+      ** Compare the Last Coupon Date got from the array with the ITLD    211407
+      ** to classify it correctly.                                        211407
+      *                                                                   211407
+      ** If Initial date coincides with the regular coupon date, it       211407
+      ** should be CUM.                                                   211407
+      *                                                                   211407
+     C           ITLD      IFEQ ZZLCD1                               B2   211407
+     C           NCDD5     ANDEQFCPN                                      211407
+     C                     MOVE 'C'       SCUMEX                          211407
+     C                     ELSE                                      X2   211407
+      *                                                                   211407
+      ** If Initial date greater than calculated LCD, it                  211407
+      ** should be NX (i.e. short first coupon period).                   211407
+      *                                                                   211407
+     C           ITLD      IFGT ZZLCD1                               B3   211407
+     C                     MOVE 'N'       SCUMEX                          211407
+     C                     ELSE                                      X3   211407
+      *                                                                   211407
+      ** It has a long first coupon period therefore it is                211407
+      ** NNX.                                                             211407
+      *                                                                   211407
+     C                     MOVE 'D'       SCUMEX                          211407
+     C                     ENDIF                                     E3   211407
+     C                     ENDIF                                     E2   211407
+      *                                                                   211407
+     C***********ITLD      IFGE LCDD5                              CSE035 211407
+     C***********NCDD5     IFNE FCPN                               CSE035 211407
+     C***********          MOVE 'D'       SCUMEX                   CSE035 211407
+     C***********          ELSE                                    CSE035 211407
+     C***********          MOVE 'N'       SCUMEX                   CSE035 211407
+     C***********          END                                     CSE035 211407
+     C***********          ELSE                                    CSE035 211407
+     C***********          MOVE 'D'       SCUMEX                   CSE035 211407
+     C***********          END                                     CSE035 211407
+      *                                                                   CSE035
+     C                     ELSE                                           CSE035
+      *                                                                   CSE035
+     C*
+     C                     MOVE 'C'       SCUMEX  1
+     C           WRKD      IFNE NCD
+     C                     MOVELEDFT      ZNRDYS
+     C           ZNRDYS    IFNE *ZEROS
+     C                     MOVE EDFT      WEDFT   1
+     C           WEDFT     IFEQ 'W'
+     C*
+     C*         working days
+     C*
+     C                     Z-ADDNCD       ZDAYNO
+     C                     MOVE NMCY      ZCCY
+     C***********          EXSR XDATE3                                    S01195
+     C                     EXSR ZBKDT                                     S01195
+     C                     ELSE
+     C*
+     C*         actual  days
+     C*
+     C           NCD       SUB  ZNRDYS    ZDYNBR
+     C                     END
+     C*
+     C           WRKD      IFLT NCD
+     C           WRKD      ANDGEZDYNBR
+      *                                                                   CSE035
+     C           CSE035    OREQ 'Y'                                       CSE035
+     C           WRKD      ANDLTNCD                                       CSE035
+     C           WRKD      ANDGEZDYNBR                                    CSE035
+     C           NCD       ANDNEMATY                                      CSE035
+      *                                                                   CSE035
+     C                     MOVE 'X'       SCUMEX
+     C                     END
+     C                     END
+     C                     END
+     C                     END                                            CSE035
+     C*
+     C           ZYCEND    ENDSR
+     C*

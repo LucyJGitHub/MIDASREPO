@@ -1,0 +1,116 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Utility to populate R1PYBK in GLATMIPD')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC00245 - Utility to populate R1PYBK in GLATMIPD          */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2011           */
+/*                                                                   */
+/*       Last Amend No. AR845655 *CREATE   Date 06Oct11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR845655 - Update datatype of Paying Bank to Alphanumeric   */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&INVLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&POP01) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&POP02) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&POP03) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&POP04) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&POP05) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&POP06) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&POP07) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&POP08) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&POP09) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&POP10) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&PVL01) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVL02) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVL03) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVL04) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVL05) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVL06) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVL07) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVL08) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVL09) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVL10) TYPE(*CHAR) LEN(200)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2010')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Save a copy of the update files in INVLIB */
+ 
+             CHGVAR     VAR(&PRTCD) VALUE(' ')
+             CHGVAR     VAR(&POP01) VALUE('BrgMidasSystemPrefix')
+             CALL       PGM(AOSVALR0) PARM(&PRTCD &POP01 &PVL01 +
+                          &POP02 &PVL02 &POP03 &PVL03 &POP04 &PVL04 +
+                          &POP05 &PVL05 &POP06 &PVL06 &POP07 &PVL07 +
+                          &POP08 &PVL08 &POP09 &PVL09 &POP10 &PVL10)
+ 
+             IF         COND(&PRTCD *NE '       ') THEN(GOTO CMDLBL(ABNOR))
+ 
+             CHGVAR     VAR(&PRE) VALUE(%SST(&PVL01 1 2))
+             CHGVAR     VAR(&INVLIB) VALUE(&PRE *TCAT 'INVLIB')
+             CHGVAR     VAR(&DMLIB) VALUE(&PRE *TCAT 'DMLIB')
+ 
+             CRTDUPOBJ  OBJ(GLATMIPD) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                          TOLIB(&INVLIB) NEWOBJ(BKGLATMIPD) DATA(*YES)
+ 
+             MONMSG     MSGID(CPF4128 CPF2130 CPD2104) EXEC(DO)
+             SNDPGMMSG  MSG('Failed to create backup file +
+                          GLATMIPD, exiting program') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Excecute program to populate R1PAYB in GLATMIPD */
+ 
+             CALL       PGM(SMU00245)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                           CMDLBL(ABNOR))
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+ 
+/* Restore data to update files */
+ 
+             CPYF       FROMFILE(&INVLIB/BKGLATMIPD) +
+                          TOFILE(&DMLIB/GLATMIPD) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+             MONMSG     MSGID(CPF2802 CPF2869 CPF2817 CPF3130 CPF2909)
+ 
+             CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SMUC00245 ended abnormally - see joblog +
+                          ') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+ 
+/* Delete backup files */
+ 
+             DLTF       FILE(&INVLIB/BKGLATMIPD)
+             MONMSG     MSGID(CPF0000)
+ 
+             ENDPGM

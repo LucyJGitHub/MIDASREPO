@@ -1,0 +1,734 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT Incoming Payments by Sender Extct')           *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - FUNDS TRANSFER MODULE
+     F*                                                               *
+     F*  FT0249 - INCOMING PAYMENT SUMMARY BY SENDER EXTRACT          *
+     F*           GENERATOR                                           *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. CER030             Date 09Jul08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 07Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CFT009             Date 01JUN00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CAP136             Date 15Nov99               *
+     A*                 175479             DATE 08FEB00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 S01435            DATE 08SEP93                *
+     F*                 056032            DATE 04JUN93                *
+     F*                 S01414            DATE 29MAR93                *
+     F*                 051416            DATE 26FEB93                *
+     F*                 043959            DATE 03JUL92                *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER030 - Multicash German Feature (Recompile)                *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  CFT009 - FT Fees and Charge Development-Recompiled           *
+      *  CAP136 - Conversion of FT Incoming Payment inputs into       *
+      *           modular structure to use as APIs.                   *
+      *           Recompiled over changed PF/INPAYDD.                 *
+     A*  175479 - Recompiled over changes in PF/INPAYDD               *
+     F*  S01435 - Incoming Message Management.                        *
+     F*  056032 - Prevent database error processing for:              *
+     F*           a) Sender if SLDT (settle value date) is less than  *
+     F*              Rundate or if the payment is matured.            *
+     F*           b) Beneficiary if PVDT (pay value date) is less than*
+     F*              Rundate or if the payment is matured.            *
+     F*           N.B fix includes errors 048005,054302               *
+     F*  S01414 - Book Code and Profit Centre Incorporation.          *
+     F*           Rename of profit centre field on ACCNTABF           *
+     F*  051416 - For type 1 only details of payments authorised today*
+     F*           should be written to extract file.                  *
+     F*  043959 - Do not check on account if the posting is matured   *  *
+     F*           with an account closed.                             *  *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     FINPAYDD IF  E                    DISK         KINFSR UEABRT
+     FINPAYEX O   E                    DISK         KINFSR UEABRT
+      ************                                                        S01435
+      ************ Files now accessed through FT0315 access object        S01435
+      ************                                                        S01435
+     F*CLINT***IF**E           K        DISK         KINFSR UEABRT        S01435
+     F************CLINTCAF                          KIGNORE               S01435
+     F************CLINTCCF                          KIGNORE               S01435
+     F************CLINTC1F                          KIGNORE               S01435
+     F************CLINTCBF                          KRENAMECLINTBF1       S01435
+     FTABFP   IF  E           K        DISK         KINFSR UEABRT
+     F            TABTB20F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F            TABTE10F                          KIGNORE
+      ************                                                        S01435
+      ************ Files now accessed through FT0315 access object        S01435
+      ************                                                        S01435
+     F*ACNUMA**IF**E           K        DISK         KINFSR UEABRT        S01435
+     F************ACCNTABF                          KRENAMEACNUMAF        S01435
+     F*****************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       10
+     F*       89      GENERAL WORK INDICATOR
+     F*       99      ZSYSTM, INSTALLATION CONTROL DATA RECORD NOT FOUND.
+     F*
+     F*     U7 & U8   DATABASE ERROR, REQUIRED RECORDS NOT FOUND.
+     F*****************************************************************
+     F/EJECT
+     E                    CPY@    1   1 80
+     E************        TXT     1   2 18                                056032
+     E/EJECT
+     I*
+     IINPAYDDF
+     I              RECI                            @RECI
+     I              OEDT                            @OEDT
+     I              CHTP                            @CHTP
+     I              LCD                             INLCD@
+     I* RENAME THE BRANCH FIELD BRCA IN  ACNUMA AND TABLETL TO AVOID
+     I* CORRUPTION OF BRCA FIELD IN INPAYDD
+     I*                                                                   S01414
+     I* Rename of Profit Centre to avoid overwriting                      S01414
+     I*                                                                   S01414
+     I*
+      ************                                                        S01435
+      ************ Files now accessed through FT0315 access object        S01435
+      ************                                                        S01435
+     I*ACNUMAF*****                                                       S01435
+     I************  BRCA                            BRCH                  S01435
+     I************  PRFC                            ACPRFC                S01414
+     ITABLETLF
+     I              BRCA                            BRCH
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I**  DATA STRUCTURE FOR KEY TO ACCNT FILE DATABASE ERRORS
+     I*
+     I            DS
+     I                                        1  15 ACKEY
+     I                                        1   60KCNUM
+     I                                        7   9 KCCY
+     I                                       10  130KACOD
+     I                                       14  150KACSQ
+     I*
+     I**  DATA AREA LDA - USED IN THE EVENT OF DATABASE ERRORS
+     I*
+     IDLDA        DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I*   DATA STRUCTURE TO SUB DIVIDE TABLE KEY FIELD
+     I*
+     I            DS                             12
+     I                                        1  12 KEY
+     I                                        1   2 RECTTB
+     I                                        9  11 CCY
+     I                                       12  12 SRECTB
+     I*
+     I** TO REDEFINE SENDER AND BENEFICIARY
+     I            DS
+     I                                        1  35 SND1
+     I                                        1   5 FSND
+     I                                        1  100RSND
+     I                                        1   60CSND
+     I                                       36  70 BNC1
+     I                                       34  450RBNC
+     I                                       36  410CBNC
+      *                                                                   056032
+      * Set up message to print instead of DB error processing            056032
+      *                                                                   056032
+     I            DS                                                      056032
+     I                                        1  35 @MSG                  056032
+     I                                        1  15 @SNBN                 056032
+     I                                       17  34 @TXT                  056032
+      *                                                                   S01435
+      ** Program data structure                                           S01435
+     IDSPGM     ESDSY2PGDSP
+      *                                                                   S01435
+      ** Split name into components.                                      S01435
+     IXNAMDS      DS                            175                       S01435
+     I                                        1  12 XACCT                 S01435
+     I                                       13  15 XBRCA                 S01435
+     I                                        1   1 XSLSH                 S01435
+     I                                        1  35 XADD1                 S01435
+     I                                       36  70 XADD2                 S01435
+     I                                       71 105 XADD3                 S01435
+     I                                      106 140 XADD4                 S01435
+     I                                      141 175 XADD5                 S01435
+      *                                                                   S01435
+      **            address lines 2 - 5.                                  S01435
+     I                                       36 175 XADDS                 S01435
+      *                                                                   S01435
+      ** to define XTYPE.                                                 S01435
+     IXTYPE       DS                              1                       S01435
+      *                                                                   S01435
+      /EJECT                                                              S01435
+     IW8FT        DS                            128                       S01435
+      *                                                                   S01435
+      * Address data structure                                            S01435
+      *                                                                   S01435
+      * Currency                                                          S01435
+     I                                        1   3 W8CCY                 S01435
+      * Settlement Type                                                   S01435
+     I                                        4   5 W8STMT                S01435
+      * Mandatory Text - convert BIC identifiers                          S01435
+     I                                        6   6 W8MTXT                S01435
+      * Message Tag                                                       S01435
+     I                                        7  11 W8MTAG                S01435
+      * Construct of data in field                                        S01435
+     I                                       12  12 W8TYPE                S01435
+      * Number of Lines available                                         S01435
+     I                                       13  140W8NLIN                S01435
+      * Network and Message Type                                          S01435
+     I                                       15  20 W8NWRK                S01435
+     I                                       21  23 W8MTPY                S01435
+      * Calling Program                                                   S01435
+     I                                       24  33 W8CPGM                S01435
+      * Action *PRINT/*ENQ/*MSG GEN                                       S01435
+     I                                       34  41 W8ACT                 S01435
+      * Critical reporting - Database error if 'Y'                        S01435
+      * If no BIC directory and BIC entered no error                      S01435
+     I                                       42  42 W8CRIT                S01435
+      * Force Midas Address - where possible                              S01435
+     I                                       43  43 W8MADD                S01435
+      * If Retail get first address from account                          S01435
+     I                                       44  44 W8RTAD                S01435
+      * Alternative Address                                               S01435
+     I                                       45  45 W8ALTN                S01435
+      * Address type selected in W0MSG                                    S01435
+     I                                       46  46 W8ADTP                S01435
+     I/EJECT
+     C*****************************************************************
+     C*                 AA-MAINLINE-PROCESSING                        *
+     C*                                                               *
+     C*  FUNCTION : TO CONTROL THE PROCESSING OF EACH RECORD          *
+     C*                                                               *
+     C*  CALLS :    CBSEND                                            *
+     C*             CCDETL                                            *
+     C*                                                               *
+     C*  CALLED BY: NONE                                              *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C** PERFORM INITIAL PROCESSING
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           TYPE    1
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** KEY LIST FOR ACCNT
+     C*
+     C           ACCKEY    KLIST
+     C                     KFLD           KCNUM
+     C                     KFLD           KCCY
+     C                     KFLD           KACOD
+     C                     KFLD           KACSQ
+     C**********                                                          S01435
+     C***KEY*LIST FOR CLINT                                               S01435
+     C**********                                                          S01435
+     C********** CLKEY     KLIST                                          S01435
+     C**********           KFLD           CNUM                            S01435
+     C**********           KFLD           RCDT                            S01435
+     C**********                                                          S01435
+     C**SET*TYPE FOR CLINTCB TO 'A'                                       S01435
+     C**********                                                          S01435
+     C**********           MOVE 'A'       RCDT                            S01435
+     C*
+     C** CALL ZSYSTM TO ACCESS I.C.D.R. 1 ON TABLE FILE
+     C*
+     C                     EXSR ZSYSTM
+     C*
+     C** FOR DETAIL RECORDS :
+     C*
+     C** READ IN RECORD FROM INPAYDD FIND SENDERS ADDESS AND WRITE TO
+     C** INPASEX UNTIL END OF FILE
+     C*
+     C           1         SETLLINPAYDDF               89
+     C   89                DO                              B001
+     C                     MOVEL'01'      WDBASE           **DBERR 01**
+     C                     MOVEL'INPAY'   WDBFIL
+     C                     MOVEL'1'       WDBKEY
+     C                     END                             E001
+     C*
+     C** IF NOT ERROR CONTINUE
+     C*
+     C*
+     C           *IN89     IFNE '1'                        B002
+     C                     READ INPAYDDF               8910
+     C   89                DO                              B003
+     C                     MOVEL'02'      WDBASE           **DBERR 02**
+     C                     END                             E003
+     C                     END                             E002
+     C*
+     C           *IN10     DOWNE'1'                        B001
+     C           *IN89     ANDNE'1'
+     C*
+     C*   If the type is ' ' then all payments requested                  051416
+     C*   If the type is '1' then all aut payments today                  051416
+     C*   If the type is '2' then all unaut payments                      051416
+     C*                                                                   051416
+     C           TYPE      IFNE '1'                                       051416
+     C           TYPE      OREQ '1'                                       051416
+     C           @OEDT     ANDEQRUND                                      051416
+     C           TYPE      OREQ '1'                                       051416
+     C           INLCD@    ANDEQRUND                                      051416
+     C*                                                                   051416
+     C                     EXSR CBSEND
+     C*
+     C***********TYPE      IFEQ *BLANKS                    B002           051416
+     C***********TYPE      ORNE *BLANKS                                   051416
+     C***********OEDT      ANDEQRUND                                      051416
+     C***********TYPE      ORNE *BLANKS                                   051416
+     C***********INLCD@    ANDEQRUND                                      051416
+     C*
+     C                     EXSR CCDETL
+     C*
+     C***********          END                             E002           051416
+     C*
+     C                     MOVE @RECI     RECI
+     C                     Z-ADDINLCD@    LCD
+     C                     Z-ADD@OEDT     OEDT
+     C                     MOVE @CHTP     CHTP
+      *
+     C                     WRITEINPAYEXF               89
+     C   89                MOVEL'03'      WDBASE           **DBERR 03**
+     C                     END                             E002           051416
+     C*
+     C           *IN89     IFNE '1'                        B002
+     C                     READ INPAYDDF               8910
+     C   89                MOVEL'04'      WDBASE           **DBERR 04**
+     C                     END                             E002
+     C                     END                             E001
+     C*
+     C           *IN89     IFEQ '1'                        B001
+     C                     EXSR UEABRT
+     C                     ELSE                            X001
+     C                     SETON                         LR
+     C                     RETRN
+     C                     END                             E001
+     C/EJECT
+     C************************************************************
+     C* CBSEND SR.
+     C* TO FORMAT SENDER NAME
+     C* CALLED FROM MAIN SUBROUTINE
+     C************************************************************
+     C*
+     C           CBSEND    BEGSR
+     C*
+     C** SENDER'S NAME GENERATION
+     C*
+     C                     MOVEL*BLANKS   @MSG                            056032
+     C                     MOVEL*BLANKS   SNDEX1                          056032
+     C*                                                                   S01435
+     C                     MOVELSNTP      XTYPE                           S01435
+     C                     MOVEL*BLANKS   XNAMDS                          S01435
+     C                     MOVELSND1      XADD1                           S01435
+     C                     MOVELSND2      XADD2                           S01435
+     C                     MOVELSND3      XADD3                           S01435
+     C                     MOVELSND4      XADD4                           S01435
+     C                     MOVELSMCY      XCCY                            S01435
+     C                     EXSR GETNAM
+     C                     MOVELXNAME     SNDEX1
+      **********
+     C**********                                                          056032
+     C***SENDER*TYPE A - FULL ADDRESS
+     C**********
+     C********** SNTP      IFEQ 'A'                        B001
+     C**********           MOVELSND1      SNDEX1
+     C**********           END                             E001
+     C**********
+     C***SENDER*TYPE R - RETAIL NUMBER
+     C**********
+     C********** SNTP      IFEQ 'R'                        B001
+     C**********           Z-ADDRSND      ACNO
+     C********** ACNO      CHAINACNUMA               89
+     C**N89***** RECI      COMP 'D'                  8989
+     C**********
+     C***IF*RECORD NOT FOUND DATABASE ERROR
+     C**********                                                          056032
+     C**Process*for database error UNLESS the payment is matured OR       056032
+     C**the*value date is prior to the rundate. The account may have      056032
+     C**been*closed/dropped since that date but it don't matter coz       056032
+     C**the*accounting is complete. The file key is displayed instead     056032
+     C**of*the*name.                                                      056032
+     C**********
+     C********** *IN89     IFEQ '1'                        B003           056032
+      **********                                                          056032
+     C********** @RECI     IFNE 'M'                                       043959
+     C********** SLDT      ANDGERUND                                      056032
+     C********** *IN89*****IFEQ '1'                        B003           056032
+     C**********           MOVEL'ACNUMA'  WDBFIL           ************
+     C**********           MOVELRSND      WDBKEY           * DBERR 02 *
+     C**********           MOVEL'02'      WDBASE           ************   056032
+     C**********           MOVEL'002'     WDBASE           ************   056032
+     C**********           EXSR UEABRT                     *ABORT PGM*
+     C**********           ELSE                                           056032
+     C**********           MOVELRSND      @SNBN                           056032
+     C**********           MOVE TXT,1     @TXT                            056032
+     C**********           MOVEL@MSG      SNDEX1                          056032
+     C**********           GOTO ENDCBS                                    056032
+     C**********           END                             E003
+      **********
+     C**********           END                                            043959
+      **********
+     C**********           END                             E001
+     C**********
+     C***SENDER*TYPE P - PARTIAL ACCOUNT
+     C***OR*****     G - FULL ACCOUNT
+     C**********
+     C********** SNTP      IFEQ 'P'                        B001
+     C********** SNTP      OREQ 'G'
+     C********** SNTP      OREQ 'C'
+     C**********           Z-ADDCSND      CNUM
+     C**********           END                             E001
+     C**********
+     C***SENDER*TYPE F - FULL NOSTRO
+     C**********
+     C**********           SETOF                     12
+     C**********
+     C********** SNTP      IFEQ 'F'                        B001
+     C**********           MOVE FSND      WSND5   5
+     C**********           MOVEL*BLANKS   KEY
+     C**********           MOVEL'70'      KEY
+     C**********           MOVE WSND5     KEY
+     C********** KEY       CHAINTABLETLF             89
+     C**********
+     C**N89***** RECI      COMP 'D'                  8989
+     C**********
+     C***IF*RECORD NOT FOUND DATABASE ERROR
+      **********                                                          056032
+      **Same*conditions apply as for Retail account processing.           056032
+     C**********
+     C********** *IN89     IFEQ '1'                        B002
+      **********                                                          056032
+     C********** @RECI     IFNE 'M'                                       056032
+     C********** SLDT      ANDGERUND                                      056032
+     C**********           MOVEL'TABLE'   WDBFIL           ************
+     C**********           MOVELKEY       WDBKEY           * DBERR 03 *
+     C**********           MOVEL'03'      WDBASE           ************   056032
+     C**********           MOVEL'003'     WDBASE           ************   056032
+     C**********           EXSR UEABRT                     *ABORT PGM*
+     C**********           ELSE                                           056032
+     C**********           MOVELFSND      @SNBN                           056032
+     C**********           MOVE TXT,1     @TXT                            056032
+     C**********           MOVEL@MSG      SNDEX1                          056032
+     C**********           GOTO ENDCBS                                    056032
+     C**********           END                             E003           056032
+      **********                                                          056032
+     C**********           END                             E002
+      **********
+     C**********           END                             E001
+     C**********
+     C***ACCESS*CLIENT FILE
+     C**********
+     C********** SNTP      IFEQ 'R'                        B001
+     C********** SNTP      OREQ 'P'
+     C********** SNTP      OREQ 'G'
+     C********** SNTP      OREQ 'F'
+     C********** SNTP      OREQ 'C'
+     C********** CLKEY     CHAINCLINTBF1             89
+     C**N89***** RECI      COMP 'D'                  8989
+      **********                                                          056032
+      **If*record not found/closed, process for database error.           056032
+      **Same*conditions apply as for Retail account processing.           056032
+      **********                                                          056032
+     C***89*****           DO                              B002
+      **********                                                          056032
+     C********** @RECI     IFNE 'M'                                       056032
+     C********** SLDT      ANDGERUND                                      056032
+     C**********           MOVEL'CLINT '  WDBFIL           ************
+     C**********           MOVELCNUM      WDBKEY           * DBERR 04 *
+     C**********           MOVEL'04'      WDBASE           ************   056032
+     C**********           MOVEL'004'     WDBASE           ************   056032
+     C**********           EXSR UEABRT                     *ABORT PGM*
+     C**********           ELSE                                           056032
+     C**********           MOVELCNUM      @SNBN                           056032
+     C**********           MOVE TXT,2     @TXT                            056032
+     C**********           MOVEL@MSG      SNDEX1                          056032
+     C**********           GOTO ENDCBS                                    056032
+     C**********           END                             E003           056032
+      **********                                                          056032
+     C**********           END                             E002
+     C**********
+     C**********           MOVELCRNM      SNDEX1
+     C**********           END                             E001
+     C**********
+     C*  SENDER TYPE BLANK - NOT ENTERED
+     C*
+     C           SNTP      IFEQ ' '                        B001
+     C                     MOVE *BLANK    SNDEX1
+     C                     END                             E001
+     C*
+     C*********************ENDSR
+     C           ENDCBS    ENDSR
+     C************************************************************
+     C* END OF SENDER SUBROUTINE
+     C************************************************************
+     C/EJECT
+     C************************************************************
+     C* CCDETL SR.
+     C* TO FORMAT A DETAIL LINE
+     C* CALLED BY : MAIN SUBROUTINE
+     C* CALLS :     UEABRT                                            *
+     C*             UGFRMT                                            *
+     C*             ZDATE2                                            *
+     C************************************************************
+     C           CCDETL    BEGSR
+     C*
+     C** BENEFICIARY ADDRESS GENERATION
+     C*
+     C                     MOVEL*BLANKS   @MSG                            056032
+     C                     MOVEL*BLANKS   BENEX1                          056032
+     C*                                                                   S01435
+     C                     MOVELBNCT      XTYPE                           S01435
+     C                     MOVEL*BLANKS   XNAMDS                          S01435
+     C                     MOVELBNC1      XADD1                           S01435
+     C                     MOVELBNC2      XADD2                           S01435
+     C                     MOVELBNC3      XADD3                           S01435
+     C                     MOVELBNC4      XADD4                           S01435
+     C                     MOVELBNC5      XADD4                           S01435
+     C                     MOVELPCCY      XCCY                            S01435
+     C                     EXSR GETNAM
+     C                     MOVELXNAME     BENEX1
+      ************
+     C************                                                        056032
+     C***BENEFICIARY TYPE A - FULL ADDRESS
+     C************
+     C***********BNCT      IFEQ 'A'                        B001
+     C***********BNCT      OREQ 'S'
+     C************         MOVELBNC1      BENEX1
+     C************         END                             E001
+     C************
+     C***BENEFICIARY TYPE R - RETAIL NUMBER
+     C************
+     C***********BNCT      IFEQ 'R'                        B001
+     C************         Z-ADDRBNC      ACNO
+     C***********ACNO      CHAINACNUMA               89
+     C**N89******RECI      COMP 'D'                  8989
+     C************
+     C***IF*RECORD NOT FOUND DATABASE ERROR
+     C************
+     C**Process*for database error UNLESS the payment is matured OR       056032
+     C**the*value*date is prior to the rundate. The account may have      056032
+     C**been*closed/dropped since that date but it don't matter coz       056032
+     C**the*accounting is complete. The file key is displayed instead     056032
+     C**of*the*name.                                                      056032
+     C************
+     C************IN89     IFEQ '1'                        B003           056032
+      ************                                                        056032
+     C***********@RECI     IFNE 'M'                                       043959
+     C***********PVDT      ANDGERUND                                      056032
+     C************IN89*****IFEQ '1'                        B002           056032
+     C************         MOVEL'ACNUMA'  WDBFIL           ************
+     C************         MOVELACNO      WDBKEY           * DBERR 05 *
+     C************         MOVEL'05'      WDBASE           ************
+     C************         EXSR UEABRT                     *ABORT PGM*
+     C************         ELSE                                           056032
+     C************         MOVELRBNC      @SNBN                           056032
+     C************         MOVE TXT,1     @TXT                            056032
+     C************         MOVEL@MSG      BENEX1                          056032
+     C************         GOTO ENDDET                                    056032
+     C************         END                             E002
+     C************
+     C************         END                                            043959
+     C************
+     C************         END                             E001
+     C************
+     C***BENEFICIARY TYPE P - PARTIAL ACCOUNT
+     C************
+     C***********BNCT      IFEQ 'P'                        B001
+     C***********BNCT      OREQ 'C'
+     C************         Z-ADDCBNC      CNUM
+     C************         END                             E001
+     C************
+     C***********BNCT      IFEQ 'R'                        B001
+     C***********BNCT      OREQ 'P'
+     C***********BNCT      OREQ 'C'
+     C***********CLKEY     CHAINCLINTBF1             89
+     C**N89******RECI      COMP 'D'                  8989
+      ************                                                        056032
+      **If*record*not found/closed, process database error                056032
+      **Same*conditions apply as for Retail account processing.           056032
+      ************                                                        056032
+     C***89*******         DO                              B002
+      ************                                                        056032
+     C***********@RECI     IFNE 'M'                                       056032
+     C***********PVDT      ANDGERUND                                      056032
+     C************         MOVEL'CLINT '  WDBFIL           ************
+     C************         MOVELCNUM      WDBKEY           * DBERR 06 *
+     C************         MOVEL'06'      WDBASE           ************
+     C************         EXSR UEABRT                     *ABORT PGM*
+     C************         ELSE                                           056032
+     C************         MOVELCNUM      @SNBN                           056032
+     C************         MOVE TXT,2     @TXT                            056032
+     C************         MOVEL@MSG      BENEX1                          056032
+     C************         GOTO ENDDET                                    056032
+     C************         END                             E003           056032
+      ************                                                        056032
+     C************         END                             E002
+     C************
+     C************         MOVE CRNM      BENEX1                          051416
+     C************         MOVELCRNM      BENEX1                          051416
+     C************         END                             E001
+     C*
+     C*  BENEFICIARY TYPE BLANK - NOT ENTERED
+     C*
+     C           BNCT      IFEQ ' '                        B001
+     C                     MOVE *BLANK    BENEX1
+     C                     END                             E001
+     C*
+     C*********************ENDSR                                          056032
+     C           ENDDET    ENDSR                                          056032
+     C*
+     C************************************************************
+     C* END OF DETAIL SUBROUTINE
+     C************************************************************
+      /EJECT                                                              S01435
+      *****************************************************************   S01435
+      **                                                                  S01435
+      **    Get name for Type.                                            S01435
+      **                                                                  S01435
+      **    CALLED FROM:  anywhere                                        S01435
+      **    CALLS:                                                        S01435
+      **                                                                  S01435
+      **                                                                  S01435
+     C           GETNAM    BEGSR                                          S01435
+      *                                                                   S01435
+      *                                                                   S01435
+      *  Set up general parameters                                        S01435
+      *                                                                   S01435
+     C           *LIKE     DEFN PCCY      XCCY                            S01435
+     C                     MOVEL*BLANKS   @MSG                            S01435
+     C                     MOVE *BLANKS   XNAME  35                       S01435
+      *                                                                   S01435
+     C                     CLEARW8FT                                      S01435
+     C                     MOVEL*BLANKS   W8STMT                          S01435
+     C                     MOVELXCCY      W8CCY                           S01435
+     C                     MOVEL##PGM     W8CPGM                          S01435
+     C                     MOVEL'*PRINT'  W8ACT                           S01435
+     C                     MOVEL'Y'       W8MTXT                          S01435
+     C                     Z-ADD5         W8NLIN                          S01435
+      *                                                                   S01435
+      *  Set up paramters                                                 S01435
+      *                                                                   S01435
+     C                     MOVELXTYPE     W8TYPE                          S01435
+     C                     MOVEL*BLANKS   W8LINS                          S01435
+     C                     MOVELXNAMDS    W8LINS                          S01435
+      *                                                                   S01435
+      * Call expansion program                                            S01435
+      *                                                                   S01435
+     C                     CALL 'FT0315'               9999               S01435
+     C                     PARM           W8RTN   7                       S01435
+     C                     PARM           W8FT                            S01435
+     C                     PARM           W8LINS256                       S01435
+     C                     PARM           W8RPT 256                       S01435
+     C                     PARM           W8MSG 256                       S01435
+     C                     PARM           W8SCR 256                       S01435
+      *                                                                   S01435
+      ** Check if database error occurred                                 S01435
+      *                                                                   S01435
+     C           *IN99     IFEQ '1'                                       S01435
+     C           W8RTN     ORNE *BLANKS                                   S01435
+     C                     MOVEL'FT0315'  WDBFIL                          S01435
+     C                     MOVEL'*CALL'   WDBKEY                          S01435
+     C                     MOVEL'05'      WDBASE                          S01435
+     C                     EXSR UEABRT                     *ABORT PGM*    S01435
+     C                     END                                            S01435
+      *                                                                   S01435
+     C                     MOVELW8MSG     XNAMDS                          S01435
+     C           XSLSH     IFNE '/'                                       S01435
+     C           XTYPE     OREQ 'A'                                       S01435
+     C                     MOVELXADD1     XNAME                           S01435
+     C                     ELSE                                           S01435
+     C                     MOVELXADD2     XNAME                           S01435
+     C                     END                                            S01435
+      *                                                                   S01435
+     C                     ENDSR                                          S01435
+     C/EJECT
+     C************************************************************
+     C* UEABRT SR.
+     C* TO ABORT PROGRAM IF DATABASE ERROR
+     C************************************************************
+     C           UEABRT    BEGSR
+     C*
+     C** UPDATE DATA AREA LDA
+     C*
+     C           *NAMVAR   DEFN LDA       DLDA
+     C           *LOCK     IN   DLDA
+     C           *LIKE     DEFN DBKEY     WDBKEY
+     C           *LIKE     DEFN DBASE     WDBASE
+     C           *LIKE     DEFN DBFILE    WDBFIL
+     C                     MOVEL'EXTRACT' DBPGM
+     C           *IN89     IFEQ '1'                        B001
+     C                     MOVEL'MAIN '   DBFILE
+     C                     MOVEL'PROCESS' DBKEY
+     C                     ELSE                            X001
+     C                     MOVELWDBFIL    DBFILE
+     C                     MOVELWDBASE    DBASE
+     C                     MOVELWDBKEY    DBKEY
+     C                     END                             E001
+     C                     OUT  DLDA
+     C                     SETON                     U7U8LR
+     C*
+     C** PRODUCE PROGRAM DUMP
+     C*
+     C                     DUMP
+     C*
+     C** END PROGRAM
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C************************************************************
+     C* END OF ABORT SUBROUTINE
+     C************************************************************
+     C/EJECT
+     C**
+     C********************************************************************
+     C**
+     C**   ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.
+     C**
+     C           ZSYSTM    BEGSR                           *** ZSYSTEM ***
+     C**
+     C**   SET UP KEY FOR INSTALLATION CONTROL RECORD.
+     C                     MOVE *BLANK    KEY
+     C                     MOVEL'01'      KEY
+     C                     MOVE '10'      KEY
+     C**
+     C           KEY       CHAINTABTB10F             99    ON NOT THERE
+     C  N99      RECI      COMP 'D'                  9999  ON, IS DELETED
+     C**
+     C                     ENDSR
+     C**
+     C/EJECT
+      ************                                                        S01435
+      ************ Errors now indicated through FT0315 access object      S01435
+      ************                                                        S01435
+     O**   TXT - Text                                               056032S01435
+     O*- Account Closed                                             056032S01435
+     O*- Customer Deleted                                           056032S01435
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

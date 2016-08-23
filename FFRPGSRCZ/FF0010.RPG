@@ -1,0 +1,1083 @@
+     H        1
+     F********************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Trades input (initial)')
+      *****************************************************************
+     F*                                                                  *
+     F*  Midas  -  Futures and Options Module
+     F*                                                                  *
+     F*     This program will be made redundant at DBA R4.00          *
+     F*     In the interim please check the new ILE RPG versions      *
+     F*     and apply any new fixes if they are appropriate.          *
+     F*                                                               *
+     F*   FF0010  -  TRADES INPUT (SELECT ACTION CODE + MARKET CENTRE)   *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CAAA03             Date 29Apr04               *
+      *  Prev Amend No. CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CFF007             Date 13Feb01               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 112464             Date 26Apr00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAP010             Date 02Jul99               *
+     F*                  CPL002             DATE 08MAR99                 *
+     F*                  CAP004             DATE 28Oct98                 *
+     F*                  107864             DATE 08DEC97                 *
+     F*                  CFF003             Date 14Apr97              *
+     F*                  CFF004             DATE 08OCT96                 *
+     F*                  CPM003             DATE 08FEB96                 *
+     F*                  CFF001             DATE 01JUN95                 *
+     F*                  073714             DATE 01MAR95                 *
+     F*                  S01457             DATE 30DEC93                 *
+     F*                  S01456             DATE 08NOV93                 *
+     F*                  E28921             DATE 27SEP91                 *
+     F*                  S01332             DATE 05JUN91                 *
+     F*                  FO0053             DATE  2APR91                 *
+     F*                  S01195             DATE 05JUL90                 *
+     F*                  S01199             DATE 27FEB90                 *
+     F*                  E21147             DATE 20FEB90                 *
+     F*                  S01117             DATE 02FEB90                 *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  CAAA03 - Webfacing Changes. (recompile)                         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CFF007 - Futures and Options Enhancement for Private Banking *
+     F*   112464  -  Confirmations were not always produced for Options
+     F*              deals
+     F*   CAP010  -  Enhanced switchability for APIs                     *
+     F*              CAP004 replaced by CAP128                           *
+     F*   CPL002  -  Midas-Plato Interface                               *
+     F*              Add Spot Price to all options screens.              *
+     F*  CAP004 - This function may only be used for non-currency        *
+     F*           OTCs, if APIs phase 3 is on.                           *
+     F*   107864  -  Suppress the default values for instrument type     *
+     F*              and number of contracts                             *
+     F*   CFF003  -  Recompile due to change in FF0010DF                 *
+     F*   CFF004  -  Increase in size of Price Fields,(Recompiled Only)  *
+     F*   CPM003  -  FF PM Interface Upgrade to R10 (Just recompiled)    *
+     F*   CFF001  -  MAKE OTC ENHANCEMENTS SWITCHABLE                    *
+     F*   073714  -  OTC ENHANCEMENTS                                    *
+     F*   S01457  -  Enable Brokers to deal with OTC's.                  *
+     F*   S01456  - 'FF' MONTHLY P&L ENHANCEMENTS.                       *
+     F*              Recompiled due to change to PF/MKCTLD.              *
+     F*   E28921  -  Trades input locks up if a validation error         *
+     F*              occurs during a linked enquiry.                     *
+     F*   S01332  -  Amended for Exposure Management Release 10 to       *
+     F*              allow linked enquiry                                *
+     F*   FO0053  -  RECOMPILE DUE TO CHANGE IN DISPLAY FILE             *
+     F*   S01195  -  HOLIDAY AMENDMENT                                   *
+     F*   S01199  -  HELP SYSTEM                                         *
+     F*   E21147  -  REPLACE QCAEXEC CALL WITH QCMDEXC FOR AS400         *
+     F*   S01117  -  MULTIBRANCHING                                      *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                        *
+     F*                                                                  *
+     F******IGNDECERR(*NO)                                               *073714
+     F*     IGNDECERR(*YES)                                              *073714
+     F*                                                                  *
+     F*****************************************************************
+     FMKCTL   IF  E           K        DISK
+     FMARKT   IF  E           K        DISK
+     F*ABTB10*IF* E                    DISK                               S01117
+     F*ABTB11*IF* E                    DISK                               S01117
+     FFF0010DFCF  E                    WORKSTN
+     F            FF0010F5                          KIGNORE
+     F            FF0010F6                          KIGNORE
+     F            FF0010F7                          KIGNORE
+     F            FF0010F8                          KIGNORE
+     F            FF0010F9                          KIGNORE               CPL002
+     F            FF0010FB                          KIGNORE               CPL002
+     F*
+     F/EJECT
+     F*                  FUNCTION OF INDICATORS
+     F*                 ************************
+     F* ID F  C  H  L
+     F*
+     F*******01********'HELP' key                                         S01199
+     F*
+     F*      02        Insert
+     F*      03        Amend
+     F*      04        Delete
+     F*      05        Enquire
+     F*
+     F*      06        DSPF/FF0010DF - Read fail
+     F*
+     F*      07        FRCDTA enabled - overrides DFRWRT(*YES) to (*NO)
+     F*
+     F*      10        Valid exit Indicator
+     F*
+     F*    11-15       used in FF0020
+     F*
+     F*      18        General Error Indicator
+     F*
+     F*      19        used in FF0020
+     F*
+     F*    Field Error Indicators
+     F*   ~~~~~~~~~~~~~~~~~~~~~~~~
+     F*      20        Action Code
+     F*      21        Market Centre
+     F*      22        Processing Type                                    073714
+     F*
+     F*    22-59       used in FF0020
+     F*
+     F*
+     F*      61        Originating Branch Used 'Y'                        S01117
+     F*      62        Profit Centre Used 'Y'                             S01117
+     F*      63        used in FF0020                                     S01117
+     F*      64        Multi-Branch Ind. 'N'
+     F*      65        used in FF0020
+     F*      66        used in FF0020
+     F*                                                                   CFF001
+     F*      68        Enhanced OTC is present (used in FF0020)           CFF001
+     F*
+     F*******70********PF/TABTB10/11*-*Read/Chain*fail********************S01117
+     F*******71********Other*files*-*Read/Chain*fail*or*QCAEXEC*failure   E21147
+     F*      71        Other files - Read/Chain fail or QCMDEXC failure   E21147
+      *    69         Securities module is on                         *   CFF007
+     F*
+     F*    72-76       used in FF0020
+     F*      77        Program is stacked                                 S01332
+     F*                                                                   S01332
+     F*      79        First time through indicator                       S01332
+     F*
+     F*    80-89       Reserved for Standard FF Subroutines
+     F*
+     F*    90-99       Reserved for Standard MIDAS Subroutines
+     F*
+     F*      KC        F3 - exit program
+     F*      KL        )
+     F*      KJ        )   used in FF0020
+     F*      KL        )
+     F*
+     F*    U7+U8       Database Errors
+     F*
+     F/EJECT
+     E                    CPY@    1   1 80
+     E                    ERR        40  4               Error Codes
+     E***********         CMD     1   1 39               QCAEXEC Cmd      E21147
+     E                    CMD     1   1 39               QCMDEXC Cmd      E21147
+     E/SPACE 2
+     ISDMMOD    E DSSDMMODPD                                              CPL002
+      ** External DS for Midas Modules                                    CPL002
+     IERRDS       DS                            160
+     I*    Display Screen Error Codes
+     I                                        1 160 ERR
+     I                                        1  77 SERCD1
+     I*
+     IMNAME       DS                             20
+     I*    Split up Screen Market Name (for OTC)
+     I                                        1  20 SMKTN
+     I                                        1   8 SOTC1
+     I                                        9  16 SOTC2
+     I*
+     IFFMRKT     UDS
+     I*    Save Market
+     I                                        1   2 MRKTFF
+     I*
+     ICOMMD       DS
+     I*****QCAEXEC*Command********                                        E21147
+     I*    QCMDEXC Command                                                E21147
+     I                                        1  39 WCMD
+     I                                        1   1 WAORD
+     I                                       13  14 WMRKT
+     I                                       32  39 WWAIT
+     I*
+     IICDK        DS                             12
+     I*    Key for ICD records
+     I                                        1   2 KICD1
+     I                                       11  12 KICD2
+     I*
+     IPSDS       SDS
+     I*    Holds Workstn id
+     I                                      244 246 WSID
+     I*
+     ILDA         DS                            256
+     I*    Local Data Area
+     I** *LOCK IN LDA immediately before and OUT LDA immediately          S01117
+     I** after each database handling.                                    S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 177 DBASE                 S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I**                                                                  S01117
+     IRUNDT       DS                                                      S01117
+     I** DATA AREA RUNDAT                                                 S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+      **                                                                  S01117
+     IZMUSER      DS                             17                       S01117
+      ** DATA AREA OF MENU USER                                           S01117
+     I                                       11  13 USRBCH                S01117
+     ISDBANK    E DSSDBANKPD                                              S01117
+     I** BANK DETAILS                                                     S01117
+     I              BJSBRC                          SINBCH                S01117
+     I*                                                                   S01117
+     ISDGELR    E DSSDGELRPD                                              S01117
+     I** General Ledger Details                                           S01117
+     I              BKPRCU                          PFCU                  S01117
+     I              BKOBRU                          OBUU                  S01117
+      *                                                                   CFF007
+     ISCSARD    E DSSCSARDPD                                              CFF007
+      ** External data structure for SAR details                          CFF007
+      *                                                                   S01332
+     IEMSDS     E DSEMDTA                                                 S01332
+      * External Data Area for Linked Enquiry Processing                  S01332
+      *                                                                   S01332
+     I*                                                                   S01117
+     I@DSFDY    E DSDSFDY                                                 S01117
+     I*  FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE               S01117
+     I*                                                                   S01117
+     I/EJECT
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I/COPY WNCPYSRC,FF0010I001
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+     C********************************************************************
+     C**                                                                 *
+     C**      M  A  I  N     P  R  O  C  E  S  S  I  N  G                *
+     C**                                                                 *
+     C********************************************************************
+     C**
+     C**   Receive/Pass  Parameters
+     C**
+     C           *ENTRY    PLIST
+     C                     PARM           PACTN   1
+     C                     PARM           PMRKT   2
+     C                     PARM           PMKTN  20
+     C                     PARM           PMKLC   3
+     C                     PARM           PMLOC   3                       S01195
+     C                     PARM           PBUSD   50
+     C                     PARM           PISPT   1                       073714
+     C                     PARM           PRUNA   7
+     C                     PARM           PRUND   50
+     C                     PARM           PDATF   1
+     C***********          PARM           PDFBR   30                      S01117
+     C                     PARM           PDFBR   3                       S01117
+     C                     PARM           PMBIN   1
+     C                     PARM           PFRST   1                       S01332
+     C**   Reset LDA
+     C**
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBLOT
+     C                     MOVE 'FF0010  'DBPGM
+     C                     OUT  LDA
+      *                                                                   S01332
+      *  Retrieve data area EMSDS. If program called as a linked          S01332
+      *  enquiry check whether it is a market instrument and calculate    S01332
+      *  relevant dates.                                                  S01332
+      *                                                                   S01332
+     C                     SETOF                     79                   S01332
+     C           *NAMVAR   DEFN           EMSDS                           S01332
+     C           *LOCK     IN   EMSDS                                     S01332
+     C                     MOVE RQDTD     MODI    2                       S01332
+      *                                                                   S01332
+     C           MODI      IFNE *BLANKS                                   S01332
+      *                                                                   S01332
+      *  Check first time indicator for Exposure Management               S01332
+      *                                                                   S01332
+     C           PFRST     IFEQ *BLANKS                                   S01332
+     C                     MOVE 'Y'       PFRST                           S01332
+     C                     ELSE                                           S01332
+     C                     MOVE 'N'       PFRST                           S01332
+     C                     END                                            S01332
+      *                                                                   S01332
+     C                     SETON                     77                   S01332
+     C                     MOVELRQDTD     TRNMKT  8                       S01332
+     C                     MOVE TRNMKT    MKT     2                       S01332
+     C                     MOVELTRNMKT    TRN     6                       S01332
+     C                     END                                            S01332
+     C                     OUT  EMSDS                                     S01332
+     C**
+     C*****Access*ICD/10*+*ICD/11*(for*1st*execution*of*program*only)*****S01117
+     C**   Access ICD/10 + ICD/11 + RUNDAT + ZMUSER                       S01117
+     C**   (for 1st execution of program only)                            S01117
+     C**
+     C           PDATF     IFEQ ' '
+     C                     EXSR ICDR
+     C                     SETON                     79                   S01332
+     C**
+     C                     ELSE
+     C**   Reset Processing
+     C                     SETOF                     10
+     C                     MOVE ' '       SACTN
+     C                     MOVE '  '      SMRKT
+     C                     MOVE *BLANK    SMKTN
+     C                     MOVE *BLANK    PMKLC
+     C                     MOVE *BLANK    PMLOC                           S01195
+     C                     Z-ADD0         PBUSD
+     C                     MOVE ' '       SISPT                           073714
+     C                     END
+     C**
+     C**   Initial Screen
+     C                     EXSR INTSCN
+     C**
+     C**   F3
+     C           *INKC     IFEQ '1'
+     C                     MOVE ' '       PACTN
+     C                     CALL 'FF0582'                                  112464
+     C                     SETON                     LR
+     C**
+     C                     ELSE
+     C                     MOVE SACTN     PACTN
+     C                     MOVE SMRKT     PMRKT
+     C                     MOVE SMKTN     PMKTN
+     C**
+     C           PMRKT     IFNE '  '
+     C                     MOVE MKLC      PMKLC
+     C                     MOVE MLOC      PMLOC                           S01195
+     C                     Z-ADDBUSD      PBUSD
+     C                     END
+     C**                                                                  073714
+     C                     MOVE SISPT     PISPT                           073714
+     C**
+     C                     END
+     C**
+     C                     RETRN
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*       S   U   B   R   O   U   T   I   N   E   S                  *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C*                  SUMMARY  OF  SUBROUTINES
+     C*                 **************************
+     C*
+     C*     ICDR        Access 'Installation Control Data' Records
+     C*                 and    'Standing Data' details                    S01117
+     C*
+     C*     INTSCN      Initial Screen Processing
+     C*
+     C*     SCRNF1      To  Write/Read  Initial Screen, + handle 'Help'
+     C*
+     C*     VALSR       Validate initial screen input.
+     C*
+     C*     NXTSCN      Display Next Screen
+     C*
+     C*     DBERR       Database Error Handling : Terminates program
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**   ICDR SR. -  Access 'Installation Control Data' Records        *
+     C**   ~~~~~~~~    and    'Standing Data' details                    *S01117
+     C*****~~~~~~~~*******************************************************S01117
+     C**      Called From                  Calls                         *
+     C**       Main Processing              SR. DBERR                    *
+     C**                                                                 *
+     C********************************************************************
+     C**
+     C           ICDR      BEGSR                           *** ICDR SR ***
+      *                                                                   CPL002
+      ** Check whether the Midas-Plato Interface is installed.            CPL002
+      *                                                                   CPL002
+     C                     CALL 'AOMMODR0'                                CPL002
+     C                     PARM *BLANKS   @RTCD                           CPL002
+     C                     PARM '*FIRST ' @OPTN                           CPL002
+     C           SDMMOD    PARM SDMMOD    @DSFDY                          CPL002
+      *                                                                   CPL002
+     C           @RTCD     IFNE *BLANKS                                   CPL002
+     C                     MOVE *BLANKS   DBKEY                           CPL002
+     C           *LOCK     IN   LDA                                       CPL002
+     C                     Z-ADD05        DBASE            **DB ERROR 05**CPL002
+     C                     MOVE 'SDMMODPD'DBFILE                          CPL002
+     C                     MOVEL*BLANKS   DBKEY                           CPL002
+     C                     EXSR DBERR                                     CPL002
+     C                     ENDIF                                          CPL002
+      *                                                                   CPL002
+      ** Set indicator *IN80 if Midas-Plato Interface installed.          CPL002
+      *                                                                   CPL002
+     C           BGN2ST    IFEQ 'Y'                                       CPL002
+     C                     MOVE '1'       *IN80                           CPL002
+     C                     MOVE 'Y'       PLATO   1                       CPL002
+     C                     ELSE                                           CPL002
+     C                     MOVE '0'       *IN80                           CPL002
+     C                     MOVE 'N'       PLATO                           CPL002
+     C                     ENDIF                                          CPL002
+      *                                                                   CPL002
+     C**                                                                  S01117
+     C**   GET BANK DETAILS                                               S01117
+     C**                                                                  S01117
+     C                     CALL 'AOBANKR0'                                S01117
+     C                     PARM '*DBERR ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C           SDBANK    PARM SDBANK    @DSFDY                          S01117
+     C           @RTCD     IFNE *BLANKS                                   S01117
+     C                     SETON                     70                   S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'SDBANKPD'DBFILE             *************S01117
+     C                     Z-ADD01        DBASE              * DBERR 001 *S01117
+     C                     MOVEL@OPTN     DBOPTN  7          *************S01117
+     C                     MOVEL@OPTN     DBKEY                           S01117
+     C                     EXSR DBERR                                     S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C**   Get General Ledger Details                                     S01117
+     C**                                                                  S01117
+     C**********           CALL 'AOGELRR0'                                S01117              CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*DBERR ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C********** SDGELR    PARM SDGELR    @DSFDY                          S01117              CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS                                   S01117
+     C                     SETON                     70                   S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'SDGELRPD'DBFILE             *************S01117
+     C                     Z-ADD02        DBASE              * DBERR 002 *S01117
+     C                     MOVEL@OPTN     DBOPTN  7          *************S01117
+     C                     MOVEL@OPTN     DBKEY                           S01117
+     C                     EXSR DBERR                                     S01117
+     C                     END                                            S01117
+     C/COPY WNCPYSRC,FF0010C001
+     C**                                                                  CFF001
+     C** Access SAR Details to determine whether Enhanced OTC is present  CFF001
+     C**                                                                  CFF001
+     C                     CALL 'AOSARDR0'                                CFF001
+     C                     PARM '       ' @RTCD                           CFF001
+     C                     PARM '*VERIFY' @OPTN                           CFF001
+     C                     PARM 'CFF001'  @SARD   6                       CFF001
+     C           @RTCD     IFNE *BLANK                                    CFF001
+     C           @RTCD     ANDNE'*NRF   '                                 CFF001
+     C                     SETON                     70                   CFF001
+     C           *LOCK     IN   LDA                                       CFF001
+     C                     MOVEL'SCSARDPD'DBFILE             *************CFF001
+     C                     Z-ADD04        DBASE              * DBERR 004 *CFF001
+     C                     MOVEL@OPTN     DBOPTN             *************CFF001
+     C                     MOVEL@OPTN     DBKEY                           CFF001
+     C                     EXSR DBERR                                     CFF001
+     C                     END                                            CFF001
+     C           @RTCD     IFEQ *BLANK                                    CFF001
+     C                     MOVEL'Y'       CFF001  1                       CFF001
+     C                     MOVEL'1'       *IN68                           CFF001
+     C                     END                                            CFF001
+      *                                                                   CAP004
+      ***Determine*whether*APIs*phase*3*is*on                       CAP004CAP010
+      ** Determine whether FF Trades ILE menu items on                    CAP010
+     C                     CALL 'AOSARDR0'                                CAP004
+     C                     PARM '       ' @RTCD                           CAP004
+     C                     PARM '*VERIFY' @OPTN                           CAP004
+     C******               PARM 'CAP004'  @SARD                     CAP004CAP010
+     C                     PARM 'CAP128'  @SARD                           CAP010
+      *                                                                   CAP004
+     C           @RTCD     IFEQ *BLANK                                    CAP004
+      *                                                                   CAP004
+     C******               MOVEL'Y'       CAP004  1                 CAP004CAP010
+     C                     MOVEL'Y'       CAP128  1                       CAP010
+      *                                                                   CAP004
+      ** Set up the program name for the message subfile                  CAP004
+     C                     MOVEL'FF0010'  FFPGMQ                          CAP004
+      *                                                                   CAP004
+     C                     ENDIF                                          CAP004
+      *                                                                   CFF007
+     C                     MOVE 'N'       CFF007  1                       CFF007
+     C                     MOVE '1'       *IN69                           CFF007
+     C                     CALL 'AOSARDR0'                                CFF007
+     C                     PARM *BLANKS   PRTCD   7                       CFF007
+     C                     PARM '*VERIFY' POPTN   7                       CFF007
+     C                     PARM 'CFF007'  PSARD   6                       CFF007
+     C           SCSARD    PARM SCSARD    @DSFDY                          CFF007
+     C           PRTCD     IFEQ *BLANKS                                   CFF007
+     C                     MOVE 'Y'       CFF007                          CFF007
+     C                     MOVEL'1'       *IN68                           CFF007
+      ** Securities module                                                CFF007
+     C           BGSECS    IFEQ 'Y'                                       CFF007
+     C                     MOVE '0'       *IN69                           CFF007
+     C                     ENDIF                                          CFF007
+      *                                                                   CFF007
+     C                     ELSE                                           CFF007
+     C           PRTCD     IFNE '*NRF   '                                 CFF007
+     C           *LOCK     IN   LDA                                       CFF007
+     C                     Z-ADD6         DBASE                           CFF007
+     C                     MOVEL'CFF007  'DBKEY                           CFF007
+     C                     MOVEL'SCSARDPD'DBFILE                          CFF007
+     C                     EXSR DBERR                                     CFF007
+     C                     ENDIF                                          CFF007
+     C                     ENDIF                                          CFF007
+      *                                                                   CAP004
+     C***********                                                         S01117
+     C*****ICD/10*********************************************************S01117
+     C***********          READ TABTB10F                 70               S01117
+     C**N70******RECI      COMP 'D'                  7070                 S01117
+     C***********                                                         S01117
+     C************IN70     IFEQ '0'                                       S01117
+     C*                                                                   S01117
+     C** IN THE DATAAREA RUNDAT & ZMUSER                                  S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C           *NAMVAR   DEFN           ZMUSER                          S01117
+     C                     IN   RUNDT                                     S01117
+     C                     IN   ZMUSER                                    S01117
+     C                     MOVE RUNA      PRUNA
+     C                     Z-ADDRUND      PRUND
+     C                     MOVE DATF      PDATF
+     C***********          Z-ADDDFBR      PDFBR                           S01117
+     C***********                                                         S01117
+     C***********          ELSE                                           S01117
+     C************LOCK     IN   LDA                                       S01117
+     C***********          MOVE '01'      DBASE            ** DBERR  01 **S01117
+     C***********          MOVE 'TABLE'   DBFILE                          S01117
+     C***********          MOVE '01'      KICD1                           S01117
+     C***********          MOVE '10'      KICD2                           S01117
+     C***********          MOVELICDK      DBKEY                           S01117
+     C***********          EXSR DBERR                                     S01117
+     C***********          END                                            S01117
+     C***********                                                         S01117
+     C*****ICD/11                                                         S01117
+     C***********          READ TABTB11F                 70               S01117
+     C**N70******RECI      COMP 'D'                  7070                 S01117
+     C***********                                                         S01117
+     C************IN70     IFEQ '0'                                       S01117
+     C*                                                                   S01117
+     C**   SET UP PDFBR, PMBIN, *IN61, *IN62 & *IN64                      S01117
+     C*                                                                   S01117
+     C           MBIN      IFEQ 'N'                                       S01117
+     C                     MOVE SINBCH    PDFBR                           S01117
+     C                     ELSE                                           S01117
+     C                     MOVE USRBCH    PDFBR                           S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     MOVE MBIN      PMBIN
+     C           MBIN      COMP 'N'                      64
+     C*                                                                   S01117
+     C  N64      OBUU      COMP 'Y'                      61               S01117
+     C           PFCU      COMP 'Y'                      62               S01117
+     C**
+     C***********          ELSE                                           S01117
+     C************LOCK     IN   LDA                                       S01117
+     C***********          MOVE '02'      DBASE            ** DBERR  02 **S01117
+     C***********          MOVE 'TABLE'   DBFILE                          S01117
+     C***********          MOVE '01'      KICD1                           S01117
+     C***********          MOVE '11'      KICD2                           S01117
+     C***********          MOVELICDK      DBKEY                           S01117
+     C***********          EXSR DBERR                                     S01117
+     C***********          END                                            S01117
+     C**
+     C                     ENDSR
+     C**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**   INTSCN SR. -  Initial Screen Processing                       *
+     C**   ~~~~~~~~~~                                                    *
+     C**      Called From                  Calls                         *
+     C**       Main Processing              SR. VALSR                    *
+     C**                                    SR. SCRNF1                   *
+     C**                                    SR. NXTSCN                   *
+     C**                                                                 *
+     C********************************************************************
+     C**
+     C           INTSCN    BEGSR                           ** INTSCN SR **
+     C**
+     C                     MOVE RUNA      SRUNA
+     C                     MOVE WSID      SWSID
+     C                     SETON                     07
+      *                                                                   S01332
+      *  If pgm called via stack check if Market or OTC parms passed      S01332
+      *                                                                   S01332
+     C           *IN77     IFEQ '1'                                       S01332
+      *                                                                   S01332
+     C           MKT       IFNE *BLANKS                                   S01332
+     C           PFRST     ANDEQ'Y'                                       S01332
+     C                     MOVE MKT       SMRKT                           S01332
+     C                     END                                            S01332
+      *                                                                   S01332
+     C                     MOVE 'E'       SACTN                           S01332
+     C           PFRST     IFEQ 'Y'                                       S01332
+     C                     MOVE TRN       STNBR                           S01332
+     C                     ELSE                                           S01332
+     C                     MOVE *BLANKS   STNBR                           S01332
+     C                     END                                            S01332
+     C                     END                                            S01332
+     C/COPY WNCPYSRC,FF0010C008
+     C**   Display screen
+     C                     EXSR SCRNF1
+     C/COPY WNCPYSRC,FF0010C009
+     C**
+     C           *INKC     DOWNE'1'
+     C           *IN10     ANDNE'1'
+     C           *INKA     ANDNE'1'                                       S01332
+     C           *INKL     ANDNE'1'                                       S01332
+     C**
+     C**   Reset Processing
+     C                     SETOF                     182021
+     C                     SETOF                     22                   073714
+     C                     Z-ADD0         E       20
+     C                     MOVE *BLANK    ERR
+     C**
+     C**   Validate Input
+     C                     EXSR VALSR
+     C**
+     C**   If error - redisplay screen
+     C           *IN18     IFEQ '1'
+     C                     EXSR SCRNF1
+     C**
+     C                     ELSE
+     C**   Otherwise, save market in FFMRKT data area,
+     C**    select Next Screen and end pgm.
+     C**
+     C           *NAMVAR   DEFN           FFMRKT
+     C           *LOCK     IN   FFMRKT
+     C                     MOVE SMRKT     MRKTFF
+     C                     OUT  FFMRKT
+     C**
+     C                     EXSR NXTSCN
+     C/COPY WNCPYSRC,FF0010C004
+     C                     SETOF                     07
+     C                     SETON                     10
+     C/COPY WNCPYSRC,FF0010C005
+     C**
+     C                     END
+     C**
+     C                     END
+      *                                                                   S01332
+      *   Validate Command Keys                                           S01332
+      *                                                                   S01332
+     C           *IN77     IFEQ '1'                                       S01332
+     C           *LOCK     IN   EMSDS                                     S01332
+      *                                                                   S01332
+     C           *INKA     IFEQ '1'                                       S01332
+     C                     MOVE 'S'       RETND                           S01332
+     C                     SETON                     LR                   S01332
+     C                     END                                            S01332
+      *                                                                   S01332
+     C           *INKC     IFEQ '1'                                       S01332
+     C                     MOVE 'Q'       RETND                           S01332
+     C                     CALL 'FF0582'                                  112464
+     C                     SETON                     LR                   S01332
+     C                     END                                            S01332
+      *                                                                   S01332
+     C           *INKL     IFEQ '1'                                       S01332
+     C                     MOVE 'U'       RETND                           S01332
+     C                     SETON                     LR                   S01332
+     C                     END                                            S01332
+      *                                                                   S01332
+     C                     OUT  EMSDS                                     S01332
+     C                     END                                            S01332
+      *                                                                   S01332
+     C**
+     C                     ENDSR
+     C**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**   SCRNF1 SR. -  To  Write/Read  Initial Screen                  *
+     C**   ~~~~~~~~~~     + handle 'HELP'                                *
+     C**                                                                 *
+     C**      Called From                  Calls                         *
+     C**       SR. INTSCN                                                *
+     C**                                                                 *
+     C********************************************************************
+     C**
+     C           SCRNF1    BEGSR                           ** SCRNF1 SR **
+     C**
+      *                                                                   S01332
+      *  If first call to program and call is via stack do not display    S01332
+      *  initial screen                                                   S01332
+      *                                                                   S01332
+     C           *IN77     IFEQ '1'                                       S01332
+     C           *IN79     ANDEQ'0'                                       S01332
+     C           *IN77     OREQ '0'                                       S01332
+     C           *IN18     OREQ '1'                                       E28921
+      *                                                                   CAP004
+      ** If APIs phase 3 is on, write the message subfile on top of       CAP004
+      ** the existing format.                                             CAP004
+     C******     CAP004    IFEQ 'Y'                                 CAP004CAP010
+     C           CAP128    IFEQ 'Y'                                       CAP010
+     C                     WRITEFF0010S0                                  CAP004
+     C                     WRITEFF0010F1                                  CAP004
+     C                     READ FF0010F1                 99               CAP004
+     C                     ELSE                                           CAP004
+     C                     EXFMTFF0010F1
+     C                     ENDIF                                          CAP004
+     C                     END                                            S01332
+     C**   Allow 'HELP'
+     C**
+     C********** *IN01     DOWEQ'1'                                       S01199
+     C**
+     C**********           MOVE 'FF0020  'HBPGM   8                       S01199
+     C**********           MOVEAERR       HERCD 160                       S01199
+     C**********           CALL 'MHELP'                                   S01199
+     C**********           PARM           HBPGM                           S01199
+     C**********           PARM           HERCD                           S01199
+     C**
+     C**********           READ FF0010F1                 06               S01199
+     C**********           END                                            S01199
+     C**
+     C                     ENDSR
+     C**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**   VALSR SR. -  Validate initial screen input.                   *
+     C**   ~~~~~~~~~                                                     *
+     C**      Called From                  Calls                         *
+     C**       SR. INTSCN                   SR. DBERR                    *
+     C**                                                                 *
+     C********************************************************************
+     C**
+     C           VALSR     BEGSR                           *** VALSR SR **
+      *                                                                   CAP004
+      ** If APIs phase 3 is on, check that this function is only being    CAP004
+      ** used for non-currency OTCs                                       CAP004
+     C******     CAP004    IFEQ 'Y'                                 CAP004CAP010
+     C           CAP128    IFEQ 'Y'                                       CAP010
+      *                                                                   CAP004
+      ** Clear the program message queue                                  CAP004
+     C                     CALL 'ZA0250'                                  CAP004
+      *                                                                   CAP004
+      ** Market cannot be entered and instrument processing type must not CAP004
+      ** be 5.                                                            CAP004
+     C           SMRKT     IFNE *BLANKS                                   CAP004
+     C           SISPT     OREQ '5'                                       CAP004
+      *                                                                   CAP004
+     C                     MOVEL'MMA0712' MSGID                           CAP004
+     C                     CALL 'ZA0240'                                  CAP004
+     C                     PARM           MSGID  10                       CAP004
+      *                                                                   CAP004
+      ** Set the specific indicators for those fields, the general        CAP004
+      ** screen error indicator, and the indicators controlling the       CAP004
+      ** message subfile.                                                 CAP004
+     C                     MOVE *ON       *IN21                           CAP004
+     C                     MOVE *ON       *IN22                           CAP004
+     C                     MOVE *ON       *IN18                           CAP004
+     C                     MOVE *OFF      *IN96                           CAP004
+     C                     MOVE *ON       *IN97                           CAP004
+      *                                                                   CAP004
+     C                     ENDIF                                          CAP004
+     C                     ENDIF                                          CAP004
+      *                                                                   CAP004
+     C**
+     C**   Action Code
+     C**   ~~~~~~~~~~~
+     C           SACTN     IFNE 'I'
+     C           SACTN     ANDNE'A'
+     C           SACTN     ANDNE'D'
+     C           SACTN     ANDNE'E'
+     C/COPY WNCPYSRC,FF0010C002
+     C           *IN77     OREQ '1'                                       S01332
+     C           SACTN     ANDNE'E'                                       S01332
+     C           E         ADD  1         E
+     C                     MOVE ' 001'    ERR,E
+     C                     SETON                     1820
+     C                     END
+     C/SPACE 2
+     C**   Market Centre (if entered)
+     C**   ~~~~~~~~~~~~~~
+     C           SMRKT     IFNE '  '
+     C**
+     C           SMRKT     CHAINMARKT                71
+     C  N71      RECI      COMP 'D'                  7171
+     C**
+     C**   - a live Market record must exist
+     C           *IN71     IFEQ '1'
+     C           E         ADD  1         E
+     C                     MOVE ' 011'    ERR,E
+     C                     SETON                     1821
+     C                     END
+     C**
+     C**   If no errors so far
+     C           *IN18     IFEQ '0'
+     C**
+     C**   - attempt to allocate Market data area
+     C                     MOVE CMD,1     WCMD
+     C                     MOVE 'A'       WAORD
+     C                     EXSR QCAEX
+     C**
+     C**   - Market not available for input
+     C           *IN71     IFEQ '1'
+     C           E         ADD  1         E
+     C                     MOVE ' 012'    ERR,E
+     C                     SETON                     1821
+     C**
+     C                     ELSE
+     C**
+     C**   - a live Market Control record must exist
+     C           SMRKT     CHAINMKCTL                71
+     C  N71      RECI      COMP 'D'                  7171
+     C**
+     C           *IN71     IFEQ '1'
+     C**   - deallocate Market data area
+     C                     MOVE 'D'       WAORD
+     C                     MOVE *BLANK    WWAIT
+     C                     EXSR QCAEX
+     C**   - database error
+     C           *LOCK     IN   LDA
+     C***********          MOVE '03'      DBASE            ** DBERR  03 **S01117
+     C                     Z-ADD3         DBASE            ** DBERR  03 **S01117
+     C                     MOVE 'MKCTL'   DBFILE
+     C                     MOVELSMRKT     DBKEY
+     C                     EXSR DBERR
+     C                     END
+     C**
+     C*****-*Market*Centre*must*be*open*for*input*                        E28921
+     C*                                                                   E28921
+     C**   - Market Centre must be open for input for all action          E28921
+     C**   - code except Enquire where it may also be closed.             E28921
+     C*                                                                   E28921
+     C           MKCI      IFNE 'I'
+     C*                                                                   E28921
+     C           MKCI      IFNE 'C'                                       E28921
+     C           SACTN     ORNE 'E'                                       E28921
+     C*                                                                   E28921
+     C**   - deallocate Market data area
+     C                     MOVE 'D'       WAORD
+     C                     MOVE *BLANK    WWAIT
+     C                     EXSR QCAEX
+     C**
+     C           E         ADD  1         E
+     C                     MOVE ' 012'    ERR,E
+     C                     SETON                     1821
+     C*                                                                   E28921
+     C                     END                                            E28921
+     C*                                                                   E28921
+     C                     END
+     C**
+     C                     END
+     C**
+     C                     END
+     C**
+     C                     END
+     C**                                                                  073714
+     C**   - If Market Centre defined                                     073714
+     C**                                                                  073714
+     C           SMRKT     IFNE *BLANK                                    073714
+     C**                                                                  073714
+     C**   - Processing Type must be blank                                073714
+     C**                                                                  073714
+     C           SISPT     IFNE *BLANK                                    073714
+     C           E         ADD  1         E                               073714
+     C                     MOVE ' 015'    ERR,E                           073714
+     C                     SETON                     1822                 073714
+     C                     END                                            073714
+     C**                                                                  073714
+     C**   - Else if Market Centre not defined (i.e. OTC)                 073714
+     C**                                                                  073714
+     C                     ELSE                                           073714
+     C**                                                                  073714
+     C**   - If insertion                                                 073714
+     C**                                                                  073714
+     C           SACTN     IFEQ 'I'                                       073714
+     C**                                                                  073714
+     C*****-*Default*Processing*Type*to*5***                       073714 107864
+     C***********                                                  073714 107864
+     C***********SISPT     IFEQ *BLANK                             073714 107864
+     C***********          MOVEL'5'       SISPT                    073714 107864
+     C***********          END                                     073714 107864
+     C**                                                                  073714
+     C**   - Processing Type must be 4, 5 or 6                            073714
+     C**                                                                  073714
+     C           SISPT     IFNE '4'                                       073714
+     C           SISPT     ANDNE'5'                                       073714
+     C           SISPT     ANDNE'6'                                       073714
+     C           E         ADD  1         E                               073714
+     C                     MOVE ' 016'    ERR,E                           073714
+     C                     SETON                     1822                 073714
+     C                     END                                            073714
+     C**                                                                  073714
+     C**   - Else if not insertion                                        073714
+     C**                                                                  073714
+     C                     ELSE                                           073714
+     C**                                                                  073714
+     C**   - Processing Type must be blank                                073714
+     C**                                                                  073714
+     C           SISPT     IFNE *BLANK                                    073714
+     C           E         ADD  1         E                               073714
+     C                     MOVE ' 017'    ERR,E                           073714
+     C                     SETON                     1822                 073714
+     C                     END                                            073714
+     C**                                                                  073714
+     C                     END                                            073714
+     C**                                                                  073714
+     C                     END                                            073714
+     C**
+     C/COPY WNCPYSRC,FF0010C003
+     C                     ENDSR
+     C**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**   NXTSCN SR. -  Display Next Screen                             *
+     C**   ~~~~~~~~~~                                                    *
+     C**      Called From                  Calls                         *
+     C**       SR. INTSCN                                                *
+     C**                                                                 *
+     C********************************************************************
+     C**
+     C           NXTSCN    BEGSR                           ** NXTSCN SR **
+     C**
+     C*                                                                   S01457
+      *** Check the switchable features file to see if S01457 is on.      S01457
+      *                                                                   S01457
+     C                     MOVE *BLANKS   S0CUST 12                       S01457
+     C                     MOVE *BLANKS   S1CUST 12                       S01457
+     C                     MOVE 'N'       S01457  1                       S01457
+     C                     CALL 'AOSARDR0'                                S01457
+     C                     PARM '       ' @RTCD   7                       S01457
+     C                     PARM '*VERIFY' @OPTN   7                       S01457
+     C                     PARM 'S01457 ' @SARD   6                       S01457
+      *                                                                   S01457
+     C           @RTCD     IFEQ *BLANKS                                   S01457
+     C           SMRKT     ANDEQ*BLANKS                                   S01457
+     C                     MOVE 'Y'       S01457                          S01457
+     C                     MOVEL'Counter' S0CUST                          S01457
+     C                     MOVE 'party'   S0CUST                          S01457
+     C                     MOVEL'COUNTER' S1CUST                          S01457
+     C                     MOVE 'PARTY'   S1CUST                          S01457
+     C                     ELSE                                           S01457
+     C                     MOVEL'Cust'    S0CUST                          S01457
+     C                     MOVE 'omer    'S0CUST                          S01457
+     C                     MOVEL'CUSTO'   S1CUST                          S01457
+     C                     MOVE 'MER    ' S1CUST                          S01457
+     C                     ENDIF                                          S01457
+     C**   Reset Processing
+     C                     SETOF                     182021
+     C                     SETOF                     22                   073714
+      *                                                                   CFF007
+     C           CFF007    IFEQ 'Y'                                       CFF007
+     C           BGN4ST    ANDEQ'Y'                                       CFF007
+     C                     MOVE '1'       *IN21                           CFF007
+     C                     ENDIF                                          CFF007
+     C                     Z-ADD0         E       20
+     C                     MOVE *BLANK    ERR
+     C**
+     C**   Output  Market Name or O.T.C.
+     C**
+     C           SMRKT     IFNE '  '
+     C                     MOVE MKTN      SMKTN
+     C**
+     C                     ELSE
+     C                     MOVE 'OVER THE'SOTC1
+     C                     MOVE ' COUNTER'SOTC2
+     C                     END
+     C/COPY WNCPYSRC,FF0010C006
+     C**
+     C           SACTN     IFNE 'I'
+     C**   Trans Ref prompt
+     C           *IN77     IFEQ '1'                                       S01332
+     C           *IN79     ANDEQ'0'                                       S01332
+     C           *IN77     OREQ '0'                                       S01332
+     C                     WRITEFF0010F2
+     C                     END                                            S01332
+     C                     ELSE
+     C**
+     C           MBIN      IFEQ 'N'
+     C***********          MOVE DFBR      SBRCD                           S01117
+     C                     MOVE SINBCH    SBRCD                           S01117
+     C                     MOVE SINBCH    SORBR                           S01117
+     C                     ELSE                                           S01117
+     C                     MOVE USRBCH    SBRCD                           S01117
+     C                     MOVE USRBCH    SORBR                           S01117
+     C                     END
+     C                     MOVE 'N'       STBLO
+     C**
+     C           SMRKT     IFNE '  '
+     C**   Insert Mkt Instr.
+     C                     WRITEFF0010F3
+     C                     ELSE
+     C**   Insert O.T.C.
+     C***********          MOVE '    1'   SNUCO                    073714 107864
+     C           SISPT     COMP '5'                  0808  *              073714
+     C*                                                                   CPL002
+     C*** If Plato interface present, then use FF0010FA for Currency      CPL002
+     C*** OTC.                                                            CPL002
+     C*                                                                   CPL002
+     C           PLATO     IFEQ 'Y'                                       CPL002
+     C           SISPT     ANDEQ'5'                                       CPL002
+     C                     WRITEFF0010FA                                  CPL002
+     C                     ELSE                                           CPL002
+     C                     WRITEFF0010F4
+     C                     END                                            CPL002
+     C*                                                                   CPL002
+     C                     END
+     C**
+     C                     END
+     C                     MOVE '0'       *IN21                           CFF007
+     C/COPY WNCPYSRC,FF0010C007
+     C**
+     C                     ENDSR
+     C**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**   QCAEX SR. - To call/execute CL commands                       *
+     C**   ~~~~~~~~~                                                     *
+     C**      Called From                                                *
+     C**       SR. VALSR                                                 *
+     C**                                                                 *
+     C********************************************************************
+     C**
+     C           QCAEX     BEGSR                           ** QCAEX SR **
+     C**
+     C                     MOVE SMRKT     WMRKT
+     C******               CALL 'QCAEXEC'              71                 E21147
+     C                     CALL 'QCMDEXC'              71                 E21147
+     C                     PARM           WCMD   39
+     C                     PARM 39        WLEN   155
+     C**
+     C                     ENDSR
+     C**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**   DBERR SR. - Database Error Handling : Terminates program      *
+     C**   ~~~~~~~~~                                                     *
+     C**      Called From      DB Err No.    File                        *
+     C*********SR.*ICDR*************01*******TABTB10**********************S01117
+     C******************************02*******TABTB11**********************S01117
+     C**       SR. ICDR             01       SDBANKPD                    *S01117
+     C**                            02       SDGELRPD                    *S01117
+     C**       SR. VALSR            03       MKCTL                       *
+     C**                                                                 *
+     C********************************************************************
+     C**
+     C           DBERR     BEGSR                           ** DBERR SR **
+     C                     OUT  LDA
+     C                     SETON                     U7U8LR
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+      *                                                                   S01332
+     C           *LOCK     IN   EMSDS                                     S01332
+     C                     MOVE 'E'       RETND                           S01332
+     C                     OUT  EMSDS                                     S01332
+      *                                                                   S01332
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C                     RETRN
+     C                     ENDSR
+     C**
+     C********************************************************************
+     C/EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+** CMD - QCMDEXC COMMAND                                                  E21147
+XLCOBJ OBJ((XX *DTAARA *SHRRD)) WAIT(5)

@@ -1,0 +1,783 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF O/S Posn. in Spot Month - Extract')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Futures and Options Module
+     F*                                                                  *
+     F*   FF1220  -  OUTSTANDING POSITION IN SPOT MONTH EXTRACT          *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. BUG8774            Date 02Dec05               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CFF006             Date 28Nov00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CFF004             Date 18Sep96               *
+      *                 S71062             Date 19Dec95               *
+     F*                  046303             DATE 14JAN94                 *
+     F*                  S01456             DATE 08NOV93                 *
+     F*                  S01393             DATE 30OCT92                 *
+     F*                  FUJI-FF0011        DATE 10AUG92                 *
+     F*                  E38323             DATE 30JUL92                 *
+     F*                  AUS022             DATE 10AUG92                 *
+     F*                  E20526             DATE 03MAY90                 *
+     F*                  S01195             DATE 25APR90                 *
+     F*                  S01117             DATE 25APR90                 *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+     F*  BUG8774 - DB ERROR in file INTYP2, key ET, in FF1220, at 007    *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CFF006 - Fractional Ticks Enhancement.  (Recompiled)         *
+     F*  CFF004 - Increase in size of Price Fields,(Recompiled Only)     *
+     F*  S71062 - FF/PM Interface (Just recompiled)                      *
+     F*  046303 - /COPY source subr. ZFWDT amended to prevent array      *
+     F*           error if no holiday record found - fixed by S01434.    *
+     F*           Program recompiled.                                    *
+     F*   S01456  -  'FF' MONTHLY P&L ENHANCEMENTS.                      *
+     F*              Recompiled due to change to PF/MKCTLD.              *
+     F*   S01393  -  RECOMPILED FOR STRATEGIC RISK MANAGEMENT            *
+     F* FUJI-FF0011 - The system does not differentiate between          *
+     F*               american and european option on exercise           *
+     F*               validation and OTC confirmation wording.           *
+     F*               *** RECOMPILE ONLY ***                             *
+     F*   E38323  -  Recompilation of the program done due to a change   *
+     F*              in copy source ZFWDT subroutine                     *
+     F*   AUS022  -  AUSTRALIAN CHANGE : Introduction of Processing      *
+     F*              Types 7 and 8.                                      *
+     F*   E20526  -  RECOMPILED OVER CHANGED FILE PRICS                  *
+     F*   S01195  -  HOLIDAY AMENDMENT                                   *
+     F*   S01117  -  MULTIBRANCHING                                      *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                        *
+     F*                                                                  *
+     F*     IGNDECERR(*NO)                                               *
+     F*                                                                  *
+     F********************************************************************
+     F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*ABTB10*IF* E           K        DISK                               S01117
+     FTABTB11 IF  E           K        DISK
+     FMARKT   IF  E           K        DISK
+     FMKCTL   IF  E           K        DISK
+     FWPOSTN  O   E                    DISK
+     F*ABLETJ*IF* E           K        DISK                               S01195
+     FPRICS   IF  E           K        DISK
+     FINTYP   IF  E           K        DISK
+     FINTYP2  IF  E           K        DISK
+     F            INTYPDF                           KRENAMEINTYP2D
+     FPOSTN3  IF  E           K        DISK
+     F/SPACE 2
+     F*FILE SPECIFICATIONS*********************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       30         CHAIN FAIL TO MCKTL
+     F*
+     F*       31         END OF FILE FOR INTYP
+     F*       32         CHANGE OF INSTRUMENT TYPE
+     F*
+     F*       35         CHAIN FAIL TO MARKT
+     F*
+     F*       42         EOF FOR POSTN3
+     F*
+     F*       50         CHAIN FAIL TO PRICS
+     F*
+     F*     80-89     RESERVED FOR STANDARD FF SUBROUTINES
+     F*
+     F*       98         MM/DD/YY FORMAT
+     F*
+     F*       99         NON-LIVE RECORD ON TABTB10
+     F*
+     F*       U1 = '1'   ALL INSTRUMENTS IN SPOT MONTH ARE REQUIRED
+     F*       U1 = '0'   INSTRUMENTS THAT REACHED SPOT MONTH TODAY
+     F*                  ARE REQUIRED.
+     F*
+     F*       U7 & U8    DATABASE ERROR
+     F*
+     F/SPACE 2
+     E                    CPY@    1   1 80
+     E*EXTENSION SPECIFICATIONS****************************************
+     E/COPY ZSRSRC,FFDATEZ1
+     E** SR.ARRAY FOR FF SUBROUTINE.
+     E*
+     E/COPY ZSRSRC,ZDATE1Z1
+     E** SR.ARRAY FOR BOTH ZDATE1 AND ZDATE2
+     E*
+     E*COPY*ZSRSRC,ZDATE3Z1                                               S01195
+     E***SR.ARRAY*FOR*ZDATE3**********************************************S01195
+     E*
+     E*COPY*ZSRSRC,ZDATE5Z1                                               S01195
+     E***SR.ARRAY*FOR*ZDATE5**********************************************S01195
+     E*                                                                   S01195
+     E/COPY ZSRSRC,ZHOLE                                                  S01195
+     E** SR.ARRAY FOR ZFWDT                                               S01195
+     E*
+     F/SPACE 2
+     I*INPUT SPECIFICATIONS *******************************************
+     I*
+     IINTYP2D
+     I** Redefine fields for obtaining underlying tick denominator
+     I** and minimum price fluctuation.
+     I              RECI                            RECI2
+     I              ISTT                            ISTT2
+     I              ISTI                            ISTI2
+     I              ISPT                            ISPT2
+     I              ISCY                            ISCY2
+     I              QOTC                            QOTC2
+     I              TKDM                            TKDM2
+     I              MNPF                            MNPF2
+     I              TKVL                            TKVL2
+     I              OTHC                            OTHC2
+     I*
+     I*COPY*ZSRSRC,ZDATE3Z2                                               S01195
+     I*COPY*ZSRSRC,ZDATE3Z3                                               S01195
+     I/COPY ZSRSRC,FFDATEZ2
+     I/COPY ZSRSRC,ZHOLI                                                  S01195
+     I/COPY ZSRSRC,ZHOLDS                                                 S01195
+     I*
+     IUISTK       DS
+     I*
+     I** For concatenating two fields on INTYP to chain to INTYP2
+     I                                        1   2 MRKT
+     I                                        3   5 FTRF
+     I*
+     I*DA********UDS                            256                       S01117
+     ILDA         DS                            256                       S01117
+     I**    Local Data Area for Database Error Details
+     I*
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     ISDBANK    E DSSDBANKPD                                              S01117
+      **  EXTERNAL DS FOR BANK DETAILS                                    S01117
+     I              BJURPT                          TITL                  S01117
+      **                                                                  S01117
+     IRUNDT       DS                                                      S01117
+      **  DATA AREA RUNDAT                                                S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+      *                                                                   S01117
+      *                                                                   S01117
+     IDSFDY     E DSDSFDY                                                 S01117
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01117
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C/EJECT
+     C*===================================================================
+      **
+      ** PRCESS TO PASS THE MARKET PARAMETER
+      ** CALLS MAIN AND END SUBROUTINES.
+      **
+     C*===================================================================
+     C           *LIKE     DEFN MRKT      MARK
+     C           *ENTRY    PLIST
+     C                     PARM           MARK
+     C*
+     C** Key list for chain to PRICS
+     C*
+     C           SETPRI    KLIST
+     C                     KFLD           ISTT
+     C                     KFLD           YRNO
+     C                     KFLD           MTHN
+     C                     KFLD           PCAL
+     C                     KFLD           STRP
+     C*
+     C** Key list for chain to POSTN3
+     C*
+     C           POSTKY    KLIST
+     C***********          KFLD           BRCD                            S01117
+     C                     KFLD           BRCA                            S01117
+     C                     KFLD           ISTT
+     C                     KFLD           YRNO
+     C                     KFLD           MTHN
+     C                     KFLD           PCAL
+     C                     KFLD           STRP
+     C*
+     C**   Reset LDA
+     C***********          MOVE *BLANKS   DBLOT                           S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                        INITIALIZE     S01117
+     C                     MOVEL*BLANK    DBPGM                           S01117
+     C                     MOVE *BLANK    DBFILE                          S01117
+     C                     MOVE *BLANK    DBKEY                           S01117
+     C                     Z-ADD*ZERO     DBASE                           S01117
+     C                     MOVE 'FF1220  'DBPGM
+     C                     OUT  LDA                                       S01117
+     C*                                                                   S01117
+     C                     EXSR MAIN
+     C*
+     C                     EXSR END
+     C*
+     C*===================================================================
+     C/EJECT
+     C********************************************************************
+      **               INDEX TO SUBROUTINES
+     C*
+      ** MAIN      MAIN BODY PROCESSING
+     C*
+      ** OTC       PROCESS OTCS ON POSTN3 AND OUTPUT TO WPOSTN
+     C*
+      ** INSTRM    PROCESSING ON CHANGE OF MARKET INSTRUMENT ON POSTN3
+     C*
+      ** INSTDT    PROCESS THE POSTN3 RECORD AND OUTPUT TO WPOSTN
+     C*
+      ** ACCESS    READS FROM POSTN3
+     C*
+      ** DBERR     PERFORM DATABASE ERROR EXIT FROM PROGRAM
+     C*
+      ** END       END PROGRAM
+     C*
+      ** FFDATE    DETERMINE MARKET INSTRUMENT SETTLEMENT DATES
+     C*
+     C********************************************************************
+     C*===================================================================
+      **
+      ** MAIN S/R TO ACCESS ALL LIVE VALID RECORDS
+      ** CALLED BY PRCESS S/R.
+      ** CALLS ACCESS AND OTC SUBROUTINES.
+      **
+     C*===================================================================
+     C*
+     C           MAIN      BEGSR
+     C*
+     C***********          READ TABTB10F                 99               S01117
+     C************IN99     IFEQ '1'                                       S01117
+     C***********RECI      ORNE 'D'                                       S01117
+     C***********          MOVE 'TABLE'   DBFILE                          S01117
+     C***********          MOVEL'TABTB10' DBKEY            ***************S01117
+     C***********          Z-ADD1         DBASE            * DB ERROR 01 *S01117
+     C***********          EXSR DBERR                      ***************S01117
+     C***********          END                                            S01117
+     C*                                                                   S01117
+     C** IN THE DATAAREA RUNDAT                                           S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C*                                                                   S01117
+     C**                                                                  S01117
+     C**   ACCESS BANK DETAILS, FOR TITLE                                 S01117
+     C                     CALL 'AOBANKR0'                                S01117
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C           SDBANK    PARM SDBANK    DSFDY                           S01117
+     C*                                                                   S01117
+     C           @RTCD     IFNE *BLANK                                    S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'SDBANKPD'DBFILE                          S01117
+     C                     MOVEL'FF1220  'DBPGM                           S01117
+     C                     MOVEL@OPTN     DBKEY            ***************S01117
+     C                     MOVEL@OPTN     DBOPTN  7        * DB ERROR 01 *S01117
+     C                     Z-ADD1         DBASE            ***************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR                                     S01117
+     C                     END                                            S01117
+     C*
+     C** Set *IN98 for mm/dd/yy format
+     C*
+     C           DATF      COMP 'M'                      98
+     C*
+     C                     READ TABTB11F                 99
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE
+     C                     MOVEL'TABTB11' DBKEY            ***************
+     C                     Z-ADD2         DBASE            * DB ERROR 02 *
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C* P A R A M E T E R   B L A N K     -     O T C
+     C*
+     C           MARK      IFEQ *BLANKS
+     C*
+     C** Call ACCESS SR to access first live record from POSTN3
+     C*
+     C                     EXSR ACCESS
+     C*
+     C** Call OTC to extract valid records and write them to WPOSTN
+     C*
+     C                     EXSR OTC
+     C*
+     C                     ELSE
+     C*
+     C*
+     C* P A R A M E T E R   P A S S E D     -    M A R K E T
+     C*
+     C** Chain to MARKT to pick up currency for use in FFDATE SR when
+     C*  calculating spot month date.
+     C*
+     C           MARK      CHAINMARKTDF              35
+     C           *IN35     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'MARKT'   DBFILE
+     C                     MOVELMARK      DBKEY            ***************
+     C                     Z-ADD3         DBASE            * DB ERROR 03 *
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C                     MOVE MKLC      FFCCY1
+     C*
+     C** Chain to MKCTL to access business date
+     C*
+     C           MARK      CHAINMKCTLDF              30
+     C           *IN30     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'MKCTL'   DBFILE
+     C                     MOVELMARK      DBKEY            ***************
+     C                     Z-ADD4         DBASE            * DB ERROR 04 *
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C***Call*ZDATE5*to*determine*Date*of*next*working*day*for*market*****S01195
+     C** Call ZFWDT TO CALCULATE THE NEXT WORKING DAY FOR ANY             S01195
+     C** PARTICULAR CURRENCY AND (OPTIONAL) LOCATION                      S01195
+     C*
+     C           BUSD      ADD  1         ZDAYNO
+     C                     MOVELMKLC      ZCCY
+     C                     MOVELMLOC      ZLOC                            S01195
+     C***********          MOVEL'Y'       ZOPT                            S01195
+     C***********          EXSR ZDATE5                                    S01195
+     C                     Z-ADD*ZERO     ZNRDYS                          S01195
+     C                     EXSR ZFWDT                                     S01195
+     C                     Z-ADDZDYNBR    DNWD
+     C*
+     C** Call ACCESS SR to access first live record from POSTN3
+     C*
+     C                     EXSR ACCESS
+     C*
+     C** Call INSTRM to extract valid records and write them to WPOSTN
+     C*
+     C                     EXSR INSTRM
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+      **
+      ** OTC S/R TO WRITE ALL VALID 'OTC' RECORDS TO TEMP FILE WPOSTN.
+      ** CALLED BY MAIN S/R.
+      ** CALLS NO OTHER SUBROUTINES.
+      **
+     C********************************************************************
+     C           OTC       BEGSR
+     C*
+     C** Do while not EOF.
+     C*
+     C           *IN42     DOWNE'1'
+     C*
+     C           ISTT      CHAININTYPDF              31
+     C*
+     C           *IN31     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'INTYP'   DBFILE           ***************
+     C                     MOVELISTT      DBKEY            * DB ERROR 05 *
+     C                     Z-ADD5         DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C** Move settlement date to output fields
+     C*
+     C                     MOVE SETD      SEDT
+     C*
+     C** If Instrument is an Option add values to UTKD & UMNP
+     C*
+     C***********ISPT      IFGT 4                                         AUS022
+     C           ISPT      IFGE 4                                         AUS022
+     C           ISPT      ANDNE7                                         AUS022
+     C                     Z-ADDTKDM      UTKD
+     C                     Z-ADDMNPF      UMNP
+     C*
+     C** If Instrument is not an Option SET TO zero
+     C*
+     C                     ELSE
+     C                     Z-ADD*ZERO     UTKD
+     C                     Z-ADD*ZERO     UMNP
+     C                     END
+     C*
+     C* Do while same instrument and not EOF
+     C*
+     C                     MOVELISTT      SISTT
+     C*
+     C           ISTT      DOWEQSISTT
+     C           *IN42     ANDNE'1'
+     C*
+     C*If U1 on - report requested at start of EOC.  Write record to
+     C* temporary file if spot date is less than date of next wkng day
+     C*
+     C           *INU1     IFEQ '1'
+     C*
+     C           SPDT      IFLT DNWD
+     C*
+     C** Get instrument price , if present
+     C*
+     C           SETPRI    CHAINPRICS                50
+     C*
+     C           *IN50     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     Z-ADD*ZERO     PLEC
+     C                     END
+     C*
+     C                     WRITEWPOSTNDF
+     C*
+     C** Advance to next BRCD , OTC instrument on POSTN3
+     C*
+     C                     ELSE
+     C                     MOVE *HIVAL    PCAL
+     C                     MOVE *HIVAL    STRP
+     C                     END
+     C*
+     C                     END
+     C*
+     C*If U1 off - report forced out in EOC. Write record to           to
+     C* temporary file only if the spot date is between today and next wrkng day
+     C*
+     C           *INU1     IFEQ '0'
+     C*
+     C           SPDT      IFGE RUND
+     C           SPDT      ANDLTDNWD
+     C*
+     C** Get instrument price , if present
+     C*
+     C           SETPRI    CHAINPRICS                50
+     C*
+     C           *IN50     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     Z-ADD*ZERO     PLEC
+     C                     END
+     C*
+     C                     WRITEWPOSTNDF
+     C*
+     C** Advance to next BRCD , OTC instrument on POSTN3
+     C*
+     C                     ELSE
+     C                     MOVE *HIVAL    PCAL
+     C                     MOVE *HIVAL    STRP
+     C                     END
+     C*
+     C                     END
+     C*
+     C* Move on to next BRCD , Instrument Type
+     C* and next Put/Call , Strike Price if required
+     C*
+     C           POSTKY    SETGTPOSTN3
+     C                     EXSR ACCESS
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      **
+      ** INSTRM S/R TO ACCESS ALL MARKET INSTRUMENT POSITIONS
+      ** CALLED BY MAIN S/R.
+      ** CALLS INSTDT S/R.
+      **
+     C********************************************************************
+     C           INSTRM    BEGSR
+     C*
+     C** Do while not EOF.
+     C*
+     C           *IN42     DOWNE'1'
+     C*
+     C           ISTT      CHAININTYPDF              31
+     C*
+     C           *IN31     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'INTYP'   DBFILE           ***************
+     C                     MOVELISTT      DBKEY            * DB ERROR 06 *
+     C                     Z-ADD6         DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C** If Instrument is an Option chain INTYP2
+     C*
+     C           ISPT      IFGT 3
+     C           ISPT      ANDNE7                                         AUS022
+     C           ISTI      ANDNE'Y'                                       BUG8774
+     C*
+     C           *LIKE     DEFN ISTT2     MRKFT
+     C                     MOVELISTT      MRKFT
+     C                     MOVE FTRF      MRKFT
+     C           MRKFT     CHAININTYP2D              32
+     C*
+     C           *IN32     IFEQ '1'
+     C           RECI2     ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'INTYP2'  DBFILE           ***************
+     C                     MOVELMRKFT     DBKEY            * DB ERROR 07 *
+     C                     Z-ADD7         DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C** Move underlying tick denominator and min prc fluct to o/p fields
+     C*
+     C                     MOVE TKDM2     UTKD
+     C                     MOVE MNPF2     UMNP
+     C*
+     C** If Instrument is not an Option add zeroes to output fields
+     C*
+     C                     ELSE
+     C                     Z-ADD*ZERO     UTKD
+     C                     Z-ADD*ZERO     UMNP
+     C                     END
+     C*
+     C** Process market instrument details off POSTN3
+     C*
+     C                     EXSR INSTDT
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+      **
+      ** INSTDT S/R  WRITES ALL VALID MARKET RECORDS TO TEMP FILE WPOSTN
+      ** CALLED BY MAIN S/R.
+      ** CALLS FFDATE, ZDATE3, AND ZDATE5 SUBROUTINES
+      **
+     C********************************************************************
+     C*
+     C           INSTDT    BEGSR
+     C*
+     C* Store instrument to monitor change while same instrument.
+     C*
+     C           *LIKE     DEFN ISTT      SISTT
+     C                     MOVELISTT      SISTT
+     C*
+     C* Do while not end of file and same instrument.
+     C*
+     C           *IN42     DOWNE'1'
+     C           SISTT     ANDEQISTT
+     C*
+     C* Calculate Spot Month Date with FFDATE S/R
+     C*
+     C                     MOVE ISCY      FFCCY2
+     C                     MOVE OTHC      FFCCY3
+     C                     MOVE MTHN      FFMTH
+     C                     MOVE YRNO      FFYR
+     C                     MOVE SPMF      FFDATC
+     C                     MOVE MLOC      FFLOC                           S01195
+     C                     EXSR FFDATE
+     C                     Z-ADDFFDAY     SPDT
+     C*
+     C* Calculate Final Transaction Date .
+     C*
+     C                     MOVE FTDF      FFDATC
+     C                     EXSR FFDATE
+     C                     MOVE FFDAY     FTDT
+     C*
+     C* Calculate Settlement Date .
+     C*
+     C                     MOVE SEDF      FFDATC
+     C                     EXSR FFDATE
+     C                     MOVE FFDAY     SEDT
+     C*
+     C* Store year , month to monitor change
+     C*
+     C           *LIKE     DEFN YRNO      SYRNO
+     C                     MOVELYRNO      SYRNO
+     C           *LIKE     DEFN MTHN      SMTHN
+     C                     MOVELMTHN      SMTHN
+     C*
+     C* Do while not end of file and same instrument , year , month
+     C*
+     C           *IN42     DOWNE'1'
+     C           SISTT     ANDEQISTT
+     C           SYRNO     ANDEQYRNO
+     C           SMTHN     ANDEQMTHN
+     C*
+     C*If U1 on - report requested at start of EOC.  Write record to
+     C* temporary file if spot date is less than next working day
+     C*
+     C           *INU1     IFEQ '1'
+     C*
+     C           SPDT      IFLT DNWD
+     C*
+     C** Get instrument price
+     C*
+     C           SETPRI    CHAINPRICS                50
+     C*
+     C           *IN50     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     Z-ADD*ZERO     PLEC
+     C                     END
+     C*
+     C* Write record to temp file .
+     C*
+     C                     WRITEWPOSTNDF
+     C*
+     C** Set pointer to next branch , instrument
+     C** year , month with partial key.
+     C*
+     C                     ELSE
+     C                     MOVE *HIVAL    PCAL
+     C                     MOVE *HIVAL    STRP
+     C                     END
+     C*
+     C                     END
+     C*
+     C*If U1 off- report forced out in EOC.  Write record to
+     C* temporary file if spot date is between today and next wrkng day
+     C*
+     C           *INU1     IFEQ '0'
+     C*
+     C           SPDT      IFGE BUSD
+     C           SPDT      ANDLTDNWD
+     C*
+     C** Get instrument price
+     C*
+     C           SETPRI    CHAINPRICS                50
+     C           *IN50     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     Z-ADD*ZERO     PLEC
+     C                     END
+     C*
+     C* Write record to temp file .
+     C*
+     C                     WRITEWPOSTNDF
+     C*
+     C** Set pointer to next branch , instrument
+     C** year , month with partial key.
+     C*
+     C                     ELSE
+     C                     MOVE *HIVAL    PCAL
+     C                     MOVE *HIVAL    STRP
+     C                     END
+     C*
+     C                     END
+     C*
+     C* Move on to next BRCD , Instrument Type
+     C* and next Put/Call , Strike Price if required
+     C*
+     C           POSTKY    SETGTPOSTN3
+     C                     EXSR ACCESS
+     C*
+     C** Same instrument , year , month
+     C*
+     C                     END
+     C*
+     C** Same instrument
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+      **
+      ** ACCESS S/R TO ACCESS ALL LIVE VALID RECORDS
+      ** CALLED BY MAIN S/R AND INSTDT S/R
+      ** CALLS NO OTHER SUBROUTINES.
+      **
+     C********************************************************************
+     C           ACCESS    BEGSR
+     C*
+     C**  Read next live record
+     C*
+     C                     MOVEL'*'       RECI
+     C           *IN42     DOWEQ'0'
+     C           RECI      ANDNE'D'
+     C*
+     C                     READ POSTN3                   42
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+      **
+      ** DBERR S/R TO HANDLE DATABASE ERRORS AND TERMINATE PROGRAM
+      ** CALLED IN ALL S/RS
+      ** CALLS NO OTHER SUBROUTINES.
+      **
+     C********************************************************************
+     C*
+     C           DBERR     BEGSR
+     C                     SETON                     U7U8LR
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C                     RETRN
+     C                     ENDSR
+     C*
+     C/EJECT
+     C********************************************************************
+      **
+      ** END S/R TO END PGM UNDER NORMAL CONDITIONS
+      ** CALLED BY PRCESS S/R
+      ** CALLS NO OTHER SUBROUTINES.
+      **
+     C********************************************************************
+     C*
+     C           END       BEGSR
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/COPY ZSRSRC,FFDATEZ3
+     C/COPY ZSRSRC,ZDATE1Z2
+     C*COPY*ZSRSRC,ZDATE3Z4                                               S01195
+     C*COPY*ZSRSRC,ZDATE5Z2                                               S01195
+     C/EJECT                                                              S01195
+     C/COPY ZSRSRC,ZACCH                                                  S01195
+     C/EJECT                                                              S01195
+     C/COPY ZSRSRC,ZFWDT                                                  S01195
+     C/EJECT                                                              S01195
+     C/COPY ZSRSRC,ZBKDT                                                  S01195
+     C/EJECT                                                              S01195
+     C/COPY ZSRSRC,ZCHKH                                                  S01195
+     C********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   TABDY/TABNO - SHORTNAMES & DAY NUMBERS
+F0S1X2M3U4W5T6
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365

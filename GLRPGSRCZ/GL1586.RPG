@@ -1,0 +1,653 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Change profit centre on postings - rep')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas GENERAL LEDGER MODULE
+     F*                                                                  *
+     F*      GL1586 - POSTINGS' PROFIT CENTRE CHANGE REPORT              *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 199643             Date 28Mar02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 075323             Date 13Jan98               *
+     F*                 066939             Date 16Oct95                  *
+     F*                                                                  *
+     F********************************************************************
+     F*  AMENDMENT HISTORY                                               *
+     F*                                                                  *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  199643 - Add a line to OPEN PRTF/GL1586P1 before the WRITE      *
+      *           operation.  This prevents possible I/O error.          *
+     F*  075323 - Negative posting amounts not formatted correctly. Fix  *
+     F*           is to add DRCR field to file, and make posting amount  *
+     F*           negative if 1 (CR). Amended GL1586P1 to format credit  *
+     F*           amount with 'CR' at the end.                           *
+     F*  066939 - Posting amount printed is wrong.  Use MOVE instead of  *
+     F*           Z-ADD to conform with the no. of dec. places.          *
+     F*                                                                  *
+     F********************************************************************
+     FPSTPRF3LIF  E           K        DISK
+     FPSTPRF1 IF  E           K        DISK
+     FGL1586P1O   E             20     PRINTER      KINFDS SPOOL      UC
+     FGL1586AUO   E                    PRINTER      KINFDS SPOOLU
+     F*
+     F* 10  REQUEST FOR MORE THAN ONE BRANCH
+     F* 11  REQUEST BY PROFIT CENTRE
+     F*
+     F* 30  MULTIBRANCHING ENVIRONMENT
+     F* 32  RETAIL MODULE PRESENT
+     F*
+     F* 40  POSTING CURRENCY HAS ZERO DECIMAL POINTS
+     F* 41  POSTING CURRENCY HAS ONE DECIMAL POINTS
+     F* 42  POSTING CURRENCY HAS TWO DECIMAL POINTS
+     F* 43  POSTING CURRENCY HAS THREE DECIMAL POINTS
+     F*
+     F* 60  NUMBER OF RECORDS EXPECTED LESS THAN NUMBER ON POSTING FILE
+     F* 61  NUMBER OF RECORDS EXPECTED MORE THAN NUMBER ON POSTING FILE
+     F*
+     F* 88  END OF FILE - PSTPRF1
+     F* 89  END OF FILE - PSTPRF3
+     F*
+     F* U7 -U8 DATABASE ERROR
+     F*
+     F* 90-99 USED IN SUBROUTINES
+     F*
+     E                    CPY@    1   1 80
+     E                    ZYDY    4   4  4 0             ZDATE2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE2 SR.ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 SR.ARRAY
+     I*
+     I* RENAME FIELDS FOR DISTINCTION
+     I*
+     IPSTPRF3R
+     I              CNUM                            CNUMX
+     I              CCY                             CCYX
+     I              ACOD                            ACODX
+     I              ACSQ                            ACSQX
+     I              BRCA                            BRCAX
+     I              CSNM                            CSNMX
+     I              ACNO                            ACNOX
+     ISPOOL       DS
+     I                                       83  90 SFILE
+     I                                    B 123 1240SFNUM
+     I*
+     ISPOOLU      DS
+     I                                       83  90 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     I*     LOCAL DATA AREA
+     I**
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I**
+     I*     PROGRAMME STATUS DATA SRUCTURE
+     I**
+     IPSDS       SDS
+     I                                      244 246 WSID
+     I                                      245 246 WSID2
+     I                                      244 253 SWSID
+     I                                      254 263 USRID
+     I*
+     I*   DATA STRUCTURE USED TO STORE CURRENCY DETAILS
+     I*
+     ICURLOD      DS                        100
+     I                                        1   3 CURC
+     I                                        4   4 NODEC
+0276 I*
+     I* DATA STRUCTURES FOR USE WITH ACCESS OBJECTS
+     I*
+     ISDMMOD    E DSSDMMODPD
+     I              BGMBIN                          MBIN
+     I*
+     ISDBANK    E DSSDBANKPD
+     I              BJMRDT                          RUNA
+     I              BJURPT                          TITLE
+     I              BJRDNB                          RUND
+     I*
+     ISDBRCH    E DSSDBRCHPD
+     I              A8BRNM                          BRNM
+     I*
+     ISDPRFC    E DSSDPRFCPD
+     I*
+     ISDCURR    E DSSDCURRPD
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C*    DEFINE LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C* INITIAL PROCESSING
+     C*
+     C*  ENSURE TOTALS SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUMU    SFNUM2  60
+     C                     CALL 'ZSFILE'
+     C                     PARM *BLANKS   SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILEU
+     C                     PARM           SFNUM2
+     C                     PARM           ZSERR   1
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C* ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAMME
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C* OBTAIN RUN DATE AND TITLE FROM SDBANKPD
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG    '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL'GL1586'  DBPGM
+     C                     Z-ADD01        DBASE
+     C                     OUT  LDA                        *********************
+     C                     SETON                     U7U8  * DATA BASE ERROR 01*
+     C                     GOTO END                        *********************
+     C                     END
+     C*
+     C* OBTAIN MBIN FROM SDMMODPD
+     C*
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*MSG    '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDMMOD    PARM SDMMOD    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDMMODPD'DBFILE
+     C                     MOVEL'GL1586'  DBPGM            *********************
+     C                     Z-ADD02        DBASE            * DATA BASE ERROR 02*
+     C                     OUT  LDA                        *********************
+     C                     SETON                     U7U8
+     C                     GOTO END
+     C                     END
+     C*
+     C*  CHECK MBIN
+     C*
+     C           MBIN      COMP 'Y'                      30
+     C*
+     C*  CHECK RETAIL MODULE
+     C*
+     C           BGRTBN    COMP 'Y'                      32
+     C*
+     C*  CHECK DATE FORMAT
+     C*
+     C           BJDFIN    COMP 'M'                      98
+     C*
+     C*  INITIALISE COUNT AND MULTIPLE OCCURANCE DATA STRUCTURE INDEX
+     C*
+     C                     Z-ADD0         COUNT
+     C                     Z-ADD0         X
+     C*
+     C*  READ POSTINGS PROFIT CENTRE CHANGE - REQUEST PARAMETERS FILE
+     C*
+     C                     READ PSTPRF1                  88
+     C*
+     C           *IN88     IFEQ '0'
+     C*
+     C*  PRINT AUDIT REPORT HEADER LINE
+     C*
+     C                     WRITEH100
+     C*
+     C*  SET ON INDICATORS DEPENDING ON TYPE OF ENTRY
+     C*  1)IF CNUM *NE *BLANKS, THE REQUEST IS BY ACCOUNT AND PRFC
+     C*  1)IF BRCA *EQ 'ALL', THE REQUEST IS FOR MORE THAN ONE BRANCH
+     C*
+     C********** CNUM      COMP 0                    1111                                     CSD027
+     C           CNUM      COMP *BLANKS              1111                                     CSD027
+     C           BRCA      COMP 'ALL'                    10
+     C*
+     C*
+     C* OBTAIN PROFIT CENTRE NAME FOR OLD AND NEW
+     C*
+     C           PRFC      IFNE *BLANKS
+     C                     CALL 'AOPRFCR0'
+     C                     PARM '*MSG    '@RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM PRFC      @KEYP   4
+     C           SDPRFC    PARM SDPRFC    DSFDY
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDPRFCPD'DBFILE
+     C                     MOVEL'GL1586'  DBPGM            *********************
+     C                     Z-ADD03        DBASE            * DATA BASE ERROR 03
+     C                     OUT  LDA                        *********************
+     C                     SETON                     U7U8
+     C                     GOTO END
+     C                     ELSE
+     C                     MOVE DSPCDS    PRFCD
+     C                     END
+     C                     END
+     C*
+     C           NPRFC     IFNE *BLANKS
+     C                     CALL 'AOPRFCR0'
+     C                     PARM '*MSG    '@RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM NPRFC     @KEYN   4
+     C           SDPRFC    PARM SDPRFC    DSFDY
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDPRFCPD'DBFILE
+     C                     MOVEL'GL1586'  DBPGM            *********************
+     C                     Z-ADD04        DBASE            * DATA BASE ERROR 04*
+     C                     OUT  LDA                        *********************
+     C                     SETON                     U7U8
+     C                     GOTO END
+     C                     ELSE
+     C                     MOVE DSPCDS    NPRFCD
+     C                     END
+     C                     END
+     C*
+     C* WRITE REPORT LINE ACCORDING TO REQUEST TYPE
+     C*
+     C           PRFC      IFEQ *BLANKS
+     C                     MOVEL'**NONE**'PRFCD
+     C                     END
+     C*
+     C           NPRFC     IFEQ *BLANKS
+     C                     MOVEL'**NONE**'NPRFCD
+     C                     END
+     C*
+     C*  FIND FROM AND/OR TO DATES
+     C*  HAVE BEEN ENTERED AND CONVERT TO REAL DATES
+     C*
+     C           FDATEM    IFNE 0
+     C                     Z-ADDFDATEM    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    FDATE
+     C                     ELSE
+     C                     MOVE 'START'   FDATE
+     C                     END
+     C*
+     C           TDATEM    IFNE 0
+     C                     Z-ADDTDATEM    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    TDATE
+     C                     ELSE
+     C                     MOVE 'END'     TDATE
+     C                     END
+     C*
+     C                     READ PSTPRF3L                 89
+     C*
+     C           *IN89     DOWEQ'0'
+     C*
+     C           BRCAA     IFNE BRCAX
+     C                     CLOSEGL1586P1
+     C                     OPEN GL1586P1
+     C*
+     C*  PRINT HEADERS DEPENDING ON TYPE OF CHANGE REQUESTED
+     C*
+     C*  PRINT MAIN HEADER LINES
+     C*
+     C                     WRITEH001
+     C*
+     C*  IF PROFIT CENTRE BASED REQUESTS
+     C*
+     C           *IN11     IFEQ '0'
+     C                     WRITEH002
+     C*
+     C*  ELSE IF ACCOUNT BASED REQUESTS
+     C*
+     C                     ELSE
+     C                     WRITEH003
+     C                     END
+     C*
+     C**  ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUM     SFNUM1  60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM BRCAX     SENTY   3
+     C                     PARM           SFILEU
+     C                     PARM           SFNUM1
+     C                     PARM           ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C* ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAMME
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     Z-ADD0         PAGE
+     C*
+     C* OBTAIN BRANCH NAME
+     C*
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG    '@RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM BRCAX     @KEYB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBRCHPD'DBFILE
+     C                     MOVEL'GL1586'  DBPGM
+     C                     Z-ADD05        DBASE            *********************
+     C                     SETON                     U7U8  * DATA BASE ERROR 05*
+     C                     OUT  LDA                        *********************
+     C                     GOTO END
+     C                     END
+     C                     MOVE BRCAX     BRCAA   3
+     C*
+     C           *IN11     IFEQ '0'
+     C                     WRITED001
+     C*
+     C                     ELSE
+     C*
+     C           *IN31     IFEQ '1'
+     C           *IN32     ANDEQ'1'
+     C                     MOVE ACNOX     ACNOXX
+     C                     END
+     C*
+     C                     WRITED002
+     C*
+     C                     END
+     C*
+     C*  PRINT LINE ACCORIDNG TO TYPE OF REQUEST
+     C*
+     C           ALLREQ    IFEQ 'Y'
+     C*
+     C           FDATEM    IFNE *ZERO
+     C           TDATEM    ANDNE*ZERO
+     C*
+     C           *IN11     IFEQ '1'
+     C                     WRITEH006
+     C                     ELSE
+     C                     WRITEH004
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C           *IN11     IFEQ '1'
+     C                     WRITEH007
+     C                     ELSE
+     C                     WRITEH005
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C*  PRINT HEADER FOR POSTING DETAILS
+     C*
+     C                     WRITEH009
+     C*
+     C*  IF MULTIBRANCHED OUTPUT LINE ACCORDINGLY
+     C*
+     C           *IN30     IFEQ '1'
+     C                     WRITEH008
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ADD  1         COUNT
+     C*
+     C*   WRITE POSTING RECORD
+     C*
+     C                     EXSR DETREC
+     C*
+     C                     READ PSTPRF3L                 89
+     C*
+     C                     END
+     C*
+     C*  WRITE A RECORD TO PRINT THE COUNT
+     C*
+     C           NOREQ     COMP 500                      60
+     C           COUNT     COMP NOREQ                6161
+     C                     WRITED100
+     C           *IN60     IFEQ '1'
+     C                     WRITEH101
+     C                     END
+     C           *IN61     IFEQ '1'
+     C                     WRITEH102
+     C                     END
+     C*
+     C* IF NO RECORDS FOUND ON PSTPRF1 WRITE LINE TO THAT EFFECT
+     C*
+     C                     ELSE
+     C*
+     C                     CLOSEGL1586P1                                                      199643
+     C                     OPEN GL1586P1                                                      199643
+     C                     WRITEH001                                                          199643
+     C                     WRITEH010
+     C                     WRITEH100                                                          199643
+     C                     WRITEH103
+     C                     END
+     C           END       TAG
+     C*
+     C                     SETON                     LR
+     C*
+     C*****************************************************************
+     C*
+     C*   SUBROUTINE TO WRITE RECORDS TO PRINTER FILE
+     C*
+     C*   CALLED FROM : MAIN PROCESSING
+     C*
+     C           DETREC    BEGSR
+     C*
+     C*  OBTAIN POSTING AND VALUE DATE FOR REPORT
+     C*
+     C                     Z-ADDPSTD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    PSTDA
+     C*
+     C                     Z-ADDVALD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    VALDA
+     C*
+     C*  CHECK CORRECT NO. OF DECIMALS FOR POSTING AMOUNT BY CHECKING
+     C*  TO SEE IF CURRENCY INPUTED HAS BEEN ENTERED PREVIOUSLY
+     C*
+     C                     Z-ADD1         Y       30
+     C           Y         DOWLEX
+     C           *IN96     ANDNE'1'
+     C           Y         OCUR CURLOD
+     C           CCYX      IFEQ CURC
+     C                     MOVE NODEC     A6NBDP
+     C                     SETON                     96
+     C                     END
+     C                     ADD  1         Y
+     C                     END
+     C*
+     C* IF A NEW CCY CODE, THEN OBTAIN AND LOAD IN DATA STRUCTURE
+     C*
+     C           *IN96     IFEQ '0'
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG    '@RTCD
+     C                     PARM '*KEY    '@OPTN
+     C                     PARM CCYX      @KEYC   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     MOVEL'GL1586'  DBPGM
+     C                     Z-ADD06        DBASE            *********************
+     C                     SETON                     U7U8  * DATA BASE ERROR 06*
+     C                     OUT  LDA                        *********************
+     C                     GOTO END
+     C                     ELSE
+     C                     ADD  1         X       30
+     C           X         OCUR CURLOD
+     C                     MOVE CCYX      CURC
+     C                     MOVE A6NBDP    NODEC
+     C                     END
+     C                     END
+     C*
+     C           A6NBDP    COMP 1                      4041
+     C           A6NBDP    COMP 2                    43  42
+     C                     SETOF                     33                   075323
+     C           DRCR      IFEQ 1                                         075323
+     C           PSTA      MULT -1        PSTA                            075323
+     C                     END                                            075323
+     C*
+     C           *IN40     IFEQ '1'
+     C***********          Z-ADDPSTA      PSTAA                           066939
+     C                     MOVE PSTA      PSTAA                           066939
+     C                     END
+     C*
+     C           *IN41     IFEQ '1'
+     C***********          Z-ADDPSTA      PSTAB                           066939
+     C                     MOVE PSTA      PSTAB                           066939
+     C                     END
+     C*
+     C           *IN42     IFEQ '1'
+     C***********          Z-ADDPSTA      PSTAC                           066939
+     C                     MOVE PSTA      PSTAC                           066939
+     C                     END
+     C*
+     C           *IN43     IFEQ '1'
+     C***********          Z-ADDPSTA      PSTAD                           066939
+     C                     MOVE PSTA      PSTAD                           066939
+     C                     END
+     C*
+     C*  CHECK OF OVERFLOW
+     C*
+     C           *IN20     IFEQ '1'
+     C                     WRITEH001
+     C           *IN30     IFEQ '1'
+     C                     WRITEH008
+     C                     END
+     C                     WRITEH009
+     C                     SETOF                     20
+     C                     END
+     C*
+     C*  WRITE A RECORD TO INDICATE THIS UPDATE
+     C*
+     C                     WRITED003
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C**
+     C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+     C**
+     C**  CALLED FROM : MAIN PROCESSING
+     C**
+     C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+     C**
+     C           ZDATE2    BEGSR                           ***  ZDATE2 ***
+     C**
+     C**   CLEAR DATE FIELDS.
+     C                     Z-ADD0         ZDATE   60
+     C                     MOVEL'       ' ZADATE  7
+     C**
+     C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C**
+     C**   DETERMINE YEAR NUMBER.
+     C**
+     C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+     C           ZDAYNO    SUB  1         ZDAYN1  50   99
+     C   99                GOTO ZDEND2
+     C**
+     C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+     C           ZDAYN1    DIV  1461      ZLYR    20
+     C                     MVR            ZDAYN1           SAVE REMAINING
+     C**                                                   DAYS
+     C**   CALCULATE NUMBER OF REMAINING YEARS.
+     C                     Z-ADD1         ZWRK2   20
+     C           ZDTAG1    TAG                             ***  ZDTAG1 ***
+     C           ZDAYN1    COMP ZYDY,ZWRK2             90
+     C  N90      ZWRK2     ADD  1         ZWRK2
+     C  N90                GOTO ZDTAG1
+     C           ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON
+     C**
+     C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+     C  N91      ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+     C**
+     C**   CALCULATE ACTUAL YEAR NUMBER.
+     C           ZLYR      MULT 4         ZWRK3   30
+     C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+     C                     Z-ADDZWRK3     ZYEAR   20
+     C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+     C**
+     C**   DETERMINE MONTH NUMBER.
+     C**
+     C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+     C                     SETOF                     9293
+     C   91      ZDAYN1    COMP 59                     9293
+     C   91N92   ZDAYN1    SUB  1         ZDAYN1
+     C**
+     C**   CALCULATE MONTH NUMBER.
+     C                     Z-ADD2         ZWRK2
+     C           ZDTAG2    TAG                             ***  ZDTAG2 ***
+     C           ZDAYN1    COMP ZMDY,ZWRK2             94
+     C  N94      ZWRK2     ADD  1         ZWRK2
+     C  N94                GOTO ZDTAG2
+     C           ZWRK2     SUB  1         ZWRK2
+     C**
+     C                     Z-ADDZWRK2     ZMTH    20       MONTH
+     C**
+     C**   DETERMINE DAY OF MONTH.
+     C**
+     C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+     C           ZDAYN1    ADD  1         ZDAYN1
+     C**
+     C**   CALCULATE DAY OF MONTH.
+     C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+     C**
+     C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+     C   93      ZDAY      ADD  1         ZDAY
+     C**
+     C**   FORMAT DATE, DDMMYY OR MMDDYY.
+     C  N98                MOVELZDAY      ZWRK4   40
+     C   98                MOVE ZDAY      ZWRK4
+     C  N98                MOVE ZMTH      ZWRK4
+     C   98                MOVELZMTH      ZWRK4
+     C                     MOVELZWRK4     ZDATE
+     C                     MOVE ZYEAR     ZDATE
+     C**
+     C**   FORMAT ALPHA DATE, DDMMMYY.
+     C           ZDAY      COMP 10                     95
+     C                     MOVELZDAY      ZWRK5   5
+     C   95                MOVEL' '       ZWRK5
+     C                     MOVE ZMNM,ZMTH ZWRK5
+     C                     MOVELZWRK5     ZADATE
+     C                     MOVE ZYEAR     ZADATE
+     C**
+     C           ZDEND2    ENDSR                           ***  ZDEND2 ***
+     C**
+     C**
+     C********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+** ZYDY -- YEARS IN DAYS CUMULATIVE IN FOUR YEAR SPAN
+0366073110961461
+** ZMDY -- MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+** ZMNM -- MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

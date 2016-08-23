@@ -1,0 +1,2526 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Position revaluation')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas FUTURES AND OPTIONS MODULE
+     F*                                                                  *
+     F*   FF0400  -  POSITION REVALUATION                                *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      *  Last Amend No. MD034233           Date 27Apr15               *
+      *  Prev Amend No. CFF015             Date 11Mar15               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 246526             Date 21Mar07               *
+      *                 247517             Date 09May07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 245463             Date 08Feb07               *
+      *                 241147A            Date 07Nov06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 222960             Date 26May06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG6688            Date 31May05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CGL020             Date 12Dec02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CFF006             Date 28Nov00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 176510             Date 03Apr00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CPB001             Date 18Jun99               *
+      * Midas DBA 3.01 Patch E ---------------------------------------*
+      *                 171172             Date 25Nov99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 137941             Date 26Apr99                  *
+     F*                 CAC003             Date 25Feb97                  *
+     F*                  CFF004             Date 11SEP96                 *
+     F*                  CPM003             DATE 01MAY96                 *
+     F*                  S71062             DATE 12DEC95                 *
+     F*                  054330             DATE 12DEC95                 *
+     F*                  S01408             DATE 09JAN96                 *
+     F*                  081262             DATE 08MAR95                 *
+     F*                  S01456             DATE 08NOV93                 *
+     F*                  S01455             DATE 05NOV93                 *
+     F*                  048119             DATE 08FEB94                 *
+     F*                  S04662             DATE 12JUL93                 *
+     F*                  S01393             DATE 30OCT92                 *
+     F*                  FUJI-FF0011        DATE 21SEP92                 *
+     F*                  AUS022             DATE 07AUG92                 *
+     F*                  FO0017             DATE 07JAN91                 *
+     F*                  S01117             DATE 12MAR90                 *
+     F*                  S01240             DATE 14APR89                 *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                               *  *
+      *  MD034233 - Updates on CFF015 Design                             *
+      *  CFF015 - Differentiate accounting keys as Put or Call option.   *
+      *  246526 - Recompiled due to change in FFSETLZ4.               *
+      *  247517 - Reversed fix 241147.                                *
+      *  245463 - Applied fix 241735.                                 *
+      *  241735 - Future commission fee profit centre is not right.   *
+      *  241147A - Use old processing for computation of p/l.         *
+      *  222960 - Previous profit/loss for customer/broker were not   *
+      *           reversed after a change in price thus resulting to  *
+      *           unknown posting.  Fix is to pattern customer        *
+      *           account key processing to that of the book          *
+      *           whenever position is change from profit to loss     *
+      *           or vice-versa.  Applied fix 220813.                 *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG6688- Branch record not found in TABLETR                  *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CGL020 - Midas Compliance Watch - Additional A/C Postings    *
+      *           Information                                         *
+      *  CFF006 - Fractional Ticks Enhancement.                       *
+     F*  176510 - Improvement of the AOPRFMR0 call for the Broker/    *
+     F*           Customer Call (Account officer added).              *
+     F*  CPB001 - 'Private Banking' Module                               *
+     F*  171172 - Recompile over changed POSTNCD/POSTNKD             *
+     F*  137941 - Do not end if chain fails to FOPCCD or FOPCKD in    *
+     F*           case of Profit Centres having newly switched on.    *
+     F*           Fix 138754 was partially applied.                   *
+     F*  CAC003 - Profit Centre Accounting Development Phase 3.       *
+     F*  CFF004 - Increase in size of Price Fields,(Recompiled Only)     *
+     F*  CPM003 - FF PM Interface Upgrade to R10.                     *
+     F*  S71062 - FF/PM Interface                                     *
+     F*   054330  -  Change Ac/k generation :                            *
+     F*               single generation instead of double if book loss   *
+     F*               became a higher loss                               *
+     F*               double generation instead of single if book loss   *
+     F*               became a lower loss                                *
+     F*   S01408  -  Addition of core hooks FF0400FFP1                   *
+     F*                                     FF0400IIP1                   *
+     F*                                     FF0400IIP2                   *
+     F*                                     FF0400CCP1                   *
+     F*                                     FF0400CCP2                   *
+     F*                                     FF0400CCP3                   *
+     F*                                     FF0400CCP4                   *
+     F*                                     FF0400CCP5                   *
+     F*                                     FF0400CCP6                   *
+     F*                                     FF0400CCP7                   *
+     F*                                     FF0400CCP8                   *
+     F*                                     FF0400CCP9                   *
+     F*                                     FF0400CP10                   *
+     F*                                     FF0400CP11                   *
+     F*                                     FF0400CP12                   *
+     F*                                     FF0400CP13                   *
+     F*                                     FF0400CP14                   *
+     F*                                     FF0400CP15                   *
+     F*                                     FF0400CP16                   *
+     F*                                     FF0400CP17                   *
+     F*                                     FF0400CP18                   *
+     F*                                     FF0400CP19                   *
+     F*                                     FF0400CP20                   *
+     F*                                     FF0400CP21                   *
+     F*                                     FF0400CP22                   *
+     F*                                     FF0400CP23                   *
+     F*                                     FF0400CP24                   *
+     F*                                     FF0400CP25                   *
+     F*   081262  -  Remove code which prevents output of unrealised     *
+     F*              P/L for options.                                    *
+     F*   S01456  -  'FF' MONTHLY P&L ENHANCEMENTS.                      *
+     F*              Recompiled due to change to PF/MKCTLD.              *
+     F*   S01455  -  'FF' ACCOUNT KEY ENHANCEMENTS.                      *
+     F*   048119  -  The previous P&L was completely reversed and the
+     F*           -  new P&L posted even though the position did not
+     F*           -  move from profit to loss or vice versa.
+     F*   S04662  -  Switchable Feature for Init Margins for Futures;    *
+     F*              Deposit and Spread Margin Rate added to DEFLTD.     *
+     F*              Recompile only.                                     *
+     F*   S01393  -  RECOMPILED FOR STRATEGIC RISK MANAGEMENT            *
+     F* FUJI-FF0011 - The system does not differentiate between          *
+     F*               american and european option on exercise           *
+     F*               validation and OTC confirmation wording.           *
+     F*               *** RECOMPILE ONLY ***                             *
+     F*   AUS022  -  AUSTRALIAN CHANGE : Introduction of Processing      *
+     F*              Types 7 and 8.                                      *
+     F*   FO0017  -  ADD BRCA ON UPDATE OF ACCOUNT MOVEMENTS FILE        *
+     F*   S01240  -  ADDITION OF REAL-TIME STATEMENTS                    *
+     F*   S01117  -  MULTIBRANCHING                                      *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                        *
+     F*                                                                  *
+     F*     IGNDECERR(*YES)                                              *
+     F*                                                                  *
+     F********************************************************************
+     FMKCTL   IF  E           K        DISK                           UC
+     FMARKT   IF  E           K        DISK                           UC
+     FTABFF   IF  E           K        DISK
+     F* ICD 1     TABTB10F                          KIGNORE
+     F            TABTB10F                          KIGNORE               S01117
+     F* ICD 2     TABTB11F                          KIGNORE
+     F            TABTB11F                          KIGNORE               S01117
+     F* ICD 3     TABTB20F                          KIGNORE
+     F* ICD 5     TABTB40F                          KIGNORE
+     F* ICD-FF    TABTB80F                          KIGNORE
+     F* A/C 1     TABTE10F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F* NOSTROS   TABLETLF                          KIGNORE
+     F* BRANCH    TABLETRF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F*
+     FFOCLT   IF  E           K        DISK
+     FDEFLT   IF  E           K        DISK
+     FINTYP   IF  E           K        DISK
+     F*FOPCC**IF**E           K        DISK                        S01117 137941
+     F*FOPCK**IF**E           K        DISK                        S01117 137941
+     FFOPCC   IF  E           K        DISK                      A    UC  137941
+     FFOPCK   IF  E           K        DISK                      A    UC  137941
+     FPOSTNC  UP  E           K        DISK
+     FPOSTNK  US  E           K        DISK
+     FWUNRLC  IF  E           K        DISK
+     FWUNRLK  IF  E           K        DISK
+     FACCNT   IF  E           K        DISK
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+     FACNUM   IF  E           K        DISK
+     F            ACCNTABF                          KRENAMEACCNTABR
+     FMEMOSM  UF  E           K        DISK                      A
+     FPRONOM  UF  E           K        DISK                      A
+     FFFACMVD O   E           K        DISK                      A    U6  S01240
+     FFOKEYA  UF  E           K        DISK
+     FFOKEYD  O   E           K        DISK                      A
+     FPOCHGRC O   E           K        DISK                      A
+     FPOCHGRK O   E           K        DISK                      A
+     F*                                                                   S01408
+     F/COPY WNCPYSRC,FF0400FFP1                                           S01408
+     F*                                                                   S01408
+     FFF0400AUO   E                    DISK
+     F********************************************************************
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*             L8   CHANGE OF BRANCH          ON POSTNC/POSTNK
+     F*             L7   CHANGE OF BOOK CODE       ON POSTNK
+     F*             L6   CHANGE OF CUSTOMER/BROKER ON POSTNC
+     F*             L5   CHANGE OF INSTRUMENT TYPE ON POSTNC/POSTNK
+     F*             L4   CHANGE OF YEAR            ON POSTNC/POSTNK
+     F*             L3   CHANGE OF MONTH           ON POSTNC/POSTNK
+     F*             L2   CHANGE OF PUT/CALL IND    ON POSTNC/POSTNK
+     F*             L1   CHANGE OF STRIKE PRICE    ON POSTNC/POSTNK
+     F*
+     F*    01            POSTNC  RECORD
+     F*    02            POSTNK  RECORD
+     F*
+     F*        20        FIRST CYCLE PROCESSING DONE
+     F*
+     F*        50        RECORD NOT FOUND ON MEMOSM
+     F*        51        RECORD NOT FOUND ON PRONOM
+     F*        52        RECORD NOT FOUND ON DEFLT
+     F*
+     F*     80-89        Reserved for Standard FF Subroutines
+     F*     90-99        Reserved for Standard MIDAS Subroutines
+     F*        99        GENERAL CHAIN/READ FAIL INDICATOR FOR DB ERRORS
+     F*
+     F*     U7+U8        Database Errors
+     F*
+     F********************************************************************
+     F/EJECT
+     E                    CPY@    1   1 80
+     E                    MSG     1   1 20
+     E*
+     E** ARRAY FOR UNDERLINING
+     E                    FULA       34  1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,FFFMTZ1
+     E/SPACE 3
+     IPOSTNCDF    01
+     I***********                                   BRCD  L8              S01117
+     I              BRCA                            BRCAP L8              S01117
+     I*
+     I                                              CBCD  L6
+     I                                              ISTT  L5
+     I                                              YRNO  L4
+     I                                              MTHN  L3
+     I                                              PCAL  L2
+     I                                              STRP  L1
+     IPOSTNKDF    02
+     I***********                                   BRCD  L8              S01117
+     I              BRCA                            BRCAP L8              S01117
+     I*
+     I                                              BOKC  L7
+     I*
+     I                                              ISTT  L5
+     I                                              YRNO  L4
+     I                                              MTHN  L3
+     I                                              PCAL  L2
+     I                                              STRP  L1
+     IWUNRLCDF    10
+      ** Rename of fields on WUNRLC
+     I              RECI                            RECIW
+     I***********   BRCD                            BRCDW                 S01117
+     I              BRCA                            BRCAW                 S01117
+     I              CBCD                            CBCDW
+     I              ISTT                            ISTTW
+     I              YRNO                            YRNOW
+     I              MTHN                            MTHNW
+     I              PCAL                            PCALW
+     I              STRP                            STRPW
+     I              ULPL                            ULPLW
+     I*
+     IWUNRLKDF    10
+      ** Rename of fields on WUNRLK
+     I              RECI                            RECIW
+     I***********   BRCD                            BRCDW                 S01117
+     I              BRCA                            BRCAW                 S01117
+     I              BOKC                            BOKCW
+     I              YRNO                            YRNOW
+     I              MTHN                            MTHNW
+     I              PCAL                            PCALW
+     I              STRP                            STRPW
+     I              ULPL                            ULPLW
+     I*
+     IFOCLTDF     10
+      ** Rename of fields on FOCLT
+     I              SETP                            SETPCB
+     I              SETA                            SETACB
+     I              SEBR                            SEBRCB                S01117
+     I              FACO                            FACOCB                                    CGL020
+     I              CNOS                            CNOSCB                                    CGL020
+     I*
+     IDEFLTDF     10
+      ** Rename of fields on DEFLT
+     I              SETP                            SETPDF
+     I              SETA                            SETADF
+     I              SEBR                            SEBRDF                S01117
+     I              FACO                            FACODF                                    CGL020
+     I              CNOS                            CNOSDF                                    CGL020
+     I*
+     IMEMOSMEF    10
+      ** Rename of fields on MEMOSM
+     I              RECI                            RECIME
+     I              CNUM                            CNUMME
+     I              CCY                             CCYME
+     I              ACOD                            ACODME
+     I              ACSQ                            ACSQME
+     I              BRCA                            BRCAME                S01117
+     I*
+     IPRONOMEF    10
+      ** Rename of fields on PRONOM
+     I              RECI                            RECIPR
+     I              CCY                             CCYPR
+     I              NOSN                            NOSNPR
+     I*
+     IACCNTABF    10
+      ** Rename of fields on ACCNT
+     I***********   BRCD                            BRCDX                 S01117
+     I              BRCA                            BRCAX                 S01117
+     I              PRFC                            PRFCX                 S01117
+     I*                                                                   S01408
+     I/COPY WNCPYSRC,FF0400IIP1                                           S01408
+     I*                                                                   S01408
+     I*
+     I/COPY ZSRSRC,FFFMTZ2
+     I/COPY ZSRSRC,FFSETLZ1
+     IBRKEY       DS
+     I*
+     I*  DATASTRUCTURE FOR ACCESSING BRANCH DETAILS FROM TABLE TILE
+     I*
+     I                                        1   20TEN
+     I***********                            10  120BRCD                  S01117
+     I                                       10  12 BRCAP                 S01117
+     IFFKY        DS
+     I*  DATASTRUCTURE FOR FOKEY ACCOUNT KEY.
+     I*
+     I                                        1   1 F
+     I                                        2   2 INVA                  S01455
+     I                                        3   3 U
+     I                                        4   5 BOOKCD
+     I                                        6  10 INSTYP
+     I*                                                                   S01408
+     I/COPY WNCPYSRC,FF0400IIP2                                           S01408
+     I*                                                                   S01408
+     I                                       12  12 CUSBRK
+     I                                       14  14 PRFLSS
+     I*
+     I*DA********UDS                            256                       S01117
+     ILDA         DS                            256                       S01117
+     I*  LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*                                                                   S01117
+      ** DATA AREA RUNDAT                                                 S01117
+     IRUNDT       DS                                                      S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+      *                                                                   S01117
+     ISDBANK    E DSSDBANKPD                                              S01117
+      **  EXTERNAL DS FOR BANK DETAILS                                    S01117
+     I              BJDNWD                          DNWD                  S01117
+     I              BJURPT                          TITL                  S01117
+      *                                                                   S01117
+     ISDGELR    E DSSDGELRPD                                              S01117
+      **  EXTERNAL DS FOR GENERAL LEDGER DETAILS                          S01117
+      *                                                                   S71062
+     ISDMMOD    E DSSDMMODPD                                              S71062
+      **  EXTERNAL DS FOR MODULE DETAILS                                  S71062
+     ISDPORT    E DSSDPORTPD                                              CPM003
+     I** Portfolio Management ICD                                         CPM003
+      *                                                                   S01117
+     I*                                                                   CAC003
+     ISDFODA    E DSSDFODAPD                                              CAC003
+     I** Futures and Options Data                                         CAC003
+     I              QQACCD                          QQACD1                                    CGL029
+      *                                                                   176510
+     ISDACOD    E DSSDACODPD                                                                  CGL029
+      ** External data structure for account code                                             CGL029
+     I              QQACCD                          QQACD2                                    CGL029
+      *                                                                                       CGL029
+     ISDCUST    E DSSDCUSTPD                                              176510
+     I** Customer Details                                                 176510
+     I*                                                                   CAC003
+     ISCSARD    E DSSCSARDPD                                              CFF006
+      ** External DS for SAR Details                                      CFF006
+      *                                                                   CFF006
+     ISDBRCH    E DSSDBRCHPD                                                                 BUG6688
+      ** Midas SD Branch Codes                                                               BUG6688
+      *                                                                                      BUG6688
+     I              QQDFAC                          QDFAC1                                   BUG6688
+      *                                                                                      BUG6688
+     I@DSFDY    E DSDSFDY                                                 S01117
+      **  FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE              S01117
+     IDSSDY     E DSDSSDY                                                 176510
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                176510
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     IPSDS       SDS                                                      137941
+     I*    Program Status data structure                                  137941
+     I                                      244 246 WSID                  137941
+     I                                      254 263 USRID                 137941
+      *                                                                                       CGL020
+     I            DS                                                                          CGL020
+     I**********                              1   60PCBCD                              CGL020 CSD027
+     I                                        1   6 PCBCD                                     CSD027
+      ** Customer Broker Code Parameter for ZAAMLSETFF                                        CGL020
+      *                                                                                       CGL020
+     I              'ZAAMLSETFF'          C         SETFF                                     CGL020
+      ** Futures and Options Settlement Fields Extractor Program Name                         CGL020
+      *                                                                                       CGL020
+     I/COPY ZSRSRC,FFSETLZ3
+     I/COPY ZSRSRC,FFSETLZ2
+     C*
+     C********************************************************************
+     C*
+     C* Key for WUNRLC File
+     C*
+     C           WNRLCY    KLIST
+     C***********          KFLD           BRCD                            S01117
+     C                     KFLD           BRCAP                           S01117
+     C                     KFLD           CBCD
+     C                     KFLD           ISTT
+     C                     KFLD           YRNO
+     C                     KFLD           MTHN
+     C                     KFLD           PCAL
+     C                     KFLD           STRP
+     C*
+     C* Key for WUNRLK File
+     C*
+     C           WNRLKY    KLIST
+     C***********          KFLD           BRCD                            S01117
+     C                     KFLD           BRCAP                           S01117
+     C                     KFLD           BOKC
+     C                     KFLD           ISTT
+     C                     KFLD           YRNO
+     C                     KFLD           MTHN
+     C                     KFLD           PCAL
+     C                     KFLD           STRP
+     C*
+     C* Key for DEFLT File
+     C*
+     C           DEFLTK    KLIST
+     C                     KFLD           CBCD
+     C                     KFLD           MRKT
+     C                     KFLD           ISTC
+     C*                                                                   S01117
+     C* Key for FOPCC File                                                S01117
+     C*                                                                   S01117
+     C           FOPCCK    KLIST                                          S01117
+     C                     KFLD           BRCAP                           S01117
+     C                     KFLD           CBCD                            S01117
+     C                     KFLD           ISTT                            S01117
+     C*                                                                   S01117
+     C* Key for FOPCK File                                                S01117
+     C*                                                                   S01117
+     C           FOPCKK    KLIST                                          S01117
+     C                     KFLD           BRCAP                           S01117
+     C                     KFLD           BOKC                            S01117
+     C                     KFLD           ISTT                            S01117
+     C*
+     C* Key for PRONOM File
+     C*
+     C           PRONMK    KLIST
+     C                     KFLD           FFCCY
+     C                     KFLD           FFNOSN
+     C*
+     C* Key for MEMOSM File
+     C*
+     C           MEMSNK    KLIST
+     C                     KFLD           FFBRCB                          S01117
+     C                     KFLD           FFCNUM
+     C                     KFLD           FFCCY
+     C                     KFLD           FFACOD
+     C                     KFLD           FFACSQ
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      **             M A I N   P R O C E S S I N G
+     C********************************************************************
+     C*
+      ** IF first cycle
+      **     Perform Initial processing
+     C*
+     C           *IN20     IFEQ '0'
+     C                     EXSR INIT
+     C                     SETON                     20
+     C                     END
+     C*
+      ***IF*Indicator*L7*is*on********************************************S01117
+      ** IF Indicator L8 is on                                            S01117
+      **     Access TABLETR for branch
+      **     IF no record found,
+      **     OR record not live
+      **          Perform Database error processing
+     C*
+     C************INL7     IFEQ '1'                                       S01117
+     C           *INL8     IFEQ '1'                                       S01117
+     C*
+     C                     EXSR CHBRCD
+     C*
+     C                     END
+     C*
+      ** IF Change of Customer/Broker Code
+      ** AND POSTNC Record last read.
+      **     Access FOCLT for FO Client Details.
+      **     IF no record found,
+      **     OR record not live
+      **          Perform Database error processing
+     C*
+     C           *INL6     IFEQ '1'
+     C           *IN01     ANDEQ'1'
+     C*
+     C                     EXSR CHCBCD
+     C*
+     C                     END
+     C*
+      ** IF Change of Customer Broker Code/Instrument Type.
+      ** AND POSTNC Record last read.
+      **     Access DEFLT for FO Client Default Details.
+     C*
+     C           *INL5     IFEQ '1'
+     C           *IN01     ANDEQ'1'
+     C*
+     C                     EXSR CHDFLT
+     C*
+     C                     END
+     C*                                                                   S01117
+      ** IF Change of Branch/Customer Broker or Book Code/Instrument Type S01117
+      **  IF Profit Centre Used is 'Y'                                    S01117
+      **   IF POSTNC Record last read                                     S01117
+      **     Access Customer/Broker Profit Centres.                       S01117
+      **   ELSE POSTNK Record last read                                   S01117
+      **     Access Book Profit Centres.                                  S01117
+      **  ELSE Profit Centre is blank.                                    S01117
+     C*                                                                   S01117
+     C           *INL5     IFEQ '1'                                       S01117
+     C*                                                                   S01117
+     C           BKPRCU    IFEQ 'Y'                                       S01117
+     C*                                                                   S01117
+     C           *IN01     IFEQ '1'                                       S01117
+     C                     EXSR GTCBPC                                    S01117
+     C                     ELSE                                           S01117
+     C                     EXSR GTBKPC                                    S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ELSE                                           S01117
+     C                     MOVE *BLANKS   PRFC                            S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     END                                            S01117
+     C*
+      ** IF Indicator L5 is on
+      **     Access INTYP for Instrument Details.
+      **     IF no record found,
+      **     OR record not live
+      **          Perform Database error processing
+     C*
+     C           *INL5     IFEQ '1'
+     C*
+     C                     EXSR CHISTT
+     C*
+     C                     END
+     C*
+      ** IF POSTNC Record Read. ( 01 ON )
+      **      Access WUNRLC
+      **      ELSE - POSTNK Record Read
+      **      Access WUNRLK
+      ** ENDIF
+     C*
+     C           *IN01     IFEQ '1'
+     C*
+     C           WNRLCY    CHAINWUNRLC               50
+     C*
+     C                     ELSE
+     C*
+     C           WNRLKY    CHAINWUNRLK               50
+     C*
+     C                     END
+     C*
+      ** IF Record Exists on WUNRLC/WUNRLK
+      **      Convert Unrealised Profit/Loss to Instrument Currency
+      **      and Add to Current Profit/Loss
+      **      ELSE
+      **      Set Unrealised Profit/Loss to 0
+      ** ENDIF
+     C*
+     C           *IN50     IFEQ '0'
+     C           ISPT      IFLE 6                                         AUS022
+      *****************************************************************               CFF006 241147A
+      ***If*enhancement*CFF006*is*installed*and*the*fractional*********               CFF006 241147A
+      ***ticks*indicator*is*'Y',*then*use*this*new*processing**********               CFF006 241147A
+      ***for*computing*the*Unrealised*Profit*and*Loss.*****************               CFF006 241147A
+      *****************************************************************               CFF006 241147A
+     C********** CFF006    IFEQ 'Y'                                                   CFF006 241147A
+     C********** FRTK      ANDEQ'Y'                                                   CFF006 241147A
+     C********** TKVL      MULT MNPF      ADTV   178                                  CFF006 241147A
+     C********** ADTV      MULT ULPLW     ULPLW     H                                 CFF006 241147A
+      *                                                                   CFF006
+      ** Otherwise, use the old computation.                              CFF006
+      *                                                                   CFF006
+     C**********           ELSE                                                       CFF006 241147A
+      *                                                                                       247517
+      ** If enhancement CFF006 is installed and the fractional                                247517
+      ** ticks indicator is 'Y', then use this new processing                                 247517
+      ** for computing the Unrealised Profit and Loss.                                        247517
+      *                                                                                       247517
+     C           CFF006    IFEQ 'Y'                                                           247517
+     C           FRTK      ANDEQ'Y'                                                           247517
+     C           TKVL      MULT MNPF      ADTV   178                                          247517
+     C           ADTV      MULT ULPLW     ULPLW     H                                         247517
+      *                                                                                       247517
+      ** Otherwise, use the old computation.                                                  247517
+      *                                                                                       247517
+     C                     ELSE                                                               247517
+     C                     MULT TKVL      ULPLW     H
+     C**********           ENDIF                                                      CFF006 241147A
+     C                     ENDIF                                                              247517
+      *                                                                   CFF006
+     C                     END                                            AUS022
+     C                     ELSE
+     C                     Z-ADD0         ULPLW
+     C                     END
+     C*
+      ** Set up Account Key details
+     C*
+     C                     EXSR ACKDET
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0400CCP1                                           S01408
+     C*                                                                   S01408
+     C*
+      ** IF POSTNC Record Read. ( 01 ON )
+      **      IF Next Revaluation Date Less Than Next Working Day
+      **           Do Revaluation Due Processing
+      **           ELSE
+      **           Do Revaluation NOT Due Processing
+      **      ENDIF
+      **      ELSE - POSTNK Record Read
+      **      Do Book Revaluation Processing.
+      ** ENDIF
+     C*
+     C           *IN01     IFEQ '1'
+     C*
+     C           NRED      IFLT DNWD
+     C                     EXSR REVDUE
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0400CCP2                                           S01408
+     C*                                                                   S01408
+     C                     ELSE
+     C                     EXSR RNOTDU
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0400CCP3                                           S01408
+     C*                                                                   S01408
+     C                     END
+     C*
+     C                     ELSE
+     C                     EXSR REBOOK
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0400CCP4                                           S01408
+     C*                                                                   S01408
+     C*
+     C                     END
+     C*
+      ** T O T A L    T I M E    P R O C E S S I N G
+      ** Execute Program Initialisation Subroutine (if not yet done)
+      ** Execute End of Program Subroutine
+     C*
+     CLR         *IN20     IFEQ '0'
+     CLR                   EXSR INIT
+     CLR                   END
+     CLR                   EXSR LRTIME
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      **               INDEX TO SUBROUTINES
+     C*
+      ** CHBRCD    CHANGE OF BRANCH CODE PROCESSING
+      ** CHCBCD    CHANGE OF CUSTOMER/BROKER CODE PROCESSING
+      ** CHDFLT    CHANGE OF CUSTOMER/BROKER/INSTRUMENT TYPE PROCESSING
+      ** CHISTT    CHANGE OF INSTRUMENT TYPE PROCESSING
+     C*                                                                   S01117
+      ** GTCBPC    GET CUSTOMER/BROKER PROFIT CENTRES                     S01117
+      ** GTBKPC    GET BOOK PROFIT CENTRES                                S01117
+     C*
+      ** REVDUE    REVALUATION DUE PROCESSING     FOR POSTNC RECORDS
+      ** RNOTDU    REVALUATION NOT DUE PROCESSING FOR POSTNC RECORDS
+     C*
+      ** REBOOK    BOOK REVALUATION PROCESSING    FOR POSTNK RECORDS
+     C*
+      ** PSTDET    DETERMINE IF MEMOSM AND/OR PRONOM UPDATES REQUIRED
+     C*                                                                   S01240
+      ** WACMVD    WRITE A RECORD TO PF/FFACMVD                           S01240
+      ** FOKWRT    WRITE A RECORD TO PF/FOKEYD
+     C*
+      ** ACKDET    SET UP DETAILS FOR OUTPUT TO PF/FOKEYD
+     C*
+      ** LRTIME    LAST RECORD CALCULATIONS - PF/FOKEYA UPDATE/REPORT
+     C*
+      ** INIT      PERFORM FIRST CYCLE ONLY CALCULATIONS
+     C*
+      ** DBERR     PERFORM DATABASE ERROR EXIT FROM PROGRAM
+     C*
+      ** FFFMT     STANDARD SUBROUTINE TO FORMAT MARKET NAME/DATE
+      ** ZDATE2    STANDARD SUBROUTINE TO CONVERT MIDAS DAYNO TO A DATE
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+      ** S/R CHBRCD - CHANGE OF BRANCH CODE PROCESSING
+     C*
+      ** CALLED FROM MAIN PROCESSING
+     C*
+      ** CALLS DBERR;
+     C*
+     C********************************************************************
+     C*
+     C           CHBRCD    BEGSR
+     C*
+     C********** BRKEY     CHAINTABLETRF             99                                      BUG6688
+      *                                                                                      BUG6688
+     C                     CALL 'AOBRCHR1'                                                   BUG6688
+     C                     PARM *BLANKS   PRTCD   7                                          BUG6688
+     C                     PARM '*KEY   ' POPTN   7                                          BUG6688
+     C                     PARM BRCAP     PBRCH   3                                          BUG6688
+     C           SDBRCH    PARM SDBRCH    DSSDY                                              BUG6688
+     C*
+     C           PRTCD     IFNE *BLANKS                                                      BUG6688
+     C********** *IN99     IFEQ '1'                                                          BUG6688
+     C********** RECI      ORNE 'D'                                                          BUG6688
+     C           *LOCK     IN   LDA                                       S01117
+     C**********           MOVE 'TABLE'   DBFILE                                             BUG6688
+     C***********          MOVELBRCD      DBKEY            ***************S01117
+     C                     MOVELBRCAP     DBKEY            ***************S01117
+     C                     MOVEL'SDBRCHPD'DBFILE                                             BUG6688
+     C                     Z-ADD1         DBASE            * DB ERROR 01 *
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+      ** S/R CHCBCD - CHANGE OF CUSTOMER/BROKER CODE PROCESSING
+     C*
+      ** CALLED FROM MAIN PROCESSING
+     C*
+      ** CALLS DBERR;
+     C*
+     C********************************************************************
+     C*
+     C           CHCBCD    BEGSR
+     C*
+     C           CBCD      CHAINFOCLT                99
+     C*
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'FOCLT'   DBFILE
+     C                     MOVELCBCD      DBKEY            ***************
+     C                     Z-ADD2         DBASE            * DB ERROR 02 *
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+      ** S/R CHDFLT - CHANGE OF CUSTOMER/BROKER & INSTRUMENT TYPE PROCESSING
+     C*
+      ** CALLED FROM MAIN PROCESSING
+     C*
+      ** CALLS
+     C*
+     C********************************************************************
+     C*
+     C           CHDFLT    BEGSR
+     C*
+     C                     MOVE ISTT      ISTC
+     C*
+     C           DEFLTK    CHAINDEFLT                52
+     C  N52      SETPDF    COMP *ZERO                    52
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+      ** S/R CHISTT - CHANGE OF INSTRUMENT TYPE PROCESSING
+     C*
+      ** CALLED FROM MAIN PROCESSING
+     C*
+      ** CALLS DBERR;
+     C*
+     C********************************************************************
+     C*
+     C           CHISTT    BEGSR
+     C*
+     C           ISTT      CHAININTYP                99
+     C*
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'INTYP'   DBFILE
+     C                     MOVELISTT      DBKEY            ***************
+     C                     Z-ADD3         DBASE            * DB ERROR 03 *
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT                                                              S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+      ** S/R GTCBPC - GET CUSTOMER/BROKER PROFIT CENTRES                  S01117
+     C*                                                                   S01117
+      ** CALLED FROM MAIN PROCESSING                                      S01117
+     C*                                                                   S01117
+      ** CALLS DBERR;                                                     S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           GTCBPC    BEGSR                                          S01117
+      *                                                                                       241735
+      ** Check first for profit center held in Cust/Brok positions                            241735
+      ** profit ctr file (FOPCCD).                                                            241735
+     C*                                                                   CAC003
+     C***Check*if*Analytical*Accounting*is*installed.**************                    CAC003 241735
+     C*                                                                   CAC003
+     C********** *IN30     IFEQ '1'                                                    CAC003 241735
+     C********** BRKI      ANDEQ'Y'                                                    CAC003 241735
+     C**********           MOVE BXFOPC    PRFC                                         CAC003 241735
+     C**********           ELSE                                                        CAC003 241735
+     C*                                                                   S01117
+     C           FOPCCK    CHAINFOPCC                99                   S01117
+     C*                                                                   S01117
+     C************IN99     IFEQ '1'                                S01117 137941
+     C***********RECI      ORNE 'D'                                S01117 137941
+     C           *IN99     IFEQ '0'                                       137941
+     C           RECI      ANDNE'D'                                       137941
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'FOPCC'   DBFILE                          S01117
+     C                     MOVELBRCAP     WRK9A   9                       S01117
+     C                     MOVE CBCD      WRK9A                           S01117
+     C                     MOVE ISTT      WRK14A 14                       S01117
+     C                     MOVELWRK9A     WRK14A                          S01117
+     C                     MOVELWRK14A    DBKEY            ***************S01117
+     C                     Z-ADD12        DBASE            * DB ERROR 12 *S01117
+     C                     OUT  LDA                        ***************S01117
+     C                     EXSR DBERR                                     S01117
+     C                     END                                            S01117
+     C*                                                                   137941
+     C           *IN99     IFEQ '1'                                       137941
+     C                     MOVE 'D'       RECI                            137941
+     C                     MOVE BRCAP     BRCA                            137941
+     C**********           Z-ADDCBCD      CBCD                                         137941 CSD027
+     C                     MOVE CBCD      CBCD                                                CSD027
+     C                     MOVE ISTT      ISTT                            137941
+     C                     MOVE BRCAP     @BRCD   3                       137941
+     C                     MOVE CBCD      CUST    6                       137941
+     C*                                                                   176510
+     C**   Retrieve the Account officer for the customer                  176510
+     C                     CALL 'AOCUSTR0'                                176510
+     C                     PARM *BLANKS   @RTCD   7                       176510
+     C                     PARM '*KEY   ' @OPTN   7                       176510
+     C                     PARM CUST      @KEY1  10                       176510
+     C                     PARM           @KYST   7                       176510
+     C           SDCUST    PARM SDCUST    DSSDY                           176510
+     C*                                                                   176510
+     C**   Move the Account officer into the Acof field                   176510
+     C                     MOVE BBACOC    ACOF    2                       176510
+     C*                                                                   137941
+     C**   Set up base fields for Profit Centre default taking            137941
+     C*                                                                   137941
+     C                     CALL 'AOPRFMR0'                                137941
+     C                     PARM *BLANKS   @RTCD1  1                       137941
+     C                     PARM *BLANKS   @BKCD   2                       137941
+     C                     PARM *BLANKS   @TRTY   5                       137941
+     C                     PARM *BLANKS   @SBTY   2                       137941
+     C                     PARM           @BRCD   3                       137941
+     C                     PARM *BLANKS   @DPCD   3                       137941
+     C                     PARM USRID     @USID  10                       137941
+     C******************** PARM *BLANKS   @ACOC   2                 137941176510
+     C                     PARM ACOF      @ACOC   2                       176510
+     C                     PARM CUST      @CUST   6                       137941
+     C                     PARM *BLANK    PRFC    4                       137941
+      *                                                                   137941
+     C           @RTCD1    IFEQ '0'                                       137941
+     C                     MOVELPRFC      PCCB                            137941
+     C                     ELSE                                           137941
+     C                     MOVE *BLANKS   PCCB                            137941
+     C                     END                                            137941
+      *                                                                   137941
+     C                     Z-ADDRUND      LCD                             137941
+     C                     MOVE 'I'       CHTP                            137941
+     C                     Z-ADD0         TNLU                            137941
+     C                     WRITEFOPCCDF                                   137941
+     C                     END                                            137941
+     C*                                                                   S01117
+     C                     MOVE PCCB      PRFC                            S01117
+     C*                                                                   CAC003
+      *                                                                                       241735
+      ** Check if Analytical Accounting is installed.  If on and entry                        241735
+      ** is for broker but profit ctr in FOPCCD is blank, use profit                          241735
+      ** ctr defined in ICD.                                                                  241735
+      *                                                                                       241735
+     C           *IN30     IFEQ '1'                                                           241735
+     C           BRKI      ANDEQ'Y'                                                           241735
+     C           PCCB      ANDEQ*BLANK                                                        241735
+     C                     MOVE BXFOPC    PRFC                                                241735
+     C                     ENDIF                                          CAC003
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+      /EJECT                                                              S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+      ** S/R GTBKPC - GET BOOK PROFIT CENTRES                             S01117
+     C*                                                                   S01117
+      ** CALLED FROM MAIN PROCESSING                                      S01117
+     C*                                                                   S01117
+      ** CALLS DBERR;                                                     S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           GTBKPC    BEGSR                                          S01117
+     C*                                                                   S01117
+     C           FOPCKK    CHAINFOPCK                99                   S01117
+     C*                                                                   S01117
+     C************IN99     IFEQ '1'                                 S01117137941
+     C***********RECI      ORNE 'D'                                 S01117137941
+     C           *IN99     IFEQ '0'                                       137941
+     C           RECI      ANDNE'D'                                       137941
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'FOPCK'   DBFILE                          S01117
+     C                     MOVELBRCAP     WRK5A   5                       S01117
+     C                     MOVE BOKC      WRK5A                           S01117
+     C                     MOVE ISTT      WRK10A 10                       S01117
+     C                     MOVELWRK5A     WRK10A                          S01117
+     C                     MOVELWRK10A    DBKEY            ***************S01117
+     C                     Z-ADD13        DBASE            * DB ERROR 13 *S01117
+     C                     OUT  LDA                        ***************S01117
+     C                     EXSR DBERR                                     S01117
+     C                     END                                            S01117
+     C*                                                                   137941
+     C           *IN99     IFEQ '1'                                       137941
+     C                     MOVE 'D'       RECI                            137941
+     C                     MOVE BRCAP     BRCA                            137941
+     C                     MOVE BOKC      BOKC                            137941
+     C                     MOVE ISTT      ISTT                            137941
+     C                     MOVE BRCAP     @BRCD   3                       137941
+     C*                                                                   137941
+     C**   Set up base fields for Profit Centre default taking            137941
+     C*                                                                   137941
+     C                     CALL 'AOPRFMR0'                                137941
+     C                     PARM *BLANKS   @RTCD1  1                       137941
+     C                     PARM BOKC      @BKCD   2                       137941
+     C                     PARM *BLANKS   @TRTY   5                       137941
+     C                     PARM *BLANKS   @SBTY   2                       137941
+     C                     PARM           @BRCD   3                       137941
+     C                     PARM *BLANKS   @DPCD   3                       137941
+     C                     PARM USRID     @USID  10                       137941
+     C                     PARM *BLANKS   @ACOC   2                       137941
+     C                     PARM *BLANKS   @CUST   6                       137941
+     C                     PARM *BLANK    PRFC    4                       137941
+      *                                                                   137941
+     C           @RTCD1    IFEQ '0'                                       137941
+     C                     MOVELPRFC      PCBK                            137941
+     C                     ELSE                                           137941
+     C                     MOVE *BLANKS   PCBK                            137941
+     C                     END                                            137941
+      *                                                                   137941
+     C                     Z-ADDRUND      LCD                             137941
+     C                     MOVE 'I'       CHTP                            137941
+     C                     Z-ADD0         TNLU                            137941
+     C                     WRITEFOPCKDF                                   137941
+     C                     END                                            137941
+     C*                                                                   S01117
+     C                     MOVE PCBK      PRFC                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+      /EJECT
+     C********************************************************************
+     C*
+      ** S/R REVDUE - REVALUATION DUE PROCESSING.
+     C*
+      ** CALLED FROM MAIN PROCESSING
+     C*
+      ***CALLS*DETPST;*FOKWRT;********************************************S01240
+      ** CALLS DETPST; FOKWRT; WACMVD                                     S01240
+     C*
+     C********************************************************************
+     C*
+     C           REVDUE    BEGSR
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0400CCP5                                           S01408
+     C*                                                                   S01408
+     C*
+      ** IF INSTRUMENT TYPE IS A FUTURE
+     C*
+     C           ISPT      IFLE 3
+     C           ISPT      OREQ 7                                         AUS022
+     C*
+      **  Determine if MEMOSM and/or PRONOM updates required
+     C*
+     C                     EXSR DETPST
+     C*
+      ** If FFMIND Returned 'Y' From DETPST Subroutine
+      **  Update/Write to MEMOSM File.
+     C*
+     C           FFMIND    IFEQ 'Y'
+     C*
+     C           MEMSNK    CHAINMEMOSM               50
+     C*
+     C           *IN50     IFEQ '0'
+     C*                                                                   S01240
+      ** Store Ledger Balance for use in SR.WACMVD                        S01240
+     C*                                                                   S01240
+     C                     Z-ADDLDBL      WLDBL  150                      S01240
+     C*
+      ** Add      old unrealised profit/loss to balances
+      ** Subtract new unrealised profit/loss from balances
+     C*
+     C                     ADD  CUPL      LDBL
+     C                     ADD  CUPL      CLBL
+     C                     SUB  ULPLW     LDBL
+     C                     SUB  ULPLW     CLBL
+     C*
+     C                     EXCPTMEMOS
+     C*
+     C                     ELSE
+     C*                                                                   S01240
+      ** Store Ledger Balance for use in SR.WACMVD                        S01240
+     C*                                                                   S01240
+     C                     Z-ADD*ZERO     WLDBL                           S01240
+     C*
+     C                     MOVE 'D'       RECIME
+     C                     MOVE FFCCY     CCYME
+     C**********           Z-ADDFFCNUM    CNUMME                                              CSD027
+     C                     MOVE FFCNUM    CNUMME                                              CSD027
+     C                     Z-ADDFFACOD    ACODME
+     C                     Z-ADDFFACSQ    ACSQME
+     C                     MOVE FFBRCB    BRCAME                          S01117
+     C*
+     C           CUPL      SUB  ULPLW     LDBL
+     C           CUPL      SUB  ULPLW     CLBL
+     C*
+     C/COPY WNCPYSRC,FF0400C001
+     C                     WRITEMEMOSMEF
+     C/COPY WNCPYSRC,FF0400C002
+     C*
+     C                     END
+     C*                                                                   S01240
+      ** Set MEMOS/PRONO Update Indicator to 'M'                          S01240
+     C*                                                                   S01240
+     C                     MOVE 'M'       MPIND   1                       S01240
+     C*                                                                   S01240
+      ** Write record to PF/FFACMVD                                       S01240
+     C*                                                                   S01240
+     C                     EXSR WACMVD                                    S01240
+     C*
+     C                     END
+     C*
+      ** If FFPIND Returned 'Y' From DETPST Subroutine
+      **  Update/Write to PRONOM File.
+     C*
+     C           FFPIND    IFEQ 'Y'
+     C*
+     C           PRONMK    CHAINPRONOM               51
+     C*
+     C           *IN51     IFEQ '0'
+     C*                                                                   S01240
+      ** Store Projected Nostro Balance for use in SR.WACMVD              S01240
+     C*                                                                   S01240
+     C                     Z-ADDPNBL      WPNBL  150                      S01240
+     C*
+      ** Add      old unrealised profit/loss to balance
+      ** Subtract new unrealised profit/loss from balance
+     C*
+     C                     ADD  CUPL      PNBL
+     C                     SUB  ULPLW     PNBL
+     C*
+     C                     EXCPTPRONO
+     C*
+     C                     ELSE
+     C*                                                                   S01240
+      ** Store Projected Nostro Balance for use in SR.WACMVD              S01240
+     C*                                                                   S01240
+     C                     Z-ADD*ZERO     WPNBL                           S01240
+     C*
+     C                     MOVE 'D'       RECIPR
+     C                     MOVE FFCCY     CCYPR
+     C                     Z-ADDFFNOSN    NOSNPR
+     C*
+     C           CUPL      SUB  ULPLW     PNBL
+     C*
+     C                     WRITEPRONOMEF
+     C*                                                                   S01240
+     C           FFMIND    IFNE 'Y'                                       S01240
+     C*                                                                   S01240
+      ** Set MEMOS/PRONO Update Indicator to 'P'                          S01240
+     C*                                                                   S01240
+     C                     MOVE 'P'       MPIND                           S01240
+     C*                                                                   S01240
+      ** Write record to PF/FFACMVD                                       S01240
+     C*                                                                   S01240
+     C                     EXSR WACMVD                                    S01240
+     C                     END                                            S01240
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0400CCP6                                           S01408
+     C*                                                                   S01408
+     C*
+      ** Write an Account Key For Unrealized P/L Posted to Suspense
+     C*
+     C           UPSP      IFNE 0
+     C                     MOVEL'N'       URA     1
+     C                     Z-ADDUPSP      EAMT
+     C                     Z-ADD1         REVI
+     C*
+      ** Reverse Unrealized P/L posted to Suspense
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0400CCP7                                           S01408
+     C*                                                                   S01408
+     C*
+     C                     EXSR FOKWRT
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0400CCP8                                           S01408
+     C*                                                                   S01408
+     C                     END
+     C*
+      **  IF Unrealized Profit/Loss from LF/WUNRLC is Not Equal
+      **  to the Unrealized Profit/Loss Posted from LF/POSTNC
+     C*
+     C           ULPLW     IFNE UPLP
+      *                                                                                       222960
+     C           ULPLW     IFGT 0                                                             222960
+     C           UPLP      ANDGT0                                                             222960
+     C           UPLP      ANDLTULPLW                                                         222960
+     C           ULPLW     ORLT 0                                                             222960
+     C           UPLP      ANDLT0                                                             222960
+     C           UPLP      ANDGTULPLW                                                         222960
+     C*
+      ** Generate one account key for the net change
+     C*
+     C*
+     C                     MOVEL'Y'       URA
+     C           ULPLW     SUB  UPLP      EAMT
+     C                     Z-ADD0         REVI
+     C*
+     C           EAMT      IFNE 0
+     C*
+      ** Current Unrealized P/L minus Unrealised P/L Posted
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0400CCP9                                           S01408
+     C*                                                                   S01408
+     C*
+     C                     EXSR FOKWRT
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0400CP10                                           S01408
+     C*                                                                   S01408
+     C                     END
+      *                                                                                       222960
+     C                     ELSE                                                               222960
+      *                                                                                       222960
+      ** Write an account key to reverse the previously posted amount                         222960
+      *                                                                                       222960
+     C                     MOVEL'Y'       URA                                                 222960
+     C                     Z-ADDUPLP      EAMT                                                222960
+     C                     Z-ADD1         REVI                                                222960
+      *                                                                                       222960
+     C           EAMT      IFNE 0                                                             222960
+      *                                                                                       222960
+      ** Reverse Unrealized P/L posted                                                        222960
+      *                                                                                       222960
+     C                     EXSR FOKWRT                                                        222960
+     C                     END                                                                222960
+      *                                                                                       222960
+      ** Write an account key to post the new amount                                          222960
+      *                                                                                       222960
+     C                     MOVEL'Y'       URA                                                 222960
+     C                     Z-ADDULPLW     EAMT                                                222960
+     C                     Z-ADD0         REVI                                                222960
+      *                                                                                       222960
+     C           EAMT      IFNE 0                                                             222960
+      *                                                                                       222960
+      ** Current Unrealized P/L                                                               222960
+      *                                                                                       222960
+     C                     EXSR FOKWRT                                                        222960
+     C                     ENDIF                                                              222960
+     C*                                                                                       222960
+     C                     ENDIF                                                              222960
+     C*
+     C                     END
+     C*
+      ** WRITE POSITION CHANGE REVALUATION RECORD (POCHGRC)
+     C*
+      ** Current Unrealized P/L minus Unrealised P/L Posted
+     C*
+     C           UPLP      SUB  ULPLW     ULPL
+     C*
+     C           ULPL      IFNE 0
+     C*
+      ***IF*INSTRUMENT*TYPE*IS*AN*OPTION***                               081262
+      ***This*Unrealised*P/L*is*not*to*be*reported*on*statements/confs*** 081262
+     C*                                                                   081262
+     C***********ISPT      IFGT 3                                         081262
+     C***********ISPT      ANDNE7                                   AUS022081262
+     C***********          MOVE 'Y'       AOSI                            081262
+     C***********          MOVE 'Y'       ATCI                            081262
+     C***********          END                                            081262
+     C*
+     C                     MOVEL'D'       RECI
+     C                     Z-ADDXDAT      POCD
+     C                     MOVE BRCAP     BRCA                            S01117
+     C                     WRITEPOCHGRCF
+     C                     MOVE 'N'       AOSI
+     C                     MOVE 'N'       ATCI
+     C                     END
+     C*
+      ** UPDATE POSTNC RECORD.
+     C*
+     C           *LIKE     DEFN ULPLW     WRKSAV
+     C           ULPLW     SUB  UPLP      WRKSAV
+     C                     Z-ADDULPLW     CUPL
+     C                     Z-ADDULPLW     UPLP
+     C                     Z-ADD0         UPSP
+     C                     Z-ADDLOPC      LOPE
+     C                     Z-ADDSOPC      SOPE
+     C                     Z-ADDRPLD      RPLY
+     C                     Z-ADD0         RPLD
+     C                     Z-ADDWRKSAV    UPLY
+     C*
+     C                     EXCPTCPOST1
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0400CP11                                           S01408
+     C*                                                                   S01408
+      /EJECT
+     C********************************************************************
+     C*
+      ** S/R RNOTDU - REVALUATION NOT DUE PROCESSING.
+     C*
+      ** CALLED FROM MAIN PROCESSING
+     C*
+      ** CALLS FOKWRT;
+     C*
+     C********************************************************************
+     C*
+     C           RNOTDU    BEGSR
+     C*
+      ** Calclate Unrealized Profit/Loss For Suspense (ULPLSU)
+      **  as the Difference between Current Unrealized Profit/Loss
+      **  from LF/WUNRLC (ULPLW) & the Unrealized Profit/Loss Posted
+      **  on LF/POSTNC (UPLP).
+     C*
+     C           *LIKE     DEFN ULPLW     ULPLSU
+     C           ULPLW     SUB  UPLP      ULPLSU
+     C*
+      ** IF Unrealized Profit/Loss Suspense calculated is Not Equal to
+      **  the Unrealized Profit/Loss Suspense Posted from LF/POSTNC
+     C*
+     C           ULPLSU    IFNE UPSP
+     C*
+      ** If both amounts are of the same sign and neither are zero
+      ** Generate one account key for the net change
+     C*
+     C           ULPLSU    IFGT 0
+     C           UPSP      ANDGT0
+     C           ULPLSU    ORLT 0
+     C           UPSP      ANDLT0
+     C*
+      ** Write an account key for the difference in their values
+     C*
+     C                     MOVEL'N'       URA
+     C           ULPLSU    SUB  UPSP      EAMT
+     C                     Z-ADD0         REVI
+     C*
+     C           EAMT      IFNE 0
+     C*
+      ** Unrealized P/L to Suspense minus Unrlsd P/L Posted to Suspense
+     C*
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0400CP12                                           S01408
+     C*                                                                   S01408
+     C                     EXSR FOKWRT
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0400CP13                                           S01408
+     C*                                                                   S01408
+     C                     END
+     C*
+      ** Otherwise if the amounts are of different sign
+      ** Generate one account key for the previously posted amount
+      **      ( if it is non zero )
+      **      and one account key for the new amount
+      **      ( if it is non zero )
+     C*
+     C                     ELSE
+     C*
+      ** Write an account key to reverse the previously posted amount
+     C*
+     C                     MOVEL'N'       URA
+     C                     Z-ADDUPSP      EAMT
+     C                     Z-ADD1         REVI
+     C*
+     C           EAMT      IFNE 0
+     C*
+      ** Reverse Unrealized P/L Posted to Suspense
+     C*
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0400CP14                                           S01408
+     C*                                                                   S01408
+     C                     EXSR FOKWRT
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0400CP15                                           S01408
+     C*                                                                   S01408
+     C                     END
+     C*
+      ** Write an account key to post the new amount
+     C*
+     C                     MOVEL'N'       URA
+     C                     Z-ADDULPLSU    EAMT
+     C                     Z-ADD0         REVI
+     C*
+     C           EAMT      IFNE 0
+     C*
+      ** Unrealized P/L to Suspense
+     C*
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0400CP16                                           S01408
+     C*                                                                   S01408
+     C                     EXSR FOKWRT
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0400CP17                                           S01408
+     C*                                                                   S01408
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+      ** UPDATE POSTNC RECORD.
+     C*
+     C           ULPLW     SUB  UPLP      UPSP
+     C                     Z-ADDLOPC      LOPE
+     C                     Z-ADDSOPC      SOPE
+     C                     Z-ADDRPLD      RPLY
+     C                     Z-ADD0         RPLD
+     C                     Z-ADD0         UPLY
+     C*
+     C                     EXCPTCPOST2
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0400CP18                                           S01408
+     C*                                                                   S01408
+      /EJECT
+     C********************************************************************
+     C*
+      ** S/R REBOOK - BOOK REVALUATION PROCESSING.
+     C*
+      ** CALLED FROM MAIN PROCESSING
+     C*
+      ** CALLS FOKWRT;
+     C*
+     C********************************************************************
+     C*
+     C           REBOOK    BEGSR
+     C*
+      ** IF Unrealized Profit/Loss from LF/WUNRLK is Not Equal to
+      **  the Unrealized Profit/Loss Posted from LF/POSTNK
+     C*
+     C           ULPLW     IFNE UPLP
+     C*
+      ** If both amounts are of the same sign , neither are zero
+      ***and*the*posted*amount*is*less*than*the*new*amount.****           048119
+      ** Generate one account key for the net change
+     C*
+     C           ULPLW     IFGT 0
+     C           UPLP      ANDGT0
+     C***********UPLP      ANDLTULPLW                                     048119
+     C           UPLP      ANDLTULPLW                                     054330
+     C           ULPLW     ORLT 0
+     C           UPLP      ANDLT0
+     C***********UPLP      ANDLTULPLW                                     048119
+     C           UPLP      ANDGTULPLW                                     054330
+     C*
+      ** Write an account key for the difference in their values
+     C*
+     C                     MOVEL'Y'       URA
+     C           ULPLW     SUB  UPLP      EAMT
+     C                     Z-ADD0         REVI
+     C*
+     C           EAMT      IFNE 0
+     C*                                                                   048119
+     C** If position is in profit only profit keys are produced           048119
+     C*                                                                   048119
+     C           ULPLW     IFGT 0                                         048119
+     C*                                                                   048119
+     C** If profitability has increased                                   048119
+     C*                                                                   048119
+     C           EAMT      IFGT 0                                         048119
+     C                     Z-ADD0         REVI                            048119
+     C*                                                                   048119
+     C** else profitability has decreased                                 048119
+     C*                                                                   048119
+     C                     ELSE                                           048119
+     C                     Z-ADD1         REVI                            048119
+     C                     Z-SUBEAMT      EAMT                            048119
+     C                     END                                            048119
+     C*                                                                   048119
+     C** else position is in loss and only loss keys are produced         048119
+     C*                                                                   048119
+     C                     ELSE                                           048119
+     C*                                                                   048119
+     C** If loss has increased                                            048119
+     C*                                                                   048119
+     C           EAMT      IFLT 0                                         048119
+     C                     Z-ADD0         REVI                            048119
+     C*                                                                   048119
+     C** else loss has decreased                                          048119
+     C*                                                                   048119
+     C                     ELSE                                           048119
+     C                     Z-ADD1         REVI                            048119
+     C                     Z-SUBEAMT      EAMT                            048119
+     C                     END                                            048119
+     C                     END                                            048119
+     C*
+      ** Current Unrealized P/L minus Unrealised P/L Posted
+     C*
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0400CP19                                           S01408
+     C*                                                                   S01408
+     C                     EXSR FOKWRT
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0400CP20                                           S01408
+     C*                                                                   S01408
+     C                     END
+     C*
+      ** Otherwise if the amounts are of different sign
+      ** Generate one account key for the previously posted amount
+      **      ( if it is non zero )
+      **      and one account key for the new amount
+      **      ( if it is non zero )
+     C*
+     C                     ELSE
+     C*
+     C*
+      ** Write an account key to reverse the previously posted amount
+     C*
+     C                     MOVEL'Y'       URA
+     C                     Z-ADDUPLP      EAMT
+     C                     Z-ADD1         REVI
+     C*
+     C           EAMT      IFNE 0
+     C*
+      ** Reverse Unrealized P/L posted
+     C*
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0400CP21                                           S01408
+     C*                                                                   S01408
+     C                     EXSR FOKWRT
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0400CP22                                           S01408
+     C*                                                                   S01408
+     C                     END
+     C*
+      ** Write an account key to post the new amount
+     C*
+     C                     MOVEL'Y'       URA
+     C                     Z-ADDULPLW     EAMT
+     C                     Z-ADD0         REVI
+     C*
+     C           EAMT      IFNE 0
+     C*
+      ** Current Unrealized P/L
+     C*
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0400CP23                                           S01408
+     C*                                                                   S01408
+     C                     EXSR FOKWRT
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0400CP24                                           S01408
+     C*                                                                   S01408
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+      ** WRITE POSITION CHANGE REVALUATION RECORD (POCHGRK)
+     C*
+     C           UPLP      SUB  ULPLW     ULPL
+     C*
+     C           ULPL      IFNE 0
+     C                     MOVEL'D'       RECI
+     C                     Z-ADDXDAT      POCD
+     C                     MOVE BRCAP     BRCA                            S01117
+     C                     WRITEPOCHGRKF
+     C                     END
+     C*
+      ** UPDATE POSTNK RECORD.
+     C*
+     C           ULPLW     SUB  UPLP      WRKSAV
+     C                     Z-ADDULPLW     CUPL
+     C                     Z-ADDULPLW     UPLP
+     C                     Z-ADDLOPC      LOPE
+     C                     Z-ADDSOPC      SOPE
+     C                     Z-ADDRPLD      RPLY
+     C                     Z-ADD0         RPLD
+     C                     Z-ADDWRKSAV    UPLY
+     C*
+     C                     EXCPTKPOST
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0400CP25                                           S01408
+     C*                                                                   S01408
+      /EJECT
+     C********************************************************************
+     C*
+      ** S/R DETPST - DETERMINE IF MEMOSM/PRONOM UPDATES REQUIRED
+     C*
+      ** CALLED FROM MAIN PROCESSING
+     C*
+      ** CALLS FFSETL;
+     C*
+     C********************************************************************
+     C*
+     C           DETPST    BEGSR
+     C*
+     C* Set Up Input Fields for subroutine FFSETL
+     C*
+     C* Branch code
+     C*
+     C***********          Z-ADDBRCD      FFBRCD                          S01117
+     C                     MOVE BRCAP     FFBRCA                          S01117
+     C*
+     C* Customer/Broker code
+     C*
+     C**********           Z-ADDCBCD      FFCBCD                                              CSD027
+     C                     MOVE CBCD      FFCBCD                                              CSD027
+     C*
+     C* Broker Indicator
+     C*
+     C                     MOVE BRKI      FFBRKI
+     C*
+      ** IF Defaults exist
+      **     use DEFLT values for settlement type & account
+      **     ELSE use FOCLT values.
+     C*
+     C           *IN52     IFEQ '0'
+     C*
+     C* Settlement Type
+     C*
+     C                     Z-ADDSETPDF    FFSETP
+     C*
+     C* Settlement Account
+     C*
+     C                     MOVE SETADF    FFSETA
+     C*                                                                   S01117
+     C* Settlement Branch                                                 S01117
+     C*                                                                   S01117
+     C                     MOVE SEBRDF    FFSETB                          S01117
+     C*
+     C                     ELSE
+     C*
+     C* Settlement Type
+     C*
+     C                     Z-ADDSETPCB    FFSETP
+     C*
+     C* Settlement Account
+     C*
+     C                     MOVE SETACB    FFSETA
+     C*                                                                   S01117
+     C* Settlement Branch                                                 S01117
+     C*                                                                   S01117
+     C                     MOVE SEBRCB    FFSETB                          S01117
+     C                     END
+     C*
+     C* Currency
+     C*
+     C                     MOVE ISCY      FFCCY
+     C*
+     C**Default*Account*Sequence******************************************S01117
+     C***********                                                         S01117
+     C***********MBIN      IFEQ 'Y'                                       S01117
+     C***********          Z-ADDNSACS     FFDASQ                          S01117
+     C***********          ELSE                                           S01117
+     C***********          Z-ADD01        FFDASQ                          S01117
+     C***********          END                                            S01117
+     C*
+     C                     EXSR FFSETL
+     C*
+     C/COPY WNCPYSRC,FF0400C003
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************S01240
+     C**                                                                 *S01240
+     C**   WACMVD SR. -  Write record to PF/FFACMVD                      *S01240
+     C**   ~~~~~~~~~~                                                    *S01240
+     C**      Called From                  Calls                         *S01240
+     C**       SR. REVDUE                                                *S01240
+     C**                                                                 *S01240
+     C********************************************************************S01240
+     C**                                                                  S01240
+     C           WACMVD    BEGSR                           ** WACMVD SR **S01240
+     C**                                                                  S01240
+     C**   Set up fields for output to PF/FFACMVD                         S01240
+     C**                                                                  S01240
+     C**   Branch Code                                                    S01240
+     C************         MOVE *BLANK    BRCA                            FO0017
+     C                     MOVE FFBRCB    BRCA                            FO0017
+     C**                                                                  S01240
+     C**   Customer Number                                                S01240
+     C**********           Z-ADDFFCNUM    CUSN                                         S01240 CSD027
+     C                     MOVE FFCNUM    CUSN                                                CSD027
+     C**                                                                  S01240
+     C**   Currency Code                                                  S01240
+     C                     MOVE FFCCY     CCYD                            S01240
+     C**                                                                  S01240
+     C**   Account Code                                                   S01240
+     C                     Z-ADDFFACOD    ACDE                            S01240
+     C**                                                                  S01240
+     C**   Account Sequence                                               S01240
+     C                     Z-ADDFFACSQ    ASNC                            S01240
+     C**                                                                  S01240
+     C**   Posting Date                                                   S01240
+     C                     Z-ADDRUND      PTDT                            S01240
+     C**                                                                  S01240
+     C**   Value Date                                                     S01240
+     C                     Z-ADDRUND      VUDT                            S01240
+     C**                                                                  S01240
+     C**   Transaction Type                                               S01240
+     C                     MOVE *BLANK    TRYP                            S01240
+     C**                                                                  S01240
+     C**   Narrative Code                                                 S01240
+     C                     Z-ADD0         NRTC                            S01240
+     C**                                                                  S01240
+     C**   Narrative Description                                          S01240
+     C                     MOVELISTN      NRTD                            S01240
+     C**                                                                  S01240
+     C**   Transaction Number                                             S01240
+     C                     MOVE *BLANK    TNMR                            S01240
+     C**                                                                  S01240
+     C**   Cheque Number                                                  S01240
+     C                     Z-ADD*ZERO     CQNR                            S01240
+     C**                                                                  S01240
+     C**   Movement Amount = change in Ledger Balance/Projected           S01240
+     C**                     Nostro Balance                               S01240
+     C           MPIND     IFEQ 'M'                                       S01240
+     C           LDBL      SUB  WLDBL     WMVAM  130                      S01240
+     C                     Z-ADDWMVAM     MVAM                            S01240
+     C                     END                                            S01240
+     C*                                                                   S01240
+     C           MPIND     IFEQ 'P'                                       S01240
+     C           PNBL      SUB  WPNBL     WMVAM                           S01240
+     C                     Z-ADDWMVAM     MVAM                            S01240
+     C                     END                                            S01240
+     C**                                                                  S01240
+     C           MVAM      IFNE *ZERO                                     S01240
+     C**                                                                  S01240
+     C**   Debit or Credit                                                S01240
+     C           MPIND     IFEQ 'M'                                       S01240
+     C           LDBL      IFGE WLDBL                                     S01240
+     C                     Z-ADD0         DORC                            S01240
+     C                     ELSE                                           S01240
+     C                     Z-SUBMVAM      MVAM                            S01240
+     C                     Z-ADD1         DORC                            S01240
+     C                     END                                            S01240
+     C                     END                                            S01240
+     C**                                                                  S01240
+     C           MPIND     IFEQ 'P'                                       S01240
+     C           PNBL      IFGE WPNBL                                     S01240
+     C                     Z-ADD0         DORC                            S01240
+     C                     ELSE                                           S01240
+     C                     Z-SUBMVAM      MVAM                            S01240
+     C                     Z-ADD1         DORC                            S01240
+     C                     END                                            S01240
+     C                     END                                            S01240
+     C**                                                                  S01240
+     C**  Write record to PF/FFACMVD                                      S01240
+     C                     WRITEFFACMVDF                                  S01240
+     C**                                                                  S01240
+     C                     END                                            S01240
+     C**                                                                  S01240
+     C                     ENDSR                                          S01240
+     C**                                                                  S01240
+     C********************************************************************S01240
+     C/EJECT                                                              S01240
+     C********************************************************************
+     C*
+      ** S/R FOKWRT - WRITE FOKEY RECORDS
+     C*
+      ** CALLED FROM REVDUE; RNOTDU; REBOOK
+     C*
+      ** CALLS
+     C*
+     C********************************************************************
+     C*
+     C           FOKWRT    BEGSR
+     C*
+     C                     MOVEL'D'       RECI
+     C                     MOVE BRCAP     BRCA                            S01117
+     C*
+      ** If this is an Unrealised P/L account key
+      **  Use 'P' & 'L' for profit & loss in account key
+     C*
+     C           URA       IFEQ 'Y'
+     C*
+     C           EAMT      IFLT 0
+     C                     MOVE 'L'       PRFLSS
+     C                     Z-SUBEAMT      EAMT
+     C                     ELSE
+     C                     MOVE 'P'       PRFLSS
+     C                     END
+     C*
+     C                     ELSE
+     C*
+      ** ELSE use 'M' & 'Q' for profit & loss in account key
+     C*
+     C           EAMT      IFLT 0
+     C                     MOVE 'M'       PRFLSS
+     C                     Z-SUBEAMT      EAMT
+     C                     ELSE
+     C                     MOVE 'Q'       PRFLSS
+     C                     END
+     C*                                                                   S71062
+     C                     MOVE *BLANKS   PTFR                            S71062
+     C*
+     C                     END
+     C*
+      ** Set Up FOKEY Record for Output
+      ** Only if record processed is not related to a CUSTOMER            S71062
+     C           CUSBRK    IFNE 'C'                                       S71062
+     C           BGPFMG    ANDEQ'Y'                                       S71062
+     C           FCPORS    ANDNE'B'                                       CPM003
+     C           CUSBRK    ORNE 'C'                                       CPB001
+     C           BGN4ST    ANDEQ'Y'                                       CPB001
+     C           BGPFMG    ORNE 'Y'                                       S71062
+     C           BGN4ST    ANDNE'Y'                                       CPB001
+     C** If Bank Portfolios are supported, treat as if PM off             CPM003
+     C           BGPFMG    OREQ 'Y'                                       S71062
+     C           FCPORS    ANDEQ'B'                                       CPM003
+     C*
+     C                     WRITEFOKEYDF
+     C*
+      ** Accumulate Hash Totals
+     C*
+     C                     ADD  1         COUNT
+     C           EAMT      DIV  1000      ZZAMT
+     C*
+     C                     EXSR ZZADD
+     C*
+     C                     END                                            S71062
+     C*                                                                   S71062
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+      ** S/R ACKDET - SET UP ACCOUNT KEY DETAILS
+     C*
+      ** CALLED FROM MAIN BODY
+     C*
+      ** CALLS
+     C*
+     C********************************************************************
+     C*
+     C           ACKDET    BEGSR
+     C*
+      ** ACCOUNT KEY
+     C*
+      ** The Instrument Type is only valid if indicator is 'Y'            S01455
+      ** on I.C.D. "TABTB80"                                              S01455
+     C*                                                                   S01455
+     C           ISTY      IFEQ 'Y'                                       S01455
+     C/COPY WNCPYSRC,FF0400C007
+     C           PMRKT     IFEQ '  '
+     C/COPY WNCPYSRC,FF0400C008
+     C                     MOVE *BLANKS   INSTYP
+     C                     ELSE
+     C                     MOVE ISTT      INSTYP
+     C                     MOVELPMRKT     INSTYP                          S01455
+     C                     END
+     C*
+     C                     ELSE                                           S01455
+     C                     MOVE '     '   INSTYP                          S01455
+     C/COPY WNCPYSRC,FF0400C004
+     C                     END                                            S01455
+     C/COPY WNCPYSRC,FF0400C005
+     C*                                                                   S01455
+      ** The processing type is only valid if indicator is 'Y'            S01455
+      ** on I.C.D. "TABTB80"                                              S01455
+     C*                                                                   S01455
+     C           PROT      IFEQ 'Y'                                       S01455
+     C                     MOVE ISPT      INVA                            S01455
+     C                     ELSE                                           S01455
+     C                     MOVE *BLANKS   INVA                            S01455
+     C                     END                                            S01455
+      *                                                                                       CFF015
+      * If CFF015 is On, set position 2 of the account key equal to Put/Call indicator        CFF015
+     C           CFF015    IFEQ 'Y'                                                           CFF015
+     C           ISPT      IFEQ 4                                                           MD034233
+     C           ISPT      OREQ 5                                                           MD034233
+     C           ISPT      OREQ 6                                                           MD034233
+     C           ISPT      OREQ 8                                                           MD034233
+     C                     MOVE PCAL      INVA                                                CFF015
+     C                     END                                                                CFF015
+     C                     END                                                              MD034233
+      *                                                                                       CFF015
+     C/COPY WNCPYSRC,FF0400C006
+      ** If POSTNC record processed
+     C*
+     C           *IN01     IFEQ '1'
+     C*
+     C           BRKI      IFEQ 'Y'
+     C                     MOVE 'B'       CUSBRK
+     C                     ELSE
+     C                     MOVE 'C'       CUSBRK
+     C                     END
+     C                     MOVE *BLANKS   BOOKCD
+     C*
+      ** ELSE POSTNK record processed
+     C*
+     C                     ELSE
+     C*
+     C                     MOVE 'I'       CUSBRK
+     C                     MOVE BOKC      BOOKCD
+     C*
+     C                     END
+     C*
+      ** ACCOUNT DETAILS
+     C*
+     C***********          Z-ADDBRCD      BRCD                            S01117
+     C                     MOVE ISCY      CCY
+     C*
+     C                     Z-ADDRUND      EDAT
+     C                     Z-ADDXDAT      VDAT
+     C*
+      ** If POSTNC record processed
+     C*
+     C           *IN01     IFEQ '1'
+     C**********           Z-ADDCBCD      CBCD                                                CSD027
+     C                     MOVE CBCD      CBCD                                                CSD027
+     C                     MOVE *BLANKS   BOKC
+     C*
+      ** If Default exists use DEFLT settlement details.
+     C*
+     C           *IN52     IFEQ '0'
+     C                     Z-ADDSETPDF    SETP
+     C                     MOVE SETADF    SETA
+     C                     MOVE SEBRDF    SEBR                            S01117
+     C                     ELSE
+     C                     Z-ADDSETPCB    SETP
+     C                     MOVE SETACB    SETA
+     C                     MOVE SEBRCB    SEBR                            S01117
+     C                     END
+     C*
+      ** ELSE POSTNK record processed
+     C*
+     C                     ELSE
+     C                     MOVE BOKC      BOKC
+     C**********           Z-ADD0         CBCD                                                CSD027
+     C                     MOVE *BLANKS   CBCD                                                CSD027
+     C                     Z-ADD*ZERO     SETP
+     C                     MOVE *BLANK    SETA
+     C                     MOVE *BLANK    SEBR                            S01117
+     C                     END
+     C*
+     C                     MOVE ISTT      ISTT
+     C                     Z-ADDYRNO      YRNO
+     C                     Z-ADDMTHN      MTHN
+     C                     MOVE PCAL      PCAL
+     C                     Z-ADDSTRP      STRP
+     C                     MOVE ISTN      ISTN
+     C*
+      ** Execute P/R Settlement Instruction processing if CGL020 is                           CGL020
+      ** enabled.                                                                             CGL020
+      *                                                                                       CGL020
+     C           CGL020    IFEQ 'Y'                                                           CGL020
+      *                                                                                       CGL020
+      ** If the POSTNC record was processed, save the Counterparty                            CGL020
+      ** Nostro and For Account Of fields.                                                    CGL020
+      *                                                                                       CGL020
+     C           *IN01     IFEQ '1'                                                           CGL020
+      *                                                                                       CGL020
+      ** Is there a default?                                                                  CGL020
+      *                                                                                       CGL020
+     C           *IN52     IFEQ '0'                                                           CGL020
+     C**********           MOVE FACODF    SEFA   10                                    CGL020 CGL029
+     C                     MOVELFACODF    SEFA   10                                           CGL029
+     C                     MOVE CNOSDF    SECP    8                                           CGL020
+     C                     ELSE                                                               CGL020
+     C**********           MOVE FACOCB    SEFA                                         CGL020 CGL029
+     C                     MOVELFACOCB    SEFA                                                CGL029
+     C                     MOVE CNOSCB    SECP                                                CGL020
+     C                     ENDIF                                                              CGL020
+      *                                                                                       CGL020
+     C                     ELSE                                                               CGL020
+     C                     MOVE *BLANKS   SEFA                                                CGL020
+     C                     MOVE *BLANKS   SECP                                                CGL020
+      *                                                                                       CGL020
+     C                     ENDIF                                                              CGL020
+      *                                                                                       CGL020
+     C                     EXSR SRPRSI                                                        CGL020
+      *                                                                                       CGL020
+     C                     ENDIF                                                              CGL020
+      *                                                                                       CGL020
+     C/COPY WNCPYSRC,FF0400C009
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT                                                                                  CGL020
+      *****************************************************************                       CGL020
+      *                                                               *                       CGL020
+      * SRPRSI - Handles the P/R Settlement Instruction processing.   *                       CGL020
+      *                                                               *                       CGL020
+      *****************************************************************                       CGL020
+     C           SRPRSI    BEGSR                                                              CGL020
+      *                                                                                       CGL020
+     C           SETA      IFEQ *BLANKS                                                       CGL020
+      *                                                                                       CGL020
+      ** Clear the AML P/R Settlement Instruction fields.                                     CGL020
+      *                                                                                       CGL020
+     C                     MOVE *BLANKS   F1RACT                                              CGL020
+     C                     MOVE *BLANKS   F1RCTY                                              CGL020
+     C                     MOVE *BLANKS   F1RBNK                                              CGL020
+     C                     MOVE *BLANKS   F1RCDE                                              CGL020
+     C                     MOVE *BLANKS   F1PACT                                              CGL020
+     C                     MOVE *BLANKS   F1PCTY                                              CGL020
+     C                     MOVE *BLANKS   F1PBNK                                              CGL020
+     C                     MOVE *BLANKS   F1PCDE                                              CGL020
+     C                     MOVE *BLANKS   F1DACT                                              CGL020
+     C                     MOVE *BLANKS   F1DCTY                                              CGL020
+     C                     MOVE *BLANKS   F1DBNK                                              CGL020
+     C                     Z-ADD0         F1SDAT                                              CGL020
+      *                                                                                       CGL020
+     C                     ELSE                                                               CGL020
+      *                                                                                       CGL020
+      ** Call the Futures and Options Settlement Fields Extractor.                            CGL020
+      *                                                                                       CGL020
+     C**********           Z-ADDCBCD      PCBCD                                        CGL020 CSD027
+     C                     MOVE CBCD      PCBCD                                               CSD027
+      *                                                                                       CGL020
+     C                     CALL SETFF                                                         CGL020
+     C                     PARM           PCBCD                                               CGL020
+     C                     PARM           SETA                                                CGL020
+     C                     PARM           SEBR                                                CGL020
+     C                     PARM           SEFA                                                CGL020
+     C                     PARM           SECP                                                CGL020
+     C                     PARM           CCY                                                 CGL020
+     C                     PARM           F1RACT                                              CGL020
+     C                     PARM           F1RCTY                                              CGL020
+     C                     PARM           F1RBNK                                              CGL020
+     C                     PARM           F1RCDE                                              CGL020
+     C                     PARM           F1PACT                                              CGL020
+     C                     PARM           F1PCTY                                              CGL020
+     C                     PARM           F1PBNK                                              CGL020
+     C                     PARM           F1PCDE                                              CGL020
+     C                     PARM           F1DACT                                              CGL020
+     C                     PARM           F1DCTY                                              CGL020
+     C                     PARM           F1DBNK                                              CGL020
+      *                                                                                       CGL020
+     C                     Z-ADDRUND      F1SDAT                                              CGL020
+      *                                                                                       CGL020
+     C                     ENDIF                                                              CGL020
+      *                                                                                       CGL020
+     C                     ENDSR                                                              CGL020
+      *****************************************************************                       CGL020
+      /EJECT
+     C********************************************************************
+     C*
+      ** S/R INIT TO PERFORM FIRST CYCLE ONLY CALCULATIONS
+     C*
+      ** CALLED FROM MAIN PROCESSING
+     C*
+      ** CALLS DBERR
+     C*
+     C********************************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+      ** Receive Market End of Centre Code Parameter
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           PMRKT   2
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANKS   DBFILE                          S01117
+     C                     MOVE *BLANKS   DBPGM                           S01117
+     C                     MOVE *BLANKS   DBKEY                           S01117
+     C                     Z-ADD*ZEROS    DBASE                           S01117
+     C                     MOVE 'FF0400  'DBPGM
+     C                     OUT  LDA                                       S01117
+     C*
+     C                     Z-ADD10        TEN
+     C                     MOVE 'F'       F
+     C                     MOVE 'U'       U
+     C*                                                                   S01117
+      ** ACCESS DATAAREA RUNDAT                                           S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C*
+      ***Access*TABTB10***************************************************S01117
+      ** Access SDBANKPD                                                  S01117
+      ** IF no record found,
+      ***OR*record*not*live***********************************************S01117
+      **     Perform Database-error
+     C*
+     C***********          READ TABTB10F                 99               S01117
+     C***********                                                         S01117
+     C************IN99     IFEQ '1'                                       S01117
+     C***********RECI      ORNE 'D'                                       S01117
+     C***********          MOVE 'TABLE'   DBFILE                          S01117
+     C***********          MOVEL'TABTB10' DBKEY            ***************S01117
+     C*                                                                   S01117
+     C                     CALL 'AOBANKR0'                                S01117
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C           SDBANK    PARM SDBANK    @DSFDY                          S01117
+     C*                                                                   S01117
+     C           @RTCD     IFNE *BLANK                                    S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'SDBANKPD'DBFILE                          S01117
+     C                     MOVEL@OPTN     DBOPTN  7                       S01117
+     C                     MOVEL@OPTN     DBKEY            ***************S01117
+     C                     Z-ADD4         DBASE            * DB ERROR 04 *
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+      ***Access*TABTB11***************************************************S01117
+      ** Access SDGELRPD                                                  S01117
+      ** IF no record found,
+      ***OR*record*not*live***********************************************S01117
+      **     Perform Database-error
+     C*
+     C***********          READ TABTB11F                 99               S01117
+     C***********                                                         S01117
+     C************IN99     IFEQ '1'                                       S01117
+     C***********RECI      ORNE 'D'                                       S01117
+     C***********          MOVE 'TABLE'   DBFILE                          S01117
+     C***********          MOVEL'TABTB11' DBKEY            ***************S01117
+     C*                                                                   S01117
+     C**********           CALL 'AOGELRR0'                                             S01117 CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD                           S01117
+     C                     PARM '*FIRST ' @OPTN                           S01117
+     C********** SDGELR    PARM SDGELR    @DSFDY                                       S01117 CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C*                                                                   S01117
+     C           @RTCD     IFNE *BLANK                                    S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'SDGELRPD'DBFILE                          S01117
+     C                     MOVEL@OPTN     DBKEY                           S01117
+     C                     MOVEL@OPTN     DBOPTN           ***************S01117
+     C                     Z-ADD5         DBASE            * DB ERROR 05 *
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*                                                                   S71062
+     C** Access SDMMODPD                                                  S71062
+     C** IF no record found,                                              S71062
+     C**     Perform Database-error                                       S71062
+     C*                                                                   S71062
+     C                     CALL 'AOMMODR0'                                S71062
+     C                     PARM '*MSG   ' @RTCD                           S71062
+     C                     PARM '*FIRST ' @OPTN                           S71062
+     C           SDMMOD    PARM SDMMOD    @DSFDY                          S71062
+     C*                                                                   S71062
+     C           @RTCD     IFNE *BLANK                                    S71062
+     C           *LOCK     IN   LDA                                       S71062
+     C                     MOVEL'SDMMODPD'DBFILE                          S71062
+     C                     MOVEL@OPTN     DBKEY                           S71062
+     C                     MOVEL@OPTN     DBOPTN           ***************S71062
+     C                     Z-ADD14        DBASE            * DB ERROR 14 *S71062
+     C                     OUT  LDA                        ***************S71062
+     C                     EXSR DBERR                                     S71062
+     C                     END                                            S71062
+      *                                                                                       CFF015
+      ** Access SAR Details to see if CFF015 (Differentiate account keys by Put and Call)     CFF015
+      ** is switched on                                                                       CFF015
+      *                                                                                       CFF015
+     C                     MOVEL'N'       CFF015  1                                           CFF015
+     C                     CALL 'AOSARDR0'                                                    CFF015
+     C                     PARM *BLANKS   @RTCD                                               CFF015
+     C                     PARM '*VERIFY '@OPTN                                               CFF015
+     C                     PARM 'CFF015'  @SARD                                               CFF015
+     C           SCSARD    PARM SCSARD    DSSDY                                               CFF015
+      *                                                                                       CFF015
+     C           @RTCD     IFEQ *BLANKS                                                       CFF015
+     C                     MOVEL'Y'       CFF015                                              CFF015
+     C                     ENDIF                                                              CFF015
+     C*                                                                                       CFF015
+     C*                                                                   CAC003
+     C** Check if SAR CAC003 is installed                                 CAC003
+     C*                                                                   CAC003
+     C                     CALL 'AOSARDR0'                                CAC003
+     C                     PARM '       ' @RTCD   7                       CAC003
+     C                     PARM '*VERIFY' @OPTN   7                       CAC003
+     C                     PARM 'CAC003 ' @SARD   6                       CAC003
+      *                                                                   CAC003
+     C           @RTCD     IFEQ *BLANKS                                   CAC003
+     C           BGN0ST    ANDEQ'Y'                                       CAC003
+     C                     MOVE '1'       *IN30                           CAC003
+     C                     ENDIF                                          CAC003
+     C*                                                                   CAC003
+     C** Access the F&O ICD file using AOFODAR0                           CAC003
+     C*                                                                   CAC003
+     C                     CALL 'AOFODAR0'                                CAC003
+     C                     PARM '*MSG   ' @RTCD                           CAC003
+     C                     PARM '*FIRST ' @OPTN                           CAC003
+     C           SDFODA    PARM SDFODA    @DSFDY                          CAC003
+     C*                                                                   CAC003
+     C           @RTCD     IFNE *BLANK                                    CAC003
+     C           *LOCK     IN   LDA                                       CAC003
+     C                     MOVEL'SDFODAPD'DBFILE                          CAC003
+     C                     MOVEL@OPTN     DBKEY                           CAC003
+     C                     MOVEL@OPTN     DBOPTN           ***************CAC003
+     C                     Z-ADD16        DBASE            * DB ERROR 16 *CAC003
+     C                     OUT  LDA                        ***************CAC003
+     C                     EXSR DBERR                                     CAC003
+     C                     END                                            CAC003
+     C*
+      ** Access TABTB20
+      ** IF no record found,
+      ** OR record not live
+      **     Perform Database-error
+     C*
+     C                     READ TABTB20F                 99
+     C*
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE
+     C                     MOVEL'TABTB20' DBKEY            ***************
+     C                     Z-ADD6         DBASE            * DB ERROR 06 *
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+      ** Access TABTB40
+      ** IF no record found,
+      ** OR record not live
+      **     Perform Database-error
+     C*
+     C                     READ TABTB40F                 99
+     C*
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE
+     C                     MOVEL'TABTB40' DBKEY            ***************
+     C                     Z-ADD7         DBASE            * DB ERROR 07 *
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+      ** Access TABTB80
+      ** IF no record found,
+      ** OR record not live
+      **     Perform Database-error
+     C*
+     C                     READ TABTB80F                 99
+     C*
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE
+     C                     MOVEL'TABTB80' DBKEY            ***************
+     C                     Z-ADD8         DBASE            * DB ERROR 08 *
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*                                                                   CPM003
+     C           BGPFMG    IFEQ 'Y'                                       CPM003
+     C                     CALL 'AOPORTR0'                                CPM003
+     C                     PARM *BLANKS   @RTCD                           CPM003
+     C                     PARM '*FIRST  '@OPTN                           CPM003
+     C           SDPORT    PARM SDPORT    @DSFDY                          CPM003
+     C           @RTCD     IFNE *BLANKS                                   CPM003
+     C           *LOCK     IN   LDA                                       CPM003
+     C                     MOVE *BLANKS   DBKEY            ***************CPM003
+     C                     Z-ADD15        DBASE            * DB ERROR 15 *CPM003
+     C                     MOVE 'SDPORTPD'DBFILE           ***************CPM003
+     C                     OUT  LDA                                       CPM003
+     C                     EXSR DBERR                                     CPM003
+     C                     END                                            CPM003
+     C                     END                                            CPM003
+     C*
+      ** If not OTC
+      ** Access MKCTL
+      ** IF no record found,
+      ** OR record not live
+      **     Perform Database-error
+     C*
+     C           PMRKT     IFNE *BLANK
+     C*
+     C                     OPEN MKCTL
+     C*
+     C           PMRKT     CHAINMKCTL                99
+     C*
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'MKCTL'   DBFILE
+     C                     MOVELPMRKT     DBKEY            ***************
+     C                     Z-ADD09        DBASE            * DB ERROR 09 *
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C                     OPEN MARKT
+     C*
+     C           PMRKT     CHAINMARKT                99
+     C*
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'MARKT'   DBFILE
+     C                     MOVELPMRKT     DBKEY            ***************
+     C                     Z-ADD10        DBASE            * DB ERROR 10 *
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C                     END
+     C*                                                                   S01117
+      ** Open Cust/Brok & Book Profit Centre files.                       S01117
+     C*                                                                   S01117
+     C           BKPRCU    IFEQ 'Y'                                       S01117
+     C                     OPEN FOPCC                                     S01117
+     C                     OPEN FOPCK                                     S01117
+     C                     END                                            S01117
+     C*
+      ** Set indicator for date format, from DATF field.
+     C*
+     C           DATF      COMP 'M'                      98
+     C*
+      ** Set Indicators to be Output on POCHGRC/POCHGRK Records.
+     C*
+     C                     MOVE 'N'       AOSI
+     C                     MOVE 'N'       ATCI
+     C                     MOVE 'N'       PUPI
+     C*
+      ** Set Control Date to Business or Run date dependant on OTC/Market
+     C*
+     C           *LIKE     DEFN BUSD      XDAT
+     C           PMRKT     IFNE '  '
+     C                     Z-ADDBUSD      XDAT
+     C                     ELSE
+     C                     Z-ADDRUND      XDAT
+     C                     END
+     C*
+      **  Format run/business date for report title
+     C*
+     C           PMRKT     IFNE *BLANK
+     C                     Z-ADDBUSD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    FFDAT
+     C                     MOVE MKTN      FFNAM
+     C                     ELSE
+     C                     MOVE RUNA      FFDAT
+     C                     MOVE MSG,1     FFNAM
+     C                     END
+     C*
+     C                     EXSR FFFMT
+     C                     MOVE FFTXT     MNAMED
+     C*
+     C**  Set up underlining for heading
+     C**  Initialise array index
+     C                     Z-ADD0         X       20
+     C*
+     C**  FFULIN returned from SR. FFFMT contains number of characters
+     C**  for underline
+     C           X         DOUEQFFULIN
+     C                     ADD  1         X
+     C                     MOVEA'-'       FULA,X
+     C                     END
+     C*
+     C**  Move underline array to output field
+     C                     MOVEAFULA      FULINE
+      *                                                                   CFF006
+      **  Access SAR details file to see if switchable feature            CFF006
+      **  CFF006 - Fractional Ticks Enhancement is installed.             CFF006
+      *                                                                   CFF006
+     C                     CALL 'AOSARDR0'                                CFF006
+     C                     PARM *BLANKS   PRTCD   7                       CFF006
+     C                     PARM '*VERIFY' POPTN   7                       CFF006
+     C                     PARM 'CFF006'  PSARD   6                       CFF006
+     C           SCSARD    PARM SCSARD    @DSFDY                          CFF006
+      *                                                                   CFF006
+     C           PRTCD     IFEQ *BLANK                                    CFF006
+     C                     MOVE 'Y'       CFF006  1                       CFF006
+     C                     ELSE                                           CFF006
+     C                     MOVE 'N'       CFF006                          CFF006
+     C                     ENDIF                                          CFF006
+     C*
+      ** Access SAR details to see if CGL020 is enabled.                                      CGL020
+      *                                                                                       CGL020
+     C                     CALL 'AOSARDR0'                                                    CGL020
+     C                     PARM *BLANKS   PRTCD                                               CGL020
+     C                     PARM '*VERIFY' POPTN                                               CGL020
+     C                     PARM 'CGL020'  PSARD                                               CGL020
+     C           SCSARD    PARM SCSARD    @DSFDY                                              CGL020
+      *                                                                                       CGL020
+     C                     MOVE 'N'       CGL020  1                                           CGL020
+     C           PRTCD     IFEQ *BLANK                                                        CGL020
+     C                     MOVE 'Y'       CGL020                                              CGL020
+     C                     ELSE                                                               CGL020
+      *                                                                                       CGL020
+     C           PRTCD     IFNE '*NRF'                                                        CGL020
+     C           *LOCK     IN   LDA                                                           CGL020
+     C                     MOVEL'SCSARDPD'DBFILE                                              CGL020
+     C                     MOVELPSARD     DBKEY                                               CGL020
+     C                     Z-ADD18        DBASE                                               CGL020
+     C                     OUT  LDA                                                           CGL020
+     C                     EXSR DBERR                                                         CGL020
+     C                     ENDIF                                                              CGL020
+      *                                                                                       CGL020
+     C                     ENDIF                                                              CGL020
+      *                                                                                       CGL020
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+      ** S/R LRTIME TO PERFORM LAST RECORD PROCESSING.
+     C*
+      ** CALLED FROM MAINLINE
+     C*
+      ** CALLS NO OTHER SUBROUTINES
+     C*
+     C********************************************************************
+     C*
+     C           LRTIME    BEGSR
+     C*
+      ** Update FOKEYA With Hash Totals.
+     C*
+     C*
+     C                     READ FOKEYAF                  99
+     C*
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'T'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'FOKEY'   DBFILE
+     C                     MOVEL'FOKEYAF' DBKEY            ***************
+     C                     Z-ADD11        DBASE            * DB ERROR 11 *
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C*
+      ** ADD HASH TOTAL TO FILE CONTROL TOTAL, ACCOMODATING OVERFLOW
+     C*
+     C                     ADD  ZZTOTI    HRWN
+     C           HRDC      ADD  ZZTOTD    TEMP    30
+     C*
+     C           TEMP      IFLT HRDC
+     C                     ADD  1         HRWN
+     C                     END
+     C*
+     C                     Z-ADDTEMP      HRDC
+     C*
+     C                     ADD  COUNT     NORE
+     C                     MOVE 'T'       RECI
+     C*
+      ** Update PF/FOKEYA
+     C*
+     C                     UPDATFOKEYAF
+     C*
+      ** Write to Audit Report
+     C*
+     C                     WRITEAUDIT
+     C***********          WRITEEND                                       S01117
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+      ** S/R DBERR TO PERFORM DATABASE ERROR EXIT FROM PROGRAM
+     C*
+      ** CALLED FROM
+     C*
+      ** CALLS NO OTHER SUBROUTINES
+     C*
+     C********************************************************************
+     C*
+     C           DBERR     BEGSR
+     C*
+      ** Write to Audit Report
+      ** Program Dump                                                     S01117
+      ** Return
+     C*
+     C                     WRITEAUDIT
+     C                     WRITEDBERROR
+     C*
+     C                     SETON                     U7U8LR
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C/COPY ZSRSRC,FFSETLZ4
+     C/EJECT
+     C/COPY ZSRSRC,ZZADDZ1
+     C/EJECT
+     C/COPY ZSRSRC,FFFMTZ3
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/EJECT
+     O********************************************************************
+     O*
+      ** OUTPUT FOR POSTNC FILE - REVALUATION DUE
+     O*
+     OPOSTNCDFE                CPOST1
+     O                         CUPL
+     O                         UPLP
+     O                         UPSP
+     O                         LOPE
+     O                         SOPE
+     O                         RPLY
+     O                         RPLD
+     O                         UPLY
+     O*
+      ** OUTPUT FOR POSTNC FILE - REVALUATION NOT DUE
+     O*
+     OPOSTNCDFE                CPOST2
+     O                         UPSP
+     O                         LOPE
+     O                         SOPE
+     O                         RPLY
+     O                         RPLD
+     O                         UPLY
+     O*
+      ** OUTPUT FOR POSTNK FILE - BOOK REVALUATION
+     O*
+     OPOSTNKDFE                KPOST
+     O                         CUPL
+     O                         UPLP
+     O                         LOPE
+     O                         SOPE
+     O                         RPLY
+     O                         RPLD
+     O                         UPLY
+     O*
+      ** OUTPUT FOR MEMOSM FILE
+     O*
+     OMEMOSMEFE                MEMOS
+     O                         LDBL
+     O                         CLBL
+     O*
+      ** OUTPUT FOR PRONOM FILE
+     O*
+     OPRONOMEFE                PRONO
+     O                         PNBL
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   MSG
+OVER THE COUNTER
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

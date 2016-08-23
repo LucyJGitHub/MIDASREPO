@@ -1,0 +1,957 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Int. Outright Accruals Rep by Branch')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas  Dealing Module
+     F*                                                                  *
+     F*  DL5002 - Interest Outright Accruals Report by Branch            *
+     F*                                                                  *
+     F*  Function: This program processes each record on the Accruals    *
+     F*            Extract Detail file and produces a report split by    *
+     F*            currency, deal type, then deal sub type.              *
+     F*            Totals are produced on change of deal subtype, deal   *
+     F*            type, and currency.                                   *
+     F*            An audit report is produced for database errors, or   *
+     F*            if there are no details to report.                    *
+     F*            It is called on request during COB.                   *
+     F*            Created as part of S01440.                            *
+     F*                                                                  *
+     F*  Called By: DLC0801 - Interest Outright Accruals Extract         *
+     F*                       Controlling Component                      *
+     F*                                                                  *
+     F*  Calls: AOBRCHR0 - Access object for Branch Details File         *
+     F*         AOGELRR0 - Access object for General Ledger I.C.D.       *
+     F*         ZSFILE   - Log spool file                                *
+     F*         AOCUSTR0 - Access object for Customer Details File       *
+     F*         AOBANKR0 - Access object for Bank I.C.D.                 *
+     F*         AODLSTR0 - Access object for Deal Sub Types File         *
+     F*         AOCURRR0 - Access object for Currencies File             *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01408             Date 16Aug96               *
+      *                 S01440             Date 23Nov93               *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type                              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*   S01408 - Core Hook DL5002CCP1 Added                            *
+     F*   S01440 - REMOVE TABLE AND CLINT REFERENCES                     *
+     F*                                                                  *
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FDLINTAL1IP  F      58  7AI     1 DISK         KINFSR *PSSR                              CDL038
+     F*DLINTAL1IP**F******54**7AI*****1*DISK*********KINFSR *PSSR                             CDL038
+     F*TABLE***IF  F      96 12AI     2 DISK         KINFSR *PSSR         S01440
+     F*CLINT***IF  F     256  7AI     2 DISK         KINFSR *PSSR         S01440
+     FFDDTSTL1IF  E           K        DISK                                                   CDL038
+      ** Deal Types/Sub Types                                                                 CDL038
+      *                                                                                       CDL038
+     FDL5002P1O   F     132     OF     PRINTER      KINFDS SPOOL      UC
+     FDL5002AUO   F     132     OA     PRINTER      KINFDS SPOOLU
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F* 01            DLINTAL1 DETAIL
+     F* 03            DLINTAL1 CATCHALL
+     F**04*******     TABLE ICR 1                                         S01440
+     F**05*******     TABLE DEAL SUB-TYPES                                S01440
+     F**06*******     TABLE CATCHALL                                      S01440
+     F**07*******     CLINT DETAIL                                        S01440
+     F**08*******     CLINT CATCHALL                                      S01440
+     F**10*******     TABLE CURRENCIES                                    S01440
+     F*       30      CCY HAS 0 D.P.
+     F*       31      CCY HAS 1 D.P.
+     F*       32      CCY HAS 2 D.P.
+     F*       33      CCY HAS 3 D.P.
+     F*       34      HASH AMOUNT IS NEGATIVE
+     F*       35      DEAL TYPE IS 'PI'
+     F*       36      PSIND(PURCH-SOLD INDICATOR) IS 'P'
+     F*       40      FIRST CYCLE
+     F********41      CHAIN FAIL TO CLINT                                 S01440
+     F********42      CHAIN FAIL TO TABLE                                 S01440
+     F*       51      PCPL1 IS POSITIVE
+     F*       52      PCPL2 IS POSITIVE
+     F*       53      PCPL3 IS POSITIVE
+     F*       54      AMAD1 IS POSITIVE
+     F*       55      AMAD2 IS POSITIVE
+     F*       56      AMAD3 IS POSITIVE
+     F*       57      AMTA1 IS POSITIVE
+     F*       58      AMTA2 IS POSITIVE
+     F*       59      AMTA3 IS POSITIVE
+     F*       80      NO. OF RECORDS DIFFERENCE
+     F*       81      HASH TOTAL DIFFERENCE
+     F*             L1CHANGE OF DEAL SUB-TYPE
+     F*             L2CHANGE OF DEAL TYPE
+     F*             L3CHANGE OF CURRENCY
+     E                    CPY@    1   1 80
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     E**
+     I*    SORTED INTEREST OUTRIGHT ACCRUALS EXTRACT FILE - DETAIL
+     I*
+     IDLINTAL1NS  01   1 CD
+     I                                        1   1 RECI
+     I                                        2   4 CCY   L3
+     I                                        5   6 DTYP  L2
+     I                                        7   8 DLST  L1
+     I**********                              9  140CNUM                                      CSD027
+     I                                        9  14 CNUM                                      CSD027
+     I                                       15  200DLNO
+     I                                    P  21  230ACFD
+     I                                    P  24  260ACTD
+     I                                    P  27  330PCPL
+     I                                    P  34  400AMAD
+     I                                    P  41  470AMTA
+     I                                       48  48 PSIND
+     I                                       49  51 BRCA  L4
+     I                                       52  54 CMPY
+     I                                       55  58 CLAS  L1                                  CDL038
+     I*
+     I*    CATCHALL
+     I*
+     I        NS  03
+     I**********                                                          S01440
+     I*****TABLE FILE                                                     S01440
+     I**********                                                          S01440
+     I*****ICR*1                                                          S01440
+     I**********TABLE   NS  04   1 CD   2 C0   3 C1                       S01440
+     I*******AND      12 C1  13 C0                                        S01440
+     I**********                              1   1 RECI                  S01440
+     I**********                             14  66 TITL                  S01440
+     I**********                             80  86 RUNA                  S01440
+     I**********                             87  87 DATF                  S01440
+     I********NS       1 CD   2 C0   3 C1                                 S01440
+     I*******AND      12 C1  13 C1                                        S01440
+     I**********                          P  41  430DNWD                  S01440
+     I**********                             52  52 ACLD                  S01440
+     I*****DEAL*SUB-TYPES                                                 S01440
+     I********NS  05   1 CD   2 C4   3 C2                                 S01440
+     I**********                             12  13 DSCD                  S01440
+     I**********                             14  43 DSNM                  S01440
+     I**********                                                          S01440
+     I*****TABLE FILE - CURRENCIES RECORD 1.                              S01440
+     I**********                                                          S01440
+     I**********TABLE   NS  10   1 CD   2 C2   3 C0                       S01440
+     I*******AND      13 C1                                               S01440
+     I**********                              1   1 RECI                  S01440
+     I**********                              2   30RECT                  S01440
+     I**********                             10  12 CCY                   S01440
+     I**********                             13  130SREC                  S01440
+     I**********                             14  27 CCNM                  S01440
+     I**********                          P  28  348SPOT                  S01440
+     I**********                             35  37 CCYS                  S01440
+     I**********                             38  380CDP                   S01440
+     I**********                             39  390TNOT                  S01440
+     I**********                             40  40 DCCY                  S01440
+     I**********                             41  44 SRC1                  S01440
+     I**********                             45  48 SRC2                  S01440
+     I**********                             49  520TACC                  S01440
+     I**********                             53  560TEQV                  S01440
+     I**********                             57  600SWQV                  S01440
+     I**********                             61  640TAC4                  S01440
+     I**********                             65  680TAC5                  S01440
+     I**********                             69  69 HIND                  S01440
+     I**********                          P  70  768PART                  S01440
+     I**********                             77  780SSNO                  S01440
+     I**********                          P  79  858ERLC                  S01440
+     I**********                                                          S01440
+     I*****CATCHALL                                                       S01440
+     I**********                                                          S01440
+     I********NS  06                                                      S01440
+     I**********                                                          S01440
+     I*****CLIENT FILE                                                    S01440
+     I**********                                                          S01440
+     I**********CLINT   NS  07   1 CD   8 CA                              S01440
+     I**********                              9  28 CRNM                  S01440
+     I**********                                                          S01440
+     I*****CATCHALL                                                       S01440
+     I**********                                                          S01440
+     I********NS  08                                                      S01440
+     ISPOOL       DS
+     I** FILE INFORMATION DATA STRUCTURE
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 243 2460SWRIT
+     C*
+     I@BINRY      DS
+     I** DEFINE A BLANK BINARY FIELD FOR USE WITH SWRIT
+     I                                    B   1   40@BKBIN
+     ISPOOLU      DS
+     I** FILE INFORMATION DATA STRUCTURE
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     I@BRCH     E DSSDBRCHPD
+     I** EXTERNAL DS FOR BRANCH DETAILS
+     ISDBANK    E DSSDBANKPD                                              S01440
+     I*                                                                   S01440
+     I*  Bank Details DS for assigning data from Access                   S01440
+     I*  Programs to work fields                                          S01440
+     I*                                                                   S01440
+     I*
+     ISDGELR    E DSSDGELRPD
+     I*
+     I*  General Ledger Details DS for assigning data from Access
+     I*  Programs to work fields
+     I*
+     I*                                                                   S01440
+     ISDCURR    E DSSDCURRPD                                              S01440
+     I*                                                                   S01440
+     I*  Currencies Details DS for assigning data from Access             S01440
+     I*  Programs to work fields                                          S01440
+     I*                                                                   S01440
+     ISDCUST    E DSSDCUSTPD                                              S01440
+     I              QQDFAC                          #DFAC1                                    CGL029
+     I*                                                                   S01440
+     I*  Customers Details DS for assigning data from Access              S01440
+     I*  Programs to work fields                                          S01440
+     I*                                                                   S01440
+     ISDDLST    E DSSDDLSTPD                                              S01440
+     I*                                                                   S01440
+     I*  Deal Sub Types Details DS for assigning data from Access         S01440
+     I*  Programs to work fields                                          S01440
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I/EJECT
+     C********************************************************************
+     C********************************************************************
+      * ENTRY PARAMETER REQUIRED BY RCF
+     C           *ENTRY    PLIST
+     C                     PARM           SEQ     5
+     C                     PARM           BRNCH   3         BRANCH OR ALL
+     C*
+     C   40                GOTO MAIN
+     C                     SETON                     40
+     C                     SETOF                     77
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Set up LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBPGM
+     C                     MOVEL'DL5002'  DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+     C*
+     C                     EXSR ZSYSTM
+     C*
+     C********** *IN99     IFEQ '1'                                       S01440
+     C           @RTCD     IFNE *BLANKS                                   S01440
+     C           *LOCK     IN   LDA
+     C**********           MOVEL'TABLE  ' DBFILE                  ********S01440
+     C                     MOVEL'SDBANKPD'DBFILE                  ********S01440
+     C**********           MOVEL'01'      DBASE                   * DBERR S01440
+     C                     MOVEL'001'     DBASE                   *DBERR01S01440
+     C                     MOVEL'*BLANKS' DBKEY                   ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     GOTO END
+     C                     END
+     C*
+     C**********           MOVE '1'       ZTABKY                          S01440
+     C********** ZTABKY    CHAINTABLE                31                   S01440
+     C**N31***** RECI      COMP 'D'                  3131                 S01440
+     C*
+     C********** *IN31     IFEQ '1'                                       S01440
+     C********** *LOCK     IN   LDA                                       S01440
+     C**********           MOVEL'TABLE  ' DBFILE                  ********S01440
+     C**********           MOVEL'02'      DBASE                   * DB 02 S01440
+     C**********           MOVELZTABKY    DBKEY                   ********S01440
+     C**********           OUT  LDA                                       S01440
+     C**********           EXSR *PSSR                                     S01440
+     C**********           GOTO END                                       S01440
+     C**********           END                                            S01440
+     C*
+     C********** ACLD      COMP 'Y'                      60               S01440
+     C                     MOVE '1'       WRK4    4
+     C**********           MOVE 'A'       KEYCL   7                       S01440
+     C*
+     C**   ACCESS GENERAL LEDGER I.C.D. FOR ACCRUAL PROFIT DATE
+     C*    AND ACCRUE ON LAST DAY INDICATOR                               S01440
+     C*
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG  '  @RTCD   7        B:Return Cd
+     C                     PARM '*FIRST'  @OPTN   7        I:Option
+     C********** SDGELR    PARM SDGELR    DSFDY            O:Format                           CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDGELRPD'DBFILE           ************
+     C**********           MOVEL'03'      DBASE            * DBERR 03 *   S01440
+     C                     MOVEL'003'     DBASE            * DBERR 03 *   S01440
+     C**********           MOVEL'*FIRST'  DBKEY            ************   S01440
+     C                     MOVEL*BLANKS   DBKEY            ************   S01440
+     C**********           MOVE '1'       *IN99                           S01440
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     GOTO END
+     C                     END
+     C           BKALDI    COMP 'Y'                      60               S01440
+     C*
+     C*    CONVERT 'TITLE DATE' TO ALPHA FORMAT
+     C*
+     C*********  BKAPDT    IFLT DNWD                                      S01440
+     C           BKAPDT    IFLT BJDNWD                                    S01440
+     C           BKAPDT    ADD  1         TDAT    50
+     C                     ELSE
+     C**********           Z-ADDDNWD      TDAT                            S01440
+     C                     Z-ADDBJDNWD    TDAT                            S01440
+     C                     END
+     C*
+     C                     Z-ADDTDAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    TDATA   7
+     C********************************************************************
+     C*                                                                  *
+     C*           M A I N      P R O C E S S I N G                       *
+     C*                                                                  *
+     C********************************************************************
+     C           MAIN      TAG                             ** MAIN TAG ***
+     C  N01                GOTO END
+     C   01                SETOF                     40
+     C   01                SETON                     77
+      *
+      ** IF BRANCH CODE HAS CHANGED, CLOSE PRINTER FILE AND OPEN A
+      ** NEW ONE FOR EACH CHANGE OF BRANCH
+      *
+     C           *INL4     IFEQ '1'                         B1
+     C                     MOVE '0'       *IN11             *1
+     C                     CLOSEDL5002P1                    *1
+     C           BRNCH     IFEQ 'ALL'                       B*2
+     C           BRNCH     OREQ BRCA                        **2
+     C                     SETON                     61    ALLOW OUTPUT
+     C                     MOVE '1'       *IN11             **2
+     C                     OPEN DL5002P1                    **2
+     C*
+     C* REPORT SPOOL FILE GENERATION
+     C                     Z-ADDSFNUM     ZSNUM   60        **2
+     C                     CALL 'ZSFILE'                    **2
+     C                     PARM           SEQ               **2
+     C                     PARM BRCA      @PARM   3         **2
+     C                     PARM           SFILE             **2
+     C                     PARM           ZSNUM             **2
+     C                     PARM           ZSERR   1         **2
+     C*
+     C           ZSERR     IFEQ 'Y'                         B***3
+     C* Error during ZSFILE processing, return to calling program.
+     C                     SETON                     U7U8LR  ***3
+     C                     RETRN                             ***3
+     C                     END                              E***3
+     C*
+     C                     Z-ADD0         PAGE              **2
+     C*
+     C** To get Branch Name          :
+     C** READ BRANCH DETAILS VIA ACCESS PROGRAM FOR BRANCH NAME
+     C**********           CALL 'AOBRCHR0'                  **2                               CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7         **2
+     C                     PARM '*KEY   ' @OPTN   7         **2
+     C                     PARM BRCA      @DSNB   3         **2
+     C********** @BRCH     PARM @BRCH     DSFDY             **2                               CGL029
+     C           @BRCH     PARM @BRCH     DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANK                      B**3
+     C           *LOCK     IN   LDA                         ***3
+     C                     MOVEL'SDBRCHPD'DBFILE           ************
+     C**********           MOVEL'02'      DBASE            * DBERR 02 *   S01440
+     C                     MOVEL'002'     DBASE            * DBERR 02 *   S01440
+     C                     MOVELBRCA      DBKEY            ************
+     C                     OUT  LDA                         ***3
+     C                     EXSR *PSSR                       ***3
+     C                     GOTO END                         ***3
+     C                     END                              E**3
+     C**
+     C**   IF DETAILS TO REPORT EXIST, SET INDICATOR
+     C                     SETON                     62     **2
+     C                     ELSE                             X*2
+     C                     SETOF                     61     **2
+     C                     END                              E*2
+     C                     END                              E1
+     C*
+     C*****AT*CHANGE OF DEAL SUB-TYPE, RECOVER NAME FROM TABLE FILE       S01440
+     C*    AT CHANGE OF DEAL SUB-TYPE, RECOVER NAME FROM SDDLSTPD         S01440
+     C*                                                                   CDL038
+     C   L1                DO                                             CDL038
+     C***L1*****           MOVEL*BLANK    KEYT   12                       S01440
+     C***L1*****           MOVEL'42'      KEYT   12                       S01440
+     C***L1*****           MOVE DLST      WRK3    4                       S01440
+     C***L1*****           MOVEL'  '      WRK3                            S01440
+     C***L1*****           MOVE WRK3      KEYT                            S01440
+     C**********           SETOF                     05                   S01440
+     C***L1******KEYT      CHAINTABLE                42                   S01440
+032  C* CALL ACCESS PROG. FOR DEAL SUBTYPE DETAILS.                       S01440
+     C                     CALL 'AODLSTR0'                                S01440
+     C                     PARM '       ' @RTCD   7                       S01440
+     C                     PARM '*KEY   ' @OPTN   7                       S01440
+     C                     PARM DLST      KEYT    2                       S01440
+     C           SDDLST    PARM SDDLST    DSFDY                           S01440
+     C           *INL1     IFEQ '1'
+     C********** *IN05     ANDEQ'0'                                       S01440
+     C           @RTCD     ANDNE*BLANKS                                   S01440
+     C           *LOCK     IN   LDA
+     C**********           MOVEL'TABLE  ' DBFILE                  ********S01440
+     C                     MOVEL'SDDLSTPD'DBFILE                  ********S01440
+     C**********           MOVEL'04'      DBASE                   * DBERR S01440
+     C                     MOVEL'004'     DBASE                   *DBERR04S01440
+     C                     MOVE *BLANKS   DBKEY                   *       S01440
+     C                     MOVELKEYT      DBKEY                   ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     GOTO END
+     C                     END
+     C*                                                                   CDL038
+     C**   ACCESS DEAL TYPE/SUB-TYPE NARRATIVE                            CDL038
+     C*                                                                   CDL038
+     C           DTSTK     KLIST                                          CDL038
+     C                     KFLD           DTYP                            CDL038
+     C                     KFLD           DLST                            CDL038
+     C                     KFLD           CLAS                            CDL038
+     C           DTSTK     CHAINFDDTSTL1             99                   CDL038
+     C*                                                                   CDL038
+     C           *IN99     IFEQ *OFF                                      CDL038
+     C                     MOVELNARR11    DSTCNR                          CDL038
+     C                     ELSE                                           CDL038
+     C                     MOVEL*BLANK    DSTCNR                          CDL038
+     C                     MOVELASDSTN    DSTCNR 35                       CDL038
+     C                     ENDIF                                          CDL038
+     C                     ENDDO                                          CDL038
+     C*
+     C*    AT CHANGE OF DEAL TYPE, SET INDICATORS
+     C   L2      DTYP      COMP 'PI'                     35
+     C*
+     C*    AT CHANGE OF CURRENCY, SET INDICATORS ACCORDING TO
+     C*    NUMBER OF DECIMAL PLACES
+     C*
+     C***L3*****           MOVEL*BLANK    KEYT                            S01440
+     C***L3*****           MOVEL'20'      KEYT                            S01440
+     C***L3*****           MOVELCCY       WRK4                            S01440
+     C***L3*****           MOVE WRK4      KEYT                            S01440
+     C**********           SETOF                     10                   S01440
+     C***L3***** KEYT      CHAINTABLE                42                   S01440
+032  C* CALL ACCESS PROG. FOR CURRENCY DETAILS.                           S01440
+     C                     CALL 'AOCURRR0'                                S01440
+     C                     PARM '       ' @RTCD   7                       S01440
+     C                     PARM '*KEY   ' @OPTN   7                       S01440
+     C                     PARM CCY       @CURKY  3                       S01440
+     C           SDCURR    PARM SDCURR    DSSDY                           S01440
+     C           *INL3     IFEQ '1'
+     C********** *IN10     ANDEQ'0'                                       S01440
+     C           @RTCD     ANDNE*BLANKS                                   S01440
+     C           *LOCK     IN   LDA
+     C**********           MOVEL'TABLE  ' DBFILE                  ********S01440
+     C                     MOVEL'SDCURRPD'DBFILE                  ********S01440
+     C**********           MOVEL'05'      DBASE                   * DBERR S01440
+     C                     MOVEL'005'     DBASE                   *DBERR05S01440
+     C**********           MOVELKEYT      DBKEY                   ********S01440
+     C                     MOVE *BLANKS   DBKEY                   *       S01440
+     C                     MOVEL@CURKY    DBKEY                   ********S01440
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     GOTO END
+     C                     END
+     C***L3***** CDP       COMP 1                      3031               S01440
+     C***L3***** CDP       COMP 2                    33  32               S01440
+     C   L3      A6NBDP    COMP 1                      3031               S01440
+     C   L3      A6NBDP    COMP 2                    33  32               S01440
+     C**
+     C*
+     C** PURCHASE IS +,SALE IS -
+     C*
+     C           PSIND     COMP 'P'                      36
+     C  N36                Z-SUBPCPL      PCPL
+     C  N36                Z-SUBAMAD      AMAD
+     C  N36                Z-SUBAMTA      AMTA
+     C*    ACCUMULATE NUMBER AND VALUE OF DETAIL RECORDS READ
+     C*
+     C           RECRED    ADD  1         RECRED  50
+     C*
+     C*    ACCUMULATE PRINCIPAL AMOUNT FOR DEAL SUB-TYPE IN PCPL1
+     C*    ACCUMULATE ACCRUED TO DATE  FOR DEAL SUB-TYPE IN AMAD1
+     C*    ACCUMULATE AMOUNT TO ACCRUE FOR DEAL SUB TYPE IN AMTA1
+     C*
+     C           PCPL1     ADD  PCPL      PCPL1  130
+     C           AMAD1     ADD  AMAD      AMAD1  130
+     C           AMTA1     ADD  AMTA      AMTA1  130
+     C*
+     C*    CHAIN TO CLIENT FILE FOR CUSTOMER REPORTING NAME
+     C*
+     C                     MOVELCNUM      KEYCL
+     C********** KEYCL     CHAINCLINT                41                   S01440
+     C********** *IN07     IFEQ '0'                                       S01440
+032  C* CALL ACCESS PROG. FOR CUSTOMER DETAILS.                           S01440
+     C                     CALL 'AOCUSTR0'                                S01440
+     C                     PARM *BLANK    @RTCD   7                       S01440
+     C                     PARM '*KEY    '@OPTN   7                       S01440
+     C                     PARM           KEYCL  10                       S01440
+     C                     PARM           @KYST   7                       S01440
+     C           SDCUST    PARM SDCUST    DSSDY                           S01440
+     C*                                                                   S01440
+     C           @RTCD     IFNE *BLANKS                                   S01440
+     C           *LOCK     IN   LDA
+     C**********           MOVEL'TABLE  ' DBFILE                  ********S01440
+     C                     MOVEL'SDCUSTPD'DBFILE                  ********S01440
+     C**********           MOVEL'05'      DBASE                   * DB 05 S01440
+     C                     MOVEL'006'     DBASE                   * DB 06 S01440
+     C                     MOVE *BLANKS   DBKEY                   *       S01440
+     C                     MOVELKEYCL     DBKEY                   ********
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     GOTO END
+     C                     END
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,DL5002CCP1                                           S01408
+     C*                                                                   S01408
+     C*
+     C*    CONVERT 'ACCRUAL FROM' AND 'PERIOD TO' DATES TO ALPHA FORMAT
+     C*
+     C                     Z-ADDACFD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    ACFDA   7
+     C                     Z-ADDACTD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    ACTDA   7
+     C           END       TAG                             ** END TAG **
+     C*
+     C*    INCREMENT LINE COUNT TO CONDITION OVERFLOW
+     C   OF                Z-ADD0         LINE    20
+     C   L3
+     COR OFNL3   LINE      ADD  15        LINE
+     C   L2
+     COR OFNL2   LINE      ADD  2         LINE
+     C   L1
+     COR OFNL1   LINE      ADD  2         LINE
+     C   01      LINE      ADD  1         LINE
+     C**
+     C**   LEVEL BREAK CALCULATIONS
+     C**
+     C*
+     C*    ADD SUB-TOTALS TO RUNNING TOTALS
+     CL1         PCPL2     ADD  PCPL1     PCPL2  130
+     CL1         AMAD2     ADD  AMAD1     AMAD2  130
+     CL1         AMTA2     ADD  AMTA1     AMTA2  130
+     CL1         LINE      COMP 60                   OF
+     CL1         PCPL1     COMP 0                    51
+     CL1         AMAD1     COMP 0                    54
+     CL1         AMTA1     COMP 0                    57
+     C*
+     CL2         PCPL3     ADD  PCPL2     PCPL3  130
+     CL2         AMAD3     ADD  AMAD2     AMAD3  130
+     CL2         AMTA3     ADD  AMTA2     AMTA3  130
+     CL2         PCPL2     COMP 0                    52
+     CL2         AMAD2     COMP 0                    55
+     CL2         AMTA2     COMP 0                    58
+     C*
+     C*    LINE CHECK TO CONDITION OVERFLOW
+     CL2         LINE      COMP 58                   OF
+     CL3         LINE      COMP 56                   OF
+     CL3                   Z-ADD0         LINE
+     CL3         PCPL3     COMP 0                    53
+     CL3         AMAD3     COMP 0                    56
+     CL3         AMTA3     COMP 0                    59
+     C*
+     CLR         *IN77     IFEQ '0'
+     CLR                   EXSR ZSYSTM
+     C*
+     C**LR******   *IN99     IFEQ '1'                                     S01440
+     CLR         @RTCD     IFNE *BLANKS                                   S01440
+     CLR         *LOCK     IN   LDA
+     C**LR******           MOVEL'TABLE  ' DBFILE                  ********S01440
+     CLR                   MOVEL'SDBANKPD'DBFILE                  ********S01440
+     C**LR******           MOVEL'01'      DBASE                   * DBERR S01440
+     CLR                   MOVEL'001'     DBASE                   *DBERR01S01440
+     CLR                   MOVEL'*BLANKS' DBKEY                   ************
+     CLR                   OUT  LDA
+     CLR                   EXSR *PSSR
+     CLR                   END
+     CLR                   END
+     C*
+     C** ENSURE AUDIT SPOOL FILE RECORDED BY RCF
+     CLR                   Z-ADDSFNUMU    ZSNUM   60
+     CLR                   CALL 'ZSFILE'
+     CLR                   PARM           SEQ
+     CLR                   PARM *BLANK    @PARM
+     CLR                   PARM           SFILEU                          E135
+     CLR                   PARM           ZSNUM
+     C*R**                 PARM           SFNUMU                          E135
+     CLR                   PARM           ZSERR   1
+     C*
+     CLR         ZSERR     IFEQ 'Y'
+     C** Error during ZSFILE processing, return to calling program
+     CLR                   SETON                     U7U8LR
+     CLR                   RETRN
+     CLR                   END
+     C*
+     C********************************************************************
+     C**
+     C**   ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.
+     C**
+     C           ZSYSTM    BEGSR                           *** ZSYSTM ***
+     C**
+     C**   SET UP KEY FOR INSTALLATION CONTROL RECORD.
+     C**********           MOVEL'01      'ZTABKY 12                       S01440
+     C**********           MOVE '  10'    ZTABKY                          S01440
+     C**
+     C********** ZTABKY    CHAINTABLE                99    ON NOT THERE   S01440
+     C**N99***** RECI      COMP 'D'                  9999  ON, IS DELETED S01440
+     C**   ACCESS BANK I.C.D.                                             S01440
+     C                     CALL 'AOBANKR0'                                S01440
+     C                     PARM '*MSG    '@RTCD   7                       S01440
+     C                     PARM '*FIRST  '@OPTN   7                       S01440
+     C           SDBANK    PARM SDBANK    DSFDY                           S01440
+     C**
+     C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+     C********** DATF      COMP 'M'                      98MMDDYY, 98 ON  S01440
+     C           BJDFIN    IFEQ 'M'                                       S01440
+     C                     SETON                     98                   S01440
+     C                     END                                            S01440
+     C**
+     C                     ENDSR
+     C**
+     C**
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C           DBASE     IFEQ 0
+     C                     SETON                     U7LR
+     C                     ELSE
+     C                     SETON                     U7U8LR
+     C                     END
+     C                     DUMP
+     C                     END
+     C*
+     C                     ENDSR
+     C/SPACE 3                                                            S01390
+     C/COPY ZSRSRC,ZDATE2Z2                                               S01390
+     C/EJECT
+     ODL5002P1H  203   L3NLR 61
+     O       OR        OFNL3NLR
+     O       AND       61
+     O                                   24 'REFERENCE DL5002P1'
+     O**********               TITL      89                               S01440
+     O                         BJURPT    89                               S01440
+     O                                  104 'DATE'
+     O**********               RUNA     112                               S01440
+     O                         BJMRDT   112                               S01440
+     O                                  122 'PAGE'
+     O                         PAGE  Z  127
+     O        H 11     L3NLR 61
+     O       OR        OFNL3NLR
+     O       AND       61
+     O                                   50 'INTEREST OUTRIGHT '
+     O                                   60 'ACCRUALS -'
+     O                                   70 'UP TO AND'
+     O                 60                82 'EXCLUDING -'
+     O                N60                82 'INCLUDING -'
+     O                         TDATA     90
+     O        H  2     L3NLR 61
+     O       OR        OFNL3NLR
+     O       AND       61
+     O                                   50 '------------------'
+     O                                   71 '---------------------'
+     O                                   90 '-------------------'
+     O        H 12     L3N98NLR
+     O       AND       61
+     O       OR        OFNL3NLR
+     O       AND       61
+     O                                   13 'BRANCH'
+     O                         BRCA      17
+     O                         A8BRNM    50
+     O        H  1     L3NLR
+     O       AND       61
+     O       OR        OFNL3NLR
+     O       AND       61
+     O                                   12 'CUSTOMER'
+     O                                   46 'DEAL     ACCRUAL'
+     O                                   56 'PERIOD '
+     O        H  2     L3NLR 61
+     O       OR        OFNL3NLR
+     O       AND       61
+     O                                   53 'NUMBER     FROM       TO'
+     O                                   69 '         CCY'
+     O                                  101 'PRINCIPAL       ACCRUED'
+     O                                  125 'TO DATE       TO ACCRUE'
+     O        D  2     L2NLR 61
+     O       OR  2     OFNL2NLR
+     O       AND       61
+     O                       35          25 'PURCHASE IN COVER OF '
+     O                       35          33 'INTEREST'
+     O                      N35          21 'SALE IN COVER OF '
+     O                      N35          29 'INTEREST'
+     O        D  2     L1NLR 61
+     O       OR  2     OFNL1NLR
+     O       AND       61
+     O                         DLST       6                               CDL038
+     O                         CLAS      10                               CDL038
+     O                         DSTCNR    46                               CDL038
+     O*************************DLST       3                               CDL038
+     O**********               DSNM      34                               S01440
+     O*************************ASDSTN    34                        S01440 CDL038
+     O        D  1     01NLR 61
+     O       AND       61
+     O                         CNUM       7
+     O**********               CRNM      28                               S01440
+     O                         BBCRNM    28                               S01440
+     O                         DLNO      35
+     O                         ACFDA     46
+     O                         ACTDA     56
+     O                         CCY       69
+     O                       30PCPL      88 ' ,   ,   ,   , 0 -'
+     O                       31PCPL      88 '   ,   ,   , 0 . -'
+     O                       32PCPL      88 '  ,   ,   , 0 .  -'
+     O                       33PCPL      88 ' ,   ,   , 0 .   -'
+     O                       36          88 '+'
+     O                       30AMAD     109 ' ,   ,   ,   , 0 -'
+     O                       31AMAD     109 '   ,   ,   , 0 . -'
+     O                       32AMAD     109 '  ,   ,   , 0 .  -'
+     O                       33AMAD     109 ' ,   ,   , 0 .   -'
+     O                       36         109 '+'
+     O                       30AMTA     128 ' ,   ,   ,   , 0 -'
+     O                       31AMTA     128 '   ,   ,   , 0 . -'
+     O                       32AMTA     128 '  ,   ,   , 0 .  -'
+     O                       33AMTA     128 ' ,   ,   , 0 .   -'
+     O                       36         128 '+'
+     O        T  203   OF L1N40
+     O       AND       77 61
+     O       OR        OF L2N40
+     O       AND       77 61
+     O       OR        OF L3N40
+     O       AND       77 61
+     O       OR        OF LRN40
+     O       AND       77 61
+     O                                   24 'REFERENCE DL5002P1'
+     O**********               TITL      89                               S01440
+     O                         BJURPT    89                               S01440
+     O                                  104 'DATE'
+     O**********               RUNA     112                               S01440
+     O                         BJMRDT   112                               S01440
+     O                                  122 'PAGE'
+     O                         PAGE  Z  127
+     O        T 11     OF L1N40
+     O       AND       77 61
+     O       OR        OF L2N40
+     O       AND       77 61
+     O       OR        OF L3N40
+     O       AND       77 61
+     O       OR        OF LRN40
+     O       AND       77 61
+     O                                   50 'INTEREST OUTRIGHT '
+     O                                   60 'ACCRUALS -'
+     O                                   70 'UP TO AND'
+     O                 60                82 'EXCLUDING -'
+     O                N60                82 'INCLUDING -'
+     O                         TDATA     90
+     O        T  2     OF L1N40
+     O       AND       77 61
+     O       OR        OF L2N40
+     O       AND       77 61
+     O       OR        OF L3N40
+     O       AND       77 61
+     O       OR        OF LRN40
+     O       AND       77 61
+     O                                   50 '------------------'
+     O                                   71 '---------------------'
+     O                                   90 '-------------------'
+     O        T 12     OF L1N40
+     O       AND       77 61
+     O       OR        OF L2N40
+     O       AND       77 61
+     O       OR        OF L3N40
+     O       AND       77 61
+     O       OR        OF LRN40
+     O       AND       77 61
+     O                                   13 'BRANCH'
+     O                         BRCA      17
+     O                         A8BRNM    50
+     O        T  1     OF L1N40
+     O       AND       77 61
+     O       OR        OF L2N40
+     O       AND       77 61
+     O       OR        OF L3N40
+     O       AND       77 61
+     O       OR        OF LRN40
+     O       AND       77 61
+     O                                   12 'CUSTOMER'
+     O                                   46 'DEAL     ACCRUAL'
+     O                                   56 'PERIOD '
+     O        T  2     OF L1N40
+     O       AND       77 61
+     O       OR        OF L2N40
+     O       AND       77 61
+     O       OR        OF L3N40
+     O       AND       77 61
+     O       OR        OF LRN40
+     O       AND       77 61
+     O                                   53 'NUMBER     FROM       TO'
+     O                                   69 '         CCY'
+     O                                  101 'PRINCIPAL       ACCRUED'
+     O                                  125 'TO DATE       TO ACCRUE'
+     O        T  2     OF L1N40
+     O       AND       77 61
+     O       OR        OF L2N40
+     O       AND       77 61
+     O       OR        OF L3N40
+     O       AND       77 61
+     O       OR        OF LRN40
+     O       AND       77 61
+     O                       35          25 'PURCHASE IN COVER OF '
+     O                       35          33 'INTEREST'
+     O                      N35          21 'SALE IN COVER OF '
+     O                      N35          29 'INTEREST'
+     O        T  2     OF L1N40
+     O       AND       77 61
+     O       OR        OF L2N40
+     O       AND       77 61
+     O       OR        OF L3N40
+     O       AND       77 61
+     O       OR        OF LRN40
+     O       AND       77 61
+     O                         DLST       6                               CDL038
+     O                         CLAS      10                               CDL038
+     O                         DSTCNR    46                               CDL038
+     O*************************DLST       3                               CDL038
+     O**********               DSNM      34                               S01440
+     O*************************ASDSTN    34                        S01440 CDL038
+     O        TF12     L1N40 77
+     O       AND       61NU7NU8
+     O                                   65 'DEAL SUB-TYPE TOTAL'
+     O                       30PCPL1  B  88 ' ,   ,   ,   , 0 -'
+     O                       31PCPL1  B  88 '   ,   ,   , 0 . -'
+     O                       32PCPL1  B  88 '  ,   ,   , 0 .  -'
+     O                       33PCPL1  B  88 ' ,   ,   , 0 .   -'
+     O                       51          88 '+'
+     O                       30AMAD1  B 109 ' ,   ,   ,   , 0 -'
+     O                       31AMAD1  B 109 '   ,   ,   , 0 . -'
+     O                       32AMAD1  B 109 '  ,   ,   , 0 .  -'
+     O                       33AMAD1  B 109 ' ,   ,   , 0 .   -'
+     O                       54         109 '+'
+     O                       30AMTA1  B 128 ' ,   ,   ,   , 0 -'
+     O                       31AMTA1  B 128 '   ,   ,   , 0 . -'
+     O                       32AMTA1  B 128 '  ,   ,   , 0 .  -'
+     O                       33AMTA1  B 128 ' ,   ,   , 0 .   -'
+     O                       57         128 '+'
+     O        TF 2     L2N40 77
+     O       AND       61NU7NU8
+     O                                   65 'DEAL TYPE TOTAL'
+     O                       30PCPL2  B  88 ' ,   ,   ,   , 0 -'
+     O                       31PCPL2  B  88 '   ,   ,   , 0 . -'
+     O                       32PCPL2  B  88 '  ,   ,   , 0 .  -'
+     O                       33PCPL2  B  88 ' ,   ,   , 0 .   -'
+     O                       52          88 '+'
+     O                       30AMAD2  B 109 ' ,   ,   ,   , 0 -'
+     O                       31AMAD2  B 109 '   ,   ,   , 0 . -'
+     O                       32AMAD2  B 109 '  ,   ,   , 0 .  -'
+     O                       33AMAD2  B 109 ' ,   ,   , 0 .   -'
+     O                       55         109 '+'
+     O                       30AMTA2  B 128 ' ,   ,   ,   , 0 -'
+     O                       31AMTA2  B 128 '   ,   ,   , 0 . -'
+     O                       32AMTA2  B 128 '  ,   ,   , 0 .  -'
+     O                       33AMTA2  B 128 ' ,   ,   , 0 .   -'
+     O                       58         128 '+'
+     O        TF 1     L3N40 77
+     O       AND       61NU7NU8
+     O                                   65 'CURRENCY TOTAL'
+     O                         CCY       69
+     O                       30PCPL3  B  88 ' ,   ,   ,   , 0 -'
+     O                       31PCPL3  B  88 '   ,   ,   , 0 . -'
+     O                       32PCPL3  B  88 '  ,   ,   , 0 .  -'
+     O                       33PCPL3  B  88 ' ,   ,   , 0 .   -'
+     O                       53          88 '+'
+     O                       30AMAD3  B 109 ' ,   ,   ,   , 0 -'
+     O                       31AMAD3  B 109 '   ,   ,   , 0 . -'
+     O                       32AMAD3  B 109 '  ,   ,   , 0 .  -'
+     O                       33AMAD3  B 109 ' ,   ,   , 0 .   -'
+     O                       56         109 '+'
+     O                       30AMTA3  B 128 ' ,   ,   ,   , 0 -'
+     O                       31AMTA3  B 128 '   ,   ,   , 0 . -'
+     O                       32AMTA3  B 128 '  ,   ,   , 0 .  -'
+     O                       33AMTA3  B 128 ' ,   ,   , 0 .   -'
+     O                       59         128 '+'
+     O        TF3      L4 11 61
+     O       AND      NU8NU7                                              S01440
+     O                                   68 '*** END OF REPORT FOR '
+     O                                   78 'BRANCH ***'
+     ODL5002AUT  203   LRN62
+     O       OR        U7 U8 LR
+     O                                   24 'REFERENCE DL5002AU'
+     O**********               TITL      89                               S01440
+     O                         BJURPT    89                               S01440
+     O                                  104 'DATE'
+     O**********               RUNA     112                               S01440
+     O                         BJMRDT   112                               S01440
+     O                                  122 'PAGE'
+     O**********               PAGE  Z  127                               S01440
+     O                         PAGE1 Z  127                               S01440
+     O        T  1     LRN62
+     O       OR        U7 U8 LR
+     O                                   71 'INTEREST OUTRIGHT ACCRUA'
+     O                                   80 'LS REPORT'
+     O        T  3     LRN11N62
+     O       OR        U7 U8 LR
+     O                                   71 '------------------------'
+     O                                   80 '--------- '
+     O        T 2      LR U7 U8
+     O                                   71 '*** PRINT TERMINATED ***'
+     O        T 2      LR U7 U8
+     O                                   57 'DATABASE ERROR'
+     O                         DBASE     61
+     O                                   72 'IN PROGRAM'
+     O                         DBPGM     83
+     O        T 13     LR U7 U8
+     O                                   47 'FILE'
+     O                         DBFILE    57
+     O                                   61 'KEY'
+     O                         DBKEY     91
+     O        T   22   LRNU7N62
+     O                                   66 '***   NO DETAILS TO '
+     O                                   78 'REPORT   ***'
+     O*
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

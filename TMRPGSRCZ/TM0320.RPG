@@ -1,0 +1,1117 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas TM Update ABDEALPP,& FX takeon of AB')
+     F****************************************************************
+     F*                                                              *
+     F*  Midas - Treasury Management Module
+     F*                                                              *
+     F*     TM0320  -   Update of AB with base currency for dealing  *
+     F*                 equivalent, and FX takeon of AB deals.       *
+     F*                                                              *
+     F*     Function:   This program updates the AB deals file for   *
+     F*                 dealing equivalent information not           *
+     F*                 available when deal was entered, and updates *
+     F*                 the FX Treasury Management files with AB     *
+     F*                 deals.                                       *
+     F*                                                              *
+     F*     Called by:  TMC0310 - Control takeon of Midas AB deals.  *
+     F*                                                              *
+     F*     Calls:      AODEALR0 - Obtain deal information.          *
+     F*                 AOCURRR0 - Obtain currency information.      *
+     F*                 AB0250   - Update FX Forward Book.           *
+     F*                 AB0260   - Update FX Positions and Profits.  *
+     F*                                                              *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                              *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CAS004             Date 26Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CAS004 - Hedge Accounting Phase A (Recompile)                *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+     F*                                                              *
+     F*****************************************************************
+     F*                                                              *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N  O F  I N D I C A T O R S                    *
+     F*                                                               *
+     F*   11 - End of PF/ABDEALPP reached.                            *
+     F*   21 - Chain to LF/ABDEAULL failed.                           *
+     F*                                                               *
+     F* 90-99 - Errors in subroutines (not all used in program).      *
+     F*                                                               *
+     F* U7-U8 - Database Error.                                       *
+     F*****************************************************************
+     F/EJECT
+     FABDEALPPIF  E                    DISK
+     FFDCCYPLLIF  E           K        DISK
+     FFXCCYPLLIF  E           K        DISK
+     F            FDCCYPP0                          KRENAMEFXCCYPP0
+     FABDEAULLUF  E           K        DISK
+     F            ABDEALP0                          KRENAMEABDEALL0
+     E/EJECT
+     E                    CPY@    1   1 80
+      * Copyright array.
+     E                    @YD     4   4  5 0A
+      * Cum.Days in year
+     E                    @MD    13  13  5 0A
+      * Cum.Days in mth.
+     E                    @AD     1   5  6 0
+      * Adjust Decimal
+     E                    @DC     4   4  4 0
+      * CorrectDec.Places
+     E                    @SF     1  10 10 0
+      * Scaling Factors
+     I/EJECT
+     I@ABDL     E DSABDEALPP
+      * Arbitrage Deals format data structure.
+     I                                      171 1780W@VDT1
+     I                                      179 1860W@VDT2
+     I*
+      ** Standard Deal externally defined data structure.
+     I@STDL     E DSABSTDDPP
+     I*
+     I            DS
+      * Date input data structure
+     I                                        1   80@@DTIN
+     I                                        1   40@@YYYY
+     I                                        1   20@@CC
+     I                                        3   40@@YY
+     I                                        5   60@@MTH
+     I                                        7   80@@DAY
+      *
+     I            DS
+      * ZA0710 Data structure over @@VLDT
+     I                                        1   80@@VLDT
+     I                                        1   40@@Z71Y
+     I                                        5   60@@Z71M
+     I                                        7   80@@Z71D
+      *
+     I@#DLA       DS
+      * Arbitrage Deal display format data structure
+      *        Sub-structure: Deal Done date
+     I                                        1   60##DLDT
+     I                                        1   20D@DL01
+     I                                        3   40D@DL02
+     I                                        5   60D@DL03
+     I                                        7   8 ##DSTP
+     I                                        9  11 ##BRCD
+     I                                       12  170##L1DN
+     I                                       18  19 ##FXBC
+     I                                       20  21 ##MMBC
+     I                                       22  270##LNKR
+      *        Sub-structure: 1st.Value date
+     I                                       28  330##L1DT
+     I                                       28  290D@L101
+     I                                       30  310D@L102
+     I                                       32  330D@L103
+     I                                       34  458##L1RT
+     I                                       46  48 ##L1CB
+     I                                       49  64 ##L1BA
+     I                                       65  67 ##L1CS
+     I                                       68  83 ##L1SA
+     I                                       84  99 ##L1BE
+     I                                      100 1050##L2DN
+      *        Sub-structure: 2nd.Value date
+     I                                      106 1110##L2DT
+     I                                      106 1070D@L201
+     I                                      108 1090D@L202
+     I                                      110 1110D@L203
+     I                                      112 127 ##L2BE
+     I                                      128 1342##FPTS
+     I                                      135 138 ##PRFC
+     I                                      139 141 ##ORBR
+     I                                      142 1420##LOCM
+     I                                      143 1537##LOIR
+     I                                      154 1540##DPCM
+     I                                      155 1657##DPIR
+     IDSFDY     E DSDSFDY
+      * Short Data Structure for Access Objects
+      *
+     IDSSDY     E DSDSSDY
+      * Long Data Structure for Access Objects
+      *
+     ISDDEAL    E DSSDDEALPD
+      * Dealing details accessed via access program.
+      *
+     ISDCURR    E DSSDCURRPD
+      * Currency details accessed via access program.
+      *
+     ILDA       E DSLDA
+      *  Local Data Area
+     I/EJECT
+     C                     MOVEACPY@      BIS@   80
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ERROR   1
+      *
+      * Set up work fields
+     C                     MOVE 'N'       ERROR
+     C                     MOVE 'N'       RUN1    1
+      *
+      * Define Work fields (used in subroutines) :
+     C           *LIKE     DEFN A6MDEX    W@XMD1           Xrate M/D 1
+     C           *LIKE     DEFN A6MDEX    W@XMD2           Xrate M/D 2
+     C           *LIKE     DEFN A6NQDP    W@NQD1           N/Quoted dec.1
+     C           *LIKE     DEFN A6NQDP    W@NQD2           N/Quoted dec.2
+     C           *LIKE     DEFN A6SCEX    W@SXP1           ScaleExponent1
+     C           *LIKE     DEFN A6SCEX    W@SXP2           ScaleExponent2
+     C           *LIKE     DEFN A6HSRT    W@HSR1           Hi Spot rate 1
+     C           *LIKE     DEFN A6HSRT    W@HSR2           Hi Spot rate 2
+     C           *LIKE     DEFN A6LSPR    W@LSR1           Lo Spot rate 1
+     C           *LIKE     DEFN A6LSPR    W@LSR2           Lo Spot rate 2
+     C           *LIKE     DEFN A6FXSD    W@FSD1           FX Spot date 1
+     C           *LIKE     DEFN A6FXSD    W@FSD2           FX Spot date 2
+     C           *LIKE     DEFN JPDFCY    W@CUR1           Currency 1
+     C           *LIKE     DEFN JPNDA1    W@AMT1           Amount 1
+     C           *LIKE     DEFN JPNBCA    W@BCEA           BCE
+     C           *LIKE     DEFN JPCDPF    W@BCDD
+     C           *LIKE     DEFN ##L1DN    W@L1DN           Deal No.1
+     C           *LIKE     DEFN ##L1DN    C#L1DN           Copy Deal No.1
+      *
+      * Find dealing base currency using PF/SDDEALPD.
+     C**********           CALL 'AODEALR0'                                                    CGL029
+     C                     CALL 'AODEALR1'                                                    CGL029
+     C                     PARM '*BLANKS' RTNCD   7
+     C                     PARM '*KEY'    OPTN    7
+     C********** SDDEAL    PARM SDDEAL    DSFDY                                               CGL029
+     C           SDDEAL    PARM SDDEAL    DSSDY                                               CGL029
+      *
+      * If error found execute error routine.
+     C           RTNCD     IFNE *BLANK
+     C                     MOVEL'TM0320  'DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'SDDEALPD'DBFILE            *************
+     C                     Z-ADD005       DBASE             *DBERROR 005*
+     C                     EXSR *PSSR                       *************
+     C                     END
+      *
+      * Move base dealing currency into work field.
+     C                     MOVE BNCYDL    BSCCY   3
+      *
+      * Call access program to get data on dealing base currency.
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*BLANKS' RTNCD   7
+     C                     PARM '*KEY'    OPTN    7
+     C                     PARM           BSCCY
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      * If error found execute error routine.
+     C           RTNCD     IFNE *BLANK
+     C                     MOVEL'TM0320  'DBPGM
+     C                     MOVE BSCCY     DBKEY
+     C                     MOVEL'SDCURRPD'DBFILE            *************
+     C                     Z-ADD009       DBASE             *DBERROR 009*
+     C                     EXSR *PSSR                       *************
+     C                     END
+      *
+      * Move fields from currency file to work fields.
+     C                     Z-ADDA6NBDP    W@BCDD
+      *
+      * Read first record on ABDEALPP.
+     C                     READ ABDEALPP                 11
+      *
+      * Do until the end of the file is reached.
+     C           *IN11     DOWEQ'0'
+     C                     MOVE 'N'       ABUPD   1
+      *
+      * Call access program to get data on first deal currency.
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*BLANKS' RTNCD   7
+     C                     PARM '*KEY'    OPTN    7
+     C                     PARM           JPDFCY
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      * If error found execute error routine.
+     C           RTNCD     IFNE *BLANK
+     C                     MOVEL'TM0320  'DBPGM
+     C                     MOVE JPDFCY    DBKEY
+     C                     MOVEL'SDCURRPD'DBFILE            *************
+     C                     Z-ADD006       DBASE             *DBERROR 006*
+     C                     EXSR *PSSR                       *************
+     C                     END
+      *
+      * Move fields from currency file to work fields.
+     C                     Z-ADDA6HSRT    W@HSR1             Hi Spot rate
+     C                     Z-ADDA6LSPR    W@LSR1             Lo Spot rate
+     C                     MOVE A6MDEX    W@XMD1             Xrate M/D
+     C                     Z-ADDA6NQDP    W@NQD1             N/Quoted dec.
+     C                     Z-ADDA6SCEX    W@SXP1             ScaleExponent
+     C                     Z-ADDA6FXSD    W@FSD1             FX Spot Date
+      *
+      * Call access program to get data on second deal currency.
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*BLANKS' RTNCD
+     C                     PARM '*KEY'    OPTN
+     C                     PARM           JPDSCY
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      * If error found execute error routine.
+     C           RTNCD     IFNE *BLANK
+     C                     MOVEL'TM0320  'DBPGM
+     C                     MOVE JPDSCY    DBKEY
+     C                     MOVEL'SDCURRPD'DBFILE            *************
+     C                     Z-ADD007       DBASE             *DBERROR 007*
+     C                     EXSR *PSSR                       *************
+     C                     END
+      *
+      * Move fields from currency file to work fields.
+     C                     Z-ADDA6HSRT    W@HSR2             Hi Spot rate
+     C                     Z-ADDA6LSPR    W@LSR2             Lo Spot rate
+     C                     MOVE A6MDEX    W@XMD2             Xrate M/D
+     C                     Z-ADDA6NQDP    W@NQD2             N/Quoted dec.
+     C                     Z-ADDA6SCEX    W@SXP2             ScaleExponent
+     C                     Z-ADDA6FXSD    W@FSD2             FX Spot Date
+      *
+      * If Near Date Dealt Base Currency Equivalent is equal to zero
+      * then calculate.
+     C           JPNBCD    IFEQ 0
+     C                     Z-ADDJPNDA1    @@DAM1           I:1st.Amount
+     C                     MOVE JPDFCY    @@CCY1           I: "  Currency
+     C                     MOVE W@XMD1    @@XMD1           I: "  M/D ind.
+     C                     Z-ADDW@LSR1    @@LSR1           I: "  Lo S/rate
+     C                     Z-ADDW@HSR1    @@HSR1           I: "  Hi S/rate
+     C                     Z-ADDW@NQD1    @@NQD1           I: "  N/Qt.Dec.
+     C                     Z-ADDW@SXP1    @@SXP1           I: "  Scalexpnt
+     C                     Z-ADDW@FSD1    @@FXS1           I: "  Spot date
+     C                     Z-ADDJPNDA2    @@DAM2           I:2nd.Amount
+     C                     MOVE JPDSCY    @@CCY2           I: "  Currency
+     C                     MOVE W@XMD2    @@XMD2           I: "  M/D ind.
+     C                     Z-ADDW@LSR2    @@LSR2           I: "  Lo S/rate
+     C                     Z-ADDW@HSR2    @@HSR2           I: "  Hi S/rate
+     C                     Z-ADDW@NQD2    @@NQD2           I: "  N/Qt.Dec.
+     C                     Z-ADDW@SXP2    @@SXP2           I: "  Scalexpnt
+     C                     Z-ADDW@FSD2    @@FXS2           I: "  Spot date
+     C                     Z-ADDW@VDT1    @@VLDT           I:Value date
+     C                     EXSR ZA0800                     <Get Near DBCE>
+     C                     Z-ADD@@DBCE    NBCD   150       O:Near DBCE
+      *
+      * Set on Update ABDEALLPP Flag.
+     C                     MOVE 'Y'       ABUPD
+     C                     END
+      *
+      * If Far Date Dealt Base Currency Equivalent is equal to zero
+      * then calculate.
+     C           JPFBCD    IFEQ 0
+     C                     Z-ADDJPFDA1    @@DAM1           I:1st.Amount
+     C                     MOVE JPDFCY    @@CCY1           I: "  Currency
+     C                     MOVE W@XMD1    @@XMD1           I: "  M/D ind.
+     C                     Z-ADDW@LSR1    @@LSR1           I: "  Lo S/rate
+     C                     Z-ADDW@HSR1    @@HSR1           I: "  Hi S/rate
+     C                     Z-ADDW@NQD1    @@NQD1           I: "  N/Qt.Dec.
+     C                     Z-ADDW@SXP1    @@SXP1           I: "  Scalexpnt
+     C                     Z-ADDW@FSD1    @@FXS1           I: "  Spot date
+     C                     Z-ADDJPFDA2    @@DAM2           I:2nd.Amount
+     C                     MOVE JPDSCY    @@CCY2           I: "  Currency
+     C                     MOVE W@XMD2    @@XMD2           I: "  M/D ind.
+     C                     Z-ADDW@LSR2    @@LSR2           I: "  Lo S/rate
+     C                     Z-ADDW@HSR2    @@HSR2           I: "  Hi S/rate
+     C                     Z-ADDW@NQD2    @@NQD2           I: "  N/Qt.Dec.
+     C                     Z-ADDW@SXP2    @@SXP2           I: "  Scalexpnt
+     C                     Z-ADDW@FSD2    @@FXS2           I: "  Spot date
+     C                     Z-ADDW@VDT2    @@VLDT           I:Value date
+     C                     EXSR ZA0800                     <Get Far DBCE>
+     C                     Z-ADD@@DBCE    FBCD   150       O:Far DBCE
+      *
+      * Set on Update ABDEALLPP Flag.
+     C                     MOVE 'Y'       ABUPD
+     C                     END
+      *
+      * If Near Date Spot Base Currency Equivalent is equal to zero
+      * then calculate.
+     C           JPNSBC    IFEQ 0
+     C                     Z-ADDJPNDA1    @@DAM1           I:1st.Amount
+     C                     MOVE JPDFCY    @@CCY1           I: "  Currency
+     C                     MOVE W@XMD1    @@XMD1           I: "  M/D ind.
+     C                     Z-ADDW@LSR1    @@LSR1           I: "  Lo S/rate
+     C                     Z-ADDW@HSR1    @@HSR1           I: "  Hi S/rate
+     C                     Z-ADDW@FSD1    @@FXS1           I: "  Spot date
+     C                     Z-ADDJPNDA2    @@DAM2           I:2nd.Amount
+     C                     MOVE JPDSCY    @@CCY2           I: "  Currency
+     C                     MOVE W@XMD2    @@XMD2           I: "  M/D ind.
+     C                     Z-ADDW@LSR2    @@LSR2           I: "  Lo S/rate
+     C                     Z-ADDW@HSR2    @@HSR2           I: "  Hi S/rate
+     C                     Z-ADDW@FSD2    @@FXS2           I: "  Spot date
+     C                     Z-ADDJPFWPP    @@DFPT           I:Fwd.points
+     C                     Z-ADDJPNDXR    @@DXRT           I:Xchg.Rate
+     C                     Z-ADDW@VDT1    @@VLDT           I:Value date
+     C                     EXSR ZA0810                     <Get Near SBCE>
+     C                     Z-ADD@@DSBC    NSBC   150       O:Near SBCE
+      *
+      * Set on Update ABDEALLPP Flag.
+     C                     MOVE 'Y'       ABUPD
+     C                     END
+      *
+      * If Far Date Spot Base Currency Equivalent is equal to zero
+      * then calculate.
+     C           JPFSBC    IFEQ 0
+     C                     Z-ADDJPFDA1    @@DAM1           I:1st.Amount
+     C                     Z-ADDJPFDA2    @@DAM2           I:2nd.Amount
+     C                     Z-ADDJPFDXR    @@DXRT           I:Xchg.Rate
+     C                     Z-ADDW@VDT2    @@VLDT           I:Value date
+     C                     EXSR ZA0810                     <Get Far SBCE>
+     C                     Z-ADD@@DSBC    FSBC   150       O:Far SBCE
+      *
+      * Set on Update ABDEALLPP Flag.
+     C                     MOVE 'Y'       ABUPD
+     C                     END
+      *
+      * If the update flag has been set on then update the fields
+      * via the logical ABDEAULL.
+     C           ABUPD     IFEQ 'Y'
+      *
+     C           JPFD38    CHAINABDEAULL             21
+      *
+      * If deal number not found on file then perform error handling.
+     C           *IN21     IFEQ '1'
+     C                     MOVEL'TM0320  'DBPGM
+     C                     MOVE JPFD38    DBKEY
+     C                     MOVEL'ABDEALPP'DBFILE            *************
+     C                     Z-ADD008       DBASE             *DBERROR 008*
+     C                     EXSR *PSSR                       *************
+      *
+     C                     ELSE
+      *
+      * Update the calculated fields.
+     C                     Z-ADDNBCD      JPNBCD
+     C                     Z-ADDFBCD      JPFBCD
+     C                     Z-ADDNSBC      JPNSBC
+     C                     Z-ADDFSBC      JPFSBC
+     C                     EXCPTUPDAT
+     C                     END
+      *
+     C                     END
+      *
+     C**  Initialise external data structure with values from
+     C**  AB deals file
+     C                     MOVE JPLACT    JULACT
+     C                     MOVE JPDFCY    JUDFCY
+     C                     Z-ADDJPNDA1    JUNDA1
+     C                     MOVE JPDSCY    JUDSCY
+     C                     Z-ADDJPNDA2    JUNDA2
+     C                     Z-ADDJPNDYY    JUNDYY
+     C                     Z-ADDJPNDMM    JUNDMM
+     C                     Z-ADDJPNDDD    JUNDDD
+     C                     Z-ADDJPFDYY    JUFDYY
+     C                     Z-ADDJPFDMM    JUFDMM
+     C                     Z-ADDJPFDDD    JUFDDD
+     C                     Z-ADDJPFDA1    JUFDA1
+     C                     Z-ADDJPFDA2    JUFDA2
+     C*
+     C                     Z-ADDJPNDYY    @@YYYY
+     C                     Z-ADDJPNDMM    @@MTH
+     C                     Z-ADDJPNDDD    @@DAY
+     C                     EXSR ZA0680
+     C                     Z-ADD@@MDNO    JUNDAT
+     C*
+     C                     Z-ADDJPFDYY    @@YYYY
+     C                     Z-ADDJPFDMM    @@MTH
+     C                     Z-ADDJPFDDD    @@DAY
+     C                     EXSR ZA0680
+     C                     Z-ADD@@MDNO    JUFDAT
+     C*
+     C                     Z-ADDJPNBCD    JUNBCD
+     C                     Z-ADDJPFBCD    JUFBCD
+     C                     Z-ADDJPNSBC    JUNSBC
+     C                     Z-ADDJPFSBC    JUFSBC
+     C*
+     C** Update FX Forward Book files.
+     C*
+     C                     CALL 'AB0250'
+     C                     PARM ' '       @TERM   1
+     C                     PARM           @STDL
+     C*
+     C** Update FX Positions and Profits file.
+     C*
+     C           @TERM     IFEQ ' '
+     C                     CALL 'AB0260'
+     C                     PARM ' '       @TERM
+     C                     PARM           @STDL
+     C                     END
+     C*
+     C           @TERM     IFEQ 'E'
+     C                     EXSR *PSSR
+     C                     END                              E1
+     C*
+      * Read next record from ABDEALPP.
+     C                     READ ABDEALPP                 11
+      *
+     C                     END
+      *
+      * End program.
+     C                     SETON                     LR
+     C                     RETRN
+      /EJECT
+      ********************************************************************
+      *
+      *  ZA0800 Subroutine to calculate Dealt Base Currency Equivalent.
+      *
+      *    CALLED BY : Main Processing
+      *
+      *    CALLS     : SR/ZA0630
+      *
+     C           ZA0800    BEGSR
+      *
+      * Input  : @@VLDT 8,0   Value date
+      *          @@CCY1 3     1st.Currency code
+      *          @@DAM1 15,0  1st.Currency Deal Amount
+      *          @@XMD1 1     1st.Currency Exch.Rate Mult/Div
+      *          @@HSR1 13,8  1st.Currency High Spot rate
+      *          @@LSR1 13,8  1st.Currency Low  Spot rate
+      *          @@NQD1 1,0   1st.Currency Norm.Quoted decimals
+      *          @@SXP2 1,0   1st.Currency Scaling Exponent
+      *          @@FXS1 8,0   1st.Currency FX Spot date
+      *          @@CCY2 3     2nd.Currency code
+      *          @@DAM2 15,0  2nd.Currency Deal Amount
+      *          @@XMD2 1     2nd.Currency Exch.Rate Mult/Div
+      *          @@HSR2 13,8  2nd.Currency High Spot rate
+      *          @@LSR2 13,8  2nd.Currency Low  Spot rate
+      *          @@NQD2 1,0   2nd.Currency Norm.Quoted decimals
+      *          @@SXP2 1,0   2nd.Currency Scaling Exponent
+      *          @@FXS2 8,0   2nd.Currency FX Spot date
+      *          @@SFAC 1,0   Scaling Factor
+      * Output : @@DBCE 15,0  Dealt Base Currency Equivalent
+      *
+     C           *LIKE     DEFN A6FXSD    @@FXS1           ¦ Define
+     C           *LIKE     DEFN A6FXSD    @@FXS2           ¦ fields
+     C           *LIKE     DEFN A6SPRT    @@SPRT           ¦
+     C           *LIKE     DEFN A6HSRT    @@HSR1           ¦
+     C           *LIKE     DEFN A6HSRT    @@HSR2           ¦
+     C           *LIKE     DEFN A6LSPR    @@LSR1           ¦
+     C           *LIKE     DEFN A6LSPR    @@LSR2           ¦
+     C           *LIKE     DEFN A6NQDP    @@NQD1           ¦
+     C           *LIKE     DEFN A6NQDP    @@NQD2           ¦
+     C           *LIKE     DEFN A6MDEX    @@XMD1           ¦
+     C           *LIKE     DEFN A6MDEX    @@XMD2           ¦
+     C           *LIKE     DEFN A6HSRT    @@HGSP           ¦
+     C           *LIKE     DEFN A6LSPR    @@LWSP           ¦
+     C           *LIKE     DEFN A6NQDP    @@NQDP           ¦
+     C           *LIKE     DEFN A6MDEX    @@XRMD           ¦
+     C           *LIKE     DEFN JPNDA1    @@DAM1           ¦
+     C           *LIKE     DEFN JPNDA1    @@DAM2           ¦
+     C           *LIKE     DEFN A6SCEX    @@SFAC           ¦
+     C           *LIKE     DEFN A6SCEX    @@SXP1           ¦
+     C           *LIKE     DEFN A6SCEX    @@SXP2           ¦
+      *
+      * If either Ccy.is Base Ccy, set DBCE to corresponding amount :
+     C           @@CCY1    IFEQ BSCCY                      IF C1=BASE
+     C           @@DAM1    IFGT *ZERO                      IF AMT.+VE.
+     C                     Z-ADD@@DAM1    @@DBCE 150         To DBCE
+     C                     ELSE                            EL AMT.-VE.
+     C                     Z-SUB@@DAM1    @@DBCE             Make +ve.
+     C                     END                             FI
+     C                     GOTO ZA0809                       Exit--->
+     C                     END                             FI
+      *
+     C           @@CCY2    IFEQ BSCCY                      IF C2=BASE
+     C           @@DAM2    IFGT *ZERO                      IF AMT.+VE
+     C                     Z-ADD@@DAM2    @@DBCE             To DBCE
+     C                     ELSE                            EL AMT.-VE
+     C                     Z-SUB@@DAM2    @@DBCE             Make +ve.
+     C                     END                             FI
+     C                     GOTO ZA0809                       Exit--->
+     C                     END                             FI
+      *
+      * Obtain Forward Outright Rate and Mult/Div.Ind. for 1st.Currency :
+     C           @@DAM1    IFGT *ZERO                      IF AMT.1 +VE
+     C                     MOVE 'B'       @@BSIN  1          I:Buy
+     C                     ELSE                            EL AMT.1 -VE.
+     C                     MOVE 'S'       @@BSIN             I:Sell
+     C                     END                             FI
+      *
+     C                     MOVE @@CCY1    K@CURR  3        I:Currency
+     C                     Z-ADD@@HSR1    @@HGSP           I:Hi Spot rate
+     C                     Z-ADD@@LSR1    @@LWSP           I:Lo Spot rate
+     C                     Z-ADD@@FXS1    @@FXSP           I:FX Spot date
+     C                     Z-ADD@@NQD1    @@NQDP           I:N/Qt.decimal
+     C           @@SXP1    ADD  1         @@SFAC           Scaling Factor
+     C                     MOVE @@XMD1    @@XRMD           I:Xrate M/D
+     C                     EXSR ZA0630                     <Obtain rate>
+      *
+     C           @@XRMD    IFEQ 'M'                        IF MULTIPLY
+     C           @@DAM1    MULT @@FORR    @@DBC1 150H        Calc.DBCE
+     C                     ELSE                            EL DIVIDE
+     C           @@DAM1    DIV  @@FORR    @@DBC1    H        Calc.DBCE
+     C                     END                             FI
+      *
+     C           @@DBC1    IFLT *ZERO                      IF NEGATIVE
+     C           *ZERO     SUB  @@DBC1    @@DBC1             Make +ve.
+     C                     END                             FI
+      *
+      * Must ensure value has decimal places as base currency DP's.
+     C           W@BCDD    SUB  JPCDPF    @@WDP
+     C           @@WDP     IFLT *ZERO                      B1
+     C                     Z-SUB@@WDP     @@WDP            *1
+     C                     ADD  1         @@WDP            *1
+     C           @@DBC1    DIV  @DC,@@WDP @@DBC1    H      *1
+     C                     ELSE
+     C                     ADD  1         @@WDP            *1
+     C           @@DBC1    MULT @DC,@@WDP @@DBC1           *1
+     C                     END                             E1
+      *
+      * Obtain Forward Outright Rate and Mult/Div.Ind. for 2nd.Currency :
+     C           @@DAM2    IFGT *ZERO                      IF AMT.2 +VE.
+     C                     MOVE 'B'       @@BSIN             Buy
+     C                     ELSE                            EL AMT.2 -VE.
+     C                     MOVE 'S'       @@BSIN             Sell
+     C                     END                             FI
+      *
+     C                     MOVE @@CCY2    K@CURR           I:Currency
+     C                     Z-ADD@@HSR2    @@HGSP           I:Hi Spot rate
+     C                     Z-ADD@@LSR2    @@LWSP           I:Lo Spot rate
+     C                     Z-ADD@@FXS2    @@FXSP           I:FX Spot date
+     C                     Z-ADD@@NQD2    @@NQDP           I:N/Qt.decimal
+     C           @@SXP2    ADD  1         @@SFAC           Scaling Factor
+     C                     MOVE @@XMD2    @@XRMD           I:Xrate M/D
+     C                     EXSR ZA0630                     <Obtain rate>
+      *
+     C           @@XRMD    IFEQ 'M'                        IF MULTIPLY
+     C           @@DAM2    MULT @@FORR    @@DBC2 150H        Calc.DBCE
+     C                     ELSE                            EL DIVIDE
+     C           @@DAM2    DIV  @@FORR    @@DBC2    H        Calc.DBCE
+     C                     END                             FI
+      *
+     C           @@DBC2    IFLT *ZERO                      IF NEGATIVE
+     C           *ZERO     SUB  @@DBC2    @@DBC2             Make +ve.
+     C                     END                             FI
+      *
+      * Must ensure value has decimal places as base currency DP's.
+     C           W@BCDD    SUB  JPCDPS    @@WDP
+     C           @@WDP     IFLT *ZERO                      B*2
+     C                     Z-SUB@@WDP     @@WDP            **2
+     C                     ADD  1         @@WDP            **2
+     C           @@DBC2    DIV  @DC,@@WDP @@DBC2    H      **2
+     C                     ELSE                            X*2
+     C                     ADD  1         @@WDP            **2
+     C           @@DBC2    MULT @DC,@@WDP @@DBC2           **2
+     C                     END                             E*2
+      *
+     C           @@DBC1    ADD  @@DBC2    @@DBC1           ¦ Obtain
+     C           @@DBC1    DIV  2         @@DBCE    H      ¦ average
+      *
+     C           ZA0809    ENDSR
+      /EJECT
+      ********************************************************************
+      *
+      *  ZA0630 Subroutine to calculate Forward Outright Rate.
+      *
+      *    CALLED BY : ZA0800
+      *
+      *    CALLS     : SR/ZA0700
+      *
+     C           ZA0630    BEGSR
+      *
+      * Input  : @@BSIN 1     Buy/Sell indicator
+      *          @@HGSP 8,8   High Spot rate
+      *          @@LOSP 8,8   Low  Spot rate
+      *          @@NQDP 1,0   Normally-quoted decimal places
+      *          @@XRMD 1     Xrate Mult/Div indicator
+      *          K@CURR 3     (ZA0700) Currency code
+      *          @@FXSP 8,0   (ZA0700) Spot date  (YYYY/MM/DD)
+      *          @@VLDT 8,0   (ZA0700) Value date (YYYY/MM/DD)
+      * Output : @@FORR 13,8  Forward Outright Rate
+      *
+     C           @@BSIN    IFEQ 'B'                        IF   CCY=BUY
+     C           @@XRMD    ANDEQ'M'                         AND MULTIPLY
+     C           @@BSIN    OREQ 'S'                        OR   CCY=SELL
+     C           @@XRMD    ANDEQ'D'                         AND DIVIDE
+     C                     MOVE @@HGSP    @@SPRT             Hi Spot rate
+     C                     ELSE                            EL B/D OR S/M
+     C                     MOVE @@LWSP    @@SPRT             Lo Spot rate
+     C                     END                             FI
+      *
+     C                     EXSR ZA0700                     <Get Fwd.Pts.>
+      *
+     C           @@NQDP    IFNE 0                                      .
+     C           @@FPTS    DIV  @AD,@@NQDP@@FORR    H      Adjust F/Pts.
+     C                     ELSE
+     C                     Z-ADD@@FPTS    @@FORR           Adjust F/Pts.
+     C                     END
+     C           @@FORR    DIV  @SF,@@SFAC@@FORR           Adjust O RATE
+     C                     ADD  @@SPRT    @@FORR 138       Fwd.O'Rt.Rate
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+      *
+      *  ZA0700 Subroutine to obtain Forward Points.
+      *
+      *    CALLED BY : ZA0630
+      *
+      *    CALLS     : SR/ZA0680
+      *
+     C           ZA0700    BEGSR
+      *
+      * Input  : @@VLDT 8,0   Value date
+      *          K@CURR 3     Currency code
+      *          @@BSIN 1     Buy/Sell indicator (B/S)
+      *          @@XRMD 1     Mult/Div indicator
+      *          @@FXSP 8,0   FX Spot date
+      * Output : @@FPTS 7,2   Forward points
+      *
+     C           *LIKE     DEFN A6FXSD    @@FXSP
+      *
+      * Find first record for currency on LF/FXCCYPLL file :
+      *
+     C           K@CURR    SETLLFXCCYPLL                   Set file
+     C                     READ FXCCYPLL               9090Read data
+      *
+     C           *IN90     IFEQ '1'                        IF  NRF/ERROR
+     C           K@CURR    ORNE XPCCY                       OR NOT IN GRP.
+     C                     MOVEL'FXCCYPLL'DBFILE             ¦ DB Error
+     C                     MOVE '001'     DBASE              ¦ reporting
+     C                     MOVELK@CURR    DBKEY              ¦ in LDA
+     C                     SETON                     U7U8LR  Set switches
+     C                     RETRN                             Exit program
+     C                     END                             FI
+      *
+      * Check value date = spot date, or before the first record
+      * on file for the currency; if so, points are zero :
+     C           @@VLDT    IFEQ @@FXSP                     IF V/DT=SPOT
+     C           @@VLDT    ORLT XPPRDD                      OR ¬ON FILE
+     C                     Z-ADD*ZERO     @@FPTS  72         F/Pts=0
+     C                     GOTO ZA0709                       Exit--->
+     C                     END                             FI
+      *
+      * Check file for date equal to Value date :
+     C           CCYVDT    KLIST                           |KEY LIST|
+     C                     KFLD           K@CURR           >Currency
+     C                     KFLD           @@VLDT           >Value date
+      *
+     C           CCYVDT    SETLLFXCCYPLL                   Set file
+     C                     READ FXCCYPLL                 90Get record
+      *
+     C           *IN90     IFEQ '1'                        IF  NRF
+     C           K@CURR    ORNE XPCCY                       OR CCY ¬FOUND
+     C                     GOTO ZA0708                       Skip--->
+     C                     END                             FI
+      *
+     C                     Z-ADD@@VLDT    @@DTIN           I:Value date
+     C                     EXSR ZA0680                     <Convert>
+     C                     Z-ADD@@MDNO    @@VDAT  50       O:Day number
+      *
+     C           @@VLDT    IFEQ XPPRDD                     IF V/DT=RECORD
+      *
+     C           XPTPRD    IFNE 'D'                        IF PERIOD<>D
+      *
+     C           @@BSIN    IFEQ 'B'                        IF   BUY
+     C           @@XRMD    ANDEQ'D'                         AND DIVIDE
+     C           @@BSIN    OREQ 'S'                        OR   SELL
+     C           @@XRMD    ANDEQ'M'                         AND MULTIPLY
+     C                     MOVE XPLOPT    @@FPTS             Low Points
+     C                     ELSE                            EL
+     C                     MOVE XPHIPT    @@FPTS             High Points
+     C                     END                             FI
+      *
+     C                     GOTO ZA0709                       Exit--->
+      *
+     C                     END                             FI
+      *
+      * The type of period is 'D'.
+      * Date is spot + 1 , spot - 1 or spot - 2 days.
+      * Linear interpolation or extrapolation used between one week
+      * rate & 0 on the spot date.
+      *
+      * Find the one week rate.
+      *
+     C           K@WKRT    KLIST                             |KEY LIST|
+     C                     KFLD           K@CURR             >Currency
+     C                     KFLD           K@PDTP             >Period type
+     C                     KFLD           K@PDNO             >Period
+      *
+     C                     MOVE 'W'       K@PDTP  1          Weekly period
+     C                     Z-ADD1         K@PDNO  20         One week
+      *
+     C           K@WKRT    CHAINFDCCYPLL             90      Get record
+      *
+     C           *IN90     IFEQ '1'                        IF  NRF/ERROR
+     C           XPDLTF    OREQ '*'                         OR DELETED
+     C                     MOVEL'FDCCYPLL'DBFILE             ¦ DB Error
+     C                     MOVE '002'     DBASE              ¦ reporting
+     C                     MOVELK@CURR    DBKEY              ¦ in LDA
+     C                     SETON                     U7U8LR  Set switches
+     C                     RETRN                             Exit program
+     C                     END                             FI
+      *
+     C           @@BSIN    IFEQ 'B'                        IF   BUY
+     C           @@XRMD    ANDEQ'D'                         AND DIVIDE
+     C           @@BSIN    OREQ 'S'                         OR  SELL
+     C           @@XRMD    ANDEQ'M'                         AND MULTIPLY
+     C                     MOVE XPLOPT    @@FP2   72         Low Points
+     C                     ELSE                            EL
+     C                     MOVE XPHIPT    @@FP2              High Points
+     C                     END                             FI
+      *
+     C                     Z-ADDXPPRDD    @@DTIN             I:1-Week dt.
+     C                     EXSR ZA0680                       <Convert>
+     C                     Z-ADD@@MDNO    @@D2    50         O:Day number
+      *
+     C                     Z-ADD@@FXSP    @@DTIN             I:Spot date
+     C                     EXSR ZA0680                       <Convert>
+     C                     Z-ADD@@MDNO    @@SPDT  50         O:Day number
+      *
+     C           @@VDAT    SUB  @@SPDT    @@WF1  158         ¦ Calculate
+     C                     MULT @@FP2     @@WF1     H        ¦ Forward
+     C           @@D2      SUB  @@SPDT    @@WF2   80         ¦ Points
+     C           @@WF1     DIV  @@WF2     @@FPTS    H        ¦
+     C                     GOTO ZA0709                       Exit--->
+      *
+     C                     END                             FI
+      *
+      * Period is greater than the Value date :
+     C           XPPRDD    IFGT @@VLDT                     IF PERIOD>V/DT
+      *
+     C           @@BSIN    IFEQ 'B'                        IF   BUY
+     C           @@XRMD    ANDEQ'D'                         AND DIVIDE
+     C           @@BSIN    OREQ 'S'                         OR  SELL
+     C           @@XRMD    ANDEQ'M'                         AND MULTIPLY
+     C                     MOVE XPLOPT    @@FP2   72         Low Points
+     C                     ELSE                            EL
+     C                     MOVE XPHIPT    @@FP2              High Points
+     C                     END                             FI
+      *
+     C                     Z-ADDXPPRDD    @@DTIN             I:Period date
+     C                     EXSR ZA0680                       <Convert>
+     C                     Z-ADD@@MDNO    @@D2    50         O:Day number
+      *
+     C                     READPFXCCYPLL               9090  Previous rec.
+      *
+     C           *IN90     IFEQ '1'                        IF NRF/ERROR
+     C                     MOVEL'FXCCYPLL'DBFILE             ¦ DB Error
+     C                     MOVE '003'     DBASE              ¦ reporting
+     C                     SETON                     U7U8LR  Set switches
+     C                     RETRN                             Exit program
+     C                     END                             FI
+      *
+     C           @@BSIN    IFEQ 'B'                        IF   BUY
+     C           @@XRMD    ANDEQ'D'                         AND DIVIDE
+     C           @@BSIN    OREQ 'S'                         OR  SELL
+     C           @@XRMD    ANDEQ'M'                         AND MULTIPLY
+     C                     MOVE XPLOPT    @@FP1   72         Low Points
+     C                     ELSE                            EL
+     C                     MOVE XPHIPT    @@FP1              High Points
+     C                     END                             FI
+      *
+     C                     Z-ADDXPPRDD    @@DTIN             I:Period date
+     C                     EXSR ZA0680                       <Convert>
+     C                     Z-ADD@@MDNO    @@D1    50         O:Day number
+      *
+     C           @@FP2     SUB  @@FP1     @@WF1              ¦
+     C           @@VDAT    SUB  @@D1      @@WF2              ¦ Calculate
+     C                     MULT @@WF2     @@WF1              ¦ Forward
+     C           @@D2      SUB  @@D1      @@WF2              ¦ Points
+     C                     DIV  @@WF2     @@WF1     H        ¦
+     C           @@WF1     ADD  @@FP1     @@FPTS    H        ¦
+      *
+     C                     GOTO ZA0709                       Exit--->
+      *
+     C                     END                             FI
+      *
+      * No record with > or = date has been found at this stage
+      * of processing so the points on the furthest forward
+      * record are used.
+      *
+      * Find the furthest forward record
+      *          _____________
+     C           ZA0708    TAG                             +++TAG+++
+      *          ~~~~~~~~~~~~~
+     C                     MOVE *HIVAL    @@VLDT           Max.V/Date
+      *
+     C           CCYVDT    SETGTFXCCYPLL                   Set file
+     C                     READPFXCCYPLL               9090Previous record
+      *
+     C           *IN90     IFEQ '1'                        IF  NRF/ERROR
+     C           K@CURR    ORNE XPCCY                       OR ¬IN GROUP
+     C                     MOVEL'FXCCYPLL'DBFILE             ¦ DB Error
+     C                     MOVE '004'     DBASE              ¦ reporting
+     C                     SETON                     U7U8LR  Set switches
+     C                     RETRN                             Exit program
+     C                     END                             FI
+      *
+     C           @@BSIN    IFEQ 'B'                        IF   BUY
+     C           @@XRMD    ANDEQ'D'                         AND DIVIDE
+     C           @@BSIN    OREQ 'S'                         OR  SELL
+     C           @@XRMD    ANDEQ'M'                         AND MULTIPLY
+     C                     MOVE XPLOPT    @@FPTS             Low Points
+     C                     ELSE                            FI
+     C                     MOVE XPHIPT    @@FPTS             High Points
+     C                     END                             FI
+      *
+     C           ZA0709    ENDSR
+      /EJECT
+      ********************************************************************
+      *
+      *  ZA0680 Subroutine to convert YYYYMMDD to Midas Day Number.
+      *
+      *    CALLED BY : ZA0700
+      *
+      *    CALLS     :
+      *
+     C           ZA0680    BEGSR
+      *
+      * Input  : @@DTIN 8,0   Date YYYY/MM/DD (Data Structure)
+      * Output : @@MDNO 5,0   Midas day number
+      *
+     C                     Z-ADD*ZERO     @@MDNO  50       Reset result
+      *
+      * Adjust for date beyond day number period :
+     C           @@YYYY    IFGT 2071                       IF > 2071
+     C           @@CC      SUB  19        @@WK2              Centuries
+     C           @@WK2     MULT 36524     @@MDNO             Century days
+     C                     ADD  1         @@MDNO             Leap adjust
+     C                     END                             FI
+      *
+      * Check 4-year periods :
+     C           @@YY      ADD  28        @@WK2   20       Adjust year
+     C           @@WK2     DIV  4         @@WK2            No.of 4-years
+     C                     MVR            @@REM   10       No.remaining
+     C           @@WK2     MULT 1461      @@WK5   50       Days in 4-yrs.
+     C                     ADD  @@WK5     @@MDNO           To Total days
+      *
+     C           @@REM     IFNE *ZERO                      IF YEARS REMAIN
+     C                     ADD  @YD,@@REM @@MDNO             Days in years
+     C                     ELSE                            EL NONE REMAIN
+     C           @@MTH     IFGT 2                          IF MTH>FEBRUARY
+     C                     ADD  1         @@MDNO             Add Leap day
+     C                     END                             FI
+     C                     END                             FI
+      *
+     C                     ADD  @MD,@@MTH @@MDNO           Days in months
+     C                     ADD  @@DAY     @@MDNO           Days in date
+     C           ZA0689    ENDSR
+      /EJECT
+      ********************************************************************
+      *
+      *  ZA0810 Subroutine to calculate Dealt Spot Base Currency
+      *         Eqivalent (DSBCE).
+      *
+      *    CALLED BY : Main Processing
+      *
+      *    CALLS     :
+      *
+     C           ZA0810    BEGSR
+      *
+      * Input  : @@DAM1 15,0  1st.Amount
+      *          @@CCY1 3      "  Currency
+      *          @@XMD1 1      "  M/D ind.
+      *          @@LSR1 13,8   "  Lo S/rate
+      *          @@HSR1 13,8   "  Hi S/rate
+      *          @@FXS1 8,0    "  Spot date
+      *          @@DAM2 15,0  2nd.Amount
+      *          @@CCY2 3      "  Currency
+      *          @@XMD2 1      "  M/D ind.
+      *          @@LSR2 13,8   "  Lo S/rate
+      *          @@HSR2 13,8   "  Hi S/rate
+      *          @@FXS2 8,0    "  Spot date
+      *          @@DFPT 7,2   Fwd.points
+      *          @@DXRT 13,8  Xchg.Rate
+      *          @@VLDT 8,0   Value date
+      * Output : @@DSBC 15,0  Equivalent
+      *
+     C           *LIKE     DEFN JPDFCY    @@CCY1           ¦
+     C           *LIKE     DEFN JPDFCY    @@CCY2           ¦ Define
+     C           *LIKE     DEFN JPFWPP    @@DFPT           ¦ fields
+     C           *LIKE     DEFN ##L1RT    @@DXRT           ¦
+     C           *LIKE     DEFN @@WRT1    @@WRT            ¦
+      *
+      * Check Currency 1 for High or Low Spot rate :
+     C           @@XMD1    IFEQ 'D'                        IF   DIVIDE
+     C           @@DAM1    ANDGT*ZERO                       AND POSITIVE
+     C           @@XMD1    OREQ 'M'                         OR  MULTIPLY
+     C           @@DAM1    ANDLT*ZERO                       AND NEGATIVE
+     C                     Z-ADD@@LSR1    @@WRT1 138         Lo Spot rate
+     C                     ELSE                            EL NONE
+     C                     Z-ADD@@HSR1    @@WRT1             Hi Spot rate
+     C                     END                             FI
+      *
+      * Check Currency 2 for High or Low Spot rate :
+     C           @@XMD2    IFEQ 'D'                        IF   DIVIDE
+     C           @@DAM2    ANDGT*ZERO                       AND POSITIVE
+     C           @@XMD2    OREQ 'M'                         OR  MULTIPLY
+     C           @@DAM2    ANDLT*ZERO                       AND NEGATIVE
+     C                     Z-ADD@@LSR2    @@WRT2 138         Lo Spot rate
+     C                     ELSE                            EL NONE
+     C                     Z-ADD@@HSR2    @@WRT2             Hi Spot rate
+     C                     END                             FI
+      *
+      * Calculate DSBCE where neither Currency is Base :
+     C           @@CCY1    IFNE BSCCY                      IF   C1<>BASE
+     C           @@CCY2    ANDNEBSCCY                       AND C2<>BASE
+      *
+     C           @@XMD1    IFEQ 'D'                        IF DIVIDE
+     C           @@DAM1    DIV  @@WRT1    @@WA1  150H        Apply rate
+     C                     ELSE                            EL MULTIPLY
+     C           @@DAM1    MULT @@WRT1    @@WA1     H        Apply rate
+     C                     END                             FI
+      *
+     C           @@WA1     IFLT *ZERO                      IF NEGATIVE
+     C           *ZERO     SUB  @@WA1     @@WA1              Make +ve.
+     C                     END                             FI
+      *
+      * Must ensure value has decimal places as base currency DP's.
+     C           W@BCDD    SUB  JPCDPF    @@WDP   10       *1
+     C           @@WDP     IFLT *ZERO                      B*2
+     C                     Z-SUB@@WDP     @@WDP            **2
+     C                     ADD  1         @@WDP            **2
+     C           @@WA1     DIV  @DC,@@WDP @@WA1     H      **2
+     C                     ELSE                            X*2
+     C                     ADD  1         @@WDP            **2
+     C           @@WA1     MULT @DC,@@WDP @@WA1            **2
+     C                     END                             E*2
+      *
+     C           @@XMD2    IFEQ 'D'                        IF DIVIDE
+     C           @@DAM2    DIV  @@WRT2    @@WA2  150H        Apply rate
+     C                     ELSE                            EL MULTIPLY
+     C           @@DAM2    MULT @@WRT2    @@WA2     H        Apply rate
+     C                     END                             FI
+      *
+     C           @@WA2     IFLT *ZERO                      IF NEGATIVE
+     C           *ZERO     SUB  @@WA2     @@WA2              Make +ve.
+     C                     END                             FI
+      *
+      * Must ensure value has decimal places as base currency DP's.
+     C           W@BCDD    SUB  JPCDPS    @@WDP   10       *1
+     C           @@WDP     IFLT *ZERO                      B*2
+     C                     Z-SUB@@WDP     @@WDP            **2
+     C                     ADD  1         @@WDP            **2
+     C           @@WA2     DIV  @DC,@@WDP @@WA2     H      **2
+     C                     ELSE                            X*2
+     C                     ADD  1         @@WDP            **2
+     C           @@WA2     MULT @DC,@@WDP @@WA2            **2
+     C                     END                             E*2
+      *
+     C           @@WA1     ADD  @@WA2     @@DSBC 150         ¦ Calculate
+     C           @@DSBC    DIV  2         @@DSBC    H        ¦ average
+     C                     GOTO ZA0819                       Exit--->
+      *
+     C                     END                             FI
+      *
+      * One Ccy.is Base; check Value date against Spot dates :
+     C           @@VLDT    IFEQ @@FXS1                     IF  V/DT=SPOT 1
+     C           @@VLDT    OREQ @@FXS2                      OR V/DT=SPOT 2
+      *
+     C           @@CCY1    IFEQ BSCCY                      IF C1=BASE
+     C                     Z-ADD@@DAM1    @@DSBC             Equiv=Amt.1
+     C                     ELSE                            EL C2=BASE
+     C                     Z-ADD@@DAM2    @@DSBC             Equiv=Amt.2
+     C                     END                             FI
+      *
+     C                     ELSE                            EL V/DT<>SPOTS
+      *
+     C           @@CCY1    IFNE BSCCY                      IF C1<>BASE
+     C                     Z-ADD@@DAM1    @@WA1              Amount 1
+     C           W@BCDD    SUB  JPCDPF    @@WDP   10
+     C                     MOVE @@XMD1    @@WMD   1          Mult/Div.ind
+     C                     Z-ADD@@WRT1    @@WRT              Spot on file
+      *
+     C                     ELSE                            EL C1=BASE
+      *
+     C                     Z-ADD@@DAM2    @@WA1              Amount 2
+     C           W@BCDD    SUB  JPCDPS    @@WDP   10
+     C                     MOVE @@XMD2    @@WMD              Mult/Div.ind
+     C                     Z-ADD@@WRT2    @@WRT              Spot on file
+      *
+     C                     END                             FI
+      *
+      ** MUST ENSURE VALUE HAS DECIMAL PLACES AS BASE CURRENCY DP'S
+     C           @@WDP     IFLT *ZERO
+     C                     Z-SUB@@WDP     @@WDP
+     C                     ADD  1         @@WDP
+     C           @@WA1     DIV  @DC,@@WDP @@WA1     H
+     C                     ELSE
+     C                     ADD  1         @@WDP
+     C           @@WA1     MULT @DC,@@WDP @@WA1
+     C                     END
+      *
+     C           @@WMD     IFEQ 'M'                        IF MULTIPLY
+     C           @@WA1     MULT @@WRT     @@DSBC    H        Apply rate
+     C                     ELSE                            EL DIVIDE
+     C           @@WA1     DIV  @@WRT     @@DSBC    H        Apply rate
+     C                     END                             FI
+      *
+     C                     END                             FI
+      *
+     C           @@DSBC    IFLT *ZERO                      IF NEGATIVE
+     C           *ZERO     SUB  @@DSBC    @@DSBC             Make +ve.
+     C                     END                             FI
+      *
+     C           ZA0819    ENDSR
+      *****************************************************************
+      *
+      *  *PSSR Subroutine to handle program error
+      *
+      *    CALLED BY : Main Processing
+      *
+      *    CALLS     :
+      *
+     C           *PSSR     BEGSR
+      *
+      * Check that this is the first time through the routine
+      * to prevent recursive calling which would loop the progam.
+     C           RUN1      IFEQ 'Y'
+     C                     MOVE 'N'       RUN1
+     C                     MOVE 'E'       ERROR
+     C                     SETON                     U7U8
+     C                     DUMP
+     C                     END
+      *
+     C                     ENDSR
+     O/EJECT
+      *
+      * Update fields on ABDEAULL.
+     OABDEALL0E                UPDAT
+     O                         JPNBCD
+     O                         JPFBCD
+     O                         JPNSBC
+     O                         JPFSBC
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+** @YD Cumulative days in years over 4-year span
+00366007310109601461
+** @MD Cumulative days in months through year
+00000000310005900090001200015100181002120024300273003040033400365
+** @AD Adjust Decimals (for applying NQDP)
+000010
+000100
+001000
+010000
+100000
+** @DC Decimal Places Correction Array
+0001001001001000
+** @SF Scaling factors array
+0000000001
+0000000010
+0000000100
+0000001000
+0000010000
+0000100000
+0001000000
+0010000000
+0100000000
+1000000000

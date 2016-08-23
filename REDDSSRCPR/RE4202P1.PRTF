@@ -1,0 +1,680 @@
+      *****************************************************************
+/*STD *  PRTFBASE                                                     *
+/*EXS *  PR_STD60                                                     *
+/*EXI *  TEXT('Midas RE Teller/Batch Journal Print')
+     A*****************************************************************
+     A*                                                               *
+     A*  Midas - Retail Module                                    *
+     A*                                                               *
+     A*  PRTF/RE4202P1 - Teller/Batch Transaction Journal             *
+     A*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     A*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. BUG8510            Date 05Oct05               *
+      *  Prev Amend No. CRT026             Date 22May06               *
+      *                 CGL029             Date 21Feb00               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 166074             Date 21Feb00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 106653             Date 13May97               *
+     A*                 S01408             DATE 06SEP95               *
+     A*                 CRT001  *CREATE    DATE 28FEB95               *
+     A*                                                               *
+     A*---------------------------------------------------------------*
+     A*                                                               *
+      *  BUG8510- Include House Cheque Account Number                 *
+      *  CRT026 - Retail Teller Password Change                       *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     A*  166074 - Add Profit Centre onto Printer Output               *
+     A*  106653 - Add Reversal Trans Number for FX transaction.       *
+     A*  S01408 - Addition of hooks RE4202P101                        *
+     A*  CRT001 - Retail Teller System                                *
+     A*                                                               *
+     A*****************************************************************
+     A                                      REF(MFRFL)
+      *
+      ** Heading print
+      *
+     A          R HEADNG                    TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+      *
+     A                                  3  6'REFERENCE RE4202P1'
+     A            BJURPT    R           3 37REFFLD(URPT)
+     A                                  3101'DATE'
+     A            BJMRDT    R           3106REFFLD(MRDT)
+     A                                  3119'PAGE'
+     A                                  3124PAGNBR
+     A                                      EDTCDE(Z)
+      *
+     A                                  4101'TIME'
+     A                                  4106TIME
+     A                                      EDTWRD('  :  :  ')
+      *
+     A                                  6 56'TRANSACTION JOURNAL'
+     A  33N34                           6 89'CONSOLIDATED'
+     A  33 34                           6 89'BRANCH -'
+     A  33 34     RBRCA     R           6 98REFFLD(BRCA)
+     A  33 34     RBRNM     R           6102REFFLD(BRNM)
+     A                                  7 56'-------------------'
+      *
+     A  13                              9 11'TELLER IDENTITY:'
+     A  13        PTLID          3A     9 29TEXT('Teller No')
+     A  13                              9 39'TRANSACTION NOS:'
+     A  13        FRMTRN         5  0O  9 56TEXT('transactions from')
+     A  13                              9 62'-'
+     A  13N55     TOTRN          5  0O  9 64TEXT('transactions to')
+     A  13 55                           9 64'NONE '
+     A***********                       9100'BRANCH:'
+     A  14N34                           9100'BRANCH:'
+     A  14N34     PBRCH          3   O  9108
+      *
+     A  14                              9 11'BATCH NUMBER:'
+     A  14        PBTID          3A     9 26TEXT('Batch No')
+     A  14                              9 35'CURRENCY:'
+     A  14        PCCY           3   O  9 46
+     A  14                              9 53'TRANSACTION TYPE:'
+     A  14        PTRTP          5   O  9 72
+     A  14                              9 82'DEPT:'
+     A  14        PDEPT          3   O  9 88
+     A  14N34                           9 94'INPUT'
+     A  14                              9115'USER BRANCH:'
+     A  14        PUSBR          3   O  9128
+      *
+     A          R RHEAD                     TEXT('FOR RANGE HEAD')
+     A                                 11  9'*   *   *   *   *   *   *   *   *'
+     A                                 11 45'TOTALS FOR TRANSACTION RANGE ONLY'
+     A                                 11 81'*   *   *   *   *   *   *   *   *'
+      *
+     A          R HEAD1                     TEXT('REPORT HEADING')
+     A                                 13 10'Currency'
+     A                                 13 21'--------Debits--------'
+     A                                 13 47'-------Credits--------'
+     A                                 13 84'Cash'
+     A                                 13101'Clearings'
+      *
+     A                                 14 21'No.'
+     A                                 14 37'Value'
+     A                                 14 47'No.'
+     A                                 14 63'Value'
+     A                                 14 83'Value'
+     A                                 14105'Value'
+      *
+     A          R HEAD2                     TEXT('DETAIL HEAD')
+     A                                 12 02'TRAN'
+     A                                 12 17'DESCRIPTION'
+     A                                 12 38'ACCOUNT/  CCY'
+     A                                 12 61'AMOUNT'
+     A                                 12 73'EXCHANGE TRANS'
+     A                                 12 89'VALUE  REVSE OVRRID'
+     A                                 12110'OVR   WSID'
+      *                                               Begin /166074/
+     A                                 12120'/'
+      *                                               End /166074/
+      **Start of change CRT026
+     A**********                       12126'TR.TIME'
+     A                                 12124'TR.TIME'
+      **End of change CRT026
+      *
+     A                                 13 02' NO.'
+     A                                 13 37'TELLER ID'
+     A                                 13 75'RATE   TYPE'
+     A                                 13 89'DATE    NO.  CODES'
+      **Start of change CRT026
+     A**********                       13110'TID'
+     A N51                             13110'TID'
+     A  51                             13110'USR'
+     A  50                             13124'PRFT CNTR'
+      *                                               Begin /166074/
+     A**50******                       13114'PRFT CNTR'
+      *                                               End /166074/
+      **End of change CRT026
+      *
+     A  14                             14 74'CHQ/REF'
+      *
+     A          R DETAIL1                   TEXT('QUERY PRINT')
+     A                                      SPACEB(2)
+     A            SCCYR          3        12TEXT('CURRENCY')
+     A            SNDRA          5  0     19TEXT('DEBIT TRNS')
+     A                                      EDTCDE(L)
+     A            PVDRA         17        25TEXT('DEBIT VALUE')
+     A            SNCRA          5  0     45TEXT('CREDIT TRNS')
+     A                                      EDTCDE(L)
+     A            PVCRA         17        51TEXT('CREDIT VALUE')
+     A            PVCAA         19        72TEXT('CASH VALUE')
+     A            PVCKA         17        93TEXT('CLEARING VALUE')
+      *
+     A          R LAST                      TEXT('LAST LINE')
+     A                                      SPACEB(4)
+     A N34
+     AON33                                55'*** END OF REPORT ***'
+     A  33 34                             53'*** END OF BRANCH REPORT ***'
+      *
+      ** Database error reporting line
+     A          R ERRLINE                   TEXT('ERROR PRINT LINE')
+     A                                    47'*** REFERENCE RE4202 +
+     A                                      DATABASE ERROR ***'
+     A                                      SPACEB(2)
+      *
+     A          R DETL1                     TEXT('Treasury in/out')
+     A                                      SPACEB(2)
+      *
+     A            PTRNO          5  0      1
+     A            PDESC         30         7
+     A            PCCY1          3        48
+     A            PAMT1         16        51
+     A            PWSID         10       114
+     A            PTIME          6  0    125
+     A                                      EDTWRD('0 :  :  ')
+      **Start of change CRT026
+     A  50        PPRFC          4A      124TEXT('PROFIT CENTRE')
+     A  50                                  SPACEB(1)
+      *                                               Begin /166074/
+     A**50******  PPRFC          4A      114TEXT('PROFIT CENTRE')
+     A**50******                            SPACEB(1)
+      *                                               End /166074/
+      **End of change CRT026
+      *
+     A          R DETL2                     TEXT('Teller in/out')
+     A                                      SPACEB(2)
+      *
+     A            PTRNO          5  0      1
+     A            PDESC         30         7
+     A            PTLID          3        40
+     A            PCCY1          3        48
+     A            PAMT1         16        51
+     A            PWSID         10       114
+     A            PTIME          6  0    125
+     A                                      EDTWRD('0 :  :  ')
+      **Start of change CRT026
+     A  50        PPRFC          4A      124TEXT('PROFIT CENTRE')
+     A  50                                  SPACEB(1)
+      *                                               Begin /166074/
+     A**50******  PPRFC          4A      114TEXT('PROFIT CENTRE')
+     A**50******                            SPACEB(1)
+      *                                               End /166074/
+      **End of change CRT026
+      *
+     A          R DETL3                     TEXT('A/c closure')
+     A                                      SPACEB(2)
+      *
+     A            PTRNO          5  0      1
+     A            PDESC         30         7
+     A            PACNO         10        37
+     A            PCCY1          3        48
+     A            PWRCD          7       102TEXT('WARNING CODES')
+      **Start of change CRT026
+     A**********  POVTI          3       110TEXT('OVERRIDE TELLER')
+     A N51        POVTI          3       110TEXT('OVERRIDE TELLER')
+      **End of change CRT026
+     A            PWSID         10       114
+     A            PTIME          6  0    125
+     A                                      EDTWRD('0 :  :  ')
+      **Start of change CRT026
+     A  51        POVUR         10A      110TEXT('OVERRIDE USER')
+     A  51                                  SPACEB(1)
+      *
+     A  50        PPRFC          4A      124TEXT('PROFIT CENTRE')
+     A  50N51                               SPACEB(1)
+      *                                               Begin /166074/
+     A**50******  PPRFC          4A      114TEXT('PROFIT CENTRE')
+     A**50******                            SPACEB(1)
+      *                                               End /166074/
+      **End of change CRT026
+      *
+     A          R DETL4                     TEXT('Cash W/D - a/c')
+     A                                      SPACEB(2)
+      *
+     A            PTRNO          5  0      1
+     A            PDESC         30         7
+     A            PACNO         10        37
+     A            PCCY1          3        48
+     A            PAMT1         16        51
+     A N15        PVLDT          7        88
+     A  15                                88'CLOSURE'
+     A  16        PCRTN          5  0     96TEXT('REVERSAL NO')
+     A            PWRCD          7       102TEXT('WARNING CODES')
+      **Start of change CRT026
+     A**********  POVTI          3       110TEXT('OVERRIDE TELLER')
+     A N51        POVTI          3       110TEXT('OVERRIDE TELLER')
+      **End of change CRT026
+     A            PWSID         10       114
+     A            PTIME          6  0    125
+     A                                      EDTWRD('0 :  :  ')
+      **Start of change CRT026
+     A  51        POVUR         10A      110TEXT('OVERRIDE USER')
+     A  51                                  SPACEB(1)
+      *
+     A  50        PPRFC          4A      124TEXT('PROFIT CENTRE')
+     A  50N51                               SPACEB(1)
+      *                                               Begin /166074/
+     A**50******  PPRFC          4A      114TEXT('PROFIT CENTRE')
+     A**50******                            SPACEB(1)
+      *                                               End /166074/
+      **End of change CRT026
+     A*/COPY WNCPYSRC,RE4202P102
+      *
+     A          R DETL5                     TEXT('Cash W/D - NAC')
+     A                                      SPACEB(2)
+      *
+     A            PTRNO          5  0      1
+     A            PDESC         30         7
+     A            PACNO         10        37
+     A            PCCY1          3        48
+     A            PAMT1         16        51
+     A            PEXCR         13  8     67TEXT('EXCHANGE RATES')
+     A                                      EDTCDE(3)
+     A N15        PVLDT          7        88
+     A  15                                88'CLOSURE'
+     A  16        PCRTN          5  0     96TEXT('REVERSAL NO')
+     A            PWRCD          7       102TEXT('WARNING CODES')
+      **Start of change CRT026
+     A**********  POVTI          3       110TEXT('OVERRIDE TELLER')
+     A N51        POVTI          3       110TEXT('OVERRIDE TELLER')
+      **End of change CRT026
+     A            PWSID         10       114
+     A            PTIME          6  0    125
+     A                                      EDTWRD('0 :  :  ')
+      **Start of change CRT026
+     A  51        POVUR         10A      110TEXT('OVERRIDE USER')
+     A  51                                  SPACEB(1)
+      *
+     A  50        PPRFC          4A      124TEXT('PROFIT CENTRE')
+     A  50N51                               SPACEB(1)
+      *                                               Begin /166074/
+     A**50******  PPRFC          4A      114TEXT('PROFIT CENTRE')
+     A**50******                            SPACEB(1)
+      *                                               End /166074/
+      **End of change CRT026
+     A*/COPY WNCPYSRC,RE4202P104
+      *
+     A          R DETL6                     TEXT('Cheque W/D - a/c')
+     A                                      SPACEB(2)
+      *
+     A            PTRNO          5  0      1
+     A            PDESC         30         7
+     A            PACNO         10        37
+     A            PCCY1          3        48
+     A            PAMT1         16        51
+     A N15        PVLDT          7        88
+     A  15                                88'CLOSURE'
+     A  16        PCRTN          5  0     96TEXT('REVERSAL NO')
+     A            PWRCD          7       102TEXT('WARNING CODES')
+      **Start of change CRT026
+     A**********  POVTI          3       110TEXT('OVERRIDE TELLER')
+     A N51        POVTI          3       110TEXT('OVERRIDE TELLER')
+      **End of change CRT026
+     A            PWSID         10       114
+     A            PTIME          6  0    125
+     A                                      EDTWRD('0 :  :  ')
+      **Start of change CRT026
+     A  51        POVUR         10A      110TEXT('OVERRIDE USER')
+     A  51                                  SPACEB(1)
+      *
+     A  50        PPRFC          4A      124TEXT('PROFIT CENTRE')
+     A  50N51                               SPACEB(1)
+      *                                               Begin /166074/
+     A**50******  PPRFC          4A      114TEXT('PROFIT CENTRE')
+     A**50******                            SPACEB(1)
+      *                                               End /166074/
+      **End of change CRT026
+     A*/COPY WNCPYSRC,RE4202P105
+      *
+     A          R DETL7                     TEXT('Cheque W/D - NAC')
+     A                                      SPACEB(2)
+      *
+     A            PTRNO          5  0      1
+     A            PDESC         30         7
+     A            PACNO         10        37
+     A            PCCY1          3        48
+     A            PAMT1         16        51
+     A            PEXCR         13  8     67TEXT('EXCHANGE RATES')
+     A                                      EDTCDE(3)
+     A N15        PVLDT          7        88
+     A  15                                88'CLOSURE'
+     A  16        PCRTN          5  0     96TEXT('REVERSAL NO')
+     A            PWRCD          7       102TEXT('WARNING CODES')
+      **Start of change CRT026
+     A**********  POVTI          3       110TEXT('OVERRIDE TELLER')
+     A N51        POVTI          3       110TEXT('OVERRIDE TELLER')
+      **End of change CRT026
+     A            PWSID         10       114
+     A            PTIME          6  0    125
+     A                                      EDTWRD('0 :  :  ')
+      **Start of change CRT026
+     A  51        POVUR         10A      110TEXT('OVERRIDE USER')
+     A  51                                  SPACEB(1)
+      *
+     A  50        PPRFC          4A      124TEXT('PROFIT CENTRE')
+     A  50N51                               SPACEB(1)
+      *                                               Begin /166074/
+     A**50******  PPRFC          4A      114TEXT('PROFIT CENTRE')
+     A**50******                            SPACEB(1)
+      *                                               End /166074/
+      **End of change CRT026
+     A*/COPY WNCPYSRC,RE4202P106
+      *
+     A          R DETL8                     TEXT('Cash/Chq Dep AC')
+     A                                      SPACEB(2)
+      *
+     A            PTRNO          5  0      1
+     A            PDESC         30         7
+     A            PACNO         10        37
+     A            PCCY1          3        48
+     A            PAMT1         16        51
+     A N15        PVLDT          7        88
+     A  15                                88'CLOSURE'
+     A  16        PCRTN          5  0     96TEXT('REVERSAL NO')
+     A            PWRCD          7       102TEXT('WARNING CODES')
+      **Start of change CRT026
+     A**********  POVTI          3       110TEXT('OVERRIDE TELLER')
+     A N51        POVTI          3       110TEXT('OVERRIDE TELLER')
+      **End of change CRT026
+     A            PWSID         10       114
+     A            PTIME          6  0    125
+     A                                      EDTWRD('0 :  :  ')
+      *
+     A            PAMT2         16        51
+     A                                      SPACEB(1)
+     A            PWRCD2         7       102TEXT('WARNING CODES')
+      **Start of change CRT026
+     A  51        POVUR         10A      110TEXT('OVERRIDE USER')
+     A  50        PPRFC          4A      124TEXT('PROFIT CENTRE')
+      *                                               Begin /166074/
+     A**50******  PPRFC          4A      114TEXT('PROFIT CENTRE')
+      *                                               End /166074/
+      **End of change CRT026
+     A*/COPY WNCPYSRC,RE4202P103
+      *
+     A          R DETL9                     TEXT('Cash/Chq Dep NAC')
+     A                                      SPACEB(2)
+      *
+     A            PTRNO          5  0      1
+     A            PDESC         30         7
+     A            PACNO         10        37
+     A            PCCY1          3        48
+     A            PAMT1         16        51
+     A            PEXCR         13  8     67TEXT('EXCHANGE RATES')
+     A                                      EDTCDE(3)
+     A N15        PVLDT          7        88
+     A  15                                88'CLOSURE'
+     A  16        PCRTN          5  0     96TEXT('REVERSAL NO')
+     A            PWRCD          7       102TEXT('WARNING CODES')
+      **Start of change CRT026
+     A**********  POVTI          3       110TEXT('OVERRIDE TELLER')
+     A N51        POVTI          3       110TEXT('OVERRIDE TELLER')
+      **End of change CRT026
+     A            PWSID         10       114
+     A            PTIME          6  0    125
+     A                                      EDTWRD('0 :  :  ')
+      *
+     A            PAMT2         16        51
+     A                                      SPACEB(1)
+     A            PWRCD2         7       102TEXT('WARNING CODES')
+      **Start of change CRT026
+     A  51        POVUR         10A      110TEXT('OVERRIDE USER')
+     A  50        PPRFC          4A      124TEXT('PROFIT CENTRE')
+      *                                               Begin /166074/
+     A**50******  PPRFC          4A      114TEXT('PROFIT CENTRE')
+      *                                               End /166074/
+      **End of change CRT026
+     A*/COPY WNCPYSRC,RE4202P107
+      *
+     A          R DETL10                    TEXT('Retail A.C transfer')
+     A                                      SPACEB(2)
+      *
+     A            PTRNO          5  0      1
+     A            PDESC         30         7
+     A            PACNO         10        37
+     A            PCCY1          3        48
+     A            PAMT1         16        51
+     A N15        PVLDT          7        88
+     A  15                                88'CLOSURE'
+     A  16        PCRTN          5  0     96TEXT('REVERSAL NO')
+     A            PWRCD          7       102TEXT('WARNING CODES')
+      **Start of change CRT026
+     A**********  POVTI          3       110TEXT('OVERRIDE TELLER')
+     A N51        POVTI          3       110TEXT('OVERRIDE TELLER')
+      **End of change CRT026
+     A            PWSID         10       114
+     A            PTIME          6  0    125
+     A                                      EDTWRD('0 :  :  ')
+      *
+     A            PTTAC         10        37
+     A                                      SPACEB(1)
+     A            PWRCD2         7       102TEXT('WARNING CODES')
+      **Start of change CRT026
+     A  51        POVUR         10A      110TEXT('OVERRIDE USER')
+     A  50        PPRFC          4A      124TEXT('PROFIT CENTRE')
+      *                                               Begin /166074/
+     A**50******  PPRFC          4A      114TEXT('PROFIT CENTRE')                             CRT026
+      *                                               End /166074/
+      **End of change CRT026
+     A*/COPY WNCPYSRC,RE4202P108
+      *
+     A          R DETL11                    TEXT('GL Transfer')
+     A                                      SPACEB(2)
+      *
+     A            PTRNO          5  0      1
+     A            PDESC         30         7
+     A            PCUS1          6        37
+     A                                    43'-'
+     A**Start of change CGL029
+     A**********  PACD1          6        44                                                  CGL029
+     A**********                          48'-'                                               CGL029
+     A**********  PACSQ1         6        49                                                  CGL029
+     A**********  PAMT1         16        51                                                  CGL029
+     A**********  PCCY1          3        67                                                  CGL029
+     A            PACD1         10        44
+     A                                    54'-'
+     A            PACSQ1         2        55
+     A            PAMT1         16        58
+     A            PCCY1          3        74
+     A**End of change CGL029
+     A  16        PCRTN          5  0     96TEXT('REVERSAL NO')
+     A            PWRCD          7       102TEXT('WARNING CODES')
+      **Start of change CRT026
+     A**********  POVTI          3       110TEXT('OVERRIDE TELLER')
+     A N51        POVTI          3       110TEXT('OVERRIDE TELLER')
+      **End of change CRT026
+     A            PWSID         10       114
+     A            PTIME          6  0    125
+     A                                      EDTWRD('0 :  :  ')
+      *
+     A            PCUS2          6        37
+     A                                      SPACEB(1)
+     A                                    43'-'
+     A**Start of change CGL029
+     A**********  PACD2          6        44                                                  CGL029
+     A**********                          48'-'                                               CGL029
+     A**********  PACSQ2         6        49                                                  CGL029
+     A            PACD2         10        44
+     A                                    54'-'
+     A            PACSQ2         2        55
+     A**End of change CGL029
+     A            PWRCD2         7       102TEXT('WARNING CODES')
+      **Start of change CRT026
+     A  51        POVUR         10A      110TEXT('OVERRIDE USER')
+     A  50        PPRFC          4A      124TEXT('PROFIT CENTRE')
+      *                                               Begin /166074/
+     A**50******  PPRFC          4A      114TEXT('PROFIT CENTRE')
+      *                                               End /166074/
+      **End of change CRT026
+     A*/COPY WNCPYSRC,RE4202P109
+      *
+     A          R DETL12                    TEXT('Charges/Credits')
+     A                                      SPACEB(2)
+      *
+     A            PTRNO          5  0      1
+     A            PDESC         30         7
+     A            PACNO         10        37
+     A            PCCY1          3        48
+     A            PAMT1         16        51
+     A            PTTP1          5        82TEXT('Transaction type')
+     A N15        PVLDT          7        88
+     A  15                                88'CLOSURE'
+     A  16        PCRTN          5  0     96TEXT('REVERSAL NO')
+     A            PWRCD          7       102TEXT('WARNING CODES')
+      **Start of change CRT026
+     A**********  POVTI          3       110TEXT('OVERRIDE TELLER')
+     A N51        POVTI          3       110TEXT('OVERRIDE TELLER')
+      **End of change CRT026
+     A            PWSID         10       114
+     A            PTIME          6  0    125
+     A                                      EDTWRD('0 :  :  ')
+      *
+     A            PCCY2          3        48
+     A                                      SPACEB(1)
+     A            PAMT2         16        51
+     A            PTTP2          5        82TEXT('Transaction type')
+     A            PWRCD2         7       102TEXT('WARNING CODES')
+      **Start of change CRT026
+     A  51        POVUR         10A      110TEXT('OVERRIDE USER')
+     A  50        PPRFC          4A      124TEXT('PROFIT CENTRE')
+      *                                               Begin /166074/
+     A**50******  PPRFC          4A      114TEXT('PROFIT CENTRE')
+      *                                               End /166074/
+      **End of change CRT026
+     A*/COPY WNCPYSRC,RE4202P110
+      *
+     A          R DETL13                    TEXT('FX Input')
+     A                                      SPACEB(2)
+      *
+     A            PTRNO          5  0      1
+     A            PDESC         30         7
+     A            PCCY1          3        48
+     A            PAMT1         16        51
+     A            PEXCR         13  8     67TEXT('EXCHANGE RATES')
+     A                                      EDTCDE(3)
+     A            PTTP1          5        82TEXT('Transaction type')
+     A*                                              Start /106653/
+     A  16        PCRTN          5  0     96TEXT('REVERSAL NO')
+     A*                                              End   /106653/
+     A            PWRCD          7       102TEXT('WARNING CODES')
+      **Start of change CRT026
+     A**********  POVTI          3       110TEXT('OVERRIDE TELLER')
+     A N51        POVTI          3       110TEXT('OVERRIDE TELLER')
+      **End of change CRT026
+     A            PWSID         10       114
+     A            PTIME          6  0    125
+     A                                      EDTWRD('0 :  :  ')
+      *
+     A            PCCY2          3        48
+     A                                      SPACEB(1)
+     A            PAMT2         16        51
+     A            PTTP2          5        82TEXT('Transaction type')
+     A            PWRCD2         7       102TEXT('WARNING CODES')
+      **Start of change CRT026
+     A  51        POVUR         10A      110TEXT('OVERRIDE USER')
+     A  50        PPRFC          4A      124TEXT('PROFIT CENTRE')
+      *                                               Begin /166074/
+     A**50******  PPRFC          4A      114TEXT('PROFIT CENTRE')
+      *                                               End /166074/
+      **End of change CRT026
+     A*/COPY WNCPYSRC,RE4202P111
+      *
+     A          R DETL14                    TEXT('Trans. reversal')
+     A                                      SPACEB(2)
+      *
+     A            PTRNO          5  0      1
+     A            PDESC         30         7
+     A  16        PCRTN          5  0     96TEXT('REVERSAL NO')
+     A            PWRCD          7       102TEXT('WARNING CODES')
+      **Start of change CRT026
+     A**********  POVTI          3       110TEXT('OVERRIDE TELLER')
+     A N51        POVTI          3       110TEXT('OVERRIDE TELLER')
+      **End of change CRT026
+     A            PWSID         10       114
+     A            PTIME          6  0    125
+     A                                      EDTWRD('0 :  :  ')
+      *
+      **Start of change CRT026
+     A  51        POVUR         10A      110TEXT('OVERRIDE USER')
+     A  51                                  SPACEB(1)
+      *
+     A  50        PPRFC          4A      124TEXT('PROFIT CENTRE')
+     A  50N51                               SPACEB(1)
+      *                                               Begin /166074/
+     A**50******  PPRFC          4A      114TEXT('PROFIT CENTRE')
+     A**50******                            SPACEB(1)
+      *                                               End /166074/
+      **End of change CRT026
+     A          R DETL15                    TEXT('Clearing/Payroll')
+     A                                      SPACEB(2)
+      *
+     A            PTRNO          5  0      1
+     A            PDESC         30         7
+     A            PACNO         10        37
+     A            PCCY1          3        48
+     A            PAMT1         16        51
+     A            PCQNF          8        72TEXT('Cheque reference')
+     A            PVLDT          7        88
+     A  16        PCRTN          5  0     96TEXT('REVERSAL NO')
+     A            PWRCD          7       102TEXT('WARNING CODES')
+      **Start of change CRT026
+     A**********  POVTI          3       110TEXT('OVERRIDE TELLER')
+     A N51        POVTI          3       110TEXT('OVERRIDE TELLER')
+      **End of change CRT026
+     A            PWSID         10       114
+     A            PTIME          6  0    125
+     A                                      EDTWRD('0 :  :  ')
+      *
+     A            PACNM         20        37TEXT('Retail A/C Name')
+     A                                      SPACEB(1)
+     A            PWRCD2         7       102TEXT('WARNING CODES')
+      **Start of change CRT026
+     A  51        POVUR         10A      110TEXT('OVERRIDE USER')
+     A  50        PPRFC          4A      124TEXT('PROFIT CENTRE')
+      *                                               Begin /166074/
+     A**50******  PPRFC          4A      114TEXT('PROFIT CENTRE')
+      *                                               End /166074/
+      **End of change CRT026
+      *
+     A          R DETL16                    TEXT('Fixed Deposit')
+     A                                      SPACEB(2)
+      *
+     A            PTRNO          5  0      1
+     A            PDESC         30         7
+     A            PCQNF          8        37TEXT('FD Deal No')
+     A            PCCY1          3        48
+     A            PAMT1         16        51
+     A  16        PCRTN          5  0     96TEXT('REVERSAL NO')
+     A            PWRCD          7       102TEXT('WARNING CODES')
+      **Start of change CRT026
+     A**********  POVTI          3       110TEXT('OVERRIDE TELLER')
+     A N51        POVTI          3       110TEXT('OVERRIDE TELLER')
+      **End of change CRT026
+     A            PWSID         10       114
+     A            PTIME          6  0    125
+     A                                      EDTWRD('0 :  :  ')
+      **Start of change CRT026
+     A  51        POVUR         10A      110TEXT('OVERRIDE USER')
+     A  51                                  SPACEB(1)
+      *
+     A  50        PPRFC          4A      124TEXT('PROFIT CENTRE')
+     A  50N51                               SPACEB(1)
+      *                                               Begin /166074/
+     A**50******  PPRFC          4A      114TEXT('PROFIT CENTRE')
+     A**50******                            SPACEB(1)
+      *                                               End /166074/
+      **End of change CRT026
+      *
+     A          R WRNLIN                    TEXT('Warning line')
+     A                                      SPACEB(1)
+      *
+     A            PWRCD2         7       102TEXT('WARNING CODES')
+     A*                                              Start /S01408/
+     A*/COPY WNCPYSRC,RE4202P101
+     A*                                              End   /S01408/
+      *
+      **Start of change BUG8510
+     A          R DETL17                    TEXT('HOUSE CHEQUE ACCONT #')
+     A                                      SPACEB(1)
+     A                                    11'CHEQUE ACCOUNT #:'
+     A            PHCAC         10        29
+      **End of change BUG8510

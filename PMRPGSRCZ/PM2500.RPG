@@ -1,0 +1,819 @@
+     H***********                                                         S01486
+     H        1                                                           S01486
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM End of month drop')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module                          *
+     F*                                                               *
+     F*  PM2500  - End of Month Drop                                  *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CSE071             Date 19Jul05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 159446             Date 15Jun01               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 162396             Date 17Jun99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 CPM005             Date 06Aug96               *
+     F*                 CFF004             DATE 02OCT96               *
+     F*                 S01486             DATE 11AUG94               *
+     F*                 056467             DATE 01JUN93               *
+     F*                 R37467             DATE 26MAR92               *
+     F*                 48219              DATE 19OCT92               *
+     F*                 38047              DATE 09APR92               *
+     F*                 B08253             DATE 14NOV91               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  159446 - DB error in SECTYD redundant for drop purpose.      *
+     F*  162396 - If Security has been dropped, delete also live      *
+     F*           Portfolio  Positions.                               *
+     F*  CPM005 - Private Banking Phase 2                             *
+     F*           Focus Group Changes upgraded to DBA                 *
+     F*           PBFG/5 - INSTRUMENT ASSET / LIABILITY SPLIT         *
+     F*           PBFG/6 - ADDITIONAL CUSTOMER DETAILS                *
+     F*           PBFG/7 - NET COMMITMENT BY CURRENCY                 *
+     F*           PBFG/8 - DISPLAY POSITIONS SPLIT BY CURRENCY        *
+     F*  CFF004 - Increase in size of Price Fields,(Recompiled Only)  *
+     F*  S01486 - Portfolio Management Upgrade to Release 10.         *
+     F*  056467 - HISTORIC POSITIONS CREATED ON TRADE DATE AND ALSO ON*
+     F*           VALUE DATE POSITION                                 *
+     F*  R37467 - DROP SECURITY POSITIONS VIA SE2570 RATHER THAN HERE *
+     F*  48219  - CHANGE TO KEEP PM POSITIONS TO TRADE RETENTION DATE *
+     F*  38047  - DB ERROR IN SECTYD BECAUSE THE SECURITY WAS DROPPED *
+     F*           OR CANCELLED.                                       *
+     F*  B08253 - DELETE MATURED POSITIONS FROM PF/PMMFHLPP           *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F***SDBANKL1IF**E           K        DISK                            S01486
+     F*************                                 KINFSR *PSSR          S01486
+     F** RECORD ID
+     F***SDGELRL1IF**E           K        DISK                            S01486
+     F*************                                 KINFSR *PSSR          S01486
+     F** RECORD ID
+     F***SDSTRDL1IF**E           K        DISK                            S01486
+     F*************                                 KINFSR *PSSR          S01486
+     F** RECORD ID
+     FSECTY   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F** RECORD ID
+     FPMHPOSLLUF  E           K        DISK                      A
+     F            PMCPOSP0                          KRENAMEPMHPOSP0
+     F                                              KINFSR *PSSR
+     F** RECORD ID 'QH'
+     FPMIPOSLLUF  E           K        DISK
+     F            PMCPOSP0                          KRENAMEPMIPOSP0
+     F                                              KINFSR *PSSR
+     FPMCPOSL0UF  E           K        DISK                               162396
+     F            PMCPOSP0                          KRENAMEPMDPOSP0       162396
+     F                                              KINFSR *PSSR          162396
+     F** RECORD ID 'QA'
+     F*PMMFHLL1UF**E           K        DISK                        R37467B08253
+     FPM2500AUO   E                    PRINTER
+     F** RECORD ID RR
+     F*************************************************************
+     E**
+     E** TABLES AND ARRAYS
+     E*********************************************************************
+      ** ARRAY FOR COPYRIGHT
+      *
+     E                    CPY@    1   1 80
+     E**
+     I**
+     I** RENAME FIELDS ON PMHPOSLL
+     I**
+     IPMHPOSP0
+     I              QARECI                          QHRECI
+     I              QACNUM                          QHCNUM
+     I              QAPTFR                          QHPTFR
+     I              QATDSS                          QHTDSS
+     I              QATVDA                          QHTVDA
+     I              QAPDAT                          QHPDAT
+     I              QANOML                          QHNOML
+     I              QACSEX                          QHCSEX
+     I              QAAPNM                          QHAPNM
+     I              QAFXAP                          QHFXAP
+     I              QAPILP                          QHPILP
+     I              QAACDI                          QHACDI
+     I              QABVLD                          QHBVLD
+     I              QATNMC                          QHTNMC
+     I              QATNMD                          QHTNMD
+     I              QAPTCY                          QHPTCY
+     I              QAPCDP                          QHPCDP
+     I              QAAYNM                          QHAYNM                B08253
+     I              QACSBY                          QHCSBY                B08253
+     I              QABYDP                          QHBYDP                B08253
+     I              QACLAS                          QHCLAS                B08253
+     I              QAACOC                          QHACOC                B08253
+     I              QAOTNM                          QHOTNM                B08253
+     I              QAOTEX                          QHOTEX                B08253
+     I              QAAPBC                          QHAPBC                B08253
+     I              QAFLEX                          QHFLEX                B08253
+     I              QACOLC                          QHCOLC                B08253
+     I              QABRCD                          QHBRCD                B08253
+     I              QANPDT                          QHNPDT                B08253
+     I              QAPFMR                          QHPFMR                CPM005
+     I              QAPFM8                          QHPFM8                CPM005
+     I              QAPFM9                          QHPFM9                CPM005
+     I*
+     I** PROGRAM STATUS DATA STRUCTURE FOR WS/USER ID'S
+     I*
+     IPSDS       SDS
+     I                                      247 249 WSID
+     I                                      254 263 USID
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     I***LDA********UDS***********************     256                    S01486
+     ILDA         DS                            256                       S01486
+     I                                      132 183 DBLOT
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     ICPYR@#      DS
+     I*
+     I** DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*                                                                   S01486
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I**  Data structure for Bank details                                 S01486
+     I*                                                                   S01486
+     ISDGELR    E DSSDGELRPD                                              S01486
+     I**  Data structure for general ledger details                       S01486
+     I*                                                                   S01486
+     ISDSTRD    E DSSDSTRDPD                                              S01486
+     I**  Data structure for Securities Trading ICD                       S01486
+     I*                                                                   S01486
+     IDSFDY     E DSDSFDY                                                 S01486
+     I**  Short data structure for access objects                         S01486
+     I*                                                                   S01486
+     IDSSDY     E DSDSSDY                                                 S01486
+     I**  Long data structure for access programs                         S01486
+     I*                                                                   S01486
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * MAIN     - MAIN PROCESSING                                       *
+      * #INIT    - INITIAL PROCESSING                                    *
+      * #P01     - POSITIONS PROCESSING                                  *
+      * #P02     - ACCESS SECURITY DETAILS                               *
+      * #P03     - DETERMINE IF POSITION TO BE DROPPED                   *
+      * #W01     - WRITE TO END OF MONTH DROP AUDIT REPORT               *
+      * #W03     - WRITE TO PORTFOLIO POSITIONS                          *
+      * ZEVCD    - DETERMINE THE EVENT CONTROL DATE                      *
+      * *PSSR    - PROCESS DATA BASE ERRORS                              *
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      *                                                                  *
+      ********************************************************************
+     C*************************************************************
+     C**
+     C** KEY LISTS
+     C**
+     C           PMIPSK    KLIST
+     C                     KFLD           QACNUM
+     C                     KFLD           QAPTFR
+     C                     KFLD           QATDSS
+     C                     KFLD           QATVDA                          48219
+     C**
+     C           PMHPSK    KLIST
+     C                     KFLD           QACNUM
+     C                     KFLD           QAPTFR
+     C                     KFLD           QATDSS
+     C                     KFLD           QATVDA
+     C**                                                                  48219
+     C           PMHPS1    KLIST                                          48219
+     C**********           KFLD           WACNUM  60                                    48219 CSD027
+     C                     KFLD           WACNUM  6                                           CSD027
+     C                     KFLD           WAPTFR  4                       48219
+     C                     KFLD           WATDSS 10                       48219
+     C                     KFLD           WATVDA  1                       48219
+     C                     KFLD           WAPDAT  50                      48219
+     C**                                                                  48219
+     C           PMHPS2    KLIST                                          48219
+     C**********           KFLD           WACNUM  60                                    48219 CSD027
+     C                     KFLD           WACNUM  6                                           CSD027
+     C                     KFLD           WAPTFR  4                       48219
+     C                     KFLD           WATDSS 10                       48219
+     C                     KFLD           WATVDA  1                       48219
+     C**                                                                  162396
+     C           PMDPS1    KLIST                                          162396
+     C                     KFLD           DATDSS 10                       162396
+     C**********           KFLD           DACNUM  60                                   162396 CSD027
+     C                     KFLD           DACNUM  6                                           CSD027
+     C                     KFLD           DATVDA  1                       162396
+     C                     KFLD           DAPTFR  4                       162396
+     C****                                                          R37467B08253
+     C****       MFHLKY    KLIST                                    R37467B08253
+     C****                 KFLD           QFCNUM                    R37467B08253
+     C****                 KFLD           QFMODI                    R37467B08253
+     C****                 KFLD           QFTRNB                    R37467B08253
+     C****                 KFLD           QFTDSS                    R37467B08253
+     C****                 KFLD           QFTXT2                    R37467B08253
+     C****                 KFLD           QFPTFR                    R37467B08253
+     C****                                                          R37467B08253
+     C****       MFHLK1    KLIST                                    R37467B08253
+     C****                 KFLD           QFCNUM                    R37467B08253
+     C****                 KFLD           QFMODI                    R37467B08253
+     C****                 KFLD           QFTRNB                    R37467B08253
+     C****                 KFLD           QFTDSS                    R37467B08253
+     C*************************************************************
+     C** P R O G R A M    S T A R T
+     C*************************************************************
+     C**
+     C                     EXSR #INIT
+     C**
+     C                     EXSR #P01
+     C**
+     C                     EXSR #W01
+     C**
+     C                     MOVE '1'       *INLR
+     C*************************************************************
+     C** P R O G R A M    E N D
+     C*************************************************************
+     C**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #INIT    - INITIAL PROCESSING                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - PROCESS DATA BASE ERRORS                              *
+      * ZEVCD    - DETERMINE THE EVENT CONTROL DATE                      *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWEVTD   - EVENT DATE                                            *
+      * WWBACV   - BACK VALUE DATE                                       *
+      *                                                                  *
+      ********************************************************************
+     C           #INIT     BEGSR
+     C*                                                                   S01486
+     C**  Copyright statement                                             S01486
+     C*                                                                   S01486
+     C                     MOVEACPY@      ACT@   80                       S01486
+     C*                                                                   S01486
+     C           *NAMVAR   DEFN           LDA                             S01486
+     C**
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVE *BLANKS   DBFILE                          S01486
+     C                     MOVE *BLANKS   DBKEY                           S01486
+     C                     MOVEL'PM2500'  DBPGM
+     C                     Z-ADD0         DBASE                           S01486
+     C                     OUT  LDA                                       S01486
+     C***********                                                         S01486
+     C***ACCESS*SDBANKL1*TO*GET*BANK*DETAILS***************************   S01486
+     C***********                                                         S01486
+     C***********          READ SDBANKL1                 70               S01486
+     C***********                                                         S01486
+     C************IN70     IFEQ '1'                        ***************S01486
+     C*                                                                   S01486
+     C** Get bank details using access object                             S01486
+     C*                                                                   S01486
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD  7                       S01486
+     C                     PARM '*FIRST ' P@OPTN  7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+     C*                                                                   S01486
+     C** Check if an error occurred                                       S01486
+     C*                                                                   S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD1         DBASE            **DB ERROR 01**
+     C***********          MOVEL'SDBANKL1'DBFILE           ***************S01486
+     C                     MOVE 'SDBANKPD'DBFILE           ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C***********          ELSE                                           S01486
+     C***********                                                         S01486
+     C***RECORD*FOUND*-**LOAD*RUN*DATE*********************************   S01486
+     C***********                                                         S01486
+     C***********          MOVELBJMRDT    RRRUNA                          S01486
+     C***********                                                         S01486
+     C                     END
+     C***********                                                         S01486
+     C***ACCESS*SDGELRL1*TO*GET*GENERAL*LEDGER*DETAILS*****************   S01486
+     C***********                                                         S01486
+     C***********          READ SDGELRL1                 70               S01486
+     C***********                                                         S01486
+     C************IN70     IFEQ '1'                        ***************S01486
+     C*                                                                   S01486
+     C** Get General Ledger details using access object                   S01486
+     C*                                                                   S01486
+     C**********           CALL 'AOGELRR0'                                S01486              CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM *BLANKS   P@RTCD                          S01486
+     C                     PARM '*FIRST'  P@OPTN                          S01486
+     C********** SDGELR    PARM SDGELR    DSFDY                           S01486              CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C*                                                                   S01486
+     C** Check if an error occurred                                       S01486
+     C*                                                                   S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD2         DBASE            **DB ERROR 02**
+     C***********          MOVEL'SDGELRL1'DBFILE           ***************S01486
+     C                     MOVE 'SDGELRPD'DBFILE           ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END
+     C**
+     C** DETERMINE THE EVENT CONTROL DATE
+     C**
+     C                     Z-ADDBKAPDT    APDA    50
+     C                     Z-ADDBJDNWD    DNWD    50
+     C**
+     C** SET EVENT CONTROL DATE EQUAL TO ECD, OUTPUT FROM STANDARD
+     C** SUBROUTINE ZEVCD
+     C**
+     C                     EXSR ZEVCD
+     C**
+     C                     Z-ADDECD       WWEVTD  50
+     C***********                                                         S01486
+     C***ACCESS*LF/SDSTRDL1*FOR*BACK*VALUE*PERIOD**********************   S01486
+     C***********                                                         S01486
+     C***********          READ SDSTRDL1                 70               S01486
+     C***********                                                         S01486
+     C************IN70     IFEQ '1'                        ***************S01486
+     C*                                                                   S01486
+     C* Get Installation Control Data record for Securities trading       S01486
+     C*                                                                   S01486
+     C                     CALL 'AOSTRDR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD                          S01486
+     C                     PARM '*FIRST ' P@OPTN                          S01486
+     C           SDSTRD    PARM SDSTRD    DSSDY                           S01486
+     C*                                                                   S01486
+     C** Check if an error occurred                                       S01486
+     C*                                                                   S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD3         DBASE            **DB ERROR 03**
+     C***********          MOVEL'SDSTRDL1'DBFILE           ***************S01486
+     C                     MOVE 'SDSTRDPD'DBFILE           ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END
+     C**
+     C** SET BACK VALUE DATE AS USED BY THIS PROGRAM AS EQUAL
+     C** TO EVENT CONTROL DATE FROM ABOVE MINUS THE BACK VALUE PERIOD
+     C** FROM LF/SDSTRDL1
+     C           WWEVTD    SUB  BVBVP     WWBACV  50                      48219
+     C**
+     C** SET RETENTION DATE = EVENT CONTROL DATE - (RETENTION MONTHS X 31)48219
+     C****       BVROST    MULT 31        WWBAC1  50                      48219
+     C****       WWEVTD    SUB  WWBAC1    WWBACV  50                      48219
+     C           BVROST    MULT 31        WWRETD  50                      48219
+     C           WWEVTD    SUB  WWRETD    WWRETD                          48219
+     C**
+     C                     ENDSR
+     C**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P01     - POSITIONS PROCESSING                                  *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #P02     - ACCESS SECURITY DETAILS                               *
+      * #P03     - DETERMINE IF POSITION TO BE DROPPED                   *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWRECD   - NUMBER OF RECORDS DELETED                             *
+      * WWTDSS   - SECURITY SHORT NAME                                   *
+      *                                                                  *
+      ********************************************************************
+     C           #P01      BEGSR
+     C**
+     C** INITIALIZE WORK FIELD AND INDICATOR
+     C**
+     C                     Z-ADD0         WWRECD  30
+     C                     Z-ADD0         WWREC1  30                      S01486
+     C                     MOVEL*BLANKS   WWTDSS 10
+     C                     MOVE '0'       *IN80
+     C**
+     C** DO UNTIL END OF FILE REACHED
+     C**
+     C           *IN71     DOUEQ'1'                        B1
+     C**
+     C                     READ PMIPOSLL                 71
+     C**
+     C           *IN71     IFEQ '0'                        B2
+     C**
+     C** IF THIS IS THE FIRST RECORD READ OR THE SECURITY SHORT NAME
+     C** IS DIFFERENT FROM THE PREVIOUS RECORD READ
+     C**
+     C           *IN80     IFEQ '0'                        B3
+     C           QATDSS    ORNE WWTDSS
+     C                     EXSR #P02
+     C                     MOVE '1'       *IN80
+     C                     MOVELQATDSS    WWTDSS
+     C                     END                             E3
+     C**
+     C** IF SECURITY IS MATURED OR DELETED
+     C** OR IF SECURITY NO MORE IN SECTYD FOR RECORD(S) STILL IN PMCPOSPD                     159446
+     C** DELETE RECORD FROM LF/PMIPOSLL
+     C**
+     C           RECI      IFEQ 'M'                        B3
+     C           RECI      OREQ '*'
+     C           *IN72     OREQ '1'                                                           159446
+     C****                                                          R37467B08253
+     C****F PORTFOLIO REFERENCE NOT BLANK DELETE ALL HOLDINGS FOR THR37467B08253
+     C****EAL FROM LF/PMMFHLL1                                      R37467B08253
+     C****                 MOVE QACNUM    QFCNUM                    R37467B08253
+     C****                 MOVE 'SE'      QFMODI                    R37467B08253
+     C****                 Z-ADD0         QFTRNB                    R37467B08253
+     C****                 MOVE QATDSS    QFTDSS                    R37467B08253
+     C****                 MOVE *LOVAL    QFTXT2                    R37467B08253
+     C****                 MOVE *LOVAL    QFPTFR                    R37467B08253
+     C****                                                          R37467B08253
+     C****ET FILE POINTER BEFORE FIRST RECORD FOR DEAL              R37467B08253
+     C****       MFHLKY    SETLLPMMFHLL1                            R37467B08253
+     C****       MFHLK1    READEPMMFHLL1                 60         R37467B08253
+     C****                                                          R37467B08253
+     C****       *IN60     DOWEQ'0'                                 R37467B08253
+     C****                 DELETPMHOLDP0                            R37467B08253
+     C****       MFHLK1    READEPMMFHLL1                 60         R37467B08253
+     C****                 END                                      R37467B08253
+     C*                                                             R37467B08253
+     C                     DELETPMIPOSP0
+     C                     ADD  1         WWRECD
+     C*
+     C           *IN72     IFEQ '1'                                       162396
+     C                     MOVE WWTDSS    DATDSS                          162396
+     C**********           Z-ADD0         DACNUM                                       162396 CSD027
+     C                     MOVE *BLANKS   DACNUM                                              CSD027
+     C                     MOVE *BLANKS   DATVDA                          162396
+     C                     MOVE *BLANKS   DAPTFR                          162396
+     C           PMDPS1    SETLLPMDPOSP0                                  162396
+     C                     READ PMDPOSP0                 73               162396
+     C           *IN73     DOUEQ'1'                                       162396
+     C           QATDSS    ORNE WWTDSS                                    162396
+     C           QATDSS    IFEQ WWTDSS                                    162396
+     C                     DELETPMDPOSP0                                  162396
+     C                     ADD  1         WWRECD                          162396
+     C                     END                                            162396
+     C                     READ PMDPOSP0                 73               162396
+     C                     END                                            162396
+     C                     END                                            162396
+     C                     ELSE                            X3
+     C**
+     C** DETERMINE IF POSITION TO BE DROPPED
+     C**
+     C                     EXSR #P03
+     C**
+     C                     END                             E3
+     C**
+     C                     END                             E2
+     C**
+     C                     END                             E1
+     C*                                                                   48219
+     C** READ THROUGH ALL HISTORIC POSITIONS AND ENSURE THAT ONLY ONE     48219
+     C** HISTORIC POSITION EXISTS BEFORE THE 'TRADE RETENTION DATE'       48219
+     C*                                                                   48219
+     C** SET FILE POINTER BEFORE FIRST RECORD ON FILE                     48219
+     C**********           Z-ADD*LOVAL    WACNUM                                        48219 CSD027
+     C                     MOVE *LOVAL    WACNUM                                              CSD027
+     C                     MOVE *LOVAL    WAPTFR                          48219
+     C                     MOVE *LOVAL    WATDSS                          48219
+     C                     MOVE *LOVAL    WATVDA                          48219
+     C                     Z-ADD*LOVAL    WAPDAT                          48219
+     C                     MOVE '0'       *IN60                           48219
+     C                     READ PMHPOSLL                 60               48219
+     C*                                                                   48219
+     C** DO WHILE RECORDS EXIST ON PMHPOSLL                               48219
+     C           *IN60     DOWEQ'0'                        B1             48219
+     C**********           Z-ADDQHCNUM    WACNUM                                        48219 CSD027
+     C                     MOVE QHCNUM    WACNUM                                              CSD027
+     C                     MOVE QHPTFR    WAPTFR                          48219
+     C                     MOVE QHTDSS    WATDSS                          48219
+     C                     MOVE QHTVDA    WATVDA                          48219
+     C                     Z-ADD0         WWCNT   50                      48219
+     C                     MOVE '0'       *IN61                           48219
+     C*                                                                   48219
+     C** MAINTAIN COUNT OF HISTORIC RECORDS FOR POSITION                  48219
+     C           *IN61     DOWEQ'0'                        B2             48219
+     C           QHPDAT    IFLT WWRETD                     B3             48219
+     C                     ADD  1         WWCNT                           48219
+     C                     END                             E3             48219
+     C           PMHPS2    READEPMHPOSLL                 61               48219
+     C                     END                             E2             48219
+     C*                                                                   48219
+     C** IF MORE THAN ONE 'H' RECORD DELETE ALL POSITIONS OTHER THAN      48219
+     C** LAST POSITION BEFORE RETENTION DATE                              48219
+     C           WWCNT     IFGT 1                          B2             48219
+     C                     Z-ADD*LOVAL    WAPDAT                          48219
+     C           PMHPS1    SETLLPMHPOSLL                                  48219
+     C*                                                                   48219
+     C           2         DO   WWCNT                      B3             48219
+     C                     READ PMHPOSLL                 60               48219
+     C*                                                                   48219
+     C           QHPDAT    IFLT WWRETD                     B4             48219
+     C                     DELETPMHPOSP0                                  48219
+     C                     ADD  1         WWREC1                          S01486
+     C                     END                             E4             48219
+     C*                                                                   48219
+     C                     END                             E3             48219
+     C                     END                             E2             48219
+     C*                                                                   48219
+     C** RESET FILE POINTER TO BE AFTER LAST RECORD FOR POSITION          48219
+     C                     Z-ADD*HIVAL    WAPDAT                          48219
+     C           PMHPS1    SETGTPMHPOSLL                                  48219
+     C                     READ PMHPOSLL                 60               48219
+     C                     END                             E1             48219
+     C**
+     C                     ENDSR
+     C**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P02     - ACCESS SECURITY DETAILS                               *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - PROCESS DATA BASE ERRORS                              *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P01     - POSITIONS PROCESSING                                  *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #P02      BEGSR
+     C**
+     C** ACCESS LF/SECTY USING SECURITY SHORT NAME
+     C** FROM LF/PMIPOSLL AS KEY
+     C**
+     C           QATDSS    CHAINSECTY                72
+     C**
+     C********** *IN72     IFEQ '1'                        ***************                    159446
+     C********** QANOML    ANDNE0                                      ***38047               159446
+     C********** *IN72     OREQ '1'                                    ***38047               159446
+     C********** QACSEX    ANDNE0                                      ***38047               159446
+     C********** *LOCK     IN   LDA                                       S01486              159446
+     C**********           Z-ADD4         DBASE            **DB ERROR 04**                    159446
+     C***********          MOVEL'SECTY   'DBFILE           ***************S01486
+     C**********           MOVE 'SECTY   'DBFILE           ***************S01486              159446
+     C**********           MOVELQATDSS    DBKEY                                               159446
+     C**********           OUT  LDA                                       S01486              159446
+     C**********           EXSR *PSSR                                                         159446
+     C**********           END                                                                159446
+     C**
+     C                     ENDSR
+     C**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P03     - DETERMINE IF POSITION TO BE DROPPED                   *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #W03     - WRITE TO PORTFOLIO POSITIONS                          *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P01     - POSITIONS PROCESSING                                  *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWBACV   - BACK VALUE DATE                                       *
+      * WWRECD   - NUMBER OF RECORDS DELETED                             *
+      *                                                                  *
+      ********************************************************************
+     C           #P03      BEGSR
+     C**
+     C** IF POSITION DATE IS GREATER THAN BACK VALUE DATE
+     C**
+     C           QAPDAT    IFGE WWBACV
+     C**
+     C***        PMIPSK    SETGTPMIPOSLL                                  056467
+     C           PMHPSK    SETGTPMIPOSLL                                  056467
+     C**
+     C                     ELSE
+     C****                                                                48219
+     C****CCESS PMHPOSLL                                                  48219
+     C****                                                                48219
+     C****       PMHPSK    CHAINPMHPOSLL             73                   48219
+     C****                                                                48219
+     C****F RECORD FOUND                                                  48219
+     C****                                                                48219
+     C****       *IN73     IFEQ '0'                                       48219
+     C****                 EXSR #W03                                      48219
+     C****                 UPDATPMHPOSP0                                  48219
+     C****                 ELSE                                           48219%
+     C****                 EXSR #W03                                      48219
+     C****                 WRITEPMHPOSP0                                  48219
+     C****                 END                                            48219
+     C*                                                                   48219
+     C** WRITE NEW HISTORIC RECORD TO PMHPOSPP FOR DROPPED 'I' POSITION   48219
+     C                     EXSR #W03                                      48219
+     C                     WRITEPMHPOSP0                                  48219
+     C**
+     C** DELET RECORD FROM PMIPOSLL
+     C**
+     C                     DELETPMIPOSP0
+     C                     ADD  1         WWRECD
+     C**
+     C                     END
+     C**
+     C                     ENDSR
+     C**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #W01     - WRITE TO END OF MONTH DROP AUDIT REPORT               *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWRECD   - NUMBER OF RECORDS DELETED                             *
+      *                                                                  *
+      ********************************************************************
+     C           #W01      BEGSR
+     C**
+     C** BANK TITLE
+     C**
+     C***********          MOVELBJURPT    RRTITL                          S01486
+     C**
+     C** NUMBER OF RECORDS DELETED
+     C**
+     C                     Z-ADDWWRECD    RRRECD
+     C                     Z-ADDWWREC1    RRREC1                          S01486
+     C**
+     C** WRITE TO AUDIT
+     C**
+     C***********          WRITEPM2500P1                                  S01486
+     C                     WRITEHEADER                                    S01486
+     C                     WRITECONTROL                                   S01486
+     C*                                                                   S01486
+     C** Check if no details to report                                    S01486
+     C*                                                                   S01486
+     C           RRRECD    IFEQ *ZERO                                     S01486
+     C           RRREC1    ANDEQ*ZERO                                     S01486
+     C                     WRITENODTLS                                    S01486
+     C                     END                                            S01486
+     C**
+     C                     ENDSR
+     C**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #W03     - WRITE TO PORTFOLIO POSITIONS                          *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P03     - DETERMINE IF POSITION TO BE DROPPED                   *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWBACV   - BACK VALUE DATE                                       *
+      *                                                                  *
+      ********************************************************************
+     C           #W03      BEGSR
+     C**
+     C** RECORD ID
+     C**
+     C                     MOVEL'H'       QHRECI
+     C**
+     C** CUSTOMER NUMBER
+     C**
+     C**********           Z-ADDQACNUM    QHCNUM                                              CSD027
+     C                     MOVE QACNUM    QHCNUM                                              CSD027
+     C**
+     C** PORTFOLIO REFERENCE
+     C**
+     C                     MOVELQAPTFR    QHPTFR
+     C**
+     C** SECURITY SHORTNAME
+     C**
+     C                     MOVELQATDSS    QHTDSS
+     C**
+     C** TRADE OR VALUE DATE
+     C**
+     C                     MOVELQATVDA    QHTVDA
+     C**
+     C** POSITION DATE
+     C**
+     C                     Z-ADDQAPDAT    QHPDAT
+     C**
+     C** NOMINAL AMOUNT
+     C**
+     C                     Z-ADDQANOML    QHNOML
+     C**
+     C** EX COUPON NOMINAL
+     C**
+     C                     Z-ADDQACSEX    QHCSEX
+     C**
+     C** AP NUMERATOR
+     C**
+     C                     Z-ADDQAAPNM    QHAPNM
+     C**
+     C** FX AP NUMERATOR
+     C**
+     C                     Z-ADDQAFXAP    QHFXAP
+     C**
+     C** PURCHASED INTEREST
+     C**
+     C                     Z-ADDQAPILP    QHPILP
+     C**
+     C** ACCRUED INTEREST
+     C**
+     C                     Z-ADDQAACDI    QHACDI
+     C**
+     C** BACK VALUATION DATE
+     C**
+     C                     Z-ADDWWBACV    QHBVLD
+     C**
+     C** NOMINAL CURRENCY
+     C**
+     C                     MOVELQATNMC    QHTNMC
+     C**
+     C** NOMINAL DECIMAL PLACES
+     C**
+     C                     Z-ADDQATNMD    QHTNMD
+     C**
+     C** PORTFOLIO CURRENCY CODE
+     C**
+     C                     MOVELQAPTCY    QHPTCY
+     C**
+     C** PORTFOLIO CURRENCY DECIMAL PLACES
+     C**
+     C                     Z-ADDQAPCDP    QHPCDP
+     C                     Z-ADDQAAYNM    QHAYNM                          B08253
+     C                     MOVE QACSBY    QHCSBY                          B08253
+     C                     Z-ADDQABYDP    QHBYDP                          B08253
+     C                     MOVE QACLAS    QHCLAS                          B08253
+     C                     MOVE QAACOC    QHACOC                          B08253
+     C                     Z-ADDQAOTNM    QHOTNM                          B08253
+     C                     Z-ADDQAOTEX    QHOTEX                          B08253
+     C                     MOVE QAAPBC    QHAPBC                          B08253
+     C                     MOVE QAFLEX    QHFLEX                          B08253
+     C                     MOVE QACOLC    QHCOLC                          B08253
+     C                     MOVE QABRCD    QHBRCD                          B08253
+     C                     Z-ADDQANPDT    QHNPDT                          B08253
+     C**
+     C                     ENDSR
+     C**
+      ********************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZEVCDZ1
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - PROCESS DATA BASE ERRORS                              *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #INIT    - INITIAL PROCESSING                                    *
+      * #P02     - ACCESS SECURITY DETAILS                               *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR
+     C*                                                                   S01486
+     C                     WRITEHEADER                                    S01486
+     C                     WRITEDBERROR                                   S01486
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C**
+     C** ROLL BACK CHANGES, PRINT DUMP AND CANCEL PROGRAM
+     C**
+     C                     DUMP
+     C**
+     C                     MOVE '1'       *INLR
+     C**
+     C                     RETRN
+     C**
+     C                     ENDSR
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

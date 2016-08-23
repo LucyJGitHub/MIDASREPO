@@ -1,0 +1,59 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GO Bulk Sync of GZSDACUSPD - TS Server')        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GOC0115T2 - Midas GO Bulk Sync of GZSDACUSPD - TS Server    */
+/*                                                                   */
+/*       (c) Misys Banking Systems Ltd. 2012                         */
+/*                                                                   */
+/*       Last Amend No. MD020205 *CREATE   Date 24Apr13              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD020205 - Continuous CoB run time improvement              */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&DTAQLIBL) TYPE(*CHAR) LEN(10) +
+                          VALUE('*LIBL     ')
+             DCL        VAR(&MSGLENGTH) TYPE(*DEC) LEN(5 0) VALUE(50)
+             DCL        VAR(&MSGDATA) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&RCVDTAQ) TYPE(*CHAR) LEN(10) +
+                          VALUE('GOACUSSRV')
+             DCL        VAR(&RCVWAIT) TYPE(*DEC) LEN(5 0) VALUE(-1)
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Send message to MRUNQ */
+ 
+             SNDPGMMSG  MSG('GOC0115T2 - Midas GO Bulk Sync of +
+                          GZSDACUSPD Task Split Server') TOMSGQ(MRUNQ)
+ 
+/* Wait for message that all sub tasks have completed successfully */
+ 
+ RECEIVE:    CALL       PGM(QRCVDTAQ) PARM(&RCVDTAQ &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA &RCVWAIT)
+ 
+/* If message = FINISH, terminate the program */
+ 
+             IF         COND(%SST(&MSGDATA 1 6) = 'FINISH') THEN(DO)
+             GOTO       CMDLBL(END)
+             ENDDO
+             ELSE       CMD(DO)
+             GOTO       CMDLBL(RECEIVE)
+             ENDDO
+ 
+ ABNOR:      SNDPGMMSG  MSG('Program GOC0115T2 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+END:
+             ENDPGM

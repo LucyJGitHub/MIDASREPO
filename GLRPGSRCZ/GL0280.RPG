@@ -1,0 +1,594 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Batch Postings on Comp. Susp A/C report')     *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - GENERAL LEDGER MODULE                                *
+     F*                                                               *
+     F*  GL0280 - BATCH POSTINGS DIVERTED TO COMPUTER SUSPENSE A/C    *
+     F*           REPORT                                              *
+     F*                                                               *
+     F*  Function: This program produces a report of all journal      *
+     F*  (I/C)     batch items which have come from an external       *
+     F*  (COB)     interface and have been diverted to the Computer   *
+     F*            Suspense Account.                                  *
+     F*                                                               *
+     F*  Called by:   GLC0280                                         *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. MD022919           Date 19Aug14               *
+      *  Prev Amend No. MD027587           Date 19Jun14               *
+      *                 CGL135B            Date 04Nov13               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER030             Date 09Jul08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 145002             Date 17Nov98               *
+      *                 CEU013 *CREATE     Date 16Apr98               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD022919 - GL0280P1 report being generated without a header. *
+      *             Write header and no details remark when no data   *
+      *             output in the report.                             *
+      *  MD027587 - Unable to used the C for Copy and T for Template  *
+      *             (Recompile)                                       *
+      *  CGL135B - Accounting Rules Process                           *
+      *            Added hooks: CGL135_086, CGL135_087, CGL135_088,   *
+      *                         CGL135_089, CGL135_090                *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER030 - Multicash German Feature (Recompile)                *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  145002 - Only report postings which are coming from an       *
+     F*           external interface and going to suspense.           *
+     F*  CEU013 - EMU Account Postings Narrative                      *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FGLJENHL1IF  E           K        DISK
+     FGLJENPL1IF  E           K        DISK
+     F/COPY OFCPYSRCZ,CGL135_086                                                             CGL135B
+     FACCNT   IF  E           K        DISK
+     F*
+     FGL0280AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU
+      *
+     FGL0280P1O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL1
+      *
+     F*
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  37 - Multibranch Indicator                                   *
+      *                                                               *
+      *  60 - Read of GLJENHL1                                        *
+      *  61 - Chain of ACCNT                                          *
+      *  62 - Chain of GLJENPL1                                       *
+      *                                                               *
+      *  98 - Date format                                             *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INIT    -  Initialise fields & Access Standing Data          *
+      *  POSDET  -  Process GL Posting Details                        *
+      *  *PSSR   -  Database Error Program Dump                       *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZDATE2Z1
+     I/EJECT
+     ICPYR@#      DS
+      **  Data Structure for Compilation  - Copyright Insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     ILDA       E DSLDA
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      * Printer file information data structure
+      *
+     ISPOOL1      DS
+     I                                       83  90 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      **  File Information Data Structure for GL0280AU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     IRUNDAT    E DS
+      *
+      ** Data Area giving Installation Control Details
+      *
+      *
+     I***KYACC**  DS                             18                                           CGL029
+     IKYACC       DS                             24                                           CGL029
+      *
+      **  Key fields used in READ of ACCNT
+      *
+     I**********                              1   60KCNUM                                     CSD027
+     I                                        1   6 KCNUM                                     CSD027
+     I                                        7   9 KCCY
+     I**********                             10  130KACOD                                     CGL029
+     I**********                             14  150KACSQ                                     CGL029
+     I**********                             16  18 KBRCA                                     CGL029
+     I                                       10  190KACOD                                     CGL029
+     I                                       20  210KACSQ                                     CGL029
+     I                                       22  24 KBRCA                                     CGL029
+      *
+     I***BTACC**  DS                             18                                           CGL029
+     IBTACC       DS                             24                                           CGL029
+      *
+     I                                        1   6 BTCUST
+     I                                        7   9 BTCYCD
+     I**********                             10  13 BTACCD                                    CGL029
+     I**********                             14  15 BTACSN                                    CGL029
+     I**********                             16  18 BTIBCA                                    CGL029
+     I                                       10  19 BTACCD                                    CGL029
+     I                                       20  21 BTACSN                                    CGL029
+     I                                       22  24 BTIBCA                                    CGL029
+      *
+     ISDBRCH    E DSSDBRCHPD
+      *
+      **  Branch Code Details
+      *
+     ISDGELR    E DSSDGELRPD
+      *
+      **  General Ledger Details
+      *
+     ISDNARR    E DSSDNARRPD
+      *
+      **  Narrative Code Details
+      *
+     ID@CURR    E DSSDCURRPD
+      *
+      **  Currency Codes Details
+      *
+     I/COPY OFCPYSRCZ,CGL135_087                                                             CGL135B
+     IDSFDY     E DSDSFDY
+      *
+      **  First DS for Access Programs, Short Data Structure
+      *
+     IDSSDY     E DSDSSDY
+      *
+      **  Second DS for Access Programs
+      *
+     C/EJECT
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           RTCD    7
+     C                     PARM           SEQ     5
+     C                     PARM           LEVEL   1
+     C                     PARM           SENTY   3
+      *
+      **  Initial Processing
+      *
+     C                     EXSR INIT
+      *
+      **  Obtain Batch Header Details
+      *
+     C                     READ GLJENHL1                 60
+     C           *IN60     IFEQ '1'
+     C                     EXSR AUDIT
+     C                     ENDIF
+      *
+     C           *IN60     DOWEQ'0'
+     C           BRTOJE    ANDEQ'I'                                       145002
+      *
+      **  Access posting details for specified batch
+      *
+     C           BRBTSF    IFEQ 'S'
+     C           BRBTSF    OREQ 'A'
+     C           BRBTNB    CHAINGLJENPL1             62
+      *
+      **  Process all relevant posting records
+      *
+     C           *IN62     IFNE '0'
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVE 'GLJENPL1'DBFILE           ***************
+     C                     MOVE BRBTNB    DBKEY            * DB ERROR 05 *
+     C                     Z-ADD5         DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     EXSR POSDET
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     READ GLJENHL1                 60
+     C                     ENDDO
+      *
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *                                                               *
+      **  Check counter if zero and write header and no details remark                      MD022919
+      **  on the report                                                                     MD022919
+      *                                                                                     MD022919
+     C           COUNT     IFEQ 0                                                           MD022919
+     C                     WRITEGL0280F1                                                    MD022919
+     C                     WRITEGL0280NR                                                    MD022919
+     C                     ENDIF                                                            MD022919
+      *                                                                                     MD022919
+     C                     WRITEGL0280F3
+     C                     CLOSEGL0280P1
+     C                     EXSR AUDIT
+     C                     SETON                         LR
+     C                     RETRN
+      *                                                               *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  INIT - SR TO INITIALISE FIELDS AND ACCESS STANDING DATA      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Key to access account on LF/ACCNT
+      *
+     C           ACKEY     KLIST
+     C                     KFLD           KCNUM
+     C                     KFLD           KCCY
+     C                     KFLD           KACOD
+     C                     KFLD           KACSQ
+     C                     KFLD           KBRCA
+     C/COPY OFCPYSRCZ,CGL135_088                                                             CGL135B
+      *
+      **  Prepare LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL0280  'DBPGM
+     C                     OUT  LDA
+      *
+      ** In the Dataarea RUNDAT
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+     C** Check System Format date, DDMMYY or MMDDYY(98 on)
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      ** Check for multibranching indicator
+      *
+     C           AGMBIN    IFEQ 'M'
+     C                     SETON                     37
+     C                     END
+      *
+      **  Access General Ledger details
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDGELRPD'DBFILE           ***************
+     C                     MOVE @OPTN     DBKEY            * DB ERROR 01 *
+     C                     Z-ADD1         DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C/COPY OFCPYSRCZ,CGL135_089                                                             CGL135B
+      *
+      ***  Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM           SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANKS   ZSERR   1
+     C*
+     C           *LOCK     IN   LDA
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C* ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAMME
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+      ***  Report Work fields.
+      *
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+     C                     Z-ADD0         COUNT   50
+      *
+     C                     OPEN GL0280P1
+     C*
+     C**  ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUM1    ZSNUM   60
+     C**
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  POSDET - SR TO PROCESS GL POSTINGS DETAILS                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           POSDET    BEGSR
+      *
+      **  Process for each posting in batch
+      *
+     C           *IN62     DOWEQ'0'
+      *
+     C                     MOVE BTACC     KYACC
+     C           ACKEY     CHAINACCNTABF             61
+     C           *IN61     IFEQ '1'
+     C           *IN61     OREQ '0'
+     C           ACST      ANDEQ'C'
+      *
+     C           BRBTNB    IFNE WBTNB
+      *
+      **  Print header for batch
+      **  Set up other batch header details
+      *
+     C                     MOVELBRBTNB    #BTNB
+     C                     MOVELBRBCDA    #BCDA
+     C                     MOVELBRDPCD    #DPCD
+     C                     MOVELBRBDES    #BDES
+     C                     WRITEGL0280F1
+      * Save batch number
+     C                     MOVELBRBTNB    WBTNB   3
+     C                     ENDIF
+      *
+      **  Set up Posting Narrative
+      *
+     C           BTNVCD    IFNE '  '
+      *
+     C                     CALL 'AONARRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM BTNVCD    @NVCD   2
+     C           SDNARR    PARM SDNARR    DSFDY
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVELALDON     #PNAR
+     C                     ENDIF
+     C*
+     C                     ELSE
+     C                     MOVELBTNRDC    #PNAR
+     C                     ENDIF
+     C*
+      **  Set up other posting item details
+     C*
+     C                     MOVELBTBINB    #BINB
+     C                     MOVELBKACCD    #ACCD
+     C                     MOVEL'01'      #ACSN
+     C                     MOVELBTTRTY    #TRTY
+     C                     MOVELBTTSTY    #TSTY
+     C                     MOVELBTCQNB    #CQNB
+     C                     MOVELBTSWCR    #SWCR
+     C                     MOVELBTPRCN    #PRCN
+     C                     MOVELBTACNB    #ACNB
+     C                     MOVELBTBKCD    #BKCD
+     C                     MOVELBTDCIN    #DCIN
+     C*
+      * Setup Formatted Posting Amount
+     C*
+     C           BTCYCD    IFEQ *BLANK
+     C                     Z-ADD*ZERO     WUNBDP
+     C                     ELSE
+     C*
+     C*  Access Currency codes file for no. of decimal places
+     C*
+     C                     MOVELBTCYCD    UUCYCD
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   UUAPRC  7
+     C                     PARM '*KEY'    UUAPOP  7
+     C                     PARM           UUCYCD  3
+     C           D@CURR    PARM *BLANK    DSSDY
+     C*
+     C* Assign work field to file field values.
+     C*
+     C                     MOVELA6CYCD    #CYCD
+     C                     MOVELA6NBDP    WUNBDP  10
+     C*
+     C                     ENDIF
+      * Format amount (short) - Standard functions  *
+     C                     Z-ADDBTPTAM    ULVALU
+      *
+     C                     CALL 'GL0135U'              90
+     C                     PARM           ULVALU 150
+     C                     PARM WUNBDP    ULDECP  10
+     C                     PARM 'J'       ULEDIT  1
+     C                     PARM *BLANK    ULCHQP  1
+     C                     PARM           ULRSLF 23
+      *
+     C                     MOVE ULRSLF    #PTAM
+     C*
+      * Format posting and value dates
+     C*
+     C                     Z-ADDBTPTDT    ZDAYNO
+     C/COPY OFCPYSRCZ,CGL135_090                                                             CGL135B
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    #PTDT
+     C*
+     C                     Z-ADDBTVLDT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    #VLDT
+     C*
+     C* Retrieve Internal Customer No.
+     C*
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANK    @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM BRBCDA    @BRCD   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBRCHPD'DBFILE           ***************
+     C                     MOVELBRBCDA    DBKEY            * DB ERROR 04 *
+     C                     Z-ADD4         DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE A8BICN    #BICN
+      *
+      * Output to printer file
+      *
+     C                     ADD  1         COUNT
+      *
+      ***  Check that sufficient lines remain for the Format. If not,
+      ***  write out the Main Headings on a new page.
+      *
+     C                     Z-ADD7         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEGL0280F1
+     C                     ENDIF
+      *
+     C                     WRITEGL0280F2
+     C                     ENDIF
+      *
+     C           BRBTNB    READEGLJENPL1                 62
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  AUDIT  - Subroutine to Output Audit report and End Program.  *
+      *                                                               *
+      *  Called By: Main Processing, PROCES, *PSSR                    *
+      *  Calls: None.                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR                           *** AUDIT  ***
+      *
+      ***  Output Report Header and File Controls.
+      *
+     C                     WRITEHEADAU
+     C                     WRITECONTROL
+      *
+      ***  If there is a DB Error, Output the DB Error Information.
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ***  Or, if no records read, Output "No Details" message.
+      *
+     C           COUNT     IFEQ 0
+     C                     WRITENODTLS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  End Program and Return.
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+      *****************************************************************
+      *                                                               *
+      *  *PSSR - SR TO HANDLE ABNORMAL ERROR CONDITIONS               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *
+      *****************************************************************
+      /EJECT
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

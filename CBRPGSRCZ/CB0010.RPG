@@ -1,0 +1,1400 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CB Close of business scheduler')                 *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Close of Business Processing                         *
+      *                                                               *
+      *  CB0010 - COB SCHEDULER                                       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. AR954163           Date 10Jun13               *
+      *  Prev Amend No. CGL120             Date 06Aug12               *
+      *                 CCB020             Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 247203             Date 25Apr07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *  Prev Amend No. CPK014             Date 14Nov01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CCB003             Date 16OCT96               *
+      *                 S01408             DATE 11JUN96               *
+      *                 056287             DATE 11AUG94               *
+      *                 046312             DATE 06NOV93               *
+      *                 E38011             DATE 02APR92               *
+      *                 LN1197             DATE 13MAR91               *
+      *                 LN0545             DATE 20JUL90               *
+      *                 LN0278             DATE 11JUL90               *
+      *                 LN0382             DATE 15JUN90               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  AR954163 - Improve COB time by changing wait from 1 to 0.    *
+      *             (Child: AR954165)                                 *
+      *  CGL120 - GL COB Components Task Split (Recompile)            *
+      *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
+      *  247203 - Access logicals selecting on Halt Status = 'H' to   *
+      *           ensure Halt messages refer to the correct component.*
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CPK014 - Submit jobs with user *JOBD                         *
+      *  CCB003 - COB Performance Enhancements - Task Split           *
+      *           Prevent Task Split Jobs appearing on COB monitor.   *
+      *           Also change to use new copied version of the        *
+      *           Mutually Exclusive Comps file.                      *
+      *  S01408 - Core hook CB0010EEP3 added.                         *
+      *           Core hook CB0010EEP2 added.                         *
+      *           Core hook CB0010EEP1 added.                         *
+      *           Core hook CB0010IIP3 added.                         *
+      *           Core hook CB0010IIP2 added.                         *
+      *           Core hook CB0010IIP1 added.                         *
+      *           Core hook CB0010OOP1 added.                         *
+      *           Core hook CB0010CCP4 added.                         *
+      *           Core hook CB0010CCP3 added.                         *
+      *           Core hook CB0010CCP2 added.                         *
+      *           Core hook CB0010CCP1 added.                         *
+      *  056287 - MULTILANGUAGE FIELD IS NOW PASSED AS A PARAMETER TO *
+      *           SUBMITTED JOB                                       *
+      *  046312 - Component name to be included in the halt text      *
+      *  E38011 - DO NOT SUBMIT OTHER MUTUALLY EXCLUSIVE COMPONENT    *
+      *           IF THE FIRST ONE HAS FAILED                         *
+      *  LN1197 - ADD DEFAULTS FOR OUTQ AND INLLIBL TO SBMJOB CMD     *
+      *  LN0545 - RE-TRY THE LOCK OF CBSTAT TO AVOID POTENTIAL        *
+      *           COB CRASH AS A NUMBER OF PROGRAMS PERFORM THE       *
+      *           *LOCK TO UPDATE THE DATA AREA                       *
+      *  LN0278 - USE NEW PROGRAM CBTIME TO ACCESS TIME AND           *
+      *           DATE IN CORRECT FORMAT FOR CALCULATIONS             *
+      *           AND REMOVE ZDATE1 SUBROUTINE                        *
+      *  LN0382 - REMOVE CALL TO AOBANKR0 AND USE RUNDAT TO           *
+      *           OBTAIN DATE FORMAT IN ORDER TO AVOID AOBANKR0       *
+      *           BEING CALLED BY ITSELF                              *
+      *                                                               *
+      *****************************************************************
+     FCBCOMSL0UF  E           K        DISK
+     F                                              KCOMIT
+     FCBCOMSL9UF  E           K        DISK
+     F                                              KCOMIT
+     FCBCOMSL6IF  E           K        DISK                                                   247203
+     FCBCOMSLDIF  E           K        DISK                                                   247203
+     FCBDEPSL2UF  E           K        DISK
+     F                                              KCOMIT
+     F**CBMEXCL1IF  E           K        DISK                             CCB003
+     FCBMUTXL1IF  E           K        DISK                               CCB003
+     FCBHALTPDO   E           K        DISK                           UC
+     F*
+      /SPACE 2
+      ********************************************************************
+      *
+      *     C  L   FUNCTION OF INDICATORS
+      *
+      *    02      EOF FOUND ON LF/CBDEPSL2
+      *    03      EOF FOUND ON LF/CBCOMSL0
+      *    04      EOF FOUND ON LF/CBCOMSL9
+      *****05******EOf*FOUND*ON*LF/CBMEXCL1
+      *    05      EOF FOUND ON LF/CBMUTXL1
+      *    06      No record on LF/CBCOMSL6                                                   247203
+      *    07      No record on LF/CBCOMSLD                                                   247203
+      *    50      WORK INDICATOR
+      *    70      RE-TRY LOCK OF DATA AREA                               LN0545
+      *****90-99***INDICATORS USED BY STANDARD SUBROUTINE ZDATE1          LN0278
+      *
+      *       LR   LAST RECORD INDICATOR
+      *
+      *     U7&U8  DATABASE ERROR
+      *
+      *****************************************************************
+     F/EJECT
+     E*                                                                   S01408
+     E/COPY WNCPYSRC,CB0010EEP3                                           S01408
+     E*                                                                   S01408
+     E                    MESA    1   1 16
+     E** MESSAGES FOR DTAQ/CBDTQA
+     E*
+     E*                                                                   S01408
+     E/COPY WNCPYSRC,CB0010EEP1                                           S01408
+     E*                                                                   S01408
+     E                    MESD    1   5 25
+     E*                                                                   S01408
+     E/COPY WNCPYSRC,CB0010EEP2                                           S01408
+     E*                                                                   S01408
+     E** MESSAGES FOR DTAQ/CBDTQD
+     E*
+     E                    QCMD    1   1 80
+     E** QCMDEXC COMMAND
+     E*
+     E                    SBM1    1   1 67
+     E                    SBM2    1   1 66
+     E                    SBM3    1   1 21
+     E********************SBM4    1   1  5                                LN1197
+     E********************SBM4    1   1 32                         LN1197 056287
+     E********************SBM4    1   1 39                         056287 CPK014
+     E                    SBM4    1   1 51                                CPK014
+     E** FOUR ARRAYS TO FORM SBMJOB COMMAND
+     E*
+     E                    CPY@    1   1 80
+     E** COPYRIGHT ARRAY
+     E*
+     E****/COPY ZSRSRC,ZDATE1Z1                                           LN0278
+     E***SR.ARRAY*FOR*ZDATE1                                              LN0278
+     E*
+     E*****************************************************************
+     E/EJECT
+     I*****************************************************************
+     I*
+     I@DHREGG
+     I              DHCOTT                          DHDL@@
+     I              DHCSEQ                          DHDM@@
+     I              DHCSTS                          DHAB@@
+     I              DHCSHP                          DHMR@@
+     I              DHCEPY                          DHMS@@
+     I              DHCTSL                          DHMT@@
+     I              DHCFOB                          DHDN@@
+     I              DHCTXT                          DHAH@@
+     I              DHCPRM                          DHAI@@
+     I              DHCRQD                          DHKD@@
+     I              DHCMOD                          DHDO@@
+     I              DHCEMI                          DHKE@@
+     I              DHCRES                          DHKF@@
+     I              DHCODP                          DHMU@@
+     I              DHCMEF                          DHKG@@
+     I              DHCFRQ                          DHKH@@
+     I              DHCSDE                          DHMV@@
+     I              DHCSTI                          DHMW@@
+     I              DHCEDE                          DHMX@@
+     I              DHCETI                          DHMY@@
+     I              DHCHTB                          DHKI@@
+     I              DHCHTA                          DHKJ@@
+     I              DHCFAL                          DHKK@@
+     I              DHTASK                          DHKL@@                CCB003
+     I              DHTSNO                          DHKM@@                CCB003
+     I*                                                                                       247203
+     I@CMPNHM                                                                                 247203
+     I              DHCOTT                          DHDLL6                                    247203
+     I              DHCSEQ                          DHDML6                                    247203
+     I              DHCSTS                          DHABL6                                    247203
+     I              DHCSHP                          DHMRL6                                    247203
+     I              DHCEPY                          DHMSL6                                    247203
+     I              DHCTSL                          DHMTL6                                    247203
+     I              DHCFOB                          DHDNL6                                    247203
+     I              DHCTXT                          DHAHL6                                    247203
+     I              DHCPRM                          DHAIL6                                    247203
+     I              DHCRQD                          DHKDL6                                    247203
+     I              DHCMOD                          DHDOL6                                    247203
+     I              DHCEMI                          DHKEL6                                    247203
+     I              DHCRES                          DHKFL6                                    247203
+     I              DHCODP                          DHMUL6                                    247203
+     I              DHCMEF                          DHKGL6                                    247203
+     I              DHCFRQ                          DHKHL6                                    247203
+     I              DHCSDE                          DHMVL6                                    247203
+     I              DHCSTI                          DHMWL6                                    247203
+     I              DHCEDE                          DHMXL6                                    247203
+     I              DHCETI                          DHMYL6                                    247203
+     I              DHCHTB                          DHKIL6                                    247203
+     I              DHCHTA                          DHKJL6                                    247203
+     I              DHCFAL                          DHKKL6                                    247203
+     I              DHTASK                          DHKLL6                                    247203
+     I              DHTSNO                          DHKML6                                    247203
+     I*                                                                                       247203
+     I@CMPNLD                                                                                 247203
+     I              DHCOTT                          DHDLLD                                    247203
+     I              DHCSEQ                          DHDMLD                                    247203
+     I              DHCSTS                          DHABLD                                    247203
+     I              DHCSHP                          DHMRLD                                    247203
+     I              DHCEPY                          DHMSLD                                    247203
+     I              DHCTSL                          DHMTLD                                    247203
+     I              DHCFOB                          DHDNLD                                    247203
+     I              DHCTXT                          DHAHLD                                    247203
+     I              DHCPRM                          DHAILD                                    247203
+     I              DHCRQD                          DHKDLD                                    247203
+     I              DHCMOD                          DHDOLD                                    247203
+     I              DHCEMI                          DHKELD                                    247203
+     I              DHCRES                          DHKFLD                                    247203
+     I              DHCODP                          DHMULD                                    247203
+     I              DHCMEF                          DHKGLD                                    247203
+     I              DHCFRQ                          DHKHLD                                    247203
+     I              DHCSDE                          DHMVLD                                    247203
+     I              DHCSTI                          DHMWLD                                    247203
+     I              DHCEDE                          DHMXLD                                    247203
+     I              DHCETI                          DHMYLD                                    247203
+     I              DHCHTB                          DHKILD                                    247203
+     I              DHCHTA                          DHKJLD                                    247203
+     I              DHCFAL                          DHKKLD                                    247203
+     I              DHTASK                          DHKLLD                                    247203
+     I              DHTSNO                          DHKMLD                                    247203
+     I*
+     ICMD         DS
+     I                                        1  80 QCMD
+     I                                        9  64 MOPERQ
+     I** SETTING UP QCMDEXC SNDPGMMSG COMMAND
+     I*
+     I*                                                                   S01408
+     I/COPY WNCPYSRC,CB0010IIP1                                           S01408
+     I*                                                                   S01408
+     ISBMJOB      DS
+     I                                        1  67 SBM1
+     I                                       68 133 SBM2
+     I                                      134 154 SBM3
+     I***********                           215 219 SBM4                  LN1197
+     I***********                           215 246 SBM4           LN1197 056287
+     I***********                           215 253 SBM4           056287 CPK014
+     I                                      215 265 SBM4                  CPK014
+     I                                       12  21 DHCOTT
+     I                                       57  64 RTGDTA
+     I                                       81  87 CPGM
+     I                                       92  99 DTQB
+     I                                      105 114 DHDL@@
+     I                                      120 124 DHCSEQ
+     I                                      130 1310DHCEPY
+     I                                      138 1480DHCTSL
+     I                                      155 214 DHCTXT
+     I                                      220 221 MULTL                 056287
+     I** SETTING UP QCMDEXC SBMJOB COMMAND
+     I*
+     ICBSTAT      DS                             50
+     I                                        5   9 HALTDT
+     I                                       10  13 HALTTI
+     I                                       18  19 NOAS
+     I                                       20  20 HALTST
+     I                                       21  25 SCHEDT
+     I                                       26  31 SCHETI
+     I**  DATA AREA CONTAINING HALT STATE/DATE/TIME VALUES
+     I**                       NUMBER OF ACTIVE STREAMS RUNNING
+     I**                       SCHEDULER DATE/TIME VALUES
+     I*
+     I***RUNDAT   DS                             13                 LN0382LN0278
+     I*******                                    12  12 AGDFF       LN0382LN0278
+     I***DATA*STRUCTURE*TO*GET*DATE*FROM*RUNDAT*DATA*AREA           LN0382LN0278
+     I*                                                                   LN0382
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I**     LOCAL DATA AREA
+     I*
+     I*                                                                   S01408
+     I/COPY WNCPYSRC,CB0010IIP2                                           S01408
+     I*                                                                   S01408
+     IDTQA        DS
+     I                                        1   5 NAME5
+     I                                        1  10 NAME10
+     I                                       11  15 SEQNO
+     I                                       16  16 TYPE
+     I**  DATA STRUCTURE TO SPLIT INFO. FROM DTAQ/CBDTQA
+     I*
+     INICTIM      DS
+     I                                        1   2 NICHR
+     I                                        3   3 COLON1
+     I                                        4   5 NICMI
+     I                                        6   6 COLON2
+     I                                        7   8 NICSE
+     I**  CONVERT CURRENT TIME INTO 'NICE' DISPLAY (HH:MM:SS)
+     I*
+     ICURRTI      DS
+     I                                        1   2 CURHR
+     I                                        3   4 CURMI
+     I                                        5   6 CURSE
+     I                                        1   60CURRTP
+     I**  DATA STRUCTURE TO SPLIT CURRENT TIME INTO HOURS, MINUTES
+     I**  AND SECONDS
+     I*
+     IMSG1        DS
+     I                                        1  86 MSG
+     I                                       11  70 MSGTXT
+     I                                       71  78 MSGTYP
+     I**  DATA STRUCTURE TO SET UP HALT MESSAGE FOR DTAQ/CBDTQD
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I**  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I**SDBANK    E DSSDBANKPD                                            LN0382
+     I***EXTERNAL*DATA*STRUCTURE*FOR*ACCESS*OBJECT*FORMAT                 LN0382
+     I*
+     I**DSFDY     E DSDSFDY                                               LN0382
+     I***FIRST*DATA*STRUCTURE*FOR*ACCESS*OBJECT,*SHORT*DATA*STRUCTURE     LN0382
+     I*
+     I*                                                                   S01408
+     I/COPY WNCPYSRC,CB0010IIP3                                           S01408
+     I*                                                                   S01408
+     I*****************************************************************
+     I/EJECT
+     C*****************************************************************
+     C*                                                                   056287
+     C**   DEFINE PLIST                                                   056287
+     C*                                                                   056287
+     C           *ENTRY    PLIST                                          056287
+     C                     PARM           MULT    2                       056287
+     C                     MOVE MULT      MULTL   2                       056287
+     C*
+     C**   DEFINE KLISTS
+     C*
+     C           DEPKEY    KLIST
+     C                     KFLD           DKCCOT 10
+     C                     KFLD           DKCSEQ  5
+     C*
+     C           COMKEY    KLIST
+     C                     KFLD           CKCCOT 10
+     C                     KFLD           CKCSEQ  5
+     C*
+     C           MEXKEY    KLIST
+     C                     KFLD           MKCCOT 10
+     C                     KFLD           MKCSEQ  5
+     C*
+     C           SCHKEY    KLIST
+     C                     KFLD           SCSPTY  10
+     C                     KFLD           SCRQDT  1
+     C*
+     C**   DEFINE LOCAL DATA AREA, DTAARA/CBSTAT & RUNDAT                 LN0382
+     C*
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,CB0010CCP1                                           S01408
+     C*                                                                   S01408
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           CBSTAT
+     C********   *NAMVAR   DEFN           RUNDAT                    LN0382LN0278
+     C********             IN   RUNDAT                              LN0382LN0278
+     C********             MOVE AGDFF     BJDFIN  1                 LN0382LN0278
+     C********             UNLCKRUNDAT                              LN0382LN0278
+     C*
+     C**   INITIALISE FIELDS FOR SCHKEY
+     C*
+     C                     MOVE *BLANKS   SCRQDT
+     C                     Z-ADD1         SCSPTY
+     C*
+     C**   INITIALISE WORK FIELDS
+     C*
+     C                     MOVE ':'       COLON1
+     C                     MOVE ':'       COLON2
+     C                     MOVEL'SCOBFINI'SCOBFI 10                                           CCB020
+     C                     MOVE 'SH'      SCOBFI                                              CCB020
+     C*
+     C*
+     C/COPY WNCPYSRC,CB0010CCP2                                           S01408
+     C*                                                                   S01408
+     C***********          MOVELMESD,1    MSGTX1 32                       046312
+     C***********          MOVELMESD,2    MSGTX2 33                       046312
+     C                     MOVELMESD,1    MSGTX1 43                       046312
+     C                     MOVELMESD,2    MSGTX2 44                       046312
+     C                     MOVELMESD,3    MSGTX3 26
+     C                     MOVELMESD,4    MSGTX4 22
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,CB0010CCP3                                           S01408
+     C*                                                                   S01408
+     C                     MOVELMESD,5    MSGTX5 25
+     C*
+     C                     MOVEL'CBDTQA'  DTQANM 10
+     C                     MOVEL'*LIBL'   DTQALB 10
+     C                     Z-ADD16        DTQALN  50
+     C*
+     C                     MOVEL'CBDTQB'  DTQBNM 10
+     C                     MOVEL'*LIBL'   DTQBLB 10
+     C                     Z-ADD8         DTQBLN  50
+     C*
+     C                     MOVEL'CBDTQC'  DTQCNM 10
+     C                     MOVEL'*LIBL'   DTQCLB 10
+     C                     Z-ADD1         DTQCLN  50
+     C*
+     C                     MOVEL'CBDTQD'  DTQDNM 10
+     C                     MOVEL'*LIBL'   DTQDLB 10
+     C                     Z-ADD86        DTQDLN  50
+     C*
+     C***USE*ACCESS*OBJECT*AOBANKR0*TO*                                   LN0382
+     C***RETRIEVE*DATE*FORMAT*FOR*ZDATE1                                  LN0382
+     C*****                                                               LN0382
+     C*****                CALL 'AOBANKR0'                                LN0382
+     C*****                PARM '*MSG   ' P@RTCD  7                       LN0382
+     C*****                PARM '*FIRST ' P@OPTN  7                       LN0382
+     C*****      SDBANK    PARM SDBANK    DSFDY                           LN0382
+     C*****                                                               LN0382
+     C***IF ERROR FOUND BY ACCESS OBJECT EXIT                             LN0382
+     C***PROGRAM VIA DATABASE ERROR SUBROUTINE                            LN0382
+     C*****                                                               LN0382
+     C*****      P@RTCD    IFNE *BLANKS                                   LN0382
+     C*****                MOVEL'AOBNK'   DBFILE           ***************LN0382
+     C*****                Z-ADD1         DBASE            * DB ERROR 01 *LN0382
+     C*****                EXSR DBERR                      ***************LN0382
+     C*****                END                                            LN0382
+     C*
+     C***VALIDATION*OF*DATE*FORMAT*ON*TABTB10                             LN0278
+     C***AS*REQUIRED*BY*SUBROUTINE*ZDATE1                                 LN0278
+     C*
+     C******     BJDFIN    IFEQ 'M'                                       LN0278
+     C******               SETON                     98                   LN0278
+     C******               ELSE                                           LN0278
+     C******               SETOF                     98                   LN0278
+     C******               END                                            LN0278
+     C*
+     C**   DO WHILE 'E' IN POSITION 16 NOT READ FROM DTAQ/CBDTQA
+     C*
+     C           TYPE      DOWNE'E'
+     C*
+     C**   CHECK FOR AND HANDLE TIMED HALTS
+     C*
+     C                     EXSR TIMESR
+     C*
+     C**   MOVE CURRENT DATE/TIME TO CBSTAT (SCHDULER DATE/TIME)
+     C*
+     C           *IN70     DOUEQ'0'                                       LN0545
+     C************LOCK     IN   CBSTAT                                    LN0545
+     C           *LOCK     IN   CBSTAT                 70                 LN0545
+     C                     END                                            LN0545
+     C                     MOVE CURRDT    SCHEDT
+     C                     MOVE CURRTI    SCHETI
+     C                     OUT  CBSTAT
+     C*
+     C**   RECEIVE INFO FROM DTAQ/CBDTQA
+     C*
+     C                     Z-ADD-1        WAIT    50
+     C*
+     C                     CALL 'QRCVDTAQ'
+     C                     PARM           DTQANM
+     C                     PARM           DTQALB
+     C                     PARM           DTQALN
+     C                     PARM           DTQA
+     C                     PARM           WAIT
+     C*
+     C**   ZEROISE SCHEDULER DATE/TIME ON CBSTAT
+     C*
+     C           *IN70     DOUEQ'0'                                       LN0545
+     C************LOCK     IN   CBSTAT                                    LN0545
+     C           *LOCK     IN   CBSTAT                 70                 LN0545
+     C                     END                                            LN0545
+     C                     MOVE *ZEROS    SCHEDT
+     C                     MOVE *ZEROS    SCHETI
+     C                     OUT  CBSTAT
+     C*
+     C**   WHEN TYPE OF RECORD FROM DTAQ/CBDTQA WAS COMPLETED NORMALLY
+     C*
+     C           TYPE      DOWEQ'C'
+     C*
+     C**   EXECUTE COMPLETED SUBROUTINE ....
+     C*
+     C                     EXSR COMPSR
+     C*
+     C**   ....AND RECEIVE FURTHER INFO FROM DTAQ/CBDTQA
+     C**   TO CLEAR ANY MORE COMPLETED NORMALLY MESSAGES.
+     C**   CLEAR TYPE FIELD SO THAT IF NO MESSAGE RECEIVED
+     C**   PROGRAM CAN EXIT FROM THIS LOOP
+     C*
+     C                     MOVE *BLANKS   TYPE
+     C**********           Z-ADD1         WAIT                                              AR954163
+     C                     Z-ADD0         WAIT                                              AR954163
+     C*
+     C                     CALL 'QRCVDTAQ'
+     C                     PARM           DTQANM
+     C                     PARM           DTQALB
+     C                     PARM           DTQALN
+     C                     PARM           DTQA
+     C                     PARM           WAIT
+     C*
+     C**  RESET DATA QUEUE LENGTH IN CASE OF TIMEOUT ON QRCVDTAQ
+     C*
+     C                     Z-ADD16        DTQALN
+     C*
+     C                     END
+     C*
+     C**   IF TYPE OF RECORD FROM DTAQ/CBDTQA WAS HALT...
+     C*
+     C           TYPE      IFEQ 'H'
+     C*
+     C**   EXECUTE HALT SUBROUTINE
+     C*
+     C                     EXSR HALTSR
+     C*
+     C                     END
+     C*
+     C**   IF TYPE OF RECORD FROM DTAQ/CBDTQA WAS NOT END
+     C*
+     C           TYPE      IFNE 'E'
+     C*
+     C**   EXECUTE SELECT SUBROUTINE
+     C*
+     C                     EXSR SELTSR
+     C*
+     C                     END
+     C*
+     C                     COMIT
+     C*
+     C                     END
+     C*
+     C                     SETON                     LR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** INDEX OF SUBROUTINES
+     C**
+     C**
+     C** TIMESR - CHECKS FOR AND HANDLES TIMED HALTS
+     C**
+     C** COMPSR - HANDLES COMPONENTS THAT COMPLETED NORMALLY
+     C**
+     C** SELTSR - SELECTS THE NEXT COMPONENT TO BE RUN
+     C**
+     C** CHECK  - CHECK THAT SELECTED COMPONENT CAN BE RUN NOW
+     C**
+     C** HALTSR - HANDLES HALT BEFORE COMPONENT
+     C**
+     C** HLTMSG - SETS UP AND SENDS HALT MESSAGE INFO
+     C**
+     C***ZDATE1*-*TO*CONVERT*DATE*INTO*MIDAS*DAY*NUMBER.                  LN0278
+     C**
+     C** DBERR  - DATABASE ERROR HANDLING
+     C**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C** SUBROUTINE THAT CHECKS FOR AND HANDLES ANY TIMED HALTS
+     C*
+     C** CALLED FROM MAIN CYCLE
+     C*
+     C** CALLS NO OTHER SUBROUTINES
+     C*
+     C********************************************************************
+     C*
+     C           TIMESR    BEGSR
+     C*
+     C**   READ DATA AREA CBSTAT TO FIND HALT DATE/TIME
+     C*
+     C           *IN70     DOUEQ'0'                                       LN0545
+     C************LOCK     IN   CBSTAT                                    LN0545
+     C           *LOCK     IN   CBSTAT                 70                 LN0545
+     C                     END                                            LN0545
+     C                     MOVELHALTTI    HALT    9
+     C                     MOVE HALTDT    HALT
+     C                     OUT  CBSTAT
+     C*
+     C**   ACCESS CURRENT DATE/TIME AND CONVERT DATE INTO MIDAS DAY
+     C**   NUMBER
+     C*
+     C******               TIME           TIMDAT 120                      LN0278
+     C******               MOVE TIMDAT    ZDATE                           LN0278
+     C******               MOVELTIMDAT    CURRTI                          LN0278
+     C******               EXSR ZDATE1                                    LN0278
+     C******               MOVE ZDAYNO    CURRDT  50                      LN0278
+     C*                                                                   LN0278
+     C** ACCESS DATE, TIME AND DATE FORMAT USING PROGRAM CBTIME           LN0278
+     C*                                                                   LN0278
+     C                     CALL 'CBTIME'                                  LN0278
+     C                     PARM           DAYNOA  5                       LN0278
+     C                     PARM           STIME   6                       LN0278
+     C                     PARM           DFMT    1                       LN0278
+     C*                                                                   LN0278
+     C** SET CURRENT DATE AND TIME FIELDS                                 LN0278
+     C** WITH VALUES FROM CBTIME                                          LN0278
+     C*                                                                   LN0278
+     C                     MOVE DAYNOA    CURRDT  50                      LN0278
+     C                     MOVE STIME     CURRTI                          LN0278
+     C*
+     C**   IF HALT DATE/TIME IS NOT BLANK (I.E. ONE HAS BEEN ENTERED)
+     C*
+     C           HALT      IFNE *BLANKS
+     C*
+     C**   IF CURRENT DATE/TIME >= HALT DATE/TIME
+     C*
+     C                     MOVE HALT      HALDT   50
+     C                     Z-ADD0         HALTI   60
+     C                     MOVELHALT      HALTI
+     C*
+     C           CURRDT    IFGT HALDT
+     C           CURRDT    OREQ HALDT
+     C           CURRTP    ANDGEHALTI
+     C*
+     C**   READ IN HALT STATE FROM DTAARA/CBSTAT
+     C*
+     C           *IN70     DOUEQ'0'                                       LN0545
+     C************LOCK     IN   CBSTAT                                    LN0545
+     C           *LOCK     IN   CBSTAT                 70                 LN0545
+     C                     END                                            LN0545
+     C*
+     C**   IF NO HALT IN PROGRESS...SEND HALT MESSAGE TO DTAQ/CBDTQA
+     C**                         UPDATE DTAARA/CBDTAARA TO REFLECT THIS
+     C*
+     C           HALTST    IFEQ 'N'
+     C                     MOVE MESA,1    DTQA
+     C*
+     C                     CALL 'QSNDDTAQ'
+     C                     PARM           DTQANM
+     C                     PARM           DTQALB
+     C                     PARM           DTQALN
+     C                     PARM           DTQA
+     C*
+     C                     MOVE 'R'       HALTST
+     C*
+     C                     END
+     C*
+     C**   RESET HALT DATE/TIME TO BLANKS
+     C*
+     C                     MOVE *BLANKS   HALTTI
+     C                     MOVE *BLANKS   HALTDT
+     C                     OUT  CBSTAT
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C** SUBROUTINE THAT HANDLES COMPLETED NORMALLY MESSAGES FROM DTAQ/
+     C** CBDTQA
+     C*
+     C** CALLED FROM MAIN CYCLE
+     C*
+     C** CALLS DBERR
+     C*
+     C********************************************************************
+     C*
+     C           COMPSR    BEGSR
+     C*
+     C**   UPDATE DEPENDENCIES FILE WITH COMPLETED NORMALLY FOR
+     C**   PROCESSED RECORD
+     C*
+     C                     MOVE NAME10    DKCCOT
+     C                     MOVE SEQNO     DKCSEQ
+     C           DEPKEY    SETLL@DPRLG7
+     C           DEPKEY    READE@DPRLG7                  02
+     C*
+     C** IF NO RECORDS FOUND - DATABASE ERROR
+     C*
+     C           *IN02     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DPRL2'   DBFILE
+     C                     MOVELNAME10    DEPKY  15
+     C                     MOVE SEQNO     DEPKY
+     C                     MOVELDEPKY     DBKEY            ***************
+     C                     Z-ADD02        DBASE            * DB ERROR 02 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C**   DO WHILE A RECORD WITH THE RELEVANT COMPONENT NAME/SEQUENCE
+     C**   NUMBER IS FOUND
+     C*
+     C           *IN02     DOWEQ'0'
+     C*
+     C**   CHANGE THE DEPENDENT STATUS TO COMPLETED NORMALLY
+     C*
+     C                     MOVE 'C'       DICDST
+     C                     EXCPTDEPSTS
+     C*
+     C**   CHAIN TO CBCOMSL0 WITH KEY OF DEPENDS ON COMPONENT NAME/
+     C**   SEQUENCE NUMBER
+     C*
+     C                     MOVE DIDSON    CKCCOT
+     C                     MOVE DIDSOS    CKCSEQ
+     C           COMKEY    CHAIN@DHREGG              03
+     C*
+     C** IF NO RECORDS FOUND - DATABASE ERROR
+     C*
+     C           *IN03     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CMPL0'   DBFILE
+     C                     MOVELDIDSON    COMKY  15
+     C                     MOVE DIDSOS    COMKY
+     C                     MOVELCOMKY     DBKEY            ***************
+     C                     Z-ADD03        DBASE            * DB ERROR 03 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C**   SUBTRACT ONE FROM THE NUMBER OF OUTSTANDING DEPENDENCIES
+     C**   AND UPDATE CBCOMSL0
+     C*
+     C                     SUB  1         DHMU@@
+     C                     EXCPTCOMODP
+     C*
+     C**   READ NEXT DEPENDENCY RECORD WITH THE SAME KEY
+     C*
+     C           DEPKEY    READE@DPRLG7                  02
+     C*
+     C                     END
+     C*
+     C**   COMMIT CHANGES
+     C*
+     C                     COMIT
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C** SUBROUTINE TO SELECT NEXT COMPONENT TO RUN
+     C*
+     C** CALLED FROM MAIN CYCLE
+     C*
+     C** CALLS CHECK
+     C*
+     C********************************************************************
+     C*
+     C           SELTSR    BEGSR
+     C*
+     C**   SELECT COMPONENT WITH HIGHEST SCHEDULING PRIORITY (I.E. '1')
+     C*
+     C           SCHKEY    SETLL@CMPNHO
+     C                     READ @CMPNHO                  04
+     C*
+     C*****IF*RECORD*FOUND*IS*COBEND*THEN*MOVE*'E'*TO*TYPE*TO*DROP*OUT*                       CCB020
+     C*****OF*MAIN*LOOP*AND*END*PROGRAM.*******************************                       CCB020
+      ** If record found is SCOBFINISH then move 'E' to type                                  CCB020
+      ** to drop out of main loop and end program.                                            CCB020
+     C*
+     C           *IN04     IFEQ '0'
+     C********** DHCOTT    ANDEQ'COBEND'                                                      CCB020
+     C           DHCOTT    ANDEQSCOBFI                                                        CCB020
+     C*
+     C                     MOVE 'E'       TYPE
+     C*
+     C                     ELSE
+     C*
+     C**   MOVE DUMMY VALUE INTO WORK FIELD SO LOOP WILL ALWAYS BE
+     C**   PROCESSED AT LEAST ONCE.
+     C*
+     C                     MOVEL'STREAM'  DTQB
+     C*
+     C**   DO WHILE RECORD FOUND AND DTAQ/CBDTQB NOT BLANK
+     C*
+     C           *IN04     DOWEQ'0'
+     C           DTQB      ANDNE*BLANKS
+     C*
+     C**   SET ON WORK INDICATOR & INITIALISE UPDATE FLAG
+     C*
+     C                     SETON                       50
+     C                     MOVE 'N'       EXCPT   1
+     C*
+     C**   IF COMPONENTS HALT BEFORE HAS ALREADY BEEN 'RECOGNISED'
+     C*
+     C           DHCHTB    IFEQ 'H'
+     C                     SETOF                       50
+     C                     END
+     C*
+     C**   IF COMPONENT IS REQUIRED TO RUN TODAY
+     C*
+     C           DHCRQD    IFEQ 'Y'
+     C*
+     C**   CHECK THAT IT IS AVALIABLE TO RUN NOW
+     C*
+     C                     EXSR CHECK
+     C*
+     C**   ELSE.....
+     C*
+     C                     ELSE
+     C*
+     C**   CHANGE COMPONENT STATUS TO 'C' AND UPDATE
+     C*
+     C                     MOVE 'C'       DHCSTS
+     C                     EXCPTCOMSTS
+     C                     MOVE 'Y'       EXCPT
+     C*
+     C**   SEND COMPLETED MESSAGE TO DTAQ/CBDTQA
+     C*
+     C                     MOVE *BLANKS   MSG
+     C                     MOVE DHCOTT    NAME10
+     C                     MOVE DHCSEQ    SEQNO
+     C                     MOVE 'C'       TYPE
+     C*
+     C                     CALL 'QSNDDTAQ'
+     C                     PARM           DTQANM
+     C                     PARM           DTQALB
+     C                     PARM           DTQALN
+     C                     PARM           DTQA
+     C*
+     C                     END
+     C*
+     C**   IF DIFFERENT RECORD CAN BE POSSIBLY BE READ
+     C**   FROM COMPONENTS FILE THEN SETLL BEFORE READ
+     C*
+     C           *IN50     IFEQ '1'
+     C           SCHKEY    SETLL@CMPNHO
+     C                     END
+     C*
+     C**   READ NEXT AVALIABLE RECORD
+     C*
+     C                     READ @CMPNHO                  04
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C** SUBROUTINE THAT CHECKS THAT THE SELECTED COMPONENT CAN BE
+     C** RUN NOW.
+     C*
+     C** CALLED FROM SUBROUTINE SELTSR
+     C*
+     C** CALLS DBERR
+     C*
+     C********************************************************************
+     C*
+     C           CHECK     BEGSR
+     C*
+     C**   IF WORK INDICATOR IS ON AND MUTUALLY EXCLUSIVE FLAG = 'Y'
+     C*
+     C           *IN50     IFEQ '1'
+     C           DHCMEF    ANDEQ'Y'
+     C*
+     C**   FIND CORRESPONDING M.E. COMPONENT
+     C*
+     C                     MOVE DHCOTT    MKCCOT
+     C                     MOVE DHCSEQ    MKCSEQ
+     C******     MEXKEY    SETLLCBMEXCL1                                  CCB003
+     C******     MEXKEY    READECBMEXCL1                 05               CCB003
+     C           MEXKEY    SETLLCBMUTXL1                                  CCB003
+     C           MEXKEY    READECBMUTXL1                 05               CCB003
+     C*
+     C**   IF RECORD NOT FOUND - DATABASE ERROR
+     C*
+     C           *IN05     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C******               MOVEL'MEXL1'   DBFILE
+     C                     MOVEL'MUTL1'   DBFILE
+     C                     MOVELDHCOTT    COMKY
+     C                     MOVE DHCSEQ    COMKY
+     C                     MOVELCOMKY     DBKEY            ***************
+     C                     Z-ADD04        DBASE            * DB ERROR 04 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C**   DO WHILE M.E. RECORD FOUND AND WORK INDICATOR IS ON
+     C*
+     C           *IN05     DOWEQ'0'
+     C           *IN50     ANDEQ'1'
+     C*
+     C**   CHAIN TO CBCOMSL0 ON M.E COMPONENT NAME & M.E. SEQ.NO.
+     C*
+     C                     MOVE DKMECN    CKCCOT
+     C                     MOVE DKMECS    CKCSEQ
+     C           COMKEY    CHAIN@DHREGG              03
+     C*
+     C**   IF RECORD NOT FOUND - DATABASE ERROR
+     C*
+     C           *IN03     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CMPL0'   DBFILE
+     C                     MOVELDKMECN    COMKY
+     C                     MOVE DKMECS    COMKY
+     C                     MOVELCOMKY     DBKEY            ***************
+     C                     Z-ADD05        DBASE            * DB ERROR 05 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C**   IF M.E. COMPONENT IS SCHEDULED OR BEING PROCESSED
+     C**   OR HAS TERMINATED ABNORMALLY                                   E38011
+     C*
+     C           DHAB@@    IFEQ 'S'
+     C           DHAB@@    OREQ 'P'
+     C           DHAB@@    OREQ 'A'                                       E38011
+     C*
+     C**   SET OFF WORK INDICATOR
+     C*
+     C                     SETOF                         50
+     C*
+     C                     ELSE
+     C*
+     C**   READ NEXT RECORD FROM M.E. FILE WITH SAME KEY
+     C*
+     C******     MEXKEY    READECBMEXCL1                 05               CCB003
+     C           MEXKEY    READECBMUTXL1                 05               CCB003
+     C*
+     C                     END
+     C*
+     C**   RELEASE CBCOMSL0 RECORD
+     C*
+     C                     EXCPTCOMRE0
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C**   IF NO MUTUALLY EXCLUSIVE COMPONENTS RUNNING
+     C*
+     C           *IN50     IFEQ '1'
+     C*
+     C**   IF HALT BEFORE REQUESTED - SEND HALT MESSAGE TO DTAQ/CBDTQA
+     C*
+     C           DHCHTB    IFEQ 'Y'
+     C*
+     C**   IF HALT ISN'T ALREADY IN PROGRESS (I.E. CBSTAT POS. 20
+     C**   IS AN 'N') RESET WORK INDICATOR AND COMMENCE HALT
+     C**   PROCESSING OTHERWISE BYPASS HALT PROCESSING FOR
+     C**   THIS COMPONENT UNTIL AFTER RESTART
+     C*
+     C           *IN70     DOUEQ'0'                                       LN0545
+     C************LOCK     IN   CBSTAT                                    LN0545
+     C           *LOCK     IN   CBSTAT                 70                 LN0545
+     C                     END                                            LN0545
+     C                     MOVE HALTST    HLTST   1
+     C                     OUT  CBSTAT
+     C                     SETOF                     50
+     C           HLTST     IFEQ 'N'
+     C                     MOVE *BLANKS   DTQA
+     C                     MOVEL'BEFORE'  NAME10
+     C                     MOVE 'H'       TYPE
+     C*
+     C                     CALL 'QSNDDTAQ'
+     C                     PARM           DTQANM
+     C                     PARM           DTQALB
+     C                     PARM           DTQALN
+     C                     PARM           DTQA
+     C*
+     C**   UPDATE CBCOMSL9 TO SHOW HALT REQUESTED
+     C*
+     C                     MOVE 'H'       DHCHTB
+     C                     EXCPTCOMHTB
+     C                     MOVE 'Y'       EXCPT
+     C*
+     C**   UPDATE DTAARA/CBSTAT TO SHOW HALT HAS BEEN REQUESTED
+     C*
+     C           *IN70     DOUEQ'0'                                       LN0545
+     C************LOCK     IN   CBSTAT                                    LN0545
+     C           *LOCK     IN   CBSTAT                 70                 LN0545
+     C                     END                                            LN0545
+     C                     MOVE 'R'       HALTST
+     C                     OUT  CBSTAT
+     C*
+     C                     END
+     C*
+     C**   ELSE (HALT BEFORE COMPONENT NOT REQUESTED)
+     C*
+     C                     ELSE
+     C*
+     C                     MOVE 'S'       DHCSTS
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C**   IF COMPONENT WAS SCHEDULED - FIND FREE STREAM AND RUN
+     C*
+     C           DHCSTS    IFEQ 'S'
+      *                                                                   CCB003
+      ** If Task Split job do not remove a stream number from the         CCB003
+      ** data area as Task Split jobs will not be shown on the monitor.   CCB003
+      *                                                                   CCB003
+     C           DHTASK    IFNE 'Y'                                       CCB003
+     C                     MOVE *BLANKS   DTQB
+     C                     Z-ADD1         WAIT
+     C                     CALL 'QRCVDTAQ'
+     C                     PARM           DTQBNM
+     C                     PARM           DTQBLB
+     C                     PARM           DTQBLN
+     C                     PARM           DTQB    8
+     C                     PARM           WAIT
+     C                     ENDIF                                          CCB003
+     C*
+     C           DTQB      IFNE *BLANKS
+     C           DHTASK    OREQ 'Y'                                       CCB003
+     C*
+     C                     EXCPTCOMSTS
+     C                     MOVE 'Y'       EXCPT
+     C*
+     C** IF ON REQUEST REPORT CALL REPORT PROGRAM, ELSE COMPONENT PROGRAM
+     C*
+     C           DHCFRQ    IFEQ '00'
+     C                     MOVE 'CBC0055' CPGM
+     C                     ELSE
+     C                     MOVE 'CBC0050' CPGM
+     C                     END
+     C*
+     C                     MOVE DHCOTT    DHDL@@
+      *                                                                   CCB003
+      ** If Task Split job set RTGDTA to 'STREAM00'+ 1st parameter to     CCB003
+      ** 'STREAMXX'                                                       CCB003
+      *                                                                   CCB003
+     C           DHTASK    IFEQ 'Y'                                       CCB003
+     C                     MOVE 'STREAM00'RTGDTA                          CCB003
+     C                     MOVE 'STREAMXX'DTQB                            CCB003
+     C                     ELSE                                           CCB003
+     C                     MOVE DTQB      RTGDTA
+     C                     ENDIF                                          CCB003
+     C***********          Z-ADD219       LEN                             LN1197
+     C*********************Z-ADD246       LEN                       LN1197056287
+     C***********          Z-ADD253       LEN                       056287CPK014
+     C                     Z-ADD265       LEN                             CPK014
+     C                     CALL 'QCMDEXC'
+     C                     PARM           SBMJOB
+     C                     PARM           LEN
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C**   IF RECORD NOT PREVIOUSLY UPDATED - RELEASE CBCOMSL9 RECORD
+     C*
+     C           EXCPT     IFEQ 'N'
+     C                     EXCPTCOMREL
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C** SUBROUTINE THAT PROCESSES HALT MESSAGES FROM DTAQ/CBDTQA
+     C*
+     C** CALLED FROM MAIN CYCLE
+     C*
+     C** CALLS HLTMSG
+     C*
+     C********************************************************************
+     C*
+     C           HALTSR    BEGSR
+     C*
+     C**   IF FIRST FIVE CHARACTERS OF DTAQ/CBDTQA NOT 'DUMMY'
+     C*
+     C           NAME5     IFNE 'DUMMY'
+     C*
+     C**   ACCESS DTAARA/CBSTAT. UPDATE HALT STATUS TO 'H'
+     C*
+     C           *IN70     DOUEQ'0'                                       LN0545
+     C************LOCK     IN   CBSTAT                                    LN0545
+     C           *LOCK     IN   CBSTAT                 70                 LN0545
+     C                     END                                            LN0545
+     C                     MOVE 'H'       HALTST
+     C                     OUT  CBSTAT
+     C*
+     C                     END
+     C*
+     C**   READ DTAQ/CBDTQC
+     C*
+     C                     MOVE *BLANKS   DTQC
+     C                     Z-ADD60        WAIT
+     C                     CALL 'QRCVDTAQ'
+     C                     PARM           DTQCNM
+     C                     PARM           DTQCLB
+     C                     PARM           DTQCLN
+     C                     PARM           DTQC    1
+     C                     PARM           WAIT
+     C*
+     C**   REPEAT WHILE STREAMS STILL RUNNING & CANCEL OR RESTART
+     C**   MESSAGE HASN'T BEEN SENT (SIGNIFIED BY DTAQ TIMING OUT)
+     C*
+     C           DTQC      DOWEQ*BLANKS
+     C*
+     C**   IF ALL STREAMS HALTED THEN HALT OCCURS
+     C*
+     C           *IN70     DOUEQ'0'                                       LN0545
+     C************LOCK     IN   CBSTAT                                    LN0545
+     C           *LOCK     IN   CBSTAT                 70                 LN0545
+     C                     END                                            LN0545
+     C*
+     C           NOAS      IFEQ '00'
+     C                     MOVE 'Y'       HALTST
+     C                     Z-SUB1         WAIT
+     C*
+     C           NAME5     IFNE 'DUMMY'
+     C                     EXSR HLTMSG
+     C                     END
+     C*
+     C                     END
+     C                     OUT  CBSTAT
+     C*
+     C**   READ DTAQ/CBDTQC
+     C*
+     C                     MOVE *BLANKS   DTQC
+     C                     CALL 'QRCVDTAQ'
+     C                     PARM           DTQCNM
+     C                     PARM           DTQCLB
+     C                     PARM           DTQCLN
+     C                     PARM           DTQC    1
+     C                     PARM           WAIT
+     C*
+     C                     END
+     C*
+     C**   IF RECORD ON DTAQ/CBDTQC IS CANCEL - EXIT PROGRAM
+     C*
+     C           DTQC      IFEQ 'C'
+     C                     SETON                         LR
+     C                     RETRN
+     C*
+     C**   ELSE.....
+     C*
+     C                     ELSE
+     C*
+     C**   ACCESS CURRENT DATE/TIME AND CONVERT DATE INTO MIDAS DAY
+     C**   NUMBER
+     C*
+     C*****                TIME           TIMDAT                          LN0278
+     C*****                MOVE TIMDAT    ZDATE                           LN0278
+     C*****                MOVELTIMDAT    CURRTI                          LN0278
+     C******               EXSR ZDATE1                                    LN0278
+     C******               MOVE ZDAYNO    CURRDT  50                      LN0278
+     C*                                                                   LN0278
+     C** ACCESS DATE, TIME AND DATE FORMAT USING PROGRAM CBTIME           LN0278
+     C*                                                                   LN0278
+     C                     CALL 'CBTIME'                                  LN0278
+     C                     PARM           DAYNOA                          LN0278
+     C                     PARM           STIME                           LN0278
+     C                     PARM           DFMT                            LN0278
+     C*                                                                   LN0278
+     C** SET CURRENT DATE AND TIME FIELDS                                 LN0278
+     C** WITH VALUES FROM CBTIME                                          LN0278
+     C*                                                                   LN0278
+     C                     MOVE DAYNOA    CURRDT                          LN0278
+     C                     MOVE STIME     CURRTI                          LN0278
+     C*                                                                   LN0278
+     C                     MOVE CURHR     NICHR
+     C                     MOVE CURMI     NICMI
+     C                     MOVE CURSE     NICSE
+     C*
+     C**   WRITE RECORD TO PF/CBHALTPD
+     C*
+     C                     MOVE NICTIM    MSGTX5
+     C                     MOVELCURRTI    HSTI
+     C                     MOVELCURRDT    HSDE
+     C                     MOVE *BLANKS   HTXT
+     C                     MOVELMSGTX5    HTXT
+     C                     OPEN CBHALTPD
+     C                     WRITECBHALTP0
+     C                     CLOSECBHALTPD
+     C*
+     C**   SEND MESSAGE TO DTAQ/CBDTQD
+     C*
+     C                     MOVE *BLANKS   MSG
+     C                     MOVEL'RESTART 'MSGTYP
+     C                     MOVELMSGTX5    MSGTXT
+     C*
+     C                     CALL 'QSNDDTAQ'
+     C                     PARM           DTQDNM
+     C                     PARM           DTQDLB
+     C                     PARM           DTQDLN
+     C                     PARM           MSG
+     C*
+     C**   CHECK HALT DATE/TIME IN DTAARA/CBSTAT
+     C**   IF CURRENT DATE/TIME IS PAST HALT DATE/TIME RESET HALT
+     C**   DATE/TIME.
+     C*
+     C           *IN70     DOUEQ'0'                                       LN0545
+     C************LOCK     IN   CBSTAT                                    LN0545
+     C           *LOCK     IN   CBSTAT                 70                 LN0545
+     C                     END                                            LN0545
+     C*
+     C           CURRDT    IFGT HALDT
+     C           CURRDT    OREQ HALDT
+     C           CURRTP    ANDGTHALTI
+     C*
+     C                     MOVE *BLANKS   HALTTI
+     C                     MOVE *BLANKS   HALTDT
+     C*
+     C                     END
+     C*
+     C                     OUT  CBSTAT
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C** SUBROUTINE THAT SENDS HALT MESSAGE TO MSGQ/MOPERQ,
+     C** DTAQ/CBDTQD AND PF/CBHALTPD
+     C*
+     C** CALLED FROM HALTSR
+     C*
+     C** CALLS NO OTHER SUBROUTINES
+     C*
+     C********************************************************************
+     C*
+     C           HLTMSG    BEGSR
+     C*
+     C**   ACCESS CURRENT DATE/TIME AND CONVERT DATE INTO MIDAS DAY
+     C**   NUMBER
+     C*
+     C******               TIME           TIMDAT                          LN0278
+     C******               MOVE TIMDAT    ZDATE                           LN0278
+     C******               MOVELTIMDAT    CURRTI                          LN0278
+     C******               EXSR ZDATE1                                    LN0278
+     C******               MOVE ZDAYNO    CURRDT                          LN0278
+     C*                                                                   LN0278
+     C** ACCESS DATE, TIME AND DATE FORMAT USING PROGRAM CBTIME           LN0278
+     C*                                                                   LN0278
+     C                     CALL 'CBTIME'                                  LN0278
+     C                     PARM           DAYNOA                          LN0278
+     C                     PARM           STIME                           LN0278
+     C                     PARM           DFMT                            LN0278
+     C*                                                                   LN0278
+     C** SET CURRENT DATE AND TIME FIELDS                                 LN0278
+     C** WITH VALUES FROM CBTIME                                          LN0278
+     C*                                                                   LN0278
+     C                     MOVE DAYNOA    CURRDT                          LN0278
+     C                     MOVE STIME     CURRTI                          LN0278
+     C*                                                                   LN0278
+     C                     MOVE CURHR     NICHR
+     C                     MOVE CURMI     NICMI
+     C                     MOVE CURSE     NICSE
+     C*
+     C**   SET UP APPROPRIATE MESSAGE DEPENDING ON TYPE OF HALT
+     C*
+     C                     MOVE *BLANKS   MSG
+     C                     MOVEL'HALTED  'MSGTYP
+     C*
+     C**  Access CBCOMSLD for name of Component being halted after.                           247203
+     C*                                                                                       247203
+     C           NAME5     IFEQ 'AFTER'
+     C***********          MOVE NICTIM    MSGTX1                          046312
+     C           *LOVAL    SETLL@CMPNLD                                                       247203
+     C                     READ @CMPNLD                  07                                   247203
+     C           *IN07     IFEQ '0'                                                           247203
+     C***********          MOVELDHCOTT    MSGTXA 13                       046312              247203
+     C                     MOVELDHDLLD    MSGTXA 13                                           247203
+     C                     ENDIF                                                              247203
+     C                     MOVE 'AT'      MSGTXA                          046312
+     C                     MOVELMSGTXA    MSGTXB 22                       046312
+     C                     MOVE NICTIM    MSGTXB                          046312
+     C                     MOVE MSGTXB    MSGTX1                          046312
+     C                     MOVELMSGTX1    MSGTXT 60
+     C                     END
+     C*
+     C**  Access CBCOMSL6 for name of Component being halted before.                          247203
+     C*                                                                                       247203
+     C           NAME5     IFEQ 'BEFOR'
+     C***********          MOVE NICTIM    MSGTX2                          046312
+     C           *LOVAL    SETLL@CMPNHM                                                       247203
+     C                     READ @CMPNHM                  06                                   247203
+     C           *IN06     IFEQ '0'                                                           247203
+     C***********          MOVELDHCOTT    MSGTXA 13                       046312              247203
+     C                     MOVELDHDLL6    MSGTXA 13                                           247203
+     C                     ENDIF                                                              247203
+     C                     MOVE 'AT'      MSGTXA                          046312
+     C                     MOVELMSGTXA    MSGTXB 22                       046312
+     C                     MOVE NICTIM    MSGTXB                          046312
+     C                     MOVE MSGTXB    MSGTX2                          046312
+     C                     MOVELMSGTX2    MSGTXT
+     C                     END
+     C*
+     C           NAME5     IFEQ 'IMMED'
+     C                     MOVE NICTIM    MSGTX3
+     C                     MOVELMSGTX3    MSGTXT
+     C                     END
+     C*
+     C           NAME5     IFEQ 'TIMED'
+     C                     MOVE NICTIM    MSGTX4
+     C                     MOVELMSGTX4    MSGTXT 60
+     C                     END
+     C*
+     C**   SEND MESSAGE TO MOPERQ
+     C*
+     C                     MOVELMSGTXT    MOPERQ
+     C                     Z-ADD80        LEN    155
+     C                     CALL 'QCMDEXC'
+     C                     PARM           CMD
+     C                     PARM           LEN
+     C*
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,CB0010CCP4                                           S01408
+     C*                                                                   S01408
+     C**   SEND MESSAGE TO DTAQ/CBDTQD
+     C*
+     C                     CALL 'QSNDDTAQ'
+     C                     PARM           DTQDNM
+     C                     PARM           DTQDLB
+     C                     PARM           DTQDLN
+     C                     PARM           MSG
+     C*
+     C**   WRITE RECORD TO PF/CBHALTPD
+     C*
+     C                     MOVELCURRTI    HSTI
+     C                     MOVELCURRDT    HSDE
+     C                     MOVE *BLANKS   HTXT
+     C                     MOVE MSGTXT    HTXT
+     C                     OPEN CBHALTPD
+     C                     WRITECBHALTP0
+     C                     CLOSECBHALTPD
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*****/COPY ZSRSRC,ZDATE1Z2                                          LN0278
+     C*****************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C** DATABASE ERROR SUBROUTINE TO PERFORM DATABASE ERROR
+     C** EXIT FROM PROGRAM
+     C*
+     C** CALLED FROM COMPSR AND SELTSR SUBROUTINES
+     C*
+     C** CALLS NO OTHER SUBROUTINES
+     C*
+     C********************************************************************
+     C*
+     C           DBERR     BEGSR
+     C*
+     C** SETON INDICATORS U7 U8 LR AND RETURN TO CALLING PROGRAM
+     C*
+     C                     MOVEL'CB0010'  DBPGM
+     C                     SETON                     U7U8LR
+     C                     OUT  LDA
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     O*****************************************************************
+     O*
+     O**   UPDATE OF CBDEPSL2 - DEPENDENCY STATUS FIELD
+     O@DPRLG7 E                DEPSTS
+     O                         DICDST
+     O*
+     O**   UPDATE OF CBCOMSL0 - OUTSTANDING DEPENDENCIES FIELD
+     O@DHREGG E                COMODP
+     O                         DHMU@@
+     O*
+     O**   UPDATE OF CBCOMSL0 - RELEASE
+     O        E                COMRE0
+     O*
+     O**   UPDATE OF CBCOMSL9 - COMPONENT STATUS FIELD
+     O@CMPNHO E                COMSTS
+     O                         DHCSTS
+     O*
+     O**   UPDATE OF CBCOMSL9 - COMPONENT HALT BEFORE FIELD
+     O        E                COMHTB
+     O                         DHCHTB
+     O*
+     O**   UPDATE OF CBCOMSL9 - RELEASE
+     O        E                COMREL
+     O*
+      /EJECT
+     O*                                                                   S01408
+     O/COPY WNCPYSRC,CB0010OOP1                                           S01408
+     O*                                                                   S01408
+**  MESA
+TIMED          H
+**  MESD
+HALT AFTER COMPONENT
+HALT BEFORE COMPONENT
+IMMEDIATE HALT AT
+TIMED HALT AT
+COB RESTARTED AT
+**  QCMD
+SNDMSG '                                                        ' TOMSGQ(MOPERQ)
+**  SBM1
+SBMJOB JOB(          ) JOBD(MBATCH) JOBQ(MCOBQ) RTGDTA('        ')
+**  SBM2
+RQSDTA('CALL XXXXXXX (''        '' ''          '' ''     '' ''  ''
+**  SBM3
+ X''           F'' ''
+**  SBM4
+'' ''  '')') OUTQ(*JOBD) INLLIBL(*JOBD) USER(*JOBD)                       056287CPK014
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

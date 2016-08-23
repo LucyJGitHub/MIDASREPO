@@ -1,0 +1,790 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SF Account codes authorities audit/report')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Security Profile Facility                            *
+      *                                                               *
+      *  SF0031 - Account Codes Authorities Audit/Report              *
+      *                                                               *
+      * FUNCTION:  This Program produces a report, for audit          *
+      * (COB)      purposes, of all Account Codes Authorities defined *
+      * (I/C)      to the system. The report runs on request in I/C   *
+      *            and for all Account Codes or for an individual     *
+      *            Account Code.                                      *
+      *                                                               *
+      *  Called By: SFC0031                                           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 BUG11202           Date 11Apr06               *
+      *                 BUG9569            Date 12May05               *
+      *                 TDA035             Date 02Apr04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 201182             Date 10Jul02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CGL008             Date 01Mar99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CRE026 - Consumer Banking (Recompile)                        *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  BUG11202 - Apply Bug9569 (annotated as BUG9569).             *
+      *           - SFC0031 failed with database problem due to       *
+      *             printer file overflow.  Applied fix 235073.       *
+      *  BUG9569- SFC0031 failed with database problem due to printer *
+      *           file overflow.  Applied fix 235073.                 *
+      *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  201182 - Add one to the number of print line test before    *
+      *           writing the format to print the text 'END OF REPORT'*
+      *           In order to avoid overflow error.                   *
+      *  CGL008 - Security on Journal Entry Input                     *
+      *                                                               *
+      *****************************************************************
+     FSFACAUL0IF  E           K        DISK
+      *
+     FSF0031AUO   E                    PRINTER      KINFDS SPOOLU     UC
+     F                                              KINFSR *PSSR
+      *
+     FSF0031P1O   E                    PRINTER      KINFDS SPOOL1     UC
+     F                                              KINFSR *PSSR
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  20 - End of File for PF/SFACAUPD                             *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRP002 - Program Initialisation                              *
+      *  SRP003 - List all Account Code Authorities                   *
+      *  SRP004 - List Account Code Authorities for an audit list     *
+      *  SRP005 - List Account Code Authorities for an individual     *
+      *           Account Code                                        *
+      *  SRP006 - Output Audit Report and End Program                 *
+      *****************************************************************
+      *
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      **   Array for copyright
+      *
+      *
+     E/EJECT
+     ICPYR@$      DS
+      ***  Data structure for compilation - copyright insertion
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@$$
+      *
+     IPSDS       SDS
+      ***  Program status data structure
+     I                                      244 253 JOB
+     I                                      254 263 USER
+      *
+     ISPOOLU      DS
+      ***  File Information Data Structure for SF0031AU.
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     ISPOOL1      DS
+      ***  File information data structure for SF0031P1
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ILDA       E DSLDA                         256
+      *
+      ***  Local data area for database error details
+      ***  *LOCK IN LDA immediately before and OUT LDA immediately
+      ***  after each database error handling.
+      ***
+      ***                                     134 141 DBFILE
+      ***        Defines:                     142 170 DBKEY
+      ***                                     171 180 DBPGM
+      ***                                     181 1830DBASE
+      *
+     ISDBANK    E DSSDBANKPD
+      ***  Bank details
+      *
+     ISDUSER    E DSMUSERDD
+      ***  External DS for User details
+      *
+     ISDACCD    E DSSDACODPD
+      ***  Account Code details
+      *
+     IDSSDY     E DSDSSDY
+      ***  Second DS for access programs, long data strucutre
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  P001 - Main Processing                                       *
+      *                                                               *
+      *  Called by: None                                              *
+      *                                                               *
+      *  Calls:     SRP002 - Program Initialisation                   *
+      *             SRP003 - Lists all Account Code Authorities       *
+      *             SRP004 - List Account Code Authorities for        *
+      *                      an audit List                            *
+      *             SRP005 - List Account Code Authorities for        *
+      *                      an individual Account Code               *
+      *             SRP006 - Output Audit Report                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+     C                     EXSR SRP002
+      *
+      ***  Check input parameter
+      *
+     C           PACOD     IFEQ '*ALL'
+     C           PMODE     OREQ 'L'
+      *
+      ***  Full list
+      *
+     C                     EXSR SRP003
+     C                     ELSE
+      *
+      ** Request for an Audit List
+      *
+     C           PMODE     IFEQ 'A'
+     C                     EXSR SRP004
+     C                     ELSE
+      *
+      ***  List for an individual Account Code
+      *
+     C                     EXSR SRP005
+     C                     END
+     C                     END
+      *
+      ***  Perform audit report
+      *
+     C                     EXSR SRP006
+      *
+      ***  End program
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP002 - Program Initialization                              *
+      *                                                               *
+      *  Called By: P001 - Main Processing                            *
+      *                                                               *
+      *  Calls:     AOBANKR0 - Access object for Bank Details         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP002    BEGSR
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ***  Access Bank details file
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' WWRTCD  7
+     C                     PARM '*FIRST ' WWOPTN  7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+      ***  Initialise work fields
+      *
+     C**********           Z-ADD0         WSACOD  40                                          CGL029
+     C                     Z-ADD0         WSACOD 100                                          CGL029
+      *
+      ***  Input parameter list
+      *
+     C           *ENTRY    PLIST
+     C**********           PARM           PACOD   4                                           CGL029
+     C                     PARM           PACOD  10                                           CGL029
+     C                     PARM           PRSEQ   5
+     C                     PARM           PMODE   1
+      *
+      ***  Initialise run controls work fields
+      *
+     C                     Z-ADD*ZEROS    RRPROG  50
+      *
+      ***  Report Work fields.
+      *
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+      *
+     C                     TESTN          PACOD      21
+     C***21*****           MOVE PACOD     PACOD1  40                                          CGL029
+     C   21                MOVE PACOD     PACOD1 100                                          CGL029
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *    SRP003 -  List Account Codes Authorities for all Account   *
+      *                                                               *
+      *    Called by: P001 - Main Processing                          *
+      *                                                               *
+      *    Calls:     AOACODR0 - Access object for Account Code       *
+      *               AOUSERR0 - Access object for Midas Users        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP003    BEGSR
+      *
+     C           *LOVAL    SETLLSFACAUL0
+     C                     READ SFACAUL0                 20
+      *
+      ***  If End of Records, (*IN20), Perform: Audit Reporting (No
+      ***  Records).
+      *
+     C           *IN20     IFEQ *OFF
+      *
+      ***  Print list : open file and record RCF details
+      *
+     C                     EXSR RCFP1
+     C                     WRITEHEADER1
+     C                     WRITEHEADER3
+      *
+     C           *IN20     DOWEQ*OFF
+      *
+      ***  If Account code not equal to 'Save Account Code'
+      *
+     C           SFACOD    IFNE WSACOD
+      *
+     C                     MOVE SFACOD    WWACCD
+     C                     MOVE SFACOD    WSACOD
+      *
+      ***  Access to Account details
+      *
+     C                     CALL 'AOACODR0'
+     C                     PARM           WWRTCD  7
+     C                     PARM '*KEY   ' WWOPTN  7
+     C**********           PARM           WWACCD  4                                           CGL029
+     C                     PARM           WWACCD 10                                           CGL029
+     C           SDACCD    PARM SDACCD    DSSDY
+      *
+     C           WWRTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD001       DBASE            ************
+     C                     MOVEL'SDACODPD'DBFILE           * DBERR  01*
+     C                     MOVELWWACCD    DBKEY            ************
+     C                     MOVEL'SF0031'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Write header Account code
+      *
+     C                     MOVE SFACOD    RRACOD    P
+     C                     MOVE A5ACCN    RRACCN    P
+     C                     ADD  1         RRPROG
+      *
+      ***  Check that sufficient lines remain for the Format. If not,
+      ***  write out the Main Headings on a new page.
+      *
+     C                     Z-ADD9         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADER1
+     C                     WRITEHEADER3
+     C                     ENDIF
+      *
+     C                     WRITEHEADER4
+     C                     ENDIF
+      *
+      ***  Access to user detail to retrive the user name
+      *
+     C                     CALL 'AOUSERR0'
+     C                     PARM           PRTCD   7
+     C                     PARM '*KEY   ' POPTN   7
+     C                     PARM SFUSRP    PUSRP  10
+     C           SDUSER    PARM SDUSER    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD002       DBASE            ************
+     C                     MOVEL'MUSERDD' DBFILE           * DBERR  02*
+     C                     MOVELSFUSRP    DBKEY            ************
+     C                     MOVEL'SF0031'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELUSRP      RRUSRP
+     C                     MOVELUSER1     RRUSR1
+      *
+     C                     Z-ADD3         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADER1
+     C                     WRITEHEADER3
+     C                     WRITEHEADER4
+     C                     ENDIF
+      *
+     C                     WRITEDETAIL1
+      *
+      ***  Read next Account Code Authorities
+      *
+     C                     READ SFACAUL0                 20
+     C                     ENDDO
+      *
+      ***  End of Report/No Details to Print.
+      *
+     C           RRPROG    IFGT 0
+      *
+      ***  Check that sufficient lines remain for the Format. If not,
+      ***  write out the Main Headings on a new page.
+      *
+     C**********           Z-ADD3         RQDLN1                                              201182
+     C                     Z-ADD4         RQDLN1                                              201182
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADER1
+     C                     WRITEHEADER3
+     C                     ENDIF
+     C                     WRITEFOOTING1
+     C                     ENDIF
+      *
+     C                     CLOSESF0031P1
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *    SRP004 - List Account Code Authorities for an Audit List   *
+      *                                                               *
+      *    Called by: P001 - Main Processing                          *
+      *                                                               *
+      *    Calls:     AOACODR0 - Access object for Account Code       *
+      *               AOUSERR0 - Access object for Midas Users        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP004    BEGSR
+      *
+     C           *LOVAL    SETLLSFACAUL0
+     C                     READ SFACAUL0                 20
+      *
+     C           *IN20     DOWEQ*OFF
+     C           SFLCD     ANDNEBJRDNB
+     C                     READ SFACAUL0                 20
+     C                     ENDDO
+      *
+      ***  If End of Records, (*IN20), Perform: Audit Reporting (No
+      ***  Records).
+      *
+     C           *IN20     IFEQ *OFF
+      *
+      ***  Print list : open file and record RCF details
+      *
+     C                     EXSR RCFP1
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+      *
+     C           *IN20     DOWEQ*OFF
+      *
+      ***  If Account code not equal to 'Save Account Code'
+      *
+     C           SFLCD     IFEQ BJRDNB
+     C           SFACOD    IFNE WSACOD
+      *
+     C**********           MOVE SFACOD    WWACCD  4                                           CGL029
+     C                     MOVE SFACOD    WWACCD                                              CGL029
+     C                     MOVE SFACOD    WSACOD
+      *
+      ***  Access to Account details
+      *
+     C                     CALL 'AOACODR0'
+     C                     PARM           PRTCD1  7
+     C                     PARM '*KEY   ' POPTN1  7
+     C**********           PARM WWACCD    PACCD1  4                                           CGL029
+     C                     PARM WWACCD    PACCD1 10                                           CGL029
+     C           SDACCD    PARM SDACCD    DSSDY
+      *
+     C           PRTCD1    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD003       DBASE            ************
+     C                     MOVEL'SDACODPD'DBFILE           * DBERR  03*
+     C                     MOVELSFACOD    DBKEY            ************
+     C                     MOVEL'SF0031'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Write header Account code
+      *
+     C                     MOVE SFACOD    RRACOD    P
+     C                     MOVE A5ACCN    RRACCN    P
+     C                     ADD  1         RRPROG
+      *
+      ***  Check that sufficient lines remain for the Format. If not,
+      ***  write out the Main Headings on a new page.
+      *
+     C***********          Z-ADD3         RQDLN1                                             BUG9569
+     C                     Z-ADD9         RQDLN1                                             BUG9569
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     ENDIF
+      *
+     C                     WRITEHEADER4
+     C                     ENDIF
+      *
+      ***  Access to user detail to retrive the user name
+      *
+     C                     CALL 'AOUSERR0'
+     C                     PARM           PRTCD   7
+     C                     PARM '*KEY   ' POPTN   7
+     C                     PARM SFUSRP    PUSRP  10
+     C           SDUSER    PARM SDUSER    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD004       DBASE            ************
+     C                     MOVEL'MUSERDD' DBFILE           * DBERR  04*
+     C                     MOVELSFUSRP    DBKEY            ************
+     C                     MOVEL'SF0031'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELUSRP      RRUSRP
+     C                     MOVELUSER1     RRUSR1
+      *
+     C                     Z-ADD3         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     WRITEHEADER4
+     C                     ENDIF
+      *
+     C                     WRITEDETAIL1
+      *
+     C                     ENDIF
+      *
+      ***  Read next Account Code Authorities
+      *
+     C                     READ SFACAUL0                 20
+     C                     ENDDO
+      *
+      ***  End of Report/No Details to Print.
+      *
+     C           RRPROG    IFGT 0
+      *
+      ***  Check that sufficient lines remain for the Format. If not,
+      ***  write out the Main Headings on a new page.
+      *
+     C**********           Z-ADD3         RQDLN1                                              201182
+     C                     Z-ADD4         RQDLN1                                              201182
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     ENDIF
+     C                     WRITEFOOTING1
+     C                     ENDIF
+      *
+     C                     CLOSESF0031P1
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *    SRP005 -  List Account Codes Authorities for an individual *
+      *              Account code                                     *
+      *                                                               *
+      *    Called by: P001 - Main Processing                          *
+      *                                                               *
+      *    Calls:     AOACODR0 - Access object for Account Code       *
+      *               AOUSERR0 - Access object for Midas Users        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP005    BEGSR
+      *
+     C           PACOD1    SETLLSFACAUL0
+     C           PACOD1    READESFACAUL0                 20
+      *
+      ***  If End of Records, (*IN20), Perform: Audit Reporting (No
+      ***  Records).
+      *
+     C           *IN20     IFEQ *OFF
+      *
+      ***  Print list : open file and record RCF details
+      *
+     C                     EXSR RCFP1
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+      *
+     C           *IN20     DOWEQ*OFF
+      *
+      ***  If Account code not equal to 'Save Account Code'
+      *
+     C           SFACOD    IFNE WSACOD
+      *
+     C**********           MOVE SFACOD    WWACCD  4                                           CGL029
+     C                     MOVE SFACOD    WWACCD                                              CGL029
+     C                     MOVE SFACOD    WSACOD
+      *
+      ***  Access to Account details
+      *
+     C                     CALL 'AOACODR0'
+     C                     PARM           PRTCD1  7
+     C                     PARM '*KEY   ' POPTN1  7
+     C**********           PARM WWACCD    PACCD1  4                                           CGL029
+     C                     PARM WWACCD    PACCD1 10                                           CGL029
+     C           SDACCD    PARM SDACCD    DSSDY
+      *
+     C           PRTCD1    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD005       DBASE            ************
+     C                     MOVEL'SDACODPD'DBFILE           * DBERR  05*
+     C                     MOVELSFACOD    DBKEY            ************
+     C                     MOVEL'SF0031'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Write header Account code
+      *
+     C                     MOVE SFACOD    RRACOD    P
+     C                     MOVE A5ACCN    RRACCN    P
+     C                     ADD  1         RRPROG
+      *
+      ***  Check that sufficient lines remain for the Format. If not,
+      ***  write out the Main Headings on a new page.
+      *
+     C                     Z-ADD9         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     ENDIF
+      *
+     C                     WRITEHEADER4
+     C                     ENDIF
+      *
+      ***  Access to user detail to retrive the user name
+      *
+     C                     CALL 'AOUSERR0'
+     C                     PARM           PRTCD   7
+     C                     PARM '*KEY   ' POPTN   7
+     C                     PARM SFUSRP    PUSRP  10
+     C           SDUSER    PARM SDUSER    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD006       DBASE            ************
+     C                     MOVEL'MUSERDD' DBFILE           * DBERR  06*
+     C                     MOVELSFUSRP    DBKEY            ************
+     C                     MOVEL'SF0031'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELUSRP      RRUSRP
+     C                     MOVELUSER1     RRUSR1
+      *
+     C                     Z-ADD3         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     WRITEHEADER4
+     C                     ENDIF
+      *
+     C                     WRITEDETAIL1
+      *
+      ***  Read next Account Code Authorities
+      *
+     C           PACOD1    READESFACAUL0                 20
+     C                     ENDDO
+      *
+      ***  End of Report/No Details to Print.
+      *
+     C           RRPROG    IFGT 0
+      *
+      ***  Check that sufficient lines remain for the Format. If not,
+      ***  write out the Main Headings on a new page.
+      *
+     C**********           Z-ADD3         RQDLN1                                              201182
+     C                     Z-ADD4         RQDLN1                                              201182
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     ENDIF
+     C                     WRITEFOOTING1
+     C                     ENDIF
+      *
+     C                     CLOSESF0031P1
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP006 - Output Audit Report                                 *
+      *                                                               *
+      *  Called By: P001  - Main Processing                           *
+      *             *PSSR - Error control subroutine                  *
+      *                                                               *
+      *  Calls:     RCFAU - Subroutine to register the AU Printer     *
+      *                     file via RCF                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP006    BEGSR
+      *
+      ***  Output Report Header and File Controls.
+      *
+     C           RRPROG    IFEQ 0
+     C           *INU7     OREQ *ON
+      *
+      ***  RCF Processing for Audit File.
+      *
+     C                     EXSR RCFAU
+      *
+     C                     WRITEHEADER
+      *
+     C           PMODE     IFEQ 'A'
+     C                     WRITEHEAD3
+     C                     ELSE
+     C                     WRITEHEAD2
+     C                     ENDIF
+      *
+      ***  If there is a DB Error, Output the DB Error Information.
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ***  If no records read, Output "No Details" message.
+      *
+     C                     WRITENULL1
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  RCFP1  - Subroutine to register the P1 Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+     C           RCFP1     BEGSR
+      *
+     C                     CLOSESF0031P1
+     C                     OPEN SF0031P1
+      *
+      ***  Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PRSEQ   5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  RCFAU  - Subroutine to register the AU Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+     C           RCFAU     BEGSR
+      *
+      ***  Ensure Audit Spool File recorded by RCF.
+      *
+     C                     OPEN SF0031AU
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PRSEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine - automatically Called     *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+      ***  If *PSSR already run, then just end the program here.
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     EXSR SRP006
+     C                     ENDIF
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

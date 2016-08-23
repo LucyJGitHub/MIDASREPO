@@ -1,0 +1,885 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IRM Money Market Tmark Extract')                 *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Interest Risk Management Module                  *
+     F*                                                               *
+     F*  RM0110 - Money Market Tmark Extract                          *
+     F*                                                               *
+     F*  Function:  This program extracts data from the money market  *
+     F*  (COB)      loans and deposits file DEALSDC for download to   *
+     F*             Tmark.  Loans and deposits for which the principal*
+     F*             and interest rate stay constant until maturity    *
+     F*             will be written by this program to the appropriate*
+     F*             (i.e. money market) transaction extract file.     *
+     F*             Loans and deposits for which the principal and    *
+     F*             interest rate do not stay constant until maturity *
+     F*             will be written to the interim events file - for  *
+     F*             onward processing.                                *
+     F*                                                               *
+     F*  Called By: RMC0110 - Money Market Tmark Extract Control      *
+     F*                       Program                                 *
+     F*                                                               *
+     F*  Calls    : RM0510 - IRM Extract Filter                       *
+     F*             RM0520 - Write to Transaction Extract File        *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CGL165             Date 15Feb17               *
+      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CLE064             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 11May06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CRM001  *CREATE    Date 06Feb95               *
+      *                 XNNNNN             Date DDMmmYY               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  CRM001 - Midas/Tmark Interface                               *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FDEALSDC IF  E                    DISK         KINFSR *PSSR
+     F** Loan and Deposit Details
+     F*
+     FDEAMS   IF  E           K        DISK         KINFSR *PSSR
+     F** Deal Amendments
+     F            DEAMSDHF                          KIGNORE
+     F            DEAMSDJF                          KIGNORE
+     F*
+     FRMIEEXPDO   E                    DISK         KINFSR *PSSR
+     F** Interim Events Extract File
+     F*
+     FRMITEXPDO   E                    DISK         KINFSR *PSSR
+     F** Interim Transaction Extract File
+     F*
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   30  - Read fail on DEALSDC                                  *
+     F*   31  - Read fail on DEAMS                                    *
+     F*                                                               *
+     F*   LR  - Last record indicator                                 *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*   #LINIT - Initialisation subroutine                          *
+     F*   #LDEAM - Write deal amendment details to Interim Events     *
+     F*            Extract File                                       *
+     F*   #LIEEX - Write deal details to Interim Events Extract File  *
+     F*   #LSETF - Setup all fields on the Interim Transaction        *
+     F*            Extract File                                       *
+     F*   #LMLOC - Get Maturity Settlement Nostro Location            *
+     F*   ZACCH  - Access holiday file                                *
+     F*   ZCHKH  - Determine if a given date is a holiday             *
+     F*   ZDATE1 - Convert date format to day number                  *
+     F*   ZDATE2 - Convert day number to date formats                 *
+     F*   ZFREQB - Calculate the day number of the next payment/      *
+     F*            statement date from current date/day in month      *
+     F*            and frequency code                                 *
+     F*   ZFWDT  - Calculate the nth working day forward from a       *
+     F*            given start date for a particular currency         *
+     F*            and (optional) location                            *
+     F*   *PSSR  - Standard Error Processing                          *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E** Array containing Copyright statement
+     E*
+     E/COPY ZSRSRC,ZFREQBZ1
+     E*
+     E/COPY ZSRSRC,ZDATE2Z1
+     E*
+     E/COPY ZSRSRC,ZHOLE
+     E*
+     I/EJECT
+     I*
+     IDEAMSDIF
+     I**  Rename fields common to DEALSDC
+     I*
+     I              RECI                            DRECI
+     I              DLNO                            DDLNO
+     I              VDAT                            DVDAT
+     I              AMTP                            DAMTP
+     I              BRCA                            DBRCA
+     I              CNUM                            DCNUM
+     I              CCY                             DCCY
+     I              RTSP                            DRTSP
+     I              BRTT                            DBRTT
+     I*
+     IDEALSDCF
+     I**  Rename fields
+     I*
+     I              RECI                            CRECI
+     I              DLNO                            CDLNO
+     I              CNUM                            CCNUM
+     I              BRCA                            CBRCA
+     I              DDAT                            CDDAT
+     I              VDAT                            CVDAT
+     I              MDAT                            CMDAT
+     I              CCY                             CCCY
+     I              PCPL                            CPCPL
+     I              INTC                            CINTC
+     I              BRTT                            CBRTT
+     I              BRTE                            CBRTE
+     I              RTSP                            CRTSP
+     I              INTR                            CINTR
+     I              ICBS                            CICBS
+     I              IPFR                            CIPFR
+     I              NIDT                            CNIDT
+     I              IBDT                            CIBDT
+     I              IACD                            CIACD
+     I              AITC                            CAITC
+     I              IPRD                            CIPRD
+     I              ICTD                            CICTD
+     I              INTF                            CINTF
+     I              TAXD                            CTAXD
+     I              BOKC                            CBOKC
+     I              PRFC                            CPRFC
+     I*
+     ID@ITEX    E DSRMITEXPD
+     I**  Data structure for Interim Transaction Extract File details
+     I*
+     IDSCSNM      DS                             10
+     I**  Data area for the location code in customer shortname field
+     I*
+     I                                        8  10 NRLC
+     I*
+     I            DS
+     I                                        1   4 WDTST
+     I                                        1   2 DTYP
+     I                                        3   4 DLST
+     I*
+     ILDA       E DSLDA                         256
+     I**  Local data area for database error details
+     I*
+     ISDBANK    E DSSDBANKPD
+     I**  Data structure for bank details
+     I*
+     ISDRISK    E DSSDRISKPD
+     I**  Data structure for risk management details
+     I*
+     ISDNOST    E DSSDNOSTPD
+     I              QQACCD                          QQACC1                                    CGL029
+     I**  Data structure for nostro details
+     I              A7NOSN                          CSNM
+     I*
+     IDSFDY     E DSDSFDY
+     I**  Short data structure for access programs
+     I*
+     IDSSDY     E DSDSSDY
+     I**  Data structure to hold the outgoing record format
+     I*
+     I/COPY ZSRSRC,ZHOLI
+     I*
+     I/COPY ZSRSRC,ZAOZ2
+     I*
+     C/EJECT
+     C*================================================================
+     C*  P R O G R A M   S T A R T                                    *
+     C*================================================================
+     C*
+     C**  Set up copyright parameter
+     C*
+     C                     MOVEACPY@      ACT@   80
+     C*
+     C**  Define work fields
+     C*
+     C           *LIKE     DEFN CBRCA     WSVBR
+     C           *LIKE     DEFN CPRFC     WSVPR
+     C           *LIKE     DEFN CBOKC     WSVBK
+     C           *LIKE     DEFN DTYP      WSVDT
+     C           *LIKE     DEFN DLST      WSVDS
+     C*
+     C*================================================================
+     C*  M A I N   P R O C E S S I N G                                *
+     C*================================================================
+     C*
+     C**  Perform initial processing
+     C*
+     C                     EXSR #LINIT
+     C*
+     C                     READ DEALSDC                  30
+     C*
+     C**  Do while not end of file
+     C*
+     C           *IN30     DOWEQ'0'
+     C*
+     C**  On a change of branch, profit centre, book code, deal
+     C**  type or deal subtype
+     C*
+     C           CBRCA     IFNE WSVBR
+     C           CPRFC     ORNE WSVPR
+     C           CBOKC     ORNE WSVBK
+     C           DTYP      ORNE WSVDT
+     C           DLST      ORNE WSVDS
+     C*
+     C                     CALL 'RM0510'
+     C                     PARM           CBRCA
+     C                     PARM           CPRFC
+     C                     PARM           CBOKC
+     C                     PARM           WDTST
+     C                     PARM *BLANKS   WLTST   4
+     C                     PARM *BLANKS   WINVT   3
+     C                     PARM *BLANKS   WISTT   5
+     C                     PARM *BLANKS   WRTCD   7
+     C*
+     C**  Check value of return code
+     C*
+     C           WRTCD     IFEQ '*ERROR'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C           WRTCD     IFEQ '*END'
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C**  Save current values
+     C*
+     C                     MOVE CBRCA     WSVBR
+     C                     MOVE CPRFC     WSVPR
+     C                     MOVE CBOKC     WSVBK
+     C                     MOVE DTYP      WSVDT
+     C                     MOVE DLST      WSVDS
+     C*
+     C                     ENDIF
+     C*
+     C**  Set maturity date (if zero) equal to run date plus the
+     C**  nominal days to maturity for call deals from IRM ICD
+     C*
+     C           CMDAT     IFEQ *ZEROS
+     C           BJRDNB    ADD  EUNMDY    CMDAT
+     C                     ENDIF
+     C*
+     C**  Process only if live, not to be omitted, amd maturity date
+     C**  is greater than the run date
+     C*
+     C           WRTCD     IFNE '*OMIT'
+     C           CRECI     ANDEQ'D'
+     C           CMDAT     ANDGTBJRDNB
+     C*
+     C                     MOVE ' '       WWRRC   1
+     C           CDLNO     SETLLDEAMS
+     C           CDLNO     READEDEAMS                    31
+     C*
+     C**  Do while records are read from DEAMS
+     C*
+     C           *IN31     DOWEQ'0'
+     C*
+     C**  If live, write the deal amendment details to the interim
+     C**  events extract file
+     C*
+     C           DRECI     IFEQ 'D'
+     C                     EXSR #LDEAM
+     C                     MOVE 'Y'       WWRRC
+     C                     ENDIF
+     C*
+     C           CDLNO     READEDEAMS                    31
+     C*
+     C                     ENDDO
+     C*
+     C**  Clear fields on Interim Transaction Extract File
+     C*
+     C                     CLEARD@ITEX
+     C*
+     C**  Setup all fields on the Interim Transaction Extract File
+     C*
+     C                     EXSR #LSETF
+     C*
+     C**  If no records were written to the Interim Events Extract File
+     C**  for this deal write a record to the Transaction Extract file
+     C*
+     C           WWRRC     IFNE 'Y'
+     C*
+     C                     CALL 'RM0520'
+     C                     PARM D@ITEX    DSSDY
+     C                     PARM *BLANKS   WRTCD
+     C*
+     C**  Check if error occurred
+     C*
+     C           WRTCD     IFEQ '*ERROR'
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C**  Otherwise, write to Interim Transaction extract file
+     C*
+     C                     ELSE
+     C*
+     C                     WRITERMITEXD0
+     C*
+     C**  If the next interest payment date is not zero and is less
+     C**  than the deal's maturity date
+     C*
+     C           CNIDT     IFNE *ZEROS
+     C           CNIDT     ANDLTCMDAT
+     C*
+     C**  Write an interest pay date event to the Interim Events Ext
+     C**  File with value date = interest pay date, amendment type =
+     C** 'CI' if interest capitalization ind is 'Y' else 'SI'
+     C*
+     C                     Z-ADDCNIDT     WVDAT   50
+     C           CINTC     IFEQ 'Y'
+     C                     MOVE 'CI'      WAMTP   2
+     C                     ELSE
+     C                     MOVE 'SI'      WAMTP
+     C                     ENDIF
+     C*
+     C                     EXSR #LIEEX
+     C*
+     C**  If the interest payment frequency is not blank, calculate all
+     C**  interest payment dates to the deal maturity date starting
+     C**  from the interest base date
+     C*
+     C           CIPFR     IFNE *BLANKS
+     C*
+     C                     MOVE CIPFR     ZFREQ
+     C                     Z-ADDCIBDT     WDATE1  50
+     C                     Z-ADDCINTF     ZMDAY
+     C                     MOVE CCCY      ZCCY
+     C                     EXSR #LMLOC
+     C                     MOVE WMLOC     ZLOC
+     C*
+     C**  Calculate next interest payment date using FREQB
+     C*
+     C           WNIDT     DOUGTCMDAT
+     C*
+     C                     Z-ADDWDATE1    ZDAYNO
+     C                     EXSR ZFREQB
+     C                     Z-ADD*ZEROS    ZNRDYS
+     C                     Z-ADDZDAYNO    WDATE1
+     C*
+     C**  All other input fields to ZFWDT are set in ZFREQB
+     C*
+     C                     EXSR ZFWDT
+     C                     Z-ADDZDYNBR    WNIDT   50
+     C*
+     C**  For each interest payment date, write an interest pay date
+     C**  event to the Interim events extract file
+     C*
+     C                     Z-ADDWNIDT     WVDAT
+     C           CINTC     IFEQ 'Y'
+     C                     MOVE 'CI'      WAMTP
+     C                     ELSE
+     C                     MOVE 'SI'      WAMTP
+     C                     ENDIF
+     C*
+     C           WNIDT     IFLE CMDAT
+     C                     EXSR #LIEEX
+     C                     ENDIF
+     C*
+     C                     ENDDO
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C**  Read next record
+     C*
+     C                     READ DEALSDC                  30
+     C*
+     C                     ENDDO
+     C*
+     C**  Seton LR and return to calling program
+     C*
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #LINIT - Subroutine to perform initial processing             *
+     C*                                                               *
+     C* Called by: Main processing                                    *
+     C*                                                               *
+     C* Calls: AOBANKR0, AORISKR0, *PSSR                              *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LINIT    BEGSR                           ** #LINIT SR **
+     C*
+     C**  Set up database error details
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'RM0110'  DBPGM
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD*ZEROS    DBASE
+     C                     OUT  LDA
+     C*
+     C**  Get bank details using access object
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANK    P@RTCD  7
+     C                     PARM '*FIRST'  P@OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C**  Check if error occurred
+     C*
+     C           P@RTCD    IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE           **************
+     C                     MOVEL'*FIRST'  DBKEY            * DBERROR 01 *
+     C                     Z-ADD1         DBASE            **************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C           BJDFIN    COMP 'M'                      98MMDDYY, 98 ON
+     C*
+     C**  Get risk management details (IRM ICD) using access object
+     C*
+     C                     CALL 'AORISKR0'
+     C                     PARM *BLANK    P@RTCD
+     C                     PARM '*FIRST'  P@OPTN
+     C           SDRISK    PARM SDRISK    DSFDY
+     C*
+     C**  Check if error occurred
+     C*
+     C           P@RTCD    IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDRISKPD'DBFILE           **************
+     C                     MOVEL'*FIRST'  DBKEY            * DBERROR 02 *
+     C                     Z-ADD2         DBASE            **************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #LDEAM-  Subroutine to write deal amendment details to the    *
+     C*          Interim Events Extract file                          *
+     C*                                                               *
+     C* Called by: Main processing                                    *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LDEAM    BEGSR                           ** #LDEAM SR **
+     C*
+     C**  Loan number
+     C*
+     C                     MOVELCDLNO     LNRF
+     C*
+     C**  Value date
+     C*
+     C                     Z-ADDDVDAT     VDAT
+     C*
+     C**  Processing Sequence
+     C*
+     C                     SELEC
+     C           DAMTP     WHEQ 'PI'
+     C           DAMTP     OREQ 'PD'
+     C                     Z-ADD15        PRSQ
+     C           DAMTP     WHEQ 'SI'
+     C           DAMTP     OREQ 'CI'
+     C                     Z-ADD21        PRSQ
+     C           DAMTP     WHEQ 'SC'
+     C                     Z-ADD37        PRSQ
+     C                     ENDSL
+     C*
+     C**  Amendment type
+     C*
+     C                     MOVELDAMTP     AMTP
+     C*
+     C**  Principal Amount
+     C*
+     C                     Z-ADDDAAM      PRAM
+     C*
+     C**  Sign negative if deal is a deposit
+     C*
+     C           RCDC      IFEQ 16
+     C                     Z-SUBPRAM      PRAM
+     C                     ENDIF
+     C*
+     C**  Base rate code
+     C*
+     C                     Z-ADDDBRTT     BRTT
+     C*
+     C**  Rate/Spread
+     C                     Z-ADDDRTSP     RTSP
+     C*
+     C**  Spread indicator
+     C                     MOVE *BLANKS   SPIN
+     C*
+     C**  Calculation basis
+     C                     Z-ADD*ZEROS    CALC
+     C*
+     C**  Write a record to Interim Events Extract File
+     C*
+     C                     WRITERMIEEXD0
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #LIEEX - Subroutine to write deal details to the Interim      *
+     C*          Events Extract File                                  *
+     C*                                                               *
+     C* Called by: Main processing                                    *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LIEEX    BEGSR                           ** #LIEEX SR **
+     C*
+     C**  Loan number
+     C*
+     C                     MOVELCDLNO     LNRF
+     C*
+     C**  Value date
+     C*
+     C                     Z-ADDWVDAT     VDAT
+     C*
+     C**  Processing Sequence
+     C*
+     C                     Z-ADD21        PRSQ
+     C*
+     C**  Amendment type
+     C*
+     C                     MOVELWAMTP     AMTP
+     C*
+     C**  Principal Amount
+     C*
+     C                     Z-ADD*ZEROS    PRAM
+     C*
+     C**  Base rate code
+     C*
+     C                     Z-ADD*ZEROS    BRTT
+     C*
+     C**  Rate/Spread
+     C*
+     C                     Z-ADD*ZEROS    RTSP
+     C*
+     C**  Spread indicator
+     C*
+     C                     MOVE *BLANK    SPIN
+     C*
+     C**  Calculation basis
+     C*
+     C                     Z-ADD*ZEROS    CALC
+     C*
+     C**  Write a record to Interim Events Extract File
+     C*
+     C                     WRITERMIEEXD0
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #LSETF - Subroutine to setup all fields on the Interim        *
+     C*          Transaction Extract File                             *
+     C*                                                               *
+     C* Called by: Main processing                                    *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LSETF    BEGSR                           ** #LSETF SR **
+     C*
+     C**  Trade ID
+     C*
+     C                     MOVELCDLNO     TMID
+     C                     MOVE '00'      TMID
+     C*
+     C**  Instrument type
+     C*
+     C                     MOVEL'LD'      IRTY
+     C*
+     C**  Customer Number
+     C*
+     C                     MOVELCCNUM     CNUM
+     C*
+     C**  Branch code
+     C*
+     C                     MOVELCBRCA     BRCA
+     C*
+     C**  Profit Centre
+     C*
+     C                     MOVELCPRFC     PRFC
+     C*
+     C**  Book code
+     C*
+     C                     MOVELCBOKC     BOKC
+     C*
+     C**  Currency
+     C*
+     C                     MOVELCCCY      CCY
+     C*
+     C**  Index Type
+     C*
+     C                     MOVEL'F'       IDXT
+     C*
+     C**  Deal date
+     C*
+     C                     Z-ADDCDDAT     DDAT
+     C*
+     C**  Value date
+     C*
+     C                     Z-ADDSLID      VDAT
+     C*
+     C**  Maturity date (may be program updated)
+     C*
+     C                     Z-ADDCMDAT     MDAT
+     C*
+     C**  Principal
+     C*
+     C           RCDC      IFEQ 16
+     C                     Z-SUBCPCPL     PCPL
+     C                     ELSE
+     C                     Z-ADDCPCPL     PCPL
+     C                     ENDIF
+     C*
+     C**  Interest Rate
+     C*
+     C                     Z-ADDCINTR     INTR
+     C*
+     C**  Base Rate
+     C*
+     C                     Z-ADDCBRTE     BRTE
+     C*
+     C**  Rate/Spread
+     C*
+     C                     Z-ADDCRTSP     RTSP
+     C*
+     C**  Spread indicator
+     C*
+     C                     MOVEL'A'       SPIN
+     C*
+     C**  Interest Payment Frequency
+     C*
+     C                     MOVELCIPFR     IPFR
+     C*
+     C**  Use Next Interest Payment Date only if less than
+     C**  Maturity Date
+     C*
+     C           CNIDT     IFLE CMDAT
+     C                     Z-ADDCNIDT     NIDT
+     C                     ELSE
+     C                     Z-ADDCMDAT     NIDT
+     C                     ENDIF
+     C*
+     C** Interest Base Date
+     C*
+     C                     Z-ADDCIBDT     IBDT
+     C*
+     C**  Interest Frequency Day in Month
+     C*
+     C                     Z-ADDCINTF     INTF
+     C*
+     C**  Interest Holiday Rule
+     C*
+     C                     MOVEL'AS'      IHOL
+     C*
+     C**  Interest Holiday Adjustment Rule
+     C*
+     C                     MOVEL'A'       IHAR
+     C*
+     C**  Interest Capitalisation Indicator
+     C*
+     C                     MOVELCINTC     INTC
+     C*
+     C**  Interest Calculation basis
+     C*
+     C                     Z-ADDCICBS     ICBS
+     C*
+     C**  Interest Method
+     C*
+     C           FUID      IFEQ 'Y'
+     C                     MOVEL'DAD'     INTM
+     C                     ELSE
+     C                     MOVEL'YAR'     INTM
+     C                     ENDIF
+     C*
+     C**  Principal Indicator
+     C*
+     C                     MOVEL'P'       PRPI
+     C*
+     C**  Interest Accrual Control Date
+     C*
+     C                     Z-ADDCIACD     IACD
+     C*
+     C**  Accrued Interest to Control Date
+     C*
+     C                     Z-ADDCAITC     AITC
+     C                     ADD  AIAN      AITC
+     C                     ADD  AIAP      AITC
+     C*
+     C**  Sign is negative if deal is deposit
+     C*
+     C           RCDC      IFEQ 16
+     C                     Z-SUBAITC      AITC
+     C                     ENDIF
+     C*
+     C**  Interest Paid/Received to Date
+     C*
+     C           RCDC      IFEQ 16
+     C                     Z-SUBCIPRD     IPRD
+     C                     ELSE
+     C                     Z-ADDCIPRD     IPRD
+     C                     ENDIF
+     C*
+     C**  Interest Capitalized to Date
+     C*
+     C           RCDC      IFEQ 16
+     C                     Z-SUBCICTD     ICTD
+     C                     ELSE
+     C                     Z-ADDCICTD     ICTD
+     C                     ENDIF
+     C*
+     C**  Tax Deducted to Date
+     C*
+     C           RCDC      IFEQ 16
+     C                     Z-SUBCTAXD     TAXD
+     C                     ELSE
+     C                     Z-ADDCTAXD     TAXD
+     C                     ENDIF
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #LMLOC - Subroutine to get maturity settlement nostro         *
+     C*          location                                             *
+     C*                                                               *
+     C* Called by: Main processing                                    *
+     C*                                                               *
+     C* Calls: AONOSTR0                                               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LMLOC    BEGSR                           ** #LMLOC SR **
+     C*
+     C**  Initialise working variable - settlement branch location
+     C*
+     C           *LIKE     DEFN NRLC      WMLOC
+     C                     MOVE *BLANKS   WMLOC
+     C*
+     C**  For type 01,02,07,08 or 12, settlement location is determined
+     C**  by the nostro branch
+     C*
+     C           MDST      IFEQ 01
+     C           MDST      OREQ 02
+     C           MDST      OREQ 07
+     C           MDST      OREQ 08
+     C           MDST      OREQ 12
+     C*
+     C                     MOVELOMDA      SNOS    2
+     C*
+     C                     CALL 'AONOSTR0'
+     C                     PARM '*BLANKS' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM *BLANKS   @KEYA   6
+     C                     PARM CCCY      @KEYB   3
+     C**********           PARM *BLANKS   @KEYC   4                                           CGL029
+     C                     PARM *BLANKS   @KEYC  10                                           CGL029
+     C                     PARM *BLANKS   @KEYD   2
+     C                     PARM SNOS      @KEYE   2
+     C                     PARM *BLANKS   @BRCD   3
+     C                     PARM *BLANKS   @CSSN  10
+     C                     PARM *BLANKS   @PNOI   1
+     C           SDNOST    PARM SDNOST    DSFDY
+     C*
+     C           @RTCD     IFEQ *BLANKS
+     C*
+     C**  Move the last 3 characters of customer short code (which
+     C**  is the location code) to start location code field
+     C*
+     C                     MOVE CSNM      DSCSNM
+     C                     MOVE NRLC      WMLOC
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR  - Program exception error routine                      *
+     C*          Called automatically if a program error occurs,      *
+     C*          or directly by the program code using EXSR.          *
+     C*                                                               *
+     C* Called by: Any file or program errors                         *
+     C*            Main processing                                    *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+     C*
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/COPY ZSRSRC,ZFREQBZ2
+     C*
+     C/COPY ZSRSRC,ZDATE1Z2
+     C*
+     C/COPY ZSRSRC,ZDATE2Z2
+     C*
+     C/COPY ZSRSRC,ZCHKH
+     C*
+     C/COPY ZSRSRC,ZACCH
+     C*
+     C/COPY ZSRSRC,ZFWDT
+     C********************************************************************
+**  CPY@ - Copyright Statement
+(c) Misys International Banking Systems Ltd. 2001
+**   ZFMD  -  NUMBER OF DAYS IN THE MONTH
+312831303130313130313031
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

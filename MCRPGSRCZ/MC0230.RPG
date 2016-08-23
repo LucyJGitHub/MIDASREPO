@@ -1,0 +1,1735 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MC Update Man Accs to Current EOP')              *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Management Accounting Module
+      *                                                               *
+      *  MC0230 - Update Management Accounts to Current EOP           *
+      *                                                               *
+      *  Function: This program writes/updates the Management         *
+      *            Account records for the Control Group from the     *
+      *            Date of Last Update to the End of the Current      *
+      *            Period using the data from previous Periods or     *
+      *            the created Opening Balances.                      *
+      *                                                               *
+      *  Called by: MC0220  - Recreate Mgt Accs from Movements        *
+      *             MCC0264 - Update One Control Group Control        *
+      *                             or                                *
+      *             MCC0265 - Update All Control Groups               *
+      *                                                               *
+      ******Calls:*None                                               *   CED002
+      *  Calls: ED0410 - Write change details to PF/EDBULKPD.         *   CED002
+      *                                                               *
+      *  Parameters: 2A Group code                                    *
+      *              1A Return code                                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. 239785             Date 18May06               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01.03 ----------------------------------------*
+      *                 211528             Date 14Jan03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 104305             Date 06Feb98               *
+      *                 CED002             Date 11Jun97               *
+      *                 CMC001             DATE 18MAR96               *
+      *                 055301             DATE 13MAY93               *
+      *                 048237             DATE 11FEB93               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  239785 - DBerr when recreating balances due to historic      *
+      *           postings with ACCNTAB record purged already.        *
+      *           Set DACO to 0 if account details not found.         *
+      *           Applied fix 221097.                                 *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  211528 - Total Debit/Credit Average Balance not balanced in  *
+      *           BSPL Report GL0761.  Amend program to write to      *
+      *           PF/GLHIBLPD and PF/GLAVBLPD if the Weighted Balance *
+      *           fields and Movements fields are all non-zero.       *
+      *           Complete the fix 104305 which makes it the same     *
+      *           as 142496.                                          *
+      *  104305 - Ensure that GLHIBLPD AND GLAVBLPD records are       *
+      *           written if the movement fields are non-zero even if *
+      *           the weighted balances are zero.                     *
+      *  CED002 - Export Data Enhancements for GIB.                   *
+      *           Creation parameters changed to ignore decimal       *
+      *           data errors.                                        *
+      *  CMC001 - Management Accounts Enhancement for PCA:            *
+      *           Output an historic balance record if one of         *
+      *           period, term 1, term 2 or year-to-date movements    *
+      *           are non zero.                                       *
+      *  055301 - Averages for Income & Expense Accounts wrong        *
+      *  048237 - Speedup Management Accounts                         *
+      *                                                               *
+      *****************************************************************
+      /SPACE
+      *INPUT FILES
+     FGLPERDL5IF  E           K        DISK
+      * Period Details by Relative Period Number
+     FGLHIBLL3IF  E           K        DISK
+      * Historic Balances by Period
+     FGLAVBLL3IF  E           K        DISK
+      * Average Balances by Period
+     FGLPERDL1IF  E           K        DISK
+      * Period Details by Year/Number
+     FGLAVBLL0IF  E           K        DISK
+      * Average Balances
+     FACCNT   IF  E           K        DISK
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+      * Account Master Details
+      /SPACE
+      * UPDATE FILES
+     FGLHBCGL0UF  E           K        DISK
+      * Historic Balance Control Groups
+     FGLHIBLL0UF  E           K        DISK
+      * Historic Balances
+      /SPACE
+      * OUTPUT FILES
+     FGLHIBLPDO   E           K        DISK                      A
+      * Historic Balances
+     FGLAVBLPDO   E           K        DISK                      A
+      * Average Balances
+     F/COPY WNCPYSRC,MC0230F001
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  51  -  CHAIN GLHBCGL0                                        *
+      *  52  -  CHAIN GLPERDL5                                        *
+      *  53  -  SETLL GLPERDL1                                        *
+      *  55  -  READ  GLPERDL1
+      *  57  -  READE GLHIBLL3
+      *  59  -  CHAIN ACCNT
+      *  60  -  CHAIN GLHIBLL0
+      *  61  -  CHAIN GLAVBLL3
+      *  62  -  CHAIN GLAVBBL0
+      *  U7  -  Database error                                        *
+      *  U8  -  Database error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  P01 - Initial Processing                                     *
+      *        (Calls P02)                                            *
+      *  P02 - Main Processing                                        *
+      *        (Calls P03 & U01)                                      *
+      *  P03 - Update/Write Historic Balance record                   *
+      *        (Calls W01 & P04 & U02)                                *
+      *  P04 - Write Average Balance record                           *
+      *        (Calls W02)                                            *
+      *  U01 - Update Historic Balance Control Groups File GLHBCGL0   *
+      *  W01 - Write to Historic Balances file GLHIBLPD               *
+      *  U02 - Update Historic Balances File GLHIBLL0                 *
+      *  W02 - Write to Average Balances file GLAVBLPD                *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+     E                    CPY@    1   1 80               Copyright
+     E                    JRNENT   3971  1                                CED002
+      /SPACE 3
+     ILDA       E DSLDA
+      * Local data structure used for error handling
+      *                                                                   CMC001
+     ISCSARD    E DSSCSARDPD                                              CMC001
+      *  DS for SCSARDPD                                                  CMC001
+      *                                                                   CED002
+     ISDMMOD    E DSSDMMODPD                                              CED002
+      *  DS for SDMMODPD                                                  CED002
+      *                                                                   CMC001
+     IEDDFTF    E DSEDDFTFPD                                              CED002
+      *  DS for EDDFTFPD                                                  CED002
+      *                                                                   CMC001
+     IDSFDY     E DSDSFDY                                                 CMC001
+      * Short Data Structure for Access Objects                           CMC001
+      *                                                                   CMC001
+     IGLHIBL    E DSGLHIBLPD                                              CED002
+      * DS for GLHIBLPD                                                   CED002
+      *                                                                   CED002
+     IGLAVBL    E DSGLAVBLPD                                              CED002
+      * DS for GLAVBLPD                                                   CED002
+     I              QQACCD                          ACCDQQ                                    CGL029
+      *                                                                   CED002
+     IPSDS       SDS                                                      CED002
+      *  Program status data structure.                                   CED002
+     I                                     *PROGRAM ##PGM                 CED002
+      *                                                                   CED002
+     I            DS
+      * Century, Year & Period Number Data Sructure
+     I                                        1   60CYRNBR
+     I                                        1   20PEPDCT
+     I                                        3   40PEPDYR
+     I                                        5   60PEPDNY
+     I            DS
+      * KL1 alpha definition for dbase error
+     I                                        1   4 KL1A
+     I                                        1   1 HCPSTC
+     I                                        2   40ZERO
+     I            DS
+      * KL4 alpha definition for dbase error and redefinition
+      * of GLHIBLL3 for key to chain to ACCNT
+     I**********                              1  18 KL4A                                      CGL029
+     I                                        1  24 KL4A                                      CGL029
+     I                                        1   6 SVCUST
+     I**********                              1   60ACCUST                                    CSD027
+     I                                        1   6 ACCUST                                    CSD027
+     I                                        7   9 SVCYCD
+     I**********                             10  13 SVACCD                                    CGL029
+     I**********                             10  130ACACCD                                    CGL029
+     I**********                             14  15 SVACSN                                    CGL029
+     I**********                             14  150ACACSN                                    CGL029
+     I**********                             16  18 SVBRCD                                    CGL029
+     I                                       10  19 SVACCD                                    CGL029
+     I                                       10  190ACACCD                                    CGL029
+     I                                       20  21 SVACSN                                    CGL029
+     I                                       20  210ACACSN                                    CGL029
+     I                                       22  24 SVBRCD                                    CGL029
+     I            DS
+      * KL5 alpha definition for dbase error
+     I                                        1   7 KL5A
+     I                                        1   1 K5PSTC
+     I                                        2   70K5CPNB
+     I                                        2   3 K5PDCT
+     I                                        4   5 K5PDYR
+     I                                        6   7 K5PDNY
+     I            DS
+      * KL6 alpha definition for dbase error
+     I**********                              1  28 KL6A                                      CGL029
+     I                                        1  34 KL6A                                      CGL029
+     I                                        1   2 KEYDCT
+     I                                        3   4 KEYDYR
+     I                                        5   6 KEYDNY
+     I                                        7   9 KYBRCD
+     I                                       10  12 KYCYCD
+     I**********                             13  16 KYACCD                                    CGL029
+     I**********                             17  22 KYCUST                                    CGL029
+     I**********                             23  24 KYACSN                                    CGL029
+     I**********                             25  28 KYPCCD                                    CGL029
+     I                                       13  22 KYACCD                                    CGL029
+     I                                       23  28 KYCUST                                    CGL029
+     I                                       29  30 KYACSN                                    CGL029
+     I                                       31  34 KYPCCD                                    CGL029
+     I            DS
+      * Fields to enable check for blanks in DTPDCT (Century)
+     I                                        1   2 DTPDCT
+     I                                        1   1 D1PDCT
+     I                                        1   2 D2PDCT
+     I            DS
+      * Fields to enable check for blanks in DTPDYR (Year)
+     I                                        1   2 DTPDYR
+     I                                        1   1 D1PDYR
+     I                                        1   2 D2PDYR
+     I            DS
+      * Fields to enable check for blanks in DTPDNY (Number)
+     I                                        1   2 DTPDNY
+     I                                        1   1 D1PDNY
+     I/COPY WNCPYSRC,MC0230I002
+     I                                        1   2 D2PDNY
+     I/COPY WNCPYSRC,MC0230I001
+      /EJECT
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      /SPACE
+      * Receive parameters
+     C           *ENTRY    PLIST
+     C                     PARM           XGRPC   2        Group code
+     C                     PARM           XRETC   1        Return code
+      /SPACE
+      * Set up copyright
+     C                     MOVEACPY@      BIS@   80
+      /SPACE
+      * Define the error DS
+     C           *NAMVAR   DEFN           LDA
+      *                                                                   CMC001
+      ** Call Access Program AOSARDR0 to check if Management Accounts     CMC001
+      ** Enhancement (CMC001 feature is installed).                       CMC001
+      *                                                                   CMC001
+     C                     MOVE 'N'       CMC001  1                       CMC001
+     C                     CALL 'AOSARDR0'                                CMC001
+     C                     PARM *BLANKS   RTNCD   7                       CMC001
+     C                     PARM '*VERIFY' OPTN    7                       CMC001
+     C                     PARM 'CMC001'  PSARN   6                       CMC001
+     C           SCSARD    PARM SCSARD    DSFDY                           CMC001
+      *                                                                   CMC001
+      ** If error found execute error routine.                            CMC001
+      *                                                                   CMC001
+     C           RTNCD     IFNE *BLANK                     ---B001        CMC001
+     C           RTNCD     ANDNE'*NRF'                                    CMC001
+     C           *LOCK     IN   LDA                                       CMC001
+     C                     MOVEL'SCSARDPD'DBFILE            ************* CMC001
+     C                     Z-ADD12        DBASE             *DBERROR 012* CMC001
+     C                     MOVELPSARN     DBKEY             ************* CMC001
+     C                     MOVEL'MC0230  'DBPGM                           CMC001
+     C                     DUMP                                           CMC001
+     C                     OUT  LDA                                       CMC001
+     C                     MOVE 'Y'       XRETC                           CMC001
+     C                     SETON                     U7U8LR               CMC001
+     C                     RETRN                                          CMC001
+     C                     END                             ---E001        CMC001
+      *                                                                   CMC001
+     C           RTNCD     IFEQ *BLANKS                    ---B001        CMC001
+     C                     MOVE 'Y'       CMC001                          CMC001
+     C                     ENDIF                           ---E001        CMC001
+     C/COPY WNCPYSRC,MCH00012
+      *                                                                   CED002
+      ** Call Access program AOMMODR0 to check if Eureka (ED) module      CED002
+      ** present.                                                         CED002
+      *                                                                   CED002
+     C                     CALL 'AOMMODR0'                                CED002
+     C                     PARM '*MSG   ' RTNCD                           CED002
+     C                     PARM '*FIRST ' OPTN                            CED002
+     C           SDMMOD    PARM SDMMOD    DSFDY                           CED002
+      *                                                                   CED002
+      ** If error found execute error routine.                            CED002
+      *                                                                   CED002
+     C           RTNCD     IFNE *BLANK                     ---B001        CED002
+     C           *LOCK     IN   LDA                                       CED002
+     C                     MOVEL'SDMMODPD'DBFILE            ************* CED002
+     C                     Z-ADD13        DBASE             *DBERROR 013* CED002
+     C                     MOVELOPTN      DBKEY             ************* CED002
+     C                     MOVEL'MC0230  'DBPGM                           CED002
+     C                     DUMP                                           CED002
+     C                     OUT  LDA                                       CED002
+     C                     MOVE 'Y'       XRETC                           CED002
+     C                     SETON                     U7U8LR               CED002
+     C                     RETRN                                          CED002
+     C                     ENDIF                           ---E001        CED002
+      *                                                                   CED002
+      ** Eureka (ED) Module flag is on.                                   CED002
+      *                                                                   CED002
+     C           BGNZST    IFEQ 'Y'                        ---B001        CED002
+      *                                                                   CED002
+      ** Call Access Program AODFTFR0.                                    CED002
+      *                                                                   CED002
+     C                     CALL 'AODFTFR0'                                CED002
+     C                     PARM 'GLHIBLPD'FILENM 10                       CED002
+     C                     PARM XGRPC     MBRNM  10                       CED002
+     C                     PARM 'MC0230'  PGMID  10                       CED002
+     C                     PARM *BLANKS   RTNCD   7                       CED002
+     C           EDDFTF    PARM EDDFTF    DSFDY                           CED002
+      *                                                                   CED002
+     C           RTNCD     IFEQ *BLANKS                    ---B002        CED002
+     C                     MOVE 'Y'       CED002  1                       CED002
+     C                     ELSE                            ---X002        CED002
+     C                     MOVE 'N'       CED002                          CED002
+     C                     ENDIF                           ---E002        CED002
+      *                                                                   CED002
+     C                     ENDIF                           ---E001        CED002
+      *                                                                   CMC001
+      /SPACE
+      * Initial Processing to see if Current Period Needs Updating
+     C                     EXSR P01
+      /SPACE
+      *                                                                   CED002
+      ** If Extract GLHIBLPD to ED module flag is on, call ED0410         CED002
+      ** to close any open batch.                                         CED002
+      *                                                                   CED002
+     C           CED002    IFEQ 'Y'                                       CED002
+      *                                                                   CED002
+     C                     CALL 'ED0410'                                  CED002
+     C                     PARM '*CLOSE'  MODE    7                       CED002
+     C                     PARM 'GLHIBLPD'FNAME  10                       CED002
+     C                     PARM XGRPC     MNAME  10                       CED002
+     C                     PARM ##PGM     PNAME  10                       CED002
+     C                     PARM '  '      JRNA    2                       CED002
+     C                     PARM *BLANKS   JRNENT                          CED002
+     C                     PARM *BLANKS   RTCD    1                       CED002
+      *                                                                   CED002
+     C                     ENDIF                                          CED002
+      *                                                                   CED002
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *                                                               *
+     C                     SETON                         LR           *
+     C                     RETRN                                      *
+      *                                                               *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  P01 - Initial Processing                                     *
+      *                                                               *
+      *****************************************************************
+      /SPACE
+     C           P01       BEGSR
+      /SPACE
+      * Initialise DB error fields to blanks
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBPGM
+     C                     OUT  LDA
+      /SPACE
+      * Chain to History Balance Control Groups file using the received
+      * Control Group parameter, DB Error if not found
+     C           XGRPC     CHAINGLHBCGL0             51
+     C           *IN51     IFEQ '1'                        ---B001
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GLHBCGL0'DBFILE           ************
+     C                     Z-ADD1         DBASE            * Error 01 *
+     C                     MOVELXGRPC     DBKEY            ************
+     C                     MOVEL'MC0230'  DBPGM
+     C                     DUMP
+     C                     OUT  LDA
+     C                     MOVE 'Y'       XRETC
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END                             ---E001
+      /SPACE
+      * Move Average Over A/C Open & DR/CR Average Balances to work
+      * fields for possible use in P03
+     C                     MOVE *BLANKS   WKAOAO
+     C                     MOVE *BLANKS   WKADCB
+     C                     MOVE HCAOAO    WKAOAO  1
+     C                     MOVE HCADCB    WKADCB  1
+      /SPACE
+      * Chain GLPERDL5 for current period in required set, DB Error
+      * if not found
+     C                     Z-ADD*ZEROS    ZERO    30
+     C           KL1       KLIST
+     C                     KFLD           HCPSTC
+     C                     KFLD           ZERO
+     C           KL1       CHAINGLPERDL5             52
+     C           *IN52     IFEQ '1'                        ---B001
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GLPERDL5'DBFILE           ************
+     C                     Z-ADD2         DBASE            * Error 02 *
+     C                     MOVELKL1A      DBKEY            ************
+     C                     MOVEL'MC0230'  DBPGM
+     C                     DUMP
+     C                     OUT  LDA
+     C                     MOVE 'Y'       XRETC
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END                             ---E001
+      /SPACE
+      * Move GLPERDL5 Cent/Year/No. to numeric fields getting rid
+      * of following blanks
+     C                     Z-ADD0         PEPDCT
+     C                     Z-ADD0         PEPDYR
+     C                     Z-ADD0         PEPDNY
+     C           D2PDCT    IFEQ *BLANKS                    ---B001
+     C                     MOVE D1PDCT    PEPDCT
+     C                     ELSE                                001
+     C                     MOVE DTPDCT    PEPDCT
+     C                     END                             ---E001
+     C           D2PDYR    IFEQ *BLANKS                    ---B001
+     C                     MOVE D1PDYR    PEPDYR
+     C                     ELSE                                001
+     C                     MOVE DTPDYR    PEPDYR
+     C                     END                             ---E001
+     C           D2PDNY    IFEQ *BLANKS                    ---B001
+     C                     MOVE D1PDNY    PEPDNY
+     C                     ELSE                                001
+     C                     MOVE DTPDNY    PEPDNY
+     C                     END                             ---E001
+      /SPACE
+      * If Current Period Number from GLHBCGL0 is less than
+      * Cent/Year/Number from GLPERDL5 save Period Century/Year/No.
+      * for later use & perform P02 Main Processing
+     C           HCCPNB    IFLT CYRNBR                     ---B001
+     C                     Z-ADDCYRNBR    WKALL3  60
+     C/COPY WNCPYSRC,MC0230C006
+     C                     EXSR P02
+     C                     END                             ---E001
+     C/COPY WNCPYSRC,MC0230C001
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  P02 - Main Processing                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE
+     C           P02       BEGSR
+      /SPACE
+      * Set lower limits on GLPERDL1 using Period Set & Current Period
+      * Number from GLHBCGL0, DB Error if no record found
+     C                     MOVE *BLANKS   K5PSTC
+     C                     MOVELHCPSTC    K5PSTC
+     C                     Z-ADDHCCPNB    K5CPNB
+     C           KL5       KLIST
+     C                     KFLD           K5PSTC
+     C                     KFLD           K5PDCT
+     C                     KFLD           K5PDYR
+     C                     KFLD           K5PDNY
+     C           KL5       SETLLGLPERDL1             5353
+     C           *IN53     IFEQ '1'                        ---B001
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GLPERDL1'DBFILE           ************
+     C                     Z-ADD3         DBASE            * Error 03 *
+     C                     MOVELKL5A      DBKEY            ************
+     C                     MOVEL'MC0230'  DBPGM
+     C                     DUMP
+     C                     OUT  LDA
+     C                     MOVE 'Y'       XRETC
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END                             ---E001
+      /SPACE
+      * Read first GLPERDL1 record & save Century, Year & Number
+      * to 'CURRENT' work fields
+     C                     READ GLPERDL1                 55
+      /SPACE
+     C                     MOVE *BLANKS   CURDCT
+     C                     MOVE *BLANKS   CURDYR
+     C                     MOVE *BLANKS   CURDNY
+     C                     MOVELDTPDCT    CURDCT  2
+     C                     MOVELDTPDYR    CURDYR  2
+     C                     MOVELDTPDNY    CURDNY  2
+      /SPACE
+      * Save Century,Year & Number to 'CURRENT' Key Fields
+     C                     MOVE *BLANKS   KEYDCT
+     C                     MOVE *BLANKS   KEYDYR
+     C                     MOVE *BLANKS   KEYDNY
+     C                     MOVELDTPDCT    KEYDCT  2
+     C                     MOVELDTPDYR    KEYDYR  2
+     C                     MOVELDTPDNY    KEYDNY  2
+      /SPACE
+      * Read next GLPERDL1 record & save Century, Year & Number
+      * to 'FUTURE' work fields, DB Error if no record found
+     C                     READ GLPERDL1                 55
+     C           *IN55     IFEQ '1'                        ---B001
+     C           DTPSTC    ORNE HCPSTC
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GLPERDL1'DBFILE           ************
+     C                     Z-ADD4         DBASE            * Error 04 *
+     C                     MOVEL'NONE'    DBKEY            ************
+     C                     MOVEL'MC0230'  DBPGM
+     C                     DUMP
+     C                     OUT  LDA
+     C                     MOVE 'Y'       XRETC
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END                             ---E001
+      /SPACE
+      * Save Century,Year & Number to 'FUTURE' Work Fields
+     C                     MOVE *BLANKS   FUTDCT
+     C                     MOVE *BLANKS   FUTDYR
+     C                     MOVE *BLANKS   FUTDNY
+     C                     MOVELDTPDCT    FUTDCT  2
+     C                     MOVELDTPDYR    FUTDYR  2
+     C                     MOVELDTPDNY    FUTDNY  2
+      /SPACE
+      * Whilst Relative Period Number from GLPERDL1 is less than one
+     C           DTRPDN    DOWLT1                          ---B001
+     C           KL2       KLIST
+     C                     KFLD           CURDCT
+     C                     KFLD           CURDYR
+     C                     KFLD           CURDNY
+      /SPACE
+     C           KL2       SETLLGLHIBLL3
+      /SPACE
+      * Read equal GLHIBLL3 & save data if record found
+     C           KL2       READEGLHIBLL3                 57
+     C           *IN57     IFEQ '0'                        ---B002
+     C                     MOVELHBCGCD    SVCGCD  2
+     C                     MOVELHBBRCD    SVBRCD  3
+     C                     MOVELHBCYCD    SVCYCD  3
+     C**********           MOVELHBACCD    SVACCD  4                                           CGL029
+     C                     MOVELHBACCD    SVACCD                                              CGL029
+     C                     MOVELHBCUST    SVCUST  6
+     C                     MOVELHBACSN    SVACSN  2
+     C                     MOVELHBPCCD    SVPCCD  4
+     C                     MOVELHBBKCD    SVBKCD  2
+     C                     MOVELHBOTTP    SVOTTP 10
+     C                     MOVELHBTSTY    SVTSTY 10
+     C                     MOVELHBACNB    SVACNB  6
+     C                     MOVELHBPDCT    SVPDCT  2
+     C                     MOVELHBPDYR    SVPDYR  2
+     C                     MOVELHBPDNY    SVPDNY  2
+     C                     Z-ADDHBSOYD    SVSOYD  50
+     C                     Z-ADDHBST1D    SVST1D  50
+     C                     Z-ADDHBST2D    SVST2D  50
+     C                     Z-ADDHBSPDD    SVSPDD  50
+     C                     Z-ADDHBEPDD    SVEPDD  50
+     C                     Z-ADDHBPDOB    SVPDOB 190
+     C                     Z-ADDHBPDCB    SVPDCB 190
+     C                     Z-ADDHBPMTD    SVPMTD 190
+     C                     Z-ADDHBT1MT    SVT1MT 190
+     C                     Z-ADDHBT2MT    SVT2MT 190
+     C                     Z-ADDHBYMTD    SVYMTD 190
+     C                     Z-ADDHBWPBL    SVWPBL 190
+     C                     Z-ADDHBWT1B    SVWT1B 190
+     C                     Z-ADDHBWT2B    SVWT2B 190
+     C                     Z-ADDHBWYBL    SVWYBL 190
+     C                     MOVELHBACSC    SVACSC  2
+     C                     Z-ADDHBLMDT    SVLMDT  50
+      * Also save to key fields for possible later chain to GLAVBLL3
+     C                     MOVELHBBRCD    KYBRCD
+     C                     MOVELHBCYCD    KYCYCD
+     C                     MOVELHBACCD    KYACCD
+     C                     MOVELHBCUST    KYCUST
+     C                     MOVELHBACSN    KYACSN
+     C                     MOVELHBPCCD    KYPCCD
+     C                     MOVELHBBKCD    KYBKCD  2
+     C                     MOVELHBOTTP    KYOTTP 10
+     C                     MOVELHBTSTY    KYTSTY 10
+     C                     MOVELHBACNB    KYACNB  6
+     C                     END                             ---E002
+      /SPACE
+      * Do while records are found on GLHIBLL3
+     C           *IN57     DOWEQ'0'                        ---E003
+     C                     EXSR P03
+     C                     END                             ---E003
+      /SPACE
+      * Move data from 'FUTURE' to 'CURRENT' work fields
+     C                     MOVE *BLANKS   CURDCT
+     C                     MOVE *BLANKS   CURDYR
+     C                     MOVE *BLANKS   CURDNY
+     C                     MOVELFUTDCT    CURDCT
+     C                     MOVELFUTDYR    CURDYR
+     C                     MOVELFUTDNY    CURDNY
+      * Move data from 'FUTURE' to 'CURRENT' key fields
+     C                     MOVE *BLANKS   KEYDCT
+     C                     MOVE *BLANKS   KEYDYR
+     C                     MOVE *BLANKS   KEYDNY
+     C                     MOVELFUTDCT    KEYDCT
+     C                     MOVELFUTDYR    KEYDYR
+     C                     MOVELFUTDNY    KEYDNY
+      /SPACE
+      * Read next GLPERDL1 record & save Century, Year & Number
+      * to 'FUTURE' work fields
+     C                     READ GLPERDL1                 55
+     C           *IN55     IFEQ '1'                        ---B004
+     C           DTPSTC    ORNE HCPSTC
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GLPERDL1'DBFILE           ************
+     C                     Z-ADD8         DBASE            * Error 08 *
+     C                     MOVEL'NONE'    DBKEY            ************
+     C                     MOVEL'MC0230'  DBPGM
+     C                     DUMP
+     C                     OUT  LDA
+     C                     MOVE 'Y'       XRETC
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END                             ---E004
+      /SPACE
+      * Save Century,Year & Number to 'FUTURE' Work Fields
+     C                     MOVE *BLANKS   FUTDCT
+     C                     MOVE *BLANKS   FUTDYR
+     C                     MOVE *BLANKS   FUTDNY
+     C                     MOVELDTPDCT    FUTDCT  2
+     C                     MOVELDTPDYR    FUTDYR  2
+     C                     MOVELDTPDNY    FUTDNY  2
+      /SPACE
+     C                     END                             ---E001
+      /SPACE
+      * Update GLHBCGL0
+     C                     EXSR U01
+      /SPACE
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  P03 - Update/Write Historic Balance record                   *
+      *                                                               *
+      *****************************************************************
+      /SPACE
+     C           P03       BEGSR
+      /SPACE
+      * Chain to GLHIBLL0 using key values from GLHIBLL3 and
+      * the 'FUTURE' Century, Year & Number
+     C           KL3       KLIST
+     C                     KFLD           SVCGCD
+     C                     KFLD           SVBRCD
+     C                     KFLD           SVCYCD
+     C                     KFLD           SVACCD
+     C                     KFLD           SVCUST
+     C                     KFLD           SVACSN
+     C                     KFLD           SVPCCD
+     C                     KFLD           SVBKCD
+     C                     KFLD           SVOTTP
+     C                     KFLD           SVTSTY
+     C                     KFLD           SVACNB
+     C                     KFLD           FUTDCT
+     C                     KFLD           FUTDYR
+     C                     KFLD           FUTDNY
+      /SPACE
+     C           KL3       CHAINGLHIBLL0             60
+      /SPACE
+      * If no 'FUTURE' record found in GLHIBLL0 write one
+     C           *IN60     IFEQ '1'                        ---B001
+      /SPACE
+      * If Average Over A/C Open from GLHBCGL0 is 'Y' & Customer No.,
+      * Branch Code & A/c Seq. No. from GLHIBLL3 are all non-blank
+      * chain to ACCNT, DB Error if no record found
+     C           WKAOAO    IFEQ 'Y'                        ---B002
+     C           SVCUST    ANDNE*BLANKS
+     C           SVBRCD    ANDNE*BLANKS
+     C           SVACSN    ANDNE*BLANKS
+     C           KL4       KLIST
+     C                     KFLD           ACCUST
+     C                     KFLD           SVCYCD
+     C                     KFLD           ACACCD
+     C                     KFLD           ACACSN
+     C                     KFLD           SVBRCD
+     C           KL4       CHAINACCNT                59
+      /SPACE
+     C********** *IN59     IFEQ '1'                        ---B003                            239785
+     C********** *LOCK     IN   LDA                                                           239785
+     C**********           MOVEL'ACCNT'   DBFILE           ************                       239785
+     C**********           Z-ADD9         DBASE            * Error 09 *                       239785
+     C**********           MOVELKL4A      DBKEY            ************                       239785
+     C**********           MOVEL'MC0230'  DBPGM                                               239785
+     C**********           DUMP                                                               239785
+     C**********           OUT  LDA                                                           239785
+     C**********           MOVE 'Y'       XRETC                                               239785
+     C**********           SETON                     U7U8LR                                   239785
+     C**********           RETRN                                                              239785
+     C**********           END                             ---E003                            239785
+      *                                                                                       239785
+      ** If Account details not available, no DBerr, set DACO to 0.                           239785
+      *                                                                                       239785
+     C           *IN59     IFEQ '1'                                                           239785
+     C                     Z-ADD0         DACO                                                239785
+     C                     END                                                                239785
+      /SPACE
+     C                     END                             ---E002
+      /SPACE
+      * Write a record to GLHIBLPD
+     C                     EXSR W01
+      /SPACE
+      * If DR/CR Average Balances from GLHBCGL0 is not 'N' and
+      * Account Section from GLHIBLL3 is not 'IN' or 'EX' write
+      * Average Balance record. (P04)
+     C           WKADCB    IFNE 'N'                        ---B002
+     C           SVACSC    ANDNE'IN'
+     C/COPY WNCPYSRC,MC0230C007
+     C           SVACSC    ANDNE'EX'
+     C                     EXSR P04
+     C                     END                             ---E002
+     C/COPY WNCPYSRC,MC0230C002
+      /SPACE
+      * Else, if a record is found in GLHIBLL0, update it
+     C                     ELSE                            ---001
+     C                     EXSR U02
+      /SPACE
+      * If DR/CR Average Balances from GLHBCGL0 is not 'N' and
+      * Account Section from GLHIBLL3 is not 'IN' or 'EX' write
+      * Average Balance record.
+     C           WKADCB    IFNE 'N'                        ---B002
+     C/COPY WNCPYSRC,MC0230C008
+     C           SVACSC    ANDNE'IN'
+     C           SVACSC    ANDNE'EX'
+     C                     EXSR P04
+     C                     END                             ---E002
+     C/COPY WNCPYSRC,MC0230C003
+      /SPACE
+     C                     END                             ---E001
+      /SPACE
+      * Read equal GLHIBLL3 & save data if matched record found
+     C           KL2       READEGLHIBLL3                 57
+     C           *IN57     IFEQ '0'                        ---B001
+     C                     MOVE *BLANKS   SVCGCD
+     C                     MOVE *BLANKS   SVBRCD
+     C                     MOVE *BLANKS   SVCYCD
+     C                     MOVE *BLANKS   SVACCD
+     C                     MOVE *BLANKS   SVCUST
+     C                     MOVE *BLANKS   SVACSN
+     C                     MOVE *BLANKS   SVPCCD
+     C                     MOVE *BLANKS   SVBKCD
+     C                     MOVE *BLANKS   SVOTTP
+     C                     MOVE *BLANKS   SVTSTY
+     C                     MOVE *BLANKS   SVACNB
+     C                     MOVE *BLANKS   SVPDCT
+     C                     MOVE *BLANKS   SVPDYR
+     C                     MOVE *BLANKS   SVPDNY
+     C                     MOVELHBCGCD    SVCGCD
+     C                     MOVELHBBRCD    SVBRCD
+     C                     MOVELHBCYCD    SVCYCD
+     C                     MOVELHBACCD    SVACCD
+     C                     MOVELHBCUST    SVCUST
+     C                     MOVELHBACSN    SVACSN
+     C                     MOVELHBPCCD    SVPCCD
+     C                     MOVELHBBKCD    SVBKCD
+     C                     MOVELHBOTTP    SVOTTP
+     C                     MOVELHBTSTY    SVTSTY
+     C                     MOVELHBACNB    SVACNB
+     C                     MOVELHBPDCT    SVPDCT
+     C                     MOVELHBPDYR    SVPDYR
+     C                     MOVELHBPDNY    SVPDNY
+     C                     Z-ADDHBSOYD    SVSOYD
+     C                     Z-ADDHBST1D    SVST1D
+     C                     Z-ADDHBST2D    SVST2D
+     C                     Z-ADDHBSPDD    SVSPDD
+     C                     Z-ADDHBEPDD    SVEPDD
+     C                     Z-ADDHBPDOB    SVPDOB
+     C                     Z-ADDHBPDCB    SVPDCB
+     C                     Z-ADDHBPMTD    SVPMTD
+     C                     Z-ADDHBT1MT    SVT1MT
+     C                     Z-ADDHBT2MT    SVT2MT
+     C                     Z-ADDHBYMTD    SVYMTD
+     C                     Z-ADDHBWPBL    SVWPBL
+     C                     Z-ADDHBWT1B    SVWT1B
+     C                     Z-ADDHBWT2B    SVWT2B
+     C                     Z-ADDHBWYBL    SVWYBL
+     C                     MOVE *BLANKS   SVACSC
+     C                     MOVELHBACSC    SVACSC
+     C                     Z-ADDHBLMDT    SVLMDT
+      * Save data to GLAVBLL3 key fields
+     C                     MOVE *BLANKS   KYBRCD
+     C                     MOVE *BLANKS   KYCYCD
+     C                     MOVE *BLANKS   KYACCD
+     C                     MOVE *BLANKS   KYCUST
+     C                     MOVE *BLANKS   KYACSN
+     C                     MOVE *BLANKS   KYPCCD
+     C                     MOVE *BLANKS   KYBKCD
+     C                     MOVE *BLANKS   KYOTTP
+     C                     MOVE *BLANKS   KYTSTY
+     C                     MOVE *BLANKS   KYACNB
+     C                     MOVELHBBRCD    KYBRCD
+     C                     MOVELHBCYCD    KYCYCD
+     C                     MOVELHBACCD    KYACCD
+     C                     MOVELHBCUST    KYCUST
+     C                     MOVELHBACSN    KYACSN
+     C                     MOVELHBPCCD    KYPCCD
+     C                     MOVELHBBKCD    KYBKCD
+     C                     MOVELHBOTTP    KYOTTP
+     C                     MOVELHBTSTY    KYTSTY
+     C                     MOVELHBACNB    KYACNB
+     C                     END                             ---E001
+      /SPACE
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  P04 - Write Average Balance record                           *
+      *                                                               *
+      *****************************************************************
+      /SPACE
+     C           P04       BEGSR
+      /SPACE
+      * Use the key from GLHIBLL3 to chain to GLAVBLL3 & save data,
+      * DB Error if not found
+     C           KL6       KLIST
+     C                     KFLD           KEYDCT
+     C                     KFLD           KEYDYR
+     C                     KFLD           KEYDNY
+     C                     KFLD           KYBRCD
+     C                     KFLD           KYCYCD
+     C                     KFLD           KYACCD
+     C                     KFLD           KYCUST
+     C                     KFLD           KYACSN
+     C                     KFLD           KYPCCD
+     C                     KFLD           KYBKCD
+     C                     KFLD           KYOTTP
+     C                     KFLD           KYTSTY
+     C                     KFLD           KYACNB
+     C           KL6       CHAINGLAVBLL3             61
+      /SPACE
+     C           *IN61     IFEQ '1'                        ---B001
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GLAVBLL3'DBFILE           ************
+     C                     Z-ADD11        DBASE            * Error 11 *
+     C                     MOVELKL6A      DBKEY            ************
+     C                     MOVEL'MC0230'  DBPGM
+     C                     DUMP
+     C                     OUT  LDA
+     C                     MOVE 'Y'       XRETC
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END                             ---E001
+      /SPACE
+      * Save the data from GLAVBLL3
+     C                     MOVE *BLANKS   ASCGCD  2
+     C                     MOVE *BLANKS   ASBRCD  3
+     C                     MOVE *BLANKS   ASCUST  6
+     C                     MOVE *BLANKS   ASCYCD  3
+     C**********           MOVE *BLANKS   ASACCD  4                                           CGL029
+     C                     MOVE *BLANKS   ASACCD 10                                           CGL029
+     C                     MOVE *BLANKS   ASACSN  2
+     C                     MOVE *BLANKS   ASPCCD  4
+     C                     MOVE *BLANKS   ASBKCD  2
+     C                     MOVE *BLANKS   ASOTTP 10
+     C                     MOVE *BLANKS   ASTSTY 10
+     C                     MOVE *BLANKS   ASACNB  6
+     C                     MOVE *BLANKS   ASPDCT  2
+     C                     MOVE *BLANKS   ASPDYR  2
+     C                     MOVE *BLANKS   ASPDNY  2
+     C                     MOVELABCGCD    ASCGCD  2
+     C                     MOVELABBRCD    ASBRCD  3
+     C                     MOVELABCUST    ASCUST  6
+     C                     MOVELABCYCD    ASCYCD  3
+     C**********           MOVELABACCD    ASACCD  4                                           CGL029
+     C                     MOVELABACCD    ASACCD                                              CGL029
+     C                     MOVELABACSN    ASACSN  2
+     C                     MOVELABPCCD    ASPCCD  4
+     C                     MOVELABBKCD    ASBKCD  2
+     C                     MOVELABOTTP    ASOTTP 10
+     C                     MOVELABTSTY    ASTSTY 10
+     C                     MOVELABACNB    ASACNB  6
+     C                     MOVELABPDCT    ASPDCT  2
+     C                     MOVELABPDYR    ASPDYR  2
+     C                     MOVELABPDNY    ASPDNY  2
+     C                     Z-ADDABPDDD    ASPDDD  30
+     C                     Z-ADDABPDMT    ASPDMT 190
+     C                     Z-ADDABWPDB    ASWPDB 190
+     C                     Z-ADDABPDDC    ASPDDC  30
+     C                     Z-ADDABPCMT    ASPCMT 190
+     C                     Z-ADDABWPCB    ASWPCB 190
+     C                     Z-ADDABT1DD    AST1DD  30
+     C                     Z-ADDABT1DM    AST1DM 190
+     C                     Z-ADDABW1DB    ASW1DB 190
+     C                     Z-ADDABT1DC    AST1DC  30
+     C                     Z-ADDABT1CM    AST1CM 190
+     C                     Z-ADDABW1CB    ASW1CB 190
+     C                     Z-ADDABT2DD    AST2DD  30
+     C                     Z-ADDABT2DM    AST2DM 190
+     C                     Z-ADDABW2DB    ASW2DB 190
+     C                     Z-ADDABT2DC    AST2DC  30
+     C                     Z-ADDABT2CM    AST2CM 190
+     C                     Z-ADDABW2CB    ASW2CB 190
+     C                     Z-ADDABYDDD    ASYDDD  30
+     C                     Z-ADDABYDMT    ASYDMT 190
+     C                     Z-ADDABWYDB    ASWYDB 190
+     C                     Z-ADDABYDDC    ASYDDC  30
+     C                     Z-ADDABYCMT    ASYCMT 190
+     C                     Z-ADDABWYCB    ASWYCB 190
+      /SPACE
+      * Use the key from GLHIBLL0 to chain to GLAVBLL0 & write a
+      * record to GLAVBLL0 if one does not already exist (W02)
+     C           KL3       CHAINGLAVBLL0             62
+     C           *IN62     IFEQ '1'                        ---B001
+     C                     EXSR W02
+     C                     MOVE '0'       *IN62
+     C                     END                             ---E001
+      /SPACE
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  U01 - Update Historic Balance Control Groups File            *
+      *                                                               *
+      *****************************************************************
+      /SPACE
+     C           U01       BEGSR
+      /SPACE
+      * Update Current Period Number In GLHBCGL0 with Period Century/
+      * Year/Number from GLPERDL5
+     C                     Z-ADDWKALL3    HCCPNB
+      * Update GLHBCGL0
+     C                     UPDAT@BNREDZ
+      /SPACE
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  W01 - Write to Historic Balances file GLHIBLPD               *
+      *                                                               *
+      *****************************************************************
+      /SPACE
+     C           W01       BEGSR
+      /SPACE
+      * Group Code from GLHIBLL3
+     C                     MOVE *BLANKS   HBCGCD
+     C                     MOVELSVCGCD    HBCGCD
+      /SPACE
+      * Branch Code from GLHIBLL3
+     C                     MOVE *BLANKS   HBBRCD
+     C                     MOVELSVBRCD    HBBRCD
+      /SPACE
+      * Currency Code from GLHIBLL3
+     C                     MOVE *BLANKS   HBCYCD
+     C                     MOVELSVCYCD    HBCYCD
+      /SPACE
+      * Account Code from GLHIBLL3
+     C                     MOVE *BLANKS   HBACCD
+     C                     MOVELSVACCD    HBACCD
+      /SPACE
+      * Customer Number from GLHIBLL3
+     C                     MOVE *BLANKS   HBCUST
+     C                     MOVELSVCUST    HBCUST
+      /SPACE
+      * Account Sequence from GLHIBLL3
+     C                     MOVE *BLANKS   HBACSN
+     C                     MOVELSVACSN    HBACSN
+      /SPACE
+      * Profit Centre Code from GLHIBLL3
+     C                     MOVE *BLANKS   HBPCCD
+     C                     MOVELSVPCCD    HBPCCD
+      /SPACE
+      * Book Code from GLHIBLL3
+     C                     MOVE *BLANKS   HBBKCD
+     C                     MOVELSVBKCD    HBBKCD
+      /SPACE
+      * Transaction Type from GLHIBLL3
+     C                     MOVE *BLANKS   HBOTTP
+     C                     MOVELSVOTTP    HBOTTP
+      /SPACE
+      * Transaction Subtype from GLHIBLL3
+     C                     MOVE *BLANKS   HBTSTY
+     C                     MOVELSVTSTY    HBTSTY
+      /SPACE
+      * Associated Customer from GLHIBLL3
+     C                     MOVE *BLANKS   HBACNB
+     C                     MOVELSVACNB    HBACNB
+      /SPACE
+      * Period Century from 'FUTURE' work field
+     C                     MOVE *BLANKS   HBPDCT
+     C                     MOVELFUTDCT    HBPDCT
+      /SPACE
+      * Period Year from 'FUTURE' work field
+     C                     MOVE *BLANKS   HBPDYR
+     C                     MOVELFUTDYR    HBPDYR
+      /SPACE
+      * Period Number from 'FUTURE' work field
+     C                     MOVE *BLANKS   HBPDNY
+     C                     MOVELFUTDNY    HBPDNY
+      /SPACE
+      * Start of Year Date, Start of Term 1 Date, Start of Term 2 Date,
+      * Start of Period Date
+      * If Average Over A/C Open from GLHBCGL0 is 'Y' & Customer No.,
+      * Branch Code & A/c Seq. No. from GLHIBLL3 are all non-blank
+      * & Date Account Opened is later, use Date Account Opened,
+      * else use last GLPERDL1 values
+     C                     Z-ADDDTSOYD    HBSOYD           Last
+     C                     Z-ADDDTST1D    HBST1D           GLPERDL1
+     C                     Z-ADDDTST2D    HBST2D           values
+     C                     Z-ADDDTSPDD    HBSPDD
+     C                     Z-ADDDTEPDD    HBEPDD                          048237
+     C           WKAOAO    IFEQ 'Y'                        ---B001
+     C           SVCUST    ANDNE*BLANKS
+     C           SVBRCD    ANDNE*BLANKS
+     C           SVACSN    ANDNE*BLANKS
+     C           DACO      IFGT DTSOYD                     ---B002
+     C                     Z-ADDDACO      HBSOYD
+     C                     END                             ---E002
+     C           DACO      IFGT DTST1D                     ---B002
+     C           DTST1D    ANDNE*ZERO
+     C                     Z-ADDDACO      HBST1D
+     C                     END                             ---E002
+     C           DACO      IFGT DTST2D                     ---B002
+     C           DTST2D    ANDNE*ZERO
+     C                     Z-ADDDACO      HBST2D
+     C                     END                             ---E002
+     C           DACO      IFGT DTSPDD                     ---B002
+     C                     Z-ADDDACO      HBSPDD
+     C                     END                             ---E002
+     C                     END                             ---E001
+      /SPACE
+     C**End*of*Period*Date*********************************************** 048237
+     C**If*Average*Over*A/C*Open*from*GLHBCGL0*is*'Y'*&*Customer*No.,**** 048237
+     C**Branch*Code*&*A/c*Seq.*No.*from*GLHIBLL3*are*all*non-blank******* 048237
+     C**&*Date*Account*Closed*is*earlier,*use*Date*Account*Closed******** 048237
+     C**from*ACCNT*(ACCNTAB)*                                             048237
+     C***********WKAOAO    IFEQ 'Y'                        ---B001        048237
+     C***********SVCUST    ANDNE*BLANKS                                   048237
+     C***********SVBRCD    ANDNE*BLANKS                                   048237
+     C***********SVACSN    ANDNE*BLANKS                                   048237
+     C***********DACC      ANDLTDTEPDD                                    048237
+     C***********DACC      ANDNE*ZEROS                                    048237
+     C***********          Z-ADDDACC      HBEPDD                          048237
+     C***********          ELSE                            ---X001        048237
+     C***********          Z-ADDDTEPDD    HBEPDD                          048237
+     C***********          END                             ---E001        048237
+      /SPACE
+      * Calculate number of days in period (end of period date minus
+      * start of period plus 1)
+     C                     Z-ADD0         X
+     C                     Z-ADD0         NBRDAY
+     C           HBEPDD    SUB  HBSPDD    X       30
+     C           X         ADD  1         NBRDAY  30
+      /SPACE
+      * Period Opening Balance (Period Closing from GLHIBLL3)
+     C                     Z-ADDSVPDCB    HBPDOB
+      /SPACE
+      * Period Closing Balance (Period Closing from GLHIBLL3)
+     C                     Z-ADDSVPDCB    HBPDCB
+      /SPACE
+      * Period to-date Movements
+     C                     Z-ADD*ZEROS    HBPMTD
+      /SPACE
+      * Term 1 Movements to-date
+     C           HBSPDD    IFNE HBST1D                     ---B001
+     C                     Z-ADDSVT1MT    HBT1MT
+     C                     ELSE                                 001
+     C                     Z-ADD*ZEROS    HBT1MT
+     C                     END                             ---E001
+      /SPACE
+      * Term 2 Movements to-date
+     C           HBSPDD    IFNE HBST2D                     ---B001
+     C                     Z-ADDSVT2MT    HBT2MT
+     C                     ELSE                                 001
+     C                     Z-ADD*ZEROS    HBT2MT
+     C                     END                             ---E001
+      /SPACE
+      * Yearly Movements to-date
+     C           HBSPDD    IFNE HBSOYD                     ---B001
+     C                     Z-ADDSVYMTD    HBYMTD
+     C                     ELSE                                 001
+     C                     Z-ADD*ZEROS    HBYMTD
+     C                     END                             ---E001
+      /SPACE
+      * Calculate Weighted Opening Balance
+     C                     Z-ADD0         PDOBXD
+     C           HBPDOB    MULT NBRDAY    PDOBXD 190
+      /SPACE
+     C* Separate processing for 'IN' and 'EX' Account Sections           055301
+     C* caused the Average balance Sheet to go out of balance            055301
+     C* The account Balance and Weightings must always be in step        055301
+     C* For IN & EX accounts only the Movements disregard Transfers.     055301
+     C*                                                                  055301
+     C**EQUAL****                                                        055301
+     C**If*Account Section is 'IN' or 'EX'                               055301
+     C***********SVACSC    IFEQ 'IN'                       ---B001       055301
+     C***********SVACSC    OREQ 'EX'                                     055301
+     C/SPACE
+     C**Weighted*Period to-date Balance                                  055301
+     C***********          Z-ADDPDOBXD    HBWPBL                         055301
+     C/SPACE
+     C**Weighted*Term 1 to-date Balance                                  055301
+     C***********HBSPDD    IFNE HBST1D                     ---B002       055301
+     C***********SVPMTD    MULT NBRDAY    T1MTXD 190                     055301
+     C***********SVWT1B    ADD  T1MTXD    HBWT1B                         055301
+     C***********          ADD  PDOBXD    HBWT1B                         055301
+     C***********          ELSE                            ---X002       055301
+     C***********          Z-ADD*ZEROS    HBWT1B                         055301
+     C***********          END                             ---E002       055301
+     C/SPACE
+     C**Weighted*Term 2 to-date Balance                                  055301
+     C***********HBSPDD    IFNE HBST2D                     ---B002       055301
+     C***********SVPMTD    MULT NBRDAY    T2MTXD 190                     055301
+     C***********SVWT2B    ADD  T2MTXD    HBWT2B                         055301
+     C***********          ADD  PDOBXD    HBWT2B                         055301
+     C***********          ELSE                            ---X002       055301
+     C***********          Z-ADD*ZEROS    HBWT2B                         055301
+     C***********          END                             ---E002       055301
+     C/SPACE
+     C**Weighted*Year to-date Balance                                    055301
+     C***********HBSPDD    IFNE HBSOYD                     ---B002       055301
+     C***********SVPMTD    MULT NBRDAY    YMTDXD 190                     055301
+     C***********SVWYBL    ADD  YMTDXD    HBWYBL                         055301
+     C***********          ADD  PDOBXD    HBWYBL                         055301
+     C***********          ELSE                            ---X002       055301
+     C***********          Z-ADD*ZEROS    HBWYBL                         055301
+     C***********          END                             ---E002       055301
+     C/SPACE
+     C**NOT*EQUAL                                                        055301
+     C***********          ELSE                            ---X001       055301
+      /SPACE
+      * Weighted Period to-date Balance
+     C                     Z-ADDPDOBXD    HBWPBL
+      /SPACE
+      * Weighted Term 1 to-date Balance
+     C           HBSPDD    IFNE HBST1D                     ---B002
+     C           SVWT1B    ADD  PDOBXD    HBWT1B
+     C                     ELSE                            ---X002
+     C                     Z-ADDPDOBXD    HBWT1B
+     C                     END                             ---E002
+      /SPACE
+      * Weighted Term 2 to-date Balance
+     C           HBSPDD    IFNE HBST2D                     ---B002
+     C           SVWT2B    ADD  PDOBXD    HBWT2B
+     C                     ELSE                            ---X002
+     C                     Z-ADDPDOBXD    HBWT2B
+     C                     END                             ---E002
+      /SPACE
+      * Weighted Year to-date Balance
+     C           HBSPDD    IFNE HBSOYD                     ---B002
+     C           SVWYBL    ADD  PDOBXD    HBWYBL
+     C                     ELSE                            ---X002
+     C                     Z-ADDPDOBXD    HBWYBL
+     C                     END                             ---E002
+      /SPACE
+     C***********          END                             ---E001       055301
+      /SPACE
+      * Account Section
+     C                     MOVELSVACSC    HBACSC
+      /SPACE
+      * Last Movement Date
+     C                     Z-ADDSVLMDT    HBLMDT
+      /SPACE
+      *                                                                   CMC001
+      ** Do not write if Period Opening Balance and Period, Term 1,       CMC001
+      ** Term 2 and Year To-Date Movements are all zero and if            CMC001
+      ** CMC001 feature is installed                                      CMC001
+      *                                                                   CMC001
+     C           CMC001    IFEQ 'Y'                                       CMC001
+     C           HBPDOB    IFNE *ZEROS                     ---B001        CMC001
+     C           HBPMTD    ORNE *ZEROS                                    CMC001
+     C           HBT1MT    ORNE *ZEROS                                    CMC001
+     C           HBT2MT    ORNE *ZEROS                                    CMC001
+     C           HBYMTD    ORNE *ZEROS                                    CMC001
+     C           HBWPBL    ORNE *ZEROS                                                        211528
+     C           HBWT1B    ORNE *ZEROS                                                        211528
+     C           HBWT2B    ORNE *ZEROS                                                        211528
+     C           HBWYBL    ORNE *ZEROS                                                        211528
+      *                                                                   CED002
+      ** If Extract GLHIBLPD to ED module flag is on, call ED0410         CED002
+      ** to log changes.                                                  CED002
+      *                                                                   CED002
+     C           CED002    IFEQ 'Y'                        ---B002        CED002
+     C                     MOVELXGRPC     MNAME     P                     CED002
+     C                     MOVEAGLHIBL    JRNENT    P                     CED002
+      *                                                                   CED002
+     C                     CALL 'ED0410'                                  CED002
+     C                     PARM '*UPDATE' MODE                            CED002
+     C                     PARM 'GLHIBLPD'FNAME                           CED002
+     C                     PARM           MNAME                           CED002
+     C                     PARM 'MC0230  'PNAME                           CED002
+     C                     PARM 'PT'      JRNA                            CED002
+     C                     PARM           JRNENT                          CED002
+     C                     PARM *BLANKS   RTCD                            CED002
+      *                                                                   CED002
+      ** Program error                                                    CED002
+      *                                                                   CED002
+     C           RTCD      IFNE *BLANKS                    ---B003        CED002
+     C           *LOCK     IN   LDA                         ************  CED002
+     C                     Z-ADD16        DBASE             *DBERROR 016* CED002
+     C                     MOVEL*BLANK    DBKEY             ************* CED002
+     C                     MOVEL'MC0230  'DBPGM                           CED002
+     C                     DUMP                                           CED002
+     C                     OUT  LDA                                       CED002
+     C                     MOVE 'Y'       XRETC                           CED002
+     C                     SETON                     U7U8LR               CED002
+     C                     RETRN                                          CED002
+     C                     ENDIF                           ---E003        CED002
+      *                                                                   CED002
+     C                     ENDIF                           ---E002        CED002
+      *                                                                   CED002
+      * Write GLHIBLPD                                                    CMC001
+     C                     WRITEGLHIBLD0                                  CMC001
+     C                     END                             ---E001        CMC001
+     C                     ELSE                                           CMC001
+      * Do not write if Period Opening Balance and Weighted Period,
+      * Term 1, Term 2 and Year To-Date Balance are all zero
+     C           HBPDOB    IFNE *ZEROS                     ---B001
+     C           HBWPBL    ORNE *ZEROS
+     C           HBWT1B    ORNE *ZEROS
+     C           HBWT2B    ORNE *ZEROS
+     C           HBWYBL    ORNE *ZEROS
+     C           HBPMTD    ORNE *ZEROS                                    104305
+     C           HBT1MT    ORNE *ZEROS                                    104305
+     C           HBT2MT    ORNE *ZEROS                                    104305
+     C           HBYMTD    ORNE *ZEROS                                    104305
+      *
+      ** If Extract GLHIBLPD to ED module flag is on, call ED0410         CED002
+      ** to log changes.                                                  CED002
+      *                                                                   CED002
+     C           CED002    IFEQ 'Y'                        ---B002        CED002
+     C                     MOVELXGRPC     MNAME     P                     CED002
+     C                     MOVEAGLHIBL    JRNENT    P                     CED002
+      *                                                                   CED002
+     C                     CALL 'ED0410'                                  CED002
+     C                     PARM '*UPDATE' MODE                            CED002
+     C                     PARM 'GLHIBLPD'FNAME                           CED002
+     C                     PARM           MNAME                           CED002
+     C                     PARM 'MC0230  'PNAME                           CED002
+     C                     PARM 'PT'      JRNA                            CED002
+     C                     PARM           JRNENT                          CED002
+     C                     PARM *BLANKS   RTCD                            CED002
+      *                                                                   CED002
+      ** Program error                                                    CED002
+      *                                                                   CED002
+     C           RTCD      IFNE *BLANKS                    ---B003        CED002
+     C           *LOCK     IN   LDA                         ************  CED002
+     C                     Z-ADD16        DBASE             *DBERROR 016* CED002
+     C                     MOVEL*BLANK    DBKEY             ************* CED002
+     C                     MOVEL'MC0230  'DBPGM                           CED002
+     C                     DUMP                                           CED002
+     C                     OUT  LDA                                       CED002
+     C                     MOVE 'Y'       XRETC                           CED002
+     C                     SETON                     U7U8LR               CED002
+     C                     RETRN                                          CED002
+     C                     ENDIF                           ---E003        CED002
+      *                                                                   CED002
+     C                     ENDIF                           ---E002        CED002
+      * Write GLHIBLPD
+     C                     WRITEGLHIBLD0
+     C                     END                             ---E001
+     C                     END                                            CMC001
+      /SPACE
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  U02 - Update Historic Balances File GLHIBLL0                 *
+      *                                                               *
+      *****************************************************************
+      /SPACE
+     C           U02       BEGSR
+      /SPACE
+      * Calculate number of days in period (end of period date minus
+      * start of period plus 1)
+     C           HBEPDD    SUB  HBSPDD    X
+     C           X         ADD  1         NBRDAY
+      /SPACE
+      * Period Opening Balance (Period Closing from GLHIBLL3)
+     C                     Z-ADDSVPDCB    HBPDOB
+      /SPACE
+      * Period Closing Balance(Period Closing from GLHIBLL0 + GLHIBLL3)
+     C                     ADD  SVPDCB    HBPDCB
+      /SPACE
+      * Term 1 Movements to-date
+     C           HBSPDD    IFNE HBST1D                     ---B001
+     C                     ADD  SVT1MT    HBT1MT
+     C                     END                             ---E001
+      /SPACE
+      * Term 2 Movements to-date
+     C           HBSPDD    IFNE HBST2D                     ---B001
+     C                     ADD  SVT2MT    HBT2MT
+     C                     END                             ---E001
+      /SPACE
+      * Yearly Movements to-date
+     C           HBSPDD    IFNE HBSOYD                     ---B001
+     C                     ADD  SVYMTD    HBYMTD
+     C                     END                             ---E001
+     C* Separate processing for 'IN' and 'EX' Account Sections           055301
+     C* caused the Average balance Sheet to go out of balance            055301
+     C* The account Balance and Weightings must always be in step        055301
+     C* For IN & EX accounts only the Movements disregard Transfers.     055301
+     C*                                                                  055301
+     C**EQUAL****                                                        055301
+     C**If*Account Section is 'IN' or 'EX'                               055301
+     C***********HBACSC    IFEQ 'IN'                       ---B001       055301
+     C***********HBACSC    OREQ 'EX'                                     055301
+     C*/SPACE*****                                                       055301
+     C**Weighted*Term 1 to-date Balance                                  055301
+     C***********HBSPDD    IFNE HBST1D                     ---B002       055301
+     C***********          Z-ADD0         T1MTXD                         055301
+     C***********HBT1MT    MULT NBRDAY    T1MTXD                         055301
+     C***********          ADD  T1MTXD    HBWT1B                         055301
+     C***********          ADD  SVWT1B    HBWT1B                         055301
+     C***********          END                             ---E002       055301
+     C*/SPACE*****                                                       055301
+     C**Weighted*Term 2 to-date Balance                                  055301
+     C***********HBSPDD    IFNE HBST2D                     ---B002       055301
+     C***********          Z-ADD0         T2MTXD                         055301
+     C***********HBT2MT    MULT NBRDAY    T2MTXD                         055301
+     C***********          ADD  T2MTXD    HBWT2B                         055301
+     C***********          ADD  SVWT2B    HBWT2B                         055301
+     C***********          END                             ---E002       055301
+     C*/SPACE*****                                                       055301
+     C**Weighted*Year to-date Balance                                    055301
+     C***********HBSPDD    IFNE HBSOYD                     ---B002       055301
+     C***********          Z-ADD0         YMTDXD                         055301
+     C***********HBYMTD    MULT NBRDAY    YMTDXD                         055301
+     C***********          ADD  YMTDXD    HBWYBL                         055301
+     C***********          ADD  SVWYBL    HBWYBL                         055301
+     C***********          END                             ---E002       055301
+     C*/SPACE*****                                                       055301
+     C**NOT*EQUAL                                                        055301
+     C***********          ELSE                            ---X001       055301
+     C                     Z-ADD0         PDOBXD
+     C           HBPDOB    MULT NBRDAY    PDOBXD
+      /SPACE
+      * Weighted Period to-date Balance
+     C                     ADD  PDOBXD    HBWPBL
+      /SPACE
+      * Weighted Term 1 to-date Balance
+     C           HBSPDD    IFNE HBST1D                     ---B002
+     C                     ADD  PDOBXD    HBWT1B
+     C                     ADD  SVWT1B    HBWT1B
+     C                     ELSE                            ---X002
+     C                     ADD  PDOBXD    HBWT1B
+     C                     END                             ---E002
+      /SPACE
+      * Weighted Term 2 to-date Balance
+     C           HBSPDD    IFNE HBST2D                     ---B002
+     C                     ADD  PDOBXD    HBWT2B
+     C                     ADD  SVWT2B    HBWT2B
+     C                     ELSE                            ---X002
+     C                     ADD  PDOBXD    HBWT2B
+     C                     END                             ---E002
+      /SPACE
+      * Weighted Year to-date Balance
+     C           HBSPDD    IFNE HBSOYD                     ---B002
+     C                     ADD  PDOBXD    HBWYBL
+     C                     ADD  SVWYBL    HBWYBL
+     C                     ELSE                            ---X002
+     C                     ADD  PDOBXD    HBWYBL
+     C                     END                             ---E002
+      /SPACE
+     C***********          END                             ---E001       055301
+      /SPACE
+      * Last Movement Date
+     C                     Z-ADDSVLMDT    HBLMDT
+     C/COPY WNCPYSRC,MC0230C009
+     C           WKADCB    IFNE 'N'                        ---B001
+     C           SVACSC    ANDNE'IN'
+     C           SVACSC    ANDNE'EX'
+     C                     Z-ADD99999     HBLMDT
+     C                     END                             ---E001
+     C/COPY WNCPYSRC,MC0230C004
+      /SPACE
+      *                                                                   CED002
+      ** If Extract GLHIBLPD to ED Module flag is on, call ED0410         CED002
+      ** to log changes.                                                  CED002
+      *                                                                   CED002
+     C           CED002    IFEQ 'Y'                                       CED002
+     C                     MOVELXGRPC     MNAME     P                     CED002
+     C                     MOVEAGLHIBL    JRNENT    P                     CED002
+      *                                                                   CED002
+     C                     CALL 'ED0410'                                  CED002
+     C                     PARM '*UPDATE' MODE                            CED002
+     C                     PARM 'GLHIBLPD'FNAME                           CED002
+     C                     PARM           MNAME                           CED002
+     C                     PARM 'MC0230'  PNAME                           CED002
+     C                     PARM 'UP'      JRNA                            CED002
+     C                     PARM           JRNENT                          CED002
+     C                     PARM *BLANKS   RTCD                            CED002
+      *                                                                   CED002
+      ** Program error                                                    CED002
+      *                                                                   CED002
+     C           RTCD      IFNE *BLANKS                                   CED002
+     C           *LOCK     IN   LDA                         ************  CED002
+     C                     Z-ADD14        DBASE             *DBERROR 014* CED002
+     C                     MOVEL*BLANK    DBKEY             ************* CED002
+     C                     MOVEL'MC0230  'DBPGM                           CED002
+     C                     DUMP                                           CED002
+     C                     OUT  LDA                                       CED002
+     C                     MOVE 'Y'       XRETC                           CED002
+     C                     SETON                     U7U8LR               CED002
+     C                     RETRN                                          CED002
+     C                     ENDIF                           ---E001        CED002
+      *                                                                   CED002
+     C                     ENDIF                                          CED002
+      *                                                                   CED002
+      * Issue Update of Historic Balances GLHIBLL0
+      *
+     C                     UPDAT@BORED6
+      *
+      /SPACE
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  W02 - Write to Average Balances file                         *
+      *                                                               *
+      *****************************************************************
+      /SPACE
+     C           W02       BEGSR
+      /SPACE
+      * Calculate number of days in period (end of period date minus
+      * start of period plus 1)
+     C                     Z-ADD0         X
+     C                     Z-ADD0         NBRDAY
+     C           HBEPDD    SUB  HBSPDD    X
+     C           X         ADD  1         NBRDAY
+      /SPACE
+      * Group Code from GLAVBLL3
+     C                     MOVE *BLANKS   ABCGCD
+     C                     MOVELASCGCD    ABCGCD
+      /SPACE
+      * Branch Code from GLAVBLL3
+     C                     MOVE *BLANKS   ABBRCD
+     C                     MOVELASBRCD    ABBRCD
+      /SPACE
+      * Currency Code from GLAVBLL3
+     C                     MOVE *BLANKS   ABCYCD
+     C                     MOVELASCYCD    ABCYCD
+      /SPACE
+      * Account Code from GLAVBLL3
+     C                     MOVE *BLANKS   ABACCD
+     C                     MOVELASACCD    ABACCD
+      /SPACE
+      * Customer Number from GLAVBLL3
+     C                     MOVE *BLANKS   ABCUST
+     C                     MOVELASCUST    ABCUST
+      /SPACE
+      * Account Sequence from GLAVBLL3
+     C                     MOVE *BLANKS   ABACSN
+     C                     MOVELASACSN    ABACSN
+      /SPACE
+      * Profit Centre Code from GLAVBLL3
+     C                     MOVE *BLANKS   ABPCCD
+     C                     MOVELASPCCD    ABPCCD
+      /SPACE
+      * Book Code from GLAVBLL3
+     C                     MOVE *BLANKS   ABBKCD
+     C                     MOVELASBKCD    ABBKCD
+      /SPACE
+      * Transaction Type from GLAVBLL3
+     C                     MOVE *BLANKS   ABOTTP
+     C                     MOVELASOTTP    ABOTTP
+      /SPACE
+      * Transaction Subtype from GLAVBLL3
+     C                     MOVE *BLANKS   ABTSTY
+     C                     MOVELASTSTY    ABTSTY
+      /SPACE
+      * Associated Customer from GLAVBLL3
+     C                     MOVE *BLANKS   ABACNB
+     C                     MOVELASACNB    ABACNB
+      /SPACE
+      * Period Century from 'FUTURE' work field
+     C                     MOVE *BLANKS   ABPDCT
+     C                     MOVELFUTDCT    ABPDCT
+      /SPACE
+      * Period Year from 'FUTURE' work field
+     C                     MOVE *BLANKS   ABPDYR
+     C                     MOVELFUTDYR    ABPDYR
+      /SPACE
+      * Period Number from 'FUTURE' work field
+     C                     MOVE *BLANKS   ABPDNY
+     C                     MOVELFUTDNY    ABPDNY
+      /SPACE
+      * Period to Period End Days in DR
+      * If Period Closing Balance from GLHIBLL3 is +ve then number of
+      * days in this period, else '0'
+     C           SVPDCB    IFGT 0                          ---B001
+     C                     Z-ADDNBRDAY    ABPDDD
+     C                     ELSE                                 001
+     C                     Z-ADD0         ABPDDD
+     C                     END                             ---E001
+      /SPACE
+      * Period to Period End DR Movements
+     C                     Z-ADD0         ABPDMT
+      /SPACE
+      * Period to Period End Weighted DR Balance
+      * If Period Closing Balance from GLHIBLL3 is +ve then number of
+      * days in this period X Period Closing Balance, else '0'
+     C           SVPDCB    IFGT 0                          ---B001
+     C                     Z-ADD0         PDCBXD
+     C           SVPDCB    MULT NBRDAY    PDCBXD 190
+     C                     Z-ADDPDCBXD    ABWPDB
+     C                     ELSE                                 001
+     C                     Z-ADD0         ABWPDB
+     C                     END                             ---E001
+      /SPACE
+      * Period to Period End Days in CR
+      * If Period Closing Balance from GLHIBLL3 is -ve then number of
+      * days in this period, else '0'
+     C           SVPDCB    IFLT 0                          ---B001
+     C                     Z-ADDNBRDAY    ABPDDC
+     C                     ELSE                                 001
+     C                     Z-ADD0         ABPDDC
+     C                     END                             ---E001
+      /SPACE
+      * Period to Period End CR Movements
+     C                     Z-ADD0         ABPCMT
+      /SPACE
+      * Period to Period End Weighted CR Balance
+      * If Period Closing Balance from GLHIBLL3 is -ve then number of
+      * days in this period X Period Closing Balance, else '0'
+     C           SVPDCB    IFLT 0                          ---B001
+     C                     Z-ADD0         PDCBXD
+     C           SVPDCB    MULT NBRDAY    PDCBXD
+     C                     Z-ADDPDCBXD    ABWPCB
+     C                     ELSE                                 001
+     C                     Z-ADD0         ABWPCB
+     C                     END                             ---E001
+      /SPACE
+      * NOT EQUAL 1
+      * If Start of Period Date is not equal Start of Term 1 Date
+     C           HBSPDD    IFNE HBST1D                     ---B001
+      /SPACE
+      * Term 1 to Period End Days In DR
+     C                     ADD  ABPDDD    AST1DD
+     C                     Z-ADDAST1DD    ABT1DD
+      /SPACE
+      * Term 1 to Period End DR Movements
+     C                     Z-ADDAST1DM    ABT1DM
+      /SPACE
+      * Term 1 to Period End Weighted  DR Balance
+     C                     ADD  ABWPDB    ASW1DB
+     C                     Z-ADDASW1DB    ABW1DB
+      /SPACE
+      * Term 1 to Period End Days in CR
+     C                     ADD  ABPDDC    AST1DC
+     C                     Z-ADDAST1DC    ABT1DC
+      /SPACE
+      * Term 1 to Period End CR Movements
+     C                     Z-ADDAST1CM    ABT1CM
+      /SPACE
+      * Term 1 to Period End Weighted CR Balance
+     C                     ADD  ABWPCB    ASW1CB
+     C                     Z-ADDASW1CB    ABW1CB
+      /SPACE
+      * EQUAL 1
+     C                     ELSE                            ---X001
+      /SPACE
+      * Term 1 to Period End Days In DR
+     C                     Z-ADDABPDDD    ABT1DD
+      /SPACE
+      * Term 1 to Period End DR Movements
+     C                     Z-ADD0         ABT1DM
+      /SPACE
+      * Term 1 to Period End Weighted  DR Balance
+     C                     Z-ADDABWPDB    ABW1DB
+      /SPACE
+      * Term 1 to Period End Days in CR
+     C                     Z-ADDABPDDC    ABT1DC
+      /SPACE
+      * Term 1 to Period End CR Movements
+     C                     Z-ADD0         ABT1CM
+      /SPACE
+      * Term 1 to Period End Weighted CR Balance
+     C                     Z-ADDABWPCB    ABW1CB
+      /SPACE
+     C                     END                             ---E001
+      /SPACE
+      * NOT EQUAL 2
+      * If Start of Period Date is not equal Start of Term 2 Date
+     C           HBSPDD    IFNE HBST2D                     ---B001
+      /SPACE
+      * Term 2 to Period End Days In DR
+     C                     ADD  ABPDDD    AST2DD
+     C                     Z-ADDAST2DD    ABT2DD
+      /SPACE
+      * Term 2 to Period End DR Movements
+     C                     Z-ADDAST2DM    ABT2DM
+      /SPACE
+      * Term 2 to Period End Weighted DR Balance
+     C                     ADD  ABWPDB    ASW2DB
+     C                     Z-ADDASW2DB    ABW2DB
+      /SPACE
+      * Term 2 to Period End Days in CR
+     C                     ADD  ABPDDC    AST2DC
+     C                     Z-ADDAST2DC    ABT2DC
+      /SPACE
+      * Term 2 to Period End CR Movements
+     C                     Z-ADDAST2CM    ABT2CM
+      /SPACE
+      * Term 2 to Period End Weighted CR Balance
+     C                     ADD  ABWPCB    ASW2CB
+     C                     Z-ADDASW2CB    ABW2CB
+      /SPACE
+      * EQUAL 2
+     C                     ELSE                            ---X001
+      /SPACE
+      * Term 2 to Period End Days In DR
+     C                     Z-ADDABPDDD    ABT2DD
+      /SPACE
+      * Term 2 to Period End DR Movements
+     C                     Z-ADD0         ABT2DM
+      /SPACE
+      * Term 2 to Period End Weighted  DR Balance
+     C                     Z-ADDABWPDB    ABW2DB
+      /SPACE
+      * Term 2 to Period End Days in CR
+     C                     Z-ADDABPDDC    ABT2DC
+      /SPACE
+      * Term 2 to Period End CR Movements
+     C                     Z-ADD0         ABT2CM
+      /SPACE
+      * Term 2 to Period End Weighted CR Balance
+     C                     Z-ADDABWPCB    ABW2CB
+      /SPACE
+     C                     END                             ---E001
+      * NOT EQUAL Y
+      * If Start of Period Date is not equal Start of Year Date
+     C           HBSPDD    IFNE HBSOYD                     ---B001
+      /SPACE
+      * Year to Period End Days In DR
+     C                     ADD  ABPDDD    ASYDDD
+     C                     Z-ADDASYDDD    ABYDDD
+      /SPACE
+      * Year to Period End DR Movements
+     C                     Z-ADDASYDMT    ABYDMT
+      /SPACE
+      * Year to Period End Weighted  DR Balance
+     C                     ADD  ABWPDB    ASWYDB
+     C                     Z-ADDASWYDB    ABWYDB
+      /SPACE
+      * Year to Period End Days in CR
+     C                     ADD  ABPDDC    ASYDDC
+     C                     Z-ADDASYDDC    ABYDDC
+      /SPACE
+      * Year to Period End CR Movements
+     C                     Z-ADDASYCMT    ABYCMT
+      /SPACE
+      * Year to Period End Weighted CR Balance
+     C                     ADD  ABWPCB    ASWYCB
+     C                     Z-ADDASWYCB    ABWYCB
+      /SPACE
+      * EQUAL Y
+     C                     ELSE                            ---X001
+      /SPACE
+      * Year to Period End Days In DR
+     C                     Z-ADDABPDDD    ABYDDD
+      /SPACE
+      * Year to Period End DR Movements
+     C                     Z-ADD0         ABYDMT
+      /SPACE
+      * Year to Period End Weighted  DR Balance
+     C                     Z-ADDABWPDB    ABWYDB
+      /SPACE
+      * Year to Period End Days in CR
+     C                     Z-ADDABPDDC    ABYDDC
+     C/COPY WNCPYSRC,MC0230C010
+      /SPACE
+      * Year to Period End CR Movements
+     C                     Z-ADD0         ABYCMT
+      /SPACE
+      * Year to Period End Weighted CR Balance
+     C                     Z-ADDABWPCB    ABWYCB
+     C/COPY WNCPYSRC,MC0230C005
+      /SPACE
+     C                     END                             ---E001
+      /SPACE
+      * Do not write GLAVBLPD if the Period Opening Balance and all
+      * the Weighted To-Date Balances are zero
+     C           ABWPDB    IFNE *ZEROS                     ---B001
+     C           ABWPCB    ORNE *ZEROS
+     C           ABW1DB    ORNE *ZEROS
+     C           ABW1CB    ORNE *ZEROS
+     C           ABW2DB    ORNE *ZEROS
+     C           ABW2CB    ORNE *ZEROS
+     C           ABWYDB    ORNE *ZEROS
+     C           ABWYCB    ORNE *ZEROS
+     C           ABPDMT    ORNE *ZEROS                                    104305
+     C           ABPCMT    ORNE *ZEROS                                    104305
+     C           ABT1DM    ORNE *ZEROS                                    104305
+     C           ABT1CM    ORNE *ZEROS                                    104305
+     C           ABT2DM    ORNE *ZEROS                                    104305
+     C           ABT2CM    ORNE *ZEROS                                    104305
+     C           ABYDMT    ORNE *ZEROS                                    104305
+     C           ABYCMT    ORNE *ZEROS                                    104305
+      *                                                                   CED002
+      ** If Extract GLHIBLPD to ED module flag is on, call ED0410         CED002
+      ** to log changes.                                                  CED002
+      *                                                                   CED002
+     C           CED002    IFEQ 'Y'                        ---B002        CED002
+     C                     MOVELXGRPC     MNAME     P                     CED002
+     C                     MOVEAGLAVBL    JRNENT    P                     CED002
+      *                                                                   CED002
+     C                     CALL 'ED0410'                                  CED002
+     C                     PARM '*UPDATE' MODE                            CED002
+     C                     PARM 'GLAVBLPD'FNAME                           CED002
+     C                     PARM           MNAME                           CED002
+     C                     PARM 'MC0230'  PNAME                           CED002
+     C                     PARM 'PT'      JRNA                            CED002
+     C                     PARM           JRNENT                          CED002
+     C                     PARM *BLANKS   RTCD                            CED002
+      *                                                                   CED002
+      ** Program error                                                    CED002
+      *                                                                   CED002
+     C           RTCD      IFNE *BLANKS                    ---B003        CED002
+     C           *LOCK     IN   LDA                         ************  CED002
+     C                     Z-ADD15        DBASE             *DBERROR 015* CED002
+     C                     MOVEL*BLANK    DBKEY             ************* CED002
+     C                     MOVEL'MC0230  'DBPGM                           CED002
+     C                     DUMP                                           CED002
+     C                     OUT  LDA                                       CED002
+     C                     MOVE 'Y'       XRETC                           CED002
+     C                     SETON                     U7U8LR               CED002
+     C                     RETRN                                          CED002
+     C                     ENDIF                           ---E003        CED002
+      *                                                                   CED002
+     C                     ENDIF                           ---E002        CED002
+      *                                                                   CED002
+      * Write GLAVBLPD record
+      *
+     C                     WRITEGLAVBLD0
+     C                     END                             ---E001
+      /SPACE
+     C                     ENDSR
+      /SPACE 3
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,66 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas RE REACRD backup copy creation')                */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Retail Module                                       */
+/*                                                                   */
+/*       REC003763 - Midas RE REACRD backup copy creation            */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. MD021155           Date 15Jul13              */
+/*       Prev Amend No. CRE083AD  *CREATE  Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD021155 - COB Restructure Phase 1 Remnants                 */
+/*                - Change the copy process to CPYF instead of SQL   */
+/*       CRE083AD - COB Restructure - RE COB Optimisation Phase 1    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+/**********  DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7) VALUE(' ')  */                   /*MD021155*/
+             DCLF       FILE(RECAPM)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems +
+                          Ltd. 2012')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+               GOTO       CMDLBL(END)
+             ENDDO
+ 
+/**********  CALL       PGM(RE003763) PARM(&PRTCD)                 */                   /*MD021155*/
+/*******************************************************************/                   /*MD021155*/
+/**********  IF         COND(&PRTCD *NE ' ') THEN(DO)              */                   /*MD021155*/
+/**********    GOTO       CMDLBL(ABNOR)                            */                   /*MD021155*/
+/**********  ENDDO                                                 */                   /*MD021155*/
+ 
+             CPYF       FROMFILE(REACRD) TOFILE(EREACRD) +
+                          MBROPT(*REPLACE)                                              /*MD021155*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)                         /*MD021155*/
+                CLRPFM     FILE(EREACRD)                                                /*MD021155*/
+             ENDDO                                                                      /*MD021155*/
+                                                                                        /*MD021155*/
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             SNDPGMMSG  MSG('REC003763 REACRD backup copy creation +
+                          Terminated Abnormally') +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+END:
+             ENDPGM

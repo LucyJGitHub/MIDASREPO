@@ -1,0 +1,254 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+      *****************************************************************
+/*X*IA***OVRDBF*FILE(OVCF1)*TOFILE(UPOVCFTPD)**************************                       CUP021
+/*X*IB***OVRDBF*FILE(OVCF2)*TOFILE(UPOVCFTPD)**************************                       CUP021
+/*S*D****RPGBASEBND****************************************************                       CUP021
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bridge                                               *
+      *                                                               *
+      *  UP001825 - Build Action File for T_GPOVCFPD                  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *                                                               *
+      *  Last Amend No. CUP021  *REDUNDANT Date 11Feb11               *
+      *  Prev Amend No. BUG27776*CREATE    Date 10Jun10               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CUP021 - Rewrite of Action File processing                   *
+      *  BUG27776 - Missing Overridable Errors for RATM and RABC      *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      * Function of indicators                                        *
+      *                                                               *
+      *       20      End of file                                     *
+      *       30      Chain - record not found                        *
+      *       69      Read, write or chain fail                       *
+      *       70 - 71 Indicators for changed fields                   *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      * *PSSR - Error processing                                      *
+      * *INZSR - Initialise                                           *
+      *                                                               *
+      *    The *INZSR subroutine will only get called automatically   *
+      *    on entry to the module the first time it is run            *
+      *    (unless you end the program with LR on).  Similarly        *
+      *    D-spec initialisation only happens the first time.  Use    *
+      *    RESET for subsequent passes.                               *
+      *                                                               *
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ F-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+      **
+      *
+     FOVCF1     IF   E             DISK    INFSR(*PSSR)
+     FOVCF2     IF   E           K DISK    INFSR(*PSSR)
+     F                                     RENAME(UPOVCFTPD:OVCFF) PREFIX(X)
+     FUPOVCFPD  O    E             DISK    INFSR(*PSSR)
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ D-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+     D LDA           E DS           256    EXTNAME(LDA)
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+      ** The following /COPY line includes all the defined fields in the
+      ** PSDS.  They have meaningful names, prefixed by 'PS'.
+      *
+     D/COPY GPCPYSRCG,PSDS
+      *
+      ** Program Status Data Structure
+      *
+      ** +--------------------------------------+
+      ** ¦ Named constants                      ¦
+      ** ¦ ===============                      ¦
+      ** +--------------------------------------+
+      *
+      ** +--------------------------------------+
+      ** ¦ Arrays and Data Structures           ¦
+      ** ¦ ==========================           ¦
+      ** +--------------------------------------+
+      *
+      ** +--------------------------------------+
+      ** ¦ Declared variables                   ¦
+      ** ¦ ==================                   ¦
+      ** +--------------------------------------+
+      *
+     D MODE            S              1
+     D @RUN            S              1
+     D INTEST          S              2
+     D INTNUM          S              2  0
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** +--- Start of Main processing -----------------------------------+
+      ** ¦                                                                ¦
+      ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
+      ** ¦ executed at program activation.                                ¦
+      ** ¦                                                                ¦
+      ** +----------------------------------------------------------------+
+      *
+      *********************************************************************
+      * MAIN PROCEDURE                                                    *
+      *********************************************************************
+      *
+     C                   READ      OVCF1                                6920
+     C                   IF        *IN69 = *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   DOW       *IN20 = *OFF
+     C     COMP          CHAIN     OVCFF                              3069
+     C                   IF        *IN69 = *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+      ** If record not found then record has been deleted or added
+      **  depending on mode.
+      *
+     C                   IF        *IN30 = *ON
+     C                   MOVE      MODE          A2ACTC
+     C                   EVAL      A2OEID    =  9999999999
+     C                   WRITE     UPOVCFD0                             69
+     C                   IF        *IN69 = *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDIF
+      *
+      ** Need to find differences but this should only be run once;
+      **  run only if mode is 'Delete'.
+      *
+     C                   IF        MODE = 'D'
+      *
+      ** If record found then look for any differences; only look in
+      **  fields that have data all of the time.
+      *
+     C                   IF        *IN30 = *OFF
+     C                   MOVE      'A'           A2ACTC
+      *
+      ** Error Message Description
+      *
+     C                   IF        A2TEXT <> XA2TEXT
+     C                   SETON                                        70
+     C                   ENDIF
+      *
+      ** Business Error Classification
+      *
+     C                   IF        A2CLAS <> XA2CLAS
+     C                   SETON                                        71
+     C                   ENDIF
+      *
+     C                   MOVEA     *IN(70)       INTEST
+     C                   MOVE      INTEST        INTNUM
+      *
+      ** If any indicators are set on then write record.
+      *
+     C                   IF        INTNUM <> 0
+     C                   EVAL      A2OEID    =  9999999999
+     C                   WRITE     UPOVCFD0                             69
+     C                   IF        *IN69 = *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+      ** Set values to write second record.
+      *
+     C                   EVAL      A2OEID    =  9999999999
+     C                   EVAL      A2TEXT    = XA2TEXT
+     C                   EVAL      A2CLAS    = XA2CLAS
+      *
+     C                   WRITE     UPOVCFD0                             69
+     C                   IF        *IN69 = *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   ENDIF
+     C                   ENDIF
+      *
+      ** Read next record
+      *
+     C                   MOVEA     '00'          *IN(70)
+      *
+     C                   READ      OVCF1                                6920
+     C                   IF        *IN69 = *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   ENDDO
+      *
+     C                   SETON                                        LR
+     C                   RETURN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Program Initialisation routine                       *
+      *                                                               *
+      * Called by: Implicitly on program activation                   *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *INZSR        BEGSR
+      *
+     C     *ENTRY        PLIST
+     C                   PARM                    MODE
+      *
+     C     COMP          KLIST
+     C                   KFLD                    A2API
+     C                   KFLD                    A2NAME
+     C                   KFLD                    A2MSGD
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: None                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *PSSR         BEGSR
+      *
+     C                   IF        @RUN = *BLANK
+     C                   EVAL      @RUN = 'Y'
+     C                   DUMP
+     C                   ENDIF
+      *
+     C                   SETON                                        U7U8LR
+     C                   RETURN
+      *
+     C                   ENDSR
+      *

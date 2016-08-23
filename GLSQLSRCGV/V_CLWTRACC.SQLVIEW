@@ -1,0 +1,247 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Customer Lending Module                                       */
+/*                                                                             */
+/*       V_CLWTRACC - Transaction accounts linked to a facility and            */
+/*                    SD used to identify DF trigger recalculation             */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2006                     */
+/*                                                                             */
+/*       Last Amend No. CGL165             Date 23Feb15                        */
+/*       Prev Amend No. CRE073             Date 06Dec10                        */
+/*                      CRE075             Date 06Dec10                        */
+/*                      CLE064             Date 06Dec10                        */
+/*                      CER059             Date 19Jul10                        */
+/*                      CER048             Date 19May08                        */
+/*                      CER047             Date 19May08                        */
+/*                      CER020             Date 19May08                        */
+/*                      CER043             Date 19May08                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      242201  *CREATE    Date 13Sep06                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       CGL165 - Dual Withholding Tax (Recompile)                             */
+/*       CRE073 - Interest Rate Rounding (Recompile)                           */
+/*       CRE075 - Effective Date for Retail Accounts (Recompile)               */
+/*       CLE064 - Enhancement of Lending Frequencies (Recompile)               */
+/*       CER059 - German Feature Upgrade to Delhi                              */
+/*       CER048 - German Features - Taxes (Recompile)                          */
+/*       CER047 - German Features LF037-00 Reporting §24c KWG                  */
+/*                (Recompile)                                                  */
+/*       CER020 - Enhanced Rollover Window: Upgrade FGE089 to                  */
+/*                Midas Plus (Recompile)                                       */
+/*       CER043 - German Features LF041-00 New Fields and Defaulting           */
+/*                        (Recompile)                                          */
+/*       242201 - Rejected loan still taken into account                       */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  (                                                                             :
+  T_ZONE ,                                                                      :
+  T_CCID ,                                                                      :
+  T_ID ,                                                                        :
+  T_MOD ,                                                                       :
+  T_SMOD ,                                                                      :
+  T_SNAM ,                                                                      :
+  RCCY ,                                                                        :
+  T_RCCY ,                                                                      :
+  T_NBDP ,                                                                      :
+  T_SPRT ,                                                                      :
+  T_MDIN ,                                                                      :
+  T_BRCA ,                                                                      :
+  T_CNMA ,                                                                      :
+  T_CNUM ,                                                                      :
+  T_ACCY ,                                                                      :
+  T_ACOD ,                                                                      :
+  T_ACDN ,                                                                      :
+  T_ACSQ ,                                                                      :
+  T_ACSN ,                                                                      :
+  T_TDAT ,                                                                      :
+  T_SDAT ,                                                                      :
+  T_EDAT ,                                                                      :
+  T_TRTP ,                                                                      :
+  T_TRST ,                                                                      :
+  RECI ,                                                                        :
+  BRCA ,                                                                        :
+  CNUM ,                                                                        :
+  FACT ,                                                                        :
+  FCNO ,                                                                        :
+  FCCY ,                                                                        :
+  FCNBDP ,                                                                      :
+  FCSPRT ,                                                                      :
+  FCMDIN ,                                                                      :
+  BBCUST ,                                                                      :
+  BBINOF ,                                                                      :
+  A5ACCD ,                                                                      :
+  PDINNR ,                                                                      :
+  PDINOF ,                                                                      :
+  PDWEIG ,                                                                      :
+  PDPERC)                                                                       :
+  AS                                                                            :
+  SELECT                                                                        :
+  T_ZONE                                                                        :
+  ,T_CCID                                                                       :
+  ,T_ID                                                                         :
+  ,T_MOD                                                                        :
+  ,T_SMOD                                                                       :
+  ,T_SNAM                                                                       :
+  ,T_RCCY AS RCCY                                                               :
+  ,CASE WHEN T_VCCY = TRIM('') THEN T_RCCY                                      :
+  ELSE T_VCCY END AS T_RCCY                                                     :
+  ,CASE WHEN T_VCCY = TRIM('') THEN RCCY.A6NBDP                                 :
+  ELSE VCCY.A6NBDP END AS T_NBDP                                                :
+  ,CASE WHEN T_VCCY = TRIM('') THEN RCCY.A6SPRT                                 :
+  ELSE VCCY.A6SPRT END AS T_SPRT                                                :
+  ,CASE WHEN T_VCCY = TRIM('') THEN RCCY.A6MDIN                                 :
+  ELSE VCCY.A6MDIN END AS T_MDIN                                                :
+  ,T_BRCA                                                                       :
+  ,T_CNMA                                                                       :
+  ,T_CNUM                                                                       :
+  ,T_ACCY                                                                       :
+  ,T_ACOD                                                                       :
+  ,T_ACDN                                                                       :
+  ,T_ACSQ                                                                       :
+  ,T_ACSN                                                                       :
+  ,T_TDAT                                                                       :
+  ,T_SDAT                                                                       :
+  ,T_EDAT                                                                       :
+  ,T_TRTP                                                                       :
+  ,T_TRST                                                                       :
+  ,ACCT.RECI AS RECI                                                            :
+  ,FCLTY.BRCA                                                                   :
+  ,FCLTY.CNUM                                                                   :
+  ,FCLTY.FACT                                                                   :
+  ,FCLTY.FCNO                                                                   :
+  ,FCLTY.FCCY                                                                   :
+  ,FCCY.A6NBDP AS FCNBDP                                                        :
+  ,FCCY.A6SPRT AS FCSPRT                                                        :
+  ,FCCY.A6MDIN AS FCMDIN                                                        :
+  ,BBCUST                                                                       :
+  ,BBINOF                                                                       :
+  ,A5ACCD                                                                       :
+  ,PDINNR                                                                       :
+  ,PLIN.PDINOF                                                                  :
+  ,WEIG.PDWEIG                                                                  :
+  ,WEIG.PDPERC                                                                  :
+  FROM                                                                          :
+  GPWTRAPPD                                                                     :
+  LEFT OUTER JOIN                                                               :
+  GZSDCURRPD VCCY                                                               :
+  ON                                                                            :
+  T_VCCY = VCCY.A6CYCD                                                          :
+  AND T_ZONE = VCCY.A6ZONE                                                      :
+  ,GZSDBRCHPD FCLTBR                                                            :
+  ,GZACCNTAB ACCT                                                               :
+  ,GZFCLTYFM FCLTY                                                              :
+  ,GZSDCUSTPD                                                                   :
+  ,GZSDACODPD                                                                   :
+  ,GZSDPLINPD PLIN                                                              :
+  ,GPWEIGPD WEIG                                                                :
+  ,GZSDCURRPD RCCY                                                              :
+  ,GZSDCURRPD FCCY                                                              :
+  WHERE                                                                         :
+  T_MOD = 'GL'                                                                  :
+  AND T_SMOD = 'ACCT'                                                           :
+  AND T_BRCA = ACCT.BRCA                                                        :
+  AND T_CNUM = ACCT.CNUM                                                        :
+  AND T_ACCY = ACCT.CCY                                                         :
+  AND T_ACDN = ACCT.ACOD                                                        :
+  AND T_ACSN = ACCT.ACSQ                                                        :
+  AND ACCT.FCCU = FCLTY.CNUM                                                    :
+  AND ACCT.FACT = FCLTY.FACT                                                    :
+  AND ACCT.FCNO = FCLTY.FCNO                                                    :
+  AND FCLTBR.A8ZONE = T_ZONE                                                    :
+  AND FCLTBR.A8BRCD = FCLTY.BRCA                                                :
+  AND FCLTY.FCCY = FCCY.A6CYCD                                                  :
+  AND T_ZONE = FCCY.A6ZONE                                                      :
+  AND T_CNMA = BBCUST                                                           :
+  AND T_RCBR = BBBRCD                                                           :
+  AND T_RCCY = RCCY.A6CYCD                                                      :
+  AND T_ZONE = RCCY.A6ZONE                                                      :
+  AND T_CNMA = BBCUST                                                           :
+  AND T_ACOD = A5ACCD                                                           :
+  AND T_ZONE = A5ZONE                                                           :
+  AND A5INNR = PDINNR                                                           :
+  AND A5ZONE = PDZONE                                                           :
+  AND PLIN.PDWEIG = WEIG.PDWEIG ;                                               :
+                                                                                :
+  LABEL ON COLUMN                                                               :
+  **********/**********                                                         :
+  (T_ZONE IS 'Zone' ,                                                           :
+  T_CCID IS 'Commit ID' ,                                                       :
+  T_ID IS 'Identifier' ,                                                        :
+  T_MOD IS 'Module' ,                                                           :
+  T_SMOD IS 'Sub-Module' ,                                                      :
+  T_SNAM IS 'Shortname' ,                                                       :
+  T_BRCA IS 'Booking             Branch' ,                                      :
+  T_CNMA IS 'Customer Number (Alpha)' ,                                         :
+  T_CNUM IS 'Customer            Number' ,                                      :
+  T_ACCY IS 'Account             Currency' ,                                    :
+  T_ACOD IS 'Account             Code' ,                                        :
+  T_ACDN IS 'Account Code (Numeric)' ,                                          :
+  T_ACSQ IS 'Account             Sequence' ,                                    :
+  T_ACSN IS 'Account Sequence (Numeric)' ,                                      :
+  T_TDAT IS 'Transaction Date' ,                                                :
+  T_SDAT IS 'Start Date' ,                                                      :
+  T_EDAT IS 'End Date' ,                                                        :
+  T_TRTP IS 'Transaction Type' ,                                                :
+  T_TRST IS 'Transaction Sub-Type' ,                                            :
+  BRCA IS 'Brch                Code' ,                                          :
+  CNUM IS 'Customer            Number' ,                                        :
+  FACT IS 'Facil               Type' ,                                          :
+  FCNO IS 'Fac                 No' ,                                            :
+  FCCY IS 'Facil               Curr' ,                                          :
+  BBCUST IS 'Customer            Number' ,                                      :
+  BBINOF IS 'Include Offsets Flag' ,                                            :
+  PDINNR IS 'Inst                Type' ,                                        :
+  PDINOF IS 'Include Offsets Flag' ,                                            :
+  PDWEIG IS 'Weighting           Code' ,                                        :
+  PDPERC IS 'Percentage' ) ;                                                    :
+                                                                                :
+  LABEL ON COLUMN                                                               :
+  **********/**********                                                         :
+  (T_ZONE TEXT IS 'Zone' ,                                                      :
+  T_CCID TEXT IS 'Commit ID' ,                                                  :
+  T_ID TEXT IS 'Identifier' ,                                                   :
+  T_MOD TEXT IS 'Module' ,                                                      :
+  T_SMOD TEXT IS 'Sub-Module' ,                                                 :
+  T_SNAM TEXT IS 'Shortname' ,                                                  :
+  RCCY TEXT IS 'Risk Currency' ,                                                :
+  T_BRCA TEXT IS 'Booking Branch' ,                                             :
+  T_CNMA TEXT IS 'Customer Number (Alpha)' ,                                    :
+  T_CNUM TEXT IS 'Customer Number' ,                                            :
+  T_ACCY TEXT IS 'Account Currency' ,                                           :
+  T_ACOD TEXT IS 'Account Code' ,                                               :
+  T_ACDN TEXT IS 'Account Code (Numeric)' ,                                     :
+  T_ACSQ TEXT IS 'Account Sequence' ,                                           :
+  T_ACSN TEXT IS 'Account Sequence (Numeric)' ,                                 :
+  T_TDAT TEXT IS 'Transaction Date' ,                                           :
+  T_SDAT TEXT IS 'Start Date' ,                                                 :
+  T_EDAT TEXT IS 'End Date' ,                                                   :
+  T_TRTP TEXT IS 'Transaction Type' ,                                           :
+  T_TRST TEXT IS 'Transaction Sub-Type' ,                                       :
+  BRCA TEXT IS 'Branch Code - Alpha' ,                                          :
+  CNUM TEXT IS 'Customer number' ,                                              :
+  FACT TEXT IS 'Facility type' ,                                                :
+  FCNO TEXT IS 'Facility number' ,                                              :
+  FCCY TEXT IS 'Facility currency' ,                                            :
+  FCNBDP TEXT IS 'Number of Decimal Places' ,                                   :
+  FCSPRT TEXT IS 'Spot Rate' ,                                                  :
+  FCMDIN TEXT IS 'Multiply/Divide Indicator' ,                                  :
+  BBCUST TEXT IS 'Customer Number' ,                                            :
+  BBINOF TEXT IS 'Include Offsets Flag' ,                                       :
+  A5ACCD TEXT IS 'Account Code' ,                                               :
+  PDINNR TEXT IS 'Instrument Type' ,                                            :
+  PDINOF TEXT IS 'Include Offsets Flag' ,                                       :
+  PDWEIG TEXT IS 'Weighting Code' ,                                             :
+  PDPERC TEXT IS 'Percentage' ) ;                                               :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas GL Transaction Accounts                     ';                     :
+                                                                                :

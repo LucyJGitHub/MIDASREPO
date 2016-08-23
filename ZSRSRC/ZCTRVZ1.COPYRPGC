@@ -1,0 +1,196 @@
+     C**********************************************************************
+     C*
+     C*  ZCTRV - SUBROUTINE TO CALCULATE COUNTERVALUE OF TRADES
+     C*
+     C*  INPUT  - FROM TRADE FILE - PRIC (15,8) TRADE PRICE
+     C*                             NOML (11,0) NOMINAL
+     C*                             RALL (9,5)  REALLOWANCE
+     C*                             ITRA (13,0) INTEREST AMOUNT
+     C********                      TCA1,TCA2,TCA3,TLTA,TOCA(13,0)CHARGES S01176
+     C*                             TCA1,TCA2,TCA3,TCA4,TCA5,TCA6         S01176
+     C*                             TCA7,TAXA (13,0) CHARGES              S01176
+     C*                             TBCA,TCCA (13,0) COMMISSIONS
+     C*                             TDTP (2) TRADE TYPE
+     C*           FROM CLINTSE    - C1DI (1) DISCRETIONARY INDICATOR
+     C*                             CFCT (9,8) CURRENT FACTOR
+     C*           FROM INVTPD     - PROT (1) PROCESSING TYPE OF SECURITY
+     C*           FROM SECTYD     - SPBS (1) PRICE BASIS
+     C*                           - NMCY (3) NOMINAL CURRENCY
+     C*                           - NMDP (1,0) NOMINAL DECIMAL PLACES
+     C*           ARRAY           - POWER8
+     C*
+     C*  OUTPUT - ZCTRVL (15,0) COUNTERVALUE
+     C*
+     C*  CALLS - NONE
+     C*
+     C*  NEEDS TABTG10 FILE FOR NOMINAL CURENCY DECIMAL PLACES
+     C*
+     C*  INDICATORS USED  - 90 NOMINAL CURRENCY HAS 0 DECIMAL PLACES
+     C*                     91 NOMINAL CURRENCY HAS 1 DECIMAL PLACE
+     C*                     92 NOMINAL CURRENCY HAS 2 DECIMAL PLACES
+     C*                     93 NOMINAL CURRENCY HAS 3 DECIMAL PLACES
+     C*                     99 NOMINAL CURRENCY NOT ON FILE
+     C*                                                                  *
+     C********************************************************************
+     C*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     C*  LAST AMEND NO. E20496             DATE 04DEC89                  *
+     C*  PREV AMEND NO. E20086             DATE 06NOV89                  *
+     C*                 S01176             DATE 18/08/88                 *
+     C*                                                                  *
+     C*------------------------------------------------------------------*
+     C*                                                                  *
+     C*  E20496 - EX-Coupon interest is being subtracted from the        *E20496
+     C*           C/Value when it is already Negative                    *E20496
+     C*  E20086 - MORTGAGE-BACKEDS AND CURRENT FACTOR PROCESSING         *E20086
+     C*           REWRITE                                                *E20086
+     C*           - Take the Current Factor from the Trade instead of    *E20086
+     C*             from the Security so as to pick up the correct       *E20086
+     C*             value (including changes).                           *E20086
+     C*           - Adjust consideration for current factor.             *E20086
+     C*                                                                  *
+     C*  S01176 - SECURITIES TRADING 3.1 (AUSTRALIA)                     *S01176
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           ZCTRV     BEGSR                           **ZCTRV  BEGSR
+     C*
+     C* Define fields
+     C*
+     C                     Z-ADD0         ZCTRVL 150
+     C                     Z-ADD0         ZCCTOT 152
+     C                     Z-ADD0         ZCONS  150
+     C                     Z-ADD0         ZCONS0 150
+     C                     Z-ADD0         ZCONS1 151
+     C                     Z-ADD0         ZCONS2 152
+     C                     Z-ADD0         ZCONS3 153
+     C                     Z-ADD0         ZRALL  150
+     C                     Z-ADD0         ZRALL0 150
+     C                     Z-ADD0         ZRALL1 151
+     C                     Z-ADD0         ZRALL2 152
+     C                     Z-ADD0         ZRALL3 153
+     C                     Z-ADDZWRALL    ZWRALL 158
+     C*
+     C* Fetch Nominal currency decimal places for result field
+     C*
+     C                     MOVELNMCY      WORK4   4
+     C                     MOVE '1'       WORK4
+     C                     MOVEL'20'      KEY12A 12
+     C                     MOVE WORK4     KEY12A
+     C           KEY12A    CHAINTABTG10F             99
+     C  N99      RECI      COMP '*'                      99
+     C           *IN99     CABEQ'1'       EZCTRV
+     C*
+     C* Set indicator for number of decimal places
+     C*
+     C                     MOVEA'0000'    *IN,90
+     C           90        ADD  CDP       V       20
+     C                     MOVEA'1'       *IN,V
+     C*
+     C* Calculate consideration = face value(=nominal) x trade price
+     C*     If price basis is P, divide consideration by 100
+     C******If*processing*type*is*8*,*multiply*cons'n*by*current*factor***E20086
+     C*
+     C   90      NOML      MULT PRIC      ZCONS0    H
+     C   91      NOML      MULT PRIC      ZCONS1    H
+     C   92      NOML      MULT PRIC      ZCONS2    H
+     C   93      NOML      MULT PRIC      ZCONS3    H
+     C*
+     C           SPBS      IFEQ 'P'
+     C   90      ZCONS0    DIV  100       ZCONS0    H
+     C   91      ZCONS1    DIV  100       ZCONS1    H
+     C   92      ZCONS2    DIV  100       ZCONS2    H
+     C   93      ZCONS3    DIV  100       ZCONS3    H
+     C                     END
+     C*
+     C**  Consideration should be held on file exclusive                  E20086
+     C**  of the Current Factor.                                          E20086
+     C*
+     C********** PROT      IFEQ '8'                                       E20086
+     C***90***** ZCONS0    MULT CFCT      ZCONS0                          E20086
+     C***91***** ZCONS1    MULT CFCT      ZCONS1                          E20086
+     C***92***** ZCONS2    MULT CFCT      ZCONS2                          E20086
+     C***93***** ZCONS3    MULT CFCT      ZCONS3                          E20086
+     C**********           END                                            E20086
+     C*
+     C   90                MOVE ZCONS0    ZCONS
+     C   91                MOVE ZCONS1    ZCONS
+     C   92                MOVE ZCONS2    ZCONS
+     C   93                MOVE ZCONS3    ZCONS
+     C*
+     C*  ALLOW FOR NOMINAL DECIMAL PLACES
+     C*
+     C           5         SUB  NMDP      DC      10
+     C           ZCONS     MULT POWER8,DC ZCONS
+     C*
+     C*    Calculate the reallowance amount -
+     C*        = reallowance x face value (=nominal)
+     C*    If price basis is P divide reallowance amount by 100
+     C*
+     C   90      ZWRALL    MULT NOML      ZRALL0    H
+     C   91      ZWRALL    MULT NOML      ZRALL1    H
+     C   92      ZWRALL    MULT NOML      ZRALL2    H
+     C   93      ZWRALL    MULT NOML      ZRALL3    H
+     C*
+     C           SPBS      IFEQ 'P'
+     C   90      ZRALL0    DIV  100       ZRALL0    H
+     C   91      ZRALL1    DIV  100       ZRALL1    H
+     C   92      ZRALL2    DIV  100       ZRALL2    H
+     C   93      ZRALL3    DIV  100       ZRALL3    H
+     C                     END
+     C*
+     C   90                MOVE ZRALL0    ZRALL
+     C   91                MOVE ZRALL1    ZRALL
+     C   92                MOVE ZRALL2    ZRALL
+     C   93                MOVE ZRALL3    ZRALL
+     C*
+     C*  ALLOW FOR NOMINAL DECIMAL PLACES
+     C*
+     C           ZRALL     MULT POWER8,DC ZRALL
+     C*
+     C* Calculate total charge/commission -
+     C*    add the two commission amounts
+     C*    add the five charge amounts to the contract price total
+     C*
+     C                     ADD  TBCA      ZCCTOT
+     C                     ADD  TCCA      ZCCTOT
+     C                     ADD  TCA1      ZCCTOT
+     C                     ADD  TCA2      ZCCTOT
+     C                     ADD  TCA3      ZCCTOT
+     C***********          ADD  TLTA      ZCCTOT                          S01176
+     C***********          ADD  TOCA      ZCCTOT                          S01176
+     C                     ADD  TCA4      ZCCTOT                          S01176
+     C                     ADD  TCA5      ZCCTOT                          S01176
+     C                     ADD  TCA6      ZCCTOT                          S01176
+     C                     ADD  TCA7      ZCCTOT                          S01176
+     C                     ADD  TAXA      ZCCTOT                          S01176
+     C*
+     C*
+     C* Calculate countervalue -
+     C*         = consideration + reallowance amount + total c/c payable
+     C*                                           + Purchase Interest
+     C           PROT      IFEQ '8'                                       E20086
+     C           ZCONS     MULT TCFC      ZCTRVL                          E20086
+     C                     ELSE                                           E20086
+     C                     Z-ADDZCONS     ZCTRVL
+     C                     END                                            E20086
+     C                     ADD  ZRALL     ZCTRVL
+     C                     ADD  ZCCTOT    ZCTRVL
+     C*
+     C***********PROT      IFNE '6'                                       E20496
+     C***********ACIN      IFEQ 'C'
+     C***********ACIN      IFNE 'X'                                       E20496
+     C                     ADD  ITRA      ZCTRVL
+     C***********          ELSE                                           E20496
+     C***********          SUB  ITRA      ZCTRVL                          E20496
+     C***********          END                                            E20496
+     C***********          END                                            E20496
+     C*
+     C           EZCTRV    ENDSR                           *** ENDSR    ***
+     C*
+     C*****************************************************************

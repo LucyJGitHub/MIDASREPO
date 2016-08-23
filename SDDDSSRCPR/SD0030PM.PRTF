@@ -1,0 +1,649 @@
+      *****************************************************************
+/*STD *  PRTFBASE                                                     *
+/*EXS *  PR_STD60                                                     *
+/*EXI *  TEXT('Midas SD Account codes aud/req report')                *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  PRTF/SD0030PM - ACCOUNT CODES REPORT                         *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. MD030956           Date 09Oct14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Prev Amend No. CRE015             Date 18Dec09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL013             Date 10Jul06               *
+      *                 BUG10644           Date 21Feb06               *
+      *                 CER001             Date 25Apr05               *
+      *                 CPB004             Date 11Jul02               *
+      *                 CGP001             Date 10Mar04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CGL010             Date 08Nov99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 04Mar99               *
+      *                 CTI002             Date 22Sep98               *
+      *                 CTI001             DATE 30SEP97               *
+      *                 CRE002             Date 03Feb97               *
+      *                 S01408             Date 15Nov96               *
+      *                 S01408             Date 07Sep95               *
+      *                 S01408             DATE 03AUG95               *
+      *                 080042             DATE 14DEC94               *
+      *                 063606             DATE 14JAN94
+      *                 S01413             DATE 13APR93
+      *                 E23836                  10SEP91
+      *                 RT0070                  23MAY91
+      *                 LN0947                  31JAN91
+      *
+      ********************************************************************
+      *                                                                  *
+      *  MD030956 - Additional changes to BFM-TI enhancement          *
+      *  CRE015 - Retail Term and Notice Accounts                     *
+      *  CDL013 - Tiered Withholding Tax                              *
+      *  BUG10644 - Usage of *IN66 is wrong                           *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  CPB004 - Add 'To be transferred to TOF' flag for each        *
+      *           account code.                                       *
+      *  CGP001 - Global Processing                                   *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CGL010 - Future Value Dated Journal Entries for              *
+      *           Non-Retail Accounts.                                *
+      *  CSD005 - Addition of Standing Data Account Narrative field   *
+      *           on condition of switchable feature CSD005           *
+      *  CTI002 - Midas / Trade Innovation Interface Phase II            *
+      *           Addition of TRADE FINANCE EXPOSURE FIELD.              *
+      *  CTI001 - Midas / Trade Innovation Interface Phase 1             *
+      *           Addition of TI Account Type field.                     *
+      *  CRE002 - Retail Accruals Processing Enhancement.                *
+      *  S01408 - Core hook SD0030PM04 added                             *
+      *           Core hook SD0030PM03 added                             *
+      *  S01408 - Core hook SD0030PM02 added
+      *  S01408 - Core hook SD0030PM01 added
+      *  080042 - PM Instrument Code not printed on report            *
+      *  063606 - Addition of Withholding tax details.                   *
+      *  S01413 - Retail 3 Incorporation                                 *
+      *  E23836 - Move 'Account Section' to below 'Account Sub-type'.    *
+      *         - Replace 'Debt' with 'Debit'.                           *
+      *         - Move 'Credit Int. Accrual A/C' to below 'Debit Int.    *
+      *           Accrual A/C'.                                          *
+      *         - Replace 'Int. Capital A/C' with 'Interest Capital A/C' *
+      *         - Swap credit and debit columns so that debit is the     *
+      *           first column.                                          *
+      *  RT0070 - New layout & addition of last change date/type.        *
+      *  LN0947 - Fields removed from SDACODPD                           *
+      *                                                                  *
+      ********************************************************************
+     A                                      INDARA
+      *=========================================================================
+     A          R ZZPAGHDR                  TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A                                      SKIPB(3)
+      *.........................................................................
+     A                                     2'Reference'
+     A            ##PGM         10        12TEXT('*PROGRAM')
+     A            ##URPT        53        45TEXT('User Report Title')
+     A                                   111'Date'
+     A            ##MRDT         7       116TEXT('midas rundate')
+     A                                   124'Page'
+     A                                   129PAGNBR
+     A                                      EDTCDE(3)
+      *                                              Begin /RT0070/
+     A***********                        111'Time'
+     A***********                           SPACEB(1)
+     A                                      SPACEA(2)
+     A***********                        116TIME
+     A***********                           EDTWRD('  :  :  ')
+     A*********** ##ARTL        53        45TEXT('Audit/Request Title')
+     A            ##ARTL        55        45TEXT('Audit/Request Title')
+      *                                              End   /RT0070/
+     A                                      SPACEB(1)
+      *                                              Begin /RT0070/
+     A*********** ##UNDL        55        45TEXT('Underline')
+     A            ##UNDL        53        45TEXT('Underline')
+      *                                              End   /RT0070/
+     A                                      SPACEB(1)
+      *=========================================================================
+      *                                              Begin /RT0070/
+     A**********R ZZCOLHDG                  TEXT('(C) COPYRIGHT MKI -
+     A***********                           tems Intl Ltd 1988,90')
+     A***********                           SPACEB(1)
+     A***********                           SPACEA(1)
+      *.........................................................................
+     A***********                          2'Account'
+     A***********                        111'Last'
+     A***********                        121'Change'
+     A***********                          2'Code'
+     A***********                           SPACEB(1)
+     A***********                        111'Change'
+     A***********                        121'Type'
+      *                                              End   /RT0070/
+      *=========================================================================
+     A          R ZZDTLRCD
+     A                                      TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A                                      SPACEB(1)
+     A                                      SPACEA(1)
+      *.........................................................................
+     A**Start of change CGL029
+     A**********  XRACCD         4         2TEXT('Account Code')                              CGL029
+     A**********                          10'Description.............:'                       CGL029
+     A            XRACCD        10         2TEXT('Account Code')
+     A                                    16'Description.............:'
+     A**End of change CGL029
+      ***************                                Begin /CSD005/
+     A*********   XRACCN        25        36TEXT('Account Code Name')
+     A**Start of change CGL029
+     A*N73******  XRACCN        25        36TEXT('Account Code Name')                         CGL029
+     A N73        XRACCN        25        42TEXT('Account Code Name')
+     A**End of change CGL029
+     A*/COPY WNCPYSRC,SD0030PM26
+     A**Start of change CGL029
+     A**73******  XRNARR        50        36TEXT('Acct Code Narrative')                       CGL029
+     A  73        XRNARR        50        42TEXT('Acct Code Narrative')
+     A**End of change CGL029
+      ***************                                  End /CSD005/
+      *                                              Begin /RT0070/
+     A*********** XRACDT         7       111TEXT('alpha change date')
+     A*********** XRALCH         6       121TEXT('alpha of last change')
+      *                                              End   /RT0070/
+     A                                    10'Title Only Indicator....:'
+     A                                      SPACEB(1)
+     A            XRTOIN         1        36TEXT('Title Only Indicator')
+     A*                                                      /*LN0947*/
+      *                                                    Begin E23836
+      *                                              Begin /CRE002/
+     A**79******                          89'Dr   Cr'
+     A*/COPY WNCPYSRC,SD0030PM18
+     A**Start of change CGL029
+     A**79******                         101'Dr                Cr'                            CGL029
+     A  79                                98'Dr                      Cr'
+     A**End of change CGL029
+     A*/COPY WNCPYSRC,SD0030PM19
+      *                                              End   /CRE002/
+      *                                                      End E23836
+     A*****                               62'Balance Sheet Credit:'
+     A*****       XRBSC1         4        84TEXT('Balance Sheet Credit 1')
+     A*****       XRBPSN         1        89TEXT('BS/PL Set Number')
+     A*****       XRBPIN         1        91TEXT('BS/PL Indicator')
+     A*****       XRBSC2         4        93TEXT('Balance Sheet Credit 2')
+     A*****       XRBCN2         1        98TEXT('Balance Sheet Credit03050')
+     A*****       XRBCI2         1       100TEXT('Balance Sheet Credit 2 BS')
+     A*****       XRBSC3         4       102TEXT('Balance Sheet Credit 3 BS')
+     A*****       XRBCN3         1       107TEXT('Balance Sheet Credit03052')
+     A*****       XRBCI3         1       109TEXT('Balance Sheet Credit03029')
+     A*                                                      /*LN0947*/
+      *                                                    Begin E23836
+     A************                        10'Account Section.........:'
+     A************                          SPACEB(1)
+     A************XRACSC         2        36TEXT('Account Section')
+      *                                                      End E23836
+     A*                                                      /*LN0947*/
+     A*****                               62'Balance Sheet Debit.:'
+     A*****       XRBSD1         4        84TEXT('Balance Sheet Debit 1 BS/')
+     A*****       XRBDN1         1        89TEXT('Balance Sheet Debit 03054')
+     A*****       XRBDI1         1        91TEXT('Balance Sheet Debit 03031')
+     A*****       XRBSD2         4        93TEXT('Balance Sheet Debit 2 BS/')
+     A*****       XRBDN2         1        98TEXT('Balance Sheet Debit 03056')
+     A*****       XRBDI2         1       100TEXT('Balance Sheet Debit 03033')
+     A*****       XRBSD3         4       102TEXT('Balance Sheet Debit 3 BS/')
+     A*****       XRBDN3         1       107TEXT('Balance Sheet Debit 03058')
+     A*****       XRBDI3         1       109TEXT('Balance Sheet Debit 03035')
+     A*                                                      /*LN0947*/
+     A                                    10'Account type............:'
+     A                                      SPACEB(1)
+     A            XRACTY         1        36TEXT('Account type')
+     A*                                                      /*LN0947*/
+      *                                                    Begin E23836
+     A**Start of change CGL029
+     A**79******                          62'Debit Int. Accrual A/C..:'                       CGL029
+     A  79                                56'Debit Int. Accrual A/C..:'
+     A**End of change CGL029
+      *                                              Begin /CRE002/
+     A**Start of change CGL029
+     A**79******  XRDIDX        11        88TEXT('Debit Int. Accrual Dr.Text')                CGL029
+     A  79        XRDIDX        11        82TEXT('Debit Int. Accrual Dr.Text')
+     A**End of change CGL029
+     A**79******  XRDIAD         4        88TEXT('Debit Interest Accrual Dr.')
+     A**Start of change CGL029
+     A**79******  XRDIAD         4       100TEXT('Debit Interest Accrual Dr.')                CGL029
+     A  79        XRDIAD        10        94TEXT('Debit Interest Accrual Dr.')
+     A**End of change CGL029
+     A  79        XRDICX        11       106TEXT('Debit Int. Accrual Cr.Text')
+     A**79******  XRDIAC         4        93TEXT('Debit Interest Accrual Cr.')
+     A*/COPY WNCPYSRC,SD0030PM20
+     A**Start of change CGL029
+     A**79******  XRDIAC         4       118TEXT('Debit Interest Accrual Cr.')                CGL029
+     A  79        XRDIAC        10       118TEXT('Debit Interest Accrual Cr.')
+     A**End of change CGL029
+     A*/COPY WNCPYSRC,SD0030PM21
+      *                                              End   /CRE002/
+      *                                                      End E23836
+     A*****                               62'Profit & Loss Credit:'
+     A*****       XRPLC1         4        84TEXT('Profit & Loss Credit 1')
+     A*****       XRPCN1         1        89TEXT('Profit & Loss Credit03060')
+     A*****       XRPCI1         1        91TEXT('Profit & Loss Credit 1 BS')
+     A*****       XRPLC2         4        93TEXT('Profit & Loss Credit 2 BS')
+     A*****       XRPCN2         1        98TEXT('Profit & Loss Credit03062')
+     A*****       XRPCI2         1       100TEXT('Profit & Loss Credit03039')
+     A*****       XRPLC3         4       102TEXT('Profit & Loss Credit 3 BS')
+     A*****       XRPCN3         1       107TEXT('Profit & Loss Credit03064')
+     A*****       XRPCI3         1       109TEXT('Profit & Loss Credit03041')
+     A*                                                      /*LN0947*/
+     A                                    10'Account Sub-type........:'
+     A                                      SPACEB(1)
+     A            XRACST         1        36TEXT('Account Sub-type')
+     A*                                                      /*LN0947*/
+      *                                                    Begin E23836
+     A**Start of change CGL029
+     A**79******                          62'Credit Int. Accrual A/C.:'                       CGL029
+     A  79                                56'Credit Int. Accrual A/C.:'
+     A**End of change CGL029
+      *                                              Begin /CRE002/
+     A**Start of change CGL029
+     A**79******  XRCIDX        11        88TEXT('Credit Int. Accrual Dr.Text')               CGL029
+     A  79        XRCIDX        11        82TEXT('Credit Int. Accrual Dr.Text')
+     A**End of change CGL029
+     A**79******  XRCIAD         4        88TEXT('Credit Int. Accrual Dr. A')
+     A**Start of change CGL029
+     A**79******  XRCIAD         4       100TEXT('Credit Int. Accrual Dr. A')                 CGL029
+     A  79        XRCIAD        10        94TEXT('Credit Int. Accrual Dr. A')
+     A**End of change CGL029
+     A  79        XRCICX        11       106TEXT('Credit Int. Accrual Cr.Text')
+     A**79******  XRCIAC         4        93TEXT('Credit Int. Accrual Cr. A')
+     A*/COPY WNCPYSRC,SD0030PM22
+     A**Start of change CGL029
+     A**79******  XRCIAC         4       118TEXT('Credit Int. Accrual Cr. A')                 CGL029
+     A  79        XRCIAC        10       118TEXT('Credit Int. Accrual Cr. A')
+     A**End of change CGL029
+     A*/COPY WNCPYSRC,SD0030PM23
+      *                                              End   /CRE002/
+      *                                                      End E23836
+     A*****                               62'Profit & Loss Debit.:'
+     A*****       XRPLD1         4        84TEXT('Profit & Loss Debit 1 BS/')
+     A*****       XRPDN1         1        89TEXT('Profit & Loss Debit 03066')
+     A*****       XRPDI1         1        91TEXT('Profit & Loss Debit 03043')
+     A*****       XRPLD2         4        93TEXT('Profit & Loss Debit 2 BS/')
+     A*****       XRPDN2         1        98TEXT('Profit & Loss Debit 03068')
+     A*****       XRPDI2         1       100TEXT('Profit & Loss Debit 03045')
+     A*****       XRPLD3         4       102TEXT('Profit & Loss Debit 3 BS/')
+     A*****       XRPDN3         1       107TEXT('Profit & Loss Debit 03070')
+     A*****       XRPDI3         1       109TEXT('Profit & Loss Debit 03047')
+     A*                                                      /*LN0947*/
+      *                                                    Begin E23836
+     A                                    10'Account Section.........:'
+     A                                      SPACEB(1)
+     A            XRACSC         2        36TEXT('Account Section')
+      *
+     A**Start of change CGL029
+     A**79******                          62'Interest Capital A/C....:'                       CGL029
+     A  79                                56'Interest Capital A/C....:'
+     A**End of change CGL029
+      *                                              Begin /CRE002/
+     A**Start of change CGL029
+     A**79******  XRICDX        11        88TEXT('Int. Capital in Debt Dr.Text')              CGL029
+     A  79        XRICDX        11        82TEXT('Int. Capital in Debt Dr.Text')
+     A**End of change CGL029
+     A**79******  XRICID         4        88TEXT('Interest Capital in Debt')
+     A**Start of change CGL029
+     A**79******  XRICID         4       100TEXT('Interest Capital in Debt')                  CGL029
+     A  79        XRICID        10        94TEXT('Interest Capital in Debt')
+     A**End of change CGL029
+     A  79        XRICCX        11       106TEXT('Int. Capital in Debt Cr.Text')
+     A**79******  XRICIC         4        93TEXT('Interest Capital in Cr. A')
+     A*/COPY WNCPYSRC,SD0030PM24
+     A**Start of change CGL029
+     A**79******  XRICIC         4       118TEXT('Interest Capital in Cr. A')                 CGL029
+     A  79        XRICIC        10       118TEXT('Interest Capital in Cr. A')
+     A**End of change CGL029
+     A*/COPY WNCPYSRC,SD0030PM25
+      *                                              End   /CRE002/
+      *                                                      End E23836
+     A                                    10'Retention Period........:'
+     A                                      SPACEB(1)
+     A            XRACPR         2  0     36TEXT('Acct Post Retention Prd')
+     A                                      EDTCDE(3)
+     A                                    10'Stat Returns BS L/C.....:'
+     A                                      SPACEB(1)
+     A            XRSRLC         5  0     36TEXT('Stat Returns BS L/C')
+     A                                      EDTCDE(3)
+     A**Start of change CGP001
+     A  66                                62'Global Account Code.....:'
+     A  66        XGACD         10A  O    88
+     A**End of change CGP001
+      *                                                    Begin E23836
+     A**79********                        62'Credit Int. Accrual A/C.:'
+     A**79********XRCIAC         4        88TEXT('Credit Int. Accrual Cr. A')
+     A**79********XRICID         4        93TEXT('Interest Capital in Debt')
+      *                                                      End E23836
+     A*/COPY WNCPYSRC,SD0030PM33
+      *Begin CPB004
+      **Start of change BUG10644
+     A**66******                          62'To be transferred to TOF:'                     BUG10644
+     A  67                                62'To be transferred to TOF:'
+      **End of change BUG10644
+     A                                      SPACEB(1)
+      *
+      **Start of change BUG10644
+     A**66******  XRTRAN         1        88TEXT('to be transferred to TOF')                BUG10644
+     A  67        XRTRAN         1        88TEXT('to be transferred to TOF')
+      **End of change BUG10644
+      *End   CPB004
+     A                                    10'Stat Returns BS F/C.....:'
+     A                                      SPACEB(1)
+     A            XRSRFC         5  0     36TEXT('Stat Returns BS F/C')
+     A                                      EDTCDE(3)
+     A**Start of change CGP001
+     A  66                                62'Global Product Code.....:'
+     A  66        XPRDC         10A  O    88
+     A**End of change CGP001
+      *                                                    Begin E23836
+     A**79********                        62'Debt Int. Accrual A/C...:'
+     A**79********XRDIAC         4        88TEXT('Debt Interest Accrual Cr.')
+     A**79********XRDIAD         4        93TEXT('Debt Interest Accrual Dr.')
+      *                                                      End E23836
+     A*                                                                   S01408
+     A*/COPY WNCPYSRC,SD0030PM03                                          S01408
+     A*                                                                   S01408
+     A                                    10'Reporting Code..........:'
+     A*                                                                   S01408
+     A*/COPY WNCPYSRC,SD0030PM04                                          S01408
+     A*                                                                   S01408
+     A                                      SPACEB(1)
+     A            XRRPCD        10  0     36TEXT('Reporting Code')
+     A                                      EDTCDE(3)
+     A*/COPY WNCPYSRC,SDH00430
+     A**Start of change CGP001
+     A  66                                62'Global Instrument Code..:'
+     A  66        XINSC         10A  O    88
+     A**End of change CGP001
+     A*                                              Begin /080042/
+     A  40                                10'PM Instrument Code......:'
+     A                                      SPACEB(1)
+     A  40        XRINNR         3        36TEXT('PM Instrument Code')
+     A*                                              End   /080042/
+     A*/COPY WNCPYSRC,SD0030PM34
+     A*                                              Begin /CTI001/
+      **Start of change MD030956
+     A**77******                          10'TI Account Type.........:'                     MD030956
+     A**********                            SPACEB(1)                                       MD030956
+     A**77******  XRTIAT         2        36TEXT('TI Account Type')                         MD030956
+     A  77N78                             10'TI Account Type.........:'
+     A                                      SPACEB(1)
+     A  77N78     XRTIAT         2        36TEXT('TI Account Type')
+      **End of change MD030956
+     A*                                              End   /CTI001/
+     A*                                              Begin /CTI002/
+     A  77                                10'Trade Finance Exposure .:'
+     A                                      SPACEB(1)
+     A  77        XRTFCT         2        36TEXT('TF Exposure A/C')
+     A*                                              End   /CTI002/
+      *                                              Begin /CGL010/
+     A  19                                10'Transitory Dr A/c Code..:'
+     A                                      SPACEB(1)
+     A**Start of change CGL029
+     A**19******  XRTRDA         4        36TEXT('Transitory Dr A/c Code')                    CGL029
+     A  19        XRTRDA        10        36TEXT('Transitory Dr A/c Code')
+     A**End of change CGL029
+     A  19                                10'Transitory Cr A/c Code..:'
+     A                                      SPACEB(1)
+     A**Start of change CGL029
+     A**19******  XRTRCA         4        36TEXT('Transitory Cr A/c Code')                    CGL029
+     A  19        XRTRCA        10        36TEXT('Transitory Cr A/c Code')
+     A**End of change CGL029
+      *                                              End   /CGL010/
+     A*/COPY WNCPYSRC,SD0030PM05
+      *                                                    Begin E23836
+     A**79********                        62'Int. Capital A/C........:'
+     A**79********XRICIC         4        88TEXT('Interest Capital in Cr. A')
+     A**79********XRCIAD         4        93TEXT('Credit Int. Accrual Dr. A')
+      *                                                      End E23836
+      *                                    Start of change /S01413/
+     A*                                    Start of Change /063606/
+     A  74 79                             10'Withholding Tax Details'
+     A                                      SPACEB(2)
+      ** Start of change CRE015
+     A  79 81                             79
+     A                                      'Terms & Notice Account Details'
+     A N74                                  SPACEB(2)
+      ** End of change CRE015
+     A*/COPY WNCPYSRC,SD0030PM27
+     A  74 79                             10'-----------------------'
+     A                                      SPACEB(1)
+      ** Start of change CRE015
+     A  79 81                             79
+     A                                      '------------------------------'
+     A N74                                  SPACEB(1)
+      ** End of change CRE015
+     A*/COPY WNCPYSRC,SD0030PM28
+     A**74*79**                           10'Transfer Daily..........:'
+     A*********                             SPACEB(1)
+     A**74*79**   XRTRFD         1        36
+     A  74 79                             10'DR Interest Payable A/c Code DR...-
+     A                                      ............:'
+     A**********                            SPACEB(2)
+     A                                      SPACEB(1)
+     A**Start of change CGL029
+     A**74*79***  XRDIPD         4        58                                                  CGL029
+     A  74 79     XRDIPD        10        58
+     A**End of change CGL029
+      ** Start of change CRE015
+     A  79 81                             79
+     A                                      'Agreed Period.....................-
+     A                                      ...:'
+     A N74                                  SPACEB(1)
+     A  79 81     A5ATTY         1A  O   118
+      ** End of change CRE015
+     A*/COPY WNCPYSRC,SD0030PM29
+     A  74 79                             10'DR Interest Payable A/c Code CR...-
+     A                                      ............:'
+     A                                      SPACEB(1)
+     A**Start of change CGL029
+     A**74*79***  XRDIPC         4        58                                                  CGL029
+     A  74 79     XRDIPC        10        58
+     A**End of change CGL029
+      ** Start of change CRE015
+     A  79 81                             79
+     A                                      'Penalty Charge Income A/c Code....-
+     A                                      ...:'
+     A N74                                  SPACEB(1)
+     A  79 81     AXCHIA        10A  O   118
+      ** End of change CRE015
+     A*/COPY WNCPYSRC,SD0030PM30
+     A  74 79                             10'CR Interest Payable A/c Code CR...-
+     A                                      ............:'
+     A                                      SPACEB(1)
+     A**Start of change CGL029
+     A**74*79***  XRCIPC         4        58                                                  CGL029
+     A  74 79     XRCIPC        10        58
+     A**End of change CGL029
+      ** Start of change CRE015
+     A  79 81                             79
+     A                                      'Penalty Retail Transaction Type...-
+     A                                      ...:'
+     A N74                                  SPACEB(1)
+     A  79 81     A5RTTY         5A  O   118
+      ** End of change CRE015
+     A*/COPY WNCPYSRC,SD0030PM31
+     A  74 79                             10'CR Int. Pay. A/c Code DR Subject T-
+     A                                      o Tax.......:'
+     A                                      SPACEB(1)
+     A**Start of change CGL029
+     A**74*79***  XRCISU         4        58                                                  CGL029
+     A  74 79     XRCISU        10        58
+     A**End of change CGL029
+      ** Start of change CRE015
+     A  79 81                             79
+     A                                      'Penalty Narrative Code............-
+     A                                      ...:'
+     A N74                                  SPACEB(1)
+     A  79 81     A5NVCD         2A  O   118
+      ** End of change CRE015
+     A*/COPY WNCPYSRC,SD0030PM32
+     A  74 79                             10'CR Int. Pay. A/c Code DR Not Subje-
+     A                                      ct To Tax...:'
+     A                                      SPACEB(1)
+     A**Start of change CGL029
+     A**74*79***  XRCINS         4        58                                                  CGL029
+     A  74 79     XRCINS        10        58
+     A**End of change CGL029
+      ** Start of change CRE015
+     A  79 81                             79
+     A                                      'Penalty Profit Center.............-
+     A                                      ...:'
+     A N74                                  SPACEB(1)
+     A  79 81     A5PRFC         4A  O   118
+      ** End of change CRE015
+     A*/COPY WNCPYSRC,SD0030PM08
+     A**Start of change CDL013
+     A**74*79***                          10'Withholding Tax Account Code......-              CDL013
+     A**********                            ............:'                                    CDL013
+     A**********                            SPACEB(1)                                         CDL013
+     A**End of change CDL013
+     A**Start of change CGL029
+     A**74*79***  XRWTAC         4        58                                                  CGL029
+     A**Start of change CDL013
+     A**74*79***  XRWTAC        10        58                                                  CDL013
+      *
+      ** If CDL013 is on set on *IN80 ignore W/H Tax and print Retail     CDL013
+      ** W/H Tax and Corporate W/H Tax
+      *
+     A  74 79N80                          10'Withholding Tax Account Code......-
+     A                                      ............:'
+     A                                      SPACEB(1)
+     A  74 79N80  XRWTAC        10        58
+      ** Start of change CRE015
+     A  79N80 81                          79
+     A                                      'Retention of Customer Notification-
+     A                                      s..:'
+     A N74N80                               SPACEB(1)
+     A  79N80 81  AXRTDN         2A  O   118
+      ** End of change CRE015
+     A  74 79 80                          10'Withholding Tax Retail Account Cod-
+     A                                      e...........:'
+     A                                      SPACEB(1)
+     A  74 79 80  XRWTRC        10        58
+      ** Start of change CRE015
+     A  79 80 81                          79
+     A                                      'Retention of Customer Notification-
+     A                                      s..:'
+     A N74 80                               SPACEB(1)
+     A  79 80 81  AYRTDN         2A  O   118
+      ** End of change CRE015
+     A*
+     A  74 79 80                          10'Withholding Tax Corporate Account -
+     A                                      Code........:'
+     A                                      SPACEB(1)
+     A  74 79 80  XRWTCC        10        58
+      ** Start of change CRE015
+     A  79 80 81                          79
+     A                                      'Retention of Interest Notification-
+     A                                      s..:'
+     A N74 80                               SPACEB(1)
+     A  79 80 81  AYRTDI         2A  O   118
+      ** End of change CRE015
+     A**End of change CDL013
+     A**End of change CGL029
+     A*/COPY WNCPYSRC,SD0030PM09
+     A  74 79                             10'Minimum Interest Subject To Tax...-
+     A                                      ............:'
+     A                                      SPACEB(1)
+     A**74*79*****XRMISU        13  0     58EDTCDE(1)
+     A  74 79     XRMISU        16        58
+     A*                                      End of change /063606/
+      *                                      End of change /S01413/
+      ** Start of change CRE015
+     A  79N80 81                          79
+     A                                      'Retention of Interest Notification-
+     A                                      s..:'
+     A N74N80                               SPACEB(1)
+     A  79N80 81  AXRTDI         2A  O   118
+      ** End of change CRE015
+     A*                                                                   S01408
+     A*/COPY WNCPYSRC,SD0030PM02                                          S01408
+     A*                                                                   S01408
+      **Start of change CER001
+      *
+     A  52                                10'Share Type :'
+     A                                      SPACEB(1)
+     A  52        XRSHAT         1  0     23
+     A  52                                30'LMI Circular 93/93 :'
+     A  52        XRIM93         1  0     51
+      *
+      **End of change CER001
+      *
+     A N78        XRWFFR       131         2TEXT('Window Function Field')
+     A                                      SPACEB(1)
+     A N77        XRWF1R       131         2TEXT('Window Function Field 1')
+     A                                      SPACEB(1)
+     A N76        XRWF2R       131         2TEXT('Window Function Field 2')
+     A                                      SPACEB(1)
+     A*/COPY WNCPYSRC,SD0030PM06
+     A                                     2'                                  -
+     A                                                                         -
+     A                                       '
+     A                                      SPACEB(1)
+     A                                     2'                                  -
+     A                                                                         -
+     A                                       '
+     A                                      SPACEB(1)
+     A*/COPY WNCPYSRC,SD0030PM07
+      * 'Hidden' internal version of Last Change Date
+     A  99N99     XRLCD          5  0      1SPACEB(1)
+      * 'Hidden' internal version of Type of Last Change
+     A  99N99     XRTYLC         1         1SPACEB(1)
+      *                                              Begin /RT0070/
+     A                                    10'Last Change Date........:'
+     A                                      SPACEB(1)
+     A            XRACDT         7        36TEXT('alpha change date')
+     A                                    10'Type of Last Change.....:'
+     A                                      SPACEB(1)
+     A            XRALCH         6        36TEXT('alpha of last change')
+      *                                              End   /RT0070/
+     A*                                                                   S01408
+     A*/COPY WNCPYSRC,SD0030PM01                                          S01408
+     A*                                                                   S01408
+      *
+      **Start of change CER001
+      *
+     A          R ZZIBLC02                  TEXT('Extended IBLC informations')
+      *
+     A  52        RRFROM       132         1SPACEA(1)
+      *
+      **End of change CER001
+      *
+      *
+      *=========================================================================
+     A          R ZZFINTTL                  TEXT('Final totals             ')
+     A                                      SPACEB(2)
+      *.........................................................................
+     A  75                                56'*** NO DETAILS TO REPORT ***'
+      *                                              Begin /RT0070/
+     A***********                         56'Number of Records Printed..:'
+     A***********                           SPACEB(1)
+     A*********** ZTNCRC         5  0     85TEXT('No of Calculated Recs')
+     A***********                           EDTCDE(4)
+      ***********
+      **'Hidden'*internal version of No of Records on file
+     A**99N99**** ZTNORF         5  0      1SPACEB(1)
+      **'Hidden'*internal version of *CON (Screen constant)
+     A**99N99**** ZTCON          1         1SPACEB(1)
+      **'Hidden'*internal version of Account Codes on Old File
+     A**99N99**** ZTACOF         5  0      1SPACEB(1)
+      **'Hidden'*internal version of Account Codes on New File
+     A**99N99**** ZTACNF         5  0      1SPACEB(1)
+      *                                              End   /RT0070/
+      *=========================================================================
+     A          R ZZENDRPT                  TEXT('End of report            ')
+     A                                      SPACEB(2)
+      *.........................................................................
+     A                                    60'*** END OF REPORT ***'
+      *=========================================================================

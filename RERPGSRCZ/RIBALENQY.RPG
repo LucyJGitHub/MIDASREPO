@@ -1,0 +1,623 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Get the Closing Balance')                     *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *  RIBALENQY - Get the Closing Balance                          *
+      *                                                               *
+      *  Function:  For a valid Midas Retail account this program     *
+      *             will return the required closing balance for the  *
+      *             account.                                          *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *                                                               *
+      *  Last Amend No. CGL165             Date 17Feb15               *
+      *  Prev Amend No. AR1087355 *CREATE  Date 30Sep13               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  AR1087355C - Do not issue 'EX.O/D' error if withdrawal amnt  *
+      *               is withn the range of Available Balance and     *
+      *               Closing Balance.                                *
+      *                                                               *
+      *****************************************************************
+     FACCNT   IF  E           K        DISK         KINFSR *PSSR      UC
+     F                                              KCOMIT
+     F            ACCNTACF                          KIGNORE
+      ** Account Master
+      *
+     FACNUM   IF  E           K        DISK
+      ** Account Numbers Cross Reference File
+     F            ACCNTABF                          KRENAMEACNUMABF
+      *
+     FREFXAJL0IF  E           K        DISK
+     F** Fixed Accounts File
+      *
+     FREACR   IF  E           K        DISK                           UC
+      ** Retail Interest Accrual ITD
+      *
+     FREIAC   IF  E           K        DISK                           UC
+      ** Retail Interest and Charges
+      *
+     FSDSTAXPDIF  E                    DISK                           UC
+      ** SD Tax File
+      *
+      /COPY ZSRSRC,RTINDEF3
+      /COPY ZSRSRC,RTCOMMF1
+      /COPY ZSRSRC,RTCCYSF1
+      *****************************************************************
+      *       Arrays & Tables                                         *
+      *****************************************************************
+      *
+     E                    POWER   1   7  7 3             POWER ARRAY
+      *
+      /COPY ZSRSRC,RTCOMME1
+      *
+      /COPY ZSRSRC,RTCCYSE1
+      ** Array for SR.RTCCYS
+      *
+      /COPY ZSRSRC,ZFRPEDZ1
+      ** Array for SR.ZFRPED
+      *
+      /COPY ZSRSRC,RTINDEF1
+      *
+      /COPY ZSRSRC,ZDATE1Z1
+      ** Array for SR ZDATE1
+      *
+      *****************************************************************
+      *       Data Structures                                         *
+      *****************************************************************
+      /COPY ZSRSRC,RTINDEF4
+      *
+     ISDBANK    E DSSDBANKPD
+     I** Bank Details
+      *
+     ISDCURR    E DSSDCURRPD
+     I** Currency Codes
+      *
+     ISDCUST    E DSSDCUSTPD
+     I** Customer Details
+      *
+     ISDACOD    E DSSDACODPD
+     I** Account Codes
+      *
+     ISCSARD    E DSSCSARDPD
+     I** Switchable SARs
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** First DS for access programs, Short data structure
+      *
+     IDSSDY     E DSDSSDY
+      *
+      ** 2nd   DS for access programs, Long  data structure
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+      ** Field containing program ID
+      *
+     I                                        1  10 @PGM
+      *
+      ** Field containing workstation ID
+      *
+     I                                      244 253 @JOB
+      *
+      ** Field containing user ID
+      *
+     I                                      254 263 @USER
+      *
+     I            DS
+     I                                        1  24 @ACCN
+     I                                        1   6 @CNUM
+     I                                        7   9 @CCY
+     I                                       10  190@ACOD
+     I                                       20  210@ACSQ
+     I                                       22  24 @BRCA
+     I            DS
+      * 12 Character key
+     I                                        1  12 @KEY
+     I                                        2   30@CHGT
+     I                                        4   80@CHST
+     I                                        9  11 @CHCY
+     I                                       12  12 @DDDD
+      *
+     IUMEMER      DS
+      ** Data structure for database error on call to AOMEMSR0/AOMEMSU0
+      *
+     I                                        1   6 U0CNUM
+     I                                        7   9 U0CUCD
+     I                                       10  190U0ACCD
+     I                                       20  210U0ACSQ
+     I                                       22  24 U0BRCA
+      *
+     IDSMEMS    E DSMEMOS
+      ** External data structure for MEMOS Details
+      ** Renamed fields in PF/MEMOS
+      *
+     I              CNUM                            MECNUM
+     I              CCY                             MECCY
+     I              ACOD                            MEACOD
+     I              ACSQ                            MEACSQ
+      *
+     ILDA         DS                            256
+      **  Local data area for data base errors.
+     I                                        1   3 ERTLID
+     I                                       11  20 ERTWID
+     I                                       21  30 ERWSID
+      **  Field combining the following fields
+     I                                      134 183 DBLOT
+      **  Name of database file in error
+     I                                      134 141 DBFILE
+      **  Key value causing database error
+     I                                      142 170 DBKEY
+      **  Name of program causing database error
+     I                                      171 180 DBPGM
+      **  Number of database error
+     I                                      181 1830DBASE
+      *
+      /COPY ZSRSRC,RTINDEF5
+      /COPY ZSRSRC,RTCOMMI1
+      /COPY ZSRSRC,ZFRPEDZ2
+      ** Data structure for SR.ZFRPED
+      *****************************************************************
+      *                     M A I N L I N E                           *
+      *****************************************************************
+      *
+      ** Input parameter(s) :
+     C           *ENTRY    PLIST                           Entry parameter list
+     C                     PARM           PFNCD   3        Function code
+     C                     PARM           PACNO  10        Account No.
+     C                     PARM           PACCY   3        Account Currency
+     C                     PARM           PACBL  22        Account Bal.
+      *
+      /COPY ZSRSRC,RTINDEF2
+      *
+      ** Account Numbers Cross Reference
+      *
+     C           KLACNO    KLIST
+     C                     KFLD           KACNO  100
+      *
+      ** Account Master
+      *
+     C           KLACNT    KLIST
+     C                     KFLD           @CNUM
+     C                     KFLD           @CCY
+     C                     KFLD           @ACOD
+     C                     KFLD           @ACSQ
+     C                     KFLD           @BRCA
+      *
+      ** Retail Commission
+      *
+     C           KLCOMM    KLIST
+     C                     KFLD           @BRCA
+     C                     KFLD           @CNUM
+     C                     KFLD           @CCY
+     C                     KFLD           @ACOD
+     C                     KFLD           @ACSQ
+      *
+      **   Reset LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBLOT
+     C                     OUT  LDA
+      *
+      * Field Initialisation
+      *
+     C                     Z-ADD0         ZDATE   60
+     C                     Z-ADD0         ZDAYNO  50
+     C                     Z-ADD0         ZDAYN1  50
+     C                     Z-ADD0         @CYDP   10
+     C                     Z-ADD@RRNM     @RRNM   50
+     C                     Z-ADD@HELD     @HELD  150
+     C                     MOVE *BLANKS   SACNO1 10
+     C                     MOVE *BLANKS   SCCY1   3
+     C                     MOVE *BLANKS   SANAM  20
+     C                     MOVE *BLANKS   @RETB   1
+      *
+      ** Access Tax ICD for rate. Default is ZERO
+      *
+     C                     Z-ADD0         TXWTRR
+     C                     OPEN SDSTAXPD
+     C           1         CHAINSDSTAXPD             70
+     C                     CLOSESDSTAXPD
+      *
+      ** Error in SDSTAXPD
+      *
+     C           *IN70     IFEQ '1'
+     C           *LOCK     IN   LDA                        ***************
+     C                     Z-ADD24        DBASE            ** DB ERR 24 **
+     C                     MOVE 'SDSTAXPD'DBFILE           ***************
+     C                     MOVEL'1'       DBKEY
+     C                     EXSR DBERR
+     C                     END
+      *
+      ** Get Base Currency - Bank Details
+      ** Set up key list
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*BLANK ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY
+     C                     Z-ADD11        DBASE
+     C                     EXSR DBERR
+     C                     END
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+     C                     Z-ADDBJRDNB    RUND    50
+      *
+     C                     OPEN REIAC
+     C                     OPEN REACR
+      *
+     C                     EXSR VSACNO
+      *
+      ** Set-up Variables
+      *
+     C                     MOVE ' '       @CLOS   1
+     C                     MOVE RETB      @RETB
+     C                     Z-ADDRRNM      @RRNM
+     C                     MOVELCNUM      @CNUM
+     C                     MOVELCCY       @CCY
+     C                     Z-ADDACOD      @ACOD
+     C                     Z-ADDACSQ      @ACSQ
+     C                     MOVELBRCA      @BRCA
+     C                     Z-ADDHELD      @HELD
+      *
+      ** Get Currency Decimal Places
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM @CCY      @CURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** If Record Found
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     Z-ADDA6NBDP    @CYDP
+     C                     ENDIF
+      *
+      ** Chain Access Object AOMEMSR0
+      *
+     C                     CALL 'AOMEMSR0'
+     C                     PARM *BLANK    W0RTCD  7        I:Return code
+     C                     PARM '*KEY   ' P@OPTN  7        O:Option
+     C                     PARM 0         W0RETL 100       O:Retail A/C No
+     C                     PARM @CNUM     W0CNUM  6        O:Customer No.
+     C                     PARM @CCY      W0CCY   3        O:Currency
+     C                     PARM @ACOD     W0ACCD 100       O:Account Code
+     C                     PARM @ACSQ     W0ACSQ  20       O:Account Seq.
+     C                     PARM @BRCA     W0BRCA  3        O:Branch
+     C           DSMEMS    PARM DSMEMS    DSFDY
+      *
+      ** If Record Not Found
+      *
+     C           W0RTCD    IFNE *BLANK
+     C           *LOCK     IN   LDA                        ***************
+     C                     Z-ADD9         DBASE            ** DB ERR 09 **
+     C                     MOVE 'AOMEMSR0'DBFILE
+     C                     MOVELW0CNUM    U0CNUM
+     C                     MOVE W0CCY     U0CUCD
+     C                     Z-ADDW0ACCD    U0ACCD
+     C                     Z-ADDW0ACSQ    U0ACSQ
+     C                     MOVE W0BRCA    U0BRCA
+     C                     MOVELUMEMER    DBKEY
+     C                     EXSR DBERR
+     C                     END
+      *
+      ** Perform Close Account Condition Check
+      *
+     C                     MOVE SCCY1     SCCY2   3
+     C                     MOVE ANAM      SANAM
+     C                     MOVE SACNO1    SACNO2 10
+     C                     MOVE '  '      @ACIN   2
+     C                     Z-ADDCLBLN     @CLBL
+      *
+      ** Calculate Close Details
+      *
+     C                     EXSR RTCLSC
+      *
+      ** If record not found?
+      *
+     C           *IN80     IFEQ '1'
+      *                                                    ***************
+     C                     Z-ADD10        DBASE            ** DB ERR 10 **
+     C                     EXSR DBERR                      ***************
+     C                     END
+      *
+      ** Format 'Close Balance' and load to return parameter (PACBL)...
+      *
+     C                     Z-ADD@CYDP     ZDECS
+     C                     MOVE 'A'       ZECODE
+     C                     MOVE @CLOB     ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    SCLOB  22
+     C                     MOVE SCLOB     PACBL
+     C                     MOVE @CCY      PACCY
+      *
+     C                     SETON                     29
+      *
+     C                     SETOF                     40
+      *
+     C                     CLOSEREIAC
+     C                     CLOSEREACR
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C*****************************************************************
+      /EJECT
+      ** Calculate Close Details
+      /COPY ZSRSRC,RTCLSCC1
+     C*****************************************************************
+      /EJECT
+      ** Calculate Commissions
+      /COPY ZSRSRC,RTCOMMC1
+     C*****************************************************************
+      /EJECT
+      ** Calculate Service Charges
+      /COPY ZSRSRC,RTCHRGC1
+     C*****************************************************************
+      /EJECT
+      ** Calculate Interest
+      /COPY ZSRSRC,RTINTRC1
+     C*****************************************************************
+      /EJECT
+      ** Calculation of Interest
+      /COPY ZSRSRC,RTINTRE
+     C*****************************************************************
+      /EJECT
+      ** Cross Currency Calculation
+      /COPY ZSRSRC,RTCCYXC1
+     C*****************************************************************
+      /EJECT
+      ** SR.ZFRPED Subroutine
+      /COPY ZSRSRC,ZFRPEDZ3
+     C*****************************************************************
+      /EJECT
+      ** SR.ZDATE1 Subroutine
+      /COPY ZSRSRC,ZDATE1Z2
+     C*****************************************************************
+      *                                                               *
+      *            RTCCYS - Currencies Setup and retrieval            *
+      *                                                               *
+      * FLDS USED  Input                                              *
+      *            @I     - Array index                               *
+      *            @CCY   - Currency code                             *
+      *                                                               *
+      * FLDS USED  Output                                             *
+      *            TCY    - Currency code array           ( 3A ) x 50 *
+      *            TDP    - Currency decimal places       ( 1,0) x 50 *
+      *            TMD    - Currency multiply/divide ind. ( 1,0) x 50 *
+      *            TRT    - Currency spot rate            (13,8) x 50 *
+      *                                                               *
+      *****************************************************************
+     C           RTCCYS    BEGSR                           ** RTCCYS **
+      *
+      ** Define parameters
+      *
+     C                     Z-ADD1         @I      20
+     C                     MOVE @CCY      @CCY    3
+     C                     SETOF                     808289
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'CRT104'  @SARD   6
+     C           SCSARD    PARM SCSARD    DSFDY
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       CRT104  1
+     C                     ELSE
+     C                     MOVE 'N'       CRT104
+     C                     END
+      *
+      ** Look up array if currency has already been used in this pgm.
+      *
+     C           @CCY      LOKUPTCY,@I                   82
+      *
+      ** If element is found, corresponding elements in other arrays
+      ** are output (accessed via index @I)
+      *
+      ** If element is not found
+      *
+     C           *IN82     IFEQ '0'
+      *
+      ** Get Currency Details
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*BLANK ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           @CCY
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** If Record Found
+      *
+     C           @RTCD     IFEQ *BLANK
+      *
+     C           '   '     LOKUPTCY,@I                   82
+      *
+      ** If an Empty Space Exist in Array to be Setup
+      *
+     C           *IN82     IFEQ '1'
+     C                     MOVEL@CCY      TCY,@I
+     C                     Z-ADDA6NBDP    TDP,@I
+     C                     MOVELA6MDIN    TMD,@I
+     C                     Z-ADDA6SPRT    TRT,@I
+     C           CRT104    IFEQ 'Y'
+     C           PFNCD     IFEQ '0JI'
+     C           PFNCD     OREQ '0JS'
+     C           PFNCD     OREQ '0JX'
+     C                     EXSR GETSPT
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Else Indicate an Error Since Array is Full
+      *
+     C                     ELSE
+     C                     SETON                         89
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *   GETSPT - Get Spot Rate                                      *
+      *                                                               *
+      *****************************************************************
+     C           GETSPT    BEGSR                           ** GETSPT **
+      *
+     C                     OPEN REBDCCPD
+     C                     OPEN REBDCRPD
+      *
+      ** Find Function Code in Exchange Rate Control Table
+      *
+     C           PFNCD     CHAINREBDCCD0             70
+      *
+      ** If Record Not Found
+      *
+     C           *IN70     IFEQ *ON
+     C           *LOCK     IN   LDA                        ***************
+     C                     Z-ADD22        DBASE            ** DB ERR 22 **
+     C                     MOVEL'REBDCCPD'DBFILE           ***************
+     C                     MOVELPFNCD     DBKEY
+     C                     EXSR DBERR
+     C                     END
+      *
+     C           @CCY      CHAINREBDCRD0             70
+      *
+      ** Move Exchange Rate in Accordance with Function and Currency Code
+      *
+     C                     Z-ADD0         TRT,@I
+     C                     SELEC
+     C           NAC       WHEQ 'DN'
+     C           FEDNRT    DIV  FEAMNT    TRT,@I    H
+     C           NAC       WHEQ 'DP'
+     C           FEDPRT    DIV  FEAMNT    TRT,@I    H
+     C           NAC       WHEQ 'DS'
+     C           FEDSRT    DIV  FEAMNT    TRT,@I    H
+     C           NAC       WHEQ 'VN'
+     C           FEVNRT    DIV  FEAMNT    TRT,@I    H
+     C           NAC       WHEQ 'VP'
+     C           FEVPRT    DIV  FEAMNT    TRT,@I    H
+     C           NAC       WHEQ 'VS'
+     C           FEVSRT    DIV  FEAMNT    TRT,@I    H
+     C                     ENDSL
+      *
+     C                     CLOSEREBDCCPD
+     C                     CLOSEREBDCRPD
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *   VSACNO - Get Account  Details                               *
+      *                                                               *
+      *****************************************************************
+     C           VSACNO    BEGSR                           ** VSACNO **
+      *
+      ** Set Off Error Indicator
+      *
+     C                     MOVE '0'       *IN70
+      *
+      * Initialise Suspense Indicator
+      *
+     C                     MOVE *BLANKS   SACN20 10
+      *
+      ** Set Up Key List
+      *
+     C                     MOVELPACNO     KACNO
+     C                     MOVELKACNO     SACN20
+      *
+     C           PACNO     IFNE SACN20
+     C           KACNO     ORLT 0
+     C                     MOVE '1'       *IN70
+     C                     END
+      *
+      ** Get Account Details
+      *
+     C           *IN70     IFEQ '0'
+     C           KLACNO    CHAINACNUM                70
+     C                     END
+      *
+      ** Record Not Found
+      *
+     C           *IN70     IFEQ '0'
+      *
+      ** If Account is a 'Live' Record
+      *
+     C           RECI      IFEQ 'D'
+      *
+      ** Set Up Account Details
+      *
+     C                     MOVELCNUM      @CNUM
+     C                     Z-ADDACOD      @ACOD
+     C                     Z-ADDACSQ      @ACSQ
+     C                     MOVELBRCA      @BRCA
+     C                     MOVELCCY       @CCY
+     C                     Z-ADDRRNM      @RRNM
+      *
+     C                     END
+      *                                                               *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *   DBERR - Database Error Handling                             *
+      *                                                               *
+      *****************************************************************
+     C           DBERR     BEGSR                           ** DBERR  **
+      *
+     C                     MOVEL@PGM      DBPGM
+     C                     OUT  LDA
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *   *PSSR - Program error                                       *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR  **
+      *
+      ** Check to see that *PSSR has not been called yet
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     ENDIF
+      *
+      ** If *PSSR already run, then just end the program here
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365

@@ -1,0 +1,219 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Check Cust use on Ext Settlements')           *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas SD STANDING DATA MODULE
+     F*                                                                  *
+     F*     SD0400U - CHECKING CLIENT REFERENCE IN EXTENDED              *
+     F*               SETTLEMENTS FILE.                                  *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      *  Last Amend No. CSD095             Date 08Apr14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CDL031             Date 05Dec04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 063444             Date 25Feb94               *  *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                                  *
+      *  CSD095 - Allow Deal Sub-Type and Branch for MM and FX SSIs   *
+      *           (Recompile)                                         *
+      *  CDL031 - Effective Date on Extended SSI (Recompile)          *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  063444 - ADD NEW PARAMETERS TO RETURN MORE OF THE RECORD        *
+     F*           STRING                                                 *
+     F*                                                                  *
+     F********************************************************************
+     F*  P R O G R A M     C R E A T I O N     P A R A M E T E R S       *
+     F*                                                                  *
+     F*                                                                  *
+     F********************************************************************
+     F/COPY WNCPYSRC,SDH00180
+     FSDEXSTPDIF  E                    DISK
+     F/COPY WNCPYSRC,SDH00181
+      ************************************************************        S01230
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright     array
+     E********************************************************************
+      ************************************************************
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+      *                                                                   063444
+     I***PARMS**     DS                            300                                 063444 CGL029
+     IPARMS       DS                            340                                           CGL029
+      * Parameter return strings                                          063444
+     I                                        1 150 WURTN1                063444
+     I**********                            151 300 WURTN2                             063444 CGL029
+     I                                      151 340 WURTN2                                    CGL029
+     I* Customer Number                                                   063444
+     I                                        4   9 WUCUST                063444
+     I* Receipt - Our Nostro                                              063444
+     I**********                             54  65 WURONO                             063444 CGL029
+     I                                       54  65 QQRONO                                    CGL029
+     I* Rcpt - Ordering Bank No.                                          063444
+     I                                       66  71 WUROBN                063444
+     I* Rcpt - Ordering Customer                                          063444
+     I                                       72  77 WUROCS                063444
+     I* Rcpt - Intermed Bank No.                                          063444
+     I                                       78  85 WURIBN                063444
+     I* Pay - Our Nostro                                                  063444
+     I**********                            123 134 WUPONO                             063444 CGL029
+     I                                      123 134 QQPONO                                    CGL029
+     I* Pay - Ordering Bank Numb.                                         063444
+     I                                      135 140 WUPOBN                063444
+     I* Pay - Ordering Customer                                           063444
+     I                                      141 146 WUPOCS                063444
+     I* Pay - Intermed Bank No.                                           063444
+     I                                      147 154 WUPIBN                063444
+     I* Receiver Correspondent No                                         063444
+     I                                      190 197 WURCNO                063444
+     I* Receiver Number                                                   063444
+     I                                      233 240 WURCNB                063444
+     I* A/c With Bank No.                                                 063444
+     I                                      241 248 WUACBN                063444
+     I* Beneficiary Number                                                063444
+     I                                      284 291 WUBYNB                063444
+     I                                      292 319 WURONO                                    CGL029
+     I                                      320 337 WUPONO                                    CGL029
+      *                                                                   063444
+     C*****************************************************************
+     C           *ENTRY    PLIST
+     C                     PARM           CUSTNO  6
+     C                     PARM           P0RTN   7
+     C                     PARM           P0RTN1150                       063444
+     C**********           PARM           P0RTN2150                                    063444 CGL029
+     C                     PARM           P0RTN2190                                           CGL029
+     C/COPY WNCPYSRC,SDH00182
+     C*****************************************************************
+     C**
+     C** READ FROM THE QUERY FILE IF THERE ARE NO RECORDS THEN THE
+     C** CUSTOMER IS NOT USED BY EXTENDED SETTLEMENTS, IF THERE ARE
+     C** RECORDS THEN CHECK TO SEE WHICH FIELD USES THE CUSTOMER
+     C** NUMBER
+     C**
+     C                     MOVE *BLANKS   P0RTN1                          063444
+     C                     MOVE *BLANKS   P0RTN2                          063444
+      *                                                                   063444
+     C/COPY WNCPYSRC,SDH00183
+     C                     READ SDEXSTPD                 99
+     C/COPY WNCPYSRC,SDH00184
+     C********** *IN99     IFEQ '1'                                       063444
+     C**********           MOVEL*BLANKS   P0RTN                           063444
+     C**********           ELSE                                           063444
+      *                                                                   063444
+     C           *IN99     DOWEQ'0'                                       063444
+      *                                                                   063444
+     C           BYCUST    IFEQ CUSTNO
+     C                     MOVELBYCUST    WUCUST                          063444
+     C                     END                                            063444
+     C**********           MOVEL'EXTSET'  P0RTN                           063444
+     C**********           ELSE                                           063444
+      *                                                                   063444
+     C           BYROBN    IFEQ CUSTNO
+     C                     MOVELBYROBN    WUROBN                          063444
+     C                     END                                            063444
+     C**********           MOVEL'RCPBANK' P0RTN                           063444
+     C**********           ELSE                                           063444
+      *                                                                   063444
+     C           BYROCS    IFEQ CUSTNO
+     C                     MOVELBYROCS    WUROCS                          063444
+     C                     END                                            063444
+     C**********           MOVEL'RCPCUST' P0RTN                           063444
+     C**********           ELSE                                           063444
+      *                                                                   063444
+     C           BYRIBN    IFEQ CUSTNO
+     C                     MOVELBYRIBN    WURIBN                          063444
+     C                     END                                            063444
+     C**********           MOVEL'RCPIBNK' P0RTN                           063444
+     C**********           ELSE                                           063444
+      *                                                                   063444
+     C           BYPOBN    IFEQ CUSTNO
+     C                     MOVELBYPOBN    WUPOBN                          063444
+     C                     END                                            063444
+     C**********           MOVEL'PAYBANK' P0RTN                           063444
+     C**********           ELSE                                           063444
+      *                                                                   063444
+     C           BYPOCS    IFEQ CUSTNO
+     C                     MOVELBYPOCS    WUPOCS                          063444
+     C                     END                                            063444
+     C**********           MOVEL'PAYCUST' P0RTN                           063444
+     C**********           ELSE                                           063444
+      *                                                                   063444
+     C           BYPIBN    IFEQ CUSTNO
+     C                     MOVELBYPIBN    WUPIBN                          063444
+     C                     END                                            063444
+     C**********           MOVEL'PAYIBNK' P0RTN                           063444
+     C**********           ELSE                                           063444
+      *                                                                   063444
+     C           BYRCNO    IFEQ CUSTNO
+     C                     MOVELBYRCNO    WURCNO                          063444
+     C                     END                                            063444
+     C**********           MOVEL'RECCORR' P0RTN                           063444
+     C**********           ELSE                                           063444
+      *                                                                   063444
+     C           BYRCNB    IFEQ CUSTNO
+     C                     MOVELBYRCNB    WURCNB                          063444
+     C                     END                                            063444
+     C**********           MOVEL'RECNUMB' P0RTN                           063444
+     C**********           ELSE                                           063444
+      *                                                                   063444
+     C           BYACBN    IFEQ CUSTNO
+     C                     MOVELBYACBN    WUACBN                          063444
+     C                     END                                            063444
+     C**********           MOVEL'ACBANK'  P0RTN                           063444
+     C**********           ELSE                                           063444
+      *                                                                   063444
+     C           BYBYNB    IFEQ CUSTNO
+     C                     MOVELBYBYNB    WUBYNB                          063444
+     C**********           MOVEL'BENNUMB' P0RTN                           063444
+     C                     END
+      *                                                                   063444
+     C/COPY WNCPYSRC,SD0400UC01
+     C                     READ SDEXSTPD                 99               063444
+     C/COPY WNCPYSRC,SDH00185
+      *                                                                   063444
+     C           WUCUST    IFEQ CUSTNO                                    063444
+     C           WUROBN    ANDEQCUSTNO                                    063444
+     C           WUROCS    ANDEQCUSTNO                                    063444
+     C           WURIBN    ANDEQCUSTNO                                    063444
+     C           WUPOBN    ANDEQCUSTNO                                    063444
+     C           WUPOCS    ANDEQCUSTNO                                    063444
+     C           WUPIBN    ANDEQCUSTNO                                    063444
+     C           WURCNO    ANDEQCUSTNO                                    063444
+     C           WURCNB    ANDEQCUSTNO                                    063444
+     C           WUACBN    ANDEQCUSTNO                                    063444
+     C           WUBYNB    ANDEQCUSTNO                                    063444
+     C/COPY WNCPYSRC,SD0400UC02
+     C                     SETON                     99                   063444
+     C                     END                                            063444
+      *                                                                   063444
+     C                     END
+     C**********           END                                            063444
+     C**********           END                                            063444
+     C**********           END                                            063444
+     C**********           END                                            063444
+     C**********           END                                            063444
+     C**********           END                                            063444
+     C**********           END                                            063444
+     C**********           END                                            063444
+     C**********           END                                            063444
+     C**********           END                                            063444
+     C                     MOVE WURTN1    P0RTN1                          063444
+     C                     MOVE WURTN2    P0RTN2                          063444
+     C                     SETON                     LR
+     C                     RETRN
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Misys International Banking Systems Ltd. 2001

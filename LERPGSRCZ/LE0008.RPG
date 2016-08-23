@@ -1,0 +1,498 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Add part sold records to facility history')   *
+      *****************************************************************
+      *                                                               *
+      *  Midas Customer Lending Module - Upgrade Utility              *
+      *                                                               *
+      *  LE0008 - Initialisation Program (CLE023)                     *
+      *                                                               *
+      *  Function:  This is an initialisation program for CLE023,     *
+      *             to add Participations Sold records to FACHISA     *
+      *                                                               *
+      *  Called By:                                                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *                                                               *
+      *  Last Amend No. 246710             Date 19Aug14               *
+      *  Prev Amend No. 260891             Date 17Dec12               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CAS006             Date 21Jan03               *
+      *                 CAS005             Date 16Dec02               *
+      *                 217982             Date 28May03               *
+      *                 214540             Date 28May03               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 211488             Date 04Nov02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 199570 *CREATE     Date 30Oct01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  246710 - Applied fix 222526.                                 *
+      *  222526 - In adding missing part sold records, ensure the MA  *
+      *           records are for the facility's FALOAN.              *
+      *         - Applied for MD028999                                *
+      *  260891 - Wrong projection in LOAC. Add LCD as a key.         *
+      *           Recompiled due to changes in LF/HISTR.              *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  CAS005 - Enahancements to CAS001, CAS002 and CAS004          *
+      *           (Recompile)                                         *
+      *  217982 - Ignore any actions which are dated earlier than the *
+      *           Facility History Take-on date or else the Part Sold *
+      *           records will end up on the wrong facility.          *
+      *  214540 - Do not include 'Stop Accrual' actions, or payments  *
+      *           of interest only. Include maturities with zero PRAM.*
+      *  211488 - Initialise the new field 'Facility Transaction Seq.'*
+      *           (FATSEQ), which was added to FACHISA by fix 200289. *
+      *  199570 - Actions against Parts Sold now generate records on  *
+      *           FACHISA. However actions which occurred in the past *
+      *           may be missing from the facility history. This adds *
+      *           Start records etc onto FACHISA for live Parts Sold. *
+      *                                                               *
+      *****************************************************************
+     FLE0008DFCF  E                    WORKSTN
+     FFCLTY1  IF  E           K        DISK
+     FPSOLD   IF  E           K        DISK
+     FHISTR   IF  E           K        DISK
+     FHISUPD  IF  E           K        DISK                      A
+     F            HISACTF                           KIGNORE
+     FLE0008P1O   E                    PRINTER      KINFDS SPOOL1
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  FUNCTION OF INDICATORS                                       *
+      *                                                               *
+      *   12 -  No Details to Report                                  *
+      *   15 -  Heading printed                                       *
+      *   16 -  Update mode                                           *
+      *   60 -  0 decimal place                                       *
+      *   61 -  1 decimal place                                       *
+      *   62 -  2 decimal places                                      *
+      *   63 -  3 decimal places                                      *
+      *   80 -  EOF in FCLTY1 file                                    *
+      *   81 -  EOF in PSOLD file                                     *
+      *   83 -  BOF in FACHISA file                                   *
+      *   84 -  no record found in READP for FACHISA                  *
+      *   85 -  EOR in HISTR file                                     *
+      *   98 -  Date format indicator is month/day/year               *
+      *****************************************************************
+      *
+     E                    CPY@    1   1 80
+     E                    POWR    1   7  7 3
+     E/COPY ZSRSRC,ZDATE2Z1
+      *
+      ** Rename fields from FCLTY1:
+     IFCLTYF
+     I              BRCA                            FBRCA
+     I              CNUM                            FCNUM
+      *
+      ** Rename fields from PSOLD:
+     ICLOANCLF
+     I              LNRF                            ILNRF
+      *
+      ** Rename fields from HISTR:
+     IHISTSHMF
+     I              VDAT                            HVDAT
+     IHISTSHPF
+     I              VDAT                            HVDAT
+     IHISTSHQF
+     I              VDAT                            HVDAT
+      *
+     IRUNDAT      DS                             13
+     I                                        1   7 DATE
+      *
+     ILDA         DS                            256
+      *
+      ** Local Data Area for Database Error Details
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *                                                                                       217982
+      ** Facility History Take-on date in Dataarea LERSTS                                     217982
+      *                                                                                       217982
+     ILERSTS    E DSLERSTS                                                                    217982
+     I              FACHISD                         HISDAY                                    217982
+     I              LERC2030                        RENAM1                                    217982
+     I              LERC135                         RENAM2                                    217982
+     I              LERC315                         RENAM3                                    217982
+     I              LERC425                         RENAM4                                    217982
+     I              EOYFLAG                         RENAM5                                    217982
+      *                                                                                       217982
+     ISDBANK    E DSSDBANKPD
+     ISDCURR    E DSSDCURRPD
+      *
+      ** Bank details and rundate
+      *
+     IDSFDY     E DSDSFDY
+     IDSSDY     E DSDSSDY
+      *
+      ** Data structure for Access Program
+      *
+     ISPOOL1      DS
+     I                                    B 188 1890OFFLN
+     I                                    B 367 3680CURLIN
+      /EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+     C                     MOVEACPY@      CPYR@  80
+      *
+      ** Initialise LDA
+     C           *NAMVAR   DEFN           LDA
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*                                                                                       217982
+     C** Read in Data Area LERSTS.                                                            217982
+     C*                                                                                       217982
+     C           *NAMVAR   DEFN           LERSTS                                              217982
+     C                     IN   LERSTS                                                        217982
+     C                     Z-ADDHISDAY    TAKEON  50       TAKE ON DATE                       217982
+      *
+      *  Display prompt screen to confirm whether program
+      *   should be run in Update or Audit mode.
+     C                     WRITEPROMPT
+     C                     EXFMTMODREQ
+      *
+      ** Check mode if AUDIT or UPDATE.
+     C           SMODE     IFEQ 'U'
+     C           SMODE     OREQ 'u'
+     C                     MOVE '1'       *IN16
+     C                     ELSE
+     C                     MOVE '0'       *IN16
+     C                     ENDIF
+      *
+     C           KEY001    KLIST
+     C                     KFLD           FBRCA
+     C                     KFLD           FCNUM
+     C                     KFLD           WFACT
+     C                     KFLD           HVDAT
+      *
+     C                     MOVE '0'       *IN12
+     C                     Z-ADD0         PAGE    20
+     C                     Z-ADD0         FACAUD  50
+     C                     Z-ADD0         FACERR  50
+     C                     Z-ADD0         FACREC  50
+      *
+      ** Access bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL@OPTN     DBKEY
+     C                     MOVEL'LE0008'  DBPGM
+     C                     MOVE '  '      DBPGM            *************
+     C                     MOVEL'SDBANKPD'DBFILE           * DBERR 001 *
+     C                     MOVEL'001'     DBASE            *************
+     C                     OUT  LDA
+     C                     WRITEHEADER1
+     C                     WRITEDBERROR1
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ELSE
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     WRITEHEADER1
+      *
+     C                     READ FCLTY1                   80
+      *
+     C           *IN80     DOWEQ'0'
+      *
+     C           RECI      IFEQ 'D'
+     C                     MOVE '0'       *IN15
+     C                     ADD  1         FACAUD
+     C                     MOVELFACT      WFACT   50
+     C                     MOVE FCNO      WFACT
+      *
+      ** Look for missing parts sold events in FACHISA.
+      *
+     C           *LOVAL    SETLLPSOLD
+     C                     READ PSOLD                    81
+     C           *IN81     DOWEQ'0'
+     C           FCUS      IFEQ FCNUM
+     C           FTYP      ANDEQFACT
+     C           FSEQ      ANDEQFCNO
+     C           *LOVAL    SETLLHISTR
+     C                     READ HISTR                    85
+     C           *IN85     DOWEQ'0'
+     C           ILNRF     IFEQ LNRF
+     C           AMTP      ANDNE'IN'
+     C           AMTP      ANDNE'MI'
+     C           AMTP      ANDNE'LS'
+     C           AMTP      ANDNE'RO'
+     C           AMTP      ANDNE'SC'
+     C           AMTP      ANDNE'BC'
+     C           AMTP      ANDNE'BR'
+     C           AMTP      ANDNE'SA'                                                          214540
+     C           PRAM      ANDNE0                                                             214540
+     C           AMTP      OREQ 'MA'                                                          214540
+     C           ILNRF     ANDEQLNRF                                                          222526
+      *
+     C           AMTP      IFEQ 'MR'
+     C                     MOVE 'RE'      AMTP
+     C                     ENDIF
+      *
+     C           AMTP      IFEQ 'MA'
+     C                     MOVE 'MT'      AMTP
+     C                     ENDIF
+      *
+     C                     MOVE '0'       WFOUND  1
+     C           KEY001    SETLLFACHISAF
+     C                     READPFACHISAF                 83
+     C           KEY001    READEFACHISAF                 84
+     C           *IN84     DOWEQ'0'
+     C           LNRF      IFEQ FALOAN
+     C           AMTP      ANDEQFAACTN
+     C                     MOVE '1'       WFOUND
+     C                     ENDIF
+     C           KEY001    READEFACHISAF                 84
+     C                     ENDDO
+      *                                                                                       217982
+      ** Ignore actions that occurred before History Take-on date:                            217982
+     C           HVDAT     IFLT TAKEON                                                        217982
+     C                     MOVE '1'       WFOUND                                              217982
+     C                     ENDIF                                                              217982
+      *
+      ** Generate entry for missing parts sold event record.
+     C           WFOUND    IFEQ '0'
+      *
+     C           *IN15     IFEQ '0'
+     C                     ADD  1         FACERR
+     C                     Z-ADD2         RQDLIN  20
+     C           OFFLN     SUB  CURLIN    AVALIN  20
+     C           AVALIN    IFLT RQDLIN
+     C                     ADD  1         PAGE
+     C                     WRITEHEADER1
+     C                     ENDIF
+     C                     WRITEDETAIL1
+     C                     MOVE '1'       *IN15
+     C                     ENDIF
+      *
+     C                     MOVE FCCY      WCCY    3
+     C                     EXSR SRCCY
+     C                     MOVE A6NBDP    FCDP    10
+      *
+     C                     MOVE CCY       WCCY    3
+     C                     EXSR SRCCY
+     C                     MOVE A6NBDP    LCDP    10
+      *
+      ** Convert event amount using facility exchange rate if loan
+      ** currency is different from facility currency.
+     C           CCY       IFNE FCCY
+     C           FCDP      SUB  LCDP      DP      10
+     C                     ADD  4         DP
+     C           FMDI      IFEQ 'D'
+     C           FCXR      DIV  POWR,DP   FCXRT  159H
+     C           1         DIV  FCXRT     FCXRT
+     C                     ELSE
+     C           FCXR      MULT POWR,DP   FCXRT     H
+     C                     ENDIF
+     C           PRAM      MULT FCXRT     FAAAMT    H
+     C                     ELSE
+     C                     Z-ADDPRAM      FAAAMT
+     C                     ENDIF
+      *
+      ** If update mode, write record on file.
+     C           *IN16     IFEQ '1'
+     C                     MOVE 'D'       FARECI
+     C                     MOVE FBRCA     BRCA
+      *
+      ** If events already exist on the same date, add 1 to sequence
+      ** number of new record, otherwise initialize it to 1.
+     C           HVDAT     IFEQ FADATE
+     C********** FAFSEQ    ADD  1         FAFSEQ                                              211488
+     C           FATSEQ    ADD  1         FATSEQ                                              211488
+     C                     ELSE
+     C**********           Z-ADD1         FAFSEQ                                              211488
+     C                     Z-ADD1         FATSEQ                                              211488
+     C                     ENDIF
+     C                     Z-ADDFATSEQ    FAFSEQ                                              211488
+     C                     Z-ADDHVDAT     FADATE
+     C**********           Z-ADDLNRF      FALOAN                                              CLE148
+     C                     MOVELLNRF      FALOAN                                              CLE148
+     C                     MOVE AMTP      FAACTN
+     C                     MOVE *BLANK    FAREVI
+     C                     MOVE GASS      FAGASS
+     C                     ADD  1         FACREC
+     C                     WRITEFACHISAF
+     C                     ENDIF
+      *
+      ** Display missing parts sold events in report.
+     C                     EXSR SRDEC
+     C                     EXSR SRDISP
+     C                     Z-ADD2         RQDLIN  20
+     C           OFFLN     SUB  CURLIN    AVALIN  20
+     C           AVALIN    IFLT RQDLIN
+     C                     ADD  1         PAGE
+     C                     WRITEHEADER1
+     C                     WRITEDETAIL1
+     C                     ENDIF
+     C                     WRITEDETAIL2
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     READ HISTR                    85
+     C                     ENDDO
+      *
+     C                     ENDIF
+     C                     READ PSOLD                    81
+     C                     ENDDO
+      *
+     C                     ENDIF
+     C                     READ FCLTY1                   80
+     C                     ENDDO
+      *
+      ** Write Footer.
+      *
+     C           ENDPGM    TAG
+     C           FACERR    IFEQ 0
+     C                     MOVE '1'       *IN12
+     C                     ENDIF
+      *
+     C                     Z-ADD10        RQDLIN  20
+     C           OFFLN     SUB  CURLIN    AVALIN  20
+     C           AVALIN    IFLT RQDLIN
+     C                     ADD  1         PAGE
+     C                     WRITEHEADER1
+     C                     ENDIF
+      *
+     C                     WRITETRAILER1
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*****************************************************************
+      *                                                               *
+      *  SRDEC - Subroutine to determine number of decimal places     *
+      *                                                               *
+      *  CALLED FROM:  Main Processing                                *
+      *                                                               *
+      *  CALLS: Nothing                                               *
+      *                                                               *
+      *****************************************************************
+     C           SRDEC     BEGSR
+     C                     MOVEA'0000'    *IN,60
+     C                     SELEC
+     C           LCDP      WHEQ 0
+     C                     MOVE '1'       *IN60
+     C           LCDP      WHEQ 1
+     C                     MOVE '1'       *IN61
+     C           LCDP      WHEQ 2
+     C                     MOVE '1'       *IN62
+     C           LCDP      WHEQ 3
+     C                     MOVE '1'       *IN63
+     C                     ENDSL
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  SRDISP - Subroutine to display amounts with correct decimal  *
+      *           places and convert Midas day numbers to date format *
+      *                                                               *
+      *  Called from:  Main Program                                   *
+      *                                                               *
+      *  Calls: Nothing                                               *
+      *                                                               *
+      *****************************************************************
+     C           SRDISP    BEGSR
+     C                     SELEC
+     C           *IN60     WHEQ '1'
+     C                     MOVE PRAM      SPRAM0
+     C           *IN61     WHEQ '1'
+     C                     MOVE PRAM      SPRAM1
+     C           *IN62     WHEQ '1'
+     C                     MOVE PRAM      SPRAM2
+     C           *IN63     WHEQ '1'
+     C                     MOVE PRAM      SPRAM3
+     C                     ENDSL
+      *
+     C                     Z-ADDHVDAT     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    WADATE  7
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  SRCCY  - Subroutine to check currency details.               *
+      *                                                               *
+      *  Called from:  Main Program                                   *
+      *                                                               *
+      *  Calls: Nothing                                               *
+      *                                                               *
+      *****************************************************************
+     C           SRCCY     BEGSR
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM WCCY      @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE           ***************
+     C                     MOVEL'002'     DBASE            * DBERROR 002 *
+     C                     MOVELWCCY      DBKEY            ***************
+     C                     MOVEL'LE0008'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR - Subroutine to handle error conditions                *
+      *                                                               *
+      *  Called from:  After abnormal operation occurs                *
+      *                                                               *
+      *  Calls: Nothing                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     ENDSR
+      *****************************************************************
+     C/COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+** CPY@  OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2002
+**  POWR   **      POWERS OF TEN
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

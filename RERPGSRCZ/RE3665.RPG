@@ -1,0 +1,688 @@
+     H        1     J
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RElculate TEG and Lissage Interest')             *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module
+     F*                                                               *
+     F*  RE3665 - CALCULATE TEG AND LISSAGE INTEREST                  *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CER049             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 173057             Date 21Nov00               *
+      *                 CPB002             Date 25Aug00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01413 *Create     Date 13Apr93               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  CER049 - Stamp Tax (Recompile)                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  173057 - Change to ensure that if this is the first cap      *
+      *           then the key for file REHISL is set up correctly    *
+      *           (WLDID field).                                      *
+     F*  CPB002 - Meridian DBA Middleware Replication Customization.  *
+     F*           (Recompiled)                                        *
+     F*  S01413 - Retail 3 Incorporation                              *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F/EJECT
+     FRFTD102 IF  E                    DISK
+     FABSFI101IF  E                    DISK
+     FCLINT   IF  E           K        DISK
+     F            CLINTCCF                          KIGNORE
+     F            CLINTCAF                          KIGNORE
+     F            CLINTC1F                          KIGNORE
+     F            CLINTSEF                          KIGNORE
+     FACCNT   IF  E           K        DISK
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+     FRECOM   UF  E           K        DISK
+     FREHISBC IF  E           K        DISK
+     FREHISL  IF  E           K        DISK
+     F            REHISPPF                          KRENAMEREHISLF
+     FREACR   UF  E           K        DISK
+     F            REACRAF                           KIGNORE
+     F            REACRZF                           KIGNORE
+     FRE3665AUO   E                    PRINTER                        UC
+     F*
+     E/EJECT
+     E                    CPY@    1   1 80               COPYRIGHT
+     E                    IEMN        3  2               REGISTERED BANK
+     E                    INMN        3  2               BANQUE D'EMISSION
+     E                    ABRN        3  2               CREDIT POP./MUT.
+     E                    AOFN        3  2               ORGAN. FIN.FRAN.
+     E                    EFFN        3  2               ETAB. FIN. FRAN.
+     E                    SCN         3  2               HEAD OFFICE
+     E                    AGN         3  2               AGENCE
+     E                    SOCN        3  2               SOCIETES
+     E                    EINN        3  2               ENT INDIV.   ES
+     E                    PARN        3  2               PARTICULIERS
+     E                    DIVN        3  2               DIVERS
+     E                    INVN        3  2               SOC. INVESTISS.
+     E                    CAPN        3  2               ORG. ASSURANCES
+     E                    ABNN        6  2               FOREIGN CORR.
+     E                    DIRN        3  2               DIR. BQE
+     I/EJECT
+     I*
+     IACCNTABF
+     I              DRIS                            DRISW
+     I              CRIS                            CRISW
+     IREACRDF
+     I*
+     I** Rename REACRDF format fields - REACR file
+     I*
+     I              MNBL                            RMNBL
+     I              LCD                             RLCD
+     I              CHTP                            RCHTP
+     I              DAIC1                           RDAIC
+     I              MADI                            RMADI
+     I              GADI                            RGADI
+     I              CAIC1                           RCAIC
+     I              MACI                            RMACI
+     I              GACI                            RGACI
+     I              HISB                            RHISB
+     I              BFDR                            RBFDR
+     I              BFCR                            RBFCR
+     I*
+     IKEYF        DS
+     I**********                              1  15 KEY1                                      CGL029
+     I**********                              1  18 KEYDS                                     CGL029
+     I                                        1  21 KEY1                                      CGL029
+     I                                        1  24 KEYDS                                     CGL029
+     I                                        1   6 CNUMK
+     I                                        7   9 CCYK
+     I**********                             10  13 ACODK                                     CGL029
+     I**********                             14  15 ACSQK                                     CGL029
+     I**********                             16  18 BRCAK                                     CGL029
+     I**********                             19  230WDATE                                     CGL029
+     I                                       10  19 ACODK                                     CGL029
+     I                                       20  21 ACSQK                                     CGL029
+     I                                       22  24 BRCAK                                     CGL029
+     I                                       25  290WDATE                                     CGL029
+     I*
+     ILDA         DS                            256
+     I*
+     I** Standard local data area fields
+     I*
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     ISDBANK    E DSSDBANKPD
+     I*
+     I** Data structure for branch details
+     I*
+     I              BJRDNB                          RUND
+     I              BJMRDT                          RUNA
+     I              BJURPT                          TITL
+     I*
+     ISDGELR    E DSSDGELRPD
+     I*
+     I** Data structure for general ledger details
+     I*
+     I              BKALDI                          ACLD
+     I*
+     ISDRETL    E DSSDRETLPD
+     I*
+     I** Data structure for retail details
+     I*
+     I              BMLDAI                          LDAC
+     I              QQACCD                          QQACC1                                    CGL029
+     I*
+     IDSFDY     E DSDSFDY
+     I*
+     I** First DS for access programs, short data structure
+     I*
+     IDSSDY     E DSDSSDY
+     I*
+     I** Second DS for access programs, long data structure
+     I*
+     C/EJECT
+     C*===============================================================
+     C*
+     C** Copyright insertion
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** Key lists
+     C*
+     C           CLIKEY    KLIST
+     C                     KFLD           CNUM
+     C*
+     C           ACCKEY    KLIST
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C                     KFLD           BRCA
+     C*
+     C           KHISL     KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C*
+     C           KHISLT    KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C                     KFLD           WNDID   50
+     C*
+     C           KHISLD    KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C                     KFLD           WLDID   50
+     C*
+     C           *LIKE     DEFN DBFILE    WFILE
+     C           *LIKE     DEFN DBKEY     WKEY
+     C           *LIKE     DEFN DBASE     WDBNO
+     C*
+     C*================================================================
+     C**  P R O G R A M   S T A R T
+     C*================================================================
+     C*
+     C** Prepare LDA variables
+     C*
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVE *BLANKS   DBPGM
+     C                     MOVEL'RE3665'  DBPGM
+     C                     OUT  LDA
+     C*
+     C           1         CHAINABSFI1F1             01
+     C*
+     C** RECUP TAUX USURE     TXUSUR  42   AUTRES
+     C** RECUP TAUX USURE     TXUSU1  42   PARTICULIERS
+     C*
+     C           *IN01     IFEQ '1'
+     C                     MOVEL'FI101'   WFILE
+     C                     MOVEL*BLANKS   WKEY             **************
+     C                     Z-ADD01        WDBNO            ** DB ERROR 01
+     C                     EXSR DBERR                      **************
+     C                     END
+     C*
+     C** Get run date (from SDBANKPD)
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'SDBANKPD'WFILE
+     C                     MOVEL@OPTN     WKEY             **************
+     C                     Z-ADD02        WDBNO            ** DB ERROR 02
+     C                     EXSR DBERR                      **************
+     C                     END
+     C*
+     C* Recup si last day accrual   ACLD
+     C*
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'SDGELRPD'WFILE
+     C                     MOVEL@OPTN     WKEY             **************
+     C                     Z-ADD03        WDBNO            ** DB ERROR 03
+     C                     EXSR DBERR                      **************
+     C                     END
+     C*
+     C** Recup si last day accrual   LDAC
+     C*
+     C                     CALL 'AORETLR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDRETL    PARM SDRETL    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'SDRETLPD'WFILE
+     C                     MOVEL@OPTN     WKEY             **************
+     C                     Z-ADD04        WDBNO            ** DB ERROR 04
+     C                     EXSR DBERR                      **************
+     C                     END
+     C*
+     C**  Access RFTAB INST codes
+     C*
+     C           1         CHAINRFTD102F             01
+     C*
+     C           *IN01     IFEQ '1'
+     C                     MOVE 'TD102'   WFILE
+     C                     MOVEL*BLANKS   WKEY             **************
+     C                     Z-ADD05        WDBNO            ** DB ERROR 05
+     C                     EXSR DBERR                      **************
+     C                     END
+     C*
+     C                     MOVEAIEM       IEMN
+     C                     MOVEAINM       INMN
+     C                     MOVEAABR       ABRN
+     C                     MOVEAAOF       AOFN
+     C                     MOVEAEFF       EFFN
+     C                     MOVEASC        SCN
+     C                     MOVEAAG        AGN
+     C                     MOVEASOC       SOCN
+     C                     MOVEAEIN       EINN
+     C                     MOVEAPAR       PARN
+     C                     MOVEADIV       DIVN
+     C                     MOVEAINV       INVN
+     C                     MOVEACAP       CAPN
+     C                     MOVEAABN       ABNN
+     C                     MOVEADIR       DIRN
+     C*
+     C           BCREAD    TAG
+     C*
+     C                     READ REHISPPF                 01
+     C*
+     C           *IN01     IFEQ '0'
+     C*
+     C* Test DICI = ' ' ou 'M'    pas de  traitement
+     C*
+     C           DICI      IFEQ ' '
+     C           DICI      OREQ 'M'
+     C                     GOTO BCREAD
+     C                     END
+     C*
+     C                     MOVE CNUM      CNUMK
+     C                     MOVE CCY       CCYK
+     C                     MOVE ACOD      ACODK
+     C                     MOVE ACSQ      ACSQK
+     C                     MOVE BRCA      BRCAK
+     C*
+     C* Si int deb  egal 0 pas de traitement
+     C*
+     C           ACCKEY    CHAINREACRDF              01
+     C           *IN01     IFEQ '1'
+     C                     MOVE 'REACR'   WFILE
+     C                     MOVELKEYDS     WKEY             **************
+     C                     Z-ADD06        WDBNO            ** DB ERROR 06
+     C                     EXSR DBERR                      **************
+     C                     END
+     C*
+     C           ACCKEY    CHAINACCNTABF             01
+     C           *IN01     IFEQ '1'
+     C                     MOVE 'ACCNT'   WFILE
+     C                     MOVELKEYDS     WKEY             **************
+     C                     Z-ADD07        WDBNO            ** DB ERROR 07
+     C                     EXSR DBERR                      **************
+     C                     END
+     C*
+     C** Si pas retail
+     C*
+     C           ATYP      CABNE'R'       BCREAD
+     C*
+     C           CLIKEY    CHAINCLINTCBF             01
+     C           *IN01     IFEQ '1'
+     C                     MOVE 'CLINT'   WFILE
+     C                     MOVELCNUM      WKEY             **************
+     C                     Z-ADD08        WDBNO            ** DB ERROR 08
+     C                     EXSR DBERR                      **************
+     C                     END
+     C*
+     C**-----LINS   de clint --------------------------
+     C*
+     C                     MOVE LINS      LINSA   2
+     C                     Z-ADD0         AGTECO  20
+     C           LINSA     LOKUPIEMN                     01  BANQUE
+     C   01                Z-ADD01        AGTECO
+     C   01                GOTO FINLIN
+     C           LINSA     LOKUPINMN                     01  BANQUE EMI
+     C   01                Z-ADD01        AGTECO
+     C   01                GOTO FINLIN
+     C           LINSA     LOKUPABRN                     01  CRED POP
+     C   01                Z-ADD03        AGTECO
+     C   01                GOTO FINLIN
+     C           LINSA     LOKUPAOFN                     01  ORG FIN
+     C   01                Z-ADD04        AGTECO
+     C   01                GOTO FINLIN
+     C           LINSA     LOKUPEFFN                     01  ETS FIN
+     C   01                Z-ADD05        AGTECO
+     C   01                GOTO FINLIN
+     C           LINSA     LOKUPSCN                      01  SIEGES
+     C   01                Z-ADD06        AGTECO
+     C   01                GOTO FINLIN
+     C           LINSA     LOKUPAGN                      01  AGENCES
+     C   01                Z-ADD07        AGTECO
+     C   01                GOTO FINLIN
+     C           LINSA     LOKUPSOCN                     01  SOCIETES
+     C   01                Z-ADD20        AGTECO
+     C   01                GOTO FINLIN
+     C           LINSA     LOKUPEINN                     01  ENT.INDIV
+     C   01                Z-ADD24        AGTECO
+     C   01                GOTO FINLIN
+     C           LINSA     LOKUPPARN                     01  PARTICULIE
+     C   01                Z-ADD21        AGTECO
+     C   01                GOTO FINLIN
+     C           LINSA     LOKUPDIVN                     01  DIVERS
+     C   01                Z-ADD23        AGTECO
+     C   01                GOTO FINLIN
+     C           LINSA     LOKUPINVN                     01  STE INVES.
+     C   01                Z-ADD20        AGTECO
+     C   01                GOTO FINLIN
+     C           LINSA     LOKUPCAPN                     01  STE CAPITA
+     C   01                Z-ADD20        AGTECO
+     C   01                GOTO FINLIN
+     C           LINSA     LOKUPABNN                     01  CORRES.ETR
+     C   01                Z-ADD02        AGTECO
+     C   01                GOTO FINLIN
+     C           LINSA     LOKUPDIRN                     01  DIR BQE
+     C   01                Z-ADD21        AGTECO
+     C   01                GOTO FINLIN
+     C           FINLIN    TAG
+     C*
+     C* SI AGTECO = 0     ERREUR
+     C*
+     C           AGTECO    IFEQ 00
+     C                     MOVE 'GTECO'   WFILE
+     C                     MOVEL'UNKNOWN 'WKEY             **************
+     C                     Z-ADD09        WDBNO            ** DB ERROR 09
+     C                     EXSR DBERR                      **************
+     C                     END
+     C*
+     C* Calcul TEG et lissage que pour les agents economiques suivants
+     C*
+     C           AGTECO    IFEQ 20                          SOCIETES
+     C           AGTECO    OREQ 21                          PARTICULIER
+     C           AGTECO    OREQ 23                          DIVERS
+     C           AGTECO    OREQ 24                          ENTR.INDIVI
+     C*
+     C           AGTECO    IFEQ 21                          PARTICULIER
+     C                     Z-ADDTXUSU1    USURE   42
+     C                     ELSE                             AUTRES
+     C                     Z-ADDTXUSUR    USURE
+     C                     END
+     C*
+     C           KHISL     CHAINRECOMDF              01
+     C           *IN01     IFEQ '1'
+     C                     MOVE 'RECOM'   WFILE
+     C**********           MOVE KEY1      @KEY   18                                           CGL029
+     C                     MOVE KEY1      @KEY   24                                           CGL029
+     C                     MOVELBRCAK     @KEY
+     C                     MOVEL@KEY      WKEY             **************
+     C                     Z-ADD10        WDBNO            ** DB ERROR 10
+     C                     EXSR DBERR                      **************
+     C                     END
+     C*
+     C**  Cal TEG
+     C*
+     C                     EXSR SRTEG
+     C                     END
+     C*
+     C                     GOTO BCREAD
+     C                     END                             FIN READ
+     C                     SETON                     LR
+     C*
+     C*================================================================
+     C**  P R O G R A M   E N D
+     C*================================================================
+     C/EJECT
+     C*****************************************************************
+     C*
+     C           SRTEG     BEGSR
+     C*
+     C**  Raz du teg et teglis pour mise a jour directe
+     C**  Par le tag finteg si pas interets debiteurs
+     C*
+     C                     Z-ADD0         REGUL
+     C                     Z-ADD0         TEG     42
+     C                     Z-ADD0         TEGLIS
+     C*
+     C** Raz des nombres debiteurs de la periode
+     C*
+     C                     Z-ADD0         TND    300
+     C*
+     C** Zone travail pfd  com fixe et interets
+     C*
+     C           ACST      IFNE 'C'                         CLOSED
+     C                     Z-ADDFXDC      WFXDC  130
+     C                     ELSE
+     C                     Z-ADD0         WFXDC
+     C                     END
+     C                     Z-ADDTDINT     WTDINT 130
+     C           CHDBC     SUB  CCHDBC    WPFD   130
+     C                     Z-ADDWPFD      SPFD   130
+     C*
+     C           WPFD      IFLT 0
+     C                     Z-ADD0         WPFD
+     C                     END
+     C           WFXDC     IFLT 0
+     C                     Z-ADD0         WFXDC
+     C                     END
+     C*
+     C           WTDINT    ADD  WPFD      ITOT   130
+     C                     ADD  WFXDC     ITOT
+     C           ITOT      CABLE0         FINTEG
+     C*
+     C** Le teg se calcule a partir d'itot
+     C** Le lissage se fait a partir d'itot2
+     C*
+     C                     Z-ADDTDINT     ITOT2  130
+     C*
+     C** Initialise last and next debit capitalisation date
+     C*
+     C                     Z-ADDLDID      WLDID   50
+     C                     Z-ADDNDID      WNDID   50
+     C           DICI      IFEQ 'C'
+     C           DICI      OREQ 'D'
+     C                     Z-ADDRUND      WNDID
+     C                     END
+     C*
+     C*  Si first day accrual
+     C*
+      *                                                                   173057
+      ** Only add a day if not last day accruals AND this is not the      173057
+      ** first DR capitalisation of the account.                          173057
+      *                                                                   173057
+     C           LDAC      IFNE 'Y'
+      *                                                                   173057
+     C           DACO      ANDNELDID                                      173057
+      *                                                                   173057
+     C                     ADD  1         WLDID
+     C                     ADD  1         WNDID
+     C                     END
+     C*
+     C*  Calcul des nbres de la periode
+     C*
+     C           KHISLD    SETLLREHISL                   01
+     C           *IN01     IFEQ '0'
+     C                     Z-ADDWLDID     WDATE
+     C                     MOVE 'REHIS'   WFILE
+     C                     MOVELKEYF      WKEY             **************
+     C                     Z-ADD11        WDBNO            ** DB ERROR 11
+     C                     EXSR DBERR                      **************
+     C                     END
+     C*
+     C           KHISL     READEREHISL                   01
+     C                     Z-ADDHISD      PHISD   50
+     C                     Z-ADDHISB      PHISB  150
+     C*
+     C           *IN01     DOWEQ'0'
+     C           HISD      ANDLEWNDID
+     C*
+     C**  Que si debiteur
+     C*
+     C           PHISB     IFGT 0
+     C           HISD      SUB  PHISD     NBJ     50
+     C           NBJ       IFGT 0
+     C           PHISB     MULT NBJ       NB     300
+     C                     ADD  NB        TND
+     C                     END
+     C                     END
+     C*
+     C                     Z-ADDHISD      PHISD
+     C                     Z-ADDHISB      PHISB
+     C           KHISL     READEREHISL                   01
+     C*
+     C                     END
+     C*
+     C**  Raz du teg et teglis avant recalcul teglis existe dans
+     C**  file REHISL
+     C*
+     C                     Z-ADD0         TEG     42
+     C                     Z-ADD0         TEGLIS
+     C*
+     C** Raz des nombres debiteurs de la periode
+     C** calcul du teg  et calage sur usure
+     C** taux journalier
+     C*
+     C           TND       IFGT 0                          NBRE DEBIT
+     C                     Z-ADDNDID      Z5N     50
+     C                     Z-ADD0         Z6N     60
+     C                     CALL 'DA2MDS'               45
+     C                     PARM           Z5N
+     C                     PARM           Z6N
+     C                     Z-ADDZ6N       DATARR  60       AAMMJJ
+     C*
+     C           ITOT2     DIV  TND       TJOUR  119H
+     C           *LIKE     DEFN TEG       TEG2
+     C*
+     C                     MOVELDATARR    Z2A     20
+     C                     DIV  4         Z2A
+     C                     MVR            Z2A
+     C           Z2A       IFEQ 0                             BISSEXC
+     C           TJOUR     MULT 36600     TEG2      H
+     C                     ELSE
+     C           TJOUR     MULT 36500     TEG2      H
+     C                     END
+     C*
+     C** Comparaison taux usure  si sup lissage
+     C*
+     C           TEG2      IFGT USURE
+     C                     Z-ADDUSURE     TEG2
+     C           TND       MULT TEG2      Z30N   300
+     C           Z2A       IFEQ 0                             BISSEXC
+     C           Z30N      DIV  36600     ITEG   130
+     C                     ELSE
+     C           Z30N      DIV  36500     ITEG   130
+     C                     END
+     C           ITOT2     SUB  ITEG      REGUL  130
+     C           REGUL     IFLT 0
+     C           REGUL     IFLT -10
+     C                     Z-ADD0         REGUL
+     C                     END
+     C                     END
+     C*
+     C** Regul que sur les interets
+     C** Regul com fixe
+     C*
+     C** Regul INTD
+     C*
+     C                     SUB  REGUL     WTDINT
+     C           WTDINT    IFLT 0
+     C                     Z-ADDWTDINT    TEGLIS
+     C*
+     C                     Z-ADDWTDINT    REGUL
+     C                     Z-ADD0         WTDINT
+     C*
+     C                     ELSE
+     C                     Z-ADDREGUL     TEGLIS
+     C                     END                             FIN REG INT
+     C*
+     C** Regul PFD si > moitier des interets debiteurs
+     C*
+     C           *LIKE     DEFN WTDINT    WTINT2
+     C           *LIKE     DEFN REGUL     REGUL2
+     C           WTDINT    DIV  2         WTINT2
+     C           WPFD      IFGT WTINT2
+     C           WPFD      SUB  WTINT2    REGUL2
+     C                     Z-ADDWTINT2    WPFD
+     C                     ADD  REGUL2    REGUL
+     C                     END
+     C*
+     C** Regul que sur les interets
+     C*
+     C                     END                             FIN TEG>USUR
+     C*
+     C** Calcul du teg imprimable
+     C*
+     C                     SUB  REGUL     ITOT
+     C           ITOT      DIV  TND       TJOUR  119H
+     C                     MOVELDATARR    Z2A     20
+     C                     DIV  4         Z2A
+     C                     MVR            Z2A
+     C           Z2A       IFEQ 0                             BISSEXC
+     C           TJOUR     MULT 36600     TEG       H
+     C                     ELSE
+     C           TJOUR     MULT 36500     TEG       H
+     C                     END
+     C*
+     C                     END                             FIN TND>0
+     C           FINTEG    TAG
+     C                     MLLZO-1        TEGLIS           TOUJOURS NEG
+     C*
+     C** Mise a jour file RECOM pour tegrt  et com FXDC  CHDBC
+     C*
+     C                     Z-ADDWFXDC     FXDC
+     C                     Z-ADDWPFD      CHDBC
+     C                     Z-ADD0         CCHDBC
+     C                     MOVE TEG       TEGRT
+     C                     EXCPTRECO1
+     C*
+     C** MISE A JOUR FILE REACR POUR TEGLIS
+     C*
+     C                     EXCPTREAO1
+     C*
+     C                     ENDSR                           FIN CAL TEG
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C           DBERR     BEGSR                           *** DBERR ***
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVE WFILE     DBFILE
+     C                     MOVE WKEY      DBKEY
+     C                     Z-ADDWDBNO     DBASE
+     C                     OUT  LDA
+     C*
+     C                     OPEN RE3665AU
+     C                     WRITEHEADAU
+     C                     WRITEERRAU
+     C                     CLOSERE3665AU
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     O/EJECT
+     O*
+     OREACRDF E                REAO1
+     O                         TEGLIS
+     ORECOMDF E                RECO1
+     O                         FXDC
+     O                         CHDBC
+     O                         CCHDBC
+     O                         TEGRT
+** CPY@ OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

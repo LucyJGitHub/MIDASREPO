@@ -1,0 +1,86 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SM Update Replication for SWIFT 2009')          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC00007 - Update Replication for SWIFT 2009               */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2009           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Last Amend No. CSW209  *CREATE    Date 21Jul09              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSW209 - SWIFT 2009 changes                                 */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&BRGDTA) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&QUOTE) TYPE(*CHAR) LEN(1) VALUE('''')
+             DCL        VAR(&STM_STR) TYPE(*CHAR) LEN(80)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2009')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Create source file for potential SQL statements. */
+             DLTF       FILE(QTEMP/RUNSQLSTM)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/RUNSQL)
+             MONMSG     MSGID(CPF0000)
+             CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                          MBR(RUNSQLSTM) TEXT('Temporary source +
+                          file for upgrade programs SQL')
+             RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                          NEWOBJ(RUNSQL)
+ 
+             CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                          'BrgDeliveredDtaLib' &SVAL1 ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ' ')
+             IF         COND(%SST(&SVAL1 1 4) *EQ '*NRF' *OR &RTNCDE +
+                          *NE ' ') THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             CHGVAR     VAR(&BRGDTA) VALUE(&SVAL1)
+ 
+/* Check if file exists in library list. */
+             CHKOBJ     OBJ(RPMSGFPD) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* Build strings to delete records. */
+             CHGVAR     VAR(&STM_STR) VALUE('delete from RPMSGFPD +
+                          where WHFILE =' *BCAT &QUOTE *TCAT +
+                          'INPAYXPD' *TCAT &QUOTE *BCAT ';')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
+             CHGVAR     VAR(&STM_STR) VALUE('delete from RPMSGFPD +
+                          where WHFILE =' *BCAT &QUOTE *TCAT +
+                          'OTPAYXPD' *TCAT &QUOTE *BCAT ';')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+             OVRDBF     FILE(RPMSGFPD) MBR(MIDASTOF) OVRSCOPE(*JOB)
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+             DLTOVR     FILE(RPMSGFPD) LVL(*JOB)
+ 
+/* Copy file from deliverable data library. */
+             CPYF       FROMFILE(&BRGDTA/RPMSGFPD_R) +
+                          TOFILE(RPMSGFPD) TOMBR(*FROMMBR) +
+                          MBROPT(*ADD) FMTOPT(*MAP *DROP)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ENDPGM:
+             ENDPGM

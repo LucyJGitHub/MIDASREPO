@@ -1,0 +1,85 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas ME Outgoing Message Field Management Excepti')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Message Management Module                           */
+/*                                                                   */
+/*       MEC1752 - Midas ME Outgoing Message Field Management        */
+/*                 Exception Report                                  */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2006           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Last Amend No. BUG15195           Date 06Nov07              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CFT032  *CREATE    Date 11Sep06              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BUG15195 - ME1752 call FT001000 with wrong order of         */
+/*                  parameters                                       */
+/*       CFT032 - Account Line in Field 50X in MT103                 */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PSEQ &PLVL &PETTY)
+ 
+             DCL        VAR(&PSEQ) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&PLVL) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PETTY) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2006')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('MEC1752 - Outgoing Message Field +
+                          Management Exception Report') TOMSGQ(MRUNQ)
+             CHGJOB     SWS(00000000)
+ 
+/* Create data area LDA */
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+                                                                                        /*BUG15195*/
+             CRTDTAARA  DTAARA(QTEMP/ZBRU) TYPE(*CHAR) LEN(304) +
+                          TEXT('User valid Booking Branches')                           /*BUG15195*/
+             MONMSG     MSGID(CPF1023)                                                  /*BUG15195*/
+             CRTDTAARA  DTAARA(QTEMP/ZBRU1) TYPE(*CHAR) LEN(1998) +
+                          TEXT('User valid Booking Branches 1')                         /*BUG15195*/
+             MONMSG     MSGID(CPF1023)                                                  /*BUG15195*/
+             CRTDTAARA  DTAARA(QTEMP/ZBRU2) TYPE(*CHAR) LEN(402) +
+                          TEXT('User valid Booking Branches 2')                         /*BUG15195*/
+             MONMSG     MSGID(CPF1023)                                                  /*BUG15195*/
+ 
+             CALL       PGM(ME1752) PARM(&PSEQ &PLVL &PETTY)
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                           TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+             DMPCLPGM
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                            MEC1752 ended abnormally - see job log') +
+                            TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             ENDPGM

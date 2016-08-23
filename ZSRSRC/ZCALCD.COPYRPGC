@@ -1,0 +1,138 @@
+     C********************************************************************
+     C**                                                                 *
+     C** ZCALCD SR. TO CALCULATE LONG TERM CD PRICE FROM INPUT YIELD     *
+     C**                                                                 *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     C** LAST AMEND NO. E39495             DATE 02NOV92                  *
+     C**                                                                 *
+     C**-----------------------------------------------------------------*
+     C**                                                                 *
+     C** E39495 - New subroutine to calculate Long term CD price from    *
+     C**          input yield (previously done in PL1 program zyield)    *
+     C**                                                                 *
+     C********************************************************************
+     C**
+     C** Inputs     - ZNOML  = nominal
+     C**              ZPNPL  = current principal      (calculated in ZYLD)
+     C**              ZCONS  = face value at maturity (calculated in ZYLD)
+     C**              CUMEXF = CUM or EX coupon  (set from SCUMEX in ZYLD)
+     C**              PURINT = purchased interest     (calculated in ZYLD)
+     C**              ZFDATE = date at which yield is effective
+     C**              ZPRCIN = yield to be converted to % price
+     C**
+     C**  Output    - PRICEC = % price
+     C**
+     C**  Calls     - ZDAYS
+     C**              ZLCD
+     C**              ZACCZ
+     C**
+     C           ZCALCD    BEGSR                           *** ZCALCD ***
+     C*
+     C**  Define parameter
+     C*
+     C                     Z-ADDZPRCIN    ZPRCIN 158
+     C*
+     C**  Set output price to 100 %
+     C*
+     C                     Z-ADD100       PRICEC
+     C*
+     C**  If nominal is zero, then end
+     C*
+     C           ZNOML     CABEQ*ZERO     ZECALC
+     C*
+     C**  If value date at, or after, maturity, then end
+     C*
+     C           ZFDATE    CABGEMATY      ZECALC
+     C*
+     C**  If value date at, or before, initial date, then end
+     C*
+     C           ZFDATE    CABLEITLD      ZECALC
+     C*
+     C**  Set final coupon date equal to maturity date
+     C*
+     C                     Z-ADDMATY      NCD
+     C*
+     C**  Do while the next coupon date is greater than the value date
+     C*
+     C           NCD       DOWGTZFDATE
+     C*
+     C**  Calculate previous coupon date to latest next coupon date
+     C**  (ZZLCD)
+     C*
+     C           NCD       SUB  1         ZECD
+     C                     EXSR ZLCD
+     C*
+     C**  Set up start and end dates of interest calculation
+     C*
+     C                     Z-ADDZZLCD     ZDCSDT
+     C                     Z-ADDNCD       ZDCEDT
+     C*
+     C**  Nominal used in interest calculation
+     C*
+     C                     Z-ADDZNOML     ZAMT
+     C*
+     C**  Calculate interest (& no. of days  & no. of days in a yr)
+     C*
+     C                     EXSR ZACCZ
+     C*
+     C**  Add calculated interest to principal
+     C*
+     C                     ADD  ZDCINT    ZPNPL
+     C*
+     C**  If the previous coupon date is less than the value date
+     C*
+     C           ZZLCD     IFLT ZFDATE
+     C*
+     C**  Calculate no. of days from value date to next coupon date
+     C**  (ZDDAYS)
+     C*
+     C                     Z-ADDZFDATE    ZSDATE
+     C                     Z-ADDNCD       ZEDATE
+     C                     EXSR ZDAYS
+     C                     END
+     C*
+     C**  Discount factor = 1 + (No. of Days X Yield)/N0. of Days in Yr
+     C**  (Note: No. of Days & No. of Days in Year calculated by ZACCZ,
+     C**  ZDAYS)
+     C*
+     C           ZDDAYS    MULT ZPRCIN    ZDSCF  158
+     C           ZINTDD    IFNE *ZERO
+     C                     DIV  ZINTDD    ZDSCF
+     C                     ELSE
+     C                     Z-ADD*ZERO     ZDSCF
+     C                     END
+     C                     DIV  100       ZDSCF     H
+     C                     ADD  1         ZDSCF
+     C*
+     C**  Discount new principal to previous coupon date/value date
+     C*
+     C           ZDSCF     IFNE *ZERO
+     C                     DIV  ZDSCF     ZPNPL
+     C                     END
+     C*
+     C**  Set the next coupon date to the last date calculated
+     C*
+     C                     Z-ADDZZLCD     NCD
+     C                     END
+     C*
+     C**  Calculated price = principal/face value
+     C*
+     C                     MULT 100       ZPNPL
+     C           ZPNPL     DIV  ZCONS     PRICEC
+     C*
+     C**  Price obtained so far is a 'dirty' price, ie, it includes
+     C**  purchased interest
+     C**  subtract the purchased interest tp get a 'clean' price
+     C*
+     C           CUMEXF    IFEQ 'C'
+     C                     SUB  PURINT    PRICEC
+     C                     ELSE
+     C                     ADD  PURINT    PRICEC
+     C                     END
+     C           ZECALC    ENDSR
+     C*****************************************************************

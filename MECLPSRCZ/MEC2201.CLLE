@@ -1,0 +1,158 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas ME Control access to Meridian server options')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas Message Management                                    */
+/*                                                                   */
+/*       MEC2101 - Control access to Meridion Server options         */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. 214798             Date 11Feb03              */
+/* Midas Release 4.01 -----------------------------------------------*/
+/*       Prev Amend No. CSW025 *CREATE     Date 26Mar02              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       214798 - Change Midas to work with MMM version 2 (MLink 3)  */
+/*       CSW025 - Midas Message Manager                              */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CMDPARMSLA &CMDPARMS)
+ 
+/* Parameters */
+             DCL        VAR(&CMDPARMSLA) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&CMDPARMS) TYPE(*CHAR) LEN(80)
+ 
+/* Command/Parameters length - numeric */
+             DCL        VAR(&CMDPARMSLN) TYPE(*DEC) LEN(2 0)
+ 
+/* Managing system flag                */
+             DCL        VAR(&MNGSYS) TYPE(*CHAR) LEN(1) VALUE(' ')
+ 
+/* Library related fields              */
+             DCL        VAR(&MERIDLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CURLIB) TYPE(*CHAR) LEN(10)
+ 
+/* Midas information screen related fields / Error handling */
+             DCL        VAR(&RTN_CODE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(132)
+ 
+/* System value fields */                                                                 /*214798*/
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)                                   /*214798*/
+             DCL        VAR(&SVALK1) TYPE(*CHAR) LEN(20)                                  /*214798*/
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)                                  /*214798*/
+             DCL        VAR(&SVALK2) TYPE(*CHAR) LEN(20)                                  /*214798*/
+             DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)                                  /*214798*/
+             DCL        VAR(&SVALK3) TYPE(*CHAR) LEN(20)                                  /*214798*/
+             DCL        VAR(&SVAL3) TYPE(*CHAR) LEN(200)                                  /*214798*/
+             DCL        VAR(&SVALK4) TYPE(*CHAR) LEN(20)                                  /*214798*/
+             DCL        VAR(&SVAL4) TYPE(*CHAR) LEN(200)                                  /*214798*/
+             DCL        VAR(&SVALK5) TYPE(*CHAR) LEN(20)                                  /*214798*/
+             DCL        VAR(&SVAL5) TYPE(*CHAR) LEN(200)                                  /*214798*/
+             DCL        VAR(&SVALK6) TYPE(*CHAR) LEN(20)                                  /*214798*/
+             DCL        VAR(&SVAL6) TYPE(*CHAR) LEN(200)                                  /*214798*/
+             DCL        VAR(&SVALK7) TYPE(*CHAR) LEN(20)                                  /*214798*/
+             DCL        VAR(&SVAL7) TYPE(*CHAR) LEN(200)                                  /*214798*/
+             DCL        VAR(&SVALK8) TYPE(*CHAR) LEN(20)                                  /*214798*/
+             DCL        VAR(&SVAL8) TYPE(*CHAR) LEN(200)                                  /*214798*/
+             DCL        VAR(&SVALK9) TYPE(*CHAR) LEN(20)                                  /*214798*/
+             DCL        VAR(&SVAL9) TYPE(*CHAR) LEN(200)                                  /*214798*/
+             DCL        VAR(&SVALK0) TYPE(*CHAR) LEN(20)                                  /*214798*/
+             DCL        VAR(&SVAL10) TYPE(*CHAR) LEN(200)                                 /*214798*/
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2002')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Initialisation */
+             CHGJOB     SWS(XXXXXX00)
+             RTVJOBA    CURLIB(&CURLIB)
+ 
+/* Access MESTAT to determine if this is the managing system. */
+             RTVDTAARA  DTAARA(MESTAT (50 1)) RTNVAR(&MNGSYS)
+ 
+/* If this is not the managing system send an appropriate error */
+/*  message ...                                                 */
+             IF         COND(&MNGSYS *NE 'Y') THEN(DO)
+                CHGVAR     VAR(&MSGDTA) VALUE(' ')
+                CALL       PGM(MEC1027) PARM(&RTN_CODE 'MEC2200' +
+                             'MEMSG    ' &MSGDTA 'ENTER     ' ' ' +
+                             'MEC2200' 'N')
+             ENDDO
+             ELSE       CMD(DO)
+/* ... this is the managing system so execute the command. */
+ 
+/* First add in the relevant libraries */
+                RTVDTAARA  DTAARA(MESTAT (51 10)) RTNVAR(&MERIDLIB)
+                CHGCURLIB  CURLIB(&MERIDLIB)
+ 
+/* Extract the relevant data and run the command monitoring for */
+/*  F3/F12 message to prevent spurious error message on menu.   */
+                CHGVAR     VAR(&CMDPARMSLN) VALUE(&CMDPARMSLA)
+                CHGVAR     VAR(&CMDPARMS) VALUE(%SST(&CMDPARMS 1 +
+                             &CMDPARMSLN))
+/***************CALL       PGM(QCMDEXC) PARM(&CMDPARMS 80)                                /*214798*/
+/***************MONMSG     MSGID(CPF6801)                                                 /*214798*/
+                                                                                          /*214798*/
+/* Start MMM server ? */                                                                  /*214798*/
+                IF         COND(&CMDPARMS *EQ '?STRMRDSVR') THEN(DO)                      /*214798*/
+                                                                                          /*214798*/
+                CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                                'StrSvrMMM' &SVAL1 &SVALK2 +
+                                &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                                &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                                &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                                &SVALK0 &SVAL10)                                          /*214798*/
+                   IF         COND(%SST(&SVAL1 1 4) *EQ '*NRF') THEN(GOTO +
+                                CMDLBL(ABNOR))                                            /*214798*/
+                                                                                          /*214798*/
+                CALL       PGM(QCMDEXC) PARM(&SVAL1 200)                                  /*214798*/
+                MONMSG     MSGID(CPF6801)                                                 /*214798*/
+                ENDDO                                                                     /*214798*/
+                                                                                          /*214798*/
+/* End MMM server ? */                                                                    /*214798*/
+                IF         COND(&CMDPARMS *EQ '?ENDMRDSVR') THEN(DO)                      /*214798*/
+                CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                                'EndSvrMMM' &SVAL1 &SVALK2 +
+                                &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                                &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                                &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                                &SVALK0 &SVAL10)                                          /*214798*/
+                   IF         COND(%SST(&SVAL1 1 4) *EQ '*NRF') THEN(GOTO +
+                                CMDLBL(ABNOR))                                            /*214798*/
+                                                                                          /*214798*/
+                CALL       PGM(QCMDEXC) PARM(&SVAL1 200)                                  /*214798*/
+                MONMSG     MSGID(CPF6801)                                                 /*214798*/
+                ENDDO                                                                     /*214798*/
+ 
+/* Reset the current library. */
+                   IF         COND(&CURLIB *EQ '*NONE     ') THEN(DO)
+                      CHGCURLIB  CURLIB(*CRTDFT)
+                   ENDDO
+                   ELSE       CMD(DO)
+                      CHGCURLIB  CURLIB(&CURLIB)
+                   ENDDO
+             ENDDO
+ 
+/* Normal end */
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal end */
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          MEC2201 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             ENDPGM

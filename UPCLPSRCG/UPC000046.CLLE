@@ -1,0 +1,252 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP Start up layer')                             */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC000046 - Start up layer                                  */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2014           */
+/*                                                                   */
+/*       Last Amend No. CUP041   *CREATE   Date 21Oct14              */
+/*       Prev Amend No. xxxxxxxx           Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP041 - New Bridge methodology to combine menu options     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LAYER &MODE)
+ 
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(4)
+ 
+             DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
+ 
+             DCL        VAR(&SAVLIBL) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ERRORFLAG) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&RTNFLAG) TYPE(*CHAR) LEN(1)
+ 
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK1) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK2) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL3) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK3) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL4) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK4) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL5) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK5) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL6) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK6) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL7) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK7) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL8) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK8) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL9) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK9) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL10) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK0) TYPE(*CHAR) LEN(20)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2014')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Prepare temporary files, job, etc. */
+             CALLSUBR   SUBR(PREPARE)
+ 
+/* Retrieve required System Values. */
+             CALLSUBR   SUBR(RTVSVAL)
+/* For a general error just report. */
+             IF         COND(&ERRORFLAG *EQ 'E') THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+/* If a System Value is blank then send specific error message. */
+             IF         COND(&ERRORFLAG *EQ 'B') THEN(DO)
+                CALLSUBR   SUBR(BLANKSVAL)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* Set up library list. */
+             CALLSUBR   SUBR(SETUPLIBL)
+ 
+/* Start journaling. */
+STRJRN:
+             IF         COND(&MODE *NE '*ALL' *AND &MODE *NE '*JRN') +
+                          THEN(DO)
+                GOTO       CMDLBL(STRTRG)
+             ENDDO
+/* Use CPPs rather than commands to avoid compilation issues. */
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('GPBEGINJRN')
+                CALL       PGM(GPBEGINJRN) PARM(&PFX '*START')
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('SCBEGINJRN')
+                CALL       PGM(SCBEGINJRN) PARM(&PFX '*START')
+             ENDDO
+ 
+/* Start triggering. */
+STRTRG:
+             IF         COND(&MODE *NE '*ALL' *AND &MODE *NE '*TRG') +
+                          THEN(DO)
+                GOTO       CMDLBL(STRSBS)
+             ENDDO
+             CHGVAR     VAR(&ERRPGM) VALUE('UPC000149')
+             CALL       PGM(UPC000149) PARM(&LAYER &RTNFLAG)
+             IF         COND(&RTNFLAG *NE ' ') THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* Start subsystem. */
+STRSBS:
+             IF         COND(&MODE *NE '*ALL' *AND &MODE *NE '*SBS') +
+                          THEN(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             CHGVAR     VAR(&ERRPGM) VALUE('UPC000146')
+             CALL       PGM(UPC000146) PARM(&LAYER &PFX &RTNFLAG)
+             IF         COND(&RTNFLAG *NE ' ') THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA(&ERRPGM) MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details')
+             MONMSG     MSGID(CPF0000)
+             CALL       PGM(SCC0010) PARM(&ERRPGM 'JOBLOG' 'Y')
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ENDPGM:
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+                IF         COND(&SAVLIBL *EQ 'Y') THEN(DO)
+                   RSTLIBL    SAVEDLIBL(UPC000046)
+                   MONMSG     MSGID(CPF0000 MCH0000)
+                ENDDO
+             ENDDO
+ 
+/******************************************************************************/
+/*                                                                            */
+/* Subroutine to prepare for run.                                             */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(PREPARE)
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Create data area for screen message handling. */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800)
+ 
+/* Create error handling file in QTEMP. */
+             DLTF       FILE(QTEMP/UPERRMQT)
+             MONMSG     MSGID(CPF0000)
+             CRTPF      FILE(QTEMP/UPERRMQT) RCDLEN(100)
+ 
+             ENDSUBR
+ 
+/******************************************************************************/
+/*                                                                            */
+/* Subroutine to retrieve System Values.                                      */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(RTVSVAL)
+ 
+/* Retrieve the appropriate System Values and perform other layer specific */
+/*  code.                                                                  */
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+                CHGVAR     VAR(&SVALK1) VALUE('BrgMidasSystemPrefix')
+                CHGVAR     VAR(&ERRPGM) VALUE('AOSVALR0')
+                CALL       PGM(AOSVALR0) PARM(&RTNCODE &SVALK1 &SVAL1 +
+                             &SVALK2 &SVAL2 &SVALK3 &SVAL3 &SVALK4 +
+                             &SVAL4 &SVALK5 &SVAL5 &SVALK6 &SVAL6 +
+                             &SVALK7 &SVAL7 &SVALK8 &SVAL8 &SVALK9 +
+                             &SVAL9 &SVALK0 &SVAL10)
+                CALLSUBR   SUBR(CHECKSVAL)
+             ENDDO
+ 
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+                CHGVAR     VAR(&SVALK1) VALUE('BrgMidasGlobalPrefix')
+                CHGVAR     VAR(&ERRPGM) VALUE('GPAOSVALR0')
+                CALL       PGM(GPAOSVALR0) PARM(&RTNCODE &SVALK1 &SVAL1 +
+                             &SVALK2 &SVAL2 &SVALK3 &SVAL3 &SVALK4 +
+                             &SVAL4 &SVALK5 &SVAL5 &SVALK6 &SVAL6 +
+                             &SVALK7 &SVAL7 &SVALK8 &SVAL8 &SVALK9 +
+                             &SVAL9 &SVALK0 &SVAL10)
+                CALLSUBR   SUBR(CHECKSVAL)
+             ENDDO
+             CHGVAR     VAR(&PFX) VALUE(%SST(&SVAL1 1 2))
+ 
+             ENDSUBR
+ 
+/******************************************************************************/
+/*                                                                            */
+/* Subroutine for checking the call to System Values.                         */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(CHECKSVAL)
+ 
+             IF         COND(&RTNCODE *NE ' ') THEN(DO)
+                CHGVAR     VAR(&ERRORFLAG) VALUE('E')
+                GOTO       CMDLBL(ENDCHKSVAL)
+             ENDDO
+             IF         COND(%SST(&SVAL1 1 1) *EQ '*') THEN(DO)
+                CHGVAR     VAR(&ERRORFLAG) VALUE('E')
+                GOTO       CMDLBL(ENDCHKSVAL)
+             ENDDO
+             IF         COND(&SVAL1 *EQ ' ') THEN(DO)
+                CHGVAR     VAR(&ERRORFLAG) VALUE('B')
+                GOTO       CMDLBL(ENDCHKSVAL)
+             ENDDO
+ 
+ENDCHKSVAL:
+             ENDSUBR
+ 
+/******************************************************************************/
+/*                                                                            */
+/* Subroutine for reporting blank System Values.                              */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(BLANKSVAL)
+ 
+             RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             RTVMSG     MSGID(UPM0004) MSGF(UTMSGF) MSG(&MESSAGE)
+             CHGDTAARA  DTAARA(MIDASMSG (151 50)) VALUE(&MESSAGE)
+             CALL       PGM(SCC0010) PARM('UPC000046' 'ENTER' ' ')
+ 
+             ENDSUBR
+ 
+/******************************************************************************/
+/*                                                                            */
+/* Subroutine to set up the library list.                                     */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(SETUPLIBL)
+ 
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+                CALL       PGM(UPC0014) PARM(&PFX)
+             ENDDO
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+                SAVLIBL    SAVDTL(UPC000046)
+                CHGVAR     VAR(&SAVLIBL) VALUE('Y')
+                CALL       PGM(GPC000016) PARM(&PFX)
+             ENDDO
+ 
+             ENDSUBR
+ 
+             ENDPGM

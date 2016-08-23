@@ -1,0 +1,353 @@
+     F********************************************************************
+     F*                                                                  *
+     F*    Midas SECURITIES TRADING RELEASE 2 MODULE                     *
+     F*
+     F*    ZACRCI - STANDARD ROUTINE TO CALCULATE INTEREST               *
+     F*             ON A CUSTOMER POSITION DURING INPUT CYCLE            *
+     F*
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*    LAST AMEND NO E19290                   DATE 06/05/88          *
+     F*    PREV AMEND NO S01158                   DATE 06/05/88          *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+     F*    E19290 - FIELD INCORRECTLY DEFINED, ZACRD DOES NOT EXIST.     *E19290
+     F*    S01158 - POST INCORPORATION DEVELOPMENT FIXES                 *S01158
+     F*                                                                  *
+     F********************************************************************
+     F*  INPUT  - ZFDAT  (5,0)     FROM DATE (MIDAS DAY NO.)
+     F*           ZTDAT  (5,0)     TO DATE   (MIDAS DAY NO.)
+     F*           ZBRCH  (3,0)     BRANCH
+     F*           ZCUST  (6,0)     CUSTOMER
+     F*           ZSECT  (10)      SECURITY
+     F*
+     F*           SAVCDP (1,0)     NOMINAL CURRENCY DEC. PLS. (TABTG10)
+     F*           NMDP   (1,0)     NOMINAL DEC. PLS. (SECTY )
+     F*           DATA FROM SECTY  FOR ZRATE ZACCR
+     F*           PROT   (1)       PROCESSING TYPE (INVTPD)
+     F*           ZCUMCP (15,0)    CUM COUP HOLDING (FOR PROT N=6 ONLY)
+     F*
+     F*  OUTPUT - ZIAMT  (15,0-4)  INTEREST AMOUNT (NOM CCY DEC PLS)
+     F*           ZACDY  (5,0)     INTEREST DAYS
+     F*
+     F*  REQUIRES CDEPD TO BE INCLUDED IN CALLING PROGRAM
+     F*  REQUIRES SECED TO BE INCLUDED IN CALLING PROGRAM
+     F*  (THUS IF EITHER FILE IS USED IN CALLING PGM -
+     F*   THE CALLING PGM MUST RESET POSITION AFTER ZACRCI CALLED)
+     F*
+     F*  USES INDICATORS 90 & 91
+     F*
+     C*
+     C           ZACRCI    BEGSR                           **ZACRCI BEGSR*
+     C                     GOTO TZACST
+     C*
+     C*  Define Input fields
+     C*
+     C                     Z-ADDDDTE      ZFDAT   50
+     C                     Z-ADDZTDAT     ZTDAT   50
+     C                     MOVE ZBRCH     ZBRCH   30
+     C                     Z-ADDZCUST     ZCUST   60
+     C                     MOVE ZSECT     ZSECT  10
+     C                     Z-ADDZCUMCP    ZCUMCP 150
+     C*
+     C*  Clear Output field
+     C*
+     C           TZACST    TAG                             *** TZACST  ***
+     C                     Z-ADD0         ZIAMT  150
+     C                     Z-ADD0         ZACDY   50
+     C*
+     C*  Define Work fields (based on similar fields where possible)
+     C*
+     C           *LIKE     DEFN DDTE      ZWDDTE
+     C           *LIKE     DEFN DDTE      ZSAVDT
+     C*
+     C           *LIKE     DEFN SDET      ZWSDET
+     C                     MOVE 'CP'      ZWSDET
+     C*
+     C                     Z-ADD0         ZI      10
+     C*
+     C*  Set up Key Lists for CDEPD and SECED access
+     C*
+     C           ZCDEPD    KLIST
+     C                     KFLD           ZCUST
+     C                     KFLD           ZSECT
+     C                     KFLD           ZBRCH
+     C                     KFLD           ZWDDTE
+     C*
+     C           ZCDEPP    KLIST
+     C                     KFLD           ZCUST
+     C                     KFLD           ZSECT
+     C                     KFLD           ZBRCH
+     C*
+     C           ZSECED    KLIST
+     C                     KFLD           ZSECT
+     C                     KFLD           ZZSDAT
+     C                     KFLD           ZWSDET
+     C*
+     C           ZSECDP    KLIST
+     C                     KFLD           ZSECT
+     C*
+     C*****************************************************************
+     C*
+     C*
+     C*****************************************************************
+     C*
+     C*  Differentiate between Schuldshein and others
+     C*
+     C           PROT      IFNE '6'
+     C*
+     C*  Non-Schuldshein processing
+     C*
+     C*
+     C*  Calculate no. interest days
+     C                     Z-ADDZFDAT     ZSDATE
+     C                     Z-ADDZTDAT     ZEDATE
+     C                     EXSR ZDAYS
+     C                     Z-ADDZDDAYS    ZACDY
+     C*
+     C*  Convert the amount on which interest is to be calculated
+     C*    from Nominal Dec Pls to Nominal Ccy Dec Pls - unless zero
+     C                     Z-ADDZCUMCP    ZAMT
+     C           ZAMT      IFNE 0
+     C           SAVCDP    SUB  NMDP      ZI
+     C           ZI        ADD  5         ZI
+     C           ZAMT      MULT POWER8,ZI ZAMT      H
+     C                     END
+     C                     Z-ADD1         ZZRET   10
+     C*
+     C*  Calculate interest for the period
+     C                     GOTO ZZINT0
+     C*
+     C*****************************************************************
+     C*
+     C                     ELSE
+     C*
+     C*  Schuldshein processing
+     C*
+     C*  Access the latest position for Branch/Security/Customer
+     C*    which is earlier than or on From Date
+     C*    If none is found then treat this as a zero position
+     C*
+     C                     MOVE ZFDAT     ZWDDTE
+     C                     Z-ADD0         ZSAVDT
+     C           ZCDEPD    SETGTCDEPD
+     C                     READPCDEPD                  9191
+     C*
+     C           *IN91     IFEQ '1'
+     C           CDBR      ORNE ZBRCH
+     C           CDSN      ORNE ZSECT
+     C           CDCN      ORNE ZCUST
+     C           DDTE      ORGT ZFDAT
+     C                     Z-ADD0         ZAMT
+     C*
+     C                     ELSE
+     C*
+     C*  Convert the amount on which interest is to be calculated
+     C*    from Nominal Dec Pls to Nominal Ccy Dec Pls - unless zero
+     C*
+     C           CDNV      ADD  CNPV      ZAMT
+     C           ZAMT      ADD  CNSV      ZAMT
+     C           ZAMT      SUB  CECN      ZAMT
+     C           DDTE      IFGE ZFDAT
+     C                     Z-ADDDDTE      ZSAVDT
+     C                     ELSE
+     C                     Z-ADDZFDAT     ZSAVDT
+     C                     END
+     C                     END
+     C*
+     C                     Z-ADDZFDAT     ZSDATE
+     C*
+     C           ZCDEPD    SETGTCDEPD
+     C*
+     C           ZREAD     TAG                             ** ZREAD **
+     C*
+     C*  Read next Position  for this Branch/Security/Customer
+     C*    between From and To Dates
+     C*
+     C*
+     C*
+     C           ZCDEPP    READECDEPD                  9191
+     C*
+     C*
+     C*
+     C*  If End of Events
+     C*    then calculate interest for remaining period
+     C*    (which may be the whole period)
+     C*
+     C           *IN91     IFEQ '1'
+     C           DDTE      ORGT ZTDAT
+     C*
+     C                     Z-ADDZTDAT     ZEDATE
+     C           ZAMT      IFNE 0
+     C           SAVCDP    SUB  NMDP      ZI
+     C           ZI        ADD  5         ZI
+     C           ZAMT      MULT POWER8,ZI ZAMT      H
+     C                     END
+     C                     Z-ADD1         ZZRET
+     C           ZAMT      IFNE 0
+     C                     GOTO ZZINT0
+     C                     END
+     C*
+     C                     GOTO ZENDAC
+     C*
+     C                     END
+     C*
+     C*
+     C*  New date
+     C           DDTE      IFNE ZSAVDT
+     C           DDTE      ANDGTZSAVDT
+     C*
+     C*    so calculate the interest up to the Event Date
+     C*
+     C                     Z-ADDDDTE      ZEDATE
+     C           ZAMT      IFNE 0
+     C           SAVCDP    SUB  NMDP      ZI
+     C           ZI        ADD  5         ZI
+     C           ZAMT      MULT POWER8,ZI ZAMT      H
+     C                     Z-ADD2         ZZRET
+     C                     GOTO ZZINT0
+     C           ZZRET2    TAG                             *** ZZRET2  ***
+     C                     END
+     C*
+     C*  Set Start of Next Interest Period = End of this Period
+     C*    and save values from Event before reading next one
+     C*
+     C                     Z-ADDDDTE      ZSDATE
+     C                     Z-ADDSDNC      CPNR
+     C                     Z-ADDSDCP      CFCT
+     C                     MOVE SDTP      CPDP
+     C*  Convert the amount on which interest is to be calculated
+     C*    from Nominal Dec Pls to Nominal Ccy Dec Pls - unless zero
+     C*
+     C           CDNV      ADD  CNPV      ZAMT
+     C           ZAMT      ADD  CNSV      ZAMT
+     C           ZAMT      SUB  CECN      ZAMT
+     C*
+     C*
+     C                     MOVE DDTE      ZSAVDT
+     C                     ELSE
+     C*
+     C*    NOT NEW date
+     C*
+     C                     MOVE DDTE      ZSAVDT
+     C*    Accumulate amount
+     C*
+     C                     ADD  CNPV      ZAMT
+     C                     ADD  CDNV      ZAMT
+     C           ZAMT      ADD  CNSV      ZAMT
+     C           ZAMT      SUB  CECN      ZAMT
+     C*
+     C                     END
+     C*
+     C*
+     C                     GOTO ZREAD
+     C*
+     C                     END
+     C*
+     C*****************************************************************
+     C*
+     C           ZZINT0    TAG                             *** ZINT0   ***
+     C*
+     C*  This is a s/r within ZACRCI
+     C*    From/To dates input - ZSDATE/ZEDATE
+     C*    These are stores & restored at end
+     C                     Z-ADDZSDATE    ZZSDAT  50
+     C                     Z-ADDZEDATE    ZZEDAT  50
+     C*
+     C*  Access the Coupon Rate Event for From Date
+     C*    It should always be found (From Date should be Coupon Date)
+     C*    but if not use values from SECTY  record for call to ZRATE
+     C*
+     C           ZSECED    CHAINSECED                90
+     C*
+     C*  If no Coupon Rate Event read or End of File
+     C*    reset file pointer ready for read of rest of Events
+     C*
+     C           *IN90     IFEQ '1'
+     C           ZSECED    SETLLSECED
+     C*
+     C                     MOVE '0'       *IN90
+     C                     ELSE
+     C*
+     C*  If Coupon Rate Event read successfully
+     C*    then save fields to be used by ZRATE before next Event read
+     C*
+     C                     Z-ADDSNCR      CPNR
+     C                     Z-ADDSNCF      CFCT
+     C                     MOVE SNCP      CPDP
+     C                     END
+     C*
+     C                     Z-ADDZZSDAT    ZSDATE
+     C*
+     C*  Read all Security Events between From and To Dates
+     C*
+     C           *IN90     DOUEQ'1'
+     C*
+     C           ZSECDP    READESECED                    90
+     C*
+     C           *IN90     IFEQ '0'
+     C           SDED      ANDGEZZEDAT
+     C                     MOVE '1'       *IN90
+     C                     END
+     C*
+     C*  If End of File or of Events between From and To Dates
+     C*    then calculate interest for remaining period
+     C*    (which may be the whole period if no required events read)
+     C*
+     C           *IN90     IFEQ '1'
+     C                     Z-ADDZZEDAT    ZEDATE
+     C                     EXSR ZRATE
+     C                     EXSR ZSAVE                                     S01158
+     C                     EXSR ZACCR
+     C                     EXSR ZRSTOR                                    S01158
+     C*********************ADD  ZACRD     ZIAMT                           E19290
+     C                     ADD  ZACCRD    ZIAMT                           E19290
+     C*
+     C                     ELSE
+     C*
+     C*  If Event read is within required dates
+     C*    check if it is a required event
+     C*
+     C           SDET      IFEQ 'PP'
+     C           SDET      OREQ 'MP'
+     C           SDET      OREQ 'IR'
+     C*
+     C*  A required Event marks the End of This Interest Period
+     C*    so calculate the interest up to the Event Date
+     C*
+     C                     Z-ADDSDED      ZEDATE
+     C                     EXSR ZRATE
+     C                     EXSR ZSAVE                                     S01158
+     C                     EXSR ZACCR
+     C                     EXSR ZRSTOR                                    S01158
+     C*********************ADD  ZACRD     ZIAMT                           E19290
+     C                     ADD  ZACCRD    ZIAMT                           E19290
+     C*
+     C*  Set Start of Next Interest Period = End of this Period
+     C*    and save values from Event before reading next one
+     C*
+     C                     Z-ADDSDED      ZSDATE
+     C                     Z-ADDSDNC      CPNR
+     C                     Z-ADDSDCP      CFCT
+     C                     MOVE SDTP      CPDP
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     Z-ADDZZSDAT    ZSDATE
+     C                     Z-ADDZZEDAT    ZEDATE
+     C           ZZRET     CABEQ2         ZZRET2
+     C           ZENDAC    TAG                              *** ZENDAC
+     C*
+     C                     ENDSR

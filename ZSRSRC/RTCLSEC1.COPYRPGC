@@ -1,0 +1,215 @@
+     C*****************************************************************
+     C*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 10Mar06               *
+      *  Prev Amend No. CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     C*                 106661             Date 17Sep97               *
+     C*                 114621             Date 21Feb97               *
+     C*                 CCB002             DATE 16Jul96               *
+     C*                 CRT001  *CREATE    DATE 28Feb95               *
+     C*                                                               *
+     C*---------------------------------------------------------------*
+     C*                                                               *
+      *  CSD027 - Change Customer Number to alpha.                    *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     C*  106661 - Incorporate 089531 (Prevent closure of alternate    *
+     C*           account).                                           *
+     C*  114621 - Replace blank with 'X' to mean not to validate      *
+     C*           condition.                                          *
+     F*  CCB002 - COB Performance Enhancements                        *
+     F*           Access now via access object                        *
+     F*           MEMOS is now accessed via GL/RE key rather than old *
+     F*           relative record number.                             *
+     C*  CRT001 - Retail Teller System                                *
+     C*                                                               *
+     C*****************************************************************
+     C*                                                               *
+     C*            RTCLSE - Close account condition check             *
+     C*                                                               *
+     C* CALLS      RTIACT - Inactive account check                    *
+     C*            RTBKPT - Bankrupt/Liquidation check                *
+     C*            RTBDPT - Bad Debt check                            *
+     C*            RTBKCR - Block credit check                        *
+     C*            RTBKDR - Block debit check                         *
+     C*            RTBRCH - Branch different check                    *
+     C*            RTRFCR - Refer credit check                        *
+     C*            RTRFDR - Refer debit check                         *
+     C*                                                               *
+     C* CALLED BY         -                                           *
+     C*                                                               *
+     C* FLDS USED  Input                                              *
+     C*            @V     - Validation indicators array               *
+     C*            @BD    - Block credit     array position           *
+     C*            @BC    - Block debit      array position           *
+     C*            @RC    - Refer credit     array position           *
+     C*            @RD    - Refer debit      array position           *
+     C*            @DB    - Bad debt         array position           *
+     C*            @DF    - Branch different array position           *
+     C*            @IA    - Inactive account array position           *
+     C*            @BL    - Bankrupt/Liquidation array position       *
+     C*            @BRCD  - Branch code                               *
+     C*            @HELD  - Held amount                               *
+     C*            @RRNM  - Relative record number                    *
+     C*            PTLBC  - Teller branch code                        *
+     C*                                                               *
+     C* FLDS USED  Output                                             *
+     C*            @TI    - Terminal error index                      *
+     C*            @T     - Terminal message codes array              *
+     C*            *IN80  - Database error on PF/MEMOS                *
+     C*                                                               *
+     C*****************************************************************
+     C           RTCLSE    BEGSR                           ** RTCLSE **
+     C*                                                                   CCB002
+     C** Define variables                                                 CCB002
+     C*                                                                   CCB002
+     C                     Z-ADD@ACNOM    @ACNOM 100                      CCB002
+     C**********           Z-ADD@CNUMM    @CNUMM  60                                   CCB002 CSD027
+     C                     MOVEL@CNUMM    @CNUMM  6                                           CSD027
+     C                     MOVE @CCYM     @CCYM   3                       CCB002
+     C**********           Z-ADD@ACCDM    @ACCDM  40                                   CCB002 CGL029
+     C                     Z-ADD@ACCDM    @ACCDM 100                                          CGL029
+     C                     Z-ADD@ACSQM    @ACSQM  20                      CCB002
+     C                     MOVE @BRCAM    @BRCAM  3                       CCB002
+      *                                                                   106661
+      ** Alternative a/c check                                            106661
+     C           KLACNT    CHAINREIAC                80                   106661
+     C           *IN80     IFEQ '1'                                       106661
+     C           *LOCK     IN   LDA                                       106661
+     C                     MOVEL@ACCN     DBKEY                           106661
+     C                     MOVEL'REIAC'   DBFILE                          106661
+     C                     ELSE                                           106661
+     C           NOALT     IFGT 0                                         106661
+     C                     ADD  1         @TI                             106661
+     C                     MOVEL'ALT A/C' @T,@TI                          106661
+     C                     END                                            106661
+     C                     END                                            106661
+     C*
+     C** Block debit check
+     C*
+     C***********@V,@BD    IFNE ' '                                       114621
+     C           @V,@BD    IFNE 'X'                                       114621
+     C                     EXSR RTBKDR
+     C                     END
+     C*
+     C** Block credit check
+     C*
+     C***********@V,@BC    IFNE ' '                                       114621
+     C           @V,@BC    IFNE 'X'                                       114621
+     C                     EXSR RTBKCR
+     C                     END
+     C*
+     C** Refer debit check
+     C*
+     C***********@V,@RD    IFNE ' '                                       114621
+     C           @V,@RD    IFNE 'X'                                       114621
+     C                     EXSR RTRFDR
+     C                     END
+     C*
+     C** Refer credit check
+     C*
+     C***********@V,@RC    IFNE ' '                                       114621
+     C           @V,@RC    IFNE 'X'                                       114621
+     C                     EXSR RTRFCR
+     C                     END
+     C*
+     C** Inactive account check
+     C*
+     C***********@V,@IA    IFNE ' '                                       114621
+     C           @V,@IA    IFNE 'X'                                       114621
+     C                     EXSR RTIACT
+     C                     END
+     C*
+     C** Bankrupt/Liquidation check
+     C*
+     C***********@V,@BL    IFNE ' '                                       114621
+     C           @V,@BL    IFNE 'X'                                       114621
+     C                     EXSR RTBKPT
+     C                     END
+     C*
+     C** Bad Debt check
+     C*
+     C***********@V,@DB    IFNE ' '                                       114621
+     C           @V,@DB    IFNE 'X'                                       114621
+     C                     EXSR RTBDPT
+     C                     END
+     C*
+     C** Branch different check
+     C*
+     C***********@V,@DF    IFNE ' '                                       114621
+     C           @V,@DF    IFNE 'X'                                       114621
+     C                     MOVELBRCA      @BRCA
+     C                     MOVELPTLBC     @TLBC
+     C                     EXSR RTBRCH
+     C                     END
+     C*
+     C** If held amount is not zero
+     C*
+     C           @HELD     IFNE 0
+     C                     ADD  1         @TI
+     C                     MOVEL'HOLDS'   @T,@TI
+     C                     END
+     C*
+     C** Retrieve PF/MEMOS details
+     C*
+     C***********@RRNM*****CHAINMEMOS                80                   CCB002
+     C*
+     C           @ACNOM    IFNE *ZEROS                                    CCB002
+      *                                                                   CCB002
+     C                     CALL 'AOMEMSR0'                                CCB002
+     C                     PARM *BLANKS   W0RTCD  7        I:Return code  CCB002
+     C                     PARM '*KEY   ' W0OPTN  7        I:Option       CCB002
+     C                     PARM @ACNOM    W0RETL 100       O:Retail A/C NoCCB002
+     C**********           PARM *ZERO     W0CNUM  60       I:Customer No.              CCB002 CSD027
+     C                     PARM *BLANKS   W0CNUM  6        I:Customer No.                     CSD027
+     C                     PARM *BLANKS   W0CCY   3        I:Currency     CCB002
+     C**********           PARM @ACCDM    W0ACCD  40       O:Account Code              CCB002 CGL029
+     C                     PARM @ACCDM    W0ACCD                                              CGL029
+     C                     PARM *ZERO     W0ACSQ  20       I:Account Seq. CCB002
+     C                     PARM *BLANKS   W0BRCA  3        I:Branch       CCB002
+     C           DSMEMS    PARM DSMEMS    DSFDY                           CCB002
+      *                                                                   CCB002
+     C                     ELSE                                           CCB002
+      *                                                                   CCB002
+     C                     CALL 'AOMEMSR0'                                CCB002
+     C                     PARM *BLANK    W0RTCD  7        I:Return code  CCB002
+     C                     PARM '*KEY   ' W0OPTN  7        O:Option       CCB002
+     C                     PARM *ZERO     W0RETL 100       I:Retail A/C NoCCB002
+     C**********           PARM @CNUMM    W0CNUM  60       O:Customer No.              CCB002 CSD027
+     C                     PARM @CNUMM    W0CNUM           O:Customer No.                     CSD027
+     C                     PARM @CCYM     W0CUCD  3        O:Currency     CCB002
+     C**********           PARM @ACCDM    W0ACCD  40       O:Account Code              CCB002 CGL029
+     C                     PARM *ZERO     W0ACCD 100                                          CGL029
+     C                     PARM @ACSQM    W0ACSQ  20       O:Account Seq. CCB002
+     C                     PARM @BRCAM    W0BRCA  3        O:Branch       CCB002
+     C           DSMEMS    PARM DSMEMS    DSFDY                           CCB002
+      *                                                                   CCB002
+     C                     ENDIF                                          CCB002
+      *                                                                   CCB002
+     C           W0RTCD    IFNE *BLANK                                    CCB002
+     C                     MOVE '1'       *IN80                           CCB002
+     C                     ENDIF                                          CCB002
+     C*                                                                   CCB002
+     C** If record found
+     C*                                                                   CCB002
+     C           *IN80     IFEQ '0'
+     C*
+     C***Release*the*record                                               CCB002
+     C*********************                                               CCB002
+     C*********************EXCPT@RLMEM                                    CCB002
+     C*
+     C** If cleared balance is not the same as the ledger balance
+     C*
+     C           CLBLN     IFNE LDBLN
+     C                     ADD  1         @TI
+     C                     MOVEL'FLOAT'   @T,@TI
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************

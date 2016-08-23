@@ -1,0 +1,135 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing Module                                      */
+/*                                                                             */
+/*       V_CLCCYCWO - CURRENCY WEIGHTING CODES (PLEDGE COLLATERAL)             */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2006                     */
+/*                                                                             */
+/*       Last Amend No. CGL165             Date 23Feb15                        */
+/*       Prev Amend No. CER059             Date 19Jul10                        */
+/*                      CER048             Date 19May08                        */
+/*                      CER043             Date 19May08                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      241629             Date 15Aug06                        */
+/*                      CSD031             Date 10Apr06                        */
+/*                      CSD027A            Date 08May06                        */
+/*                      BUG4721 *CREATE    Date 06Apr06                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       CGL165 - Dual Withholding Tax (Recompile)                             */
+/*       CER059 - German Feature Upgrade to Delhi                              */
+/*       CER048 - German Features - Taxes (Recompile)                          */
+/*       CER043 - German Features LF041-00 New Fields and Defaulting(Recompile)*/
+/*       241629 - Valuation amount & lending value were not calculated         */
+/*                (Recompile)                                                  */
+/*       CSD031 - Enhanced Centralised Static Data (Recompile)                 */
+/*       CSD027A - Conversion Of Customer Number to Alpha                      */
+/*       BUG4721 - SQL0204 V_CLINSCWO IN *LIBL TYPE *FILE NOT FOUND UPON       */
+/*                 INSERT OF A PLEDGE COLLATERAL                               */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  (                                                                             :
+  WOZONE ,                                                                      :
+  WOCNUM ,                                                                      :
+  WOPTFR ,                                                                      :
+  WOCYCD ,                                                                      :
+  WOWEIG ,                                                                      :
+  PDPERC ,                                                                      :
+  PDCUML ,                                                                      :
+  PRIORITY )                                                                    :
+  AS                                                                            :
+  SELECT                                                                        :
+   WOZONE                                                                       :
+  ,WOCNUM                                                                       :
+  ,WOPTFR                                                                       :
+  ,WOCYCD                                                                       :
+  ,WOWEIG                                                                       :
+  ,PDPERC                                                                       :
+  ,PDCUML                                                                       :
+  ,PRIORITY                                                                     :
+  FROM (                                                                        :
+   SELECT                                                                       :
+    WOZONE                                                                      :
+   ,WOCNUM                                                                      :
+   ,WOPTFR                                                                      :
+   ,WOCYCD                                                                      :
+   ,WOWEIG                                                                      :
+***,CASE**WHEN*WOCNUM*<>*0                                                      :CSD027A
+   ,CASE WHEN TRIM(WOCNUM) <> ''                                                :CSD027A
+     AND TRIM(WOPTFR) <> ''                                                     :
+     AND TRIM(WOCYCD) <> ''                                                     :
+     AND TRIM(WOSESN)  = ''                                                     :
+     AND TRIM(WOCNCD)  = '' THEN 1                                              :
+*****WHEN*****WOCNUM*<>*0                                                       :CSD027A
+     WHEN TRIM(WOCNUM) <> ''                                                    :CSD027A
+     AND TRIM(WOPTFR) <> ''                                                     :
+     AND TRIM(WOCYCD)  = ''                                                     :
+     AND TRIM(WOSESN)  = ''                                                     :
+     AND TRIM(WOCNCD)  = '' THEN 2                                              :
+****WHEN*******WOCNUM*<>*0                                                      :CSD027A
+    WHEN TRIM(WOCNUM) <> ''                                                     :CSD027A
+     AND TRIM(WOPTFR)  = ''                                                     :
+     AND TRIM(WOCYCD) <> ''                                                     :
+     AND TRIM(WOSESN)  = ''                                                     :
+     AND TRIM(WOCNCD)  = '' THEN 3                                              :
+****WHEN*******WOCNUM*<>*0                                                      :CSD027A
+    WHEN TRIM(WOCNUM) <> ''                                                     :CSD027A
+     AND TRIM(WOPTFR)  = ''                                                     :
+     AND TRIM(WOCYCD)  = ''                                                     :
+     AND TRIM(WOSESN)  = ''                                                     :
+     AND TRIM(WOCNCD)  = '' THEN 4                                              :
+    ELSE 0 END AS PRIORITY                                                      :
+    FROM GZSDCUWOPD                                                             :
+    UNION                                                                       :
+    SELECT                                                                      :
+     T_ZONE AS WOZONE                                                           :
+****,0******AS*WOCNUM                                                           :CSD027A
+    ,''     AS WOCNUM                                                           :CSD027A
+    ,''     AS WOPTFR                                                           :
+    ,T_RCCY AS WOCYCD                                                           :
+    ,A6POWC AS WOWEIG                                                           :
+    ,5 AS PRIORITY                                                              :
+    FROM                                                                        :
+      GPTRAPPD                                                                  :
+     ,GZSDCURRPD                                                                :
+    WHERE                                                                       :
+          T_MOD = 'SE'                                                          :
+     AND T_SMOD = 'SCPS'                                                        :
+     AND T_RCCY = A6CYCD                                                        :
+     AND T_ZONE = A6ZONE ) AS CURR                                              :
+    ,GPWEIGPD                                                                   :
+    WHERE                                                                       :
+         CURR.PRIORITY <> 0                                                     :
+     AND CURR.WOWEIG = PDWEIG ;                                                 :
+                                                                                :
+ LABEL ON COLUMN                                                                :
+  **********/**********                                                         :
+ ( WOZONE IS 'ZONE' ,                                                           :
+  WOCNUM IS 'CUSTOMER            NUMBER' ,                                      :
+  WOPTFR IS 'FOLIO               REF' ,                                         :
+  WOCYCD IS 'CURRENCY            CODE' ,                                        :
+  WOWEIG IS 'WEIGHTING           CODE' ,                                        :
+  PDPERC IS 'PERCENTAGE' ,                                                      :
+  PDCUML IS 'CUMULATIVE          PERCENTAGE' ) ;                                :
+                                                                                :
+ LABEL ON COLUMN                                                                :
+  **********/**********                                                         :
+ ( WOZONE TEXT IS 'ZONE' ,                                                      :
+  WOCNUM TEXT IS 'CUSTOMER NUMBER' ,                                            :
+  WOPTFR TEXT IS 'PORTFOLIO REFERENCE' ,                                        :
+  WOCYCD TEXT IS 'CURRENCY CODE' ,                                              :
+  WOWEIG TEXT IS 'WEIGHTING CODE' ,                                             :
+  PDPERC TEXT IS 'PERCENTAGE' ,                                                 :
+  PDCUML TEXT IS 'CUMULATIVE PERCENTAGE' ) ;                                    :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Currency Weighting Codes (Pledge Collateral)      ';                     :
+                                                                                :

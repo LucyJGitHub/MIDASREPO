@@ -1,0 +1,200 @@
+     H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Balances sort 2')                             *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - General Ledger Module                                *
+     F*                                                               *
+     F*     GL0745 - SUMMARIZES LF/GLX15 TO PF/GLX16 FOR GL0750       *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. 262907             Date 01Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 06May06               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                    200390            Date  21May02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+     F*                    179407            DATE  22Jun00            *
+      * Midas DBA 3.02 -----------------------------------------------*
+     F*                    156318            DATE  18Oct99            *
+     F*                    154761            DATE  18Oct99            *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                    LN0529            DATE   9AUG90            *
+     F*                    S01117            DATE  28/02/89           *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  262907 - FOOB GLC0730 and GLC0750 due to truncated balance   *
+      *         - Increase the length of the LDBL from 15,0 to 18,0 to*
+      *           make sure that balance will not be truncated.       *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *     200390 - Dbase error in file SDBRCHPD AT 005 IN GL0750       *
+      *              Don't output blank record to GLX16  if no record on *
+      *              GLEXGC.                                             *
+     F*     179407 - Ledger balance of the last record in GLX16          *
+     F*              file is incorrect.                                  *
+     F*     156318 - Balances were not initialised by 154761 .           *
+     F*     154761 - No extract occurs if branch not found, processing   *
+     F*              is changed . SETLL file with branch value .         *
+     F*     LN0529  -  IF ONLY ONE BRANCH REQUESTED STOP AT END OF BRANCH*
+     F*     S01117  -  MULTIBRANCHING                                    *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F*GLX15***IPE*E***********K********DISK                              154761
+     FGLX15   IF  E           K        DISK                               154761
+     FGLX16   O   E                    DISK
+     F*
+     F********************************************************************
+     E                    CPY@    1   1 80
+     I*              GLX15(SGLEY) INPUT FIELDS
+     IGLEXGCF     01
+     I              RECI                            WWRECI                156318
+     I              CNUM                            WWCNUM                156318
+     I              CCY                             WWCCY                 156318
+     I              ACOD                            WWACOD                156318
+     I              ACSQ                            WWACSQ                156318
+     I              RIND                            WWRIND                156318
+     I              BRCA                            WWBRCA                156318
+     I              CMPYM                           WWCMPY                156318
+     I              CNAM                            WWCNAM                156318
+     I              CTOW                            WWCTOW                156318
+     I              ACKN                            WWACKN                156318
+     I              ASEC                            WWASEC                156318
+     I              TACD                            WWTACD                156318
+     I              TANM                            WWTANM                156318
+     I              LDBL                            WWLDBL                156318
+     I              DCIN                            WWDCIN                156318
+     I*                                                                   156318
+     I**************BRCD                            BRCD  L1       S01117*154761
+     I**************BRCA                            BRCA  L1       S01117*154761
+     I**************ASEC                            ASEC  L1              154761
+     I**************TACD                            TACD  L1              154761
+     I**************ACOD                            ACOD  L1              154761
+     I**************CCY                             CCY   L1              154761
+     I**************DCIN                            DCIN  L1              154761
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I********************************************************************
+     C           *ENTRY    PLIST                                          LN0529
+     C                     PARM           RENT    3                       LN0529
+     C                     MOVEACPY@      BIS@   80                       156318
+     C**********           Z-ADD0         TLDBL  150                                   156318 262907
+     C                     Z-ADD0         TLDBL  180                                          262907
+     C                     MOVE 'N'       RRIND   1                                           200390
+     C**                                                                  156318
+     C************IN10     IFEQ '0'                                       156318
+     C***********          MOVEACPY@      BIS@   80                       156318
+     C***********          Z-ADD0         TLDBL  150                      156318
+     C**                                                                  156318
+     C***********          SETON                     1011                 156318
+     C*                                                                   156318
+     C***********          END                                            156318
+     C*                                                                   LN0529
+     C           RENT      IFEQ 'ALL'                                     154761
+     C                     MOVE *LOVAL    POSIT   3        POINTER        154761
+     C                     ELSE                                           154761
+     C                     MOVE RENT      POSIT                           154761
+     C                     END                                            154761
+     C*                                                                   154761
+     C           POSIT     SETLLGLX15                                     154761
+     C                     READ GLX15                    80               154761
+     C*                                                                   156318
+     C                     MOVE WWCCY     CCY                             156318
+     C                     MOVE WWACOD    ACOD                            156318
+     C                     MOVE WWBRCA    BRCA                            156318
+     C                     MOVE WWASEC    ASEC                            156318
+     C                     MOVE WWTACD    TACD                            156318
+     C                     MOVE WWDCIN    DCIN                            156318
+     C***                                                                 154761
+     C           *IN80     DOWEQ*OFF                                      154761
+     C**                                                                  154761
+     C           RRIND     IFEQ 'N'                                                           200390
+     C                     MOVE 'Y'       RRIND                                               200390
+     C                     ENDIF                                                              200390
+      *                                                                                       200390
+     C           RENT      IFNE 'ALL'                                     LN0529
+     C           RENT      IFNE BRCA                                      LN0529
+     C                     SETON                       LR                 LN0529
+     C                     RETRN                                          LN0529
+     C                     END                                            LN0529
+     C                     END                                            LN0529
+     C*
+     C           TLDBL     ADD  LDBL      TLDBL
+     C*                                                                   156318
+     C           BRCA      IFNE WWBRCA                                    156318
+     C           ASEC      ORNE WWASEC                                    156318
+     C           TACD      ORNE WWTACD                                    156318
+     C           ACOD      ORNE WWACOD                                    156318
+     C           CCY       ORNE WWCCY                                     156318
+     C           DCIN      ORNE WWDCIN                                    156318
+     C                     Z-ADDTLDBL     LDBL                            156318
+     C                     Z-ADD0         TLDBL                           156318
+     C                     WRITEGLX16F                                    156318
+     C                     END                                            156318
+     C*
+     C*L1**********        DO                                             154761
+     C*L1**********        Z-ADDTLDBL     LDBL                            154761
+     C**                                                                  154761
+     C*L1**********        SETOF                     10                   154761
+     C*L1**********        END                                            154761
+     C**                                                                  154761
+     C*************        Z-ADDTLDBL     LDBL                     154761*156318
+     C*************        SETOF                     10            154761*156318
+     C*************        WRITEGLX16F                             154761*156318
+     C                     MOVE WWRECI    RECI                            156318
+     C*************        Z-ADDWWCNUM    CNUM                                         156318 CSD027
+     C                     MOVE WWCNUM    CNUM                                                CSD027
+     C                     MOVE WWCCY     CCY                             156318
+     C                     Z-ADDWWACOD    ACOD                            156318
+     C                     Z-ADDWWACSQ    ACSQ                            156318
+     C                     Z-ADDWWRIND    RIND                            156318
+     C                     MOVE WWBRCA    BRCA                            156318
+     C                     MOVE WWCMPY    CMPYM                           156318
+     C                     MOVE WWCNAM    CNAM                            156318
+     C                     MOVE WWCTOW    CTOW                            156318
+     C                     MOVE WWACKN    ACKN                            156318
+     C                     Z-ADDWWASEC    ASEC                            156318
+     C                     Z-ADDWWTACD    TACD                            156318
+     C                     MOVE WWTANM    TANM                            156318
+     C                     Z-ADDWWLDBL    LDBL                            156318
+     C                     MOVE WWDCIN    DCIN                            156318
+     C*                                                                   156318
+     C                     READ GLX15                    80               154761
+     C*                                                                   154761
+     C                     ENDDO                                          154761
+     C*                                                                   154761
+      **  If the last branch/account code to be processed has two or      179407
+      **  more records, use the total ledger balance computed.            179407
+      *                                                                   179407
+     C           RRIND     IFEQ 'Y'                                                           200390
+      *                                                                                       200390
+     C           TLDBL     IFNE 0                                         179407
+     C                     ADD  TLDBL     LDBL                            179407
+     C                     ENDIF                                          179407
+      *                                                                   179407
+     C                     WRITEGLX16F                                    156318
+     C                     ENDIF                                                              200390
+      *                                                                                       200390
+     C                     MOVE *ON       *INLR                           154761
+     C*                                                                   154761
+     C********************************************************************154761
+     O*              GLX16(GLEX) OUTPUT FIELDS                            154761
+     O*GLX16F**T********L1*11                                             154761
+     O*********                *ALL                                       154761
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

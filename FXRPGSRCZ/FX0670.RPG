@@ -1,0 +1,1020 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FX Forward book file reorganization')            *
+      *****************************************************************
+      *                                                               *
+      *  Midas - FX Dealer Module                                     *
+      *                                                               *
+      *       FX0670 - UPDATE FX FORWARD BOOK FILE                    *
+      *                                                               *
+      *     Function:   This program updates the Foreign Exchange     *
+      *     (I/C INIT)  forward book file (FXFWDDPP) during input     *
+      *                 cycle initiation.                             *
+      *                                                               *
+      *     Called by: FX8010  - Daily file setup.                    *
+      *                                                               *
+      *     Calls    : none                                           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CDL094             Date 11Jun14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CDL049             Date 07Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL010             Date 02Aug02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU003             Date  27APR98              *
+      *                      S01453         DATE  14DEC93            *
+      *                      E36026         DATE  12FEB92            *
+      *                      S01319         DATE  21AUG91            *
+      *                      S01194         DATE  03JAN90             *
+      *                      E14319         DATE  15/07/88            *
+      *                      E12427         DATE  25/03/88            *
+      *                      S01136         DATE  09/12/87            *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *       CDL010 - Prevent last user that actioned the trade from *
+      *                authorising it.                                *
+      *                Recompile due to changes in FXDEALPP.          *
+      *       CRE003 - Recomplied over changed FXOOPTLL               *
+      *       S01453 - MARGIN AND FX POSITIONS/POINTS AND BASE CURRENCY
+      *                 POSITIONS/POINTS ADDED TO FX INPUT (RECOMPILED)
+      *       E36026 - Database error caused in FX0590 when FXFWDDPP  *
+      *                is empty                                       *
+      *       S01319 - Remove redundant processing
+      *       S01194 - STANDING DATA CHANGES FOR RELEASE 10           *
+      *       E14319 - Remove ignores of ICD record formats.          *
+      *       E12427 - BCE should always be added as it is not signed.*
+      *       S01136 - Remove database error if no records on FXFWDTLL*
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FFXOOPTLLIF  E           K        DISK         KINFSR INFSR      UC
+     F**FDICDRLLIF  E           K        DISK         KINFSR INFSR      UCS01194
+     F********    TABTB20F                          KIGNORE               E14319
+     F********    TABTB11F                          KIGNORE               E14319
+     F*FXSSTSLLIF**E**********K********DISK*********KINFSR*INFSR******UC**S01319
+     FFXFWMHLLUF  E           K        DISK         KINFSR INFSR A    UC
+     FFXFWDTLLUF  E           K        DISK         KINFSR INFSR A    UC
+     F*****************************************************************
+      /EJECT
+     E*
+     E                    CPY@    1   1 80                                S01194
+      *
+     E**  ARRAY FOR SR. ZA0710 - CUMULATIVE DAYS IN YEAR FOR 4 YEAR PERIOD
+     E                    @YD     4   4  5 0A
+     E*
+     E**  ARRAY FOR SR. ZA0710 - CUMULATIVE DAYS IN YEAR PER MONTH
+     E                    @MD    13  13  5 0A
+     E/COPY WNCPYSRC,FX0670E001
+     E*
+      /EJECT
+     I*****************************************************************
+     I* ID  F  C  H  L   FUNCTION OF INDICATORS
+     I* 01               RECORD FORMAT FXDEALL0
+     I* 02               RECORD FORMAT FXDEALL1
+     I*****    60        NO RECORDS ON FILE FDICDRLL                      S01194
+     I*********61********NO*RECORDS*ON*FILE*FXSSTSLL**********************S01319
+     I*        62        NO RECORDS ON FILE FXFWDTLL MAIN PROCESS
+     I*        63        NO RECORDS ON FILE FXFWMHLL MAIN PROCESS
+     I*        64        NO RECORDS ON FILE FXOOPTLL
+     I*        80        LOOKUP ARRAY @YD
+     I*        81        LOOKUP ARRAY @MD
+     I*                  -----------------------------------
+     I*                  WHILE UPDATING FXFWDTLL & FXFWMHLL
+     I*                  WITH AMOUNTS FROM FXOOPTLL.
+     I*                  -----------------------------------
+     I*        65        NO RECORDS ON FILE FXFWDTLL
+     I*        66        NO RECORDS ON FILE FXFWMHLL
+     I*****************************************************************
+      /EJECT
+     I*
+     IFXDEALL0    01
+     IFXDEALL1    02
+     I*
+     I* PROGRAM STATUS DATA STRUCTURE                                *
+     IPSDS       SDS
+     I                                      201 208 @FILE
+     I                                      254 263 @JOB
+     I                                      254 256 @USER
+     I*
+     I* LOCAL DATA AREA DATA STRUCTURE                                *
+     I           UDS
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+     I**  DATA STRUCTURE FOR SR. ZA0710 - FIELD IS @@Z71Y
+     I            DS
+     I                                        1   40@@Z71Y
+     I                                        1   10@@SSY1
+     I                                        2   20@@SSY2
+     I                                        3   30@@SSY3
+     I                                        4   40@@SSY4
+     I****DATA STRUCTURE FOR FIELD RUNA ON TABTB10                        S01194
+     I*   DATA STRUCTURE FOR FIELD BJMRDT ON SDBANKPD                     S01194
+     I            DS
+     I*****                                   1   7 RUNA                  S01194
+     I                                        1   7 @@RUNA                S01194
+     I                                        1   20@@D
+     I                                        3   5 @@M
+     I                                        6   70@@Y
+     I**  DATA STRUCTURE FOR SR. ZA0710 - FIELD IS @@VDT
+     I            DS
+     I                                        1   80@@VDT
+     I                                        1   40@@YR
+     I                                        5   60@@Z71M
+     I                                        7   80@@Z71D
+     I* DATA STRUCTURE TO REDEFINE DATE FIELD ON FXFWDTLL.           *
+     I            DS
+     I                                        1   80@@DDTL
+     I                                        1   40FPFWBY
+     I                                        5   60FPFWBM
+     I                                        7   80FPFWBD
+     I* DATA STRUCTURE TO REDEFINE DATE FIELD ON FXFWMHLL.           *
+     I            DS
+     I                                        1   80@@DMHL
+     I                                        1   40FQFWBY
+     I                                        5   60FQFWBM
+     I                                        7   80FQFBHM
+     I* DATA STRUCTURE TO REDEFINE DATE FIELD ON FXOOPTLL.           *
+     I            DS
+     I                                        1   80@@DOPT
+     I                                        1   40FHVDYY
+     I                                        5   60FHVDMM
+     I                                        7   80FHVDDD
+      *                                                                   S01194
+     ISDBANK    E DSSDBANKPD                                              S01194
+      ** BANK DETAILS ACCESSED VIA ACCESS PROGRAM                         S01194
+     ISDTRMA    E DSSDTRMAPD                                              S01319
+     I** EXTERNAL DS FOR TREASURY MANAGEMENT DETAILS                      S01319
+      *                                                                   S01194
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*                                                                   S01117
+     I/COPY WNCPYSRC,FX0670I001
+      /EJECT
+     C*****************************************************************
+     C* *LIKE DEFN
+     C*
+     C           *LIKE     DEFN FPCCY     @@SCCY
+     C*****      *LIKE     DEFN KEY       @DIC                            S01194
+     C           *LIKE     DEFN FQCCY     @FXMH1
+     C           *LIKE     DEFN FQFWBY    @FXMH2
+     C           *LIKE     DEFN FQFWBM    @FXMH3
+     C           *LIKE     DEFN FQFBHM    @FXMH4
+     C           *LIKE     DEFN FPCCY     @FXFD1
+     C           *LIKE     DEFN FPFWBY    @FXFD2
+     C           *LIKE     DEFN FPFWBM    @FXFD3
+     C           *LIKE     DEFN FPFWBD    @FXFD4
+      /EJECT
+     C*****************************************************************
+     C* KLISTS
+     C*
+     C**KLIST FOR FDICDRLL                                                S01194
+     C*****      @DICD     KLIST                                          S01194
+     C*****                KFLD           @DIC                            S01194
+     C*
+     C* KLIST FOR FXFWMHLL
+     C           @FXMH     KLIST
+     C                     KFLD           @FXMH1
+     C                     KFLD           @FXMH2
+     C                     KFLD           @FXMH3
+     C                     KFLD           @FXMH4
+     C*
+     C* KLIST FOR FXFWDTLL
+     C           @FXFD     KLIST
+     C                     KFLD           @FXFD1
+     C                     KFLD           @FXFD2
+     C                     KFLD           @FXFD3
+     C                     KFLD           @FXFD4
+      /EJECT
+     C*****************************************************************
+     C* MAINLINE                                                      *
+     C*                                                               *
+     C* ROUTINES : #B              MAINLINE LOGIC                     *
+     C*            #BB             CHECKING IF AMOUNTS FROM FXFWDTLL  *
+     C*                            HAVE TO BE CONSIDERED IF NOT IN    *
+     C*                            CURRENT HALF MONTH.                *
+     C*            #BC             PROCESSING RECORDS ON FXFWMHLL     *
+     C*            #BA             INITIALIZATION OF WORK FIELDS      *
+     C*            #BCA            PROCESSING RECORDS ON FXOOPTLL     *
+     C*            #BCAA           UPDATING FIELDS FROM FXOOPTLL ONTO *
+     C*                            FILES FXFWDTLL AND FXFWMHLL.       *
+     C*            #A              INITIALIZATION                     *
+     C*            #ZA0710         CONVERT MIDAS DAY NO. TO YYYYMMDD  *
+     C*            #C              TERMINATION ROUTINE.               *
+     C*            INFSR           FILE ERROR SUBROUTINE.             *
+     C*            *PSSR           PROGRAM ERROR SUBROUTINE.          *
+     C*                                              .                *
+     C*****************************************************************
+     C*
+     C                     EXSR #A
+     C*
+     C           *INU7     IFNE '1'
+     C                     EXSR #B
+     C                     END
+     C*
+     C                     EXSR #C
+     C*
+     C                     SETON                     LR
+     C*
+      /EJECT
+     C*****************************************************************
+     C* #B                                                            *
+     C* --                                                            *
+     C* THIS ROUTINE IS THE MAINLINE LOGIC.                         *
+     C*
+     C* CALLS    : #BA, #BB, #BC                                      *
+     C*****************************************************************
+     C*
+     C           #B        BEGSR
+     C*
+     C           *LIKE     DEFN FPDYCI    @@SYCI
+     C           *LIKE     DEFN FPDYCO    @@SYCO
+     C           *LIKE     DEFN FPDYDE    @@SYDE
+     C/COPY WNCPYSRC,FX0670C001
+     C                     MOVE '1'       @@SWT                           E36026
+     C*
+     C           *IN62     DOWEQ'0'
+     C*
+     C* READING NEXT RECORD ON DAILY DEALS FILE.
+     C*
+     C                     READ FXFWDTLL                 62
+     C*
+     C* IF PROCESSING FIRST RECORD THEN SET FIRST RECORD SWITCH
+     C* @@REC1 TO ONE AND STORE CURRENCY FPCCY IN @@SCCY
+     C*
+     C           @@REC1    IFEQ ' '
+     C           *IN62     ANDEQ'0'                                       E36026
+     C                     MOVE '0'       @@SWT                           E36026
+     C                     MOVE '1'       @@REC1  1
+     C                     MOVE FPCCY     @@SCCY
+     C                     EXSR #BA
+     C                     END
+     C*
+     C* CHECKING IF NOT END OF FILE AND ALSO THE CURRENCY HAS ALREADY
+     C* BEEN PROCESSED(THAT IS STORED CURRENCY @@SCCY *EQ PRESENT ON
+     C* RECORD FPCCY & PROCESS COMPLETD SWITCH @@SWT *EQ TO ONE)
+     C* THEN BYPASS PROCESS.
+     C*
+     C           *IN62     IFEQ '0'
+     C           @@SWT     ANDEQ'1'
+     C           FPCCY     ANDEQ@@SCCY
+     C                     GOTO #B1
+     C                     END
+     C*
+     C* STORE FPCCY AS IT IS A NEW CURRENCY THEN STORE CURRENCY
+     C* MOVE ZERO TO PROCESS SWITCH AND INITIALIZE WORK FIELDS.
+     C*
+     C           *IN62     IFEQ '0'
+     C           @@SWT     ANDEQ'1'
+     C           FPCCY     ANDNE@@SCCY
+     C                     MOVE FPCCY     @@SCCY
+     C                     MOVE '0'       @@SWT   1
+     C                     EXSR #BA
+     C                     END
+     C*
+     C* IF END OF FILE AND PROCESSED SWITCH(@@SWT *EQ 1) THEN END
+     C* OF PROCESS(END OF PROGRAM).
+     C           *IN62     IFEQ '1'
+     C           @@SWT     ANDEQ'1'
+     C                     GOTO #B9
+     C                     END
+     C*
+     C* IF RECORD FOUND AND STORED CURRENCY EQUALS CURRENCY AND ALSO
+     C* RUNDATE (@@VDT) GREATER THAN OR EQUAL TO THAT ON RECORD THEN
+     C* CHECK IF RECORD BELONGS TO CURRENT HALF MONTH(SR #BB) AND
+     C* DELETE RECORD.
+     C* IF NONE OF THE ABOVE HOLD GOOD THEN PROCESS FILE FXFWMHLL FOR
+     C* HALF MONTHLY RECORDS(SR #BC).
+     C*
+     C           *IN62     IFEQ '0'
+     C           @@SCCY    ANDEQFPCCY
+     C/COPY WNCPYSRC,FX0670C002
+     C           @@DDTL    ANDLT@@VDT
+     C/COPY WNCPYSRC,FX0670C003
+     C                     EXSR #BB
+     C                     DELETFXFWDTLL
+     C                     ELSE
+     C                     EXSR #BC
+     C                     END
+     C*
+     C           #B1       TAG
+     C*
+     C                     END
+     C*
+     C           #B9       ENDSR
+      /EJECT
+     C*****************************************************************
+     C* #BB                                                           *
+     C* ---                                                           *
+     C* THIS ROUTINE CHECKS IF RECORD ON FXFWDTLL IS IN THE CURRENT   *
+     C* HALF MONTH SO AS TO ADD CASH IN , CASH OUT AND DAILY NET      *
+     C* DEALT BCE.                                                    *
+     C*                                                               *
+     C* CALLED BY: #B                                                 *
+     C*****************************************************************
+     C*
+     C           #BB       BEGSR
+     C*
+     C* CHECKING IF FORWARD BOOKED YEAR IS PREVIOUS YEAR.
+     C* IF SO EXIT WITHOUT TOTALLING FIELDS. NEED ONLY TO
+     C* DELETE THIS RECORD.
+     C*
+     C           FPFWBY    IFLT @@YR
+     C                     GOTO #BB9
+     C                     END
+     C*
+     C* CHECKING IF FORWARD BOOKED MONTH IS PREVIOUS MONTH
+     C* IF SO EXIT WITHOUT TOTALLING FIELDS. NEED ONLY TO
+     C* DELETE THIS RECORD.
+     C*
+     C           FPFWBM    IFLT @@Z71M
+     C                     GOTO #BB9
+     C                     END
+     C*
+     C/COPY WNCPYSRC,FX0670C004
+     C*
+     C* CHECKING FOR FORWARD BOOK HALF MONTH IS WHAT IS THAT DERIVED
+     C* FROM SYSTEM DATE NAMELY, @@WMTH.
+     C*
+     C           FPFWBD    IFGT 15
+     C                     Z-ADD02        @@SMTH  20
+     C                     ELSE
+     C                     Z-ADD01        @@SMTH
+     C                     END
+     C*
+     C* ADDING CASHIN , CASHOUT AND DEALT BCE TO WORK FIELDS.
+     C*
+     C           @@SMTH    IFEQ @@WMTH
+     C                     ADD  FPDYCI    @@SYCI
+     C                     ADD  FPDYCO    @@SYCO
+     C                     ADD  FPDYDE    @@SYDE
+     C                     END
+     C/COPY WNCPYSRC,FX0670C005
+     C*
+     C           #BB9      ENDSR
+      /EJECT
+     C*****************************************************************
+     C* #BC                                                           *
+     C* ---                                                           *
+     C* THIS ROUTINE READS FILE FXFWMNHLL AND DELETES A RECORD IF     *
+     C* CURRENCIES MATCH AND CHECKS IF @@CHMT(RUN DATE -YYYYMM AND    *
+     C* HALF MONTH OF RUN DATE) IS  LESS THAN THAT ON HALF MONTHLY    *
+     C* IF THE MATCH IS EQUAL IT ZERO ADDS THE FIELDS @@SYCI,@@SYCO   *
+     C* AND @@SYDE TO THE RESPECTIVE ONES ON RECORD AND UPDATES       *
+     C* FXFWMHLL. IT THEN CHECKS @@OPT(OPTION) IS EQUAL TO 'Y' SO AS  *
+     C* IT CAN CALL ROUTINE #BCA TO PROCESS THE OPTIONS FILE(FXOOPTLL)*
+     C*                                                               *
+     C* CALLS    : #BCA                                               *
+     C* CALLED BY: #B                                                 *
+     C*****************************************************************
+     C*
+     C           #BC       BEGSR
+     C*
+     C                     SETOF                         63
+     C*
+     C           @@SCCY    SETLLFXFWMHLL
+     C*
+     C           *IN63     DOWEQ'0'
+     C*
+     C           @@SCCY    READEFXFWMHLL                 63
+     C*
+     C* IF RECORD FOUND AND DATE IS GREATER THAN RUN DATE THEN
+     C* SETON IN63 AND EXIT DO.
+     C*
+     C           *IN63     IFEQ '0'
+     C/COPY WNCPYSRC,FX0670C006
+     C           @@DMHL    ANDGT@@CHMT
+     C/COPY WNCPYSRC,FX0670C007
+     C                     SETON                         63
+     C                     END
+     C*
+     C* DATE(YYYYMM) AND FORWARD HALF MONTH ON FXFWMHLL IS LESS THAN
+     C* THAT OF CORRESPONDING FIELD OF RUN DATE (@@CHMT).IF SO
+     C* DELETE FXFWMHLL ELSE IF EQUAL THEN UPDATE FIELDS ON RECORD
+     C* AND EXIT DO.
+     C*
+     C           *IN63     IFEQ '0'
+     C           @@DMHL    ANDLT@@CHMT
+     C                     DELETFXFWMHLL
+     C/COPY WNCPYSRC,FX0670C008
+     C                     END
+     C* UPDATING RECORD.
+     C           *IN63     IFEQ '0'
+     C/COPY WNCPYSRC,FX0670C009
+     C           @@DMHL    ANDEQ@@CHMT
+     C/COPY WNCPYSRC,FX0670C010
+     C                     SUB  @@SYCI    FQHMCI
+     C                     SUB  @@SYCO    FQHMCO
+     C           FQHMCI    SUB  FQHMCO    FQHMNM
+     C                     SUB  @@SYDE    FQHMDE
+     C/COPY WNCPYSRC,FX0670C011
+     C                     MOVE @USER     FQLUID
+     C                     MOVE @@D       FQDLUP
+     C                     MOVE @@M       FQMLUP
+     C                     MOVE @@Y       FQYLUP
+     C*****                MOVE RUND      FQLCD                           S01194
+     C                     MOVE BJRDNB    FQLCD                           S01194
+     C                     MOVE @@TME     FQTLUP
+     C                     MOVE 'A'       FQCHTP
+     C                     UPDATFXFWDHP0
+     C/COPY WNCPYSRC,FX0670C012
+     C                     SETON                     63
+     C/COPY WNCPYSRC,FX0670C013
+     C                     END
+     C/COPY WNCPYSRC,FX0670C014
+     C*
+     C                     END
+     C*
+     C* IF OPTION IS 'Y' THEN PROCESS FXOOPTLL FOR THAT CURRENCY AND
+     C* RUNDATE.
+     C*
+     C           @@OPT     IFEQ 'Y'
+     C                     EXSR #BCA
+     C                     END
+     C*
+     C* UPDATES PROCESS SWITCH FOR THAT CURRENCY
+     C*
+     C                     MOVE '1'       @@SWT
+     C*
+     C* SETS GREATER LIMITS THAN @@SCCY ON FILE FXFWDTLL
+     C* TO CHECK IF EVEN THE LAST RECORD HAS BEEN PROCESSED.
+     C           @@SCCY    SETGTFXFWDTLL             62
+     C*
+     C           #BC9      ENDSR
+      /EJECT
+     C*****************************************************************
+     C* #BA                                                           *
+     C* ---                                                           *
+     C* ZEROISES ALL WORK FIELDS.                                     *
+     C*                                                               *
+     C* CALLED BY: #B                                                 *
+     C*****************************************************************
+     C*
+     C           #BA       BEGSR
+     C*
+     C                     Z-ADD0         @@SYCI
+     C                     Z-ADD0         @@SYCO
+     C                     Z-ADD0         @@SYDE
+     C                     Z-ADD0         @@AMT
+     C                     Z-ADD0         @@BCE
+     C/COPY WNCPYSRC,FX0670C015
+     C*
+     C           #BA9      ENDSR
+      /EJECT
+     C*****************************************************************
+     C* #BCA                                                          *
+     C* ----                                                          *
+     C* THIS ROUTINE READS FILE FXOOPTLL  AND UPDATES RECORDS FOR THE *
+     C* CURRENCY CHOSEN AND MATCH FOR RUNDATE ON FILES FXFWDTLL AND   *
+     C* FXFWMHLL.IT READS ONLY THOSE RECORDS WHICH ARE OF THE SAME    *
+     C* CURRENCY AND LESS THAN EQUAL TO RUN DATE AND TOTALS THE AMOUNT*
+     C* AND THE DEALT BCE AMOUNT FIELDS IN WORK FIELDS @@AMT & @@BCE. *
+     C* IT THEN CHECKS FOR THE TOTALLED AMOUNT FIELD(@@AMT) AND DOES  *
+     C* THE NECESSARY ADDITION TO CASHIN IF POSITIVE AND SUBTRACTION  *
+     C* FROM CASHOUT IF NEGATIVE ON FILES FXFWDTLL AND FXFWMHLL.IF    *
+     C* RECORDS ARE MISSING IT GENERATES THESE RECORDS.THIS UDPDATION *
+     C* OR GENERATION IS DONE BY ROUTINE #BCAA.                       *
+     C*                                                               *
+     C* CALLS    : #BCAA                                              *
+     C* CALLED BY: #BC                                                *
+     C*****************************************************************
+     C*
+     C           #BCA      BEGSR
+     C*
+     C                     SETOF                         64
+     C*
+     C           *LIKE     DEFN FHDAM1    @@AMT
+     C/COPY WNCPYSRC,FX0670C016
+     C           *LIKE     DEFN FHBCDE    @@BCE
+     C*
+     C           @@SCCY    SETLLFXOOPTLL
+     C*
+     C           *IN64     DOWEQ'0'
+     C*
+     C                     SETOF                     0102
+     C*
+     C           @@SCCY    READEFXOOPTLL                 64
+     C/COPY WNCPYSRC,FX0670C017
+     C*
+     C           *IN64     IFEQ '0'
+     C           @@DOPT    ANDLE@@VDT
+     C           *IN01     ANDEQ'1'
+     C                     ADD  FHDAM1    @@AMT
+     C                     ADD  FHBCDE    @@BCE
+     C                     END
+     C*
+     C           *IN64     IFEQ '0'
+     C           @@DOPT    ANDLE@@VDT
+     C           *IN02     ANDEQ'1'
+     C                     ADD  FHDAM2    @@AMT
+     C                     ADD  FHBCDE    @@BCE
+     C                     END
+     C*
+     C           *IN64     IFEQ '0'
+     C           @@DOPT    ANDGT@@VDT
+     C                     MOVE '1'       *IN64
+     C                     END
+     C*
+     C/COPY WNCPYSRC,FX0670C033
+     C                     END
+     C/COPY WNCPYSRC,FX0670C034
+     C*
+     C* UPDATING FILES FXFWDTLL AND FXFWMHLL.
+     C*
+     C                     EXSR #BCAA
+     C/COPY WNCPYSRC,FX0670C018
+     C*
+     C           #BCA9     ENDSR
+      /EJECT
+     C*****************************************************************
+     C* #BCAA                                                         *
+     C* -----                                                         *
+     C* THIS ROUTINE UPDATES FILES FXFWDTLL AND FXFWMHLL  FOR         *
+     C* CASH IN/CASH OUT AND DEALT BASE CURRENCY EQUIVALENT           *
+     C*                                                               *
+     C* CALLED BY: #BCA                                               *
+     C*****************************************************************
+     C*
+     C           #BCAA     BEGSR
+     C*
+     C                     MOVE @@SCCY    @FXMH1
+     C                     MOVE @@SCCY    @FXFD1
+     C/COPY WNCPYSRC,FX0670C019
+     C*
+     C* UPDATING OR INSERTING A RECORD ON FXFWMHLL
+     C*
+     C           @FXMH     CHAINFXFWMHLL             65
+     C*
+     C* ZEROISES CASHIN,CASHOUT,NET AMOUNT AND DEALT BCE ON FXFWMHLL.
+     C*
+     C           *IN65     IFEQ '1'
+     C                     Z-ADD0         FQHMCI
+     C                     Z-ADD0         FQHMCO
+     C                     Z-ADD0         FQHMNM
+     C                     Z-ADD0         FQHMDE
+     C                     END
+     C*
+     C* UPDATES RECORD FOR FIELDS COMMON FOR BOTH INSERTION AND AMMEND.
+     C*
+     C                     MOVE @USER     FQLUID
+     C                     MOVE @@D       FQDLUP
+     C                     MOVE @@M       FQMLUP
+     C                     MOVE @@Y       FQYLUP
+     C*****                MOVE RUND      FQLCD                           S01194
+     C                     MOVE BJRDNB    FQLCD                           S01194
+     C                     MOVE @@TME     FQTLUP
+     C*
+     C* CHECKS SIGN OF AMOUNT AND EITHER SUBTRACTS FROM CASHOUT OR
+     C* ADDS TO CASHIN AND THEN RECALCULATES NET AMOUNT.
+     C*
+     C/COPY WNCPYSRC,FX0670C020
+     C           @@AMT     IFLT 0
+     C                     SUB  @@AMT     FQHMCO
+     C************         SUB  @@BCE     FQHMDE                          E12427
+     C                     ELSE
+     C                     ADD  @@AMT     FQHMCI
+     C************         ADD  @@BCE     FQHMDE                          E12427
+     C                     END
+     C*
+     C                     ADD  @@BCE     FQHMDE                          E12427
+     C/COPY WNCPYSRC,FX0670C021
+     C*                                                                   E12427
+     C           FQHMCI    SUB  FQHMCO    FQHMNM
+     C*
+     C* IF IN65 *EQ 1 THEN INSERTION ELSE AMMENDMENT.
+     C*
+     C           *IN65     IFEQ '1'
+     C                     MOVE 'I'       FQCHTP
+     C                     MOVE @@SCCY    FQCCY
+     C/COPY WNCPYSRC,FX0670C022
+     C                     Z-ADD@@YR      FQFWBY
+     C                     Z-ADD@@Z71M    FQFWBM
+     C                     Z-ADD@@WMTH    FQFBHM
+     C/COPY WNCPYSRC,FX0670C023
+     C                     WRITEFXFWDHP0
+     C                     ELSE
+     C                     MOVE 'A'       FQCHTP
+     C                     UPDATFXFWDHP0
+     C                     END
+     C*
+     C* UPDATING OR INSERTING A RECORD ON FXFWDTLL
+     C*
+     C           @FXFD     CHAINFXFWDTLL             66
+     C*
+     C* ZEROISES CASHIN,CASHOUT,NET AMOUNT AND DEALT BCE ON FXFWDTLL.
+     C*
+     C           *IN66     IFEQ '1'
+     C                     Z-ADD0         FPDYCI
+     C                     Z-ADD0         FPDYCO
+     C                     Z-ADD0         FPDYNM
+     C                     Z-ADD0         FPDYDE
+     C                     END
+     C*
+     C* UPDATES RECORD FOR FIELDS COMMON FOR BOTH INSERTION AND AMMEND.
+     C*
+     C                     MOVE @USER     FPLUID
+     C                     MOVE @@D       FPDLUP
+     C                     MOVE @@M       FPMLUP
+     C                     MOVE @@Y       FPYLUP
+     C*****                MOVE RUND      FPLCD                           S01194
+     C                     MOVE BJRDNB    FPLCD                           S01194
+     C                     MOVE @@TME     FPTLUP
+     C*
+     C* CHECKS SIGN OF AMOUNT AND EITHER SUBTRACTS FROM CASHOUT OR
+     C* ADDS TO CASHIN AND THEN RECALCULATES NET AMOUNT.
+     C*
+     C/COPY WNCPYSRC,FX0670C024
+     C           @@AMT     IFLT 0
+     C                     SUB  @@AMT     FPDYCO
+     C***********          SUB  @@BCE     FPDYDE                          E12427
+     C                     ELSE
+     C                     ADD  @@AMT     FPDYCI
+     C***********          ADD  @@BCE     FPDYDE                          E12427
+     C                     END
+     C*                                                                   E12427
+     C                     ADD  @@BCE     FPDYDE                          E12427
+     C*                                                                   E12427
+     C/COPY WNCPYSRC,FX0670C025
+     C           FPDYCI    SUB  FPDYCO    FPDYNM
+     C*
+     C* IF IN66 *EQ 1 THEN INSERTION ELSE AMMENDMENT.
+     C*
+     C           *IN66     IFEQ '1'
+     C                     MOVE 'I'       FPCHTP
+     C                     MOVE @@SCCY    FPCCY
+     C/COPY WNCPYSRC,FX0670C026
+     C                     Z-ADD@@YR      FPFWBY
+     C                     Z-ADD@@Z71M    FPFWBM
+     C                     Z-ADD@@Z71D    FPFWBD
+     C/COPY WNCPYSRC,FX0670C027
+     C                     WRITEFXFWDDP0
+     C                     ELSE
+     C                     MOVE 'A'       FPCHTP
+     C                     UPDATFXFWDDP0
+     C                     END
+     C*
+     C           #BCAA9    ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C* #A                                                            *
+     C* --                                                            *
+     C* THIS ROUTINE IS THE INITIAL ROUTINE . IT INITIALLY CHAINS     *
+     C* TO SDBANKPD TO GET THE SYSTEM DATE AS A MIDAS DAY NO..IT THEN *
+     C* SR ZX0710 TO CONVERT THIS DATE TO DDMMMYY FORMAT WHICH IS     *
+     C* USED THROUGH OUT PROCESSING.IT ALSO CHECKS THE RANGE OF DAY   *
+     C* SO AS TO HALF MONTHLY NUMBER IN FIELD @@WMTH. IT ALSO READS   *
+     C* FILE FXSSTLL TO STORE THE OPTION IN FIELD @@OPT WHICH IS LATER*
+     C* USED AS A BASIS TO READ THE OPTION FILE FXOOPTLL.             *
+     C* CALLS ROUTINES : ZA0710                                       *
+     C*****************************************************************
+     C*
+     C           #A        BEGSR
+     C*
+     C                     MOVEACPY@      BIS@   80                       S01194
+      *
+     C                     MOVE *BLANKS   @@SCCY
+     C*****                MOVE *BLANKS   @DIC                            S01194
+     C* OPENING FILES
+     C                     OPEN FXOOPTLL
+     C                     OPEN FXFWMHLL
+     C*********************OPEN*FXSSTSLL**********************************S01319
+     C                     OPEN FXFWDTLL
+     C*****                OPEN FDICDRLL                                  S01194
+     C/COPY WNCPYSRC,FX0670C032
+     C*
+     C*****                MOVEL'01'      @DIC                            S01194
+     C*****                MOVE '10'      @DIC                            S01194
+     C*
+     C* CHAINING TO SDBANKPD TO STORE RUN DATE AND FIND HALF MONTH NO.
+     C* RUN DATE RETURNED BY ZA0710 IS STORED IN YYYYMMDD FORMAT.
+     C*
+     C*****      @DICD     CHAINFDICDRLL             60                   S01194
+     C*****      *IN60     IFEQ '1'                                       S01194
+      *                                                                   S01194
+     C                     CALL 'AOBANKR0'                                S01194
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*FIRST ' @OPTN   7                       S01194
+     C           SDBANK    PARM SDBANK    DSFDY                           S01194
+     C           @RTCD     IFNE *BLANKS                                   S01194
+     C                     SETON                     U7U8
+     C*****                MOVEL'FDICDRLL'DBFILE                          S01194
+     C                     MOVEL'SDBANKPD'DBFILE                          S01194
+     C                     MOVEL'001'     DBASE
+     C*****                MOVEL@DIC      DBKEY                           S01194
+     C                     MOVEL@OPTN     DBKEY                           S01194
+     C                     EXSR *PSSR                                     S01194
+     C                     GOTO #A9
+     C                     END
+     C*
+     C*****                Z-ADDRUND      @@DAYN  50                      S01194
+     C                     Z-ADDBJRDNB    @@DAYN  50                      S01194
+     C                     MOVE BJMRDT    @@RUNA                          S01194
+     C                     EXSR ZA0710
+     C*
+     C* CHECKS FOR INVALID MIDAS DATE.
+     C*
+     C           @@RTN     IFEQ 1
+     C                     SETON                     U7U8
+     C*****                MOVEL'FDICDRLL'DBFILE                          S01194
+     C                     MOVEL'SDBANKPD'DBFILE                          S01194
+     C                     MOVEL'002'     DBASE
+     C*****                MOVEL@DIC      DBKEY                           S01194
+     C                     MOVEL@OPTN     DBKEY                           S01194
+     C                     EXSR *PSSR                                     S01194
+     C                     GOTO #A9
+     C                     END
+     C/COPY WNCPYSRC,FX0670C028
+     C*
+     C* SETS UP HALF MONTH NO..
+     C*
+     C           @@Z71D    IFGT 15
+     C                     Z-ADD02        @@WMTH  20
+     C                     ELSE
+     C                     Z-ADD01        @@WMTH
+     C                     END
+     C/COPY WNCPYSRC,FX0670C029
+     C*
+     C**CHAINING*TO*OPTIONS*FILE*FXSSTLL*TO*STORE*OPTIONS.****************S01319
+     C********************************************************************S01319
+     C************LIKE*****DEFN*FWOVDI****@@OPT***************************S01319
+     C           *LIKE     DEFN EROVDI    @@OPT                           S01319
+     C*********************READ*FXSSTSLL*****************61***************S01319
+     C************IN61*****IFEQ*'1'***************************************S01319
+     C                     CALL 'AOTRMAR0'                                S01319
+     C                     PARM '*MSG   ' @RTCD   7                       S01319
+     C                     PARM '*FIRST ' @OPTN   7                       S01319
+     C           SDTRMA    PARM SDTRMA    DSFDY                           S01319
+     C           @RTCD     IFNE *BLANKS                    B1             S01319
+     C                     SETON                     U7U8
+     C*********************MOVEL'FXSSTSLL'DBFILE**************************S01319
+     C                     MOVEL'SDTRMAPD'DBFILE                          S01319
+     C                     MOVEL'003'     DBASE
+     C                     EXSR *PSSR                                     S01194
+     C                     GOTO #A9
+     C                     END
+     C*********************MOVE*FWOVDI****@@OPT***************************S01319
+     C                     MOVE EROVDI    @@OPT                           S01319
+     C*
+     C***** START OF FIX SS1008                                           S01136
+     C*****      *LOVAL    SETGTFXFWDTLL             62                   S01136
+     C******                                                              S01136
+     C**NO RECORD ON INPUT FILE                                           S01136
+     C*****                                                               S01136
+     C*****      *IN62     IFEQ '1'                                       S01136
+     C*****                SETON                     U7U8                 S01136
+     C*****                MOVEL'FXFWDTLL'DBFILE                          S01136
+     C*****                MOVEL'004'     DBASE                           S01136
+     C*****                END                                            S01136
+     C********** END OF FIX SS1008
+     C*
+     C* KEY FIELDS FOR DAILY FILE(FXFWDTLL)
+     C                     Z-ADD@@YR      @FXFD2
+     C                     Z-ADD@@Z71M    @FXFD3
+     C                     Z-ADD@@Z71D    @FXFD4
+     C* KEY FIELDS FOR HALF MONTHLY FILE(FXFWMHLL)
+     C                     Z-ADD@@YR      @FXMH2
+     C                     Z-ADD@@Z71M    @FXMH3
+     C                     Z-ADD@@WMTH    @FXMH4
+     C*
+     C* @@CHMT IS USED FOR COMPARISON ON HALF MONTHLY FILE FXFWMHLL
+     C*
+     C                     MOVEL@@YR      @@WORK  60
+     C                     MOVE @@Z71M    @@WORK
+     C                     MOVEL@@WORK    @@CHMT  80
+     C                     MOVE @@WMTH    @@CHMT
+     C/COPY WNCPYSRC,FX0670C030
+     C*
+     C* OBTAIN SYSTEM TIME
+     C*
+     C                     TIME           @@TME   60
+     C           #A9       ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*       TITLE:CALCULATE MIDAS DAY NO. TO DRS (YYYYMMDD) FORMAT. *
+     C*                                                               *
+     C*       SUBROUTINE ZA0710 EXPECTS FIELD '@@DAYN' TO BE          *
+     C*       PASSED TO IT IN 5,0 FORMAT.IF THE ABOVE FIELD IS LESS   *
+     C*       THAN 1 IT RETURNS 1 IN FIELD '@@RTN'.THE MAIN PROGRAM   *
+     C*       SHOULD CHECK FOR THIS CONDITION AND DO THE NECESSARY.   *
+     C*       IF '@@RTN' IS NOT EQUAL TO 1 IT RETURNS THE FIELD       *
+     C*       '@@VDT'  IN 'YYYYMMDD' FORMAT.                          *
+     C*                                                               *
+     C* NOTE: FIELD TO BE DEFINED BY EXTERNAL ROUTINE IS
+     C*                                                               *
+     C*       1) @@DAYN   LENGTH 5,0.                                 *
+     C*                                                               *
+     C*       FIELDS USED AND ALREADY DEFINED IN THE ROUTINE ARE:     *
+     C*                                                               *
+     C*       1) @@VDT    LENGTH 8,0 DEFINED BY A DS.                 *
+     C*       2) @@RTN    LENGTH 1,0.                                 *
+     C*       3) @@I      LENGTH 2,0 USED TO ACCESS ARRAY @YD         *
+     C*       4) @@J      LENGTH 2,0 USED TO ACCESS ARRAY @MD         *
+     C*       5) @@Z71Y   LENGTH 4,0 DEFINED BY A DS.                 *
+     C*       6) @@RDAY   LENGTH 5,0.                                 *
+     C*       7) @@LEAP   LENGTH 1,0.
+     C*                                                               *
+     C*       INDICATORS USED ARE:                                    *
+     C*                                                               *
+     C*       1) 80       CHECK FOR LOW AND EQUAL ON ARRAY @YD        *
+     C*       2) 81       CHECK FOR LOW ON ARRAY @MD.                 *
+     C*                                                               *
+     C* INPUT FIELD:       @@DAYN                                     *
+     C*                                                               *
+     C* OUTPUT FIELD:      @@VDT                                      *
+     C*                                                               *
+     C* WORK FIELDS:       @@RTN                                      *
+     C*                    @@Z71Y                                     *
+     C*                    @@RDAY                                     *
+     C*                    @@LEAP                                     *
+     C*                    @@I                                        *
+     C*                    @@J                                        *
+     C*                                                               *
+     C* ARRAYS USED:       @YD COMPILE TIME ARRAY.
+     C*                    @MD COMPILE TIME ARRAY.
+     C*
+     C*****************************************************************
+     C*
+     C           ZA0710    BEGSR
+     C*
+     C                     SETOF                     8081
+     C                     Z-ADD0         @@RTN   10
+     C                     Z-ADD0         @@VDT
+     C                     Z-ADD1         @@I     20
+     C                     Z-ADD1         @@J     20
+     C                     Z-ADD1         @@LEAP  10
+     C*
+     C           @@DAYN    IFLT 1
+     C                     Z-ADD1         @@RTN
+     C                     GOTO ZA0719
+     C                     END
+     C*
+     C* DIVISION TO DETERMINE WETHER LEAP YEAR.
+     C*
+     C           @@DAYN    DIV  1461      @@Z71Y
+     C                     MVR            @@RDAY  50
+     C*
+     C* CALCULATING YEAR.
+     C*
+     C           @@Z71Y    MULT 4         @@Z71Y
+     C                     ADD  1972      @@Z71Y
+     C*
+     C* CHECKING IF YEAR IS GREATER THAN OR EQUAL TO 2100
+     C*
+     C           @@Z71Y    IFGE 2100
+     C                     ADD  @@SSY2    @@RDAY
+     C                     END
+     C*
+     C* LOKUP ARRAY @YD TO SEE HOW MANY YEARS OF A FOUR YEAR CYCLE
+     C* HAVE PASSED.
+     C*
+     C           @@RDAY    LOKUP@YD,@@I                8080
+     C*
+     C* IF YEAR IS A LEAP YEAR SSLEAP IS SET TO ZERO.
+     C*
+     C           *IN80     IFEQ '0'
+     C                     Z-ADD0         @@LEAP
+     C                     END
+     C*
+     C* ADD INDEX TO YEAR TO GIVE CORRECT YEAR AND ADJUST '@@RDAY'.
+     C*
+     C           @@LEAP    IFEQ 1
+     C           @@RDAY    SUB  @YD,@@I   @@RDAY
+     C                     ADD  @@I       @@Z71Y
+     C                     END
+     C*
+     C* PROCESSING FOR A LEAP YEAR.
+     C*
+     C           @@LEAP    IFEQ 0
+     C*
+     C* IF '@@RDAY' = 60 DATE MUST BE 29TH OF FEBRUARY.
+     C*
+     C           @@RDAY    IFEQ 60
+     C                     Z-ADD29        @@Z71D
+     C                     Z-ADD2         @@Z71M
+     C                     GOTO ZA0711
+     C                     END
+     C*
+     C* IF '@@RDAY' > 60 DATE IS AFTER 29TH OF FEBRUARY,CONVERSION CAN
+     C* PROCEED AS USUAL AFTER SUBTRACTING THE EXTRA DAY FOR THE LEAP
+     C* YEAR. NOTE : '@@RDAY' < 60 CONVERSION PROCEEDS AS USUAL.
+     C*
+     C           @@RDAY    IFGT 60
+     C           @@RDAY    SUB  1         @@RDAY
+     C                     END
+     C*
+     C                     END
+     C*
+     C* IF DAY '@@DAYN' IS EXACTLY DIVISIBLE BY 1461 (NUMBER OF DAYS
+     C* IN 4 YEARS) THEN DATE MUST BE LAST DAY OF PREVIOUS FOUR YEAR
+     C* GROUP.
+     C*
+     C           @@RDAY    IFEQ 0
+     C                     Z-ADD31        @@Z71D
+     C                     Z-ADD12        @@Z71M
+     C                     SUB  1         @@Z71Y
+     C                     GOTO ZA0711
+     C                     END
+     C*
+     C* LOOK UP ARRAY ARRAY @MD TO DETERMINE WHICH MONTH '@@RDAY'
+     C* OCCURS IN
+     C*
+     C           @@RDAY    LOKUP@MD,@@J                81
+     C                     Z-ADD@@J       @@Z71M
+     C           @@RDAY    SUB  @MD,@@J   @@Z71D
+     C*
+     C* DS @@VDT  IS RETURNED IN YYYYMMDD FORMAT
+     C*
+     C           ZA0711    TAG
+     C*
+     C                     MOVE @@Z71Y    @@YR
+     C*
+     C           ZA0719    ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C           #C        BEGSR
+     C*
+     C           *INU7     IFEQ '1'
+     C                     DUMP
+     C                     END
+     C* CLOSING FILES
+     C*********************CLOSEFXSSTSLL*******************************   S01319
+     C*****                CLOSEFDICDRLL                                  S01194
+     C                     CLOSEFXOOPTLL
+     C                     CLOSEFXFWMHLL
+     C                     CLOSEFXFWDTLL
+     C*
+     C                     ENDSR
+      /EJECT
+     C*****************************************************************
+     C           INFSR     BEGSR
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+      *
+      ** SET UP FIELDS IN LOCAL DATA AREA
+     C                     MOVE @FILE     DBFILE
+     C                     MOVE 'FX0670'  DBPGM
+     C                     MOVE '992'     DBASE
+     C                     DUMP
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR    - PROGRAM ERROR SUBROUTINE                           *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED  @ERR1  - CONTROL LOOPING.                          *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+      ** SET @ERR1 TO 'Y' TO PREVENT LOOPING IF FURTHER ERRORS
+     C           @ERR1     IFNE 'Y'                        B1
+     C                     MOVE 'Y'       @ERR1   1        *1
+      *
+     C                     MOVE '1'       *INU6            *1
+     C*
+     C** SET UP FIELDS IN LOCAL DATA AREA
+     C                     MOVEL'FX0670'  DBPGM            *1
+     C*****                MOVEL'991'     DBASE            *1             S01194
+     C*
+     C                     DUMP                            *1
+     C                     END                             E1
+      *
+     C                     ENDSR
+     C/COPY WNCPYSRC,FX0670C031
+      *****************************************************************
+**
+(c) Misys International Banking Systems Ltd. 2001
+** @YD  USED BY SR. ZA0710 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZA0710 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365

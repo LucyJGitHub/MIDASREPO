@@ -1,0 +1,1992 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Euclid Instructions for Euroclea')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE0430 - EUCLID INSTRUCTIONS FOR EUROCLEAR.                  *
+     F*                                                               *
+     F*  Function:  This program produces pre-formatted EUCLID        *
+     F*   (COB)     instructions for Euroclear.  The report functions *
+     F*   (I/C)     as an audit trail if the EUCLID high speed        *
+     F*             interface is installed, and as an input document  *
+     F*             if it is not.                                     *
+     F*                                                               *
+     F*  Called By: SEC0603 - COB Pay/Receive Telexes                 *
+     F*             SEC3305 - I/C Pay/Receive Telexes                 *
+     F*             SEC1201 - EUCLID Transmission                     *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CSE071             Date 19Jul05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CSE022             Date 29Mar01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01502             Date 08Jul94               *
+      *                 052254             Date 10Jan94               *
+     F*                 S01401             DATE 16JUN93               *
+     F*                 S01397             DATE 10SEP92               *
+     F*                 E29170             DATE 07OCT91               *
+     F*                 S01117             DATE 10MAY91               *
+     F*                 S01271             DATE 07JUN90               *
+     F*                 E22725             DATE 02AUG90               *
+     F*                 E21537             DATE 23MAR90               *
+     F*                 E16870             DATE 07/07/89              *
+     F*                 S01190             DATE 06/03/89              *
+     F*                 S01176             DATE 11/11/88              *
+     F*                 E15436             DATE 04/10/88              *
+     F*                 E14515             DATE 23/09/88              *
+     F*                 S01175             DATE 01/07/88              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSE022 - Depository Definition Enhancement                   *
+     F*  S01502 - BLI Telekurs Processing.  Recompiled due to change  *
+     F*           in length of SESTAT, 133 long.                      *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S01401 - MT5xx SWIFT Messages Feature:                       *
+     F*          - Recompiled due to changes to files.                *
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+     F*          - Recompiled due to changes to files.                *
+     F*  E29170 - RCF Changes.                                        *
+     F*  S01117 - Multibranching                                      *
+     F*  S01271 - PAY/RECEIVE IN INPUT CYCLE - ADD IC/COB             *
+     F*           NARRATIVE. UPDATE NEW FIELD EUTG ON SEEUC           *
+     F*           ONCE PROCESSED.  PREVENT DETAIL LINES FOR           *
+     F*           TELEXES ALREADY PROCESSED APPEARING.                *
+     F*  E22725 - DETAIL LINES NOW CONDITIONED ON *IN49 TO            *   E22725
+     F*           PREVENT OUTPUT OF PREVIOUSLY PROCESSED TELEXES      *   E22725
+     F*  E21537 - INCREASE SIZE OF SECURITY CODE ON '03' TYPES        *   E21537
+     F*  E16870 - SESTAT REDEFINED AS 128 BYTES.                      *   E16870
+     F*  S01190 - EUCLID FIX/ENHANCEMENTS                             *   S01190
+     F*  S01176 - SECURITIES TRADING 3.1                              *   S01176
+     F*  E15436 - SECURITY CODE TRUNCATED TO 5 DIGITS                 *   E15436
+     F*  E14515 - PREVENT DATABASE ERROR IF SECURITY NOT FOUND        *   E14515
+     F*  S01175 - SECURITIES TRADING (EUCLID)                         *   S01175
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     F*******SEEUC   IP  E           K        DISK                        S01271
+     FSEEUC   UP  E           K        DISK                               S01271
+     FBTCHN   UF  E           K        DISK
+     F*LINE   IF  E           K        DISK                               S01175
+     FSECTE   IF  E           K        DISK
+     FSECT2   IF  E           K        DISK                               S01190
+     F            SECTYDF                           KRENAMESECTY1         S01190
+     FSECT3   IF  E           K        DISK                               S01190
+     F            SECTYDF                           KRENAMESECTY2         S01190
+     F*LINT   IF  E           K        DISK                               S01175
+     F*           CLINTCAF                          KIGNORE               S01175
+     F*           CLINTCCF                          KIGNORE               S01175
+     F*           CLINTC1F                          KIGNORE               S01175
+     F*           CLINTSEF                          KIGNORE               S01175
+     FCLINE   IF  E           K        DISK                               S01190
+     FCLINC   IF  E           K        DISK                               S01190
+     F            CLINTSEF                          KRENAMECLTSEF         S01190
+     FTABSE   IF  E           K        DISK
+     F* ICD 1     TABTB10F                          KIGNORE
+     F            TABTB11F                          KIGNORE
+     F            TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F*********** TABLETJF                          KIGNORE               S01117
+     F            TABLETKF                          KIGNORE
+     F            TABLETLF                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABLETAF                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F*
+     F***SE0430P1O***F     132     OF    LPRINTER                         E29170
+     FSE0430P1O   F     132     OF    LPRINTER                        UC  E29170
+     F                                              KINFDS SPOOL          E29170
+     FSE0430AUO   F     132            PRINTER
+     F                                              KINFDS SPOOLU         E29170
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   01      SEEUCH  - HEADER                                    *
+     F*   02      SEEUCD0                                             *
+     F*   03      SEEUCD1                                             *
+     F*   04      SEEUCD2                                             *
+     F*   05      SEEUCD3                                             *   S01190
+     F****05******SEEUCA**-*TRAILER****************************       *   S01190
+     F*   06      SEEUCD4                                             *   S01190
+     F*   07      SEEUCD5                                             *   S01190
+     F*   08      SEEUCA  - TRAILER                                   *   S01190
+     F*                                                               *
+     F*   36      DETAIL PRINTER FILE OPEN                            *   E29170
+     F*   37      COUNTERPARTY NO. REFERS TO EUROCLEAR DEPOT.         *   S01190
+     F*   38      COUNTERPARTY NO. REFERS TO CEDEL DEPOT.             *   S01190
+     F*   39      PREVIOUS RECORD READ WAS A D0                       *   S01175
+     F*   40      FIRST CYCLE INDICATOR                               *
+     F*   41      DETAILS EXIST ON SEEUCD0                            *
+     F*   42      SEEUC - TRAILER                                     *
+     F*   43      EUCLID INSTRUCTION TYPE - 01                        *
+     F*   44                              - 02                        *
+     F*   45                              - 03                        *
+     F*   46                              - 07                        *
+     F*   47      EUCLID CLEARING HOUSE - C                           *
+     F*   48                            - K                           *
+     F*   49      TELEX TO BE REPORTED.                               *
+     F*   50      INSTRUCTIONS OF THIS TYPE FOR THIS ACCOUNT REPORTED *
+     F*   51      HEADER RECORD READ IN LAST CYCLE SO FORCE 'L1' LEVEL*
+     F*           BREAK                                               *
+     F*   52      CANCELLATION TELEX                                  *
+     F*   53      NO INSTRUCTIONS OUTSTANDING (EUEX IN SESTAT)        *
+     F*   54      EUCLID INSTRUCTION TYPE IS '01' OR '02'             *
+     F*   60      PRINT TRADE DETAILS                                 *   S01175
+     F*   61      PRINT NARRATIVE DETAILS                             *   S01175
+     F*   62      CASH COUNTER-VALUE MUST BE BLANK IF A TRADE IS      *   S01175
+     F*           FREE OF PAYMENT                                     *   S01175
+     F*   63      CLEARING HOUSE IS ABSENT (EUCL = ' ' ) AND TYPE     *   S01175
+     F*           07 OR 03 IS BEING PROCESSED                         *   S01175
+     F*   64      DUPLICATES IND 62 FOR EXPLICIT LINE 2 PRINTING      *   S01175
+     F*   65      DUPLICATES IND 44 FOR EXPLICIT LINE 2 PRINTING      *   S01175
+     F*   66      DUPLICATES IND 60 OR IND 45 AND EUCL = ' ' FOR      *   S01175
+     F*           EXPLICIT LINE 2 PRINTING                            *   S01175
+     F*   67      PRINT 'INCORRECT INSTRUCTIONS'.                     *   S01190
+     F*   68      TO PRINT ALL 4 TRADE DETAIL LINES                   *   S01190
+     F*   71      TYPE 02 OWN ACCOUNT TRANSFER                        *   S01190
+     F*   72      TYPE 07 OWN ACCOUNT TRANSFER                        *   S01190
+     F*   74      EUCL = 'K' OR ' '                                   *   S01190
+     F*   81      When = 0, Input Cycle run; when = 1, COB run        *   S01271
+     F*                                                               *   S01271
+     F*   98      ZSYSTM, DATE FORMAT MMDDYY IF ON.                   *
+     F*   99      ZSYSTM, INSTALLATION CONTROL DATA RECORD NOT FOUND. *
+     F*                                                               *
+     F*   L1      LEVEL BREAK - INSTRUCTION TYPE                      *
+     F*   L2                  - EUROCLEAR ACCOUNT                     *
+     F*   L3                  - ACTION CODE                           *
+     F*                                                               *
+     F*   U6      END-OF-DAY RUN, EXTRACT TODAY'S DETAILS             *
+     F*           OR INPUT CYCLE PAY/RECEIVE RUN                      *   S01271
+     F*   NU6     NO EXTRACT - OVERRIDE IN OPERATION                  *
+     F*   U7U8    DATA BASE ERROR                                     *
+     F*   U8      FILE CONTROLS OUT OF BALANCE                        *
+     F*
+     F*****************************************************************
+      /EJECT
+     E                    NBRI        4  3 0             NO. INSTRUCTIONS
+     E                    CPY@    1   1 80
+      /EJECT
+     LSE0430P1 66FL 59OL
+      /EJECT
+     ISEEUCHF     01
+     I                                              ACTC  L3
+     I                                              EURO  L2
+     ISEEUCD0F    02
+     I                                              ACTC  L3
+     I                                              EURO  L2
+     I              EUIT                            EUITX L1
+     ISEEUCD1F    03
+     I                                              ACTC  L3
+     I                                              EURO  L2
+     I              EUCO                            EUCOX
+     ISEEUCD2F    04
+     I                                              ACTC  L3
+     I                                              EURO  L2
+     I*EEUCAF*****05                                                      S01190
+     ISEEUCD3F    05                                                      S01190
+     I                                              ACTC  L3              S01190
+     I                                              EURO  L2              S01190
+     ISEEUCD4F    06                                                      S01190
+     I                                              ACTC  L3              S01190
+     I                                              EURO  L2              S01190
+     ISEEUCD5F    07                                                      S01190
+     I                                              ACTC  L3              S01190
+     I                                              EURO  L2              S01190
+     ISEEUCAF     08                                                      S01190
+     I                                              ACTC  L3
+     I                                              EURO  L2
+     IBTCHNABF
+     I*
+     I*   S/BTCHN
+     I*
+     I** DATA STRUCTURE USED FOR OUTPUTTING THE KEY FOR RECORD WHEN NO
+     I** DETAIL RECORD FOUND FOR A PARTICULAR INSTRUCTION
+     I*
+     I            DS
+     I                                        1   20EUB0EX
+     I                                        3   3 ACTCEX
+     I                                        4   80EUROEX
+     I                                        9  130EUDTEX
+     I                                       14  150EUINEX
+     I                                       16  210TRDREX
+     I                                        1  21 SEEKEY
+     I*
+     I***TAT    E DS                            256                       E16870
+     I***SESTAT****E*DS                            128              E16870S01502
+     ISESTAT    E DS                            133                       S01502
+     I*
+     I**  SECURITIES TRADING DATA AREA
+     I*
+     ISPOOL       DS                                                      E29170
+     I*                                                                   E29170
+     I**  DS FOR LINE NO. TO HANDLE OVERFLOW                              E29170
+     I*                                                                   E29170
+     I                                       83  92 SFILE                 E29170
+     I                                    B 123 1240SFNUM                 E29170
+     I**                                                                  E29170
+     ISPOOLU      DS                                                      E29170
+     I                                       83  92 SFILEU                E29170
+     I                                    B 123 1240SFNUMU                E29170
+     I*
+     I*LDA********UDS                            256                      S01117
+     I*
+     I**  LOCAL DATA AREA
+     I*
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I*   TIME DATA STRUCTURE                                             S01271
+     I*                                                                   S01271
+     I            DS                                                      S01271
+     I                                        1   60CTIME                 S01271
+     I                                        1   2 CHOUR                 S01271
+     I                                        3   4 CMINT                 S01271
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C/EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*
+     C*    FIRST CYCLE ONLY CALCULATIONS.
+     C*    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     C   40                GOTO ENDFC
+     C*
+     C**  SETON FIRST CYCLE INDICATOR 40
+     C*
+     C                     SETON                     40
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANKS   DBLOT
+     C                     MOVEL'SE0430  'DBPGM
+     C                     OUT  LDA                                       S01117
+     C*
+     C**  GET INSTALLATION CONTROL DATA RECORD AND RELEASE.
+     C*
+     C                     EXSR ZSYSTM
+     C  N99                GOTO NOERR1
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'TABLE'   DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY            ** DB ERR 01 **
+     C                     Z-ADD01        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C*********************GOTO ENDD                                      S01175
+     C                     GOTO ENDT                                      S01175
+     C*
+     C           NOERR1    TAG                             ** NOERR1 **
+     C*                                                                   S01175
+     C***INITIALIZE*INDICATOR*39********                            S01175S01190
+     C*                                                                   S01175
+     C***********          MOVE '0'       *IN39                     S01175S01190
+     C*
+     C**  INITIALIZE LINE COUNT
+     C*
+     C                     Z-ADD13        LCNT    20
+     C*
+     C**  INITIALIZE RECORD COUNT FIELDS.
+     C*
+     C                     Z-ADD0         NORR    50
+     C  NU6                SETON                     49
+     C*********************                                               S01158
+     C****IF*TRANSMISSION*AUDIT, SAVE EUROCLEAR CLEARINGHOUSE A/C NUMBER  S01158
+     C*********************                                               S01158
+     C**NU6****************Z-ADDEURO      SVEURO  50                      S01158
+     C*                                                                   S01158
+     C                     EXSR COBIC                                     S01271
+     C*                                                                   S01271
+     C** RCF Processing for Audit File                                    E29170
+     C*                                                                   E29170
+     C                     EXSR RCFAU                                     E29170
+     C*                                                                   E29170
+     C           ENDFC     TAG                             ** ENDFC **
+     C*
+     C*      DETAIL CALCULATIONS
+     C*      ~~~~~~~~~~~~~~~~~~~
+     C**                                                                  S01190
+     C**   OUTPUT '***  INCORRECT INSTRUCTION  ***' IF RECORDS ARE        S01190
+     C**   MISSING (FROM PREVIOUS TRADE).                                 S01190
+     C**                                                                  S01190
+     C                     SETOF                     67                   S01190
+     C           *IN02     IFEQ '1'                                       S01190
+     C           *IN68     IFEQ '1'                                       S01190
+     C           *IN10     IFEQ '0'                                       S01190
+     C           *IN11     OREQ '0'                                       S01190
+     C           *IN12     OREQ '0'                                       S01190
+     C           *IN13     OREQ '0'                                       S01190
+     C                     SETON                     67                   S01190
+     C                     END                                            S01190
+     C                     END                                            S01190
+     C           *IN71     IFEQ '1'                                       S01190
+     C           *IN72     OREQ '1'                                       S01190
+     C           *IN10     IFEQ '0'                                       S01190
+     C           *IN11     OREQ '1'                                       S01190
+     C           *IN12     OREQ '1'                                       S01190
+     C           *IN13     OREQ '1'                                       S01190
+     C                     SETON                     67                   S01190
+     C                     END                                            S01190
+     C                     END                                            S01190
+     C           *IN73     IFEQ '1'                                       S01190
+     C           *IN74     OREQ '1'                                       S01190
+     C           *IN10     IFEQ '0'                                       S01190
+     C           *IN11     OREQ '0'                                       S01190
+     C           *IN12     OREQ '1'                                       S01190
+     C           *IN13     OREQ '1'                                       S01190
+     C                     SETON                     67                   S01190
+     C                     END                                            S01190
+     C                     END                                            S01190
+     C           ACTCS     IFEQ 'C'                                       S01190
+     C                     SETOF                     67                   S01190
+     C                     END                                            S01190
+     C                     END                                            S01190
+     C           *IN67     IFEQ '1'                                       S01190
+     C                     EXCPTLINE1                                     S01190
+     C                     END                                            S01190
+     C*                                                                   S01190
+     C**  SAVE ACTION CODE 'INCORRECT                                     S01190
+     C**  INSTRUCTIONS' VERIFICATION.                                     S01190
+     C*
+     C           *IN01     IFEQ '0'                                       S01190
+     C                     MOVE ACTC      ACTCS   1                       S01190
+     C                     END                                            S01190
+     C*                                                                   S01190
+     C**  SET OFF READ INDICATORS                                         S01190
+     C*
+     C           *IN02     IFEQ '1'                                       S01190
+     C                     SETOF                     101112               S01190
+     C                     SETOF                     131480               S01190
+     C**                                                                  S01190
+     C                     SETOF                     687152               S01190
+     C                     SETOF                     727374               S01190
+     C                     SETOF                     373839               S01190
+     C                     END                                            S01190
+     C*
+     C**  SET INDICATORS TO SHOW WHETHER RECORDS HAVE BEEN READ.          S01190
+     C*                                                                   S01190
+     C           *IN03     IFEQ '1'                                       S01190
+     C                     SETON                     10                   S01190
+     C                     END                                            S01190
+     C           *IN04     IFEQ '1'                                       S01190
+     C                     SETON                     11                   S01190
+     C                     END                                            S01190
+     C           *IN05     IFEQ '1'                                       S01190
+     C                     SETON                     12                   S01190
+     C                     END                                            S01190
+     C           *IN06     IFEQ '1'                                       S01190
+     C                     SETON                     13                   S01190
+     C                     END                                            S01190
+     C           *IN07     IFEQ '1'                                       S01190
+     C                     SETON                     14                   S01190
+     C                     END                                            S01190
+     C*                                                                   S01190
+     C**  SET ON '80' IF COUNTERVALUE NOT TO BE PRINTED                   S01190
+     C*                                                                   S01190
+     C           EDP1      IFEQ ' '                                       S01190
+     C                     SETON                     80                   S01190
+     C                     END                                            S01190
+     C**                                                                  S01190
+     C***IF*A*D1*RECORD*READ*-*SET*INDICATOR*39*(LAST*RECORD*READ*WAS01175S01190
+     C***A*D0*)*AND*IND*66*(*LINE*PRINTING*DETAILS*FOR*PREVIOUS*D0*)S01175S01190
+     C*
+     C************IN03     IFEQ '1'                                 S01175S01190
+     C***********          MOVE '0'       *IN39                     S01175S01190
+     C***********          MOVE '0'       *IN66                     S01175S01190
+     C***********          END                                      S01175S01190
+     C*
+     C**  IF TRANSMISSION AUDIT                                        R  S01175
+     C**  AND HEADER READ -  SAVE EUROCLEAR CLEARINGHOUSE A/C NUMBE    R  S01175
+     C*                                                                   S01175
+     C           *IN01     IFEQ '1'                                       S01175
+     C  NU6                Z-ADDEURO      SVEURO  50                      S01175
+     C                     END                                            S01175
+     C*                                                                   S01175
+     C*                                                                   S01175
+     C***check*if*narrative*needs*printing************************  S01175S01190
+     C***seeucd2*record*read*and*clearing*house*is*'K'*or*'*'*and*  S01175S01190
+     C***counter*party*is*Blank***********************************  S01175S01190
+     C*                                                             S01175S01190
+     C***********          MOVE '0'       *IN61                     S01175S01190
+     C************IN04     IFEQ '1'                                 S01175S01190
+     C***********EUCL      ANDNE'C'                                 S01175S01190
+     C***********EUCP      ANDEQ'     '                             S01175S01190
+     C***********          MOVE '1'       *IN61                     S01175S01190
+     C***********          END                                      S01175S01190
+     C*                                                                   S01175
+     C**   MAINTAIN RECORD COUNT.
+     C*                                                                   S01175
+     C***********NORR      ADD  1         NORR                            S01175
+     C**N05******NORR      ADD  1         NORR                      S01175S01190
+     C  N08      NORR      ADD  1         NORR                            S01190
+     C*
+     C**IF*NO*DETAIL*2*RECORD*PRESENT*AFTER*A*DETAIL*0*RECORD*WAS*PREVIOUSLY
+     C**READ*WITH*INSTRUCTION*TYPE*07.*PERFORM*STD*DB*ERROR
+     C**********
+     C********** *IN02     IFEQ '1'                                       S01175
+     C********** *IN38     ANDEQ'1'                                       S01175
+     C********** *IN01     OREQ '1'                                       S01175
+     C********** *IN38     ANDEQ'1'                                       S01175
+     C**********           SETON                     U7U8LR               S01175
+     C**********           MOVE 'SEEUC'   DBFILE           ***************S01175
+     C**********           MOVELSEEKEY    DBKEY            ** DB ERROR 02 S01175
+     C**********           Z-ADD2         DBASE            ***************S01175
+     C**********           GOTO ENDD                                      S01175
+     C**********           END                                            S01175
+     C*********************                                               S01175
+     C**IF*NO*DETAIL*1*RECORD PRESENT AFTER A DETAIL 0 RECORD WAS PREVIOUSS01175
+     C**READ,*OUTPUT*SECOND LINE ON REPORT FOR THE PREVIOUS RECORD        S01175
+     C*********************                                               S01175
+     C************IN01     IFEQ '1'                                       S01175
+     C************IN39     ANDEQ'1'                                       S01175
+     C************IN02     OREQ '1'                                       S01175
+     C************IN39     ANDEQ'1'                                       S01175
+     C************IN04     OREQ '1'                                       S01175
+     C************IN39     ANDEQ'1'                                       S01175
+     C************         Z-ADD0         EUHU                            S01175
+     C************         Z-ADD0         EUHD                            S01175
+     C************         EXCPTLINE2                                     S01175
+     C************         END                                            S01175
+     C************         SETOF                     39                   S01175
+     C************                                                        S01175
+     C************         Z-ADD0         EUHU                            S01175
+     C************         Z-ADD0         EUHD                            S01175
+     C************         ADD  1         EULN2                           S01175
+     C************         EXCPTLINE2                                     S01175
+     C************         ADD  1         EULN2                           S01175
+     C************         EXCPTLINE3                                     S01175
+     C************         END                                            S01175
+     C*                                                                   S01175
+     C** SET UP DBKEY FOR A RECORD IF NO DETAIL 2 RECORD WAS READ FOR
+     C** THE PREVIOUS INSTRUCTION
+     C*
+     C           *IN02     IFEQ '1'
+     C                     MOVE EUB0      EUBOEX  20
+     C                     MOVE ACTC      ACTCEX  1
+     C                     MOVE EURO      EUROEX  50
+     C                     MOVE EUDT      EUDTEX  50
+     C                     MOVE EUIN      EUINEX  20
+     C                     MOVE TRDR      TRDREX  60
+     C                     END
+     C*
+     C**  SETON 51 IF HEADER RECORD READ. IF 51 ALREADY ON, SETON L1
+     C**  & RESET 51
+     C*
+     C   51      0         COMP 1                    51L1
+     C   01                SETON                     51
+     C*
+     C**  RESET INDICATORS & COUNT OF INSTRUCTIONS
+     C*
+     C  N43N44             SETOF                     54
+     C   U6                SETOF                     49
+     C   L1                SETOF                     50
+     C   L1                Z-ADD0         NBRI
+     C   L1                Z-ADD13        LCNT
+     C*
+     C**  IDENTIFY IF CANCELLATION TELEX                                 E
+     C*                                                                  E
+     C***L3******ACTC      COMP 'C'                      52               S01190
+     C           ACTC      COMP 'C'                      52               S01190
+     C*
+     C**  IF TRAILER READ THEN SETON INDICATOR 42.
+     C*
+     C***05******          SETON                     42                   S01190
+     C***05******          SETOF                     49                   S01190
+     C   08                SETON                     42                   S01190
+     C   08                SETOF                     49                   S01190
+     C*
+     C**  IF HEADER OR TRAILER READ THEN SETOF INSTR. TYPE INDICATORS
+     C*
+     C   01
+     C*R*05******          SETOF                     434445               S01190
+     COR 08                SETOF                     434445               S01190
+     C   01
+     C*R*05******          SETOF                     46                   S01190
+     COR 08                SETOF                     46                   S01190
+     C*
+     C**  IF HEADER OR TRAILER READ THEN SKIP DETAIL PROCESSING.
+     C*
+     C   01
+     C*R*05******          GOTO ENDD                                S01175S01190
+     COR 08                GOTO ENDD                                      S01190
+     C***04******          SETOF                     38                   S01175
+     C*
+     C**  PROCESS ONLY TODAY'S TELEXES IF U6 ON
+     C**  ALSO IF U6 EXCLUDE TODAYS RECORDS ALREADY PROCESSED             S01271
+     C*
+     C   U6      EUDT      COMP RUND                     49
+     C           *INU6     IFEQ '1'                                       S01271
+     C           *IN49     ANDEQ'1'                                       S01271
+     C           EUTG      ANDEQ'Y'                                       S01271
+     C                     SETOF                     49                   S01271
+     C                     END                                            S01271
+     C   U6N49             GOTO ENDD
+     C*                                                                   S01175
+     C** IND 62 SET ON TO PREVENT PRINTING OF CASH COUNTER VALUE          S01175
+     C** IF PROCESS IS FREE OF PAYMENT (EUPC = F) AND D0 RECORD READ      S01175
+     C*                                                                   S01175
+     C           *IN02     IFEQ '1'                                       S01175
+     C                     MOVE '0'       *IN62                           S01175
+     C                     END                                            S01175
+     C           EUPC      IFEQ 'F'                                       S01175
+     C                     MOVE '1'       *IN62                           S01175
+     C                     END                                            S01175
+     C*
+     C**  UNLESS RECORD READ FROM SEEUCD0 THEN SIMPLY OUTPUT DETAILS.
+     C*
+     C  N02                GOTO ENDD
+     C**********                                                          S01175
+     C**SAVE*FIELDS FOR PRINTING IF DETAIL 0 RECORD BUT NO DETAIL 1 OR 2  S01175
+     C**********                                                          S01175
+     C*********************Z-ADDEULN      EULN2   50                      S01175
+     C*********************Z-ADDEUCU      EUCU2  110                      S01175
+     C*********************MOVE EDP1      EDP12   1                       S01175
+     C*********************Z-ADDEUCD      EUCD2   20                      S01175
+     C*
+     C**  IF ANY DETAIL RECORDS HAVE BEEN READ THEN 41 IS SET ON.
+     C**  INDICATOR 50 IS SETON IF ANY DETAILS HAVE BEEN READ FOR
+     C**  THIS ACCOUNT.
+     C*
+     C*********************SETON                     415039               S01175
+     C                     SETON                     4150                 S01175
+     C*                                                                   E29170
+     C** If there are details to report and the detail printer file is    E29170
+     C** not open then open it and do RCF processing                      E29170
+     C*                                                                   E29170
+     C           *IN36     IFEQ '0'                                       E29170
+     C                     SETON                     36                   E29170
+     C                     OPEN SE0430P1                                  E29170
+     C                     EXSR RCFP1                                     E29170
+     C                     END                                            E29170
+     C*
+     C**  PRODUCE REPORT AS ACCORDING TO INSTRUCTION TYPE.
+     C*
+     C           EUITX     COMP 1                        43
+     C           EUITX     COMP 2                        44
+     C           EUITX     COMP 3                        45
+     C           EUITX     COMP 7                        46
+     C*
+     C   43
+     COR 44                SETON                         54
+     C***46*****           SETON                         38               S01175
+     C*
+     C   43
+     COR 44
+     COR 45
+     COR 46                GOTO NOERR2
+     C*
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'SEEUC'   DBFILE           ***************
+     C                     MOVELEULN      DBKEY            ** DB ERR 09 **
+     C                     Z-ADD09        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C*********************GOTO ENDD                                      S01175
+     C                     GOTO ENDT                                      S01175
+     C*
+     C           NOERR2    TAG                             ** NOERR2 **
+     C*                                                                   S01175
+     C***DETERMINE*WETHER*TRADE*DETAILS*NEED*PRINTING************   S01175S01190
+     C***CRITERIA*:-**PRINT*IF*TYPE*1****************************   S01175S01190
+     C*******************OR IF TYPE 2 AND AGAINST PAYMENT EUPC=P    S01175S01190
+     C*******************OR IF TYPE 3 AND CLEARING HOUSE = CEDEL    S01175S01190
+     C*******************OR IF TYPE 7 AND CLEARING HOUSE = CEDEL EUCS01175S01190
+     C*                                                             S01175S01190
+     C***********          MOVE '0'       *IN60                     S01175S01190
+     C************IN43     IFEQ '1'                                 S01175S01190
+     C***********          MOVE '1'       *IN60                     S01175S01190
+     C***********          END                                      S01175S01190
+     C************IN44     IFEQ '1'                                 S01175S01190
+     C***********EUPC      ANDEQ'P'                                 S01175S01190
+     C***********          MOVE '1'       *IN60                     S01175S01190
+     C***********          END                                      S01175S01190
+     C***********EUCL      IFEQ 'C'                                 S01175S01190
+     C************IN45     IFEQ '1'                                 S01175S01190
+     C************IN46     OREQ '1'                                 S01175S01190
+     C************         MOVE '1'       *IN60                     S01175S01190
+     C************         END                                      S01175S01190
+     C************         END                                      S01175S01190
+     C*                                                                   S01175
+     C***ADD*1*TO*LAST*LINE*NUMBER*TO*PRODUCE*CORRECT*LINE*NUMBER         S01175
+     C***FOR*PRINTING*OF*TRADE*DETAILS*                                   S01175
+     C*                                                                   S01175
+     C************IN60     IFEQ '1'                                 S01175S01190
+     C************IN61     OREQ '1'                                 S01175S01190
+     C***********          Z-ADDEULN      EULN3   50                S01175S01190
+     C***********          ADD  2         EULN3                     S01175S01190
+     C***********          END                                      S01175S01190
+     C*
+     C*
+     C**  KEEP COUNT OF INSTRUCTIONS.
+     C*
+     C      43             ADD  1         NBRI,1
+     C      44             ADD  1         NBRI,2
+     C      45             ADD  1         NBRI,3
+     C      46             ADD  1         NBRI,4
+     C*
+     C**  IDENTIFY CLEARING HOUSE.
+     C*
+     C           EUCL      COMP 'C'                      47
+     C           EUCL      COMP 'K'                      48
+     C                     MOVE '0'       *IN63                           S01175
+     C           EUCL      IFEQ ' '                                       S01175
+     C           *IN46     IFEQ '1'                                       S01175
+     C           *IN45     OREQ '1'                                       S01175
+     C                     MOVE '1'       *IN63                           S01175
+     C                     END                                            S01175
+     C                     END                                            S01175
+     C*
+     C                     MOVE EUSD      EUSDN   60
+     C*
+     C**GET*CUSTOMER*NAME*AND*TOWN*FROM*CLINTCB*FILE.*PICK*UP*THE*
+     C**CUSTOMER*NUMBER*TO*USE*FROM*LF/CLINE.PERFORM*STD*DB*ERROR*
+     C**IF*EITHER*NOT*FOUND**
+     C**********           MOVELEUSC      EUCTPY  6                       S01175
+     C**********           MOVELEUCP      EUCTPY  6                       S01175
+     C********** EUCTPY    CHAINCLINTSEF             31                   S01175
+     C********** *IN31     IFEQ '1'                                       S01175
+     C********** RECI      OREQ '*'                                       S01175
+     C**********           SETON                     U7U8LR
+     C**********           MOVE 'CLINT'   DBFILE           *****************
+     C**********           MOVELEUCTPY    DBKEY            ** DB ERROR 03 **
+     C**********           Z-ADD3         DBASE            *****************
+     C**********           GOTO ENDD
+     C**USE*THE*CUSTOMER*NUMER*FROM*LF/ECLIN*TO*PICK*UP*THE*CUSTOMER*NAME S01175
+     C**AND*TOWN*FROM*CLINTCBF.IF*ERROR*OCCURS*PERFORM*STD*DB*ERROR*      S01175
+     C**********                                                          S01175
+     C**********           ELSE                                           S01175
+     C********** CNUM      CHAINCLINTCBF             31                   S01175
+     C********** *IN31     IFEQ '1'                                       S01175
+     C********** RECI      OREQ '*'                                       S01175
+     C**********           SETON                     U7U8LR               S01175
+     C**********           MOVE 'CLINT'   DBFILE           ***************S01175
+     C**********           MOVELCNUM      DBKEY            ** DB ERROR 04 S01175
+     C**********           Z-ADD4         DBASE            ***************S01175
+     C**********           GOTO ENDD                                      S01175
+     C**********           END                                            S01175
+     C**********           END                                            S01175
+     C*
+     C*****E THE SECURITY CODE INTO A 5 ALPHA SECURITY NUMBER FIELD       E15436
+     C*                                                                   E15436
+     C**********           MOVELEUSC      EUSCNO  5                       E15436
+     C*                                                                   E15436
+     C**MOVE*THE*SECURITY*CODE*INTO*A*10*ALPHA*SECURITY*NUMBER*FIELD*     E15436
+     C* MOVE THE SECURITY CODE INTO A 12 ALPHA SECURITY NUMBER FIELD      E15436
+     C*                                                                   E15436
+     C***********          MOVELEUSC      EUSCNO 10                E15436 E21537
+     C                     MOVELEUSC      EUSCNO 12                       E21537
+     C*
+     C* USE THE SECURITY CODE FIELD TO PICK UP THE SECURITY REPORT NAME
+     C* FROM LF/SECTE
+     C**FROM*LF/SECTE,*IF*ERROR*OCCURS*THEN*PERFORM*STD*DB*ERROR*
+     C*
+     C***********          MOVELEUSC      EUSCRF  9                       S01176
+     C                     MOVELEUSC      EUSCRF 12                       S01176
+     C           EUSCRF    CHAINSECTYDF              31
+     C           *IN31     IFEQ '1'
+     C           RECI      OREQ '*'
+     C           EUSCRF    CHAINSECTY1               55                   S01190
+     C           *IN55     IFEQ '1'                                       S01190
+     C           RECI      OREQ '*'                                       S01190
+     C           EUSCRF    CHAINSECTY2               56                   S01190
+     C           *IN56     IFEQ '1'                                       S01190
+     C           RECI      OREQ '*'                                       S01190
+     C***********          SETON                     U7U8LR
+     C***********          MOVE 'SECTY'   DBFILE           *****************
+     C***********          MOVELEUSCRF    DBKEY            ** DB ERROR 05 **
+     C***********          Z-ADD5         DBASE            *****************
+     C***********          SETON                     U7U8LR       S01175  E14515
+     C***********          MOVE 'SECTY'   DBFILE           *******S01175**E14515
+     C***********          MOVELEUSCRF    DBKEY            ** DB ERROR 05 E14515
+     C***********          Z-ADD5         DBASE            *******S01175**E14515
+     C***********          MOVEL*BLANK    SRPN                            S01175
+     C***********          MOVEL'UNKNOWN' SRPN                            S01175
+     C                     MOVEL*BLANK    SRPN                            E14515
+     C                     MOVEL'UNKNOWN' SRPN                            E14515
+     C                     END
+     C                     END                                            S01190
+     C                     END                                            S01190
+     C           ENDD      TAG                             ** ENDD **
+     C*                                                                   S01175
+     C**  CHECK IF OWN ACCOUNT TRANSFER                                   S01190
+     C*                                                                   S01175
+     C                     MOVELEUCP      EUCTPY  6                       S01190
+     C                     MOVELEUCP      EUCTPK 20                       CSE022
+     C********** EUCTPY    CHAINCLINTSEF             31            S01190 CSE022
+     C           EUCTPK    CHAINCLINTSEF             31                   CSE022
+     C           *IN31     IFEQ '0'                                       S01190
+     C           C1DI      ANDEQ'E'                                       S01190
+     C                     SETON                     39                   S01190
+     C                     END                                            S01190
+     C*                                                                   S01175
+     C**  OR IF C/PARTY IS CEDEL DEPOT                                    S01190
+     C*                                                                   S01175
+     C                     MOVELEUCP      EUCTPY                          S01190
+     C                     MOVELEUCP      EUCTPK 20                       CSE022
+     C********** EUCTPY    CHAINCLTSEF               31            S01190 CSE022
+     C           EUCTPK    CHAINCLTSEF               31                   CSE022
+     C           *IN31     IFEQ '0'                                       S01190
+     C           C1DI      ANDEQ'C'                                       S01190
+     C                     SETON                     38                   S01190
+     C                     END                                            S01190
+     C*                                                                   S01190
+     C**  WHICH TRADE DETAIL LINES TO PRINT                               S01190
+     C*                                                                   S01190
+     C           *IN43     IFEQ '1'                                       S01190
+     C                     SETON                     68                   S01190
+     C                     END                                            S01190
+     C           *IN44     IFEQ '1'                                       S01190
+     C           EUPC      IFEQ 'F'                                       S01190
+     C           *IN39     ANDEQ'1'                                       S01190
+     C                     SETON                     71                   S01190
+     C                     ELSE                                           S01190
+     C                     SETON                     68                   S01190
+     C                     END                                            S01190
+     C                     END                                            S01190
+     C           *IN45     IFEQ '1'                                       S01190
+     C           EUCL      IFEQ 'K'                                       S01190
+     C           EUCL      OREQ *BLANKS                                   S01190
+     C                     SETON                     73                   S01190
+     C                     ELSE                                           S01190
+     C                     SETON                     68                   S01190
+     C                     END                                            S01190
+     C                     END                                            S01190
+     C           *IN46     IFEQ '1'                                       S01190
+     C           EUCL      IFEQ 'C'                                       S01190
+     C           EUPC      IFEQ 'F'                                       S01190
+     C           *IN38     ANDEQ'1'                                       S01190
+     C                     SETON                     72                   S01190
+     C                     ELSE                                           S01190
+     C                     SETON                     68                   S01190
+     C                     END                                            S01190
+     C                     ELSE                                           S01190
+     C           EUCL      IFEQ 'K'                                       S01190
+     C           EUCL      OREQ *BLANKS                                   S01190
+     C                     SETON                     74                   S01190
+     C                     ELSE                                           S01190
+     C                     SETON                     68                   S01190
+     C                     END                                            S01190
+     C                     END                                            S01190
+     C                     END                                            S01190
+     C           *IN72     IFEQ '1'                                       S01190
+     C                     SETOF                     6874                 S01190
+     C                     END                                            S01190
+     C*                                                                   S01190
+     C**  CORRECT LINE NOS. FOR TRADE DETAILS                             S01190
+     C*                                                                   S01190
+     C           *IN04     IFEQ '1'                                       S01190
+     C           *IN68     ANDEQ'1'                                       S01190
+     C           EULN      ADD  1         NULN1   50                      S01190
+     C           EULN      ADD  2         NULN2   50                      S01190
+     C           EULN      ADD  3         NULN3   50                      S01190
+     C           EULN      ADD  4         NULN4   50                      S01190
+     C           EULN      ADD  5         NARLN   50                      S01190
+     C                     END                                            S01190
+     C           *IN71     IFEQ '1'                                       S01190
+     C           *IN72     OREQ '1'                                       S01190
+     C           *IN03     IFEQ '1'                                       S01190
+     C           EULN      ADD  1         NARLN                           S01190
+     C                     END                                            S01190
+     C                     END                                            S01190
+     C           *IN73     IFEQ '1'                                       S01190
+     C           *IN74     OREQ '1'                                       S01190
+     C           *IN03     IFEQ '1'                                       S01190
+     C           EULN      ADD  1         NULN1                           S01190
+     C                     END                                            S01190
+     C           *IN04     IFEQ '1'                                       S01190
+     C           NULN1     ADD  1         NARLN                           S01190
+     C                     END                                            S01190
+     C                     END                                            S01190
+     C*
+     C**  CHANGE FIELDS TO ZERO SUPPRESS THEM                             S01190
+     C*
+     C           *IN68     IFEQ '1'                                       S01190
+     C                     MOVE EPRA      EPRAN  130                      S01190
+     C                     MOVE EPRX      EPRXN   50                      S01190
+     C                     MOVE EAIA      EAIAN  130                      S01190
+     C                     MOVE EAIX      EAIXN   50                      S01190
+     C                     MOVE EFCA      EFCAN  130                      S01190
+     C                     MOVE EFCX      EFCXN   50                      S01190
+     C                     END                                            S01190
+     C                     MOVE 'Y'       EUTG                            S01271
+     C*                                                                   S01271
+     C*  UPDATE SEEUC RECORD TO SHOW THAT IT HAS BEEN PRINTED.            S01271
+     C*                                                                   S01271
+     C           *INU6     IFEQ '1'                                       S01271
+     C   01                EXCPTSEEH                                      S01271
+     C   02                EXCPTSEE0                                      S01271
+     C   03                EXCPTSEE1                                      S01271
+     C   04                EXCPTSEE2                                      S01271
+     C   05                EXCPTSEE3                                      S01271
+     C   06                EXCPTSEE4                                      S01271
+     C   07                EXCPTSEE5                                      S01271
+     C                     END                                            S01271
+     C*
+     C*     TOTAL TIME CALCULATIONS
+     C*     ~~~~~~~~~~~~~~~~~~~~~~~
+     C*                                                                   S01190
+     C**IF*NO*DETAIL*1*RECORD*PRESENT*AFTER*A*DETAIL*0*RECORD*WAS*PREVIOUSS01190
+     C**READ*AND*THE*TRADE*DETAILS*NEED*PRINTING*OR*CORRESPONDENT*IS**1175S01190
+     C**REQUIRED*(TYPE*03*-*RECEIT*FROM*OUTSIDE*EUROCLEAR*EUCL*=*'*'*)1175S01190
+     C**THEN*PROCESS*AS*A*DATABASE*ERROR*ELSE*OUTPUT*DETAILS*FROM*D S01175S01190
+     C**AS*STORED*PREVIOUSLY*************************************** S01175S01190
+     C*                                                                   S01175
+     C*                                                                   S01175
+     C************IN02     IFEQ '1'                                 S01175S01190
+     C************IN39     ANDEQ'1'                                 S01175S01190
+     C*                                                                   S01175
+     C************IN66     IFEQ '1'                                 S01175S01190
+     C***********          SETON                     U7U8LR         S01175S01190
+     C***********          MOVE 'SEEUC'   DBFILE           *********S01175S01190
+     C***********          MOVELSEEKEY    DBKEY            ** DB ERROR 02 S01190
+     C***********          Z-ADD2         DBASE            *********S01175S01190
+     C***********          GOTO ENDT                                S01175S01190
+     C***********          ELSE                                     S01175S01190
+     C***********          ADD  1         EULN2                     S01175S01190
+     C***********          EXCPTLINE2                               S01175S01190
+     C***********          END                                      S01175S01190
+     C*                                                                   S01175
+     C***********          END                                      S01175S01190
+     C*                                                                   S01175
+     C***IF*A*D0*RECORD*HAS*BEEN*READ*SET*ON*INDICATOR*39********** S01175S01190
+     C***AND*RETAIN*AN*INDICATOR*HOLDING*LINE*PRINTING*DETAILS*REQUIS01175S01190
+     C*                                                             S01175S01190
+     C************IN02     IFEQ '1'                                 S01175S01190
+     C***********          MOVE '1'       *IN39                     S01175S01190
+     C************IN60     IFEQ '1'                                 S01175S01190
+     C************IN45     OREQ '1'                                 S01175S01190
+     C***********EUCL      ANDEQ' '                                 S01175S01190
+     C***********          MOVE '1'       *IN66                     S01175S01190
+     C***********          END                                      S01175S01190
+     C***********          END                                      S01175S01190
+     C*                                                                   S01175
+     C**SAVE*FIELDS*FOR*PRINTING*IF*DETAIL*0*RECORD*BUT*NO*DETAIL*1*OR*2  S01175
+     C*                                                                   S01175
+     C***********          Z-ADDEULN      EULN2   50                S01175S01190
+     C***********          Z-ADDEUCU      EUCU2  110                S01175S01190
+     C***********          Z-ADDEUCA      EUCU2  130                S01175S01190
+     C***********          MOVE EDP1      EDP12   1                 S01175S01190
+     C***********          Z-ADDEUCD      EUCD2   20                S01175S01190
+     C***********          MOVE EUSD      EUSD2   6                 S01175S01190
+     C***********          MOVE EUPR      EUPR2   1                 S01175S01190
+     C***********          MOVE EUCP      EUCP2   5                 S01175S01190
+     C***********          MOVE EUVY      EUVY2   3                 S01175S01190
+     C***********          MOVE '0'       *IN64                     S01175S01190
+     C***********          MOVE '0'       *IN65                     S01175S01190
+     C************IN62     IFEQ '1'                                 S01175S01190
+     C***********          MOVE '1'       *IN64                     S01175S01190
+     C***********          END                                      S01175S01190
+     C************IN44     IFEQ '1'                                 S01175S01190
+     C***********          MOVE '1'       *IN65                     S01175S01190
+     C***********          END                                      S01175S01190
+     C*                                                                   S01175
+     C*                                                                   S01175
+     C**IF*NO*DETAIL*2*RECORD*PRESENT*AFTER*A*DETAIL*0*RECORD*WAS*PREVIOUSLY
+     C**READ*WITH*INSTRUCTION*TYPE*07.*PERFORM*STD*DB*ERROR*
+     C*
+     C***L1***** *IN02     IFEQ '1'                                       S01175
+     C***L1***** *IN38     ANDEQ'1'                                       S01175
+     C***L1***** *IN01     OREQ '1'                                       S01175
+     C***L1***** *IN38     ANDEQ'1'                                       S01175
+     C***L1*****           SETON                     U7U8LR               S01175
+     C***L1*****           MOVE 'SEEUC'   DBFILE           ***************S01175
+     C***L1*****           MOVELSEEKEY    DBKEY            ** DB ERROR 06 S01175
+     C***L1*****           Z-ADD6         DBASE            ***************S01175
+     C***L1*****           END                                            S01175
+     C**********
+     C**IF*NO*DETAIL*1*RECORD*PRESENT*AFTER*A*DETAIL*0*RECORD*WAS*PREVIOUSLY
+     C**READ,*OUTPUT*SECOND*LINE*ON*REPORT*FOR*THE*PREVIOUS*RECORD*
+     C*
+     C*1******** *IN01     IFEQ '1'                                       S01175
+     C*1******** *IN39     ANDEQ'1'                                       S01175
+     C*1******** *IN02     OREQ '1'                                       S01175
+     C*1******** *IN39     ANDEQ'1'                                       S01175
+     C*1******** *IN04     OREQ '1'                                       S01175
+     C*1******** *IN39     ANDEQ'1'                                       S01175
+     C*1********           Z-ADD0         EUHU                            S01175
+     C*1********           Z-ADD0         EUHD                            S01175
+     C*1********           EXCPTLINE2                                     S01175
+     C*1********           END                                            S01175
+     C**********                                                          S01175
+     C***ON*CHANGE*OF*TYPE*SET*OFF *IN39                                  S01175
+     C**********                                                          S01175
+     C*1********           SETOF                     39                   S01175
+     C*
+     CLRN40                EXSR COBIC                                     S01271
+     C*******                                                             S01271
+     CLR U7                GOTO ENDT
+     CLR 42                GOTO NOERR3
+     C*
+     C**  TRAILER MISSING ON SEEUC
+     C*
+     CLR                   SETON                     U7U8
+     CLR         *LOCK     IN   LDA                                       S01117
+     CLR                   MOVE 'SEEUC'   DBFILE           ***************
+     CLR                   MOVE 'TRAILER' CHAR15 15        ** DB ERR 07 **
+     CLR                   MOVEL'MISSING' CHAR15           ***************
+     CLR                   MOVELCHAR15    DBKEY
+     CLR                   Z-ADD07        DBASE
+     CLR                   OUT  LDA                                       S01117
+     CLR                   EXSR *PSSR                                     S01117
+     CLR                   GOTO ENDT
+     C*
+     CLR         NOERR3    TAG                             ** NOERR3 **
+     C*
+     C**  FILE CONTROL CHECKING.
+     C*
+     CLR         EUNU      COMP NORR                 U8U8
+     C*
+     C** IF TRANSMISSION AUDIT & NO ERROR & NO OUTSTANDING INSTRUCTIONS
+     C** THEN RESET BATCH & LINE NUMBERS IN S/BTCHN FOR THIS CLEARING
+     C** HOUSE ACCOUNT
+     C*
+     CLR                   SETOF                     99
+     CLR         EUEX      COMP ' '                      53
+     CLRNU6NU8 53SVEURO    CHAINBTCHN                99
+     CLRN99                GOTO EUROOK
+     C*
+     CLR                   SETON                     U7U8
+     CLR         *LOCK     IN   LDA                                       S01117
+     CLR                   MOVE 'BTHCN'   DBFILE           ***************
+     CLR                   MOVELSVEURO    DBKEY            ** DB ERR 08 **
+     CLR                   Z-ADD08        DBASE            ***************
+     CLR                   OUT  LDA                                       S01117
+     CLR                   EXSR *PSSR                                     S01117
+     CLR                   GOTO ENDT
+     C*
+     CLR         EUROOK    TAG                             ** EUROOK **
+     C*
+     CLRNU6NU8 53          Z-ADD0         EUBN
+     CLRNU6NU8 53          Z-ADD0         EULN
+     CLRNU6NU8 53          UPDATBTCHNABF                                  S01175
+     C*
+     CLR         ENDT      TAG                             ** ENDT **
+     C*
+     C*****************************************************************
+      *                                                                   S01271
+     C*   COBIC - INPUT CYCLE / CLOSE OF BUSINESS PARAMETER SR            S01271
+     C*                                                                   S01271
+     C           COBIC     BEGSR                                          S01271
+     C*                                                                   S01271
+     C           *ENTRY    PLIST                                          S01271
+     C                     PARM           PRPHAS  1                       S01271
+     C                     PARM           SEQ     5                       S01117
+     C           PRPHAS    IFEQ 'I'                                       S01271
+     C                     SETOF                     81                   S01271
+     C                     TIME           CTIME                           S01271
+     C                     MOVE ':  '     ATIME   5                       S01271
+     C                     MOVE CMINT     ATIME                           S01271
+     C                     MOVELCHOUR     ATIME                           S01271
+     C                     ELSE                                           S01271
+     C                     SETON                     81                   S01271
+     C                     END                                            S01271
+     C                     ENDSR                                          S01271
+     C*                                                                   S01271
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+     C********************************************************************S01271
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           RCFP1     BEGSR                            ** RCFP1 **   E29170
+     C*                                                                   E29170
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF                    E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUM     ZSNUM   60                      E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ     5                       E29170
+     C                     PARM *BLANKS   SENTY   3                       E29170
+     C                     PARM           SFILE                           E29170
+     C                     PARM           ZSNUM                           E29170
+     C                     PARM           ZSERR   1                       E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+     C*                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C*  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           RCFAU     BEGSR                            ** RCFAU **   E29170
+     C*                                                                   E29170
+     C**      ENSURE AUDIT SPOOL FILE RECORDED BY RCF                     E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ                             E29170
+     C                     PARM *BLANKS   SENTY                           E29170
+     C                     PARM           SFILEU                          E29170
+     C                     PARM           ZSNUMU                          E29170
+     C                     PARM *BLANK    ZSERR                           E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+     C*                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C*****************************************************************   E29170
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+     O/EJECT
+     O********************************************************************
+     O*  Exception output to update EUTG field on SEECU formats           S01271
+     O*                                                                   S01271
+     OSEEUCHF E                SEEH                                       S01271
+     O                         EUTG                                       S01271
+     OSEEUCD0FE                SEE0                                       S01271
+     O                         EUTG                                       S01271
+     OSEEUCD1FE                SEE1                                       S01271
+     O                         EUTG                                       S01271
+     OSEEUCD2FE                SEE2                                       S01271
+     O                         EUTG                                       S01271
+     OSEEUCD3FE                SEE3                                       S01271
+     O                         EUTG                                       S01271
+     OSEEUCD4FE                SEE4                                       S01271
+     O                         EUTG                                       S01271
+     OSEEUCD5FE                SEE5                                       S01271
+     O                         EUTG                                       S01271
+     O*TCHNABFT        LRNU6NU8                                           S01175
+     O*
+     O*  S/BTCHN
+     O*
+     O*                        *ALL                                       S01175
+     O*
+     O*    EUCLID INSTRUCTIONS
+     O*    ~~~~~~~~~~~~~~~~~~~
+     OSE0430P1H  203  N01 L1NU7
+     O       AND       49NLR
+     O       OR       N01 OFNL1
+     O       AND       49
+     O                                   15 'REFERENCE'
+     O                                   25 'SE0430P1'
+     O                         TITL      89
+     O                                  104 'DATE'
+     O                         RUNA     112
+     O                                  122 'PAGE'
+     O                         PAGE     127
+     O*
+     O        H  1    N01 L1NU7
+     O       AND       49NLR
+     O       OR       N01 OFNL1
+     O       AND       49
+     O                      NU6          15 'TRANSMISS'
+     O                      NU6          24 'ION AUDIT'
+     O                                   41 'ACCOUNT NUMBER'
+     O                         EURO      47
+     O                 52                67 'CANCELLED'
+     O                                   94 'EUCLID INSTRUCTIONS'
+     O                                  101 '- TYPE'
+     O                         EUITX    104
+     O                                  125 'BATCH NUMBER'
+     O                         EUB0     128
+     O*
+     O        H  2    N01 L1NU7
+     O       AND       49NLR
+     O       OR       N01 OFNL1
+     O       AND       49
+     O                      NU6          15 '---------'
+     O                      NU6          24 '---------'
+     O        H  2    N01 L1NU7                                           S01271
+     O       AND       49NLR                                              S01271
+     O       OR       N01 OFNL1                                           S01271
+     O       AND       49                                                 S01271
+     O                N81                94 'INPUT CYCLE - TIME'          S01271
+     O                N81      ATIME    101                               S01271
+     O                 81 U6             93 'CLOSE OF BUSINESS'           S01271
+     O*                                                                   S01271
+     O*
+     O*
+     O        H  1     43 L1NU7
+     O       AND         N52                                              S01190
+     O       OR        43 OFNL1
+     O       AND         N52                                              S01190
+     O       OR        44 L1NU7
+     O       AND         N52                                              S01190
+     O       OR        44 OFNL1
+     O       AND         N52                                              S01190
+     O                                   19 'LINE   TYP.   REF.'
+     O                                   43 'P.C.   COUNTERPARTY'
+     O***********************************68 'NAME/TOWN'                   S01175
+     O***********************************13 'NOM.AMT.         SEC.NB.'    S01175
+     O*****   H  2     43 L1NU7                                           S01175
+     O*****  OR        43 OFNL1                                           S01175
+     O*****  OR        44 L1NU7                                           S01175
+     O*****  OR        44 OFNL1                                           S01175
+     O*********************************** 6 'NUMBER'                      S01175
+     O***********************************22 'CASH AMT.'                   S01175
+     O***********************************27 'CUR'                         S01175
+     O***********************************37 'STLMT.'                      S01175
+     O*****            44                94 'PRY'                         S01175
+     O***********************************16 '*.HASH TOTAL.*'              S01175
+     O*                                                                   S01175
+     O*****   H  1     45 L1NU7                                           S01175
+     O*****  OR        45 OFNL1                                           S01175
+     O***********************************22 'LINE   TYP.   REF.'          S01175
+     O***********************************41 'P.C.   CTRP.'                S01175
+     O***********************************47 'CLR'                         S01175
+     O***********************************68 'NOM.AMT.   SEC.NB.'          S01175
+     O*****   H  1     45 L1NU7                                           S01175
+     O*****  OR        45 OFNL1                                           S01175
+     O***********************************11 'NUMBER'                      S01175
+     O***********************************25 'CASH AMT.'                   S01175
+     O***********************************42 'CUR    STLMT.'               S01175
+     O***********************************55 'PRY'                         S01175
+     O***********************************72 '*.HASH TOTAL.*'              S01175
+     O*****   H  1     45 L1NU7                                           S01175
+     O*****  OR        45 OFNL1                                           S01175
+     O***********************************45 '(NAME/TOWN)'                 S01175
+     O*                                                                   S01175
+     O*****   H  1     46 L1NU7                                           S01175
+     O*****  OR        46 OFNL1                                           S01175
+     O***********************************22 'LINE   TYP.   REF.'          S01175
+     O***********************************41 'P.C.   CTRP.'                S01175
+     O***********************************74 'NOM.AMT.         SEC.NB.'    S01175
+     O*****   H  1     46 L1NU7                                           S01175
+     O*****  OR        46 OFNL1                                           S01175
+     O*********************************** 9 'NUMBER'                      S01175
+     O***********************************25 'CASH AMT.'                   S01175
+     O***********************************42 'CUR    STLMT.'               S01175
+     O***********************************63 'PRY   CTRP.'                 S01175
+     O***********************************78 '*.HASH TOTAL.*'              S01175
+     O*****   H  1     46 L1NU7                                           S01175
+     O*****  OR        46 OFNL1                                           S01175
+     O***********************************45 '(NAME/TOWN)'                 S01175
+     O*                                                                   S01175
+     O*****   D 21     02 43NU7                                           S01175
+     O*****  AND       49                                                 S01175
+     O*****  OR        02 44NU7                                           S01175
+     O*****  AND       49                                                 S01175
+     O*************************EULN       6                               S01175
+     O*************************EUITX     11                               S01175
+     O*************************EURF      19                               S01175
+     O*************************EUPC      26                               S01175
+     O*************************CNUM      33                               S01175
+     O*************************CRNM      57                               S01175
+     O*************************CTWN      78                               S01175
+     O*************************EUNA  3   96                               S01175
+     O*************************EUSCNO   106                               S01175
+     O*************************SRPN     128                               S01175
+     O*****   E  1     49 43NU7LINE2                                      S01175
+     O*****  OR        49 44NU7                                           S01175
+     O*************************EULN2      6                               S01175
+     O*************************EUCU2 3   20                               S01175
+     O*************************EDP12     21                               S01175
+     O*************************EUCD2     23                               S01175
+     O*************************EUVY      27                               S01175
+     O***************  44      EUSDN Y   39                               S01175
+     O***************  44      EUPR      93                               S01175
+     O*************************EUHU  3  115                               S01175
+     O***********************************16 '.'                           S01175
+     O*************************EUHD     118                               S01175
+     O*****   D  1     03 43NU7                                           S01175
+     O*****  AND       49                                                 S01175
+     O*****  OR        03 44NU7                                           S01175
+     O*****  AND       49                                                 S01175
+     O*************************EULN       6                               S01175
+     O*************************EUCU  3   20                               S01175
+     O*************************EDP1      21                               S01175
+     O*************************EUCD      23                               S01175
+     O*************************EUVY      27                               S01175
+     O***************  44      EUSDN Y   39                               S01175
+     O***************  44      EUPR      93                               S01175
+     O*************************EUHU  3  115                               S01175
+     O*************************EDP2     116                               S01175
+     O*************************EUHD     118                               S01175
+     O*                                                                   S01175
+     O*****   D 21     02 45NU7                                           S01175
+     O*****  AND       49                                                 S01175
+     O*************************EULN       8                               S01175
+     O*************************EUITX     13                               S01175
+     O*************************EURF      22                               S01175
+     O*************************EUPC      31                               S01175
+     O*************************CNUM      41                               S01175
+     O*************************EUCL      46                               S01175
+     O*************************EUNA  3   59                               S01175
+     O*************************EUSCNO    67                               S01175
+     O*************************SRPN      89                               S01175
+     O*****************47               109 '*** RECEIVE FROM'            S01175
+     O*****************47               119 'CEDEL ***'                   S01175
+     O********D  1     02 45NU7                                           S01175
+     O*******AND       49                                                 S01175
+     O*************************CRNM      55                               S01175
+     O********D  1     02 45NU7                                           S01175
+     O*******AND       49                                                 S01175
+     O*************************CTWN      45                               S01175
+     O********E  1     49 45NU7LINE2                                      S01175
+     O*************************EULN2      8                               S01175
+     O*************************EUCU2 3   23                               S01175
+     O*************************EDP12     24                               S01175
+     O*************************EUCD2     26                               S01175
+     O*************************EUVY      32                               S01175
+     O*************************EUSDN Y   43                               S01175
+     O*************************EUPR      54                               S01175
+     O*************************EUHU  3   70                               S01175
+     O***********************************71 '.'                           S01175
+     O*************************EUHD      73                               S01175
+     O********D  1     03 45NU7                                           S01175
+     O*******AND       49                                                 S01175
+     O*************************EULN       8                               S01175
+     O*************************EUCU  3   23                               S01175
+     O*************************EDP1      24                               S01175
+     O*************************EUCD      26                               S01175
+     O*************************EUVY      32                               S01175
+     O*************************EUSDN Y   43                               S01175
+     O*************************EUPR      54                               S01175
+     O*************************EUHU  3   70                               S01175
+     O*************************EDP2      71                               S01175
+     O*************************EUHD      73                               S01175
+     O********D 21     02 46NU7                                           S01175
+     O*******AND       49                                                 S01175
+     O*************************EULN       8                               S01175
+     O*************************EUITX     14                               S01175
+     O*************************EURF      22                               S01175
+     O*************************EUPC      31                               S01175
+     O*************************CNUM      41                               S01175
+     O*************************EUNA  3   59                               S01175
+     O*************************EUSCNO    73                               S01175
+     O*************************SRPN      95                               S01175
+     O*****************47               119 '*** DELIVER TO CEDEL ***'    S01175
+     O*****************48               113 '*** DELIVER THROUGH'         S01175
+     O*****************48               122 'KASS ***'                    S01175
+     O********D  1     02 46NU7                                           S01175
+     O*******AND       49                                                 S01175
+     O*************************CRNM      55                               S01175
+     O********D  1     02 46NU7                                           S01175
+     O*******AND       49                                                 S01175
+     O*************************CTWN      45                               S01175
+     O********E  1     49 46NU7LINE2                                      S01175
+     O*************************EULN2      8                               S01175
+     O*************************EUCU2 3   24                               S01175
+     O*************************EDP12     25                               S01175
+     O*************************EUCD2     27                               S01175
+     O*************************EUVY      32                               S01175
+     O*************************EUSDN Y   43                               S01175
+     O*************************EUPR      51                               S01175
+     O*************************CNUM      63                               S01175
+     O*************************EUHU  3   76                               S01175
+     O*************************EDP2      77                               S01175
+     O*************************EUHD      79                               S01175
+     O*                                                                   S01175
+     O********D  1     03 46NU7                                           S01175
+     O*******AND       49                                                 S01175
+     O*************************EULN       8                               S01175
+     O*************************EUCU  3   24                               S01175
+     O*************************EDP1      25                               S01175
+     O*************************EUCD      27                               S01175
+     O*************************EUVY      32                               S01175
+     O*************************EUSDN Y   43                               S01175
+     O*************************EUPR      54                               S01175
+     O*************************CNUM      63                               S01175
+     O*************************EUHU  3   76                               S01175
+     O*************************EDP2      77                               S01175
+     O*************************EUHD      79                               S01175
+     O********D  1     04 46NU7                                           S01175
+     O*******AND       49                                                 S01175
+     O*************************EULN       8                               S01175
+     O*************************EUNR      45                               S01175
+     O                                   54 'NOM.AMT.'                    S01175
+     O                                   69 'SECURITY CODE'               S01175
+     O**   TYPE 01/02 LINE 2                                              S01190
+     O********H**2     43 L1NU7                                     S01175S01190
+     O        H  1     43 L1NU7                                           S01190
+     O       AND         N52                                              S01190
+     O       OR        43 OFNL1                                           S01175
+     O       AND         N52                                              S01190
+     O       OR        44 L1NU7                                           S01175
+     O       AND         N52                                              S01190
+     O       OR        44 OFNL1                                           S01175
+     O       AND         N52                                              S01190
+     O                                    6 'NUMBER'                      S01190
+     O                                   22 'CASH AMT.'                   S01175
+     O***********                        27 'CUR'                   S01175S01190
+     O                                   30 'CUR'                         S01190
+     O***********                        37 'STLMT.'                S01175S01190
+     O                                   39 'STLMT.'                      S01190
+     O***********      44                42 'PRY'                   S01175S01190
+     O                 44                43 'PRY'                         S01190
+     O***********                        54 '*.HASH TOTAL.*'        S01175S01190
+     O                                   59 '*.HASH TOTAL.*'              S01190
+     O*                                                                   S01175
+     O        H  1     45 L1NU7                                           S01175
+     O       AND         N52                                              S01190
+     O       OR        45 OFNL1                                           S01175
+     O       AND         N52                                              S01190
+     O***********                        15 'LINE  TYP  REF'        S01175S01190
+     O                                   19 'LINE   TYP.   REF.'          S01190
+     O***********                        25 'PC CTRP '              S01175S01190
+     O                                   43 'P.C.   COUNTERPARTY'         S01190
+     O***********                        29 'CLR'                   S01175S01190
+     O                                   48 'CLR'                         S01190
+     O***********                        39 'NOM.AMT.'              S01175S01190
+     O                                   60 'NOMINAL'                     S01190
+     O***********                        50 'SEC. CODE'             S01175S01190
+     O                                   76 'SEC. CODE'                   S01190
+     O**  TYPE03 LINE2 HEADER                                             S01190
+     O        H  1     45 L1NU7                                           S01175
+     O       AND         N52                                              S01190
+     O       OR        45 OFNL1                                           S01175
+     O       AND         N52                                              S01190
+     O                                    6 'NUMBER'                      S01175
+     O************                       21 'CASH AMT.'            S01175 S01190
+     O                                   20 'COUNTERVALUE'                S01190
+     O************                       33 'CUR  STLMT'           S01175 S01190
+     O                                   30 'CUR'                         S01190
+     O                                   39 'STLMT.'                      S01190
+     O************                       38 'COR'                  S01175 S01190
+     O                                   46 'CORR'                        S01190
+     O************                       57 '*.HASH TOTAL.*'       S01175 S01190
+     O                                   70 '*.HASH TOTAL.*'              S01190
+     O**   TYPE 07 LINE 1                                                 S01190
+     O        H  1     46 L1NU7                                           S01175
+     O       AND         N52                                              S01190
+     O       OR        46 OFNL1                                           S01175
+     O       AND         N52                                              S01190
+     O***********                        15 'LINE  TYPE REF'        S01175S01190
+     O***********                        18 'PC'                    S01175S01190
+     O***********                        22 'CLR'                   S01175S01190
+     O***********                        31 'NOM AMT'               S01175S01190
+     O***********                        44 'SEC.NB.'               S01175S01190
+     O                                   18 'LINE   TYPE   REF'           S01190
+     O                                   28 'P.C.'                        S01190
+     O                                   33 'CLR'                         S01190
+     O                                   45 'NOMINAL'                     S01190
+     O                                   62 'SEC. CODE'                   S01190
+     O** IF CANCELLATION                                                  S01190
+     O        H  1     52 L1NU7                                           S01175
+     O       AND       43                                                 S01190
+     O       OR        52 OFNL1                                           S01190
+     O       AND       43                                                 S01190
+     O       OR        52 L1NU7                                           S01190
+     O       AND       44                                                 S01190
+     O       OR        52 OFNL1                                           S01190
+     O       AND       44                                                 S01190
+     O       OR        52 L1NU7                                           S01190
+     O       AND       45                                                 S01190
+     O       OR        52 OFNL1                                           S01190
+     O       AND       45                                                 S01190
+     O       OR        52 L1NU7                                           S01190
+     O       AND       46                                                 S01190
+     O       OR        52 OFNL1                                           S01190
+     O       AND       46                                                 S01190
+     O                                    5 'LINE'                        S01190
+     O                                   12 'TYPE'                        S01190
+     O                                   19 'REF.'                        S01190
+     O                                   37 'COUNTERPARTY'                S01190
+     O                                   52 'NOMINAL'                     S01190
+     O                                   66 'SECURITY'                    S01190
+     O** CANCELLATION                                                     S01190
+     O        D 21     52 02NU7                                           S01190
+     O       AND       49                                                 E22725
+     O                         EULN       6                               S01190
+     O                         EUITX     11                               S01190
+     O                         EURF      19                               S01190
+     O                         ECCP      29                               S01190
+     O                         EUCP      34                               S01190
+     O                         ENAM  3   51                               S01190
+     O                         EUSC      71                               S01190
+     O                         SRPN      94                               S01190
+     O**   TYPE 07 LINE 12B                                               S01190
+     O        H  1     46 L1NU7                                           S01175
+     O       AND         N52                                              S01190
+     O       OR        46 OFNL1                                           S01175
+     O       AND         N52                                              S01190
+     O                                    6 'NUMBER'                      S01175
+     O***********                        19 'CASH AMT.'             S01175S01190
+     O                                   20 'COUNTERVALUE'                S01190
+     O***********                        26 'CUR'                   S01175S01190
+     O                                   30 'CUR'                         S01190
+     O***********                        32 'STLMT'                 S01175S01190
+     O                                   38 'STLMT'                       S01190
+     O***********                        36 'PRY'                   S01175S01190
+     O                                   43 'PRY'                         S01190
+     O***********                        40 'COR'                   S01175S01190
+     O                                   48 'COR'                         S01190
+     O***********                        47 'CTRP'                  S01175S01190
+     O                                   60 'C/PARTY'                     S01190
+     O***********                        62 '*.HASH TOTAL.*'        S01175S01190
+     O                                   81 '** HASH TOTAL **'            S01190
+     O**   TYPES 01,02,03,07 LINE 3                                       S01190
+     O        H  2     43 L1NU7                                           S01190
+     O       AND         N52                                              S01190
+     O       OR        43 OFNL1                                           S01190
+     O       AND         N52                                              S01190
+     O       OR        44 L1NU7                                           S01190
+     O       AND         N52                                              S01190
+     O       OR        44 OFNL1                                           S01190
+     O       AND         N52                                              S01190
+     O       OR        45 L1NU7                                           S01190
+     O       AND         N52                                              S01190
+     O       OR        45 OFNL1                                           S01190
+     O       AND         N52                                              S01190
+     O       OR        46 L1NU7                                           S01190
+     O       AND         N52                                              S01190
+     O       OR        46 OFNL1                                           S01190
+     O       AND         N52                                              S01190
+     O                                   16 'PR.AGENT'                    S01190
+     O                                   38 'TRADE PRICE'                 S01190
+     O                                   60 'TR.DATE  SPEC. INS.'         S01190
+     O**  TYPE 01 LINE11                                                  S01190
+     O        D 21     02 43NU7                                           S01175
+     O*******AND       49                                           S01175S01190
+     O       AND       49N52                                              S01190
+     O       OR        02 44NU7                                           S01175
+     O*******AND       49                                           S01175S01190
+     O       AND       49N52                                              S01190
+     O                         EULN       6                               S01175
+     O************             EUITX     11                        S01175 S01190
+     O                         EUITX     10                               S01190
+     O                         EURF      19                               S01175
+     O                         EUPC      26                               S01175
+     O                         EUCP      40                               S01175
+     O***********              EUNA  3   55                         S01175S01190
+     O                         ENAM  3   56                               S01190
+     O***********              EUSCNO    68                         S01175S01190
+     O                         EUSC      71                               S01190
+     O***********              SRPN      90                         S01175S01190
+     O                         SRPN      94                               S01190
+     O********E**1     49 43NU7LINE2                                S01175S01190
+     O*******OR**      49 44NU7                                     S01175S01190
+     O***********              EULN2      6                         S01175S01190
+     O***********     N64      EUCU2 3   20                         S01175S01190
+     O***********     N64      EDP12     21                         S01175S01190
+     O***********     N64      EUCD2     23                         S01175S01190
+     O***********              EUVY2     27                         S01175S01190
+     O***********              EUSD2     37                         S01175S01190
+     O***********      65      EUPR2     93                         S01175S01190
+     O*                                                                   S01175
+     O*                                                                   S01175
+     O********D**1     03 43NU7                                     S01175S01190
+     O*******AND*      49                                           S01175S01190
+     O*******OR**      03 44NU7                                     S01175S01190
+     O*******AND*      49                                           S01175S01190
+     O***********              EULN       6                         S01175S01190
+     O***********     N62      EUCU  3   18                         S01175S01190
+     O***********     N62      EDP1      19                         S01175S01190
+     O***********     N62      EUCD      21                         S01175S01190
+     O***********              EUVY      27                         S01175S01190
+     O***********              EUSDN     37                         S01175S01190
+     O***********      44      EUPR      41                         S01175S01190
+     O***********              EUHU  3   50                         S01175S01190
+     O***********              EDP2      51                         S01175S01190
+     O***********              EUHD      53                         S01175S01190
+     O**  TYPE 01/02 LINE12(B)                                            S01190
+     O        D  1     03 43NU7                                           S01190
+     O       AND       49                                                 S01190
+     O       OR        03 44NU7                                           S01190
+     O       AND       49N71                                              S01190
+     O                         EULN       6                               S01190
+     O                         EUCA  3   19                               S01190
+     O                         EDP1      20                               S01190
+     O                         EUCD      22                               S01190
+     O                         EUVY      30                               S01190
+     O                         EUSD      39                               S01190
+     O                         EUPR      43                               S01190
+     O                         EUHA  3   58                               S01190
+     O                         EDP2      59                               S01190
+     O                         EUHD      61                               S01190
+     O*                                                                   S01190
+     O********D**1     03 43NU7                                     S01175S01190
+     O*******AND*      49 60                                        S01175S01190
+     O*******OR**      03 44NU7                                     S01175S01190
+     O*******AND*      49 60                                        S01175S01190
+     O***********              EULN3      6                         S01175S01190
+     O***********                        10 'TP'                    S01175S01190
+     O***********              ETPR  3   20                         S01175S01190
+     O***********              ETPN      21                         S01175S01190
+     O***********              ETPD      27                         S01175S01190
+     O***********              ETDT      34                         S01175S01190
+     O***********              ESPI      36                         S01175S01190
+     O**  TYPE 01/02 LINE13                                               S01190
+     O        D  1     04 43NU7                                           S01190
+     O       AND       49                                                 S01190
+     O       OR        04 44NU7                                           S01190
+     O       AND       49N71                                              S01190
+     O                         EULN       6                               S01190
+     O                         ELAG      10                               S01190
+     O                         EUPA      14                               S01190
+     O                                   19 'TP'                          S01190
+     O                         ETPS      23                               S01190
+     O                         ETDP  3   31                               S01190
+     O                         ETPN      32                               S01190
+     O                         ETPD      38                               S01190
+     O                         ETDT      48                               S01190
+     O                         ESPI      54                               S01190
+     O*                                                                   S01175
+     O**   02 OWN ACCOUNT TRANSFER (LINE 12A)                             S01190
+     O        D  1     71 44NU7                                           S01190
+     O*******AND       03                                           S01190E22725
+     O       AND       03 49                                              E22725
+     O                         EULN       6                               S01190
+     O                         EUSD      14                               S01190
+     O                         EUPR      18                               S01190
+     O                         EUHA  3   35                               S01190
+     O                         EDP2      36                               S01190
+     O                         EUHD      38                               S01190
+     O                         ELRE      43                               S01190
+     O                         EREM      47                               S01190
+     O**   TYPE 03 LINE 11                                                S01190
+     O        D 21     02 45NU7                                           S01175
+     O*******AND       49                                           S01175S01190
+     O       AND       49N52                                              S01190
+     O                         EULN       6                               S01175
+     O                         EUITX     10                               S01175
+     O***********              EURF      16                         S01175S01190
+     O                         EURF      19                               S01190
+     O***********              EUPC      18                         S01175S01190
+     O                         EUPC      26                               S01190
+     O                         ECCP      35
+     O***********              EUCP      26                         S01175S01190
+     O                         EUCP      40                               S01190
+     O***********              EUCL      28                         S01175S01190
+     O                         EUCL      47                               S01190
+     O***********              EUNA  3   40                         S01175S01190
+     O                         ENAM  3   61                               S01190
+     O******                   EUSCNO    46                               E15436
+     O******                   SRPN      67                               E15436
+     O***********              EUSCNO    51                              ES01190
+     O                         EUSCNO    79                               S01190
+     O***********              SRPN      72                              ES01190
+     O                         SRPN     102                               S01190
+     O***********      47               109 '*** RECEIVE FROM'      S01175S01190
+     O***********      47               119 'CEDEL ***'             S01175S01190
+     O                 47               121 '*** RECEIVE FROM'            S01190
+     O                 47               131 'CEDEL ***'                   S01190
+     O                 48               121 '*** RECEIVE FROM'            S01190
+     O                 48               130 'KASS ***'                    S01190
+     O*                                                                   S01175
+     O********E**1     49 45NU7LINE2                                S01175S01190
+     O***********              EULN2      6                         S01175S01190
+     O***********     N64      EUCU2 3   19                         S01175S01190
+     O***********     N64      EDP12     20                         S01175S01190
+     O***********     N64      EUCD2     22                         S01175S01190
+     O***********              EUVY2     26                         S01175S01190
+     O***********              EUSD2     33                         S01175S01190
+     O*                                                                   S01175
+     O**  TYPE 03 LINE 12                                                 S01190
+     O        D  1     03 45NU7                                           S01175
+     O       AND       49                                                 S01175
+     O                         EULN       6                               S01175
+     O***********     N62      EUCU2 3   19                         S01175S01190
+     O                N80      EUCA  3   21                               S01190
+     O***********     N62      EDP1      20                         S01175S01190
+     O                N80      EDP1      22                               S01190
+     O***********     N62      EUCD      22                         S01175S01190
+     O                N80      EUCD      24                               S01190
+     O***********              EUVY      26                         S01175S01190
+     O                         EUVY      30                               S01190
+     O***********              EUSDN     33                         S01175S01190
+     O                         EUSD      39                               S01190
+     O***********      63      EUCOX     39                         S01175S01190
+     O                         EUCOX     47                               S01190
+     O***********              EUHU  3   53                         S01175S01190
+     O                         EUHA  3   64                               S01190
+     O***********              EDP2      54                         S01175S01190
+     O                         EDP2      65                               S01190
+     O***********              EUHD      56                         S01175S01190
+     O                         EUHD      67                               S01190
+     O** TYPE 03 LINE 13B                                                 S01190
+     O********D  1     03 46NU7                                     S01175S01190
+     O        D  1     04 45NU7                                           S01190
+     O*******AND       49 60                                        S01175S01190
+     O       AND       49N73                                              S01190
+     O***********              EULN3      6                         S01175S01190
+     O***********                        10 'TP'                    S01175S01190
+     O***********              ETPR  3   19                         S01175S01190
+     O***********              ETPN      20                         S01175S01190
+     O***********              ETPD      26                         S01175S01190
+     O***********              ETDT      33                         S01175S01190
+     O***********              ESPI      35                         S01175S01190
+     O                         EULN       6                               S01190
+     O                         ELAG      10                               S01190
+     O                         EUPA      14                               S01190
+     O                                   19 'TP'                          S01190
+     O                         ETPS      23                               S01190
+     O                         ETDP  3   31                               S01190
+     O                         ETPN      32                               S01190
+     O                         ETPD      38                               S01190
+     O                         ETDT      48                               S01190
+     O                         ESPI      55                               S01190
+     O**  TYPE 07 LINE 11                                                 S01190
+     O        D 21     02 46NU7                                           S01175
+     O*******AND       49                                           S01175S01190
+     O       AND       49N52                                              S01190
+     O                         EULN       6                               S01175
+     O                         EUITX     10                               S01175
+     O***********              EURF      16                         S01175S01190
+     O                         EURF      19                               S01190
+     O***********              EUPC      18                         S01175S01190
+     O                         EUPC      26                               S01190
+     O***********      48      EUCL      20                         S01175S01190
+     O***********      47      EUCL      20                         S01175S01190
+     O                 48      EUCL      32                               S01190
+     O                 47      EUCL      32                               S01190
+     O***********              EUNA  3   31                         S01175S01190
+     O                         ENAM  3   47                               S01190
+     O***********              EUSCNO    43                         S01175S01190
+     O                         EUSCNO    65                               S01190
+     O***********              SRPN      65                         S01175S01190
+     O                         SRPN      88                               S01190
+     O***********      47               119 '*** DELIVER TO CEDEL **S01175S01190
+     O***********      48               113 '*** DELIVER THROUGH'   S01175S01190
+     O***********      48               122 'KASS ***'              S01175S01190
+     O                 47               115 '*** DELIVER TO CEDEL ***'    S01190
+     O                 48               110 '*** DELIVER THROUGH'         S01190
+     O                 48               119 'KASS ***'                    S01190
+     O*                                                                   S01175
+     O********E**1     49 46NU7LINE2                                S01175S01190
+     O***********              EULN2      6                         S01175S01190
+     O***********     N64      EUCU2 3   19                         S01175S01190
+     O***********     N64      EDP12     20                         S01175S01190
+     O***********     N64      EUCD2     22                         S01175S01190
+     O***********              EUVY2     26                         S01175S01190
+     O***********              EUSD2     33                         S01175S01190
+     O***********              EUPR2     35                         S01175S01190
+     O***********              EUCP2     47                         S01175S01190
+     O*                                                                   S01175
+     O*                                                                   S01175
+     O**  TYPE 07 LINE 12B                                                S01190
+     O        D  1     03 46NU7                                           S01175
+     O*******AND       49                                           S01175S01190
+     O       AND       49 74                                              S01190
+     O       OR  1     03 46NU7                                           S01190
+     O       AND       49 68                                              S01190
+     O                         EULN       6                               S01175
+     O***********     N62      EUCU  3   19                         S01175S01190
+     O***********     N62      EDP1      20                         S01175S01190
+     O***********     N62      EUCD      22                         S01175S01190
+     O***********              EUVY      26                         S01175S01190
+     O***********              EUSDN     33                         S01175S01190
+     O***********              EUPR      35                         S01175S01190
+     O***********      48      EUCOX     41                         S01175S01190
+     O***********      63      EUCOX     41                         S01175S01190
+     O***********              EUCP      47                         S01175S01190
+     O***********              EUHU  3   60                         S01175S01190
+     O***********              EDP2      61                         S01175S01190
+     O***********              EUHD      63                         S01175S01190
+     O                N80      EUCA  3   21                               S01190
+     O                N80      EDP1      22                               S01190
+     O                N80      EUCD      24                               S01190
+     O                         EUVY      30                               S01190
+     O                         EUSD      39                               S01190
+     O                         EUPR      42                               S01190
+     O                 48      EUCOX     50                               S01190
+     O                 63      EUCOX     50                               S01190
+     O                         ECCP      54                               S01190
+     O                         EUCP      59                               S01190
+     O                         EUHA  3   76                               S01190
+     O                         EDP2      77                               S01190
+     O                         EUHD      79                               S01190
+     O**  TYPE 07 LINE 12A                                                S01190
+     O        D        03 46NU7                                           S01190
+     O       AND       49 72                                              S01190
+     O                         EULN       6                               S01190
+     O                         EUSD      14                               S01190
+     O                         EUPR      18                               S01190
+     O                         ECCP      22                               S01190
+     O                         EUCP      27                               S01190
+     O                         EUHA  3   44                               S01190
+     O                         EDP2      45                               S01190
+     O                         EUHD      47                               S01190
+     O                         ELRE      52                               S01190
+     O                         EREM      56                               S01190
+     O********D**1     04 46NU7                                     S01175S01190
+     O*******AND*      49 61                                        S01175S01190
+     O***********              EULN       6                         S01175S01190
+     O***********              EUNR      45                         S01175S01190
+     O**  TYPE 07  LINE 13B                                               S01190
+     O********D  1     03 46NU7                                     S01175S01190
+     O        D  1     04 46NU7                                           S01190
+     O*******AND       49 60                                        S01175S01190
+     O       AND       49 68                                              S01190
+     O***********              EULN3      6                         S01175S01190
+     O***********                        10 'TP'                    S01175S01190
+     O***********              ETPR  3   19                         S01175S01190
+     O***********              ETPN      20                         S01175S01190
+     O***********              ETPD      26                         S01175S01190
+     O***********              ETDT      33                         S01175S01190
+     O***********              ESPI      35                         S01175S01190
+     O                         EULN       6                               S01190
+     O                         ELAG      10                               S01190
+     O                         EUPA      14                               S01190
+     O                                   19 'TP'                          S01190
+     O                         ETPS      23                               S01190
+     O                         ETDP  3   31                               S01190
+     O                         ETPN      32                               S01190
+     O                         ETPD      38                               S01190
+     O                         ETDT      47                               S01190
+     O                         ESPI      55                               S01190
+     O**  TYPE 07  LINE 13A                                               S01190
+     O        D  1     04 45NU7                                           S01190
+     O       AND       49 73                                              S01190
+     O       OR        04 46NU7                                           S01190
+     O       AND       49 74                                              S01190
+     O                         NULN1      6                               S01190
+     O                                   10 'TD'                          S01190
+     O                         ETDT      20                               S01190
+     O*                                                                   S01175
+     O**  TRADE DETAILS                                                   S01190
+     O**    LINE 1                                                        S01190
+     O        D  1     04 49                                              S01190
+     O       AND      NU7 68                                              S01190
+     O                         NULN1      6                               S01190
+     O                         ELTR      10                               S01190
+     O                         ETRF      22                               S01190
+     O                         ELMT      27                               S01190
+     O                         EMKT      31                               S01190
+     O**    LINE 2                                                        S01190
+     O        D  1     05 49                                              S01190
+     O       AND      NU7 68                                              S01190
+     O                         NULN2      6                               S01190
+     O                         ELPA      10                               S01190
+     O                         EPRAN 3   27                               S01190
+     O                         EDP3      28                               S01190
+     O                         EPRD      30                               S01190
+     O                         EPRC      36                               S01190
+     O                         EPRXN 3   44                               S01190
+     O                         EDP4      45                               S01190
+     O                         EPXD      51                               S01190
+     O**    LINE 3                                                        S01190
+     O        D  1     06 49                                              S01190
+     O       AND      NU7 68                                              S01190
+     O                         NULN3      6                               S01190
+     O                         ELAI      10                               S01190
+     O                         EAIS      14                               S01190
+     O                         EAIAN     27                               S01190
+     O                         EDP5      28                               S01190
+     O                         EAID      30                               S01190
+     O                         EAIC      36                               S01190
+     O                         EAIXN 3   44                               S01190
+     O                         EDP6      45                               S01190
+     O                         EAXD      51                               S01190
+     O                         ELRA      56                               S01190
+     O                         EDAC      63                               S01190
+     O                         EARA      69                               S01190
+     O                         EDP7      70                               S01190
+     O                         EARD      76                               S01190
+     O                         ECLB      83                               S01190
+     O**    LINE 4                                                        S01190
+     O        D  1     06 49                                              S01190
+     O       AND      NU7 68                                              S01190
+     O                         NULN4      6                               S01190
+     O                         ELFC      10                               S01190
+     O                         EFCAN 3   27                               S01190
+     O                         EDP8      28                               S01190
+     O                         EFCD      30                               S01190
+     O                         EFCC      36                               S01190
+     O                         EFCXN 3   44                               S01190
+     O                         EDP9      45                               S01190
+     O                         EFXD      51                               S01190
+     O**                                                                  S01190
+     O**   NARRATIVE                                                      S01190
+     O        D  1     07 49                                              S01190
+     O       AND      NU7                                                 S01190
+     O                         NARLN      6                               S01190
+     O                         ELNA      10                               S01190
+     O                         EUNR      46                               S01190
+     O**
+     O**  'INCORRECT INSTRUCTIONS'                                        S01190
+     O        E 11             LINE1                                      S01190
+     O                                   46 '***  INCORRECT INSTRUCT'     S01190
+     O                                   55 'IONS  ***'                   S01190
+     O**                                                                  S01190
+     O*
+     O        TF22     L1 50NU7
+     O                                   39 'ACCOUNT'
+     O                         EURO      45
+     O                                   55 'NUMBER OF'
+     O                         EUITX     58
+     O                                   71 'INSTRUCTIONS'
+     O                 43      NBRI,13   75
+     O                 44      NBRI,23   75
+     O                 45      NBRI,33   75
+     O                 46      NBRI,43   75
+     O*
+     O        T  1     L1 50NU7
+     O       AND       U6
+     O                                  107 'CHECKED-'
+     O        T  1     L1 50NU7
+     O       AND       U6
+     O                                  110 'AUTHORISED-'
+     O*
+     O        T 3      LR 41NU7
+     O                                   69 '*** END OF REPORT ***'
+     O*************************                                           E29170
+     O********T**203  N41 42 LR                                           E29170
+     O*************************          15 'REFERENCE'                   E29170
+     O*************************          25 'SE0430P1'                    E29170
+     O*************************TITL      89                               E29170
+     O*************************         104 'DATE'                        E29170
+     O*************************RUNA     112                               E29170
+     O*************************         122 'PAGE'                        E29170
+     O*************************PAGE     127                               E29170
+     O*************************                                           E29170
+     O********T**1    N41 42 LR                                           E29170
+     O*************************          56 'SECURITIES TRADING E'        E29170
+     O*************************          80 'UCLID TELEX INSTRUCTIONS'    E29170
+     O****************N81               101 '- INPUT CYCLE - TIME'  S01271E29170
+     O****************N81      ATIME    108                         S01271E29170
+     O**************** 81 U6            100 '- CLOSE OF BUSINESS'   S01271E29170
+     O********T**2    N41 42 LR                                           E29170
+     O*************************          56 '--------------------'        E29170
+     O*************************          80 '------------------------'    E29170
+     O****************N81               101 '---------------------' S01271E29170
+     O****************N81               108 '-------'               S01271E29170
+     O**************** 81 U6            100 '--------------------'  S01271E29170
+     O*************************                                           E29170
+     O********T***25  N41 42 LR                                           E29170
+     O*************************          70 '** NO DETAILS TO REPORT'     E29170
+     O*************************          73 '**'                          E29170
+     O********T***53  N41 42 LR                                           E29170
+     O*************************          70 '*** END OF REPORT ***'       E29170
+     O*
+     O*      FILE CONTROLS REPORT
+     O*      ~~~~~~~~~~~~~~~~~~~~
+     O*
+     OSE0430AUT  203   LR
+     O                                   15 'REFERENCE'
+     O                                   24 'SE0430AU'
+     O                         TITL      81
+     O                                  104 'DATE'
+     O                         RUNA     112
+     O                                  122 'PAGE'
+     O                         PAGE1    127
+     O        T  1     LR
+     O*
+     O                                   33 'SECURITIES'
+     O                                   41 'TRADING'
+     O                                   61 'EUCLID INSTRUCTIONS'
+     O                                   75 'FOR EUROCLEAR'
+     O                                   90 '- RUN CONTROLS'
+     O                N81               111 '- INPUT CYCLE - TIME'        S01271
+     O                N81      ATIME    118                               S01271
+     O                 81 U6            110 '- CLOSE OF BUSINESS'         S01271
+     O*
+     O        T     13 LR
+     O*
+     O                                   34 '-----------'
+     O                                   42 '--------'
+     O                                   62 '--------------------'
+     O                                   76 '--------------'
+     O                                   90 '--------------'              S01271
+     O                N81               111 '---------------------'       S01271
+     O                N81               118 '-------'                     S01271
+     O                 81 U6            110 '--------------------'        S01271
+     O*
+     O        T  3     LRNU7
+     O                                   72 'FILE CONTROL'
+     O                                  100 'CALCULATED'
+     O*
+     O        T  1     LRNU7
+     O                                   19 'FILE - EUCLID '
+     O                                   42 'TELEX INSTRUCTIONS LF/S'
+     O                                   46 'EEUC'
+     O        T  2     LRNU7
+     O                                   19 '--------------'
+     O                                   42 '-----------------------'
+     O                                   46 '----'
+     O        T  2     LRNU7
+     O                                   23 'NO. OF RECORDS'
+     O                         EUNU  3   69
+     O                         NORR  3   98
+     O                 U8               120 '*** DIFFERENCE ***'
+     O*
+     O        T   25   LRN41                                              E29170
+     O                                   70 '** NO DETAILS TO REPORT'     E29170
+     O                                   73 '**'                          E29170
+     O*                                                                   E29170
+     O        T   42   LR U7
+     O                                   56 'DATABASE ERROR AT'
+     O***********              DBASE     59                               S01117
+     O***********                        64 ', KEY'                       S01117
+     O***********              DBKEY     94                               S01117
+     O                         DBASE     60                               S01117
+     O                                   65 ', KEY'                       S01117
+     O                         DBKEY     95                               S01117
+     O        T   45   LR U7
+     O                                   64 'FILE NAME'
+     O***********              DBFILE    70                               S01117
+     O                         DBFILE    73                               S01117
+     O        T   49   LRNU7 U8
+     O                                   64 '*** FILE CONTROLS OUT OF'
+     O                                   76 'BALANCE ***'
+     O********T***53   LR                                                 E29170
+     O*************************          69 '*** END OF REPORT ***'       E29170
+     O*****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

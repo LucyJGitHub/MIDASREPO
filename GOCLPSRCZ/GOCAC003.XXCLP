@@ -1,0 +1,96 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GOCAC003   - Midas GO Global Update Accounts Task Split -   */
+/*                  - End Process                                    */
+/*                                                                   */
+/*       (c) Misys Banking Systems Ltd. 2009                         */
+/*                                                                   */
+/*       Last Amedn No. AR1097467B *REDUNDANT DATE 17APR13           */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Prev Amend No. CGP013  *Create    Date 19Feb09              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       AR1097467B - Expected 15% COB run optimization not met      */
+/*       CGP013 - Task split component COB Global Update Account     */
+/*                spilt TS (End Proc)                                */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+/* Declare variables */
+ 
+             DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTAQLIBL) TYPE(*CHAR) LEN(10) +
+                          VALUE('*LIBL     ')
+             DCL        VAR(&MSGLENGTH) TYPE(*DEC) LEN(5 0) VALUE(50)
+             DCL        VAR(&MSGDATA) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&SNDDTAQ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RCVDTAQ) TYPE(*CHAR) LEN(10) +
+                          VALUE('GOACNTSRV')
+             DCL        VAR(&RCVWAIT) TYPE(*DEC) LEN(5 0) VALUE(-1)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2009')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Send message to MRUNQ */
+             SNDPGMMSG  MSG('GOCAC003  - Global Update Accounts +
+                           - End Proc') TOMSGQ(MRUNQ)
+ 
+/* Retrieve first member description */
+ 
+             RTVMBRD    FILE(ACTSDVPD) RTNMBR(&MEMBER)
+ 
+/* Set up data queue and message data */
+ 
+             CHGVAR     VAR(&SNDDTAQ) VALUE(&MEMBER)
+             CHGVAR     VAR(&MSGDATA) VALUE('END')
+ 
+/* Send message data to data queue */
+ 
+ LOOP:       CALL       PGM(QSNDDTAQ) PARM(&SNDDTAQ &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA)
+ 
+/* Retrieve next member description */
+ 
+             RTVMBRD    FILE(ACTSDVPD) MBR(&MEMBER *NEXT) +
+                          RTNMBR(&SNDDTAQ)
+             MONMSG     MSGID(CPF3049) EXEC(GOTO CMDLBL(RCVDTAQ))
+ 
+/* Loop for all members in driving file */
+ 
+             CHGVAR     VAR(&MEMBER) VALUE(&SNDDTAQ)
+             GOTO       CMDLBL(LOOP)
+ 
+/* Wait for data queue entry */
+ 
+ RCVDTAQ:    CALL       PGM(QRCVDTAQ) PARM(&RCVDTAQ &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA &RCVWAIT)
+ 
+/* If message = FINISH, terminate the program */
+ 
+             IF         COND(%SST(&MSGDATA 1 6) = 'FINISH') THEN(DO)
+             GOTO       CMDLBL(END)
+             ENDDO
+             ELSE       CMD(DO)
+             GOTO       CMDLBL(RCVDTAQ)
+             ENDDO
+ 
+ ABNOR:      SNDPGMMSG  MSG('Program GOCAC003 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+             ENDPGM

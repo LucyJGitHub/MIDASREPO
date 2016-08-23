@@ -1,0 +1,946 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Trading Statement Request')
+/*OVRF*: OVRDBF TSCCYX TSCCY SHARE(*NO)                             : *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Futures and Options Module
+     F*                                                                  *
+     F*   FF1270  -  TRADING STATEMENT REQUEST                           *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 FO0068             Date 01May91               *
+      *                 FO0046             Date 02Apr91               *
+     F*                  S01199             DATE 27FEB90                 *
+     F*                  S01117             DATE 14MAY90                 *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*   FO0068  -  IF A CUSTOMER SHORTNAME IS ENTERED IT SHOULD BE     *
+     F*              REDISPLAYED AS A SHORTNAME AFTER VALIDATION         *
+     F*   FO0046  -  CHANGES FOR RCF PROCESSING - IF TR STMT REQUEST     *
+     F*              BEING PROCESSED FOR ANOTHER USER, END REQUEST.      *
+     F*   S01199  -  HELP SYSTEM                                     *
+     F*   S01117  -  MULTIBRANCHING                                      *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                        *
+     F*                                                                  *
+     F*     IGNDECERR(*NO)                                               *
+     F*     OVRDBF     FILE(TSCCYX) TOFILE(TSCCY) SHARE(*NO)             *
+     F*                                                                  *
+     F********************************************************************
+     F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*ABFF***IF* E           K        DISK                               S01117
+     F**ICD*1**** TABTB10F                          KIGNORE               S01117
+     F**ICD*2**** TABTB11F                          KIGNORE               S01117
+     F*********** TABTB20F                          KIGNORE               S01117
+     F*********** TABTB40F                          KIGNORE               S01117
+     F*********** TABTB80F                          KIGNORE               S01117
+     F*********** TABTE10F                          KIGNORE               S01117
+     F**CCY*1**** TABTG10F                          KIGNORE               S01117
+     F*********** TABLETHF                          KIGNORE               S01117
+     F*********** TABLETLF                          KIGNORE               S01117
+     F**BRANCH*** TABLETRF                          KIGNORE               S01117
+     F*********** TABLET2F                          KIGNORE               S01117
+     F*
+     F*NAME***IF* E           K        DISK                               S01117
+     F*OCLT***IF* E           K        DISK                               S01117
+     FTSCCY   UF  E           K        DISK
+     FTSCCYX  IF  E           K        DISK
+     F            TSCCYDF                           KRENAMETSCCYDFX
+     FFF1270DFCF  E                    WORKSTN
+     F                                        RN    KSFILE FF1270S0
+     F********************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       KC         F3
+     F*       KL         F12                                              FO0046
+     F*
+     F********10*********Help-key                                         S01199
+     F*
+     F*       30         SFLDSP     Display Subfile-records
+     F*       31         SFLDSPCTL  Display Subfile Control-record
+     F*       32         SFLINZ     Initialize Subfile-records
+     F*       33         SFLNXTCHG  Subfile-record is to seem changed
+     F*
+     F*       36         Display Error-codes
+     F*       37         Error in field  Branch-code
+     F*       38         Errors on Subfile-record
+     F*       39         Error in subfile-field  Customer
+     F*       40         Error in subfile-field  Currency-code
+     F*       41         Error in subfile-field  All-Currencies
+     F*       50         Error 100: Branch not on Table-file.
+     F*       51         Error 101: Invalid Short-name of Customer.
+     F*       52         Error 102: Not a Futures and Options Customer.
+     F*       53         Error 103: Currency not on Table-file.
+     F*       54         Error 104: ALL-Currencies flag not Y/N/blank.
+     F*       55         Error 105: Both or neither of Currency,ALL(Y).
+     F*       56         Error 106: No such Trading Summary records.
+     F*       57         Error 107: Duplication of a Request.
+     F*       58         Error 108: No Trading Statements requested.
+     F*
+     F*       60         Same Customer found in array of earlier inputs
+     F*       61         Subfile-record input duplicates another record
+     F*       62         Duplicated record marked in Flagging array
+     F*       65         Multi Branch dealing
+     F*       67         End of Trading Summary file or of key
+     F*       69         End of changed records on Subfile
+     F*       70         Dummy indicator
+     F*       71         All entries valid
+     F*       77         General work-indicator
+     F*
+     F*     80-89        ( Reserved for Standard FF Subroutines )
+     F*
+     F*     90-99        ( Reserved for Standard MIDAS Subroutines )
+     F*       98         Date Format is MMDDYY
+     F*
+     F*     U2           EXIT (Report being run by another user)          FO0046
+     F*     U7+U8        Database Error
+     F********************************************************************
+      /EJECT
+      ********************************************************************
+     E                    CPY@    1   1 80
+     E**********          CAR        15  6 0                                                  CSD027
+     E                    CAR        15  6                                                    CSD027
+     E                    DAR        15  3
+     E                    FAR        15  1
+      ** Arrays for valid Customer/Currency input to Subfile,
+      ** with an extra Array to flag Subfile-records whose input is
+      ** duplicated by later records and which must be updated to
+      ** highlight the error after all changed records have been read.
+      **   It is not enough to highlight only the later record when it
+      **   is validated because a customer may be identified on the
+      **   screen by short-name on one record and by number on another.
+      **   Duplicated records are updated after all changed records
+      **   have been read, so that the pointer is not displaced.
+      *
+     E                    ERR        19  4
+      ** Array for Error- and Warning-codes to be displayed
+      ********************************************************************
+     I*DA********UDS                            256                       S01117
+     ILDA         DS                            256                       S01117
+      ** Local Data Area for Database Error details
+     I***********                           134 175 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+      **                                                                  S01117
+     IRUNDT       DS                                                      S01117
+      **  DATA AREA RUNDAT                                                S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+      *                                                                   S01117
+     ISDCURR    E DSSDCURRPD                                              S01117
+     I*                                                                   S01117
+     I** CURRENCY CODES                                                   S01117
+      *                                                                   S01117
+     ISDCUST    E DSSDCUSTPD                                              S01117
+     I*                                                                   S01117
+     I** CLIENTS DETAILS                                                  S01117
+     I*                                                                   S01117
+      *                                                                   S01117
+     ISDFOCS    E DSSDFOCSPD                                              S01117
+     I*                                                                   S01117
+     I** FUTURES & OPTION CLIENTS                                         S01117
+     I*                                                                   S01117
+     IDSFDY     E DSDSFDY                                                 S01117
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01117
+     I*                                                                   S01117
+     IDSSDY     E DSDSSDY                                                 S01117
+     I* FIRST DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                 S01117
+      *                                                                   S01117
+     IEPPDS      SDS
+      ** Program Status Data Structure :
+      **   Workstation Identifier.
+     I                                      244 246 WID
+      ********************************************************************
+      *
+      * Key List  for Trading Summary file
+      *
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C*                                                                   S01117
+     C** Pass parameter(s)                                                S01117
+     C           *ENTRY    PLIST                                          S01117
+     C                     PARM           SENTY   3        ENTITY         S01117
+     C                     PARM           SCMD    1                       FO0046
+     C*                                                                   S01117
+     C           TSCCKY    KLIST
+     C                     KFLD           KBRCD
+     C                     KFLD           KCBCD
+     C                     KFLD           KCCY
+      *
+      * Key List (partial)  for Trading Summary file
+      *
+     C           TSCCK2    KLIST
+     C                     KFLD           KBRCD
+     C                     KFLD           KCBCD
+      *
+      * Define Key-fields and other Work-fields
+      *
+     C************LIKE     DEFN BRCD      KBRCD                           S01117
+     C           *LIKE     DEFN BRCA      KBRCD                           S01117
+     C           *LIKE     DEFN CBCD      KCBCD
+     C           *LIKE     DEFN CCY       KCCY
+     C           *LIKE     DEFN RUND      WRUND
+     C************LIKE     DEFN KEY       WKEY                            S01117
+     C           *LIKE     DEFN RN        RX
+      *
+     C                     MOVE RN        RN      20
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      **                   INITIAL PROCESSING
+      *                    ------------------
+      ***CALLS*S/R****DBERR***********************************************S01117
+      ********************************************************************
+      *
+      ** Prepare  Local Data Area to register any Database Error.
+      *
+     C***********          MOVE *BLANK    DBLOT                           S01117
+     C***********          MOVE *ZERO     DBASE                           S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                        INITIALIZE     S01117
+     C                     MOVEL*BLANK    DBPGM                           S01117
+     C                     MOVE *BLANK    DBFILE                          S01117
+     C                     MOVE *BLANK    DBKEY                           S01117
+     C                     Z-ADD*ZERO     DBASE                           S01117
+     C                     MOVE 'FF1270  'DBPGM
+     C                     OUT  LDA                                       S01117
+      *
+      ***Get**Installation*Control*Data*record*(1)*from*Table-file********S01117
+      ***TABTB10.*********************************************************S01117
+      *****IF*record*not*found,*******************************************S01117
+      *****OR*record*not*live*:*******************************************S01117
+      *******Process**Database*Error.*************************************S01117
+      *
+     C*********            READ TABTB10F                 77               S01117
+      *
+     C************IN77     IFEQ '1'                                       S01117
+     C***********RECI      ORNE 'D'                                       S01117
+     C***********          MOVE *BLANK    WKEY                            S01117
+     C***********          MOVEL'01'      WKEY                            S01117
+     C***********          MOVE '10'      WKEY                            S01117
+     C***********          MOVELWKEY      DBKEY            *************  S01117
+     C***********          Z-ADD1         DBASE            * DB-ERR 01 *  S01117
+     C***********          MOVE 'TABFF'   DBFILE           *************  S01117
+     C***********          EXSR DBERR                                     S01117
+     C***********          END                                            S01117
+      *
+     C** IN THE DATAAREA RUNDAT                                           S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C*                                                                   S01117
+     C           DATF      COMP 'M'                      98
+     C                     Z-ADDRUND      WRUND
+     C                     MOVE RUNA      SRUNA
+      *
+      ***Get**Installation*Control*Data*record*(2)*from*Table-file********S01117
+      ***TABTB11.*********************************************************S01117
+      *****IF*record*not*found,*******************************************S01117
+      *****OR*record*not*live*:*******************************************S01117
+      *******Process**Database*Error.*************************************S01117
+      *
+     C***********          READ TABTB11F                 77               S01117
+      *
+     C************IN77     IFEQ '1'                                       S01117
+     C***********RECI      ORNE 'D'                                       S01117
+     C***********          MOVE *BLANK    WKEY                            S01117
+     C***********          MOVEL'01'      WKEY                            S01117
+     C***********          MOVE '11'      WKEY                            S01117
+     C***********          MOVELWKEY      DBKEY            *************  S01117
+     C***********          Z-ADD2         DBASE            * DB-ERR 02 *  S01117
+     C***********          MOVE 'TABFF'   DBFILE           *************  S01117
+     C***********          EXSR DBERR                                     S01117
+     C***********          END                                            S01117
+      *
+      ***If*not*multibranching*use*default*branch*and*protect*************S01117
+      *
+     C***********MBIN      COMP 'Y'                      65               S01117
+      *
+     C************IN65     IFEQ '0'                                       S01117
+     C***********          MOVELDFBR      SBRCD                           S01117
+     C***********          END                                            S01117
+      *
+      ** Workstation Identifier.
+      *
+     C                     MOVE WID       SWID
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      **                   MAIN PROCESSING
+      *                    ---------------
+      ** CALLS S/R  VALIDS UPTRAD   HELP
+      ********************************************************************
+      *
+      ** If request currently being processed for another user, display   FO0046
+      **    message and terminate request.                                FO0046
+      *                                                                   FO0046
+     C           *INU2     IFEQ '1'                                       FO0046
+     C                     EXFMTFF1270F1                                  FO0046
+     C                     MOVE 'E'       SCMD                            FO0046
+     C                     SETON                     LR                   FO0046
+     C                     RETRN                                          FO0046
+     C                     END                                            FO0046
+      *
+      ***DO*WHILE*F3*key*is*not*pressed*&*invalid*entries*exist***        FO0046
+      ** DO WHILE F3 key is not pressed & F12 key is not pressed
+      ** & invalid entries exist
+      *
+     C           *INKC     DOWEQ'0'
+     C           *INKL     ANDEQ'0'                                       FO0046
+     C           *IN71     ANDEQ'0'
+      *
+      **   IF there are no errors :
+      **     Subfile is to be displayed initialized for input.
+      *
+     C                     SETOF                     32
+     C           ERR,1     IFEQ *BLANK
+     C                     SETON                     32
+     C                     SETOF                     33
+     C                     END
+      *
+      **   Display the Subfile for input to control-record and subfile.
+      **   Process Help-key.
+      *
+     C                     SETON                     30  31
+     C                     WRITEFF1270F0
+     C                     EXFMTFF1270C0
+     C********** *IN10     DOWEQ'1'                                       S01199
+     C**********           EXSR HELP                                      S01199
+     C**********           READ FF1270C0                 70               S01199
+     C**********           END                                            S01199
+      *
+      *****IF*F3*key*is*pressed*set*on*U1*and*exit*loop****************** FO0046
+      **   IF F3 or F12 pressed, update SCMD parameter and exit loop      FO0046
+      **   ELSE Validate input to control-record and subfile.
+      **     IF there are no Errors :
+      **       Update  Trading Summary file
+      **       Redisplay screen and exit loop
+      *
+     C           *INKC     IFEQ '1'
+     C           *INKL     OREQ '1'                                       FO0046
+     C           *INKC     IFEQ '1'                                       FO0046
+     C                     MOVE 'E'       SCMD                            FO0046
+     C                     END                                            FO0046
+     C           *INKL     IFEQ '1'                                       FO0046
+     C                     MOVE 'F'       SCMD                            FO0046
+     C                     END                                            FO0046
+     C**********           SETON                     U1                   FO0046
+      *                                                                   FO0046
+     C                     ELSE
+      *
+     C                     MOVE SENTY     KBRCD                           S01117
+     C                     EXSR VALIDS
+      *
+     C           ERR,1     IFEQ *BLANK
+     C                     EXSR UPTRAD
+     C                     SETON                     30  31
+     C                     WRITEFF1270F0
+     C                     WRITEFF1270C0
+     C                     SETON                     71
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      **                   FINAL PROCESSING
+      *                    ----------------
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                INDEX TO SUBROUTINES
+      *
+      *  VALIDS    VAILIDATE INPUT TO CONTROL-RECORD AND SUBFILE
+      *
+      *  UPTRAD    UPDATE TRADING SUMMARY FILE TO REQUEST STATEMENTS
+      *
+      *  VALIDR    VAILIDATE INPUT TO SUBFILE-RECORD
+      *
+      *  HELP      DISPLAY MESSAGE-TEXTS FOR ERROR-CODES
+      *
+      ***DBERR*****END*PROGRAM*WITH*DATABASE-ERROR************************S01117
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      ** S/R  VALIDS  Validate input to Control-record and Subfile
+      ** CALLED FROM  Main Processing
+      ***CALLS*S/R**VALIDR***DBERR****************************************S01117
+      ********************************************************************
+      *
+     C           VALIDS    BEGSR
+      *
+      ** Clear all Errors.
+      *
+     C                     SETOF                     363738
+     C                     SETOF                     394041
+     C                     SETOF                     505152
+     C                     SETOF                     535455
+     C                     SETOF                     5657
+     C                     MOVE *BLANK    SERRMG
+     C                     MOVE *BLANK    ERR
+     C                     MOVE *ZERO     EC      20
+      *
+      **   Clear the Arrays used to check for Duplication Errors.
+      *
+     C**********           MOVE *ZERO     CAR                                                 CSD027
+     C                     MOVE *BLANK    CAR                                                 CSD027
+     C                     MOVE *BLANK    DAR
+     C                     MOVE *BLANK    FAR
+      *
+      ***Seek**Branch*code*on*Table-file*TABLETR.*************************S01117
+      *****IF*record*not*found,*******************************************S01117
+      *****OR*record*not*live*:*******************************************S01117
+      *******IF**Multi*Branch*dealing*is*not*indicated********************S01117
+      **********(Branch*is*Default*Branch*from*database,*not*input)*:*****S01117
+      *********Process*Database*Error.************************************S01117
+      *******Error-code*is*to*be*displayed.*(Branch*was*input.)***********S01117
+      *
+     C***********          MOVE *BLANK    WKEY                            S01117
+     C***********          MOVEL'10'      WKEY                            S01117
+     C***********          MOVE SBRCD     WKEY                            S01117
+     C***********WKEY      CHAINTABFF                77                   S01117
+     C************IN77     IFEQ '1'                                       S01117
+     C***********RECI      ORNE 'D'                                       S01117
+      *
+     C************IN65     IFEQ '0'                                       S01117
+     C***********          MOVELWKEY      DBKEY            *************  S01117
+     C***********          Z-ADD3         DBASE            * DB-ERR 03 *  S01117
+     C***********          MOVE 'TABFF'   DBFILE           *************  S01117
+     C***********          EXSR DBERR                                     S01117
+     C***********          END                                            S01117
+      *
+     C***********          SETON                     37                   S01117
+     C***********          ADD  1         EC         50                   S01117
+     C***********          MOVE ' 100'    ERR,EC                          S01117
+     C***********          END                                            S01117
+      *
+      ** DO UNTIL there are no more changed records on Subfile :
+      **   Read next changed record from Subfile.
+      **   IF a changed record is found :
+      **     Clear all Subfile-record Error-indicators.
+      **     IF some input has actually been made :
+      **       Validate the input to the Subfile-record.
+      **       Indicate record to read as if changed on next display.
+      **     Update the subfile-record.
+      *
+     C                     SETON                     58
+     C           *IN69     DOUEQ'1'
+     C                     READCFF1270S0                 69
+     C           *IN69     IFEQ '0'
+     C                     SETOF                     38
+     C                     SETOF                     394041
+     C                     SETOF                     33
+      *
+     C           SCSNM     IFNE *BLANK
+     C           SCCY      ORNE *BLANK
+     C           SALLCY    ORNE *BLANK
+     C                     SETOF                     58
+     C                     EXSR VALIDR
+     C                     SETON                     33
+     C                     END
+      *
+     C                     UPDATFF1270S0
+     C                     END
+     C                     END
+      *
+      ** IF there are Duplication Errors :
+      **   Clear all Subfile-record Error-indicators.
+      **   Update the Duplicated subfile-records, as indicated in the
+      **   record-flagging array, to highlight the error.
+      **     The Duplicating subfile-records will have been updated
+      **     on detection of the errors during record-validation.
+      *
+     C           *IN57     IFEQ '1'
+     C                     SETOF                     38
+     C                     SETOF                     394041
+     C                     MOVE *ZERO     RX
+     C           *IN62     DOUEQ'0'
+     C           RX        ORGE 15
+     C                     ADD  1         RX
+     C           '1'       LOKUPFAR,RX                   62
+     C           *IN62     IFEQ '1'
+      *
+     C                     SETON                     33  39
+     C           RX        CHAINFF1270S0             70
+     C                     UPDATFF1270S0
+      *
+     C                     END
+     C                     END
+     C                     END
+      *
+      ** IF no non-blank entries have been made
+      **   Highlight first subfile record and update error array
+      *
+     C           *IN58     IFEQ '1'
+      *
+     C                     ADD  1         EC
+     C                     MOVE ' 108'    ERR,EC
+     C                     SETON                     334039
+     C           1         CHAINFF1270S0             70
+     C                     UPDATFF1270S0
+     C                     END
+      *
+      ** IF there are Errors :
+      **   Error-code array-data is to be displayed.
+      *
+     C           ERR,1     IFNE *BLANK
+     C                     SETON                     36
+     C                     MOVEAERR       SERRMG
+     C                     END
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      ** S/R  UPTRAD  Update Trading Summary file to request Statements
+      ** CALLED FROM  Main Processing
+      ** CALLS  no other subroutines
+      ********************************************************************
+      *
+     C           UPTRAD    BEGSR
+      *
+      ** DO UNTIL there are no more changed records on Subfile :
+      **   Read next changed record from Subfile.
+      **   IF a changed Subfile-record is found :
+      **     Get  Key-fields:  Branch, Customer, Currency.
+      **     IF  Currency input is blank :
+      **       A partial Key-list is used.
+      **     Update all live Trading Summary records with the specified
+      **     key-fields. The fields updated are :
+      **       Next-Statement Date,  Statement-Required Indicator.
+      *
+     C           *IN69     DOUEQ'1'
+     C                     READCFF1270S0                 69
+     C           *IN69     IFEQ '0'
+     C***********          MOVE SBRCD     KBRCD                           S01117
+     C                     MOVE SCBCD     KCBCD
+     C                     MOVE SCCY      KCCY
+     C           TSCCKY    SETLLTSCCYDF
+      *
+     C           *IN67     DOUEQ'1'
+     C           SCCY      IFEQ *BLANK
+     C           TSCCK2    READETSCCYDF                  67
+     C                     ELSE
+     C           TSCCKY    READETSCCYDF                  67
+     C                     END
+      *
+     C           *IN67     IFEQ '0'
+     C           RECI      ANDEQ'D'
+     C                     Z-ADDWRUND     NSTD
+     C                     MOVE 'Y'       STRQ
+     C                     EXCPTTSUPD
+     C                     END
+     C                     END
+      *
+      ** Reset display file error indicators
+      *
+     C                     SETOF                     363738
+     C                     SETOF                     394041
+     C                     SETOF                     505152
+     C                     SETOF                     535455
+     C                     SETOF                     5657
+     C                     MOVE *BLANK    SERRMG
+     C                     MOVE *BLANK    ERR
+     C                     MOVE *ZERO     EC      20
+      *
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      ** S/R  VALIDR  Validate the input to a Subfile Record
+      ** CALLED FROM  S/R  VALIDS
+      ** CALLS  no other subroutines
+      ********************************************************************
+      *
+     C           VALIDR    BEGSR
+      *
+      ***IF**Customer*field*is*blank*:************************************S01117
+      *****Error*(because*there*is*input*to*other*fields).****************S01117
+      ***OTHERWISE*:******************************************************S01117
+      *****IF*input*for*Customer*is*non-numeric*(i.e.*Short*Name)*:*******S01117
+      *******Use**Short*Name*to*get*Customer-number*from*Customer*file.***S01117
+      *********IF*record*not*found,***************************************S01117
+      *********OR*record*not*live*:***************************************S01117
+      ***********Error.***************************************************S01117
+      *
+     C           SCSNM     IFEQ *BLANK
+     C                     SETON                     38  39
+     C           *IN51     IFEQ '0'
+     C                     ADD  1         EC         51
+     C                     MOVE ' 101'    ERR,EC
+     C                     END
+     C                     END                                            S01117
+      *
+     C***********          ELSE                                           S01117
+     C***********          MOVELSCSNM     WORK7   7                       S01117
+     C***********          MOVE '0'       WORK7                           S01117
+     C***********          TESTN          WORK7      7777                 S01117
+     C************IN77     IFEQ '1'                                       S01117
+      *
+     C***********          MOVELSCSNM     WORK6   6                       S01117
+     C***********SCSNM     IFEQ WORK6                                     S01117
+     C***********          MOVE WORK6     SCBCD                           S01117
+     C***********          ELSE                                           S01117
+     C***********          SETON                     38  39               S01117
+     C************IN51     IFEQ '0'                                       S01117
+     C***********          ADD  1         EC         51                   S01117
+     C***********          MOVE ' 101'    ERR,EC                          S01117
+     C***********          END                                            S01117
+     C***********          END                                            S01117
+      *
+     C***********          ELSE                                           S01117
+     C***********SCSNM     CHAINCLINTCBF             77                   S01117
+     C************IN77     IFEQ '1'                                       S01117
+     C***********RECI      ORNE 'D'                                       S01117
+     C***********          SETON                     38  39               S01117
+     C************IN51     IFEQ '0'                                       S01117
+     C************         ADD  1         EC         51                   S01117
+     C************         MOVE ' 101'    ERR,EC                          S01117
+     C************         END                                            S01117
+      *
+     C************         ELSE                                           S01117
+     C************         Z-ADDCNUM      SCBCD                           S01117
+     C************         END                                            S01117
+     C************         END                                            S01117
+     C************         END                                            S01117
+      *
+      ***IF*there*are*not*yet*Customer-errors*for*this*subfile-record*:***S01117
+      *****Seek**Customer-number*on*Futures*and*Options*Client*file.******S01117
+      *******IF*record*not*found,*****************************************S01117
+      *******OR*record*not*live,******************************************S01117
+      *******OR*Broker-indicator*not*'N'*:********************************S01117
+      *********Error.*****************************************************S01117
+      *
+     C************IN39     IFEQ '0'                                       S01117
+     C***********SCBCD     CHAINFOCLTDF              77                   S01117
+      *
+     C************IN77     IFEQ '1'                                       S01117
+     C***********RECI      ORNE 'D'                                       S01117
+     C***********BRKI      ORNE 'N'                                       S01117
+     C***********          SETON                     38  39               S01117
+     C************IN52     IFEQ '0'                                       S01117
+     C************         ADD  1         EC         52                   S01117
+     C************         MOVE ' 102'    ERR,EC                          S01117
+     C************         END                                            S01117
+     C************         END                                            S01117
+      *
+     C************         END                                            S01117
+     C*                                                                   S01117
+     C** Do the input validation or select from the question mark         S01117
+     C**    user query facility for the customer                          S01117
+     C*                                                                   S01117
+     C           SCSNM     IFNE *BLANK                                    S01117
+     C*                                                                   S01117
+     C                     CALL 'AOCUSTR0'                                S01117
+     C                     PARM *BLANK    @RTCD   7                       S01117
+     C                     PARM '*KEY   ' @OPTN   7                       S01117
+     C                     PARM SCSNM     @KEY1  10                       S01117
+     C                     PARM *BLANK    @KYST   7                       S01117
+     C           SDCUST    PARM SDCUST    DSSDY                           S01117
+     C*                                                                   S01117
+     C           @RTCD     IFNE *BLANKS                                   S01117
+     C*                                                                   S01117
+     C**   IF NO SELECTION MADE, SETON ERROR INDICATOR                    S01117
+     C           @RTCD     IFEQ '*NOSEL'                                  S01117
+     C                     SETON                     38  39               S01117
+     C           *IN51     IFEQ '0'                                       S01117
+     C                     ADD  1         EC         51                   S01117
+     C                     MOVE ' 110'    ERR,EC                          S01117
+     C                     END                                            S01117
+     C                     ELSE                                           S01117
+     C                     SETON                     38  39               S01117
+     C           *IN51     IFEQ '0'                                       S01117
+     C                     ADD  1         EC         51                   S01117
+     C                     MOVE ' 101'    ERR,EC                          S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C                     ELSE                                           S01117
+     C                     MOVE BBCUST    SCBCD                           S01117
+     C***********@KYST     IFEQ '*CNUM  '                           S01117FO0068
+     C           @KYST     IFEQ '*NUMBER'                                 FO0068
+     C                     MOVELBBCUST    SCSNM                           S01117
+     C                     ELSE                                           S01117
+     C           @KYST     IFEQ '*SHNAME'                           S01117FO0068
+     C***********@KYST     IFEQ '*CSHT  '                                 FO0068
+     C                     MOVELBBCSSN    SCSNM                           S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C**   Validate Customer-number on Futures and Options Client file.   S01117
+     C*                                                                   S01117
+     C           *IN39     IFEQ '0'                                       S01117
+     C                     CALL 'AOFOCSR0'                                S01117
+     C                     PARM *BLANK    @RTCD   7                       S01117
+     C                     PARM '*KEY   ' @OPTN   7                       S01117
+     C                     PARM BBCUST    @AENB   6                       S01117
+     C           SDFOCS    PARM SDFOCS    DSFDY                           S01117
+     C*                                                                   S01117
+     C           @RTCD     IFNE *BLANKS                                   S01117
+     C                     SETON                     38  39               S01117
+     C           *IN52     IFEQ '0'                                       S01117
+     C                     ADD  1         EC         52                   S01117
+     C                     MOVE ' 102'    ERR,EC                          S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C************IN39*****IFEQ '0'                                S01117 FO0068
+     C*********************MOVELBHCUST    SCSNM                    S01117 FO0068
+     C*********************END                                     S01117 FO0068
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+      *
+      ***Seek**Currency-code*on*Table-file*TABTG10.***********************S01117
+      *****IF*record*not*found,*******************************************S01117
+      *****OR*record*not*live*:*******************************************S01117
+      *******Error.*******************************************************S01117
+      *
+     C           SCCY      IFNE *BLANK
+     C***********          MOVE *BLANK    WKEY                            S01117
+     C***********          MOVEL'20'      WKEY                            S01117
+     C***********          MOVELSCCY      WORK4   4                       S01117
+     C***********          MOVE '1'       WORK4                           S01117
+     C***********          MOVE WORK4     WKEY                            S01117
+     C********** WKEY      CHAINTABFF                77                   S01117
+      *
+     C************IN77     IFEQ '1'                                       S01117
+     C***********RECI      ORNE 'D'                                       S01117
+     C***********          SETON                     38  40               S01117
+     C************IN53     IFEQ '0'                                       S01117
+     C************         ADD  1         EC         53                   S01117
+     C************         MOVE ' 103'    ERR,EC                          S01117
+     C************         END                                            S01117
+     C************         END                                            S01117
+     C*                                                                   S01117
+     C                     CALL 'AOCURRR0'                                S01117
+     C                     PARM *BLANK    @RTCD   7                       S01117
+     C                     PARM '*KEY   ' @OPTN   7                       S01117
+     C                     PARM SCCY      @DSNB   3                       S01117
+     C           SDCURR    PARM SDCURR    DSSDY                           S01117
+     C*                                                                   S01117
+     C           @RTCD     IFNE *BLANKS                                   S01117
+     C*                                                                   S01117
+     C**   IF NO SELECTION MADE, SETON ERROR INDICATOR                    S01117
+     C           @RTCD     IFEQ '*NOSEL'                                  S01117
+     C                     SETON                     38  40               S01117
+     C           *IN53     IFEQ '0'                                       S01117
+     C                     ADD  1         EC         53                   S01117
+     C                     MOVE ' 109'    ERR,EC                          S01117
+     C                     END                                            S01117
+     C                     ELSE                                           S01117
+     C                     SETON                     38  40               S01117
+     C           *IN53     IFEQ '0'                                       S01117
+     C                     ADD  1         EC         53                   S01117
+     C                     MOVE ' 103'    ERR,EC                          S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C                     ELSE                                           S01117
+     C                     MOVE A6CYCD    SCCY                            S01117
+     C                     END                                            S01117
+     C                     END
+      *
+      ** IF  ALL-Currencies flag is not 'Y', 'N' nor blank :
+      **   Error.
+      ** OTHERWISE :
+      **   IF  ALL-Currencies flag is blank :
+      **     Set  ALL-Currencies flag to 'N'.
+      *
+     C           SALLCY    IFNE 'Y'
+     C           SALLCY    ANDNE'N'
+     C           SALLCY    ANDNE*BLANK
+     C                     SETON                     38  41
+     C           *IN54     IFEQ '0'
+     C                     ADD  1         EC         54
+     C                     MOVE ' 104'    ERR,EC
+     C                     END
+      *
+     C                     ELSE
+     C           SALLCY    IFEQ *BLANK
+     C                     MOVE 'N'       SALLCY
+     C                     END
+     C                     END
+      *
+      ** IF  neither a Currency nor ALL-Currencies ('Y') is specified,
+      ** OR  both a Currency and ALL-Currencies ('Y') are specified :
+      **   Error.
+      *
+     C           SCCY      IFEQ *BLANK
+     C           SALLCY    ANDNE'Y'
+     C           SCCY      ORNE *BLANK
+     C           SALLCY    ANDEQ'Y'
+     C                     SETON                     384041
+     C           *IN55     IFEQ '0'
+     C                     ADD  1         EC         55
+     C                     MOVE ' 105'    ERR,EC
+     C                     END
+     C                     END
+      *
+      ** IF  there are not yet errors for this subfile-record,
+      ** AND there is no error in Branch-code :
+      **   IF  there are no Trading Summary records for the specified
+      **       branch,customer,currency combination :
+      **     Error.
+      *
+     C           *IN38     IFEQ '0'
+     C           *IN37     ANDEQ'0'
+     C***********          MOVE SBRCD     KBRCD                           S01117
+     C                     MOVE SCBCD     KCBCD
+     C                     MOVE SCCY      KCCY
+     C           TSCCKY    SETLLTSCCYDFX
+      *
+     C           RECI      DOUEQ'D'
+     C           *IN67     OREQ '1'
+     C           SCCY      IFEQ *BLANK
+     C           TSCCK2    READETSCCYDFX                 67
+     C                     ELSE
+     C           TSCCKY    READETSCCYDFX                 67
+     C                     END
+     C                     END
+      *
+     C           *IN67     IFEQ '1'
+     C                     SETON                     38  39
+     C           *IN56     IFEQ '0'
+     C                     ADD  1         EC         56
+     C                     MOVE ' 106'    ERR,EC
+     C                     END
+     C                     END
+     C                     END
+      *
+      ** IF there are not yet errors for this Subfile-record :
+      **   Compare input with arrays of valid input to earlier records.
+      **   IF customer/currency repeats or overlaps an earlier record :
+      **     Duplication Error.
+      **       Mark element of Flagging-array for Duplicated record
+      **       to be updated later.
+      **   OTHERWISE :
+      **     Add an element to Input-arrays (Customers and Currencies).
+      *
+     C                     SETOF                     60  61
+     C           *IN38     IFEQ '0'
+      *
+     C                     MOVE *ZERO     RX
+     C           *IN60     DOUEQ'0'
+     C           *IN61     OREQ '1'
+     C           RX        ORGE 15
+     C                     ADD  1         RX
+     C           SCBCD     LOKUPCAR,RX                   60
+     C           *IN60     IFEQ '1'
+     C           SCCY      IFEQ *BLANK
+     C           DAR,RX    OREQ SCCY
+     C           DAR,RX    OREQ *BLANK
+      *
+     C                     MOVE '1'       FAR,RX
+      *
+     C                     SETON                     383961
+     C           *IN57     IFEQ '0'
+     C                     ADD  1         EC         57
+     C                     MOVE ' 107'    ERR,EC
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *
+     C           *IN61     IFEQ '0'
+     C                     MOVE SCBCD     CAR,RN
+     C                     MOVE SCCY      DAR,RN
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      ********************************************************************
+      *EJECT
+      ********************************************************************S01199
+      ***S/R**HELP**Call*a*program*to*display*Message-texts*for*Errors    S01199
+      ***CALLED*FROM**Main*Processing**********************************   S01199
+      ***CALLS**no*other*subroutines***********************************   S01199
+      ********************************************************************S01199
+      **********                                                          S01199
+     C********** HELP      BEGSR                                          S01199
+      **********                                                          S01199
+     C**********           MOVE 'FF1270'  HBPGM   6                       S01199
+     C**********           MOVEAERR       HERCD 160                       S01199
+     C**********           CALL 'MHELP'                                   S01199
+     C**********           PARM           HBPGM                           S01199
+     C**********           PARM           HERCD                           S01199
+      **********
+     C**********           ENDSR                                          S01199
+      ********************************************************************
+      /EJECT
+      ********************************************************************S01117
+      ***S/R**DBERR**End*program*on*Database*Error************************S01117
+      ***CALLED*FROM**Initial*Processing,**S/R**VALIDS*VALIDR*************S01117
+      ***CALLS**no*other*subroutines**************************************S01117
+      ********************************************************************S01117
+      ***********                                                         S01117
+     C***********DBERR     BEGSR                                          S01117
+      ***********                                                         S01117
+     C***********          SETON                     U7  U8               S01117
+     C***********          SETON                     LR                   S01117
+     C***********          RETRN                                          S01117
+      ***********                                                         S01117
+     C***********          ENDSR                                          S01117
+      ********************************************************************S01117
+      /EJECT
+      ********************************************************************
+     OTSCCYDF E                TSUPD
+      *
+      ** Update  Trading Summary file
+      *
+     O                         NSTD
+     O                         STRQ
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

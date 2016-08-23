@@ -1,0 +1,355 @@
+/************************************************************************************/
+/*                                                                                  */
+/*       Midas - Global Processing Module                                           */
+/*                                                                                  */
+/*       V_GPAMADPD - Global Accounts Master Detail view                            */
+/*                                                                                  */
+/*       (c) Misys International Banking Systems Ltd. 2008                          */
+/*                                                                                  */
+/*       Last Amend No. CRE101             Date 27Aug14                             */
+/*       Prev Amend No. CRE095             Date 25Apr14                             */
+/*                      CGL165             Date 26Mar15                             */
+/*                      CRE090             Date 14Feb14                             */
+/*                      AR1095876          Date 30Sep13                             */
+/*                      AR871055           Date 15May12                             */
+/*                      AR899028           Date 25Jan12                             */
+/*                      AR847269           Date 09Nov11                             */
+/*                      CSF011             Date 12Sep11                             */
+/*                      CER049             Date 06Dec10                             */
+/*                      CRE073             Date 06Dec10                             */
+/*                      CER055             Date 06Dec10                             */
+/*                      CER042             Date 11May11                             */
+/*                      AR756626           Date 12May11                             */
+/*                      CRE075             Date 06Dec10                             */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/*                      CAP187             Date 21Aug09                             */
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/*                      BUG16715*CREATE    Date 13Apr08                             */
+/*                                                                                  */
+/*----------------------------------------------------------------------------------*/
+/*                                                                                  */
+/*       CRE101 - Interim Interest Statement on Frequency                           */
+/*       CRE095 - Rate Fixing for RE Accounts                                       */
+/*       CGl165 - Dual Withholding Tax                                              */
+/*       CRE090 - Delay Capitalisation of Interest                                  */
+/*       AR1095876- ABC - Forward Days 1 should = DNWD-1, not just                  */
+/*                  RUND. Added F1OAD field to hold next working day                */
+/*                  after last availability date of ABC                             */
+/*                  (Child: AR1095877) (Recompile)                                  */
+/*       AR871055 - WIP active accounts information is incomplete. Customer name,   */
+/*                  shortname and report town are blank                             */
+/*                  Applied for AR971360 (Child:AR971361)                           */
+/*       AR899028 - NOSTRO AMAD System errors occured; applied fix AR847269         */
+/*       AR847269 - Column F1DACN not in specified tables (Recompile)               */
+/*       CSF011 - Customer Name on Inputs                                           */
+/*       CER049 - Stamp Tax                                                         */
+/*       CRE073 - Interest Rate Rounding                                            */
+/*       CER055 - Penalty Interest on Exceeding Overdraft Limit                     */
+/*       CER042 - Interest Scale Report Correspondence                              */
+/*                (Upgrade of FGE178/179) (Recompile)                               */
+/*       AR756626 - Include 'Account Balance Check' and 'Overdraft Tolerance' on    */
+/*                  the list of fields in configuration editor (Child: AR756627)    */
+/*       CRE075 - Effective Date for Retail Accounts                                */
+/*       CAP187 - Document Linkage                                                  */
+/*       BUG16715 - Slow performance unable to locate an Account                    */
+/*                                                                                  */
+/************************************************************************************/
+  CREATE VIEW                                                                        :
+  **********/**********                                                              :
+  AS                                                                                 :
+  SELECT                                                                             :
+   RECI, CCY, ZZ006, BRCA, ATYP, STYP,                                               :
+   MFFQ, ACST, ANAM, STFQ, STDY, LSTP, ADREF1,                                       :
+   PRFC, ZZ004, ADREF2, ZZ002, CDIR, CCIR,                                           :
+   CNUM, ACOD, ACSQ, CEXA,  CEXB, CEXC, CEXD, CEXE,                                  :
+   CEXF, CEXG, ACNO, FCCU, FACT, FCNO, EFAC, DRIB,                                   :
+   OLDB, OLCB, CRIB, DICT, DCST, CICT, CCST, CHGT,                                   :
+***CHST,*ATCRST,*DACO,*DACC,*LSTD,*NSTD,*LMVD,*ORED,*DLIM,***************************:        CGL165
+   CHST, GPAMADPD.ATCRST, DACO, DACC, LSTD, NSTD, LMVD, ORED, DLIM,                  :        CGL165
+   LRCR, ODED, LACD, DRCD, NDID, LDID, LPAR, DDIA, OLDR, NCID,                       :
+***LCID,*LPAP,*DCIA,*OLCR,*LCD,******************************************************:        CER055
+***LCID,*LPAP,*DCIA,*OLCR,*LCD,*ATDOBE*AS*DOBE,*ATNDYE*AS*NYDE,*ATPOLA*AS*POLA,******: CER055 CGL165
+   LCID, LPAP, DCIA, OLCR, LCD, GPAMADPD.ATDOBE AS DOBE,                             :        CGL165
+   GPAMADPD.ATNDYE AS NYDE, GPAMADPD.ATPOLA AS POLA,                                 :        CGL165
+   CASE WHEN LAND(X'80',RETB) <> X'00' THEN 'Y' ELSE 'N' END AS BIT0,                :
+   CASE WHEN LAND(X'40',RETB) <> X'00' THEN 'Y' ELSE 'N' END AS BIT1,                :
+   CASE WHEN LAND(X'20',RETB) <> X'00' THEN 'Y' ELSE 'N' END AS BIT2,                :
+   CASE WHEN LAND(X'10',RETB) <> X'00' THEN 'Y' ELSE 'N' END AS BIT3,                :
+   CASE WHEN LAND(X'08',RETB) <> X'00' THEN 'Y' ELSE 'N' END AS BIT4,                :
+   CASE WHEN LAND(X'02',RETB) <> X'00' THEN 'Y' ELSE 'N' END AS BIT6,                :
+   CASE WHEN LAND(X'01',RETB) <> X'00' THEN 'Y' ELSE 'N' END AS BIT7,                :
+   ODSC, DIOD, LISP, DRIS, DRIC,                                                     :
+   DRIF, DRDY, SDAP, DDIS, OLDS,                                                     :
+   CRIS, CRCD, CRIC, CRIF, CRDY, SCAP, CDIS,                                         :
+   OLCS, BRTCA, NACSG, R4ACNT, ENOC, EPNO,                                           :
+   PTFR, HLEX, A5TIAC, A5TIAN, A5TIAS,                                               :
+   EUSB, IBAN, IBSEQN, FRNT, AFRT, REPA, TMST, REPI,                                 :
+***ATSUBO,*ATITAX,*ATSTCI,*ATCHIN,*ATAODR,*******************************************:        CGL165
+***ATITRD,*ATORTC,*ATOLVD,*ATPOLC,*ATPOLE,*******************************************:        CGL165
+***ATOVRD,*ATOVRC,*ATDRMG,*ATCRMG,*ATDRMD,*ATCRMD,***********************************:        CGL165
+   GPAMADPD.ATSUBO, GPAMADPD.ATITAX, GPAMADPD.ATSTCI, GPAMADPD.ATCHIN,               :        CGL165
+   GPAMADPD.ATAODR, GPAMADPD.ATITRD, GPAMADPD.ATORTC, GPAMADPD.ATOLVD,               :        CGL165
+   GPAMADPD.ATPOLC, GPAMADPD.ATPOLE, GPAMADPD.ATOVRD, GPAMADPD.ATOVRC,               :        CGL165
+   GPAMADPD.ATDRMG, GPAMADPD.ATCRMG, GPAMADPD.ATDRMD, GPAMADPD.ATCRMD,               :        CGL165
+   DACP, DICP, CACP, CICP,                                                           :
+   CHAC, PTRA, PRCH, NOALT, TCHO, DRBR,                                              :
+   CRBR, CHBR, PBKU, ACCRA, MMACC, CDRR, MMCDI, CHDBR,                               :
+   MMCHDB, CACDC, TEGRT, NOIS, NOCC, PESP,                                           :
+   A5NARR, A5ACSC,                                                                   :
+          CNUM  AS PADCNUM,                                                          :
+   PADACOD,                                                                          :
+   DIGITS(ACSQ) AS PADACSQ,                                                          :
+   CASE WHEN CEXA = '          ' THEN 0 ELSE BIGINT(CEXA) END AS ICEXA,              :
+   CASE WHEN CEXB = '          ' THEN 0 ELSE BIGINT(CEXB) END AS ICEXB,              :
+   CASE WHEN CEXC = '          ' THEN 0 ELSE BIGINT(CEXC) END AS ICEXC,              :
+   CASE WHEN CEXD = '          ' THEN 0 ELSE BIGINT(CEXD) END AS ICEXD,              :
+   CASE WHEN CEXE = '          ' THEN 0 ELSE BIGINT(CEXE) END AS ICEXE,              :
+   CASE WHEN CEXF = '          ' THEN 0 ELSE BIGINT(CEXF) END AS ICEXF,              :
+   CASE WHEN CEXG = '          ' THEN 0 ELSE BIGINT(CEXG) END AS ICEXG,              :
+   CASE WHEN ACNO = 0 THEN ' ' ELSE DIGITS(ACNO) END AS PADACNO,                     :
+   CASE WHEN FCCU = '' THEN ' ' ELSE        FCCU  END AS PADFCCU,                    :
+   CASE WHEN FACT = 0 THEN ' ' ELSE DIGITS(FACT) END AS PADFACT,                     :
+   CASE WHEN FCNO = 0 THEN ' ' ELSE DIGITS(FCNO) END AS PADFCNO,                     :
+   CASE WHEN EFAC = 0 THEN ' ' ELSE DIGITS(EFAC) END AS PADEFAC,                     :
+   CASE WHEN DRIB = 0 THEN ' ' ELSE DIGITS(DRIB) END AS PADDRIB,                     :
+   CASE WHEN OLDB = 0 THEN ' ' ELSE DIGITS(OLDB) END AS PADOLDB,                     :
+   CASE WHEN OLCB = 0 THEN ' ' ELSE DIGITS(OLCB) END AS PADOLCB,                     :
+   CASE WHEN CRIB = 0 THEN ' ' ELSE DIGITS(CRIB) END AS PADCRIB,                     :
+   CASE WHEN DICT = 0 THEN ' ' ELSE DIGITS(DICT) END AS PADDICT,                     :
+   CASE WHEN DCST = 0 THEN ' ' ELSE DIGITS(DCST) END AS PADDCST,                     :
+   CASE WHEN CICT = 0 THEN ' ' ELSE DIGITS(CICT) END AS PADCICT,                     :
+   CASE WHEN CCST = 0 THEN ' ' ELSE DIGITS(CCST) END AS PADCCST,                     :
+   CASE WHEN CHGT = 0 THEN ' ' ELSE DIGITS(CHGT) END AS PADCHGT,                     :
+   CASE WHEN CHST = 0 THEN ' ' ELSE DIGITS(CHST) END AS PADCHST,                     :
+***CASE*WHEN*ATCRST*=*0*THEN*'*'*ELSE*DIGITS(ATCRST)*END*AS*PADATCRST,***************:        CGL165
+   CASE WHEN GPAMADPD.ATCRST = 0 THEN ' ' ELSE DIGITS(GPAMADPD.ATCRST) END           :        CGL165
+                                                         AS PADATCRST,               :        CGL165
+   CASE WHEN DACO=0 THEN NULL ELSE DATE(DACO+719892) END AS FDACO,                   :
+   CASE WHEN DACC=0 THEN NULL ELSE DATE(DACC+719892) END AS FDACC,                   :
+   CASE WHEN LSTD=0 THEN NULL ELSE DATE(LSTD+719892) END AS FLSTD,                   :
+   CASE WHEN NSTD=0 THEN NULL ELSE DATE(NSTD+719892) END AS FNSTD,                   :
+   CASE WHEN LMVD=0 THEN NULL ELSE DATE(LMVD+719892) END AS FLMVD,                   :
+   CASE WHEN ORED=0 THEN NULL ELSE DATE(ORED+719892) END AS FORED,                   :
+   CASE WHEN DLIM=0 THEN NULL ELSE DATE(DLIM+719892) END AS FDLIM,                   :
+   CASE WHEN LRCR=0 THEN NULL ELSE DATE(LRCR+719892) END AS FLRCR,                   :
+   CASE WHEN ODED=0 THEN NULL ELSE DATE(ODED+719892) END AS FODED,                   :
+   CASE WHEN LACD=0 THEN NULL ELSE DATE(LACD+719892) END AS FLACD,                   :
+   CASE WHEN DRCD=0 THEN NULL ELSE DATE(DRCD+719892) END AS FDRCD,                   :
+   CASE WHEN NDID=0 THEN NULL ELSE DATE(NDID+719892) END AS FNDID,                   :
+   CASE WHEN LDID=0 THEN NULL ELSE DATE(LDID+719892) END AS FLDID,                   :
+   CASE WHEN LPAR=0 THEN NULL ELSE DATE(LPAR+719892) END AS FLPAR,                   :
+   CASE WHEN DDIA=0 THEN NULL ELSE DATE(DDIA+719892) END AS FDDIA,                   :
+   CASE WHEN OLDR=0 THEN NULL ELSE DATE(OLDR+719892) END AS FOLDR,                   :
+   CASE WHEN NCID=0 THEN NULL ELSE DATE(NCID+719892) END AS FNCID,                   :
+   CASE WHEN LCID=0 THEN NULL ELSE DATE(LCID+719892) END AS FLCID,                   :
+   CASE WHEN LPAP=0 THEN NULL ELSE DATE(LPAP+719892) END AS FLPAP,                   :
+   CASE WHEN DCIA=0 THEN NULL ELSE DATE(DCIA+719892) END AS FDCIA,                   :
+   CASE WHEN OLCR=0 THEN NULL ELSE DATE(OLCR+719892) END AS FOLCR,                   :
+   CASE WHEN LCD=0 THEN NULL ELSE DATE(LCD+719892) END AS FLCD,                      :
+   LDBL AS SLDBL,                                                                    :
+   CLBL AS SCLBL,                                                                    :
+   CFSB AS SCFSB,                                                                    :
+   EPLB AS SEPLB,                                                                    :
+   EPCB AS SEPCB,                                                                    :
+   YTDB AS SYTDB,                                                                    :
+   RTCB AS SRTCB,                                                                    :
+   RTLB AS SRTLB,                                                                    :
+   DITM AS SDITM,                                                                    :
+   CITM AS SCITM,                                                                    :
+   ODLN AS SODLN,                                                                    :
+   DIIE AS SDIIE,                                                                    :
+   DAIC AS SDAIC,                                                                    :
+   MADI AS SMADI,                                                                    :
+   GADI AS SGADI,                                                                    :
+   CIIE AS SCIIE,                                                                    :
+   CAIC AS SCAIC,                                                                    :
+   MACI AS SMACI,                                                                    :
+   GACI AS SGACI,                                                                    :
+   HCFB AS SHCFB,                                                                    :
+   HELD AS SHELD,                                                                    :
+   MINB AS SMINB,                                                                    :
+   LDIA AS SLDIA,                                                                    :
+   LCIA AS SLCIA,                                                                    :
+   ECFB AS SECFB,                                                                    :
+***ATCHAM*AS*SATCHAM,****************************************************************:        CGL165
+   GPAMADPD.ATCHAM AS SATCHAM,                                                       :        CGL165
+   NRCA AS SNRCA,                                                                    :
+   RCA AS SRCA,                                                                      :
+   MCLB AS SMCLB,                                                                    :
+   FXDC AS SFXDC,                                                                    :
+   ACCEA AS SACCEA,                                                                  :
+   GVDPE AS SGVDPE,                                                                  :
+   CDIE AS SCDIE,                                                                    :
+   CCDIC AS SCCDIC,                                                                  :
+   IACE AS SIACE,                                                                    :
+   CIACC AS SCIACC,                                                                  :
+   CMBE AS SCMBE,                                                                    :
+   ACCB AS SACCB,                                                                    :
+   CCMBC AS SCCMBC,                                                                  :
+   CHDBE AS SCHDBE,                                                                  :
+   HDRB AS SHDRB,                                                                    :
+   CCHDBC AS SCCHDBC,                                                                :
+   CCINST AS SCCINST,                                                                :
+   VATAM AS SVATAM,                                                                  :
+   NOIP AS SNOIP,                                                                    :
+   COLA AS SCOLA,                                                                    :
+   BCOA AS SBCOA,                                                                    :
+   CUSTZONE,                                                                         :
+***CGGLOB,CGCSSN,CGRNM,CGRTN,CGICD,CGACO,CGCNCZ,CGCOLC,CGBRCD,CGCUST,CGZONE**********:        CAP187
+   CGGLOB,CGCSSN,CGRNM,CGRTN,CGICD,CGACO,CGCNCZ,CGCOLC,CGBRCD,CGCUST,CGZONE,         :        CAP187
+   SD.BBCSSN,SD.BBCRNM,SD.BBCRTN,                                                    :        CSF011
+   (SELECT COUNT(*) FROM GLAMAD2X0 EX                                                :        CAP187
+     WHERE EX.BRCA=GPAMADPD.BRCA                                                     :        CAP187
+     AND EX.PADCNUM=GPAMADPD.CNUM                                                    :        CAP187
+     AND EX.CCY=GPAMADPD.CCY                                                         :        CAP187
+     AND EX.PADACOD=GPAMADPD.ACOD                                                    :        CAP187
+     AND EX.PADACSQ=GPAMADPD.ACSQ                                                    :        CAP187
+     AND EX.CUSTZONE=GPAMADPD.CUSTZONE                                               :        CAP187
+*****) AS PCLIP**********************************************************************: CAP187 CRE075
+*****)*AS*PCLIP,*********************************************************************CRE075 AR756626
+     ) AS PCLIP, F1TOLR, F1IABC,                                                     :      AR756626
+***CASE*WHEN*ACEFDT=0*THEN*NULL*ELSE*DATE(ACEFDT+719892)*END*AS*ACEFDT***************: CRE075 CRE073
+   CASE WHEN ACEFDT=0 THEN NULL ELSE DATE(ACEFDT+719892) END AS ACEFDT,              :        CRE073
+   DCSP AS DDDCSP, DCSG AS DDDCSG, DRMT AS DDDRMT, DRFD AS DDDRFD,                   :        CRE073
+   CCSP AS DDCCSP, CCSG AS DDCCSG, CRMT AS DDCRMT, CRFD AS DDCRFD,                   :        CRE073
+   GZGLACNTQD.F1TAX, GZGLACNTQD.F1CLOS, GZGLACNTQD.F1AVBL, GZGLACNTQD.F1ADTE,        :        CER049
+   GZGLACNTQD.F1FREE, GZGLACNTQD.F1FEDT, GZGLACNTQD.F1SINT, GZGLACNTQD.F1IDTE,       :        CER049
+   GZGLACNTQD.F1DBRC, GZGLACNTQD.F1DCST, GZGLACNTQD.F1DCCY, GZGLACNTQD.F1DACD,       :        CER049
+   GZGLACNTQD.F1DASC, GZGLACNTQD.F1STAB, GZGLACNTQD.F1STAI, GZGLACNTQD.F1TAXE,       :        CER049
+***GZGLACNTQD.F1CDTE,*GZGLACNTQD.F1CCFL,*GZGLACNTQD.F1SDTE,*GZGLACNTQD.F1STCC********CER049 AR847269
+   GZGLACNTQD.F1CDTE, GZGLACNTQD.F1CCFL, GZGLACNTQD.F1SDTE, GZGLACNTQD.F1STCC,       :      AR847269
+***GZGLACNTQD.F1DACN*****************************************************************AR847269 CRE090
+***GZGLACNTQD.F1DACN,*GZGLACNTQD.F1DECD**********************************************  CRE090 CGL165
+***GZGLACNTQD.F1DACN,*GZGLACNTQD.F1DECD,*GZACCNTBXC.ATTXC1,*GZACCNTBXC.ATTXC2********: CGL165 CRE095
+   GZGLACNTQD.F1DACN, GZGLACNTQD.F1DECD, GZACCNTBXC.ATTXC1, GZACCNTBXC.ATTXC2,       :        CRE095
+   GZGLACNTQD.F1DNFD, GZGLACNTQD.F1DNFF,                                             :        CRE095
+   CASE WHEN F1DNFM = 0 THEN '  ' ELSE DIGITS(GZGLACNTQD.F1DNFM) END AS PADDNFM,     :        CRE095
+   GZGLACNTQD.F1DNFC,                                                                :        CRE095
+   GZGLACNTQD.F1CNFD, GZGLACNTQD.F1CNFF,                                             :        CRE095
+   CASE WHEN F1CNFM = 0 THEN '  ' ELSE DIGITS(GZGLACNTQD.F1CNFM) END AS PADCNFM,     :        CRE095
+***GZGLACNTQD.F1CNFC,*GZGLACNTQD.F1DRFD,*GZGLACNTQD.F1CRFD***************************: CRE095 CRE101
+   GZGLACNTQD.F1CNFC, GZGLACNTQD.F1DRFD, GZGLACNTQD.F1CRFD,                          :        CRE101
+   GZGLACMI1D.MISTMI, GZGLACMI1D.MINISD, GZGLACMI1D.MIISFF,                          :        CRE101
+   CASE WHEN MIISFM = 0 THEN '  ' ELSE DIGITS(GZGLACMI1D.MIISFM) END AS PADISFM      :        CRE101   
+***FROM*GPAMADPD;********************************************************************:      AR756626
+   FROM GPAMADPD GPAMADPD LEFT OUTER JOIN GZGLACNTQD GZGLACNTQD ON                   :      AR756626
+   (GZGLACNTQD.F1BRCA = BRCA                                                         :      AR756626
+    AND GZGLACNTQD.F1CNUM = CNUM                                                     :      AR756626
+    AND GZGLACNTQD.F1CCY  = CCY                                                      :      AR756626
+    AND GZGLACNTQD.F1ACOD = ACOD                                                     :      AR756626
+****AND*GZGLACNTQD.F1ACSQ*=*ACSQ);***************************************************AR756626 CSF011
+    AND GZGLACNTQD.F1ACSQ = ACSQ)                                                    :        CSF011
+***LEFT*JOIN*GZSDCUSTPD*AS*SD*ON*****************************************************CSF011 AR871055
+***(CNUM*=*SD.BBCUST*****************************************************************CSF011 AR871055
+***AND*BRCA*=*SD.BBBRCD);************************************************************CSF011 AR871055
+   LEFT JOIN (                                                                       :      AR871055
+    SELECT A.BBCUST, A.BBCSSN, A.BBCRNM, A.BBCRTN, B.A8ZONE                          :      AR871055
+    FROM GZSDCUSTPD A, GZSDBRCHPD B                                                  :      AR871055
+    WHERE A.BBBRCD = B.A8BRCD) SD                                                    :      AR871055
+***ON*(CNUM*=*SD.BBCUST*AND*CUSTZONE*=*SD.A8ZONE);***********************************AR871055 CGL165
+   ON (CNUM = SD.BBCUST AND CUSTZONE = SD.A8ZONE)                                    :        CGL165
+   LEFT JOIN         GZACCNTBXC  GZACCNTBXC ON (GZACCNTBXC.ATBRCA = BRCA AND         :        CGL165
+   GZACCNTBXC.ATCNUM=CNUM AND GZACCNTBXC.ATCCY=CCY AND                               :        CGL165
+***GZACCNTBXC.ATACOD=ACOD*AND*GZACCNTBXC.ATACSQ=ACSQ);*******************************: CGL165 CRE101
+   GZACCNTBXC.ATACOD=ACOD AND GZACCNTBXC.ATACSQ=ACSQ)                                :        CRE101
+   LEFT JOIN GZGLACMI1D GZGLACMI1D ON (GZGLACMI1D.MIBRCA = BRCA                      :        CRE101
+   AND GZGLACMI1D.MICNUM = CNUM                                                      :        CRE101
+   AND GZGLACMI1D.MICCY = CCY                                                        :        CRE101
+   AND GZGLACMI1D.MIACOD = ACOD                                                      :        CRE101
+   AND GZGLACMI1D.MIACSQ = ACSQ);                                                    :        CRE101
+ * DESCRIBESTART                                                                     :
+ * DESCRIBEFIELD PADCNUM    AS CNUM       USING GPAMADPD                             :
+ * DESCRIBEFIELD PADACSQ    AS ACSQ       USING GPAMADPD                             :
+ * DESCRIBEFIELD PADACNO    AS ACNO       USING GPAMADPD                             :
+ * DESCRIBEFIELD PADFCCU    AS FCCU       USING GPAMADPD                             :
+ * DESCRIBEFIELD PADFACT    AS FACT       USING GPAMADPD                             :
+ * DESCRIBEFIELD PADFCNO    AS FCNO       USING GPAMADPD                             :
+ * DESCRIBEFIELD PADEFAC    AS EFAC       USING GPAMADPD                             :
+ * DESCRIBEFIELD PADOLDB    AS OLDB       USING GPAMADPD                             :
+ * DESCRIBEFIELD PADOLCB    AS OLCB       USING GPAMADPD                             :
+ * DESCRIBEFIELD PADCRIB    AS CRIB       USING GPAMADPD                             :
+ * DESCRIBEFIELD PADDRIB    AS DRIB       USING GPAMADPD                             :
+ * DESCRIBEFIELD PADDICT    AS DICT       USING GPAMADPD                             :
+ * DESCRIBEFIELD PADDCST    AS DCST       USING GPAMADPD                             :
+ * DESCRIBEFIELD PADCICT    AS CICT       USING GPAMADPD                             :
+ * DESCRIBEFIELD PADCCST    AS CCST       USING GPAMADPD                             :
+ * DESCRIBEFIELD PADCHGT    AS CHGT       USING GPAMADPD                             :
+ * DESCRIBEFIELD PADCHST    AS CHST       USING GPAMADPD                             :
+ * DESCRIBEFIELD FDACO      AS DACO       USING GPAMADPD                             :
+ * DESCRIBEFIELD FDACC      AS DACC       USING GPAMADPD                             :
+ * DESCRIBEFIELD FLSTD      AS LSTD       USING GPAMADPD                             :
+ * DESCRIBEFIELD FNSTD      AS NSTD       USING GPAMADPD                             :
+ * DESCRIBEFIELD FLMVD      AS LMVD       USING GPAMADPD                             :
+ * DESCRIBEFIELD FORED      AS ORED       USING GPAMADPD                             :
+ * DESCRIBEFIELD FDLIM      AS DLIM       USING GPAMADPD                             :
+ * DESCRIBEFIELD FLRCR      AS LRCR       USING GPAMADPD                             :
+ * DESCRIBEFIELD FODED      AS ODED       USING GPAMADPD                             :
+ * DESCRIBEFIELD FLACD      AS LACD       USING GPAMADPD                             :
+ * DESCRIBEFIELD FDRCD      AS DRCD       USING GPAMADPD                             :
+ * DESCRIBEFIELD FNDID      AS NDID       USING GPAMADPD                             :
+ * DESCRIBEFIELD FLDID      AS LDID       USING GPAMADPD                             :
+ * DESCRIBEFIELD FLPAR      AS LPAR       USING GPAMADPD                             :
+ * DESCRIBEFIELD FDDIA      AS DDIA       USING GPAMADPD                             :
+ * DESCRIBEFIELD FOLDR      AS OLDR       USING GPAMADPD                             :
+ * DESCRIBEFIELD FNCID      AS NCID       USING GPAMADPD                             :
+ * DESCRIBEFIELD FLCID      AS LCID       USING GPAMADPD                             :
+ * DESCRIBEFIELD FLPAP      AS LPAP       USING GPAMADPD                             :
+ * DESCRIBEFIELD FDCIA      AS DCIA       USING GPAMADPD                             :
+ * DESCRIBEFIELD FOLCR      AS OLCR       USING GPAMADPD                             :
+ * DESCRIBEFIELD FLCD       AS LCD        USING GPAMADPD                             :
+ * DESCRIBEFIELD SLDBL      AS LDBL       USING GPAMADPD                             :
+ * DESCRIBEFIELD SCLBL      AS CLBL       USING GPAMADPD                             :
+ * DESCRIBEFIELD SCFSB      AS CFSB       USING GPAMADPD                             :
+ * DESCRIBEFIELD SEPLB      AS EPLB       USING GPAMADPD                             :
+ * DESCRIBEFIELD SEPCB      AS EPCB       USING GPAMADPD                             :
+ * DESCRIBEFIELD SYTDB      AS YTDB       USING GPAMADPD                             :
+ * DESCRIBEFIELD SRTCB      AS RTCB       USING GPAMADPD                             :
+ * DESCRIBEFIELD SRTLB      AS RTLB       USING GPAMADPD                             :
+ * DESCRIBEFIELD SDITM      AS DITM       USING GPAMADPD                             :
+ * DESCRIBEFIELD SCITM      AS CITM       USING GPAMADPD                             :
+ * DESCRIBEFIELD SODLN      AS ODLN       USING GPAMADPD                             :
+ * DESCRIBEFIELD SDIIE      AS DIIE       USING GPAMADPD                             :
+ * DESCRIBEFIELD SDAIC      AS DAIC       USING GPAMADPD                             :
+ * DESCRIBEFIELD SMADI      AS MADI       USING GPAMADPD                             :
+ * DESCRIBEFIELD SGADI      AS GADI       USING GPAMADPD                             :
+ * DESCRIBEFIELD SCIIE      AS CIIE       USING GPAMADPD                             :
+ * DESCRIBEFIELD SCAIC      AS CAIC       USING GPAMADPD                             :
+ * DESCRIBEFIELD SMACI      AS MACI       USING GPAMADPD                             :
+ * DESCRIBEFIELD SGACI      AS GACI       USING GPAMADPD                             :
+ * DESCRIBEFIELD SHCFB      AS HCFB       USING GPAMADPD                             :
+ * DESCRIBEFIELD SHELD      AS HELD       USING GPAMADPD                             :
+ * DESCRIBEFIELD SMINB      AS MINB       USING GPAMADPD                             :
+ * DESCRIBEFIELD SLDIA      AS LDIA       USING GPAMADPD                             :
+ * DESCRIBEFIELD SMINB      AS MINB       USING GPAMADPD                             :
+ * DESCRIBEFIELD SECFB      AS ECFB       USING GPAMADPD                             :
+ * DESCRIBEFIELD SATCHAM    AS ATCHAM     USING GPAMADPD                             :
+ * DESCRIBEFIELD SNRCA      AS NRCA       USING GPAMADPD                             :
+ * DESCRIBEFIELD SRCA       AS RCA        USING GPAMADPD                             :
+ * DESCRIBEFIELD SMCLB      AS MCLB       USING GPAMADPD                             :
+ * DESCRIBEFIELD SFXDC      AS FXDC       USING GPAMADPD                             :
+ * DESCRIBEFIELD SACCEA     AS ACCEA      USING GPAMADPD                             :
+ * DESCRIBEFIELD SGVDPE     AS GVDPE      USING GPAMADPD                             :
+ * DESCRIBEFIELD SCDIE      AS CDIE       USING GPAMADPD                             :
+ * DESCRIBEFIELD SCCDIC     AS CCDIC      USING GPAMADPD                             :
+ * DESCRIBEFIELD SIACE      AS IACE       USING GPAMADPD                             :
+ * DESCRIBEFIELD SCIACC     AS CIACC      USING GPAMADPD                             :
+ * DESCRIBEFIELD SCMBE      AS CMBE       USING GPAMADPD                             :
+ * DESCRIBEFIELD SACCB      AS ACCB       USING GPAMADPD                             :
+ * DESCRIBEFIELD SCCMBC     AS CCMBC      USING GPAMADPD                             :
+ * DESCRIBEFIELD SCHDBE     AS CHDBE      USING GPAMADPD                             :
+ * DESCRIBEFIELD SHDRB      AS HDRB       USING GPAMADPD                             :
+ * DESCRIBEFIELD SCCHDBC    AS CCHDBC     USING GPAMADPD                             :
+ * DESCRIBEFIELD SCCINST    AS CCINST     USING GPAMADPD                             :
+ * DESCRIBEFIELD SVATAM     AS VATAM      USING GPAMADPD                             :
+ * DESCRIBEFIELD SNOIP      AS NOIP       USING GPAMADPD                             :
+ * DESCRIBEFIELD SCOLA      AS COLA       USING GPAMADPD                             :
+ * DESCRIBEFIELD SBCOA      AS BCOA       USING GPAMADPD                             :
+ * DESCRIBEFIELD PADDNFM    AS F1DNFM     USING GZGLACNTQD                           :        CRE095
+ * DESCRIBEFIELD PADCNFM    AS F1CNFM     USING GZGLACNTQD                           :        CRE095
+ * DESCRIBEEND                                                                       :
+                                                                                     :
+/************************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas GZ Accounts master detail view              ';                     :
+                                                                                :

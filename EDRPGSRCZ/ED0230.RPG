@@ -1,0 +1,289 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ED FRA/IRS module reconciliation extract')
+      *****************************************************************
+      *  Midas  -  Midas Export Data Module                           *
+      *                                                               *
+      *  ED0230 -  ED FRA/IRS Module Reconciliation Extract           *
+      *                                                               *
+      *  Function: This program is one of the Reconciliation Report   *
+      *            Extract programs.  This program processes the      *
+      *            FRA/IRS module.                                    *
+      *                                                               *
+      *  Called By: EDC0230                                           *
+      *                                                               *
+      *  Calls:     None                                              *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CDL038             Date 10May05               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 217684             Date 12May03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CED003             Date 26Jun97               *
+      *                 113234             Date 23Jan97               *
+      *                 101973 *CREATE     DATE 29JAN96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  217684 - Authorisation User Malfunction (Recompile)          *
+      *  CED003 - Extract IRC details for IRS's in ED Module          *
+      *  113234 - The deal type field was being checked against a     *
+      *           value of 'RP' three times in a IFEQ/OREQ statement. *
+      *         - Replaced the check with one against 'RP', 'RF'      *
+      *           and 'RR'.                                           *
+      *  101973 - Phase V Modifications                               *
+      *                                                               *
+      *****************************************************************
+      *
+     FEDDEALL4IP  E           K        DISK         KINFSR *PSSR
+      * FRA/IRS Deals by Branch and Currency
+      *
+     FDLPCSCPDIF  E           K        DISK         KINFSR *PSSR          CED003
+      * IRS Principle Change Schedule                                     CED003
+      *                                                                   CED003
+     FEDREC3PDO   E                    DISK         KINFSR *PSSR
+      * ED FRA/IRS Reconciliation Data
+      *
+     FED0230AUO   E                    PRINTER                        UC
+      * Program Audit report
+     F/COPY WNCPYSRC,ED0230F001
+      *
+      /TITLE FUNCTION OF INDICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *    31  -  Extract to write                                    *
+      *    40  -  First Cycle                                         *
+      *    41  -  SDBANKR0 error                                      *
+      *    L2  -  Level break for Branch                              *
+      *    L1  -  Level break for Currency                            *
+      *                                                               *
+      *  U7+U8 - Database Error                                       *
+      *                                                               *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  *PSSR  - Program error handling routine                      *
+      *                                                               *
+      *****************************************************************
+     E/TITLE E-SPECIFICATIONS
+     E                    CPY@    1   1 80
+      ***  Array for Object Copyright Statement.
+      *
+     I/TITLE I-SPECIFICATIONS
+      *-----------------------------------------------------------
+     IDEALSDGF
+     I                                              BRCA  L2
+     I                                              TCUCY L1
+     IPSDS       SDS
+      ** Program Status
+     I                                      244 253 WSID
+     I                                      254 263 USRID
+     I                                      276 281 WDATE
+     I                                      282 287 WTIME
+      *
+     IDBERR       DS                            256
+      * Data structure for data-base error processing.
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** Midas Access Object Short Data Structure
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Bank Details
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      ***  Copyright Statement.
+      *
+     C           *IN40     IFEQ *OFF
+     C                     MOVEACPY@      MKI@   80
+     C                     Z-ADD3         EJTRTY
+     C/COPY WNCPYSRC,ED0230C001
+      *                                                                   CED003
+      ** Key list for read of PF/DLPCSCPD                                 CED003
+      *                                                                   CED003
+     C           KEY2      KLIST                                          CED003
+     C                     KFLD           KDLNO   60                      CED003
+     C                     KFLD           KOTIN   1                       CED003
+     C                     KFLD           KPRDT   50                      CED003
+      *
+      **  Get run date for comparison against maturity date and
+      **  report title (used on error report)
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     SETON                     41
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     SETON                     40
+     C                     ENDIF
+      *
+     C   L2                MOVELBRCA      EJBRCA
+     C   L1                MOVELTCUCY     EJCCYC
+     C   L1                SETOF                     31
+      *
+      **  Accumulate if deal is not in the past.
+      *
+     C           BJRDNB    IFLE MDAT
+     C                     ADD  1         EJTCOT
+     C                     SETON                     31
+      *
+      **  Which amount to use (Ours or Theirs) depends on the deal type.
+      *
+     C           DTYP      IFEQ 'RP'
+     C********** DTYP      OREQ 'RP'                                      113234
+     C********** DTYP      OREQ 'RP'                                      113234
+     C           DTYP      OREQ 'RF'                                      113234
+     C           DTYP      OREQ 'RR'                                      113234
+     C                     ADD  UPAMT     EJTVAL
+     C                     ELSE
+      *                                                                   CED003
+      ** If principle changes have been defined for a IRS deal then       CED003
+      ** correct principal amount is used.                                CED003
+      *                                                                   CED003
+     C           DTYP      IFEQ 'RX'                                      CED003
+     C           TNPCD     ANDNE0                                         CED003
+     C           DTYP      OREQ 'RS'                                      CED003
+     C           TNPCD     ANDNE0                                         CED003
+      *                                                                   CED003
+      ** Deal type is RX, find last record on PF/DLPCSCPD.                CED003
+      *                                                                   CED003
+     C           DTYP      IFEQ 'RX'                                      CED003
+     C                     Z-ADDDLNO      KDLNO                           CED003
+     C                     MOVE 'T'       KOTIN                           CED003
+     C                     Z-ADD99999     KPRDT                           CED003
+     C                     ELSE                                           CED003
+      *                                                                   CED003
+      ** Deal type is RS, find last record on PF/DLPCSCPD.                CED003
+      *                                                                   CED003
+     C                     Z-ADDDLNO      KDLNO                           CED003
+     C                     MOVE *BLANK    KOTIN                           CED003
+     C                     Z-ADD99999     KPRDT                           CED003
+     C                     ENDIF                                          CED003
+      *                                                                   CED003
+     C           KEY2      SETGTDLPCSCPD                                  CED003
+     C                     READPDLPCSCPD                 42               CED003
+      *                                                                   CED003
+      ** If record not found, database error.                             CED003
+      *                                                                   CED003
+     C           DLNO      IFNE KDLNO                                     CED003
+     C           OTIN      ORNE KOTIN                                     CED003
+     C                     MOVEL'DLPCSCPD'DBFILE                          CED003
+     C                     MOVEL'002'     DBASE                           CED003
+     C                     MOVELKDLNO     KEY1      P                     CED003
+     C                     MOVE KOTIN     KEY1                            CED003
+     C                     MOVELKEY1      DBKEY                           CED003
+     C                     SETON                     41                   CED003
+     C                     EXSR *PSSR                                     CED003
+     C                     ENDIF                                          CED003
+      *                                                                   CED003
+      ** Add principle amount from PF/DLPCSCPD to Transaction amount on   CED003
+      ** PF/EDREC3PD                                                      CED003
+      *                                                                   CED003
+     C                     ADD  PAMT      EJTVAL                          CED003
+     C                     ELSE                                           CED003
+      *                                                                   CED003
+     C                     ADD  TPAMT     EJTVAL
+     C                     ENDIF                                          CED003
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C/COPY WNCPYSRC,ED0230C002
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine.                *
+      *                                                               *
+      *  Called By: MAIN                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           *** *PSSR  ***
+      *
+     C                     SETON                     U7U8LR
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK                     B1
+     C                     MOVE 'Y'       WRUN    1
+      *
+      ***  Set up LDA data
+      *
+     C                     MOVEL'ED0230'  DBPGM
+      *
+      ***  Set up deal key if the error did not occur in 1st cycle process
+      *
+     C           *IN41     IFEQ *OFF
+     C                     MOVEL'EDDEALL4'DBFILE
+     C                     MOVEL'001'     DBASE
+     C                     MOVELBRCA      KEY1    7 P
+     C                     MOVE TCUCY     KEY1
+     C                     MOVELKEY1      DBKEY     P
+     C                     MOVE DLNO      DBKEY
+     C                     ENDIF
+      *
+      ***  Output LDA
+      *
+     C           *NAMVAR   DEFN LDA       WLDA  256
+     C           *LOCK     IN   WLDA
+     C                     MOVELDBERR     WLDA
+     C                     OUT  WLDA
+      *
+      **  Print audit report ED0230AU
+      *
+     C                     OPEN ED0230AU
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     CLOSEED0230AU
+      *
+     C                     DUMP
+      *
+     C                     END                             E1
+      *
+      ** Exit program
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      **********************************************************************
+     OEDREC3D0T        L1 31
+     O                         EJBRCA
+     O                         EJCCYC
+     O                         EJTRTY
+     O                         EJTCOT B
+     O                         EJTVAL B
+      **********************************************************************
+      /TITLE COMPILE-TIME ARRAYS
+      ***
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

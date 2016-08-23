@@ -1,0 +1,399 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Facility History Takeon')                     *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Customer Lending Module
+     F*                                                               *
+     F*  HISTO - TAKE ON OF FACILITY HISTORY                          *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CLE134             Date 01Aug12               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CLE023             Date 19Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 190627             Date 3MAy01                *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 052829             Date 29Mar93               *
+     F*                 000132             DATE 31JUL92               *
+     F*                 E29618             DATE 07APR92               *
+     F*                 E28662             DATE 07APR92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CLE023 - Lending Facility History Improvement. (Recompiled)  *
+     F*  190627 - Recompiled due to fields added to FCLTY1 by 189544. *
+     F*  052829 - Set up start records for loans outstanding at takeon*
+     F*  000132 - Initialise *IN83 before initial read of LF/FCLTY1   *
+     F*           for first eligible facility. (If first facilty      *
+     F*           read is not eligible no other facility is           *
+     F*           processed).                                         *
+     F*  E29618 - Exclude participations sold from take-on            *
+     F*  E28662 - Include loans where the facility has already        *
+     F*           expired when setting up history details.            *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F*FCLTYL1*IF**E           K        DISK                              E28662
+     F*(Use different file so that both FM & FN records picked up)        E28662
+     FFCLTY1  IF  E           K        DISK                               E28662
+     FCLOANF  IF  E           K        DISK
+     FSDBANKPDIF  E                    DISK
+     FFACHISA O   E                    DISK
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   80  - End of file on FCLTYL1 or record ID <> 'D'            *
+     F*   81  - READE fail on CLOANF                                  *
+     F*   82  - Fail on WRITE to PF/FACHISA                           *
+     F*   83  - Record ID on FCLTYL1 <> 'D'                           *
+     F*   89  - No SDBANKPD record found                              *
+     F*                                                               *
+     F* U7+U8 - Database error                                        *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80               Copyright Statement
+     E                    POWR    1   7  7 3             POWERS OF TEN
+      /SPACE 3
+     I**FCLTYFMF                                                          E28662
+     IFCLTYF                                                              E28662
+     I              CNUM                            CNUMF
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Currency Details
+      *
+     ILDA       E DSLDA
+      *
+     IDSFDY     E DSDSFDY
+      ** DS for access programs, short data structure
+      *
+     IDSSDY     E DSDSSDY
+      ** Second DS for access programs, long data structure
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  Main Processing.                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+     C           LNKEY     KLIST
+     C**********           KFLD           CNUMF   60                                          CSD027
+     C                     KFLD           CNUMF   6                                           CSD027
+     C                     KFLD           FACT
+     C                     KFLD           FCNO
+      *
+     C           1         SETLLSDBANKPD
+     C                     READ SDBANKPD                 89
+     C           *IN89     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'HISTO   'DBPGM
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD001       DBASE            * DBERROR 001 *
+     C                     MOVEL'*READ   'DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C           *IN83     DOUEQ'0'
+     C           *IN80     OREQ '1'
+     C                     MOVE '0'       *IN83                           000132
+     C***********          READ FCLTYL1                  80               E28662
+     C                     READ FCLTY1                   80               E28662
+     C*                                                                     0027
+     C***  SAVE FACILITY BRANCH FOR OUTPUT TO FACHISA                       0027
+     C*                                                                     0027
+     C           *IN80     IFEQ '0'                                         0027
+     C                     MOVE BRCA      WKBRCA  3                         0027
+     C                     END                                              0027
+     C*                                                                   E28662
+     C** CHANGED TO CHECK FOR FACILITIES THAT ARE NOT LIVE OR EXPIRED     E28662
+     C** WITH OUTSTANDING LOANS UNDER THEM (CURRENT AMOUNT DRAWN=0)       E28662
+     C*                                                                   E28662
+     C**N80******RECI******COMP 'D'                  8080                 E28662
+     C           *IN83     IFEQ '0'                                       E28662
+     C           *IN80     ANDEQ'0'
+     C           RECI      IFNE 'D'                                       E28662
+     C           RECI      ANDNE'E'                                       E28662
+     C           RECI      OREQ 'E'                                       E28662
+     C           CAMD      ANDEQ0                                         E28662
+     C                     MOVE '1'       *IN83                           E28662
+     C                     END                                            E28662
+     C                     END
+      *
+     C                     END
+      *
+     C           LNKEY     SETLLCLOANF
+     C           *IN80     DOWEQ'0'
+     C           LNKEY     READECLOANF                   81
+     C*                                                                   052829
+      ***  WRITE FACHISA RECORD                                           052829
+     C                     MOVE 'D'       FARECI                          052829
+     C**********           Z-ADDCNUMF     FACNUM                                       052829 CSD027
+     C                     MOVE CNUMF     FACNUM                                              CSD027
+     C                     MOVELFACT      FAFCTY                          052829
+     C                     MOVE FCNO      FAFCTY                          052829
+     C                     MOVE BJRDNB    FADATE                          052829
+     C                     MOVE '01'      FAFSEQ                          052829
+     C*                                                                   052829
+     C**  THIS IS FACILITY BRANCH AS LOAN BRANCH CAN BE IN ANOTHER        052829
+     C**  BRANCH                                                          052829
+     C*                                                                   052829
+     C                     MOVE WKBRCA    BRCA                            052829
+     C*                                                                   052829
+     C**********           Z-ADD0         FALOAN                                       052829 CLE148
+     C                     MOVEL*BLANKS   FALOAN                                              CLE148
+     C                     MOVE 'FS'      FAACTN                          052829
+     C                     MOVE FAMT      FAAAMT                          052829
+     C                     MOVE ' '       FAPART                          052829
+     C                     MOVE RVCR      FARCIN                          052829
+     C                     MOVE FAMT      FACFAM                          052829
+     C                     MOVE *ZEROS    FADRAM                          052829
+     C           FAMT      SUB  FADRAM    FAUNDR                          052829
+     C                     MOVE ' '       FAREVI                          052829
+     C                     WRITEFACHISAF               82                 052829
+     C*                                                                   052829
+     C           *IN82     IFEQ '1'                                       052829
+     C           *LOCK     IN   LDA                                       052829
+     C                     MOVEL'HISTO   'DBPGM            ***************052829
+     C                     MOVEL'FACHISA 'DBFILE           * DBERROR 004 *052829
+     C                     Z-ADD004       DBASE            ***************052829
+     C                     MOVEL*BLANKS   DBKEY                           052829
+     C                     OUT  LDA                                       052829
+     C                     EXSR *PSSR                                     052829
+     C                     END                                            052829
+     C*
+     C           *IN81     DOWEQ'0'
+     C*
+     C           RECI      IFEQ 'D'
+     C           VDAT      ANDLEBJRDNB
+      *                                                                   E29625
+      **  Do not include participations sold                              E29625
+      *                                                                   E29625
+     C           PTYP      IFNE 66                                        E29625
+     C           PTYP      ANDNE67                                        E29625
+      *
+     C           CCY       IFNE FCCY
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM FCCY      @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'HISTO   'DBPGM
+     C                     MOVEL'SDCURRPD'DBFILE           ***************
+     C                     Z-ADD002       DBASE            * DBERROR 002 *
+     C                     MOVELFCCY      DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     MOVE A6NBDP    FCDP    10
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM CCY       @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'HISTO   'DBPGM
+     C                     MOVEL'SDCURRPD'DBFILE           ***************
+     C                     Z-ADD003       DBASE            * DBERROR 003 *
+     C                     MOVELCCY       DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C           FCDP      SUB  A6NBDP    DP      10
+     C                     ADD  4         DP
+     C           FMDI      IFEQ 'D'
+     C           FCXR      DIV  POWR,DP   FCXRT  159H
+     C           1         DIV  FCXRT     FCXRT
+     C                     ELSE
+     C           FCXR      MULT POWR,DP   FCXRT     H
+     C                     END
+     C           CPAM      MULT FCXRT     @AMT   130
+     C                     ELSE
+     C                     Z-ADDCPAM      @AMT   130
+     C                     END
+     C                     ADD  @AMT      @@AMT  130       Tot for fac.
+     C*                                                                   052829
+      ***  WRITE FACHISA RECORD                                           052829
+     C                     MOVE 'D'       FARECI                          052829
+     C**********           Z-ADDCNUMF     FACNUM                                       052829 CSD027
+     C                     MOVE CNUMF     FACNUM                                              CSD027
+     C                     MOVELFACT      FAFCTY                          052829
+     C                     MOVE FCNO      FAFCTY                          052829
+     C                     MOVE BJRDNB    FADATE                          052829
+     C                     MOVE '01'      FAFSEQ                          052829
+     C*                                                                   052829
+     C**  THIS IS FACILITY BRANCH AS LOAN BRANCH CAN BE IN ANOTHER        052829
+     C**  BRANCH                                                          052829
+     C*                                                                   052829
+     C                     MOVE WKBRCA    BRCA                            052829
+     C*                                                                   052829
+     C**********           Z-ADDLNRF      FALOAN                                       052829 CLE148
+     C                     MOVELLNRF      FALOAN                                              CLE148
+     C                     MOVE 'ST'      FAACTN                          052829
+     C                     MOVE @AMT      FAAAMT                          052829
+     C                     MOVE ' '       FAPART                          052829
+     C                     MOVE RVCR      FARCIN                          052829
+     C                     MOVE FAMT      FACFAM                          052829
+     C                     MOVE @@AMT     FADRAM                          052829
+     C           FAMT      SUB  @@AMT     FAUNDR                          052829
+     C                     MOVE ' '       FAREVI                          052829
+     C                     WRITEFACHISAF               82                 052829
+     C*                                                                   052829
+     C           *IN82     IFEQ '1'                                       052829
+     C           *LOCK     IN   LDA                                       052829
+     C                     MOVEL'HISTO   'DBPGM            ***************052829
+     C                     MOVEL'FACHISA 'DBFILE           * DBERROR 004 *052829
+     C                     Z-ADD014       DBASE            ***************052829
+     C                     MOVEL*BLANKS   DBKEY                           052829
+     C                     OUT  LDA                                       052829
+     C                     EXSR *PSSR                                     052829
+     C                     END                                            052829
+     C                     END
+     C                     END                                            E29624
+     C           LNKEY     READECLOANF                   81
+     C                     END
+      *                                                                   052829
+      *****WRITE FACHISA RECORD                                           052829
+     C**********           MOVE 'D'       FARECI                          052829
+     C**********           Z-ADDCNUMF     FACNUM                          052829
+     C**********           MOVELFACT      FAFCTY                          052829
+     C**********           MOVE FCNO      FAFCTY                          052829
+     C**********           MOVE BJRDNB    FADATE                          052829
+     C**********           MOVE '01'      FAFSEQ                          052829
+     C**********           MOVE BRCA      BRCA                     0027   052829
+     C**********                                                   0027   052829
+     C*****THIS*IS FACILITY BRANCH AS LOAN BRANCH CAN BE IN ANOTHER0027   052829
+     C*****BRANCH                                                  0027   052829
+     C**********                                                   0027   052829
+     C**********           MOVE WKBRCA    BRCA                     0027   052829
+     C**********                                                   0027   052829
+     C**********           Z-ADD0         FALOAN                          052829
+     C**********           MOVE 'FS'      FAACTN                          052829
+     C**********           MOVE FAMT      FAAAMT                          052829
+     C**********           MOVE ' '       FAPART                          052829
+     C**********           MOVE RVCR      FARCIN                          052829
+     C**********           MOVE FAMT      FACFAM                          052829
+     C**********           MOVE @@AMT     FADRAM                          052829
+     C********** FAMT      SUB  @@AMT     FAUNDR                          052829
+     C**********           MOVE ' '       FAREVI                          052829
+     C**********           WRITEFACHISAF               82                 052829
+     C**********                                                          052829
+     C********** *IN82     IFEQ '1'                                       052829
+     C********** *LOCK     IN   LDA                                       052829
+     C**********           MOVEL'HISTO   'DBPGM            ***************052829
+     C**********           MOVEL'FACHISA 'DBFILE           * DBERROR 004 *052829
+     C**********           Z-ADD004       DBASE            ***************052829
+     C**********           MOVEL*BLANKS   DBKEY                           052829
+     C**********           OUT  LDA                                       052829
+     C**********           EXSR *PSSR                                     052829
+     C**********           END                                            052829
+     C**********
+     C                     Z-ADD0         @@AMT
+     C           *IN83     DOUEQ'0'
+     C           *IN80     OREQ '1'
+     C                     MOVE '0'       *IN83
+     C***********          READ FCLTYL1                  80               E28662
+     C                     READ FCLTY1                   80               E28662
+     C*                                                                     0027
+     C***  SAVE FACILITY BRANCH FOR OUTPUT TO FACHISA                       0027
+     C*                                                                     0027
+     C           *IN80     IFEQ '0'                                         0027
+     C                     MOVE BRCA      WKBRCA                            0027
+     C                     END                                              0027
+     C*                                                                   E28662
+     C** CHANGED TO CHECK FOR FACILITIES THAT ARE NOT LIVE OR EXPIRED     E28662
+     C** WITH OUTSTANDING LOANS UNDER THEM (CURRENT AMOUNT DRAWN=0)       E28662
+     C*                                                                   E28662
+     C**N80******RECI******COMP 'D'                  8383                 E28662
+     C           *IN83     IFEQ '0'                        ***B004        E28662
+     C           *IN80     ANDEQ'0'
+     C           RECI      IFNE 'D'                        ***B005        E28662
+     C           RECI      ANDNE'E'                                       E28662
+     C           RECI      OREQ 'E'                                       E28662
+     C           CAMD      ANDEQ0                                         E28662
+     C                     MOVE '1'       *IN83                           E28662
+     C                     END                             ***E005        E28662
+     C                     END                             ***E004        E28662
+      *
+     C                     END                             ***E004
+      *
+     C           LNKEY     SETLLCLOANF
+     C                     END
+     C                     MOVE '1'       *INLR
+      *
+     C                     RETRN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS     *
+      *                                                               *
+      *  CALLED FROM: AFTER ABNORMAL OPERATION OCCURS                 *
+      *                                                               *
+      *  CALLS: NOTHING                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      ***
+** CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  POWR   **      POWERS OF TEN
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000

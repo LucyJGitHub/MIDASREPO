@@ -1,0 +1,708 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+      *****************************************************************
+/*STD *  RPGBASEMOD                                                   *
+/*EXI *  TEXT('Midas ZA Validate total interest')                     *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standard routines                                    *
+      *                                                               *
+      *  ZAVTOTINT - Validate total interest                          *
+      *                                                               *
+      *  Function:  This module validates a total interest field      *
+      *                                                               *
+      *  Component of: ZA_ALL - All ZA modules service program        *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *    This source is centrally supported and must ONLY be        *
+      *    amended by Core Development Personnel                      *
+      *                                                               *
+      *    /COPY, Client or Country amendments must not be            *
+      *    applied to this source.                                    *
+      *                                                               *
+      *  Last Amend No. AR814519           Date 09Mar15               *
+      *  Prev Amend No. MD000091           Date 23May13               *
+      *                 CER059             Date 19Jul10               *
+      *                 BUG23140           Date 10Mar09               *
+      *                 BUG21437           Date 28Oct08               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 BUG10695           Date 25Feb06               *
+      *                 CAP076             Date 03Jun02               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 208051             Date 22Aug02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 164565             Date 04Aug99               *
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CDL006             Date 26Apr99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAP002  *CREATE    Date 01Aug97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  AR814519 - Allow negative base rate. Apply fix AR399874.     *
+      *             Applied for MD033488                              *
+      *  MD000091 - Event Codes Substitution                          *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG23140 - Total interest is not defaulted for CL/CD         *
+      *  BUG21437 - Defaulting of total interest is done on incorrect *
+      *             deal types                                        *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *  BUG10695 - Wrong Total Interest being computed for           *
+      *             fiduciary deals.  (Recompile)                     *
+      *  CAP076 - Lending API enhancements - Rollover details         *
+      *           Recompile due to change in MM1030                   *
+      *           (new parameter to ZINTDY)                           *
+      *  208051 - Allow entry of a -ve interest amount. Use new       *
+      *           program ZA0841. (ZA0920 is amended to return -ve    *
+      *           interest amounts correctly to the screen).          *
+      *  164565 - Total Interest defaults to '0' whilst amending Call *
+      *           /Notice transac. types when Maturity Date entered.  *
+      *           Remove the IF condition, so that this field's (Total*
+      *           Interest) amount will be validated for all deal     *
+      *           types and alter validation processing slightly.     *
+      *  CDL006 - Dealing Fiduciary.                                  *
+      *  CAP002 - Conversion of Midas inputs to modular API structure *
+      *                                                               *
+      *****************************************************************
+ 
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ Automatically included D-specs       ¦
+      ** ¦ ==============================       ¦
+      ** +--------------------------------------+
+      **
+      ** Standard D-specs
+      ** ================
+      **
+      ** The following /COPY line includes the LDA layout,
+      ** the copyright array definition,
+      ** and the following named constants:
+      **    True       logical = *on (for indcator processing)
+      **    False      logical = *off (for indcator processing)
+      **    DBErrCtl   10A     = 'DBERRCTL' (the name of the database error
+      **                                    handler)
+      ** and the following variables:
+      **    RunBefore  1A (for the PSSR)
+ 
+     D/COPY ZACPYSRC,STD_D_SPEC
+ 
+      ** Include the MM standard declares
+     D/COPY ZACPYSRC,STDDECLARE
+ 
+      ** Program Status Data Structure
+      ** =============================
+      ** The following /COPY line includes all the defined fields in the
+      ** PSDS.  They have meaningful names, prefixed by 'PS'.
+ 
+     D/COPY ZACPYSRC,PSDS
+ 
+      ** Program, procedure and module names for parameters
+      ** ==================================================
+ 
+      ** +--------------------------------------+
+      ** ¦ End of automatically included D-specs¦
+      ** ¦ =====================================¦
+      ** +--------------------------------------+
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+ 
+      ** +--------------------------------------+
+      ** ¦ Manually included D-specs            ¦
+      ** ¦ =========================            ¦
+      ** +--------------------------------------+
+ 
+      ** +--------------------------------------+
+      ** ¦ Arrays and Data Structures           ¦
+      ** ¦ ==========================           ¦
+      ** +--------------------------------------+
+ 
+      ** External data structure for access programs (long)                                   CER043
+     D DSFDY         E DS                  EXTNAME(DSFDY)                                     CER043
+                                                                                              CER043
+      ** External data structure for SAR details                                              CER043
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CER043
+                                                                                              CER043
+      ** +--------------------------------------+
+      ** ¦ Named constants                      ¦
+      ** ¦ ===============                      ¦
+      ** +--------------------------------------+
+ 
+      ** Switchable feature                                                                   CER043
+     D CER043          S              1A                                                      CER043
+                                                                                              CER043
+      ** Return Code                                                                          CER043
+     D PRtcd           S              7A                                                      CER043
+                                                                                              CER043
+      ** +--------------------------------------+
+      ** ¦ Declared variables                   ¦
+      ** ¦ ==================                   ¦
+      ** +--------------------------------------+
+ 
+      ** ==========
+      ** Parameters
+ 
+      ** Message ID
+     D MsgID1          S                   LIKE(#MsgID)
+ 
+      ** Message data
+     D MsgData1        S                   LIKE(#MsgData)
+ 
+      ** Action Code (1A, from caller)                                          164565
+     D DDACTN          S              1A                                        164565
+ 
+      ** Interest amount returned from this module
+     D IKMTTI          S             15P 0
+ 
+      ** Total interest amount
+     D DDTOTI          S             14A
+ 
+      ** Default interest for CL and CD deals with zero notice days
+      ** feature flag
+     D S01468          S              1A
+ 
+      ** Deal notice days
+     D DDNTCE          S              3A
+ 
+      ** Deal type
+     D DDTYPE          S              2A
+ 
+      ** Interest rate
+     D IKINTR          S             11P 7
+ 
+      ** Deal amount
+     D IKAMNP          S             15P 0
+ 
+      ** Interest calculation method
+     D DDICMT          S              1A
+ 
+      ** Deal value date in Midas day number format
+     D @VDYNO          S              5P 0
+ 
+      ** Currency OK flag
+     D CurrOK          S              1A
+ 
+      ** Number of decimal places in deal currency
+     D A6NBDP          S              1S 0
+ 
+     ** Value date field OK
+     D ValDateOK       S              1A
+ 
+     ** Notice days field OK
+     D NotDaysOK       S              1A
+ 
+     ** Amount field OK
+     D AmountOK        S              1A
+ 
+     ** Base Rate field OK
+     D BaseRateOK      S              1A
+ 
+     ** Spread/Rate field OK
+     D SpreadOK        S              1A
+ 
+     ** Calculation method field OK
+     D CalcMethOK      S              1A
+ 
+     ** Maturity date
+     D DDMDAT          S              6A
+ 
+     ** Maturity date in Midas day number format (5,0P, from caller)
+     D @MDYNO          S                   LIKE(@VDYNO)
+ 
+     ** Maturity date field OK
+     D MatDateOK       S              1A
+ 
+     ** Notice days
+     D @NTCNM          S              3S 0
+ 
+      ** First and last day interest flag
+     D DDFLID          S              1A
+ 
+      ** Round-down interest flag
+     D DDRDFC          S              1A
+ 
+      ** Decimal separator
+     D BNDCSP          S              1A
+ 
+      ** End of parameters
+      ** =================
+ 
+      ** Beginning of interest period
+     D ZZBEG           S                   LIKE(@VDYNO)
+ 
+      ** End of interest period
+     D ZZEND           S                   LIKE(@VDYNO)
+ 
+      ** Interest work field
+     D @@INTR          S                   LIKE(IKAMNP)
+ 
+      ** Interest work field
+     D @TOTIN          S                   LIKE(IKAMNP)
+ 
+      ** Alpha field for numeric validation
+     D @@ALPH          S             16A
+ 
+      ** Number of integers in amount
+     D @@IINT          S              3P 0
+ 
+      ** Millions/Thousands id (Y=function on)
+     D @@MTID          S              1A
+ 
+      ** Error code for ZA0840
+     D @@ERCD          S              1P 0
+ 
+      ** Amount after numeric checking
+     D @@AMT           S             15P 0
+ 
+      ** Difference between input and calculated rate
+     D @DIFI           S             15P 0
+ 
+      ** 13,0P amount field for passing into ZA0920
+     D Amount13        S             13P 0
+ 
+      ** Packed version of number of decimal places for passing into ZA0920
+     D NbrDecPl1       S              1P 0
+ 
+      ** Packed version of number of decimal places for passing into ZA0840
+     D NbrDecPl3       S              3P 0
+ 
+      ** Formatted amount returned from ZA0920
+     D AmountOut       S             14A
+                                                                                CDL006
+     D CDL006          S              1A   IMPORT                               CDL006
+ 
+      **                                                                                    MD000091
+     D BChar           DS                                                                   MD000091
+     D   BLen                  1      2B 0                                                  MD000091
+     D   LenStr                1      2                                                     MD000091
+                                                                                            MD000091
+      ** +--------------------------------------+
+      ** ¦ End of D-specs                       ¦
+      ** ¦ ==============                       ¦
+      ** +--------------------------------------+
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     C
+      ** +--- Start of Main processing -----------------------------------+
+      ** ¦                                                                ¦
+      ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
+      ** ¦ executed at program activation.                                ¦
+      ** ¦                                                                ¦
+      ** +----------------------------------------------------------------+
+ 
+     C                   RESET                   ErrorFound
+     C*
+     C* If the total interest has NOT been entered...
+     C*
+     C     DDTOTI        IFEQ      *BLANKS
+     C*
+     C* Calculate total interest if S01468 installed and call deal
+     C*
+     C     S01468        IFEQ      'Y'
+     C     DDNTCE        ANDEQ     '  0'
+     C     CER043        OREQ      'Y'                                                        CER043
+     C     DDMDAT        ANDNE     *BLANKS                                                  BUG21437
+     C*
+     C     DDTYPE        IFEQ      'CD'
+     C     DDTYPE        OREQ      'CL'
+     C     DDTYPE        OREQ      'DL'
+     C     DDTYPE        OREQ      'DT'                                         CDL006
+     C     CDL006        ANDEQ     'Y'                                          CDL006
+     C     DDTYPE        OREQ      'LT'                                         CDL006
+     C     CDL006        ANDEQ     'Y'                                          CDL006
+     C     DDTYPE        OREQ      'DP'                                         CDL006
+     C     CDL006        ANDEQ     'Y'                                          CDL006
+     C     DDTYPE        OREQ      'LP'                                         CDL006
+     C     CDL006        ANDEQ     'Y'                                          CDL006
+     C     CER043        OREQ      'Y'                                                      BUG21437
+     C     DDMDAT        ANDNE     *BLANKS                                                  BUG21437
+     C*
+     C                   Z-ADD     @VDYNO        ZZBEG
+     C     ZZBEG         ADD       1             ZZEND
+     C*
+     C     CER043        IFEQ      'Y'                                                      BUG21437
+     C*****DDTYPE        ANDNE     'CD'                                            BUG21437 BUG23140
+     C*****DDTYPE        ANDNE     'CL'                                            BUG21437 BUG23140
+     C     DDTYPE        ANDNE     'DL'                                                     BUG21437
+     C     DDTYPE        ANDNE     'DT'                                                     BUG21437
+     C     DDTYPE        ANDNE     'LT'                                                     BUG21437
+     C     DDTYPE        ANDNE     'DP'                                                     BUG21437
+     C     DDTYPE        ANDNE     'LP'                                                     BUG21437
+     C                   Z-ADD     @MDYNO        ZZEND                                      BUG21437
+     C                   ENDIF                                                              BUG21437
+      *                                                                                     BUG21437
+     C                   CALLB     'MM1030'
+     C                   PARM                    ZZBEG
+     C                   PARM                    ZZEND
+     C                   PARM                    DDICMT
+     C                   PARM                    IKAMNP
+     C                   PARM                    IKINTR
+     C                   PARM                    DDRDFC
+     C                   PARM                    @@INTR
+ 
+     C                   Z-ADD     @@INTR        @TOTIN
+     C                   GOTO      SKIPV
+     C                   END
+     C                   END
+     C*
+     C* Error as total interest not defined
+     C*
+     C                   EVAL      ErrorFound = 'Y'
+     C                   MOVEL     'MMM0451'     MsgID1
+     C     SKIPV         TAG
+     C*
+     C**  If the interest has been entered...
+     C*
+     C                   ELSE
+      *
+      **  Check that the input amount is a valid number.
+      **      If no error in currency field:
+      *
+     C     CurrOK        IFEQ      'Y'
+      *
+      ** If DDTOTI is '*', total interest is to be calculated
+      *
+     C     DDTOTI        IFEQ      '*'
+     C                   Z-ADD     *ZERO         @@ERCD
+     C                   ELSE
+ 
+     C     13            SUB       A6NBDP        @@IINT
+     C                   MOVE      'N'           @@MTID
+      *
+      ** Put field to be validated into parameter field
+      ** Put number of decimal places into a packed field for call
+      *
+     C                   EVAL      @@ALPH = DDTOTI
+     C                   EVAL      NbrDecPl3 = A6NBDP
+     C                   CLEAR                   ReturnCode
+ 
+      * Only for Call Deposit/Loans allow entry of -ve interest amounts.                      208051
+     C**********         CALLB     'ZA0840'                                                   208051
+     C                   CALLB     'ZA0841'                                                   208051
+     C                   PARM                    ReturnCode
+     C                   PARM                    @@ALPH
+     C                   PARM                    NbrDecPl3
+     C                   PARM                    @@IINT
+     C                   PARM                    @@MTID
+     C                   PARM                    @@ERCD
+     C                   PARM                    @@AMT
+     C                   PARM                    BNDCSP
+     C                   END
+     C*
+     C**  The input amount is NOT a valid number.
+     C*
+     C     @@ERCD        IFNE      0
+     C                   EVAL      ErrorFound = 'Y'
+     C                   MOVEL     'MMM0452'     MsgID1
+     C*
+     C**  If the amount is a valid number, cross validate the actual
+     C**  amount. (Only if all the fields used are valid.)
+     C*
+     C                   ELSE
+      *
+     C     ValDateOK     IFNE      'N'
+     C     MatDateOK     ANDNE     'N'
+     C     NotDaysOK     ANDNE     'N'
+     C     CurrOK        ANDNE     'N'
+     C     AmountOK      ANDNE     'N'
+     C     BaseRateOK    ANDNE     'N'
+     C     SpreadOK      ANDNE     'N'
+     C     CalcMethOK    ANDNE     'N'
+     C*
+     C**  Call/notice indicator.
+     C*
+     C     @NTCNM        IFEQ      -999
+     C                   MOVE      *BLANKS       IWRK              1
+     C                   ELSE
+     C     @NTCNM        IFEQ      *ZEROS
+     C                   MOVE      'C'           IWRK
+     C                   ELSE
+     C                   MOVE      'N'           IWRK
+     C                   END
+     C                   END
+     C*
+     C****Do*not*validate*if*the*deal*is*CALL/NOTICE**AND*a*Maturity**     164565
+     C****date*HAS*been*Entered.**                    ~~~                  164565
+      *  Validate the Total Interest amount for all deal types .           164565
+     C**** IWRK          IFEQ      'C'                                     164565
+     C**** DDMDAT        ANDEQ     *BLANKS                                 164565
+     C**** IWRK          OREQ      'N'                                     164565
+     C**** DDMDAT        ANDEQ     *BLANKS                                 164565
+     C**** IWRK          ORNE      'N'                                     164565
+     C**** IWRK          ANDNE     'C'                                     164565
+     C*
+     C**  Set up the fields for the execution of the routine to find
+     C**  the total interest.
+     C                   Z-ADD     @VDYNO        ZZBEG
+     C                   Z-ADD     @@AMT         @TOTIN
+     C*
+     C     DDTYPE        IFEQ      'CD'                                         b*1
+     C     DDTYPE        OREQ      'CL'
+     C     DDTYPE        OREQ      'DL'
+     C     DDTYPE        OREQ      'DT'                                         CDL006
+     C     CDL006        ANDEQ     'Y'                                          CDL006
+     C     DDTYPE        OREQ      'LT'                                         CDL006
+     C     CDL006        ANDEQ     'Y'                                          CDL006
+     C     DDTYPE        OREQ      'DP'                                         CDL006
+     C     CDL006        ANDEQ     'Y'                                          CDL006
+     C     DDTYPE        OREQ      'LP'                                         CDL006
+     C     CDL006        ANDEQ     'Y'                                          CDL006
+      *                                                                            164565
+      * If Maturity date is Not entered use Notice Days for calculating            164565
+      * the Total Interest                                                         164565
+     C     @MDYNO        IFEQ      0                                            b*2164565
+      *                                                                            164565
+     C     @NTCNM        IFEQ      0                                            b*3
+     C     ZZBEG         ADD       1             ZZEND
+     C                   ELSE                                                   x*3
+     C     @NTCNM        IFNE      -999                                         b*4
+     C     ZZBEG         ADD       @NTCNM        ZZEND
+     C                   ELSE                                                   x*4
+     C                   Z-ADD     @MDYNO        ZZEND
+     C                   END                                                    e*4
+     C                   END                                                    e*3
+      *
+      * When Maturity date entered                                                 164565
+     C                   ELSE                                                   x*2164565
+     C                   Z-ADD     @MDYNO        ZZEND                             164565
+     C                   END                                                    e*2164565
+      *                                                                            164565
+     C                   ELSE                                                   x*1
+     C*
+     C* IF FIRST & LAST DAY INTEREST, CALCULATE TO MATURITY DATE + 1
+     C*
+     C     DDFLID        IFEQ      'Y'                                          b*2
+     C     @MDYNO        ADD       1             ZZEND
+     C                   ELSE                                                   x*2
+     C                   Z-ADD     @MDYNO        ZZEND
+     C                   END                                                    e*2
+     C                   END                                                    e*1
+     C*
+     C                   CALLB     'MM1030'
+     C                   PARM                    ZZBEG
+     C                   PARM                    ZZEND
+     C                   PARM                    DDICMT
+     C                   PARM                    IKAMNP
+     C                   PARM                    IKINTR
+     C                   PARM                    DDRDFC
+     C                   PARM                    @@INTR
+      *
+      ** If DDTOTI is '*', total interest is that calculated
+      *
+     C     DDTOTI        IFEQ      '*'
+     C*****DDACTN        OREQ      'A'                                               164565 AR814519
+     C                   Z-ADD     @@INTR        @TOTIN
+     C                   END
+     C*
+     C**  Find the difference between the input and calculated interest
+     C**  - if the difference is greater than 1 currency unit, this is
+     C**    an error.
+      ****Do*this*only*when*inserting*a*transaction*,and*allow*any*typed             164565 AR814519
+      ****amount*by*the*user*in*'Amend'*mode*to*remain*(but*in*the*background        164565 AR814519
+      ****will*be*correctly*calculated*)*******************************              164565 AR814519
+      *                                                                      164565
+     C*****DDACTN        IFEQ      'I'                                               164565 AR814519
+      *                                                                      164565
+     C     @TOTIN        SUB       @@INTR        @DIFI
+     C*
+     C     @DIFI         IFLT      0
+     C                   Z-SUB     @DIFI         @DIFI
+     C                   END
+     C*
+     C     @DIFI         IFGT      0
+     C                   EVAL      ErrorFound = 'Y'
+     C                   END
+     C*
+     C**  If there is a difference in the input and calculated interest
+     C**  amounts, format the calculated figure and output it in a message
+     C     ErrorFound    IFEQ      'Y'
+      *
+      ** Copy the amount into a 13,0P field for passing to ZA0920
+      ** Put number of decimal places into a packed field for call
+      *
+     C                   EVAL      Amount13 = @@INTR
+     C                   EVAL      NbrDecPl1 = A6NBDP
+     C                   CLEAR                   ReturnCode
+ 
+     C                   CALLB     'ZA0920'
+     C                   PARM                    ReturnCode
+     C                   PARM                    Amount13
+     C                   PARM                    NbrDecPl1
+     C                   PARM                    BNDCSP
+     C                   PARM                    AmountOut
+ 
+     C                   MOVE      *BLANKS       MsgData1
+     C**********         MOVEL     AmountOut     MsgData1                                   MD000091
+     C                   EVAL      BLen = %Len(%Trim(AmountOut))                            MD000091
+     C                   EVAL      MsgData1 = LenStr +%TRIM(AmountOut)                      MD000091
+     C                   MOVEL     'MMM0453'     MsgID1
+     C                   END
+     C**********         END                                                         164565 AR814519
+     C***********        END                                               164565
+     C                   END
+     C                   END
+     C                   END
+     C                   END
+     C*
+     C**  If the amount is valid, set up the numeric amount on the
+     C**  Standard Deal format.
+     C*
+     C     ValDateOK     IFNE      'N'
+     C     MatDateOK     ANDNE     'N'
+     C     NotDaysOK     ANDNE     'N'
+     C     CurrOK        ANDNE     'N'
+     C     AmountOK      ANDNE     'N'
+     C     BaseRateOK    ANDNE     'N'
+     C     SpreadOK      ANDNE     'N'
+     C     CalcMethOK    ANDNE     'N'
+     C     ErrorFound    ANDEQ     'N'
+     C*
+     C                   Z-ADD     @TOTIN        IKMTTI
+ 
+     C**  Reformat the interest value for display
+ 
+      ** Copy the amount into a 13,0P field for passing to ZA0920
+      ** Put number of decimal places into a packed field for call
+ 
+     C                   EVAL      Amount13 = @TOTIN
+     C                   EVAL      NbrDecPl1 = A6NBDP
+     C                   CLEAR                   ReturnCode
+ 
+     C                   CALLB     'ZA0920'
+     C                   PARM                    ReturnCode
+     C                   PARM                    Amount13
+     C                   PARM                    NbrDecPl1
+     C                   PARM                    BNDCSP
+     C                   PARM                    AmountOut
+ 
+     C                   MOVE      AmountOut     DDTOTI
+     C*
+     C                   END
+      *
+      ** Return code set in /COPY
+     C/COPY ZACPYSRC,SETRETCDE
+ 
+     C                   RETURN
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Program Initialisation routine                       *
+      *                                                               *
+      * Called by: Implicitly on program activation                   *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+ 
+     C     *INZSR        BEGSR
+ 
+     C     *entry        PLIST
+      ** Incoming return code (10A)
+     C                   PARM                    ReturnCode
+      ** Message ID (10A)
+     C                   PARM                    MsgID1
+      ** Action Code (1A, from caller)                                          164565
+     C                   PARM                    DDACTN                         164565
+      ** Message data (45A)
+     C                   PARM                    MsgData1
+      ** Total interest amount returned from this module (15,0P)
+     C                   PARM                    IKMTTI
+      ** Total interest amount (14A, from transaction)
+     C                   PARM                    DDTOTI
+      ** Default interest for CL and CD deals with zero notice days
+      ** feature flag (1A, from SCSARDPD via caller)
+     C                   PARM                    S01468
+      ** Deal notice days (3A, from transaction)
+     C                   PARM                    DDNTCE
+      ** Deal type (2A, from transaction)
+     C                   PARM                    DDTYPE
+      ** Interest rate (11,7P, from caller)
+     C                   PARM                    IKINTR
+      ** Deal amount (15,0P, from caller)
+     C                   PARM                    IKAMNP
+      ** Interest calculation method (1A, from transaction)
+     C                   PARM                    DDICMT
+      ** Deal value date in Midas day number format (5,0P, from caller)
+     C                   PARM                    @VDYNO
+      ** Currency field OK flag (1A, from caller)
+     C                   PARM                    CurrOK
+      ** Number of decimal places in deal currency (1,0S, from SDCURRPD)
+     C                   PARM                    A6NBDP
+      ** Value date field OK (1A, from caller)
+     C                   PARM                    ValDateOK
+      ** Notice days field OK (1A, from caller)
+     C                   PARM                    NotDaysOK
+      ** Amount field OK (1A, from caller)
+     C                   PARM                    AmountOK
+      ** Base Rate field OK (1A, from caller)
+     C                   PARM                    BaseRateOK
+      ** Spread/Rate field OK (1A, from caller)
+     C                   PARM                    SpreadOK
+      ** Calculation method field OK (1A, from caller)
+     C                   PARM                    CalcMethOK
+      ** Maturity date (6A, from transaction)
+     C                   PARM                    DDMDAT
+      ** Maturity date in Midas day number format (5,0P, from caller)
+     C                   PARM                    @MDYNO
+      ** Maturity date field OK (1A, from caller)
+     C                   PARM                    MatDateOK
+      ** Notice days (3,0P, from caller)
+     C                   PARM                    @NTCNM
+      ** First and last day interest flag (1A, from transaction)
+     C                   PARM                    DDFLID
+      ** Round-down interest flag (1A, from transaction)
+     C                   PARM                    DDRDFC
+      ** Decimal separator (1A, from SDDEALPD)
+     C                   PARM                    BNDCSP
+ 
+      *                                                                                       CER043
+      ** Check if CER043 is switched on                                                       CER043
+                                                                                              CER043
+     C                   Call      'AOSARDR0'                                                 CER043
+     C                   Parm      *BLANKS       PRtcd                                        CER043
+     C                   Parm      '*VERIFY'     POPTN             7                          CER043
+     C                   Parm      'CER043'      PSARD             6                          CER043
+     C     SCSARD        Parm      SCSARD        DSFDY                                        CER043
+                                                                                              CER043
+     C                   If        PRtcd = *BLANKS                                            CER043
+     C                   Eval      CER043 = 'Y'                                               CER043
+     C                   Else                                                                 CER043
+     C                   Eval      CER043 = 'N'                                               CER043
+                                                                                              CER043
+     C                   If        PRtcd <> '*NRF'                                            CER043
+     C     *Lock         IN        LDA                                                        CER043
+     C                   Eval      DBKEY = 'CER043'                                           CER043
+     C                   Eval      DBFILE = 'SCSARDPD'                                        CER043
+     C                   Eval      DBASE = 001                                                CER043
+     C                   OUT       LDA                                                        CER043
+     C                   Exsr      *PSSR                                                      CER043
+     C                   EndIf                                                                CER043
+                                                                                              CER043
+     C                   EndIf                                                                CER043
+                                                                                              CER043
+ 
+      ** Program, module and procedure names for database error processing.
+      ** =================================================================
+      ** The following /COPY sets these values, and also defines LDA as
+      ** an external data area
+ 
+     C/COPY ZACPYSRC,DBFIELDS
+ 
+     C                   ENDSR                                                  *** InzEnd ***
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     C/COPY ZACPYSRC,PSSR_ILE
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

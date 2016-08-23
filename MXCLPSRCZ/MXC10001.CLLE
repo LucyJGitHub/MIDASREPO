@@ -1,0 +1,95 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas MX Initialisation for Midas Message Manager')   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Meridian Export Module                              */
+/*                                                                   */
+/*       MXC10001 - MX Initialisation for Message Manager            */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4.01 -----------------------------------------------*/
+/*       Last Amend No. CSW025  *CREATE    Date 18Jun02              */
+/*       Prev Amend No.                    Date                      */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSW025 - Midas Message Manager                              */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RTCDE &PMODE)
+ 
+             DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RTCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2002')
+ 
+             DCLF       FILE(MXC10001DF)
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Mode 1 (first call) and Mode 2 (second call) */
+ 
+             IF         COND((&PMODE *EQ '1') *OR (&PMODE *EQ '2')) +
+                          THEN(DO)
+ 
+LOOP:           SNDRCVF
+ 
+                CHGVAR     VAR(&IN30) VALUE('0')
+                CHGVAR     VAR(&IN31) VALUE('0')
+ 
+                IF         COND((&SDTAQ *EQ ' ') *AND (&SLIB *NE ' ')) +
+                             THEN(CHGVAR VAR(&IN30) VALUE('1'))
+ 
+                IF         COND((&SDTAQ *NE ' ') *AND (&SLIB *EQ ' ')) +
+                             THEN(CHGVAR VAR(&IN30) VALUE('1'))
+ 
+                IF         COND(&SDTAQ *NE ' ') THEN(DO)
+                   CHKOBJ     OBJ(&SLIB/&SDTAQ) OBJTYPE(*DTAQ)
+                   MONMSG     MSGID(CPF9801 CPF9810) +
+                              EXEC(CHGVAR &IN31 VALUE('1'))
+                ENDDO
+ 
+                IF         COND(&IN03 *EQ '1') THEN(GOTO CMDLBL(END))
+ 
+                IF         COND((&IN30 *EQ '1') *OR (&IN31 *EQ '1')) +
+                             THEN(GOTO CMDLBL(LOOP))
+ 
+                CALLPRC    PRC(MX010001) PARM(&SDTAQ &SLIB &SRPTP &RTCD)
+ 
+/* Check for database errors */
+ 
+                IF (&RTCD *NE ' ') THEN(DO)
+                    RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                   SNDPGMMSG  MSGID(MEM0011) MSGF(MIDAS) MSGDTA(&MEM) +
+                                TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                ENDDO
+             ENDDO
+ 
+/* Mode 3 - Deletion */
+ 
+             IF         COND(&PMODE *EQ '3') THEN(DO)
+                /* There is currently no deletion processing */
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             CHGVAR     VAR(&RTCDE) VALUE('*ERROR')
+ 
+             SNDPGMMSG  MSG('Midas Message Manager initialisation +
+                          ENDED ABNORMALLY') TOPGMQ(*EXT) +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+ END:
+             ENDPGM

@@ -1,0 +1,508 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas EU EMU base ccy/spot rates update with Euro')    *
+      *****************************************************************
+      *                                                               *
+      *  Midas - EMU Module                                           *
+      *                                                               *
+      *  EU0050 - Midas EMU Base Ccy / Spot Rates Update with Euro    *
+      *                                                               *
+      *  Function:  This program is a new COB program that will       *
+      *  (I/C INT) override the base currency for accounting on the   *
+      *            I.C.D. by the new base currency for accounting.    *
+      *            This will also override the current spot rate      *
+      *            and spot rate multiply/divide indicator on each    *
+      *            currency by the euro rate multiply/divide          *
+      *            indicator (if the euro rate is present).           *
+      *                                                               *
+      *  Called By: EUC0050 - EMU Base Currency Conversion - Part II  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CGL165             Date 23Feb15               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER048             Date 19May08               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 241017             Date 14Jul06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 204923             Date 29Apr02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CIR007             Date 11May01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 15May01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 143792             Date 07Oct98               *
+      *                 137364             Date 24Jun98               *
+      *                 133470             Date 30Mar98               *
+      *                 133469             Date 27Mar98               *
+      *                 132519             Date 24Mar98               *
+      *                 CEU001 *CREATE     Date 08Sep97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER048 - German Features - Taxes (Recompile)                 *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  241017 - If rates are defined on either in or out currencies *
+      *           use these values first.  If values are not available*
+      *           then derived.                                       *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  204923 - Rate Fix Days Adjustment (OIS)                      *
+      *           (Recompiled over changed SDCURRPD)                  *
+      *  CIR007 - Overnight Index Swaps                               *
+      *           (Recompiled over changed SDCURRPD)                  *
+      *  CSD006 - Recompiled over changed SDCURRPD.                   *
+      *  CDL008 - Continuous Linked Settlement (recompile SDCURRPD)   *
+      *  143792 - Program updated the Multiply/Divide indicator on    *
+      *           TABTG10 with the wrong values.                      *
+      *  137364 - System is converting the rates for Out currencies   *
+      *           the wrong way - Remove Fix 133469.                  *
+      *  133470 - EURO and consolidated EURO currencies are being     *
+      *           converted with wrong spot rates                     *
+      *  133469 - System is converting the rates for Out currencies   *
+      *           the wrong way                                       *
+      *  132519 - Spot rates for 'Out' currencies are not updated     *
+      *  CEU001 - EMU Base Currency for Accounting Conversion         *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     F/COPY WNCPYSRC,EU0050F001
+     FEUBCACPDIF  E                    DISK         KINFSR *PSSR      UC
+     FSDBANKPDUF  E                    DISK
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+     FSDCURRL1UF  E           K        DISK
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+     FTABTB11 UF  E                    DISK
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+     FTABTG10 UF  E           K        DISK
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   03  - End of File or Error in Updating SDCURRL1             *
+      *   04  - End of File or Error in Updating SDBANKPD             *
+      *   05  - End of File for EUBCACPD                              *
+      *   06  - End of File or Error in Updating TABTB11              *
+      *   07  - End of File or Error in Updating TABTG10              *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT   - Program Initialisation                            *
+      *  SRPRCS   - Performs all Process                              *
+      *                                                               *
+      *  *PSSR    - Program Error Processing Subroutine               *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     ISDGELR    E DSSDGELRPD                                              133470
+      ***  External data structures for GL ICD Details                    133470
+      *                                                                   133470
+     IDSFDY     E DSDSFDY                                                 133470
+      **  First data structure for Access Programs, short DS              133470
+      *                                                                   133470
+     I/COPY WNCPYSRC,EU0050I001
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+     C/EJECT
+     C*================================================================
+     C*  P R O G R A M   S T A R T                                    *
+     C*================================================================
+     C*
+     C**  Set up copyright parameter
+     C*
+     C                     MOVEACPY@      MKI@   80
+     C*
+     C                     EXSR SRINIT
+     C*
+     C                     EXSR SRPRCS
+     C*
+     C                     COMIT
+     C*
+     C                     SETON                     LR
+     C*
+     C*================================================================
+     C*  P R O G R A M   E N D                                        *
+     C*================================================================
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRINIT - Subroutine to do Program Initialisation.            *
+     C*                                                               *
+     C*  Called By: Main Processing                                   *
+     C*                                                               *
+     C*  Calls    : *PSSR  - Program Error Processing                 *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRINIT    BEGSR
+     C*
+     C***  Read in Installation Data
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+     C*
+     C                     OPEN EUBCACPD
+     C                     READ EUBCACPD                 05
+     C*
+     C***  End the program when Run Conversion is not 'Y'
+     C*
+     C           *IN05     IFEQ '0'
+     C           BCRUNC    ANDNE'Y'
+     C           *IN05     OREQ '1'
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDIF
+     C*                                                                   133470
+     C**********           CALL 'AOGELRR0'                                133470              CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM *BLANKS   PRTCD   7                       133470
+     C                     PARM '*FIRST  'POPTN   7                       133470
+     C********** SDGELR    PARM SDGELR    DSFDY                           133470              CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C*                                                                   133470
+     C***  Handle Database Error.                                         133470
+     C*                                                                   133470
+     C           PRTCD     IFNE *BLANKS                                   133470
+     C           *LOCK     IN   LDA                                       133470
+     C                     MOVEL'SDGELRPD'DBFILE           ************   133470
+     C                     MOVEL'*FIRST  'DBKEY            * DBERR 10 *   133470
+     C                     Z-ADD10        DBASE            ************   133470
+     C                     MOVEL'EU0050'  DBPGM                           133470
+     C                     OUT  LDA                                       133470
+     C                     EXSR *PSSR                                     133470
+     C                     ENDIF                                          133470
+     C/COPY WNCPYSRC,EU0050C001
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C*                                                               *
+     C*  SRPRCS - Performs all Process                                *
+     C*                                                               *
+     C*  Called By: Main Processing                                   *
+     C*                                                               *
+     C*  Calls    : *PSSR  - Program Error Processing                 *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRPRCS    BEGSR
+     C                     READ SDBANKPD                 04
+     C*
+     C***  Handle Database Error.
+     C*
+     C           *IN04     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     MOVEL'*FIRST  'DBKEY            * DBERR 01 *
+     C                     Z-ADD1         DBASE            ************
+     C                     MOVEL'EU0050'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C***  Update currency code in SDBANKPD with the new base currency
+     C***  from EUBCACPD
+     C/COPY WNCPYSRC,EU0050C002
+     C*
+     C                     MOVE BCNBCY    BJCYCD
+     C                     UPDATSDBANKD0               04
+     C*
+     C***  Handle Database Error.
+     C*
+     C           *IN04     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     MOVEL'*FIRST  'DBKEY            * DBERR 02 *
+     C                     Z-ADD2         DBASE            ************
+     C                     MOVEL'EU0050'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     READ TABTB11                  06
+     C*
+     C***  Handle Database Error.
+     C*
+     C           *IN06     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'TABTB11 'DBFILE           ************
+     C                     MOVEL'*FIRST  'DBKEY            * DBERR 05 *
+     C                     Z-ADD5         DBASE            ************
+     C                     MOVEL'EU0050'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C***  Update currency code in TABTB11 with new base currency from
+     C***  EUBCACPD
+     C*
+     C                     MOVELBCNBCY    BCCY
+     C                     UPDATTABTB11F               06
+     C*
+     C***  Handle Database Error.
+     C*
+     C           *IN06     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'TABTB11 'DBFILE           ************
+     C                     MOVELBCCY      DBKEY            * DBERR 06 *
+     C                     Z-ADD6         DBASE            ************
+     C                     MOVEL'EU0050'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     CLOSEEUBCACPD
+     C*                                                                   132519
+     C** Get currency details for the new base currency.                  132519
+     C*                                                                   132519
+     C           BCNBCY    CHAINSDCURRL1             03                   132519
+     C*                                                                   132519
+     C***  Handle Database Error.                                         132519
+     C*                                                                   132519
+     C           *IN03     IFEQ '1'                                       132519
+     C           *LOCK     IN   LDA                                       132519
+     C                     MOVEL'SDCURRL1'DBFILE           ************   132519
+     C                     MOVELBCNBCY    DBKEY            * DBERR 09 *   132519
+     C                     Z-ADD9         DBASE            ************   132519
+     C                     MOVEL'EU0050'  DBPGM                           132519
+     C                     OUT  LDA                                       132519
+     C                     EXSR *PSSR                                     132519
+     C                     ENDIF                                          132519
+     C*                                                                   132519
+     C                     Z-ADDA6SPRT    WSPRT  138                      132519
+     C                     MOVE A6MDIN    WMDIN   1                       132519
+     C*
+     C           *LOVAL    SETLLSDCURRL1                                  132519
+     C                     READ SDCURRL1                 03
+     C*
+     C***  Handle Database Error.
+     C*
+     C           *IN03     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRL1'DBFILE           ************
+     C                     MOVEL'*FIRST  'DBKEY            * DBERR 03 *
+     C                     Z-ADD3         DBASE            ************
+     C                     MOVEL'EU0050'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C           *IN03     DOWEQ'0'
+     C*                                                                   133470
+     C           A6CYCD    IFEQ BKEURO                                    133470
+     C           A6CYCD    OREQ BKEUCP                                    133470
+     C                     Z-ADD1         WWSPRT                          133470
+     C                     MOVE 'M'       WWMDIN                          133470
+     C                     ELSE                                           133470
+     C*
+      ** If values exists for in or out rates.                                                241017
+      *                                                                                       241017
+     C           A6INER    IFNE 0                                                             241017
+     C           A6EUER    ORNE 0                                                             241017
+      *                                                                                       241017
+     C           A6EUER    IFNE 0
+     C***********          Z-ADDA6EUER    A6SPRT                          132519
+     C***********          MOVE A6EUMD    A6MDIN                          132519
+     C                     Z-ADDA6EUER    WWSPRT 138                      132519
+     C                     MOVE A6EUMD    WWMDIN  1                       132519
+     C                     ENDIF                                                              241017
+      *                                                                                       241017
+     C           A6INER    IFNE 0                                                             241017
+     C           A6INCY    ANDNE'Y'                                                           241017
+     C                     Z-ADDA6INER    WWSPRT                                              241017
+     C                     MOVE A6INMD    WWMDIN                                              241017
+     C                     ENDIF                                                              241017
+      *                                                                                       241017
+     C                     ELSE                                           132519
+      *                                                                                       241017
+      ** derive                                                                               241017
+      *                                                                                       241017
+     C*                                                                   132519
+     C                     MOVE A6MDIN    WWMDIN                          132519
+     C*                                                                   132519
+     C           A6MDIN    IFEQ 'M'                                       132519
+     C           WMDIN     ANDEQ'M'                                       132519
+     C           A6MDIN    OREQ 'D'                                       132519
+     C           WMDIN     ANDEQ'D'                                       132519
+     C***********A6SPRT    DIV  WSPRT     WWSPRT    H              132519 133469
+     C***********A6SPRT    MULT WSPRT     WWSPRT    H              133469 137364
+     C           A6SPRT    DIV  WSPRT     WWSPRT    H                     137364
+     C                     ELSE                                           132519
+     C***********A6SPRT    MULT WSPRT     WWSPRT    H              132519 133469
+     C***********A6SPRT    DIV  WSPRT     WWSPRT    H              133469 137364
+     C           A6SPRT    MULT WSPRT     WWSPRT    H                     137364
+     C                     ENDIF                                          132519
+     C*                                                                   132519
+     C                     ENDIF                                          132519
+     C*                                                                   133470
+     C                     ENDIF                                          133470
+     C*                                                                   132519
+     C                     MOVE WWMDIN    A6MDIN                          132519
+     C                     Z-ADDWWSPRT    A6SPRT                          132519
+     C*
+     C***  Update spot rate and multiply/divide indicator in SDCURRL1
+     C***  when the Euro spot rate is not zero
+     C*
+     C                     UPDAT@A6REA3                03
+     C*
+     C***  Handle Database Error.
+     C*
+     C           *IN03     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRL1'DBFILE           ************
+     C                     MOVELA6CYCD    DBKEY            * DBERR 04 *
+     C                     Z-ADD4         DBASE            ************
+     C                     MOVEL'EU0050'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C           A6CYCD    CHAINTABTG10              07
+     C*
+     C***  Handle Database Error.
+     C*
+     C           *IN07     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'TABTG10 'DBFILE           ************
+     C                     MOVELA6CYCD    DBKEY            * DBERR 07 *
+     C                     Z-ADD7         DBASE            ************
+     C                     MOVEL'EU0050'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C***********          Z-ADDA6EUER    SPOT                            132519
+     C                     Z-ADDWWSPRT    SPOT                            132519
+     C*
+     C***********A6EUMD    IFEQ 'M'                                       132519
+     C           WWMDIN    IFEQ 'M'                                       132519
+     C**********           MOVE '0'       MDIN                            143792
+     C                     MOVE '1'       MDIN                            143792
+     C                     ELSE
+     C**********           MOVE '1'       MDIN                            143792
+     C                     MOVE '0'       MDIN                            143792
+     C                     ENDIF
+     C*
+     C***  Update spot rate and multiply/divide indicator in TABTG10
+     C*
+     C                     UPDATTABTG10F               07
+     C*
+     C***  Handle Database Error.
+     C*
+     C           *IN07     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'TABTG10 'DBFILE           ************
+     C                     MOVELA6CYCD    DBKEY            * DBERR 08 *
+     C                     Z-ADD8         DBASE            ************
+     C                     MOVEL'EU0050'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C***********                                                         132519
+     C***********          ENDIF                                          132519
+     C/COPY WNCPYSRC,EU0050C004
+     C*
+     C                     READ SDCURRL1                 03
+     C*
+     C                     ENDDO
+     C/COPY WNCPYSRC,EU0050C003
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR  - Program exception error routine                      *
+     C*          Called automatically if a program error occurs,      *
+     C*          or directly by the program code using EXSR.          *
+     C*          This subroutine DUMPs the program just once.         *
+     C*                                                               *
+     C* Called by: SRINIT - Subroutine to do Program Initialisation   *
+     C*            SRPRCS - Performs all Process                      *
+     C*                                                               *
+     C* Calls    : None                                               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+     C*
+     C                     ROLBK
+     C*
+     C***  Check if *PSSR has already been called.
+     C*
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     ENDIF
+     C*
+     C***  If *PSSR already run, just end the program here.
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+**   CPY@
+(c) Misys International Banking Systems Ltd. 2001

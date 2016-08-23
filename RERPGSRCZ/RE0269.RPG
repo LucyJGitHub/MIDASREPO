@@ -1,0 +1,940 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Deflt Retl A/c Maint-Logging/File')
+0002 F*****************************************************************
+0003 F*                                                               *
+     F*  Midas - Retail Module
+0005 F*                                                               *
+0006 F*  RE0269 - DEFAULT RETAIL ACCOUNTS MAINTENANCE - S/REDEF       *
+0007 F*           MASTER FILE UPDATE                                  *
+0008 F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*      1990, 1993                                               *
+0010 F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Last Amend No. CAP205             Date 04Jan10               *
+      *  Prev Amend No. CRE030             Date 07Jul06               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG3900            Date 04Aug04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01.03 ----------------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+0011  *                 S01413             Date 13Apr93               *
+0011  *                 S01117             Date 23Nov89               *
+ 011 F*                 E81134                  17DEC86               *
+     F*                 S01194                  19MAR90               *
+0010 F*                                                               *
+     F*****************************************************************
+0010 F*                                                               *
+      *  CAP205 - Teller Related APIs - Account Balance Check         *
+      *  CRE030 - Default RE Accounts by Currency                     *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG3900 - Recompiled due to changed RE0260FM.                *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  S01413  -  Retail 3 Incorporation                            *
+     F*  S01117  -  MULTIBRANCHING. LDA POSITIONS SHIFTED.            *
+     F*  E81134  -  REDISPLAY WSID & DATE AFTER INITIAL DISPLAY       *
+     F*  S01194  -  NEW STANDING DATA.                                *
+0012 F*                                                               *
+0013 F*****************************************************************
+0012 F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/COPY WNCPYSRC,RE0269F001
+0016 F***RE0260FMCF  F     189            WORKSTN                                             CGL029
+     F***RE0260FMCF  F     236            WORKSTN                                      CGL029 CRE030
+     F***RE0260FMCF  F     239            WORKSTN                                      CRE030 CAP205
+     FRE0260FMCF  F     240            WORKSTN                                                CAP205
+     F/COPY WNCPYSRC,RE0269F002
+0019 F***REDEF** UF  F     128  5AI     2 DISK                                                CGL029
+     F***REDEF   UF  F     138 11AI     2 DISK                                         CGL029 CRE030
+     FREDEF   UF  E           K        DISK                      A                            CRE030
+     F            REDEFAF                           KIGNORE                                   CRE030
+     F                                              KCOMIT
+     F***REDEFD* O   F     128            DISK                                                CGL029
+     F***REDEFD* O   F     138            DISK                                         CGL029 CAP205
+     FREDEFD  O   F     139            DISK                                                   CAP205
+     F                                              KCOMIT
+     F                                              KINFDS INFDS
+     F                                              KINFSR INFSR
+0023 F*
+0024 F*       FUNCTION OF INDICATORS
+0026 F*       U7      DATABASE ERROR
+0030 F*       89      BLINK ACTION CODE LABEL
+0031 F*       88      NON-DISPLAY ERROR MESSAGE/CODES
+0032 F*       87      NON-DISPLAY CHANGE DETAILS
+0033 F*       86      NON-DISPLAY USEFUL DATA
+0034 F*       85      OUTPUT ENQUIRE - SE - SCREEN
+0035 F*       84      OUTPUT DELETE - SD - SCREEN
+0036 F*       83      OUTPUT AMEND - SA - SCREEN
+0037 F*       82      OUTPUT INSERT - SI - SCREEN
+0038 F*       81      OUTPUT INITIAL - SF - SCREEN
+0039 F*       80      BLINK DELETE CHECK FIELD LABEL
+0040 F*       79      SYSTEM SET-UP FLAG ON
+0041 F*       78      SI SCREEN READ IN
+0042 F*       77      SA SCREEN READ IN
+0043 F*       76      SD SCREEN READ IN
+0044 F*       RECORD ID INDICATORS
+0045 F*       75      MASTER FILE - HEADER
+0046 F*       74      MASTER FILE - DETAIL RECORD
+0047 F*       73      MASTER FILE - TRAILER
+0048 F*       72      MASTER FILE - NO RECORD FOUND
+0049 F*       71      SPARE
+0053 F*       67      WTRN - SI RECORD
+0054 F*       66      WTRN - SA RECORD
+0055 F*       65      WTRN - SD RECORD
+0056 F*       64      RECORD UPDATED BY ANOTHER WORKSTATION
+0057 F*       FILE UPDATE INDICATORS
+ 059 F*       54      UPDATE MASTER TRAILER
+ 061 F*       51      UPDATE MASTER RECORD
+0064 F*       SUNDRY INDS
+0065 F*       49      DELETE INCLUDES SETTING RECI TO *, OTHERWISE LEAVE
+     F*       48      REDEF FILE RELEASE INDICATOR
+     F*
+     F*       02      SET ON IF ERROR DURING READ FROM THE WORK STATION *
+     F*       01      DISABLES READ OF WORKSTATION
+0066 E*    STANDARD TABLES/ARRAYS
+0068 E                    ERCM    1   1 79               ERROR MESSAGES
+0069 E                    NR          5  5 0
+0070 E                    WN          5 15 0
+     E                    CPY@    1   1 80
+0071 E                    DC          5  3 0
+0072 I*    STANDARD FILES
+0073 I*
+0074 I*    WORKSTATION FILE
+0075 I*
+0076 IRE0260FMNS
+0077 I**********                                                                              CRE030
+0078 I*****MASTER FILE - HEADER RECORD                                                        CRE030
+0079 I**********                                                                              CRE030
+0080 I***REDEF** NS  75   1 CA                                                                CRE030
+0081 I**********                                                                              CRE030
+0082 I*****MASTER FILE - TRAILER                                                              CRE030
+0083 I**********                                                                              CRE030
+0084 I***REDEF** NS  73   1 CZ                                                                CRE030
+0085 I**********                              1   1 RECI                                      CRE030
+0086 I**********                          P  31  330TNLU                                      CRE030
+0087 I**********                             34  34 IRRI                                      CRE030
+0088 I**********                          P  35  49 NR                                        CRE030
+0089 I**********                          P  50  89 WN                                        CRE030
+0090 I**********                          P  90  99 DC                                        CRE030
+0091 I**********                              1 128 OLD3                               CGL029 CRE030
+     I**********                              1 138 OLD3                               CGL029 CRE030
+0092 I**********                                                                              CRE030
+0093 I*****MASTER FILE - DETAIL RECORD                                                        CRE030
+0094 I**********                                                                              CRE030
+0095 I********NS  74                                                                          CRE030
+0096 I**********                                                                              CRE030
+0097 I*****STANDARD MASTER FILE TNLU AND OLD HASH AMOUNT                                      CRE030
+     I***/COPY WNCPYSRC,RE0269I001                                                            CRE030
+0098 I**********                          P  31  330MTNLU                                     CRE030
+0099 I**********                          P  41  470OLDH                                      CRE030
+0100 I*    OLD MASTER FILE CHARACTER STRINGS
+0101 I**********                              1 128 OLD1                                      CGL029
+     I**********                              1 138 OLD1                               CGL029 CAP205
+     I                                        1 139 OLD1                                      CAP205
+     IREDEFDF                                                                                 CRE030
+     I              RECI                            MRECI                                     CRE030
+     I              ACODQQ                          MACODQ                                    CRE030
+     I              RECJ                            MRECJ                                     CRE030
+     I/COPY WNCPYSRC,RE0269I001                                                               CRE030
+     I              TNLU                            MTNLU                                     CRE030
+     I              ORED                            MORED                                     CRE030
+     I              LCD                             MLCD                                      CRE030
+     I              CHTP                            MCHTP                                     CRE030
+     I              HASH                            OLDH                                      CRE030
+     I              CNUM                            MCNUM                                     CRE030
+     I              RCCY                            MRCCY                                     CRE030
+     I              SEQR                            MSEQR                                     CRE030
+     I              RETN                            MRETN                                     CRE030
+     I              BRCA                            MBRCA                                     CRE030
+     I              ACOD                            MACOD                                     CRE030
+     I              ABCR                            MABCR                                     CAP205
+     IREDEFZF                                                                                 CRE030
+     I              RECI                            TRECI                                     CRE030
+     I              ACODQQ                          TACODQ                                    CRE030
+     I              RECJ                            TRECJ                                     CRE030
+     I              ZZ024                           TZZ024                                    CRE030
+     I              TNLU                            TTNLU                                     CRE030
+     I              IRRI                            TIRRI                                     CRE030
+     I              NR                              NRDS                                      CRE030
+     I              WN                              WNDS                                      CRE030
+     I              DC                              DCDS                                      CRE030
+     I              ZZ029                           TZZ029                                    CRE030
+     I              ACOD                            TACOD                                     CRE030
+0102 I*
+0133 I*
+0134 I*    WORKSTATION TRANSACTION FILE
+0135 I*
+0136 IWTRN       UDS                            860
+0139 I*    MASTER FILE KEY
+0140 I**********                              2   6 MASTKY                                    CGL029
+     I                                        6   6 RECJ                                      CGL029
+     I                                      129 138 ACOD                                      CGL029
+     I                                      129 1380ACODN                                     CRE030
+     I                                       54  56 CCY                                       CRE030
+0141 I*    STANDARD NEW HASH AMOUNT
+0142 I                                    P  41  470NEWH
+0143 I*    NEW MASTER FILE CHARACTER STRINGS
+0144 I**********                              1 128 NEW1                                      CGL029
+     I**********                              1 138 NEW1                               CGL029 CAP205
+     I                                        1 139 NEW1                                      CAP205
+     I/COPY WNCPYSRC,RE0269I002
+0145 I                                        1 200 NEW200
+0146 I*    FIRST 60 CHARACTERS OF LOG RECORD
+0147 I                                      401 460 QLOG
+0148 I*    STANDARD SCREEN FIELDS
+     I/COPY WNCPYSRC,RE0269I004
+0149 I**********                            462 492 SCN31                                     CGL029
+     I**********                            462 498 SCN31                              CGL029 CRE030
+     I                                      462 501 SCN31                                     CRE030
+     I/COPY WNCPYSRC,RE0269I003
+0150 I                                      462 717 SCN256
+0154 I                                      469 470 SID
+     I                                      470 470 SCNID
+0155 I*
+0156 I*    STANDARD LOCAL DATA AREA FIELDS
+0157 I*
+0158 ILDA        UDS                            256
+0159 I                                        1   8 LPROC
+0160 I***********                           134 138 LFILE                 S01117
+0161 I***********                           139 167 LKEY                  S01117
+0162 I***********                           168 175 LPROG                 S01117
+0163 I***********                           176 1770LDBNO                 S01117
+     I                                      134 141 LFILE                 S01117
+     I                                      142 170 LKEY                  S01117
+     I                                      171 180 LPROG                 S01117
+     I                                      181 1830LDBNO                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+0164 I***********                           181 1850LRUND                 S01117
+0165 I***********                           186 192 LRUNA                 S01117
+0166 I***********                           193 193 LDATF                 S01117
+0167 I***********                           194 1940LSFLG                 S01117
+0168 I***********                           195 1960LKEYL                 S01117
+0169 I***********                           197 202 LISP                  S01117
+0170 I***********                           203 203 LTWOL                 S01117
+0171 I***********                           204 2040LLDLP                 S01117
+0172 I***********                           205 2090LTNLU                 S01117
+0173 I***********                           210 210 LDELM                 S01117
+0174 I***********                           211 211 LDUD                  S01117
+     I***********                           212 212 LMBIN                 S01117
+     I                                      187 1910LRUND                 S01117
+     I                                      192 198 LRUNA                 S01117
+     I                                      199 199 LDATF                 S01117
+     I**********                            200 2000LSFLG           S01117S01194
+     I                                      200 200 LSFLG                 S01194
+     I                                      201 2020LKEYL                 S01117
+     I                                      203 208 LISP                  S01117
+     I                                      209 209 LTWOL                 S01117
+     I                                      210 2100LLDLP                 S01117
+     I                                      211 2150LTNLU                 S01117
+     I                                      216 216 LDELM                 S01117
+     I                                      217 217 LDUD                  S01117
+     I                                      218 218 LMBIN                 S01117
+     IPSDS       SDS
+     I                                      244 246 WSID
+     I                                      245 246 WSID2
+     I                                      254 263 USRID
+     I**
+     IOLD1      E DSREDEFD                                                                    CRE030
+     I**  EXTERNAL DS FOR DEFAULT RETAIL ACCOUNT DETAILS                                      CRE030
+     I              RECI                            MRECI                                     CRE030
+     I              ACODQQ                          MACODQ                                    CRE030
+     I              RECJ                            MRECJ                                     CRE030
+     I/COPY WNCPYSRC,RE0269I001                                                               CRE030
+     I              TNLU                            MTNLU                                     CRE030
+     I              ORED                            MORED                                     CRE030
+     I              LCD                             MLCD                                      CRE030
+     I              CHTP                            MCHTP                                     CRE030
+     I              HASH                            OLDH                                      CRE030
+     I              CNUM                            MCNUM                                     CRE030
+     I              RCCY                            MRCCY                                     CRE030
+     I              SEQR                            MSEQR                                     CRE030
+     I              RETN                            MRETN                                     CRE030
+     I              BRCA                            MBRCA                                     CRE030
+     I              ACOD                            MACOD                                     CRE030
+     I              ABCR                            MABCR                                     CAP205
+     IOLD3      E DSREDEFZ                                                                    CRE030
+     I**  EXTERNAL DS FOR DEFAULT RETAIL ACCOUNT TRAILER                                      CRE030
+     I              RECI                            TRECI                                     CRE030
+     I              ACODQQ                          TACODQ                                    CRE030
+     I              RECJ                            TRECJ                                     CRE030
+     I              ZZ024                           TZZ024                                    CRE030
+     I              TNLU                            TTNLU                                     CRE030
+     I              IRRI                            TIRRI                                     CRE030
+     I              NR                              NRDS                                      CRE030
+     I              WN                              WNDS                                      CRE030
+     I              DC                              DCDS                                      CRE030
+     I              ZZ029                           TZZ029                                    CRE030
+     I              ACOD                            TACOD                                     CRE030
+     IDSFDY     E DSDSFDY                                                                     CRE030
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                                    CRE030
+     I/COPY WNCPYSRC,RE0269I005
+     I**                                                                                      CRE030
+     INRDS1       DS                                                                          CRE030
+     I                                    P   1   30NR1                                       CRE030
+     I                                    P   4   60NR2                                       CRE030
+     I                                    P   7   90NR3                                       CRE030
+     I                                    P  10  120NR4                                       CRE030
+     I                                    P  13  150NR5                                       CRE030
+     I**                                                                                      CRE030
+     IWNDS1       DS                                                                          CRE030
+     I                                    P   1   80WN1                                       CRE030
+     I                                    P   9  160WN2                                       CRE030
+     I                                    P  17  240WN3                                       CRE030
+     I                                    P  25  320WN4                                       CRE030
+     I                                    P  33  400WN5                                       CRE030
+     I**                                                                                      CRE030
+     IDCDS1       DS                                                                          CRE030
+     I                                    P   1   20DC1                                       CRE030
+     I                                    P   3   40DC2                                       CRE030
+     I                                    P   5   60DC3                                       CRE030
+     I                                    P   7   80DC4                                       CRE030
+     I                                    P   9  100DC5                                       CRE030
+     I**  DATA STRUCTURE  TO UPDATE LAST TRANSACTION NUMBER DTAARA
+     I**
+     IDNATN       DS                              5
+     I                                        1   50FNATN
+     I**   INFDS DATA STRUCTURE
+     IINFDS       DS
+     I                                     *STATUS  STATUS
+     I**   CMTTXT DATASTRUCTURE
+     ICMTTXT      DS
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  25 SCNIDX
+     I                                       26  35 USRIDX
+     I                                       51 306 SCNLOT
+     C                     MOVEACPY@      BIS@   80
+     C/COPY WNCPYSRC,RE0269C002
+     C**   RPG ERROR HANDLING
+     C           STATUS    IFEQ 01021
+     C                     EXSR UDLOG
+     C                     END
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           WTRN
+     C           *LOCK     IN   *NAMVAR
+     C                     MOVE '0'       *IN
+      *                                                                                       CRE030
+      ** Check feature CRE030                                                                 CRE030
+      *                                                                                       CRE030
+     C                     CALL 'AOSARDR0'                                                    CRE030
+     C                     PARM '       ' @RTCD   7                                           CRE030
+     C                     PARM '*VERIFY' @OPTN   7                                           CRE030
+     C                     PARM 'CRE030'  @SARD   6                                           CRE030
+     C*                                                                                       CRE030
+     C           @RTCD     IFEQ *BLANKS                                                       CRE030
+     C                     MOVE 'Y'       CRE030  1                                           CRE030
+     C                     MOVE *ON       *IN28                                               CRE030
+     C                     ELSE                                                               CRE030
+     C                     MOVE 'N'       CRE030                                              CRE030
+     C                     MOVE *OFF      *IN28                                               CRE030
+     C                     ENDIF                                                              CRE030
+      *                                                                                       CGL029
+     C*********  ACOD      CAT  RECJ      MASTKY 11                                    CGL029 CRE030
+     C           ACOD      CAT  RECJ      MASTKY 14 P                                         CRE030
+      *                                                                                       CRE030
+     C           CRE030    IFEQ 'Y'                                                           CRE030
+     C                     MOVE CCY       MASTKY                                              CRE030
+     C                     ENDIF                                                              CRE030
+     C**                                                                  E81134
+     C/COPY WNCPYSRC,RE0269C003
+     C                     MOVE WSID      SWSID   3                       E81134
+     C                     MOVE LRUNA     SRUNA   7                       E81134
+     C**                                                                  E81134
+     C**   SETON RELEVANT SCREEN INDICATORS
+     C           SCNID     COMP 'I'                      67
+     C**
+     C           SCNID     COMP 'A'                      66
+     C           SCNID     COMP 'D'                      65
+0175 C*  SET-UP STANDARD INPUT PROGRAM FIELDS  -  WPROG IS THIS PROGRAM
+0176 C*
+     C**
+     C*    READ WORKSTATION FILE
+     C**
+     C   01                READ RE0260FM                 02
+     C*
+0180 C                     MOVELLISP      WPROG   8
+0181 C                     MOVE '9  '     WPROG
+0182 C                     MOVELWPROG     SPID    6
+0183 C*  SET-UP STANDARD LDA FIELDS
+0184 C                     MOVE WPROG     LPROG
+0185 C                     Z-ADD9         LLDLP
+0186 C*  SET-UP STANDARD BLANK FIELDS
+0187 C                     MOVE ' '       BLK200200
+0188 C*  INITIALISE STANDARD INDICATORS
+0189 C                     SETON                     88    * NON-DISPLAY
+0190 C           LDATF     COMP 'M'                      98* DATE FORMAT
+0191 C********** LSFLG     COMP 1                        79* SSF          S01194
+0191 C           LSFLG     COMP 'Y'                      79* SSF          S01194
+0192 C           LDELM     COMP '*'                      49* DELETE METHOD
+0193 C*
+0194 C*  CLEAR ERROR CODE ARRAY, RESET INDEX
+0195 C*
+0196 C                     MOVE BLK200    ERMSG  79
+0198 C                     Z-ADD0         S       20
+0199 C*
+0200 C*  PROCESSING IN ONE CYCLE
+0201 C*
+0204 C                     Z-ADD0         ZERO05  50
+0205 C*
+0206 C*  SET-UP KEY FOR MASTER FILE TRAILER
+0207 C**********           MOVEL'9999D'   TRLRKY  5                                           CGL029
+     C           '999999'  CAT  '9999D'   TRLRKY 11                                           CGL029
+0208 C*
+ 209 C*  ACCESS DATA FOR UPDATING FROM TRANSACTION FILE
+0210 C*
+0212 C  N67N66N65          SETON                     U7
+0214 C   U7                MOVE BLK200    LKEY
+0215 C   U7                MOVEL'1'       LKEY
+0216 C   U7                MOVE SID       LKEY
+0217 C   U7                MOVE '91'      LDBNO            ** DB ERROR 91
+0218 C   U7                GOTO END
+0219 C*
+ 220 C*  EXECUTE UPDATE PROCEDURE
+0221 C*
+0222 C                     EXSR UDLOG
+0223 C*
+0224 C           END       TAG                             ** END TAG
+     C   U7                SETON                     LR
+     C                     OUT  *NAMVAR
+     C                     RETRN
+0225 C*
+0226 C********************************************************************
+0227 C**
+0228 C**   SUBR. - TO SET UP INITIAL SCREEN OUTPUT
+0229 C**
+0230 C           SUBSF     BEGSR                           ***  SUBSF  ***
+0231 C                     SETON                     81
+0232 C                     MOVE '1  '     LPROC
+0233 C                     MOVE 'SF'      SID     2
+0234 C                     ENDSR
+0235 C********************************************************************
+0236 C**
+0237 C**   SUBR. - TO CHAIN TO MASTER FILE
+0238 C**
+0239 C           MASTCH    BEGSR                           *** MASTCH  ***
+     C*                                                                                       CRE030
+     C*   KEY LISTS FOR REDEF                                                                 CRE030
+     C           MYKEY0    KLIST                                                              CRE030
+     C                     KFLD           ACODN                                               CRE030
+     C                     KFLD           RECJ    1                                           CRE030
+     C*                                                                                       CRE030
+     C           MYKEY1    KLIST                                                              CRE030
+     C                     KFLD           ACODN                                               CRE030
+     C                     KFLD           RECJ    1                                           CRE030
+     C                     KFLD           CCY                                                 CRE030
+     C*                                                                                       CRE030
+0240 C                     SETOF                     727374
+0241 C                     SETOF                     75
+     C*                                                                                       CRE030
+     C           CRE030    IFEQ 'Y'                                                           CRE030
+0242 C********   MASTKY    CHAINREDEF                72                                       CRE030
+     C           MYKEY1    CHAINREDEFDF              72                                       CRE030
+     C                     ELSE                                                               CRE030
+     C           MYKEY0    CHAINREDEFDF              72                                       CRE030
+     C                     ENDIF                                                              CRE030
+     C*                                                                                       CRE030
+     C  N72      MRECI     COMP 'D'                      74                                   CRE030
+     C   72                Z-ADD*ZERO     MTNLU                                               CRE030
+0243 C                     ENDSR
+     C********************************************************************                    CRE030
+     C**                                                                                      CRE030
+     C**   SUBR. - TO CHAIN TO TRAILER RECORD                                                 CRE030
+     C**                                                                                      CRE030
+     C           MASTCT    BEGSR                           *** MASTCT  ***                    CRE030
+     C                     SETOF                     727374                                   CRE030
+     C                     SETOF                     75                                       CRE030
+     C*                                                                                       CRE030
+     C           MYKEY2    KLIST                                                              CRE030
+     C                     KFLD           TACODX 100                                          CRE030
+     C                     KFLD           TRECJX  1                                           CRE030
+     C*                                                                                       CRE030
+     C                     Z-ADD9999999999TACODX                                              CRE030
+     C                     MOVEL'D'       TRECJX                                              CRE030
+     C           MYKEY2    CHAINREDEFZF              72                                       CRE030
+     C*                                                                                       CRE030
+     C  N72      TRECI     COMP 'Z'                      73                                   CRE030
+     C                     ENDSR                                                              CRE030
+0244 C********************************************************************
+0254 C**
+0255 C**   SUBR. - TO PERFORM EXCEPTION OUTPUT
+0256 C**
+0257 C           EXEPT     BEGSR                           ***  EXEPT  ***
+0258 C                     EXCPT
+      *                                                                                       CRE030
+      * If not Insert, Update existing detail record                                          CRE030
+     C           *IN51     IFEQ *ON                                                           CRE030
+     C           *IN72     ANDEQ*OFF                                                          CRE030
+     C                     MOVELNEW1      OLD1                                                CRE030
+     C                     Z-ADDNATN      MTNLU                                               CRE030
+     C                     UPDATREDEFDF                                                       CRE030
+     C                     ENDIF                                                              CRE030
+      *                                                                                       CRE030
+      * Update/Write Trailer record as appropriate                                            CRE030
+      *                                                                                       CRE030
+     C           *IN54     IFEQ *ON                                                           CRE030
+     C                     Z-ADDNATN      TTNLU                                               CRE030
+     C                     MOVEL'Y'       TIRRI                                               CRE030
+      *                                                                                       CRE030
+     C           *IN72     IFEQ *OFF                                                          CRE030
+     C                     UPDATREDEFZF                                                       CRE030
+     C                     ELSE                                                               CRE030
+     C                     Z-ADD9999999999TACOD                                               CRE030
+     C                     MOVEL'Z'       TRECI                                               CRE030
+     C                     MOVEL'D'       TRECJ                                               CRE030
+     C                     WRITEREDEFZF                                                       CRE030
+     C                     ENDIF                                                              CRE030
+     C                     ENDIF                                                              CRE030
+      *                                                                                       CRE030
+     C                     SETOF                     515481
+0262 C                     ENDSR
+0263 C********************************************************************
+0264 C**
+0265 C**   SUBR. - TO PERFORM UPDATING
+0266 C**
+0267 C           UDLOG     BEGSR                           ***  UDLOG  ***
+     C**   RPG ERROR HANDLING
+     C           STATUS    IFEQ 01021
+     C                     Z-ADD0         STATUS  50
+     C                     GOTO INFTAG
+     C                     END
+0268 C*
+     C**  OBTAIN LAST TRANSACTION NUMBER  AND SET UP STANDARD OUTPUT
+     C**  INFORMATION
+     C                     EXSR ZTNLU1
+     C                     MOVE 'RE'      MDID    2
+     C                     MOVEL'RE0269'  PGMN    8
+     C                     MOVE WSID      WSIDX
+     C                     MOVE USRID     USRIDX
+     C                     MOVE SCNID     SCNIDX
+     C                     MOVE SCN256    SCNLOT
+0275 C*
+0276 C                     TIME           MTIME   60
+0277 C*
+0281 C*  UPDATE CHAIN TO THE MASTER FILE DETAIL RECORD
+0282 C                     EXSR MASTCH
+     C/COPY WNCPYSRC,RE0269C001
+0283 C*
+0284 C*  CHECK IF STATUS CHANGED
+0285 C           MTNLU     COMP LTNLU                6464
+     C           INFTAG    TAG
+0286 C*
+0287 C*  OUTPUT INITIAL SCREEN WITH MSG IF STATUS CHANGED
+0288 C  N64                GOTO UDLOG1
+0289 C                     EXSR SUBSF
+0290 C                     SETOF                     88
+0291 C           S         ADD  1         S
+0293 C                     MOVE ERCM,1    ERMSG
+0294 C                     EXSR EXEPT
+0295 C                     GOTO UDEND
+0296 C*
+     C/COPY WNCPYSRC,RE0269C004
+0297 C           UDLOG1    TAG                             ** UDLOG1 TAG
+     C/COPY WNCPYSRC,RE0269C005
+0298 C*
+0299 C*  MOVE OLD MASTER RECORD INTO OLD200
+0301 C*
+0302 C                     MOVELOLD1      OLD200200
+0303 C*
+0325 C*
+0326 C*  OTHERWISE, OUTPUT NEW INITIAL SCREEN AND CONTINUE PROCESSING
+0327 C                     EXSR SUBSF
+0328 C                     EXSR EXEPT
+0329 C*
+0348 C                     SETON                     51
+0349 C                     EXSR EXEPT
+0350 C*
+0362 C*
+0363 C*  UPDATE CHAIN TO THE MASTER FILE TRAILER
+0364 C********             MOVE TRLRKY    MASTKY                                              CRE030
+0365 C********             EXSR MASTCH                                                        CRE030
+     C                     MOVELTRLRKY    MASTKY    P                                         CRE030
+     C                     EXSR MASTCT                                                        CRE030
+0366 C  N73                SETON                     U7
+0367 C  N73                MOVELWPROG     LFILE
+0368 C  N73                MOVE BLK200    LKEY
+0369 C  N73                MOVELMASTKY    LKEY
+0370 C  N73                MOVE '97'      LDBNO            ** DB ERROR 97
+0371 C  N73                GOTO UDEND
+0372 C*
+0373 C*  MOVE OLD MASTER TRAILER INTO OLD200
+0375 C*
+0376 C                     MOVELOLD3      OLD200
+0377 C*
+0378 C*  IF THERE IS NO HASH TOTAL FIELD ON THE MASTER FILE DETAIL RECORD,
+0379 C*  THEN ZEROISE OLDH/NEWH AND CONTINUE AS IF THERE IS.
+0380 C*
+0381 C                     Z-ADD0         OLDH   130
+0382 C                     Z-ADD0         NEWH   130
+0383 C*
+0384 C*  UPDATE FILE CONTROLS
+0385 C*
+0386 C*  UPDATE NUMBER AND HASH OF RECORDS ON FILE
+0387 C*
+0388 C*  NOT DONE FOR DELETE IF RECI NOT SET TO *
+0389 C*
+0390 C   65N49             GOTO UDLOG2
+0391 C*
+0392 C                     SETOF                     96
+0393 C*
+0394 C*  INSERT
+0395 C   67                Z-ADD1         H          97    *  ADD
+0396 C   67                MOVE NEWH      ZZAMT
+0397 C*  AMEND
+0398 C   66                Z-ADD1         H          97    *  ADD
+0399 C   66      NEWH      SUB  OLDH      WRK15  150
+0400 C   66                MOVE WRK15     ZZAMT
+0401 C*  SUPPRESS UPDATE OF NR,1 FOR AMENDMENT
+0402 C   66                SETON                     96
+0403 C*  DELETE - IF * PUT IN RECORD ID
+0404 C   65                Z-ADD1         H            97  *  SUBTRACT
+0405 C   65                MOVE OLDH      ZZAMT
+0406 C*
+0407 C                     EXSR NPZHSH
+0408 C*
+0409 C           UDLOG2    TAG                             ** UDLOG2 TAG
+0410 C*
+0411 C*  UPDATE NUMBER AND HASH OF RECORDS INSERTED/AMENDED/DELETED TODAY
+0412 C*
+0413 C                     SETOF                     96
+0414 C*
+0415 C*  INSERT
+0416 C   67                Z-ADD3         H          97    *  ADD
+0417 C   67                MOVE NEWH      ZZAMT
+0418 C*  AMEND
+0419 C   66                Z-ADD4         H          97    *  ADD
+0420 C   66      NEWH      SUB  OLDH      WRK15
+0421 C   66                MOVE WRK15     ZZAMT
+0422 C*  DELETE - WHETHER RECORD ID SET TO * OR NOT
+0423 C   65                Z-ADD5         H          97    *  ADD
+0424 C   65                MOVE OLDH      ZZAMT
+0425 C*
+0426 C                     EXSR NPZHSH
+0427 C*
+ 428 C*  UPDATE MASTER FILE TRAILER
+0429 C                     SETON                     54
+0430 C                     EXSR EXEPT
+0431 C*
+0450 C*
+     C**  END COMIT CYCLE
+     C           CMTTXT    COMIT
+     C           UDEND     TAG                             ** UDEND TAG
+0451 C                     ENDSR
+0452 C*
+0453 C********************************************************************
+0454 C**
+0455 C**   SUBR. - SUBROUTINE TO ADD  -97 ON-  OR SUBTRACT  -97 OFF-  1
+0456 C**           TO/FROM NR,H AND TO ADD/SUBTRACT ZZAMT TO/FROM WN/DC,H.
+0457 C**           96 ON SUPPRESSES THE UPDATE OF NR,H - USED FOR AMEND
+0458 C**
+0459 C           NPZHSH    BEGSR                           ***  NPZHSH ***
+0460 C                     Z-ADDH         H       10
+      *                                                                                       CRE030
+     C                     MOVE NRDS      NRDS1                                               CRE030
+     C                     Z-ADDNR1       NR,1                                                CRE030
+     C                     Z-ADDNR2       NR,2                                                CRE030
+     C                     Z-ADDNR3       NR,3                                                CRE030
+     C                     Z-ADDNR4       NR,4                                                CRE030
+     C                     Z-ADDNR5       NR,5                                                CRE030
+      *                                                                                       CRE030
+     C                     MOVE WNDS      WNDS1                                               CRE030
+     C                     Z-ADDWN1       WN,1                                                CRE030
+     C                     Z-ADDWN2       WN,2                                                CRE030
+     C                     Z-ADDWN3       WN,3                                                CRE030
+     C                     Z-ADDWN4       WN,4                                                CRE030
+     C                     Z-ADDWN5       WN,5                                                CRE030
+      *                                                                                       CRE030
+     C                     MOVE DCDS      DCDS1                                               CRE030
+     C                     Z-ADDDC1       DC,1                                                CRE030
+     C                     Z-ADDDC2       DC,2                                                CRE030
+     C                     Z-ADDDC3       DC,3                                                CRE030
+     C                     Z-ADDDC4       DC,4                                                CRE030
+     C                     Z-ADDDC5       DC,5                                                CRE030
+0461 C*
+0462 C   97N96   NR,H      ADD  1         NR,H
+0463 C  N97N96   NR,H      SUB  1         NR,H
+0464 C*
+0465 C                     Z-ADDWN,H      ZZTOTI
+0466 C                     Z-ADDDC,H      ZZTOTD
+0467 C   97                EXSR GLZADD
+0468 C  N97                EXSR GLZSUB
+0469 C                     Z-ADDZZTOTI    WN,H
+0470 C                     Z-ADDZZTOTD    DC,H
+      *                                                                                       CRE030
+     C                     Z-ADDNR,1      NR1                                                 CRE030
+     C                     Z-ADDNR,2      NR2                                                 CRE030
+     C                     Z-ADDNR,3      NR3                                                 CRE030
+     C                     Z-ADDNR,4      NR4                                                 CRE030
+     C                     Z-ADDNR,5      NR5                                                 CRE030
+     C                     MOVE NRDS1     NRDS                                                CRE030
+      *                                                                                       CRE030
+     C                     Z-ADDWN,1      WN1                                                 CRE030
+     C                     Z-ADDWN,2      WN2                                                 CRE030
+     C                     Z-ADDWN,3      WN3                                                 CRE030
+     C                     Z-ADDWN,4      WN4                                                 CRE030
+     C                     Z-ADDWN,5      WN5                                                 CRE030
+     C                     MOVE WNDS1     WNDS                                                CRE030
+      *                                                                                       CRE030
+     C                     Z-ADDDC,1      DC1                                                 CRE030
+     C                     Z-ADDDC,2      DC2                                                 CRE030
+     C                     Z-ADDDC,3      DC3                                                 CRE030
+     C                     Z-ADDDC,4      DC4                                                 CRE030
+     C                     Z-ADDDC,5      DC5                                                 CRE030
+     C                     MOVE DCDS1     DCDS                                                CRE030
+0471 C*
+0472 C                     ENDSR
+0473 C********************************************************************
+0474 C* SUBROUTINE TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL (ZZTOTI,ZZTOTD)
+0475 C*   IND '99' IS SET BY AN OVERFLOW ERROR
+0476 C*
+0477 CSR         GLZADD    BEGSR                           *** GLZADD ****
+0478 C*
+0479 CSR                   Z-ADDZZAMT     ZZAMT  153     91-DEFINE ZZAMT
+0480 CSR 91                GOTO ZZAEND                     AMT = 0.BYPASS
+0481 C*
+0482 C* SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS
+0483 CSR                   Z-ADDZZAMT     ZZAMTI 150       INTEGER FIELD
+0484 CSR                   MOVE ZZAMT     ZZAMTD  30       DECIMAL FIELD
+0485 C* BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW
+0486 C*
+0487 CSR                   EXSR GLZSUM
+0488 CSR         ZZAEND    ENDSR                           ** ZZAEND TAG *
+0489 C*
+0490 C********************************************************************
+0491 C* SUBROUTINE TO SUBTRACT AN AMOUNT (ZZAMT) FROM THE TOTAL
+0492 C*                                                   (ZZTOTI,ZZTOTD)
+0493 C*  IND '99' IS SET BY AN OVERFLOW ERROR
+0494 CSR         GLZSUB    BEGSR                           *** GLZSUB ****
+0495 C* PROCESSING. JUST REVERSE THE 'SIGN' AND ADD
+0496 CSR                   Z-SUBZZAMT     ZZAMT  153       REVERSE 'SIGN'
+0497 CSR                   EXSR GLZADD                       AND 'ADD'
+0498 CSR                   Z-SUBZZAMT     ZZAMT            RESTORE 'SIGN'
+0499 CSR                   ENDSR
+0500 C********************************************************************
+0501 C* SUBROUTINE TO CARRY OUT THE ADDITION FOR SUBROUTINES -
+0502 C*                        GLZADD, GLZSUB, GLZCMP.
+0503 C*          PARAMETERS PASSED -
+0504 C*                     I/P ZZAMTI ZZAMTD
+0505 C*                     O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.
+0506 C*
+0507 CSR         GLZSUM    BEGSR                           *** GLZSUM ****
+0508 C*
+0509 CSR                   Z-ADDZZTOTI    ZZTOTI 150       DEFINE ZZTOTI
+0510 CSR                   Z-ADDZZTOTD    ZZTOTD  30       DEFINE ZZTOTD
+0511 CSR                   SETOF                     919293
+0512 CSR                   SETOF                     949599
+0513 C*
+0514 C*    DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG
+0515 CSR         ZZAMTI    COMP 0                      9293
+0516 CSR 93      ZZAMTD    COMP 0                      9293
+0517 CSR 93                GOTO ZZSEND                     ZERO BYPASS
+0518 C*
+0519 C*    DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.
+0520 CSR         ZZTOTI    COMP 0                      9193
+0521 CSR 93      ZZTOTD    COMP 0                      9193
+0522 C*
+0523 C*    IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.
+0524 CSR 93                Z-ADDZZAMTI    ZZTOTI
+0525 CSR 93                Z-ADDZZAMTD    ZZTOTD
+0526 CSR 93                GOTO ZZSEND                     ZERO BYPASS
+0527 C*    IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.
+0528 CSR 91N92
+0529 CORN91 92             GOTO ZZOFPS
+0530 C*
+0531 CSR         ZZAMTD    ADD  ZZTOTD    ZZWK2   40
+0532 CSR         ZZWK2     COMP 999                  93    '93' = CARRY
+0533 CSRN93      ZZWK2     COMP -999                   93    INTO INTEGER.
+0534 C*
+0535 CSR 93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VE
+0536 CSR    93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VE
+0537 CSR 93      ZZTOTI    ADD  ZZWK3     ZZWK3
+0538 CSRN93      ZZTOTI    ADD  ZZAMTI    ZZWK3
+0539 C*
+0540 C* IF THE MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED
+0541 CSRN92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS.
+0542 CSR 92      ZZWK3     COMP ZZTOTI               99     NEGATIVE
+0543 CSRN99                Z-ADDZZWK2     ZZTOTD
+0544 CSRN99                Z-ADDZZWK3     ZZTOTI
+0545 C*
+0546 C* IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT INTACT.
+0547 CSR 99                Z-ADD0         ZZAMT  153
+0548 CSR                   GOTO ZZSEND
+0549 C*
+0550 C* THE 'SIGNS' ARE DIFFERENT
+0551 CSR         ZZOFPS    TAG                             ** ZZOFPS TAG**
+0552 C* IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT
+0553 C*
+0554 CSR 92                Z-SUBZZAMTI    ZZAMTI 150
+0555 CSR 92                Z-SUBZZAMTD    ZZAMTD  30
+0556 C*
+0557 C* IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.
+0558 C*
+0559 CSR 91                Z-SUBZZTOTI    ZZTOTI
+0560 CSR 91                Z-SUBZZTOTD    ZZTOTD
+0561 C* BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.
+0562 C*
+0563 CSR         ZZTOTI    COMP ZZAMTI               93  95
+0564 CSR 95      ZZTOTD    COMP ZZAMTD               93  95
+0565 C*
+0566 C* IF ZZTOT EQ. ZZAMT RETURN ZERO.
+0567 CSR 95                Z-ADD0         ZZTOTI
+0568 CSR 95                Z-ADD0         ZZTOTD
+0569 CSR 95                GOTO ZZSEND
+0570 C*
+0571 C* IF ZZTOT GT. ZZAMT.
+0572 CSR 93      ZZAMTD    COMP ZZTOTD               94
+0573 CSR 93 94   ZZTOTI    SUB  1         ZZTOTI
+0574 CSR 93 94   ZZTOTD    ADD  1000      ZZWK2
+0575 CSR 93      ZZTOTI    SUB  ZZAMTI    ZZTOTI
+0576 CSR 93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD
+0577 CSR 93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD
+0578 C*
+0579 C*
+0580 C* IF ZZAMT GT. ZZTOT.
+0581 CSRN93      ZZTOTD    COMP ZZAMTD               94
+0582 CSRN93 94   ZZAMTI    SUB  1         ZZWK3  150
+0583 CSRN93 94   ZZAMTD    ADD  1000      ZZWK2
+0584 CSRN93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI
+0585 CSRN93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI
+0586 CSRN93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD
+0587 CSRN93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD
+0588 C*
+0589 C* REVERSE SIGN OF ZZTOT IF LARGER I/P FIELDS WERE NEGATIVE
+0590 CSR                   SETOF                     94
+0591 CSR 93 91
+0592 CORN93 92             SETON                     94
+0593 CSR 94                Z-SUBZZTOTI    ZZTOTI
+0594 CSR 94                Z-SUBZZTOTD    ZZTOTD
+0595 C**
+0596 C**   RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.
+0597 CSR 92                Z-SUBZZAMTI    ZZAMTI
+0598 CSR 92                Z-SUBZZAMTD    ZZAMTD
+0599 CSR         ZZSEND    TAG                             ** ZZSEND TAG *
+0600 C**
+0601 C**   IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.
+0602 CSR                   SETOF                     96
+0603 CSR         ZZTOTD    COMP 0                        91
+0604 CSR 91      ZZTOTI    COMP 0                      96
+0605 CSR 96                MOVE '.000-'   ZZNEGD  5
+0606 CSR                   ENDSR                             ** ENDSR **
+0607 C********************************************************************
+     C*
+     C*   ZTNLU1 SR. - TO LOCK THE TRANSACTION NUMBER DATA AREA AND
+     C*                THEN UPDATE AND RELEASE THE DATA AREA.
+     C*
+     C           ZTNLU1    BEGSR
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     MOVE FNATN     NATN    50
+     C                     MOVE FNATN     ZZWK05  50
+     C                     ADD  1         ZZWK05
+     C                     MOVE ZZWK05    FNATN
+     C                     ENDSR
+ 707 C********************************************************************
+     C**   FILE EXCEPTION/ERROR HANDLING SUBROUTINE
+     C           INFSR     BEGSR
+     C**   CHECK ERROR TYPE
+     C           STATUS    IFEQ 01021
+     C**   CHAIN TO FILE TO GET CURRENT DETAILS
+     C********   MASTKY    CHAINREDEF                72                                       CRE030
+     C           ACODN     IFNE 9999999999                                                    CRE030
+     C           CRE030    IFNE 'Y'                                                           CRE030
+     C           MYKEY0    CHAINREDEFDF              72                                       CRE030
+     C                     ELSE                                                               CRE030
+     C           MYKEY1    CHAINREDEFDF              72                                       CRE030
+     C                     ENDIF                                                              CRE030
+     C                     ELSE                                                               CRE030
+     C           MYKEY2    CHAINREDEFZF              72                                       CRE030
+     C                     ENDIF                                                              CRE030
+     C**
+     C           *IN72     IFEQ '0'
+     C**   ROLLBACK UPDATES ALREADY DONE
+     C                     ROLBK
+     C**   SET ON 'RECORD UPDATED....' INDICATOR
+     C                     SETON                     64
+     C**   RESET OTHER INDICATORS
+     C                     SETOF                     515481
+     C**
+     C                     MOVE '*DETC '  EXTTAG  6
+     C**
+     C                     ELSE
+     C**
+     C                     MOVE '*CANCL'  EXTTAG
+     C                     END
+     C**
+     C                     ELSE
+     C**
+     C                     MOVE '*CANCL'  EXTTAG
+     C                     END
+     C*
+     C                     ENDSREXTTAG
+     C*****************************************************************
+0608 O*  WORKSTATION - INITIAL SCREEN OUTPUT
+0609 O*
+0610 ORE0260FME        81
+0611 O                                   K8 'RE0260F1'
+     O/COPY WNCPYSRC,RE0269O001
+0612 O**********       64      SCN31     31                                                   CGL029
+     O**********       64      SCN31     37                                            CGL029 CRE030
+     O                 64      SCN31     40                                                   CRE030
+     O/COPY WNCPYSRC,RE0269O002
+     O                         SRUNA      7                               E81134
+0613 O                         SID        9
+0614 O                         SPID      15
+0615 O                         MTIME     23 '  .  .  '
+     O                         SWSID     26                               E81134
+0616 O*  ERROR FIELDS
+     O/COPY WNCPYSRC,RE0269O003
+0617 O**********               ERMSG    110                                                   CGL029
+     O**********               ERMSG    116                                            CGL029 CRE030
+     O                         ERMSG    119                                                   CRE030
+     O/COPY WNCPYSRC,RE0269O004
+0619 O*
+0650 O*  MASTER FILE - DETAIL RECORD UPDATE, FOR INSERT
+0651 O*  WHEN NO RECORD ON FILE
+0652 O*
+0653 OREDEFD  E        51 72
+0654 O**********               NEW1     128                                                   CGL029
+     O**********               NEW1     138                                            CGL029 CAP205
+     O                         NEW1     139                                                   CAP205
+0655 O                         NATN      33P
+0656 O**********                                                                              CRE030
+0657 O***MASTER*FILE - DETAIL RECORD UPDATE, FOR INSERT OVER DELETED/                         CRE030
+0658 O***BACKED*OUT RECORD AND AMEND/DELETE                                                   CRE030
+0659 O**********                                                                              CRE030
+0660 O***REDEF** E        51N72                                                               CRE030
+0661 O**********               NEW1     128                                                   CGL029
+     O**********               NEW1     138                                            CGL029 CRE030
+0662 O**********               NATN      33P                                                  CRE030
+0663 O**********                                                                              CRE030
+0681 O**********                                                                              CRE030
+0682 O***MASTER*FILE - TRAILER UPDATE                                                         CRE030
+0683 O**********                                                                              CRE030
+0684 O***REDEF** E        54                                                                  CRE030
+0685 O**********               OLD3     128                                            CGL029 CRE030
+     O**********               OLD3     138                                            CGL029 CRE030
+0686 O**********               NATN      33P                                                  CRE030
+0687 O**********                         34 'Y'                                               CRE030
+0688 O**********               NR        49P                                                  CRE030
+0689 O**********               WN        89P                                                  CRE030
+0690 O**********               DC        99P                                                  CRE030
+ 691 O*
+**   ERROR MESSAGES
+THIS RECORD HAS BEEN UPDATED BY ANOTHER WORKSTATION
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

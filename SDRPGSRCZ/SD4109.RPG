@@ -1,0 +1,738 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD BTS Process TRADSD')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Standing Data module                                 *
+     F*                                                               *
+     F*  SD4109 - BTS Process TRADSR                                  *
+     F*                                                               *
+     F*  Called By: SDC4100 - BTS COB Control Component               *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD004             Date 11Mar99               *
+      *                 S01411             Date 05May93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  CSD004 - Report split by business entity                     *
+     F*  S01411 - New program for Business Transaction Statistics     *
+     F*           Switchable Feature.                                 *
+     F*                                                               *
+     F*****************************************************************
+     F**---------------------------------------------------------------
+     F**  Index of Sub-routines
+     F*----------------------------------------------------------------
+     F*   INIT   -  Initial processing
+     F*   DETAIL -  Reads all records from LF/TRANSR
+     F*   DPRT   -  Chains to Secty and Invtpc to determine Prot
+     F*   INS    -  Counts Number of Live records
+     F*   LIVE   -  Counts Number of Inserted records (to-day)
+     F*   OUTPUT -  Writes a record to PF/SDBTSEPD
+     F*   FINAL  -  Ends program normally
+     F*----------------------------------------------------------------
+     F**  FUNCTION OF INDICATORS
+     F*
+     F***01*******End*of*file*PF/TRADSR****
+     F*  01       End of file PF/TRADSD                                   CSD004
+     F*  02       Record Not Found PF/SECTY or PF/INVTPC
+     F*  U7 & U8  Standard database error indicators
+     F*  LR       Last Record - End of Program
+     F**---------------------------------------------------------------
+      *
+      * Transaction file to be processed
+      *
+     F***********TRADSR  IF  E           K        DISK                    CSD004
+     FTRDBSR  IF  E           K        DISK                               CSD004
+     FSECTY   IF  E           K        DISK
+     FINVTPC  IF  E           K        DISK
+      *
+      * Business Transaction Statistics temporary file
+      * for todays data
+      *
+     FSDBTSEPDO   E                    DISK
+      *
+      /EJECT
+      *
+      ** Array containing Copyright statement
+      *
+     E                    CPY@    1   1 80
+      *
+      /SPACE 3
+      *
+      ** Local data area for database error details
+      *
+     ILDA       E DSLDA                         256
+      *
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     IPSDS       SDS
+      *
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+      *
+      * Define layout of SDBANKPD for AOBANKR0 call return string
+      *
+     ISDBANK    E DSSDBANKPD
+      *                                                                   CSD004
+      * Define Access Object Branch detail                                CSD004
+      *                                                                   CSD004
+     ISDBRCH    E DSSDBRCHPD                                              CSD004
+      *
+      * Define Access Object call output string
+      *
+     I@FMT      E DSDSFDY
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * MAIN   - MAIN   Processing                                    *
+      *                                                               *
+      * Calls    : Init   Processing                                  *
+      *            Detail Processing                                  *
+      *            Output Processing                                  *
+      *            Final  Processing                                  *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Preform Initial Processing
+      *
+     C                     EXSR INIT
+      *
+      ** Process all Records on TRADSD
+      *
+     C                     EXSR DETAIL
+      *
+      ***When*all*records*have*been*processed*-*output*totals*to*******   CSD004
+      ***SDBTSEPD**************************                               CSD004
+      *
+     C*********************EXSR OUTPUT                                    CSD004
+      *
+      ** When all Deal Type records have been written to
+      ** SDBTSEPD - end program normally
+      *
+     C                     EXSR FINAL
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * INIT -  Initiation Processing:                                *
+      *                                                               *
+      * Called by: Main processing                                    *
+      *                                                               *
+      * Calls    : *PSSR error processing                             *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      ** Define LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Set up KLIST for LF/INVTPC
+      *
+     C           KINVT     KLIST
+     C                     KFLD           KITYP   3
+     C                     KFLD           KCCYI   3
+      *
+      ** Obtain rundate from SDBANKPD
+      *
+     C                     MOVEL'*FIRST ' BANKOP  7
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   BANKRC  7        Return code
+     C                     PARM           BANKOP           Option
+     C           SDBANK    PARM SDBANK    @FMT             Format
+      *
+      ** Check for error in SDBANKPD
+      *
+     C           BANKRC    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD001       DBASE
+     C                     MOVEL'SD4109'  DBPGM            **************
+     C                     MOVEL'SDBANKPD'DBFILE           *DB ERROR 001*
+     C                     MOVEL'BANK'    DBKEY            **************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Initialise variable RUNDAT and save to-days's date
+      *
+     C           *LIKE     DEFN BJRDNB    RUNDAT
+     C                     Z-ADDBJRDNB    RUNDAT
+      *
+      ** Initialise variable U0TDSS
+      *
+     C           *LIKE     DEFN TDSS      U0TDSS
+      *
+      ** Initialise the live and inserted record counters
+      *
+     C           *LIKE     DEFN E0TTLV    TTLV1
+     C           *LIKE     DEFN E0TTIN    TTIN1
+     C           *LIKE     DEFN E0TTLV    TTLV2
+     C           *LIKE     DEFN E0TTIN    TTIN2
+     C           *LIKE     DEFN E0TTLV    TTLV3
+     C           *LIKE     DEFN E0TTIN    TTIN3
+     C           *LIKE     DEFN E0TTLV    TTLV4
+     C           *LIKE     DEFN E0TTIN    TTIN4
+     C           *LIKE     DEFN E0TTLV    TTLV5
+     C           *LIKE     DEFN E0TTIN    TTIN5
+     C           *LIKE     DEFN E0TTLV    TTLV6
+     C           *LIKE     DEFN E0TTIN    TTIN6
+     C           *LIKE     DEFN E0TTLV    TTLV7
+     C           *LIKE     DEFN E0TTIN    TTIN7
+     C           *LIKE     DEFN E0TTLV    TTLV8
+     C           *LIKE     DEFN E0TTIN    TTIN8
+     C           *LIKE     DEFN E0TTLV    TTLV9
+     C           *LIKE     DEFN E0TTIN    TTIN9
+     C           *LIKE     DEFN TDBA      UCBRCA                          CSD004
+     C                     MOVEL*HIVAL    UCBRCA                          CSD004
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * DETAIL - Detail Processing                                    *
+      *                                                               *
+      * Called by: Main processing                                    *
+      *                                                               *
+      * Calls    : DPRT - Determine Processing Type                   *
+      *            INS  - count Inserted Records                      *
+      *            LIVE - count Live Records                          *
+      *****************************************************************
+      *
+     C           DETAIL    BEGSR
+      *
+      ** Read Transaction File until EOF
+      ** TRADSD contains live records only
+      *
+     C           *IN01     DOUEQ'1'
+     C***********          READ TRADSR                 0101               CSD004
+     C                     READ TRDBSR                 0101               CSD004
+      *
+     C           *IN01     IFEQ '0'
+      *
+      ** Process if record found and it's status is live
+      ** Reci = 'D' or 'S' or 'L' or 'R' or 'P'
+      *
+     C           RECI      IFEQ 'D'
+     C           RECI      OREQ 'S'
+     C           RECI      OREQ 'L'
+     C           RECI      OREQ 'R'
+     C           RECI      OREQ 'P'
+      *
+      ** First time                                                       CSD004
+      *                                                                   CSD004
+     C           UCBRCA    IFEQ *HIVAL                                    CSD004
+     C                     MOVELTDBA      UCBRCA                          CSD004
+     C                     ENDIF                                          CSD004
+      *                                                                   CSD004
+      ** On each break down on branch - output totals to                  CSD004
+      ** SDBTSEPD                                                         CSD004
+     C           TDBA      IFNE UCBRCA                                    CSD004
+     C                     MOVE UCBRCA    @DSNB                           CSD004
+     C                     EXSR RVBRCA                                    CSD004
+     C                     EXSR OUTPUT                                    CSD004
+     C                     MOVELTDBA      UCBRCA                          CSD004
+     C                     ENDIF                                          CSD004
+      *                                                                   CSD004
+      **  If the Original Entry date is equal to the Run date
+      **  Count as an Inserted record
+      *
+     C           TOED      IFEQ RUNDAT
+      *
+     C           TDSS      IFNE U0TDSS
+     C                     EXSR DPRT
+     C                     END
+      *
+     C                     EXSR INS
+      *
+      **  If the Value date is less than the Run date
+      **  Count as a live record
+      *
+     C           TDVD      IFLT RUNDAT
+     C                     EXSR LIVE
+     C                     END
+      *
+     C                     END
+      *
+      **  If the Value date is greater than or equal to the run date
+      **  Count as a live record
+      *
+     C           TDVD      IFGE RUNDAT
+      *
+     C           TDSS      IFNE U0TDSS
+     C                     EXSR DPRT
+     C                     END
+      *
+     C                     EXSR LIVE
+     C                     END
+      *
+     C                     END
+      *                                                                   CSD004
+     C                     ELSE                                           CSD004
+      *                                                                   CSD004
+      ** End of the file / TRANSDM                                        CSD004
+      ** At least one record found                                        CSD004
+     C           UCBRCA    IFNE *HIVAL                                    CSD004
+     C                     MOVE TDBA      @DSNB                           CSD004
+     C                     EXSR RVBRCA                                    CSD004
+     C                     ENDIF                                          CSD004
+      *
+     C                     END
+     C                     END
+      *                                                                   CSD004
+     C           UCBRCA    IFNE *HIVAL                                    CSD004
+     C                     EXSR OUTPUT                                    CSD004
+     C                     ENDIF                                          CSD004
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * DPRT  - Chains to records to find Processing Types           *
+      *                                                               *
+      * Called by: Detail Processing                                  *
+      *                                                               *
+      * Calls    : *PSSR error processing                             *
+      *****************************************************************
+      *
+     C           DPRT      BEGSR
+      *
+      ** Move Nominal Currency from TRADSD to KFLD/KCCYI - KLIST/KINVT
+      *
+     C                     MOVE TNMC      KCCYI
+      *
+      ** Move Security shortname to U0TDSS for later comparison
+      *
+     C                     MOVE TDSS      U0TDSS
+      *
+      ** Obtain the Security Investment Type. Use Security Shortname
+      ** TDSS/TRADSD to chain SECTY. Chain operation reads the matching
+      ** record.
+      *
+     C           TDSS      CHAINSECTY                02    02=NOT FOUND
+      *
+     C           *IN02     IFEQ '1'
+     C           RECI      OREQ '*'
+      *
+     C           *LOCK     IN   LDA
+     C                     Z-ADD002       DBASE
+     C                     MOVEL'SD4109'  DBPGM            **************
+     C                     MOVEL'SECTY   'DBFILE           *DB ERROR 002*
+     C                     MOVEL*BLANKS   DBKEY            **************
+     C                     MOVELTDSS      DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+      *
+     C                     END
+      *
+      ** Move Security Investment Type into KFLD/KITYP - KLIST/KINVT
+      ** if no error on chain.
+      *
+     C                     MOVE SITP      KITYP
+      *
+      ** Obtain the Processing Type. Use Security Investment Type
+      ** SITP/SECTY and Nominal Currency TNMC/TRADSD = KLIST/KINVT
+      ** to chain INVTPC.
+      *
+     C           KINVT     CHAININVTPC               02    02=NOT FOUND
+      *
+     C           *IN02     IFEQ '1'
+     C           RECI      ORNE 'D'
+      *
+     C           *LOCK     IN   LDA
+     C                     Z-ADD003       DBASE
+     C                     MOVEL'SD4109'  DBPGM            **************
+     C                     MOVEL'INVTPC  'DBFILE           *DB ERROR 003*
+     C                     MOVEL*BLANKS   DBKEY            **************
+     C                     MOVELSITP      DBKEY
+     C                     MOVE TNMC      DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * INS    - Counts Inserted records (to-day)                     *
+      *                                                               *
+      * Called by: Detail Processing                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INS       BEGSR
+      *
+      ** Determine Processing Types
+      *
+      ** Processing type '1' - Fixed Bonds
+      *
+     C           PROT      IFEQ '1'
+     C                     ADD  1         TTIN1
+     C                     END
+      *
+      ** Processing type '2' - Commodities
+      *
+     C           PROT      IFEQ '2'
+     C                     ADD  1         TTIN2
+     C                     END
+      *
+      ** Processing type '3' - Floating Rate Notes
+      *
+     C           PROT      IFEQ '3'
+     C                     ADD  1         TTIN3
+     C                     END
+      *
+      ** Processing type '4' - Shares
+      *
+     C           PROT      IFEQ '4'
+     C                     ADD  1         TTIN4
+     C                     END
+      *
+      ** Processing type'5' - Yen Bonds
+      *
+     C           PROT      IFEQ '5'
+     C                     ADD  1         TTIN5
+     C                     END
+      *
+      ** Processing type '6' - Schuldschein
+      *
+     C           PROT      IFEQ '6'
+     C                     ADD  1         TTIN6
+     C                     END
+      *
+      ** Processing type '7' - Unit Trusts/Mutual Funds
+      *
+     C           PROT      IFEQ '7'
+     C                     ADD  1         TTIN7
+     C                     END
+      *
+      ** Processing type '8' - Mortgage Backed Securities
+      *
+     C           PROT      IFEQ '8'
+     C                     ADD  1         TTIN8
+     C                     END
+      *
+      ** Processing type '9' - Commercial Paper
+      *
+     C           PROT      IFEQ '9'
+     C                     ADD  1         TTIN9
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * LIVE  - Counts Live records                                  *
+      *                                                               *
+      * Called by: Main processing                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           LIVE      BEGSR
+      *
+      ** Determine Processing Types
+      *
+      ** Processing type '1' - Fixed Bonds
+      *
+     C           PROT      IFEQ '1'
+     C                     ADD  1         TTLV1
+     C                     END
+      *
+      ** Processing type '2' - Commodities
+      *
+     C           PROT      IFEQ '2'
+     C                     ADD  1         TTLV2
+     C                     END
+      *
+      ** Processing type '3' - Floating Rate Notes
+      *
+     C           PROT      IFEQ '3'
+     C                     ADD  1         TTLV3
+     C                     END
+      *
+      ** Processing type '4' - Shares
+      *
+     C           PROT      IFEQ '4'
+     C                     ADD  1         TTLV4
+     C                     END
+      *
+      ** Processing type'5' - Yen Bonds
+      *
+     C           PROT      IFEQ '5'
+     C                     ADD  1         TTLV5
+     C                     END
+      *
+      ** Processing type '6' - Schuldschein
+      *
+     C           PROT      IFEQ '6'
+     C                     ADD  1         TTLV6
+     C                     END
+      *
+      ** Processing type '7' - Unit Trusts/Mutual Funds
+      *
+     C           PROT      IFEQ '7'
+     C                     ADD  1         TTLV7
+     C                     END
+      *
+      ** Processing type '8' - Mortgage Backed Securities
+      *
+     C           PROT      IFEQ '8'
+     C                     ADD  1         TTLV8
+     C                     END
+      *
+      ** Processing type '9' - Commercial Paper
+      *
+     C           PROT      IFEQ '9'
+     C                     ADD  1         TTLV9
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * OUTPUT - Outputs today's totals to SDBTSEPD.                  *
+      *                                                               *
+      * Called by: Main processing                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           OUTPUT    BEGSR
+      *
+      ** Move Transaction File name, Transaction File module
+      ** and Midas run date into SDBTSEPD fields ready for output
+      *
+     C                     MOVEL'TRADSD ' E0FNME
+     C                     MOVEL'SE'      E0MMOD
+     C                     Z-ADDBJRDNB    E0DATE
+      *
+      ** Move branch and company codes                                    CSD004
+      *                                                                   CSD004
+     C                     MOVE A8BRCD    E0BRCA                          CSD004
+     C                     MOVE A8CMCD    E0CMPY                          CSD004
+      *
+      ** Move Processing Type, total inserts today and total
+      ** live records to SDBTSEPD fields for each Processing Type
+      ** and Write a recrod to PF/SDBTSEPD
+      *
+      ** Processing Type '1' - Fixed Bonds
+      *
+     C                     MOVE *BLANKS   E0TNTY
+     C                     MOVE '1'       E0TNTY
+     C                     Z-ADDTTIN1     E0TTIN
+     C                     Z-ADDTTLV1     E0TTLV
+      *
+      ** Write a record to SDBTSEPD
+      *
+     C                     WRITESDBTSMD0
+      *
+      ** Processing Type '2' - Commodities
+      *
+     C                     MOVE *BLANKS   E0TNTY
+     C                     MOVE '2'       E0TNTY
+     C                     Z-ADDTTIN2     E0TTIN
+     C                     Z-ADDTTLV2     E0TTLV
+      *
+      ** Write a record to SDBTSEPD
+      *
+     C                     WRITESDBTSMD0
+      *
+      ** Processing Type '3' - Floating Rate
+      *
+     C                     MOVE *BLANKS   E0TNTY
+     C                     MOVE '3'       E0TNTY
+     C                     Z-ADDTTIN3     E0TTIN
+     C                     Z-ADDTTLV3     E0TTLV
+      *
+      ** Write a record to SDBTSEPD
+      *
+     C                     WRITESDBTSMD0
+      *
+      ** Processing type '4' - Shares
+      *
+     C                     MOVE *BLANKS   E0TNTY
+     C                     MOVE '4'       E0TNTY
+     C                     Z-ADDTTIN4     E0TTIN
+     C                     Z-ADDTTLV4     E0TTLV
+      *
+      ** Write a record to SDBTSEPD
+      *
+     C                     WRITESDBTSMD0
+      *
+      ** Processing type '5' - Yen Bonds
+      *
+     C                     MOVE *BLANKS   E0TNTY
+     C                     MOVE '5'       E0TNTY
+     C                     Z-ADDTTIN5     E0TTIN
+     C                     Z-ADDTTLV5     E0TTLV
+      *
+      ** Write a record to SDBTSEPD
+      *
+     C                     WRITESDBTSMD0
+      *
+      ** Processing type '6' - Schuldschein
+      *
+     C                     MOVE *BLANKS   E0TNTY
+     C                     MOVE '6'       E0TNTY
+     C                     Z-ADDTTIN6     E0TTIN
+     C                     Z-ADDTTLV6     E0TTLV
+      *
+      ** Write a record to SDBTSEPD
+      *
+     C                     WRITESDBTSMD0
+      *
+      ** Processing type '7' - Unit Trusts/Mutual Funds
+      *
+     C                     MOVE *BLANKS   E0TNTY
+     C                     MOVE '7'       E0TNTY
+     C                     Z-ADDTTIN7     E0TTIN
+     C                     Z-ADDTTLV7     E0TTLV
+      *
+      ** Write a record to SDBTSEPD
+      *
+     C                     WRITESDBTSMD0
+      *
+      ** Processing type '8' - Mortgage-Backed Securities
+      *
+     C                     MOVE *BLANKS   E0TNTY
+     C                     MOVE '8'       E0TNTY
+     C                     Z-ADDTTIN8     E0TTIN
+     C                     Z-ADDTTLV8     E0TTLV
+      *
+      ** Write a record to SDBTSEPD
+      *
+     C                     WRITESDBTSMD0
+      *
+      ** Processing type '9' - Commercial Paper
+      *
+     C                     MOVE *BLANKS   E0TNTY
+     C                     MOVE '9'       E0TNTY
+     C                     Z-ADDTTIN9     E0TTIN
+     C                     Z-ADDTTLV9     E0TTLV
+      *
+      ** Write a record to SDBTSEPD
+      *
+     C                     WRITESDBTSMD0
+      *
+      *  Reset the count variables for the branch                         CSD004
+     C                     Z-ADD0         TTLV1                           CSD004
+     C                     Z-ADD0         TTIN1                           CSD004
+     C                     Z-ADD0         TTLV2                           CSD004
+     C                     Z-ADD0         TTIN2                           CSD004
+     C                     Z-ADD0         TTLV3                           CSD004
+     C                     Z-ADD0         TTIN3                           CSD004
+     C                     Z-ADD0         TTLV4                           CSD004
+     C                     Z-ADD0         TTIN4                           CSD004
+     C                     Z-ADD0         TTLV5                           CSD004
+     C                     Z-ADD0         TTIN5                           CSD004
+     C                     Z-ADD0         TTLV6                           CSD004
+     C                     Z-ADD0         TTIN6                           CSD004
+     C                     Z-ADD0         TTLV7                           CSD004
+     C                     Z-ADD0         TTIN7                           CSD004
+     C                     Z-ADD0         TTLV8                           CSD004
+     C                     Z-ADD0         TTIN8                           CSD004
+     C                     Z-ADD0         TTLV9                           CSD004
+     C                     Z-ADD0         TTIN9                           CSD004
+      *                                                                   CSD004
+     C                     ENDSR
+      /EJECT                                                              CSD004
+      *****************************************************************   CSD004
+      *                                                               *   CSD004
+      * RVBRCA - Retrieve Branch Details.                             *   CSD004
+      *                                                               *   CSD004
+      * Called by: Main processing                                    *   CSD004
+      *                                                               *   CSD004
+      *****************************************************************   CSD004
+      *                                                                   CSD004
+     C           RVBRCA    BEGSR                                          CSD004
+     C**********           CALL 'AOBRCHR0'                                             CSD004 CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM           @RTCD   7                       CSD004
+     C                     PARM '*KEY   ' @OPTN   7                       CSD004
+     C                     PARM           @DSNB   3                       CSD004
+     C********** SDBRCH    PARM SDBRCH    @FMT                                         CSD004 CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS                                   CSD004
+     C           *LOCK     IN   LDA                                       CSD004
+     C                     Z-ADD002       DBASE                           CSD004
+     C                     MOVEL'SD4109'  DBPGM            ************** CSD004
+     C                     MOVEL'SDBRCHPD'DBFILE           *DB ERROR 002* CSD004
+     C                     MOVELTDBA      DBKEY            ************** CSD004
+     C                     OUT  LDA                                       CSD004
+     C                     EXSR *PSSR                                     CSD004
+     C                     END                                            CSD004
+     C                     ENDSR                                          CSD004
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * FINAL - Final Processing                                      *
+      *                                                               *
+      * Called by: Main processing                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FINAL     BEGSR
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: INIT Initial Processing                            *
+      *            DPRT Determine Processing type Processing          *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

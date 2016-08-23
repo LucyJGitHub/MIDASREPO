@@ -1,0 +1,1290 @@
+      *****************************************************************
+/*STD *  PRTFBASE                                                     *
+/*EXS *  PR_STD60                                                     *
+/*EXI *  TEXT('Midas FT Outgoing payments dropped records')           *
+     A*****************************************************************
+     A*                                                               *
+     A*  Midas - Funds Transfer Module                            *
+     A*                                                               *
+     A*  PRTF/FT1000P5 - Outgoing Payments Dropped Records            *
+     A*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     A*                                                               *
+      *  Last Amend No. CFT157             Date 29Aug14               *
+      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *                 AR655670           Date 29Nov10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER030             Date 09Jul08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CSW209             Date 01Apr09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CFT032             Date 11Sep06               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CSW203             Date 26May03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+     A*                 CFT009             Date 06Jul00               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CFT014             Date 25May00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01408             Date 25Jul94               *
+      *                 S01499             Date 06Jun94               *
+     A*                 S01494             DATE 25MAY94               *
+     A*                 S01435             DATE 14NOV93               *
+     A*                 S01414             DATE 30MAR93               *
+     A*                 S01117             DATE 27NOV90               *
+     A*                                                               *
+     A*****************************************************************
+      *  CFT157 - Stop FT Transaction after Authorisation.            *
+      *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
+      *  AR655670 - FTC1000 00001 component failed due to printer     *
+      *           overflow. Ensure that no overflow error will be en- *
+      *           countered in FT1000 reports. Applied fix 263244.    *
+      *           (Child: AR655671)                                   *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER030 - Multicash German Feature                            *
+      *  CSW209 - SWIFT 2009 Changes                                  *
+      *  CFT032 - Account Line in Field 50X in MT103                  *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSW203 - SWIFT 2003 Standards Update                         *
+     A*     CFT009 - FT Fees and Charge Development                   *
+      *  CFT014 - Straight-through Processing Phase 2 MT103 Messages  *
+      *           Generation for FT                                   *
+     A*     S01408 - Core Hook FT1000P502 Added                       *
+     A*            - Core Hook FT1000P501 Added                       *
+     A*     S01499 - BLI V.A.T. Processing                            *
+     A*     S01494 - BLI Funds Transfer Enhancements                  *
+     A*     S01435 - Standardisation of Output                        *
+     A*     S01414 - Book Code and Profit Centre Incorporation.       *
+     A*     S01117 - CHANGES FOR MULTIBRANCHING                       *
+     A*****************************************************************
+     A*                                                    /S01117/
+     A                                      REF(MFRFL)
+     A*                                                    /S01117/
+     A          R P5HD
+     A*                                                    /S01117/
+     A                                      TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A*
+     A**********************************3  6'REFERENCE FT1000'
+     A                                  3  6'REFERENCE FT1000P5'
+     A*                                                    /S01117/
+     A            P5TITL        53      3 37
+     A                                  3100'DATE'
+     A            P5DATE         7      3105
+     A                                  3119'PAGE'
+     A            P5PAGE         5  0   3124EDTCDE(4)
+     A*
+     A                                  5 42'OUTGOING PAYMENTS DROPPED'
+     A                                  5 68'BY DAILY REORGANISATION'
+     A*
+     A                                  6 42'~~~~~~~~~~~~~~~~~~~~~~~~~~'
+     A                                  6 68'~~~~~~~~~~~~~~~~~~~~~~~'
+     A*
+     A************
+      * S01435 Remove old layout
+     A************
+     A************                      7  3'PAYMENT'
+     A************                      7 36'-----------'
+     A************                      7 48'SETTLE'
+     A************                      7 55'-----------'
+     A************                      7 90'-----------'
+     A************                      7102'PAY'
+     A************                      7106'-----------'
+     A************
+     A************                      8  3'REFERENCE'
+     A************                      8 18'TYPE'
+     A************                      8 24'SUB-TYPE'
+     A************                      8 45'AMOUNT'
+     A************                      8 53'CCY'
+     A************                      8 59'VALUE'
+     A************                      8 72'RATE'
+     A************                      8 96'AMOUNT'
+     A************                      8104'CCY'
+     A************                      8110'VALUE'
+     A************
+      * S01435 Start of new layout
+     A  30                              8  3'BOOKING BRANCH'
+     A  30        P5BRCA    R           8 23REFFLD(BRCA)
+     A  30        P5BRNM    R           8 28REFFLD(BRNM)
+     A  30 35                           8 76'ORIGINATING BRANCH'
+     A  30 35     P5ORBR    R           8 96REFFLD(BRCA)
+     A  30 35     P5ORNM    R           8101REFFLD(BRNM)
+      *
+     A*********              Start of Change               /S01494/
+     A*********                        11  3'PAYMENT'
+     A*********                        11 34'--------- SETTLEMENT ----------'
+     A*********                        11 87'------------ PAY --------------'
+     A*********              Start of Change               /CFT157/
+     A*********                        10  3'PAYMENT'
+     A*********                        10 34'--------- SETTLEMENT ----------'
+     A*********                        10 87'------------ PAY --------------'
+     A                                  9  3'PAYMENT'
+     A                                  9 34'--------- SETTLEMENT ----------'
+     A                                  9 87'------------ PAY --------------'
+     A*********                End of Change               /CFT157/
+      *
+     A*********                        12  3'REFERENCE'
+     A*********                        12 18'TYPE'
+     A*********                        12 24'SUB-TYPE'
+     A*********                        12 45'AMOUNT'
+     A*********                        12 53'CCY'
+     A*********                        12 59'VALUE'
+     A*********                        12 72'RATE'
+     A*********                        12 83'OVR'
+     A*********                        12 98'AMOUNT'
+     A*********                        12106'CCY'
+     A*********                        12112'VALUE'
+     A*********              Start of Change               /CFT157/
+     A*********                        11  3'REFERENCE'
+     A*********                        11 18'TYPE'
+     A*********                        11 24'SUB-TYPE'
+     A*********                        11 45'AMOUNT'
+     A*********                        11 53'CCY'
+     A*********                        11 59'VALUE'
+     A*********                        11 72'RATE'
+     A*********                        11 83'OVR'
+     A*********                        11 98'AMOUNT'
+     A*********                        11106'CCY'
+     A*********                        11112'VALUE'
+     A                                 10  3'REFERENCE'
+     A                                 10 18'TYPE'
+     A                                 10 24'SUB-TYPE'
+     A                                 10 45'AMOUNT'
+     A                                 10 53'CCY'
+     A                                 10 59'VALUE'
+     A                                 10 72'RATE'
+     A                                 10 83'OVR'
+     A                                 10 98'AMOUNT'
+     A                                 10106'CCY'
+     A                                 10112'VALUE'
+     A*********                End of Change               /CFT157/
+     A*                      End of Change                 /S01494/
+     A************
+      * S01435 End
+      *
+     A*
+      *                                              Begin /CFT014/
+     A**********R P5DETL                    SPACEB(2)
+     A          R P5DETL                    SPACEB(1)
+      *                                              End   /CFT014/
+     A************
+      * S01435 Remove old layout
+     A************P5PREF        15         2
+     A************P5PYTP         2        19
+     A************P5PYST         2        27
+     A************P5SMAM        17        34
+     A************P5SMCY         3        53
+     A************P5SLDT         7        58
+     A************P5RATE        13S 8     68EDTCDE(4)
+     A************P5PYAM        17        85
+     A************P5PCCY         3       104
+     A************P5PYDT         7       109
+     A************                                         /S01117/
+     A**30********                         3'BOOKING BRANCH     -'
+     A**30********                          SPACEB(2)
+     A**30********P5BRCA    R             24REFFLD(BRCA)
+     A**30********P5BRNM    R             30REFFLD(BRNM)
+     A**30*35*****                         3'ORIGINATING BRANCH -'
+     A**30*35*****                          SPACEB(1)
+     A**30*35*****P5ORBR    R             24REFFLD(ORBR)
+     A**30*35*****P5ORNM    R             30REFFLD(BRNM)
+     A************                                         /S01117/
+     *************
+     *************
+     A************                         3'SENDERS  CORRESPONDENT'
+     A************                          SPACEB(2)
+     A************P5SNCO        10        26
+     A************                        61'ORDERING BANK'
+     A************P5ORBK        12        76
+     A************                                         /S01117/
+     A**30********P5ORBB    R             88REFFLD(ORBB)
+     A************                                         /S01117/
+     *************
+     *************
+     A************                         3'RECEIVER''S'
+     A************                          SPACEB(2)
+     A************P5RCO1        35        18
+     A************                        61'INTERMEDIARY'
+     A************P5INB1        35        76
+     *************
+     *************
+     A************                         3'CORRESPONDENT'
+     A************                          SPACEB(1)
+     A************P5RCO2        35        18
+     A************                        61'BANK         '
+     A************P5INB2        35        76
+     *************
+     *************
+     A************P5RCO3        35        18SPACEB(1)
+     A************P5INB3        35        76
+     *************
+     *************
+     A************P5RCO4        35        18SPACEB(1)
+     A************P5INB4        35        76
+     *************
+     *************
+     A************P5RCO5        35        18SPACEB(1)
+     A************P5INB5        35        76
+     *************
+     *************
+     A************                         3'RECEIVING BANK'
+     A************                          SPACEB(2)
+     A************P5DST1        35        18
+     A************                        61'ORDERING'
+     A************P5ORC1        35        76
+     *************
+     *************
+     A************P5DST2        35        18SPACEB(1)
+     A************                        61'CUSTOMER'
+     A************P5ORC2        35        76
+     *************
+     *************
+     A************P5DST3        35        18SPACEB(1)
+     A************P5ORC3        35        76
+     *************
+     *************
+     A************P5DST4        35        18SPACEB(1)
+     A************P5ORC4        35        76
+     *************
+     *************
+     A************P5DST5        35        18SPACEB(1)
+     A************P5ORC5        35        76
+     *************
+     *************
+     A************                         3'ACCOUNT WITH'
+     A************                          SPACEB(2)
+     A************P5ACB1        35        18
+     A************                        61'BANK TO BANK'
+     A************P5BBI1        35        76
+     *************
+     *************
+     A************                         3'BANK'
+     A************                          SPACEB(1)
+     A************P5ACB2        35        18
+     A************                        61'INFORMATION'
+     A************P5BBI2        35        76
+     *************
+     *************
+     A************P5ACB3        35        18SPACEB(1)
+     A************P5BBI3        35        76
+     *************
+     *************
+     A************P5ACB4        35        18SPACEB(1)
+     A************P5BBI4        35        76
+     *************
+     *************
+     A************P5ACB5        35        18SPACEB(1)
+     A************P5BBI5        35        76
+     *************
+     *************
+     A************P5BBI6        35        76SPACEB(1)
+     A************                         3'BENEFICIARY'
+     A************P5BNC1        35        18
+     *************
+     *************
+     A************                         3'BANK'
+     A************                          SPACEB(1)
+     A************P5BNC2        35        18
+     *************
+     *************
+     A************P5BNC3        35        18
+     A************                          SPACEB(1)
+     A************                        61'DETAILS OF'
+     A************P5DTP1        35        76
+     *************
+     *************
+     A************P5BNC4        35        18SPACEB(1)
+     A************                        61'PAYMENT'
+     A************P5DTP2        35        76
+     *************
+     *************
+     A************P5BNC5        35        18SPACEB(1)
+     A************P5DTP3        35        76
+     *************
+     *************
+     A************P5DTP4        35        76SPACEB(1)
+     *************
+     *************
+     A************                         3'SETTLEMENT TYPE'
+     A************                          SPACEB(2)
+     A************P5STTP         2        20
+     A************                        26'CENTRAL BANK REFERENCE  '
+     A************P5DNBC        11        52
+     A************                        67'SEND MT202 INDICATOR'
+     A************P5SNMT         1        89
+     A************                        96'PAY PLUS CHARGES'
+     A************                       + 1'INDICATOR'
+     A************P5ADDC         1       124
+     A************
+     A**START*S01414
+     A************                         3'BOOK CODE'
+     A************                          SPACEB(1)
+     A************BOKC      R             20
+     A**70********                        26'PROFIT CENTRE'
+     A**70********PRFC      R             50
+     A************
+     A************                         3'REGULAR PAYMENT'
+     A************                          SPACEB(2)
+     A************                         3'REGULAR PAYMENT'
+     A************                          SPACEB(1)
+     A**END***S01414
+     A************P5RPAY         1        20
+     A************                        24'FREQUENCY'
+     A************P5PAYF         1        34
+     A************                        37'DAY IN MONTH'
+     A************P5DYIM         2        51
+     A************                        56'NEXT DATE'
+     A************P5NPDT         7        66
+     A************                        76'FINAL DATE'
+     A************P5FDAT         7        87
+     A************
+     A************                         3'DETAILS OF CHARGES'
+     A************                          SPACEB(2)
+     A************P5DTCH         3        22
+     A************                        30'TRANSFER COMMISSION'
+     A************                       + 1'TARIFF'
+     A************P5TRCT         1        57
+     A************                        61'TRANSFER COMMISSION'
+     A************P5TRCY         3        82
+     A************P5TRCM        15        87
+     A************
+     A************                         3'TELEX CHARGE'
+     A************                          SPACEB(2)
+     A************P5TXCY         3        18
+     A************P5TXCH        15        23
+     A************                        51'SWIFT PRIORITY CODE'
+     A************                                         /S01117/
+     A************P5SWPC*********2********74
+     A************P5SWPC         1        74
+     A************                                         /S01117/
+     A************
+     A************                         3'CHEQUE CHARGE'
+     A************                          SPACEB(1)
+     A************P5CQCY         3        18
+     A************P5CQCH        15        23
+     A************                        51'SWIFT PRIORITY CHARGE'
+     A************P5SPCY         3        74
+     A************P5SPCH        15        79
+     A************
+     A************                         3'COSTS ABROAD'
+     A************                          SPACEB(1)
+     A************P5CSCY         3        18
+     A************P5CSTA        15        23
+     A************                        51'MISCELLANEOUS CHARGE'
+     A************P5MSCY         3        74
+     A************P5MSCH        15        79
+     A************
+     A************                         3'CHARGES TO THE DEBIT'
+     A************                          SPACEB(2)
+     A************                       + 1'OF A/C'
+     A************P5CDRO        12        31
+     A************                                         /S01117/
+     A**30********P5CDBR    R             43REFFLD(CDBRFT)
+     A************                                         /S01117/
+     A************                        51'RELATED REFERENCE NUMBER'
+     A************P5RLPR        16        76
+     A************                        94'CHAPS CODE'
+     A************P5CHAP         6       105
+     A************
+      * S01435 Start of new layout
+      ************
+     A            P5PREF        15         2
+     A            P5PYTP         2        19
+     A            P5PYST         2        27
+     A            P5SMAM        17        34
+     A            P5SMCY         3        53
+     A            P5SLDT         7        58
+     A            P5RATE        13S 8     68EDTCDE(4)
+     A            P5OVRD         3        83
+     A            P5PYAM        17        87
+     A            P5PCCY         3       106
+     A            P5PYDT         7       111
+     A*/COPY WNCPYSRC,FT1000P507
+     **
+      *                                              Begin /CFT014/
+     A                                     3'INSTRUCTED AMT/CCY'
+     A                                      SPACEB(1)
+     A  40        P5PDAM        17        22
+     A  40        P5PDCY         3        40
+     A                                    47'ORIGINAL RATE'
+     A  40        P5OEXR        13S 8     61EDTCDE(4)
+      *                                              End    /CFT014/
+     A                                     3'SENDER''S'
+      *                                              Begin /CFT014/
+     A***********                           SPACEB(2)
+     A                                      SPACEB(1)
+      *                                              End   /CFT014/
+     A            P5SNCO        35        18
+     A                                    61'ORDERING BANK'
+     A            P5ORBK        35        76
+     A*
+     A                                     3'CORRESPONDENT'
+     A                                      SPACEB(1)
+     A            P5SNC1        35        18
+     A                                    61'FURTHER INF.'
+     A            P5ORB1        35        76
+     A            P5SNC2        35        18SPACEB(1)
+     A            P5ORB2        35        76
+     A            P5SNC3        35        18SPACEB(1)
+     A            P5ORB3        35        76
+     A            P5SNC4        35        18SPACEB(1)
+     A            P5ORB4        35        76
+     A            P5SNC5        35        18SPACEB(1)
+     A            P5ORB5        35        76
+     **
+     A                                     3'RECEIVER''S'
+     A                                      SPACEB(1)
+     A            P5RCO1        35        18
+     A                                    61'INTERMEDIARY'
+     A            P5INB1        35        76
+     **
+     A                                     3'CORRESPONDENT'
+     A                                      SPACEB(1)
+     A            P5RCO2        35        18
+     A                                    61'BANK         '
+     A            P5INB2        35        76
+     **
+     **
+     A            P5RCO3        35        18SPACEB(1)
+     A            P5INB3        35        76
+     **
+     **
+     A            P5RCO4        35        18SPACEB(1)
+     A            P5INB4        35        76
+     **
+     **
+     A            P5RCO5        35        18SPACEB(1)
+     A            P5INB5        35        76
+     **
+      *                                              Begin /CFT014/
+     A***********                          3'DESTINATION'
+     A***********                           SPACEB(1)
+     A*********** P5DST1        35        18
+     A***********                         61'CUSTOMER'
+     A*********** P5ORC1        35        76
+     A***********
+     A*********** P5DST2        35        18SPACEB(1)
+     A*********** P5ORC2        35        76
+     A***********
+     A*********** P5DST3        35        18SPACEB(1)
+     A*********** P5ORC3        35        76
+     A***********
+     A*********** P5DST4        35        18SPACEB(1)
+     A*********** P5ORC4        35        76
+     A***********
+     A*********** P5DST5        35        18SPACEB(1)
+     A*********** P5ORC5        35        76
+      *
+      ** Third Reimbursement/Destination/Customer
+      *
+     A                                      SPACEA(1)
+     A  59                                 3'THIRD'
+     A  59        P5TRI1        35        11
+     A                                    48'DEST''N'
+     A            P5DST1        35        55
+     A                                    92'CUST'
+     A            P5ORC1        35        97
+      *
+     A                                      SPACEA(1)
+     A  59                                 3'RMBRSMT'
+     A  59        P5TRI2        35        11
+     A            P5DST2        35        55
+     A            P5ORC2        35        97
+      *
+     A                                      SPACEA(1)
+     A  59        P5TRI3        35        11
+     A            P5DST3        35        55
+     A            P5ORC3        35        97
+      *
+     A                                      SPACEA(1)
+     A  59        P5TRI4        35        11
+     A            P5DST4        35        55
+     A            P5ORC4        35        97
+      *
+     A                                      SPACEA(1)
+     A  59        P5TRI5        35        11
+     A            P5DST5        35        55
+     A            P5ORC5        35        97
+      *                                              End   /CFT014/
+     **
+     A                                     3'ACCOUNT WITH'
+     A                                      SPACEB(1)
+     A            P5ACB1        35        18
+     A                                    61'BANK TO BANK'
+     A            P5BBI1        35        76
+     **
+     **
+     A                                     3'BANK'
+     A                                      SPACEB(1)
+     A            P5ACB2        35        18
+     A                                    61'INFORMATION'
+     A            P5BBI2        35        76
+     **
+     **
+     A            P5ACB3        35        18SPACEB(1)
+     A            P5BBI3        35        76
+     **
+     **
+     A            P5ACB4        35        18SPACEB(1)
+     A            P5BBI4        35        76
+     **
+     **
+     A            P5ACB5        35        18SPACEB(1)
+     A            P5BBI5        35        76
+     **
+     **
+     A            P5BBI6        35        76SPACEB(1)
+     A                                     3'BENEFICIARY'
+     A                                       SPACEB(1)
+     A*
+     A            P5BNC1        35        18
+     A                                    61'DETAILS OF'
+     A*
+     A            P5DTP1        35        76
+     **
+     **
+     A            P5BNC2        35        18
+     A                                       SPACEB(1)
+     **
+     A                                    61'PAYMENT'
+     A            P5DTP2        35        76
+     **
+     A            P5BNC3        35        18
+     A                                      SPACEB(1)
+     A            P5DTP3        35        76
+     **
+     A            P5BNC4        35        18SPACEB(1)
+     A            P5DTP4        35        76
+     A            P5BNC5        35        18SPACEB(1)
+     A*/COPY WNCPYSRC,FT1000P505
+     A                                     3'INPUT OFFICER 1'
+      *                                              Begin /CFT014/
+     A***********                           SPACEB( 2)
+     A                                      SPACEB(1)
+      *                                              End   /CFT014/
+     A*/COPY WNCPYSRC,FT1000P506
+     A            SIUSR1        25        20
+     A                                    61'AUTHORISING OFFICER 1'
+     A            SAUP1         25        83
+     A                                     3'INPUT OFFICER 2'
+     A                                      SPACEB( 1)
+     A            SIUSR2        25        20
+     A                                    61'AUTHORISING OFFICER 2'
+     A            SAUP2         25        83
+     A*/COPY WNCPYSRC,FTH00463
+      *                                              Begin /CFT157/
+     A  56                               109'PAYMENT STOPPED'
+     A  56                                 3'STOP INPUT USER'
+     A  56                                  SPACEB( 1)
+     A  56        SSUSR         25        20
+     A  56                                61'STOP AUTHORISING USER'
+     A  56        SSAUS         25        83
+      *                                              End   /CFT157/
+     **
+     **
+     A                                     3'SETTLEMENT TYPE'
+      *                                              Begin /CFT014/
+     A***********                           SPACEB(2)
+     A                                      SPACEB(1)
+      *                                              End   /CFT014/
+     A            P5STTP         2        20
+     A                                    26'CENTRAL BANK REFERENCE  '
+     A            P5DNBC        11        52
+     A                                    67'SEND MT202 INDICATOR'
+     A            P5SNMT         1        89
+     A                                    96'ADD/DEDUCT CHARGES'
+     A                                   + 1'INDICATOR'
+     A            P5ADDC         1       126
+     A*
+     A                                     3'BOOK CODE'
+     A                                      SPACEB(1)
+     A            BOKC      R             20
+     A  70                                26'PROFIT CENTRE'
+     A  70        PRFC      R             52
+     A                                    67'SWIFT PRIORITY CODE'
+     A            P5SWPC         1        89
+      *                                              Begin /CFT014/
+     A  59                                96'BANK OPERATION CODE'
+     A  59        P5BOCD         4       118
+      *                                              End   /CFT014/
+     A*
+     A                                     3'REGULAR PAYMENT'
+     A                                      SPACEB(1)
+     A*
+     A            P5RPAY         1        20
+     A                                    24'FREQUENCY'
+     A            P5PAYF         1        34
+     A                                    37'DAY IN MONTH'
+     A            P5DYIM         2        51
+     A                                    56'NEXT DATE'
+     A            P5NPDT         7        66
+     A                                    76'FINAL DATE'
+     A            P5FDAT         7        87
+     A*/COPY WNCPYSRC,FTH00436
+      *                                              Begin /CFT014/
+     A N59                                  SPACEA(5)
+     A  59                                96'TRANSACTION TYPE CODE'
+     A  59        P5TTCD         3       118
+      *
+      ** Instruction code/Regulatory reporting, Receiver's corresp./
+      ** Sender's correspondent
+      *
+     A  59                                 3'INSTRUCTION'
+     A  59                                  SPACEB(1)
+     A  59        P5ICD1        35        15
+     A  59                                54'REGULATORY'
+     A  59        P5RRP1        35        65
+     A  59                               104'SENDER''S'
+     A  59        P5SCH1        19       113
+      *
+     A  59                                 3'CODE'
+     A  59                                  SPACEB(1)
+     A  59        P5ICD2        35        15
+     A  59                                54'REPORTING'
+     A  59        P5RRP2        35        65
+     A  59                               104'CHARGES'
+     A  59        P5SCH2        19       113
+      *
+     A  59        P5ICD3        35        15SPACEB(1)
+     A  59        P5RRP3        35        65
+     A  59        P5SCH3        19       113
+      *
+     A  59        P5ICD4        35        15SPACEB(1)
+     A  59        P5SCH4        19       113
+      *
+     A  59        P5ICD5        35        15SPACEB(1)
+     A  59                                54'RECEIVER''S CHARGES'
+     A  59        P5RCRM        19        73
+     A  59        P5SCH5        19       113
+      *                                              End    /CFT014/
+     A*
+     A                                     3'DETAILS OF CHARGES'
+      *                                              Begin /CFT014/
+     A***********                           SPACEB(2)
+     A                                      SPACEB(1)
+      *                                              End   /CFT014/
+     A            P5DTCH         3        22
+      *
+      *****                  Start of Change                 /CFT009/
+      *
+     A***********                         30'TRANSFER COMMISSION'
+     A***********                        + 1'TARIFF'
+     A*********** P5TRCT         1        57
+     A N74                                30'TRANSFER COMMISSION'
+     A N74                               + 1'TARIFF'
+     A N74        P5TRCT         1        57
+     A  74                                59'PAYMENT DATE OFFSET'
+     A  74                               + 1'CODE'
+     A  74        OTPDOF         5        84
+      *
+     A*****                               18'------ENTERED-------'
+     A*****                                 SPACEB(1)
+     A*********              Start of Change               /S01499/
+     A*********                           40'-----CALCULATED-----'
+     A*********                           84'------ENTERED-------'
+     A*********                          107'-----CALCULATED-----'
+     A**29*                               39'VAT?'
+     A*****                               44'-----CALCULATED-----'
+     A*****                               87'------ENTERED-------'
+     A**29*                              108'VAT?'
+     A*****                              113'-----CALCULATED-----'
+     A*****                  End of Change                 /S01499/
+     A*****                                          */Start of hook S01408/*
+     A*/COPY WNCPYSRC,FT1000P501
+     A*****                                          */End of hook S01408/*
+     A*****                                3'TELEX CHARGE'
+     A*****                                          */Start of hook S01408/*
+     A*/COPY WNCPYSRC,FT1000P502
+     A*****                                          */End of hook S01408/*
+     A*****                                 SPACEB(1)
+     A*****       P5TXEC         3        18
+     A*****       P5TXEA        15        23
+     A*********              Start of Change               /S01499/
+     A*********   P5TXCY         3        40
+     A*********   P5TXCH        15        45
+     A*********                           61'TRANSFER COMMISSION'
+     A*********   P5TREC         3        84
+     A*********   P5TREA        15        89
+     A*********   P5TRCY         3       107
+     A*********   P5TRCM        15       112
+     A**29*       P5TXVF         1        40
+     A*****       P5TXCY         3        44
+     A*****       P5TXCH        15        49
+     A*****                               65'TRANSFER COMMISSION'
+     A*****       P5TREC         3        87
+     A*****       P5TREA        15        92
+     A**29*       P5TRVF         1       109
+     A*****       P5TRCY         3       113
+     A*****       P5TRCM        15       118
+     A*****                  End of Change                 /S01499/
+     A*****
+     A*****                                3'CHEQUE CHARGE'
+     A*****                                 SPACEB(1)
+     A*****       P5CQEC         3        18
+     A*****       P5CQEA        15        23
+     A*********              Start of Change               /S01499/
+     A*********   P5CQCY         3        40
+     A*********   P5CQCH        15        45
+     A*********                           61'SWIFT PRIORITY CHARGE'
+     A*********   P5SPEC         3        84
+     A*********   P5SPEA        15        89
+     A*********   P5SPCY         3       107
+     A*********   P5SPCH        15       112
+     A**29*       P5CQVF         1        40
+     A*****       P5CQCY         3        44
+     A*****       P5CQCH        15        49
+     A*****                               65'SWIFT PRIORITY CHARGE'
+     A*****       P5SPEC         3        87
+     A*****       P5SPEA        15        92
+     A**29*       P5SPVF         1       109
+     A*****       P5SPCY         3       113
+     A*****       P5SPCH        15       118
+     A*****                  End of Change                 /S01499/
+     A*****
+     A*****                                3'COSTS ABROAD'
+     A*****                                 SPACEB(1)
+     A*****       P5CSEC         3        18
+     A*****       P5CSEA        15        23
+     A*********              Start of Change               /S01499/
+     A*********   P5CSCY         3        40
+     A*********   P5CSTA        15        45
+     A*********                           61'MISCELLANEOUS CHARGE'
+     A*********   P5MSEC         3        84
+     A*********   P5MSEA        15        89
+     A*********   P5MSCY         3       107
+     A*********   P5MSCH        15       112
+     A**29*       P5CSVF         1        40
+     A*****       P5CSCY         3        44
+     A*****       P5CSTA        15        49
+     A*****                               65'MISCELLANEOUS CHARGE'
+     A*****       P5MSEC         3        87
+     A*****       P5MSEA        15        92
+     A**29*       P5MSVF         1       109
+     A*****       P5MSCY         3       113
+     A*****       P5MSCH        15       118
+     A*****                  End of Change                 /S01499/
+      *****
+     A*********              Start of Change               /S01499/
+     A*****                                 SPACEA(1)
+     A**29*                                3'V.A.T.'
+     A**29*       P5VTEC         3        18
+     A**29*       P5VAEA        15        23
+     A**29*       P5VTCY         3        44
+     A**29*       P5VATT        15        49
+     A*****                  End of Change                 /S01499/
+     A*********              Start of Change               /S01494/
+     A**28*                               65'FX/CHANGE COMMISSION'
+     A**28*       P5CHEC         3        87
+     A**28*       P5CHEA        15        92
+     A*********              Start of Change               /S01499/
+     A**28*29     P5CHVF         1       109
+     A*****                  End of Change                 /S01499/
+     A**28*       P5CHCY         3       113
+     A**28*       P5CHCM        15       118
+     A*****                  End of Change                 /S01494/
+      *
+     A       N74                          18'------ENTERED-------'
+     A       N74                            SPACEB(1)
+     A  29   N74                          39'VAT?'
+     A       N74                          44'-----CALCULATED-----'
+     A       N74                          87'------ENTERED-------'
+     A  29   N74                         108'VAT?'
+     A       N74                         113'-----CALCULATED-----'
+     A       N74                           3'TELEX CHARGE'
+     A       N74                            SPACEB(1)
+     A       N74  P5TXEC         3        18
+     A       N74  P5TXEA        15        23
+     A  29   N74  P5TXVF         1        40
+     A       N74  P5TXCY         3        44
+     A       N74  P5TXCH        15        49
+     A       N74                          65'TRANSFER COMMISSION'
+     A       N74  P5TREC         3        87
+     A       N74  P5TREA        15        92
+     A  29   N74  P5TRVF         1       109
+     A       N74  P5TRCY         3       113
+     A       N74  P5TRCM        15       118
+     A*      N74
+     A       N74                           3'CHEQUE CHARGE'
+     A       N74                            SPACEB(1)
+     A       N74  P5CQEC         3        18
+     A       N74  P5CQEA        15        23
+     A  29   N74  P5CQVF         1        40
+     A       N74  P5CQCY         3        44
+     A       N74  P5CQCH        15        49
+     A       N74                          65'SWIFT PRIORITY CHARGE'
+     A       N74  P5SPEC         3        87
+     A       N74  P5SPEA        15        92
+     A  29   N74  P5SPVF         1       109
+     A       N74  P5SPCY         3       113
+     A       N74  P5SPCH        15       118
+     A*      N74
+     A       N74                           3'COSTS ABROAD'
+     A       N74                            SPACEB(1)
+     A       N74  P5CSEC         3        18
+     A       N74  P5CSEA        15        23
+     A  29   N74  P5CSVF         1        40
+     A       N74  P5CSCY         3        44
+     A       N74  P5CSTA        15        49
+     A       N74                          65'MISCELLANEOUS CHARGE'
+     A       N74  P5MSEC         3        87
+     A       N74  P5MSEA        15        92
+     A  29   N74  P5MSVF         1       109
+     A       N74  P5MSCY         3       113
+     A       N74  P5MSCH        15       118
+     A*      N74
+     A       N74                            SPACEA(1)
+     A  29   N74                           3'V.A.T.'
+     A  29   N74  P5VTEC         3        18
+     A  29   N74  P5VAEA        15        23
+     A  29   N74  P5VTCY         3        44
+     A  29   N74  P5VATT        15        49
+     A  28   N74                          65'FX/CHANGE COMMISSION'
+     A  28   N74  P5CHEC         3        87
+     A  28   N74  P5CHEA        15        92
+     A  28 29N74  P5CHVF         1       109
+     A  28   N74  P5CHCY         3       113
+     A  28   N74  P5CHCM        15       118
+      *
+      **********             End of Change                 /CFT009/
+     A                                     3'CHARGES TO THE DEBIT'
+     A*********              Start of Change               /S01494/
+     A*********                             SPACEB(2)
+     A                                      SPACEB(1)
+     A*                      End of Change                 /S01494/
+     A                                   + 1'OF A/C'
+     A*/COPY WNCPYSRC,FT1000P503
+     A**Start of change CGL029
+     A**********  P5CDRO        12        31                                                  CGL029
+     A            P5CDRO        18        31
+     A**End of change CGL029
+     A*/COPY WNCPYSRC,FT1000P504
+     A  30        P5CDBR    R            + 0REFFLD(CDBRFT)
+      **Start of change CFT120
+     A  58        P5CDRC         3A       53TEXT('Charges to DR of Ccy')
+      **End of change CFT120
+     A**Start of change CGL029
+     A**********                          51'RELATED REFERENCE NUMBER'                        CGL029
+     A**********  P5RLPR        16        76                                                  CGL029
+     A**********                          94'CHAPS CODE'                                      CGL029
+     A**********  P5CHAP         6       105                                                  CGL029
+     A                                    57'RELATED REFERENCE NUMBER'
+     A            P5RLPR        16        82
+     A                                   100'CHAPS CODE'
+     A            P5CHAP         6       111
+     A**End of change CGL029
+      **Start of Change CSW203
+     A**********                           3'MT100 CUSTOMER'                                  CSW203
+     A                                      SPACEA(1)
+     A**Start of change CFT032
+     A*N59N69***                           3'MT100 CUSTOMER'                                  CFT032
+     A N59N69                              3'MT100 ACCOUNT'
+     A**End of change CFT032
+     A  59 69                              3'MT103 CUSTOMER'
+     A  59N69                              3'MT103/MT100 CUSTOMER'
+     A**********                            SPACEB(1)                                         CSW203
+     A**********  P5ODMT         6        20                                                  CSW203
+     A**Start of change CFT032
+     A**********  P5ODMT         6        26                                                  CFT032
+     A            P5ODMT        34        26
+     A**End of change CFT032
+     A**********  P5ODMC        35        30                                                  CSW203
+     A**Start of change CFT032
+     A**********  P5ODMC        35        36                                                  CFT032
+     A            P5ODMC        35        62
+     A**End of change CFT032
+     A**51******                          51'GENERATED FROM INCOMING'                         CSW203
+     A**51******                          75'PAYMENT'                                         CSW203
+     A**51******  OXPREF        15        84                                                  CSW203
+     A**Start of change CFT032
+     A**51******                          75'GENERATED FROM INCOMING'                         CFT032
+     A**51******                          99'PAYMENT'                                         CFT032
+     A**51******  OXPREF        15       109                                                  CFT032
+     A                                      SPACEA(1)
+     A  51                                 3'GENERATED FROM INCOMING'
+     A  51                                27'PAYMENT'
+     A  51        OXPREF        15        36
+     A**End of change CFT032
+      **End of Change CSW203
+      *
+      *******                                        /Begin/CFT009/
+      *
+     A          R P5CHGS                    SKIPB(5)
+      *
+     A                                      TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+      *
+     A                                     6'REFERENCE FT1000P5'
+     A            P5TITL        53        37
+     A                                   100'DATE'
+     A            P5DATE         7       105
+     A                                   119'PAGE'
+     A            P5PAGE         5  0    124EDTCDE(4)
+     A                                      SPACEA(2)
+      *
+     A                                    42'OUTGOING PAYMENTS DROPPED'
+     A                                    68'BY DAILY REORGANISATION'
+     A                                      SPACEA(1)
+      *
+     A                                    42'~~~~~~~~~~~~~~~~~~~~~~~~~~'
+     A                                    68'~~~~~~~~~~~~~~~~~~~~~~~'
+     A                                      SPACEA(2)
+      *
+     A                                     3'FX SPREAD SET CODE'
+     A            P5FXSR         5        24
+     A                                    37'PAYMENT REF'
+     A            P5PREF        15        49
+     A                                      SPACEA(2)
+     A                                     3'CHARGE'
+     A                                    26'CCY'
+     A                                    30'CHARGE'
+     A                                    44'LEVIED'
+     A  75                                58'VAT'
+     A                                    69'CHARGE'
+     A                                    84'ENTERED'
+     A                                      SPACEA(1)
+     A                                    31'CODE'
+     A                                    44'AMOUNT'
+     A                                    70'CCY'
+     A                                    84'AMOUNT'
+     A                                      SPACEA(1)
+     A                                     3'Telex Charge'
+     A            P5TXCY         3        26
+     A            P5TXCD         5        30
+     A            P5TXCH        15        42
+     A  75        P5INV2         1        59
+     A            P5CG01         3        70
+     A            P5TXCG        15        85
+     A                                      SPACEA(1)
+     A                                     3'Cheque Charge'
+     A            P5CQCY         3        26
+     A            P5CQCD         5        30
+     A            P5CQCH        15        42
+     A  75        P5INV3         1        59
+     A            P5CG02         3        70
+     A            P5CQCG        15        85
+     A                                      SPACEA(1)
+     A                                     3'Costs Abroad'
+     A            P5CSCY         3        26
+     A            P5CSCD         5        30
+     A            P5CSTA        15        42
+     A  75        P5INV4         1        59
+     A            P5CG03         3        70
+     A            P5CSCG        15        85
+     A                                      SPACEA(1)
+     A                                     3'Swift Standard Charge'
+     A            P5STCY         3        26
+     A            P5STCD         5        30
+     A            P5STSC        17        40
+     A  75        P5STVI         1        59
+     A            P5CG04         3        70
+     A            P5STCG        18        82
+     A                                      SPACEA(1)
+     A                                     3'Swift Priority Charge'
+     A            P5SWCY         3        26
+     A            P5SWCD         5        30
+     A            P5SWSC        15        42
+     A  75        P5SWVI         1        59
+     A            P5CG05         3        70
+     A            P5SWCG        15        85
+     A                                      SPACEA(1)
+     A                                     3'Miscellaneous Charge'
+     A            P5MSCY         3        26
+     A            P5MSCD         5        30
+     A            P5MSCH        15        42
+     A  75        P5INV6         1        59
+     A            P5CG06         3        70
+     A            P5MSCG        15        85
+     A                                      SPACEA(1)
+     A            P5M1DC        22         3
+     A            P5M1CY         3        26
+     A            P5M1CD         5        30
+     A            P5M1CH        17        40
+     A  75        P5IVM1         1        59
+     A            P5CG07         3        70
+     A            P5M1CG        18        82
+     A                                      SPACEA(1)
+     A            P5M2DC        22         3
+     A            P5M2CY         3        26
+     A            P5M2CD         5        30
+     A            P5M2CH        17        40
+     A  75        P5IVM2         1        59
+     A            P5CG08         3        70
+     A            P5M2CG        18        82
+     A                                      SPACEA(1)
+     A            P5M3DC        22         3
+     A            P5M3CY         3        26
+     A            P5M3CD         5        30
+     A            P5M3CH        17        40
+     A  75        P5IVM3         1        59
+     A            P5CG09         3        70
+     A            P5M3CG        18        82
+     A                                      SPACEA(1)
+     A            P5M4DC        22         3
+     A            P5M4CY         3        26
+     A            P5M4CD         5        30
+     A            P5M4CH        17        40
+     A  75        P5IVM4         1        59
+     A            P5CG10         3        70
+     A            P5M4CG        18        82
+     A                                      SPACEA(1)
+     A            P5M5DC        22         3
+     A            P5M5CY         3        26
+     A            P5M5CD         5        30
+     A            P5M5CH        17        40
+     A  75        P5IVM5         1        59
+     A            P5CG11         3        70
+     A            P5M5CG        18        82
+     A                                      SPACEA(1)
+     A                                     3'Transfer Commission'
+     A            P5TRCY         3        26
+     A            P5TRCD         5        30
+     A            P5TRCH        15        42
+     A  75        P5INV1         1        59
+     A            P5CG12         3        70
+     A            P5TRCG        15        85
+     A                                      SPACEA(1)
+     A                                     3'FX Change Commission'
+     A            P5FXCY         3        26
+     A            P5FXCD         5        30
+     A            P5FXCH        15        42
+     A  75        P5INV7         1        59
+     A            P5CG13         3        70
+     A            P5FXCG        15        85
+     A                                      SPACEA(1)
+     A  75                                 3'V.A.T. total'
+     A  75        P5VTCY         3        26
+     A  75        P5TLVT        18        39
+     A  75        P5CG14         3        70
+     A  75        P5VTCC        15        85
+     A                                      SPACEA(2)
+     A                                    30'TOTALS'
+     A            P5TLAM        18        39
+     A            P5TLCG        19        81
+     A                                      SPACEA(2)
+      **Start of Change CSW209
+      ** Start of change AR655670
+     A**********R P5NTWK                    SPACEA(2)                                       AR655670
+     A          R P5NTWK
+     A N78                                  SKIPB(5)
+     A  78                                  SPACEA(2)
+     A                                      TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+      *
+     A N78                                 6'REFERENCE FT1000P5'
+     A N78        P5TITL        53        37
+     A N78                               100'DATE'
+     A N78        P5DATE         7       105
+     A N78                               119'PAGE'
+     A N78        P5PAGE         5  0    124EDTCDE(4)
+     A N78                                  SPACEA(2)
+      *
+     A N78                                42'OUTGOING PAYMENTS DROPPED'
+     A N78                                68'BY DAILY REORGANISATION'
+     A N78                                  SPACEA(1)
+      *
+     A N78                                42'¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯'
+     A N78                                68'¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯'
+     A N78                                  SPACEA(2)
+      ** End of change AR655670
+     A                                     3'INCOMING NETWORK'
+     A                                    46'OUTGOING VALIDATION FLAG (MAIN)'
+     A            P5NWRK        06        31
+     A            P5OMVF        08        84
+     A                                      SPACEA(1)
+     A                                     3'INCOMING MESSAGE TYPE'
+     A                                    46'OUTGOING VALIDATION FLAG (COVER)'
+     A            P5MTPY        03        31
+     A            P5OCVF        08        84
+     A                                      SPACEA(1)
+     A                                     3'INCOMING VALIDATION FLAG'
+     A            P5VALF        08        31
+     A                                      SPACEA(1)
+     A                                     3'SENDER TO RECEIVER INFO (COVER A)'
+     A                                      SPACEA(1)
+     A            P5OCB1        35         3
+     A                                      SPACEA(1)
+     A            P5OCB2        35         3
+     A                                      SPACEA(1)
+     A            P5OCB3        35         3
+     A                                      SPACEA(1)
+     A            P5OCB4        35         3
+     A                                      SPACEA(1)
+     A            P5OCB5        35         3
+     A                                      SPACEA(1)
+     A            P5OCB6        35         3
+     A                                      SPACEA(2)
+     A          R P5COVM                    SKIPB(5)
+      *
+     A                                      TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+      *
+     A                                     6'REFERENCE FT1000P5'
+     A            P5TITL        53        37
+     A                                   100'DATE'
+     A            P5DATE         7       105
+     A                                   119'PAGE'
+     A            P5PAGE         5  0    124EDTCDE(4)
+     A                                      SPACEA(2)
+      *
+     A                                    42'OUTGOING PAYMENTS DROPPED'
+     A                                    68'BY DAILY REORGANISATION'
+     A                                      SPACEA(1)
+      *
+     A                                    42'~~~~~~~~~~~~~~~~~~~~~~~~~~'
+     A                                    68'~~~~~~~~~~~~~~~~~~~~~~~'
+     A                                      SPACEA(2)
+     A                                     3'PAYMENT REF'
+     A            P5PREF        15        16
+     A                                      SPACEA(3)
+     A                                     3'COVER MESSAGE INFORMATION'
+     A                                      HIGHLIGHT UNDERLINE
+     A                                      SPACEA(2)
+     A                                     3'ORDERING CUSTOMER'
+     A                                    44'ORDERING INSTITUTION'
+     A                                    83'INTERMEDIARY INSTITUTION'
+     A                                      SPACEA(1)
+     A            P5COC1        35         3
+     A            P5COB1        35        44
+     A            P5CIB1        35        83
+     A                                      SPACEA(1)
+     A            P5COC2        35         3
+     A            P5COB2        35        44
+     A            P5CIB2        35        83
+     A                                      SPACEA(1)
+     A            P5COC3        35         3
+     A            P5COB3        35        44
+     A            P5CIB3        35        83
+     A                                      SPACEA(1)
+     A            P5COC4        35         3
+     A            P5COB4        35        44
+     A            P5CIB4        35        83
+     A                                      SPACEA(1)
+     A            P5COC5        35         3
+     A            P5COB5        35        44
+     A            P5CIB5        35        83
+     A                                      SPACEA(3)
+     A                                     3'ACCOUNT WITH INSTITUTION'
+     A                                    44'BENEFICIARY CUSTOMER'
+     A                                      SPACEA(1)
+     A            P5CAB1        35         3
+     A            P5CBC1        35        44
+     A                                      SPACEA(1)
+     A            P5CAB2        35         3
+     A            P5CBC2        35        44
+     A                                      SPACEA(1)
+     A            P5CAB3        35         3
+     A            P5CBC3        35        44
+     A                                      SPACEA(1)
+     A            P5CAB4        35         3
+     A            P5CBC4        35        44
+     A                                      SPACEA(1)
+     A            P5CAB5        35         3
+     A            P5CBC5        35        44
+     A                                      SPACEA(3)
+     A                                     3'REMITTANCE INFORMATION'
+     A                                    44'SENDER TO RECEIVER INFO (COVER B)'
+     A                                      SPACEA(1)
+     A            P5CDP1        35         3
+     A            P5CBB1        35        44
+     A                                      SPACEA(1)
+     A            P5CDP2        35         3
+     A            P5CBB2        35        44
+     A                                      SPACEA(1)
+     A            P5CDP3        35         3
+     A            P5CBB3        35        44
+     A                                      SPACEA(1)
+     A            P5CDP4        35         3
+     A            P5CBB4        35        44
+     A                                      SPACEA(1)
+     A            P5CBB5        35        44
+     A                                      SPACEA(1)
+     A            P5CBB6        35        44
+     A                                      SPACEA(2)
+     A                                     3'INSTRUCTED CURRENCY/AMOUNT'
+     A            P5CICY        03        31
+     A            P5CIAM        15        35
+     A                                      SPACEA(2)
+      ** End of Change CSW209
+      *
+     A*****                                          /End  /CFT009/
+     A*
+      **Start of change CER030
+     A          R P5TRTN                    SPACEB(1)
+     A  17                                  SKIPB(5)
+     A  17                                 6'REFERENCE FT1000P5'
+     A  17        P5TITL        53        37
+     A  17                               100'DATE'
+     A  17        P5DATE         7       105
+     A  17                               119'PAGE'
+     A  17        P5PAGE         5  0    124EDTCDE(4)
+     A  17                                  SPACEA(2)
+      *
+     A  17                                42'OUTGOING PAYMENTS DROPPED'
+     A  17                                68'BY DAILY REORGANISATION'
+     A  17                                  SPACEA(1)
+      *
+     A  17                                42'~~~~~~~~~~~~~~~~~~~~~~~~~~'
+     A  17                                68'~~~~~~~~~~~~~~~~~~~~~~~'
+     A  17                                  SPACEA(2)
+     A  17                                 3'PAYMENT REF'
+     A  17        P5PREF        15        15
+     A  17                                  SPACEA(2)
+     A  33                                 3'TRANSACTION TYPE'
+     A  33        P5RTTY         5        20
+      *
+     A          R P5EXND
+     A                                     3'EXTENDED NARRATIVE +
+     A                                       (DEBIT)'
+     A                                      SPACEB(1)
+     A  34        P5EXN1        65        18
+     A                                      SPACEB(1)
+     A  34        P5EXN2        65        18
+     A                                      SPACEB(1)
+     A  34        P5EXN3        65        18
+     A                                      SPACEB(1)
+     A  34        P5EXN4        65        18
+     A                                      SPACEB(1)
+     A  34        P5EXN5        65        18
+     A                                      SPACEB(1)
+     A  34        P5EXN6        65        18
+     A                                      SPACEB(1)
+     A          R P5EXNC
+     A                                     3'EXTENDED NARRATIVE +
+     A                                       (CREDIT)'
+     A                                      SPACEB(1)
+     A  35        P5EXC1        65        18
+     A                                      SPACEB(1)
+     A  35        P5EXC2        65        18
+     A                                      SPACEB(1)
+     A  35        P5EXC3        65        18
+     A                                      SPACEB(1)
+     A  35        P5EXC4        65        18
+     A                                      SPACEB(1)
+     A  35        P5EXC5        65        18
+     A                                      SPACEB(1)
+     A  35        P5EXC6        65        18
+     A                                      SPACEB(1)
+      **End of change CER030
+     A*********              Start of Change               /S01494/
+     A********* R P5EOR                     SPACEB(4)
+     A          R P5EOR
+     A*                      End of Change                 /S01494/
+     A N85                                54'*** NO RECORDS DROPPED ***'
+     A*********              Start of Change               /S01494/
+     A N85                                  SPACEB(4)
+     A*                      End of Change                 /S01494/
+     A*
+     A                                    56'*** END OF REPORT ***'
+     A*********              Start of Change               /S01494/
+     A*N85*****                             SPACEB(6)
+     A                                      SPACEB(2)
+     A*                      End of Change                 /S01494/
+     A*

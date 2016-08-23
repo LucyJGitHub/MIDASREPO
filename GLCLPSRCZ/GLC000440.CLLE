@@ -1,0 +1,172 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas GL Account & Projected movements enquiry pgm')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - General Ledger Module                            */
+/*                                                                   */
+/*       GLC000440 - Account Movements Enquiry                       */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2006           */
+/*                                                                   */
+/*       Last Amend No. 243661             Date 13Mar15              */
+/*       Prev Amend No. MD023397A          Date 06Feb14              */
+/*                      MD023397           Date 01Oct13              */
+/*                      CGL145B            Date 01Oct13              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      CPK027             Date 17Jan08              */
+/*                      247110             Date 23Apr07              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/*                      243584             Date 07Nov06              */
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      242693             Date 10Oct06              */
+/*                      239964             Date 31May06              */
+/*                      239966             Date 05Jun06              */
+/*                      240079  *CREATE    Date 02Jun06              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       243661 - GL4441 dumps                                       */
+/*       MD023397A - Proj Acct Movements and Acct Movement Enq screen*/
+/*                   not displayed (Recompile)                       */
+/*       MD023397 - Proj Acct Movements and Acct Movement Enq screen */
+/*                  not displayed (Recompile)                        */
+/*       CGL145B - Subsidiaries Daily Sweeping Forcast               */
+/*                 Added hooks: CGL145_006, CGL145_007, CGL145_008   */
+/*       CPK027 - Conflict with MP1.2 SP12 and MP1.4 SP02            */
+/*                Rename CL/PGM from GLC000446 to GLC0000447         */
+/*       247110 - Projected Account Movements for Non-Retail Accounts*/
+/*       243584 - Reset job switches.                                */
+/*       242693 - Help is not available because of transfer job.     */
+/*       239964 - Applied fix 236093.                                */
+/*       240079 - Applied fix 236093.                                */
+/*       236093 - MidasPlus Webfacing screens hanging since webfacing*/
+/*                doesn't support TFRGRPJOB.  Replaced GLC440 &      */
+/*                GLC440B programs.                                  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PMODE)
+ 
+ 
+             DCL        VAR(&PMODE)   TYPE(*CHAR) LEN(4)
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEM)     TYPE(*CHAR) LEN(50)
+             DCL        VAR(&FUNC)    TYPE(*CHAR) LEN(3)
+             DCL        VAR(&MITEM)   TYPE(*CHAR) LEN(10)
+/*/COPY OFCPYSRCZ,CGL145_006                                         */                  /*CGL145B*/
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2006')
+ 
+/*/COPY OFCPYSRCZ,CGL145_007                                         */                  /*CGL145B*/
+             RTVDTAARA  DTAARA(ZMITEM (1 10)) RTNVAR(&MITEM)
+             CHGDTAARA  DTAARA(*LDA (1 512)) VALUE(' ')
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(00000000)                                                     /*243584*/
+                                                                                          /*243584*/
+ LOOP:
+             CHGJOB     SWS(00000000)                                                     /*243661*/
+ 
+             RTVDTAARA  DTAARA(*LDA (66 3)) RTNVAR(&FUNC)
+ 
+             RTVJOBA    TYPE(&JOBTYPE)
+ 
+ 
+/*  F3 - Exit from the menu */
+ 
+             IF         COND(&FUNC *EQ 'F03') THEN(DO)
+                 GOTO       CMDLBL(END)
+             ENDDO
+ 
+/*  F13 - Account & Statement Details */
+ 
+             IF         COND(&FUNC *EQ 'F13' *OR &PMODE *EQ 'ACNT') +
+                          THEN(DO)
+                CALL       PGM(GLC000441)
+                CHGVAR     VAR(&PMODE) VALUE('    ')
+                GOTO       CMDLBL(LOOP)
+             ENDDO
+ 
+/*  F14 - Ledger Movements to SOB */
+ 
+             IF         COND(&FUNC *EQ 'F14') THEN(DO)
+                CALL       PGM(GLC000442)
+                GOTO       CMDLBL(LOOP)
+             ENDDO
+ 
+/*  F15 - Projected Account Movements */
+ 
+             IF         COND(&FUNC *EQ 'F15' *OR &PMODE *EQ 'PROJ') +
+                          THEN(DO)
+                CALL       PGM(GLC000443)
+                CHGVAR     VAR(&PMODE) VALUE('    ')
+                GOTO       CMDLBL(LOOP)
+             ENDDO
+ 
+/*  F16 - Items in Clearing */
+ 
+             IF         COND(&FUNC *EQ 'F16') THEN(DO)
+                CALL       PGM(GLC000444)
+                GOTO       CMDLBL(LOOP)
+             ENDDO
+                                                                                         /*CGL145B*/
+/*/COPY OFCPYSRCZ,CGL145_008                                       */                    /*CGL145B*/
+                                                                                          /*242693*/
+/*  Non-retail account movements */                                                /*242693 247110*/
+                                                                                          /*242693*/
+             IF         COND(&PMODE *EQ 'PNRT') THEN(DO)                                  /*242693*/
+                CALL       PGM(GLC000445)                                                 /*242693*/
+                GOTO       CMDLBL(LOOP)                                                   /*242693*/
+             ENDDO                                                                        /*242693*/
+ 
+                                                                                          /*247110*/
+/*  Non-retail projected account movements */                                             /*247110*/
+                                                                                          /*247110*/
+             IF         COND(&PMODE *EQ 'NRPM') THEN(DO)                                  /*247110*/
+/*              CALL       PGM(GLC000446)  */                                  /*247110*/ /*CPK027*/
+                CALL       PGM(GLC000447)                                                 /*CPK027*/
+                GOTO       CMDLBL(LOOP)                                                   /*247110*/
+             ENDDO                                                                        /*247110*/
+ 
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(*LDA (134 50)) RTNVAR(&MEM)
+                ROLLBACK
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+             ROLLBACK
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ 
+/* Abnormal termination - interactive job */
+ 
+             IF         COND(&JOBTYPE = '1') THEN(DO)
+ 
+               SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC0000440 ended abnormally - see job +
+                          log') TOPGMQ(*EXT)
+               MONMSG     MSGID(CPF0000 MCH0000)
+             DMPCLPGM
+ 
+             ENDDO
+ 
+END:
+ 
+             ENDPGM

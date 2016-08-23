@@ -1,0 +1,454 @@
+     H        1
+     F*****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE On-line update of LE position files')         *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LE2041 - Computation of loan projected maturity principal    *
+      *           after loan amendment.                               *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *                                                               *
+      *  Last Amend No. AR868380           Date 19Jun13               *
+      *  Prev Amend No. AR830785           Date 07May13               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CLE064             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 221505             Date 30Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 218984             Date 14Oct03               *
+      *                 220754             Date 29Apr02               *
+      *                 CAS006             Date 21Jan03               *
+      *                 CAS005             Date 16Dec02               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 201672  *CREATE    Date 29Apr02               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  AR868380 - APISERVER on LCKW status. Return *RECLCK to       *
+      *             calling program if file locking occurred on       *
+      *             online position files. (Child: AR868381)          *
+      *  AR830785 - Looping on insert of accrued interest adjustment  *
+      *             Extended core fix 263533. (Child: AR830786)       *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus (Recompile)                              *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  221505 - Interest calculations need to take rollovers into   *
+      *           account                                             *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  218984 - Rollovers where there is a repayment or increase    *
+      *           need to be processed. These are identified as       *
+      *           non-multi currency rollovers where a new facilty    *
+      *           exchange rate and a new principal amount have been  *
+      *           defined.                                            *
+      *  220754 - Multi-currency rollovers need to be processed       *
+      *           by the online updates.                              *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  CAS005 - Enahancements to CAS001, CAS002 and CAS004          *
+      *           (Recompile)                                         *
+      *  201672 - Calculate projected interest and principal on       *
+      *           maturity.                                           *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Indicator usage                                              *
+      *  ~~~~~~~~~~~~~~~                                              *
+      *    98           READE to LOAMSOM4                             *
+      *    99           READE to CLOANL4                              *
+      *                                                               *
+      *****************************************************************
+     FCLOANL4 IF  E           K        DISK
+     FLELOANL2IF  E           K        DISK                                                   220754
+     FLOAMSOM4IF  E           K        DISK
+     E/COPY ZSRSRC,ZFREQBZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZHOLE
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     I/COPY ZSRSRC,ZHOLI
+     IZ#BSTS    E DSZ#BST
+     IZ#ASTS    E DSZ#AST
+     IZ#WSTS    E DSZ#WST
+     IDSFDY     E DSDSFDY
+     IKIMI      E DSCLOANL4
+     I              RECI                            OMRECI
+     I              CPAM                            OMPRAM
+      *
+     ISDGELR    E DSSDGELRPD
+      *
+      ** General ledger details
+     IDSSDY     E DSDSSDY
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      **  Parameter list for current program invocation.
+      *
+     C           *ENTRY    PLIST
+     C**********           PARM           ##LNRF  60                                          CLE148
+     C                     PARM           ##LNRF  6                                           CLE148
+     C                     PARM           ##VDAT  50
+     C                     PARM           ##LASN  30
+     C                     PARM           ##PRAM 130
+     C                     PARM           ##AMTP  2
+     C                     PARM           ##ACTN  1
+     C                     PARM           @@RTCD  7                                         AR868380
+      *
+     C                     MOVEL'D'       ##RECI  1
+      *
+     C           OMLNRF    KLIST
+     C                     KFLD           ##RECI
+     C                     KFLD           ##LNRF
+      *
+     C           OMLNRF    SETLLCLOANL4
+     C           OMLNRF    READECLOANL4                  99
+      *
+     C           *IN99     IFEQ '0'
+     C           MDAT      ANDNE0
+     C                     Z-ADDCPAM      OMPRAM
+     C                     Z-ADDNRPD      WNRPD   50
+     C           *LIKE     DEFN VDAT      SVVDAT                                              218984
+     C           *LIKE     DEFN VDAT      SVMDAT                                              218984
+     C           *LIKE     DEFN OMPRAM    RLAMT                                               218984
+     C           *LIKE     DEFN OMPRAM    BRLAMT                                              218984
+     C           *LIKE     DEFN OMPRAM    SVPRAM                                              218984
+     C                     Z-ADDVDAT      SVVDAT                                              218984
+     C                     Z-ADD0         RLAMT                                               218984
+     C                     Z-ADD0         BRLAMT                                              218984
+      *                                                                                       220754
+     C           ##LNRF    SETLLLELOANL2                                                      220754
+     C           ##LNRF    READELELOANL2                 97                                   220754
+      *                                                                                       220754
+     C           NMDT      IFNE 0                                                             220754
+     C                     Z-ADDNMDT      OMMAT   50                                          220754
+     C                     ELSE                                                               220754
+     C                     Z-ADDMDAT      OMMAT                                               220754
+     C                     ENDIF                                                              220754
+     C***********          MOVEL'LOAN'    ##TYPE                                       220754 218984
+     C           ##LNRF    SETLLLOAMSOM4                                                      218984
+      *                                                                                       220754
+     C           RLDT      IFNE 0                                                             220754
+     C           NCCY      ANDNE*BLANKS                                                       220754
+     C           RLDT      ORNE 0                                                             218984
+     C           NCCY      ANDEQ*BLANKS                                                       218984
+     C           NFCE      ANDNE*ZEROS                                                        218984
+     C           NPRAM     ANDNE*ZEROS                                                        218984
+     C                     Z-ADDOMMAT     SVMDAT                                              218984
+     C                     Z-ADDRLDT      OMMAT                                               218984
+     C                     EXSR SRPRIN                                                        218984
+     C                     Z-ADDOMPRAM    RLAMT                                               218984
+     C           NCCY      IFEQ *BLANKS                                                       218984
+     C           RLAMT     SUB  NPRAM     RLAMT                                               218984
+     C                     Z-ADDNPRAM     OMPRAM                                              218984
+     C***********          MOVEL'ROLL'    ##TYPE                                       220754 218984
+     C                     ELSE                                                               218984
+     C                     Z-ADDNCPA      OMPRAM                                              220754
+     C                     ENDIF                                                              218984
+      *                                                                                       220754
+     C***********WNRPD     IFNE 0                                                      220754 218984
+     C***********WNRPD     ANDLERLDT                                                   220754 218984
+     C***********WNRPD     DOWLERLDT                                                   220754 218984
+     C***********RFRQ      IFNE *BLANKS                                                220754 218984
+     C***********          MOVELRFRQ      ZFREQ                                        220754 218984
+     C***********          Z-ADDWNRPD     ZDAYNO                                       220754 218984
+     C***********          MOVELCCY       ZCCY                                         220754 218984
+     C***********          EXSR ZFRQB3                                                 220754 218984
+     C***********          Z-ADDZDAYNO    WNRPD   50                                   220754 218984
+     C***********          ELSE                                                        220754 218984
+     C***********          Z-ADD99999     WNRPD                                        220754 218984
+     C***********          ENDIF                                                       220754 218984
+     C***********          ENDDO                                                       220754 218984
+     C***********          ENDIF                                                       220754 218984
+      *                                                                                       220754
+     C                     EXSR SRROLL                                                        220754
+     C                     Z-ADDSVMDAT    OMMAT                                               218984
+     C                     Z-ADDRLDT      SVVDAT                                              218984
+     C                     ENDIF                                                              220754
+     C                     EXSR SRPRIN                                                        218984
+      ***********                                                                             218984
+      ***Consider*loan*repayment frequency on projection of                                   218984
+      ***maturity*principal.*                                                                 218984
+      ***********                                                                             218984
+     C***********WNRPD     IFNE 0                                                             218984
+      ***********                                                                             218984
+     C***********WNRPD     DOWLEMDAT                                                          220754
+     C***********WNRPD     DOWLEOMMAT                                                  220754 218984
+     C***********OMPRAM    SUB  RAMT      OMPRAM                                              218984
+     C***********RFRQ      IFNE *BLANKS                                                       218984
+     C***********          MOVELRFRQ      ZFREQ                                               218984
+     C***********          Z-ADDWNRPD     ZDAYNO                                              218984
+     C***********          MOVELCCY       ZCCY                                                218984
+     C***********          EXSR ZFRQB3                                                        218984
+     C***********          Z-ADDZDAYNO    WNRPD   50                                          218984
+     C***********          ELSE                                                               218984
+     C***********          Z-ADD99999     WNRPD                                               218984
+     C***********          ENDIF                                                              218984
+     C***********          ENDDO                                                              218984
+      ***********                                                                             218984
+     C***********          ENDIF                                                              218984
+      ***********                                                                             218984
+      ***Calculate*the*original projected maturity principal that will be                     218984
+      ***reversed.*****                                                                       218984
+      ***********                                                                             218984
+     C***********##LNRF    SETLLLOAMSOM4                                                      218984
+     C***********##LNRF    READELOAMSOM4                 98                                   218984
+      ***********                                                                             218984
+     C************IN98     DOWEQ'0'                                                           218984
+     C***********VDAT      IFGT RLDT                                                   220754 218984
+     C***********VDAT      IFGT SVVDAT                                                 220754 218984
+     C***********AMTP      IFNE ##AMTP                                                        218984
+     C***********RECI      ANDNE'R'                                                           218984
+     C***********LASN      ORNE ##LASN                                                        218984
+     C***********RECI      ANDNE'R'                                                           218984
+     C***********VDAT      ORNE ##VDAT                                                        218984
+     C***********RECI      ANDNE'R'                                                           218984
+     C***********AMTP      OREQ ##AMTP                                                        218984
+     C***********LASN      ANDEQ##LASN                                                        218984
+     C***********VDAT      ANDEQ##VDAT                                                        218984
+     C***********RECI      ANDEQ'R'                                                           218984
+      ***********                                                                             218984
+     C***********AMTP      IFEQ 'MR'                                                          218984
+     C***********AMTP      OREQ 'RE'                                                          218984
+     C***********OMPRAM    SUB  PRAM      OMPRAM                                              218984
+     C***********          ENDIF                                                              218984
+      ***********                                                                             218984
+     C***********AMTP      IFEQ 'PI'                                                          218984
+     C***********OMPRAM    ADD  PRAM      OMPRAM                                              218984
+     C***********          ENDIF                                                              218984
+     C***********          ENDIF                                                              218984
+     C***********          ENDIF                                                       220754 218984
+      ***********                                                                             218984
+      ***********                                                                             218984
+     C***********##LNRF    READELOAMSOM4                 98                                   218984
+     C***********          ENDDO                                                              218984
+      *
+     C           OMLNRF    SETLLCLOANL4
+     C           OMLNRF    READECLOANL4                  99
+      *
+     C           RLDT      IFNE 0                                                             220754
+     C           NCCY      ANDNE*BLANKS                                                       220754
+     C           RLDT      ORNE 0                                                             218984
+     C           NCCY      ANDEQ*BLANKS                                                       218984
+     C           NFCE      ANDNE*ZEROS                                                        218984
+     C           NPRAM     ANDNE*ZEROS                                                        218984
+     C                     EXSR SRROLL                                                        220754
+     C                     ENDIF                                                              220754
+     C                     MOVELKIMI      Z#BSTS
+     C                     Z-ADDRLAMT     BRLAMT                                              218984
+      *                                                                                       218984
+      ** Calculate new projected principal at rollover if appropriate.                        218984
+      *                                                                                       218984
+     C           ##VDAT    IFLE RLDT                                                          218984
+     C           RLAMT     ANDNE0                                                             218984
+     C                     Z-ADDOMPRAM    SVPRAM                                              218984
+     C                     Z-ADDRLAMT     OMPRAM                                              218984
+     C                     ENDIF                                                              218984
+      *
+      ** Calculate new projected maturity principal.
+      ** If amendment type is deletion, reverse the amendment.
+      *
+     C           ##AMTP    IFEQ 'MR'
+     C           ##AMTP    OREQ 'RE'
+     C           ##ACTN    IFNE 'R'
+     C           OMPRAM    SUB  ##PRAM    OMPRAM
+     C                     ELSE
+     C           OMPRAM    ADD  ##PRAM    OMPRAM
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           ##AMTP    IFEQ 'PI'
+     C           ##ACTN    IFNE 'R'
+     C           OMPRAM    ADD  ##PRAM    OMPRAM
+     C                     ELSE
+     C           OMPRAM    SUB  ##PRAM    OMPRAM
+     C                     ENDIF
+     C                     ENDIF
+      *                                                                                       218984
+      ** Calculate new projected principal at rollover if appropriate.                        218984
+      *                                                                                       218984
+     C           ##VDAT    IFLE RLDT                                                          218984
+     C           BRLAMT    ANDNE0                                                             218984
+     C                     Z-ADDOMPRAM    RLAMT                                               218984
+     C                     Z-ADDSVPRAM    OMPRAM                                              218984
+     C                     ENDIF                                                              218984
+      *
+     C                     MOVELKIMI      Z#ASTS
+     C                     MOVEL*BLANKS   Z#WSTS
+      *
+     C                     CALL 'AOOMLEU0'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM           Z#BSTS
+     C                     PARM           Z#ASTS
+     C                     PARM           Z#WSTS
+     C                     PARM           ##AMTP
+     C                     PARM           ##VDAT
+     C                     PARM           ##LASN
+     C                     PARM           CPAM
+     C                     PARM           STAL                                                220754
+     C************         PARM           ##TYPE  4                                    220754 218984
+     C                     PARM           BRLAMT                                              218984
+     C                     PARM           RLAMT                                               218984
+     C                     PARM           NCCY                                                218984
+      *                                                                                     AR868380
+     C           ##RTCD    IFEQ '*RECLCK'                                                   AR868380
+     C                     MOVEL##RTCD    @@RTCD                                            AR868380
+     C                     SETON                     LR                                     AR868380
+     C                     RETRN                                                            AR868380
+     C                     ENDIF                                                            AR868380
+      *                                                                                     AR868380
+     C                     ENDIF
+      *
+     C                     RETRN
+      *****************************************************************
+     C/SPACE 5                                                                                218984
+      *****************************************************************                       218984
+      * Subroutine  :  SRPRIN                                         *                       218984
+      * Function    :  Calculate expected principal amount up to      *                       218984
+      *                a particular date                              *                       218984
+      *                                                               *                       218984
+      * Called by   :  Main                                           *                       218984
+      * Calls       :                                                 *                       218984
+      *****************************************************************                       218984
+     C           SRPRIN    BEGSR                                                              218984
+      *                                                                                       218984
+      *                                                                                       218984
+      ** Consider loan repayment frequency on projection of                                   218984
+      ** maturity principal.                                                                  218984
+      *                                                                                       218984
+     C           WNRPD     IFNE 0                                                             218984
+      *                                                                                       218984
+     C           WNRPD     DOWLEOMMAT                                                         218984
+     C           ZDAYNO    ANDGENRPD                                                        AR830785
+     C           OMPRAM    SUB  RAMT      OMPRAM                                              218984
+     C           RFRQ      IFNE *BLANKS                                                       218984
+     C                     MOVELRFRQ      ZFREQ                                               218984
+     C                     Z-ADDWNRPD     ZDAYNO                                              218984
+     C                     MOVELCCY       ZCCY                                                218984
+     C                     EXSR ZFRQB3                                                        218984
+     C                     Z-ADDZDAYNO    WNRPD   50                                          218984
+     C                     ELSE                                                               218984
+     C                     Z-ADD99999     WNRPD                                               218984
+     C                     ENDIF                                                              218984
+     C                     ENDDO                                                              218984
+      *                                                                                       218984
+     C                     ENDIF                                                              218984
+      *                                                                                       218984
+      ** Calculate the original projected maturity principal that will be                     218984
+      ** reversed.                                                                            218984
+      *                                                                                       218984
+     C           ##LNRF    READELOAMSOM4                 98                                   218984
+      *                                                                                       218984
+     C           *IN98     DOWEQ'0'                                                           218984
+     C           VDAT      IFGT SVVDAT                                                        218984
+     C           AMTP      IFNE ##AMTP                                                        218984
+     C           RECI      ANDNE'R'                                                           218984
+     C           LASN      ORNE ##LASN                                                        218984
+     C           RECI      ANDNE'R'                                                           218984
+     C           VDAT      ORNE ##VDAT                                                        218984
+     C           RECI      ANDNE'R'                                                           218984
+     C           AMTP      OREQ ##AMTP                                                        218984
+     C           LASN      ANDEQ##LASN                                                        218984
+     C           VDAT      ANDEQ##VDAT                                                        218984
+     C           RECI      ANDEQ'R'                                                           218984
+      *                                                                                       218984
+     C           AMTP      IFEQ 'MR'                                                          218984
+     C           AMTP      OREQ 'RE'                                                          218984
+     C           OMPRAM    SUB  PRAM      OMPRAM                                              218984
+     C                     ENDIF                                                              218984
+      *                                                                                       218984
+     C           AMTP      IFEQ 'PI'                                                          218984
+     C           OMPRAM    ADD  PRAM      OMPRAM                                              218984
+     C                     ENDIF                                                              218984
+     C                     ENDIF                                                              218984
+     C                     ENDIF                                                              218984
+      *                                                                                       218984
+      *                                                                                       218984
+     C           ##LNRF    READELOAMSOM4                 98                                   218984
+     C                     ENDDO                                                              218984
+     C                     ENDSR                                                              218984
+      *****************************************************************                       218984
+     C/SPACE 5                                                                                220754
+      *****************************************************************                       220754
+      * Subroutine  :  SRROLL                                         *                       220754
+      * Function    :  Rollover processing                            *                       220754
+      *                                                               *                       220754
+      * Called by   :  Main                                           *                       220754
+      * Calls       :                                                 *                       220754
+      *****************************************************************                       220754
+     C           SRROLL    BEGSR                                                              220754
+      *                                                                                       220754
+     C           NCCY      IFEQ *BLANKS                                                       218984
+     C**********           Z-ADDNPRAM     CPAM                                         218984 221505
+     C                     ELSE                                                               218984
+     C**********           Z-ADDNCPA      CPAM                                         220754 221505
+     C                     Z-ADDNLRA      RAMT                                                220754
+     C                     MOVELNCCY      CCY                                                 220754
+     C           PTYP      IFEQ 66                                                            220754
+     C           PTYP      OREQ 67                                                            220754
+     C           PTYP      OREQ 69                                                            220754
+     C           PTYP      OREQ 72                                                            220754
+     C                     MOVELRPSM      MDST                                                220754
+     C                     MOVELRPOS      OMDA                                                220754
+     C                     MOVELRPSB      OMDB                                                220754
+     C                     MOVELRRST      SDST                                                220754
+     C                     MOVELRRON      OSDA                                                220754
+     C                     MOVELRLBR      OSDB                                                220754
+     C                     ELSE                                                               220754
+     C                     MOVELRPSM      SDST                                                220754
+     C                     MOVELRPOS      OSDA                                                220754
+     C                     MOVELRPSB      OSDB                                                220754
+     C                     MOVELRRST      MDST                                                220754
+     C                     MOVELRRON      OMDA                                                220754
+     C                     MOVELRLBR      OMDB                                                220754
+     C                     ENDIF                                                              220754
+     C                     MOVELRRSC      SCCY                                                220754
+     C                     Z-ADDRRSR      REXR                                                220754
+     C                     MOVELRRSI      REXI                                                220754
+     C                     MOVELRPSC      PSCY                                                220754
+     C                     Z-ADDRPSR      PEXR                                                220754
+     C                     MOVELRPSI      PEXI                                                220754
+     C                     MOVELRSTA      STAL                                                220754
+     C           NIDT      IFLE RLDT                                                          220754
+     C                     Z-ADD0         NIDT                                                220754
+     C                     ENDIF                                                              220754
+     C                     ENDIF                                                              218984
+     C                     ENDSR                                                              220754
+      *****************************************************************                       220754
+      /EJECT
+     C/COPY ZSRSRC,ZFRQB3
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+     C/COPY ZSRSRC,ZCHKH
+      /EJECT
+     C/COPY ZSRSRC,ZACCH
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/SPACE 5
+**   ZFMD  -  NUMBER OF DAYS IN THE MONTH
+312831303130313130313031
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2002

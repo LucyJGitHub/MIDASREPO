@@ -1,0 +1,153 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SC Input cycle initiation - J')                 */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC041119 - Input Cycle Initiation                          */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. MD029791           Date 25Aug14              */
+/*       Prev Amend No. CSC056  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD029791 - Remove calling of EMC09 and move it in SCC41119  */
+/*       CSC056 - COB Restructure - SC COB Optimisation Phase 1      */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&RTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&OPN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&SFMT) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&SDMMOD) TYPE(*CHAR) LEN(128)
+             DCL        VAR(&AB8010) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) VALUE('*')
+             DCL        VAR(&EMSTAT) TYPE(*CHAR) LEN(256)                               /*MD029791*/
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2012')
+ 
+/* Global Monitor Message */
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Access PF/SDMMODPD to determine which modules are live */
+ 
+             CALL       PGM(AOMMODR0) PARM(&RTCD '*FIRST' &SDMMOD)
+ 
+/* Database error */
+ 
+             IF         COND(&RTCD *NE '       ') THEN(DO)
+                SNDPGMMSG  MSG('Error on access to +
+                ICD file AOMMODPD')  TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Check for switchable feature CEU009 - EMU Base Currency for   */
+/* Dealing Conversion                                            */
+ 
+             CHGVAR     VAR(&RTN) VALUE('       ')
+             CHGVAR     VAR(&OPN) VALUE('*VERIFY')
+             CHGVAR     VAR(&SARD) VALUE('CEU009')
+             CALL       PGM(AOSARDR0) PARM(&RTN &OPN &SARD &SFMT)
+             IF         COND(&RTN *EQ '       ') THEN(DO)
+ 
+/* Start commitment control in case not already started i.e. if   */
+/* restarting from after recovery point 'R'                       */
+ 
+                STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
+                           CMTSCOPE(*JOB)
+                MONMSG     MSGID(CPF8351)
+ 
+                CALL       PGM(EUC0510)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                           CMDLBL(DBETAG))
+             ENDDO
+ 
+             IF         COND((%SUBSTRING(&SDMMOD 50 1)) = 'Y') THEN(DO)
+                CALL       PGM(DLC6030)
+             ENDDO
+             ELSE       CMD(DO)
+                IF         COND((%SUBSTRING(&SDMMOD 48 1)) = 'Y') +
+                           THEN(CALL PGM(MM0102) PARM(' '))
+ 
+             CHGJOB     SWS(XXXXXX00)
+             CALL       PGM(MMEXDEAMP)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(DBETAG))
+ 
+/* This should only run after MM0102 and not DLC6030, as DLC6030     */
+/* already calls AB8010                                              */
+/* Once MM0102 has finished Successfully (U7 & U8 both off)          */
+/* and if internal contract module is turned on (SDMMODPD pos.49 = Y */
+/* then run the internal contacts deals file update and reorg        */
+/* if an error occurs, End Abnormally                                */
+ 
+                IF         COND((%SUBSTRING(&SDMMOD 49 1)) = 'Y' *AND +
+                           (%SWITCH(XXXXXX00))) THEN(DO)
+                   CALL       PGM(AB8010) PARM(&AB8010)
+                   IF         COND(&AB8010 *EQ 'E') THEN(DO)
+                      GOTO       CMDLBL(ABNOR)
+                   ENDDO
+                ENDDO
+ 
+             ENDDO
+             IF         COND((%SWITCH(XXXXXX1X)) *OR +
+                          (%SWITCH(XXXXXXX1))) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Check for database error */
+ 
+             IF         COND(%SWITCH(XXXXX000) *EQ '0') THEN(GOTO +
+                           CMDLBL(DBETAG))
+ 
+/*  Exposure Management                                              */                 /*MD029791*/
+                                                                                        /*MD029791*/
+             IF         COND(%SST(&SDMMOD 25 1) *EQ 'Y') THEN(DO)                       /*MD029791*/
+             RTVDTAARA  DTAARA(EMSTAT *ALL) RTNVAR(&EMSTAT)                             /*MD029791*/
+             IF         COND(%SST(&EMSTAT 2 1) *EQ 'N') THEN(DO)                        /*MD029791*/
+             CALL       PGM(EMC09)                                                      /*MD029791*/
+             ENDDO                                                                      /*MD029791*/
+                                                                                        /*MD029791*/
+             IF         COND((%SWITCH(XXXXXX1X)) *OR +
+                          (%SWITCH(XXXXXXX1))) THEN(DO)                                 /*MD029791*/
+                GOTO       CMDLBL(ABNOR)                                                /*MD029791*/
+             ENDDO                                                                      /*MD029791*/
+             ENDDO                                                                      /*MD029791*/
+                                                                                        /*MD029791*/
+/* Successful completion */
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/* Database error processing */
+ 
+DBETAG:
+ 
+/* Retrieve database error information from LDA */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                           TOMSGQ(MOPERQ)
+             ENDDO
+ 
+/* Abnormal error processing */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+             SNDPGMMSG  MSG('Program SCC041119 ended abnormally.') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+ENDPGM:
+             ENDPGM

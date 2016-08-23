@@ -1,0 +1,269 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/                /*AR1096969*/
+/********************************************************************/
+/*                                                                  */
+/*        Midas     - Customer Lending Module                   */
+/*                                                                  */
+/*     LEC0608  -  GENERATE ACCOUNTING ENTRIES                      */
+/*                                                                  */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                  */
+/*       Last Amend No. AR1096969*REDUNDANTDate 21Mar13              */
+/*       Prev Amend No. AR824348           Date 02Sep11              */
+/*                      CER049             Date 06Dec10              */
+/*                      CER059             Date 19Jul10              */
+/*                      BUG23276           Date 10Mar09              */
+/*                      CER044             Date 19May08              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.04 ---------------------------------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                    062613             DATE  10JUN96              */
+/*                    S01408             DATE  16OCT95              */
+/*                    S01270             DATE  05JUN92              */
+/*                    LN0465             DATE  03JUL90              */
+/*                    S01194             DATE  08FEB90              */
+/*                    S01179             DATE  14/09/88             */
+/*                    E80624             DATE  28/04/87             */
+/*                    S01094             DATE  03/07/86             *  *S01094*/
+/*                                                                  */
+/*------------------------------------------------------------------*/
+/*                                                                  */
+/*       AR1096969 - CBCFMGR_nn jobs should no longer run in our     */
+/*                   system                                          */
+/*                 - CCB022B - COB Restructure - COB File Manager    */
+/*                   (Missed out for drop2A delivery)                */
+/*       AR824348 - Naming convention errors                        */
+/*       CER049 - Stamp Tax                                         */
+/*       CER059 - German Feature Upgrade to Delhi                   */
+/*       BUG23276 - Items with Customers set up as Banks not shown  */
+/*       CER044 - German Features LF035-00 AWV Reporting            */
+/*    062613 - Do not clear LKEY2* files as LE0660 requires them    */
+/*             during take-on phase - move the clear to SCCLRLE.    */
+/*     S01408  -  Apply Core Hooks LEC0608INT                       */
+/*                Apply Core Hooks LEC0608001                       */
+/*                Apply Core Hooks LEC0608002                       */
+/*     S01270  -  OVERRIDE OF LERKEY (NEW FILE AT R10) TO LEKEY     */
+/*                TO ALLOW OLD PROCESSING TO CONTINUE UNTIL EOM     */
+/*                                                                  */
+/*     LN0465  -  AMENDED TO CALL CB0175 TO SET ON HALT AFTER       */
+/*                COMPONENT FLAG IF APPROPRIATE                     */
+/*                                                                  */
+/*     S01194  -  NEW STANDING DATA                                 *  *E80624*/
+/*                                                                  */
+/*     S01179  -  AS400 INCORPORATION                               *  *E80624*/
+/*                                                                  */
+/*     E80624  -  LEC0608 USES U5 TO INDICATE PRESENCE OF THE       *  *E80624*/
+/*                RETAIL MODULE AND LE0470 (CALLED BY LEC0608)      *  *E80624*/
+/*                USES U2.                                          *  *E80624*/
+/*     S01094  -  LE0470 AMENDED AND NO LONGER USES TABLED -        */
+/*                THEREFORE OVERRIDE REMOVED                        *  *S01094*/
+/*                                                                  */
+/********************************************************************/
+/**/
+/*       C R E A T I O N     P A R A M E T E R S                     */
+/*                                                                   */
+/*********************************************************************/
+/************PGM        PARM(&POST)                                   /*LN0465*/
+             PGM        PARM(&POST &NAM &SEQ)                         /*LN0465*/
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2001')
+             DCL        VAR(&POST) TYPE(*CHAR) LEN(1)
+/*           DCLDTAARA  DTAARA(MMOD)                                *  *S01179*/
+/*           DCLDTAARA  DTAARA(LESTAT)                              *  *S01179*/
+             DCL VAR(&MMOD) TYPE(*CHAR) LEN(256)
+             DCL VAR(&LESTAT) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&NAM) TYPE(*CHAR) LEN(10)                 /*LN0465*/
+             DCL        VAR(&SEQ) TYPE(*DEC) LEN(5 0)                 /*LN0465*/
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) +
+                          VALUE('       ')                                                /*CER044*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7) +
+                          VALUE('*VERIFY')                                                /*CER044*/
+             DCL        VAR(&CER044) TYPE(*CHAR) LEN(1) +
+                          VALUE(' ')                                                      /*CER044*/
+             DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)  +
+                          VALUE('CER044')                                                 /*CER044*/
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                                 /*CER044*/
+/*/COPY WNCPYSRC,LEC0608003                                          */
+ 
+/*/COPY WNCPYSRC,LEC0608INT                                        */ /*S01408*/
+ 
+/**********  CLRPFM     FILE(LE8110PD) */                                        /*CER049 AR824348*/
+             CLRPFM     FILE(LESTGEPD)                                                    /*CER049*/
+             MONMSG     MSGID(CPF3142)                                                    /*CER049*/
+/**/
+/****CLEAR PF/GELExx OR PF/GELE2xx                                  */
+/************IF         COND(&POST *EQ '1') THEN(DO)             */
+/***************CLRPFM     FILE(GELEHH)                          */
+/***************CLRPFM     FILE(GELEPD)                          */
+/***************CLRPFM     FILE(GELEZZ)                          */
+/************ENDDO                                               */
+/**/
+/************IF         COND(&POST *EQ '5') THEN(DO)             */
+/***************CLRPFM     FILE(GELE2HH)                         */
+/***************CLRPFM     FILE(GELE2PD)                         */
+/***************CLRPFM     FILE(GELE2ZZ)                         */
+/************ENDDO                                               */
+/**/
+/**IF*RETAIL*MOD*SWITCH*5*-*GENERATE*ACCOUNTING*ENTRIES*-*CLEAR*GELE*  *E80624*/
+/* IF RETAIL MOD SWITCH 2 - GENERATE ACCOUNTING ENTRIES - CLEAR GELE*  *E80624*/
+             RTVDTAARA  DTAARA(MMOD) RTNVAR(&MMOD)
+/**/
+             IF         COND(%SUBSTRING(&MMOD 3 1) *EQ 'Y') THEN(DO)
+/***************CHGJOB     SWS(XXXX1XXX)*****************************  *E80624*/
+                CHGJOB     SWS(X1XXXXXX)                              /*E80624*/
+             ENDDO
+/**/
+/**/
+/*********** OVRDBF     FILE(TABLE) TOFILE(TABLEEI)                  * *S01194*/
+/*********** OVRDBF     FILE(TABLED) TOFILE(TABLEEI) SHARE(*NO)     *  *S01094*/
+/**/
+             IF         COND(&POST *EQ '5') THEN(DO)
+/**/
+                OVRDBF     FILE(GELEHH) TOFILE(GELE2HH)
+                OVRDBF     FILE(GELEPD) TOFILE(GELE2PD)
+                OVRDBF     FILE(GELEZZ) TOFILE(GELE2ZZ)
+/**/
+             ENDDO
+/**/
+             SNDPGMMSG  MSG('CUSTOMER LENDING GENERATED ACCOUNT +
+                        POSTINGS') TOMSGQ(MRUNQ)
+/**/
+/* TAKE SECURITY COPIES OF THE FILES OUTPUT BY THE FIRST RUN IN */
+/* CASE OF ERROR */
+ 
+             CPYF       FROMFILE(GELEPD) TOFILE(*LIBL/XXGELEPD) +
+                          MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817)
+             CPYF       FROMFILE(GELEZZ) TOFILE(*LIBL/XXGELEZZ) +
+                          MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817)
+             CPYF       FROMFILE(GELE2PD) TOFILE(XGELE2PD) +
+                          MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817)
+             CPYF       FROMFILE(GELE2ZZ) TOFILE(XGELE2ZZ) +
+                          MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817)
+ 
+             OVRDBF     FILE(LERKEY) TOFILE(LEKEY)         /*S01270*/
+ 
+/*/COPY WNCPYSRC,LEC0608001                                        */ /*S01408*/
+ 
+             CHGVAR     VAR(&SAR) VALUE('CER044')                                         /*CER044*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)                      /*CER044*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)                                /*CER044*/
+             CHGVAR     VAR(&CER044) VALUE('Y')                                           /*CER044*/
+             CPYF       FROMFILE(LKEY1DP) TOFILE(QTEMP/XXLKEY1DP) +
+                          MBROPT(*ADD) CRTFILE(*YES)                                      /*CER044*/
+             ENDDO                                                                        /*CER044*/
+/**/
+             CALL       PGM(LE0470)
+/** Clear Extract file   */                                                               /*CER044*/
+             IF         COND(&CER044 *EQ 'Y') THEN(DO)                                    /*CER044*/
+/**********  CLRPFM     FILE(GLAWVLPD)  */                                   /*CER044*/ /*BUG23276*/
+/**********  CLRPFM     FILE(GLAWXLPD)  */                                   /*CER044*/ /*BUG23276*/
+             CALL       PGM(LE000471)                                                     /*CER044*/
+             DLTF       FILE(QTEMP/XXLKEY1DP)                                             /*CER044*/
+             ENDDO                                                                        /*CER044*/
+ 
+/*/COPY WNCPYSRC,LEC0608002                                        */ /*S01408*/
+ 
+             CALL       PGM(LE008110)                                                     /*CER049*/
+             MONMSG     MSGID(CPF0000)                                                    /*CER049*/
+/**/
+             DLTOVR     FILE(LERKEY)                       /*S01270*/
+/**/
+/* IF ERROR HAS OCCURED CLEAR FILES AND END                          */
+             IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
+/*/COPY WNCPYSRC,LEC0608006                                          */
+/**/
+                IF         COND(&POST *EQ '1') THEN(DO)
+/**/
+/******************CLRPFM     FILE(GELEHH)****/
+/******************CLRPFM     FILE(GELEPD)****/
+/******************CLRPFM     FILE(GELEZZ)****/
+             CPYF       FROMFILE(XXGELEPD) TOFILE(GELEPD) +
+                          MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817)
+             CPYF       FROMFILE(XXGELEZZ) TOFILE(GELEZZ) +
+                          MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817)
+/**/
+                ENDDO
+/**/
+                IF         COND(&POST *EQ '5') THEN(DO)
+/**/
+/******************CLRPFM     FILE(GELE2HH)****/
+/******************CLRPFM     FILE(GELE2PD)****/
+/******************CLRPFM     FILE(GELE2ZZ)****/
+             CPYF       FROMFILE(XGELE2PD) TOFILE(GELE2PD) +
+                          MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817)
+             CPYF       FROMFILE(XGELE2ZZ) TOFILE(GELE2ZZ) +
+                          MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817)
+/**/
+                ENDDO
+/**/
+             ENDDO
+             ELSE          CMD(DO)
+/**/
+/* CLEAR THE SECURITY FILES  */
+             CLRPFM   XXGELEPD
+             CLRPFM   XXGELEZZ
+             CLRPFM   XGELE2PD
+             CLRPFM   XGELE2ZZ
+/*/COPY WNCPYSRC,LEC0608007                                          */
+/**/
+/* IF NO A/C KEYS MISSING THEN CLEAR PF/LKEY2xx                      */
+/* PF/LKEY1xx IS USED IN LEC0708 REPORTING                           */
+                IF         COND(%SWITCH(XXX0XXXX)) THEN(DO)
+/**/
+/** DO NOT CLEAR LKEY2* FILES, LE0660 NEEDS THEM                        062613*/
+/******************CLRPFM     FILE(LKEY2HH)                             062613*/
+/******************CLRPFM     FILE(LKEY2DP)                             062613*/
+/******************CLRPFM     FILE(LKEY2ZZ)                             062613*/
+/**/
+                ENDDO
+/* IF A/C KEYS MISSING THEN CHECK D/LESTAT WHETHER TO CONTINUE OR NOT*/
+                ELSE       CMD(DO)
+/**/
+                   RTVDTAARA  DTAARA(LESTAT) RTNVAR(&LESTAT)
+/**/
+                   IF         COND(%SUBSTRING(&LESTAT 8 1) *EQ 'Y') +
+                              THEN(DO)
+/**/
+                              SNDPGMMSG MSG('CUSTOMER LENDING +
+                              A/C KEYS MISSING - PROCESSING +
+                              CONTINUED') TOMSGQ(MRUNQ)
+                   ENDDO
+/**/
+                   ELSE       CMD(DO)
+/**/
+/******SEND*HALT*MESSAGE*TO*MSTATUS*SO*THAT*END*OF*DAY*EXECTION      /*LN0465*/
+/*     CALL CB0175 TO SET HALT AFTER COMPONENT FLAG ON               /*LN0465*/
+/*     WILL HALT AT THE END OF THIS COMPONENT.                       */
+/**/
+                      SNDPGMMSG  MSG('CUSTOMER LENDING A/C KEYS +
+                                 MISSING - PROCESSING HALTED') +
+                                 TOMSGQ(MOPERQ MRUNQ)
+/**********           SNDPGMMSG  MSG('HALT') TOMSGQ(MSTATUS)          /*LN0465*/
+/**/                                                                  /*LN0465*/
+                      CALL       PGM(CB0175) PARM(&NAM &SEQ)          /*LN0465*/
+/**/                                                                  /*LN0465*/
+/**/
+                   ENDDO
+/**/
+                ENDDO
+/*/COPY WNCPYSRC,LEC0608005                                          */
+/**/
+             ENDDO
+/**/
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+/*/COPY WNCPYSRC,LEC0608004                                          */
+             ENDPGM

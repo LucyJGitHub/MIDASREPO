@@ -1,0 +1,1757 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE LUX Security Details 2')
+      *****************************************************************
+      *                                                               *
+      *  MIDAS/ABS  EUROPEAN REPORTING - LUXEMBOURG                   *
+      *                                                               *
+      *  SE0247 - LUX Security Details 2                              *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CER001  *CREATE    Date 25Apr05               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *                                                               *
+      *****************************************************************
+      *  F U N C T I O N    O F    I N D I C A T O R S
+      *
+      *  (Screen field error indicators should start with 20 in
+      *   ascending order)
+      *
+      *  *IN15  -  On=Delete/Enquiry, Protect field.
+      *            Off=Insert/Amend, Underline field.
+      *  *IN29  -  Error on field #0SECT
+      *  *IN30  -  Error on field #0RAOC
+      *  *IN31  -  Error on field #0RACD
+      *  *IN32  -  Error on field #0IM93
+      *  *IN33  -  Error on field #0CLAT
+      *  *IN40  -  Error on field #0QUOT
+      *  *IN60  -  Extension record not found via update index
+      *  *IN61  -  Unable to allocate record via update index
+      *  *IN68  -  Error occured during DBF update
+      *  *IN69  -  SFLEND control
+      *  *IN75  -  General error indicator. Used to condition output
+      *            of error messages and redisplay screen.
+      *  *IN81  -  Call to DBERRCTL ended in error
+      *  *IN82  -  ULX046 is installed
+      *  *IN89  -  Extension record not found via retrieval index
+      *
+      *  *INKJ  -  F10 pressed, enable delete
+      *  *INKL  -  F12 pressed, exit
+      *  *INLR  -  End processing
+      *
+      *  *INU7  -  :    Data-base
+      *  *INU8  -  :  error control
+      *****************************************************************
+      *
+      *  S U B R O U T I N E     I N D E X
+      *
+      *   SRALOC- Routine to access record via update index
+      *   SRAMD - Routine to handle 'AMEND' action
+      *   SRBTOF- Routine to move blanks to file fields
+      *   SRCLAT- Routine to validate VVCLAT
+      *   SRCMSG- Routine to clear program's message queue
+      *   SRCOMP- Routine to compare before/after image of records
+      *   SRDBER- Routine to handle database errors
+      *   SRDEL - Routine to handle 'DELETE' action
+      *   SRDELR- Routine to delete a record
+      *   SREEEM- Routine to validate 'Quoted on a "EEE"
+      *           Regulated Market Centre' Field
+      *   SRENQ - Routine to handle 'ENQUIRY' action
+      *   SRER91- Check if Guar/Coll./Prov. maint. pgm is to call
+      *   SRIM93- Routine to validate VVIM93
+      *   SRINIT- Routine to handle initial processing
+      *   SRINS - Routine to handle 'INSERT' action
+      *   SRINZ - Routine to initialize screen fields with defaults
+      *   SRFTOS- Routine to move file fields to screen fields
+      *   SRLUSU- Routine to validate VVLUSU
+      *   SRQUOT- Routine to validate 'Quoted (Y/N)' Field
+      *   SRREC - Routine to access file via retrieve index
+      *   SRRTRN- Routine to set up return code for calling program
+      *   SRPORE- Routine to validate VXPORE
+      *   SRSAVE- Routine to save before image of record via DS
+      *   SRSCRN- Routine to handle screen and validation
+      *   SRSECD- Routine to validate Security Code And
+      *           Security National Code Fields
+      *   SRSECT- Routine to validate VVSECT
+      *   SRSMSG- Routine to send messages to message subfile
+      *   SRSTOF- Routine to move screen fields to file fields
+      *   SRSUBR- Routine to validate VVSUBR
+      *   SRUPD - Routine to update file
+      *   SRWRT - Routine to write a new record to the file
+      *   SRVAL - Routine to control validation of each field
+      *   SRVOTR- Routine to validate Voting Right
+      *
+      * - Changes to the existing code should be reduced to a minimum,
+      *   using separate subroutines in order to preserve the program
+      *   structure as defined in the skeleton, thus reducing
+      *   maintenance efforts.
+      *
+      * - Moreover, no functionality should be added unless specifically
+      *   required. In this case, it should be very well documented
+      *   in the header box.
+      *
+      * - The data structure used to save the before image of the
+      *   record is called SVRCD.
+      *   Only the length should be changed.
+      *
+      * - The data structure used to access the current record
+      *   via the DS name is called NWRCD.
+      *   Only the file name should be changed.
+      *
+      * - The files must have their record formats renamed to:
+      *      RTVIDX for the retrieve index
+      *      UPDIDX for the update index
+      *      SCREEN for the screen format
+      *   Any file/screen access will be done through the renamed format
+      *   so that these routines remain unchanged.
+      *
+      *-------------------------------------------------------------------------
+      *
+      *   Naming conventions
+      *   ==================
+      *
+      * - Work fields used in the program should start with WW or WU
+      *   i.e. WWPLEX or WUPLEX
+      *
+      * - Screen fields should start with #0 (for 1st screen format),
+      *   i.e. #0PLEX
+      *
+      * - Key fields should start with K ,i.e. KSESN
+      *   (Also for fields used in KLIST's)
+      *
+      * - Subroutines should start with SR, i.e. SRVAL for validation,
+      *   SRINIT for initial routine , etc...
+      *
+      *-------------------------------------------------------------------------
+     FERLUMPL0IF  E           K        DISK
+      *
+     FSESDX3L0IF  E           K        DISK
+     F            SECTYDF6                          KRENAMERTVIDX
+      ** Securities details              Retrieval index            Prefix VE.
+     FSESDX3PDUF  E           K        DISK         KCOMIT       A    UC
+     F            SECTYDF6                          KRENAMEUPDIDX
+      ** Securities details              Update index               Prefix VE.
+     FSE0247DFCF  E                    WORKSTN
+     F            SE0247F                           KRENAMESCREEN
+      *                                Display file               Prefix #0.
+      /EJECT
+     E/COPY ZSRSRC,ZALIGNZ1
+     E                    TAB    11  11  3
+     E                    @F         16  1               ZA0840 ARRAY
+      ** INPUT ARRAY FOR SR/ZA0840
+     E                    @G         16  1               ZA0840 ARRAY
+      ** OUTPUT ARRAY FOR SR/ZA0840
+     E                    @H      1  15 15 0
+      *-------------------------------------------------------------------------
+     E                    CPY@    1   1 80
+      *-------------------------------------------------------------------------
+     I           SDS
+      ** Get program name from PSDS
+     I                                     *PROGRAM WWPGM
+     I                                      244 253 WSID
+     I                                      254 263 WUSER
+      /EJECT
+      *-------------------------------------------------------------------------
+     IDLDA        DS                            256
+      ** Data structure for data-base processing
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      /EJECT
+      *-------------------------------------------------------------------------
+     IDSFDY     E DSDSFDY
+      ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I@MMOD     E DSSDMMODPD
+      ** DUMMY RECORD FORMATS FOR ACCESS TO MIDAS MODULES DETAILS
+     INWRCD     E DSSESDX3PD
+      ** Current/previous master file fields
+      /EJECT
+      *-------------------------------------------------------------------------
+     ISVRCD       DS                             61
+      ** Stored master file fields
+     IDSER91    E DSERL910DA
+      **  Data structure defined through External format
+      /EJECT
+      *-------------------------------------------------------------------------
+      ** Get the data structure passed from calling program
+      /COPY QWINDSRC,SE0040GDTA
+      /EJECT
+      *
+     IDATALX      DS                           1024
+     I                                        1  10 #1SESN
+     I                                       11  13 #1CCYI
+     I                                       14  16 #1INVT
+     I                                       17  26 #1ISSR
+     I                                       27  29 #1LICD
+     I                                      117 117 #1SCVI
+     I                                      124 129 #1ITDT
+     I                                      130 135 #1MATY
+     I                                      136 147 #1ISNO
+     I                                      201 202 #LCRTT
+     I                                      203 204 #LINCT
+     I                                      205 206 #LEXCD
+     I                                      207 207 #LOIDI
+     I                                      208 208 #LAPIE
+     I                                      209 209 #LPROT
+      *
+     IRUNDT       DS
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+      *
+      *-------------------------------------------------------------------------
+      * Main processing
+      *-------------------------------------------------------------------------
+      *
+      ** Execute initial routine
+      *
+     C                     EXSR SRINIT
+      *
+      ** Execute specific routine depending on action
+      *
+     C           ACTCDE    CASEQ'I'       SRINS
+     C           ACTCDE    CASEQ'D'       SRDEL
+     C                     END
+      *
+     C           ACTCDE    CASEQ'A'       SRAMD
+     C           ACTCDE    CASEQ'E'       SRENQ
+     C                     END
+      *
+      ** Execute routine to setup return code and exit program
+      *
+     C                     EXSR SRRTRN
+      *
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRINS - Routine to handle 'INSERT' action
+      *-------------------------------------------------------------------------
+      *
+     C           SRINS     BEGSR
+      *
+      ** Check whether record exists
+      *
+     C                     EXSR SRREC
+      *
+      ** If record found,
+      *
+     C           *IN89     IFEQ '0'
+      *
+      ** In case of 'Insert over Deleted Record'
+      ** Save before image
+      *
+     C                     EXSR SRSAVE
+      *
+     C                     EXSR SRFTOS
+      *
+     C                     ELSE
+      *
+      ** Initialize fields
+      *
+     C                     EXSR SRINZ
+      *
+     C                     ENDIF
+      *
+      ** Display and handle screen until no more errors or F12
+      *
+     C           *IN75     DOUEQ'0'
+     C           *INKL     OREQ '1'
+      *
+     C                     EXSR SRSCRN
+      *
+      ** Bypass any further validation if previous DB error or F12
+      *
+     C           *IN69     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+      *
+      ** Clear messages for redisplay
+      *
+     C                     EXSR SRCMSG
+      ** Validate input
+     C                     EXSR SRVAL
+      ** No errors
+     C           *IN75     IFEQ '0'
+      *
+      ** In case of 'Insert over Deleted Record'
+      *
+     C           *IN89     IFEQ '0'
+      *
+      ** Allocate record via update index
+      *
+     C                     EXSR SRALOC
+      *
+      ** If record on file and allocated, compare record images,
+      ** else, screen will be redisplayed
+      *
+     C           *IN60     IFEQ '0'
+     C           *IN61     ANDEQ'0'
+      *
+     C                     EXSR SRCOMP
+      *
+      ** If images do not match, screen will be redisplayed with
+      ** relevant message
+      *
+     C           WWMTCH    IFEQ 'Y'
+      *
+      ** Move blanks to all file fields
+      *
+     C                     EXSR SRBTOF
+      *
+      ** Images match, move screen values to file fields
+      *
+     C                     EXSR SRSTOF
+      *
+      ** Update record
+      *
+     C                     EXSR SRUPD
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ** Move screen fields to file fields
+      *
+     C                     EXSR SRSTOF
+      *
+      ** Write new record
+      *
+     C                     EXSR SRWRT
+      *
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRAMD - Routine to handle 'AMEND' action
+      *-------------------------------------------------------------------------
+      *
+     C           SRAMD     BEGSR
+      *
+      ** Check whether record exists
+      *
+     C                     EXSR SRREC
+      *
+      ** If record not found,
+      ** set DB error indicator, setup message, display screen, exit
+      *
+     C           *IN89     IFEQ '1'
+      *
+      *
+      ** Initialize fields
+      *
+     C                     EXSR SRINZ
+      *
+      ** Display and handle screen until no more errors or F12
+      *
+     C           *IN75     DOUEQ'0'
+     C           *INKL     OREQ '1'
+      *
+     C                     EXSR SRSCRN
+      *
+      ** Bypass any further validation if previous DB error or F12
+      *
+     C           *IN69     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+      *
+      ** Clear messages for redisplay
+      *
+     C                     EXSR SRCMSG
+      *
+      ** Validate input
+      *
+     C                     EXSR SRVAL
+      *
+      ** No errors
+      *
+     C           *IN75     IFEQ '0'
+      *
+      ** Move screen fields to file fields
+      *
+     C                     EXSR SRSTOF
+      *
+      ** Write new record
+      *
+     C                     EXSR SRWRT
+      *
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDDO
+      *
+      ** Execute DB error routine
+      *
+     C                     ELSE
+      *
+      ** Record found,
+      ** set file fields to screen fields and save before image
+      *
+     C                     EXSR SRFTOS
+     C                     EXSR SRSAVE
+      *
+      ** Display and handle screen until record can be allocated and
+      ** record on file and no errors left or F12 pressed
+      *
+     C           *IN61     DOUEQ'0'
+     C           *IN60     ANDEQ'0'
+     C           *IN75     ANDEQ'0'
+     C           *INKL     OREQ '1'
+      *
+     C                     EXSR SRSCRN
+      *
+      ** Bypass any further validation if previous DB error or F12
+      *
+     C           *IN69     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+      *
+      ** Clear messages for redisplay
+      *
+     C                     EXSR SRCMSG
+      *
+      ** Validate input
+      *
+     C                     EXSR SRVAL
+      *
+      ** No errors
+      *
+     C           *IN75     IFEQ '0'
+      *
+      ** Allocate record via update index
+      *
+     C                     EXSR SRALOC
+      *
+      ** If record on file and allocated, compare record images,
+      ** else, screen will be redisplayed
+      *
+     C           *IN60     IFEQ '0'
+     C           *IN61     ANDEQ'0'
+      *
+     C                     EXSR SRCOMP
+      *
+      ** If images do not match, screen will be redisplayed with
+      ** relevant message
+      *
+     C           WWMTCH    IFEQ 'Y'
+      *
+      ** Images match, move screen values to file fields
+      *
+     C                     EXSR SRSTOF
+      *
+      ** Update record
+      *
+     C                     EXSR SRUPD
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRDEL - Routine to handle 'DELETE' action
+      *-------------------------------------------------------------------------
+      *
+     C           SRDEL     BEGSR
+      *
+      ** Set indicators on for 'DELETE' mode to protect fields
+      *
+     C                     MOVE '1'       *IN15
+      *
+      ** Check whether record exists
+      *
+     C                     EXSR SRREC
+      *
+      ** If record not found,
+      ** set DB error indicator, setup message, display screen, exit
+      *
+     C           *IN89     IFEQ '1'
+      *
+     C                     MOVE '1'       *IN69
+     C                     MOVEL'ER04006' ZAMSID
+     C                     EXSR SRSMSG
+      *
+      **  do while *in75 is *OFF or F12
+      *
+     C           *IN75     DOUEQ*OFF
+     C           *INKL     OREQ *ON
+      *
+      **  Display message
+      *
+     C                     EXSR SRSCRN
+      *
+      ** Clear messages for redisplay
+      *
+     C                     EXSR SRCMSG
+      *
+      **  Validate F12 or Enter
+      *
+     C           *INKL     IFEQ '0'
+     C                     EXSR SRER91
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     ELSE
+      *
+      ** Record found,
+      ** save before image
+      *
+     C                     EXSR SRSAVE
+      *
+      ** Allocate record via update index
+      *
+     C                     EXSR SRALOC
+      *
+      ** Disable F10 key
+      *
+     C                     MOVE '0'       *IN11
+      *
+      ** Record found, set file fields to screen fields
+      *
+     C                     EXSR SRFTOS
+      *
+      **  do while *in75 is *OFF or F12
+      *
+     C           *IN75     DOUEQ*OFF
+     C           *INKL     OREQ *ON
+      *
+      ** Display screen
+      *
+     C                     EXSR SRSCRN
+      *
+      ** Clear messages for redisplay
+      *
+     C                     EXSR SRCMSG
+      *
+      **  Validate F12 or Enter
+      *
+     C           *INKL     IFEQ '0'
+     C                     EXSR SRER91
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C           *INKL     IFNE *ON
+      *
+      ** If record on file and allocated, compare record images,
+      ** else, screen will be redisplayed
+      *
+     C           *IN60     IFEQ '0'
+     C           *IN61     ANDEQ'0'
+      *
+     C                     EXSR SRCOMP
+      *
+      ** If images do not match, screen will be redisplayed with
+      ** relevant message
+      *
+     C           WWMTCH    IFEQ 'Y'
+      *
+      ** Images match, delete record
+      *
+     C                     EXSR SRDELR
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRENQ - Routine to handle 'ENQUIRY' action
+      *-------------------------------------------------------------------------
+      *
+     C           SRENQ     BEGSR
+      *
+      ** Set indicators on for 'ENQUIRY' mode to protect fields
+      *
+     C                     MOVE '1'       *IN15
+      *
+      ** Check whether record exists
+      *
+     C                     EXSR SRREC
+      *
+      ** If record not found,
+      ** set DB error indicator, setup message, display screen, exit
+      *
+     C           *IN89     IFEQ '1'
+      *
+     C                     MOVE '1'       *IN69
+     C                     MOVEL'ER99917' ZAMSID
+     C                     EXSR SRSMSG
+      *
+      ** Display screen
+      *
+     C                     EXSR SRSCRN
+      *
+      ** Execute DB error routine
+      *
+     C                     MOVELWWEXTF    WWBFIL
+     C                     Z-ADD4         WWBASE
+     C                     MOVELKSESN     WWBKEY
+     C                     EXSR SRDBER
+      *
+     C                     ELSE
+      *
+      ** Record found, set file fields to screen fields
+      *
+     C                     EXSR SRFTOS
+      *
+      ** Display and handle screen
+      **  do while *in75 is *OFF or F12
+      *
+     C           *IN75     DOUEQ*OFF
+     C           *INKL     OREQ *ON
+      *
+     C                     EXSR SRSCRN
+      *
+      ** Clear messages for redisplay
+      *
+     C                     EXSR SRCMSG
+      *
+      **  Validate F12 or Enter
+      *
+     C           *INKL     IFEQ '0'
+     C                     EXSR SRER91
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRSMSG - Routine to send messages to message subfile.
+      *-------------------------------------------------------------------------
+      *
+     C           SRSMSG    BEGSR
+      *
+     C           ZAMSGF    IFEQ *BLANKS
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     END
+     C                     CALL 'SNDERMSG'
+     C                     PARM WWPGM     ZAPGM  10
+     C                     PARM           ZAPGRL  5
+     C                     PARM           ZAMSID  7
+     C                     PARM           ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTP  7
+      *
+      ** Clear all fields for default mechanism next time.
+      *
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRCMSG - Routine to clear program's message queue.
+      *-------------------------------------------------------------------------
+      *
+     C           SRCMSG    BEGSR
+      *
+     C                     CALL 'CLRERMSG'
+     C                     PARM WWPGM     ZAPGM
+     C                     PARM '*SAME'   ZAPGRL
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRREC - Routine to access file via retrieve index
+      *-------------------------------------------------------------------------
+      *
+     C           SRREC     BEGSR
+      *
+     C           KSESN     CHAINRTVIDX               89
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRALOC - Routine to access record via update index
+      *-------------------------------------------------------------------------
+      *
+     C           SRALOC    BEGSR
+      *
+     C           KSESN     CHAINUPDIDX               6061
+      *
+      ** If record not on file, setup message 'Record deleted'
+      *
+     C           *IN60     IFEQ '1'
+     C                     MOVEL'ER99918' ZAMSID
+     C                     EXSR SRSMSG
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRUPD - Routine to update file.
+      *-------------------------------------------------------------------------
+      *
+     C           SRUPD     BEGSR
+      *
+     C                     UPDATUPDIDX                 68
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRWRT - Routine to write a new record to the file.
+      *-------------------------------------------------------------------------
+      *
+     C           SRWRT     BEGSR
+      *
+     C                     WRITEUPDIDX                 68
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRDELR - Routine to delete a record
+      *-------------------------------------------------------------------------
+      *
+     C           SRDELR    BEGSR
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRCOMP - Routine to compare before/after image of records
+      *-------------------------------------------------------------------------
+      *
+     C           SRCOMP    BEGSR
+      *
+     C           SVRCD     IFEQ NWRCD
+     C                     MOVE 'Y'       WWMTCH  1
+     C                     ELSE
+     C                     MOVE 'N'       WWMTCH
+     C                     MOVEL'ER99919' ZAMSID
+     C                     EXSR SRSMSG
+      *
+      ** Use SETLL to release record lock
+      *
+     C           KSESN     SETLLUPDIDX
+      *
+      ** Set condition to redisplay screen
+      *
+     C                     MOVE '1'       *IN60
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRSAVE - Routine to save before image of record via DS
+      *-------------------------------------------------------------------------
+      *
+     C           SRSAVE    BEGSR
+      *
+     C                     MOVELNWRCD     SVRCD
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRRTRN - Routine to set up return code for calling program
+      *-------------------------------------------------------------------------
+      *
+     C           SRRTRN    BEGSR
+      *
+      ** DBF update error
+      *
+     C           *IN69     IFEQ '1'
+     C                     MOVE 'Y2U0004' W0RTN
+     C                     ELSE
+      *
+      ** Database / Window error
+      *
+     C           *IN68     IFEQ '1'
+     C                     MOVE 'USR0563' W0RTN
+     C                     ELSE
+      *
+      ** F12 pressed
+      *
+     C           *INKL     IFEQ '1'
+     C                     MOVE 'USR0790' W0RTN
+     C                     ELSE
+      *
+      ** No errors
+      *
+     C                     MOVE *BLANKS   W0RTN
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     CLOSESESDX3PD               99
+      *
+      ** Exit program
+      *
+     C                     MOVE '1'       *INLR
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRDBER - Routine to handle database errors
+      *-------------------------------------------------------------------------
+      *
+     C           SRDBER    BEGSR
+      *
+      ** Update data area LDA
+      *
+     C           *NAMVAR   DEFN LDA       DLDA
+     C           *LOCK     IN   DLDA
+     C                     MOVEL'SE0247'  DBPGM
+     C                     MOVE WWBFIL    DBFILE
+     C                     MOVE WWBKEY    DBKEY
+     C                     MOVE WWBASE    DBASE
+     C                     OUT  DLDA
+      *
+      ** Set on data-base error indicators
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *IN69
+      *
+      ** Dump program
+      *
+     C                     DUMP
+      *
+      ** Call standard DB error handler
+      *
+     C                     CALL 'DBERRCTL'             81
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRSCRN - Routine to handle screen and validation
+      *-------------------------------------------------------------------------
+      *
+     C           SRSCRN    BEGSR
+      *
+      ** Display messages
+      *
+     C                     WRITE#MSGCTL
+      *
+      ** Display main screen
+      *
+     C                     EXFMTSCREEN
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * The routines that can be changed start here...
+      *-------------------------------------------------------------------------
+      * SRVAL - Routine to control validation of each field.
+      *-------------------------------------------------------------------------
+      *
+     C           SRVAL     BEGSR
+      *
+      ** Initialize error condition indicators
+      *
+     C                     MOVE '0'       *IN75
+     C                     MOVEA'0000000' *IN,23
+     C                     MOVEA'000000'  *IN,29
+     C                     MOVEA'00'      *IN,35
+      *
+      ** If feature UlX008 is installed
+      *
+     C           ULX008    IFEQ 'Y'
+     C                     MOVEA'000'     *IN,37
+     C                     ENDIF
+      *
+      ** If feature ULX046 is installed
+      *
+     C           ULX046    IFEQ 'Y'
+     C                     MOVEA'0'       *IN,40
+     C                     ENDIF
+     C                     MOVE '0'       *IN44
+      *
+     C                     EXSR SRLUSU
+     C                     EXSR SRSUBR
+     C                     EXSR SRIM93
+     C                     EXSR SRCLAT
+     C                     EXSR SRSECT
+     C                     EXSR SRVOTR
+     C           ULX008    IFEQ 'Y'
+     C                     EXSR SRSECD
+     C                     EXSR SRSNCD
+     C                     EXSR SREEEM
+     C                     ENDIF
+     C           ULX046    IFEQ 'Y'
+     C                     EXSR SRQUOT
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------
+      * SRLUSU - Routine to validate VVLUSU
+      *-------------------------------------------------------------------
+      *
+     C           SRLUSU    BEGSR
+      *
+     C           #0LUSU    IFNE *ZEROS
+      *
+     C           #0LUSU    CHAINERLUMPL0             88
+     C           *IN88     IFEQ '1'
+     C                     MOVE 'ER60003' ZAMSID
+     C                     MOVE '1'       *IN75
+     C                     MOVE '1'       *IN44
+     C                     EXSR SRSMSG
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *-------------------------------------------------------------------
+      * SRSUBR - Routine to validate VVSUBR
+      *-------------------------------------------------------------------
+      *
+     C           SRSUBR    BEGSR
+      *
+      ** Validate field
+      *
+     C           #0SUBR    IFEQ *BLANKS
+     C                     MOVE 'N'       #0SUBR
+     C                     ENDIF
+      *
+     C           #0SUBR    IFNE 'Y'
+     C           #0SUBR    ANDNE'N'
+     C                     MOVE '1'       *IN75
+     C                     MOVE '1'       *IN34
+     C                     MOVE 'ERM2602' ZAMSID
+     C                     EXSR SRSMSG
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *-------------------------------------------------------------------------
+      * SRSECT - Routine to validate VVSECT
+      *-------------------------------------------------------------------------
+      *
+     C           SRSECT    BEGSR
+      *
+     C                     ENDSR
+      *-------------------------------------------------------------------
+      * SRIM93 - Routine to validate VVIM93
+      *-------------------------------------------------------------------
+      *
+     C           SRIM93    BEGSR
+      *
+     C           #0IM93    IFLT 0
+     C           #0IM93    ORGT 8
+     C                     MOVE 'ER32014' ZAMSID
+     C                     MOVE '1'       *IN75
+     C                     MOVE '1'       *IN32
+     C                     EXSR SRSMSG
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *-------------------------------------------------------------------
+      * SRCLAT - Routine to validate VVCLAT
+      *-------------------------------------------------------------------
+      *
+     C           SRCLAT    BEGSR
+      *
+     C           #0CLAT    IFNE 0
+     C           #0CLAT    ANDNE3
+     C           #0CLAT    ANDNE4
+     C           #0CLAT    ANDNE5
+     C           #0CLAT    ANDNE6
+     C           #0CLAT    ANDNE9
+     C                     MOVE 'ER32015' ZAMSID
+     C                     MOVE '1'       *IN75
+     C                     MOVE '1'       *IN33
+     C                     EXSR SRSMSG
+     C                     ENDIF
+      *
+      ** If subordinate is 'Y', the claim type should be '1'
+      *
+     C           #0CLAT    IFNE 0
+     C           #0SUBR    ANDEQ'Y'
+     C                     MOVE 'ER32020' ZAMSID
+     C                     MOVE '1'       *IN75
+     C                     MOVE '1'       *IN34
+     C                     EXSR SRSMSG
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *-------------------------------------------------------------------
+      * SRVOTR - Routine to validate Voting Right
+      *-------------------------------------------------------------------
+      *
+     C           SRVOTR    BEGSR
+      *
+      ** Using SR/ZA0840 subroutine to validate and align amount
+      *
+     C           #0VOTR    IFNE *BLANKS
+     C                     MOVE #0VOTR    @@ALPH
+     C                     Z-ADD2         @@IDP
+     C                     Z-ADD3         @@IINT
+     C                     MOVE *BLANK    @@ERCD
+     C                     EXSR ZA0840
+     C           @@ERCD    IFEQ 1
+     C           @@ERCD    OREQ 2
+     C                     MOVE '1'       *IN27
+     C                     MOVE '1'       *IN75
+     C                     MOVEL'ERL9112' ZAMSID
+     C                     EXSR SRSMSG
+     C                     ENDIF
+      *
+      ** If the amount returned by the subroutine is negative
+      ** sending a mesage
+      *
+     C           @@AMT     IFLT *ZEROS
+     C                     MOVE '1'       *IN27
+     C                     MOVE '1'       *IN75
+     C                     MOVEL'ERL9112' ZAMSID
+     C                     EXSR SRSMSG
+     C                     ENDIF
+      *
+      ** If the amount returned by the subroutine is valid
+      ** moving the amount in a work field
+      *
+     C           #0VOTR    IFNE *BLANKS
+     C           *IN27     ANDEQ'0'
+     C                     MOVE @@ALPH    #0VOTR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------
+      * SRER91 - Check if Guar/Coll./Prov. maint. pgm is to call
+      *-------------------------------------------------------------------
+      *
+     C           SRER91    BEGSR
+      *
+      ** #0ER91 field is optional and must be 'Y', 'N', or ' '
+      *
+     C                     MOVE *OFF      *IN36
+     C                     MOVE *OFF      *IN75
+      *
+     C           #0ER91    IFNE 'Y'
+     C           #0ER91    ANDNE'N'
+     C           #0ER91    ANDNE' '
+      *
+     C                     MOVE *ON       *IN36
+     C                     MOVE *ON       *IN75
+     C                     MOVEL'ER04004' ZAMSID
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     EXSR SRSMSG
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *-------------------------------------------------------------------------
+      * SRINZ - Routine to initialize screen fields with defaults
+      *-------------------------------------------------------------------------
+      *
+     C           SRINZ     BEGSR
+      *
+     C                     Z-ADD0         #0SECT
+     C                     Z-ADD0         #0LUSU
+     C                     Z-ADD0         #0IM93
+     C                     Z-ADD0         #0CLAT
+     C                     MOVE *BLANKS   #0VOTR
+     C                     MOVE *BLANKS   #0SUBR
+     C                     MOVE *BLANKS   #0ROFC
+     C                     MOVE *BLANKS   #0RATC
+      *
+     C                     MOVE 'N'       #0ER91
+      *
+     C           ULX008    IFEQ 'Y'
+     C                     MOVE *BLANKS   #0SECD
+     C                     MOVE *BLANKS   #0SNCD
+     C                     MOVE *BLANKS   #0EEEM
+     C                     ENDIF
+      *
+     C           ULX046    IFEQ 'Y'
+     C                     MOVE 'Y'       #0QUOT
+     C                     ELSE
+     C                     MOVE *BLANKS   #0QUOT
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRFTOS - Routine to move file fields to screen fields
+      *-------------------------------------------------------------------------
+      *
+     C           SRFTOS    BEGSR
+      *
+     C                     Z-ADDVVSECT    #0SECT
+     C                     Z-ADDVVLUSU    #0LUSU
+     C                     Z-ADDVVIM93    #0IM93
+     C                     Z-ADDVVCLAT    #0CLAT
+     C                     MOVE VVSUBR    #0SUBR
+     C                     MOVE VVROFC    #0ROFC
+     C                     MOVE VVRATC    #0RATC
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE VVVOTR    ZFIELD
+     C                     Z-ADD2         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    #0VOTR
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE 'N'       #0ER91
+     C           ULX008    IFEQ 'Y'
+     C                     MOVE VVSECD    #0SECD
+     C                     MOVE VVSNCD    #0SNCD
+     C                     MOVE VVEEEM    #0EEEM
+     C                     ENDIF
+     C           ULX046    IFEQ 'Y'
+     C                     MOVE VVQUOT    #0QUOT
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRSTOF - Routine to move screen fields to file fields
+      *-------------------------------------------------------------------------
+      *
+     C           SRSTOF    BEGSR
+      *
+      ** Move key field to file field
+      *
+     C                     MOVE KSESN     VVSESN
+      *
+      ** Move data fields to file fields
+      *
+     C                     Z-ADD#0SECT    VVSECT
+     C                     Z-ADD#0LUSU    VVLUSU
+     C                     Z-ADDLSRATE    VVLURA
+     C                     Z-ADD#0IM93    VVIM93
+     C                     Z-ADD#0CLAT    VVCLAT
+     C                     MOVE #0SUBR    VVSUBR
+     C                     MOVE #0ROFC    VVROFC
+     C                     MOVE #0RATC    VVRATC
+     C                     MOVE #0VOTR    @@ALPH
+     C                     Z-ADD2         @@IDP
+     C                     Z-ADD3         @@IINT
+     C                     MOVE *BLANK    @@ERCD
+     C                     EXSR ZA0840
+     C                     MOVE @@AMT     VVVOTR
+     C           ULX008    IFEQ 'Y'
+     C                     MOVE #0SECD    VVSECD
+     C                     MOVE #0SNCD    VVSNCD
+     C                     MOVE #0EEEM    VVEEEM
+     C                     ENDIF
+     C           ULX046    IFEQ 'Y'
+     C                     MOVE #0QUOT    VVQUOT
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------
+      * SRSECD - Routine to validate Security Code And Security National
+      *          Code Fields
+      *-------------------------------------------------------------------
+      *
+     C           SRSECD    BEGSR
+      *
+      ** Mandatory Fields If ISIN Code Has Not Been Entered
+      *
+     C           #1ISNO    IFEQ *BLANKS
+     C           #0SECD    ANDEQ*BLANKS
+     C                     MOVE *ON       *IN37
+     C                     MOVE *ON       *IN75
+     C                     MOVEL'ERL0837' ZAMSID
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     EXSR SRSMSG
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------
+      * SRSNCD - Routine to validate Security Code And Security National
+      *          Code Fields
+      *-------------------------------------------------------------------
+      *
+     C           SRSNCD    BEGSR
+      *
+     C           #0SNCD    IFEQ *BLANKS
+     C           #0SECD    IFNE *BLANKS
+     C                     MOVE *ON       *IN38
+     C                     MOVE *ON       *IN75
+     C                     MOVEL'ERL0836' ZAMSID
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     EXSR SRSMSG
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ** Check If Security National Code Is A Correct Value
+      *
+     C           #0SNCD    LOKUPTAB                      81
+     C           *IN81     IFEQ '0'
+     C           #0SNCD    ANDNE*BLANKS
+     C                     MOVE *ON       *IN38
+     C                     MOVE *ON       *IN75
+     C                     MOVEL'ERL0821' ZAMSID
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     EXSR SRSMSG
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------
+      * SREEEM - Routine to validate 'Quoted on a "EEE" Regulated Market
+      *          Centre' Field
+      *-------------------------------------------------------------------
+      *
+     C           SREEEM    BEGSR
+      *
+      ** Mandatory Field
+      *
+     C           #0EEEM    IFEQ *BLANKS
+     C                     MOVE *ON       *IN39
+     C                     MOVE *ON       *IN75
+     C                     MOVEL'ERL0812' ZAMSID
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     EXSR SRSMSG
+     C                     ELSE
+     C           #0EEEM    IFNE 'Y'
+     C           #0EEEM    ANDNE'N'
+     C                     MOVE *ON       *IN39
+     C                     MOVE *ON       *IN75
+     C                     MOVEL'ERL0829' ZAMSID
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     EXSR SRSMSG
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------
+      * SRQUOT - Routine to validate 'Quoted (Y/N)' Field
+      *-------------------------------------------------------------------
+      *
+     C           SRQUOT    BEGSR
+      *
+      ** Mandatory Field defaulted to 'Y' if blank
+      *
+     C           #0QUOT    IFEQ *BLANKS
+     C                     MOVE 'Y'       #0QUOT
+     C                     ELSE
+     C           #0QUOT    IFNE 'Y'
+     C           #0QUOT    ANDNE'N'
+     C                     MOVE *ON       *IN40
+     C                     MOVE *ON       *IN75
+     C                     MOVEL'LX61016' ZAMSID
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     EXSR SRSMSG
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRINIT - Routine to handle initial processing
+      *-------------------------------------------------------------------------
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Get parameters from calling program
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           RTNCDE 10
+     C                     PARM           ACTCDE  1
+     C                     PARM           DATALX
+     C                     PARM           W0RTN   7
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+      *
+      ** Setup key values using transaction data passed from caller
+      *
+     C           *LIKE     DEFN VVSESN    KSESN
+     C                     MOVE #1SESN    KSESN
+      *
+      ** Redefine data-base error fields for program
+      *
+     C           *LIKE     DEFN DBFILE    WWBFIL
+     C           *LIKE     DEFN DBKEY     WWBKEY
+     C           *LIKE     DEFN DBASE     WWBASE
+      *
+      ** Setup file value used in database error during access to
+      ** retrieval index
+      *
+     C           *LIKE     DEFN DBFILE    WWEXTF
+     C                     MOVEL'SESDX3PD'WWEXTF
+      *
+      ** Initialise error indicators
+      *
+     C                     MOVEA'0000000' *IN,23
+     C                     MOVEA'0'       *IN,40
+     C                     MOVE '0'       *IN75
+      *
+      ** CALL ACCESS PROGRAM FOR MIDAS MODULES DETAILS
+      *
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*MSG    '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           @MMOD     PARM @MMOD     DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDMMODPD'WWBFIL
+     C                     MOVEL'99'      WWBASE
+     C                     MOVEL@OPTN     WWBKEY
+     C                     EXSR SRDBER
+     C                     ENDIF
+      *
+     C           BGLRIN    IFNE 'Y'
+     C                     MOVE *BLANKS   W0RTN
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     ELSE
+     C                     OPEN SESDX3PD
+     C                     ENDIF
+      *
+      ** Access SAR details to see if ULX008 is switched on
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'ULX008'  @SARD   6
+      *
+     C                     MOVE 'N'       ULX008  1
+     C                     MOVE *OFF      *IN80
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVE *ON       *IN80
+     C                     MOVEL'Y'       ULX008
+     C                     ENDIF
+      *
+      ** Access SAR details to see if ULX046 is switched on
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'ULX046'  @SARD   6
+      *
+     C                     MOVE 'N'       ULX046  1
+     C                     MOVE *OFF      *IN82
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVE *ON       *IN82
+     C                     MOVEL'Y'       ULX046
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------
+      * ZA0840 -
+      *-------------------------------------------------------------------
+      *
+     C           ZA0840    BEGSR
+      *
+      ** initialize the fields and the arrays
+      *
+     C                     MOVE '0'       *IN51
+     C                     MOVE '0'       *IN52
+     C                     Z-ADD0         @@ERCD  10
+     C                     Z-ADD0         @@AMT  150
+     C                     MOVEA*BLANKS   @G
+     C                     MOVEA@@ALPH    @F
+     C                     MOVE *BLANKS   @@ALPH 16
+     C                     Z-ADD0         @@WK7   10
+     C                     Z-ADD0         @@CADP  30
+     C                     Z-ADD0         @@CINT  30
+     C                     Z-ADD0         @@PIDP  30
+     C                     Z-ADD0         @@PODP  30
+     C                     Z-ADD0         @@C     20
+     C                     Z-ADD0         @@D     20
+     C                     Z-ADD0         @@E     20
+      *
+      ** define the input fields
+      *
+     C           *LIKE     DEFN @@CADP    @@IDP
+     C           *LIKE     DEFN @@CINT    @@IINT
+      *
+      ** first check that the number input will not produce a number
+      ** output with more than 15 figures.
+      *
+     C           @@IDP     ADD  @@IINT    @@WK2   20
+     C           @@WK2     IFGT 15
+     C                     Z-ADD2         @@ERCD
+     C                     GOTO ZA0849
+     C                     ENDIF
+      *
+      ** work through input array, ignoring leading zeros and blanks,
+      ** also blanking the leading zeros in the input array.
+      *
+     C                     MOVE '0'       *IN53
+     C                     ADD  1         @@C
+     C           @@C       DOWLE16
+     C           *IN53     ANDEQ'0'
+     C           @F,@@C    IFNE ' '
+     C           @F,@@C    ANDNE'0'
+     C                     MOVE '1'       *IN53
+     C                     SUB  1         @@C
+     C                     ENDIF
+     C                     ADD  1         @@C
+     C                     ENDDO
+      *
+      ** check the integer part of the number for valid characters.
+      *
+     C           @@C       DOWLE16
+     C           @F,@@C    ANDNE'.'
+     C           @F,@@C    ANDNE' '
+      *
+      ** check for non numeric characters
+      *
+     C           @F,@@C    IFGT '9'
+     C           @F,@@C    ORLT '0'
+     C                     Z-ADD0         @@AMT
+     C                     Z-ADD1         @@ERCD
+     C                     GOTO ZA0849
+      *
+     C                     ELSE
+      *
+     C                     ADD  1         @@CINT
+      *
+      ** check number of integers is not greater than that required
+      *
+     C           @@CINT    IFGT @@IINT
+     C                     Z-ADD0         @@AMT
+     C                     Z-ADD2         @@ERCD
+     C                     GOTO ZA0849
+     C                     ENDIF
+      *
+      ** multiply the output amount by 10 then add the number in
+      ** the input array element being processed.
+      *
+     C           @@AMT     MULT 10        @@AMT
+     C                     MOVE @F,@@C    @@WK7
+     C           @@AMT     ADD  @@WK7     @@AMT
+     C                     ENDIF
+      *
+      ** increase array index
+      *
+     C                     ADD  1         @@C
+     C                     ENDDO
+      *
+      ** set up position of decimal point in input array
+      *
+     C                     Z-ADD@@C       @@PIDP
+      *
+      ** if the character pointed to is a decimal point add 1 to the
+      ** index
+      *
+     C           @@C       IFLE 16
+     C           @F,@@C    ANDEQ'.'
+     C                     ADD  1         @@C
+     C                     MOVE '1'       *IN52
+     C                     ENDIF
+      *
+      ** now validate the decimal part of the number
+      *
+     C           @@C       DOWLE16
+      *
+      ** if a blank is found set on the blank input indicator
+      *
+     C           @F,@@C    IFEQ ' '
+     C                     MOVE '1'       *IN51
+     C                     ENDIF
+      *
+      ** if the figure is numeric, check that the number of decimal
+      ** places does not exceed that specified, and that no blanks
+      ** have been entered.
+      *
+     C           @F,@@C    IFGE '0'
+     C           @F,@@C    ANDLE'9'
+     C                     ADD  1         @@CADP
+      *
+     C           @@CADP    IFGT @@IDP
+     C                     Z-ADD0         @@AMT
+     C                     Z-ADD2         @@ERCD
+     C                     GOTO ZA0849
+     C                     ENDIF
+      *
+     C           *IN51     IFEQ '1'
+     C                     Z-ADD0         @@AMT
+     C                     Z-ADD1         @@ERCD
+     C                     GOTO ZA0849
+     C                     ENDIF
+      *
+      ** update output amount
+      *
+     C           @@AMT     MULT 10        @@AMT
+     C                     MOVE @F,@@C    @@WK7
+     C                     ADD  @@WK7     @@AMT
+      *
+     C                     ELSE
+      *
+      ** if the character is not numeric and not a blank then it is
+      ** invalid
+      *
+     C           @F,@@C    IFNE ' '
+     C                     Z-ADD0         @@AMT
+     C                     Z-ADD1         @@ERCD
+     C                     GOTO ZA0849
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** increase index
+      *
+     C                     ADD  1         @@C
+      *
+     C                     ENDDO
+      *
+      ** correct the output number for any decimal places not input
+      ** in the alpha field.
+      *
+     C           @@IDP     SUB  @@CADP    @@E
+      *
+      ** increase the index by one to get correct array entry
+      *
+     C                     ADD  1         @@E
+     C           @@AMT     MULT @H,@@E    @@AMT
+      *
+      ** now format the output alpha field, first calculate where
+      ** the decimal point goes
+      *
+     C           16        SUB  @@IDP     @@PODP
+     C           @@PODP    SUB  1         @@PIDP
+      *
+      ** if there are no decimal points set the position to 17
+      *
+     C           @@IDP     IFEQ 0
+     C                     Z-ADD17        @@PODP
+     C                     ENDIF
+      *
+      ** move the output number into the input array
+      *
+     C                     MOVEA*BLANKS   @F
+     C                     MOVE @@AMT     @@AMTA 15
+     C                     MOVEA@@AMTA    @F
+      *
+      ** set up indexes
+      *
+     C                     Z-ADD1         @@C
+     C                     Z-ADD1         @@D
+     C                     MOVE '0'       *IN50
+      *
+      ** now fill up the output array
+      *
+     C           @@D       DOWLE16
+      *
+      ** insert decimal point if the position is found
+      *
+     C           @@D       IFEQ @@PODP
+     C                     MOVE '.'       @G,@@D
+     C                     ADD  1         @@D
+     C                     ENDIF
+      *
+      ** insert the zero before the decimal point
+      *
+     C           *IN50     IFEQ '0'
+     C           @@D       ANDEQ@@PIDP
+     C           @F,@@C    ANDEQ'0'
+     C                     MOVE '1'       *IN50
+     C                     MOVE '0'       @G,@@D
+     C                     ENDIF
+      *
+      ** blank leading zeros
+      *
+     C           *IN50     IFEQ '0'
+     C           @F,@@C    ANDEQ'0'
+     C                     MOVE ' '       @G,@@D
+     C                     ENDIF
+      *
+      ** move a normal character
+      *
+     C           @F,@@C    IFGE '1'
+     C           @F,@@C    ANDLE'9'
+     C                     MOVE @F,@@C    @G,@@D
+     C                     MOVE '1'       *IN50
+     C                     ENDIF
+      *
+      ** non blanked zero
+      *
+     C           @F,@@C    IFEQ '0'
+     C           *IN50     ANDEQ'1'
+     C                     MOVE '0'       @G,@@D
+     C                     ENDIF
+      *
+     C                     ADD  1         @@C
+     C                     ADD  1         @@D
+     C                     ENDDO
+      *
+      ** put output array into output amount
+      *
+     C                     MOVEA@G        @@ALPH
+      *
+      ** align figure with zero decimal places.
+      *
+     C           @@IDP     IFEQ 0
+     C                     MOVE *BLANKS   @@ALP1 17
+     C                     MOVE @@ALPH    @@ALP1
+     C                     MOVEL@@ALP1    @@ALPH
+     C                     ENDIF
+      *
+     C           ZA0849    ENDSR
+      *-------------------------------------------------------------------------
+      * SRBTOF - Routine to move blanks to file fields
+      *-------------------------------------------------------------------------
+      *
+     C           SRBTOF    BEGSR
+      *
+      ** Move blanks to file fields
+      *
+     C                     ENDSR
+      /EJECT
+      *******************************************************************
+      *
+      *   ZEDIT SUBROUTINE TO INSERT A DECIMAL POINT INTO A NUMERIC FIELD
+      *   AND TO BLANK OUT LEADING ZEROES.
+      *       INPUT FIELDS:   ZFIELD 16/
+      *                       ZADEC
+      *                       ZADIG - NOT ACTUALLY USED
+      *
+      *       ARRAYS    ZA1 ,ZA2   BOTH 16 ELEMENTS, EACH ONE BYTE LONG.
+      *
+      *       OUTPUT FIELD   ZFIELD
+      *
+      *******************************************************************
+     C           ZEDIT     BEGSR
+      *
+      ** CALCULATION TO DEFINE NUMBER STRUCTURE CONTROL FIELDS.
+      *
+     C                     Z-ADDZADIG     ZADIG   20
+     C                     Z-ADDZADEC     ZADEC   10
+      *
+      ** SET UP WORK FIELDS
+      *
+     C                     MOVEA' '       ZA1
+     C                     MOVEA' '       ZA2
+      *
+     C                     Z-ADD16        Z1      20
+     C                     Z-ADD16        Z2      20
+      *
+     C           16        SUB  ZADEC     ZADEC2  20
+      *
+     C                     MOVEAZFIELD    ZA1
+      *
+      ** CHECK TO SEE IF THERE ARE ANY DECIMAL PLACES
+      *
+     C           ZADEC     COMP 0                        91
+     C   91                GOTO ZT20
+      *
+     C           ZT10      TAG
+      *
+      ** SET UP DECIMALS
+      *
+     C                     MOVE ZA1,Z1    ZA2,Z2
+     C           Z1        SUB  1         Z1
+     C           Z2        SUB  1         Z2
+      *
+     C           Z2        COMP 0                        90
+     C   90                GOTO ZT30
+      *
+      ** CHECK IF END OF DECIMALS
+      *
+     C           Z2        COMP ZADEC2               90
+     C   90                GOTO ZT10
+      *
+      ** PUT IN DECIMAL PLACE
+      *
+     C                     MOVE '.'       ZA2,Z2
+     C           Z2        SUB  1         Z2
+      *
+     C           ZT20      TAG
+      *
+      ** SET UP INTEGERS
+      *
+     C                     MOVE ZA1,Z1    ZA2,Z2
+     C           Z1        SUB  1         Z1
+     C           Z2        SUB  1         Z2
+      *
+     C           Z2        COMP 0                    90
+     C   90                GOTO ZT20
+      *
+      ** PUT IN LEADING BLANKS
+      *
+     C           ZT30      TAG
+      *
+     C                     Z-ADD1         Z2
+      *
+     C           ZT40      TAG
+      *
+     C           ZA2,Z2    COMP '0'                  9090
+     C   90      ZA2,Z2    COMP ' '                  9090
+      *
+     C   90                GOTO ZT50
+      *
+     C                     MOVE ' '       ZA2,Z2
+     C           Z2        ADD  1         Z2
+      *
+     C           Z2        COMP 16                     90
+     C   90                GOTO ZT40
+      *
+      ** IF NO INTEGERS PUT IN LEADING ZERO
+      *
+     C           ZT50      TAG
+      *
+     C                     Z-ADDZADEC2    Z2
+     C  N91      Z2        SUB  1         Z2
+     C           ZA2,Z2    COMP ' '                      90
+     C   90                MOVE '0'       ZA2,Z2
+      *
+      ** SET UP OUTPUT FIELD
+      *
+     C           ZT60      TAG
+      *
+     C                     MOVEAZA2       ZFIELD 16
+      *
+     CSR         ZEND      ENDSR
+      /EJECT
+      *
+      ********************************************************************
+      * ARRAY TAB NOT USE ANYMORE !!!
+      ** TAB
+      *** WKNAUTBELSICRGAGRECOMSEDREU
+      /COPY ZSRSRC,ZALIGNZ2
+** TAB
+WKNAUTBELSICRGAGRECOMSEDREUBLOTEL
+** array of powers of 10 from 0 to 8
+000000000000001
+000000000000010
+000000000000100
+000000000001000
+000000000010000
+000000000100000
+000000001000000
+000000010000000
+000000100000000
+000001000000000
+000010000000000
+000100000000000
+001000000000000
+010000000000000
+100000000000000
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2005

@@ -1,0 +1,196 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER IML Reporting - Depot Movements')
+     H****************************************************************
+     H*                                                              *
+     H*          MIDAS ABS - EUROPEAN REPORTING                      *
+     H*                                                              *
+     H*  ERLU69 - IML REPORTING - DEPOT MOVEMENTS PROCESSING         *
+     H*                                                              *
+     H*  (c) Misys International Banking Systems Ltd. 2005           *
+     H*                                                              *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CER001             Date 25Apr05               *
+      *  Prev Amend No. 180219             Date 14Jun00               *
+      *                 ULX008             Date 18Apr00               *
+     H*                    ULX008             Date   16Mar00         *
+     H*                    ULX004             Date   18MAR97         *
+     H*                    ERL432 PT          Date   31AUG94         *
+     H*                    ERL354 TLI         DATE   21JUN93         *
+     H*                                                              *
+     H****************************************************************
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+     H* 180219 - Confusion between Beneficiary and Counterparty      *
+     H*          on Depot Movements                                  *
+     H*          Recompiled due to changes in PF/DPTMVDX6            *
+     H* ULX008 - "Commissariat aux Bourses" - Change Control B       *
+     H*          Recompiled due to changes in PF/DPTMVDX6            *
+     H* ULX008 - "Commissariat aux Bourses" - Change Control A       *
+     H*          Recompiled due to changes in PF/DPTMVDX6            *
+     H* ULX004 - Capital Adequacy                                    *
+     H* ERL432 - TO MANAGE THE DATABASE ERRORS CORRECTLY             *
+     H* ERL354 - WRITTEN FOR DEPOT MOVEMENTS PROCESSING              *
+     F*****************************************************************
+     F***DPTMVDY6IF**E           K        DISK                                                CER001
+     FSEDPX2L0IF  E           K        DISK                                                   CER001
+     F* WN - ER Depot Movements - Extended file
+      *
+      *===============================================================*
+     F*
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       80         FAIL CONDITION FOR FILE ACCESS OPERATION
+     F*
+     F*       U7         DATABASE ERROR
+     F*
+     F**             *************************
+     F**             ** INDICATORS NOT USED **
+     F**             ** ------------------- **
+     F**             *************************
+     F**
+     F**      ***************************************************
+     F**      * 01   02   03   04   05   06   07   08   09   10 *
+     F**      * 11   12   13   14   15   16   17   18   19   20 *
+     F**      * 21   22   23   24   25   26   27   28   29   30 *
+     F**      * 31   32   33   34   35   36   37   38   39   40 *
+     F**      * 41   42   43   44   45   46   47   48   49   50 *
+     F**      * 51   52   53   54   55   56   57   58   59   60 *
+     F**      * 61   62   63   64   65   66   67   68   69   70 *
+     F**      * 71   72   73   74   75   76   77   78   79   .. *
+     F**      * 81   82   83   84   85   86   87   88   89   90 *
+     F**      * 91   92   93   94   95   96   97   98   99      *
+     F**      ***************************************************
+     E** ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+      *===============================================================*
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     ILDA        UDS                            256
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+     I**
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I**
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      * Program status data structure
+     I           SDS
+     I                                     *PROGRAM PGM
+      *
+      **=================================================================
+     C           KDEPO     KLIST
+     C                     KFLD           KDPSS
+     C                     KFLD           KDPRN
+      **=================================================================
+     C                     EXSR #INIT
+      *----------------------------------------------------------------==
+     C           EXLOTD    CASEQ'DEP'     #DEP
+      *
+     C                     END
+      *----------------------------------------------------------------==
+     C                     RETRN
+      /EJECT
+      **=================================================================
+      **
+      **=================================================================
+      **
+      **  #INIT       Program initialisation sub-routine
+      **
+      *----------------------------------------------------------------==
+     C           #INIT     BEGSR
+      *----------------------------------------------------------------==
+      *                                                                *****
+     C           *NAMVAR   DEFN           LDA
+     C                     UNLCKLDA
+      **                                                               *****
+     C           *ENTRY    PLIST
+      *  Input Parameters
+     C                     PARM           EXLOTD  3
+     C**********           PARM           EXTREF 15                                           CER001
+     C                     PARM           EXTREF 21                                           CER001
+     C**********           PARM           EXDECK  8                                           CER001
+     C                     PARM           EXDECK 14                                           CER001
+     C                     PARM           EXSESN 10
+      *  Output Parameters
+     C                     PARM           EXTOVM  30
+     C                     PARM           EXEXCF  10                      ULX004
+     C                     PARM           ERROR   1                       ERL432
+      *
+     C                     MOVE '0'       *INU7
+      *
+     C                     ENDSR
+     C*================================================================
+      **
+      **  #DEP      DEPOT MOVEMENTS
+      **
+      *----------------------------------------------------------------==
+     C           #DEP      BEGSR
+      *----------------------------------------------------------------==
+      *
+     C                     MOVE EXTREF    KDPRN   6
+     C                     MOVELEXSESN    KDPSS  10
+     C                     MOVELEXDECK    DPTYP   2
+     C*
+     C** Access to Depot details only for Depot Type 'RR' - 'RP' - 'PD' - 'PL'
+     C           DPTYP     IFEQ 'RR'                       - B1
+     C           DPTYP     OREQ 'RP'
+     C           DPTYP     OREQ 'PD'
+     C           DPTYP     OREQ 'PL'
+     C********** KDEPO     CHAINDPTMVDY6             80                                       CER001
+     C           KDEPO     CHAINSEDPX2L0             80                                       CER001
+     C           *IN80     IFEQ '1'                        - B2
+     C           *LOCK     IN   LDA
+     C                     MOVEL'691'     DBASE
+     C**********           MOVEL'DPTMVDY6'DBFILE                                              CER001
+     C                     MOVEL'SEDPX2L0'DBFILE                                              CER001
+     C                     MOVELEXTREF    DBKEY
+     C                     EXSR #DBERR
+     C                     END                             - E2
+      *
+     C                     Z-ADDWNOPTP    EXTOVM
+     C                     Z-ADDWNEXCF    EXEXCF                          ULX004
+      *
+     C                     ELSE                            - X1
+      *
+     C           DPTYP     IFEQ 'BL'                       - B2
+     C                     Z-ADD090       EXTOVM
+     C                     END                             - E2
+      *
+     C           DPTYP     IFEQ 'BB'                       - B2
+     C                     Z-ADD100       EXTOVM
+     C                     END                             - E2
+     C*
+     C                     END                             - E1
+      *
+     C                     ENDSR
+      **=================================================================
+      **
+      **  #DBERR      DATA BASE ERROR
+      **
+      *----------------------------------------------------------------==
+     C           #DBERR    BEGSR
+      *----------------------------------------------------------------==
+     C*
+      **
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA                    81
+     C                     MOVE 'Y'       ERROR                           ERL432
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INLR
+     C  N81                DUMP
+     C                     RETRN
+     C**
+     C                     ENDSR
+     C********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2005

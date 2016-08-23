@@ -1,0 +1,415 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Outward Clearing file update')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *  RE2008  -  PF/MEMOS file merge                               *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      *  Last Amend No. MD035554           Date 25May16               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CRE023  *CREATE    Date 29Jul05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD035554 - 2o'clock/ABC compatibility (Recompile)            *
+      *  CRE023 - 2 O'clock Flag Upgrade to MidasPlus                 *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** Outward clearing file
+     FREOUTLL0IP  F      40  1AI     1 DISK
+     FREMEMLL0UF  E           K        DISK
+     FRE2008AUO   F     132     OF     PRINTER
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E                    CPY@    1   1 80
+      *****************************************************************
+      *
+     IREOUTLL0NS  01   1 CH
+      *
+     I        NS  02   1 CL
+     I                                    P   2   90PAMT            21
+     I                                    P  10  170TAMT            22
+     I                                       18  270ACNO
+      *
+     I        NS  03   1 CT
+     I                                        2   60NORE
+     I                                    P   7  140HWNP
+     I                                    P  15  160HDCP
+     I                                    P  17  240HWNT
+     I                                    P  25  260HDCT
+      *
+      ** Program Status Data Structure
+     IPSDS       SDS
+     I                                     *PROGRAM WPGM
+     I                                      244 253 WWSID
+     I                                      254 263 WUSER
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+     ILDA       E DSLDA                         256
+      *
+      ** First DS for access programs, short data structure
+     IDSFDY     E DSDSFDY
+      *
+      ** Bank ICD details
+     ISDBANK    E DSSDBANKPD
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            M A I N   P R O G R A M                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *IN01     IFEQ *ON
+     C                     EXSR SRINIT
+     C                     ENDIF
+      *
+      ** Detail processing
+      *
+     C  N02                GOTO END
+      *
+      ** Perform hash total
+      *
+     C           COUNT     ADD  1         COUNT
+     C   21                GOTO TG05
+      *
+     C           PAMT      DIV  1000      ZZAMT
+     C                     Z-ADDCHWNP     ZZTOTI
+     C                     Z-ADDCHDCP     ZZTOTD
+     C                     EXSR GLZADD
+     C                     Z-ADDZZTOTI    CHWNP
+     C                     Z-ADDZZTOTD    CHDCP
+      *
+     C           TG05      TAG
+     C   22                GOTO TG10
+     C           TAMT      DIV  1000      ZZAMT
+     C                     Z-ADDCHWNT     ZZTOTI
+     C                     Z-ADDCHDCT     ZZTOTD
+     C                     EXSR GLZADD
+     C                     Z-ADDZZTOTI    CHWNT
+     C                     Z-ADDZZTOTD    CHDCT
+      *
+      ** Access S/MEMOS 'L' record
+      *
+     C           TG10      TAG
+     C                     SETOF                     07
+     C           ACNO      CHAINREMEMLL0             30
+     C  N30      GRECI     IFEQ 'L'
+     C                     SETON                     07
+     C                     ENDIF
+     C  N07                SETON                     U7LR
+     C   U7                GOTO END
+      *
+      ** Update 'L' record
+      *
+     C                     Z-ADDPAMT      GPAMT
+     C                     Z-ADDTAMT      GTAMT
+     C                     UPDATREMEMLD0
+      *
+     C           END       TAG
+      *
+     CLR         COUNT     COMP NORE                 2525
+     CLR         HWNP      COMP CHWNP                2626
+     CLRN26      HDCP      COMP CHDCP                2626
+     CLR         HWNT      COMP CHWNT                2727
+     CLRN27      HDCT      COMP CHDCT                2727
+     CLR 25
+     COR 26
+     COR 27                SETON                     U8
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  GLZADD - Subroutine to add an amount (ZZAMT) to the total    *
+      *  (ZZTOTI, ZZTOTD) IND '99' is set by an overflow error        *
+      *                                                               *
+      *****************************************************************
+     C           GLZADD    BEGSR
+      *
+     C                     Z-ADDZZAMT     ZZAMT  153     91
+      *
+      ** Bypass if amount is 0
+     C           ZZAMT     IFNE 0
+      *
+      ** Split ZZAMT into integer and decimal fields
+      *
+     C                     Z-ADDZZAMT     ZZAMTI 150       integer field
+     C                     Z-ADDZZAMT     ZZWK1   33
+     C                     MOVE ZZWK1     ZZAMTD  30       decimal field
+      *
+      ** Both ZZAMTI and ZZAMTD contain a 'SIGN' zone now
+      *
+     C                     EXSR GLZSUM
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Subroutine to carry out the addition for subroutines -       *
+      *                        GLZADD, GLZSUB, GLZCMP.                *
+      *          Parameters passed -                                  *
+      *                     I/P ZZAMTI ZZAMTD                         *
+      *                     O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.   *
+      *                                                               *
+      *****************************************************************
+     C           GLZSUM    BEGSR
+      *
+     C                     Z-ADDZZTOTI    ZZTOTI 150
+     C                     Z-ADDZZTOTD    ZZTOTD  30
+     C                     SETOF                     919293
+     C                     SETOF                     949599
+      *
+      ** Determine sign of ZZAMTI & D, 92 if neg
+      *
+     C           ZZAMTI    COMP 0                      9293
+     C   93      ZZAMTD    COMP 0                      9293
+     C   93                GOTO ZZSEND
+      *
+      ** Determine sign of ZZTOTI & D, 91 if neg.
+      *
+     C           ZZTOTI    COMP 0                      9193
+     C   93      ZZTOTD    COMP 0                      9193
+      *
+      ** If ZZTOTAL is zero, return ZZAMOUNT.
+      *
+     C   93                Z-ADDZZAMTI    ZZTOTI
+     C   93                Z-ADDZZAMTD    ZZTOTD
+     C   93                GOTO ZZSEND
+      *
+      ** If signs differ bypass ovreflow checks.
+      *
+     C   91N92
+     CORN91 92             GOTO ZZOFPS
+      *
+     C           ZZAMTD    ADD  ZZTOTD    ZZWK2   40
+     C           ZZWK2     COMP 999                  93    '93' = carry
+     C  N93      ZZWK2     COMP -999                   93    into integer.
+      *
+     C   93N92   ZZAMTI    ADD  1         ZZWK3  150       add 'carry' +ve
+     C      93 92ZZAMTI    SUB  1         ZZWK3            sub 'carry' -ve
+     C   93      ZZTOTI    ADD  ZZWK3     ZZWK3
+     C  N93      ZZTOTI    ADD  ZZAMTI    ZZWK3
+      *
+      ** If the modulus of ZZWK3 is LT MOD ZZTOTI then O/F has occured
+      *
+     C  N92      ZZWK3     COMP ZZTOTI                 99  -92 means nos.
+     C   92      ZZWK3     COMP ZZTOTI               99     negative
+     C  N99                Z-ADDZZWK2     ZZTOTD
+     C  N99                Z-ADDZZWK3     ZZTOTI
+      *
+      ** If O/F zeroize ZZAMT , IND '99' set and ZZTOT fields left
+      ** intact.
+      *
+     C   99                Z-ADD0         ZZAMT  153
+     C                     GOTO ZZSEND
+      *
+      ** The 'SIGNS' are different
+      *
+     C           ZZOFPS    TAG
+      *
+      ** If ZZAMT was negative, make it pos. to comp with ZZTOT
+      *
+     C   92                Z-SUBZZAMTI    ZZAMTI 150
+     C   92                Z-SUBZZAMTD    ZZAMTD  30
+      *
+      ** If ZZTOT was negative, make it pos. to COMP with ZZAMT.
+      *
+     C   91                Z-SUBZZTOTI    ZZTOTI
+     C   91                Z-SUBZZTOTD    ZZTOTD
+      *
+      ** Both ZZAMT and ZZTOT are now positive.
+      *
+     C           ZZTOTI    COMP ZZAMTI               93  95
+     C   95      ZZTOTD    COMP ZZAMTD               93  95
+      *
+      ** If ZZTOT eq. ZZAMT return ZERO.
+      *
+     C   95                Z-ADD0         ZZTOTI
+     C   95                Z-ADD0         ZZTOTD
+     C   95                GOTO ZZSEND
+      *
+      ** If ZZTOT GT. ZZAMT.
+      *
+     C   93      ZZAMTD    COMP ZZTOTD               94
+     C   93 94   ZZTOTI    SUB  1         ZZTOTI
+     C   93 94   ZZTOTD    ADD  1000      ZZWK2
+     C   93      ZZTOTI    SUB  ZZAMTI    ZZTOTI
+     C   93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD
+     C   93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD
+      *
+      ** If ZZAMT GT. ZZTOT.
+      *
+     C  N93      ZZTOTD    COMP ZZAMTD               94
+     C  N93 94   ZZAMTI    SUB  1         ZZWK3  150
+     C  N93 94   ZZAMTD    ADD  1000      ZZWK2
+     C  N93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI
+     C  N93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI
+     C  N93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD
+     C  N93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD
+      *
+      ** Reverse sign of ZZTOT if larger I/P fields were negative
+      *
+     C                     SETOF                     94
+     C   93 91
+     CORN93 92             SETON                     94
+     C   94                Z-SUBZZTOTI    ZZTOTI
+     C   94                Z-SUBZZTOTD    ZZTOTD
+      *
+      ** Restore sign of ZZAMTI & ZZAMTD if it was reversed.
+      *
+     C   92                Z-SUBZZAMTI    ZZAMTI
+     C   92                Z-SUBZZAMTD    ZZAMTD
+     C           ZZSEND    TAG
+      *
+      ** If ZZTOTD is zero, and ZZTOTI is neg. set up ZZNEGD.
+      *
+     C                     SETOF                     96
+     C           ZZTOTD    COMP 0                        91
+     C   91      ZZTOTI    COMP 0                      96
+     C   96                MOVE '.000-'   ZZNEGD  5
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Initialization routine.                             *
+      *                                                               *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           *NAMVAR   DEFN           LDA
+     C                     MOVELWPGM      DBPGM
+      *
+      ** Access bank ICD details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE
+     C                     MOVELWOPTN     DBKEY
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     ENDIF
+      *
+     C                     Z-ADD0         COUNT   50
+     C                     Z-ADD0         CHWNP  150
+     C                     Z-ADD0         CHDCP   30
+     C                     Z-ADD0         CHWNT  150
+     C                     Z-ADD0         CHDCT   30
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     ORE2008AUT   02   LR
+     O                                   24 'REFERNECE RE2008AU'
+     O                         BJURPT    89
+     O                                  104 'DATE'
+     O                         BJMRDT   112
+     O                                  126 'PAGE'
+     O                         PAGE  Z  130
+      *
+     O        T 2      LR
+     O                                   73 'S/MEMO FILE MERGE - CONT'
+     O                                   83 'ROL REPORT'
+      *
+     O        T 1      LR
+     O                                   73 '------------------------'
+     O                                   83 '----------'
+      *
+     O        T   18   LR U7
+     O                                   73 'MERGE TREMINATED, DATABA'
+     O                                   84 'SE IN ERROR'
+      *
+     O        T   25   LR
+     O                                   13 'S/OUTCL'
+     O                                   68 'FILE CONTROL'
+     O                                   90 'CALCULATED'
+      *
+     O        T 3      LR
+     O                                   30 'NUMBER OF RECORDS ON FIL'
+     O                                   31 'E'
+     O                         NORE      68 '   0 '
+     O                         COUNT     90 '   0 '
+     O                       25         117 '***   DIFFERENCE   ***'
+      *
+     O        T 2      LR
+     O                                   30 'TOTAL AMOUNT OF TODAYS O'
+     O                                   45 'UTWARD CLEARING'
+     O                         HWNP  4   65
+     O                         HDCP      68
+     O                         CHWNP 4   87
+     O                         CHDCP     90
+     O                       26         117 '***   DIFFERENCE   ***'
+      *
+     O        T 2      LR
+     O                                   30 'TOTAL AMOUNT OF NEXT DAY'
+     O                                   48 'S OUTWARD CLEARING'
+     O                         HWNT  4   65
+     O                         HDCT      68
+     O                         CHWNT 4   87
+     O                         CHDCT     90
+     O                       27         117 '***   DIFFERENCE   ***'
+      *
+     O        T   38   LR
+     O                                   77 '***   END OF REPORT   **'
+     O                                   78 '*'
+** CPY@
+(c) Misys International Banking Systems Ltd. 2005

@@ -1,0 +1,212 @@
+     H            Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Convert Date to Day Number')
+     T* Utility Calls: Convert Date to Day number
+      *
+     H*  SYSTEM  : UTILITY OBJECTS
+     H* ANALYST     : J L Blenkinsop
+     H* DATE        : June 1988
+     H* DESCRIPTION : Validates date and converts to MIDAS day number
+      *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas  GENERAL LEDGER MODULE
+     F*                                                                  *
+     F*     GL0133U  -                                                   *S01251
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01199             Date 02MAY90               *
+     F*                 S01251             Date 09FEB90               *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*     S01199 - RECOMPILED FOR CURSOR SENSITIVE HELP                *
+     F*     S01251 - PROGRAM AND FIELD NAME CHANGES                      *
+     F*                                                                  *
+     F********************************************************************
+     F*  P R O G R A M     C R E A T I O N     P A R A M E T E R S    *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     M* MAINTENANCE : *NONE
+      *
+     P* PARAMETERS  : Call with the following code :
+     P*
+     P*                    CALL '@UCVDDN0'             90  <CONVERT DATE>
+     P*                    PARM *BLANK    P@RTCD  7        B:Return code
+     P*                    PARM (Date)    P@DTNO  60       I:DDMMYY/MMDDYY
+     P*                    PARM (Format)  P@FMAT  3        I:Format flag
+     P*          (Day No.) PARM           P@DYNO  50       O:Day number
+     P*
+     P*          *IN90     IFEQ '1'                        IF CALL ERROR
+     P*          (Perform error reporting if required)
+     P*                    END                             FI
+     P*
+     P*          P@RTCD    IFNE *BLANK                     IF DATE ERROR
+     P*          (Perform error reporting if required)
+     P*                    END                             FI
+     P*
+     P*    NOTE: Date format must be either "DMY" (Day/Month/Year)
+     P*                                  or "MDY" (Month/Day/Year)
+     P*                                  or "YMD" (Year/Month/Day)
+     P*
+     P*    NOTE: Return code returns *BLANK if no error occurred
+     P*          Otherwise, returns:
+     P*
+     P*             '*FORMAT'   - If invalid Date format (not D,M or Y)
+     P*
+     P*             '*MONTH '   - Month not 01-12
+     P*
+     P*             '*DAY   '   - Day is zero or greater than max.for month
+     P*
+     P*             '*LEAP  '   - Day is 29, Month is 2, but Year not Leap
+      *
+      ***************************************************************
+      /SPACE 3
+     H*HSTART
+      ***************************************************************
+      ***************************************************************
+      /SPACE 3
+     E*ESTART
+      ***************************************************
+     E                    @LY    25  25  2 0A            Leap years
+     E                    @LD    12  25  5 0             Leap year cum.
+     E                    @YD     3   3  5 0A            Year offsets
+     E                    @M1    12  12  3 0A            Days in norm.year
+     E                    @M2    12  12  3 0A            Days in leap year
+     E                    @DD    12  12  3 0             Days in months
+     E                    CPY@    1   1 80               COPYRIGHT STATEMENT
+      ***************************************************
+      /SPACE 3
+     I*ISTART
+      *****************************************************************
+     I            DS
+      * Date checking data structure
+     I                                        1   60W@DTNO
+     I                                        1   20W@01
+     I                                        3   40W@02
+     I                                        5   60W@03
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *****************************************************************
+      /EJECT
+     C*CSTART
+      *****************************************************
+     C                     MOVEACPY@      BIS@   80
+     C           *ENTRY    PLIST
+     C                     PARM           P@RTCD  7        B:Return code
+     C           W@DTNO    PARM           P@DTNO  60       I:Date xx/xx/xx
+     C                     PARM           P@FMAT  3        I:Format flag
+     C                     PARM           P@DYNO  50       O:Day number
+      *****************************************************
+      * Initialise :
+      *
+     C                     Z-ADD*ZERO     P@DYNO           Day number
+     C                     MOVE *BLANK    P@RTCD           Return code
+      *
+      * Check date order (DDMMYY or MMDDYY) :
+      *
+     C           P@FMAT    IFEQ 'MDY'                      IF MDY FORMAT
+     C                     Z-ADDW@01      W@MM    30         Month
+     C                     Z-ADDW@02      W@DD    30         Day
+     C                     Z-ADDW@03      W@YY    20         Year
+     C                     END                             FI
+      *
+     C           P@FMAT    IFEQ 'DMY'                      IF DMY FORMAT
+     C                     Z-ADDW@01      W@DD               Day
+     C                     Z-ADDW@02      W@MM               Month
+     C                     Z-ADDW@03      W@YY               Year
+     C                     END                             FI
+      *
+     C           P@FMAT    IFEQ 'YMD'                      IF YMD FORMAT
+     C                     Z-ADDW@01      W@YY               Year
+     C                     Z-ADDW@02      W@MM               Month
+     C                     Z-ADDW@03      W@DD               Day
+     C                     END                             FI
+      *
+     C           P@FMAT    IFNE 'DMY'                      IF FORMAT ERROR
+     C           P@FMAT    ANDNE'MDY'                       AND
+     C           P@FMAT    ANDNE'YMD'                       AND
+     C                     MOVE '*FORMAT' P@RTCD             Format error
+     C                     RETRN                             Return
+     C                     END                             FI
+      *
+      * Check Year in Leap Year table :
+      *
+     C                     Z-ADD1         P1      30       Set pointer 1
+     C           W@YY      LOKUP@LY,P1                 0102 FCT1<=FCT2
+      *
+      * Obtain day difference if year is not a leap year :
+      *
+     C           *IN02     IFEQ '0'                        IF NOT LEAP
+     C           W@YY      SUB  @LY,P1    P2      30         Year diff.
+     C           @LD,P1    ADD  @YD,P2    P@DYNO             Day diff.
+     C                     ELSE                            EL LEAP YEAR
+     C                     Z-ADD@LD,P1    P@DYNO             Days
+     C                     END                             FI
+      *
+      * Validate Month :
+      *
+     C           W@MM      IFLT 1                          IF MONTH <1
+     C           W@MM      ORGT 12                          OR      >12
+     C                     MOVE '*MONTH ' P@RTCD             Month error
+     C                     RETRN                             Return
+     C                     ELSE                            EL MONTH OK
+     C           *IN02     IFEQ '0'                        IF NOT LEAP
+     C                     ADD  @M1,W@MM  P@DYNO             Days to month
+     C                     ELSE                            EL LEAP YEAR
+     C                     ADD  @M2,W@MM  P@DYNO             Days to month
+     C                     END                             FI
+     C                     END                             FI
+      *
+      * Validate Days in month :
+      *
+     C           W@DD      IFLT 1                          IF DAYS <1
+     C           W@DD      ORGT @DD,W@MM                    OR     >LIMIT
+     C                     MOVE '*DAY   ' P@RTCD             Day error
+     C                     RETRN                             Return
+     C                     END                             FI
+      *
+     C           *IN02     IFEQ '0'                        IF NOT LEAP
+     C           W@MM      ANDEQ2                           AND  FEBRUARY
+     C           W@DD      ANDEQ29                          AND  DAY = 29
+     C                     MOVE '*LEAP  ' P@RTCD             Day error
+     C                     RETRN                             Return
+     C                     END                             FI 4
+      *
+     C                     ADD  W@DD      P@DYNO           Days
+      *
+      * Return to caller; leave this program active in pool :
+      *
+     C                     RETRN
+      *
+      *****************************************************************
+      /SPACE 3
+** @LY - Leap years from 1972 to 2068, starting at 2000 /
+00040812162024283236404448525660646872768084889296
+** @LD - Days between Leap years from 1972 to 2068, starting at 2000 /
+102271168813149146101607117532189932045421915233762483726298
+277592922030681321423360335064000000146102922043830584407305
+08766
+** @YD - Days offset for year /
+003660073101096
+** @M1 - Days in a normal year /
+000031059090120151181212243273304334
+** @M2 - Days in a leap year /
+000031060091121152182213244274305335
+** @DD - Days in months /
+031029031030031030031031030031030031
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,1926 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Initialisation program for CCM003')           *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL0014 - Takeon Program for CCM003 initialisation            *
+      *                                                               *
+      *  Function:  This program is called for CCM003 initialisation  *
+      *                                                               *
+      *  Called By: DLC0014 - Midas CCM003 initialisation             *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CAP212             Date 15Sep14               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *                 AR996895           Date 25Nov12               *
+      *                 CLE134             Date 14Mar11               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CRE075             Date 06Dec10               *
+      *                 CLE064             Date 06Dec10               *
+      *                 263666             Date 01Feb10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER016A            Date 19May08               *
+      *                 CER047             Date 19May08               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 246141             Date 26Mar07               *
+      *                 164847             Date 30Nov06               *
+      *                 BUG12990            Date 05Jan07              *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 242286             Date 25Sep06               *
+      *                 CDL049             Date 05Jul06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CIR013             Date 25Apr05               *
+      *                 CDL038             Date 10May05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CCM003  *CREATE    Date 09Feb01               *
+      *                                                               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CAP212 - FT Nostro Transfer API (Recompile)                  *
+      *  CDL094 - Enhance Receive Settlement Instructions             *
+      *           (Recompiled)                                        *
+      *  AR996895 - Incorrect accrual interest calculation            *
+      *             (Child: AR996897) (Recompile)                     *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
+      *  263666 - Recompiled due to changes in ZINTDYZ2               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER016A - German Interest Calculation: Upgarde of FGE059     *
+      *            to Midas Plus (Recompile)                          *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  246141 - Recompiled due to changes in ZINTDYZ2               *
+      *  164847 - Recompile over changes in /COPY ZINTDYZ2.           *
+      *  BUG12990 - Recompiled due to changes in ZINTDYZ2/ZINTDYZ2LE  *
+      *  242286 - Recompile over changes in /COPY ZINTDYZ2.           *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CIR013 - Additional Calculation Method for FRA/IRS/CCF       *
+      *           Recompile over GLINTC and ZINTDY.                   *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CCM003 - Lending City/Dealer interface.                      *
+      *                                                               *
+      *****************************************************************
+     FACNUMA  IF  E           K        DISK
+      ** Define Retail Accounts file
+      *
+     FDEALSDB IF  E                    DISK
+      ** Foreign Exchange Deals file
+      *
+     FNTRANDD IF  E                    DISK
+      ** Nostro Transfers file
+      *
+     FOTPAYDD IF  E                    DISK
+      ** FT Outgoing Payments file
+      *
+     FINPAYDD IF  E                    DISK
+      ** FT Incoming Payments file
+      *
+     FDLETNTPDO   E                    DISK         KCOMIT            UC
+     FDLETFTPDO   E                    DISK         KCOMIT            UC
+      *
+     F/EJECT
+      /TITLE FUNCTION OF INDICATORS
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N  C T I O N    O F    I N D I C A T O R S               *
+     F*                                                               *
+     F*  40         Failed CHAIN to LF/CLOAN                          *
+     F*  59         Stop Accruals is not active                       *
+     F*  60         Work indicator for COMP op code                   *
+     F*  97         SHUT DOWN                                         *
+     F*  98         Date Format Indicator                             *
+     F*  U7         Database Error                                    *
+     F*  U8         Database Error                                    *
+     F*  LR         Exit program                                      *
+     F*                                                               *
+     F*****************************************************************
+      /TITLE SUBROUTINE INDEX
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E    I N D E X                             *
+     F*                                                               *
+     F*  Main routine                                                 *
+     F*  #LINIT  -  Initial Screen Processing                         *
+     F*  #LLLAC  -  Processing for Loan Changes if program is LE0033  *
+     F*  #LALAC  -  Processing for Loan Changes if program is LE0070  *
+     F*  #LPLAC  -  Processing for Loan Amendment Changes             *
+     F*  #LPNTD  -  Processing for Nostro Transfer Dealing            *
+     F*  #LPNTF  -  Processing for Nostro Transfer FT                 *
+     F*  #LPFTP  -  Processing for Funds Transfer Payments            *
+     F*  #LCJIP  -  Check if Journal Image to be Processed            *
+     F*  #LPINC  -  Perform Interest Calculation                      *
+     F*  #AMNT1  -  Calculate Principle Amount                        *
+     F*  #AMNT2  -  Format Amount                                     *
+     F*  #FSIGN  -  Format Positive/Negative sign                     *
+     F*  #SETTL  -  Format Pay from Name/City and Pay to Name/City    *
+     F*  #FUNDT  -  Find Customer for Funds Transfer Changes          *
+     F*  #DATE   -  Convert date DDMMYY to YYYYMMDD format            *
+     F*  #NOST   -  Access Nostro customer details                    *
+     F*  #CURR   -  Access Currency details (No. of Decimal pos.)     *
+     F*  #ADDR   -  Access Customer Details file (Report Name/Town)   *
+     F*  #BRCH   -  Access Branch Details file (Internal Customer)    *
+     F*  APP1    -  Fixed Rate Term Loans                             *
+     F*  APP2    -  Floating Rate Term Loans                          *
+     F*  APP3    -  Call/Notice Loans                                 *
+     F*  APP4    -  Principal Increase/Repayments on Loans            *
+     F*  APP5    -  Base Rate/Spread Change on Loans                  *
+     F*  APP6    -  Format for Nostro Transfers Dealing               *
+     F*  APP7    -  Format for Nostro Transfers FT                    *
+     F*  APP8    -  FT Payments same currency                         *
+     F*  APP9    -  FT Payments cross currency                        *
+     F*  AP10    -  Format for Nostro Transfers FT      Second Record *
+     F*  AP11    -  Format for Nostro Transfers Dealing Second Record *
+     F*  GLINTC  -  Calculate Interest Between Two Dates              *
+     F*  ZFREQB  -  Calculate Next Payment/Statement Date             *
+     F*  ZFWDT   -  Find nth Working Day Forward from a Given Date    *
+     F*  *PSSR   -  Error Subroutine                                  *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+      *
+     E                    AAMT       16  1
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      /COPY ZSRSRC,ZDATE2Z1
+      /COPY ZSRSRC,ZFREQBZ1
+      /COPY ZSRSRC,ZHOLE
+      /COPY ZSRSRC,ZDATE9Z1
+      /COPY ZSRSRC,ZEDITZ1
+      *
+      *
+     I*-------------------------------------------------------------------------
+      *
+     IOTPAYDDF                                                                                CGL029
+     I              CDROQQ                          QQCDR1                                    CGL029
+      *                                                                                       CGL029
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+      ** Data Structures to convert to Date format (YYYYMMDD)
+     I            DS
+     I                                        1   8 DATF2
+     I                                        1   40YEAR
+     I                                        5   6 MONTH
+     I                                        7   8 DAY
+      *
+     I            DS
+     I                                        1   6 DATF1
+     I                                        1   2 DY
+     I                                        3   4 MTH
+     I                                        5   60YR
+      *
+      ** Data Structures to hold data to be output to files
+     IPFLD        DS                            512
+     ITEMP        DS                            512
+      *
+     II#DTA       DS                            256
+      *  Account type N=nostro nbr F=Full nostro G=General Ledger
+      *               P=Partial Ledger R= Retail Number
+     I                                        1   1 I#ATYP
+      *               Full General Ledger - CNUM/CCY/ACOD/ACSQ
+     I**********                              2  19 I#ACCT                                    CGL029
+     I                                        2  25 I#ACCT                                    CGL029
+     I**********                              2   70I#CNU1                                    CSD027
+     I                                        2   7 I#CNU1                                    CSD027
+     I                                        8  10 I#CCY1
+     I**********                             11  140I#ACO1                                    CGL029
+     I**********                             15  160I#ACS1                                    CGL029
+     I**********                             17  19 I#BRC1                                    CGL029
+     I                                       11  200I#ACO1                                    CGL029
+     I                                       21  220I#ACS1                                    CGL029
+     I                                       23  25 I#BRC1                                    CGL029
+      *               Nostro number
+     I                                        2   30I#NOSN
+     I                                        4   4 I#TEST
+      *               Full Nostro - CCY/NOSN
+     I                                        2   6 I#NOS
+      *               Retail Number
+     I                                        2  110I#ACNO
+      *               Partial Account - CNUM/ACOD/ACSQ
+     I**********                              2   70I#CNUM                                    CSD027
+     I                                        2   7 I#CNUM                                    CSD027
+     I**********                              8  110I#ACOD                                    CGL029
+     I**********                             12  130I#ACSQ                                    CGL029
+     I                                        8  170I#ACOD                                    CGL029
+     I                                       18  190I#ACSQ                                    CGL029
+      *               Branch of account if Partial                      '
+     I**********                             14  16 I#BRCA                                    CGL029
+     I                                       20  22 I#BRCA                                    CGL029
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     ISDCUST    E DSSDCUSTPD
+      ** Customer Details
+      *
+     ISDMMOD    E DSSDMMODPD
+      ** Module Setting Details
+      *
+     ISDCLND    E DSSDCLNDPD
+      ** Customer Lending ICD Details
+      *
+     ISDDEAL    E DSSDDEALPD
+     I              QQACCD                          QQACC1                                    CGL029
+      ** Deal Details
+      *
+     ISDBSRT    E DSSDBSRTPD
+      ** Base Rate Details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Currency Details
+      *
+     ISDNOST    E DSSDNOSTPD
+     I              QQACCD                          QQACC2                                    CGL029
+      ** Nostro Details
+      *
+     ISDBRCH    E DSSDBRCHPD
+     I              QQDFAC                          QQDFA1                                    CGL029
+      ** Branch Details
+      *
+     IDSFDY     E DSDSFDY
+      ** Short Data Structure
+      *
+     ISDACCT    E DSACCNTAB
+     I              RECI                            SDRECI
+     I              CNUM                            SDCNUM
+     I              CCY                             SDCCY
+     I              ACOD                            SDACOD
+     I              ACSQ                            SDACSQ
+     I              PRFC                            SDPRFC
+     I              ORED                            SDORED
+     I              LCD                             SDLCD
+     I              CHTP                            SDCHTP
+     I              TNLU                            SDTNLU
+      ** Account Details
+      *
+     I              'FTPAYMENT'           C         FTPAY
+     I              'CUSTLEND'            C         CUSTL
+     I              ',,,,,,,,,,,,'        C         EMPTY
+      ** Dealer ID and blank positions for FT Payments
+      *
+     I/COPY ZSRSRC,ZHOLI
+     I/COPY ZSRSRC,ZINTDYZ1
+     I/COPY ZSRSRC,ZDATE9Z2
+     I/COPY ZSRSRC,ZHOLDS
+     I/COPY ZSRSRC,ZAOZ2
+     I*--------------------------------------------------------------
+     I* THIS SECTION IS ADDED TO THE PGM DUE TO DBA2 PTF06 UPGRADE
+     I/COPY ZSRSRC,ZDAT10Z1
+     I*--------------------------------------------------------------
+      *
+      *****************************************************************
+      *                    MAIN CYCLE PROCESSING                      *
+      *****************************************************************
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Entry parameters from EXITPGM of RCVJRNE command
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           WKRTNC  1
+      *
+      ** Initial Processing
+      *
+     C                     EXSR #LINIT
+      *
+      ** Perform processing for take on.
+      *
+     C                     EXSR TAKEON
+      *
+      *
+     C                     RETRN
+      /EJECT
+      *****************************************************************
+      *  TAKEON - Take on of loans and loan amendments in City Dealer *
+      *                                                               *
+      *  This subroutine is only accessed if program is being run in  *
+      *  take on mode.                                                *
+      *                                                               *
+      *  The following transactions are taken on:                     *
+      *                                                               *
+      *  all live loans; and                                          *
+      *  all live loan amendments value dated today or forward valued.*
+      *                                                               *
+      *  Also, rate fixing records are generated where next rate      *
+      *  /spread and rollover date are non-zero.                      *
+      *                                                               *
+      *                                                               *
+      *  Called by  : Main processing.                                *
+      *                                                               *
+      *****************************************************************
+     C           TAKEON    BEGSR
+      *
+      ** Processing for Nostro Transfers Dealing
+      *
+      ** Open extract file for output.
+      *
+     C                     OPEN DLETNTPD
+      *
+      ** Read through Deals master file DEALSDB
+      *
+     C           1         SETLLDEALSDBF             40
+     C                     READ DEALSDBF                 40
+      *
+     C           *IN40     DOWEQ'0'
+      *
+     C           RECI      IFEQ 'D'
+     C           DTYP      ANDEQ'NX'
+     C           VDAT      ANDGEBJRDNB
+      *
+     C                     EXSR APP6
+     C                     EXSR AP11
+     C                     ENDIF
+      *
+     C           CHTP      IFEQ 'R'
+      *
+     C           DTYP      IFEQ 'NX'
+     C           VDAT      ANDGEBJRDNB
+      *
+     C                     EXSR APP6
+     C                     EXSR AP11
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Commit changes to file DLETNTPD.
+      *
+     C                     COMIT
+      *
+      ** Read next record on deals master file DEALSDB
+      *
+     C                     READ DEALSDBF                 40
+     C                     ENDDO
+      *
+      ** Close extract file.
+      *
+     C                     CLOSEDLETNTPD
+      *
+      *****************************************************************
+      *
+      ** Processing for Nostro Transfers FT
+      *
+      ** Open extract file for output.
+      *
+     C                     OPEN DLETNTPD
+      *
+      ** Read through Nostro Transfers master file NTRANND
+      *
+     C           1         SETLLNTRANDDF             40
+     C                     READ NTRANDDF                 40
+      *
+     C           *IN40     DOWEQ'0'
+      *
+      ** Only process authorised payments
+      *
+     C           AUIN      IFEQ 'Y'
+      *
+     C           RECI      IFEQ 'D'
+     C           VDAT      ANDGEBJRDNB
+      *
+     C                     EXSR APP7
+     C                     EXSR AP10
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Commit changes to file DLETNTPD.
+      *
+     C                     COMIT
+      *
+      ** Read next record on Nostro Transfers master file NTRANDD
+      *
+     C                     READ NTRANDDF                 40
+     C                     ENDDO
+      *
+      ** Close extract file.
+      *
+     C                     CLOSEDLETNTPD
+      *
+      *****************************************************************
+      *  Processing for Funds Transfer Payments - Outgoing
+      *
+      ** Open extract file for output.
+      *
+     C                     OPEN DLETFTPD
+      *
+      ** Read through Outgoing Payments master file OTPAYDD
+      *
+     C           1         SETLLOTPAYDDF             40
+     C                     READ OTPAYDDF                 40
+      *
+     C           *IN40     DOWEQ'0'
+      *
+      ** Clear work fields
+     C                     Z-ADD*ZEROS    @VDAT   50
+     C                     MOVE *BLANKS   @PCCY   3
+     C                     MOVE *BLANKS   @SMCY   3
+      *
+      ** Move the parm-Journal-Entry into a data structure defining all
+      ** individual PF/OTPAYDD and PF/INPAYDD fields
+      *
+     C                     MOVE 'OP'      TYPE    2
+     C                     MOVE AUIN      AUTH    1
+     C                     Z-ADDPVDT      @VDAT
+     C                     MOVE PCCY      @PCCY
+     C                     MOVE SMCY      @SMCY
+     C           PYTP      CABEQ'RP'      EXFT
+      *
+      ** Only process authorised payments
+      *
+     C           AUTH      IFEQ 'Y'
+      *
+     C           @VDAT     IFGE BJRDNB
+      *
+     C           @PCCY     IFEQ @SMCY
+     C                     EXSR APP8
+      *
+     C                     ELSE
+     C                     EXSR APP9
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *
+      ** Commit changes to file DLETFTPD.
+      *
+     C                     COMIT
+      *
+      ** Read next record on Outgoing Payments master file OTPAYDD
+      *
+     C                     READ OTPAYDDF                 40
+     C                     ENDDO
+      *
+     C           EXFT      TAG
+      *
+      ** Close extract file.
+      *
+     C                     CLOSEDLETFTPD
+      *
+      *****************************************************************
+      *  Processing for Funds Transfer Payments - Incoming
+      *
+      ** Open extract file for output.
+      *
+     C                     OPEN DLETFTPD
+      *
+      ** Read through Incoming Payments master file INPAYDD
+      *
+     C           1         SETLLINPAYDDF             40
+     C                     READ INPAYDDF                 40
+      *
+     C           *IN40     DOWEQ'0'
+      *
+      ** Clear work fields
+     C                     Z-ADD*ZEROS    @VDAT   50
+     C                     MOVE *BLANKS   @PCCY   3
+     C                     MOVE *BLANKS   @SMCY   3
+      *
+      ** Move the parm-Journal-Entry into a data structure defining all
+      ** individual PF/OTPAYDD and PF/INPAYDD fields
+      *
+     C                     MOVE 'IN'      TYPE
+     C                     MOVE AUIN      AUTH
+     C                     Z-ADDPVDT      @VDAT
+     C                     MOVE PCCY      @PCCY
+     C                     MOVE SMCY      @SMCY
+      *
+      ** Only process authorised payments
+      *
+     C           AUTH      IFEQ 'Y'
+      *
+     C           @VDAT     IFGE BJRDNB
+      *
+     C           @PCCY     IFEQ @SMCY
+     C                     EXSR APP8
+      *
+     C                     ELSE
+     C                     EXSR APP9
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Commit changes to file DLETFTPD.
+      *
+     C                     COMIT
+      *
+      ** Read next record on Incoming Payments master file INPAYDD
+      *
+     C                     READ INPAYDDF                 40
+     C                     ENDDO
+      *
+      ** Close extract file.
+      *
+     C                     CLOSEDLETFTPD
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *  #AMNT2 - Format Amount                                       *
+      *                                                               *
+      *  Called by  : APP6, APP7, APP8, APP9.                         *
+      *****************************************************************
+     C           #AMNT2    BEGSR
+      *
+     C                     MOVEA*BLANKS   AAMT
+     C                     MOVE *BLANKS   PAMT   16
+      *
+     C                     EXSR ZEDIT
+     C                     MOVEAZFIELD    AAMT
+     C           ' '       CHECKZFIELD    N       20
+     C                     MOVEAAAMT,N    PAMT
+      *
+     C           PFLD      CAT  PAMT:0    TEMP
+     C                     MOVELTEMP      PFLD
+      *
+     C           WINSRT    IFEQ 'Y'                        Insert Deal
+     C           PFLD      CAT  '+,':0    TEMP             ~~~~~~~~~~~
+     C                     ELSE                            Reverse Deal
+     C           PFLD      CAT  '-,':0    TEMP             ~~~~~~~~~~~~
+     C                     ENDIF
+     C                     MOVELTEMP      PFLD
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *  #FUNDT - Find Customer for Funds Transfer Changes            *
+      *                                                               *
+      *  Called by  : APP8, APP9.                                     *
+      *****************************************************************
+     C           #FUNDT    BEGSR
+      *
+     C                     MOVE *BLANKS   @CNUM   6
+      *
+     C           TYPE      IFEQ 'OP'
+     C           I#ATYP    IFEQ 'S'
+     C           I#ATYP    OREQ 'A'
+     C                     MOVE @PCCY     @CCY
+     C                     MOVELSNCO      @NOST
+     C                     EXSR #NOST
+     C                     MOVE A7CUST    @CNUM
+     C                     ENDIF
+     C                     ELSE
+     C           I#ATYP    IFEQ 'S'
+     C           I#ATYP    OREQ 'A'
+     C                     MOVE @SMCY     @CCY
+     C                     MOVELRCCO      @NOST
+     C                     EXSR #NOST
+     C                     MOVE A7CUST    @CNUM
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If account is Nostro or Full nostro look up on SDNOSTL1
+      *
+     C           I#ATYP    IFEQ 'N'
+     C           I#ATYP    OREQ 'F'
+      *
+      ** Format key for Access to SDNOSTPD and read file for nostro
+      *
+     C                     MOVE CNUM      @CNUM
+     C           I#ATYP    IFEQ 'N'
+     C                     MOVE @SMCY     @CCY
+     C                     MOVE I#NOSN    @NOST
+     C                     ELSE
+     C                     MOVELI#NOS     @CCY
+     C                     MOVE I#NOS     @NOST
+     C                     ENDIF
+      *
+     C                     EXSR #NOST
+     C                     MOVE A7CUST    @CNUM
+     C                     ENDIF
+      *
+     C           I#ATYP    IFEQ 'P'
+     C                     MOVE I#CNUM    @CNUM
+     C                     ENDIF
+      *
+     C           I#ATYP    IFEQ 'G'
+     C                     MOVE I#CNU1    @CNUM
+     C                     ENDIF
+      *
+      ** If account is Retail look up on ACNUMA
+      *
+     C           I#ATYP    IFEQ 'R'
+      *
+     C           K#RETN    KLIST
+     C                     KFLD           ACNO
+     C                     MOVELI#ACNO    ACNO
+      *
+      ** Read retail accounts for details
+      *
+     C           K#RETN    CHAINACNUMA               90
+     C           *IN90     IFEQ '0'
+     C                     MOVE CNUM      @CNUM
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *  #DATE - Convert date DDMMYY to YYYYMMDD format               *
+      *                                                               *
+      *  Called by  : APP1, APP2, APP3, APP4, APP5, APP6, APP7, APP8, *
+      *               APP9.                                           *
+      *****************************************************************
+     C           #DATE     BEGSR
+      *
+      ** Convert Day number to date format DDMMYY
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DATF1
+      *
+      ** Convert Date DDMMYY to format YYYMMDD
+     C           ZDAYNO    IFGE 10228
+     C           2000      ADD  YR        YEAR
+     C                     ELSE
+     C           1900      ADD  YR        YEAR
+     C                     ENDIF
+      *
+     C                     MOVE MTH       MONTH
+     C                     MOVE DY        DAY
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *  #NOST - Access Nostro customer details                       *
+      *                                                               *
+      *  Called by  : APP6, APP7.                                     *
+      *****************************************************************
+     C           #NOST     BEGSR
+      *
+      ** Access Nostro details using currency and nostro
+     C                     CALL 'AONOSTR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM *BLANKS   @CUST   6
+     C                     PARM           @CCY    3
+     C**********           PARM           @ACCD   4                                           CGL029
+     C                     PARM           @ACCD  10                                           CGL029
+     C                     PARM           @ACSN   2
+     C                     PARM           @NOST   2
+     C                     PARM           @BRCA   3
+     C                     PARM *BLANKS   @CSSN  10
+     C                     PARM *BLANKS   @PNOI   1
+     C           SDNOST    PARM SDNOST    DSFDY
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVELA7CUST    CUSTNO  6
+     C                     ELSE
+     C                     MOVE *BLANKS   CUSTNO
+     C                     ENDIF
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *  #CURR - Access Currency details (No. of Decimal positions)   *
+      *                                                               *
+      *  Called by  : APP1, APP2, APP3, APP4, APP5, APP6, APP7, APP8, *
+      *               APP9.                                           *
+      *****************************************************************
+     C           #CURR     BEGSR
+      *
+      ** Access Currency details
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Customer record not found - Error
+     C           @RTCD     IFNE *BLANKS
+     C                     Z-ADD7         DBASE            *************
+     C                     MOVEL@AJCD     DBKEY            *DB ERROR 07*
+     C                     MOVEL'SDCURRPD'DBFILE           *************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Save No. of Decimal positions to work field
+     C                     Z-ADDA6NBDP    @NBDP   10
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *  #ADDR - Access Customer Details file (Report Name and Town)  *
+      *                                                               *
+      *  Called by  : APP1, APP2, APP3, APP4, APP5, APP6, APP7, APP8, *
+      *               APP9.                                           *
+      *****************************************************************
+     C           #ADDR     BEGSR
+      *
+      ** Initialise workfields
+     C                     MOVE *BLANKS   @CRTN  10
+     C                     MOVE *BLANKS   @CRNM  15
+      *
+      ** Access SDCUSTPD using customer.
+     C                     MOVEL@CNUM     @KEY1
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      ** Customer record not found - Error
+     C           @RTCD     IFNE *BLANKS
+     C                     Z-ADD8         DBASE            *************
+     C                     MOVEL@KEY1     DBKEY            *DB ERROR 08*
+     C                     MOVEL'SDCUSTPD'DBFILE           *************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Save Customer Report Name and Customer Town to work fields
+     C                     MOVELBBCRTN    @CRTN
+     C                     MOVELBBCRNM    @CRNM
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *  #BRCH - Access Branch Details file (Internal Customer)       *
+      *                                                               *
+      *  Called by  : APP7, APP8, APP9.                               *
+      *****************************************************************
+     C           #BRCH     BEGSR
+      *
+      ** Access SDBRCHPD using branch.
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           @BRCD   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+      ** Customer record not found - Error
+     C           @RTCD     IFNE *BLANKS
+     C                     Z-ADD9         DBASE            *************
+     C                     MOVEL@BRCD     DBKEY            *DB ERROR 09*
+     C                     MOVEL'SDBRCHPD'DBFILE           *************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Save Customer Report Name and Customer Town to work fields
+     C                     MOVELA8BICN    @CNUM
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *  APP6 - Format for Nostro Transfers Dealing                   *
+      *                                                               *
+      *  Called by  : MAIN   - Main Processing Routine                *
+      *****************************************************************
+     C           APP6      BEGSR
+      *
+     C                     MOVE *BLANKS   PFLD
+     C                     MOVE *BLANKS   TEMP
+      *
+      ** Record ID.
+     C                     MOVEL'MMCASH,' PFLD
+      *
+      ** Currency
+     C           PFLD      CAT  PUCY:0    TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Counterparty Name (Customer Report Name)
+     C                     MOVELCNUM      @CNUM
+     C                     EXSR #ADDR
+      *
+     C           PFLD      CAT  @CRNM:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Counterparty City (Customer Town)
+     C           PFLD      CAT  @CRTN:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Amount
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE PUCY      @AJCD
+     C                     EXSR #CURR
+      *
+     C                     Z-ADD@NBDP     ZADEC
+     C                     MOVE PUAM      ZFIELD
+     C                     EXSR #AMNT2
+      *
+      ** Value Date converted to YYYYMMDD
+     C                     Z-ADDVDAT      ZDAYNO
+     C                     EXSR #DATE
+      *
+     C           PFLD      CAT  DATF2:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Broker, Portfolio, Receive to Name and Receive to City are
+      ** all blank.
+     C           PFLD      CAT  ',,':0    TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Pay from Name (Customer Report Name)
+      *
+     C                     MOVE PUCY      @CCY
+      *
+      ** Pay to Name (Customer Report Name)
+     C           WINSRT    IFEQ 'Y'                        Insert Deal
+     C                     MOVELPONS      @NOST            ~~~~~~~~~~~
+     C                     ELSE                            Reverse Deal
+     C                     MOVELRONS      @NOST            ~~~~~~~~~~~~
+     C                     ENDIF
+      *
+     C                     EXSR #NOST
+      *
+     C           CUSTNO    IFNE *BLANKS
+     C                     MOVELCUSTNO    @CNUM
+     C                     EXSR #ADDR
+      *
+     C           PFLD      CAT  @CRNM:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      ** Pay to City (Customer Town)
+     C           PFLD      CAT  @CRTN:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+     C                     ELSE
+     C           PFLD      CAT  ',,':0    TEMP
+     C                     MOVELTEMP      PFLD
+     C                     ENDIF
+      *
+      ** Via Name, Via Name, In Favour of Name and In Favour of
+      ** City are all blank.
+     C           PFLD      CAT  ',,,,,,':0TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Back Office Flag
+     C           PFLD      CAT  'B,':0    TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Back Office Reference Number
+     C                     MOVEL'D'       BORNO   7
+     C                     MOVE DLNO      BORNO
+      *
+     C           PFLD      CAT  BORNO:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Dealer ID.
+     C           PFLD      CAT  'NOSTRO':0TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Deal No., Cross Reference, Cancel Reference, Flags and
+      ** Other PCW are all blank.
+     C           PFLD      CAT  ',,,,,':0 TEMP
+     C                     MOVELTEMP      PFLD
+      *
+     C                     MOVELPFLD      EDATA
+     C                     WRITEDLETNTD0
+      *
+     C                     ENDSR
+      *****************************************************************
+      *  AP49 - FT Payments cross currency                            *
+      *                                                               *
+      *  Called by  : MAIN   - Main Processing Routine                *
+      *****************************************************************
+     C           APP9      BEGSR
+      *
+     C                     MOVE *BLANKS   PFLD
+     C                     MOVE *BLANKS   TEMP
+      *
+      ** Record ID.
+     C                     MOVEL'FXOUTR,' PFLD
+      *
+      ** Settlement Currency
+     C           PFLD      CAT  @SMCY:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Pay Currency
+     C           PFLD      CAT  @PCCY:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Counterparty Name (Internal Customer Report Name)
+     C           TYPE      IFEQ 'OP'
+     C                     MOVE BRCA      @BRCD
+     C                     ELSE
+     C                     MOVE BRCA      @BRCD
+     C                     ENDIF
+      *
+     C                     EXSR #BRCH
+     C                     EXSR #ADDR
+      *
+     C           PFLD      CAT  @CRNM:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Counterparty City (Internal Customer Town)
+     C           PFLD      CAT  @CRTN:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Settlement Amount
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE @SMCY     @AJCD
+     C                     EXSR #CURR
+      *
+     C                     Z-ADD@NBDP     ZADEC
+     C                     Z-ADDA6SPRT    @SPRT  135
+     C           TYPE      IFEQ 'OP'
+     C                     MOVE SMAM      ZFIELD
+     C                     ELSE
+     C                     MOVE SMAM      ZFIELD
+     C                     ENDIF
+      *
+     C                     MOVE 'Y'       WINSRT
+     C                     EXSR #AMNT2
+      *
+      ** Pay Amount
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE @PCCY     @AJCD
+     C                     EXSR #CURR
+      *
+     C                     Z-ADD@NBDP     ZADEC
+     C           TYPE      IFEQ 'OP'
+     C                     MOVE PYAM      ZFIELD
+     C                     ELSE
+     C                     MOVE PYAM      ZFIELD
+     C                     ENDIF
+      *
+     C                     MOVE 'N'       WINSRT
+     C                     EXSR #AMNT2
+      *
+      ** Spot Date - Settlement Value Date converted to YYYYMMDD
+     C           TYPE      IFEQ 'OP'
+     C                     Z-ADDSLDT      ZDAYNO
+     C                     ELSE
+     C                     Z-ADDSLDT      ZDAYNO
+     C                     ENDIF
+      *
+     C                     EXSR #DATE
+      *
+     C           PFLD      CAT  DATF2:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Pay Value Date converted to YYYYMMDD
+     C                     Z-ADD@VDAT     ZDAYNO
+     C                     EXSR #DATE
+      *
+     C           PFLD      CAT  DATF2:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Spot Rate
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVEA*BLANKS   AAMT
+     C                     MOVE *BLANKS   SRATE  16
+     C                     Z-ADD5         ZADEC
+     C                     MOVE @SPRT     ZFIELD
+      *
+     C                     EXSR ZEDIT
+     C                     MOVEAZFIELD    AAMT
+     C           ' '       CHECKZFIELD    N
+     C                     MOVEAAAMT,N    SRATE
+      *
+     C           PFLD      CAT  SRATE:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Outright Rate - Exchange rate
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVEA*BLANKS   AAMT
+     C                     MOVE *BLANKS   ERATE  16
+     C                     Z-ADD5         ZADEC
+     C           TYPE      IFEQ 'OP'
+     C                     Z-ADDRATE      @RATE
+     C                     MOVE @RATE     ZFIELD
+     C                     ELSE
+     C                     Z-ADDRATE      @RATE  135
+     C                     MOVE @RATE     ZFIELD
+     C                     ENDIF
+      *
+     C                     EXSR ZEDIT
+     C                     MOVEAZFIELD    AAMT
+     C           ' '       CHECKZFIELD    N
+     C                     MOVEAAAMT,N    ERATE
+      *
+     C           PFLD      CAT  ERATE:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Option Date, Broker, Portfolio, Receive to Name and Receive
+      ** to City are all blank.
+     C           TYPE      IFEQ 'OP'
+     C           PFLD      CAT  ',,,,,':0 TEMP
+     C                     ELSE
+     C           PFLD      CAT  ',,,':0   TEMP
+     C                     END
+     C                     MOVELTEMP      PFLD
+      *
+      ** Pay from Name (Customer Report Name) For OP
+      ** Receive To Name (Customer Report Name) For IP
+     C                     MOVE *BLANKS   I#ACCT
+     C           TYPE      IFEQ 'OP'
+     C           DSTT      IFEQ 'F'
+     C                     MOVELDSTT      I#ATYP
+     C                     MOVELDST1      I#ACCT
+     C                     ELSE
+     C           DSTT      IFEQ 'S'
+     C                     MOVELDSTT      I#ATYP
+     C                     MOVELSNCO      I#ACCT
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ELSE
+     C           SNTP      IFEQ 'F'
+     C                     MOVELSNTP      I#ATYP
+     C                     MOVELSND1      I#ACCT
+     C                     ELSE
+     C           SNTP      IFEQ 'S'
+     C                     MOVELSNTP      I#ATYP
+     C                     MOVELRCCO      I#ACCT
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C* Pay From Blank for INPAYDD
+     C           I#ACCT    IFNE *BLANKS
+     C                     EXSR #FUNDT
+     C                     ELSE
+     C                     MOVE *BLANKS   @CNUM
+     C                     ENDIF
+      *
+     C           @CNUM     IFNE *BLANKS
+     C                     EXSR #ADDR
+      *
+     C           PFLD      CAT  @CRNM:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      ** Pay from City (Customer Town)
+     C           PFLD      CAT  @CRTN:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+     C                     ELSE
+     C           PFLD      CAT  ',,':0    TEMP
+     C                     MOVELTEMP      PFLD
+     C                     ENDIF
+     C           TYPE      IFEQ 'IN'
+     C           PFLD      CAT  ',,':0    TEMP
+     C                     MOVELTEMP      PFLD
+     C                     END
+      *
+      ** Pay to Name (Customer Report Name)
+     C                     MOVE *BLANKS   I#ACCT
+     C           TYPE      IFEQ 'OP'
+     C                     MOVEL*BLANKS   I#ACCT
+      *
+     C                     ELSE
+     C                     MOVEL*BLANKS   I#ACCT
+     C                     ENDIF
+      *
+     C           I#ACCT    IFNE *BLANKS
+     C                     EXSR #FUNDT
+     C                     ELSE
+     C                     MOVE *BLANKS   @CNUM
+     C                     ENDIF
+      *
+     C           @CNUM     IFNE *BLANKS
+     C                     EXSR #ADDR
+      *
+     C           PFLD      CAT  @CRNM:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      ** Pay to City (Customer Town)
+     C           PFLD      CAT  @CRTN:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+     C                     ELSE
+     C           PFLD      CAT  ',,':0    TEMP
+     C                     MOVELTEMP      PFLD
+     C                     ENDIF
+      *
+      ** Via Name, Via Name, In Favour of Name and In Favour of
+      ** City are all blank.
+     C           PFLD      CAT  ',,,,':0  TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Back Office Flag
+     C           PFLD      CAT  'B,':0    TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Back Office Reference Number
+     C           TYPE      IFEQ 'OP'
+     C           PFLD      CAT  PREF:0    TEMP
+     C                     ELSE
+     C           PFLD      CAT  PREF:0    TEMP
+     C                     ENDIF
+      *
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Dealer ID.
+     C           PFLD      CAT  FTPAY:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Update X Position Flag, Near USD/Cur1 Rate, Near USD Equiv,
+      ** Far USD/Cur1 Rate, Far USD Equiv, Deal No., Cross Ref.,
+      ** Cancel Ref., Flags, Other PCW, Third Currency and Arbitage
+      ** Flag are all blank.
+     C           PFLD      CAT  EMPTY:0   TEMP
+     C                     MOVELTEMP      PFLD
+      *
+     C                     MOVELPFLD      EDATA
+     C                     WRITEDLETFTD0
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *  APP7 - Format for Nostro Transfers FT                        *
+      *                                                               *
+      *  Called by  : MAIN   - Main Processing Routine                *
+      *****************************************************************
+     C           APP7      BEGSR
+      *
+     C                     MOVE *BLANKS   PFLD
+     C                     MOVE *BLANKS   TEMP
+      *
+      ** Record ID.
+     C                     MOVEL'MMCASH,' PFLD
+      *
+      ** Currency
+     C           PFLD      CAT  CCY:0     TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Counterparty Name (Internal Customer Report Name)
+     C                     MOVE BRCA      @BRCD
+     C                     EXSR #BRCH
+     C                     EXSR #ADDR
+      *
+     C           PFLD      CAT  @CRNM:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Counterparty City (Internal Customer Town)
+     C           PFLD      CAT  @CRTN:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Amount
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE CCY       @AJCD
+     C                     EXSR #CURR
+      *
+     C                     Z-ADD@NBDP     ZADEC
+     C                     MOVE AMNT      ZFIELD
+      *
+     C                     MOVE 'Y'       WINSRT
+     C                     EXSR #AMNT2
+      *
+      ** Value Date converted to YYYYMMDD
+     C                     Z-ADDVDAT      ZDAYNO
+     C                     EXSR #DATE
+      *
+     C           PFLD      CAT  DATF2:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Broker, Portfolio, Receive to Name and Receive to City are
+      ** all blank.
+     C           PFLD      CAT  ',,':0    TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Pay from Name (Customer Report Name)
+     C                     MOVE CCY       @CCY
+      *
+      ** Pay to Name (Customer Report Name)
+     C                     MOVELACBN      @NOST
+     C                     EXSR #NOST
+      *
+     C           CUSTNO    IFNE *BLANKS                    B1
+     C                     MOVELCUSTNO    @CNUM
+     C                     EXSR #ADDR
+      *
+     C           PFLD      CAT  @CRNM:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      ***Pay to City (Customer Town)
+     C           PFLD      CAT  @CRTN:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+     C                     ELSE                            X1
+     C           PFLD      CAT  ',,':0    TEMP
+     C                     MOVELTEMP      PFLD
+     C                     ENDIF                           E1
+      *
+      ** Via Name, Via Name, In Favour of Name and In Favour of
+      ** City are all blank.
+     C           PFLD      CAT  ',,,,,,':0TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Back Office Flag
+     C           PFLD      CAT  'B,':0    TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Back Office Reference Number
+     C           PFLD      CAT  TFRF:0    TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Dealer ID.
+     C           PFLD      CAT  'NOSTRO':0TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Deal No., Cross Reference, Cancel Reference, Flags and
+      ** Other PCW are all blank.
+     C           PFLD      CAT  ',,,,,':0 TEMP
+     C                     MOVELTEMP      PFLD
+      *
+     C                     MOVELPFLD      EDATA
+     C                     WRITEDLETNTD0
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *  APP8 - FT Payments same currency                             *
+      *                                                               *
+      *  Called by  : MAIN   - Main Processing Routine                *
+      *****************************************************************
+     C           APP8      BEGSR
+      *
+     C                     MOVE *BLANKS   PFLD
+     C                     MOVE *BLANKS   TEMP
+      *
+      ** Record ID.
+     C                     MOVEL'MMCASH,' PFLD
+      *
+      ** Currency
+     C           PFLD      CAT  @SMCY:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Counterparty Name (Internal Customer Report Name)
+     C           TYPE      IFEQ 'OP'
+     C                     MOVE BRCA      @BRCD
+     C                     ELSE
+     C                     MOVE BRCA      @BRCD
+     C                     ENDIF
+      *
+     C                     EXSR #BRCH
+     C                     EXSR #ADDR
+      *
+     C           PFLD      CAT  @CRNM:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Counterparty City (Internal Customer Town)
+     C           PFLD      CAT  @CRTN:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Amount
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE @SMCY     @AJCD
+     C                     EXSR #CURR
+      *
+     C                     Z-ADD@NBDP     ZADEC
+     C           TYPE      IFEQ 'OP'
+     C                     MOVE SMAM      ZFIELD
+     C                     MOVE 'N'       WINSRT
+     C                     ELSE
+     C                     MOVE 'Y'       WINSRT
+     C                     MOVE SMAM      ZFIELD
+     C                     ENDIF
+      *
+     C                     EXSR #AMNT2
+      *
+      ** Value Date converted to YYYYMMDD
+     C           TYPE      IFEQ 'OP'
+     C                     Z-ADDSLDT      ZDAYNO
+     C                     ELSE
+     C                     Z-ADDSLDT      ZDAYNO
+     C                     ENDIF
+      *
+     C                     EXSR #DATE
+      *
+     C           PFLD      CAT  DATF2:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Broker, Portfolio, Receive to Name and Receive to City are
+      ** all blank.
+     C           TYPE      IFEQ 'OP'
+     C           PFLD      CAT  ',,,,':0  TEMP
+     C                     ELSE
+     C           PFLD      CAT  ',,':0    TEMP
+     C                     END
+     C                     MOVELTEMP      PFLD
+      *
+      ** Pay from Name (Customer Report Name)
+     C                     MOVE *BLANKS   I#ACCT
+     C           TYPE      IFEQ 'OP'
+     C           DSTT      IFEQ 'F'
+     C                     MOVELDSTT      I#ATYP
+     C                     MOVELDST1      I#ACCT
+     C                     ELSE
+     C           SNCT      IFEQ 'N'
+     C                     MOVELDSTT      I#ATYP
+     C                     MOVELSNCO      I#ACCT
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ELSE
+     C           SNTP      IFEQ 'F'
+     C                     MOVELSNTP      I#ATYP
+     C                     MOVELSND1      I#ACCT
+     C                     ELSE
+     C           RCRT      IFEQ 'N'
+     C                     MOVELSNTP      I#ATYP
+     C                     MOVELRCCO      I#ACCT
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           I#ACCT    IFNE *BLANKS
+     C                     EXSR #FUNDT
+     C                     ELSE
+     C                     MOVE *BLANKS   @CNUM
+     C                     ENDIF
+      *
+     C           @CNUM     IFNE *BLANKS
+     C                     EXSR #ADDR
+      *
+     C           PFLD      CAT  @CRNM:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      ** Pay from City (Customer Town)
+     C           PFLD      CAT  @CRTN:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+     C                     ELSE
+     C           PFLD      CAT  ',,':0    TEMP
+     C                     MOVELTEMP      PFLD
+     C                     ENDIF
+     C           TYPE      IFEQ 'IN'
+     C           PFLD      CAT  ',,':0    TEMP
+     C                     MOVELTEMP      PFLD
+     C                     END
+      *
+      ** Pay to Name (Customer Report Name)
+     C                     MOVE *BLANKS   I#ACCT
+     C           TYPE      IFEQ 'OP'
+     C                     MOVEL*BLANKS   I#ACCT
+      *
+     C                     ELSE
+     C                     MOVEL*BLANKS   I#ACCT
+     C                     ENDIF
+      *
+     C           I#ACCT    IFNE *BLANKS
+     C                     EXSR #FUNDT
+     C                     ELSE
+     C                     MOVE *BLANKS   @CNUM
+     C                     ENDIF
+      *
+     C           @CNUM     IFNE *BLANKS
+     C                     EXSR #ADDR
+      *
+     C           PFLD      CAT  @CRNM:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      ** Pay to City (Customer Town)
+     C           PFLD      CAT  @CRTN:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+     C                     ELSE
+     C           PFLD      CAT  ',,':0    TEMP
+     C                     MOVELTEMP      PFLD
+     C                     ENDIF
+      *
+      ** Via Name, Via Name, In Favour of Name and In Favour of
+      ** City are all blank.
+     C           PFLD      CAT  ',,,,':0  TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Back Office Flag
+     C           PFLD      CAT  'B,':0    TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Back Office Reference Number
+     C           TYPE      IFEQ 'OP'
+     C           PFLD      CAT  PREF:0    TEMP
+     C                     ELSE
+     C           PFLD      CAT  PREF:0    TEMP
+     C                     ENDIF
+      *
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Dealer ID.
+     C           PFLD      CAT  FTPAY:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Deal No., Cross Reference, Cancel Reference, Flags and
+      ** Other PCW are all blank.
+     C           PFLD      CAT  ',,,,,':0 TEMP
+     C                     MOVELTEMP      PFLD
+      *
+     C                     MOVELPFLD      EDATA
+     C                     WRITEDLETFTD0
+      *
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*  APP7 - Format for Nostro Transfers FT                        *
+     C*                                                               *
+     C*  Called by  : MAIN   - Main Processing Routine                *
+     C*****************************************************************
+     C           AP10      BEGSR
+     C*
+     C                     MOVE *BLANKS   PFLD
+     C                     MOVE *BLANKS   TEMP
+     C*
+     C           WINSRT    IFEQ 'N'
+     C                     MOVEL'Y'       WINSRT  1
+     C                     ELSE
+     C                     MOVEL'N'       WINSRT
+     C                     ENDIF
+     C*
+     C** Record ID.
+     C                     MOVEL'MMCASH,' PFLD
+     C*
+     C** Currency
+     C           PFLD      CAT  CCY:0     TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+     C*
+     C** Counterparty Name (Internal Customer Report Name)
+     C                     MOVE BRCA      @BRCD
+     C                     EXSR #BRCH
+     C                     EXSR #ADDR
+     C*
+     C           PFLD      CAT  @CRNM:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+     C*
+     C** Counterparty City (Internal Customer Town)
+     C           PFLD      CAT  @CRTN:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+     C*
+     C** Amount
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE CCY       @AJCD
+     C                     EXSR #CURR
+     C*
+     C                     Z-ADD@NBDP     ZADEC
+     C                     MOVE AMNT      ZFIELD
+     C*
+     C                     EXSR #AMNT2
+     C*
+     C** Value Date converted to YYYYMMDD
+     C                     Z-ADDVDAT      ZDAYNO
+     C                     EXSR #DATE
+     C*
+     C           PFLD      CAT  DATF2:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+     C*
+     C** Broker, Portfolio, Receive to Name and Receive to City are
+     C** all blank.
+     C           PFLD      CAT  ',,,,':0  TEMP
+     C                     MOVELTEMP      PFLD
+     C*
+     C** Pay from Name (Customer Report Name)
+     C                     MOVE CCY       @CCY
+     C                     MOVELDEST      @NOST
+     C                     EXSR #NOST
+     C*
+     C           CUSTNO    IFNE *BLANKS
+     C                     MOVELCUSTNO    @CNUM
+     C                     EXSR #ADDR
+     C*
+     C           PFLD      CAT  @CRNM:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+     C** Pay from City (Customer Town)
+     C           PFLD      CAT  @CRTN:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+     C*
+     C                     ELSE
+     C           PFLD      CAT  ',,':0    TEMP
+     C                     MOVELTEMP      PFLD
+     C                     ENDIF
+     C*
+     C           PFLD      CAT  ',,,,':0  TEMP
+     C                     MOVELTEMP      PFLD
+     C*
+     C** Back Office Flag
+     C           PFLD      CAT  'B,':0    TEMP
+     C                     MOVELTEMP      PFLD
+     C*
+     C** Back Office Reference Number
+     C           PFLD      CAT  TFRF:0    TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+     C*
+     C** Dealer ID.
+     C           PFLD      CAT  'NOSTRO':0TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+     C*
+     C** Deal No., Cross Reference, Cancel Reference, Flags and
+     C** Other PCW are all blank.
+     C           PFLD      CAT  ',,,,,':0 TEMP
+     C                     MOVELTEMP      PFLD
+     C*
+     C                     MOVELPFLD      EDATA
+     C                     WRITEDLETNTD0
+     C*
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *  AP11 - Format for Nostro Transfers Dealing                   *
+      *                                                               *
+      *  Called by  : MAIN   - Main Processing Routine                *
+      *****************************************************************
+     C           AP11      BEGSR
+      *
+     C                     MOVE *BLANKS   PFLD
+     C                     MOVE *BLANKS   TEMP
+      *
+     C           WINSRT    IFEQ 'N'
+     C                     MOVEL'Y'       WINSRT
+     C                     ELSE
+     C                     MOVEL'N'       WINSRT
+     C                     ENDIF
+      *
+      ** Record ID.
+     C                     MOVEL'MMCASH,' PFLD
+      *
+      ** Currency
+     C           PFLD      CAT  PUCY:0    TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Counterparty Name (Customer Report Name)
+     C                     MOVELCNUM      @CNUM
+     C                     EXSR #ADDR
+      *
+     C           PFLD      CAT  @CRNM:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Counterparty City (Customer Town)
+     C           PFLD      CAT  @CRTN:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Amount
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE PUCY      @AJCD
+     C                     EXSR #CURR
+      *
+     C                     Z-ADD@NBDP     ZADEC
+     C                     MOVE PUAM      ZFIELD
+     C                     EXSR #AMNT2
+      *
+      ** Value Date converted to YYYYMMDD
+     C                     Z-ADDVDAT      ZDAYNO
+     C                     EXSR #DATE
+      *
+     C           PFLD      CAT  DATF2:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Broker, Portfolio, Receive to Name and Receive to City are
+      ** all blank.
+     C           PFLD      CAT  ',,,,':0  TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Pay from Name (Customer Report Name)
+      *
+     C           WINSRT    IFEQ 'Y'                        Insert Deal
+     C                     MOVELRONS      @NOST            ~~~~~~~~~~~
+     C                     ELSE                            Reverse Deal
+     C                     MOVELPONS      @NOST            ~~~~~~~~~~~~
+     C                     ENDIF
+      *
+     C                     MOVE PUCY      @CCY
+     C                     EXSR #NOST
+      *
+     C           CUSTNO    IFNE *BLANKS
+     C                     MOVELCUSTNO    @CNUM
+     C                     EXSR #ADDR
+      *
+     C           PFLD      CAT  @CRNM:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *  Pay from City (Customer Town)
+     C           PFLD      CAT  @CRTN:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+     C                     ELSE
+     C           PFLD      CAT  ',,':0    TEMP
+     C                     MOVELTEMP      PFLD
+     C                     ENDIF
+      *
+      ** Via Name, Via Name, In Favour of Name and In Favour of
+      ** City are all blank.
+     C           PFLD      CAT  ',,,,':0  TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Back Office Flag
+     C           PFLD      CAT  'B,':0    TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Back Office Reference Number
+     C                     MOVEL'D'       BORNO
+     C                     MOVE DLNO      BORNO
+      *
+     C           PFLD      CAT  BORNO:0   TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Dealer ID.
+     C           PFLD      CAT  'NOSTRO':0TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Deal No., Cross Reference, Cancel Reference, Flags and
+      ** Other PCW are all blank.
+     C           PFLD      CAT  ',,,,,':0 TEMP
+     C                     MOVELTEMP      PFLD
+      *
+     C                     MOVELPFLD      EDATA
+     C                     WRITEDLETNTD0
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *  #LINIT - Initial Processing                                  *
+      *                                                               *
+      *  Called by  : MAIN   - Main Processing Routine                *
+      *****************************************************************
+     C           #LINIT    BEGSR
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DL0014'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Key for CHAIN to 'A' or 'B' record from LF/LOAMS
+      *
+     C           CLONKY    KLIST
+     C**********           KFLD           LNRFK   60                                          CLE148
+     C                     KFLD           LNRFK   6                                           CLE148
+     C                     KFLD           RCDTK   1
+      *
+      ** Initialise work fields
+      *
+     C                     MOVEL*BLANKS   WFCYL   1
+      *
+      ** If First Cycle
+      *
+     C           WFCYL     IFEQ *BLANKS                    B1
+      *
+      ** Access the Bank Details.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS                    B2
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            *************
+     C                     MOVEL'SDBANKPD'DBFILE           *DB ERROR 01*
+     C                     MOVEL'*FIRST'  DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                             E2
+      *
+      ** Access Module Setting Details
+      *
+     C                     CALL 'AOMMODR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDMMOD    PARM SDMMOD    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS                    B2
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            *************
+     C                     MOVEL'SDMMODPD'DBFILE           *DB ERROR 02*
+     C                     MOVEL'*FIRST'  DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                             E2
+      *
+      ** Check if Customer Lending module used within the system
+      *
+     C           BGCSLN    IFEQ 'Y'                        B2
+      *
+      ** Access Customer Lending Details
+      *
+     C                     CALL 'AOCLNDR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C********** SDCLND    PARM SDCLND    DSFDY                                               CLE134
+     C           SDCLND    PARM SDCLND    DSSDY                                               CLE134
+      *
+     C           @RTCD     IFNE *BLANKS                    B3
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE            *************
+     C                     MOVEL'SDCLNDPD'DBFILE           *DB ERROR 03*
+     C                     MOVEL'*FIRST'  DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                             E3
+     C                     END                             E2
+      *
+     C           BJRDNB    ADD  30        WCDAT1  50
+     C                     MOVEL'Y'       WFCYL
+      *
+     C                     END                             E1
+      *
+      **  Check System Date Format, DDMMYY (*IN98 off)
+      **                            MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVEL'1'       *IN98
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      * Calls: None                                                   *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      *
+     C                     DUMP
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+     C/COPY ZSRSRC,ZFWDT
+      /EJECT
+     C/COPY ZSRSRC,ZACCH
+      /EJECT
+     C/COPY ZSRSRC,GLINTCZ1
+      /EJECT
+     C/COPY ZSRSRC,ZSAVEZ1
+      /EJECT
+     C/COPY ZSRSRC,ZRSTORZ1
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+      /EJECT
+     C/COPY ZSRSRC,ZFREQBZ2
+      /EJECT
+     C/COPY ZSRSRC,ZINTDYZ2
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+     C/COPY ZSRSRC,ZCHKH
+      /EJECT
+     C/COPY ZSRSRC,ZDATE9Z3
+      /EJECT
+     C/COPY ZSRSRC,ZEDITZ2
+      /EJECT
+     I*--------------------------------------------------------------
+     I* THIS SECTION IS ADDED TO THE PGM DUE TO DBA2 PTF06 UPGRADE
+     I/COPY ZSRSRC,ZDAT10Z2
+      /EJECT
+     I*--------------------------------------------------------------
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   ZFMD  -  NUMBER OF DAYS IN THE MONTH
+312831303130313130313031
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365

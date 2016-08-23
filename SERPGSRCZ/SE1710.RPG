@@ -1,0 +1,1208 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Pay/receive message generation')              *
+     F*****************************************************************
+     F*                                                               *
+     F*   Midas - SECURITIES TRADING MODULE                           *
+     F*                                                               *
+     F*   SE1710 - PAY/RECEIVE - INPUT CYCLE & C.O.B.                 *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CLE148             Date 23Jul12               *
+      *  Prev Amend No. CSW210             Date 04May10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 CPK027             Date 18Apr07               *
+      *                 162270A            Date 12Jan07               *
+      *                 162270             Date 19Dec06               *
+      *                 180739             Date 19Dec06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 222458             Date 01Jul03               *
+      *                 219243             Date 01Jul03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 169025             Date 05Jun01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CFT013             Date 25May00               *
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 157756             Date 14Jul99               *
+      *                 CEU005             Date 05Feb98               *
+     F*                 099441             Date 19Aug97               *
+     F*                 S01408             DATE 21JUN95               *
+     F*                 084182             DATE 21JUN95               *
+     F*                 085056             DATE 11APR95               *
+     F*                 080283             DATE 23JAN95               *
+     F*                 S01408             DATE 18MAY94               *
+     F*                 052254             DATE 10JAN94               *
+     F*                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CSW210 - SWIFT 2010 Changes (Recompile)                      *
+      *  CPK027 - Errors in compiling MP1_3_TTTS - change WPYFM to 6A *
+      *           Also redefine CNUM to 6A.                           *
+      *  162270A- Change feature BCY001 to CSE099.                    *
+      *  162270 - Amended program such that for a TP trade with a     *
+      *           pay code of 1, a clearance type of 3 or 4 and a pay *
+      *           from different to the delivered to, MT202 and MT210 *
+      *           will be generated.                                  *
+      *           Also include 180739 changes.                        *
+      *           Amended for CGL029.                                 *
+      *  180739 - Generation of MT210 when a trade is TP, with pay    *
+      *           code of 1, a clearance type of 3 or 4, should not   *
+      *           not depend on the generation of MT202.              *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  222458 - Complete fix 219243                                 *
+      *  219243 - Fields 33B and 36 for FX Deals                      *
+      *  169025 - Remove fix 157756 as it is causing problems under   *
+      *           the dealing module.                                 *
+      *  CFT013 - Straight-through Processing Phase 2 MT103 Messages  *
+      *           Generation for non-FT.                              *
+      *  CDL008 - Continuous Linked Settlement                        *
+     F*  157756 - Additional parameter to match parameters in         *
+     F*           deletion/cancellation control program MG9200.       *
+     F*  CEU005 - EMU SE Settlement Ccy Conversion                    *
+     F*  099441 - Replace bank/non-bank flag with financial           *
+     F*           institution flag.                                   *
+     F*  S01408 - Core hook SE1710CCP1 added                          *
+     F*         - Core hook SE1710FFP1 added                          *
+     F*  084182 - Suppression of SWIFT Message if the counterparty is *
+     F*           the nostro                                          *
+     F*  085056 - Used incorrect pay to account and branch for MT210. *
+     F*  080283 - For a purchase, field 52A on the MT202 should not   *
+     F*           be the client. The Ordering Institution is          *
+     F*           'ourselves'. Since pgm MG0202 uses field MGPOBN     *
+     F*           to look for a customer and field :52: is not        *
+     F*           mandatory , clear the MGPOBN field so that no       *
+     F*           field :52: is written for the MT202.                *
+     F*  S01408 - Core hook SE1710CVSF added                          *
+     F*           Core hook SE1710CVS1 added                          *
+     F*           Core hook SE1710CVSR added                          *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+      *****************************************************************
+      *                                                               *
+      *  C R E A T I O N     P A R A M E T E R S                      *
+      *****************************************************************
+     F*                                                                   S01408
+     F/COPY WNCPYSRC,SE1710FFP1                                           S01408
+     F*                                                                   S01408
+     FSTPR5MG IF  E           K        DISK
+     FTRADS   IF  E           K        DISK
+     FMGF100PDO   E                    DISK
+     FMGF202PDO   E                    DISK
+     FMGF210PDO   E                    DISK
+     FSE1710AUO   E                    PRINTER                        UC
+      *                                                                                       162270
+     FACNUM   IF  E           K        DISK                                                   162270
+     FTABSE   IF  E           K        DISK                                                   162270
+     F            TABLETAF                          KIGNORE                                   162270
+     F            TABTB10F                          KIGNORE                                   162270
+     F            TABTB11F                          KIGNORE                                   162270
+     F            TABTB36F                          KIGNORE                                   162270
+     F            TABTB40F                          KIGNORE                                   162270
+     F            TABTG10F                          KIGNORE                                   162270
+     F            TABTG20F                          KIGNORE                                   162270
+     F            TABTE10F                          KIGNORE                                   162270
+     F            TABTE20F                          KIGNORE                                   162270
+     F            TABLETHF                          KIGNORE                                   162270
+     F            TABLETKF                          KIGNORE                                   162270
+     F            TABLETNF                          KIGNORE                                   162270
+     F            TABLETPF                          KIGNORE                                   162270
+     F            TABLETRF                          KIGNORE                                   162270
+     F            TABLETXF                          KIGNORE                                   162270
+     F            TABLET2F                          KIGNORE                                   162270
+     F            TABLET3F                          KIGNORE                                   162270
+     F            TABLET5F                          KIGNORE                                   162270
+     FTRADSDJ3IF  E           K        DISK                                                   162270
+      *                                                                                       162270
+     F/COPY WNCPYSRC,SE1710F001
+      *
+      *****************************************************************
+      * ID C  F  H  L    Function of indicators                       *
+      *                                                               *
+      *    10            EOF STPR5MG                                  *
+      *    13            Chain to TRADS                               *
+      *    15            Call to MG9200                               *
+      *    20            Message type not generated                   *
+      *    21            Message group not generated                  *
+      *    22            Message group not generated                  *
+      *                                                               *
+      *    U7U8LR        DB error                                     *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Message types not generated
+     E                    NGN        15  3
+     E/COPY WNCPYSRC,SE1710E001
+     E                    CPY@    1   1 80
+      *
+     ITRADSDF
+     I              RECI                            TRECI                 E31531
+      ** Rename RECI from TRADS to avoid confusion with any others
+      *
+     I            DS
+     I                                        1   60TRDR
+     I                                        1   6 KTRDR
+      *
+     ISDBANK    E DSSDBANKPD
+      **  Data structure for bank file
+      *
+     ISDCUST    E DSSDCUSTPD
+      **  Data structure for customer file
+      *
+     ISDBRCH    E DSSDBRCHPD
+     I              QQDFAC                          #DFAC1                                    CGL029
+      **  Data structure for branch file
+      *
+     ISDNOST    E DSSDNOSTPD
+      **  Data structure for nostro file
+      *
+     ISCSARD    E DSSCSARDPD                                              CFT013
+      **  Data structure for switchable features file                     CFT013
+      *                                                                   CFT013
+     IDSFDY     E DSDSFDY
+      **  Short data structure for access programs
+      *
+     IDSSDY     E DSDSSDY
+      **  Long data structure for access programs
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      **  Local data area
+      *                                                                                       162270
+     I            DS                                                                          162270
+     I                                        1   2 PYNOSF                                    162270
+     I                                        1   60PYCLNF                                    162270
+     I                                        1   7 PYCLAF                                    162270
+     I                                        3  12 PYRESF                                    162270
+     I                                        1  10 PYF10                                     162270
+     I                                       11  12 PYFAC                                     162270
+     I                                        1   8 PYCLZF                                    162270
+     I                                        9  12 PYFCPN                                    162270
+     I                                        7  10 PYFRCK                                    162270
+     I                                        3  10 PYFL10                                    162270
+     I***                                     1  12 PYFM                               162270 CGL029
+     I                                        1  18 PYFM                               162270 CGLO29
+      *                                                                                       162270
+      ** DS to get at PYFM as a Nostro code or a client number                                162270
+      *                                                                                       162270
+     I            DS                                                                          162270
+     I**********                              1   60CNUM                               162270 CPK027
+     I                                        1   6 CNUM                                      CPK027
+     I***                                     7  100ACOD                               162270 CGL029
+     I                                        7  160ACOD                               162270 CGL029
+     I***                                    11  120ACSQ                               162270 CGL029
+     I                                       17  180ACSQ                               162270 CGL029
+     I***                                     1  12 ACCKEY                             162270 CGL029
+     I                                        1  18 ACCKEY                             162270 CGL029
+      *                                                                                       162270
+      ** DS on key for ACCNT from ACNUM                                                       162270
+      *                                                                                       162270
+     I            DS                                                                          162270
+     I                                        1  12 NOSKEY                                    162270
+     I                                        1   7 NOSBLK                                    162270
+     I                                        8  10 SETC                                      162270
+     I                                       11  12 NOSNOS                                    162270
+      *                                                                                       162270
+      ** DS to build a key for the NOSTRO codes table                                         162270
+      *                                                                                       162270
+     I/COPY WNCPYSRC,SE1710I001
+      *
+     C/EJECT
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *   main process                                                *
+      *   INIT  - initial process                                     *
+      *   INIF  - initialisation process of common fields             *
+      *   TYPE  - determine message type                              *
+      *   DEST  - determine destination customer                      *
+      *   CANC  - generate cancellation for destination customer      *
+      *   MGEN  - generate a message                                  *
+      *   TRADSR - accesses trades file                               *
+      *   FMT100 - format and output record for MGF100PD file         *
+      *   FMT202 - format and output record for MGF202PD file         *
+      *   FMT210 - format and output record for MGF210PD file         *
+      *   GETEX - Get next valid extract record                       *
+      *   *PSSR - error handling                                      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   main process                                                *
+      *   Calls - INIT initial process                                *
+      *           INIF initialisation process of common fields        *
+      *           TYPE determine message type                         *
+      *           MGEN generate a  message                            *
+      *           CANC generate cancellation for destination customer *
+      *           GETEX get next valid extract record                 *
+      *****************************************************************
+      *
+      **  Perform initial process
+     C                     EXSR INIT
+      *
+      **  Read first pay/receive extract record
+     C                     EXSR GETEX
+      *
+      **  Do until EOF
+     C           *IN10     DOWEQ'0'                                   1
+     C           SVTRDR    ANDNE*ZEROS
+      *
+      **  Access trade
+     C                     EXSR TRADSR                     Access TRADS
+      *
+      **  Initialise common fields
+     C                     EXSR INIF
+     C/COPY WNCPYSRC,SE1710C005
+      *
+      **  Determine message type
+     C                     EXSR TYPE
+      *
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE1710CCP1                                           S01408
+     C*                                                                   S01408
+      **  Do deletion/cancellation processing if this not the first set
+      **  of messages to be produced
+     C           LSWS      IFGT 0
+     C                     EXSR CANC
+     C                     END                                       E2
+      *
+      **  Continue with message generation if not processing a
+      **  reversal and if type is to be generated for customer
+     C           TRECI     IFNE 'C'                                   2
+     C           *IN20     ANDEQ'0'
+     C           *IN21     ANDEQ'0'
+     C           *IN22     ANDEQ'0'
+     C                     EXSR MGEN
+     C                     END                                       E2
+     C***********BCY001    IFEQ 'Y'                                                   162270 162270A
+     C           CSE099    IFEQ 'Y'                                                          162270A
+      *                                                                                       180739
+     C           TRECI     IFNE 'C'                                                           180739
+      *                                                                                       180739
+      ** Output MT210 record for TP trades having a clearance type of 4                       180739
+      ** pay code of 1 and its delivery to different to pay from.                             180739
+      *                                                                                       180739
+     C           TDTP      IFEQ 'TP'                                                          180739
+     C           PCOD      ANDEQ'1'                                                           180739
+     C           CLTY      IFEQ '3'                                                           180739
+     C           CLTY      OREQ '4'                                                           180739
+      *                                                                                       180739
+      ** Determine if Pay From inserted is a retail account. If so,                           180739
+      ** obtain the WPYFM value from the customer of the account.                             180739
+      *                                                                                       180739
+     C           PYFM      IFNE *BLANK                                                        180739
+     C           PYFAC     ANDEQ*BLANK                                                        180739
+     C           PYFRCK    ANDNE*BLANK                                                        180739
+     C           PYFCPN    ANDNE*BLANK                                                        180739
+     C                     MOVE PYF10     ACNO                                                180739
+     C           ACNO      CHAINACNUM                99                                       180739
+     C           *IN99     IFNE '1'                                                           180739
+     C           RECI      ANDEQ'D'                                                           180739
+     C                     MOVELACCKEY    PYFM                                                180739
+     C                     END                                                                180739
+      *                                                                                       180739
+      ** Else, determine if Pay From inserted is a Nostro. If so,                             180739
+      ** change the WPYFM value to that of the corresponding customer                         180739
+      ** of the Nostro.                                                                       180739
+      *                                                                                       180739
+     C                     ELSE                                                               180739
+     C                     MOVEL'70     ' NOSBLK                                              180739
+     C                     MOVELPYNOSF    NOSNOS                                              180739
+     C                     EXSR NOSCHN                                                        180739
+     C                     MOVE ACCKEY    WRK006  6                                           180739
+     C                     MOVELCNUM      PYFM                                                180739
+     C                     MOVE WRK006    PYFM                                                180739
+     C                     END                                                                180739
+      *                                                                                       180739
+     C**********           MOVELPYFM      WPYFM   60                                   180739 CPK027
+     C                     MOVELPYFM      WPYFM   6                                           CPK027
+     C           WPYFM     IFNE DELT                                                          180739
+     C                     MOVE DELT      DTDEST  6                                           180739
+     C                     MOVE '210'     @TYP                                                180739
+     C                     EXSR DEST                                                          180739
+     C           CSW002    IFEQ 'N'                                                           180739
+     C           CSW002    OREQ 'Y'                                                           180739
+     C           CLNT      ANDNEMGDEST                                                        180739
+     C           *IN20     IFEQ '0'                                                           180739
+     C           *IN21     ANDEQ'0'                                                           180739
+     C           *IN22     ANDEQ'0'                                                           180739
+     C                     EXSR FMT210                                                        180739
+     C                     ENDIF                                                              180739
+     C                     ENDIF                                                              180739
+     C                     ENDIF                                                              180739
+     C**********           Z-ADD0         WPYFM                                        180739 CPK027
+     C                     MOVE *BLANKS   WPYFM                                               CPK027
+     C                     ENDIF                                                              180739
+     C                     ENDIF                                                              180739
+     C                     ENDIF                                                              180739
+     C                     ENDIF                                                              162270
+      *                                                                                       180739
+     C/COPY WNCPYSRC,SE1710C020
+      *
+      **  Read next relevant pay/receive extract record
+     C                     EXSR GETEX
+      *
+     C                     END                                       E1
+     C/COPY WNCPYSRC,SE1710C001
+      *
+      **  Terminate program
+     C                     SETON                     LR
+     C/EJECT
+      *****************************************************************
+      *   INIT - inital process                                       *
+      *   Called by - main process                                    *
+      *   Calls                                                       *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Set up LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBPGM
+     C                     MOVEL'SE1710'  DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+      *
+      **  Access SDBANKPD for report title
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS                               1
+     C           *LOCK     IN   LDA
+     C                     MOVE '001'     DBASE            * * * * * * * *
+     C                     MOVEL'FIRST'   DBKEY            *  DBERR 001  *
+     C                     MOVEL'SDBANKPD'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     OPEN SE1710AU
+     C                     WRITESE1710D0
+     C                     WRITESE1710D1
+     C                     EXSR *PSSR
+     C                     END                                       E1
+     C*                                                                   084182
+     C** Determine if CSW002 (Suppression of SWIFT Message if counterparty084182
+     C** is a nostro) is switched on                                      084182
+     C*                                                                   084182
+     C                     CALL 'AOSARDR0'                                084182
+     C                     PARM *BLANKS   @RTCD                           084182
+     C                     PARM '*VERIFY' @OPTN                           084182
+     C                     PARM 'CSW002'  @SARD   6                       084182
+     C*                                                                   084182
+     C           @RTCD     IFEQ *BLANKS                                   084182
+     C                     MOVE 'Y'       CSW002  1                       084182
+     C                     ELSE                                           084182
+     C                     MOVE 'N'       CSW002                          084182
+     C           @RTCD     IFNE '*NRF'                                    084182
+     C           *LOCK     IN   LDA                                       084182
+     C                     MOVE '013'     DBASE            * * * * * * * *084182
+     C                     MOVEL'CSW002'  DBKEY            *  DBERR 013  *084182
+     C                     MOVEL'SCSARDPD'DBFILE           * * * * * * * *084182
+     C                     OUT  LDA                                       084182
+     C                     OPEN SE1710AU                                  084182
+     C                     WRITESE1710D0                                  084182
+     C                     WRITESE1710D1                                  084182
+     C                     EXSR *PSSR                                     084182
+     C                     END                                            084182
+     C                     END                                            084182
+     C/COPY WNCPYSRC,SE1710C002
+     C*                                                                   CEU005
+     C** Determine if CEU005 (EMU SE Setttlement Currency Conversion)     CEU005
+     C** is switched on                                                   CEU005
+     C*                                                                   CEU005
+     C                     CALL 'AOSARDR0'                                CEU005
+     C                     PARM *BLANKS   @RTCD                           CEU005
+     C                     PARM '*VERIFY' @OPTN                           CEU005
+     C                     PARM 'CEU005'  @SARD   6                       CEU005
+     C*                                                                   CEU005
+     C           @RTCD     IFEQ *BLANKS                                   CEU005
+     C                     MOVE 'Y'       CEU005  1                       CEU005
+     C                     ELSE                                           CEU005
+     C                     MOVE 'N'       CEU005                          CEU005
+     C           @RTCD     IFNE '*NRF'                                    CEU005
+     C           *LOCK     IN   LDA                                       CEU005
+     C                     MOVE '014'     DBASE            * * * * * * * *CEU005
+     C                     MOVEL'CEU005'  DBKEY            *  DBERR 014  *CEU005
+     C                     MOVEL'SCSARDPD'DBFILE           * * * * * * * *CEU005
+     C                     OUT  LDA                                       CEU005
+     C                     OPEN SE1710AU                                  CEU005
+     C                     WRITESE1710D0                                  CEU005
+     C                     WRITESE1710D1                                  CEU005
+     C                     EXSR *PSSR                                     CEU005
+     C                     END                                            CEU005
+     C                     END                                            CEU005
+      *                                                                   CFT013
+      ** Access SAR file to determine if CFT013 is installed.             CFT013
+      *                                                                   CFT013
+     C                     CALL 'AOSARDR0'                                CFT013
+     C                     PARM *BLANKS   PRTCD   7                       CFT013
+     C                     PARM '*VERIFY' POPTN   7                       CFT013
+     C                     PARM 'CFT013'  PSARD   6                       CFT013
+     C           SCSARD    PARM SCSARD    DSFDY                           CFT013
+      *                                                                   CFT013
+      ** An NRF (No Record Found) return code is valid.                   CFT013
+      ** Issue database error only for error return codes.                CFT013
+      *                                                                   CFT013
+     C           PRTCD     IFNE *BLANKS                                   CFT013
+     C           PRTCD     ANDNE'*NRF   '                                 CFT013
+     C           *LOCK     IN   LDA                                       CFT013
+     C                     MOVEL'CFT013'  DBKEY                           CFT013
+     C                     MOVEL'SCSARDPD'DBFILE                          CFT013
+     C                     Z-ADD19        DBASE                           CFT013
+     C                     OUT  LDA                                       CFT013
+     C                     EXSR *PSSR                                     CFT013
+     C                     ENDIF                                          CFT013
+      *                                                                   CFT013
+     C           PRTCD     IFEQ *BLANK                                    CFT013
+     C                     MOVEL'Y'       CFT013  1                       CFT013
+     C                     ELSE                                           CFT013
+     C                     MOVEL'N'       CFT013                          CFT013
+     C                     ENDIF                                          CFT013
+      *                                                                   CFT013
+      *                                                                                       162270
+      ***Access*SAR*Details*file*to*determine*if*BCY001*installed                     162270 162270A
+      ** Access SAR Details file to determine if CSE099 installed                            162270A
+      *                                                                                       162270
+     C                     CALL 'AOSARDR0'                                                    162270
+     C                     PARM '       ' @RTCD                                               162270
+     C                     PARM '*VERIFY' @OPTN                                               162270
+     C*********************PARM 'BCY001'  @SARD   6                                   162270 162270A
+     C                     PARM 'CSE099'  @SARD   6                                          162270A
+     C           SCSARD    PARM SCSARD    DSFDY                                               162270
+     C           @RTCD     IFNE *BLANK                                                        162270
+     C           @RTCD     ANDNE'*NRF   '                                                     162270
+     C                     MOVEL'SCSARDPD'DBFILE           **************                     162270
+     C                     MOVEL'035'     DBASE            * DBERROR 035*                     162270
+     C                     MOVEL@RTCD     DBKEY            **************                     162270
+     C                     SETON                     U7U8                                     162270
+     C                     EXSR *PSSR                                                         162270
+     C                     END                                                                162270
+     C           @RTCD     IFEQ *BLANK                                                        162270
+     C*********************MOVE 'Y'       BCY001  1                                   162270 162270A
+     C                     MOVE 'Y'       CSE099  1                                          162270A
+     C                     ELSE                                                               162270
+     C*********************MOVE 'N'       BCY001                                      162270 162270A
+     C                     MOVE 'N'       CSE099                                             162270A
+     C                     ENDIF                                                              162270
+     C/COPY WNCPYSRC,SE1710C014
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   INIF - initalisation process of common fields               *
+      *   Called by - main process                                    *
+      *   Calls                                                       *
+      *****************************************************************
+      *
+     C           INIF      BEGSR
+      *
+      **  Save loan number,loan amendment no.,value date and
+      **  pay/receive indicator
+     C                     MOVE TRDR      STRDR   60
+     C                     Z-ADDVDAT      SVDAT   50
+     C                     MOVE PYIN      SPYIN   1
+      *
+      **  Format common fields
+     C                     MOVE CHTP      MGCHTP
+     C                     MOVELTRDR      MGTNUM
+     C                     MOVE 'SE'      MGMODI
+     C                     Z-ADDVDAT      MGVDAT
+     C                     MOVE VCCY      MGCCY
+     C                     Z-ADDCVIV      MGEAMT
+     C                     MOVE TDTP      MGTTYP
+     C                     MOVE TSUB      MGTSTP
+     C                     MOVE BRCA      MGBRCA
+     C**********           Z-ADDTCNR      MGCNUM                                              CSD027
+     C                     MOVE TCNR      MGCNUM                                              CSD027
+     C                     Z-ADDSETL      MGSETP
+     C                     Z-ADDTPDY      MGRATE
+      *
+      ** Check length of field THEIRS If more than 8 long , only output
+      ** account no.(1st 6 characters) to MGAWBN
+     C                     MOVE THEIRS    CHK02   2
+     C           CHK02     IFEQ *BLANKS
+     C                     MOVELTHEIRS    MGAWBN
+     C/COPY WNCPYSRC,SE1710C006
+     C                     ELSE
+     C                     MOVELTHEIRS    FLD06   6
+     C                     MOVELFLD06     MGAWBN
+     C/COPY WNCPYSRC,SE1710C007
+     C                     END
+      *
+      **  Clear generation driver file fields
+     C                     Z-ADD0         MGAVDT
+     C                     Z-ADD0         MGASEQ
+     C**********           Z-ADD0         MGROCN                                              CSD027
+     C**********           Z-ADD0         MGROBN                                              CSD027
+     C**********           Z-ADD0         MGPOCN                                              CSD027
+     C**********           Z-ADD0         MGPOBN                                              CSD027
+     C                     MOVE *BLANKS   MGROCN                                              CSD027
+     C                     MOVE *BLANKS   MGROBN                                              CSD027
+     C                     MOVE *BLANKS   MGPOCN                                              CSD027
+     C                     MOVE *BLANKS   MGPOBN                                              CSD027
+     C                     MOVE *BLANKS   MGRVNO
+     C                     MOVE *BLANKS   MGRCRN
+     C                     MOVE *BLANKS   MGRCRA
+     C                     MOVE *BLANKS   MGPIBN
+     C                     MOVE *BLANKS   MGPIBA
+     C                     MOVE *BLANKS   MGPONS
+     C                     MOVE *BLANKS   MGRONS
+     C                     MOVE *BLANKS   MGPOBR
+     C                     MOVE *BLANKS   MGROBR
+     C                     MOVE *BLANKS   MGAWBA
+     C                     MOVE *BLANKS   MGBENN
+     C                     MOVE *BLANKS   MGBENA
+     C                     MOVE *BLANKS   MGDTP1
+     C                     MOVE *BLANKS   MGDTP2
+     C                     MOVE *BLANKS   MGDTP3
+     C                     MOVE *BLANKS   MGDTP4
+     C                     MOVE *BLANKS   MGDCHG
+     C                     MOVE *BLANKS   MGBTB1
+     C                     MOVE *BLANKS   MGBTB2
+     C                     MOVE *BLANKS   MGBTB3
+     C                     MOVE *BLANKS   MGBTB4
+     C                     MOVE *BLANKS   MGBTB5
+     C                     MOVE *BLANKS   MGBTB6
+     C                     Z-ADD0         MGOTRA                          CEU005
+     C                     MOVE *BLANKS   MGOTRC                          CEU005
+      *                                                                                       219243
+      ** Initialise MGICCY and MGIAMT.                                                        219243
+      *                                                                                       219243
+     C                     MOVEL*BLANKS   MGICCY                                              219243
+     C                     Z-ADD*ZERO     MGIAMT                                              219243
+     C                     Z-ADD*ZERO     MGEXRT                                              222458
+      *                                                                                       219243
+     C/COPY WNCPYSRC,SE1710C015
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   TYPE - determine message type                               *
+      *   Called by - main process                                    *
+      *   Calls  - DEST  determine destination customer               *
+      *****************************************************************
+      *
+     C           TYPE      BEGSR
+      *
+      **  Check if Counterparty is non-bank
+     C                     MOVE *BLANKS   @KEY1
+     C                     MOVELCLNT      @KEY1
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS                               2
+     C           *LOCK     IN   LDA
+     C                     MOVE '002'     DBASE            * * * * * * * *
+     C                     MOVELCLNT      DBKEY            *  DBERR 002  *
+     C                     MOVEL'SDCUSTPD'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                                       E2
+      *
+     C**********           MOVE BBBNBI    @BCNUM  1                       099441
+     C                     MOVE BBSWFI    @BCNUM  1                       099441
+      *
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,SE1710CVSF                                           S01408
+     C*                                                                   S01408
+      **  If Receive message  (MT210)
+     C           PYIN      IFEQ 'R'
+     C                     MOVE '210'     @TYP    3
+     C                     END
+      *
+      **  If Payment message
+     C           PYIN      IFEQ 'P'                                   1
+     C           PYIN      OREQ 'C'                                   1
+      *
+      **  Check if 'For a/c of' is non-bank
+      **  Test if customer number (numeric) or counterparty nostro
+     C                     MOVE 'Y'       @BFACO  1
+     C           FACO      IFNE *BLANKS
+      *
+     C                     MOVELFACO      HOLD6   6
+     C                     TESTN          HOLD6      3132
+      *
+      **  FACO is a customer number
+     C           *IN31     IFEQ '1'
+     C           *IN32     OREQ '1'
+      *
+     C                     MOVE *BLANKS   @KEY1
+     C                     MOVELFACO      @KEY1
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '004'     DBASE            * * * * * * * *
+     C                     MOVELFACO      DBKEY            *  DBERR 004  *
+     C                     MOVEL'SDCUSTPD'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C**********           MOVE BBBNBI    @BFACO                          099441
+     C                     MOVE BBSWFI    @BFACO                          099441
+      *
+      **  Counterparty nostro (hence bank)
+     C                     ELSE
+     C                     MOVE 'Y'       @BFACO
+     C                     END
+     C                     END
+      *
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,SE1710CVSR                                           S01408
+     C*                                                                   S01408
+      **  If CNUM and FACO are banks OR
+      **  CNUM is a bank and FACO is blank  -  MT202
+     C           @BCNUM    IFEQ 'Y'
+     C           @BFACO    ANDEQ'Y'
+     C                     MOVE '202'     @TYP
+      *
+      **  If CNUM or FACO are non-bank  -  MT100
+     C                     ELSE
+     C                     MOVE '100'     @TYP
+     C                     END
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,SE1710CVS1                                           S01408
+     C*                                                                   S01408
+      *
+      **  Payment Ordering Bank
+      **  FACO  else Booking branch (if not equal to Pay branch)
+     C           @TYP      IFEQ '202'
+     C           TDTP      IFEQ 'TP'                       TRADE PURCHASE 080283
+     C                     CLEARMGPOBN                                    080283
+     C                     ELSE                                           080283
+     C                     MOVELCLNT      MGPOBN
+     C                     END                                            080283
+     C                     END
+      *
+      **  Beneficiary
+      **  FACO  else Counterparty
+     C           FACO      IFNE *BLANKS
+     C                     MOVELFACO      MGBENN
+     C                     ELSE
+     C                     MOVELCLNT      MGBENN
+     C                     END
+     C                     END
+      *
+      **  Determine destination customer
+     C                     EXSR DEST
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   MGEN - GENERATE A MESSAGE                                   *
+      *   Called by - Main process                                    *
+      *   Calls  - FMT100 format & output record for MT100 message    *
+      *          - FMT202 format & output record for MT202 message    *
+      *          - FMT210 format & output record for MT210 message    *
+      *****************************************************************
+      *
+      **  If message is required for destination, format and output
+      **  to generation driver files (PF/MGFnnnPD).
+     C           MGEN      BEGSR
+      *
+      **  A/C with institute is not output, if equal to nostro customer
+     C           A7CUST    IFEQ MGAWBN
+     C                     MOVE *BLANKS   MGAWBN
+     C                     END
+     C/COPY WNCPYSRC,SE1710C008
+      *
+      ** Format fields for generation files depending on type
+     C***********@TYP      CASEQ'100'     FMT100                      1   084182
+     C***********@TYP      CASEQ'202'     FMT202                          084182
+     C***********@TYP      CASEQ'210'     FMT210                          084182
+     C*                                                                   084182
+     C** Suppress SWIFT generation if counterparty is the nostro and this 084182
+     C** feature is available                                             084182
+     C*                                                                   084182
+     C                     SELEC                                          084182
+     C*                                                                   084182
+     C           @TYP      WHEQ '100'                                     084182
+     C                     EXSR FMT100                                    084182
+     C*                                                                   084182
+     C           @TYP      WHEQ '202'                                     084182
+     C           CSW002    ANDEQ'N'                                       084182
+     C           @TYP      OREQ '202'                                     084182
+     C           CSW002    ANDEQ'Y'                                       084182
+     C           CLNT      ANDNEMGDEST                                    084182
+     C                     EXSR FMT202                                    084182
+     C*                                                                   084182
+     C           @TYP      WHEQ '210'                                     084182
+     C           CSW002    ANDEQ'N'                                       084182
+     C           @TYP      OREQ '210'                                     084182
+     C           CSW002    ANDEQ'Y'                                       084182
+     C           CLNT      ANDNEMGDEST                                    084182
+     C                     EXSR FMT210                                    084182
+     C/COPY WNCPYSRC,SE1710C003
+     C                     END                                       E1
+     C/COPY WNCPYSRC,SE1710C018
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   TRADSR -                                                    *
+      *   Access loans file using loan number from LF/LESXT           *
+      *   Called by - Main line                                       *
+      *   Calls                                                       *
+      *****************************************************************
+     C           TRADSR    BEGSR
+      *
+     C           KTRDR     CHAINTRADS                13
+      *
+     C           *IN13     IFEQ '1'                                   1
+     C           *LOCK     IN   LDA
+     C                     MOVE '008'     DBASE            * * * * * * * *
+     C                     MOVELKTRDR     DBKEY            *  DBERR 008  *
+     C                     MOVEL'TRADS'   DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     OPEN SE1710AU
+     C                     WRITESE1710D0
+     C                     WRITESE1710D1
+     C                     EXSR *PSSR
+     C                     END                                       E1
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   DEST - determine destination customer                       *
+      *   Called by - TYPE                                            *
+      *   Calls                                                       *
+      *****************************************************************
+      *
+     C           DEST      BEGSR
+      *
+      **  Set up destination customer field on generation file
+     C                     MOVELOURS      @CUST   6
+     C                     MOVEL@CUST     MGDEST
+     C***********BCY001    IFEQ 'Y'                                                   162270 162270A
+     C           CSE099    IFEQ 'Y'                                                          162270A
+      *                                                                                       180739
+      ** If TP, processing code 1, clearance type 3 or 4, for MT210                           180739
+      ** MGDEST is Deliver To.                                                                180739
+      *                                                                                       180739
+     C           TDTP      IFEQ 'TP'                                                          180739
+     C           PCOD      ANDEQ'1'                                                           180739
+     C           @TYP      ANDEQ'210'                                                         180739
+     C           CLTY      IFEQ '3'                                                           180739
+     C           CLTY      OREQ '4'                                                           180739
+     C                     MOVELDTDEST    MGDEST                                              180739
+     C                     MOVELMGDEST    @CUST                                               180739
+     C                     ENDIF                                                              180739
+     C                     ENDIF                                                              180739
+     C                     ENDIF                                                              162270
+      *                                                                                       180739
+     C/COPY WNCPYSRC,SE1710C021
+      *
+      **  Access SDCUSTPD
+     C                     MOVE *BLANKS   @KEY1
+     C                     MOVEL@CUST     @KEY1
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           @KEY1
+     C                     PARM *BLANKS   @KYST
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS                               1
+     C           *LOCK     IN   LDA
+     C                     MOVE '011'     DBASE            * * * * * * * *
+     C                     MOVEL@CUST     DBKEY            *  DBERR 011  *
+     C                     MOVEL'SDCUSTPD'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     OPEN SE1710AU
+     C                     WRITESE1710D0
+     C                     WRITESE1710D1
+     C                     EXSR *PSSR
+     C                     END                                       E1
+      *
+     C                     MOVE BBNG01    NGN,1
+     C                     MOVE BBNG02    NGN,2
+     C                     MOVE BBNG03    NGN,3
+     C                     MOVE BBNG04    NGN,4
+     C                     MOVE BBNG05    NGN,5
+     C                     MOVE BBNG06    NGN,6
+     C                     MOVE BBNG07    NGN,7
+     C                     MOVE BBNG08    NGN,8
+     C                     MOVE BBNG09    NGN,9
+     C                     MOVE BBNG10    NGN,10
+     C                     MOVE BBNG11    NGN,11
+     C                     MOVE BBNG12    NGN,12
+     C                     MOVE BBNG13    NGN,13
+     C                     MOVE BBNG14    NGN,14
+     C                     MOVE BBNG15    NGN,15
+      *
+      **  Set up wildcard for message group (eg 1**)
+     C                     MOVEL@TYP      @WLD
+     C                     MOVE '**'      @WLD    3
+      *
+      **  Set up 2nd wildcard for message group (eg 10*)
+     C                     MOVEL@TYP      @WLD2
+     C                     MOVE '*'       @WLD2   3
+      *
+      **  Determine if message type is not to be generated for the
+      **  for the destination customer, using both message type
+      **  and wildcard to check against array entries
+     C           @TYP      LOKUPNGN                      20
+     C           @WLD      LOKUPNGN                      21
+     C           @WLD2     LOKUPNGN                      22
+      *
+      ** If either indicator is on message will not be generated
+      ** (see main processing)
+      *                                                                   CFT013
+      ** Set off *IN20. Suppression will be dealt in pgm/MG0100.          CFT013
+      *                                                                   CFT013
+     C           CFT013    IFEQ 'Y'                                       CFT013
+     C           *IN20     ANDEQ*ON                                       CFT013
+     C           @TYP      IFEQ '100'                                     CFT013
+     C           @TYP      OREQ '103'                                     CFT013
+     C                     MOVE *OFF      *IN20                           CFT013
+     C                     ENDIF                                          CFT013
+     C                     ENDIF                                          CFT013
+      *                                                                   CFT013
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *
+      *   Called by - main process                                    *
+      *   Calls - MG9200 cancellation/deletion program                *
+      *****************************************************************
+      *
+     C           CANC      BEGSR
+      *
+      **  Call cancellation program with parameters of the trade ref.
+      **  program type (PR - pay/rcv)
+      **  module id (SE - securities trading)
+      **  amendment date and sequence (n/a for trades)
+      **  nostro transfer indicator (n/a for trades)
+      **  return code ('E' indicates a DB error)
+     C                     MOVE TRDR      TRNUM                                               CLE148
+     C                     CALL 'MG9200'               15
+     C**********           PARM TRDR      TRNUM   60                                          CLE148
+     C                     PARM           TRNUM   6                                           CLE148
+     C                     PARM 'PR'      CALLP   2
+     C                     PARM 'SE'      MODID   2
+     C                     PARM 0         TRVDT   50
+     C                     PARM 0         TRSEQ   30
+     C                     PARM *BLANKS   REVNX   1
+     C                     PARM *BLANKS   RTCD    1
+     C***********          PARM @TYP      @TYPE   3                157756 169025
+     C                     PARM 'N'       @CLSS   1                       CDL008
+      *
+      ** MG9200 is not found
+     C           *IN15     IFEQ '1'                                   1
+     C           *LOCK     IN   LDA
+     C                     MOVE '012'     DBASE            * * * * * * * *
+     C                     MOVELTRDR      DBKEY            *  DBERR 012  *
+     C                     MOVEL'MG9200'  DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     END                                       E1
+      *
+      ** Write error to audit report
+     C           *IN15     IFEQ '1'                                   1
+     C           RTCD      ORNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     OUT  LDA
+     C                     OPEN SE1710AU
+     C                     WRITESE1710D0
+     C                     WRITESE1710D1
+     C                     EXSR *PSSR
+     C                     END                                       E1
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *  FMT100 - format and output record for MT100 msg. generation  *
+      *  Called by - MGEN                                             *
+      *  Calls                                                        *
+      *****************************************************************
+      *
+     C           FMT100    BEGSR
+      *
+      **  Format fields for MT100 - Customer transfer
+     C**********           Z-ADDTCNR      MGPOCN                                              CSD027
+     C                     MOVE TCNR      MGPOCN                                              CSD027
+     C                     MOVELPAYT      MGPONS
+     C                     MOVE PYTA      MGPOBR
+     C                     MOVELTDSI      MGBTB1
+      *
+      ** If 'account with bank' is the same as ordering customer or
+      ** beneficiary, suppress.
+     C**********           MOVELMGAWBN    WK6N    60                                          CSD027
+     C                     MOVELMGAWBN    WK6N    6                                           CSD027
+     C           WK6N      IFEQ MGPOCN
+     C           MGAWBN    OREQ MGBENN
+     C                     MOVE *BLANKS   MGAWBN
+     C                     END
+      *
+      * Format Original Transaction fields if CEU005 switched on          CEU005
+      * and 'In' Ccy field used in PF/TRADSD.                             CEU005
+      *                                                                   CEU005
+     C           CEU005    IFEQ 'Y'                                       CEU005
+     C           ICCY      IFNE *BLANK                                    CEU005
+     C           ICCY      ANDEQTNMC                                      CEU005
+     C                     Z-ADDTCTR      MGOTRA                          CEU005
+     C                     MOVE TNMC      MGOTRC                          CEU005
+     C                     ENDIF                                          CEU005
+      *                                                                   CEU005
+     C           ICCY      IFNE *BLANK                                    CEU005
+     C           ICCY      ANDNETNMC                                      CEU005
+     C                     CALL 'EU0200'                                  CEU005
+     C                     PARM *BLANK    P@RTCD  7                       CEU005
+     C                     PARM TCTR      P@FRAM 183                      CEU005
+     C                     PARM TNMC      P@FRCY  3                       CEU005
+     C                     PARM ICCY      P@TOCY  3                       CEU005
+     C           MGOTRA    PARM           P@OUTA 150                      CEU005
+     C                     PARM           P@INTA 183                      CEU005
+     C                     PARM           P@EXRT 159                      CEU005
+     C                     PARM           P@MDIN  1                       CEU005
+     C                     MOVE ICCY      MGOTRC                          CEU005
+     C                     ENDIF                                          CEU005
+     C                     ENDIF                                          CEU005
+     C/COPY WNCPYSRC,SE1710C012
+      *                                                                   CEU005
+     C                     WRITEMGF100D0
+     C/COPY WNCPYSRC,SE1710C009
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *  FMT202 - format and output record for MT202 msg. generation  *
+      *  Called by - MGEN                                             *
+      *  Calls                                                        *
+      *****************************************************************
+      *
+     C           FMT202    BEGSR
+      *
+     C***********          MOVELPAYT      MGPONS                          085056
+     C***********          MOVE PYTA      MGPOBR                          085056
+     C                     MOVELPYFM      MGPONS                          085056
+     C                     MOVE PYFA      MGPOBR                          085056
+     C                     MOVELTDSI      MGBTB1
+      *
+      ** If 'account with bank' is the same as ordering institution
+      ** or beneficiary, suppress.
+     C**********           MOVELMGAWBN    WK6N    60                                          CSD027
+     C                     MOVELMGAWBN    WK6N    6                                           CSD027
+     C           WK6N      IFEQ MGPOBN
+     C           MGAWBN    OREQ MGBENN
+     C                     MOVE *BLANKS   MGAWBN
+     C                     END
+      *                                                                   CEU005
+      * Format Original Transaction fields if CEU005 switched on          CEU005
+      * and 'In' Ccy field used in PF/TRADSD.                             CEU005
+      *                                                                   CEU005
+     C           CEU005    IFEQ 'Y'                                       CEU005
+     C           ICCY      IFNE *BLANK                                    CEU005
+     C           ICCY      ANDEQTNMC                                      CEU005
+     C                     Z-ADDTCTR      MGOTRA                          CEU005
+     C                     MOVE TNMC      MGOTRC                          CEU005
+     C                     ENDIF                                          CEU005
+      *                                                                   CEU005
+     C           ICCY      IFNE *BLANK                                    CEU005
+     C           ICCY      ANDNETNMC                                      CEU005
+     C                     CALL 'EU0200'                                  CEU005
+     C                     PARM *BLANK    P@RTCD  7                       CEU005
+     C                     PARM TCTR      P@FRAM 183                      CEU005
+     C                     PARM TNMC      P@FRCY  3                       CEU005
+     C                     PARM ICCY      P@TOCY  3                       CEU005
+     C           MGOTRA    PARM           P@OUTA 150                      CEU005
+     C                     PARM           P@INTA 183                      CEU005
+     C                     PARM           P@EXRT 159                      CEU005
+     C                     PARM           P@MDIN  1                       CEU005
+     C                     MOVE ICCY      MGOTRC                          CEU005
+     C                     ENDIF                                          CEU005
+     C                     ENDIF                                          CEU005
+      *                                                                                       162270
+     C***********BCY001    IFEQ 'Y'                                                   162270 162270A
+     C           CSE099    IFEQ 'Y'                                                          162270A
+     C           TRADKY    KLIST                                                              162270
+     C                     KFLD           TDBA                                                162270
+     C                     KFLD           TDRF                                                162270
+     C           TRADKY    CHAINTRADSDJ3             99                                       162270
+     C           *IN99     IFEQ '0'                                                           162270
+     C                     MOVELT2BOF1    MGBENA                                              162270
+     C                     ENDIF                                                              162270
+     C                     ENDIF                                                              162270
+      *                                                                                       162270
+      *
+     C/COPY WNCPYSRC,SE1710C016
+     C                     WRITEMGF202D0
+     C/COPY WNCPYSRC,SE1710C010
+      *
+     C                     ENDSR
+     C/COPY WNCPYSRC,SE1710C004
+     C/EJECT
+      *****************************************************************
+      *  FMT210   - format and output record for MT210 msg generation *
+      *  Called by - MGEN                                             *
+      *  Calls                                                        *
+      *****************************************************************
+      *
+     C           FMT210    BEGSR
+     C*
+     C           @BCNUM    IFEQ 'Y'
+     C**********           Z-ADDCLNT      MGROBN                                              CSD027
+     C                     MOVE CLNT      MGROBN                                              CSD027
+     C                     ELSE
+     C**********           Z-ADDCLNT      MGROCN                                              CSD027
+     C                     MOVE CLNT      MGROCN                                              CSD027
+     C                     END
+     C*
+     C                     MOVE *BLANKS   MGRIBN
+     C                     MOVE *BLANKS   MGRIBA
+     C************         MOVELPYFM      MGRONS                          085056
+     C************         MOVE PYFA      MGROBR                          085056
+     C                     MOVELPAYT      MGRONS                          085056
+     C                     MOVE PYTA      MGROBR                          085056
+      *                                                                                       162270
+     C***********BCY001    IFEQ 'Y'                                                   162270 162270A
+     C           CSE099    IFEQ 'Y'                                                          162270A
+     C********** WPYFM     IFNE 0                                                      162270 CPK027
+     C           WPYFM     IFNE *BLANKS                                                       CPK027
+     C           WPYFM     ANDNEDELT                                                          162270
+     C                     MOVELPAYT      MGRIBN                                              162270
+     C                     ENDIF                                                              162270
+     C                     ENDIF                                                              162270
+      *                                                                                       162270
+     C/COPY WNCPYSRC,SE1710C019
+      *
+     C                     WRITEMGF210D0
+     C/COPY WNCPYSRC,SE1710C011
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *  GETEX   - Read latest extract for given trade/value-date/p-r *
+      *            nb. SE can produce more than one extract for a     *
+      *            a given trade/event. eg. If a trade is amended     *
+      *            twice before p/r is run, two records will be       *
+      *            extracted. In this case, the record required is    *
+      *            that produced for the most recent amendment. This  *
+      *            s/r reads through all similar records for a given  *
+      *            trade/event to find the last, which should contain *
+      *            the most up-to-date trade details.                 *
+      *  Called by - main line                                        *
+      *  Calls                                                        *
+      *****************************************************************
+      *
+     C           GETEX     BEGSR
+      *
+      ** Seton 10 if the last execution caused last-record to be read
+     C           *IN09     IFEQ '1'
+     C                     SETON                     10
+     C                     ELSE
+      *
+      ** Read next record and save key values (Trade reference, value
+      ** date and pay/rcv indicator). Loop to access all records for
+      ** this combination.
+     C                     READ STPR5MG                  09
+     C                     Z-ADDTRDR      SVTRDR  60
+     C                     Z-ADDVDAT      SVVDAT  50
+     C                     MOVE PYIN      SVPYIN  1
+      *
+     C           *IN09     DOWEQ'0'
+     C           SVTRDR    ANDEQTRDR
+     C           SVVDAT    ANDEQVDAT
+     C           SVPYIN    ANDEQPYIN
+      *
+     C                     READ STPR5MG                  09
+      *
+     C                     END                             DOW
+      *
+      ** When record read which does not match first in this range,
+      ** READP to access the latest match.
+     C           *IN09     IFEQ '0'
+     C                     READPSTPR5MG                  09
+     C                     END                             IF
+      *
+     C                     END                             IF
+      *
+     C                     ENDSR
+      *
+     C/COPY WNCPYSRC,SE1710C017
+     C/EJECT
+      *****************************************************************
+      *   *PSSR - error handling                                      *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+      *****************************************************************                       162270
+      *  NOSCHN S/R - TO CHAIN FOR A NOSTRO CODES TABLE RECORD        *                       162270
+      *                                                               *                       162270
+      *  CALLED FROM:   MGEN                                          *                       162270
+      *  CALLS:   None.                                               *                       162270
+      *                                                               *                       162270
+      *****************************************************************                       162270
+      *                                                                                       162270
+     C           NOSCHN    BEGSR                           *** NOSCHN ***                     162270
+      *                                                                                       162270
+     C           NOSKEY    CHAINTABSE                99                                       162270
+     C           *IN99     IFEQ '1'                                                           162270
+     C           *IN99     OREQ '0'                                                           162270
+     C           RECI      ANDEQ'*'                                                           162270
+     C                     SETON                     U7U8LR                                   162270
+     C           *LOCK     IN   LDA                                                           162270
+     C                     MOVE '014'     DBASE            * * * * * * * *                    162270
+     C                     MOVE *BLANKS   DBKEY            *  DBERR 014  *                    162270
+     C                     MOVELNOSKEY    DBKEY            * * * * * * * *                    162270
+     C                     MOVE *BLANKS   DBFILE                                              162270
+     C                     MOVE 'TABLE'   DBFILE                                              162270
+     C                     MOVE *BLANKS   DBPGM                                               162270
+     C                     MOVEL'SE1710'  DBPGM                                               162270
+     C                     OUT  LDA                                                           162270
+     C                     EXSR *PSSR                                                         162270
+     C                     END                                                                162270
+     C           EXITNS    ENDSR                           ** EXITNS **                       162270
+      *                                                                                       162270
+      *****************************************************************                       162270
+     C/EJECT                                                                                  162270
+     C/COPY WNCPYSRC,SE1710C013
+      *
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

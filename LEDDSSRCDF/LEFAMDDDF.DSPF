@@ -1,0 +1,227 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas LE Facility Amendment Display')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  DSPF/LEFAMDDDF - Facility Amendment Display                  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CAAA03             Date 01Apr04               *
+      * Midas Release 4.01 -------------------------------------------*
+      *  Prev Amend No. CAP071             Date 28Mar02               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CAAA03 - Webfacing changes.                                  *
+      *  CAP071 - Conversion of LE Facility Amendment Transactions    *
+      *           details into modular structure to use as APIs.      *
+      *                                                               *
+      *****************************************************************
+     A*
+     A                                      DSPSIZ(24 80 *DS3)
+     A                                      REF(*LIBL/MFRFL)
+     A                                      CHGINPDFT
+     A                                      CA03(03 'Exit')
+     A                                      CF05(05 'Refresh')
+     A                                      INDARA
+     A                                      PRINT(*LIBL/MPRINT)
+     A*=========================================================================
+     A          R LEFAMDF2
+     A                                      TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A                                      OVERLAY
+     A                                      KEEP
+     A            S#USER    R        O  1  2REFFLD(USER)
+     A            S#WSID    R        O  2  2REFFLD(JOJOB)
+     A                                  1 14'LEFAMDSIN'
+     A                                  2 72TIME
+     A                                      EDTWRD('  :  :  ')
+     A            S#RUNA    R        O  1 72REFFLD(RUNA)
+     A                                  2 29'FACILITY AMENDMENTS INPUT'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A*=========================================================================
+     A          R LEFAMDS1                  SFL
+     A  35                                  SFLNXTCHG
+     A            S#SEL          1A  B 10  3
+     A  36                                  DSPATR(RI PC)
+     A N36                                  DSPATR(HI UL)
+     A            S#CSSN        10A  O 10  6DSPATR(HI)
+     A            S#FACT         3A  O 10 17DSPATR(HI)
+     A            S#FCNO         2A  O 10 23DSPATR(HI)
+     A            S#VLDA         7A  O 10 27DSPATR(HI)
+     A            S#SQNO         3A  O 10 37DSPATR(HI)
+     A            S#FATN        24A  O 10 42DSPATR(HI)
+     A            S#STAT        10A  O 10 69DSPATR(HI)
+     A            S#FATP         2A  H
+     A            S#VLDT         6A  H
+     A*=========================================================================
+     A          R LEFAMDC1                  SFLCTL(LEFAMDS1)
+     A                                      SFLSIZ(11)
+     A                                      SFLPAG(10)
+     A                                      CF09(09 'Add')
+     A                                      CF12(12 'Previous')
+     A                                      OVERLAY
+     A  30                                  SFLDSP
+     A  31                                  SFLDSPCTL
+     A N31                                  SFLCLR
+     A  32                                  SFLEND(*MORE)
+     A N32                                  ROLLUP(33)
+     A            ##SFRC         4S 0H      SFLRCDNBR
+     A                                  4 50'Review from'
+     A            R#CSSN        10A  B  4 62DSPATR(UL)
+     A  37                                  DSPATR(RI PC)
+     A N37                                  DSPATR(HI)
+     A            R#FACT         3A  B  4 73DSPATR(UL)
+     A  38                                  DSPATR(RI PC)
+     A N38                                  DSPATR(HI)
+     A            R#FCNO         2A  B  4 77DSPATR(UL)
+     A  39                                  DSPATR(RI PC)
+     A N39                                  DSPATR(HI)
+     A                                  5  2'Actions,'
+     A                                  5 50'Unauthorised Only?'
+     A            R#UNAU         1A  B  5 69DSPATR(HI UL)
+     A                                  6  3'E=Enquire'
+     A                                  6 16'A=Amend'
+     A                                  6 27'D=Delete'
+     A  64                              6 39'X=Authorise'
+     A                                  8  2'Sel'
+     A                                  8  6'Customer'
+     A                                  8 17'Facility'
+     A                                  8 28'Value'
+     A                                  8 37'Seq'
+     A                                  8 47'Amendment'
+     A                                  8 69'Status'
+     A                                  9 17'Type'
+     A                                  9 23'No'
+     A                                  9 28'Date'
+     A                                  9 49'Type'
+     A*=========================================================================
+     A          R LEFAMDF1
+     A                                      OVERLAY
+     A                                 23  2'F3=Exit'
+     A                                 23 11'F5=Refresh'
+      ** Start of change CAAA03
+     A N62                                  DSPATR(ND)
+      ** End of change CAAA03
+     A                                 23 23'F10=Delete' DSPATR(HI)
+     A N68                                  DSPATR(ND)
+     A                                 23 35'F11=Authorise' DSPATR(HI)
+     A N66                                  DSPATR(ND)
+     A                                 23 50'F12=Previous Screen'
+     A*=========================================================================
+     A          R LEFAMDF3
+     A                                      CF12(12 'Previous')
+     A  68                                  CF10(10 'Reverse')
+     A  66                                  CF11(11 'Authorize')
+     A                                      OVERLAY
+     A                                      PROTECT
+     A                                  4  2'Action'
+     A            S#ACTN         1A  B  4 20
+     A  40                                  DSPATR(RI PC)
+     A N40                                  DSPATR(HI)
+     A                                      DSPATR(PR)
+     A                                  4 37'Status'
+     A            S#STAT        10A  O  4 44DSPATR(HI)
+     A                                  6  2'Customer'
+     A            S#CSSN        10A  B  6 20
+     A  41                                  DSPATR(RI PC)
+     A N41                                  DSPATR(HI)
+     A  69                                  DSPATR(PR)
+     A N69                                  DSPATR(UL)
+     A                                  7  2'Facility Type/No'
+     A            S#FACT         3A  B  7 20
+     A  42                                  DSPATR(RI PC)
+     A N42                                  DSPATR(HI)
+     A  69                                  DSPATR(PR)
+     A N69                                  DSPATR(UL)
+     A            S#FCNO         2A  B  7 24
+     A  43                                  DSPATR(RI PC)
+     A N43                                  DSPATR(HI)
+     A  69                                  DSPATR(PR)
+     A N69                                  DSPATR(UL)
+     A                                  9  2'Amendment Type'
+     A            S#FATP         2A  B  9 20
+     A  44                                  DSPATR(RI PC)
+     A N44                                  DSPATR(HI)
+     A  69                                  DSPATR(PR)
+     A N69                                  DSPATR(UL)
+     A                                 10  2'Value Date'
+     A            S#VLDT         6A  B 10 20
+     A  45                                  DSPATR(RI PC)
+     A N45                                  DSPATR(HI)
+     A  69                                  DSPATR(PR)
+     A N69                                  DSPATR(UL)
+     A                                 10 29'Sequence'
+     A            S#SQNO         3A  B 10 39
+     A  46                                  DSPATR(RI PC)
+     A N46                                  DSPATR(HI)
+     A                                      DSPATR(PR)
+     A                                 13  2'Currency'
+     A            S#ACCY         3A  B 13 20
+     A  47                                  DSPATR(RI PC)
+     A N47                                  DSPATR(HI)
+     A  67                                  DSPATR(PR)
+     A N67                                  DSPATR(UL)
+     A                                 14  2'Amount'
+     A            S#AAMT        14A  B 14 20
+     A  48                                  DSPATR(RI PC)
+     A N48                                  DSPATR(HI)
+     A  67                                  DSPATR(PR)
+     A N67                                  DSPATR(UL)
+     A            S#SIGN         1A  B 14 35
+     A  49                                  DSPATR(RI PC)
+     A N49                                  DSPATR(HI)
+     A  67                                  DSPATR(PR)
+     A N67                                  DSPATR(UL)
+     A                                 15  2'Revolving Credit'
+     A            S#RVCR         1A  B 15 20
+     A  50                                  DSPATR(RI PC)
+     A N50                                  DSPATR(HI)
+     A  67                                  DSPATR(PR)
+     A N67                                  DSPATR(UL)
+     A                                 16  2'New Expiry Date'
+     A            S#NDEX         6A  B 16 20
+     A  51                                  DSPATR(RI PC)
+     A N51                                  DSPATR(HI)
+     A  67                                  DSPATR(PR)
+     A N67                                  DSPATR(UL)
+     A*=========================================================================
+     A          R LEFAMDF4
+     A                                      OVERLAY
+     A                                 13 32'NO RECORDS TO DISPLAY'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(RI)
+     A*=========================================================================
+     A          R LEFAMDF5
+     A                                      OVERLAY
+     A                                 23  2'F3=Exit'
+     A                                 23 14'F5=Refresh'
+     A                                 23 29'F9=Add'
+     A                                 23 36'F12=Previous'
+     A*=========================================================================
+     A          R #MSGRCD                   TEXT('Program messages')
+     A                                      SFL SFLMSGRCD(24)
+     A            MSGKEY                    SFLMSGKEY
+     A            ##PGM                     SFLPGMQ
+     A*=========================================================================
+     A          R #MSGCTL                   SFLCTL(#MSGRCD)
+     A                                      TEXT('Program messages')
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A  25                                  SFLDSP
+     A  25                                  SFLDSPCTL
+     A  25                                  SFLINZ
+     A  25                                  SFLCLR
+     A  25                                  SFLEND
+     A                                      SFLSIZ(0010)
+     A                                      SFLPAG(0001)
+     A            ##PGM                     SFLPGMQ(10)

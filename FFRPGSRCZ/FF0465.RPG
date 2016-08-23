@@ -1,0 +1,1243 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Delete positions beyond historical period')   *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Futures and Options Module
+     F*                                                                  *
+     F*   FF0465  -  DELETE POSITIONS BEYOND HISTORICAL PERIOD           *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      *  Last Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAS003             Date 14Jan02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 Patch D ---------------------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 163444             Date 01Oct99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 CFF004             Date 12Sep96               *
+     F*                  S71062             DATE 19DEC95                 *
+     F*                  046303             DATE 14JAN94
+     F*                  S01455             DATE 05NOV93                 *
+     F*                  S01393             DATE 30OCT92                 *
+     F*                  FUJI-FF0011        DATE 10AUG92                 *
+     F*                  E38323             DATE 30JUL92                 *
+     F*                  AUS022             DATE 11AUG92                 *
+     F*                  S01299             DATE 24AUG90                 *
+     F*                  E23580             DATE 12SEP90                 *
+     F*                  S01117             DATE 12APR90                 *
+     F*                  S01195             DATE 12APR90                 *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CAS003 - Hedge Strategy/Linkage (For Futures & Options)      *
+     F*  163444 - Y2K Sort Order.                                        *
+     F*  CFF004 - Increase in size of Price Fields                       *
+     F*  S71062 - FF/PM Interface (Just recompiled)                      *
+     F*  046303 - /COPY source subr. ZFWDT amended to prevent array      *
+     F*           error if no holiday record found - fixed by S01434.    *
+     F*           Program recompiled.                                    *
+     F*   S01455  -  'FF' ACCOUNT KEY ENHANCEMENTS.                      *
+     F*              Recompiled due to changes in file TABFF.            *
+     F*   S01393  -  RECOMPILED FOR STRATEGIC RISK MANAGEMENT            *
+     F* FUJI-FF0011 - The system does not differentiate between          *
+     F*               american and european option on exercise           *
+     F*               validation and OTC confirmation wording.           *
+     F*               *** RECOMPILE ONLY ***                             *
+     F*   E38323  -  Recompilation of the program done due to a change   *
+     F*              in copy source ZFWDT subroutine                     *
+     F*   AUS022  -  AUSTRALIAN CHANGE : Contract Type (CNTT) added to   *
+     F*              PF/INTYPD.  Recompile program only.                 *
+     F*   S01299  -  ALLOW 32 MARKET CENTRES AS PER ORIGINAL             *
+     F*              SPECIFICATION.                                      *
+     F*   E23580  -  CHECK FOR OVERFLOW AND WRITE HEADER IF NEW PAGE.    *
+     F*              ALSO, RESET PAGE NO. BEFORE OUTPUTTING FF0465P2.    *
+     F*   S01117  -  MULTIBRANCHING                                      *
+     F*   S01195  -  NEW HOLIDAY PROCESSING                              *
+     F*------------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                        *
+     F*                                                                  *
+     F*     IGNDECERR(*NO)                                              *
+     F*                                                                  *
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F********************************************************************
+     F*
+     FTABFF   IF  E           K        DISK
+     F            TABTB10F                          KIGNORE               S01117
+     F            TABTG10F                          KIGNORE               S01117
+     F            TABTB11F                          KIGNORE
+     F            TABTB20F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F            TABLETLF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F*ABLETJ*IF**E***        K        DISK                               S01117
+     F*F0465P2O***E***                 PRINTER                            S01117
+     F*F0465P1O***E***                 PRINTER                            S01117
+     F*F0465P1O***E***                 DISK                      UC E23580S01117
+     FFF0465P1O   E             78     PRINTER                        UC  E23580
+     F                                              KINFDS SPOOL          S01117
+     F*F0465P2O***E***                 DISK                      UC E23580S01117
+     FFF0465P2O   E             77     PRINTER                        UC  E23580
+     F                                              KINFDS SPOOL2         S01117
+     FFF0465A1O   E                    DISK                               S01117
+     F                                              KINFDS SPOOLU         S01117
+     FFF0465A2O   E                    DISK                               S01117
+     F                                              KINFDS SPOOU2         S01117
+     F*OCHG4**IF**E***        K        DISK                               S01299
+     FPOCHG4C IF  E           K        DISK                               S01299
+     FPOCHG4T IF  E           K        DISK                               S01299
+     FPOCHG4R IF  E           K        DISK                               S01299
+     FMARKT   IF  E           K        DISK
+     FINTYP   IF  E           K        DISK
+     FBOOKD   IF  E           K        DISK
+     FPOSTNC1 UF  E           K        DISK
+     FFFPSNCPDIF  E           K        DISK                               163444
+     F*OSTNK1*UF**E***        K        DISK                               S01117
+     FPOSTNK5 UF  E           K        DISK                               S01117
+     FFFPNK5PDIF  E           K        DISK                               163444
+     F/COPY WNCPYSRC,FF0465F001
+     F*
+      *                                                                                       CAS003
+     FFFNPVLL0UF  E           K        DISK                                                   CAS003
+      ** Revalued FF Positions File                                                           CAS003
+      *                                                                                       CAS003
+     FASHTRNL7IF  E           K        DISK                                                   CAS003
+      ** Hedge Transactions File                                                              CAS003
+      *                                                                                       CAS003
+     F/SPACE 2
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F* 04      -   CUSTOMER POSITION RECORDS
+     F* 05      -   BOOK POSITION RECORDS
+     F*
+     F*     10  -   EOF ON POSTNC1
+     F******20**-***EOF*ON*POSTNK1****************************************S01117
+     F*     20  -   EOF ON POSTNK5                                        S01117
+     F*     30  -   CHAIN FAIL OM INTYP
+     F*     31  -   DETAILS PRINTED FOR BRANCH (POSTNC)                   S01117
+     F*     32  -   DETAILS PRINTED FOR BRANCH (POSTNK)                   S01117
+     F*     35  -   MULTIBRANCHING IND.                                   S01117
+     F*     40  -   CHAIN FAIL ON MARKT
+     F*     41  -   CHAIN FAIL ON POSTNC1                                 163444
+     F*     42  -   CHAIN FAIL ON POSTNK5                                 163444
+     F*     50  -   CHAIN FAIL ON POCHG4
+     F*     51  -   WORK IND- RECORDS EXIST ON POCHG4 FOR ASSOCIATED
+     F*             POSTNC1 RECORD.
+     F*     52  -   WORK IND- POSTNC1 RECORDS DELETED THIS RUN
+     F******53**-***WORK*IND-*POSTNK1*RECORDS*DELETED*THIS*RUN************S01117
+     F*     53  -   WORK IND- POSTNK5 RECORDS DELETED THIS RUN            S01117
+     F*     60  -   CHAIN FAIL ON BOOKD
+     F*     70  -   DISPLAY YEAR NUMBER AND MONTH NUMBER ON REPORT
+     F*     77  -   PRINT OVERFLOW INDICATOR FOR FF0465P2                 E23580
+     F*     78  -   PRINT OVERFLOW INDICATOR FOR FF0465P1                 E23580
+     F*     79  -   DB ERROR ON TABTB80
+     F*
+     F*     80-89       Reserved for Standard FF Subroutines
+     F*
+     F*     90-99       Reserved for Standard MIDAS Subroutines
+     F*
+     F*     U7+U8       Database Errors
+     F*
+     F/SPACE 2
+     E                    CPY@    1   1 80
+     E*EXTENSION SPECIFICATIONS ***************************************
+     E*
+     E* C O M P I L E   T I M E   A R R A Y S
+     E*
+     E**                                                                  S01195
+     E/COPY ZSRSRC,ZHOLE                                                  S01195
+     E**                                                                  S01195
+     E/COPY ZSRSRC,FFDATEZ1
+     E*COPY*ZSRSRC,ZDATE3Z1                                               S01195
+     E*COPY*ZSRSRC,ZDATE5Z1                                               S01195
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/SPACE 2
+     I*
+     I*INPUT SPECIFICATIONS *******************************************
+     I*
+     I* RECORD IDENTIFYING INDICATORS.  USED IN WRITING OUT DATABASE ERROR
+     I* DETAILS TO REPORTS.
+     I*
+     IPOSTNCDF    04
+     IPOSTNKDF    05
+     I*
+     I*COPY*ZSRSRC,ZDATE3Z2                                               S01195
+     I/COPY ZSRSRC,FFDATEZ2
+     I*COPY*ZSRSRC,ZDATE3Z3                                               S01195
+     I*
+     I*DA********UDS                            256                       S01117
+     I*  LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     ILDA         DS                            256                       S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I**                                                                  S01117
+     ISPOOL       DS                                                      S01117
+     I                                       83  92 SFILE                 S01117
+     I                                    B 123 1240SFNUM                 S01117
+     I                                    B 367 3680LINE                  S01117
+     I**                                                                  S01117
+     ISPOOLU      DS                                                      S01117
+     I                                       83  92 SFILEU                S01117
+     I                                    B 123 1240SFNUMU                S01117
+     I**                                                                  S01117
+     ISPOOL2      DS                                                      S01117
+     I                                       83  92 SFILE2                S01117
+     I                                    B 123 1240SFNUM2                S01117
+     I                                    B 367 3680LINE2                 S01117
+     I**                                                                  S01117
+     ISPOOU2      DS                                                      S01117
+     I                                       83  92 SFILU2                S01117
+     I                                    B 123 1240SFNUU2                S01117
+     I**                                                                  S01117
+     I**  EXTERNAL DS FOR BANK DETAILS                                    S01117
+     ISDBANK    E DSSDBANKPD                                              S01117
+     I              BJURPT                          TITL                  S01117
+     I**                                                                  S01117
+     I**  EXTERNAL DS FOR BRANCH CODE DETAILS                             S01117
+     ISDBRCH    E DSSDBRCHPD                                              S01117
+     I              A8BRNM                          BRNM                  S01117
+     I/COPY WNCPYSRC,FF0465I001
+      *                                                                                       CAS003
+      ** Switchable Features details                                                          CAS003
+     ISCSARD    E DSSCSARDPD                                                                  CAS003
+      *                                                                                       CAS003
+     I**                                                                  S01117
+     I**  DATA STRUCTURE FOR RUN DATE DETAILS                             S01117
+     IRUNDT       DS                                                      S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     I**                                                                  S01117
+     I** DATA STRUCTURE FOR ACCESS OBJECTS, SHORT DATA STRUCTURE          S01117
+     IDSFDY     E DSDSFDY                                                 S01117
+     I**                                                                  S01195
+     I/COPY ZSRSRC,ZHOLDS                                                 S01195
+     I**                                                                  S01195
+     I/COPY ZSRSRC,ZHOLI                                                  S01195
+     I**                                                                  S01195
+     I*
+     IPOS1KD      DS
+     I**For moving LF/POSTN1 KFLD error details to DBKEY.
+     I*
+     I***********                             1   30BRCD                  S01117
+     I                                        1   3 BRCA                  S01117
+     I**********                              4   90CBCD                                      CSD027
+     I                                        4   9 CBCD                                      CSD027
+     I                                       10  14 ISTT
+     I                                       15  160YRNO
+     I                                       17  180MTHN
+     I                                       19  19 PCAL
+     I***********                         P  20  257STRP                  CFF004
+     I                                    P  20  278STRP                  CFF004
+      /EJECT
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C********************************************************************
+     C*       I N I T I A L   P R O C E S S I N G
+     C********************************************************************
+     C***MOVE*PROGRAM*NUMBER*TO*LDA***************************************S01117
+     C***********          MOVEL'FF0465'  DBPGM                           S01117
+     C***********          MOVE *BLANKS   DBKEY                           S01117
+     C*
+     C** KLIST - POSTNC1
+     C           POS1KY    KLIST
+     C***********          KFLD           BRCD                            S01117
+     C                     KFLD           BRCA                            S01117
+     C                     KFLD           CBCD
+     C                     KFLD           ISTT
+     C                     KFLD           YRNO
+     C                     KFLD           MTHN
+     C                     KFLD           PCAL
+     C                     KFLD           STRP
+      *                                                                   163444
+      ** POSTNC1  KEY LIST  (FULL)                                        163444
+      *                                                                   163444
+     C           POSTFK    KLIST                                          163444
+     C                     KFLD           BRCA                            163444
+     C                     KFLD           CBCD                            163444
+     C                     KFLD           ISCY                            163444
+     C                     KFLD           ISTT                            163444
+     C                     KFLD           YRNO                            163444
+     C                     KFLD           MTHN                            163444
+     C                     KFLD           PCAL                            163444
+     C                     KFLD           STRP                            163444
+      *                                                                   163444
+      ** POSTNK5  KEY LIST  (FULL)                                        163444
+      *                                                                   163444
+     C           PSNKFK    KLIST                                          163444
+     C                     KFLD           BRCA                            163444
+     C                     KFLD           BOKC                            163444
+     C                     KFLD           ISTT                            163444
+     C                     KFLD           YRNO                            163444
+     C                     KFLD           MTHN                            163444
+     C                     KFLD           PCAL                            163444
+     C                     KFLD           STRP                            163444
+     C*
+     C***ACCESS*TABTB10*TO*OBTAIN*RUNDATE*********************************S01117
+     C*
+     C***********          READ TABTB10F                 99               S01117
+     C************IN99     IFEQ '1'                                       S01117
+     C***********RECI      ORNE 'D'                                       S01117
+     C***********          MOVE 'TABLE'   DBFILE                          S01117
+     C***********          MOVEL'TABTB10' DBKEY            ***************S01117
+     C***********          Z-ADD1         DBASE            * DB ERROR 01 *S01117
+     C***********          EXSR DBERR                      ***************S01117
+     C***********          END                                            S01117
+     C**                                                                  S01117
+     C** IN THE DATAAREA RUNDAT                                           S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C**                                                                  S01117
+     C** INITIALISE DATABASE ERROR DATAAREA                               S01117
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                        INITIALIZE     S01117
+     C                     MOVE *BLANK    DBPGM                           S01117
+     C                     MOVEL'FF0465  'DBPGM                           S01117
+     C                     MOVE *BLANK    DBFILE                          S01117
+     C                     MOVE *BLANK    DBKEY                           S01117
+     C                     Z-ADD0         DBASE                           S01117
+     C                     OUT  LDA                                       S01117
+     C**                                                                  S01117
+     C**  TEST FOR MULTIBRANCHING                                         S01117
+     C           MBIN      IFEQ 'Y'                                       S01117
+     C                     SETON                     35                   S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C**   ACCESS BANK DETAILS, FOR TITLE                                 S01117
+     C                     CALL 'AOBANKR0'                                S01117
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C           SDBANK    PARM SDBANK    DSFDY                           S01117
+     C*                                                                   S01117
+     C           @RTCD     IFNE *BLANK                                    S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'SDBANKPD'DBFILE                          S01117
+     C                     MOVEL@OPTN     DBKEY            ***************S01117
+     C                     MOVEL@OPTN     DBOPTN  7        * DBERROR 001 *S01117
+     C                     Z-ADD1         DBASE            ***************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR                                     S01117
+     C                     END                                            S01117
+     C*
+     C** Set *IN98 for mm/dd/yy format
+     C*
+     C           DATF      COMP 'M'                      98
+     C*
+     C*
+     C** ACCESS TABTB80 TO OBTAIN HISTORICAL PERIOD
+     C*
+     C                     READ TABTB80F                 79
+     C           *IN79     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE
+     C                     MOVEL'TABTB80' DBKEY            ***************
+     C                     Z-ADD2         DBASE            * DB ERROR 02 *
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+     C/COPY WNCPYSRC,FF0465C001
+      *                                                                                       CAS003
+      ** Check if switchable feature CAS003 is installed.                                     CAS003
+      *                                                                                       CAS003
+     C                     CALL 'AOSARDR0'                                                    CAS003
+     C                     PARM *BLANKS   @RTCD                                               CAS003
+     C                     PARM '*VERIFY' @OPTN                                               CAS003
+     C                     PARM 'CAS003'  @SARD   6                                           CAS003
+     C           SCSARD    PARM SCSARD    DSFDY                                               CAS003
+      *                                                                                       CAS003
+      ** Database error.                                                                      CAS003
+      *                                                                                       CAS003
+     C           @RTCD     IFNE *BLANKS                                                       CAS003
+     C           @RTCD     ANDNE'*NRF   '                                                     CAS003
+     C           *LOCK     IN   LDA                                                           CAS003
+     C                     MOVE 'SCSARDPD'DBFILE                                              CAS003
+     C                     MOVEL@SARD     DBKEY                                               CAS003
+     C                     MOVEL@OPTN     DBOPTN                                              CAS003
+     C                     Z-ADD9         DBASE                                               CAS003
+     C                     EXSR DBERR                                                         CAS003
+     C                     ELSE                                                               CAS003
+      *                                                                                       CAS003
+     C           @RTCD     IFEQ *BLANKS                                                       CAS003
+     C                     MOVE 'Y'       CAS003  1                                           CAS003
+     C                     ELSE                                                               CAS003
+     C                     MOVE 'N'       CAS003                                              CAS003
+     C                     ENDIF                                                              CAS003
+     C                     ENDIF                                                              CAS003
+      *                                                                                       CAS003
+      ** Key list for FF Revalued Positions File FFNPVLL0.                                    CAS003
+      *                                                                                       CAS003
+     C           KNPVL0    KLIST                                                              CAS003
+     C                     KFLD           BRCA                                                CAS003
+     C                     KFLD           BOKC                                                CAS003
+     C                     KFLD           ISTT                                                CAS003
+     C                     KFLD           YRNO                                                CAS003
+     C                     KFLD           MTHN                                                CAS003
+     C                     KFLD           PCAL                                                CAS003
+      *                                                                                       CAS003
+      ** Key list for Hedge Transaction File ASHTRNL7.                                        CAS003
+      *                                                                                       CAS003
+     C           KHTRN7    KLIST                                                              CAS003
+     C                     KFLD           KDHIN                                               CAS003
+     C                     KFLD           KMOD                                                CAS003
+     C                     KFLD           KFPSE                                               CAS003
+     C                     KFLD           BRCA                                                CAS003
+     C                     KFLD           BOKC                                                CAS003
+     C                     KFLD           PCAL                                                CAS003
+      *                                                                                       CAS003
+     C********************************************************************
+     C*
+     C** P O S T N C 1   P R O C E S S I N G
+     C*
+     C********************************************************************
+     C*  INITIAL READ OF POSTNC1
+     C**************       READ POSTNCDF                 10               163444
+     C                     READ FFPSNCPD                 10               163444
+      *                                                                   163444
+      * Get actual record to update                                       163444
+      *                                                                   163444
+     C           *IN10     IFEQ *OFF                                      163444
+     C           POSTFK    CHAINPOSTNC1              41                   163444
+     C                     ENDIF                                          163444
+     C*
+     C***WRITE*HEADINGS*TO*CUSTOMER/BROKER*AUDIT*REPORT*******************S01117
+     C*
+     C***********          WRITEFMTP100                                   S01117
+     C*
+     C* IF RECORDS ON FILE CALL POSTCS SUBROUTINE
+     C           *IN10     IFNE '1'
+     C                     MOVE *BLANKS   BCODE   3                       S01117
+     C                     Z-ADD0         INO1                            S01117
+     C                     EXSR POSTCS
+     C*
+     C**IF*NO*POSTNC1*RECORDS*HAVE*BEEN*DELETED,*WRITE*'NO*DETAILS'*AND***S01117
+     C**'END*OF*REPORT'*MESSAGES******************************************S01117
+     C*
+     C************IN52     IFEQ '0'                                       S01117
+     C***********          WRITEFMTP102                                   S01117
+     C***********          END                                            S01117
+     C*
+     C**WRITE*'END*OF*REPORT'*MESSAGE*************************************S01117
+     C*
+     C***********          WRITEFMTP103                                   S01117
+     C*
+     C**IF*NO*RECORDS*ON*FILE*WRITE*'NO*DETAILS'*MESSAGE*TO*REPORT********S01117
+     C***********          ELSE                                           S01117
+     C*
+     C***********          WRITEFMTP102                                   S01117
+     C***********          WRITEFMTP103                                   S01117
+     C**                                                                  S01117
+     C** OUTPUT 'END OF REPORT' IF DETAILS PRINTED FOR BRANCH             S01117
+     C           *IN31     IFEQ '1'                                       S01117
+     C                     MOVE '0'       *IN31                           S01117
+     C                     WRITEFMTP103                                   S01117
+     C                     CLOSEFF0465P1                                  S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     END
+     C**                                                                  S01117
+     C** OUTPUT AUDIT REPORT                                              S01117
+     C                     EXSR RCFA1                                     S01117
+     C                     WRITEFMTA101                                   S01117
+     C                     WRITEFMTA102                                   S01117
+     C           ONO1      IFEQ 0                                         S01117
+     C                     WRITEFMTA104                                   S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C********************************************************************
+     C*
+     C** P O S T N K 1   P R O C E S S I N G
+     C*
+     C********************************************************************
+     C*
+     C***FIRST*READ*OF*POSTNK1.*******************************************S01117
+     C** FIRST READ OF POSTNK5.                                           S01117
+     C************         READ POSTNKDF                 20               163444
+     C                     READ FFPNK5PD                 20               163444
+      *                                                                   163444
+      * Get actual record to update                                       163444
+      *                                                                   163444
+     C           *IN20     IFEQ *OFF                                      163444
+     C           PSNKFK    CHAINPOSTNK5              42                   163444
+     C                     ENDIF                                          163444
+     C*
+     C*  RESET PAGE NO. FOR BOOK POSITIONS AUDIT REPORT                   E23580
+     C*                                                                   E23580
+     C                     MOVE *BLANKS   PAGE                            E23580
+     C***WRITE*HEADINGS*TO*BOOK*POSITIONS*AUDIT*REPORT********************S01117
+     C*
+     C***********          WRITEFMTP200                                   S01117
+     C           *IN20     IFNE '1'
+     C                     Z-ADD0         INO2                            S01117
+     C                     EXSR POSTKS
+     C*
+     C**IF*NO*POSTNK1*RECORDS*HAVE*BEEN*DELETED,*WRITE*'NO*DETAILS'*AND***S01117
+     C**'END*OF*REPORT'*MESSAGES******************************************S01117
+     C*
+     C************IN53     IFEQ '0'                                       S01117
+     C***********          WRITEFMTP202                                   S01117
+     C***********          END                                            S01117
+     C*
+     C***********          WRITEFMTP203                                   S01117
+     C*
+     C**IF*NO*RECORDS*ON*FILE*WRITE*'NO*DETAILS'*MESSAGE*TO*REPORT********S01117
+     C*
+     C***********          ELSE                                           S01117
+     C***********          WRITEFMTP202                                   S01117
+     C***********          WRITEFMTP203                                   S01117
+     C**                                                                  S01117
+     C** OUTPUT 'END OF REPORT' IF DETAILS PRINTED FOR BRANCH             S01117
+     C           *IN32     IFEQ '1'                                       S01117
+     C                     MOVE '0'       *IN32                           S01117
+     C                     WRITEFMTP203                                   S01117
+     C                     CLOSEFF0465P2                                  S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     END
+     C**
+     C** OUTPUT AUDIT REPORT                                              S01117
+     C                     EXSR RCFA2                                     S01117
+     C                     WRITEFMTA201                                   S01117
+     C                     WRITEFMTA202                                   S01117
+     C           ONO2      IFEQ 0                                         S01117
+     C                     WRITEFMTA204                                   S01117
+     C                     END                                            S01117
+     C*
+     C**
+     C                     EXSR END
+     C**
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*   POSTCS SR. MAIN PROCESSING FOR POSTNC1 RECORDS
+     C*   CALLS: MKTINS SR. IF INSTRUMENT IS MARKET TYPE
+     C*          DLPOSC SR. DELETES RECORD ON POSTNC1 IF POCHG 4 RECS EXIST
+     C********************************************************************
+     C*
+     C**
+     C           POSTCS    BEGSR
+     C*
+     C** DO WHILE RECORDS EXIST ON FILE
+     C           *IN10     DOWNE'1'
+     C                     SETOF                     70
+     C**                                                                  S01117
+     C**  PROCESSING FOR CHANGE OF BRANCH                                 S01117
+     C           BRCA      IFNE BCODE                                     S01117
+     C           *IN31     IFEQ '1'                                       S01117
+     C                     WRITEFMTP103                                   S01117
+     C                     CLOSEFF0465P1                                  S01117
+     C                     MOVE '0'       *IN31                           S01117
+     C                     END                                            S01117
+     C                     MOVE BRCA      BCODE                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C**  KEEP COUNT OF INPUT RECORDS                                     S01117
+     C                     ADD  1         INO1                            S01117
+     C*
+     C** ACCESS INTYP TO GET SETTLEMENT DATE OR FORMULA
+     C           ISTT      CHAININTYP                30
+     C           *IN30     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'INTYP'   DBFILE
+     C                     MOVELISTT      DBKEY            ***************
+     C                     Z-ADD3         DBASE            * DB ERROR 03 *
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C** IF INSTRUMENT TYPE IS MARKET CALL MKTINS SR. TO WORK OUT
+     C** SETTLEMENT DATE IN MIDAS DAYNO FORMAT
+     C           ISTI      IFNE 'Y'
+     C                     MOVE '1'       *IN70
+     C                     EXSR MKTINS
+     C                     END
+     C*
+     C** CALL DLPOSC SR. TO ASSESS IF POSTNC1 RECORD CAN BE DELETED
+     C                     EXSR DLPOSC
+     C*
+     C** READ NEXT RECORD OFF POSTNC1
+     C************         READ POSTNCDF                 10               163444
+     C                     READ FFPSNCPD                 10               163444
+      *                                                                   163444
+      * Get actual record to update                                       163444
+      *                                                                   163444
+     C           *IN10     IFEQ *OFF                                      163444
+     C           POSTFK    CHAINPOSTNC1              41                   163444
+     C                     ENDIF                                          163444
+     C*
+     C**
+     C                     END
+     C*
+     C**
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C****POSTKS*SR.*MAIN*PROCESSING*FOR*POSTNK1*RECORDS******************S01117
+     C*   POSTKS SR. MAIN PROCESSING FOR POSTNK5 RECORDS                  S01117
+     C*   CALLS: MKTINS SR. IF INSTRUMENT IS MARKET TYPE
+     C***********DLPOSK*SR.*DELETES*RECORD*ON*POSTNK1*********************S01117
+     C*          DLPOSK SR. DELETES RECORD ON POSTNK5                     S01117
+     C*
+     C********************************************************************
+     C*
+     C**
+     C           POSTKS    BEGSR
+     C*
+     C***PROCESS*WHILE*RECORDS*EXIST*ON*POSTNK1***************************S01117
+     C** PROCESS WHILE RECORDS EXIST ON POSTNK5                           S01117
+     C           *IN20     DOWNE'1'
+     C                     SETOF                     70
+     C**                                                                  S01117
+     C**  PROCESSING FOR CHANGE OF BRANCH                                 S01117
+     C           BRCA      IFNE BCODE                                     S01117
+     C           *IN32     IFEQ '1'                                       S01117
+     C                     WRITEFMTP203                                   S01117
+     C                     CLOSEFF0465P2                                  S01117
+     C                     MOVE '0'       *IN32                           S01117
+     C                     END                                            S01117
+     C                     MOVE BRCA      BCODE                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C**  KEEP COUNT OF INPUT RECORDS                                     S01117
+     C                     ADD  1         INO2                            S01117
+     C*
+     C** ACCESS INTYP TO GET SETTLEMENT DATE OR FORMULA
+     C           ISTT      CHAININTYP                30
+     C*
+     C** IF NO LIVE RECORD FOUND REPORT DATABASE ERROR
+     C           *IN30     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'INTYP'   DBFILE
+     C                     MOVELISTT      DBKEY            ***************
+     C                     Z-ADD4         DBASE            * DB ERROR 04 *
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C**IF INSTRUMENT IS MARKET TYPE EXECUTE MKTINS SR.
+     C           ISTI      IFNE 'Y'
+     C                     MOVE '1'       *IN70
+     C                     EXSR MKTINS
+     C                     END
+     C*
+     C***CALL*DLPOSK*SR.*TO*ASSESS*IF*POSTNK1*RECORD*CAN*BE*DELETED*******S01117
+     C** CALL DLPOSK SR. TO ASSESS IF POSTNK5 RECORD CAN BE DELETED       S01117
+     C                     EXSR DLPOSK
+     C*
+     C***READ*NEXT*RECORD*ON*POSTNK1**************************************S01117
+     C***********          READ POSTNK1                  20               S01117
+     C** READ NEXT RECORD ON POSTNK5                                      S01117
+     C****************     READ POSTNK5                  20        S01117 163444
+     C                     READ FFPNK5PD                 20               163444
+      *                                                                   163444
+      * Get actual record to update                                       163444
+      *                                                                   163444
+     C           *IN20     IFEQ *OFF                                      163444
+     C           PSNKFK    CHAINPOSTNK5              42                   163444
+     C                     ENDIF                                          163444
+     C*
+     C**
+     C                     END
+     C*
+     C**
+     C                     ENDSR
+     C*
+     C**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*   MKTINS SR. ACCESSES FIELDS FROM LF/MARKT
+     C*   CALLS: FFDATE SR. TO CONVERT SETTLEMENT DATE INTO A MIDAS DAYNO.
+     C*
+     C********************************************************************
+     C           MKTINS    BEGSR
+     C*
+     C** ACCESS MARKT TO GET MARKET LOCAL CURRENCY
+     C           *LIKE     DEFN MRKT      MKTS
+     C                     MOVELISTT      MKTS
+     C           MKTS      CHAINMARKT                40
+     C*
+     C** IF NO LIVE RECORD FOUND REPORT DATABASE ERROR
+     C           *IN40     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'MARKT'   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVELMRKT      DBKEY            ***************
+     C                     Z-ADD5         DBASE            * DB ERROR 05 *
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C* MOVE FIELDS INTO FFDATE WORK FIELDS TO CALCULATE SPOT MONTH DATE
+     C                     MOVE SEDF      FFDATC
+     C                     MOVE MKLC      FFCCY1
+     C                     MOVE ISCY      FFCCY2
+     C                     MOVE OTHC      FFCCY3
+     C                     MOVE MTHN      FFMTH
+     C                     MOVE YRNO      FFYR
+     C                     MOVE MLOC      FFLOC                           S01117
+     C                     EXSR FFDATE
+     C*
+     C** RESULT FIELD FFDAY IS USED IN DELETION TEST SUBROUTINES
+     C** DLPOSC AND DLPOSK
+     C*
+     C                     ENDSR
+     C*
+     C**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*   DLPOSC SR. DELETES POSITIONS ON POSTNC1 BEYOND HISTORICAL DATE
+     C*
+     C********************************************************************
+     C*
+     C**
+     C           DLPOSC    BEGSR
+     C*
+     C** SET OFF WORK INDICATOR
+     C                     SETOF                     51
+     C*
+     C** IF BROKER INDICATOR IS  = Y, SETON WORK INDICATOR
+     C*
+     C           BRKI      IFEQ 'Y'
+     C*
+     C                     SETON                     51
+     C*
+     C** ELSE - BROKER INDICATOR <> "Y", ACCESS POCHG4
+     C*
+     C                     ELSE
+     C***********POS1KY    CHAINPOCHG4               50                   S01299
+      *                                                                   S01299
+     C           POS1KY    CHAINPOCHG4C              50                   S01299
+      *                                                                   S01299
+     C           *IN50     IFEQ '1'                                       S01299
+     C           POS1KY    CHAINPOCHG4T              50                   S01299
+     C                     END                                            S01299
+      *                                                                   S01299
+     C           *IN50     IFEQ '1'                                       S01299
+     C           POS1KY    CHAINPOCHG4R              50                   S01299
+     C                     END                                            S01299
+     C*
+     C** IF NO LIVE RECORD FOUND POSTNCD RECORD CAN BE DELETED:-
+     C*
+     C**      SET ON WORK INDICATOR
+     C           *IN50     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     MOVE '1'       *IN51
+     C                     END
+     C                     END
+     C*
+     C**      SAVE HISTORICAL PERIOD AS TARGET PERIOD (IN ZONED FORMAT)
+     C*
+     C           *LIKE     DEFN FFDAY     TRGTPD
+     C                     Z-ADDHISP      TRGTPD
+     C*
+     C*
+     C** IF NO POCHG4 RECORDS EXIST FOR ASSOCIATED POSTNC1 RECORD
+     C*  POSTNC1 RECORD MAY BE DELETED
+     C           *IN51     IFEQ '1'
+     C*
+     C**  ADD TARGET PERIOD TO SETTLEMENT DATE
+     C           ISTI      IFNE 'Y'
+     C           FFDAY     ADD  TRGTPD    TRGTPD
+     C                     ELSE
+     C           SETD      ADD  TRGTPD    TRGTPD
+     C                     END
+     C*
+     C**  IF RESULTANT DATE IS LESS THAN RUNDATE, DELETE POSTNCD RECORD
+     C**  AFTER WRITING DETAILS TO AUDIT REPORT
+     C*
+     C           TRGTPD    IFLT RUND
+     C*
+     C** FORMAT SETTLEMENT DATE FOR REPORT
+     C           ISTI      IFNE 'Y'
+     C                     Z-ADDFFDAY     ZDAYNO
+     C                     ELSE
+     C                     Z-ADDSETD      ZDAYNO
+     C                     END
+     C                     EXSR ZDATE2
+     C*
+     C** CHECK IF DETAILS BEEN PRINTED FOR BRANCH                         S01117
+     C           *IN31     IFEQ '0'                                       S01117
+     C**                                                                  S01117
+     C**  ACCESS BRANCH DETAILS FOR MULTIBRANCHING                        S01117
+     C           MBIN      IFEQ 'Y'                                       S01117
+     C**********           CALL 'AOBRCHR0'                                S01117              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*KEY   ' @OPTN   7                       S01117
+     C                     PARM BRCA      @DSNB   3                       S01117
+     C********** SDBRCH    PARM SDBRCH    DSFDY                           S01117              CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C**                                                                  S01117
+     C**  CHECK FOR DATABASE ERROR                                        S01117
+     C           @RTCD     IFNE *BLANK                                    S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'SDBRCHPD'DBFILE                          S01117
+     C                     MOVELBRCA      DBKEY                           S01117
+     C                     MOVEL@OPTN     DBOPTN  7        ***************S01117
+     C                     Z-ADD7         DBASE            * DB ERROR 07 *S01117
+     C                     OUT  LDA                        ***************S01117
+     C                     EXSR DBERR                                     S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     MOVE '1'       *IN31                           S01117
+     C                     Z-ADD0         PAGE                            S01117
+     C                     OPEN FF0465P1                                  S01117
+     C                     EXSR RCFP1                                     S01117
+     C                     WRITEFMTP100                                   S01117
+     C*                                                                   E23580
+     C** IF THERES A CHANGE OF BRANCH A NEW SPOOL FILE IS OPENED AND      E23580
+     C** THEREFORE THE OVERFLOW INDICATOR CAN BE SET OFF.THIS PREVENTS    E23580
+     C** HEADINGS BEING WRITTEN TWICE SHOULD OVERFLOW OCCUR ON CHANGE     E23580
+     C** OF BRANCH.                                                       E23580
+     C*                                                                   E23580
+     C                     MOVE '0'       *IN78                           E23580
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ADD  1         ONO1                            S01117
+     C**                                                                  S01117
+     C*                                                                   E23580
+     C** IF OVERFLOW REWRITE HEADINGS AND SET OFF OVERFLOW INDICATOR.     E23580
+     C*                                                                   E23580
+     C           *IN78     IFEQ '1'                                       E23580
+     C                     WRITEFMTP100                                   E23580
+     C                     MOVE '0'       *IN78                           E23580
+     C                     END                                            E23580
+     C                     WRITEFMTP101
+     C***********          MOVE '1'       *IN52                           S01117
+     C                     DELETPOSTNCDF
+     C                     END
+     C*
+     C                     END
+     C*
+     C**
+     C                     ENDSR
+     C**
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C****DLPOSK*SR.*DELETES*POSITIONS*ON*POSTNK1*BEYOND*HISTORICAL*DATE**S01117
+     C*   DLPOSK SR. DELETES POSITIONS ON POSTNK5 BEYOND HISTORICAL DATE  S01117
+     C*
+     C********************************************************************
+     C*
+     C           DLPOSK    BEGSR
+     C*
+     C** ACCESS BOOKD TO CHECK HEDGE INDICATOR
+     C           BOKC      CHAINBOOKD                60
+     C*
+     C** IF NO LIVE RECORD FOUND REPORT DATABASE ERROR
+     C           *IN60     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'BOOKD'   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVELBOKC      DBKEY            ***************
+     C                     Z-ADD6         DBASE            * DB ERROR 06 *
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C** IF HEDGE INDICATOR IS 'Y' SAVE THE LATER OF THE UNDERLYING PERIOD
+     C** AND THE HISTORICAL PERIOD AS THE TARGET PERIOD
+     C           HDGI      IFEQ 'Y'
+     C           ULPD      IFGT HISP
+     C                     Z-ADDULPD      TRGTPD
+     C                     ELSE
+     C                     Z-ADDHISP      TRGTPD
+     C                     END
+     C*
+     C** HEDGE INDICATOR IS NOT 'Y' SAVE HISTORICAL PERIOD AS TARGET DATE
+     C                     ELSE
+     C                     Z-ADDHISP      TRGTPD
+     C                     END
+     C*
+     C**  ADD TARGET PERIOD TO SETTLEMENT DATE
+     C           ISTI      IFNE 'Y'
+     C           FFDAY     ADD  TRGTPD    TRGTPD
+     C                     ELSE
+     C           SETD      ADD  TRGTPD    TRGTPD
+     C                     END
+     C*
+     C/COPY WNCPYSRC,FF0465C002
+      *                                                                                       CAS003
+     C                     MOVE *BLANKS   WSKIP   1                                           CAS003
+      *                                                                                       CAS003
+      ** If CAS003 is on, record must NOT be dropped if it exists                             CAS003
+      ** in the Hedge Transactions File.                                                      CAS003
+      *                                                                                       CAS003
+     C           CAS003    IFEQ 'Y'                                                           CAS003
+     C                     MOVE *IN75     W75     1                                           CAS003
+     C                     MOVE *OFF      *IN75                                               CAS003
+      *                                                                                       CAS003
+      ** Convert numeric month MM to alpha MMM.                                               CAS003
+      *                                                                                       CAS003
+     C                     MOVEAZMNM,MTHN RMN     3                                           CAS003
+     C                     MOVELRMN       RMNYR   5                                           CAS003
+     C                     MOVE YRNO      RMNYR                                               CAS003
+      *                                                                                       CAS003
+      ** Set key field values.                                                                CAS003
+      *                                                                                       CAS003
+     C                     MOVE 'D'       KDHIN   1                                           CAS003
+     C                     MOVE 'FF'      KMOD    2                                           CAS003
+      *                                                                                       CAS003
+     C                     MOVE *BLANKS   KFPSE  10                                           CAS003
+     C                     MOVELISTT      KFPSE                                               CAS003
+     C                     MOVE RMNYR     KFPSE                                               CAS003
+      *                                                                                       CAS003
+      ** Check if record exists in the Hedge Transactions file.                               CAS003
+      *                                                                                       CAS003
+     C           KHTRN7    SETLLASHTRNL7                 75                                   CAS003
+      *                                                                                       CAS003
+      ** If found, exit subroutine; do NOT drop Futures position record.                      CAS003
+      *                                                                                       CAS003
+     C           *IN75     IFEQ *ON                                                           CAS003
+     C                     MOVE 'Y'       WSKIP                                               CAS003
+     C                     ENDIF                                                              CAS003
+      *                                                                                       CAS003
+      ** Restore previous value of *IN75.                                                     CAS003
+      *                                                                                       CAS003
+     C                     MOVE W75       *IN75                                               CAS003
+      *                                                                                       CAS003
+     C                     ENDIF                                                              CAS003
+      *                                                                                       CAS003
+     C           WSKIP     IFNE 'Y'                                                           CAS003
+      *                                                                                       CAS003
+     C**  IF RESULTANT DATE IS LESS THAN RUNDATE, DELETE POSTNKD RECORD
+     C**  AFTER WRITING DETAILS TO AUDIT REPORT
+     C*
+     C           TRGTPD    IFLT RUND
+     C*
+     C** FORMAT SETTLEMENT DATE FOR REPORT
+     C           ISTI      IFNE 'Y'
+     C                     Z-ADDFFDAY     ZDAYNO
+     C                     ELSE
+     C                     Z-ADDSETD      ZDAYNO
+     C                     END
+     C                     EXSR ZDATE2
+     C*
+     C*
+     C** CHECK IF DETAILS BEEN PRINTED FOR BRANCH                         S01117
+     C           *IN32     IFEQ '0'                                       S01117
+     C**                                                                  S01117
+     C**  ACCESS BRANCH DETAILS FOR MULTIBRANCHING                        S01117
+     C           MBIN      IFEQ 'Y'                                       S01117
+     C**********           CALL 'AOBRCHR0'                                S01117              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD                           S01117
+     C                     PARM '*KEY   ' @OPTN                           S01117
+     C                     PARM BRCA      @DSNB                           S01117
+     C********** SDBRCH    PARM SDBRCH    DSFDY                           S01117              CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C**                                                                  S01117
+     C**  CHECK FOR DATABASE ERROR                                        S01117
+     C           @RTCD     IFNE *BLANK                                    S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'SDBRCHPD'DBFILE                          S01117
+     C                     MOVELBRCA      DBKEY                           S01117
+     C                     MOVEL@OPTN     DBOPTN           ***************S01117
+     C                     Z-ADD8         DBASE            * DB ERROR 08 *S01117
+     C                     OUT  LDA                        ***************S01117
+     C                     EXSR DBERR                                     S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     MOVE '1'       *IN32                           S01117
+     C                     Z-ADD0         PAGE                            S01117
+     C                     OPEN FF0465P2                                  S01117
+     C                     EXSR RCFP2                                     S01117
+     C                     WRITEFMTP200                                   S01117
+     C*                                                                   E23580
+     C** IF THERES A CHANGE OF BRANCH A NEW SPOOL FILE IS OPENED AND      E23580
+     C** THEREFORE THE OVERFLOW INDICATOR SHOULD BE SET OFF. THIS         E23580
+     C** PREVENTS HEADINGS BEING PRINTED TWICE SHOULD OVERFLOW OCCUR      E23580
+     C** ON CHANGE OF BRANCH.                                             E23580
+     C*                                                                   E23580
+     C                     MOVE '0'       *IN77                           E23580
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ADD  1         ONO2                            S01117
+     C**                                                                  S01117
+     C*                                                                   E23580
+     C** IF OVERFLOW REWRITE HEADINGS AND SET OFF OVERFLOW INDICATOR.     E23580
+     C*                                                                   E23580
+     C           *IN77     IFEQ '1'                                       E23580
+     C                     WRITEFMTP200                                   E23580
+     C                     MOVE '0'       *IN77                           E23580
+     C                     END                                            E23580
+     C                     WRITEFMTP201
+     C***********          MOVE '1'       *IN53                           S01117
+     C                     DELETPOSTNKDF
+     C/COPY WNCPYSRC,FF0465C003
+      *                                                                                       CAS003
+      ** If CAS003 is on, also drop corresponding record in FFNPVLL0.                         CAS003
+      *                                                                                       CAS003
+     C           CAS003    IFEQ 'Y'                                                           CAS003
+      *                                                                                       CAS003
+     C                     MOVE *IN99     W99     1                                           CAS003
+     C                     MOVE '0'       *IN99                                               CAS003
+      *                                                                                       CAS003
+     C           KNPVL0    CHAINFFNPVLL0             99                                       CAS003
+     C           *IN99     IFEQ '0'                                                           CAS003
+     C                     DELETFFNPVLL0                                                      CAS003
+     C                     ENDIF                                                              CAS003
+      *                                                                                       CAS003
+     C                     MOVE W99       *IN99                                               CAS003
+     C                     ENDIF                                                              CAS003
+      *                                                                                       CAS003
+     C                     END
+     C*
+     C/COPY WNCPYSRC,FF0465C004
+     C**
+      *                                                                                       CAS003
+     C                     ENDIF                                                              CAS003
+      *                                                                                       CAS003
+     C                     ENDSR
+     C*
+     C**
+     C/EJECT
+     C*****************************************************************
+      **
+      ** DBERR S/R TO HANDLE DATABASE ERRORS AND TERMINATE PROGRAM
+      **
+     C*****************************************************************
+     C*
+     C           DBERR     BEGSR
+     C*
+     C** WRITE DATABASE ERROR DETAILS AND END OF REPORT MESSAGE TO FILE
+     C*
+     C*  CUSTOMER/BROKER POSITIONS
+     C           *IN04     IFEQ '1'
+     C           *IN05     ANDNE'1'                                       S01117
+     C           *IN31     IFEQ '1'                                       S01117
+     C                     WRITEFMTP104
+     C                     WRITEFMTP103
+     C                     CLOSEFF0465P1                                  S01117
+     C                     END                                            S01117
+     C                     EXSR RCFA1                                     S01117
+     C                     WRITEFMTA101                                   S01117
+     C                     WRITEFMTA102                                   S01117
+     C                     WRITEFMTA103                                   S01117
+     C**                                                                  S01117
+     C                     ELSE
+     C*
+     C*  BOOK POSITIONS DELETIONS
+     C           *IN32     IFEQ '1'                                       S01117
+     C                     WRITEFMTP204
+     C                     WRITEFMTP203
+     C                     CLOSEFF0465P2                                  S01117
+     C                     END                                            S01117
+     C                     EXSR RCFA2                                     S01117
+     C                     WRITEFMTA201                                   S01117
+     C                     WRITEFMTA202                                   S01117
+     C                     WRITEFMTA203                                   S01117
+     C**                                                                  S01117
+     C                     END
+     C                     SETON                     U7U8LR
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C                     RETRN
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C*
+     C*****************************************************************
+      **
+      ** END  S/R TO END PROGRAM UNDER NORMAL CONDITIONS
+      **
+     C*****************************************************************
+     C*
+     C           END       BEGSR
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDSR
+     C*
+     C/EJECT
+     C********************************************************************
+     C**                                                                  S01117
+     C** RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF          S01117
+     C**                                                                  S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           RCFP1     BEGSR                            ** RCFP1 **   S01117
+     C*                                                                   S01117
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF                    S01117
+     C*                                                                   S01117
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01117
+     C**                                                                  S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ     5                       S01117
+     C                     PARM BRCA      SENTY   3                       S01117
+     C                     PARM           SFILE                           S01117
+     C                     PARM           ZSNUM                           S01117
+     C                     PARM           ZSERR   1                       S01117
+     C*                                                                   S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+     C********************************************************************S01117
+     C**                                                                  S01117
+     C** RCFA1 -- SUBROUTINE TO REGISTER A1 PRINTER FILE VIA RCF          S01117
+     C**                                                                  S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           RCFA1     BEGSR                            ** RCFA1 **   S01117
+     C*                                                                   S01117
+     C**      ENSURE AUDIT SPOOL FILE RECORDED BY RCF                     S01117
+     C*                                                                   S01117
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      S01117
+     C**                                                                  S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ     5                       S01117
+     C                     PARM *BLANKS   SENTY   3                       S01117
+     C                     PARM           SFILEU                          S01117
+     C                     PARM           ZSNUMU                          S01117
+     C                     PARM           ZSERR   1                       S01117
+     C*                                                                   S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+     C********************************************************************S01117
+     C**                                                                  S01117
+     C** RCFP2 -- SUBROUTINE TO REGISTER P2 PRINTER FILE VIA RCF          S01117
+     C**                                                                  S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           RCFP2     BEGSR                            ** RCFP2 **   S01117
+     C*                                                                   S01117
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF                    S01117
+     C*                                                                   S01117
+     C                     Z-ADDSFNUM2    ZSNUM   60                      S01117
+     C**                                                                  S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ     5                       S01117
+     C                     PARM BRCA      SENTY   3                       S01117
+     C                     PARM           SFILE2                          S01117
+     C                     PARM           ZSNUM                           S01117
+     C                     PARM           ZSERR   1                       S01117
+     C*                                                                   S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+     C********************************************************************S01117
+     C**                                                                  S01117
+     C** RCFA2 -- SUBROUTINE TO REGISTER A2 PRINTER FILE VIA RCF          S01117
+     C**                                                                  S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           RCFA2     BEGSR                            ** RCFA2 **   S01117
+     C*                                                                   S01117
+     C**      ENSURE AUDIT SPOOL FILE RECORDED BY RCF                     S01117
+     C*                                                                   S01117
+     C                     Z-ADDSFNUU2    ZSNUMU  60                      S01117
+     C**                                                                  S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ     5                       S01117
+     C                     PARM *BLANKS   SENTY   3                       S01117
+     C                     PARM           SFILU2                          S01117
+     C                     PARM           ZSNUMU                          S01117
+     C                     PARM           ZSERR   1                       S01117
+     C*                                                                   S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+      /EJECT                                                              S01117
+     C/COPY ZSRSRC,FFDATEZ3
+     C*COPY*ZSRSRC,ZDATE3Z4                                               S01195
+     C*COPY*ZSRSRC,ZDATE5Z2                                               S01195
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/COPY ZSRSRC,ZDATE2Z2
+      /EJECT                                                              S01195
+     C/COPY ZSRSRC,ZACCH                                                  S01195
+      /EJECT                                                              S01195
+     C/COPY ZSRSRC,ZFWDT                                                  S01195
+      /EJECT                                                              S01195
+     C/COPY ZSRSRC,ZBKDT                                                  S01195
+      /EJECT                                                              S01195
+     C/COPY ZSRSRC,ZCHKH                                                  S01195
+     C/EJECT                                                              S01195
+     C********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   TABDY/TABNO - SHORTNAMES & DAY NUMBERS
+F0S1X2M3U4W5T6
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

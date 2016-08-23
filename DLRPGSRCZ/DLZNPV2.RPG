@@ -1,0 +1,385 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Dealing net present value calculation')       *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DLZNPV - Dealing Net Present Value calculation               *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      *  Last Amend No. 245132             Date 31Jan07               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. 247544             Date 16May07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL033  *CREATE    Date 10Feb05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  245132 - After switching on CAS009, COB takes longer time.   *
+      *  247544 - Increase definition of W@NLP2 to match w/ ZINTDYZ2  *
+      *           processing as amended by 242286.  (Recompile)       *
+      *  CDL033 - Floating Rate CDs Issued                            *
+      *                                                               *
+      *****************************************************************
+      *
+     FDLIRDFL2IF  E           K        DISK
+      *
+      *----------------------------------------------------------------
+      * ID  F  C  H  L    Function of indicators
+      *
+      *       90-99       Standard subroutines
+      *----------------------------------------------------------------
+      /SPACE 5
+     E                    CPY@    1   1 80
+      *
+      ** 29th Feb Array
+      *
+     E                    ZF29   14  32  5 0
+      *
+      ** ZDATE2 Sr. Array
+      *
+     E                    ZYDY    4   4  4 0
+      *
+      ** ZDATE2 Sr. Array
+      *
+     E                    ZMDY   13  13  3 0
+      *
+      ** ZDATE2 Sr. Array
+      *
+     E                    ZMNM   12  12  3
+     E/COPY ZSRSRC,ZDATE9Z1
+     I/COPY WNCPYSRC,DLZNPVI001
+     I/COPY ZSRSRC,ZDATE9Z2
+     I/COPY ZSRSRC,ZDAT10Z1
+      *
+      ** Data structure for subroutine ZCBDYS
+      *
+     I            DS
+     I                                        1   80ZZDAT1
+     I                                        1   40ZZYYA
+     I                                        5   60ZZMMA
+     I                                        7   80ZZDDA
+      *
+     I            DS
+     I                                        1   80ZZDAT2
+     I                                        1   40ZZYYB
+     I                                        5   60ZZMMB
+     I                                        7   80ZZDDB
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *
+     ISCSARD    E DSSCSARDPD
+      ** External DS for SAR Details
+      *
+     IDSFDY     E DSDSFDY
+      ** First DS for Access Programs, Short Data Structure
+      *
+      **************************************************************************
+      /SPACE 5
+      **************************************************************************
+      *
+     C                     EXSR SRINIT
+      *
+     C                     EXSR SRMAIN
+      *
+     C                     RETRN
+      *
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      *                                                               *
+      *  SRMAIN - Main Subroutine                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRMAIN    BEGSR
+      *
+      ** If CAS001 is not installed, determine Discount Factor from
+      ** Discount Factor file
+      *
+     C           CAS001    IFEQ 'N'
+     C                     DO
+      *
+      ** First find the Discount Factor to use for discounting.
+      *
+     C           DLIRDK    SETLLDLIRDFL2             91
+      *
+      ** If not EOF, Read Equal the next record of the Currency.
+      *
+     C           *IN91     IFEQ *OFF
+     C           DLIRDP    READEDLIRDFL2                 92
+      *
+      ** If a record was read and is the correct date, set up the
+      ** Factor and GOTO Present Value Calculation.
+      *
+     C           *IN92     IFEQ *OFF
+     C           I2MMDN    ANDEQZNPFDT
+     C                     Z-ADDI2DF      ZNPDF
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** If a record has not yet been retrieved, reposition the file
+      ** and read the last record of the Currency.
+      *
+     C           *IN91     IFEQ *ON
+     C           *IN92     OREQ *ON
+     C           DLIRDK    SETGTDLIRDFL2
+      *
+      ** If Record found, set up the Factor and GOTO Present Value
+      ** Calculation, else Currency is not on File
+      *
+     C           DLIRDP    REDPEDLIRDFL2                 93
+     C           *IN93     IFEQ *OFF
+     C                     Z-ADDI2DF      ZNPDF
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C                     MOVEL'*NRCD'   ZNPRTC
+     C                     MOVE 'N'       VCAL
+     C                     LEAVE
+     C                     ENDIF
+      *
+      ** If this point has been reached, a record has been found with
+      ** a date greater than the one we want and it will probably be
+      ** necessary to use interpolation, so set up Far Date and Far
+      ** Rate fields (for PGM/ZAEXPIN).
+      *
+     C                     Z-ADDI2MMDN    ZIFDAT
+     C                     Z-ADDI2DF      ZIFRAT
+      *
+      ** Read the Previous record to get the Near Discount Factor. If
+      ** not found, then the the record already retrieved is the first
+      ** record of the Currency and that Factor should be used.
+      *
+     C           DLIRDP    REDPEDLIRDFL2                 91
+      *
+     C           *IN91     IFEQ *ON
+     C                     Z-ADDZNPSDT    ZINDAT
+     C                     Z-ADD1         ZINRAT
+     C                     ELSE
+      *
+      ** Else set up Near Date and Near Factor for interpolation.
+      *
+     C                     Z-ADDI2MMDN    ZINDAT
+     C                     Z-ADDI2DF      ZINRAT
+     C                     ENDIF
+      *
+      ** Set up Broken Date and interpolate the Factor
+      *
+     C                     Z-ADDZNPFDT    ZIBDAT
+      *
+      ** Define parameters to PGM/ZAEXPIN
+      *
+     C                     Z-ADDZNPSDT    ZISDAT
+     C                     Z-ADD0         ZIBRAT
+      *
+     C                     CALL 'ZAEXPIN'
+     C                     PARM           ZISDAT  50
+     C                     PARM           ZINDAT  50
+     C                     PARM           ZIBDAT  50
+     C                     PARM           ZIFDAT  50
+     C                     PARM           ZINRAT 139
+     C                     PARM           ZIFRAT 139
+     C                     PARM           ZIBRAT 139
+      *
+     C                     Z-ADDZIBRAT    ZNPDF
+      *
+      ** If CAS001 is installed, call ZADSFCAL to determine Discount
+      ** Factor
+      *
+     C                     ENDDO
+      *
+     C                     ELSE
+      *
+     C**********           CALL 'ZADSFCAL'                                                    245132
+     C                     CALL 'ZADSFCA2'                                                    245132
+     C                     PARM           ZNRTCD  7
+     C                     PARM           ZNPRTC
+     C                     PARM           ZNYLDC
+     C                     PARM           ZNPCCY
+     C                     PARM           ZNPINC
+     C                     PARM           ZNPFDT
+     C                     PARM           ZNPDF
+     C                     PARM           CAS008  1                                           245132
+     C                     PARM           CIR004  1                                           245132
+     C                     PARM           ZNPSDT  50                                          245132
+     C                     ENDIF
+      *
+      *
+     C           VCAL      IFEQ 'Y'
+      *
+      ** Present Value is then calculated as:
+      ** Present Value =   Future Amount x Discount Factor
+      *
+     C           ZNPAMT    MULT ZNPDF     ZNPOUT    H
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Subroutine To Initialize Variables (Run Everytime)  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      /COPY WNCPYSRC,DLZNPVC001
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Determine if Switcheable Feature CAS001 is installed
+      ** (only if the access object has not been called previously)
+      *
+     C           CAS001    IFEQ *BLANK
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*VERIFY' POPTN   7
+     C                     PARM 'CAS001'  PSARD   6
+     C           SCSARD    PARM SCSARD    DSFDY
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       CAS001  1
+     C                     ELSE
+     C                     MOVE 'N'       CAS001
+      *
+     C           PRTCD     IFNE '*NRF'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CAS001'  DBKEY
+     C                     MOVEL'SCSARDPD'DBFILE
+     C                     Z-ADD1         DBASE
+     C                     OUT  LDA
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Initialise fields.
+      *
+     C                     Z-ADD0         ZNPRAT
+     C                     Z-ADD1         ZNPDF
+     C                     Z-ADD0         ZNPOUT
+      *
+     C/COPY WNCPYSRC,DLZNPVC002
+     C                     MOVE *OFF      *IN91
+     C                     MOVE *OFF      *IN92
+     C                     MOVE *OFF      *IN93
+      *
+     C                     MOVE *OFF      *IN98
+      *
+     C                     MOVE 'Y'       VCAL    1
+      *
+     C                     ENDSR
+      *
+      **************************************************************************
+      /SPACE 5
+      **************************************************************************
+      *                                                               *
+      * *PSSR - Program Exception/Error Subroutine                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     MOVE '*ERR*'   ZNPRTC
+     C                     DUMP
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Initialisation Subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+     C           *ENTRY    PLIST
+      *
+     C                     PARM           ZNPRTC  5
+      *
+      ** Currency
+      *
+     C                     PARM           ZNPCCY  3
+      *
+      ** Int. Calc. Meth.
+      *
+     C                     PARM           ZNPINC  1
+      *
+      ** Spot Date
+      *
+     C                     PARM           ZNPSDT  50
+      *
+      ** Forward Date
+      *
+     C                     PARM           ZNPFDT  50
+      *
+      ** Amount
+      *
+     C                     PARM           ZNPAMT 130
+     C                     PARM           ZNPRAT 117
+     C                     PARM           ZNPDF  139
+     C                     PARM           ZNPOUT 130
+     C                     PARM           ZNYLDC  5
+     C                     PARM           CAS001
+     C                     PARM           CAS008  1                                           245132
+     C                     PARM           CIR004  1                                           245132
+      *
+      ** Key Lists for the IRS Discount factors file
+      *
+     C           DLIRDK    KLIST
+     C                     KFLD           ZNPCCY
+     C                     KFLD           ZNPINC
+     C                     KFLD           ZNPFDT
+     C           DLIRDP    KLIST
+     C                     KFLD           ZNPCCY
+     C                     KFLD           ZNPINC
+      *
+     C                     ENDSR
+      *
+     C********************************************************************
+      /SPACE 5
+     C/COPY ZSRSRC,ZCBDYSZ1
+      /SPACE 5
+     C/COPY ZSRSRC,ZDATE2Z2
+      /SPACE 5
+     C/COPY ZSRSRC,ZDATE9Z3
+      /SPACE 5
+     C/COPY ZSRSRC,ZDAT10Z2
+      /SPACE 5
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2005
+**   ZF29 Day nos. of Feb 29 to 2096 (including 2000)
+0006001521029820444305904073650882610287117481320914670161311759219053
+2051421975234362489726358278192928030741322023366335124365853804639507
+40968424294389045351
+**   ZYDY - Years in days cumulative, four-year span
+0366073110961461
+**   ZMDY - Months in days cumulative through year
+000031059090120151181212243273304334365
+**   ZMNM - Month short names
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+     X/COPY ZSRSRC,ZDATE9Z4

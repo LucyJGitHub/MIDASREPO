@@ -1,0 +1,253 @@
+/********************************************************************/
+/*STD    CLPBASEBND                                                 */
+/*EXI    TEXT('Midas DL Stamp Tax A/C Keys - on Deals Interest')     */
+/********************************************************************/
+/*                                                                  */
+/*         Midas - Dealing                                          */
+/*                                                                  */
+/*         DLC000820 - Stamp Tax - Generate Tax Account Keys on     */
+/*                     Deal Interest                                */
+/*                                                                  */
+/*                   After GL008130 has run, DKEYSDP file is saved  */
+/*                   to GLVCLSPD MBR(LEDLAKY). This will be used    */
+/*                   by GLC008131 for the Average Stamp Tax         */
+/*                                                                  */
+/*                  If the Update Flag is 'N', Stamp Tax            */
+/*                  a/c key records will only be in STTDLnnnnn      */
+/*                  (where nnnnn is the cob component sequence)     */
+/*                                                                  */
+/*       (c) Misys International Banking Systems Ltd. 2010          */
+/*                                                                  */
+/*       Last Amend No. AR834586           Date 07Oct11             */
+/*       Prev Amend No. AR820951           Date 26Aug11             */
+/*                      CER049  *CREATE    Date 06Dec10             */
+/*                                                                  */
+/********************************************************************/
+/*                                                                  */
+/*       AR834586 - Component DLC000130 failed                      */
+/*       AR820951 - Component DLC000820 00001 failed                */
+/*       CER049 - Stamp Tax                                         */
+/*                                                                  */
+/********************************************************************/
+             PGM        PARM(&UPDF &CNAM &CSEQ)
+ 
+             DCL        VAR(&MKICPY) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                      Copyright Misys International Banking Systems Ltd. 2010')
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
+             DCL        VAR(&UPDF) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&SEQU) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&BUSY) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DILIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&WORKFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FILEN) TYPE(*CHAR) LEN(10) +
+                          VALUE('STDLIN    ')
+             DCL        VAR(&PGMC) TYPE(*CHAR) LEN(10) +
+                          VALUE('DLC000820 ')
+ 
+/* DB error defintion */
+ 
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+/** Declare parameters for access object AOSARDR0 */
+ 
+             DCL        VAR(&CCB009) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&DSFDY) TYPE(*CHAR) LEN(60)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Retrieve the system prefix xx                                              */
+ 
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PRE)
+             CHGVAR     VAR(&DMLIB) VALUE(&PRE *TCAT 'DMLIB')
+             CHGVAR     VAR(&DPLIB) VALUE(&PRE *TCAT 'DPLIB')
+             CHGVAR     VAR(&DILIB) VALUE(&PRE *TCAT 'DILIB')
+             CHGVAR     VAR(&SEQU) VALUE(&CSEQ)
+             CHGVAR     VAR(&WORKFILE) VALUE('STTDL' *TCAT &SEQU)
+ 
+/* Check if CCB009 is active  */
+ 
+             CALL       PGM(AOSARDR0) PARM(&RTCD '*VERIFY'   +
+                          'CCB009' &DSFDY)
+             IF         COND(&RTCD = '       ') THEN(CHGVAR +
+                          VAR(&CCB009) VALUE('Y'))
+ 
+/* Allocate object and check for restart */
+ 
+             ALCOBJ     OBJ((DKEYSDP *FILE *EXCL)) WAIT(120)
+             CALL       CB0160 PARM(&CNAM &CSEQ &BUSY)
+ 
+/* No restart - save object */
+ 
+/**********  IF         COND(&BUSY *EQ 'N') THEN(DO)                */                  /*AR820951*/
+             IF         COND(&BUSY *NE 'Y') THEN(DO)                                    /*AR820951*/
+ 
+/* If no member, add it */
+ 
+             CHGPF      FILE(GLVCLSPD) MAXMBRS(*NOMAX)
+             CHKOBJ     OBJ(GLVCLSPD) OBJTYPE(*FILE) MBR(LEDLAKY)
+             MONMSG     MSGID(CPF9815) EXEC(ADDPFM FILE(GLVCLSPD) +
+                          MBR(LEDLAKY))
+ 
+/* If no save file, create */
+ 
+             CHKOBJ     OBJ(&DILIB/SAVFDKEYSD) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+             CRTSAVF    FILE(&DILIB/SAVFDKEYSD) TEXT('Save of DKEYS*  +
+                          before update')
+             ENDDO
+             CLRSAVF    FILE(&DILIB/SAVFDKEYSD)
+ 
+             CHKOBJ     OBJ(&DILIB/SAVDLC0820) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+             CRTSAVF    FILE(&DILIB/SAVDLC0820) TEXT('Save of SDSTM*  +
+                          before update')
+             ENDDO
+             CLRSAVF    FILE(&DILIB/SAVDLC0820)
+ 
+/* Save data */
+ 
+             SAVOBJ     OBJ(DKEYSDP DKEYSZZ) LIB(&DPLIB) DEV(*SAVF) +
+                          SAVF(&DILIB/SAVFDKEYSD)
+ 
+             SAVOBJ     OBJ(DLDLDCQD SDSTMDPD GLVCLSPD) +
+                        LIB(&DMLIB) DEV(*SAVF) +
+                          SAVF(&DILIB/SAVDLC0820) FILEMBR((GLVCLSPD +
+                          (LEDLAKY)))
+ 
+/* Set active flag */
+ 
+             CHGVAR     VAR(&BUSY) VALUE('Y')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &BUSY)
+ 
+             ENDDO
+             ELSE       CMD(DO)
+ 
+/* Restore copy of files */
+ 
+             RSTOBJ     OBJ(DKEYSDP DKEYSZZ) +
+                        SAVLIB(&DPLIB) +
+                          DEV(*SAVF) SAVF(&DILIB/SAVFDKEYSD)
+             RSTOBJ     OBJ(DLDLDCQD SDSTMDPD) +
+                        SAVLIB(&DMLIB) +
+                          DEV(*SAVF) SAVF(&DILIB/SAVDLC0820)
+             RSTOBJ     OBJ(GLVCLSPD) SAVLIB(&DMLIB) DEV(*SAVF) +
+                          SAVF(&DILIB/SAVDLC0820) FILEMBR((GLVCLSPD +
+                          (LEDLAKY))) MBROPT(*ALL)
+             ENDDO
+ 
+/* Override Report File */
+ 
+             OVRPRTF    FILE(GL008130P1) USRDTA('GL8130-DL')
+/*                                                                   */
+/* Start journalling extension files PF/SDSTM* & PF/DKEYS* to        */
+/* journal ICJRN.                                                    */
+/* If file is already journalled continue processing.                */
+/*                                                                   */
+             STRJRNPF   FILE(*LIBL/DLDLDCQD) JRN(*LIBL/ICJRN) +
+                          IMAGES(*BOTH) OMTJRNE(*OPNCLO)
+             MONMSG     MSGID(CPF7030)
+ 
+             STRJRNPF   FILE(*LIBL/SDSTMDPD) JRN(*LIBL/ICJRN) +
+                          IMAGES(*BOTH) OMTJRNE(*OPNCLO)
+             MONMSG     MSGID(CPF7030)
+ 
+             STRJRNPF   FILE(*LIBL/DKEYSDP) JRN(*LIBL/ICJRN) +
+                          IMAGES(*BOTH) OMTJRNE(*OPNCLO)
+             MONMSG     MSGID(CPF7030)
+ 
+             STRJRNPF   FILE(*LIBL/DKEYSZZ) JRN(*LIBL/ICJRN) +
+                          IMAGES(*BOTH) OMTJRNE(*OPNCLO)
+             MONMSG     MSGID(CPF7030)
+ 
+/* &WORKFILE = 'STTDL+Cob Component Sequece*/
+ 
+             DLTF       FILE(&WORKFILE)
+             MONMSG     MSGID(CPF0000)
+ 
+/* GL008130 - generate Stamp Tax A/C Keys on MM Loans Int. A/C keys */
+ 
+             CALL       PGM(GL008130) PARM(&FILEN &PGMC &UPDF)
+ 
+             DLTOVR     FILE(*ALL)
+ 
+/* Copy Account Keys file for later use */
+ 
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+             CPYF       FROMFILE(DKEYSDP) TOFILE(GLVCLSPD) +
+                          TOMBR(LEDLAKY) MBROPT(*ADD) FMTOPT(*MAP +
+                          *DROP)
+             MONMSG     MSGID(CPF2817) EXEC(CHGJOB SWS(XXXXXX11))
+             ENDDO
+ 
+/* Save account keys file */
+ 
+             CPYF       FROMFILE(DKEYSDP) TOFILE(&DPLIB/&WORKFILE) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) EXEC(CHGJOB SWS(XXXXXX11))
+ 
+/* If UPDF is N, then account keys are not to be updated so restore account keys files */
+/* from save file*/
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+             IF         COND(&UPDF *NE 'Y') THEN(DO)
+             RSTOBJ     OBJ(DKEYSDP DKEYSZZ) SAVLIB(&DPLIB) +
+                          DEV(*SAVF) SAVF(&DILIB/SAVFDKEYSD)
+             MONMSG     MSGID(CPF3801) EXEC(CHGJOB SWS(XXXXXX11))
+             ENDDO
+             ENDDO
+ 
+/* DB error  */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+             SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ MRUNQ)
+             CHGVAR     VAR(&MEM) VALUE('DLC000820 - Job Terminated, +
+                        Database in Error')
+             SNDPGMMSG  MSG(&MEM) TOPGMQ(*EXT) TOMSGQ(MRUNQ MOPERQ)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Set OK flag  */
+ 
+             CHGVAR     VAR(&BUSY) VALUE('N')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &BUSY)
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+ END:
+ 
+/*  If CCB009 (COB Journalling) off, end journalling                          */
+/**/
+             IF         COND(&CCB009 *NE 'Y') THEN(DO)
+/**/
+             ENDJRNPF   FILE(DLDLDCQD)
+             MONMSG     MSGID(CPF7032)
+ 
+             ENDJRNPF   FILE(SDSTMDPD)
+             MONMSG     MSGID(CPF7032)
+ 
+             ENDJRNPF   FILE(DKEYSDP)
+             MONMSG     MSGID(CPF7032)
+ 
+             ENDJRNPF   FILE(DKEYSZZ)
+             MONMSG     MSGID(CPF7032)
+ 
+             ENDDO
+             DLCOBJ     OBJ((DKEYSDP *FILE *EXCL))                                      /*AR834586*/
+             MONMSG     MSGID(CPF0000)                                                  /*AR834586*/
+ 
+             CHGVAR     VAR(&MKICPY) VALUE('Copyright Misys International +
+                          Banking Systems Ltd. 2010')
+             ENDPGM

@@ -1,0 +1,2173 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE General Ledger Account Transfers')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module                                        *
+     F*                                                               *
+     F*  RE4113 - General Ledger Account Transfers                    *
+     F*                                                               *
+     F*  Function:  This program accepts and validates transfers      *
+     F*  (I/C)      between general ledger accounts and performs file *
+     F*             updates to the teller system master files.        *
+     F*                                                               *
+     F*  Called By: Retail Teller System Menu                         *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. BUG17966           Date 25Apr08               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 BUG8514            Date 14Jun06               *
+      *                 CRT026             Date 19Jan06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG7819            Date 30Aug05               *
+      *                 CRE019             Date 12Mar04               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CRT012             Date 20May03               *
+      * Midas Release 4.01 -------------------------------------------*
+     F*                 CRT007             Date 14Jan02               *
+      *                 CRT005             Date 27Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 194978             Date 28Jun01               *
+      *                 CRT006             Date 17Apr01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 169719             Date 14Aug00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 104270             Date 19Sep97               *
+     F*                 104034 (060910)    DATE 22JUL96               *
+     F*                 114621             DATE 21Feb97               *
+     F*                 S01408             DATE 06SEP95               *
+     F*                 091241             DATE 17JUL95               *
+     F*                 CRT001  *CREATE    DATE 28FEB95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  BUG17966 - Screen looks as if text is overwritten            *
+      *             (Recompile)                                       *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  BUG8514 - Issue regarding teller overrides(Recompile)        *
+      *  CRT026 - Retail Teller Password Change                       *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG7819 - If a retail account has insufficient funds,        *
+      *            the system simply drop a Cash Withdrawal           *
+      *            (non-account currency) transaction                 *
+      *            Recompiled due to changes in the dspf RE4113DF     *
+      *  CRE019 - Cheque Processing and Maintenance (Recompile)       *
+      *  CGL029 - Increase Account Code to 10 digits (Recompile)      *
+     F*  CRT012 - Midas/Cashier Interface - Multiple Charges          *
+     F*           Recompile                                           *
+      *  CRT007 - Cashier Branch Offline Checking                     *
+     F*  CRT005 - Recompiled due to change in RTTWIDC1                *
+      *  194978 - Recompiled due to changes in RTTWIDC1.              *
+      *  CRT006 - Cashier Reserve Transactions.                       *
+     F*  169719 - Amended to perform checking for Cash-In/Cash-Out    *
+     F*           so that beyond teller Cash/Non-Cash limit,          *
+     F*           transaction will not be accepted. Partially applied *
+     F*           105809.                                             *
+     F*  104270 - Recompile due to changes to /COPYs RT*.             *
+     F*  104034 - NO TELLER LIMIT CHECK ON GL CASH IN/OUT (060910-upg)*
+     F*           ADD 062979 FOR PREVENTATIVE MAINTENANCE.            *
+     F*           062979 -ADVICES INCORRECT FOR CCYS WITH 0 DEC PLACES*
+     F*  114621 - Replace blank with 'X' to mean not to validate      *
+     F*           condition.                                          *
+     F*  S01408 - Addition of hook RE4113IIP1.                        *
+     F*           Addition of hook RE4113IIP2.                        *
+     F*           Addition of hook RE4113CCP1.                        *
+     F*           Addition of hook RE4113CCP2.                        *
+     F*           Addition of hook RE4113CCP3.                        *
+     F*           Addition of hook RE4113CCP4.                        *
+     F*           Addition of hook RE4113CCP5.                        *
+     F*           Addition of hook RE4113CCP6.                        *
+     F*  091241 - ATM Interface.  Recompiled.                         *
+     F*  CRT001 - Retail Teller System                                *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N   P A R A M E T E R S                        *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FACCNT   IF  E           K        DISK
+      ** Account master
+      *
+     FTTRNT   UF  E           K        DISK         KINFSR *PSSR
+      ** Teller Trans. Control file
+     F                                              KCOMIT
+     FTTRANPD O   E                    DISK         KINFSR *PSSR
+      ** Teller Trans. Details file
+     F                                              KCOMIT
+      *
+     FTTRANPT UF  E                    DISK         KINFSR *PSSR
+      ** Teller Trans. Trailer file
+     F                                              KCOMIT
+      *
+     FRE4113DFCF  E                    WORKSTN      KINFSR *PSSR
+      ** Display file - General ledger account transfers
+      *
+     FTTNARPD O   E                    DISK         KINFSR *PSSR
+      ** Teller transfer/cross narratives file
+     F                                              KCOMIT
+     F/COPY ZSRSRC,RTCCYSF1                                               104043
+     F*                                                                   104043
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*                                                               *
+     F*   09  - Internal a/c indicator                                *
+     F*   10  - Message Subfile End Indicator (SFLEND)                *
+     F*                                                               *
+     F*   11  - Error in SCCY  -Currency code or                      *
+     F*                  SOVTI -Override teller-id                    *
+     F*   12  - Error in SDCUS - Debit customer number or             *
+     F*                  SOVPC - Override teller passcode             *
+     F*   13  - Error in SDAC  - Debit a/c code                       *
+     F*   14  - Error in SDSEQ - Debit a/c seq                        *
+     F*   15  - Error in SAMT  - Amount                               *
+     F*   16  - Error in SCCUS - Credit customer number               *
+     F*   17  - Error in SCAC  - Credit a/c code                      *
+     F*   18  - Error in SCSEQ - Credit a/c seq                       *
+     F*   19  - Error in SDEPC - Department code                      *
+     F*                                                               *
+     F*   20  - Terminal errors found                                 *
+     F*   21  - Override prompt required                              *
+     F*   22  - Transaction completed successfully once               *
+     F*   23  - Display override user id / password                   *                       CRT026
+     F*   24  - Condition display of trans.comp.successfully          *
+     F*   25  - Error in SDBRCA - Debit branch code                   *
+     F*   26  - Error in SCBRCA - Credit branch code                  *
+     F*   27  - Error in SNARR - Narrative                            *
+     F*                                                               *
+     F*   30  - Error in debit a/c no.                                *
+     F*   31  - Error in credit a/c no.                               *
+     F*                                                               *
+     F*   50  - Invalid input indicator                               *
+     F*                                                               *
+     F*   51  - Error in override validation                          *
+     F*   52  - Error in override details validation                  *
+     F*   65  - Error indicator for branch code a/c no.               *
+     F*   66  - Error indicator for cust.cd in a/c no.                *
+     F*   67  - Error indicator for a/c code in a/c no.               *
+     F*   68  - Error in a/c no.                                      *
+     F*                                                               *
+     F*   69  - General error indicator                               *
+     F*   70  - General Indicator Used For CHAIN                      *
+     F*                                                               *
+     F* 80-89 - Standard RTS subroutines                              *
+     F*                                                               *
+     F* 90-99 - Standard MIDAS subroutines                            *
+     F*                                                               *
+     F*   KA  - Validate override details                             *
+     F*   KC  - Exit Program                                          *
+     F*   KE  - Refresh Screen                                        *
+     F*   KL  - Commad 12 pressed                                     *
+     F*   KM  - Commad 13 pressed                                     *
+     F*                                                               *
+     F*   LR  - Last record indicator                                 *
+     F*                                                               *
+     F*   U6  - System error                                          *
+     F* U7-U8 - Set on if database error occurs                       *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  Control Subroutines                                          *
+     F*                                                               *
+     F*  DBERR  - Database Error Handling                             *
+     F*  DSPFMT - Display screen formats                              *
+     F*  FIRST  - Initial Processing                                  *
+     F*  IFLDS  - Initialize screen/work fields                       *
+     F*  INT01  - Initialise error indicators                         *
+     F*  LAST   - Final processing - terminate pgm.                   *
+     F*  MAIN   - Control Process                                     *
+     F*  PCMTXT - Prepare comit text                                  *
+     F*  RFRESH - Refresh screen                                      *
+     F*  SCRINP - Detail screen input                                 *
+     F*  SETDSP - Set indicators for display                          *
+     F*  SNDMSG - Send program message parameters                     *
+     F*  SWDSP  - Switch display between internal/cust.               *
+     F*  TRNOVR - Transaction override process                        *
+     F*  UPDRTN - Control rtn. for updates                            *
+     F*  UPTRL  - Update Control Trailer Record                       *
+     F*  VALAMT - Validate amount                                     *
+     F*  VALACC - Validate a/c number                                 *
+     F*  VALDET - Validate Details                                    *
+     F*  VALFMT - Validate input formats                              *
+     F*  VALOVR - Validate override conditions                        *
+     F*  VOVDET - Validate override details                           *
+     F*  WRTLPD - Write TELIDPD Record                                *
+     F*  *PSSR  - Program error                                       *
+     F*                                                               *
+     F*  Standard RTS Subroutines                                     *
+     F*                                                               *
+     F*  RTACLG - Account closing Check                               *
+     F*  RTBRCH - Branch different check                              *
+     F*  RTTCCY - Teller currency conditions check                    *
+     F*  RTTOTS - Teller total updates                                *
+     F*  RTTWID - Teller workstation conditions check                 *
+     F*  RTENCP - Encript passcode                                    *
+     F*  RTTLMT - Teller limit check                                  *   104034
+     F*                                                               *
+     F*  Standard MIDAS Subroutines                                   *
+     F*                                                               *
+     F*  ZALIGN - Validate amount fields                              *
+     F*  ZFRPED - Format and edit amount field                        *
+     F*  ZTNLU1 - Access dataarea for next transaction no.            *
+     F*                                                               *
+     F*  External Routines                                            *
+     F*                                                               *
+     F*  SCC0250 - Clear Message Queue                                *
+     F*  SCC0240 - Send Message                                       *
+     F*                                                               *
+     F*  DBERRCTL Program error                                       *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80               COPYRIGHT STATEMENT
+     E/COPY ZSRSRC,RTXXXXE1
+     E** Array for SR.RTBKDR, SR.RTBKCR, SR.RTRFDR, SR.RTRFCR, SR.RTIACT
+     E*
+     E/COPY ZSRSRC,ZALIGNZ1
+     E** Array for both SR.ZALIGN AND SR.ZEDIT
+     E*
+     E/COPY ZSRSRC,ZFRPEDZ1
+     E** Array for SR.ZFRPED
+     E*
+     E                    @CY        24  3
+     E** Teller currencies array
+     E*
+     E/COPY ZSRSRC,RTENCPE1
+     E** Array for SR.RTENCP
+     E*
+      /COPY ZSRSRC,RTCCYSE1                                               104034
+      ** Array for SR.RTCCYS                                              104034
+      *                                                                   104034
+     E*****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     ITTRNTM2F
+      ** Renamed fields in PF/TTRNTM2
+     I              NATN                            TTNATN
+      *
+     ITTRANPTF
+      ** Renamed fields in PF/TTRANPT
+     I              TBTN                            TRTBTN
+      *
+      *
+      /COPY ZSRSRC,RTTOTSI1
+      ** Multiple occurrence data structures for SR.RTTOTS
+      *
+     I            DS                              5
+      ** Data structure to hold key fields of LF/TTRNT
+     I                                        1   5 @TTRNT
+     I                                        1   1 KTBRI
+     I                                        2   4 KTBID
+     I                                        5   5 KRCTP
+      *
+      *
+     I**********  DS                             18                                           CGL029
+     I            DS                             24                                           CGL029
+      ** Data structure to define debit a/c no
+     I**********                              1  18 @DACNO                                    CGL029
+     I                                        1  24 @DACNO                                    CGL029
+     I                                        1   6 SDCUS
+     I                                        7   9 @DCUR
+     I**********                             10  13 SDAC                                      CGL029
+     I**********                             14  15 SDSEQ                                     CGL029
+     I**********                             16  18 SDBRCA                                    CGL029
+     I                                       10  19 SDAC                                      CGL029
+     I                                       20  21 SDSEQ                                     CGL029
+     I                                       22  24 SDBRCA                                    CGL029
+      *
+      *
+     I**********  DS                             18                                           CGL029
+     I            DS                             24                                           CGL029
+      ** Data structure to define credit a/c no
+     I**********                              1  18 @CACNO                                    CGL029
+     I                                        1  24 @CACNO                                    CGL029
+     I                                        1   6 SCCUS
+     I                                        7   9 @CCUR
+     I**********                             10  13 SCAC                                      CGL029
+     I**********                             14  15 SCSEQ                                     CGL029
+     I**********                             16  18 SCBRCA                                    CGL029
+     I                                       10  19 SCAC                                      CGL029
+     I                                       20  21 SCSEQ                                     CGL029
+     I                                       22  24 SCBRCA                                    CGL029
+      *
+     I@@NARR      DS                             30
+      ** Data structure to setup narrative for file
+     I                                        1   50@@TBTN
+     I                                        6   6 @@SLSH
+     I                                        7   9 @@TBID
+     I                                       10  10 @@UNDS
+     I                                       11  30 SNARR
+      *
+      *
+     I@AMTDS      DS                             16
+      ** Data structure to hold amount(SAMT) returned by zalign
+     I                                        1  14 @SAMT
+      *
+      /COPY ZSRSRC,RTXXXXI1
+      ** Data structure to positions of validation indicators
+      *
+      /COPY ZSRSRC,RTXXXXI2
+      ** Data structure for 15 character account number
+      *
+      *
+      /COPY ZSRSRC,ZTNLU1Z1
+      **  Data structure to update last transaction number
+      *
+      /COPY ZSRSRC,ZFRPEDZ2
+      ** Data structure for SR.ZFRPED
+      *
+     I*                                                                   S01408
+     I/COPY WNCPYSRC,RE4113IIP1                                           S01408
+     I*                                                                   S01408
+     I***CMTTXT*     DS                             85                                        CGL029
+     I***CMTTXT*     DS                            101                                 CGL029 CRT026
+     ICMTTXT      DS                            121                                           CRT026
+      *
+      **  COMIT TEXT
+     I                                        1   50@NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  34 USRIDX
+     I                                       35  37 @CMCCY
+     I                                       38  43 @DCUS
+     I**********                             44  47 @DAC                                      CGL029
+     I                                       44  47 @DACQQ                                    CGL029
+     I                                       48  49 @DSEQ
+     I                                       50  63 SAMT
+     I                                       64  69 @CCUS
+     I**********                             70  73 @CAC                                      CGL029
+     I                                       70  73 @CACQQ                                    CGL029
+     I                                       74  75 @CSEQ
+     I                                       76  78 SDEPC
+     I                                       79  81 SOVTI
+     I                                       82  91 @DAC                                      CGL029
+     I                                       92 101 @CAC                                      CGL029
+     I                                      102 111 SOVUR                                     CRT026
+     I                                      112 121 SOVPW                                     CRT026
+      *
+     I            DS                             72
+      ** Data structure to redefine currency array
+     I                                        1  72 CCYR1
+     I                                        1  72 @CY
+      *
+      *
+     IRTSDTA     UDS                            256
+      **  Job dataarea data structure
+      *
+     I                                        1   3 PTLID
+     I                                        4   6 PTLBC
+     I                                        7   7 PSPVI
+     I                                        8  32 POVIN
+     I                                    P  33  390PCHTL
+     I                                    P  40  460PNCTL
+     I                                       47  76 PTLNM
+     I                                       77  800PTLMG
+     I                                       81  840PTLSL
+     I                                       85  890PTLTO
+     I                                       90  92 PDEPC
+      *
+     IPSDS       SDS
+      **  Program Status Data Structure
+      *
+     I                                        1  10 @PGM
+      **  Field containing Program name
+     I                                      244 253 @JOB
+      **  Field containing Workstation ID
+     I                                      254 263 SUSER
+      **  Field Containing User ID
+      *
+     ILDA         DS                            256
+     I**  Local data area for data base errors.
+     I*
+     I                                        1   3 ERTLID
+     I                                       11  20 ERTWID
+     I                                       21  30 ERWSID
+      *
+      **  Field combining the following fields
+     I                                      134 183 DBLOT
+      **  Name of database file in error
+     I                                      134 141 DBFILE
+      **  Key value causing database error
+     I                                      142 170 DBKEY
+      **  Name of program causing database error
+     I                                      171 180 DBPGM
+      **  Number of database error
+     I                                      181 1830DBASE
+     ISDBANK    E DSSDBANKPD
+     I** External data structure for Bank Details
+     I*
+     ISDCURR    E DSSDCURRPD
+     I** External data structure for Currency Codes
+     I*
+     ISDBRCH    E DSSDBRCHPD
+     I** External data structure for Branch Details
+     I*
+     ISDDEPT    E DSSDDEPTPD
+     I** External data structure for Department Codes
+     I*
+     ISDRETR    E DSSDRETRPD
+     I** External data structure for Retail Transaction Types
+     I*
+     ISDFNCD    E DSSDFNCDPD
+     I** External data structure for Function Codes Details
+     I*
+     ISDTELD    E DSSDTELDPD
+     I** External data structure for Teller Identification Details
+     I*
+     IDSSDY     E DSDSSDY
+      *Second DS for Access Programs, long data structure
+     I*
+     IDSFDY     E DSDSFDY
+      *First DS for Access Programs, short data structure
+      *
+     ISCSARD    E DSSCSARDPD                                              104034
+     I** Switchable SARs                                                  104034
+     I*                                                                   104034
+     I*                                                                   S01408
+     I/COPY WNCPYSRC,RE4113IIP2                                           S01408
+     I*                                                                   S01408
+      *
+     IMUSER     E DSMUSERDD                                                                   CRT026
+     I** External data structure for User Details                                             CRT026
+     I** Renamed fields in PF/MUSERDD                                                         CRT026
+     I              LCD                             LCDU                                      CRT026
+      *                                                                                       CRT026
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *            MAIN   - Control Process                           *
+      *                                                               *
+      * CALLS      FIRST  - Initial Processing                        *
+      *            LAST   - Final processing - terminate pgm.         *
+      *            SCRINP - Detail screen input                       *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      *****************************************************************
+     C*
+     C** Copyright statement
+     C*
+     C                     MOVEACPY@      BIS@   80
+      ** Initial processing
+     C                     EXSR FIRST
+      *
+      ** Do while cmd/3 is not pressed
+     C           *INKC     DOWEQ'0'
+      *
+      ** Perform detail screen input
+     C                     EXSR SCRINP
+      *
+     C                     END
+      *
+      **  Final Processing
+     C                     EXSR LAST
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SCRINP - Detail screen input                       *
+      *                                                               *
+      * CALLS      DSPFMT - Display screen formats                    *
+      *            LAST   - Final processing - terminate pgm.         *
+      *            RFRESH - Refresh screen                            *
+      *            SWDSP  - Switch display between internal/cust.     *
+      *            UPDRTN - Control rtn. for updates                  *
+      *            VALFMT - Validate input formats                    *
+      *                                                               *
+      * CALLED BY  MAIN   - Control Process                           *
+      *                                                               *
+      *****************************************************************
+     C           SCRINP    BEGSR                           ** SCRINP **
+      *
+      ** Do while input not valid
+     C           *IN50     DOWEQ'1'
+      *
+      ** Display appropriate screen format
+     C                     EXSR DSPFMT
+      *
+      ** Process the input depending on the key pressed
+      *
+      *
+      ** If cmd/3 is pressed - terminate the program
+     C           *INKC     CASEQ'1'       LAST
+      *
+      ** If cmd/5 is pressed - refresh the screen & redisplay appr.scrn
+     C           *INKE     CASEQ'1'       RFRESH
+      *
+      ** If cmd/13 is pressed - Switch display between internal/cust.
+     C           *INKM     CASEQ'1'       SWDSP
+      *
+      ** If enter key is pressed - validate the screen input
+     C                     CAS            VALFMT
+      *
+     C                     END
+      *
+     C                     END
+      *
+      ** If no terminal errors
+      ** Perform transaction update
+     C           *IN20     IFEQ '0'
+     C                     EXSR UPDRTN
+      *
+      ** Seton indicator for transaction completed screen
+     C                     SETON                     2224
+      *
+     C                     END
+      *
+      ** Perform initialisation
+     C                     EXSR RFRESH
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            DSPFMT - Display screen formats                    *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  SCRINP - Detail screen input                       *
+      *                                                               *
+      *****************************************************************
+     C           DSPFMT    BEGSR                           ** DSPFMT **
+      *
+      ** Display message subfile control record
+     C                     WRITERE4113C0
+      *
+      ** Display appropriate screen format
+      *
+      ** If any terminal errors - display tran.terminated screen
+     C           *IN20     IFEQ '1'
+     C                     EXFMTRE4113F2
+      *
+     C                     ELSE
+      *
+      ** If tran completed successfully - disp.tran.completed scrn.
+     C           *IN22     IFEQ '1'
+     C                     EXFMTRE4113F3
+      *
+     C                     ELSE
+      *
+      ** Otherwise display initial input screen
+     C                     EXFMTRE4113F1
+      *
+     C                     END
+      *
+     C                     END
+      *
+      ** Clear program message queue and terminal & warning msg. lines
+     C                     CALL 'SCC0250'
+     C                     MOVEL*BLANKS   SMSG1
+     C                     MOVEL*BLANKS   SMSG2
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            RFRESH - Refresh screen                            *
+      *                                                               *
+      * CALLS      IFLDS  - Initialize screen/work fields             *
+      *            INT01  - Initialise error indicators               *
+      *                                                               *
+      * CALLED BY  SCRINP - Detail screen input                       *
+      *            SWDSP  - Switch display between internal/cust.     *
+      *                                                               *
+      *****************************************************************
+     C           RFRESH    BEGSR                           ** RFRESH **
+      *
+      ** Initialize all indicators
+     C                     EXSR INT01
+      *
+      ** Initialize screen/work fields
+     C                     EXSR IFLDS
+      *
+      ** If int.trf move debit & credit customer no. from lf/sdbrchl1
+     C           *IN09     IFEQ '1'
+     C                     MOVE A8BICN    SDCUS
+     C                     MOVE A8BICN    SCCUS
+     C                     MOVE A8BRCD    SDBRCA
+     C                     MOVE A8BRCD    SCBRCA
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            VALFMT - Validate input formats                    *
+      *                                                               *
+      * CALLS      INT01  - Initialise error indicators               *
+      *            RTTWID - Teller workstation conditions check       *
+      *            VALDET - Validate Details                          *
+      *                                                               *
+      * CALLED BY  SCRINP - Detail screen input                       *
+      *                                                               *
+      *****************************************************************
+     C           VALFMT    BEGSR                           ** VALFMT **
+      *
+      ** Intialise error indicators
+     C                     EXSR INT01
+      *
+      ** Setof indicator for invalid input
+     C                     SETOF                     50
+      *
+     C                     Z-ADD0         @TI     20
+     C                     Z-ADD0         @WI     20
+     C                     MOVE *BLANKS   @W
+     C                     MOVE *BLANKS   @T
+      *
+      ** perform check for multiple sign on
+     C                     EXSR RTTWID
+      *
+      ** Validate details
+     C                     EXSR VALDET
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            INT01  - Initialise error indicators               *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  FIRST  - Initial Processing                        *
+      *            RFRESH - Refresh screen                            *
+      *            VALFMT - Validate input formats                    *
+      *                                                               *
+      *****************************************************************
+     C           INT01     BEGSR                           ** INT01  **
+      *
+      ** Setof screen conditioning & error indicators
+     C                     SETOF                     111213
+     C                     SETOF                     141516
+     C                     SETOF                     171819
+     C                     SETOF                     252665
+     C                     SETOF                     3031
+     C                     SETOF                     666768
+     C                     SETOF                     27
+      *
+      ** Setof indicator for override required
+     C                     SETOF                     51
+      *
+      ** Seton indicator for invalid input
+     C                     SETON                     50
+      *
+      ** If screen is to be refreshed - then setof 24
+     C           *INKE     IFEQ '1'
+     C                     SETOF                     24
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SWDSP  - Switch display between internal/cust.     *
+      *                                                               *
+      * CALLS      RFRESH - Refresh screen                            *
+      *                                                               *
+      * CALLED BY  SCRINP - Detail screen input                       *
+      *                                                               *
+      *****************************************************************
+     C           SWDSP     BEGSR                           ** SWDSP  **
+      *
+      ** If 09 is on (internal a/c) set off 09 (for customer a/c)
+     C           *IN09     IFEQ '1'
+     C                     SETOF                     09
+      *
+      ** Otherwise if customer a/c (09 off) switch to internal (09)
+     C                     ELSE
+      *
+     C                     SETON                     09
+      *
+     C                     END
+      *
+      ** Refresh screen
+     C                     EXSR RFRESH
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            VALDET - Validate Details                          *
+      *                                                               *
+      * CALLS      RTACLG - Account closing Check                     *
+      *            RTTCCY - Teller currency conditions check          *
+      *            SNDMSG - Send program message parameters           *
+      *            TRNOVR - Transaction override process              *
+      *            VALACC - Validate a/c number                       *
+      *            VALAMT - Validate amount                           *
+      *            VALOVR - Validate override conditions              *
+      *                                                               *
+      * CALLED BY  VALFMT - Validate input formats                    *
+      *                                                               *
+      *****************************************************************
+     C           VALDET    BEGSR                           ** VALDET **
+      *
+      ** Setof indicators conditioning warn. & term. errors & succ.comp
+     C                     SETOF                     202124
+     C                     MOVE *OFF      *IN23                                               CRT026
+      *
+      ** If currency code is blanks
+     C           SCCY      IFEQ *BLANKS
+     C                     SETON                     1150
+     C                     MOVEL'USR0076' @MSGID
+     C                     EXSR SNDMSG
+      *
+      ** otherwise Check whether currency is present in currency table
+     C                     ELSE
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*BLANKS' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           SCCY
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** If record not found
+      ** Message - currency code not found
+     C           @RTCD     IFNE *BLANK
+     C                     SETON                     1150
+     C                     MOVEL'USR0049' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+      ** Store decimal places for transaction currency                    104034
+     C                     Z-ADDA6NBDP    @6NBDP  10                      104034
+     C                     END
+      *
+      ** Validate debit  - a/c code
+     C                     MOVELSCCY      @DCUR
+     C                     MOVEL@DACNO    @ACCN
+     C                     EXSR VALACC
+      *
+      ** If error in cust.no - seton 12
+     C           *IN66     IFEQ '1'
+     C                     SETON                     12
+     C                     END
+      *
+      ** If error in a/c code - seton 13
+     C           *IN67     IFEQ '1'
+     C                     SETON                     13
+     C                     END
+      *
+      ** If error in branch code - seton 25
+     C           *IN65     IFEQ '1'
+     C                     SETON                     25
+     C                     END
+      *
+      ** If error in debit a/c no.  - seton 30
+     C           *IN68     IFEQ '1'
+     C                     SETON                     30
+     C                     END
+      *
+      ** If no error in debit a/c no.
+     C           *IN30     IFEQ '0'
+      *
+      ** Move seq no to screen seq no.
+     C                     MOVE @ACSQ     SDSEQ
+      *
+      ** Store branch code and a/c status of debit a/c no.
+     C                     MOVE BRCA      @DBRCA  3
+     C                     MOVE ACST      @DACST  1
+      *
+     C                     END
+      *
+      ** Validate amount - only if currency code is valid
+     C           *IN11     IFEQ '0'
+     C                     EXSR VALAMT
+     C                     END
+      *
+      ** If Credit a/c no. is same as debit a/c no.
+     C                     MOVELSCCY      @CCUR
+     C           SCSEQ     IFEQ *ZEROS
+     C                     MOVE 1         SCSEQ
+     C                     END
+     C           @CACNO    IFEQ @DACNO
+     C                     SETON                     3150
+     C                     MOVEL'USR0080' @MSGID
+     C                     EXSR SNDMSG
+      *
+     C                     ELSE
+      *
+      ** Validate credit  - a/c code
+     C                     MOVEL@CACNO    @ACCN
+     C                     EXSR VALACC
+      *
+      ** If error in cust.no - seton 16
+     C           *IN66     IFEQ '1'
+     C                     SETON                     16
+     C                     END
+      *
+      ** If error in a/c code - seton 17
+     C           *IN67     IFEQ '1'
+     C                     SETON                     17
+     C                     END
+      *
+      ** If error in branch code - seton 26
+     C           *IN65     IFEQ '1'
+     C                     SETON                     26
+     C                     END
+      *
+      ** If error in credit a/c no.  - seton 31
+     C           *IN68     IFEQ '1'
+     C                     SETON                     31
+     C                     END
+      *
+      ** If no error in credit a/c no.
+     C           *IN31     IFEQ '0'
+      *
+      ** Move seq no to screen seq no.
+     C                     MOVE @ACSQ     SCSEQ
+      *
+      ** Store branch code and a/c status of debit a/c no.
+     C                     MOVE BRCA      @CBRCA  3
+     C                     MOVE ACST      @CACST  1
+      *
+      ** credit a/c branch code must be same as debit a/c branch code
+     C           @CBRCA    IFNE @DBRCA
+     C                     SETON                     3150
+     C                     MOVEL'USR0082' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+      ** If department code is blanks
+      ** message - department code is required
+     C           SDEPC     IFEQ *BLANK
+     C                     SETON                     1950
+     C                     MOVEL'USR0055' @MSGID
+     C                     EXSR SNDMSG
+      *
+      ** Get department code details
+     C                     ELSE
+      *
+     C                     CALL 'AODEPTR0'
+     C                     PARM '*BLANKS' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           SDEPC
+     C           SDDEPT    PARM SDDEPT    DSFDY
+      *
+      ** If record not found
+      ** message - department code not found
+     C           @RTCD     IFNE *BLANKS
+     C                     SETON                     1950
+     C                     MOVE 'USR0054' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+     C                     END
+     C*
+     C** Narrative field must be entered
+     C*
+     C           SNARR     IFEQ *BLANKS
+     C                     SETON                     2750
+     C                     MOVE 'USR0070' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+      ** If there are no errors in validation
+     C           *IN50     IFEQ '0'
+      *
+      ** Check teller currency conditions for any terminal condition
+     C                     MOVELSCCY      @CCY
+     C                     EXSR RTTCCY
+      *
+      ** For debit a/c no. - Set acc. indicator to '1'
+     C                     MOVE '1 '      @ACIN   2
+      *
+      ** If brnch-chk indicator in fn-cd table is non-blank
+     C*          @V,@DF    IFNE ' '
+      *
+      ** perform brnch-check
+     C*                    MOVELPTLBC     @TLBC
+     C*                    MOVEL@DBRCD    @BRCD
+     C*                    EXSR RTBRCH
+      *
+     C*                    END
+     C*
+     C**  Reinstated following lines deleted from above due to  addition
+     C**  of branch as user-definable condition.
+     C*
+     C** If brnch-chk indicator in fn-cd table is non-blank
+     C*                                                                   114621
+     C***********@V,@DF    IFNE ' '                                       114621
+     C           @V,@DF    IFNE 'X'                                       114621
+     C*
+     C** perform brnch-check
+     C                     MOVELPTLBC     @TLBC   3
+     C                     MOVEL@DBRCA    @BRCA
+     C                     EXSR RTBRCH
+     C*
+     C                     END
+      *
+      ** Account closing check
+      *                                                                   114621
+     C***********@V,@AC    IFNE ' '                                       114621
+     C           @V,@AC    IFNE 'X'                                       114621
+     C                     MOVEL@DACST    @ACST
+     C                     EXSR RTACLG
+     C                     END
+      *
+      ** For credit a/c no. - Set acc. indicator to '2'
+     C                     MOVE '2 '      @ACIN
+      *
+      ** If brnch-chk indicator in fn-cd table is non-blank
+     C*          @V,@DF    IFNE ' '
+      *
+      ** perform brnch-check
+     C*                    MOVELPTLBC     @TLBC
+     C*                    MOVEL@CBRCD    @BRCD
+     C*                    EXSR RTBRCH
+      *
+     C*                    END
+     C*
+     C**  Reinstated following lines deleted from above due to  addition
+     C**  of branch as user-definable condition.
+     C*
+     C** If brnch-chk indicator in fn-cd table is non-blank
+     C*                                                                   114621
+     C***********@V,@DF    IFNE ' '                                       114621
+     C           @V,@DF    IFNE 'X'                                       114621
+     C*
+     C** perform brnch-check
+     C                     MOVELPTLBC     @TLBC
+     C                     MOVEL@DBRCA    @BRCA
+     C                     EXSR RTBRCH
+     C*
+     C                     END
+      *                                                                                       CRT026
+      ** Only check the credit account if no warning error found                              CRT026
+      ** in debit account                                                                     CRT026
+      *
+      ** Account closing check
+      *                                                                   114621
+     C***********@V,@AC    IFNE ' '                                       114621
+     C           @V,@AC    IFNE 'X'                                       114621
+     C           @O,@AC    ANDEQ' '                                                           CRT026
+     C                     MOVEL@CACST    @ACST
+     C                     EXSR RTACLG
+     C                     END
+      *
+      ** Move screen fields to work fields required for comit text &
+      ** displaying on the screen when transaction terminated
+     C                     MOVE SDCUS     @DCUS
+     C                     MOVE SDAC      @DAC
+     C                     MOVE SDSEQ     @DSEQ
+     C                     MOVE SCCUS     @CCUS
+     C                     MOVE SCAC      @CAC
+     C                     MOVE SCSEQ     @CSEQ
+      *
+      ** If terminal error(s) exist
+     C           @TI       IFGT 0
+     C                     SETON                     20
+     C                     MOVEA@T,1      SMSG1
+     C                     MOVEA@T,10     SMSG2
+      *
+     C                     ELSE
+      *
+      ** If warning error(s) exist and different from previous error(s)
+     C           @WI       IFGT 0
+     C                     MOVEA@W,1      SMSG1
+     C                     MOVEA@W,10     SMSG2
+      *
+      ** Move overrride indicators from rtsdta to teller ovr.ind.array
+     C                     MOVEAPOVIN     @R
+      *
+      ** Perform ovr.validation to check whether signon teller has
+      ** authority to override - otherwise override prompt is required
+     C                     EXSR VALOVR
+      *
+      ** If no successful override - override prompt is required
+     C           *IN51     IFEQ '1'
+      *
+      ** If CRT026 is switch ON use User Id instead of Teller ID                              CRT026
+      *                                                                                       CRT026
+     C           CRT026    IFEQ 'Y'                                                           CRT026
+     C                     MOVE *ON       *IN23                                               CRT026
+     C                     ELSE                                                               CRT026
+     C                     SETON                     21
+     C                     ENDIF                                                              CRT026
+      *
+     C                     END
+      *
+      ** Perform transaction override process
+     C                     EXSR TRNOVR
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            VALAMT - Validate amount                           *
+      *                                                               *
+      * CALLS      SNDMSG - Send program message parameters           *
+      *            RTTLMT - Teller limit check                        *   104034
+      *            ZALIGN - Validate amount fields                    *
+      *            ZFRPED - Format and edit amount field              *
+      *                                                               *
+      * CALLED BY  VALDET - Validate Details                          *
+      *                                                               *
+      *****************************************************************
+     C           VALAMT    BEGSR                           ** VALAMT **
+      *
+      ** Check if amount field is blanks or zeros
+     C           SAMT      IFEQ *ZEROS
+     C           SAMT      OREQ *BLANKS
+     C                     SETON                     1550
+     C                     MOVE 'USR0008' @MSGID
+     C                     EXSR SNDMSG
+      *
+     C                     ELSE
+      *
+      ** Set up decimal values
+     C**********           Z-ADDA6NBDP    ZADEC                           104034
+     C                     Z-ADD@6NBDP    ZADEC                           104034
+     C********** 13        SUB  A6NBDP    ZADIG                           104034
+     C           13        SUB  @6NBDP    ZADIG                           104034
+      *
+      ** Align amount - and move it to numeric field
+     C                     MOVEL*BLANK    ZFIELD
+     C                     MOVE SAMT      ZFIELD
+     C                     EXSR ZALIGN
+     C                     MOVE ZFIELD    @TAMT  150
+      *
+      ** If error found?  Set up error message
+     C           *IN99     IFEQ '1'
+     C           ZFIELD    OREQ *ZERO
+     C                     SETON                     1550
+     C                     MOVE 'USR0008' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+      ** Continue if no error in amount field.                            169719
+      *                                                                   169719
+     C           *IN99     IFEQ '0'                                       169719
+     C           ZFIELD    ANDNE*ZERO                                     169719
+      *
+      *                                                                   104034
+      ** Teller limit check                                               104034
+     C                     MOVELSCCY      @TCCY                           104034
+     C                     MOVELBJLCCY    @LCCY                           104034
+     C                     Z-ADD@TAMT     @TAM1                           104034
+     C                     Z-ADD0         @TAM2                           104034
+     C                     MOVEL@DCSIN    @TCI1                           104034
+     C                     MOVEL@CCSIN    @TCI2                           104034
+     C                     Z-ADDPCHTL     @CHTL                           104034
+     C                     Z-ADDPNCTL     @NCTL                           104034
+     C           @V,@TL    IFEQ ' '                                       104034
+     C                     MOVE 'N'       @V,@TL                          104034
+     C                     END                                            104034
+     C*                                                                   104034
+     C                     EXSR RTTLMT                                    104034
+     C*                                                                   104034
+     C           @V,@TL    IFEQ 'N'                                       104034
+     C                     MOVE ' '       @V,@TL                          104034
+     C                     END                                            104034
+      *                                                                   169719
+     C                     END                                            169719
+      *                                                                   169719
+     C                     END
+      *
+      ** If there are no errors - edit the amount field - insert dec.pt
+     C           *IN15     IFEQ '0'
+     C**********           Z-ADDA6NBDP    ZDECS                           104034
+     C                     Z-ADD@6NBDP    ZDECS                           104034
+     C                     MOVE 'L'       ZECODE
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE @TAMT     ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE *BLANKS   @AMTDS
+     C                     MOVE *BLANKS   SAMT
+     C                     MOVE ZOUT22    @AMTDS
+     C                     MOVEL@SAMT     SAMT
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            VALACC - Validate a/c number                       *
+      *                                                               *
+      * CALLS      SNDMSG - Send program message parameters           *
+      *                                                               *
+      * CALLED BY  VALDET - Validate Details                          *
+      *                                                               *
+      *****************************************************************
+     C           VALACC    BEGSR                           ** VALACC **
+      *
+      ** Setof error indicators
+     C                     SETOF                     65
+     C                     SETOF                     666768
+      *
+      ** Validate customer no. for customer a/c transfer only (09 off)
+     C           *IN09     IFEQ '0'
+     C********** @CNUM     IFEQ *ZEROS                                                        CSD027
+     C           @CNUM     IFEQ *BLANKS                                                       CSD027
+     C                     SETON                     6650
+     C                     MOVE 'USR0083' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+     C                     END
+      *
+      ** a/c code must not be blanks
+     C           @ACOD     IFEQ *ZEROS
+     C                     SETON                     6750
+     C                     MOVEL'USR0079' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+      ** a/c seq if not entered - must default to 01
+     C           @ACSQ     IFEQ *ZEROS
+     C                     MOVE 01        @ACSQ
+     C                     END
+      *
+      ** a/c code must not be blanks
+     C           @BRCA     IFEQ *BLANKS
+     C                     SETON                     6550
+     C                     MOVEL'USR0145' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+      ** Access lf/accnt for account number
+     C           KLACNT    CHAINACCNTABF             70
+      *
+      ** If no live record found
+     C           *IN70     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     SETON                     6850
+     C                     MOVEL'USR0050' @MSGID
+     C                     EXSR SNDMSG
+      *
+     C                     ELSE
+      *
+      ** Account referred to must not be retail type
+     C           ATYP      IFEQ 'R'
+     C                     SETON                     6850
+     C                     MOVE 'USR0084' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            VALOVR - Validate override conditions              *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  VALDET - Validate Details                          *
+      *            VOVDET - Validate override details                 *
+      *                                                               *
+      *****************************************************************
+     C           VALOVR    BEGSR                           ** VALOVR **
+      *
+      ** Setof error indicator
+     C                     SETOF                     51
+      *
+      ** Set array index to 1
+     C                     Z-ADD1         IX      20
+      *
+     C           IX        DOUGT25
+     C           *IN51     OREQ '1'
+      *
+     C           @O,IX     IFEQ 'Y'
+     C           @R,IX     ANDEQ'N'
+     C                     SETON                     51
+      *
+     C                     ELSE
+      *
+     C                     ADD  1         IX
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            TRNOVR - Transaction override process              *
+      *                                                               *
+      * CALLS             -                                           *
+      *            LAST   - Final processing - terminate pgm.         *
+      *            SETDSP - Set indicators for display                *
+      *            VOVDET - Validate override details                 *
+      *                                                               *
+      * CALLED BY  VALDET - Validate Details                          *
+      *                                                               *
+      *****************************************************************
+     C           TRNOVR    BEGSR                           ** TRNOVR **
+     C*
+     C** Refresh screen fields
+     C*
+     C                     MOVE *BLANKS   SOVTI
+     C                     MOVE *BLANKS   SOVPC
+     C                     MOVE *BLANKS   SOVUR                                               CRT026
+     C                     MOVE *BLANKS   SOVPW                                               CRT026
+      *
+      ** Do until successful override
+     C           *IN51     DOUEQ'0'
+      *
+      ** Display message subfile control record
+     C                     WRITERE4113C0
+      *
+      ** Display override screen format
+     C                     EXFMTRE4113F4
+      *
+      ** Clear program message queue and terminal & warning msg. lines
+     C                     CALL 'SCC0250'
+      *
+      ** Process the input depending on the key pressed
+      *
+      ** If cmd/3 is pressed - terminate the program
+     C           *INKC     CASEQ'1'       LAST
+      *
+      ** If cmd/1 is pressed - validate override details
+     C           *INKA     CASEQ'1'       VOVDET
+      *
+      ** If cmd/12 or enter key is pressed - Set indicators for dsplay
+     C                     CAS            SETDSP
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            VOVDET - Validate override details                 *
+      *                                                               *
+      * CALLS      SNDMSG - Send program message parameters           *
+      *            VALOVR - Validate override conditions              *
+      *            RTENCP - Encript passcode                          *
+      *                                                               *
+      * CALLED BY  TRNOVR - Transaction override process              *
+      *                                                               *
+      *****************************************************************
+     C           VOVDET    BEGSR                           ** VOVDET **
+      *
+      ** Validation is to be done only if override prompt is displayed
+      ** Otherwise - setof 51 to come out of loop
+     C           *IN21     IFEQ '0'
+     C           *IN23     ANDEQ'0'                                                           CRT026
+     C                     SETOF                     51
+      *
+     C                     ELSE
+      *
+      ** Setof error indicators
+     C                     SETOF                     111252
+      *
+      ** Override teller if blanks
+      ** If CRT026 is switch ON User Id is required                                           CRT026
+      *                                                                                       CRT026
+     C           SOVTI     IFEQ *BLANKS
+     C           SOVUR     ANDEQ*BLANKS                                                       CRT026
+     C                     SETON                     1152
+     C           CRT026    IFEQ 'Y'                                                           CRT026
+     C                     MOVE 'USR1500' @MSGID                                              CRT026
+     C                     ELSE                                                               CRT026
+     C                     MOVE 'USR0032' @MSGID
+     C                     ENDIF                                                              CRT026
+     C                     EXSR SNDMSG
+      *
+     C                     ELSE
+      *                                                                                       CRT026
+      ** Access user id details to obtain the teller id attached                              CRT026
+      ** to the user id                                                                       CRT026
+      *                                                                                       CRT026
+     C           CRT026    IFEQ 'Y'                                                           CRT026
+     C                     CALL 'AOUSERR0'                                                    CRT026
+     C                     PARM *BLANKS   @RTCD   7                                           CRT026
+     C                     PARM '*KEY'    @OPTN   7                                           CRT026
+     C                     PARM SOVUR     @USRP  10                                           CRT026
+     C           MUSER     PARM MUSER     DSSDY                                               CRT026
+      *                                                                                       CRT026
+     C           @RTCD     IFNE *BLANKS                                                       CRT026
+     C           @RTCD     ANDNE'*NRF   '                                                     CRT026
+     C           *LOCK     IN   LDA                                                           CRT026
+     C                     MOVEL'MUSERDD' DBFILE           ***************                    CRT026
+     C                     Z-ADD10        DBASE            ** DB ERR 10 **                    CRT026
+     C                     MOVELSOVUR     DBKEY            ***************                    CRT026
+     C                     EXSR DBERR                                                         CRT026
+     C                     ENDIF                                                              CRT026
+      *                                                                                       CRT026
+     C           @RTCD     IFNE *BLANKS                                                       CRT026
+     C                     MOVE *ON       *IN11                                               CRT026
+     C                     MOVE *ON       *IN52                                               CRT026
+     C                     MOVEL'USR1501' @MSGID                                              CRT026
+     C                     EXSR SNDMSG                                                        CRT026
+      ** If user id is valid use the teller attached to this user                             CRT026
+      ** to obtain the teller details                                                         CRT026
+     C                     ELSE                                                               CRT026
+     C                     MOVE TLID      @TELI                                               CRT026
+     C                     ENDIF                                                              CRT026
+      ** If CRT026 enhancement is switch OFF use the teller id                                CRT026
+      ** entered to obtain the teller details                                                 CRT026
+     C                     ELSE                                                               CRT026
+     C                     MOVE SOVTI     @TELI                                               CRT026
+     C                     ENDIF                                                              CRT026
+      *                                                                                       CRT026
+      ** If no validation errors exist                                                        CRT026
+      *
+      ** Check if record exists in file SDTELDPD
+      *
+     C*
+     C           *IN52     IFEQ *OFF                                                          CRT026
+     C                     CALL 'AOTELDR0'
+     C                     PARM '*BLANKS' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C**********           PARM SOVTI     @TELI   3                                           CRT026
+     C                     PARM           @TELI   3                                           CRT026
+     C           SDTELD    PARM SDTELD    DSFDY
+      *
+      ** If record not found
+      ** message - Teller identifier not found
+     C           @RTCD     IFNE *BLANKS
+     C                     SETON                     1152
+     C           CRT026    IFEQ 'Y'                                                           CRT026
+     C                     MOVEL'USR1509' @MSGID                                              CRT026
+     C                     ELSE                                                               CRT026
+     C                     MOVEL'USR0030' @MSGID
+     C                     ENDIF                                                              CRT026
+     C                     EXSR SNDMSG
+     C                     END
+     C                     ENDIF                                                              CRT026
+      *
+     C                     END
+      *                                                                                       CRT026
+      ** If no validation errors exist                                                        CRT026
+      *                                                                                       CRT026
+     C           *IN52     IFEQ *OFF                                                          CRT026
+      *
+      ** Check if passcode is blanks
+      ** message - Teller passcode is required
+      ** If CRT026 enhancement is ON check the password instead                               CRT026
+      ** message - User password is required                                                  CRT026
+     C           SOVPC     IFEQ *BLANKS
+     C           SOVPW     ANDEQ*BLANKS                                                       CRT026
+     C                     SETON                     1252
+     C           CRT026    IFEQ 'Y'                                                           CRT026
+     C                     MOVEL'USR1502' @MSGID                                              CRT026
+     C                     ELSE                                                               CRT026
+     C                     MOVEL'USR0033' @MSGID
+     C                     ENDIF                                                              CRT026
+     C                     EXSR SNDMSG
+      *
+     C                     ELSE
+      *                                                                                       CRT026
+      ** If CRT026 enhancement is ON check the password via REC4170                           CRT026
+     C           CRT026    IFEQ 'Y'                                                           CRT026
+     C                     CALL 'REC4170'                                                     CRT026
+     C                     PARM           SOVUR                                               CRT026
+     C                     PARM           SOVPW                                               CRT026
+     C                     PARM *BLANKS   @RTCD   7                                           CRT026
+      *                                                                                       CRT026
+     C           @RTCD     IFNE *BLANKS                                                       CRT026
+     C                     SELEC                                                              CRT026
+     C           @RTCD     WHEQ 'CPF2204'                                                     CRT026
+     C                     MOVE 'USR1501' @MSGID                                              CRT026
+     C                     MOVE *ON       *IN11                                               CRT026
+     C           @RTCD     WHEQ 'CPF22E3'                                                     CRT026
+     C                     MOVE 'USR1506' @MSGID                                              CRT026
+     C                     MOVE *ON       *IN11                                               CRT026
+     C           @RTCD     WHEQ 'CPF2203'                                                     CRT026
+     C                     MOVE 'USR1507' @MSGID                                              CRT026
+     C                     MOVE *ON       *IN11                                               CRT026
+     C           @RTCD     WHEQ 'CPF2213'                                                     CRT026
+     C                     MOVE 'USR1508' @MSGID                                              CRT026
+     C                     MOVE *ON       *IN11                                               CRT026
+     C           @RTCD     WHEQ 'CPF22E5'                                                     CRT026
+     C                     MOVE 'USR1505' @MSGID                                              CRT026
+     C           @RTCD     WHEQ 'CPF22E2'                                                     CRT026
+     C                     MOVE 'USR1503' @MSGID                                              CRT026
+     C           @RTCD     WHEQ 'CPF22E4'                                                     CRT026
+     C                     MOVE 'USR1504' @MSGID                                              CRT026
+     C           @RTCD     WHEQ 'CPF22E6'                                                     CRT026
+     C                     MOVE 'USR1510' @MSGID                                              CRT026
+     C           @RTCD     WHEQ 'CPF22E9'                                                     CRT026
+     C                     MOVE 'USR1511' @MSGID                                              CRT026
+     C           @RTCD     WHEQ 'CPF2225'                                                     CRT026
+     C                     MOVE 'USR1512' @MSGID                                              CRT026
+     C                     ENDSL                                                              CRT026
+     C                     MOVE *ON       *IN12                                               CRT026
+     C                     MOVE *ON       *IN52                                               CRT026
+     C                     EXSR SNDMSG                                                        CRT026
+     C                     ENDIF                                                              CRT026
+      *                                                                                       CRT026
+     C                     ELSE                                                               CRT026
+      *
+      ** Check if passcode matches with that in file
+      ** message - Teller passcode
+      *
+      ** Encript the passcode
+     C                     MOVEASOVPC     BPWD
+     C                     Z-ADD6         X       10
+     C                     EXSR RTENCP
+     C                     MOVEAEPWD      SOVPC
+      *
+     C           SOVPC     IFNE FRTLPC
+     C                     SETON                     1252
+     C                     MOVEL'USR0039' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+     C                     ENDIF                                                              CRT026
+      *
+     C                     END
+     C                     ENDIF                                                              CRT026
+      *
+      ** If no errors in validation
+     C           *IN52     IFEQ '0'
+      *
+      ** move override indicators from telidpd to override ind.array
+     C                     MOVEAFROVRI    @R
+      *
+      ** Perform override validation
+     C                     EXSR VALOVR
+      *
+      ** If override unsuccessful -
+      ** message - teller override failed
+     C           *IN51     IFEQ '1'
+     C                     MOVEL'USR0029' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SETDSP - Set indicators for display                *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  TRNOVR - Transaction override process              *
+      *                                                               *
+      *****************************************************************
+     C           SETDSP    BEGSR                           ** SETDSP **
+      *
+      ** If cmd/12 is pressed - display prev.screen
+     C           *INKL     IFEQ '1'
+      *
+      ** Setof indicator to come out override screen loop
+     C                     SETOF                     51
+      *
+      ** Setof common screen error indicators
+     C                     SETOF                     1112
+      *
+      ** Seton indicator to loop to display previous screen
+     C                     SETON                     50
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            UPDRTN - Control rtn. for updates                  *
+      *                                                               *
+      * CALLS      DBERR  - Database Error Handling                   *
+      *            PCMTXT - Prepare comit text                        *
+      *            RTTOTS - Teller total updates                      *
+      *            UPTRL  - Update Control Trailer Record             *
+      *            WRTLPD - Write TELIDPD Record                      *
+      *            ZTNLU1 - Access dataarea for next transaction no.  *
+      *                                                               *
+      * CALLED BY  SCRINP - Detail screen input                       *
+      *                                                               *
+      *****************************************************************
+     C           UPDRTN    BEGSR                           ** UPDRTN **
+      *
+      ** Update next available transaction number
+     C                     EXSR ZTNLU1
+      *
+      ** Prepare commmitment control text
+     C                     EXSR PCMTXT
+      *
+      ** Move fields to key list.
+     C                     MOVEL'T'       KTBRI
+     C                     MOVELPTLID     KTBID
+     C                     MOVEL'1'       KRCTP
+      *
+      ** Access teller controls - TTRNTM2 - to get transaction number
+     C           KLTRNT    CHAINTTRNTM2F             70
+      *
+      ** Write Teller transaction details file
+     C                     EXSR WRTLPD
+     C*
+     C** Write Narrative file
+     C*
+     C                     MOVEL'D'       RECI
+     C                     MOVEL'T'       TBRI
+     C                     MOVELPTLID     TBID
+     C                     MOVE TBTN      @@TBTN
+     C                     MOVE TBID      @@TBID
+     C                     MOVE @@NARR    TTNARR
+     C                     WRITETTNARPDF
+      *
+      *
+      ** Update trailer
+     C                     EXSR UPTRL
+      *
+      ** Access teller controls - TTRNTM2 -
+     C                     MOVEL'1'       KRCTP
+     C           KLTRNT    CHAINTTRNTM2F             70
+      *
+      ** If record not found - database error
+     C           *IN70     IFEQ '1'
+     C           *LOCK     IN   LDA                        ***************
+     C                     Z-ADD1         DBASE            ** DB ERR 01 **
+     C                     MOVE 'TTRNTM2' DBFILE           ***************
+     C                     MOVEL@TTRNT    DBKEY
+     C                     EXSR DBERR
+      *
+     C                     ELSE
+      *
+      ** Increment next available transaction number
+     C                     ADD  1         TTNATN
+      *
+      ** Use transaction ccy to look up currencies array
+     C                     Z-ADD1         @I      20
+     C           @CCY      LOKUP@CY,@I                   82
+      *
+      ** If element not found
+     C           *IN82     IFEQ '0'
+      *
+      ** Check if an empty element is present in array
+     C           '   '     LOKUP@CY,@I                   82
+      *
+      ** If empty element is present
+     C           *IN82     IFEQ '1'
+     C                     MOVEA@CCY      @CY,@I
+     C                     END
+      *
+     C                     END
+      *
+      ** Update the record
+     C                     UPDATTTRNTM2F
+      *
+     C                     END
+      *
+      ** Access teller controls - TTRNTM3 -
+     C                     MOVEL'2'       KRCTP
+     C           KLTRNT    CHAINTTRNTM3F             70
+      *
+      ** If record not found - database error
+     C           *IN70     IFEQ '1'
+     C           *LOCK     IN   LDA                        ***************
+     C                     Z-ADD2         DBASE            ** DB ERR 02 **
+     C                     MOVE 'TTRNTM3' DBFILE           ***************
+     C                     MOVEL@TTRNT    DBKEY
+     C                     EXSR DBERR
+      *
+     C                     ELSE
+      *
+      ** Obtain currency totals for debit trans-type 1
+     C                     MOVEL@DRVIN    @RVIN
+     C                     MOVEL@DDCIN    @DCIN
+     C                     MOVEL@DCSIN    @CSIN
+     C                     MOVEL@DCLIN    @CLIN
+     C                     EXSR RTTOTS
+      *
+      ** Obtain currency totals for credit trans-type 1
+     C                     MOVEL@CRVIN    @RVIN
+     C                     MOVEL@CDCIN    @DCIN
+     C                     MOVEL@CCSIN    @CSIN
+     C                     MOVEL@CCLIN    @CLIN
+     C                     EXSR RTTOTS
+      *
+      ** Move teller transaction number to file & screen field
+     C                     Z-ADDTBTN      TNLU
+     C                     Z-ADDTBTN      TTLU                                                CRT006
+     C                     Z-ADDTBTN      @TTRNO
+      *
+      ** Update the record
+     C                     UPDATTTRNTM3F
+      *
+     C                     END
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE4113CCP1                                           S01408
+     C*                                                                   S01408
+      *
+      ** End of commitment cycle
+     C           CMTTXT    COMIT
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE4113CCP2                                           S01408
+     C*                                                                   S01408
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            WRTLPD - Write TELIDPD Record                      *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  UPDRTN - Control rtn. for updates                  *
+      *                                                               *
+      *****************************************************************
+     C           WRTLPD    BEGSR                           ** WRTLPD **
+      *
+     C                     MOVEL'D'       RECI
+     C                     MOVEL'T'       TBRI
+     C                     MOVELPTLID     TBID
+     C                     Z-ADDTTNATN    TBTN
+     C                     MOVELPFNCD     FNCD
+     C                     MOVELSCCY      CCY1
+     C                     Z-ADD@TAMT     AMT1
+     C                     MOVELSDCUS     CUS1
+     C                     MOVELSDAC      ACD1
+     C                     MOVELSDSEQ     ACSQ1
+     C                     MOVELSDBRCA    DBBRCA                          RTS10
+     C                     MOVELSCCUS     CUS2
+     C                     MOVELSCAC      ACD2
+     C                     MOVELSCSEQ     ACSQ2
+     C                     MOVELSCBRCA    CRBRCA                          RTS10
+     C                     MOVELSDEPC     DEPC
+     C                     MOVELPTLBC     ITLB
+     C                     MOVEL@JOB      TWID
+     C                     TIME           TIME
+     C**********           MOVELSOVTI     OVTI                                                CRT026
+     C                     MOVEL@TELI     OVTI                                                CRT026
+     C                     MOVEA@W,1      MSG1
+     C                     MOVEA@W,10     MSG2
+     C                     Z-ADDBJRDNB    VLDT
+     C                     MOVE 'Y'       ACKF                                                CRT006
+     C                     WRITETTRANPDF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            UPTRL  - Update Control Trailer Record             *
+      *                                                               *
+      * CALLS      DBERR  - Database Error Handling                   *
+      *                                                               *
+      * CALLED BY  UPDRTN - Control rtn. for updates                  *
+      *                                                               *
+      *****************************************************************
+     C           UPTRL     BEGSR                           ** UPTRL  **
+      *
+     C           1         CHAINTTRANPTF             70
+      *
+      ** If no record is present -
+     C           *IN70     IFEQ '1'
+     C           *LOCK     IN   LDA                        *************
+     C                     Z-ADD3         DBASE            ** DB ERR 03*
+     C                     MOVEL'TTRANPT' DBFILE           *************
+     C                     MOVEL'1       'DBKEY
+     C                     EXSR DBERR
+      *
+     C                     ELSE
+      *
+     C                     ADD  1         NORE
+     C                     UPDATTTRANPTF
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            PCMTXT - Prepare comit text                        *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  UPDRTN - Control rtn. for updates                  *
+      *                                                               *
+      *****************************************************************
+     C           PCMTXT    BEGSR                           ** PCMTXT **
+      *
+      ** Prepare the comit text CMTTXT
+     C                     MOVE 'RE'      MDID
+     C                     MOVEL@PGM      PGMN
+     C                     MOVE SWSID     WSIDX
+     C                     MOVELSCCY      @CMCCY
+     C                     TIME           MTIME
+     C                     MOVE SUSER     USRIDX
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            LAST   - Final processing - terminate pgm.         *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MAIN   - Control Process                           *
+      *            SCRINP - Detail screen input                       *
+      *            TRNOVR - Transaction override process              *
+      *                                                               *
+      *****************************************************************
+     C           LAST      BEGSR                           ** LAST   **
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            *PSSR  - Program error                             *
+      *                                                               *
+      * CALLS      DBERRCTL                                           *
+      *                                                               *
+      * CALLED BY  DBERR  - Database Error Handling                   *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR  **
+     C*
+     C** Check to see that *PSSR has not been called yet
+     C*
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C*
+     C** Call standard database error program
+     C*
+     C                     CALL 'DBERRCTL'
+     C*
+     C                     END
+     C*
+     C** If *PSSR already run, then just end the program here
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            FIRST  - Initial Processing                        *
+      *                                                               *
+      * CALLS      DBERR  - Database Error Handling                   *
+      *            IFLDS  - Initialize screen/work fields             *
+      *            INT01  - Initialise error indicators               *
+      *                                                               *
+      * CALLED BY  MAIN   - Control Process                           *
+      *                                                               *
+      *****************************************************************
+     C           FIRST     BEGSR                           ** FIRST  **
+      *
+      ** Input parameter(s) :
+     C           *ENTRY    PLIST                           Entry parameter list
+     C                     PARM           PFNCD   3        Function code
+      *
+      ** Define Keylist(s)
+      *
+      ** Account master
+     C           KLACNT    KLIST
+     C                     KFLD           @CNUM
+     C                     KFLD           @CCY
+     C                     KFLD           @ACOD
+     C                     KFLD           @ACSQ
+     C                     KFLD           @BRCA
+      *
+      ** Retrieve RTS job dataarea
+     C           *NAMVAR   DEFN           RTSDTA
+     C                     IN   RTSDTA
+     C                     MOVELPTLID     @TLID
+      *
+      * Prepare LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANK    DBLOT
+     C                     OUT  LDA
+      *
+      ** initialize parameters for SCC0240- build program message queue
+     C                     MOVE *BLANKS   @MSGID  7
+     C                     MOVEL'RTSMSGF' @MSGF  10
+      *
+      ** Initialize screen message queue
+     C                     MOVEL'*'       SPGMQ
+      *
+      ** Seton  message subfile end indicator
+     C                     MOVE '1'       *IN10
+      *
+     C                     MOVEL@JOB      SWSID  10
+     C*
+     C** Use access program AOBANKR0 to retrieve header details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*BLANKS' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C** If error in access program, exit via DBERR subroutine
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     MOVEL@OPTN     DBKEY            ** DB ERR 08 **
+     C                     Z-ADD8         DBASE            **************
+     C                     EXSR DBERR
+     C                     END
+      *
+      ** Move midas run date to screen field
+     C                     MOVE BJMRDT    SRUNA
+      *
+      ** Access SDFNCDPD for function code record
+     C*
+     C                     CALL 'AOFNCDR0'
+     C                     PARM '*BLANKS' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM PFNCD     @FNCD   3
+     C           SDFNCD    PARM SDFNCD    DSFDY
+      *
+      ** If record does not exist - database error
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDFNCDPD'DBFILE           ***************
+     C                     Z-ADD4         DBASE            ** DB ERR 04 **
+     C                     MOVELPFNCD     DBKEY            ***************
+     C                     EXSR DBERR
+     C                     END
+      *
+      ** Store validation indicators in an array
+     C                     MOVEAFQVWIN    @V
+     C*
+     C** Access SDRETRPD  for debit  tr.code 1 from func.cd table
+     C*
+     C*
+     C                     CALL 'AORETRR0'
+     C                     PARM '*BLANKS' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM FQDRC1    @RETR   5
+     C           SDRETR    PARM SDRETR    DSFDY
+      *
+      ** If record does not exist - database errors
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDRETRPD'DBFILE           ***************
+     C                     Z-ADD5         DBASE            ** DB ERR 05 *
+     C                     MOVELFQDRC1    DBKEY            ***************
+     C                     EXSR DBERR
+      *
+     C                     ELSE
+      *
+      ** Store dr/cr,cash,clearing & reversal indicators for later use
+     C                     MOVEL' '       @DRVIN  1
+     C                     MOVELA1DCIN    @DDCIN  1
+     C                     MOVELA1CIND    @DCSIN  1
+     C                     MOVELA1CLIN    @DCLIN  1
+      *
+     C                     END
+      *
+      ** Access SDRETRPD for credit tr.code 1 from func.cd table
+     C*
+     C                     CALL 'AORETRR0'
+     C                     PARM '*BLANKS' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM FQCRC1    @RETR
+     C           SDRETR    PARM SDRETR    DSFDY
+      *
+      ** If record does not exist - database errors
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDRETRPD'DBFILE           ***************
+     C                     Z-ADD6         DBASE            ** DB ERR 06 **
+     C                     MOVELFQCRC1    DBKEY            ***************
+     C                     EXSR DBERR
+      *
+     C                     ELSE
+      *
+      ** Store dr/cr,cash,clearing & reversal indicators for later use
+     C                     MOVEL' '       @CRVIN  1
+     C                     MOVELA1DCIN    @CDCIN  1
+     C                     MOVELA1CIND    @CCSIN  1
+     C                     MOVELA1CLIN    @CCLIN  1
+      *
+     C                     END
+      *
+      ** Access LF/SDBRCHL1 - for teller branch from rtsdta
+     C*
+     C** Use access program AOBRCHR0 to retrieve header details
+     C*
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*BLANKS' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM PTLBC     @BRCH   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*
+     C** If error in access program, exit via DBERR subroutine
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBRCHPD'DBFILE           ***************
+     C                     MOVEL@BRCH     DBKEY            ** DB ERR 07 *
+     C                     Z-ADD7         DBASE            ***************
+     C                     EXSR DBERR
+     C                     END
+      *                                                                   CRT007
+      ** Determine if SAR CRT003 Cashier Interface is installed           CRT007
+      *                                                                   CRT007
+     C                     CALL 'AOSARDR0'                                CRT007
+     C                     PARM *BLANKS   PRTCD   7                       CRT007
+     C                     PARM '*VERIFY 'POPTN   7                       CRT007
+     C                     PARM 'CRT003'  PSARD   6                       CRT007
+     C           SCSARD    PARM SCSARD    DSFDY                           CRT007
+      *                                                                   CRT007
+     C           PRTCD     IFNE *BLANKS                                   CRT007
+     C           PRTCD     ANDNE'*NRF   '                                 CRT007
+     C           *LOCK     IN   LDA                                       CRT007
+     C                     MOVEL'SCSARDPD'DBFILE                          CRT007
+     C                     Z-ADD8         DBASE                           CRT007
+     C                     MOVEL'CRT003'  DBKEY                           CRT007
+     C                     EXSR DBERR                                     CRT007
+     C                     ENDIF                                          CRT007
+      *                                                                   CRT007
+     C           PRTCD     IFEQ *BLANKS                                   CRT007
+     C                     MOVE 'Y'       CRT003                          CRT007
+     C                     ELSE                                           CRT007
+     C                     MOVE 'N'       CRT003                          CRT007
+     C                     ENDIF                                          CRT007
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE4113CCP3                                           S01408
+     C*                                                                   S01408
+      *                                                                                       CRT026
+      ** Check if CRT026 is switched on                                                       CRT026
+      *                                                                                       CRT026
+     C                     CALL 'AOSARDR0'                                                    CRT026
+     C                     PARM *BLANKS   PRTCD                                               CRT026
+     C                     PARM '*VERIFY' POPTN                                               CRT026
+     C                     PARM 'CRT026'  PSARD                                               CRT026
+     C           SCSARD    PARM SCSARD    DSFDY                                               CRT026
+      *                                                                                       CRT026
+     C           PRTCD     IFNE *BLANKS                                                       CRT026
+     C           PRTCD     ANDNE'*NRF   '                                                     CRT026
+     C           *LOCK     IN   LDA                                                           CRT026
+     C                     MOVEL'SCSARDPD'DBFILE           ***************                    CRT026
+     C                     Z-ADD9         DBASE            ** DB ERR 09 **                    CRT026
+     C                     MOVEL'CRT026'  DBKEY            ***************                    CRT026
+     C                     EXSR DBERR                                                         CRT026
+     C                     ENDIF                                                              CRT026
+      *                                                                                       CRT026
+     C           PRTCD     IFEQ *BLANKS                                                       CRT026
+     C                     MOVE 'Y'       CRT026  1                                           CRT026
+     C                     ELSE                                                               CRT026
+     C                     MOVE 'N'       CRT026                                              CRT026
+     C                     ENDIF                                                              CRT026
+      *
+      ** Initialise all screen/work fields and indicators
+     C                     EXSR INT01
+     C                     EXSR IFLDS
+     C*
+     C** Initialise fields for narrative output
+     C*
+     C                     MOVE '/'       @@SLSH
+     C                     MOVE '_'       @@UNDS
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            IFLDS  - Initialize screen/work fields             *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  FIRST  - Initial Processing                        *
+      *            RFRESH - Refresh screen                            *
+      *                                                               *
+      *****************************************************************
+     C           IFLDS     BEGSR                           ** IFLDS  **
+      *
+     C                     MOVE *BLANKS   SCCY
+     C                     MOVE *BLANKS   SAMT
+     C                     MOVE *BLANKS   SDEPC
+     C                     MOVE *BLANKS   SOVTI
+     C                     MOVE *BLANKS   SOVPC
+     C                     MOVE *BLANKS   SOVUR                                               CRT026
+     C                     MOVE *BLANKS   SOVPW                                               CRT026
+     C                     MOVE *BLANKS   SDCUS
+     C                     MOVE *BLANKS   SDAC
+     C                     MOVE *BLANKS   SDSEQ
+     C                     MOVE *BLANKS   SDBRCA
+     C                     MOVE *BLANKS   SCCUS
+     C                     MOVE *BLANKS   SCAC
+     C                     MOVE *BLANKS   SCSEQ
+     C                     MOVE *BLANKS   SCBRCA
+     C                     MOVE *BLANKS   @W
+     C                     MOVE *BLANKS   @T
+     C                     Z-ADD1         @COUNT  10
+     C                     MOVE *BLANKS   SNARR
+     C*
+     C** Load the teller's default department code
+     C*
+     C                     MOVE PDEPC     SDEPC
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SNDMSG - Send program message parameters           *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  VALACC - Validate a/c number                       *
+      *            VALAMT - Validate amount                           *
+      *            VALDET - Validate Details                          *
+      *            VOVDET - Validate override details                 *
+      *                                                               *
+      *****************************************************************
+     C           SNDMSG    BEGSR                           ** SNDMSG **
+      *
+     C                     SETON                     69
+      *
+     C                     CALL 'SCC0240'
+     C                     PARM           @MSGID
+     C                     PARM           @MSGF
+      *
+     C                     ENDSR
+      *****************************************************************
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE4113CCP4                                           S01408
+     C*                                                                   S01408
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE4113CCP6                                           S01408
+     C*                                                                   S01408
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE4113CCP5                                           S01408
+     C*                                                                   S01408
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            DBERR  - Database Error Handling                   *
+      *                                                               *
+      * CALLS      *PSSR  - Program  error                            *
+      *                                                               *
+      * CALLED BY  FIRST  - Initial Processing                        *
+      *            UPDRTN - Control rtn. for updates                  *
+      *            UPTRL  - Update Control Trailer Record             *
+      *                                                               *
+      *****************************************************************
+     C           DBERR     BEGSR                           ** DBERR  **
+      *
+     C                     MOVEL@PGM      DBPGM
+     C                     OUT  LDA
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      ** SR.ZALIGN subroutine
+      /COPY ZSRSRC,ZALIGNZ2
+      *
+      *****************************************************************
+      /EJECT
+      ** SR.ZTNLU1 subroutine
+      /COPY ZSRSRC,ZTNLU1Z2
+      *
+      *****************************************************************
+      /EJECT
+      ** SR.ZFRPED Subroutine
+      /COPY ZSRSRC,ZFRPEDZ3
+      *
+      *****************************************************************
+      /EJECT
+      /COPY ZSRSRC,RTBRCHC1
+      ** Branch different check
+      *****************************************************************
+      /EJECT
+      ** SR.RTTCCY Subroutine
+      /COPY ZSRSRC,RTTCCYC1
+      *
+      *****************************************************************
+      /EJECT
+      /COPY ZSRSRC,RTTWIDC1
+      ** Array for SR.RTTWID
+      *****************************************************************
+      /EJECT
+      ** SR.RTACLG Subroutine
+      /COPY ZSRSRC,RTACLGC1
+      *****************************************************************
+      /EJECT
+      ** SR.RTTOTS Subroutine
+      /COPY ZSRSRC,RTTOTSC1
+      *****************************************************************
+      /EJECT
+      /COPY ZSRSRC,RTENCPC1
+      ** Passcode encription
+      *
+      /EJECT                                                              104034
+      /COPY ZSRSRC,RTTLMTC1                                               104034
+      ** Teller limit check                                               104034
+      *                                                                   104034
+      *****************************************************************   104034
+      /EJECT                                                              104034
+      /COPY ZSRSRC,RTCCYSC1                                               104034
+      ** Currency setup and retrieval                                     104034
+      *                                                                   104034
+      *****************************************************************   104034
+      /EJECT                                                              104034
+      /COPY ZSRSRC,RTLCNVC1                                               104034
+      ** Local currency conversion                                        104034
+      *                                                                   104034
+      *****************************************************************   104034
+      *****************************************************************
+      *
+      ** Teller totals
+     OTTRNTM2FE                @RELTT
+      *****************************************************************
+**  CPY@  OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+** - @P   - Array to hold the positions of the validation indicators
+01020304050607080910111213141516171819202122232425
+**  alphanumeric table
+ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789
+**  encription code table
+SDKJFIENVQPWOCMUXZ293847501LRBAGYHT6ZSDKJ
+FIENVQPWOCMUXZ293847501LRBAGYHT6ZSDKJFIEN

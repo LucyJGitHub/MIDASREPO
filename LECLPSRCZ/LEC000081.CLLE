@@ -1,0 +1,64 @@
+/*******************************************************************/
+/*STD    CLPBASEBND                                                */
+/*EXI    TEXT('Midas LE Past Due Call Loans/Origin Loan')            */
+/*******************************************************************/
+/*                                                                 */
+/*       Midas     - Customer Lending Module                       */
+/*                                                                 */
+/*       LEC000081 - Past Due Call Loans/Origin Loan               */
+/*                                                                 */
+/*       (c) Misys International Banking Systems Ltd. 2012         */
+/*                                                                 */
+/*       Last Amend No. CLE134 *CREATE     Date 01Aug12            */
+/*                                                                 */
+/*******************************************************************/
+/*                                                                 */
+/*       CLE134 - Past Due Call Loan Processing                    */
+/*                                                                 */
+/*******************************************************************/
+ 
+ 
+             PGM        PARM(&RSEQ &RLEV &RENT &RLNRF)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                           Misys International Banking Systems Ltd. +
+                           2012')
+ 
+             DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RENT) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&RLNRF) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+             SNDMSG     MSG('LEC000081 - Past Due Call Loans/Origin +
+                           Loan Report') TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(00000000)
+ 
+             CALL       PGM(LE000081) PARM(&RSEQ &RLEV &RENT &RLNRF)
+ 
+/** Monitor for database error and send appropriate message */
+/** to MOPERQ */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+               SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOMSGQ(MOPERQ MRUNQ)
+               GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDMSG     MSG('LEC000081 Past Due Call Loans/Origin +
+                          Loan report terminated abnormally.') +
+                          TOMSGQ(MOPERQ MRUNQ)
+ 
+END:
+             ENDPGM

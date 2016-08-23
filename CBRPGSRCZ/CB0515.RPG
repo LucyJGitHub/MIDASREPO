@@ -1,0 +1,280 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CB Close of business users')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Close of Business Processing                         *
+      *                                                               *
+      *  CB0515 - Maintain CoB users file                             *
+      *                                                               *
+      *  Function:  This program maintains active user logged into    *
+      *             the COB.                                          *
+      *                                                               *
+      *  Called By: CBC0515                                           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. TDA035             Date 02Apr04               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSC011             Date 27May02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 100025             Date 09JAN96               *
+      *                 S01420             Date 12APR95               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CRE026 - Consumer Banking (Recompile)                        *
+      *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
+      *  CSC011 - Add COB User processing from MUSERDD.               *
+      *  100025 - Add processing to allow the COB Control profile     *
+      *           full access to the COB options.                     *
+      *  S01420 - CoB Enhancements                                    *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     FCBUSERL0UF  E           K        DISK                      A
+     F                                              KINFDS INFDS
+     FCBUSERL2UF  E           K        DISK                           UC
+     F            CBUSERD0                          KRENAMECBUSERD2
+     FMUSER   IF  E           K        DISK                                                   CSC011
+      *
+      /SPACE 2
+      ********************************************************************
+      *
+      *     U7 & U8  DATABASE ERROR
+      *
+      *****************************************************************
+     E                    ARA     1   1 10
+      *
+     IINFDS       DS
+     I                                    B 156 1590WWRCDS
+     ICBLOCK      DS
+     I                                        1  10 WWLOCK
+     I            DS
+     I                                        1   6 WWNBRT
+     I                                        1   10WWNB1
+     I                                        3   30WWNB3
+     I                                        4   40WWNB4
+     I                                        6   60WWNB6
+     I                                        3   60WWNBTT
+      *                                                                   100025
+      ** External data structure for access object SDCOBPPD format.       100025
+     ISDCOBP    E DSSDCOBPPD                                              100025
+      *                                                                   100025
+     I** Data structure for access objects (short)                        100025
+     IDSFDY     E DSDSFDY                                                 100025
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           WWJOB  10
+     C                     PARM           WWUSER 10
+     C                     PARM           WWNBR   6
+     C                     PARM           WWDTAQ 10
+     C                     PARM           WWPARM  6
+     C                     PARM           WWERRO  1
+      *
+      ** KEY LIST TO ACCESS USERS
+      *
+     C           WWKEY     KLIST
+     C                     KFLD           WWJOB
+     C                     KFLD           WWUSER
+     C                     KFLD           WWNBR
+      *
+     C                     MOVE WWUSER    CCUSER 10                       100025
+      *                                                                   100025
+     C           *NAMVAR   DEFN           CBLOCK
+      *
+     C                     MOVE WWNBR     WWNBRT
+     C                     TIME           WWTIME  60
+      *
+      ** COMPUTE CONTROL NUMBER
+      *
+     C           WWNB1     MULT WWNB6     WWRSLT  30
+     C           WWRSLT    ADD  WWNB3     WWRSLT
+     C           WWRSLT    SUB  WWNB4     WWRSLT
+     C           WWNBTT    ADD  WWRSLT    WWCHKN  50
+      *
+      ** MAIN PROCESSING
+      *
+     C           WWPARM    CASEQ'CREATE'  @WRIT
+     C           WWPARM    CASEQ'DELETE'  @DELT
+     C           WWPARM    CASEQ'CONTRL'  @CTRL
+     C           WWPARM    CASEQ'RMVCTL'  @CTRL
+     C           WWPARM    CASEQ'VERIFY'  @VRFY
+     C                     END
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+      ********************************************************************
+      *
+      ** SUBROUTINE TO WRITE NEW RECORD IN USERS
+      *
+      ** CALLED FROM MAIN
+      *
+      ** CALLS NO OTHER SUBROUTINES
+      *
+      ********************************************************************
+     C           @WRIT     BEGSR
+      *
+      ** Call access object AOCOBPR0 to access COB ICD file               100025
+      *                                                                   100025
+     C                     CALL 'AOCOBPR0'                                100025
+     C                     PARM '*MSG   ' P@RTCD  7                       100025
+     C                     PARM '*FIRST ' P@OPTN  7                       100025
+     C           SDCOBP    PARM SDCOBP    DSFDY                           100025
+      *                                                                   100025
+     C           WWKEY     CHAINCBUSERL0             80
+      *
+     C           *IN80     IFEQ '1'
+     C                     MOVELWWUSER    USUSER
+     C                     MOVELWWJOB     USJOB
+     C                     MOVE WWNBR     USNBR
+     C                     MOVELWWDTAQ    USDTAQ
+     C                     MOVE WWTIME    USSTRT
+     C                     MOVEL*BLANKS   USLOCK
+     C                     MOVEL*BLANKS   USMAST
+     C           WWRCDS    IFEQ 0
+     C                     MOVEL'C'       USCTRL
+     C                     Z-ADDWWCHKN    USCTNB
+     C           *LOCK     IN   CBLOCK                 99
+     C           WWLOCK    IFEQ WWUSER
+     C           WWLOCK    ANDNE' '
+     C           *IN99     ANDEQ'0'
+     C                     MOVE 'Y'       WWCHCK  1
+     C                     OUT  CBLOCK
+     C                     END
+     C                     ELSE
+     C                     MOVEL*BLANK    USCTRL
+     C                     Z-ADD0         USCTNB
+     C           CCUSER    IFEQ DOCPRF                                    100025
+     C                     MOVEL'C'       USCTRL                          100025
+     C                     Z-ADDWWCHKN    USCTNB                          100025
+     C                     END                                            100025
+     C                     END
+     C                     WRITECBUSERD0               90
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'E'       WWERRO
+     C                     END
+      *
+     C           WWCHCK    IFEQ 'Y'
+     C                     MOVEL'*ALL    'WWALL  10
+     C                     MOVEL*BLANK    WWERR   1
+     C                     CALL 'CBC0520'
+     C                     PARM           WWALL
+     C                     PARM           WWERR
+     C                     END
+      *
+     C                     ELSE
+     C                     MOVE 'E'       WWERRO
+     C                     END
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      *
+      ** SUBROUTINE TO DELETE    RECORD IN USERS
+      *
+      ** CALLED FROM MAIN
+      *
+      ** CALLS NO OTHER SUBROUTINES
+      *
+      ********************************************************************
+     C           @DELT     BEGSR
+      *
+      ** FIRST ACCESS RECORD
+      *
+     C           WWKEY     CHAINCBUSERL0             80
+     C           *IN80     IFEQ '0'
+     C                     DELETCBUSERD0               90
+     C                     END
+      *
+     C           USMAST    IFEQ ARA,1
+      *
+     C                     OPEN CBUSERL2
+      *
+     C           WWUSER    READECBUSERD2                 80
+      *
+     C           *IN80     DOWEQ'0'
+      *
+     C                     MOVEL*BLANKS   USLOCK
+     C                     MOVEL*BLANKS   USMAST
+     C                     UPDATCBUSERD2               90
+      *
+     C           WWUSER    READECBUSERD2                 80
+     C                     END
+     C                     CLOSECBUSERL2
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      *
+      ** SUBROUTINE TO GIVE CONTROL TO USER
+      *
+      ** CALLED FROM MAIN
+      *
+      ** CALLS NO OTHER SUBROUTINES
+      *
+      ********************************************************************
+     C           @CTRL     BEGSR
+      *
+     C           WWPARM    IFEQ 'CONTRL'
+     C           WWKEY     CHAINCBUSERL0             80
+     C           *IN80     IFEQ '0'
+     C           *LOVAL    SETLLMUSER                                                         CSC011
+     C           WWUSER    CHAINMUSER                81                                       CSC011
+     C           COBAUT    IFEQ 'Y'                                                           CSC011
+     C                     MOVEL'C'       USCTRL
+     C                     Z-ADDWWCHKN    USCTNB
+     C                     UPDATCBUSERD0
+     C                     END                                                                CSC011
+     C                     END
+     C                     END
+      *
+     C           WWPARM    IFEQ 'RMVCTL'
+     C           WWKEY     CHAINCBUSERL0             80
+     C           *IN80     IFEQ '0'
+     C                     MOVEL*BLANK    USCTRL
+     C                     Z-ADD0         USCTNB
+     C                     UPDATCBUSERD0
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      *
+      ** SUBROUTINE TO VERIFY USER CONTROL
+      *
+      ** CALLED FROM MAIN
+      *
+      ** CALLS NO OTHER SUBROUTINES
+      *
+      ********************************************************************
+     C           @VRFY     BEGSR
+      *
+     C                     MOVEL'N'       WWERRO
+      *
+     C           WWKEY     CHAINCBUSERL0             80
+     C           *IN80     IFEQ '0'
+     C           USCTRL    IFEQ 'C'
+     C           USCTNB    ANDEQWWCHKN
+     C           *LOVAL    SETLLMUSER                                                         CSC011
+     C           WWUSER    CHAINMUSER                81                                       CSC011
+     C           COBAUT    IFEQ 'Y'                                                           CSC011
+     C                     MOVEL'Y'       WWERRO
+     C                     END                                                                CSC011
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *
+** ARA
+MASTER

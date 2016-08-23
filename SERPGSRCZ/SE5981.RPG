@@ -1,0 +1,195 @@
+     H            D
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Delete duplicate Telekurs number')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module                            *
+     F*                                                               *
+     F*  SE5981 - Delete Duplicate Telekurs Number                    *
+     F*                                                               *
+     F*  Function: This program deletes duplicate telekurs nos. in    *
+     F*   (I/C)    STSECPO2.                                          *
+     F*                                                               *
+     F*  Called By: SEC5980 - Input Cycle Processing                  *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+     F*  Last Amend No. CPK014             Date 11Oct01               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  Prev Amend No. CSE009             Date 16Mar99               *
+     F*                 S01502  *CREATE    Date 08Jul94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+     F*  CPK014 - Cannot have two primary files defined in the same   *
+     F*           program. Make one secondary.                        *
+     F*  CSE009 - Telekurs Changes                                    *
+     F*  S01502 - BLI Telekurs Processing.                            *
+     F*                                                               *
+     F*****************************************************************
+     F/COPY WNCPYSRC,SE5981F001
+     F***STSECPO2IP**E**         K        DISK                                                CSE009
+     FSTSECPO2IP  E           K        DISK                           U1                      CSE009
+     F***SETKSEPDIP**E**         K        DISK                        U2               CSE009 CPK014
+     FSETKSEPDIS  E           K        DISK                           U2                      CPK014
+     FSTSECPF2O   E                    DISK
+     F/COPY WNCPYSRC,SE5981F002
+     FSETKWRPDUF  E                    DISK                      A                            CSE009
+     FSE5981AUO   E                    PRINTER
+     F*
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*       21      FIRST CYCLE INDICATOR                           *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     I*
+     I/COPY WNCPYSRC,SE5981I001
+     ISTSECPOS
+     I                                              STTELKL1
+     I/COPY WNCPYSRC,SE5981I002
+     ISETKSED0                                                                                CSE009
+     I              STTELK                          STTEL9L2                                  CSE009
+     ISETKWRD0                                                                                CSE009
+     I              STTELK                          STTEL9                                    CSE009
+     I*
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I@SARD     E DSSCSARDPD                                                                  CSE009
+     ISDBANK    E DSSDBANKPD
+     IDSFDY     E DSDSFDY
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C** MAIN PROCESSING
+     C*
+     C  N21                EXSR INITSR
+     C                     SETON                     21
+     C*
+     CL1         *IN21     IFEQ '1'
+     C/COPY WNCPYSRC,SE5981C001
+     CL1         *IN50     ANDEQ'0'                                                           CSE009
+     C/COPY WNCPYSRC,SE5981C002
+     CL1                   WRITESTSECPFS
+     CL1                   ADD  1         COUNT
+     CL1                   END
+     C/COPY WNCPYSRC,SE5981C003
+     C*                                                                                       CSE009
+     CL2         *IN21     IFEQ '1'                                                           CSE009
+     CL2         *IN50     ANDEQ'1'                                                           CSE009
+     CL2                   WRITESETKWRD0                                                      CSE009
+     CL2                   ADD  1         COUNT                                               CSE009
+     CL2                   END                                                                CSE009
+     C/COPY WNCPYSRC,SE5981C004
+     C*
+     C** LR PROCESSING
+     C*
+     CLR         *IN21     IFEQ '0'
+     CLR                   EXSR INITSR
+     CLR                   END
+     C*
+     CLR                   WRITESE5981AH
+     CLR                   WRITESE5981AT
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C* INITSR - INITIAL PROCESSING SUBROUTINE
+     C*
+     C*  CALLED FROM   MAIN PROCESSING
+     C*  CALLS SR
+     C*
+     C*****************************************************************
+     C*
+     C           INITSR    BEGSR                           *** INITSR **
+     C/COPY WNCPYSRC,SE5981C005
+     C*                                                                                       CSE009
+     C           1         SETLLSETKWRPD                                                      CSE009
+     C/COPY WNCPYSRC,SE5981C006
+     C*
+     C** INITIALISE FIELDS.
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBFILE
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVEL'SE5981  'DBPGM
+     C                     OUT  LDA
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM 'BLANKS'  @RTCD   7
+     C                     PARM '*FIRST'  @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     Z-ADD1         DBASE            * DBERR 01 *
+     C                     MOVEL'*FIRST ' DBKEY            ************
+     C                     OUT  LDA
+     C                     SETON                     U7U8
+     C                     EXSR RETSR
+     C                     END
+     C*                                                                                       CSE009
+     C** Check if SAR CSE009 is ON.                                                           CSE009
+     C*                                                                                       CSE009
+     C                     CALL 'AOSARDR0'                                                    CSE009
+     C                     PARM *BLANKS   @RTCD                                               CSE009
+     C                     PARM '*VERIFY' @OPTN                                               CSE009
+     C                     PARM 'CSE009'  @SARC   6                                           CSE009
+     C           @SARD     PARM @SARD     DSFDY                                               CSE009
+     C*                                                                                       CSE009
+     C**  Set indicator if installed or run date > or = than 26 April 99                      CSE009
+     C/COPY WNCPYSRC,SE5981C007
+     C*                                                                                       CSE009
+     C           @RTCD     IFEQ *BLANKS                    B*1                                CSE009
+     C           BJRDNB    ORGE 09978                                                         CSE009
+     C                     MOVE 'Y'       CSE009  1                                           CSE009
+     C                     MOVE '1'       *IN50                                               CSE009
+     C                     ELSE                            X*1                                CSE009
+     C                     MOVE 'N'       CSE009                                              CSE009
+     C                     MOVE '0'       *IN50                                               CSE009
+     C                     END                             E*1                                CSE009
+     C/COPY WNCPYSRC,SE5981C008
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*  RETSR -  END OF PROGRAM PROCESSING
+     C*
+     C*  CALLED FROM   MAIN PROCESSING, INITSR
+     C*  CALLS SR
+     C*****************************************************************
+     C*
+     C           RETSR     BEGSR                           *** RETSR   ***
+     C*
+     C                     SETON                     LR
+     C*
+     C                     WRITESE5981AH
+     C                     WRITESE5981AE
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+**  CPY@ - OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,530 @@
+/************************************************************************************/
+/*                                                                                  */
+/*       Midas - Global Processing Module                                           */
+/*                                                                                  */
+/*       V_#ACCNTDT - Global Accounts Master Detail view                            */
+/*                                                                                  */
+/*       (c) Misys International Banking Systems Ltd. 2003                          */
+/*                                                                                  */
+/*       Last Amend No. CGL165             Date 23Feb15                        */
+/*       Prev Amend No. CSF011             Date 12Sep11                        */
+/*                      CER049             Date 06Dec10                        */
+/*                      CRE073             Date 06Dec10                        */
+/*                      CER055             Date 06Dec10                        */
+/*                      CRE075             Date 06Dec10                        */
+/*                      CER059             Date 19Jul10                        */
+/*                      CER047             Date 19May08                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      CSD031             Date 10Apr06                        */
+/*                      BUG11273           Date 28Apr06                        */
+/*                      CSD027             Date 18Dec05                        */
+/*                      CAP086             Date 08Jun05                             */
+/*                      CAS010             Date 09Feb05                             */
+/*                      BUG6202            Date 10Mar05                             */
+/*                      BUG5331(Reopen)    Date 10Mar05                             */
+/*                      BUG5331(Recompile) Date 18Feb05                             */
+/*                      BUG5331            Date 26Jan05                             */
+/*                      BUG5404            Date 16Jan05                             */
+/*                      BUG5395            Date 06Jan05                             */
+/*                      CLE040             Date 05Jul04                             */
+/*                      BUG4565            Date 18Oct04                             */
+/*                      CRE010             Date 06Sep04                             */
+/*                      BUG4012            Date 17Aug04                             */
+/*                      BUG3098            Date 22Jun04                             */
+/*                      BUG3119            Date 08Jun04                             */
+/*                      CLE025             Date 20Apr04                             */
+/*                      BUG1912            Date 12May04                             */
+/*                      BUG539             Date 01Apr04                             */
+/*                      CGP001  *CREATE    Date 20Aug03                             */
+/*                                                                                  */
+/*----------------------------------------------------------------------------------*/
+/*                                                                                  */
+/*       CGL165 - Dual Withholding Tax (Recompile)                                  */
+/*       CSF011 - Customer Name on Inputs (Recompile)                               */
+/*       CER049 - Stamp Tax (Recompile)                                        */
+/*       CRE073 - Interest Rate Rounding (Recompile)                                */
+/*       CER055 - Penalty Interest on Exceeding Overdraft Limit                     */
+/*                (Recompile)                                                       */
+/*       CRE075 - Effective Date for Retail Accounts (Recompile)               */
+/*       CER059 - German Feature Upgrade to Delhi                                   */
+/*       CER047 - German Features LF037-00 Reporting §24c KWG (Recompile)           */
+/*       CSD031 - Enhanced Centralised Static Data (Recompile)                 */
+/*       BUG11273 - Attempt to write duplicate record in GPGLCUSL.                  */
+/*                  Add GPGLCUSL.CGBRCD as new key(unique). (Recompile)             */
+/*       CSD027 - Conversion Of Customer Number to Alpha                            */
+/*       CAP086 - Introduce Auto Authorisation to the API's                         */
+/*                without it. (Recompile)                                           */
+/*       CAS010 - IAS + PB Enhancements Upgrade to MidasPlus (Recompile)            */
+/*       BUG6202- Performance Enhancements OrderBy                                  */
+/*       BUG5331- For RETB test swap the THEN 'N' ELSE 'Y' to THEN 'Y' ELSE 'N'.    */
+/*       BUG5331- Recompile                                                         */
+/*       BUG5331- Referred/Blocked indicators not on AMAD listview.                 */
+/*       BUG5404- Local Cust Shortname added to GPGLCUSL (Recompile)                */
+/*       BUG5395- Performance enhancements                                          */
+/*       CLE040 - Collaterised Lending Phase 2 (Recompile)                          */
+/*       BUG4565- Minimum Balance incorrectly scaled.                               */
+/*       CRE010 - Retail Account Balance Check                                      */
+/*       BUG4012- Overdraft line incorrectly scaled.                                */
+/*       BUG3098- Remove dupped fields                                              */
+/*       BUG3119- Account Net Balance Enquiry                                       */
+/*       CLE025 - Credit Lines                                                      */
+/*       BUG1912- SQL performance analysis required                                 */
+/*       BUG539 - BASE RATE FIELDS CHANGED TO AS PAD FIELDS                         */
+/*       CGP001 - Global Processing                                                 */
+/*                                                                                  */
+/************************************************************************************/
+  CREATE VIEW                                                                        :
+  **********/**********                                                              :
+  AS                                                                                 :
+  SELECT                                                                             :
+   A.RECI, A.CCY, A.ZZ006, A.BRCA, A.ATYP, A.STYP,                                   :       BUG3098
+***A.RECI,*A.CNUM,*A.CCY,*A.ACOD,*A.ZZ006,*A.BRCA,*A.ATYP,*A.STYP,*******************:       BUG3098
+***A.MFFQ,*A.ACST,*A.ANAM,*A.STFQ,*A.STDY,*A.LSTP,*A.GLBT,*A.ADREF1,*****************:       BUG5395
+   A.MFFQ, A.ACST, A.ANAM, A.STFQ, A.STDY, A.LSTP, A.ADREF1,                         :       BUG5395
+***A.PRFC,*A.ZZ004,*A.ADREF2,*A.ZZ002,*A.CDIR,*A.CCIR,*A.RETB,*A.ODSC,***************:       BUG5395
+***A.PRFC,*A.ZZ004,*A.ADREF2,*A.ZZ002,*A.CDIR,*A.CCIR,*A.ODSC,***********************:BUG5395BUG5331
+   A.PRFC, A.ZZ004, A.ADREF2, A.ZZ002, A.CDIR, A.CCIR,                               :       BUG5331
+   A.CNUM, A.ACOD, A.ACSQ, C.CEXA,  C.CEXB, C.CEXC, C.CEXD, C.CEXE,                  :BUG6202
+   C.CEXF, C.CEXG, A.ACNO, A.FCCU, A.FACT, A.FCNO, A.EFAC, A.DRIB,                   :BUG6202
+   A.OLDB, A.OLCB, A.CRIB, R.DICT, R.DCST, R.CICT, R.CCST, R.CHGT,                   :BUG6202
+   R.CHST, B.ATCRST, DACO, DACC, LSTD, NSTD, LMVD, ORED, DLIM,                       :BUG6202
+   LRCR, ODED, LACD, DRCD, NDID, LDID, LPAR, DDIA, OLDR, NCID,                       :BUG6202
+   LCID, LPAP, DCIA, OLCR, LCD,                                                      :BUG6202
+***CASE*WHEN*LAND(X'80',RETB)*<>*X'00'*THEN*'N'*ELSE*'Y'*END*AS*BIT0,****************:       BUG5331
+***CASE*WHEN*LAND(X'40',RETB)*<>*X'00'*THEN*'N'*ELSE*'Y'*END*AS*BIT1,****************:       BUG5331
+***CASE*WHEN*LAND(X'20',RETB)*<>*X'00'*THEN*'N'*ELSE*'Y'*END*AS*BIT2,****************:       BUG5331
+***CASE*WHEN*LAND(X'10',RETB)*<>*X'00'*THEN*'N'*ELSE*'Y'*END*AS*BIT3,****************:       BUG5331
+***CASE*WHEN*LAND(X'08',RETB)*<>*X'00'*THEN*'N'*ELSE*'Y'*END*AS*BIT4,****************:       BUG5331
+***CASE*WHEN*LAND(X'02',RETB)*<>*X'00'*THEN*'N'*ELSE*'Y'*END*AS*BIT6,****************:       BUG5331
+***CASE*WHEN*LAND(X'01',RETB)*<>*X'00'*THEN*'N'*ELSE*'Y'*END*AS*BIT7,****************:       BUG5331
+   CASE WHEN LAND(X'80',RETB) <> X'00' THEN 'Y' ELSE 'N' END AS BIT0,                :       BUG5331
+   CASE WHEN LAND(X'40',RETB) <> X'00' THEN 'Y' ELSE 'N' END AS BIT1,                :       BUG5331
+   CASE WHEN LAND(X'20',RETB) <> X'00' THEN 'Y' ELSE 'N' END AS BIT2,                :       BUG5331
+   CASE WHEN LAND(X'10',RETB) <> X'00' THEN 'Y' ELSE 'N' END AS BIT3,                :       BUG5331
+   CASE WHEN LAND(X'08',RETB) <> X'00' THEN 'Y' ELSE 'N' END AS BIT4,                :       BUG5331
+   CASE WHEN LAND(X'02',RETB) <> X'00' THEN 'Y' ELSE 'N' END AS BIT6,                :       BUG5331
+   CASE WHEN LAND(X'01',RETB) <> X'00' THEN 'Y' ELSE 'N' END AS BIT7,                :       BUG5331
+***A.DIOD,*A.LISP,*A.RRNM,*A.DRIB,*A.DRIS,*A.DRIC,***********************************:        BUG539
+***A.DRIF,*A.DRDY,*A.SDAP,*A.DDIS,*A.OLDB,*A.OLDS,*A.CRIB,***************************:        BUG539
+***A.DIOD,*A.LISP,*A.RRNM,*A.DRIS,*A.DRIC,*******************************************:BUG539 BUG5395
+***A.DIOD,*A.LISP,*A.DRIS,*A.DRIC,***************************************************:BUG5395BUG5331
+   A.ODSC, A.DIOD, A.LISP, A.DRIS, A.DRIC,                                           :       BUG5331
+   A.DRIF, A.DRDY, A.SDAP, A.DDIS, A.OLDS,                                           :        BUG539
+   A.CRIS, A.CRCD, A.CRIC, A.CRIF, A.CRDY, A.SCAP, A.CDIS,                           :
+***A.OLCB,*A.OLCS,*A.BRTCA,*A.NACSG,*A.R4ACNT,*A.ENOC,*A.EPNO,***********************:        BUG539
+   A.OLCS, A.BRTCA, A.NACSG, A.R4ACNT, A.ENOC, A.EPNO,                               :        BUG539
+***A.LTAB,*A.LTAC,*A.LTAS,*A.PTFR,*A.HLEX,*A.A5TIAC,*A.A5TIAN,*A.A5TIAS,*************:       BUG5395
+   A.PTFR, A.HLEX, A.A5TIAC, A.A5TIAN, A.A5TIAS,                                     :       BUG5395
+   A.EUSB, A.IBAN, A.IBSEQN, A.FRNT, A.AFRT, A.REPA, A.TMST, A.REPI,                 :
+***B.ATCRST,*B.ATSUBO,*B.ATITAX,*B.ATSTCI,*B.ATCHIN,*B.ATAODR,***********************:        BUG539
+   B.ATSUBO, B.ATITAX, B.ATSTCI, B.ATCHIN, B.ATAODR,                                 :        BUG539
+***B.ATITRD,*B.ATORTC,*B.ATOLVD,*B.ATPOLC,*B.ATPOLE,*B.ATFRNT,*B.ATAFRT,*************:       BUG5395
+   B.ATITRD, B.ATORTC, B.ATOLVD, B.ATPOLC, B.ATPOLE,                                 :       BUG5395
+***B.ATACNO,*B.ATOVRD,*B.ATOVRC,*B.ATDRMG,*B.ATCRMG,*B.ATDRMD,*B.ATCRMD,*************:       BUG5395
+   B.ATOVRD, B.ATOVRC, B.ATDRMG, B.ATCRMG, B.ATDRMD, B.ATCRMD,                       :       BUG5395
+***R.DICT,*R.DCST,*R.DACP,*R.DICP,*R.CICT,*R.CCST,*R.CACP,*R.CICP,*******************:        BUG539
+   R.DACP, R.DICP, R.CACP, R.CICP,                                                   :        BUG539
+***R.CHGT,*R.CHST,*R.CHAC,*R.PTRA,*R.PRCH,*R.NOALT,*R.TCHO,*R.DRBR,******************:        BUG539
+   R.CHAC, R.PTRA, R.PRCH, R.NOALT, R.TCHO, R.DRBR,                                  :        BUG539
+   R.CRBR, R.CHBR, R.PBKU, C.ACCRA, C.MMACC, C.CDRR, C.MMCDI, C.CHDBR,               :
+***C.MMCHDB,*C.CACDC,*C.TEGRT,*C.NOIS,*C.NOCC,*C.PESP,*P.PSWD,***********************:       BUG5395
+   C.MMCHDB, C.CACDC, C.TEGRT, C.NOIS, C.NOCC, C.PESP,                               :       BUG5395
+   AC.A5NARR, AC.A5ACSC,                                                             :       BUG3119
+***R.REPI*AS*RREPI,******************************************************************:       BUG5395
+***DIGITS(A.CNUM)*AS*PADCNUM,********************************************************:        CSD027
+          A.CNUM  AS PADCNUM,                                                        :        CSD027
+   DIGITS(A.ACOD) AS PADACOD,                                                        :
+   DIGITS(A.ACSQ) AS PADACSQ,                                                        :
+   CASE WHEN C.CEXA = '          ' THEN 0 ELSE BIGINT(CEXA) END AS ICEXA,            :
+   CASE WHEN C.CEXB = '          ' THEN 0 ELSE BIGINT(CEXB) END AS ICEXB,            :
+   CASE WHEN C.CEXC = '          ' THEN 0 ELSE BIGINT(CEXC) END AS ICEXC,            :
+   CASE WHEN C.CEXD = '          ' THEN 0 ELSE BIGINT(CEXD) END AS ICEXD,            :
+   CASE WHEN C.CEXE = '          ' THEN 0 ELSE BIGINT(CEXE) END AS ICEXE,            :
+   CASE WHEN C.CEXF = '          ' THEN 0 ELSE BIGINT(CEXF) END AS ICEXF,            :
+   CASE WHEN C.CEXG = '          ' THEN 0 ELSE BIGINT(CEXG) END AS ICEXG,            :
+   CASE WHEN A.ACNO = 0 THEN ' ' ELSE DIGITS(ACNO) END AS PADACNO,                   :
+***CASE*WHEN*A.FCCU*=*0*THEN*'*'*ELSE*DIGITS(A.FCCU)*END*AS*PADFCCU,*****************: CLE025 CSD027
+   CASE WHEN A.FCCU = '' THEN ' ' ELSE        A.FCCU  END AS PADFCCU,                :        CSD027
+   CASE WHEN A.FACT = 0 THEN ' ' ELSE DIGITS(A.FACT) END AS PADFACT,                 :
+   CASE WHEN A.FCNO = 0 THEN ' ' ELSE DIGITS(A.FCNO) END AS PADFCNO,                 :
+   CASE WHEN A.EFAC = 0 THEN ' ' ELSE DIGITS(A.EFAC) END AS PADEFAC,                 :
+   CASE WHEN A.DRIB = 0 THEN ' ' ELSE DIGITS(A.DRIB) END AS PADDRIB,                 :        BUG539
+   CASE WHEN A.OLDB = 0 THEN ' ' ELSE DIGITS(A.OLDB) END AS PADOLDB,                 :        BUG539
+   CASE WHEN A.OLCB = 0 THEN ' ' ELSE DIGITS(A.OLCB) END AS PADOLCB,                 :        BUG539
+   CASE WHEN A.CRIB = 0 THEN ' ' ELSE DIGITS(A.CRIB) END AS PADCRIB,                 :        BUG539
+   CASE WHEN R.DICT = 0 THEN ' ' ELSE DIGITS(R.DICT) END AS PADDICT,                 :        BUG539
+   CASE WHEN R.DCST = 0 THEN ' ' ELSE DIGITS(R.DCST) END AS PADDCST,                 :        BUG539
+   CASE WHEN R.CICT = 0 THEN ' ' ELSE DIGITS(R.CICT) END AS PADCICT,                 :        BUG539
+   CASE WHEN R.CCST = 0 THEN ' ' ELSE DIGITS(R.CCST) END AS PADCCST,                 :        BUG539
+   CASE WHEN R.CHGT = 0 THEN ' ' ELSE DIGITS(R.CHGT) END AS PADCHGT,                 :        BUG539
+   CASE WHEN R.CHST = 0 THEN ' ' ELSE DIGITS(R.CHST) END AS PADCHST,                 :        BUG539
+   CASE WHEN B.ATCRST = 0 THEN ' ' ELSE DIGITS(B.ATCRST) END AS PADATCRST,           :        BUG539
+   CASE WHEN DACO=0 THEN NULL ELSE DATE(DACO+719892) END AS FDACO,                   :
+   CASE WHEN DACC=0 THEN NULL ELSE DATE(DACC+719892) END AS FDACC,                   :
+   CASE WHEN LSTD=0 THEN NULL ELSE DATE(LSTD+719892) END AS FLSTD,                   :
+   CASE WHEN NSTD=0 THEN NULL ELSE DATE(NSTD+719892) END AS FNSTD,                   :
+   CASE WHEN LMVD=0 THEN NULL ELSE DATE(LMVD+719892) END AS FLMVD,                   :
+   CASE WHEN ORED=0 THEN NULL ELSE DATE(ORED+719892) END AS FORED,                   :
+   CASE WHEN DLIM=0 THEN NULL ELSE DATE(DLIM+719892) END AS FDLIM,                   :
+   CASE WHEN LRCR=0 THEN NULL ELSE DATE(LRCR+719892) END AS FLRCR,                   :
+   CASE WHEN ODED=0 THEN NULL ELSE DATE(ODED+719892) END AS FODED,                   :
+   CASE WHEN LACD=0 THEN NULL ELSE DATE(LACD+719892) END AS FLACD,                   :
+   CASE WHEN DRCD=0 THEN NULL ELSE DATE(DRCD+719892) END AS FDRCD,                   :
+   CASE WHEN NDID=0 THEN NULL ELSE DATE(NDID+719892) END AS FNDID,                   :
+   CASE WHEN LDID=0 THEN NULL ELSE DATE(LDID+719892) END AS FLDID,                   :
+   CASE WHEN LPAR=0 THEN NULL ELSE DATE(LPAR+719892) END AS FLPAR,                   :
+   CASE WHEN DDIA=0 THEN NULL ELSE DATE(DDIA+719892) END AS FDDIA,                   :
+   CASE WHEN OLDR=0 THEN NULL ELSE DATE(OLDR+719892) END AS FOLDR,                   :
+   CASE WHEN NCID=0 THEN NULL ELSE DATE(NCID+719892) END AS FNCID,                   :
+   CASE WHEN LCID=0 THEN NULL ELSE DATE(LCID+719892) END AS FLCID,                   :
+   CASE WHEN LPAP=0 THEN NULL ELSE DATE(LPAP+719892) END AS FLPAP,                   :
+   CASE WHEN DCIA=0 THEN NULL ELSE DATE(DCIA+719892) END AS FDCIA,                   :
+   CASE WHEN OLCR=0 THEN NULL ELSE DATE(OLCR+719892) END AS FOLCR,                   :
+   CASE WHEN LCD=0 THEN NULL ELSE DATE(LCD+719892) END AS FLCD,                      :
+***CASE*WHEN*N.F1FCHD=0*THEN*NULL*ELSE*DATE(N.F1FCHD+719892)*END*AS*FF1FCHD,*********:CLE025 BUG5395
+***N.F1IABC,*************************************************************************:CRE010 BUG5395
+***DEC(LDBL*C1.SCALING,31,4)*AS*"SLDBL",*********************************************:       BUG5395
+***DEC(LDBL*C1.SCALING*C1.RATE,31,4)*AS*"BSLDBL",************************************:       BUG5395
+***DEC(CLBL*C1.SCALING,31,4)*AS*"SCLBL",*********************************************:       BUG5395
+***DEC(CLBL*C1.SCALING*C1.RATE,31,4)*AS*"BSCLBL",************************************:       BUG5395
+***DEC(CFSB*C1.SCALING,31,4)*AS*"SCFSB",*********************************************:       BUG5395
+***DEC(CFSB*C1.SCALING*C1.RATE,31,4)*AS*"BSCFSB",************************************:       BUG5395
+***DEC(EPLB*C1.SCALING,31,4)*AS*"SEPLB",*********************************************:       BUG5395
+***DEC(EPLB*C1.SCALING*C1.RATE,31,4)*AS*"BSEPLB",************************************:       BUG5395
+***DEC(EPCB*C1.SCALING,31,4)*AS*"SEPCB",*********************************************:       BUG5395
+***DEC(EPCB*C1.SCALING*C1.RATE,31,4)*AS*"BSEPCB",************************************:       BUG5395
+***DEC(YTDB*C1.SCALING,31,4)*AS*"SYTDB",*********************************************:       BUG5395
+***DEC(YTDB*C1.SCALING*C1.RATE,31,4)*AS*"BSYTDB",************************************:       BUG5395
+***DEC(RTCB*C1.SCALING,31,4)*AS*"SRTCB",*********************************************:       BUG5395
+***DEC(RTCB*C1.SCALING*C1.RATE,31,4)*AS*"BSRTCB",************************************:       BUG5395
+***DEC(RTLB*C1.SCALING,31,4)*AS*"SRTLB",*********************************************:       BUG5395
+***DEC(RTLB*C1.SCALING*C1.RATE,31,4)*AS*"BSRTLB",************************************:       BUG5395
+***DEC(DITM*C1.SCALING,31,4)*AS*"SDITM",*********************************************:       BUG5395
+***DEC(DITM*C1.SCALING*C1.RATE,31,4)*AS*"BSDITM",************************************:       BUG5395
+***DEC(CITM*C1.SCALING,31,4)*AS*"SCITM",*********************************************:       BUG5395
+***DEC(CITM*C1.SCALING*C1.RATE,31,4)*AS*"BSCITM",************************************:       BUG5395
+***DEC(ODLN*C1.SCALING,31,4)*AS*"SODLN",*********************************************:       BUG4012
+***DEC(ODLN,31,4)*AS*"SODLN",********************************************************:BUG4012BUG5395
+***DEC(ODLN*C1.SCALING*C1.RATE,31,4)*AS*"BSODLN",************************************:       BUG4012
+***DEC(ODLN*C1.RATE,31,4)*AS*"BSODLN",***********************************************:BUG4012BUG5395
+***DEC(DIIE*C1.SCALING,31,4)*AS*"SDIIE",*********************************************:       BUG5395
+***DEC(DIIE*C1.SCALING*C1.RATE,31,4)*AS*"BSDIIE",************************************:       BUG5395
+***DEC(DAIC*C1.SCALING,31,4)*AS*"SDAIC",*********************************************:       BUG5395
+***DEC(DAIC*C1.SCALING*C1.RATE,31,4)*AS*"BSDAIC",************************************:       BUG5395
+***DEC(MADI*C1.SCALING,31,4)*AS*"SMADI",*********************************************:       BUG5395
+***DEC(MADI*C1.SCALING*C1.RATE,31,4)*AS*"BSMADI",************************************:       BUG5395
+***DEC(GADI*C1.SCALING,31,4)*AS*"SGADI",*********************************************:       BUG5395
+***DEC(GADI*C1.SCALING*C1.RATE,31,4)*AS*"BSGADI",************************************:       BUG5395
+***DEC(CIIE*C1.SCALING,31,4)*AS*"SCIIE",*********************************************:       BUG5395
+***DEC(CIIE*C1.SCALING*C1.RATE,31,4)*AS*"BSCIIE",************************************:       BUG5395
+***DEC(CAIC*C1.SCALING,31,4)*AS*"SCAIC",*********************************************:       BUG5395
+***DEC(CAIC*C1.SCALING*C1.RATE,31,4)*AS*"BSCAIC",************************************:       BUG5395
+***DEC(MACI*C1.SCALING,31,4)*AS*"SMACI",*********************************************:       BUG5395
+***DEC(MACI*C1.SCALING*C1.RATE,31,4)*AS*"BSMACI",************************************:       BUG5395
+***DEC(GACI*C1.SCALING,31,4)*AS*"SGACI",*********************************************:       BUG5395
+***DEC(GACI*C1.SCALING*C1.RATE,31,4)*AS*"BSGACI",************************************:       BUG5395
+***DEC(HCFB*C1.SCALING,31,4)*AS*"SHCFB",*********************************************:       BUG5395
+***DEC(HCFB*C1.SCALING*C1.RATE,31,4)*AS*"BSHCFB",************************************:       BUG5395
+***DEC(HELD*C1.SCALING,31,4)*AS*"SHELD",*********************************************:       BUG5395
+***DEC(HELD*C1.SCALING*C1.RATE,31,4)*AS*"BSHELD",************************************:       BUG5395
+***DEC(MINB*C1.SCALING,31,4)*AS*"SMINB",*******************************              :       BUG4565
+***DEC(MINB,31,4)*AS*"SMINB",********************************************************:BUG4565BUG5395
+***DEC(MINB*C1.SCALING*C1.RATE,31,4)*AS*"BSMINB",**********************              :       BUG4565
+***DEC(MINB*C1.RATE,31,4)*AS*"BSMINB",***********************************************:       BUG4565
+***DEC(LDIA*C1.SCALING,31,4)*AS*"SLDIA",*********************************************:       BUG5395
+***DEC(LDIA*C1.SCALING*C1.RATE,31,4)*AS*"BSLDIA",************************************:       BUG5395
+***DEC(LCIA*C1.SCALING,31,4)*AS*"SLCIA",*********************************************:       BUG5395
+***DEC(LCIA*C1.SCALING*C1.RATE,31,4)*AS*"BSLCIA",************************************:       BUG5395
+***DEC(ECFB*C1.SCALING,31,4)*AS*"SECFB",*********************************************:       BUG5395
+***DEC(ECFB*C1.SCALING*C1.RATE,31,4)*AS*"BSECFB",************************************:       BUG5395
+***DEC(ATCHAM*C1.SCALING,31,4)*AS*"SATCHAM",*****************************************:       BUG5395
+***DEC(ATCHAM*C1.SCALING*C1.RATE,31,4)*AS*"BSATCHAM",********************************:       BUG5395
+***DEC(NRCA*C1.SCALING,31,4)*AS*"SNRCA",*********************************************:       BUG5395
+***DEC(NRCA*C1.SCALING*C1.RATE,31,4)*AS*"BSNRCA",************************************:       BUG5395
+***DEC(RCA*C1.SCALING,31,4)*AS*"SRCA",***********************************************:       BUG5395
+***DEC(RCA*C1.SCALING*C1.RATE,31,4)*AS*"BSRCA",**************************************:       BUG5395
+***DEC(MCLB*C1.SCALING,31,4)*AS*"SMCLB",*********************************************:       BUG5395
+***DEC(MCLB*C1.SCALING*C1.RATE,31,4)*AS*"BSMCLB",************************************:       BUG5395
+***DEC(FXDC*C1.SCALING,31,4)*AS*"SFXDC",*********************************************:       BUG5395
+***DEC(FXDC*C1.SCALING*C1.RATE,31,4)*AS*"BSFXDC",************************************:       BUG5395
+***DEC(ACCEA*C1.SCALING,31,4)*AS*"SACCEA",*******************************************:       BUG5395
+***DEC(ACCEA*C1.SCALING*C1.RATE,31,4)*AS*"BSACCEA",**********************************:       BUG5395
+***DEC(ACCC*C1.SCALING,31,4)*AS*"SACCC",*********************************************:       BUG5395
+***DEC(ACCC*C1.SCALING*C1.RATE,31,4)*AS*"BSACCC",************************************:       BUG5395
+***DEC(GVDPE*C1.SCALING,31,4)*AS*"SGVDPE",*******************************************:       BUG5395
+***DEC(GVDPE*C1.SCALING*C1.RATE,31,4)*AS*"BSGVDPE",**********************************:       BUG5395
+***DEC(GVDPC*C1.SCALING,31,4)*AS*"SGVDPC",*******************************************:       BUG5395
+***DEC(GVDPC*C1.SCALING*C1.RATE,31,4)*AS*"BSGVDPC",**********************************:       BUG5395
+***DEC(CACCC*C1.SCALING,31,4)*AS*"SCACCC",*******************************************:       BUG5395
+***DEC(CACCC*C1.SCALING*C1.RATE,31,4)*AS*"BSCACCC",**********************************:       BUG5395
+***DEC(CDIE*C1.SCALING,31,4)*AS*"SCDIE",*********************************************:       BUG5395
+***DEC(CDIE*C1.SCALING*C1.RATE,31,4)*AS*"BSCDIE",************************************:       BUG5395
+***DEC(CDICA*C1.SCALING,31,4)*AS*"SCDICA",*******************************************:       BUG5395
+***DEC(CDICA*C1.SCALING*C1.RATE,31,4)*AS*"BSCDICA",**********************************:       BUG5395
+***DEC(CCDIC*C1.SCALING,31,4)*AS*"SCCDIC",*******************************************:       BUG5395
+***DEC(CCDIC*C1.SCALING*C1.RATE,31,4)*AS*"BSCCDIC",**********************************:       BUG5395
+***DEC(IACE*C1.SCALING,31,4)*AS*"SIACE",*********************************************:       BUG5395
+***DEC(IACE*C1.SCALING*C1.RATE,31,4)*AS*"BSIACE",************************************:       BUG5395
+***DEC(IACCC*C1.SCALING,31,4)*AS*"SIACCC",*******************************************:       BUG5395
+***DEC(IACCC*C1.SCALING*C1.RATE,31,4)*AS*"BSIACCC",**********************************:       BUG5395
+***DEC(CIACC*C1.SCALING,31,4)*AS*"SCIACC",*******************************************:       BUG5395
+***DEC(CIACC*C1.SCALING*C1.RATE,31,4)*AS*"BSCIACC",**********************************:       BUG5395
+***DEC(CMBE*C1.SCALING,31,4)*AS*"SCMBE",*********************************************:       BUG5395
+***DEC(CMBE*C1.SCALING*C1.RATE,31,4)*AS*"BSCMBE",************************************:       BUG5395
+***DEC(CMBC*C1.SCALING,31,4)*AS*"SCMBC",*********************************************:       BUG5395
+***DEC(CMBC*C1.SCALING*C1.RATE,31,4)*AS*"BSCMBC",************************************:       BUG5395
+***DEC(ACCB*C1.SCALING,31,4)*AS*"SACCB",*********************************************:       BUG5395
+***DEC(ACCB*C1.SCALING*C1.RATE,31,4)*AS*"BSACCB",************************************:       BUG5395
+***DEC(CCMBC*C1.SCALING,31,4)*AS*"SCCMBC",*******************************************:       BUG5395
+***DEC(CCMBC*C1.SCALING*C1.RATE,31,4)*AS*"BSCCMBC",**********************************:       BUG5395
+***DEC(CHDBE*C1.SCALING,31,4)*AS*"SCHDBE",*******************************************:       BUG5395
+***DEC(CHDBE*C1.SCALING*C1.RATE,31,4)*AS*"BSCHDBE",**********************************:       BUG5395
+***DEC(CHDBC*C1.SCALING,31,4)*AS*"SCHDBC",*******************************************:       BUG5395
+***DEC(CHDBC*C1.SCALING*C1.RATE,31,4)*AS*"BSCHDBC",**********************************:       BUG5395
+***DEC(HDRB*C1.SCALING,31,4)*AS*"SHDRB",*********************************************:       BUG5395
+***DEC(HDRB*C1.SCALING*C1.RATE,31,4)*AS*"BSHDRB",************************************:       BUG5395
+***DEC(CCHDBC*C1.SCALING,31,4)*AS*"SCCHDBC",*****************************************:       BUG5395
+***DEC(CCHDBC*C1.SCALING*C1.RATE,31,4)*AS*"BSCCHDBC",********************************:       BUG5395
+***DEC(CCINST*C1.SCALING,31,4)*AS*"SCCINST",*****************************************:       BUG5395
+***DEC(CCINST*C1.SCALING*C1.RATE,31,4)*AS*"BSCCINST",********************************:       BUG5395
+***DEC(VATAM*C1.SCALING,31,4)*AS*"SVATAM",*******************************************:       BUG5395
+***DEC(VATAM*C1.SCALING*C1.RATE,31,4)*AS*"BSVATAM",**********************************:       BUG5395
+***DEC(NOIP*C1.SCALING,31,4)*AS*"SNOIP",*********************************************:       BUG5395
+***DEC(NOIP*C1.SCALING*C1.RATE,31,4)*AS*"BSNOIP",************************************:       BUG5395
+***DEC(A.COLA*C1.SCALING,31,4)*AS*"SCOLA",*******************************************:CLE025 BUG5395
+***DEC(A.COLA*C1.SCALING*C1.RATE,31,4)*AS*"BSCOLA",**********************************:CLE025 BUG5395
+***DEC(A.BCOA*C1.SCALING,31,4)*AS*"SBCOA",*******************************************:CLE025 BUG5395
+***DEC(A.BCOA*C1.SCALING*C1.RATE,31,4)*AS*"BSBCOA",**********************************:CLE025 BUG5395
+   LDBL AS SLDBL,                                                                    :       BUG5395
+   CLBL AS SCLBL,                                                                    :       BUG5395
+   CFSB AS SCFSB,                                                                    :       BUG5395
+   EPLB AS SEPLB,                                                                    :       BUG5395
+   EPCB AS SEPCB,                                                                    :       BUG5395
+   YTDB AS SYTDB,                                                                    :       BUG5395
+   RTCB AS SRTCB,                                                                    :       BUG5395
+   RTLB AS SRTLB,                                                                    :       BUG5395
+   DITM AS SDITM,                                                                    :       BUG5395
+   CITM AS SCITM,                                                                    :       BUG5395
+   ODLN AS SODLN,                                                                    :       BUG5395
+   DIIE AS SDIIE,                                                                    :       BUG5395
+   DAIC AS SDAIC,                                                                    :       BUG5395
+   MADI AS SMADI,                                                                    :       BUG5395
+   GADI AS SGADI,                                                                    :       BUG5395
+   CIIE AS SCIIE,                                                                    :       BUG5395
+   CAIC AS SCAIC,                                                                    :       BUG5395
+   MACI AS SMACI,                                                                    :       BUG5395
+   GACI AS SGACI,                                                                    :       BUG5395
+   HCFB AS SHCFB,                                                                    :       BUG5395
+   HELD AS SHELD,                                                                    :       BUG5395
+   MINB AS SMINB,                                                                    :       BUG5395
+   LDIA AS SLDIA,                                                                    :       BUG5395
+   LCIA AS SLCIA,                                                                    :       BUG5395
+   ECFB AS SECFB,                                                                    :       BUG5395
+   ATCHAM AS SATCHAM,                                                                :       BUG5395
+   NRCA AS SNRCA,                                                                    :       BUG5395
+   RCA AS SRCA,                                                                      :       BUG5395
+   MCLB AS SMCLB,                                                                    :       BUG5395
+   FXDC AS SFXDC,                                                                    :       BUG5395
+   ACCEA AS SACCEA,                                                                  :       BUG5395
+   GVDPE AS SGVDPE,                                                                  :       BUG5395
+   CDIE AS SCDIE,                                                                    :       BUG5395
+   CCDIC AS SCCDIC,                                                                  :       BUG5395
+   IACE AS SIACE,                                                                    :       BUG5395
+   CIACC AS SCIACC,                                                                  :       BUG5395
+   CMBE AS SCMBE,                                                                    :       BUG5395
+   ACCB AS SACCB,                                                                    :       BUG5395
+   CCMBC AS SCCMBC,                                                                  :       BUG5395
+   CHDBE AS SCHDBE,                                                                  :       BUG5395
+   HDRB AS SHDRB,                                                                    :       BUG5395
+   CCHDBC AS SCCHDBC,                                                                :       BUG5395
+   CCINST AS SCCINST,                                                                :       BUG5395
+   VATAM AS SVATAM,                                                                  :       BUG5395
+   NOIP AS SNOIP,                                                                    :       BUG5395
+   A.COLA AS SCOLA,                                                                  :       BUG5395
+   A.BCOA AS SBCOA,                                                                  :       BUG5395
+***A8ZONE*AS*CUSTZONE,*V_GPGLCUSL.* *************************************************:       BUG5395
+   A8ZONE AS CUSTZONE,                                                               :       BUG5395
+   GPGLCUSL.CGGLOB,GPGLCUSL.CGCSSN,GPGLCUSL.CGRNM,GPGLCUSL.CGRTN,                    :       BUG5395
+   GPGLCUSL.CGICD,GPGLCUSL.CGACO,GPGLCUSL.CGCNCZ,GPGLCUSL.CGCOLC,                    :       BUG5395
+   GPGLCUSL.CGBRCD,GPGLCUSL.CGCUST,GPGLCUSL.CGZONE                                   :       BUG5395
+  FROM GZACCNTAB AS A                                                                :
+  LEFT JOIN GZACCNTBXC AS B ON B.ATCNUM=A.CNUM AND B.ATCCY=A.CCY AND                 :
+  B.ATACOD=A.ACOD AND B.ATACSQ=A.ACSQ AND B.ATBRCA=A.BRCA                            :
+  LEFT JOIN GZREIACD AS R ON R.CNUM=A.CNUM AND R.CCY=A.CCY AND                       :
+  R.ACOD=A.ACOD AND R.ACSQ=A.ACSQ AND R.BRCA=A.BRCA                                  :
+  LEFT JOIN GZRECOMD AS C ON C.CNUM=A.CNUM AND C.CCY=A.CCY AND                       :
+  C.ACOD=A.ACOD AND C.ACSQ=A.ACSQ AND C.BRCA=A.BRCA                                  :
+**LEFT*JOIN*GZREAPWDPD*AS*P*ON*P.CNUM=A.CNUM*AND*P.CCY=A.CCY*AND*********************:       BUG5395
+**P.ACOD=A.ACOD*AND*P.ACSQ=A.ACSQ*AND*P.BRCA=A.BRCA**********************************:       BUG5395
+**LEFT*JOIN*GZGLACNTQD*AS*N*ON*N.F1CNUM=A.CNUM*AND*N.F1CCY=A.CCY*AND*****************:CLE025 BUG5395
+**N.F1ACOD=A.ACOD*AND*N.F1ACSQ=A.ACSQ*AND*N.F1BRCA=A.BRCA****************************:CLE025 BUG5395
+  LEFT JOIN GZSDBRCHPD ON A.BRCA = A8BRCD                                            :
+**LEFT*JOIN*V_GPGLCUSL*ON*A8ZONE*=*CGZONE*AND*CGCUST*=*DIGITS(A.CNUM)****************:BUG1912
+**LEFT*JOIN*GPGLCUSL*V_GPGLCUSL*ON*A8ZONE*=*CGZONE*AND*CGCNUM*=*A.CNUM***************:BUG1912BUG5395
+  LEFT JOIN GPGLCUSL ON A8ZONE = CGZONE AND CGCNUM = A.CNUM                          :       BUG5395
+**LEFT*JOIN*V_GLOBRATE*C1*ON*C1.CCY=A.CCY;*******************************************:       BUG3119
+**LEFT*JOIN*V_GLOBRATE*C1*ON*C1.CCY=A.CCY********************************************:BUG3119BUG5395
+  LEFT JOIN GZSDACODPD AS AC ON AC.A5ZONE=A8ZONE AND AC.A5ACCD=DIGITS(A.ACOD);       :       BUG3119
+                                                                                     :
+ * DESCRIBESTART                                                                     :
+ * DESCRIBEFIELD PADCNUM    AS CNUM       USING GZACCNTAB                            :
+ * DESCRIBEFIELD PADACOD    AS ACOD       USING GZACCNTAB                            :
+ * DESCRIBEFIELD PADACSQ    AS ACSQ       USING GZACCNTAB                            :
+ * DESCRIBEFIELD PADACNO    AS ACNO       USING GZACCNTAB                            :
+ * DESCRIBEFIELD PADFCCU    AS FCCU       USING GZACCNTAB                            :        CLE025
+ * DESCRIBEFIELD PADFACT    AS FACT       USING GZACCNTAB                            :
+ * DESCRIBEFIELD PADFCNO    AS FCNO       USING GZACCNTAB                            :
+ * DESCRIBEFIELD PADEFAC    AS EFAC       USING GZACCNTAB                            :
+ * DESCRIBEFIELD PADOLDB    AS OLDB       USING GZACCNTAB                            :        BUG539
+ * DESCRIBEFIELD PADOLCB    AS OLCB       USING GZACCNTAB                            :        BUG539
+ * DESCRIBEFIELD PADCRIB    AS CRIB       USING GZACCNTAB                            :        BUG539
+ * DESCRIBEFIELD PADDRIB    AS DRIB       USING GZACCNTAB                            :        BUG539
+ * DESCRIBEFIELD PADDICT    AS DICT       USING GZREIACD                             :        BUG539
+ * DESCRIBEFIELD PADDCST    AS DCST       USING GZREIACD                             :        BUG539
+ * DESCRIBEFIELD PADCICT    AS CICT       USING GZREIACD                             :        BUG539
+ * DESCRIBEFIELD PADCCST    AS CCST       USING GZREIACD                             :        BUG539
+ * DESCRIBEFIELD PADCHGT    AS CHGT       USING GZREIACD                             :        BUG539
+ * DESCRIBEFIELD PADCHST    AS CHST       USING GZREIACD                             :        BUG539
+ * DESCRIBEFIELD FDACO      AS DACO       USING GZACCNTAB                            :
+ * DESCRIBEFIELD FDACC      AS DACC       USING GZACCNTAB                            :
+ * DESCRIBEFIELD FLSTD      AS LSTD       USING GZACCNTAB                            :
+ * DESCRIBEFIELD FNSTD      AS NSTD       USING GZACCNTAB                            :
+ * DESCRIBEFIELD FLMVD      AS LMVD       USING GZACCNTAB                            :
+ * DESCRIBEFIELD FORED      AS ORED       USING GZACCNTAB                            :
+ * DESCRIBEFIELD FDLIM      AS DLIM       USING GZACCNTAB                            :
+ * DESCRIBEFIELD FLRCR      AS LRCR       USING GZACCNTAB                            :
+ * DESCRIBEFIELD FODED      AS ODED       USING GZACCNTAB                            :
+ * DESCRIBEFIELD FLACD      AS LACD       USING GZACCNTAB                            :
+ * DESCRIBEFIELD FDRCD      AS DRCD       USING GZACCNTAB                            :
+ * DESCRIBEFIELD FNDID      AS NDID       USING GZACCNTAB                            :
+ * DESCRIBEFIELD FLDID      AS LDID       USING GZACCNTAB                            :
+ * DESCRIBEFIELD FLPAR      AS LPAR       USING GZACCNTAB                            :
+ * DESCRIBEFIELD FDDIA      AS DDIA       USING GZACCNTAB                            :
+ * DESCRIBEFIELD FOLDR      AS OLDR       USING GZACCNTAB                            :
+ * DESCRIBEFIELD FNCID      AS NCID       USING GZACCNTAB                            :
+ * DESCRIBEFIELD FLCID      AS LCID       USING GZACCNTAB                            :
+ * DESCRIBEFIELD FLPAP      AS LPAP       USING GZACCNTAB                            :
+ * DESCRIBEFIELD FDCIA      AS DCIA       USING GZACCNTAB                            :
+ * DESCRIBEFIELD FOLCR      AS OLCR       USING GZACCNTAB                            :
+ * DESCRIBEFIELD FLCD       AS LCD        USING GZACCNTAB                            :
+***DESCRIBEFIELD*FF1FCHD****AS*F1FCHD*****USING*GZGLACNTQD***************************:CLE025 BUG5395
+ * DESCRIBEFIELD SLDBL      AS LDBL       USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSLDBL*****AS*LDBL*******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SCLBL      AS CLBL       USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSCLBL*****AS*CLBL*******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SCFSB      AS CFSB       USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSCFSB*****AS*CFSB*******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SEPLB      AS EPLB       USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSEPLB*****AS*EPLB*******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SEPCB      AS EPCB       USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSEPCB*****AS*EPCB*******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SYTDB      AS YTDB       USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSYTDB*****AS*YTDB*******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SRTCB      AS RTCB       USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSRTCB*****AS*RTCB*******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SRTLB      AS RTLB       USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSRTLB*****AS*RTLB*******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SDITM      AS DITM       USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSDITM*****AS*DITM*******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SCITM      AS CITM       USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSCITM*****AS*CITM*******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SODLN      AS ODLN       USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSODLN*****AS*ODLN*******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SDIIE      AS DIIE       USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSDIIE*****AS*DIIE*******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SDAIC      AS DAIC       USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSDAIC*****AS*DAIC*******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SMADI      AS MADI       USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSMADI*****AS*MADI*******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SGADI      AS GADI       USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSGADI*****AS*GADI*******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SCIIE      AS CIIE       USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSCIIE*****AS*CIIE*******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SCAIC      AS CAIC       USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSCAIC*****AS*CAIC*******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SMACI      AS MACI       USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSMACI*****AS*MACI*******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SGACI      AS GACI       USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSGACI*****AS*GACI*******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SHCFB      AS HCFB       USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSHCFB*****AS*HCFB*******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SHELD      AS HELD       USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSHELD*****AS*HELD*******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SMINB      AS MINB       USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSMINB*****AS*MINB*******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SLDIA      AS LDIA       USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSLCIA*****AS*LCIA*******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SMINB      AS MINB       USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSMINB*****AS*MINB*******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SECFB      AS ECFB       USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSECFB*****AS*ECFB*******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SATCHAM    AS ATCHAM     USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSATCHAM***AS*ATCHAM*****USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SNRCA      AS NRCA       USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSNRCA*****AS*NRCA*******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SRCA       AS RCA        USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSRCA******AS*RCA********USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SMCLB      AS MCLB       USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSMCLB*****AS*MCLB*******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SFXDC      AS FXDC       USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSFXDC*****AS*FXDC*******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SACCEA     AS ACCEA      USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSACCEA****AS*ACCEA******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+***DESCRIBEFIELD*SACCC******AS*ACCC*******USING GZACCNTAB****************************:       BUG5395
+***DESCRIBEFIELD*BSACCC*****AS*ACCC*******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SGVDPE     AS GVDPE      USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSGVDPE****AS*GVDPE******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+***DESCRIBEFIELD*SGVDPC*****AS*GVDPC******USING*GZACCNTAB****************************:       BUG5395
+***DESCRIBEFIELD*BSGVDPC****AS*GVDPC******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+***DESCRIBEFIELD*SCACCC*****AS*CACCC******USING*GZACCNTAB****************************:       BUG5395
+***DESCRIBEFIELD*BSCACCC****AS*CACCC******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SCDIE      AS CDIE       USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSCDIE*****AS*CDIE*******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+***DESCRIBEFIELD*SCDICA*****AS*CDICA******USING GZACCNTAB****************************:       BUG5395
+***DESCRIBEFIELD*BSCDICA****AS*CDICA******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SCCDIC     AS CCDIC      USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSCCDIC****AS*CCDIC******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SIACE      AS IACE       USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSIACE*****AS*IACE*******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+***DESCRIBEFIELD*SIACCC*****AS*IACCC******USING*GZACCNTAB****************************:       BUG5395
+***DESCRIBEFIELD*BSIACCC****AS*IACCC******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SCIACC     AS CIACC      USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSCIACC****AS*CIACC******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SCMBE      AS CMBE       USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSCMBE*****AS*CMBE*******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+***DESCRIBEFIELD*SCMBC******AS*CMBC*******USING*GZACCNTAB****************************:       BUG5395
+***DESCRIBEFIELD*BSCMBC*****AS*CMBC*******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SACCB      AS ACCB       USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSACCB*****AS*ACCB*******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SCCMBC     AS CCMBC      USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSCCMBC****AS*CCMBC******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SCHDBE     AS CHDBE      USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSCHDBE****AS*CHDBE******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+***DESCRIBEFIELD*SCHDBC*****AS*CHDBC******USING*GZACCNTAB****************************:       BUG5395
+***DESCRIBEFIELD*BSCHDBC****AS*CHDBC******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SHDRB      AS HDRB       USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSHDRB*****AS*HDRB*******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SCCHDBC    AS CCHDBC     USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSCCHDBC***AS*CCHDBC*****USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SCCINST    AS CCINST     USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSCCINST***AS*CCINST*****USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SVATAM     AS VATAM      USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSVATAM****AS*VATAM******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SNOIP      AS NOIP       USING GZACCNTAB                            :
+***DESCRIBEFIELD*BSNOIP*****AS*NOIP*******USING*GZACCNTAB**(BASECCY)*****************:       BUG5395
+ * DESCRIBEFIELD SCOLA      AS COLA       USING GZACCNTAB                            :        CLE025
+***DESCRIBEFIELD*BSCOLA*****AS*COLA*******USING*GZACCNTAB**(BASECCY)*****************:CLE025 BUG5395
+ * DESCRIBEFIELD SBCOA      AS BCOA       USING GZACCNTAB                            :        CLE025
+***DESCRIBEFIELD*BSBCOA*****AS*BCOA*******USING*GZACCNTAB**(BASECCY)*****************:CLE025 BUG5395
+***DESCRIBEFIELD*RREPI******AS*REPI*******USING*GZREIACD*****************************:       BUG5395
+ * DESCRIBEFIELD CUSTZONE   AS A8ZONE     USING GZSDBRCHPD                           :
+ * DESCRIBEEND                                                                       :
+                                                                                     :
+/************************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas GZ Accounts master detail view - GZACCNTDT  ';                     :
+                                                                                :

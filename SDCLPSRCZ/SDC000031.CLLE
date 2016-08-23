@@ -1,0 +1,150 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas SD Run compliance watch engine in COB')         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       SDC000031 - Run Compliance Watch Engine in COB              */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. 222005  *CREATE    Date 07Oct03              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       222005 - Run Compliance Watch Engine in COB                 */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PGM &CSEQ)
+ 
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&POPTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&DSSDY) TYPE(*CHAR) LEN(800)
+             DCL        VAR(&PGM) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&CSEQ) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&CSC011) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&CSW025) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&CURR) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&MAIN) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&W1OFSR) TYPE(*CHAR) LEN(32)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2003')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('SDC000031 - Run Compliance Watch +
+                          Engine in COB') TOMSGQ(MRUNQ)
+ 
+/** If data area LDA doesn't exist, create LDA */
+ 
+             CHKOBJ     OBJ(QTEMP/LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
+                          DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256))
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(XXXXXX00)
+ 
+/** Check if Midas Message Manager is on */
+ 
+             IF         COND(&CSEQ *EQ '00004') THEN(DO)
+                  CHGVAR     VAR(&PRTCD) VALUE('       ')
+                  CHGVAR     VAR(&POPTN) VALUE('*VERIFY')
+                  CALL       PGM(AOSARDR0) PARM(&PRTCD &POPTN 'CSW025' +
+                             &DSSDY)
+                  IF         COND(&PRTCD *EQ '       ') +
+                             THEN(CHGVAR VAR(&CSW025) VALUE('Y'))
+             ENDDO
+ 
+/** Check if 24x7 Midas Availability Feature is on */
+ 
+             CHGVAR     VAR(&PRTCD) VALUE('       ')
+             CHGVAR     VAR(&POPTN) VALUE('*VERIFY')
+             CALL       PGM(AOSARDR0) PARM(&PRTCD &POPTN 'CSC011' +
+                        &DSSDY)
+ 
+/** If CSC011 is installed, get the current system prefix from */
+/** SDSTAT and the main system prefix from SC24X7 data areas   */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&CURR)
+             IF         COND(&PRTCD *EQ '       ') THEN(DO)
+                   CHGVAR     VAR(&CSC011) VALUE('Y')
+                   RTVDTAARA  DTAARA(SC24X7 (1 2)) RTNVAR(&MAIN)
+             ENDDO
+ 
+/** If CSC011 is installed, check if current system is support */
+/** system. If yes, compliance watch engine cannot be started  */
+ 
+             IF         COND((&CSC011 *EQ 'Y') *AND (&CURR *NE +
+                           &MAIN)) THEN(DO)
+                     SNDPGMMSG  MSG('SDCSTRCW - Attempt to start the +
+                                Compliance Watch OFAC-AGENT Server and +
+                                Compliance Watch List Engine has failed.  +
+                                Cause: This Option not allowed in the +
+                                support system') TOMSGQ(MOPERQ)
+                     GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             ELSE (DO)
+ 
+/** Access compliance watch configuration file */
+ 
+                CHGVAR     VAR(&PRTCD) VALUE('       ')
+                CHGVAR     VAR(&POPTN) VALUE('*FIRST')
+                CALL       PGM(AOCWCDR0) PARM(&PRTCD &POPTN &DSSDY)
+ 
+                CHGVAR     VAR(&W1OFSR) VALUE(%SUBSTRING(&DSSDY 54 32))
+ 
+                IF         COND((&PRTCD *NE ' ') *OR (&W1OFSR *EQ ' ')) +
+                   THEN(DO)
+                      SNDPGMMSG  MSG('SCC0103 - Attempt to start the +
+                         Compliance Watch OFAC-AGENT Server and +
+                         Compliance Watch List Engine has failed.  +
+                         Cause: OFAC-Agent Server ID is not yet +
+                         defined') TOMSGQ(MOPERQ)
+                      GOTO       CMDLBL(ABNOR)
+                 ENDDO
+ 
+                 ELSE (DO)
+ 
+                    IF         COND(&PGM *EQ 'SDFOFSRV') +
+                                  THEN(CALL PGM(&PGM) PARM(&CURR &W1OFSR))
+                    IF         COND((&CSEQ *EQ '00004' *AND &CSW025 *EQ +
+                                     'N') *OR (&CSEQ *EQ '00002' +
+                                     *OR &CSEQ *EQ '00003') *OR  +
+                                    (&CSEQ *EQ '00008' *AND &CSW025 *EQ +
+                                     'N') *OR (&CSEQ *EQ '00006' +
+                                     *OR &CSEQ *EQ '00007')) +
+                                  THEN(CALL PGM(&PGM))
+ 
+/** Database error processing */
+ 
+                    IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                    RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                    SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                    TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)
+                    ENDDO
+ 
+                    GOTO       CMDLBL(END)
+ 
+                 ENDDO
+             ENDDO
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+             SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SDC000031 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             ENDPGM

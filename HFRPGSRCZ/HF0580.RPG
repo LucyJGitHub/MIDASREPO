@@ -1,0 +1,314 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas HF Purge HAF files')
+/*OVRF*: OVRDBF JOURNAL HFJRNLPD                                    : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - HISTORY AND AUDIT FACILITY
+     F*                                                               *
+     F*  HF0580 - HAF Purge HAF files.                                *
+     F*                                                               *
+     F*  Function : This program prints a list of HAF Items deleted   *
+     F*             today                                             *
+     F*                                                               *
+     F*  Called By: HFC0580 - Drop Deleted Items                      *
+     F*                                                               *
+     F*  Calls    : HFC0581 - Delete Reporting Group Files            *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. TDA035             Date 02Apr04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 142222             Date 19Mar99               *
+      *                 081700             Date 15Mar95               *
+     F*                 S01379             DATE 16SEP92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
+     F*  142222 - Move the output to Audit Header details to after    *
+     F*           the CHAIN to SDBANKPD.                              *
+     F*  081700 - Output P1 report only if details to report, and     *
+     F*           add an AU report.                                   *
+     F*  S01379 - HISTORY AND AUDIT FACILITY                          *
+     F*           NEW PROGRAM CREATED FOR SAR.                        *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*  Compiler directive for file JOURNAL                          *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*F0580P1O***E*************20     PRINTER                            081700
+      ***Printer*audit*file***                                            081700
+      *                                                                   081700
+     FHF0580P1O   E             20     PRINTER                        UC  081700
+     F                                              KINFDS SPOOL          081700
+     FHF0580AUO   E                    PRINTER                            081700
+     F                                              KINFDS SPOOLU         081700
+     FHFFILEL4UF  E                    DISK
+      *  Items by Item number
+      *
+     FSDBANKPDIF  E                    DISK
+      *  Bank details
+      *
+     FMUSER   IF  E           K        DISK
+      *  Midas User file
+      *
+     FHFUSERPDUF  E           K        DISK
+      *  HAF users
+      *
+      *
+     F*****************************************************************
+      /SPACE 3
+      *  Items per user array
+     E                    S         999  1
+      *
+     E*
+     E** Array containing Copyright statement
+     E                    CPY@    1   1 80
+     E*
+     E*****************************************************************
+     I*                                                                   081700
+     I** FILE INFORMATION DATA STRUCTURE FOR P1                           081700
+     ISPOOL       DS                                                      081700
+     I                                       83  92 SFILE                 081700
+     I                                    B 123 1240SFNUM                 081700
+     I*                                                                   081700
+     I** FILE INFORMATION DATA STRUCTURE FOR AU                           081700
+     ISPOOLU      DS                                                      081700
+     I                                       83  92 SFILEU                081700
+     I                                    B 123 1240SFNUMU                081700
+     I            DS
+      *  Reformat the time
+     I                                        1   6 HFTIME
+     I                                        1   60HFTIMX
+      *
+     I            DS
+     I                                        1   30ITEM
+     I                                        1   3 ITEMA
+      *
+     IDLDA        DS                            256
+      *  Local data area
+     I***********                           134 138 DBFILE                081700
+     I***********                           139 167 DBKEY                 081700
+     I***********                           168 175 DBPGM                 081700
+     I***********                           176 1770DBASE                 081700
+     I                                      134 141 DBFILE                081700
+     I                                      142 170 DBKEY                 081700
+     I                                      171 180 DBPGM                 081700
+     I                                      181 1830DBASE                 081700
+     I*
+      *
+      /EJECT
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+     C*****Write*AU header details                                 081700 142222
+     C***********          WRITEHF0580A1                           081700 142222
+      *                                                                   081700
+     C**   ENSURE REPORT SPOOL FILE AU RECORDED BY RCF                    081700
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      081700
+     C                     CALL 'ZSFILE'                                  081700
+     C                     PARM           SEQ     5                       081700
+     C                     PARM *BLANKS   SENTY   3                       081700
+     C                     PARM           SFILEU                          081700
+     C                     PARM           ZSNUMU                          081700
+     C                     PARM           ZSERR   1                       081700
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       081700
+     C           ZSERR     IFEQ 'Y'                                       081700
+     C                     SETON                     U7U8LR               081700
+     C                     RETRN                                          081700
+     C                     END                                            081700
+      *   Get installation details
+      *
+     C           1         CHAINSDBANKD0             99
+      *
+     C           *IN99     IFEQ '1'
+      *  Database error
+     C                     SETON                     U7U8LR
+     C           *NAMVAR   DEFN LDA       DLDA
+     C                     IN   DLDA
+     C                     Z-ADD1         DBASE
+     C                     MOVEL'HF0580'  DBPGM
+     C                     MOVEL'1ST REC' DBKEY
+     C                     MOVEL'BANK '   DBFILE
+     C                     MOVEL'SDBANKPD'DBFIL2 10
+     C                     WRITEHF0580ER                                  081700
+     C                     DUMP
+     C                     RETRN
+     C                     END
+      *
+      ****Write*the*Header***                                             081700
+     C************         WRITEHF0580F1                                  081700
+     C************         SETOF                     20                   081700
+     C************         Z-ADD0         @NO                             081700
+      *                                                                   142222
+      **   Write AU header details                                        142222
+     C                     WRITEHF0580A1                                  142222
+      *
+      *   Read all the records from HFFILEPD
+     C           *IN80     DOWEQ'0'                        *** B01
+     C                     READ HFFILEL4                 80
+      *
+      *   Only process if a record read
+     C           *IN80     IFEQ '0'                        *** B02
+      *
+      ** REMOVE 'J' FROM FILE NAME
+      *
+     C                     MOVE *BLANKS   FFILE9
+     C                     MOVE FFILE     FFILE9
+      *
+      *   If this is a header file then see whether the file has been
+      *   deleted during the day
+     C           HEADER    IFEQ '0'                        *** B03
+     C           HFJOB     IFEQ *BLANKS                    *** B04
+     C                     MOVEL'0'       *IN21
+     C                     ELSE                            *** X04
+     C                     MOVEL'1'       *IN21
+     C                     END                             *** E04
+     C                     END                             *** E03
+      *
+      *   Only process deleted records
+     C           *IN21     IFEQ '1'                        *** B03
+      *
+     C                     ADD  1         COUNT   50                      081700
+      *                                                                   081700
+      *   Check  if file enabled
+     C           ENAB      COMP 'E'                      10
+      *
+      *   Check if COB audit report required
+     C           AUDIT     COMP 'Y'                      11
+      *
+      *   Write the item details
+     C           HEADER    IFEQ '0'                        *** B04
+      *
+      *   Remove this item from any users who are authorised to it
+     C                     EXSR #A
+      *
+      *   If first time through, open P1 file and print header            081700
+     C           @PT       IFNE 'Y'                                       081700
+     C                     OPEN HF0580P1                                  081700
+     C                     WRITEHF0580F1                                  081700
+     C                     SETOF                     20                   081700
+     C                     Z-ADD0         @NO                             081700
+     C*                                                                   081700
+     C**   ENSURE REPORT SPOOL FILE P1 RECORDED BY RCF                    081700
+     C                     Z-ADDSFNUM     ZSNUM   60                      081700
+     C                     CALL 'ZSFILE'                                  081700
+     C                     PARM           SEQ     5                       081700
+     C                     PARM *BLANKS   SENTY   3                       081700
+     C                     PARM           SFILE                           081700
+     C                     PARM           ZSNUM                           081700
+     C                     PARM           ZSERR   1                       081700
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       081700
+     C           ZSERR     IFEQ 'Y'                                       081700
+     C                     SETON                     U7U8LR               081700
+     C                     RETRN                                          081700
+     C                     END                                            081700
+      *                                                                   081700
+     C                     END                                            081700
+      *   Write the spacer line
+     C           @PT       IFEQ 'Y'
+     C                     WRITEHF0580F4
+     C                     END
+      *
+      *   If two items printed on this page already then print new
+      *   headers
+     C           @NO       IFGT 1
+     C                     WRITEHF0580F1
+     C                     Z-ADD0         @NO
+     C                     END
+      *
+      *   Get the user text associated with the user profile
+     C           HFUSER    CHAINMUSER                99
+     C   99                MOVEL'UNKNOWN' USER1
+      *
+      *
+     C                     WRITEHF0580F2
+     C                     ADD  1         @NO     10
+     C                     MOVEL'Y'       @PT     1
+     C                     END                             *** E04
+      *
+      *   Write the file details
+     C                     WRITEHF0580F3
+      *
+      *   Delete this record
+     C                     DELETHFFILEP0
+      *
+     C                     END                             *** E03
+      *
+     C                     END                             *** E02
+     C                     END                             *** E01
+      *
+      *   Write end of report
+     C           @PT       IFEQ 'Y'                                       081700
+     C***********@PT       IFNE 'Y'                                       081700
+     C************         SETON                     12                   081700
+     C************         ELSE                                           081700
+      *
+      *   Write the spacer line
+     C                     WRITEHF0580F4
+     C*************        END                                            081700
+      *
+     C                     WRITEHF0580F5
+     C                     END                                            081700
+      *                                                                   081700
+      *   Write audit details                                             081700
+     C                     WRITEHF0580A2                                  081700
+      *
+     C                     SETON                     LR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *
+      *     Subroutine to set item flags on HFUSERPD to N
+      *
+      *
+     C           #A        BEGSR
+      *
+     C           *LOVAL    SETLLHFUSERP0
+      *
+     C           *IN56     DOUEQ'1'
+     C                     READ HFUSERP0                 56
+      *
+      *  EOF so abort loop
+     C           *IN56     CABEQ'1'       ENDL
+      *
+      *  Move file field into array
+     C                     MOVEAUIT       S
+      *
+      *  If the user is authorised to this item then set flag to N
+     C           S,ITEM    IFEQ 'Y'
+     C                     MOVEA'N'       S,ITEM
+     C                     MOVEAS         UIT
+     C                     UPDATHFUSERP0
+     C                     END
+      *
+     C           ENDL      TAG
+      *
+     C                     END
+      *
+      *   Call HFC0581 to delete any reporting group files
+     C                     CALL 'HFC0581'              5656
+     C                     PARM           ITEMA
+     C                     PARM           FFILE
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+     C/EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

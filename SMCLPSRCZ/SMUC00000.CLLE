@@ -1,0 +1,74 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Process CAR migration - standard CL')        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC00000 - Process CAR migration                           */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2009           */
+/*                                                                   */
+/*       Last Amend No. CER059             Date 19Jul10              */
+/*       Prev Amend No. BUG27893           Date 12Jul10              */
+/*                      CSM011  *CREATE    Date 05May09              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CER059 - German Feature Upgrade to Delhi                    */
+/*       BUG27893 - Upgrade of Proc CAR Migration Utility to BF1.4   */
+/*       CSM011 - New utility to process CAR migration               */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FLIB &FFILE &TFILE &TEMPFILE &PGM &CLRF)
+ 
+             DCL        VAR(&FLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TEMPFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CLRF) TYPE(*CHAR) LEN(1)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                            2009')
+ 
+ /* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                            CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* If requested then clear the to-file. */
+             IF         COND(&CLRF *EQ 'Y') THEN(DO)
+                CLRPFM     FILE(&TFILE)
+             ENDDO
+ 
+/* Copy old CAR file to template file if it exists. */
+             CHKOBJ     OBJ(&FLIB/&FFILE) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             CLRPFM     FILE(&TEMPFILE)
+             CPYF       FROMFILE(&FLIB/&FFILE) TOFILE(&TEMPFILE) +
+                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)
+/* Empty from file. */
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+               GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2870) EXEC(DO)
+               GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* Call program to perform migration. */
+             CALL       PGM(&PGM)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+ ENDPGM:
+             ENDPGM

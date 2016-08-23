@@ -1,0 +1,301 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD TOF ICD enquiry')                             *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD9461E - TOF ICD Enquiry                                    *
+      *                                                               *
+      *  Function:  This program allows the user to enquire on        *
+      *             TOF Interface ICD File                            *
+      *                                                               *
+      *  Called By: SDC9001 - Midas SD ICD Enquiry control            *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. 207288             DATE 11JUL12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 207378             Date 11Sep02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSD011             Date 04Mar02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CPB001   *CREATE   Date  9Jun99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  207288 - Introduce new field TQSPOT to hold number of days   *
+      *           from deal date to value date for FX spot deals.     *
+      *           Applied for AR999664 (Child: AR999668)              *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  207378 - Add 'Automatic complete market trades' field to     *
+      *           default the incomplete/complete indicator from      *
+      *           TRADSD                                              *
+      *  CSD011 - Performance Incentive Fees.                         *
+      *  CPB001 - Private Banking Module                              *
+      *                                                               *
+      *****************************************************************
+     FSDTOFPD IF  E                    DISK         KINFSR *PSSR
+      *
+     FSD9461E#CF  E                    WORKSTN
+      /EJECT
+      *****************************************************************
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      /EJECT
+      *****************************************************************
+     IP1PARM      DS                             10
+      ** I: Midas SD Midas/PB ICD retrieval
+      *
+     I                                        1  10 WTOFID
+     IP3PARM      DS
+      ** B : MAP Work Return code
+     I                                        1   5 P3WRTC
+      *
+     IA@CPY       DS
+      * Copyright array
+     I                                        1  80 CPY@
+      *
+     ILDA       E DSLDA                         256
+      ** Data Area giving Installation Control Details
+      *
+     IRUNDT       DS
+      **  Data area RUNDAT
+      *
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+      *
+     IPSDS       SDS
+      **  Program Status DS
+      *
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     IZMUSER    E DSZMUSER
+      * User default data structure (DBRN : Default branch)
+      *
+     ISDBANK    E DSSDBANKPD
+      ***  External DS for Bank Details
+      *
+     ISDMMOD    E DSSDMMODPD
+      ***  External DS for Midas Module Details
+      *
+     ISCSARD    E DSSCSARDPD                                                                  CSD011
+      ** SAR descriptions                                                                     CSD011
+      *                                                                                       CSD011
+     IDSFDY     E DSDSFDY                                                                     CSD011
+      ** Short data structure for access objects                                              CSD011
+      *
+     IDSSDY     E DSDSSDY
+      ***  DS for access programs
+      *
+      **************************************************************************
+      *
+     C           1         SETLLSDTOFPD
+     C                     READ SDTOFPD                  89
+      *
+     C           *IN89     IFEQ *OFF
+      *
+      **  Move file fields to screen fields
+      *
+     C           TQOMS     IFNE *BLANKS
+     C                     MOVE TQOMS     SOMS
+     C                     ELSE
+     C                     MOVE 'N'       SOMS
+     C                     ENDIF
+      *
+     C           TQCYDE    IFNE *BLANKS
+     C                     MOVE TQCYDE    SCYDE
+     C                     ELSE
+     C                     MOVE 'N'       SCYDE
+     C                     ENDIF
+      *                                                                                       207288
+      ** Move number of days for spot FX deals.                                               207288
+      *                                                                                       207288
+     C                     MOVE TQSPOT    SSPOT                                               207288
+      *                                                                                       CSD011
+     C           CSD011    IFEQ 'Y'                                                           CSD011
+      *                                                                                       CSD011
+      ** Number of processing days (Incentive Fees).                                          CSD011
+      *                                                                                       CSD011
+     C                     MOVE TQIFNB    SIFNB                                               CSD011
+     C                     MOVE '0'       *IN30                                               CSD011
+     C                     ELSE                                                               CSD011
+     C                     MOVE '1'       *IN30                                               CSD011
+     C                     ENDIF                                                              CSD011
+      *                                                                                       CSD011
+      * 'Automatic complete market trade'                                                     207378
+      *                                                                                       207378
+     C           TQACMT    IFNE *BLANKS                                                       207378
+     C                     MOVE TQACMT    SACMT                                               207378
+     C                     ELSE                                                               207378
+     C                     MOVE 'N'       SACMT                                               207378
+     C                     ENDIF                                                              207378
+      *                                                                                       207378
+     C                     ENDIF
+      *
+     C           WEND      DOUEQ*ON
+      *
+     C                     EXSR SRDSPL
+      *
+      ** F3
+     C           *INKC     IFEQ *ON
+     C                     GOTO END
+     C                     ENDIF
+      *
+     C                     MOVE *ON       WEND
+     C                     ENDDO
+      *
+     C           END       TAG
+     C                     SETON                     LR
+     C                     RETRN
+      **************************************************************************
+      **  SRDSPL  Subroutine to display screen
+      **************************************************************************
+     C           SRDSPL    BEGSR
+      ** Display screen
+     C                     WRITE#MSGCTL
+     C                     EXFMTSD9461F0
+     C                     CALL 'CLRERMSG'
+     C                     PARM ##PGM     ZAPGM
+     C                     PARM '*SAME'   ZAPGRL
+      *
+     C                     ENDSR
+      /EJECT
+      **************************************************************************
+      **  SRSMSG  Subroutine to Send message to message queue
+      **************************************************************************
+     C           SRSMSG    BEGSR
+      *
+     C           ZAMSGF    IFEQ *BLANKS
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     ENDIF
+     C                     CALL 'SNDERMSG'
+     C                     PARM ##PGM     ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+      ** Clear all fields for default mechanism next time.
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSID           Message Id.
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C                     MOVEL*BLANK    ZAMSGF           Message file.
+     C                     ENDSR
+      /EJECT
+      **************************************************************************
+      **  *INZSR  Subroutine to Initialise field
+      **************************************************************************
+     C           *INZSR    BEGSR
+      *
+      ** Read in Installation Data
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   RUNDT
+     C                     IN   ZMUSER
+      *
+      ** Redefine data-base error fields for program
+     C           *LIKE     DEFN DBFILE    WWBFIL
+     C           *LIKE     DEFN DBKEY     WWBKEY
+     C           *LIKE     DEFN DBASE     WWBASE
+      *
+      ** Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           P1PARM           KEY: Midas/TI I
+     C           P3WRTC    PARM P3WRTC    WP0002  5        Work Return cod
+      *
+     C                     MOVE *BLANKS   P0RTN
+      *
+      ** Access Bank details via access program
+      ** (database error handling done in access program)
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+     C                     MOVELUSER      SUSER
+     C                     MOVELRUNA      SRUNA
+     C                     MOVELWSID      SWSID
+      *
+     C                     MOVE *OFF      WEND    1
+      *
+      ***  Check Securities trading module is installed
+      ***        Take Early Redemption dummy customer
+      ***        as default if installed
+      *
+     C                     MOVE *OFF      *IN58            SE install: NO
+      *
+     C                     CALL 'AOMMODR0'                 Check Modules
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDMMOD    PARM SDMMOD    DSSDY
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C           BGSECS    ANDEQ'Y'
+     C                     MOVE *ON       *IN58            SE is installed
+     C                     ENDIF                           SE Installed
+      *
+      ** Access AOSARDR0 to check if CSD011 is switched ON.                                   CSD011
+      *                                                                                       CSD011
+     C                     CALL 'AOSARDR0'                                                    CSD011
+     C                     PARM *BLANKS   RTCD    7                                           CSD011
+     C                     PARM '*VERIFY' OPTN    7                                           CSD011
+     C                     PARM 'CSD011'  L0SARD  6                                           CSD011
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSD011
+      *                                                                                       CSD011
+     C           RTCD      IFEQ *BLANKS                                                       CSD011
+     C                     MOVE 'Y'       CSD011  1                                           CSD011
+     C                     ELSE                                                               CSD011
+     C                     MOVE 'N'       CSD011                                              CSD011
+     C                     END                                                                CSD011
+      *                                                                                       CSD011
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

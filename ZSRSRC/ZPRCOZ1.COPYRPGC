@@ -1,0 +1,105 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  XXXXXXX - (/COPY Name)                                       *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      *  Last Amend No. nnnnnn  *CREATE    Date ddmmmyy               *
+      *  Prev Amend No. nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  nnnnnn - (change description)                                *
+      *                                                               *
+      *****************************************************************
+     C*****************************************************************
+     C*
+     C*  ZPRCO - SUBROUTINE TO OUTPUT PRICE AS PRICE/DISCOUNT/YIELD
+     C*
+     C*  INPUT  - ZPRICE (15,8) INPUT PRICE AS PERCENTAGE
+     C*           ZFDATE (5,0) FROM DATE
+     C*           STBS (1) TRADE BASIS FROM SECURITY
+     C*           MATY (5,0) MATURITY DATE FROM SECURITY
+     C*           SYBS (1) YIELD BASIS FROM SECURITY
+     C*
+     C*  OUTPUT - ZPRCOT (15,8) PRICE OUT
+     C*
+     C*  CALLS  - ZDAYS (ZDATE2)
+     C*           ZDYYR (ZDAYS)
+     C*           ZYLDO
+     C*
+     C******************************************************************
+     C*
+     C           ZPRCO     BEGSR                           ** ZPRCO **
+     C*
+     C* DEFINE INPUT FIELDS
+     C*
+     C                     Z-ADDZPRICE    ZPRICE 158
+     C                     Z-ADDZFDATE    ZFDATE  50
+     C                     Z-ADD0         ZPRCOT 158
+     C*
+     C* TRADE BASIS IS 'P' (PRICE)
+     C*
+     C           STBS      IFEQ 'P'
+     C                     Z-ADDZPRICE    ZPRCOT
+     C                     ELSE
+     C*
+     C* TRADE BASIS IS 'D' (DISCOUNT)
+     C*
+     C           STBS      IFEQ 'D'
+     C*
+     C***** CALCULATE NO OF DAYS BETWEEN FROM DATE AND MATURITY DATE
+     C*
+     C                     Z-ADDZFDATE    ZSDATE
+     C                     Z-ADDMATY      ZEDATE
+     C                     EXSR ZDAYS
+     C                     Z-ADDZDDAYS    #DDAYS  50
+     C*
+     C**** CALCULATE NO OF DAYS IN INTEREST YEAR
+     C*
+     C                     EXSR ZDYYR
+     C*
+     C           #DDAYS    IFEQ 0
+     C                     Z-ADD0         ZPRCOT
+     C                     ELSE
+     C*
+     C*              (     ( PRICE IN    DAYS INTEREST YEAR ) )
+     C*  PRICE OUT = ( 1 - (---------- * -------------------) ) * 100
+     C*              (     (   100       DAYS BETWEEN DATES ) )
+     C*
+     C**         ZPRICE    MULT 0.01      WPRICE 158
+     C**         WPRICE    MULT ZINTDD    WPRICE
+     C**         WPRICE    DIV  #DDAYS    WPRICE    H
+     C**         1         SUB  WPRICE    WPRICE
+     C**         WPRICE    MULT 100       ZPRCOT 158
+     C*
+     C*              (DAYS INTEREST YEAR )
+     C*  PRICE OUT = (-------------------) * (100 - PRICE IN)
+     C*              (DAYS BETWEEN DATES )
+     C*
+     C           100       SUB  ZPRICE    WPRICE 158
+     C           WPRICE    MULT ZINTDD    WPRICE
+     C           WPRICE    DIV  #DDAYS    ZPRCOT    H
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C* TRADE BASIS IS 'Y' (YIELD)
+     C*
+     C           STBS      IFEQ 'Y'
+     C                     EXSR ZYLDO
+     C                     Z-ADDZYLDOT    ZPRCOT
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      *****************************************************************
+      * End of /COPY XXXXXXX                                          *
+      *****************************************************************

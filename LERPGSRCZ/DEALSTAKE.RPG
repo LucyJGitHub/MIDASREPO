@@ -1,0 +1,936 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Dealing Extract for Profitabil. Rpts')           *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Customer Lending Module
+     F*                                                               *
+     F*  DEALSTAKE   Dealing, FRA & IRS Extract for Profitability     *
+     F*              TAKEON.                                          *
+     F*  Function: Audit trail reporting run controls of the extract  *
+     F*   (COB)    file                                               *
+     F*                                                               *
+     F*  Called By: CLP/LERCDEALS                                     *
+     F*                                                               *
+     F*  Calls: RPG/LERDATEF - To convert a date to a day no. for     *
+     F*                        first day of month                     *
+     F*         RPG/LERDATEL - To convert a date to a day no. for     *
+     F*                        last day of month                      *
+     F*         QCMDEXC      - To clear physical file member LEPECND  *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CGL165             Date 17Feb15               *
+      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 07Jul06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 BUG7411            Date 01Jun05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 229544             Date 15Sep04               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01444             Date 24Sep93               *
+      *                 S01453             Date 14Dec93               *
+     F*                 BH3444             DATE 24AUG92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  BUG7411- CDL028 fields missing from DLGHISPD (Recompile)     *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  229544 - Recompiled due to inserted fields in DLCHISPD.      *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  S01444 - Amended to include all historic deals files.        *
+     F*  S01453 - MARGIN AND FX POSITIONS/POINTS AND BASE CURRENCY    *
+     F*           POSITIONS/POINTS ADDED TO FX INPUT (RECOMPILED)     *
+     F*  BH3444 - Take into account first/last day accruals when      *
+     F*           calculating number of days live for deals.          *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FPECUSDE IP  E           K        DISK
+     FLEPEDFD UF  E           K        DISK                      A
+     FLEPEDFZ UF  E                    DISK
+     FLEPECND UF  E           K        DISK                      A    UC
+     FSDCURRPDIF  E                    DISK
+     FLER260AUO   E                    PRINTER      KINFDS SPOOLU
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   L1  - Change in customer                                    *
+     F*                                                               *
+     F*   10  - First Cycle indicator                                 *
+     F*   11  - Work indicator                                        *
+     F*   20  - Work indicator                                        *
+     F*   60  - Invalid Account Officer                               *
+     F*   80  - Work indicator                                        *
+     F*   82  - Work indicator                                        *
+     F*   89  - Work indicator                                        *
+     F*                                                               *
+     F* 90-99 - Used by Standard Subroutines                          *
+     F*                                                               *
+     F* U7-U8 - Data Base Error                                       *
+     F*    U8 - File Controls out of Balance                          *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  CCYCVT - To convert aggregate balances to base currency      *
+     F*  DAYLIV - To calculate number of days live                    *
+     F*  DEALS  - To process deal records                             *
+     F*  ACOFF  - To check account officer for corporate customer     *
+     F*  EXTUPD - To update/write extract record at change of customer*
+     F*  ZDATE2 - To Convert a Day Number to Date Formats             *
+     F*  INIT   - To perform first cycle calculations                 *
+     F*  DBERR  - To perform database error processing                *
+     F*  *PSSR  - To Handle Abnormal Error Conditions                 *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E                    AGG        12 15 0             AGG BALANCE
+     E                    COD       150  3   CYD    15   CCY DETAILS
+     E                    AMT         7 15 0             AGG AMOUNTS
+     E                    CPY@    1   1 80               COPYRIGHT
+     E                    PWR     1   4  4 0             POWER ARRAY
+     E                    TYPE    7   7  1               RECORD TYPES
+     E/COPY ZSRSRC,ZDATE2Z1
+     IDEALSDBF
+     I                                              CNUM  L1
+     IDEALSDCF
+     I                                              CNUM  L1
+     IDEALSDDF
+     I              CNUM                            CUST
+     I              ISCN                            CNUM  L1
+     IDEALSDGF
+     I                                              CNUM  L1
+     IDLBHISD0                                                            S01444
+     I                                              CNUM  L1              S01444
+     IDLCHISD0                                                            S01444
+     I                                              CNUM  L1              S01444
+     IDLDHISD0                                                            S01444
+     I              CNUM                            CUST                  S01444
+     I              ISCN                            CNUM  L1              S01444
+     IDLGHISD0                                                            S01444
+     I                                              CNUM  L1              S01444
+     I*
+     I            DS
+     I* SPLIT RUN DATE INTO MONTH & YEAR
+     I*
+     I                                        1   7 RUNDAX
+     I                                        3   5 MMM
+     I                                        6   7 YY
+     I*
+     I            DS
+     I* SPLIT UP DATE FOR CONVERSION.
+     I*
+     I                                        1   6 DATE
+     I                                        1   2 DD
+     I                                        3   6 MY
+     I*
+     I            DS
+     I* DEFINE CURRENCY INFORMATION
+     I*
+     I                                        1  15 CYDDS
+     I                                        1  138SPT
+     I                                       14  140CDP
+     I                                       15  15 MDI
+     I*
+     I            DS
+     I* AGGREGATE BALANCES DATA STRUCTURE
+     I*
+     I                                    P   1  960AGG
+     I                                    P   1   80DDJANA
+     I                                    P   9  160DDFEBA
+     I                                    P  17  240DDMARA
+     I                                    P  25  320DDAPRA
+     I                                    P  33  400DDMAYA
+     I                                    P  41  480DDJUNA
+     I                                    P  49  560DDJULA
+     I                                    P  57  640DDAUGA
+     I                                    P  65  720DDSEPA
+     I                                    P  73  800DDOCTA
+     I                                    P  81  880DDNOVA
+     I                                    P  89  960DDDECA
+     I*
+     ISPOOLU      DS
+     I**   FILE INFORMATION DATA STRUCTURE - AU
+     I*
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     IPSDS       SDS
+     I** PROGRAM STATUS DATA STRUCTURE - REQUIRED FOR DUMP
+     I                                      244 253 JOB
+     I                                      254 263 USER
+     I*
+     ILDA       E DSLDA
+     I* DATABASE ERROR DS
+     I*
+     IRUNDAT    E DSRUNDAT
+     I* RUNDAT DATA AREA
+     I*
+     ILERSTS    E DSLERSTS                                                  0078
+      ** Fees/Profitability enhancement status data area                    0078
+     I              FACHISD                         WHISST                  0078
+     I              LERC2030                        LERC20                  0078
+     I              LERC135                         LERC13                  0078
+     I              LERC315                         LERC35                  0078
+     I              LERC425                         LERC42                  0078
+     I              EOYFLAG                         EOYFLG                  0078
+     ISDBANK    E DSSDBANKPD
+     I**  EXTERNAL DS FOR BANK DETAILS
+     I*
+     ISDCUST    E DSSDCUSTPD
+     I***  EXTERNAL DS FOR CUSTOMER DETAILS
+     I***  SPLIT UP A/C OFFICER FOR VALIDITY CHECK.
+     I*
+     I                                        1   1 BB1
+     I*
+     ISDGELR    E DSSDGELRPD
+     I**  EXTERNAL DS FOR GENERAL LEDGER DETAILS
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I*
+     C/EJECT
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C* CHANGE OF CUSTOMER
+     C*
+     C           *INL1     IFEQ '1'
+     C*
+     C* PERFORM INITIAL PROCESSING FIRST TIME THROUGH ONLY.
+     C*
+     C           *IN10     CASEQ'0'       INIT
+     C                     END
+     C*
+     C* CHECK IF CUSTOMER IS CORPORATE.
+     C*        WHERE A/C OFFICER ON CUSTOMER IS NOT
+     C*        BLANK, 'DL' OR 'RT' OR WITH FIRST
+     C*        CHARACTER EQUAL TO 'X', 'Y' OR 'Z'.
+     C*
+     C                     EXSR ACOFF
+     C*
+     C                     END
+     C*
+     C* PROCESS DETAILS FOR CURRENT CUSTOMER IF CORPORATE.
+     C*
+     C           VDAT      IFLE ENDCAL
+     C           *IN60     ANDEQ'0'
+     C                     EXSR DEALS
+     C                     END
+     C*
+     C* IF CUSTOMER CHANGES, WRITE/UPDATE EXTRACT FILE LEPEDFD
+     C* FOR PREVIOUS CUSTOMER PROCESSED.
+     C*
+     CL1                   EXSR EXTUPD
+     C*
+     C* END OF FILE, UPDATE EXTRACT TRAILER.
+     C*
+     CLR                   MOVE '0'       *IN82
+     CLR                   READ LEPEDFZ                  82
+     CLR         *IN82     IFEQ '1'
+     CLR         *LOCK     IN   LDA
+     CLR                   MOVEL'*READ'   DBKEY            ************
+     CLR                   Z-ADD2         DBASE            * DBERR 2
+     CLR                   MOVEL'LEPEDFZ' DBFILE           ************
+     CLR                   MOVEL'LER260'  DBPGM
+     CLR                   OUT  LDA
+     CLR                   EXSR *PSSR
+     CLR                   EXSR DBERR
+     CLR                   END
+      *
+     C*
+     CLR                   Z-ADDDZNREC    NPREV   50
+     CLR                   ADD  NADD      DZNREC
+     CLR                   UPDATLEPEDFZF
+     C*
+     C* WRITE AUDIT REPORT.
+     C*
+     CLR                   WRITELER260H1
+     CLR                   WRITELER260T1
+     C*                                                                     0078
+     C** Output the date of the run to the dataarea                         0078
+     C*                                                                     0078
+     C*
+     C* CLOSE LEPECND & CLEAR IF EOM.
+     C*
+     CLR                   CLOSELEPECND
+     C*
+     C*****************************************************************
+     C*
+     C***  CCYCVT SUBROUTINE TO CONVERT AGGREGATE BALANCE TO BASE CCY
+     C*
+     C***  CALLED FROM: DEALS
+     C*
+     C***  CALLS: NOTHING
+     C*
+     C********************************************************************
+     C*
+     C           CCYCVT    BEGSR
+     C*
+     C                     Z-ADD1         X
+     C           CCY       LOKUPCOD,X                    20
+     C                     MOVE CYD,X     CYDDS
+     C           MDI       IFEQ 'M'
+     C                     MULT SPT       WRKAGG 150
+     C                     ELSE
+     C                     DIV  SPT       WRKAGG    H
+     C                     END
+     C           CDP       ADD  1         DP      10
+     C                     DIV  PWR,DP    WRKAGG    H
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*
+     C***  DAYLIV SUBROUTINE TO CALCULATE NUMBER OF DAYS LIVE.
+     C***  (WDAT IS MATURITY IN ALL CASES EXCEPT NA'S WHERE IT
+     C***  IS THE EARLIER OF SALE & MATURITY DATE).
+     C*
+     C***  CALLED FROM: DEALS
+     C*
+     C***  CALLS: NOTHING
+     C*
+     C********************************************************************
+     C*
+     C           DAYLIV    BEGSR
+     C*
+     C           VDAT      IFLT STARYR
+     C*
+     C           WDAT      IFLE ENDCAL
+      *                                                                   BH3444
+      ** If last day accruals add one to maturity date to include in      BH3444
+      ** profitability calculations.                                      BH3444
+      *                                                                   BH3444
+     C           BKALDI    IFEQ 'Y'                                       BH3444
+     C                     ADD  1         WDAT                            BH3444
+     C                     END                                            BH3444
+      *                                                                   BH3444
+     C           WDAT      SUB  STARYR    DLIV    50
+     C                     ELSE
+     C           ENDCAL    SUB  STARYR    DLIV
+     C                     ADD  1         DLIV
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C           WDAT      IFLE ENDCAL
+     C           WDAT      SUB  VDAT      DLIV
+     C                     ELSE
+      *                                                                   BH3444
+      ** If first day accruals sub one from value date to include in      BH3444
+      ** profitability calculations.                                      BH3444
+      *                                                                   BH3444
+     C           BKALDI    IFNE 'Y'                                       BH3444
+     C                     SUB  1         VDAT                            BH3444
+     C                     END                                            BH3444
+      *                                                                   BH3444
+     C           ENDCAL    SUB  VDAT      DLIV
+     C***********          ADD  1         DLIV                            BH3444
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*
+     C***  DEALS SUBROUTINE TO PROCESS DEAL RECORDS.
+     C*
+     C***  CALLED FROM: MAIN PROCESSING
+     C*
+     C***  CALLS: DAYLIV,CCYCVT
+     C*
+     C********************************************************************
+     C*
+     C           DEALS     BEGSR
+     C*
+     C* RESET INDEX & WORK FIELDS FOR TYPE OF DEAL/TOTAL.
+     C*
+     C                     Z-ADD0         Z
+     C                     Z-ADD0         WRKAGG
+     C                     Z-ADD0         WDAT
+     C*
+     C* MM LOANS
+     C*
+     C           DTYP      IFEQ 'IP'
+     C           DTYP      OREQ 'TI'
+     C           DTYP      OREQ 'LN'
+     C           MDAT      IFGE STARYR
+     C*
+     C                     Z-ADD1         Z
+     C*
+     C                     END
+     C                     END
+     C*
+     C* MM DEPOSITS
+     C*
+     C           DTYP      IFEQ 'IT'
+     C           DTYP      OREQ 'TD'
+     C           DTYP      OREQ 'CI'
+     C           MDAT      IFGE STARYR
+     C*
+     C                     Z-ADD2         Z
+     C*
+     C                     END
+     C                     END
+     C*
+     C* CALCULATE AGGREGATE FOR MM LOANS/DEPOSITS.
+     C* (Z=1 LOAN; Z= 2 DEPOSIT).
+     C*
+     C           Z         IFEQ 1
+     C           Z         OREQ 2
+     C*
+     C                     Z-ADDMDAT      WDAT
+     C                     EXSR DAYLIV
+     C           PCPL      MULT DLIV      WRKAGG
+     C           CCY       IFNE BJCYCD
+     C                     EXSR CCYCVT
+     C                     ELSE
+     C                     DIV  PWR,B     WRKAGG    H
+     C                     END
+     C                     ADD  WRKAGG    AMT,Z
+     C*
+     C                     END
+     C*
+     C* MM INTEREST BEARING NA'S.
+     C*
+     C           DTYP      IFEQ 'C1'
+     C           DTYP      OREQ 'C2'
+     C           DTYP      OREQ 'BD'
+     C           DTYP      OREQ 'BP'
+     C                     Z-ADDMDAT      WDAT    50
+     C           SADT      IFNE 0
+     C           SADT      ANDLTMDAT
+     C                     Z-ADDSADT      WDAT
+     C                     END
+     C           WDAT      IFGE STARYR
+     C*
+     C                     Z-ADD3         Z
+     C*
+     C                     END
+     C                     END
+     C*
+     C* MM NON-INTEREST BEARING NA'S.
+     C*
+     C           DTYP      IFEQ 'TB'
+     C           DTYP      OREQ 'DA'
+     C           DTYP      OREQ 'TA'
+     C                     Z-ADDMDAT      WDAT
+     C           SADT      IFNE 0
+     C           SADT      ANDLTMDAT
+     C                     Z-ADDSADT      WDAT
+     C                     END
+     C           WDAT      IFGE STARYR
+     C*
+     C                     Z-ADD4         Z
+     C*
+     C                     END
+     C                     END
+     C*
+     C* CALCULATE AGGREGATE FOR MM NA'S.
+     C* (Z=3 INTEREST BEARING; Z= 4 NON-INTEREST BEARING).
+     C*
+     C           Z         IFEQ 3
+     C           Z         OREQ 4
+     C                     EXSR DAYLIV
+     C           PUPR      MULT DLIV      WRKAGG
+     C           CCY       IFNE BJCYCD
+     C                     EXSR CCYCVT
+     C                     ELSE
+     C                     DIV  PWR,B     WRKAGG    H
+     C                     END
+     C                     ADD  WRKAGG    AMT,Z
+     C                     END
+     C*
+     C* FX DEALS.
+     C*
+     C           DTYP      IFEQ 'FP'
+     C           DTYP      OREQ 'FS'
+     C           DTYP      OREQ 'CX'
+     C           DTYP      OREQ 'SW'
+     C           DTYP      OREQ 'OT'
+     C           VDAT      IFGE STARYR
+     C*
+     C                     Z-ADD5         Z
+     C           PUCY      IFEQ BJCYCD
+     C           PUAM      DIV  PWR,B     WRKAGG    H
+     C                     ELSE
+     C           SLCY      IFEQ BJCYCD
+     C           SLAM      DIV  PWR,B     WRKAGG    H
+     C                     ELSE
+     C                     MOVE PUCY      CCY
+     C                     Z-ADDPUAM      WRKAGG
+     C                     EXSR CCYCVT
+     C                     END
+     C                     END
+     C*
+     C                     ADD  WRKAGG    AMT,Z
+     C*
+     C                     END
+     C                     END
+     C*
+     C* FRA'S.
+     C*
+     C           DTYP      IFEQ 'FR'
+     C           MDAT      ANDGESTARYR
+     C*
+     C                     Z-ADD6         Z
+     C*
+     C                     END
+     C*
+     C* IRS'S.
+     C*
+     C           DTYP      IFEQ 'RS'
+     C           DTYP      OREQ 'RL'
+     C           DTYP      OREQ 'RX'
+     C           MDAT      IFGE STARYR
+     C*
+     C                     Z-ADD7         Z
+     C*
+     C                     END
+     C                     END
+     C*
+     C* CALCULATE AGGREGATE FOR FRA'S & IRS'S.
+     C* (Z=6 FRA; Z= 7 IRS).
+     C*
+     C           Z         IFEQ 6
+     C           Z         OREQ 7
+     C                     Z-ADDMDAT      WDAT
+     C                     EXSR DAYLIV
+     C           UPAMT     MULT DLIV      WRKAGG
+     C           UCUCY     IFNE BJCYCD
+     C                     MOVE UCUCY     CCY
+     C                     EXSR CCYCVT
+     C                     ELSE
+     C                     DIV  PWR,B     WRKAGG    H
+     C                     END
+     C                     ADD  WRKAGG    AMT,Z
+     C                     END
+     C*
+     C* CALL/NOTICE DEALS.
+     C*
+     C           DTYP      IFEQ 'CL'
+     C           DTYP      OREQ 'DL'
+     C           DTYP      OREQ 'CD'
+     C*
+     C           DTYP      IFEQ 'CD'
+     C                     Z-ADD2         Z
+     C                     ELSE
+     C                     Z-ADD1         Z
+     C                     END
+     C*
+     C* READ CALL/NOTICE CONTROL FILE LEPECND TO GET MONTHS AGGREGATE.
+     C*
+     C           DLNO      CHAINLEPECND              89
+     C*
+     C* DO NOT CALCULATE NEW AMOUNT IF RECI IS 'M' AND MATURITY
+     C* DATE IS LESS THAN LAST CALENDAR DAY OF MONTH.
+     C*
+     C           RECI      IFNE 'M'
+     C           RECI      OREQ 'M'
+     C           MDAT      ANDGEENDCAL
+     C*
+     C* IF RECORD NOT FOUND ON LEPECND, CALCULATE FROM LATER OF
+     C* VALUE DATE & FIRST DAY OF MONTH, OTHERWISE FROM TODAY.
+     C* CLEAR AGGREGATE FIELD IF NOT FOUND.
+     C*
+     C           *IN89     IFEQ '1'
+     C                     Z-ADD0         CDMAGG
+     C*
+     C           VDAT      IFGT STARYR
+     C                     Z-ADDVDAT      WDAT
+     C                     ELSE
+     C                     Z-ADDSTARYR    WDAT
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C                     Z-ADDENDCAL    WDAT
+     C*
+     C                     END
+     C*
+     C           ENDCAL    SUB  WDAT      DLIV
+     C           MDAT      IFGT ENDCAL
+     C           MDAT      OREQ 0
+     C                     ADD  1         DLIV
+     C                     END
+     C           PCPL      MULT DLIV      WRKAGG
+     C           CCY       IFNE BJCYCD
+     C                     EXSR CCYCVT
+     C                     ELSE
+     C                     DIV  PWR,B     WRKAGG    H
+     C                     END
+     C                     ADD  WRKAGG    AMT,Z
+     C*
+     C                     END
+     C*
+     C                     ADD  CDMAGG    AMT,Z
+     C*
+     C* WRITE/UPDATE CONTROL FILE WITH NEW AGGREGATE.
+     C*
+     C           *IN89     IFEQ '1'
+     C                     Z-ADDDLNO      CDDLNO
+     C                     Z-ADDWRKAGG    CDMAGG
+     C                     WRITELEPECNDF
+     C                     ELSE
+     C                     ADD  WRKAGG    CDMAGG
+     C                     UPDATLEPECNDF
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*
+     C***  ACOFF SUBROUTINE TO CHECK A/C OFFICER FOR CORPORATE CUSTOMER
+     C*
+     C***  CALLED FROM: MAIN PROCESSING
+     C*
+     C***  CALLS: *PSSR,DBERR
+     C*
+     C********************************************************************
+     C*
+     C           ACOFF     BEGSR
+     C*
+     C* ACCESS CUSTOMER DETAILS FILE.
+     C*
+     C                     MOVE '0'       *IN60
+     C                     MOVE CNUM      CNUMA   6
+     C                     MOVELCNUMA     CKEY
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*BLANKS' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           CKEY   10
+     C                     PARM           KEYSTS  7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C           @RTCD     IFNE *BLANKS
+     C                     SETON                     89
+     C           *LOCK     IN   LDA
+     C                     MOVELCNUM      DBKEY            ************
+     C                     Z-ADD3         DBASE            * DBERR 3
+     C                     MOVEL'SDCUSTPD'DBFILE           ************
+     C                     MOVEL'LER260'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C* CHECK A/C OFFICER CODE, SET ON INDICATOR IF INVALID.
+     C*
+     C           BBACOC    IFEQ '  '
+     C           BBACOC    OREQ 'DL'
+     C           BBACOC    OREQ 'RT'
+     C           BB1       OREQ 'X'
+     C           BB1       OREQ 'Y'
+     C           BB1       OREQ 'Z'
+     C                     MOVE '1'       *IN60
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*
+     C***  EXTUPD SUBROUTINE TO UPDATE/WRITE EXTRACT RECORD AT CHANGE
+     C***  OF CUSTOMER.
+     C*
+     C***  CALLED FROM: MAIN PROCESSING
+     C*
+     C***  CALLS: NOTHING
+     C*
+     C********************************************************************
+     C*
+     C           EXTUPD    BEGSR
+     C*
+     C* LOOP 7 TIMES TO UPDATE ALL POSSIBLE RECORD TYPES FOR CUSTOMER.
+     C*
+     C                     Z-ADD1         Z       10
+     C           Z         DOWLT8
+     C           AMT,Z     IFNE 0
+     C*
+     C* ACCESS DEALING EXTRACT FILE.
+     C*
+     C                     MOVE TYPE,Z    RTYP    1
+     C           KEYDFX    CHAINLEPEDFD              89
+     C*
+     C* IF NOT FOUND, SET UP NEW FIELDS
+     C*
+     C           *IN89     IFEQ '1'
+     C*
+     C**********           Z-ADDCNUM      DDCNUM                                              CSD027
+     C                     MOVE CNUM      DDCNUM                                              CSD027
+     C                     MOVE RTYP      DDRTYP
+     C                     MOVE *BLANKS   DDDEPT
+     C                     MOVE *BLANKS   DDACOF
+     C                     Z-ADD0         AGG
+     C*
+     C                     END
+     C*
+     C                     Z-ADDAMT,Z     AGG,MN
+     C*
+     C* UPDATE/WRITE EXTRACT RECORD
+     C*
+     C           *IN89     IFEQ '1'
+     C                     WRITELEPEDFDF
+     C                     ADD  1         NADD    50
+     C                     ELSE
+     C                     UPDATLEPEDFDF
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ADD  1         Z
+     C*
+     C                     END
+     C*
+     C* ZEROIZE AMOUNT ARRAY FOR NEXT CUSTOMER.
+     C*
+     C                     Z-ADD0         AMT
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+      *
+     C/EJECT
+     C*****************************************************************
+     C*
+     C***  INIT SUBROUTINE TO PERFORM FIRST CYCLE CALCS.
+     C*
+     C***  CALLED FROM: MAIN PROCESSING
+     C*
+     C***  CALLS: ZDATE2,*PSSR,DBERR
+     C*
+     C********************************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   LDA
+     C*
+     C           *NAMVAR   DEFN           LERSTS
+     C                     IN   LERSTS
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*                                                                     0078
+     C*
+     C                     MOVEL'LER260'  DBPGM
+     C*
+     C*
+     C* OPEN CALL/NOTICE CONTROL FILE
+     C*
+     C                     OPEN LEPECND
+     C*
+     C***  ACCESS BANK DETAILS FOR TITLE
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     SETON                     89
+     C           *LOCK     IN   LDA
+     C                     MOVEL'*READ'   DBKEY            ************
+     C                     Z-ADD1         DBASE            * DBERR 1
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     MOVEL'LER260'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C***  CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+     C*
+     C           AGDFF     COMP 'M'                      98MMDDYY, 98 ON
+     C*
+     C* CALCULATE RUN DATE IN CASE SECOND RUN OF EOM. IN THIS CASE
+     C* RUN DATE MUST BE RESET TO THE FIRST OF THE NEW MONTH.
+     C*
+     C***  THIS APPEARS TO BE ALL THE OLD ROUTINE RUNCHK USED TO DO
+     C***  FOR THIS PROGRAM, SO I'VE REPLACED IT WITH THESE NEXT LINES
+     C*
+     C***  ACCESS GENERAL LEDGER DETAILS FOR ACCRUALS/PROFIT DATE.
+     C*
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS
+     C                     SETON                     89
+     C           *LOCK     IN   LDA
+     C                     MOVEL@OPTN     DBKEY            ***************
+     C                     Z-ADD4         DBASE            * DBERR 4     *
+     C                     MOVEL'SDGELRPD'DBFILE           ***************
+     C                     MOVEL'DTAKE '  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C** START BY CONVERTING PREVIOUS END OF YEAR, PREV EOY +1 & RUNDATE
+     C** TO DDMMYY FORMAT AND SAVING THE RESULTS
+     C**
+     C**
+     C           BJPEYD    ADD  1         STARYR  50
+     C           STARMO    SUB  1         ZDAYNO
+     C                     Z-ADDZDAYNO    ENDCAL  50
+     C                     EXSR ZDATE2
+     C**
+     C** CALCULATE MONTH VALUE FOR CALCULATIONS TO FOLLOW
+     C**
+     C                     Z-ADD1         MN      20
+     C           MMM       LOKUPZMNM,MN                  11
+     C*
+     C* READ IN INFORMATION FOR DEALING CURRENCIES.
+     C* STORE IN ARRAY/DATASTRUCTURE.
+     C*
+     C                     MOVE *BLANK    MDI
+     C                     Z-ADD0         SPT
+     C                     Z-ADD0         CDP
+     C                     Z-ADD0         X       30
+     C           *IN80     DOWEQ'0'
+     C                     READ SDCURRPD                 80
+     C           *IN80     IFEQ '0'
+     C           A6DLCI    ANDEQ'Y'
+     C                     ADD  1         X
+     C*
+     C* SAVE NO.OF DECIMAL PLACES OF BASE CURRENCY.
+     C*
+     C           A6CYCD    IFEQ BJCYCD
+     C           A6NBDP    ADD  1         B       10
+     C                     END
+     C*
+     C                     MOVE A6CYCD    COD,X
+     C                     MOVELA6SPRT    SPT              SPOT RATE
+     C                     MOVE A6NBDP    CDP              DEC.PLACES
+     C                     MOVE A6MDIN    MDI              MULT/DIV
+     C                     MOVE CYDDS     CYD,X
+     C                     END
+     C                     END
+     C*
+     C* DEFINE KEY LIST FOR LEPEDFD
+     C*
+     C           KEYDFX    KLIST
+     C                     KFLD           CNUM
+     C                     KFLD           RTYP
+     C*
+     C* DEFINE PARAMETER LIST FOR LERDATEF/L (DATE TO DAY NO.)
+     C*
+     C           DATDAY    PLIST
+     C                     PARM           GDATE   60
+     C                     PARM           GDAYNO  50
+     C                     PARM           GRTCD   1
+     C*
+     C* SET INDICATOR FOR FIRST PASS THROUGH PGM.
+     C*
+     C                     MOVE '1'       *IN10
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*
+     C***  DBERR SUBROUTINE TO PERFORM DATABASE ERROR PROCESSING
+     C*
+     C***  CALLED FROM: MAIN PROCESSING,ACOFF,INIT
+     C*
+     C***  CALLS: NOTHING
+     C*
+     C********************************************************************
+     C*
+     C           DBERR     BEGSR
+     C*
+     C                     WRITELER260H1
+     C                     WRITEDBFMT
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*
+     C***  *PSSR  --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS
+     C*
+     C***  CALLED FROM: AFTER ABNORNAL OPERATION OCCURS
+     C*
+     C***  CALLS: NOTHING
+     C*
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C                     ENDSR                           ** *PSSR **
+     C********************************************************************
+     C/EJECT
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**   PWR  - POWER ARRAY FOR CONVERSION OF AGGREGATE AMOUNTS
+0001
+0010
+0100
+1000
+**   TYPE - EXTRACT FILE RECORD TYPES
+ABCDEFG
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

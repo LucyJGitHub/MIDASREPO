@@ -1,0 +1,902 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Extract Trds Pay/Receive Tlx- IC')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE3320 - GENERATE TRADE PAY/RECEIVE TELEX EXTRACT            *
+     F*                                                               *
+     F*  Function: This program extracts details of those trades      *
+     F*    (I/C)   requiring Pay/Receive processing and outputs       *
+     F*            to the SE Telex Extract file, subsequently         *
+     F*            used in the Formatted Telexes Split.               *
+     F*            This program is identical to SE3325 but is run     *
+     F*            in I/C from a menu option.                         *
+     F*                                                               *
+     F*  Called by: SEC3305 - Pay / Receive telexes - Input Cycle     *
+     F*                       Processing                              *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. 248637             Date 26Jun07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CAS006             Date 21Jan03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSE023             Date 12Jul00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 052254             Date 10Jan94               *
+     F*                 E35978             DATE 21FEB92               *
+     F*                 E35649             DATE 21FEB92               *
+     F*                 E34902             DATE 30JAN92               *
+     F*                 E32028             DATE 18NOV91               *
+     F*                 E32025             DATE 18NOV91               *
+     F*                 E29170             DATE 15NOV91               *
+     F*                 S01117             DATE 11JUN91               *
+     F*                 S01269             DATE 20JUL90               *
+     F*                 S01271             DATE 07JUN90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+     F*  NOTE: THIS PROGRAM IS VERY SIMILAR TO SE3325 - THE ONLY      *
+     F*        DIFFERENCE IS THAT THIS HAS COMMITMENT CONTROL.        *
+     F*        ANY CHANGES DONE TO THIS PROBABLY NEED TO BE DONE TO   *
+     F*        SE3325 ALSO.                                           *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  248637 - Correctly select records in file SOBTR. If found,   *
+      *           check RECI if not equal to 'C' or '*'.              *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  CSE023 - Treaty Withholding Tax (Recompiled)                 *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  E35978 - To determine whether a C record is needed as well   *
+     F*           as an I record need to check the RECI's from        *
+     F*           ATPRP, TRATX or SOBTR as well as from TRDPR         *
+     F*  E35649 - Length of TREC need to be increased as does not     *
+     F*           match current length of TRADSD                      *
+     F*  E34902 - Data structure RECIN was using RECI from TABTB10    *
+     F*           rather than TRECI from TRADSDF                      *
+     F*  E32028 - Authorised trades are not producing telexes if the  *
+     F*           previously unauthorised version has already done so *
+     F*  E32025 - Recovery problem                                    *
+     F*  E29170 - Report Control Facility changes                     *
+     F*  S01117 - Multibranching                                      *
+     F*  S01269 - TRADES AUTHORISATION                                *   S01269
+     F*  S01271 - CREATED FOR INPUT CYCLE PAY/RECEIVE PROCESSING.     *   S01271
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FTRDPR   UF  E           K        DISK         KINFDS TRDDS
+     F                                              KINFSR TRDSR
+     F                                              KCOMIT
+     FATPRP   IF  E           K        DISK
+     F            TRADSDF                           KRENAMEATPRPDF
+     FSOBTR   IF  E           K        DISK
+     F            TRADSDF                           KRENAMESOBTRDF
+     FTRATX   IF  E           K        DISK                               S01269
+     F            TRADSDF                           KRENAMEXTRDF          S01269
+     FCLINT   IF  E           K        DISK
+     F            CLINTCAF                          KIGNORE
+     F            CLINTCBF                          KIGNORE
+     F            CLINTCCF                          KIGNORE
+     F            CLINTC1F                          KIGNORE
+     F*SETLXD**O***E                    DISK                              E32025
+     FSETLXD  IF  E           K        DISK                      A        E32025
+     F                                              KINFDS SLXDS
+     F                                              KINFSR SLXSR
+     F                                              KCOMIT
+     FSETLXA  UF  E                    DISK                      A
+     F                                              KINFDS SLADS
+     F                                              KINFSR SLASR
+     F                                              KCOMIT
+     FTABSE   IF  E           K        DISK
+     F* ICD 1     TABTB10F                          KIGNORE
+     F            TABTB11F                          KIGNORE
+     F            TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETAF                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F*********** TABLETJF                          KIGNORE               S01117
+     F            TABLETLF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     FSE3320AUO   E                    PRINTER
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*    01            TRADSD RECORD READ                           *
+     F*    02            ATPRP RECORD CHAIN                           *
+     F*    03            SOBTR RECORD CHAIN                           *
+     F*    04            CLINT RECORD CHAIN                           *
+     F*    05            SETLXA RECORD READ                           *
+     F*                                                               *
+     F*    31            AUDIT REPORT DATABASE ERROR                  *
+     F*    33            SETLXD chain                                 *   E32025
+     F*                                                               *
+     F*    98            ZSYSTM DATE FORMAT IND                       *
+     F*    99            ZSYSTM ICD RECORD ERROR                      *
+     F*                                                               *
+     F*                                                               *
+     F*    U7            DATABASE ERROR                               *
+     F*    U8            DATABASE ERROR                               *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  FIRST  - INITIAL PROCESSING                                  *
+     F*  TELEX  - PROCESS ACTIVE TRADES                               *
+     F*  WRITET - SET UP AND WRITE TELEX EXTRACT RECORD               *
+     F*  AUDIT  - AUDIT PROCESS                                       *
+     F*  *PSSR  - Error handling                                      *   S01117
+     F*                                                               *
+     F*  ZSYSTM - RETRIEVE ICD RECORD 1                               *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+      /SPACE 3
+     IATPRPDF
+     I*
+     I*  RENAME RECI FIELDS  &  THEN SET UP TRADE RECORD DS
+     I*
+     I              RECI                            ARECI
+     ISOBTRDF
+     I              RECI                            SRECI
+     ITRADSDF
+     I              RECI                            TRECI
+     ICLINTSEF
+     I              RECI                            CRECI
+     IXTRDF                                                               E32028
+     I              RECI                            XRECI                 E32028
+     ISETLXDF                                                             E32025
+     I              RECI                            ORECI                 E32025
+     I*
+     IRECIN     E DSTRADSD
+     I              RECI                            TRECI                 E34902
+     ITREC        DS
+     I***********                             1 250 TREC1                 E35649
+     I***********                           251 503 TREC2                 E35649
+     I                                        1 255 TREC1                 E35649
+     I                                      256 510 TREC2                 E35649
+     I*
+     I            DS
+     I*
+     I*  DS FOR CRITICAL TRADE FIELDS
+     I*
+     I***********                             1  96 TRSIDS                E34902
+     I**********                              1 104 TRSIDS                             E34902 CGL029
+     I                                        1 140 TRSIDS                                    CGL029
+     I                                        1   20TRSMTH
+     I**********                              3  14 TRPYFM                                    CGL029
+     I                                        3  14 TRQQFM                                    CGL029
+     I***********                            15  170TRPYFB                S01117
+     I                                       15  17 TRPYFA                S01117
+     I**********                             18  29 TRPAYT                                    CGL029
+     I                                       18  29 TRQQYT                                    CGL029
+     I***********                            30  320TRPYTB                S01117
+     I                                       30  32 TRPYTA                S01117
+     I                                       33  40 TRTDFA
+     I                                       41  420TRASNM
+     I**********                             43  480TRDELT                                    CSD027
+     I                                       43  48 TRDELT                                    CSD027
+     I                                       49  56 TRDTFA
+     I**********                             57  620TRDELF                                    CSD027
+     I                                       57  62 TRDELF                                    CSD027
+     I                                       63  80 TRDFFA
+     I                                       81  81 TRPCOD
+     I                                       82  960TRTCTR
+     I                                       97 1020TRNOML
+     I                                      103 103 TRPRYC
+     I                                      104 104 TRTINC                E34902
+     I                                      105 122 TRPYFM                                    CGL029
+     I                                      123 140 TRPAYT                                    CGL029
+     I*
+     I            DS
+     I*
+     I*  DS FOR CRITICAL AMENDED/SOB FIELDS
+     I*
+     I***********                             1  96 SASIDS                E34902
+     I**********                              1 104 SASIDS                             E34902 CGL029
+     I                                        1 140 SASIDS                                    CGL029
+     I                                        1   20SASMTH
+     I**********                              3  14 SAPYFM                                    CGL029
+     I                                        3  14 SAQQFM                                    CGL029
+     I***********                            15  170SAPYFB                S01117
+     I                                       15  17 SAPYFA                S01117
+     I**********                             18  29 SAPAYT                                    CGL029
+     I                                       18  29 SAQQYT                                    CGL029
+     I***********                            30  320SAPYTB                S01117
+     I                                       30  32 SAPYTA                S01117
+     I                                       33  40 SATDFA
+     I                                       41  420SAASNM
+     I**********                             43  480SADELT                                    CSD027
+     I                                       43  48 SADELT                                    CSD027
+     I                                       49  56 SADTFA
+     I**********                             57  620SADELF                                    CSD027
+     I                                       57  62 SADELF                                    CSD027
+     I                                       63  80 SADFFA
+     I                                       81  81 SAPCOD
+     I                                       82  960SATCTR
+     I                                       97 1020SANOML
+     I                                      103 103 SAPRYC
+     I                                      104 104 SATINC                E34902
+     I                                      105 122 SAPYFM                                    CGL029
+     I                                      123 140 SAPAYT                                    CGL029
+     I*
+     I* DATA STRUCTURES FOR ERROR HANDLING
+     I*
+     ITRDDS       DS
+     I*
+     I*  Trade Pay/Rec
+     I                                     *STATUS  STSTRD
+     I*
+     ISLADS       DS
+     I*
+     I*  SE Telex extract audit
+     I                                     *STATUS  STSSLA
+     I*
+     ISLXDS       DS
+     I*
+     I*  SE Telex extract
+     I                                     *STATUS  STSSLX
+     I*
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*LDA******* UDS                            256                      S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 177 DBASE                 S01117
+     I*
+     I            DS
+     I*
+     I*   TIME DATA STRUCTURE
+     I*
+     I                                        1   60CTIME
+     I                                        1   2 CHOUR
+     I                                        3   4 CMINT
+     I*
+     ICPYR@#      DS
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C/EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T                                  *
+     C*================================================================
+     C*
+     C**  Perform initial processing - Any problems will set on U7
+     C*
+     C                     EXSR FIRST
+     C*
+     C**  Read first trade on TRADSD
+     C*
+     C                     READ TRADSDF                  01
+     C*
+     C**  Process each trade on TRADSD (which only contains records
+     C**  determined by the OPNQRYF command in the CL calling program).
+     C*
+     C           *IN01     DOWEQ'0'
+     C           *INU7     ANDEQ'0'
+     C*
+     C**  On Change of Customer
+     C**  GET CUSTOMER DETAILS - needed for internal customer check
+     C*
+     C           TCNR      IFNE PRTCNR
+     C           CLNUM     CHAINCLINTSEF             04
+     C*
+     C**  If not found or deleted then database error
+     C*
+     C  N04      CRECI     COMP 'D'                  0404
+     C           *IN04     IFEQ '1'
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'CLINT'   DBFILE
+     C                     MOVELTCNR      KEY7    7        *****************
+     C                     MOVE '1'       KEY7             ** DB ERROR 04 **
+     C                     MOVELKEY7      DBKEY            *****************
+     C***********          MOVE '04'      DBASE                           S01117
+     C                     Z-ADD4         DBASE                           S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END
+     C**********           Z-ADDTCNR      PRTCNR                                              CSD027
+     C                     MOVE TCNR      PRTCNR                                              CSD027
+     C                     END
+     C*
+     C**  Only if counterparty is not an internal customer number, and
+     C**  no database error in customer access do Telex processing
+     C*
+     C           C1DI      IFNE 'I'
+     C           *INU7     ANDEQ'0'
+     C*
+     C**  Determine if Telex Required
+     C*
+     C                     EXSR DETTLX
+     C*
+     C**  If required write telex extract
+     C*
+     C           TLXRQD    IFEQ 'Y'
+     C                     EXSR WRITET
+     C                     END
+     C*
+     C**  END IF customer is not an internal customer number
+     C*
+     C                     END
+     C*
+     C**  Set PRPC indicator on trade to Y
+     C*
+     C           *INU7     IFEQ '0'
+     C                     MOVE 'Y'       PRPC
+     C                     EXCPTTRADEP
+     C                     END
+     C*
+     C**  IF OK then Comit the updates
+     C**            Read the next trade
+     C*
+     C           *INU7     IFEQ '0'
+     C                     COMIT
+     C                     READ TRADSDF                  01
+     C                     ELSE
+     C*
+     C**  ELSE rollback the updates
+     C*
+     C                     ROLBK
+     C                     END
+     C*
+     C**  End Do While loop
+     C*
+     C                     END
+     C*
+     C*================================================================
+     C*  P R O G R A M     E N D                                      *
+     C*                                                               *
+     C**  Update Audit Records, Output Control Report and End Program *
+     C*                                                               *
+     C                     EXSR AUDIT
+     C*                                                               *
+     C*================================================================
+     C*
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* DETTLX - S/R TO DETERMINE IF TELEX IS REQUIRED FOR TRADE      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           DETTLX    BEGSR                           ** DETTLX **
+     C*
+     C                     MOVEL'N'       TLXRQD  1
+     C*                                                                   E32025
+     C*  If there is already a record on SETLXD for this trade, this meansE32025
+     C*  that the last run did not complete successfully.  This trade mustE32025
+     C*  also have been amended since that last run.  But there is no needE32025
+     C*  to put out another record to SETLXD.                             E32025
+     C*                                                                   E32025
+     C           TDRF      CHAINSETLXDF              33                   E32025
+     C*                                                                   E32025
+     C           *IN33     IFEQ '1'                                       E32025
+     C*
+     C**  Store the TRADSD trade just read in and fill the data
+     C**  structure which holds the amendment critical data
+     C*
+     C                     MOVELRECIN     TREC1
+     C                     MOVE RECIN     TREC2
+     C                     Z-ADDSMTH      TRSMTH
+     C                     MOVE PYFM      TRPYFM
+     C***********          Z-ADDPYFB      TRPYFB                          S01117
+     C                     MOVE PYFA      TRPYFA                          S01117
+     C                     MOVE PAYT      TRPAYT
+     C***********          Z-ADDPYTB      TRPYTB                          S01117
+     C                     MOVE PYTA      TRPYTA                          S01117
+     C                     MOVE TDFA      TRTDFA
+     C                     Z-ADDASNM      TRASNM
+     C**********           Z-ADDDELT      TRDELT                                              CSD027
+     C                     MOVE DELT      TRDELT                                              CSD027
+     C                     MOVE DTFA      TRDTFA
+     C**********           Z-ADDDELF      TRDELF                                              CSD027
+     C                     MOVE DELF      TRDELF                                              CSD027
+     C                     MOVE DFFA      TRDFFA
+     C                     MOVE PCOD      TRPCOD
+     C                     Z-ADDTCTR      TRTCTR
+     C                     Z-ADDNOML      TRNOML
+     C                     MOVE TINC      TRTINC                          E34902
+     C*
+     C**  Check for Clearance type 1 or 2 for EUCLID priority code
+     C*
+     C           CLTY      IFEQ '1'
+     C           CLTY      OREQ '2'
+     C                     MOVE PRYC      TRPRYC
+     C                     ELSE
+     C                     MOVE *BLANK    TRPRYC
+     C                     END
+     C*
+     C**  Get any ATPRP record for this trade
+     C*
+     C                     MOVE TDRF      STDRF   6
+     C           TDRF      SETGTATPRP                02
+     C                     READPATPRP                    02
+     C           *IN02     IFEQ '0'
+     C           TDRF      ANDNESTDRF
+     C                     SETON                     02
+     C                     END
+      *                                                                                       248637
+     C           *IN02     IFEQ '0'                                                           248637
+     C           ARECI     IFEQ '*'                                                           248637
+     C           ARECI     OREQ 'C'                                                           248637
+     C                     MOVE '1'       *IN02                                               248637
+     C                     ENDIF                                                              248637
+     C                     ENDIF                                                              248637
+     C*
+     C**  If no ATPRP record found then get SOBTR file record
+     C*
+     C************IN02     IFEQ '1'                                       S01269
+     C***********STDRF     CHAINSOBTRDF              03                   S01269
+     C***********          END                                            S01269
+     C*                                                                   S01269
+     C**  If no ATPRP record found then get TRATX file record             S01269
+     C*                                                                   S01269
+     C           *IN02     IFEQ '1'                                       S01269
+     C           STDRF     CHAINXTRDF                06                   S01269
+     C                     ELSE                                           E35978
+     C                     MOVE ARECI     SAVREC  1                       E35978
+     C                     END                                            S01269
+     C*                                                                   S01269
+     C**  If no TRATX record found then get SOBTR file record             S01269
+     C*                                                                   S01269
+     C           *IN06     IFEQ '1'                                       S01269
+     C           STDRF     CHAINSOBTRDF              03                   S01269
+     C           *IN03     IFEQ '0'                                                           248637
+     C           TRECI     IFEQ '*'                                                           248637
+     C           TRECI     OREQ 'C'                                                           248637
+     C                     MOVE '1'       *IN03                                               248637
+     C                     ENDIF                                                              248637
+     C                     ENDIF                                                              248637
+     C                     ELSE                                           E35978
+     C                     MOVE XRECI     SAVREC  1                       E35978
+     C                     END                                            S01269
+     C*                                                                   E35978
+     C           *IN03     IFEQ '0'                                       E35978
+     C                     MOVE SRECI     SAVREC  1                       E35978
+     C                     END                                            E35978
+     C*
+     C**  If Trade is NOT cancelled
+     C*
+     C           TRECI     IFNE 'C'
+     C           TRECI     ANDNE'*'
+     C*
+     C***If*no*ATPRP*or*SOBTR*record*found*then*TELEX*REQUIRED************S01269
+     C**  If no ATPRP or TRATX or SOBTR record found then                 S01269
+     C**  TELEX REQUIRED using details from TRADSD
+     C**  (as there was no access of ATPRP/SOBTR)
+     C*
+     C           *IN02     IFEQ '1'
+     C           *IN06     ANDEQ'1'                                       S01269
+     C           *IN03     ANDEQ'1'
+     C                     MOVEL'Y'       TLXRQD
+     C                     MOVELTREC1     RECIN
+     C                     MOVE TREC2     RECIN
+     C*
+     C**  ELSE if an ATPRP or SOBTR record was found then
+     C**  determine if amendment to trade warrants a telex
+     C*
+     C                     ELSE
+     C*
+     C**  Fill data structure holding the amendment critical details
+     C**  using the details from either the ATPRP or SOBTR record
+     C*
+     C                     Z-ADDSMTH      SASMTH
+     C                     MOVE PYFM      SAPYFM
+     C***********          Z-ADDPYFB      SAPYFB                          S01117
+     C                     MOVE PYFA      SAPYFA                          S01117
+     C                     MOVE PAYT      SAPAYT
+     C***********          Z-ADDPYTB      SAPYTB                          S01117
+     C                     MOVE PYTA      SAPYTA                          S01117
+     C                     MOVE TDFA      SATDFA
+     C                     Z-ADDASNM      SAASNM
+     C**********           Z-ADDDELT      SADELT                                              CSD027
+     C                     MOVE DELT      SADELT                                              CSD027
+     C                     MOVE DTFA      SADTFA
+     C**********           Z-ADDDELF      SADELF                                              CSD027
+     C                     MOVE DELF      SADELF                                              CSD027
+     C                     MOVE DFFA      SADFFA
+     C                     MOVE PCOD      SAPCOD
+     C                     Z-ADDTCTR      SATCTR
+     C                     Z-ADDNOML      SANOML
+     C***********          MOVE TINC      TRTINC                    E34902E35978
+     C                     MOVE TINC      SATINC                          E35978
+     C*
+     C**  Check for Clearance type 1 or 2 for EUCLID priority code
+     C*
+     C           CLTY      IFEQ '1'
+     C           CLTY      OREQ '2'
+     C                     MOVE PRYC      SAPRYC
+     C                     ELSE
+     C                     MOVE *BLANK    SAPRYC
+     C                     END
+     C*
+     C           TRSIDS    IFNE SASIDS
+     C                     MOVEL'Y'       TLXRQD
+     C                     END
+     C*                                                                   E32028
+     C***********RECI      IFEQ 'L'                                 E32028E34902
+     C***********RECI      OREQ 'P'                                 E32028E34902
+     C***********RECI      OREQ 'R'                                 E32028E34902
+     C           TRECI     IFEQ 'L'                                       E34902
+     C           TRECI     OREQ 'P'                                       E34902
+     C           TRECI     OREQ 'R'                                       E34902
+     C                     MOVEL'Y'       TLXRQD                          E32028
+     C                     ELSE                                           E32028
+     C           SRECI     IFEQ 'L'                                       E32028
+     C                     MOVEL'Y'       TLXRQD                          E32028
+     C                     END                                            E32028
+     C                     END                                            E32028
+     C*
+     C                     END
+     C*
+     C**  ELSE if Trade is cancelled
+     C*
+     C                     ELSE
+     C*
+     C**  If an ATPRP or SOBTR record was found then TELEX REQUIRED
+     C**  using details from ATPRP or SOBTR (ie as at last telex)
+     C*
+     C           *IN02     IFEQ '0'
+     C           *IN03     OREQ '0'
+     C                     MOVEL'Y'       TLXRQD
+     C                     END
+     C*
+     C                     END
+     C*                                                                   E32025
+     C                     END                                            E32025
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* WRITET- S/R TO OUTPUT TELEX EXTRACT                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           WRITET    BEGSR                           ** WRITET **
+     C*
+     C**  Set up details for output to SETLXD
+     C*
+     C***********          MOVE 'D'       RECI                            E32025
+     C                     MOVE 'D'       ORECI                           E32025
+     C                     MOVE TDRF      TRDE
+     C***********          MOVE TDBR      BCHT                            S01117
+     C                     MOVE TDBA      BCBA                            S01117
+     C           TDTP      IFEQ 'TP'
+     C***********          MOVE PYFB      BCHS                            S01117
+     C                     MOVE PYFA      BCSA                            S01117
+     C                     END
+     C*
+     C           TDTP      IFEQ 'TS'
+     C***********          MOVE PYTB      BCHS                            S01117
+     C                     MOVE PYTA      BCSA                            S01117
+     C                     END
+     C*
+     C***********BCHS      IFEQ *ZERO                                     S01117
+     C***********          Z-ADDBCHT      BCHS                            S01117
+     C           BCSA      IFEQ *BLANKS                                   S01117
+     C                     MOVE BCBA      BCSA                            S01117
+     C                     END
+     C*
+     C                     MOVE TDSS      SCSN
+     C                     MOVE TDTP      TRAD
+     C                     MOVE TCNR      CLNM
+     C                     MOVE *BLANKS   TXIN
+     C*
+     C**  IF Trade cancellation set action code = C
+     C*
+     C           TRECI     IFEQ 'C'
+     C           TRECI     OREQ '*'
+     C                     MOVE 'C'       ACTO
+     C                     ELSE
+     C*
+     C**  ELSE, IF amendment set action code for first record = C
+     C**  and write first record
+     C*
+     C           *IN02     IFEQ '0'
+     C           *IN03     OREQ '0'
+     C           *IN06     OREQ '0'                                       E32028
+     C***********RECI      IFNE 'L'                                 E32028E34902
+     C***********RECI      ANDNE'P'                                 E32028E34902
+     C***********RECI      ANDNE'R'                                 E32028E34902
+     C           TRECI     IFNE 'L'                                       E34902
+     C           TRECI     ANDNE'P'                                       E34902
+     C           TRECI     ANDNE'R'                                       E34902
+     C           SAVREC    ANDNE'L'                                       E35978
+     C           SAVREC    ANDNE'P'                                       E35978
+     C           SAVREC    ANDNE'R'                                       E35978
+     C                     MOVE 'C'       ACTO
+     C                     WRITESETLXDF
+     C                     ADD  1         TXCNT
+     C                     END                                            E32028
+     C*
+     C**  Restore details from TRADSD (restore from TREC1 & TREC2)
+     C**  for second record
+     C*
+     C                     MOVELTREC1     RECIN
+     C                     MOVE TREC2     RECIN
+     C*
+     C**  Set up details for output to SETLXD for second SETLXD record
+     C*
+     C***********          MOVE 'D'       RECI                            E34902
+     C                     MOVE 'D'       TRECI                           E34902
+     C                     MOVE TDRF      TRDE
+     C***********          MOVE TDBR      BCHT                            S01117
+     C                     MOVE TDBA      BCBA                            S01117
+     C           TDTP      IFEQ 'TP'
+     C***********          MOVE PYFB      BCHS                            S01117
+     C                     MOVE PYFA      BCSA                            S01117
+     C                     END
+     C*
+     C           TDTP      IFEQ 'TS'
+     C***********          MOVE PYTB      BCHS                            S01117
+     C                     MOVE PYTA      BCSA                            S01117
+     C                     END
+     C*
+     C***********BCHS      IFEQ *ZERO                                     S01117
+     C***********          Z-ADDBCHT      BCHS                            S01117
+     C           BCSA      IFEQ *BLANKS                                   S01117
+     C                     MOVE BCBA      BCSA                            S01117
+     C                     END
+     C*
+     C                     MOVE TDSS      SCSN
+     C                     MOVE TDTP      TRAD
+     C                     MOVE TCNR      CLNM
+     C                     MOVE *BLANKS   TXIN
+     C*
+     C                     END
+     C                     MOVE 'I'       ACTO
+     C                     END
+     C*
+     C                     WRITESETLXDF
+     C                     ADD  1         TXCNT
+     C*
+     C**  Write to Telex audit so that in the event of failure the
+     C**  Telex file and its audit trailer match
+     C*
+     C           1         CHAINSETLXA               05
+     C                     Z-ADDTXCNT     NORE
+     C                     UPDATSETLXAF
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* FIRST  - S/R FOR INITIAL DATA SET UP.                         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           FIRST     BEGSR                           ** FIRST **
+     C*
+     C***********          MOVEL'SE3320'  DBPGM                           S01117
+     C*
+     C**  Set up standard error fields and retrieve table records
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANKS   DBLOT
+     C                     MOVEL'SE3320'  DBPGM
+     C                     OUT  LDA                                       S01117
+     C                     MOVE *BLANKS   SECSN  10
+     C*
+     C                     EXSR ZSYSTM
+     C           *IN99     IFEQ '1'
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE
+     C                     MOVELZTABKY    DBKEY            ***************
+     C***********          MOVE '01'      DBASE            **DB ERROR 01**S01117
+     C                     Z-ADD1         DBASE            **DB ERROR 01**S01117
+     C                     OUT  LDA                        *************  S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END                             ***************
+     C*
+     C**  Define CLINT key field
+     C*
+     C                     MOVE '1'       CRCT    1
+     C           CLNUM     KLIST
+     C                     KFLD           TCNR
+     C                     KFLD           CRCT
+     C*
+     C**  Write SETLX audit record if none present - (one will
+     C**  already exist if recovering after failure).  Otherwise set
+     C**  Telex count to the number of records already on SETLXD.
+     C*
+     C           1         CHAINSETLXA               05
+     C           *IN05     IFEQ '1'
+     C                     Z-ADD0         NORE
+     C                     WRITESETLXAF
+     C                     COMIT
+     C                     Z-ADD0         TXCNT   50
+     C                     ELSE
+     C                     Z-ADDNORE      TXCNT
+     C                     END
+     C*
+     C**  Input Cycle time for audit report
+     C*
+     C                     TIME           CTIME
+     C                     MOVE ':  '     ATIME   5
+     C                     MOVE CMINT     ATIME
+     C                     MOVELCHOUR     ATIME
+     C*
+     C                     SETOF                     31
+     C*
+     C**********           MOVE *ZEROS    PRTCNR  60                                          CSD027
+     C                     MOVE *BLANKS   PRTCNR  6                                           CSD027
+     C*
+     C                     ENDSR
+     C*
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*   AUDIT - S/R FOR AUDIT PROCESSING                            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           AUDIT     BEGSR
+     C*
+     C**  Output run control report
+     C*
+     C                     WRITEHEADAU
+     C  NU7                WRITECONTROL
+     C   U7 U8             WRITEERRORAU
+     C***********          WRITETRAILAU                                   E29170
+     C*
+     C                     SETON                     LR
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*   SLXSR  - S/R FOR ERROR HANDLING OF TELEX EXTRACT FILE       *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SLXSR     BEGSR
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'SETLX'   DBFILE
+     C                     MOVELTDRF      DBKEY
+     C***********          MOVE '82'      DBASE                           S01117
+     C                     Z-ADD82        DBASE                           S01117
+     C                     MOVE STSSLX    DBSTAT
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     LRU7U8
+     C                     SETON                     31
+     C                     ROLBK
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*   SLASR  - S/R FOR ERROR HANDLING OF TELEX EXTRACT            *
+     C*            AUDIT RECORD                                       *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SLASR     BEGSR
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'SETLX'   DBFILE
+     C                     MOVEL'AUDIT'   DBKEY
+     C***********          MOVE '83'      DBASE                           S01117
+     C                     Z-ADD83        DBASE                           S01117
+     C                     MOVE STSSLA    DBSTAT
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     LRU7U8
+     C                     SETON                     31
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*   TRPSR  - S/R FOR ERROR HANDLING OF TRADES FOR               *
+     C*            PAY/RECEIVE RECORD                                 *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           TRDSR     BEGSR
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TRADSD'  DBFILE
+     C                     MOVELTDRF      DBKEY
+     C***********          MOVE '84'      DBASE                           S01117
+     C                     Z-ADD84        DBASE                           S01117
+     C                     MOVE STSTRD    DBSTAT
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     LRU7U8
+     C                     SETON                     31
+     C                     ROLBK
+     C*
+     C                     ENDSR
+     C*
+     C*
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+     C*****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+      /EJECT
+     O*                                                                   E20087
+     O*  Exception output to update PRPC field on TRADSD                  E20087
+     O*                                                                   E20087
+     OTRADSDF E                TRADEP                                     E20087
+     O                         PRPC                                       E20087
+***********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

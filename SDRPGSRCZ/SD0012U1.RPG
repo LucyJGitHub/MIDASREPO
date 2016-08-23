@@ -1,0 +1,444 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD SWIFT 2 address changes')                     *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas  -  STANDING DATA MODULE
+     F*                                                                  *
+     F*     SD0012U1 - SWIFT ADDRESS CHANGES                             *
+     F*                                                                  *
+      *  Note: Any change applied to SD0012U may well be applied to   *
+      *        this program. For that reason, the previous CAR tags   *
+      *        have not been removed                                  *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CGL165             Date 15Feb17               *
+      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CLE042             Date 06Sep05               *
+      *                 CDL038             Date 10May05               *
+      *                 CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSW036             Date 15Dec04               *
+      * ----- CSW036 -------------------------------------------------*
+      *                 CPK016             Date 04Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSW024             Date 31Aug01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 183583             Date 29Jun01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 141572             Date 21Sep98               *
+     F*                    113352             DATE 13FEB97            *
+     F*                    105838             DATE 27JAN98            *
+     F*                                                                  *
+     F*****************************************************************
+     F*                                                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198 - Cannot save new Details for CUSD (Recompile)       *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CPK016 - Release 5 packaging.  Clash of field names.         *
+      *  CSW024 - S.W.I.F.T. MT3xx Field 82/83/87. (Recompiled)       *
+      *  183583 - Added message extension file checking to 105838     *
+      *           processing as SWIFT IDs may be shared by numerous   *
+      *           customers.                                          *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *   CDL008 - Continuous Linked Settlement (Recompiled MGOREFPD) *
+     F*  141572 - Recompile over changes in MGOREFPD                  *
+     F*  113352 - RECOMPILE OVER CHANGES IN MGOREFPD                  *
+     F*  105838 - When a SWIFT address is changed the pgm may update  *
+     F*           the common reference on a massage for a different   *
+     F*           SWIFT ID if only posn 5 and 6 of the ID is different*
+     F*           as common ref uses only posn 1-4 and 7/8 of SWIFT ID*
+     F*           Fix is to check which customers SWIFT address was   *
+     F*           used to make up the common reference, and change    *
+     F*           the message only if for the customer being amended. *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  RE-WRITTEN FOR S01344 - SWIFT RATIONALISATION PHASE 2        *
+     F*                                                               *
+     F*****************************************************************
+     FMGOREFLZUF  E           K        DISK
+     F                                              KCOMIT
+     FMGOMSGLAUF  E           K        DISK
+     F                                              KCOMIT
+     FDEALS   IF  E           K        DISK                               105838
+     FSDCUSTL1IF  E           K        DISK                               105838
+     FSDBRCHL1IF  E           K        DISK                               105838
+     FCLOAN   IF  E           K        DISK                               105838
+     F            CLOANHHF                          KIGNORE               105838
+     F            CLOANCKF                          KIGNORE               105838
+     F            CLOANZ1F                          KIGNORE               105838
+     FTRADS   IF  E           K        DISK                               105838
+     FMGOEXTL1IF  E           K        DISK                               183583
+      *
+      **  Copyright array
+      *
+     E                    FD1        50  1
+     E                    FD2        50  1
+     E                    CPY@    1   1 80               Copyright
+      *
+     ITRADSDF                                                                                 CPK016
+     I              CRSK                            TDCRSK                                    CPK016
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      **  Local data area data structure
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           SWTOLD 12        OLD SWIFT ADDRESS
+     C                     PARM           SWTNEW 12        NEW SWIFT ADDRESS
+     C                     PARM           CSIDER  1
+     C                     PARM           CUSNUM  6                       183583
+     C/EJECT
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *   INIT  - Init process                                        *
+      *   MAIN  - Main process                                        *
+      *   MGOCHK - Check new SWIFT code relates to Common Reference   *   105838
+      *   *PSSR - error handling                                      *
+      *****************************************************************
+      *
+     C                     EXSR INIT
+      *
+      **  Perform until EOF
+      *
+     C           *IN01     DOWEQ'0'                                   1
+      *
+      **  If old swift address found replace with new swift address
+      *
+      **  Move Sender's customer number and Destination's customer        183583
+      **  number to a character field, since CUSNUM is declared           183583
+      **  as character.                                                   183583
+      *                                                                   183583
+     C                     MOVE SECN      SECN1   6                       183583
+     C                     MOVE DECN      DECN1   6                       183583
+      *                                                                   183583
+     C           SWTOLD    IFEQ NWSN                                  2
+     C           CUSNUM    ANDEQSECN1                                     183583
+     C                     MOVE *BLANK    NWSN
+     C                     MOVELSWTNEW    NWSN                       E2
+     C                     SETON                     02
+     C                     END
+      *
+      **  If old swift address found replace with new swift address
+      *
+     C           SWTOLD    IFEQ NWDS                                  2
+     C           CUSNUM    ANDEQDECN1                                     183583
+     C                     MOVE *BLANK    NWDS
+     C                     MOVELSWTNEW    NWDS
+     C                     SETON                     02
+     C                     END                                       E2
+      *
+      **  Update only if old swift address was found
+      *
+     C           *IN02     IFEQ '1'                                   2
+     C                     UPDATMGOREFD0
+     C                     SETOF                     02
+     C                     END                                       E2
+      *
+      **  Perform MGOMSG. This searches & replaces old swift addressess
+      **  & old short swift addresess with new swift addressess & new
+      **  short swift addressess respectively.
+      *
+     C                     EXSR MGOMSG
+      *
+      **  Read next record
+      *
+     C                     READ MGOREFLZ                 01
+      *
+     C                     END                                       E1
+      *
+     C                     SETON                     LR
+     C/EJECT
+      *****************************************************************
+      *    INIT - Init process                                        *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+     C                     MOVEACPY@      CPY@@   1
+      *
+      **  Extract from the old swift address the bank code & the
+      **  location code (positions 1 to 4, & 7 to 8) the result is
+      **  the short swift code.
+      **  Do likewise for the new swift address.
+      *
+     C           4         SUBSTSWTOLD:1  @WRK4   4
+     C           2         SUBSTSWTOLD:7  @WRK2   2
+     C           @WRK4     CAT  @WRK2     OSSA    6
+      *
+     C           4         SUBSTSWTNEW:1  @WK4    4
+     C           2         SUBSTSWTNEW:7  @WK2    2
+     C           @WK4      CAT  @WK2      NSSA    6
+      *
+      **  Check whether input to program is valid i.e new & old
+      **  not the same & not blank.
+      **  Indicator 01 - EOF
+      *
+     C                     SETON                     01
+      *
+     C           SWTOLD    IFNE *BLANKS                               1
+     C           SWTNEW    ANDNE*BLANKS
+      *
+     C           SWTOLD    IFNE SWTNEW                                2
+      *
+     C                     READ MGOREFLZ                 01
+      *
+     C                     END                                       E2
+     C                     END                                       E1
+      *
+     C           CUSKY1    KLIST                                          183583
+     C                     KFLD           TRNO                            183583
+     C                     KFLD           POSNX                           183583
+     C                     KFLD           CUSNM8  8                       183583
+      *                                                                   183583
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *    MGOMSG - process                                           *
+      *****************************************************************
+      *
+     C           MGOMSG    BEGSR
+      *
+     C           TRNO      CHAINMGOMSGLA             03
+     C                     Z-ADD1         POSNX   20                      183583
+      *
+      **  Perform Do loop until TRNO changes
+      *
+     C           *IN03     DOWEQ'0'                                   1
+      *
+      **  Scan MFLD for the old swift address, if not found scan for
+      ** old short swift address.
+      ** If neither are found read next record matching key & scan
+      ** again.
+      *
+     C           SWTOLD    SCAN MFLD:1    XX      20     05
+      *
+     C           *IN05     IFEQ '0'                                   2
+     C           OSSA      SCAN MFLD:1    YY      20     06
+     C                     END                                       E2
+      *
+      **  Old swift address found. Set up arrays & counters.
+      *
+     C           *IN05     IFEQ '1'                                   2
+      *                                                                   183583
+      ** In order to cater for changes in MCSI of MGOEXTPD chain field    183583
+      ** CUSNUM was moved to new field CUSNM8.                            183583
+      *                                                                   183583
+     C                     MOVELCUSNUM    CUSNM8    P                     183583
+     C           CUSKY1    CHAINMGOEXTL1             10                   183583
+     C           *IN10     IFEQ '1'                                       183583
+     C                     MOVE '0'       *IN05                           183583
+     C                     ENDIF                                          183583
+     C                     ENDIF                                          183583
+      *                                                                   183583
+      **  If record containing the old SWIFT address used the amended     183583
+      **  customer then set up arrays & counters.                         183583
+      *                                                                   183583
+     C           *IN05     IFEQ '1'                                   2   183583
+     C                     Z-ADD1         ZZ      20
+     C                     Z-ADD1         Z       20
+     C                     MOVE *BLANKS   FD1
+     C                     MOVE *BLANKS   FD2
+     C                     MOVEAMFLD      FD1
+      *
+      **  In this Do loop, the old swift address is being replaced
+      **  by the new swift address. XX marking the position the old
+      **  swift address was found by the SCAN operation.
+      *
+     C           ZZ        DOWLE50                                    3
+      *
+     C           ZZ        IFEQ XX                                    4
+     C                     MOVEASWTNEW    FD2,ZZ
+     C                     ADD  12        ZZ
+     C                     ADD  12        Z
+     C                     ELSE                                      X4
+     C                     MOVE FD1,Z     FD2,ZZ
+     C                     ADD  1         ZZ
+     C                     ADD  1         Z
+     C                     END                                       E4
+     C                     END                                       E3
+      *
+     C                     MOVEAFD2       MFLD
+     C                     END                                       E2
+      *
+      ****Old*short*swift*address*found.*Set*up*arrays*&*counters.        105838
+      *                                                                   105838
+      *   Old short swift address found.  Check old swift address same    105838
+      *   as swift address from which short address was created           105838
+      *                                                                   105838
+     C           *IN06     IFEQ '1'                                       105838
+     C                     EXSR MGOCHK                                    105838
+     C                     END                                            105838
+      *                                                                   105838
+      *   Subr. MGOCHK will set off indicator 6 if short swift address    105838
+      *   should not be changed                                           105838
+      *                                                                   105838
+      *
+     C           *IN06     IFEQ '1'                                   2
+     C                     Z-ADD1         ZZ
+     C                     Z-ADD1         Z
+     C                     MOVE *BLANKS   FD1
+     C                     MOVE *BLANKS   FD2
+     C                     MOVEAMFLD      FD1
+      *
+      **  In this Do loop, the old short swift address is being replaced
+      **  by the new short swift address. YY marking the position the old
+      **  short swift address was found by the SCAN operation.
+      *
+     C           ZZ        DOWLE50                                    3
+      *
+     C           ZZ        IFEQ YY                                    4
+     C                     MOVEANSSA      FD2,ZZ
+     C                     ADD  6         ZZ
+     C                     ADD  6         Z
+     C                     ELSE                                      X4
+     C                     MOVE FD1,Z     FD2,ZZ
+     C                     ADD  1         ZZ
+     C                     ADD  1         Z
+     C                     END                                       E4
+     C                     END                                       E3
+      *
+     C                     MOVEAFD2       MFLD
+     C                     END                                       E2
+      *
+      **  Only update if the old swift address or the old short swift
+      **  address was found by the SCAN operation
+      *
+     C           *IN05     IFEQ '1'                                   2
+     C           *IN06     OREQ '1'
+     C                     UPDATMGOMSGD0
+     C                     END                                       E2
+      *
+     C                     SETOF                     0506
+      *
+      **  Read next record
+      *
+     C           TRNO      READEMGOMSGLA                 03
+     C                     ADD  1         POSNX                           183583
+      *
+     C                     END                                       E1
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************   105838
+      *   MGOCHK - check old Swift code = Swift codes used to create  *   105838
+      *            Common Reference                                   *   105838
+      *****************************************************************   105838
+      *                                                                   105838
+     C           MGOCHK    BEGSR                                          105838
+      *                                                                   105838
+      * Common reference is made up of short Swift ID of the branch       105838
+      * (BRCA) from MGOREFPD plus the short Swift ID of the original      105838
+      * customer of the deal (if message type 202 or 210) or of the       105838
+      * destination customer (other message types)                        105838
+      *                                                                   105838
+      * Set off ind 06; set it on again if update of Common ref reqd      105838
+      *                                                                   105838
+     C                     MOVE '0'       *IN06                           105838
+      * Don't change common ref on MT950's, as this may not have been     105838
+      * generated by MIDAS                                                105838
+      *                                                                   105838
+     C           MTPY      IFNE '950'                                 1   105838
+      * Get Swift code of branch                                          105838
+     C           BRCA      CHAINSDBRCHL1             11                   105838
+     C           *IN11     IFEQ '0'                                   2   105838
+     C           A8BTID    ANDEQSWTOLD                                    105838
+      * If branch record not found, allow common ref to be updated        105838
+     C           *IN11     OREQ '1'                                       105838
+     C                     MOVE '1'       *IN06                           105838
+     C                     END                                       E2   105838
+      *                                                                   105838
+      * Only check other half if match not already found                  105838
+     C           *IN06     IFEQ '0'                                   2   105838
+      * See if message type 202 or 210                                    105838
+      *                                                                   105838
+     C           MTPY      IFEQ '202'                                 3   105838
+     C           MTPY      OREQ '210'                                     105838
+     C                     MOVELMTRN      NUMKEY  60                      105838
+     C                     MOVELMTRN      ALPKEY  6                       105838
+      * Check module for file to get Customer number from                 105838
+     C           MODI      IFEQ 'DL'                                  4   105838
+     C           NUMKEY    CHAINDEALS                11                   105838
+      * If record found, use customer no. to get customers Swift id       105838
+     C           *IN11     IFEQ '0'                                   5   105838
+     C                     MOVE CNUM      CUSKEY  6                       105838
+     C           CUSKEY    CHAINSDCUSTL1             11                   105838
+     C                     END                                       E5   105838
+     C                     ELSE                                      X4   105838
+     C           MODI      IFEQ 'SE'                                  5   105838
+     C           ALPKEY    CHAINTRADS                11                   105838
+      * If record found, use customer no. to get customers Swift id       105838
+     C           *IN11     IFEQ '0'                                   6   105838
+     C                     MOVE TCNR      CUSKEY                          105838
+     C           CUSKEY    CHAINSDCUSTL1             11                   105838
+     C                     END                                       E6   105838
+     C                     ELSE                                      X5   105838
+     C           MODI      IFEQ 'LE'                                  6   105838
+     C********** NUMKEY    CHAINCLOAN                11                                105838 CLE148
+     C           ALPKEY    CHAINCLOAN                11                                       CLE148
+      * If record found, use customer no. to get customers Swift id       105838
+     C           *IN11     IFEQ '0'                                   7   105838
+     C                     MOVE CNUM      CUSKEY                          105838
+     C           CUSKEY    CHAINSDCUSTL1             11                   105838
+     C                     END                                       E7   105838
+     C                     END                                       E6   105838
+     C                     END                                       E5   105838
+     C                     END                                       E4   105838
+      * If not a 202/210, use destination cust. no. to get Swift id.      105838
+     C                     ELSE                                      X3   105838
+     C                     MOVE DECN      CUSKEY                          105838
+     C           CUSKEY    CHAINSDCUSTL1             11                   105838
+     C                     END                                       E3   105838
+     C           *IN11     IFEQ '0'                                   3   105838
+     C***********BBCSID    ANDEQSWTOLD                              105838CSW036
+     C           BBCSI2    ANDEQSWTOLD                                    CSW036
+     C           CUSNUM    ANDEQCUSKEY                                    183583
+      * If customer details not found, allow update of common ref         105838
+     C           *IN11     OREQ '1'                                       105838
+     C                     MOVE '1'       *IN06                           105838
+     C                     END                                       E3   105838
+     C                     END                                       E2   105838
+     C                     END                                       E1   105838
+     C                     ENDSR                                          105838
+      *****************************************************************
+      *   *PSSR - Error handling                                      *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

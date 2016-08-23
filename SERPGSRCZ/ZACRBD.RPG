@@ -1,0 +1,1027 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Calc Int. Book/Depot Posn Cur&Fwd')           *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module                            *
+     F*                                                               *
+     F*  ZACRBD - STANDARD ROUTINE TO CALCULATE INTEREST              *
+     F*                            ON A BOOK/DEPOT POSITION           *
+     F*                                                               *
+     F*  Function: This program calculates Interest on a Book/Depot   *
+     F*   (COB)    Position: - as an Accrual, or                      *
+     F*                      - as Interest Due on a Coupon Date.      *
+     F*            Parameters are passed from the calling program;    *
+     F*            From and To Dates, Branch, Depot, Security, Book,  *
+     F*            Market, etc.                                       *
+     F*            The User/Depot Positions file - Current and Forward*
+     F*            is read for each selected Branch/Security/Book/    *
+     F*            Market/Depot combination, and the Accrued Interest *
+     F*            is calculated from the Nominal - Value Date (less  *
+     F*            the Interest from Ex-Coupon Nominal - Value Date). *
+     F*            The Interest Amount and Position Amount are        *
+     F*            returned at the end of the program run.            *
+     F*                                                               *
+     F*  Called by: SE1520 - Project User/Depot and Customer/Depot    *
+     F*                      Coupons Due.                             *
+     F*                                                               *
+     F*            Frequency:                                         *
+     F*            - At COB when Depot Positions are up to date       *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. 226449             Date 24Jun15               *
+      *  Prev Amend No. MD034776           Date 09Jul15               *
+      *                 AR1067108          Date 11Dec12               *
+      *                 AR1001183A         Date 20Nov12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 194370             Date 12Jul01               *
+      *                 211407             Date 07Jan03               *
+      *                 180056             Date 18Oct00               *
+      *                 CSE035             Date 22Apr02               *
+      *                 209025             Date 30Aug02               *
+      *                 206316             Date 19Jul02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSE031             Date 09Nov01               *
+      *                 180707             Date 25Jul00               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 130862             DATE 18OCT98               *
+      *                 151945             DATE 06Jan99               *
+     F*                 CSE005             DATE 04FEB97               *
+     F*                 100228             DATE 31MAY96               *
+     F*                 099886             DATE 18APR96               *
+     F*                 100017             DATE 18APR96               *
+     F*                 092961             DATE 04OCT95               *
+     F*                 088900             DATE 24OCT95               *
+     F*                 091254             DATE 20OCT95               *
+     F*                 086491             DATE 15JUN95               *
+     F*                 065301             DATE 06MAY94               *
+     F*                 055946             DATE 18FEB94               *
+     F*                 052254             DATE 23NOV93               *
+     F*                 051107             DATE 23NOV93               *
+     F*                 S01397             DATE 10SEP92               *
+     F*                 E27934             DATE 22OCT91               *
+     F*                 E23535             DATE 10OCT91               *
+     F*                 S01220             DATE 07AUG90               *
+     F*                 S01117             DATE 03NOV90               *
+     F*                 E22097             DATE 14MAY90               *
+     F*                 E21228             DATE 26FEB90               *
+     F*                 E21129             DATE 14FEB90               *
+     F*                 E20911             DATE 06FEB90               *
+     F*                 E20568             DATE 09DEC89               *
+     F*                 E20125             DATE 07NOV89               *
+     F*                 E20085             DATE 07NOV89               *
+     F*                 E18652             DATE 07/07/89              *
+     F*                 E16772             DATE 19/06/89              *
+     F*                 E17504             DATE 17/03/89              *
+     F*                 E13911             DATE 24/06/88              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  226449 - Recompiled over changes made in /COPY ZDYYRZ3.      *
+      *         - Applied for MD034387.                               *
+      *  MD034776 - Reverse AR1001183A to allow negative interest     *
+      *             rate. (Recompile)                                 *
+      *  AR1067108 - PMC1140 Component failed during Clean COB        *
+      *              Applied fix AR1001183A                           *
+      *  AR1001183A - Coupon rate was still used in computation of    *
+      *              interest instead of using the details in FRN tab *
+      *              (Reopen) (Recompile)                             *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CGL029 - Increase Account Code to 10 digits (Recompile)      *
+      *  194370 - Recompile after change on copy sources ZYLDZ2,      *
+      *           For securities with divisor basis = '5' and first   *
+      *           coupon date > valuation date (rundate + 1), set     *
+      *           event control date to first coupon date before      *
+      *           processing SR/ZDYYR. This is to ensure that the     *
+      *           correct hypothetical last and next coupon dates are *
+      *           used in deriving the price/yield rate.              *
+      *  211407 - Recompile after change on copy sources ZYLDZ2,      *
+      *           ZACCRZ1 and ZYCEZ1 for NX/NNX processing.           *
+      *           The change was to call subroutine ZLCD1 instead     *
+      *           of ZLCD in retrieving the PERIOD for NNX processing *
+      *           and ZNCD1 is called instead of ZNCD in retrieving   *
+      *           the WBENCD for NNX processing. Also rewrite tests   *
+      *           for identifying if position is NX,NNX or CUM.       *
+      *  180056 - Recompiled over changed in ZDYYRZ3.                 *
+      *  CSE035 - NX/NNX Coupon Payment Processing.                   *
+      *           Recompile over changed ZACCRZ1
+     F*  209025 - ECD is incorrect for Security with Divisor Basis 5. *
+     F*  206316 - Recompiled over changed ZLCDZ1.                     *
+     F*  CSE031 - Coupon Fixing for Floating Rate Notes.              *
+     F*           (recompilation due to change to ZNCD/ZLCD/ZACCR).   *
+     F*  180707 - No Position Settlements generated. Recompile over   *
+     F*           changes in /COPY ZNCDZ3.                            *
+     F*  130862 - RECOMPILED OVER ZLCDZ1 & ZDAYSZ2 CHANGES.           *
+     F*  151945 - Recompiled Over changed ZDYYRZ3 .                   *
+     F*  CSE005 - Effect of holidays on FRN Coupon Dates              *
+     F*           (recompilation due to change to ZNCD/ZLCD/ZACCR).   *
+     F*  100228 - ADD STANDARD SR ZLCDZ1.                             *
+     F*           RECOMPILE OVER CHANGED ZDYYRZ3, ZLCDZ1 & ZNCDZ3.    *
+     F*  099886 - Rounding problem for partly paid securities.        *
+     F*           Recompile over amended standard subroutine ZACCZ.   *
+     F*  100017 - Position settlement unable to pick up day adj. on   *
+     F*           SECTYD. Change subroutine to use DADJN to stop      *
+     F*           interest day adjustment being used for amortisation.*
+     F*           Recompile over amended subroutine ZDAYS.            *
+     F*  092961 - Recompile over ZDAYSZ2 which was amended by 086491  *
+     F*           (Wrong number of days calculated for day basis 1    *
+     F*           when start or end day is last day of February)      *
+     F*  088900 - Use new LF/UDPCFA for schuldschein processing       *
+     F*           in order to include past records as well            *
+     F*  091254 - RECOMPILE OVER CHANGED ZLCDZ1 & ZNCDZ3              *
+     F*  086491 - Wrong nbr of days calculated for day basis 1        *
+     F*           when start or end day is last day of February       *
+     F*           Recompiled for ZSRSRC/ZDAYSZ2 changes.              *
+     F*  065301 - Recompiled over changed copy source ZACCR subr.     *
+     F*           with ZAMT increased to 15,0; also remove (11,0)     *
+     F*           definition in this program.                         *
+     F*  055946 - This program uses ECD to compute for NCD. However,  *
+     F*           for divisor basis equal 3, it should use ZTDAT      *
+     F*           instead, for correct coupon calculation.            *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  051107 - Does no need to check if First or Last Day Accruals *
+     F*           as this is irrelevant when calculating the Coupon   *
+     F*           Amount. It is always based on last night's Position.*
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+     F*           - Recompiled due to changes to files.               *
+     F*  E27934 - Recompiled over the changed version of ZACCRZ1      *
+     F*  E23535 - If position found is lower or equal to last coupon  *
+     F*           date, then no ex-coupon nominal should be considered*
+     F*  S01220 - STRATEGIC RISK MANAGEMENT                           *
+     F*           Recompiled over changed PF/SECTYD, PF/SEDEVD        *
+     F*  S01117 - Multibranching.                                     *
+     F*  E22097 - E20125, Fix was incomplete - (SECTY has no Omits).  *
+     F*         - Last Position before Coupon Date required for First *
+     F*           Day Accruals, and Coupon Date for Last Day Accruals.*
+     F*  NOTE:  - A small amount of deleted code for error E20085     *
+     F*           has been removed to clarify the processing.         *
+     F*  E21228 - More changes for Schuldscheins.                     *
+     F*  E21129 - Set up ZRATE fields for Schuldscheins.              *
+     F*  E20911 - Amended to cater for changes already made in        *
+     F*           calling programs regarding Position Date for        *
+     F*           Coupon Payments.                                    *
+     F*  E20568 - ZACCZ changed to read non-diary events file -       *
+     F*           renamed record format of SECEO.                     *
+     F*  E20085 - Interest and Coupon Calculations Rewrite:           *
+     F*           - Non-Schuldshein Interest Accrual Processing has   *
+     F*             been replaced by a call to new version of SR/ZACCZ*
+     F*             File definitions added for this purpose.          *
+     F*           - Rate Change Events since LCPN were not being taken*
+     F*             into account due to LF/SECEF selecting only the   *
+     F*             RECI = 'D' records on SEDEVD. Change made to use  *
+     F*             LF/SECEF2 which also selects RECI = 'M' records.  *
+     F*           - The Coupon should be calculated on the Position as*
+     F*             at the night before the Coupon Date for First Day *
+     F*             Accruals and Coupon Date for Last Day Accruals.   *
+     F*  E20125 - Do not Error Matured Securities (E18449).           *
+     F*  NOTE:  - Original fix was incomplete - (SECTY has no Omits). *
+     F*  E18652 - Changes to process Trades done on Coupon Date.      *
+     F*  NOTE:  - This fix superceded by E20085 & E22097.             *
+     F*  E16772 - Recompiled for the Dividend Payment Amount field    *
+     F*           changes.                                            *
+     F*  E17504 - EX COUPON POSITIONS ARE NOT TAKEN INTO ACCOUNT.     *
+     F*  E13911 - POST INCORPORATION FIX FROM DEVELOPMENT.            *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  P A R A M E T E R S   P A S S E D :                          *
+     F*                                                               *
+     F*  INPUT  - ZFDAT  (5,0)  FROM DATE (MIDAS DAY NO.)             *
+     F*           ZTDAT  (5,0)  TO DATE   (MIDAS DAY NO.)             *
+     F************ZBRCH**(3,0)*****BRANCH******************************   S01117
+     F*           ZBRCH  (3)       BRANCH                             *   S01117
+     F*           ZDEPT  (6,0)  DEPOT                                 *
+     F*           ZSECT  (10)   SECURITY                              *
+     F*           ZBOOK  (2)    BOOK                                  *
+     F*           ZMKTC  (1)    MARKET                                *
+     F*           CDP    (1,0)  NOMINAL CURRENCY DEC. PLS. (TABTG10)  *
+     F*                                                               *
+     F*  OUTPUT - ZIAMT  (15,0-4) INTEREST AMOUNT (NOM CCY DEC PLS)   *
+     F************ZAMT***(11,0)**POSITION*AMOUNT***********************   065301
+     F*           ZAMT   (15,0)  POSITION AMOUNT                      *   065301
+     F*                                                               *
+     F*****************************************************************
+      *
+     F*TABSE***IF**E****       K        DISK                              S01117
+     F*********** TABLETAF                          KIGNORE               S01117
+     F*********** TABLETHF                          KIGNORE               S01117
+     F*********** TABLETJF                          KIGNORE               S01117
+     F*********** TABLETLF                          KIGNORE               S01117
+     F*********** TABLETKF                          KIGNORE               S01117
+     F*********** TABLETNF                          KIGNORE               S01117
+     F*********** TABLETPF                          KIGNORE               S01117
+     F*********** TABLETRF                          KIGNORE               S01117
+     F*********** TABLETXF                          KIGNORE               S01117
+     F************TABTB10F                          KIGNORE               S01117
+     F*********** TABTB10F                          KIGNORE               S01117
+     F************TABTB11F                          KIGNORE               S01117
+     F*********** TABTB36F                          KIGNORE               S01117
+     F*********** TABTB40F                          KIGNORE               S01117
+     F*********** TABTE10F                          KIGNORE               S01117
+     F*********** TABTE20F                          KIGNORE               S01117
+     F*********** TABTG10F                          KIGNORE               S01117
+     F*********** TABTG20F                          KIGNORE               S01117
+     F*********** TABLET2F                          KIGNORE               S01117
+     F*********** TABLET3F                          KIGNORE               S01117
+     F*********** TABLET5F                          KIGNORE               S01117
+     FSECTY   IF  E           K        DISK
+     FINVTP   IF  E           K        DISK
+     FUDPCF   IF  E           K        DISK
+     FUDPCFA  IF  E           K        DISK                               088900
+     F            UDEPPDF                           KRENAMEUDEPPDA        088900
+     F            UDEPFDF                           KRENAMEUDEPFDA        088900
+     F*SECEF***IF**E           K        DISK                              E20085
+     FSECEF2  IF  E           K        DISK                               E20085
+     FSECEO   IF  E           K        DISK                               E20085
+     F            SEDEVDF                           KRENAMESEDEVDO        E20085
+     F**********  SNDEVDF                           KIGNORE         E20085E20568
+     F            SNDEVDF                           KRENAMESNDEVDO        E20568
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   20  - IF OFF IS FIRST CALL OF PROGRAM                       *
+     F*                                                               *
+     F* 90-95 - WORK INDICATORS - STANDARD SUBROUTINES                *
+     F*   98  - DATE FORMAT INDICATOR FOR ZSYSTM                      *
+     F****99**-*ERROR*ON*ICDR*1*READ*-*ZSYSTM*                        *   S01117
+     F*                                                               *
+     F* U7+U8 - DATABASE ERROR                                        *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  ZACCR  -  CALCULATE INTEREST ACCRUED BETWEEN TWO DATES       *
+     F*  ZACCZ  -  INTEREST ACCRUED CALCULATION TAKING ACCOUNT OF     *   E20085
+     F*            DIARY EVENTS.                                      *   E20085
+     F*  ZDATE1 -  VALIDATE DATES AND CONVERT TO NUMBER OF DAYS       *
+     F*  ZDATE2 -  CONVERT A DAY NUMBER TO DATE FORMATS               *
+     F*  ZDAYS  -  CALCULATE NO OF DAYS BETWEEN TWO DATES             *
+     F*  ZDYYR  -  CALCULATE NO OF DAYS IN INTEREST YEAR              *
+     F*  ZEVCD  -  DETERMINE EVENT CONTROL DATE                       *
+     F***ZICD2**-**TO*CHAIN*TO*THE*INSTALLATION*CONTROL*RECORD*2*******   S01117
+     F*  ZNCD   -  DETERMINE NEXT COUPON DATE                         *
+     F*  ZRATE  -  CALCULATE EFFECTIVE RATE                           *
+     F*  ZRSTOR -  Restores indicators 90 - 97                        *
+     F*  ZSAVE  -  Remember setting and then setof indicators 90 - 97 *
+     F***ZSYSTM**-**TO*CHAIN*TO*THE*INSTALLATION*CONTROL*RECORD*1*    *   S01117
+     F*  *PSSR  -  Error handling                                     *   S01117
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80                                S01117
+     E/COPY ZSRSRC,ZPOWER8Z1
+     E/COPY ZSRSRC,ZDAYSZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZNCDZ1
+      /EJECT
+     ISNDEVDF
+     I              SNDT                            SDED
+     I              SNET                            SDET
+     I/COPY ZSRSRC,ZNCDZ2
+     I            DS
+     I                                        1   6 ZINVKY
+     I                                        1   3 NMCY
+     I                                        4   6 SITP
+     I***LDA*****   UDS                            256                    S01117
+     ILDA         DS                            256                       S01117
+     I*
+     I*      Local data area.
+     I*
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     IRUNDT       DS                                                      S01117
+      *                                                                   S01117
+      ** Data area RUNDAT                                                 S01117
+      *                                                                   S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     ISDBANK    E DSSDBANKPD                                              S01117
+      *                                                                   S01117
+      ** External data structure for bank details                         S01117
+      *                                                                   S01117
+     ISDGELR    E DSSDGELRPD                                              S01117
+     I*                                                                   S01117
+     I**    EXTERNAL DATA STRUCTURE FOR GENERAL LEDGER DETAIL             S01117
+     I*                                                                   S01117
+     IDSFDY     E DSDSFDY                                                 S01117
+     I/COPY WNCPYSRC,ZACRBDI002
+      *                                                                   S01117
+      ** First DS for access programs, short data structure               S01117
+      *                                                                   S01117
+      *  DATA STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION             S01117
+     ICPYR@#      DS                                                      S01117
+     I                                        1  80 CPY@                  S01117
+     I                                        1  20 CPY@##                S01117
+     I/COPY WNCPYSRC,ZACRBDI001
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+      *                                                                   S01117
+     C/EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ZFDAT
+     C                     PARM           ZTDAT
+     C                     PARM           ZBRCH
+     C                     PARM           ZDEPT
+     C                     PARM           ZSECT
+     C                     PARM           ZBOOK
+     C                     PARM           ZMKTC
+     C                     PARM           CDP
+     C                     PARM           ZIAMT
+     C                     PARM           ZAMT
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBLOT                           S01117
+     C                     MOVEL'ZACRBD'  DBPGM                           S01117
+     C                     Z-ADD0         DBASE                           S01117
+     C                     OUT  LDA                                       S01117
+     C*
+     C*  Define Input fields (based on similar fields on UDEPPD)
+     C*
+     C           *LIKE     DEFN UDDT      ZFDAT
+     C           *LIKE     DEFN UDDT      ZTDAT
+     C************LIKE     DEFN UDBR      ZBRCH                           S01117
+     C           *LIKE     DEFN UDBA      ZBRCH                           S01117
+     C           *LIKE     DEFN UDPT      ZDEPT
+     C           *LIKE     DEFN UDSN      ZSECT
+     C           *LIKE     DEFN UDBK      ZBOOK
+     C           *LIKE     DEFN UDMK      ZMKTC
+     C                     Z-ADDCDP       CDP     10
+     C*
+     C*  Clear Output field
+     C*
+     C                     Z-ADD0         ZIAMT  150
+     C*                                                                   065301
+     C** Remove the length from ZAMT, as it is defined in AR/ZACCR, and   065301
+     C** the it has been changed to (15,0).                               065301
+     C***********          Z-ADD0         ZAMT   110                      065301
+     C                     Z-ADD0         ZAMT                            065301
+     C*
+     C*  Define Work fields (based on similar fields where possible)
+     C*
+     C           *LIKE     DEFN UDDT      ZWDDTE
+     C           *LIKE     DEFN SDET      ZWSDET
+     C                     MOVE 'CP'      ZWSDET
+     C                     Z-ADD0         ZI      10
+     C*
+     C***Set*up*Key*Lists*for*UDPCF*and*SECEF*access*******************   E20085
+     C*  Set up Key Lists for UDPCF and SECEF2 access                     E20085
+     C*
+     C           ZUDPCF    KLIST
+     C                     KFLD           ZBRCH
+     C                     KFLD           ZSECT
+     C                     KFLD           ZBOOK
+     C                     KFLD           ZMKTC
+     C                     KFLD           ZDEPT
+     C                     KFLD           ZWDDTE
+     C*
+     C           ZCPSHP    KLIST
+     C                     KFLD           ZBRCH
+     C                     KFLD           ZSECT
+     C                     KFLD           ZBOOK
+     C                     KFLD           ZMKTC
+     C                     KFLD           ZDEPT
+     C*
+     C           ZSECEF    KLIST
+     C                     KFLD           ZSECT
+     C                     KFLD           ZFDAT
+     C                     KFLD           ZWSDET
+     C*
+     C           ZSECDP    KLIST
+     C                     KFLD           ZSECT
+     C*
+     C           ZINVTP    KLIST
+     C                     KFLD           NMCY
+     C                     KFLD           SITP
+     C*
+     C************LOCK     IN   LDA                                       S01117
+     C*
+     C*  First call of program only
+     C*
+     C           *IN20     IFEQ '0'
+     C***********                                                         S01117
+     C***********                                                         S01117
+     C****READ*INSTALLATION*CONTROL*RECORD*1*FOR*RUNDATE**********        S01117
+     C***********                                                         S01117
+     C***********                                                         S01117
+     C*******Access*File*and*check*if*record*deleted**************        S01117
+     C***********                                                         S01117
+     C***********          EXSR ZSYSTM                                    S01117
+     C***********                                                         S01117
+     C*******If*no*record*found**or*deleted*record****************        S01117
+     C**********then*it*is*a*database*error************************       S01117
+     C**********so*return*to*calling*program***********************       S01117
+     C***********                                                         S01117
+     C************IN99     IFEQ '1'                                       S01117
+     C***********          MOVEL'ZACRBD'  DBPGM            ************   S01117
+     C***********          MOVEL'ICDR1'   DBKEY            * DATABASE *   S01117
+     C***********          MOVE 'TABLE'   DBFILE           * ERROR 01 *   S01117
+     C***********          Z-ADD01        DBASE            ************   S01117
+     C***********          SETON                       U7U8               S01117
+     C***********          GOTO ZENDAC                                    S01117
+     C***********          END                                            S01117
+     C*****************************************************************   S01117
+     C***Read*ICD2*****************************************************   S01117
+     C*****************************************************************   S01117
+     C***Access*File*and*check*if*record*deleted***********************   S01117
+     C***********                                                         S01117
+     C***********          EXSR ZICD2                                     S01117
+     C***********                                                         S01117
+     C***If*no*record*found**or*deleted*record*************************   S01117
+     C***then*it*is*a*database*error***********************************   S01117
+     C***so*return*to*calling*program**********************************   S01117
+     C***********                                                         S01117
+     C************INU7     IFEQ '1'                                       S01117
+     C************INU8     ANDEQ'1'                                       S01117
+     C***********          MOVEL'ZACRBD'  DBPGM                           S01117
+     C***********          MOVEL'ICDR2'   DBKEY            ***************S01117
+     C***********          MOVE 'TABLE'   DBFILE           * DB ERROR 02 *S01117
+     C***********          Z-ADD02        DBASE            ***************S01117
+     C***********          GOTO ZENDAC                                    S01117
+     C***********          END                                            S01117
+      *                                                                   S01117
+      ** Accses data area RUNDAT                                          S01117
+      *                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+      *                                                                   S01117
+      ** Check system adte format, DDMMYY or MMDDYY.                      S01117
+      *                                                                   S01117
+     C           DATF      COMP 'M'                      98               S01117
+      *                                                                   S01117
+      ** Access bank details                                              S01117
+      **                                                                  S01117
+     C                     CALL 'AOBANKR0'                                S01117
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C           SDBANK    PARM SDBANK    DSFDY                           S01117
+      *                                                                   S01117
+     C           @RTCD     IFNE *BLANK                                    S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL@OPTN     DBKEY            ***************S01117
+     C                     MOVE 'SDBANKPD'DBFILE           * DB ERROR 05 *S01117
+     C                     Z-ADD5         DBASE            ***************S01117
+     C                     OUT  LDA                                       S01117
+     C                     SETON                       U7U8               S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ZENDAC                                    S01117
+     C                     END                                            S01117
+     C*
+     C**  ACCESS GENERAL LEDGER DETAIL                                    S01117
+     C*                                                                   S01117
+     C**********           CALL 'AOGELRR0'                                S01117              CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C********** SDGELR    PARM SDGELR    DSFDY                           S01117              CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C*                                                                   S01117
+     C           @RTCD     IFNE *BLANK                                    S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL@OPTN     DBKEY                           S01117
+     C                     MOVE 'SDGELRPD'DBFILE                          S01117
+     C                     Z-ADD2         DBASE                           S01117
+     C                     OUT  LDA                                       S01117
+     C                     SETON                       U7U8               S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ZENDAC                                    S01117
+     C                     END                                            S01117
+     C/COPY WNCPYSRC,ZACRBDC004
+      *                                                                                       CSE035
+      ** Access SAR details file to see if CSE035 is installed                                CSE035
+      *                                                                                       CSE035
+     C           CSE035    IFEQ *BLANKS                                                       CSE035
+     C                     CALL 'AOSARDR0'                                                    CSE035
+     C                     PARM *BLANKS   @RTCD                                               CSE035
+     C                     PARM '*VERIFY' @OPTN                                               CSE035
+     C                     PARM 'CSE035'  @SARD   6                                           CSE035
+      *                                                                                       CSE035
+     C           @RTCD     IFEQ *BLANK                                                        CSE035
+     C                     MOVE 'Y'       CSE035  1                                           CSE035
+     C                     ELSE                                                               CSE035
+     C                     MOVE 'N'       CSE035                                              CSE035
+     C                     ENDIF                                                              CSE035
+     C                     ENDIF                                                              CSE035
+      *                                                                                       CSE035
+     C*
+     C***CALL*ZEVCD*TO*GET*EVENT*CONTROL*DATE*FOR*ZNCD                    209025
+     C********************                                          S01117209025
+     C******************** Z-ADDBJDNWD    ZZDNWD                    S01117209025
+     C******************** Z-ADDBKAPDT    ZZAPDT                    S01117209025
+     C******************** EXSR ZEVCD                                     209025
+     C*
+     C/COPY WNCPYSRC,ZACRBDC001
+      *                                                                                       CSE035
+     C                     MOVELECD       ZECD                                                CSE035
+      *                                                                                       CSE035
+     C                     MOVE '1'       *IN20
+     C                     END
+     C*                                                                   209025
+     C*  CALL ZEVCD TO GET EVENT CONTROL DATE FOR ZNCD                    209025
+     C*                                                                   209025
+     C                     Z-ADDBJDNWD    ZZDNWD                          209025
+     C                     Z-ADDBKAPDT    ZZAPDT                          209025
+     C                     EXSR ZEVCD                                     209025
+     C*
+     C*  For each call of the program
+     C*
+     C*    Access the Security details
+     C*    If not found, or deleted record, it is a database error
+     C*
+     C           ZSECT     CHAINSECTY                90
+     C*
+     C           *IN90     IFEQ '1'
+     C***********RECI      ORNE 'D'                                       E20125
+     C           RECI      OREQ '*'                                       E22097
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'ZACRBD'  DBPGM
+     C                     MOVELZSECT     DBKEY            ***************
+     C                     MOVE 'SECTY'   DBFILE           * DB ERROR 03 *
+     C                     Z-ADD03        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     SETON                       U7U8
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ZENDAC
+     C                     END
+     C*                                                                   055946
+     C*   For Divisor Basis = 3, use ZTDAT to compute for NCD             055946
+     C           DVBS      IFEQ '3'                                       055946
+     C                     Z-ADDZTDAT     ECD                             055946
+     C                     END                                            055946
+     C*
+     C*  CALL ZNCD TO GET NEXT COUPON DATE FOR ZDYYR
+     C*
+     C                     EXSR ZNCD
+     C*
+     C*
+     C*    Access the Investment Type details (for Processing Type)
+     C*    If not found, or deleted record, it is a database error
+     C*
+     C           ZINVTP    CHAININVTP                90
+     C*
+     C           *IN90     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'ZACRBD'  DBPGM
+     C                     MOVELZINVKY    DBKEY            ***************
+     C                     MOVE 'INVTP'   DBFILE           * DB ERROR 04 *
+     C                     Z-ADD04        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     SETON                       U7U8
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ZENDAC
+     C                     END
+     C*
+     C*  Differentiate between Schuldshein and others
+     C*
+     C           PROT      IFNE '6'
+     C*
+     C*  Non-Schuldshein processing
+     C*
+     C*  Access the last position for Branch/Security/Book/Depot
+     C*    before coupon date.  If position is zero
+     C*    then exit with Interest Amount zero
+     C*
+     C***********          MOVE *HIVAL    ZWDDTE                          E18652
+     C***********ZUDPCF    SETGTUDPCF                                     E18652
+     C***********          MOVE ZTDAT     ZWDDTE                   E18652 E20085
+     C***********ZUDPCF    SETLLUDPCF                              E18652 E20085
+      ***Key*depends*on*whether*accruals*are*on*first*day*basis.*******   E22097
+     C***********ACLD      IFEQ 'N'                                       E20911
+     C*
+      ***  First/Last Day Accruals is irrelevant when calculating         051107
+      ***  Coupon Amount. It is always based on last night's Position.    051107
+      *                                                                   051107
+      *****Need*the*Last*Position*before*the*Coupon*Date,*for*FirstE22097 051107
+      *****Day*Accruals,*and*the*Coupon*Date*for*Last*Day*Accruals.E22097 051107
+     C***********                                                  E22097 051107
+     C***********ACLD      IFEQ 'N'                                E22097 S01117
+     C***********BKALDI    IFEQ 'N'                                S01117 051107
+     C***********ZTDAT     SUB  1         ZWDDTE                   E20085 051107
+     C***********          ELSE                                    E22097 051107
+     C***********          Z-ADDZTDAT     ZWDDTE                   E22097 051107
+     C***********          END                                     E22097 051107
+     C***********                                                  E22097 051107
+     C***********          ELSE                                    E20085 E20911
+     C***********          Z-ADDZTDAT     ZWDDTE                   E20085 E20911
+     C***********          END                                     E20085 E20911
+      *                                                                   051107
+     C           ZTDAT     SUB  1         ZWDDTE                          051107
+     C*                                                                   E20085
+     C           ZUDPCF    SETGTUDPCF                                     E20085
+     C                     READPUDPCF                    90
+     C*
+     C           *IN90     IFEQ '1'
+     C***********UDBR      ORNE ZBRCH                                     S01117
+     C           UDBA      ORNE ZBRCH                                     S01117
+     C           UDSN      ORNE ZSECT
+     C           UDPT      ORNE ZDEPT
+     C           UDBK      ORNE ZBOOK
+     C           UDMK      ORNE ZMKTC
+     C                     GOTO ZENDAC
+     C                     END
+     C*
+     C***********          Z-ADDUDNV      ZAMT                            E17504
+     C* If position found is lower or equal to last coupon date           E23535
+     C*    then no ex-coupon nominal should be considered                 E23535
+     C*                                                                   E23535
+     C           UDDT      IFLE ZFDAT                                     E23535
+     C                     Z-ADD0         UECN                            E23535
+     C                     END                                            E23535
+     C*                                                                   E23535
+     C           UDNV      SUB  UECN      ZAMT                            E17504
+     C*
+     C           ZAMT      IFEQ 0
+     C                     GOTO ZENDAC
+     C                     END
+     C*
+     C***Convert*the*amount*on*which*interest*is*to*be*calculated******   E13911
+     C*****from*Nominal*Dec*Pls*to*Nominal*Ccy*Dec*Pls*****************   E13911
+     C***********                                                         E13911
+     C***********CDP       SUB  NMDP      ZI                              E13911
+     C***********ZI        ADD  5         ZI                              E13911
+     C***********ZAMT      MULT POWER8,ZI ZAMT      H                     E13911
+     C*
+      *****************************************************************   E20085
+      *                                                               *   E20085
+      ***  Original processing  has been replaced by a call to the    *   E20085
+      ***  Standard Subroutine, ZACCZ.                                *   E20085
+      *                                                               *   E20085
+      *****************************************************************   E20085
+      *                                                                   E20085
+      ***  Execute Subroutine to Accrue the Interest.                     E20085
+      ***  (ZAMT has already been set up with the correct Nominal).       E20085
+     C/COPY WNCPYSRC,ZACRBDC002
+      *                                                                   E20085
+     C                     Z-ADDZFDAT     ZDCSDT                          E20085
+     C                     Z-ADDZTDAT     ZDCEDT                          E20085
+     C                     Z-ADDCDP       ZCDP                            S01117
+     C                     EXSR ZACCZ                                     E20085
+     C                     Z-ADDZDCINT    ZIAMT                           E20085
+     C/COPY WNCPYSRC,ZACRBDC003
+     C*
+     C*****************************************************************
+     C*
+     C                     ELSE
+     C*
+     C*  Schuldshein processing
+     C*
+     C*  This differs from previous processing in that Position changes
+     C*  differentiate Interest Periods as well as PP and IR Events
+     C*
+     C*  Set up constant fields for ZRATE                                 E21129
+     C*                                                                   E21129
+     C                     MOVE PPDI      ZPPDI                           E21129
+     C                     MOVE SFPP      ZSFPP                           E21129
+     C                     MOVE PROT      ZPROT                           E21129
+     C*                                                                   E21129
+     C*  Access the latest position for Branch/Security/Book/Depot
+     C*    which is earlier than or on From Date
+     C*    If none is found then treat this as a zero position
+     C*
+     C                     MOVE ZFDAT     ZWDDTE
+     C***********ZUDPCF    SETGTUDPCF                                     088900
+     C***********          READPUDPCF                  9090               088900
+     C           ZUDPCF    SETGTUDPCFA                                    088900
+     C                     READPUDPCFA                 9090               088900
+     C*
+     C           *IN90     IFEQ '1'
+     C***********UDBR      ORNE ZBRCH                                     S01117
+     C           UDBA      ORNE ZBRCH                                     S01117
+     C           UDSN      ORNE ZSECT
+     C           UDPT      ORNE ZDEPT
+     C           UDBK      ORNE ZBOOK
+     C           UDMK      ORNE ZMKTC
+     C                     Z-ADD0         ZAMT
+     C*
+     C                     ELSE
+     C*
+     C***Convert*the*amount*on*which*interest*is*to*be*calculated******   E13911
+     C*****from*Nominal*Dec*Pls*to*Nominal*Ccy*Dec*Pls*-*unless*zero***   E13911
+     C*
+     C***********          Z-ADDUDNV      ZAMT                            E17504
+     C           UDNV      SUB  UECN      ZAMT                            E17504
+     C*
+     C***********ZAMT      IFNE 0                                         E13911
+     C***********CDP       SUB  NMDP      ZI                              E13911
+     C***********ZI        ADD  5         ZI                              E13911
+     C***********ZAMT      MULT POWER8,ZI ZAMT      H                     E13911
+     C***********          END                                            E13911
+     C*
+     C                     END
+     C*
+     C*  Access the Coupon Rate Event for From Date
+     C*    It should always be found (From Date should be Coupon Date)
+     C*    but if not use values from SECTYD record for call to ZRATE
+     C*
+     C***********ZSECEF    CHAINSECEF                90                   E20085
+     C           ZSECEF    CHAINSECEF2               90                   E20085
+     C*
+     C*  If no Coupon Rate Event read or End of File
+     C*    reset file pointer ready for read of rest of Events
+     C*
+     C           *IN90     IFEQ '1'
+     C***********ZSECEF    SETLLSECEF                                     E20085
+     C           ZSECEF    SETLLSECEF2                                    E20085
+     C*
+     C                     MOVE '0'       *IN90
+     C                     Z-ADDCPNR      ZCPNR                           E21228
+     C                     Z-ADDCFCT      ZCFCT                           E21228
+     C                     MOVE CPDP      ZPPCP                           E21228
+     C                     ELSE
+     C*
+     C*  If Coupon Rate Event read successfully
+     C*    then save fields to be used by ZRATE before next Event read
+     C*
+     C***********          Z-ADDSNCR      CPNR                            E21129
+     C***********          Z-ADDSNCF      CFCT                            E21129
+     C***********          MOVE SNCP      CPDP                            E21129
+     C*                                                                   E21129
+     C**  Set up actual fields for ZRATE                                  E21129
+     C*
+     C                     Z-ADDSNCR      ZCPNR                           E21129
+     C                     Z-ADDSNCF      ZCFCT                           E21129
+     C                     MOVE SNCP      ZPPCP                           E21129
+     C                     END
+     C*
+     C                     Z-ADDZFDAT     ZSDATE
+     C*
+     C***********ZUDPCF    SETGTUDPCF                                     088900
+     C           ZUDPCF    SETGTUDPCFA                                    088900
+     C                     MOVE '1'       *IN92
+     C                     MOVE '1'       *IN93
+     C*
+     C           ZREAD     TAG                             ** ZREAD **
+     C*
+     C*  Read next Position  for this Branch/Security/Book/Depot
+     C*    between From and To Dates
+     C*    - may be zero position so no interest to calculate
+     C*
+     C           *IN93     IFEQ '1'
+     C                     MOVE '0'       *IN93
+     C*
+     C***********ZCPSHP    READEUDPCF                  9191               088900
+     C           ZCPSHP    READEUDPCFA                 9191               088900
+     C*
+     C           *IN91     IFEQ '0'
+     C           UDDT      ANDGEZTDAT
+     C                     MOVE '1'       *IN91
+     C                     END
+     C*
+     C                     END
+     C*
+     C*  Read next required Security Event between From and To dates
+     C*
+     C           *IN92     IFEQ '1'
+     C                     MOVE '0'       *IN92
+     C*
+     C           ZRDEV     TAG                             ** ZRDEV **
+     C*
+     C***********ZSECDP    READESECEF                    90               E20085
+     C           ZSECDP    READESECEF2                   90               E20085
+     C*
+     C           *IN90     IFEQ '0'
+     C           SDED      ANDGEZTDAT
+     C                     MOVE '1'       *IN90
+     C                     END
+     C*
+     C*  If Event read is within required dates
+     C*    check if it is a required event
+     C*
+     C           *IN90     IFEQ '0'
+     C           SDET      ANDNE'PP'
+     C           SDET      ANDNE'IR'
+     C                     GOTO ZRDEV
+     C                     END
+     C*
+     C                     END
+     C*
+     C*  If End of Events and of Positions
+     C*    then calculate interest for remaining period
+     C*    (which may be the whole period)
+     C*
+     C           *IN90     IFEQ '1'
+     C           *IN91     ANDEQ'1'
+     C*
+     C           ZAMT      IFNE 0
+     C                     Z-ADDZTDAT     ZEDATE
+     C                     Z-ADDCDP       ZCDP                            S01117
+     C                     EXSR ZRATE
+     C                     EXSR ZSAVE
+     C                     EXSR ZACCR
+     C/COPY WNCPYSRC,ZACRBDC005
+     C                     EXSR ZRSTOR
+     C                     ADD  ZACCRD    ZIAMT
+     C                     END
+     C*
+     C                     GOTO ZENDAC
+     C*
+     C                     END
+     C*
+     C*  Either a Position or a required Event or both
+     C*    lie between From and To Dates
+     C*    so determine which, and if both which has the lower date
+     C*
+     C           *IN90     IFEQ '0'
+     C*
+     C           *IN91     IFEQ '0'
+     C           SDED      ANDLEUDDT
+     C           *IN91     OREQ '1'
+     C*
+     C*  A required Event marks the End of This Interest Period
+     C*    so calculate the interest up to the Event Date
+     C*
+     C                     Z-ADDSDED      ZEDATE
+     C                     Z-ADDCDP       ZCDP                            S01117
+     C           ZAMT      IFNE 0
+     C                     EXSR ZRATE
+     C                     EXSR ZSAVE
+     C                     EXSR ZACCR
+     C/COPY WNCPYSRC,ZACRBDC006
+     C                     EXSR ZRSTOR
+     C                     ADD  ZACCRD    ZIAMT
+     C                     END
+     C*
+     C*  Set Start of Next Interest Period = End of this Period
+     C*    and save values from Event before reading next one
+     C*
+     C                     Z-ADDSDED      ZSDATE
+     C***********          Z-ADDSDNC      CPNR
+     C***********          Z-ADDSDCP      CFCT
+     C***********          MOVE SDTP      CPDP
+     C*
+     C**Set up actual fields for ZRATE                                    E21129
+     C*
+     C                     Z-ADDSDNC      ZCPNR                           E21129
+     C                     Z-ADDSDCP      ZCFCT                           E21129
+     C                     MOVE SDTP      ZPPCP                           E21129
+     C                     MOVE '1'       *IN92
+     C*
+     C                     END
+     C                     END
+     C*
+     C           *IN91     IFEQ '0'
+     C*
+     C           *IN90     IFEQ '0'
+     C           UDDT      ANDLTSDED
+     C           *IN90     OREQ '1'
+     C*
+     C*  A Position marks the End of This Interest Period
+     C*    so calculate the interest up to the Position Date
+     C*
+     C                     Z-ADDUDDT      ZEDATE
+     C                     Z-ADDCDP       ZCDP                            S01117
+     C           ZAMT      IFNE 0
+     C                     EXSR ZRATE
+     C                     EXSR ZSAVE
+     C                     EXSR ZACCR
+     C/COPY WNCPYSRC,ZACRBDC007
+     C                     EXSR ZRSTOR
+     C                     ADD  ZACCRD    ZIAMT
+     C                     END
+     C*
+     C*  Set Start of Next Interest Period = End of this Period
+     C*
+     C                     Z-ADDUDDT      ZSDATE
+     C*
+     C                     END
+     C*
+     C*  If Position is the end of the Period (even if equal to Event)
+     C*    save values from Position before reading next one
+     C*
+     C           *IN90     IFEQ '0'
+     C           UDDT      ANDLESDED
+     C           *IN90     OREQ '1'
+     C*
+     C***Convert*the*amount*on*which*interest*is*to*be*calculated******   E13911
+     C*****from*Nominal*Dec*Pls*to*Nominal*Ccy*Dec*Pls*-*unless*zero***   E13911
+     C*
+     C***********          Z-ADDUDNV      ZAMT                            E17504
+     C           UDNV      SUB  UECN      ZAMT                            E17504
+     C                     MOVE '1'       *IN93
+     C*
+     C***********ZAMT      IFNE 0                                         E13911
+     C***********CDP       SUB  NMDP      ZI                              E13911
+     C***********ZI        ADD  5         ZI                              E13911
+     C***********ZAMT      MULT POWER8,ZI ZAMT      H                     E13911
+     C***********          END                                            E13911
+     C*
+     C                     END
+     C                     END
+     C*
+     C                     GOTO ZREAD
+     C*
+     C                     END
+     C*
+     C           ZENDAC    TAG                             ** ZENDAC **
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *                                                               *
+     C***********          OUT  LDA                                       S01117
+     C                     RETRN
+      *                                                               *
+      *================================================================
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      * *PSSR - Subroutine to process database errors.                *   S01117
+      *                                                               *   S01117
+      * Called from: Main program                                     *   S01117
+      *                                                               *   S01117
+      * Calls: None                                                   *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                                          S01117
+      *                                                                   S01117
+     C           @RUN      IFEQ *BLANK                                    S01117
+     C                     MOVEL'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+      *                                                                   S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+      *****************************************************************   S01117
+      /EJECT
+     C/COPY ZSRSRC,ZACCRZ1
+      /EJECT                                                              E20085
+     C/COPY ZSRSRC,ZACCZZ1                                                E20085
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+      /EJECT
+     C/COPY ZSRSRC,ZDAYSZ2
+      /EJECT
+     C/COPY ZSRSRC,ZDYYRZ3
+      /EJECT
+     C/COPY ZSRSRC,ZEVCDZ1
+      /EJECT
+     C*COPY*ZSRSRC,ZICD2Z1***                                             S01117
+     C*EJECT*****************                                             S01117
+     C/COPY ZSRSRC,ZNCDZ3
+      /EJECT
+     C/COPY ZSRSRC,ZLCDZ1                                                 100228
+      /EJECT                                                              100228
+     C/COPY ZSRSRC,ZRATEZ1
+      /EJECT
+     C/COPY ZSRSRC,ZRSTORZ1
+      /EJECT
+     C/COPY ZSRSRC,ZSAVEZ1
+      /EJECT
+     C***/COPY*ZSRSRC*ZSYSTMZ1*                                           S01117
+      /EJECT
+      ***
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  POWER8 - ARRAY OF POWERS FOR NOMINAL DP TO CURRENCY DP CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000
+**   ZF29 DAY NOS OF FEB 29 TO 2096 (INCLUDING 2000)
+0006001521029820444305904073650882610287117481320914670161311759219053
+2051421975234362489726358278192928030741322023366335124365853804639507
+40968424294389045351
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN                       #DATE
+0366073110961461                                                           #DATE
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR                         #DATE
+000031059090120151181212243273304334365                                    #DATE
+**   ZMNM - MONTHS SHORT NAMES                                             #DATE
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC                                       #DATE

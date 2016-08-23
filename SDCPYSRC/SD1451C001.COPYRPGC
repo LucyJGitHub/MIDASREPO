@@ -1,0 +1,129 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD1451C001 - Standing Data Module                            *
+      *      Subroutines to format time                               *
+      *      - FMTHCM                                                 *
+      *      - FMTHM                                                  *
+      *      - CVHHMM                                                 *
+      *      - CVMINU                                                 *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *  Last Amend No. CSD006  *CREATE    Date 03Oct00               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD006 - Market Data Feed                                    *
+      *                                                               *
+      *****************************************************************
+      *****************************************************************
+      * FMTHCM - Format numeric hour 9999 -> alpha HH:MM              *
+      *****************************************************************
+     C           FMTHCM    BEGSR
+      ** Input parameters
+      ** ----------------
+      ** HHMM (4,0) Hours minutes
+      ** . HOUR (2,0)
+      ** . MINU (2,0)
+      ** Output parameters
+      ** ----------------
+      ** HHCMM (5) Hour Column Minutes
+      ** . SCRHH (2) Hour
+      ** . SCRCO (1) Column
+      ** . SCRMM (2) Minutes
+     C                     MOVEL*BLANK    SCRHH
+     C                     MOVEL':'       SCRCO
+     C                     MOVEL*BLANK    SCRMM
+      *
+     C           HHMM      IFNE 0
+     C           HOUR      IFEQ 24
+     C                     MOVEL'00'      SCRHH
+     C                     ELSE
+     C                     MOVE HOUR      SCRHH
+     C                     ENDIF
+     C                     MOVE MINU      SCRMM
+     C                     ENDIF
+      *
+     C                     Z-ADD0         HHMM
+      *
+     C                     ENDSR
+      *****************************************************************
+      * FMTHM - Format alpha hour HH:MM -> 9999                       *
+      *****************************************************************
+     C           FMTHM     BEGSR
+      ** Input parameters
+      ** ----------------
+      ** HHCMM (5) Hour Column Minutes
+      ** . SCRHH (2) Hour
+      ** . SCRCO (1) Column
+      ** . SCRMM (2) Minutes
+      ** Output parameters
+      ** ----------------
+      ** HHMM (4,0) Hours minutes
+      ** . HOUR (2,0)
+      ** . MINU (2,0)
+     C                     Z-ADD0         HHMM
+     C           HHCMM     IFNE *BLANK
+     C           HHCMM     ANDNEBLKTIM
+     C           SCRHH     IFEQ '00'
+     C           SCRMM     ANDEQ'00'
+     C                     Z-ADD24        HOUR
+     C                     ELSE
+     C                     MOVE SCRHH     HOUR
+     C                     ENDIF
+     C                     MOVE SCRMM     MINU
+     C                     ENDIF
+      *
+     C                     MOVEL*BLANK    HHCMM
+      *
+     C                     ENDSR
+      *****************************************************************
+      * CVMINU - Convert a time HHMM into MMMMMM                      *
+      *****************************************************************
+     C           CVMINU    BEGSR
+      ** Input parameters
+      ** ----------------
+      ** HHMM (4,0) Hours minutes
+      ** . HOUR (2,0)
+      ** . MINU (2,0)
+      ** Output parameters
+      ** ----------------
+      ** TIMINU (6,0) Minutes
+      ** . MINUTS (6,0)
+     C                     Z-ADD0         MINUTS
+     C           HOUR      IFEQ 24
+     C                     Z-ADD0         MINUTS
+     C                     ELSE
+     C           HOUR      MULT 60        MINUTS
+     C                     ENDIF
+     C           MINU      ADD  MINUTS    MINUTS
+      *
+     C                     Z-ADD0         HHMM
+      *
+     C                     ENDSR
+      *****************************************************************
+      * CVHHMM - Convert a time MMMMMM into HHMM                      *
+      *****************************************************************
+     C           CVHHMM    BEGSR
+      ** Input parameters
+      ** ----------------
+      ** TIMINU (6,0) Minutes
+      ** . MINUTS (6,0)
+      ** Output parameters
+      ** ----------------
+      ** HHMM (4,0) Hours minutes
+      ** . HOUR (2,0)
+      ** . MINU (2,0)
+     C                     Z-ADD0         HHMM
+     C           MINUTS    DIV  60        HOUR
+     C                     MVR            MINU
+      *
+     C                     Z-ADD0         MINUTS
+      *
+     C                     ENDSR

@@ -1,0 +1,1688 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Select profit centre default')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD0490S - Midas SD Select Profit Centre Dft                  *
+      *                                                               *
+      *  Function:  This sub-file program allows the user to select   *
+      *             from a list of Profit Centre Dft                  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG2660            Date 14May04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSD003             Date 01Jul99               *
+      *                 S01459             Date 01Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 LN1104             Date 20FEB90               *
+      *                 LN0592             Date 03AUG90               *
+      *                 LN0168             DATE 26JUN90               *
+      *                                                               *
+      *-------------------------------------------------------------- *
+      *                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG2660- Aligned TIME and Headers for Webfacing.             *
+      *           Re-compiled due to changed SD0490S#.                *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - Program removed from SD model.                    *
+      *  S01459 - Addition of Midas Headerbox.                        *
+      *  LN1104 - Recompiled due to change to SDCUSTPD                *
+      *  LN0592 - Branch code is only to be displayed in a            *
+      *           multibranching environment                          *
+      *  LN0168 - SET SCAN LIMIT TO 99999.                            *
+      *                                                               *
+      *****************************************************************
+     FSD0490S#CF  E                    WORKSTN                        UC
+     F                                        ##RR  KSFILE #SFLRCD
+     F                                              KINFDS INFDS#
+     F                                              KINFSR *PSSR
+      * DSP: Midas SD Select Profit Centre Dft
+      *
+     FSDPRFML1IF  E           K        DISK                           UC
+     F                                              KINFDS INFDS1
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Profit centre dft matrix retrieval
+      *
+     FSDCUSTL6IF  E           K        DISK                           UC
+     F                                              KINFDS ID0001
+     F                                              KINFSR *PSSR
+      * RSQ : Midas SD Customer details by shortname
+      *
+     FSDGELRL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0002
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD General ledger ICD details retrieval
+      *
+     E**
+     E                    HDR1        8 14
+     E                    HDR2        8 14
+     E** Profit Centre Def Matrix Arrays to hold ordered Base Field
+     E** headings according to their associated field priorities.
+     E**
+     E                    HDR3    1   8 14
+     E                    HDR4    1   8 14
+     E** Profit Centre Def Matrix Arrays to hold Heading Text for all
+     E** base fields.
+     E**
+     E                    HD1        61  1
+     E                    HD2        61  1
+     E** Profit Centre Default Matrix Output Array
+     E**
+     E/EJECT
+     E**
+     E                    PARR        8 14
+     E** Profit Centre Default Matrix Array to hold ordered Base Fields
+     E** according to their priorities.
+     E**
+     E                    AR1        61  1
+     E** Profit Centre Default Matrix Output Array
+     E**
+     E/EJECT
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright array
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   70##JDT
+     I                                        1   10##JCC
+     I                                        2   30##JYY
+     I                                        4   50##JMM
+     I                                        6   70##JDD
+     I                                        8  130##JTM
+     I                                        8   90##JHH
+     I                                       10  110##JNN
+     I                                       12  130##JSS
+      * ABO DEFINE LARGE STRING FOR CL CMD
+     IYARTCM      DS                            512
+     I                                        1   1 DUMMY1
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+     IINFDS1    E DSY2I1DSP
+      * File information data structure
+      *
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+     IID0001      DS                            528
+      * File information data structure
+      *
+     IID0002      DS                            528
+      * File information data structure
+      *
+      /EJECT
+      * Parameter declarations
+     IP1PARM      DS
+      * FLD: Profit Centre Dft Matrix
+      * O :  Book Code
+     I                                        1   2 P1BKCD
+      * O :  Profit Centre Trans Type
+     I                                        3   7 P1PCTT
+      * O :  Sub Type
+     I                                        8   9 P1SBTY
+      * O :  Branch code
+     I                                       10  12 P1BRCD
+      * O :  Dept Code
+     I                                       13  15 P1DPCD
+      * O :  User
+     I                                       16  25 P1USID
+      * O :  Account Officer Code
+     I                                       26  27 P1ACOC
+      * O :  Customer Number
+     I                                       28  33 P1CUST
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C           P1BKCD    PARM P1BKCD    WP0001  2        Book Code
+     C           P1PCTT    PARM P1PCTT    WP0002  5        Profit Centre T
+     C           P1SBTY    PARM P1SBTY    WP0003  2        Sub Type
+     C           P1BRCD    PARM P1BRCD    WP0004  3        Branch code
+     C           P1DPCD    PARM P1DPCD    WP0005  3        Dept Code
+     C           P1USID    PARM P1USID    WP0006 10        User
+     C           P1ACOC    PARM P1ACOC    WP0007  2        Account Officer
+     C           P1CUST    PARM P1CUST    WP0008  6        Customer Number
+      *****************************************************************
+      * Initialize
+     C                     EXSR ZZINIT
+      *
+     C                     DO   *HIVAL
+      * Initialise & load subfile page
+     C                     EXSR BAIZSF
+     C                     MOVEL'N'       W0RSF   1
+      * Display screen until reload requested
+     C           W0RSF     DOWEQ'N'
+      * Display screen
+     C                     EXSR CAEXFM
+      * Process response
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * HOME: Request subfile reload
+     C   05                CAS            FBRQRL
+      * Display next SFL page
+     C   27                CAS            BBLDSF
+      * Process screen input
+     C                     CAS            DAPR##
+     C                     END
+      *
+     C                     END                             OD W0RSF
+     C                     END                             OD *HIVAL
+      *****************************************************************
+      /EJECT
+     CSR         BAIZSF    BEGSR
+      *================================================================
+      * Initialise and load subfile page
+      *================================================================
+      * Clear subfile
+     C                     SETON                     80
+     C                     WRITE#SFLCTL
+     C                     SETOF                     80
+      * Reset no of records in subfile
+     C                     Z-ADD*ZERO     ##RRMX  50 81     SETOF 81
+      * USER: Initialize subfile control
+      * Setup the Subfile Record Header Field Text
+      * Base Field Set-up Hdr - Profit Centre Dft Matrix  *
+     C**
+     C** Move each DB field heading into the associated section of the
+     C** array in order to move the correct Headings into the screen
+     C** heading output fields.
+     C**
+     C** To place the text into the correct portion of the array make
+     C** use of the priorities specified for each base field off the
+     C** General Ledger File, the fields of which are passed into this
+     C** user source.
+     C**
+     C** Set-up Book Code Heading
+     C**
+     C           WUPMBK    IFNE '0'                           IF 1
+     C                     MOVE WUPMBK    B       10
+     C** Initialise Book Storage Fields - Line 1
+     C**                   ¦
+     C                     MOVE *BLANKS   UUBHD1 14
+     C                     MOVE *BLANKS   UUBHD2 14
+     C** UUBHD1- Move ' Book         ' into Line 1
+     C** UUBHD2- Move ' Code         ' into Line 2
+     C**                   ¦
+     C                     MOVEAHDR3,1    UUBHD1
+     C                     MOVEAHDR4,1    UUBHD2
+     C** Find Length if Field Required To be Displayed from Compile
+     C** time array data - Book Code element is 1
+     C**                   ¦
+     C** Move length of field required to be printed into last 2 Chars
+     C** of Heading Line 1 & 2 giving
+     C**
+     C** UUBHD1- Move ' Book       06' into Line 1
+     C** UUBHD2- Move ' Code       06' into Line 2
+     C**                   ¦
+     C                     MOVE '06'      UUBHD1
+     C                     MOVE '06'      UUBHD2
+     C** Move Headings 1 & 2 into array element according to the
+     C** fields priority on General Ledger Details.
+     C**                   ¦
+     C                     MOVELUUBHD1    HDR1,B
+     C                     MOVELUUBHD2    HDR2,B
+     C                     END                               IF 1
+     C/EJECT
+     C** Set-up Trans Type Heading
+     C**
+     C           WUPMTT    IFNE '0'                           IF 1
+     C                     MOVE WUPMTT    T       10
+     C** Initialise Trans Type Storage Fields - Line 1
+     C**                   ¦
+     C                     MOVE *BLANKS   UUTHD1 14
+     C                     MOVE *BLANKS   UUTHD2 14
+     C** UUTHD1- Move ' Trans        ' into Line 1
+     C** UUTHD2- Move ' Code         ' into Line 2
+     C**                   ¦
+     C                     MOVEAHDR3,2    UUTHD1
+     C                     MOVEAHDR4,2    UUTHD2
+     C** Find Length if Field Required To be Displayed from Compile
+     C** time array data - Trans Type element is 2
+     C**                   ¦
+     C** Move length of field required to be printed into last 2 Chars
+     C** of Heading Line 1 & 2 giving
+     C**
+     C** UUTHD1- Move ' Trans      07' into Line 1
+     C** UUTHD2- Move ' Type       07' into Line 2
+     C**                   ¦
+     C                     MOVE '07'      UUTHD1
+     C                     MOVE '07'      UUTHD2
+     C** Move Headings 1 & 2 into array element according to the
+     C** fields priority on General Ledger Details.
+     C**                   ¦
+     C                     MOVELUUTHD1    HDR1,T
+     C                     MOVELUUTHD2    HDR2,T
+     C                     END                               IF 1
+     C/EJECT
+     C** Set-up Sub Type  Heading
+     C**
+     C           WUPMST    IFNE '0'                           IF 1
+     C                     MOVE WUPMST    S       10
+     C** Initialise Sub Type Storage Fields - Line 1
+     C**                   ¦
+     C                     MOVE *BLANKS   UUSHD1 14
+     C                     MOVE *BLANKS   UUSHD2 14
+     C** UUSHD1- Move ' Sub          ' into Line 1
+     C** UUSHD2- Move ' Type         ' into Line 2
+     C**                   ¦
+     C                     MOVEAHDR3,3    UUSHD1
+     C                     MOVEAHDR4,3    UUSHD2
+     C** Find Length if Field Required To be Displayed from Compile
+     C** time array data - Sub Type  element is 3
+     C**                   ¦
+     C** Move length of field required to be printed into last 2 Chars
+     C** of Heading Line 1 & 2 giving
+     C**
+     C** UUSHD1- Move ' Sub        06' into Line 1
+     C** UUSHD2- Move ' Type       06' into Line 2
+     C**                   ¦
+     C                     MOVE '06'      UUSHD1
+     C                     MOVE '06'      UUSHD2
+     C** Move Headings 1 & 2 into array element according to the
+     C** fields priority on General Ledger Details.
+     C**                   ¦
+     C                     MOVELUUSHD1    HDR1,S
+     C                     MOVELUUSHD2    HDR2,S
+     C                     END                               IF 1
+     C/EJECT
+     C** Set-up Branch Code Heading
+     C**
+     C**  IF Multibranching Switched On then Branch Code Will be          LN0592
+     C**  displayed if the priority on SDGELRPD is GT 0.........          LN0592
+     C           WUMBIN    IFEQ 'Y'                                       LN0592
+     C**                                                                  LN0592
+     C           WUPMBH    IFNE '0'                           IF 1
+     C                     MOVE WUPMBH    H       10
+     C** Initialise Book Storage Fields - Line 1
+     C**                   ¦
+     C                     MOVE *BLANKS   UUHHD1 14
+     C                     MOVE *BLANKS   UUHHD2 14
+     C** UUHHD1- Move ' Brch         ' into Line 1
+     C** UUHHD2- Move ' Code         ' into Line 2
+     C**                   ¦
+     C                     MOVEAHDR3,4    UUHHD1
+     C                     MOVEAHDR4,4    UUHHD2
+     C** Find Length if Field Required To be Displayed from Compile
+     C** time array data - BRCH Code element is 4
+     C**                   ¦
+     C** Move length of field required to be printed into last 2 Chars
+     C** of Heading Line 1 & 2 giving
+     C**
+     C** UUHHD1- Move ' Brch      07' into Line 1
+     C** UUHHD2- Move ' Code      07' into Line 2
+     C**                   ¦
+     C                     MOVE '07'      UUHHD1
+     C                     MOVE '07'      UUHHD2
+     C** Move Headings 1 & 2 into array element according to the
+     C** fields priority on General Ledger Details.
+     C**                   ¦
+     C                     MOVELUUHHD1    HDR1,H
+     C                     MOVELUUHHD2    HDR2,H
+     C                     END                               IF 1
+     C**                                                                  LN0592
+     C                     END                                            LN0592
+     C/EJECT
+     C** Set-up Dept Code Heading
+     C**
+     C           WUPMDT    IFNE '0'                           IF 1
+     C                     MOVE WUPMDT    D       10
+     C** Initialise Dept Storage Fields - Line 1
+     C**                   ¦
+     C                     MOVE *BLANKS   UUDHD1 14
+     C                     MOVE *BLANKS   UUDHD2 14
+     C** UUDHD1- Move ' Dept         ' into Line 1
+     C** UUDHD2- Move ' Code         ' into Line 2
+     C**                   ¦
+     C                     MOVEAHDR3,5    UUDHD1
+     C                     MOVEAHDR4,5    UUDHD2
+     C** Find Length if Field Required To be Displayed from Compile
+     C** time array data - Dept Code element is 5
+     C**                   ¦
+     C** Move length of field required to be printed into last 2 Chars
+     C** of Heading Line 1 & 2 giving
+     C**
+     C** UUDHD1- Move ' Dept       07' into Line 1
+     C** UUDHD2- Move ' Code       07' into Line 2
+     C**                   ¦
+     C                     MOVE '07'      UUDHD1
+     C                     MOVE '07'      UUDHD2
+     C** Move Headings 1 & 2 into array element according to the
+     C** fields priority on General Ledger Details.
+     C**                   ¦
+     C                     MOVELUUDHD1    HDR1,D
+     C                     MOVELUUDHD2    HDR2,D
+     C                     END                               IF 1
+     C/EJECT
+     C** Set-up User Id Heading
+     C**
+     C           WUPMUR    IFNE '0'                           IF 1
+     C*********************MOVE #IPMUR    U       10
+     C                     MOVE WUPMUR    K       10
+     C** Initialise User Storage Fields - Line 1
+     C**                   ¦
+     C                     MOVE *BLANKS   UUUHD1 14
+     C                     MOVE *BLANKS   UUUHD2 14
+     C** UUUHD1- Move '    User      ' into Line 1
+     C** UUUHD2- Move '     Id       ' into Line 2
+     C**                   ¦
+     C                     MOVEAHDR3,6    UUUHD1
+     C                     MOVEAHDR4,6    UUUHD2
+     C** Find Length if Field Required To be Displayed from Compile
+     C** time array data - User Id element is 6
+     C**                   ¦
+     C** Move length of field required to be printed into last 2 Chars
+     C** of Heading Line 1 & 2 giving
+     C**
+     C** UUUHD1- Move '    User    12' into Line 1
+     C** UUUHD2- Move '     Id     12' into Line 2
+     C**                   ¦
+     C                     MOVE '12'      UUUHD1
+     C                     MOVE '12'      UUUHD2
+     C** Move Headings 1 & 2 into array element according to the
+     C** fields priority on General Ledger Details.
+     C**                   ¦
+     C*********************MOVELUUUHD1    HDR1,U
+     C*********************MOVELUUUHD2    HDR2,U
+     C                     MOVELUUUHD1    HDR1,K
+     C                     MOVELUUUHD2    HDR2,K
+     C                     END                               IF 1
+     C/EJECT
+     C** Set-up A/c Officer Heading
+     C**
+     C           WUPMAO    IFNE '0'                           IF 1
+     C                     MOVE WUPMAO    A       10
+     C** Initialise A/c Officer Storage Fields - Line 1
+     C**                   ¦
+     C                     MOVE *BLANKS   UUAHD1 14
+     C                     MOVE *BLANKS   UUAHD2 14
+     C** UUAHD1- Move ' A/c          ' into Line 1
+     C** UUAHD2- Move ' Off          ' into Line 2
+     C**                   ¦
+     C                     MOVEAHDR3,7    UUAHD1
+     C                     MOVEAHDR4,7    UUAHD2
+     C** Find Length if Field Required To be Displayed from Compile
+     C** time array data - A/C Officer element is 7
+     C**                   ¦
+     C** Move length of field required to be printed into last 2 Chars
+     C** of Heading Line 1 & 2 giving
+     C**
+     C** UUAHD1- Move ' A/c        06' into Line 1
+     C** UUAHD2- Move ' Off        06' into Line 2
+     C**                   ¦
+     C                     MOVE '06'      UUAHD1
+     C                     MOVE '06'      UUAHD2
+     C** Move Headings 1 & 2 into array element according to the
+     C** fields priority on General Ledger Details.
+     C**                   ¦
+     C                     MOVELUUAHD1    HDR1,A
+     C                     MOVELUUAHD2    HDR2,A
+     C                     END                               IF 1
+     C/EJECT
+     C** Set-up Customer Number Heading
+     C**
+     C           WUPMCU    IFNE '0'                           IF 1
+     C                     MOVE WUPMCU    C       10
+     C** Initialise Book Storage Fields - Line 1
+     C**                   ¦
+     C                     MOVE *BLANKS   UUCHD1 14
+     C                     MOVE *BLANKS   UUCHD2 14
+     C** UUCHD1- Move '  Customer    ' into Line 1
+     C** UUCHD2- Move '   Number     ' into Line 2
+     C**                   ¦
+     C                     MOVEAHDR3,8    UUCHD1
+     C                     MOVEAHDR4,8    UUCHD2
+     C** Find Length if Field Required To be Displayed from Compile
+     C** time array data - Customer Number element is 8
+     C**                   ¦
+     C** Move length of field required to be printed into last 2 Chars
+     C** of Heading Line 1 & 2 giving
+     C**
+     C** UUBHD1- Move '  Customer  10' into Line 1
+     C** UUBHD2- Move '   Number   10' into Line 2
+     C**                   ¦
+     C                     MOVE '10'      UUCHD1
+     C                     MOVE '10'      UUCHD2
+     C** Move Headings 1 & 2 into array element according to the
+     C** fields priority on General Ledger Details.
+     C**                   ¦
+     C                     MOVELUUCHD1    HDR1,C
+     C                     MOVELUUCHD2    HDR2,C
+     C                     END                               IF 1
+     C/EJECT
+     C** Load 70 Character 1 Bit Array with all Field Values
+     C**
+     C                     Z-ADD1         Y       10
+     C                     Z-ADD1         Z       20
+     C** Load HD1 HD2 with all 8 Base Fields according to their priors
+     C** and there length.
+     C**
+     C           Y         DOWNE9                           DO
+     C**                   ¦
+     C                     MOVEAHDR1,Y    HD1,Z
+     C                     MOVEAHDR2,Y    HD2,Z
+     C                     MOVE HDR1,Y    PTR     20
+     C           Z         ADD  PTR       Z
+     C                     ADD  1         Y
+     C**                   ¦
+     C                     END                              WOD
+     C**
+     C**
+     C** Move Final Array Contents to Output Screen Field
+     C**
+     C                     MOVEAHD1       #CPMH1
+     C                     MOVEAHD2       #CPMH2
+     C**
+     C**
+      * Position DBF file
+     C           KPOS      KLIST
+     C                     KFLD           DWBKCD           Book Code
+     C                     KFLD           DWPCTT           Profit Centre T
+     C                     KFLD           DWSBTY           Sub Type
+     C                     KFLD           DWBRCD           Branch code
+     C                     KFLD           DWDPCD           Dept Code
+     C                     KFLD           DWUSID           User
+     C                     KFLD           DWACOC           Account Officer
+     C                     KFLD           DWCUST           Customer Number
+      * Setup key
+     C                     MOVEL#2BKCD    DWBKCD           Book Code
+     C                     MOVEL#2PCTT    DWPCTT           Profit Centre T
+     C                     MOVEL#2SBTY    DWSBTY           Sub Type
+     C                     MOVEL#2BRCD    DWBRCD           Branch code
+     C                     MOVEL#2DPCD    DWDPCD           Dept Code
+     C                     MOVEL#2USID    DWUSID           User
+     C                     MOVEL#2ACOC    DWACOC           Account Officer
+     C                     MOVEL#2CUST    DWCUST           Customer Number
+     C           KPOS      SETLL@DWREHF
+     C                     READ @DWREHF                8782*82=EOF
+      * Save previous selector values
+     C           *LIKE     DEFN #2BKCD    WZBKCD
+     C                     MOVEL#2BKCD    WZBKCD           Book Code
+     C           *LIKE     DEFN #2PCTT    WZPCTT
+     C                     MOVEL#2PCTT    WZPCTT           Profit Centre T
+     C           *LIKE     DEFN #2SBTY    WZSBTY
+     C                     MOVEL#2SBTY    WZSBTY           Sub Type
+     C           *LIKE     DEFN #2BRCD    WZBRCD
+     C                     MOVEL#2BRCD    WZBRCD           Branch code
+     C           *LIKE     DEFN #2DPCD    WZDPCD
+     C                     MOVEL#2DPCD    WZDPCD           Dept Code
+     C           *LIKE     DEFN #2USID    WZUSID
+     C                     MOVEL#2USID    WZUSID           User
+     C           *LIKE     DEFN #2ACOC    WZACOC
+     C                     MOVEL#2ACOC    WZACOC           Account Officer
+     C           *LIKE     DEFN #2CUST    WZCUST
+     C                     MOVEL#2CUST    WZCUST           Customer Number
+     C           *LIKE     DEFN #2LCD     WZLCD
+     C                     MOVEL#2LCD     WZLCD            Last Change Dat
+     C           *LIKE     DEFN #2TYLC    WZTYLC
+     C                     MOVEL#2TYLC    WZTYLC           Type of Last Ch
+     C           *LIKE     DEFN #2PCCD    WZPCCD
+     C                     MOVEL#2PCCD    WZPCCD           Profit Centre C
+      * Load subfile page
+     C                     Z-ADD0         ##RROK  50
+     C                     EXSR BBLDSF
+      *================================================================
+     CSR         BAEXIT    ENDSR
+      /EJECT
+     CSR         BBLDSF    BEGSR
+      *================================================================
+      * Load subfile page
+      *================================================================
+      * Re-establish fields in read-ahead record
+     C   27                DO
+     C  N82                READP@DWREHF                  90*
+     C  N82                READ @DWREHF                  90*
+     C                     END
+      *
+      * Setof record error indicators
+     C                     MOVEL*ALL'0'   WKIND0  1
+     C                     MOVEAWKIND0    *IN,33
+      * Start at previous highest record in SFL
+     C                     Z-ADD##RRMX    ##RR    50
+      * Reset count of DBF records read
+     C                     Z-ADD0         ##RRRD  50
+      * Set required pages based on *Set Cursor or *Subfile Pages
+     C           W0RR0     IFGT 0
+     C           W0RR0     DIV  ##SFPG    ##SPG   30
+     C                     MVR            ##SLIN  30
+     C           ##SLIN    IFGT 0
+     C                     ADD  1         ##SPG
+     C                     END
+     C           W0SPG     IFGT ##SPG
+     C                     Z-ADDW0SPG     ##SPG
+     C                     END
+     C                     ELSE
+     C                     Z-ADDW0SPG     ##SPG
+     C                     END
+      * Compute lines required based on pages
+     C           ##SPG     MULT ##SFPG    ##SFLN  90
+     C           ##SFLN    IFGT 999
+     C                     Z-ADD999       ##SFLN
+     C                     END
+      *................................................................
+      * Load next SFL page until SFL page full, or
+      * Scan limit reached
+     C           *IN82     DOWEQ'0'                        DO
+     C           ##RROK    ANDLT##SFLN
+     C           ##RRRD    ANDLTW0SLM
+      * Check selection fields - if fail, read next record
+     C           #2BKCD    IFEQ *BLANK                     Book Code
+     C           #2PCTT    IFNE *BLANK                     Profit Centre T
+     C           DWPCTT    CABLT#2PCTT    BB020            Profit Centre T
+     C                     END
+     C                     END
+     C           #2BKCD    IFEQ *BLANK                     Book Code
+     C           #2PCTT    OREQ *BLANK                     Profit Centre T
+     C           #2SBTY    IFNE *BLANK                     Sub Type
+     C           DWSBTY    CABLT#2SBTY    BB020            Sub Type
+     C                     END
+     C                     END
+     C           #2BKCD    IFEQ *BLANK                     Book Code
+     C           #2PCTT    OREQ *BLANK                     Profit Centre T
+     C           #2SBTY    OREQ *BLANK                     Sub Type
+     C           #2BRCD    IFNE *BLANK                     Branch code
+     C           DWBRCD    CABLT#2BRCD    BB020            Branch code
+     C                     END
+     C                     END
+     C           #2BKCD    IFEQ *BLANK                     Book Code
+     C           #2PCTT    OREQ *BLANK                     Profit Centre T
+     C           #2SBTY    OREQ *BLANK                     Sub Type
+     C           #2BRCD    OREQ *BLANK                     Branch code
+     C           #2DPCD    IFNE *BLANK                     Dept Code
+     C           DWDPCD    CABLT#2DPCD    BB020            Dept Code
+     C                     END
+     C                     END
+     C           #2BKCD    IFEQ *BLANK                     Book Code
+     C           #2PCTT    OREQ *BLANK                     Profit Centre T
+     C           #2SBTY    OREQ *BLANK                     Sub Type
+     C           #2BRCD    OREQ *BLANK                     Branch code
+     C           #2DPCD    OREQ *BLANK                     Dept Code
+     C           #2USID    IFNE *BLANK                     User
+     C           DWUSID    CABLT#2USID    BB020            User
+     C                     END
+     C                     END
+     C           #2BKCD    IFEQ *BLANK                     Book Code
+     C           #2PCTT    OREQ *BLANK                     Profit Centre T
+     C           #2SBTY    OREQ *BLANK                     Sub Type
+     C           #2BRCD    OREQ *BLANK                     Branch code
+     C           #2DPCD    OREQ *BLANK                     Dept Code
+     C           #2USID    OREQ *BLANK                     User
+     C           #2ACOC    IFNE *BLANK                     Account Officer
+     C           DWACOC    CABLT#2ACOC    BB020            Account Officer
+     C                     END
+     C                     END
+     C           #2BKCD    IFEQ *BLANK                     Book Code
+     C           #2PCTT    OREQ *BLANK                     Profit Centre T
+     C           #2SBTY    OREQ *BLANK                     Sub Type
+     C           #2BRCD    OREQ *BLANK                     Branch code
+     C           #2DPCD    OREQ *BLANK                     Dept Code
+     C           #2USID    OREQ *BLANK                     User
+     C           #2ACOC    OREQ *BLANK                     Account Officer
+     C           #2CUST    IFNE *BLANK                     Customer Number
+     C           DWCUST    CABLT#2CUST    BB020            Customer Number
+     C                     END
+     C                     END
+     C           #2LCD     IFNE *ZERO                      Last Change Dat
+     C           DWLCD     CABNE#2LCD     BB020            Last Change Dat
+     C                     END
+     C           #2TYLC    IFNE *BLANK                     Type of Last Ch
+     C           DWTYLC    CABNE#2TYLC    BB020            Type of Last Ch
+     C                     END
+     C           #2PCCD    IFNE *BLANK                     Profit Centre C
+      * Scan for search string
+     C                     CALL 'QCLSCAN'
+     C                     PARM           DWPCCD           Profit Centre C
+      * Length
+     C                     PARM 4         WQA3N   30
+      * Start
+     C                     PARM 1         WQB3N   30
+      * Mask
+     C                     PARM           #2PCCD
+      * Length
+     C                     PARM 4         WQC3N   30
+      * Translate
+     C                     PARM '1'       WQD1    1
+      * Trim
+     C                     PARM '1'       WQE1    1
+      * Wild
+     C                     PARM '?'       WQF1    1
+      * Result
+     C                     PARM           WQG3N   30
+     C           WQG3N     CABLT1         BB020
+     C                     END
+      * Load SFL fields
+     C                     EXSR MBFL#1
+     C                     MOVEL'Y'       W0RSL   1
+      * Allow for possible *Set Cursor processing
+     C                     ADD  1         ##RR
+      * USER: Initialize subfile record from DBF record
+      * Base Field Set-up - Profit Centre Dft Matrix  *
+     C**
+     C** Move each database field into the associated section of the
+     C** array in order to display all the details into the screen
+     C** output field.
+     C**
+     C** To place the field into the correct portion of the array make
+     C** use of the priorities specified for each field off the
+     C** General Ledger File, the fields of which are passed into this
+     C** user source.
+     C**
+     C** Set-up Book Code
+     C**
+     C           WUPMBK    IFNE '0'                           IF 1
+     C                     MOVE WUPMBK    B       10
+     C** Initialise Book Storage Fields
+     C**                   ¦
+     C                     MOVE *BLANKS   UUBOK   4
+     C                     MOVE *BLANKS   UUBOK2 14
+     C** UUBOK - Move Book Code to Store Book Code 4 Long to hold
+     C**         bbXX  where bb are blanks and XX is the Book Code.
+     C**                   ¦
+     C           #1BKCD    IFNE '**'
+     C                     MOVE #1BKCD    UUBOK
+     C                     END
+     C** UUBOK2 - Move Store Book Code to Store Long Book Code 14 Long
+     C** bbXXbbbbbbbbbb where b's are blanks and XX is the Book Code.
+     C**                   ¦
+     C                     MOVELUUBOK     UUBOK2
+     C** Find Length if Field Required To be Displayed from Compile
+     C** time array data - Book Code element is 1
+     C**                   ¦
+     C** Move length of field required to be printed into last 2 Chars
+     C** of Long Store Book Code giving - bbXXbbbbbbbb06 in the field.
+     C** where b's are blanks and XX is the Book Code, 06 Len of Fld.
+     C**                   ¦
+     C                     MOVE '06'      UUBOK2
+     C** Move Long Store Book Code to array element according to the
+     C** fields priority on General Ledger Details.
+     C**                   ¦
+     C                     MOVEAUUBOK2    PARR,B
+     C                     END                               IF 1
+     C/EJECT
+     C** Set-up Sub Type
+     C**
+     C           WUPMST    IFNE '0'                           IF 1
+     C                     MOVE WUPMST    S       10
+     C** Initialise Sub Type Storage Fields
+     C**                   ¦
+     C                     MOVE *BLANKS   UUSBT   4
+     C                     MOVE *BLANKS   UUSBT2 14
+     C** UUSBT - Move Sub Type to Store Sub Type 4 Long to hold
+     C**         bbXX  where bb are blanks and XX is the Sub Type.
+     C**                   ¦
+     C           #1SBTY    IFNE '**'
+     C                     MOVE #1SBTY    UUSBT
+     C                     END
+     C** UUSBT2 - Move Store Sub Type to Store Sub Type Code 14 Long
+     C** bbXXbbbbbbbbbb where b's are blanks and XX is the Sub Type.
+     C**                   ¦
+     C                     MOVELUUSBT     UUSBT2
+     C** Find Length if Field Required To be Displayed from Compile
+     C** time array data - Sub-Type element is 3
+     C**                   ¦
+     C** Move length of field required to be printed into last 2 Chars
+     C** of Long Store Sub Type giving - bbXXbbbbbbbb06 in the field.
+     C** where b's are blanks and XX is the Sub Type, 06 Len of Fld.
+     C**                   ¦
+     C                     MOVE '06'      UUSBT2
+     C** Move Long Store Sub-Type  to array element according to the
+     C** fields priority on General Ledger Details.
+     C**                   ¦
+     C                     MOVEAUUSBT2    PARR,S
+     C                     END                               IF 1
+     C/EJECT
+     C** Set-up Transaction Type
+     C**
+     C           WUPMTT    IFNE '0'                           IF 1
+     C                     MOVE WUPMTT    T       10
+     C** Initialise Trans. Type Storage Fields
+     C**                   ¦
+     C                     MOVE *BLANKS   UUTTY   6
+     C                     MOVE *BLANKS   UUTTY2 14
+     C** UUTTY - Move Trans Type to Store Trans Type 6 Long to hold
+     C** bXXXXX where b is blank and X's is the Trans Type.
+     C**                   ¦
+     C           #1PCTT    IFNE '*****'
+     C                     MOVE #1PCTT    UUTTY
+     C                     END
+     C** UUTTY2- Move Store Trans Type to Store Trans Type Code 14 Long
+     C** bXXXXXbbbbbbbb where b's are blanks and X's is the Trans Type.
+     C**                   ¦
+     C                     MOVELUUTTY     UUTTY2
+     C** Find Length if Field Required To be Displayed from Compile
+     C** time array data - Trans-Type element is 2
+     C**                   ¦
+     C** Move length of field required to be printed into last 2 Chars
+     C** of Long Store Trans Type giving - bXXXXXbbbbbb07 in the field.
+     C** where b's are blanks and XX is the Sub Type, 07 Len of Fld.
+     C**                   ¦
+     C                     MOVE '07'      UUTTY2
+     C** Move Long Store Trans Type  to array element according to the
+     C** fields priority on General Ledger Details.
+     C**                   ¦
+     C                     MOVEAUUTTY2    PARR,T
+     C                     END                               IF 1
+     C/EJECT
+     C** Set-up Branch Code
+     C**
+     C**  IF Multibranching Switched On then Branch Code Will be          LN0592
+     C**  displayed if the priority on SDGELRPD is GT 0.........          LN0592
+     C           WUMBIN    IFEQ 'Y'                                       LN0592
+     C**                                                                  LN0592
+     C           WUPMBH    IFNE '0'                           IF 1
+     C                     MOVE WUPMBH    H       10
+     C** Initialise Branch Code Storage Fields
+     C**                   ¦
+     C                     MOVE *BLANKS   UUBCH   5
+     C                     MOVE *BLANKS   UUBCH2 14
+     C** UUBCH - Move Branch Code to Store Branch Code 5 Long to hold
+     C** bbXXX where b is blank and X's is the Branch code.
+     C**                   ¦
+     C           #1BRCD    IFNE '***'
+     C                     MOVE #1BRCD    UUBCH
+     C                     END
+     C** UUBCH2- Move Store Bch Code to Store Bch Code 14 Long
+     C** bbXXXbbbbbbbbb where b's are blanks and X's is the Bch Code.
+     C**                   ¦
+     C                     MOVELUUBCH     UUBCH2
+     C** Find Length if Field Required To be Displayed from Compile
+     C** time array data - Branch code element is 4
+     C**                   ¦
+     C** Move length of field required to be printed into last 2 Chars
+     C** of Long Store Bch Code giving - bbXXXbbbbbbb07 in the field.
+     C** where b's are blanks and XX is the Trans Type, 07 Len of Fld.
+     C**                   ¦
+     C                     MOVE '07'      UUBCH2
+     C** Move Long Store Bch Code  to array element according to the
+     C** fields priority on General Ledger Details.
+     C**                   ¦
+     C                     MOVEAUUBCH2    PARR,H
+     C                     END                               IF 1
+     C**                                                                  LN0592
+     C                     END                                            LN0592
+     C/EJECT
+     C** Set-up Dept. Code
+     C**
+     C           WUPMDT    IFNE '0'                           IF 1
+     C                     MOVE WUPMDT    D       10
+     C** Initialise Dept Code Storage Fields
+     C**                   ¦
+     C                     MOVE *BLANKS   UUDPT   5
+     C                     MOVE *BLANKS   UUDPT2 14
+     C** UUDPT - Move Dept Code to Store Dept Code 5 Long to hold
+     C** bbXXX where b is blank and X's is the Dept code.
+     C**                   ¦
+     C           #1DPCD    IFNE '***'
+     C                     MOVE #1DPCD    UUDPT
+     C                     END
+     C** UUDPT2- Move Store Dept Code to Store Dept Code 14 Long
+     C** bbXXXbbbbbbbbb where b's are blanks and X's is the Dept Code
+     C**                   ¦
+     C                     MOVELUUDPT     UUDPT2
+     C** Find Length if Field Required To be Displayed from Compile
+     C** time array data - Dept code element is 5
+     C**                   ¦
+     C** Move length of field required to be printed into last 2 Chars
+     C** of Long Store Dept Code giving - bbXXXbbbbbbb07 in the field.
+     C** where b's are blanks and XX is the Dept Type, 07 Len of Fld.
+     C**                   ¦
+     C                     MOVE '07'      UUDPT2
+     C** Move Long Store Dept Code  to array element according to the
+     C** fields priority on General Ledger Details.
+     C**                   ¦
+     C                     MOVEAUUDPT2    PARR,D
+     C                     END                               IF 1
+     C/EJECT
+     C** Set-up User Id
+     C**
+     C           WUPMUR    IFNE '0'                           IF 1
+     C*********************MOVE #IPMUR    U       10
+     C                     MOVE WUPMUR    K       10
+     C** Initialise User Id Storage Fields
+     C**                   ¦
+     C                     MOVE *BLANKS   UUUID  11
+     C                     MOVE *BLANKS   UUUID2 14
+     C** UUUID - Move User Id to Store User Id 5 Long to hold
+     C** bXXXXXXXXXX where b is blank and X's is the User Id
+     C**                   ¦
+     C                     MOVE '*****'   UUTSAS 10
+     C                     MOVEL'*****'   UUTSAS
+     C           #1USID    IFNE UUTSAS
+     C                     MOVE #1USID    UUUID
+     C                     END
+     C** UUUID2- Move Store User Id to Store User Id 14 Long
+     C** bXXXXXXXXXXbbb where b's are blanks and X's is the User Id
+     C**                   ¦
+     C                     MOVELUUUID     UUUID2
+     C** Find Length if Field Required To be Displayed from Compile
+     C** time array data - User Id element is 6
+     C**                   ¦
+     C** Move length of field required to be printed into last 2 Chars
+     C** of Long Store User Id giving - bXXXXXXXXXXb12 in the field.
+     C** where b's are blanks and XX is the User Id, 12 Len of Fld.
+     C**                   ¦
+     C                     MOVE '12'      UUUID2
+     C** Move Long Store User Id to array element according to the
+     C** fields priority on General Ledger Details.
+     C**                   ¦
+     C*********************MOVEAUUUID2    PARR,U
+     C                     MOVEAUUUID2    PARR,K
+     C                     END                               IF 1
+     C/EJECT
+     C** Set-up A/c Officer
+     C**
+     C           WUPMAO    IFNE '0'                           IF 1
+     C                     MOVE WUPMAO    A       10
+     C** Initialise A/c Officer Storage Fields
+     C**                   ¦
+     C                     MOVE *BLANKS   UUAOS   4
+     C                     MOVE *BLANKS   UUAOS2 14
+     C** UUAOS -Move A/c Officer to Store A/c Officer to 6 Long to hold
+     C** bbXXbbbbbbb where b is blank and X's is the A/c Officer
+     C**                   ¦
+     C           #1ACOC    IFNE '**'
+     C                     MOVE #1ACOC    UUAOS
+     C                     END
+     C** UUAOS2- Move Store A/c Off to Store A/c Off 14 Long
+     C** bbXXbbbbbbbbbb where b's are blanks and X's is the A/c Off
+     C**                   ¦
+     C                     MOVELUUAOS     UUAOS2
+     C** Find Length if Field Required To be Displayed from Compile
+     C** time array data - A/c Off element is 7
+     C**                   ¦
+     C** Move length of field required to be printed into last 2 Chars
+     C** of Long Store A/c Off giving - bbXXbbbbbbbb06 in the field.
+     C** where b's are blanks and XX is the A/c Off, 06 Len of Fld.
+     C**                   ¦
+     C                     MOVE '06'      UUAOS2
+     C** Move Long Store A/c Off to array element according to the
+     C** fields priority on General Ledger Details.
+     C**                   ¦
+     C                     MOVEAUUAOS2    PARR,A
+     C                     END                               IF 1
+     C/EJECT
+     C** Set-up Customer No
+     C**
+     C           WUPMCU    IFNE '0'                           IF 1
+     C                     MOVE WUPMCU    C       10
+     C** Initialise Customer No Storage Fields
+     C**                   ¦
+     C                     MOVE *BLANKS   UUCUS   8
+     C                     MOVE *BLANKS   UUCUS2 14
+     C** UUCUS-Move Customer No to Store Customer No to 08 Long to hold
+     C** BBXXXXXX where b is blank and X's is the Customer No
+     C**                   ¦
+     C           #1CUST    IFNE '******'
+     C                     MOVE #1CUST    UUCUS
+     C                     END
+     C** UUCUS2- Move Store Cust No to Store Cust No 14 Long
+     C** bXXXXXXXXXXbbb where b's are blanks and X's is the Cust No
+     C**                   ¦
+     C                     MOVELUUCUS     UUCUS2
+     C** Find Length if Field Required To be Displayed from Compile
+     C** time array data - Cust No element is 8
+     C**                   ¦
+     C** Move length of field required to be printed into last 2 Chars
+     C** of Long Store Cust No giving - BBXXXXXXBBBB10 in the field.
+     C** where b's are blanks and XX is the Cust No, 10 Len of Fld.
+     C**                   ¦
+     C                     MOVE '10'      UUCUS2
+     C** Move Long Store Cust No to array element according to the
+     C** fields priority on General Ledger Details.
+     C**                   ¦
+     C                     MOVEAUUCUS2    PARR,C
+     C                     END                               IF 1
+     C/EJECT
+     C** Load 70 Character 1 Bit Array with all Field Values
+     C**
+     C                     Z-ADD1         Y       10
+     C                     Z-ADD1         Z       20
+     C** Load AR1 with all 8 Base Fields according to their priorities
+     C** and there length.
+     C**
+     C           Y         DOWNE9                           DO
+     C**                   ¦
+     C           PARR,Y    IFNE *BLANK                      IF 1
+     C**                   ¦¦
+     C                     MOVEAPARR,Y    AR1,Z
+     C                     MOVE PARR,Y    PTR     20
+     C           Z         ADD  PTR       Z
+     C**                   ¦¦
+     C                     END                              FI 1
+     C**                   ¦
+     C                     ADD  1         Y
+     C**                   ¦
+     C                     END                              WOD
+     C**
+     C           Z         IFLT 62
+     C                     MOVEA*BLANKS   AR1,Z
+     C                     END
+     C**
+     C**
+     C** Move Final Array Contents to Output Screen Field
+     C**
+     C                     MOVEAAR1       #RPDMO
+     C**
+     C**
+     C                     SUB  1         ##RR
+      * DBF record not selected
+     C           W0RSL     CABNE'Y'       BB020
+      * Output to subfile
+     C                     ADD  1         ##RR
+     C                     ADD  1         ##RROK     81    *
+      * If SFLRCD invalid, note that errors present
+     C   98N99             SETON                     99    *
+     C                     WRITE#SFLRCD
+     C           BB020     TAG
+      * Increment scan check count
+     C                     ADD  1         ##RRRD
+     C                     READ @DWREHF                  82*82=EOF
+     C                     END                             OD 1 - ##SFPG
+      *................................................................
+     C           BB900     TAG
+      *................................................................
+      * If no DBF records found, display error message
+     C           ##RR      IFEQ *ZERO
+     C           *IN82     ANDEQ'1'
+      * Send message '*No data to display'
+     C                     MOVEL'Y2U0008' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END                             FI ##RR = *ZERO
+      *
+      *................................................................
+      * Save highest SFL record load can continue at end point
+     C           ##RR      IFGT ##RRMX
+      * Calculate top line
+     C           ##RROK    DIV  ##SFPG    ##SPG
+     C                     MVR            ##SLIN
+     C           ##SLIN    IFGT 0
+     C           ##RR      SUB  ##SLIN    ##SFRC
+     C                     ELSE
+     C           ##RR      SUB  ##SFPG    ##SFRC
+     C                     END
+     C                     ADD  1         ##SFRC
+     C                     Z-ADD##RR      ##RRMX
+     C                     END
+      * If scan limit reached, display error message
+     C           ##RRRD    IFGE W0SLM
+      * Send message '*Scan limit reached'
+     C                     MOVEL'Y2U0017' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     Z-ADD0         ##RROK
+     C                     END
+      *================================================================
+     CSR         BBEXIT    ENDSR
+      /EJECT
+     CSR         CAEXFM    BEGSR
+      *================================================================
+      * Display screen
+      *================================================================
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * Update screen time
+     C                     TIME           ##TME
+      * PUTOVR unless conditioned fields change
+     C                     SETON                     86
+     C           *IN81     IFNE CAIN81
+     C                     SETOF                     86
+     C                     END
+     C                     MOVE *IN81     CAIN81  1
+      * Set cursor by *SET CURSOR data
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y0SET
+     C                     END
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#SFLCTL
+      * Maintain subfile position where possible
+     C           @#SFRC    IFGT *ZERO
+     C                     Z-ADD@#SFRC    ##SFRC
+     C                     END
+      * Test cursor
+     C                     EXSR Y8TST
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C                     SETOF                       8392*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         DAPR##    BEGSR
+      *================================================================
+      * Process screen input
+      *================================================================
+      *
+      * Confirm/update is not deferred
+     C                     MOVEL'N'       W0DCF   1
+      * CALC: Subfile control function fields
+      * .Check Each Field for Priority Of '1'
+      * .and then position the subfile to the value entered in the
+      * .screen positioner field.
+      * Position to Book Code
+      * CASE: WRK.Prof C Def Matrix-Book is First
+     C           WUPMBK    IFEQ '1'                        *IF
+     C                     MOVEL#CPDMP    #2BKCD           Book Code
+      * CASE: CTL.Book Code NE WRK.Book Code
+     C           #2BKCD    IFNE WUBKCD                     *IF
+     C                     MOVEL'Y'       W0RSF            *Reload subfile
+     C                     MOVEL#2BKCD    WUBKCD           Book Code
+     C                     END                             *FI
+     C                     END                             *FI
+      * Position to Transaction Type
+      * CASE: WRK.Prof C Def Matrix-T Type is First
+     C           WUPMTT    IFEQ '1'                        *IF
+     C                     MOVEL#CPDMP    #2PCTT           Profit Centre T
+      * CASE: CTL.Profit Centre Trans Type NE WRK.Profit Centre Trans Typ
+     C           #2PCTT    IFNE WUPCTT                     *IF
+     C                     MOVEL'Y'       W0RSF            *Reload subfile
+     C                     MOVEL#2PCTT    WUPCTT           Profit Centre T
+     C                     END                             *FI
+     C                     END                             *FI
+      * Position to Sub-Type
+      * CASE: WRK.Prof C Def Matrix-S Type is First
+     C           WUPMST    IFEQ '1'                        *IF
+     C                     MOVEL#CPDMP    #2SBTY           Sub Type
+      * CASE: CTL.Sub Type NE WRK.Sub Type
+     C           #2SBTY    IFNE WUSBTY                     *IF
+     C                     MOVEL'Y'       W0RSF            *Reload subfile
+     C                     MOVEL#2SBTY    WUSBTY           Sub Type
+     C                     END                             *FI
+     C                     END                             *FI
+      * Position to Branch Code
+      * CASE: WRK.Prof C Def Matrix-Branch is First
+     C           WUPMBH    IFEQ '1'                        *IF
+     C                     MOVEL#CPDMP    #2BRCD           Branch code
+      * CASE: CTL.Branch code NE WRK.Branch code
+     C           #2BRCD    IFNE WUBRCD                     *IF
+     C                     MOVEL'Y'       W0RSF            *Reload subfile
+     C                     MOVEL#2BRCD    WUBRCD           Branch code
+     C                     END                             *FI
+     C                     END                             *FI
+      * Position to Dept Code
+      * CASE: WRK.Prof C Def Matrix-Dept is First
+     C           WUPMDT    IFEQ '1'                        *IF
+     C                     MOVEL#CPDMP    #2DPCD           Dept Code
+      * CASE: CTL.Dept Code NE WRK.Dept Code
+     C           #2DPCD    IFNE WUDPCD                     *IF
+     C                     MOVEL'Y'       W0RSF            *Reload subfile
+     C                     MOVEL#2DPCD    WUDPCD           Dept Code
+     C                     END                             *FI
+     C                     END                             *FI
+      * Position to User Id
+      * CASE: WRK.Prof C Def Matrix-User is First
+     C           WUPMUR    IFEQ '1'                        *IF
+     C                     MOVEL#CPDMP    #2DPCD           Dept Code
+      * CASE: CTL.User NE WRK.User
+     C           #2USID    IFNE WUUSID                     *IF
+     C                     MOVEL'Y'       W0RSF            *Reload subfile
+     C                     MOVEL#2USID    WUUSID           User
+     C                     END                             *FI
+     C                     END                             *FI
+      * Position to Acount Officer
+      * CASE: WRK.Prof C Def Matrix-Ac Off is First
+     C           WUPMAO    IFEQ '1'                        *IF
+     C                     MOVEL#CPDMP    #2ACOC           Account Officer
+      * CASE: CTL.Account Officer Code NE WRK.Account Officer Code
+     C           #2ACOC    IFNE WUACOC                     *IF
+     C                     MOVEL'Y'       W0RSF            *Reload subfile
+     C                     MOVEL#2ACOC    WUACOC           Account Officer
+     C                     END                             *FI
+     C                     END                             *FI
+      * Position to Customer Number
+      * CASE: WRK.Prof C Def Matrix-Cust is First
+     C           WUPMCU    IFEQ '1'                        *IF
+     C                     MOVEL#CPDMP    WUCSSN           Customer Shortn
+      * RTV Cust No with Sname - Client Details  *
+     C                     EXSR SARVGN
+      * CASE: PGM.*Return code is Customer Found
+     C           W0RTN     IFEQ '*CUSFND'                  *IF
+     C                     MOVELWUCUST    #2CUST           Customer Number
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL#CPDMP    #2CUST           Customer Number
+     C                     END                             *FI
+      * CASE: CTL.Customer Number NE WRK.Save P.C.D.M. Customer
+     C           #2CUST    IFNE WUSPCU                     *IF
+     C                     MOVEL'Y'       W0RSF            *Reload subfile
+     C                     MOVEL#2CUST    WUSPCU           Save P.C.D.M. C
+     C                     END                             *FI
+     C                     END                             *FI
+      * Change of position specified
+     C           WZPCCD    CASNE#2PCCD    FBRQRL
+     C                     END
+      * Reload subfile requested
+     C           W0RSF     CABEQ'Y'       DAEXIT
+     C           *IN81     IFEQ '1'
+      * Process subfile records
+     C                     EXSR DBPRSF
+     C                     END
+      * If error, quit processing
+     C           *IN99     CABEQ'1'       DAEXIT
+      * Defer confirm/update requested
+     C           W0DCF     CABEQ'Y'       DAEXIT
+      *================================================================
+     CSR         DAEXIT    ENDSR
+      /EJECT
+     CSR         DBPRSF    BEGSR
+      *================================================================
+      * Process modified subfile record
+      *================================================================
+     C                     READC#SFLRCD                  92*
+     C           *IN92     DOWEQ'0'
+      * Process subfile record
+     C                     EXSR DCPRSR
+     C                     UPDAT#SFLRCD
+     C                     READC#SFLRCD                  92*
+     C                     END
+      *================================================================
+     CSR         DBEXIT    ENDSR
+      /EJECT
+     CSR         DCPRSR    BEGSR
+      *================================================================
+      * Process subfile record
+      *================================================================
+      * Setof error indicators and SFLNXTCHG
+     C                     MOVEAWKIND0    *IN,33
+     C                     SETOF                     98    *
+      * USER: Process subfile record (Pre-confirm)
+      * User Requests S - Select
+      * CASE: RCD.*SFLSEL is *Select
+     C           #1SEL     IFEQ '1'                        *IF
+      * PAR = RCD By name
+     C                     MOVEL#1BKCD    P1BKCD           Book Code
+     C                     MOVEL#1PCTT    P1PCTT           Profit Centre T
+     C                     MOVEL#1SBTY    P1SBTY           Sub Type
+     C                     MOVEL#1BRCD    P1BRCD           Branch code
+     C                     MOVEL#1DPCD    P1DPCD           Dept Code
+     C                     MOVEL#1USID    P1USID           User
+     C                     MOVEL#1ACOC    P1ACOC           Account Officer
+     C                     MOVEL#1CUST    P1CUST           Customer Number
+     C                     MOVEL*BLANK    P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     END                             *FI
+     C           *IN98     IFEQ '1'
+      * SFLRCD invalid
+     C  N99                Z-ADD##RR      ##SFRC     99    *
+      * SFLNXTCHG
+     C                     SETON                     84
+     C                     ELSE
+      * SFLRCD valid
+      * SFLNXTCHG
+     C                     SETOF                     84
+     C                     MOVEL*BLANK    #1SEL
+     C                     END                             FI *IN98
+      *================================================================
+     CSR         DCEXIT    ENDSR
+      /EJECT
+     CSR         FBRQRL    BEGSR
+      *================================================================
+      * Request subfile reload
+      *================================================================
+     C                     MOVEL'Y'       W0RSF
+      *================================================================
+     CSR         FBEXIT    ENDSR
+      /EJECT
+     CSR         MBFL#1    BEGSR
+      *================================================================
+      * Move @DWREHF fields to subfile
+      *================================================================
+     C                     MOVEL*BLANK    #1SEL
+     C                     MOVELDWBKCD    #1BKCD           Book Code
+     C                     MOVELDWPCTT    #1PCTT           Profit Centre T
+     C                     MOVELDWSBTY    #1SBTY           Sub Type
+     C                     MOVELDWBRCD    #1BRCD           Branch code
+     C                     MOVELDWDPCD    #1DPCD           Dept Code
+     C                     MOVELDWUSID    #1USID           User
+     C                     MOVELDWACOC    #1ACOC           Account Officer
+     C                     MOVELDWCUST    #1CUST           Customer Number
+     C                     Z-ADDDWLCD     #1LCD            Last Change Dat
+     C                     MOVELDWTYLC    #1TYLC           Type of Last Ch
+     C                     MOVELDWPCCD    #1PCCD           Profit Centre C
+     C                     MOVEL*BLANK    #1SEL            *SFLSEL
+     C                     MOVEL*BLANK    #RPDMO           Prof Cent Def M
+      *================================================================
+     CSR         MBEXIT    ENDSR
+      /EJECT
+     CSR         MEIZ#2    BEGSR
+      *================================================================
+      * Initialise subfile control
+      *================================================================
+     C                     MOVEL*BLANK    #2BKCD           Book Code
+     C                     MOVEL*BLANK    #2PCTT           Profit Centre T
+     C                     MOVEL*BLANK    #2SBTY           Sub Type
+     C                     MOVEL*BLANK    #2BRCD           Branch code
+     C                     MOVEL*BLANK    #2DPCD           Dept Code
+     C                     MOVEL*BLANK    #2USID           User
+     C                     MOVEL*BLANK    #2ACOC           Account Officer
+     C                     MOVEL*BLANK    #2CUST           Customer Number
+     C                     Z-ADD*ZERO     #2LCD            Last Change Dat
+     C                     MOVEL*BLANK    #2TYLC           Type of Last Ch
+     C                     MOVEL*BLANK    #CPDMP           Prof Cent Def M
+     C                     MOVEL*BLANK    #2PCCD           Profit Centre C
+     C                     MOVEL*BLANK    #CPMH1           Prof Cent Def M
+     C                     MOVEL*BLANK    #CPMH2           Prof Cent Def M
+      *================================================================
+     CSR         MEEXIT    ENDSR
+      /EJECT
+     CSR         SARVGN    BEGSR
+      *================================================================
+      * RTV Cust No with Sname - Client Details  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Declare restrictor key work fields
+     C           *LIKE     DEFN BBCSSN    WQSA01           Customer Shortn
+      * Define keylist
+     C           KRSSA     KLIST
+     C                     KFLD           WQSA01           Customer Shortn
+      * Move fields to key list
+     C                     MOVELWUCSSN    WQSA01           Customer Shortn
+     C           KRSSA     SETLL@CUSTF3                    *
+     C           KRSSA     READE@CUSTF3                  90*
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0081' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'*NOSNOF' W0RTN            *Return code
+     C                     GOTO SAEXIT
+     C                     END
+      *
+     C           *IN90     DOWEQ'0'
+      * USER: Process Data record
+      * PAR = DB1 By name
+     C                     MOVELBBCUST    WUCUST           Customer Number
+     C                     MOVEL'*CUSFND' W0RTN            *Return code
+     C           KRSSA     READE@CUSTF3                  90*
+     C                     END
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     CSR         SBRVGN    BEGSR
+      *================================================================
+      * Obtain Prof Cent Def Pty - General Ledger Details  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSB     KLIST
+     C                     KFLD           BKGNLG           General Ledger
+      * Move fields to key list
+     C                     MOVE *BLANK    BKGNLG           General Ledger
+     C                     MOVEL'GELR'    BKGNLG           General Ledger
+     C           KRSSB     CHAIN@BKREEC              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0199' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SBEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL'Y2U0003' W0RTN            *Return code
+      * PAR = DB1 By name
+     C                     MOVELBKPMBK    WUPMBK           Prof C Def Matr
+     C                     MOVELBKPMTT    WUPMTT           Prof C Def Matr
+     C                     MOVELBKPMST    WUPMST           Prof C Def Matr
+     C                     MOVELBKPMBH    WUPMBH           Prof C Def Matr
+     C                     MOVELBKPMDT    WUPMDT           Prof C Def Matr
+     C                     MOVELBKPMUR    WUPMUR           Prof C Def Matr
+     C                     MOVELBKPMAO    WUPMAO           Prof C Def Matr
+     C                     MOVELBKPMCU    WUPMCU           Prof C Def Matr
+     C                     END
+      *================================================================
+     CSR         SBEXIT    ENDSR
+      /EJECT
+     CSR         Y0SET     BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y0EXIT    ENDSR
+      /EJECT
+     CSR         Y8TST     BEGSR
+      *================================================================
+      * Test cursor
+      *================================================================
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+      *================================================================
+     CSR         Y8EXIT    ENDSR
+      /EJECT
+     CSR         Y9CLR     BEGSR
+      *================================================================
+      * Clear *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y9EXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZHHPKY    BEGSR
+      *================================================================
+      * Display HELP text
+      *================================================================
+      * Signal help request
+     C                     MOVEL'Y'       W0HLP   1
+      *
+      * Extract cursor row and column
+     C           @#RWCL    DIV  256       ZHCSRW  50       Row
+     C                     MVR            ZHCSCL  50       Column
+      *
+      * Save cursor position for redisplay
+     C                     Z-ADDZHCSRW    ZZCSRW  30       Row
+     C                     Z-ADDZHCSCL    ZZCSCL  30       Column
+      *
+      *
+     C                     CALL 'YDDSHPR'
+     C                     PARM ##PGM     W0HPMB 10        Help text sourc
+     C                     PARM *BLANK    YYHPFL 10        Help text file
+     C                     PARM *BLANK    YYHPLB 10        Help text libra
+     C                     PARM           W0RTN   7
+     C                     PARM '*START'  YYHLVN 10        Help label
+     C                     PARM '*NORMAL' YYUSOP 10        Options
+     C                     PARM ZHCSRW    YYRW    50       Row
+     C                     PARM ZHCSCL    YYCL    50       Column
+     C                     PARM *ZERO     YYLGCT  50       # of grps
+     C                     PARM *BLANK    YYLGVN 10        Label grps
+      *
+      * Clear set cursor DDS indicator
+     C  N94                MOVEL'OFF'     WCSRLC
+     C  N94                SETON                     94    *
+      *================================================================
+     CSR         ZHEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel & exit program
+      *================================================================
+      * USER: Exit program processing
+      * CASE: CTL.*CMD key is *Exit
+     C           *IN03     IFEQ '1'                        *IF
+      * Send message '*No value selected'
+     C                     MOVEL'Y2U0016' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVEL'*PRV '   ZAPGRL           Rel queue
+     C                     MOVEL'*COMP  ' ZAMSTP           Message type
+     C                     EXSR ZASNMS
+      *
+     C                     MOVEL*BLANK    W0RTN            *Return code
+     C                     MOVEL'NOSEL'   W0RTN            *Return code
+     C                     END                             *FI
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C           W0ICL     IFEQ *BLANK
+     C                     MOVEL'Y'       W0ICL   1        *Initial call
+     C                     ELSE
+     C                     MOVEL'N'       W0ICL
+     C                     END
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+     C                     MOVEL*ZEROS    W0RTW   90
+     C                     MOVEL'400'     W0ENV   3
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+      * Set century digit (If YY prior to 1940 treat as 20YY)
+     C           ##JYY     IFLT 40
+     C                     Z-ADD1         ##JCC
+     C                     ELSE
+     C                     Z-ADD0         ##JCC
+     C                     END
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Define work field Prof C Def Matrix-Book
+     C                     MOVEL*BLANK    WUPMBK  1
+      * Define work field Prof C Def Matrix-T Type
+     C                     MOVEL*BLANK    WUPMTT  1
+      * Define work field Prof C Def Matrix-S Type
+     C                     MOVEL*BLANK    WUPMST  1
+      * Define work field Prof C Def Matrix-Branch
+     C                     MOVEL*BLANK    WUPMBH  1
+      * Define work field Prof C Def Matrix-Dept
+     C                     MOVEL*BLANK    WUPMDT  1
+      * Define work field Prof C Def Matrix-User
+     C                     MOVEL*BLANK    WUPMUR  1
+      * Define work field Prof C Def Matrix-Ac Off
+     C                     MOVEL*BLANK    WUPMAO  1
+      * Define work field Prof C Def Matrix-Cust
+     C                     MOVEL*BLANK    WUPMCU  1
+      * Define work field Book Code
+     C                     MOVEL*BLANK    WUBKCD  2
+      * Define work field Profit Centre Trans Type
+     C                     MOVEL*BLANK    WUPCTT  5
+      * Define work field Sub Type
+     C                     MOVEL*BLANK    WUSBTY  2
+      * Define work field Branch code
+     C                     MOVEL*BLANK    WUBRCD  3
+      * Define work field Dept Code
+     C                     MOVEL*BLANK    WUDPCD  3
+      * Define work field User
+     C                     MOVEL*BLANK    WUUSID 10
+      * Define work field Account Officer Code
+     C                     MOVEL*BLANK    WUACOC  2
+      * Define work field Customer Shortname
+     C                     MOVEL*BLANK    WUCSSN 10
+      * Define work field Customer Number
+     C                     MOVEL*BLANK    WUCUST  6
+      * Define work field Save P.C.D.M. Customer
+     C                     MOVEL*BLANK    WUSPCU  6
+      * Define work field Midas Run Date
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field Run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUSUC   1
+      * Define work field Date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WUMBIN  1
+      * Flag no *SET CURSOR in the program
+     C                     MOVE 'N'       YSETCS  1
+     C                     MOVE *BLANK    WCSRLC  3
+      * Define *Synon program work fields
+     C                     MOVEL*BLANKS   W0CFL  10        *Cursor field
+     C                     Z-ADD*ZEROS    W0CRW   50       *Cursor row
+     C                     Z-ADD*ZEROS    W0CCL   50       *Cursor column
+      * Move main file information to JOB context
+     C                     MOVE @1FFL     ZZFFL  10        Main file name
+     C                     MOVE @1FLB     ZZFLB  10        Main file lib
+     C                     MOVE @1FMB     ZZFMB  10        Main file mbr
+     C                     MOVE ZZFFL     @1FFL  10
+     C                     MOVE ZZFLB     @1FLB  10
+     C                     MOVE ZZFMB     @1FMB  10
+     C                     CALL 'Y2QLVNR'
+     C                     PARM           ZZFFL  10
+     C                     PARM           ZZFLB  10
+     C                     PARM           ZZFQL  21        LIBRARY/FILE
+      * Open files
+     C                     OPEN SD0490S#
+     C                     OPEN SDPRFML1
+     C                     OPEN SDCUSTL6
+     C                     OPEN SDGELRL1
+     C                     MOVEL'N'       W0PMT   1
+     C                     Z-ADD13        ##SFPG  30       SFLPAG
+     C                     Z-ADD1         ##SFRC
+      * Maximum record number
+     C                     Z-ADD*ZERO     ##RRMX
+      * Scan limit
+     C                     Z-ADD500       W0SLM   50
+      * Subfile pages
+     C                     Z-ADD1         W0SPG   30
+      * Processed Subfile record
+     C                     Z-ADD0         W0RR0   40
+      *................................................................
+     C                     MOVEL*BLANK    W0GRP   1
+      * USER: Initialize program
+      * SD0490S PRECOMPILER - Profit Centre Dft Matrix  *
+      * Copyright Statement 1988 - Standard Functions  *
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT  7        RUN DATE
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB           RUNDAY NO.
+     C                     MOVE SUC       WUSUC            SET UP COMPLT
+     C                     MOVE DFF       WUDFF            DTE FMT FLAG
+     C                     MOVE MBIN      WUMBIN           MULTI BR. IND
+      * Get Profit Centre Default Priorities off General Ledger ICD
+      * Obtain Prof Cent Def Pty - General Ledger Details  *
+     C                     EXSR SBRVGN
+      * Start of Fix LN0168
+     C                     Z-ADD99999     W0SLM            *Scan limit
+      * End of Fix LN0168
+      * Initialise subfile control
+     C                     EXSR MEIZ#2
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      /EJECT
+     CSR         *PSSR     BEGSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+      * Core function specific processing.
+      *
+     C/COPY WNCPYSRC,SD0490SPSC
+      *
+      * Start of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD0490SPS1
+      *
+      * Standard Midas PSSR processing.
+      *
+     C/COPY SDCPYSRC,SDPSSRINT
+      *
+      * End of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD0490SPS2
+      *
+      *================================================================
+     CSR                   ENDSR
+      *================================================================
+** HDR1 - Header Line 1 - Top Line Set Of values For Each Base Field
+ Book
+ Trans
+ Sub
+ Brch.
+ Dept.
+    User
+ A/c
+ Customer
+** HDR2 - Header Line 2 - Bottom Line Set Of values For Each Base Field
+ Code
+ Type
+ Type
+ Code
+ Code.
+     Id
+ Off
+  Number
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Misys International Banking Systems Ltd. 2001

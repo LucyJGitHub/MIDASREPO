@@ -1,0 +1,173 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+      *****************************************************************
+/*S*D ***RPGBASEMOD****************************************************                       CGP016
+      *****************************************************************
+      *                                                               *
+      *  Midas - Global Processing Module                             *
+      *                                                               *
+      *  GOXCCBRD - Reconcile Loan/Deposit Records on GPETRAPPD       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *                                                               *
+      *  Last Amend No. CGP016  *REDUNDANT Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. CRE026  *CREATE    Date 24May06               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CGP016 - Global database - Re-use deleted records            *
+      *  CRE026 - Consumer Banking                                    *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Use of indicators.                                           *
+      *    xx    -  Function of Indicator                             *
+      *    99    -  Read operation on files                           *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      *  *PSSR   - Program exception error routine                    *
+      *  *INZSR  - Initialisation Subroutine                          *
+      *  EXTALL  - Subroutine to Extract All Accounts                 *
+      *  EXTRCT  - Subroutine to Extract A Single Account             *
+      *                                                               *
+      *  The *INZSR subroutine will only get called automatically     *
+      *  on entry to the module the first time it is run              *
+      *  (unless you end the program with LR on).  Similarly          *
+      *  D-spec initialisation only happens the first time.  Use      *
+      *  RESET for subsequent passes.                                 *
+      *                                                               *
+      *****************************************************************
+ 
+      ** Equation Deals File
+     FOSPF      IF   E           K DISK    INFSR(*PSSR)
+ 
+     D/COPY ZACPYSRC,STD_D_SPEC
+ 
+     D EQDL          E DS                  EXTNAME(OSPF)
+ 
+     D I#RTCD          S              7
+     D I#ERMS          S             50
+     D W#RTCD          S              7
+     D W#ERMS          S             50
+     D W#LOC           S              4
+     D BUFFER          S           4000
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** +--- Start of Main processing -----------------------------------+
+      ** ¦                                                                ¦
+      ** ¦ Initial processing is performed automatically: Entry           ¦
+      ** ¦ Parameters.                                                    ¦
+      ** ¦                                                                ¦
+      ** +----------------------------------------------------------------+
+      *****************************************************************
+      *
+     C     *ENTRY        PLIST
+     C                   PARM                    I#RTCD
+     C                   PARM                    I#ERMS
+      *
+     C                   EVAL      W#LOC = 'ZONE'
+      *
+      ** Extract all deal records
+      *
+     C                   EXSR      EXTALL
+     C                   EVAL      *INLR = *ON
+      *
+     C                   RETURN
+      *
+     C/SPACE 5
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  EXTALL - Subroutine To Extract All Accounts                  *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: EXTRCT                                                *
+      *****************************************************************
+      *                                                               *
+     C     EXTALL        BEGSR
+      *
+     C                   READ      OSPF                                   99
+      *
+      ** While Deal can be found
+      *
+     C     *IN99         DOWEQ     '0'
+      *
+      ** Extract open Deals
+      *
+     C                   EXSR      EXTRCT
+      *
+      ** Read the next record
+      *
+     C                   READ      OSPF                                   99
+     C                   ENDDO
+      *
+     C                   ENDSR
+      *
+     C/SPACE 5
+      ********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  EXTRCT - Subroutine To Extract A Single Account              *
+      *                                                               *
+      *  Called By: EXTALL                                            *
+      *                                                               *
+      *  Calls: GOXTCBRD,GPWRTELOG                                    *
+      *****************************************************************
+      *                                                               *
+     C     EXTRCT        BEGSR
+      *
+     C                   CALL      'GOXTCBRD'
+     C                   PARM      *BLANK        W#RTCD
+     C                   PARM      *BLANK        W#ERMS
+      *
+      ** Inputs
+      *
+     C                   PARM                    W#LOC
+     C                   PARM                    EQDL
+      *
+      ** If data error encountered, log error
+      *
+     C     W#RTCD        IFEQ      '*ERROR '
+     C                   CLEAR                   BUFFER
+     C                   EVAL      BUFFER = 'EQDL' + W#RTCD
+     C                                      + W#ERMS + EQDL
+     C                   CALL      'GPWRTELOG'
+     C                   PARM                    BUFFER
+     C                   ENDIF
+      *
+     C                   ENDSR
+      ********************************************************************
+      /SPACE 5
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Program Initialisation routine                       *
+      *                                                               *
+      * Called by: Main processing                                    *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+     C     *INZSR        BEGSR
+      *
+      ** Get Extract control information
+      *
+      /COPY GOCPYSRC,GOGETEXCT
+ 
+     C                   ENDSR
+      ********************************************************************
+      /SPACE 5
+      ********************************************************************
+      * * P S S R  --- A B N O R M A L   E R R O R   C O N D I T I O N S
+      /COPY GOCPYSRC,GOPSSR
+      *****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2006

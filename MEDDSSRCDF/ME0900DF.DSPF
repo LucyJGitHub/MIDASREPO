@@ -1,0 +1,226 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas MG MT970 Accounts Maintenance')
+      *****************************************************************
+      *                                                               *
+      *  Midas - ME MODULE                                            *
+      *                                                               *
+      *  DSPF/ME0900DF - Midas ME MT970 Accounts Maintenance          *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. BUG7837            Date 08Jul05               *
+      *  Prev Amend No. CSW099  *CREATE    Date 28Feb05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  BUG7837 - Shift position of #1ACSQ (a/c seq) to the right    *
+      *            as it is overlapping #1ACOD (a/c code) after       *
+      *            length was increased from 4 to 10 digits.          *
+      *  CSW099 - MT970 Creation of Netting Statement                 *
+      *                                                               *
+      *****************************************************************
+     A                                      INDARA
+     A                                      PRINT(MPRINT)
+     A                                      CHGINPDFT
+      *=========================================================================
+     A                                      REF(MFRFL)
+      *
+     A          R #SFLRCD                   TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2005')
+      *
+     A                                      SFL
+     A                                      SETOF(98 'Force input format')
+     A                                      INDTXT(84 'Subfile next change')
+     A                                      INDTXT(87 'Enable key screen')
+     A                                      INDTXT(88 'Protect key fields')
+     A                                      INDTXT(89 '''ADD'' mode')
+     A                                      INDTXT(33 'Invalid: #1SEL')
+     A                                      INDTXT(34 'Invalid: #1BRCA')
+     A                                      INDTXT(35 'Invalid: #1CNUM')
+     A                                      INDTXT(36 'Invalid: #1CCY')
+     A                                      INDTXT(37 'Invalid: #1ACOD')
+     A                                      INDTXT(38 'Invalid: #1ACSQ')
+     A  84                                  SFLNXTCHG
+     A            #1DBRC        28   H      TEXT('Existing record fields')
+     A            #1LMSQ         5  0H      TEXT('Last Sequence no.')
+     A            #1LRDT         5  0H      TEXT('Last Run Date')
+     A            #1TYLC         1   H      TEXT('Type of Last Change')
+     A            #1LCD          5  0H      TEXT('Last Change Date')
+      *
+     A            #1SEL          1   B  8  4
+     A  77
+     AO 79                                  DSPATR(PR)
+     A  77
+     AO 79N33                               DSPATR(ND)
+     A N79N33                               DSPATR(UL HI)
+     A  33                                  DSPATR(RI PC)
+      *
+     A            #1BRCA    R        B  8 11REFFLD(BRCA)
+     A  88                                  DSPATR(PR)
+     A  34                                  DSPATR(RI PC)
+     A N88N34N77                            DSPATR(UL)
+     A N34                                  DSPATR(HI)
+      *
+     A            #1CNUM    R        B  8 17REFFLD(CNUMA)
+     A  88                                  DSPATR(PR)
+     A  35                                  DSPATR(RI PC)
+     A N88N35N77                            DSPATR(UL)
+     A N35                                  DSPATR(HI)
+      *
+     A            #1CCY     R        B  8 26REFFLD(CCY)
+     A  88                                  DSPATR(PR)
+     A  36                                  DSPATR(RI PC)
+     A N88N36N77                            DSPATR(UL)
+     A N36                                  DSPATR(HI)
+      *
+     A            #1ACOD    R        B  8 32REFFLD(AKEY)
+     A  88                                  DSPATR(PR)
+     A  37                                  DSPATR(RI PC)
+     A N88N37N77                            DSPATR(UL)
+     A N37                                  DSPATR(HI)
+      *
+      ** Start of Change BUG7837
+     A************#1ACSQ    R        B  8 39REFFLD(ACSQA)
+     A            #1ACSQ    R        B  8 45REFFLD(ACSQA)
+      ** End of Change BUG7837
+     A  88                                  DSPATR(PR)
+     A  38                                  DSPATR(RI PC)
+     A N88N38N77                            DSPATR(UL)
+     A N38                                  DSPATR(HI)
+      *
+     A            #1TYTX        10   O  8 50TEXT('Status')
+     A N88                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+      *=========================================================================
+      *
+     A          R #SFLCTL                   TEXT('Subfile control.')
+      *
+     A                                      SFLCTL(#SFLRCD)
+     A                                      SETOF(98 'Force input format')
+     A                                      SFLPAG(14) SFLSIZ(15)
+     A                                      OVERLAY
+     A  86                                  PUTOVR
+     A                                      INDTXT(80 'Clear subfile')
+     A                                      INDTXT(81 'Display subfile')
+     A                                      INDTXT(82 'End of subfile')
+     A                                      INDTXT(86 'Enable PUTOVR')
+     A                                      INDTXT(89 '89')
+     A  80                                  SFLCLR
+     A N80                                  SFLDSPCTL
+     A N25
+     AAN80
+     AA 81                                  SFLDSP
+     A N80 81 82                            SFLEND
+      * Command keys............................................................
+     A                                      VLDCMDKEY(29 'Valid command key')
+     A                                      CA03(03 'Exit.')
+     A N82                                  ROLLUP(27 'Next page.')
+     A  73                                  CF05(05 'Reset.')
+     A  72                                  CF09(09 'Change mode.')
+     A  70                                  CF10(10 'Confirm delete.')
+     A  71                                  CF12(12 'Previous.')
+      * SETOFFS.................................................................
+     A                                      SETOF(99 'Global error flag')
+     A                                      SETOF(31 'Invalid: #2BRCA')
+     A                                      SETOF(32 'Invalid: #2CNUM')
+     A                                      SETOF(39 'Invalid: #2CCY')
+     A                                      SETOF(40 'Invalid: #2TYTX')
+     A                                      SETOF(41 'Invalid: #2ACOD')
+     A                                      SETOF(42 'Invalid: #2ACSQ')
+      *.........................................................................
+     A            ##SFRC         4  0H      SFLRCDNBR(CURSOR)
+     A            ##USR         10      1  2TEXT('*USER')
+     A N25                                  OVRDTA
+     A            ##PGM         10   H      TEXT('*PROGRAM')
+     A                                  1 13'ME0900DF'
+     A            ##MRDT         7      1 72TEXT('Midas Run Date')
+     A N25                                  OVRDTA
+     A            ##JOB         10      2  2TEXT('*JOB')
+     A N25                                  OVRDTA
+     A                                  2 27'MT970 Accounts Maintenance'
+     A                                      DSPATR(HI)
+     A            ##TME          6  0   2 71TEXT('*TIME')
+     A                                      EDTWRD('  :  :  ')
+     A N25                                  OVRDTA
+      *
+     A                                  4  9'Branch'
+     A                                  4 17'Custom.'
+     A                                  4 26'CCY'
+     A                                  4 32'Acc.'
+     A                                  4 44'Acc.'
+     A  88                              4 50'Status'
+      *
+     A                                  5 17'Number'
+     A                                  5 32'Code'
+     A                                  5 44'Seq.'
+      *
+     A N89        #2BRCA    R        B  6 11REFFLD(BRCA)
+     A N25                                  OVRDTA
+     A  31                                  DSPATR(RI)
+     A  31
+     AO 88                                  DSPATR(PC)
+     A N31                                  DSPATR(UL HI)
+     A N25                                  OVRATR
+      *
+     A N89        #2CNUM    R        B  6 17REFFLD(CNUMA)
+     A N25                                  OVRDTA
+     A  32                                  DSPATR(RI PC)
+     A N32                                  DSPATR(UL HI)
+     A N25                                  OVRATR
+      *
+     A N89        #2CCY     R        B  6 26REFFLD(CCY)
+     A N25                                  OVRDTA
+     A  39                                  DSPATR(RI PC)
+     A N39                                  DSPATR(UL HI)
+     A N25                                  OVRATR
+      *
+     A N89        #2ACOD    R        B  6 32REFFLD(AKEY)
+     A N25                                  OVRDTA
+     A  41                                  DSPATR(RI PC)
+     A N41                                  DSPATR(UL HI)
+     A N25                                  OVRATR
+      *
+     A N89        #2ACSQ    R        B  6 45REFFLD(ACSQA)
+     A N25                                  OVRDTA
+     A  42                                  DSPATR(RI PC)
+     A N42                                  DSPATR(UL HI)
+     A N25                                  OVRATR
+      *
+     A N89 88     #2TYTX        10   B  6 50TEXT('Status')
+     A N25                                  OVRDTA
+     A  40                                  DSPATR(RI PC)
+     A N40                                  DSPATR(UL HI)
+     A N25                                  OVRATR
+      *
+      *=========================================================================
+      *
+     A          R #CMDTXT1                  TEXT('Command keys')
+      *
+     A                                      OVERLAY PUTOVR
+     A            ##CTX1        78     23  2TEXT('Command Text 1 - ACT')
+     A N25                                  OVRDTA
+      *=========================================================================
+      *
+     A          R #MSGRCD                   TEXT('Program messages')
+      *
+     A                                      SFL SFLMSGRCD(24)
+     A            MSGKEY                    SFLMSGKEY
+     A            ##PGM                     SFLPGMQ
+      *=========================================================================
+      *
+     A          R #MSGCTL                   TEXT('Program messages')
+      *
+     A                                      SFLCTL(#MSGRCD)
+     A                                      SFLPAG(01) SFLSIZ(03)
+     A  86                                  OVERLAY PUTOVR
+     A                                      SFLINZ SFLDSP SFLDSPCTL
+     A  25
+     AON25                                  SFLEND
+     A            ##PGM                     SFLPGMQ
+      *=========================================================================

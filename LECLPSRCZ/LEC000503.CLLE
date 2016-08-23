@@ -1,0 +1,75 @@
+/*******************************************************************/
+/*STD    CLPBASEBND                                                */
+/*EXI    TEXT('Midas LE Update Trailer Files')                       */
+/*******************************************************************/
+/*                                                                 */
+/*       Midas - Customer Lending Module                           */
+/*                                                                 */
+/*       LEC000503 - Midas LE Update Trailer Files                 */
+/*                                                                 */
+/*       (c) Misys International Banking Systems Ltd. 2013         */
+/*                                                                 */
+/*       Last Amend No. MD021423 *CREATE   Date 21Aug13            */
+/*                                                                 */
+/*******************************************************************/
+/*                                                                 */
+/*       MD021423 - Abnormally long run of PDCL/MAPY processing    */
+/*                  components                                     */
+/*                                                                 */
+/*******************************************************************/
+             PGM
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                           Misys International Banking Systems Ltd. +
+                           2013')
+             DCL        VAR(&LDA)     TYPE(*CHAR) LEN(256)
+             DCL        VAR(&MEM)     TYPE(*CHAR) LEN(50)
+ 
+/** Global MONMSG to trap errors  */
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                           CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(00000000)
+ 
+             SNDPGMMSG  MSG('LEC000503 - Midas LE Update Trailer +
+                          Files') TOMSGQ(MRUNQ)
+ 
+/** Start commitment control for batch jobs with file updates */
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
+                           CMTSCOPE(*JOB)
+ 
+             MONMSG     MSGID(CPF8351)
+ 
+/** Call program to update trailer files */
+             CALL       PGM(LE000503)
+ 
+/** For Database Errors Recover Data from LDA */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               RTVDTAARA  DTAARA(LDA) RTNVAR(&LDA)
+               CHGVAR     VAR(&MEM) VALUE(%SST(&LDA 134 50))
+               SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) +
+                             MSGDTA(&MEM) TOPGMQ(*EXT) +
+                             TOMSGQ(MOPERQ)
+               ROLLBACK
+               GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/** In case of successful processing - Commit */
+ 
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+               COMMIT
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ERROR:       CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF4520)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                           MSGDTA('Program LEC000503 ended +
+                           abnormally - see job log') +
+                           TOMSGQ(MOPERQ)
+             DMPCLPGM
+ 
+END:
+             ENDCMTCTL
+             ENDPGM

@@ -1,0 +1,189 @@
+0001 H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MS SWIFT Direct Link Initial File Setup')
+0002 F********************************************************************
+0004 F*                                                                  *
+     F*     Midas  Midas/S.W.I.F.T. DIRECT LINK                      *
+0005 F*                                                                  *
+0006 F*     MS0005 -  INITIAL FILE SET UP                                *
+0007 F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+0009 F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. E40251             Date 28MAY92               *
+     F*                 E29588             Date  05/02/92             *
+     F*                    E15419           DATE  27/09/88               *
+     F*                                                                  *
+     F*----------------------------------------------------------------  *
+     F*                                                                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*     E40251  -  SWDEL* FILES REDUNDANT IN R10 - REMOVE.           *
+     F*             -  THERE IS NO REASON WHY SWACS* AND SWPOS* FILES    *
+     F*                SHOULD BE CONDITIONED ON SWITCHES - REMOVE U3/U4  *
+     F*     E29588  -  POST-COLLECTION SWIFT RATIONALISATION AMENDMENTS  *
+     F*                 o re-deliver (made redundant in error)           *
+0010 F*     E15419  -  THIS PROGRAM WAS INTRODUCED BY THE ERROR FIX      *
+0010 F*                AND IS A COPY OF SW0010                           *
+0010 F*                                                                  *
+0011 F********************************************************************
+0012 F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+0013 FTABLE   IF  F      96 12AI     2 DISK
+0014 F*SWDELAA*O**F*****256            DISK                           U2  E40251
+0014 F*SWDELCA*O**F*****256            DISK                           U2  E40251
+0015 F*SWACSSA*O**F******64            DISK                           U3  E40251
+0015 F*SWACSSC*O**F******64            DISK                           U3  E40251
+0016 F*SWPOSHH*O**F*****160            DISK                           U4  E40251
+0016 F*SWPOSZZ*O**F*****160            DISK                           U4  E40251
+0015 FSWACSSA O   F      64            DISK                               E40251
+0015 FSWACSSC O   F      64            DISK                               E40251
+0016 FSWPOSHH O   F     160            DISK                               E40251
+0016 FSWPOSZZ O   F     160            DISK                               E40251
+0018 FMS0005P1O   F     132     OF     PRINTER
+0019 F*
+0020 F**ID F  C  H  L    FUNCTION OF INDICATORS
+0021 F********U2      DEALING - SWIFT INTERFACE EXISTS                    E40251
+0022 F********U3      SWIFT STATEMENTS EXISTS                             E40251
+0023 F********U4      SETON TO INDICATE S/SWPOS IS REQUIRED.              E40251
+0026 F*       98-99   USED IN STANDARD SUBROUTINE
+0027 I*
+0028 I*
+0029 I*    TABLE FILE - INSTALLATION CONTROL DATA RECORD 1.
+0030 I*
+0031 ITABLE   NS       2 C0   3 C1  12 C1
+0032 I       AND      13 C0
+0033 I                                        1   1 RECI
+0034 I                                        2   30RECT
+0035 I                                       12  130RCDE
+0036 I                                       14  66 TITL
+0037 I                                       67  67 DATF
+0038 I                                       68  70 DFBR
+0039 I                                       73  73 SWIM
+0040 I                                       74  74 MODI1
+0041 I                                       75  75 MODI2
+0042 I                                       76  76 MODI3
+0043 I                                    P  77  790RUND
+0044 I                                       80  86 RUNA
+0045 I                                       87  870SFLG
+0046 I                                    P  90  920LCD
+0047 I                                       93  93 CHTP
+0048 I                                    P  94  960TNLU
+0049 I*
+0050 I***  LOCAL DATA AREA
+0051 I*
+0052 ILDA        UDS                            256
+     I**
+     I                                      134 138 DBFILE
+     I                                      139 167 DBKEY
+     I                                      168 175 DBPGM
+     I                                      176 1770DBASE
+0062 I*
+0063 C*
+0064 C********************************************************************
+0065 C*
+0066 C***  SETUP CONSTANTS
+0067 C*
+0068 C                     Z-ADD0         ZERO5   50
+0069 C                     Z-ADD0         TNLU    50
+0070 C                     Z-ADD2         NORE    50
+     C                     Z-ADD0         NOREAC  50
+     C***********          Z-ADD0         NOREDE  50                      E40251
+     C                     Z-ADD0         SWPS    60
+0073 C*
+0074 C***  SETON LR
+0075 C*
+0076 C                     SETON                     LR
+0077 C*
+0078 C***  ACCESS ICDR1 ON S/TABLE
+0079 C*
+0080 C                     EXSR ZSYSTM
+0081 C*
+0082 C***  CHAIN FAIL
+0083 C*
+     C   99                DO
+0084 C                     SETON                     U7U8LR
+0085 C                     Z-ADD01        DBASE            * DB ERROR 01 *
+0086 C                     MOVELZTABKY    DBKEY
+0087 C                     MOVEL'TABLE'   DBFILE
+0088 C                     MOVEL'MS0005'  DBPGM
+0140 C*
+0141 C                     END
+0142 C********************************************************************
+0143 C**
+0144 C**   ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.
+0145 C**
+0146 C           ZSYSTM    BEGSR                           *** ZSYSTM ***
+0147 C**
+0148 C**   SET UP KEY FOR INSTALLATION CONTROL RECORD.
+0149 C                     MOVEL'01      'ZTABKY 12
+0150 C                     MOVE '  10'    ZTABKY
+0151 C**
+0152 C           ZTABKY    CHAINTABLE                99    ON NOT THERE
+0153 C  N99      RECI      COMP 'D'                  9999  ON, IS DELETED
+0154 C**
+0155 C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+0156 C           DATF      COMP 'M'                      98MMDDYY, 98 ON
+0157 C**
+0158 C                     ENDSR
+0159 C**
+0160 C**
+0161 C********************************************************************
+0162 O*
+0163 O****************************************************************
+0164 O*
+0178 O*SWDELAA*D*      LR                                                 E40251
+0179 O***********                        15 'H              '             E40251
+0180 O***********              NOREDE    18P                              E40251
+0181 O*SWDELCA*D*      LR                                                 E40251
+0182 O***********                        15 'T99999999999999'             E40251
+0183 O***********              NORE      18P                              E40251
+0184 O*
+0185 OSWACSSA D        LR
+0186 O                                   16 'HH              '
+0187 O                         NOREAC    19P
+0188 OSWACSSC D        LR
+0189 O                                   16 'T9999999        '
+0190 O                         NORE      19P
+0191 O                         ZERO5     22P
+0192 O                         RUND      61P
+0193 O                         TNLU      64P
+0194 O*
+0195 OSWPOSHH D        LR
+0196 O                                    1 'H'
+0197 O                         SWPS       6P
+0198 OSWPOSZZ D        LR
+0199 O                                    1 'T'
+0200 O                         NORE       6
+0201 O***  REPORT
+0202 O*
+0203 OMS0005P1T   03   LR U7 U8
+0204 O                                   23 'REFERENCE MS0005'
+0205 O                         TITL      93
+0206 O                                  105 'DATE'
+0207 O                         RUNA     113
+0208 O                                  121 'PAGE'
+0209 O                         PAGE     125
+0210 O        T 30     LR U7 U8
+0211 O                                   70 'S.W.I.F.T. FILE CREATION'
+0212 O        T 13     LR U7 U8
+0213 O                                   70 '------------------------'
+0214 O        T   40   LR U7 U8
+0215 O                                   42 '*** REFERENCE'
+0216 O                         DBPGM     51
+0217 O                                   71 '-DATABASE ERROR AT'
+0218 O                         DBASE     74
+0219 O        T 2      LR U7 U8
+0220 O                                   37 'FILE NAME'
+0221 O                         DBFILE    43
+0222 O                                   48 'KEY'
+0223 O                         DBKEY     78

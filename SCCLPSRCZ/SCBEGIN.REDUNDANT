@@ -1,0 +1,749 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/
+/*********************************************************************/
+/*                                                                   */
+/*  Midas - System Control Module                                    */
+/*                                                                   */
+/*  SCBEGIN - SYSTEM START-UP MENU                                   */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. CUP004  *REDUNDANT Date 24Sep10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. BUG10790           Date 14Mar06              */
+/* Midas Release 4.01 -----------------------------------------------*/
+/*                      CSC014             Date 11Apr02              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.03 ---------------------------------------------------*/
+/*                      CCB009             DATE 01Jun00              */
+/* Midas DBA 3.01 ---------------------------------------------------*/
+/*                      CPB001             Date 02Jun99              */
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      CPK009             Date 09Aug99              */
+/*                      CPL002             DATE 08Mar99              */
+/*                      CUT004             DATE 09OCT98              */
+/*                      CTI002             Date 29Sep98              */
+/*                      CEU001             Date 08Sep97              */
+/*                      CTI001             DATE 18SEP97              */
+/*                      CAC001             DATE 26JUN96              */
+/*                      S01408             DATE 01APR96              */
+/*                      S01408             DATE 08SEP95              */
+/*                      091689             DATE 10AUG95              */
+/*                      S01408             DATE 10MAY95              */
+/*                      CRT001             DATE 28FEB95              */
+/*                      S01522             DATE 28OCT94              */
+/*                      S01486             DATE 20JUN94              */
+/*                      S01498             DATE 20JUN94              */
+/*                      078051            DATE  02NOV94              */
+/*                      S01493            DATE  13JUN94              */
+/*                      070613            DATE  11MAY94              */
+/*                      061289            DATE  28SEP93              */
+/*                      062215             DATE 22AUG93              */
+/*                      052508             DATE 09AUG93              */
+/*                      052566             DATE 09AUG93              */
+/*                      S01401             DATE 15MAR93              */
+/*                      S01407             DATE 18MAR93              */
+/*                      S01393             DATE 30OCT92              */
+/*                      S10736             DATE 29OCT92              */
+/*                      S01379             DATE  5OCT92              */
+/*                      S01382             DATE  4AUG92              */
+/*                      S01339             DATE  4AUG92              */
+/*                      E36130             DATE  4AUG92              */
+/*                      E38189             DATE 01APR92              */
+/*                      S01319             DATE 10OCT91              */
+/*                      S01343             DATE 15AUG91              */
+/*                      E26655             DATE 12AUG91              */
+/*                      E27199             DATE 09AUG91              */
+/*                      RT0142             DATE 03JUN91              */
+/*                      LN1245             DATE 13MAY91              */
+/*                      S01314             DATE 15APR91              */
+/*                      S01184             DATE 22FEB90              */
+/*                      E22424             DATE 26JUN90              */
+/*                      E22249             DATE 29MAY90              */
+/*                      E22248             DATE 29MAY90              */
+/*                      E22247             DATE 23MAY90              */
+/*                      E22106             DATE 15MAY90              */
+/*                      E20938             DATE 30JAN90              */
+/*                      E20616             DATE 19DEC89              */
+/*                      E18573             DATE 11NOV89              */
+/*                      E19389             DATE 30AUG89              */
+/*                      E19059             DATE 11AUG89              */
+/*                      E18677             DATE 15/06/89             */
+/*                      E17531             DATE 17/03/89             */
+/*                      E15036             DATE 10/10/88             */
+/*                      E15420             DATE 23/09/88             */
+/*                      PL0003             DATE 07/09/88             */
+/*                      S01168             DATE 24/07/88             */
+/*                      S01127             DATE 03/06/88             */
+/*                      S03220             DATE 10/05/88             */
+/*                      S01129             DATE 23/07/87             */
+/*                      E10087             DATE 24/11/86             */
+/*                      E10085             DATE 21/11/86             */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       CUP004 - Rewrite of SCBEGIN process.                        */
+/*     BUG10790 - Call SD9010X here to simultaneously update         */
+/*                corresponding record in SDMMIDPD.                  */
+/*       CSC014 - Allow support for DBCS (Recompiled)                */
+/*       CCB009 - Journal files throughout close of business         */
+/*       CPB001 - Private Banking Module                             */
+/*       CPK009 - Packaging for DBA3 release. STRCMTCTL values set   */
+/*                to CMTSCOPE(*JOB).                                 */
+/*       CPL002 - Midas / Plato Interface Enhancement                */
+/*              - Remove the CTI002 references as they are already   */
+/*                in the ML /COPYs.                                  */
+/*       CUT004 - Allow Core and Non-Core mode of multilanguage      */
+/*                compiles of display files                          */
+/*       CUT004 - Allow Core and Non-Core mode of multilanguage      */
+/*       CTI002 - Midas/Trade Innovation Interface Phase 2           */
+/*       CEU001 - EMU Base Currency For Accounting Conversion        */
+/*       CTI001 - Midas/Trade Innovation Interface Phase 1           */
+/*       CAC001 - Profit Centre Accounting (Addition of AA module)   */
+/*       S01408 - Addition of core hook SCBEGININT                   */
+/*                Addition of core hook SCBEGINMPS                   */
+/*                Addition of core hook SCBEGINEND                   */
+/*                Addition of core hook SCBEGIN003                   */
+/*                Addition of core hook SCBEGIN004                   */
+/*       S01408 - Addition of core hook SCBEGIN001                   */
+/*                Addition of core hook SCBEGIN002                   */
+/*       091689 - Retail Teller System should be initialised by an   */
+/*                entry on the appripriate switchable features file, */
+/*                not here.                                          */
+/*       S01408 - Addition of core hook SCBEGINMP1                   */
+/*              - Addition of core hook SCBEGINMP2                   */
+/*       CRT001 - Retail Teller System                               */
+/*       S01522 - User Defined Correspondence                        */
+/*                 o Add override for CGUSRMSG                       */
+/*                 o Add menu option for UDC file set-up             */
+/*       S01486 - PORTFOLIO MANAGEMENT                               */
+/*       S01498 - PORTFOLIO LENDING - LOMBARD CREDITS                */
+/*       078051 - SRM file setup - end commitment control before     */
+/*                attempting to delete ICJRN.                        */
+/*       S01493 - Midas Export Data Module                          */
+/*       070613 - Optical Disk file setup - end commitment control   */
+/*                before attempting to delete ICJRN.  This also      */
+/*                applies to Microfiche.                             */
+/*       061289 - Add override for message file LERMSGF              */
+/*       062215 - Invalid coding in 052566. Attempt to access the    */
+/*                journal uses library 'xxTECPM'.  This should be    */
+/*                replaced with 'xxJLIB'.                            */
+/*       052508 - Removed option for Automatic Reconciliations       */
+/*       052566 - Add check to see if journal exists before          */
+/*                setting up ORF, HAF or SRM.                        */
+/*       S01401 - SWIFT Messages MT5xxs : Add SEUSRMSG to the list   */
+/*                of multiple language support overrides.            */
+/*       S01407 - SWITCHABILITY ENHANCEMENTS                         */
+/*                ADD MESSAGE FILES FOR CLOSE OF BUSINESS (CB) AND   */
+/*                FOR CLIENT MODIFICATIONS (XX)                      */
+/*       S01393 - Add set-up options for Strategic Risk Mgt.         */
+/*       S10736 - Add file set-up options for MC module.             */
+/*       S01379 - Add file set-up options for HAF module.            */
+/*              - Add multiple language override for GBHFMSGF.       */
+/*       S01382 - Add file set-up options for Microfiche and         */
+/*                Optical disk modules.                              */
+/*       S01339 - Remove processing for Commercial Loans.            */
+/*       E36130 - All lines of the abnormal processing should        */
+/*                be monitored individually.                         */
+/*       E38189 - CREATE DTAARA MIDASMSG                             */
+/*       S01319 - Remove redundant processing                        */
+/*       S01343 - RENAMED TO SCBEGIN.                                */
+/*       E26655 - AMEND CALLS TO SCC0010 TO REFLECT THE REWRITE      */
+/*                OF THAT PROGRAM.                                   */
+/*       E27199 - ADD MSGF/MIDASMSG TO THE LIST OF MULTIPLE          */
+/*                LANGUAGE SUPPORT OVERRIDES.                        */
+/*       RT0142 - REPLACE *EXT MESSAGES WITH CALL TO NEW             */
+/*                PROGRAM SCC0010.                                   */
+/*              - REMOVE REDUNDANT DCL COMMAND.                      */
+/*       LN1245 - ADD IN AN OVERRIDE FOR NEW MSGF FCUSRMSG           */
+/*       S01314 - CHANGED DURING PTF INCORPORATION - SD2320          */
+/*                RENAMED TO SF0410                                  */
+/*       S01184 - CONFIRMATION MATCHING INCLUDED AND OPTIONS         */
+/*                RATIONALISED.                                      */
+/*       E22424 - ENSURE COMMITMENT CONTROL IS CORRECT AT EXIT       */
+/*       E22249 - CALL TO SETCMOFF CHANGED TO REFLECT ITS NAME       */
+/*                CHANGE TO CM0004                                   */
+/*       E22248 - TFRCTL TO SDCSY CHANGED TO CALL IN ORDER TO        */
+/*                SAVE OVERRIDES FOR MULTI LANGUAGE CHANGES          */
+/*       E22247 - CHANGED FOR MULTILANGUAGE SCREENS                  */
+/*       E22106 - INS0014 RENAMED TO FD0700                          */
+/*       E20938 - CORRECTION OF BAD APPLICATION OF FIX E20616        */
+/*       E20616 - SCBEGIN CHANGED TO RUN WHEN MPHAS = 'D' OR ' '     */
+/*                AS MPHAS WILL BE BLANK WHEN SYSTEM IS SET UP.      */
+/*       E18573 - SCBEGIN CHANGED TO RUN IN PHASE 'D' ONLY.          */
+/*       E19389 - GLOBAL MONMSG NOW ACTIONED AND CRTDTAARA           */
+/*                MONITORED SEPARATELY.                              */
+/*       E19059 - OPTION TO SET OFF CM ADDED.                        */
+/*       E18677 - SETUPMIDAS REQUIRED WHEN CALLING INSxxx PGMS.      */
+/*       E17531 - PROGRAM ACCEPTS DRS OPTIONS                        */
+/*       E15036 - OPTION SHOULD ONLY BE AVAILABLE IN MODE 1.         */
+/*                COMPONENT REWRITTEN                                */
+/*       E15420 - COMMITMENT CONTROL SHOULD ALWAYS BE ENDED          */
+/*                WHEN EXITING FROM THE PROGRAM. CHANGE FOR          */
+/*                S054542 (RC) REINSTATED. NEW OPTION ADDED FOR      */
+/*                MS FILE INITIALISATION.                            */
+/*       PL0003 - SWIFT CHANGES FOR PLUTO SYSTEM SET-UP              */
+/*       S01168 - SD SYNON: OPEN I/C MODE 0                          */
+/*       S01127 - FUTURES AND OPTIONS INCORPORATION                  */
+/*                ALSO ENDS CMTCTL IF STARTED BY THIS PROGRAM        */
+/*       S03220 - FUNDS TRANSFER                                     */
+/*       S01129 - SECURITIES TRADING RELEASE 2                       */
+/*       E10087 - PROGRAM SHOULD BEGIN COMMITMENT CONTROL IF         */
+/*                IT IS NOT ALREADY ACTIVE.                          */
+/*       E10085 - PROGRAM WAS TRANSFERRING CONTROL TO MIDAS          */
+/*                AFTER ANY OPTION HAD BEEN TAKEN. NOW HAS           */
+/*                SEPARATE OPTION (23) TO DO THIS                    */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+/*  */
+/*/COPY WNCPYSRC,SCBEGININT                                        */ /*S01408*/
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2001')
+             DCL        VAR(&DEVNM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&COM) TYPE(*CHAR) LEN(1)                  /*S01127*/
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(5)                 /*E15036*/
+             DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(1)                /*S01127*/
+/************DCL VAR(&SUMIDAS) TYPE(*CHAR) LEN(1) VALUE(N)/*E18677*/  /*E22106*/
+             DCL        VAR(&SETUP) TYPE(*CHAR) LEN(5)                /*E20616*/
+             DCL        VAR(&LIBR) TYPE(*CHAR) LEN(2)                 /*052566*/
+             DCL        VAR(&JLIB) TYPE(*CHAR) LEN(7)                 /*052566*/
+             DCL        VAR(&JRN) TYPE(*CHAR) LEN(1) VALUE('N')       /*052566*/
+             DCL        VAR(&NOREPLY) TYPE(*CHAR) LEN(1)              /*RT0142*/
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)             /*E26655*/
+/************DCL********VAR(&Y2MGFLA8) TYPE(*CHAR) LEN(8)      /*E22247 CUT004*/
+/************DCL********VAR(&MIMGFLA8) TYPE(*CHAR) LEN(8)      /*E22247 CUT004*/
+/************DCL********VAR(&CBMGFLA8) TYPE(*CHAR) LEN(8)      /*S01407 CUT004*/
+/************DCL********VAR(&Y2MGFLA10) TYPE(*CHAR) LEN(10)    /*E22247 CUT004*/
+/************DCL********VAR(&MIMGFLA10) TYPE(*CHAR) LEN(10)    /*E22247 CUT004*/
+/************DCL********VAR(&CBMGFLA10) TYPE(*CHAR) LEN(10)    /*S01407 CUT004*/
+/************DCL********VAR(&MULT) TYPE(*CHAR) LEN(2)          /*E22247 CUT004*/
+/************DCL********VAR(&MITLG) TYPE(*CHAR) LEN(10)        /*E22247 CUT004*/
+/************DCL********VAR(&MITZLG) TYPE(*CHAR) LEN(10)       /*E22247 CUT004*/
+/************DCL********VAR(&MITCLG) TYPE(*CHAR) LEN(10)       /*E22247 CUT004*/
+/************DCL********VAR(&ZZMSGF) TYPE(*CHAR) LEN(8)        /*E22247 CUT004*/
+/************DCL********VAR(&SDUSRLG) TYPE(*CHAR) LEN(10)      /*E22247 CUT004*/
+/************DCL********VAR(&GLUSRLG) TYPE(*CHAR) LEN(10)      /*E22247 CUT004*/
+/************DCL********VAR(&CBUSRLG) TYPE(*CHAR) LEN(10)      /*S01407 CUT004*/
+/************DCL********VAR(&MIDASLG) TYPE(*CHAR) LEN(10)      /*E22247 CUT004*/
+/************DCL********VAR(&DRSMMLG) TYPE(*CHAR) LEN(10)      /*E22247 CUT004*/
+/************DCL********VAR(&MACLG) TYPE(*CHAR) LEN(10)        /*E22247 CUT004*/
+/************DCL********VAR(&MIUSRLG) TYPE(*CHAR) LEN(10)      /*E22247 CUT004*/
+/************DCL********VAR(&WNLG) TYPE(*CHAR) LEN(10)         /*E22247 CUT004*/
+/************DCL********VAR(&Y1USRLG) TYPE(*CHAR) LEN(10)      /*E22247 CUT004*/
+/************DCL********VAR(&Y2USRLG) TYPE(*CHAR) LEN(10)      /*E22247 CUT004*/
+/************DCL********VAR(&Y2USRPMLG) TYPE(*CHAR) LEN(10)    /*E22247 CUT004*/
+/************DCL********VAR(&MIDASMSG) TYPE(*CHAR) LEN(10)     /*E27199 CUT004*/
+/************DCL********VAR(&HFMSGF) TYPE(*CHAR) LEN(10)       /*S01379 CUT004*/
+/************DCL********VAR(&XXUSRLG) TYPE(*CHAR) LEN(10)      /*S01407 CUT004*/
+/************DCL********VAR(&SEUSRMSG) TYPE(*CHAR) LEN(10)     /*S01401 CUT004*/
+/************DCL********VAR(&LERMSGF) TYPE(*CHAR) LEN(10)      /*061289 CUT004*/
+/************DCL********VAR(&CGUSRMSG) TYPE(*CHAR) LEN(10)     /*S01522 CUT004*/
+/************DCL********VAR(&PMUSRMSG) TYPE(*CHAR) LEN(10)     /*S01486 CUT004*/
+/************DCL********VAR(&LBUSRMSG) TYPE(*CHAR) LEN(10)     /*S01498 CUT004*/
+/************DCL********VAR(&AAUSRMSG) TYPE(*CHAR) LEN(10)     /*CAC001 CUT004*/
+/************DCL********VAR(&TIUSRMSG) TYPE(*CHAR) LEN(10)     /*CTI001 CUT004*/
+/************DCL********VAR(&EUMSGF)   TYPE(*CHAR) LEN(10)     /*CEU001 CUT004*/
+/* THE FOLLOWING LINES ADDED FOR USER DEFINED MENUS               */  /*E22247*/
+/************DCL********VAR(&GROUP) TYPE(*CHAR) LEN(50)        /*E22247 CUT004*/
+/************DCL********VAR(&USER) TYPE(*CHAR) LEN(25)         /*E22247 CUT004*/
+/************DCL********VAR(&SLEVEL) TYPE(*DEC) LEN(4)         /*E22247 CUT004*/
+/************DCL********VAR(&TIMEO) TYPE(*DEC) LEN(5)          /*E22247 CUT004*/
+/************DCL********VAR(&ERRORC) TYPE(*DEC) LEN(1) VALUE(0)/*E22247 CUT004*/
+/************DCL        VAR(&ZERO) TYPE(*LGL)  LEN(1)      /*E22247*/ /*RT0142*/
+/************DCL        VAR(&EMUSRMSG) TYPE(*CHAR) LEN(10) /*CTI002*/ /*CPL002*/
+             DCL        VAR(&JOB)  TYPE(*CHAR) LEN(10)                /*E22247*/
+/************DCL********VAR(&FCUSRLG) TYPE(*CHAR) LEN(10)      /*LN1245 CUT004*/
+             DCL        VAR(&JOBSWS) TYPE(*CHAR) LEN(8)               /*S01379*/
+/*                                                                      CCB009*/
+/* Declare variable CCB009 - flag for switchable feature                CCB009*/
+/*                                                                      CCB009*/
+             DCL        VAR(&CCB009) TYPE(*CHAR) LEN(7)               /*CCB009*/
+             DCL        VAR(&AOFMT) TYPE(*CHAR) LEN(200)              /*CCB009*/
+             DCL        VAR(&RETURNCODE) TYPE(*CHAR) LEN(7)                             /*BUG10790*/
+ 
+/*/COPY MLCPYSRC,MLCOVRDCL                                         */ /*CUT004*/
+             DCLF       SCBEGINDF RCDFMT(SCBEGIN)
+ 
+/* IF IT DOESN'T EXIST ALREADY, CREATE IT */
+ 
+/************MONMSG     MSGID(CPF0000) /*MONITOR*HERE*IN*CASE*        /*E19389*/
+                            /*LDA*ALREADY*EXISTS*/                    /*E19389*/
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ERROR))       /*E19389*/
+ 
+/*                                                                      CCB009*/
+/** Check for Switchable feature CCB009.                                CCB009*/
+/*                                                                      CCB009*/
+             CALL       PGM(AOSARDR0) PARM(&CCB009 '*VERIFY' +
+                          'CCB009' &AOFMT)                            /*CCB009*/
+/*/COPY WNCPYSRC,SCBEGINMPS                                        */ /*S01408*/
+ 
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800)   /*E38189*/
+             MONMSG     MSGID(CPF0000)                                /*E38189*/
+ 
+/************RTVDTAARA  DTAARA(Y2MGFLA) RTNVAR(&Y2MGFLA10)     /*E22247 CUT004*/
+/************RTVDTAARA  DTAARA(MIMGFLA) RTNVAR(&MIMGFLA10)     /*E22247 CUT004*/
+/************RTVDTAARA  DTAARA(CBMGFLA) RTNVAR(&CBMGFLA10)     /*S01407 CUT004*/
+             RTVJOBA    JOB(&JOB)                                     /*E22247*/
+             CHGMSGQ    MSGQ(&JOB) DLVRY(*BREAK) PGM(*SAME)           /*E22247*/
+ 
+/************CALL       PGM(SD2320) PARM(&GROUP &USER &SLEVEL &TIMEO  +
+ *************************&ERRORC &MULT)           *****/  /*S01253*/ /*S01314*/
+/************CALL****   PGM(SF0410) PARM(&GROUP &USER &SLEVEL &TIMEO  + CUT004*/
+/********************     &ERRORC &MULT)                       /*S01314 CUT004*/
+ 
+/************IF*********COND(&MULT *EQ '  ') THEN(DO)          /*E22247 CUT004*/
+/************CHGVAR*****VAR(&MULT) VALUE('GB')                 /*E22247 CUT004*/
+/************ENDDOR*****                                       /*E22247 CUT004*/
+/*****CHGVAR***VAR(&ZZMSGF) VALUE('ZZ' *CAT &MULT *CAT 'MSGF') /*E22247 CUT004*/
+/*****CHGVAR*****VAR(&MITLG) VALUE(&MULT *CAT 'MITEM     ')    /*E22247 CUT004*/
+/*****CHGVAR*****VAR(&MITZLG) VALUE(&MULT *CAT 'MITEMZZ   ')   /*E22247 CUT004*/
+/*****CHGVAR*****VAR(&MITCLG) VALUE(&MULT *CAT 'MITMC     ')   /*E22247 CUT004*/
+ 
+/*****CHGVAR*****VAR(&Y2MGFLA8) VALUE(%SST(&Y2MGFLA10 1 8))    /*E22247 CUT004*/
+/*****CHGVAR*****VAR(&MIMGFLA8) VALUE(%SST(&MIMGFLA10 1 8))    /*E22247 CUT004*/
+/*****CHGVAR*****VAR(&CBMGFLA8) VALUE(%SST(&CBMGFLA10 1 8))    /*S01407 CUT004*/
+ 
+/*****CHGVAR*****VAR(&SDUSRLG) VALUE(&MULT *CAT &Y2MGFLA8)     /*E22247 CUT004*/
+/*****CHGVAR*****VAR(&GLUSRLG) VALUE(&MULT *CAT &MIMGFLA8)     /*E22247 CUT004*/
+/*****CHGVAR*****VAR(&CBUSRLG) VALUE(&MULT *CAT &CBMGFLA8)     /*S01407 CUT004*/
+/*****CHGVAR*****VAR(&MIDASLG) VALUE(&MULT *CAT 'MIDAS     ')  /*E22247 CUT004*/
+/*****CHGVAR*****VAR(&DRSMMLG) VALUE(&MULT *CAT 'DRSMM     ')  /*E22247 CUT004*/
+/*****CHGVAR*****VAR(&MACLG) VALUE(&MULT *CAT 'MACMSG    ')    /*E22247 CUT004*/
+/*****CHGVAR*****VAR(&MIUSRLG) VALUE(&MULT *CAT 'MIUSRMSG  ')  /*E22247 CUT004*/
+/*****CHGVAR*****VAR(&WNLG) VALUE(&MULT *CAT 'WNMSGF    ')     /*E22247 CUT004*/
+/*****CHGVAR*****VAR(&Y1USRLG) VALUE(&MULT *CAT 'Y1USRMSG  ')  /*E22247 CUT004*/
+/*****CHGVAR*****VAR(&Y2USRLG) VALUE(&MULT *CAT 'Y2USRMSG  ')  /*E22247 CUT004*/
+/*****CHGVAR****VAR(&Y2USRPMLG) VALUE(&MULT *CAT 'Y2USRPMT  ') /*E22247 CUT004*/
+/*****CHGVAR****VAR(&FCUSRLG)  VALUE(&MULT *CAT 'FCUSRMSG  ')  /*LN1245 CUT004*/
+/*****CHGVAR*****VAR(&MIDASMSG) VALUE(&MULT *CAT 'MIDASMSG  ') /*E27199 CUT004*/
+/*****CHGVAR*****VAR(&HFMSGF) VALUE(&MULT *CAT 'HFMSGF    ')   /*S01379 CUT004*/
+/*****CHGVAR*****VAR(&XXUSRLG) VALUE(&MULT *CAT 'XXUSRMSG  ')  /*S01407 CUT004*/
+/*****CHGVAR*****VAR(&SEUSRMSG) VALUE(&MULT *CAT 'SEUSRMSG  ') /*S01401 CUT004*/
+/*****CHGVAR*****VAR(&LERMSGF) VALUE(&MULT *CAT 'LERMSGF  ')   /*061289 CUT004*/
+/*****CHGVAR*****VAR(&CGUSRMSG) VALUE(&MULT *CAT 'CGUSRMSG  ') /*S01522 CUT004*/
+/*****CHGVAR*****VAR(&PMUSRMSG) VALUE(&MULT *CAT 'PMUSRMSG  ') /*S01486 CUT004*/
+/*****CHGVAR*****VAR(&LBUSRMSG) VALUE(&MULT *CAT 'LBUSRMSG  ') /*S01498 CUT004*/
+/*****CHGVAR*****VAR(&AAUSRMSG) VALUE(&MULT *CAT 'AAUSRMSG  ') /*CAC001 CUT004*/
+/*****CHGVAR*****VAR(&TIUSRMSG) VALUE(&MULT *CAT 'TIUSRMSG  ') /*CTI001 CUT004*/
+/*****CHGVAR*****VAR(&EUMSGF)   VALUE(&MULT *CAT 'EUMSGF    ') /*CEU001 CUT004*/
+/*****CHGVAR*****VAR(&EMUSRMSG) VALUE(&MULT *CAT 'EMUSRMSG  ') /*CTI002 CPL002*/
+ 
+/*/COPY WNCPYSRC,SCBEGIN003                                        */ /*S01408*/
+                                                                      /*S01408*/
+/*****OVRMSGF****MSGF(ZZGBMSGF) TOMSGF(&ZZMSGF)                /*E22247 CUT004*/
+ 
+/*****OVRDBF*****FILE(MITEM) MBR(&MITLG) SHARE(*NO)            /*E22247 CUT004*/
+/*****OVRDBF*****FILE(MITEMJ0) MBR(&MITLG) SHARE(*NO)          /*S01407 CUT004*/
+/*****OVRDBF*****FILE(MITEMJ1) MBR(&MITLG) SHARE(*NO)          /*S01407 CUT004*/
+/*****OVRDBF*****FILE(MITEMZZ) MBR(&MITZLG)                    /*E22247 CUT004*/
+/*****OVRDBF*****FILE(MITMC) MBR(&MITCLG)                      /*E22247 CUT004*/
+ 
+/*****OVRMSGF****MSGF(&Y2MGFLA10) TOMSGF(&SDUSRLG)             /*E22247 CUT004*/
+/*****OVRMSGF****MSGF(&MIMGFLA10) TOMSGF(&GLUSRLG)             /*E22247 CUT004*/
+/*****OVRMSGF****MSGF(&CBMGFLA10) TOMSGF(&CBUSRLG)             /*S01407 CUT004*/
+/*****OVRMSGF****MSGF(MIDAS) TOMSGF(&MIDASLG)                  /*E22247 CUT004*/
+/*****OVRMSGF****MSGF(DRSMM) TOMSGF(&DRSMMLG)                  /*E22247 CUT004*/
+/*****OVRMSGF****MSGF(MACMSG) TOMSGF(&MACLG)                   /*E22247 CUT004*/
+/*****OVRMSGF****MSGF(MIUSRMSG) TOMSGF(&MIUSRLG)               /*E22247 CUT004*/
+/*****OVRMSGF****MSGF(WNMSGF) TOMSGF(&WNLG)                    /*E22247 CUT004*/
+/*****OVRMSGF****MSGF(Y1USRMSG) TOMSGF(&Y1USRLG)               /*E22247 CUT004*/
+/*****OVRMSGF****MSGF(Y2USRMSG) TOMSGF(&Y2USRLG)               /*E22247 CUT004*/
+/*****OVRMSGF****MSGF(Y2USRPMT) TOMSGF(&Y2USRPMLG)             /*E22247 CUT004*/
+/*****OVRMSGF****MSGF(FCUSRMSG) TOMSGF(&FCUSRLG)               /*LN1245 CUT004*/
+/*****OVRMSGF****MSGF(MIDASMSG) TOMSGF(&MIDASMSG)              /*E27199 CUT004*/
+/*****OVRMSGF****MSGF(HFMSGF) TOMSGF(&HFMSGF)                  /*S01379 CUT004*/
+/*****OVRMSGF****MSGF(XXUSRMSG) TOMSGF(&XXUSRLG)               /*S01407 CUT004*/
+/*****OVRMSGF****MSGF(SEUSRMSG) TOMSGF(&SEUSRMSG)              /*S01401 CUT004*/
+/*****OVRMSGF****MSGF(LERMSGF) TOMSGF(&LERMSGF)                /*061289 CUT004*/
+/*****OVRMSGF****MSGF(CGUSRMSG) TOMSGF(&CGUSRMSG)              /*S01522 CUT004*/
+/*****OVRMSGF****MSGF(PMUSRMSG) TOMSGF(&PMUSRMSG)              /*S01486 CUT004*/
+/*****OVRMSGF****MSGF(LBUSRMSG) TOMSGF(&LBUSRMSG)              /*S01498 CUT004*/
+/*****OVRMSGF****MSGF(AAUSRMSG) TOMSGF(&AAUSRMSG)              /*CAC001 CUT004*/
+/*****OVRMSGF****MSGF(TIUSRMSG) TOMSGF(&TIUSRMSG)              /*CTI001 CUT004*/
+/*****OVRMSGF****MSGF(EUMSGF)   TOMSGF(&EUMSGF)                /*CEU001 CUT004*/
+/*****OVRMSGF****MSGF(EMUSRMSG) TOMSGF(&EMUSRMSG)          /*CTI002*/ /*CPL002*/
+ 
+/*/COPY MLCPYSRC,MLCOVROVR                                         */ /*CUT004*/
+ 
+/*/COPY WNCPYSRC,SCBEGIN004                                        */ /*S01408*/
+                                                                      /*S01408*/
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                          TEXT('Midas LOCAL DATA AREA')
+/* MONITOR FOR LDA ALREADY EXISTING */                                /*E19389*/
+             MONMSG     MSGID(CPF1023)                                /*E19389*/
+/*  */                                                                /*E10087*/
+             RTVDTAARA  DTAARA(MPHAS) RTNVAR(&MPHAS)                  /*E18573*/
+             RTVDTAARA  DTAARA(SDSTAT (1 5)) RTNVAR(&SETUP)           /*E20616*/
+/**********  IF         COND(&MPHAS *NE 'D') THEN(DO) */   /*E18573*/ /*E20616*/
+/**********  IF         COND((&MPHAS *EQ 'D') *OR +
+   ((MPHAS *EQ ' ') *AND (&SETUP *EQ ' '))) THEN(GOTO TAG1)/*E20616*/ /*E20938*/
+            IF         COND((&MPHAS *EQ 'D') *OR +
+            ((&MPHAS *EQ ' ') *AND (&SETUP *EQ ' '))) THEN(GOTO TAG1) /*E20938*/
+             ELSE DO                                                  /*E20616*/
+/*********** SNDPGMMSG  MSG('L1BGIN - Job cannot be run at this time. +
+                 Phase of Day must be D.') TOPGMQ(*PRV) */ /*E18573*/ /*E20616*/
+             SNDPGMMSG  MSG('SCBEGIN - Job cannot be run at this +
+                          time.') TOPGMQ(*PRV)                        /*E20616*/
+             RETURN                                                   /*E18573*/
+             ENDDO                                                    /*E18573*/
+TAG1:                                                                 /*E20616*/
+/*  */                                                                /*E18573*/
+/*  BEGIN COMMITMENT CONTROL IF NOT ALREADY ACTIVE  */                /*E10087*/
+ 
+/************STRCMTCTL  LCKLVL(*CHG)                           /*E10087 CPK009*/
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)                   /*CPK009*/
+             MONMSG     MSGID(CPF8351) EXEC(CHGVAR VAR(&COM) +
+                          VALUE('Y'))                                 /*S01127*/
+/*           MONMSG     MSGID(CPF8351)                    *  *E10087*  *S01127*/
+/*  */
+             RTVJOBA    JOB(&DEVNM)
+ RDSPLY:     SNDRCVF    RCDFMT(SCBEGIN)
+ 
+             IF         COND(&IN03 *EQ '1') THEN(GOTO RETURN)
+ 
+/* OPTION PROCESSING REWRITTEN FOR MIDAS ABS */
+ 
+             IF         (&MOPTN *EQ 1)  THEN(CALL SDC08)
+             IF         (&MOPTN *EQ 2)  THEN(CALL GLC92)
+             IF         (&MOPTN *EQ 3)  THEN(CALL DLC00)
+             IF         (&MOPTN *EQ 4)  THEN(CALL MSC000)
+             IF         (&MOPTN *EQ 5)  THEN(CALL REC00)
+             IF         (&MOPTN *EQ 6)  THEN(CALL LEC00)
+/************IF         (&MOPTN *EQ 7)  THEN(CALL RCC0000)         */ /*052508*/
+             IF         (&MOPTN *EQ 7)  THEN(CALL EDC00)              /*S01493*/
+/************IF         (&MOPTN *EQ 8)  THEN(CALL CLC00) */           /*S01339*/
+                                                                      /*S01379*/
+             IF         COND(&MOPTN *EQ 8) THEN(DO)                   /*S01379*/
+               CALL       PGM(HFC0000)                                /*S01379*/
+               RTVJOBA    SWS(&JOBSWS)                                /*S01379*/
+               IF         COND(%SST(&JOBSWS 7 2) *EQ '11') THEN(GOTO +
+                            CMDLBL(ERROR))                            /*S01379*/
+             ENDDO                                                    /*S01379*/
+                                                                      /*S01379*/
+             IF         (&MOPTN *EQ 9)  THEN(CALL EMC00)
+             IF         (&MOPTN *EQ 10)  THEN(CALL SEC00)
+             IF         (&MOPTN *EQ 11)  THEN(CALL FTC0000)
+             IF         (&MOPTN *EQ 12)  THEN(CALL FFC00)
+/**/                                                                  /*S01184*/
+/* ADD NEW OPTION FOR CF, AND SHIFT OTHERS DOWN                  */   /*S01184*/
+             IF         (&MOPTN *EQ 13)  THEN(CALL CFC00)             /*S01184*/
+/********************************************************/ /*E18677*/ /*E22106*/
+/**TRY*TO*ADD*SETUPMIDAS*TO*LIBL*&*SET*******************/ /*E18677*/ /*E22106*/
+/***************************ON*FLAG*IF*ALREADY*THERE*****/ /*E18677*/ /*E22106*/
+/************ADDLIBLE   LIB(SETUPMIDAS) POSITION(*LAST) */ /*E18677*/ /*E22106*/
+/************MONMSG     MSGID(CPF2103) EXEC(CHGVAR VAR(&SUMIDAS) +
+/************             VALUE(Y))     */                 /*E18677*/ /*E22106*/
+/************IF         (&MOPTN *EQ 13) THEN(CALL PGM(INS0014) +
+/************             PARM('FD'))   */                 /*E17531*/ /*E22106*/
+/************IF         (&MOPTN *EQ 14) THEN(CALL PGM(INS0014) +
+/************             PARM('CM'))   */                 /*E17531*/ /*E22106*/
+/************IF         (&MOPTN *EQ 15) THEN(CALL PGM(INS0014) +
+/************             PARM('FX'))   */                 /*E17531*/ /*E22106*/
+/************IF         (&MOPTN *EQ 16) THEN(CALL PGM(INS0014) +
+/************             PARM('MM'))   */                 /*E17531*/ /*E22106*/
+/************IF         (&MOPTN *EQ 17) THEN(CALL PGM(INS0014) +
+/************             PARM('AB'))   */                 /*E17531*/ /*E22106*/
+/************                                         */   /*E18677*/ /*E22106*/
+/**IF*SETUPMIDAS*WAS*ACTUALLY*ADDED*TO*LIBL,*REMOVE*IT**/  /*E18677*/ /*E22106*/
+/************                                         */   /*E18677*/ /*E22106*/
+/************IF         COND(&SUMIDAS *EQ N) THEN(RMVLIBLE +
+                          LIB(SETUPMIDAS))**************/  /*E18677*/ /*E22106*/
+/************IF         (&MOPTN *EQ 13) THEN(CALL PGM(FD0700)  +
+                          PARM('FD'))      ********/       /*E22106*/ /*S01184*/
+/************IF*********(&MOPTN**EQ*14)*THEN(CALL*PGM(FD0700)*+*****/ /*S01319*/
+/*************************PARM('FD'))************************S01184*/ /*S01319*/
+/************IF         (&MOPTN *EQ 14) THEN(CALL PGM(FD0700)  +
+                          PARM('CM'))  ******/             /*E22106*/ /*S01184*/
+             IF         (&MOPTN *EQ 14) THEN(CALL PGM(TM0001))        /*S01319*/
+/************IF*********(&MOPTN**EQ*15)*THEN(CALL*PGM(FD0700)**+****/ /*S01319*/
+/*************************PARM('CM'))************************S01184*/ /*S01319*/
+/************IF         (&MOPTN *EQ 15) THEN(CALL PGM(FD0700)  +
+                          PARM('FX'))     *******/         /*E22106*/ /*S01184*/
+/************IF*********(&MOPTN**EQ*16)*THEN(CALL*PGM(FD0700)**+****/ /*S01319*/
+/*************************PARM('FX'))************************S01184*/ /*S01319*/
+/************IF         (&MOPTN *EQ 16) THEN(CALL PGM(FD0700)  +
+                          PARM('MM'))   ********/          /*E22106*/ /*S01184*/
+/************IF*********(&MOPTN**EQ*17)*THEN(CALL*PGM(FD0700)**+****/ /*S01319*/
+/*************************PARM('MM'))************************S01184*/ /*S01319*/
+/************IF         (&MOPTN *EQ 17) THEN(CALL PGM(FD0700)  +
+                          PARM('AB'))   ********/          /*E22106*/ /*S01184*/
+/************IF*********(&MOPTN**EQ*18)*THEN(CALL*PGM(FD0700)**+****/ /*S01319*/
+/*************************PARM('AB'))***********************S01184*/  /*S01319*/
+/************IF         (&MOPTN *EQ 15)  THEN(DO)                  */ /*E17531*/
+/************IF         (&MOPTN *EQ 18)  THEN(DO)       */ /*E17531*/ /*S01184*/
+/* */                                                                 /*052566*/
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&LIBR)            /*052566*/
+/************CHGVAR     VAR(&JLIB) VALUE(&LIBR *TCAT +      */ /*052566 062215*/
+/************                'TECPM')                       */ /*052566 062215*/
+             CHGVAR     VAR(&JLIB) VALUE(&LIBR *TCAT 'JLIB')          /*062215*/
+                                                                      /*S01408*/
+/*/COPY WNCPYSRC,SCBEGINMP1                                          */
+                                                                      /*S01408*/
+                                                                      /*S01382*/
+/* OPTICAL DISK FILE SET-UP */                                        /*S01382*/
+                                                                      /*S01382*/
+             IF         COND(&MOPTN *EQ 15) THEN(DO)                  /*S01382*/
+/*                                                                      CCB009*/
+/* If Feature CCB009 is NOT 'on' (close of business journaling),        CCB009*/
+/*                                                                      CCB009*/
+             IF         COND(&CCB009 *NE '       ') THEN(DO)          /*CCB009*/
+/* */                                                                 /*052566*/
+/** Create journal and receiver if they do not exist               */ /*052566*/
+/* */                                                                 /*052566*/
+                  CHKOBJ     OBJ(&JLIB/ICJRN) OBJTYPE(*JRN)           /*052566*/
+                  MONMSG     MSGID(CPF9801) EXEC(DO)                  /*052566*/
+                       CHGVAR     VAR(&JRN) VALUE('Y')                /*052566*/
+                       CRTJRNRCV  JRNRCV(&JLIB/ICRCV001)              /*052566*/
+                       CRTJRN     JRN(&JLIB/ICJRN) +
+                                       JRNRCV(&JLIB/ICRCV001)         /*052566*/
+                  ENDDO                                               /*052566*/
+/* */                                                                 /*052566*/
+               STRJRNPF   FILE(SDOPTCPD SDFCTLPA) JRN(ICJRN) +
+                            IMAGES(*BOTH)                             /*S01382*/
+               MONMSG     MSGID(CPF0000)                              /*S01382*/
+             ENDDO                                                    /*CCB009*/
+               CALL       PGM(SD9271R) PARM(' ' 'OPTC' ' ' ' ')       /*S01382*/
+/*                                                                      CCB009*/
+/* If Feature CCB009 is NOT 'on' (close of business journaling),        CCB009*/
+/*                                                                      CCB009*/
+             IF         COND(&CCB009 *NE '       ') THEN(DO)          /*CCB009*/
+               ENDJRNPF   FILE(SDOPTCPD SDFCTLPA)                     /*S01382*/
+/* */                                                                 /*052566*/
+                  IF         COND(&JRN *EQ 'Y') THEN(DO)              /*052566*/
+                       ENDCMTCTL                                      /*070613*/
+                       MONMSG     MSGID(CPF8350)                      /*070613*/
+                       DLTJRN     JRN(&JLIB/ICJRN)                    /*052566*/
+/* */                                                                 /*052566*/
+/** Change job attributes for INQMSGRPY so that "RECEIVER NEVER    */ /*052566*/
+/** HAD FULL SAVE" messages are answered automatically by the      */ /*052566*/
+/** program, then change the job again to the original state       */ /*052566*/
+/** after receivers have been deleted                              */ /*052566*/
+/* */                                                                 /*052566*/
+                       CHGJOB     INQMSGRPY(*DFT)                     /*052566*/
+                       DLTJRNRCV  JRNRCV(&JLIB/ICRCV001)              /*052566*/
+                       CHGJOB     INQMSGRPY(*RQD)                     /*052566*/
+                       CHGVAR     VAR(&JRN) VALUE('N')                /*052566*/
+                  ENDDO                                               /*052566*/
+             ENDDO                                                    /*CCB009*/
+/* */                                                                 /*052566*/
+             ENDDO                                                    /*S01382*/
+                                                                      /*S01382*/
+/* MICROFICHE FILE SET-UP */                                          /*S01382*/
+                                                                      /*S01382*/
+             IF         COND(&MOPTN *EQ 16) THEN(DO)                  /*S01382*/
+/*                                                                      CCB009*/
+/* If Feature CCB009 is NOT 'on' (close of business journaling),        CCB009*/
+/*                                                                      CCB009*/
+             IF         COND(&CCB009 *NE '       ') THEN(DO)          /*CCB009*/
+/* */                                                                 /*052566*/
+/** Create journal and receiver if they do not exist               */ /*052566*/
+/* */                                                                 /*052566*/
+                  CHKOBJ     OBJ(&JLIB/ICJRN) OBJTYPE(*JRN)           /*052566*/
+                  MONMSG     MSGID(CPF9801) EXEC(DO)                  /*052566*/
+                       CHGVAR     VAR(&JRN) VALUE('Y')                /*052566*/
+                       CRTJRNRCV  JRNRCV(&JLIB/ICRCV001)              /*052566*/
+                       CRTJRN     JRN(&JLIB/ICJRN) +
+                                       JRNRCV(&JLIB/ICRCV001)         /*052566*/
+                  ENDDO                                               /*052566*/
+/* */                                                                 /*052566*/
+               STRJRNPF   FILE(SDMCFCPD SDFCTLPA) JRN(ICJRN) +
+                            IMAGES(*BOTH)                             /*S01382*/
+               MONMSG     MSGID(CPF0000)                              /*S01382*/
+             ENDDO                                                    /*CCB009*/
+               CALL       PGM(SD9251R) PARM(' ' 'MCFC' ' ' ' ')       /*S01382*/
+/*                                                                      CCB009*/
+/* If Feature CCB009 is NOT 'on' (close of business journaling),        CCB009*/
+/*                                                                      CCB009*/
+             IF         COND(&CCB009 *NE '       ') THEN(DO)          /*CCB009*/
+               ENDJRNPF   FILE(SDMCFCPD SDFCTLPA)                     /*S01382*/
+/* */                                                                 /*052566*/
+                  IF         COND(&JRN *EQ 'Y') THEN(DO)              /*052566*/
+                       ENDCMTCTL                                      /*070613*/
+                       MONMSG     MSGID(CPF8350)                      /*070613*/
+                       DLTJRN     JRN(&JLIB/ICJRN)                    /*052566*/
+/* */                                                                 /*052566*/
+/** Change job attributes for INQMSGRPY so that "RECEIVER NEVER    */ /*052566*/
+/** HAD FULL SAVE" messages are answered automatically by the      */ /*052566*/
+/** program, then change the job again to the original state       */ /*052566*/
+/** after receivers have been deleted                              */ /*052566*/
+/* */                                                                 /*052566*/
+                       CHGJOB     INQMSGRPY(*DFT)                     /*052566*/
+                       DLTJRNRCV  JRNRCV(&JLIB/ICRCV001)              /*052566*/
+                       CHGJOB     INQMSGRPY(*RQD)                     /*052566*/
+                       CHGVAR     VAR(&JRN) VALUE('N')                /*052566*/
+                  ENDDO                                               /*052566*/
+             ENDDO                                                    /*CCB009*/
+/* */                                                                 /*052566*/
+             ENDDO                                                    /*S01382*/
+                                                                      /*S01382*/
+/* MANAGEMENT ACCOUNTING FILE SET-UP /*                               /*S10736*/
+                                                                      /*S10736*/
+             IF         COND(&MOPTN *EQ 17) THEN(CALL PGM(GL0925))    /*S10736*/
+                                                                      /*S10736*/
+/* RISK MANAGEMENT FILE SET-UP */                                     /*S01393*/
+                                                                      /*S01393*/
+             IF         COND(&MOPTN *EQ 18) THEN(DO)                  /*S01393*/
+/*                                                                      CCB009*/
+/* If Feature CCB009 is NOT 'on' (close of business journaling),        CCB009*/
+/*                                                                      CCB009*/
+             IF         COND(&CCB009 *NE '       ') THEN(DO)          /*CCB009*/
+/* */                                                                 /*052566*/
+/** Create journal and receiver if they do not exist               */ /*052566*/
+/* */                                                                 /*052566*/
+                  CHKOBJ     OBJ(&JLIB/ICJRN) OBJTYPE(*JRN)           /*052566*/
+                  MONMSG     MSGID(CPF9801) EXEC(DO)                  /*052566*/
+                       CHGVAR     VAR(&JRN) VALUE('Y')                /*052566*/
+                       CRTJRNRCV  JRNRCV(&JLIB/ICRCV001)              /*052566*/
+                       CRTJRN     JRN(&JLIB/ICJRN) +
+                                       JRNRCV(&JLIB/ICRCV001)         /*052566*/
+                  ENDDO                                               /*052566*/
+/* */                                                                 /*052566*/
+               STRJRNPF   FILE(SDRISKPD SDFCTLPA) JRN(ICJRN) +
+                            IMAGES(*BOTH)                             /*S01393*/
+               MONMSG     MSGID(CPF0000)                              /*S01393*/
+             ENDDO                                                    /*CCB009*/
+               CALL       PGM(SD9321R) PARM(' ' 'RISK' ' ' ' ')       /*S01393*/
+/*                                                                      CCB009*/
+/* If Feature CCB009 is NOT 'on' (close of business journaling),        CCB009*/
+/*                                                                      CCB009*/
+             IF         COND(&CCB009 *NE '       ') THEN(DO)          /*CCB009*/
+               ENDJRNPF   FILE(SDRISKPD SDFCTLPA)                     /*S01393*/
+/* */                                                                 /*052566*/
+                  IF         COND(&JRN *EQ 'Y') THEN(DO)              /*052566*/
+                       ENDCMTCTL                                      /*078051*/
+                       MONMSG     MSGID(CPF8350)                      /*078051*/
+                       DLTJRN     JRN(&JLIB/ICJRN)                    /*052566*/
+/* */                                                                 /*052566*/
+/** Change job attributes for INQMSGRPY so that "RECEIVER NEVER    */ /*052566*/
+/** HAD FULL SAVE" messages are answered automatically by the      */ /*052566*/
+/** program, then change the job again to the original state       */ /*052566*/
+/** after receivers have been deleted                              */ /*052566*/
+/* */                                                                 /*052566*/
+                       CHGJOB     INQMSGRPY(*DFT)                     /*052566*/
+                       DLTJRNRCV  JRNRCV(&JLIB/ICRCV001)              /*052566*/
+                       CHGJOB     INQMSGRPY(*RQD)                     /*052566*/
+                       CHGVAR     VAR(&JRN) VALUE('N')                /*052566*/
+                  ENDDO                                               /*052566*/
+             ENDDO                                                    /*CCB009*/
+/* */                                                                 /*052566*/
+             ENDDO                                                    /*S01393*/
+                                                                      /*S01393*/
+/* User Defined Correspondence - call file set up                     /*S01522*/
+             IF         COND(&MOPTN *EQ 21) THEN(CALL PGM(CGC0000))   /*S01522*/
+ 
+                                                                      /*S10736*/
+             IF         (&MOPTN *EQ 19)  THEN(CALL LBC0000)           /*S01498*/
+             IF         (&MOPTN *EQ 20)  THEN(CALL PMC0000)           /*S01486*/
+/************IF         (&MOPTN *EQ 22)  THEN(CALL REC4207)  /*CRT001* *091689*/
+             IF         (&MOPTN *EQ 22)  THEN(CALL TIC00)             /*CTI001*/
+             IF         (&MOPTN *EQ 23)  THEN(CALL PLC0000)           /*CPL002*/
+             IF         (&MOPTN *EQ 24)  THEN(CALL PBC0000)           /*CPB001*/
+                                                                      /*S01408*/
+/*/COPY WNCPYSRC,SCBEGIN001                                          */
+                                                                      /*S01408*/
+                                                                      /*S01408*/
+/*/COPY WNCPYSRC,SCBEGIN002                                          */
+                                                                      /*S01408*/
+/************IF         (&MOPTN *EQ 19)  THEN(DO)             *S01184* *S01498*/
+             IF         (&MOPTN *EQ 97)  THEN(DO)                     /*S01498*/
+                RTVDTAARA  DTAARA(SDSTAT (1 5)) RTNVAR(&MODE)
+/***************IF         COND(&MODE *EQ '     ') THEN(SNDPGMMSG +
+/***************          MSG('This option is not available in Mode +
+/***************          Zero. SD and GL ICD should be entered via +
+/***************          SD/GL file setup.') TOPGMQ(*EXT)) **/       /*RT0142*/
+                                                                      /*RT0142*/
+/*  CALL SCC0010 TO INFORM USER THAT THIS OPTION IS NOT VALID  */     /*RT0142*/
+/*  IN MODE ZERO                                               */     /*RT0142*/
+                                                                      /*RT0142*/
+                IF         COND(&MODE *EQ '     ') THEN(DO)           /*RT0142*/
+                                                                      /*RT0142*/
+/******************CALL       PGM(SCC0010) PARM('L1BGIN' 'NOTMODE0' +
+/******************             &NOREPLY)                  /*RT0142*/ /*E26655*/
+             RTVMSG     MSGID(SCM0029) MSGF(MIDASMSG) MSG(&MESSAGE)   /*E26655*/
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE(&MESSAGE)     /*E26655*/
+             RTVMSG     MSGID(SCM0030) MSGF(MIDASMSG) MSG(&MESSAGE)   /*E26655*/
+             CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE(&MESSAGE)     /*E26655*/
+             RTVMSG     MSGID(SCM0031) MSGF(MIDASMSG) MSG(&MESSAGE)   /*E26655*/
+             CHGDTAARA  DTAARA(MIDASMSG (351 50)) VALUE(&MESSAGE)     /*E26655*/
+             RTVMSG     MSGID(SCM0032) MSGF(MIDASMSG) MSG(&MESSAGE)   /*E26655*/
+             CHGDTAARA  DTAARA(MIDASMSG (401 50)) VALUE(&MESSAGE)     /*E26655*/
+             CHGDTAARA  DTAARA(MIDASMSG (13 1)) VALUE('1')            /*E26655*/
+             CALL       PGM(SCC0010) PARM('SCBEGIN' 'ENTER' &NOREPLY) /*E26655*/
+                                                                      /*RT0142*/
+                ENDDO                                                 /*RT0142*/
+/***************ELSE       CMD(CALL PGM(SDC26))                                      */ /*BUG10790*/
+                ELSE (DO)                                                               /*BUG10790*/
+/*   Call Modules Maintenance - Mode 1                                               */ /*BUG10790*/
+                  CALL       PGM(SDC26)                                                 /*BUG10790*/
+/*   Call program to update SDMMIDPD                                                 */ /*BUG10790*/
+                  CALL       PGM(SD9010X) PARM(&RETURNCODE)                             /*BUG10790*/
+                  IF         COND(&RETURNCODE *NE ' ') THEN(GOTO CMDLBL(ERROR))         /*BUG10790*/
+                ENDDO                                                                   /*BUG10790*/
+                                                                                        /*BUG10790*/
+             ENDDO
+/************IF         (&MOPTN *EQ 16)  THEN(CALL SDC27)          */ /*E17531*/
+/************IF        (&MOPTN *EQ 19) THEN(CALL SDC27) */ /*E17531*/ /*S01184*/
+/************IF         (&MOPTN *EQ 20)  THEN(CALL SDC27)     *S01184* *S01498*/
+/************IF     (&MOPTN *EQ 20)  THEN(CALL SETCMOFF)*/ /*E19059*/ /*E22249*/
+/************IF     (&MOPTN *EQ 20)  THEN(CALL CM0004) */  /*E22249*/ /*S01184*/
+/************IF         (&MOPTN *EQ 21)  THEN(CALL CM0004) /*S01184*/ /*S01319*/
+/************IF         (&MOPTN *EQ 20)  THEN(TFRCTL SDCSY)        */ /*E19059*/
+/************IF         (&MOPTN *EQ 21)  THEN(TFRCTL SDCSY)/*E19059*/ /*E22248*/
+/************IF      (&MOPTN *EQ 21)  THEN(CALL SDCSY) */  /*E22248*/ /*S01184*/
+/************IF         (&MOPTN *EQ 22)  THEN(CALL SDCSY)     *S01184* *S01498*/
+                                                                      /*S01408*/
+/*/COPY WNCPYSRC,SCBEGINMP2                                          */
+                                                                      /*S01408*/
+             IF         (&MOPTN *EQ 98)  THEN(CALL SDC27)             /*S01498*/
+             IF         (&MOPTN *EQ 99)  THEN(CALL SDCSY)             /*S01498*/
+             GOTO       RDSPLY
+         /**/                                                         /*E19389*/
+/*RROR:******SNDPGMMSG  MSG('Option ended abnormally. Check job +
+/************             log.') TOPGMQ(*EXT)              /*E19389*/ /*RT0142*/
+                                                                      /*RT0142*/
+/*  CALL SCC0010 TO INFORM USER THE OPTION ENDED ABNORMALLY  */       /*RT0142*/
+                                                                      /*RT0142*/
+/*RROR:******CALL       PGM(SCC0010) PARM('L1BGIN' 'OPTIONAB' +
+/************             &NOREPLY)                        /*RT0142*/ /*E26655*/
+ ERROR:      RTVMSG     MSGID(SCM0033) MSGF(MIDASMSG) MSG(&MESSAGE)   /*E26655*/
+             MONMSG     MSGID(CPF0000)                                /*E36130*/
+             CHGDTAARA  DTAARA(MIDASMSG (301 50)) VALUE(&MESSAGE)     /*E26655*/
+             MONMSG     MSGID(CPF0000)                                /*E36130*/
+             CHGDTAARA  DTAARA(MIDASMSG (3 1)) VALUE('1')             /*E26655*/
+             MONMSG     MSGID(CPF0000)                                /*E36130*/
+             CALL       PGM(SCC0010) PARM('SCBEGIN' 'JOBLOG' 'Y')     /*E26655*/
+             MONMSG     MSGID(CPF0000)                                /*E36130*/
+                                                                      /*RT0142*/
+             CHGJOB     SWS(XXXXXX00)                                 /*S01379*/
+                                                                      /*S01379*/
+             GOTO       CMDLBL(RDSPLY)                                /*E19389*/
+         /**/                                                         /*S01127*/
+RETURN:                                                               /*E15420*/
+/************IF*********COND(&COM *NE 'Y') THEN(ENDCMTCTL /*S01127*/  /*E22424*/
+/*    Set commitment control to correct status */                     /*E22424*/
+/* */                                                                 /*E22424*/
+/*    If commitment control was active initially then restart it in   /*E22424*/
+/*    case it has been ended                                          /*E22424*/
+             IF         COND(&COM *EQ 'Y') THEN(DO)                   /*E22424*/
+/************STRCMTCTL  LCKLVL(*CHG)                        /*E22424*  *CPK009*/
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)                   /*CPK009*/
+             MONMSG     MSGID(CPF0000)                                /*E22424*/
+             ENDDO                                                    /*E22424*/
+/*    If commitment control was inactive initially then end it in     /*E22424*/
+/*    case it has been started                                        /*E22424*/
+             IF         COND(&COM *NE 'Y') THEN(DO)                   /*E22424*/
+             ENDCMTCTL                                                /*E22424*/
+             MONMSG     MSGID(CPF0000)                                /*E22424*/
+             ENDDO                                                    /*E22424*/
+         /**/                                                         /*S01127*/
+/*/COPY WNCPYSRC,SCBEGINEND                                        */ /*S01408*/
+/*  */
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+             ENDPGM     /* END CL PGM SCBEGIN     */

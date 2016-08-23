@@ -1,0 +1,1979 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Retl ICD by Ccy Maint-Ins Screen Val')
+0002 F*****************************************************************
+0003 F*                                                               *
+     F*  Midas - Retail Module
+0005 F*                                                               *
+0006 F*  RE0242 - RETAIL ICD BY CCY MAINTENANCE - S/RECCY             *
+0007 F*           INSERT SCREEN VALIDATION                            *
+0008 F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+0010 F*      1990,1993                                                *
+0010 F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 173636             Date 13Jan00               *
+     F*                 CDE002             Date 23Dec99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 S01413             Date 13APR93               *
+     F*                 S01314                  20FEB91               *
+     F*                 E19929                  17OCT90               *
+     F*                 BHF701                  08SEP90               *
+0011 F*                 S01117                  17APR90               *
+0011 F*                 S01194                  17APR90               *
+0011 F*                 S01199                  17APR90               *
+0012 F*                                                               *
+0013 F*****************************************************************
+0012 F*                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  173636 - Error messages not displayed / some fields not      *
+     F*           updating properly.                                  *
+     F*  CDE002 - Revenue Analysis.                                   *
+     F*  S01413 - Retail 3 Incorporation.                             *
+     F*  S01314 - Changes made for PTF incorporation (S01199 was      *
+     F*           not fully applied)                                  *
+     F*  E19929 - The maximum debit and credit defaults to zero when  *
+     F*           it should default to the maximum possible value     *
+0012 F*  BHF701 - Program does not check whether MAX > MIN            *
+0012 F*  S01117 - Release 10  Multibranching                          *
+0012 F*  S01194 - New Standing Data                                   *
+     F*  S01199 - Help changes                                        *
+0012 F*                                                               *
+0013 F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+0016 F***RE0240FMCF  F     275            WORKSTN                         S01413
+     F***RE0240FMCF  F     893            WORKSTN                   S01413CDE002
+     FRE0240FMCF  F     917            WORKSTN                            CDE002
+0018 F*TABLE***IF**F      96 12AI     2 DISK                              S01194
+     FTABTBRE IF  E                    DISK                               S01413
+0021 F*                                                                   RE0242
+0022 F*       FUNCTION OF INDICATORS                                      RE0242
+0039 F*       NON-STANDARD INPUT PROGRAM INDICATORS                       RE0242
+0040 F*       01      BLINK CURRENCY                                      RE0242
+0041 F*       02      BLINK MIN DR                                        RE0242
+0042 F*       03      BLINK MAX DR                                        RE0242
+0043 F*       04      BLINK MIN CR                                        RE0242
+0044 F*       05      BLINK MAX CR                                        RE0242
+0015 F*       07      SET ON IF ERROR DURING READ FROM WORKSTATION        RE0242
+     F******************AND*USED*AS*HELP*INDICATOR***                     S01314
+0044 F*       08      WORKSTN FILE CATCHALL                               RE0242
+0044 F*       09      S/WTRN                                              RE0242
+0044 F********10      TABLE FILE CATCHALL                                 S01194
+0045 F********11      CURRENCY RECORD 1                                   S01194
+     F*       10      ONE OF DEBIT FIELDS BLANK                           BHF701
+     F*       11      ONE OF CREDIT FIELDS BLANK                          BHF701
+0046 F*       12      BLANK AMOUNT ENTERED                                RE0242
+     F*       15      BLINK HIGH O/D RATE                                 S01413
+     F*       16      BLINK HIGH O/D MIN                                  S01413
+     F*       17      BLINK HIGH O/D MAX                                  S01413
+     F*       18      BLINK ACC RATE                                      S01413
+     F*       19      BLINK ACC MIN                                       S01413
+     F*       20      BLINK ACC MAX                                       S01413
+     F*       21      BLINK DR INT RATE                                   S01413
+     F*       22      BLINK DR INT MIN                                    S01413
+     F*       23      BLINK DR INT MAX                                    S01413
+     F*       24      BLINK INACT FIX CHARGE                              S01413
+     F*       25      BLINK MIN BAL C -FIX CHARGE                         S01413
+     F*       26      BLINK AV MIN BAL C                                  S01413
+     F*       27      BLINK MIN BAL S -FIX CHARGE                         S01413
+     F*       28      BLINK AV MIN BAL S                                  S01413
+     F*       29      BLINK D.S. FIX CHARGE                               S01413
+     F*       30      BLINK D.S. MIN                                      S01413
+     F*       31      BLINK D.S. MAX                                      S01413
+     F*       32      BLINK FIX COMM                                      S01413
+     F*       35      RATES = PERCENTAGE OTHERWISE FIXED RATE.            S01413
+     F*       36      ERROR ON AMOUNT FOR GROUPE NO1                      S01413
+     F*       37      ERROR ON AMOUNT FOR GROUPE NO2                      S01413
+     F*       38      ERROR ON AMOUNT FOR GROUPE NO3                      S01413
+     F*       39      ERROR ON AMOUNT FOR GROUPE NO4                      S01413
+     F*       40      ERROR ON AMOUNT FOR GROUPE NO5                      S01413
+     F*       41      ERROR ON AMOUNT FOR GROUPE NO6                      S01413
+     F*       42      ERROR ON AMOUNT FOR GROUPE NO7                      S01413
+     F*       43      ERROR ON AMOUNT FOR GROUPE NO8                      S01413
+     F*       44      GROUP NO 1 ON FILE                                  S01413
+     F*       45      GROUP NO 2 ON FILE                                  S01413
+     F*       46      GROUP NO 3 ON FILE                                  S01413
+     F*       47      GROUP NO 4 ON FILE                                  S01413
+     F*       48      GROUP NO 5 ON FILE                                  S01413
+     F*       49      GROUP NO 6 ON FILE                                  S01413
+     F*       50      GROUP NO 7 ON FILE                                  S01413
+     F*       51      GROUP NO 8 ON FILE                                  S01413
+     F*       57      ON IF CDE002 IS INSTALLED (DISPLAY DR/CR MARGIN)    CDE002
+     F*                                                                   S01413
+0023 F*       STANDARD INPUT PROGRAM INDICATORS                           RE0242
+0038 F*       76      EXCEPTION OUTPUT IND.                               RE0242
+0037 F*       77      FIRST CYCLE IND                                     RE0242
+0036 F*       78      SI SCREEN READ IN                                   RE0242
+0035 F*       79      SYSTEM SET-UP FLAG ON                               RE0242
+0034 F*       80      BLINK DELETE CHECK FIELD LABEL                      RE0242
+0033 F*       81      OUTPUT INITIAL - SF - SCREEN                        RE0242
+0032 F*       82      OUTPUT INSERT - SI - SCREEN                         RE0242
+0031 F*       83      OUTPUT AMEND - SA - SCREEN                          RE0242
+0030 F*       84      OUTPUT DELETE - SD - SCREEN                         RE0242
+0029 F*       85      OUTPUT ENQUIRE - SE - SCREEN                        RE0242
+0028 F*       86      NON-DISPLAY USEFUL DATA                             RE0242
+0027 F*       87      NON-DISPLAY CHANGE DETAILS                          RE0242
+0026 F*       88      NON-DISPLAY ERROR MESSAGE/CODES                     RE0242
+0025 F*       89      BLINK ACTION CODE LABEL                             RE0242
+0024 F*       U7      DATABASE ERROR                                      RE0242
+     F/EJECT
+0047 E*    SUBROUTINE TABLES/ARRAYS                                       RE0242
+0048 E                    ZA1        16  1               ZALIGN/ZEDIT     RE0242
+0049 E                    ZA2        16  1               ZALIGN/ZEDIT     RE0242
+0050 E*                                                                   RE0242
+0051 E***********         ERCD       19  4               ERROR CODES      S01413
+     E                    ERCD       38  4               ERROR CODES      S01413
+0052 E                    ERCM    1   1 79               ERROR MESSAGES   RE0242
+0053 E*                                                                   RE0242
+     E                    CPY@    1   1 80
+     E/EJECT
+0057 I*                                                                   RE0242
+0058 I*    FORMAT - INSERT SCREEN                                         RE0242
+0059 I*                                                                   RE0242
+0060 IRE0240FMNS  78   8 CS   9 CI                                        RE0242
+0061 I                                        1   7 SRUNA                 RE0242
+0062 I                                        8   9 SID                   RE0242
+0063 I                                       10  15 SPID                  RE0242
+0064 I                                       16  23 STIME                 RE0242
+0065 I                                       24  26 SWSID                 RE0242
+0066 I*                                NON-STANDARD KEY FIELDS            RE0242
+0067 I                                       27  29 SCCY                  RE0242
+0068 I*                                STANDARD ACTION CODE               RE0242
+0069 I                                       30  30 SACTN                 RE0242
+0070 I*                                NON-STANDARD DETAIL SCREEN FIELDS  RE0242
+0071 I                                       31  44 SCCNM                 RE0242
+0072 I                                       45  58 SMIDC                 RE0242
+0073 I                                       59  72 SMADC                 RE0242
+0074 I                                       73  86 SMICC                 RE0242
+0075 I                                       87 100 SMACC                 RE0242
+     I                                      101 111 SHORT                 S01413
+     I                                      112 125 SHOMN                 S01413
+     I                                      126 139 SHOMX                 S01413
+     I                                      140 150 SACRT                 S01413
+     I                                      151 164 SACMN                 S01413
+     I                                      165 178 SACMX                 S01413
+     I                                      179 189 SDIRT                 S01413
+     I                                      190 203 SDIMN                 S01413
+     I                                      204 217 SDIMX                 S01413
+     I                                      218 231 SINFC                 S01413
+     I                                      232 245 SMCFC                 S01413
+     I                                      246 259 SAMBC                 S01413
+     I                                      260 273 SMSFC                 S01413
+     I                                      274 287 SAMBS                 S01413
+     I                                      288 301 SDSFC                 S01413
+     I                                      302 315 SDSMN                 S01413
+     I                                      316 329 SDSMX                 S01413
+     I                                      330 343 SFCFC                 S01413
+     I**   FOLLOWING FIELDS ADDED                                         S01413
+     I                                      344 344 SGPC1                 S01413
+     I                                      345 366 SGPN1                 S01413
+     I                                      367 380 SAMO1                 S01413
+     I                                      381 381 SGPC2                 S01413
+     I                                      382 403 SGPN2                 S01413
+     I                                      404 417 SAMO2                 S01413
+     I                                      418 418 SGPC3                 S01413
+     I                                      419 440 SGPN3                 S01413
+     I                                      441 454 SAMO3                 S01413
+     I                                      455 455 SGPC4                 S01413
+     I                                      456 477 SGPN4                 S01413
+     I                                      478 491 SAMO4                 S01413
+     I                                      492 492 SGPC5                 S01413
+     I                                      493 514 SGPN5                 S01413
+     I                                      515 528 SAMO5                 S01413
+     I                                      529 529 SGPC6                 S01413
+     I                                      530 551 SGPN6                 S01413
+     I                                      552 565 SAMO6                 S01413
+     I                                      566 566 SGPC7                 S01413
+     I                                      567 588 SGPN7                 S01413
+     I                                      589 602 SAMO7                 S01413
+     I                                      603 603 SGPC8                 S01413
+     I                                      604 625 SGPN8                 S01413
+     I                                      626 639 SAMO8                 S01413
+     I                                      640 651 SDRMG                 CDE002
+     I                                      652 663 SCRMG                 CDE002
+     I*                                STANDARD STRING FIELDS             S01413
+     I                                        1  30 SCN30                 S01413
+     I                                       45 200 SCNXXX                S01413
+     I                                        1 200 SCN060                S01413
+     I                                      201 400 SCN080                S01413
+     I                                      401 600 SCN100                S01413
+     I                                      601 800 SCN120                S01413
+     I                                      801 876 SCN130                S01413
+0076 I*                                STANDARD STRING FIELDS             RE0242
+0077 I                                        1  30 SCN30                 RE0242
+0078 I                                        1 256 SCN256                RE0242
+0079 I*                                                                   RE0242
+0080 I*    CATCHALL                                                       RE0242
+0081 I        NS  08                                                      RE0242
+0082 I                                        8   9 SID                   RE0242
+0089 I*                                                                   RE0242
+0090 I*****TABLE*FILE***CURRENCIES*RECORD*1.                              S01194
+0091 I**********                                                          S01194
+0092 I*TABLE***NS  11   1 CD   2 C2   3 C0                                S01194
+0093 I*******AND      13 C1                                               S01194
+0094 I**********                              1   1 RECI                  S01194
+0095 I**********                              2   30RECT                  S01194
+0096 I**********                             10  12 CCY                   S01194
+0097 I**********                             13  130SREC                  S01194
+0098 I**********                             14  27 CCNM                  S01194
+0099 I**********                          P  28  348SPOT                  S01194
+0100 I**********                             35  37 CCYS                  S01194
+0101 I**********                             38  380CDP                   S01194
+0102 I**********                             39  390TNOT                  S01194
+0103 I**********                             40  40 DCCY                  S01194
+0104 I**********                             41  44 SRC1                  S01194
+0105 I**********                             45  48 SRC2                  S01194
+0106 I**********                             49  520TACC                  S01194
+0107 I**********                             53  560TEQV                  S01194
+0108 I**********                             57  600SWQV                  S01194
+0109 I**********                             61  640TAC4                  S01194
+0110 I**********                             65  680TAC5                  S01194
+0111 I**********                             69  69 HIND                  S01194
+0112 I**********                          P  70  768PART                  S01194
+0113 I**********                             77  780SSNO                  S01194
+0114 I**********                          P  79  858ERLC                  S01194
+0115 I**********                             86  860MDIN                  S01194
+0116 I**********                             87  870MDIA                  S01194
+0117 I**********                             88  880MDIB                  S01194
+0118 I**********                          P  90  920LCD                   S01194
+0119 I**********                             93  93 CHTP                  S01194
+0120 I**********                          P  94  960TNLU                  S01194
+0121 I**********                                                          S01194
+0122 I*****CATCHALL                                                       S01194
+0123 I********NS  10                                                      S01194
+0126 I**********                                                          S01194
+0127 I*****DATA*STRUCTURE*FOR*TABLE*FILE*KEY                              S01194
+0128 I**********                                                          S01194
+0129 I**********  DS                                                      S01194
+0130 I**********                              1  12 TABKEY                S01194
+0131 I**********                              1   2 TAB2                  S01194
+0132 I**********                              9  11 TAB3A                 S01194
+0133 I**********                             10  12 TAB3B                 S01194
+0134 I**********                              9  12 TAB4                  S01194
+0135 I**********                             12  12 TAB1                  S01194
+0136 I**********                              6  11 TAB6                  S01194
+0137 I*                                                                   RE0242
+0138 I*    LOCAL DATA AREA                                                RE0242
+0139 I*                                                                   RE0242
+0140 ILDA        UDS                            256                       RE0242
+0141 I                                        1   8 LPROC                 RE0242
+0069 I**********                            134 138 LFILE                 S01117
+0070 I**********                            139 167 LKEY                  S01117
+0071 I**********                            168 175 LPROG                 S01117
+0072 I**********                            176 1770LDBNO                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I                                      134 141 LFILE                 S01117
+     I                                      142 170 LKEY                  S01117
+     I                                      171 180 LPROG                 S01117
+     I                                      181 1830LDBNO                 S01117
+      *                                                                   S01117
+0073 I***********                           181 1850LRUND                 S01117
+0074 I***********                           186 192 LRUNA                 S01117
+0075 I***********                           193 193 LDATF                 S01117
+0076 I***********                           194 1940LSFLG                 S01117
+0077 I***********                           195 1960LKEYL                 S01117
+0078 I***********                           197 202 LISP                  S01117
+0079 I***********                           203 203 LTWOL                 S01117
+0080 I***********                           204 2040LLDLP                 S01117
+0081 I***********                           205 2090LTNLU                 S01117
+0082 I***********                           210 210 LDELM                 S01117
+0083 I***********                           211 211 LDUD                  S01117
+     I                                      187 1910LRUND                 S01117
+     I                                      192 198 LRUNA                 S01117
+     I                                      199 199 LDATF                 S01117
+     I                                      200 200 LSFLG                 S01194
+     I                                      201 2020LKEYL                 S01117
+     I                                      203 208 LISP                  S01117
+     I                                      209 209 LTWOL                 S01117
+     I                                      210 2100LLDLP                 S01117
+     I                                      211 2150LTNLU                 S01117
+     I                                      216 216 LDELM                 S01117
+     I                                      217 217 LDUD                  S01117
+     I**                                                                  RE0242
+0151 I*TRAN******UDS                            860                       S01413
+     IWTRAN      UDS                           1600                       S01413
+     I                                        1   1 WRECI                 RE0242
+     I                                       10  12 WCCY                  RE0242
+     I                                       13  13 WRECT                 RE0242
+     I                                    P  31  330WTNLU                 RE0242
+     I                                    P  34  360WORED                 RE0242
+     I                                    P  37  390WLCD                  RE0242
+     I                                       40  40 WCHTP                 RE0242
+     I                                    P  41  470WHASH                 RE0242
+     I                                    P  48  540WMIDC                 RE0242
+     I                                    P  55  610WMADC                 RE0242
+     I                                    P  62  680WMICC                 RE0242
+     I                                    P  69  750WMACC                 RE0242
+     I                                    P 129 1340WHORT                 S01413
+     I                                    P 135 1410WHOMN                 S01413
+     I                                    P 142 1480WHOMX                 S01413
+     I                                    P 149 1540WACRT                 S01413
+     I                                    P 155 1610WACMN                 S01413
+     I                                    P 162 1680WACMX                 S01413
+     I                                    P 169 1740WDIRT                 S01413
+     I                                    P 175 1810WDIMN                 S01413
+     I                                    P 182 1880WDIMX                 S01413
+     I                                    P 189 1950WINFC                 S01413
+     I                                    P 196 2020WMCFC                 S01413
+     I                                    P 203 2090WAMBC                 S01413
+     I                                    P 210 2160WMSFC                 S01413
+     I                                    P 217 2230WAMBS                 S01413
+     I                                    P 224 2300WDSFC                 S01413
+     I                                    P 231 2370WDSMN                 S01413
+     I                                    P 238 2440WDSMX                 S01413
+     I                                    P 245 2510WFCFC                 S01413
+     I** FOLLOWING FIELDS ADDED                                           S01413
+     I                                    P 252 2583WAMO1                 S01413
+     I                                    P 259 2653WAMO2                 S01413
+     I                                    P 266 2723WAMO3                 S01413
+     I                                    P 273 2793WAMO4                 S01413
+     I                                    P 280 2863WAMO5                 S01413
+     I                                    P 287 2933WAMO6                 S01413
+     I                                    P 294 3003WAMO7                 S01413
+     I                                    P 301 3073WAMO8                 S01413
+     I                                    P 308 3137WCMNR                 173636
+     I                                    P 314 3197WCMNP                 173636
+     I                                    P 320 3220WCMNV                 173636
+     I                                    P 323 3287WCADR                 173636
+     I                                    P 329 3347WCADP                 173636
+     I                                    P 335 3370WCADV                 173636
+     I                                      338 338 WFCUS                 S01413
+     I                                      339 339 WCUSF                 S01413
+     I                                    P 340 3457WDRMG                 CDE002
+     I                                    P 346 3517WCRMG                 CDE002
+     I                                      401 401 W401                  RE0242
+     I                                    P 402 4040W404                  RE0242
+     I                                    P 405 4070W407                  RE0242
+     I                                      408 409 WWSID2                RE0242
+     I                                      414 418 WFILE                 RE0242
+     I                                      424 429 WLOGP                 RE0242
+     I                                      430 430 WIND1                 RE0242
+     I                                      431 431 WRECJ                 RE0242
+     I                                      449 4540WTIME                 RE0242
+     I                                      601 800 WCN060                S01413
+     I                                      8011000 WCN080                S01413
+     I                                     10011200 WCN100                S01413
+     I                                     12011400 WCN120                S01413
+     I                                     14011476 WCN130                S01413
+     I                                      461 716 WCN256                RE0242
+     I***********                             1 200 WTRAN1                S01413
+     I***********                           201 400 WTRAN2                S01413
+     I                                        1 251 WTRAN1                S01413
+     I                                      252 400 WTRAN2                S01413
+     I                                      401 600 WTRAN3                RE0242
+     I                                      601 800 WTRAN4                RE0242
+     I***********                           801 860 WTRAN5                S01413
+     I                                      8011000 WTRAN5                S01413
+     I                                     10011200 WTRAN6                S01413
+     I                                     12011400 WTRAN7                S01413
+     I                                     14011600 WTRAN8                S01413
+     I*                                                                   RE0242
+     IPSDS       SDS                                                      RE0242
+     I                                     *PROGRAM ZAPGM                 S01413
+     I                                      244 246 WSID                  RE0242
+     I                                      245 246 WSID2                 RE0242
+     ISDCURR    E DSSDCURRPD                                              S01194
+     I**  EXTERNAL DS FOR CURRENCY DETAILS                                S01194
+     I              A6NBDP                          CDP                   S01194
+     I              A6CYNM                          CCNM                  S01413
+     I*                                                                   S01413
+     ISDMMOD    E DSSDMMODPD                                              S01413
+     I*                                                                   S01413
+     I**  SD Midas Modules                                                S01413
+     I*                                                                   S01194
+     ISCSARD    E DSSCSARDPD                                              CDE002
+     I* SAR file details                                                  CDE002
+     I*                                                                   CDE002
+     IDSFDY     E DSDSFDY                                                 CDE002
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                CDE002
+     IDSSDY     E DSDSSDY                                                 S01194
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01194
+     I*                                                                   S01194
+     I**                                                                  RE0242
+     I/EJECT
+      * Insert DS to pass DATA parameter to the return program            S01413
+      *                                                                   S01413
+      /COPY QWINDSRC,RE0241DTA                                            S01413
+      *                                                                   S01413
+     C*                                                                   S01413
+     C**  Read the file SDMMODPD to find if WINDOW flag is on (BGWDPR)    S01413
+     C*                                                                   S01413
+     C                     CALL 'AOMMODR0'                                S01413
+     C                     PARM '*DBERR  '@RTCD   7                       S01413
+     C                     PARM '*FIRST ' @OPTN   7                       S01413
+     C           SDMMOD    PARM SDMMOD    DSSDY                           S01413
+     C*                                                                   S01413
+     C                     MOVEACPY@      BIS@   80
+      *                                                                   S01194
+     C** PARAMETER LIST FOR PROGRAM 'AOCURRR0'                            S01194
+     C           PLISTA    PLIST                                          S01194
+     C                     PARM '*BLANKS' RTCD    7                       S01194
+     C                     PARM '*KEY   ' OPTN    7                       S01194
+     C                     PARM           CURKEY  3                       S01194
+     C           SDCURR    PARM SDCURR    DSSDY                           S01194
+      *                                                                   S01194
+0157 C*  FIRST CYCLE PROCESSING                                           RE0242
+     C**                                                                  RE0242
+     C           *NAMVAR   DEFN           LDA                             RE0242
+     C           *NAMVAR   DEFN           WTRAN                           RE0242
+     C************LOCK     IN   *NAMVAR                                   S01413
+     C           *LOCK     IN   LDA                                       S01413
+     C           *LOCK     IN   WTRAN                                     S01413
+     C**
+     C**    Access Switchable Features file to see if CDE002 is present   CDE002
+     C                     CALL 'AOSARDR0'                                CDE002
+     C                     PARM *BLANKS   @RTCD   7                       CDE002
+     C                     PARM '*VERIFY' @OPTN   7                       CDE002
+     C                     PARM 'CDE002'  @SARD   6                       CDE002
+     C           SCSARD    PARM SCSARD    DSFDY                           CDE002
+     C                     MOVE *OFF      *IN57                           CDE002
+     C                     MOVE 'N'       CDE002                          CDE002
+     C*                                                                   CDE002
+     C** If core feature is switched ON, set on indicator and variable    CDE002
+     C** field to condition the rest of the processing                    CDE002
+     C           @RTCD     IFEQ *BLANKS                                   CDE002
+     C                     MOVE *ON       *IN57                           CDE002
+     C                     MOVE 'Y'       CDE002  1                       CDE002
+     C                     ELSE                                           CDE002
+     C*                                                                   CDE002
+     C** Else, database error (return code other than *NRF)               CDE002
+     C           @RTCD     IFNE '*NRF   '                                 CDE002
+     C                     MOVEL'RE0242 ' DBPGM                           CDE002
+     C                     MOVEL'SCSARDPD'DBFILE           ************   CDE002
+     C                     MOVEL'CDE002'  DBKEY            * DBERR 03 *   CDE002
+     C                     Z-ADD03        DBASE            ************   CDE002
+     C                     OUT  LDA                                       CDE002
+     C                     EXSR *PSSR                                     CDE002
+     C                     SETON                     U7U8LR               CDE002
+     C                     GOTO END                                       CDE002
+     C                     ENDIF                                          CDE002
+     C                     ENDIF                                          CDE002
+     C*                                                                   CDE002
+     C*    READ WORKSTATION FILE /*HELP*FACILITY***                       S01199
+     C**
+0221 C           GUTEN     TAG                             ** GUTEN TAG **S01413
+     C********** *IN07     DOUEQ'0'                                       S01314
+     C                     READ RE0240FM                 07
+     C********** *IN07     IFEQ '1'                                       S01199
+     C**********           MOVEAERCD      HERCD 160                       S01199
+     C**********           MOVEL'RE0240  'HBPGM   8                       S01199
+     C**********           CALL 'MHELP'                                   S01199
+     C**********           PARM           HBPGM                           S01199
+     C**********           PARM           HERCD                           S01199
+     C**********           END                                            S01199
+     C*********************END                                            S01314
+     C*
+0158 C*                                                                   RE0242
+0164 C*                                                                   RE0242
+0165 C*  SET-UP STANDARD INPUT PROGRAM FIELDS  -  WPROG IS THIS PROGRAM   RE0242
+0166 C*                                                                   RE0242
+0167 C                     MOVELLISP      WPROG   8                       RE0242
+0168 C                     MOVE '2  '     WPROG                           RE0242
+0169 C                     MOVELWPROG     SPID    6                       RE0242
+0170 C*  SET-UP STANDARD LDA FIELDS                                       RE0242
+0171 C                     MOVE WPROG     LPROG                           RE0242
+0172 C                     Z-ADD2         LLDLP                           RE0242
+     C*                                                                   S01413
+     C*  EXECUTE CHN55                                                    S01413
+     C*                                                                   S01413
+     C           TAG55     TAG                             ** TAG55 TAG   S01413
+     C                     EXSR CHN55                                     S01413
+     C  N99      MDPF      COMP 'P'                      35               S01413
+     C  N99                GOTO TAG01                                     S01413
+     C                     SETON                     U7LR  ** DB ERROR 04 S01413
+     C                     MOVE 'TABTB'   LFILE                           S01413
+     C                     MOVEL'MDPF'    LKEY                            S01413
+     C                     MOVE '04'      LDBNO                           S01413
+     C                     GOTO END                                       S01413
+     C*                                                                   S01413
+     C           TAG01     TAG                             ** TAG01 TAG   S01413
+     C*                                                                   S01413
+0173 C*  SET-UP STANDARD BLANK FIELDS                                     RE0242
+0175 C*                                                                   RE0242
+0176 C           LDATF     COMP 'M'                      98* DATE FORMAT  RE0242
+0177 C********** LSFLG     COMP 1                        79* SSF          S01194
+0177 C           LSFLG     COMP 'Y'                      79* SSF          S01194
+0178 C*                                                                   RE0242
+0180 C                     MOVE ' '       BLK16  16                       RE0242
+0181 C*                                                                   RE0242
+0182 C*  LOG PROGRAM NAME                                                 RE0242
+0183 C*                                                                   RE0242
+0184 C                     MOVE LISP      WLOGP   6                       RE0242
+0185 C                     MOVE '9'       WLOGP                           RE0242
+0186 C*                                                                   RE0242
+0187 C*  INITIALISE FIELD TO BLANK OUT KEY/ACTION CODE                    RE0242
+0188 C*                                                                   RE0242
+0189 C                     MOVE ' '       BLK04   4                       RE0242
+0190 C*                                                                   RE0242
+0191 C*  INITIALISE BLANKS TO TEST FOR BLANK INPUT FIELDS                 RE0242
+0192 C*                                                                   RE0242
+0193 C                     MOVE ' '       BLK14  14                       RE0242
+     C                     MOVE ' '       BLK11  11                       S01413
+0194 C*                                                                   RE0242
+0195 C           ENDFC     TAG                             ** ENDFC TAG   RE0242
+0196 C*                                                                   RE0242
+0197 C*  INITIALISE STANDARD INDICATORS                                   RE0242
+0198 C                     SETON                     888786* NON-DISPLAY  RE0242
+0199 C                     SETOF                     8980  * BLINK LABELS RE0242
+0200 C                     SETOF                     858483* OUTPUT       RE0242
+0201 C                     SETOF                     8281  * SCREENS      RE0242
+0202 C                     SETOF                     76    * OUTPUT WTRN  RE0242
+0203 C*                                                                   RE0242
+0204 C*  INITIALISE NON-STANDARD INDS                                     RE0242
+0205 C*                                                                   RE0242
+0206 C                     SETOF                     010203* BLINK        RE0242
+0207 C                     SETOF                     0405  * LABELS       RE0242
+     C                     SETOF                     151617               S01413
+     C                     SETOF                     181920               S01413
+     C                     SETOF                     212223               S01413
+     C                     SETOF                     242526               S01413
+     C                     SETOF                     272829               S01413
+     C                     SETOF                     303132               S01413
+     C                     MOVEA'00000000'*IN,36                          S01413
+     C                     MOVEA'00'      *IN,52                          CDE002
+0208 C*                                                                   RE0242
+0209 C*  CHECK FOR CORRECT SCREEN READ IN                                 RE0242
+0210 C*                                                                   RE0242
+0211 C   78                GOTO PROCES                                    RE0242
+0212 C                     SETON                     U7LR                 RE0242
+0213 C                     MOVE 'SCREN'   LFILE                           RE0242
+0214 C                     MOVE *BLANKS   LKEY                            RE0242
+0215 C                     MOVEL'SI'      LKEY                            RE0242
+0216 C                     MOVE 'FOUND   'LKEY                            RE0242
+0217 C                     MOVE SID       LKEY                            RE0242
+0218 C                     MOVE '01'      LDBNO            * DB ERROR 01 *RE0242
+0219 C                     GOTO END                                       RE0242
+0220 C*                                                                   RE0242
+0221 C           PROCES    TAG                             * PROCES  TAG *RE0242
+0222 C*                                                                   RE0242
+0223 C*  CLEAR ERROR CODE ARRAY, RESET INDEX                              RE0242
+0224 C*                                                                   RE0242
+0225 C                     MOVE *BLANKS   ERMSG  79                       RE0242
+0226 C                     MOVE '    '    ERCD                            RE0242
+0226 C                     MOVE '    '    ERCD1  79                       S01413
+0226 C                     MOVE '    '    ERCD2  79                       S01413
+0227 C                     Z-ADD0         S       20                      RE0242
+     C                     MOVE WCUSF     Y       10                      S01413
+     C**                                                                  S01413
+     C**  SET INDICATORS FOR GROUP CODES                                  S01413
+     C           Y         COMP 1                    44  44               S01413
+     C           Y         COMP 2                    45  45               S01413
+     C           Y         COMP 3                    46  46               S01413
+     C           Y         COMP 4                    47  47               S01413
+     C           Y         COMP 5                    48  48               S01413
+     C           Y         COMP 6                    49  49               S01413
+     C           Y         COMP 7                    50  50               S01413
+     C           Y         COMP 8                    51  51               S01413
+0228 C*                                                                   RE0242
+0229 C*  IF F3, END THE PROGRAM                                           RE0242
+0230 C*                                                                   RE0242
+0231 C   KC                MOVEL'**      'LPROC                           RE0242
+0232 C   KC                SETON                     LR                   RE0242
+0233 C   KC                GOTO END                                       RE0242
+0234 C*                                                                   RE0242
+0235 C*  IF F12, OUTPUT BLANK INITIAL SCREEN                              RE0242
+0236 C*                                                                   RE0242
+0237 C   KL                EXSR SUBSF                                     RE0242
+0238 C   KL                GOTO END                                       RE0242
+0239 C*                                                                   RE0242
+0240 C*  IF F10, OUTPUT ERROR MSG TO INSERT SCREEN                        RE0242
+0241 C*                                                                   RE0242
+0242 C   KJ                EXSR SUBSI                                     RE0242
+0243 C   KJ                SETOF                     88                   RE0242
+0244 C   KJ      S         ADD  1         S                               RE0242
+0245 C   KJ                MOVE '915'     ERCD,S                          RE0242
+0246 C   KJ                MOVE ERCM,1    ERMSG                           RE0242
+0247 C   KJ                GOTO END                                       RE0242
+0248 C*                                                                   RE0242
+0249 C*  IF NO CMD KEY ENTERED, NOW VALIDATE DATA INPUT                   RE0242
+0250 C*                                                                   RE0242
+0251 C                     EXSR VALSI                                     RE0242
+0252 C*                                                                   RE0242
+0253 C*  S IS NON-ZERO IF THERE ARE ANY ERRORS                            RE0242
+0254 C*                                                                   RE0242
+0255 C           S         COMP 0                    8282                 RE0242
+0256 C*                                                                   RE0242
+0257 C*  IF THERE ARE ANY ERRORS, REOUTPUT THE                            RE0242
+0258 C*  INSERT SCREEN WITH ERROR CODES                                   RE0242
+0259 C*                                                                   RE0242
+0260 C   82                EXSR SUBSI                                     RE0242
+0261 C   82                SETOF                     88                   RE0242
+0262 C   82                GOTO END                                       RE0242
+     C*                                                                   S01413
+     C** WINDOW PROCESSING                                                S01413
+     C*                                                                   S01413
+     C           BGWDPR    IFEQ 'Y'                                       S01413
+     C           TSTMC     ANDEQ'Y'                                       S01413
+     C           BGWDPR    OREQ 'Y'                                       S01413
+     C           FACH      ANDEQ'Y'                                       S01413
+     C*    /copy to move data into the data structure fields passed       S01413
+     C*     as a parameter to the window controller                       S01413
+     C                     MOVE CDP       A6NBDP                          S01413
+     C                     MOVE SCCY      CCYD                            S01413
+     C*                                                                   S01413
+     C                     UNLCKLDA                                       S01413
+     C                     MOVE *BLANKS   #PGM                            S01413
+     C                     MOVEL'RE0242'  #PGM                            S01413
+     C*                                                                   S01413
+     C                     CALL 'WN0010'                                  S01413
+     C                     PARM           #PGM   10                       S01413
+     C                     PARM           FKEY    2                       S01413
+     C                     PARM SACTN     ACTION  1                       S01413
+     C                     PARM           DATA                            S01413
+     C                     PARM *BLANKS   #RTRN   7                       S01413
+     C                     PARM           SPARE 256                       S01413
+     C           *LOCK     IN   LDA                                       S01413
+     C*                                                                   S01413
+     C           #RTRN     IFEQ 'USR0790'                                 S01413
+     C                     EXSR SUBSI                                     S01413
+     C                     EXCPT                                          S01413
+     C                     MOVE '0'       *IN                             S01413
+     C                     GOTO GUTEN                                     S01413
+     C                     END                                            S01413
+     C                     END                                            S01413
+0263 C*                                                                   RE0242
+0264 C*  OTHERWISE, UPDATE THE WORKSTATION TRANSACTION FILE               RE0242
+0265 C*  WITH RECCY FILE RECORD                                           RE0242
+0266 C*                                                                   RE0242
+0267 C                     EXSR WTRUPD                                    RE0242
+0268 C*                                                                   RE0242
+0269 C*  UPDATE WTRN FILE AND EXECUTE LOGGING/UPDATE PROGRAM              RE0242
+0270 C*                                                                   RE0242
+0271 C                     SETON                     76                   RE0242
+0272 C                     MOVE '9  '     LPROC                           RE0242
+0273 C*                                                                   RE0242
+0274 C           END       TAG                             ** END TAG     RE0242
+0275 C*                                                                   RE0242
+0276 C*  SETOF OUTPUT INDS IF DATABASE ERROR                              RE0242
+0277 C*                                                                   RE0242
+0278 C   U7                SETOF                     818276               RE0242
+0279 C*                                                                   RE0242
+0280 C                     TIME           WTIME                           RE0242
+     C***********          OUT  *NAMVAR                                   S01413
+     C                     OUT  LDA                                       S01413
+     C                     OUT  WTRAN                                     S01413
+     C**                                                                  RE0242
+     C                     EXCPT                                          RE0242
+     C                     RETRN                                          RE0242
+0281 C*                                                                   RE0242
+     C********************************************************************S01413
+     C**                                                                  S01413
+     C**   CHN55  SR. TO CHAIN TO RETAIL FEATURES ICD                     S01413
+     C**                                                                  S01413
+     C           CHN55     BEGSR                           *** CHN55  *** S01413
+     C           1         CHAINTABTBRE              99    ON NOT THERE   S01413
+     C                     ENDSR                                          S01413
+     C**                                                                  S01413
+     C**                                                                  S01413
+0282 C********************************************************************RE0242
+0283 C**                                                                  RE0242
+0284 C**   SUBR. - TO SET UP INITIAL SCREEN OUTPUT                        RE0242
+0285 C**                                                                  RE0242
+0286 C           SUBSF     BEGSR                           ***  SUBSF  ***RE0242
+0287 C                     SETON                     81LR                 RE0242
+0288 C                     MOVE '1  '     LPROC                           RE0242
+0289 C                     MOVE 'SF'      SID                             RE0242
+0290 C                     ENDSR                                          RE0242
+0291 C********************************************************************RE0242
+0292 C**                                                                  RE0242
+0293 C**   SUBR. - TO SET UP INSERT SCREEN OUTPUT                         RE0242
+0294 C**                                                                  RE0242
+0295 C           SUBSI     BEGSR                           ***  SUBSI  ***RE0242
+0296 C                     SETON                     82                   RE0242
+0297 C                     MOVE '2  '     LPROC                           RE0242
+0298 C                     MOVE 'SI'      SID                             RE0242
+0299 C                     ENDSR                                          RE0242
+0300 C********************************************************************RE0242
+0301 C**                                                                  RE0242
+0302 C**  SUBR. - TO VALIDATE DATA ENTERED ON THE INSERT SCREEN           RE0242
+0303 C**                                                                  RE0242
+0304 C           VALSI     BEGSR                           ***  VALSI  ***RE0242
+0305 C*                                                                   RE0242
+0306 C*  CHAIN TO CURRENCY RECORD FOR NO. OF DECIMAL PLACES               RE0242
+0307 C*                                                                   RE0242
+0308 C**********           MOVE *BLANKS   TABKEY                          S01194
+0309 C**********           MOVE '20'      TAB2                            S01194
+0310 C**********           MOVE '1'       TAB1                            S01194
+0311 C**********           MOVE SCCY      TAB3A                           S01194
+0312 C**********           EXSR TABCHN                                    S01194
+0311 C                     MOVE SCCY      CURKEY                          S01194
+     C                     CALL 'AOCURRR0'PLISTA                          S01194
+0313 C*                                                                   RE0242
+0308 C********** *IN99     IFEQ '1'                                       S01194
+0308 C           RTCD      IFNE *BLANKS                                   S01194
+0309 C**********           MOVE 'TABLE'   LFILE                           S01194
+0309 C                     MOVE 'SDCURRPD'LFILE                           S01194
+0310 C**********           MOVE TABKEY    LKEY                            S01194
+0310 C                     MOVE CURKEY    LKEY                            S01194
+0311 C                     MOVE '02'      LDBNO            * DB ERROR 02 *RE0242
+0312 C                     GOTO END                                       RE0242
+0307 C                     END                                            RE0242
+0313 C*                                                                   RE0242
+0314 C*  VALIDATE AMOUNTS                                                 RE0242
+0315 C*
+0322 C                     Z-ADDCDP       ZADEC
+0323 C           13        SUB  CDP       ZADIG
+0315 C*
+0316 C*  MANDATORY                                                        RE0242
+0317 C*                                                                   RE0242
+0318 C           SMIDC     COMP BLK14                    12               RE0242
+0319 C   12                GOTO VMADC                                     RE0242
+0320 C*                                                                   RE0242
+0321 C*  CHECK NUMERIC                                                    RE0242
+0324 C                     MOVE BLK16     ZFIELD                          RE0242
+0325 C                     MOVE SMIDC     ZFIELD                          RE0242
+0326 C                     EXSR ZALIGN                                    RE0242
+0327 C   99                SETON                     02                   RE0242
+0328 C   02      S         ADD  1         S                               RE0242
+0329 C   02                MOVE '010'     ERCD,S                          RE0242
+0330 C   02                GOTO VMADC                                     RE0242
+0331 C*                                                                   RE0242
+0332 C*  WMIDC WILL BE USED TO UPDATE S/RECCY                             RE0242
+0333 C*                                                                   RE0242
+0334 C                     MOVE ZFIELD    WMIDC  130                      RE0242
+0335 C*                                                                   RE0242
+0336 C*  IF VALID, FORMAT AMOUNT FOR OUTPUT TO SCREEN                     RE0242
+0337 C*                                                                   RE0242
+0338 C                     EXSR ZEDIT                                     RE0242
+0339 C                     MOVE ZFIELD    SMIDC                           RE0242
+0340 C*                                                                   RE0242
+0341 C           VMADC     TAG                             *** VMADC ***  RE0242
+     C   12                Z-ADD0         WMIDC  130
+     C*                                                                   E19929
+     C** INSERT DEFAULT MAXIMUM DEBIT VALUE                               E19929
+     C*                                                                   E19929
+     C***********SMADC*****COMP BLK14                    12               E19929
+     C***12****************GOTO VMICC                                     E19929
+     C           SMADC     IFEQ BLK14                      IF 1           E19929
+     C                     Z-ADD*ALL'9'   WMADC                           E19929
+     C                     MOVE WMADC     ZFIELD                          E19929
+     C                     EXSR ZEDIT                                     E19929
+     C                     MOVE ZFIELD    SMADC                           E19929
+     C                     END                             END IF 1       E19929
+     C   12                SETON                         10               BHF701
+0342 C*                                                                   RE0242
+0345 C*                                                                   RE0242
+0346 C*  CHECK NUMERIC                                                    RE0242
+0347 C                     MOVE BLK16     ZFIELD                          RE0242
+0348 C                     MOVE SMADC     ZFIELD                          RE0242
+0349 C                     EXSR ZALIGN                                    RE0242
+0350 C   99                SETON                     03                   RE0242
+0351 C   03      S         ADD  1         S                               RE0242
+0352 C   03                MOVE '011'     ERCD,S                          RE0242
+0353 C   03                GOTO VMICC                                     RE0242
+0354 C*                                                                   RE0242
+0355 C*  WMADC WILL BE USED TO UPDATE S/RECCY                             RE0242
+0356 C*                                                                   RE0242
+0357 C                     MOVE ZFIELD    WMADC                           RE0242
+0358 C*                                                                   RE0242
+     C*                                                                   E19929
+     C*  ENSURE MAXIMUM NOT LESS THAN MINIMUM                             E19929
+     C*                                                                   E19929
+     C           WMADC     IFLT WMIDC                      IF 2           E19929
+     C                     ADD  1         S                               E19929
+     C                     MOVE '992'     ERCD,S                          E19929
+     C                     SETON                     03                   E19929
+     C                     END                             END IF 2       E19929
+     C*                                                                   E19929
+0359 C*  IF VALID, FORMAT AMOUNT FOR OUTPUT TO SCREEN                     RE0242
+0360 C*                                                                   RE0242
+0361 C                     EXSR ZEDIT                                     RE0242
+0362 C                     MOVE ZFIELD    SMADC                           RE0242
+0363 C*                                                                   RE0242
+0364 C           VMICC     TAG                             *** VMICC ***  RE0242
+     C***12****************Z-ADD0         WMADC  130                      E19929
+0365 C*                                                                   RE0242
+0366 C           SMICC     COMP BLK14                    12               RE0242
+0367 C   12                GOTO VMACC                                     RE0242
+0368 C*                                                                   RE0242
+0369 C*  CHECK NUMERIC                                                    RE0242
+0370 C                     MOVE BLK16     ZFIELD                          RE0242
+0371 C                     MOVE SMICC     ZFIELD                          RE0242
+0372 C                     EXSR ZALIGN                                    RE0242
+0373 C   99                SETON                     04                   RE0242
+0374 C   04      S         ADD  1         S                               RE0242
+0375 C   04                MOVE '012'     ERCD,S                          RE0242
+0376 C   04                GOTO VMACC                                     RE0242
+0377 C*                                                                   RE0242
+0378 C*  WMICC WILL BE USED TO UPDATE S/RECCY                             RE0242
+0379 C*                                                                   RE0242
+0380 C                     MOVE ZFIELD    WMICC                           RE0242
+0381 C*                                                                   RE0242
+0382 C*  IF VALID, FORMAT AMOUNT FOR OUTPUT TO SCREEN                     RE0242
+0383 C*                                                                   RE0242
+0384 C                     EXSR ZEDIT                                     RE0242
+0385 C                     MOVE ZFIELD    SMICC                           RE0242
+0386 C*                                                                   RE0242
+0387 C           VMACC     TAG                             *** VMACC ***  RE0242
+     C   12                Z-ADD0         WMICC  130
+     C   12                SETON                         11               BHF701
+0388 C*                                                                   RE0242
+     C*  INSERT DEFAULT MAXIMUM CREDIT VALUE                              E19929
+     C*                                                                   E19929
+0389 C***********SMACC*****COMP BLK14                    12               E19929
+0390 C***12****************GOTO VALSIE                                    E19929
+     C           SMACC     IFEQ BLK14                      IF 3           E19929
+     C                     Z-ADD*ALL'9'   WMACC                           E19929
+     C                     MOVE WMACC     ZFIELD                          E19929
+     C                     EXSR ZEDIT                                     E19929
+     C                     MOVE ZFIELD    SMACC                           E19929
+     C                     END                             END IF 3       E19929
+0391 C*                                                                   RE0242
+0392 C*  CHECK NUMERIC                                                    RE0242
+0393 C                     MOVE BLK16     ZFIELD                          RE0242
+0394 C                     MOVE SMACC     ZFIELD                          RE0242
+0395 C                     EXSR ZALIGN                                    RE0242
+0396 C   99                SETON                     05                   RE0242
+0397 C   05      S         ADD  1         S                               RE0242
+0398 C   05                MOVE '013'     ERCD,S                          RE0242
+0399 C***05******          GOTO VALSIE                                    S01413
+     C   05                GOTO VHOMN                                     S01413
+0400 C*                                                                   RE0242
+0401 C*  WMACC WILL BE USED TO UPDATE S/RECCY                             RE0242
+0402 C*                                                                   RE0242
+0403 C                     MOVE ZFIELD    WMACC                           RE0242
+0404 C*                                                                   RE0242
+     C*                                                                   E19929
+     C           WMACC     IFLT WMICC                      IF 4           E19929
+     C                     ADD  1         S                               E19929
+     C                     MOVE '992'     ERCD,S                          E19929
+     C                     SETON                     05                   E19929
+     C                     END                             END IF 4       E19929
+0405 C*  IF VALID, FORMAT AMOUNT FOR OUTPUT TO SCREEN                     RE0242
+0406 C*                                                                   RE0242
+0407 C                     EXSR ZEDIT                                     RE0242
+0408 C                     MOVE ZFIELD    SMACC                           RE0242
+0409 C*                                                                   RE0242
+0410 C***********VALSIE    TAG                             **  VALSIE TAG S01413
+0410 C           VHOMN     TAG                             **  VHOMN  TAG S01413
+     C***12****************Z-ADD0         WMACC  130                      E19929
+     C   12                SETON                         11               BHF701
+     C*                                                                   BHF701
+     C*  CHECK THAT MAXIMUM IS GREATER THAN MINIMUM - CR                  BHF701
+     C           *IN11     IFNE '1'                                       BHF701
+     C           SMACC     COMP SMICC                  12                 BHF701
+     C   12      S         ADD  1         S                               BHF701
+     C   12                MOVE '014'     ERCD,S                          BHF701
+     C   12                SETON                     0405                 BHF701
+     C                     END                                            BHF701
+     C*                                                                   BHF701
+     C*  CHECK THAT MAXIMUM IS GREATER THAN MINIMUM - DR                  BHF701
+     C           *IN10     IFNE '1'                                       BHF701
+     C           SMADC     COMP SMIDC                  12                 BHF701
+     C   12      S         ADD  1         S                               BHF701
+     C   12                MOVE '015'     ERCD,S                          BHF701
+     C   12                SETON                     0203                 BHF701
+     C                     END                                            BHF701
+     C*                                                                   S01413
+     C           SHOMN     COMP BLK14                    12               S01413
+     C   12                GOTO VHOMX                                     S01413
+     C*                                                                   S01413
+     C*  CHECK NUMERIC                                                    S01413
+     C                     MOVE BLK16     ZFIELD                          S01413
+     C                     MOVE SHOMN     ZFIELD                          S01413
+     C                     EXSR ZALIGN                                    S01413
+     C   99                SETON                     16                   S01413
+     C   16      S         ADD  1         S                               S01413
+     C   16                MOVE '015'     ERCD,S                          S01413
+     C   16                GOTO VHOMX                                     S01413
+     C*                                                                   S01413
+     C*  WHOMN WILL BE USED TO UPDATE S/RECCY                             S01413
+     C*                                                                   S01413
+     C                     MOVE ZFIELD    WHOMN  130                      S01413
+     C*                                                                   S01413
+     C*  IF VALID, FORMAT AMOUNT FOR OUTPUT TO SCREEN                     S01413
+     C*                                                                   S01413
+     C                     EXSR ZEDIT                                     S01413
+     C                     MOVE ZFIELD    SHOMN                           S01413
+     C*                                                                   S01413
+     C           VHOMX     TAG                             *** VHOMX ***  S01413
+     C   12                Z-ADD0         WHOMN  130                      S01413
+     C*                                                                   S01413
+     C   35                Z-ADD8         ZADEC                           S01413
+     C   35                Z-ADD5         ZADIG                           S01413
+     C           SHOMX     IFEQ BLK14                      IF 1           S01413
+     C  N35                Z-ADD*ALL'9'   WHOMX                           S01413
+     C   35                Z-ADD50        WHOMX                           S01413
+     C                     MOVE WHOMX     ZFIELD                          S01413
+     C                     EXSR ZEDIT                                     S01413
+     C                     MOVE ZFIELD    SHOMX                           S01413
+     C                     END                             END IF 1       S01413
+     C*                                                                   S01413
+     C*  CHECK NUMERIC                                                    S01413
+     C                     MOVE BLK16     ZFIELD                          S01413
+     C                     MOVE SHOMX     ZFIELD                          S01413
+     C                     EXSR ZALIGN                                    S01413
+     C   99                SETON                     17                   S01413
+     C   17      S         ADD  1         S                               S01413
+     C   17                MOVE '016'     ERCD,S                          S01413
+     C   17                GOTO VACMN                                     S01413
+     C*                                                                   S01413
+     C*  WHOMX WILL BE USED TO UPDATE S/RECCY                             S01413
+     C*                                                                   S01413
+     C                     MOVE ZFIELD    WHOMX                           S01413
+     C*                                                                   S01413
+     C*  IF VALID, FORMAT AMOUNT FOR OUTPUT TO SCREEN                     S01413
+     C*                                                                   S01413
+     C                     EXSR ZEDIT                                     S01413
+     C                     MOVE ZFIELD    SHOMX                           S01413
+     C*                                                                   S01413
+     C           VACMN     TAG                             *** VACMN ***  S01413
+     C*                                                                   S01413
+     C   35                Z-ADDCDP       ZADEC                           S01413
+     C   35      13        SUB  CDP       ZADIG                           S01413
+     C           SACMN     COMP BLK14                    12               S01413
+     C   12                GOTO VACMX                                     S01413
+     C*                                                                   S01413
+     C*  CHECK NUMERIC                                                    S01413
+     C                     MOVE BLK16     ZFIELD                          S01413
+     C                     MOVE SACMN     ZFIELD                          S01413
+     C                     EXSR ZALIGN                                    S01413
+     C   99                SETON                     19                   S01413
+     C   19      S         ADD  1         S                               S01413
+     C   19                MOVE '018'     ERCD,S                          S01413
+     C   19                GOTO VACMX                                     S01413
+     C*                                                                   S01413
+     C*  WACMN WILL BE USED TO UPDATE S/RECCY                             S01413
+     C*                                                                   S01413
+     C                     MOVE ZFIELD    WACMN                           S01413
+     C*                                                                   S01413
+     C*  IF VALID, FORMAT AMOUNT FOR OUTPUT TO SCREEN                     S01413
+     C*                                                                   S01413
+     C                     EXSR ZEDIT                                     S01413
+     C                     MOVE ZFIELD    SACMN                           S01413
+     C*                                                                   S01413
+     C           VACMX     TAG                             *** VACMX ***  S01413
+     C   12                Z-ADD0         WACMN  130                      S01413
+     C*                                                                   S01413
+     C           SACMX     IFEQ BLK14                      IF 1           S01413
+     C                     Z-ADD*ALL'9'   WACMX                           S01413
+     C                     MOVE WACMX     ZFIELD                          S01413
+     C                     EXSR ZEDIT                                     S01413
+     C                     MOVE ZFIELD    SACMX                           S01413
+     C                     END                             END IF 1       S01413
+     C*                                                                   S01413
+     C*  CHECK NUMERIC                                                    S01413
+     C                     MOVE BLK16     ZFIELD                          S01413
+     C                     MOVE SACMX     ZFIELD                          S01413
+     C                     EXSR ZALIGN                                    S01413
+     C   99                SETON                     20                   S01413
+     C   20      S         ADD  1         S                               S01413
+     C   20                MOVE '019'     ERCD,S                          S01413
+     C   20                GOTO VDIMN                                     S01413
+     C*                                                                   S01413
+     C*  WACMX WILL BE USED TO UPDATE S/RECCY                             S01413
+     C*                                                                   S01413
+     C                     MOVE ZFIELD    WACMX                           S01413
+     C*                                                                   S01413
+     C*  IF VALID, FORMAT AMOUNT FOR OUTPUT TO SCREEN                     S01413
+     C*                                                                   S01413
+     C                     EXSR ZEDIT                                     S01413
+     C                     MOVE ZFIELD    SACMX                           S01413
+     C*                                                                   S01413
+     C           VDIMN     TAG                             *** VDIMN ***  S01413
+     C*                                                                   S01413
+     C           SDIMN     COMP BLK14                    12               S01413
+     C   12                GOTO VDIMX                                     S01413
+     C*                                                                   S01413
+     C*  CHECK NUMERIC                                                    S01413
+     C                     MOVE BLK16     ZFIELD                          S01413
+     C                     MOVE SDIMN     ZFIELD                          S01413
+     C                     EXSR ZALIGN                                    S01413
+     C   99                SETON                     22                   S01413
+     C   22      S         ADD  1         S                               S01413
+     C   22                MOVE '021'     ERCD,S                          S01413
+     C   22                GOTO VDIMX                                     S01413
+     C*                                                                   S01413
+     C*  WDIMN WILL BE USED TO UPDATE S/RECCY                             S01413
+     C*                                                                   S01413
+     C                     MOVE ZFIELD    WDIMN                           S01413
+     C*                                                                   S01413
+     C*  IF VALID, FORMAT AMOUNT FOR OUTPUT TO SCREEN                     S01413
+     C*                                                                   S01413
+     C                     EXSR ZEDIT                                     S01413
+     C                     MOVE ZFIELD    SDIMN                           S01413
+     C*                                                                   S01413
+     C           VDIMX     TAG                             *** VDIMX ***  S01413
+     C   12                Z-ADD0         WDIMN  130                      S01413
+     C*                                                                   S01413
+     C           SDIMX     IFEQ BLK14                      IF 1           S01413
+     C                     Z-ADD*ALL'9'   WDIMX                           S01413
+     C                     MOVE WDIMX     ZFIELD                          S01413
+     C                     EXSR ZEDIT                                     S01413
+     C                     MOVE ZFIELD    SDIMX                           S01413
+     C                     END                             END IF 1       S01413
+     C*                                                                   S01413
+     C*  CHECK NUMERIC                                                    S01413
+     C                     MOVE BLK16     ZFIELD                          S01413
+     C                     MOVE SDIMX     ZFIELD                          S01413
+     C                     EXSR ZALIGN                                    S01413
+     C   99                SETON                     23                   S01413
+     C   23      S         ADD  1         S                               S01413
+     C   23                MOVE '022'     ERCD,S                          S01413
+     C   23                GOTO VAMBC                                     S01413
+     C*                                                                   S01413
+     C*  WDIMX WILL BE USED TO UPDATE S/RECCY                             S01413
+     C*                                                                   S01413
+     C                     MOVE ZFIELD    WDIMX                           S01413
+     C*                                                                   S01413
+     C*  IF VALID, FORMAT AMOUNT FOR OUTPUT TO SCREEN                     S01413
+     C*                                                                   S01413
+     C                     EXSR ZEDIT                                     S01413
+     C                     MOVE ZFIELD    SDIMX                           S01413
+     C*                                                                   S01413
+     C           VAMBC     TAG                             *** VAMBC ***  S01413
+     C*                                                                   S01413
+     C           SAMBC     COMP BLK14                    12               S01413
+     C   12                GOTO VAMBS                                     S01413
+     C*                                                                   S01413
+     C*  CHECK NUMERIC                                                    S01413
+     C                     MOVE BLK16     ZFIELD                          S01413
+     C                     MOVE SAMBC     ZFIELD                          S01413
+     C                     EXSR ZALIGN                                    S01413
+     C   99                SETON                     26                   S01413
+     C   26      S         ADD  1         S                               S01413
+     C   26                MOVE '025'     ERCD,S                          S01413
+     C   26                GOTO VAMBS                                     S01413
+     C*                                                                   S01413
+     C*  WAMBC WILL BE USED TO UPDATE S/RECCY                             S01413
+     C*                                                                   S01413
+     C                     MOVE ZFIELD    WAMBC                           S01413
+     C*                                                                   S01413
+     C*  IF VALID, FORMAT AMOUNT FOR OUTPUT TO SCREEN                     S01413
+     C*                                                                   S01413
+     C                     EXSR ZEDIT                                     S01413
+     C                     MOVE ZFIELD    SAMBC                           S01413
+     C*                                                                   S01413
+     C           VAMBS     TAG                             **  VAMBS  TAG S01413
+     C   12                Z-ADD0         WAMBC  130                      S01413
+     C           SAMBS     COMP BLK14                    12               S01413
+     C   12                GOTO VDSMN                                     S01413
+     C*                                                                   S01413
+     C*  CHECK NUMERIC                                                    S01413
+     C                     MOVE BLK16     ZFIELD                          S01413
+     C                     MOVE SAMBS     ZFIELD                          S01413
+     C                     EXSR ZALIGN                                    S01413
+     C   99                SETON                     28                   S01413
+     C   28      S         ADD  1         S                               S01413
+     C   28                MOVE '027'     ERCD,S                          S01413
+     C   28                GOTO VDSMN                                     S01413
+     C*                                                                   S01413
+     C*  WAMBS WILL BE USED TO UPDATE S/RECCY                             S01413
+     C*                                                                   S01413
+     C                     MOVE ZFIELD    WAMBS  130                      S01413
+     C*                                                                   S01413
+     C*  IF VALID, FORMAT AMOUNT FOR OUTPUT TO SCREEN                     S01413
+     C*                                                                   S01413
+     C                     EXSR ZEDIT                                     S01413
+     C                     MOVE ZFIELD    SAMBS                           S01413
+     C*                                                                   S01413
+     C           VDSMN     TAG                             *** VDSMN ***  S01413
+     C*                                                                   S01413
+     C   12                Z-ADD0         WAMBS  130                      173636
+     C           SDSMN     COMP BLK14                    12               S01413
+     C   12                GOTO VDSMX                                     S01413
+     C*                                                                   S01413
+     C*  CHECK NUMERIC                                                    S01413
+     C                     MOVE BLK16     ZFIELD                          S01413
+     C                     MOVE SDSMN     ZFIELD                          S01413
+     C                     EXSR ZALIGN                                    S01413
+     C   99                SETON                     30                   S01413
+     C   30      S         ADD  1         S                               S01413
+     C   30                MOVE '029'     ERCD,S                          S01413
+     C   30                GOTO VDSMX                                     S01413
+     C*                                                                   S01413
+     C*  WDSMN WILL BE USED TO UPDATE S/RECCY                             S01413
+     C*                                                                   S01413
+     C                     MOVE ZFIELD    WDSMN                           S01413
+     C*                                                                   S01413
+     C*  IF VALID, FORMAT AMOUNT FOR OUTPUT TO SCREEN                     S01413
+     C*                                                                   S01413
+     C                     EXSR ZEDIT                                     S01413
+     C                     MOVE ZFIELD    SDSMN                           S01413
+     C*                                                                   S01413
+     C           VDSMX     TAG                             *** VDSMX ***  S01413
+     C   12                Z-ADD0         WDSMN  130                      S01413
+     C*                                                                   S01413
+     C           SDSMX     IFEQ BLK14                      IF 1           S01413
+     C                     Z-ADD*ALL'9'   WDSMX                           S01413
+     C                     MOVE WDSMX     ZFIELD                          S01413
+     C                     EXSR ZEDIT                                     S01413
+     C                     MOVE ZFIELD    SDSMX                           S01413
+     C                     END                             END IF 1       S01413
+     C*                                                                   S01413
+     C*  CHECK NUMERIC                                                    S01413
+     C                     MOVE BLK16     ZFIELD                          S01413
+     C                     MOVE SDSMX     ZFIELD                          S01413
+     C                     EXSR ZALIGN                                    S01413
+     C   99                SETON                     31                   S01413
+     C   31      S         ADD  1         S                               S01413
+     C   31                MOVE '030'     ERCD,S                          S01413
+     C   31                GOTO VINFC                                     S01413
+     C*                                                                   S01413
+     C*  WDSMX WILL BE USED TO UPDATE S/RECCY                             S01413
+     C*                                                                   S01413
+     C                     MOVE ZFIELD    WDSMX                           S01413
+     C*                                                                   S01413
+     C*  IF VALID, FORMAT AMOUNT FOR OUTPUT TO SCREEN                     S01413
+     C*                                                                   S01413
+     C                     EXSR ZEDIT                                     S01413
+     C                     MOVE ZFIELD    SDSMX                           S01413
+     C*                                                                   S01413
+     C           VINFC     TAG                             *** VINFC ***  S01413
+     C*                                                                   S01413
+     C           SINFC     COMP BLK11                    12               S01413
+     C   12                GOTO VMCFC                                     S01413
+     C*                                                                   S01413
+     C*  CHECK NUMERIC                                                    S01413
+     C                     MOVE BLK16     ZFIELD                          S01413
+     C                     MOVE SINFC     ZFIELD                          S01413
+     C                     EXSR ZALIGN                                    S01413
+     C   99                SETON                     24                   S01413
+     C   24      S         ADD  1         S                               S01413
+     C   24                MOVE '023'     ERCD,S                          S01413
+     C   24                GOTO VMCFC                                     S01413
+     C*                                                                   S01413
+     C*  WMCFC WILL BE USED TO UPDATE S/RECCY                             S01413
+     C*                                                                   S01413
+     C                     MOVE ZFIELD    WINFC                           S01413
+     C*                                                                   S01413
+     C*  IF VALID, FORMAT AMOUNT FOR OUTPUT TO SCREEN                     S01413
+     C*                                                                   S01413
+     C                     EXSR ZEDIT                                     S01413
+     C                     MOVE ZFIELD    SINFC                           S01413
+     C*                                                                   S01413
+     C           VMCFC     TAG                             *** VMCFC ***  S01413
+     C   12                Z-ADD0         WINFC                           S01413
+     C*                                                                   S01413
+     C           SMCFC     COMP BLK11                    12               S01413
+     C   12                GOTO VMSFC                                     S01413
+     C*                                                                   S01413
+     C*  CHECK NUMERIC                                                    S01413
+     C                     MOVE BLK16     ZFIELD                          S01413
+     C                     MOVE SMCFC     ZFIELD                          S01413
+     C                     EXSR ZALIGN                                    S01413
+     C   99                SETON                     25                   S01413
+     C   25      S         ADD  1         S                               S01413
+     C   25                MOVE '024'     ERCD,S                          S01413
+     C   25                GOTO VMSFC                                     S01413
+     C*                                                                   S01413
+     C*  WMCFC WILL BE USED TO UPDATE S/RECCY                             S01413
+     C*                                                                   S01413
+     C                     MOVE ZFIELD    WMCFC                           S01413
+     C*                                                                   S01413
+     C*  IF VALID, FORMAT AMOUNT FOR OUTPUT TO SCREEN                     S01413
+     C*                                                                   S01413
+     C                     EXSR ZEDIT                                     S01413
+     C                     MOVE ZFIELD    SMCFC                           S01413
+     C*                                                                   S01413
+     C           VMSFC     TAG                             **  VMSFC  TAG S01413
+     C   12                Z-ADD0         WMCFC                           S01413
+     C           SMSFC     COMP BLK11                    12               S01413
+     C   12                GOTO VDSFC                                     S01413
+     C*                                                                   S01413
+     C*  CHECK NUMERIC                                                    S01413
+     C                     MOVE BLK16     ZFIELD                          S01413
+     C                     MOVE SMSFC     ZFIELD                          S01413
+     C                     EXSR ZALIGN                                    S01413
+     C   99                SETON                     27                   S01413
+     C   27      S         ADD  1         S                               S01413
+     C   27                MOVE '026'     ERCD,S                          S01413
+     C   27                GOTO VDSFC                                     S01413
+     C*                                                                   S01413
+     C*  WMSFC WILL BE USED TO UPDATE S/RECCY                             S01413
+     C*                                                                   S01413
+     C                     MOVE ZFIELD    WMSFC                           S01413
+     C*                                                                   S01413
+     C*  IF VALID, FORMAT AMOUNT FOR OUTPUT TO SCREEN                     S01413
+     C*                                                                   S01413
+     C                     EXSR ZEDIT                                     S01413
+     C                     MOVE ZFIELD    SMSFC                           S01413
+     C*                                                                   S01413
+     C           VDSFC     TAG                             *** VDSFC ***  S01413
+     C   12                Z-ADD0         WMSFC                           S01413
+     C*
+     C           SDSFC     COMP BLK11                    12               S01413
+     C   12                GOTO VFCFC                                     S01413
+     C*                                                                   S01413
+     C*  CHECK NUMERIC                                                    S01413
+     C                     MOVE BLK16     ZFIELD                          S01413
+     C                     MOVE SDSFC     ZFIELD                          S01413
+     C                     EXSR ZALIGN                                    S01413
+     C   99                SETON                     29                   S01413
+     C   29      S         ADD  1         S                               S01413
+     C   29                MOVE '028'     ERCD,S                          S01413
+     C   29                GOTO VFCFC                                     S01413
+     C*                                                                   S01413
+     C*  WDSFC WILL BE USED TO UPDATE S/RECCY                             S01413
+     C*                                                                   S01413
+     C                     MOVE ZFIELD    WDSFC                           S01413
+     C*                                                                   S01413
+     C*  IF VALID, FORMAT AMOUNT FOR OUTPUT TO SCREEN                     S01413
+     C*                                                                   S01413
+     C                     EXSR ZEDIT                                     S01413
+     C                     MOVE ZFIELD    SDSFC                           S01413
+     C*                                                                   S01413
+     C           VFCFC     TAG                             *** VFCFC ***  S01413
+     C   12                Z-ADD0         WDSFC                           S01413
+     C*                                                                   S01413
+     C           SFCFC     COMP BLK11                    12               S01413
+     C   12                GOTO VHORT                                     S01413
+     C*                                                                   S01413
+     C*  CHECK NUMERIC                                                    S01413
+     C                     MOVE BLK16     ZFIELD                          S01413
+     C                     MOVE SFCFC     ZFIELD                          S01413
+     C                     EXSR ZALIGN                                    S01413
+     C   99                SETON                     32                   S01413
+     C   32      S         ADD  1         S                               S01413
+     C   32                MOVE '031'     ERCD,S                          S01413
+     C   32                GOTO VHORT                                     S01413
+     C*                                                                   S01413
+     C*  WFCFC WILL BE USED TO UPDATE S/RECCY                             S01413
+     C*                                                                   S01413
+     C                     MOVE ZFIELD    WFCFC                           S01413
+     C*                                                                   S01413
+     C*  IF VALID, FORMAT AMOUNT FOR OUTPUT TO SCREEN                     S01413
+     C*                                                                   S01413
+     C                     EXSR ZEDIT                                     S01413
+     C                     MOVE ZFIELD    SFCFC                           S01413
+     C*                                                                   S01413
+     C           VHORT     TAG                             *** VHORT ***  S01413
+     C***12******          Z-ADD0         WDSMX  130                S01413173636
+     C   12                Z-ADD0         WFCFC  130                      173636
+     C*                                                                   S01413
+     C                     Z-ADD8         ZADEC                           S01413
+     C                     Z-ADD2         ZADIG                           S01413
+     C*                                                                   S01413
+     C           SHORT     COMP BLK11                    12               S01413
+     C   12                GOTO VACRT                                     S01413
+     C*                                                                   S01413
+     C*  CHECK NUMERIC                                                    S01413
+     C                     MOVE BLK16     ZFIELD                          S01413
+     C                     MOVE SHORT     ZFIELD                          S01413
+     C                     EXSR ZALIGN                                    S01413
+     C   99                SETON                     15                   S01413
+     C   15      S         ADD  1         S                               S01413
+     C   15                MOVE '014'     ERCD,S                          S01413
+     C   15                GOTO VACRT                                     S01413
+     C*                                                                   S01413
+     C*  WHORT WILL BE USED TO UPDATE S/RECCY                             S01413
+     C*                                                                   S01413
+     C                     MOVE ZFIELD    WHORT                           S01413
+     C*                                                                   S01413
+     C*  IF VALID, FORMAT AMOUNT FOR OUTPUT TO SCREEN                     S01413
+     C*                                                                   S01413
+     C                     EXSR ZEDIT                                     S01413
+     C                     MOVE ZFIELD    SHORT                           S01413
+     C*                                                                   S01413
+     C           VACRT     TAG                             *** VACRT ***  S01413
+     C   12                Z-ADD0         WHORT  110                      S01413
+     C*                                                                   S01413
+     C           SACRT     COMP BLK11                    12               S01413
+     C   12                GOTO VDIRT                                     S01413
+     C*                                                                   S01413
+     C*  CHECK NUMERIC                                                    S01413
+     C                     MOVE BLK16     ZFIELD                          S01413
+     C                     MOVE SACRT     ZFIELD                          S01413
+     C                     EXSR ZALIGN                                    S01413
+     C   99                SETON                     18                   S01413
+     C   18      S         ADD  1         S                               S01413
+     C   18                MOVE '017'     ERCD,S                          S01413
+     C   18                GOTO VDIRT                                     S01413
+     C*                                                                   S01413
+     C*  WACRT WILL BE USED TO UPDATE S/RECCY                             S01413
+     C*                                                                   S01413
+     C                     MOVE ZFIELD    WACRT                           S01413
+     C*                                                                   S01413
+     C*  IF VALID, FORMAT AMOUNT FOR OUTPUT TO SCREEN                     S01413
+     C*                                                                   S01413
+     C                     EXSR ZEDIT                                     S01413
+     C                     MOVE ZFIELD    SACRT                           S01413
+     C*                                                                   S01413
+     C           VDIRT     TAG                             **  VDIRT  TAG S01413
+     C   12                Z-ADD0         WACRT  110                      S01413
+     C           SDIRT     COMP BLK11                    12               S01413
+     C   12                GOTO VALSIE                                    S01413
+     C*                                                                   S01413
+     C*  CHECK NUMERIC                                                    S01413
+     C                     MOVE BLK16     ZFIELD                          S01413
+     C                     MOVE SDIRT     ZFIELD                          S01413
+     C                     EXSR ZALIGN                                    S01413
+     C   99                SETON                     21                   S01413
+     C   21      S         ADD  1         S                               S01413
+     C   21                MOVE '020'     ERCD,S                          S01413
+     C   21                GOTO VALSIE                                    S01413
+     C*                                                                   S01413
+     C*  WDIRT WILL BE USED TO UPDATE S/RECCY                             S01413
+     C*                                                                   S01413
+     C                     MOVE ZFIELD    WDIRT                           S01413
+     C*                                                                   S01413
+     C*  IF VALID, FORMAT AMOUNT FOR OUTPUT TO SCREEN                     S01413
+     C*                                                                   S01413
+     C                     EXSR ZEDIT                                     S01413
+     C                     MOVE ZFIELD    SDIRT                           S01413
+     C*                                                                   S01413
+     C           VALSIE    TAG                             **  VALSIE TAG S01413
+     C***12******          Z-ADD0         WFCFC                     S01413173636
+     C   12                Z-ADD0         WDIRT                           173636
+     C** NEW AMOUNT VALIDATION                                            S01413
+     C                     Z-ADD3         ZADEC                           S01413
+     C                     Z-ADD10        ZADIG                           S01413
+     C           1         DO   Y         X       10                      S01413
+     C                     MOVE BLK16     ZFIELD                          S01413
+     C           X         IFEQ 1                                         S01413
+     C           SAMO1     IFEQ *BLANK                                    S01413
+     C                     MOVE '0.000'   SAMO1                           S01413
+     C                     END                                            S01413
+     C                     MOVE SAMO1     ZFIELD                          S01413
+     C                     MOVE SGPC1     TAMO    1                       S01413
+     C                     EXSR ZALIGN                                    S01413
+     C           *IN99     IFEQ '1'                                       S01413
+     C                     SETON                     36                   S01413
+     C                     ELSE                                           S01413
+     C                     MOVE ZFIELD    WAMO1                           S01413
+     C                     EXSR ZEDIT                                     S01413
+     C                     MOVE ZFIELD    SAMO1                           S01413
+     C                     END                                            S01413
+     C                     ELSE                                           S01413
+     C           X         IFEQ 2                                         S01413
+     C           SAMO2     IFEQ *BLANK                                    S01413
+     C                     MOVE '0.000'   SAMO2                           S01413
+     C                     END                                            S01413
+     C                     MOVE SAMO2     ZFIELD                          S01413
+     C                     MOVE SGPC2     TAMO    1                       S01413
+     C                     EXSR ZALIGN                                    S01413
+     C           *IN99     IFEQ '1'                                       S01413
+     C                     SETON                     37                   S01413
+     C                     ELSE                                           S01413
+     C                     MOVE ZFIELD    WAMO2                           S01413
+     C                     EXSR ZEDIT                                     S01413
+     C                     MOVE ZFIELD    SAMO2                           S01413
+     C                     END                                            S01413
+     C                     ELSE                                           S01413
+     C           X         IFEQ 3                                         S01413
+     C           SAMO3     IFEQ *BLANK                                    S01413
+     C                     MOVE '0.000'   SAMO3                           S01413
+     C                     END                                            S01413
+     C                     MOVE SAMO3     ZFIELD                          S01413
+     C                     MOVE SGPC3     TAMO    1                       S01413
+     C                     EXSR ZALIGN                                    S01413
+     C           *IN99     IFEQ '1'                                       S01413
+     C                     SETON                     38                   S01413
+     C                     ELSE                                           S01413
+     C                     MOVE ZFIELD    WAMO3                           S01413
+     C                     EXSR ZEDIT                                     S01413
+     C                     MOVE ZFIELD    SAMO3                           S01413
+     C                     END                                            S01413
+     C                     ELSE                                           S01413
+     C           X         IFEQ 4                                         S01413
+     C           SAMO4     IFEQ *BLANK                                    S01413
+     C                     MOVE '0.000'   SAMO4                           S01413
+     C                     END                                            S01413
+     C                     MOVE SAMO4     ZFIELD                          S01413
+     C                     MOVE SGPC4     TAMO    1                       S01413
+     C                     EXSR ZALIGN                                    S01413
+     C           *IN99     IFEQ '1'                                       S01413
+     C                     SETON                     39                   S01413
+     C                     ELSE                                           S01413
+     C                     MOVE ZFIELD    WAMO4                           S01413
+     C                     EXSR ZEDIT                                     S01413
+     C                     MOVE ZFIELD    SAMO4                           S01413
+     C                     END                                            S01413
+     C                     ELSE                                           S01413
+     C           X         IFEQ 5                                         S01413
+     C           SAMO5     IFEQ *BLANK                                    S01413
+     C                     MOVE '0.000'   SAMO5                           S01413
+     C                     END                                            S01413
+     C                     MOVE SAMO5     ZFIELD                          S01413
+     C                     MOVE SGPC5     TAMO    1                       S01413
+     C                     EXSR ZALIGN                                    S01413
+     C           *IN99     IFEQ '1'                                       S01413
+     C                     SETON                     40                   S01413
+     C                     ELSE                                           S01413
+     C                     MOVE ZFIELD    WAMO5                           S01413
+     C                     EXSR ZEDIT                                     S01413
+     C                     MOVE ZFIELD    SAMO5                           S01413
+     C                     END                                            S01413
+     C                     ELSE                                           S01413
+     C           X         IFEQ 6                                         S01413
+     C           SAMO6     IFEQ *BLANK                                    S01413
+     C                     MOVE '0.000'   SAMO6                           S01413
+     C                     END                                            S01413
+     C                     MOVE SAMO6     ZFIELD                          S01413
+     C                     MOVE SGPC6     TAMO    1                       S01413
+     C                     EXSR ZALIGN                                    S01413
+     C           *IN99     IFEQ '1'                                       S01413
+     C                     SETON                     41                   S01413
+     C                     ELSE                                           S01413
+     C                     MOVE ZFIELD    WAMO6                           S01413
+     C                     EXSR ZEDIT                                     S01413
+     C                     MOVE ZFIELD    SAMO6                           S01413
+     C                     END                                            S01413
+     C                     ELSE                                           S01413
+     C           X         IFEQ 7                                         S01413
+     C           SAMO7     IFEQ *BLANK                                    S01413
+     C                     MOVE '0.000'   SAMO7                           S01413
+     C                     END                                            S01413
+     C                     MOVE SAMO7     ZFIELD                          S01413
+     C                     MOVE SGPC7     TAMO    1                       S01413
+     C                     EXSR ZALIGN                                    S01413
+     C           *IN99     IFEQ '1'                                       S01413
+     C                     SETON                     42                   S01413
+     C                     ELSE                                           S01413
+     C                     MOVE ZFIELD    WAMO7                           S01413
+     C                     EXSR ZEDIT                                     S01413
+     C                     MOVE ZFIELD    SAMO7                           S01413
+     C                     END                                            S01413
+     C                     ELSE                                           S01413
+     C           X         IFEQ 8                                         S01413
+     C           SAMO8     IFEQ *BLANK                                    S01413
+     C                     MOVE '0.000'   SAMO8                           S01413
+     C                     END                                            S01413
+     C                     MOVE SAMO8     ZFIELD                          S01413
+     C                     MOVE SGPC8     TAMO    1                       S01413
+     C                     EXSR ZALIGN                                    S01413
+     C           *IN99     IFEQ '1'                                       S01413
+     C                     SETON                     43                   S01413
+     C                     ELSE                                           S01413
+     C                     MOVE ZFIELD    WAMO8                           S01413
+     C                     EXSR ZEDIT                                     S01413
+     C                     MOVE ZFIELD    SAMO8                           S01413
+     C                     END                                            S01413
+     C                     END                                            S01413
+     C                     END                                            S01413
+     C                     END                                            S01413
+     C                     END                                            S01413
+     C                     END                                            S01413
+     C                     END                                            S01413
+     C                     END                                            S01413
+     C                     END                                            S01413
+     C           *IN99     IFEQ '1'                                       S01413
+     C                     EXSR ERROR                                     S01413
+     C                     END                                            S01413
+     C                     END                                            S01413
+     C**                                                                  S01413
+     C** If CDE002 is present, validate DR & CR Interest Margin fields    CDE002
+     C** - if entered they must be 4 int. 7 dec. numerics.                CDE002
+     C           CDE002    IFEQ 'Y'                                       CDE002
+     C*                                                                   CDE002
+     C                     MOVE *BLANKS   ZFIELD                          CDE002
+     C                     MOVE SDRMG     ZFIELD                          CDE002
+     C                     Z-ADD4         ZADIG                           CDE002
+     C                     Z-ADD7         ZADEC                           CDE002
+     C                     EXSR ZALIGN                                    CDE002
+     C           *IN99     IFEQ *ON                                       CDE002
+     C                     MOVE *ON       *IN52                           CDE002
+     C                     ADD  1         S                               CDE002
+     C                     MOVE '121'     ERCD,S                          CDE002
+     C*                                                                   CDE002
+     C*  If screen field valid, W#DRMG will be used to update RECCY       CDE002
+     C                     ELSE                                           CDE002
+     C                     MOVE ZFIELD    W#DRMG 117P                     CDE002
+     C                     ENDIF                                          CDE002
+     C*                                                                   CDE002
+     C                     MOVE *BLANKS   ZFIELD                          CDE002
+     C                     MOVE SCRMG     ZFIELD                          CDE002
+     C                     Z-ADD4         ZADIG                           CDE002
+     C                     Z-ADD7         ZADEC                           CDE002
+     C                     EXSR ZALIGN                                    CDE002
+     C           *IN99     IFEQ *ON                                       CDE002
+     C                     MOVE *ON       *IN53                           CDE002
+     C                     ADD  1         S                               CDE002
+     C                     MOVE '122'     ERCD,S                          CDE002
+     C*                                                                   CDE002
+     C*  If screen field valid, W#CRMG will be used to update RECCY       CDE002
+     C                     ELSE                                           CDE002
+     C                     MOVE ZFIELD    W#CRMG 117P                     CDE002
+     C                     ENDIF                                          CDE002
+     C*                                                                   CDE002
+     C*                                                                   CDE002
+     C                     ENDIF                                          CDE002
+     C*                                                                   CDE002
+     C** Set up error messages                                            173636
+     C*                                                                   173636
+     C                     MOVEAERCD,1    ERCD1                           173636
+     C*                                                                   173636
+     C*                                                                   BHF701
+0410 C                     ENDSR                                       AG RE0242
+     C**                                                                  RE0242
+0435 C********************************************************************RE0242
+0436 C**                                                                  RE0242
+0437 C**   SUBR TO UPDATE WORKSTATION TRANSACTION DATA STRUCTURE          RE0242
+0438 C**                                                                  RE0242
+0439 C           WTRUPD    BEGSR                           ***  WTRUPD ***RE0242
+0901 C**                                                                  RE0242
+0440 C                     MOVE 'D'       WRECI                           RE0242
+0442 C                     MOVE SCCY      WCCY                            RE0242
+0443 C                     MOVE 'D'       WRECT                           RE0242
+0444 C                     Z-ADD0         WTNLU                           RE0242
+0445 C                     MOVE LRUND     WORED                           RE0242
+0446 C                     MOVE LRUND     WLCD                            RE0242
+0444 C                     MOVE 'I'       WCHTP                           RE0242
+0444 C                     Z-ADD0         WHASH                           RE0242
+0445 C                     MOVE 'D'       W401                            RE0242
+0446 C                     Z-ADD0         W404                            RE0242
+1445 C                     Z-ADD0         W407                            RE0242
+0446 C                     MOVE WSID2     WWSID2                          RE0242
+0445 C                     MOVE LFILE     WFILE                           RE0242
+0446 C                     MOVE WLOGP     WLOGP                           RE0242
+0445 C                     MOVE '1'       WIND1                           RE0242
+0446 C                     MOVE 'I'       WRECJ                           RE0242
+0446 C                     MOVE SCN256    WCN256                          RE0242
+     C                     MOVE SCN060    WCN060                          S01413
+     C                     MOVE SCN080    WCN080                          S01413
+     C                     MOVE SCN100    WCN100                          S01413
+     C                     MOVE SCN120    WCN120                          S01413
+     C                     MOVE SCN130    WCN130                          S01413
+     C                     Z-ADDW#DRMG    WDRMG                           CDE002
+     C                     Z-ADDW#CRMG    WCRMG                           CDE002
+     C                     Z-ADD*ZEROS    WCMNR                           173636
+     C                     Z-ADD*ZEROS    WCMNP                           173636
+     C                     Z-ADD*ZEROS    WCMNV                           173636
+     C                     Z-ADD*ZEROS    WCADR                           173636
+     C                     Z-ADD*ZEROS    WCADP                           173636
+     C                     Z-ADD*ZEROS    WCADV                           173636
+     C*                                                                   RE0242
+0447 C                     ENDSR                                          RE0242
+0411 C********************************************************************RE0242
+0817 C*****SUBR.***TO*CHAIN*TO*TABLE*FILE*                                S01194
+0818 C**********                                                          S01194
+0819 C********** TABCHN    BEGSR                           ***  TABCHN ***S01194
+0820 C**********                                                          S01194
+0821 C**********           SETOF                       1199               S01194
+0822 C**********                                                          S01194
+0823 C********** TABKEY    CHAINTABLE                99                   S01194
+0824 C**********                                                          S01194
+0825 C**********           ENDSR                                          S01194
+     C********************************************************************
+     C**   ZALIGN SR. TO VALIDATE AND RIGHT-ALIGN NUMERIC FIELDS.
+     C**
+     C           ZALIGN    BEGSR                           *** ZALIGN ***
+     C**
+     C                     SETOF                     929399
+     C**
+     C**   SAVE INPUT FIELD IN ARRAY, ZA1.
+     C                     MOVEAZFIELD    ZA1
+     C**
+     C**   CALCULATION TO DEFINE NUMBER STRUCTURE CONTROL FIELDS.
+     C                     Z-ADDZADIG     ZADIG   20
+     C                     Z-ADDZADEC     ZADEC   10
+     C**
+     C**   CALCULATIONS TO DEFINE/CLEAR FIELDS.
+     C                     MOVE ' '       ZA2
+     C                     MOVEAZA2       ZFIELD 16
+     C                     Z-ADD0         ZX      20
+     C                     Z-ADD0         ZY      20
+     C**
+     C**   ENSURE REQUIRED STRUCTURE OF FIELD IS VALID.
+     C           ZADIG     ADD  ZADEC     ZZ      20
+     C           ZZ        COMP 15                   99
+     C   99                GOTO ZAEND
+     C**
+     C**   LOOP TO FIND DECIMAL POINT, BLANKS AND CHARACTERS.
+     C           ZATAG1    TAG                             ** ZATAG1 TAG *
+     C           ZX        ADD  1         ZX
+     C**
+     C**   CHECK FOR DECIMAL POINT. ERROR IF SECOND DECIMAL POINT.
+     C           ZA1,ZX    COMP '.'                      90
+     C   90 93             SETON                     99
+     C   99                GOTO ZAEND
+     C**
+     C**
+     C**   CHECK FOR 'M' CONSTANT. ERROR IF NOT LAST CHARACTER ENTERED
+     C           ZA1,ZX    COMP 'M'                      96
+     C   96                DO
+     C           ZX        COMP 15                   99  99
+     C   99                GOTO ZAEND
+     C           ZX        ADD  1         ZX
+     C           ZA1,ZX    COMP ' '                  9999
+     C   99                GOTO ZAEND
+     C           ZX        SUB  1         ZX
+     C           ZX        COMP 9                    99
+     C   99                GOTO ZAEND
+     C                     END
+     C**
+     C**   CHECK FOR 'T' CONSTANT. ERROR IF NOT LAST CHARACTER ENTERED
+     C           ZA1,ZX    COMP 'T'                      97
+     C   97                DO
+     C           ZX        COMP 15                   99  99
+     C   99                GOTO ZAEND
+     C           ZX        ADD  1         ZX
+     C           ZA1,ZX    COMP ' '                  9999
+     C   99                GOTO ZAEND
+     C           ZX        SUB  1         ZX
+     C           ZX        COMP 12                   99
+     C   99                GOTO ZAEND
+     C                     END
+     C**
+     C**   CLEAR ALPHAMERIC CONSTANT FROM ZA1
+     C   96
+     COR 97                MOVE ' '       ZA1,ZX
+     C**
+     C**   CHECK FOR BLANKS. BYPASS FOR FIRST BLANK AFTER A DIGIT.
+     C           ZA1,ZX    COMP ' '                      91
+     C   91 92             GOTO ZATAG2
+     C**
+     C**   CHECK FOR NUMERIC, IF NOT '.' OR ' '.
+     C  N90N91   ZA1,ZX    COMP '0'                    99
+     C  N90N91N99ZA1,ZX    COMP '9'                  99
+     C   99                GOTO ZAEND                      NOT NUMERIC
+     C**
+     C**   STORE DIGITS IN ARRAY AND HOW MANY.
+     C**   ZY, TOTAL OF DIGITS IN THE INPUT FIELD.
+     C**   ZZ, TOTAL OF DIGITS TO THE LEFT OF DECIMAL POINT.
+     C  N90N91   ZY        ADD  1         ZY         92
+     C  N90N91             MOVE ZA1,ZX    ZA2,ZY
+     C   90                Z-ADDZY        ZZ         93  93
+     C**
+     C           ZX        COMP 16                     94  CHECK IF ALL
+     C   94                GOTO ZATAG1
+     C**
+     C           ZATAG2    TAG                             ** ZATAG2 TAG *
+     C**
+     C**   IF 'M' SPECIFIED, MULTIPLY ZA1 BY 1 MILLION
+     C   96      ZZ        ADD  6         ZZ
+     C**
+     C**   IF 'T' SPECIFIED, MULTIPLY ZA1 BY 1 THOUSAND
+     C   97      ZZ        ADD  3         ZZ
+     C**
+     C**   FILL IN ZEROS IN ANY BLANKS LEFT OF DECIMAL POINT
+     C   96 93
+     COR 97 93   ZZ        DOWGTZY
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C                     END
+     C**
+     C**   IF CONSTANT SPECIFIED WITH NO DECIMAL POINT ZEROISE BLANKS
+     C   96N93             DO   6
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C                     END
+     C**
+     C   97N93             DO   3
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C                     END
+     C**
+     C**   IF NO DECIMAL POINT FOUND, SET TOTAL FIELD ZZ.
+     C  N93                Z-ADDZY        ZZ
+     C**
+     C**   CHECK FOR EMBEDDED BLANKS.
+     C   91 92             MOVEAZA1,ZX    ZFIELD
+     C   91 92   ZFIELD    COMP ' '                  9999
+     C   99                GOTO ZAEND                      EMBEDDED BLANK
+     C**
+     C**   ENSURE THAT NUMBER OF DIGITS ENTERED EITHER SIDE
+     C**   OF DECIMAL POINT ARE NOT MORE THAN ALLOWED.
+     C           ZZ        COMP ZADIG                99
+     C           ZY        SUB  ZZ        ZX
+     C  N99      ZADEC     SUB  ZX        ZX           9995
+     C   99                GOTO ZAEND
+     C   95                GOTO ZATAG4                     NO TRAILING
+     C**                                                   BLANKS.
+     C**   FILL THE TRAILING BLANKS WITH ZEROS.
+     C           ZY        ADD  ZX        ZZ
+     C           ZATAG3    TAG                             ** ZATAG3 TAG *
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C           ZY        COMP ZZ                     94
+     C   94                GOTO ZATAG3
+     C**
+     C**   RIGHT-ALIGN THE VALUE BY MOVING BACK TO ARRAY, ZA1.
+     C           ZATAG4    TAG                             ** ZATAG4 TAG *
+     C                     MOVE '0'       ZA1
+     C                     Z-ADD16        ZX
+     C           ZATAG5    TAG                             ** ZATAG5 TAG *
+     C           ZY        COMP 0                        94
+     C   94                GOTO ZATAG6
+     C                     MOVE ZA2,ZY    ZA1,ZX
+     C           ZY        SUB  1         ZY
+     C           ZX        SUB  1         ZX
+     C                     GOTO ZATAG5
+     C           ZATAG6    TAG                             ** ZATAG6 TAG *
+     C**
+     C**   MOVE VALIDATED AND RIGHT-ALIGNED NUMBER BACK INTO ZFIELD.
+     C                     MOVEAZA1       ZFIELD
+     C**
+     C                     SETOF                     9697
+     C**
+     C           ZAEND     ENDSR                           * ZAEND ENDSR *
+     C**
+     C**
+     C********************************************************************
+0535 C**                                                                  RE0242
+0536 C**                                                                  RE0242
+0537 C********************************************************************RE0242
+0538 C**                                                                 *RE0242
+0539 C**  ZEDIT SUBROUTINE TO INSERT A DECIMAL POINT INTO A NUMERIC FIELD*RE0242
+0540 C**  AND TO BLANK OUT LEADING ZEROES.                               *RE0242
+0541 C**      INPUT FIELDS:   ZFIELD 16/                                 *RE0242
+0542 C*                       ZADEC                                      *RE0242
+0543 C*                       ZADIG - NOT ACTUALLY USED                  *RE0242
+0544 C*                                                                  *RE0242
+0545 C*       ARRAYS    ZA1 ,ZA2   BOTH 16 ELEMENTS, EACH ONE BYTE LONG. *RE0242
+0546 C*                                                                  *RE0242
+0547 C*       OUTPUT FIELD   ZFIELD                                      *RE0242
+0548 C*                                                                  *RE0242
+0549 C           ZEDIT     BEGSR                           ***  ZEDIT  ***RE0242
+0550 C**                                                                 *RE0242
+0551 C*       SET UP WORK FIELDS                                         *RE0242
+0552 C**                                                                 *RE0242
+0553 C                     Z-ADDZADIG     ZADIG   20                     *RE0242
+0554 C                     Z-ADDZADEC     ZADEC   10                     *RE0242
+0555 C*                                                                  *RE0242
+0556 C                     MOVEA' '       ZA1                            *RE0242
+0557 C                     MOVEA' '       ZA2                            *RE0242
+0558 C*                                                                  *RE0242
+0559 C                     Z-ADD16        Z1      20                     *RE0242
+0560 C                     Z-ADD16        Z2      20                     *RE0242
+0561 C*                                                                  *RE0242
+0562 C           16        SUB  ZADEC     ZADEC2  20                     *RE0242
+0563 C*                                                                  *RE0242
+0564 C*                                                                  *RE0242
+0565 C                     MOVEAZFIELD    ZA1                            *RE0242
+0566 C*                                                                  *RE0242
+0567 C*       CHECK TO SEE IF THERE ARE ANY DECIMAL PLACES               *RE0242
+0568 C*                                                                  *RE0242
+0569 C           ZADEC     COMP 0                        91              *RE0242
+0570 C   91                GOTO ZT20                                     *RE0242
+0571 C**                                                                 *RE0242
+0572 C           ZT10      TAG                             ** ZT10 TAG ***RE0242
+0573 C**                                                                 *RE0242
+0574 C*                                                                  *RE0242
+0575 C*       SET UP DECIMALS                                            *RE0242
+0576 C*                                                                  *RE0242
+0577 C                     MOVE ZA1,Z1    ZA2,Z2                         *RE0242
+0578 C           Z1        SUB  1         Z1                             *RE0242
+0579 C           Z2        SUB  1         Z2                             *RE0242
+0580 C*                                                                  *RE0242
+0581 C           Z2        COMP 0                        90              *RE0242
+0582 C   90                GOTO ZT30                                     *RE0242
+0583 C*                                                                  *RE0242
+0584 C*       CHECK IF END OF DECIMALS                                   *RE0242
+0585 C**                                                                 *RE0242
+0586 C           Z2        COMP ZADEC2               90                  *RE0242
+0587 C   90                GOTO ZT10                                     *RE0242
+0588 C*                                                                  *RE0242
+0589 C**                                                                 *RE0242
+0590 C*       PUT IN DECIMAL PLACE                                       *RE0242
+0591 C*                                                                  *RE0242
+0592 C                     MOVE '.'       ZA2,Z2                         *RE0242
+0593 C           Z2        SUB  1         Z2                             *RE0242
+0594 C*                                                                  *RE0242
+0595 C           ZT20      TAG                             ** ZT20 TAG ***RE0242
+0596 C*                                                                  *RE0242
+0597 C*       SET UP INTEGERS                                            *RE0242
+0598 C*                                                                  *RE0242
+0599 C                     MOVE ZA1,Z1    ZA2,Z2                         *RE0242
+0600 C           Z1        SUB  1         Z1                             *RE0242
+0601 C           Z2        SUB  1         Z2                             *RE0242
+0602 C**                                                                 *RE0242
+0603 C           Z2        COMP 0                    90                  *RE0242
+0604 C   90                GOTO ZT20                                     *RE0242
+0605 C*                                                                  *RE0242
+0606 C*       PUT IN LEADING BLANKS                                      *RE0242
+0607 C*                                                                  *RE0242
+0608 C           ZT30      TAG                             ** ZT30 TAG ***RE0242
+0609 C**                                                                 *RE0242
+0610 C                     Z-ADD1         Z2                             *RE0242
+0611 C**                                                                 *RE0242
+0612 C           ZT40      TAG                             ** ZT40 TAG ***RE0242
+0613 C*                                                                  *RE0242
+0614 C           ZA2,Z2    COMP '0'                  9090                *RE0242
+0615 C   90      ZA2,Z2    COMP ' '                  9090                *RE0242
+0616 C*                                                                  *RE0242
+0617 C   90                GOTO ZT50                                     *RE0242
+0618 C*                                                                  *RE0242
+0619 C                     MOVE ' '       ZA2,Z2                         *RE0242
+0620 C           Z2        ADD  1         Z2                             *RE0242
+0621 C*                                                                  *RE0242
+0622 C           Z2        COMP 16                     90                *RE0242
+0623 C   90                GOTO ZT40                                     *RE0242
+0624 C*                                                                  *RE0242
+0625 C*       IF NO INTEGERS PUT IN LEADING ZERO                         *RE0242
+0626 C*                                                                  *RE0242
+0627 C           ZT50      TAG                             ** ZT50 TAG ***RE0242
+0628 C*                                                                  *RE0242
+0629 C                     Z-ADDZADEC2    Z2                             *RE0242
+0630 C  N91      Z2        SUB  1         Z2                             *RE0242
+0631 C           ZA2,Z2    COMP ' '                      90              *RE0242
+0632 C   90                MOVE '0'       ZA2,Z2                         *RE0242
+0633 C*                                                                  *RE0242
+0634 C*                                                                  *RE0242
+0635 C*       SET UP OUTPUT FIELD                                         RE0242
+0636 C*                                                                  *RE0242
+0637 C           ZT60      TAG                             ** ZT60 TAG ***RE0242
+0638 C*                                                                  *RE0242
+0639 C                     MOVEAZA2       ZFIELD 16                      *RE0242
+0640 C**                                                                 *RE0242
+0641 C           ZEND      ENDSR                           ** ZEND **    *RE0242
+0642 C*                                                                  *RE0242
+0643 C********************************************************************RE0242
+     C**         ERROR HANDLING FOR MIMIMUM INTEREST AMOUNT
+     C*****************************************************************
+     C           ERROR     BEGSR                           ** ERROR SR ** S01413
+     C           S         ADD  1         S                               S01413
+     C           TAMO      IFEQ '1'                                       S01413
+     C                     MOVE '036'     ERCD,S                          S01413
+     C                     ELSE                                           S01413
+     C           TAMO      IFEQ '2'                                       S01413
+     C                     MOVE '037'     ERCD,S                          S01413
+     C                     ELSE                                           S01413
+     C           TAMO      IFEQ '3'                                       S01413
+     C                     MOVE '038'     ERCD,S                          S01413
+     C                     ELSE                                           S01413
+     C           TAMO      IFEQ '4'                                       S01413
+     C                     MOVE '039'     ERCD,S                          S01413
+     C                     ELSE                                           S01413
+     C           TAMO      IFEQ '5'                                       S01413
+     C                     MOVE '040'     ERCD,S                          S01413
+     C                     ELSE                                           S01413
+     C           TAMO      IFEQ '6'                                       S01413
+     C                     MOVE '041'     ERCD,S                          S01413
+     C                     ELSE                                           S01413
+     C           TAMO      IFEQ '7'                                       S01413
+     C                     MOVE '042'     ERCD,S                          S01413
+     C                     ELSE                                           S01413
+     C           TAMO      IFEQ '8'                                       S01413
+     C                     MOVE '043'     ERCD,S                          S01413
+     C                     END                                            S01413
+     C                     END                                            S01413
+     C                     END                                            S01413
+     C                     END                                            S01413
+     C                     END                                            S01413
+     C                     END                                            S01413
+     C                     END                                            S01413
+     C                     END                                            S01413
+     C                     ENDSR                                          S01413
+     C*****************************************************************   S01413
+     C********************************************************************CDE002
+     C*                                                                   CDE002
+     C* *PSSR  --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS         CDE002
+     C*                                                                   CDE002
+     C* CALLED FROM: AFTER ABNORNAL OPERATION OCCURS                      CDE002
+     C*                                                                   CDE002
+     C* CALLS: NOTHING                                                    CDE002
+     C*                                                                   CDE002
+     C********************************************************************CDE002
+     C*                                                                   CDE002
+     C           *PSSR     BEGSR                           ** *PSSR **    CDE002
+     C*                                                                   CDE002
+     C           @RUN      IFEQ *BLANKS                                   CDE002
+     C                     MOVE 'Y'       @RUN    1                       CDE002
+     C                     DUMP                                           CDE002
+     C                     ENDIF                                          CDE002
+     C*                                                                   CDE002
+     C                     ENDSR                                          CDE002
+     C****************************************************************    CDE002
+     C/EJECT
+0644 O*  WORKSTATION - INITIAL SCREEN OUTPUT                              RE0242
+0645 O*                                                                   RE0242
+0646 ORE0240FME        81                                                 RE0242
+0647 O                                   K8 'RE0240F1'                    RE0242
+0648 O                         SCN30     30                               RE0242
+0649 O                         SID        9                               RE0242
+0650 O                         SPID      15                               RE0242
+0651 O                         WTIME     23 '  .  .  '                    RE0242
+0652 O*  BLANK OUT KEY/ACTION CODE FOR F12 - REMOVED IN STANDARD PROG     RE0242
+0653 O                 KL      BLK04     30                               RE0242
+0654 O*  ERROR FIELDS                                                     RE0242
+0655 O                         ERMSG    109                               RE0242
+0656 O***********              ERCD     188                               S01413
+     O                         ERCD1    188                               S01413
+     O                         ERCD2    267                               S01413
+0657 O*                                                                   RE0242
+0658 O*  WORKSTATION - INSERT SCREEN OUTPUT                               RE0242
+0659 O*                                                                   RE0242
+0660 O        E        82                                                 RE0242
+0661 O                                   K8 'RE0240F2'                    RE0242
+     O                         SCN30     30                               S01413
+     O                         SCNXXX   217                               S01413
+     O                         SCN080   417                               S01413
+     O                         SCN100   617                               S01413
+     O                         SCN120   817                               S01413
+     O                         SCN130   893                               S01413
+0662 O***********              SCN256   256                               S01413
+0663 O                         SID        9                               RE0242
+0664 O                         SPID      15                               RE0242
+0665 O                         WTIME     23 '  .  .  '                    RE0242
+0666 O                         SCCNM     44                               RE0242
+0667 O*  FIELDS WHICH HAVE BEEN REFORMATED IF VALID                       RE0242
+0668 O***********              SMIDC     58                               S01413
+0669 O***********              SMADC     72                               S01413
+0670 O***********              SMICC     86                               S01413
+0671 O***********              SMACC    100                               S01413
+     O                         SMIDC     75                               S01413
+     O                         SMADC     89                               S01413
+     O                         SMICC    103                               S01413
+     O                         SMACC    117                               S01413
+     O                         SHORT    128                               S01413
+     O                         SHOMN    142                               S01413
+     O                         SHOMX    156                               S01413
+     O                         SACRT    167                               S01413
+     O                         SACMN    181                               S01413
+     O                         SACMX    195                               S01413
+     O                         SDIRT    206                               S01413
+     O                         SDIMN    220                               S01413
+     O                         SDIMX    234                               S01413
+     O                         SINFC    248                               S01413
+     O                         SMCFC    262                               S01413
+     O                         SAMBC    276                               S01413
+     O                         SMSFC    290                               S01413
+     O                         SAMBS    304                               S01413
+     O                         SDSFC    318                               S01413
+     O                         SDSMN    332                               S01413
+     O                         SDSMX    346                               S01413
+     O                         SFCFC    360                               S01413
+     O* FOLLOWING FIELDS ADDED                                            S01413
+     O                         SGPC1    361                               S01413
+     O                         SGPN1    383                               S01413
+     O                         SAMO1    397                               S01413
+     O                         SGPC2    398                               S01413
+     O                         SGPN2    420                               S01413
+     O                         SAMO2    434                               S01413
+     O                         SGPC3    435                               S01413
+     O                         SGPN3    457                               S01413
+     O                         SAMO3    471                               S01413
+     O                         SGPC4    472                               S01413
+     O                         SGPN4    494                               S01413
+     O                         SAMO4    508                               S01413
+     O                         SGPC5    509                               S01413
+     O                         SGPN5    531                               S01413
+     O                         SAMO5    545                               S01413
+     O                         SGPC6    546                               S01413
+     O                         SGPN6    568                               S01413
+     O                         SAMO6    582                               S01413
+     O                         SGPC7    583                               S01413
+     O                         SGPN7    605                               S01413
+     O                         SAMO7    619                               S01413
+     O                         SGPC8    620                               S01413
+     O                         SGPN8    642                               S01413
+     O                         SAMO8    656                               S01413
+     O                         SDRMG    668                               CDE002
+     O                         SCRMG    680                               CDE002
+     O                         ERMSG    759                               CDE002
+     O                         ERCD1    838                               CDE002
+     O                         ERCD2    917                               CDE002
+     O***********              ERMSG    735                         S01413CDE002
+     O***********              ERCD1    814                         S01413CDE002
+     O***********              ERCD2    893                         S01413CDE002
+0672 O*  ERROR FIELDS                                                     RE0242
+0673 O***********              ERMSG    179                               S01413
+0674 O***********              ERCD     258                               S01413
+**   ERROR MESSAGES
+F10 KEY NOT ALLOWED NOW
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

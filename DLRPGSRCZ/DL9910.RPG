@@ -1,0 +1,138 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('DL Consolidated Deal Amendments Extract')              *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL9910 - Consolidated Deal Amendments Extract                *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *                                                               *
+      *  Last Amend No. CGL165             Date 17Feb15               *
+      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER054             Date 07Apr09               *
+      *                 CER040  *CREATE    Date 19May08               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER054 - German Features - Church Tax (Recompile)            *
+      *  CER040 - Consolidated MM Deal Confirmation Correspondence    *
+      *           (upgFGE097)                                         *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Midas DL DEAL Amendments INDEX - Detail
+      *
+     FDAINDDL IF  E                    DISK
+      *
+      ** Midas DL Deals file
+      *
+     FDEALS   IF  E           K        DISK
+     F            DEALSDAF                          KIGNORE
+     F            DEALSDBF                          KIGNORE
+     F            DEALSDGF                          KIGNORE
+     F            DEALSDEF                          KIGNORE
+     F            DEALSDFF                          KIGNORE
+      *
+      ** Cons Deal Amendments - Extract
+      *
+     FDLDABRPDUF  E                    DISK                      A
+      *
+      *****************************************************************
+     F/EJECT
+      *****************************************************************
+      *
+      ** DEALSDC
+      *
+     IDEALSDCF
+     I              RCDT                            DLRCDT
+     I              VDAT                            DLVDAT
+     I              DASN                            DLDASN
+      *
+      ** DAINDDL
+      *
+     IDTRIEPHF
+     I              BRCA                            DABRCA
+      *
+      ** Local data area
+      *
+     ILDA         DS                            256
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      *****************************************************************
+     I/EJECT
+      *****************************************************************
+      *
+      ** Initialisation
+      *
+     C                     READ DLDABRPD                 03
+     C                     MOVE *BLANKS   ZZ015
+     C                     MOVEL'DL9910  'DBPGM
+      *
+      ** Define Local Data Area
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Initial Read
+     C                     READ DAINDDL                  01
+     C*
+     C           *IN01     IFEQ '1'
+     C                     ELSE
+      *
+      ** Records on File
+      *
+     C           *IN01     DOWEQ'0'
+      *
+     C                     MOVE RECI      FRECI
+     C                     MOVE RCDT      FRCDT
+     C                     MOVE DLNO      FDLNO
+     C                     MOVE VDAT      FVDAT
+     C                     MOVE DASN      FDASN
+     C                     MOVE CHTP      FCHTP
+     C                     MOVE CNRQ      FCNRQ
+     C                     MOVE CNPR      FCNPR
+      *
+     C           DLNO      CHAINDEALS                02
+     C           *IN02     IFEQ '1'
+      *
+      ** If no record found, data base error
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DEALSDC 'DBFILE
+     C                     MOVELDLNO      DBKEY
+     C                     MOVE '001'     DBASE
+      *
+      ** Release the LDA
+      *
+     C                     OUT  LDA
+     C                     SETON                     U7U8LR
+     C                     DUMP
+      *
+     C                     ELSE
+     C                     MOVE BRCA      FBRCA
+     C                     END
+      *
+     C                     WRITEDLDABRD0
+     C                     READ DAINDDL                  01
+     C                     END
+      *
+     C                     END
+      *
+      ** Exit program
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *

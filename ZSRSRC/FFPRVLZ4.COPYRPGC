@@ -1,0 +1,432 @@
+     C****************************************************************
+     C**                                                             *
+     C**  SR:FFPRVL   - VALIDATES A PRICE IN SCREEN FORMAT           *
+     C******************(*12**A*)*AND*IN*DOING*SO*CONVERTS*IT*********    CFF004
+     C******************INTO*ITS*EQUIVALENT*FILE*FORMAT*(*11,7P*)*****    CFF004
+     C**                ( 16  A ) AND IN DOING SO CONVERTS IT        *    CFF004
+     C**                INTO ITS EQUIVALENT FILE FORMAT ( 15,8P )    *    CFF004
+     C**                                                             *
+     C****INPUTS******-*FFSPRC*(12**A)*PRICE*(*SCREEN*FORMAT*)********    CFF004
+     C**  INPUTS      - FFSPRC (16  A) PRICE ( SCREEN FORMAT )       *    CFF004
+     C**                FFTKDM  (3,0P) TICKS DENOMINATOR             *
+     C******************FFMNPF*(11,7P)*MINIMUM*PRICE*FLUCTUATION******    CFF004
+     C**                FFMNPF (15,8P) MINIMUM PRICE FLUCTUATION     *    CFF004
+     C****OUTPUTS*****-*FFPRIC*(11,7P)*PRICE*(*FILE*FORMAT*)**********    CFF004
+     C**  OUTPUTS     - FFPRIC (15,8P) PRICE ( FILE FORMAT )         *    CFF004
+     C**                *IN89    (1A)  ERROR IND. (ON IF INVALID)    *
+     C**                                                             *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *  Last Amend No. CFF006             Date 28Nov00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CFF004             Date 22Aug96               *
+      *                 080988             Date 11Jan95               *
+     C*                                                              *
+     C*--------------------------------------------------------------*
+     C*                                                              *
+      *  CFF006 - Fractional Ticks Enhancement.                       *
+     C*   CFF004  -  Increase in size of Price Fields                *
+     C*   080988  -  Price format Delimiter validation extended to   *
+     C*              check for no '.' if Tick Denominator is not 100 *
+     C*                                                              *
+     C****************************************************************
+     C**
+     C           FFPRVL    BEGSR                           ** FFPRVL SR **
+     C**
+     C**    DEFINE INPUT FIELDS
+     C**
+     C***********          MOVE FFSPRC    FFSPRC 12                       CFF004
+     C                     MOVE FFSPRC    FFSPRC 16                       CFF004
+     C                     Z-ADDFFTKDM    FFTKDM  30
+     C***********          Z-ADDFFMNPF    FFMNPF 117                      CFF004
+     C                     Z-ADDFFMNPF    FFMNPF 158                      CFF004
+     C*
+     C                     SETOF                     89
+     C**
+     C**    INITIALISE O/P FIELD FFPRIC
+     C**
+     C***********          Z-ADD0         FFPRIC 117                      CFF004
+     C                     Z-ADD0         FFPRIC 158                      CFF004
+     C**
+     C**    NO FURTHER PROCESSING IF FIELD ENTERED IS BLANK
+     C**
+     C           FFSPRC    IFNE *BLANKS
+     C                     Z-ADD0         I       20
+     C                     Z-ADD0         P       20                      CFF006
+     C                     Z-ADD0         N       20                      CFF006
+     C**
+     C**   CHECK ARRAY FOR FIRST NON-BLANK CHARACTER
+     C**
+     C                     Z-ADD1         J       20
+     C**
+     C           FFSP,J    DOWEQ' '
+     C                     ADD  1         J
+     C                     END
+     C**
+     C**   LOOP TO PROCESS NON-BLANK CHARACTERS
+     C**
+     C                     Z-ADD0         FFCNT1  10
+     C                     Z-ADD0         FFCNT2  10
+     C                     Z-ADD0         FFCNT3  10                      CFF006
+     C                     MOVE *BLANK    FFPRDL  1                       CFF006
+     C                     Z-ADDJ         K       20
+     C***********K         DOWLT13                                        CFF004
+     C           K         DOWLT17                                        CFF004
+     C           FFSP,K    ANDNE' '
+     C**
+     C**   IF CHARACTER IS A NUMBER, ADD 1 TO RELEVANT COUNT
+     C**
+     C           FFSP,K    IFGE '0'
+     C           FFSP,K    ANDLE'9'
+     C**
+     C           I         IFEQ 0
+     C                     ADD  1         FFCNT1
+     C                     ELSE
+      *                                                                   CFF006
+      ** Check that position of the first digit after the second          CFF006
+      ** delimeter is zero before adding 1 to counter 2, otherwise        CFF006
+      ** add 1 to counter 3                                               CFF006
+      *                                                                   CFF006
+     C           P         IFEQ 0                                         CFF006
+     C                     ADD  1         FFCNT2
+     C                     ELSE                                           CFF006
+     C                     ADD  1         FFCNT3                          CFF006
+     C                     ENDIF                                          CFF006
+      *                                                                   CFF006
+     C                     END
+     C**
+     C**   IF COUNT IS TOO HIGH, THERE IS AN ERROR
+     C**
+     C**
+     C***********FFCNT1    IFGT 4                                         CFF004
+     C***********FFCNT2    ORGT 7                                         CFF004
+     C           FFCNT1    IFGT 7                                         CFF004
+     C           FFCNT2    ORGT 8                                         CFF004
+     C                     SETON                         89
+     C                     GOTO FFVEND
+     C                     END
+     C**
+     C                     ELSE
+     C**
+     C**   IF CHARACTER IS A DECIMAL DELIMITER
+     C**
+     C           FFSP,K    IFEQ '-'
+     C           FFSP,K    OREQ '.'
+      *                                                                   CFF006
+     C           FFTKDM    IFNE 100                                       CFF006
+     C           FFMNPF    ANDNE0                                         CFF006
+      *                                                                   CFF006
+      ** If I is greater than zero means that second delimeter was        CFF006
+      ** encountered and should be validated.  Otherwise, this variable   CFF006
+      ** should contain the position of the first digit after the         CFF006
+      ** first delimeter.  This is for Fractional Ticks processing only.  CFF006
+      *                                                                   CFF006
+     C           I         IFGT 0                                         CFF006
+      *                                                                   CFF006
+     C                     SELEC                                          CFF006
+      *                                                                   CFF006
+     C           P         WHGT 0                                         CFF006
+     C                     MOVE *ON       *IN89                           CFF006
+     C                     GOTO FFVEND                                    CFF006
+      *                                                                   CFF006
+     C           FFSP,K    WHNE '.'                                       CFF006
+     C                     MOVE *ON       *IN89                           CFF006
+     C                     GOTO FFVEND                                    CFF006
+      *                                                                   CFF006
+     C           FFSP,K    WHEQ '.'                                       CFF006
+     C           FFPRDL    ANDNE'-'                                       CFF006
+     C                     MOVE *ON       *IN89                           CFF006
+     C                     GOTO FFVEND                                    CFF006
+      *                                                                   CFF006
+     C                     OTHER                                          CFF006
+     C           K         ADD  1         P                               CFF006
+     C                     ENDSL                                          CFF006
+      *                                                                   CFF006
+     C                     ELSE                                           CFF006
+     C           K         ADD  1         I                               CFF006
+     C                     MOVE FFSP,K    FFPRDL                          CFF006
+     C                     ENDIF                                          CFF006
+      *                                                                   CFF006
+     C                     ELSE                                           CFF006
+     C**
+     C**   IT IS AN ERROR IF A PREVIOUS DELIMITER HAS BEEN FOUND
+     C**
+     C           I         IFGT 0
+     C                     SETON                         89
+     C                     GOTO FFVEND
+     C                     ELSE
+     C           K         ADD  1         I
+     C                     END
+     C**
+     C**   IT IS AN ERROR IF IT IS A DASH WHEN FFTKDM = 100
+     C**               OR IF IT IS A POINT WHEN FFTKDM >< 100             080988
+     C**                                                                  080988
+     C           FFSP,K    IFEQ '-'
+     C           FFTKDM    ANDEQ100
+     C           FFSP,K    OREQ '.'                                       080988
+     C           FFTKDM    ANDNE100                                       080988
+     C                     SETON                         89
+     C                     GOTO FFVEND
+     C                     END
+     C                     ENDIF                                          CFF006
+     C**
+     C**   IF CHARACTER IS NEITHER NUMBER OR DELIMITER IT IS AN ERROR
+     C**
+     C                     ELSE
+     C                     SETON                         89
+     C                     GOTO FFVEND
+     C                     END
+     C**
+     C                     END
+     C**
+     C**   IF NO ERROR, CHECK NEXT CHARACTER
+     C**
+     C                     ADD  1         K
+     C                     END
+     C**
+     C**   ERROR IF EMBEDDED BLANK IS FOUND
+     C**
+     C***********K         IFLT 12                                        CFF004
+     C***********          MOVE *BLANKS   FFTEST 11                       CFF004
+     C           K         IFLT 16                                        CFF004
+     C                     MOVE *BLANKS   FFTEST 15                       CFF004
+     C                     MOVEAFFSP,K    FFTEST
+     C**
+     C           FFTEST    IFNE *BLANKS
+     C                     SETON                         89
+     C                     GOTO FFVEND
+     C                     END
+     C**
+     C                     END
+     C**
+     C**   IF BOTH COUNTS ARE 0 IT IS AN ERROR
+     C**
+     C           FFCNT1    IFEQ 0
+     C           FFCNT2    ANDEQ0
+     C           FFCNT3    ANDEQ0                                         CFF006
+     C                     SETON                         89
+     C                     GOTO FFVEND
+     C                     END
+     C**
+     C**   IT IS AN ERROR IF TOO MANY CHARACTERS ARE ENTERED AFTER THE
+     C**   DECIMAL DELIMITER AND TICKS DENOMINATOR ISN'T 100
+     C**
+     C           FFTKDM    IFNE 100
+     C**
+     C           FFCNT2    IFGE 4
+     C                     SETON                         89
+     C                     GOTO FFVEND
+     C                     END
+     C**
+     C           FFTKDM    IFLE 99
+     C           FFTKDM    ANDGE11
+     C           FFCNT2    ANDGE3
+     C                     SETON                         89
+     C                     GOTO FFVEND
+     C                     END
+     C**
+     C           FFTKDM    IFLE 10
+     C           FFTKDM    ANDGE1
+     C           FFCNT2    ANDGE2
+     C                     SETON                         89
+     C                     GOTO FFVEND
+     C                     END
+      *                                                                    CFF006
+      ** Number of digits after '.' must not exceed 3 digits               CFF006
+      *                                                                    CFF006
+     C           FFMNPF    IFNE 0                                          CFF006
+     C           FFCNT3    ANDGT3                                          CFF006
+     C                     MOVE '1'       *IN89                            CFF006
+     C                     GOTO FFVEND                                     CFF006
+     C                     ENDIF                                           CFF006
+     C**
+     C                     END
+     C**
+     C*****SET*UP*THE*11,7*OUTPUT*PRICE*-*INTEGER*COMPONENT***********    CFF004
+     C**   SET UP THE 15,8 OUTPUT PRICE - INTEGER COMPONENT               CFF004
+     C**
+     C**   FFPRIC WAS ZEROISED AT START OF ROUTINE SO IT IS ALREADY
+     C**   CORRECT IF COUNT1 IS 0
+     C**
+     C           FFCNT1    IFNE 0
+     C***********5         SUB  FFCNT1    L       20                      CFF004
+     C           8         SUB  FFCNT1    L       20                      CFF004
+     C                     MOVEAFFSP,J    FFIN,L
+     C                     END
+     C**
+     C**   DECIMAL COMPONENT
+     C**
+     C***********K         IFLT 13                                        CFF004
+     C           K         IFLT 17                                        CFF004
+     C                     MOVEA*ZEROS    FFSP,K
+     C                     END
+     C**
+     C**   FFPRIC WAS ZEROISED AT START OF ROUTINE SO IT IS ALREADY
+     C**   CORRECT IF COUNT2 IS 0
+     C**
+     C           FFCNT2    IFNE 0
+     C                     MOVEAFFSP,I    FFDECA
+     C                     END
+     C**
+     C**   ADJUST DECIMAL COMPONENT TO ALLOW FOR MISSING LEADING
+     C**   ZEROS IF TICKS DENOMINATOR ISN'T 100
+     C**
+     C           FFTKDM    IFNE 100
+      *                                                                   CFF006
+     C           FFMNPF    IFNE 0                                         CFF006
+      *                                                                   CFF006
+      ** Move the decimal part of the price to an array variable so       CFF006
+      ** that it will contain the exact decimal part without the          CFF006
+      ** delimeter.                                                       CFF006
+      *                                                                   CFF006
+     C           FFCNT2    ADD  8         N                               CFF006
+     C                     MOVEAFFDECA    FFAR,8                          CFF006
+      *                                                                   CFF006
+     C           P         IFNE *ZERO                                     CFF006
+     C                     MOVEAFFSP,P    FFAR,N                          CFF006
+     C                     ENDIF                                          CFF006
+     C                     MOVEAFFAR,8    FFDECA                          CFF006
+      *                                                                   CFF006
+      ** Extract the correct decimal figures to be used later             CFF006
+      ** to check if the decimal part of the price is an exact            CFF006
+      ** multiple of the minimum price fluctuation                        CFF006
+      *                                                                   CFF006
+     C                     SELEC                                          CFF006
+      *                                                                   CFF006
+     C           FFCNT2    WHEQ 3                                         CFF006
+     C           FFDECD    DIV  100000    FFDCDP 158                      CFF006
+      *                                                                   CFF006
+     C           FFCNT2    WHEQ 2                                         CFF006
+     C           FFDECD    DIV  1000000   FFDCDP                          CFF006
+      *                                                                   CFF006
+     C           FFCNT2    WHEQ 1                                         CFF006
+     C           FFDECD    DIV  10000000  FFDCDP                          CFF006
+      *                                                                   CFF006
+     C           FFCNT2    WHEQ 0                                         CFF006
+     C           FFDECD    DIV  100000000 FFDCDP                          CFF006
+      *                                                                   CFF006
+     C                     OTHER                                          CFF006
+     C                     MOVE *ON       *IN89                           CFF006
+     C                     GOTO FFVEND                                    CFF006
+     C                     ENDSL                                          CFF006
+      *                                                                   CFF006
+     C           FFCNT2    IFEQ 0                                         CFF006
+      *                                                                   CFF006
+     C                     SELEC                                          CFF006
+      *                                                                   CFF006
+      ** Divide by 10 if between 1 and 9 and one zero missing             CFF006
+      *                                                                   CFF006
+     C           FFTKDM    WHLE 9                                         CFF006
+     C           FFTKDM    ANDGE1                                         CFF006
+     C           FFDECD    DIV  10        FFDECD                          CFF006
+      *                                                                   CFF006
+      ** Divide by 100 if between 10 and 99 and two zeros missing         CFF006
+      *                                                                   CFF006
+     C           FFTKDM    WHLE 99                                        CFF006
+     C           FFTKDM    ANDGE10                                        CFF006
+     C           FFDECD    DIV  100       FFDECD                          CFF006
+      *                                                                   CFF006
+      ** Divide by 1000 if between 101 and 999 and three zeros missing    CFF006
+      *                                                                   CFF006
+     C           FFTKDM    WHLE 999                                       CFF006
+     C           FFTKDM    ANDGE101                                       CFF006
+     C           FFDECD    DIV  1000      FFDECD                          CFF006
+      *                                                                   CFF006
+     C                     ENDSL                                          CFF006
+     C                     ENDIF                                          CFF006
+     C                     ENDIF                                          CFF006
+     C**
+     C**   DIVIDE BY 10 IF BETWEEN 11 & 99 AND ONE ZERO MISSING
+     C**
+     C           FFTKDM    IFLE 99
+     C           FFTKDM    ANDGE11
+     C           FFCNT2    ANDEQ1
+     C           FFDECD    DIV  10        FFDECD
+     C                     END
+     C**
+     C**   DIVIDE BY 10 IF BETWEEN 100 & 999 AND ONE ZERO MISSING
+     C**
+     C           FFTKDM    IFLE 999
+     C           FFTKDM    ANDGE101
+     C           FFCNT2    ANDEQ2
+     C           FFDECD    DIV  10        FFDECD
+     C                     END
+     C**
+     C**   DIVIDE BY 100 IF BETWEEN 100 & 999 AND TWO ZEROS MISSING
+     C**
+     C           FFTKDM    IFLE 999
+     C           FFTKDM    ANDGE101
+     C           FFCNT2    ANDEQ1
+     C           FFDECD    DIV  100       FFDECD
+     C                     END
+     C**
+     C                     END
+     C**
+     C**   IF TICKS DENOMINATOR IS 100 THE PRICE MUST BE AN EXACT
+     C**   MULTIPLE OF THE MINIMUM PRICE FLUCTUATION
+     C**
+     C           FFTKDM    IFEQ 100
+     C***********FFPRIC    DIV  FFMNPF    FFCHK1 110                      CFF004
+     C***********          MVR            FFCHK2 117                      CFF004
+     C           FFPRIC    DIV  FFMNPF    FFCHK1 150                      CFF004
+     C                     MVR            FFCHK2 158                      CFF004
+     C**
+     C           FFCHK2    IFNE *ZERO
+     C                     SETON                         89
+     C                     GOTO FFVEND
+     C                     END
+     C**
+     C**   IF IT ISN'T, THE PRICE AFTER THE DECIMAL POINT MUST BE LESS
+     C**   THAN THE TICKS DENOMINATOR
+     C**
+     C                     ELSE
+      *                                                                   CFF006
+      ** If Fractional Ticks enhancement is installed, the price after    CFF006
+      ** '-' must be an exact multiple of the minimum price fluctuation   CFF006
+      *                                                                   CFF006
+     C           FFMNPF    IFNE 0                                         CFF006
+     C           FFDCDP    DIV  FFMNPF    FFCHK1                          CFF006
+     C                     MVR            FFCHK2                          CFF006
+      *                                                                   CFF006
+     C           FFCHK2    IFNE *ZEROS                                    CFF006
+     C                     MOVE *ON       *IN89                           CFF006
+     C                     GOTO FFVEND                                    CFF006
+     C                     ENDIF                                          CFF006
+      *                                                                   CFF006
+     C                     ELSE                                           CFF006
+      *                                                                   CFF006
+     C                     MOVEA*ZEROS    FFDC
+     C**
+     C**   MOVE THE SIGNIFICANT CHARACTERS INTO A DATA STRUCTURE
+     C**
+     C           FFCNT2    IFNE 0
+     C           4         SUB  FFCNT2    L
+     C                     MOVEAFFSP,I    FFDC,L
+     C                     END
+     C                     MOVEAFFDC      FFTSTC  3
+     C                     MOVE FFTSTC    FFTSTD  30
+     C**
+     C**   ERROR IF THE VALUE IS TOO HIGH
+     C**
+     C           FFTSTD    IFGE FFTKDM
+     C                     SETON                         89
+     C                     END
+     C                     ENDIF                                          CFF006
+     C**
+     C                     END
+     C**
+     C**   ZEROISE OUTPUT FIELD IF ERROR OCCURRED
+     C**
+     C           FFVEND    TAG                             * FFVEND TAG *
+     C           *IN89     IFEQ '1'
+     C                     MOVE *ZERO     FFPRIC
+     C                     END
+     C**
+     C                     END
+     C**
+     C                     ENDSR
+     C**

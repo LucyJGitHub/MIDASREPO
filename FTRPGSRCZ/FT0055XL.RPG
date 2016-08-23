@@ -1,0 +1,316 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IBLC 2002 Set Up Incoming Payments ext. file')   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - IBLC 2002 Module                                     *
+      *                                                               *
+      *  RPG/FT0055XL  - SET UP IBLC INCOMING PAYMENTS EXTENTION FILE *
+      *                                                               *
+      *  Function:  This program set up IBLC Incoming Payments ext.   *
+      *             file with default values.                         *
+      *                                                               *
+      *  (phase(s)) Installation                                      *
+      *                                                               *
+      *  Called By: ILC0000 - IBLC MODULE INSTALLATION                *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      *  Last Amend No. CCB020             Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027A            Date 03May06               *
+      *                 CER001             Date 25Apr05               *
+      *                 UPG402             Date 04Oct04               *
+      *                 ULX043             Date 14Aug01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
+      *  CSD027A - Conversion of customer number to alpha (post       *
+      *            build 103). Recompiled.                            *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  UPG402 - Recompile due to R4.02 upgrade                      *
+      *  ULX043 - IBLC 2002 Reporting                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     FINPAYDD IF  E                    DISK
+      ***  Incoming payments detail    Master file
+      *
+     F***INPAYDXLUF  E           K        DISK                      A                         CER001
+     FFTIPX1PDUF  E           K        DISK                      A                            CER001
+      ***  Extended Incoming payments                      Prefix IN
+      *
+     FSDCUSTL1IF  E           K        DISK
+      ***  Customer details                                Prefix BB.
+      *
+     F***SDBRCHYLIF  E           K        DISK                                                CER001
+     FSDBRX1L0IF  E           K        DISK                                                   CER001
+      ***  Extended Branch code details                    Prefix BR.
+      *
+     F***SDCUSTX6IF  E           K        DISK                                                CER001
+     FSDCUX2PDIF  E           K        DISK                                                   CER001
+      ***  Extended Customer details                       Prefix VF.
+      *
+      /EJECT
+      *-------------------------------------------------------------------------
+     E                    CPY@    1   1 80               COPYRIGHT  ARRAY
+      /EJECT
+      *-------------------------------------------------------------------------
+     I           SDS
+      * Get program name from PSDS
+     I                                     *PROGRAM ##PGM
+      /EJECT
+      *-------------------------------------------------------------------------
+     IDLDA        DS                            256
+      * Data structure for data-base processing
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I***MPHAS*******DS                              1                                        CCB020
+     I**********                              1   1 COB                                       CCB020
+      /EJECT
+      *
+      ***  Redefine data-base error fields for program
+      *
+     C           *LIKE     DEFN DBFILE    WWBFIL
+     C           *LIKE     DEFN DBKEY     WWBKEY
+     C           *LIKE     DEFN DBASE     WWBASE
+      /EJECT
+      *-------------------------------------------------------------------------
+      * Main processing
+      *-------------------------------------------------------------------------
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C********** *NAMVAR   DEFN           MPHAS                                               CCB020
+     C**********           IN   MPHAS                                                         CCB020
+      *                                                                                       CCB020
+     C                     MOVEL'CBC00100'@CLPRM  9                                           CCB020
+     C                     MOVE '1'       @CLPRM                                              CCB020
+     C                     CALL @CLPRM                                                        CCB020
+     C                     PARM *BLANKS   @RTPHS  4                                           CCB020
+      *                                                                                       CCB020
+     C********** COB       IFEQ 'C'                                                           CCB020
+     C           @RTPHS    IFEQ '*YES'                                                        CCB020
+     C                     Z-ADD1         POPCL
+     C                     END
+      *
+      ***  First read
+      *
+     C                     READ INPAYDDF                 88
+      *
+      ***  Process until 88 indicator not on
+      *
+     C           *IN88     DOWEQ*OFF
+      *
+      ***  Check if record exists in the extension file
+      *
+     C           PREF      CHAININPAYDDL             89
+      *
+      ***  If record not in the extension file : FIELDS SET UP & WRITE
+      *
+     C           *IN89     IFEQ '1'
+      *
+      ***  Retrieve Ordering customer number
+      *
+     C           BNCT      IFEQ 'A'
+     C                     MOVE ACBT      PTYPE   1
+     C                     MOVELACBK      PLINE  35
+     C                     ELSE
+     C                     MOVE BNCT      PTYPE
+     C                     MOVE BNC1      PLINE
+     C                     ENDIF
+      *
+     C                     CALL 'IL0421'
+      * Outgoing
+     C                     PARM PCCY      WCCY    3
+     C                     PARM           PTYPE
+     C                     PARM           PLINE
+     C                     PARM           POPCL   10
+      * Incoming
+     C**********           PARM *BLANKS   PACCD   4                                           CER001
+     C                     PARM *BLANKS   PACCD  10                                           CER001
+     C                     PARM *BLANKS   PCUST   6
+     C                     PARM *BLANK    PFOUND  1
+      *
+     C                     MOVE PCUST     WWCUST  6
+      *
+     C           PFOUND    IFEQ 'Y'
+      *
+      ***  Access customer informations
+      *
+     C           WWCUST    CHAINSDCUSTL1             87
+     C           *IN87     IFEQ *ON
+     C                     MOVEL'SDCUSTL1'DBFILE           ***************
+     C                     MOVELWWCUST    DBKEY            * DBERROR 004 *
+     C                     Z-ADD4         DBASE            ***************
+     C                     EXSR SRDBER
+     C                     ELSE
+      *
+      ***  Access branch extended informations
+      *
+     C********** BBBRCD    CHAINSDBRCHYL             87                                       CER001
+     C           BBBRCD    CHAINSDBRX1L0             87                                       CER001
+     C           *IN87     IFEQ *ON
+     C**********           MOVEL'SDBRCHYL'DBFILE           ***************                    CER001
+     C                     MOVEL'SDBRX1L0'DBFILE           ***************                    CER001
+     C                     MOVELBBBRCD    DBKEY            * DBERROR 005 *
+     C                     Z-ADD5         DBASE            ***************
+     C                     EXSR SRDBER
+     C                     ELSE
+      *
+      ***  Does customer be a bank ?
+      *
+     C           BBBNBI    IFEQ 'Y'
+     C                     SELEC
+     C           BBCOLC    WHEQ 'LU'
+     C                     MOVE 'BR'      INBETY
+     C           BBCOLC    WHNE 'LU'
+     C                     MOVE 'BO'      INBETY
+     C                     ENDSL
+     C                     ELSE
+      *
+      *****use*Economic*code*VFNCOS*from*SDCUSTX6*to*determinate*organism                     CER001
+      ** use Economic code VFNCOS from SDCUX2PD to determinate organism                       CER001
+      *
+     C********** WWCUST    CHAINSDCUSTX6             88                                       CER001
+     C           WWCUST    CHAINSDCUX2PD             88                                       CER001
+     C           *IN88     IFEQ *ON
+     C**********           MOVEL'SDCUSTX6'DBFILE           ***************                    CER001
+     C                     MOVEL'SDCUX2PD'DBFILE           ***************                    CER001
+     C                     MOVELWWCUST    DBKEY            * DBERROR 007 *
+     C                     Z-ADD7         DBASE            ***************
+     C                     EXSR SRDBER
+     C                     ELSE
+      *
+     C                     SELEC
+      *
+      ***  OPCVM
+      *
+     C           VFNCOS    WHEQ 6101
+     C           VFNCOS    OREQ 6121
+     C                     SELEC
+     C           BBCOLC    WHEQ 'LU'
+     C                     MOVE 'OR'      INBETY
+     C           BBCOLC    WHEQ 'LU'
+     C                     MOVE 'OO'      INBETY
+     C                     ENDSL
+      *
+      ***  ADM. PUBL.
+      *
+     C           VFNCOS    WHEQ 2001
+     C           VFNCOS    OREQ 2002
+     C           VFNCOS    OREQ 2003
+     C           VFNCOS    OREQ 2004
+     C           VFNCOS    OREQ 2005
+     C           VFNCOS    OREQ 2006
+     C           VFNCOS    OREQ 2007
+     C           VFNCOS    OREQ 2008
+     C           VFNCOS    OREQ 2101
+     C           VFNCOS    OREQ 2102
+     C           VFNCOS    OREQ 2150
+     C           VFNCOS    OREQ 2151
+     C           VFNCOS    OREQ 2201
+     C           VFNCOS    OREQ 2202
+     C           VFNCOS    OREQ 2300
+     C           VFNCOS    OREQ 2400
+      *
+     C                     SELEC
+     C           BBCOLC    WHEQ 'LU'
+     C                     MOVE 'AR'      INBETY
+     C           BBCOLC    WHNE 'LU'
+     C                     MOVE 'AO'      INBETY           OTHER
+     C                     ENDSL
+      *
+      ***  OTHER
+      *
+     C                     OTHER
+     C                     SELEC
+     C           BBCOLC    WHEQ 'LU'
+     C                     MOVE ' R'      INBETY
+     C           BBCOLC    WHNE 'LU'
+     C                     MOVE ' O'      INBETY
+     C                     ENDSL
+      *
+     C                     ENDSL
+      *
+     C                     ENDIF                           SDCUSTX6
+      *
+     C                     ENDIF                           BBBNBI
+      *
+     C                     ENDIF                           SDBRCHYL
+      *
+     C                     ENDIF                           SDCUSTL1
+      *
+     C                     ELSE
+      *
+     C                     CLEARINPAYDDL
+      *
+     C                     END
+     C                     MOVE PREF      INPREF
+     C                     MOVE '  '      INORTY
+      *
+     C                     MOVE *BLANKS   INOPCO
+     C                     MOVE *BLANKS   INIDCO
+     C                     MOVE *BLANKS   INIDEN
+     C                     MOVE *BLANKS   INCOCO
+      *
+     C                     WRITEINPAYDDL
+     C                     ENDIF
+      *
+      ***  Main file read
+      *
+     C                     READ INPAYDDF                 88
+      *
+     C                     ENDDO
+      *-------------------------------------------------------------------------
+      * End of processing
+      *-------------------------------------------------------------------------
+      *
+      ***  Close external program
+      *
+     C********** COB       IFNE 'C'                                                           CCB020
+     C           @RTPHS    IFEQ '*NO'                                                         CCB020
+     C                     Z-ADD9         POPCL
+     C                     CALL 'IL0421'
+     C                     PARM           PCCY
+     C                     PARM           PTYPE
+     C                     PARM           PLINE
+     C                     PARM           POPCL
+     C                     PARM           PACCD
+     C                     PARM           PCUST
+     C                     PARM           PFOUND
+     C                     END
+      *
+     C                     SETON                     LR
+      *
+     C                     RETRN
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRDBER - Routine to handle database errors
+      *-------------------------------------------------------------------------
+      *
+     C           SRDBER    BEGSR
+      *
+      ***  Update data area LDA
+      *
+     C           *NAMVAR   DEFN LDA       DLDA
+     C           *LOCK     IN   DLDA
+     C                     OUT  DLDA
+      *
+      ***  Dump program
+      *
+     C                     DUMP
+      *
+     C                     ENDSR
+      /EJECT
+** CPY@  COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2005

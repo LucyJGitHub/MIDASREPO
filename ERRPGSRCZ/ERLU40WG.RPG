@@ -1,0 +1,612 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Decision Table - Transaction Types Setup')       *
+      ********************************************************************
+      *                                                                  *
+      *     MIDAS ABS  EUROPEAN REPORTING                                *
+      *                                                                  *
+      *     ERLU40WG - DECISION TABLE - TRANSACTION TYPES SETUP          *
+      *                                                                  *
+      *     (c) Misys International Banking Systems Ltd. 2005         *
+      *                                                                  *
+      *  Last Amend No. CLE134             Date 01Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027A            Date 03May06               *
+      *                 BUG10452           Date 09Feb06               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CER001             Date 25Apr05               *
+      *                 UPG402             Date 03Oct04               *
+      *                 ADIFIX             Date 03Sep99               *
+      *                 ULX024             Date 03Sep99               *
+      *                    ULX011              Date 21Apr98              *
+      *                    ULX004              Date 27Dec96              *
+      *                    ER_R10 ???          Date 21Jun93              *
+      *                    ERL354 TLI          DATE 21JUN93              *
+      *                    ER0323 TLI          DATE 01MAR93              *
+      *                    ER0101 ADs          DATE 26NOV92              *
+      *                    ER0101 ADs          DATE 24NOV92              *
+      *                    ER0100 ADs          DATE 24NOV92              *
+      *                    ER1008 ThL          DATE 16NOV92              *
+      *------------------------------------------------------------------*
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CSD027A - Conversion of customer number to alpha (post       *
+      *            build 103). Recompiled.                            *
+      *  BUG10452 - No item reported on CADREPORT job (Recompile)     *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  UPG402 - Recompile due to R4.02 upgrade                      *
+      * ADIFIX - Rename PLDPCD as different definition in INVTPD         *
+      *          from FDDTSTPD and SDLOANPD                              *
+      * ULX024 - Trade Innovation/CSSF Reporting Interface               *
+      * ULX011 - IML Circular 97/138                                     *
+      * ULX004 - CAPITAL ADEQUACY                                        *
+      * ER_R10 - Use file FDDLSTPD to limitate the routing keys generated*
+      *          to the exixting Deal type-Subtype entries               *
+      * ERL354 - Include Depot Movements processing                      *
+      * ER0323 - Include Commercial Loans processing                     *
+      * ER0104 - Include only live records.                              *
+      * ER0101 - Decision Key lenght from 6 to 8                         *
+      *        - Instrument Type Key format is changed from 'INSTR '     *
+      *          (inst-type) ) to 'BKINSTRP' (book/inst_type/put_call)   *
+      * ER0100 - Missing Deal Types (completetion of fix ER1008)         *
+      * ER1008 - Missing Deal Types.                                     *
+      ********************************************************************
+     FSDDLSTL1IF  E                    DISK
+     FERTIPTL0IF  E                    DISK                               ULX024
+     F*** 'TI' ***                                                        ULX024
+     FFDDTSTL1IF  E                    DISK                               ER_R10
+     F*** 'DL' ***
+     FSDLOANL1IF  E                    DISK
+     F*** 'LE' ***
+     FSDFACTL1IF  E                    DISK
+     F*** 'FC' ***
+     FINVTP   IF  E                    DISK
+     F*** 'IV' ***
+     F*INTYP**IF**E                    DISK                               ULX004
+     F*** 'IT' ***
+     F*
+     FSDBANKL1IF  E                    DISK
+     F*
+     FERLUTTL0UF  E           K        DISK                      A
+     FSDBOOKPDIT  F      44           EDISK
+      /EJECT
+     E**************************************************************************
+     E* ARRAY FOR DEAL TYPES
+     E************        ARDL   22  22  2                                ER1008
+     E******              ARDL   34  34  2                         ER1008 ER0100
+     E************        ARDL   36  36  2                   ER1008 ER0100ER_R10
+     E                    ARCL    3   3  2                                ER0323
+     E                    ARDP    6   6  2                                ERL354
+     E                    ARIT   11  11  2                                ULX004
+     E    SDBOOKPD        ARIV    1  99  2
+      ** Pre-execution time array: Currency Codes in CUR, corresponding
+      ** details in CYD
+     E*
+     E                    CPY@    1   1 80
+     E                    TIPC    1  11  4                                ULX024
+      /EJECT
+     I**************************************************************************
+     IINVTPDF                                                             ADIFIX
+      ** Rename PLDPCD waiting for a core correction                      ADIFIX
+      *                                                                   ADIFIX
+     I              PLDPCD                          IVDPCD                ADIFIX
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     ILDA        UDS                            256
+     I                                      132 183 DBLOT
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I**
+     I**  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION:
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I** ARRAY FOR DEAL TYPES
+     I            DS
+     I                                        1   2 DL1
+     I                                        3   4 DL2
+     I                                        6   9 DL3                                       CLE042
+     I                                        1   9 DL12                                      CLE042
+     I****************************************5   8 DL3                                CER001 CLE042
+     I****************************************1   4 DL12                                      CLE042
+     I** ARRAY FOR BOOK CODES
+     I            DS
+     I                                        1   3 IV1
+     I                                        4   5 IV2
+     I                                        1   5 IV12
+     I** ARRAY FOR INSTRUMENTS                                            ER0102
+     I            DS                                                      ER0102
+     I                                        1   2 IT1                   ER0102
+     I                                        3   7 IT2                   ER0102
+     I                                        8   8 IT3                   ER0102
+     I                                        1   8 IT123                 ER0102
+     C**************************************************************************
+     C* SETUP KEYS
+     C**************************************************************************
+     C           ERKEY     KLIST
+     C                     KFLD           ERKEY1  2
+     C******               KFLD           ERKEY2  6                       ER0102
+     C**********           KFLD           ERKEY2  8                                    ER0102 CER001
+     C                     KFLD           ERKEY2 14                                           CER001
+     C**************************************************************************
+     C*
+     C**  GET INSTALLATION CONTROL DATA RECORD 1:
+     C           1         CHAINSDBANKL1             01
+     C**
+     C**  IF RECORD NOT FOUND:
+     C           *IN01     IFEQ '1'
+     C                     MOVEL'ERLU40WG'DBPGM
+     C                     MOVEL'001'     DBASE            *****************
+     C                     MOVEL'SDBANKL1'DBFILE           ** DB ERROR 01 **
+     C                     MOVEL' NONE '  DBKEY            *****************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **************************************************************************
+      * 'DL' PROCESSING
+      **************************************************************************
+     C***********          READ SDDLSTL1                 31               ER_R10
+     C                     READ FDDTSTL1                 31               ER_R10
+     C                     MOVE 'DL'      ERKEY1
+      *
+     C           *IN31     DOWEQ'0'                        - B1
+      *
+      ** LOOP WITH ALL DEAL TYPES
+     C                     Z-ADD1         I       20
+     C*****      I         DOWLE22                         - B2           ER1008
+     C******     I         DOWLE34                         - B2    ER1008 ER0100
+     C***********I         DOWLE36                          ER1008 ER0100 ER_R10
+     C***********          MOVELARDL,I    DL1                             ER_R10
+     C***********          MOVELASDSTC    DL2                             ER_R10
+     C                     MOVELDTPE11    DL1                             ER_R10
+     C                     MOVELDLST11    DL2                             ER_R10
+     C                     MOVELCLAS11    DL3                                                 CER001
+     C                     MOVELDL12      ERKEY2
+      *
+     C           ERKEY     CHAINERLUTTL0             32
+      *
+     C           *IN32     IFEQ '1'                        - B3
+      *
+     C                     MOVE 'DL'      VCMMOD
+     C                     MOVELDL12      VCTTYP
+     C                     MOVE 'N'       VCEXTT
+     C*********************MOVE 'G'       VBAMTY                          ULX004
+     C                     MOVE '0'       VCAMTY                          ULX011
+     C                     Z-ADD0         VCRBND
+     C                     Z-ADD0         VCRBNC
+     C                     Z-ADD0         VCPRCD                          ULX004
+     C                     Z-ADD0         VCPORT                          ULX004
+     C                     Z-ADDBJRDNB    VCLCD
+     C                     MOVE 'I'       VCTYLC
+      *
+     C                     WRITEERLUTTD0
+      *
+     C                     END                             - E3
+     C                     ADD  1         I
+      *
+     C***********          END                             - E2           ER_R10
+      *
+     C***********          READ SDDLSTL1                 31               ER_R10
+     C                     READ FDDTSTL1                 31               ER_R10
+     C                     ENDDO                           - E1
+      *
+      **************************************************************************
+      * 'LE' PROCESSING
+      **************************************************************************
+     C                     READ SDLOANL1                 33
+     C                     MOVE 'LE'      ERKEY1
+     C                     MOVE *BLANKS   ERKEY2
+      *
+     C           *IN33     DOWEQ'0'                        - B1
+      *
+     C                     MOVELAYLNTY    WWLNTY  4
+     C                     MOVE AYLNST    WWLNTY
+     C*********************MOVELWWLNTY    ERKEY2                                              CLE042
+     C                     MOVELWWLNTY    WWLTSC  9                                           CLE042
+     C                     MOVE AYLNCL    WWLTSC                                              CLE042
+     C                     MOVELWWLTSC    ERKEY2                                              CLE042
+     C           ERKEY     CHAINERLUTTL0             34
+      *
+     C           *IN34     IFEQ '1'                        - B2
+      *
+     C                     MOVE 'LE'      VCMMOD
+     C*********************MOVELWWLNTY    VCTTYP                                              CLE042
+     C                     MOVELWWLTSC    VCTTYP                                              CLE042
+     C                     MOVE 'N'       VCEXTT
+     C*********************MOVE 'G'       VCAMTY                          ULX004
+     C                     MOVE '0'       VCAMTY                          ULX011
+     C                     Z-ADD0         VCRBND
+     C                     Z-ADD0         VCRBNC
+     C                     Z-ADD0         VCPRCD                          ULX004
+     C                     Z-ADD0         VCPORT                          ULX004
+     C                     Z-ADDBJRDNB    VCLCD
+     C                     MOVE 'I'       VCTYLC
+      *
+     C                     WRITEERLUTTD0
+      *
+     C                     END                             - E2
+      *
+     C                     READ SDLOANL1                 33
+     C                     ENDDO                           - E1
+      *
+      **************************************************************************
+      * 'FC' PROCESSING
+      **************************************************************************
+     C                     READ SDFACTL1                 35
+     C                     MOVE 'FC'      ERKEY1
+     C                     MOVE *BLANKS   ERKEY2
+     C                     MOVE *BLANKS   VCTTYP
+      *
+     C           *IN35     DOWEQ'0'                        - B1
+      *
+     C                     MOVELAMFCTY    ERKEY2
+     C           ERKEY     CHAINERLUTTL0             36
+      *
+     C           *IN36     IFEQ '1'                        - B2
+      *
+     C                     MOVE 'FC'      VCMMOD
+     C                     MOVE 'N'       VCEXTT
+     C                     MOVELAMFCTY    VCTTYP
+     C                     MOVE 'N'       VCEXTT
+     C*********************MOVE 'G'       VCAMTY                          ULX004
+     C                     MOVE '0'       VCAMTY                          ULX011
+     C                     Z-ADD0         VCRBND
+     C                     Z-ADD0         VCRBNC
+     C                     Z-ADD0         VCPRCD                          ULX004
+     C                     Z-ADD0         VCPORT                          ULX004
+     C                     Z-ADDBJRDNB    VCLCD
+     C                     MOVE 'I'       VCTYLC
+      *
+     C                     WRITEERLUTTD0
+      *
+     C                     END                             - E2
+      *
+     C                     READ SDFACTL1                 35
+     C                     ENDDO                           - E1
+      **************************************************************************
+      * 'IV' PROCESSING
+      **************************************************************************
+     C                     READ INVTP                    37
+     C                     MOVE 'IV'      ERKEY1
+     C                     MOVE *BLANKS   ERKEY2
+     C                     MOVE *BLANKS   VCTTYP
+      *
+     C           *IN37     DOWEQ'0'                        - B1
+      *                                                                   ER0104
+     C           RECI      IFEQ 'D'                        - B1A          ER0104
+      *
+      ** LOPP WITH ALL BOOK CODES
+     C                     Z-ADD1         I
+     C           ARIV,I    DOWNE'  '                       - B2
+     C                     MOVELARIV,I    IV2
+     C                     MOVELINVT      IV1
+     C                     MOVELIV12      ERKEY2
+      *
+     C           ERKEY     CHAINERLUTTL0             38
+      *
+     C           *IN38     IFEQ '1'                        - B3
+      *
+     C                     MOVE 'IV'      VCMMOD
+     C                     MOVELERKEY2    VCTTYP
+     C                     MOVE 'N'       VCEXTT
+     C*********************MOVE 'G'       VCAMTY                          ULX004
+     C                     MOVE '0'       VCAMTY                          ULX011
+     C                     Z-ADD0         VCRBND
+     C                     Z-ADD0         VCRBNC
+     C                     Z-ADD0         VCPRCD                          ULX004
+     C                     Z-ADD0         VCPORT                          ULX004
+     C                     Z-ADDBJRDNB    VCLCD
+     C                     MOVE 'I'       VCTYLC
+      *
+     C                     WRITEERLUTTD0
+      *
+     C                     END                             - E3
+     C                     ADD  1         I
+      *
+     C                     END                             - E2
+      *                                                                   ER0104
+     C                     END                             - E1A          ER0104
+      *
+     C                     READ INVTP                    37
+     C                     ENDDO                           - E1
+      **************************************************************************
+      * 'IT' PROCESSING
+      **************************************************************************
+     C*************        READ INTYP                    39               ULX004
+     C*************        MOVE 'IT'      ERKEY1                          ULX004
+     C*************        MOVE *BLANKS   ERKEY2                          ULX004
+     C*************        MOVE *BLANKS   VCTTYP                          ULX004
+      *************                                                       ULX004
+     C************IN39     DOWEQ'0'                        - B1           ULX004
+      *************                                                ER0104 ULX004
+     C***********RECI      IFEQ 'D'                        - B1A   ER0104 ULX004
+      *************                                                ER0102 ULX004
+      ***LOPP*WITH*ALL BOOK CODES                                  ER0102 ULX004
+     C*************        Z-ADD1         I                        ER0102 ULX004
+     C***********ARIV,I    DOWNE'  '                       - B2    ER0102 ULX004
+     C*************        MOVELARIV,I    IT1                      ER0102 ULX004
+     C*************        MOVELISTT      IT2                      ER0102 ULX004
+      *************                                                ER0102 ULX004
+      ***LOPP*WITH*CALL/PUT INDICATOR                              ER0102 ULX004
+     C*************        Z-ADD1         J       10               ER0102 ULX004
+     C***********J*        DOWLT4                          - B4    ER0102 ULX004
+      *************                                                ER0102 ULX004
+     C***********J*        IFEQ 1                          - B5    ER0102 ULX004
+     C*************        MOVE 'C'       IT3                      ER0102 ULX004
+     C*************        ELSE                            - X5    ER0102 ULX004
+     C***********J*        IFEQ 2                          - B6    ER0102 ULX004
+     C*************        MOVE 'P'       IT3                      ER0102 ULX004
+     C*************        ELSE                            - X6    ER0102 ULX004
+     C*************        MOVE ' '       IT3                      ER0102 ULX004
+     C*************        END                             - E6    ER0102 ULX004
+     C*************        END                             - E5    ER0102 ULX004
+      *************                                                ER0102 ULX004
+     C*************        MOVELIT123     ERKEY2                   ER0102 ULX004
+      *************                                                       ULX004
+     C*************        MOVELISTT      ERKEY2                   ER0102 ULX004
+     C***********ERKEY     CHAINERLUTTL0             40                   ULX004
+     C************IN40     IFEQ '1'                        - B2    ER0102 ULX004
+     C************IN40     IFEQ '1'                        - B4    ER0102 ULX004
+      *************                                                       ULX004
+     C*************        MOVE 'IT'      VCMMOD                          ULX004
+     C*************        MOVELERKEY2    VCTTYP                          ULX004
+     C*************        MOVE 'N'       VCEXTT                          ULX004
+     C*************        MOVE 'G'       VCAMTY                          ULX004
+     C*************        Z-ADD0         VCRBND                          ULX004
+     C*************        Z-ADD0         VCRBNC                          ULX004
+     C*************        Z-ADDBJRDNB    VCLCD                           ULX004
+     C*************        MOVE 'I'       VCTYLC                          ULX004
+      *************                                                       ULX004
+     C*************        WRITEERLUTTD0                                  ULX004
+      *************                                                ER0102 ULX004
+     C*************        END                             - E4    ER0102 ULX004
+     C*************        ADD  1         J                        ER0102 ULX004
+      *************                                                ER0102 ULX004
+     C*************        END                             - E3    ER0102 ULX004
+     C*************        ADD  1         I                        ER0102 ULX004
+      *************                                                       ULX004
+     C*************        END                             - E2           ULX004
+      *************                                                ER0104 ULX004
+     C*************        END                             - E1A   ER0104 ULX004
+      *************                                                       ULX004
+     C*************        READ INTYP                    39               ULX004
+     C*************        ENDDO                           - E1           ULX004
+      *
+     C                     MOVE 'IT'      ERKEY1                          ULX004
+     C                     MOVE *BLANKS   ERKEY2                          ULX004
+     C                     MOVE *BLANKS   VCTTYP                          ULX004
+      *                                                                   ULX004
+      ** LOPP WITH ALL BOOK CODES                                         ULX004
+     C                     Z-ADD1         I                               ULX004
+      *                                                                   ULX004
+     C           ARIV,I    DOWNE'  '                       - B1           ULX004
+      *                                                                   ULX004
+      ** Perform loop to create records on ERLUTRPD for a given Book Code ULX004
+      *                                                                   ULX004
+     C           1         DO   11        X       20       - B2           ULX004
+     C           ARIV,I    CAT  ARIT,X    ERKEY2    P      * create key   ULX004
+     C           ERKEY     CHAINERLUTTL0             40                   ULX004
+      *                                                                   ULX004
+     C           *IN40     IFEQ '1'                        - B3           ULX004
+      *                                                                   ULX004
+     C                     MOVE 'IT'      VCMMOD                          ULX004
+     C                     MOVELERKEY2    VCTTYP                          ULX004
+     C                     MOVE 'N'       VCEXTT                          ULX004
+     C                     Z-ADD0         VCRBND                          ULX004
+     C                     Z-ADD0         VCRBNC                          ULX004
+     C                     Z-ADD0         VCPRCD                          ULX004
+     C                     Z-ADD0         VCPORT                          ULX004
+     C                     Z-ADDBJRDNB    VCLCD                           ULX004
+     C                     MOVE 'I'       VCTYLC                          ULX004
+     C                     MOVE '0'       VCAMTY                          ULX011
+      *                                                                   ULX004
+     C                     WRITEERLUTTD0                                  ULX004
+      *                                                                   ULX004
+     C                     ENDIF                           - E3           ULX004
+      *                                                                   ULX004
+     C                     ENDDO                           - E2           ULX004
+      *                                                                   ULX004
+     C                     ADD  1         I                               ULX004
+      *                                                                   ULX004
+     C                     ENDDO                           - E1           ULX004
+      ********************************************************************ER0323
+      * 'CL' PROCESSING                                                   ER0323
+      ********************************************************************ER0323
+     C                     MOVE 'CL'      ERKEY1                          ER0323
+     C                     MOVE *BLANKS   ERKEY2                          ER0323
+     C                     MOVE *BLANKS   DL12                                                CLE042
+     C                     Z-ADD1         I                               ER0323
+      *                                                                   ER0323
+     C* BYPASS CL KEYS ON R10                                             ER_R10
+     C                     Z-ADD4         I                               ER_R10
+     C           I         DOWLE3                          - B1           ER0323
+      *                                                                   ER0323
+      ** LOOP WITH ALL DEAL TYPES                                         ER0323
+     C           1         SETLLSDDLSTL1                                  ER0323
+     C                     READ SDDLSTL1                 45               ER0323
+     C           *IN45     DOWEQ'0'                        - B2           ER0323
+      *                                                                   ER0323
+     C                     MOVELARCL,I    DL1                             ER0323
+     C                     MOVELASDSTC    DL2                             ER0323
+     C                     MOVELDL12      ERKEY2                          ER0323
+      *                                                                   ER0323
+     C           ERKEY     CHAINERLUTTL0             32                   ER0323
+      *                                                                   ER0323
+     C           *IN32     IFEQ '1'                        - B3           ER0323
+      *                                                                   ER0323
+     C                     MOVE 'CL'      VCMMOD                          ER0323
+     C                     MOVELERKEY2    VCTTYP                          ER0323
+     C                     MOVE 'N'       VCEXTT                          ER0323
+     C*********************MOVE 'G'       VCAMTY                          ULX004
+     C                     MOVE '0'       VCAMTY                          ULX011
+     C                     Z-ADD0         VCRBND                          ER0323
+     C                     Z-ADD0         VCRBNC                          ER0323
+     C                     Z-ADD0         VCPRCD                          ULX004
+     C                     Z-ADD0         VCPORT                          ULX004
+     C                     Z-ADDBJRDNB    VCLCD                           ER0323
+     C                     MOVE 'I'       VCTYLC                          ER0323
+      *                                                                   ER0323
+     C                     WRITEERLUTTD0                                  ER0323
+      *                                                                   ER0323
+     C                     END                             - E3           ER0323
+      *                                                                   ER0323
+     C                     READ SDDLSTL1                 45               ER0323
+      *                                                                   ER0323
+     C                     END                             - E2           ER0323
+      *                                                                   ER0323
+     C                     ADD  1         I                               ER0323
+      *                                                                   ER0323
+     C                     END                             - E1           ER0323
+      ********************************************************************ERL354
+      * 'DP' PROCESSING                                                   ERL354
+      ********************************************************************ERL354
+     C                     MOVE 'DP'      ERKEY1                          ERL354
+     C                     MOVE *BLANKS   ERKEY2                          ERL354
+     C                     Z-ADD1         I                               ERL354
+      *                                                                   ERL354
+     C           I         DOWLE6                          - B1           ERL354
+      *                                                                   ERL354
+      ** LOOP WITH ALL DEPOT MOVEMENTS TYPES                              ERL354
+      *                                                                   ERL354
+     C                     MOVELARDP,I    ERKEY2                          ERL354
+      *                                                                   ERL354
+     C           ERKEY     CHAINERLUTTL0             50                   ERL354
+      *                                                                   ERL354
+     C           *IN50     IFEQ '1'                        - B2           ERL354
+      *                                                                   ERL354
+     C                     MOVE 'DP'      VCMMOD                          ERL354
+     C                     MOVELERKEY2    VCTTYP                          ERL354
+     C                     MOVE 'N'       VCEXTT                          ERL354
+     C*********************MOVE 'G'       VCAMTY                          ULX004
+     C                     MOVE '0'       VCAMTY                          ULX011
+     C                     Z-ADD0         VCRBND                          ERL354
+     C                     Z-ADD0         VCRBNC                          ERL354
+     C                     Z-ADD0         VCPRCD                          ULX004
+     C                     Z-ADD0         VCPORT                          ULX004
+     C                     Z-ADDBJRDNB    VCLCD                           ERL354
+     C                     MOVE 'I'       VCTYLC                          ERL354
+      *                                                                   ERL354
+     C                     WRITEERLUTTD0                                  ERL354
+      *                                                                   ERL354
+     C                     END                             - E2           ERL354
+      *                                                                   ERL354
+     C                     ADD  1         I                               ERL354
+      *                                                                   ERL354
+     C                     END                             - E1           ERL354
+      **************************************************************************
+      * 'TI' PROCESSING                                                   ULX024
+      ********************************************************************ULX024
+      * 1) Standard Product Code                                          ULX024
+      *                                                                   ULX024
+     C                     MOVE 'TI'      ERKEY1                          ULX024
+     C                     MOVE *BLANKS   ERKEY2                          ULX024
+     C                     Z-ADD1         I                               ULX024
+      *                                                                   ULX024
+     C           I         DOWLE10                         - B1           ULX024
+      *                                                                   ULX024
+      ** Loop With All Product Code                                       ULX024
+      *                                                                   ULX024
+     C                     MOVELTIPC,I    ERKEY2                          ULX024
+      *                                                                   ULX024
+     C           ERKEY     CHAINERLUTTL0             50                   ULX024
+      *                                                                   ULX024
+     C           *IN50     IFEQ '1'                        - B2           ULX024
+      *                                                                   ULX024
+     C                     MOVE 'TI'      VCMMOD                          ULX024
+     C                     MOVELERKEY2    VCTTYP                          ULX024
+     C                     MOVE 'N'       VCEXTT                          ULX024
+     C                     MOVE '0'       VCAMTY                          ULX024
+     C                     Z-ADD0         VCRBND                          ULX024
+     C                     Z-ADD0         VCRBNC                          ULX024
+     C                     Z-ADD0         VCPRCD                          ULX024
+     C                     Z-ADD0         VCPORT                          ULX024
+     C                     Z-ADDBJRDNB    VCLCD                           ULX024
+     C                     MOVE 'I'       VCTYLC                          ULX024
+      *                                                                   ULX024
+     C                     WRITEERLUTTD0                                  ULX024
+      *                                                                   ULX024
+     C                     END                             - E2           ULX024
+      *                                                                   ULX024
+     C                     ADD  1         I                               ULX024
+      *                                                                   ULX024
+     C                     END                             - E1           ULX024
+      * 2) Product Code /CSSF Type combination                            ULX024
+      *                                                                   ULX024
+     C                     READ ERTIPTL0                 31               ULX024
+     C                     MOVE 'TI'      ERKEY1                          ULX024
+      *                                                                   ULX024
+     C           *IN31     DOWEQ'0'                        - B1           ULX024
+      *                                                                   ULX024
+      ** Loop with allcombination                                         ULX024
+     C           ERTIPC    CAT  ERTIPT    ERKEY2    P                     ULX024
+      *                                                                   ULX024
+     C           ERKEY     CHAINERLUTTL0             32                   ULX024
+      *                                                                   ULX024
+     C           *IN32     IFEQ '1'                        - B3           ULX024
+      *                                                                   ULX024
+     C                     MOVE 'TI'      VCMMOD                          ULX024
+     C                     MOVELERKEY2    VCTTYP                          ULX024
+     C                     MOVE 'N'       VCEXTT                          ULX024
+     C                     MOVE '0'       VCAMTY                          ULX024
+     C                     Z-ADD0         VCRBND                          ULX024
+     C                     Z-ADD0         VCRBNC                          ULX024
+     C                     Z-ADD0         VCPRCD                          ULX024
+     C                     Z-ADD0         VCPORT                          ULX024
+     C                     Z-ADDBJRDNB    VCLCD                           ULX024
+     C                     MOVE 'I'       VCTYLC                          ULX024
+      *                                                                   ULX024
+     C                     WRITEERLUTTD0                                  ULX024
+      *                                                                   ULX024
+     C                     END                             - E3           ULX024
+     C                     ADD  1         I                               ULX024
+      *                                                                   ULX024
+      *                                                                   ULX024
+     C                     READ ERTIPTL0                 31               ULX024
+     C                     ENDDO                           - E1           ULX024
+      **************************************************************************
+      *
+      ** TERMINATION PROCESSING
+     C                     SETON                     LR
+      *
+     C                     RETRN
+      **************************************************************************
+      * *PSSR  S/R
+      **************************************************************************
+     C           *PSSR     BEGSR
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+      *
+     C                     ENDSR
+      **************************************************************************
+********ARDL                                                              ER_R10
+********CILNCDCLDLC1C2BPBDTBDATACSBSBRTSRATRCXFSFPOPOTSWSIPIFRRFRPRR0100  ER_R10
+**  ARCL                                                                  ER0323
+DSRCTE                                                                    ER0323
+**  ARDP                                                                  ERL354
+BLBBRPRRPDPL                                                              ERL354
+**  ARIT                                                                  ULX004
+1N2N3N4Y4N5Y5N6Y6N7N8N                                                    ULX004
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2005
+**  TIPC                                                                  ULX024
+ILC Import Letters of Credit                                              ULX024
+ELC Export Letters of Credit                                              ULX024
+RMB Reimbursement                                                         ULX024
+IGT Import Guarantees                                                     ULX024
+EGT Export Guarantees                                                     ULX024
+ISB Import Standby Letters of Credit                                      ULX024
+ESB Export Standby Letters of Credit                                      ULX024
+ICC Inward Clean Collection                                               ULX024
+ECC Outward Clean Collection                                              ULX024
+IDC Inward Documentary Collection                                         ULX024
+EDC Outward Documentary Collection                                        ULX024

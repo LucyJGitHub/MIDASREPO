@@ -1,0 +1,1510 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Option Narrative Codes Maintenance')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE7517 - Option Narrative Code Maintenance                   *
+      *                                                               *
+      *  Function: This program allows the maintenance of             *
+      *            Option Narrative Code                              *
+      *                                                               *
+      *  Called By: SEUC020  - Input Cycle Processing                 *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Last Amend No. CSE007             Date 22Aug97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSE007 - Corporate Acitons.                                  *
+      *                                                               *
+      *****************************************************************
+     F/EJECT
+      *
+      *       FILE DEFINITIONS
+      *      ------------------
+      *
+     FSECONAL0IF  E           K        DISK         KINFSR *PSSR
+      ***  Option Narrative Code Maintenance
+     F            SECONAD0                          KRENAMESECONAX0
+      *
+     FSECONAPDUF  E           K        DISK         KINFSR *PSSR A
+      ***  Option Narrative Code Maintenance
+     F                                              KINFDS FIL1DS
+     F                                              KCOMIT
+      *
+     FSECONAPAUF  E                    DISK         KINFSR *PSSR
+      ***  Option Narrative Code Maintenance
+     F                                              KCOMIT
+      *
+     FSE7517DFCF  E                    WORKSTN      KINFSR *PSSR
+      **   Screen Format
+     F                                        SFLRR2KSFILE SE7517S1
+      *
+      ********************************************************************
+     F/EJECT
+      ********************************************************************
+      *                                                                  *
+      *  ID F  C  H  L    FUNCTION OF INDICATORS                         *
+      *                  ------------------------                        *
+      *                                                                  *
+      *        26 - SFLEND    }- MESSAGE SUBFILE                         *
+      *                                                                  *
+      *        28 - ROLLUP    }                                          *
+      *        28 - SFLDSP    }                                          *
+      *        29 - SFLDSPCTL }                                          *
+      *        30 - SFLCLR    }- REVIEW FROM SUBFILE                     *
+      *        31 - SFLEND    }                                          *
+      *        32 - ROLLDOWN  }                                          *
+      *        33 - SFLNXTCHG }                                          *
+      *                                                                  *
+      *        37 - FILE INDICATOR ON SECONAPD                           *
+      *        38 - FILE INDICATOR ON SECONAL0                           *
+      *        39 - FILE INDICATOR ON SE7517DF                           *
+      *        41 - FILE INDICATOR ON SECONAPA                           *
+      *        42 - WRITE INDICATOR ON SECONAPD                          *
+      *                                                                  *
+      *        50 - ENABLE CMD-12                                        *
+      *        56 - DISPLAY STATUS ON REVIEW FROM SCREEN                 *
+      *        57 - DISPLAY 'DELETED' TEXT                               *
+      *        58 - ENABLE CMD-10                                        *
+      *                                                                  *
+      *        61 - ERROR ON ACTION CODE                                 *
+      *        62 - ERROR ON OPTION CODE                                 *
+      *        63 - ERROR ON REVIEW FROM OPTION CODE                     *
+      *        64 - ERROR ON NARRATIVE                                   *
+      *        65 - ERROR ON REVIEW FROM OPPTION CODE                    *
+      *        66 - ERROR ON SUBFILE SELECT                              *
+      *                                                                  *
+      *        99 - FILE ERROR INDICATOR                                 *
+      *                                                                  *
+      ********************************************************************
+     F/EJECT
+      ********************************************************************
+      *
+      ***  Array for Copyright
+     E                    CPY@    1   1 80
+     E********************************************************************
+     E/EJECT
+     I********************************************************************
+      *
+     ICPYR@$      DS
+      ***  Data structure for compilation - Copyright Insertion
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@$$
+      *
+     IPSDS       SDS
+      ***  Program status data structure
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     IFIL1DS      DS
+      ***  File information data strucutre
+     I                                     *STATUS  STATUS
+      *
+     IFIL2DS      DS
+      ***  File information data strucutre
+     I                                    B 397 4000WWHRRN
+      *
+     ILDA       E DSLDA                         256
+      **   Local Data Area for Data Base Errors
+      ***                                   134 141 DBFILE
+      ***                                   142 170 DBKEY
+      ***                                   171 180 DBPGM
+      ***                                   181 1830DBASE
+      ***
+      *
+     IDNATN       DS                              5
+      ***  Data Area for Update Processing
+     I                                        1   50FNATN
+      *
+     ICMTTXT      DS                             56
+      ***  Data structure to provide text on COMIT Entry in Journal
+     I                                        1   50WWNATN
+     I                                        6   7 MDID
+     I                                        8  17 PGMN
+     I                                       18  27 WSIDX
+     I                                       28  330MTIME
+     I                                       34  34 ACTCDX
+     I                                       35  42 USIDX
+     I                                       43  44 S1CODE
+      *
+     IWWDATE      DS
+      ***  DAY, MONTH & YEAR OF LAST UPDATE
+     I                                        1   7 WWDAT
+     I                                        1   20MNDLUP
+     I                                        3   5 MNMLUP
+     I                                        6   70MNYLUP
+      *
+     IRUNDT       DS
+      ***  Data area RUNDAT
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+      *
+     IZMUSER      DS                             17
+      ***  Data area ZMUSER
+     I                                       11  13 USRBCH
+      *
+     ISDBANK    E DSSDBANKPD
+      ***  Bank details
+      *
+     IDSSDY     E DSDSSDY
+      ***  SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+      *
+     C/EJECT
+      *
+      ***             START MAINLINE
+      ***            ----------------
+      *
+      ***  INITIAL PROCESSING
+      *
+     C                     EXSR #A
+      *
+      ***  MAIN PROCESSING
+      *
+     C                     EXSR #B
+      *
+      ***  END PROGRAM
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C/EJECT
+      ********************************************************************
+      *                                                                  *
+      *           INDEX TO SUBROUTINES                                   *
+      *          ----------------------                                  *
+      *                                                                  *
+      *    1.  #A     - INITIALISATION                                   *
+      *    2.  #B     - MAIN PROCESSING                                  *
+      *    3.  #BA    - VALIDATION OF INITIAL SCREEN                     *
+      *    4.  #BB    - PROCESS REVIEW SCREEN                            *
+      *    5.  #BBA   - PROCESS AN ENTRY ON REVIEW SCREEN                *
+      *    6.  #BBAA  - VALIDATE SELECTION ON REVIEW FROM SUBFILE        *
+      *    7.  #ZA    - PROCESS UPDATE SCREEN                            *
+      *    8.  #ZAA   - UPDATE FILES                                     *
+      *    9.  #ZAAA  - UPDATE TRAILER FILE                              *
+      *   10.  #ZAB   - VALIDATION OF UPDATE SCREEN                      *
+      *   11.  #ZB    - LOADS A PAGE OF SUBFILE RECORDS                  *
+      *   12.  #ZC    - PROCESS CMD12                                    *
+      *   13.  ZTNLU1 - TRANSACTION NUMBER PROCESSING                    *
+      *   14.  ZASNMS - SEND MESSAGE TO PROGRAMS MESSAGE QUEUE           *
+      *   15.  #PSSR  - PROGRAM ERROR HANDLING ROUTINE                   *
+      *                                                                  *
+      ********************************************************************
+     C/EJECT
+      ********************************************************************
+      *  #A        - INITIALISATION                                      *
+      *                                                                  *
+      *  Calls     - None                                                *
+      *  Called by - Mainline                                            *
+      ********************************************************************
+     C           #A        BEGSR
+      *
+      ***  LDA DEFINITION.
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ***  Read in ZMUSER
+      *
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   ZMUSER
+      *
+      ***  Read in RUNDAT
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+      *
+      ***  INITIALISE DB ERROR FIELDS ETC, AND STORE PROGRAM NAME FOR
+      ***  DB ERROR FIELD.
+      *
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBASE
+     C                     MOVEL'SE7517'  DBPGM
+      *
+     C                     Z-ADD*ZERO     WWDSTN  50
+     C                     Z-ADD*ZERO     LSTRR2  40
+     C                     Z-ADD*ZERO     SFLRR2  40
+     C                     Z-ADD*ZERO     WWSRRN  40
+     C                     Z-ADD*ZERO     WWSFLC  40
+     C                     Z-ADD*ZERO     WWLRRN  40
+      *
+     C                     MOVE *BLANKS   WWMSGD  7
+     C                     MOVE *BLANKS   WWSSEL  1
+     C                     MOVE '1'       *IN26
+     C                     MOVE 'Y'       WWVALD  1
+      *
+     C                     MOVE *BLANKS   ZAMSGF
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+      *
+      ***  Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @@RTCD  7
+     C                     PARM '*FIRST ' @@OPTN  7
+     C           SDBANK    PARM SDBANK    DSSDY
+     C           @@RTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           *DB ERROR 001 *
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   WWTPGQ
+     C                     MOVEL'*'       WWTPGQ
+     C                     MOVE *BLANKS   WWPGQR
+     C                     MOVEL'*PRV'    WWPGQR
+      *
+      ***  Initialise screen message queue
+      *
+     C                     MOVEL'*'       ##PGMQ
+      *
+      ***  Initialise header screen
+      *
+     C                     MOVELUSER      SUSER
+     C                     MOVELRUNA      SRUNA
+     C                     MOVELWSID      SWSID
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      ********************************************************************
+      *  #B        - MAIN PROCESSING                                     *
+      *                                                                  *
+      *  Calls     - #BA, #BB, #ZA                                       *
+      *  Called by - Mainline                                            *
+      ********************************************************************
+     C           #B        BEGSR
+      *
+      ***  Do while not CMD-3
+      *
+     C           *INKC     DOWEQ'0'
+      *
+      ***  Display selection screen
+      *
+     C                     WRITESE7517F1
+      *
+      ***  If error, write message subfile
+      *
+     C           WWVALD    IFEQ 'N'
+     C                     WRITESE7517C2
+     C                     END
+      *
+      ***  Read selection screen
+      *
+     C                     READ SE7517F1                 39
+      *
+      ***  If not CMD-3
+      *
+     C           *INKC     IFEQ '0'
+      *
+      ***  Perform validation
+      *
+     C                     EXSR #BA
+      *
+     C                     END
+      *
+      ***  If valid details
+      *
+     C           WWVALD    IFEQ 'Y'
+      *
+      ***  Enable CMD-12
+      *
+     C                     MOVE '1'       *IN50
+      *
+      ***  Display nest screen as necessary
+      *
+     C           WWSFL     IFEQ 'Y'
+      *
+      ***  Review from subfile
+      *
+     C                     EXSR #BB
+      *
+     C                     ELSE
+      *
+      ***  Detail screen
+      *
+     C                     EXSR #ZA
+      *
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      ********************************************************************
+      *  #BA       - VALIDATION OF INITIAL SCREEN                        *
+      *                                                                  *
+      *  Calls     - ZASNMS                                              *
+      *  Called by - #B                                                  *
+      ********************************************************************
+     C           #BA       BEGSR
+      *
+      ***  Clear screen message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ 10
+     C                     PARM           WWPGQR  5
+      *
+      ***  Set of error indicators
+      *
+     C                     MOVE '0'       *IN61
+     C                     MOVE '0'       *IN62
+     C                     MOVE '0'       *IN63
+      *
+      ***  Set ON valid flag
+      *
+     C                     MOVE 'Y'       WWVALD
+      *
+      ***  If all fields blanks - SUBFILE Required
+      *
+     C           SACT      IFEQ *BLANKS
+     C           S1CODE    ANDEQ*BLANKS
+     C           S1RCRG    ANDEQ*BLANKS
+      *
+     C                     MOVE 'Y'       WWSFL   1
+      *
+     C                     ELSE
+      *
+     C                     MOVE 'N'       WWSFL
+      *
+      ***  If review from entered
+      *
+     C           S1RCRG    IFNE *BLANKS
+      *
+      ***  If option code not blank - ERROR
+      *
+     C           SACT      IFNE *BLANKS
+     C           S1CODE    ORNE *BLANKS
+      *
+     C                     MOVE '1'       *IN61
+     C                     MOVE '1'       *IN62
+     C                     MOVE '1'       *IN63
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CO00091' ZAMSID
+     C                     EXSR ZASNMS
+      *
+      ***  Review from subfile screen Required
+      *
+     C                     ELSE
+      *
+     C                     MOVE 'Y'       WWSFL
+      *
+     C                     END
+      *
+      ***  Review from not entered
+      *
+     C                     ELSE
+      *
+      ***  Action is blank => Option Code ONLY ENTERED
+      *
+     C           SACT      IFEQ *BLANKS
+      *
+     C                     MOVE '1'       *IN61
+     C                     MOVE '1'       *IN62
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CO00092' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C                     ELSE
+      *
+      ***  Action not blank => Option Code MUST BE ENTERED
+      *
+     C           S1CODE    IFEQ *BLANKS
+     C                     MOVE '1'       *IN62
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CO00093' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     END
+      *
+      ***  Action entered & Valid so FAR
+      *
+     C           SACT      IFNE *BLANKS
+     C           WWVALD    ANDEQ'Y'
+      *
+      ***  Action must be 'I', 'A', 'E', OR 'D'
+      *
+     C           SACT      IFNE 'I'
+     C           SACT      ANDNE'A'
+     C           SACT      ANDNE'E'
+     C           SACT      ANDNE'D'
+      *
+     C                     MOVE '1'       *IN61
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CO00082' ZAMSID
+     C                     EXSR ZASNMS
+      *
+      ***  Valid action code
+      *
+     C                     ELSE
+      *
+      ***  If action = 'D' - System set up flag must = 'N'
+      *
+     C           SACT      IFEQ 'D'
+     C           BJSUC     ANDEQ'Y'
+     C                     MOVE '1'       *IN61
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CO00083' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      ***  If valid, check spf
+      *
+     C           WWVALD    IFEQ 'Y'
+      *
+      ***  For single-Branch environment
+      *
+     C           MBIN      IFNE 'Y'
+     C                     CALL 'ZVACTU'
+     C                     PARM SACT      @ZACTN  1
+     C                     PARM           @ERR    10
+      *
+      ***  If action invalid for user
+      *
+     C           @ERR      IFNE *ZERO
+     C                     MOVE '1'       *IN61
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CO00034' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+     C                     ELSE
+      *
+      ***  Fof multi-branch environment
+      *
+     C                     CALL 'ZVACTBU'
+     C                     PARM SACT      @ZACTN  1
+     C                     PARM USRBCH    @ZBR    3
+     C                     PARM           @ERR    10
+      *
+      ***  If action invalid for user
+      *
+     C           @ERR      IFEQ 1
+     C                     MOVE '1'       *IN61
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CO00035' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C           @ERR      IFEQ 2
+     C                     MOVE '1'       *IN61
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CO00036' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *
+      ***  If valid SO FAR
+      *
+     C           WWVALD    IFEQ 'Y'
+      *
+      ***  Validate Option Code
+      *
+     C           S1CODE    CHAINSECONAL0             38
+      *
+      ***  If record FOUND
+      *
+     C           *IN38     IFEQ '0'
+      *
+      ***  Action = 'I'
+      *
+     C           SACT      IFEQ 'I'
+      *
+      ***  If record not flagged as Deleted
+      *
+     C           MNRECI    IFNE '*'
+      *
+      ***  Live record and therefore CANNOT BE RE-INSERTED
+      *
+     C                     MOVE '1'       *IN61
+     C                     MOVE '1'       *IN62
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CO00094' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C                     ELSE
+      *
+      ***  DELETED RECORD SO ALLOW RE-INSERTION
+      *
+     C                     MOVE *BLANKS   SNARR
+     C                     MOVEL'IA'      WWFMT   2
+     C                     Z-ADDMNTNLU    STNLU
+     C                     Z-ADDWWHRRN    S2RRN
+      *
+     C                     END
+      *
+      ***  Action Code = 'A', 'D' OR 'E'
+      *
+     C                     ELSE
+      *
+      ***  If record flagged as DELETED
+      *
+     C           MNRECI    IFEQ '*'
+      *
+      ***  If action code = 'A' OR 'D' - ERROR
+      *
+     C           SACT      IFEQ 'A'
+     C           SACT      OREQ 'D'
+      *
+     C                     MOVE '1'       *IN61
+     C                     MOVE '1'       *IN62
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CO00090' ZAMSID
+     C                     EXSR ZASNMS
+      *
+      ***  Enquiry on Deleted record
+      *
+     C                     ELSE
+      *
+     C                     MOVE '1'       *IN57
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+      ***  Record does NOT EXIST
+      *
+     C                     ELSE
+      *
+     C           SACT      IFNE 'I'
+     C                     MOVE '1'       *IN61
+     C                     MOVE '1'       *IN62
+     C                     MOVE 'N'       WWVALD
+      *
+     C                     MOVEL'CO00090' ZAMSID
+      *
+     C                     EXSR ZASNMS
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     MOVELMNNARR    SNARR
+      *
+     C                     Z-ADDWWHRRN    S2RRN
+     C                     Z-ADDMNTNLU    STNLU
+      *
+      ***  Set Format flag depending on type
+      *
+     C           SACT      IFEQ 'I'
+     C                     MOVEL'IA'      WWFMT
+     C                     MOVEL*BLANKS   SNARR
+     C                     END
+      *
+     C           SACT      IFEQ 'A'
+     C                     MOVEL'IA'      WWFMT
+     C                     END
+      *
+     C           SACT      IFEQ 'E'
+     C                     MOVEL'EN'      WWFMT
+     C                     END
+      *
+     C           SACT      IFEQ 'D'
+     C                     MOVEL'DL'      WWFMT
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      ********************************************************************
+      *  #BB       - PROCESS REVIEW SCREEN                               *
+      *                                                                  *
+      *  Calls     - #BBA, #ZB, #ZC                                      *
+      *  Called by - #B                                                  *
+      ********************************************************************
+     C           #BB       BEGSR
+      *
+      ***  Clear screen message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ 10
+     C                     PARM           WWPGQR  5
+      *
+      ***  Load first page for subfile
+      *
+     C                     EXSR #ZB
+      *
+      ***  Do while not CMD-3 and CMD-12
+      *
+     C           *INKC     DOWEQ'0'
+     C           *INKL     ANDEQ'0'
+      *
+     C                     WRITESE7517C1
+     C                     WRITESE7517F5
+      *
+     C           WWVALD    IFEQ 'N'
+     C                     WRITESE7517C2
+     C                     END
+      *
+     C                     READ SE7517C1                 59
+      *
+      ***  If not CMD-3
+      *
+     C           *INKC     IFEQ '0'
+      *
+     C           *IN27     CASEQ'1'       #ZB              ROLLUP
+     C           *IN32     CASEQ'1'       #ZB              ROLLDOWN
+     C           *INKL     CASEQ'1'       #ZC              CMD-12
+     C                     CAS            #BBA             ENTER
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      ********************************************************************
+      *  #BBA      - PROCESS ENTRY ON REVIEW SCREEN                      *
+      *                                                                  *
+      *  Calls     - #BBAA, #ZA, #ZB, ZASNMS                             *
+      *  Called by - #BB                                                 *
+      ********************************************************************
+     C           #BBA      BEGSR
+      *
+      ***  Clear screen message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ
+     C                     PARM           WWPGQR
+      *
+      ***  Set ON valid flag
+      *
+     C                     MOVE 'Y'       WWVALD
+      *
+      ***  If blank subfile displayed - ASSUME REVIEW FROM REQUIRED
+      *
+     C           *IN28     IFEQ '0'
+      *
+     C                     MOVE '1'       *IN59
+      *
+      ***  Else identify whether 'REVIEW FROM' or SELECTION REQUIRED
+      *
+     C                     ELSE
+      *
+     C                     READCSE7517S1                 59
+      *
+     C                     END
+      *
+      ***  No Records changed => 'REVIEW FROM' required
+      *
+     C           *IN59     IFEQ '1'
+      *
+     C                     EXSR #ZB
+      *
+     C                     ELSE
+      *
+      ***  Validate selection
+      *
+     C                     EXSR #BBAA
+      *
+      ***  If valid
+      *
+     C           WWVALD    IFEQ 'Y'
+      *
+      ***  Process detail screen
+      *
+     C                     EXSR #ZA
+      *
+      ***  If not CMD-3 or CMD-12
+      *
+     C           *INKC     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+      *
+      ***  Chain to subfile to get first record
+      *
+     C           1         CHAINSE7517S1             39
+     C                     MOVELS2CODE    S1RCRG
+      *
+      ***  Rebuild subfile
+      *
+     C                     EXSR #ZB
+      *
+     C                     END
+      *
+     C                     ELSE
+      *
+      ***  Save RRN of changed subfile record
+      *
+     C                     Z-ADDSFLRR2    WWSRRN
+     C                     MOVE S2SEL     WWSSEL
+      *
+      ***  Remove reverse image from subfile
+      *
+     C                     Z-ADD0         WWSFLC
+      *
+     C           WWSFLC    DOWLTWWLRRN
+      *
+     C                     ADD  1         WWSFLC
+      *
+     C           WWSFLC    CHAINSE7517S1             39
+     C                     MOVE *BLANKS   S2SEL
+     C                     MOVE '0'       *IN66
+      *
+     C                     UPDATSE7517S1
+      *
+     C                     END
+      *
+     C                     MOVE '1'       *IN66
+     C                     MOVE 'N'       WWVALD
+     C                     MOVELWWMSGD    ZAMSID
+     C                     EXSR ZASNMS
+     C           WWSRRN    CHAINSE7517S1             39
+     C                     MOVE WWSSEL    S2SEL
+     C                     UPDATSE7517S1
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      ********************************************************************
+      *  #BBAA     - VALIDATE SELECTION ON REVIEW FROM SUBFILE           *
+      *                                                                  *
+      *  Calls     - NONE                                                *
+      *  Called by - #BBA                                                *
+      ********************************************************************
+     C           #BBAA     BEGSR
+      *
+     C                     MOVE '0'       *IN57
+      *
+      ***  Selection must = 'I' 'A' 'E' OR 'D'
+      *
+     C           S2SEL     IFNE 'I'
+     C           S2SEL     ANDNE'A'
+     C           S2SEL     ANDNE'E'
+     C           S2SEL     ANDNE'D'
+      *
+     C                     MOVEL'CO00082' WWMSGD
+     C                     MOVE 'N'       WWVALD
+      *
+     C                     ELSE
+      *
+      ***  SPF check.
+      ***  for single-branch environment
+      *
+     C           MBIN      IFNE 'Y'
+     C                     CALL 'ZVACTU'
+     C                     PARM S2SEL     @ZACTN  1
+     C                     PARM           @ERR    10
+      *
+      ***  If action invalid for user
+      *
+     C           @ERR      IFNE *ZERO
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CO00034' WWMSGD
+     C                     END
+     C                     ELSE
+      *
+      ***  for multi-branch environment
+      *
+     C                     CALL 'ZVACTBU'
+     C                     PARM S2SEL     @ZACTN  1
+     C                     PARM USRBCH    @ZBR    3
+     C                     PARM           @ERR    10
+      *
+      ***  If action invalid for user
+      *
+     C           @ERR      IFEQ 1
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CO00035' WWMSGD
+     C                     ELSE
+     C           @ERR      IFEQ 2
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CO00036' WWMSGD
+     C                     END
+     C                     END
+     C                     END
+      *
+      ***  If action = 'D' - System set up flag must = 'N'
+      *
+     C           S2SEL     IFEQ 'D'
+     C           BJSUC     ANDEQ'Y'
+      *
+     C                     MOVEL'CO00083' WWMSGD
+     C                     MOVE 'N'       WWVALD
+      *
+     C                     ELSE
+      *
+      ***  If action = 'I' , Record must be flagged as DELETED
+      *
+     C           S2SEL     IFEQ 'I'
+     C           S2TYP     ANDNE'D'
+      *
+     C                     MOVEL'CO00094' WWMSGD
+     C                     MOVE 'N'       WWVALD
+      *
+     C                     ELSE
+      *
+      ***  If record flagged as DELETED
+      *
+     C           S2TYP     IFEQ 'D'
+      *
+     C           S2SEL     IFEQ 'E'
+     C                     MOVE '1'       *IN57
+     C                     END
+      *
+      ***  Action cannot equal 'A' OR 'D'
+      *
+     C           S2SEL     IFEQ 'A'
+     C           S2SEL     OREQ 'D'
+      *
+     C                     MOVEL'CO00090' WWMSGD
+     C                     MOVE 'N'       WWVALD
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+      ***  If valid entry
+      *
+     C           WWVALD    IFEQ 'Y'
+      *
+     C                     MOVELS2SEL     SACT
+     C                     MOVELS2CODE    S1CODE
+      *
+      ***  Set format flag depending on type
+      *
+     C           S2SEL     IFEQ 'I'
+     C                     MOVEL'IA'      WWFMT
+     C                     MOVE *BLANKS   SNARR
+     C                     END
+      *
+     C           S2SEL     IFEQ 'A'
+     C                     MOVEL'IA'      WWFMT
+     C                     END
+      *
+     C           S2SEL     IFEQ 'E'
+     C                     MOVEL'EN'      WWFMT
+     C                     END
+      *
+     C           S2SEL     IFEQ 'D'
+     C                     MOVEL'DL'      WWFMT
+     C                     END
+      *
+     C           S2SEL     IFNE 'I'
+     C                     MOVELS2CODE    S1CODE
+     C                     MOVELS2NARR    SNARR
+     C                     ENDIF
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      ********************************************************************
+      *  #ZA       - PROCESS UPDATE SCREEN                               *
+      *                                                                  *
+      *  Calls     - #ZAA, #ZAB, #ZC                                     *
+      *  Called by - #B, #BBA                                            *
+      ********************************************************************
+     C           #ZA       BEGSR
+      *
+      ***  Set of valid flag
+      *
+     C                     MOVE 'N'       WWVALD
+      *
+      ***  Dowhile exit not requested
+      *
+     C           *INKC     DOWEQ'0'
+     C           *INKL     ANDEQ'0'
+     C           WWVALD    ANDEQ'N'
+      *
+     C           WWFMT     IFEQ 'IA'
+     C                     WRITESE7517F2
+     C                     END
+      *
+     C           WWFMT     IFEQ 'EN'
+     C                     WRITESE7517F3
+     C                     END
+      *
+     C           WWFMT     IFEQ 'DL'
+     C                     MOVE '1'       *IN58
+     C                     WRITESE7517F4
+     C                     END
+      *
+      ***  If error and not help, write message subfile
+      *
+     C           WWVALD    IFEQ 'N'
+     C                     WRITESE7517C2
+     C                     END
+      *
+      ***  Read screen
+      *
+     C           WWFMT     IFEQ 'IA'
+     C                     READ SE7517F2                 39
+     C                     END
+      *
+     C           WWFMT     IFEQ 'EN'
+     C                     READ SE7517F3                 39
+     C                     END
+      *
+     C           WWFMT     IFEQ 'DL'
+     C                     READ SE7517F4                 39
+     C                     END
+      *
+      *** If not CMD-3
+      *
+     C           *INKC     IFEQ '0'
+      *
+     C           *INKJ     CASEQ'1'       #ZAA             CMD-10
+     C           *INKL     CASEQ'1'       #ZC              CMD-12
+     C                     CAS            #ZAB             ENTER
+     C                     END
+      *
+     C                     END
+      *
+     C           *INKC     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+     C           WWVALD    ANDEQ'Y'
+      *
+     C           SACT      IFEQ 'I'
+     C           SACT      OREQ 'A'
+      *
+      ***  Update files
+      *
+     C                     EXSR #ZAA
+      *
+     C                     END
+      *
+     C           WWVALD    IFEQ 'Y'
+      *
+     C                     MOVE *BLANKS   SACT
+     C                     MOVE *BLANKS   S1CODE
+     C                     MOVE *BLANKS   S1RCRG
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      ********************************************************************
+      *  #ZAA      - UPDATE PROCESSING                                   *
+      *                                                                  *
+      *  Calls     - #ZAAA, ZASNMS, ZTNLU1, *PSSR                        *
+      *  Called by - #ZA                                                 *
+      ********************************************************************
+     C           #ZAA      BEGSR
+      *
+     C                     EXSR ZTNLU1
+     C                     MOVE 'Y'       WWVALD
+      *
+      ***  Action = 'I'
+      *
+     C           SACT      IFEQ 'I'
+      *
+      ***  Access option code
+      *
+     C           S1CODE    CHAINSECONAPD             37
+      *
+      ***  Set up DAY,MONTH,YEAR OF LAST UPDATE
+      *
+     C                     MOVE BJMRDT    WWDAT
+      *
+      ***  If a record already exists
+      *
+     C           *IN37     IFEQ '0'
+      *
+      ***  If TRANS. NO. OF LAST UPDATE HAS CHANGED - ERROR
+      *
+     C           MNTNLU    IFNE STNLU
+      *
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CO00086' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C                     EXCPTSECONA
+      *
+      ***  Else - UPDATE Record
+      *
+     C                     ELSE
+      *
+     C                     MOVE 'D'       MNRECI
+     C                     MOVELS1CODE    MNCODE
+     C                     MOVELSNARR     MNNARR
+     C                     Z-ADDWWDSTN    MNTNLU
+     C                     Z-ADDBJRDNB    MNLCD
+     C                     TIME           MNTLUP
+     C                     MOVE 'I'       MNCHTP
+      *
+     C                     UPDATSECONAD0
+      *
+     C                     END
+      *
+      ***  Else - Record does not exist
+      *
+     C                     ELSE
+      *
+     C                     MOVE 'D'       MNRECI
+     C                     MOVELS1CODE    MNCODE
+     C                     MOVELSNARR     MNNARR
+     C                     Z-ADDWWDSTN    MNTNLU
+     C                     Z-ADDBJRDNB    MNLCD
+     C                     TIME           MNTLUP
+     C                     MOVE 'I'       MNCHTP
+      *
+     C                     WRITESECONAD0               42
+      *
+      ***  If duplicate key error
+      *
+     C           *IN42     IFEQ '1'
+      *
+     C           STATUS    IFEQ 01021
+      *
+     C                     ROLBK
+      *
+      ***  Clear messages caused by status error
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ
+     C                     PARM           WWPGQR
+      *
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CO00086' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C                     ELSE
+      *
+     C                     EXSR *PSSR
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+      ***  Action = 'A'
+      *
+     C           SACT      IFEQ 'A'
+      *
+      **   Access Option Code
+      *
+     C           S1CODE    CHAINSECONAPD             37
+      *
+      ***  Set up DAY,MONTH,YEAR OF LAST UPDATE
+      *
+     C                     MOVE BJMRDT    WWDAT
+      *
+      ***  If a record not found or TNLU has CHANGED
+      *
+     C           *IN37     IFEQ '1'
+     C           MNTNLU    ORNE STNLU
+      *
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CO00086' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C           *IN37     IFEQ '0'
+     C                     EXCPTSECONA
+     C                     END
+      *
+      ***  Else - UPDATE record
+      *
+     C                     ELSE
+      *
+     C                     MOVELS1CODE    MNCODE
+     C                     MOVELSNARR     MNNARR
+     C                     Z-ADDWWDSTN    MNTNLU
+      *
+     C           MNLCD     IFNE BJRDNB
+     C                     MOVE 'A'       MNCHTP
+     C                     END
+      *
+     C                     Z-ADDBJRDNB    MNLCD
+     C                     TIME           MNTLUP
+      *
+     C                     UPDATSECONAD0
+      *
+     C                     END
+      *
+     C                     END
+      *
+      ***  Action = 'D'
+      *
+     C           SACT      IFEQ 'D'
+      *
+      ***  Access Option Code
+      *
+     C           S1CODE    CHAINSECONAPD             37
+      *
+      ***  Set up DAY,MONTH,YEAR OF LAST UPDATE
+      *
+     C                     MOVE BJMRDT    WWDAT
+      *
+      ***  If a record not found or TNLU has CHANGED
+      *
+     C           *IN37     IFEQ '1'
+     C           MNTNLU    ORNE STNLU
+      *
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'CO00086' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C           *IN37     IFEQ '0'
+     C                     EXCPTSECONA
+     C                     END
+      *
+      ***  Else - DELETE record
+      *
+     C                     ELSE
+      *
+     C                     MOVE '*'       MNRECI
+      *
+     C                     Z-ADDWWDSTN    MNTNLU
+     C                     MOVE 'D'       MNCHTP
+     C                     Z-ADDBJRDNB    MNLCD
+     C                     TIME           MNTLUP
+      *
+     C                     UPDATSECONAD0
+     C                     MOVE '0'       *IN58
+      *
+     C                     END
+      *
+     C                     END
+      *
+      ***  If no error
+      *
+     C           WWVALD    IFEQ 'Y'
+      *
+      ***  If action = 'I' or 'D'
+      *
+     C           SACT      IFEQ 'I'
+     C           SACT      OREQ 'D'
+      *
+      ***  Update Trailer File
+      *
+     C                     EXSR #ZAAA
+      *
+     C                     END
+      *
+      ***  COMIT updates
+      *
+     C           CMTTXT    COMIT
+      *
+     C                     END
+      *
+     C           #ZA1      ENDSR
+      *
+     C/EJECT
+      ********************************************************************
+      *  #ZAAA     - UPDATE TRAILER FILE                                 *
+      *                                                                  *
+      *  Calls     - NONE                                                *
+      *  Called by - #ZAA                                                *
+      ********************************************************************
+     C           #ZAAA     BEGSR
+      *
+      ***  Access SAFE CUSTODY FEES GROUP TRAILER
+      *
+     C           1         CHAINSECONAPA             41
+      *
+     C           *IN41     IFEQ '1'
+     C           MNRECI    ORNE 'Z'
+     C                     ROLBK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SECONAPA'DBFILE           ***************
+     C                     MOVEL*BLANKS   DBKEY            * DBERROR 002 *
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     OUT  LDA
+     C                     RETRN
+     C                     END
+      *
+      ***  If action = 'I' , Add 1 to NO of records
+      *
+     C           SACT      IFEQ 'I'
+     C                     ADD  1         MNNORE
+     C                     END
+      *
+      ***  If Action = 'D' , Subtract 1 from NO of records
+      *
+     C           SACT      IFEQ 'D'
+     C                     SUB  1         MNNORE
+     C                     END
+      *
+      ***  Update trailer file
+      *
+     C                     UPDATSECONAZ0
+      *
+      ***  Set up commitment text
+      *
+     C                     MOVEL'  '      MDID
+     C                     MOVEL'SE7517'  PGMN
+     C                     MOVELSWSID     WSIDX
+     C                     MOVELSUSER     USIDX
+     C                     MOVE *BLANKS   ACTCDX
+     C                     TIME           MTIME
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      ********************************************************************
+      *  #ZAB      - VALIDATE UPDATE SCREEN                              *
+      *                                                                  *
+      *  Calls     - ZASNMS                                              *
+      *  Called by - #ZA                                                 *
+      ********************************************************************
+     C           #ZAB      BEGSR
+      *
+      ***  Clear screen message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ
+     C                     PARM           WWPGQR
+      *
+      ***  Set of indicators
+      *
+     C                     MOVE '0'       *IN64
+      *
+      ***  Set on valid flag
+      *
+     C                     MOVE 'Y'       WWVALD
+      *
+      ***  Narrative must be entered
+      *
+     C           SNARR     IFEQ *BLANKS
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE '1'       *IN64
+     C                     MOVEL'CO00089' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      ********************************************************************
+      *  #ZB       - LOAD A PAGE OF SUBFILE RECORDS                      *
+      *                                                                  *
+      *  Calls     - None                                                *
+      *  Called by - #BB, #BBA                                           *
+      ********************************************************************
+     C           #ZB       BEGSR
+      *
+     C                     Z-ADD*ZERO     WWLRRN
+     C                     Z-ADD*ZERO     SFLRR2
+     C                     Z-ADD*ZERO     WWSFLC
+     C                     MOVEL*BLANKS   S2SEL
+     C                     MOVE '0'       *IN28
+     C                     MOVE '0'       *IN29
+     C                     MOVE '0'       *IN31
+     C                     MOVE '0'       *IN56
+     C                     MOVE '0'       *IN66
+      *
+      ***  Clear screen 2 subfile
+      *
+     C                     MOVEA'001'     *IN,28           OFF 28-29 ON 30
+     C                     WRITESE7517C1
+     C                     MOVEA'000'     *IN,28           OFF 28-30
+      *
+     C           *IN32     IFEQ '1'
+     C           *LOVAL    SETLLSECONAPD
+     C                     ELSE
+     C           S1RCRG    SETLLSECONAPD
+     C                     END
+      *
+     C                     READ SECONAPD                 37
+      *
+     C           *IN37     IFEQ '1'
+      *
+     C                     MOVE '1'       *IN29            SFLDSPCTL
+      *
+     C                     ELSE
+      *
+     C                     MOVE '1'       *IN28            SFLDSP
+     C                     MOVE '1'       *IN29            SFLDSPCTL
+      *
+     C           *IN37     DOWEQ'0'
+     C           WWSFLC    ANDLT13
+      *
+     C           MNRECI    IFEQ '*'
+     C                     MOVEL'D'       S2TYP
+     C                     MOVE '1'       *IN56
+     C                     ELSE
+     C                     MOVEL*BLANKS   S2TYP
+     C                     MOVE '0'       *IN56
+     C                     END
+      *
+     C                     MOVELMNCODE    S2CODE
+     C                     MOVELMNNARR    S2NARR
+     C                     Z-ADDWWHRRN    S2RRN
+     C                     Z-ADDMNTNLU    STNLU
+      *
+     C                     ADD  1         WWSFLC
+     C                     ADD  1         SFLRR2
+      *
+     C                     WRITESE7517S1
+      *
+     C                     READ SECONAPD                 37
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C           *IN37     IFEQ '0'
+     C                     MOVELMNCODE    S1RCRG
+     C                     ELSE
+     C                     MOVE '1'       *IN31
+     C                     MOVEL*BLANKS   S1RCRG
+     C                     END
+      *
+     C                     Z-ADDSFLRR2    WWLRRN
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      ********************************************************************
+      *  #ZC       - PROCESS CMD-12                                      *
+      *                                                                  *
+      *  Calls     - None                                                *
+      *  Called by - #BB, #ZA                                            *
+      ********************************************************************
+     C           #ZC       BEGSR
+      *
+      ***  Clear screen message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ 10
+     C                     PARM           WWPGQR  5
+      *
+      ***  Clear screen error indicators
+      *
+     C                     MOVE '0'       *IN50
+     C                     MOVE '0'       *IN58
+     C                     MOVE '0'       *IN61
+     C                     MOVE '0'       *IN62
+     C                     MOVE '0'       *IN63
+     C                     MOVE '0'       *IN64
+     C                     MOVE '0'       *IN65
+     C                     MOVE '0'       *IN66
+     C                     MOVE '0'       *IN67
+     C                     MOVE '0'       *IN68
+     C                     MOVE '0'       *IN69
+      *
+      ***  Initialise fields
+      *
+     C                     MOVEL*BLANKS   SACT
+     C                     MOVEL*BLANKS   S1CODE
+     C                     MOVEL*BLANKS   S1RCRG
+     C                     MOVEL*BLANKS   SNARR
+     C                     MOVEL*BLANKS   S2RRN
+     C                     MOVEL*BLANKS   STNLU
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      ********************************************************************
+      *  ZTNLU1    - RETRIEVE/UPDATE TRANS NO. OF LAST UPDATE            *
+      *                                                                  *
+      *  Calls     - None                                                *
+      *  Called by - #ZAA                                                *
+      ********************************************************************
+     C           ZTNLU1    BEGSR                                        **
+      *
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     Z-ADDFNATN     WWDSTN
+     C                     Z-ADDFNATN     WWNATN
+     C                     ADD  1         FNATN
+     C                     OUT  DNATN
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      ********************************************************************
+      *  ZASNMS    - SEND MESSAGE TO PROGRAM'S MESSAGE QUEUE             *
+      *                                                                  *
+      *  Calls     - Y2SNMGC                                             *
+      *  Called by - #BA, #BAA, #BBA, #ZAA, #ZAB                         *
+      ********************************************************************
+     C           ZASNMS    BEGSR                           ** ZASNMS    **
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10
+     C                     PARM           ZAPGRL  5
+     C                     PARM           ZAMSID  7
+     C                     PARM           ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTP  7
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      ********************************************************************
+      *  *PSSR     - PROGRAM ERROR HANDLING ROUTINE                      *
+      *                                                                  *
+      *  CALLS     - NONE                                                *
+      *                                                                  *
+      *  CALLED BY - #ZAA                                                *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR
+      *
+     C                     DUMP
+      *
+     C                     ROLBK
+      *
+     C                     MOVE '1'       *INLR
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *
+      *
+      ***  Release the record from SECONAPD
+     OSECONAD0E                SECONA
+      *
+     O/EJECT
+** CPY@
+(c) Misys International Banking Systems Ltd. 2001

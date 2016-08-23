@@ -1,0 +1,80 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  XXXXXXX - (/COPY Name)                                       *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      *  Last Amend No. nnnnnn  *CREATE    Date ddmmmyy               *
+      *  Prev Amend No. nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  nnnnnn - (change description)                                *
+      *                                                               *
+      *****************************************************************
+-----------------------------------------------------------------------
+-----------------------------------------------------------------------
+PROCESS DESCRIPTION
+Process:ZLCR       Name:Determine Last Rate Change Date
+-
+-----------------------------------------------------------------------
+-----------------------------------------------------------------------
+Process :  Determine Last Rate Change Date   ZLCR
+For each:  Call of process
+When    :  Called
+-----------------------------------------------------------------------
+-
+- Use subroutines ZNCDZ1 &ZNCDZ2 to set up arrays, otherwise if you
+- are using subroutines ZLCD,ZNCD or ZNCR use subroutines already
+- installed.
+-            |   Data item                   |  Source/Dest.
+      -------|-------------------------------|----------------
+      Input  |   Arrays (12 entries) of :    | Security
+             |    Coupon rate/payt dates     |
+             |    (as DDMM or MMDD)          |
+             |    Rate/payt inds             |
+             |   First Coupon Date           |   "
+             |   Maturity Date               |   "
+             |   Event control date          | ZEVCD
+             |   Date Format                 | TABTB10, ZSYSTM
+             |                               |
+      -------|-------------------------------|----------------
+      Output |   Next Rate Change Date       |  process
+             |                               |
+ 
+   1. Obtain MMDD for Event Control Date (ZDATE2).
+ 
+   2. If Date Format = DDMMYY, turn round array of coupon dates
+      to MMDD, to enable 'GT' comparison.
+ 
+   3. Find Last Rate Change Date from arrays:
+ 
+      3.1 If Rate/Payt inds all blank,
+            -  Last Rate Change Date = Maturity Date
+ 
+      3.2 Else,
+            Using Event Ctl Date MMDD for comparison, search for last
+            highest coupon MMDD for which Rate/payt ind = R or C (ie. |
+            Rate Change or Both).
+ 
+            - If found, add ECD's YY to form a date in correct        |
+              ICD date format
+ 
+            - Else,
+                - use first coupon MMDD with Rate/payt ind = R or C   |
+                - add (ECD's YY + 1) to form a date in correct ICD    |
+                  format.
+-
+   4. Convert date to day no (ZDATE1) = Last Rate Change Date (NCR).
+ 
+   5. If LCR GT Maturity Date, reset LCR = MATURITY Date.
+ 
+   6. If LCR LT First Coupon Date, reset LCR = First Coupon Date.
+ 
+-----------------------------------------------------------------------
+-----------------------------------------------------------------------

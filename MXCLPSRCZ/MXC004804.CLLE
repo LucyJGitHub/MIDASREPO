@@ -1,0 +1,93 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas MX Daily Housekeeping - LE purging update')     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Meridian Export Module                              */
+/*                                                                   */
+/*       MXC004804 - Daily Housekeeping - LE purging update          */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. AR1097467          Date 01Apr13              */
+/*       Prev Amend No. AR1089839          Date 19Feb13              */
+/*                      CMX014  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR1097467 - Expected 15% COB run optimization not met       */
+/*       AR1089839 - COBOP and 2.1 source clashes                    */
+/*       CMX014 - COB Restructure - MX COB Optimisation Phase 1      */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM                                                     */                /*AR1097467*/
+             PGM        PARM(&FILE)                                                    /*AR1097467*/
+ 
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)                                 /*AR1097467*/
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&ERMS) TYPE(*CHAR) LEN(30)
+             DCL        VAR(&COB) TYPE(*CHAR) LEN(1) VALUE(Y)
+             DCL        VAR(&SOM) TYPE(*CHAR) LEN(1) VALUE(N)
+             DCL        VAR(&CURSOM) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&PRVSOM) TYPE(*CHAR) LEN(5)
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2012')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('MXC004804 - Midas MX Daily Housekeeping +
+                          - LE purging and update') TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(00000000)
+ 
+             CALL       PGM(MXEXCTUPD) PARM(&RTCD &ERMS &COB &SOM)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* If start of month, purge saved data files */
+/* Drop all records with an LCD < previous start of month date */
+/* This means 2 months of data is held on these files */
+ 
+             IF         COND(&SOM *EQ 'Y') THEN(DO)
+ 
+             RTVDTAARA  DTAARA(MXEXPCTL (11 5)) RTNVAR(&PRVSOM)
+ 
+/**********  RUNSQL     SQL('delete from MXSLECLPD where LCD <' +  */                  /*AR1089839*/
+/**********                *CAT &PRVSOM) COMMIT(*NONE)             */                  /*AR1089839*/
+             IF         COND(&FILE *EQ 'CLOANCL') THEN(DO)                             /*AR1097467*/
+             SCRUNSQL   SQL('delete from MXSLECLPD where LCD <' +
+                           *CAT &PRVSOM)                                               /*AR1089839*/
+             ENDDO                                                                     /*AR1097467*/
+ 
+/**********  RUNSQL     SQL('delete from MXSLECKPD where LCD <' +  */                  /*AR1089839*/
+/**********                *CAT &PRVSOM) COMMIT(*NONE)             */                  /*AR1089839*/
+             IF         COND(&FILE *EQ 'CLOANCK') THEN(DO)                             /*AR1097467*/
+             SCRUNSQL   SQL('delete from MXSLECKPD where LCD <' +
+                           *CAT &PRVSOM)                                               /*AR1089839*/
+             ENDDO                                                                     /*AR1097467*/
+             ENDDO
+ 
+/* Do saved data updates */
+ 
+/**********  CALL       PGM(MXSDUPDLE) PARM(&RTCD &ERMS &SOM)      */                  /*AR1097467*/
+             CALL       PGM(MXSDUPDLE) PARM(&RTCD &ERMS &SOM &FILE)                    /*AR1097467*/
+ 
+             IF COND(%SWITCH(XXXXXX11)) THEN(DO)
+               SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                            MXC004804 ended abnormally - see job +
+                            log') TOMSGQ(MOPERQ MRUNQ)
+               GOTO       CMDLBL(END)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             SNDPGMMSG  MSG('Program MXC004804 ended abnormally +
+                          - job cancelled') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ END:
+             ENDPGM

@@ -1,0 +1,269 @@
+      *****************************************************************
+/*STD *  LFBASE                                                       *
+/*EXS *  LF_IM                                                        *
+/*EXI *  TEXT('Midas LE Facility Changes by Date')                    *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LF/LEFCAMLB - Midas LE Facility Changes by Date              *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *                                                               *
+      *  Last Amend No. CLE141             Date 08Feb16               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CLE143             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 05Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE106             Date 01Aug04               *
+      *                 CAS011             Date 16May05               *
+      *                 CAP086             Date 08Jun05               *
+      *                 CLE037  *CREATE    Date 09Dec03               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE141 - Currency and Location Business Day Convention       *
+      *           (Recompile)                                         *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CLE143 - Original Loan Contract Date & Effective Interest    *
+      *           Rate (Recompile)                                    *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus (Recompile)                              *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CLE106 - Syndications Manager. (Recompiled)                  *
+      *  CAS011 - EIR/AC Accounting Upgrade to MP1 (Recompile)        *
+      *  CAP086 - Introduce Auto Authorisation to the API's           *
+      *           without it. (Recompile)                             *
+      *  CLE037 - Nordea Commitment Fee Update                        *
+      *                                                               *
+      *****************************************************************
+     A          R LEFCAMPF                  PFILE(LEFCAMPD)
+     A                                      TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2003')
+     A            RECI      R
+     A            BRCA      R
+     A            CNUM      R
+     A            FACT      R
+     A            FCNO      R
+     A            SQNO      R
+     A            FWDT      R               RENAME(VLDT)
+     A            FCTY                      CONCAT(FACT FCNO)
+     A            FWAM      R               RENAME(AAMT)
+     A            FATP      R
+     A          K CNUM
+     A          K FCTY
+     A          K VLDT
+     A          K SQNO
+
+     A          S RECI                      COMP(EQ 'D')
+     A            FATP                      VALUES('FI' 'FD')
+
+     A          R LOAMSDKF                  PFILE(LOAMSDK)
+     A            RECI      R
+     A            BRCA      R
+     A            FCUS      R
+     A            FTYP      R
+     A            FSEQ      R
+     A            FWDT           5P         RENAME(VDAT)
+     A            FCTY                      CONCAT(FTYP FSEQ)
+     A            PTYP      R
+     A            PRAM      R
+     A            TAMT      R
+     A            CCY       R
+     A            LNRF      R
+     A            REPT      R
+     A            AMTP      R
+     A          K FCUS
+     A          K FCTY
+     A          K FWDT
+
+     A          S RECI                      COMP(EQ 'D')
+     A            AMTP                      VALUES('PI' 'RE' 'MR')
+
+     A          R CLOANCL1                  PFILE(CLOANCL)
+     A            RECI      R
+     A            BRCA      R
+     A            FCUS      R
+     A            FTYP      R
+     A            FSEQ      R
+     A            FWDT      R               RENAME(VDAT)
+     A            FCTY                      CONCAT(FTYP FSEQ)
+     A            PTYP      R
+     A            FWAM      R               RENAME(CPAM)
+     A            CCY       R
+     A            FCXR      R
+     A            FMDI      R
+     A          K FCUS
+     A          K FCTY
+     A          K FWDT
+
+     A          S RECI                      COMP(EQ 'D')
+
+     A          R CLOANCL2                  PFILE(CLOANCL)
+     A            RECI      R
+     A            BRCA      R
+     A            PTFC      R
+     A            PTFT      R
+     A            PTFN      R
+     A            FWDT      R               RENAME(VDAT)
+     A            FCTY                      CONCAT(PTFT PTFN)
+     A            PTYP      R
+     A            FWAM      R               RENAME(CPAM)
+     A            CCY       R
+     A            FCXR      R
+     A            FMDI      R
+     A          K PTFC
+     A          K FCTY
+     A          K FWDT
+
+     A          S RECI                      COMP(EQ 'D')
+      * Begin /CSD027/
+     A**********  PTFC                      COMP(NE 0)                                        CSD027
+     A            PTFC                      COMP(NE '      ')
+      * End /CSD027/
+     A            PTFT                      COMP(NE 0)
+     A            PTFN                      COMP(NE 0)
+
+     A          R CLOANCL3                  PFILE(CLOANCL)
+     A            RECI      R
+     A            BRCA      R
+     A            FCUS      R
+     A            FTYP      R
+     A            FSEQ      R
+     A            FWDT      R               RENAME(NIDT)
+     A            FCTY                      CONCAT(FTYP FSEQ)
+     A            PTYP      R
+     A            FWAM      R               RENAME(CPAM)
+     A            CCY       R
+     A            FCXR      R
+     A            FMDI      R
+     A            INTC      R
+     A            LNRF      R
+     A          K FCUS
+     A          K FCTY
+     A          K FWDT
+
+     A          S RECI                      COMP(EQ 'D')
+     A            FWDT                      COMP(NE 0)
+     A            INTC                      COMP(EQ 'Y')
+
+     A          R CLOANCL4                  PFILE(CLOANCL)
+     A            RECI      R
+     A            BRCA      R
+     A            PTFC      R
+     A            PTFT      R
+     A            PTFN      R
+     A            FWDT      R               RENAME(MDAT)
+     A            FCTY                      CONCAT(PTFT PTFN)
+     A            PTYP      R
+     A            FWAM      R               RENAME(CPAM)
+     A            CCY       R
+     A            FCXR      R
+     A            FMDI      R
+     A          K PTFC
+     A          K FCTY
+     A          K FWDT
+
+     A          S RECI                      COMP(EQ 'D')
+      * Begin /CSD027/
+     A**********  PTFC                      COMP(NE 0)                                        CSD027
+     A            PTFC                      COMP(NE '      ')
+      * End /CSD027/
+     A            PTFT                      COMP(NE 0)
+     A            PTFN                      COMP(NE 0)
+     A            FWDT                      COMP(NE 0)
+
+     A          R CLOANCL5                  PFILE(CLOANCL)
+     A            RECI      R
+     A            BRCA      R
+     A            FCUS      R
+     A            FTYP      R
+     A            FSEQ      R
+     A            FWDT      R               RENAME(MDAT)
+     A            FCTY                      CONCAT(FTYP FSEQ)
+     A            PTYP      R
+     A            FWAM      R               RENAME(CPAM)
+     A            CCY       R
+     A            FCXR      R
+     A            FMDI      R
+     A          K FCUS
+     A          K FCTY
+     A          K FWDT
+
+     A          S RECI                      COMP(EQ 'D')
+     A            FWDT                      COMP(NE 0)
+
+     A          R CLOANCL6                  PFILE(CLOANCL)
+     A            RECI      R
+     A            BRCA      R
+     A            FCUS      R
+     A            FTYP      R
+     A            FSEQ      R
+     A            FWDT      R               RENAME(NRPD)
+     A            FCTY                      CONCAT(FTYP FSEQ)
+     A            PTYP      R
+     A            FWAM      R               RENAME(CPAM)
+     A            CCY       R
+     A            FCXR      R
+     A            FMDI      R
+     A            REPT      R
+     A            LNRF      R
+     A          K FCUS
+     A          K FCTY
+     A          K FWDT
+
+     A          S RECI                      COMP(EQ 'D')
+     A            FWDT                      COMP(NE 0)
+
+     A          R LEMNFUPF                  PFILE(LEMNFUPD)
+     A            RECI      R
+     A            BRCA      R
+     A            CNUM      R
+     A            FACT      R
+     A            FCNO      R
+     A            SQNO      R
+     A            FWDT      R               RENAME(STDT)
+     A            FCTY                      CONCAT(FACT FCNO)
+     A            FWAM      R               RENAME(UAMT)
+     A            UCCY      R
+     A            UXRT      R
+     A            UXID      R
+     A          K CNUM
+     A          K FCTY
+     A          K FWDT
+
+     A          S RECI                      COMP(EQ 'D')
+
+     A          R LEMNFUPE                  PFILE(LEMNFUPD)
+     A            RECI      R
+     A            BRCA      R
+     A            CNUM      R
+     A            FACT      R
+     A            FCNO      R
+     A            SQNO      R
+     A            FWDT      R               RENAME(EXDT)
+     A            FCTY                      CONCAT(FACT FCNO)
+     A            FWAM      R               RENAME(UAMT)
+     A            UCCY      R
+     A            UXRT      R
+     A            UXID      R
+     A          K CNUM
+     A          K FCTY
+     A          K FWDT
+
+     A          S RECI                      COMP(EQ 'D')
+     A            FWDT                      COMP(NE 0)
+

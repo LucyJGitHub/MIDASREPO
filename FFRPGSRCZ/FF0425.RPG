@@ -1,0 +1,982 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF EOC Generated Entries Report')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Futures and Options Module
+     F*                                                                  *
+     F*   FF0425  -  EOC GENERATED ENTRIES REPORT                        *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. 241202             Date 17Aug06               *
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG8427            Date 15Jul05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 150367             Date 07Apr00               *
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CGL007             Date 26Mar99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01456             Date 08Nov93               *
+      *                  S01455             Date 05Nov93              *
+     F*                  S10736             DATE 03SEP92                 *
+     F*                  E29168             DATE 04SEP91                 *
+     F*                  S01117             DATE 11APR90                 *
+     F*                  E18343             DATE 11NOV89                 *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  241202 - Complete BUG8427 by writing correct Account Name.
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG8427 - FFC0910 failed due to parameter mismatch           *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  150367 - Recompile over changed /copy FFSTDPZ4.                 *
+      *  CGL007 - Account Postings Enquiry (Recompile)                *
+     F*   S01456  -  'FF' MONTHLY P&L ENHANCEMENTS.                      *
+     F*              Recompiled due to change to PF/MKCTLD.              *
+     F*   S01455  -  'FF' ACCOUNT KEY ENHANCEMENTS.                      *
+     F*              Recompiled due to changes in TABFF.                 *
+     F*   S10736  -  MANAGEMENT ACCOUNTING                               *
+     F*           -  RECOMPILED OVER NEW LF/MGEFF.                       *
+     F*   E29168  -  Page overflow processing for totals.                *
+     F*   S01117  -  MULTIBRANCHING                                      *
+     F*   E18343  -  PROGRAM RE-COMPILED DUE TO CHANGE IN  ZSRSRC MEMBER *
+     F*              ZFRPEDZ3                                            *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                        *
+      *                                                                  *
+      *     IGNDECERR(*NO )                                              *
+      *                                                                  *
+      ********************************************************************
+      * ID F  C  H  L    FUNCTION OF INDICATORS                          *
+      *                                                                  *
+      *             L1   CHANGE IN ACCOUNT SEQUENCE                      *
+      *             L2   CHANGE IN CUSTOMER NUMBER                       *
+      *             L3   CHANGE IN ACCOUNT CODE                          *
+      *             L4   CHANGE IN CURRENCY                              *
+      *             L5   CHANGE IN BRANCH CODE                           *
+      *             LR   END OF FILE                                     *
+      *       49         PREVENT PRINTING 0 TRANSACTION TYPE             *
+      *       50         RESULT OF FILE ACCESSES                         *
+      *       51         NOT FIRST CYCLE INDICATOR                       *
+      *       52         CUSNO AND AC SEQ PRINT INDICATOR                *
+      *       53         AUDIT REPORT DIFFERENCE IN FILE CONTROLS        *
+      *       54         MULTIBRANCHING INDICATOR = Y                    *S01117
+      *       55         DETAILS REPORT PRINTER FILE HAS BEEN OPENED     *S01117
+      *       75         CREDIT BALANCE ON OUTPUT AMOUNT                 *
+      *                                                                  *
+      *     80-89        Reserved for Standard FF Subroutines            *
+      *                                                                  *
+      *     90-99        Reserved for Standard MIDAS Subroutines         *
+      *                                                                  *
+      *       U7U8       DATABASE ERROR                                  *
+      *         U8       HASH TOTALS IN ERROR                            *
+      ********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FTABFF   IF  E           K        DISK
+     F            TABTB10F                          KIGNORE               S01117
+     F*           TABTB10F                          KIGNORE
+     F            TABTB11F                          KIGNORE
+     F            TABTB20F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTB80F                          KIGNORE
+     F* A/C 1     TABTE10F                          KIGNORE
+     F* CCY 1     TABTG10F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F            TABLETLF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     FMGEFFZZ IF  E                    DISK
+     FMARKT   IF  E           K        DISK                           UC
+     FMKCTL   IF  E           K        DISK                           UC
+     FMGEFF   IP  E           K        DISK
+     F*F0425P1O** E                    PRINTER                            S01117
+     F***********                                   KINFDS PRTDS          S01117
+     F*F0425AUO** E                    PRINTER                        UC  S01117
+     F***********                                                         S01117
+     FFF0425P1O   E                    PRINTER                        UC  S01117
+     F                                              KINFDS SPOOL          S01117
+     FFF0425AUO   E                    PRINTER                            S01117
+     F                                              KINFDS SPOOLU         S01117
+      /EJECT
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,FFFMTZ1
+     E/COPY ZSRSRC,ZFRPEDZ1
+     E/COPY ZSRSRC,FFSTDPZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+      *
+      * ARRAY TO HOLD CHARACTER STRING 'OVER THE COUNTER'
+      *
+     E                    HDR     1   1 20
+     E*
+     E** ARRAY FOR UNDERLINING
+     E                    FULA       34  1
+     IAPOSTPDF
+     I              RECI                            MRECI
+     I                                              ACSQ  L1
+     I                                              CNUM  L2
+     I                                              ACOD  L3
+     I                                              CCY   L4
+     I***********                                   BRCD  L5              S01117
+     I                                              BRCA  L5              S01117
+      *
+     I/COPY ZSRSRC,ZFRPEDZ2
+     I/COPY ZSRSRC,FFSTDPZ2
+     I/COPY ZSRSRC,FFFMTZ2
+     I***TKEY***     DS                                                                       CGL029
+     I**********                              1   2 TKEY1                                     CGL029
+     I**********                              3   7 TKEY2                                     CGL029
+     I**********                              8  110ACOD                                      CGL029
+     I**********                             12  12 TKEY3                                     CGL029
+      *
+      **TABTE10*KEY*FIELD**********************************************                       CGL029
+      *
+     I*RTDS****** DS                                                      S01117
+     ISPOOL       DS                                                      S01117
+     I                                       83  92 SFILE                 S01117
+     I                                    B 123 1240SFNUM                 S01117
+     I                                    B 367 3680LINE
+     I*                                                                   S01117
+     ISPOOLU      DS                                                      S01117
+     I                                       83  92 SFILEU                S01117
+     I                                    B 123 1240SFNUMU                S01117
+      *
+      *  OVERFLOW STRUCTURE
+      *
+     I*DA********UDS                            256                       S01117
+     ILDA         DS                            256                       S01117
+     I***********                           134 177 DBBLK                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I*                                                                   S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*                                                                   S01117
+     ISDBANK    E DSSDBANKPD                                              S01117
+      **  EXTERNAL DS FOR BANK DETAILS                                    S01117
+     I              BJURPT                          TITL                  S01117
+      **                                                                  S01117
+     IRUNDT       DS                                                      S01117
+      **  DATA AREA RUNDAT                                                S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+      *                                                                   S01117
+     ISDBRCH    E DSSDBRCHPD                                              S01117
+      ** EXTERNAL DS FOR BRANCHES DETAILS                                 S01117
+      *                                                                   S01117
+     ISDACOD    E DSSDACODPD                                                                  CGL029
+      ** External DS for Account Codes Details                                                CGL029
+      *                                                                                       CGL029
+     IDSFDY     E DSDSFDY                                                 S01117
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01117
+     I*                                                                   S01117
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      ** Second DS for Access Programs, Long Data Structure                                   CGL029
+      *                                                                                       CGL029
+     I**                                                                  S01117
+      /EJECT
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C           *ENTRY    PLIST
+     C                     PARM           PMRKT
+      *
+      * DEFINE WORK FIELDS
+      *
+     C           *LIKE     DEFN PSTA      PTOT  + 2
+     C           *LIKE     DEFN PTOT      HTOT
+     C           *LIKE     DEFN PTOT      ATOT
+     C           *LIKE     DEFN PTOT      BRTOT
+     C           *LIKE     DEFN MRKT      PMRKT
+      ********************************
+      * START OF DETAIL CALCULATIONS ********************************
+      **CALLS*SUBROUTINES*INIT;*DBERR;*ZFRPED;*ZDATE2;*ACTOT;*AUDIT*******S01117
+      * CALLS SUBROUTINES INIT; DBERR; ZFRPED; ZDATE2; ACTOT; AUDIT; HEAD*S01117
+      ***************************************************************
+      *
+      * IF FIRST CYCLE ONLY THEN INITIALISE
+      *
+     C           *IN51     IFEQ '0'
+     C                     EXSR INIT
+     C                     SETON                         51
+     C                     END
+      /SPACE 3
+     C                     ADD  1         COUNT                           S01117
+     C*                                                                   S01117
+     C*   IF VALID TO PRINT DETAIL, PRINT THE HEADING                     S01117
+     C*                                                                   S01117
+     C           MRECI     IFNE '*'                                       S01117
+     C                     EXSR HEAD                                      S01117
+     C                     END                                            S01117
+      *
+      ** THE FOLLOWING SECTION OF CODING IS NOW PERFORMED IN SR/HEAD      S01117
+      **WRITE*NEW*PAGE*HEADINGS*ON*CHANGE*OF*BRANCH/CURRENCY*OR*OVERFLOW**S01117
+      ***********                                                         S01117
+     C************INL4     IFEQ '1'                                       S01117
+     C***********LINE      ORGE 57                                        S01117
+     C***********          WRITEFMTP101                                   S01117
+      ***********                                                         S01117
+      **WRITE*SUB-HEADING*IF*ADDITIONALLY*NO*CHANGE*OF*ACCOUNT*CODE*******S01117
+      ***********                                                         S01117
+     C************INL3     IFEQ '0'                                       S01117
+     C***********          SETON                         52               S01117
+     C***********          WRITEFMTP102                                   S01117
+     C***********          END                                            S01117
+      ***********                                                         S01117
+     C***********          END                                            S01117
+      *
+      * IF CHANGE IN BRANCH/CURRENCY
+      *
+     C           *INL4     IFEQ '1'
+      *
+      * GET NUMBER OF DECIMAL POSITIONS FOR CURRENCY
+      *
+     C                     MOVE CCY       FFCCY
+     C                     EXSR FFSTDP
+      *
+      * IF CURRENCY INVALID THEN DATABASE ERROR
+      *
+     C           *IN89     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABFF'   DBFILE           ***************
+     C                     Z-ADD04        DBASE            **DB ERROR 04**
+     C                     MOVELCCY       DBKEY            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+     C                     END
+      /SPACE 3
+      *
+      * IF CHANGE IN ACCOUNT CODE...
+      *
+     C           *INL3     IFEQ '1'
+      *
+      * PRINT CUST NO AND AC SEQ FOR EACH CHANGE OF CUST NO OR AC SEQ
+      *
+     C                     SETON                         52
+      *
+      * IF OVERFLOW REWRITE HEADINGS
+      *
+     C           LINE      IFGE 52
+     C           *IN55     ANDEQ'1'                                       S01117
+     C                     WRITEFMTP101
+     C                     END
+      *
+      * GET ACCOUNT CODE NARRATIVE
+      *
+     C**********           MOVE '30'      TKEY1                                               CGL029
+     C**********           MOVE '1'       TKEY3                                               CGL029
+     C********** TKEY      CHAINTABTE10F             50                                       CGL029
+      *                                                                                       CGL029
+     C                     MOVE ACOD      PACOD  10                                          BUG8427
+     C                     CALL 'AOACODR0'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD                                               CGL029
+     C                     PARM '*KEY   ' @OPTN                                               CGL029
+     C**********           PARM           ACOD                                        CGL029 BUG8427
+     C                     PARM           PACOD                                              BUG8427
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+      *
+      * IF ACCOUNT CODE NOT FOUND THEN **ERROR** TO BE OUTPUT
+      *    AS ACCOUNT CODE DESCRIPTION
+      *
+     C********** *IN50     IFEQ '1'                                                           CGL029
+     C********** RECI      ORNE 'D'                                                           CGL029
+     C**********           MOVE *BLANKS   ACKN                                                CGL029
+     C**********           MOVEL'*ERROR*' ACKN                                                CGL029
+     C**********           END                                                                CGL029
+      *                                                                                       CGL029
+     C********** @RTCD     IFNE *BLANKS                                                CGL029 241202
+     C           @RTCD     IFEQ *BLANKS                                                       241202
+     C                     MOVELA5ACCN    ACKN                                                CGL029
+     C                     ELSE                                                               CGL029
+     C                     MOVE *BLANKS   ACKN                                                CGL029
+     C                     MOVEL'*ERROR*' ACKN                                                CGL029
+     C                     ENDIF                                                              CGL029
+      *
+      * WRITE REPORT SUB-HEADING
+      *
+     C           *IN55     IFEQ '1'                                       S01117
+     C                     WRITEFMTP102
+     C                     END                                            S01117
+     C                     END
+      /SPACE 3
+      *
+      * FORMAT POSTING AMOUNT BY DECIMAL POSITIONS AND CHECK FOR
+      * CREDIT BALANCE
+      *
+     C                     Z-ADDFFCDP     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE PSTA      ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    WPOST
+      *
+     C           DRCR      IFEQ 1
+     C                     SETON                     75
+     C                     ELSE
+     C                     SETOF                     75
+     C                     END
+      *
+      * CONVERT VALUE DATE TO DDMMMYY
+      *
+     C                     Z-ADDVALD      ZDAYNO
+     C                     EXSR ZDATE2
+      *
+      * CHECK OVERFLOW AND OUTPUT DETAIL
+      *
+     C           LINE      IFGE 54
+     C           *IN55     ANDEQ'1'                                       S01117
+     C                     WRITEFMTP101
+     C                     WRITEFMTP102
+     C                     END
+      *
+      * IF TRANSACTION TYPE IS 0 ,  PRINT BLANKS.
+      *
+     C           TRAT      IFEQ 0
+     C                     SETON                     49
+     C                     END
+      *
+      *
+     C           MRECI     IFNE '*'
+     C                     WRITEFMTP103
+     C                     END
+      *
+     C                     SETOF                     49
+      *
+      * ACCUMULATE TOTALS ALLOWING FOR NEGATIVE BALANCES
+      * IF NOT A DELETED RECORD.
+      *
+     C           MRECI     IFNE '*'
+      *
+     C           *IN75     IFEQ '0'
+     C                     Z-ADDPSTA      PTOT
+     C                     ADD  PSTA      ATOT
+     C                     ADD  PSTA      BRTOT
+     C                     ELSE
+     C                     Z-SUBPSTA      PTOT
+     C                     SUB  PSTA      ATOT
+     C                     SUB  PSTA      BRTOT
+     C                     END
+      *
+      * ADD POSTING TOTAL TO HASH TOTAL
+      *
+     C           PTOT      DIV  1000      ZZAMT
+     C                     EXSR ZZADD
+     C                     ADD  1         RECTOT
+      *
+     C                     END
+      *
+      * CUSNO AND AC SEQ PRINT INDICATOR
+      *
+     C                     SETOF                         52
+      /SPACE 3
+      *
+      * TOTAL CALCULATIONS FOR ACCOUNT TOTALS
+      *
+     CL1         *IN51     IFEQ '1'
+     CL1                   EXSR ACTOT
+     CL1                   END
+      *
+      * TOTAL CALCULATIONS FOR BRANCH/CURRENCY TOTALS
+      *
+     CL4         *IN51     IFEQ '1'
+     CL4                   EXSR BRCYTT
+     CL4                   END
+      *                                                                   S01117
+      * CLOSE P1 ON CHANGE OF BRANCH                                      S01117
+      *                                                                   S01117
+     CL5         *IN55     IFEQ '1'                                       S01117
+     C*                                                                   E29168
+     CL5         LINE      IFGE 57                                        E29168
+     CL5                   WRITEFMTP101                                   E29168
+     CL5                   END                                            E29168
+     C*                                                                   E29168
+     CL5                   WRITEFMTP104                                   S01117
+     CL5                   CLOSEFF0425P1                                  S01117
+     CL5                   SETOF                     55                   S01117
+     CL5                   END                                            S01117
+      *
+      * TOTAL CALCULATIONS FOR AUDIT REPORT
+      *
+     CLR                   EXSR AUDIT
+     CLR                   EXSR PRTAU                      PRINT AU       S01117
+     CLR                   EXSR RCFAU                                     S01117
+     CLR                   RETRN
+      /EJECT
+      ************************************************************
+      *                                                          *
+      * INDEX OF SUBROUTINES                                     *
+      * ********************                                     *
+      *                                                          *
+      * INIT  : PROGRAM START                                    *
+      *                                                          *
+      * ACTOT : ALIGN POSTING TOTAL BY DECIMAL POINT.            *
+      *                                                          *
+      * BRCYTT: FORMAT BRANCH/CURRENCY TOTAL.                    *
+      *                                                          *
+      * HEAD  : PRINT THE HEADING FOR THE VALID DETAIL           *        S01117
+      *                                                          *        S01117
+      * AUDIT : PRINT AUDIT REPORT.                              *
+      *                                                          *
+      * DBERR : DATABASE ERROR                                   *
+      *                                                          *
+      * RCFP1  - CALL THE REPORT CONTROL FACILITY FOR P1         *        S01117
+      *                                                          *        S01117
+      * RCFAU  - CALL THE REPORT CONTROL FACILITY FOR AU         *        S01117
+      *                                                          *        S01117
+      * PRTAU  - PRINT THE AUDIT REPORT                          *        S01117
+      *                                                          *        S01117
+      ************************************************************
+      /EJECT
+      ************************************************************
+      * ACTOT SUB-ROUTINE - ALIGN POSTING TOTAL BY DECIMAL POINT *
+      * CALLED FROM MAINLINE                                     *
+      * CALLS SUBROUTINE    ZFRPED      - INSERT DECIMAL POINT   *
+      ************************************************************
+     C           ACTOT     BEGSR
+      *
+      * FORMAT POSTING TOTAL
+      *
+     C                     MOVE ATOT      ZFLD15
+     C                     MOVE 'A'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    WACTO
+      *
+      * WRITE ACCOUNT TOTAL
+      *
+     C           *IN55     IFEQ '1'                                       S01117
+     C*                                                                   E29168
+     C           LINE      IFGE 58                                        E29168
+     C                     WRITEFMTP101                                   E29168
+     C                     END                                            E29168
+     C*                                                                   E29168
+     C                     WRITEFMTP105
+     C                     END                                            S01117
+      *
+     C                     MOVE *BLANK    ZECODE
+     C                     SETON                         52
+     C                     Z-ADD0         ATOT
+      *
+     C                     ENDSR
+      ************************************************************
+      * ACTOT END OF SUB-ROUTINE                                 *
+      ************************************************************
+      ************************************************************
+      /EJECT
+      ************************************************************
+      * BRCYTT SUB-ROUTINE - FORMAT BRANCH/CURRENCY TOTAL        *
+      * CALLED FROM MAINLINE                                     *
+      * CALLS SUBROUTINE    ZFRPED      - INSERT DECIMAL POINT   *
+      ************************************************************
+     C           BRCYTT    BEGSR
+      *
+      * CHECK OVERFLOW AND OUTPUT HEADINGS IF REQUIRED
+      *
+     C           LINE      IFGE 57
+     C           *IN55     ANDEQ'1'                                       S01117
+     C                     WRITEFMTP101
+     C                     WRITEFMTP102
+     C                     END
+      *
+      * FORMAT BRANCH/CURRENCY TOTAL
+      *
+     C                     MOVE BRTOT     ZFLD15
+     C                     MOVE 'A'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    BCTOT
+      *
+      * WRITE BRANCH/CURRENCY TOTAL
+      *
+     C           *IN55     IFEQ '1'                                       S01117
+     C*                                                                   E29168
+     C           LINE      IFGE 58                                        E29168
+     C                     WRITEFMTP101                                   E29168
+     C                     END                                            E29168
+     C*                                                                   E29168
+     C                     WRITEFMTP107
+     C                     END                                            S01117
+     C                     MOVE *BLANK    ZECODE
+      *
+      *  ZEROISE BRANCH/CURRENCY TOTAL
+      *
+     C                     Z-ADD0         BRTOT
+      *
+     C                     ENDSR
+      ************************************************************
+      * BRCYTT END OF SUB-ROUTINE                                *
+      ************************************************************
+      * INIT SUB-ROUTINE START                                   *
+      * CALLED FROM MAINLINE                                     *
+      * CALLS SUBROUTINES     DBERR     - DATABASE ERROR         *
+      *                       ZDATE2    - DATE CONVERSION        *
+      *                       FFFMT     - TITLE FORMAT           *
+      ************************************************************
+     C           INIT      BEGSR
+      *
+      * BLANK OUT DBERRORS IN LDA
+      *
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C*                                                                   S01117
+     C           *LOCK     IN   LDA                        INITIALIZE     S01117
+     C***********          MOVE *BLANK    DBBLK                           S01117
+     C                     MOVE *BLANK    DBFILE                          S01117
+     C                     MOVE *BLANK    DBKEY                           S01117
+     C                     Z-ADD*ZERO     DBASE                           S01117
+     C                     MOVEL*BLANK    DBPGM                           S01117
+     C                     MOVE 'FF0425'  DBPGM
+     C                     OUT  LDA                                       S01117
+     C*                                                                   S01117
+     C                     Z-ADD*ZERO     COUNT   50                      S01117
+     C*                                                                   S01117
+      *
+      **ACCESS*ICD*RECORD*************************************************S01117
+      *
+     C***********          READ TABTB10F                 50               S01117
+     C************IN50     IFEQ '0'                                       S01117
+     C***********RECI      ANDEQ'D'                                       S01117
+     C*                                                                   S01117
+     C** IN THE DATAAREA RUNDAT                                           S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C*                                                                   S01117
+     C*                                                                   S01117
+     C* DETERMINE WHETHER SINGLE BRANCH OR MULTI BRANCH                   S01117
+     C*                                                                   S01117
+     C           MBIN      IFEQ 'Y'                                       S01117
+     C                     MOVE '1'       *IN54                           S01117
+     C                     ELSE                                           S01117
+     C                     MOVE '0'       *IN54                           S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C*                                                                   S01117
+     C           DATF      COMP 'M'                      98
+     C***********          ELSE                                           S01117
+     C***********          Z-ADD1         DBASE            ***************S01117
+     C***********          MOVEL'TABFF'   DBFILE           **DB ERROR 01**S01117
+     C***********          MOVEL'01'      ZTABKY 12        ***************S01117
+     C***********          MOVE '10'      ZTABKY                          S01117
+     C***********          MOVELZTABKY    DBKEY                           S01117
+     C***********          EXSR DBERR                                     S01117
+     C***********          END                                            S01117
+     C**                                                                  S01117
+     C**   ACCESS BANK DETAILS, FOR TITLE                                 S01117
+     C                     CALL 'AOBANKR0'                                S01117
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C           SDBANK    PARM SDBANK    DSFDY                           S01117
+     C*                                                                   S01117
+     C           @RTCD     IFNE *BLANK                                    S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'SDBANKPD'DBFILE                          S01117
+     C                     MOVEL@OPTN     DBKEY            ***************S01117
+     C                     MOVEL@OPTN     DBOPTN  7        * DBERROR 001 *S01117
+     C                     Z-ADD1         DBASE            ***************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR                                     S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C* INIT THE BRANCH CODE WHICH USED FOR COMPARE WITH THE PREVIOUS     S01117
+     C*                                                                   S01117
+     C                     MOVE *BLANK    PRVBR                           S01117
+      /SPACE 3
+      *
+      * IF PARAMETER (PMRKT) IS BLANK USE RUNA AND 'OVER THE COUNTER'
+      *
+     C           PMRKT     IFEQ *BLANK
+     C                     MOVE HDR,1     MKTN
+     C                     ELSE
+      *
+      * IF PARAMETER IS NOT BLANK ACCESS MARKT
+      *
+     C                     OPEN MARKT
+     C           PMRKT     CHAINMARKT                50
+     C                     CLOSEMARKT
+     C           *IN50     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'MARKT'   DBFILE           ***************
+     C                     Z-ADD02        DBASE            **DB ERROR 02**
+     C                     MOVELPMRKT     DBKEY            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+     C                     OPEN MKCTL
+      *
+      * GET BUSINESS DATE
+      *
+     C           PMRKT     CHAINMKCTL                50
+     C                     CLOSEMKCTL
+     C           *IN50     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'MKCTL'   DBFILE           ***************
+     C                     Z-ADD03        DBASE            **DB ERROR 03**
+     C                     MOVELPMRKT     DBKEY            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+     C                     END
+     C/COPY ZSRSRC,FFSTDPZ3
+      *
+      * IF MARKET PARAMETER PASSED TO PROG USE BUSINESS DAT
+      * ELSE USE RUN DATE
+      *
+     C           BUSD      IFGT 0
+     C                     Z-ADDBUSD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    FFDAT
+     C                     ELSE
+     C                     MOVE RUNA      FFDAT
+     C                     END
+     C                     MOVE MKTN      FFNAM
+      /SPACE 3
+      *
+      * FORMAT REPORT TITLES
+      *
+     C                     EXSR FFFMT
+     C*
+     C**  Set up underlining for heading
+     C**  Initialise array index
+     C                     Z-ADD0         X       20
+     C*
+     C**  FFULIN returned from SR. FFFMT contains number of characters
+     C**  for underline
+     C           X         DOUEQFFULIN
+     C                     ADD  1         X
+     C                     MOVEA'-'       FULA,X
+     C                     END
+     C*
+     C**  Move underline array to output field
+     C                     MOVEAFULA      FULINE
+     C*                                                                   S01117
+     C*                                                                   S01117
+     C**  REDEFINE THE FORMAT REPORT TITLE AND THE UNDERLINE FOR          S01117
+     C**           MULTIBRANCH IN THE PRINTER FILE                        S01117
+     C*                                                                   S01117
+     C                     MOVE FFTXT     FTXT                            S01117
+     C                     MOVEAFULA      FLINE                           S01117
+     C*
+     C                     ENDSR
+      ************************************************************
+      * INIT END OF SUB-ROUTINE                                  *
+      ************************************************************
+      /EJECT
+      ************************************************************        S01117
+      * HEAD SUB-ROUTINE - PRINT THE HEADING FOR VALID DETAIL    *        S01117
+      * CALLED FROM MAINLINE                                     *        S01117
+      * CALLS SUBROUTINES                                        *        S01117
+      ************************************************************        S01117
+     C           HEAD      BEGSR                                          S01117
+     C*                                                                   S01117
+     C** OPEN THE PRINTER FILE P1 FOR SINGLE BRANCH                       S01117
+     C*                                                                   S01117
+     C           MBIN      IFEQ 'N'                                       S01117
+     C           *IN55     ANDEQ'0'                                       S01117
+     C                     OPEN FF0425P1                                  S01117
+     C                     EXSR RCFP1                                     S01117
+     C                     MOVE '1'       *IN55                           S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C** OPEN THE PRINTER FILE P1 FOR MULTIBRANCH                         S01117
+     C*                                                                   S01117
+     C           MBIN      IFEQ 'Y'                                       S01117
+     C           *INL5     IFEQ '1'                                       S01117
+     C           BRCA      ORNE PRVBR                                     S01117
+     C                     OPEN FF0425P1                                  S01117
+     C                     EXSR RCFP1                                     S01117
+     C                     MOVE '1'       *IN55                           S01117
+     C                     Z-ADD0         PAGE1                           S01117
+     C                     Z-ADD0         LINE                            S01117
+     C*                                                                   S01117
+      ** GET BRANCH NAME                                                  S01117
+     C*                                                                   S01117
+     C**********           CALL 'AOBRCHR0'                                S01117              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*KEY   ' @OPTN   7                       S01117
+     C                     PARM BRCA      @DSNB   3                       S01117
+     C********** SDBRCH    PARM SDBRCH    DSFDY                           S01117              CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*                                                                   S01117
+     C           @RTCD     IFNE *BLANKS                                   S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'SDBRCHPD'DBFILE                          S01117
+     C                     MOVEL@DSNB     DBKEY            ***************S01117
+     C                     MOVEL@OPTN     DBOPTN  7        * DB ERROR 7  *S01117
+     C                     Z-ADD7         DBASE            ***************S01117
+     C                     OUT  LDA                                       S01117
+     C                     MOVEL*BLANKS   SEBN                            S01117
+     C                     EXSR DBERR                                     S01117
+     C                     END                                            S01117
+     C                     MOVELA8BRNM    SEBN                            S01117
+     C*                                                                   S01117
+     C** STORE THE PREVIOUS BRANCH CODE FOR MULTIBRANCH CASE              S01117
+     C*                                                                   S01117
+     C                     MOVE BRCA      PRVBR                           S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C* REDEFINE THE CCY FOR MULTIBRANCH IN THE PRINTER FILE              S01117
+     C*                                                                   S01117
+     C                     MOVE CCY       BCCY                            S01117
+     C*                                                                   S01117
+      * WRITE NEW PAGE HEADINGS ON CHANGE OF BRANCH/CURRENCY OR OVERFLOW  S01117
+      *                                                                   S01117
+     C           *INL4     IFEQ '1'                                       S01117
+     C           *IN55     ANDEQ'1'                                       S01117
+     C           LINE      ORGE 57                                        S01117
+     C           *IN55     ANDEQ'1'                                       S01117
+     C           LINE      ORLE 1                                         S01117
+     C           *IN55     ANDEQ'1'                                       S01117
+     C                     WRITEFMTP101                                   S01117
+      *                                                                   S01117
+      * WRITE SUB-HEADING IF ADDITIONALLY NO CHANGE OF ACCOUNT CODE       S01117
+      *                                                                   S01117
+     C           *INL3     IFEQ '0'                                       S01117
+     C           *IN55     ANDEQ'1'                                       S01117
+     C                     SETON                         52               S01117
+     C                     WRITEFMTP102                                   S01117
+     C                     END                                            S01117
+      *                                                                   S01117
+     C                     END                                            S01117
+      *                                                                   S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+      ************************************************************        S01117
+      * HEAD END OF SUB-ROUTINE                                  *        S01117
+      ************************************************************        S01117
+      /EJECT
+     C*                                                                   S01117
+      ************************************************************
+      * AUDIT SUB-ROUTINE - PRINT AUDIT REPORT                   *
+      * CALLED FROM MAINLINE                                     *
+      * CALLS SUBROUTINES   INIT     - INITIALISATION, IF LR AND *
+      *                                FIRST CYCLE               *
+      *                     DBERR    - DATABASE ERROR            *
+      *                     ZZADD    - HASH TOTAL ROUTINE
+      ************************************************************
+     C           AUDIT     BEGSR
+      *
+      * IF NO RECORDS READ INITIALISE FOR REPORT HEADINGS ETC
+      *
+     C           *IN51     IFEQ '0'
+     C                     EXSR INIT
+     C***********          WRITEFMTP101                                   S01117
+     C                     END
+      *
+      * GET HASH TOTALS
+      *
+     C                     READ MGEFFZZ                  50
+     C           *IN50     IFEQ '1'
+     C           RECI      ORNE 'T'
+      *
+      * STOP UNNECESSARY PAGE THROW (*IN51) IF ERROR
+      *
+     C                     SETON                         51
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'MGEFF'   DBFILE           ***************
+     C                     MOVEL'TRAILER' DBKEY            ***************
+     C                     Z-ADD06        DBASE            **DB ERROR 06**
+     C                     OUT  LDA                        ***************S01117
+     C                     EXSR DBERR                      ***************
+     C                     END
+      *
+      * INCREMENT CALCULATED RECORD TOTAL BY 2 TO ALLOW FOR HEADER
+      * AND TRAILER RECORDS
+      *
+     C                     ADD  2         RECTOT
+      *
+      * IF CALCULATED HASH TOTALS ARE NOT EQUAL TO FILE TOTALS SETON U8
+      *
+     C           ZZTOTI    IFNE HRWN
+     C           ZZTOTD    ORNE HRDC
+     C           RECTOT    ORNE NORE1
+     C                     SETON                       U853
+     C                     END
+      *
+      * CHECK OVERFLOW AND OUTPUT HEADINGS IF REQUIRED
+      *
+     C           *IN55     IFEQ '1'                                       S01117
+     C           LINE      IFGE 56
+     C                     WRITEFMTP101
+     C                     END
+     C                     END                                            S01117
+      *
+      * WRITE END OF REPORT
+      *
+     C           *IN55     IFEQ '1'                                       S01117
+     C*                                                                   E29168
+     C           LINE      IFGE 57                                        E29168
+     C                     WRITEFMTP101                                   E29168
+     C                     END                                            E29168
+     C*                                                                   E29168
+     C                     WRITEFMTP104
+     C                     END                                            S01117
+      *
+      **WRITE*FILE*CONTROL*REPORT*****************************************S01117
+      *
+     C***********          OPEN FF0425AU                                  S01117
+     C***********          WRITEFMTP108                                   S01117
+     C***********          CLOSEFF0425AU                                  S01117
+     C                     ENDSR
+      ************************************************************
+      * AUDIT END OF SUB-ROUTINE                                 *
+      ************************************************************
+      /EJECT
+      ************************************************************
+      * DBERR START OF SUB-ROUTINE                               *
+      * CALLED FROM MAINLINE; INIT; AUDIT                        *
+      ************************************************************
+     C           DBERR     BEGSR
+      *
+      * WRITE DATABASE ERROR REPORT AND END PROG
+      *
+     C                     SETON                     U7U8
+      *
+      **WRITE*HEADINGS*ONLY*IF*NOT*FIRST*CYCLE****************************S01117
+      ********************************************************************S01117
+     C************IN51     IFEQ '0'                                       S01117
+     C***********          WRITEFMTP101                                   S01117
+     C***********          END                                            S01117
+     C***********          WRITEFMTP106                                   S01117
+     C*                                                                   S01117
+     C** IF P1 ALREADY OPENED, WRITE THE DATABASE ERROR FORMAT            S01117
+     C*                                                                   S01117
+     C           *IN55     IFEQ '1'                                       S01117
+     C                     WRITEFMTP106                                   S01117
+     C                     END                                            S01117
+     C                     EXSR PRTAU                      PRINT AU       S01117
+     C                     EXSR RCFAU                                     S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDSR
+      ************************************************************
+      * DBERR END OF SUB-ROUTINE                                 *
+      ************************************************************
+     C/EJECT
+     C********************************************************************S01117
+      **                                                                  S01117
+      ** RCFP1 -- SUBROUTINE TO SPOOL P1 THROUGH RCF                      S01117
+      ** CALLED FROM: BEFORE END OF PROGRAM                               S01117
+      ** CALLS: NOTHING                                                   S01117
+      **                                                                  S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           RCFP1     BEGSR                           ** RCFP1  **   S01117
+     C*                                                                   S01117
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF                    S01117
+     C*                                                                   S01117
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01117
+     C**                                                                  S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ     5                       S01117
+     C                     PARM BRCA      SENTY   3                       S01117
+     C                     PARM           SFILE                           S01117
+     C                     PARM           ZSNUM                           S01117
+     C                     PARM           ZSERR   1                       S01117
+     C*                                                                   S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C********************************************************************S01117
+     C/EJECT
+     C********************************************************************S01117
+      **                                                                  S01117
+      ** RCFAU -- SUBROUTINE TO SPOOL AU THROUGH RCF                      S01117
+      ** CALLED FROM: BEFORE END OF PROGRAM                               S01117
+      ** CALLS: NOTHING                                                   S01117
+      **                                                                  S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           RCFAU     BEGSR                           ** RCFAU  **   S01117
+     C*                                                                   S01117
+     C**      ENSURE TOTAL SPOOL FILE RECORDED BY RCF                     S01117
+     C*                                                                   S01117
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      S01117
+     C**                                                                  S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ     5                       S01117
+     C                     PARM *BLANK    SENTY   3                       S01117
+     C                     PARM           SFILEU                          S01117
+     C                     PARM           ZSNUMU                          S01117
+     C                     PARM           ZSERR   1                       S01117
+     C*                                                                   S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+     C********************************************************************S01117
+      **   PRTAU -- SUBROUTINE TO PRINT AU REPORT                         S01117
+      ** CALLS: NOTHING                                                   S01117
+     C********************************************************************S01117
+     C           PRTAU     BEGSR                                          S01117
+     C*                                                                   S01117
+     C                     WRITEFMTAU01                                   S01117
+     C*                                                                   S01117
+     C           COUNT     IFEQ *ZERO                      NO DETL        S01117
+     C           *INU7     ANDEQ'0'                                       S01117
+     C                     WRITEFMTAU02                                   S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C           *INU7     IFEQ '1'                                       S01117
+     C                     WRITEFMTAU03                                   S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C********************************************************************S01117
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+     C/COPY ZSRSRC,ZFRPEDZ3
+      /EJECT
+     C/COPY ZSRSRC,FFSTDPZ4
+      /EJECT
+     C/COPY ZSRSRC,FFFMTZ3
+      /EJECT
+     C/COPY ZSRSRC,ZZADDZ1
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**
+OVER THE COUNTER

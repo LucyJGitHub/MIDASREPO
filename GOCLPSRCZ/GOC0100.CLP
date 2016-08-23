@@ -1,0 +1,211 @@
+/*********************************************************************/
+/*STD    CLPBASE                                                     */
+/*EXI    TEXT('Midas GO Bulk synchronization of global layer')       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Global Processing Module                            */
+/*                                                                   */
+/*       GOC0100 - Bulk Synchronisation of Global Layer (with Zone)  */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*                                                                   */
+/*       Last Amend No. MD020205A          Date 27Jun13              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Prev Amend No. BUG18886           Date 30May08              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      243724             Date 15Nov06              */
+/*                      242731             Date 29Sep06              */
+/*                      CLE041             Date 11Oct04              */
+/*                      BG1364             Date 04Mar04              */
+/*                      CGP001  *CREATE    Date 23May03              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD020205A - Continuous CoB run time improvement             */
+/*       BUG18886 - Non-standard codes exist in Midas Plus core      */
+/*                  sources                                          */
+/*       243724 - A length that is not valid is specified in the 2nd */
+/*                parameter that was sent to QCMDEXC. Fix 242731 has */
+/*                been corrected to send the maximum length allowed. */
+/*       242731 - Fix to enlarge size of OPNQRYF statement.          */
+/*       CLE041 - Collateralised Lending Phase 2B                    */
+/*       BG1364 - Filter Duplicate records in Bulk Synchronization   */
+/*       CGP001 - Global Processing                                  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&GPF)
+ 
+             DCL        VAR(&RTCD)  TYPE(*CHAR) LEN( 7)
+             DCL        VAR(&ERMS)  TYPE(*CHAR) LEN(50)
+             DCL        VAR(&FULLCHECK) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&ZOZONE)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ZOSHTC)  TYPE(*CHAR) LEN(4)
+             DCL        VAR(&ZORDNB)  TYPE(*DEC)  LEN(5 0)
+             DCL        VAR(&ZODNWD)  TYPE(*DEC)  LEN(5 0)
+             DCL        VAR(&ZOBCCY)  TYPE(*CHAR) LEN(3)
+             DCL        VAR(&ZONJOB)  TYPE(*DEC)  LEN(1 0)
+ 
+             DCL        VAR(&GPF )    TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GLFU)    TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PGM )    TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ZLFOVR)  TYPE(*CHAR) LEN(60)
+             DCL        VAR(&GLFOVR)  TYPE(*CHAR) LEN(60)
+             DCL        VAR(&GLFCLO)  TYPE(*CHAR) LEN(60)
+             DCL        VAR(&ZLFDLO)  TYPE(*CHAR) LEN(60)
+             DCL        VAR(&GLFDLO)  TYPE(*CHAR) LEN(60)
+/**********  DCL        VAR(&OPNQRY)  TYPE(*CHAR) LEN(5000)                            */ /*242731*/
+/**********  DCL        VAR(&OPNQRY)  TYPE(*CHAR) LEN(32767)                */ /*242731*/ /*243724*/
+             DCL        VAR(&OPNQRY)  TYPE(*CHAR) LEN(32702)                              /*243724*/
+             DCL        VAR(&ZLF   )  TYPE(*CHAR) LEN(10)                                 /*BG1364*/
+             DCL        VAR(&BLFD  )  TYPE(*CHAR) LEN(1)                                  /*BG1364*/
+             DCL        VAR(&BLSY  )  TYPE(*CHAR) LEN(1)
+             DCL        VAR(&STRRRN) TYPE(*DEC) LEN(10 0)                              /*MD020205A*/
+             DCL        VAR(&ENDRRN) TYPE(*DEC) LEN(10 0)                              /*MD020205A*/
+ 
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2003')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('GOC0100 - Bulk Synchronisation of +
+                          Global Layer:' *CAT &GPF) TOMSGQ(MRUNQ)
+ 
+             RTVJOBA    TYPE(&JOBTYPE)
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                          VALUE(' ')
+             MONMSG     MSGID(CPF0000)
+ 
+             CHGJOB SWS(00000000)
+ 
+/* Get zone */
+ 
+             CALL       PGM(GOGETZONE) PARM(&RTCD &ERMS &FULLCHECK +
+                          &ZOZONE &ZOSHTC &ZORDNB &ZODNWD &ZOBCCY +
+                          &ZONJOB)
+ 
+/* error */
+/**********  IF         COND(&RTCD *= '       ') THEN(DO)                           */ /*BUG18886 */
+             IF         COND(&RTCD *NE '       ') THEN(DO)                             /*BUG18886 */
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+ 
+/* Get synchronisation executables*/
+/*********** CALL       PGM(GOGETSYNX) PARM(&GPF &ZOZONE &GLFU +      ******/             /*BG1364*/
+/***********              &ZLFOVR &GLFOVR &GLFCLO &ZLFDLO &GLFDLO +   ******/             /*BG1364*/
+/**********               &OPNQRY &BLSY)                              ******/             /*BG1364*/
+ 
+             CALL       PGM(GOGETSYNX) PARM(&GPF &ZOZONE &GLFU +
+                          &ZLFOVR &GLFOVR &GLFCLO &ZLFDLO &GLFDLO +
+                          &OPNQRY &ZLF &BLFD &BLSY)                                       /*BG1364*/
+ 
+/* End if bulk synchronisation not done for this file*/
+/**********  IF         COND(&BLSY *= 'Y') THEN(DO)                                 */ /*BUG18886 */
+             IF         COND(&BLSY *NE 'Y') THEN(DO)                                   /*BUG18886 */
+              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Bulk +
+                            synchronisation was not done for file ' +
+                            *CAT &GPF) TOPGMQ(*EXT)
+             GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Generate Fix Data */
+             CALL       PGM(GPC0010) PARM(&ZOZONE &GPF)
+ 
+/* Generate Key Data */
+             CALL       PGM(GPC0012) PARM(&ZOZONE &GPF &GLFU)
+ 
+/* Bulk synchronisation program */
+             CHGVAR     VAR(&PGM) VALUE('GO' *CAT %SST(&GPF 3 8))
+ 
+/* Do bulk synchronisation */
+             CALL       PGM(QCMDEXC) PARM(&ZLFOVR 60)
+             CALL       PGM(QCMDEXC) PARM(&GLFOVR 60)
+/**********  CALL       PGM(QCMDEXC) PARM(&OPNQRY 5000)                                */ /*242731*/
+/**********  CALL       PGM(QCMDEXC) PARM(&OPNQRY 32767)                    */ /*242731*/ /*243724*/
+             CALL       PGM(QCMDEXC) PARM(&OPNQRY 32702)                                  /*243724*/
+/**********  OVRDBF     FILE(&GPF) SEQONLY(*YES 5000) */                                  /*CLE041*/
+             OVRDBF     FILE(&GPF) SEQONLY(*YES 4000)                                     /*CLE041*/
+             OVRDBF     FILE(GPGDRPPD) SEQONLY(*YES 5000)
+/* Filter duplicates                                                                  */  /*BG1364*/
+             IF (&BLFD = 'Y') THEN(DO)                                                    /*BG1364*/
+             OPNQRYF    FILE((&ZLF)) OPTION(*INP) KEYFLD(*FILE) +
+                          UNIQUEKEY(*ALL) SEQONLY(*YES 5000)                              /*BG1364*/
+             ENDDO                                                                        /*BG1364*/
+                                                                                       /*MD020205A*/
+             IF         COND(&PGM = 'GOSDACUSPD') THEN(DO)                             /*MD020205A*/
+             RTVMBRD    FILE(SDACUSPD) NBRCURRCD(&ENDRRN)                              /*MD020205A*/
+             CHGVAR     VAR(&STRRRN) VALUE(1)                                          /*MD020205A*/
+             CALL       PGM(&PGM) PARM(&ZOZONE &STRRRN &ENDRRN)                        /*MD020205A*/
+             ENDDO                                                                     /*MD020205A*/
+             ELSE       CMD(DO)                                                        /*MD020205A*/
+             CALL       PGM(&PGM) PARM(&ZOZONE)
+             ENDDO                                                                     /*MD020205A*/
+             CALL       PGM(QCMDEXC) PARM(&GLFCLO 60)
+             CALL       PGM(QCMDEXC) PARM(&ZLFDLO 60)
+             CALL       PGM(QCMDEXC) PARM(&GLFDLO 60)
+ 
+/* Log Global Totals */
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+             CALL       PGM(GPC0011) PARM(&GPF)
+             ENDDO
+ 
+/*error*/
+             IF COND(%SWITCH(XXXXXX11)) THEN(DO)
+                IF         COND(&JOBTYPE = '0') THEN(DO)
+                   SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                                GOC0100 ended abnormally - see job log') +
+                                TOMSGQ(MOPERQ MRUNQ)
+                   GOTO       CMDLBL(END)
+                ENDDO
+ 
+                IF         COND(&JOBTYPE = '1') THEN(DO)
+                   SNDPGMMSG  MSGID(MEM5003) MSGF(MIDAS) +
+                              TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                   GOTO       CMDLBL(END)
+                ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/* Abnormal termination - batch job */
+ 
+             IF         COND(&JOBTYPE = '0') THEN(DO)
+               SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                            GOC0100 ended abnormally - see job log') +
+                            TOMSGQ(MOPERQ MRUNQ)
+               MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ 
+/* Abnormal termination - interactive job */
+ 
+             IF         COND(&JOBTYPE = '1') THEN(DO)
+                SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GOC0100 ended abnormally - see job log') +
+                          TOPGMQ(*EXT)
+                MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ 
+END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+             RCLRSC
+             MONMSG     MSGID(CPF0000 MCH0000)
+             RCLRSC     LVL(*CALLER)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             RCLACTGRP  ACTGRP(*ELIGIBLE)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             ENDPGM

@@ -1,0 +1,185 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Maint calling pgm to check Wn')
+     F*
+     F*********************************************************************
+     F***                                                               ***
+     F***      Midas Standing Data Module
+     F***                                                               ***
+     F***      SD0005 - CALLS SD MAINTENANCES PROGRAMS AND CHECKS FOR   ***
+     F***               WINDOW PROCESSING                               ***
+     F***                                                               ***
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F***                                                               ***
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. 214109             Date 17Oct06               *
+      *  Prev Amend No. CPK018             Date 19Mar05               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 189102             Date 13Feb02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 E24414             Date 16Jul91               *
+      *                 E20528             Date 08Aug90               *
+     F***                                                               ***
+     F********************************************************************
+     F***                                                              ***
+      *  214109 - Override SDECOSPD to SDECOSLXPD                     *
+      *  CPK018 - Change to make windows switchable. Replace use of   *
+      *           - Replace use of SDMREFL1 with SDMREFJ0.            *
+      *  189102 - Replace READ with standard access object in re-     *
+      *           trieving modules present.                           *
+     F***   E24414 - CALL UP SINGLE EDIT RECORD IF EITHER A MANDATORY  ***
+     F***            OR AN OPTIONAL WINDOW IS DEFINED.                 ***
+     F***                                                              ***
+     F***   E20528 - RECORD LEVEL FUNCTION CALLED IF THERE IS A        ***
+     F***            WINDOW ON SDOREFPD                                ***
+     F******************************************************************
+     F***SDMMODPDIF  E                    DISK                                                189102
+     F*SDMREFL1IF*E*******    K        DISK                                                   CPK018
+     FSDMREFJ0IF  E           K        DISK                                                   CPK018
+     FSDOREFL1IF  E           K        DISK                               E20528
+     E                    CPY@    1   1 80
+     E                    MSG     1   1 40
+     E                    OVR     1   1 51                                                    214109
+     E                    DLTOVR  1   1 21                                                    214109
+     IDSFDY     E DSDSFDY                                                                     189102
+      *                                                                                       189102
+      ** Data structure for modules file                                                      189102
+      *                                                                                       189102
+     ISDMMOD    E DSSDMMODPD                                                                  189102
+      *                                                                                       189102
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C*
+     C*  ENTRY PARAMETERS ARE PROGRAM NAMES
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           PGM1    8
+     C                     PARM           PGM2    8
+     C                     PARM           PGMMD   1
+     C                     PARM           PGM3    8
+     C*
+     C                     MOVELPGM1      PGM51   5                                           214109
+     C                     MOVELPGM2      PGM52   5                                           214109
+     C           PGM51     IFEQ 'SD009'                                                       214109
+     C           PGM52     OREQ 'SD009'                                                       214109
+     C                     CALL 'QCMDEXC'              16                                     214109
+     C                     PARM           OVR                                                 214109
+     C                     PARM 51        WLEN   155                                          214109
+     C                     END                                                                214109
+     C           PGM1      IFEQ *BLANKS
+     C**N92*****           CALL PGM2                     90                                   189102
+      *                                                                                       189102
+     C           *IN92     IFEQ '0'                                                           189102
+     C                     CALL PGM2                   90                                     189102
+     C                     PARM           WORTN   7
+     C                     PARM           PGMMD
+     C                     ENDIF                                                              189102
+      *                                                                                       189102
+     C                     ELSE
+     C*
+     C*  IF NO ALTERNATIVE PROGRAM FOR WINDOWS (PGM2) CALL PGM1
+     C*
+     C           PGM2      IFEQ *BLANKS
+     C*
+     C                     CALL PGM1                   90
+     C                     PARM           WORTN   7
+     C*
+     C                     ELSE
+     C*
+     C**********           READ SDMMODPD                 91                                   189102
+      *                                                                                       189102
+      ** Access Midas module details.                                                         189102
+      *                                                                                       189102
+     C                     CALL 'AOMMODR0'                                                    189102
+     C                     PARM '*MSG'    @RTCD   7                                           189102
+     C                     PARM '*FIRST ' @OPTN   7                                           189102
+     C           SDMMOD    PARM SDMMOD    DSFDY                                               189102
+      *                                                                                       189102
+     C           @RTCD     IFNE *BLANKS                                                       189102
+     C                     EXSR *PSSR                                                         189102
+     C                     ENDIF                                                              189102
+     C*
+     C*  CHECK MMOD FOR WINDOW PROCESSING FLAG 'YES'
+     C*
+     C           BGWDPR    IFEQ 'Y'
+     C*
+     C*  CHECK SDMREFPD TO SEE IF WINDOW PROCESSING DEFINED
+     C*  AND CHECK SDOREFPD TO SEE IF WINDOW PROCESSING DEFINED           E20528
+     C*
+     C                     MOVELPGM3      WPGM3  10
+     C********** WPGM3     CHAINSDMREFL1             92                                       CPK018
+     C           WPGM3     CHAINSDMREFJ0             92                                       CPK018
+     C           WPGM3     CHAINSDOREFL1             93                   E20528
+     C           *IN92     IFEQ '1'                                       E20528
+     C************IN93     OREQ '1'                                 E20528E24414
+     C           *IN93     ANDEQ'1'                                       E24414
+     C***92******          CALL PGM1                   90                 E20528
+     C                     CALL PGM1                   90                 E20528
+     C                     PARM           W0RTN   7
+     C**N92******          CALL PGM2                   90                 E20528
+     C                     ELSE                                           E20528
+     C                     CALL PGM2                   90                 E20528
+     C                     PARM           W0RTN   7
+     C                     PARM           PGMMD
+     C                     END                                            E20528
+     C*
+     C                     ELSE
+     C                     CALL PGM1                   90
+     C                     PARM           WORTN   7
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C*  SEND ERROR MESSAGE IF CALL OR READ OPERATIONS FAIL
+     C*
+     C***91*****                                                                              189102
+     C***OR*90**    MSG,1     DSPLY'*EXT'    REPLY   1                                        189102
+     C           *IN90     IFEQ '1'                                                           189102
+     C           MSG,1     DSPLY'*EXT'    REPLY   1                                           189102
+     C                     ENDIF                                                              189102
+     C*
+     C                     SETON                     LR
+     C           PGM51     IFEQ 'SD009'                                                       214109
+     C           PGM52     OREQ 'SD009'                                                       214109
+     C                     CALL 'QCMDEXC'              16                                     214109
+     C                     PARM           DLTOVR                                              214109
+     C                     PARM 21        WLEN   155                                          214109
+     C                     END                                                                214109
+     C*                                                                                       214109
+     C                     RETRN
+      *****************************************************************                       189102
+      *                                                               *                       189102
+      * *PSSR --- Subroutine to handle abnormal error conditions.     *                       189102
+      *                                                               *                       189102
+      * CALLED FROM: After abnormal operation occurs.                 *                       189102
+      *                                                               *                       189102
+      * CALLS: None.                                                  *                       189102
+      *                                                               *                       189102
+      *****************************************************************                       189102
+      *                                                                                       189102
+     C           *PSSR     BEGSR                                                              189102
+      *                                                                                       189102
+     C           @RUN      IFEQ *BLANKS                                                       189102
+     C                     MOVE 'Y'       @RUN    1                                           189102
+     C                     DUMP                                                               189102
+     C                     ENDIF                                                              189102
+     C                     MOVE '1'       *INLR                                               189102
+     C                     RETRN                                                              189102
+      *                                                                                       189102
+     C                     ENDSR                                                              189102
+      *****************************************************************                       189102
+     C*
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**  MESSAGE TEXT
+Transaction Failed, Enter to Continue
+**  OVR
+OVRDBF FILE(SDECOSPD) TOFILE(SDECOSLXPD) SHARE(*NO)
+**  DLTOVR
+DLTOVR FILE(SDECOSPD)

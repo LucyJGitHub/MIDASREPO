@@ -1,0 +1,270 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+      *****************************************************************
+/*S*D****RPGBASEBND****************************************************                       CCB023
+      *****************************************************************
+      *                                                               *
+      *  Midas - Global Processing                                    *
+      *                                                               *
+      *  GO000111 - Global Processing data dowload, FRA/IRS           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *                                                               *
+      *  Last Amend No. CCB023  *REDUNDANT Date 06Aug12               *
+      *  Prev Amend No. BUG27964           Date 05Aug10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 246828             Date 30Jul07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 BUG9512            Date 05Dec05               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CGP002  *CREATE    Date 02Jul03               *
+      *                 XXXXXX             Date DDMmmYY               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *  CCB023 - COB Restructure - Input Cycle Termination           *
+      *           Restructuring                                       *
+      *  BUG27964 - Unauthorized Transactions Not Reflected on Midas  *
+      *             Dashboard                                         *
+      *  246828 - Use T_MSWIP in unauthorised deals computation.      *
+      *  BUG9512 - Signal errors to calling program in U7U8.          *
+      *            Make input files user open to prevent message wait *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CGP002 - Global Processing data download                     *
+      *                                                               *
+      *****************************************************************
+      **
+      ** +--------------------------------------+
+      ** ¦ Files                                ¦
+      ** ¦ =====                                ¦
+      ** +--------------------------------------+
+      *
+     F**DLDLDGL9  IF   E           K DISK    INFSR(*PSSR)                                     246828
+     F**                                     USROPN                                   BUG9512 246828
+     F***GPDLWIPL  IF   E           K DISK    INFSR(*PSSR)                           246828 BUG27964
+     FGPIRWIPL  IF   E           K DISK    INFSR(*PSSR)                                     BUG27964
+     F                                     USROPN                                             246828
+     FGPDWNLL0  UF A E           K DISK    INFSR(*PSSR)
+     F                                     USROPN                                            BUG9512
+      **
+      ** +--------------------------------------+
+      ** ¦ Arrays and Data Structures           ¦
+      ** ¦ ==========================           ¦
+      ** +--------------------------------------+
+     D                 DS
+     D  CountN                 1      5  0
+     D  CountA                 1      5
+      *
+      * Program Status Data Structure
+     D/COPY ZACPYSRC,PSDS
+      *
+      * Midas Local Data Area for database error reporting
+     D LDA           E DS           256    EXTNAME(LDA) DTAARA(LDA)
+      * The following fields are defined in the external file:
+      *                                     134 141 DBFile
+      *                                     142 170 DBKey
+      *                                     171 180 DBPgm
+      *                                     181 1830DBase
+      *                                     184 193 DBMod
+      *                                     194 203 DBProc
+      ** +--------------------------------------+
+      ** ¦ Declared variables                   ¦
+      ** ¦ ==================                   ¦
+      ** +--------------------------------------+
+      *
+     D @RUN            S              1
+     D Value           S             50
+     D DealType1       S              2
+     D DealType2       S              2
+     D DealType3       S              2
+     D APIType         S              4                                                       246828
+     D Atype           S              4                                                       246828
+      *
+      ** +--------------------------------------+
+      ** ¦ End of D-specs                       ¦
+      ** ¦ ==============                       ¦
+      ** +--------------------------------------+
+      *
+      ** +--- Start of Main processing -----------------------------------+
+      ** ¦                                                                ¦
+      ** +----------------------------------------------------------------+
+      *
+     C/COPY GOCPYSRC,GOUPD_PARM
+      * Get Zone                                                                              246828
+     C                   EXSR      SRGPGZ                                                     246828
+      *
+      * Unauthorised FRAs
+     C                   IF        Key_Desc = 'UnauthFRAs'
+      *
+     C**********         EVAL      DealType1 = 'FR'                                           246828
+     C**********         EVAL      DealType2 = '  '                                           246828
+     C**********         EVAL      DealType3 = '  '                                           246828
+     C                   EVAL      APIType = 'FRA '                                           246828
+      *
+     C                   EXSR      UpdateCount
+      *
+     C                   ENDIF
+      *
+      * Unauthorised IRS - Caps/Collars/Floors
+     C                   IF        Key_Desc = 'UnauthIRSCpsClrsFlrs'
+      *
+     C**********         EVAL      DealType1 = 'RP'                                           246828
+     C**********         EVAL      DealType2 = 'RR'                                           246828
+     C**********         EVAL      DealType3 = 'RF'                                           246828
+     C                   EVAL      APIType = 'CACF'                                           246828
+      *
+     C                   EXSR      UpdateCount
+      *
+     C                   ENDIF
+      *
+      * Unauthorised IRS - Cross Currency
+     C                   IF        Key_Desc = 'UnauthIRSCrossCcy'
+      *
+     C**********         EVAL      DealType1 = 'RX'                                           246828
+     C**********         EVAL      DealType2 = '  '                                           246828
+     C**********         EVAL      DealType3 = '  '                                           246828
+     C                   EVAL      APIType = 'CIRS'                                           246828
+      *
+     C                   EXSR      UpdateCount
+      *
+     C                   ENDIF
+      *
+      * Unauthorised IRS - Single Currency
+     C                   IF        Key_Desc = 'UnauthIRSSingleCcy'
+      *
+     C**********         EVAL      DealType1 = 'RS'                                           246828
+     C**********         EVAL      DealType2 = '  '                                           246828
+     C**********         EVAL      DealType3 = '  '                                           246828
+     C                   EVAL      APIType = 'SIRS'                                           246828
+      *
+     C                   EXSR      UpdateCount
+      *
+     C                   ENDIF
+      *
+     C/COPY GOCPYSRC,GOUPD_DWNL
+      *
+     C     ENDPGM        TAG
+     C                   SETON                                        LR
+     C                   RETURN
+      /EJECT                                                                                  246828
+      *****************************************************************                       246828
+      *                                                               *                       246828
+      * SRGPGZ - Gets the Zone.                                       *                       246828
+      *                                                               *                       246828
+      * Called by: (At the beginning)                                 *                       246828
+      *                                                               *                       246828
+      * Calls: GOGETZONE                                              *                       246828
+      *                                                               *                       246828
+      *****************************************************************                       246828
+     C     SRGPGZ        BEGSR                                                                246828
+      *                                                                                       246828
+     C                   CALL      'GOGETZONE'                                                246828
+     C                   PARM      *BLANKS       PZRTCD            7                          246828
+     C                   PARM      *BLANKS       PZERMS           50                          246828
+     C                   PARM      'N'           PZFCHK            1                          246828
+     C                   PARM      *BLANKS       PZZONE           10                          246828
+     C                   PARM      *BLANKS       PZSHTC            4                          246828
+     C                   PARM      *ZERO         PZRDNB            5 0                        246828
+     C                   PARM      *ZERO         PZDNWD            5 0                        246828
+     C                   PARM      *BLANKS       PZBCCY            3                          246828
+     C                   PARM      *ZERO         PZNJOB            1 0                        246828
+      *                                                                                       246828
+     C     PZRTCD        IFEQ      *BLANKS                                                    246828
+     C                   MOVE      PZZONE        WZONE            10                          246828
+     C                   ELSE                                                                 246828
+      *                                                                                       246828
+     C     PZRTCD        IFEQ      '*ERROR'                                                   246828
+     C                   EXSR      *PSSR                                                      246828
+     C                   ENDIF                                                                246828
+     C                   ENDIF                                                                246828
+      *                                                                                       246828
+     C                   ENDSR                                                                246828
+      *****************************************************************                       246828
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * UpdateCount - This does the read of the file containing       *
+      *               unauthorised deals and updates the count        *
+      *               accordingly.                                    *
+      *                                                               *
+      * Called by: *MAIN                                              *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     UpdateCount   BEGSR
+      *
+      * If the Midas phase is not Input Cycle then set data to blank.
+     C                   IF        MidasPhase <> 'A'
+     C                   EVAL      Value = *blanks
+     C                   ELSE
+      *
+     C                   EVAL      CountN = 0
+     C**********         Open      DLDLDGL9                                           BUG9512 246828
+      *
+     C******LOVAL        SETLL     DLDLDGL9                                                   246828
+     C**********         READ      DLDLDGL9                               01                  246828
+     C**********         OPEN      GPDLWIPL                                          246828 BUG27964
+     C******LOVAL        SETLL     GPDLWIPL                                          246828 BUG27964
+     C**********         READ      GPDLWIPL                               01         246828 BUG27964
+     C                   OPEN      GPIRWIPL                                                 BUG27964
+     C     *LOVAL        SETLL     GPIRWIPL                                                 BUG27964
+     C                   READ      GPIRWIPL                               01                BUG27964
+      *
+     C                   DOW       *IN01 = *OFF
+     C**********         IF        DTYP = DealType1 or                                        246828
+     C**********                   DTYP = DealType2 or                                        246828
+     C**********                   DTYP = DealType3                                           246828
+     C                   EVAL      Atype = %TRIM(MSWAPI)                                      246828
+     C                   IF        MSWZONE = PZZONE and                                       246828
+     C                             Atype = APIType                                            246828
+     C                   EVAL      CountN = CountN + 1
+     C                   ENDIF
+     C**********         READ      DLDLDGL9                               01                  246828
+     C**********         READ      GPDLWIPL                               01         246828 BUG27964
+     C                   READ      GPIRWIPL                               01                BUG27964
+     C                   ENDDO
+      *
+     C**********         CLOSE     GPDLWIPL                                          246828 BUG27964
+     C                   CLOSE     GPIRWIPL                                                 BUG27964
+     C                   EVAL      Value = CountA
+     C**********         Close     DLDLDGL9                                           BUG9512 246828
+      *
+     C                   ENDIF
+      *
+     C     UpdateCountE  ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *PSSR         BEGSR
+      *
+     C                   IF        @RUN = *BLANK
+     C                   EVAL      @RUN = 'Y'
+     C                   DUMP
+     C                   ENDIF
+      *
+     C                   EVAL      *INLR = *ON
+     C                   SetOn                                        U7U8                   BUG9512
+     C                   RETURN
+      *
+     C                   ENDSR
+      *
+      *****************************************************************

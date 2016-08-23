@@ -1,0 +1,431 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Determine Network Routing/Addresses 2')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - MESSAGE MANAGEMENT UTILITIES.                        *
+     F*                                                               *
+     F*  ZM1101 - DETERMINE NETWORK ROUTING AND ADDRESSES - Double ID *
+     F*                                                               *
+     F*  Function: To determine network routing and address for SWIFT.*
+     F*   (I/C)    Used for MTxxx messages.                           *
+     F*                                                               *
+     F*  Called By: SE1805 - Trades Input for MT5xx.                  *
+     F*                                                               *
+     F*  Function:  This is a copy of ZM1101 enhanced to manage       *
+     F*             customers with 2 SWIFT IDs.                       *
+     F*                                                               *
+     F*  Note: Any change applied to ZM1100 may well be applied to    *
+     F*        this program. For that reason, the previous CAR tags   *
+     F*        have not been removed                                  *
+     F*                                                               *
+     F*  (c) Misys International Banking Systems Ltd. 2004            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSW037A            Date 02May05               *
+      *                 CSW036   *CREATE   Date 15Dec04               *
+     F* ----- CSW036 -------------------------------------------------*
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSW096             Date 03Jun96               *
+      *                 MR0048             Date 19May93               *
+     F*                 S01401             DATE 05NOV92               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+     F*  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*  CSW096 - SWIFT changes 1996                                  *
+     F*  S01401 - The generation of MT500 SWIFT Messages if the       *
+     F*           option is available.  NEW PROGRAM.                  *
+     F*                                                               *
+      *****************************************************************
+      *                                                               *
+      *  C R E A T I O N     P A R A M E T E R S                      *
+      *****************************************************************
+      *                                                               *
+      * INPUT :                                                       *
+      *   @SNDR  (6A) Customer number of sender (usually BICN)        *
+      *   @SCSD (12A) Sender's branch TID                             *
+      *   @DEST  (6A) Destination customer number                     *
+      *   @SETP  (2A) Settlement type                                 *
+      *                                                               *
+      * OUTPUT :                                                      *
+      *   @NWSN (20A) Network address of sender                       *
+      *   @NWSN (20A) Network address of destination                  *
+      *   @NWRK  (6A) Network - set to 'SWIFT ', 'TELEX ', 'STTX  '   *
+      *                         or 'UNROUT'                           *
+      *   @ERRC  (1A) Error code - 'S' BICN not found on SDCUSTPD     *
+      *                   or no record on SDMMODPD (dberror)          *
+      *               'D' Destination customer not found on SDCUSTPD  *
+      *   @SRNM (20A) Sender's Report Name                            *
+      *   @SRTN (10A) Sender's Report Town                            *
+      *   @DRNM (20A) Destination Report Name                         *
+      *   @DRTN (10A) Destination Report Town                         *
+      *                                                               *
+      *****************************************************************
+     E                    CPY@    1   1 80
+      *
+     I            DS
+      **  Data structure to test for BIC code
+     I                                        1  12 CSID
+     I                                        8   8 USID                  CSW096
+     I                                        9  11 @BIC
+     I*
+     IDSFDY     E DSDSFDY
+     I** First Data Structure for Access Objects
+     I*
+     IDSSDY     E DSDSSDY
+     I** Second Data Structure for Access Objects
+     I*                                                                   CSW036
+     IDSLDY     E DSDSLDY                                                 CSW036
+     I** Very Large Data Structure for Access Objects                     CSW036
+     I*
+     ISDMMOD    E DSSDMMODPD
+     I** Midas Modules Details
+     I*
+     ISDCUST    E DSSDCUSTPD
+     I** Customer Details
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  MAIN PROCESS                                                 *
+      *  PRAD  - Determine settlement network address                 *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     C*****************************************************************
+      *  P R O G R A M   S T A R T                                    *
+      *
+      **  CALLING PARAMETERS
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           @SNDR   6
+     C                     PARM           @SCSD  12
+     C                     PARM           @DEST   6
+     C                     PARM           @SETP   2
+     C                     PARM           @NWSN  20
+     C                     PARM           @NWDS  20
+     C                     PARM           @NWRK   6
+     C                     PARM           @ERRC   1
+     C                     PARM           @SRNM  20
+     C                     PARM           @SRTN  10
+     C                     PARM           @DRNM  20
+     C                     PARM           @DRTN  10
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Convert settlement type to numeric
+     C                     MOVE @SETP     WSETP   20
+      *                                                                   CSW036
+      ** Access SAR details file to check for presence of CSW036          CSW036
+      *                                                                   CSW036
+     C                     CALL 'AOSARDR0'                                CSW036
+     C                     PARM '       ' RTCDA   7                       CSW036
+     C                     PARM '*VERIFY' RTCDB   7                       CSW036
+     C                     PARM 'CSW036'  RTCDC   6                       CSW036
+      *                                                                   CSW036
+     C                     CLEAR@CSW36                                    CSW036
+     C           RTCDA     IFEQ *BLANK                                    CSW036
+     C                     MOVE 'Y'       @CSW36  1                       CSW036
+     C                     ENDIF                                          CSW036
+      *
+     C**  Access ICD Modules
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDMMOD    PARM SDMMOD    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE 'S'       @ERRC
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C**  Access Customer Details using the sender, @SNDR.
+     C**  (only if not blank...)                                          MR0048
+     C           @SNDR     IFNE *BLANKS                                   MR0048
+     C           @SNDR     ANDNE*ZEROS                                    MR0048
+     C*********************CALL 'AOCUSTR0'                                CSW036
+     C                     CALL 'AOCUSTR1'                                CSW036
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM @SNDR     @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C***********SDCUST    PARM SDCUST    DSSDY                           CSW036
+     C           SDCUST    PARM SDCUST    DSLDY                           CSW036
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE 'S'       @ERRC
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C** ...else, if Sender is blank, return as UNROUTABLE but no DBERR   MR0048
+     C                     ELSE                                           MR0048
+     C                     MOVE 'S'       @ERRC                           MR0048
+     C                     END                                            MR0048
+     C*                                                                   MR0048
+      **  Save sender's addresses & report name
+     C                     MOVE BBTXA1    STELX  10
+     C                     MOVE BBSTAD    SSTTX  12
+     C                     MOVE BBCRNM    SCRNM  20
+     C                     MOVE BBCRNM    @SRNM
+     C                     MOVE BBCRTN    @SRTN
+      *
+      **  Access Customer Details using destination customer no, @DEST.
+     C**  (only if not blank...)                                          MR0048
+     C           @DEST     IFNE *BLANKS                                   MR0048
+     C           @DEST     ANDNE*ZEROS                                    MR0048
+     C*********************CALL 'AOCUSTR0'                                CSW036
+     C                     CALL 'AOCUSTR1'                                CSW036
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM @DEST     @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C***********SDCUST    PARM SDCUST    DSSDY                           CSW036
+     C           SDCUST    PARM SDCUST    DSLDY                           CSW036
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE 'D'       @ERRC
+     C                     EXSR *PSSR
+     C                     END
+     C*                                                                   MR0048
+     C** ...else, if Destination is blank, return as UNROUTABLE           MR0048
+     C** but no DBERR                                                     MR0048
+     C                     ELSE                                           MR0048
+     C                     MOVE 'D'       @ERRC                           MR0048
+     C                     END                                            MR0048
+      *
+      **  To check 'BIC' in SWIFT destination customer address
+     C           @CSW36    IFEQ 'Y'                                       CSW036
+     C           BBCSI2    ANDNE*BLANKS                                   CSW036
+     C                     MOVE BBCSI2    CSID                            CSW036
+     C                     ELSE                                           CSW036
+     C                     MOVE BBCSID    CSID
+     C                     ENDIF                                          CSW036
+     C                     MOVE CSID      W0CSID 12                       CSW036
+     C                     MOVE BBCRNM    @DRNM
+     C                     MOVE BBCRTN    @DRTN
+      *                                                                   CSW096
+      **  Check if SWIFT Changes 1996 (CSW096) is installed.              CSW096
+      *                                                                   CSW096
+     C                     CALL 'SWIFT96'                                 CSW096
+     C                     PARM *BLANKS   @RTCD   7                       CSW096
+      *                                                                   CSW096
+     C           @RTCD     IFEQ 'CSW096'                                  CSW096
+     C                     MOVE 'Y'       CSW096  1                       CSW096
+     C                     ELSE                                           CSW096
+     C                     MOVE 'N'       CSW096                          CSW096
+     C                     ENDIF                                          CSW096
+      *
+      **  Determine settlement network address.
+     C                     EXSR PRAD
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * PRAD - Determine settlement network address                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PRAD      BEGSR
+      *
+      **  Set up sender, destination & network
+      *
+      **  'S' = SWIFT; 'T' = TELEX; 'X' = STTX
+      *
+      **                   (1)  (2)  (3)  (4)  (5)  (6)  (7)
+      **  ---------------------------------------------------
+      **  SWIFT ADDRESS  ¦  Y ¦  N ¦  N ¦  Y ¦  Y ¦  Y ¦  Y ¦
+      **  TELEX ADDRESS  ¦  N ¦  Y ¦  N ¦  Y ¦  Y ¦  N ¦  N ¦
+      **  STTX ADDRESS   ¦  N ¦  N ¦  Y ¦  N ¦  N ¦  Y ¦  Y ¦
+      **  SETT. TYPE     ¦    ¦    ¦    ¦ 01 ¦ 08 ¦ 01 ¦ 08 ¦
+      **  ---------------------------------------------------
+      ** *DESTN*=*BBCSID*¦**X*¦****¦****¦****¦**X*¦****¦**X*¦             CSW036
+      **  DESTN = W0CSID ¦  X ¦    ¦    ¦    ¦  X ¦    ¦  X ¦             CSW036
+      **  DESTN = BBTXA1 ¦    ¦  X ¦    ¦  X ¦    ¦    ¦    ¦
+      **  DESTN = BBSTAD ¦    ¦    ¦  X ¦    ¦    ¦  X ¦    ¦
+      **  ---------------------------------------------------
+      **  NETWORK        ¦    ¦    ¦    ¦    ¦    ¦    ¦    ¦
+      **  (NWRK)         ¦  S ¦  T ¦  X ¦  T ¦  S ¦  X ¦  S ¦
+      *
+      **  SWIFT ?
+      **  (1)
+     C           BGMSDL    IFEQ 'Y'
+      *
+     C***********BBCSID    IFNE *BLANKS                                   CSW036
+     C           W0CSID    IFNE *BLANKS                                   CSW036
+     C           BBTXA1    ANDEQ*BLANKS
+     C           BBSTAD    ANDEQ*BLANKS
+      **  (5)
+     C***********BBCSID    ORNE *BLANKS                                   CSW036
+     C           W0CSID    ORNE *BLANKS                                   CSW036
+     C           BBTXA1    ANDNE*BLANKS
+     C           BBSTAD    ANDEQ*BLANKS
+     C           WSETP     ANDEQ08
+      **  (7)
+     C***********BBCSID    ORNE *BLANKS                                   CSW036
+     C           W0CSID    ORNE *BLANKS                                   CSW036
+     C           BBTXA1    ANDEQ*BLANKS
+     C           BBSTAD    ANDNE*BLANKS
+     C           WSETP     ANDEQ08
+      *
+     C                     MOVEL@SCSD     @NWSN
+     C*********************MOVELBBCSID    @NWDS                           CSW036
+     C                     MOVELW0CSID    @NWDS                           CSW036
+     C                     MOVE 'SWIFT '  @NWRK
+     C                     END
+     C                     END
+      *
+      **  TELEX ?
+      **  (2)
+     C           BGMTMI    IFEQ 'Y'
+      *
+     C***********BBCSID    IFEQ *BLANKS                                   CSW036
+     C           W0CSID    IFEQ *BLANKS                                   CSW036
+     C           BBTXA1    ANDNE*BLANKS
+     C           BBSTAD    ANDEQ*BLANKS
+      **  (4)
+     C***********BBCSID    ORNE *BLANKS                                   CSW036
+     C           W0CSID    ORNE *BLANKS                                   CSW036
+     C           BBTXA1    ANDNE*BLANKS
+     C           BBSTAD    ANDEQ*BLANKS
+     C           WSETP     ANDEQ01
+      *
+     C                     MOVELSTELX     @NWSN
+     C                     MOVELBBTXA1    @NWDS
+     C                     MOVE 'TELEX '  @NWRK
+     C                     END
+     C                     END
+      *
+      **  STTX ?
+      **  (3)
+      *
+     C           BGMSDL    IFEQ 'Y'
+      *
+     C***********BBCSID    IFEQ *BLANKS                                   CSW036
+     C           W0CSID    IFEQ *BLANKS                                   CSW036
+     C           BBTXA1    ANDEQ*BLANKS
+     C           BBSTAD    ANDNE*BLANKS
+      **  (6)
+     C***********BBCSID    ORNE *BLANKS                                   CSW036
+     C           W0CSID    ORNE *BLANKS                                   CSW036
+     C           BBTXA1    ANDEQ*BLANKS
+     C           BBSTAD    ANDNE*BLANKS
+     C           WSETP     ANDEQ01
+      *
+     C                     MOVELSSTTX     @NWSN
+     C                     MOVELBBSTAD    @NWDS
+     C                     MOVE 'STTX  '  @NWRK
+     C                     END
+     C                     END
+      *
+      **  If network is SWIFT and if positions 9-11 of the
+      **  SWIFT address are equal to 'BIC'
+      **  try to route the message via Telex or STTX
+      *
+     C           @NWRK     IFEQ 'SWIFT '
+     C           @BIC      ANDEQ'BIC'
+     C           CSW096    ANDEQ'N'                                       CSW096
+     C           @NWRK     OREQ 'SWIFT'                                   CSW096
+     C           USID      ANDEQ'1'                                       CSW096
+     C           CSW096    ANDEQ'Y'                                       CSW096
+      *
+     C                     MOVE *BLANKS   @NWSN
+     C                     MOVE *BLANKS   @NWDS
+      *
+     C           BGMTMI    IFEQ 'Y'
+     C           BBTXA1    ANDNE*BLANKS
+     C                     MOVELSTELX     @NWSN
+     C                     MOVELBBTXA1    @NWDS
+     C                     MOVEL'TELEX '  @NWRK
+     C                     END
+      *
+     C           BGMSDL    IFEQ 'Y'
+     C           BBSTAD    ANDNE*BLANKS
+     C                     MOVELSSTTX     @NWSN
+     C                     MOVELBBSTAD    @NWDS
+     C                     MOVE 'STTX  '  @NWRK
+     C                     END
+     C                     END
+      *
+      **  Found to be unroutable
+      *
+     C           @NWRK     IFEQ *BLANKS
+     C           @NWDS     OREQ *BLANKS
+     C           @NWSN     OREQ *BLANKS
+      *
+     C           BGMSDL    IFEQ 'Y'
+     C***********BBCSID    ANDNE*BLANKS                                   CSW036
+     C           W0CSID    ANDNE*BLANKS                                   CSW036
+     C                     MOVEL@SCSD     @NWSN
+     C*********************MOVELBBCSID    @NWDS                           CSW036
+     C                     MOVELW0CSID    @NWDS                           CSW036
+     C                     MOVE 'SWIFT '  @NWRK
+     C                     ELSE
+      *
+     C           BGMTMI    IFEQ 'Y'
+     C           BBTXA1    ANDNE*BLANKS
+     C                     MOVELSTELX     @NWSN
+     C                     MOVELBBTXA1    @NWDS
+     C                     MOVE 'TELEX '  @NWRK
+     C                     ELSE
+      *
+     C           BGMSDL    IFEQ 'Y'
+     C           BBSTAD    ANDNE*BLANKS
+     C                     MOVELSSTTX     @NWSN
+     C                     MOVELBBSTAD    @NWDS
+     C                     MOVE 'STTX  '  @NWRK
+     C                     ELSE
+      *
+     C                     MOVEL'UNROUT'  @NWRK
+     C                     MOVELSCRNM     @NWSN
+     C                     MOVELBBCRNM    @NWDS
+      *
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Routine to handle database errors                    *
+      *                                                               *
+      * NB. DBERRCTL not called because want to return to calling pgm.*
+      *                                                               *
+     C*****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     MOVEL'ZM1101'  DBPGM  10
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+** CPY@   Object Copyright
+(c) Misys International Banking Systems Ltd. 2001

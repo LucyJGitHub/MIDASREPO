@@ -1,0 +1,1526 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME MT970 Accounts list Maintenance')             *
+      *****************************************************************
+      *                                                               *
+      *  Midas - ME Module                                            *
+      *                                                               *
+      *  ME0900 - Midas ME MT970 Accounts List Maintenance            *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      *  Last Amend No. CRE075             Date 06Dec10               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG7884            Date 15Jul05               *
+      *                 BUG7837            Date 08Jul05               *
+      *                 CSW099  *CREATE    Date 28Feb05               *
+      *                                                               *
+      *-------------------------------------------------------------- *
+      *                                                               *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG7884 - CLS MT970 Msg Generation                           *
+      *  BUG7837 - Error message MEM0009 (Invalid Account Code)       *
+      *            issued. This is due to W0ACOD defined as           *
+      *            4-digits and NOT 10-digits.                        *
+      *  CSW099 - Creation of MT970 Netting Statements                *
+      *                                                               *
+      *****************************************************************
+     FME0900DFCF  E                    WORKSTN                        UC
+     F                                        ##RR  KSFILE #SFLRCD
+     F                                              KINFDS INFDS#
+     F                                              KINFSR *PSSR
+      * DSP: Midas ME Maintenance subfile
+      *
+     FMGF970L0UF  E           K        DISK                      A    UC
+     F                                              KINFSR *PSSR
+     F                                              KCOMIT
+      *
+      * PF: Midas ME Maintenance file
+      *
+     FMGF970L1IF  E           K        DISK                           UC
+     F                                              KINFSR *PSSR
+     F                                              KCOMIT
+     F            MGF970D0                          KRENAMEMGF970D1
+      *
+      * PF: Midas ME Maintenance file
+      *
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright array
+      *
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   70##JDT
+     I                                        1   10##JCC
+     I                                        2   30##JYY
+     I                                        4   50##JMM
+     I                                        6   70##JDD
+     I                                        8  130##JTM
+     I                                        8   90##JHH
+     I                                       10  110##JNN
+     I                                       12  130##JSS
+      *
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+     I@1DBRC    E DSMGF970L0
+      * UPD : Midas ME MT970 Accounts List
+      *
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+      *
+     I            DS
+     I                                        1 132 ZAMSDA
+     I                                        1   4 ZA0008
+      *
+     ISDSARD    E DSSCSARDPD
+      ** EXTERNAL DS FOR SAR DETAILS
+      *
+     ISDACOD    E DSSDACODPD
+      ** EXTERNAL DS FOR ACCOUNT CODE DETAILS
+      *
+     ISDCUST    E DSSDCUSTPD
+      ** EXTERNAL DS FOR CUSTOMER DETAILS
+      *
+     ISDBRCH    E DSSDBRCHPD
+     I              QQDFAC                          ZZDFAC
+      ** EXTERNAL DS FOR BRANCH DETAILS
+      *
+     ISDCURR    E DSSDCURRPD
+      ** EXTERNAL DS FOR CURRENCY DETAILS
+      *
+     ISDACCN    E DSACCNTAB
+     I              LCD                             LLLCD
+      ** EXTERNAL DS FOR ACCOUNT DETAILS
+      *
+     IMUSER     E DSMUSERDD
+     I              RECI                            MRECI
+     I              LCD                             MLCD
+     I              CHTP                            MCHTP
+      ** USER DETAILS ACCESSED VIA ACCESS PROGRAM
+      *
+     IDSLDY     E DSDSLDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+      *
+     I* Text for screen functions
+      *
+     I              'F3=Main Menu '       C         W0TX01
+     I              'F5=Refresh'          C         W0TX02
+     I              'F9=Insert'           C         W0TX03
+     I              'F12=Previous'        C         W0TX04
+     I              'D=Delete'            C         W0TX05
+     I              'X=Authorise'         C         W0TX07
+     I              'F9=Browse'           C         W0TX08
+      *
+     I* Text for error message
+      *
+     I              'Delete (D)'          C         W0ER01
+     I              'Authorise (X)'       C         W0ER03
+      *
+      /EJECT
+      *****************************************************************
+      * Initialize
+     C                     EXSR ZZINIT
+      *
+     C                     DO   *HIVAL
+      * Initialise and load subfile page
+     C                     EXSR BAIZSF
+     C                     MOVEL'N'       W0RSF   1
+      * Display screen until reload requested
+     C           W0RSF     DOWEQ'N'
+      * Display screen
+     C                     EXSR CAEXFM
+      * Process response
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * HOME: Request subfile reload
+     C   05                CAS            FBRQRL
+      * Display next SFL page
+     C   27                CAS            BBLDSF
+      * Process screen input
+     C                     CAS            DAPR##
+     C                     END
+      *
+     C                     END
+     C                     END
+      *****************************************************************
+      /EJECT
+     CSR         BAIZSF    BEGSR
+      *================================================================
+      * Initialise & load subfile page
+      *================================================================
+      * Clear subfile
+     C                     SETON                     80
+     C                     WRITE#SFLCTL
+     C                     SETOF                     80
+      * Reset no of records in subfile
+     C                     Z-ADD*ZERO     ##RRMX  50 81     SETOF 81
+      * Verify action codes
+     C           *LOVAL    SETLLMGF970L1
+     C                     READ MGF970L1                 50
+     C           *IN50     IFEQ *ON
+     C           *IN51     IFEQ *OFF
+     C                     MOVEL'ADD'     W0PMD   3
+     C                     MOVEL'MEM0003' ZAMSID
+     C                     MOVEL'MEMSG'   ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     SETON                     88    *
+     C                     MOVEL'CHG'     W0PMD   3
+     C                     MOVEL'MEM0004' ZAMSID
+     C                     MOVEL'MEMSG'   ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * Set up Edit File Footer - Standard Functions  *
+      *****************************************************************
+      *
+      *  Sets up the function key footer text for edit files in which
+      *  records may not be deleted after the system set up flag has
+      *  been set on
+      *
+      *****************************************************************
+      *
+      *  DETAIL LINE COMMAND KEY TEXT
+      *
+     C                     MOVE *BLANKS   WUMTXT 80
+      *
+     C                     MOVEA'00000'   *IN,70
+      *
+     C                     SELEC
+      *
+      * Input mode
+      * F3=Main Menu   F5=Refresh   (F9=Browse)
+      *
+     C           W0PMD     WHEQ 'ADD'
+      *
+     C           W0TX01    CAT  W0TX02:3  WUMTXT
+     C                     MOVE *ON       *IN73
+      * Browse
+     C           *IN52     IFEQ *OFF
+     C           *IN53     OREQ *OFF
+     C           *IN55     OREQ *OFF
+     C           WUMTXT    CAT  W0TX08:3  WUMTXT
+     C                     MOVE *ON       *IN72
+     C                     ENDIF
+      * Build line
+     C                     MOVELWUMTXT    ##CTX1
+      *
+      * Delete not chosen/available, building options
+      * (D=Delete/X=Authorise)   F3=Main Menu   F5=Refresh   (F9=Insert)
+      *
+     C           W0PMD     WHEQ 'CHG'
+     C           *IN79     ANDEQ*OFF
+     C           W0PMD     OREQ 'CHG'
+     C           *IN79     ANDEQ*ON
+     C           *IN52     ANDEQ*ON
+      *
+     C                     Z-ADD1         X1      10
+      * Delete
+     C           *IN52     IFEQ *OFF
+     C                     MOVE *ON       *IN70
+     C           WUMTXT    CAT  W0TX05:X1 WUMTXT
+     C                     ENDIF
+      * Authorise
+     C           *IN55     IFEQ *OFF
+     C           *IN52     IFEQ *OFF
+     C                     Z-ADD3         X1
+     C                     ENDIF
+     C           WUMTXT    CAT  W0TX07:X1 WUMTXT
+     C                     MOVE *ON       *IN76
+     C                     ENDIF
+      * F3
+     C           WUMTXT    CAT  W0TX01:3  WUMTXT
+      * Refresh
+     C           WUMTXT    CAT  W0TX02:3  WUMTXT
+     C                     MOVE *ON       *IN73
+      * Insert
+     C           *IN51     IFEQ *OFF
+     C           WUMTXT    CAT  W0TX03:3  WUMTXT
+     C                     MOVE *ON       *IN72
+     C                     ENDIF
+      * Build line
+     C                     MOVELWUMTXT    ##CTX1
+      *
+      * No option caught
+      * Default to exit only
+     C                     OTHER
+      * F3
+     C           WUMTXT    CAT  W0TX01:3  WUMTXT
+      * Build line
+     C                     MOVELWUMTXT    ##CTX1
+      *
+     C                     ENDSL
+      *
+      *................................................................
+      * If CHANGE mode, then position file:
+     C           W0PMD     IFNE 'ADD'
+     C           *LIKE     DEFN #2BRCA    WZBRCA
+     C                     MOVEL#2BRCA    WZBRCA
+     C           *LIKE     DEFN #2CNUM    WZCNUM
+     C                     MOVEL#2CNUM    WZCNUM
+     C           *LIKE     DEFN #2CCY     WZCCY
+     C                     MOVEL#2CCY     WZCCY
+     C           *LIKE     DEFN #2ACOD    WZACOD
+     C                     MOVEL#2ACOD    WZACOD
+     C           *LIKE     DEFN #2ACSQ    WZACSQ
+     C                     MOVEL#2ACSQ    WZACSQ
+     C           *LIKE     DEFN #2TYTX    WZTYTX
+     C                     MOVEL#2TYTX    WZTYTX
+      * 82=EOF
+     C           *LOVAL    SETLLMGF970L1             82    *
+      * 82=EOF
+     C  N82                READ MGF970L1               9182*
+     C                     ELSE
+     C                     SETOF                     82    *
+     C                     END
+      * Load subfile page
+     C                     EXSR BBLDSF
+      *................................................................
+      * If no records found, display error message
+     C   82      ##RR      IFEQ *ZERO                      IF
+      * Send message '*No data to display'
+     C                     MOVEL'Y2U0008' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      *================================================================
+     CSR         BAEXIT    ENDSR
+      /EJECT
+     CSR         BBLDSF    BEGSR
+      *================================================================
+      * Load subfile page (write empty page if add mode)
+      *================================================================
+     C                     SETOF                     84    No SFLNXTCHG
+      * Re-establish fields in read-ahead record
+     C   27      W0PMD     IFNE 'ADD'
+     C  N82                READPMGF970L1                 90*
+     C  N82                READ MGF970L1                 90*
+     C                     END
+      *
+      * Setof record error indicators
+     C                     MOVE *ALL'0'   WKIND0  6
+      * Start at previous highest record in SFL
+     C                     Z-ADD##RRMX    ##RR    50
+     C                     Z-ADD*ZERO     ##RROK  50
+      * Set required pages based on *Set Cursor or *Subfile Pages
+     C           W0RR0     IFGT 0
+     C           W0RR0     DIV  ##SFPG    ##SPG   30
+     C                     MVR            ##SLIN  30
+     C           ##SLIN    IFGT 0
+     C                     ADD  1         ##SPG
+     C                     END
+     C           W0SPG     IFGT ##SPG
+     C                     Z-ADDW0SPG     ##SPG
+     C                     END
+     C                     ELSE
+     C                     Z-ADDW0SPG     ##SPG
+     C                     END
+      * Compute lines required based on pages
+     C           ##SPG     MULT ##SFPG    ##SFLN  90
+     C           ##SFLN    IFGT 999
+     C                     Z-ADD999       ##SFLN
+     C                     END
+      *................................................................
+      * Load next subfile page
+     C  N82      ##RROK    DOWLT##SFLN                     DO
+      *
+     C           W0PMD     IFNE 'ADD'
+      * Branch code
+     C           #2BRCA    IFNE *BLANK
+     C           *LIKE     DEFN #2BRCA    WQBRCA
+     C                     MOVE LBRCA     WQBRCA
+     C                     CALL 'QCLSCAN'
+     C                     PARM           WQBRCA                         Description
+     C                     PARM 3         WQA3N   30                     Length
+     C                     PARM 1         WQB3N   30                     Start
+     C                     PARM           #2BRCA                         Mask
+     C                     PARM 3         WQC3N   30                     Length
+     C                     PARM '1'       WQD1    1                      Translate
+     C                     PARM '1'       WQE1    1                      Trim
+     C                     PARM '?'       WQF1    1                      Wild
+     C                     PARM           WQG3N   30                     Result
+     C           WQG3N     CABLT1         BB020
+     C                     ENDIF
+      *
+      * Customer Number
+     C           #2CNUM    IFNE *BLANK
+     C           *LIKE     DEFN #2CNUM    WQCNUM
+     C                     MOVE LCNUM     WQCNUM
+     C                     CALL 'QCLSCAN'
+     C                     PARM           WQCNUM                         Description
+     C                     PARM 6         WQA3N   30                     Length
+     C                     PARM 1         WQB3N   30                     Start
+     C                     PARM           #2CNUM                         Mask
+     C                     PARM 6         WQC3N   30                     Length
+     C                     PARM '1'       WQD1    1                      Translate
+     C                     PARM '1'       WQE1    1                      Trim
+     C                     PARM '?'       WQF1    1                      Wild
+     C                     PARM           WQG3N   30                     Result
+     C           WQG3N     CABLT1         BB020
+     C                     ENDIF
+      *
+      * Currency Code
+     C           #2CCY     IFNE *BLANK
+     C           *LIKE     DEFN #2CCY     WQCCY
+     C                     MOVE LCCY      WQCCY
+     C                     CALL 'QCLSCAN'
+     C                     PARM           WQCCY                          Description
+     C                     PARM 3         WQA3N   30                     Length
+     C                     PARM 1         WQB3N   30                     Start
+     C                     PARM           #2CCY                          Mask
+     C                     PARM 3         WQC3N   30                     Length
+     C                     PARM '1'       WQD1    1                      Translate
+     C                     PARM '1'       WQE1    1                      Trim
+     C                     PARM '?'       WQF1    1                      Wild
+     C                     PARM           WQG3N   30                     Result
+     C           WQG3N     CABLT1         BB020
+     C                     ENDIF
+      *
+      * Account Code
+     C           #2ACOD    IFNE *BLANK
+     C           *LIKE     DEFN #2ACOD    WQACOD
+     C                     MOVE LACOD     WQACOD
+     C                     CALL 'QCLSCAN'
+     C                     PARM           WQACOD                         Description
+     C***********          PARM 4         WQA3N   30                     Length              BUG7884
+     C                     PARM 10        WQA3N   30                     Length              BUG7884
+     C                     PARM 1         WQB3N   30                     Start
+     C                     PARM           #2ACOD                         Mask
+     C***********          PARM 4         WQC3N   30                     Length              BUG7884
+     C                     PARM 10        WQC3N   30                     Length              BUG7884
+     C                     PARM '1'       WQD1    1                      Translate
+     C                     PARM '1'       WQE1    1                      Trim
+     C                     PARM '?'       WQF1    1                      Wild
+     C                     PARM           WQG3N   30                     Result
+     C           WQG3N     CABLT1         BB020
+     C                     ENDIF
+      *
+      * Account Sequence
+     C           #2ACSQ    IFNE *BLANK
+     C           *LIKE     DEFN #2ACSQ    WQACSQ
+     C                     MOVE LACSQ     WQACSQ
+     C                     CALL 'QCLSCAN'
+     C                     PARM           WQACSQ                         Description
+     C                     PARM 2         WQA3N   30                     Length
+     C                     PARM 1         WQB3N   30                     Start
+     C                     PARM           #2ACSQ                         Mask
+     C                     PARM 2         WQC3N   30                     Length
+     C                     PARM '1'       WQD1    1                      Translate
+     C                     PARM '1'       WQE1    1                      Trim
+     C                     PARM '?'       WQF1    1                      Wild
+     C                     PARM           WQG3N   30                     Result
+     C           WQG3N     CABLT1         BB020
+     C                     ENDIF
+      *
+      * Status
+     C           #2TYTX    IFNE *BLANK
+     C                     SELEC
+     C           LTYLC     WHEQ 'I'
+     C                     MOVEL'INPUT'   WQTYTX 10
+     C           LTYLC     WHEQ 'X'
+     C           'AUTHORIS'CAT  'ED'      WQTYTX
+     C                     ENDSL
+     C                     CALL 'QCLSCAN'
+     C                     PARM           WQTYTX                         Description
+     C                     PARM 10        WQA3N   30                     Length
+     C                     PARM 1         WQB3N   30                     Start
+     C                     PARM           #2TYTX                         Mask
+     C                     PARM 10        WQC3N   30                     Length
+     C                     PARM '1'       WQD1    1                      Translate
+     C                     PARM '1'       WQE1    1                      Trim
+     C                     PARM '?'       WQF1    1                      Wild
+     C                     PARM           WQG3N   30                     Result
+     C           WQG3N     CABLT1         BB020
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ADD  1         ##RR
+     C                     MOVEAWKIND0    *IN,33
+      *
+     C                     SETOF                     87    *
+      * Clear subfile fields
+     C                     EXSR MAIZ#1
+      * If CHANGE mode, load subfile fields
+     C           W0PMD     IFNE 'ADD'
+     C                     EXSR MBFL#1
+      * Record will be selected unless overridden
+     C                     MOVEL'Y'       W0RSL   1
+      * If record dropped...
+     C                     SUB  1         ##RR
+     C           W0RSL     CABNE'Y'       BB020
+     C                     ADD  1         ##RR
+     C                     END
+      * Output to subfile
+     C                     ADD  1         ##RROK     81    *
+      * If SFLRCD invalid, note that errors present
+     C   98N99             SETON                     99    *
+      * Set screen conditioning indicators
+     C                     EXSR GADSA1
+     C                     WRITE#SFLRCD
+     C           BB020     TAG
+     C           W0PMD     IFNE 'ADD'
+      * 82=EOF
+     C                     READ MGF970L1                 82*
+     C                     END
+     C  N82                END
+      *................................................................
+      * Save highest SFL record load can continue at end point
+     C           ##RR      IFGT ##RRMX
+      * Calculate top line
+     C           ##RROK    DIV  ##SFPG    ##SPG
+     C                     MVR            ##SLIN
+     C           ##SLIN    IFGT 0
+     C           ##RR      SUB  ##SLIN    ##SFRC
+     C                     ELSE
+     C           ##RR      SUB  ##SFPG    ##SFRC
+     C                     END
+     C                     ADD  1         ##SFRC
+     C                     Z-ADD##RR      ##RRMX
+     C                     END
+      *================================================================
+     CSR         BBEXIT    ENDSR
+      /EJECT
+     CSR         CAEXFM    BEGSR
+      *================================================================
+      * Display screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GBDSA2
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * PUTOVR unless conditioned fields change
+     C                     SETON                     86
+     C           *IN89     IFNE CAIN89
+     C           *IN81     ORNE CAIN81
+     C                     SETOF                     86
+     C                     END
+     C                     MOVE *IN89     CAIN89  1
+     C                     MOVE *IN81     CAIN81  1
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#SFLCTL
+      * Maintain subfile position where possible
+     C           @#SFRC    IFGT *ZERO
+     C                     Z-ADD@#SFRC    ##SFRC
+     C                     END
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         DAPR##    BEGSR
+      *================================================================
+      * Process screen input
+      *================================================================
+      *
+     C           W0PMD     IFNE 'ADD'
+      * Change of position specified
+     C           WZBRCA    IFNE #2BRCA
+     C           WZCNUM    ORNE #2CNUM
+     C           WZCCY     ORNE #2CCY
+     C           WZACOD    ORNE #2ACOD
+     C           WZACSQ    ORNE #2ACSQ
+     C           WZTYTX    ORNE #2TYTX
+     C                     EXSR FBRQRL
+     C                     END
+      *
+     C                     END
+      * Quit if reload requested
+     C           W0RSF     CABEQ'Y'       DAEXIT
+      *
+     C   81                DO
+      * Process subfile records
+     C                     EXSR DBPRSF
+     C                     END
+      * Switch between *ADD/*CHANGE modes
+     C   09                EXSR FACHMD
+      *================================================================
+     CSR         DAEXIT    ENDSR
+      /EJECT
+     CSR         DBPRSF    BEGSR
+      *================================================================
+      * Process modified subfile record
+      *================================================================
+     C                     READC#SFLRCD                  92*
+      *
+     C                     MOVEL'Y'       W0RSF
+      *
+     C           *IN92     DOWEQ'0'
+     C                     EXSR DCPRSR
+      * Set screen conditioning indicators
+     C                     EXSR GADSA1
+      * No errors in DEV1
+     C           *IN98     IFEQ *OFF
+      * Process modified subfile record
+     C                     MOVE *BLANKS   W0RTN
+     C                     EXSR EBPRSR
+     C           W0RTN     IFNE *BLANK
+      * Error: ROLLBACK any DBF changes
+     C                     ROLBK
+     C                     ELSE
+      * Otherwise COMMIT any DBF changes
+     C                     COMIT
+     C                     END
+     C                     ENDIF
+      *
+     C           *IN98     IFEQ *ON
+     C           *IN99     OREQ *ON
+     C                     MOVEL'N'       W0RSF
+     C                     ENDIF
+     C                     SETOF                     87    *
+      *
+     C                     UPDAT#SFLRCD
+     C                     READC#SFLRCD                  92*
+     C                     END
+      *
+      *================================================================
+     CSR         DBEXIT    ENDSR
+      /EJECT
+     CSR         DCPRSR    BEGSR
+      *================================================================
+      * Process subfile record
+      *================================================================
+      * Set off error indicators
+     C                     MOVEAWKIND0    *IN,33
+      *
+      * No errors
+     C                     SETOF                     98
+      * No SFLNXTCHG
+     C                     SETOF                     84
+     C           W0PMD     IFEQ 'ADD'
+      * Check for null record
+     C                     EXSR DDNLRC
+     C           W0NLR     IFEQ 'Y'
+     C                     GOTO DCEXIT
+     C                     END
+      * If not null record, continue
+     C                     END
+      *
+      * SFLNXTCHG
+     C                     SETON                     84
+      *
+      * Validate subfile record
+     C                     EXSR DEV1RC
+      *
+      * If SFLRCD invalid, note the fact
+     C   98N99             Z-ADD##RR      ##SFRC     99    *
+      *================================================================
+     CSR         DCEXIT    ENDSR
+      /EJECT
+     CSR         DDNLRC    BEGSR
+      *================================================================
+      * Check for null record
+      *================================================================
+     C                     MOVEL'N'       W0NLR   1
+     C           #1BRCA    CABNE*BLANK    DDEXIT
+     C           #1CNUM    CABNE*BLANK    DDEXIT
+     C           #1CCY     CABNE*BLANK    DDEXIT
+     C           #1ACOD    CABNE*BLANK    DDEXIT
+     C           #1ACSQ    CABNE*BLANK    DDEXIT
+      *
+     C                     MOVEL'Y'       W0NLR
+      *================================================================
+     CSR         DDEXIT    ENDSR
+      /EJECT
+     CSR         DEV1RC    BEGSR
+      *================================================================
+      * Validate subfile record
+      *================================================================
+      *
+      * If option taken is not valid
+     C           #1SEL     IFEQ 'D'
+     C           *IN52     ANDNE*OFF
+     C           #1SEL     OREQ 'X'
+     C           *IN55     ANDNE*OFF
+     C           #1SEL     ORNE 'D'
+     C           #1SEL     ANDNE'X'
+     C           #1SEL     ANDNE*BLANKS
+      *
+     C                     MOVEL'MEM0005' ZAMSID
+     C                     MOVE *BLANKS   ZAMSDA
+      *
+      * Delete (D)
+     C           *IN52     IFEQ *OFF
+     C           ZAMSDA    CAT  W0ER01:1  ZAMSDA
+     C                     ENDIF
+      *
+     C           *IN52     IFEQ *OFF
+     C           ZAMSDA    CAT  ', ':0    ZAMSDA
+     C                     ENDIF
+      * Authorise (X)
+     C           *IN55     IFEQ *OFF
+     C           ZAMSDA    CAT  W0ER03:1  ZAMSDA
+     C                     ENDIF
+      *
+     C                     MOVEL'MEMSG'   ZAMSGF
+     C                     EXSR ZASNMS
+     C                     SETON                     33    *
+     C                     SETON                     98    *
+      *
+     C                     ENDIF
+      *
+      * Record already authorised
+     C           #1SEL     IFEQ 'X'
+     C           #1TYLC    ANDEQ'X'
+     C                     MOVEL'MEM0017' ZAMSID
+     C                     MOVEL'MEMSG'   ZAMSGF
+     C                     EXSR ZASNMS
+     C                     SETON                     33    *
+     C                     SETON                     98    *
+     C                     ENDIF
+      *
+      *
+     C           #1SEL     IFEQ ' '
+      *
+      * Validate Branch Code
+     C                     CALL 'AOBRCHR0'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM '*KEY    '##OPTN  7
+     C                     PARM #1BRCA    W0BRCA  3
+     C           SDBRCH    PARM SDBRCH    DSLDY
+      *
+     C           ##RTCD    IFNE *BLANKS
+     C                     MOVEL'MEM0006' ZAMSID
+     C                     MOVEL'MEMSG'   ZAMSGF
+     C                     EXSR ZASNMS
+     C                     SETON                     34    *
+     C                     SETON                     98    *
+     C                     ELSE
+     C                     MOVE A8BRCD    #1BRCA
+     C                     ENDIF
+      *
+      * Validate Customer Number
+     C                     CALL 'AOCUSTR1'
+     C                     PARM *BLANKS   ##RTCD
+     C                     PARM '*KEY   ' ##OPTN
+     C                     PARM #1CNUM    W0CNUM 10
+     C                     PARM *BLANKS   ##KYST  7
+     C           SDCUST    PARM SDCUST    DSLDY
+      *
+     C           ##RTCD    IFNE *BLANKS
+     C                     MOVEL'MEM0007' ZAMSID
+     C                     MOVEL'MEMSG'   ZAMSGF
+     C                     EXSR ZASNMS
+     C                     SETON                     35    *
+     C                     SETON                     98    *
+     C                     ELSE
+     C                     MOVE BBCUST    #1CNUM
+     C                     ENDIF
+      *
+     C           BBCLSS    IFNE 'Y'
+     C           ##RTCD    ANDEQ*BLANKS
+     C                     MOVEL'MEM0012' ZAMSID
+     C                     MOVEL'MEMSG'   ZAMSGF
+     C                     EXSR ZASNMS
+     C                     SETON                     35    *
+     C                     SETON                     98    *
+     C                     ENDIF
+      *
+      * Validate Currency Code
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   ##RTCD
+     C                     PARM '*KEY'    ##OPTN
+     C                     PARM #1CCY     W0CCY   3
+     C           SDCURR    PARM *BLANK    DSLDY
+      *
+     C           ##RTCD    IFNE *BLANKS
+     C                     MOVEL'MEM0008' ZAMSID
+     C                     MOVEL'MEMSG'   ZAMSGF
+     C                     EXSR ZASNMS
+     C                     SETON                     36    *
+     C                     SETON                     98    *
+     C                     ELSE
+     C                     MOVE A6CYCD    #1CCY
+     C                     ENDIF
+      *
+      * Validate Account Code
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANKS   ##RTCD
+     C                     PARM '*KEY   ' ##OPTN
+     C*********************PARM #1ACOD    W0ACOD  4                                          BUG7837
+     C                     PARM #1ACOD    W0ACOD 10                                          BUG7837
+     C           SDACOD    PARM SDACOD    DSLDY
+      *
+     C           ##RTCD    IFNE *BLANKS
+     C                     MOVEL'MEM0009' ZAMSID
+     C                     MOVEL'MEMSG'   ZAMSGF
+     C                     EXSR ZASNMS
+     C                     SETON                     37    *
+     C                     SETON                     98    *
+     C                     ELSE
+     C                     MOVE A5ACCD    #1ACOD
+     C                     ENDIF
+      *
+      * Validate Account Sequence Number
+     C                     CALL 'ZALIGN'               97
+     C                     PARM *BLANKS   ##RTCD
+     C                     PARM #1ACSQ    WQ0012 16
+     C                     PARM *ZERO     WQ0013  10
+     C                     PARM 2         WQ0014  20
+     C                     PARM *BLANK    WQ0015 16
+      *
+     C           ##RTCD    IFNE *BLANKS
+     C           #1ACSQ    OREQ *BLANKS
+     C                     MOVEL'MEM0010' ZAMSID
+     C                     MOVEL'MEMSG'   ZAMSGF
+     C                     EXSR ZASNMS
+     C                     SETON                     38    *
+     C                     SETON                     98    *
+     C                     ELSE
+     C                     MOVE WQ0015    #1ACSQ
+     C                     ENDIF
+      *
+     C           *IN98     IFEQ *OFF
+      * Validate Midas Account
+     C                     CALL 'AOACCTR0'
+     C                     PARM *BLANKS   ##RTCD
+     C                     PARM '*KEY   ' ##OPTN
+     C                     PARM *BLANKS   P@RETL 10
+     C                     PARM #1CNUM    W0CNUM
+     C                     PARM #1CCY     W0CCY
+     C                     PARM #1ACOD    W0ACOD
+     C                     PARM #1ACSQ    W0ACSQ  2
+     C                     PARM #1BRCA    W0BRCA
+     C           SDACCN    PARM SDACCN    DSLDY
+      *
+     C           ##RTCD    IFNE *BLANKS
+     C                     MOVEL'MEM0011' ZAMSID
+     C                     MOVEL'MEMSG'   ZAMSGF
+     C                     EXSR ZASNMS
+     C                     SETON                     34    *
+     C                     SETON                     35    *
+     C                     SETON                     36    *
+     C                     SETON                     37    *
+     C                     SETON                     38    *
+     C                     SETON                     98    *
+     C                     ELSE
+     C                     MOVELCNUM      #1CNUM
+     C                     MOVELCCY       #1CCY
+     C                     MOVELACOD      #1ACOD
+     C                     MOVELACSQ      #1ACSQ
+     C                     MOVELBRCA      #1BRCA
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      *================================================================
+     CSR         DEEXIT    ENDSR
+      /EJECT
+     CSR         EBPRSR    BEGSR
+      *================================================================
+      * Process modified subfile record
+      *================================================================
+      *
+     C                     SETOF                     98
+      *
+     C                     SELEC
+      *
+      * Process insert request
+     C           W0PMD     WHEQ 'ADD'
+     C                     EXSR DDNLRC
+     C           W0NLR     IFNE 'Y'
+     C                     EXSR ECADRQ
+     C                     END
+      *
+      * Process DELETE request
+     C           W0PMD     WHEQ 'CHG'
+     C           #1SEL     ANDEQ'D'
+     C                     EXSR EDDLRQ
+      *
+      * Process AUTHORISE request
+     C           W0PMD     WHEQ 'CHG'
+     C           #1SEL     ANDEQ'X'
+     C                     EXSR SRAUT
+      *
+     C                     OTHER
+      *
+     C                     MOVE '*'       W0RTN
+      *
+     C                     ENDSL
+      *
+      * Process Status on screen
+     C                     SELEC
+     C           #1TYLC    WHEQ 'I'
+     C                     MOVEL'INPUT'   #1TYTX
+     C           #1TYLC    WHEQ 'D'
+     C           '***DELET'CAT  'ED'      #1TYTX
+     C           #1TYLC    WHEQ 'X'
+     C           'AUTHORIS'CAT  'ED'      #1TYTX
+     C                     ENDSL
+      *
+      * If error occurred on update, note the fact
+     C           *IN98     IFEQ '1'
+     C           *IN99     IFEQ '0'
+     C                     Z-ADD##RR      ##SFRC     99    *
+     C                     END
+     C                     END
+      *================================================================
+     CSR         EBEXIT    ENDSR
+      /EJECT
+     CSR         ECADRQ    BEGSR
+      *================================================================
+      * Process ADD request
+      *================================================================
+      *
+     C                     EXSR SCCRRC
+     C           W0RTN     IFNE *BLANK
+      * Write error detected
+      * Screen errors
+     C                     MOVE *ON       *IN34
+     C                     MOVE *ON       *IN35
+     C                     MOVE *ON       *IN36
+     C                     MOVE *ON       *IN37
+     C                     MOVE *ON       *IN38
+      * Format error
+     C                     SETON                     98    *
+      * Enable entry
+     C                     SETOF                     87    *
+      * SFLNXTCHG
+     C                     SETON                     84    *
+     C                     ELSE
+      * DBF write successful
+      * disable entry
+     C                     SETON                     87    *
+      * No SFLNXTCHG
+     C                     SETOF                     84    *
+     C                     END
+      *================================================================
+     CSR         ECEXIT    ENDSR
+      /EJECT
+     CSR         EDDLRQ    BEGSR
+      *================================================================
+      * Process DELETE request
+      *================================================================
+      *
+     C                     EXSR TEDLRC
+     C           W0RTN     IFNE *BLANK
+      * DELETE unsuccessful
+      * Screen errors
+     C                     MOVE *ON       *IN34
+     C                     MOVE *ON       *IN35
+      * Format error
+     C                     SETON                     98    *
+      * Enable entry
+     C                     SETOF                     87    *
+      * SFLNXTCHG
+     C                     SETON                     84    *
+      * If record altered, reset subfile record
+     C           W0RTN     CASEQ'Y2U0007' MBFL#1           IF
+     C                     END
+     C                     ELSE
+      * DBF delete successful
+      * Blank out record and protect from entry
+     C*                    EXSR MAIZ#1
+      * disable entry
+     C                     SETON                     87    *
+      * No SFLNXTCHG
+     C                     SETOF                     84    *
+      *
+     C                     END
+      *================================================================
+     CSR         EDEXIT    ENDSR
+      /EJECT
+     CSR         SRAUT     BEGSR
+      *================================================================
+      * Process AUTHORISE request
+      *================================================================
+      *
+     C                     EXSR TEAURC
+     C           W0RTN     IFNE *BLANK
+      * AUTH unsuccessful
+      * Screen errors
+     C                     MOVE *ON       *IN34
+     C                     MOVE *ON       *IN35
+      * Format error
+     C                     SETON                     98    *
+      * Enable entry
+     C                     SETOF                     87    *
+      * SFLNXTCHG
+     C                     SETON                     84    *
+      * If record altered, reset subfile record
+     C           W0RTN     CASEQ'Y2U0007' MBFL#1           IF
+     C                     END
+     C                     ELSE
+      * No SFLNXTCHG
+     C                     SETOF                     84    *
+      *
+     C                     END
+      *================================================================
+     CSR                   ENDSR
+      /EJECT
+     CSR         FACHMD    BEGSR
+      *================================================================
+      * Switch between *ADD/*CHANGE modes
+      *================================================================
+     C                     SELEC
+      * Not authorised to BROWSE
+     C           *IN52     WHEQ *ON
+     C           *IN53     ANDEQ*ON
+     C           *IN55     ANDEQ*ON
+     C           W0PMD     ANDEQ'ADD'
+     C                     MOVEL'MEM0001' ZAMSID
+     C                     MOVEL'MEMSG'   ZAMSGF
+     C                     EXSR ZASNMS
+      * Not authorised to INSERT
+     C           *IN51     WHEQ *ON
+     C           W0PMD     ANDEQ'CHG'
+     C                     MOVEL'MEM0002' ZAMSID
+     C                     MOVEL'MEMSG'   ZAMSGF
+     C                     EXSR ZASNMS
+      *
+     C                     OTHER
+     C           W0PMD     IFNE 'ADD'
+     C                     MOVEL'ADD'     W0PMD
+     C                     MOVE *ON       *IN79
+     C                     ELSE
+     C                     MOVEL'CHG'     W0PMD
+     C                     MOVE *OFF      *IN79
+     C                     END
+     C                     EXSR FBRQRL
+      *
+     C                     ENDSL
+      *================================================================
+     CSR         FAEXIT    ENDSR
+      /EJECT
+     CSR         FBRQRL    BEGSR
+      *================================================================
+      * Request subfile reload
+      *================================================================
+     C                     MOVEL'Y'       W0RSF
+      *================================================================
+     CSR         FBEXIT    ENDSR
+      /EJECT
+     CSR         GADSA1    BEGSR
+      *================================================================
+      * Set display attributes for Subfile record
+      *================================================================
+     C           W0PMD     COMP 'ADD'                    89*
+      * Protect keys if change mode or updated record
+     C                     SETON                     88    *
+     C   89N87             SETOF                     88    *
+     C                     MOVEL*IN87     *IN78
+     C           W0PMD     IFEQ 'CHG'                      *IF
+     C                     MOVEL'1'       *IN78
+     C                     END                             *FI
+      *
+     C           W0PMD     IFEQ 'ADD'
+     C           *IN52     OREQ *ON
+     C           *IN55     ANDEQ*ON
+     C                     MOVE *ON       *IN79
+     C                     ELSE
+     C                     MOVE *OFF      *IN79
+     C                     ENDIF
+      *
+     C                     MOVE *OFF      *IN77
+      *
+      *================================================================
+     CSR         GAEXIT    ENDSR
+      /EJECT
+     CSR         GBDSA2    BEGSR
+      *================================================================
+      * Set display attributes for Subfile control
+      *================================================================
+     C           W0PMD     COMP 'ADD'                    89*
+      *================================================================
+     CSR         GBEXIT    ENDSR
+      /EJECT
+     CSR         MAIZ#1    BEGSR
+      *================================================================
+      * Initialise subfile record
+      *================================================================
+      *
+     C                     MOVEL*BLANK    #1DBRC
+     C                     MOVEL*BLANK    #1SEL
+     C                     MOVEL*BLANK    #1BRCA
+     C                     MOVEL*BLANK    #1CNUM
+     C                     MOVEL*BLANK    #1CCY
+     C                     MOVEL*BLANK    #1ACOD
+     C                     MOVEL*BLANK    #1ACSQ
+     C                     MOVEL*BLANK    #1TYTX
+     C                     MOVEL*BLANK    #1TYLC
+     C                     Z-ADD*ZERO     #1LCD
+      *================================================================
+     CSR         MAEXIT    ENDSR
+      /EJECT
+     CSR         MBFL#1    BEGSR
+      *================================================================
+      * Move MGF970L0 fields to subfile
+      *================================================================
+     C                     MOVELLBRCA     #1BRCA
+     C                     MOVELLCNUM     #1CNUM
+     C                     MOVELLCCY      #1CCY
+     C                     MOVELLACOD     #1ACOD
+     C                     MOVELLACSQ     #1ACSQ
+     C                     MOVELLTYLC     #1TYLC
+      *
+     C                     MOVEL*BLANK    #1TYTX
+     C                     SELEC
+     C           LTYLC     WHEQ 'I'
+     C                     MOVEL'INPUT'   #1TYTX
+     C           LTYLC     WHEQ 'X'
+     C           'AUTHORIS'CAT  'ED'      #1TYTX
+     C                     ENDSL
+      *
+     C                     Z-ADDLLCD      #1LCD
+      * Hold current record image for change detection
+     C                     MOVEL@1DBRC    #1DBRC
+      *================================================================
+     CSR         MBEXIT    ENDSR
+      /EJECT
+     CSR         MEIZ#2    BEGSR
+      *================================================================
+      * Initialise subfile control
+      *================================================================
+     C                     MOVEL*BLANK    #2BRCA
+     C                     MOVEL*BLANK    #2CNUM
+     C                     MOVEL*BLANK    #2CCY
+     C                     MOVEL*BLANK    #2ACOD
+     C                     MOVEL*BLANK    #2ACSQ
+     C                     MOVEL*BLANK    #2TYTX
+      *================================================================
+     CSR         MEEXIT    ENDSR
+      /EJECT
+     CSR         SCCRRC    BEGSR
+      *================================================================
+      * Crt Record
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Move all fields to MGF970L0
+     C                     MOVEL#1BRCA    LBRCA
+     C                     MOVEL#1CNUM    LCNUM
+     C                     MOVEL#1CCY     LCCY
+     C                     MOVEL#1ACOD    LACOD
+     C                     MOVEL#1ACSQ    LACSQ
+     C                     Z-ADD0         LLRDT
+     C                     Z-ADD0         LLMSQ
+     C                     MOVEL'I'       LTYLC            Type of Last Ch
+     C                     Z-ADDWURDNB    LLCD             Last Change Dat
+      *
+      * Create record in MGF970L0 with screen values entered.
+     C           KLCRSC    KLIST
+     C                     KFLD           LBRCA
+     C                     KFLD           LCNUM
+     C                     KFLD           LCCY
+     C                     KFLD           LACOD
+     C                     KFLD           LACSQ
+      * Check for duplicate primary key
+     C           KLCRSC    SETLLMGF970L0                 90*
+     C           *IN90     IFEQ '1'
+      * Send message
+     C                     MOVEL'Y2U0003' W0RTN
+     C                     MOVEL'Y2U0003' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO SCEXIT
+     C                     END
+      *
+     C                     WRITEMGF970D0               91  *
+      *
+     C           *IN91     IFEQ '1'
+      * Write error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ENDIF
+      *================================================================
+     CSR         SCEXIT    ENDSR
+      /EJECT
+     CSR         TEDLRC    BEGSR
+      *================================================================
+      * Del Record
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      *
+      * Move key fields to MGF970L0
+     C                     MOVEL#1BRCA    LBRCA
+     C                     MOVEL#1CNUM    LCNUM
+     C                     MOVEL#1CCY     LCCY
+     C                     MOVEL#1ACOD    LACOD
+     C                     MOVEL#1ACSQ    LACSQ
+      *
+     C           KLDLTE    KLIST
+     C                     KFLD           LBRCA
+     C                     KFLD           LCNUM
+     C                     KFLD           LCCY
+     C                     KFLD           LACOD
+     C                     KFLD           LACSQ
+     C           KLDLTE    CHAINMGF970L0             9091  *
+     C           *IN90     IFEQ '1'
+      * Record already deleted
+     C                     MOVEL'Y2U0009' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'Y2U0009' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO TEEXIT
+     C                     END
+      *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     MOVEL'Y2U0004' W0RTN   7
+      * Send message '*Database operation error'
+     C                     MOVEL'Y2U0004' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO TEEXIT
+     C                     END
+      *
+      * Check for changed record
+     C           #1DBRC    IFNE @1DBRC                     IF
+     C                     MOVEL'Y2U0007' W0RTN   7
+      * Send message '*Update not accepted'
+     C                     MOVEL'Y2U0007' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+      * Release record lock
+     C           KLDLTE    SETLLMGF970L0             9091  *
+     C                     GOTO TEEXIT
+     C                     END                             FI #1DBRC
+      *................................................................
+     C                     DELETMGF970D0               91  *
+     C                     MOVE 'D'       #1TYLC
+     C                     MOVE ' '       #1SEL
+     C                     MOVE *ON       *IN77
+     C           *IN91     IFEQ '1'
+      * Delete error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ENDIF
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     98    *
+     C                     END
+      *================================================================
+     CSR         TEEXIT    ENDSR
+      /EJECT
+     CSR         TEAURC    BEGSR
+      *================================================================
+      * AUTH Record
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      *
+      * Move key fields to MGF970L0
+     C                     MOVEL#1BRCA    LBRCA
+     C                     MOVEL#1CNUM    LCNUM
+     C                     MOVEL#1CCY     LCCY
+     C                     MOVEL#1ACOD    LACOD
+     C                     MOVEL#1ACSQ    LACSQ
+      *
+     C           KLAUT     KLIST
+     C                     KFLD           LBRCA
+     C                     KFLD           LCNUM
+     C                     KFLD           LCCY
+     C                     KFLD           LACOD
+     C                     KFLD           LACSQ
+     C           KLAUT     CHAINMGF970L0             9091  *
+     C           *IN90     IFEQ '1'
+      * Record already deleted
+     C                     MOVEL'Y2U0009' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'Y2U0009' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO TEAUEX
+     C                     END
+      *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     MOVEL'Y2U0004' W0RTN   7
+      * Send message '*Database operation error'
+     C                     MOVEL'Y2U0004' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO TEAUEX
+     C                     END
+      *
+     C                     MOVEL'X'       LTYLC            Type of Last Ch
+     C                     MOVEL'X'       #1TYLC           Type of Last Ch
+     C                     MOVEL' '       #1SEL
+     C                     Z-ADDWURDNB    LLCD             Last Change Dat
+     C                     UPDATMGF970D0               91  *
+     C           *IN91     IFEQ '1'
+      * Auth error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ENDIF
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     98    *
+     C                     END
+      *================================================================
+     CSR         TEAUEX    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Exit program: Normal
+      *================================================================
+      *
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      *
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+      *
+      * Execute only if CSW099 is active
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'CSW099'  @SARD   6
+     C           SDSARD    PARM SDSARD    DSLDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     EXSR ZXEXPG
+     C                     ENDIF
+      *
+      * Set up program
+      *
+     C                     MOVE *BLANK    P0RTN   7
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+     C                     MOVEL*ZEROS    W0RTW   90
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+      * Set century digit (If YY prior to 1940 treat as 20YY)
+     C           ##JYY     IFLT 40
+     C                     Z-ADD1         ##JCC
+     C                     ELSE
+     C                     Z-ADD0         ##JCC
+     C                     END
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Obtain default message file
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      * Define work field Run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      * Define work field Midas Run Date
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Flag no *SET CURSOR in the program
+     C                     MOVE 'N'       YSETCS  1
+     C                     MOVE *BLANK    WCSRLC  3
+     C                     MOVEL*BLANKS   W0CFL  10        *Cursor field
+     C                     Z-ADD*ZEROS    W0CRW   50       *Cursor row
+     C                     Z-ADD*ZEROS    W0CCL   50       *Cursor column
+      * Move main file information to JOB context
+     C                     MOVE @1FFL     ZZFFL  10        Main file name
+     C                     MOVE @1FLB     ZZFLB  10        Main file lib
+     C                     MOVE @1FMB     ZZFMB  10        Main file mbr
+     C                     MOVE ZZFFL     @1FFL  10
+     C                     MOVE ZZFLB     @1FLB  10
+     C                     MOVE ZZFMB     @1FMB  10
+     C                     CALL 'Y2QLVNR'
+     C                     PARM           ZZFFL  10
+     C                     PARM           ZZFLB  10
+     C                     PARM           ZZFQL  21        LIBRARY/FILE
+     C                     OPEN ME0900DF
+     C                     OPEN MGF970L0
+     C                     OPEN MGF970L1
+     C                     MOVEL'N'       W0PMT   1
+      *
+     C                     Z-ADD14        ##SFPG  30       SFLPAG
+     C                     Z-ADD1         ##SFRC
+      * Maximum record number
+     C                     Z-ADD*ZERO     ##RRMX
+      * Scan limit
+     C                     Z-ADD500       W0SLM   50
+      * Subfile pages
+     C                     Z-ADD1         W0SPG   30
+      * Processed Subfile record
+     C                     Z-ADD0         W0RR0   40
+      *................................................................
+      * Set mode
+     C                     MOVEL'CHG'     W0PMD
+     C                     MOVEL*BLANK    W0GRP   1
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT           RUN DATE
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB           RUNDAY NO.
+      * Initialise subfile control
+     C                     EXSR MEIZ#2
+      *
+      * Check user authority
+      *
+     C                     CALL 'AOUSERR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM ##USR     @USRP  10
+     C           MUSER     PARM MUSER     DSLDY
+      *
+      * Verify user authority (ADD)
+     C                     CALL 'ZVACTBU'
+     C                     PARM 'I'       ZACTN   1
+     C                     PARM DBRN      ZBRCA   3
+     C                     PARM           @@ERR   10
+      *
+     C           @@ERR     IFEQ 0
+     C                     SETOF                     51
+     C                     ELSE
+     C                     SETON                     51
+     C                     ENDIF
+      *
+      * Verify user authority (ENQUIRY)
+     C                     CALL 'ZVACTBU'
+     C                     PARM 'E'       ZACTN   1
+     C                     PARM DBRN      ZBRCA   3
+     C                     PARM           @@ERR   10
+      *
+     C           @@ERR     IFEQ 0
+     C                     SETOF                     53
+     C                     ELSE
+     C                     SETON                     53
+     C                     ENDIF
+      *
+      * Verify user authority (DELETE)
+     C                     CALL 'ZVACTBU'
+     C                     PARM 'D'       ZACTN   1
+     C                     PARM DBRN      ZBRCA   3
+     C                     PARM           @@ERR   10
+      *
+     C           @@ERR     IFEQ 0
+     C                     SETOF                     52
+     C                     ELSE
+     C                     SETON                     52
+     C                     ENDIF
+      *
+      * Verify user authority (AUTHORISE)
+     C                     CALL 'ZVACTBU'
+     C                     PARM 'X'       ZACTN   1
+     C                     PARM DBRN      ZBRCA   3
+     C                     PARM           @@ERR   10
+      *
+     C           @@ERR     IFEQ 0
+     C                     SETOF                     55
+     C                     ELSE
+     C                     SETON                     55
+     C                     ENDIF
+      *
+      * Set up ADD mode if only IN51 is off
+      *
+     C           *IN51     IFEQ *OFF
+     C           *IN52     ANDEQ*ON
+     C           *IN53     ANDEQ*ON
+     C           *IN55     ANDEQ*ON
+     C                     MOVE 'ADD'     W0PMD
+     C                     ENDIF
+      *
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      /EJECT
+     CSR         *PSSR     BEGSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C/COPY SDCPYSRC,SDPSSRINT
+      *
+      *================================================================
+     CSR                   ENDSR
+      *================================================================
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Misys International Banking Systems Ltd. 2005

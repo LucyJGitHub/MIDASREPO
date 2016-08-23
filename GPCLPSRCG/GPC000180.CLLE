@@ -1,0 +1,89 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas GP Central FO Account Keys File Maintenance')   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Global Processing Module                            */
+/*                                                                   */
+/*       GPC000180 - Central FO Account Keys File Maintenance        */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2006           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. BUG11849           Date 09Aug06              */
+/*       Prev Amend No. CSD031  *CREATE    Date 10Apr06              */
+/*                                                                   */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BUG11849 - User not authorized to Standard Settlement menu  */
+/*       CSD031 - Enhanced Centralised Standing Data                 */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2006')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Start Commitment Control */
+ 
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF0000)
+ 
+             RTVJOBA    TYPE(&JOBTYPE)
+ 
+             OVRDBF     FILE(FACKYX) TOFILE(GPFAKYL1)
+             OVRDBF     FILE(FACKY) TOFILE(GPFAKYL0)
+ 
+/**********  CHGJOB     SWS(1XXXXXXX) */                                                /*BUG11849*/
+             CHGJOB     SWS(1XXX1XXX)                                                   /*BUG11849*/
+ 
+             CALL       PGM(FF0180)
+ 
+/**********  CHGJOB     SWS(0XXXXXXX) */                                                /*BUG11849*/
+             CHGJOB     SWS(0XXX0XXX)                                                   /*BUG11849*/
+ 
+/* Database error processing */
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+/* Abnormal termination - batch job */
+ 
+             IF         COND(&JOBTYPE = '0') THEN(DO)
+               SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                            GPC000180 ended abnormally - see job log') +
+                            TOMSGQ(MOPERQ)
+               MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ 
+/* Abnormal termination - interactive job */
+ 
+             IF         COND(&JOBTYPE = '1') THEN(DO)
+ 
+/* (Set up messages for Midas information screen and call */
+/* appropriate module program to display screen)          */
+ 
+             ENDDO
+ 
+END:
+             DLTOVR     FILE(FACKYX)
+             DLTOVR     FILE(FACKY)
+ 
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+             ENDPGM

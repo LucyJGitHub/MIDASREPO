@@ -1,0 +1,817 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LB Portfolio Lending Instrument/Grp Enq')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Lending Module                         *
+     F*                                                               *
+     F*  LB0335 - Portfolio Lending Instrument/Group Enquiry          *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01498             Date 11Aug94               *
+      *                 066235             Date 27Jan93               *
+     F*                 SA9018             DATE 16JAN91               *
+     F*                 R00300             DATE 20AUG90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*  S01498 - Portfolio Lending Upgrade to Release 10             *
+     F*  066235  -  Recompile program due to changes in DSPF          *
+     F*  SA9018  -  REMOVE ATTACHED LIMIT                             *
+     F*  R00300  -  Message file changes                              *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F** C R E A T I O N     P A R A M E T E R S                      *
+     F**                                                              *
+     F**                                                              *
+     F**                                                              *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F**
+     F** FILE DEFINITIONS
+     F** ----------------
+     F*
+     F** Workstation File
+     FLB0335DFCF  E                    WORKSTN      KINFSR *PSSR
+     F                                        SFLRR2KSFILE LB0335S2
+     F                                              KINFDS FDS001
+     F*
+     F***Bank*Details*File.*Prefix*-*BJ********************************   S01498
+     F***SDBANKPDIF**E                    DISK         KINFSR *PSSR       S01498
+     F*
+     F*
+     F** Portfolio Lending Groups (in sequence). Prefix - GP
+     FLBGROUL1IF  E           K        DISK         KINFSR *PSSR
+     F*
+     F***Instrument*Types*(Group/Instr*type).*Prefix*-*PD**************   S01498
+     F***SDPLINL4IF**E           K        DISK         KINFSR *PSSR       S01498
+     F*
+     F** Instrument Types (Group/Instr type). Prefix - PD
+     FSDPLINL3IF  E           K        DISK         KINFSR *PSSR
+     F            SDPLINP0                          KRENAMESDPLIND1
+     F********************************************************************
+     F/EJECT
+     F********************************************************************
+     F**                                                                 *
+     F** ID F  C  H  L    FUNCTION OF INDICATORS                         *
+     F**                  ----------------------                         *
+     F**      26          SFLEND    ------) Message Subfile              *
+     F**      27          ROLLUP                                         *
+     F**                                                                 *
+     F**      28          SFLDSP    ------)                              *
+     F**      29          SFLDSPCTL       )                              *
+     F**      30          SFLCLR          ) Input Screen 2 Subfile       *
+     F**      31          SFLEND    ------)                              *
+     F**                                                                 *
+     F**      24 25       Display file indicators                        *
+     F**      41          Error indicator for group code input field     *
+     F**      42          Error indicator for instrument code field      *
+     F********70**********Read*fail*on*Bank*Details*file*SDBANKPD******  *S01498
+     F********71**********Chain*fail*on*group*details*file*LBGROUL1****  *S01498
+     F**      72          READE fail on LBGROUL1 file                    *
+     F********73**********Chain*fail*on*SDPLINL0*file******************  *S01498
+     F**      74          Read fail on LBGROUL1 file                     *
+     F**      75          Reade fail on SDPLINL1 file                    *
+     F**                                                                 *
+     F********************************************************************
+     E/EJECT
+     E********************************************************************
+     E*
+     E**   Array for COPYRIGHT
+     E                    CPY@    1   1 80
+     E********************************************************************
+     E/EJECT
+     E********************************************************************
+     I*
+     I**   DATA STRUCTURE FOR COMPILATION - Copyright Insertion
+     ICPYR@$      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@$$
+     I*
+     I** File information data structure for display file
+     IFDS001      DS
+     I                                    B 378 3790FDSRR1
+     I*
+     I** Program status data structure
+     IPSDS       SDS
+     I**************************************244 253 DDWSID                S01498
+     I**************************************254 263 DDUSER                S01498
+     I                                      244 253 SWSID                 S01498
+     I                                      254 263 SUSER                 S01498
+     I*
+     I** Local data area
+     I***LDA********UDS***********************     256                    S01498
+     ILDA         DS                            256                       S01498
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I** Data Structure to split the 79 character field on an input screen
+     I*  input to three parts each of 17 characters
+     IDD2OUT      DS
+     I                                        5   7 DD2FD1
+     I                                       15  17 DD2FD2
+     I                                       23  42 DD2FD3
+     I                                       25  44 DD2FD4
+     I                                       53  54 DD2FD5
+     I                                       59  73 DD2FD6
+     I*****                                  69  70 DD2FD7                SA9018
+     I*
+     ISDBANK    E DSSDBANKPD                                              S01498
+     I**  Data structure for bank details                                 S01498
+     I*                                                                   S01498
+     ISDPLIN    E DSSDPLINPD                                              S01498
+     I**  Data structure for instrument type details                      S01498
+     I*                                                                   S01498
+     ISDGROU    E DSLBGROUPD                                              S01498
+     I**  Data structure for lending group details                        S01498
+     I*                                                                   S01498
+     IDSFDY     E DSDSFDY                                                 S01498
+     I**  Short data structure for access objects                         S01498
+     I*                                                                   S01498
+     IDSSDY     E DSDSSDY                                                 S01498
+     I**  Long data structure for access programs                         S01498
+     I*
+     I********************************************************************
+     I/EJECT
+     C********************************************************************
+     C*
+     C**             START MAINLINE
+     C**             --------------
+     C** Initialisation
+     C                     EXSR #A
+     C*
+     C** Main processing
+     C                     EXSR #B
+     C*
+     C** End program
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**                    INDEX TO SUBROUTINES                         *
+     C**                    --------------------                         *
+     C**                                                                 *
+     C**  1.ZASNMS - Send message to program's message queue             *
+     C**  2.#ZD    - Output instrument details                           *
+     C**  3.#ZC    - Output group details                                *
+     C**  4.#ZE    - Processing for exactly one page of subfile          *
+     C**  5.#BA    - Validate initial screen                             *
+     C**  6.#BB    - Outputs second screen                               *
+     C**  7.#BBB   - Process screen 2                                    *
+     C**  8.#ZB    - Subfile processing                                  *
+     C**  9.#BBBA  - CMD/12 processing                                   *
+     C** 10.#BBBB  - Enter processing                                    *
+     C** 11.#A     - Initialisation                                      *
+     C** 12.#ZA    - Database error handling routine                     *
+     C** 13.#B     - Main processing                                     *
+     C** 14.*PSSR  - Program error handling routine                      *
+     C**                                                                 *
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** ZASNMS    - Send message to program's message queue             *
+     C**                                                                 *
+     C** CALLED BY -                                                     *
+     C**                                                                 *
+     C** CALLS     - Y2SNMGC                                             *
+     C**                                                                 *
+     C********************************************************************
+     C           ZASNMS    BEGSR                           ** ZASNMS    **
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10
+     C                     PARM           ZAPGRL  5
+     C                     PARM           ZAMSID  7
+     C                     PARM           ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTP  7
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #ZD         - This subroutine outputs instrument details        *
+     C**                                                                 *
+     C** CALLS       -                                                   *
+     C**                                                                 *
+     C** CALLED BY   - #ZB                                               *
+     C**                                                                 *
+     C********************************************************************
+     C           #ZD       BEGSR
+     C*
+     C** Move SDPLINDD fields to output fields
+     C                     MOVE PDINNR    DD2FD2
+     C                     MOVE PDISTN    DD2FD4
+     C           PDCSHI    IFEQ 'Y'
+     C                     MOVEL'Cash Ins'DD2FD6
+     C                     MOVE 'trument' DD2FD6
+     C                     END
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #ZC         - This subroutine outputs group details             *
+     C**                                                                 *
+     C** CALLS       -                                                   *
+     C**                                                                 *
+     C** CALLED BY   - #ZB                                               *
+     C**                                                                 *
+     C********************************************************************
+     C           #ZC       BEGSR
+     C*
+     C** Move LBGROUL1 fields to output fields
+     C                     MOVE GPLCGR    DD2FD1
+     C                     MOVE GPLCGN    DD2FD3
+     C                     MOVE GPLCGS    DD2FD5
+     C*****                MOVE GPATTI    DD2FD7                          SA9018
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #ZE         - This subroutine ensures correct rollup            *
+     C**               for exactly 14 records on last subfile screen     *
+     C**                                                                 *
+     C** CALLS       -                                                   *
+     C**                                                                 *
+     C** CALLED BY   - #ZB                                               *
+     C**                                                                 *
+     C********************************************************************
+     C           #ZE       BEGSR
+     C           *IN31     IFEQ '0'
+     C           WWSFCT    ANDEQ14
+     C*
+     C** Check to see if end of SDPLINL3 file reached
+     C                     READ SDPLINL3                 31
+     C           *IN31     IFEQ '0'
+     C                     READPSDPLINL3                 31
+     C                     END
+     C           WW1GRP    IFEQ '1'
+     C*
+     C** Check to see if end of LBGROUL1 file reached
+     C           *IN32     IFEQ '1'
+     C                     READ LBGROUL1                 31
+     C           *IN31     IFEQ '0'
+     C           WWGRP     SETLLLBGROUL1
+     C                     READ LBGROUL1                 31
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #BA      - Validate initial screen                              *
+     C**                                                                 *
+     C** CALLS     -                                                     *
+     C**                                                                 *
+     C** CALLED BY -  #B                                                 *
+     C**                                                                 *
+     C********************************************************************
+     C           #BA       BEGSR
+     C*
+     C** Reset error indicators
+     C                     MOVEA'00'      *IN,40
+     C                     MOVE '0'       WW1GRP
+     C*
+     C** CLEAR PROGRAM MESSAGE QUEUE
+     C                     MOVE *BLANKS   WWTPGQ
+     C                     MOVEL'*'       WWTPGQ
+     C                     MOVE *BLANKS   WWPGQR
+     C                     MOVEL'*PRV'    WWPGQR
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ 10
+     C                     PARM           WWPGQR  5
+     C           DDICDE    IFNE *BLANKS
+     C                     MOVE '1'       *IN25
+     C                     MOVE '0'       *IN24
+     C                     ELSE
+     C                     MOVE '0'       *IN25
+     C                     MOVE '1'       *IN24
+     C                     END
+     C           DDGCDE    IFNE *BLANKS
+     C           DDICDE    ANDEQ*BLANKS
+     C*                                                                   S01498
+     C** Get group name using access object                               S01498
+     C*                                                                   S01498
+     C                     CALL 'AOGROUR0'                                S01498
+     C                     PARM *BLANKS   P@RTCD  7                       S01498
+     C                     PARM '*KEY   ' P@OPTN  7                       S01498
+     C                     PARM DDGCDE    P@LCGR  3                       S01498
+     C           SDGROU    PARM SDGROU    DSFDY                           S01498
+     C*                                                                   S01498
+     C           P@RTCD    IFEQ '*NOSEL '                                 S01498
+     C                     MOVE '1'       *IN40                           S01498
+     C                     MOVE 'N'       WWVLD1                          S01498
+     C                     MOVEL'LBM0040' ZAMSID                          S01498
+     C                     ELSE                                           S01498
+     C           P@RTCD    IFEQ *BLANKS                                   S01498
+     C                     MOVE GPLCGR    DDGCDE                          S01498
+     C                     END                                            S01498
+     C*
+     C** Process all following groups
+     C           DDGCDE    SETLLLBGROUL1
+     C                     READ LBGROUL1                 72
+     C           *IN72     IFEQ '1'
+     C*
+     C** Invalid group code
+     C                     MOVE '1'       *IN40
+     C                     MOVE 'N'       WWVLD1
+     C                     MOVEL'LBM0013' ZAMSID
+     C                     ELSE
+     C                     MOVE 'Y'       WWVLD1
+     C                     MOVE GPLCGR    WWGRP
+     C                     END
+     C                     END                                            S01498
+     C                     END
+     C*
+     C           DDICDE    IFNE *BLANKS
+     C           DDGCDE    ANDEQ*BLANKS
+     C*
+     C** Process one group
+     C***********DDICDE    CHAINSDPLINL4             73                   S01498
+     C************IN73     IFEQ '1'                                       S01498
+     C*                                                                   S01498
+     C                     CALL 'AOPLINR0'                                S01498
+     C                     PARM *BLANKS   P@RTCD                          S01498
+     C                     PARM '*KEY   ' P@OPTN                          S01498
+     C                     PARM DDICDE    P@INST  3                       S01498
+     C           SDPLIN    PARM SDPLIN    DSFDY                           S01498
+     C*
+     C** Invalid instrument code
+     C           P@RTCD    IFEQ '*NOSEL'                                  S01498
+     C                     MOVE '1'       *IN41                           S01498
+     C                     MOVE 'N'       WWVLD1                          S01498
+     C                     MOVEL'LBM0311' ZAMSID                          S01498
+     C                     ELSE                                           S01498
+     C           P@RTCD    IFNE *BLANKS                                   S01498
+     C                     MOVE '1'       *IN41
+     C                     MOVE 'N'       WWVLD1
+     C                     MOVEL'LBM0014' ZAMSID
+     C                     ELSE
+     C           PDLOMG    IFEQ *BLANKS
+     C*
+     C** Instrument type has no Portfolio Lending display group
+     C                     MOVE '1'       *IN41
+     C                     MOVE 'N'       WWVLD1
+     C                     MOVEL'LBM0016' ZAMSID
+     C                     ELSE
+     C                     MOVE 'Y'       WWVLD1
+     C                     MOVE PDLOMG    WWGRP
+     C                     MOVE PDINNR    DDICDE                         S01498
+     C** Flag to indicate only one group to be processed
+     C                     MOVE '1'       WW1GRP
+     C                     END
+     C                     END
+     C                     END                                            S01498
+     C                     END
+     C*
+     C*
+     C           DDGCDE    IFNE *BLANKS
+     C           DDICDE    ANDNE*BLANKS
+     C*
+     C** Only one code type can be entered
+     C                     MOVEA'11'      *IN,40
+     C                     MOVE 'N'       WWVLD1
+     C                     MOVEL'LBM0001' ZAMSID
+     C                     END
+     C*
+     C           DDGCDE    IFEQ *BLANKS
+     C           DDICDE    ANDEQ*BLANKS
+     C*
+     C** Process all groups
+     C           *LOVAL    SETLLLBGROUL1
+     C                     READ LBGROUL1                 74
+     C           *IN74     IFEQ '0'
+     C*
+     C** Valid code entered
+     C                     MOVE 'Y'       WWVLD1
+     C                     MOVE GPLCGR    WWGRP
+     C                     MOVE GPLCGR    DDGCDE
+     C                     ELSE
+     C*
+     C** No credit groups on file
+     C                     MOVEA'11'      *IN,40
+     C                     MOVE 'N'       WWVLD1
+     C                     MOVEL'LBM0181' ZAMSID
+     C                     END
+     C                     END
+     C*
+     C** Invalid code entered
+     C           WWVLD1    IFEQ 'N'
+     C                     EXSR ZASNMS
+     C                     END
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** *BB         - This subroutine outputs the second screen         *
+     C**                                                                 *
+     C** CALLS       - #ZB #BBB #ZA                                      *
+     C**                                                                 *
+     C** CALLED BY   - #B                                                *
+     C**                                                                 *
+     C********************************************************************
+     C           #BB       BEGSR
+     C           DDICDE    IFNE *BLANKS
+     C           DDGCDE    ANDEQ*BLANKS
+     C*
+     C** Instrument code entered
+     C***********PDLOMG    CHAINLBGROUL1             71                   S01498
+     C************IN71     IFEQ '1'                                       S01498
+     C***********          MOVEL'LBGROUL1'DBFILE           ***************S01498
+     C*                                                                   S01498
+     C                     CALL 'AOGROUR0'                                S01498
+     C                     PARM *BLANKS   P@RTCD                          S01498
+     C                     PARM '*KEY   ' P@OPTN                          S01498
+     C                     PARM PDLOMG    P@LCGR  3                       S01498
+     C           SDGROU    PARM SDGROU    DSFDY                           S01498
+     C*                                                                   S01498
+     C** Check if error occurred                                          S01498
+     C*                                                                   S01498
+     C           P@RTCD    IFNE *BLANKS                                   S01498
+     C           *LOCK     IN   LDA                                       S01498
+     C                     MOVE 'LBGROUPD'DBFILE           ***************S01498
+     C                     MOVELPDLOMG    DBKEY            * DBERROR 002 *
+     C                     Z-ADD2         DBASE            ***************
+     C                     OUT  LDA                                       S01498
+     C                     EXSR #ZA
+     C                     ELSE
+     C           GPLCGR    SETLLSDPLINL3
+     C                     END
+     C                     ELSE
+     C           DDGCDE    IFNE *BLANKS
+     C*
+     C** Process from selected group to end of file
+     C           WWGRP     SETLLSDPLINL3
+     C                     ELSE
+     C*
+     C** Group and instrument fields blank - process all groups
+     C           *LOVAL    SETLLSDPLINL3
+     C                     END
+     C                     END
+     C*
+     C** Load subfile page
+     C                     MOVE *BLANKS   WWGCDE
+     C                     EXSR #ZB
+     C*
+     C** Process screen 2
+     C                     EXSR #BBB
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** *BBB        - This subroutine processes screen 2                *
+     C**                                                                 *
+     C** CALLS       - #BBBA #ZB #BBBB                                   *
+     C**                                                                 *
+     C** CALLED BY   - #BB                                               *
+     C**                                                                 *
+     C********************************************************************
+     C           #BBB      BEGSR
+     C*
+     C** Process screen 2 until a termination request
+     C           *INKC     DOWEQ'0'
+     C           WWPRS     ANDEQ'N'
+     C*
+     C** Display and validate screen 2
+     C                     WRITELB0335F2
+     C                     WRITELB0335C2
+     C                     READ LB0335C2                 78
+     C*
+     C** Display and validate screen 2
+     C           FDSRR1    IFEQ 0
+     C                     Z-ADDSFLRR2    WWREC
+     C                     ELSE
+     C                     Z-ADDFDSRR1    WWREC
+     C                     END
+     C*
+     C** Process command keys
+     C           *INKC     IFEQ '0'                        f3
+     C           *INKL     CASEQ'1'       #BBBA            f12
+     C           *IN27     CASEQ'1'       #ZB              roll-up
+     C                     CAS            #BBBB            enter
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C**
+     C                     MOVE 'N'       WWPRS
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #ZB         - This subroutine adds 14 records to subfile        *
+     C**                                                                 *
+     C** CALLS       - #ZC #ZD #ZE                                       *
+     C**                                                                 *
+     C** CALLED BY   - #BB #BBB                                          *
+     C**                                                                 *
+     C********************************************************************
+     C           #ZB       BEGSR
+     C*
+     C** Load  a page of subfile records
+     C                     Z-ADDWWLSTR    SFLRR2
+     C                     Z-ADD0         WWSFCT
+     C           *IN31     DOWEQ'0'
+     C           WWSFCT    ANDLT14
+     C                     MOVE '0'       *IN32
+     C*
+     C** Choice between new group or current group
+     C           WWGRP     IFNE WWGCDE
+     C*
+     C** Output group details
+     C                     EXSR #ZC
+     C                     MOVE WWGRP     WWGCDE
+     C                     ELSE
+     C           WWGRP     READESDPLINL3                 32
+     C           *IN32     IFEQ '0'
+     C*
+     C** Output detail lines
+     C                     EXSR #ZD
+     C                     ELSE
+     C           WW1GRP    IFEQ '1'
+     C*
+     C** All details for the requested group have been reported
+     C                     MOVE '1'       *IN31
+     C                     END
+     C                     END
+     C                     END
+     C           *IN31     IFEQ '0'
+     C           DDICDE    IFEQ *BLANKS
+     C           WW1GRP    ANDEQ'0'
+     C           *IN32     ANDEQ'1'
+     C*
+     C** Multiple groups to be reported
+     C                     READ LBGROUL1                 31
+     C           *IN31     IFEQ '0'
+     C                     MOVE GPLCGR    WWGRP
+     C*
+     C** Get new group details
+     C           GPLCGR    SETLLSDPLINL3
+     C                     END
+     C                     ELSE
+     C                     ADD  1         SFLRR2
+     C                     ADD  1         WWSFCT
+     C                     WRITELB0335S2
+     C                     MOVE *BLANKS   DD2OUT
+     C                     END
+     C                     END
+     C                     END
+     C                     Z-ADDSFLRR2    WWLSTR
+     C                     EXSR #ZE
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #BBBA       - This subroutine processes CMD/12                  *
+     C**                                                                 *
+     C** CALLS       -                                                   *
+     C**                                                                 *
+     C** CALLED BY   - #BBB                                              *
+     C**                                                                 *
+     C********************************************************************
+     C           #BBBA     BEGSR
+     C                     MOVE '0'       *INKL
+     C                     MOVE 'Y'       WWPRS
+     C                     MOVE *BLANKS   DDICDE
+     C                     MOVE *BLANKS   DDGCDE
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #BBBB       - This subroutine processes enter key               *
+     C**                                                                 *
+     C** CALLS       -                                                   *
+     C**                                                                 *
+     C** CALLED BY   - #BBB                                              *
+     C**                                                                 *
+     C********************************************************************
+     C           #BBBB     BEGSR
+     C*
+     C** Save correct value for SFLRR2 when <ENTER> key pressed
+     C                     Z-ADDWWREC     SFLRR2
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #A          - This subroutine performs the initial processing   *
+     C**                                                                 *
+     C** CALLS       - #ZA                                               *
+     C**                                                                 *
+     C** CALLED BY   - MAINLINE                                          *
+     C**                                                                 *
+     C********************************************************************
+     C*
+     C           #A        BEGSR
+     C*                                                                   S01498
+     C**  Copyright statement                                             S01498
+     C*                                                                   S01498
+     C                     MOVEACPY@      ACT@   80                       S01498
+     C*                                                                   S01498
+     C           *NAMVAR   DEFN           LDA                             S01498
+     C*
+     C** Initialise subfile output field
+     C                     MOVE *BLANKS   DD2OUT
+     C*
+     C** Initialise work fields
+     C                     Z-ADD0         WWREC   40
+     C                     MOVE 'N'       WWVLD1  1
+     C           *LIKE     DEFN GPLCGR    WWGCDE
+     C           *LIKE     DEFN GPLCGR    WWICDE
+     C           *LIKE     DEFN GPLCGR    WWGRP
+     C                     MOVE *BLANKS   WWGCDE
+     C                     MOVE *BLANKS   WWICDE
+     C                     MOVE *BLANKS   WWGRP
+     C                     MOVE 'N'       WWPRS   1
+     C                     Z-ADD0         WWLSTR  40
+     C                     Z-ADD0         WWSFCT  40
+     C                     MOVE '0'       WW1GRP  1
+     C*
+     C**   Fill in fields for subroutine ZASNMS                           R00300
+     C                     MOVEL*BLANK    ZAPGM  10        Message queue  R00300
+     C                     MOVE *BLANKS   ZAMSGF 10
+     C*********************MOVEL'LXGBMSGF'ZAMSGF                          R00300
+     C                     MOVEL'LBUSRMSG'ZAMSGF 10        Message file   R00300
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue      R00300
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.    R00300
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.  R00300
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.  R00300
+     C*
+     C** Initialise message subfile
+     C                     MOVE *BLANKS   DDPGMQ
+     C                     MOVEL'*'       DDPGMQ
+     C*
+     C** CLEAR PROGRAM MESSAGE QUEUE
+     C                     MOVE *BLANKS   WWTPGQ
+     C                     MOVEL'*'       WWTPGQ
+     C                     MOVE *BLANKS   WWPGQR
+     C                     MOVEL'*PRV'    WWPGQR
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ 10
+     C                     PARM           WWPGQR  5
+     C                     MOVE '1'       *IN26
+     C*
+     C** Initialise subfile
+     C                     MOVEA'111'     *IN,28
+     C                     WRITELB0335C2
+     C                     MOVE '0'       *IN30
+     C*
+     C** Initialise database error fields
+     C           *LOCK     IN   LDA                                       S01498
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'LB0335'  DBPGM
+     C                     Z-ADD0         DBASE
+     C                     OUT  LDA                                       S01498
+     C*
+     C***Read*the*record*on*the*bank*details*file**********************   S01498
+     C*
+     C***********1         SETLLSDBANKPD                                  S01498
+     C***********          READ SDBANKPD                 70               S01498
+     C*
+B1   C************IN70     IFEQ '1'                                       S01498
+     C***********BJTYLC    OREQ 'D'                        ***************S01498
+     C***********          MOVEL'SDBANKPD'DBFILE           * DBERROR 001 *S01498
+     C*                                                                   S01498
+     C** Get bank details using access object                             S01498
+     C*                                                                   S01498
+     C                     CALL 'AOBANKR0'                                S01498
+     C                     PARM *BLANKS   P@RTCD  7                       S01498
+     C                     PARM '*FIRST ' P@OPTN  7                       S01498
+     C           SDBANK    PARM SDBANK    DSFDY                           S01498
+     C*                                                                   S01498
+     C** Check if an error occurred                                       S01498
+     C*                                                                   S01498
+     C           P@RTCD    IFNE *BLANKS                                   S01498
+     C           *LOCK     IN   LDA                                       S01498
+     C                     MOVE 'SDBANKPD'DBFILE           * DBERROR 001 *S01498
+     C                     Z-ADD1         DBASE            ***************
+     C                     OUT  LDA                                       S01498
+     C                     EXSR #ZA
+E1   C                     END
+     C*                                                                   S01498
+     C**  Rundate in DDMMMYY format                                       S01498
+     C*                                                                   S01498
+     C                     MOVE BJMRDT    SRUNA                           S01498
+E1   C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #ZA      - Database error handling routine.                     *
+     C**                                                                 *
+     C** CALLS     -  NONE                                               *
+     C**                                                                 *
+     C** CALLED BY -  #A #BB                                             *
+     C**                                                                 *
+     C********************************************************************
+     C           #ZA       BEGSR
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C           #ZA0      ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #B       - Main processing subroutine                           *
+     C**                                                                 *
+     C** CALLS     -  #BA #BB                                            *
+     C**                                                                 *
+     C** CALLED BY -  Mainline                                           *
+     C**                                                                 *
+     C********************************************************************
+     C           #B        BEGSR
+B1   C           *INKC     DOWEQ'0'
+B1   C           *INKL     ANDEQ'0'
+     C*
+     C** Output initial screen
+     C                     WRITELB0335F1
+     C*
+     C** Process until a termination request F3 pressed or screen valid
+B1   C           *INKC     DOWEQ'0'
+B1   C           WWVLD1    ANDEQ'N'
+     C*
+     C** Invalid data input - output error message
+     C           *IN40     IFEQ '1'
+     C           *IN41     OREQ '1'
+     C*
+     C** Redisplay screen
+     C                     WRITELB0335F1
+     C*
+     C** Display message subfile
+     C                     WRITELB0335C1
+     C                     END
+     C                     READ LB0335F1                 79
+     C           *INKC     IFEQ '0'
+     C                     EXSR #BA
+     C                     END
+     C*
+     C                     END
+     C           WWVLD1    IFEQ 'Y'
+     C*
+     C** Clear subfile once valid first screen obtained
+     C                     MOVE '1'       *IN30
+     C                     WRITELB0335C2
+     C                     MOVE '0'       *IN30
+     C                     MOVE 'N'       WWVLD1
+     C                     Z-ADD0         WWLSTR
+     C                     MOVE '0'       *IN31
+     C                     EXSR #BB
+     C                     END
+     C                     END
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** *PSSR       - This subroutine processes a program file error    *
+     C**                                                                 *
+     C** CALLS       - *NONE                                             *
+     C**                                                                 *
+     C** CALLED BY   - *NONE                                             *
+     C**                                                                 *
+     C********************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C                     DUMP
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C*****************************************************************
+**   CPY@
+(c) Misys International Banking Systems Ltd. 2001

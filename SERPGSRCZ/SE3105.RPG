@@ -1,0 +1,498 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE EXTEL Price Update Audit List')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE3105  -  Extel Price Update Audit Report                   *
+     F*                                                               *
+     F*  Function: Produce the MIDAS-EXTEL price update audit list and*
+     F*            control report.                                    *
+     F*            The Audit List gives details of all rejected and   *
+     F*            accepted prices. The control report gives the total*
+     F*            number of records READ/CALCULATED, REJECTED/       *
+     F*            ACCEPTED.                                          *
+     F*                                                               *
+     F*  Called by: SEC3104 - EXTEL Daily Changes Update Control      *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  LAST AMEND NO. 052254             DATE 11JAN94               *
+     F*  PREV AMEND NO. E29170             DATE 14NOV91               *
+     F*                 S01117             DATE 10JUN91               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  E29170 - Report Control Facility changes                     *
+     F*  S01117 - Multi-branching                                     *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FEXPRCD  IP  E           K        DISK
+     FEXPRCZ  IF  E                    DISK
+     FTABTB10 IF  E                    DISK
+     FSE3105AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU         E29170
+     F***SE3105P1O***E                    PRINTER                         E29170
+     FSE3105P1O   E                    PRINTER                        UC  E29170
+     F                                              KINFDS SPOOL          E29170
+     F*                                                                  *
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   U7 - DATABASE ERROR (USED WITH U8)                          *
+     F*   U8 - CONTROL RECORD DOES NOT MATCH RECORDS READ             *
+     F*   LR - END PROGRAM                                            *
+     F*   L1 - LEVEL BREAK ON EXPRC (EXTEL PRICE DETAILS FILE)        *
+     F*                                                               *
+     F*   30 - REJECTED PRICE DIFFERENCE                              *
+     F*   31 - ACCEPTED PRICE DIFFERENCE                              *
+     F*   32 - RECORDS READ DIFFERENCE                                *
+     F*   33 - PRICE ACCEPTED                                         *
+     F*   70 - READ OF TABTB10 (INSTALLATION FILE)                    *
+     F*   71 - READ OF EXPRCZ (TRAILER FILE)                          *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      /EJECT
+     IEXPRCDF
+     I                                              STAT  L1
+     I*
+     I** LEVEL BREAK ON STAT IN FILE EXPRCD
+     I*
+     I*LDA******* UDS                            256                      S01117
+     ILDA         DS                            256                       S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I***********                           134 138 RDBFL                 S01117
+     I***RDBFL*USED*FOR*DATABASE*ERROR*PRINT*ON*REPORT******************* S01117
+     I***********                           139 167 RDBKEY                S01117
+     I***RDBKEY*USED*FOR*DATABASE*ERROR*PRINT*ON*REPORT*******************S01117
+     I***********                           168 175 RDBPGM                S01117
+     I***RDBPGM*USED*FOR*DATABASE*ERROR*PRINT*ON*REPORT*******************S01117
+     I***********                           176 1770RDBERR                S01117
+     I***RDBERR*USED*FOR*DATABASE*ERROR*PRINT*ON*REPORT*******************S01117
+     I*
+     I*  ERROR DATA STRUCTURE FOR LDA
+     I*
+     I*                                                                   E29170
+     ISPOOL       DS                                                      E29170
+     I*                                                                   E29170
+     I**  DS FOR P1 SPOOL FILE NAME                                       E29170
+     I*                                                                   E29170
+     I                                       83  92 SFILE                 E29170
+     I                                    B 123 1240SFNUM                 E29170
+     I**                                                                  E29170
+     ISPOOLU      DS                                                      E29170
+     I                                       83  92 SFILEU                E29170
+     I                                    B 123 1240SFNUMU                E29170
+     I*
+     ICPYR@#      DS
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*   MAIN CONTROL                                                *
+     C*                                                               *
+     C*   CALLS  #A - INITIALISATION ON FIRST CYCLE                   *
+     C*          #B - DETAIL RECORD PROCESSING                        *
+     C*          #C - TERMINATION PROCESSING AT END OF FILE EXPRCD    *
+     C*                                                               *
+     C*   USES   @FCF - FIRST CYCLE FLAG                              *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C** IF FIRST CYCLE PROCESS INITIALISATION
+     C*
+     C           @FCF      IFNE 'Y'                        B1
+     C                     EXSR #A                         *1
+     C                     END                             E1
+     C*
+     C** DETAIL PROCESSING
+     C*
+     C           *INU7     IFEQ '0'                        B1
+     C                     EXSR #B                         *1
+     C                     END                             E1
+     C*
+     C** TERMINATION PROCESS
+     C*
+     CLR                   EXSR #C
+     C*
+     C****************************************************************
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*   #B - DETAIL RECORD PROCESSING                              *
+     C*                                                              *
+     C*   CALLED BY :  MAIN PROCESS                                  *
+     C*                                                              *
+     C*   CALLS     :                                                *
+     C*                                                              *
+     C*   USES      :  @RPC - REJECTED PRICES COUNT                  *
+     C*                @APC - ACCEPTED PRICES COUNT                  *
+     C*                @RECC - RECORDS READ COUNT                    *
+     C*                @LNCNT - LINE COUNT                           *
+     C*                                                              *
+     C****************************************************************
+     C*
+     C           #B        BEGSR
+     C*
+     C** IF STAT IS 'R'(REJECTED) ADD TO REJECTED COUNT
+     C*
+     C           STAT      IFEQ 'R'
+     C                     ADD  1         @RPC    50
+     C                     MOVEL'*** REJE'RNARR
+     C                     MOVE 'CTED ***'RNARR
+     C                     MOVE '0'       *IN33
+     C                     END
+     C*
+     C** IF STAT IS 'A'(ACCEPTED) ADD TO ACCEPTED COUNT
+     C*
+     C           STAT      IFEQ 'A'
+     C                     ADD  1         @APC    50
+     C                     MOVEL'*** ACCE'RNARR
+     C                     MOVE 'PTED ***'RNARR
+     C                     MOVE '1'       *IN33
+     C                     END
+     C*
+     C** ADD 1 TO RECORDS READ COUNT
+     C*
+     C                     ADD  1         @RECC   50
+     C*                                                                   E29170
+     C** Open output file if required                                     E29170
+     C*                                                                   E29170
+     C           FILOPN    IFEQ 'N'                                       E29170
+     C                     OPEN SE3105P1                                  E29170
+     C*                                                                   E29170
+     C** RCF Processing for Detail Printer File                           E29170
+     C*                                                                   E29170
+     C                     EXSR RCFP1                                     E29170
+     C                     Z-ADD70        @LNCNT                          E29170
+     C                     MOVEL'Y'       FILOPN                          E29170
+     C                     END                                            E29170
+     C*
+     C** IF LINE COUNT GREATER THAN 60 OR LEVEL BREAK INDICATOR IS
+     C** ON THEN THROW NEW PAGE PRINT HEADINGS & INITIALISE LINE COUNT
+     C*
+     C           @LNCNT    IFGT 60
+     C           *INL1     OREQ '1'
+     C                     WRITESE3105F1
+     C                     Z-ADD12        @LNCNT
+     C                     END
+     C*
+     C** PRINT DETAIL LINE
+     C*
+     C                     WRITESE3105F2
+     C*
+     C** ADD 1 TO LINE COUNT
+     C*
+     C                     ADD  1         @LNCNT  30
+     C*
+     C                     ENDSR
+     C*
+     C****************************************************************
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*  #A  - INITIALLISATION PROCESS                               *
+     C*                                                              *
+     C*  CALLED BY : MAIN PROCESS ON FIRST CYCLE ONLY                *
+     C*                                                              *
+     C*  CALLS     : #ZA - READ TABTB10 RECORD                       *
+     C*                                                              *
+     C*  USES      : @FCF - FIRST CYCLE FLAG                         *
+     C*              @RPC - REJECTED PRICES COUNT                    *
+     C*              @APC - ACCEPTED PRICES COUNT                    *
+     C*              @RECC - RECORDS READ COUNT                      *
+     C*              @DBERR - DATABASE ERROR FLAG                    *
+     C*                                                              *
+     C****************************************************************
+     C*
+     C           #A        BEGSR
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C                     MOVEL'SE3105'  DBPGM
+     C*
+     C** READ TABTB10 RECORD
+     C*
+     C                     EXSR #ZA
+     C*
+     C                     SETOF                     L1
+     C***********          WRITESE3105F1                                  E29170
+     C***********                                                         E29170
+     C***IF*DATABASE*ERROR*PRINT*ERROR************************************E29170
+     C***********                                                         E29170
+     C************INU7     IFEQ '1'                                       E29170
+     C***********          WRITESE3105F6                                  E29170
+     C***********          END                                            E29170
+     C*
+     C                     MOVEL'Y'       @FCF    1
+     C                     MOVEL'N'       FILOPN  1                       E29170
+     C*
+     C           #A9       ENDSR
+     C*
+     C****************************************************************
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*    #C - TERMINATION PROCESS                                  *
+     C*                                                              *
+     C*    CALLED BY : MAIN PROCESS AT EOF OF EXPRCD FILE            *
+     C*                                                              *
+     C*    CALLS     : #ZA - READ TABTB10 RECORD                     *
+     C*                                                              *
+     C*    USES      :                                               *
+     C*                                                              *
+     C****************************************************************
+     C*
+     C           #C        BEGSR
+     C*
+     C** IF NO RECORDS WERE READ FROM EXPRCD FILE READ INSTALLATION
+     C** CONTROL RECORD FOR REPORT HEADING INFORMATION
+     C*
+     C           @RECC     IFEQ 0                          B1
+     C           *INU7     ANDEQ'0'                        *1
+     C                     EXSR #ZA                        *1
+     C***********          WRITESE3105F1                   *1             E29170
+     C************INU7     IFEQ '1'                        B*2            E29170
+     C***********          WRITESE3105F6                   **2            E29170
+     C***********          ELSE                            **2            E29170
+     C***********          WRITESE3105F5                   **2            E29170
+     C***********          END                             E*2            E29170
+     C                     END                             E1
+     C*
+     C** Print trailer if P1 is open                                      E29170
+     C*                                                                   E29170
+     C           FILOPN    IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C** Write '** DATABASE ERROR **' if there is an error and P1 open    E29170
+     C*                                                                   e29170
+     C           *INU7     IFEQ '1'                                       E29170
+     C                     WRITESE3105F6                                  e29170
+     C                     END                                            E29170
+     C                     WRITESE3105F7
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C** RCF Processing for Audit File                                    E29170
+     C*                                                                   E29170
+     C                     EXSR RCFAU                                     E29170
+     C*
+     C** PRINT CONTROL REPORT HEADINGS
+     C*
+     C                     WRITESE3105A1
+     C*
+     C** IF DATABASE ERROR HAS OCCURRED GOTO LABEL #C8
+     C*
+     C           *INU7     CABEQ'1'       #C8
+     C*
+     C** READ CONTROL FILE RECORD
+     C*
+     C           1         CHAINEXPRCZ               71
+     C*
+     C           *IN71     IFEQ '1'                        B1
+     C***********RECI      ORNE 'D'                        *1
+     C           RECI      ORNE 'Z'                        *1
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'SE3105'  DBPGM            *1
+     C                     MOVEL'EXPRC'   DBFILE           ***************
+     C                     MOVEL'1'       DBKEY            * DB ERROR 02 *
+     C                     Z-ADD2         DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     U7U8LR*1
+     C                     GOTO #C8                        *1
+     C                     END                             E1
+     C*
+     C** CHECK ACCEPTED PRICE COUNT MATCHES CONTROL RECORD
+     C*
+     C           @APC      IFNE NORA
+     C                     SETON                     31U8
+     C                     END
+     C*
+     C** CHECK REJECTED PRICE COUNT MATCHES CONTROL RECORD
+     C*
+     C           @RPC      IFNE NORR
+     C                     SETON                     30U8
+     C                     END
+     C*
+     C** CHECK RECORDS READ MATCHES CONTROL RECORD
+     C*
+     C           @RECC     IFNE NORE
+     C                     SETON                     32U8
+     C                     END
+     C*
+     C** LABEL #C8
+     C*
+     C           #C8       TAG                             #C8
+     C*
+     C** MOVE COUNTS TO PRINT FIELDS
+     C*
+     C                     Z-ADD@APC      RACPT
+     C                     Z-ADD@RPC      RRJCT
+     C                     Z-ADD@RECC     RRECS
+     C*
+     C** PRINT CONTROL REPORT DETAILS
+     C*
+     C                     WRITESE3105A2
+     C*                                                                   E29170
+     C** IF P1 FILE WAS NOT OPENED WRITE 'NO DETAILS' ON AU               E29170
+     C*                                                                   E29170
+     C           FILOPN    IFEQ 'N'                                       E29170
+     C                     WRITENODETL                                    E29170
+     C                     END                                            E29170
+     C*
+     C** IF *INU7 IS ON THEN DATABASE ERROR HAS OCCURRED
+     C** PRINT ERROR AND DUMP PROGRAM
+     C*
+     C           *INU7     IFEQ '1'
+     C                     WRITESE3105A3
+     C***********          DUMP
+     C                     END
+     C***********                                                         E29170
+     C***********          WRITESE3105A4                                  E29170
+     C*
+     C           #C9       ENDSR
+     C****************************************************************
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*  #ZA - READ TABTB10 RECORD                                   *
+     C*                                                              *
+     C*  CALLED BY : #A                                              *
+     C*              #C                                              *
+     C*                                                              *
+     C*                                                              *
+     C****************************************************************
+     C*
+     C           #ZA       BEGSR
+     C*
+     C** READ TABTB10 RECORD
+     C*
+     C                     MOVEL'01'      TABKEY 12
+     C                     MOVE '10'      TABKEY
+     C*
+     C           1         CHAINTABTB10              70
+     C*
+     C** IF RECORD NOT FOUND/NOT LIVE DATABASE ERROR
+     C*
+     C           *IN70     IFEQ '1'                        B1
+     C           RECI      ORNE 'D'                        *1
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'TABTB'   DBFILE           ***************
+     C                     MOVELTABKEY    DBKEY            * DB ERROR 01 *
+     C                     Z-ADD1         DBASE            ***************
+     C                     EXSR *PSSR                                     S01117
+     C                     OUT  LDA                                       S01117
+     C                     SETON                     U7U8LR*1
+     C                     END                             E1
+     C*
+     C                     ENDSR
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+     C*****************************************************************
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           RCFP1     BEGSR                            ** RCFP1 **   E29170
+     C*                                                                   E29170
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF                    E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUM     ZSNUM   60                      E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ     5                       E29170
+     C                     PARM *BLANKS   SENTY   3                       E29170
+     C                     PARM           SFILE                           E29170
+     C                     PARM           ZSNUM                           E29170
+     C                     PARM           ZSERR   1                       E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+     C*                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C*  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           RCFAU     BEGSR                            ** RCFAU **   E29170
+     C*                                                                   E29170
+     C**      ENSURE AUDIT SPOOL FILE RECORDED BY RCF                     E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ                             E29170
+     C                     PARM *BLANKS   SENTY                           E29170
+     C                     PARM           SFILEU                          E29170
+     C                     PARM           ZSNUMU                          E29170
+     C                     PARM *BLANK    ZSERR                           E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+     C*                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C*****************************************************************   E29170
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

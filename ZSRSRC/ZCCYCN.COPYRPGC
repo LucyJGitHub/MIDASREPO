@@ -1,0 +1,158 @@
+     C**************************************************************************
+     C*                                                                        *
+     C*  ZCCYCN SR. TO CONVERT AN AMOUNT IN ONE CURRENCY TO ANOTHER            *
+     C*  CURRENCY USING THE SPOT RATES FOR THE TWO CURRENCIES                  *
+     C*                                                                        *
+     C*  INPUT  FIELDS                                                         *
+     C*       ZAMTF  150     AMOUNT IN 'FROM' CURRENCY                         *
+     C*       ZCCYF   3A     FROM CURRENCY                                     *
+     C*       ZCCYT   3A     TO CURRENCY                                       *
+     C*       ZRATEF 138     SPOT RATE FOR 'FROM' CURRENCY                     *
+     C*       ZRATET 138     SPOT RATE FOR 'TO' CURRENCY                       *
+     C*       ZMDINF  1A     MULTIPLY/DIVIDE INDICATOR FOR 'FROM' CURRENCY     *
+     C*       ZMDINT  1A     MULTIPLY/DIVIDE INDICATOR FOR 'TO' CURRENCY       *
+     C*       ZCDPF   10     CURRENCY DECIMAL PLACES FOR 'FROM' CURRENCY       *
+     C*       ZCDPT   10     CURRENCY DECIMAL PLACES FOR 'TO' CURRENCY   *
+     C*                                                                  *
+     C*  OUTPUT  FIELDS                                                  *
+     C*       ZAMTT  150     AMOUNT IN 'TO' CURRENCY (IE. CONVERTED AMOUNT)    *
+     C*       ZCRSRT 138     CROSS EXCHANGE RATE                         *
+     C*       ZCRSMD  1A     CROSS RATE MULTIPLY/DIVIDE INDICATOR        *
+     C*                                                                  *
+     C*                                                                  *
+     C*  CALLS:                                                          *
+     C*       ZCCYCA - CONVERT AMOUNT                                    *
+     C*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     C*+ LAST AMEND NO. 062594             DATE 28OCT93                  *
+     C*  PREV AMEND NO. 047719             DATE 25NOV92                  *
+     C*                                                                  *
+     F*------------------------------------------------------------------*
+     C*                                                                  *
+     C*  062594 - OUTPUT DOUBLE PRECISION FX RATE EVEN FOR SAME CCCY     *
+     C*  047719 - CORRECT CONVERSION OF AMOUNTS                          *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           ZCCYCN    BEGSR                           *** ZCCYCN ***
+     C*
+     C** DEFINE ALL FIELDS
+     C                     Z-ADDZAMTF     ZAMTF  150
+     C                     MOVE ZCCYF     ZCCYF   3
+     C                     MOVE ZCCYT     ZCCYT   3
+     C                     Z-ADDZRATEF    ZRATEF 138
+     C                     Z-ADDZRATET    ZRATET 138
+     C                     MOVE ZMDINF    ZMDINF  1
+     C                     MOVE ZMDINT    ZMDINT  1
+     C                     Z-ADDZCDPF     ZCDPF   10
+     C                     Z-ADDZCDPT     ZCDPT   10
+     C                     Z-ADDZAMTT     ZAMTT  150
+     C                     Z-ADDZCRSRT    ZCRSRT 138
+     C                     MOVE ZCRSMD    ZCRSMD  1
+     C*
+     C** IF 'FROM' CURRENCY EQUAL TO 'TO' CURRENCY SET AMOUNT IN 'TO' CURRENCY
+     C** EQUAL TO AMOUNT IN 'FROM' CURRENCY
+     C           ZCCYF     IFEQ ZCCYT
+     C                     Z-ADDZAMTF     ZAMTT
+     C                     Z-ADD1         ZCRSRT
+     C                     MOVE 'M'       ZCRSMD
+     C           1000000000MULT 1000000   ZCRSRN                         062594
+     C                     GOTO CCYEND
+     C                     END
+     C*
+     C** INITIALIZE CROSS EXCHANGE RATE (ZCRSSRT) TO ZERO
+     C                     Z-ADD*ZEROS    ZCRSRT
+     C*
+     C** CONVERT 'FROM' RATE TO MULTIPLY RATE
+     C           ZMDINF    IFEQ 'M'
+     C                     Z-ADDZRATEF    ZRATF1 138
+     C           1000000000MULT ZRATEF    ZRATF2 308                      47719
+     C           10        MULT ZRATF2    ZRATF2                          47719
+     C                     ELSE
+     C           1         DIV  ZRATEF    ZRATF1
+     C           1000000000MULT 10        ZRWORK 200                      47719
+     C           ZRWORK    DIV  ZRATEF    ZRATF2    H                     47719
+     C                     END
+     C*
+     C** CONVERT 'TO' RATE TO MULTIPLY RATE
+     C           ZMDINT    IFEQ 'M'
+     C                     Z-ADDZRATET    ZRATT1 138
+     C           1000000000MULT ZRATET    ZRATT2 308                      47719
+     C           10        MULT ZRATT2    ZRATT2                          47719
+     C                     ELSE
+     C           1         DIV  ZRATET    ZRATT1
+     C           1000000000MULT 10        ZRWORK                          47719
+     C           ZRWORK    DIV  ZRATET    ZRATT2    H                     47719
+     C                     END
+     C*
+     C** NOW CALCULATE CROSS RATE
+     C           ZRATT1    IFNE *ZEROS
+     C           ZRATF1    DIV  ZRATT1    ZCRSRT
+     C*                                                                   47719
+     C** CALCULATE DOUBLE PRECISION FX RATE                               47719
+     C** FIRST SPLIT FIGURE INTO TWO PARTS                                47719
+     C           1000000000MULT 1000000   ZRWORK                          47719
+     C           ZRATF2    MULT ZRWORK    ZRATBF 300                      47719
+     C                     Z-ADDZRATF2    ZRATSF 158                      47719
+     C*                                                                   47719
+     C** DIVIDE BOTH BIG AND SMALL PARTS BY TO FX RATE AND ADD TO CROSS RA47719
+     C** TO BE USED IN CALCULATIONS                                       47719
+     C           ZRATBF    DIV  ZRATT2    ZCRSRN 309H                     47719
+     C           ZRATSF    DIV  ZRATT2    ZCRSR1 309H                     47719
+     C                     ADD  ZCRSR1    ZCRSRN                          47719
+     C                     END
+     C*
+     C** MOVE MULT/DIV INDIC FOR 'FROM' CURRENCY TO CROSS RATE MULT/DIV
+     C** INDICATOR (ZCRSMD)
+     C                     MOVE 'M'       ZCRSMD
+     C*
+     C** EXECUTE SR/ZCCYCA TO CONVERT AMOUNT                              47719
+     C****                 EXSR ZCCYXR                                    47719
+     C*                                                                   47719
+     C** IF CROSS EXCHANGE RATE IS EQUAL TO ZERO                          47719
+     C** SET ZAMTT  TO *ZERO  & EXIT                                      47719
+     C           ZCRSRN    IFEQ 0                                         47719
+     C                     Z-ADD*ZEROS    ZAMTT                           47719
+     C                     GOTO CCYEND                                    47719
+     C                     END                                            47719
+     C*                                                                   47719
+     C** IF DECIMAL PLACES  FOR 'FROM' CURRENCY (ZCDPF) EQUALS DECIMAL    47719
+     C** DECIMAL PLACES  FOR 'TO' CURRENCY CONVERT AMOUNT BY SIMPLE       47719
+     C** MULTIPLICATION                                                   47719
+     C           ZCDPF     IFEQ ZCDPT                      B1             47719
+     C           ZAMTF     MULT ZCRSRN    ZAMTO  300H                     47719
+     C                     END                             E1             47719
+     C*                                                                   47719
+     C** IF DECIMAL PLACES  FOR 'FROM' CURRENCY (ZCDPF)  NOT EQUALS DECIMA47719
+     C** DECIMAL PLACES  FOR 'TO' CURRENCY ADJUST AMOUNT FOR DIFFERENT DP 47719
+     C           ZCDPF     IFNE ZCDPT                      B1             47719
+     C*                                                                   47719
+     C** SUBTRACT DECIMAL PLACES 'FROM' FROM DECIMAL PLACES 'TO' IN POWER 47719
+     C           ZCDPT     SUB  ZCDPF     ZWKPX   10                      47719
+     C           ZWKPX     ADD  4         B       30                      47719
+     C*                                                                   47719
+     C** IF POWER ELEMENT (8,4) LESS THAN 1                               47719
+     C           POWER,B   IFLT 1                          B2             47719
+     C*                                                                   47719
+     C** MULTIPLY AMOUNT IN FROM CURRENCY BY ELEMENT IN POWER ARRAY       47719
+     C           POWER,B   MULT ZAMTF     ZWK153 153                      47719
+     C*                                                                   47719
+     C           ZWK153    MULT ZCRSRN    ZAMTO     H                     47719
+     C                     END                             E2             47719
+     C*                                                                   47719
+     C** IF POWER ELEMENT (8,4) GREATER OR EQUAL TO 1                     47719
+     C           POWER,B   IFGE 1                          B2             47719
+     C           ZAMTF     MULT POWER,B   ZAMTO                           47719
+     C           ZAMTO     MULT ZCRSRN    ZAMTO     H                     47719
+     C                     END                             E2             47719
+     C                     END                             E1             47719
+     C*                                                                   47719
+     C           ZAMTO     DIV  ZRWORK    ZAMTT     H                     47719
+     C*                                                                   47719
+     C           CCYEND    ENDSR
+     C********************************************************************

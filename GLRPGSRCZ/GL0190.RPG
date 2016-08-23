@@ -1,0 +1,744 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Transfer Ext Postings to Interface File')     *
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL0190 - Transfer External Postings to Interface File        *
+      *                                                               *
+      *  Function:  This program will transfer GL external postings   *
+      *  (I/C)      to journal entries interface file.                *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *                                                               *
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. BUG23742           Date 09May09               *
+      *                 CER030             Date 09Jul08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG2452            Date 20May04               *
+      *                 CGL028  *CREATE    Date 24Sep03               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG23742 - Improper handling of Ext Narr from Batch          *
+      *             Interface Input                                   *
+      *  CER030 - Multicash German Feature                            *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG2452 - Hash totals are not correct.                       *
+      *  CGL028 - GL Postings Interface                               *
+      *                                                               *
+      *****************************************************************
+     FGLEXTHPDIF  E                    DISK         KINFSR *PSSR
+      **  External Postings Header File
+      *
+     FGLEXTDPDIF  E                    DISK         KINFSR *PSSR
+      **  External Postings Detail File
+      *
+     FGLHSIFL0UF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+      **  Historic Interface Details File - Update
+      *
+     FGLJEIHL0UF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+      **  Journal Entry Interface Header File - Update
+      *
+     FGLJEIPPDO   E                    DISK         KINFSR *PSSR
+     F                                              KCOMIT
+      **  Journal Entry Interface Detail File
+      *
+     FGL0190AUO   E                    PRINTER      KINFDS SPOOLU     UC
+      **  Transferred External Postings Audit Report
+      *
+     FGL0190P1O   E             60     PRINTER      KINFDS SPOOL      UC
+      **  Transferred External Postings Report
+      *
+     FGLJEIXPDO   E                    DISK         KINFSR *PSSR                              CER030
+     F                                              KCOMIT                                    CER030
+      *                                                                                       CER030
+      **  Midas GL Journal entry Interface - Additional Info                                  CER030
+      *                                                                                       CER030
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E/COPY ZSRSRC,ZDATE9Z1
+      *
+     E/COPY ZSRSRC,ZSEDITZ1
+      *****************************************************************
+     IA@CPY       DS                             80
+      **  Copyright array
+      *
+     IZMUSER      DS
+     I                                        1  10 USID
+     I                                       11  13 UDBC
+     I                                       14  16 UDDP
+     I                                       17  17 UBLA
+     IDSPRDT      DS
+      **  Data structure for processing date
+     I                                        1   2 WKDD
+     I                                        3   4 WKMM
+     I                                        5   8 WKCCYY
+     ISPOOL       DS
+      ** Spool Information Data Structure
+      *
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     ISPOOLU      DS
+      ** Spool Information Data Structure
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     I/COPY ZSRSRC,ZDATE9Z2
+      *
+     I/COPY ZSRSRC,ZSEDITZ2
+      *
+     ILDA       E DSLDA
+      **  Local DTAARA for Database Error Details
+      *
+     ISDBANK    E DSSDBANKPD
+      **  Data Structure for bank details
+      *
+     ISDCURR    E DSSDCURRPD
+      **  Data Structure for currency details
+      *
+     IDSFDY     E DSDSFDY
+      **  Short Data Structure for access programs
+      *
+     IDSSDY     E DSDSSDY
+      **  Long Data Structure for access programs
+      *
+     ISCSARD    E DSSCSARDPD                                                                  CER030
+      *                                                                                       CER030
+      ** External data structure for SAR file details                                         CER030
+      *                                                                                       CER030
+      *****************************************************************
+      *
+      **         M A I N    P R O C E S S I N G
+      *
+      *****************************************************************
+      *
+      **  Initial Processing
+      *
+     C                     EXSR SRINIT
+      *
+      **  Read header record
+     C                     READ GLEXTHPD                 30
+      *
+      **  Convert Processing Date from DDMMYYYY to YYYYMMDD format
+     C                     MOVE PRDT      DSPRDT  8
+     C           WKMM      CAT  WKDD      UGMMDD  4
+     C           WKCCYY    CAT  UGMMDD    UGPRDT  8
+     C                     MOVE UGPRDT    @@PRDT  80
+      *
+      **  Convert current system date to YYYYMMDD format
+     C                     Z-ADDBJRDNB    @@DAYN  50
+     C                     EXSR ZDATE9
+     C                     Z-ADD@@VDT     @@CYMD  80
+      *
+      **  If the current system date is NOT equal to Processing Date,
+      **  set on Switch 1 and exit
+     C           @@CYMD    IFNE @@PRDT
+     C                     MOVE *ON       *INU1
+     C                     EXSR SRTERM
+     C                     ENDIF
+      *
+      **  Read all detail records and count all debit/credit records
+      **  and accumulate hash totals
+      *
+     C                     READ GLEXTDPD                 30
+      *
+     C           *IN30     DOWEQ*OFF
+      *
+      **  Retrieve Currency Details                                                          BUG2452
+      *                                                                                      BUG2452
+     C                     MOVE CCY       WCCY                                               BUG2452
+     C                     EXSR SRCURR                                                       BUG2452
+      *                                                                                      BUG2452
+      **  Hash totals have 3 decimal places, so amount have to be adjusted accordingly       BUG2452
+      *                                                                                      BUG2452
+     C                     SELEC                                                             BUG2452
+     C           A6NBDP    WHEQ 0                                                            BUG2452
+     C                     MULT 1000      PSTA                                               BUG2452
+     C           A6NBDP    WHEQ 1                                                            BUG2452
+     C                     MULT 100       PSTA                                               BUG2452
+     C           A6NBDP    WHEQ 2                                                            BUG2452
+     C                     MULT 10        PSTA                                               BUG2452
+     C                     ENDSL                                                             BUG2452
+      *                                                                                      BUG2452
+     C           DRCR      IFEQ 'D'
+     C                     ADD  1         TOTDR
+     C                     ADD  PSTA      VALDR
+     C                     ELSE
+     C                     ADD  1         TOTCR
+     C                     ADD  PSTA      VALCR
+     C                     ENDIF
+      *
+     C                     READ GLEXTDPD                 30
+     C                     ENDDO
+     C           TOTDR     ADD  TOTCR     TOTRE
+     C           VALDR     ADD  VALCR     TOTVL
+      *
+      **  If hash total of debit records is not equal to credit records,
+      **  set on Switch 2 and exit
+      *
+     C           VALDR     IFNE VALCR
+     C                     MOVE *ON       *INU2
+     C                     EXSR SRTERM
+     C                     ENDIF
+      *
+      **  Access historic interface detail file
+      *
+     C           *INU4     IFEQ *OFF
+      *
+     C           *LOVAL    SETLLGLHSIFL0
+     C                     READ GLHSIFL0                 40
+      *
+     C           *IN40     DOWEQ*OFF
+      *
+      **  If no. and hash total of debit/credit records is equal to today's
+      **  no. and hash total of debit/credit records, set on Switch 3 and exit
+      *
+     C           TOTDR     IFEQ NODR
+     C           TOTCR     ANDEQNOCR
+     C           VALDR     ANDEQHTDR
+     C           VALCR     ANDEQHTCR
+     C                     MOVE *ON       *INU3
+     C                     EXSR SRTERM
+     C                     ENDIF
+      *
+     C                     READ GLHSIFL0                 40
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+      **  Output header record to journal entry interface file
+      *
+     C                     EXSR SROUTH
+      *
+      **  Output detail records to journal entry interface file
+      *
+     C                     EXSR SROUTD
+      *
+      **  Output to historic interface detail file
+      *
+     C                     EXSR SRHSIF
+      *
+      **  Generate Audit Report
+      *
+     C                     EXSR SRAUDT
+      *
+      **  Termination processing
+      *
+     C                     EXSR SRTERM
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *
+      ** SROUTH - Output Header Record to Journal Entry Interface File
+      *
+      *****************************************************************
+     C           SROUTH    BEGSR
+      *
+      **  Determine batch number
+      *
+     C           *HIVAL    SETGTGLJEIHL0
+     C                     READPGLJEIHL0            N    40
+     C           *IN40     IFEQ *ON
+     C                     Z-ADD1         WBTNB   30
+     C                     ELSE
+     C                     MOVE BRBTNB    WBTNB
+     C                     ADD  1         WBTNB
+     C                     ENDIF
+      *
+      **  Setup fields for output to journal entry interface header
+      *
+     C                     MOVE BRCA      BRBCDA
+     C                     MOVE DPCD      BRDPCD
+     C                     Z-ADDTOTRE     BRHINI
+     C                     MOVE 'Y'       BRMBRB
+     C                     MOVE BDES      BRBDES
+     C                     MOVE 'I'       BRTOJE
+      *
+      **  Add hash total of debits and credits and separate integer from decimal part
+     C           VALDR     ADD  VALCR     WWVALU 150
+     C           WWVALU    DIV  1000      WWHINT 153
+     C                     Z-ADDWWHINT    BRHIIN
+     C                     MOVE WWVALU    BRHDIN
+      *
+      **  Write to journal entry interface header file
+      *
+     C                     MOVE WBTNB     BRBTNB
+     C                     WRITE@BRREAG
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *
+      ** SROUTD - Output Detail Records to Journal Entry Interface File
+      *
+      *****************************************************************
+     C           SROUTD    BEGSR
+      *
+      **  Ensure spooled file is recorded by RCF
+      *
+     C                     OPEN GL0190P1
+      *
+      **  Report Spool File Generation.
+      *
+     C                     Z-ADDSFNUM     WFNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   @PARM   3
+     C                     PARM           SFILE
+     C                     PARM           WFNUM
+     C                     PARM *BLANK    ZSERR   1
+      *
+      ** If error during ZSFILE processing.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE
+     C                     MOVEL'ZSFILE'  DBFILE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     OUT  LDA
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Write the header format.
+      *
+     C                     MOVE BRBTNB    RBTNB
+     C                     WRITEHEADP1
+      *
+      **  Read all detail records (external postings)
+      *
+     C           1         SETLLGLEXTDPD
+     C                     READ GLEXTDPD                 30
+      *
+     C           *IN30     IFEQ *ON
+     C                     MOVE 'Y'       WNODTL
+     C                     ENDIF
+      *
+     C           *IN30     DOWEQ*OFF
+      *
+      **  Setup fields for output to journal entry interface detail file
+      *
+     C                     MOVE WBTNB     BTBTNB
+     C                     ADD  1         WBTIN
+     C                     MOVE WBTIN     BTBINB
+     C                     MOVE BRCA      BTIBCA
+     C                     MOVE CNUM      BTCUST
+     C                     MOVE CCY       BTCYCD
+     C                     MOVE ACOD      BTACCD
+     C                     MOVE ACSQ      BTACSN
+     C                     MOVE ACNO      BTRACN
+     C                     MOVE TRTY      BTTRTY
+     C                     MOVE PSTA      BTPTAM
+     C                     MOVE DRCR      BTDCIN
+     C                     Z-ADDBJRDNB    BTPTDT
+     C                     Z-ADDBJRDNB    BTVLDT
+     C                     MOVE NARR      BTNRDC
+     C                     MOVE BRBCDA    BTBCBH
+      *
+     C           BTRACN    IFNE *ZERO
+     C                     MOVE 'R'       BTACTY
+     C                     MOVE 'Y'       BTRNBE
+     C                     ELSE
+     C                     MOVE *BLANK    BTACTY
+     C                     MOVE *BLANK    BTRNBE
+     C                     ENDIF
+      *
+      **  Write to journal entry interface header file
+      *
+     C                     WRITE@BTREMG
+      *                                                                                       CER030
+      ** Write the entries in the file GLJEIXD0                                               CER030
+      *                                                                                       CER030
+     C           CER031    IFEQ 'Y'                                                           CER030
+      *                                                                                       CER030
+     C                     MOVE BTPTDT    BAPTDT                                              CER030
+     C                     MOVE BTBTNB    BABTNB                                              CER030
+     C                     MOVE BTBINB    BABINB                                              CER030
+     C                     MOVE BTADI1    BAADI1                                              CER030
+     C                     MOVE BTADI2    BAADI2                                              CER030
+     C                     MOVE BTADI3    BAADI3                                              CER030
+     C                     MOVE BTADI4    BAADI4                                              CER030
+     C                     MOVE BTADI5    BAADI5                                              CER030
+     C                     MOVE BTADI6    BAADI6                                              CER030
+      *                                                                                       CER030
+     C           CER030    IFEQ 'Y'                                                           CER030
+      *                                                                                       CER030
+     C                     MOVE BTFN2     BAFN2                                               CER030
+     C                     MOVE BTFN3     BAFN3                                               CER030
+     C                     MOVE BTFN4     BAFN4                                               CER030
+     C                     MOVE BTFN5     BAFN5                                               CER030
+     C                     MOVE BTFN6     BAFN6                                               CER030
+     C                     MOVE BTFN7     BAFN7                                               CER030
+     C                     MOVE BTFN8     BAFN8                                               CER030
+     C                     MOVE BTFN9     BAFN9                                               CER030
+     C                     MOVE BTFN10    BAFN10                                              CER030
+     C                     MOVE BTFN11    BAFN11                                              CER030
+     C                     MOVE BTFN12    BAFN12                                              CER030
+     C                     MOVE BTFN13    BAFN13                                              CER030
+     C                     MOVE BTFN14    BAFN14                                              CER030
+     C                     MOVE BTFN15    BAFN15                                              CER030
+     C                     MOVE BTFN16    BAFN16                                              CER030
+     C                     MOVE BTFN17    BAFN17                                              CER030
+     C                     MOVE BTFN18    BAFN18                                            BUG23742
+     C                     MOVE BTFN19    BAFN19                                            BUG23742
+     C                     MOVE BTFN20    BAFN20                                            BUG23742
+     C                     MOVE BTFN21    BAFN21                                            BUG23742
+     C                     MOVE BTFN22    BAFN22                                            BUG23742
+     C                     MOVE BTFN23    BAFN23                                            BUG23742
+      *                                                                                       CER030
+     C                     ELSE                                                               CER030
+      *                                                                                       CER030
+     C                     MOVE *BLANKS   BAFN2                                               CER030
+     C                     MOVE *BLANKS   BAFN3                                               CER030
+     C                     MOVE *BLANKS   BAFN4                                               CER030
+     C                     MOVE *BLANKS   BAFN5                                               CER030
+     C                     MOVE *BLANKS   BAFN6                                               CER030
+     C                     MOVE *BLANKS   BAFN7                                               CER030
+     C                     MOVE *BLANKS   BAFN8                                               CER030
+     C                     MOVE *BLANKS   BAFN9                                               CER030
+     C                     MOVE *BLANKS   BAFN10                                              CER030
+     C                     MOVE *BLANKS   BAFN11                                              CER030
+     C                     MOVE *BLANKS   BAFN12                                              CER030
+     C                     MOVE *BLANKS   BAFN13                                              CER030
+     C                     MOVE *BLANKS   BAFN14                                              CER030
+     C                     MOVE *BLANKS   BAFN15                                              CER030
+     C                     MOVE *BLANKS   BAFN16                                              CER030
+     C                     MOVE *BLANKS   BAFN17                                              CER030
+     C                     MOVE *BLANKS   BAFN18                                            BUG23742
+     C                     MOVE *BLANKS   BAFN19                                            BUG23742
+     C                     MOVE *BLANKS   BAFN20                                            BUG23742
+     C                     MOVE *BLANKS   BAFN21                                            BUG23742
+     C                     MOVE *BLANKS   BAFN22                                            BUG23742
+     C                     MOVE *BLANKS   BAFN23                                            BUG23742
+     C                     ENDIF                                                              CER030
+      *                                                                                       CER030
+     C                     WRITEGLJEIXD0                                                      CER030
+      *                                                                                       CER030
+     C                     ENDIF                                                              CER030
+      *
+      **  Setup fields for output to report
+      *
+     C                     MOVE BRCA      RBRCA
+     C                     MOVE CNUM      RCNUM
+     C                     MOVE CCY       RCCY
+     C                     MOVE ACOD      RACOD
+     C                     MOVE ACSQ      RACSQ
+     C           ACNO      IFNE *ZERO
+     C                     MOVE ACNO      RACNO
+     C                     ELSE
+     C                     MOVE *BLANKS   RACNO
+     C                     ENDIF
+     C                     MOVE TRTY      RTRTY
+     C                     MOVE DRCR      RDRCR
+     C                     MOVE NARR      RNARR
+      *
+      **  Retrieve Currency Details
+      *
+     C                     MOVE CCY       WCCY    3
+     C                     EXSR SRCURR
+      *
+      **  Format Posting Amount
+      *
+     C                     Z-ADDPSTA      ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RPSTA
+      *
+      **  Write Header format if overflow.
+      *
+     C           *IN60     IFEQ *ON
+     C                     WRITEHEADP1
+     C                     MOVE '0'       *IN60
+     C                     ENDIF
+      *
+      **  Output detail record
+     C                     WRITEDETAIL
+      *
+      **  Read next detail posting
+     C                     READ GLEXTDPD                 30
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *
+      ** SRCURR - Retrieve Currency Details via Access Object
+      *
+      *****************************************************************
+     C           SRCURR    BEGSR
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY   ' POPTN   7
+     C                     PARM WCCY      PCYCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      **  Database error in file
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD4         DBASE
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     MOVELCCY       DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     SETON                     U7U8LR
+     C                     ENDIF
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *
+      ** SRHSIF - Output to Historic Interface Detail File
+      *
+      *****************************************************************
+     C           SRHSIF    BEGSR
+      *
+      **  Setup fields for output to historic interface detail file
+      *
+     C                     MOVE BRBTNB    IFBN
+     C                     Z-ADDBJRDNB    PRDN
+     C                     Z-ADDTOTDR     NODR
+     C                     Z-ADDTOTCR     NOCR
+     C                     Z-ADDVALDR     HTDR
+     C                     Z-ADDVALCR     HTCR
+     C                     MOVE USID      IFUS
+     C                     MOVE 'N'       UPIN
+      *
+     C                     WRITEGLHSIFD0
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *
+      ** SRAUDT - Audit Report Processing
+      *
+      *****************************************************************
+     C           SRAUDT    BEGSR
+      *
+      **  Write Header format if overflow.
+      *
+     C           *IN60     IFEQ *ON
+     C                     WRITEHEADP1
+     C                     MOVE '0'       *IN60
+     C                     ENDIF
+      *
+      **  Output 'No details to report' if no detail records transferred
+      *
+     C           WNODTL    IFEQ 'Y'
+     C                     WRITENODTLP1
+     C                     ELSE
+     C                     WRITETRAILP1
+     C                     ENDIF
+      *
+      **  Audit report spool file generation
+      *
+     C                     OPEN GL0190AU
+     C                     Z-ADDSFNUMU    WFNUMU  60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANKS   @PARMU  3
+     C                     PARM           SFILEU
+     C                     PARM           WFNUMU
+     C                     PARM *BLANK    ZSERR   1
+      *
+      **  If error during ZSFILE processing.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE
+     C                     MOVEL'ZSFILE'  DBFILE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     OUT  LDA
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  Write the header format.
+      *
+     C                     WRITEHEADAU
+      *
+     C           *INU7     IFEQ '1'
+     C           *INU8     OREQ '1'
+     C                     WRITEDBERROR
+     C                     ENDIF
+      *
+      **  Output file controls
+      *
+     C                     WRITECONTROL
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *
+      ** SRINIT - Initial Processing
+      *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      **  Setup copyright
+      *
+     C                     MOVEACPY@      A@CPY
+      *
+      **  Initialise LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANKS   DBFILE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVEL'GL0190'  DBPGM
+     C                     Z-ADD*ZEROS    DBASE
+     C                     OUT  LDA
+      *
+      **  Access data-area ZMUSER
+      *
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   ZMUSER
+      *
+      **  Retrieve Bank details via Access Object
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      **  Database error in file
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD001       DBASE
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL'*FIRST  'DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     SETON                     U7U8LR
+     C                     ENDIF
+      *
+      **  Initialise fields
+      *
+     C                     Z-ADD*ZEROS    TOTDR
+     C                     Z-ADD*ZEROS    TOTCR
+     C                     Z-ADD*ZEROS    VALDR
+     C                     Z-ADD*ZEROS    VALCR
+     C                     Z-ADD*ZEROS    TOTRE
+     C                     Z-ADD*ZEROS    WBTIN   30
+     C                     MOVE *BLANK    WNODTL  1
+      *
+      *                                                                                       CER030
+      ** Check the switchable feature CER031                                                  CER030
+      *                                                                                       CER030
+     C                     MOVE 'N'       CER031  1                                           CER030
+     C                     CALL 'AOSARDR0'                                                    CER030
+     C                     PARM *BLANKS   PRTCD   7                                           CER030
+     C                     PARM '*VERIFY' POPTN   7                                           CER030
+     C                     PARM 'CER031'  PSARD   6                                           CER030
+     C           SCSARD    PARM SCSARD    DSFDY                                               CER030
+      *                                                                                       CER030
+     C           PRTCD     IFEQ *BLANKS                                                       CER030
+     C                     MOVE 'Y'       CER031                                              CER030
+     C                     ELSE                                                               CER030
+      *                                                                                       CER030
+     C           PRTCD     IFNE '*NRF'                                                        CER030
+     C           *LOCK     IN   LDA                                                           CER030
+     C                     Z-ADD005       DBASE                                               CER030
+     C                     MOVEL'SDSARDPD'DBFILE                                              CER030
+     C                     MOVEL'CER031  'DBKEY                                               CER030
+     C                     OUT  LDA                                                           CER030
+     C                     EXSR *PSSR                                                         CER030
+     C                     SETON                     U7U8LR                                   CER030
+     C                     ENDIF                                                              CER030
+     C                     ENDIF                                                              CER030
+      *                                                                                       CER030
+      ** Check the switchable feature CER030                                                  CER030
+      *                                                                                       CER030
+     C                     MOVE 'N'       CER030  1                                           CER030
+     C                     CALL 'AOSARDR0'                                                    CER030
+     C                     PARM *BLANKS   PRTCD                                               CER030
+     C                     PARM '*VERIFY' POPTN                                               CER030
+     C                     PARM 'CER030'  PSARD                                               CER030
+     C           SCSARD    PARM SCSARD    DSFDY                                               CER030
+      *                                                                                       CER030
+     C           PRTCD     IFEQ *BLANKS                                                       CER030
+     C                     MOVE 'Y'       CER030                                              CER030
+     C                     ELSE                                                               CER030
+      *                                                                                       CER030
+     C           PRTCD     IFNE '*NRF'                                                        CER030
+     C           *LOCK     IN   LDA                                                           CER030
+     C                     Z-ADD006       DBASE                                               CER030
+     C                     MOVEL'SDSARDPD'DBFILE                                              CER030
+     C                     MOVEL'CER030  'DBKEY                                               CER030
+     C                     OUT  LDA                                                           CER030
+     C                     EXSR *PSSR                                                         CER030
+     C                     SETON                     U7U8LR                                   CER030
+     C                     ENDIF                                                              CER030
+     C                     ENDIF                                                              CER030
+      *                                                                                       CER030
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *
+      ** SRTERM - Termination Processing
+      *
+      *****************************************************************
+     C           SRTERM    BEGSR
+      *
+      **  End Program
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *
+      ** *PSSR -  Error Processing
+      *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZDATE9Z3
+      /EJECT
+     C/COPY ZSRSRC,ZSEDITZ3
+      ********************************************************************
+** CPY@
+(C) Copyright Misys International Banking Systems Ltd. 2003
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365

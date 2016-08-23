@@ -1,0 +1,206 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas AS Hedge file drop/maintenance')                */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - Accounting Standards Module                      */
+/*                                                                   */
+/*       ASC000007 - Daily File Maintenance/Reorganization for the   */
+/*                   Hedge Strategy, Linkage and Transaction Files   */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. 229174             Date 24Aug04              */
+/*       Prev Amend No. 228542             Date 05Aug04              */
+/*                      221416             Date 17Sep03              */
+/* Midas Release 4.01 -----------------------------------------------*/
+/*                      CAS002  *CREATE    Date 14Jan02              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       229174 - No's auto incremented based on F9.                 */
+/*       228542 - RGZPFM has changed at R5V3                         */
+/*       221416 - Should backup ASHTRNPD                             */
+/*       CAS002 - Hedge Strategy/Linkage                             */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM **/                                                                      /*221416*/
+             PGM        PARM(&CNAM &CSEQ)                                                 /*221416*/
+ 
+             DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)                                    /*221416*/
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)                                      /*221416*/
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')                          /*221416*/
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)                                    /*221416*/
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')                   /*221416*/
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7) VALUE('  DMLIB')                   /*221416*/
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2002')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('ASC000007 - Hedge File Maint. & Reorg. +   +
+                          for the Strategy, Linkage & Transaction +
+                          Details') TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(00000000)
+ 
+/* Create data area LDA */                                                                /*221416*/
+                                                                                          /*221416*/
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)                            /*221416*/
+             MONMSG     MSGID(CPF1023)                                                    /*221416*/
+                                                                                          /*221416*/
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)                               /*221416*/
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)                         /*221416*/
+             CHGVAR     VAR(%SUBSTRING(&DMLIB 1 2)) VALUE(&SYSID)                         /*221416*/
+                                                                                          /*221416*/
+/* Call program CB0160 to get value of restart indicator */                               /*221416*/
+                                                                                          /*221416*/
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)                               /*221416*/
+                                                                                          /*221416*/
+/* If it is not a restart */                                                              /*221416*/
+                                                                                          /*221416*/
+             IF         COND(&STAT *NE 'Y') THEN(DO)                                      /*221416*/
+                  DLTF       FILE(XSDHGSTPD)                                              /*221416*/
+                  MONMSG     MSGID(CPF2105)                                               /*221416*/
+                  DLTF       FILE(XASHGLKPD)                                              /*221416*/
+                  MONMSG     MSGID(CPF2105)                                               /*221416*/
+                  DLTF       FILE(XASHTRNPD)                                              /*221416*/
+                  MONMSG     MSGID(CPF2105)                                               /*221416*/
+                  DLTF       FILE(XASFHTRPD)                                              /*221416*/
+                  MONMSG     MSGID(CPF2105)                                               /*221416*/
+                                                                                          /*221416*/
+/* Create a backup for DEALSDG, DEALSDC, DEALSDD, DKEYSDP and DKEYSZZ */                  /*221416*/
+                                                                                          /*221416*/
+                  CPYF       FROMFILE(SDHGSTPD) TOFILE(&DPLIB/XSDHGSTPD) +
+                             CRTFILE(*YES)                                                /*221416*/
+                  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                               /*221416*/
+                  CPYF       FROMFILE(ASHGLKPD) TOFILE(&DPLIB/XASHGLKPD) +
+                             CRTFILE(*YES)                                                /*221416*/
+                  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                               /*221416*/
+                  CPYF       FROMFILE(ASHTRNPD) TOFILE(&DPLIB/XASHTRNPD) +
+                             CRTFILE(*YES)                                                /*221416*/
+                  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                               /*221416*/
+                  CPYF       FROMFILE(ASFHTRPD) TOFILE(&DPLIB/XASFHTRPD) +
+                             CRTFILE(*YES)                                                /*221416*/
+                  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                               /*221416*/
+             ENDDO                                                                        /*221416*/
+                                                                                          /*221416*/
+/* If it is a restart */                                                                  /*221416*/
+                                                                                          /*221416*/
+             IF         COND(&STAT *EQ 'Y') THEN(DO)                                      /*221416*/
+                  CPYF       FROMFILE(XSDHGSTPD) TOFILE(&DMLIB/SDHGSTPD) +
+                             MBROPT(*REPLACE)                                             /*221416*/
+                  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                               /*221416*/
+                  CPYF       FROMFILE(XASHGLKPD) TOFILE(&DMLIB/ASHGLKPD) +
+                             MBROPT(*REPLACE)                                             /*221416*/
+                  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                               /*221416*/
+                  CPYF       FROMFILE(XASHTRNPD) TOFILE(&DMLIB/ASHTRNPD) +
+                             MBROPT(*REPLACE)                                             /*221416*/
+                  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                               /*221416*/
+                  CPYF       FROMFILE(XASFHTRPD) TOFILE(&DMLIB/ASFHTRPD) +
+                             MBROPT(*REPLACE)                                             /*221416*/
+                  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                               /*221416*/
+             ENDDO                                                                        /*221416*/
+                                                                                          /*221416*/
+             CHGVAR     VAR(&STAT) VALUE('Y')                                             /*221416*/
+                                                                                          /*221416*/
+/* Call CB0150 to update restart indicator */                                             /*221416*/
+                                                                                          /*221416*/
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)                               /*221416*/
+                                                                                          /*221416*/
+/** Call Daily Hedge Files Maintenance and Reorganization */
+ 
+             CALL       PGM(AS000007)
+                                                                                          /*221416*/
+/* If no error occured in the program */                                                  /*221416*/
+                                                                                          /*221416*/
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)                                  /*221416*/
+                                                                                          /*221416*/
+/* Call CB0150 to update restart indicator */                                             /*221416*/
+                                                                                          /*221416*/
+                  CHGVAR     VAR(&STAT) VALUE('N')                                        /*221416*/
+                  CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)                          /*221416*/
+                  DLTF       FILE(XSDHGSTPD)                                              /*221416*/
+                  MONMSG     MSGID(CPF2105)                                               /*221416*/
+                  DLTF       FILE(XASHGLKPD)                                              /*221416*/
+                  MONMSG     MSGID(CPF2105)                                               /*221416*/
+                  DLTF       FILE(XASHTRNPD)                                              /*221416*/
+                  MONMSG     MSGID(CPF2105)                                               /*221416*/
+                  DLTF       FILE(XASFHTRPD)                                              /*221416*/
+                  MONMSG     MSGID(CPF2105)                                               /*221416*/
+             ENDDO                                                                        /*221416*/
+ 
+/** Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)
+                  CPYF       FROMFILE(&DPLIB/XSDHGSTPD) TOFILE(SDHGSTPD) +
+                             MBROPT(*REPLACE)                                             /*221416*/
+                  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                               /*221416*/
+                  CPYF       FROMFILE(&DPLIB/XASHGLKPD) TOFILE(ASHGLKPD) +
+                             MBROPT(*REPLACE)                                             /*221416*/
+                  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                               /*221416*/
+                  CPYF       FROMFILE(&DPLIB/XASHTRNPD) TOFILE(ASHTRNPD) +
+                             MBROPT(*REPLACE)                                             /*221416*/
+                  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                               /*221416*/
+                  CPYF       FROMFILE(&DPLIB/XASFHTRPD) TOFILE(ASFHTRPD) +
+                             MBROPT(*REPLACE)                                             /*221416*/
+                  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                               /*221416*/
+             GOTO       CMDLBL(END)
+             ENDDO
+ 
+/**********  RGZPFM     FILE(SDHGSTPD)                                                    /*228542*/
+/**********  MONMSG     MSGID(CPF2995 CPF2981)                                            /*228542*/
+             CALL       PGM(SCC000060) PARM('SDHGSTPD' '*FIRST')                          /*228542*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))                                                  /*228542*/
+ 
+/**********  RGZPFM     FILE(ASHGLKPD)                                                    /*228542*/
+/**********  MONMSG     MSGID(CPF2995 CPF2981)                                            /*228542*/
+             CALL       PGM(SCC000060) PARM('ASHGLKPD' '*FIRST')                          /*228542*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))                                                  /*228542*/
+ 
+/**********  RGZPFM     FILE(ASHTRNPD)                                                    /*228542*/
+/**********  MONMSG     MSGID(CPF2995 CPF2981)                                            /*228542*/
+             CALL       PGM(SCC000060) PARM('ASHTRNPD' '*FIRST')                          /*228542*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))                                                  /*228542*/
+ 
+/**********  RGZPFM     FILE(ASFHTRPD)                                                    /*228542*/
+/**********  MONMSG     MSGID(CPF2995 CPF2981)                                            /*228542*/
+             CALL       PGM(SCC000060) PARM('ASFHTRPD' '*FIRST')                          /*228542*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))                                                  /*228542*/
+ 
+             CALL       PGM(SCC000060) PARM('ASAHIDPD' '*FIRST')                          /*229174*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))                                                  /*229174*/
+                                                                                          /*229174*/
+             GOTO       CMDLBL(END)
+ 
+/** Abnormal termination - batch job */
+ 
+ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          ASC000007 ended abnormally - see job log')   +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+ 
+             ENDPGM

@@ -1,0 +1,450 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Cust. Serv. Fees - DL Holdings Extract')      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL1942 - Customer Service Fees - Dealing Holdings Extract    *
+      *                                                               *
+      *  Function:  This program Evaluate Dealing Holdings to be      *
+      *  (phase(s)) able to calculate Safe Custody Fees and/or        *
+      *             Management Fees to Accrue.                        *
+      *             Called during COB after Call of DL                *
+      *                                                               *
+      *  Called By: GLC1942 - Cust. Serv. Fees - DL Holdings Extract  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CGL165             Date 17Feb15               *
+      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 07Jul06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CSD008  *CREATE    Date 05Feb01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSD008 - Customer Service Fees Enhancement                   *
+      *                                                               *
+      *****************************************************************
+     FGLCUFEL7IF  E           K        DISK         KINFSR *PSSR
+      ** Customers With SC or MG fees to accrued.
+      *
+     FCUSDE   IF  E           K        DISK         KINFSR *PSSR
+      ** Customer DEALS - Only Live deals (not matured ones)
+     F            DEALSDAF                          KIGNORE
+     F            DEALSDDF                          KIGNORE
+     F            DEALSDEF                          KIGNORE
+     F            DEALSDGF                          KIGNORE
+     F            DEALSDFF                          KIGNORE
+      *
+     FFDDTSTL0IF  E           K        DISK         KINFSR *PSSR
+      ** Deal type/Subtype File
+      *
+     FGLHOLDPDO   E                    DISK         KINFSR *PSSR
+      ** Extract Holding Details
+      *
+     FGL1942AUO   E                    PRINTER
+      ** DL Holdings extract - audit
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   87  - Chain Failed Indicator for FDDTSTPD                   *
+      *   88  - Chain Failed Indicator for LF/CUSDE                   *
+      *   89  - End of File Indicator                                 *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  *INSZR - Initialisation routine                              *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      /COPY ZSRSRC,ZPOWERZ1
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+     I                                     *PROGRAM @@PGM
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Access Object DS for Bank details file
+      *
+     ISDGELR    E DSSDGELRPD
+      ** Access Object DS For General Ledger Module I.C.D. Details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Access Object DS For Currency Details
+      *
+     IDSSDY     E DSDSSDY
+      ** Access Object DS Retrieve file details
+      *
+      /EJECT
+      ***************************************************************
+      *                      M A I N L I N E S                      *
+      ***************************************************************
+      *
+      ** Read GLCUFEL7 until EOF
+      *
+     C                     READ GLCUFED0                 89
+      *
+     C           *IN89     DOWEQ*OFF
+      *
+      ** Forward FX Deals
+      *
+     C**********           MOVE F0CNUM    KCNUM   60                                          CSD027
+     C                     MOVE F0CNUM    KCNUM   6                                           CSD027
+     C           *LOVAL    SETLLCUSDE
+      *
+     C           KCNUM     CHAINDEALSDBF             88
+     C           *IN88     DOWEQ*OFF
+      *
+      ** Process only live Deals at event control date,
+      ** and DTYP not 'OP' (option)
+      *
+     C           RECI      IFEQ 'D'
+     C           DTYP      ANDNE'OP'
+      *
+      ** Fill up GLHOLDPD with Deals Details
+      *
+     C                     CLEARGLHOLDD0
+      *
+     C                     MOVE CNUM      F8CNUM
+     C                     MOVE PTFR      F8PTFR
+     C                     MOVEL'FX'      F8SRHO
+     C                     MOVE SLCY      F8CCY
+     C                     MOVELDLNO      F8TREF    P
+      *
+      ** Retrieve Instrument with Deal type/Subtype (AOLOANR0)
+      *
+     C                     MOVE DTYP      KDTYP
+     C                     MOVE DLST      KDLST
+     C           KDTST     CHAINFDDTSTL0             87
+      *
+     C           *IN87     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'FDDTSTL0'DBFILE
+     C                     Z-ADD3         DBASE
+     C           DTYP      CAT  DLST:0    DBKEY
+     C                     MOVEL@@PGM     DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELINNR      F8INST
+      *
+      ** Assets Forward FX =  'Sell amount - Purchase amount' if positive
+      ** Liabil. Forward FX = 'Sell amount - Purchase amount' if negative
+      *
+      ** Convert Purchase amount in Sell Currency using Today Spot Rate
+      *
+     C                     MOVE PUAM      ZAMTF
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM PUCY      PCCY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     Z-ADD4         DBASE
+     C                     MOVELPUCY      DBKEY     P
+     C                     MOVEL@@PGM     DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE PUCY      ZCCYF
+     C                     Z-ADDA6NBDP    ZCDPF
+     C                     Z-ADDA6SPRT    ZRATEF
+     C                     MOVE A6MDIN    ZMDINF
+      *
+      ** Sell currency
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM SLCY      PCCY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     Z-ADD5         DBASE
+     C                     MOVELSLCY      DBKEY     P
+     C                     MOVEL@@PGM     DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE SLCY      ZCCYT
+     C                     Z-ADDA6NBDP    ZCDPT
+     C                     Z-ADDA6SPRT    ZRATET
+     C                     MOVE A6MDIN    ZMDINT
+      *
+     C                     EXSR ZCCYCN
+      *
+     C           SLAM      SUB  ZAMTT     WWAMNT 150
+      *
+     C           WWAMNT    IFLT 0
+     C                     Z-SUBWWAMNT    F8LIFX
+     C                     ELSE
+     C                     Z-ADDWWAMNT    F8ASFX
+     C                     ENDIF
+      *
+      ** All other fields stay blanks or Zero
+      *
+     C                     WRITEGLHOLDD0
+      *
+     C                     ENDIF
+      *
+      ** next record
+      *
+     C           KCNUM     READEDEALSDBF                 88
+     C                     ENDDO
+      *
+      ** MONEY MARKET DEALS
+      *
+     C           *LOVAL    SETLLCUSDE
+      *
+     C           KCNUM     CHAINDEALSDCF             88
+     C           *IN88     DOWEQ*OFF
+      *
+      ** Process only live Deals at event control date,
+      ** And Value date Less or Equal Control date
+      *
+     C           RECI      IFEQ 'D'
+     C           VDAT      ANDLEWWCTRL
+      *
+      ** Fill up GLHOLDD0 with Deals Details
+      *
+     C                     CLEARGLHOLDD0
+      *
+     C                     MOVE CNUM      F8CNUM
+     C                     MOVE PTFR      F8PTFR
+     C                     MOVEL'MM'      F8SRHO
+     C                     MOVE CCY       F8CCY
+     C                     MOVELDLNO      F8TREF    P
+      *
+      ** Retrieve Instrument with Deal type/Subtype (AOLOANR0)
+      *
+     C                     MOVE DTYP      KDTYP
+     C                     MOVE DLST      KDLST
+     C           KDTST     CHAINFDDTSTL0             87
+      *
+     C           *IN87     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'FDDTSTL0'DBFILE
+     C                     Z-ADD6         DBASE
+     C           DTYP      CAT  DLST:0    DBKEY
+     C                     MOVEL@@PGM     DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELINNR      F8INST
+      *
+      ** Assets Market Value = PCPL if Deal type isn't IP, TI, LN, CL and DL
+      ** Liabilities Market values = PCPL if Deal type is IP, TI, LN ,CL or DL
+      *
+     C           DTYP      IFEQ 'IP'
+     C           DTYP      OREQ 'TI'
+     C           DTYP      OREQ 'LN'
+     C           DTYP      OREQ 'CL'
+     C           DTYP      OREQ 'DL'
+     C                     Z-ADDPCPL      F8LIMV
+     C                     ELSE
+     C                     Z-ADDPCPL      F8ASMV
+     C                     ENDIF
+      *
+      ** Accrued on Assets  = Accruals Amount if Deal type isn't IP, TI, LN, C
+      ** Accrued on Liabilities = Accruals Amount if Deal type is IP, TI, LN ,
+      ** Accruals Amount = AIPD + AIAN - IPRD - ICTD
+      *
+     C                     Z-ADDAIPD      WWAMNT 150
+     C                     ADD  AIAN      WWAMNT
+     C                     SUB  IPRD      WWAMNT
+     C                     SUB  ICTD      WWAMNT
+      *
+     C           DTYP      IFEQ 'IP'
+     C           DTYP      OREQ 'TI'
+     C           DTYP      OREQ 'LN'
+     C           DTYP      OREQ 'CL'
+     C           DTYP      OREQ 'DL'
+     C                     Z-ADDWWAMNT    F8LIAC
+     C                     ELSE
+     C                     Z-ADDWWAMNT    F8ASAC
+     C                     ENDIF
+      *
+      ** All other fields stay blanks or Zero
+      *
+     C                     WRITEGLHOLDD0
+      *
+     C                     ENDIF
+      *
+      ** next record
+      *
+     C           KCNUM     READEDEALSDCF                 88
+     C                     ENDDO
+      ** read next customer
+      *
+     C           F0CNUM    SETGTGLCUFEL7
+     C                     READ GLCUFEL7                 89
+     C                     ENDDO
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      ***************************************************************
+      *               E N D    O F    M A I N L I N E S             *
+      ***************************************************************
+      /EJECT
+      ***************************************************************
+      *                                                             *
+      *  *INZSR - Standard initial subroutine                       *
+      *                                                             *
+      *  Called by : automatically                                  *
+      *                                                             *
+      *  Calls     :                                                *
+      *                                                             *
+      ***************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Read SDBANKPD to retrieve Bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     Z-ADD1         DBASE
+     C                     MOVEL'*FIRST ' DBKEY     P
+     C                     MOVEL@@PGM     DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Read SDGELRPD to retrieve  Accrual Control date BKAPDT
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C           SDGELR    PARM SDGELR    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDGELRPD'DBFILE
+     C                     Z-ADD2         DBASE
+     C                     MOVEL'*FIRST ' DBKEY     P
+     C                     MOVEL@@PGM     DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Event control date
+      *
+     C           BJDNWD    SUB  1         WWCTRL  50
+     C           BKANWD    IFEQ '2'
+     C           BKAPDT    IFLE WWCTRL
+     C                     Z-ADDBKAPDT    WWCTRL  50
+     C                     ELSE
+     C                     Z-ADDBJRDNB    WWCTRL
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Key List Definition
+      *
+     C           KDTST     KLIST
+     C                     KFLD           KDTYP   2
+     C                     KFLD           KDLST   2
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program exception error routine                     *
+      *                                                               *
+      * Called by : Automatically or EXSR                             *
+      *                                                               *
+      * Calls     :                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     DUMP
+     C                     END
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZCCYCN
+      /EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  POWER
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000

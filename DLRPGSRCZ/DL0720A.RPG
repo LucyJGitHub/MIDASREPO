@@ -1,0 +1,352 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL MM Deals due for Automatic Rollover Pmpt')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL0720A - MM Deals due for Automatic Rollover Today Prompt   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CDL038             Date 10May05               *
+      *  Prev Amend No. CDL016 *Create     Date 03Feb04               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CDL038 - Extended Deal Sub Type                              *
+      *  CDL016 - Autumatic Rollover of Fixed Term Loan/Deposit       *
+      *                                                               *
+      *****************************************************************
+     FFDDTSTL0IF  E           K        DISK         KINFSR *PSSR      UC
+      *
+     FDL0720DFCF  E                    WORKSTN
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *    03  - EXIT PROGRAM                                         *
+      *                                                               *
+      *    20  - Error on Input Deal Type                             *
+      *    21  - Error on Input Deal SubType                          *
+      *    23  - Error on Input Deal Class                            *                       CDL038
+      *                                                               *
+      *    70  - INPUT PASSED VALIDATION                              *
+      *                                                               *
+      *  U7+U8 - DATABASE ERROR                                       *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INIT   - Initial Processing                                  *
+      *  VAL    - Validate input from user                            *
+      *  ERROR  - Send message to program message queue               *
+      *  *PSSR  - Database Error Processing                           *
+      *                                                               *
+      *  Index to external programs used                              *
+      *                                                               *
+      *  ZA0250 - Clear message subfile                               *
+      *  ZA0240 - Add a message to message subfile                    *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      *
+     ISCSARD    E DSSCSARDPD                                                                  CDL038
+      * EXTERNAL DS FOR SAR DETAILS                                                           CDL038
+      *                                                                                       CDL038
+     IDSFDY     E DSDSFDY                                                                     CDL038
+      * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                                    CDL038
+      *                                                                                       CDL038
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *
+     IRUNDAT      DS
+     I                                        1   7 WRUNA
+     I                                       13  13 WMBIN
+      ** Data Structure for Midas RunDate
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+     I                                      244 253 JOB
+     I                                      254 263 USER
+      *
+     I@PARM       DS                            100
+      * DealType/Subtype/Class                                                                CDL038
+      **DealType/Subtype**********************                                                CDL038
+     I                                        1   2 WDTYPE
+     I                                        3   4 WDSTYP
+     I                                        5   8 WDCLAS                                    CDL038
+      *
+     ISDBANK    E DSSDBANKPD
+      * External Data-Structure for Bank Installation Control Data.
+      *
+      /EJECT
+      *****************************************************************
+      *
+      ** If F3 has been pressed or if validation successful end pgm.
+     C           *IN03     DOWEQ'0'
+     C           *IN70     ANDEQ'0'
+      *
+      ** Write subfile record, if error exists message will be displayed
+     C                     WRITEDL0720C0
+      *
+      ** Display initial input screen or, if in error, re-display.
+     C                     EXFMTDL0720P1
+      *
+      ** Validate user input, if in error send msg(s) to error subfile.
+     C                     EXSR VAL
+      *
+     C                     ENDDO
+      *
+      ** end program
+     C                     CLOSEFDDTSTL0
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  VAL        - Validate input from user                        *
+      *                                                               *
+      *  CALLED BY: - Main Processing                                 *
+      *                                                               *
+      *  CALLS:     - ERROR  - Send a message to program message queue*
+      *               ZA0250 - Clear message subfile                  *
+      *                                                               *
+      *  USES:      - WDTYPE - Output parameter: Selected Deal Type   *
+      *               WDSTYP - Output parameter: Selected Deal SubType*
+      *               WDTYPE - Screen field - Deal Type               *
+      *               WDSTYP - Screen field - Deal SubType            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           VAL       BEGSR
+      *
+      ** Reset error indicators
+     C                     MOVE '0'       *IN20
+     C                     MOVE '0'       *IN21
+     C                     MOVE '0'       *IN22
+     C                     MOVE '0'       *IN23                                               CDL038
+      *
+      ** If CA03 then set up RCF field; end subroutine and exit program
+     C           *IN03     IFEQ '1'
+     C                     MOVE 'E'       @RCMD
+     C                     GOTO VAL9
+     C                     ENDIF
+      *
+      ** Validate Deal Type
+     C           WDTYPE    IFNE *BLANKS
+     C           WDTYPE    ANDNE'TD'
+     C           WDTYPE    ANDNE'TI'
+     C           WDTYPE    ANDNE'IP'
+     C           WDTYPE    ANDNE'IT'
+     C                     MOVE '1'       *IN20
+     C                     ENDIF
+      *
+      ** Deal Type must be valid for SubType to be entered
+     C           WDSTYP    IFNE *BLANKS
+     C           WDTYPE    ANDEQ*BLANKS
+     C                     MOVE '1'       *IN21
+     C                     ENDIF
+      *                                                                                       CDL038
+      ** Deal Type and SubType must be valid for Class to be entered                          CDL038
+     C           WDCLAS    IFNE *BLANKS                                                       CDL038
+     C           WDTYPE    ANDEQ*BLANKS                                                       CDL038
+     C           WDCLAS    ORNE *BLANKS                                                       CDL038
+     C           WDSTYP    ANDEQ*BLANKS                                                       CDL038
+     C                     MOVE '1'       *IN23                                               CDL038
+     C                     ENDIF                                                              CDL038
+      *
+      ** If both Deal Type and Deal SubType are entered, the combination must exist
+     C           WDTYPE    IFNE *BLANKS
+     C           WDSTYP    ANDNE*BLANKS
+      *
+     C           @DTSTK    CHAINFDDTSTL0             31
+     C           *IN31     IFEQ '1'
+     C                     MOVE '1'       *IN22
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** If no error on either Deal Type or Deal Sub Type then move input fields
+      ** to the output parameters; indicate validation successful.
+     C           *IN20     IFEQ '0'
+     C           *IN21     ANDEQ'0'
+     C           *IN22     ANDEQ'0'
+     C           *IN23     ANDEQ'0'                                                           CDL038
+     C                     MOVE '1'       *IN70
+      *
+      ** ...error in input field(s) move error messages into message
+      ** subfile for display
+     C                     ELSE
+     C                     EXSR ERROR
+     C                     ENDIF
+      *
+     C           WDTYPE    IFNE *BLANKS
+     C           WDSTYP    ANDEQ*BLANKS
+     C           WDCLAS    ANDEQ*BLANKS                                                       CDL038
+     C                     MOVE '**'      WDSTYP
+     C                     ENDIF
+      *
+     C           WDTYPE    IFEQ *BLANKS
+     C           WDSTYP    ANDEQ*BLANKS
+     C           WDCLAS    ANDEQ*BLANKS                                                       CDL038
+     C                     MOVE '**'      WDTYPE
+     C                     MOVE '**'      WDSTYP
+     C                     ENDIF
+      *
+     C           VAL9      ENDSR                           ** VAL9 **
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *INZSR     - Initial Processing                              *
+      *                                                               *
+      *  CALLED BY: - Main Processing                                 *
+      *                                                               *
+      *  CALLS:     - ZA0250 - Clear message subfile                  *
+      *                                                               *
+      *  USES:  WDTYPE - Output : Selected Deal Type                  *
+      *         WDSTYP - Output : Selected Deal SubType               *
+      *         DATE   - Run date from the ICD                        *
+      *         WDTYPE - Screen field - Deal Type                     *
+      *         WDSTYP - Screen field - Deal SubType                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+      ***  Copyright Statement.
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Receive parameters
+     C           *ENTRY    PLIST
+     C                     PARM           @RSEQ   5
+     C                     PARM           @RLEV   1
+     C                     PARM           @RENT   3
+     C                     PARM           @PARM
+     C                     PARM           @RACT   1
+     C                     PARM           @RCMD   1
+      *
+      ** Deal type/subtype validation KLIST
+     C           @DTSTK    KLIST
+     C                     KFLD           WDTYPE
+     C                     KFLD           WDSTYP
+     C                     KFLD           WDCLAS                                              CDL038
+      *
+      **  Open Files
+     C                     OPEN FDDTSTL0
+      *
+      ** Set up subfile message queue as program message queue and
+      ** clear messages.
+     C                     MOVEL'*'       DDPGMQ
+     C                     CALL 'ZA0250'
+      *
+      ** Access RUNDAT for multibranching indicator
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE WRUNA     DATE
+     C*                                                                                       CDL038
+     C** DETERMINE IF CDL038 IS ON (EXTENDED DEAL SUB-TYPE)                                   CDL038
+     C*                                                                                       CDL038
+     C                     CALL 'AOSARDR0'                                                    CDL038
+     C                     PARM *BLANKS   @RTCD   7                                           CDL038
+     C                     PARM '*VERIFY' @OPTN   7                                           CDL038
+     C                     PARM 'CDL038'  @SARD   6                                           CDL038
+     C           SCSARD    PARM SCSARD    DSFDY                                               CDL038
+     C*                                                                                       CDL038
+     C           @RTCD     IFEQ *BLANKS                                                       CDL038
+     C                     MOVE 'Y'       CDL038  1                                           CDL038
+     C                     MOVE *ON       *IN65                                               CDL038
+     C                     ELSE                                                               CDL038
+     C                     MOVE 'N'       CDL038                                              CDL038
+     C                     MOVE *OFF      *IN65                                               CDL038
+     C                     END                                                                CDL038
+      *
+     C                     ENDSR                           ** INIT9 **
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  ERROR      - Send message to program message queue           *
+      *                                                               *
+      *  CALLED BY: - VAL - Validate input from user                  *
+      *                                                               *
+      *  CALLS:     - ZA0250 - Clear message subfile                  *
+      *             - ZA0240 - Add a message to message subfile       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ERROR     BEGSR
+      *
+      ** clear message subfile
+     C                     CALL 'ZA0250'
+      *
+      ** If error on Deal SubType send error message to message subfile
+     C           *IN20     IFEQ '1'
+     C           *IN21     OREQ '1'
+     C           *IN23     OREQ '1'                                                           CDL038
+     C           CDL038    IFEQ 'Y'                                                           CDL038
+     C                     MOVEL'MMM1070' @MSGID                                              CDL038
+     C                     ELSE                                                               CDL038
+     C                     MOVEL'MMM1051' @MSGID                                              CDL038
+     C                     ENDIF                                                              CDL038
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID 10                                           CDL038
+     C*********************PARM 'MMM1051' @MSGID 10                                           CDL038
+     C                     ENDIF
+      *
+      ** If error on Deal Type/Sub Type combination send error message to message subfile
+     C           *IN22     IFEQ '1'
+     C                     MOVE '1'       *IN20
+     C                     MOVE '1'       *IN21
+     C           CDL038    IFEQ 'Y'                                                           CDL038
+     C                     MOVE '1'       *IN23                                               CDL038
+     C                     MOVEL'MMM1070' @MSGID                                              CDL038
+     C                     ELSE                                                               CDL038
+     C                     MOVEL'MMM1051' @MSGID                                              CDL038
+     C                     ENDIF                                                              CDL038
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID                                              CDL038
+     C*********************PARM 'MMM1051' @MSGID                                              CDL038
+     C                     ENDIF
+      *
+     C                     ENDSR                           ** ERROR9 **
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR      - Database Error Processing                       *
+      *                                                               *
+      *  CALLED BY:   Executes whenever file of program exception     *
+      *               error occurs                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+      *
+      ** (no need to set up LDA since all database errors handled by
+      **  access programs)
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     CLOSEFDDTSTL0
+     C                     CALL 'DBERRCTL'
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+** CPY@   **      Object Copyright
+(c) Misys International Banking Systems Ltd. 2004

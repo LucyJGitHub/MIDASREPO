@@ -1,0 +1,73 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Special handling for graphical fields')      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000115 - Special handling for graphical fields           */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. CUP003  *CREATE    Date 06Aug10              */
+/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       CUP003 - New program to handle graphical fields             */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FILE &FMLIB &TOLIB)
+ 
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&NBRCURRCD) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2010')
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Check if 'from' file exists and if it has any records. */
+             RTVMBRD    FILE(&FMLIB/&FILE) NBRCURRCD(&NBRCURRCD)
+             MONMSG     MSGID(CPF9812) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             IF         COND(&NBRCURRCD *EQ 0) THEN(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             DSPFFD     FILE(&TOLIB/&FILE) OUTPUT(*OUTFILE) +
+                          OUTFILE(QTEMP/DSPFFD)
+             CPYF       FROMFILE(QTEMP/DSPFFD) +
+                          TOFILE(QTEMP/SMC000115F) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+             OVRDBF     FILE(UPFFDSTPD) TOFILE(QTEMP/SMC000115F)
+             CALL       PGM(SM000023) PARM(&FILE &RTNCODE)
+             DLTOVR     FILE(UPFFDSTPD)
+             DLTF       FILE(QTEMP/&FILE)
+             MONMSG     MSGID(CPF0000)
+             CRTPF      FILE(QTEMP/&FILE) SRCFILE(QTEMP/RUNSQL) +
+                          SRCMBR(RUNSQLSTM) MAXMBRS(*NOMAX) +
+                          SIZE(*NOMAX)
+             CPYF       FROMFILE(&FMLIB/&FILE) TOFILE(QTEMP/&FILE) +
+                          FROMMBR(*ALL) TOMBR(*FROMMBR) +
+                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)
+             CPYF       FROMFILE(QTEMP/&FILE) TOFILE(&TOLIB/&FILE) +
+                          FROMMBR(*ALL) TOMBR(*FROMMBR) +
+                          MBROPT(*REPLACE) FMTOPT(*NOCHK)
+             CALL       PGM(SM000008) PARM(&FILE '*FILE' '*UPDATE' +
+                          'PASSED')
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+/* Set status to FAILED. */
+             CALL       PGM(SM000008) PARM(&FILE '*FILE' '*UPDATE' +
+                          'FAILED')
+ 
+ENDPGM:
+             ENDPGM

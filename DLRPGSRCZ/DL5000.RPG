@@ -1,0 +1,395 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Int. outright accruals extract')              *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Dealing Module
+     F*                                                               *
+     F*                                                               *
+     F* DL5000 - DEALS FILE EXTRACT FOR INTEREST OUTRIGHT ACCRUALS    *
+     F*                                                               *
+     F*  Function:  This program outputs 2 records tp the extracts    *
+     F*             details file for all fx deals of type 'PI' and    *
+     F*             'SI', one record for the purchase side and one    *
+     F*             for the sell side.                                *
+     F*             For each record the program calculates the 'amount*
+     F*             accrued up to the report control date' and 'the   *
+     F*             amount to accrue'. An audit report is produced    *
+     F*             showing the number of records extracted.          *
+     F*                                                               *
+     F*  Called By: DLC0801 - Interest Outright Accruals Extract      *  *
+     F*                       Controlling Component                   *  *
+     F*                                                               *  *
+     F*  Calls: AOGELRR0 - Access object for General Ledger I.C.D.    *  *
+     F*         AOBANKR0 - Access object for Bank I.C.D.              *  *
+     F*         AOBRCHR0 - Access object for Branch Details File      *  *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*               CREATED BY S01440                               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  Last Amend No. CGL165             Date 17Feb15               *
+      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CDL049             Date 05Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01440             Date 23Nov93               *
+     F*                                                               *  *
+     F*------------------------------------------------------------------*
+     F*                                                               *  *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type                              *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*   S01440 - TIDY UP                                            *  *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FDEALS   IF  E                    DISK         KINFSR *PSSR
+     F            DEALSDAF                          KIGNORE
+     F            DEALSDCF                          KIGNORE
+     F            DEALSDDF                          KIGNORE
+     F            DEALSDEF                          KIGNORE
+     F            DEALSDFF                          KIGNORE
+     F            DEALSDGF                          KIGNORE
+     FDLINTAPDO   E                    DISK
+     FDL5000AUO   E                    PRINTER
+      /EJECT
+     E                    CPY@    1   1 80
+     E*
+     E** Array containing Copyright statement
+     E*
+     ISDBANK    E DSSDBANKPD
+     ISDGELR    E DSSDGELRPD
+     I**********SDDEAL    E DSSDDEALPD                                    S01440
+     ISDBRCH    E DSSDBRCHPD
+     IDSFDY     E DSDSFDY
+     ILDA       E DSLDA                         256
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+      ****************************************************************
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBPGM
+     C                     MOVEL'DL5000'  DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+     C                     SETOF                     3399
+      *
+     C                     EXSR PRC1
+     C           *IN99     IFEQ '0'
+     C                     EXSR PRC2
+     C                     END
+     C                     SETON                     LR
+      *
+     C**************************************************************
+     C*
+     C*    INITIAL PROCESSING
+     C*
+     C**************************************************************
+      *
+     C           PRC1      BEGSR
+      *
+     C                     Z-ADD0         WKFLD4  50
+     C/COPY WNCPYSRC,DL5000C002
+      *
+      *** READ BANK DETAILS VIA ACCESS PROGRAM
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           BJDFIN    COMP 'M'                      98MMDDYY, 98 ON
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     MOVEL'001'     DBASE            * DBERR 01 *
+     C                     MOVEL@OPTN     DBKEY            ************
+     C                     MOVE '1'       *IN99
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      *** READ GENERAL LEDGER DETAILS VIA ACCESS PROGRAM
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDGELRPD'DBFILE           ************
+     C                     MOVEL'002'     DBASE            * DBERR 02 *
+     C                     MOVEL'*FIRST'  DBKEY            ************
+     C                     MOVE '1'       *IN99
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      *** If the 'accrue on last day' is 'Y'
+      *** set the report control date to the 'date of the next working
+      *** day minus 1.
+      *
+     C           BKALDI    IFEQ 'Y'
+     C           BJDNWD    SUB  1         WKFLD4
+     C                     END
+      *
+      *** If the 'accruals profit date' is less than the date of the
+      *** next working day - set the report control date to
+      *** 'accruals profit date +1.
+      *
+     C           BKAPDT    IFLT BJDNWD
+     C           BKAPDT    ADD  1         WKFLD4
+     C                     END
+      *
+      *** If the 'accruals profit date' is less than the date of the
+      *** next working day and the 'accrue on last day indicator is 'Y'
+      *** set the report control date to the 'accruals profit date'
+      *
+     C           BKAPDT    IFLT BJDNWD
+     C           BKALDI    ANDEQ'Y'
+     C                     Z-ADDBKAPDT    WKFLD4
+     C                     END
+      *
+      *** if the 'accruals profit date' is greater than or equal to
+      *** the next working day, and the 'accrue on last day'
+      *** indicator is not 'Y'- set the report control date
+      *** to 'date of the next working day'
+      *
+     C           BKAPDT    IFGE BJDNWD
+     C           BKALDI    ANDNE'Y'
+     C                     Z-ADDBJDNWD    WKFLD4
+     C                     END
+      *
+     C           PR1       ENDSR
+      *
+     C*****************************************************************
+     C*
+     C           PRC2      BEGSR
+      *
+     C                     Z-ADD0         RCNT    50
+      *
+      *** Access is made to the deals file.
+      *
+     C                     READ DEALS                    33
+      *
+      *** If a record has been found.
+      *
+     C           *IN33     DOWEQ'0'
+     C           DTYP      IFEQ 'PI'
+     C           RECI      ANDEQ'D'
+     C           RECI      OREQ 'D'
+     C           DTYP      ANDEQ'SI'
+      *
+      *** READ BRANCH DETAILS VIA ACCESS PROGRAM TO GET COMPANY CODE
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM BRCA      @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBRCHPD'DBFILE           ************
+     C                     MOVEL'003'     DBASE            * DBERR 03 *
+     C                     MOVELBRCA      DBKEY            ************
+     C                     MOVE '1'       *IN99
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C/COPY WNCPYSRC,DL5000C001
+     C                     EXSR TOTAL
+      *
+      *INCREMENT RECORD COUNT BY 2
+      *
+     C                     ADD  2         RCNT
+      *
+      *
+     C                     END
+     C                     READ DEALS                    33
+     C                     END
+     C                     WRITEHDNGS
+     C                     WRITEDETAIL
+      *
+     C           P2        ENDSR
+      *
+      *****************************************************************
+      *
+     C           TOTAL     BEGSR
+      *
+     C                     Z-ADD0         WKFLD1 130
+     C                     Z-ADD0         WKFLD2 130
+     C                     Z-ADD0         WKFLD3 180
+     C                     Z-ADD0         WKFLD5 180
+     C                     Z-ADD0         PAMAD  130
+      *
+      *** If the Deal Date is greater than the Report Control Date,
+      *** set the workfield Report Control Date to Deal Date.
+      *
+     C           DDAT      IFGT WKFLD4
+     C                     Z-ADDDDAT      WKFLD4
+     C                     END
+      *
+      *** If the Value Date is less than the Report Control Date, set
+      *** the workfield Report Control Date to the Value Date.
+      *
+     C           VDAT      IFLT WKFLD4
+     C                     Z-ADDVDAT      WKFLD4
+     C                     END
+      *
+      *** Subtract the Deal Date from the Value Date to obtain WKFLD1.
+      *
+     C           VDAT      SUB  DDAT      WKFLD1
+      *
+      *** If the workfield is zero then set it to 1.
+      *
+     C           WKFLD1    IFEQ 0
+     C                     Z-ADD1         WKFLD1
+     C                     END
+      *
+      *
+      *** Subtract the Deal Date from the Report Control Date to
+      *** obtain WKFLD2
+      *
+     C           WKFLD4    SUB  DDAT      WKFLD2
+      *
+      *** If the workfield is not equal to 0,
+      *
+     C           WKFLD2    IFNE 0
+      *
+      *** Multiply the workfield by the purchase amount to give the
+      *** Purchase Amount Accrued to Date.
+      *
+     C           WKFLD2    MULT PUAM      WKFLD3    H
+     C           WKFLD3    DIV  WKFLD1    PAMAD     H
+      *
+      *** Multiply the workfield by the Sell Amount to give the
+      *** Sell Amount Accrued to Date.
+      *
+     C           WKFLD2    MULT SLAM      WKFLD5    H
+     C           WKFLD5    DIV  WKFLD1    SAMAD  130H
+      *
+      *** Otherwise,
+      *
+     C                     ELSE
+      *
+      *** Set the Purchase Amount Accrued to Date and the Sale Amount
+      *** Accrued to Date to 0.
+      *
+     C                     Z-ADD0         PAMAD
+     C                     Z-ADD0         SAMAD
+     C                     END
+      *
+      *** Set the Purchase Amount to Accrue and the Sale Amount to
+      *** Accrue to 0.
+      *
+     C                     Z-ADD0         GAAMTA
+      *
+      *** Subtract the Purchase Amount Accrued to Date from the
+      *** Purchase Amount to give the Purchase Amount to Accrue
+      *** and move 'P' into the buy/sell indicator GABSIN.
+      *
+     C           PUAM      SUB  PAMAD     GAAMTA
+     C                     MOVE 'P'       GABSIN
+     C                     MOVE PUCY      GACURR
+     C                     MOVE PAMAD     GAAMAD
+     C                     MOVE PUAM      GAPCPL
+      *
+      *** Update the file.
+      *
+     C                     EXSR UPDTE
+      *
+      *** Subtract the Sale Amount Accrued to Date from the Sale Amount
+      *** to give the Sale Amount to Accrue and move 'S' into the
+      *** buy/sell indicator GABSIN.
+      *
+     C           SLAM      SUB  SAMAD     GAAMTA
+     C                     MOVE 'S'       GABSIN
+     C                     MOVE SLCY      GACURR
+     C                     MOVE SAMAD     GAAMAD
+     C                     MOVE SLAM      GAPCPL
+      *
+      *** Update the file.
+      *
+     C                     EXSR UPDTE
+      *
+     C           TOT       ENDSR
+      *
+      *****************************************************************
+      *
+      *** This sub routine Update the file DLINTAPD.
+      *
+     C           UPDTE     BEGSR
+     C                     MOVE RECI      GARECI
+     C                     MOVE DTYP      GADTYP
+     C                     MOVE DLST      GADLST
+     C                     MOVE CNUM      GACNUM
+     C                     MOVE DLNO      GADLNO
+     C                     MOVE DDAT      GAACFD
+     C                     MOVE VDAT      GAACDT
+     C                     MOVE BRCA      GABRCA
+     C                     MOVE A8CMCD    GACMPY
+     C                     MOVE CLAS      GACLAS                                              CDL038
+      *
+     C                     WRITEDLINTAD0
+      *
+     C           UD        ENDSR
+      *
+      *****************************************************************
+      *
+      *** Standard Database error sub routine.
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     WRITEHDNGS
+     C                     SETON                     U7U8
+     C                     WRITEDBERROR
+      *
+     C                     END
+      *
+     C                     DUMP
+     C                     SETON                         LR
+     C                     RETRN
+      *
+     C           PSSR      ENDSR
+      *
+     C********************************************************************
+     C/EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

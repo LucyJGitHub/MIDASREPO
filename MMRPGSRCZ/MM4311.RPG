@@ -1,0 +1,673 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MM Cash Flows Using All-in-Rate Report')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Money Market Dealing Module                          *
+      *                                                               *
+      *  MM4311 - Midas MM Cash Flows Using All-in-Rate Report        *
+      *                                                               *
+      *  Function:  This program outputs the details from the Money   *
+      *             Market Cash Flow File MMCFLAPD.                   *
+      *                                                               *
+      *  NOTE: Check MM4111 for changes that may apply to it if there *
+      *        are amendments done to this program.                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CAS009             Date 04May04               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CAS005  *CREATE    Date 16Dec02               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type                              *
+      *  CAS009 - Effective Interest Rate/Amortised Cost Accounting   *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *                                                               *
+      *****************************************************************
+     FMMCFLAL1IF  E           K        DISK
+      ** Midas MM Cash Flows Using All-in-Rate File
+      *
+     FMM4311P1O   E                    PRINTER      KINFDS SPOOL      UC
+      ** Money Market Cash Flow Using All-In-Rate Report
+      *
+     FMM4311AUO   E                    PRINTER      KINFDS SPOOLU
+      ** Money Market Cash Flow Using All-In-Rate Audit Report
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZFRPEDZ1
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  01     - READ Indicator for MMCFLAL1                         *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Initialisation Program                              *
+      *  SRPRNT - Print Transaction Details                           *
+      *  SRBLNK - Blank Out Detail Fields                             *
+      *  SRLOAD - Load Detail Line                                    *
+      *  SRAUDT - Print Cash Flow Audit Report                        *
+      *                                                               *
+      *  *INZSR - Program Initialisation Routine                      *
+      *  *PSSR  - Program Exception Error Routine                     *
+      *                                                               *
+      *****************************************************************
+     IWLVLDS      DS                              6
+     I                                        1   1 WL6
+     I                                        2   2 WL5
+     I                                        3   3 WL4
+     I                                        4   4 WL3
+     I                                        5   5 WL2
+     I                                        6   6 WL1
+     ISPOOL       DS
+      ** File Information Data Structure
+      *
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 367 3680PRTLNE
+     ISPOOLU      DS
+      ** File Information Data Structure
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details File
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ** Branch codes file
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Currencies file
+      *
+     IDSFDY     E DSDSFDY
+      ** First DS for access programs, short data structure
+      *
+     IDSSDY     E DSDSSDY
+      ** Second DS for access programs, long data structure
+      *
+     ISDGELR    E DSSDGELRPD
+      *
+     ISCSARD    E DSSCSARDPD                                                                  CAS009
+      ** Switchable Features Details accessed via access program                              CAS009
+      *                                                                                       CAS009
+     I/COPY ZSRSRC,ZFRPEDZ2
+      *****************************************************************
+      *                                                               *
+      *  Main Processing                                              *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Initialise fields
+      *
+     C                     EXSR SRINIT
+      *
+      ** Access Midas MM Cash Flows Using All-in-Rate File
+      *
+     C           *LOVAL    SETLLMMCFLAL1
+     C                     READ MMCFLAL1                 01
+      *
+      ** Print audit report if file is empty
+      *
+     C           *IN01     IFEQ *ON
+     C                     EXSR SRAUDT
+     C                     ENDIF
+      *
+      ** Print transaction details until end of file
+      *
+     C           *IN01     DOWEQ*OFF
+      *                                                                                       CAS009
+     C           MAFTYP    IFEQ 'EFAN'                                                        CAS009
+     C           CAS009    ANDEQ'Y'                                                           CAS009
+     C           MAFTYP    OREQ 'SFAN'                                                        CAS009
+     C           CAS009    ANDEQ'Y'                                                           CAS009
+     C           MAFTYP    OREQ 'SFBN'                                                        CAS009
+     C           CAS009    ANDEQ'Y'                                                           CAS009
+      *                                                                                       CAS009
+     C                     ELSE                                                               CAS009
+      *                                                                                       CAS009
+     C                     EXSR SRPRNT
+      *                                                                                       CAS009
+     C                     ENDIF                                                              CAS009
+      *                                                                                       CAS009
+     C                     READ MMCFLAL1                 01
+     C                     ENDDO
+      *
+      ** Write 'End of Report for Branch'
+      *
+     C           WCOUNT    IFNE *ZERO
+      *
+     C           PRTLNE    IFGT 56
+     C                     WRITEMM4311D1
+     C                     ENDIF
+      *
+     C                     WRITEMM4311D4
+      *
+     C                     ENDIF
+      *
+      ** Return to calling program
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Initialisation Routine                              *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: ZSFILE                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ
+     C                     PARM *BLANK    PPARM   3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR   1
+      *
+      ** Error during ZSFILE processing, return to calling program
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     Z-ADD0         WCOUNT  30
+      *
+     C                     MOVE *BLANKS   WBRCA   3
+     C                     MOVE *BLANKS   WCYCD   3
+     C                     MOVE *BLANK    WBKCD   2
+     C                     MOVE *BLANK    WDTYP   2
+     C                     MOVE *BLANK    WDLST   2
+     C                     MOVE *BLANK    WCLAS   4                                           CDL038
+     C                     Z-ADD*ZERO     WDLNO   60
+     C                     MOVE *BLANK    WLVLDS
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPRNT - Print Transaction Details                           *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: ZSFILE, SRBLNK, SRLOAD, *PSSR                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPRNT    BEGSR
+      *
+      ** Determine which field has changed upon read to MMCFLAL1
+      *
+     C                     MOVE *ALL'N'   WLVLDS
+      *
+     C                     SELEC
+      *
+     C           MABRCA    WHNE WBRCA
+     C                     MOVEL'YYYYYY'  WLVLDS
+     C           MACYCD    WHNE WCYCD
+     C                     MOVEL'NYYYYY'  WLVLDS
+     C           MABKCD    WHNE WBKCD
+     C                     MOVEL'NNYYYY'  WLVLDS
+     C           MADTYP    WHNE WDTYP
+     C                     MOVEL'NNNYYY'  WLVLDS
+     C           MADLST    WHNE WDLST
+     C           MACLAS    ORNE WCLAS                                                         CDL038
+     C                     MOVEL'NNNNYY'  WLVLDS
+     C           MADLNO    WHNE WDLNO
+     C                     MOVEL'NNNNNY'  WLVLDS
+      *
+     C                     ENDSL
+      *
+      ** At change of Branch
+      *
+     C           WL6       IFEQ 'Y'
+      *
+     C           WBRCA     IFNE *BLANK
+     C           PRTLNE    IFGT 56
+     C                     WRITEMM4311D1
+     C                     ENDIF
+     C                     WRITEMM4311D4
+     C                     ENDIF
+      *
+      ** Ensure report spool file recorded by RCF
+      ** transfer binary data into numeric field
+      *
+     C                     CLOSEMM4311P1
+     C                     OPEN MM4311P1
+      *
+     C                     Z-ADDSFNUM     ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ
+     C                     PARM MABRCA    PPARM
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM *BLANK    ZSERR
+      *
+      ** Error during ZSFILE processing, return to calling program
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+      ** Initialise page number field
+      *
+     C                     Z-ADD*ZERO     PAGE
+      *
+      ** Use access program to read branch codes file
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM MABRCA    PDSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVELMABRCA    DBKEY
+     C                     MOVEL'SDBRCHPD'DBFILE
+     C                     Z-ADD2         DBASE
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     MOVELMABRCA    RBRCA
+     C                     MOVELA8BRNM    RBRNM
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** At change of currency
+      *
+     C           WL5       IFEQ 'Y'
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM MACYCD    PAJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVELMACYCD    DBKEY
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     Z-ADD3         DBASE
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     MOVELMACYCD    RCYCD
+     C                     MOVELA6CYNM    RCYNM
+     C                     WRITEMM4311D1
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** At change of deal number, skip line
+      *
+     C           WL1       IFEQ 'Y'
+      *
+     C           PRTLNE    IFGT 58
+     C                     WRITEMM4311D1
+     C                     ENDIF
+      *
+     C                     WRITEMM4311D3
+     C                     ENDIF
+      *
+      ** Load details onto detail line
+      *
+     C                     EXSR SRBLNK
+     C           MACAMT    IFNE 0
+     C                     EXSR SRLOAD
+      *
+     C           PRTLNE    IFGT 58
+     C                     WRITEMM4311D1
+     C                     ENDIF
+      *
+     C                     WRITEMM4311D2
+     C                     ENDIF
+      *
+     C                     MOVELMABRCA    WBRCA
+     C                     MOVELMACYCD    WCYCD
+     C                     MOVE MABKCD    WBKCD
+     C                     MOVE MADTYP    WDTYP
+     C                     MOVE MADLST    WDLST
+     C                     MOVE MACLAS    WCLAS                                               CDL038
+     C                     Z-ADDMADLNO    WDLNO
+      *
+     C           MACAMT    IFNE 0
+     C                     ADD  1         WCOUNT
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRBLNK - Blank Out Detail Fields                             *
+      *                                                               *
+      *  Called By: SRPRNT                                            *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRBLNK    BEGSR
+      *
+     C                     MOVE *BLANKS   RBKCD
+     C                     MOVE *BLANKS   RDTYP
+     C*********************MOVE *BLANKS   RDLST                                               CDL038
+     C                     MOVE *BLANKS   RDSTC                                               CDL038
+     C                     MOVE *BLANKS   RDLNO
+     C                     MOVE *BLANKS   RADLN
+     C                     MOVE *BLANKS   RCNUM
+     C                     MOVE *BLANKS   RDATE
+     C                     MOVE *BLANKS   RNDYP
+     C                     MOVE *BLANKS   RCAMT
+     C                     MOVE *BLANKS   RFTYP
+     C                     MOVE *BLANKS   RIRAT
+     C                     MOVE *BLANKS   RYLDC
+     C                     MOVE *ZEROS    RICBS
+     C                     MOVE *BLANKS   RDSCF
+     C                     MOVE *BLANKS   RNPVA
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  SRLOAD - Load Detail Line                                    *
+      *                                                               *
+      *  Called By: SRPRNT                                            *
+      *                                                               *
+      *  Calls: ZFRPED                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRLOAD    BEGSR
+      *
+     C                     MOVE MABKCD    RBKCD
+     C                     MOVE MADTYP    RDTYP
+     C*********************MOVE MADLST    RDLST                                               CDL038
+     C                     MOVELMADLST    RDSTC                                               CDL038
+     C                     MOVE MACLAS    RDSTC                                               CDL038
+     C                     MOVE MADLNO    RDLNO
+      *
+     C           MAADLN    IFNE 0
+     C                     MOVE MAADLN    RADLN
+     C                     ENDIF
+      *
+     C                     MOVE MACNUM    RCNUM
+     C                     MOVE MADATE    RDATE
+     C                     Z-ADDMAICBS    RICBS
+     C                     MOVE MAFTYP    RFTYP
+     C                     MOVE MAYLDC    RYLDC
+      *
+      ** Edit the Number of Days in Interest Period
+      *
+     C                     Z-ADDMANDYP    ZFLD15
+     C                     Z-ADD0         ZDECS
+     C                     MOVE 'C'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVELZOUT22    WTMP20 20
+     C                     MOVE WTMP20    RNDYP
+      *
+      ** Edit the Cash flow amount according to the number of
+      ** decimal places of the Currency, if currency is not blanks
+      *
+     C           MACYCD    IFNE *BLANKS
+     C           MAIOIN    IFEQ 'O'
+     C                     Z-SUBMACAMT    MACAMT
+     C                     ENDIF
+     C                     Z-ADDMACAMT    ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RCAMT                                               CDL038
+     C*********************MOVELZOUT22    RCAMT                                               CDL038
+     C                     ENDIF
+      *
+      ** Edit the NPV amount according to the number of
+      ** decimal places of the Currency, if currency is not blanks
+      *
+     C           MACYCD    IFNE *BLANKS
+     C           MAIOIN    IFEQ 'O'
+     C                     Z-SUBMANPVA    MANPVA
+     C                     ENDIF
+     C                     Z-ADDMANPVA    ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RNPVA                                               CDL038
+     C*********************MOVELZOUT22    RNPVA                                               CDL038
+     C                     ENDIF
+      *
+      ** Edit the Interest rate
+      ** Print Interest Rate only for Interest Amount Events
+      *
+     C           RFTYP     IFEQ 'MINT'
+     C           RFTYP     OREQ 'INTP'
+     C           RFTYP     OREQ 'RINT'
+     C           RFTYP     OREQ 'RMIN'
+     C           MAIRAT    MULT 10000000  ZFLD15
+     C                     Z-ADD7         ZDECS
+     C                     MOVE 'C'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT1     RIRAT
+     C                     ENDIF
+      *
+      ** Edit the Discount factor
+      *
+     C           MADSCF    MULT 1000000000ZFLD15
+     C                     Z-ADD9         ZDECS
+     C                     MOVE 'C'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT1     RDSCF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRAUDT - Print Cash Flow Audit Report                        *
+      *                                                               *
+      *  Called By: Main Processing, *PSSR                            *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR
+      *
+     C                     WRITEHEADAU
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+     C           WCOUNT    IFEQ *ZERO
+     C                     WRITENODTLS
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *INZSR - Program Initialisation Routine                      *
+      *                                                               *
+      *  Called By: Implicitly on program activation                  *
+      *                                                               *
+      *  Calls: *PSSR                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQ    5
+     C                     PARM           PBRNCH  3
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C                     MOVEL'MM4311'  DBPGM
+      *
+      ** Read RUNDAT for multi-branching indicator
+      *
+     C                     IN   RUNDAT
+     C           *NAMVAR   DEFN           RUNDAT 13
+      *
+      ** Access Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST  'POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Database Error
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVELPOPTN     DBKEY
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     Z-ADD1         DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+      ** Call access program for General Ledger details.
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*DBERR ' PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+      ** Database Error
+      *
+     C           PRTCD     IFNE *BLANK
+     C                     MOVEL'SDGELRPD'DBFILE
+     C                     Z-ADD2         DBASE
+     C                     MOVELPOPTN     DBKEY
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Set up Event Control Date. It is the lesser of either the
+      ** (Next Working Day - 1) or the Accrual Profit Date
+      *
+     C           BJDNWD    SUB  1         EVCD    50
+      *
+     C           BKAPDT    IFLT EVCD
+     C                     Z-ADDBKAPDT    EVCD
+     C                     ENDIF
+      *
+      ** Convert the event control date to DDMMMYY
+      *
+     C                     Z-ADDEVCD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    REVCD
+      *                                                                                       CAS009
+      ** Check if CAS009 is installed                                                         CAS009
+      *                                                                                       CAS009
+     C                     CALL 'AOSARDR0'                                                    CAS009
+     C                     PARM *BLANKS   PRTCD                                               CAS009
+     C                     PARM '*VERIFY' POPTN                                               CAS009
+     C                     PARM 'CAS009'  PSARD   6                                           CAS009
+     C           SCSARD    PARM SCSARD    DSFDY                                               CAS009
+      *                                                                                       CAS009
+     C           PRTCD     IFEQ *BLANKS                                                       CAS009
+     C                     MOVE 'Y'       CAS009  1                                           CAS009
+     C                     ELSE                                                               CAS009
+     C                     MOVE 'N'       CAS009                                              CAS009
+     C           PRTCD     IFNE '*NRF   '                                                     CAS009
+     C                     MOVE 'SCSARDPD'DBFILE                                              CAS009
+     C                     Z-ADD9         DBASE                                               CAS009
+     C                     MOVEL'CAS009'  DBKEY                                               CAS009
+     C                     EXSR *PSSR                                                         CAS009
+     C                     ENDIF                                                              CAS009
+     C                     ENDIF                                                              CAS009
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR - Program Exception Error Routine                      *
+      *                                                               *
+      *  Called By: *INZSR, SRPRNT                                    *
+      *                                                               *
+      *  Calls: SRAUDT                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+      *
+     C                     EXSR SRAUDT
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZFRPEDZ3
+** CPY@
+(c) Misys International Banking Systems Ltd. 2002
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

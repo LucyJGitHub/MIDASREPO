@@ -1,0 +1,95 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UT CPP for CHGOBJ')                             */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas     - Utilities Module                                */
+/*                                                                   */
+/*       UTC0010   - CCP for CHGOBJ command                          */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2011           */
+/*                                                                   */
+/*       Last Amend No. CUT008 *CREATE     Date 18Jan11              */
+/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUT008 - CRTOBJ rewrite.                                    */
+/*                Allow change of source member name to an object.   */
+/*                Source file, library need not to be specified and  */
+/*                default to be *SAME.                               */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM        PARM(&OBJANDLIB &OBJTYPE &NEWFILE &NEWLIB +
+                          &NEWMBR &SRCLSTCHG)
+ 
+             DCL        VAR(&OBJANDLIB) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&OBJTYPE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&NEWFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NEWLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NEWMBR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRCLSTCHG) TYPE(*CHAR) LEN(13)
+ 
+             DCL        VAR(&OBJ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OBJLIB) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&RODSRCF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RODSRCFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RODSRCMBR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTNMSGD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&RTNMSGDTA) TYPE(*CHAR) LEN(27)
+ 
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE(N)
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2011')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Extract variables from parameter. */
+             CHGVAR     VAR(&OBJ) VALUE(%SST(&OBJANDLIB 1 10))
+             CHGVAR     VAR(&OBJLIB) VALUE(%SST(&OBJANDLIB 11 10))
+ 
+/* Retrieve object description about where the object was created from. */
+             RTVOBJD    OBJ(&OBJLIB/&OBJ) OBJTYPE(&OBJTYPE) +
+                          SRCF(&RODSRCF) SRCFLIB(&RODSRCFLIB) +
+                          SRCMBR(&RODSRCMBR)
+ 
+/* Call program to run API. */
+             CALL       PGM(UT0010) PARM(&OBJANDLIB &OBJTYPE +
+                          &NEWFILE &NEWLIB &NEWMBR &SRCLSTCHG +
+                          &RODSRCF &RODSRCFLIB &RODSRCMBR &RTNMSGD +
+                          &RTNMSGDTA)
+             IF         COND(&RTNMSGD *NE ' ') THEN(DO)
+                SNDPGMMSG  MSGID(&RTNMSGD) MSGF(QCPFMSG) +
+                             MSGDTA(&RTNMSGDTA) MSGTYPE(*DIAG)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+             IF         COND(&RECURSIVE *EQ 'N') THEN(DO)
+                CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+RCVMSG:
+                RCVMSG     MSGTYPE(*DIAG) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                             MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                IF         COND(&MSGID *NE ' ') THEN(DO)
+                   SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                                MSGDTA(&MSGDTA) MSGTYPE(*DIAG)
+                   GOTO       CMDLBL(RCVMSG)
+                ENDDO
+                RCVMSG     MSGTYPE(*EXCP) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                             MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                             MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
+             ENDDO
+ 
+ENDPGM:
+             ENDPGM

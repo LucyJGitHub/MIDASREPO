@@ -1,0 +1,1154 @@
+     H        1
+     F*****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Lending advices - amendments')                *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                          *
+     F*                                                               *
+     F*  CG6038 - Midas Lending Advices - Amendments                  *
+     F*                                                               *
+     F*  Function:  This program extracts data for amendment advices. *
+     F*  ( COB )    This will be called  by CG6030 if the type of e-  *
+     F*             vent read from LF/SCUTX was amendment. This will  *
+     F*             extract UDC data for group set L07AM.             *
+     F*                                                               *
+     F*  Called By: CG6030 -  Midas Lending Advices - Driver          *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CLE134             Date 01Aug12               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 BUG9646            Date 20Dec05               *
+      *                 CSC022             Date 24Feb04               *
+      *                 CLE028             Date 27Jun02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CCG015             Date 09Aug01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 15May01               *
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 122226             Date 26Aug97               *
+      *                 CCG008 *CREATE     Date 30Oct95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  BUG9646- Changes in CGPACKE causes programs not to compile   *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s)              *
+      *           (Recompile)                                         *
+      *  CCG015 - Correspondence Manager Phase 1                      *
+      *  CSD006 - Recompiled over changed SDCURRPD.                   *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+     F*  122226 - Recompile due to changes to CUTX1HP + change length *
+     F*           of DSPARM.                                          *
+     F*  CCG008 - User Defined Correspondence - Lending               *
+     F*                                                               *
+     F*****************************************************************
+     FCLOAN   IF  E           K        DISK         KINFSR SRFILE
+     F            CLOANHHF                          KIGNORE
+     F            CLOANZ1F                          KIGNORE
+     F/TITLE FUNCTION OF INDICATORS
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N    O F    I N D I C A T O R S                *
+     F*                                                               *
+     F*  90   -    Record not foung on LF/CLOAN                       *
+     F*  99   -    General error indicator                            *
+     F*                                                               *
+     F*****************************************************************
+     F/TITLE SUBROUTINE INDEX
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E    I N D E X                             *
+     F*                                                               *
+     F*  Main routine                                                 *
+     F*  SRINIT  -  Initial Processing - On First Call                *
+     F*  SRINZ   -  Initialise Fields on Each Invocation              *
+     F*  SRMAIN  -  Main Processing                                   *
+     F*  SRDETL  -  Obtain Detail Information                         *
+     F*  L07AM   -  Process Lending Amendment Advices                 *
+     F*  LOANAM  -  Process Loan Amendment Details                    *
+     F*  LOANA   -  Process Loan Associated Details                   *
+     F*  SRADTA  -  Accumulate RDEs and Associated Data for output    *
+     F*  SRODTA  -  Output Accumulated Data to PF/CGUDTAPD            *
+     F*  SRBIND  -  Generate Binding Numbers                          *
+     F*  SRPATH  -  Generate Path String                              *
+     F*  SRRFMN  -  Reformat RDE Data                                 *
+     F*  SRDCDT  -  Determine Currency Details                        *
+     F*  SRGENR  -  Generate Reference Number                         *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E*****************************************************************
+     E/COPY CGCPYSRC,CGPACKE
+     E/COPY CGCPYSRC,SRERRE
+     E**  Number Arrays
+     E                    ##W        20  1
+     E                    ##NUMA     29  1
+     E*
+     E**  Array of Currencies accessed by program
+     E                    ##CY      100  3
+     E*
+     E**  Copyright array.
+     E                    ##CPY   1   1 80
+     I/EJECT
+     I*
+     ICLOANCLF
+     I** Rename fields of CLOANCL
+     I              RECI                            ##RECI
+     I              LNRF                            ##LNRF
+     I              PTYP                            ##PTYP
+     I              CNUM                            ##CNUM
+     I              BRCA                            ##BRCA
+     I              LTYP                            ##LTYP
+     I              SUTP                            ##SUTP
+     I              VDAT                            ##VDAT
+     I              FCUS                            ##FCUS
+     I              FTYP                            ##FTYP
+     I              FSEQ                            ##FSEQ
+     I              CCY                             ##CCY1
+     I              REPT                            ##REPT
+     I*
+     IDSPARM    E DSCUTX1HP
+     I**  External DS for parameter passed from CG6030
+     I*
+     I**  Look-up string for RDE definition Array
+     I*
+     I##SDS       DS
+     I**********                              15120 ##S                                      BUG9646
+     I                                        15632 ##S                                      BUG9646
+     I*
+     I#@SDS       DS
+     I                                     51205120 #@S
+     I*
+     I**  Packed data string.
+     I*
+     I            DS
+     I                                        1  20 ##W
+     I                                        1  200##WNUM
+     I*
+     I**  Number Field
+     I*
+     I            DS
+     I                                        1   8 ##ITMA
+     I                                        1   80##ITEM
+     I*
+     I** Used to convert item reference from character to numeric
+     I*
+     I            DS
+     I                                        1   6 ##NCIT
+     I                                        1   3 NMCY
+     I                                        4   6 SITP
+     I            DS
+     I                                        1   5 ##CCCC
+     I                                        1   3 ##CCY
+     I                                        4   5 ##CCD
+     I*
+     I**  For error reporting
+     I*
+     I*
+     I**  UDC Details for call to CG6001
+     I*
+     IP1PARM      DS                            256
+     I* Output Sequence
+     I                                        1   90P1OSEQ
+     I* UDC item number
+     I                                       10  170P1ITEM
+     I* This bind level
+     I                                       18  250P1TBIN
+     I* Previous bind level
+     I                                       26  330P1PBIN
+     I*
+     I**  Loan details Parameters for call to CG6001
+     I*
+     IP3PARM      DS                            256
+     I**  Loan Reference
+     I                                        1   6 P3LNRF
+     I**  Cancel/Amend Field
+     I                                        7   7 P3CNAM
+     I*
+     IP4PARM      DS                            256
+     I**  Facility Customer Number
+     I**********                              1   60P4CNUM                                    CSD027
+     I                                        1   6 P4CNUM                                    CSD027
+     I**  Facility Type
+     I                                        7   90P4CNAM
+     I**  Facility Number
+     I                                       10  110P4FCNO
+     I*
+     I*----------------------------------------------------------------
+     I*Named constants
+     I*
+     I              'LOAN AMEND'          C         W#PTYP
+     I              'BASIC     '          C         W#PSTY
+     I*----------------------------------------------------------------
+     I##UDCR    E DSCGUDCRPD
+     I** External DS for incomplete reference
+     I*
+     ISDBANK    E DSSDBANKPD
+     I**  External DS for Bank details
+     I*
+     ISDCURR    E DSSDCURRPD                101
+     I**  External DS for currency details
+     I/COPY WNCPYSRC,CG6038I001
+     I*
+     IDSSDY     E DSDSSDY
+     I**  Second DS for access programs, long data structure
+     I*
+     IW0FMT     E DSCGUDTAPD
+     I**  Record format of PF/CGUDTAPD for use as a parameter
+     I*
+     I/COPY CGCPYSRC,CGPACKI
+     I*
+     ICPYR        DS
+     I**  Data Structure for Compilation - Copyright Insertion
+     I                                        1  80 ##CPY
+     I/COPY CGCPYSRC,SRERRI
+     I**  DS to store subroutine specific data.
+     I**  - Saved Path
+     I##PATH      DS                         20
+     I                                        1   6 ##GRPS
+     I*
+     I##BIND      DS                         20
+     I I            1                         1   60##PBIN
+     I I            1                         7  120##TBIN
+     I*
+     I            DS
+     I I            1                         1   60#@BIND
+     I*
+     I#PDS        DS
+     I I            0                         1   30P1
+     I                                        4   60P2
+     I                                        7   90P3
+     I                                       10  120P4
+     I                                       13  150P5
+     C/SPACE 5
+     C*****************************************************************
+     C* Process     :  MAINLINE                                       *
+     C* Function    :  Mainline processing                            *
+     C*                                                               *
+     C* Called by   :  None                                           *
+     C* Calls       :  SRINIT - Initial Processing - On First Call    *
+     C*                SRINZ  - Initialise Fields on Each Invocation  *
+     C*                SRMAIN - Main Processing                       *
+     C*****************************************************************
+     C*
+     C**  Parameter list for current program invocation.
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN
+     C                     PARM           W0CMT   3
+     C                     PARM           ##COPD  1
+     C***********          PARM           DSPARM100                       122226
+     C                     PARM           DSPARM                          122226
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+     C*
+     C**  Initial processing - Once Only
+     C*
+     C           ##INIT    IFEQ *BLANK
+     C                     EXSR SRINIT
+     C                     MOVE 'Y'       ##INIT  1
+     C                     ENDIF
+     C*
+     C** Initialisation processing
+     C*
+     C                     EXSR SRINZ
+     C*
+     C** Main processing
+     C*
+     C                     EXSR SRMAIN
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C**  Terminate program
+     C*
+     C                     RETRN
+     C*****************************************************************
+     C/SPACE 5
+     C*****************************************************************
+     C* Subroutine  :  SRMAIN                                         *
+     C* Function    :  Main processing                                *
+     C*                                                               *
+     C* Called by   :  Mainline                                       *
+     C* Calls       :  SRDETL - Obtain Detail Information             *
+     C*                SRGENR - Generate reference number by writing  *
+     C*                         to PF/CGUDCRPD                        *
+     C*                L07AM  - Process Lending Amendment Advices     *
+     C*****************************************************************
+     C           SRMAIN    BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRMAIN'  @STK,Q
+     C*
+     C                     EXSR SRDETL
+     C*
+     C**  Generate reference number by writing to PF/CGUDCRPD
+     C**  If no confirmation to be produced, then bypass
+     C*
+     C                     MOVE 'N'       ##COPD
+     C/COPY WNCPYSRC,CG6038C004
+     C                     EXSR SRGENR
+     C           ##COPD    CABEQ'N'       EXMAIN
+     C*
+     C** Extract
+     C*
+     C                     EXSR L07AM
+     C*
+     C           EXMAIN    TAG
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+     C*****************************************************************
+     C*  Subroutine  :  SRDETL                                        *
+     C*  Function    :  Process: Obtain detail information            *
+     C*                                                               *
+     C*  Called by   :  SRMAIN - Main Processing                      *
+     C*  Calls       :  SRERR  - Database Error                       *
+     C*****************************************************************
+     C           SRDETL    BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRDETL'  @STK,Q
+     C*
+     C           CLOANK    KLIST
+     C                     KFLD           LNRF
+     C                     KFLD           RCDT
+     C*
+     C                     MOVEL'A'       RCDT
+     C*
+     C           CLOANK    CHAINCLOAN                90
+     C*
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'CLOAN   'W0FILE           ***************
+     C                     MOVELLNRF      W0KEY            * DB ERROR 03 *
+     C                     Z-ADD03        W0ERNB           ***************
+     C                     MOVEL'MEM5004' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+     C*
+     C           EXDETL    TAG
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+     C*****************************************************************
+     C* Subroutine  :  L07AM                                          *
+     C* Function    :  Process: Lending Amendment Advices             *
+     C*                                                               *
+     C* Called by   :  SRMAIN - Main Processing                       *
+     C* Calls       :  SRPATH - Generate Path String                  *
+     C*                LOANAM - Process Loan Amendment Details        *
+     C*                LOANA  - Process Loan Associated Details       *
+     C*****************************************************************
+     C           L07AM     BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'L07AM '  @STK,Q
+     C*
+     C                     ADD  1         P1
+     C           P1        OCUR ##PATH
+     C                     MOVEL'l07AM '  ##GRPS    P
+     C*
+     C                     EXSR SRPATH
+      *                                                                                       CCG015
+     C                     EXSR PSHGRS                                                        CCG015
+     C*
+     C                     EXSR LOANAM
+     C*
+     C                     EXSR LOANA
+     C*
+     C**  Decrement Path DS index
+     C*
+     C           P1        OCUR ##PATH
+     C                     CLEAR##GRPS
+     C                     SUB  1         P1
+      *                                                                                       CCG015
+     C                     EXSR POPGRS                                                        CCG015
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+     C*****************************************************************
+     C* Subroutine  :  LOANAM                                         *
+     C* Function    :  Process: Loan Amendment details                *
+     C*                                                               *
+     C* Called by   :  L07AM - Process Lending Amendment Advices      *
+     C* Calls       :  SRPATH - Generate Path String                  *
+     C*                SRADTA - Accumulate RDEs and Associated Data   *
+     C*                SRODTA - Output Accumulated Data to            *
+     C*                          PF/CGUDTAPD                          *
+     C*****************************************************************
+     C           LOANAM    BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'LOANAM'  @STK,Q
+     C*
+     C                     ADD  1         P1
+     C           P1        OCUR ##PATH
+     C                     MOVEL'LOANAM'  ##GRPS    P
+     C*
+     C                     EXSR SRPATH
+      *                                                                                       CCG015
+     C                     EXSR PSHGRS                                                        CCG015
+     C*
+     C                     Z-ADD0         R1      30
+     C*
+     C** Amendment Type
+     C*
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE 'PE'      #@RDE
+     C                     MOVEL'AMEND TY'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELAMTP      R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C*
+     C** Loan Reference
+     C*
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'LOAN REF'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELLNRF      R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C*
+     C** Run date; production time
+     C*
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'RUNDAT  '#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELBJRDNB    ##DATA
+     C                     MOVEL'Date  '  ##RDEC
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C/COPY WNCPYSRC,CG6038C003
+     C*
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+     C*
+     C**  Decrement Path DS index
+     C*
+     C           P1        OCUR ##PATH
+     C                     CLEAR##GRPS
+     C                     SUB  1         P1
+      *                                                                                       CCG015
+     C                     EXSR POPGRS                                                        CCG015
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*  Subroutine  :  LOANA                                         *
+     C*  Function    :  Process: Loan Associated Details              *
+     C*                                                               *
+     C*  Called by   :  L07AM  - Process Lending Amendment Advices    *
+     C*  Calls       :  CG6001 - General Loan Details                 *
+     C*****************************************************************
+     C           LOANA     BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'LOANA '  @STK,Q
+     C*
+     C                     EXSR SRPATH
+     C*
+     C                     MOVELS#PATH    P2PARM
+     C                     Z-ADD##OSEQ    P1OSEQ
+     C                     Z-ADD##ITEM    P1ITEM
+     C                     Z-ADD##TBIN    P1TBIN
+     C                     Z-ADD##PBIN    P1PBIN
+     C*
+     C**  Set up data.
+     C*
+     C                     CLEARP4PARM
+     C                     MOVE LNRF      P3LNRF
+     C                     MOVE *BLANKS   P3CNAM
+     C                     CALL 'CG6001'
+     C                     PARM *BLANKS   W0RTN   7
+     C                     PARM           W0CMT   3
+     C                     PARM           P1PARM           UDC Details
+     C                     PARM           P2PARM140        Path Details
+     C                     PARM           P3PARM           Loan Details
+     C                     PARM           P4PARM           Facility Details
+     C                     PARM           ##AUTO  1
+     C                     PARM           ##REFR                                              CCG015
+     C                     PARM           P@ICR                                               CCG015
+     C                     PARM 'N'       ##MAST                                              CCG015
+     C*
+     C**  Reset Sequence number.
+     C*
+     C                     Z-ADDP1OSEQ    ##OSEQ
+     C*
+     C           EXXPAY    TAG
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C/COPY WNCPYSRC,CG6038C005
+     C*****************************************************************
+     C/SPACE 5
+     C*****************************************************************
+     C* Subroutine  :  SRINZ                                          *
+     C* Function    :  Initialise Fields on Program Invocation        *
+     C*                                                               *
+     C* Called by   :  Mainline                                       *
+     C* Calls       :  None                                           *
+     C*****************************************************************
+     C           SRINZ     BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRINZ '  @STK,Q
+     C*
+     C**  Initialise work fields
+     C*
+     C                     Z-ADD*ZEROS    ##W050  50
+     C                     Z-ADD*ZEROS    ##W150 150
+     C                     Z-ADD*ZEROS    ##W157 157
+     C                     Z-ADD*ZEROS    #1      60
+     C                     Z-ADD*ZEROS    #2      60
+     C                     Z-ADD*ZEROS    #3      60
+     C                     MOVE *BLANKS   S#PATH256
+     C           *LIKE     DEFN DEOSEQ    ##OSEQ
+     C*
+     C**  Initialise output sequence (to CGUDTAPD)
+     C*
+     C                     Z-ADD*ZEROS    ##OSEQ
+     C*
+     C** DJU Additions for CG4999 1st version **
+     C*
+     C                     MOVE *BLANKS   #@RDE  10
+     C           *LIKE     DEFN ##TBIN    #@TBIN
+     C*
+     C           1         OCUR ##BIND
+     C                     RESET##BIND
+     C                     RESET#@BIND
+     C                     RESET#PDS
+      *                                                                                       CCG015
+      ** Initialise XML increment                                                             CCG015
+      *                                                                                       CCG015
+     C                     EXSR INIXML                                                        CCG015
+     C*
+     C           EXINZ     TAG
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+     C*****************************************************************
+     C* Subroutine  :  SRINIT                                         *
+     C* Function    :  Initial processing - First Call Only           *
+     C*                                                               *
+     C* Called by   :  Mainline                                       *
+     C* Calls       :  SRERR  - Report Error and Close Down Program   *
+     C*                SRDCDT - Determine Currency Details            *
+     C*****************************************************************
+     C           SRINIT    BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRINIT'  @STK,Q
+     C/COPY WNCPYSRC,CG6038C001
+     C*
+     C** Call access program for Bank details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM '*FIRST  '##OPTN  7
+     C           SDBANK    PARM SDBANK    DSSDY
+     C*
+     C           ##RTCD    IFNE *BLANK
+     C*
+     C** Database error
+     C*
+     C                     MOVEL'AOBANKR0'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD01        W0ERNB           * DB ERROR 01 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+     C*
+     C           BJDFIN    COMP 'M'                      98MMDDYY, 98 ON
+     C*
+     C**   Determine Number of decimal places - Base currency
+     C*
+     C                     MOVELBJCYCD    ##CCY
+     C                     EXSR SRDCDT
+     C                     Z-ADDA6NBDP    BASCDP  10
+      *                                                                                       CCG015
+      ** Access SAR details file to determine if CCG015 is installed.                         CCG015
+      *                                                                                       CCG015
+     C                     MOVEL'N'       CCG015  1                                           CCG015
+      *                                                                                       CCG015
+     C                     CALL 'AOSARDR0'                                                    CCG015
+     C                     PARM '       ' ##RTCD                                              CCG015
+     C                     PARM '*VERIFY' ##OPTN                                              CCG015
+     C                     PARM 'CCG015'  ##SARD  6                                           CCG015
+      *                                                                                       CCG015
+      ** Database Error                                                                       CCG015
+      *                                                                                       CCG015
+     C           ##RTCD    IFNE *BLANK                                                        CCG015
+     C           ##RTCD    ANDNE'*NRF   '                                                     CCG015
+     C                     MOVEL'SCSARDPD'W0FILE                                              CCG015
+     C                     MOVEL'*CALL'   W0KEY                                               CCG015
+     C                     Z-ADD07        W0ERNB                                              CCG015
+     C                     MOVEL'MEM5003' W0MSGD                                              CCG015
+     C                     MOVEL'MIDAS  ' W0MSGF                                              CCG015
+     C                     EXSR SRERR                                                         CCG015
+     C                     ENDIF                                                              CCG015
+      *                                                                                       CCG015
+     C           ##RTCD    IFEQ *BLANK                                                        CCG015
+     C                     MOVEL'Y'       CCG015                                              CCG015
+     C                     ENDIF                                                              CCG015
+     C*
+     C           EXINIT    TAG
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+     C*****************************************************************
+     C* Subroutine  :  SRADTA                                         *
+     C* Function    :  Accumulate RDEs and associated data for output *
+     C*                                                               *
+     C* Called by   :  LOANAM - Process Loan Amendment Details        *
+     C* Calls       :  CG3999 - Format and Pack Data                  *
+     C*                SRRFMN - Reformat RDE Data                     *
+     C*                SRERR  - Database Error                        *
+     C*****************************************************************
+     C           SRADTA    BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRADTA'  @STK,Q
+     C*
+     C**  Reformat RDE data
+     C*
+     C                     EXSR SRRFMN
+     C*
+     C**  Pack RDEs and associated data into data string
+     C*
+     C                     CLEAR##SDS
+      *                                                                                       CCG015
+     C           CCG015    IFEQ 'Y'                                                           CCG015
+     C                     MOVE '*NEWARR 'W0ACT                                               CCG015
+     C                     MOVELS#PATH    W0SPAT                                              CCG015
+     C                     ELSE                                                               CCG015
+     C                     MOVE '*PACK   'W0ACT                                               CCG015
+     C                     MOVEL*BLANKS   W0SPAT                                              CCG015
+     C                     ENDIF                                                              CCG015
+      *                                                                                       CCG015
+     C                     CALL 'CG3999'
+     C                     PARM *BLANK    ##RTCD
+     C**********           PARM '*PACK   'W0ACT                                               CCG015
+     C                     PARM           W0ACT                                               CCG015
+     C                     PARM           ##R
+     C                     PARM           ##D
+     C                     PARM           ##S
+     C                     PARM           W0SPAT 70                                           CCG015
+     C                     PARM           ##RN                                                CCG015
+     C                     PARM           ##DN                                                CCG015
+     C                     PARM           ##FM                                                CCG015
+     C*
+     C**  Database error
+     C*
+     C           ##RTCD    IFNE *BLANK
+     C*
+     C                     MOVEL'CG3999  'W0FILE           ***************
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 04 *
+     C                     Z-ADD04        W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *                                                                                       CCG015
+      ** Write a XML record for RDE                                                           CCG015
+      *                                                                                       CCG015
+     C                     EXSR WRTRDE                                                        CCG015
+     C*
+     C**  Append Data from pack routine.
+     C*
+     C           #@SDS     CAT  ##SDS:0   #@SDS
+     C*
+     C                     MOVEL*BLANK    ##R
+     C                     MOVEL*BLANK    ##D
+     C                     MOVEL*BLANK    ##S
+     C*
+     C           EXADTA    TAG
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+     C*****************************************************************
+     C* Subroutine  :  SRODTA                                         *
+     C* Function    :  Output Accumulated data to PF/CGUDTAPD         *
+     C*                                                               *
+     C* Called by   :  LOANRO - Process Loan Amendment Details        *
+     C* Calls       :  CG9020 - Output Data to CGUDTAPD               *
+     C*                SRERR  - Database Error                        *
+     C*****************************************************************
+     C           SRODTA    BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRODTA'  @STK,Q
+     C*
+     C**  Initialise Write Format Parameter.
+     C*
+     C                     CLEARW0FMT
+     C*
+     C**  Set up Control Information.
+     C*
+     C                     Z-ADD##ITEM    DEITEM
+     C                     ADD  1         ##OSEQ
+     C                     Z-ADD##OSEQ    DEOSEQ
+     C                     Z-ADD##PBIN    DEPBIN
+     C                     Z-ADD##TBIN    DETBIN
+     C                     MOVE 'FR'      DEFSLI
+     C                     MOVE *BLANKS   W0PATH
+     C                     MOVELS#PATH    W0PATH
+     C*
+     C**  Append Data from pack routine.
+     C*
+     C           W0FMT     CAT  #@SDS:0   W0FMT
+     C*
+     C**  Output PF/CGUDTAPD Record.
+     C*
+     C           CCG015    IFEQ 'N'                                                           CCG015
+     C                     CALL 'CG9020'
+     C                     PARM *BLANK    ##RTCD
+     C                     PARM '*WRITE  'W0ACT
+     C                     PARM           W0PATH256
+     C                     PARM           W0FMT
+     C                     PARM *BLANK    W0TITL  7
+     C                     PARM *BLANK    W0ULIN  7
+     C                     PARM           W0CMT
+     C*
+     C**  Database error
+     C*
+     C           ##RTCD    IFNE *BLANK
+     C*
+     C                     MOVEL'CG9020  'W0FILE           ***************
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 05 *
+     C                     Z-ADD05        W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C                     ENDIF                                                              CCG015
+     C*
+     C                     CLEAR#@SDS
+     C*
+     C           EXODTA    TAG
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+     C*****************************************************************
+     C* Subroutine  :  SRBIND                                         *
+     C* Function    :  Generate Binding numbers                       *
+     C*                                                               *
+     C* Called by   :  All Repeating Group Set Subroutines            *
+     C* Calls       :  None                                           *
+     C*****************************************************************
+     C           SRBIND    BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRBIND'  @STK,Q
+     C*
+     C           P1        SUB  1         P2
+     C           P2        OCUR ##BIND
+     C*
+     C                     Z-ADD##TBIN    #@TBIN
+     C           P1        OCUR ##BIND
+     C                     Z-ADD#@TBIN    ##PBIN
+     C*
+     C                     ADD  1         #@BIND
+     C                     Z-ADD#@BIND    ##TBIN
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+     C*****************************************************************
+     C* Subroutine  :  SRPATH                                         *
+     C* Function    :  Generate Path String /GS1/GS2...               *
+     C*                                                               *
+     C* Called by   :  L07AM  - Process Lending Amendment Advices     *
+     C*                LOANAM - Process Loan Amendment Details        *
+     C* Calls       :  None                                           *
+     C*****************************************************************
+     C           SRPATH    BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRPATH'  @STK,Q
+     C*
+     C                     CLEARS#PATH
+     C*
+     C                     DO   P1        P2
+     C           P2        OCUR ##PATH
+     C           S#PATH    CAT  '\':0     S#PATH
+     C           S#PATH    CAT  ##GRPS:0  S#PATH
+     C                     END
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+     C*****************************************************************
+     C* Subroutine  :  SRRFMN                                         *
+     C* Function    :  Reformat RDE data                              *
+     C*                                                               *
+     C* Called by   :  SRADTA - Accumulate RDEs and associated        *
+     C*                         data for output                       *
+     C* Calls       :  None                                           *
+     C*****************************************************************
+     C           SRRFMN    BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRRFMN'  @STK,Q
+     C*
+     C** Loop through RDE's and data
+     C*
+     C                     Z-ADD0         #1
+     C           #1        DOUEQ20
+     C                     ADD  1         #1
+     C                     MOVEL##R,#1    R#DEFN
+     C                     MOVEL##D,#1    R#DATA
+     C*
+     C** If data present and RDE is edited
+     C*
+     C           R#DATA    IFNE *BLANK
+     C           ##RDEC    ANDNE*BLANK
+     C*
+     C** Reformat Amount
+     C*
+     C                     Z-ADD1         #2
+     C           *BLANK    LOKUP##NUMA,#2                99*
+     C                     Z-ADD20        #3
+     C                     Z-ADD0         ##WNUM
+     C           #2        DOWGT1
+     C           #2        ANDLE20
+     C           #3        ANDGT1
+     C                     SUB  1         #2
+     C                     MOVEL##NUMA,#2 ##W,#3
+     C                     SUB  1         #3
+     C                     ENDDO
+     C*
+     C** Sign the amount
+     C*
+     C           ##SIGN    IFEQ '-'
+     C                     Z-SUB##WNUM    ##NUMB
+     C                     ELSE
+     C                     Z-ADD##WNUM    ##NUMB
+     C                     END
+     C*
+     C** Default Edit Type
+     C*
+     C           ##EDTT    IFEQ *BLANK
+     C                     MOVEL##RDET    ##EDTT
+     C                     END
+     C*
+     C** Default Decimal Places
+     C*
+     C           ##DCPA    IFEQ *BLANK
+     C                     MOVEL##RDED    ##DCPA
+     C                     END
+     C*
+     C** New RDE data
+     C*
+     C                     MOVELR#DATA    ##D,#1
+     C                     ENDIF
+     C                     ENDDO
+     C*
+     C           EXRFMN    TAG
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+     C*****************************************************************
+     C* Subroutine  :  SRDCDT                                         *
+     C* Function    :  Determine Currency Details                     *
+     C*                                                               *
+     C* Called by   :  SRINIT - Initial Processing - On First Call    *
+     C* Calls       :  SRERR  - Database Error                        *
+     C*****************************************************************
+     C           SRDCDT    BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRDCDT'  @STK,Q
+     C*
+     C**  Access array of Currency Details already loaded
+     C*
+     C                     Z-ADD1         C       30
+     C           ##CCY     LOKUP##CY,C                   99
+     C*
+     C**  If no match is found determine the next free space in the
+     C**  loaded currency array.
+     C*
+     C           *IN99     IFEQ *OFF
+     C                     Z-ADD1         C
+     C           *BLANK    LOKUP##CY,C                   99
+     C*
+     C**  If no space is left, set the Currency Data data structure to
+     C**  the 101st occurrence so that when the new details are
+     C**  retrieved no existing details are overwritten.
+     C*
+     C           *IN99     IFEQ *OFF
+     C           101       OCUR SDCURR
+     C*
+     C**  If a space is found, set up the new currency into the array
+     C**  and position the Currency Data data structure on the
+     C**  occurrence matching the array index.
+     C*
+     C                     ELSE
+     C                     MOVE ##CCY     ##CY,C
+     C           C         OCUR SDCURR
+     C                     ENDIF
+     C*
+     C**  Retrieve the currency details.
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   ##RTCD           B:Return Cd
+     C                     PARM '*KEY'    ##OPTN           I:Option
+     C                     PARM ##CCY     ##CCYP  3        I:Currency Code
+     C           SDCURR    PARM *BLANK    DSSDY            O:Format
+     C*
+     C**  Database Error
+     C*
+     C           ##RTCD    IFNE *BLANK
+     C                     MOVEL'SDCURRPD'W0FILE
+     C                     MOVEL##CCY     W0KEY            ***************
+     C                     Z-ADD02        W0ERNB           * DB ERROR 02 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C*
+     C**  If the currency has been retrieved earlier, position the
+     C**  Currency Data data structure on the relevant occurrence.
+     C*
+     C                     ELSE
+     C           C         OCUR SDCURR
+     C                     ENDIF
+     C/COPY WNCPYSRC,CG6038C002
+     C*
+     C           EXDCDT    TAG
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+     C*****************************************************************
+     C* Subroutine  :  SRGENR                                         *
+     C* Function    :  Generate reference number                      *
+     C*                by writing to PF/CGUDCRPD                      *
+     C*                                                               *
+     C* Called by   :  SRMAIN - Main Processing                       *
+     C* Calls       :  CG9010 - Create reference record               *
+     C*****************************************************************
+     C           SRGENR    BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRGENR'  @STK,Q
+     C*
+     C**  Generate reference number and check if further processing
+     C**  required. Set up all available information in the record
+     C**  format before calling.
+     C*
+     C                     CLEAR##UDCR
+     C*
+     C** Booking/Main Branch (Mandatory)
+     C*
+     C                     MOVELBRCA      DRBRCA
+     C*
+     C**  Originating Branch (Optional)
+     C*
+     C                     MOVELORBR      DRORBR
+     C*
+     C** Module identifier (Mandatory)
+     C*
+     C                     MOVEL'LE'      DRMODI
+     C*
+     C** Midas Transaction Number (Mandatory)
+     C*
+     C                     MOVELLNRF      DRMTRN
+     C*
+     C                     MOVELW#PTYP    DRPTYP           * print type
+     C                     MOVELW#PSTY    DRPSTP           * print s/type
+     C*
+     C** Auto Transmission indicator
+     C*
+     C                     MOVEL'N'       DRATRM
+     C*
+     C** Customer Number (Mandatory)
+     C*
+     C                     MOVELCNUM      ##CUST
+     C*
+     C                     CALL 'CG9010'
+     C                     PARM           ##RTCD  7
+     C                     PARM '*GEN'    ##MODE 10
+     C                     PARM W0CMT     ##CMT   3
+     C                     PARM           ##CUST  6
+     C                     PARM           ##UDCR
+     C                     PARM           ##ITMA  8
+     C*
+     C**  Blank return code implies generate correspondence.
+     C**  CGD1270 => no error, but suppress output for this transaction.
+     C*
+     C           ##RTCD    IFEQ *BLANK
+     C*
+     C                     MOVE 'Y'       ##COPD
+      *                                                                                       CCG015
+      ** Pass reference as printtype:subtype                                                  CCG015
+      *                                                                                       CCG015
+     C           DRPTYP    CAT  ':':0     COLON  11 P                                         CCG015
+     C           COLON     CAT  DRPSTP:0  ##REFR    P                                         CCG015
+     C                     EXSR WRAPRF                                                        CCG015
+     C*
+     C                     ELSE
+     C*
+     C           ##RTCD    IFNE 'CGD1270'
+     C                     MOVEL'CG9010  'W0FILE
+     C                     MOVEL##RTCD    W0KEY            ***************
+     C                     Z-ADD06        W0ERNB           * DB ERROR 06 *
+     C                     MOVEL'CGD1286' W0MSGD           ***************
+     C                     MOVEL'CGUSRMSG'W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C           EXGENR    TAG
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+     C/COPY CGCPYSRC,SRERRPSSR
+     C/SPACE 5
+     C/COPY CGCPYSRC,SRERRC
+     C/SPACE 5                                                                                CCG015
+     C/COPY CGCPYSRC,CGNWEX                                                                   CCG015
+     C/SPACE 5
+** ##CPY  **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

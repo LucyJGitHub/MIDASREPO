@@ -1,0 +1,105 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing Module                                      */
+/*                                                                             */
+/*       V_MLCASHT - Midas GP Global Cashflows                                 */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2004                     */
+/*                                                                             */
+/*       Last Amend No. CLE134             Date 01Aug12                        */
+/*       Prev Amend No. CSF011             Date 12Sep11                        */
+/*                      CER059             Date 19Jul10                        */
+/*                      CER043             Date 02Jun08                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      BUG11273           Date 28Apr06                        */
+/*                      CSD027             Date 18Dec05                        */
+/*                      CSW037A            Date 02May05                        */
+/*                      CSD025             Date 11Jan05                        */
+/*                      BUG5404            Date 18Jan05                        */
+/*                      CSW037             Date 15Dec04                        */
+/*                      CSW036             Date 15Dec04                        */
+/*                      BUG5221            Date 13Dec04                        */
+/*                      BUG5310            Date 22Dec04                        */
+/*                      BUG3860            Date 19Aug04                        */
+/*                      CLE025             Date 20Oct03                        */
+/*                      CGP001  *CREATE    Date 05Mar04                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       CLE134 - Past Due Call Loan Processing (Recompile)                    */
+/*       CSF011 - Customer Name on Inputs (Recompile)                          */
+/*       CER059 - German Feature Upgrade to Delhi                              */
+/*       CER043 - German Features LF041-00 New Fields and Defaulting           */
+/*                (Recompile)                                                  */
+/*       BUG11273 - Attempt to write duplicate record in GPGLCUSL.             */
+/*                  Add GPGLCUSL.CGBRCD as new key(unique). (Recompile)        */
+/*       CSD027 - Conversion Of Customer Number to Alpha                       */
+/*       CSW037A- Additional Field extended to 40 chars (recompile)            */
+/*       CSD025 - Customer De-Activation                                       */
+/*       BUG5404- Local Cust Shortname added to GPGLCUSL (Recompile)           */
+/*       CSW037 - Additional Field Data on MT300/MT320                         */
+/*       CSW036 - Dual SWIFT BIC held on Client Details                        */
+/*       BUG5221 - Recompile                                                   */
+/*       BUG5310 - SQL Performance                                             */
+/*       BUG3860 - SQL Performance                                             */
+/*       CLE025 - Credit Lines (Recompile)                                     */
+/*       CGP001 - Global Processing                                            */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+  SELECT C_ID, C_DATE, C_AMNT AS C_AMNTNDP,                                     : /*BUG5310*/
+  C_AMTDEC AS C_AMNT,                                                           : /*BUG5310*/
+  C_CCY, C_IO,C_SETB, C_NTRF,                                                   : /*BUG5310*/
+  CASE C_NTSC                                                                   : /*BUG5310*/
+      WHEN 0 THEN ''                                                            : /*BUG5310*/
+      ELSE C_NTCA                                                               : /*BUG5310*/
+  END AS C_NTSC,                                                                : /*BUG5310*/
+  CASE                                                                          : /*BUG5310*/
+      WHEN CUSTNET.CGGLOB IS NULL THEN ''                                       : /*BUG5310*/
+      ELSE CUSTNET.CGGLOB                                                       : /*BUG5310*/
+  END AS C_NTSCG,                                                               : /*BUG5310*/
+  CUSTRISK.CGGLOB AS CFCUST,                                                    : /*BUG5310*/
+  C_ZONE AS CFZONE,                                                             : /*BUG5310*/
+  C_MOD AS CFMOD,                                                               : /*BUG5310*/
+  C_TRTP AS CFTRTP,                                                             : /*BUG5310*/
+  C_TRST AS CFTRST                                                              : /*BUG5310*/
+  FROM GPCASHPD                                                                 : /*BUG5310*/
+  INNER JOIN GPGLCUSL CUSTRISK ON  C_RCSA  = CUSTRISK.CGCUST                    : /*BUG5310*/
+  AND C_ZONE  = CUSTRISK.CGZONE                                                 : /*BUG5310*/
+  LEFT OUTER JOIN                                                               : /*BUG5310*/
+  GPGLCUSL CUSTNET                                                              : /*BUG5310*/
+  ON C_NTCA = CUSTNET.CGCUST AND C_ZONE = CUSTNET.CGZONE;                       : /*BUG5310*/
+**SELECT************************************************************************: /*BUG5310*/
+/*C_ID,*C_DATE,*****************************************************************:BUG5310
+/*C_AMNT*AS*C_AMNTNDP,**********************************************************:BUG5310
+/*(C_AMNT/10****GCNBDP)*AS*C_AMNT,**********************************************:BUG5310
+/*C_CCY,*C_IO,C_SETB,***********************************************************:BUG5310
+/*C_NTRF,***********************************************************************:BUG5310
+/*CASE C_NTSC*******************************************************************:BUG5310
+/*****WHEN*0*THEN*''************************************************************:BUG5310
+/*****ELSE*DIGITS(C_NTSC)*******************************************************:BUG5310
+/*END*AS*C_NTSC,****************************************************************:BUG5310
+/*CASE**************************************************************************:BUG5310
+/******WHEN*CUSTX.CUGCUS*IS*NULL*THEN*''****************************************:BUG5310
+/******ELSE*CUSTX.CUGCUS********************************************************:BUG5310
+/*END*AS*C_NTSCG****************************************************************:BUG5310
+/*******************************************************************************:BUG5310
+/*FROM*GPCASHPD*INNER*JOIN******************************************************:BUG5310
+/*GPTRAPPD*ON*C_ID*=*T_ID*******************************************************:BUG5310
+/*INNER*JOIN*GPCURRPD*ON********************************************************:BUG5310
+/*C_CCY*=*GCCYCD****************************************************************:BUG5310
+/*LEFT*OUTER*JOIN*V_MLCUSTX*CUSTX***********************************************:BUG5310
+/*ON*DIGITS(C_NTSC)**=*CUSTX.CUCUST*********************************************:BUG3860
+/*ON*C_NTCA*=*CUSTX.CUCUST******************************************************:BUG3860 BUG5310
+/*AND*T_ZONE*=*CUSTX.CUZONE;****************************************************:BUG5310
+                                                                                :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas GP Global Cashflows                         ';                     :
+                                                                                :

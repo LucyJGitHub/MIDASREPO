@@ -1,0 +1,1484 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Balance Sheet Summary Report')                *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE4607  - PRINT NEW REPORT BALANCE SHEET SUMMARY REPORT      *
+      *                                                               *
+      *  Called by: SEC4606  - Unrealised Profit and Loss             *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *                                                               *
+      *  Last Amend No. 226449             Date 24Jun15               *
+      *  Prev Amend No. MD034776           Date 09Jul15               *
+      *                 AR1067108          Date 11Dec12               *
+      *                 AR1001183A         Date 20Nov12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CPK024             Date 12Apr06               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 211407             Date 07Jan03               *
+      *                 208241             Date 21Aug02               *
+      *                 207543             Date 17JUL02               *
+      *                 194370             Date 12Jul01               *
+      *                 180056             Date 18OCT00               *
+      *                 CSE035             Date 22Apr02               *
+      *                 CSE036  *CREATE    Date 22Apr02               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  226449 - Recompiled over changes made in /COPY ZDYYRZ3.      *
+      *         - Applied for MD034387.                               *
+      *  MD034776 - Reverse AR1001183A to allow negative interest     *
+      *             rate. (Recompile)                                 *
+      *  AR1067108 - PMC1140 Component failed during Clean COB        *
+      *              Applied fix AR1001183A                           *
+      *  AR1001183A - Coupon rate was still used in computation of    *
+      *              interest instead of using the details in FRN tab *
+      *              (Reopen) (Recompile)                             *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CPK024 - Packaging of MPlus 1.2.1. Copy sources needed by    *
+      *           UTC0012.                                            *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  211407 - Recompile after change on copy sources ZYLDZ2,      *
+      *           ZACCRZ1 and ZYCEZ1 for NX/NNX processing.           *
+      *           The change was to call subroutine ZLCD1 instead     *
+      *           of ZLCD in retrieving the PERIOD for NNX processing *
+      *           and ZNCD1 is called instead of ZNCD in retrieving   *
+      *           the WBENCD for NNX processing. Also rewrite tests   *
+      *           for identifying if position is NX,NNX or CUM.       *
+      *  208241 - Recompiled over changed /CPY ZSDESCZ3.              *
+      *  207543 - CEU018 NOT WORKING ON A PRICE BASIS, MISSING A PART *
+      *           OF AUS047. CHECK FOR CEU017, RECOMPILE OVER ZYLDZ2. *
+      *  194370 - Recompile after change on copy sources ZYLDZ2,      *
+      *           For securities with divisor basis = '5' and first   *
+      *           coupon date > valuation date (rundate + 1), set     *
+      *           event control date to first coupon date before      *
+      *           processing SR/ZDYYR. This is to ensure that the     *
+      *           correct hypothetical last and next coupon dates are *
+      *           used in deriving the price/yield rate.              *
+      *  180056 - Recompiled over changed in ZDYYRZ3.                 *
+      *  CSE035 - NX/NNX Coupon Payment Processing.                   *
+      *  CSE036 - Unrealised Profit and Loss Report by Trade          *
+      *                                                               *
+      *****************************************************************
+     FSETREXV3IF  E           K        DISK
+     FSECTY   IF  E           K        DISK
+     FINVTP   IF  E           K        DISK
+     FSEDEV   IF  E           K        DISK
+     FSECEO   IF  E           K        DISK
+     F            SEDEVDF                           KRENAMESEDEVDO
+     F            SNDEVDF                           KRENAMESNDEVDO
+     FSE4607P1O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL
+     FSE4607AUO   E                    PRINTER                        UC
+     F                                              KINFDS SPOOLU
+      *
+     F***COPY*ZSRSRC,ZNDECZ1*                                                                 CPK024
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *    21 - EOF for SETREXV2 File                                 *
+      *    22 - Record Not Found                                      *
+      *    23 - EOF for SEDEV File                                    *
+      *    24 - Australian Yield Security                             *
+      *                                                               *
+      * 90-95 - ZDATE2 Subroutine Indicators                          *
+      *    98 - Date Format Indicator                                 *
+      *                                                               *
+      *    U7 - Database Error                                        *
+      *    U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Copyright Statement
+      *
+     E                    CPY@    1   1 80
+      *
+      ** Work Arrays
+      *
+     E                    AU1        16  1
+     E                    AU2        22  1
+      *
+      ** Total accumulation arrays
+      *
+     E                    NOM         7 22 0             Nominal
+     E                    DSC         7 22 0             Discount
+     E                    CAP         7 22 0             Capital Value
+      *
+     E/COPY ZSRSRC,ZNCDZ1
+     E/COPY ZSRSRC,ZDAYSZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZSEDITZ1
+     E/COPY ZSRSRC,ZPOWER8Z1
+     E/COPY ZSRSRC,ZDATE6Z1
+     E/COPY ZSRSRC,ZHOLE
+     E***COPY*ZSRSRC,ZNDECZ2*                                                                 CPK024
+      *
+      **  Data Structure for Compilation - Copyright Insertion
+      *
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      **  Data Structure for LF/INVTP
+      *
+     I            DS
+     I                                        1   6 INKEY
+     I                                        1   3 ATNMC
+     I                                        4   6 AINVT
+     ILEV         DS                          4
+     I                                        1  220FACE
+     I                                       23  440PDIS
+     I                                       45  660CVAL
+      *
+     ISDCURR    E DSSDCURRPD
+      *
+      **  External DS for currency details.
+      *
+     ISDBRCH    E DSSDBRCHPD
+      *
+      **  External DS for SD Branch Codes
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** First DS for Access Programs, Short Data Structure
+      *
+      ** Program Status
+      *
+     IPSDS       SDS
+     I                                      244 253 WSID
+     I                                      254 263 USRID
+      *
+      ** Error reporting data structure
+      *
+     ILDA         DS                            256
+     I                                      134 183 DBALL
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      ** System Rundate
+      *
+     IRUNDT       DS
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     ISPOOL       DS
+      *
+      ** DS FOR P1 SPOOL FILE NAME
+      *
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+      *
+     ISPOOLU      DS
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     I/COPY ZSRSRC,ZNCDZ2
+     I/COPY ZSRSRC,ZSEDITZ2
+     I/COPY ZSRSRC,ZYLDZ1
+     I/COPY ZSRSRC,ZHOLI
+     I/COPY ZSRSRC,ZHOLDS
+      /EJECT
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Key Field for LF/SEDEV
+      *
+     C           SEKEY     KLIST
+     C                     KFLD           SDSN
+     C                     KFLD           SDED
+     C                     KFLD           SDET
+      *
+      **  Key Field for LF/INVTP
+      *
+     C           ITKEY     KLIST
+     C                     KFLD           ATNMC
+     C                     KFLD           AINVT
+      *
+      **  Main Processing
+      *
+     C           *NAMVAR   DEFN           LDA
+     C                     EXSR SRINIT
+      *
+     C           *IN99     IFEQ *OFF
+     C                     MOVE *OFF      *IN20
+     C                     EXSR SRDETL
+      *
+      **  If database error ocurred, return to calling program.
+      **  Else, print report.
+      *
+     C           *INU7     IFEQ *OFF
+     C           *INU8     ANDEQ*OFF
+      *
+      **  If LF/SETREXV2 is empty, print 'NO DETAILS TO REPORT'. Else,
+      **  print 'END OF REPORT'.
+      *
+     C           *IN20     IFEQ *OFF
+     C                     OPEN SE4607AU
+     C                     EXSR RCFAU
+     C                     WRITEHEADAU
+     C                     WRITENODET
+     C                     ELSE
+     C                     EXSR SRWITL
+     C                     EXSR SRWCTL
+     C                     WRITEFMTP107
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INLR
+      *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Intial Program Control                              *
+      *  SRDETL - Record Detail Processing                            *
+      *  SRBRAN - Branch Details Check                                *
+      *  SRNCCY - Nominal Currency Details Check                      *
+      *  SRITYP - Investment Type Check                               *
+      *  SRSECN - Security Details Check                              *
+      *  SRDBER - Database Error Handling                             *
+      *  SRWCTL - Write Currency Totals                               *
+      *  SRWITL - Write Invesment Totals                              *
+      *  SRWSTL - Write Investment & Currency Totals                  *
+      *  SRACCU - Add TOTALS for Investment                           *
+      *  SRWRIT - Write Detail                                        *
+      *  SROVRF - Check Overflow Line                                 *
+      *  SRHEAD - Write Headings                                      *
+      *  SRNEGV - Format Negative Value                               *
+      *  *PSSR  - Error Handling Routine                              *
+      *  ZSDESC - Format Security Description                         *
+      *  ZDATE1 - Convert Date to Day Number                          *
+      *  ZDATE2 - Convert Day Number to Date Formats                  *
+      *  ZSEDIT - Format Amount                                       *
+      *  ZNCD   - Determine Next Coupon Date                          *
+      *  ZYCE   - Determine if in Cum- or Ex- Coupon Date Range       *
+      *  ZPRCI  - Convert Price to %Price                             *
+      *  ZPRCO  - Convert Price to Yield                              *
+      *  ZACCZ  - Calculate Accrued Interest                          *
+      *  ZDAYS  - Calculate No. of Days between Dates                 *
+      *  ZDYYR  - Calculate No. of Days in Interest Year              *
+      *  ZYLDO  - Output Price as Price/Discount/Yield                *
+      *  ZACCR  - Calculate Accured Int. Between Two Dates            *
+      *  ZRATE  - Calculate Effective Interest Rate                   *
+      *  ZYLDI  - Output Yield as %Price                              *
+      *  ZD5DYS - Determine No. of Days in Coupon Period (DVBS=5)     *
+      *  ZYLD   - Set Up Parameter Values and Call ZYIELD             *
+      *  ZLCD   - Calculate Last Coupon Date                          *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Subroutine: SRINIT - Initial Program Control                 *
+      *                                                               *
+      *  Called by : MAIN - Main Controlling Routine                  *
+      *                                                               *
+      *  Calls     : SRDBER - Database Error Handling                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      **  Access Run Date
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+      *
+      **  Check Date Format
+      *
+     C           DATF      IFEQ 'M'
+     C                     SETON                     98
+     C                     ENDIF
+      *
+      **  Initialise 'LEV' multiple occurence data structure
+      *
+     C                     Z-ADD1         Q       20
+     C           1         DO   4         Q
+     C           Q         OCUR LEV
+     C                     Z-ADD0         FACE
+     C                     Z-ADD0         PDIS
+     C                     Z-ADD0         CVAL
+     C                     ENDDO
+      *                                                                                       CSE035
+      ** Check if SAR CSE035 is on                                                            CSE035
+      *                                                                                       CSE035
+     C                     CALL 'AOSARDR0'                                                    CSE035
+     C                     PARM *BLANKS   PRTCD   7                                           CSE035
+     C                     PARM '*VERIFY' POPTN   7                                           CSE035
+     C                     PARM 'CSE035'  PSARD   6                                           CSE035
+      *                                                                                       CSE035
+     C           PRTCD     IFEQ *BLANKS                                                       CSE035
+     C                     MOVE 'Y'       CSE035  1                                           CSE035
+     C                     ELSE                                                               CSE035
+     C                     MOVE 'N'       CSE035                                              CSE035
+     C                     ENDIF                                                              CSE035
+      *                                                                                       207543
+      ** Access SAR details file to see if CEU018 is installed                                207543
+      *                                                                                       207543
+     C                     CALL 'AOSARDR0'                                                    207543
+     C                     PARM *BLANKS   PRTCD                                               207543
+     C                     PARM '*VERIFY' POPTN                                               207543
+     C                     PARM 'CEU018'  PSARD                                               207543
+      *                                                                                       207543
+     C           PRTCD     IFEQ *BLANK                                                        207543
+     C                     MOVE 'Y'       CEU018  1                                           207543
+     C                     ELSE                                                               207543
+     C                     MOVE 'N'       CEU018                                              207543
+     C                     END                                                                207543
+      *
+     C           SRINI9    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Subroutine: SRDETL - Record Detail Processing                *
+      *                                                               *
+      *  Called by : MAIN - Main Controlling Routine                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDETL    BEGSR
+      *
+      **  Read Trade Details File.
+      *
+     C                     READ SETREXV3                 21
+      *
+      **  Perform details processing while not end-of-file and no
+      **  database error encountered.
+      *
+     C           *IN21     DOWEQ*OFF
+     C           *INU7     ANDEQ*OFF
+     C           *INU8     ANDEQ*OFF
+      *
+      **  Get Security Details
+      *
+     C                     EXSR SRSECN
+      *
+      **  If a record has already been processed, check for changes in
+      **  branch, currency, investment type
+      *
+     C           *IN20     IFEQ *ON
+      *
+      **  If BRANCH,CCY or INVESTMENT TYPE changed print totals
+      **  for investment type and currency.
+      *
+     C           ATDBR     IFNE #ATDBR
+     C                     EXSR SRWITL
+     C                     EXSR SRWCTL
+     C                     WRITEFMTP107
+     C                     CLOSESE4607P1
+     C                     OPEN SE4607P1
+     C                     Z-ADD0         PAGE
+     C                     Z-ADD0         #PAGE
+     C                     EXSR RCFP1
+      *
+      **  Check details for branch, currency, investment type, book
+      **  market and security.
+      *
+     C                     EXSR SRBRAN
+     C                     EXSR SRNCCY
+     C                     EXSR SRITYP
+      *
+      **  If no database error occurred, print new page with new
+      **  branch details.
+      *
+     C           *INU7     IFEQ *OFF
+     C           *INU8     ANDEQ*OFF
+     C                     MOVE *ON       *IN30
+     C                     EXSR SRHEAD
+     C                     MOVE *OFF      *IN30
+     C                     ENDIF
+     C                     ELSE
+      *
+      **  If there is a change in nominal currency, write totals for
+      **  investment type.
+      *
+     C           ATNMC     IFNE #ATNMC
+     C                     EXSR SRWITL
+      *
+      **  Print CURRENCY TOTAL.
+      *
+     C                     EXSR SRWCTL
+      *
+      **  Check details for currency, investment type, book, market and
+      **  security.
+      *
+     C                     EXSR SRNCCY
+     C                     EXSR SRITYP
+      *
+      ** If no database error were encountered, write new page with
+      ** new currency details.
+      *
+     C           *INU7     IFEQ *OFF
+     C           *INU8     ANDEQ*OFF
+     C                     MOVE *ON       *IN30
+     C                     EXSR SRHEAD
+     C                     MOVE *OFF      *IN30
+     C                     ENDIF
+     C                     ELSE
+      *
+      **  If there is a change in the investment type, print totals
+      *
+     C           AINVT     IFNE #AINVT
+      *
+      **  Print INVESTMENT TYPE TOTAL.
+      *
+     C                     EXSR SRWITL
+      *
+      **  Check details for investment type
+      *
+     C                     EXSR SRITYP
+      *
+      ** If no database error occurred, print new investment type line.
+      *
+     C           *INU7     IFEQ *OFF
+     C           *INU8     ANDEQ*OFF
+     C                     WRITEFMTP102
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  If this is the first record read, check details for branch,
+      **  currency, investment type
+      *
+     C           *IN20     IFEQ *OFF
+     C                     EXSR SRBRAN
+     C                     EXSR SRNCCY
+     C                     EXSR SRITYP
+      *
+      **  If no database error occurred, print headings and details.
+      *
+     C           *INU7     IFEQ *OFF
+     C           *INU8     ANDEQ*OFF
+     C                     OPEN SE4607P1
+     C                     EXSR RCFP1
+     C                     MOVE *ON       *IN30
+     C                     EXSR SRHEAD
+     C                     MOVE *OFF      *IN30
+     C                     MOVE *ON       *IN20
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  If not database error occurred, calculate next coupon date
+      **  using the trade value date as the event control date.
+      *
+     C           *INU7     IFEQ *OFF
+     C           *INU8     ANDEQ*OFF
+     C                     Z-ADDATDVD     ECD     50
+     C                     EXSR ZNCD
+      *
+      **  Check if security is an Australian Yield security (trade
+      **  basis = 'Y' and yield basis = 'AU').
+      *
+     C           STBS      IFEQ 'Y'
+     C           SYBS      ANDEQ'AU'
+     C                     MOVE *ON       *IN24
+     C                     ENDIF
+      *
+      **  Write details. Then, read next record.
+      *
+     C                     EXSR SRACCU
+     C                     READ SETREXV3                 21
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C           SRDET9    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Subroutine: SRBRAN - Branch Details Check                    *
+      *                                                               *
+      *  Called by : SRDETL - Record Detail Processing                *
+      *                                                               *
+      *  Calls     : SRDBER                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRBRAN    BEGSR
+      *
+      **  Access Branch Details using the branch code as key field.
+      *
+     C                     MOVE ATDBR     PBRCD
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM           PBRCD   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVE ATDBR     #ATDBR  3
+     C                     ELSE
+     C                     MOVEL'SDBRCHPD'DBFILE
+     C                     MOVELATDBR     DBKEY
+     C                     Z-ADD2         DBASE            * DB ERROR 02 *
+     C                     EXSR SRDBER
+     C                     ENDIF
+      *
+     C           SRBRA9    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Subroutine: SRNCCY - Nominal Currency Details Check          *
+      *                                                               *
+      *  Called by : SRDETL - Record Detail Processing                *
+      *                                                               *
+      *  Calls     : SRDBER                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRNCCY    BEGSR
+      *
+      **  Retrieve Currencies file.
+      *
+     C                     MOVE ATNMC     PCCY
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM           PCCY    3
+     C           SDCURR    PARM SDCURR    DSFDY
+      *
+      **  Generate DATABASE ERROR if no record was found.
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVE ATNMC     #ATNMC  3
+     C                     Z-ADDA6NBDP    ZCDP
+     C                     ELSE
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     MOVELATNMC     DBKEY            ***************
+     C                     Z-ADD4         DBASE            * DB ERROR 04 *
+     C                     EXSR SRDBER                     ***************
+     C                     ENDIF
+      *
+     C           SRNCC9    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Subroutine: SRITYP - Investment Type Check                   *
+      *                                                               *
+      *  Called by : SRDETL - Record Detail Processing                *
+      *                                                               *
+      *  Calls     : SRDBER                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRITYP    BEGSR
+      *
+      **  If no database error occurred previously, chain to Investment
+      **  Type Details file.
+      *
+     C           *INU7     IFEQ *OFF
+     C           *INU8     ANDEQ*OFF
+      *
+     C           ITKEY     CHAININVTPDF              22
+      *
+      **  If no equivalent record exists, DATABASE ERROR.
+      *
+     C           *IN22     IFEQ *ON
+     C           RECI      ORNE 'D'
+     C                     MOVEL'INVTP'   DBFILE           ***************
+     C                     MOVELINKEY     DBKEY            * DB ERROR 05 *
+     C                     Z-ADD5         DBASE            ***************
+     C                     EXSR SRDBER
+     C                     ELSE
+     C                     MOVE AINVT     #AINVT  3
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           SRITY9    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Subroutine: SRSECN - Security Details Check                  *
+      *                                                               *
+      *  Called by : SRDETL - Record Detail Processing                *
+      *                                                               *
+      *  Calls     : SRDBER                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRSECN    BEGSR
+      *
+      **  If there were no previous database errors, chain to Security
+      **  Details file.
+      *
+     C           *INU7     IFEQ *OFF
+     C           *INU8     ANDEQ*OFF
+      *
+     C           ATDSS     CHAINSECTY                22
+      *
+      **  Generate DATABASE ERROR if no equivalent record exists. Else,
+      **  format corresponding security report name.
+      *
+     C           *IN22     IFEQ *ON
+     C                     MOVE 'SECTY   'DBFILE           ***************
+     C                     MOVE ATDSS     DBKEY            * DB ERROR 06 *
+     C                     Z-ADD06        DBASE            ***************
+     C                     EXSR SRDBER
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           SRSEC9    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Subroutine: SRDBER - Database Error                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDBER    BEGSR
+      *
+      **  Move values to LDA
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBALL
+     C                     MOVEL'SE4607 ' DBPGM
+     C                     OUT  LDA
+      *
+     C                     OPEN SE4607AU
+     C                     EXSR RCFAU
+     C                     WRITEHEADAU
+     C                     WRITEERROR
+     C                     EXSR *PSSR
+      *
+     C           SRDBE9    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Subroutine: SRWCTL - Write Currency Totals                   *
+      *                                                               *
+      *  Called by : MAIN   - Main Controlling Routine                *
+      *              SRDETL - Record Detail Processing                *
+      *                                                               *
+      *  Calls     : SRWSTL - Write Investment & Currency Total       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRWCTL    BEGSR
+      *
+     C                     MOVE *OFF      *IN43
+      *
+      **  If the currency total is less than zero, set on *IN43 to
+      **  indicate a negative amount.
+      *
+     C                     Z-ADD0         #ACTTL 150
+     C                     Z-ADD1         Y       20
+     C                     CLEAR#TOT
+     C                     MOVE 'CURRENCY'#TOT   10
+     C                     EXSR SRWSTL
+      *
+     C           SRWCT9    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Subroutine: SRWITL - Write Investment Type Totals            *
+      *                                                               *
+      *  Called by : MAIN   - Main Controlling Routine                *
+      *              SRDETL - Record Detail Processing                *
+      *                                                               *
+      *  Calls     : SRWRIT - Write detail                            *
+      *              SROVRF - Check overflow line                     *
+      *              SRWSTL - Write Investment & Currency Total       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRWITL    BEGSR
+      *
+     C                     MOVE *OFF      *IN41
+      *
+      **  Write PAGE DETAILS for investment
+      *
+     C           #PAGE     IFGE 2
+     C                     EXSR SROVRF
+     C                     ENDIF
+      *
+     C                     EXSR SRWRIT
+      *
+     C                     Z-ADD2         Y       20
+     C                     CLEAR#TOT
+     C                     MOVEL'INVESTME'#TOT   10
+     C                     MOVE 'NT'      #TOT
+     C                     EXSR SRWSTL
+      *
+     C           SRWIT9    ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Subroutine: SRWSTL - Write Investment & Currency Total       *
+      *                                                               *
+      *  Called by : SRWCTL - Write Currency Totals                   *
+      *              SRWITL - Write Investment Type Totals            *
+      *                                                               *
+      *  Calls     : ZSEDIT                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRWSTL    BEGSR
+      *
+      **  Set off indicators.
+      *
+     C                     SETOF                     3132
+     C                     SETOF                     35
+      *
+      **  If the nominal total is less than zero, set on *IN31 to
+      **  indicate a negative amount.
+      *
+     C                     Z-ADDNOM,Y     #ATOTN
+      *
+      **  Format NOMINAL TOTAL for output.
+      *
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE #ATOTN    ZFLD15
+     C                     MOVE A6NBDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    #ANTOT
+      *
+     C                     Z-ADDCAP,Y     #ATOTS
+      *
+      **  Format CAPITAL VALUE  TOTAL for output.
+      *
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE #ATOTS    ZFLD15
+     C                     MOVE A6NBDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    #ASTOT
+      *
+     C                     Z-ADDDSC,Y     #ATOTD
+      *
+      **  Format DISCOUNT TOTAL for output.
+      *
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE #ATOTD    ZFLD15
+     C                     MOVE A6NBDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    #ADTOT
+      *
+      **  Print totals.
+      *
+     C                     WRITEFMTP106
+     C                     Z-ADD0         #ATOTN 150
+     C                     Z-ADD0         #ATOTS 150
+     C                     Z-ADD0         #ATOTD 150
+     C                     Z-ADD0         #WWAY  228
+     C                     Z-ADD*ZERO     NOM,Y
+     C                     Z-ADD*ZERO     CAP,Y
+     C                     Z-ADD*ZERO     DSC,Y
+     C                     Z-ADD*ZERO     Y
+      *
+     C           SRWST9    ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Subroutine: SRACCU - Add TOTALS for Investment               *
+      *                                                               *
+      *  Called by : SRDETL - Record Detail Processing                *
+      *                                                               *
+      *  Calls     : ZACCZ                                            *
+      *              ZYCE                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRACCU    BEGSR
+      *
+      **  Set off indicators.
+      *
+     C                     SETOF                     394546
+     C                     SETOF                     4748
+     C                     SETOF                     49
+      *
+      **  Initialise factorised nominal to nominal amount.
+      *
+     C                     Z-ADDANOML     #ANOM  154
+     C                     Z-ADDANOML     #WNOM  150
+     C                     Z-ADDAFNOML    #AFNOM 154
+      *
+      ** Adjust for Currency Decimal Places
+      *
+     C           5         SUB  A6NBDP    #DP     10
+     C           #AFNOM    MULT POWER8,#DP#AFNOM
+     C           #ANOM     MULT POWER8,#DP#ANOM
+      *
+      **  Convert trade price from %price to yield.
+      *
+     C                     Z-ADDAPRIC     ZPRICE
+     C                     Z-ADDATDVD     ZFDATE
+     C                     MOVE 'Y'       #WMODE  1
+     C                     MOVE *BLANKS   #WRTCD 10
+     C                     CALL 'ZPRCCAL'
+     C                     PARM           ATDSS
+     C                     PARM           APRIC
+     C                     PARM           ATDVD
+     C                     PARM           #WMODE
+     C                     PARM           ZPRCOT
+     C                     PARM           #WRTCD
+     C                     PARM           #WNOM
+     C                     PARM 'N'       PDBG    1
+      *
+      **   ACCUMULATE YIELD * FACE VALUE FOR WEIGHTED AVERAGE YIELD CAL
+      *
+     C           ZPRCOT    MULT AFNOML    #WK228 228
+     C                     ADD  #WK228    #WWAY
+      *
+      **  Reset currency decimal places based on the nominal currency.
+      *
+     C                     MOVEA'0000'    *IN,35
+     C           35        ADD  A6NBDP    J       20
+     C                     MOVE *ON       *IN,J
+     C                     Z-ADDA6NBDP    NCDP
+      *
+      **  Initialise fields to contain settlement value.
+      *
+     C                     Z-ADD*ZEROS    #ASETV 150
+     C                     Z-ADD*ZEROS    #ASEV0 150
+     C                     Z-ADD*ZEROS    #ASEV1 151
+     C                     Z-ADD*ZEROS    #ASEV2 152
+     C                     Z-ADD*ZEROS    #ASEV3 153
+     C           APRIC     DIV  100       #WPRIC 159H
+      *
+      **  Settlement Value = Price x Factorised Nominal
+      *
+     C   35      #WPRIC    MULT #ANOM     #ASEV0    H
+     C   36      #WPRIC    MULT #ANOM     #ASEV1    H
+     C   37      #WPRIC    MULT #ANOM     #ASEV2    H
+     C   38      #WPRIC    MULT #ANOM     #ASEV3    H
+      *
+     C   35                MOVE #ASEV0    #ASETV
+     C   36                MOVE #ASEV1    #ASETV
+     C   37                MOVE #ASEV2    #ASETV
+     C   38                MOVE #ASEV3    #ASETV
+      *
+      **  Initialise fields to contain premium/discount total.
+      *
+     C                     Z-ADD*ZEROS    #ADSC  150
+     C                     Z-ADD*ZEROS    #ADSC0 150
+     C                     Z-ADD*ZEROS    #ADSC1 151
+     C                     Z-ADD*ZEROS    #ADSC2 152
+     C                     Z-ADD*ZEROS    #ADSC3 153
+      *
+      **  Discount = Factorised Nominal - Book value
+      *
+     C   35      #AFNOM    SUB  #ASEV0    #ADSC0    H
+     C   36      #AFNOM    SUB  #ASEV1    #ADSC1    H
+     C   37      #AFNOM    SUB  #ASEV2    #ADSC2    H
+     C   38      #AFNOM    SUB  #ASEV3    #ADSC3    H
+      *
+     C   35                MOVE #ADSC0    #ADSC
+     C   36                MOVE #ADSC1    #ADSC
+     C   37                MOVE #ADSC2    #ADSC
+     C   38                MOVE #ADSC3    #ADSC
+     C                     Z-SUB#ADSC     #ADSC
+      *
+      **  If the market price and the nominal are not zero and the
+      **  security is an Australian yield security, calculate accrued
+      **  interest using the last coupon date, trade value date, and
+      **  nominal amount as inputs.
+      *
+     C           MKPR      IFNE *ZERO
+     C           ANOML     IFNE *ZERO
+     C           *IN24     ANDEQ*ON
+     C                     Z-ADDLCPN      ZDCSDT
+     C                     Z-ADDATDVD     ZDCEDT
+     C                     Z-ADDANOML     ZAMT
+     C                     EXSR ZACCZ
+      *
+      **  Purchased Interest = Accrued Interest / Nominal Amount
+      *
+     C           ZDCINT    DIV  ANOML     WRKPI     H
+      *
+      **  Determine if the trade value date is in the cum- or ex-
+      **  coupon date range.
+      *
+     C                     Z-ADDATDVD     WRKD    50
+     C                     EXSR ZYCE
+      *
+      **  If it is within the ex-coupon range, calculate accrued
+      **  interest using the last coupon date as the start date, the
+      **  next coupon date as the end date.
+      *
+     C           SCUMEX    IFEQ 'X'
+     C                     Z-ADDLCPN      ZDCSDT
+     C                     Z-ADDNCD       ZDCEDT
+     C                     EXSR ZACCZ
+      *
+      **  Calculate the work purchased interest.
+      **  Final Purchased Int. = Purchased Int. - Work Purchased Int.
+      *
+     C           ZDCINT    DIV  ANOML     #AWKPI 159H
+     C           WRKPI     SUB  #AWKPI    WRKPI
+     C                     ENDIF
+      *
+      **  If the trade value date is in the cum- coupon date range,
+      **  zeroise the purchased interest.
+      *
+     C                     ELSE
+     C                     MOVE 'C'       SCUMEX
+     C                     Z-ADD*ZERO     WRKPI
+     C                     ENDIF
+      *
+      **  Calculate the %price.
+      *
+     C                     MOVE MKPR      ZPRCIN
+     C                     MOVE 'P'       #WMODE  1
+     C                     MOVE *BLANKS   #WRTCD 10
+     C                     CALL 'ZPRCCAL'
+     C                     PARM           ATDSS
+     C                     PARM           ZPRCIN
+     C                     PARM           ATDVD
+     C                     PARM           #WMODE
+     C                     PARM           ZPRCOT
+     C                     PARM           #WRTCD
+     C                     PARM           #WNOM
+     C                     PARM 'N'       PDBG
+      *
+      **  Initialise fields to contain the market value.
+      *
+     C                     Z-ADD*ZEROS    #AMARV 150
+     C                     Z-ADD*ZEROS    #AMAV0 150
+     C                     Z-ADD*ZEROS    #AMAV1 151
+     C                     Z-ADD*ZEROS    #AMAV2 152
+     C                     Z-ADD*ZEROS    #AMAV3 153
+      *
+      **  Market Value = Market %Price x Factorised Nominal
+      *
+     C           ZPRCOT    DIV  100       #WPRIC    H
+     C   35      #WPRIC    MULT #ANOM     #AMAV0    H
+     C   36      #WPRIC    MULT #ANOM     #AMAV1    H
+     C   37      #WPRIC    MULT #ANOM     #AMAV2    H
+     C   38      #WPRIC    MULT #ANOM     #AMAV3    H
+      *
+     C   35                MOVE #AMAV0    #AMARV
+     C   36                MOVE #AMAV1    #AMARV
+     C   37                MOVE #AMAV2    #AMARV
+     C   38                MOVE #AMAV3    #AMARV
+      *
+     C                     ENDIF
+      *
+      **  Accumulate total registers
+      *
+     C                     Z-ADD1         X       20
+     C                     DO   3         X
+     C                     ADD  AFNOML    NOM,X
+     C           *IN49     IFEQ *ON
+     C                     SUB  #ADSC     DSC,X
+     C                     ELSE
+     C                     ADD  #ADSC     DSC,X
+     C                     ENDIF
+     C                     ADD  #ASETV    CAP,X
+     C                     ENDDO
+      *
+      ** Accumulate for each investment type change print
+      *
+     C           AFWST     IFEQ 'C'
+     C           ASIGN     IFEQ 'L'
+     C           1         OCUR LEV                            SETTLE LONG
+     C                     ELSE
+     C           2         OCUR LEV                            SETTLE SHORT
+     C                     ENDIF
+      *
+     C                     ELSE
+     C           ASIGN     IFEQ 'L'
+     C           3         OCUR LEV                        FWD PURCHASE
+     C                     ELSE
+     C           4         OCUR LEV                        FWD SALE
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ADD  AFNOML    FACE
+     C                     ADD  #ADSC     PDIS
+     C                     ADD  #ASETV    CVAL
+      *
+     C           SRACC9    ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Subroutine: SRWRIT - Write Detail                            *
+      *                                                               *
+      *  Called by : SRWITL - Write Investment Type Totals            *
+      *                                                               *
+      *  Calls     : ZSEDIT                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRWRIT    BEGSR
+      *
+     C                     Z-ADD1         Q
+     C           1         DO   4         Q
+     C           Q         OCUR LEV
+      *
+      ** Write 'VALUE DATE AND LONG POSITIONS'
+      *
+     C           Q         IFEQ 1
+     C                     MOVE *BLANKS   NARR1  10
+     C                     MOVEL'VALUE'   NARR1
+     C                     MOVE 'DATE'    NARR1
+     C                     WRITEFMTP104
+     C                     MOVE *BLANKS   NARR   15
+     C                     MOVEL'LONG  P' NARR
+     C                     MOVE 'OSITIONS'NARR
+     C                     ENDIF
+      *
+      ** Write 'SHORT POSITIONS'
+      *
+     C           Q         IFEQ 2
+     C                     MOVE *BLANKS   NARR   15
+     C                     MOVEL'SHORT P' NARR
+     C                     MOVE 'OSITIONS'NARR
+     C                     ENDIF
+      *
+      ** Write 'FWD TRADES AND PURCHASE'
+      *
+     C           Q         IFEQ 3
+      *
+      ** Write 'TOTAL SETTLED'
+      *
+     C                     MOVE *BLANKS   #TOT
+     C                     MOVE 'SETTLED' #TOT
+     C                     SETOF                     313235
+      *
+      ** Format FACE VALUE TOTAL FOR output.
+      *
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE TFACE     ZFLD15
+     C                     MOVE A6NBDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    #ANTOT
+      *
+      **  Format PREM/DISC
+      *
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE TPDIS     ZFLD15
+     C                     MOVE A6NBDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    #ADTOT
+      *
+      **  Format CAPITAL VALUE
+      *
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE TCVAL     ZFLD15
+     C                     MOVE A6NBDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    #ASTOT
+      *
+     C                     WRITEFMTP106                       WRITE TOTAL
+      *
+      ** Zeroise subtotals
+      *
+     C                     Z-ADD0         TFACE
+     C                     Z-ADD0         TPDIS
+     C                     Z-ADD0         TCVAL
+      *
+     C                     MOVE *BLANKS   NARR1  10
+     C                     MOVEL'FWD  '   NARR1
+     C                     MOVE 'TRADES'  NARR1
+     C                     WRITEFMTP104
+     C                     MOVE *BLANKS   NARR   15
+     C                     MOVEL'PURCHASE'NARR
+     C                     ENDIF
+      *
+      ** Write 'SALES'
+      *
+     C           Q         IFEQ 4
+     C                     MOVE *BLANKS   NARR   15
+     C                     MOVEL'SALES  ' NARR
+     C                     ENDIF
+      *
+      ** Accumulate
+      *
+     C                     ADD  FACE      TFACE  220
+     C                     ADD  PDIS      TPDIS  220
+     C                     ADD  CVAL      TCVAL  220
+      *
+     C                     SETOF                     313235
+      *
+      **  Format FACE VALUE FOR output.
+      *
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE FACE      ZFLD15
+     C                     MOVE A6NBDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DFACE
+      *
+      **  Format PREM/DISC
+      *
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE PDIS      ZFLD15
+     C                     MOVE A6NBDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DPDIS
+      *
+      **  Format CAPITAL VALUE
+      *
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE CVAL      ZFLD15
+     C                     MOVE A6NBDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DCVAL
+      *
+     C                     WRITEFMTP105                       WRITE DETAL
+      *
+     C                     ENDDO                              DO 1-4
+      *
+      **  Write 'TOTAL FORWARD'
+      *
+     C                     MOVE *BLANKS   #TOT
+     C                     MOVE 'FORWARD' #TOT
+     C                     SETOF                     313235
+      *
+      **  Format FACE VALUE TOTAL FOR output.
+      *
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE TFACE     ZFLD15
+     C                     MOVE A6NBDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    #ANTOT
+      *
+      **  Format PREM/DISC
+      *
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE TPDIS     ZFLD15
+     C                     MOVE A6NBDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    #ADTOT
+      *
+      **  Format CAPITAL VALUE
+      *
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE TCVAL     ZFLD15
+     C                     MOVE A6NBDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    #ASTOT
+      *
+     C                     WRITEFMTP106                       WRITE TOTAL
+      *
+      ** Zeroise Subtotals
+      *
+     C                     Z-ADD0         TFACE
+     C                     Z-ADD0         TPDIS
+     C                     Z-ADD0         TCVAL
+      *
+      **  Initialise 'LEV' multiple occurrence data structure
+      *
+     C                     Z-ADD1         Q       20
+     C           1         DO   4         Q
+     C           Q         OCUR LEV
+     C                     Z-ADD0         FACE
+     C                     Z-ADD0         PDIS
+     C                     Z-ADD0         CVAL
+     C                     ENDDO
+      *
+     C                     ADD  1         #PAGE
+      *
+     C           SRWRI9    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Subroutine: SROVRF - Check overflow line                     *
+      *                                                               *
+      *  Called by : MAIN   - Main Controlling Routine                *
+      *              SRDETL - Record Detail Processing                *
+      *              SRWITL - Write Investment Type Totals            *
+      *                                                               *
+      *  Calls     : None                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SROVRF    BEGSR
+      *
+      **  If the line overflow, print a new page.
+      *
+     C                     WRITEFMTP101
+     C                     WRITEFMTP102
+     C                     WRITEFMTP103
+     C                     Z-ADD0         #PAGE   20
+      *
+     C           SROVR9    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Subroutine: SRHEAD - Write Headings                          *
+      *                                                               *
+      *  Called by : SRDETL - Record detail processing                *
+      *                                                               *
+      *  Calls     : None                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRHEAD    BEGSR
+      *
+     C                     WRITEFMTP101
+     C                     WRITEFMTP102
+     C                     WRITEFMTP103
+     C                     Z-ADD0         #PAGE   20
+      *
+     C           SRHEA9    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Subroutine: SRNEGV - Format Negative Value                   *
+      *                                                               *
+      *  Called by :                                                  *
+      *                                                               *
+      *  Calls     : None                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRNEGV    BEGSR
+      *
+     C                     Z-ADD1         AA      20
+     C                     Z-ADD#ALEN     #ALEN   20
+      *
+      **  Check if the length of the work array is 17.
+      *
+     C           #ALEN     IFEQ 17
+      *
+      **  Increment array index while it is not yet equal to the array
+      **  length and while the element is a blank.
+      *
+     C           AA        DOWLT#ALEN
+     C           AU1,AA    ANDEQ' '
+     C                     ADD  1         AA
+     C                     ENDDO
+      *
+      **  Place the bracket before the amount.
+      *
+     C                     SUB  1         AA
+     C                     MOVE '('       AU1,AA
+     C                     ENDIF
+      *
+      **  Check if the length of the work array is 23.
+      *
+     C           #ALEN     IFEQ 23
+      *
+      **  Increment array index while it is not yet equal to the array
+      **  length and while the element is a blank.
+      *
+     C           AA        DOWLT#ALEN
+     C           AU2,AA    ANDEQ' '
+     C                     ADD  1         AA
+     C                     ENDDO
+      *
+      **  Place the bracket before the amount.
+      *
+     C                     SUB  1         AA
+     C                     MOVE '('       AU2,AA
+     C                     ENDIF
+      *
+     C           SRNEG9    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Subroutine : *PSSR  - Error Handling Subroutine              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      **  Dump program.
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C           #PSSR9    ENDSR                           ** #PSSR9 **
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Subroutine : RCFAU -- Subroutine to register AU printer file *
+      *                        via RCF                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFAU     BEGSR                            ** RCFAU **
+      *
+      **      ENSURE AUDIT SPOOL FILE RECORDED BY RCF
+      *
+     C                     Z-ADDSFNUMU    PZSNUM  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ
+     C                     PARM *BLANKS   PENTY
+     C                     PARM           SFILEU
+     C                     PARM           PZSNUM
+     C                     PARM *BLANK    PZSERR
+      *
+     C           PZSERR    IFEQ 'Y'
+      *
+      **  Error during ZSFILE processing, return to calling program
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Subroutine : RCFP1 - Subroutine to register P1 Printer file  *
+      *                       via RCF                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFP1     BEGSR                            ** RCFP1 **
+      *
+      ** Ensure report spool file recorded by RCF
+      *
+     C                     Z-ADDSFNUM     PZSNUM  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ    5
+     C                     PARM ATDBR     PENTY   3
+     C                     PARM           SFILE
+     C                     PARM           PZSNUM
+     C                     PARM           PZSERR  1
+      *
+     C           PZSERR    IFEQ 'Y'
+      *
+      ** Error during ZSFILE processing, return to calling program
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+     C/COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+     C/COPY ZSRSRC,ZNCDZ3
+      /EJECT
+     C/COPY ZSRSRC,ZYCEZ1
+      /EJECT
+     C/COPY ZSRSRC,ZPRCIZ1
+      /EJECT
+     C/COPY ZSRSRC,ZPRCOZ1
+      /EJECT
+     C/COPY ZSRSRC,ZACCZZ1
+      /EJECT
+     C/COPY ZSRSRC,ZDAYSZ2
+      /EJECT
+     C/COPY ZSRSRC,ZDYYRZ3
+      /EJECT
+     C/COPY ZSRSRC,ZYLDOZ1
+      /EJECT
+     C/COPY ZSRSRC,ZACCRZ1
+      /EJECT
+     C/COPY ZSRSRC,ZRATEZ1
+      /EJECT
+     C/COPY ZSRSRC,ZYLDIZ1
+      /EJECT
+     C/COPY ZSRSRC,ZYLDZ2
+      /EJECT
+     C/COPY ZSRSRC,ZLCDZ1
+      /EJECT
+     C/COPY ZSRSRC,ZACCH
+      /EJECT
+     C/COPY ZSRSRC,ZBKDT
+      /EJECT
+     C/COPY ZSRSRC,ZFWDT
+      /EJECT
+     C/COPY WNCPYSRC,WRKCDSR
+      /EJECT
+     C***COPY*ZSRSRC,ZNDECZ3*                                                                 CPK024
+      /EJECT
+     C/COPY ZSRSRC,ZCNSDZ1
+      /EJECT
+     C/COPY ZSRSRC,ZCALCD
+      /EJECT
+**   CPY@
+(c) Misys International Banking Systems Ltd. 2002
+**   ZF29 DAY NOS OF FEB 29 TO 2096 (INCLUDING 2000)
+0006001521029820444305904073650882610287117481320914670161311759219053
+2051421975234362489726358278192928030741322023366335124365853804639507
+40968424294389045351
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000

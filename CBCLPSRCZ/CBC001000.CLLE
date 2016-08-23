@@ -1,0 +1,118 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas CB Monitor machine activity')                   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Close of Business Processing                        */
+/*                                                                   */
+/*       CBC001000 - Monitor machine activity                        */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2014           */
+/*                                                                   */
+/*       Last Amend No. CPK030   *CREATE   Date 10Feb14              */
+/*       Prev Amend No. xxxxxxxx           Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CPK030 - New utility to monitor active jobs for a           */
+/*                specified frequency and number of times.           */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       Please note: the primary purpose of this program is to help */
+/*       analyse machine activity over a specified period,           */
+/*       particularly for the CoB.  It is intended as an internal    */
+/*       utility utility only but can be used at a customer site.    */
+/*       For it to run during the CoB it will first need to be added */
+/*       to the CoB via the normal CoB maintenance.                  */
+/*                                                                   */
+/*       For example, component mmCnnnnnn is running slowly and      */
+/*       additional data is required.  This program would be added   */
+/*       to the CoB to start running just before mmCnnnnnn with a    */
+/*       specified period to end after mmCnnnnnn normally completes. */
+/*       Obviously the new component should be removed once analysis */
+/*       has finished.                                               */
+/*                                                                   */
+/*       The specified period is defined by the time between the     */
+/*       loops (LOOPFREQ) and the number of loops (NOOFLOOPS).       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE &LOOPFREQA &NOOFLOOPSA &LOCKFILE +
+                          &LOCKLIB)
+ 
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&LOOPFREQA) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&NOOFLOOPSA) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&LOCKFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LOCKLIB) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&LOOP) TYPE(*INT)
+             DCL        VAR(&LOOPFREQ) TYPE(*INT)
+             DCL        VAR(&NOOFLOOPS) TYPE(*INT)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2014')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Set number of times program will loop. */
+             CHGVAR     VAR(&NOOFLOOPS) VALUE(&NOOFLOOPSA)
+/* Set frequency of loop. */
+             CHGVAR     VAR(&LOOPFREQ) VALUE(&LOOPFREQA)
+ 
+/* For each mode perform a separate subroutine. */
+             IF         COND(&MODE *EQ '*JOB') THEN(DO)
+                CALLSUBR   SUBR(JOB)
+             ENDDO
+             IF         COND(&MODE *EQ '*LCK') THEN(DO)
+                CALLSUBR   SUBR(LCK)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+/******************************************************************************/
+/*                                                                            */
+/* Subroutine to perform WRKACTJOB.                                           */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(JOB)
+ 
+/* Perform display of work active jobs the designated number of times at */
+/*  the designated frequency.                                            */
+             DOFOR      VAR(&LOOP) FROM(1) TO(&NOOFLOOPS)
+                WRKACTJOB  OUTPUT(*PRINT)
+                DLYJOB     DLY(&LOOPFREQ)
+             ENDDO
+ 
+ JOBEND:
+             ENDSUBR
+ 
+/******************************************************************************/
+/*                                                                            */
+/* Subroutine to perform WRKOBJLCK.                                           */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(LCK)
+ 
+/* Perform display of work active jobs the designated number of times at */
+/*  the designated frequency.                                            */
+             DOFOR      VAR(&LOOP) FROM(1) TO(&NOOFLOOPS)
+                IF         COND(&LOCKFILE *NE ' ') THEN(DO)
+                   WRKOBJLCK  OBJ(&LOCKFILE) OBJTYPE(*FILE) OUTPUT(*PRINT)
+                ENDDO
+                IF         COND(&LOCKLIB *NE ' ') THEN(DO)
+                   WRKOBJLCK  OBJ(&LOCKLIB) OBJTYPE(*LIB) OUTPUT(*PRINT)
+                ENDDO
+                DLYJOB     DLY(&LOOPFREQ)
+             ENDDO
+ 
+ LCKEND:
+             ENDSUBR
+ 
+ ENDPGM:
+             ENDPGM

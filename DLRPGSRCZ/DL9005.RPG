@@ -1,0 +1,1815 @@
+     H        1                                                           S01390
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Daily update of history with DL events')      *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Dealing Module                                       *
+     F*                                                               *
+     F*  DL9005 - DAILY UPDATE OF HISTORY FILE WITH DEAL EVENTS       *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+     F*  PURPOSE - TO UPDATE THE DEALING HISTORY FILE WITH DEAL EVENTS*
+     F*  ACTIONED TODAY.  TO DETERMINE THE TYPE OF STATEMENT TO BE    *
+     F*  PRODUCED IF APPLICABLE.                                      *
+     F*                                                               *
+     F*  PROCESSING DESCRIPTION - READ SELECTED RECORDS FROM DKEYSDP. *
+     F*  PLEASE NOTE THAT ONLY RECORDS WITH POSITIONS ONE(1) TO       *
+     F*  TWO(2) OF THE ACCOUNT KEY EQUAL TO ONE OF THE FOLLOWING      *
+     F*  VALUES ARE READ BY THIS PROGRAM: IP, TD, TI, CD, CL.         *
+     F*  DEPENDING ON THE ACCOUNT KEY READ A RECORD IS WRITTEN TO THE *
+     F*  HISTORY FILE.  THE FOLLOWING EVENTS ARE PRODUCED BY THE      *
+     F*  PROGRAM.  THE START OF A LOAN/DEPOSIT, SERVICE CHARGE, TAX   *
+     F*  DEDUCTION, INTEREST PAID/RECEIVED/CAPITIALISATION, PRINCIPAL *
+     F*  DECREASE, MATURITY, ROLLOVER, PRINCIPAL INCREASE. A COUNT OF *
+     F*  RECORDS READ FROM THE FILE DKEYSDP AND RECORDS WRITTEN TO    *
+     F*  HISTSAA ARE PRODUCED ON THE AUDIT REPORT.                    *
+      *                                                               *
+      *  Last Amend No. MD031565           Date 06Aug15               *
+      *  Prev Amend No. MD020257           Date 26Jun15               *
+      *                 CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 AR1042266          Date 15Oct12               *
+      *                 CER059             Date 19Jul10               *
+      *                 BUG26296           Date 06Oct09               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CDL049             Date 05Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 234598             Date 30Jun05               *
+      *                 233565             Date 02Jun05               *
+      *                 232958             Date 08Apr05               *
+      *                 233247             Date 26Apr05               *
+      *                 CGL031             Date 05Jul04               *
+      *                 CDL038             Date 10May05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 203873             Date 13Mar02               *
+      *                 213159             Date 11Dec02               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CAS006             Date 21Jan03               *
+      *                 CAS005             Date 16Dec02               *
+      *                 CDL009             Date 15Apr02               *
+      * Midas Release 4.01.03 ----------------------------------------*
+      *                 207544             Date 10Oct02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 194696             Date 21Dec01               *
+      *                 196132             Date 19Dec01               *
+      *                 196203             Date 03Aug01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CPB002             Date 22Sep00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+     F*                 136274             Date 12Nov99               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 145001             Date 19Oct98               *
+     F*                 CEU015             Date 19Jun98               *
+     F*                 S01408             Date 27Aug96               *
+     F*                 S01408             DATE 06JUN96               *
+     F*                 085050             DATE 21MAY96               *
+     F*                 059962             DATE 19MAR94               *
+     F*                 051154             DATE 26JAN94               *
+     F*                 S01390             DATE 04AUG92               *
+     F*                 S36008             DATE 01/02/90              *
+     F*                 AUS006             DATE 18DEC90               *
+     F*                 EA001              DATE 01/07/88              *
+     F*                 E36008             DATE 13/04/88              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+      *                                                               *
+      *  MD031565 - DL Interest History does not show Withholding Tax *
+      *             and 2nd Tax deduction if taxable interest is      *
+      *             capitalised                                       *
+      *  MD020257 - Difference in reconciliation due to an 'IP'       *
+      *             record in HISTSAA with zero amount.               *
+      *           - Applied fixes 212818 and 261001.                  *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  AR1042266 - Duplicate credit interest postings from BFMidas  *
+      *              to TOF (Child:AR1042267)                         *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG26296 - Add new processing  Daily Update of History with  *
+      *           Dealing Events                                      *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  234598 - Replication indicator incorrectly managed for EU tax*
+      *  233565 - Account Keys definition reviewed.                   *
+      *  232958 - 203873 incomplete. Add missing code.                *
+      *  233247 - Selection of records in DL9005 are incorrect       *
+      *  CGL031 - Taxation on Savings Income                          *
+      *  CDL038 - Extended Deal Sub Type                              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  203873 - When the deal is matured, don't setup REPI flag to  *
+      *           'Y' for the 'IP' (interest); Tof booked it          *
+      *           automatically when it receives the maturity event.  *
+      *  213159 - In case of interest paid separately, the event      *
+      *           amount is not correctly setted.                     *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *           (Recompile)                                         *
+      *  CDL009 - Suppress Interest History Cheques Printing.         *
+      *  207544 - Interest Payment sometimes not written - due to     *
+      *           051154 not initialising @EDAT at the same time      *
+      *           as the @DLNO field.                                 *
+     F*  194696 - Send Interim Payment for 'TD' and 'TI' as well.     *
+     F*  196132 - Setup correctly REPI indicator                      *
+     F*           Use access object AOCUSTR1 to retrieve last fields  *
+     F*           from SDCUSTPD (BBPRBA)                              *
+     F*           Setup correctly key used in AOCUSTR1                *
+     F*  196203 - INT CAP record duplicated on INTH (DL9100).         *
+     F*           This is because some records have INTC = 'Y' that   *
+     F*           should not. Applied part of fix 185096.             *
+     F*  CPB002 - Meridian DBA Middleware Replication Customization.  *
+     F*  136274 - If a deal has two records with the same date, the   *
+     F*           second record will have an invalid calculation      *
+     F*           basis equal to zero in HISTSAA.                     *
+     F*           Applied fix 129690.                                 *
+     F*  145001 - CEU015 fix: Remove CEU015 changes as RBDA is again  *
+     F*           expressed in deal currency.                         *
+     F*  CEU015 - EMU Enhanced MM Deal Rollover                       *
+     F*  S01408 - Insertion of hook  DL9005CCP3                       *
+     F*         - Insertion of hook  DL9005CCP4                       *
+     F*         - Insertion of hook  DL9005CCP5                       *
+     F*         - Insertion of hook  DL9005CCP6                       *
+     F*         - Insertion of hook  DL9005CCP7                       *
+     F*         - Insertion of hook  DL9005CCP8                       *
+     F*         - Insertion of hook  DL9005CCP9                       *
+     F*         - Insertion of hook  DL9005CP10                       *
+     F*         - Insertion of hook  DL9005CP11                       *
+     F*         - Insertion of hook  DL9005CP12                       *
+     F*         - Insertion of hook  DL9005CP13                       *
+     F*         - Insertion of hook  DL9005CP14                       *
+     F*         - Insertion of hook  DL9005CP15                       *
+     F*         - Insertion of hook  DL9005CP16                       *
+     F*         - Insertion of hook  DL9005CP17                       *
+     F*         - Insertion of hook  DL9005CP18                       *
+     F*         - Insertion of hook  DL9005CP19                       *
+     F*         - Insertion of hook  DL9005FFP1                       *
+     F*  S01408 - Insertion of hook  DL9005CCP2                       *
+     F*         - Insertion of hook  DL9005CCP1                       *
+     F*         - Insertion of hook  DL9005EEP2                       *
+     F*         - Insertion of hook  DL9005EEP1                       *
+     F*
+     F*  085050 - Correct processing for Up Front Interest Deals.     *
+     F*  059962 - Two IP records produced when capitilisation of a CD *
+     F*  051154 - Interim interest paid not shown. Applied fix        *
+     F*           034321 and E36379 to produced interim interest      *
+     F*           records.                                            *
+     F*  S01390 - Release 10 Changes for Australianisation            *
+     F*  S36008 - INTEREST HISTORY ENQUIRY AND PURGE                  *
+     F*  AUS006 - AUSTRALIAN PRODUCT - INTEREST HISTORY               *
+     F*  EA001  - AUSTRALIAN RELEASE ERROR FIX                        *
+     F*           IGNORE FRA/IRS DEALS FILE                           *
+     F*  E36008 - STANDARD CHARTERED BANK ERROR                       *
+     F*           TWO RECORDS BEING GENERATED FOR 'IP'                *
+     F*                                                               *
+     F*****************************************************************
+      ***/EJECT*****                                                      S01390
+      ***************FFFFFFFFFFFFFF***************************************S01390
+      ***************FFFFFFFFFFFFFF***************************************S01390
+      ***************FFF**************************************************S01390
+      ***************FFF**************************************************S01390
+      ***************FFFFFFFF*********************************************S01390
+      ***************FFFFFFFF*********************************************S01390
+      ***************FFF**************************************************S01390
+      ***************FFF**************************************************S01390
+      ***************FFF**************************************************S01390
+      ***************FFF**************************************************S01390
+     F*
+     F* INPUT FILES
+     F*                                                               *
+     F*****************************************************************
+     FDKEYSDP IF  E                    DISK
+     F***TABTB10*IF**E                    DISK                            S01390
+     F***TABTB11*IF**E                    DISK                            S01390
+     FDLRTS   IF  E           K        DISK
+     FDEALS   IF  E           K        DISK
+     F            DEALSDAF                          KIGNORE
+     F            DEALSDBF                          KIGNORE
+     F            DEALSDDF                          KIGNORE
+     F            DEALSDEF                          KIGNORE
+EA001F            DEALSDGF                          KIGNORE
+     F            DEALSDFF                          KIGNORE
+     F***TABDLEI*IF**E           K        DISK                            S01390
+     F*********** TABLETAF                          KIGNORE               S01390
+     F*********** TABTB10F                          KIGNORE               S01390
+     F*********** TABTB11F                          KIGNORE               S01390
+     F*********** TABTB20F                          KIGNORE               S01390
+     F*********** TABTB40F                          KIGNORE               S01390
+     F*********** TABTE10F                          KIGNORE               S01390
+     F*********** TABTE20F                          KIGNORE               S01390
+     F*********** TABTG10F                          KIGNORE               S01390
+     F*********** TABTG20F                          KIGNORE               S01390
+     F*********** TABLETHF                          KIGNORE               S01390
+     F*********** TABLETIF                          KIGNORE               S01390
+     F*********** TABLETKF                          KIGNORE               S01390
+     F*********** TABLETLF                          KIGNORE               S01390
+     F*********** TABLETMF                          KIGNORE               S01390
+     F*********** TABLETPF                          KIGNORE               S01390
+     F*********** TABLETRF                          KIGNORE               S01390
+     F*********** TABLETSF                          KIGNORE               S01390
+     F*********** TABLET1F                          KIGNORE               S01390
+     F*********** TABLET2F                          KIGNORE               S01390
+     F*********** TABLET5F                          KIGNORE               S01390
+     F*********** TABLETXF                          KIGNORE               S01390
+     FHIST1   IF  E           K        DISK                               213159
+     F            HISTSAAF                          KRENAMEHISTSA1F       213159
+     F/COPY WNCPYSRC,DL9005FFP1                                           S01408
+     F*
+     F* OUTPUT FILES
+     FHISTSAA O   E                    DISK
+     FHSTRVAA O   E                    DISK
+     F***DL9005P1O***E                    PRINTER                         S01390
+     FDL9005AUO   E                    PRINTER                            S01390
+      ***/EJECT*****                                                      S01390
+      /SPACE 3                                                            S01390
+     E***************EEEEEEEEEEEEEE***************************************S01390
+     E***************EEEEEEEEEEEEEE***************************************S01390
+     E***************EEE**************************************************S01390
+     E***************EEE**************************************************S01390
+     E***************EEEEEEEE*********************************************S01390
+     E***************EEEEEEEE*********************************************S01390
+     E***************EEE**************************************************S01390
+     E***************EEE**************************************************S01390
+     E***************EEEEEEEEEEEEEE***************************************S01390
+     E***************EEEEEEEEEEEEEE***************************************S01390
+     E*
+     E/COPY WNCPYSRC,DL9005E001
+     E                    ZHC        50  3                             Y
+     E                    ZYDY    4   4  4 0
+     E                    ZMDY   13  13  3 0
+     E                    ZMNM   12  12  3
+     E                    DTE1   12  12  2 0 DTE2    2 0
+      *                                                                   S01408
+      *                                                                   S01408
+      /COPY WNCPYSRC,DL9005EEP1                                           S01408
+      *                                                                   S01408
+      *                                                                   S01408
+     E**********          SEQ1    8   8  2   SEQ2    2                                        CGL031
+     E**********          SEQ1    9   9  2   SEQ2    2                               CGL031 BUG26296
+     E                    SEQ1   11  11  2   SEQ2    2                                      BUG26296
+      *                                                                   S01408
+      *                                                                   S01408
+      /COPY WNCPYSRC,DL9005EEP2                                           S01408
+      *                                                                   S01408
+      *                                                                   S01408
+     E                    CPY@    1   1 80                                S01390
+     E/COPY ZSRSRC,ZHOLE                                                  S01390
+      /EJECT
+     I***************IIIIIIIIIIIIII***************************************S01390
+     I***************IIIIIIIIIIIIII***************************************S01390
+     I********************III*********************************************S01390
+     I********************III*********************************************S01390
+     I********************III*********************************************S01390
+     I********************III*********************************************S01390
+     I********************III*********************************************S01390
+     I********************III*********************************************S01390
+     I***************IIIIIIIIIIIIII***************************************S01390
+     I***************IIIIIIIIIIIIII***************************************S01390
+     I***********                                                         S01390
+     I***********                                                         S01390
+     I*****TABLE*FILE*-*HOLIDAY*RECORD.***********************************S01390
+     I********E-EXCLUDE,*I-INCLUDE.***************************************S01390
+     I*
+     IDLRTSAAF
+     I              DLNO                            DLNO@
+     I              VDAT                            VDAT@
+     I              ORAT                            ORAT@
+     I              NRAT                            NRAT@
+     I              TERM                            TERM@
+     IDKEYSDPF
+     I              EAMT                            EAMT1
+     I              INTR                            INTR1
+     IDEALSDCF
+     I              RECI                            RECI1                 203873
+     I              PCPL                            PCPL1
+     I              ICBS                            ICBS1                 S36008
+     IHISTSA1F                                                            213159
+     I              RTYP                            HRTYP                 213159
+     I              CNUM                            HCNUM                 213159
+     I              EDAT                            HEDAT                 213159
+     I              DLNO                            HDLNO                 213159
+     I              PCPL                            HPCPL                 213159
+     I              NRAT                            HNRAT                 213159
+     I              ORAT                            HORAT                 213159
+     I              TERM                            HTERM                 213159
+     I              DTYP                            HDTYP                 213159
+     I              DLST                            HDLST                 213159
+     I              BRCA                            HBRCA                 213159
+     I              SQNO                            HSQNO                 213159
+     I              MDAT                            HMDAT                 213159
+     I              SECI                            HSECI                 213159
+     I              CCY                             HCCY                  213159
+     I              INTC                            HINTC                 213159
+     I              EAMT                            HEAMT                 213159
+     I              CHQI                            HCHQI                 213159
+     I              ICBS                            HICBS                 213159
+     I              REPI                            HREPI                 213159
+     I              CLAS                            HCLAS                 CDL038
+     I*
+     I* ACCOUNT KEY DATA STRUCTURE
+     I            DS
+     I****************************************1  10 AKEY                                      CDL038
+     I                                        1  14 AKEY                                      CDL038
+     I                                        3   3 AKEY3
+     I                                        6   6 AKEY6                                     233565
+     I                                        7   7 AKEY7                                     233247
+     I                                        6   7 X6X7                                      233247
+     I                                        9   9 AKEY9
+     I                                        9  10 X9X10
+     I                                       10  10 AKEY10
+     I/COPY WNCPYSRC,DL9005I001
+     I*
+     I* RUN DATE DATA STRUCTURE
+     I            DS
+     I                                        1   60DAT1
+     I                                        1   20DD1
+     I                                        3   40MM1
+     I                                        5   60YY1
+     I*
+     I* LAST DAY OF MONTH DATA STRUCTURE
+     I            DS
+     I                                        1   60DAT2
+     I                                        1   20DD2
+     I                                        3   40MM2
+     I                                        5   60YY2
+     I*
+     I* NEXT WORKING DAY DATA STRUCTURE
+     I            DS
+     I                                        1   60DAT3
+     I                                        1   20DD3
+     I                                        3   40MM3
+     I                                        5   60YY3
+     I*
+     I* DATA STRUCTURE CONTAINING HISTORY RECORD
+     IHISTR0      DS
+     I                                        1   2 RTYP
+     I**********                              3   80CNUM                                      CSD027
+     I                                        3   8 CNUM                                      CSD027
+     I                                        9  130EDAT
+     I                                       14  190DLNO
+     I                                       20  340PCPL
+     I                                       35  478NRAT
+     I                                       48  608ORAT
+     I                                       61  63 TERM
+     I                                       64  65 DTYP
+     I                                       66  67 DLST
+     I***********                            68  700BRCD                  S01390
+     I                                       68  70 BRCA                  S01390
+     I                                       71  720SQNO
+     I                                       73  770MDAT
+     I                                       78  78 SECI
+     I                                       79  81 CCY
+     I                                       82  82 INTC
+     I                                       83  970EAMT
+     I                                       98  98 CHQI
+     I                                       99  99 ICBS                  S36008
+     I                                      100 103 CLAS                  CDL038
+     I*
+     I* DATA STRUCTURE CONTAINING HISTORY RECORD TEMPORARILY
+     IHISTR1      DS
+     I                                        1   2 #RTYP
+     I**********                              3   80#CNUM                                     CSD027
+     I                                        3   8 #CNUM                                     CSD027
+     I                                        9  130#EDAT
+     I                                       14  190#DLNO
+     I                                       20  340#PCPL
+     I                                       35  478#NRAT
+     I                                       48  608#ORAT
+     I                                       61  63 #TERM
+     I                                       64  65 #DTYP
+     I                                       66  67 #DLST
+     I***********                            68  700#BRCD
+     I                                       68  70 #BRCA
+     I                                       71  720#SQNO
+     I                                       73  770#MDAT
+     I                                       78  78 #SECI
+     I                                       79  81 #CCY
+     I                                       82  82 #INTC
+     I                                       83  970#EAMT
+     I                                       98  98 #CHQI
+     I                                       99  99 #ICBS                 S36008
+     I                                      100 103 #CLAS                 CDL038
+     I*                                                                   S01390
+     ISDBANK    E DSSDBANKPD                                              S01390
+     I* Bank Details Accesses Via Access Program                          S01390
+     I*                                                                   059962
+     ISDDEAL    E DSSDDEALPD                                              059962
+     I*                                                                   059962
+     I** Dealing ICD  Accesses Via Access Program                         059962
+     I*                                                                   S01390
+     ISDCUST    E DSSDCUSTPD                                              CPB002
+     I*                                                                   CPB002
+     I** Customer Details Via Access Program                              CPB002
+     I*                                                                   CPB002
+     ISDMMOD    E DSSDMMODPD                                              CPB002
+     I*                                                                   CPB002
+     I** Module Details Via Access Program                                CPB002
+     I*                                                                   CPB002
+     ISCSARD    E DSSCSARDPD                                                                BUG26296
+     I* SAR Details Accessed Via Access Program                                             BUG26296
+     I*                                                                                     BUG26296
+     IDSFDY     E DSDSFDY                                                 S01390
+     I* First DS For Access Programs, Short Data Structure                S01390
+     I*                                                                   S01390
+     I*                                                                   CPB002
+     IDSLDY     E DSDSLDY                                                 CPB002
+     I* Third DS For Access Programs, Very Long Data Structure            CPB002
+     I*                                                                   CPB002
+     I/SPACE 3                                                            S01390
+     I/COPY ZSRSRC,ZHOLI                                                  S01390
+     I/SPACE 3                                                            S01390
+     I/COPY ZSRSRC,ZHOLDS                                                 S01390
+     I*                                                                   S01390
+      /EJECT
+     C***************CCCCCCCCCCCCCC***************************************S01390
+     C***************CCCCCCCCCCCCCC***************************************S01390
+     C***************CCC**************************************************S01390
+     C***************CCC**************************************************S01390
+     C***************CCC**************************************************S01390
+     C***************CCC**************************************************S01390
+     C***************CCC**************************************************S01390
+     C***************CCC**************************************************S01390
+     C***************CCCCCCCCCCCCCC***************************************S01390
+     C***************CCCCCCCCCCCCCC***************************************S01390
+     C*
+     C                     EXSR #INIT                      INITIALISATION
+     C*
+     C*  PROCESS DKEYSDP UNTIL END OF FILE
+     C           *IN20     DOWEQ#OFF
+     C*
+     C                     READ DKEYSDP                  20
+     C           *IN20     IFEQ #OFF
+     C*
+     C*  COUNT NUMBER OF RECORDS READ FROM DKEYSDP
+     C                     ADD  1         DLCNT
+     C*
+     C*  ON CHANGE OF DEAL NUMBER RETRIEVE DEALS RECORD FROM DEALS FILE
+     C           DLNO      IFNE ##DLNO
+     C                     MOVEA'00'      *IN,74
+     C                     Z-ADDDLNO      ##DLNO
+     C           DLNO      CHAINDEALSDCF             21
+     C*                                                                   085050
+     C*  Save interest calculation basis for Front Up interest Deals      085050
+     C                     MOVE ICBS1     ICBS2   1                       085050
+     C*                                                                   085050
+     C/COPY WNCPYSRC,DL9005CCP3                                           S01408
+     C                     END
+     C*
+     C*  IGNORE RECORD IF NO RECORD IS FOUND ON THE DEALS FILE FOR DEAL
+     C           *IN21     IFEQ #OFF
+     C*
+     C*  IGNORE THE RECORD IF THE EVENT AMOUNT FROM DKEYSDP IS ZERO
+     C           EAMT1     IFNE 0
+     C*                                                                   051154
+     C** Set the previous deal no. to zeros if the previous               051154
+     C** account key is not for net interest due.                         051154
+     C*                                                                   051154
+     C           *IN80     IFEQ '0'                                       051154
+     C                     Z-ADD*ZEROS    @DLNO                           051154
+     C                     Z-ADD*ZEROS    @EDAT                                               207544
+     C                     END                                            051154
+     C*
+     C*  IGNORE THE RECORD IF POSITION THREE OF THE ACCOUNT KEY IS
+     C*  EQUAL TO "A" OR "D"
+     C           AKEY3     IFNE 'A'
+     C           AKEY3     ORNE 'D'
+     C*                                                                   085050
+     C*  PROCESS FRONT UP INTEREST DEALS CORRECTLY.                       085050
+     C           FUID      IFEQ 'Y'                                       085050
+     C           AKEY3     ANDEQ'V'                                       085050
+     C*                                                                   085050
+     C*  IF POSITION TEN EQUALS "A" THEN EXECUTE HISTA                    085050
+     C*                         "I" THEN EXECUTE IIP                      085050
+     C***********AKEY10    CASEQ'A'       HISTA                                        085050 233565
+     C***********AKEY10    CASEQ'I'       IIP                                          085050 233565
+     C***********          END                                                         085050 233565
+     C           AKEY10    IFEQ 'A'                                                           233565
+     C           AKEY9     ANDNE'U'                                                           233565
+     C                     EXSR HISTA                                                         233565
+     C                     ENDIF                                                              233565
+      *                                                                                       233565
+     C           AKEY10    IFEQ 'I'                                                           233565
+     C                     EXSR IIP                                                           233565
+     C                     ENDIF                                                              233565
+      *                                                                                       233565
+     C*                                                                   085050
+     C                     ELSE                                           085050
+     C*
+     C*  IF POSITION THREE EQUALS "V" THEN EXECUTE HISTA
+     C*                           "I" THEN EXECUTE IIP
+     C*                           "M" THEN EXECUTE MDP
+     C           AKEY6     IFEQ ' '                                                           233565
+     C           AKEY3     CASEQ'V'       HISTA
+     C           AKEY3     CASEQ'I'       IIP
+     C           AKEY3     CASEQ'M'       MDP
+     C/COPY WNCPYSRC,DL9005CP10                                           S01408
+     C                     END
+     C                     ENDIF                                                              233565
+     C*
+     C                     END                                            085050
+     C/COPY WNCPYSRC,DL9005C003
+     C*                                                                   085050
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C*  WRITE AUDIT REPORT ON CURRENT RUN OF PROGRAM
+     C                     WRITEAUDIT
+     C*
+     C*  SETON LAST RECORD INDICATOR TO END PROGRAM
+     C                     MOVE #ON       *INLR
+      /TITLE DEFINITION ROUTINE
+     C           #DEFN     BEGSR
+      **--------------------------------------------------------#DEFN
+      **                                                           **
+      ** #DEFN - DEFINITION ROUTINE.                               **
+      **                                                           **
+      **-----------------------------------------------------------**
+      *
+     C           *LIKE     DEFN DLNO      ##DLNO
+     C           *LIKE     DEFN ACSQ      X
+     C           *LIKE     DEFN EDAT      WKDAT
+     C           *LIKE     DEFN EDAT      CALDAT
+     C           *LIKE     DEFN RODA      INT1
+     C           *LIKE     DEFN PCPL      XXX
+     C           *LIKE     DEFN CALDAT    WKDAT1
+     C************LIKE     DEFN DNWD      DNWDM1                          S01390
+     C           *LIKE     DEFN BJDNWD    DNWDM1                          S01390
+     C*
+     C           KEY001    KLIST
+     C                     KFLD           DLNO
+     C                     KFLD           EDAT
+     C*
+     C                     ENDSR
+      /TITLE INITIALISACTION ROUTINE
+     C           #INIT     BEGSR
+      **--------------------------------------------------------#INIT
+      **                                                           **
+      ** #INIT - INITIALISATION ROUTINE.                           **
+      **                                                           **
+      **-----------------------------------------------------------**
+      *
+     C                     MOVE '1'       #ON     1
+     C                     MOVE '0'       #OFF    1
+     C                     MOVEACPY@      BIS@   80                       S01390
+     C*
+     C                     MOVE #OFF      *IN98
+     C*
+     C                     TIME           TIME    60
+     C*
+     C***READ*TABLE*FILES*************************************************S01390
+     C***********          READ TABTB10                  H1               S01390
+     C                     CALL 'AOBANKR0'                                S01390
+     C***********          PARM '*DBERR ' RTCD    7                S01390 059962
+     C                     PARM '*MSG   ' RTCD    7                       059962
+     C                     PARM '*FIRST ' OPTN    7                       S01390
+     C           SDBANK    PARM SDBANK    DSFDY                           S01390
+     C*                                                                   059962
+     C           RTCD      IFNE *BLANK                                    059962
+     C                     MOVEL'SDBANKPD'DBFILE 10                       059962
+     C                     MOVEL'01'      DBASE   3                       059962
+     C                     MOVELOPTN      DBOPTN  7                       059962
+     C                     MOVEL'1'       *INU7                           059962
+     C                     MOVEL'1'       *INU8                           059962
+     C                     MOVEL'1'       *INLR                           059962
+     C*                                                                   059962
+     C** Seton indicator *IN20 to end processing of dkeysdp               059962
+     C*                                                                   059962
+     C                     MOVEL'1'       *IN20                           059962
+     C                     EXSR *PSSR                                     059962
+     C                     GOTO ENDNIT                                    059962
+     C                     END                                            059962
+     C*                                                                   CPB002
+     C                     CALL 'AOMMODR0'                                CPB002
+     C                     PARM *BLANKS   RTCD                            CPB002
+     C                     PARM '*FIRST ' OPTN                            CPB002
+     C           SDMMOD    PARM SDMMOD    DSFDY                           CPB002
+     C*                                                                   CPB002
+     C           RTCD      IFNE *BLANK                                    CPB002
+     C                     MOVEL'SDMMODPD'DBFILE                          CPB002
+     C                     MOVEL'04'      DBASE                           CPB002
+     C                     MOVELOPTN      DBOPTN                          CPB002
+     C                     MOVE *ON       *INU7                           CPB002
+     C                     MOVE *ON       *INU8                           CPB002
+     C                     MOVE *ON       *INLR                           CPB002
+     C*                                                                   CPB002
+     C** Seton indicator *IN20 to end processing of dkeysdp               CPB002
+     C*                                                                   CPB002
+     C                     MOVE *ON       *IN20                           CPB002
+     C                     EXSR *PSSR                                     CPB002
+     C                     GOTO ENDNIT                                    CPB002
+     C                     END                                            CPB002
+     C*
+     C***********          READ TABTB11                  H1               S01390
+     C*
+     C***********DNWD      SUB  1         DNWDM1                          S01390
+     C           BJDNWD    SUB  1         DNWDM1                          S01390
+     C*
+     C*  GIVEN THE RUNDATE AND THE NEXT WORKING DATE THE FOLLOWING
+     C*  CODE CALCULATES THE LAST CALENDAR DAY OF THE MONTH NOW
+     C*  BEING PROCESSED AND THE LAST WORKING DATE OF THE CURRENT
+     C*  MONTH.
+     C***********          Z-ADDRUND      ZDAYNO                          S01390
+     C                     Z-ADDBJRDNB    ZDAYNO                          S01390
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     DAT1
+     C*
+     C                     MOVE #OFF      *IN73
+     C                     Z-ADD1         X
+     C           MM1       LOKUPDTE1,X                   73
+     C           *IN73     IFEQ #ON
+     C                     MOVE DTE2,X    DD2
+     C                     MOVE MM1       MM2
+     C                     MOVE YY1       YY2
+     C           MM1       IFEQ 02
+     C           YY1       DIV  4         XXX
+     C                     MVR            REM     20
+     C           REM       IFEQ 0
+     C                     Z-ADD29        DD2
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C***********          Z-ADDDNWD      ZDAYNO                          S01390
+     C                     Z-ADDBJDNWD    ZDAYNO                          S01390
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     DAT3
+     C*
+     C                     Z-ADDDAT2      ZDATE
+     C                     EXSR ZDATE1
+     C                     Z-ADDZDAYNO    CALDAT
+     C*
+     C                     Z-ADDCALDAT    WKDAT1
+     C*
+     C           MM1       IFNE MM3
+     C***********          Z-ADDRUND      WKDAT                           S01390
+     C                     Z-ADDBJRDNB    WKDAT                           S01390
+     C                     ELSE
+     C           *IN72     DOUEQ#ON
+     C                     Z-ADDWKDAT1    ZDAYNO
+     C***********          MOVE BCCY      ZCCY                            S01390
+     C                     MOVE BJCYCD    ZCCY                            S01390
+     C                     MOVE *BLANKS   ZLOC                            S01390
+     C***********          EXSR ZDATE5                                    S01390
+     C                     EXSR ZCHKH                                     S01390
+     C************IN99     IFEQ #OFF                                      S01390
+     C           ZIND      IFEQ 'W'                                       S01390
+     C                     MOVE #ON       *IN72
+     C                     MOVE WKDAT1    WKDAT
+     C                     ELSE
+     C                     SUB  1         WKDAT1
+     C                     END
+     C                     END
+     C                     END
+     C*                                                                   059962
+     C** Get Dealing ICD                                                  059962
+     C*                                                                   059962
+     C**********           CALL 'AODEALR0'                                059962              CGL029
+     C                     CALL 'AODEALR1'                                                    CGL029
+     C                     PARM '*MSG   ' RTCD    7                       059962
+     C                     PARM '*FIRST ' OPTN    7                       059962
+     C********** SDDEAL    PARM SDDEAL    DSFDY                           059962              CGL029
+     C           SDDEAL    PARM SDDEAL    DSSDY                                               CGL029
+     C*                                                                   059962
+     C           RTCD      IFNE *BLANK                                    059962
+     C                     MOVEL'SDDEALPD'DBFILE                          059962
+     C                     MOVEL'02'      DBASE                           059962
+     C                     MOVELOPTN      DBOPTN                          059962
+     C                     MOVEL'1'       *INU7                           059962
+     C                     MOVEL'1'       *INU8                           059962
+     C                     MOVEL'1'       *INLR                           059962
+     C*                                                                   059962
+     C** Seton indicator *IN20 to end processing of dkeysdp               059962
+     C*                                                                   059962
+     C                     MOVEL'1'       *IN20                           059962
+     C                     EXSR *PSSR                                     059962
+     C                     GOTO ENDNIT                                    059962
+     C                     END                                            059962
+      ** Access SAR details file to see if CDL009 SAR is installed.                           CDL009
+      *                                                                                       CDL009
+     C                     MOVE 'N'       CDL009                                              CDL009
+     C                     CALL 'AOSARDR0'                                                    CDL009
+     C                     PARM *BLANKS   PRTCD   7                                           CDL009
+     C                     PARM '*VERIFY' POPTN   7                                           CDL009
+     C                     PARM 'CDL009'  PSARD   6                                           CDL009
+      *                                                                                       CDL009
+     C           PRTCD     IFNE *BLANKS                                                       CDL009
+     C           PRTCD     IFNE '*NRF'                                                        CDL009
+     C                     MOVEL'SCSARDPD'DBFILE                                              CDL009
+     C                     MOVEL'05'      DBASE                                               CDL009
+     C                     MOVELPOPTN     DBOPTN                                              CDL009
+     C                     MOVE '1'       *INU7                                               CDL009
+     C                     MOVE '1'       *INU8                                               CDL009
+     C                     MOVE '1'       *INLR                                               CDL009
+     C*                                                                                       CDL009
+     C** Seton indicator *IN20 to end processing of dkeysdp                                   CDL009
+     C*                                                                                       CDL009
+     C                     MOVE '1'       *IN20                                               CDL009
+     C                     EXSR *PSSR                                                         CDL009
+     C                     GOTO ENDNIT                                                        CDL009
+     C                     ENDIF                                                              CDL009
+     C                     ELSE                                                               CDL009
+     C                     MOVE 'Y'       CDL009  1                                           CDL009
+     C                     ENDIF                                                              CDL009
+      *                                                                                       CDL009
+      ***********                                                  CEU015 145001
+      ***Access*SAR*details*file*to*see*if*CEU015*SAR*is*installed.CEU015 145001
+      ***********                                                  CEU015 145001
+     C***********          CALL 'AOSARDR0'                         CEU015 145001
+     C***********          PARM *BLANKS   @RTCD   7                CEU015 145001
+     C***********          PARM '*VERIFY' @OPTN   7                CEU015 145001
+     C***********          PARM 'CEU015'  @SARD   6                CEU015 145001
+     C***********                                                  CEU015 145001
+     C***********@RTCD     IFEQ *BLANK                             CEU015 145001
+     C***********          MOVE 'Y'       CEU015  1                CEU015 145001
+     C***********          ELSE                                    CEU015 145001
+     C***********          MOVE 'N'       CEU015                   CEU015 145001
+     C***********          ENDIF                                   CEU015 145001
+     C*
+     C/COPY WNCPYSRC,DL9005C001
+     C***********          ENDSR                                          059962
+      *                                                                                       CGL031
+      ** Access SAR details file to see if CGL031 SAR is installed.                           CGL031
+      *                                                                                       CGL031
+     C                     CALL 'AOSARDR0'                                                    CGL031
+     C                     PARM *BLANKS   PRTCD   7                                           CGL031
+     C                     PARM '*VERIFY' POPTN   7                                           CGL031
+     C                     PARM 'CGL031'  PSARD   6                                           CGL031
+      *                                                                                       CGL031
+     C           PRTCD     IFNE *BLANK                                                        CGL031
+     C           PRTCD     ANDNE'*NRF   '                                                     CGL031
+     C                     MOVEL'SCSARDPD'DBFILE                                              CGL031
+     C                     MOVEL'05'      DBASE                                               CGL031
+     C                     MOVEL'CGL031'  DBOPTN                                              CGL031
+     C                     MOVE *ON       *INU7                                               CGL031
+     C                     MOVE *ON       *INU8                                               CGL031
+     C                     MOVE *ON       *INLR                                               CGL031
+     C                     MOVE *ON       *IN20                                               CGL031
+     C                     EXSR *PSSR                                                         CGL031
+     C                     GOTO ENDNIT                                                        CGL031
+     C                     ENDIF                                                              CGL031
+      *                                                                                       CGL031
+     C           PRTCD     IFEQ *BLANK                                                        CGL031
+     C                     MOVE 'Y'       CGL031  1                                           CGL031
+     C                     ELSE                                                               CGL031
+     C                     MOVE 'N'       CGL031                                              CGL031
+     C                     ENDIF                                                              CGL031
+      *                                                                                       CGL031
+      ** Access SAR details to check whether CER048 is installed                            BUG26296
+      *                                                                                     BUG26296
+     C                     CALL 'AOSARDR0'                                                  BUG26296
+     C                     PARM *BLANKS   PRTCD                                             BUG26296
+     C                     PARM '*VERIFY' POPTN                                             BUG26296
+     C                     PARM 'CER048'  PSARD                                             BUG26296
+     C           SCSARD    PARM SCSARD    DSFDY                                             BUG26296
+      *                                                                                     BUG26296
+     C           PRTCD     IFNE *BLANKS                                                     BUG26296
+     C           PRTCD     ANDNE'*NRF    '                                                  BUG26296
+     C                     MOVE 'SCSARDPD'DBFILE                                            BUG26296
+     C                     MOVEL'043'     DBASE                                             BUG26296
+     C                     MOVEL'CER048'  DBOPTN                                            BUG26296
+     C                     MOVE *ON       *INU7                                             BUG26296
+     C                     MOVE *ON       *INU8                                             BUG26296
+     C                     MOVE *ON       *INLR                                             BUG26296
+     C                     MOVE *ON       *IN20                                             BUG26296
+     C                     EXSR *PSSR                                                       BUG26296
+     C                     GOTO ENDNIT                                                      BUG26296
+      *                                                                                     BUG26296
+     C                     ENDIF                                                            BUG26296
+      *                                                                                     BUG26296
+     C           PRTCD     IFEQ *BLANKS                                                     BUG26296
+     C                     MOVE 'Y'       CER048  1                                         BUG26296
+     C                     ELSE                                                             BUG26296
+     C                     MOVE 'N'       CER048                                            BUG26296
+     C                     ENDIF                                                            BUG26296
+      *                                                                                     BUG26296
+      ** Access SAR details to check whether CER054 is installed                            BUG26296
+     C                     CALL 'AOSARDR0'                                                  BUG26296
+     C                     PARM *BLANKS   PRTCD                                             BUG26296
+     C                     PARM '*VERIFY' POPTN                                             BUG26296
+     C                     PARM 'CER054'  PSARD                                             BUG26296
+     C           SCSARD    PARM SCSARD    DSFDY                                             BUG26296
+      *                                                                                     BUG26296
+     C           PRTCD     IFNE *BLANKS                                                     BUG26296
+     C           PRTCD     ANDNE'*NRF    '                                                  BUG26296
+     C                     MOVE 'SCSARDPD'DBFILE                                            BUG26296
+     C                     MOVEL'050'     DBASE                                             BUG26296
+     C                     MOVEL'CER054'  DBOPTN                                            BUG26296
+     C                     MOVE *ON       *INU7                                             BUG26296
+     C                     MOVE *ON       *INU8                                             BUG26296
+     C                     MOVE *ON       *INLR                                             BUG26296
+     C                     MOVE *ON       *IN20                                             BUG26296
+     C                     EXSR *PSSR                                                       BUG26296
+     C                     GOTO ENDNIT                                                      BUG26296
+      *                                                                                     BUG26296
+     C                     ENDIF                                                            BUG26296
+      *                                                                                     BUG26296
+     C           PRTCD     IFEQ *BLANKS                                                     BUG26296
+     C                     MOVE 'Y'       CER054  1                                         BUG26296
+     C                     ELSE                                                             BUG26296
+     C                     MOVE 'N'       CER054                                            BUG26296
+     C                     ENDIF                                                            BUG26296
+      *                                                                                     BUG26296
+     C           ENDNIT    ENDSR                                          059962
+     C*                                                                   059962
+     C*****************************************************************   059962
+      /TITLE FIRST HISTORY SUBROUTINE
+     C           HISTA     BEGSR
+      **--------------------------------------------------------HISTA
+      **                                                           **
+      ** HISTA - WRITE A RECORD TO THE HISTORY FILE WITH RECORD    **
+      **         TYPE LD OR PI.                                    **
+      **                                                           **
+      **-----------------------------------------------------------**
+      *
+     C*  OUTPUT A RECORD TO THE HISTORY FILE HISTSAA
+     C*  RECORD TYPE LD IS THE START DATE RECORD
+     C*  RECORD TYPE PI IS THE PRINCIPAL INCREASE RECORD
+     C           AKEY9     IFEQ ' '
+     C                     MOVE 'LD'      RTYP
+     C                     ELSE
+     C           AKEY9     IFEQ 'I'
+     C                     MOVE 'PI'      RTYP
+     C                     END
+     C                     END
+     C*
+     C*  SET UP HISTORY RECORD,
+     C*  WRITE RECORD AND CLEAR RECORD AFTER OUTPUT.
+     C*  KEEP A COUNT OF THE NUMBER OF RECORDS OUTPUT TO HISTSAA
+     C                     EXSR HISTB
+     C           EDAT      CASLTDNWDM1    SUBRTS
+     C                     END
+     C*                                                                   085050
+     C*  SET UP FUID ON HISTORY FILE.                                     085050
+     C           FUID      IFEQ 'Y'                                       085050
+     C                     MOVE 'F'       INTC                            085050
+     C                     MOVE ICBS2     ICBS                            085050
+     C                     END                                            085050
+     C*                                                                   085050
+     C                     WRITEHISTSAAF
+     C                     EXSR HISTC
+     C                     ADD  1         HCNT
+     C*
+     C                     ENDSR
+      /TITLE DETERMINE THE CHEQUE/STATEMENT INDICATOR
+     C           CHQIS     BEGSR
+      **---------------------------------------------------------CHQI
+      **                                                           **
+      ** CHQI  - SUBROUTINE TO DETERMINE THE CHEQUE/STATEMENT      **
+      **         INDICATOR.                                        **
+      **                                                           **
+      **-----------------------------------------------------------**
+      *
+     C*  FOR "IP" TYPE RECORDS THE CHEQUE/STATEMENT INDICATOR
+     C*  SHOULD FOLLOW THESE CONDITIONS:
+     C*  IF RCDC (DEALS) = 15 THEN CHQI = L FOR LOAN, OTHERWISE
+     C*  IF INTC = "Y" THEN CHQI = "D", OTHERWISE
+     C*  IF CURRENCY IS NOT EQUAL TO BASE CURRENCY THEN CHQI = D,
+     C*  OTHERWISE IF EVENT DATE IS EARLIER THAN THE END OF THE
+     C*  WORKING MONTH DATE OR GREATER THAN THE END OF THE CALENDAR
+     C*  MONTH DATE THEN CHQI = "D".
+     C                     MOVE 'IP'      RTYP
+     C*
+     C           RCDC      IFEQ 15
+     C                     MOVEL'L'       CHQI
+     C                     ELSE
+     C           INTC      IFEQ 'Y'
+     C                     MOVE 'D'       CHQI
+     C                     ELSE
+     C***********CCY       IFNE BCCY                                      S01390
+     C           CCY       IFNE BJCYCD                                    S01390
+     C                     MOVE 'D'       CHQI
+     C                     ELSE
+     C           EDAT      IFLT WKDAT
+     C           EDAT      ORGT CALDAT
+     C           CDL009    OREQ 'Y'                                                           CDL009
+     C/COPY WNCPYSRC,DL9005C002
+     C                     MOVE 'D'       CHQI
+     C                     ELSE
+     C                     MOVE 'C'       CHQI
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+      /TITLE INTEREST PAYMENT/RECEIPT HISTORY RECORD
+     C           IIP       BEGSR
+      **----------------------------------------------------------IIP
+      **                                                           **
+      ** IIP - WRITE AN INTEREST PAYMENT OR RECEIPT RECORD TO      **
+      **       THE HISTORY FILE.                                   **
+      **                                                           **
+      **-----------------------------------------------------------**
+      *
+     C*  SET UP HISTORY RECORD,
+     C*  WRITE RECORD AND CLEAR RECORD AFTER OUTPUT.
+     C*  KEEP A COUNT OF THE NUMBER OF RECORDS OUTPUT TO HISTSAA
+     C***********AKEY10    IFEQ 'T'                                                           233565
+     C           AKEY10    IFEQ 'S'                                                           233565
+     C           AKEY9     ANDNE'U'                                                           CGL031
+     C           X6X7      ANDNE'  '                                                          233565
+     C           CGL031    ANDEQ'Y'                                                           CGL031
+     C           AKEY10    OREQ 'T'                                                           CGL031
+     C           CGL031    ANDEQ'N'                                                           CGL031
+      *                                                                                     BUG26296
+     C           AKEY10    OREQ 'S'                                                         BUG26296
+     C           AKEY9     ANDNE'S'                                                         BUG26296
+     C           X6X7      ANDNE'  '                                                        BUG26296
+     C           CER048    ANDEQ'Y'                                                         BUG26296
+      *                                                                                     BUG26296
+     C           AKEY10    OREQ 'S'                                                         BUG26296
+     C           AKEY9     ANDNE'T'                                                         BUG26296
+     C           X6X7      ANDNE'  '                                                        BUG26296
+     C           CER054    ANDEQ'Y'                                                         BUG26296
+     C                     MOVE 'TX'      RTYP
+      *                                                                   S01408
+      *                                                                   S01408
+     C/COPY WNCPYSRC,DL9005CCP1                                           S01408
+      *                                                                   S01408
+      *                                                                   S01408
+     C                     EXSR HISTB
+     C                     WRITEHISTSAAF
+     C                     EXSR HISTC
+     C                     ADD  1         HCNT
+     C                     ELSE
+     C/COPY WNCPYSRC,DL9005CCP6                                           S01408
+     C*
+     C*  SET UP HISTORY RECORD,
+     C*  WRITE RECORD AND CLEAR RECORD AFTER OUTPUT.
+     C*  KEEP A COUNT OF THE NUMBER OF RECORDS OUTPUT TO HISTSAA
+     C           AKEY10    IFEQ 'N'
+     C           AKEY9     ANDNE'U'                                                           233247
+     C           AKEY6     ANDEQ' '                                                           233565
+     C                     MOVE DLNO      @DLNO   60                      051154
+     C                     MOVE EDAT      @EDAT   60                      051154
+     C                     SETON                     80                   051154
+     C                     EXSR CHQIS
+     C                     EXSR HISTB
+     C                     WRITEHISTSAAF
+     C                     EXSR HISTC
+     C                     ADD  1         HCNT
+     C                     ELSE
+     C                     SETOF                     80                   051154
+     C/COPY WNCPYSRC,DL9005CP11                                           S01408
+     C*
+     C*  SET UP HISTORY RECORD,
+     C*  WRITE RECORD AND CLEAR RECORD AFTER OUTPUT.
+     C*  KEEP A COUNT OF THE NUMBER OF RECORDS OUTPUT TO HISTSAA
+     C           X9X10     IFEQ ' F'
+     C                     MOVE 'FD'      RTYP
+     C                     EXSR HISTB
+     C                     WRITEHISTSAAF
+     C                     EXSR HISTC
+     C                     ADD  1         HCNT
+     C                     ELSE
+     C           X9X10     CABEQ'RF'      #END
+     C/COPY WNCPYSRC,DL9005CP12                                           S01408
+     C*
+     C*  SET UP HISTORY RECORD,
+     C*  WRITE RECORD AND CLEAR RECORD AFTER OUTPUT.
+     C*  KEEP A COUNT OF THE NUMBER OF RECORDS OUTPUT TO HISTSAA
+     C           AKEY10    IFEQ 'C'
+     C           AKEY9     ANDNE'U'                                                           233565
+EA001C                     MOVE 'Y'       INTC                            E36008
+     C                     EXSR CHQIS
+     C                     EXSR HISTB
+     C                     WRITEHISTSAAF
+     C                     EXSR HISTC
+     C                     ADD  1         HCNT
+     C                     ELSE                                           051154
+     C*                                                                   051154
+     C** Set up history record,                                           051154
+     C** Write record and clear record after output.                      051154
+     C** Keep a count of the number of records output to HISTSAA          051154
+     C*                                                                   051154
+     C           AKEY10    IFEQ 'I'                                       051154
+     C           DLNO      ANDNE@DLNO                                     051154
+     C           EDAT      ANDNE@EDAT                                     051154
+     C           DTYP      IFNE 'CD'                                      059962
+     C           BNHKTR    OREQ 0                                         059962
+     C                     MOVE ' '       INTC                            196203
+     C                     EXSR CHQIS                                     051154
+     C                     EXSR HISTB                                     051154
+     C                     WRITEHISTSAAF                                  051154
+     C                     EXSR HISTC                                     051154
+     C                     ADD  1         HCNT                            051154
+     C                     END                                            059962
+     C                     END                                            051154
+     C                     END
+     C*
+     C/COPY WNCPYSRC,DL9005CP13                                           S01408
+     C                     END
+     C/COPY WNCPYSRC,DL9005CP14                                           S01408
+     C*
+     C                     END
+     C*
+     C                     END
+     C/COPY WNCPYSRC,DL9005CCP5                                           S01408
+      *                                                                                       CGL031
+      ** Set up history record for EU Withholding Tax                                         CGL031
+      ** Write record and clear record after output.                                          CGL031
+      ** Keep a count of the number of records output to HISTSAA                              CGL031
+      *                                                                                       CGL031
+     C           CGL031    IFEQ 'Y'                                                           CGL031
+     C********** X9X10     ANDEQ'UT'                                                   CGL031 233247
+     C***********X6X7      ANDNE'  '                                                   233247 233565
+     C***********X9X10     ANDEQ'UD'                                                   233247 233565
+     C           X6X7      ANDEQ'  '                                                          233565
+     C           X9X10     IFEQ 'UA'                                                        MD031565
+     C           X9X10     OREQ 'UE'                                                        MD031565
+     C********** X9X10     ANDEQ'UA'                                                 233565 MD031565
+     C                     MOVE 'EU'      RTYP                                                CGL031
+     C                     EXSR HISTB                                                         CGL031
+     C                     WRITEHISTSAAF                                                      CGL031
+     C                     EXSR HISTC                                                         CGL031
+     C                     ADD  1         HCNT                                                CGL031
+     C                     ENDIF                                                            MD031565
+     C                     ENDIF                                                              CGL031
+     C*
+     C           CER048    IFEQ 'Y'                                                         BUG26296
+     C           X6X7      ANDEQ'  '                                                        BUG26296
+     C           X9X10     IFEQ 'SA'                                                        MD031565
+     C           X9X10     OREQ 'SE'                                                        MD031565
+     C********** X9X10     ANDEQ'SA'                                               BUG26296 MD031565
+     C                     MOVE 'ST'      RTYP                                              BUG26296
+     C                     EXSR HISTB                                                       BUG26296
+     C                     WRITEHISTSAAF                                                    BUG26296
+     C                     EXSR HISTC                                                       BUG26296
+     C                     ADD  1         HCNT                                              BUG26296
+     C                     ENDIF                                                            MD031565
+     C                     ENDIF                                                            BUG26296
+      *                                                                                     BUG26296
+     C           CER054    IFEQ 'Y'                                                         BUG26296
+     C           X6X7      ANDEQ'  '                                                        BUG26296
+     C           X9X10     ANDEQ'TA'                                                        BUG26296
+     C                     MOVE 'CT'      RTYP                                              BUG26296
+     C                     EXSR HISTB                                                       BUG26296
+     C                     WRITEHISTSAAF                                                    BUG26296
+     C                     EXSR HISTC                                                       BUG26296
+     C                     ADD  1         HCNT                                              BUG26296
+     C                     ENDIF                                                            BUG26296
+      *                                                                                     BUG26296
+     C           #END      ENDSR
+      /TITLE MATURITY DATE PROCESSING
+     C           MDP       BEGSR
+      **----------------------------------------------------------MDP
+      **                                                           **
+      ** MDP - MATURITY DATE PROCESSING.                           **
+      **                                                           **
+      **-----------------------------------------------------------**
+      *
+     C***********          Z-ADD0         P@OUTA                   CEU015 145001
+     C***********CEU015    IFEQ 'Y'                                CEU015 145001
+     C***********RTFC      ANDNE*BLANKS                            CEU015 145001
+     C***********RBDA      ANDNE0                                  CEU015 145001
+     C***********          Z-ADDRBDA      P@FRAM                   CEU015 145001
+     C***********          MOVELRTFC      P@FRCY                   CEU015 145001
+     C***********          MOVELCCY       P@TOCY                   CEU015 145001
+      ***********                                                  CEU015 145001
+      ***Convert*RBDA*to*deal*currency*equivalent*via*call*to*EU02*CEU015 145001
+      ***********                                                  CEU015 145001
+     C***********          CALL 'EU0200'                           CEU015 145001
+     C***********          PARM *BLANKS   P@RTCD  7                CEU015 145001
+     C***********          PARM           P@FRAM 183               CEU015 145001
+     C***********          PARM           P@FRCY  3                CEU015 145001
+     C***********          PARM           P@TOCY  3                CEU015 145001
+     C***********          PARM           P@OUTA 150               CEU015 145001
+     C***********          PARM           P@INTA 183               CEU015 145001
+     C***********          PARM           P@EXRT 159               CEU015 145001
+     C***********          PARM           P@MDIN  1                CEU015 145001
+     C***********                                                  CEU015 145001
+     C***Database*error*processing*if*P@RTCD*=**ERROR************* CEU015 145001
+     C***********                                                  CEU015 145001
+     C***********P@RTCD    IFEQ '*ERROR*'                          CEU015 145001
+     C***********          MOVEL'EU0200  'DBFILE                   CEU015 145001
+     C***********          MOVEL'03'      DBASE                    CEU015 145001
+     C***********          MOVEL'1'       *INU7                    CEU015 145001
+     C***********          MOVEL'1'       *INU8                    CEU015 145001
+     C***********          MOVEL'1'       *INLR                    CEU015 145001
+     C***********                                                  CEU015 145001
+     C***Seton*indicator**IN20*to*end*processing*of*dkeysdp******* CEU015 145001
+     C***********                                                  CEU015 145001
+     C***********          MOVEL'1'       *IN20                    CEU015 145001
+     C***********          EXSR *PSSR                              CEU015 145001
+     C***********          ENDIF                                   CEU015 145001
+     C***********          ENDIF                                   CEU015 145001
+      *                                                            CEU015 145001
+     C*  DON'T PROCESS RECORS WITH POSITION 10 OF THE ACCOUNT KEY
+     C*  EQUAL TO "Z" OR "I"
+     C           AKEY10    IFEQ 'Z'
+     C           AKEY10    OREQ 'I'
+     C                     GOTO #END1
+     C                     END
+      *                                                                   085050
+     C*  DON'T PROCESS RECORDS FOR FRONT UP INTEREST DEALS UNLESS POSN    085050
+     C*  10 IS EQUAL TO "A"                                               085050
+     C           FUID      IFEQ 'Y'                                       085050
+     C           AKEY10    ANDNE'A'                                       085050
+     C                     GOTO #END1                                     085050
+     C                     END                                            085050
+     C*
+     C*  ROLLOVER RECORD INDICATOR ON
+     C           AKEY10    IFEQ 'R'
+     C                     MOVE #ON       *IN74
+     C                     END
+     C*
+     C           AKEY10    IFEQ 'A'
+     C           AKEY9     ANDNE'U'                                                           233565
+     C           AKEY9     ANDNE'S'                                                         BUG26296
+     C           AKEY9     ANDNE'T'                                                         BUG26296
+     C*
+     C*  SET UP HISTORY RECORD,
+     C*  WRITE RECORD AND CLEAR RECORD AFTER OUTPUT.
+     C*  KEEP A COUNT OF THE NUMBER OF RECORDS OUTPUT TO HISTSAA
+     C           AKEY9     IFEQ ' '
+     C           *IN74     IFEQ #OFF
+     C                     MOVE 'MA'      RTYP
+     C                     EXSR HISTB
+     C                     WRITEHISTSAAF
+     C                     EXSR HISTC
+     C                     ADD  1         HCNT
+     C                     ELSE
+     C***********P@OUTA    IFNE 0                                  CEU015 145001
+     C***********          SUB  P@OUTA    EAMT1                    CEU015 145001
+     C***********          ELSE                                    CEU015 145001
+     C                     SUB  RBDA      EAMT1
+     C***********          ENDIF                                   CEU015 145001
+     C           EAMT1     IFGT 0
+     C                     MOVE 'MA'      RTYP
+     C                     EXSR HISTB
+     C                     WRITEHISTSAAF
+     C                     EXSR HISTC
+     C                     ADD  1         HCNT
+     C                     END
+     C                     END
+     C                     ELSE
+     C           AKEY9     IFEQ 'D'
+     C                     MOVE 'PD'      RTYP
+     C                     EXSR HISTB
+     C           EDAT      CASLTDNWDM1    SUBRTS
+     C                     END
+     C                     WRITEHISTSAAF
+     C                     EXSR HISTC
+     C                     ADD  1         HCNT
+     C                     END
+     C                     END
+     C*
+     C                     ELSE
+     C/COPY WNCPYSRC,DL9005CCP7                                           S01408
+     C***********AKEY10    IFEQ 'T'                                                           233565
+     C           AKEY10    IFEQ 'S'                                                           233565
+     C           AKEY9     ANDNE'U'                                                           CGL031
+     C           X6X7      ANDNE'  '                                                          233565
+     C           CGL031    ANDEQ'Y'                                                           CGL031
+     C           AKEY10    OREQ 'T'                                                           CGL031
+     C           CGL031    ANDEQ'N'                                                           CGL031
+      *                                                                                     BUG26296
+     C           AKEY10    OREQ 'S'                                                         BUG26296
+     C           AKEY9     ANDNE'S'                                                         BUG26296
+     C           X6X7      ANDNE'  '                                                        BUG26296
+     C           CER048    ANDEQ'Y'                                                         BUG26296
+      *                                                                                     BUG26296
+     C           AKEY10    OREQ 'S'                                                         BUG26296
+     C           AKEY9     ANDNE'T'                                                         BUG26296
+     C           X6X7      ANDNE'  '                                                        BUG26296
+     C           CER054    ANDEQ'Y'                                                         BUG26296
+     C                     MOVE 'TX'      RTYP
+      *                                                                   S01408
+      *                                                                   S01408
+     C/COPY WNCPYSRC,DL9005CCP2                                           S01408
+      *                                                                   S01408
+      *                                                                   S01408
+     C                     EXSR HISTB
+     C                     WRITEHISTSAAF
+     C                     EXSR HISTC
+     C                     ADD  1         HCNT
+     C*
+     C                     ELSE
+     C/COPY WNCPYSRC,DL9005CP16                                           S01408
+     C           X9X10     IFEQ ' F'
+     C                     MOVE 'FD'      RTYP
+     C                     EXSR HISTB
+     C                     WRITEHISTSAAF
+     C                     EXSR HISTC
+     C                     ADD  1         HCNT
+     C*
+     C                     ELSE
+     C           X9X10     CABEQ'RF'      #END1
+     C/COPY WNCPYSRC,DL9005CP17                                           S01408
+     C*
+     C           AKEY10    IFEQ 'R'
+     C                     EXSR CHQIS
+     C                     MOVE 'RO'      RTYP
+     C                     EXSR HISTB
+     C                     WRITEHISTSAAF
+     C                     EXSR HISTC
+     C                     ADD  1         HCNT
+     C*
+     C                     ELSE
+     C           AKEY10    IFEQ 'B'
+     C           AKEY9     ANDEQ' '                                                           233247
+     C           AKEY10    OREQ 'M'
+     C                     EXSR INT
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C/COPY WNCPYSRC,DL9005CP18                                           S01408
+     C                     END
+     C/COPY WNCPYSRC,DL9005CP19                                           S01408
+     C*
+     C                     END
+     C/COPY WNCPYSRC,DL9005CCP9                                           S01408
+      *                                                                                       CGL031
+      ** Set up history record for EU Withholding Tax                                         CGL031
+      ** Write record and clear record after output                                           CGL031
+      ** Keep a count of the number of records output to HISTSAA                              CGL031
+      *                                                                                       CGL031
+     C           CGL031    IFEQ 'Y'                                                           CGL031
+     C********** X9X10     ANDEQ'UT'                                                   CGL031 233247
+     C********** X6X7      ANDNE'  '                                                   233247 233565
+     C********** X9X10     ANDEQ'UD'                                                   233247 233565
+     C           X6X7      ANDEQ'  '                                                          233565
+     C           X9X10     IFEQ 'UA'                                                        MD031565
+     C           X9X10     OREQ 'UE'                                                        MD031565
+     C********** X9X10     ANDEQ'UA'                                                 233565 MD031565
+     C                     MOVE 'EU'      RTYP                                                CGL031
+     C                     EXSR HISTB                                                         CGL031
+     C                     WRITEHISTSAAF                                                      CGL031
+     C                     EXSR HISTC                                                         CGL031
+     C                     ADD  1         HCNT                                                CGL031
+     C                     ENDIF                                                            MD031565
+     C                     ENDIF                                                              CGL031
+     C*
+     C           CER048    IFEQ 'Y'                                                         BUG26296
+     C           X6X7      ANDEQ'  '                                                        BUG26296
+     C           X9X10     IFEQ 'SA'                                                        MD031565
+     C           X9X10     OREQ 'SE'                                                        MD031565
+     C********** X9X10     ANDEQ'SA'                                               BUG26296 MD031565
+     C                     MOVE 'ST'      RTYP                                              BUG26296
+     C                     EXSR HISTB                                                       BUG26296
+     C                     WRITEHISTSAAF                                                    BUG26296
+     C                     EXSR HISTC                                                       BUG26296
+     C                     ADD  1         HCNT                                              BUG26296
+     C                     ENDIF                                                            MD031565
+     C                     ENDIF                                                            BUG26296
+      *                                                                                     BUG26296
+     C           CER054    IFEQ 'Y'                                                         BUG26296
+     C           X6X7      ANDEQ'  '                                                        BUG26296
+     C           X9X10     ANDEQ'TA'                                                        BUG26296
+     C                     MOVE 'CT'      RTYP                                              BUG26296
+     C                     EXSR HISTB                                                       BUG26296
+     C                     WRITEHISTSAAF                                                    BUG26296
+     C                     EXSR HISTC                                                       BUG26296
+     C                     ADD  1         HCNT                                              BUG26296
+     C                     ENDIF                                                            BUG26296
+      *                                                                                     BUG26296
+     C           #END1     ENDSR
+      /TITLE PROCESS DLRTS
+     C           SUBRTS    BEGSR
+      **-------------------------------------------------------SUBRTS
+      **                                                           **
+      ** SUBRTS - PROCESS DLRTS FILE.                              **
+      **                                                           **
+      **-----------------------------------------------------------**
+      *
+     C           KEY001    SETLLDLRTS
+     C*
+     C                     MOVE '0'       *IN97
+     C*
+     C                     READ DLRTS                    97
+     C*
+     C           *IN97     IFEQ #OFF
+     C           DLNO      ANDEQDLNO@
+     C           TERM@     IFNE '   '
+     C                     MOVE TERM@     TERM
+     C                     END
+     C                     MOVE ORAT@     NRAT
+     C                     MOVE ORAT@     ORAT
+     C                     END
+     C*
+     C*  IF THE A/C KEY IS FOR BACKDATED LODGEMENT OUTPUT REC TO
+     C*    REVALUATION FILE.
+     C*
+     C           RTYP      IFEQ 'LD'
+     C                     WRITEHSTRVAAF
+     C                     END
+     C*
+     C                     ENDSR
+      /TITLE PREPARE HISTORY RECORD
+     C           HISTB     BEGSR
+      **--------------------------------------------------------HISTB
+      **                                                           **
+      ** HISTB - MOVE VALUES TO HISTORY FILE FIELDS BEFORE A       **
+      **         RECORD IS WRITTEN TO THE HISTORY FILE.            **
+      **                                                           **
+      **-----------------------------------------------------------**
+      *
+     C                     MOVE #OFF      *IN73
+     C                     Z-ADDINTR      NRAT
+     C                     Z-ADDNRAT      ORAT
+     C                     MOVE NOTD      TERM
+     C                     Z-ADD1         X
+     C/COPY WNCPYSRC,DL9005CCP4                                           S01408
+     C           RTYP      LOKUPSEQ1,X                   73
+     C           *IN73     IFEQ #ON
+     C                     MOVE SEQ2,X    SQNO
+     C                     ELSE
+     C                     MOVE *ZEROS    SQNO
+     C                     END
+     C/COPY WNCPYSRC,DL9005CCP8                                           S01408
+     C                     MOVE ' '       SECI
+     C           RTYP      IFNE 'IP'
+     C           RTYP      ANDNE'RO'
+     C                     MOVE 'N'       CHQI
+     C                     END
+     C/COPY WNCPYSRC,DL9005C004
+     C                     Z-ADDEAMT1     EAMT
+     C                     Z-ADDPCPL1     PCPL
+     C                     MOVE ICBS1     ICBS                            S36008
+     C*                                                                   CPB002
+     C*** Send this message to Meridian                                   CPB002
+     C*                                                                   CPB002
+     C                     MOVE *BLANKS   REPI                            CPB002
+     C           BGN4ST    IFEQ 'Y'                                       CPB002
+     C*                                                                   CPB002
+     C*** Access Customer details to retrieve Private Banking Indicator   CPB002
+     C*                                                                   CPB002
+     C                     MOVE *BLANKS   PCNUM                           196132
+     C                     MOVELCNUM      PCNUM                           196132
+     C*                                                                   196132
+     C***********          CALL 'AOCUSTR0'                         CPB002 196132
+     C                     CALL 'AOCUSTR1'                                196132
+     C                     PARM *BLANKS   PRTCD   7                       CPB002
+     C                     PARM '*KEY   ' POPTN   7                       CPB002
+     C                     PARM           PCNUM  10                       CPB002
+     C                     PARM           PKEY7   7                       CPB002
+     C           SDCUST    PARM SDCUST    DSLDY                           CPB002
+     C*                                                                   CPB002
+     C           BBPRBA    IFEQ 'Y'                                       CPB002
+     C*                                                                   CPB002
+     C***  Flag this record if Repayment Type is 'IP'                     CPB002
+     C***     and Deal Type 'CD' or 'CL'                                  CPB002
+     C***     and Private Banking Customer                                CPB002
+     C*                                                                   CPB002
+     C           CGL031    IFEQ 'Y'                                                           234598
+     C           RTYP      IFEQ 'EU'                                                          234598
+     C           DTYP      ANDEQ'TD'                                                          234598
+     C           RTYP      OREQ 'EU'                                                          234598
+     C           DTYP      ANDEQ'CD'                                                          234598
+     C                     MOVE 'Y'       REPI                                                234598
+     C                     ENDIF                                                              234598
+     C                     ENDIF                                                              234598
+      *                                                                                       234598
+     C***  If deal matured, no replication is needed                                          232958
+     C*                                                                                       232958
+     C           RECI1     IFNE 'M'                                                           232958
+     C           RECI1     OREQ 'M'                                       213159
+     C           EDAT      ANDNEMDAT                                      213159
+     C           RTYP      IFEQ 'IP'                                      CPB002
+     C           DTYP      ANDEQ'CD'                                      CPB002
+     C           RTYP      OREQ 'IP'                                      CPB002
+     C           DTYP      ANDEQ'CL'                                      CPB002
+     C*                                                                   194696
+     C**   Include Time Deposit and Time Loan                             194696
+     C           RTYP      OREQ 'IP'                                      194696
+     C           DTYP      ANDEQ'TD'                                      194696
+     C           RTYP      OREQ 'IP'                                      194696
+     C           DTYP      ANDEQ'TI'                                      194696
+      *                                                                                    AR1042266
+      ** Avoid if gross interest                                                           AR1042266
+      *                                                                                    AR1042266
+     C           X9X10     IFNE 'TI'                                                       AR1042266
+     C                     MOVE 'Y'       REPI                            CPB002
+     C                     ENDIF                                                           AR1042266
+     C                     ENDIF                                          CPB002
+     C                     ENDIF                                                              233247
+      *                                                                                       233247
+     C           CGL031    IFEQ 'Y'                                                           233247
+     C           RTYP      IFEQ 'EU'                                                          233247
+     C           DTYP      ANDEQ'TD'                                                          233247
+     C           RTYP      OREQ 'EU'                                                          233247
+     C           DTYP      ANDEQ'CD'                                                          233247
+     C                     MOVE 'Y'       REPI                                                233247
+     C                     ENDIF                                                              233247
+      ***********                                                                      233247 234598
+     C***********CGL031    IFEQ 'Y'                                                    233247 234598
+     C***********RTYP      IFEQ 'EU'                                                   233247 234598
+     C***********DTYP      ANDEQ'TD'                                                   233247 234598
+     C***********RTYP      OREQ 'EU'                                                   233247 234598
+     C***********DTYP      ANDEQ'CD'                                                   233247 234598
+     C***********          MOVE 'Y'       REPI                                         233247 234598
+     C***********          ENDIF                                                       233247 234598
+     C                     ENDIF                                                              232958
+     C***********          ENDIF                                                       233247 234598
+      *                                                                                       233247
+     C           CER048    IFEQ 'Y'                                                         BUG26296
+     C           RTYP      ANDEQ'ST'                                                        BUG26296
+     C           CER054    OREQ 'Y'                                                         BUG26296
+     C           RTYP      ANDEQ'CT'                                                        BUG26296
+      *                                                                                     BUG26296
+     C           DTYP      ANDEQ'TD'                                                        BUG26296
+     C           DTYP      OREQ 'CD'                                                        BUG26296
+     C                     MOVE 'Y'       REPI                                              BUG26296
+     C                     ENDIF                                                            BUG26296
+      *                                                                                     BUG26296
+     C                     ENDIF                                          CPB002
+     C                     ENDIF                                          CPB002
+     C*
+     C                     ENDSR
+      /TITLE CALCULATE INTEREST AND CREATE HISTORY RECORD
+     C           INT       BEGSR
+      **----------------------------------------------------------INT
+      **                                                           **
+      ** INT - CALCULATE INTEREST AND THEN WRITE A RECORD TO THE   **
+      **       HISTORY FILE.                                       **
+      **                                                           **
+      **-----------------------------------------------------------**
+      *
+     C                     Z-ADD0         INT1
+     C***********P@OUTA    IFNE 0                                  CEU015 145001
+     C***********EAMT1     ADD  P@OUTA    INT1                     CEU015 145001
+     C***********          ELSE                                    CEU015 145001
+     C           EAMT1     ADD  RBDA      INT1
+     C***********          ENDIF                                   CEU015 145001
+     C                     SUB  PCPL1     INT1
+     C*                                                                   213159
+     C* If IPDS = 'Y', calculate interest amount to be paid at maturity   213159
+     C           IPDS      IFEQ 'Y'                        IPDS=Y         213159
+     C           RECI1     ANDEQ'M'                                       213159
+     C           AKEY3     ANDEQ'M'                                       213159
+     C* Set the interest to the total interest                            213159
+     C                     Z-ADDTOTI      INT1                            213159
+     C* Set the pointer on HIST1 and begin loop                           213159
+     C           DLNO      SETLLHIST1                                     213159
+     C                     READ HIST1                    83               213159
+     C*                                                                   213159
+     C           *IN83     DOWEQ'0'                                       213159
+     C           DLNO      ANDEQHDLNO                                     213159
+     C*                                                                   213159
+     C           HRTYP     IFEQ 'IP'                       IP             213159
+     C           INT1      SUB  HEAMT     INT1           83               213159
+     C                     ENDIF                           IP             213159
+     C*                                                                   213159
+     C                     READ HIST1                    83               213159
+     C*                                                                   213159
+     C                     ENDDO                                          213159
+     C*                                                                   213159
+     C                     ENDIF                           IPDS=Y         213159
+     C*                                                                   213159
+     C           INT1      IFNE 0                                                           MD020257
+     C                     EXSR CHQIS
+     C                     EXSR HISTB
+     C                     Z-ADDINT1      EAMT
+     C                     WRITEHISTSAAF
+     C                     EXSR HISTC
+     C                     ENDIF                                                            MD020257
+     C*
+     C                     ENDSR
+      /TITLE BLANK OUT DEALS RECORD FIELDS AFTER HISTORY RECORD OUTPUT
+     C           HISTC     BEGSR
+      **--------------------------------------------------------HISTC
+      **                                                           **
+      ** HISTC - BALNK OUT ALL FIELDS FROM DEALS RECORD USED IN    **
+      **         THE PROGRAM ONCE THE HISTORY RECORD HAS BEEN      **
+      **         OUTPUT.                                           **
+      **                                                           **
+      **-----------------------------------------------------------**
+      *
+     C                     MOVE '  '      RTYP
+     C                     Z-ADD0         EDAT
+     C                     Z-ADD0         PCPL
+     C                     Z-ADD0         NRAT
+     C                     Z-ADD0         ORAT
+     C                     MOVE '   '     TERM
+     C                     Z-ADD0         SQNO
+     C                     MOVE ' '       SECI
+     C                     Z-ADD0         EAMT
+     C                     MOVE ' '       CHQI
+     C***********          MOVE ' '       ICBS1                     S36008136274
+     C                     MOVE ' '       ICBS                            136274
+     C*
+     C*  INITIALISE FUID INDICATOR ON HISTORY FILE.                       085050
+     C           INTC      IFEQ 'F'                                       085050
+     C                     MOVE ' '       INTC                            085050
+     C                     MOVE ' '       ICBS2                           085050
+     C                     END                                            085050
+     C*                                                                   085050
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************   059962
+     C*                                                               *   059962
+     C*  SUBROUTINE : *PSSR  -  Error handling subroutine             *   059962
+     C*                                                               *   059962
+     C*  CALLED BY  : This routine is called if there are any program *   059962
+     C*               or file errors.                                 *   059962
+     C*                                                               *   059962
+     C*  CALLS      : none                                            *   059962
+     C*                                                               *   059962
+     C*  FIELDS USED: @RUN                                            *   059962
+     C*                                                               *   059962
+     C*****************************************************************   059962
+     C*                                                                   059962
+     C           *PSSR     BEGSR                                          059962
+     C           @RUN      IFEQ *BLANK                                    059962
+     C                     MOVE 'Y'       @RUN    1                       059962
+     C                     DUMP                                           059962
+     C                     END                                            059962
+     C                     ENDSR                                          059962
+     C*                                                                   059962
+     C*****************************************************************   059962
+     C/COPY WNCPYSRC,DL9005CP15                                           S01408
+      ***/TITLE*ZDATE2*-*CONVERT*DAY*NUMBER*TO*DD/MM/YY*OR*MM/DD/YY*******S01390
+     C***********ZDATE2    BEGSR                                          S01390
+      **-------------------------------------------------------ZDATE2*****S01390
+      ***********                                                  **     S01390
+      ***ZDATE2*-*SUBROUTINE*TO*CONVERT*A*DAY*NUMBER*TO*EITHER************S01390
+      ************DD/MM/YY*OR*MM/DD/YY*FORMATS.***************************S01390
+      ***********                                                  **     S01390
+      **-----------------------------------------------------------*******S01390
+     C***********                                                         S01390
+     C*****CLEAR*DATE*FIELDS.*********************************************S01390
+     C***********          Z-ADD0         ZDATE   60                      S01390
+     C***********          MOVEL'       ' ZADATE  7                       S01390
+     C***********                                                         S01390
+     C*****CALCULATION*TO*DEFINE*INPUT*DAY*NUMBER.************************S01390
+     C***********          Z-ADDZDAYNO    ZDAYNO  50                      S01390
+     C***********                                                         S01390
+     C*****DETERMINE*YEAR*NUMBER.*****************************************S01390
+     C***********                                                         S01390
+     C*****ADJUST*DAY*NUMBER*IN*CASE*LAST*DAY*OF*YEAR.********************S01390
+     C***********ZDAYNO    SUB  1         ZDAYN1  50   99                 S01390
+     C***99******          GOTO ZDEND2                                    S01390
+     C***********                                                         S01390
+     C*****CALCULATE*NUMBER*OF*4*YEAR*SPANS*SINCE*31/12/1971.*************S01390
+     C***********ZDAYN1    DIV  1461      ZLYR    20                      S01390
+     C***********          MVR            ZDAYN1           SAVE REMAINING S01390
+     C***********                                          DAYS           S01390
+     C*****CALCULATE*NUMBER*OF*REMAINING*YEARS.***************************S01390
+     C***********          Z-ADD1         ZWRK2   20                      S01390
+     C***********ZDTAG1    TAG                             ** ZDTAG1 TAG *S01390
+     C***********ZDAYN1    COMP ZYDY,ZWRK2             90                 S01390
+     C**N90******ZWRK2     ADD  1         ZWRK2                           S01390
+     C**N90******          GOTO ZDTAG1                                    S01390
+     C***********ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON S01390
+     C***********                                                         S01390
+     C*****DECREMENT*DAY*NO.*BY*DAYS*IN*REMAINING*YEARS.******************S01390
+     C**N91******ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1                          S01390
+     C***********                                                         S01390
+     C*****CALCULATE*ACTUAL*YEAR*NUMBER.**********************************S01390
+     C***********ZLYR      MULT 4         ZWRK3   30                      S01390
+     C***********ZWRK3     ADD  72        ZWRK3            BASE IS 1972   S01390
+     C***********          Z-ADDZWRK3     ZYEAR   20                      S01390
+     C***********ZYEAR     ADD  ZWRK2     ZYEAR            YEAR           S01390
+     C***********                                                         S01390
+     C*****DETERMINE*MONTH*NUMBER.****************************************S01390
+     C***********                                                         S01390
+     C*****ADJUST*DAY*NO.*IN*CASE*LAST*DAY*OF*LEAP*YEAR*FEBRUARY.*********S01390
+     C***********          SETOF                     9293                 S01390
+     C***91******ZDAYN1    COMP 59                     9293               S01390
+     C***91N92***ZDAYN1    SUB  1         ZDAYN1                          S01390
+     C***********                                                         S01390
+     C*****CALCULATE*MONTH*NUMBER.****************************************S01390
+     C***********          Z-ADD2         ZWRK2                           S01390
+     C***********ZDTAG2    TAG                             ** ZDTAG2 TAG *S01390
+     C***********ZDAYN1    COMP ZMDY,ZWRK2             94                 S01390
+     C**N94******ZWRK2     ADD  1         ZWRK2                           S01390
+     C**N94******          GOTO ZDTAG2                                    S01390
+     C***********ZWRK2     SUB  1         ZWRK2                           S01390
+     C***********                                                         S01390
+     C***********          Z-ADDZWRK2     ZMTH    20       MONTH          S01390
+     C***********                                                         S01390
+     C*****DETERMINE*DAY*OF*MONTH.****************************************S01390
+     C***********                                                         S01390
+     C*****ADD*BACK*LAST*DAY*OF*YEAR*ADJUSTMENT.**************************S01390
+     C***********ZDAYN1    ADD  1         ZDAYN1                          S01390
+     C***********                                                         S01390
+     C*****CALCULATE*DAY*OF*MONTH.****************************************S01390
+     C***********ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY            S01390
+     C***********                                                         S01390
+     C*****ADD*BACK*LEAP*YEAR*29TH*FEBUARY*ADJUSTMENT,*IF*REQUIRED.*******S01390
+     C***93******ZDAY      ADD  1         ZDAY                            S01390
+     C***********                                                         S01390
+     C*****FORMAT*DATE,*DDMMYY*OR*MMDDYY.*********************************S01390
+     C**N98******          MOVELZDAY      ZWRK4   40                      S01390
+     C***98******          MOVE ZDAY      ZWRK4                           S01390
+     C**N98******          MOVE ZMTH      ZWRK4                           S01390
+     C***98******          MOVELZMTH      ZWRK4                           S01390
+     C***********          MOVELZWRK4     ZDATE                           S01390
+     C***********          MOVE ZYEAR     ZDATE                           S01390
+     C***********                                                         S01390
+     C*****FORMAT*ALPHA*DATE,*DDMMMYY.************************************S01390
+     C***********ZDAY      COMP 10                     95                 S01390
+     C***********          MOVELZDAY      ZWRK5   5                       S01390
+     C***95******          MOVEL' '       ZWRK5                           S01390
+     C***********          MOVE ZMNM,ZMTH ZWRK5                           S01390
+     C***********          MOVELZWRK5     ZADATE                          S01390
+     C***********          MOVE ZYEAR     ZADATE                          S01390
+     C***********                                                         S01390
+     C***********ZDEND2    ENDSR                           * ZDEND2 ENDSR*S01390
+      ***/TITLE*ZDATE5*-*DETERMINE*IF*A*DATE*IS*A*HOLIDAY*****************S01390
+     C***********ZDATE5    BEGSR                                          S01390
+      **-------------------------------------------------------ZDATE5*****S01390
+      ***********                                                  **     S01390
+      ***ZDATE5*-*SUBROUTINE*TO*DETERMINE*IF*A*DAY*NUMBER*DATE************S01390
+      ************IS*A*HOLIDAY*IN*A*GIVEN*CURRENCY,*AND,*IF*THE***********S01390
+      ************DAY*IS*A*HOLIDAY*AND*IF*REQUIRED,*DETERMINE*************S01390
+      ************NEXT*WORKING*DAY.***************************************S01390
+      ***********                                                  **     S01390
+      **-----------------------------------------------------------**     S01390
+     C***********                                                         S01390
+     C*****CALCULATIONS*TO*DEFINE*INPUT*FIELDS.***************************S01390
+     C***********          Z-ADDZDAYNO    ZDAYNO  50                      S01390
+     C***********          MOVE ZCCY      ZCCY    3                       S01390
+     C***********          MOVE ZOPT      ZOPT    1                       S01390
+     C***********                                                         S01390
+     C*****CALCULATIONS*TO*DEFINE/CLEAR*WORKFIELDS.***********************S01390
+     C***********          MOVE '   '     ZHC                             S01390
+     C***********                                                         S01390
+     C*****RESET*INDICATOR.***********************************************S01390
+     C***********          SETOF                     99                   S01390
+     C***********                                                         S01390
+     C*****CALCULATION*TO*DEFINE/SET*OUTPUT*FIELD.************************S01390
+     C***********          Z-ADDZDAYNO    ZDYNBR  50                      S01390
+     C***********                                                         S01390
+     C*****DETERMINE*IF*HOLIDAY*******************************************S01390
+     C***********ZDHOL     TAG                             ** ZDHOL TAG **S01390
+     C***********          SETOF                     91                   S01390
+     C***********                                                         S01390
+     C*****SET*KEY*FOR*FIRST*HOLIDAY*RECORD.******************************S01390
+     C***********          MOVEL'22      'ZTABKY 12                       S01390
+     C***********          MOVELZDYNBR    ZWRK6   6                       S01390
+     C***********          MOVE '1'       ZWRK6                           S01390
+     C***********          MOVE ZWRK6     ZTABKY                          S01390
+     C***********                                                         S01390
+     C*****CHAIN*FOR*HOLIDAY*RECORD,*RECORD*1*OR*2.***********************S01390
+     C***********ZDHCH5    TAG                             ** ZDHCH5 TAG *S01390
+     C***********ZTABKY    CHAINTABDLEI              90    ON NOT THERE   S01390
+     C**N90******RECI      COMP 'D'                  9090  DELETED        S01390
+     C***********                                                         S01390
+     C*****STORE*CURRENCIES*IF*RECORD*FOUND.******************************S01390
+     C**N90N91***          MOVEAHCCY      ZHC,1                           S01390
+     C***91N90***          MOVEAHCCY      ZHC,26                          S01390
+     C***********                                                         S01390
+     C*****GET*SECOND*RECORD,*IF*NOT*ALREADY*DONE.************************S01390
+     C***********          MOVE ZTABKY    ZWRK1   10                      S01390
+     C***********ZWRK1     COMP 1                        91               S01390
+     C***********          MOVE '2'       ZTABKY                          S01390
+     C***91N90***          GOTO ZDHCH5                                    S01390
+     C***********                                                         S01390
+     C*****BYPASS*TO*END*IF*NO*FIRST*RECORD*FOUND.************************S01390
+     C***90*91***          GOTO ZDEND5                                    S01390
+     C***********                                                         S01390
+     C*****DETERMINE*HOLIDAY*RECORD*TYPE.*********************************S01390
+     C***********INEX      COMP 'E'                      92               S01390
+     C***********INEX      COMP 'I'                      93               S01390
+     C***********                                                         S01390
+     C*****CHECK*IF*CURRENCY*ON*HOLIDAY.**********************************S01390
+     C***********ZCCY      LOKUPZHC                      94               S01390
+     C***********                                                         S01390
+     C*****BYPASS*TO*END*IF*NOT*HOLIDAY*FOR*CURRENCY.*********************S01390
+     C***92*94***                                                         S01390
+     C***OR*93N94***          GOTO ZDEND5                                 S01390
+     C***********                                                         S01390
+     C*****SET*INDICATOR*FOR*HOLIDAY*FOR*DAY*NUMBER.**********************S01390
+     C***********          SETON                     99                   S01390
+     C***********                                                         S01390
+     C***********                                                         S01390
+     C*****CHECK*IF*NEXT*WORKING*DAY*REQUIRED.****************************S01390
+     C***********ZOPT      COMP 'Y'                      95               S01390
+     C***95******ZDYNBR    ADD  1         ZDYNBR                          S01390
+     C***95******          GOTO ZDHOL                                     S01390
+     C***********                                                         S01390
+     C***********                                                         S01390
+     C***********ZDEND5    ENDSR                           * ZDEND5 ENDSR*S01390
+     C***********                                                         S01390
+      ***/TITLE*ZDATE1*-*CONVERT*A*DATE*TO*MIDAS*DAY*NUMBER***************S01390
+     C***********ZDATE1    BEGSR                                          S01390
+      **-------------------------------------------------------ZDATE1*****S01390
+      ***********                                                  **     S01390
+      *****ZDATE1*SR.*TO*VALIDATE*DATES*SUBMITTED*AND*********************S01390
+      ****************CONVERT*TO*A*NUMBER*OF*DAYS.************************S01390
+      ***********                                                  **     S01390
+      **-----------------------------------------------------------*******S01390
+     C***********                                                         S01390
+     C*****THE*YEAR*2000,*BEING*DIVISIBLE*BY*400,*IS*A*LEAP*YEAR.*********S01390
+     C***********                                                         S01390
+     C*****CLEAR*DAY*NUMBER.**********************************************S01390
+     C***********          Z-ADD0         ZDAYNO  50                      S01390
+     C***********                                                         S01390
+     C*****CALCULATION*TO*DEFINE*INPUT*DATE*FIELD.************************S01390
+     C***********          Z-ADDZDATE     ZDATE   60                      S01390
+     C***********                                                         S01390
+     C*****GET*INDIVIDUAL*DAY,*MONTH*AND*YEAR*FIELDS.*********************S01390
+     C***********          MOVE ZDATE     ZYEAR   20                      S01390
+     C**N98******          MOVELZDATE     ZDAY    20                      S01390
+     C***98******          MOVELZDATE     ZMTH    20                      S01390
+     C***********          MOVE ZDATE     ZWRK4   40                      S01390
+     C**N98******          MOVELZWRK4     ZMTH                            S01390
+     C***98******          MOVELZWRK4     ZDAY                            S01390
+     C***********                                                         S01390
+     C*****ENSURE*MONTH*IS*VALID.*****************************************S01390
+     C***********ZMTH      COMP 0                      9999               S01390
+     C**N99******ZMTH      COMP 12                   99                   S01390
+     C***99******          GOTO ZDEND1                     BYPASS IF ERRORS01390
+     C***********                                                         S01390
+     C*****CHECK*FOR*30*DAY*MONTHS.***************************************S01390
+     C***********ZMTH      COMP 4                        90IF 90 ON, 30   S01390
+     C**N90******ZMTH      COMP 6                        90DAY MONTH.     S01390
+     C**N90******ZMTH      COMP 9                        90               S01390
+     C**N90******ZMTH      COMP 11                       90               S01390
+     C***********                                                         S01390
+     C*****ENSURE*DAY*IS*VALID.*******************************************S01390
+     C***********ZDAY      COMP 0                      9999               S01390
+     C***90N99***ZDAY      COMP 30                   99                   S01390
+     C**N90N99***ZDAY      COMP 31                   99                   S01390
+     C***99******          GOTO ZDEND1                     BYPASS IF ERRORS01390
+     C***********                                                         S01390
+     C*****CHECK*FOR*LEAP*YEAR*AND*FEBRUARY.******************************S01390
+     C***********ZYEAR     ADD  28        ZYEAR                           S01390
+     C***********ZYEAR     DIV  4         ZLYR    20                      S01390
+     C***********          MVR            ZLY     10     91LEAP YR, 91 ON S01390
+     C***********ZMTH      COMP 2                    93  92FEB., 92 ON    S01390
+     C***********                                          PAST FEB, 93 ONS01390
+     C*****IF*FEBUARY*FURTHER*VALIDATE*DAY.*******************************S01390
+     C**N91*92***ZDAY      COMP 28                   99                   S01390
+     C***91*92***ZDAY      COMP 29                   99                   S01390
+     C***99******          GOTO ZDEND1                     BYPASS IF ERRORS01390
+     C***********                                                         S01390
+     C*****DETERMINE*NUMBER*OF*DAYS*FROM*31/12/1971.*****NO.OF*4*YR.*SPANSS01390
+     C***********ZLYR      MULT 1461      ZDAYNO           X DAYS IN SPAN.S01390
+     C**N91******ZDAYNO    ADD  ZYDY,ZLY  ZDAYNO           SINCE LAST L.YRS01390
+     C***91*93***ZDAYNO    ADD  1         ZDAYNO           L.YR.,PAST FEB.S01390
+     C***********ZDAYNO    ADD  ZMDY,ZMTH ZDAYNO           DAYS THIS YEAR S01390
+     C***********ZDAYNO    ADD  ZDAY      ZDAYNO           DAYS THIS MONTHS01390
+     C***********                                                         S01390
+     C***********ZDEND1    ENDSR                           * ZDEND1 ENDSR*S01390
+     C***********                                                         S01390
+     C***********                                                         S01390
+     C/COPY ZSRSRC,ZDATE1Z2                                               S01390
+     C/SPACE 3                                                            S01390
+     C/COPY ZSRSRC,ZDATE2Z2                                               S01390
+     C/SPACE 3                                                            S01390
+     C/COPY ZSRSRC,ZCHKH                                                  S01390
+     C/SPACE 3                                                            S01390
+     C/COPY ZSRSRC,ZACCH                                                  S01390
+     C/SPACE 3                                                            S01390
+      ***/TITLE*OUTPUT****************************************************S01390
+     O***************OOOOOOOOOOOOOO***************************************S01390
+     O***************OOOOOOOOOOOOOO***************************************S01390
+     O***************OOO********OOO***************************************S01390
+     O***************OOO********OOO***************************************S01390
+     O***************OOO********OOO***************************************S01390
+     O***************OOO********OOO***************************************S01390
+     O***************OOO********OOO***************************************S01390
+     O***************OOO********OOO***************************************S01390
+     O***************OOOOOOOOOOOOOO***************************************S01390
+     O***************OOOOOOOOOOOOOO***************************************S01390
+     O***********                                                         S01390
+      *******LD01PI05PD10MA20TX25FD30IP35RO19EU27                                     233247BUG26296
+     O/COPY WNCPYSRC,DL9005O001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   DTE1 & DTE2  LAST DAY OF MONTH ARRAY'S
+013102280331043005310630073108310930103111301231
+** SEQ1 & SEQ2 - DETERMINE SEQUENCE
+LD01PI05PD10MA20TX25FD30IP35RO19EU27ST28CT29                                                BUG26296
+     X/COPY WNCPYSRC,DL9005X001
+** CPY@   **      OBJECT COPYRIGHT                                        S01390
+(c) Misys International Banking Systems Ltd. 2001

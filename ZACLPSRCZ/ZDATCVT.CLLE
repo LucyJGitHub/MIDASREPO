@@ -1,0 +1,266 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Validates & converts a date into different formats')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas Standard routines                                     */
+/*                                                                   */
+/*       ZDATCVT - Validation and conversion of a date into different*/
+/*                 formats                                           */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. CGL013  *CREATE    Date 04Apr02              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CGL013 - MT94x Messages Generation                          */
+/*                                                                   */
+/*********************************************************************/
+/* This program allows HLL programs to make use of the OS/400 command*/
+/* CVTDAT in order to validate and convert a date                    */
+/*                                                                   */
+/* The support for Midas date format is implemented by the use of    */
+/* the modules ZDATE1 and ZDATE2                                     */
+/*                                                                   */
+/* Input fields :                                                    */
+/* ------------                                                      */
+/*                                                                   */
+/* &Idate   : Date to be converted (10 bytes)                        */
+/*                                                                   */
+/* &Idattyp : Input Date Type ('1' if MDY / '0' if DMY)              */
+/*            - This is usually the value of *IN98 in RPG programs - */
+/*            This parameter will only be used for conversion if the */
+/*            &Ifmt parameter is left blank                          */
+/*                                                                   */
+/* &Ifmt    : Format of the input date (7 bytes)                     */
+/*            If this field is left blank, the format of the input   */
+/*            may be one of the following :                          */
+/*                                                                   */
+/*               *MDY, *MDYY, *DMY, *DMYY                            */
+/*                                                                   */
+/*            It is determined by the above parameter - &Idattyp -   */
+/*            on one hand, and the length of the character string    */
+/*            - without blanks - passed in &Idate on the other hand  */
+/*                                                                   */
+/* &Ofmt    : Wished format of the output date (7 bytes)             */
+/*                                                                   */
+/* Note : the possible values for the two last parameters - &Ifmt    */
+/* ----   and &Ofmt - are the same that these available for the      */
+/*        FROMFMT and TOFMT parameters of the CVTDAT command,        */
+/*        plus one special value '*MIDAS' that means an input date   */
+/*        in Midas format (five numeric digits)                      */
+/*                                                                   */
+/* &Osep    : Wished separator for the output date (5 bytes)         */
+/*            The valid values are the same as those avalaible for   */
+/*            the TOSEP parameter of the CVTDAT command              */
+/*                                                                   */
+/* Output fields :                                                   */
+/* -------------                                                     */
+/*                                                                   */
+/* &Odate   : Converted date (10 bytes)                              */
+/*                                                                   */
+/* &Rtncod  : '1' if error / '0' if all's right                      */
+/*********************************************************************/
+             PGM        PARM(&IDATE &IDATTYP &IFMT &OFMT &OSEP +
+                          &ODATE &RTNCOD)
+ 
+             DCL        VAR(&IDATE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&IDATTYP) TYPE(*LGL)
+             DCL        VAR(&IFMT) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&OFMT) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&OSEP) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&ODATE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTNCOD) TYPE(*LGL)
+ 
+             DCL        VAR(&BEG) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&END) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&INDEX) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&LENGTH) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&LENGTH2) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&DATE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOFMT) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&TOSEP) TYPE(*CHAR) LEN(5)
+ 
+             DCL        VAR(&ZDAYNO) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&ZDATFM) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ZDATE) TYPE(*DEC) LEN(6 0)
+             DCL        VAR(&ZADATE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&ZDATE@) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&ZERR) TYPE(*CHAR) LEN(1)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2003')
+ 
+             CHGVAR     VAR(&RTNCOD) VALUE('0')
+ 
+/* Look for first non-blank character in entry date */
+/* Error if entry date is entirely blank  */
+ 
+             CHGVAR     VAR(&BEG) VALUE(0)
+ 
+ LOOP1:
+             CHGVAR     VAR(&BEG) VALUE(&BEG + 1)
+ 
+             IF         COND(&BEG *GT 10) THEN(DO)
+                CHGVAR     VAR(&RTNCOD) VALUE('1')
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+             IF         COND(%SST(&IDATE &BEG 1) *NE ' ') THEN(GOTO +
+                          CMDLBL(ELOOP1))
+ 
+             GOTO       CMDLBL(LOOP1)
+ ELOOP1:
+ 
+/* Look for last non-blank character in entry date */
+ 
+             CHGVAR     VAR(&END) VALUE(11)
+ 
+ LOOP2:
+             CHGVAR     VAR(&END) VALUE(&END - 1)
+ 
+             IF         COND(%SST(&IDATE &END 1) *NE ' ') THEN(GOTO +
+                          CMDLBL(ELOOP2))
+ 
+             GOTO       CMDLBL(LOOP2)
+ ELOOP2:
+ 
+/* Compute length of significant string in entry date */
+ 
+             CHGVAR     VAR(&LENGTH) VALUE(&END - &BEG + 1)
+ 
+/* Compute length without non numeric characters */
+ 
+             CHGVAR     VAR(&INDEX) VALUE(&BEG - 1)
+ 
+             CHGVAR     VAR(&LENGTH2) VALUE(&LENGTH)
+ 
+ LOOP3:
+             CHGVAR     VAR(&INDEX) VALUE(&INDEX + 1)
+ 
+             IF         COND(&INDEX > &END) THEN(GOTO CMDLBL(ELOOP3))
+ 
+             IF         COND(%SST(&IDATE &INDEX 1) *LT '0' *OR +
+                          %SST(&IDATE &INDEX 1) *GT '9 ') +
+                          THEN(CHGVAR VAR(&LENGTH2) VALUE(&LENGTH2 +
+                          - 1))
+ 
+             GOTO       CMDLBL(LOOP3)
+ ELOOP3:
+ 
+/* Error if input format is '*MIDAS' and length isn't 5 */
+ 
+             IF         COND(&IFMT = '*MIDAS' *AND &LENGTH *NE 5) +
+                          THEN(DO)
+                CHGVAR     VAR(&RTNCOD) VALUE('1')
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* If input format is '*MIDAS', convert day number into *DMY */
+/* and replace values in input parameters to fit with the    */
+/* results of that conversion                                */
+ 
+             IF         COND(&IFMT *NE '*MIDAS') THEN(GOTO +
+                          CMDLBL(SKIP01))
+ 
+             CHGVAR     VAR(&ZDAYNO) VALUE(%SST(&IDATE &BEG &LENGTH))
+             MONMSG     MSGID(CPF0000) EXEC(DO)
+                CHGVAR     VAR(&RTNCOD) VALUE('1')
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+             CHGVAR     VAR(&ZDATFM) VALUE('D')
+ 
+             CALLPRC    PRC(ZDATE2) PARM(&ZDAYNO &ZDATFM &ZDATE +
+                          &ZADATE)
+             MONMSG     MSGID(CPF0000 RPG0000) EXEC(DO)
+                CHGVAR     VAR(&RTNCOD) VALUE('1')
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+             IF         COND(&ZDATE *EQ 0) THEN(DO)
+                CHGVAR     VAR(&RTNCOD) VALUE('1')
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+             CHGVAR     VAR(&IDATE) VALUE(' ')
+             CHGVAR     VAR(%SST(&IDATE 1 6)) VALUE(&ZDATE)
+             CHGVAR     VAR(&IFMT) VALUE('*DMY')
+             CHGVAR     VAR(&BEG) VALUE(1)
+             CHGVAR     VAR(&END) VALUE(6)
+             CHGVAR     VAR(&LENGTH) VALUE(6)
+             CHGVAR     VAR(&LENGTH2) VALUE(6)
+ 
+/* Prepare date parameter for entry in CVTDAT, and eventually add */
+/* the missing leading zero */
+ 
+ SKIP01:
+             CHGVAR     VAR(&DATE) VALUE(' ')
+ 
+             IF         COND(&LENGTH2 *EQ 5 *OR &LENGTH2 *EQ 7) +
+                          THEN(CHGVAR VAR(&DATE) VALUE('0' *CAT +
+                          %SST(&IDATE &BEG &LENGTH)))
+             ELSE       CMD(CHGVAR VAR(&DATE) VALUE(%SST(&IDATE &BEG +
+                          &LENGTH)))
+ 
+/* Prepare from format parameter for entry in CVTDAT */
+/* if blank in entry */
+ 
+             IF         COND(&IFMT *EQ ' ') THEN(DO)
+                IF         COND(&IDATTYP) THEN(DO)
+                   IF         COND(&LENGTH2 *LT 7) THEN(CHGVAR VAR(&IFMT) +
+                                VALUE('*MDY'))
+                   ELSE       CMD(CHGVAR VAR(&IFMT) VALUE('*MDYY'))
+                ENDDO
+                ELSE       CMD(DO)
+                   IF         COND(&LENGTH2 *LT 7) THEN(CHGVAR VAR(&IFMT) +
+                                VALUE('*DMY'))
+                   ELSE       CMD(CHGVAR VAR(&IFMT) VALUE('*DMYY'))
+                ENDDO
+             ENDDO
+ 
+/* Prepare to format parameter for entry in CVTDAT */
+             IF         COND(&OFMT *EQ '*MIDAS') THEN(CHGVAR +
+                          VAR(&TOFMT) VALUE('*DMY'))
+             ELSE       CMD(CHGVAR VAR(&TOFMT) VALUE(&OFMT))
+ 
+/* Prepare to separator parameter for entry in CVTDAT */
+             IF         COND(&OFMT *EQ '*MIDAS' *OR &OSEP = ' ') +
+                          THEN(CHGVAR VAR(&TOSEP) VALUE('*NONE'))
+             ELSE       CMD(CHGVAR VAR(&TOSEP) VALUE(&OSEP))
+ 
+/* Launch CVTDAT and error if anything wrong */
+             CVTDAT     DATE(&DATE) TOVAR(&ODATE) FROMFMT(&IFMT) +
+                          TOFMT(&TOFMT) TOSEP(&TOSEP)
+             MONMSG     MSGID(CPF0000) EXEC(CHGVAR VAR(&RTNCOD) +
+                          VALUE('1'))
+ 
+/* Call ZDATE1 if output format is '*MIDAS' */
+             IF         COND(&OFMT *NE '*MIDAS') THEN(GOTO CMDLBL(END))
+ 
+             CHGVAR     VAR(&ZDATE@) VALUE(%SST(&ODATE 1 6))
+             CHGVAR     VAR(&ZDATFM) VALUE('D')
+ 
+             CALLPRC    PRC(ZDATE1) PARM(&ZDATE@ &ZDAYNO &ZDATFM &ZERR)
+             MONMSG     MSGID(CPF0000 RPG0000) EXEC(DO)
+                CHGVAR     VAR(&RTNCOD) VALUE('1')
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+             IF         COND(&ZERR *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&RTNCOD) VALUE('1')
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+             CHGVAR     VAR(&ODATE) VALUE(' ')
+             CHGVAR     VAR(%SST(&ODATE 1 5)) VALUE(&ZDAYNO)
+ 
+/* End of program */
+ END:
+             RETURN
+             ENDPGM

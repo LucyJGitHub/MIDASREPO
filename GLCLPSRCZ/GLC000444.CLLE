@@ -1,0 +1,121 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas GL Component for enq program GL4444')           */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - General Ledger Module                            */
+/*                                                                   */
+/*       GLC000444 - CL Component for Items in Clearing Enquiry      */
+/*                                                                   */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2006           */
+/*                                                                   */
+/*       Last Amend No. AR316373           Date 03Jun15              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. 239964             Date 31May06              */
+/*                      239966             Date 05Jun06              */
+/*                      240079  *CREATE    Date 02Jun06              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR316373 - Recompile due to change in /COPY MLCOVRDCL and   */
+/*                  MLCOVROVR.                                       */
+/*       239964 - Applied fix 236093.                                */
+/*       239966 - Applied fix 236093.                                */
+/*       240079 - Applied fix 236093.                                */
+/*       236093 - MidasPlus Webfacing screens hanging since webfacing*/
+/*                doesn't support TFRGRPJOB.  Replaced GLC444 pgm.   */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MBIN) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ZMUSER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+/*/COPY WNCPYSRC,GLC444INT                                    */
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2006')
+ 
+/*/COPY MLCPYSRC,MLCOVRDCL                                    */
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             RTVDTAARA  DTAARA(RUNDAT (13 1)) RTNVAR(&MBIN)
+ 
+/*   CREATE AND SET UP USER DATA AREA    */
+ 
+             IF         COND(&MBIN *EQ 'Y') THEN(CALL PGM(SFC0400))
+ 
+             CHKOBJ     OBJ(QTEMP/ZMUSER) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9815 CPF9801) EXEC(DO)
+             CALL       PGM(ZMUSER) PARM(&ERRORC &ZMUSER)
+             IF         COND(&ERRORC *NE 0) THEN(DO)
+             SNDPGMMSG MSG('Default Branch or Department not valid') +
+                       TOPGMQ(*EXT) MSGTYPE(*INFO)
+             SIGNOFF    LOG(*LIST)
+             MONMSG     MSGID(CPF0000) /* Monitor here to prevent +
+                          error during re-routing of job */
+             ENDDO
+             ENDDO
+ 
+/*/COPY MLCPYSRC,MLCOVROVR                                    */
+ 
+/* Create the Midas Information Screen data area */
+ 
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ') TEXT('Midas SC Midas +
+                          information screen data')
+             MONMSG     MSGID(CPF1023)
+ 
+/* Create the data area ZMITEM in QTEMP                       */
+ 
+             CRTDTAARA  DTAARA(QTEMP/ZMITEM) TYPE(*CHAR) LEN(10) +
+                          VALUE('          ') TEXT('Midas SF +
+                          Unique Menu Item Code')
+             MONMSG     MSGID(CPF1023)
+ 
+/*/COPY WNCPYSRC,GLC444MPS                                    */
+ 
+             CALL       PGM(GL4444)
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(*LDA (134 50)) RTNVAR(&MEM)
+                ROLLBACK
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+             ROLLBACK
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/* Abnormal termination - interactive job */
+ 
+             IF         COND(&JOBTYPE = '1') THEN(DO)
+               SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC0000444 ended abnormally - see job +
+                          log') TOPGMQ(*EXT)
+               MONMSG     MSGID(CPF0000 MCH0000)
+             DMPCLPGM
+             ENDDO
+ 
+END:
+ 
+             ENDPGM

@@ -1,0 +1,493 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Save Start of Period Details')                *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module                          *
+     F*                                                               *
+     F*  PM6430 - SAVE START OF PERIOD DETAILS                        *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CLE148             Date 23Jul12               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPM005             Date 19Jun96               *
+      *                 097158             Date 09Jan96               *
+     F*                 S01124             Date 22JUN94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus                                          *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  CPM005 - Private Banking Phase 2                             *
+     F*           Focus Group Changes upgraded to DBA                 *
+     F*  097158 - Rename QFVDAT to be witten in PMPSTCPP              *
+     F*           See also PM1140, PM1620, PM1640.                    *
+     F*  S01124 - PBFG/1 - CHANGE CUSTOMER/PORTFOLIO BASE CURRENCY    *
+     F*                                                               *
+     F*****************************************************************
+     F***SDBANKL1IF**E           K        DISK                            CPM005
+     F***********                                   KINFSR *PSSR          CPM005
+     F***SDPORTL1IF**E           K        DISK                            CPM005
+     F***********                                   KINFSR *PSSR          CPM005
+     F***SDPLCSPDIF**E           K        DISK                            CPM005
+     F***********                                   KINFSR *PSSR          CPM005
+     F***PMPORTPPIF**E           K        DISK                            CPM005
+     FPMPORTPDIF  E           K        DISK                               CPM005
+     F                                              KINFSR *PSSR
+     FPMHOLDL4IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FPMPPTMPDIF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F***PMPSTCPPO***E           K        DISK                            CPM005
+     FPMPSTCPDO   E           K        DISK                               CPM005
+     F                                              KINFSR *PSSR
+     FPM6430AUO   E                    PRINTER
+     F                                              KINFSR *PSSR
+      *****************************************************************
+      /COPY ZSRSRC,ZDATE2Z1
+      *
+     E                    CPY@    1   1 80
+      *****************************************************************
+      *
+     I*  RENAME FIELDS FROM PMHOLDP0                                      097158
+     IPMHOLDP0                                                            097158
+     I              QFVDAT                          RNVDAT                097158
+     I*
+      **  LOCAL DATA AREA FOR DATA BASE ERRORS:
+     ILDA         DS                            256
+     I***********                           132 183 DBLOT                 CPM005
+     I***********                           132 141 DBFILE                CPM005
+     I                                      134 183 DBLOT                 CPM005
+     I                                      134 141 DBFILE                CPM005
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      **  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION:
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     IWKEY1       DS
+     I**********                              1   60KCNUM                                     CSD027
+     I                                        1   6 KCNUM                                     CSD027
+     I                                        7  10 KPTFR
+     I*                                                                   CPM005
+     I** EXTRACT ACCOUNT CODE AND ACCOUNT SEQUENCE                        CPM005
+     I            DS                                                      CPM005
+     I**********                             10  13 WWACOD                             CPM005 CGL029
+     I**********                             14  15 WWACSQ                             CPM005 CGL029
+     I**********                              1  20 QFTXT2                             CPM005 CGL029
+     I                                       10  19 WWACOD                                    CGL029
+     I                                       20  21 WWACSQ                                    CGL029
+     I                                        1  26 QFTXT2                                    CGL029
+     I*                                                                   CPM005
+     ISDPORT    E DSSDPORTPD                                              CPM005
+     I* DS FOR PM ICD DETAILS                                             CPM005
+     I*                                                                   CPM005
+     ISDPLCS    E DSSDPLCSPD                                              CPM005
+     I* DS FOR PM CUSTOMER DETAILS                                        CPM005
+     I*                                                                   CPM005
+     ISDBANK    E DSSDBANKPD                                              CPM005
+     I** EXTERNAL DS FOR BANK DETAILS                                     CPM005
+     I*                                                                   CPM005
+     IDSFDY     E DSDSFDY                                                 CPM005
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                CPM005
+     I*                                                                   CPM005
+     IDSSDY     E DSDSSDY                                                 CPM005
+     I* Second DS For Access Programs, Long Data Structure                CPM005
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * MAIN     -                                                       *
+      * #INIT    - INITIAL PROCESSING                                    *
+      * #MAIN    - MAIN PROCESSING                                       *
+      * SRFILL   - MOVE PMHOLDPD FIELDS TO PMPSTCPD                      *CPM005
+      * #TERM    - TERMINATION PROCESSING                                *
+      * *PSSR    - ERROR IN FILE                                         *
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      *                                                                  *
+      ********************************************************************
+     C                     EXSR #INIT
+      *
+     C                     EXSR #MAIN
+      *
+     C                     EXSR #TERM
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #INIT    - INITIAL PROCESSING                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - ERROR IN FILE                                         *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     -                                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #INIT     BEGSR
+      *
+      **  PREPARE LDA:
+     C           *NAMVAR   DEFN           LDA
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'PM6430'  DBPGM
+     C*
+     C           KEY1      KLIST
+     C**********           KFLD           KCNUM   60                                          CSD027
+     C                     KFLD           KCNUM   6                                           CSD027
+     C                     KFLD           KPTFR   4
+     C*
+     C           KEY2      KLIST
+     C                     KFLD           OSCNUM
+     C                     KFLD           OSPTFR
+      *
+      **  GET INSTALLATION CONTROL DATA RECORD 1:
+     C************LOVAL    SETLLSDBANKL1                                  CPM005
+     C***********          READ SDBANKL1                 71               CPM005
+     C                     CALL 'AOBANKR0'                                CPM005
+     C                     PARM *BLANKS   WWRTCD  7                       CPM005
+     C                     PARM '*FIRST ' WWOPTN  7                       CPM005
+     C           SDBANK    PARM SDBANK    DSFDY                           CPM005
+      *
+      **  IF RECORD NOT FOUND, DB ERROR
+     C************IN71     IFEQ '1'                        *B1            CPM005
+     C           WWRTCD    IFNE *BLANKS                    *B1            CPM005
+     C                     Z-ADD1         DBASE            ***************
+     C***********          MOVEL'SDBANKL1'DBFILE           * DB ERROR 01 *CPM005
+     C                     MOVE 'SDBANKPD'DBFILE           * DB ERROR 01 *CPM005
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END                             *E1
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     END
+      *
+      ** CONVERT DATE OF NEXT WORKING DAY TO DDMMYY FORMAT AND EXTRACT
+      ** 'MM' PART OF DATE
+     C                     Z-ADDBJDNWD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     WWORK4  4
+     C***********          MOVE WWORK4    QFSTMN           Start Month NumCPM005
+     C                     MOVE WWORK4    GFSTMN           Start Month NumCPM005
+      *
+     C***********          MOVE 'N'       QFPPRC           Position ProcesCPM005
+     C                     MOVE 'N'       GFPPRC           Position ProcesCPM005
+      *
+      **  GET PORTFOLIO MANAGEMENT CONTROL DATA RECORD :
+     C************LOVAL    SETLLSDPORTL1                                  CPM005
+     C***********          READ SDPORTL1                 71               CPM005
+     C                     CALL 'AOPORTR0'                                CPM005
+     C                     PARM *BLANKS   WWRTCD                          CPM005
+     C                     PARM '*FIRST ' WWOPTN                          CPM005
+     C           SDPORT    PARM SDPORT    DSFDY                           CPM005
+      *
+      **  IF RECORD NOT FOUND, DB ERROR
+     C************IN71     IFEQ '1'                        *B1            CPM005
+     C           WWRTCD    IFNE *BLANKS                    *B1            CPM005
+     C                     Z-ADD2         DBASE            ***************
+     C***********          MOVEL'SDPORTL1'DBFILE           * DB ERROR 02 *CPM005
+     C                     MOVEL'SDPORTPD'DBFILE           * DB ERROR 02 *CPM005
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END                             *E1
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #MAIN    - MAIN PROCESSING                                       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     -                                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #MAIN     BEGSR
+      *
+     C************LOVAL    SETLLPMPORTPP                                  CPM005
+     C***********          READ PMPORTPP                 71               CPM005
+     C           *LOVAL    SETLLPMPORTPD                                  CPM005
+     C                     READ PMPORTPD                 71               CPM005
+      *
+      ** WHILE NOT END OF FILE
+     C           *IN71     DOWEQ'0'                        B*1
+     C**********           Z-ADDPNCNUM    KCNUM                                               CSD027
+     C                     MOVE PNCNUM    KCNUM                                               CSD027
+     C                     MOVE PNPTFR    KPTFR
+      *
+      ** READ FILE DEPENDING ON TRADE/VALUE DATE POSITION (FROM PF/SDPORTPD)
+     C           KEY1      SETLLPMHOLDL4
+     C           KEY1      READEPMHOLDL4                 72
+      *
+     C           *IN72     DOWEQ'0'                        B*2
+      *
+      ** WRITE A RECORD IN FILE
+     C           QFHLDV    IFEQ 'Y'                        B*3
+     C           QFPFMR    ANDEQ'Y'
+     C*                                                                   CPM005
+     C                     EXSR SRFILL                                    CPM005
+     C***********          Z-ADDRNVDAT    QFVDAT                   097158 CPM005
+     C                     Z-ADDRNVDAT    GFVDAT                          CPM005
+     C                     WRITEPMPSTCP0
+     C                     ADD  1         RREXTR
+     C                     END                             E*3
+      *
+     C           KEY1      READEPMHOLDL4                 72
+      *
+     C                     END                             E*2
+      *
+      **  DETERMINE WHETHER POOL PORTOFLIO CUSTOMER
+     C                     MOVE PNCNUM    WACNUM  6
+     C***********WACNUM    CHAINSDPLCSPD             71                   CPM005
+     C                     MOVELPNCNUM    WWCLIN 10                       CPM005
+     C                     CALL 'AOPLCSR0'                                CPM005
+     C                     PARM *BLANKS   WWRTCD                          CPM005
+     C                     PARM '*KEY   ' WWOPTN                          CPM005
+     C                     PARM WWCLIN    WWKY10 10                       CPM005
+     C           SDPLCS    PARM SDPLCS    DSSDY                           CPM005
+      *
+      **  IF RECORD NOT FOUND, DB ERROR
+     C************IN71     IFEQ '1'                        *B2            CPM005
+     C           WWRTCD    IFNE *BLANKS                    *B2            CPM005
+     C                     Z-ADD12        DBASE            ***************
+     C                     MOVEL'SDPLCSPD'DBFILE           * DB ERROR 02 *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END                             *E2
+     C*
+     C** IF CUSTOMER IS A POOL CUSTOMER PERFORM ROUTINE TO EXTRACT
+     C** POSITIONS FOR POOL MEMBER PORTFOLIOS
+     C           QBPPCS    IFEQ 'Y'                        *B2
+     C                     EXSR #POOL
+     C                     END                             *E2
+      *
+     C***********          READ PMPORTPP                 71               CPM005
+     C                     READ PMPORTPD                 71               CPM005
+     C                     END                             E*1
+      *
+      ** WRITE PERFORMANCE AUDIT REPORT
+     C                     WRITEFORMTAU
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #POOL    - READ POOL PORTFOLIO MEMBER DETAILS AND EXTRACT        *
+      *            POSITIONS                                             *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - OUTPUT DTABASE ERROR DETAILS                          *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING ROUTINE                               *
+      *                                                                  *
+      ********************************************************************
+     C           #POOL     BEGSR
+     C*
+     C** READ THROUGH DETAILS OF MEMBERS OF POOL
+     C           KEY1      SETLLPMPPTMPD
+     C           KEY1      READEPMPPTMPD                 62
+     C*
+     C           *IN62     DOWEQ'0'                        B1
+     C*
+     C           OSRECI    IFEQ 'D'                        B2
+     C*
+     C** READ THROUGH ALL PORTFOLIO POSISTIONS
+     C           KEY2      SETLLPMHOLDL4
+     C           KEY2      READEPMHOLDL4                 72
+      *
+     C           *IN72     DOWEQ'0'                        B3
+     C*
+     C** IF HOLDING VALUED AND FIDUCIARY, DEAL OR LOAN OUTPUT DETAILS
+     C           QFHLDV    IFEQ 'Y'                        B4
+     C           QFMODI    ANDEQ'FI'
+     C           QFHLDV    OREQ 'Y'
+     C           QFMODI    ANDEQ'MD'
+     C           QFHLDV    OREQ 'Y'
+     C           QFMODI    ANDEQ'ML'
+     C           QFHLDV    OREQ 'Y'
+     C           QFMODI    ANDEQ'FX'
+     C           QFHLDV    OREQ 'Y'
+     C           QFMODI    ANDEQ'LE'
+     C*                                                                   CPM005
+     C                     EXSR SRFILL                                    CPM005
+     C*
+     C** OUTPUT DETAILS FOR POOL PORTFOLIO
+     C***********          Z-ADDOSPCNU    QFCNUM                          CPM005
+     C***********          MOVE OSPPTF    QFPTFR                          CPM005
+     C***********          MOVE 'N'       QFPPRC                          CPM005
+     C**********           Z-ADDOSPCNU    GFCNUM                                       CPM005 CSD027
+     C                     MOVE OSPCNU    GFCNUM                                              CSD027
+     C                     MOVE OSPPTF    GFPTFR                          CPM005
+     C                     MOVE 'N'       GFPPRC                          CPM005
+     C                     Z-ADDRNVDAT    GFVDAT                          CPM005
+     C*
+     C                     WRITEPMPSTCP0
+     C                     ADD  1         RREXTR
+     C                     END                             E4
+     C*
+     C           KEY2      READEPMHOLDL4                 72
+     C                     END                             E3
+     C                     END                             E2
+     C*
+     C           KEY1      READEPMPPTMPD                 62
+     C                     END                             E1
+     C*
+     C                     ENDSR
+      ********************************************************************
+     C/EJECT                                                              CPM005
+     C*****************************************************************   CPM005
+     C*                                                               *   CPM005
+     C* SRFILL   - MOVE PMHOLDPD FIELDS INTO PMPSTCPD                 *   CPM005
+     C*                                                               *   CPM005
+     C* SUBROUTINE CALLS:                                             *   CPM005
+     C*                                                               *   CPM005
+     C* SUBROUTINE CALLED FROM:                                       *   CPM005
+     C* #MAIN    - MAIN PROCESSING                                    *   CPM005
+     C* #POOL    - READ POOL PORTFOLIO MEMBER DETAILS AND EXTRACT     *   CPM005
+     C*                                                               *   CPM005
+     C* ROUTINE USES VARIABLES:                                       *   CPM005
+     C*                                                               *   CPM005
+     C*****************************************************************   CPM005
+     C           SRFILL    BEGSR                                          CPM005
+     C*                                                                   CPM005
+     C           QFMODI    IFEQ 'RE'                                      CPM005
+     C                     MOVE WWACOD    GFACOD                          CPM005
+     C                     MOVE WWACSQ    GFACSQ                          CPM005
+     C                     ELSE                                           CPM005
+     C                     Z-ADD0         GFACOD                          CPM005
+     C                     Z-ADD0         GFACSQ                          CPM005
+     C                     END                                            CPM005
+     C*                                                                   CPM005
+     C*  SET 'REFERENCE/SHORTNAME' AND 'EXISTED AT START'                 CPM005
+     C                     SELEC                                          CPM005
+     C           QFMODI    WHEQ 'SE'                                      CPM005
+     C                     MOVELQFTDSS    GFRESH    P                     CPM005
+     C           QFMODI    WHEQ 'RE'                                      CPM005
+     C                     MOVELQFTXT2    GFRESH                          CPM005
+     C           QFMODI    WHEQ 'FO'                                      CPM005
+     C                     MOVEL*BLANKS   GFRESH                          CPM005
+     C           QFMODI    WHEQ 'FM'                                      CPM005
+     C                     MOVEL*BLANKS   GFRESH                          CPM005
+     C                     OTHER                                          CPM005
+     C                     MOVELQFTRNB    GFRESH    P                     CPM005
+     C                     ENDSL                                          CPM005
+     C                     MOVE 'Y'       GFEXST                          CPM005
+     C*                                                                   CPM005
+     C**********           Z-ADDQFCNUM    GFCNUM                                       CPM005 CSD027
+     C                     MOVE QFCNUM    GFCNUM                                              CSD027
+     C**********           Z-ADDQFLIND    GFLIND                                       CPM005 CER020
+     C                     MOVELQFLOIC    GFLOIC                                              CER020
+     C                     Z-ADDQFAMT1    GFAMT1                          CPM005
+     C                     Z-ADDQFACIS    GFACIS                          CPM005
+     C                     Z-ADDQFPLFX    GFPLFX                          CPM005
+     C                     Z-ADDQFMFXR    GFMFXR                          CPM005
+     C                     Z-ADDQFMPRC    GFMPRC                          CPM005
+     C**********           Z-ADDQFTRNB    GFTRNB                                       CPM005 CLE148
+     C                     MOVELQFTRNB    GFTRNB                                              CLE148
+     C                     Z-ADDQFCDP1    GFCDP1                          CPM005
+     C                     Z-ADDQFMFXD    GFMFXD                          CPM005
+     C                     Z-ADDQFNMDP    GFNMDP                          CPM005
+     C                     MOVELQFSPBS    GFSPBS                          CPM005
+     C                     MOVELQFPTFR    GFPTFR                          CPM005
+     C                     MOVELQFINNR    GFINNR                          CPM005
+     C                     MOVELQFVALG    GFVALG                          CPM005
+     C                     MOVELQFCCY1    GFCCY1                          CPM005
+     C                     MOVELQFCNTR    GFCNTR                          CPM005
+     C                     MOVELQFTDSS    GFTDSS                          CPM005
+     C                     MOVELQFMFMD    GFMFMD                          CPM005
+     C                     MOVELQFMODI    GFMODI                          CPM005
+     C                     MOVELQFBYSF    GFBYSF                          CPM005
+     C                     MOVELQFFOIS    GFFOIS                          CPM005
+     C                     MOVELQFTXT2    GFTXT2                          CPM005
+     C                     Z-ADDQFMVPC    GFMVPC                          CPM005
+     C                     Z-ADD*ZEROS    GFTKDM                          CPM005
+     C                     Z-ADD*ZEROS    GFMNPF                          CPM005
+     C                     Z-ADD*ZEROS    GFTKVL                          CPM005
+     C*                                                                   CPM005
+     C                     ENDSR                                          CPM005
+     C********************************************************************CPM005
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #TERM    - TERMINATION PROCESSING                                *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     -                                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #TERM     BEGSR
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - ERROR IN FILE                                         *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #INIT    - INITIAL PROCESSING                                    *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           *LOCK     IN   LDA
+     C                     OUT  LDA
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+     C**=================================================================
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

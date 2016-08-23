@@ -1,0 +1,628 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+      *****************************************************************
+/*S*D****RPGBASEBND****************************************************                       CUP021
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bridge                                               *
+      *                                                               *
+      *  UP001839 - Report Action File for CBRAMEPD                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *                                                               *
+      *  Last Amend No. CUP021  *REDUNDANT Date 11Feb11               *
+      *  Prev Amend No. BUG27914*CREATE    Date 21Jul10               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CUP021 - Rewrite of Action File processing                   *
+      *  BUG27914 - RAME Design Changes                               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      * Function of indicators                                        *
+      *                                                               *
+      *       20      End of file indicator                           *
+      *       37      Overflow indicator                              *
+      *       69      Read or write errors                            *
+      *       60      Amended records                                 *
+      *       61      No amended records to report                    *
+      *       62      Amended records headers                         *
+      *       63      Print field description for Amend               *
+      *       64      Print 'before' for Amend                        *
+      *       65      Print 'after' for Amend                         *
+      *       70      Deleted records                                 *
+      *       71      No deleted records to report                    *
+      *       72      Deleted records headers                         *
+      *       80      Inserted records                                *
+      *       81      No inserted records to report                   *
+      *       82      Inserted records headers                        *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      * *PSSR - Error processing                                      *
+      * *INZSR - Initialise                                           *
+      *                                                               *
+      *    The *INZSR subroutine will only get called automatically   *
+      *    on entry to the module the first time it is run            *
+      *    (unless you end the program with LR on).  Similarly        *
+      *    D-spec initialisation only happens the first time.  Use    *
+      *    RESET for subsequent passes.                               *
+      *                                                               *
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ F-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+      **
+      *
+     FUPRAMEL0  IF   E           K DISK    INFSR(*PSSR)
+     FUP0799P1  O    E             PRINTER INFSR(*PSSR)
+     F                                     INFDS(SPOOL)
+     F                                     OFLIND(*IN37)
+     F                                     USROPN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ D-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+     D LDA           E DS           256    EXTNAME(LDA)
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+      ** The following /COPY line includes all the defined fields in the
+      ** PSDS.  They have meaningful names, prefixed by 'PS'.
+      *
+     D/COPY ZACPYSRC,PSDS
+      *
+      ** Program Status Data Structure
+      *
+      ** +--------------------------------------+
+      ** ¦ Named constants                      ¦
+      ** ¦ ===============                      ¦
+      ** +--------------------------------------+
+      *
+      ** +--------------------------------------+
+      ** ¦ Arrays and Data Structures           ¦
+      ** ¦ ==========================           ¦
+      ** +--------------------------------------+
+      *
+      ** File information data structure for P1 file; used for page end
+      **   handling
+      *
+     D SPOOL           DS
+     D  SFILE                 83     92
+     D  SFNUM                123    124B 0
+     D  OFLLN                188    189B 0
+     D  PRTLN                367    368B 0
+      *
+     D                 DS
+     D KEYHDR                  1    132
+     D  HDR1                  10     23    INZ('Component Name')
+     D  HDR2                  26     33    INZ('Sequence')
+     D  HDR3                  36     39    INZ('Flag')
+      *
+     D                 DS
+     D KEYDTA                  1    132
+     D  DTA1                  10     19
+     D  DTA2                  26     30
+     D  DTA3                  36     36
+      *
+      ** +--------------------------------------+
+      ** ¦ Declared variables                   ¦
+      ** ¦ ==================                   ¦
+      ** +--------------------------------------+
+      *
+     D @RUN            S              1
+     D COTT1           S             10
+     D CSEQ1           S              5
+     D FLAG1           S              1
+     D COTT2           S             10
+     D CSEQ2           S              5
+     D FLAG2           S              1
+     D FIELD           S             10
+     D #FDESC          S             50
+     D RMLN            S              2  0
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** +--- Start of Main processing -----------------------------------+
+      ** ¦                                                                ¦
+      ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
+      ** ¦ executed at program activation.                                ¦
+      ** ¦                                                                ¦
+      ** +----------------------------------------------------------------+
+      *
+      *********************************************************************
+      * MAIN PROCEDURE                                                    *
+      *********************************************************************
+      *
+     C                   OPEN      UP0799P1
+      *
+     C                   WRITE     HEADH                                69
+     C                   IF        *IN69 = *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C     *LOVAL        SETLL     UPRAMED0
+      *
+     C                   READ      UPRAMEL0                             6920
+     C                   IF        *IN69 = *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+      ** If there are no records at all write 'no records'.
+      *
+     C                   IF        *IN20 = *ON
+     C                   WRITE     NORECS                               69
+     C                   IF        *IN69 = *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   WRITE     TRAILP                               69
+      *
+     C                   IF        *IN69 = *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+      ** End program
+      *
+     C                   CLOSE     UP0799P1
+     C                   SETON                                        LR
+     C                   RETURN
+      *
+     C                   ELSE
+     C                   SETON                                        60
+     C                   WRITE     DTL1
+     C                   SETOFF                                       60
+     C                   ENDIF
+      *
+     C                   IF        REACTC <> 'A'
+     C                   SETON                                        61
+     C                   WRITE     DTL1
+     C                   SETOFF                                       61
+     C                   ELSE
+     C                   SETON                                        62
+     C                   WRITE     DTL1
+     C                   SETOFF                                       62
+     C                   ENDIF
+      *
+     C                   DOW       REACTC = 'A' AND
+     C                             *IN20 <> *ON
+      *
+      ** Write headers if overflow on.
+      *
+     C                   IF        *IN37 = *ON
+     C                   WRITE     HEADH                                69
+     C                   IF        *IN69 = *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   SETON                                        60
+     C                   WRITE     DTL1
+     C                   SETOFF                                       60
+     C                   SETON                                        62
+     C                   WRITE     DTL1
+     C                   SETOFF                                       6237
+     C                   ENDIF
+      *
+     C                   EXSR      AMEND
+      *
+     C                   READ      UPRAMEL0                             6920
+     C                   IF        *IN69 = *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDDO
+      *
+     C                   WRITE     HEADH                                69
+     C                   IF        *IN69 = *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   SETON                                        70
+     C                   WRITE     DTL2
+     C                   SETOFF                                       70
+      *
+     C                   IF        REACTC <> 'D'
+     C                   SETON                                        71
+     C                   WRITE     DTL2
+     C                   SETOFF                                       71
+     C                   ELSE
+     C                   SETON                                        72
+     C                   WRITE     DTL2
+     C                   SETOFF                                       72
+     C                   ENDIF
+      *
+     C                   DOW       REACTC = 'D' AND
+     C                             *IN20 <> *ON
+      *
+      ** Write headers if overflow on.
+      *
+     C                   IF        *IN37 = *ON
+     C                   WRITE     HEADH                                69
+     C                   IF        *IN69 = *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   SETON                                        70
+     C                   WRITE     DTL2
+     C                   SETOFF                                       70
+     C                   SETON                                        72
+     C                   WRITE     DTL2
+     C                   SETOFF                                       7237
+     C                   ENDIF
+      *
+     C                   EXSR      DELETE
+      *
+     C                   READ      UPRAMEL0                             6920
+     C                   IF        *IN69 = *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDDO
+      *
+     C                   WRITE     HEADH                                69
+     C                   IF        *IN69 = *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   SETON                                        80
+     C                   WRITE     DTL3
+     C                   SETOFF                                       80
+      *
+     C                   IF        REACTC <> 'I'
+     C                   SETON                                        81
+     C                   WRITE     DTL3
+     C                   SETOFF                                       81
+     C                   ELSE
+     C                   SETON                                        82
+     C                   WRITE     DTL3
+     C                   SETOFF                                       82
+     C                   ENDIF
+      *
+     C                   DOW       REACTC = 'I' AND
+     C                             *IN20 <> *ON
+      *
+      ** Write headers if overflow on.
+      *
+     C                   IF        *IN37 = *ON
+     C                   WRITE     HEADH                                69
+     C                   IF        *IN69 = *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   SETON                                        80
+     C                   WRITE     DTL3
+     C                   SETOFF                                       80
+     C                   SETON                                        82
+     C                   WRITE     DTL3
+     C                   SETOFF                                       8237
+     C                   ENDIF
+      *
+     C                   EXSR      INSERT
+      *
+     C                   READ      UPRAMEL0                             6920
+     C                   IF        *IN69 = *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDDO
+      *
+     C                   WRITE     TRAILP                               69
+     C                   IF        *IN69 = *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   CLOSE     UP0799P1
+     C                   SETON                                        LR
+     C                   RETURN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * AMEND subroutine - process amended records                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C     AMEND         BEGSR
+      *
+     C                   EVAL      DTA1 = RECOTT
+     C                   EVAL      DTA2 = RECSEQ
+     C                   EVAL      DTA3 = REFLAG
+      *
+      ** Check values for first and second amended records of pair
+      *
+     C                   EVAL      COTT1 = RECOTT
+     C                   EVAL      CSEQ1 = RECSEQ
+     C                   EVAL      FLAG1 = REFLAG
+      *
+      ** Read next record so that values can be compared.
+      *
+     C                   READ      UPRAMEL0                             6920
+     C                   IF        *IN69 = *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   EVAL      COTT2 = RECOTT
+     C                   EVAL      CSEQ2 = RECSEQ
+     C                   EVAL      FLAG2 = REFLAG
+      *
+      ** Compare values and write records to report.
+      *
+ 
+      *
+      ** Component Name
+      *
+     C                   IF        COTT1 <> COTT2
+     C                   EVAL      FIELD = 'RECOTT'
+      *
+      ** Write description of field.
+      *
+     C                   EXSR      WrtFldDesc
+      *
+      ** Write 'before' value of field.
+      *
+     C                   EVAL      KEYDTA = *BLANKS
+     C                   EVAL      FIELD  = *BLANKS
+     C                   EVAL      #VALUE = *BLANKS
+     C                   EVAL      #VALUE = COTT1
+     C                   EXSR      WrtBfValue
+      *
+      ** Write 'after' value of field.
+      *
+     C                   EVAL      #VALUE = *BLANKS
+     C                   EVAL      #VALUE = COTT2
+     C                   EXSR      WrtAfValue
+     C                   ENDIF
+      *
+      ** Component Sequence Number
+      *
+     C                   IF        CSEQ1 <> CSEQ2
+     C                   EVAL      FIELD = 'RECSEQ'
+      *
+      ** Write description of field.
+      *
+     C                   EXSR      WrtFldDesc
+      *
+      ** Write 'before' value of field.
+      *
+     C                   EVAL      KEYDTA = *BLANKS
+     C                   EVAL      FIELD  = *BLANKS
+     C                   EVAL      #VALUE = *BLANKS
+     C                   EVAL      #VALUE = CSEQ1
+     C                   EXSR      WrtBfValue
+      *
+      ** Write 'after' value of field.
+      *
+     C                   EVAL      #VALUE = *BLANKS
+     C                   EVAL      #VALUE = CSEQ2
+     C                   EXSR      WrtAfValue
+     C                   ENDIF
+      *
+      ** Request Available flag
+      *
+     C                   IF        FLAG1 <> FLAG2
+     C                   EVAL      FIELD = 'REFLAG'
+      *
+      ** Write description of field.
+      *
+     C                   EXSR      WrtFldDesc
+      *
+      ** Write 'before' value of field.
+      *
+     C                   EVAL      KEYDTA = *BLANKS
+     C                   EVAL      FIELD  = *BLANKS
+     C                   EVAL      #VALUE = *BLANKS
+     C                   EVAL      #VALUE = FLAG1
+     C                   EXSR      WrtBfValue
+      *
+      ** Write 'after' value of field.
+      *
+     C                   EVAL      #VALUE = *BLANKS
+     C                   EVAL      #VALUE = FLAG2
+     C                   EXSR      WrtAfValue
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * DELETE subroutine - process deleted records                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     DELETE        BEGSR
+      *
+     C                   EVAL      DTA1 = RECOTT
+     C                   EVAL      DTA2 = RECSEQ
+     C                   EVAL      DTA3 = REFLAG
+      *
+     C                   WRITE     DTL2                                 69
+     C                   IF        *IN69 = *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * INSERT subroutine - process inserted records                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C     INSERT        BEGSR
+      *
+     C                   EVAL      DTA1 = RECOTT
+     C                   EVAL      DTA2 = RECSEQ
+     C                   EVAL      DTA3 = REFLAG
+      *
+     C                   WRITE     DTL3                                 69
+     C                   IF        *IN69 = *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * OFLOW subroutine - handle overflow for print of field details *
+      *                                                               *
+      *****************************************************************
+      *
+     C     OFLOW         BEGSR
+      *
+     C     OFLLN         SUB       PRTLN         RMLN
+     C                   IF        RMLN >= 3
+      *
+     C                   WRITE     HEADH                                69
+     C                   IF        *IN69 = *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   SETON                                        60
+     C                   WRITE     DTL1
+     C                   SETOFF                                       60
+     C                   SETON                                        62
+     C                   WRITE     DTL1
+     C                   SETOFF                                       62
+     C                   EVAL      DTA1 = RECOTT
+     C                   EVAL      DTA2 = RECSEQ
+     C                   EVAL      DTA3 = REFLAG
+     C                   EVAL      #VALUE = *BLANKS
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * WrtFldDesc - Write description of the field compared          *
+      *                                                               *
+      *****************************************************************
+      *
+     C     WrtFldDesc    BEGSR
+      *
+      ** Find description of field.
+      *
+     C                   CALL      'UPC0890'
+     C                   PARM                    FIELD
+     C                   PARM                    #FDESC
+      *
+      ** Check overflow before writing next lines.
+      *
+     C                   EXSR      OFLOW
+      *
+      ** Write description of field.
+      *
+     C                   EVAL      #VALUE    =   #FDESC
+     C                   SETON                                        63
+     C                   WRITE     DTL1                                 69
+     C                   SETOFF                                       63
+     C                   IF        *IN69 = *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * WrtBfValue - Write before value of the field                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C     WrtBfValue    BEGSR
+      *
+     C                   SETON                                        64
+     C                   WRITE     DTL1                                 69
+     C                   SETOFF                                       64
+     C                   IF        *IN69 = *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * WrtAfValue - Write after value of the field                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     WrtAfValue    BEGSR
+      *
+     C                   SETON                                        65
+     C                   WRITE     DTL1                                 69
+     C                   SETOFF                                       65
+     C                   IF        *IN69 = *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Program Initialisation routine                       *
+      *                                                               *
+      * Called by: Implicitly on program activation                   *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *INZSR        BEGSR
+      *
+     C     *ENTRY        PLIST
+     C                   PARM                    HDRTXT
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: None                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *PSSR         BEGSR
+      *
+     C                   IF        @RUN = *BLANK
+     C                   EVAL      @RUN = 'Y'
+     C                   DUMP
+      *
+     C                   ENDIF
+      *
+     C                   EVAL      *INU7 = *ON
+     C                   EVAL      *INU8 = *ON
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+      *
+     C                   ENDSR
+      *

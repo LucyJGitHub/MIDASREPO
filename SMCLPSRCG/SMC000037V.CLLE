@@ -1,0 +1,197 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SM MIGRATEG/Z validity checker')                */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000037V - Validity checker for MIGRATEG/Z                */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2007           */
+/*                                                                   */
+/*       Last Amend No. BUG27793           Date 07Jun10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Prev Amend No. CUP038             Date 03Oct06              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BUG27793 - Make migration multi-streamed.                   */
+/*       CUP038 - Reorganisation of migration tools.                 */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM        PARM(&LIBF &LIBT &MODE &CRT &RERUN &SYSPFX +                 */ /*BUG27793*/
+/**********               &EXCEPTION &EXCPTACT &QUALJOBQ &THRESHOLD +                */ /*BUG27793*/
+/**********               &JUMP &SBMJOB &JOBD)                                       */ /*BUG27793*/
+             PGM        PARM(&LIBF &LIBT &CRT &RERUN &SYSPFX +
+                          &EXCEPTION &THRESHOLD &JUMP)                                  /*BUG27793*/
+ 
+             DCL        VAR(&LIBF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIBT) TYPE(*CHAR) LEN(10)
+/**********  DCL        VAR(&MODE) TYPE(*CHAR) LEN(14)                               */ /*BUG27793*/
+             DCL        VAR(&CRT) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&RERUN) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&SYSPFX) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&EXCEPTION) TYPE(*CHAR) LEN(362)
+/**********  DCL        VAR(&EXCPTACT) TYPE(*CHAR) LEN(7)                            */ /*BUG27793*/
+/**********  DCL        VAR(&QUALJOBQ) TYPE(*CHAR) LEN(20)                           */ /*BUG27793*/
+             DCL        VAR(&THRESHOLD) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&JUMP) TYPE(*DEC) LEN(2 0)
+/**********  DCL        VAR(&SBMJOB) TYPE(*CHAR) LEN(4)                              */ /*BUG27793*/
+/**********  DCL        VAR(&JOBD) TYPE(*CHAR) LEN(10)                               */ /*BUG27793*/
+ 
+             DCL        VAR(&EXCPTOBJ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&EXCPTTYP) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&NOOFEXCPTB) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&NOOFEXCPTS) TYPE(*DEC) LEN(2 0)
+/**********  DCL        VAR(&JOBQ) TYPE(*CHAR) LEN(10)                               */ /*BUG27793*/
+/**********  DCL        VAR(&JOBQLIB) TYPE(*CHAR) LEN(10)                            */ /*BUG27793*/
+ 
+             DCL        VAR(&COUNT) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&STARTOBJ) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&STARTTYP) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2007')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Check that 'from' library exists. */
+             CHKOBJ     OBJ(&LIBF) OBJTYPE(*LIB) AUT(*USE)
+             MONMSG     MSGID(CPF9801 CPF9802) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                          MSGDTA('0000Library' *BCAT &LIBF +
+                          *BCAT 'does not exist or you have +
+                          insufficient authority') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Check that 'to' library exists. */
+             CHKOBJ     OBJ(&LIBT) OBJTYPE(*LIB) AUT(*USE)
+             MONMSG     MSGID(CPF9801 CPF9802) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                          MSGDTA('0000Library' *BCAT &LIBT +
+                          *BCAT 'does not exist or you have +
+                          insufficient authority') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Check that the 'to' library is not the same as the 'from' library */
+             IF         COND(&LIBT *EQ &LIBF) THEN(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000The +
+                             "to" library can not be the same as the +
+                             "from" library') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* If exceptions have been entered check that they exist. */
+             CHGVAR     VAR(&NOOFEXCPTB) VALUE(%SST(&EXCEPTION 1 2))
+             CHGVAR     VAR(&NOOFEXCPTS) VALUE(%BIN(&NOOFEXCPTB))
+             IF         COND(&NOOFEXCPTS *NE 0) THEN(DO)
+                CHGVAR     VAR(&COUNT) VALUE(1)
+                CHGVAR     VAR(&STARTOBJ) VALUE(3)
+                CHGVAR     VAR(&STARTTYP) VALUE(13)
+LOOP1:
+                IF         COND(&COUNT *LE &NOOFEXCPTS) THEN(DO)
+                   CHGVAR     VAR(&EXCPTOBJ) VALUE(%SST(&EXCEPTION +
+                                &STARTOBJ 10))
+                   CHGVAR     VAR(&EXCPTTYP) VALUE(%SST(&EXCEPTION +
+                                &STARTTYP 8))
+                   CHKOBJ     OBJ(&LIBF/&EXCPTOBJ) OBJTYPE(&EXCPTTYP)
+                   MONMSG     MSGID(CPF9801) EXEC(DO)
+                      SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                   MSGDTA('0000Object' *BCAT &EXCPTOBJ  +
+                                   *TCAT ', type' *BCAT &EXCPTTYP *BCAT +
+                                   'does not exist in' *BCAT &LIBF) +
+                                   MSGTYPE(*DIAG)
+                      CHGVAR     VAR(&ERROR) VALUE('Y')
+                      GOTO       CMDLBL(ABNOR)
+                   ENDDO
+                   CHGVAR     VAR(&COUNT) VALUE(&COUNT +1)
+                   CHGVAR     VAR(&STARTOBJ) VALUE(&STARTOBJ + 18)
+                   CHGVAR     VAR(&STARTTYP) VALUE(&STARTTYP + 18)
+                   GOTO       CMDLBL(LOOP1)
+                ENDDO
+             ENDDO
+ 
+/**If*exceptions*have*been*entered*and**SUBMIT*specified*as*an*action**/ /*          */ /*BUG27793*/
+/***then*check*a*job*queue*has*been*entered*and*that*it*exists.********/ /*          */ /*BUG27793*/
+/**********  IF         COND(&NOOFEXCPTS *GT 0 *AND &EXCPTACT *EQ +                  */ /*BUG27793*/
+/**********               '*SUBMIT') THEN(DO)                                        */ /*BUG27793*/
+/**********     CHGVAR     VAR(&JOBQ) VALUE(%SST(&QUALJOBQ 1 10))                    */ /*BUG27793*/
+/**********     CHGVAR     VAR(&JOBQLIB) VALUE(%SST(&QUALJOBQ 11 10))                */ /*BUG27793*/
+/**********     IF         COND(&JOBQ *EQ ' ') THEN(DO)                              */ /*BUG27793*/
+/**********        SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000A +           */ /*BUG27793*/
+/**********                     job queue must be entered') MSGTYPE(*DIAG)           */ /*BUG27793*/
+/**********        CHGVAR     VAR(&ERROR) VALUE('Y')                                 */ /*BUG27793*/
+/**********        GOTO       CMDLBL(ABNOR)                                          */ /*BUG27793*/
+/**********     ENDDO                                                                */ /*BUG27793*/
+/**********     ELSE       CMD(DO)                                                   */ /*BUG27793*/
+/**********        CHKOBJ     OBJ(&JOBQLIB/&JOBQ) OBJTYPE(*JOBQ) AUT(*USE)           */ /*BUG27793*/
+/**********        MONMSG     MSGID(CPF9801) EXEC(DO)                                */ /*BUG27793*/
+/**********           SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000Job +      */ /*BUG27793*/
+/**********                        queue' *BCAT &JOBQLIB *TCAT '/' *TCAT +           */ /*BUG27793*/
+/**********                        &JOBQ *BCAT 'does not exist.') MSGTYPE(*DIAG)     */ /*BUG27793*/
+/**********           CHGVAR     VAR(&ERROR) VALUE('Y')                              */ /*BUG27793*/
+/**********           GOTO       CMDLBL(ABNOR)                                       */ /*BUG27793*/
+/**********        ENDDO                                                             */ /*BUG27793*/
+/**********        MONMSG     MSGID(CPF9820) EXEC(DO)                                */ /*BUG27793*/
+/**********           SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000You +      */ /*BUG27793*/
+/**********                        do not have authority to the library +            */ /*BUG27793*/
+/**********                        containing the job queue.') +                     */ /*BUG27793*/
+/**********                        MSGTYPE(*DIAG)                                    */ /*BUG27793*/
+/**********           CHGVAR     VAR(&ERROR) VALUE('Y')                              */ /*BUG27793*/
+/**********           GOTO       CMDLBL(ABNOR)                                       */ /*BUG27793*/
+/**********        ENDDO                                                             */ /*BUG27793*/
+/**********        MONMSG     MSGID(CPF9820) EXEC(DO)                                */ /*BUG27793*/
+/**********           SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000You +      */ /*BUG27793*/
+/**********                        do not have authority to the job queue.') +       */ /*BUG27793*/
+/**********                        MSGTYPE(*DIAG)                                    */ /*BUG27793*/
+/**********           CHGVAR     VAR(&ERROR) VALUE('Y')                              */ /*BUG27793*/
+/**********           GOTO       CMDLBL(ABNOR)                                       */ /*BUG27793*/
+/**********        ENDDO                                                             */ /*BUG27793*/
+/**********     ENDDO                                                                */ /*BUG27793*/
+/**********  ENDDO                                                                   */ /*BUG27793*/
+ 
+/**If*the*option*is*a re-run*then*check*that*the*driving*file*CPYDTA*already**/ /*   */ /*BUG27793*/
+/***exists*in*the*'from'*library.*********************************************/ /*   */ /*BUG27793*/
+/**********  IF         COND(&RERUN *EQ '*YES') THEN(DO)                             */ /*BUG27793*/
+/**********     CHKOBJ     OBJ(&LIBF/CPYDTA) OBJTYPE(*FILE)                          */ /*BUG27793*/
+/**********     MONMSG     MSGID(CPF9801) EXEC(DO)                                   */ /*BUG27793*/
+/**********        SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +                         */ /*BUG27793*/
+/**********                     MSGDTA('0000Driving file CPYDTA must +               */ /*BUG27793*/
+/**********                     already exist in' *BCAT &LIBF *BCAT 'if +            */ /*BUG27793*/
+/**********                     RERUN = "*YES".') MSGTYPE(*DIAG)                     */ /*BUG27793*/
+/**********        CHGVAR     VAR(&ERROR) VALUE('Y')                                 */ /*BUG27793*/
+/**********        GOTO       CMDLBL(ABNOR)                                          */ /*BUG27793*/
+/**********     ENDDO                                                                */ /*BUG27793*/
+/**********  ENDDO                                                                   */ /*BUG27793*/
+ 
+/**If*job*is*to*be*submitted*then*job*description*must*exist*in*library*list.**/ /*  */ /*BUG27793*/
+/**********  IF         COND(&SBMJOB *EQ '*YES') THEN(DO)                            */ /*BUG27793*/
+/**********     CHKOBJ     OBJ(&JOBD) OBJTYPE(*JOBD)                                 */ /*BUG27793*/
+/**********     MONMSG     MSGID(CPF9801) EXEC(DO)                                   */ /*BUG27793*/
+/**********        SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000Job +         */ /*BUG27793*/
+/**********                     description' *BCAT &JOBD *BCAT 'is not +             */ /*BUG27793*/
+/**********                     found in the library list.') MSGTYPE(*DIAG)          */ /*BUG27793*/
+/**********        CHGVAR     VAR(&ERROR) VALUE('Y')                                 */ /*BUG27793*/
+/**********        GOTO       CMDLBL(ABNOR)                                          */ /*BUG27793*/
+/**********     ENDDO                                                                */ /*BUG27793*/
+/**********  ENDDO                                                                   */ /*BUG27793*/
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Send message to cause CPF to pass back earlier messages. */
+ABNOR:
+             IF         COND(&ERROR *EQ 'Y') THEN(SNDPGMMSG +
+                          MSGID(CPF0002) MSGF(QCPFMSG) +
+                          MSGTYPE(*ESCAPE))
+ 
+END:
+             ENDPGM

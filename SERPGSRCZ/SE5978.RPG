@@ -1,0 +1,804 @@
+     H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Security Telekurs Prices report')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module                            *
+     F*                                                               *
+     F*  SE5978 - Securities Telekurs Prices Report                   *
+     F*                                                               *
+     F*  Function: This program produces a report indicating the      *
+     F*   (I/C)    securities with telekur market price.              *
+     F*                                                               *
+     F*  Called By: SEC5978 - Input Cycle Processing                  *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSE009             Date 15Mar99               *
+      *                 S01502  *CREATE    Date 08Jul94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+     F*  CSE009 - Telekurs Changes                                    *
+     F*  S01502 - BLI Telekurs Processing.                            *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/COPY WNCPYSRC,SE5978F001
+     FTELKXT2 IP  E           K        DISK
+     F***TELEKR2*IF**E**         K        DISK                                                CSE009
+     FTELEKR2 IF  E           K        DISK                           UC                      CSE009
+     F/COPY WNCPYSRC,SE5978F002
+     FSETKURL0IF  E           K        DISK                           UC                      CSE009
+     FSECTY   IF  E           K        DISK
+     FSEMKCL0 IF  E           K        DISK
+     FSE5978P1O   E             30     PRINTER                        UC
+     F                                              KINFDS SPOOL
+     FSE5978AUO   E                    PRINTER                        UC
+     F                                              KINFDS SPOOLU
+     F*
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*       20      FIRST CYCLE INDICATOR                           *
+     F*       30      OVERFLOW INDICATOR                              *
+     F*       40      P1 WAS OPENED                                   *
+     F*       80      CHAIN FAILED INDICATOR                          *
+     F*       81      READ EOF INDICATOR                              *
+     F*       84      WORK INDICATOR                                  *
+     F*       85      WORK INDICATOR                                  *
+     F*       U7,U8   D-BASE ERROR                                    *
+     F*****************************************************************
+      /EJECT
+     E/COPY ZSRSRC,ZSERPT1
+     E                    CPY@    1   1 80
+     E                    DEC        16  1               DECIMAL PLACES
+     E                    PBP    10  10  2 0                                                  CSE009
+     E                    PBU    10  10  2 0                                                  CSE009
+     E/COPY ZSRSRC,ZSEDITZ1
+     I*
+     I/COPY WNCPYSRC,SE5978I001
+     ITELKXPFS
+     I/COPY WNCPYSRC,SE5978I002
+     I              MKPR                            CVLPTK
+     I/COPY WNCPYSRC,SE5978I007
+     ISETKURD0                                                                                CSE009
+     I              TELKPM                          TELKP9                                    CSE009
+     I/COPY WNCPYSRC,SE5978I008
+     I*
+     I** DATA STRUCTURE TELEKURS PRICE
+     I*
+     I            DS
+     I                                        1   60CVLPPM
+     I                                        1   61CVLPP1
+     I                                        1   62CVLPP2
+     I                                        1   63CVLPP3
+     I                                        1   64CVLPP4
+     I                                        1   65CVLPP5
+     I                                        1   66CVLPP6
+     I*
+     I** DATA STRUCTURE FOR TELEKURS KEY
+     I*
+     I            DS
+     I                                        1  12 T2RF
+     I/COPY WNCPYSRC,SE5978I005
+     I                                        1   6 TVRF
+     I                                        1   60TELEK
+     I/COPY WNCPYSRC,SE5978I006
+     I                                        1   9 TVRF2                                     CSE009
+     I                                        1   90TELEK9                                    CSE009
+     I                                       10  12 SMCO
+     I*
+     I**  VALUE DATE - MMDDYY
+     I*
+     I            DS
+     I                                        1   60VDATMN
+     I                                        1   20VMONMN
+     I                                        3   40VDAYMN
+     I                                        5   50VDECMN
+     I                                        6   60VYERMN
+     I*
+     I**  VALUE DATE - DDMMYY
+     I*
+     I            DS
+     I/COPY WNCPYSRC,SE5978I003
+     I                                        1   60VDATWF
+     I                                        1   20VDAYPM
+     I                                        3   40VMONPM
+     I                                        5   50VDECPM
+     I                                        6   60VYERPM
+     I/COPY WNCPYSRC,SE5978I004
+     I/COPY ZSRSRC,ZSEDITZ2
+     I*
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I*
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     I** LOCAL DATA AREA FOR DATABASE RECORD
+     I*
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I** ACCESS PROGRAM DATA STRUCTURE
+     I*
+     I@SARD     E DSSCSARDPD                                                                  CSE009
+     ISDBANK    E DSSDBANKPD
+     ISDCURR    E DSSDCURRPD
+     IDSFDY     E DSDSFDY
+     IDSSDY     E DSDSSDY
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C** MAIN PROCESSING
+     C*
+     C** INPUT PARAMETER
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           SEQ     5
+     C*
+     C           TLKDAT    KLIST
+     C                     KFLD           TELEK
+     C                     KFLD           XTELEK
+     C                     KFLD           TCCYPM
+     C                     KFLD           EXTPPM
+     C                     KFLD           VYERPM
+     C                     KFLD           VMONPM
+     C                     KFLD           VDAYPM
+     C*                                                                                       CSE009
+     C           TLKDA9    KLIST                                                              CSE009
+     C                     KFLD           TELEK9                                              CSE009
+     C                     KFLD           XTELEK                                              CSE009
+     C                     KFLD           TCCYPM                                              CSE009
+     C                     KFLD           EXTPPM                                              CSE009
+     C                     KFLD           VYERPM                                              CSE009
+     C                     KFLD           VMONPM                                              CSE009
+     C                     KFLD           VDAYPM                                              CSE009
+     C*
+     C** FIRST CYCLE CALCULATIONS
+     C*
+     C  N20                EXSR INITSR
+     C                     SETON                     20
+     C*
+     C** GET SECURITY DETAILS
+     C*
+     C           SESN      CHAINSECTY                80
+     C*
+     C           *IN80     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SECTY   'DBFILE           ************
+     C                     MOVELSESN      DBKEY            * DBERR 02 *
+     C                     Z-ADD2         DBASE            ************
+     C                     OUT  LDA
+     C                     SETON                     U7U8
+     C                     EXSR RETSR
+     C                     END
+     C*
+     C** CHECK THAT PRICE IS THE SAME
+     C*
+     C           CVLPTK    IFEQ MKPR
+     C*
+     C**   FORMAT SECURITY DETAILS
+     C*
+     C                     EXSR FORMAT
+     C*
+     C**   RECOVER SECURITY CURRENCY DETAILS
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM 'BLANKS'  @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           NMCY
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE           ************
+     C                     Z-ADD4         DBASE            * DBERR 04 *
+     C                     MOVELNMCY      DBKEY            ************
+     C                     OUT  LDA
+     C                     SETON                     U7U8
+     C                     EXSR RETSR
+     C                     END
+     C*
+     C                     MOVELA6CYNM    NOMCCY 14
+     C*
+     C** RECOVER TELEKURS CCY DETAIL
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM 'BLANKS'  @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           TCCY
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE           ************
+     C                     Z-ADD3         DBASE            * DBERR 03 *
+     C                     MOVELTCCY      DBKEY            ************
+     C                     OUT  LDA
+     C                     SETON                     U7U8
+     C                     EXSR RETSR
+     C                     END
+     C*
+     C                     MOVE TCCY      CCYTLK
+     C                     Z-ADDA6TKCC    TCCYPM
+     C*
+     C           CSE009    IFEQ 'N'                                                           CSE009
+     C           TELEK     IFGT 0
+     C**********           MOVE TELEK     TELEKW                                              CSE009
+     C                     MOVELTELEK     TELEKW    P                                         CSE009
+     C                     ELSE
+     C                     MOVE *BLANKS   TELEKW
+     C                     END
+     C                     ELSE                                                               CSE009
+     C           TELEK9    IFGT 0                                                             CSE009
+     C                     MOVE TELEK9    TELEKW                                              CSE009
+     C                     ELSE                                                               CSE009
+     C                     MOVE *BLANKS   TELEKW                                              CSE009
+     C                     ENDIF                                                              CSE009
+     C                     ENDIF                                                              CSE009
+     C*
+     C** WRITE SECURITY DETAILS
+     C*
+     C           *IN40     IFEQ '0'
+     C                     OPEN SE5978P1
+     C                     EXSR RCFP1
+     C                     SETON                     40
+     C                     WRITESE5978H1
+     C                     END
+     C*
+     C                     WRITESE5978D1
+     C           *IN30     IFEQ '1'
+     C                     WRITESE5978H1
+     C                     WRITESE5978D1
+     C                     SETOF                     30
+     C                     END
+     C*
+     C** ACCESS PRICES FOR THIS SECURITY
+     C*
+     C                     Z-ADD0         TLCVLP
+     C                     Z-ADD0         COUNT
+     C*
+     C           CSE009    IFEQ 'N'                                                           CSE009
+     C/COPY WNCPYSRC,SE5978C001
+     C           TLKDAT    SETLLTELEKR2                  84
+     C/COPY WNCPYSRC,SE5978C002
+     C                     ELSE                                                               CSE009
+     C           TLKDA9    SETLLSETKURL0                 84                                   CSE009
+     C                     ENDIF                                                              CSE009
+     C*
+     C** IF NO PRICES AND CCY HAS CONVERTABLE CCY
+     C*
+     C           *IN84     IFEQ '0'
+     C           TCCYPM    IFEQ 20
+     C                     Z-ADD21        TCCYPM
+     C                     END
+     C           TCCYPM    IFEQ 120
+     C                     Z-ADD122       TCCYPM
+     C                     END
+     C           TCCYPM    IFEQ 576
+     C                     Z-ADD577       TCCYPM
+     C                     END
+     C           CSE009    IFEQ 'N'                                                           CSE009
+     C/COPY WNCPYSRC,SE5978C003
+     C           TLKDAT    SETLLTELEKR2                  84
+     C/COPY WNCPYSRC,SE5978C004
+     C                     ELSE                                                               CSE009
+     C           TLKDA9    SETLLSETKURL0                 84                                   CSE009
+     C                     ENDIF                                                              CSE009
+     C                     END
+     C*
+     C** IF NO PRICES - DATABASE ERROR
+     C*
+     C           *IN84     IFEQ '0'
+     C           *LOCK     IN   LDA
+     C           CSE009    IFEQ 'N'                                                           CSE009
+     C                     MOVEL'TELEKR2 'DBFILE           ************
+     C                     MOVELTELEK     DBKEY            * DBERR 05 *
+     C                     ELSE                            ************                       CSE009
+     C                     MOVEL'SETKURL0'DBFILE                                              CSE009
+     C                     MOVELTELEK9    DBKEY                                               CSE009
+     C                     ENDIF                                                              CSE009
+     C                     Z-ADD5         DBASE
+     C                     OUT  LDA
+     C                     SETON                     U7U8
+     C                     EXSR RETSR
+     C                     ELSE
+     C*
+     C** ELSE, ACCESS PRICES FOR THAT SECURITY
+     C*
+     C                     SETOF                     81
+     C           CSE009    IFEQ 'N'                                                           CSE009
+     C/COPY WNCPYSRC,SE5978C005
+     C           TLKDAT    READETELEKR2                  81
+     C/COPY WNCPYSRC,SE5978C006
+     C                     ELSE                                                               CSE009
+     C           TLKDA9    READESETKURL0                 81                                   CSE009
+     C                     ENDIF                                                              CSE009
+     C*
+     C           *IN81     IFEQ '0'
+     C*
+     C           ZDATFM    IFEQ 'M'
+     C                     MOVE VDAYPM    VDAYMN
+     C                     MOVE VMONPM    VMONMN
+     C                     MOVE VYERPM    VYERMN
+     C                     MOVE VDECPM    VDECMN
+     C                     MOVELVDATMN    PVDATE
+     C                     ELSE
+     C                     MOVELVDATWF    PVDATE
+     C                     END
+     C                     END
+     C*
+     C           *IN81     DOWEQ'0'
+     C*
+     C** FORMAT DETAILS AND EDIT OUTPUT
+     C*
+     C                     EXSR LIN1SR
+     C*
+     C** OUTPUT DETAILS
+     C*
+     C                     WRITESE5978D2
+     C           *IN30     IFEQ '1'
+     C                     WRITESE5978H1
+     C                     WRITESE5978D1
+     C                     SETOF                     30
+     C                     END
+     C*
+     C           CSE009    IFEQ 'N'                                                           CSE009
+     C/COPY WNCPYSRC,SE5978C007
+     C           TLKDAT    READETELEKR2                  81
+     C/COPY WNCPYSRC,SE5978C008
+     C                     ELSE                                                               CSE009
+     C           TLKDA9    READESETKURL0                 81                                   CSE009
+     C                     ENDIF                                                              CSE009
+     C                     END
+     C*
+     C** LAST RECORD - OUPUT TOTALS
+     C*
+     C                     EXSR TOTALS
+     C                     END
+     C                     END
+     C*
+     C** LAST RECORD PROCESSING
+     C*
+     CLR         *IN20     IFEQ '0'
+     CLR         *IN40     OREQ '0'
+     C*
+     CLR         *IN20     IFEQ '0'
+     CLR                   EXSR INITSR
+     CLR                   END
+     C*
+     CLR                   OPEN SE5978AU
+     CLR                   EXSR RCFAU
+     CLR                   WRITESE5978AH
+     CLR                   WRITESE5978AN
+     CLR                   CLOSESE5978AU
+     CLR                   END
+     C*
+     CLR         *IN40     IFEQ '1'
+     CLR                   WRITESE5978D4
+     CLR                   CLOSESE5978P1
+     CLR                   END
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  TOTALS  SR TO PRINT TOTALS
+     C*
+     C*  CALLED FROM   MAIN PROCESSING
+     C*  CALLS  DECSR, ZSEDIT
+     C*****************************************************************
+     C*
+     C           TOTALS    BEGSR                           *** TOTALS ***
+     C*
+     C                     MOVE *BLANKS   CVLPAV
+     C*
+     C** CALCULATE AVERAGE PRICE IN NOMINAL CCY
+     C*
+     C           TLCVLP    DIV  COUNT     XTLCV  138H
+     C*
+     C** EDIT AVERAGE PRICE
+     C*
+     C                     MOVE XTLCV     ZFLD15
+     C                     MOVE *BLANK    ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    XCVLP
+     C                     MOVEAXCVLP     DEC
+     C                     MOVE SPBS      ZPBAS
+     C                     EXSR DECSR
+     C                     MOVEADEC       XCVLP
+     C                     MOVE XCVLP     CVLPAV
+     C*
+     C** WRITE AVERAGE PRICE
+     C*
+     C                     WRITESE5978D3
+     C           *IN30     IFEQ '1'
+     C                     WRITESE5978H1
+     C                     SETOF                     30
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  LIN1SR - RECOVER AND EDIT TELEKUR PRICE DETAILS
+     C*
+     C*  CALLED FROM   MAIN PROCESSING
+     C*  CALLS SR      DECSR, ZSEDIT
+     C*****************************************************************
+     C*
+     C           LIN1SR    BEGSR                           *** LIN1SR ***
+     C*
+     C** BOURSE CODE - RECOVER FROM TABLE FILE
+     C*
+     C                     MOVE STEXPM    PMSXCD
+     C                     MOVE *BLANKS   PMSXNM
+     C*
+     C           STEXPM    CHAINSEMKCL0              80
+     C*
+     C** NOT FOUND - PRINT TEXT
+     C*
+     C           *IN80     IFEQ '1'
+     C           RECI      OREQ '*'
+     C                     MOVEL'UNKNOWN' PMSXNM
+     C                     ELSE
+     C                     MOVELMKTN      PMSXNM
+     C                     END
+     C*
+     C** FORMAT PRICE
+     C*
+     C           CDP       IFEQ 0
+     C                     Z-ADDCVLPPM    CVLPTL 138
+     C                     END
+     C           CDP       IFEQ 1
+     C                     Z-ADDCVLPP1    CVLPTL
+     C                     END
+     C           CDP       IFEQ 2
+     C                     Z-ADDCVLPP2    CVLPTL
+     C                     END
+     C           CDP       IFEQ 3
+     C                     Z-ADDCVLPP3    CVLPTL
+     C                     END
+     C           CDP       IFEQ 4
+     C                     Z-ADDCVLPP4    CVLPTL
+     C                     END
+     C           CDP       IFEQ 5
+     C                     Z-ADDCVLPP5    CVLPTL
+     C                     END
+     C           CDP       IFEQ 6
+     C                     Z-ADDCVLPP6    CVLPTL
+     C                     END
+     C*                                                                                       CSE009
+     C           PBASPM    IFEQ 60                                                            CSE009
+     C           CVLPTL    MULT 1000      CVLPTL                                              CSE009
+     C                     ENDIF                                                              CSE009
+     C*
+     C** CONVERT PRICE BASIS FIELD
+     C*
+     C*****      PBASPM    IFEQ 1                                                             CSE009
+     C           PBASPM    LOKUPPBP                      73                                   CSE009
+     C           *IN73     IFEQ '1'                                                           CSE009
+     C                     MOVE 'P'       ZPBAS   1
+     C                     ELSE
+     C                     MOVE 'U'       ZPBAS
+     C                     END
+     C*
+     C** EDIT MARKET PRICE
+     C*
+     C                     Z-ADDCVLPTL    XTLCV
+     C                     MOVE XTLCV     ZFLD15
+     C                     MOVE *BLANK    ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    XCVLP  16
+     C                     MOVEAXCVLP     DEC
+     C                     EXSR DECSR
+     C                     MOVEADEC       XCVLP
+     C                     MOVE XCVLP     CVLPWF
+     C*
+     C** CHECK PRICE BASIS IS THE SAME
+     C*
+     C*****      PBASPM    IFEQ 0                                                             CSE009
+     C           PBASPM    LOKUPPBU                      73                                   CSE009
+     C           *IN73     IFEQ '1'                                                           CSE009
+     C           SPBS      IFNE 'U'
+     C           CVLPTL    MULT 100       CVLPTL
+     C                     END
+     C                     ELSE
+     C           SPBS      IFNE 'P'
+     C           CVLPTL    DIV  100       CVLPTL
+     C                     END
+     C                     END
+     C*
+     C** IF TELEKURS CCY THE SAME AS NOMINAL CCY
+     C*
+     C           PBASPM    LOKUPPBP                      73                                   CSE009
+     C           CCYTLK    IFEQ NMCY
+     C*****      PBASPM    OREQ 01                                                            CSE009
+     C           *IN73     OREQ '1'                                                           CSE009
+     C                     ADD  CVLPTL    TLCVLP 137
+     C                     ADD  1         COUNT   50
+     C                     ELSE
+     C*
+     C**   CONVERT USING SPOT RATE
+     C*
+     C           CVLPTL    MULT SPOTPM    CVLPTL
+     C                     ADD  CVLPTL    TLCVLP
+     C                     ADD  1         COUNT
+     C                     END
+     C*
+     C** EDIT MARKET PRICE BASE CCY
+     C*
+     C                     Z-ADDCVLPTL    XTLCV
+     C                     MOVE XTLCV     ZFLD15
+     C                     MOVE *BLANK    ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    XCVLP
+     C                     MOVEAXCVLP     DEC
+     C                     MOVE SPBS      ZPBAS
+     C                     EXSR DECSR
+     C                     MOVEADEC       XCVLP
+     C                     MOVE XCVLP     CVLPBC
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  FORMAT SR   TO FORMAT SECURITY DETAILS FOR OUTPUT
+     C*
+     C*  CALLED FROM   MAIN PROCESSING
+     C*  CALLS         ZDATE2, ZSERPT
+     C*****************************************************************
+     C*
+     C           FORMAT    BEGSR                           ** FORMAT  ***
+     C*
+     C           MATY      IFGT 0
+     C                     Z-ADDMATY      ZDAYNO
+     C                     Z-ADD0         ZDATE
+     C                     CALL 'ZDATE2'
+     C                     PARM           ZDAYNO  50       DAY NUMBER
+     C                     PARM           ZDATFM  1        DATE FORMAT IND
+     C                     PARM           ZDATE   60       DATE-DDMMYY
+     C                     PARM           WQ0004  7        DATE-DDMMMYY
+     C                     Z-ADDZDATE     ZMADAT
+     C                     ELSE
+     C                     Z-ADD0         ZMADAT
+     C                     END
+     C*
+     C                     MOVE *BLANKS   SECNAM
+     C                     MOVELSRPN      ZTITLE
+     C                     Z-ADDCPNR      ZCPRAT
+     C                     EXSR ZSERPT
+     C*
+     C                     MOVELZRPNAM    SECNAM
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*  DECSR - TO FIND NO OF DECIMAL PLACES
+     C*
+     C*  CALLED FROM   TOTALS, DETSR
+     C*  CALLS SR
+     C*****************************************************************
+     C*
+     C           DECSR     BEGSR                           *** DECSR   ***
+     C*
+     C                     Z-ADD15        D       20
+     C                     Z-ADD8         ZDECS
+     C                     DO   8
+     C           DEC,D     IFEQ '0'
+     C                     MOVE ' '       DEC,D
+     C                     SUB  1         D
+     C                     ELSE
+     C                     GOTO EDECSR
+     C                     END
+     C                     END
+     C           EDECSR    TAG
+     C           D         IFEQ 7
+     C                     Z-ADD6         D
+     C                     MOVE ' '       DEC,7
+     C                     END
+     C*
+     C           ZPBAS     IFEQ 'P'
+     C                     ADD  1         D
+     C                     MOVE '%'       DEC,D
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*  INITSR -  INITIAL PROCESSING SUBROUTINE
+     C*
+     C*  CALLED FROM   MAIN PROCESSING
+     C*  CALLS SR
+     C*
+     C*****************************************************************
+     C*
+     C           INITSR    BEGSR                           *** INITSR  ***
+     C*
+     C** INITIALISE FIELDS.
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBFILE
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVEL'SE5978  'DBPGM
+     C                     OUT  LDA
+     C                     Z-ADD0         XTELEK  30
+     C                     Z-ADD8         ZDECS
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM 'BLANKS'  @RTCD   7
+     C                     PARM '*FIRST'  @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     Z-ADD1         DBASE            * DBERR 01 *
+     C                     MOVEL'*FIRST ' DBKEY            ************
+     C                     OUT  LDA
+     C                     SETON                     U7U8
+     C                     EXSR RETSR
+     C                     END
+     C*
+     C** SET DATE FORMAT INDICATOR
+     C*
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     MOVE 'M'       ZDATFM
+     C                     ELSE
+     C                     MOVE '0'       *IN98
+     C                     MOVE 'D'       ZDATFM
+     C                     END
+     C*                                                                                       CSE009
+     C** Check if SAR CSE009 is ON.                                                           CSE009
+     C*                                                                                       CSE009
+     C                     CALL 'AOSARDR0'                                                    CSE009
+     C                     PARM *BLANKS   @RTCD                                               CSE009
+     C                     PARM '*VERIFY' @OPTN                                               CSE009
+     C                     PARM 'CSE009'  @SARC   6                                           CSE009
+     C           @SARD     PARM @SARD     DSFDY                                               CSE009
+     C*                                                                                       CSE009
+     C**  Set indicator if installed or run date > or = than 26 April 99                      CSE009
+     C/COPY WNCPYSRC,SE5978C009
+     C*                                                                                       CSE009
+     C           @RTCD     IFEQ *BLANKS                                                       CSE009
+     C           BJRDNB    ORGE 09978                                                         CSE009
+     C                     MOVE 'Y'       CSE009  1                                           CSE009
+     C                     OPEN SETKURL0                                                      CSE009
+     C                     ELSE                                                               CSE009
+     C                     MOVE 'N'       CSE009                                              CSE009
+     C                     OPEN TELEKR2                                                       CSE009
+     C                     END                                                                CSE009
+     C/COPY WNCPYSRC,SE5978C010
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF
+     C*
+     C*****************************************************************
+     C*
+     C           RCFP1     BEGSR                            ** RCFP1 **
+     C*
+     C** ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM *BLANKS   ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF
+     C*
+     C*****************************************************************
+     C*
+     C           RCFAU     BEGSR                            ** RCFAU **
+     C*
+     C** ENSURE AUDIT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*  RETSR -  END OF PROGRAM PROCESSING
+     C*
+     C*  CALLED FROM   MAIN PROCESSING, INITSR
+     C*  CALLS SR
+     C*****************************************************************
+     C*
+     C           RETSR     BEGSR                           *** RETSR   ***
+     C*
+     C                     SETON                     LR
+     C           *IN40     IFEQ '1'
+     C                     WRITESE5978D5
+     C                     CLOSESE5978P1
+     C                     END
+     C*
+     C                     OPEN SE5978AU
+     C                     EXSR RCFAU
+     C                     WRITESE5978AH
+     C                     WRITESE5978AE
+     C                     CLOSESE5978AU
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/COPY ZSRSRC,ZSEDITZ3
+     C/COPY ZSRSRC,ZSERPT2
+     C/COPY ZSRSRC,ZSERPT3
+**  CPY@ - OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**   PBP  - Price basis Percentage                                                            CSE009
+0111213141                                                                                    CSE009
+**   PBU  - Price basis Unit                                                                  CSE009
+001020305160                                                                                  CSE009

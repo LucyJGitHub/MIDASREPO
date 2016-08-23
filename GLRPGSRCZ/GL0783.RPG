@@ -1,0 +1,1221 @@
+     H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Account details req - authorise extract')
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL0783 - Account Master Details Prompt                       *
+      *           for Authorised Accounts.                            *
+      *                                                               *
+      *  Function:  This program is based on GL0781 but reads         *
+      *             the Account details shadow files.                 *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 BUG4684            Date 29Oct04               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CSF002             Date 11Aug03               *
+      *                 CSD012  *CREATE    Date 15Oct02               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG4684 - Rename WCOA to COLA same as ACCNTAB. (Recompile)   *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSF002 - Global layer.                                       *
+      *           - Remove unused ZMITEM layout.                      *
+      *  CSD012 - Standing Data Authorisation                         *
+      *                                                               *
+      *****************************************************************
+      *
+     FGL0783DFCF  E                    WORKSTN
+     F                                        RRN1  KSFILE GL0783S1
+      *
+     FREACSHL0IF  E           K        DISK
+     F            ACCNTABF                          KRENAMEACNMB1
+     FGLACSHL1IF  E           K        DISK
+     F            ACCNTABF                          KRENAMEACBRB1
+     FGLACSHL2IF  E           K        DISK
+     F            ACCNTABF                          KRENAMEACNTB1
+     FGL0781EXUF  E           K        DISK                      A
+     F                                              KCOMIT
+      *
+      ****************************************************************
+      *    FUNCTION OF INDICATORS.
+      *
+      * 03            CMD 3 TAKEN FROM DSPF-END PROGRAM
+      * 06            CMD 6 TAKEN FROM DSPF-END PROMPTING AND CONTINUE
+      * 12            CMD 12 TAKEN FROM DSPF-RETRN TO RCF INITIAL PROMP
+      *       21      ACCOUNT NO. FROM  FIELD  BLANK ON INPUT. (RANGA)
+      *       22      ACCOUNT NO. TO  FIELD  BLANK ON INPUT.   (RANGZ)
+      *       23      BRANCH CODE FIELD  BLANK ON INPUT.       (BRCDFM)
+      *       24      'ALL'  ENTERED  IN FIELD. (BLANK DEFAULTS TO ALL)
+      *   30          WORK INDICATOR FOR ARRAY LOKUP.
+      *   31          WORK INDICATOR FOR ARRAY LOKUP.
+      *          41   FULL KEY -- ALL 18 CHARS INPUT.
+      *          42   PARTIAL KEY -- 15 CHARS INPUT.
+      *          43   PARTIAL KEY -- 13 CHARS INPUT.
+      *          44   PARTIAL KEY --  9 CHARS INPUT.
+      *          45   PARTIAL KEY --  6 CHARS INPUT.
+      *          49   BRANCH IN A/C FILE IS VALID FOR USER.
+      *      50       SFLEND
+      *      51       SFLCLR
+      *      52       SFLDSPCTL
+      *      53       SFLDSP
+      *      55       ROLLUP
+      *         61    ERROR DETECTED.  DISPLAY MESSAGE IN RI.
+      *         62    ACCOUNT NO.  FROM  INVALID.
+      *         63    ACCOUNT NO. TO     INVALID.
+      *         64    BRANCH  CODE FIELD INVALID.
+      *      70       END  OF  OUTPUT  LOOP. (SR-ACNTSR,ACNMSR,ACBRSR)
+      *      72       CHAIN  TO  ACCOUNT MASTER FAILS. (GLACSHL21/GLACSHL1)
+      *      73       CHAIN  TO  ACCOUNT MASTER FAILS. (REACSHL0/GLACSHL1)
+      *      74       VALID RECORD FOUND IN FILE FOR PARTIAL KEY.
+      *      79       END-OF-FILE REACHED (REACSHL0/GLACSHL1/GLACSHL2)
+      *      80       MULTI BRANCH SYSTEM
+      *      81       USED FOR DELET SUBR AS INDICATOR ON READE
+      *      82       OPTION 6
+      *      83       OPTION 5
+      *       98      DATE FORMAT  -- ON  =  MMDDYY
+      *       99      ANY OF THE ABOVE ERRORS EXIST.
+      *          U1   REACSHL0 EXISTS   (RETAIL MODULE?)
+      *          U7   DATA BASE ERROR :: INSTL. CTL REC. NOT FOUND
+      *          U8   DATA BASE ERROR.
+      *          LR   END  PROGRAM.
+      *
+      ****************************************************************
+     E                    CPY@    1   1 80               COPYRIGHT STATEMENT
+     E                    MSG     2   7 30               ERROR MESSAGES
+     E**********          ARR        15  1               WORK ARRAY                           CGL029
+     E                    ARR        21  1                                                    CGL029
+     E                    COD     5   5  2 0             PART KEY SIZE
+     E****************************************************************
+     IACNTB1
+     I              ZZ004                           ZZ004A
+     IACBRB1
+     I              ZZ004                           ZZ004B
+     I*****************************************************
+      *  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *    DATA  AREA FOR  DBASE ERROR MESSAGE.
+      *    LOCAL DATA AREA
+      *
+     ILDA        UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      **   RETRIEVE WSID FROM PROGRAM STATUS DATA STRUCTURE
+     IPSDS       SDS
+     I                                      244 246 WSID
+     I                                      245 246 WSID2
+     I                                      244 253 SWSID
+     I                                      254 263 USRID
+      **   DATA STRUCTURE  FOR  THE SUBFILE  DETAILS.
+     ISFDET       DS
+     I                                        1  15 FR
+     I                                       17  31 TU
+     I                                       33  35 BR
+      **   DS FOR RANGE COMPARISION OF  GLACSHL1
+     IACBRTO      DS
+     I                                        1   3 BR1TO
+     I                                        4   9 CU1TO
+     I                                       10  12 CY1TO
+     I**********                             13  16 AC1TO                                     CGL029
+     I**********                             17  18 SE1TO                                     CGL029
+     I                                       13  22 AC1TO                                     CGL029
+     I                                       23  24 SE1TO                                     CGL029
+      **   DS FOR RANGE COMPARISION OF  GLACSHL2
+     IACNTTO      DS
+     I                                        1   6 CU2TO
+     I                                        7   9 CY2TO
+     I**********                             10  13 AC2TO                                     CGL029
+     I**********                             14  15 SE2TO                                     CGL029
+     I**********                             16  18 BR2TO                                     CGL029
+     I                                       10  19 AC2TO                                     CGL029
+     I                                       20  21 SE2TO                                     CGL029
+     I                                       22  24 BR2TO                                     CGL029
+      **   DS FOR  ACCOUNT  DETAILS :: PART OF KEY.
+     IPARTK       DS
+     I**********                              1   60CUSN                                      CSD027
+     I                                        1   6 CUSN                                      CSD027
+     I                                        7   9 CURN
+     I**********                             10  130ACCU                                      CGL029
+     I**********                             14  150SEQN                                      CGL029
+     I                                       10  190ACCU                                      CGL029
+     I                                       20  210SEQN                                      CGL029
+     I***EXTERNAL*DATA*AREA*OF*MENU*ITEM*REQUESTED******************************              CSF002
+     I*ZMITEM***  UDS                                                                         CSF002
+     I**********                              2   50ZMGRP                                     CSF002
+     I**********                              6   9 ZICDE                                     CSF002
+      *
+      * DATA STRUCTURES FOR USE WITH ACCESS OBJECTS
+      *
+     ISDBANK    E DSSDBANKPD
+     I              BJRDNB                          RUND
+     I              BJSUC                           DATF
+     I              BJMRDT                          RUNA
+      *
+     ISDMMOD    E DSSDMMODPD
+     I              BGMBIN                          MBIN
+      *
+     ISDBRCH    E DSSDBRCHPD
+      *
+     IDSFDY     E DSDSFDY
+      * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           SEQNO   5
+     C                     PARM           LEVEL   1
+     C                     PARM           BRCDFM  3
+     C                     PARM           SPARM 100
+     C                     PARM           ACTION  1
+     C                     PARM           ACTCMD  1
+      ****   NOTE THAT AS THE UNDERLYING REPORT CAN BE RUN
+      ****    BOTH DURING INPUT CYCLE AND CLOSE OF BUSINESS
+      ****    ONLY INSERT ACTION CODE IS ALLOWED - REPORT MAY
+      ****    ALREADY BE RUNNING IF AMENDMENT OF INPUT CYCLE
+      ****    REQUEST WERE PERMITTED.
+      *
+      *****************************************************
+      **           INDEX  TO  SUBROUTINES
+      **
+      **    1.  CHECK  :::  VALIDATION OF INPUT DATA.
+      **    2.  NONRET :::  VALIDATION FOR NON-RETAIL A/C #.
+      **    3.  SETKEY :::  SETS KEY NUMBER FROM INPUT VALUES.
+      **    4.  FSEL   :::  VALIDATES INPUT AND SETS FILE NO.
+      **    5.  FSELNT :::  SETS FILE NO. FOR A PARTIAL KEY (GLACSHL2).
+      **    6.  FRVAL  :::  VALIDATES RANGA FIELD.
+      **    7.  FSELBR :::  SETS FILE NO. FOR A PARTIAL KEY (GLACSHL1).
+      **    8.  TOVAL  :::  VALIDATES RANGZ FIELD.
+      **    9.  INIT   :::  INITIALIZES ALL WORK/ KEY FIELDS.
+      **   10.  RETAIL :::  VALIDATION FOR A RETAIL A/C #.
+      **   11.  DOJOB  :::  CALLS APPROPRIATE SR. FOR EXTRACTION.
+      **   12.  FILSF  :::  FILLS SUBFILE WITH A/C #S REQUESTED.
+      **   13.  CLRSF  :::  CLEARS SUBFILE AND WRITES HEADER RECORD.
+      **   14.  DELET  :::  DELETES RECORDS FOR THIS REQUEST ON CMD3/12
+      **
+      *****************************************************
+      **
+      **   PARTIAL KEY SETUP FOR FILE GLACSHL1 :::
+      **
+      **   |BRC|CUSTNO|CUR|ACOD|SE|   (ACBRF1/ACBRT1= #1)
+      **   |BRC|CUSTNO|CUR|ACOD|      (ACBRF2/ACBRT2= #2)
+      **   |BRC|CUSTNO|CUR|           (ACBRF3/ACBRT3= #3)
+      **   |BRC|CUSTNO|               (ACBRF4/ACBRT4= #4)
+      **   |BRC|                      (ACBRF5/ACBRT5= #5)
+      **
+      **   KFLD  DESCRIPTIONS FILE  GLACSHL1  *** FROM ***
+     C           ACBRF1    KLIST
+     C                     KFLD           BR1F    3
+     C**********           KFLD           CU1F    60                                          CSD027
+     C                     KFLD           CU1F    6                                           CSD027
+     C                     KFLD           CY1F    3
+     C**********           KFLD           AC1F    40                                          CGL029
+     C                     KFLD           AC1F   100                                          CGL029
+     C                     KFLD           SE1F    20
+     C           ACBRF2    KLIST
+     C                     KFLD           BR1F    3
+     C**********           KFLD           CU1F    60                                          CSD027
+     C                     KFLD           CU1F    6                                           CSD027
+     C                     KFLD           CY1F    3
+     C**********           KFLD           AC1F    40                                          CGL029
+     C                     KFLD           AC1F                                                CGL029
+     C           ACBRF3    KLIST
+     C                     KFLD           BR1F    3
+     C**********           KFLD           CU1F    60                                          CSD027
+     C                     KFLD           CU1F    6                                           CSD027
+     C                     KFLD           CY1F    3
+     C           ACBRF4    KLIST
+     C                     KFLD           BR1F    3
+     C**********           KFLD           CU1F    60                                          CSD027
+     C                     KFLD           CU1F    6                                           CSD027
+     C           ACBRF5    KLIST
+     C                     KFLD           BR1F    3
+      **
+      **   KFLD  DESCRIPTION  FILE  GLACSHL1  *** TO   ***
+     C           ACBRT1    KLIST
+     C                     KFLD           BR1T    3
+     C**********           KFLD           CU1T    60                                          CSD027
+     C                     KFLD           CU1T    6                                           CSD027
+     C                     KFLD           CY1T    3
+     C**********           KFLD           AC1T    40                                          CGL029
+     C                     KFLD           AC1T   100                                          CGL029
+     C                     KFLD           SE1T    20
+     C           ACBRT2    KLIST
+     C                     KFLD           BR1T    3
+     C**********           KFLD           CU1T    60                                          CSD027
+     C                     KFLD           CU1T    6                                           CSD027
+     C                     KFLD           CY1T    3
+     C**********           KFLD           AC1T    40                                          CGL029
+     C                     KFLD           AC1T                                                CGL029
+     C           ACBRT3    KLIST
+     C                     KFLD           BR1T    3
+     C**********           KFLD           CU1T    60                                          CSD027
+     C                     KFLD           CU1T    6                                           CSD027
+     C                     KFLD           CY1T    3
+     C           ACBRT4    KLIST
+     C                     KFLD           BR1T    3
+     C**********           KFLD           CU1T    60                                          CSD027
+     C                     KFLD           CU1T    6                                           CSD027
+     C           ACBRT5    KLIST
+     C                     KFLD           BR1T    3
+      *****************************************************
+      **
+      **   PARTIAL KEY SETUP FOR FILE GLACSHL2 :::
+      **   |CUSTNO|CUR|ACOD|SE|BRC|   (ACNTF1/ACNTT1= #1)
+      **   |CUSTNO|CUR|ACOD|SE|       (ACNTF2/ACNTT2= #2)
+      **   |CUSTNO|CUR|ACOD|          (ACNTF3/ACNTT3= #3)
+      **   |CUSTNO|CUR|               (ACNTF4/ACNTT4= #4)
+      **   |CUSTNO|                   (ACNTF5/ACNTT5= #5)
+      **
+      **   KFLD  DESCRIPTIONS FILE  GLACSHL2  *** FROM ***
+     C           ACNTF1    KLIST
+     C**********           KFLD           CU1F    60                                          CSD027
+     C                     KFLD           CU1F    6                                           CSD027
+     C                     KFLD           CY1F    3
+     C**********           KFLD           AC1F    40                                          CGL029
+     C                     KFLD           AC1F                                                CGL029
+     C                     KFLD           SE1F    20
+     C                     KFLD           BR1F    3
+     C           ACNTF2    KLIST
+     C**********           KFLD           CU1F    60                                          CSD027
+     C                     KFLD           CU1F    6                                           CSD027
+     C                     KFLD           CY1F    3
+     C**********           KFLD           AC1F    40                                          CGL029
+     C                     KFLD           AC1F                                                CGL029
+     C                     KFLD           SE1F    20
+     C           ACNTF3    KLIST
+     C**********           KFLD           CU1F    60                                          CSD027
+     C                     KFLD           CU1F    6                                           CSD027
+     C                     KFLD           CY1F    3
+     C**********           KFLD           AC1F    40                                          CGL029
+     C                     KFLD           AC1F                                                CGL029
+     C           ACNTF4    KLIST
+     C**********           KFLD           CU1F    60                                          CSD027
+     C                     KFLD           CU1F    6                                           CSD027
+     C                     KFLD           CY1F    3
+     C           ACNTF5    KLIST
+     C**********           KFLD           CU1F    60                                          CSD027
+     C                     KFLD           CU1F    6                                           CSD027
+      **
+      **   KFLD  DESCRIPTION  FILE  GLACSHL2  *** TO   ***
+     C           ACNTT1    KLIST
+     C**********           KFLD           CU1T    60                                          CSD027
+     C                     KFLD           CU1T    6                                           CSD027
+     C                     KFLD           CY1T    3
+     C**********           KFLD           AC1T    40                                          CGL029
+     C                     KFLD           AC1T                                                CGL029
+     C                     KFLD           SE1T    20
+     C                     KFLD           BR1T    3
+     C           ACNTT2    KLIST
+     C**********           KFLD           CU1T    60                                          CSD027
+     C                     KFLD           CU1T    6                                           CSD027
+     C                     KFLD           CY1T    3
+     C**********           KFLD           AC1T    40                                          CGL029
+     C                     KFLD           AC1T                                                CGL029
+     C                     KFLD           SE1T    20
+     C           ACNTT3    KLIST
+     C**********           KFLD           CU1T    60                                          CSD027
+     C                     KFLD           CU1T    6                                           CSD027
+     C                     KFLD           CY1T    3
+     C**********           KFLD           AC1T    40                                          CGL029
+     C                     KFLD           AC1T                                                CGL029
+     C           ACNTT4    KLIST
+     C**********           KFLD           CU1T    60                                          CSD027
+     C                     KFLD           CU1T    6                                           CSD027
+     C                     KFLD           CY1T    3
+     C           ACNTT5    KLIST
+     C**********           KFLD           CU1T    60                                          CSD027
+     C                     KFLD           CU1T    6                                           CSD027
+      **
+      **   KFLD  FOR FILE  REACSHL0  *** FROM / TO ***
+     C           ACNMF     KLIST
+     C                     KFLD           ACN2F  100
+     C           ACNMT     KLIST
+     C                     KFLD           ACN2T  100
+      *****************************************************
+      **
+      **    * PROGRAM (MAIN RTN.)  BEGINS :::
+      **
+      **      I.   GET INSTALLATION CTL REC. IF NOT FOUND,
+      **           DATA BASE ERR. SETON  U7 & U8. SETON LR.
+      **           ACCESS SDBANKPD/ICD TO OBTAIN RUNDATE.
+      **
+      *
+     C                     MOVEACPY@      BIS@   80
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANK    @RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     SETON                     99
+     C                     ELSE
+     C                     MOVE RUNA      SRUNA
+     C                     END
+      *
+     C           *IN99     IFEQ '1'
+     C                     SETON                     U7U8
+     C                     MOVE '01'      DBASE                         **
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     GOTO JOBEND
+     C                     END
+      *
+      **           ACCESS SDMMODPD/ICD TO OBTAIN MBIN
+      *
+     C                     CALL 'AOMMODR0'
+     C                     PARM *BLANK    @RTCD
+     C                     PARM '*FIRST  '@OPTN
+     C           SDMMOD    PARM SDMMOD    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     SETON                     99
+     C                     END
+      *
+     C           *IN99     IFEQ '1'
+     C                     SETON                     U7U8
+     C                     MOVE '01'      DBASE                         **
+     C                     MOVE 'SDMMODPD'DBFILE
+     C                     GOTO JOBEND
+     C                     END
+     C           BGRTBN    IFEQ 'Y'
+     C           BGIOAC    OREQ 'Y'
+     C                     MOVE '1'       *INU1
+     C                     END
+     C           MBIN      IFEQ 'Y'
+     C                     MOVE '1'       *IN80
+     C                     ELSE
+      ***   IN SINGLE BRANCH CASE SET BRCDFM (PASSED AS BLANK FROM RCF)
+      ***   TO SINGLE BRANCH CODE FROM  SDBANKPD
+     C                     MOVE BJSBRC    BRCDFM
+     C                     END
+      **
+      **   SYSTEM DATE FORMAT : *IN98 = 1 IF MMDDYY.
+     C           DATF      COMP 'M'                      98
+      **
+      **
+      **     II.   INITIALIZE SUBFILE & WORK/KEY FLDS
+     C                     EXSR CLRSF
+     C                     EXSR INIT
+      **
+      **    III.   DO LOOP TILL CMD 03,12 OR 06 ARE PRESSED:::
+      **
+     C                     WRITEGL0783F1
+     C           *IN06     DOUEQ'1'
+     C           *IN03     OREQ '1'
+     C           *IN12     OREQ '1'
+      **
+      **      1.  DISPLAY/ACCEPT INPUT FIELDS.
+     C                     EXFMTGL0783F2
+     C                     SETOF                     616263
+     C                     SETOF                     64
+      **
+      **      2.  VALIDATE  INPUT.
+     C           *IN03     IFNE '1'
+     C           *IN12     ANDNE'1'
+     C           *IN82     ANDNE'1'
+     C           *IN83     ANDNE'1'
+     C                     EXSR CHECK
+      **
+      **      3.  WRITE OUT A/C RECORDS REQUESTED
+      **          IF NO ERROR AND DISPLAY SUBFILE
+      **          DETAILS.
+     C           *IN06     IFNE '1'
+     C           ERROR     IFEQ 0
+      **
+      **      IF ALL ACCOUNTS FOR ALL BRANCHES HAVE BEEN REQUESTED
+      **
+     C           OPTION    IFEQ '6'
+     C                     SETON                     82
+     C                     SETON                     84
+     C                     MOVEL'ALL'     SPARM
+     C                     ELSE
+     C                     MOVEL'XXX'     SPARM
+     C                     END
+      *
+     C                     EXSR DOJOB
+     C                     WRITEGL0783C1
+     C                     ELSE
+     C                     EXSR INIT
+     C                     END
+      *
+     C                     END
+     C                     END
+     C                     END
+      **
+      **    IV.   END PROGRAM.
+      **
+     C           JOBEND    TAG                             *** JOBEND ***
+     C           *IN03     IFEQ '1'
+     C                     MOVE 'E'       ACTCMD
+     C                     EXSR DELET
+     C                     END
+     C           *IN12     IFEQ '1'
+     C                     SETOF                     12
+     C                     MOVE 'F'       ACTCMD
+     C                     EXSR DELET
+     C                     END
+     C                     SETON                     LR
+     C                     RETRN
+      **
+      **    *****   PROGRAM (MAIN RTN.)  ENDS.
+      **
+      *****************************************************
+      **    SUBROUTINE (01) :::  CHECK
+      **                    SCREEN  INPUT  VALIDATION
+      **
+      **---------------------------------------------------
+     C           CHECK     BEGSR
+      **    INITIALIZE  WORK  FIELDS.
+      **
+     C                     Z-ADD0         ERROR   10
+     C                     Z-ADD0         X       10
+     C                     MOVE ' '       OPTION  1
+     C                     MOVE *BLANKS   ERR
+     C                     SETOF                     24
+      *
+      **    IF F6 TAKEN CHECK IF A RANGE HAS BEEN ENTERED
+      *
+     C           *IN06     IFEQ '1'
+      *
+     C           RRN1      IFEQ 1
+     C                     SETOF                     06
+     C                     Z-ADD7         X
+     C                     GOTO VALERR
+     C                     ELSE
+     C                     GOTO VALEND
+     C                     END
+      *
+     C                     END
+      **
+      **    1.  SET INDICATORS 21 TO 24 ACCORDING TO INPUT.
+      **        IND.   ON WHEN:            OFF WHEN:
+      **
+      **        21     RANGA == *BLANKS    RANGA  NOT *BLKS
+      **        22     RANGZ == *BLANKS    RANGZ  NOT *BLKS
+      **        23     BRCDFM== *BLANKS    BRCDFM NOT *BLKS
+      **        24     'ALL' OR BLANK IN-  BRCDFM IS A SPECIFIC
+      **               BRCDFM FIELD        BRANCH CODE
+      **
+     C           RANGA     COMP *BLANKS                  21
+     C           RANGZ     COMP *BLANKS                  22
+     C           BRCDFM    COMP *BLANKS                  23
+     C  N23      BRCDFM    COMP 'ALL'                    24
+     C   23                SETON                     24
+      **
+      **
+      **    2.  SET OPTION ACCORDING TO VALUES INPUT :::
+      **    OPT.   DESCRIPTION                  21 22 23 24
+      **
+      **      1.   ONE A/C # FOR ALL BRANCHES  A:0  1  1  1
+      **      2.   ONE A/C # FOR ONE BRANCH.     0  1  0  0
+      **      3.   A RANGE  FOR ALL BRANCHES   A:0  0  1  1
+      **      4.   A RANGE  FOR ONE BRANCH       0  0  0  0
+      **      5.   ONE BRANCH,  ALL A/C #S       1  1  0  0
+      **      6    ALL A/C #S,  ALL BRANCHES     1  1  0  1
+      **
+     C  N21 22 24          MOVE '1'       OPTION
+      **
+     C  N21N23N24
+     CAN 22                MOVE '2'       OPTION
+      **
+     C  N21N22 24          MOVE '3'       OPTION
+      **
+     C  N24
+     CANN21N22N23          MOVE '4'       OPTION
+      **
+     C   21 22
+     CANN23N24             MOVE '5'       OPTION
+      **
+     C   21 22
+     CANN23 24             DO
+     C                     MOVE '6'       OPTION
+     C                     GOTO VALEND
+     C                     END
+      **
+      **    3.  IF OPTION CANNOT BE DETERMINED, ERROR.
+      **        SET CONDITIONS TO REFLECT ERROR & EXIT.
+      **
+     C           OPTION    IFEQ ' '
+     C                     Z-ADD1         X
+     C                     GOTO VALERR
+     C                     END
+      **
+      **    4.  MOVE INPUT FIELDS TO WORK FIELDS.
+      **
+     C                     MOVELRANGA     BLK15F
+     C                     MOVELRANGZ     BLK15T
+     C                     MOVEARANGA     ARR
+      **
+      **    5.  DETERMINE IF A/C # ENTERED IS RETAIL.
+      **        IF A RETAIL A/C NO., AND MODULE PRESENT (U1 ON),
+      **        VALIDATE FOR RETAIL A/C;  ELSE VALIDATE
+      **        FOR A NON-RETAIL A/C.
+      **
+     C                     Z-ADD1         Z       20
+     C           ' '       LOKUPARR,Z                    30
+     C           Z         IFEQ 11
+     C           *INU1     IFEQ '1'
+     C                     EXSR RETAIL
+     C                     ELSE
+     C                     Z-ADD1         X
+     C                     GOTO VALERR
+     C                     END
+     C                     ELSE
+     C                     EXSR NONRET
+     C                     END
+      **
+     C           VALERR    TAG                             *** VALERR ***
+     C           X         IFNE 0
+     C                     SETON                     61
+     C                     MOVEAMSG,X     ERR
+     C                     ADD  1         ERROR
+     C                     END
+     C           VALEND    ENDSR
+      **
+      *****************************************************
+      **    SUBROUTINE (03) :::  NONRET
+      **                    NON-RETAIL ACCOUNT VALIDATION.
+      **        CHECK FOR A VALID PARTIAL KEY AND SET KEY
+      **        NUMBER. MOVE INPUT TO PROPER KEY FIELDS.
+      **
+      **---------------------------------------------------
+     C           NONRET    BEGSR
+      **
+      **        1.   VALIDATE RANGA FIELD;
+      **             DETERMINE KEY NUMBER & IF KEYNUM IS
+      **             ZERO, ERROR IN INPUT.
+      **
+     C                     Z-ADD0         X
+     C                     MOVELRANGA     BLK15F
+     C                     EXSR SETKEY
+     C           KEYNUM    IFLE 0
+     C                     Z-ADD1         X
+     C                     SETON                     62
+     C                     ELSE
+      **
+      **        2. MOVE RANGA FIELD TO KEY FIELDS.
+      **
+     C                     MOVELBLK15F    PARTK
+     C                     MOVE BRCDFM    BR1F
+     C                     MOVE CUSN      CU1F
+     C                     MOVE CURN      CY1F
+     C                     MOVE ACCU      AC1F
+     C                     MOVE SEQN      SE1F
+      **
+      **        3. EXECUTE FRVAL TO CHECK IF THE A/C
+      **           EXISTS IN FILE. IF FIELD X IS NOT
+      **           ZERO, ERROR.
+      **
+     C                     EXSR FRVAL
+     C                     MOVE BRCA      ABRCA   3
+     C           X         IFEQ 0
+      **
+      **        4.  VALIDATE RANGZ FIELD IF INPUT
+      **            AND RANGA FIELD HAS NO ERROR.
+      **
+     C           *IN22     IFNE '1'
+      **
+      **        5.  DETERMINE KEY NUMBER & IF KEYNUM IS
+      **            ZERO OR GT KEYNUM OF RANGA FLD, ERROR.
+      **            FIELD,  ERROR.
+      **
+     C                     Z-ADDKEYNUM    PREKEY  10
+     C                     MOVEARANGZ     ARR
+     C                     EXSR SETKEY
+     C           KEYNUM    IFLE 0
+     C           KEYNUM    ORGT PREKEY
+     C                     Z-ADD1         X
+     C                     SETON                     63
+     C                     GOTO NREND
+     C                     END
+      **
+      **        6. MOVE RANGZ FIELD TO KEY FIELDS.
+      **
+     C                     MOVELBLK15T    PARTK
+     C                     END
+     C                     MOVE BRCDFM    BR1T
+     C                     MOVE CUSN      CU1T
+     C                     MOVE CURN      CY1T
+     C                     MOVE ACCU      AC1T
+     C                     MOVE SEQN      SE1T
+     C                     MOVE BRCDFM    BR1TO
+     C                     MOVE BRCDFM    BR2TO
+     C                     MOVE CUSN      CU1TO
+     C                     MOVE CUSN      CU2TO
+     C                     MOVE CURN      CY1TO
+     C                     MOVE CURN      CY2TO
+     C                     MOVE ACCU      AC1TO
+     C                     MOVE ACCU      AC2TO
+     C                     MOVE SEQN      SE1TO
+     C                     MOVE SEQN      SE2TO
+      **
+      **        7. EXECUTE TOVAL TO CHECK IF THE A/C
+      **           EXISTS IN FILE. IF FIELD X IS NOT
+      **           ZERO, ERROR.
+      **
+     C           *IN22     IFNE '1'
+     C                     EXSR TOVAL
+     C                     END
+     C                     END
+     C                     END
+     C           NREND     ENDSR
+      **
+      *****************************************************
+      **      SUBROUTINE (04) ::: SETKEY
+      **          VALIDATES INPUT FIELDS FOR PARTIAL KEY
+      **          ENTRY, AND SETS KEY NUMBER & FILE NUMBER:
+      **          1= GLACSHL2,  2= GLACSHL1.
+      **
+      **   INPUT  VALUE TAKEN  FROM ARRAY ARR.
+      **
+      **  FLD ID.        KEY NUMBER WILL BE :::
+      **   1. CUST #     1 - ALL FLDS, INCL BRCD      *IN41
+      **   2. CURNCY     2 - ALL 4 FIELDS ENTERED.    *IN42
+      **   3. A/C #      3 - FIRST 3 FIELDS ENTERED.  *IN43
+      **   4. A/C SQ     4 - FIRST 2 FIELDS ENTERED.  *IN44
+      **                 5 - 1ST FIELD ONLY ENTERED.  *IN45
+      **
+      **   IF BRANCH CODE HAS ALSO BEEN ENTERED, KEY NUMBER
+      **   WILL BE DECREMENTED BY ONE. (REFER KLIST SETUP)
+      **
+      **---------------------------------------------------
+     C           SETKEY    BEGSR
+      **   INITIALISE WORK FIELDS & INDICATORS.
+     C                     SETOF                     414243
+     C                     SETOF                     4445
+     C                     Z-ADD1         FILNUM  10
+     C                     Z-ADD0         KEYNUM  10
+      **
+      **   IF OPTION IS 5, SET KEYNUM TO 5 & FILNUM TO 2
+     C           OPTION    IFEQ '5'
+     C                     Z-ADD5         KEYNUM
+     C                     Z-ADD2         FILNUM
+     C                     SETON                     45
+     C                     SETON                     8384
+     C                     ELSE
+      **
+      **   ELSE, IF FULL KEY IS  INPUT, SET  KEYNUM TO 2
+     C********** ARR,15    IFNE ' '                                                           CGL029
+     C           ARR,21    IFNE ' '                                                           CGL029
+     C                     Z-ADD2         KEYNUM  10
+     C                     ELSE
+      **
+      **   IF INPUT IS A PARTIAL KEY, DETERMINE POSITION
+      **   OF FIRST BLANK CHARACTER.
+     C                     Z-ADD1         Z       20
+     C           ' '       LOKUPARR,Z                    30
+      **
+      **   CHECK IF THE POSITION OF THE BLANK CHARACTER
+      **   IS VALID FROM COD TABLE. IF NOT, KEYNUM == 0.
+     C                     Z-ADD1         ZZ      10
+     C           Z         LOKUPCOD,ZZ                   31
+     C           *IN31     IFEQ '0'
+     C                     Z-ADD0         KEYNUM
+     C                     ELSE
+      **
+      **   IF PARTIAL KEY INPUT IS VALID, KEYNUM WILL BE
+      **   THE INDEX OF THE ARRAY COD.
+     C                     Z-ADDZZ        KEYNUM
+     C                     END
+     C                     END
+      **
+      **   IF BRANCH CODE IS INPUT, RESET KEYNUM FOR GLACSHL1
+      **   FILE.
+      **
+     C           *IN24     IFEQ '0'
+     C                     SUB  1         KEYNUM
+     C                     Z-ADD2         FILNUM
+     C                     END
+      **
+      **   SETON INDICATOR (41 TO 45) ACCORDING TO THE
+      **   VALUE OF KEYNUM.
+      **
+     C           KEYNUM    ADD  40        Z       20
+     C                     MOVE '1'       *IN,Z
+      **
+     C                     END
+     C                     ENDSR
+      **
+      *****************************************************
+      **    SUBROUTINE (05) :::  FSEL
+      **        SELECT FILE WHICH HAS VALID KEY.
+      **        INPUT::: FIELD :: FILSEL  1 A
+      **                 FILSEL :: 1 = CHECK FROM KEYS
+      **                           2 = CHECK TO KEYS
+      **                           0 = ERROR.
+      **                 FILNUM :: 2 = GLACSHL1 FILE
+      **                           1 = GLACSHL2 FILE
+      **
+      **    RETURNS A VALUE  OF 1/2  (FIELD=FILE 1A )
+      **             IF  KEY EXISTS IN FILE: GLACSHL2/GLACSHL1
+      **             AND 0, IF THE KEY SPECIFIED IS INVALID
+      **
+      **    REQUIRES SUBROUTINES FSELBR(GLACSHL1) AND FSELNT
+      **      (GLACSHL2) IF PARTIAL KEYS ARE INPUT.  THESE 2
+      **      SRTNS. SET *IN75. IF OFF, KEY DOES NOT EXIST.
+      **
+      **---------------------------------------------------
+     C           FSEL      BEGSR
+      **      1.  INITIALISE WORK FIELDS/INDICATORS.
+      **
+     C                     SETOF                     727375
+     C                     MOVE '0'       FILE    1
+      **
+      **      2.  IF GLACSHL1 FILE IS SET (FILNUM==2)
+      **          IF  *IN41 IS 1       (KEYNUM==1)
+      **          CHAIN INTO FILE, ELSE CALL FSELBR.
+      **
+     C           FILNUM    IFEQ 2
+      **
+     C           *IN41     IFEQ '1'
+     C           FILSEL    IFEQ '1'
+     C   41      ACBRF1    CHAINACBRB1               72
+     C                     ELSE
+     C   41      ACBRT1    CHAINACBRB1               72
+     C                     END
+     C                     ELSE
+     C                     EXSR FSELBR
+     C   75                MOVE '2'       FILE
+     C  N75                SETON                     72
+     C                     END
+      **
+      **      3.  IF RECORD FOUND AND ACTIVE, SET FILE
+      **          FIELD TO 1.
+      **
+     C           *IN72     IFEQ '0'
+     C           RECI      ANDEQ'D'
+     C                     MOVE '2'       FILE
+     C                     END
+     C                     ELSE
+      **
+      **      4.  IF GLACSHL2 FILE IS SET (FILNUM==1)
+      **          IF  *IN41 IS 1       (KEYNUM==1)
+      **          CHAIN INTO FILE, ELSE CALL FSELNT.
+      **
+     C           *IN41     IFEQ '1'
+     C           FILSEL    IFEQ '1'
+     C   41      ACNTF1    CHAINACNTB1               73
+     C                     ELSE
+     C   41      ACNTT1    CHAINACNTB1               73
+     C                     END
+     C                     ELSE
+     C                     EXSR FSELNT
+     C  N75                SETON                     73
+     C   75                MOVE '1'       FILE
+     C                     END
+      **
+      **      5.  IF RECORD FOUND AND ACTIVE, SET FILE
+      **          FIELD TO 2.
+      **
+     C           *IN73     IFEQ '0'
+     C           RECI      ANDEQ'D'
+     C                     MOVE '1'       FILE
+     C                     END
+     C                     END
+     C                     ENDSR
+      **
+      *****************************************************
+      **    SUBROUTINE (06) :::  FSELNT
+      **
+      **    TO FIND IF PARTIAL KEY EXISTS IN FILE - GLACSHL2.
+      **    INPUT :::    FIELD :: FILSEL  1 A
+      **                 FILSEL :: 1 = CHECK FROM KEYS
+      **                           2 = CHECK TO KEYS
+      **                           0 = ERROR.
+     C           FSELNT    BEGSR
+     C                     SETOF                     7475
+      **
+      **      1.  SETLL WITH THE KEY ACCORDING TO KEYNUM
+      **          (*IN42 TO *IN45)  (FROM/TO FIELD)
+      **
+     C           FILSEL    IFEQ '1'
+     C   42      ACNTF2    SETLLACNTB1
+     C   43      ACNTF3    SETLLACNTB1
+     C   44      ACNTF4    SETLLACNTB1
+     C   45      ACNTF5    SETLLACNTB1
+     C                     ELSE
+     C   42      ACNTT2    SETLLACNTB1
+     C   43      ACNTT3    SETLLACNTB1
+     C   44      ACNTT4    SETLLACNTB1
+     C   45      ACNTT5    SETLLACNTB1
+     C                     END
+      **
+      **      2.  READ FILE TILL NO RECORDS WITH SAME KEY
+      **          FOUND OR A VALID RECORD IS FOUND.
+      **
+     C           *IN74     DOUEQ'1'
+     C           FILSEL    IFEQ '1'
+     C   42      ACNTF2    READEACNTB1                   74
+     C   43      ACNTF3    READEACNTB1                   74
+     C   44      ACNTF4    READEACNTB1                   74
+     C   45      ACNTF5    READEACNTB1                   74
+     C                     ELSE
+     C   42      ACNTT2    READEACNTB1                   74
+     C   43      ACNTT3    READEACNTB1                   74
+     C   44      ACNTT4    READEACNTB1                   74
+     C   45      ACNTT5    READEACNTB1                   74
+     C                     END
+      **
+      **      3.  IF A RECORD HAS BEEN READ, SHOULD BE
+      **          AN ACTIVE RECORD
+      **
+     C           *IN74     IFEQ '0'
+     C           RECI      ANDEQ'D'
+     C           BRCDFM    IFEQ 'ALL'
+     C           BRCA      OREQ BRCDFM
+     C                     SETON                     7475
+     C                     END
+     C                     END
+      **
+     C                     END
+     C                     ENDSR
+      **
+      *****************************************************
+      **    SUBROUTINE (07) :::  FRVAL
+      **        VALIDATE  THE  RANGA FIELD.
+      **        FOR A  NON RETAIL A/C #.
+      **
+      **---------------------------------------------------
+     C           FRVAL     BEGSR
+      **
+      **    SET WORK FIELDS -- X,FILSEL & RFROM
+      **
+     C                     Z-ADD0         X
+     C                     MOVE ' '       RFROM   1
+     C                     MOVE '1'       FILSEL  1
+      **
+      **    EXECUTE FSEL.  IF FIELD FILE IS ZERO, ERROR.
+      **
+     C                     EXSR FSEL
+     C           FILE      IFEQ '0'
+     C                     Z-ADD2         X
+     C                     SETON                     62
+     C           FILNUM    COMP 2                        64
+     C                     ELSE
+     C                     MOVE FILE      RFROM   1
+     C                     END
+     C                     ENDSR
+      **
+      *****************************************************
+      **    SUBROUTINE (08) :::  FSELBR
+      **        TO FIND IF PARTIAL KEY EXISTS IN GLACSHL1
+      **        INPUT :::    FIELD :: FILSEL  1 A
+      **                    FILSEL :: 1 = CHECK FROM KEYS
+      **                              2 = CHECK TO KEYS
+      **
+      **---------------------------------------------------
+     C           FSELBR    BEGSR
+     C                     SETOF                     7475
+      **
+      **      1.  SETLL WITH THE KEY ACCORDING TO KEYNUM
+      **          (*IN42 TO *IN45)  (FROM/TO FIELD)
+      **
+     C           FILSEL    IFEQ '1'
+     C   42      ACBRF2    SETLLACBRB1
+     C   43      ACBRF3    SETLLACBRB1
+     C   44      ACBRF4    SETLLACBRB1
+     C   45      ACBRF5    SETLLACBRB1
+     C                     ELSE
+     C   42      ACBRT2    SETLLACBRB1
+     C   43      ACBRT3    SETLLACBRB1
+     C   44      ACBRT4    SETLLACBRB1
+     C   45      ACBRT5    SETLLACBRB1
+     C                     END
+      **
+      **      2.  READ FILE TILL NO RECORDS WITH SAME KEY
+      **          FOUND OR A VALID RECORD IS FOUND.
+      **
+     C           *IN74     DOUEQ'1'
+     C           FILSEL    IFEQ '1'
+     C   42      ACBRF2    READEACBRB1                   74
+     C   43      ACBRF3    READEACBRB1                   74
+     C   44      ACBRF4    READEACBRB1                   74
+     C   45      ACBRF5    READEACBRB1                   74
+     C                     ELSE
+     C   42      ACBRT2    READEACBRB1                   74
+     C   43      ACBRT3    READEACBRB1                   74
+     C   44      ACBRT4    READEACBRB1                   74
+     C   45      ACBRT5    READEACBRB1                   74
+     C                     END
+      **
+      **      3.  IF A RECORD HAS BEEN READ, A) SHOULD BE
+      **          AN ACTIVE RECORD, B) SHOULD BELONG TO
+      **          THE USER.
+      **
+     C           *IN74     IFEQ '0'
+     C           RECI      ANDEQ'D'
+     C           BRCDFM    IFEQ 'ALL'
+     C           BRCA      OREQ BRCDFM
+     C                     SETON                     7475
+     C                     END
+     C                     END
+     C                     END
+     C                     ENDSR
+      **
+      *****************************************************
+      **    SUBROUTINE (09) :::  TOVAL
+      **        VALIDATE THE RANGZ FIELD:(NON RETAIL A/C)
+      **         A.  CHECK IF PRESENT IN THE ACCOUNTS FILE
+      **         B.  CHECK IF THE FILE CODE IS THE SAME AS
+      **             RANGA.
+      **         C.  CHECK IF THE RANGZ FIELD HAS GOT A
+      **             HIGHER VALUE THAN THE RANGZ FIELD.
+      **
+      **---------------------------------------------------
+     C           TOVAL     BEGSR
+      **
+      **    SET WORK FIELDS -- X,FILSEL & RFROM
+      **
+     C                     Z-ADD0         X
+     C                     MOVE '2'       FILSEL  1
+      **
+      **    EXECUTE FSEL.  IF FIELD FILE IS ZERO, ERROR.
+      **
+     C                     EXSR FSEL
+     C           FILE      IFEQ '0'
+     C                     Z-ADD2         X
+     C           FILNUM    COMP 2                        64
+     C                     SETON                     63
+     C                     ELSE
+      **
+      **    IF RANGE FROM IS GREATER THAN RANGE TO, OR
+      **    IF FILE SET IS NOT THE SAME AS RFROM, ERROR
+      **
+     C           BRCDFM    IFEQ 'ALL'
+     C                     MOVE *BLANKS   F18ACA 18
+     C                     MOVE *BLANKS   F18ACZ 18
+     C                     MOVE RANGA     F18ACA
+     C                     MOVELABRCA     F18ACA
+     C                     MOVE RANGZ     F18ACZ
+     C                     MOVE BRCA      ZBRCA   3
+     C                     MOVELZBRCA     F18ACZ
+     C           FILE      IFNE RFROM
+     C           F18ACA    ORGT F18ACZ
+     C                     Z-ADD3         X
+     C                     SETON                     6362
+     C                     END
+     C                     ELSE
+     C           FILE      IFNE RFROM
+     C           RANGA     ORGT RANGZ
+     C                     Z-ADD3         X
+     C                     SETON                     6362
+     C                     END
+     C                     END
+     C                     END
+     C                     ENDSR
+      **
+      *****************************************************
+      **    SUBROUTINE (10) :::  INIT
+      **        TO  INIT ALL KEY/  WORK  FIELDS.
+      **
+      **---------------------------------------------------
+     C           INIT      BEGSR
+      **         COMP FLD FOR GLACSHL2 **  *IN42 / 43 / 44
+     C                     MOVE *BLANKS   ACNTC2 15
+     C                     MOVE *BLANKS   ACNTC3 13
+     C                     MOVE *BLANKS   ACNTC4  9
+      **         COMP FLD FOR GLACSHL1 **  *IN42 / 43 / 44
+     C                     MOVE *BLANKS   ACBRC2 16
+     C                     MOVE *BLANKS   ACBRC3 12
+     C                     MOVE *BLANKS   ACBRC4  9
+      **
+     C**********           MOVEL'00000000'BLK15F 15                                           CGL029
+     C**********           MOVE '00000000'BLK15F                                              CGL029
+     C**********           MOVEL'00000000'BLK15T 15                                           CGL029
+     C**********           MOVE '00000000'BLK15T                                              CGL029
+     C                     MOVE *ZEROS    BLK15F 21                                           CGL029
+     C                     MOVEL'      '  BLK15F                                              CSD027
+     C                     MOVEL*ZEROS    BLK15T 21                                           CGL029
+     C                     MOVEL'      '  BLK15T                                              CSD027
+     C                     MOVE *BLANKS   SFDET
+     C                     MOVE *BLANKS   ACBRTO
+     C                     MOVE *BLANKS   ACNTTO
+     C                     MOVE *BLANKS   CURN
+     C                     MOVE *BLANKS   CY1F
+     C                     MOVE *BLANKS   CY1T
+     C                     MOVE *BLANKS   FILE
+     C                     MOVE *BLANKS   TOFLD
+      **
+     C**********           MOVE *ZEROS    CUSN                                                CSD027
+     C                     MOVE *BLANKS   CUSN                                                CSD027
+     C                     MOVE *ZEROS    ACCU
+     C                     MOVE *ZEROS    SEQN
+     C                     MOVE *BLANKS   BR1F
+     C**********           MOVE *ZEROS    CU1F                                                CSD027
+     C                     MOVE *BLANKS   CU1F                                                CSD027
+     C                     MOVE *ZEROS    AC1F
+     C                     MOVE *ZEROS    SE1F
+     C                     MOVE *ZEROS    ACN2F
+     C                     MOVE *ZEROS    ACN2T
+     C                     MOVE *ZEROS    BR1T
+     C**********           MOVE *ZEROS    CU1T                                                CSD027
+     C                     MOVE *BLANKS   CU1T                                                CSD027
+     C                     MOVE *ZEROS    AC1T
+     C                     MOVE *ZEROS    SE1T
+     C                     MOVE *BLANKS   ABRCA
+     C                     MOVE *BLANKS   ZBRCA
+     C                     ENDSR
+      **
+      *****************************************************
+      **      SUBROUTINE (11) :::   RETAIL
+      **          VALIDATES INPUT FIELDS IF RETAIL A/C
+      **          CHAIN INTO  REACSHL0 FILE.
+      **          VALIDATE INPUT FIELDS AGAINST REACSHL0.
+      **
+      **---------------------------------------------------
+     C           RETAIL    BEGSR
+      **
+     C                     SETOF                     7372
+     C                     Z-ADD0         X
+     C                     MOVELBLK15F    ACN2F
+      **      1. IF A/C # IN FIELD RANGA NOT FOUND IN REACSHL0
+      **         ERROR.
+     C           ACNMF     CHAINREACSHL0             72
+     C           *IN72     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     Z-ADD2         X
+     C                     SETON                     62
+     C                     GOTO RETERR
+     C                     END
+      **
+      **      2. IF A RANGE IS INPUT, CHECK IF A/C # IN THE
+      **         RANGZ FIELD EXISTS.
+      **         IF NOT MOVE RANGA VALUE TO 'TO' KEY FIELDS
+      **         AND EXIT.
+     C           *IN22     IFEQ '1'
+     C                     MOVELBLK15F    ACN2T
+     C                     GOTO RETEND
+     C                     END
+      **
+     C                     MOVELBLK15T    ACN2T
+     C           ACNMT     CHAINREACSHL0             73
+     C           *IN73     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     Z-ADD2         X
+     C                     SETON                     63
+     C                     GOTO RETERR
+     C                     END
+      **      3. CHECK IF RANGZ IS GREATER THAN THE
+      **         RANGA FIELD.
+     C           ACN2T     IFLT ACN2F
+     C                     Z-ADD3         X
+     C                     SETON                     6263
+     C                     GOTO RETERR
+     C                     END
+      **
+     C           RETEND    TAG                             *** RETEND ***
+     C           *IN72     IFEQ '0'
+     C           *IN73     ANDEQ'0'
+     C                     Z-ADD3         FILNUM  10
+     C                     END
+     C           RETERR    TAG                             *** RETERR ***
+     C                     ENDSR
+      **
+      *****************************************************
+      **    SUBROUTINE (12) :::  DOJOB
+      **
+      **        TO EXTRACT RECORDS ACCORDING TO OPTION
+      **      FILE  TO  USE :::
+      **      FILNUM == 3  REACSHL0 RETAIL A/C NO. ENTERED.
+      **      FILNUM == 2  GLACSHL1 PART KEY & BRCD OR ALL.
+      **      FILNUM == 1  GLACSHL2 FULL KEY & BRCD OR
+      **                            A/C NUMBER ONLY.
+      **
+      **---------------------------------------------------
+     C           DOJOB     BEGSR
+     C                     MOVE *BLANKS   TOFLD  18
+     C                     MOVE *BLANKS   FRFLD  18
+      **
+      **       UPDATE SUBFILE WITH
+      **      I/O DETAILS & INITIALIZE ALL WORK/OUTPUT/
+      **      INPUT KEY FIELDS.
+     C                     EXSR FILLSF
+     C                     EXSR INIT
+     C                     MOVE *BLANKS   RANGA
+     C                     MOVE *BLANKS   RANGZ
+     C                     ENDSR
+      **
+      *****************************************************
+      **    SUBROUTINE (13) :::  FILLSF
+      **        TO  ADD  ACCOUNT  NUMBERS  TO SUBFILE
+      **        AND WRITE TO EXTRACT FILE
+      **---------------------------------------------------
+     C           FILLSF    BEGSR
+      **
+     C                     Z-ADDRRN1      PGREC1
+     C           *IN21     IFEQ '0'
+     C                     MOVELRANGA     FR
+     C                     ELSE
+     C                     MOVEL'START'   FR
+     C                     END
+     C           *IN22     IFEQ '0'
+     C                     MOVELRANGZ     TU
+     C                     ELSE
+     C                     MOVEL'END'     TU
+     C                     END
+      ***    ONLY SET UP BRANCH CODE FIELD IN MULTI BRANCH SYSTEM
+     C   80                MOVELBRCDFM    BR
+     C                     MOVE SFDET     SFOUT
+     C                     WRITEGL0783S1
+     C                     WRITEGL0781E1
+     C                     COMIT
+     C                     ADD  1         RRN1
+     C                     ENDSR
+      **
+      *****************************************************
+      **    SUBROUTINE (14) :::  CLRSF
+      **        CLEAR SUBFILE AND WRITE HEADER RECORD.
+      **
+      **---------------------------------------------------
+     C           CLRSF     BEGSR
+      **
+     C                     SETOF                     525355
+     C                     SETON                     51
+     C                     WRITEGL0783C1
+     C                     SETOF                     51
+     C                     SETON                     525350
+     C                     Z-ADD1         PGREC1
+     C                     Z-ADD1         RRN1    50
+     C                     ENDSR
+      **
+      *****************************************************
+      **    SUBROUTINE (16) :::  DELET
+      **        DELET RECORDS FOR THIS REQUEST IF CMD 3
+      **        OR CMD 12 ARE TAKEN
+      **
+      **---------------------------------------------------
+     C           DELET     BEGSR
+      **
+     C           SEQNO     SETLLGL0781E1
+     C           *IN81     DOWEQ'0'
+     C           SEQNO     READEGL0781E1                 81
+     C           *IN81     IFEQ '0'
+     C                     DELETGL0781E1
+     C                     COMIT
+     C                     END
+     C                     END
+     C                     ENDSR
+      **
+      *****************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2002
+** MSG
+INVALID INPUT                 INVALID A/C NUMBER
+INVALID RANGE                 BRANCH NOT ON TABLE
+INVALID BRANCH                USER/BRANCH INVALID
+F6 INVALID UNTIL ENTER PRESSED
+** COD
+1916141007

@@ -1,0 +1,110 @@
+/*********************************************************************/
+/*S*D****CLPBASEBND***************************************************/                /*MD024006A*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Close of Business Processing                        */
+/*                                                                   */
+/*       CBC022002 - Midas CB Change LF by Switchable Feature        */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. MD024006A*REDUNDANTDate 11Sep13              */
+/*       Prev Amend No. MD022015B          Date 11Sep13              */
+/*                      MD022015 *CREATE   Date 27Aug13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD024006A - Inefficiency of COB file Manager                */
+/*       MD022015B - Rebuild access path maintenance locking issue   */
+/*       MD022015 - Rebuild access path maintenance locking issue    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FNAME &ACTCT)
+ 
+             DCL        VAR(&FNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ACTCT) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&CAP204) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&CRE072) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&CGL025) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&CGL114) TYPE(*CHAR) LEN(1) VALUE('N')
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2013')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Check if features are installed */
+ 
+             CHGVAR     VAR(&RTCD) VALUE('       ')
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
+             CHGVAR     VAR(&SAR) VALUE('CAP204')
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                          VAR(&CAP204) VALUE('Y'))
+ 
+             CHGVAR     VAR(&RTCD) VALUE('       ')
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
+             CHGVAR     VAR(&SAR) VALUE('CRE072')
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                          VAR(&CRE072) VALUE('Y'))
+ 
+             CHGVAR     VAR(&RTCD) VALUE('       ')
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
+             CHGVAR     VAR(&SAR) VALUE('CGL025')
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                          VAR(&CGL025) VALUE('Y'))
+ 
+             CHGVAR     VAR(&RTCD) VALUE('       ')
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
+             CHGVAR     VAR(&SAR) VALUE('CGL114')
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                          VAR(&CGL114) VALUE('Y'))
+ 
+/* Change LF access path maintenance if features are active */
+ 
+             IF         COND(&FNAME *EQ 'GLPOSTL6') THEN(DO)
+/**********  IF         COND((&CAP204 *EQ 'Y') *AND  +      */                         /*MD022015B*/
+/**********               (&CRE072 *EQ 'Y'))  THEN(DO)      */                         /*MD022015B*/
+             IF         COND((&CAP204 *EQ 'Y') *OR   +
+                          (&CRE072 *EQ 'Y'))  THEN(DO)                                 /*MD022015B*/
+                CHGLF      FILE(&FNAME) MAINT(&ACTCT)
+                MONMSG     MSGID(CPF0000)
+                ENDDO
+             ENDDO
+ 
+             IF         COND(&FNAME *EQ 'GLACPHL3') THEN(DO)                           /*MD022015B*/
+             IF         COND((&CAP204 *EQ 'N') *AND  +
+                          (&CRE072 *EQ 'N'))  THEN(DO)                                 /*MD022015B*/
+                CHGLF      FILE(&FNAME) MAINT(&ACTCT)                                  /*MD022015B*/
+                MONMSG     MSGID(CPF0000)                                              /*MD022015B*/
+                ENDDO                                                                  /*MD022015B*/
+             ENDDO                                                                     /*MD022015B*/
+                                                                                       /*MD022015B*/
+             IF         COND(&FNAME *EQ 'GLACPHL1') THEN(DO)
+             IF         COND((&CGL025 *EQ 'Y') *OR   +
+                          (&CGL114 *EQ 'Y'))  THEN(DO)
+                CHGLF      FILE(&FNAME) MAINT(&ACTCT)
+                MONMSG     MSGID(CPF0000)
+                ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             SNDPGMMSG  MSG('Program CBC022002 ended abnormally +
+                          - job cancelled') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ END:
+             ENDPGM

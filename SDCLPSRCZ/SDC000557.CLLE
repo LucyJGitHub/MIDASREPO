@@ -1,0 +1,75 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas SD FATCA Tools File Allocation Check')          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       CLP/SDC000557 - FATCA Tools Files Allocation Check          */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2014           */
+/*                                                                   */
+/*       Last Amend No. CGL132  *CREATE    Date 01May13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CGL132 - FATCA Phase 1 - Customers' Identification and      */
+/*                Classification - Master                            */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM        PARM(&PGM &PARM)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2014')
+ 
+             DCL        VAR(&PGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PARM) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&RTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&IFILE) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&SFMT) TYPE(*CHAR) LEN(200)
+             DCLF       FILE(SD000557DF)
+ 
+/* Monitor for any errors and send appropriate message to MOPERQ */
+             MONMSG     MSGID(RPG0000 CPF0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Check if CGL133 is ON */
+             CHGVAR     VAR(&SARD) VALUE('CGL133')
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
+             CALL       PGM(AOSARDR0) PARM(&RTN &OPTN &SARD &SFMT)
+             IF         COND(&RTN *EQ ' ') THEN(GOTO +
+                          CMDLBL(CGL133))
+             CHGVAR     VAR(&RTN) VALUE(' ')
+ 
+             SNDMSG     MSG('SDC000557 - FATCA Tools Caller +
+                          Program') TOMSGQ(MRUNQ)
+ 
+/* Call the tool intended */
+             IF         COND(&PARM *EQ ' ') THEN(DO)
+             CALL       PGM(&PGM)
+             ENDDO
+             ELSE       (DO)
+             CALL       PGM(&PGM) PARM(&PARM)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+OBJLCK:
+             SNDRCVF    RCDFMT(SD000557D0)
+             GOTO       CMDLBL(END)
+CGL133:
+             SNDRCVF    RCDFMT(SD000557D1)
+             GOTO       CMDLBL(END)
+ERROR:
+             SNDMSG     MSG('FATCA Tools Caller ended abnormally.') +
+                          TOMSGQ(MOPERQ MRUNQ)
+ 
+END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+             ENDPGM

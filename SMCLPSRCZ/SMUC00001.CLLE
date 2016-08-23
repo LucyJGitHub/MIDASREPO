@@ -1,0 +1,84 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Process CAR migration - SDACUSPD')           */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC00001 - Ferman feature migration for SDACUSPD           */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2009           */
+/*                                                                   */
+/*       Last Amend No. CER059             Date 19Jul10              */
+/*       Prev Amend No. CSM011  *CREATE    Date 05May09              */
+/*                      XXXXXX             Date DDMmmYY              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CER059 - German Feature Upgrade to Delhi                    */
+/*       CSM011 - New utility to process CAR migration               */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FLIB)
+ 
+             DCL        VAR(&FLIB) TYPE(*CHAR) LEN(10)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                            2009')
+ 
+ /* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                            CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Copy old CAR file to template file if they exist. */
+             CHKOBJ     OBJ(&FLIB/SDCUSTX0) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CLRPFM     FILE(SMUGF01PD)
+                GOTO       CMDLBL(FILE2)
+             ENDDO
+             CPYF       FROMFILE(&FLIB/SDCUSTX0) TOFILE(SMUGF01PD) +
+                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+                CLRPFM     FILE(SMUGF01PD)
+             ENDDO
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2870) EXEC(DO)
+                CLRPFM     FILE(SMUGF01PD)
+             ENDDO
+ 
+ FILE2:
+             CHKOBJ     OBJ(&FLIB/SDCUSTX2) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CLRPFM     FILE(SMUGF02PD)
+                GOTO       CMDLBL(CALL)
+             ENDDO
+             CPYF       FROMFILE(&FLIB/SDCUSTX2) TOFILE(SMUGF02PD) +
+                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+                CLRPFM     FILE(SMUGF02PD)
+             ENDDO
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2870) EXEC(DO)
+                CLRPFM     FILE(SMUGF02PD)
+             ENDDO
+ 
+ CALL:
+/* Call program to perform main migration. */
+             CALL       PGM(SMU00001)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* Joint account migration. */
+             CALL       PGM(SMU00008)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+ ENDPGM:
+             ENDPGM

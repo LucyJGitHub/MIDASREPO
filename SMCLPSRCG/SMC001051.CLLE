@@ -1,0 +1,197 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Global layer program library restore')       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC001051 - Global layer database restore                   */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*                                                                   */
+/*       Last Amend No. AR790665           Date 14Jun11              */
+/*       Prev Amend No. CSC043             Date 18Jun10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CUP033             Date 08Jun06              */
+/*                      CSM005             Date 21Sep05              */
+/*                      CSM003             Date 07Jun05              */
+/*                      CPK018             Date 07Jun04              */
+/*                      CUP025  *CREATE    Date 27Nov03              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       AR790665 - Handle more than one program library.            */
+/*       CSC043 - MidasPlus IASP Enablement                          */
+/*       CUP033 - Removal of System Value /COPYs.                    */
+/*       CSM005 - Changes to /COPYs.  Recompile.                     */
+/*       CSM003 - Retrieve program library name from system value.   */
+/*       CPK018 - MidasPlus packaging.  Print option for restore.    */
+/*       CUP025 - MidasPlus Bridge changes.                          */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM                                                                       */ /*CUP033*/
+/**********  PGM        PARM(&BRGSVAL &CORPGMSVAL)  */                             /*CUP033 CSC043*/
+             PGM        PARM(&BRGSVAL &CORPGMSVAL &IASPYNSVAL &IASPSVAL)                  /*CSC043*/
+ 
+             DCL        VAR(&BRGSVAL) TYPE(*CHAR) LEN(20)                                 /*CUP033*/
+             DCL        VAR(&CORPGMSVAL) TYPE(*CHAR) LEN(20)                              /*CUP033*/
+             DCL        VAR(&IASPYNSVAL) TYPE(*CHAR) LEN(20)                              /*CSC043*/
+             DCL        VAR(&IASPSVAL) TYPE(*CHAR) LEN(20)                                /*CCS043*/
+             DCL        VAR(&IASP_YN) TYPE(*CHAR) LEN(1)                                  /*CSC043*/
+             DCL        VAR(&IASP) TYPE(*CHAR) LEN(10)                                    /*CSC043*/
+/**COPY*UPCPYSRCG,UPGSVALDCL*                                        */ /*             */ /*CUP033*/
+             DCL        VAR(&PTFUPG) TYPE(*CHAR) LEN(10)                                  /*CUP033*/
+/**********  DCL        VAR(&CORLIB) TYPE(*CHAR) LEN(10)                  */ /*CUP033*/ /*AR790665*/
+             DCL        VAR(&LIBLIST) TYPE(*CHAR) LEN(200)                              /*AR790665*/
+             DCL        VAR(&LIBPOS) TYPE(*DEC) LEN(3 0) VALUE(1)                       /*AR790665*/
+             DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1) VALUE('N')                     /*CUP033*/
+             DCL        VAR(&DEVD) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PGMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+ 
+             DCLF       FILE(UPGSVALJ0)                                                   /*CUP033*/
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2004')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Create data area /MIDASMSG in QTEMP */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+ 
+VALIDATE:                                                                                 /*CUP033*/
+             RCVF                                                                         /*CUP033*/
+             MONMSG     MSGID(CPF0864) EXEC(DO)                                           /*CUP033*/
+                GOTO       CMDLBL(CHECK)                                                  /*CUP033*/
+             ENDDO                                                                        /*CUP033*/
+ 
+             IF         COND(&GISVAL *EQ &BRGSVAL) THEN(DO)                               /*CUP033*/
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)                                  /*CUP033*/
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+                ELSE       CMD(DO)                                                        /*CUP033*/
+                   CHGVAR     VAR(&PTFUPG) VALUE(&GIVAL)                                  /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+             ENDDO                                                                        /*CUP033*/
+ 
+             IF         COND(&GISVAL *EQ &CORPGMSVAL) THEN(DO)                            /*CUP033*/
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)                                  /*CUP033*/
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+                ELSE       CMD(DO)                                                        /*CUP033*/
+/**********        CHGVAR     VAR(&CORLIB) VALUE(&GIVAL)                  */ /*CUP033*/ /*AR790665*/
+                   CHGVAR     VAR(&LIBLIST) VALUE(&GIVAL)                               /*AR790665*/
+                ENDDO                                                                     /*CUP033*/
+             ENDDO                                                                        /*CUP033*/
+ 
+             IF         COND(&GISVAL *EQ &IASPYNSVAL) THEN(DO)                            /*CSC043*/
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)                                  /*CSC043*/
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CSC043*/
+                ENDDO                                                                     /*CSC043*/
+                ELSE       CMD(DO)                                                        /*CSC043*/
+                   CHGVAR     VAR(&IASP_YN) VALUE(&GIVAL)                                 /*CSC043*/
+                ENDDO                                                                     /*CSC043*/
+             ENDDO                                                                        /*CSC043*/
+                                                                                          /*CSC043*/
+             IF         COND(&GISVAL *EQ &IASPSVAL) THEN(DO)                              /*CSC043*/
+                IF         COND((&GIVAL *EQ ' ') *AND (&IASP_YN *EQ +
+                          'Y')) THEN(DO)                                                  /*CSC043*/
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CSC043*/
+                ENDDO                                                                     /*CSC043*/
+                ELSE       CMD(DO)                                                        /*CSC043*/
+                   CHGVAR     VAR(&IASP) VALUE(&GIVAL)                                    /*CSC043*/
+                ENDDO                                                                     /*CSC043*/
+             ENDDO                                                                        /*CSC043*/
+                                                                                          /*CSC043*/
+             GOTO       CMDLBL(VALIDATE)                                                  /*CUP033*/
+ 
+/**COPY*UPCPYSRCG,UPGSVALCL1*                                        */ /*             */ /*CUP033*/
+/**********  IF         COND(&PTFUPG *EQ ' ') THEN(DO)                                 */ /*CUP033*/
+ CHECK:                                                                                   /*CUP033*/
+             IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)                                 /*CUP033*/
+/* Set up messages for Midas Information Screen  */
+                RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                RTVMSG     MSGID(UPM0004) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (151 50)) VALUE(&MESSAGE)
+                CALL       PGM(SCC0010) PARM('SMC001051' 'ENTER' ' ')
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+DEVICENAME:
+             ?          DEVICENAME
+             MONMSG     MSGID(CPF6801) EXEC(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+             RTVDTAARA  DTAARA(QTEMP/DEVD) RTNVAR(&DEVD)
+ 
+/* Check device is valid. */
+             CHKOBJ     OBJ(&DEVD) OBJTYPE(*DEVD)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE('Device' +
+                             *BCAT &DEVD *BCAT 'does not exist.')
+             CALL       PGM(SCC0010) PARM('SMC001051' 'ENTER' ' ')
+                GOTO       CMDLBL(DEVICENAME)
+             ENDDO
+ 
+/**Retrieve*program*library*name*from*data*area*UPSTAT.**/ /*                          */ /*CSM003*/
+/**********  RTVDTAARA  DTAARA(UPSTAT (90 10)) RTNVAR(&PGMLIB)                         */ /*CSM003*/
+/**********  CHGVAR     VAR(&PGMLIB) VALUE(&CORLIB)                       */ /*CSM003*/ /*AR790665*/
+ 
+/*********   SBMJOB     CMD(RSTLIB SAVLIB(&PGMLIB) DEV(&DEVD)) +                       */ /*CPK018*/
+/*********                JOB(&PGMLIB) JOBD(SETUP) JOBQ(SMJOBQ) +                      */ /*CPK018*/
+/*********                OUTQ(*JOBD) RTGDTA(*JOBD) CURLIB(&PTFUPG)                    */ /*CPK018*/
+                                                                                        /*AR790665*/
+/* Loop through the system value to restore all program libraries. */                   /*AR790665*/
+RSTLIB:                                                                                 /*AR790665*/
+             IF         COND(%SST(&LIBLIST &LIBPOS 10) *NE ' ') +
+                          THEN(DO)                                                      /*AR790665*/
+             CHGVAR     VAR(&PGMLIB) VALUE(%SST(&LIBLIST &LIBPOS 10))                   /*AR790665*/
+/*                                                                                        /*CSC043*/
+/** If IASP environment */                                                                /*CSC043*/
+/*                                                                                        /*CSC043*/
+             IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                                   /*CSC043*/
+             SBMJOB     CMD(RSTLIB SAVLIB(&PGMLIB) DEV(&DEVD) +
+                          RSTASPDEV(&IASP) OUTPUT(*PRINT)) +
+                          JOB(&PGMLIB) JOBD(SETUP) JOBQ(SMJOBQ) +
+                          OUTQ(*JOBD) RTGDTA(*JOBD) CURLIB(&PTFUPG)                       /*CSC043*/
+             ENDDO                                                                        /*CSC043*/
+             ELSE       CMD(DO)                                                           /*CSC043*/
+             SBMJOB     CMD(RSTLIB SAVLIB(&PGMLIB) DEV(&DEVD) +
+                          OUTPUT(*PRINT)) JOB(&PGMLIB) JOBD(SETUP) +
+                          JOBQ(SMJOBQ) OUTQ(*JOBD) RTGDTA(*JOBD) +
+                          CURLIB(&PTFUPG)                                                 /*CPK018*/
+             ENDDO                                                                        /*CSC043*/
+             CHGVAR     VAR(&LIBPOS) VALUE(&LIBPOS + 10)                                /*AR790665*/
+             GOTO       CMDLBL(RSTLIB)                                                  /*AR790665*/
+             ENDDO                                                                      /*AR790665*/
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal end. */
+ABNOR:
+/* Set up messages for Midas Information Screen  */
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('SMC001051') MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details')
+             MONMSG     MSGID(CPF0000)
+             CALL       PGM(SCC0010) PARM('SMC001051' 'ENTER' ' ')
+             MONMSG     MSGID(CPF0000)
+ 
+END:
+             ENDPGM

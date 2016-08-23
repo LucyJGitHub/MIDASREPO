@@ -1,0 +1,262 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas RE Generate entries-income and expense')        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas Retail Module                                         */
+/*                                                                   */
+/*       REC3666  -  GENERATE ENTRIES - INCOME AND EXPENSE           */
+/*                                                                   */
+/*   WARNING - THIS PROGRAM IS RUNNING IN TASK SPLIT MODE.           */
+/*             DO NOT ADD ANY NEW PROGRAMS TO THIS CL IF IT IS NOT   */
+/*             ABLE TO RUN IN TASK SPLIT.                            */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. MD002850           Date 08Apr13              */
+/*       Prev Amend No. CRE093 *REWRITE    Date 06Aug12              */
+/*                      AR1091578          Date 27Feb13              */
+/*                      CRE083AC           Date 06Aug12              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*                      BUG27127A          Date 10Mar10              */
+/*                      BUG27127           Date 05Mar10              */
+/*                      242873             Date 08Oct06              */
+/*                      CCB016             Date 25Oct07              */
+/*                      242190             Date 08Sep06              */
+/*                      CRE028             Date 06Jul06              */
+/*                      258994             Date 16Mar09              */
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CRE008             Date 19Feb02              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.05 ---------------------------------------------------*/
+/*                      CMX001             Date 18Apr01              */
+/* Midas DBA 3.02 ---------------------------------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      S01408             DATE 11MAY95              */
+/*                      060266              DATE 03SEP92             */
+/*                      S01413 *CREATE      DATE 13APR93             */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD002850 - Correct the processing for restart of subtasks   */
+/*                  after failure.                                   */
+/*       CRE093 - Tactical COB changes REC3666                       */
+/*       AR1091578 - REC3666 File Out of Balance                     */
+/*       CRE083AC - COB Restructure - RE COB Optimisation Phase 1    */
+/*                - Change creating backup of PF's via CPYF for      */
+/*                  recovery to standard MIDAS journalling           */
+/*                - MXC0491, REC3666A and REC103666 are now COB      */
+/*                  components.                                      */
+/*       BUG27127A - Bug reopened, include mode 'ONE' in validation  */
+/*       BUG27127 - GLC63 Fails due to file out of balance in        */
+/*                  GEIERPD and GEIER2PD                             */
+/*       242873 - Override not done when ACSM NE 'Y'                 */
+/*       CCB016 - CoB performance enhancement                        */
+/*       242190 - Check for new system value and perform OVR         */
+/*       CRE028 - Retail Accrual Summary                             */
+/*       258994 - Must check job switches before calling MXC0490     */
+/*       CRE008 - Cash Management                                    */
+/*       CMX001 - Meridian Export                                    */
+/*       S01408 - Addition of core hook REC3666MP1                   */
+/*       060266 - Missing Retail Accrual Summary                     */
+/*       S01413 - Retail 3 Incorporation.                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE &CNAM &CSEQ)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2001')
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10) VALUE('REC3666')
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0) VALUE(1)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&CSEQC) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(12)
+             DCL        VAR(&DTAQLIBL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGLENGTH) TYPE(*DEC) LEN(5 0) VALUE(50)
+             DCL        VAR(&MSGDATA) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&SNDDTAQ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RCVWAIT) TYPE(*DEC) LEN(5 0) VALUE(600)
+             DCL        VAR(&RESTART) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&COUNT) TYPE(*DEC) LEN(3 0) VALUE(0)
+             DCL        VAR(&SNDMSG) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&INDEXFL) TYPE(*CHAR) LEN(10) +
+                        VALUE(REACRIPD)
+             DCL        VAR(&RCVDTAQ) TYPE(*CHAR) LEN(10)
+ 
+/* Main Processing */
+ 
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
+ 
+             SNDPGMMSG  MSG('REC3666 - Generation of Income & Expense +
+                          Entries') TOMSGQ(MRUNQ)
+ 
+/* Check if any problems with COB components file */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             CHGVAR     VAR(&RESTART) VALUE(&STAT)
+ 
+/* Set restart status to 'Y' */
+ 
+             CHGVAR     VAR(&STAT) VALUE('Y')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+ 
+/* Set up call to QSNDDTAQ and override files to their members */
+ 
+             CHGVAR     VAR(&CSEQC) VALUE(&CSEQ)
+             CHGVAR     VAR(&MEMBER) VALUE('REACR' *CAT &CSEQC)
+             CHGVAR     VAR(&DTAQLIBL) VALUE('*LIBL')
+             CHGVAR     VAR(&SNDDTAQ) VALUE('REACRSERVE')
+             CHGVAR     VAR(&RCVDTAQ) VALUE(&MEMBER)
+ 
+             OVRDBF     FILE(REACRDPD) TOFILE(REACRDPD) MBR(&MEMBER)
+ 
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+ 
+/* If restart from component failed because of no response  */
+/* from the server then resend message to server and wait.  */
+ 
+             IF         COND(&RESTART = 'F') THEN(DO)
+                GOTO       CMDLBL(LOOP)
+             ENDDO
+ 
+/* If restart, do not wait for the data queue entry */
+/* Clear any old data queue message from server but ensure that an */
+/* 'END' message, sent from the end proc job is not lost */
+ 
+             IF         COND(&RESTART = 'Y') THEN(DO)
+             CHGVAR     VAR(&RCVWAIT) VALUE(5)
+             CALL       PGM(QRCVDTAQ) PARM(&MEMBER &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA &RCVWAIT)
+             CHGVAR     VAR(&RCVWAIT) VALUE(600)
+             CHGVAR     VAR(&MSGLENGTH) VALUE(50)
+             IF         COND(%SST(&MSGDATA 1 3) = 'END') THEN(DO)
+             CALL       PGM(QSNDDTAQ) PARM(&MEMBER &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA)
+             ENDDO
+             GOTO       CMDLBL(RESTART)
+             ENDDO
+ 
+LOOP:
+ 
+/* Request response from DTAQ whether to run job again or end */
+ 
+             CHGVAR     VAR(&MSGDATA) VALUE(&MEMBER)
+             CALL       PGM(QSNDDTAQ) PARM(&SNDDTAQ &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA)
+/**********  CHGVAR     VAR(&STAT) VALUE('F')                      */                   /*MD002850*/
+/**********  CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)        */                   /*MD002850*/
+ 
+/* Wait on reply for 5 minutes */
+ 
+             CALL       PGM(QRCVDTAQ) PARM(&MEMBER &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA &RCVWAIT)
+ 
+/* If no reply, error message and terminate */
+/* If  - no reply  check if the server is still active.            */
+/*     - server is not active then send error message and          */
+/*       terminate.                                                */
+/*     - server is active then resend message to server.           */
+/*     - server still does not respond after resending the message */
+/*       then send error message and terminate.                    */
+ 
+             IF         COND(&MSGLENGTH = 0) THEN(DO)
+                ALCOBJ     OBJ((&INDEXFL *FILE *EXCL)) WAIT(0)
+                MONMSG     MSGID(CPF1002) EXEC(DO)
+                IF         COND(&SNDMSG *EQ 'Y') THEN(DO)
+                   CHGVAR     VAR(&STAT) VALUE('F')                                     /*MD002850*/
+                   CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)                       /*MD002850*/
+                   SNDPGMMSG  MSG('No response from server for REC3666') +
+                                TOMSGQ(MOPERQ MRUNQ)
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&SNDMSG) VALUE('Y')
+                   GOTO       CMDLBL(LOOP)
+                ENDDO
+                ENDDO
+                                                                                        /*MD002850*/
+                CHGVAR     VAR(&STAT) VALUE('F')                                        /*MD002850*/
+                CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)                          /*MD002850*/
+                SNDPGMMSG  MSG('Server for REC3666 not active.') +
+                             TOMSGQ(MOPERQ MRUNQ)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* If reply = END, set restart status to 'N' and terminate. */
+ 
+             IF         COND(%SST(&MSGDATA 1 3) = 'END') THEN(DO)
+                CHGVAR     VAR(&STAT) VALUE('N')
+                CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+ RESTART:
+ 
+             CALL       PGM(REC3666C) PARM(&MEMBER &MODE &CNAM &CSEQ)
+ 
+/* Successful completion */
+ 
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+             CHGVAR     VAR(&RESTART) VALUE('N')
+             CLRPFM     FILE(REACRDPD) MBR(&MEMBER)
+             GOTO       CMDLBL(LOOP)
+             ENDDO
+ 
+/* Unsuccessful completion - remove changes  */
+ 
+             ELSE       CMD(DO)
+ 
+                 RTVDTAARA  DTAARA(LDA *ALL) RTNVAR(&LDA)
+                 CHGVAR     VAR(&MEM) VALUE(%SST(&LDA 134 50))
+                 SNDPGMMSG  MSGID(MEM0001) MSGF(REUSRMSG) MSGDTA(&MEM) +
+                              TOMSGQ(MOPERQ MRUNQ)
+                 ROLLBACK
+ 
+/* File out of balance */
+ 
+             IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
+               SNDPGMMSG  MSG('DATABASE ERROR - RE3666') TOMSGQ(MOPERQ)
+             ENDDO
+ 
+/* Database Error */
+ 
+             IF         COND(%SWITCH(XXXXXX1X)) THEN(DO)
+               RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&ERROR)
+               SNDPGMMSG  MSGID(MEM0001) MSGF(REUSRMSG) MSGDTA(&ERROR) +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+             SNDPGMMSG  MSG('DATABASE IN ERROR - RE3666') TOMSGQ(MOPERQ)
+             ENDDO
+             ENDDO
+ 
+ABNOR:
+             SNDPGMMSG  MSG('Program REC3666 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+ENDPGM:
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+             CHGVAR     VAR(&STAT) VALUE('N')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             ENDDO
+ 
+             DLTOVR     FILE(*ALL)
+ 
+             ENDCMTCTL
+             MONMSG     MSGID(CPF0000)
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+             RETURN
+             ENDPGM

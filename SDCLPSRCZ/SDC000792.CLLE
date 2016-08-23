@@ -1,0 +1,201 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SD Exempt Threshold tape Extract Prompt')       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       SDC000792 - SD Midas Exemption Threshold Tape Extract Prompt*/
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2008           */
+/*                                                                   */
+/*       Last Amend No. CER059             Date 19Jul10              */
+/*       Prev Amend No. CER048  *CREATE    Date 19May08              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CER059 - German Feature Upgrade to Delhi                    */
+/*       CER048 - German Features - Taxes                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RSEQ &RLEV &RENT &RPARM  &RACT &RCMD)
+ 
+/** Declare variable. */
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2008')
+ 
+             DCL VAR(&RSEQ)  TYPE(*CHAR) LEN(5)
+             DCL VAR(&RLEV)  TYPE(*CHAR) LEN(1)
+             DCL VAR(&RENT)  TYPE(*CHAR) LEN(3)
+             DCL VAR(&RPARM) TYPE(*CHAR) LEN(100)
+             DCL VAR(&RACT)  TYPE(*CHAR) LEN(1)
+             DCL VAR(&RCMD)  TYPE(*CHAR) LEN(1)
+ 
+             DCL        VAR(&DATA) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&RETCOD) TYPE(*CHAR) LEN(2) VALUE('  ')
+ 
+/** Header branch and branches to report */
+ 
+             DCL        VAR(&BRCH) TYPE(*CHAR) LEN(99)
+ 
+/** Flag to know if the current job has changed &USED values 'Y',' ' */
+ 
+             DCL        VAR(&AUSED) TYPE(*CHAR) LEN(1)
+ 
+/** KESTAT information */
+ 
+             DCL        VAR(&USED) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&STATUS) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DDBRANCH) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&DDWHO) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DDWHO2) TYPE(*CHAR) LEN(10)
+ 
+/** SDC0792DF data */
+ 
+             DCL        VAR(&DDUSER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DDWSID) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DDJOB) TYPE(*CHAR) LEN(10) +
+                          VALUE('SDC000792 ')
+             DCL        VAR(&DDDATUM) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MBIN) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&PCRDTA)  TYPE(*CHAR) LEN(1) VALUE('N')
+ 
+             DCL        VAR(&DTALIB)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTAZONE) TYPE(*CHAR) LEN(2)
+ 
+             DCLF       FILE(SDC0792DF) RCDFMT(SDC0792F0)
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             SNDPGMMSG  MSG('SDC000792 - Midas Exemption Threshold +
+                        Tape Extract Prompt') TOMSGQ(MRUNQ)
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&DTAZONE)
+             CHGVAR     VAR(&DTALIB) VALUE(&DTAZONE *TCAT 'DMLIB')
+ 
+             CHGVAR     VAR(&PCRDTA) VALUE('N')
+ 
+             CHKOBJ     OBJ(KESTAT) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(CHGVAR VAR(&PCRDTA) +
+                          VALUE('Y'))
+             IF         COND(&PCRDTA *EQ 'Y') THEN(CRTDTAARA +
+                          DTAARA(&DTALIB/KESTAT) TYPE(*CHAR) +
+                          LEN(256) TEXT('Midas SD Module KE Status +
+                          Data Area'))
+             CHGVAR     VAR(&PCRDTA) VALUE('N')
+ 
+/** Set switches */
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/** Retrive env. information. */
+ 
+             RTVJOBA    JOB(&DDWSID) USER(&DDUSER)
+             RTVDTAARA  DTAARA(RUNDAT (1 7)) RTNVAR(&DDDATUM)
+             RTVDTAARA  DTAARA(RUNDAT (13 1)) RTNVAR(&MBIN)
+             IF         COND(&MBIN *EQ 'Y') THEN(CHGVAR VAR(&IN33) +
+                          VALUE('1'))
+ 
+/** Check KESTAT to retrieve tape file status */
+ 
+             RTVDTAARA  DTAARA(KESTAT (52 1)) RTNVAR(&STATUS)
+             RTVDTAARA  DTAARA(KESTAT (53 3)) RTNVAR(&DDBRANCH)
+             RTVDTAARA  DTAARA(KESTAT (56 10)) RTNVAR(&DDWHO)
+             RTVDTAARA  DTAARA(KESTAT (51 1)) RTNVAR(&USED)
+             CHGVAR     VAR(&DDWHO2) VALUE(&DDWHO)
+ 
+/** Already in use, quit menu. */
+ 
+             IF         COND(&USED *EQ 'Y') THEN(DO)
+             ALCOBJ     OBJ((SDSADVPD *FILE *EXCL)) WAIT(0)
+             MONMSG     MSGID(CPF1002 CPF1085) EXEC(DO)
+             CHGVAR     VAR(&IN30) VALUE('1')
+             SNDRCVF    RCDFMT(SDC0792F0)
+             CHGVAR     VAR(&RCMD) VALUE('E')
+             GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             ENDDO
+ 
+/** Not in use, Lock other menu, fill in use indicator to 'Y'. */
+ 
+             CHGDTAARA  DTAARA(KESTAT (51 1)) VALUE('Y')
+             CHGVAR     VAR(&AUSED) VALUE('Y')
+ 
+/** Check File for tape status. */
+ 
+             IF         COND((&STATUS *EQ '1') *OR (&STATUS *EQ +
+                          '2')) THEN(DO)
+ 
+/** Status = 1 : Ready to run second menu. */
+ 
+             IF         COND(&STATUS *EQ '1') THEN(DO)
+             CHGVAR     VAR(&IN30) VALUE('0')
+             CHGVAR     VAR(&IN31) VALUE('1')
+             ENDDO
+ 
+/** Status = 2 : Ready to run third menu. */
+ 
+             IF         COND(&STATUS *EQ '2') THEN(DO)
+             CHGVAR     VAR(&IN30) VALUE('0')
+             CHGVAR     VAR(&IN32) VALUE('1')
+             ENDDO
+ 
+             SNDRCVF    RCDFMT(SDC0792F0)
+ 
+/** Check Return. */
+ 
+             IF         COND((&IN03 *EQ '1') *OR (&DDOPTION *NE 'Y')) +
+                          THEN(DO)
+                          CHGVAR     VAR(&RCMD) VALUE('E')
+                          GOTO ENDPGM
+                          ENDDO
+             ENDDO
+ 
+             CHGVAR     VAR(&RETCOD) VALUE(&RPARM)
+ 
+/** Call program */
+/** Warning: in germany instead &BRCH,&RPARM is used. */
+ 
+             CALL       PGM(SD000792) PARM(&RETCOD  &BRCH )
+ 
+/** If data base error send appropriate message and terminate pgm */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&DATA)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&DATA) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/** If F3 press */
+ 
+             IF         COND(&RETCOD *EQ 'F3') THEN(CHGVAR +
+                          VAR(&RCMD) VALUE('E'))
+ 
+/** Warning: in germany the following line doesn't exist. */
+/** &RPARM is 256 long. */
+ 
+             CHGVAR     VAR(&RPARM) VALUE(&BRCH)
+             GOTO ENDPGM
+ 
+/** Additional error message in case of problem */
+ 
+ ERROR:      CHGJOB     SWS(XXXXXX01)
+             DMPCLPGM
+             SNDPGMMSG  MSG('SDC000792 - Program execution error') +
+                          TOMSGQ(MRUNQ)
+             MONMSG     MSGID(CPF0000)
+             IF         COND(&AUSED *EQ 'Y') THEN(CHGDTAARA +
+                          DTAARA(KESTAT (51 1)) VALUE('N'))
+             GOTO       CMDLBL(END)
+ 
+ ENDPGM:     IF         COND((&AUSED *EQ 'Y')) +
+                        THEN(CHGDTAARA DTAARA(KESTAT (51 1)) +
+                          VALUE('N'))
+ 
+ END:        DLCOBJ     OBJ((SDSADVPD *FILE *EXCL))
+             MONMSG     MSGID(CPF0000)
+             ENDPGM

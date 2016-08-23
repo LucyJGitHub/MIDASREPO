@@ -1,0 +1,263 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas EM Select sub-line type')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Exposure Management Module                           *
+      *                                                               *
+      *  EM0030S - SELECT SUB LIMIT TYPE                              *
+      *                                                               *
+      *  Called By: EM0040 - Customer sub-limit maintenance           *
+      *                                                               *
+      *  Calls: ZA0250   - Clear program subfile message queue        *
+      *         AOCREPT  - Access program (General ledger)            *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Last Amend No. CTI002  *CREATE    Date 19AUG98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *  CTI002 - Trade Innovation Phase II  *CREATE                  *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Use of indicators.                                           *
+      *                                                               *
+      * 01-05         Error Indicators                                *
+      *    30         sfldsp                                          *
+      *    31         sflclr                                          *
+      *   N31         sfldspctl                                       *
+      *    32         sflend                                          *
+      *    33         Readc of Subfile Record                         *
+      *    34         Sflnxtchg                                       *
+      *    40         Display Message Subfile                         *
+      *    80-89      General Chain indicators                        *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      *  *INZSR - Initial processing                                  *
+      *  CLR@SF - Clear subfile                                       *
+      *  LOADSF - Load subfile                                        *
+      *  PRC@SF - Process subfile requests                            *
+      *  SNDMSG - send messages                                       *
+      *  *PSSR  - Error processing                                    *
+      *                                                               *
+      *****************************************************************
+      *
+      * Display File
+     FEM0030S#CF  E                    WORKSTN
+     F                                        SFLRRNKSFILE STSFL
+     F                                              KINFSR *PSSR
+      *
+      * Trade Finance Sub-Type file
+     FEMTFSLL0IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      * -------------------------------------------------------------------
+      *
+      * Array containing Copyright statement
+     E                    CPY@    1   1 80
+      * -------------------------------------------------------------------
+     IMSGDS       DS
+     I I            ' '                       1   7 MSGID
+     I I            'EMUSRMSG'                8  17 MSGF
+     I I            '*LIBL'                  18  27 MSGLIB
+     I I            ' '                      28 283 MSGDTA
+     I I            '*PRV'                  284 288 MSGREL
+      * -------------------------------------------------------------------
+      /SPACE 3
+     ILDA       E DS
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IIPSDS      SDS
+     I                                        1  10 #PGM
+     I                                      244 253 JOB
+     I                                      254 263 USER
+      ***  Program status data structure
+      *
+      * -------------------------------------------------------------------
+      *                         MAIN ROUTINE
+      * -------------------------------------------------------------------
+      *
+      * As there will only ever be 26 records (max) in the file EMTFSLPD
+      * and the subfile has been defined as having a maximum of 26
+      * records anyway, read the whole file and load into subfile.
+      *
+     C                     EXSR CLR@SF
+     C                     EXSR LOADSF
+      * -------------------------------------------------------------------
+      *
+      * Process Subfile
+     C           *IN03     DOWEQ*OFF
+      *
+     C                     WRITEMSGCTL
+     C                     WRITESTTRL
+     C                     EXFMTSTCTL
+      *
+     C                     CALL 'ZA0250'
+      *
+      * Sfldsp = 30.  ie records exist, then can process
+     C           *IN30     IFEQ *ON
+     C                     EXSR PRC@SF
+     C                     ENDIF
+      *
+      * End *IN03
+     C                     ENDDO
+      * -------------------------------------------------------------------
+      *
+     C                     SETON                         LR
+     C                     RETRN
+      * -------------------------------------------------------------------
+      * Subroutine *INZSR
+      * Initialisation Subroutine
+      * -------------------------------------------------------------------
+     C           *INZSR    BEGSR
+      *
+      * Set up copyright parameter
+     C                     MOVEACPY@      CPY2@  80
+      *
+      * Define Work Variables
+     C           *LIKE     DEFN *IN30     ERRCDE
+     C           *LIKE     DEFN #TYPE     P#TYPE
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P#TYPE
+      *
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * Subroutine CLR@SF
+      * Clear Subfile
+      * -------------------------------------------------------------------
+     C           CLR@SF    BEGSR
+      * Clear Subfile
+     C                     SETON                       3031
+     C                     WRITESTCTL
+     C                     SETOF                       3031
+      *
+      * Reset SFLRRN
+     C                     Z-ADD0         SFLRRN
+      *
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * Subroutine LOADSF
+      * Load Subfile
+      * -------------------------------------------------------------------
+     C           LOADSF    BEGSR
+      *
+     C                     SETOF                         32
+     C           *LOVAL    SETLLEMTFSLL0
+      *
+      * Read Records into Subfile
+     C                     READ EMTFSLL0                 32
+     C           *IN32     DOWEQ'0'
+     C                     ADD  1         SFLRRN
+     C                     MOVELSLTYPE    #TYPE
+     C                     MOVELSLDESC    #DESC
+     C                     WRITESTSFL
+     C                     READ EMTFSLL0                 32
+     C                     ENDDO
+      *
+      * Compare SFLRRN with 0 to see if there is anything to display
+     C           SFLRRN    IFGT 0
+     C                     MOVE *ON       *IN30
+     C                     ENDIF
+      *
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * Subroutine PRC@SF
+      * Process Subfile Requests
+      * -------------------------------------------------------------------
+     C           PRC@SF    BEGSR
+      *
+      * Read subfile for any subfile select records
+     C                     SETOF                         33
+     C                     READCSTSFL                    33
+     C           *IN33     DOWEQ*OFF
+      *
+     C                     SETOF                       1012
+     C                     SELEC
+      * Change current record
+     C           SFLSEL    WHEQ '1'
+     C                     MOVEL#TYPE     P#TYPE
+     C                     RETRN
+      *
+      * If subfile select != 1 then Error Message
+     C                     OTHER
+     C           SFLSEL    IFNE *BLANK
+     C                     MOVELSFLSEL    MSGDTA
+     C                     MOVEL'EMT0004' MSGID
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+     C                     READCSTSFL                    33
+     C                     ENDDO
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * Subroutine SNDMSG
+      * Send Program Message
+      * -------------------------------------------------------------------
+     C           SNDMSG    BEGSR
+      *
+      * Only write message if requested
+     C           MSGID     IFNE *BLANKS
+     C                     CALL 'AOCREPT'
+     C                     PARM           MSGID
+     C                     PARM           MSGF
+     C                     PARM           MSGLIB
+     C                     PARM           MSGDTA
+     C                     PARM '*SAME'   MSGREL
+     C                     PARM           #PGM
+     C                     PARM *BLANK    FTMSGQ 10
+     C                     PARM *BLANK    FTMSGT  7
+     C                     ENDIF
+      *
+      * Reset message Id
+     C                     RESETMSGDS
+      *
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      * -------------------------------------------------------------------
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDSR
+      * -------------------------------------------------------------------
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

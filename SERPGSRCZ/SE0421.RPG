@@ -1,0 +1,974 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Pay/Receive Telexes Extract')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE0421 - PAY RECEIVE TELEXES EXTRACT                         *
+     F*                                                               *
+     F*  Function:  This program extracts, from the Unformatted       *
+     F*   (COB)     Telexes file, pay/receive telexes, incomplete     *
+     F*   (I/C)     pay/receive telexes, bankers' authorisations,     *
+     F*             internal settlements and SWIFT pay/receive        *
+     F*             telexes, and outputs their details to the         *
+     F*             appropriate file.                                 *
+     F*                                                               *
+     F*  Called By: SEC0603 - COB Pay/Receive Telexes                 *
+     F*             SEC3305 - I/C Pay/Receive Telexes                 *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027A            Date 17May06               *
+      *  Prev Amend No. CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 052254             Date 10Jan94               *
+      *                 E32244             Date 21Nov91               *
+     F*                 E29170             DATE 07OCT91               *
+     F*                 S01117             DATE 07MAY91               *
+     F*                 S01271             DATE 07JUN90               *
+     F*                 E22974             DATE 27SEP90               *
+     F*                 E19616             DATE 02NOV89               *
+     F*                 E16468             DATE 29AUG89               *
+     F*                 E19381             DATE 29AUG89               *
+     F*                 S01170             DATE 07/06/88              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  E32244 - Branch code from UNFOR gets overwritten when        *
+     F*           TABLETL is read                                     *
+     F*  E29170 - RCF CHANGES                                         *
+     F*  S01117 - Multibranching                                      *
+     F*  S01271 - Pay/Receive in Input Cycle - add report narrative.  *
+     F*           Also initialise record count variables.             *
+     F*           Also correct some comments which were erroneous.    *
+     F*           Also only write to SWIFT/TELEX file if these        *
+     F*           modules are installed.                              *
+     F*  E22974 - Pay/Receive telexes via SWIFT should only be        *
+     F*           generated if SWIFT/SE interface present.            *
+     F*  E19616 - DATA BASE ERROR FOR CHAIN TO TABLE IN SE0470        *   E19616
+     F*           BECAUSE BRCD IS OVERWRITTEN FROM CLINTCB.           *   E19616
+     F*  E16468 - WHEN DESTINATION, OURS AND THEIRS ARE EQUAL         *   E16468
+     F*           SE GENERATES A PAYMENT SWIFT MESSAGE FOR A          *   E16468
+     F*           TRADE SALE.                                         *   E16468
+     F*  E19381 - OMIT PAYCODE 1 CHECK FOR CREDIT TELEXES             *   E19381
+     F*  S01170 - AMENDMENT TO INCLUDE SWIFT EXTRACTING FOR           *   S01170
+     F*           SECURITIES TRADING II                               *   S01170
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FUNFOR   IP  E           K        DISK
+     FTABSE   IF  E           K        DISK
+     F            TABLETAF                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F*********** TABLETJF                          KIGNORE               S01117
+     F**NOSTRO****TABLETLF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F**ICD*1*****TABTB10F                          KIGNORE
+     F**ICD*2*****TABTB11F                          KIGNORE
+     F            TABTB36F                          KIGNORE
+     F**ICD*5*****TABTB40F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     FCLINT   IF  E           K        DISK                               S01170
+     F            CLINTCAF                          KIGNORE               S01170
+     F            CLINTCCF                          KIGNORE               S01170
+     F            CLINTC1F                          KIGNORE               S01170
+     F            CLINTSEF                          KIGNORE               S01170
+     FSTPR1   O   E                    DISK
+     FSTPR2   O   E                    DISK
+     FSTPR3   O   E                    DISK
+     FSTPR4   O   E                    DISK
+     FSTPR5   O   E                    DISK                               S01170
+     F***SE0421P1O***F     132     OF     PRINTER                         E29170
+     FSE0421AUO   F     132     OF     PRINTER                            E29170
+     F/COPY WNCPYSRC,SE0421F001
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   05      TABTG10 RECORD ID INDICATOR                         *
+     F*                                                               *
+     F*   10      FIRST CYCLE INDICATOR                               *
+     F*                                                               *
+     F*   30      SETTLEMENT TYPES ARE 00, 04, 05, 06, 10, 14, 15     *
+     F*   31      SETTLEMENT TYPES ARE 01, 07, 08                     *
+     F*   32      SETTLEMENT TYPES ARE 02, 12                         *
+     F*   41     When = 0, Input Cycle run; when = 1, COB run         *   S01271
+     F*                                                               *
+     F*   51      RECORD TO BE WRITTEN TO FILE S/STPR1                *
+     F*   52      RECORD TO BE WRITTEN TO FILE S/STPR2                *
+     F*   53      RECORD TO BE WRITTEN TO FILE S/STPR3                *
+     F*   54      RECORD TO BE WRITTEN TO FILE S/STPR4                *
+     F*   55      RECORD TO BE WRITTEN TO FILE S/STPR5                *   S01170
+     F*                                                               *
+     F*   85      TABLE CHAIN - FAILED                                *
+     F*   86      CLINT CHAIN - FAILED                                *   S01170
+     F*                                                               *
+     F*   98      ZSYSTM, DATE FORMAT MMDDYY IF ON.                   *
+     F*   99                                                          *
+     F*                                                               *
+     F*   U7 U8   DATABASE ERROR                                      *
+     F*   U8      FILE CONTROLS OUT OF BALANCE                        *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     E                    CPY@    1   1 80
+      /EJECT
+     IUNFORABF
+     I              RECI                            RECI1
+     IUNFORACF
+     I              RECI                            RECI1
+     ICLINTCBF                                                            E19616
+     I***********   BRCD                            BRCD1          E19616 S01117
+     I              BRCB                            BRCD1                 S01117
+     ITABLETLF                                                            E32244
+     I              BRCA                            BRCA1                 E32244
+     I/COPY WNCPYSRC,SE0421I002
+     I*LDA********UDS                            256                      S01117
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+      *
+      *    DATA STRUCTURES
+      *
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+      *
+      *   DATA STRUCTURE FOR BLANK FIELDS
+      *
+     I            DS
+     I**********                              1  12 BLNK12                                    CGL029
+     I                                        1  18 BLNK12                                    CGL029
+     I                                        1  10 BLNK10
+     I                                        1   6 BLNK06
+      * TABLES FILE KEY FOR NOSTROS
+     I            DS
+     I                                        1  12 ZTABKY
+     I                                        1   2 CODE
+     I                                        8  10 CURR
+     I                                       11  120NOSTNO
+      * OUR SETTLEMENT A/C * AGENT *
+     I            DS
+     I**********                              1  12 OURS                                      CGL029
+     I                                        1  18 OURS                                      CGL029
+     I                                        1   2 ONOS
+     I**********                              1   60OCNUM                                    CSD027A
+     I                                        1   6 OCNUM                                    CSD027A
+     I                                        1   6 ALPHA3
+      * THEIR AGENT
+     I            DS
+     I                                        1  10 THEIRS
+     I                                        1   2 TCNOS
+     I**********                              1   60CUST                                     CSD027A
+     I                                        1   6 CUST                                     CSD027A
+     I                                        1   6 ALPHA1
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*                                                                   S01271
+     I*   TIME DATA STRUCTURE                                             S01271
+     I*                                                                   S01271
+     I            DS                                                      S01271
+     I                                        1   60CTIME                 S01271
+     I                                        1   2 CHOUR                 S01271
+     I                                        3   4 CMINT                 S01271
+     I/COPY WNCPYSRC,SE0421I001
+     C/EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+     C           *ENTRY    PLIST                                          E22974
+     C                     PARM           BGSWST  1                       E22974
+     C                     PARM           BGMTMI  1                       E22974
+     C*    INPUT CYCLE / CLOSE OF BUSINESS PARAMETER                      S01271
+     C                     PARM           PRPHAS  1                       S01271
+     C                     MOVEA'0000'    *IN,51           *IN 51,52,53,54
+     C                     MOVE '0'       *IN55            *IN55          S01170
+     C/COPY WNCPYSRC,SE0421C006
+      *
+     C           *IN10     CASEQ'0'       FIRSTC     10  10
+     C                     END
+      *
+      *   PROCESS DETAIL RECORDS
+      *
+     C           RECI1     CASEQ'D'       CMPROC
+     C                     END
+      *
+     C           ENDD      TAG
+      *
+     C           *INU7     IFEQ '1'
+     C                     MOVEA'0000'    *IN,51           *IN 51,52,53,54
+     C                     MOVE '0'       *IN55            *IN55          S01170
+     C/COPY WNCPYSRC,SE0421C007
+     C                     END
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *                                                               *
+     CLRNU7                EXSR LASTC
+      *                                                               *
+      *================================================================
+      /EJECT
+      ********************************************************************
+      *
+      *  FIRSTC SR FOR CYCLE CALCULATIONS
+      *
+      *  CALLED FROM: MAIN PROCESSING
+      *  CALLS:       ZSYSTM
+      *
+      ********************************************************************
+      *
+     C           FIRSTC    BEGSR                           ** FIRSTC SR **
+      *
+      **  SETUP LDA FIELD DBPGM
+      *
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANKS   DBLOT
+     C                     MOVEL'SE0421  'DBPGM
+     C                     OUT  LDA                                       S01117
+     C/COPY WNCPYSRC,SE0421C001
+      *
+      **  GET INSTALLATION CONTROL DATA RECORD 1 AND RELEASE.
+      *
+     C                     EXSR ZSYSTM
+      *
+     C           *IN99     IFEQ '1'
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY            * DB ERROR 01 *
+     C                     Z-ADD01        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENDD
+     C                     END
+      *
+      **  GET INSTALLATION CONTROL DATA RECORD 2 AND RELEASE.
+      *
+     C                     MOVE '  11'    ZTABKY
+      *
+     C           ZTABKY    CHAINTABTB11F             85
+      *
+     C           *IN85     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY            * DB ERROR 02 *
+     C                     Z-ADD02        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENDD
+     C                     END
+      *
+      **  GET INSTALLATION CONTROL DATA RECORD 5 AND RELEASE.
+      *
+     C                     MOVE '  40'    ZTABKY 12
+      *
+     C           ZTABKY    CHAINTABTB40F             85
+      *
+     C           *IN85     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY            * DB ERROR 03 *
+     C                     Z-ADD03        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENDD
+     C                     END
+      *
+      **  DEFINE KEY LIST FOR CHAIN TO CLIENT FILE                        S01170
+      *                                                                   S01170
+     C           CLTKY     KLIST                                          S01170
+     C                     KFLD           OCNUM                           S01170
+     C                     KFLD           TYPE    1                       S01170
+      *                                                                   S01170
+     C*                                                                   S01271
+     C           PRPHAS    IFEQ 'I'                                       S01271
+     C                     SETOF                     41                   S01271
+     C                     TIME           CTIME                           S01271
+     C                     MOVE ':  '     ATIME   5                       S01271
+     C                     MOVE CMINT     ATIME                           S01271
+     C                     MOVELCHOUR     ATIME                           S01271
+     C                     ELSE                                           S01271
+     C                     SETON                     41                   S01271
+     C                     END                                            S01271
+     C*                                                                   S01271
+     C                     Z-ADD0         RECTOT                          S01271
+     C                     Z-ADD0         RECT01                          S01271
+     C                     Z-ADD0         RECT02                          S01271
+     C                     Z-ADD0         RECT03                          S01271
+     C                     Z-ADD0         RECT04                          S01271
+     C                     Z-ADD0         RECT05                          S01271
+     C*                                                                   S01271
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *
+      *  CMPROC  - SR FOR COMMON PROCESSING
+      *
+      *  CALLED FROM: MAIN PROCESSING
+      *  CALLS:       STPR01 STPR02 STPR03 STPR04 NOSTCH
+      *               STPR05                                              S01271
+      *
+      ********************************************************************
+      *
+     C           CMPROC    BEGSR                           ** CMPROC SR **
+      *
+     C                     MOVEA'000'     *IN,30           *IN 30 - 32
+      *
+      **  CHECK SETTLEMENT TYPE
+      *
+     C           SETL      IFEQ 0
+     C           SETL      OREQ 3
+     C           SETL      OREQ 4
+     C           SETL      OREQ 5
+     C           SETL      OREQ 6
+     C           SETL      OREQ 10
+     C           SETL      OREQ 14
+     C           SETL      OREQ 15
+     C                     MOVE '1'       *IN30
+     C                     END
+      *
+     C           SETL      IFEQ 1
+     C           SETL      OREQ 7
+     C           SETL      OREQ 8
+     C                     MOVE '1'       *IN31
+     C                     END
+      *
+     C           SETL      IFEQ 2
+     C           SETL      OREQ 12
+     C                     MOVE '1'       *IN32
+     C                     END
+      *
+      *   INCREMENT DETAIL RECORD'S COUNT
+     C           1         ADD  RECTOT    RECTOT  50
+     C/COPY WNCPYSRC,SE0421C002
+      *
+      *   CONVERT NOSTRO CODES IN EITHER OUR SETTLEMENT NOSTRO OR THEIR
+      *   SETTLEMENT NOSTRO TO CUSTOMER NUMBER.
+      *
+      *   IF 'OURS' IS A NOSTRO CODE THEN OBTAIN CUSTOMER NUMBER.
+     C                     MOVE BLNK06    ALPHA2  6
+     C                     MOVELONOS      ALPHA2  6
+      *
+     C           OURS      IFNE BLNK12
+     C           ALPHA3    ANDEQALPHA2
+     C                     MOVE ONOS      NOSTNO
+     C                     EXSR NOSTCH
+     C**********           Z-ADDCNUM      OCNUM                                              CSD027A
+     C                     MOVE CNUM      OCNUM                                              CSD027A
+     C                     END
+      *
+      *   IF 'THEIRS' IS A NOSTRO CODE THEN OBTAIN CUSTOMER NUMBER.
+     C                     MOVE BLNK06    ALPHA2  6
+     C                     MOVELTCNOS     ALPHA2  6
+      *
+     C           THEIRS    IFNE BLNK10
+     C           ALPHA1    ANDEQALPHA2
+     C                     MOVE TCNOS     NOSTNO
+     C                     EXSR NOSTCH
+     C**********           Z-ADDCNUM      CUST                                               CSD027A
+     C                     MOVE CNUM      CUST                                               CSD027A
+     C                     END
+      *
+      *   IF TRADE TYPE IS 'TS' THEN TELEX IS FOR A SALE;
+      *   THEREFORE 'P Y I N' IS 'R'.
+     C           TRTP      IFEQ 'TS'
+     C                     MOVE 'R'       PYIN    1
+     C                     ELSE
+     C                     MOVE 'P'       PYIN    1
+     C                     END
+      *
+      *   IF OURS AND THEIRS CLIENT NUMBERS ARE *EQ & PAY CODE *NE '1',
+      *   THE TELEX IS A CREDIT TELEX OTHERWISE IT IS A PAY TELEX.
+     C           OURS      IFEQ THEIRS
+     C***********PYCD      ANDNE'1'                                       E19381
+     C           PYIN      ANDEQ'P'                                       E16468
+     C                     MOVE 'C'       PYIN
+     C                     END
+      *
+      *   S E T T L E M E N T   T Y P E S   00, 04, 05, 06, 10, 14, 15
+     C           *IN30     CASEQ'1'       STPR04
+      *   S E T T L E M E N T   T Y P E S   02, 12
+     C           *IN32     CASEQ'1'       STPR03
+     C                     END
+      *
+      *   S E T T L E M E N T   T Y P E S   01, 07, 08
+     C           *IN31     IFEQ '1'
+     C/COPY WNCPYSRC,SE0421C008
+      *
+      ****IF*35*IS*ON*THEN*IS*A*BANKERS*AUTHORISATION**********           S01271
+      *   IF LOCAL CURRENCY, SETTLEMENT METHOD IS TELEX, AND LOCAL        S01271
+      *   SETTLEMENTS BY BANKERS AUTHORISATION THEN WRITE BANKERS         S01271
+      *   AUTHORISATION RECORD (STPR3)                                    S01271
+      *                                                                   S01271
+     C           VCCY      IFEQ LOCY
+     C           LCYN      ANDEQ'B'
+     C           SETL      ANDEQ1
+     C                     EXSR STPR03
+     C                     ELSE
+      *                                                                   S01170
+      *   OBTAIN SWIFT FORMAT INDICATOR ONLY IF TELEX IS COMPLETE         S01170
+      *                                                                   S01170
+     C           OURS      IFNE BLNK12                                    S01170
+     C           THEIRS    ANDNEBLNK10                                    S01170
+     C                     EXSR CLINTC                                    S01170
+     C                     END                                            S01170
+      *
+      *   TELEX IS EITHER PAY/RECEIVE TELEX OR AN INCOMPLETE P/R TELEX
+     C***********OURS      CASEQBLNK12    STPR02                          E22974
+     C***********THEIRS    CASEQBLNK10    STPR02                          E22974
+     C           OURS      IFEQ BLNK12                                    E22974
+     C           THEIRS    OREQ BLNK10                                    E22974
+     C                     EXSR STPR02                                    E22974
+     C                     ELSE                                           E22974
+      *                                                                   E22974
+      *   NEITHER THEIRS NOR OURS IS BLANK :- THEREFORE TELEX IS COMPLETE
+      ****IF*OUR*NOSTRO*HAS*SWIFT*THEN*GENERATE*A*SWIFT*FORMAT*MSG* S01170E22974
+      *   IF OUR NOSTRO HAS SWIFT THEN GENERATE A SWIFT/TLX FORMAT MSG    E22974
+      *   PROVIDING SWIFT/SE INTERFACE OR MIDAS TELEX PRESENT.            E22974
+      *                                                                   E22974
+     C***********GSFM      CASEQ'Y'       STPR05                    S01170E22974
+     C*********************CAS            STPR01                          E22974
+     C*********************END                                            E22974
+     C           GSFM      IFEQ 'Y'                                       E22974
+     C           BGSWST    ANDEQ'Y'                                       E22974
+     C           SETL      ANDEQ8                                         S01271
+     C           GSFM      OREQ 'Y'                                       E22974
+     C           BGMTMI    ANDEQ'Y'                                       E22974
+     C           SETL      ANDEQ1                                         S01271
+     C                     EXSR STPR05                                    E22974
+      **                                                                  E22974
+      **  OTHERWISE GENERATE AN ORDINARY PAY/RECEIVE TELEX.               E22974
+      **                                                                  E22974
+     C                     ELSE                                           E22974
+     C                     EXSR STPR01                                    E22974
+     C                     END                                            E22974
+     C                     END                                            E22974
+      *
+     C                     END
+     C/COPY WNCPYSRC,SE0421C009
+     C                     END
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *
+      *  LASTC  - SR. FOR LAST CYCLE PROCESSING
+      *  CALLED FROM: MAINLINE PROCESSING
+      *
+      ********************************************************************
+      *
+     C           LASTC     BEGSR                           ** LASTC  SR **
+      *
+      **  ACCESS ICD RECORD 1, IF EMPTY FILE
+      *
+     C                     MOVE '0'       *IN99
+      *
+     C           *IN10     CASEQ'0'       ZSYSTM
+     C                     END
+      *
+     C           *IN99     IFEQ '1'
+     C                     SETON                     U7U8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY            * DB ERROR 04 *
+     C                     Z-ADD04        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END
+      *
+     C           *INU7     IFEQ '0'
+      *
+      * IF RECORD READ IS NOT RECI *EQ 'T', THEN TRAILER MISSING
+      *
+     C           RECI1     IFNE 'T'
+     C                     SETON                     U7U8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'UNFOR'   DBFILE           ***************
+     C                     MOVEL'999999'  DBKEY            * DB ERROR 05 *
+     C                     Z-ADD05        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+      *
+     C                     ELSE
+      *
+      * SAVE RECORD TOTAL FROM TRAILER  'UNFORAC'
+      *
+     C                     Z-ADDNORE      UNFRFC  50
+      *
+      * INCREMENT STPR.. FILE RECORD COUNTS TO INCLUDE TRAILERS
+      *
+     C                     ADD  1         RECT01  50
+     C                     ADD  1         RECT02  50
+     C                     ADD  1         RECT03  50
+     C                     ADD  1         RECT04  50
+     C                     ADD  1         RECT05  50                      S01170
+      *
+     ***EXCEPTION OUTPUT TO STPR1 - 4 TRAILERS IN SEQUENCE                S01271
+      * EXCEPTION OUTPUT TO STPR1 - 5 TRAILERS IN SEQUENCE                S01271
+      *
+     C                     MOVE 'T'       RECI
+      *
+     C                     Z-ADDRECT01    NORE
+     C                     Z-ADDHSTA01    HRWN
+     C                     Z-ADDHSTB01    HRDC
+      *
+     C                     EXCPTSTPR1Z                     ** STPR1Z
+      *
+     C                     Z-ADDRECT02    NORE
+     C                     Z-ADDHSTA02    HRWN
+     C                     Z-ADDHSTB02    HRDC
+      *
+     C                     EXCPTSTPR2Z                     ** STPR2Z
+      *
+     C                     Z-ADDRECT03    NORE
+     C                     Z-ADDHSTA03    HRWN
+     C                     Z-ADDHSTB03    HRDC
+      *
+     C                     EXCPTSTPR3Z                     ** STPR3Z
+      *
+     C                     Z-ADDRECT04    NORE
+     C                     Z-ADDHSTA04    HRWN
+     C                     Z-ADDHSTB04    HRDC
+      *
+     C                     EXCPTSTPR4Z                     ** STPR4Z
+      *                                                                   S01170
+     C                     Z-ADDRECT05    NORE                            S01170
+     C                     Z-ADDHSTA05    HRWN                            S01170
+     C                     Z-ADDHSTB05    HRDC                            S01170
+      *                                                                   S01170
+     C                     EXCPTSTPR5Z                     ** STPR5Z      S01170
+      *
+      * RECORD TOTAL FILE CONTROL
+      *
+     C                     ADD  1         RECTOT  50
+      *
+     C           RECTOT    IFNE UNFRFC
+     C                     MOVE '1'       *INU8
+     C                     END
+      *
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *
+      *  STPR01  - SR. UPDATE RECORD TOTALS AND HASH TOTALS
+      *                FOR TRAILER - STPR1ZZ .
+      *
+      *  CALLED FROM: CMPROC
+      *  CALLS:       ZZADD
+      *
+      ********************************************************************
+      *
+     C           STPR01    BEGSR                           ** STPR01 SR **
+      *
+      *    INCREMENT RECORD COUNT
+     C           1         ADD  RECT01    RECT01  50
+     C                     MOVE '1'       *IN51
+      *
+      *    HASH TOTAL FILE CONTROL
+     C                     Z-ADDHSTA01    ZZTOTI
+     C                     Z-ADDHSTB01    ZZTOTD
+     C                     MOVE CVIV      ZZAMT
+     C                     EXSR ZZADD
+     C                     Z-ADDZZTOTI    HSTA01 150
+     C                     Z-ADDZZTOTD    HSTB01  30
+     C/COPY WNCPYSRC,SE0421C003
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *
+      *  STPR02 SR. UPDATE RECORD TOTALS AND HASH TOTALS
+      *             FOR TRAILER - STPR2ZZ .
+      *
+      *  CALLED FROM: CMPROC
+      *  CALLS:       ZZADD
+      *
+      ********************************************************************
+      *
+     C           STPR02    BEGSR                           ** STPR02 SR **
+      *
+      *    INCREMENT RECORD COUNT
+     C           1         ADD  RECT02    RECT02  50
+     C                     MOVE '1'       *IN52
+      *
+      *    HASH TOTAL FILE CONTROL
+     C                     Z-ADDHSTA02    ZZTOTI
+     C                     Z-ADDHSTB02    ZZTOTD
+     C                     MOVE CVIV      ZZAMT
+     C                     EXSR ZZADD
+     C                     Z-ADDZZTOTI    HSTA02 150
+     C                     Z-ADDZZTOTD    HSTB02  30
+     C/COPY WNCPYSRC,SE0421C004
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *
+      *  STPR03  - SR. UPDATE RECORD TOTALS AND HASH TOTALS
+      *                FOR TRAILER - STPR3ZZ .
+      *  CALLED FROM: CMPROC
+      *  CALLS:       ZZADD
+      *
+      ********************************************************************
+      *
+     C           STPR03    BEGSR                           ** STPR03 SR **
+      *
+      *    INCREMENT RECORD COUNT
+     C           1         ADD  RECT03    RECT03  50
+     C                     MOVE '1'       *IN53
+      *
+      *    HASH TOTAL FILE CONTROL
+     C                     Z-ADDHSTA03    ZZTOTI
+     C                     Z-ADDHSTB03    ZZTOTD
+     C                     MOVE CVIV      ZZAMT
+     C                     EXSR ZZADD
+     C                     Z-ADDZZTOTI    HSTA03 150
+     C                     Z-ADDZZTOTD    HSTB03  30
+     C/COPY WNCPYSRC,SE0421C005
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *
+      *  STPR04 SR. UPDATE RECORD TOTALS AND HASH TOTALS
+      *             FOR TRAILER - STPR4ZZ .
+      *
+      *  CALLED FROM: CMPROC
+      *  CALLS:       ZZADD
+      *
+      ********************************************************************
+      *
+     C           STPR04    BEGSR                           ** STPR04 SR **
+      *
+      *    INCREMENT RECORD COUNT
+     C           1         ADD  RECT04    RECT04  50
+     C                     MOVE '1'       *IN54
+      *
+      *    HASH TOTAL FILE CONTROL
+     C                     Z-ADDHSTA04    ZZTOTI
+     C                     Z-ADDHSTB04    ZZTOTD
+     C                     MOVE CVIV      ZZAMT
+     C                     EXSR ZZADD
+     C                     Z-ADDZZTOTI    HSTA04 150
+     C                     Z-ADDZZTOTD    HSTB04  30
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************S01170
+      *                                                                   S01170
+      *  STPR05 SR. UPDATE RECORD TOTALS AND HASH TOTALS                  S01170
+      *             FOR TRAILER - STPR5ZZ .                               S01170
+      *                                                                   S01170
+      *  CALLED FROM: CMPROC                                              S01170
+      *  CALLS:       ZZADD                                               S01170
+      *                                                                   S01170
+      ********************************************************************S01170
+      *                                                                   S01170
+     C           STPR05    BEGSR                           ** STPR05 SR **S01170
+      *                                                                   S01170
+      **  INCREMENT RECORD COUNT                                          S01170
+     C           1         ADD  RECT05    RECT05  50                      S01170
+     C                     MOVE '1'       *IN55                           S01170
+      *                                                                   S01170
+      *    HASH TOTAL FILE CONTROL                                        S01170
+     C                     Z-ADDHSTA05    ZZTOTI                          S01170
+     C                     Z-ADDHSTB05    ZZTOTD                          S01170
+     C                     MOVE CVIV      ZZAMT                           S01170
+     C                     EXSR ZZADD                                     S01170
+     C                     Z-ADDZZTOTI    HSTA05 150                      S01170
+     C                     Z-ADDZZTOTD    HSTB05  30                      S01170
+      *                                                                   S01170
+     C                     ENDSR                                          S01170
+      *                                                                   S01170
+      ********************************************************************S01170
+      /EJECT                                                              S01170
+     C/COPY WNCPYSRC,SE0421C010
+      ********************************************************************
+      *
+      *  NOSTCH  - SR TO CHAIN TO THE TABLE FILE TO OBTAIN
+      *               THE NOSTRO'S CLIENT NUMBER
+      *
+      *  CALLED FROM: CMPROC
+      *
+      ********************************************************************
+      *
+     C           NOSTCH    BEGSR                           ** NOSTCH SR **
+      *
+      *   ACCESS THE NOSTRO RECORD (TABLETL)
+     C                     MOVE '70'      CODE
+     C                     MOVE VCCY      CURR
+     C           ZTABKY    CHAINTABLETLF             85    -REC NOT FOUND
+      *
+     C           *IN85     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY            * DB ERROR 06 *
+     C                     Z-ADD06        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENDD
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT                                                              S01170
+      *****************************************************************   S01170
+      *                                                                   S01170
+      *  CLINTC  - SR TO CHAIN TO THE CLINT FILE TO OBTAIN                S01170
+      *               THE GENERATE SWIFT FORMAT INDICATOR                 S01170
+      *                                                                   S01170
+      *  CALLED FROM: CMPROC                                              S01170
+      *                                                                   S01170
+      *****************************************************************   S01170
+      *                                                                   S01170
+     C           CLINTC    BEGSR                           ** CLINTC SR **S01170
+      *                                                                   S01170
+     C                     MOVE 'A'       TYPE                            S01170
+      *                                                                   S01170
+     C           CLTKY     CHAINCLINTCBF             86    -REC NOT FOUND S01170
+      *                                                                   S01170
+     C           *IN86     IFEQ '1'                                       S01170
+     C           RECI      ORNE 'D'                                       S01170
+     C                     SETON                     U7U8LR               S01170
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'CLINT'   DBFILE           ***************S01170
+     C                     MOVELOCNUM     DBKEY            * DB ERROR 07 *S01170
+     C                     MOVE TYPE      DBKEY            ***************S01170
+     C                     Z-ADD07        DBASE                           S01170
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENDD                                      S01170
+     C                     END                                            S01170
+      *                                                                   S01170
+     C                     ENDSR                                          S01170
+      *                                                                   S01170
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+      *****************************************************************   S01170
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+      /EJECT
+     C/COPY ZSRSRC,ZZADDZ1
+     O/EJECT
+      *****************************************************************
+      *
+      *   DETAIL OUTPUT TO SELECTED TELEX FILE
+      *
+     OSTPR1TXFD           51
+     O                         *ALL
+      *
+     OSTPR2TXFD           52
+     O                         *ALL
+      *
+     OSTPR3TXFD           53
+     O                         *ALL
+      *
+     OSTPR4TXFD           54
+     O                         *ALL
+      *
+     OSTPR5TXFD           55                                              S01170
+     O                         *ALL                                       S01170
+      *                                                                   S01170
+     O/COPY WNCPYSRC,SE0421O001
+     OSTPR1ZZFE                STPR1Z
+      *
+      *   EXCEPTION OUTPUT OF TRAILERS
+      *
+     O                         RECI
+     O                         NORE
+     O                         HRWN
+     O                         HRDC
+      *
+     OSTPR2ZZFE                STPR2Z
+     O                         RECI
+     O                         NORE
+     O                         HRWN
+     O                         HRDC
+      *
+     OSTPR3ZZFE                STPR3Z
+     O                         RECI
+     O                         NORE
+     O                         HRWN
+     O                         HRDC
+      *
+     OSTPR4ZZFE                STPR4Z
+     O                         RECI
+     O                         NORE
+     O                         HRWN
+     O                         HRDC
+      *                                                                   S01170
+     OSTPR5ZZFE                STPR5Z                                     S01170
+     O                         RECI                                       S01170
+     O                         NORE                                       S01170
+     O                         HRWN                                       S01170
+     O                         HRDC                                       S01170
+     O***SE0421P1T**203   LR                                              E29170
+     OSE0421AUT  203   LR                                                 E29170
+      *
+      *   UNFORMATTED TELEXES EXTRACT FILE CONTROL REPORT
+      *
+     O                                   15 'REFERENCE'
+     O*************************          23 'SE0421B'                     E29170
+     O                                   24 'SE0421AU'                    E29170
+     O                         TITL      89
+     O                                  104 'DATE'
+     O                         RUNA     112
+     O                                  122 'PAGE'
+     O                         PAGE1    127
+     O        T  1     LR
+     O**************                     57 'UNFORMATTED TELEXES'         S01271
+     O**************                     65 'EXTRACT'                     S01271
+     O**************                     85 'FILE CONTROL REPORT'         S01271
+     O                                   37 'UNFORMATTED TELEXES'         S01271
+     O                                   45 ' EXTRACT'                    S01271
+     O                                   65 ' FILE CONTROL REPORT'        S01271
+     O                N41                87 ' - INPUT CYCLE - TIME '      S01271
+     O                N41      ATIME     93                               S01271
+     O                 41                85 ' - CLOSE OF BUSINESS'        S01271
+     O        T  1     LR
+     O**************                     58 '--------------------'        S01271
+     O**************                     66 '--------'                    S01271
+     O**************                     85 '-------------------'         S01271
+     O                                   37 '-------------------'         S01271
+     O                                   45 '--------'                    S01271
+     O                                   65 '--------------------'        S01271
+     O                N41                87 '----------------------'      S01271
+     O                N41                93 '------'                      S01271
+     O                 41                85 '--------------------'        S01271
+     O        T   13   LRNU7
+     O                                   45 '-------- RECORDS'
+     O                                   54 '--------'
+     O                                   92 '----------- HASH TOTAL '
+     O                                  104 '------------'
+     O        T  215   LRNU7
+     O                                   41 'FILE CONTROL'
+     O                                   54 'CALCULATED'
+     O                                   81 'FILE CONTROL'
+     O                                  104 'CALCULATED'
+     O        T  2     LRNU7
+     O                                   15 'S/UNFOR'
+     O                         UNFRFC3   41
+     O                         RECTOT3   54
+     O                    U8             60 '***'
+     O        T  2     LRNU7
+     O                                   15 'S/STPR1'
+     O                         RECT013   54
+     O                         HSTA013  101
+     O                         HSTB01   104
+     O        T  2     LRNU7
+     O                                   15 'S/STPR2'
+     O                         RECT023   54
+     O                         HSTA023  101
+     O                         HSTB02   104
+     O        T  2     LRNU7
+     O                                   15 'S/STPR3'
+     O                         RECT033   54
+     O                         HSTA033  101
+     O                         HSTB03   104
+     O        T  2     LRNU7
+     O                                   15 'S/STPR4'
+     O                         RECT043   54
+     O                         HSTA043  101
+     O                         HSTB04   104
+     O        T  2     LRNU7                                              S01170
+     O                                   15 'S/STPR5'                     S01170
+     O                         RECT053   54                               S01170
+     O                         HSTA053  101                               S01170
+     O                         HSTB05   104                               S01170
+     O/COPY WNCPYSRC,SE0421O002
+     O        T   43   LR U7 U8
+     O                                   56 'DATABASE ERROR AT'
+     O***********              DBASE     59                               S01117
+     O***********                        64 ', KEY'                       S01117
+     O***********              DBKEY     94                               S01117
+     O                         DBASE     60                               S01117
+     O                                   65 ', KEY'                       S01117
+     O                         DBKEY     95                               S01117
+     O        T   45   LR U7 U8
+     O                                   64 'FILE NAME'
+     O***********              DBFILE    70                               S01117
+     O                         DBFILE    73                               S01117
+     O        T   49   LRNU7 U8
+     O                                   64 '*** FILE CONTROLS OUT OF'
+     O                                   76 'BALANCE ***'
+     O********T***53   LR                                                 E29170
+     O*************************          69 '*** END OF REPORT ***'       E29170
+      *****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

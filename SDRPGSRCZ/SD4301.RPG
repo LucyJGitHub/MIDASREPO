@@ -1,0 +1,3530 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD BTS monthly report')                          *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Standing Data Module
+     F*                                                               *
+     F*  Business Transactions Statistics Switchable Feature          *
+     F*                                                               *
+     F*  SD4301 - BTS Monthly report                                  *
+     F*                                                               *
+     F*  Function:  This program produces a report of the details     *
+     F*             held on PF/SDBTSMPD (current financial year) or   *
+     F*             PF/SDBTMHPD (previous financial years) in a       *
+     F*             daily format for a given month.                   *
+     F*             This report will be produced automatically during *
+     F*             the COB at end of month, but may also be          *
+     F*             requested at any time.                            *
+     F*                                                               *
+     F*  Phase:     Input Cycle, Close of Business                    *
+     F*                                                               *
+     F*  Called By: SDC4301 - BTS Monthly report (request)            *
+     F*             SDC4303 - BTS COB mandatory reporting             *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. AR681945           Date 12Jun13               *
+      *  Prev Amend No. 264019             Date 10Jun13               *
+      *                 CLE134             Date 01Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 131205             Date 6Jan00                *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 CSD004             Date 26FEB99               *
+     F*                 S01411             DATE 29APR93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  AR681945 - Reopen of 264019. (Recompile)                     *
+      *  264019 - Counters increased from 6,0 to 7,0. (Recompile)     *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  131205 - Amend *PSSR so program terminates correctly.        *
+     F*  CSD004 - Sub-divide report into branches                     *
+     F*  S01411 - New program for BTS                                 *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FSDBTSML2IF  E           K        DISK
+     FSDBTSML5IF  E           K        DISK                               CSD004
+     F            SDBTMHD0                          KRENAMESDBTMHD5       CSD004
+     F            SDBTSMD0                          KRENAMESDBTSMD5       CSD004
+     F*
+     F** BTS Master Data excluding Funds Transfer
+     F*
+     FSDBTSML3IF  E           K        DISK
+     F            SDBTMHD0                          KRENAMESDBTMHD3
+     F            SDBTSMD0                          KRENAMESDBTSMD3
+     FSDBTSML6IF  E           K        DISK                               CSD004
+     F            SDBTMHD0                          KRENAMESDBTMHD6       CSD004
+     F            SDBTSMD0                          KRENAMESDBTSMD6       CSD004
+     F*
+     F** BTS Master Data for Funds Transfer
+     F*
+     FSDBRCHL0IF  E           K        DISK                               CSD004
+     F*                                                                   CSD004
+     F** Branch codes                                                     CSD004
+     F*                                                                   CSD004
+     FSD4301P1O   E                    PRINTER      KINFDS SPOOL
+     F*
+     F** BTS Monthly report
+     F*
+      /EJECT
+     F*****************************************************************
+     F*
+     F*  F U N C T I O N   O F   I N D I C A T O R S
+     F*
+     F*  32       Fields for report split by business                     CSD004
+     F*  60       New page required indicator
+     F***80*******Re*d*in*ic*tor*for*SDBTSML2,*SDBTSML3****               CSD004
+     F*  80       Read indicator for SDBTSML2, SDBTSML3,                  CSD004
+     F*                              SDBTSML5, SDBSSML6                   CSD004
+     F*  81       Read indicator for SDBRCHL0                             CSD004
+     F*
+     F*  90 - 99  Standard subroutines
+     F*
+     F*  U7,U8    Standard MIDAS error
+     F*
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*
+     F*  S U B R O U T I N E   I N D E X
+     F*
+     F*  DETAI2 - Detail processing with Business Area                    CSD004
+     F*  DETAIL - Detail processing
+     F*  DM     - Process DPTMVD
+     F*  FF     - Process TRANSD
+     F*  FINAL  - Final processing
+     F*  FRAIRS - Process DEALSDG
+     F*  FT     - Process Funds Transfer data
+     F*  FX     - Process DEALSDB
+     F*  GL     - Process ACCNTAB
+     F*  INIT   - Initial processing
+     F*  INITDT - Initialise detail line fields to zero
+     F*  INITTT - Initialise total line fields to zero
+     F*  LE     - Process CLOANCL
+     F*  MM     - Process DEALSDC
+     F*  NAP    - Process DEALSDD
+     F*  NAS    - Process DEALSDE
+     F*  TD     - Process TRADSD
+     F*  *PSSR  - Program exception error routine
+     F*
+     F*  ZDATE1 - Convert a date to a day number
+     F*  ZDATE2 - Convert a day number to date formats
+     F*
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E*
+     E** Array containing Copyright statement
+     E*
+     E                    MNAM    1  12  9
+     E*
+     E** Array containing month names
+     E*
+     E                    DYNO    1  31  4
+     E*
+     E** Array containing day numbers
+     E*
+      /COPY ZSRSRC,ZDATE2Z1
+      /SPACE 3
+     ILDA       E DSLDA                         256
+     I*
+     I** Local data area for database error details
+     I*
+     ISPOOL       DS
+     I*
+     I** Data structure for RCF details for ZSFILE
+     I*
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 188 1890OFLLN
+     I                                    B 367 3680PRTLN
+     IRUNDAT    E DSRUNDAT
+     I*
+     I** Data Area giving Installation Control Details
+     I*
+     IPSDS       SDS
+     I*
+     I** Program Status Data Structure - gives Job/Workstation name and
+     I** User ID
+     I*
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+     ISDBANK    E DSSDBANKPD
+     I*
+     I** Bank Details
+     I*
+     ISDMMOD    E DSSDMMODPD
+     I*
+     I** Module Details
+     I*
+     ISDCOMP    E DSSDCOMPPD                                              CSD004
+     I*                                                                   CSD004
+     I** Company Details                                                  CSD004
+     I*                                                                   CSD004
+     IDSFDY     E DSDSFDY
+     I*
+     I** First data structure for access programs, short data structure
+     I*
+     ISCSARD    E DSSCSARDPD                                              CSD005
+      * Switchable Features File Details                                  CSD005
+      *                                                                   CSD005
+     I/EJECT
+     C*
+     C**  Set up Copyright parameter
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C**  Read in installation data
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+     C*
+     C**  Set date format indicator *IN98 on if date format is MMDDYY
+     C*
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+     C*
+     C**  Receive parameters
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           SEQ     5        REPORT SEQ NUM
+     C                     PARM           STDATE  50       START DATE
+     C                     PARM           EDDATE  50       END DATE
+     C*
+     C**  Define key lists
+     C*
+     C           KBTSF     KLIST
+     C                     KFLD           KMMOD   2
+     C                     KFLD           KFNME  10
+     C                     KFLD           KDATE   50
+     C                     KFLD           KTNTY   2
+     C*
+     C           KBTSFP    KLIST
+     C                     KFLD           KMMOD
+     C                     KFLD           KFNME
+     C*
+     C           KBTSFT    KLIST
+     C                     KFLD           KMMOD
+     C                     KFLD           KDATE
+     C                     KFLD           KTNTY
+     C*                                                                   CSD004
+     C           K56SF     KLIST                                          CSD004
+     C                     KFLD           KCMPY   3                       CSD004
+     C                     KFLD           KBRCA   3                       CSD004
+     C                     KFLD           KMMOD   2                       CSD004
+     C                     KFLD           KFNME  10                       CSD004
+     C                     KFLD           KDATE   50                      CSD004
+     C                     KFLD           KTNTY   2                       CSD004
+     C*                                                                   CSD004
+     C           K56SFP    KLIST                                          CSD004
+     C                     KFLD           KCMPY                           CSD004
+     C                     KFLD           KBRCA                           CSD004
+     C                     KFLD           KMMOD                           CSD004
+     C                     KFLD           KFNME                           CSD004
+     C*                                                                   CSD004
+     C           K56SFT    KLIST                                          CSD004
+     C                     KFLD           KCMPY                           CSD004
+     C                     KFLD           KBRCA                           CSD004
+     C                     KFLD           KMMOD                           CSD004
+     C                     KFLD           KDATE                           CSD004
+     C                     KFLD           KTNTY                           CSD004
+     C*
+     C**  Execute initial processing
+     C*
+     C                     EXSR INIT
+     C*                                                                   CSD004
+     C**  Execute detail processing by Business Area                      CSD004
+     C*                                                                   CSD004
+     C           CSD004    IFEQ 'Y'
+     C                     EXSR DETAI2                                    CSD004
+     C                     ENDIF
+     C*
+     C**  Execute detail processing
+     C*
+     C                     MOVEL'N'       WFSPLT  1                       CSD004
+     C                     EXSR DETAIL
+     C*
+     C**  Execute final processing
+     C*
+     C                     EXSR FINAL
+     C*
+     C/EJECT                                                              CSD004
+     C********************************************************************CSD004
+     C*                                                                  *CSD004
+     C*    DETAI2 - Detail processing by Business Area                   *CSD004
+     C*                                                                  *CSD004
+     C*    CALLED BY: MAIN   - Main processing                           *CSD004
+     C*    CALLS:     DETAIL - Detail Processing                         *CSD004
+     C*                                                                  *CSD004
+     C********************************************************************CSD004
+     C           DETAI2    BEGSR                                          CSD004
+     C*                                                                   CSD004
+     C**  Execute detail processing splitted by business area             CSD004
+     C*                                                                   CSD004
+     C                     MOVEL'Y'       WFSPLT  1                       CSD004
+     C           *LOVAL    SETLLSDBRCHL0             8181                 CSD004
+     C                     READ SDBRCHL0                 81               CSD004
+     C           *IN81     IFEQ '1'                                       CSD004
+     C           *LOCK     IN   LDA                                       CSD004
+     C                     SETON                       U7U8               CSD004
+     C                     MOVEL'SD4201'  DBPGM                           CSD004
+     C                     Z-ADD4         DBASE            ***************CSD004
+     C                     MOVEL'SDBRCHPD'DBFILE           * DBERROR 004 *CSD004
+     C                     MOVEL'BRCH'    DBKEY            ***************CSD004
+     C                     OUT  LDA                                       CSD004
+     C                     EXSR *PSSR                                     CSD004
+     C                     END                                            CSD004
+     C*                                                                   CSD004
+     C           *IN81     DOWEQ'0'                                       CSD004
+     C                     EXSR DETAIL                                    CSD004
+     C                     READ SDBRCHL0                 81               CSD004
+     C                     END                                            CSD004
+     C*                                                                   CSD004
+     C** The following lines can be removed if feature CSD004 is         XCSD004
+     C** installed at least since one month.                             XCSD004
+     C** ( This lines are annoted with XCSD004 )                         XCSD004
+     C                     MOVE 'XYX'     A8CMCD                         XCSD004
+     C                     MOVE 'ZYX'     A8BRCD                         XCSD004
+     C                     MOVE *BLANKS   A8BRNM                         XCSD004
+     C                     MOVE *BLANKS   APCMNM                         XCSD004
+     C                     EXSR DETAIL                                   XCSD004
+     C*                                                                  XCSD004
+     C                     ENDSR                                          CSD004
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    DETAIL - Detail processing                                    *
+     C*                                                                  *
+     C*    CALLED BY: MAIN   - Main processing                           *
+     C*    CALLS:     FX     - Process DEALSDB                           *
+     C*               MM     - Process DEALSDC                           *
+     C*               NAP    - Process DEALSDD                           *
+     C*               NAS    - Process DEALSDE                           *
+     C*               FRAIRS - Process DEALSDG                           *
+     C*               FF     - Process TRANSD                            *
+     C*               FT     - Process Funds Transfer data               *
+     C*               GL     - Process ACCNTAB                           *
+     C*               LE     - Process CLOANCL                           *
+     C*               DM     - Process DPTMVD                            *
+     C*               TD     - Process TRADSD                            *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           DETAIL    BEGSR
+     C*                                                                   CSD004
+     C** Depending on the report mode, we display or not the              CSD004
+     C** branch name and the company name on the report                   CSD004
+     C           WFSPLT    IFEQ 'Y'                                       CSD004
+     C                     MOVELA8BRCD    #BRCD                           CSD004
+     C                     MOVELA8BRNM    #BRNM                           CSD004
+     C                     MOVELA8CMCD    #CMCD                           CSD004
+     C** Display Company and Branch on the report                         CSD004
+     C           #CMCD     IFNE 'XYX'                                    XCSD004
+     C** XYX is a temporary fictitious company name                      XCSD004
+     C                     SETON                     32                   CSD004
+     C                     CALL 'AOCOMPR0'                                CSD004
+     C                     PARM *BLANKS   @RTCD   7                       CSD004
+     C                     PARM '*KEY   ' @OPTN   7                       CSD004
+     C                     PARM A8CMCD    @CMCD   3                       CSD004
+     C           SDCOMP    PARM SDCOMP    DSFDY                           CSD004
+     C*                                                                  XCSD004
+     C                     ELSE                                          XCSD004
+     C                     MOVE *BLANKS   @RTCD                          XCSD004
+     C                     ENDIF                                         XCSD004
+     C*                                                                   CSD004
+     C**  Process database error on SDCOMPPD                              CSD004
+     C*                                                                   CSD004
+     C           @RTCD     IFNE *BLANK                                    CSD004
+     C           *LOCK     IN   LDA                                       CSD004
+     C                     SETON                       U7U8               CSD004
+     C                     MOVEL'SD4301'  DBPGM                           CSD004
+     C                     Z-ADD5         DBASE            ***************CSD004
+     C                     MOVEL'SDCOMPPD'DBFILE           * DBERROR 005 *CSD004
+     C                     MOVEL*BLANKS   DBKEY            ***************CSD004
+     C                     OUT  LDA                                       CSD004
+     C                     EXSR *PSSR                                     CSD004
+     C                     END                                            CSD004
+     C                     MOVELAPCMNM    #CMNM                           CSD004
+     C                     ELSE                                           CSD004
+     C** Hide Company and Branch on the report                            CSD004
+     C                     CLEAR#BRCD                                     CSD004
+     C                     CLEAR#CMCD                                     CSD004
+     C                     CLEAR#BRNM                                     CSD004
+     C                     CLEAR#CMNM                                     CSD004
+     C                     SETOF                     32                   CSD004
+     C                     ENDIF                                          CSD004
+     C*
+     C**  If Dealing FX is present in the system, process DEALSDB
+     C*
+     C           BGDLFX    IFEQ 'Y'
+     C                     EXSR FX
+     C                     END
+     C*
+     C**  If Dealing MM is present in the system, process DEALSDC,
+     C**  DEALSDD and DEALSDE
+     C*
+     C           BGDLMM    IFEQ 'Y'
+     C                     EXSR MM
+     C                     EXSR NAP
+     C                     EXSR NAS
+     C                     END
+     C*
+     C**  If FRA/IRS is present in the system, process DEALSDG
+     C*
+     C           BGFIIN    IFEQ 'Y'
+     C                     EXSR FRAIRS
+     C                     END
+     C*
+     C**  If Futures and Options is present in the system, process
+     C**  TRANSD
+     C*
+     C           BGFUOP    IFEQ 'Y'
+     C                     EXSR FF
+     C                     END
+     C*
+     C**  If Funds Transfer is present in the system, process Funds
+     C**  Transfer data
+     C*
+     C           BGFDTR    IFEQ 'Y'
+     C                     EXSR FT
+     C                     END
+     C*
+     C**  If General Ledger is present in the system, process ACCNTAB
+     C*
+     C           BGSDGL    IFEQ 'Y'
+     C                     EXSR GL
+     C                     END
+     C*
+     C**  If Customer Lending is present in the system, process CLOANCL
+     C*
+     C           BGCSLN    IFEQ 'Y'
+     C                     EXSR LE
+     C                     END
+     C*
+     C**  If Securities Trading is present in the system, process
+     C**  DPTMVD and TRADSD
+     C*
+     C           BGSECS    IFEQ 'Y'
+     C                     EXSR DM
+     C                     EXSR TD
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    FX - Process DEALSDB                                          *
+     C*                                                                  *
+     C*    CALLED BY: DETAIL - Detail processing                         *
+     C*    CALLS:     INITDT - Initialise detail line fields to zero     *
+     C*               INITTT - Initialise total line fields to zero      *
+     C*               ZDATE2 - Convert a day number to date formats      *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           FX        BEGSR
+     C*
+     C**  Initialise line count and all work fields to zero
+     C*
+     C                     Z-ADD0         PRDATE  50
+     C                     Z-ADD0         MNTHP   20
+     C*
+     C                     EXSR INITDT
+     C                     EXSR INITTT
+     C*
+     C**  Write report headings and sub-headings
+     C*
+     C                     WRITEHEADINGS
+     C                     WRITEFXHEAD
+     C*
+     C**  Set lower limits on SDBTSML2
+     C*
+     C                     MOVE 'FX'      KMMOD
+     C                     MOVE *BLANKS   KFNME
+     C                     MOVEL'DEALSDB' KFNME
+     C                     Z-ADDSTDATE    KDATE
+     C                     MOVE *BLANKS   KTNTY
+     C*
+     C           WFSPLT    IFEQ 'N'                                       CSD004
+     C           KBTSF     SETLLSDBTSML2             8080
+     C           KBTSFP    READESDBTSML2                 80
+     C                     ELSE                                           CSD004
+     C**  Sort by branch                                                  CSD004
+     C                     MOVE A8BRCD    KBRCA                           CSD004
+     C                     MOVE A8CMCD    KCMPY                           CSD004
+     C           K56SF     SETLLSDBTSML5             8080                 CSD004
+     C           K56SFP    READESDBTSML5                 80               CSD004
+     C                     ENDIF                                          CSD004
+     C*
+     C**  If we want the report to be split by business area              CSD004
+     C**  (company/branch). (WFSPLIT = Y), then we have to use            CSD004
+     C**  SDBTSML5 else ...                                               CSD004
+     C**  Read records from LF/SDBTSML2 for this module and file name
+     C**  until the end date parameter is greater than or equal to the
+     C**  date on the SDBTSML2 record
+     C**
+     C           EDDATE    DOWGEE0DATE
+     C           *IN80     ANDEQ'0'
+     C*
+     C**  Process all records for one date
+     C*
+     C           E0DATE    DOWEQPRDATE
+     C           *IN80     ANDEQ'0'
+     C           PRDATE    OREQ *ZERO
+     C           *IN80     ANDEQ'0'
+     C*
+     C**  Set up details for report line
+     C*
+     C* In the *split* mode we mustn't reset the totals                   CSD004
+     C*                                                                   CSD004
+     C**  Outright purchase
+     C*
+     C           E0TNTY    IFEQ 'FP'
+     C*********************Z-ADDE0TTLV    COL1A                           CSD004
+     C*********************Z-ADDE0TTIN    COL1I                           CSD004
+     C                     ADD  E0TTLV    COL1A                           CSD004
+     C                     ADD  E0TTIN    COL1I                           CSD004
+     C                     ADD  E0TTLV    TOT1A
+     C                     ADD  E0TTIN    TOT1I
+     C                     END
+     C*
+     C**  Outright sale
+     C*
+     C           E0TNTY    IFEQ 'FS'
+     C*********************Z-ADDE0TTLV    COL2A                           CSD004
+     C*********************Z-ADDE0TTIN    COL2I                           CSD004
+     C                     ADD  E0TTLV    COL2A                           CSD004
+     C                     ADD  E0TTIN    COL2I                           CSD004
+     C                     ADD  E0TTLV    TOT2A
+     C                     ADD  E0TTIN    TOT2I
+     C                     END
+     C*
+     C**  Interest purchase
+     C*
+     C           E0TNTY    IFEQ 'PI'
+     C*********************Z-ADDE0TTLV    COL3A                           CSD004
+     C*********************Z-ADDE0TTIN    COL3I                           CSD004
+     C                     ADD  E0TTLV    COL3A                           CSD004
+     C                     ADD  E0TTIN    COL3I                           CSD004
+     C                     ADD  E0TTLV    TOT3A
+     C                     ADD  E0TTIN    TOT3I
+     C                     END
+     C*
+     C**  Interest sale
+     C*
+     C           E0TNTY    IFEQ 'SI'
+     C*********************Z-ADDE0TTLV    COL4A                           CSD004
+     C*********************Z-ADDE0TTIN    COL4I                           CSD004
+     C                     ADD  E0TTLV    COL4A                           CSD004
+     C                     ADD  E0TTIN    COL4I                           CSD004
+     C                     ADD  E0TTLV    TOT4A
+     C                     ADD  E0TTIN    TOT4I
+     C                     END
+     C*
+     C**  Cross deals
+     C*
+     C           E0TNTY    IFEQ 'CX'
+     C*********************Z-ADDE0TTLV    COL5A                           CSD004
+     C*********************Z-ADDE0TTIN    COL5I                           CSD004
+     C                     ADD  E0TTLV    COL5A                           CSD004
+     C                     ADD  E0TTIN    COL5I                           CSD004
+     C                     ADD  E0TTLV    TOT5A
+     C                     ADD  E0TTIN    TOT5I
+     C                     END
+     C*
+     C**  Swap deals
+     C*
+     C           E0TNTY    IFEQ 'SW'
+     C*********************Z-ADDE0TTLV    COL6A                           CSD004
+     C*********************Z-ADDE0TTIN    COL6I                           CSD004
+     C                     ADD  E0TTLV    COL6A                           CSD004
+     C                     ADD  E0TTIN    COL6I                           CSD004
+     C                     ADD  E0TTLV    TOT6A
+     C                     ADD  E0TTIN    TOT6I
+     C                     END
+     C*
+     C**  Option
+     C*
+     C           E0TNTY    IFEQ 'OP'
+     C*********************Z-ADDE0TTLV    COL7A                           CSD004
+     C*********************Z-ADDE0TTIN    COL7I                           CSD004
+     C                     ADD  E0TTLV    COL7A                           CSD004
+     C                     ADD  E0TTIN    COL7I                           CSD004
+     C                     ADD  E0TTLV    TOT7A
+     C                     ADD  E0TTIN    TOT7I
+     C                     END
+     C*
+     C**  Option takedown
+     C*
+     C           E0TNTY    IFEQ 'OT'
+     C*********************Z-ADDE0TTLV    COL8A                           CSD004
+     C*********************Z-ADDE0TTIN    COL8I                           CSD004
+     C                     ADD  E0TTLV    COL8A                           CSD004
+     C                     ADD  E0TTIN    COL8I                           CSD004
+     C                     ADD  E0TTLV    TOT8A
+     C                     ADD  E0TTIN    TOT8I
+     C                     END
+     C*
+     C**  Internal contracts
+     C*
+     C           E0TNTY    IFEQ 'PS'
+     C*********************Z-ADDE0TTLV    COL9A                           CSD004
+     C*********************Z-ADDE0TTIN    COL9I                           CSD004
+     C                     ADD  E0TTLV    COL9A                           CSD004
+     C                     ADD  E0TTIN    COL9I                           CSD004
+     C                     ADD  E0TTLV    TOT9A
+     C                     ADD  E0TTIN    TOT9I
+     C                     END
+     C*
+     C**  Nostro transfer
+     C*
+     C           E0TNTY    IFEQ 'NX'
+     C*********************Z-ADDE0TTLV    COL10A                          CSD004
+     C*********************Z-ADDE0TTIN    COL10I                          CSD004
+     C                     ADD  E0TTLV    COL10A                          CSD004
+     C                     ADD  E0TTIN    COL10I                          CSD004
+     C                     ADD  E0TTLV    TOT10A
+     C                     ADD  E0TTIN    TOT10I
+     C                     END
+     C*
+     C**  Store date from this record
+     C*
+     C                     Z-ADDE0DATE    PRDATE
+     C           WFSPLT    IFEQ 'N'                                       CSD004
+     C*
+     C**  Read from SDBTSML2
+     C*
+     C           KBTSFP    READESDBTSML2                 80
+     C                     ELSE                                           CSD004
+     C**  Sort by branch                                                  CSD004
+     C           K56SFP    READESDBTSML5                 80               CSD004
+     C                     END                                            CSD004
+     C                     END
+     C*
+     C**  Convert date just processed to DDMMYY format to obtain day
+     C**  number for output to report
+     C*
+     C                     Z-ADDPRDATE    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     ##DDMM
+     C           *IN98     IFEQ '1'
+     C                     MOVE ##DDMM    ##DD    20
+     C                     ELSE
+     C                     MOVEL##DDMM    ##DD
+     C                     END
+     C                     MOVELDYNO,##DD TEXTA
+     C*
+     C**  Check if new page required
+     C*
+     C                     Z-ADD3         RQDLN   20
+     C                     EXSR OVFLOW
+     C*
+     C           *IN60     IFEQ '1'
+     C                     WRITEHEADINGS
+     C                     WRITEFXHEAD
+     C                     END
+     C*
+     C**  Write detail line to report
+     C*
+     C                     WRITEFXDETL
+     C*
+     C**  Increment count of months processed
+     C*
+     C                     ADD  1         MNTHP
+     C*
+     C**  Initialise all detail line fields
+     C*
+     C                     EXSR INITDT
+     C*
+     C**  Store date from this record
+     C*
+     C                     Z-ADDE0DATE    PRDATE
+     C*
+     C                     END
+     C*
+     C**  If records have been processed from SDBTSML2
+     C*
+     C           MNTHP     IFNE *ZERO
+     C*
+     C**  Calculate average number of live records for the period for
+     C**  each transaction type
+     C*
+     C           TOT1A     DIV  MNTHP     COL1A     H
+     C           TOT2A     DIV  MNTHP     COL2A     H
+     C           TOT3A     DIV  MNTHP     COL3A     H
+     C           TOT4A     DIV  MNTHP     COL4A     H
+     C           TOT5A     DIV  MNTHP     COL5A     H
+     C           TOT6A     DIV  MNTHP     COL6A     H
+     C           TOT7A     DIV  MNTHP     COL7A     H
+     C           TOT8A     DIV  MNTHP     COL8A     H
+     C           TOT9A     DIV  MNTHP     COL9A     H
+     C           TOT10A    DIV  MNTHP     COL10A    H
+     C*
+     C**  Set up total inserts for each transaction type
+     C*
+     C                     Z-ADDTOT1I     COL1I
+     C                     Z-ADDTOT2I     COL2I
+     C                     Z-ADDTOT3I     COL3I
+     C                     Z-ADDTOT4I     COL4I
+     C                     Z-ADDTOT5I     COL5I
+     C                     Z-ADDTOT6I     COL6I
+     C                     Z-ADDTOT7I     COL7I
+     C                     Z-ADDTOT8I     COL8I
+     C                     Z-ADDTOT9I     COL9I
+     C                     Z-ADDTOT10I    COL10I
+     C*
+     C**  Set up text for totals line
+     C*
+     C                     MOVEL'MEAN'    TEXTA
+     C                     MOVE 'TOTAL'   TEXTI
+     C*
+     C**  Check if new page required
+     C*
+     C                     Z-ADD3         RQDLN
+     C                     EXSR OVFLOW
+     C*
+     C           *IN60     IFEQ '1'
+     C                     WRITEHEADINGS
+     C                     WRITEFXHEAD
+     C                     END
+     C*
+     C**  Write totals line to report
+     C*
+     C                     WRITEFXDETL
+     C*
+     C**  Otherwise, no records processed, write 'NO DETAILS' line to
+     C**  report
+     C*
+     C                     ELSE
+     C                     WRITENODETL
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    MM - Process DEALSDC                                          *
+     C*                                                                  *
+     C*    CALLED BY: DETAIL - Detail processing                         *
+     C*    CALLS:     INITDT - Initialise detail line fields to zero     *
+     C*               INITTT - Initialise total line fields to zero      *
+     C*               ZDATE2 - Convert a day number to date formats      *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           MM        BEGSR
+     C*
+     C**  Initialise line count and all work fields to zero
+     C*
+     C                     Z-ADD0         PRDATE
+     C                     Z-ADD0         MNTHP
+     C*
+     C                     EXSR INITDT
+     C                     EXSR INITTT
+     C*
+     C**  Write report headings and sub-headings
+     C*
+     C                     WRITEHEADINGS
+     C                     WRITEMMHEAD
+     C*
+     C**  Set lower limits on SDBTSML2
+     C*
+     C                     MOVE 'MM'      KMMOD
+     C                     MOVE *BLANKS   KFNME
+     C                     MOVEL'DEALSDC' KFNME
+     C                     Z-ADDSTDATE    KDATE
+     C                     MOVE *BLANKS   KTNTY
+     C*
+     C           WFSPLT    IFEQ 'N'                                       CSD004
+     C           KBTSF     SETLLSDBTSML2             8080
+     C           KBTSFP    READESDBTSML2                 80
+     C                     ELSE                                           CSD004
+     C**  Sort by branch                                                  CSD004
+     C                     MOVE A8BRCD    KBRCA                           CSD004
+     C                     MOVE A8CMCD    KCMPY                           CSD004
+     C           K56SF     SETLLSDBTSML5             8080                 CSD004
+     C           K56SFP    READESDBTSML5                 80               CSD004
+     C                     END                                            CSD004
+     C*
+     C**  If we want the report to be split by business area              CSD004
+     C**  (company/branch). (WFSPLIT = Y), then we have to use            CSD004
+     C**  SDBTSML5 else ...                                               CSD004
+     C**  Read records from LF/SDBTSML2 for this module and file name
+     C**  until the end date parameter is greater than or equal to the
+     C**  date on the SDBTSML2 record
+     C**
+     C           EDDATE    DOWGEE0DATE
+     C           *IN80     ANDEQ'0'
+     C*
+     C**  Process all records for one date
+     C*
+     C           E0DATE    DOWEQPRDATE
+     C           *IN80     ANDEQ'0'
+     C           PRDATE    OREQ *ZERO
+     C           *IN80     ANDEQ'0'
+     C*
+     C**  Set up details for report line
+     C*
+     C* In the *split* mode we mustn't reset the totals                   CSD004
+     C*                                                                   CSD004
+     C**  Interbank deposit placed
+     C*
+     C           E0TNTY    IFEQ 'IP'
+     C*********************Z-ADDE0TTLV    COL1A                           CSD004
+     C*********************Z-ADDE0TTIN    COL1I                           CSD004
+     C                     ADD  E0TTLV    COL1A                           CSD004
+     C                     ADD  E0TTIN    COL1I                           CSD004
+     C                     ADD  E0TTLV    TOT1A
+     C                     ADD  E0TTIN    TOT1I
+     C                     END
+     C*
+     C**  Interbank deposit taken
+     C*
+     C           E0TNTY    IFEQ 'IT'
+     C*********************Z-ADDE0TTLV    COL2A                           CSD004
+     C*********************Z-ADDE0TTIN    COL2I                           CSD004
+     C                     ADD  E0TTLV    COL2A                           CSD004
+     C                     ADD  E0TTIN    COL2I                           CSD004
+     C                     ADD  E0TTLV    TOT2A
+     C                     ADD  E0TTIN    TOT2I
+     C                     END
+     C*
+     C**  Time deposit placed
+     C*
+     C           E0TNTY    IFEQ 'TI'
+     C*********************Z-ADDE0TTLV    COL3A                           CSD004
+     C*********************Z-ADDE0TTIN    COL3I                           CSD004
+     C                     ADD  E0TTLV    COL3A                           CSD004
+     C                     ADD  E0TTIN    COL3I                           CSD004
+     C                     ADD  E0TTLV    TOT3A
+     C                     ADD  E0TTIN    TOT3I
+     C                     END
+     C*
+     C**  Time deposit accepted
+     C*
+     C           E0TNTY    IFEQ 'TD'
+     C*********************Z-ADDE0TTLV    COL4A                           CSD004
+     C*********************Z-ADDE0TTIN    COL4I                           CSD004
+     C                     ADD  E0TTLV    COL4A                           CSD004
+     C                     ADD  E0TTIN    COL4I                           CSD004
+     C                     ADD  E0TTLV    TOT4A
+     C                     ADD  E0TTIN    TOT4I
+     C                     END
+     C*
+     C**  Call/notice deposit placed
+     C*
+     C           E0TNTY    IFEQ 'CL'
+     C*********************Z-ADDE0TTLV    COL5A                           CSD004
+     C*********************Z-ADDE0TTIN    COL5I                           CSD004
+     C                     ADD  E0TTLV    COL5A                           CSD004
+     C                     ADD  E0TTIN    COL5I                           CSD004
+     C                     ADD  E0TTLV    TOT5A
+     C                     ADD  E0TTIN    TOT5I
+     C                     END
+     C*
+     C**  Call/notice deposit taken
+     C*
+     C           E0TNTY    IFEQ 'CD'
+     C*********************Z-ADDE0TTLV    COL6A                           CSD004
+     C*********************Z-ADDE0TTIN    COL6I                           CSD004
+     C                     ADD  E0TTLV    COL6A                           CSD004
+     C                     ADD  E0TTIN    COL6I                           CSD004
+     C                     ADD  E0TTLV    TOT6A
+     C                     ADD  E0TTIN    TOT6I
+     C                     END
+     C*
+     C**  CD issued
+     C*
+     C           E0TNTY    IFEQ 'CI'
+     C*********************Z-ADDE0TTLV    COL7A                           CSD004
+     C*********************Z-ADDE0TTIN    COL7I                           CSD004
+     C                     ADD  E0TTLV    COL7A                           CSD004
+     C                     ADD  E0TTIN    COL7I                           CSD004
+     C                     ADD  E0TTLV    TOT7A
+     C                     ADD  E0TTIN    TOT7I
+     C                     END
+     C*
+     C**  Internal loans
+     C*
+     C           E0TNTY    IFEQ 'IL'
+     C           E0TNTY    OREQ 'ID'
+     C                     ADD  E0TTLV    COL8A
+     C                     ADD  E0TTIN    COL8I
+     C                     ADD  E0TTLV    TOT8A
+     C                     ADD  E0TTIN    TOT8I
+     C                     END
+     C*
+     C**  Store date from this record
+     C*
+     C                     Z-ADDE0DATE    PRDATE
+     C           WFSPLT    IFEQ 'N'                                       CSD004
+     C*
+     C**  Read from SDBTSML2
+     C*
+     C           KBTSFP    READESDBTSML2                 80
+     C                     ELSE                                           CSD004
+     C**  Sort by branch                                                  CSD004
+     C           K56SFP    READESDBTSML5                 80               CSD004
+     C                     END                                            CSD004
+     C                     END
+     C*
+     C**  Convert date just processed to DDMMYY format to obtain day
+     C**  number for output to report
+     C*
+     C                     Z-ADDPRDATE    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     ##DDMM
+     C           *IN98     IFEQ '1'
+     C                     MOVE ##DDMM    ##DD
+     C                     ELSE
+     C                     MOVEL##DDMM    ##DD
+     C                     END
+     C                     MOVELDYNO,##DD TEXTA
+     C*
+     C**  Check if new page required
+     C*
+     C                     Z-ADD3         RQDLN
+     C                     EXSR OVFLOW
+     C*
+     C           *IN60     IFEQ '1'
+     C                     WRITEHEADINGS
+     C                     WRITEMMHEAD
+     C                     END
+     C*
+     C**  Write detail line to report
+     C*
+     C                     WRITEMMDETL
+     C*
+     C**  Increment count of months processed
+     C*
+     C                     ADD  1         MNTHP
+     C*
+     C**  Initialise all detail line fields
+     C*
+     C                     EXSR INITDT
+     C*
+     C**  Store date from this record
+     C*
+     C                     Z-ADDE0DATE    PRDATE
+     C*
+     C                     END
+     C*
+     C**  If records have been processed from SDBTSML2
+     C*
+     C           MNTHP     IFNE *ZERO
+     C*
+     C**  Calculate average number of live records for the period for
+     C**  each transaction type
+     C*
+     C           TOT1A     DIV  MNTHP     COL1A     H
+     C           TOT2A     DIV  MNTHP     COL2A     H
+     C           TOT3A     DIV  MNTHP     COL3A     H
+     C           TOT4A     DIV  MNTHP     COL4A     H
+     C           TOT5A     DIV  MNTHP     COL5A     H
+     C           TOT6A     DIV  MNTHP     COL6A     H
+     C           TOT7A     DIV  MNTHP     COL7A     H
+     C           TOT8A     DIV  MNTHP     COL8A     H
+     C*
+     C**  Set up total inserts for each transaction type
+     C*
+     C                     Z-ADDTOT1I     COL1I
+     C                     Z-ADDTOT2I     COL2I
+     C                     Z-ADDTOT3I     COL3I
+     C                     Z-ADDTOT4I     COL4I
+     C                     Z-ADDTOT5I     COL5I
+     C                     Z-ADDTOT6I     COL6I
+     C                     Z-ADDTOT7I     COL7I
+     C                     Z-ADDTOT8I     COL8I
+     C*
+     C**  Set up text for totals line
+     C*
+     C                     MOVEL'MEAN'    TEXTA
+     C                     MOVE 'TOTAL'   TEXTI
+     C*
+     C**  Check if new page required
+     C*
+     C                     Z-ADD3         RQDLN
+     C                     EXSR OVFLOW
+     C*
+     C           *IN60     IFEQ '1'
+     C                     WRITEHEADINGS
+     C                     WRITEMMHEAD
+     C                     END
+     C*
+     C**  Write totals line to report
+     C*
+     C                     WRITEMMDETL
+     C*
+     C**  Otherwise, no records processed, write 'NO DETAILS' line to
+     C**  report
+     C*
+     C                     ELSE
+     C                     WRITENODETL
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    NAP - Process DEALSDD                                         *
+     C*                                                                  *
+     C*    CALLED BY: DETAIL - Detail processing                         *
+     C*    CALLS:     INITDT - Initialise detail line fields to zero     *
+     C*               INITTT - Initialise total line fields to zero      *
+     C*               ZDATE2 - Convert a day number to date formats      *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           NAP       BEGSR
+     C*
+     C**  Initialise line count and all work fields to zero
+     C*
+     C                     Z-ADD0         PRDATE
+     C                     Z-ADD0         MNTHP
+     C*
+     C                     EXSR INITDT
+     C                     EXSR INITTT
+     C*
+     C**  Write report headings and sub-headings
+     C*
+     C                     WRITEHEADINGS
+     C                     WRITENAPHEAD
+     C*
+     C**  Set lower limits on SDBTSML2
+     C*
+     C                     MOVE 'MM'      KMMOD
+     C                     MOVE *BLANKS   KFNME
+     C                     MOVEL'DEALSDD' KFNME
+     C                     Z-ADDSTDATE    KDATE
+     C                     MOVE *BLANKS   KTNTY
+     C*
+     C           WFSPLT    IFEQ 'N'                                       CSD004
+     C           KBTSF     SETLLSDBTSML2             8080
+     C           KBTSFP    READESDBTSML2                 80
+     C                     ELSE                                           CSD004
+     C**  Sort by branch                                                  CSD004
+     C                     MOVE A8BRCD    KBRCA                           CSD004
+     C                     MOVE A8CMCD    KCMPY                           CSD004
+     C           K56SF     SETLLSDBTSML5             8080                 CSD004
+     C           K56SFP    READESDBTSML5                 80               CSD004
+     C                     ENDIF                                          CSD004
+     C*
+     C**  If we want the report to be split by business area              CSD004
+     C**  (company/branch). (WFSPLIT = Y), then we have to use            CSD004
+     C**  SDBTSML5 else ...                                               CSD004
+     C**  Read records from LF/SDBTSML2 for this module and file name
+     C**  until the end date parameter is greater than or equal to the
+     C**  date on the SDBTSML2 record
+     C**
+     C           EDDATE    DOWGEE0DATE
+     C           *IN80     ANDEQ'0'
+     C*
+     C**  Process all records for one date
+     C*
+     C           E0DATE    DOWEQPRDATE
+     C           *IN80     ANDEQ'0'
+     C           PRDATE    OREQ *ZERO
+     C           *IN80     ANDEQ'0'
+     C*
+     C**  Set up details for report line
+     C*
+     C* In the *split* mode we mustn't reset the totals                   CSD004
+     C*                                                                   CSD004
+     C**  Primary certificate
+     C*
+     C           E0TNTY    IFEQ 'C1'
+     C*********************Z-ADDE0TTLV    COL1A                           CSD004
+     C*********************Z-ADDE0TTIN    COL1I                           CSD004
+     C                     ADD  E0TTLV    COL1A                           CSD004
+     C                     ADD  E0TTIN    COL1I                           CSD004
+     C                     ADD  E0TTLV    TOT1A
+     C                     ADD  E0TTIN    TOT1I
+     C                     END
+     C*
+     C**  Secondary certificate
+     C*
+     C           E0TNTY    IFEQ 'C2'
+     C*********************Z-ADDE0TTLV    COL2A                           CSD004
+     C*********************Z-ADDE0TTIN    COL2I                           CSD004
+     C                     ADD  E0TTLV    COL2A                           CSD004
+     C                     ADD  E0TTIN    COL2I                           CSD004
+     C                     ADD  E0TTLV    TOT2A
+     C                     ADD  E0TTIN    TOT2I
+     C                     END
+     C*
+     C**  Bond
+     C*
+     C           E0TNTY    IFEQ 'BP'
+     C*********************Z-ADDE0TTLV    COL3A                           CSD004
+     C*********************Z-ADDE0TTIN    COL3I                           CSD004
+     C                     ADD  E0TTLV    COL3A                           CSD004
+     C                     ADD  E0TTIN    COL3I                           CSD004
+     C                     ADD  E0TTLV    TOT3A
+     C                     ADD  E0TTIN    TOT3I
+     C                     END
+     C*
+     C**  Bill
+     C*
+     C           E0TNTY    IFEQ 'BD'
+     C*********************Z-ADDE0TTLV    COL4A                           CSD004
+     C*********************Z-ADDE0TTIN    COL4I                           CSD004
+     C                     ADD  E0TTLV    COL4A                           CSD004
+     C                     ADD  E0TTIN    COL4I                           CSD004
+     C                     ADD  E0TTLV    TOT4A
+     C                     ADD  E0TTIN    TOT4I
+     C                     END
+     C*
+     C**  Treasury bill
+     C*
+     C           E0TNTY    IFEQ 'TB'
+     C*********************Z-ADDE0TTLV    COL5A                           CSD004
+     C*********************Z-ADDE0TTIN    COL5I                           CSD004
+     C                     ADD  E0TTLV    COL5A                           CSD004
+     C                     ADD  E0TTIN    COL5I                           CSD004
+     C                     ADD  E0TTLV    TOT5A
+     C                     ADD  E0TTIN    TOT5I
+     C                     END
+     C*
+     C**  Bank acceptance
+     C*
+     C           E0TNTY    IFEQ 'DA'
+     C*********************Z-ADDE0TTLV    COL6A                           CSD004
+     C*********************Z-ADDE0TTIN    COL6I                           CSD004
+     C                     ADD  E0TTLV    COL6A                           CSD004
+     C                     ADD  E0TTIN    COL6I                           CSD004
+     C                     ADD  E0TTLV    TOT6A
+     C                     ADD  E0TTIN    TOT6I
+     C                     END
+     C*
+     C**  Trade acceptance
+     C*
+     C           E0TNTY    IFEQ 'TA'
+     C*********************Z-ADDE0TTLV    COL7A                           CSD004
+     C*********************Z-ADDE0TTIN    COL7I                           CSD004
+     C                     ADD  E0TTLV    COL7A                           CSD004
+     C                     ADD  E0TTIN    COL7I                           CSD004
+     C                     ADD  E0TTLV    TOT7A
+     C                     ADD  E0TTIN    TOT7I
+     C                     END
+     C*
+     C**  Store date from this record
+     C*
+     C                     Z-ADDE0DATE    PRDATE
+     C*
+     C**  Read from SDBTSML2
+     C*
+     C           WFSPLT    IFEQ 'N'                                       CSD004
+     C           KBTSFP    READESDBTSML2                 80
+     C                     ELSE                                           CSD004
+     C**  Sort by branch                                                  CSD004
+     C           K56SFP    READESDBTSML5                 80               CSD004
+     C                     ENDIF                                          CSD004
+     C                     END
+     C*
+     C**  Convert date just processed to DDMMYY format to obtain day
+     C**  number for output to report
+     C*
+     C                     Z-ADDPRDATE    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     ##DDMM
+     C           *IN98     IFEQ '1'
+     C                     MOVE ##DDMM    ##DD
+     C                     ELSE
+     C                     MOVEL##DDMM    ##DD
+     C                     END
+     C                     MOVELDYNO,##DD TEXTA
+     C*
+     C**  Check if new page required
+     C*
+     C                     Z-ADD3         RQDLN
+     C                     EXSR OVFLOW
+     C*
+     C           *IN60     IFEQ '1'
+     C                     WRITEHEADINGS
+     C                     WRITENAPHEAD
+     C                     END
+     C*
+     C**  Write detail line to report
+     C*
+     C                     WRITENAPDETL
+     C*
+     C**  Increment count of months processed
+     C*
+     C                     ADD  1         MNTHP
+     C*
+     C**  Initialise all detail line fields
+     C*
+     C                     EXSR INITDT
+     C*
+     C**  Store date from this record
+     C*
+     C                     Z-ADDE0DATE    PRDATE
+     C*
+     C                     END
+     C*
+     C**  If records have been processed from SDBTSML2
+     C*
+     C           MNTHP     IFNE *ZERO
+     C*
+     C**  Calculate average number of live records for the period for
+     C**  each transaction type
+     C*
+     C           TOT1A     DIV  MNTHP     COL1A     H
+     C           TOT2A     DIV  MNTHP     COL2A     H
+     C           TOT3A     DIV  MNTHP     COL3A     H
+     C           TOT4A     DIV  MNTHP     COL4A     H
+     C           TOT5A     DIV  MNTHP     COL5A     H
+     C           TOT6A     DIV  MNTHP     COL6A     H
+     C           TOT7A     DIV  MNTHP     COL7A     H
+     C*
+     C**  Set up total inserts for each transaction type
+     C*
+     C                     Z-ADDTOT1I     COL1I
+     C                     Z-ADDTOT2I     COL2I
+     C                     Z-ADDTOT3I     COL3I
+     C                     Z-ADDTOT4I     COL4I
+     C                     Z-ADDTOT5I     COL5I
+     C                     Z-ADDTOT6I     COL6I
+     C                     Z-ADDTOT7I     COL7I
+     C*
+     C**  Set up text for totals line
+     C*
+     C                     MOVEL'MEAN'    TEXTA
+     C                     MOVE 'TOTAL'   TEXTI
+     C*
+     C**  Check if new page required
+     C*
+     C                     Z-ADD3         RQDLN
+     C                     EXSR OVFLOW
+     C*
+     C           *IN60     IFEQ '1'
+     C                     WRITEHEADINGS
+     C                     WRITENAPHEAD
+     C                     END
+     C*
+     C**  Write totals line to report
+     C*
+     C                     WRITENAPDETL
+     C*
+     C**  Otherwise, no records processed, write 'NO DETAILS' line to
+     C**  report
+     C*
+     C                     ELSE
+     C                     WRITENODETL
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    NAS - Process DEALSDE                                         *
+     C*                                                                  *
+     C*    CALLED BY: DETAIL - Detail processing                         *
+     C*    CALLS:     INITDT - Initialise detail line fields to zero     *
+     C*               INITTT - Initialise total line fields to zero      *
+     C*               ZDATE2 - Convert a day number to date formats      *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           NAS       BEGSR
+     C*
+     C**  Initialise line count and all work fields to zero
+     C*
+     C                     Z-ADD0         PRDATE
+     C                     Z-ADD0         MNTHP
+     C*
+     C                     EXSR INITDT
+     C                     EXSR INITTT
+     C*
+     C**  Write report headings and sub-headings
+     C*
+     C                     WRITEHEADINGS
+     C                     WRITENASHEAD
+     C*
+     C**  Set lower limits on SDBTSML2
+     C*
+     C                     MOVE 'MM'      KMMOD
+     C                     MOVE *BLANKS   KFNME
+     C                     MOVEL'DEALSDE' KFNME
+     C                     Z-ADDSTDATE    KDATE
+     C                     MOVE *BLANKS   KTNTY
+     C*
+     C           WFSPLT    IFEQ 'N'                                       CSD004
+     C           KBTSF     SETLLSDBTSML2             8080
+     C           KBTSFP    READESDBTSML2                 80
+     C                     ELSE                                           CSD004
+     C**  Sort by branch                                                  CSD004
+     C                     MOVE A8BRCD    KBRCA                           CSD004
+     C                     MOVE A8CMCD    KCMPY                           CSD004
+     C           K56SF     SETLLSDBTSML5             8080                 CSD004
+     C           K56SFP    READESDBTSML5                 80               CSD004
+     C                     ENDIF                                          CSD004
+     C*
+     C**  If we want the report to be split by business area              CSD004
+     C**  (company/branch). (WFSPLIT = Y), then we have to use            CSD004
+     C**  SDBTSML5 else ...                                               CSD004
+     C**  Read records from LF/SDBTSML2 for this module and file name
+     C**  until the end date parameter is greater than or equal to the
+     C**  date on the SDBTSML2 record
+     C**
+     C           EDDATE    DOWGEE0DATE
+     C           *IN80     ANDEQ'0'
+     C*
+     C**  Process all records for one date
+     C*
+     C           E0DATE    DOWEQPRDATE
+     C           *IN80     ANDEQ'0'
+     C           PRDATE    OREQ *ZERO
+     C           *IN80     ANDEQ'0'
+     C*
+     C**  Set up details for report line
+     C*
+     C* In the *split* mode we mustn't reset the totals                   CSD004
+     C*                                                                   CSD004
+     C**  Primary/secondary certificate
+     C*
+     C           E0TNTY    IFEQ 'CS'
+     C*********************Z-ADDE0TTLV    COL1A                           CSD004
+     C*********************Z-ADDE0TTIN    COL1I                           CSD004
+     C                     ADD  E0TTLV    COL1A                           CSD004
+     C                     ADD  E0TTIN    COL1I                           CSD004
+     C                     ADD  E0TTLV    TOT1A
+     C                     ADD  E0TTIN    TOT1I
+     C                     END
+     C*
+     C**  Bond sold
+     C*
+     C           E0TNTY    IFEQ 'BS'
+     C*********************Z-ADDE0TTLV    COL2A                           CSD004
+     C*********************Z-ADDE0TTIN    COL2I                           CSD004
+     C                     ADD  E0TTLV    COL2A                           CSD004
+     C                     ADD  E0TTIN    COL2I                           CSD004
+     C                     ADD  E0TTLV    TOT2A
+     C                     ADD  E0TTIN    TOT2I
+     C                     END
+     C*
+     C**  Bill sold
+     C*
+     C           E0TNTY    IFEQ 'BR'
+     C*********************Z-ADDE0TTLV    COL3A                           CSD004
+     C*********************Z-ADDE0TTIN    COL3I                           CSD004
+     C                     ADD  E0TTLV    COL3A                           CSD004
+     C                     ADD  E0TTIN    COL3I                           CSD004
+     C                     ADD  E0TTLV    TOT3A
+     C                     ADD  E0TTIN    TOT3I
+     C                     END
+     C*
+     C**  Treasury bill sold
+     C*
+     C           E0TNTY    IFEQ 'TS'
+     C*********************Z-ADDE0TTLV    COL4A                           CSD004
+     C*********************Z-ADDE0TTIN    COL4I                           CSD004
+     C                     ADD  E0TTLV    COL4A                           CSD004
+     C                     ADD  E0TTIN    COL4I                           CSD004
+     C                     ADD  E0TTLV    TOT4A
+     C                     ADD  E0TTIN    TOT4I
+     C                     END
+     C*
+     C**  Bank acceptance sold
+     C*
+     C           E0TNTY    IFEQ 'RA'
+     C*********************Z-ADDE0TTLV    COL5A                           CSD004
+     C*********************Z-ADDE0TTIN    COL5I                           CSD004
+     C                     ADD  E0TTLV    COL5A                           CSD004
+     C                     ADD  E0TTIN    COL5I                           CSD004
+     C                     ADD  E0TTLV    TOT5A
+     C                     ADD  E0TTIN    TOT5I
+     C                     END
+     C*
+     C**  Trade acceptance sold
+     C*
+     C           E0TNTY    IFEQ 'TR'
+     C*********************Z-ADDE0TTLV    COL6A                           CSD004
+     C*********************Z-ADDE0TTIN    COL6I                           CSD004
+     C                     ADD  E0TTLV    COL6A                           CSD004
+     C                     ADD  E0TTIN    COL6I                           CSD004
+     C                     ADD  E0TTLV    TOT6A
+     C                     ADD  E0TTIN    TOT6I
+     C                     END
+     C*
+     C**  Store date from this record
+     C*
+     C                     Z-ADDE0DATE    PRDATE
+     C*
+     C**  Read from SDBTSML2
+     C*
+     C           WFSPLT    IFEQ 'N'                                       CSD004
+     C           KBTSFP    READESDBTSML2                 80
+     C                     ELSE                                           CSD004
+     C**  Sort by branch                                                  CSD004
+     C           K56SFP    READESDBTSML5                 80               CSD004
+     C                     ENDIF                                          CSD004
+     C                     END
+     C*
+     C**  Convert date just processed to DDMMYY format to obtain day
+     C**  number for output to report
+     C*
+     C                     Z-ADDPRDATE    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     ##DDMM
+     C           *IN98     IFEQ '1'
+     C                     MOVE ##DDMM    ##DD
+     C                     ELSE
+     C                     MOVEL##DDMM    ##DD
+     C                     END
+     C                     MOVELDYNO,##DD TEXTA
+     C*
+     C**  Check if new page required
+     C*
+     C                     Z-ADD3         RQDLN
+     C                     EXSR OVFLOW
+     C*
+     C           *IN60     IFEQ '1'
+     C                     WRITEHEADINGS
+     C                     WRITENASHEAD
+     C                     END
+     C*
+     C**  Write detail line to report
+     C*
+     C                     WRITENASDETL
+     C*
+     C**  Increment count of months processed
+     C*
+     C                     ADD  1         MNTHP
+     C*
+     C**  Initialise all detail line fields
+     C*
+     C                     EXSR INITDT
+     C*
+     C**  Store date from this record
+     C*
+     C                     Z-ADDE0DATE    PRDATE
+     C*
+     C                     END
+     C*
+     C**  If records have been processed from SDBTSML2
+     C*
+     C           MNTHP     IFNE *ZERO
+     C*
+     C**  Calculate average number of live records for the period for
+     C**  each transaction type
+     C*
+     C           TOT1A     DIV  MNTHP     COL1A     H
+     C           TOT2A     DIV  MNTHP     COL2A     H
+     C           TOT3A     DIV  MNTHP     COL3A     H
+     C           TOT4A     DIV  MNTHP     COL4A     H
+     C           TOT5A     DIV  MNTHP     COL5A     H
+     C           TOT6A     DIV  MNTHP     COL6A     H
+     C*
+     C**  Set up total inserts for each transaction type
+     C*
+     C                     Z-ADDTOT1I     COL1I
+     C                     Z-ADDTOT2I     COL2I
+     C                     Z-ADDTOT3I     COL3I
+     C                     Z-ADDTOT4I     COL4I
+     C                     Z-ADDTOT5I     COL5I
+     C                     Z-ADDTOT6I     COL6I
+     C*
+     C**  Set up text for totals line
+     C*
+     C                     MOVEL'MEAN'    TEXTA
+     C                     MOVE 'TOTAL'   TEXTI
+     C*
+     C**  Check if new page required
+     C*
+     C                     Z-ADD3         RQDLN
+     C                     EXSR OVFLOW
+     C*
+     C           *IN60     IFEQ '1'
+     C                     WRITEHEADINGS
+     C                     WRITENASHEAD
+     C                     END
+     C*
+     C**  Write totals line to report
+     C*
+     C                     WRITENASDETL
+     C*
+     C**  Otherwise, no records processed, write 'NO DETAILS' line to
+     C**  report
+     C*
+     C                     ELSE
+     C                     WRITENODETL
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    FRAIRS - Process DEALSDG                                      *
+     C*                                                                  *
+     C*    CALLED BY: DETAIL - Detail processing                         *
+     C*    CALLS:     INITDT - Initialise detail line fields to zero     *
+     C*               INITTT - Initialise total line fields to zero      *
+     C*               ZDATE2 - Convert a day number to date formats      *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           FRAIRS    BEGSR
+     C*
+     C**  Initialise line count and all work fields to zero
+     C*
+     C                     Z-ADD0         PRDATE
+     C                     Z-ADD0         MNTHP
+     C*
+     C                     EXSR INITDT
+     C                     EXSR INITTT
+     C*
+     C**  Write report headings and sub-headings
+     C*
+     C                     WRITEHEADINGS
+     C                     WRITEFRAHEAD
+     C*
+     C**  Set lower limits on SDBTSML2
+     C*
+     C                     MOVE 'DL'      KMMOD
+     C                     MOVE *BLANKS   KFNME
+     C                     MOVEL'DEALSDG' KFNME
+     C                     Z-ADDSTDATE    KDATE
+     C                     MOVE *BLANKS   KTNTY
+     C*
+     C           WFSPLT    IFEQ 'N'                                       CSD004
+     C           KBTSF     SETLLSDBTSML2             8080
+     C           KBTSFP    READESDBTSML2                 80
+     C                     ELSE                                           CSD004
+     C                     MOVE A8BRCD    KBRCA                           CSD004
+     C                     MOVE A8CMCD    KCMPY                           CSD004
+     C           K56SF     SETLLSDBTSML5             8080                 CSD004
+     C           K56SFP    READESDBTSML5                 80               CSD004
+     C                     ENDIF                                          CSD004
+     C*
+     C**  If we want the report to be split by business area              CSD004
+     C**  (company/branch). (WFSPLIT = Y), then we have to use            CSD004
+     C**  SDBTSML5 else ...                                               CSD004
+     C**  Read records from LF/SDBTSML2 for this module and file name
+     C**  until the end date parameter is greater than or equal to the
+     C**  date on the SDBTSML2 record
+     C**
+     C           EDDATE    DOWGEE0DATE
+     C           *IN80     ANDEQ'0'
+     C*
+     C**  Process all records for one date
+     C*
+     C           E0DATE    DOWEQPRDATE
+     C           *IN80     ANDEQ'0'
+     C           PRDATE    OREQ *ZERO
+     C           *IN80     ANDEQ'0'
+     C*
+     C**  Set up details for report line
+     C*
+     C* In the *split* mode we mustn't reset the totals                   CSD004
+     C*                                                                   CSD004
+     C**  Forward rate agreement
+     C*
+     C           E0TNTY    IFEQ 'FR'
+     C*********************Z-ADDE0TTLV    COL1A                           CSD004
+     C*********************Z-ADDE0TTIN    COL1I                           CSD004
+     C                     ADD  E0TTLV    COL1A                           CSD004
+     C                     ADD  E0TTIN    COL1I                           CSD004
+     C                     ADD  E0TTLV    TOT1A
+     C                     ADD  E0TTIN    TOT1I
+     C                     END
+     C*
+     C**  Single currency interest rate swap
+     C*
+     C           E0TNTY    IFEQ 'RS'
+     C*********************Z-ADDE0TTLV    COL2A                           CSD004
+     C*********************Z-ADDE0TTIN    COL2I                           CSD004
+     C                     ADD  E0TTLV    COL2A                           CSD004
+     C                     ADD  E0TTIN    COL2I                           CSD004
+     C                     ADD  E0TTLV    TOT2A
+     C                     ADD  E0TTIN    TOT2I
+     C                     END
+     C*
+     C**  Cross currency interest rate swap
+     C*
+     C           E0TNTY    IFEQ 'RX'
+     C*********************Z-ADDE0TTLV    COL3A                           CSD004
+     C*********************Z-ADDE0TTIN    COL3I                           CSD004
+     C                     ADD  E0TTLV    COL3A                           CSD004
+     C                     ADD  E0TTIN    COL3I                           CSD004
+     C                     ADD  E0TTLV    TOT3A
+     C                     ADD  E0TTIN    TOT3I
+     C                     END
+     C*
+     C**  Cap
+     C*
+     C           E0TNTY    IFEQ 'RP'
+     C*********************Z-ADDE0TTLV    COL4A                           CSD004
+     C*********************Z-ADDE0TTIN    COL4I                           CSD004
+     C                     ADD  E0TTLV    COL4A                           CSD004
+     C                     ADD  E0TTIN    COL4I                           CSD004
+     C                     ADD  E0TTLV    TOT4A
+     C                     ADD  E0TTIN    TOT4I
+     C                     END
+     C*
+     C**  Collar
+     C*
+     C           E0TNTY    IFEQ 'RR'
+     C*********************Z-ADDE0TTLV    COL5A                           CSD004
+     C*********************Z-ADDE0TTIN    COL5I                           CSD004
+     C                     ADD  E0TTLV    COL5A                           CSD004
+     C                     ADD  E0TTIN    COL5I                           CSD004
+     C                     ADD  E0TTLV    TOT5A
+     C                     ADD  E0TTIN    TOT5I
+     C                     END
+     C*
+     C**  Floor
+     C*
+     C           E0TNTY    IFEQ 'RF'
+     C*********************Z-ADDE0TTLV    COL6A                           CSD004
+     C*********************Z-ADDE0TTIN    COL6I                           CSD004
+     C                     ADD  E0TTLV    COL6A                           CSD004
+     C                     ADD  E0TTIN    COL6I                           CSD004
+     C                     ADD  E0TTLV    TOT6A
+     C                     ADD  E0TTIN    TOT6I
+     C                     END
+     C*
+     C**  Store date from this record
+     C*
+     C                     Z-ADDE0DATE    PRDATE
+     C*
+     C**  Read from SDBTSML2
+     C*
+     C           WFSPLT    IFEQ 'N'                                       CSD004
+     C           KBTSFP    READESDBTSML2                 80
+     C                     ELSE                                           CSD004
+     C**  Sort by branch                                                  CSD004
+     C           K56SFP    READESDBTSML5                 80               CSD004
+     C                     ENDIF                                          CSD004
+     C                     END
+     C*
+     C**  Convert date just processed to DDMMYY format to obtain day
+     C**  number for output to report
+     C*
+     C                     Z-ADDPRDATE    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     ##DDMM
+     C           *IN98     IFEQ '1'
+     C                     MOVE ##DDMM    ##DD
+     C                     ELSE
+     C                     MOVEL##DDMM    ##DD
+     C                     END
+     C                     MOVELDYNO,##DD TEXTA
+     C*
+     C**  Check if new page required
+     C*
+     C                     Z-ADD3         RQDLN
+     C                     EXSR OVFLOW
+     C*
+     C           *IN60     IFEQ '1'
+     C                     WRITEHEADINGS
+     C                     WRITEFRAHEAD
+     C                     END
+     C*
+     C**  Write detail line to report
+     C*
+     C                     WRITEFRADETL
+     C*
+     C**  Increment count of months processed
+     C*
+     C                     ADD  1         MNTHP
+     C*
+     C**  Initialise all detail line fields
+     C*
+     C                     EXSR INITDT
+     C*
+     C**  Store date from this record
+     C*
+     C                     Z-ADDE0DATE    PRDATE
+     C*
+     C                     END
+     C*
+     C**  If records have been processed from SDBTSML2
+     C*
+     C           MNTHP     IFNE *ZERO
+     C*
+     C**  Calculate average number of live records for the period for
+     C**  each transaction type
+     C*
+     C           TOT1A     DIV  MNTHP     COL1A     H
+     C           TOT2A     DIV  MNTHP     COL2A     H
+     C           TOT3A     DIV  MNTHP     COL3A     H
+     C           TOT4A     DIV  MNTHP     COL4A     H
+     C           TOT5A     DIV  MNTHP     COL5A     H
+     C           TOT6A     DIV  MNTHP     COL6A     H
+     C*
+     C**  Set up total inserts for each transaction type
+     C*
+     C                     Z-ADDTOT1I     COL1I
+     C                     Z-ADDTOT2I     COL2I
+     C                     Z-ADDTOT3I     COL3I
+     C                     Z-ADDTOT4I     COL4I
+     C                     Z-ADDTOT5I     COL5I
+     C                     Z-ADDTOT6I     COL6I
+     C*
+     C**  Set up text for totals line
+     C*
+     C                     MOVEL'MEAN'    TEXTA
+     C                     MOVE 'TOTAL'   TEXTI
+     C*
+     C**  Check if new page required
+     C*
+     C                     Z-ADD3         RQDLN
+     C                     EXSR OVFLOW
+     C*
+     C           *IN60     IFEQ '1'
+     C                     WRITEHEADINGS
+     C                     WRITEFRAHEAD
+     C                     END
+     C*
+     C**  Write totals line to report
+     C*
+     C                     WRITEFRADETL
+     C*
+     C**  Otherwise, no records processed, write 'NO DETAILS' line to
+     C**  report
+     C*
+     C                     ELSE
+     C                     WRITENODETL
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    FF - Process TRANSD                                           *
+     C*                                                                  *
+     C*    CALLED BY: DETAIL - Detail processing                         *
+     C*    CALLS:     INITDT - Initialise detail line fields to zero     *
+     C*               INITTT - Initialise total line fields to zero      *
+     C*               ZDATE2 - Convert a day number to date formats      *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           FF        BEGSR
+     C*
+     C**  Initialise line count and all work fields to zero
+     C*
+     C                     Z-ADD0         PRDATE
+     C                     Z-ADD0         MNTHP
+     C*
+     C                     EXSR INITDT
+     C                     EXSR INITTT
+     C*
+     C**  Write report headings and sub-headings
+     C*
+     C                     WRITEHEADINGS
+     C                     WRITEFFHEAD
+     C*
+     C**  Set lower limits on SDBTSML2
+     C*
+     C                     MOVE 'FF'      KMMOD
+     C                     MOVE *BLANKS   KFNME
+     C                     MOVEL'TRANSD'  KFNME
+     C                     Z-ADDSTDATE    KDATE
+     C                     MOVE *BLANKS   KTNTY
+     C*
+     C           WFSPLT    IFEQ 'N'                                       CSD004
+     C           KBTSF     SETLLSDBTSML2             8080
+     C           KBTSFP    READESDBTSML2                 80
+     C                     ELSE                                           CSD004
+     C**  Sort by branch                                                  CSD004
+     C                     MOVE A8BRCD    KBRCA                           CSD004
+     C                     MOVE A8CMCD    KCMPY                           CSD004
+     C           K56SF     SETLLSDBTSML5             8080                 CSD004
+     C           K56SFP    READESDBTSML5                 80               CSD004
+     C                     ENDIF                                          CSD004
+     C*
+     C**  If we want the report to be split by business area              CSD004
+     C**  (company/branch). (WFSPLIT = Y), then we have to use            CSD004
+     C**  SDBTSML5 else ...                                               CSD004
+     C**  Read records from LF/SDBTSML2 for this module and file name
+     C**  until the end date parameter is greater than or equal to the
+     C**  date on the SDBTSML2 record
+     C**
+     C           EDDATE    DOWGEE0DATE
+     C           *IN80     ANDEQ'0'
+     C*
+     C**  Process all records for one date
+     C*
+     C           E0DATE    DOWEQPRDATE
+     C           *IN80     ANDEQ'0'
+     C           PRDATE    OREQ *ZERO
+     C           *IN80     ANDEQ'0'
+     C*
+     C**  Set up details for report line
+     C*
+     C* In the *split* mode we mustn't reset the totals                   CSD004
+     C*                                                                   CSD004
+     C**  Over the counter transaction
+     C*
+     C           E0TNTY    IFEQ 'OC'
+     C*********************Z-ADDE0TTLV    COL1A                           CSD004
+     C*********************Z-ADDE0TTIN    COL1I                           CSD004
+     C                     ADD  E0TTLV    COL1A                           CSD004
+     C                     ADD  E0TTIN    COL1I                           CSD004
+     C                     ADD  E0TTLV    TOT1A
+     C                     ADD  E0TTIN    TOT1I
+     C                     END
+     C*
+     C**  Market instrument transaction
+     C*
+     C           E0TNTY    IFEQ 'MT'
+     C*********************Z-ADDE0TTLV    COL2A                           CSD004
+     C*********************Z-ADDE0TTIN    COL2I                           CSD004
+     C                     ADD  E0TTLV    COL2A                           CSD004
+     C                     ADD  E0TTIN    COL2I                           CSD004
+     C                     ADD  E0TTLV    TOT2A
+     C                     ADD  E0TTIN    TOT2I
+     C                     END
+     C*
+     C**  Store date from this record
+     C*
+     C                     Z-ADDE0DATE    PRDATE
+     C*
+     C**  Read from SDBTSML2
+     C*
+     C           WFSPLT    IFEQ 'N'                                       CSD004
+     C           KBTSFP    READESDBTSML2                 80
+     C                     ELSE                                           CSD004
+     C**  Sort by branch                                                  CSD004
+     C           K56SFP    READESDBTSML5                 80               CSD004
+     C                     ENDIF                                          CSD004
+     C                     END
+     C*
+     C**  Convert date just processed to DDMMYY format to obtain day
+     C**  number for output to report
+     C*
+     C                     Z-ADDPRDATE    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     ##DDMM
+     C           *IN98     IFEQ '1'
+     C                     MOVE ##DDMM    ##DD
+     C                     ELSE
+     C                     MOVEL##DDMM    ##DD
+     C                     END
+     C                     MOVELDYNO,##DD TEXTA
+     C*
+     C**  Check if new page required
+     C*
+     C                     Z-ADD3         RQDLN
+     C                     EXSR OVFLOW
+     C*
+     C           *IN60     IFEQ '1'
+     C                     WRITEHEADINGS
+     C                     WRITEFFHEAD
+     C                     END
+     C*
+     C**  Write detail line to report
+     C*
+     C                     WRITEFFDETL
+     C*
+     C**  Increment count of months processed
+     C*
+     C                     ADD  1         MNTHP
+     C*
+     C**  Initialise all detail line fields
+     C*
+     C                     EXSR INITDT
+     C*
+     C**  Store date from this record
+     C*
+     C                     Z-ADDE0DATE    PRDATE
+     C*
+     C                     END
+     C*
+     C**  If records have been processed from SDBTSML2
+     C*
+     C           MNTHP     IFNE *ZERO
+     C*
+     C**  Calculate average number of live records for the period for
+     C**  each transaction type
+     C*
+     C           TOT1A     DIV  MNTHP     COL1A     H
+     C           TOT2A     DIV  MNTHP     COL2A     H
+     C*
+     C**  Set up total inserts for each transaction type
+     C*
+     C                     Z-ADDTOT1I     COL1I
+     C                     Z-ADDTOT2I     COL2I
+     C*
+     C**  Set up text for totals line
+     C*
+     C                     MOVEL'MEAN'    TEXTA
+     C                     MOVE 'TOTAL'   TEXTI
+     C*
+     C**  Check if new page required
+     C*
+     C                     Z-ADD3         RQDLN
+     C                     EXSR OVFLOW
+     C*
+     C           *IN60     IFEQ '1'
+     C                     WRITEHEADINGS
+     C                     WRITEFFHEAD
+     C                     END
+     C*
+     C**  Write totals line to report
+     C*
+     C                     WRITEFFDETL
+     C*
+     C**  Otherwise, no records processed, write 'NO DETAILS' line to
+     C**  report
+     C*
+     C                     ELSE
+     C                     WRITENODETL
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    FT - Process Funds Transfer data                              *
+     C*                                                                  *
+     C*    CALLED BY: DETAIL - Detail processing                         *
+     C*    CALLS:     INITDT - Initialise detail line fields to zero     *
+     C*               INITTT - Initialise total line fields to zero      *
+     C*               ZDATE2 - Convert a day number to date formats      *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           FT        BEGSR
+     C*
+     C**  Initialise line count and all work fields to zero
+     C*
+     C                     Z-ADD0         PRDATE
+     C                     Z-ADD0         MNTHP
+     C*
+     C                     EXSR INITDT
+     C                     EXSR INITTT
+     C*
+     C**  Write report headings and sub-headings
+     C*
+     C                     WRITEHEADINGS
+     C                     WRITEFTHEAD
+     C*
+     C**  Set lower limits on SDBTSML3
+     C**  and SDBTSML6                                                    CSD004
+     C*
+     C                     MOVE 'FT'      KMMOD
+     C                     Z-ADDSTDATE    KDATE
+     C                     MOVE *BLANKS   KTNTY
+     C*
+     C           WFSPLT    IFEQ 'N'                                       CSD004
+     C           KBTSFT    SETLLSDBTSML3             8080
+     C                     READ SDBTSML3                 80
+     C                     ELSE                                           CSD004
+     C* Sort by branch                                                    CSD004
+     C                     MOVE A8BRCD    KBRCA                           CSD004
+     C                     MOVE A8CMCD    KCMPY                           CSD004
+     C           K56SFT    SETLLSDBTSML6             8080                 CSD004
+     C                     READ SDBTSML6                 80               CSD004
+     C                     ENDIF                                          CSD004
+     C*
+     C**  Read records from LF/SDBTSML3 for this module and file name
+     C**  until the end date parameter is greater than or equal to the
+     C**  date on the SDBTSML3 record
+     C**
+     C           EDDATE    DOWGEE0DATE
+     C           *IN80     ANDEQ'0'
+     C*
+     C*                                                                   CSD004
+     C**   *READ* => we need to respect the key list                      CSD004
+     C** when we are inside a business area                               CSD004
+     C           WFSPLT    IFEQ 'Y'                                       CSD004
+     C           A8BRCD    IFNE E0BRCA                                    CSD004
+     C           A8CMCD    ORNE E0CMPY                                    CSD004
+     C                     LEAVE                                          CSD004
+     C                     END                                            CSD004
+     C                     END                                            CSD004
+     C*                                                                   CSD004
+     C**  Process all records for one date
+     C*
+     C           E0DATE    DOWEQPRDATE
+     C           *IN80     ANDEQ'0'
+     C           PRDATE    OREQ *ZERO
+     C           *IN80     ANDEQ'0'
+     C*
+     C**   *READ* => we need to respect the key list                      CSD004
+     C** when we are inside a business area                               CSD004
+     C           WFSPLT    IFEQ 'Y'                                       CSD004
+     C           A8BRCD    IFNE E0BRCA                                    CSD004
+     C           A8CMCD    ORNE E0CMPY                                    CSD004
+     C                     LEAVE                                          CSD004
+     C                     END                                            CSD004
+     C                     END                                            CSD004
+     C*
+     C**  Set up details for report line
+     C*
+     C**  Cheques for collection credit
+     C* In the *split* mode we mustn't reset the totals                   CSD004
+     C*                                                                   CSD004
+     C*
+     C           E0FNME    IFEQ 'CQCOCDD'
+     C*********************Z-ADDE0TTLV    COL1A                           CSD004
+     C*********************Z-ADDE0TTIN    COL1I                           CSD004
+     C                     ADD  E0TTLV    COL1A                           CSD004
+     C                     ADD  E0TTIN    COL1I                           CSD004
+     C                     ADD  E0TTLV    TOT1A
+     C                     ADD  E0TTIN    TOT1I
+     C                     END
+     C*
+     C**  Cheques for collection debit
+     C*
+     C           E0FNME    IFEQ 'CQCODDD'
+     C*********************Z-ADDE0TTLV    COL2A                           CSD004
+     C*********************Z-ADDE0TTIN    COL2I                           CSD004
+     C                     ADD  E0TTLV    COL2A                           CSD004
+     C                     ADD  E0TTIN    COL2I                           CSD004
+     C                     ADD  E0TTLV    TOT2A
+     C                     ADD  E0TTIN    TOT2I
+     C                     END
+     C*
+     C**  Cheques to be paid credit
+     C*
+     C           E0FNME    IFEQ 'CQPACDD'
+     C*********************Z-ADDE0TTLV    COL3A                           CSD004
+     C*********************Z-ADDE0TTIN    COL3I                           CSD004
+     C                     ADD  E0TTLV    COL3A                           CSD004
+     C                     ADD  E0TTIN    COL3I                           CSD004
+     C                     ADD  E0TTLV    TOT3A
+     C                     ADD  E0TTIN    TOT3I
+     C                     END
+     C*
+     C**  Cheques to be paid debit
+     C*
+     C           E0FNME    IFEQ 'CQPADDD'
+     C*********************Z-ADDE0TTLV    COL4A                           CSD004
+     C*********************Z-ADDE0TTIN    COL4I                           CSD004
+     C                     ADD  E0TTLV    COL4A                           CSD004
+     C                     ADD  E0TTIN    COL4I                           CSD004
+     C                     ADD  E0TTLV    TOT4A
+     C                     ADD  E0TTIN    TOT4I
+     C                     END
+     C*
+     C**  Incoming payments
+     C*
+     C           E0FNME    IFEQ 'INPAYDD'
+     C*********************Z-ADDE0TTLV    COL5A                           CSD004
+     C*********************Z-ADDE0TTIN    COL5I                           CSD004
+     C                     ADD  E0TTLV    COL5A                           CSD004
+     C                     ADD  E0TTIN    COL5I                           CSD004
+     C                     ADD  E0TTLV    TOT5A
+     C                     ADD  E0TTIN    TOT5I
+     C                     END
+     C*
+     C**  Outgoing payments
+     C*
+     C           E0FNME    IFEQ 'OTPAYDD'
+     C                     ADD  E0TTLV    COL6A
+     C                     ADD  E0TTIN    COL6I
+     C                     ADD  E0TTLV    TOT6A
+     C                     ADD  E0TTIN    TOT6I
+     C                     END
+     C*
+     C**  Nostro transfer
+     C*
+     C           E0FNME    IFEQ 'NTRANDD'
+     C*********************Z-ADDE0TTLV    COL7A                           CSD004
+     C*********************Z-ADDE0TTIN    COL7I                           CSD004
+     C                     ADD  E0TTLV    COL7A                           CSD004
+     C                     ADD  E0TTIN    COL7I                           CSD004
+     C                     ADD  E0TTLV    TOT7A
+     C                     ADD  E0TTIN    TOT7I
+     C                     END
+     C*
+     C**  Store date from this record
+     C*
+     C                     Z-ADDE0DATE    PRDATE
+     C*
+     C**  Read from SDBTSML3
+     C*
+     C           WFSPLT    IFEQ 'N'                                       CSD004
+     C                     READ SDBTSML3                 80
+     C                     ELSE                                           CSD004
+     C* Sort by branch                                                    CSD004
+     C                     READ SDBTSML6                 80               CSD004
+     C                     ENDIF                                          CSD004
+     C                     END
+     C*
+     C**  Convert date just processed to DDMMYY format to obtain day
+     C**  number for output to report
+     C*
+     C                     Z-ADDPRDATE    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     ##DDMM
+     C           *IN98     IFEQ '1'
+     C                     MOVE ##DDMM    ##DD
+     C                     ELSE
+     C                     MOVEL##DDMM    ##DD
+     C                     END
+     C                     MOVELDYNO,##DD TEXTA
+     C*
+     C**  Check if new page required
+     C*
+     C                     Z-ADD3         RQDLN
+     C                     EXSR OVFLOW
+     C*
+     C           *IN60     IFEQ '1'
+     C                     WRITEHEADINGS
+     C                     WRITEFTHEAD
+     C                     END
+     C*
+     C**  Write detail line to report
+     C*
+     C                     WRITEFTDETL
+     C*
+     C**  Increment count of months processed
+     C*
+     C                     ADD  1         MNTHP
+     C*
+     C**  Initialise all detail line fields
+     C*
+     C                     EXSR INITDT
+     C*
+     C**  Store date from this record
+     C*
+     C                     Z-ADDE0DATE    PRDATE
+     C*
+     C                     END
+     C*
+     C**  If records have been processed from SDBTSML3
+     C*
+     C           MNTHP     IFNE *ZERO
+     C*
+     C**  Calculate average number of live records for the period for
+     C**  each transaction type
+     C*
+     C           TOT1A     DIV  MNTHP     COL1A     H
+     C           TOT2A     DIV  MNTHP     COL2A     H
+     C           TOT3A     DIV  MNTHP     COL3A     H
+     C           TOT4A     DIV  MNTHP     COL4A     H
+     C           TOT5A     DIV  MNTHP     COL5A     H
+     C           TOT6A     DIV  MNTHP     COL6A     H
+     C           TOT7A     DIV  MNTHP     COL7A     H
+     C*
+     C**  Set up total inserts for each transaction type
+     C*
+     C                     Z-ADDTOT1I     COL1I
+     C                     Z-ADDTOT2I     COL2I
+     C                     Z-ADDTOT3I     COL3I
+     C                     Z-ADDTOT4I     COL4I
+     C                     Z-ADDTOT5I     COL5I
+     C                     Z-ADDTOT6I     COL6I
+     C                     Z-ADDTOT7I     COL7I
+     C*
+     C**  Set up text for totals line
+     C*
+     C                     MOVEL'MEAN'    TEXTA
+     C                     MOVE 'TOTAL'   TEXTI
+     C*
+     C**  Check if new page required
+     C*
+     C                     Z-ADD3         RQDLN
+     C                     EXSR OVFLOW
+     C*
+     C           *IN60     IFEQ '1'
+     C                     WRITEHEADINGS
+     C                     WRITEFTHEAD
+     C                     END
+     C*
+     C**  Write totals line to report
+     C*
+     C                     WRITEFTDETL
+     C*
+     C**  Otherwise, no records processed, write 'NO DETAILS' line to
+     C**  report
+     C*
+     C                     ELSE
+     C                     WRITENODETL
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    GL - Process ACCNTAB                                          *
+     C*                                                                  *
+     C*    CALLED BY: DETAIL - Detail processing                         *
+     C*    CALLS:     INITDT - Initialise detail line fields to zero     *
+     C*               INITTT - Initialise total line fields to zero      *
+     C*               ZDATE2 - Convert a day number to date formats      *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           GL        BEGSR
+     C*
+     C**  Initialise line count and all work fields to zero
+     C*
+     C                     Z-ADD0         PRDATE
+     C                     Z-ADD0         MNTHP
+     C*
+     C                     EXSR INITDT
+     C                     EXSR INITTT
+     C*
+     C**  Write report headings and sub-headings
+     C*
+     C                     WRITEHEADINGS
+     C                     WRITEGLHEAD
+     C*
+     C**  Set lower limits on SDBTSML2
+     C*
+     C                     MOVE 'GL'      KMMOD
+     C                     MOVE *BLANKS   KFNME
+     C                     MOVEL'ACCNTAB' KFNME
+     C                     Z-ADDSTDATE    KDATE
+     C                     MOVE *BLANKS   KTNTY
+     C*
+     C           WFSPLT    IFEQ 'N'                                       CSD004
+     C           KBTSF     SETLLSDBTSML2             8080
+     C           KBTSFP    READESDBTSML2                 80
+     C                     ELSE                                           CSD004
+     C**  Sort by branch                                                  CSD004
+     C                     MOVE A8BRCD    KBRCA                           CSD004
+     C                     MOVE A8CMCD    KCMPY                           CSD004
+     C           K56SF     SETLLSDBTSML5             8080                 CSD004
+     C           K56SFP    READESDBTSML5                 80               CSD004
+     C                     ENDIF                                          CSD004
+     C*
+     C**  If we want the report to be split by business area              CSD004
+     C**  (company/branch). (WFSPLIT = Y), then we have to use            CSD004
+     C**  SDBTSML5 else ...                                               CSD004
+     C**  Read records from LF/SDBTSML2 for this module and file name
+     C**  until the end date parameter is greater than or equal to the
+     C**  date on the SDBTSML2 record
+     C**
+     C           EDDATE    DOWGEE0DATE
+     C           *IN80     ANDEQ'0'
+     C*
+     C**  Process all records for one date
+     C*
+     C           E0DATE    DOWEQPRDATE
+     C           *IN80     ANDEQ'0'
+     C           PRDATE    OREQ *ZERO
+     C           *IN80     ANDEQ'0'
+     C*
+     C**  Set up details for report line
+     C*
+     C* In the *split* mode we mustn't reset the totals                   CSD004
+     C*                                                                   CSD004
+     C**  Count of retail accounts
+     C*
+     C*********************Z-ADDE0TTLV    COL1A                           CSD004
+     C                     ADD  E0TTLV    COL1A                           CSD004
+     C                     ADD  E0TTLV    TOT1A
+     C*
+     C**  Store date from this record
+     C*
+     C                     Z-ADDE0DATE    PRDATE
+     C*
+     C**  Read from SDBTSML2
+     C*
+     C           WFSPLT    IFEQ 'N'                                       CSD004
+     C           KBTSFP    READESDBTSML2                 80
+     C                     ELSE                                           CSD004
+     C**  Sort by branch                                                  CSD004
+     C           K56SFP    READESDBTSML5                 80               CSD004
+     C                     ENDIF                                          CSD004
+     C                     END
+     C*
+     C**  Convert date just processed to DDMMYY format to obtain day
+     C**  number for output to report
+     C*
+     C                     Z-ADDPRDATE    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     ##DDMM
+     C           *IN98     IFEQ '1'
+     C                     MOVE ##DDMM    ##DD
+     C                     ELSE
+     C                     MOVEL##DDMM    ##DD
+     C                     END
+     C                     MOVELDYNO,##DD TEXTA
+     C*
+     C**  Check if new page required
+     C*
+     C                     Z-ADD2         RQDLN
+     C                     EXSR OVFLOW
+     C*
+     C           *IN60     IFEQ '1'
+     C                     WRITEHEADINGS
+     C                     WRITEGLHEAD
+     C                     END
+     C*
+     C**  Write detail line to report
+     C*
+     C                     WRITEGLDETL
+     C*
+     C**  Increment count of months processed
+     C*
+     C                     ADD  1         MNTHP
+     C*
+     C**  Initialise all detail line fields
+     C*
+     C                     EXSR INITDT
+     C*
+     C**  Store date from this record
+     C*
+     C                     Z-ADDE0DATE    PRDATE
+     C*
+     C                     END
+     C*
+     C**  If records have been processed from SDBTSML2
+     C*
+     C           MNTHP     IFNE *ZERO
+     C*
+     C**  Calculate average number of live records for the period for
+     C**  each transaction type
+     C*
+     C           TOT1A     DIV  MNTHP     COL1A     H
+     C*
+     C**  Set up text for totals line
+     C*
+     C                     MOVEL'MEAN'    TEXTA
+     C                     MOVE 'TOTAL'   TEXTI
+     C*
+     C**  Check if new page required
+     C*
+     C                     Z-ADD2         RQDLN
+     C                     EXSR OVFLOW
+     C*
+     C           *IN60     IFEQ '1'
+     C                     WRITEHEADINGS
+     C                     WRITEGLHEAD
+     C                     END
+     C*
+     C**  Write totals line to report
+     C*
+     C                     WRITEGLDETL
+     C*
+     C**  Otherwise, no records processed, write 'NO DETAILS' line to
+     C**  report
+     C*
+     C                     ELSE
+     C                     WRITENODETL
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    LE - Process CLOANCL                                          *
+     C*                                                                  *
+     C*    CALLED BY: DETAIL - Detail processing                         *
+     C*    CALLS:     INITDT - Initialise detail line fields to zero     *
+     C*               INITTT - Initialise total line fields to zero      *
+     C*               ZDATE2 - Convert a day number to date formats      *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           LE        BEGSR
+     C*
+     C**  Initialise line count and all work fields to zero
+     C*
+     C                     Z-ADD0         PRDATE
+     C                     Z-ADD0         MNTHP
+     C*
+     C                     EXSR INITDT
+     C                     EXSR INITTT
+     C*
+     C**  Write report headings and sub-headings
+     C*
+     C                     WRITEHEADINGS
+     C                     WRITELEHEAD
+     C*
+     C**  Set lower limits on SDBTSML2
+     C*
+     C                     MOVE 'LE'      KMMOD
+     C                     MOVE *BLANKS   KFNME
+     C                     MOVEL'CLOANCL' KFNME
+     C                     Z-ADDSTDATE    KDATE
+     C                     MOVE *BLANKS   KTNTY
+     C*
+     C           WFSPLT    IFEQ 'N'                                       CSD004
+     C           KBTSF     SETLLSDBTSML2             8080
+     C           KBTSFP    READESDBTSML2                 80
+     C                     ELSE                                           CSD004
+     C**  Sort by branch                                                  CSD004
+     C                     MOVE A8BRCD    KBRCA                           CSD004
+     C                     MOVE A8CMCD    KCMPY                           CSD004
+     C           K56SF     SETLLSDBTSML5             8080                 CSD004
+     C           K56SFP    READESDBTSML5                 80               CSD004
+     C                     ENDIF                                          CSD004
+     C*
+     C**  If we want the report to be split by business area              CSD004
+     C**  (company/branch). (WFSPLIT = Y), then we have to use            CSD004
+     C**  SDBTSML5 else ...                                               CSD004
+     C**  Read records from LF/SDBTSML2 for this module and file name
+     C**  until the end date parameter is greater than or equal to the
+     C**  date on the SDBTSML2 record
+     C**
+     C           EDDATE    DOWGEE0DATE
+     C           *IN80     ANDEQ'0'
+     C*
+     C**  Process all records for one date
+     C*
+     C           E0DATE    DOWEQPRDATE
+     C           *IN80     ANDEQ'0'
+     C           PRDATE    OREQ *ZERO
+     C           *IN80     ANDEQ'0'
+     C*
+     C**  Set up details for report line
+     C*
+     C* In the *split* mode we mustn't reset the totals                   CSD004
+     C*                                                                   CSD004
+     C**  Demand loans
+     C*
+     C           E0TNTY    IFEQ '61'
+     C*********************Z-ADDE0TTLV    COL1A                           CSD004
+     C*********************Z-ADDE0TTIN    COL1I                           CSD004
+     C                     ADD  E0TTLV    COL1A                           CSD004
+     C                     ADD  E0TTIN    COL1I                           CSD004
+     C                     ADD  E0TTLV    TOT1A
+     C                     ADD  E0TTIN    TOT1I
+     C                     END
+     C*
+     C**  Term loans
+     C*
+     C           E0TNTY    IFEQ '62'
+     C*********************Z-ADDE0TTLV    COL2A                           CSD004
+     C*********************Z-ADDE0TTIN    COL2I                           CSD004
+     C                     ADD  E0TTLV    COL2A                           CSD004
+     C                     ADD  E0TTIN    COL2I                           CSD004
+     C                     ADD  E0TTLV    TOT2A
+     C                     ADD  E0TTIN    TOT2I
+     C                     END
+     C*
+     C**  Discounted loans
+     C*
+     C           E0TNTY    IFEQ '63'
+     C*********************Z-ADDE0TTLV    COL3A                           CSD004
+     C*********************Z-ADDE0TTIN    COL3I                           CSD004
+     C                     ADD  E0TTLV    COL3A                           CSD004
+     C                     ADD  E0TTIN    COL3I                           CSD004
+     C                     ADD  E0TTLV    TOT3A
+     C                     ADD  E0TTIN    TOT3I
+     C                     END
+     C*
+     C**  Participations purchased
+     C*
+     C           E0TNTY    IFEQ '64'
+     C           E0TNTY    OREQ '65'
+     C                     ADD  E0TTLV    COL4A
+     C                     ADD  E0TTIN    COL4I
+     C                     ADD  E0TTLV    TOT4A
+     C                     ADD  E0TTIN    TOT4I
+     C                     END
+     C*
+     C**  Participations sold
+     C*
+     C           E0TNTY    IFEQ '66'
+     C           E0TNTY    OREQ '67'
+     C                     ADD  E0TTLV    COL5A
+     C                     ADD  E0TTIN    COL5I
+     C                     ADD  E0TTLV    TOT5A
+     C                     ADD  E0TTIN    TOT5I
+     C                     END
+     C*
+     C**  Guarantees issued
+     C*
+     C           E0TNTY    IFEQ '70'
+     C*********************Z-ADDE0TTLV    COL6A                           CSD004
+     C*********************Z-ADDE0TTIN    COL6I                           CSD004
+     C                     ADD  E0TTLV    COL6A                           CSD004
+     C                     ADD  E0TTIN    COL6I                           CSD004
+     C                     ADD  E0TTLV    TOT6A
+     C                     ADD  E0TTIN    TOT6I
+     C                     END
+     C*
+     C**  Store date from this record
+     C*
+     C                     Z-ADDE0DATE    PRDATE
+     C*
+     C**  Read from SDBTSML2
+     C*
+     C           WFSPLT    IFEQ 'N'                                       CSD004
+     C           KBTSFP    READESDBTSML2                 80
+     C                     ELSE                                           CSD004
+     C**  Sort by branch                                                  CSD004
+     C           K56SFP    READESDBTSML5                 80               CSD004
+     C                     ENDIF                                          CSD004
+     C                     END
+     C*
+     C**  Convert date just processed to DDMMYY format to obtain day
+     C**  number for output to report
+     C*
+     C                     Z-ADDPRDATE    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     ##DDMM
+     C           *IN98     IFEQ '1'
+     C                     MOVE ##DDMM    ##DD
+     C                     ELSE
+     C                     MOVEL##DDMM    ##DD
+     C                     END
+     C                     MOVELDYNO,##DD TEXTA
+     C*
+     C**  Check if new page required
+     C*
+     C                     Z-ADD3         RQDLN
+     C                     EXSR OVFLOW
+     C*
+     C           *IN60     IFEQ '1'
+     C                     WRITEHEADINGS
+     C                     WRITELEHEAD
+     C                     END
+     C*
+     C**  Write detail line to report
+     C*
+     C                     WRITELEDETL
+     C*
+     C**  Increment count of months processed
+     C*
+     C                     ADD  1         MNTHP
+     C*
+     C**  Initialise all detail line fields
+     C*
+     C                     EXSR INITDT
+     C*
+     C**  Store date from this record
+     C*
+     C                     Z-ADDE0DATE    PRDATE
+     C*
+     C                     END
+     C*
+     C**  If records have been processed from SDBTSML2
+     C*
+     C           MNTHP     IFNE *ZERO
+     C*
+     C**  Calculate average number of live records for the period for
+     C**  each transaction type
+     C*
+     C           TOT1A     DIV  MNTHP     COL1A     H
+     C           TOT2A     DIV  MNTHP     COL2A     H
+     C           TOT3A     DIV  MNTHP     COL3A     H
+     C           TOT4A     DIV  MNTHP     COL4A     H
+     C           TOT5A     DIV  MNTHP     COL5A     H
+     C           TOT6A     DIV  MNTHP     COL6A     H
+     C*
+     C**  Set up total inserts for each transaction type
+     C*
+     C                     Z-ADDTOT1I     COL1I
+     C                     Z-ADDTOT2I     COL2I
+     C                     Z-ADDTOT3I     COL3I
+     C                     Z-ADDTOT4I     COL4I
+     C                     Z-ADDTOT5I     COL5I
+     C                     Z-ADDTOT6I     COL6I
+     C*
+     C**  Set up text for totals line
+     C*
+     C                     MOVEL'MEAN'    TEXTA
+     C                     MOVE 'TOTAL'   TEXTI
+     C*
+     C**  Check if new page required
+     C*
+     C                     Z-ADD3         RQDLN
+     C                     EXSR OVFLOW
+     C*
+     C           *IN60     IFEQ '1'
+     C                     WRITEHEADINGS
+     C                     WRITELEHEAD
+     C                     END
+     C*
+     C**  Write totals line to report
+     C*
+     C                     WRITELEDETL
+     C*
+     C**  Otherwise, no records processed, write 'NO DETAILS' line to
+     C**  report
+     C*
+     C                     ELSE
+     C                     WRITENODETL
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    DM - Process DPTMVD                                           *
+     C*                                                                  *
+     C*    CALLED BY: DETAIL - Detail processing                         *
+     C*    CALLS:     INITDT - Initialise detail line fields to zero     *
+     C*               INITTT - Initialise total line fields to zero      *
+     C*               ZDATE2 - Convert a day number to date formats      *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           DM        BEGSR
+     C*
+     C**  Initialise line count and all work fields to zero
+     C*
+     C                     Z-ADD0         PRDATE
+     C                     Z-ADD0         MNTHP
+     C*
+     C                     EXSR INITDT
+     C                     EXSR INITTT
+     C*
+     C**  Write report headings and sub-headings
+     C*
+     C                     WRITEHEADINGS
+     C                     WRITEDMHEAD
+     C*
+     C**  Set lower limits on SDBTSML2
+     C*
+     C                     MOVE 'SE'      KMMOD
+     C                     MOVE *BLANKS   KFNME
+     C                     MOVEL'DPTMVD'  KFNME
+     C                     Z-ADDSTDATE    KDATE
+     C                     MOVE *BLANKS   KTNTY
+     C*
+     C           WFSPLT    IFEQ 'N'                                       CSD004
+     C           KBTSF     SETLLSDBTSML2             8080
+     C           KBTSFP    READESDBTSML2                 80
+     C                     ELSE                                           CSD004
+     C**  Sort by branch                                                  CSD004
+     C                     MOVE A8BRCD    KBRCA                           CSD004
+     C                     MOVE A8CMCD    KCMPY                           CSD004
+     C           K56SF     SETLLSDBTSML5             8080                 CSD004
+     C           K56SFP    READESDBTSML5                 80               CSD004
+     C                     ENDIF                                          CSD004
+     C*
+     C**  If we want the report to be split by business area              CSD004
+     C**  (company/branch). (WFSPLIT = Y), then we have to use            CSD004
+     C**  SDBTSML5 else ...                                               CSD004
+     C**  Read records from LF/SDBTSML2 for this module and file name
+     C**  until the end date parameter is greater than or equal to the
+     C**  date on the SDBTSML2 record
+     C**
+     C           EDDATE    DOWGEE0DATE
+     C           *IN80     ANDEQ'0'
+     C*
+     C**  Process all records for one date
+     C*
+     C           E0DATE    DOWEQPRDATE
+     C           *IN80     ANDEQ'0'
+     C           PRDATE    OREQ *ZERO
+     C           *IN80     ANDEQ'0'
+     C*
+     C**  Set up details for report line
+     C*
+     C* In the *split* mode we mustn't reset the totals                   CSD004
+     C*                                                                   CSD004
+     C**  Walk in
+     C*
+     C           E0TNTY    IFEQ 'WI'
+     C*********************Z-ADDE0TTLV    COL1A                           CSD004
+     C*********************Z-ADDE0TTIN    COL1I                           CSD004
+     C                     ADD  E0TTLV    COL1A                           CSD004
+     C                     ADD  E0TTIN    COL1I                           CSD004
+     C                     ADD  E0TTLV    TOT1A
+     C                     ADD  E0TTIN    TOT1I
+     C                     END
+     C*
+     C**  Walk out
+     C*
+     C           E0TNTY    IFEQ 'WO'
+     C*********************Z-ADDE0TTLV    COL2A                           CSD004
+     C*********************Z-ADDE0TTIN    COL2I                           CSD004
+     C                     ADD  E0TTLV    COL2A                           CSD004
+     C                     ADD  E0TTIN    COL2I                           CSD004
+     C                     ADD  E0TTLV    TOT2A
+     C                     ADD  E0TTIN    TOT2I
+     C                     END
+     C*
+     C**  Depot transfer
+     C*
+     C           E0TNTY    IFEQ 'DT'
+     C*********************Z-ADDE0TTLV    COL3A                           CSD004
+     C*********************Z-ADDE0TTIN    COL3I                           CSD004
+     C                     ADD  E0TTLV    COL3A                           CSD004
+     C                     ADD  E0TTIN    COL3I                           CSD004
+     C                     ADD  E0TTLV    TOT3A
+     C                     ADD  E0TTIN    TOT3I
+     C                     END
+     C*
+     C**  Bond lending
+     C*
+     C           E0TNTY    IFEQ 'BL'
+     C*********************Z-ADDE0TTLV    COL4A                           CSD004
+     C*********************Z-ADDE0TTIN    COL4I                           CSD004
+     C                     ADD  E0TTLV    COL4A                           CSD004
+     C                     ADD  E0TTIN    COL4I                           CSD004
+     C                     ADD  E0TTLV    TOT4A
+     C                     ADD  E0TTIN    TOT4I
+     C                     END
+     C*
+     C**  Bond borrowing
+     C*
+     C           E0TNTY    IFEQ 'BB'
+     C*********************Z-ADDE0TTLV    COL5A                           CSD004
+     C*********************Z-ADDE0TTIN    COL5I                           CSD004
+     C                     ADD  E0TTLV    COL5A                           CSD004
+     C                     ADD  E0TTIN    COL5I                           CSD004
+     C                     ADD  E0TTLV    TOT5A
+     C                     ADD  E0TTIN    TOT5I
+     C                     END
+     C*
+     C**  Repurchase agreement
+     C*
+     C           E0TNTY    IFEQ 'RP'
+     C*********************Z-ADDE0TTLV    COL6A                           CSD004
+     C*********************Z-ADDE0TTIN    COL6I                           CSD004
+     C                     ADD  E0TTLV    COL6A                           CSD004
+     C                     ADD  E0TTIN    COL6I                           CSD004
+     C                     ADD  E0TTLV    TOT6A
+     C                     ADD  E0TTIN    TOT6I
+     C                     END
+     C*
+     C**  Reverse repo
+     C*
+     C           E0TNTY    IFEQ 'RR'
+     C*********************Z-ADDE0TTLV    COL7A                           CSD004
+     C*********************Z-ADDE0TTIN    COL7I                           CSD004
+     C                     ADD  E0TTLV    COL7A                           CSD004
+     C                     ADD  E0TTIN    COL7I                           CSD004
+     C                     ADD  E0TTLV    TOT7A
+     C                     ADD  E0TTIN    TOT7I
+     C                     END
+     C*
+     C**  Pledged deposit
+     C*
+     C           E0TNTY    IFEQ 'PD'
+     C*********************Z-ADDE0TTLV    COL8A                           CSD004
+     C*********************Z-ADDE0TTIN    COL8I                           CSD004
+     C                     ADD  E0TTLV    COL8A                           CSD004
+     C                     ADD  E0TTIN    COL8I                           CSD004
+     C                     ADD  E0TTLV    TOT8A
+     C                     ADD  E0TTIN    TOT8I
+     C                     END
+     C*
+     C**  Pledged loan
+     C*
+     C           E0TNTY    IFEQ 'PL'
+     C*********************Z-ADDE0TTLV    COL9A                           CSD004
+     C*********************Z-ADDE0TTIN    COL9I                           CSD004
+     C                     ADD  E0TTLV    COL9A                           CSD004
+     C                     ADD  E0TTIN    COL9I                           CSD004
+     C                     ADD  E0TTLV    TOT9A
+     C                     ADD  E0TTIN    TOT9I
+     C                     END
+     C*
+     C**  Store date from this record
+     C*
+     C                     Z-ADDE0DATE    PRDATE
+     C*
+     C**  Read from SDBTSML2
+     C*
+     C           WFSPLT    IFEQ 'N'                                       CSD004
+     C           KBTSFP    READESDBTSML2                 80
+     C                     ELSE                                           CSD004
+     C**  Sort by branch                                                  CSD004
+     C           K56SFP    READESDBTSML5                 80               CSD004
+     C                     ENDIF                                          CSD004
+     C                     END
+     C*
+     C**  Convert date just processed to DDMMYY format to obtain day
+     C**  number for output to report
+     C*
+     C                     Z-ADDPRDATE    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     ##DDMM
+     C           *IN98     IFEQ '1'
+     C                     MOVE ##DDMM    ##DD
+     C                     ELSE
+     C                     MOVEL##DDMM    ##DD
+     C                     END
+     C                     MOVELDYNO,##DD TEXTA
+     C*
+     C**  Check if new page required
+     C*
+     C                     Z-ADD3         RQDLN
+     C                     EXSR OVFLOW
+     C*
+     C           *IN60     IFEQ '1'
+     C                     WRITEHEADINGS
+     C                     WRITEDMHEAD
+     C                     END
+     C*
+     C**  Write detail line to report
+     C*
+     C                     WRITEDMDETL
+     C*
+     C**  Increment count of months processed
+     C*
+     C                     ADD  1         MNTHP
+     C*
+     C**  Initialise all detail line fields
+     C*
+     C                     EXSR INITDT
+     C*
+     C**  Store date from this record
+     C*
+     C                     Z-ADDE0DATE    PRDATE
+     C*
+     C                     END
+     C*
+     C**  If records have been processed from SDBTSML2
+     C*
+     C           MNTHP     IFNE *ZERO
+     C*
+     C**  Calculate average number of live records for the period for
+     C**  each transaction type
+     C*
+     C           TOT1A     DIV  MNTHP     COL1A     H
+     C           TOT2A     DIV  MNTHP     COL2A     H
+     C           TOT3A     DIV  MNTHP     COL3A     H
+     C           TOT4A     DIV  MNTHP     COL4A     H
+     C           TOT5A     DIV  MNTHP     COL5A     H
+     C           TOT6A     DIV  MNTHP     COL6A     H
+     C           TOT7A     DIV  MNTHP     COL7A     H
+     C           TOT8A     DIV  MNTHP     COL8A     H
+     C           TOT9A     DIV  MNTHP     COL9A     H
+     C*
+     C**  Set up total inserts for each transaction type
+     C*
+     C                     Z-ADDTOT1I     COL1I
+     C                     Z-ADDTOT2I     COL2I
+     C                     Z-ADDTOT3I     COL3I
+     C                     Z-ADDTOT4I     COL4I
+     C                     Z-ADDTOT5I     COL5I
+     C                     Z-ADDTOT6I     COL6I
+     C                     Z-ADDTOT7I     COL7I
+     C                     Z-ADDTOT8I     COL8I
+     C                     Z-ADDTOT9I     COL9I
+     C*
+     C**  Set up text for totals line
+     C*
+     C                     MOVEL'MEAN'    TEXTA
+     C                     MOVE 'TOTAL'   TEXTI
+     C*
+     C**  Check if new page required
+     C*
+     C                     Z-ADD3         RQDLN
+     C                     EXSR OVFLOW
+     C*
+     C           *IN60     IFEQ '1'
+     C                     WRITEHEADINGS
+     C                     WRITEDMHEAD
+     C                     END
+     C*
+     C**  Write totals line to report
+     C*
+     C                     WRITEDMDETL
+     C*
+     C**  Otherwise, no records processed, write 'NO DETAILS' line to
+     C**  report
+     C*
+     C                     ELSE
+     C                     WRITENODETL
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    TD - Process TRADSD                                           *
+     C*                                                                  *
+     C*    CALLED BY: DETAIL - Detail processing                         *
+     C*    CALLS:     INITDT - Initialise detail line fields to zero     *
+     C*               INITTT - Initialise total line fields to zero      *
+     C*               ZDATE2 - Convert a day number to date formats      *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           TD        BEGSR
+     C*
+     C**  Initialise line count and all work fields to zero
+     C*
+     C                     Z-ADD0         PRDATE
+     C                     Z-ADD0         MNTHP
+     C*
+     C                     EXSR INITDT
+     C                     EXSR INITTT
+     C*
+     C**  Write report headings and sub-headings
+     C*
+     C                     WRITEHEADINGS
+     C                     WRITETDHEAD
+     C*
+     C**  Set lower limits on SDBTSML2
+     C*
+     C                     MOVE 'SE'      KMMOD
+     C                     MOVE *BLANKS   KFNME
+     C                     MOVEL'TRADSD'  KFNME
+     C                     Z-ADDSTDATE    KDATE
+     C                     MOVE *BLANKS   KTNTY
+     C*
+     C           WFSPLT    IFEQ 'N'                                       CSD004
+     C           KBTSF     SETLLSDBTSML2             8080
+     C           KBTSFP    READESDBTSML2                 80
+     C                     ELSE                                           CSD004
+     C**  Sort by branch                                                  CSD004
+     C                     MOVE A8BRCD    KBRCA                           CSD004
+     C                     MOVE A8CMCD    KCMPY                           CSD004
+     C           K56SF     SETLLSDBTSML5             8080                 CSD004
+     C           K56SFP    READESDBTSML5                 80               CSD004
+     C                     ENDIF                                          CSD004
+     C*
+     C**  If we want the report to be split by business area              CSD004
+     C**  (company/branch). (WFSPLIT = Y), then we have to use            CSD004
+     C**  SDBTSML5 else ...                                               CSD004
+     C**  Read records from LF/SDBTSML2 for this module and file name
+     C**  until the end date parameter is greater than or equal to the
+     C**  date on the SDBTSML2 record
+     C**
+     C           EDDATE    DOWGEE0DATE
+     C           *IN80     ANDEQ'0'
+     C*
+     C**  Process all records for one date
+     C*
+     C           E0DATE    DOWEQPRDATE
+     C           *IN80     ANDEQ'0'
+     C           PRDATE    OREQ *ZERO
+     C           *IN80     ANDEQ'0'
+     C*
+     C**  Set up details for report line
+     C*
+     C* In the *split* mode we mustn't reset the totals                   CSD004
+     C*                                                                   CSD004
+     C**  Fixed bonds
+     C*
+     C           E0TNTY    IFEQ ' 1'
+     C*********************Z-ADDE0TTLV    COL1A                           CSD004
+     C*********************Z-ADDE0TTIN    COL1I                           CSD004
+     C                     ADD  E0TTLV    COL1A                           CSD004
+     C                     ADD  E0TTIN    COL1I                           CSD004
+     C                     ADD  E0TTLV    TOT1A
+     C                     ADD  E0TTIN    TOT1I
+     C                     END
+     C*
+     C**  Commodities
+     C*
+     C           E0TNTY    IFEQ ' 2'
+     C*********************Z-ADDE0TTLV    COL2A                           CSD004
+     C*********************Z-ADDE0TTIN    COL2I                           CSD004
+     C                     ADD  E0TTLV    COL2A                           CSD004
+     C                     ADD  E0TTIN    COL2I                           CSD004
+     C                     ADD  E0TTLV    TOT2A
+     C                     ADD  E0TTIN    TOT2I
+     C                     END
+     C*
+     C**  Floating rate notes
+     C*
+     C           E0TNTY    IFEQ ' 3'
+     C*********************Z-ADDE0TTLV    COL3A                           CSD004
+     C*********************Z-ADDE0TTIN    COL3I                           CSD004
+     C                     ADD  E0TTLV    COL3A                           CSD004
+     C                     ADD  E0TTIN    COL3I                           CSD004
+     C                     ADD  E0TTLV    TOT3A
+     C                     ADD  E0TTIN    TOT3I
+     C                     END
+     C*
+     C**  Shares
+     C*
+     C           E0TNTY    IFEQ ' 4'
+     C*********************Z-ADDE0TTLV    COL4A                           CSD004
+     C*********************Z-ADDE0TTIN    COL4I                           CSD004
+     C                     ADD  E0TTLV    COL4A                           CSD004
+     C                     ADD  E0TTIN    COL4I                           CSD004
+     C                     ADD  E0TTLV    TOT4A
+     C                     ADD  E0TTIN    TOT4I
+     C                     END
+     C*
+     C**  Yen bonds
+     C*
+     C           E0TNTY    IFEQ ' 5'
+     C*********************Z-ADDE0TTLV    COL5A                           CSD004
+     C*********************Z-ADDE0TTIN    COL5I                           CSD004
+     C                     ADD  E0TTLV    COL5A                           CSD004
+     C                     ADD  E0TTIN    COL5I                           CSD004
+     C                     ADD  E0TTLV    TOT5A
+     C                     ADD  E0TTIN    TOT5I
+     C                     END
+     C*
+     C**  Schuldschein
+     C*
+     C           E0TNTY    IFEQ ' 6'
+     C*********************Z-ADDE0TTLV    COL6A                           CSD004
+     C*********************Z-ADDE0TTIN    COL6I                           CSD004
+     C                     ADD  E0TTLV    COL6A                           CSD004
+     C                     ADD  E0TTIN    COL6I                           CSD004
+     C                     ADD  E0TTLV    TOT6A
+     C                     ADD  E0TTIN    TOT6I
+     C                     END
+     C*
+     C**  Unit trusts
+     C*
+     C           E0TNTY    IFEQ ' 7'
+     C*********************Z-ADDE0TTLV    COL7A                           CSD004
+     C*********************Z-ADDE0TTIN    COL7I                           CSD004
+     C                     ADD  E0TTLV    COL7A                           CSD004
+     C                     ADD  E0TTIN    COL7I                           CSD004
+     C                     ADD  E0TTLV    TOT7A
+     C                     ADD  E0TTIN    TOT7I
+     C                     END
+     C*
+     C**  Mortgage-backed securities
+     C*
+     C           E0TNTY    IFEQ ' 8'
+     C*********************Z-ADDE0TTLV    COL8A                           CSD004
+     C*********************Z-ADDE0TTIN    COL8I                           CSD004
+     C                     ADD  E0TTLV    COL8A                           CSD004
+     C                     ADD  E0TTIN    COL8I                           CSD004
+     C                     ADD  E0TTLV    TOT8A
+     C                     ADD  E0TTIN    TOT8I
+     C                     END
+     C*
+     C**  Commercial paper
+     C*
+     C           E0TNTY    IFEQ ' 9'
+     C*********************Z-ADDE0TTLV    COL9A                           CSD004
+     C*********************Z-ADDE0TTIN    COL9I                           CSD004
+     C                     ADD  E0TTLV    COL9A                           CSD004
+     C                     ADD  E0TTIN    COL9I                           CSD004
+     C                     ADD  E0TTLV    TOT9A
+     C                     ADD  E0TTIN    TOT9I
+     C                     END
+     C*
+     C**  Store date from this record
+     C*
+     C                     Z-ADDE0DATE    PRDATE
+     C*
+     C**  Read from SDBTSML2
+     C*
+     C           WFSPLT    IFEQ 'N'                                       CSD004
+     C           KBTSFP    READESDBTSML2                 80
+     C                     ELSE                                           CSD004
+     C**  Sort by branch                                                  CSD004
+     C           K56SFP    READESDBTSML5                 80               CSD004
+     C                     ENDIF                                          CSD004
+     C                     END
+     C*
+     C**  Convert date just processed to DDMMYY format to obtain day
+     C**  number for output to report
+     C*
+     C                     Z-ADDPRDATE    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     ##DDMM
+     C           *IN98     IFEQ '1'
+     C                     MOVE ##DDMM    ##DD
+     C                     ELSE
+     C                     MOVEL##DDMM    ##DD
+     C                     END
+     C                     MOVELDYNO,##DD TEXTA
+     C*
+     C**  Check if new page required
+     C*
+     C                     Z-ADD3         RQDLN
+     C                     EXSR OVFLOW
+     C*
+     C           *IN60     IFEQ '1'
+     C                     WRITEHEADINGS
+     C                     WRITETDHEAD
+     C                     END
+     C*
+     C**  Write detail line to report
+     C*
+     C                     WRITETDDETL
+     C*
+     C**  Increment count of months processed
+     C*
+     C                     ADD  1         MNTHP
+     C*
+     C**  Initialise all detail line fields
+     C*
+     C                     EXSR INITDT
+     C*
+     C**  Store date from this record
+     C*
+     C                     Z-ADDE0DATE    PRDATE
+     C*
+     C                     END
+     C*
+     C**  If records have been processed from SDBTSML2
+     C*
+     C           MNTHP     IFNE *ZERO
+     C*
+     C**  Calculate average number of live records for the period for
+     C**  each transaction type
+     C*
+     C           TOT1A     DIV  MNTHP     COL1A     H
+     C           TOT2A     DIV  MNTHP     COL2A     H
+     C           TOT3A     DIV  MNTHP     COL3A     H
+     C           TOT4A     DIV  MNTHP     COL4A     H
+     C           TOT5A     DIV  MNTHP     COL5A     H
+     C           TOT6A     DIV  MNTHP     COL6A     H
+     C           TOT7A     DIV  MNTHP     COL7A     H
+     C           TOT8A     DIV  MNTHP     COL8A     H
+     C           TOT9A     DIV  MNTHP     COL9A     H
+     C*
+     C**  Set up total inserts for each transaction type
+     C*
+     C                     Z-ADDTOT1I     COL1I
+     C                     Z-ADDTOT2I     COL2I
+     C                     Z-ADDTOT3I     COL3I
+     C                     Z-ADDTOT4I     COL4I
+     C                     Z-ADDTOT5I     COL5I
+     C                     Z-ADDTOT6I     COL6I
+     C                     Z-ADDTOT7I     COL7I
+     C                     Z-ADDTOT8I     COL8I
+     C                     Z-ADDTOT9I     COL9I
+     C*
+     C**  Set up text for totals line
+     C*
+     C                     MOVEL'MEAN'    TEXTA
+     C                     MOVE 'TOTAL'   TEXTI
+     C*
+     C**  Check if new page required
+     C*
+     C                     Z-ADD3         RQDLN
+     C                     EXSR OVFLOW
+     C*
+     C           *IN60     IFEQ '1'
+     C                     WRITEHEADINGS
+     C                     WRITETDHEAD
+     C                     END
+     C*
+     C**  Write totals line to report
+     C*
+     C                     WRITETDDETL
+     C*
+     C**  Otherwise, no records processed, write 'NO DETAILS' line to
+     C**  report
+     C*
+     C                     ELSE
+     C                     WRITENODETL
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    INITDT - Initialise detail line fields to zero                *
+     C*                                                                  *
+     C*    CALLED BY: FX     - Process DEALSDB                           *
+     C*               MM     - Process DEALSDC                           *
+     C*               NAP    - Process DEALSDD                           *
+     C*               NAS    - Process DEALSDE                           *
+     C*               FRAIRS - Process DEALSDG                           *
+     C*               FF     - Process TRANSD                            *
+     C*               FT     - Process Funds Transfer data               *
+     C*               GL     - Process ACCNTAB                           *
+     C*               LE     - Process CLOANCL                           *
+     C*               DM     - Process DPTMVD                            *
+     C*               TD     - Process TRADSD                            *
+     C*    CALLS:                                                        *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           INITDT    BEGSR
+     C*
+     C                     MOVE *BLANKS   TEXTA
+     C                     MOVE *BLANKS   TEXTI
+     C*
+     C                     Z-ADD0         COL1A
+     C                     Z-ADD0         COL1I
+     C                     Z-ADD0         COL2A
+     C                     Z-ADD0         COL2I
+     C                     Z-ADD0         COL3A
+     C                     Z-ADD0         COL3I
+     C                     Z-ADD0         COL4A
+     C                     Z-ADD0         COL4I
+     C                     Z-ADD0         COL5A
+     C                     Z-ADD0         COL5I
+     C                     Z-ADD0         COL6A
+     C                     Z-ADD0         COL6I
+     C                     Z-ADD0         COL7A
+     C                     Z-ADD0         COL7I
+     C                     Z-ADD0         COL8A
+     C                     Z-ADD0         COL8I
+     C                     Z-ADD0         COL9A
+     C                     Z-ADD0         COL9I
+     C                     Z-ADD0         COL10A
+     C                     Z-ADD0         COL10I
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    INITTT - Initialise total line fields to zero                 *
+     C*                                                                  *
+     C*    CALLED BY: FX     - Process DEALSDB                           *
+     C*               MM     - Process DEALSDC                           *
+     C*               NAP    - Process DEALSDD                           *
+     C*               NAS    - Process DEALSDE                           *
+     C*               FRAIRS - Process DEALSDG                           *
+     C*               FF     - Process TRANSD                            *
+     C*               FT     - Process Funds Transfer data               *
+     C*               GL     - Process ACCNTAB                           *
+     C*               LE     - Process CLOANCL                           *
+     C*               DM     - Process DPTMVD                            *
+     C*               TD     - Process TRADSD                            *
+     C*    CALLS:                                                        *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           INITTT    BEGSR
+     C*
+     C                     MOVE *BLANKS   TEXTA
+     C                     MOVE *BLANKS   TEXTI
+     C*
+     C                     Z-ADD0         TOT1A   80
+     C                     Z-ADD0         TOT1I   60
+     C                     Z-ADD0         TOT2A   80
+     C                     Z-ADD0         TOT2I   60
+     C                     Z-ADD0         TOT3A   80
+     C                     Z-ADD0         TOT3I   60
+     C                     Z-ADD0         TOT4A   80
+     C                     Z-ADD0         TOT4I   60
+     C                     Z-ADD0         TOT5A   80
+     C                     Z-ADD0         TOT5I   60
+     C                     Z-ADD0         TOT6A   80
+     C                     Z-ADD0         TOT6I   60
+     C                     Z-ADD0         TOT7A   80
+     C                     Z-ADD0         TOT7I   60
+     C                     Z-ADD0         TOT8A   80
+     C                     Z-ADD0         TOT8I   60
+     C                     Z-ADD0         TOT9A   80
+     C                     Z-ADD0         TOT9I   60
+     C                     Z-ADD0         TOT10A  80
+     C                     Z-ADD0         TOT10I  60
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    INIT - Initial processing                                     *
+     C*                                                                  *
+     C*    CALLED BY: MAIN   - Main processing                           *
+     C*    CALLS:     *PSSR  - Program exception error routine           *
+     C*               ZDATE2 - Convert a day number to date formats      *
+     C*               ZDATE1 - Convert a date to a day number            *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+     C**  Access bank details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C**  Process database error on SDBANKPD
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     MOVEL'SD4301'  DBPGM
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           * DBERROR 001 *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C**  Access module details
+     C*
+     C                     CALL 'AOMMODR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDMMOD    PARM SDMMOD    DSFDY
+     C*
+     C**  Process database error on SDMMODPD
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     MOVEL'SD4301'  DBPGM
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVEL'SDMMODPD'DBFILE           * DBERROR 002 *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C**  If start date and end date parameters passed to this program
+     C**  are both zero, it means this program is being called as a
+     C**  mandatory report during the COB at end of month
+     C*
+     C           STDATE    IFEQ *ZERO
+     C           EDDATE    ANDEQ*ZERO
+     C*
+     C**  Set start date parameter equal to start of this month
+     C*
+     C                     Z-ADDBJRDNB    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     ##DDMM
+     C           *IN98     IFEQ '1'
+     C                     MOVE '01'      ##DDMM
+     C                     ELSE
+     C                     MOVEL'01'      ##DDMM
+     C                     END
+     C                     MOVEL##DDMM    ZDATE
+     C                     EXSR ZDATE1
+     C                     Z-ADDZDAYNO    STDATE
+     C*
+     C**  Set end date parameter equal to today
+     C*
+     C                     Z-ADDBJRDNB    EDDATE
+     C*
+     C**  Set report sequence number parameter equal to blank
+     C*
+     C                     MOVE *BLANKS   SEQ
+     C                     END
+     C*
+     C**  Convert end date to DDMMYY format to obtain month name for
+     C**  repor title
+     C*
+     C                     Z-ADDEDDATE    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     ##DDMM  4
+     C           *IN98     IFEQ '1'
+     C                     MOVEL##DDMM    ##MM    20
+     C                     ELSE
+     C                     MOVE ##DDMM    ##MM
+     C                     END
+     C                     MOVE MNAM,##MM MONTH
+     C                     MOVE ZDATE     YEAR
+     C*
+     C**  Ensure report spool file is recorded by RCF
+     C*
+     C                     Z-ADDSFNUM     SFNUM1  60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   @PARM   3
+     C                     PARM           SFILE
+     C                     PARM           SFNUM1
+     C                     PARM           ZSERR   1
+     C*
+     C**  If an error occurred in ZSFILE processing, return to the
+     C**  calling program
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C** Check to see if feature CSD004 is active                         CSD004
+      ** Use access program AOSARDR0 to retrieve switchable features      CSD004
+      *                                                                   CSD004
+     C                     CALL 'AOSARDR0'                                CSD004
+     C                     PARM *BLANKS   @RTCD   7                       CSD004
+     C                     PARM '*VERIFY' @OPTN   7                       CSD004
+     C                     PARM 'CSD004'  @KEY    6                       CSD004
+     C           SCSARD    PARM SCSARD    DSFDY                           CSD004
+      *                                                                   CSD004
+      *** Switch on Account Narrative feature if appropriate              CSD004
+      *                                                                   CSD004
+     C                     SELEC                                          CSD004
+     C           @RTCD     WHEQ *BLANK                                    CSD004
+     C                     MOVE 'Y'       CSD004                          CSD004
+     C           @RTCD     WHEQ '*NRF'                                    CSD004
+     C                     MOVE 'N'       CSD004  1                       CSD004
+     C                     SETOF                         32               CSD004
+     C                     OTHER                                          CSD004
+      *                                                                   CSD004
+      *** If error in access program, exit via *PSSR subroutine           CSD004
+      *                                                                   CSD004
+     C           *LOCK     IN   LDA                                       CSD004
+     C                     MOVEL'SCSARDPD'DBFILE            ************* CSD004
+     C                     Z-ADD003       DBASE             *DBERROR 003* CSD004
+     C                     MOVEL@OPTN     DBKEY             ************* CSD004
+     C                     SETON                     U7U8LR               CSD004
+     C                     OUT  LDA                                       CSD004
+     C                     EXSR *PSSR                                     CSD004
+     C                     ENDSL                                          CSD004
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    FINAL - Final processing                                      *
+     C*                                                                  *
+     C*    CALLED BY: MAIN - Main processing                             *
+     C*    CALLS:                                                        *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           FINAL     BEGSR
+     C*
+     C**  Check if new page required
+     C*
+     C                     Z-ADD14        RQDLN
+     C                     EXSR OVFLOW
+     C*
+     C           *IN60     IFEQ '1'
+     C                     WRITEHEADINGS
+     C                     END
+     C*
+     C**  Write 'END OF REPORT' line to report
+     C*
+     C                     WRITEENDREP
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*                                                                  *
+     C*    OVFLOW - Determine if new page required                       *
+     C*                                                                  *
+     C*    CALLED BY: FX     - Process DEALSDB                           *
+     C*               MM     - Process DEALSDC                           *
+     C*               NAP    - Process DEALSDD                           *
+     C*               NAS    - Process DEALSDE                           *
+     C*               FRAIRS - Process DEALSDG                           *
+     C*               FF     - Process TRANSD                            *
+     C*               FT     - Process Funds Transfer data               *
+     C*               GL     - Process ACCNTAB                           *
+     C*               LE     - Process CLOANCL                           *
+     C*               DM     - Process DPTMVD                            *
+     C*               TD     - Process TRADSD                            *
+     C*    CALLS:                                                        *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           OVFLOW    BEGSR
+     C*
+     C**  Number of remaining lines is the overflow line number minus
+     C**  the current line number
+     C*
+     C           OFLLN     SUB  PRTLN     REMLN   20
+     C*
+     C**  If this is less than the number required, set indicator to
+     C**  print headings on new page
+     C*
+     C           REMLN     IFLE RQDLN
+     C                     SETON                     60
+     C                     ELSE
+     C                     SETOF                     60
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR  - Program exception error routine                      *
+     C*          Called automatically if a program error occurs,      *
+     C*          or directly by the program code using EXSR.          *
+     C*          This subroutine DUMPs the program just once.         *
+     C*                                                               *
+     C* CALLED BY: INIT - Initial processing                          *
+     C*                                                               *
+     C* CALLS:                                                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C           @RUN      IFEQ *BLANK                                    131205
+     C                     MOVE 'Y'       @RUN    1                       131205
+     C                     DUMP                                           131205
+     C*                                                                   131205
+     C**  If database error has occurred, write details to report
+     C*
+     C           DBASE     IFNE *ZERO
+     C                     WRITEHEADINGS
+     C                     WRITEDBERROR
+     C                     END
+     C*
+     C***********@RUN      IFEQ *BLANK                                    131205
+     C***********          MOVE 'Y'       @RUN    1                       131205
+     C***********          DUMP                                           131205
+     C                     END
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  MNAM - MONTH NAMES
+  JANUARY
+ FEBRUARY
+    MARCH
+    APRIL
+      MAY
+     JUNE
+     JULY
+   AUGUST
+SEPTEMBER
+  OCTOBER
+ NOVEMBER
+ DECEMBER
+**  DYNO - DAY NUMBERS
+ 1st
+ 2nd
+ 3rd
+ 4th
+ 5th
+ 6th
+ 7th
+ 8th
+ 9th
+10th
+11th
+12th
+13th
+14th
+15th
+16th
+17th
+18th
+19th
+20th
+21st
+22nd
+23rd
+24th
+25th
+26th
+27th
+28th
+29th
+30th
+31st
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

@@ -1,0 +1,240 @@
+     H        1
+      *****************************************************************
+/*X*IA***OVRDBF*FILE(VLLS1)*TOFILE(UPVLLSTPD)**************************                CUP019 CUP022
+/*X*IB***OVRDBF*FILE(VLLS2)*TOFILE(UPVLLSTPD)**************************                CUP019 CUP022
+/*X*IA***OVRDBF*FILE(Y2VL1)*TOFILE(UPVLLSTPD)**************************                CUP022 CUP021
+/*X*IB***OVRDBF*FILE(Y2VL2)*TOFILE(UPVLLSTPD)**************************                CUP022 CUP021
+/*S*D****RPGBASE*******************************************************                       CUP021
+/*O*R ***OVRDBF*VLLS1*Y2VLLSL1*****************************************                       CUP019
+/*O*R ***OVRDBF*VLLS2*Y2VLLSL1*****************************************                       CUP019
+      *****************************************************************
+      *                                                               *
+      *  Midas - Upgrade module                                       *
+      *                                                               *
+      *  UP0875 - Build values list action file                       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CUP021  *REDUNDANT Date 11Feb11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CUP022             Date 22Mar04               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 CUP019             Date 10Sep02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CUP007             Date 18May00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CPK009 *CREATE     Date 03Dec99               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CUP021 - Rewrite of Action File processing                   *
+      *  CUP022 - Change the name of the input files so that command  *
+      *           ACTIONFILE (*NONE, *OVERRIDE) can be used to call   *
+      *           this program.                                       *
+      *  CUP019 - Use templates for Action Files.                     *
+      *  CUP007 - The *VLLSP files do not have amends.                *
+      *  CPK009 - DBA R3 packaging:                                   *
+      *           DTALIB upgrade facility                             *
+      *                                                               *
+      *****************************************************************
+      * ID F  C  H  L    FUNCTION OF INDICATORS
+      *
+      *       20      End of file
+      *       30      Chain - record not found
+      *       69      Read, write or chain fail
+      *       70 - 81 Indicators for changed fields
+      *****************************************************************
+      *
+     F*****VLLS1   IF  E                    DISK         KINFSR *PSSR                         CUP022
+     F*****VLLS2   IF  E           K        DISK         KINFSR *PSSR                         CUP022
+     FY2VL1   IF  E                    DISK         KINFSR *PSSR                              CUP022
+     FY2VL2   IF  E           K        DISK         KINFSR *PSSR                              CUP022
+     F********    @VLLSL1                           KRENAMEVLLSF                              CUP019
+     F            @VALLST                           KRENAMEVLLSF                              CUP019
+     FUPY2VLPDO   E                    DISK         KINFSR *PSSR
+      *
+      /EJECT
+      *
+      ** Array containing Copyright statement
+      *
+     E                    CPY@    1   1 80
+      *
+      * Fields with the same name will need to be renamed.
+      *
+     IVLLSF
+     I              @@CND                           @CND
+     I              CNDTYP                          CNDT
+     I              EXTVAL                          EXTV
+     I              INTVAL                          INTV
+     I              CNDTXT                          CNDX
+     I              USRMOD                          USRM
+     I              VALMAP                          VALM
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           MODE    1
+      *
+     C           COMP      KLIST
+     C                     KFLD           @@CND
+     C                     KFLD           CNDTYP
+     C                     KFLD           EXTVAL
+      *
+     C******               READ VLLS1                  6920                                   CUP022
+     C                     READ Y2VL1                  6920                                   CUP022
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           *IN20     DOWEQ'0'
+     C           COMP      CHAINVLLSF                3069
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      * If record not found then record has been deleted or added
+      *  depending on mode
+     C           *IN30     IFEQ *ON
+     C                     MOVE MODE      ACACTC
+     C                     WRITEUPY2VLP0               69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **Need*to*find differences but this should only be run once;                            CUP007
+      ***run*only if mode is 'Delete'                                                         CUP007
+     C***********MODE      IFEQ 'D'                                                           CUP007
+      ***********                                                                             CUP007
+      **If*record*found then look for any differences                                         CUP007
+     C************IN30     IFEQ *OFF                                                          CUP007
+     C***********          MOVE 'A'       ACACTC                                              CUP007
+      ***********                                                                             CUP007
+      **Condition surrogate for condition details                                             CUP007
+     C***********@@CND     IFNE @CND                                                          CUP007
+     C***********          SETON                     70                                       CUP007
+     C***********          ENDIF                                                              CUP007
+      ***********                                                                             CUP007
+      **Condition type                                                                        CUP007
+     C***********CNDTYP    IFNE CNDT                                                          CUP007
+     C***********          SETON                     70                                       CUP007
+     C***********          ENDIF                                                              CUP007
+      ***********                                                                             CUP007
+      **External*value                                                                        CUP007
+     C***********EXTVAL    IFNE EXTV                                                          CUP007
+     C***********          SETON                     70                                       CUP007
+     C***********          ENDIF                                                              CUP007
+      ***********                                                                             CUP007
+      **Internal*value                                                                        CUP007
+     C***********INTVAL    IFNE INTV                                                          CUP007
+     C***********          SETON                     70                                       CUP007
+     C***********          ENDIF                                                              CUP007
+      ***********                                                                             CUP007
+      **Condition text                                                                        CUP007
+     C***********CNDTXT    IFNE CNDX                                                          CUP007
+     C***********          SETON                     70                                       CUP007
+     C***********          ENDIF                                                              CUP007
+      ***********                                                                             CUP007
+      **User*modified                                                                         CUP007
+     C***********USRMOD    IFNE USRM                                                          CUP007
+     C***********          SETON                     70                                       CUP007
+     C***********          ENDIF                                                              CUP007
+      ***********                                                                             CUP007
+      **Value*mapping indicator                                                               CUP007
+     C***********VALMAP    IFNE VALM                                                          CUP007
+     C***********          SETON                     70                                       CUP007
+     C***********          ENDIF                                                              CUP007
+      ***********                                                                             CUP007
+     C***********          MOVEA*IN,70    INTEST  1                                           CUP007
+     C***********          MOVE INTEST    INTNUM  10                                          CUP007
+      ***********                                                                             CUP007
+      **If*any*indicators are set on then write record                                        CUP007
+     C***********INTNUM    IFNE 0                                                             CUP007
+     C***********          WRITEUPY2VLP0               69                                     CUP007
+     C************IN69     IFEQ *ON                                                           CUP007
+     C***********          EXSR *PSSR                                                         CUP007
+     C***********          ENDIF                                                              CUP007
+      ***********                                                                             CUP007
+      **Set*values to write second record                                                     CUP007
+     C***********          MOVEL*BLANKS   @@CND                                               CUP007
+     C***********          MOVEL*BLANKS   CNDTYP                                              CUP007
+     C***********          MOVEL*BLANKS   EXTVAL                                              CUP007
+     C***********          MOVEL*BLANKS   INTVAL                                              CUP007
+     C***********          MOVEL*BLANKS   CNDTXT                                              CUP007
+     C***********          MOVEL*BLANKS   USRMOD                                              CUP007
+     C***********          MOVEL*BLANKS   VALMAP                                              CUP007
+      ***********                                                                             CUP007
+     C***********          MOVEL@CND      @@CND                                               CUP007
+     C***********          MOVELCNDT      CNDTYP                                              CUP007
+     C***********          MOVELEXTV      EXTVAL                                              CUP007
+     C***********          MOVELINTV      INTVAL                                              CUP007
+     C***********          MOVELCNDX      CNDTXT                                              CUP007
+     C***********          MOVELUSRM      USRMOD                                              CUP007
+     C***********          MOVELVALM      VALMAP                                              CUP007
+      ***********                                                                             CUP007
+     C***********          WRITEUPY2VLP0               69                                     CUP007
+     C************IN69     IFEQ *ON                                                           CUP007
+     C***********          EXSR *PSSR                                                         CUP007
+     C***********          ENDIF                                                              CUP007
+     C***********          ENDIF                                                              CUP007
+      ***********                                                                             CUP007
+     C***********          ENDIF                                                              CUP007
+     C***********          ENDIF                                                              CUP007
+      ***********                                                                             CUP007
+      * Read next record
+     C***********          MOVEA'0'       *IN,70                                              CUP007
+     C*****                READ VLLS1                  6920                                   CUP022
+     C                     READ Y2VL1                  6920                                   CUP022
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C           ENDPGM    TAG
+     C                     SETON                     LR
+     C                     RETRN
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: None                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      ********************************************************************
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,60 @@
+/*******************************************************************/
+/*S*D****CLPBASEBND*************************************************/                     /*CLE164*/
+/*******************************************************************/
+/*                                                                 */
+/*       Midas - Customer Lending Module                           */
+/*                                                                 */
+/*       LEC007009 - PDCL Process - Update PCNs                    */
+/*                                                                 */
+/*       (c) Misys International Banking Systems Ltd. 2012         */
+/*                                                                 */
+/*       Last Amend No. CLE164 *REDUNDANT  Date 18Aug14            */
+/*       Prev Amend No. AR314325           Date 01Aug12            */
+/*                      CLE134  *CREATE    Date 01Aug12            */
+/*                                                                 */
+/*******************************************************************/
+/*                                                                 */
+/*       CLE164 - CLE134 Enhancement F (Repayment Methodology)     */
+/*       AR314325 - LEACCNPD file update error (Recompile)         */
+/*                  (Child:AR314326)                               */
+/*       CLE134 - Past Due Call Loan Processing                    */
+/*                                                                 */
+/*******************************************************************/
+             PGM        PARM(&CONAM &COSEQ)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                           Misys International Banking Systems Ltd. +
+                           2012')
+ 
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(132) +
+                           VALUE('PDCL PROCESS - UPDATE PCN')
+             DCL        VAR(&CONAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&COSEQ) TYPE(*DEC) LEN(5 0)
+ 
+             STRCMTCTL  LCKLVL(*ALL) NFYOBJ(MNTYF (*FILE)) +
+                           CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351)
+ 
+             SNDPGMMSG  MSG(&MSG) TOMSGQ(MRUNQ)
+ 
+             CALL       PGM(LE007009)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                           ROLLBACK
+                           GOTO       CMDLBL(ABNOR)
+             ENDDO
+             COMMIT
+ 
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                           Misys International Banking Systems Ltd.')
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                           MSGDTA('Program +
+                           LEC07009 Ended abnormally - see job +
+                           log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ENDPGM:      ENDPGM

@@ -1,0 +1,1256 @@
+     H        1
+      *****************************************************************
+/*S*D ***RPGBASE*******************************************************                     CGL127AP
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas General Ledger Module                                  *
+     F*                                                               *
+     F*  GL0570 - Account Master Detail extract                       *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CGL127AP *REDUNDANTDate 06Aug12               *
+      *  Prev Amend No. AR1048918          Date 26Oct12               *
+      *                 263892             Date 13Mar10               *
+      *                 AR820964           Date 27Aug11               *
+      *                 CRE073             Date 06Dec10               *
+      *                 AR762809B          Date 09Jun11               *
+      *                 AR762809A          Date 02Jun11               *
+      *                 CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 BUG27045A          Date 13Apr10               *
+      *                 BUG27045           Date 18Feb10               *
+      *                 CAP201             Date 09Dec09               *
+      *                 CCB016             Date 03Aug07               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CAS010             Date 09Feb05               *
+      *                 220738             Date 28Aug03               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CTI004             Date 12Apr04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CPB001             Date 20Oct99               *
+      *                 CAP035             Date 11Nov99               *
+      *                 CFT004             Date 19Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01408             Date 24Jul95               *
+      *                 S01486             Date 13Nov94               *
+     F*                 S01413             DATE 08NOV93               *
+     F*                 S01449             DATE 01DEC93               *
+     F*                 056524             DATE 16NOV93               *
+     F*                 S01383             DATE 27APR92               *
+     F*                 E22112             DATE 23MAY90               *
+     F*                 LN0433             DATE 26JUN90               *
+     F*                 LN0014             DATE 18JUN90               *
+     F*                 S01117             DATE 28DEC89               *
+     F*                 S01194             DATE 28DEC89               *
+     F*                 S01197             DATE 07/03/89              *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CGL127AP - COB Restructure - GL COB Optimisation Phase 1     *
+      *  AR1048918 - RE3772P3 did not generate                        *
+      *  263892 - Do not issue database error if customer is closed.  *
+      *           Partially applied fix 262144.                       *
+      *  AR820964 - Component GLC3571 00001 failed                    *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  AR762809B - Effective Date incorrect in the report (Reopen)  *
+      *  AR762809A - Effective Date incorrect in the report (Reopen)  *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  BUG27045A - Override the fix of Bug 27045 (Recompile)        *
+      *  BUG27045 - Amend via SOAP removes Document Linkage           *
+      *             (Recompile)                                       *
+      *  CAP201 - Enhance Stopped Cheques processing for              *
+      *           Teller Interfaces                                   *
+      *  CCB016 - CoB performance enhancement                         *
+      *           No need to access STOPB if it is empty.             *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CAS010 - IAS + PB Enhancements Upgrade to MidasPlus          *
+      *  220738 - Dump if customer is closed                          *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CTI004 - MidasPlus TI Integration Enhancements               *
+      *           Accounts Integration                                *
+      *  CLE025 - Credit Lines                                        *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  CPB001 - 'Private Banking' Module                            *
+     F*  CAP035 - Account maintenance API; recompiled over changed    *
+     F*           ACCBR.                                              *
+      *  CFT004 - Straight Through Processing Phase 2                 *
+      *           International Bank Account Numbers (IBAN)           *
+     F*  S01408 - Addition of core hooks GL0570IIPG                   *
+     F*           Addition of core hooks GL0570CCPG                   *
+     F*  S01486 - Portfolio Management Upgrade to Release 10.         *
+     F*  S01413 - Retail 3 incorporation.                             *
+      *  S01449 - Autorecs II - Recompile for change to ACCNTAB       *
+     F*  056524 - EODPOPD Missing Real time Postings - RABEXOR/ACDETAB*
+     F*           do not contain Start of Business opening Balances   *
+     F*  S01383 - Basic Rate Tax Incorporation                        *
+     F*  E22112 - Bit 7 of RETB2 should be reset before output if no  *
+     F*           stopped cheques for this account, else 'SC' text    *
+     F*           incorrectly output in RE0772.                       *
+     F*  LN0433 - Output to ACDET for accounts closing today.         *
+     F*  LN0014 - Only output to RETAC for Retail Accounts.           *
+     F*  S01117 - Multibranching                                      *
+     F*  S01194 - New Standing Data                                   *
+     F*  S01197 - RE -- > GL conversion                               *
+     F*                                                               *
+     F*****************************************************************
+     F*ACCNT**IP  F     400 18AI     2 DISK                               S01383
+     F*ACCNT**IP  F     402 18AI     2 DISK                         S01383S01413
+     F***ACCNT***IP**F     424 18AI     2 DISK                      S01413S01486
+     F/COPY WNCPYSRC,GL0570F001
+     F***ACCNT***IP  F     429 18AI     2 DISK                     S01486 CFT004
+     F***ACCNT***IP  F     485 18AI     2 DISK                     CFT004 CAP035
+     F***ACCNT   IP  F     552 18AI     2 DISK                     CAP035 CPB001
+     F***ACCNT** IP  F     553 18AI     2 DISK                                         CPB001 CGL029
+     F***ACCNT** IP  F     573 24AI     2 DISK                                         CGL029 CLE025
+     F*ACCNT**IP**F     607 24AI     2 DISK                                             CLE025CTI004
+     F***ACCNT***IP  F     646 24AI     2 DISK                                      CTI004 AR762809A
+     F***ACCNT***IP  F     651 24AI     2 DISK                                    AR762809A AR820964
+     FACCNT   IP  F     687 24AI     2 DISK                                                 AR820964
+     F/COPY WNCPYSRC,GL0570F002
+     FGLACBTL0IF  E           K        DISK                           U2  056524
+     F***STOPB** IF  F      96 21AI     2 DISK                           U6                   CGL029
+     F***IBPAIB* O   F      80            DISK                           U6                   CGL029
+     F***IBPAIZZ O   F      80            DISK                           U6                   CGL029
+     F***RETACRE O   F     160            DISK                           U6                   CGL029
+     F***RETACZZ O   F     160            DISK                           U6                   CGL029
+     F***AXFIAX* O   F      64            DISK                           U5                   CGL029
+     F***AXFIAZZ O   F      64            DISK                           U5                   CGL029
+     F***STOPB** IF  F     106 27AI     2 DISK                           U6            CGL029 CAP201
+     FSTOPB   IF  F     218 27AI     2 DISK                           U6                      CAP201
+     FIBPAIB  O   F      90            DISK                           U6                      CGL029
+     FIBPAIZZ O   F      90            DISK                           U6                      CGL029
+     F***RETACRE O   F     170            DISK                           U6         CGL029 AR1048918
+     FRETACRE O   F     175            DISK                           U6                   AR1048918
+     FRETACZZ O   F     170            DISK                           U6                      CGL029
+     FAXFIAX  O   F      74            DISK                           U5                      CGL029
+     FAXFIAZZ O   F      74            DISK                           U5                      CGL029
+     F*RABEXOR*O**F******80            DISK                           U2  S01413
+     F*RABEXZZ*O**F******80            DISK                           U2  S01413
+     F***ACDETAA O   F     400            DISK                           U1                   CGL029
+     FACDETAA O   F     410            DISK                           U1                      CGL029
+     F*CDETAB*O   F     400            DISK                           U1  S01383
+     F*ACDETAB*O**F*****402            DISK                       U1S01383S01413
+     F*ACDETAC*O**F*****400            DISK                           U1  S01413
+     F***ACDETAB*O***F     424            DISK                  U1  S01413S01486
+     F/COPY WNCPYSRC,GL0570F003
+     F***ACDETAB*O   F     429            DISK                  U1 S01486 CFT004
+     F***ACDETAB*O   F     485            DISK                  U1 CFT004 CAP035
+     F***ACDETAB*O   F     552            DISK                  U1 CAP035 CPB001
+     F***ACDETAB O   F     553            DISK                           U1            CPB001 CGL029
+     F***ACDETAB O   F     573            DISK                           U1            CGL029 CLE025
+     F***ACDETAB O   F     607            DISK                           U1            CLE025 CTI004
+     F***ACDETAB O   F     646            DISK                           U1         CTI004 AR762809A
+     F***ACDETAB O   F     651            DISK                           U1       AR762809A AR820964
+     FACDETAB O   F     687            DISK                           U1                    AR820964
+     F/COPY WNCPYSRC,GL0570F004
+     F***ACDETAC O   F     403            DISK                           U1            S01413 CGL029
+     FACDETAC O   F     413            DISK                           U1                      CGL029
+     FGL0570AUO   F     132            PRINTER
+     F/SPACE 3
+     F* ID F  C  M  L    FUNCTION OF INDICATORS
+     F*
+     F* 01            ACCNT HEADER
+     F* 02            ACCNT DETAIL
+     F* 03            ACCNT TRAILER
+     F* 04            ACCNT CATCHALL
+     F* 11            ACCNT CLOSED RECORD - RECI = C
+     F*       30      OUTPUT REC TO IBPA
+     F*       31                    AXFI
+     F*       32                    ACDET
+     F*       33                    RETAC
+     F********34********************RABEX                                 S01413
+     F*       35      NO RECORD FOUND ON GLACBTL0                         056524
+     F*       36,37   WORK INDS FOR STOPB ACCESS
+     F*       38      NO ACTION YET MADE TO ACCOUNT
+     F*       44      LEDGER BALANCE NEGATIVE
+     F*       45      LEDGER BALANCE ZERO
+     F*       50      ON AFTER FIRST CYCLE
+     F*       55      COMP NOT EQUAL IN COMP SUBR.
+     F*       59      DR DOES NOT BALANCE
+     F*       61      CR DOES NOT BALANCE
+     F*       69      NO. OF RECORDS DISCREPANCY
+     F*       71      STOPB IS EMPTY                                                          CCB016
+     F*    (90-99)    USED IN SYSTEM SUBR.S
+     F*                                               ON FOR MODES:
+     F*            U1        CONDITIONS ACDET PFS       1,2
+     F*************U2********CONDITIONS*RABEX*PFS*******1***)             S01413
+     F*            U5        CONDITIONS AXFI PFS        2,3 ) If Ret-
+     F*            U6        CONDITIONS IBPA & RETAC    2   )   ail
+     F*                      PFS & SDRETLPD
+     F*            U7        DATABASE ERROR
+     F*            U8        RUN CONTROL ERROR
+     F*
+     F*     Parameter* MODE 1A, values:
+     F*
+     F*            1: called by GLC0570 before Accounts post at COB to
+     F*               extract ACDET and RABEX PFs; only called if
+     F*               Retail present
+     F*            2. called by GLC0570 after Accounts Post to extract
+     F*               ACDET, and if retail, AXFI, IBPA and RETAC PFs
+     F*            3. called by REC77 to extract just AXFI PFs
+     F*
+     F*
+     E                    CPY@    1   1 80
+     E                    INT         4 15 0
+     E                    DEC         4  3 0
+     E/EJECT
+     I**
+     I**   A C C O U N T    M A S T E R
+     I**
+     I** ACCOUNTS MASTER - HEADER,DETAIL,TRAILER AND CATCHALL
+     I/COPY WNCPYSRC,GL0570I001
+     I*
+     IACCNT   NS  01   1 CH
+     I                                        1   1 RECIAC
+     I*
+     I        NS  02   1 CD
+     I/COPY WNCPYSRC,GL0570I002
+     I       OR   11   1 CC
+     I                                        1 200 LOT
+     I**************************************201 400 LOT1                  S01383
+     I**************************************201 402 LOT1            S01383S01413
+     I***********                           201 424 LOT1            S01413S01486
+     I/COPY WNCPYSRC,GL0570I003
+     I***********                           201 429 LOT1           S01486 CFT004
+     I***********                           201 485 LOT1           CFT004 CAP035
+     I***********                           201 552 LOT1           CAP035 CPB001
+     I**********                            201 553 LOT1                               CPB001 CGL029
+     I**********                            201 573 LOT1                               CGL029 CLE025
+     I**********                            201 607 LOT1                               CLE025 CTI004
+     I**********                            201 646 LOT1                            CTI004 AR762809B
+     I**********                            201 651 LOT1                          AR762809B AR820964
+     I                                      201 687 LOT1                                    AR820964
+     I/COPY WNCPYSRC,GL0570I004
+     I                                        1   1 RECIAC
+     I**********                              2  16 ACMDKY                                    CGL029
+     I**********                              2   70CNUM                                      CSD027
+     I                                        2   7 CNUM                                      CSD027
+     I*                                                                   S01408
+     I/COPY WNCPYSRC,GL0570IIPG                                           S01408
+     I*                                                                   S01408
+     I                                        8  10 CCY
+     I**********                             11  140ACOD                                      CGL029
+     I                                       11  140ACODQQ                                    CGL029
+     I                                       15  160ACSQ
+     I                                       23  25 BRCA
+     I                                       26  26 ATYP
+     I                                       27  27 STYP
+     I                                    P  30  320DACO
+     I                                    P  33  350DACC                  LN0433
+     I                                    P  56  630LDBL
+     I                                    P  64  710CLBL
+     I                                       72  72 STFQ
+     I                                    P  94 1010EPLB
+     I                                    P 102 1090EPCB
+     I                                    P 138 1400DLIM
+     I                                    P 141 1430LRCR
+     I                                    P 144 1510RTCB
+     I                                    P 152 1590RTLB
+     I                                      190 1990ACNO
+     I                                      200 200 RETB
+     I                                    P 202 2070ODLN
+     I                                    P 208 2100ODED
+     I                                      218 219 EFAC
+     I                                    P 220 2270HELD
+     I                                    P 228 2330MINB
+     I                                    P 234 2360LACD
+     I                                    P 394 3960LCD
+     I                                      397 397 CHTP
+     I                                      401 401 BRCTA                 S01413
+     I                                      402 402 NACSG                 S01413
+     I                                      403 403 R4ACNT                S01413
+     I                                    P 404 4050ENOC                  S01413
+     I                                    P 406 4070EPNO                  S01413
+     I                                    P 408 4150ECFB                  S01413
+     I                                      416 418 LTAB                  S01413
+     I**********                            419 4220LTAC                               S01413 CGL029
+     I                                      419 4220LTACQQ                                    CGL029
+     I                                      423 4240LTAS                  S01413
+     I/COPY WNCPYSRC,GL0570I005
+     I                                      425 428 PTFR                  S01486
+     I                                      429 429 HLEX                  S01486
+     I                                      449 482 IBAN                  CFT004
+     I                                      483 485 IBSEQN                CFT004
+     I                                      554 5630ACOD                                      CGL029
+     I                                      564 5730LTAC                                      CGL029
+     I                                      608 641 A5ACKY                                    CTI004
+     I                                      642 642 A5INTL                                    CTI004
+     I                                      643 646 A5TIAB                                    CTI004
+     I                                    P 649 6510ACEFDT                                 AR762809A
+     I                                    P 652 6577DCSP                                    AR820964
+     I                                      658 658 DCSG                                    AR820964
+     I                                      659 665 DRMT                                    AR820964
+     I                                      666 669 DRFD                                    AR820964
+     I                                    P 670 6757CCSP                                    AR820964
+     I                                      676 676 CCSG                                    AR820964
+     I                                      677 683 CRMT                                    AR820964
+     I                                      684 687 CRFD                                    AR820964
+     I/COPY WNCPYSRC,GL0570I006
+     I**
+     I*    ACCOUNT MASTER TRAILER RECORD
+     I**
+     I        NS  03   1 CT
+     I/COPY WNCPYSRC,GL0570I007
+     I                                        1   1 RECIAC
+     I                                    P  23  250NORE
+     I                                    P  32  340NINU
+     I                                    P  44  460NINP
+     I                                    P  59  66 INT,1
+     I                                    P  67  68 DEC,1
+     I                                    P  69  76 INT,2
+     I                                    P  77  78 DEC,2
+     I                                    P 395 3970LCD
+     I                                    P 401 4030NRET                  S01413
+     I*
+     I                                        1 200 TLOT
+     I**************************************201 400 TLOT1                 S01413
+     I**********                            201 403 TLOT1                              S01413 CGL029
+     I                                      201 413 TLOT1                                     CGL029
+     I*     CATCH ALL
+     I        NS  04
+     I*
+     I** Start of Day Account Balances                                    056524
+     I*                                                                   056524
+     IGLACBLF                                                             056524
+     I              RECI                            RECISB                056524
+     I*
+     I**   STOPPED CHEQUES FILE - DETAIL RECORD.
+     ISTOPB   NS  09   1 CD
+     I**********                              2  16 STPKY                                     CAS010
+     I                                        2  10 SNUMCY                                    CAS010
+     I                                       15  160SSCSQ                                     CAS010
+     I                                       30  32 SBRCA
+     I                                       97 1060SACOD                                     CAS010
+     I        NS
+      *
+     I***STOPKY*     DS                             21                                        CGL029
+     ISTOPKY      DS                             27                                           CGL029
+      ** KEY FOR STOPB
+     I                                        1   3 BRCA
+     I**********                              4   90CNUM                               CGL029 CSD027
+     I                                        4   9 CNUM                                      CSD027
+     I                                       10  12 CCY                                       CGL029
+     I                                       13  220ACOD                                      CGL029
+     I                                       23  240ACSQ                                      CGL029
+     I**********                              4  18 ACMDKY                                    CGL029
+     I**********                              1  18 SKEY                                      CGL029
+     I                                        1  24 SKEY                                      CGL029
+     I                                       25  27 FILLER                                    CGL029
+     I**********                             19  21 FILLER                                    CGL029
+      *                                                                                       CAS010
+     ISTPKY       DS                                                                          CAS010
+     I                                        1   9 STPKY1                                    CAS010
+     I                                       10  190STPKY2                                    CAS010
+     I                                       20  210STPKY3                                    CAS010
+     I* STANDARD LOCAL DATA AREA FIELDS
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     ILDA        UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I**
+     IRUNDT       DS
+     I** DATA AREA RUNDAT
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     I**
+     ISDBANK    E DSSDBANKPD
+     I**   BANK DETAILS
+      *                                                                                       263892
+     ISCSARD    E DSSCSARDPD                                                                  263892
+      ** Switchable Featured Installed                                                        263892
+      *                                                                                       263892
+     I**
+     ISDCUST    E DSSDCUSTPD
+     I** CLIENT DETAILS
+     I**
+     ISDRETL    E DSSDRETLPD
+     I** RETAIL DETAILS
+     I**
+     I/COPY WNCPYSRC,GL0570I008
+     I*
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*                                                                   S01117
+     IDSSDY     E DSDSSDY                                                 S01194
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01194
+     I*                                                                   S01194
+     IDSLDY     E DSDSLDY                                                 220738
+     I*  THIRD DS FOR ACCESS PROGRAMS, VERY LONG DATA STRUCTURE           220738
+      *                                                                   220738
+     I/EJECT
+     C*
+     C*  Receive parameter
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           MODE    1
+     C*    DEFINE LDA                                                     S01117
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C                     IN   LDA                                       S01117
+     C*                                                                   056524
+     C** Define GLACBTL0 Keylist                                          056524
+     C*                                                                   056524
+     C           KLIST     KLIST                                          056524
+     C                     KFLD           CNUM                            056524
+     C                     KFLD           CCY                             056524
+     C                     KFLD           ACOD                            056524
+     C                     KFLD           ACSQ                            056524
+     C                     KFLD           BRCA                            056524
+     C*                                                                   056524
+     C*
+     C*  First Cycle
+     C*
+     C           *IN50     IFEQ '0'
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C                     SETON                     50
+     C*
+     C*    Read RUNDAT
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+     C*
+     C*    Set up d/b values
+     C                     MOVEL'GL0570  'DBPGM
+     C*
+     C**   Access Bank Details
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     SETON                     U7LR
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY            ***************
+     C                     MOVEL@OPTN     DBOPTN  7        * DBERROR 001 *
+     C                     MOVEL'001'     DBASE            ***************
+     C                     EXSR *PSSR
+     C                     GOTO ENDF
+     C                     END
+      *                                                                                       263892
+      ** Check if CSD007 is switched on.                                                      263892
+      *                                                                                       263892
+     C                     CALL 'AOSARDR0'                                                    263892
+     C                     PARM '       ' @RTCD   7                                           263892
+     C                     PARM '*VERIFY' @OPTN   7                                           263892
+     C                     PARM 'CSD007'  @SARD   6                                           263892
+     C           SCSARD    PARM SCSARD    DSFDY                                               263892
+      *                                                                                       263892
+     C                     MOVE 'N'       CSD007  1                                           263892
+     C           @RTCD     IFEQ *BLANKS                                                       263892
+     C                     MOVE 'Y'       CSD007                                              263892
+     C                     ENDIF                                                              263892
+     C**
+     C**   Access Retail details if AXFI to be o/p
+     C           *INU5     IFEQ '1'
+     C                     CALL 'AORETLR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDRETL    PARM SDRETL    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     SETON                     U7LR
+     C                     MOVEL'SDRETLPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY            ***************
+     C                     MOVEL@OPTN     DBOPTN  7        * DBERROR 003 *
+     C                     MOVE '003'     DBASE            ***************
+     C                     EXSR *PSSR
+     C                     GOTO ENDF
+     C                     END
+     C                     END
+     C/COPY WNCPYSRC,GL0570C007
+     C*
+     C                     MOVE *BLANKS   FILLER
+      *                                                                                       CCB016
+      * Check if STOPB is empty                                                               CCB016
+     C           *LOVAL    SETLLSTOPB                                                         CCB016
+     C                     READ STOPB                    71                                   CCB016
+     C*
+     C                     END                                         ***
+     C*
+     C*    End of First Cycle
+     C*
+     C*****************************************************************
+     C/COPY WNCPYSRC,GL0570C008
+     C*
+     C* Set off all o/p indicators
+     C                     SETOF                     303132
+     C                     SETOF                     3334
+     C*****************************************************************
+     C* Main calcs only if a live account record
+     C*
+     C           RECIAC    IFEQ 'D'
+     C*
+     C*****************************************************************
+     C*
+     C* Mode 1: o/p                                                    L
+     C*    ACDET: for retail a/cs closed during the day
+     C*           (ie.Change Type=C; reci will not yet be C)
+     C*****RABEX:*for*opening*a/c*balances*on*live*retail*a/cs            S01413
+     C*
+     C           MODE      IFEQ '1'
+     C           ATYP      ANDEQ'R'
+     C**o/p*to*RABEX                                                      S01413
+     C***********          SETON                     34                   S01413
+     C*                                                                   056524
+     C** Access Start of business Ledger Balance for RABEX                056524
+     C** to get balances before Real Time Postings Applied.               056524
+     C*                                                                   056524
+     C           *INU2     IFEQ '1'                                       056524
+     C                     Z-ADDLDBL      SLDBL  150                      056524
+     C           KLIST     CHAINGLACBLF              35                   056524
+     C                     END                                            056524
+     C*                                                                   056524
+     C* o/p to ACDET
+     C           CHTP      IFEQ 'C'
+     C           LCD       ANDEQRUND
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,GL0570CCPG                                           S01408
+     C*                                                                   S01408
+     C                     SETON                     32
+     C                     END
+     C                     END
+     C*****************************************************************
+     C*
+     C* Mode 2
+     C*
+     C           MODE      IFEQ '2'
+     C*
+     C*******************************************
+     C*
+     C*  O/p to ACDET if last change date is run date
+     C           LCD       IFEQ RUND
+     C                     SETON                     32
+     C                     END
+     C*******************************************
+     C*
+     C**  Other o/p only if a retail a/c
+     C           ATYP      IFEQ 'R'
+     C*
+     C*******************************************
+     C*
+     C* Check for inactive/blocked - IBPA
+     C*
+     C                     TESTB'2'       RETB           30BLOCK DB ON
+     C  N30                TESTB'3'       RETB           30BLOCK CR ON
+     C  N30                TESTB'4'       RETB           30INACTIVE ON
+     C  N30                TESTB'6'       RETB           30BANKRUPT ON
+     C  N30                TESTB'7'       RETB           30BAD DEBT ON
+     C*
+     C*******************************************
+     C*
+     C* Test for transfer to inactive - AXFI
+     C*
+     C                     TESTB'4'       RETB       31    INACTIVE OFF
+     C*
+     C*  Still active - check for transfer today to inactive
+     C           *IN31     IFEQ '1'
+     C*
+     C*  Check time since last action, or date a/c opened if no actions
+     C           LACD      COMP 0                        38
+     C   38      BMNDBI    ADD  DACO      ZDAYNO  50
+     C  N38      BMNDBI    ADD  LACD      ZDAYNO
+     C           ZDAYNO    COMP RUND                   31
+     C                     END
+     C*
+     C*********************END                                            LN0014
+     C*
+     C*******************************************
+     C*
+     C* O/p to RETAC
+     C**  CHECK IF ANY STOPPED CHEQUES FOR THIS CUSTOMER. ENSURE THAT BIT E22112
+     C**  7 IN RETB2 IS SET OFF FIRST - IT IS USED FOR BAD DEBTS IN RETB. E22112
+     C*
+     C                     SETON                     33
+     C                     MOVE RETB      RETB2   1
+0248 C                     BITOF'7'       RETB2                           E22112
+     C*
+     C* Is there a stopped cheque for this account?
+     C           *IN71     IFEQ '0'                                                           CCB016
+     C           STOPKY    SETLLSTOPB
+     C           TAG03     TAG                             ** TAG03 TAG **
+     C                     SETOF                     0936
+     C                     READ STOPB                    36
+     C  N09N36             GOTO TAG03
+     C                     ELSE                                                               CCB016
+     C                     SETON                       36                                     CCB016
+     C                     END                                                                CCB016
+     C                     MOVELSNUMCY    STPKY1                                              CAS010
+     C                     Z-ADDSACOD     STPKY2                                              CAS010
+     C                     Z-ADDSSCSQ     STPKY3                                              CAS010
+     C**N36*               MOVELSBRCA     STPKYA 18                                           CAS010
+     C  N36                MOVELSBRCA     STPKYA 24                                           CAS010
+     C  N36                MOVE STPKY     STPKYA
+     C*
+     C*  If same a/c ref found on STOPB
+     C*
+     C  N36      SKEY      COMP STPKYA                   37
+     C  N36 37             BITON'7'       RETB2
+     C*
+     C*  Obtain Retail customer details
+     C*
+     C                     MOVE *BLANK    CLNKEY 10
+     C                     MOVELCNUM      CLNKEY
+     C******               CALL 'AOCUSTR0'                                220738
+     C                     CALL 'AOCUSTR1'                                220738
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM CLNKEY    @KEY1  10
+     C                     PARM           @KYST   7
+     C******     SDCUST    PARM SDCUST    DSSDY                           220738
+     C           SDCUST    PARM SDCUST    DSLDY                           220738
+     C*
+     C*  D/b error if live cust does not exist for a live a/c
+     C           CSD007    IFEQ 'N'                                                           263892
+     C           @KYST     IFNE '*CNUM  '
+     C           @RTCD     ORNE *BLANK
+     C           BBCLST    ANDNE'Y'                                       220738
+     C           BBDTDL    ORNE 0
+     C*
+     C           *IN02     IFEQ '1'
+     C                     SETON                     U7LR
+     C                     END
+     C*
+     C                     END
+     C                     ELSE                                                               263892
+     C           @RTCD     IFNE '*CUSDEL'                                                     263892
+     C           @RTCD     IFNE *BLANK                                                        263892
+     C           @KYST     ORNE '*CNUM  '                                                     263892
+     C           *IN02     IFEQ '1'                                                           263892
+     C                     MOVE '1'       *INU7                                               263892
+     C                     MOVE '1'       *INLR                                               263892
+     C                     ENDIF                                                              263892
+     C                     ENDIF                                                              263892
+     C                     ENDIF                                                              263892
+     C                     ENDIF                                                              263892
+     C*
+     C*  D/b error if no cust exists for a closed a/c
+     C           *INU7     IFNE '1'
+     C*
+     C           CSD007    IFEQ 'N'                                                           263892
+     C           @KYST     IFNE '*CNUM  '
+     C           @RTCD     ORNE *BLANK
+     C*
+     C           *IN11     IFEQ '1'
+     C                     SETON                     U7LR
+     C                     END
+     C*
+     C                     END
+     C                     ELSE                                                               263892
+     C           @RTCD     IFNE '*CUSDEL'                                                     263892
+     C           @KYST     IFNE '*CNUM  '                                                     263892
+     C           @RTCD     ORNE *BLANK                                                        263892
+     C           *IN11     IFEQ '1'                                                           263892
+     C                     MOVE '1'       *INU7                                               263892
+     C                     MOVE '1'       *INLR                                               263892
+     C                     ENDIF                                                              263892
+     C                     ENDIF                                                              263892
+     C                     ENDIF                                                              263892
+     C                     ENDIF                                                              263892
+     C*
+     C                     END
+     C*
+     C* Exit if d/b error
+     C           *INU7     IFEQ '1'
+     C                     MOVEL'SDCUSTPD'DBFILE
+     C                     MOVELCNUM      DBKEY            ***************
+     C                     MOVEL@OPTN     DBOPTN  7        * DBERROR 002 *
+     C                     MOVEL'002'     DBASE            ***************
+     C                     EXSR *PSSR
+     C                     GOTO ENDF
+     C                     END
+     C*
+     C                     END
+     C****                                                                LN0014
+     C**   MOVE END HERE TO RESTRICT OUTPUT TO RETAIL ACCOUNTS AS REQD.   LN0014
+     C****                                                                LN0014
+     C                     END                                            LN0014
+     C*                                                                 **
+     C******************************************    **********************LN0433
+     C**   F I L E      C O N T R O L S
+     C*
+     C**  If a live account record, hash
+     C           RECIAC    IFEQ 'D'
+     C*
+     C** Use ACCNT Balance for File Controls if RABEX being extracted     056524
+     C*                                                                   056524
+     C           *INU2     IFEQ '1'                                       056524
+     C           *IN34     ANDEQ'1'                                       056524
+     C           SLDBL     DIV  1000      ZZAMT                           056524
+     C           SLDBL     COMP 0                      4445               056524
+     C                     ELSE                                           056524
+     C           LDBL      DIV  1000      ZZAMT
+     C           LDBL      COMP 0                      4445
+     C                     END                                            056524
+     C  N44                Z-ADD3         X
+     C   44                Z-ADD4         X
+     C   44                Z-SUBZZAMT     ZZAMT
+     C*
+     C  N45                EXSR HASH
+     C*
+     C                     END
+     C*
+     C           ENDF      TAG                             ** ENDF TAG **
+     C**
+     C**   Do record counts for o/p files
+     C**
+     C   32 U1   1         ADD  AACDET    AACDET  50
+     C***34*U2***1         ADD  ARABEX    ARABEX  50                      S01413
+     C   31 U5   1         ADD  AAXFI     AAXFI   50
+     C   30 U6   1         ADD  AIBPA     AIBPA   50
+     C   33 U6   1         ADD  ARETAC    ARETAC  50
+     C*
+     C*****************************************************************
+     C*   End of main detail calcs
+     C                     END
+     C********************************************************************LN0433
+     C* ADD IN READING OF RECORDS FOR ACCOUNTS CLOSED TODAY               LN0433
+     C           RECIAC    IFEQ 'C'                                       LN0433
+     C           DACC      ANDEQRUND                                      LN0433
+     C           LCD       ANDEQRUND                                      LN0433
+     C                     SETON                     32                   LN0433
+     C                     END                                            LN0433
+     C*****************************************************************
+     C*
+     C*    ACCUMULATE NUMBER OF ACCOUNT MASTER DETAIL RECORDS READ.
+     C  N04      1         ADD  NREAD     NREAD   50
+     C*
+     C**   ADD 2 TO REC COUNT - FOR HEADER AND TRAILER -  ACDETAC
+     C*
+     C   03 U1   2         ADD  AACDET    AACDET
+     C*
+     C**   ADD 1 TO REC COUNT - FOR HEADER AND TRAILER -  OTHERS
+     C*
+     C***03*U2***2         ADD  ARABEX    ARABEX                          S01413
+     C   03 U5   2         ADD  AAXFI     AAXFI
+     C   03 U6   2         ADD  AIBPA     AIBPA
+     C   03 U6   2         ADD  ARETAC    ARETAC
+     C/COPY WNCPYSRC,GL0570C009
+     C/EJECT
+     C********************************************************************
+     C****                                                            ****
+     C****  S U B R O U T I N E S  &  C O N T R O L   B R E A K S     ****
+     C****                                                            ****
+     C********************************************************************
+     C/SPACE 1
+      *
+     C**   F I L E     C O N T R O L S
+     C**
+     CLR         NORE      ADD  NINU      ACCREC  50
+     CLR         ACCREC    ADD  NINP      ACCREC
+     C/COPY WNCPYSRC,GL0570C001
+     CLR         NREAD     COMP ACCREC               6262
+     CLR 62                SETON                     U8
+     C/COPY WNCPYSRC,GL0570C002
+     C*
+     CLR                   Z-ADD1         X
+     CLR                   Z-ADD3         Y
+     C*
+     CLR                   EXSR COMP
+     C/COPY WNCPYSRC,GL0570C003
+     C*
+     CLR 55                SETON                     59U8
+     C/COPY WNCPYSRC,GL0570C004
+     C*
+     CLR                   Z-ADD2         X       20
+     CLR                   Z-ADD4         Y       20
+     CLR                   EXSR COMP
+     C/COPY WNCPYSRC,GL0570C005
+     C*
+     CLR 55                SETON                     61U8
+     C/COPY WNCPYSRC,GL0570C006
+     C/SPACE 2
+     C********************************************************************
+     C           HASH      BEGSR                           *** HASH ***
+     C                     Z-ADDINT,X     ZZTOTI
+     C                     Z-ADDDEC,X     ZZTOTD
+     C*
+     C                     EXSR GLZADD
+     C*
+     C                     Z-ADDZZTOTI    INT,X
+     C                     Z-ADDZZTOTD    DEC,X
+     C                     ENDSR
+     C********************************************************************
+     C/SPACE 2
+     C********************************************************************
+     C           COMP      BEGSR                           *** COMP ***
+     C                     Z-ADDINT,X     ZZTOTI
+     C                     Z-ADDDEC,X     ZZTOTD
+     C*
+     C                     Z-ADDINT,Y     ZZINT
+     C                     Z-ADDDEC,Y     ZZDEC
+     C*
+     C                     EXSR GLZCMP
+     C*
+     C           ZZDIFI    COMP 0                    5555
+     C  N55      ZZDIFD    COMP 0                    5555
+     C                     ENDSR
+     C********************************************************************
+     C/SPACE 2
+     C********************************************************************
+     C* SUBROUTINE TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL (ZZTOTI,ZZTOTD)
+     C*   IND '99' IS SET BY AN OVERFLOW ERROR
+     C*
+     CSR         GLZADD    BEGSR                           *** GLZADD ****
+     C*
+     CSR                   Z-ADDZZAMT     ZZAMT  153     91-DEFINE ZZAMT
+     CSR 91                GOTO ZZAEND                     AMT = 0.BYPASS
+     C*
+     C* SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS
+     CSR                   Z-ADDZZAMT     ZZAMTI 150       INTEGER FIELD
+     CSR                   Z-ADDZZAMT     ZZWK1   33
+     CSR                   MOVE ZZWK1     ZZAMTD  30       DECIMAL FIELD
+     C* BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW
+     C*
+     CSR                   EXSR GLZSUM
+     CSR         ZZAEND    ENDSR                           ** ZZAEND TAG *
+     C********************************************************************
+     C* SUBROUTINE TO COMPARE AN AMOUNT TO THE TOTAL.
+     C*      PARAMETERS. I/P - ZZINT - THE INTEGER PORTION OF THE NUMBER.
+     C*                  I/P - ZZDEC - THE DECIMAL PORTION OF THE NUMBER.
+     C*                  O/P - ZZDIFI - IS THE INTEGER DIFFERENCE.
+     C*                  O/P - ZZDIFD - IS THE DECIMAL DIFFERENCE.
+     C*                  O/P - ZZNEGD - FOR IMMEDIATE PRINTING ONLY.
+     C*                  O/P - 96 IS SET IF DIFFERENCE IS NEGATIVE.
+     C*
+     C*    IF AN ERROR HAS OCCURED ZZDIFI AND ZZDIFD WILL BE ZERO.
+     C*        '99' - OVERFLOW ERROR
+     C*        '97' - THE 'SIGN' ZONES OF ZZINT AND ZZDEC ARE DIFFERENT
+     C*
+     CSR         GLZCMP    BEGSR                           *** GLZCMP ****
+     CSR                   SETOF                     9799
+     CSR                   Z-ADDZZDEC     ZZDEC   30 919293DEFINE ZZDEC
+     CSR                   Z-ADDZZINT     ZZINT  150 949596DEFINE ZZINT
+     C* IF SIGN ZONES DIFFER, SET 97, & RETURN ZERO.
+     CSR 91 95
+     COR 92 94             SETON                     97    ERROR -MIXED
+     C*                                                           STATUS
+     CSR 97                GOTO ZZQUIT                     BRANCH TO ADMIT
+     C*
+     C*  SPECIAL CASES DEALT WITH FIRST
+     C*      EITHER AMOUNTS EQ '0' OR BOTH AMOUNTS 'EQ'
+     CSR                   SETOF                     9192
+     CSR                   SETOF                     9495
+     CSR 93 96             SETON                     91    * IF I/P FIELD
+     CSR 91                Z-ADDZZTOTI    ZZDIFI 150       *    ZERO
+     CSR 91                Z-ADDZZTOTD    ZZDIFD  30       *
+     CSR 91                GOTO ZZSIGN
+     C*
+     CSR         ZZTOTI    COMP ZZINT                    91* IF FIELDS EQ
+     CSR 91      ZZTOTD    COMP ZZDEC                    91*
+     CSR 91                Z-ADD0         ZZDIFI           *
+     CSR 91                Z-ADD0         ZZDIFD           *
+     CSR 91                GOTO ZZCEND
+     C*
+     CSR         ZZTOTI    COMP 0                        91* IF TOTAL
+     CSR 91      ZZTOTD    COMP 0                        91*    ZERO
+     CSR 91                Z-SUBZZINT     ZZDIFI           *
+     CSR 91                Z-SUBZZDEC     ZZDIFD           *
+     C**
+     CSR         ZZSIGN    TAG                             *** ZZSIGN ****
+     C*
+     C**   IF ZZDIFD IS ZERO, AND ZZDIFI IS NEG. SET UP ZZNEGD.
+     CSR                   SETOF                     96
+     CSR 91      ZZDIFD    COMP 0                        94
+     CSR 94      ZZDIFI    COMP 0                      96
+     CSR 96                MOVE '.000-'   ZZNEGD  5
+     CSR 91                GOTO ZZCEND
+     C*      END OF SPECIAL CASES
+     C*
+     C* IF ZZTOTALS EQ 'B' AND ZZINT,ZZDEC EQ 'A'   THEN -
+     C*  TO COMPARE 'A' WITH 'B'
+     C*     1. STORE ORIGINAL VALUE OF 'B'.
+     C*     2. NEGATE 'A'.
+     C*     3. ADD 'A' TO 'B'.
+     C*     4. 'B' IS NOW THE DIFFERENCE. STORE 'B' IN FIELD 'C'.
+     C*     5. RESTORE 'B'.
+     C*            N.B. 'A' EQ ZZINT AND ZZDEC
+     C*                 'B' EQ ZZTOTI AND ZZTOTD
+     C*                 'C' EQ ZZDIFI AND ZZDIFD
+     C*
+     C*    STEP #1
+     CSR                   Z-ADDZZTOTI    ZZSTRI 150
+     CSR                   Z-ADDZZTOTD    ZZSTRD  30
+     C*    STEP #2
+     CSR                   Z-SUBZZINT     ZZAMTI 150
+     CSR                   Z-SUBZZDEC     ZZAMTD  30
+     C*    STEP #3
+     CSR                   EXSR GLZSUM
+     CSR 99                GOTO ZZQUIT
+     C*    STEP #4
+     CSR                   Z-ADDZZTOTI    ZZDIFI
+     CSR                   MOVE ZZTOTD    ZZDIFD
+     C*    STEP #5
+     CSR                   Z-ADDZZSTRI    ZZTOTI 150
+     CSR                   Z-ADDZZSTRD    ZZTOTD  30
+     CSR                   GOTO ZZCEND                     BYPASS ADMIT
+     CSR         ZZQUIT    TAG                             ** ZZQUIT TAG**
+     CSR                   Z-ADD0         ZZDIFI
+     CSR                   Z-ADD0         ZZDIFD
+     CSR         ZZCEND    ENDSR                           ** ZZCEND TAG**
+     C*
+     C********************************************************************
+     C/SPACE 2
+     C********************************************************************
+     C* SUBROUTINE TO CARRY OUT THE ADDITION FOR SUBROUTINES -
+     C*                        GLZADD, GLZSUB, GLZCMP.
+     C*          PARAMETERS PASSED -
+     C*                     I/P ZZAMTI ZZAMTD
+     C*                     O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.
+     C*
+     CSR         GLZSUM    BEGSR                           *** GLZSUM ****
+     C*
+     CSR                   Z-ADDZZTOTI    ZZTOTI 150       DEFINE ZZTOTI
+     CSR                   Z-ADDZZTOTD    ZZTOTD  30       DEFINE ZZTOTD
+     CSR                   SETOF                     919293
+     CSR                   SETOF                     949599
+     C*
+     C*    DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG
+     CSR         ZZAMTI    COMP 0                      9293
+     CSR 93      ZZAMTD    COMP 0                      9293
+     CSR 93                GOTO ZZSEND                     ZERO BYPASS
+     C*
+     C*    DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.
+     CSR         ZZTOTI    COMP 0                      9193
+     CSR 93      ZZTOTD    COMP 0                      9193
+     C*
+     C*    IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.
+     CSR 93                Z-ADDZZAMTI    ZZTOTI
+     CSR 93                Z-ADDZZAMTD    ZZTOTD
+     CSR 93                GOTO ZZSEND                     ZERO BYPASS
+     C*    IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.
+     CSR 91N92
+     CORN91 92             GOTO ZZOFPS
+     C*
+     CSR         ZZAMTD    ADD  ZZTOTD    ZZWK2   40
+     CSR         ZZWK2     COMP 999                  93    '93' = CARRY
+     CSRN93      ZZWK2     COMP -999                   93    INTO INTEGER.
+     C*
+     CSR 93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VE
+     CSR    93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VE
+     CSR 93      ZZTOTI    ADD  ZZWK3     ZZWK3
+     CSRN93      ZZTOTI    ADD  ZZAMTI    ZZWK3
+     C*
+     C* IF THE MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED
+     CSRN92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS.
+     CSR 92      ZZWK3     COMP ZZTOTI               99     NEGATIVE
+     CSRN99                Z-ADDZZWK2     ZZTOTD
+     CSRN99                Z-ADDZZWK3     ZZTOTI
+     C*
+     C* IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT INTACT.
+     CSR 99                Z-ADD0         ZZAMT  153
+     CSR                   GOTO ZZSEND
+     C*
+     C* THE 'SIGNS' ARE DIFFERENT
+     CSR         ZZOFPS    TAG                             ** ZZOFPS TAG**
+     C* IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT
+     C*
+     CSR 92                Z-SUBZZAMTI    ZZAMTI 150
+     CSR 92                Z-SUBZZAMTD    ZZAMTD  30
+     C*
+     C* IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.
+     C*
+     CSR 91                Z-SUBZZTOTI    ZZTOTI
+     CSR 91                Z-SUBZZTOTD    ZZTOTD
+     C* BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.
+     C*
+     CSR         ZZTOTI    COMP ZZAMTI               93  95
+     CSR 95      ZZTOTD    COMP ZZAMTD               93  95
+     C*
+     C* IF ZZTOT EQ. ZZAMT RETURN ZERO.
+     CSR 95                Z-ADD0         ZZTOTI
+     CSR 95                Z-ADD0         ZZTOTD
+     CSR 95                GOTO ZZSEND
+     C*
+     C* IF ZZTOT GT. ZZAMT.
+     CSR 93      ZZAMTD    COMP ZZTOTD               94
+     CSR 93 94   ZZTOTI    SUB  1         ZZTOTI
+     CSR 93 94   ZZTOTD    ADD  1000      ZZWK2
+     CSR 93      ZZTOTI    SUB  ZZAMTI    ZZTOTI
+     CSR 93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD
+     CSR 93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD
+     C*
+     C* IF ZZAMT GT. ZZTOT.
+     CSRN93      ZZTOTD    COMP ZZAMTD               94
+     CSRN93 94   ZZAMTI    SUB  1         ZZWK3  150
+     CSRN93 94   ZZAMTD    ADD  1000      ZZWK2
+     CSRN93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI
+     CSRN93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI
+     CSRN93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD
+     CSRN93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD
+     C*
+     C* REVERSE SIGN OF ZZTOT IF LARGER I/P FIELDS WERE NEGATIVE
+     CSR                   SETOF                     94
+     CSR 93 91
+     CORN93 92             SETON                     94
+     CSR 94                Z-SUBZZTOTI    ZZTOTI
+     CSR 94                Z-SUBZZTOTD    ZZTOTD
+     C**
+     C**   RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.
+     CSR 92                Z-SUBZZAMTI    ZZAMTI
+     CSR 92                Z-SUBZZAMTD    ZZAMTD
+     CSR         ZZSEND    TAG                             ** ZZSEND TAG *
+     C**
+     C**   IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.
+     CSR                   SETOF                     96
+     CSR         ZZTOTD    COMP 0                        91
+     CSR 91      ZZTOTI    COMP 0                      96
+     CSR 96                MOVE '.000-'   ZZNEGD  5
+     CSR                   ENDSR                             ** ENDSR **
+     C********************************************************************
+     C********************************************************************
+     C*
+     C* *PSSR  --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS
+     C*
+     C* CALLED FROM: AFTER ABNORNAL OPERATION OCCURS
+     C*
+     C* CALLS: NOTHING
+     C*
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C                     ENDSR                           ** *PSSR **
+     C********************************************************************
+     C/EJECT
+     O********************************************************************
+     O** INACTIVE AND BLOCKED ACCOUNTS
+     O**
+     OIBPAIB  D        30 U6
+     O                                    1 'D'
+     O                         BRCA       4
+     O                         CNUM      10
+     O                         CCY       13
+     O**********               ACOD      17                                                   CGL029
+     O                         ACODQQ    17                                                   CGL029
+     O                         ACSQ      19
+     O                         ACNO      29
+     O                         BBCRNM    49
+     O                         LDBL      57P
+     O                         CLBL      65P
+     O                         LACD      68P
+     O                         RETB      69
+     O                         BBACOC    71
+     O                         ACOD      90                                                   CGL029
+     OIBPAIZZ D        03 U6
+     O                                    1 'T'
+     O                         AIBPA      4P
+     O**
+     O**   ACCOUNTS TO BE TRANSFERRED TO INACTIVE
+     O**
+     OAXFIAX  D        31 U5
+     O                                    1 'D'
+     O                         BRCA       4
+     O                         BBACOC     6
+     O                         CNUM      12
+     O                         CCY       15
+     O**********               ACOD      19                                                   CGL029
+     O                         ACODQQ    19                                                   CGL029
+     O                         ACSQ      21
+     O                         ACNO      31
+     O                         BBCRNM    51
+     O                         LDBL      59P
+     O                         LACD      62P
+     O                         ACOD      74                                                   CGL029
+     OAXFIAZZ T        LR U5
+     O                                    1 'T'
+     O                         AAXFI      4P
+     O**
+     O**   ACCOUNT DETAILS EXTRACT
+     O**
+     OACDETAA D        U1N50
+     O                                    1 'H'
+     OACDETAB D        U1 32
+     O                         LOT      200
+     O*************************LOT1     400                               S01383
+     O*************************LOT1     402                         S01383S01413
+     O***********              LOT1     424                         S01413S01486
+     O/COPY WNCPYSRC,GL0570O001
+     O***********              LOT1     429                        S01486 CFT004
+     O***********              LOT1     485                        CFT004 CAP035
+     O***********              LOT1     552                        CAP035 CPB001
+     O**********               LOT1     553                                            CPB001 CGL029
+     O**********               LOT1     573                                            CGL029 CLE025
+     O**********               LOT1     607                                            CLE025 CTI004
+     O**********               LOT1     646                                         CTI004 AR762809B
+     O**********               LOT1     651                                       AR762809B AR820964
+     O                         LOT1     687                                                 AR820964
+     O/COPY WNCPYSRC,GL0570O002
+     OACDETAC T        LR U1
+     O                         TLOT     200
+     O*************************TLOT1    400                               S01413
+     O                         TLOT1    403                                            S01413 CGL029
+     O**********               TLOT1    413                                                   CGL029
+     O                         AACDET    25P
+     O**
+     O**   RETAIL ACCOUNTS EXTRACT FILE
+     O**
+     ORETACRE D        33 U6
+     O                                    1 'D'
+     O                         BRCA       4
+     O                         ATYP       5
+     O                         STYP       6
+     O                         CNUM      12
+     O                         CCY       15
+     O**********               ACOD      19                                                   CGL029
+     O                         ACODQQ    19                                                   CGL029
+     O                         ACSQ      21
+     O                         ACNO      31
+     O                         BBCASC    39
+     O                         BBCRNM    59
+     O                         BBACOC    61
+     O                         EFAC      63
+     O                         RETB2     64
+     O                         LRCR      67P
+     O                         LDBL      75P
+     O                         CLBL      83P
+     O                         HELD      91P
+     O                         MINB      97P
+     O                         ODLN     103P
+     O                         ODED     106P
+     O                         DLIM     109P
+     O                         EPLB     117P
+     O                         EPCB     125P
+     O                         RTLB     133P
+     O                         RTCB     141P
+     O                         STFQ     142
+     O                         DACO     145P
+     O**********               ACOD     170                                         CGL029 AR1048918
+     O                         ACOD     175                                                AR1048918
+     ORETACZZ T        LR U6
+     O                                    1 'T'
+     O                         ARETAC     4P
+     O***********                                                         S01413
+     O*****RETAIL*ACCOUNTS*OPENING*BALANCES*FILE                          S01413
+     O***********                                                         S01413
+     O***RABEXOR D        34 U2                                           S01413
+     O***********                         1 'D'                           S01413
+     O***********              BRCA       4                               S01413
+     O***********              CNUM      10                               S01413
+     O***********              CCY       13                               S01413
+     O***********              ACOD      17                               S01413
+     O***********              ACSQ      19                               S01413
+     O***********              ACNO      29                               S01413
+     O***********              LDBL      37P                              S01413
+     O***RABEXZZ*T********LR*U2                                           S01413
+     O***********                         1 'T'                           S01413
+     O***********              ARABEX     4P                              S01413
+     O/SPACE 2
+     O***  F I L E    C O N T R O L S
+     O*
+     OGL0570AUT  203   LR
+     O                                   24 'REFERENCE GL0570AU'
+     O                         BJURPT    89
+     O                                  104 'DATE'
+     O                         RUNA     113
+     O                                  122 'PAGE'
+     O                         PAGE  Z  127
+     O        T  1     LR
+     O                                   64 'ACCOUNT DETAILS EXTRACT'
+     O                                   79 'RUN CONTROLS'
+     O        T  3     LR
+     O                                   64 '-----------------------'
+     O        T  215   LR
+     O                                   60 'INPUT'
+     O                                   90 'CALCULATED'
+     O        T  2     LR
+     O                                   49 'ACCOUNTS MASTER FILE'
+     O        T  2     LR
+     O                                   26 'NUMBER OF ACCOUNT'
+     O                                   39 'RECORDS READ'
+     O                         ACCREC3   60
+     O/COPY WNCPYSRC,GL0570O003
+     O                 62      NREAD 3   90
+     O                 62               120 '*** OUT OF BALANCE ***'
+     O/COPY WNCPYSRC,GL0570O004
+     O        T  1     LR
+     O                                   22 'VALUE OF LIVE'
+     O                                   34 'ACCOUNTS DR'
+     O                         DEC,1     60 '0   '
+     O                         INT,1 Z   57
+     O/COPY WNCPYSRC,GL0570O005
+     O                 59      DEC,3     90 '0   '
+     O                 59      INT,3 Z   87
+     O                 59               120 '*** OUT OF BALANCE ***'
+     O/COPY WNCPYSRC,GL0570O006
+     O        T  2     LR
+     O                                   34 'CR'
+     O                         DEC,2     60 '0   '
+     O                         INT,2 Z   57
+     O/COPY WNCPYSRC,GL0570O007
+     O                 61      DEC,4     90 '0   '
+     O                 61      INT,4 Z   87
+     O                 61               120 '*** OUT OF BALANCE ***'
+     O        T 22     LR
+     O/COPY WNCPYSRC,GL0570O008
+     O                                   32 'NUMBER OF RECORDS WRITT'
+     O                                   50 'EN TO OUTPUT FILES'
+     O        T  2     LR U6
+     O                                   50 'INACTIVE/BLOCKED A/CS'
+     O                                   55 ' FILE'
+     O                                   75 ' - IBPA'
+     O                         AIBPA 1   90
+     O        T  2     LR U5
+     O                                   51 'A/CS TO BE TRANSFERRED'
+     O                                   68 'TO INACTIVE FILE'
+     O                                   75 ' - AXFI'
+     O                         AAXFI 1   90
+     O        T  2     LR U6
+     O                                   48 'RETAIL A/C BALANCES'
+     O                                   53 ' FILE'
+     O                                   76 ' - RETAC'
+     O                         ARETAC1   90
+     O********T  2     LR U2                                              S01413
+     O********                           52 'RETAIL OPENING BALANCES'     S01413
+     O********                           57 ' FILE'                       S01413
+     O********                           76 ' - RABEX'                    S01413
+     O********                 ARABEX1   90                               S01413
+     O        T  2     LR U1
+     O                                   49 'ACCOUNT DETAILS FILE'
+     O                                   76 ' - ACDET'
+     O                         AACDET1   90
+     O*
+     O*  DATABASE ERROR OUTPUT
+     O*
+     O        T 3      LR U7
+     O                                   38 'DATABASE ERROR NO.-'
+     O                         DBASE     41
+     O                                   48 'FILE-'
+     O                         DBFILE    58
+     O                                   65 'KEY-'
+     O                         DBKEY     94
+     O*
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

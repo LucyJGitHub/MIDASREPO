@@ -1,0 +1,2360 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IBLC 2002 Securities Trading Extraction')        *
+      *****************************************************************
+      *                                                               *
+      *  Midas - IBLC 2002 Module                                     *
+      *                                                               *
+      *  IL0643 - Daily Seurities Trading Extraction for IBLC 2002    *
+      *           Reporting                                           *
+      *                                                               *
+      *  Function:  This program is running during Close of business  *
+      *             To extract Items to report for iblc 2002 in       *
+      *             securities Trading Module                         *
+      *                                                               *
+      *  Called By: ILC0643 - IBLC 2002 -Securities Trading Extraction*
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      *  Last Amend No. CRE075             Date 06Dec10               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 244317             Date 27Dec06               *
+      *                 CSD027A            Date 12May06               *
+      *                 220750             Date 17Oct06               *
+      *                 234300             Date 28Sep06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CER001             Date 25Apr05               *
+      *                 UPG402             Date 04Oct04               *
+      *                 IL0039             Date 14Jan02               *
+      *                 IL0030             Date 03Jan02               *
+      *                 IL0022             Date 20Dec01               *
+      *                 201180             Date 17Dec01               *
+      *                 ULX043             Date 13Nov01               *
+      *                 ULX043             Date 18Sep01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  244317 = Database error at 15. Field WWPSEA to short.        *
+      *  220750 - Database error if customer is closed                *
+      *  234300 - Recompiled over changed in PF/HSTTRD.               *
+      *  CSD027A - Conversion Of Customer Number to Alpha.            *
+      *            (recompile due to change in DPTMVD etc)            *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  UPG402 - Recompile due to R4.02 upgrade                      *
+      *  IL0039 - To avoid DBE 15, Access POSETD Details with         *
+      *           Event date as VALUE DATE of POSETD ==>              *
+      *           CREATE new LF/POSETDLX                              *
+      *  IL0030 - When 'in' currency in event CCY, IF nostro not      *
+      *           found , try with 'EUR' nostro                       *
+      *  IL0022 - ULX043 - Adapt fix 183535 to avoid SDNOSTPD         *
+      *           data base error 15                                  *
+      *  201180 - Amount is converted twice if 2 Operation codes      *
+      *           is on Routing Key                                   *
+      *  ULX043 - IBLC 2002 Reporting                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     FSEKEY   IF  E           K        DISK         KINFSR *PSSR
+      *** SE Generated A/C Keys                            Prefix none
+      *
+     FILICDRPDIF  E                    DISK         KINFSR *PSSR
+      ***  IBLC 2002 I.C.D.            Retrieval index     Prefix IC
+      *
+     F***SDCUSTYLIF  E           K        DISK         KINFSR *PSSR                           CER001
+     FSDCUX1L0IF  E           K        DISK         KINFSR *PSSR                              CER001
+      ***  Customers - Ext file        Retrieval index     Prefix CU
+      *
+     F***SDBRCHYLIF  E           K        DISK         KINFSR *PSSR                           CER001
+     FSDBRX1L0IF  E           K        DISK         KINFSR *PSSR                              CER001
+      ***  Branch code - Ext file      Retrieval index     Prefix BR
+      *
+     F***SDCURRYLIF  E           K        DISK         KINFSR *PSSR                           CER001
+     FSDCYX1L0IF  E           K        DISK         KINFSR *PSSR                              CER001
+      ***  Currency Code - Ext file    Retrieval index     Prefix CY
+      *
+     F***INVTPDYLIF  E           K        DISK         KINFSR *PSSR                           CER001
+     FSEINX1L0IF  E           K        DISK         KINFSR *PSSR                              CER001
+      ***  Investment types Extension file                 Prefix NT
+      *
+     F***SECTYDYLIF  E           K        DISK         KINFSR *PSSR                           CER001
+     FSESDX1L0IF  E           K        DISK         KINFSR *PSSR                              CER001
+      ***  Securities Details - Ext                        Prefix VV
+      *
+     F***SDCTRYYLIF  E           K        DISK         KINFSR *PSSR                           CER001
+     FSDCTX1L0IF  E           K        DISK         KINFSR *PSSR                              CER001
+      ***  Countries - Ext file        Retrieval index     Prefix CT
+      *
+     FINVTP   IF  E           K        DISK         KINFSR *PSSR
+      ***  SE Investment types                             Prefix none
+      *
+     FSECTY   IF  E           K        DISK         KINFSR *PSSR
+      ***  Securities details                              Prefix None
+      *
+     FTRADHS  IF  E           K        DISK         KINFSR *PSSR
+      ***  SE - Trades + Trades Historic file              Prefix none
+      *
+     FDPTMVR  IF  E           K        DISK         KINFSR *PSSR
+      ***  SE Trades : DEPOT MOVEMENTS                     Prefix none
+      *
+     FPOSET   IF  E           K        DISK         KINFSR *PSSR
+      *** SE Position Settlement                           Prefix none
+      *
+     F***POSETDLXIF  E           K        DISK         KINFSR *PSSR                    IL0039 CER001
+     FSEPOSXL0IF  E           K        DISK         KINFSR *PSSR                              CER001
+      *** SE Position Settlement by value date             Prefix none    IL0039
+     F            POSETDF                           KRENAMERTV039         IL0039
+      *
+     FILRKSEPDIF  E           K        DISK         KINFSR *PSSR
+      ***  IBLC 2002 RK (Securities Trading)               Prefix RK
+      *
+      ***  NOT FOR NOW
+     F***SDBRCHL5IF  E           K        DISK         KINFSR *PSSR
+      ***  Branch code - BICN          Retrieval index     Prefix BR
+      *
+     FILDIWKPDO   E                    DISK         KINFSR *PSSR
+      ***  Items generated             Retrieval index     Prefix IT
+      *
+     FILRKAUPDO   E                    DISK         KINFSR *PSSR
+      ***  RK used file                Retrieval index     Prefix AU
+      *
+     FIL0643P1O   E             65     PRINTER      KINFDS SPOOL1
+     FIL0643P2O   E             66     PRINTER      KINFDS SPOOL2
+     FIL0643AUO   E                    PRINTER      KINFDS SPOOLU
+      *
+      /EJECT
+      *****************************************************************
+      *
+     E                    CSE1   10  46  3               Valid comb
+      *
+      ***  Arrays defined to Replace RK code when Counterparty is EMU Zone
+      *
+     E                    OPEC    9   9  3               Operation codes to change
+     E                    OPER    9   9  3               Operation codes Replaced values
+      *
+      ***  Standard Subroutine Arrays
+      *
+     E                    POWER   1   7  7 3             std ZCCYCN
+      *
+      /COPY ZSRSRC,ZDATE2Z1                              Std ZDATE1/ZDATE2
+      *
+      ***  Array containing Copyright statement
+      *
+     E                    CPY@    1   1 80               Array for Copyright
+      *
+      ***  Working Arrays
+      *
+     E                    ACO         6  3               Operation codes
+     E                    IND         6  1               tab *IN40--> *IN45
+      *
+      ***  Standard subroutine Arrays
+      *
+      /COPY ZSRSRC,ZHOLE                                 Std ZCHKH/ZFWDT/ZACCH
+      /COPY ZSRSRC,ZFRPEDZ1                              Std ZFRPED
+      *
+      /EJECT
+      *****************************************************************
+      *
+      ***  Standard subroutine Data Structure
+      *
+      /COPY ZSRSRC,ZHOLI                                   Std ZCHKH, ZFWDT, ZACCH
+      /COPY ZSRSRC,ZFRPEDZ2                                Std ZFRPED
+      *
+      ***  Working Data Structure
+      *
+     IPSDS       SDS
+      ***  Program status data structure for WS/user ID'S
+     I                                     *PROGRAM PGM
+     I                                      244 253 JOB
+     I                                      254 263 USER
+      *
+     ILDA       E DSLDA                         256
+      ***  Local data area
+      *
+     I            DS
+      ***  Data structure for AKEY division
+      *                                             Proc.  type
+      *                                             Deal type
+     I                                        1   2 AKEY12
+      *                                             Event type
+     I                                        3   3 AKEY33
+      *                                             Proc type
+     I                                        4   4 AKEY4
+      *                                             Trade type
+     I                                        5   5 AKEY55
+      *                                             Trade subtype
+     I                                        5   6 AKEY56
+      *                                             Event amount type
+     I                                       19  20 AKEY19
+     I                                        1  20 ACKY
+      *
+     I            DS
+      ***  data structure containing ILRKDLPD key
+     I                                        1   2 KMODI
+     I                                        3   3 KPTYP
+     I                                        4   4 KTTYP
+     I                                        5   5 KEVTP
+     I                                        6   7 KCTYP
+     I                                        8   9 KITYP
+     I                                       10  10 KDURA
+     I*                                      11  11 KCCCY
+     I                                       12  12 KSETT
+     I                                       13  14 KEVNT
+     I                                       15  22 KFIL8
+     I                                        1  22 KEYDS
+     I            DS
+      ***  data structure to move fields in report layout
+     I                                        1   2 RMODI
+     I                                        3   3 RPTYP
+     I                                        4   4 RTTYP
+     I                                        5   5 REVTP
+     I                                        6   7 RCTYP
+     I                                        8   9 RITYP
+     I                                       10  10 RDURA
+     I*                                      11  11 RCCCY
+     I                                       12  12 RSETT
+     I                                       13  14 REVNT
+     I                                       15  22 RFIL8
+     I                                        1  22 RFLDS
+     I            DS
+      ***  Data structure to move operation code in ACO array
+     I                                        1   3 RKDRR1
+     I                                        4   6 RKDRR2
+     I                                        7   9 RKDRR3
+     I                                       10  12 RKCRR1
+     I                                       13  15 RKCRR2
+     I                                       16  18 RKCRR3
+     I                                        1  18 OPCODS
+     I            DS
+      ***  Data structure to move operation code in REPORT IL0643P1
+     I                                        1   3 RDRR1
+     I                                        4   6 RDRR2
+     I                                        7   9 RDRR3
+     I                                       10  12 RCRR1
+     I                                       13  15 RCRR2
+     I                                       16  18 RCRR3
+     I                                        1  18 ROPCO
+     I            DS
+      ***  Data structure to use OSAC zones
+     I                                        1   2 DSNOS
+     I                                        1   6 DSCNM
+     I**********                              7  10 DSACD                                     CER001
+     I                                        7  16 DSACD                                     CER001
+     I                                        1  100DSRNM
+     I**********                              1  12 WWPAY                                     CER001
+     I                                        1  18 WWPAY                                     CER001
+     IMRDTDS      DS
+      ***  Data structure to use BJMRDT
+     I                                        1   2 WDLUP
+     I                                        3   5 WMLUP
+     I                                        6   7 WYLUP
+      *
+     IWWDAT       DS
+     I                                        1   40WDDMM
+     I                                        5   60WYEAR
+      *
+     I            DS
+      ***  Data structures to write ILRKAUD0 record
+     I                                        1   2 AUMODI
+     I                                        3  22 AURKEY
+     I                                        1  22 AUKEY
+     I            DS
+     I                                        1   3 AUDRR1
+     I                                        4   6 AUDRR2
+     I                                        7   9 AUDRR3
+     I                                       10  12 AUCRR1
+     I                                       13  15 AUCRR2
+     I                                       16  18 AUCRR3
+     I                                        1  18 AUOPCO
+     I            DS
+      ***  Data structure for redefine IBLC customer type
+     I                                        1   2 WWCUTY
+     I                                        1   1 WWBNBK
+     I                                        2   2 WWCTRY
+      *
+      ***  Data Structure to received details through Access Object programs
+      *
+     ISDBANK    E DSSDBANKPD
+      ***  Standing Data - Bank Details
+     ISDGELR    E DSSDGELRPD
+      ***  Standing Data - Midas General Ledger Module details
+     ISDBRCH    E DSSDBRCHPD
+     I              QQDFAC                          QQDFA1                                    CER001
+      ***  Standing Data - Branch Details
+     ISDCURR    E DSSDCURRPD
+      ***  Standing Data - Currency Details
+     ISDCUST    E DSSDCUSTPD
+      ***  Standing Data - Customer Details
+     ISDACOD    E DSSDACODPD
+     I              QQACCD                          QQACC1                                    CER001
+      ***  Standing Data - Account Code Details
+     ISDNOST    E DSSDNOSTPD
+     I              QQACCD                          QQACC2                                    CER001
+      ***  Standing Data - Nostro Accounts Details
+     IACCNT     E DSACCNTAB
+      ***  Standing Data - Customer Accounts Details
+     I              RECI                            RECIAC
+     I              CNUM                            CNUMAC
+     I              BRCA                            BRCDAC
+      *
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, short DS
+     IDSSDY     E DSDSSDY
+      **  Second DS for access programs, long DS
+     IDSLDY     E DSDSLDY                                                                     220750
+      *  Third DS for access programs, very long data structure                               220750
+      *
+      ***  Data Structure for RCF
+      *
+     ISPOOLU      DS
+      ***  File Information Data Structure - AU report
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     ISPOOL1      DS
+      ***  File Information Data Structure - P1 report
+     I                                       83  92 SFIL1
+     I                                    B 123 1240SFNUM1
+      *
+     ISPOOL2      DS
+      ***  File Information Data Structure - P2 report
+     I                                       83  92 SFIL2
+     I                                    B 123 1240SFNUM2
+      *
+      /EJECT
+      *****************************************************************
+      *                       M A I N L I N E S                       *
+      *****************************************************************
+      *
+     C                     READ SEKEY                    70Read file
+     C           *IN70     DOWEQ*OFF                       Process until EOF
+      *
+     C                     MOVE BRHA      KWBRCA  3
+      *
+      ***  Check Branch : To be reported ? Branch of consolidation ?
+      *
+     C********** KWBRCA    CHAINSDBRCHYL             99                                       CER001
+     C           KWBRCA    CHAINSDBRX1L0             99                                       CER001
+      *
+      ***  Database error in case of Problem
+      *
+     C           *IN99     IFNE *OFF
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ****************
+     C**********           MOVEL'SDBRCHYL'DBFILE    P      * DB ERROR 001 *                   CER001
+     C                     MOVEL'SDBRX1L0'DBFILE    P      * DB ERROR 001 *                   CER001
+     C                     MOVELKWBRCA    DBKEY     P      ****************
+     C                     MOVELPGM       DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Check if branch must be Reported. If no, go to next branch and Loop
+      *
+     C           BRREPT    IFNE 'Y'
+     C           KPOS1     SETGTSEKEYDF
+     C                     READ SEKEY                    70Read next
+     C                     MOVE *BLANKS   KWBRCA
+     C                     MOVE *BLANKS   KWECCY
+     C                     ITER                            Loop
+     C                     ENDIF
+      *
+      ***  Report using branch of Consolidation
+      *
+     C                     MOVE BRCONS    ITBRCD
+      *
+      ***  Access Branch Details to retrieve BICN Immatriculation
+      *
+     C                     CALL 'AOBRCHR0'             99
+     C                     PARM *BLANK    PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM KWBRCA    PBRCA   3
+     C           SDBRCH    PARM SDBRCH    DSFDY
+      *
+      ***  Database error in case of PRoblem
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *IN99     OREQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ****************
+     C                     MOVEL'SDBRCHPD'DBFILE    P      * DB ERROR 002 *
+     C                     MOVELKWBRCA    DBKEY     P      ****************
+     C                     MOVELPGM       DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C********** A8BICN    CHAINSDCUSTYL             99                                       CER001
+     C           A8BICN    CHAINSDCUX1L0             99                                       CER001
+      *
+      ***  Database error in case of PRoblem
+      *
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE            ****************
+     C**********           MOVEL'SDCUSTYL'DBFILE    P      * DB ERROR 003 *                   CER001
+     C                     MOVEL'SDCUX1L0'DBFILE    P      * DB ERROR 003 *                   CER001
+     C                     MOVELA8BICN    DBKEY     P      ****************
+     C                     MOVELPGM       DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Save Immatriculation for identification
+      *
+     C           CUIMCO    IFNE *BLANKS                    Defined
+     C           CUIMCO    ANDNE'00'                       and Known
+     C                     MOVELCUIMCO    WCIDCO  2
+     C                     MOVELCUIMNB    WCIDEN  9
+     C                     ELSE                            else use identification
+     C                     MOVELCUIDCO    WCIDCO
+     C                     MOVELCUIDEN    WCIDEN
+     C                     ENDIF
+      *
+      ***  Process While Same branch and End OF File not detected
+      *
+     C           KWBRCA    DOWEQBRHA
+     C           *IN70     ANDEQ*OFF
+      *
+      ***  Check Event Currency : To be reported ?
+      *
+     C                     MOVE EVCY      KWECCY  3
+     C********** KWECCY    CHAINSDCURRYL             99                                       CER001
+     C           KWECCY    CHAINSDCYX1L0             99                                       CER001
+      *
+      ***  Database error in case of Problem
+      *
+     C           *IN99     IFNE *OFF
+     C           *LOCK     IN   LDA
+     C                     Z-ADD4         DBASE            ****************
+     C**********           MOVEL'SDCURRYL'DBFILE    P      * DB ERROR 004 *                   CER001
+     C                     MOVEL'SDCYX1L0'DBFILE    P      * DB ERROR 004 *                   CER001
+     C                     MOVELKWECCY    DBKEY     P      ****************
+     C                     MOVELPGM       DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Check if Currency is to be Reported. If no, go to next currency and Loop
+      *
+     C           CYREPT    IFNE 'Y'
+     C           KPOS2     SETGTSEKEYDF
+     C                     READ SEKEY                    70Read next
+     C                     MOVE *BLANKS   KWECCY
+     C                     ITER                            Loop
+     C                     ENDIF
+      *
+      ***  Access Currency details For converison if Required
+      *
+     C                     CALL 'AOCURRR0'             99
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM KWECCY    PCURR
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           *IN99     IFEQ *ON
+     C           PRTCD     ORNE *BLANKS
+     C                     Z-ADD5         DBASE            ****************
+     C                     MOVEL'SDCURRPD'DBFILE    P      * DB ERROR 005 *
+     C                     MOVELKWECCY    DBKEY     P      ****************
+     C                     MOVELPGM       DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Keep to convert Eventually Amount in Euro for 'In' Currency
+      *
+     C                     MOVELA6CYCD    ZCCYF
+     C                     Z-ADDA6SPRT    ZRATEF
+     C                     MOVELA6MDIN    ZMDINF
+     C                     Z-ADDA6NBDP    ZCDPF
+     C                     MOVE A6INCY    KPINCY  1
+     C                     MOVELA6SWCY    WKCCOD  2        CCY ISO Code
+      *
+      ***  Conver limits of registration for non bank own Account transaction
+      ***  in Current currency (ICLIMR form ICD)
+      *
+     C                     MOVE '*NBANK'  PLIMT   6        Default
+     C                     CALL 'IL0410'
+     C                     PARM *BLANKS   PCODE   3        ==> Lim. of Reg.
+     C                     PARM           PLIMT
+     C                     PARM KWECCY    PTCCY   3
+     C                     PARM PGM       PCPGM  10
+      *
+      ***  Result parameters
+      *
+     C                     PARM '0'       PERID   1
+     C                     PARM '0'       PDBID   1
+     C                     PARM *ZEROS    PCLIM  150
+     C                     PARM *ZEROS    PILIM  150
+     C                     PARM ICLIMR    PLREG  150       Limit of Registration
+      *
+     C                     Z-ADDPLREG     WWREGI 150       for non Bank own A/C Transactions
+      *
+      ***  Process while same currency
+      *
+     C           KWECCY    DOWEQEVCY                       Process same currency
+     C           KWBRCA    ANDEQBRHA                       and same branch
+     C           *IN70     ANDEQ*OFF                       and until EOF
+      *
+     C                     MOVE ACKY      STARTK 20
+      *
+      ***  Look up table depending on Event type, amount type.
+      *
+     C                     MOVE *BLANK    CKCMB   3
+     C                     MOVE STARTK    RAKEY
+     C                     MOVELAKEY4     CKCMB
+     C                     MOVE AKEY19    CKCMB
+      *
+     C                     MOVE *OFF      *IN60
+     C           CKCMB     LOKUPCSE1                     60*OFF = not found
+      *
+      ***  Treat Exception
+      *
+     C           CKCMB     IFEQ 'SDI'
+     C           CKCMB     OREQ 'HDI'
+     C           CKCMB     OREQ 'PPP'
+     C           CKCMB     OREQ 'RFV'
+     C           CKCMB     OREQ 'MCV'
+     C           CKCMB     OREQ 'XCD'
+      *
+     C           AKEY56    IFNE '  '
+     C           AKEY56    ANDNE' S'
+     C           AKEY56    ANDNE' D'
+     C           AKEY56    ANDNE' X'
+     C                     MOVE *OFF      *IN60
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           CKCMB     IFEQ 'SSA'
+     C           CKCMB     OREQ 'SCD'
+      *
+     C           AKEY56    IFNE 'P '
+     C           AKEY56    ANDNE'S '
+     C           AKEY56    ANDNE' X'
+     C           AKEY56    ANDNE' S'
+     C           AKEY56    ANDNE' D'
+     C                     MOVE *OFF      *IN60
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  Access to the trade file (#DURA), if the trade reference exists
+      ***  Or if the account key is valid for the IBLC report
+      ***  (If the account key is valid and the trade reference is zero,
+      ***  the pgm will process a data base error in the routine #DURA)
+      *
+     C           TRFR      IFNE *ZEROS
+     C           *IN60     OREQ *ON
+      *
+     C                     EXSR #DURA
+     C                     ENDIF
+      *
+     C           *IN60     IFEQ *ON                        not bypassed
+      *
+      ***  If the account key is valid : Generate a routing key record
+      ***  to reduce RK management, transform ACKY for some RK
+      ***  Transform AKEY4, AKEY19 as follow
+      ***  VCP, CFP, CCP, HFP, HCP, PFP, PCP, RFP, RCP, MFP, MCP, XFP, XCP  ==> VFP
+      ***  VCR, CFR, CCR, HFR, HCR, PFR, PCR, RFR, RCR, MFR, MCR, XFR, XCR  ==> VFR
+      ***  LFR                                                              ==> VFR
+      ***  VAI                                                              ==> VPI
+      ***  RFV                                                              ==> MCV
+      ***  XCD                                                              ==> HDI
+      ***  SCD                                                              ==> SSA
+      ***  PPP                                                              ==> VCO
+      ***  HWN                                                              ==> VWN
+      ***  VPI, VCO,VFP,VFR, VRE, VRR, VWN, CDI, HDI, MCV no changes
+      ***  TO check With DM : CDI no RK
+      ***                     HDI not Accepted and no RK
+      ***                     MCV no RK
+      *
+     C           AKEY19    IFEQ 'CP'
+     C           AKEY19    OREQ 'FP'
+     C                     MOVE 'V'       AKEY4
+     C                     MOVE 'FP'      AKEY19
+     C                     ENDIF
+      *
+     C           AKEY19    IFEQ 'CR'
+     C           AKEY19    OREQ 'FR'
+     C                     MOVE 'V'       AKEY4
+     C                     MOVE 'FR'      AKEY19
+     C                     ENDIF
+      *
+     C           AKEY4     IFEQ 'V'
+     C           AKEY19    ANDEQ'AI'
+     C*Already Done        MOVE 'V'       AKEY4
+     C                     MOVE 'PI'      AKEY19
+     C                     ENDIF
+      *
+     C           AKEY4     IFEQ 'R'
+     C           AKEY19    ANDEQ'FV'
+     C                     MOVE 'M'       AKEY4
+     C                     MOVE 'CV'      AKEY19
+     C                     ENDIF
+      *
+     C*          AKEY4     IFEQ 'L'
+     C*          AKEY19    ANDEQ'FR'                       already  'FR' ==> 'VFR'
+     C*                    MOVE 'V'       AKEY4
+     C*                    MOVE 'FR'      AKEY19
+     C*                    ENDIF
+      *
+     C           AKEY4     IFEQ 'X'
+     C           AKEY19    ANDEQ'CV'
+     C                     MOVE 'H'       AKEY4
+     C                     MOVE 'DI'      AKEY19           NO RK ????
+     C                     ENDIF
+      *
+     C           AKEY4     IFEQ 'S'
+     C           AKEY19    ANDEQ'CD'
+     C                     MOVE 'S'       AKEY4
+     C                     MOVE 'SA'      AKEY19
+     C                     ENDIF
+      *
+     C           AKEY4     IFEQ 'P'
+     C           AKEY19    ANDNE'PP'
+     C                     MOVE 'V'       AKEY4
+     C                     MOVE 'CO'      AKEY19
+     C                     ENDIF
+      *
+     C           AKEY4     IFEQ 'H'
+     C           AKEY19    ANDEQ'WN'
+     C                     MOVEL'V'       AKEY4
+     C*Already Done        MOVEL'WN'      AKEY19
+     C                     ENDIF
+      *
+     C                     EXSR #GENRK
+      *
+     C                     ENDIF                           *IN60 not bypassed
+      *
+     C                     READ SEKEY                    70
+      *
+     C                     ENDDO                           End currency
+      *
+     C                     ENDDO                           End branch
+      *
+     C                     ENDDO                           End eof
+      *
+      ***  End Reports
+      *
+     C                     EXSR #END                       End of list
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      /EJECT
+      *****************************************************************
+      *  #DURA - Retrieve transaction duration                        *
+      *  -----                                                        *
+      *  Called by : Mainlines                                        *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #DURA     BEGSR
+      *
+     C                     MOVE *BLANKS   WDURA   1
+     C                     MOVE TRFR      KTRFR   6
+     C           TRFR      IFNE 0
+      *
+      ***  Read Trade Details, if not in trades (+Historic) file but in Depot mvt
+      ***  then Bypass it (Don't use depot movements)
+      *
+     C           KTRFR     CHAINTRADHS               99
+     C           *IN99     IFEQ *ON                        Not found
+      *
+      ***  So, It must be in Depot movements file
+      *
+     C           KTRFR     CHAINDPTMVR               99
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD6         DBASE            ****************
+     C                     MOVELPGM       DBPGM            * DB ERROR 006 *
+     C                     MOVELTRFR      DBKEY            ****************
+     C                     MOVEL'DPTMVR  'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     MOVE *OFF      *IN60            Bypass
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           *IN60     IFEQ *ON                        Not bypassed
+      *
+      ***  Fill KPTYP if SESH <> WWSESH  (Security short name)
+      *
+     C           WWSESH    IFNE SESH
+     C                     MOVE *BLANKS   KPTYP
+     C                     MOVE SESH      WWSESH 10
+      *
+      ***  Check in Security types file and investment types file.
+      *
+     C           SESH      CHAINSECTY                99
+     C           *IN99     IFEQ *ON                        Not found
+     C           *LOCK     IN   LDA
+     C                     Z-ADD7         DBASE            ****************
+     C                     MOVELPGM       DBPGM            * DB ERROR 007 *
+     C           SESH      CAT  ' trade'  DBKEY     P      ****************
+     C           DBKEY     CAT  KTRFR:1   DBKEY
+     C                     MOVEL'SECTY   'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE NMCY      KSMCY
+     C                     MOVE SITP      KSITP
+     C                     MOVE ISSR      WWISSR  6
+     C           KINV      CHAININVTP                99
+     C           *IN99     IFEQ *ON                        Not found
+     C           *LOCK     IN   LDA
+     C                     Z-ADD8         DBASE            ****************
+     C                     MOVELPGM       DBPGM            * DB ERROR 008 *
+     C                     MOVELTRFR      DBKEY            ****************
+     C                     MOVEL'INVTP   'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  KPTYP depends of PROT value of invtp
+      ***  Processing Type
+      *
+     C                     MOVE '1'       KPTYP            for PROT 1,3,5,6,7,8 or 9
+     C           PROT      IFEQ '2'
+     C           PROT      OREQ '4'
+     C           PROT      OREQ '7'
+     C                     MOVE '4'       KPTYP
+     C                     ENDIF
+      *
+      ***  Check if Generation of item is required for this investment type
+      *
+     C********** KINV      CHAININVTPDYL             99                                       CER001
+     C           KINV      CHAINSEINX1L0             99                                       CER001
+     C           *IN99     IFEQ *ON                        Not found
+     C           *LOCK     IN   LDA
+     C                     Z-ADD9         DBASE            ****************
+     C                     MOVELPGM       DBPGM            * DB ERROR 009 *
+     C           KSMCY     CAT  KSITP:1   DBKEY     P      ****************
+     C**********           MOVEL'INVTPDYL'DBFILE                                              CER001
+     C                     MOVEL'SEINX1L0'DBFILE                                              CER001
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           NTGENR    IFEQ 'N'
+     C                     MOVE *OFF      *IN60            Bypassed
+     C                     ENDIF
+     C                     ENDIF                           WWSESH <> SESH
+     C                     ENDIF                           *IN60
+      *
+     C           *IN60     IFEQ *ON                        not bypassed
+      *
+      ***  Save Trade Date in working field
+      *
+     C           TRFR      IFEQ 0
+     C                     MOVE ITLD      WKTDDT  50
+     C                     ELSE
+     C                     MOVE TDDT      WKTDDT
+     C                     ENDIF
+      *
+      ***  Duration
+      *
+     C           KPTYP     IFEQ '4'                        found in INVTP
+     C                     MOVE 'N'       KDURA            Always
+     C                     ELSE
+      *
+      *** 366 calendar day ==> Less than 1 year
+      *
+     C           MATY      SUB  WKTDDT    WDATE   50
+     C           WDATE     IFLE 366
+     C                     MOVE 'Y'       KDURA
+     C                     ELSE
+      *
+      ***  Valuate Trade Date + 1 year.
+      *
+     C                     Z-ADDWKTDDT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     WWDAT
+     C                     ADD  1         WYEAR
+     C                     MOVE WWDAT     ZDATE
+     C                     EXSR ZDATE1
+      *
+      *
+      ***  if Deal is matured 1 year after its value Date, Duration is 'Y'
+      *
+     C           ZDAYNO    IFEQ MATY
+     C                     MOVE 'Y'       KDURA            Year counts 366 Days
+      *
+     C                     ELSE
+      *
+      ***  Else, check if VDATDL + 1 Year is an holiday
+      *
+      ***  Retrieve Location for ZFWDT std Routine if settlement method
+      ***  is via a nostro
+      ***  When CDI and Settlement method not defined use posetd detail
+      *
+     C                     Z-ADD0         WWPSMT  20       Settl methd
+     C**********           MOVE *BLANKS   WWPSEA 12              accnt                        244317
+     C                     MOVE *BLANKS   WWPSEA 18              accnt                        244317
+     C                     MOVE *BLANKS   WWEVTP           Type
+      *
+     C           TRFR      IFEQ 0
+     C           CKCMB     ANDEQ'CDI'
+     C                     MOVE 'DV'      WWEVTP           Dividend
+     C           KPOSE     CHAINPOSET                89
+     C***        *IN99     IFEQ *ON                                       IL0039
+     C           *IN89     IFEQ *ON                                       IL0039
+     C                     MOVE 'CP'      WWEVTP           Coupon
+     C           KPOSE     CHAINPOSET                89
+     C                     ENDIF
+      *
+      ***  If no position settlement found, use default
+      *
+     C           *IN89     DOWEQ*OFF                       Found
+      *
+      ***  Check Authorised/amount (absolue value)
+      *
+     C           PAUI      IFEQ 'Y'                        Authorized
+      *
+     C           PNCY      IFEQ EVCY                       Same CCY
+      *
+     C           EVAM      IFLT 0                          absolue value
+     C                     Z-SUBEVAM      WWCHKA 130
+     C                     ELSE
+     C                     Z-ADDEVAM      WWCHKA 130
+     C                     ENDIF
+      *
+     C           PAMD      IFLT 0                          absolue value
+     C                     Z-SUBPAMD      WWCHKB 130
+     C                     ELSE
+     C                     Z-ADDPAMD      WWCHKB 130
+     C                     ENDIF
+      *
+     C           WWCHKA    IFEQ WWCHKB                     Same Amount
+     C                     Z-ADDPSMT      WWPSMT           Save settlemt
+     C                     MOVELPSEA      WWPSEA           method  / account
+     C                     MOVE *ON       *IN89            Data found
+     C                     ENDIF                           amount
+     C                     ENDIF                           CCY
+     C                     ENDIF                           authorised
+      *
+      ***  *IN89 is *ON when Posetd gives settlement meth/accnt
+      *
+     C  N89      KPOSE     READEPOSET                    89Next
+     C                     ENDDO                           Found
+     C                     ENDIF                           CDI
+      *
+     C           TRFR      IFEQ 0
+     C***                  MOVE PEV1      WWEVTP
+     C***        KPOSE     CHAINPOSET                89
+     C***        *IN89     IFEQ *OFF
+     C***                  MOVE PSCU      WPSCU   3
+     C***                  ENDIF
+      *
+     C                     MOVE STLA      WWPAY            from TRADHS
+      *
+     C           WWPAY     IFEQ *BLANKS                    Pay settlmnt account
+     C                     MOVE WWPSEA    WWPAY             from POSET
+     C                     ENDIF
+      *                                                    from SEKEYD
+     C                     Z-ADDSTLT      WWSMTH  20       Settlmnt method
+     C                     MOVE EVCY      WWEVCY  3          event ccy
+      *
+     C           WWSMTH    IFEQ 0                          from POSET
+     C                     Z-ADDWWPSMT    WWSMTH
+     C                     ENDIF
+      *
+     C                     ELSE                            TRFR NE 0
+      *
+      ***  else, retrieve details from TRADHS
+      *
+     C           TDTP      IFEQ 'TS'                          Sale
+     C                     MOVE PAYT      WWPAY               Pay settl. A/C
+     C                     ELSE                               Purchase
+     C                     MOVE PYFM      WWPAY
+     C                     ENDIF
+      *
+     C                     Z-ADDSMTH      WWSMTH              Settlmnt Method
+     C                     MOVE SETC      WWEVCY              Settlmnt Ccy
+      *
+     C                     ENDIF                           TRFR = 0
+      *
+     C           WWSMTH    IFEQ 1                          Nostro ?
+     C           WWSMTH    OREQ 2
+     C           WWSMTH    OREQ 7
+     C           WWSMTH    OREQ 8
+     C           WWSMTH    OREQ 12
+      *
+     C                     MOVELDSNOS     WSTLA   2        See WWPAY DS
+     C                     CALL 'AONOSTR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM *BLANKS   PPARM1  6
+     C                     PARM WWEVCY    PKEYB   3
+     C                     PARM *BLANKS   PPARM2  4
+     C                     PARM *BLANKS   PPARM3  2
+     C                     PARM WSTLA     PKEYE   2
+     C                     PARM *BLANKS   PKEYF   3
+     C                     PARM *BLANKS   PKEYG  10
+     C                     PARM *BLANKS   PKEYH   1
+     C           SDNOST    PARM SDNOST    DSFDY
+      *
+      ** If record not found, force it to *BLANKS
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   ZLOC
+     C                     ELSE
+     C                     MOVE A7NOSN    ZLOC
+     C                     ENDIF
+      *
+     C                     ELSE                            other Settlmnt method
+     C                     MOVE BJSLCD    ZLOC
+     C                     ENDIF
+      *
+      ***  Use Standard Subroutine to know if Value date + 1 year is an holiday
+      *
+     C                     MOVE EVCY      ZCCY
+     C                     EXSR ZCHKH
+      *
+      ***  If not, Duration is Greater than 1 year (==> put 'N')
+      *
+     C           ZIND      IFEQ 'W'
+     C                     MOVE 'N'       KDURA
+     C                     ELSE
+      *
+      ***  if yes, find first open day followinf Value date + 1 year (ZDAYNO)
+      *
+     C                     Z-ADD1         ZNRDYS
+     C                     EXSR ZFWDT
+      *
+      ***  If 1 year duration finished after maturity date --> FLAG = 'Y'
+      *
+     C           ZDYNBR    IFGE MATY
+     C                     MOVE 'Y'       KDURA
+     C                     ELSE
+     C                     MOVE 'N'       KDURA            Year counts 365 Days
+     C                     ENDIF                           ZDYNBR
+      *
+     C                     ENDIF                           Working day ZWIND
+     C                     ENDIF                           Zdayno > MATY
+     C                     ENDIF                           MATY - WKTDDT > 366
+     C                     ENDIF                           KPTYP = '4'
+      *
+     C                     ENDIF                           *IN60
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  #GENRK - Build a routing Key, Write item if Required         *
+      *  ------                                                       *
+      *  Called by : Main lines                                       *
+      *  Calls     : #BRKR, #TRKE                                     *
+      *****************************************************************
+      *
+     C           #GENRK    BEGSR
+      *
+      ***  Initialize identification working fields
+      *
+     C                     MOVE *BLANKS   WWISCC  2        Issuer Country
+     C                     MOVE *BLANKS   WWCUCO  2
+      *
+      ***  Build routing key : Module id, Processing Type, Trade type,
+      ***                      Event type, Counterparty type, Issuer type,
+      ***                      Duration < 1 year flag, Settlement type,
+      ***                      Event amount type
+      ***  MODULE ID
+      *
+     C                     MOVE 'SE'      KMODI
+      *
+      ***  Trade Type
+      *
+     C                     MOVE AKEY55    KTTYP            Default
+      *
+      ***  Exceptions  : charges or Reallowance : Always *blanks
+      *
+     C           AKEY19    IFEQ 'FP'
+     C           AKEY19    OREQ 'FR'
+     C           AKEY19    OREQ 'RE'
+     C           AKEY19    OREQ 'RR'
+     C                     MOVE *BLANK    KTTYP
+     C                     ENDIF
+      *
+      ***  Exception :
+      ***  For interest due, countervalue or Settlement Amount:
+      ***  Blanks for bank or 'C' for Safe Custody or Discretionary Customer
+      *
+     C           AKEY19    IFEQ 'DI'
+     C           AKEY19    OREQ 'CV'
+     C           CKCMB     OREQ 'SSA'
+      *
+     C           AKEY56    IFEQ ' S'
+     C           AKEY56    OREQ ' D'
+     C                     MOVE 'C'       KTTYP
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  Exception : Partly paid
+      *
+     C           CKCMB     IFEQ 'PPP'
+      *
+     C           AKEY56    IFEQ '  '
+     C                     MOVE 'P'       KTTYP            Purchase
+     C                     ELSE
+     C                     MOVE 'S'       KTTYP            Sale
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  Event Type
+      *
+     C                     MOVE AKEY4     KEVTP
+      *
+      ***  Counterpart Type
+      *
+      ***  Load identification corresponding to the counterparty
+      ***  IF Pay from Customer from TRADHS is found used it as counterparty
+      ***  else use CSTN from SEKEYD
+      *
+     C                     MOVELPYFM      WCTYP   6        PYFM from TRADHS
+     C                     MOVELWCTYP     PCUST  10 P
+      *
+      ***  Check whether it exist
+      *
+     C**********           CALL 'AOCUSTR0'                                                    220750
+     C                     CALL 'AOCUSTR1'                                                    220750
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM           PCUST
+     C                     PARM *BLANKS   DUMMY7  7
+     C********** SDCUST    PARM SDCUST    DSSDY                                               220750
+     C           SDCUST    PARM SDCUST    DSLDY                                               220750
+      *
+     C           PRTCD     IFEQ *BLANKS                    FOUND
+     C           PRTCD     ORNE *BLANKS                                                       220750
+     C           BBCLST    ANDEQ'Y'                                                           220750
+     C                     MOVELWCTYP     WWCKCU
+      *
+     C                     ELSE                            Not found
+      *
+     C                     MOVE CSTN      WWCKCU  6        --> 6 Alphas
+      *
+      ***  Read CSTN customer details  (BBCOLC)
+      *
+     C                     MOVE CSTN      PCUST     P
+     C**********           CALL 'AOCUSTR0'                                                    220750
+     C                     CALL 'AOCUSTR1'                                                    220750
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM           PCUST
+     C                     PARM *BLANKS   DUMMY7  7
+     C********** SDCUST    PARM SDCUST    DSSDY                                               220750
+     C           SDCUST    PARM SDCUST    DSLDY                                               220750
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           BBCLST    ANDNE'Y'                                                           220750
+     C           *LOCK     IN   LDA
+     C                     Z-ADD10        DBASE            ****************
+     C                     MOVELPGM       DBPGM            * DB ERROR 010 *
+     C                     MOVELPCUST     DBKEY     P      ****************
+     C                     MOVEL'SDCUSTPD'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ***  Check Customer used as Counterparty
+      *
+     C                     EXSR #RCUS
+     C                     MOVE CUTYPE    KCTYP            Counterparty type
+     C                     MOVE CUTYPE    WWCUTY
+     C                     MOVE BBCOLC    WWCOCO  2        Counterpty Ctry
+      *
+      ***  Issuer Type
+      ***  Depending of ICD Flag, take Country code of ISSUER
+      ***                         or Security Extended details
+      *
+     C           ICDMIS    IFNE 'Y'
+      *
+     C                     MOVE ISSR      KCUS    6        --> 6 Alphas
+     C           CKCMB     IFEQ 'LFR'
+     C                     MOVE WWISSR    KCUS
+     C                     ENDIF
+      *
+     C********** KCUS      CHAINSDCUSTYL             99                                       CER001
+     C           KCUS      CHAINSDCUX1L0             99                                       CER001
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD11        DBASE            ****************
+     C**********           MOVEL'SDCUSTYL'DBFILE           * DB ERROR 011 *                   CER001
+     C                     MOVEL'SDCUX1L0'DBFILE           * DB ERROR 011 *                   CER001
+     C                     MOVELKCUS      DBKEY            ****************
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     MOVE CUTYPE    KITYP
+     C                     ENDIF
+      *
+      ***  Retrieve country code from issuer country of location from
+      ***  Customer Details
+      *
+     C                     MOVELKCUS      PCUST  10
+     C**********           CALL 'AOCUSTR0'                                                    220750
+     C                     CALL 'AOCUSTR1'                                                    220750
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM           PCUST
+     C                     PARM *BLANKS   DUMMY7  7
+     C********** SDCUST    PARM SDCUST    DSSDY                                               220750
+     C           SDCUST    PARM SDCUST    DSLDY                                               220750
+      *
+     C           PRTCD     IFNE *BLANKS                    FOUND
+     C           BBCLST    ANDNE'Y'                                                           220750
+     C           *LOCK     IN   LDA
+     C                     Z-ADD12        DBASE            ****************
+     C                     MOVEL'SDCUSTPD'DBFILE           * DB ERROR 012 *
+     C                     MOVELKCUS      DBKEY            ****************
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     MOVE BBCOLC    WWISCC
+      *
+     C                     ELSE
+      *
+      ***  Retrieve details from ext. details
+      *
+     C********** SESH      CHAINSECTYDYL             99                                       CER001
+     C           SESH      CHAINSESDX1L0             99                                       CER001
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD13        DBASE            ****************
+     C**********           MOVEL'SECTYDYL'DBFILE           * DB ERROR 013 *                   CER001
+     C                     MOVEL'SESDX1L0'DBFILE           * DB ERROR 013 *                   CER001
+     C                     MOVELSESH      DBKEY            ****************
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE VVISTP    KITYP
+      *
+      ***  Use country code from security country of risk
+      *
+     C                     MOVE SCOR      WWISCC
+     C                     ENDIF
+      *
+     C                     MOVE WWISCC    WKCTRY  2
+      *
+      ***  If Issuer Country Code is same as bank country code move
+      ***  blanks in Issuer Country Code
+      *
+     C           WWISCC    IFEQ 'LU'
+     C                     MOVE *BLANK    WWISCC
+     C                     ENDIF
+      *
+      ***  Settlement Method
+      ***  When CDI and Settlement method not defined use posetd detail
+      *
+     C                     Z-ADD0         WWPSMT  20       Settl methd
+     C*********            MOVE *BLANKS   WWPSEA 12              accnt                        244317
+     C                     MOVE *BLANKS   WWPSEA 18              accnt                        244317
+     C                     MOVE *BLANKS   WWEVTP           Type
+      *
+     C           TRFR      IFEQ 0
+     C           CKCMB     ANDEQ'CDI'
+     C                     MOVE 'DV'      WWEVTP           Dividend
+     C           KPOSE     CHAINPOSET                89
+     C           *IN89     IFEQ *ON
+     C                     MOVE 'CP'      WWEVTP           Coupon
+     C           KPOSE     CHAINPOSET                89
+     C                     ENDIF
+      *
+      ***  If no position settlement found, use default
+      *
+     C           *IN89     DOWEQ*OFF
+      *
+      ***  Check Authorised/amount (absolue value)
+      *
+     C           PAUI      IFEQ 'Y'
+      *
+     C           PNCY      IFEQ EVCY                       Same CCY
+      *
+     C           EVAM      IFLT 0                          absolue value
+     C                     Z-SUBEVAM      WWCHKA 130
+     C                     ELSE
+     C                     Z-ADDEVAM      WWCHKA 130
+     C                     ENDIF
+      *
+     C           PAMD      IFLT 0                          absolue value
+     C                     Z-SUBPAMD      WWCHKB 130
+     C                     ELSE
+     C                     Z-ADDPAMD      WWCHKB 130
+     C                     ENDIF
+      *
+     C           WWCHKA    IFEQ WWCHKB                     Same Amount
+     C                     Z-ADDPSMT      WWPSMT           Save setllemt
+     C                     MOVELPSEA      WWPSEA           methd/accnt
+     C                     MOVE *ON       *IN89            Data found
+     C                     ENDIF                           amount
+     C                     ENDIF                           CCY
+     C                     ENDIF                           authorised
+      *
+      ***  *IN89 is *ON when Posetd gives settlement meth/accnt
+      *
+     C  N89      KPOSE     READEPOSET                    89Next
+     C                     ENDDO                           Found
+     C                     ENDIF                           CDI
+      *
+     C           TRFR      IFEQ 0
+     C                     MOVE PSCU      WPSCU   3
+     C                     MOVE PEV1      WWEVTP
+     C           KPOSE     CHAINPOSET                89
+     C           *IN89     IFEQ *OFF
+     C                     MOVE PSCU      WPSCU   3
+     C                     ENDIF
+      *
+      ***  Settlement account
+      *
+     C                     MOVE STLA      WWPAY            into DS
+      *
+      ***  if blanks, Retrieve PSEA of POSET (if CDI)
+      *
+     C           WWPAY     IFEQ *BLANKS
+     C                     MOVE WWPSEA    WWPAY
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ***  use details from TRADHS to fill DS WWPAY
+      *
+     C           TDTP      IFEQ 'TS'                       Sale
+     C                     MOVE PAYT      WWPAY               Pay TO
+     C                     ELSE                            Purchase
+     C                     MOVE PYFM      WWPAY               Pay From
+     C                     ENDIF
+     C                     ENDIF                           TRFR = 0
+      *
+     C                     MOVE '5'       KSETT            Default Settl. meth.
+      *
+      ***  when no trade reference  (CDI)
+      *
+     C           TRFR      IFEQ 0
+     C                     Z-ADDSTLT      WWSMTH  20
+     C                     MOVE EVCY      WWEVCY  3
+      *
+      ***  Access Event currency: if 'In' Currency use Settlement CCY
+      *
+     C                     CALL 'AOCURRR0'             99
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM           WWEVCY
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ***  Perform databse error in case of Problem
+      *
+     C           *IN99     IFEQ *ON
+     C           PRTCD     ORNE *BLANKS
+     C                     Z-ADD14        DBASE            ****************
+     C                     MOVEL'SDCURRPD'DBFILE           * DB ERROR 014 *
+     C                     MOVELWWEVCY    DBKEY            ****************
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           A6INCY    IFEQ 'Y'
+     C           WPSCU     ANDEQBKEURO
+     C           A6INCY    OREQ 'N'                                       IL0022
+     C           EVCY      ANDEQBKEURO                                    IL0022
+     C           WPSCU     ANDEQBKEURO                                    IL0022
+     C                     MOVELWPSCU     WWEVCY
+     C                     ENDIF
+      *
+      ***  if STLT is *blanks , take PSMT of POSET (if CDI)
+      *
+     C           WWSMTH    IFEQ 0
+     C                     Z-ADDWWPSMT    WWSMTH
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ***  When trade refrence, use details from TRADHS
+      *
+     C                     Z-ADDSMTH      WWSMTH
+     C                     MOVE SETC      WWEVCY
+      *
+     C                     ENDIF                           TRFR = 0
+      *
+     C                     MOVE *BLANKS   ITCOCO
+     C                     MOVE *BLANK    WWRMV   1
+     C                     SELEC
+      *
+      ***  In Case of Settlement via a nostro account
+      *
+     C           WWSMTH    WHEQ 1                           SMTH 1,2,7,8,12
+     C           WWSMTH    OREQ 2
+     C           WWSMTH    OREQ 7
+     C           WWSMTH    OREQ 8
+     C           WWSMTH    OREQ 12
+      *
+      ***  Retrieve Nostro Details
+      *
+     C                     MOVE WWEVCY    KEVCY   3
+      *
+     C                     CALL 'AONOSTR0'             99
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM *BLANKS   PPARM1  6
+     C                     PARM KEVCY     PKEYB   3          Settlement Ccy
+     C                     PARM *BLANKS   PPARM2  4
+     C                     PARM *BLANKS   PPARM3  2
+     C                     PARM DSNOS     PKEYE   2          (from WWPAY )
+     C                     PARM *BLANKS   PKEYF   3
+     C                     PARM *BLANKS   PKEYG  10
+     C                     PARM *BLANKS   PKEYH   1
+     C           SDNOST    PARM SDNOST    DSFDY
+      *
+      ***  If record not found, handle database error.
+      *
+     C           PRTCD     IFNE *BLANKS
+      *                                                                   IL0030
+      ***  IF Nostro doesn't exist for 'in CCy, try with 'EUR'            IL0030
+      *                                                                   IL0030
+     C           A6INCY    IFEQ 'Y'                                       IL0030
+     C                     MOVE BKEURO    KEVCY                           IL0030
+      *                                                                   IL0039
+     C                     ELSE                                           IL0039
+      *                                                                   IL0039
+      ***  Access POSETD details using EVDT as Value date of POSETD       IL0039
+      *                                                                   IL0039
+     C           TRFR      IFEQ 0                                         IL0039
+     C           CKCMB     IFEQ 'CDI'                                     IL0039
+     C           CKCMB     OREQ 'SDI'                                     IL0039
+     C                     MOVE 'DV'      WWEVTP           Dividend       IL0039
+     C           KPOSE     CHAINRTV039              N89                   IL0039
+     C           *IN89     IFEQ *ON                                       IL0039
+     C                     MOVE 'CP'      WWEVTP           Coupon         IL0039
+     C           KPOSE     CHAINRTV039              N89                   IL0039
+     C                     ENDIF                                          IL0039
+      *                                                                   IL0039
+      ***  if position found check it is same CCY and Same Amount         IL0039
+      ***  if not, search if other may correspond                         IL0039
+      *                                                                   IL0039
+     C           *IN89     DOWEQ*OFF                                      IL0039
+      *                                                                   IL0039
+      ***  Check Authorised/amount (absolue value)                        IL0039
+      *                                                                   IL0039
+     C           PAUI      IFEQ 'Y'                                       IL0039
+      *                                                                   IL0039
+     C           PNCY      IFEQ EVCY                       Same CCY       IL0039
+      *                                                                   IL0039
+     C           EVAM      IFLT 0                          absolue value  IL0039
+     C                     Z-SUBEVAM      CPCHKA 130                      IL0039
+     C                     ELSE                                           IL0039
+     C                     Z-ADDEVAM      CPCHKA 130                      IL0039
+     C                     ENDIF                                          IL0039
+      *                                                                   IL0039
+     C           PAMD      IFLT 0                          absolue value  IL0039
+     C                     Z-SUBPAMD      CPCHKB 130                      IL0039
+     C                     ELSE                                           IL0039
+     C                     Z-ADDPAMD      CPCHKB 130                      IL0039
+     C                     ENDIF                                          IL0039
+      *                                                                   IL0039
+      ***  Compare absolue value of Event Amount and POSETD Amount        IL0039
+      *                                                                   IL0039
+     C           CPCHKA    IFEQ CPCHKB                     Same Amount    IL0039
+     C                     MOVELPSCU      KEVCY            Settl. CCY     IL0039
+     C                     MOVE *ON       *IN89            Data found     IL0039
+     C                     ENDIF                           amount         IL0039
+      *                                                                   IL0039
+     C                     ENDIF                           CCY            IL0039
+     C                     ENDIF                           authorised     IL0039
+      *                                                                   IL0039
+      ***  *IN89 is *ON when POSETD gives Settlement currency             IL0039
+      *                                                                   IL0039
+     C  N89      KPOSE     READERTV039                   89Next           IL0039
+     C                     ENDDO                           Found          IL0039
+     C                     ENDIF                           CDI/SDI        IL0039
+     C                     ENDIF                           TRFR = 0       IL0039
+      *                                                                   IL0039
+     C                     ENDIF                                          IL0030
+      *                                                                   IL0030
+     C                     CALL 'AONOSTR0'             99                 IL0030
+     C                     PARM *BLANKS   PRTCD                           IL0030
+     C                     PARM '*KEY   ' POPTN                           IL0030
+     C                     PARM *BLANKS   PPARM1  6                       IL0030
+     C                     PARM KEVCY     PKEYB   3          Settlement CcIL0030
+     C                     PARM *BLANKS   PPARM2  4                       IL0030
+     C                     PARM *BLANKS   PPARM3  2                       IL0030
+     C                     PARM DSNOS     PKEYE   2          (from WWPAY )IL0030
+     C                     PARM *BLANKS   PKEYF   3                       IL0030
+     C                     PARM *BLANKS   PKEYG  10                       IL0030
+     C                     PARM *BLANKS   PKEYH   1                       IL0030
+     C           SDNOST    PARM SDNOST    DSFDY                           IL0030
+      *                                                                   IL0030
+      ***  If record not found, handle database error.                    IL0030
+      *                                                                   IL0030
+     C           PRTCD     IFNE *BLANKS                                   IL0030
+     C           *IN99     OREQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD15        DBASE            ****************
+     C                     MOVEL'SDNOSTPD'DBFILE           * DB ERROR 015 *
+     C           PKEYB     CAT  PKEYE     DBKEY     P      ****************
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                                          IL0030
+     C                     ENDIF
+      *
+     C********** A7CUST    CHAINSDCUSTYL             99                                       CER001
+     C           A7CUST    CHAINSDCUX1L0             99                                       CER001
+     C           *IN99     IFEQ *ON                        SDCUSTYL
+     C           *LOCK     IN   LDA
+     C                     Z-ADD16        DBASE            ****************
+     C**********           MOVEL'SDCUSTYL'DBFILE           * DB ERROR 016 *                   CER001
+     C                     MOVEL'SDCUX1L0'DBFILE           * DB ERROR 016 *                   CER001
+     C                     MOVELA7CUST    DBKEY            ****************
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE A7CUST    CUSTID  6
+     C                     SELEC
+     C           CUTYPE    WHEQ 'BR'                         Bank Resident
+     C                     MOVE '2'       KSETT
+     C           CUTYPE    WHEQ 'BO'                         Bank non-Resident
+     C                     MOVE '4'       KSETT
+     C                     ENDSL
+      *
+      ***  In Case of Settlement via a Retail account
+      *
+     C           WWSMTH    WHEQ 4                          SMTH 4
+     C                     MOVE '1'       KSETT
+      *
+     C           WWSMTH    WHEQ 14                         via Retail No
+      *
+      ***  check whether Retail No exists, if not DB error
+      *
+     C                     MOVE DSRNM     PRETL  10        From DSOSAC
+     C                     CALL 'AOACCTR0'             99
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM           PRETL            Retail Number
+     C                     PARM *BLANKS   PCUSTO  6
+     C                     PARM *BLANKS   PCCY    3
+     C**********           PARM *BLANKS   PACOD   4                                           CER001
+     C                     PARM *BLANKS   PACOD  10                                           CER001
+     C                     PARM *BLANKS   PACSQ   2
+     C                     PARM *BLANKS   PBRCA   3
+     C           ACCNT     PARM ACCNT     DSSDY
+      *
+     C           *IN99     IFEQ *ON
+     C           PRTCD     ORNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD17        DBASE            ****************
+     C                     MOVEL'ACNUM   'DBFILE           * DB ERROR 017 *
+     C                     MOVELDSRNM     DBKEY            ****************
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  In Case of Settlement via an Account
+      *
+     C           WWSMTH    WHEQ 5                          SMTH 5
+      *
+      *
+      ***  Check Account Code Type
+      *
+     C                     CALL 'AOACODR0'             99
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM           DSACD            (from DSOSAC)
+     C           SDACOD    PARM SDACOD    DSFDY
+      *
+     C           *IN99     IFEQ *ON
+     C           PRTCD     ORNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD18        DBASE            ****************
+     C                     MOVEL'SDACODPD'DBFILE           * DB ERROR 018 *
+     C                     MOVELDSACD     DBKEY     P      ****************
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           A5ACTY    IFEQ 'R'                        Retail Account
+     C                     MOVE '1'       KSETT
+     C                     ELSE
+     C                     MOVE '5'       KSETT            Internal Account
+     C                     ENDIF
+      *
+      ***  In case of settlement using Suspense account
+      *
+     C           WWSMTH    WHEQ 6
+     C                     MOVE '5'       KSETT
+      *
+      ***  In case of settlement using Designated Sec. Trading Account
+      *
+     C           WWSMTH    WHEQ 15
+     C                     MOVE '1'       KSETT
+     C                     ENDSL
+      *
+      ***  Event Amount Type
+      *
+     C                     MOVE AKEY19    KEVNT
+     C                     MOVE EVAM      RAMNT
+      *
+     C                     MOVE *BLANK    KFIL8            always
+      *
+      ***  Check Whether Routine Key exist
+      *
+     C           KRKSE     CHAINILRKSEPD             88
+      *
+      ***  If not Found, Add it in Audit File
+      *
+     C           *IN88     IFEQ *ON                        Not Found
+     C                     EXSR #PRP2
+     C                     ELSE
+      *
+      ***  Output if Required
+      *
+     C           ICPRID    IFEQ 'Y'                        ICD printing ind.
+     C                     EXSR #PRP1
+     C                     ENDIF
+      *
+      ***  Write records in file ILDIWKPD if Required EVAM > than limit amount
+      *
+     C                     EXSR #WIEX
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  #RCUS - Read customer extended information                   *
+      *  -----                                                        *
+      *  Called by : #GENRK                                           *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #RCUS     BEGSR
+      *
+     C           WWCKCU    IFNE *BLANKS
+     C           WWCKCU    ANDNE*ZEROS
+     C                     TESTN          WWCKCU     99
+     C           *IN99     IFEQ *ON
+      *
+      ***  retrieve customer type
+      *
+     C********** WWCKCU    CHAINSDCUSTYL             99                                       CER001
+     C           WWCKCU    CHAINSDCUX1L0             99                                       CER001
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD19        DBASE            ****************
+     C**********           MOVEL'SDCUSTYL'DBFILE           * DB ERROR 019 *                   CER001
+     C                     MOVEL'SDCUX1L0'DBFILE           * DB ERROR 019 *                   CER001
+     C                     MOVELWWCKCU    DBKEY            ****************
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Save the identification of the money destination if one of the
+      ***  correspondent is a bank resident
+      *
+     C                     SELEC
+     C           CUTYPE    WHEQ 'BR'                       is Bank
+      *
+      ***  Save the first bank non resident to retrieve the country code
+      ***  of the bank (If WWRPL = Y (op. Code 310))
+      *
+     C           CUTYPE    WHEQ 'BO'
+     C           WWCUCO    IFEQ *BLANKS
+     C                     MOVE WWCKCU    WWCUCO           Customer for CTRY
+      *                                                    For Code 310
+     C                     ENDIF
+     C                     ENDSL
+      *
+     C                     ENDIF                           Numeric
+     C                     ENDIF                           not blank
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  #PRP1  - Print deals in report list (routing keys found)     *
+      *  ------   (Routing key used and found in ILRKDLPD)            *
+      *  Called by : #GENRK                                           *
+      *  Calls     :                                                  *
+      *****************************************************************
+     C           #PRP1     BEGSR
+      *
+      ***  Report IL0643P1 overflow
+      *
+     C           *IN65     IFEQ *ON
+     C                     WRITEHEADP1
+     C                     WRITEDETHP1
+     C                     MOVE *OFF      *IN65
+     C                     ENDIF
+      *
+      ***  Write deals in report list IL0643P1
+      *
+     C                     MOVE TRFR      RSESH
+     C                     MOVE KEYDS     RFLDS            Report Fields
+     C                     MOVE OPCODS    ROPCO
+     C                     WRITEDETAP1
+      *
+      ***  At least one printed record in P1
+      *
+     C                     MOVE *ON       *IN68
+      *
+      ***  Write Routing key found in ILRKAUPD
+      *
+     C                     CLEARILRKAUD0
+     C                     MOVE KEYDS     AUKEY
+     C                     MOVELTRFR      AUTRNB
+     C                     MOVELSTARTK    AUAKEY
+     C                     MOVE EVAM      AUAMNT
+     C                     MOVE KWECCY    AUECCY
+     C                     MOVE OPCODS    AUOPCO
+     C                     MOVE 'Y'       AUFOUN
+     C           RVRS      IFEQ '1'
+     C                     MOVE 'R'       AURVRS
+     C                     ENDIF
+     C                     WRITEILRKAUD0
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  #PRP2  - Print deals in audit report (Missing Routing Keys)  *
+      *  ------   (Routing key not found in ILRKDLPD)                 *
+      *  Called by : #GENRK                                           *
+      *  Calls     :                                                  *
+      *****************************************************************
+     C           #PRP2     BEGSR
+      *
+      ***  Report IL0640P2 overflow
+      *
+     C           *IN66     IFEQ *ON
+     C                     WRITEHEADP2                     Header
+     C                     WRITEDETHEA                     RK not Found
+     C                     MOVE *OFF      *IN66
+     C                     ENDIF
+      *
+      ***  Write deals in audit report
+      *
+     C                     MOVE TRFR      RSESH
+     C                     MOVE KEYDS     RFLDS            Report Fields
+     C                     WRITEDETAIL                     of P2
+      *
+      ***  At least one printed record in P2
+      *
+     C                     MOVE *ON       *IN69
+      *
+      ***  Write Routing key not found in ILRKAUPD
+      *
+     C                     CLEARILRKAUD0
+     C                     MOVE KEYDS     AUKEY
+     C                     MOVELTRFR      AUTRNB
+     C                     MOVELSTARTK    AUAKEY
+     C                     MOVE EVAM      AUAMNT
+     C                     MOVE KWECCY    AUECCY
+     C                     MOVE 'N'       AUFOUN
+     C           RVRS      IFEQ '1'
+     C                     MOVE 'R'       AURVRS
+     C                     ENDIF
+     C                     WRITEILRKAUD0
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  #WIEX  - Write Item Extract in file ilDWIKPD                 *
+      *  ------                                                       *
+      *  Called by : #TRKE                                            *
+      *  Calls     : #ITWR                                            *
+      *****************************************************************
+      *
+     C           #WIEX     BEGSR
+      *
+      ***  retrieve the country code based on currency if code 130
+      *
+     C                     CALL 'AOCTRYR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*VERIFY' POPTN
+     C                     PARM           WKCCOD
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVE WKCCOD    WW130C  2
+     C                     ENDIF
+      *
+      ***  Store operation codes in ACO array
+      *
+     C                     MOVEAOPCODS    ACO
+      *
+      ***  Make initialization of ILDIWKPD fields
+      *
+     C                     MOVE 'SE'      ITMODI
+     C                     MOVE EVCY      ITCURR
+     C                     Z-ADD0         ITITSQ
+     C                     MOVE '0'       ITCORR
+     C                     MOVE '0'       ITGLOB
+     C                     MOVE *ALL'0'   ITOPER
+     C                     MOVEL'005'     ITOPER           0 05 000000 TRFR
+     C                     MOVE TRFR      ITOPER
+     C                     Z-ADDEVAM      ITAMNT
+     C                     MOVE BJMRDT    MRDTDS
+     C                     Z-ADD1         #J      20
+     C           WMLUP     LOKUPZMNM,#J                  62
+     C                     MOVE '00'      WTEMP2  2
+     C                     MOVE #J        WTEMP2
+     C           WDLUP     CAT  WTEMP2:0  WTEMP6  6        DDMMYY
+     C           WTEMP6    CAT  WYLUP:0   WTEMP6
+     C                     MOVE WTEMP6    ITACTD
+     C                     MOVE *BLANK    ITTEXT
+     C                     MOVE CSTN      ITCUST
+     C           SESH      CAT  '/':0     ITTEXT
+     C           ITTEXT    CAT  ITCUST:0  ITTEXT
+      *******
+      *****Bank own Account Transaction flag
+      *******
+     C*******              MOVE 'N'       ITOWN            Default
+      *******
+      *****Check if Counterpart Customer is Branch internal customer of
+      *****Consolidated Branches pool
+      *******
+     C*******    ITCUST    CHAINSDBRCHL5             99
+     C*******    *IN99     IFNE *OFF                       Not a BICN
+     C*******              MOVE '*NBANK'  PLIMT
+     C*******              ELSE
+      *******
+      *****if Branch Internal customer, Only considered those in
+      *****Consolidation Pool
+      *****Retrieve consolidation Branch of BICN
+      *******
+     C*******    A8BRCD    CHAINSDBRCHYL             99
+     C*******    *IN99     IFEQ *ON
+     C*******              Z-ADD20        DBASE            ****************
+     C*******              MOVEL'SDBRCHYL'DBFILE           * DB ERROR 020 *
+     C*******              MOVELA8BRCD    DBKEY            ****************
+     C*******              MOVELPGM       DBPGM
+     C*******              OUT  LDA
+     C*******              EXSR *PSSR
+     C*******              ENDIF
+      *******
+     C*******    BRCONS    IFNE ITBRCD                     Current Consol. Brch
+     C*******              MOVE '*NBANK'  PLIMT              not in Pool
+     C*******              ELSE
+     C*******              MOVEL'*BANK '  PLIMT   6        Bank own A/C Transaction
+     C*******              MOVE 'Y'       ITOWN
+     C*******              ENDIF
+     C*******              ENDIF                           BICN ??
+      *
+      ***  for now as Synoptic program will remove unnecessary items
+      ***  Considered that it's bank own account details
+      *
+     C                     MOVEL'*BANK '  PLIMT
+     C                     MOVE 'Y'       ITOWN
+      *
+      ***  Check limit of Rregistration depending of PLIMT value
+      *
+     C           PLIMT     IFEQ '*BANK'                    At first Euro
+     C           PLIMT     OREQ '*NBANK'                   or not bank Own A/c Transaction
+     C           EVAM      ANDGEWWREGI                     at upper of Limit of registration
+      *
+      ***  If counterparty country is in Emu Zone, Replace operation code in
+      ***  Array OPEC by the Same one For EMU Zone Counterparty (in Array OPER)
+      ***  Codes to be changed are :  434, 435, 441, 442, 444, 448, 449, 474, 479
+      ***      and are replaced by :  430, 431, 421, 422, 424, 428, 429, 473, 478
+      *
+     C                     Z-ADD1         #I
+     C                     MOVEA'000000'  *IN,40
+     C                     MOVEA*IN,40    IND
+     C           #I        DOWLT7
+     C           ACO,#I    IFNE '000'
+     C           ACO,#I    ANDNE'   '
+     C                     Z-ADD1         #F      20
+     C           ACO,#I    LOKUPOPEC,#F                  99
+     C           *IN99     IFEQ *ON
+     C                     MOVELWWISCC    PCTRY   2
+      *
+     C           ACO,#I    IFEQ '434'
+     C           ACO,#I    OREQ '435'
+     C           PCTRY     OREQ *BLANKS
+     C                     MOVELWWCOCO    PCTRY
+     C                     ENDIF
+      *
+      ***  Verify that country of counterparty is in EMU Zone
+      *
+     C********** PCTRY     CHAINSDCTRYYL             99                                       CER001
+     C           PCTRY     CHAINSDCTX1L0             99                                       CER001
+      *
+      ***  Handle Databse error
+      *
+     C           *IN99     IFEQ *ON
+     C                     Z-ADD20        DBASE            ****************
+     C**********           MOVEL'SDCTRYYL'DBFILE           * DB ERROR 020 *                   CER001
+     C                     MOVEL'SDCTX1L0'DBFILE           * DB ERROR 020 *                   CER001
+     C                     MOVELWWCOCO    DBKEY            ****************
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           CTEMUZ    IFEQ 'Y'                        EMU Zone Flag
+     C                     MOVE OPER,#F   ACO,#I
+     C                     MOVE '1'       IND,#I
+     C                     ENDIF                           EMU Zone
+     C                     ENDIF                           found in OPEC
+     C                     ENDIF                           not blank
+     C                     ADD  1         #I               NEXT
+     C                     ENDDO
+      *
+     C                     MOVEAIND       *IN,40           for listing
+     C                     MOVEAACO       OPCODS           Reset oper. codes
+      *
+      *                                                                   201180
+      ***  Convert Original Amount in Reporting Amount (Euro) for 'In' CCy201180
+      *                                                       for All Ccy 201180
+     C                     Z-ADDITAMNT    ZAMTF                           201180
+     C                     EXSR ZCCYCN                                    201180
+     C           KPINCY    IFEQ 'Y'                        In currency    201180
+     C                     MOVE ITCURR    ITOCUR           Origin Ccy     201180
+     C                     Z-ADDITAMNT    ITOAMN           Origin Amount  201180
+     C                     MOVE BKEURO    ITCURR                          201180
+     C                     Z-ADDZAMTT     ITAMNT                          201180
+     C                     ELSE                                           201180
+     C                     MOVE *BLANK    ITOCUR                          201180
+     C                     MOVE *BLANK    ITOAMN                          201180
+     C                     ENDIF                                          201180
+     C                     Z-ADDZAMTT     ITAMNB           Amount in EUROS201180
+      *
+      ***  Make one write in ILDIWKPD if operation code not null
+      *
+     C                     Z-ADD1         #I      10
+     C           #I        DOWLT7
+      *
+      ***  If Operation Code equals 449 and Warrant Indicator is 'Y',
+      ***  the Operation Code should become 448.
+      *
+     C           ACO,#I    IFEQ '449'
+     C           NTWARI    ANDEQ'Y'
+     C                     MOVE '448'     ACO,#I
+     C                     ENDIF
+      *
+     C           ACO,#I    IFNE '   '
+     C           ACO,#I    ANDNE'000'
+     C                     EXSR #ITWR
+     C                     ENDIF
+     C                     ADD  1         #I
+     C                     ENDDO
+      *
+     C                     ELSE
+      *
+      ***  Print not taken into Account under limit of Registration
+      *
+     C           ICPRID    IFEQ 'Y'                        ICD printing ind.
+     C                     EXSR #PRP1A                     not Extracted
+     C                     ENDIF
+      *
+     C                     ENDIF                           Lim of registration
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  #PRP1A - Print trade not extracted due to Event Amount less  *
+      *  ------   than Registration limits                            *
+      *  Called by : #WIEX                                            *
+      *  Calls     :                                                  *
+      *****************************************************************
+     C           #PRP1A    BEGSR
+      *
+      ***  Report IL0643P1 overflow
+      *
+     C           *IN65     IFEQ *ON
+     C                     WRITEHEADP1
+     C                     WRITEDETHP1
+     C                     MOVE *OFF      *IN65
+     C                     ENDIF
+      *
+      ***  Print Limit of Regsitration in Event Currency
+      *
+     C                     Z-ADDWWREGI    ZFLD15
+     C                     Z-ADDZCDPF     ZDECS            Event CCy dec. Places
+      *
+     C                     EXSR ZFRPED
+     C                     MOVELZOUT25    RLCCY            Event Amount
+     C                     MOVE KWECCY    REVCCY
+     C                     MOVE REVCCY    RCCYEV
+      *
+      ***  Print Event Amount
+      *
+     C                     Z-ADDEVAM      ZFLD15
+      *
+     C                     EXSR ZFRPED
+     C                     MOVELZOUT25    REAMT            Event Amount
+      *
+      ***  'limit of Registration is not reached (x,xxx.xx  CCY).:
+      ***   Event Amount is y,yyy,yyy.yy CCY'
+      *
+     C                     WRITEREJAP1
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  #ITWR  - IT record writing in File ILDWIKPD                  *
+      *  ------                                                       *
+      *  Called by : #WIEX                                            *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #ITWR     BEGSR
+      *
+      ***  Take operation currently treated
+      *
+     C                     MOVE ACO,#I    ITOPCO
+      *
+      ***  Check Operation Limits and Acceptance
+      *
+     C                     CALL 'IL0410'
+     C                     PARM ITOPCO    PCODE   3        Val operation Code
+     C                     PARM           PLIMT
+     C                     PARM KWECCY    PTCCY   3
+     C                     PARM PGM       PCPGM  10
+      *
+      ***  Result parameters
+      *
+     C                     PARM '0'       PERID   1
+     C                     PARM '0'       PDBID   1
+     C                     PARM *ZEROS    PCLIM  150       Limit for Country
+     C                     PARM *ZEROS    PILIM  150       Limit for Identification
+     C                     PARM           PLREG  150
+      *
+     C           PERID     IFNE '0'                        no more valid, bypass
+      *
+      ***  Write in output file, Operation no more valid
+      *
+     C           ICPRID    IFEQ 'Y'                        ICD printing ind.
+     C                     EXSR #PRP1B                     not Extracted
+     C                     ENDIF
+      *
+     C                     ELSE                            PERID = '0'
+      *
+     C                     MOVE *BLANKS   ITCOCO
+     C                     MOVE *BLANKS   ITIDCO
+     C                     MOVE *BLANKS   ITIDNB
+      *
+      ***  Load identification following operation code
+      *
+     C           EVAM      IFGE PILIM
+     C                     MOVE WCIDCO    ITIDCO
+     C                     MOVE WCIDEN    ITIDNB
+     C                     ENDIF
+      *
+      ***  Fill ITCOCO depending on operation code
+      *
+     C           EVAM      IFGE PCLIM
+     C                     SELEC
+     C           ITOPCO    WHEQ '130'
+     C           WWCOCO    IFEQ *BLANKS
+     C                     MOVE WW130C    ITCOCO
+     C                     ELSE
+     C                     MOVE WWCOCO    ITCOCO
+     C                     ENDIF
+     C                     OTHER
+     C                     MOVE WWCOCO    ITCOCO
+      *
+      ***  If counterparty is resident, use issuer country code
+      *
+     C           WWCOCO    IFEQ 'LU'
+     C                     MOVE WWISCC    ITCOCO           Issuer country
+     C                     ENDIF
+      *
+      ***  Country code defaulted to counterparty's one
+      ***  If WWCOCO is *BLANKS, use Issuer country code WWISCC
+      ***  If WWISCC is *BLANKS, use EVCY Currency country code WW130C
+      *
+     C           ITCOCO    IFEQ *BLANKS
+     C                     MOVE WWISCC    ITCOCO
+     C                     ENDIF
+     C           ITCOCO    IFEQ *BLANKS
+     C                     MOVE WW130C    ITCOCO
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+     C                     ENDIF
+      *
+      ***  Debit/credit INDICATOR depending of #I and reversal indicator
+      *
+     C           #I        IFLT 4
+     C           RVRS      IFNE '1'
+     C                     MOVE 'D'       ITDRCR           1,2,3 --> D
+     C                     ELSE
+     C                     MOVE 'C'       ITDRCR           Reverse
+     C                     ENDIF
+     C                     ELSE
+     C           RVRS      IFNE '1'
+     C                     MOVE 'C'       ITDRCR           3,4,5 --> C
+     C                     ELSE
+     C                     MOVE 'D'       ITDRCR           Reverse
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *****                                                               201180
+      *****Convert Original Amount in Reporting Amount (Euro) for 'In' CCy201180
+      *****                                                   for All Ccy 201180
+     C*****                Z-ADDITAMNT    ZAMTF                           201180
+     C*****                EXSR ZCCYCN                                    201180
+     C*****      KPINCY    IFEQ 'Y'                        In currency    201180
+     C*****                MOVE ITCURR    ITOCUR           Origin Ccy     201180
+     C*****                Z-ADDITAMNT    ITOAMN           Origin Amount  201180
+     C*****                MOVE BKEURO    ITCURR                          201180
+     C*****                Z-ADDZAMTT     ITAMNT                          201180
+     C*****                ELSE                                           201180
+     C*****                MOVE *BLANK    ITOCUR                          201180
+     C*****                MOVE *BLANK    ITOAMN                          201180
+     C*****                ENDIF                                          201180
+     C*****                Z-ADDZAMTT     ITAMNB           Amount in EUROS201180
+      *
+      ***  Physical write, except for Counterparty Resident using Bank resident
+      ***  for settlement when code is 301
+      *
+     C           WWCTRY    IFEQ 'R'
+     C           ITOPCO    ANDEQ'301'
+     C           KSETT     ANDEQ'2'
+     C                     ELSE
+     C                     WRITEILITEMD0
+     C                     ENDIF
+      *
+     C                     ENDIF                           Lim of Registration
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  #PRP1B - Print Deals not extracted due to operation code     *
+      *  ------   that is not more valid                              *
+      *  Called by :                                                  *
+      *  Calls     :                                                  *
+      *****************************************************************
+     C           #PRP1B    BEGSR
+      *
+      ***  Report IL0643P1 overflow
+      *
+     C           *IN65     IFEQ *ON
+     C                     WRITEHEADP1
+     C                     WRITEDETHP1
+     C                     MOVE *OFF      *IN65
+     C                     ENDIF
+      *
+      ***  Print Limit of Registration in Event Currency
+      *
+     C                     MOVE ACO,#I    RCODE
+      *
+      ***  'Not Extracted : Operation Code (xxx) is not valid.'
+      *
+     C                     WRITEREJBP1
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  *INZSR - Initial processing : Reset static fields            *
+      *  ------                        access standing data           *
+      *  Called by : First RPG Cycle   automatically                  *
+      *  Calls     : *PSSR                                            *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ***  Prepare LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C                     MOVELPGM       DBPGM
+      *
+      ***  Reset indicators
+      *
+     C                     MOVE *OFF      *IN
+      *
+      ***  Retrieve Bank details
+      *
+     C                     CALL 'AOBANKR0'             99
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST'  POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ***  Database error in case of Problem
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *IN99     OREQ *ON
+      *
+     C           *LOCK     IN   LDA
+     C                     Z-ADD21        DBASE            ****************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 021 *
+     C                     MOVEL'*FIRST'  DBKEY            ****************
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Check system data format (DDMMYY or MMDDYY):
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98            ON => MMDDYY
+     C                     ENDIF
+      *
+      ***  Read IBLC I.C.D.
+      *
+     C           1         SETLLILICDRPD
+     C                     READ ILICDRPD                 99
+      *
+      ***  Database error in Case of read with error
+      *
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD22        DBASE            ****************
+     C                     MOVEL'ILICDRPD'DBFILE           * DB ERROR 022 *
+     C                     MOVEL'ICDR  '  DBKEY            ****************
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Access General Ledger detail to retrive EURO Ccy code
+      *
+     C                     CALL 'AOGELRR0'             99
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C           SDGELR    PARM SDGELR    DSFDY
+      *
+      ***  Databse error in case of Problem
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *IN99     OREQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD23        DBASE            ****************
+     C                     MOVEL'SDGELRPD'DBFILE    P      * DB ERROR 023 *
+     C                     MOVEL'*FIRST'  DBKEY     P      ****************
+     C                     MOVELPGM       DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Access EURO CCy details for Std routine for Currency conversion
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM BKEURO    PCURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** If record not found, handle database error.
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD24        DBASE            ****************
+     C                     MOVEL'SDCURRPD'DBFILE    P      * DB ERROR 024 *
+     C                     MOVELBKEURO    DBKEY     P      ****************
+     C                     MOVELPGM       DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Conver Amounts in Euro  when required; keep "To CCY" details
+      *
+     C                     MOVELA6CYCD    ZCCYT
+     C                     Z-ADDA6SPRT    ZRATET
+     C                     MOVELA6MDIN    ZMDINT
+     C                     Z-ADDA6NBDP    ZCDPT
+      *
+      ***  Define Keys List
+      *
+     C           KPOS1     KLIST                           For SEKEY
+     C                     KFLD           KWBRCA  3
+      *
+     C           KPOS2     KLIST                           For SEKEY
+     C                     KFLD           KWBRCA  3
+     C                     KFLD           KWECCY  3
+      *
+     C           KINV      KLIST                           For INVTP/INVTPDYL
+     C                     KFLD           KSMCY   3
+     C                     KFLD           KSITP   3
+      *
+     C           KRKSE     KLIST                           For ILRKSEPD
+     C                     KFLD           KMODI   2
+     C                     KFLD           KPTYP   1
+     C                     KFLD           KTTYP   1
+     C                     KFLD           KEVTP   1
+     C                     KFLD           KCTYP   2
+     C                     KFLD           KITYP   2
+     C                     KFLD           KDURA   1
+     C                     KFLD           KCCCY   1        left blank
+     C                     KFLD           KSETT   1
+     C                     KFLD           KEVNT   2
+     C                     KFLD           KFIL8   8
+      *
+      ***  Key for POSET
+      *
+     C           KPOSE     KLIST                           For POSET
+     C                     KFLD           BRHA               Branch
+     C                     KFLD           SESH               Sec. Shortname
+     C                     KFLD           CSTN               Customer
+     C                     KFLD           EVDT               Event Date
+     C                     KFLD           WWEVTP  2          Event type
+      *
+     C                     Z-ADD0         WWTRFR  60
+      *
+      ***  Set on overflow printer file indicators, force Page header
+      *
+     C                     MOVE *ON       *IN65
+     C                     MOVE *ON       *IN66
+      *
+      ***  Start RCF for Printer files
+      *
+     C                     Z-ADDSFNUMU    ZSNUM            IL0643AU
+     C                     MOVELSFILEU    SFILE
+     C                     EXSR SRZSFL
+      *
+     C                     Z-ADDSFNUM1    ZSNUM            IL0643P1
+     C                     MOVELSFIL1     SFILE
+     C                     EXSR SRZSFL
+      *
+     C                     Z-ADDSFNUM2    ZSNUM            IL0643P2
+     C                     MOVELSFIL2     SFILE
+     C                     EXSR SRZSFL
+      *
+     C                     ENDSR
+      *****************************************************************
+      * SRZSFL - Subroutine to call ZSFILE (Record in RCF)            *
+      * ------                                                        *
+      * Called by : *INZSR                                            *
+      *****************************************************************
+      *
+     C           SRZSFL    BEGSR
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PRSEQ   5
+     C                     PARM           PRENT   3
+     C                     PARM           SFILE  10
+     C                     PARM           ZSNUM   60
+     C                     PARM           ZSERR   1
+      *
+      ***  If an error occurred during ZSFILE processing,
+      ***  return to the calling program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  #END   - Leave the program                                   *
+      *  ------                                                       *
+      *  Called by : main lines                                       *
+      *  Calls     : -                                                *
+      *****************************************************************
+      *
+     C           #END      BEGSR
+      *
+      ***  Audit report
+      ***  No detail in the report
+      *
+     C           *IN69     IFEQ *OFF                       No Details
+     C           *IN66     IFEQ *ON                        Overflow *ON
+     C                     WRITEHEADP2
+     C                     ENDIF
+     C                     ENDIF
+     C                     WRITEENDP2
+      *
+      ***  ICD requests the Routing keys Report
+      *
+     C           ICPRID    IFEQ 'Y'
+      *
+      ***  No detail in the report
+      *
+     C           *IN68     IFEQ *OFF                       No details
+     C           *IN65     IFEQ *ON
+     C                     WRITEHEADP1
+     C                     ENDIF
+     C                     WRITENOLIP1
+     C                     ENDIF
+     C                     WRITEENDP1
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * *PSSR   - Program exception error routine                     *
+      *           Called automatically if a program error occurs,     *
+      *           or directly by the program code using EXSR.         *
+      *           This subroutine DUMPs the program just once.        *
+      * Called by :                                                   *
+      * Calls     :                                                   *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           DBASE     IFEQ 0
+     C                     Z-ADD999       DBASE
+     C                     ENDIF
+      *
+      ***  Print error message in Audit report IL0640AU
+      *
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT                                                              132893
+      *****************************************************************
+      /TITLE Copy Standard Subroutines
+      /COPY ZSRSRC,ZDATE1Z2                                Std ZDATE1
+      /COPY ZSRSRC,ZDATE2Z2                                Std ZDATE2
+      /COPY ZSRSRC,ZACCH                                   Std ZACCH
+      /COPY ZSRSRC,ZFWDT                                   Std ZFWDT
+      /COPY ZSRSRC,ZCHKH                                   Std ZCHKH
+      /COPY ZSRSRC,ZCCYCN                                  Std ZCCYCN
+      /COPY ZSRSRC,ZFRPEDZ3                                Std ZFRPED
+      /EJECT
+**   CSE1 - Valid Account keys
+VPIVCOVFPVFRVREVRRVWNVCPVCRVAI
+CDICFPCFRCCPCCRHDIHFPHFRHCPHCR
+PPPPFPPFRPCPPCRRFVRFPRFRRCPRCR
+MCVMFPMFRMCPMCRSSASDISCVXCDXFP
+XFRXCPXCRSCDLFRHWN
+**  OPEC - RK code to be replace if counterparty is in EMU zone
+434435441442444448449474479
+**  OPER - Value of new OPERATION if it has to be Replaced
+430431421422424428429473478
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2005

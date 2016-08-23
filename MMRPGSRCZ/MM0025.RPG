@@ -1,0 +1,1022 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Range Authorizations (Deams)')                   *
+     F****************************************************************
+     F*                                                              *
+     F*  Midas - MM Dealer Module
+     F*                                                              *
+     F*     MM0025    - RANGE AUTHORIZATIONS (DEAMS)                 *
+     F*                                                              *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                              *
+      *  Last Amend No. CGL165             Date 17Feb15               *
+      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 11Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL022             Date 03Feb04               *
+      *                 CDL020             Date 03Feb04               *
+      *                 CDL019             Date 03Feb04               *
+      *                 CDL018             Date 03Feb04               *
+      *                 CDL017             Date 03Feb04               *
+      *                 CDL016             Date 03Feb04               *
+      *                 CGL029             Date 01Sep03               *
+      *                 222727             Date 05Nov03               *
+      *                 CDL010             Date 02Aug02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 047741             Date 17Mar93               *
+     F*                    E20989             DATE   17MAR93         *
+     F*                    S01319             DATE   21AUG91         *
+      *                    S01117             DATE   22JAN90         *
+     F*                    S01194             DATE   21JAN90         *
+     F*                                                              *
+     F*--------------------------------------------------------------*
+     F*                                                              *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CDL022 - Deal Amendment Changes (Recompile)                  *
+      *  CDL020 - Apply Base Rate at Value Date (Recompile)           *
+      *  CDL019 - Allow Base Rate Changes on Fixed Deposits/Loans     *
+      *           (Recompile)                                         *
+      *  CDL018 - Multiple Settlement Accounts on Loans/Deposits      *
+      *           (Recompile)                                         *
+      *  CDL017 - Penalty Fee & Early Maturity of Fixed Term Loan/Dep *
+      *           (Recompile)                                         *
+      *  CDL016 - Automatic rollover of Fixed Term Loans/Deposits     *
+      *           (Recompile)                                         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+     F*     CDL010 - Prevent last user that actioned the trade from  *
+     F*              authorising it. Recompile due to changes in     *
+     F*              MMDEAMPP, MMDELDPP, MMDENBPP AND MMDENSPP.      *
+     F*     047741 - It is pointless to try to authorise a Deam for  *
+     F*              a deal which is not itself authorised - the user*
+     F*              is presented with an amendment screen but cant  *
+     F*              authorise the original deal - so prevent MM0028 *
+     F*              from being called in this case.                 *
+     F*              As this fix requires a chain to MMDEALLL the    *
+     F*              file should be opened in #A regardless of       *
+     F*              multibranching.                                 *
+     F*                                                              *
+     F*     E20989 - FUNCTIONAL ENHANCEMENT - If the deam is not     *
+     F*              authorised by the called maint program then do  *
+     F*              not give up on life and return to main menu -   *
+     F*              NOTIFY the user, he's as interested as you!     *
+     F*                                                              *
+     F*     S01319 - Remove redundant processing                     *
+     F*                                                              *
+      *     S01117 - MULTI-BRANCHING.
+      *                                                              *
+      *     S01194 - AMENDMENT TO USE ACCESS OBJECTS                 *
+      *                                                              *
+     F****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F****************************************************************
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       KC         Exit program.
+     F*
+     F*       10         Error - Start deal number
+     F*       11         Error - Start value date
+     F*       12         Error - Start sequence number
+     F*       16         Error - End deal number
+     F*       14         Error - End value date
+     F*       15         Error - End sequence number
+     F*       13         Protect input fields
+     F*
+     F*       59         EOF on display file
+     F*
+     F*       61         Error on display
+     F*       65         Work indicator
+     F*       66         Work indicator
+     F*       70         Eof for next record routine
+     F*
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     FMM0025DDCF  E                    WORKSTN      KINFSR *PSSR      UC
+     F*FDICDRLLIF**E**********K********DISK*********KINFSR *PSSR      UC  S01194
+     F************TABTB11F                          KIGNORE               S01194
+     F************TABTB20F                          KIGNORE               S01194
+     F*MMSSTSLLIF**E*******************DISK*********KINFSR**PSSR******UC**S01319
+     F*MMUSERLLIF**E**********K********DISK*********KINFSR**PSSR******UC**S01319
+     FMMDEAMLLIF  E           K        DISK         KINFSR *PSSR      UC
+     FMMDEALLLIF  E           K        DISK         KINFSR *PSSR      UC  S01117
+     F*******                                       KINFDS @MMPD   S01117 047741
+      *
+      ** data structure for data to output message
+     E                    CPY@    1   1 80                                S01194
+     E*
+     I@DATA       DS                             45
+     I                                        1   6 @DATA1
+     I                                        7  12 @DATA2
+     I                                       13  18 @DATA3
+      *
+      ** data structure for data to output message                        E20989
+     I@FDTA       DS                             45                       E20989
+     I                                        1   6 @FDT1                 E20989
+     I                                        7  12 @FDT2                 E20989
+     I                                       13  18 @FDT3                 E20989
+     I                                       19  24 @FDT4                 E20989
+      *
+      **  Local data area for data base errors.
+     I           UDS
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+      *
+      **  Program status data structure.
+     IPSDS       SDS
+     I                                      244 253 @JOB
+     I                                      254 263 @USER
+      *
+      ** First deal key
+     IKEYF        DS                             17
+     I                                        1   60@FDNO
+     I                                        7  100@FCY
+     I                                        7   80@FCC
+     I                                        9  100@FYY
+     I                                       11  120@FMM
+     I                                       13  140@FDD
+     I                                       15  170@FSEQ
+      *
+      ** Last deal key
+     IKEYL        DS                             17
+     I                                        1   60@LDNO
+     I                                        7   80@LCC
+     I                                        9  100@LYY
+     I                                       11  120@LMM
+     I                                       13  140@LDD
+     I                                       15  170@LSEQ
+      *
+      ** Deam key
+     IKEYM        DS                             17
+     I                                        1   60HNDA38
+     I                                        7  140@HCYMD
+     I                                        7  100HNVDYY
+     I                                       11  120HNVDMM
+     I                                       13  140HNVDDD
+     I                                       15  170HNDS38
+     ISDBANK    E DSSDBANKPD                                              S01194
+     I* BANK DETAILS ACCESSED VIA ACCESS PROGRAM                          S01194
+     I*                                                                   S01319
+     ISDDEAL    E DSSDDEALPD                                              S01319
+     I** EXTERNAL DS FOR DEALING DETAILS                                  S01319
+     I*                                                                   S01194
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*                                                                   S01117
+     IRUNDAT      DS                                                      S01117
+     I** DATA STRUCTURE FOR MULTIBRANCH INDICATOR USING RUNDAT.           S01117
+     I                                       13  13 @MBIN                 S01117
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+     I*                                                                   S01117
+     I*@MMPD*     DS                                               S01117 047741
+     I*******                              *STATUS  @MMST          S01117 047741
+     I*******                                 9   9 @MMOPN         S01117 047741
+     I****FILE IN. DS. TO TEST IF FILE MMDEALLL IS OPEN.           S01117 047741
+     I*
+      *****************************************************************
+      * SUBROUTINES USED                                              *
+      *                                                               *
+      *  01  #B       - main process                                  *
+      *  02  #BA      - validate screen input                         *
+      *  03  #BB      - process deals selected                        *
+      *  04  #BBA     - process deal                                  *
+      *  05  #A       - initialize                                    *
+      *  06  #C       - termination                                   *
+      *  07  #ZB      - Get next valid record                         *
+      *  08  *PSSR    - program error subroutine                      *
+      *  09  #ZBB     - Related deal not authorised                   *   047741
+      *                                                               *
+      * EXTERNAL ROUTINE                                              *
+      *      ZA0250   - clear message subfile                         *
+      *      ZA0240   - send message                                  *
+      *      ZA0440   - send message with data                        *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * MAIN     - control process                                    *
+      *                                                               *
+      * CALLS    #A       - initialize                                *
+      *          #B       - main process                              *
+      *          #C       - termination                               *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED  @TERM  -  Termination parameter                    *
+      *                                                               *
+      *****************************************************************
+     C*
+     C**  Initial processing.
+     C           @TERM     IFNE 'T'                        B1
+     C                     EXSR #A                         *1
+     C*
+     C**  Main processing
+     C           *INU7     IFNE '1'                        B*2
+     C           @TERM     ANDNE'E'                        **2
+     C                     EXSR #B                         **2
+     C                     END                             E*2
+     C                     END                             E1
+     C*
+     C**  Termination processing
+     C                     EXSR #C
+     C*
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #B       - main process                                       *
+      *                                                               *
+      * CALLS
+      *          #BA      - validate screen input                     *
+      *          #BB      - Process selected deals                    *
+      *                                                               *
+      * CALLED BY  MAIN   - control process                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           #B        BEGSR
+      *
+      ** Loop until F3
+     C           *INKC     DOWEQ'0'                        B1
+      *
+      ** Selection screen
+     C                     TIME           DDTIME           *1
+     C                     WRITEMM0025S0                   *1
+     C                     WRITEMM0025D0                   *1
+     C                     READ MM0025S0                 50*1
+      *
+     C           *INKC     IFEQ '0'                        B*2
+      *
+      ** Validate input
+     C                     EXSR #BA                        **2
+      *
+      ** Process deals in range
+     C           *IN61     IFEQ '0'                        B**3
+     C                     EXSR #BB                        ***3
+     C                     END                             E**3
+     C                     END                             E*2
+     C                     END                             E1
+      *
+     C           #B9       ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #BA      - validate screen input                              *
+      *                                                               *
+      * CALLS    ZA0240   - send message                              *
+      *          ZA0250   - clear message sfl                         *
+      *          #ZB      - get next record                           *
+      *                                                               *
+      * CALLED BY  #B     - main process                              *
+      *                                                               *
+      * FLDS USED  @MSGID - message id                                *
+      *            @FDNO  - First deal number                         *
+      *            @FVLD  - First value date                          *
+      *            @FSEQ  - First sequence number                     *
+      *            @LDNO  - Last deal number                         *
+      *            @LVLD  - Last value date                          *
+      *            @LSEQ  - Last sequence number                     *
+      *            KEYF   - First Key (Data structure)                *
+      *            KEYM   - Deam  Key (Data structure)                *
+      *            KEYL   - Last  Key (Data structure)                *
+      *                                                               *
+      *****************************************************************
+     C           #BA       BEGSR
+      *
+      ** clear the message queue & init error indicators
+     C                     CALL 'ZA0250'
+     C                     MOVE '0'       *IN61
+     C                     MOVE '0'       *IN10
+     C                     MOVE '0'       *IN11
+     C                     MOVE '0'       *IN12
+     C                     MOVE '0'       *IN13
+     C                     MOVE '0'       *IN14
+     C                     MOVE '0'       *IN15
+     C                     MOVE '0'       *IN16
+      *
+      ** First deal numeric
+     C                     TESTN          DDFDLN     6565
+     C           *IN65     IFNE '1'                        *1
+     C                     MOVEL'MMM0311' @MSGID           *1
+     C                     CALL 'ZA0240'                   *1
+     C                     PARM           @MSGID           *1
+     C                     MOVE '1'       *IN61            *1
+     C                     MOVE '1'       *IN10            *1
+     C                     GOTO #BA9                       *1
+     C                     ELSE                            X1
+     C                     MOVE DDFDLN    @FDNO   60       *1
+     C                     END                             E1
+      *
+      *-----------------
+      ** First date
+      *-----------------
+      ** Numeric
+     C           DDFVLD    IFEQ *BLANKS                    B1
+     C                     Z-ADD0         @FVLD   60       *1
+     C                     ELSE                            X1
+     C                     TESTN          DDFVLD     65    *1
+     C           *IN65     IFNE '1'                        B2
+     C                     MOVEL'MMM0125' @MSGID           *2
+     C                     CALL 'ZA0240'                   *2
+     C                     PARM           @MSGID           *2
+     C                     MOVE '1'       *IN61            *2
+     C                     MOVE '1'       *IN11            *2
+     C                     GOTO #BA9                       *2
+     C                     ELSE                            X2
+      *
+      ** Valid date
+     C                     MOVE DDFVLD    @FVLD            *2
+     C                     CALL 'ZA0270'                   *2
+     C                     PARM @FVLD     @@DATE  60       *2
+     C*********************PARM DATF      @@DFMT  1        *2             S01194
+     C                     PARM BJDFIN    @@DFMT  1        *2             S01194
+     C                     PARM           @@RTN   1        *2
+     C                     PARM           @@DAYN  50       *2
+     C           @@RTN     IFEQ '1'                        B3
+     C                     MOVEL'MMM0125' @MSGID           *3
+     C                     CALL 'ZA0240'                   *3
+     C                     PARM           @MSGID           *3
+     C                     MOVE '1'       *IN61            *3
+     C                     MOVE '1'       *IN11            *3
+     C                     GOTO #BA9                       *3
+     C                     END                             E3
+     C                     END                             E2
+     C                     END                             E1
+      *
+     C                     Z-ADD@FVLD     @FYY
+      *
+     C           @FYY      IFGE 72
+     C           @FVLD     OREQ 0
+     C                     Z-ADD19        @FCC
+     C                     ELSE
+     C                     Z-ADD20        @FCC
+     C                     END
+      *
+     C***********DATF******IFEQ 'D'                                       S01194
+     C           BJDFIN    IFEQ 'D'                                       S01194
+     C           @FVLD     MULT .01       @FMM
+     C           @FVLD     MULT .0001     @FDD
+     C                     ELSE
+     C           @FVLD     MULT .0001     @FMM
+     C           @FVLD     MULT .01       @FDD
+     C                     END
+      *
+      ** First sequence number numeric
+     C           DDFSEQ    IFEQ *BLANKS                    B1
+     C                     Z-ADD0         @FSEQ   30       *1
+     C                     ELSE                            X1
+     C                     TESTN          DDFSEQ     65    *1
+     C           *IN65     IFNE '1'                        B2
+     C                     MOVEL'MMM0196' @MSGID           *2
+     C                     CALL 'ZA0240'                   *2
+     C                     PARM           @MSGID           *2
+     C                     MOVE '1'       *IN61            *2
+     C                     MOVE '1'       *IN12            *2
+     C                     GOTO #BA9                       *2
+     C                     ELSE                            X2
+     C                     MOVE DDFSEQ    @FSEQ            *2
+     C                     END                             E2
+     C                     END                             E1
+      *
+      ** Second deal number numeric
+     C                     TESTN          DDLDLN     6565
+     C           *IN65     IFNE '1'                        *1
+     C                     MOVEL'MMM0311' @MSGID           *1
+     C                     CALL 'ZA0240'                   *1
+     C                     PARM           @MSGID           *1
+     C                     MOVE '1'       *IN61            *1
+     C                     MOVE '1'       *IN16            *1
+     C                     GOTO #BA9                       *1
+     C                     ELSE                            X1
+     C                     MOVE DDLDLN    @LDNO   60       *1
+     C                     END                             E1
+      *-----------------
+      ** Second date
+      *-----------------
+      ** Numeric
+     C           DDLVLD    IFEQ *BLANKS                    B1
+     C                     Z-ADD999999    @LVLD   60       *1
+     C                     ELSE                            X1
+     C                     TESTN          DDLVLD     65    *1
+     C           *IN65     IFNE '1'                        B2
+     C                     MOVEL'MMM0125' @MSGID           *2
+     C                     CALL 'ZA0240'                   *2
+     C                     PARM           @MSGID           *2
+     C                     MOVE '1'       *IN61            *2
+     C                     MOVE '1'       *IN14            *2
+     C                     GOTO #BA9                       *2
+     C                     ELSE                            X2
+      *
+      ** Valid date
+     C                     MOVE DDLVLD    @LVLD            *2
+     C                     CALL 'ZA0270'                   *2
+     C                     PARM @LVLD     @@DATE  60       *2
+     C*********************PARM DATF      @@DFMT  1        *2             S01194
+     C                     PARM BJDFIN    @@DFMT  1        *2             S01194
+     C                     PARM           @@RTN   1        *2
+     C                     PARM           @@DAYN  50       *2
+     C           @@RTN     IFEQ '1'                        B3
+     C                     MOVEL'MMM0125' @MSGID           *3
+     C                     CALL 'ZA0240'                   *3
+     C                     PARM           @MSGID           *3
+     C                     MOVE '1'       *IN61            *3
+     C                     MOVE '1'       *IN14            *3
+     C                     GOTO #BA9                       *3
+     C                     END                             E3
+     C                     END                             E2
+     C                     END                             E1
+     C                     Z-ADD@LVLD     @LYY
+      *
+     C           @LYY      IFGE 72
+     C           @LVLD     OREQ 999999
+     C                     Z-ADD19        @LCC
+     C                     ELSE
+     C                     Z-ADD20        @LCC
+     C                     END
+      *
+     C***********DATF******IFEQ 'D'                                       S01194
+     C           BJDFIN    IFEQ 'D'                                       S01194
+     C           @LVLD     MULT .01       @LMM
+     C           @LVLD     MULT .0001     @LDD
+     C                     ELSE
+     C           @LVLD     MULT .0001     @LMM
+     C           @LVLD     MULT .01       @LDD
+     C                     END
+      *
+      ** Second sequence number numeric
+     C           DDLSEQ    IFEQ *BLANKS                    B1
+     C                     Z-ADD999       @LSEQ   30       *1
+     C                     ELSE                            X1
+     C                     TESTN          DDLSEQ     6566  *1
+     C           *IN65     IFNE '1'                        B2
+     C           *IN66     ANDNE'1'                        *2
+     C                     MOVEL'MMM0196' @MSGID           *2
+     C                     CALL 'ZA0240'                   *2
+     C                     PARM           @MSGID           *2
+     C                     MOVE '1'       *IN61            *2
+     C                     MOVE '1'       *IN15            *2
+     C                     GOTO #BA9                       *2
+     C                     ELSE                            X2
+     C                     MOVE DDLSEQ    @LSEQ            *2
+     C                     END                             E2
+     C                     END                             E1
+      *
+      ** If value date entered, sequence number cannot be entered
+     C           DDFVLD    IFEQ *BLANKS                    B1
+     C           DDFSEQ    ANDNE*BLANKS                    *1
+     C                     MOVE '1'       *IN12            *1
+     C                     END                             E1
+     C           DDLVLD    IFEQ *BLANKS                    B1
+     C           DDLSEQ    ANDNE*BLANKS                    *1
+     C                     MOVE '1'       *IN15            *1
+     C                     END                             E1
+     C           DDFVLD    IFEQ *BLANKS                    B1
+     C           DDFSEQ    ANDNE*BLANKS                    *1
+     C           DDLVLD    OREQ *BLANKS                    *1
+     C           DDLSEQ    ANDNE*BLANKS                    *1
+     C                     MOVEL'MMM0315' @MSGID           *1
+     C                     CALL 'ZA0240'                   *1
+     C                     PARM           @MSGID           *1
+     C                     MOVE '1'       *IN61            *1
+     C                     GOTO #BA9                       *1
+     C                     END                             E1
+      *
+      ** Second not less than first
+     C           KEYL      IFLT KEYF
+     C                     MOVEL'MMM0312' @MSGID           *1
+     C                     CALL 'ZA0240'                   *1
+     C                     PARM           @MSGID           *1
+     C                     MOVE '1'       *IN61            *1
+     C                     MOVE '1'       *IN16            *1
+     C                     GOTO #BA9                       *1
+     C                     END                             E1
+      *
+      ** Get next record
+     C           FKEY      SETLLMMDEAMLL
+     C                     EXSR #ZB
+      *
+      ** At least 1 record to process
+     C           *IN70     IFEQ '1'                        B1
+     C                     MOVEL'MMM0313' @MSGID           *1
+     C                     CALL 'ZA0240'                   *1
+     C                     PARM           @MSGID           *1
+     C                     MOVE '1'       *IN61            *1
+     C                     MOVE '1'       *IN10            *1
+     C                     END                             E1
+      *
+     C           #BA9      ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #BB      - Process the range selected                         *
+      *                                                               *
+      * CALLS    ZA0440   - send message with data                    *
+      *          #BBA     - Process deal record                       *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED  @LDNO  - last deal number                          *
+      *            @DATA  - message data                              *
+      *            @MSGID - message id                                *
+      *            @COUNT - deal count                                *
+      *                                                               *
+      *****************************************************************
+     C           #BB       BEGSR
+     C                     Z-ADD0         @COUNT  60
+     C                     Z-ADD0         @FCNT   60                      E20989
+      *
+      ** Process eof/end deal number/error
+     C           *IN70     DOWEQ'0'                        B1
+     C           KEYL      ANDGEKEYM                       *1
+     C           *IN61     ANDEQ'0'                        *1
+      *
+      ** Process deal record
+     C                     EXSR #BBA                       *2
+      *
+      ** Get next record
+     C           *IN61     IFNE '1'                        B2
+     C                     EXSR #ZB                        *2
+     C                     END                             E2
+      *
+     C                     END                             E1
+      *
+      * Completion count message
+     C           *IN61     IFEQ '0'                        B1
+     C                     MOVEL'MMM0265' @MSGID           *1
+     C                     MOVE @COUNT    @DATA1           *1
+     C                     MOVE @FDNO     @DATA2           *1
+     C                     MOVE @LDNO     @DATA3           *1
+     C                     CALL 'ZA0440'                   *1
+     C                     PARM           @MSGID           *1
+     C                     PARM           @DATA            *1
+     C*                                                                   E20989
+     C           @FCNT     IFNE 0                                         E20989
+     C                     MOVEL'MMM1047' @MSGID                          E20989
+     C                     MOVE @FCNT     @FDT1                           E20989
+     C                     MOVE @FDNO     @FDT2            *1             E20989
+     C                     MOVE @LDNO     @FDT3            *1             E20989
+     C                     CALL 'ZA0440'                   *1             E20989
+     C                     PARM           @MSGID           *1             E20989
+     C                     PARM           @FDTA            *1             E20989
+     C                     END                                            E20989
+     C                     END                             E1
+      *
+     C           #BB9      ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #BBA     - Process deal record                                *
+      *                                                               *
+      * CALLS                                                         *
+      *          MM0028   - Deam input-validation
+      *                                                               *
+      * CALLED BY  #BB    - Process range of deals                    *
+      *                                                               *
+      * FLDS USED                                                     *
+      *            @TERM  - Abnormal termination parm                 *
+      *            @ERROR - Error parameter                           *
+      *            @HCYMD - Value date from data-structure            *
+      *            @RVDT  - Value date passed to MM0028               *
+      *            @RDLN  - Deal number passed to MM0028              *
+      *            @RDSQ  - Sequence number passed to MM0028          *
+      *            @KEY   - File key                                  *
+      *                                                               *
+      *****************************************************************
+     C           #BBA      BEGSR
+      * Deams
+     C*
+     C** Move zoned fields to packed for call
+     C                     Z-ADD@HCYMD    @RVDT   80
+     C                     Z-ADDHNDA38    @RDLN   60
+     C                     Z-ADDHNDS38    @RDSQ   30
+     C*
+     C                     CALL 'MM0028'
+     C                     PARM           @TERM
+     C                     PARM           @RDLN
+     C                     PARM           @RVDT
+     C                     PARM           @RDSQ
+     C                     PARM           @ERROR  1
+     C*
+      *
+      ** If error set flag
+     C           @TERM     IFEQ 'E'                        B1
+     C********** @ERROR ** OREQ 'E' ********************** *1             E20989
+     C                     MOVE '1'       *IN61            *1
+     C                     MOVE '1'       *INKC            *1
+     C                     ELSE                            X1
+     C*                                                                   E20989
+     C*   If @ERROR is 'E' then deal not authorised. Do not BOMB out      E20989
+     C*  and leave the user mystified. Keep a count of failures           E20989
+     C*  and carry on.                                                    E20989
+     C           @ERROR    IFEQ 'E'                                       E20989
+     C                     ADD  1         @FCNT                           E20989
+     C                     MOVE *BLANKS   @ERROR                          E20989
+     C                     ELSE                            X1             E20989
+     C                     ADD  1         @COUNT           *1
+     C                     END                                            E20989
+     C                     END                             E1
+      *
+     C           #BBA9     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #A       - initialize                                         *
+      *                                                               *
+      * CALLS    ZA0240   - send message                              *
+      *                                                               *
+      * CALLED BY  MAIN   - control process                           *
+      *                                                               *
+      * FLDS USED                                                     *
+      *            @USER  - user id                                   *
+      *            @USRKY - key to user file                          *
+      *            @MSGID - message id                                *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+     C           #A        BEGSR
+     C*
+     C                     MOVEACPY@      BIS@   80                       S01194
+      *
+      ** set up *LDA
+     C                     MOVEL'MM0025'  DBPGM
+      *
+     C** GET MULTI BRANCH INDICATOR FROM DATA AREA - RUNDAT               S01117
+     C           *NAMVAR   DEFN           RUNDAT                          S01117
+     C                     IN   RUNDAT                                    S01117
+      *
+      ** set up subfile message queue information
+     C                     MOVEL'*'       DDPGMQ
+     C                     MOVE '1'       *IN59
+     C                     MOVEL@JOB      DDWID
+      *
+      ** open the files
+     C                     OPEN MM0025DD
+     C*********************OPEN*MMSSTSLL**********************************S01319
+     C*********************OPEN FDICDRLL                                  S01194
+     C*********************OPEN*MMUSERLL**********************************S01319
+     C                     OPEN MMDEAMLL
+     C                     OPEN MMDEALLL                                  047741
+      *
+      ** Instalation control
+     C*********************MOVEL'01'      KEY                             S01194
+     C*********************MOVE '10'      KEY                             S01194
+     C***********KEY*******CHAINFDICDRLL             61                   S01194
+     C                     CALL 'AOBANKR0'                                S01194
+     C                     PARM '*DBERR ' @RTCD   7                       S01194
+     C                     PARM '*FIRST ' @OPTN   7                       S01194
+     C           SDBANK    PARM SDBANK    DSFDY                           S01194
+     C************IN61*****IFEQ '1'                        B1             S01194
+     C***********RECI******OREQ '*'                        *1             S01194
+     C           @RTCD     IFNE *BLANKS                                   S01194
+     C                     MOVE '1'       *INU7            ***************
+     C                     MOVE '1'       *INU8            *             *
+     C                     MOVE '1'       *INLR            * DB ERROR 004*
+     C                     MOVE '1'       *INKC            *             *
+     C*********************MOVEL'FDICDRLL'DBFILE           ***************S01194
+     C                     MOVEL'SDBANKPD'DBFILE           ***************S01194
+     C                     MOVEL'004'     DBASE            *1
+     C                     MOVEL@OPTN     DBKEY            *1             S01194
+     C                     EXSR *PSSR                      *1             S01194
+     C                     GOTO #A9                        *1
+     C                     END                             E1
+      *
+     C***get*the*user*data************************************************S01319
+     C*********************MOVEL@USER*****@USRKY**3***********************S01319
+     C***********@USRKY****CHAINMMUSERLL*************61*******************S01319
+     C************IN61*****IFEQ*'1'************************B1*************S01319
+     C***********IQDLTF****ORNE*'*'*************************1*************S01319
+     C*********************MOVE*'1'********INU7***************************S01319
+     C*********************MOVE*'1'********INU8***************************S01319
+     C*********************MOVE*'1'********INLR**************DB*ERROR*005*S01319
+     C*********************MOVE*'1'********INKC***************************S01319
+     C*********************MOVEL'MMUSERLL'DBFILE**************************S01319
+     C*********************MOVEL'005'*****DBASE*************1*************S01319
+     C*********************EXSR**PSSR***********************1******S01194 S01319
+     C*********************GOTO*#A9*************************1*************S01319
+     C*********************END*****************************E1*************S01319
+      *
+     C***System*status*file***********************************************S01319
+     C***********1*********CHAINMMSSTSLL*************61*******************S01319
+     C************IN61*****IFEQ*'1'************************B1*************S01319
+     C***********H1DLTF****ORNE*'*'*************************1*************S01319
+     C*********************MOVE*'1'********INU7***************************S01319
+     C*********************MOVE*'1'********INU8***************************S01319
+     C*********************MOVE*'1'********INLR**************DB*ERROR*006*S01319
+     C*********************MOVE*'1'********INKC***************************S01319
+     C*********************MOVEL'MMSSTSLL'DBFILE**************************S01319
+     C*********************MOVEL'006'*****DBASE*************1*************S01319
+     C*********************EXSR**PSSR***********************1******S01194 S01319
+     C*********************GOTO*#A9*************************1*************S01319
+     C*********************END*****************************E1*************S01319
+     C**********           CALL 'AODEALR0'                                             S01319 CGL029
+     C                     CALL 'AODEALR1'                                                    CGL029
+     C                     PARM '*DBERR ' @RTCD   7                       S01319
+     C                     PARM '*FIRST ' @OPTN   7                       S01319
+     C********** SDDEAL    PARM SDDEAL    DSFDY                                        S01319 CGL029
+     C           SDDEAL    PARM SDDEAL    DSSDY                                               CGL029
+      *
+      ** close single record files
+     C*********************CLOSEFDICDRLL                                  S01194
+     C*********************CLOSEMMSSTSLL**********************************S01319
+     C*********************CLOSEMMUSERLL**********************************S01319
+      *
+      ** if authorizations are not required, then it is an error
+     C***********H1BOAR****IFEQ*'N'************************B1*************S01319
+     C           BNMMAU    IFEQ 'N'                        B1             S01319
+     C                     MOVEL'MMM0159' @MSGID 10        *1
+     C                     END                             E1
+     C***********IQMMAO****IFEQ*'N'************************B1*************S01319
+     C*********************MOVEL'MMM0175'*@MSGID***********B1*************S01319
+     C*********************END*****************************E1*************S01319
+      * if error: Write message, present screen and end program
+     C***********H1BOAR****IFEQ*'N'************************B1*************S01319
+     C           BNMMAU    IFEQ 'N'                        B1             S01319
+     C***********IQMMAO****OREQ*'N'*************************1*************S01319
+     C                     CALL 'ZA0240'                   *1
+     C                     PARM           @MSGID           *1
+     C                     MOVE '1'       *IN13            *1
+     C                     TIME           DDTIME           *1
+     C                     WRITEMM0025S0                   *1
+     C                     WRITEMM0025D0                   *1
+     C                     READ MM0025S0                 50*1
+     C                     MOVE '1'       *INKC            *1
+     C                     GOTO #A9                        *1
+     C                     END                             E1
+     C*
+     C           #A9       ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #C       - termination                                        *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MAIN   - control process                           *
+      *                                                               *
+      * FLDS USED  @TERM  - termination parameter                     *
+      *                                                               *
+      *****************************************************************
+     C           #C        BEGSR
+      *
+      ** close all files left open
+     C                     CLOSEMM0025DD
+     C                     CLOSEMMDEAMLL
+      *
+      ** if the error flag @TERM is on, then do not set on LR
+     C           @TERM     IFNE 'E'                        B1
+     C                     MOVE '1'       *INLR            *1
+     C                     END                             E1
+     C*
+     C** If database error has been found *inLR has already been set on
+     C           *INU7     IFEQ '1'                        B1
+     C                     MOVE 'E'       @TERM            *1
+     C                     END                             E1
+      *
+     C                     RETRN
+      *
+     C           #C9       ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #ZB      - Determine next valid record (70 = EOF)             *
+      *                                                               *
+      * CALLS
+      *                                                               *
+      * CALLED BY  MAIN   -                                           *
+      *                                                               *
+      * FLDS USED      *IN70 - end of file                            *
+      *                @LDNO - Last deal number                       *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+     C           #ZB       BEGSR
+      *
+      ** Do until range error
+     C           *IN70     DOUEQ'1'                        B1
+      ** Or other error
+     C           *IN61     OREQ '1'                        *1
+      *  Or valid record (Not deleted, not status A or I)
+     C           HNDLTF    OREQ *BLANKS                    *1
+     C           HNDDLT    ANDEQ*BLANKS                    *1
+     C           HNDSTS    ANDNE'A'                        *1
+     C           HNDSTS    ANDNE'I'                        *1
+     C*  And related deal authorised                                      047741
+     C           HKDSTS    ANDEQ'A'                        *1             047741
+     C*                                                                   047741
+     C                     READ MMDEAMLL                 70*1
+      *
+     C           KEYM      IFGT KEYL                       B2
+     C                     MOVE '1'       *IN70            *2
+     C                     END                             E2
+      *
+     C***IF*MBIN = Y,VALIDATE BOOKING BRANCH FOR USER              S01117 047741
+     C*******                                                      S01117 047741
+     C*******    @MBIN     IFEQ 'Y'                                S01117 047741
+     C*******    *IN70     ANDNE'1'                                S01117 047741
+     C*******    @MMOPN    IFEQ *BLANKS                            S01117 047741
+     C*******              OPEN MMDEALLL                           S01117 047741
+     C*******              END                                     S01117 047741
+     C*                                                                   047741
+     C           *IN70     IFNE '1'                                       047741
+     C           HNDA38    CHAINMMDEALLL             60                   S01117
+     C           *IN60     IFEQ '1'                                       S01117
+     C                     MOVE '1'       *INU7            ***************S01117
+     C                     MOVE '1'       *INU8            *             *S01117
+     C                     MOVE '1'       *INLR            * DB ERROR 007*S01117
+     C                     MOVEL'MMDEALLL'DBFILE           *             *S01117
+     C                     MOVEL'007'     DBASE            ***************S01117
+     C                     MOVELHNDA38    DBKEY                           S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO #ZB9                                      S01117
+     C                     END                                            S01117
+     C**                                                                  047741
+     C** IF MBIN = Y,VALIDATE BOOKING BRANCH FOR USER                     047741
+     C**                                                                  047741
+     C           @MBIN     IFEQ 'Y'                                       047741
+     C                     CALL 'ZVBBU'                                   S01117
+     C                     PARM HKDBRC    ZBRCDX  3                       S01117
+     C                     PARM           @ERR    10                      S01117
+     C           @ERR      IFNE 0                                         S01117
+     C                     MOVE '1'       *IN70                           S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C/COPY WNCPYSRC,MM0025C001
+     C*                                                                   047741
+     C                     END                                            047741
+      *
+      ** If incomplete ask if want to continue
+     C           *IN70     IFEQ '0'                        B2
+     C           HNDSTS    ANDEQ'I'                        *2
+     C                     EXSR #ZBA                       *2
+     C                     END                             E2
+     C*                                                                   047741
+     C** If the related deal is not authorised then cannot authorise      047741
+     C** this deam so do not call MM0028.                                 047741
+     C           *IN70     IFEQ '0'                        B2             047741
+     C           HKDSTS    ANDNE'A'                        *2             047741
+     C                     EXSR #ZBB                       *2             047741
+     C                     ADD  1         @FCNT            *2             047741
+     C                     END                             E2             047741
+     C*                                                                   047741
+     C                     END                             E1
+      *
+     C           #ZB9      ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #ZBA     - Incomplete deal warning screen                     *
+      *                                                               *
+      * CALLS
+      *                                                               *
+      * CALLED BY  MAIN   -  #ZB                                      *
+      *                                                               *
+      * FLDS USED      *IN61 - error                                  *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+     C           #ZBA      BEGSR
+      *
+      ** Prompt warning screen, continue if not Ck1
+     C                     MOVEL'MMM1024' @MSGID
+     C                     MOVE HNDA38    @DATA1
+     C                     CALL 'ZA0440'
+     C                     PARM           @MSGID
+     C                     PARM           @DATA
+     C                     MOVE '1'       *IN13
+     C                     TIME           DDTIME
+     C                     WRITEMM0025S0
+     C                     WRITEMM0025D0
+     C                     READ MM0025S0                 50
+      *
+     C           *INKC     IFEQ '1'                        B1
+     C                     MOVE '1'       *IN61            *1
+     C                     ELSE                            X1
+      *
+      ** clear the message queue & init error indicators
+     C                     CALL 'ZA0250'                   *1
+     C                     MOVE '0'       *IN13            *1
+     C                     END                             E1
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT                                                              047741
+     C*****************************************************************   047741
+     C*                                                               *   047741
+     C* #ZBB     - Related deal not authorised                        *   047741
+     C*                                                               *   047741
+     C* CALLS                                                             047741
+     C*                                                               *   047741
+     C* CALLED BY  MAIN   -  #ZB                                      *   047741
+     C*                                                               *   047741
+     C* FLDS USED      *IN61 - error                                  *   047741
+     C*                                                               *   047741
+     C*                                                               *   047741
+     C*****************************************************************   047741
+     C           #ZBB      BEGSR                                          047741
+     C*                                                                   047741
+     C** Prompt warning screen, continue if not CMD3                      047741
+     C                     MOVEL'MMM2547' @MSGID                          047741
+     C                     MOVE HNDA38    @DATA1                          047741
+     C                     CALL 'ZA0440'                                  047741
+     C                     PARM           @MSGID                          047741
+     C                     PARM           @DATA                           047741
+     C                     MOVE '1'       *IN13                           047741
+     C                     TIME           DDTIME                          047741
+     C                     WRITEMM0025S0                                  047741
+     C                     WRITEMM0025D0                                  047741
+     C                     READ MM0025S0                 50               047741
+     C*                                                                   047741
+     C           *INKC     IFEQ '1'                        B1             047741
+     C                     MOVE '1'       *IN61            *1             047741
+     C                     ELSE                            X1             047741
+     C*                                                                   047741
+     C** clear the message queue & init error indicators                  047741
+     C                     CALL 'ZA0250'                   *1             047741
+     C                     MOVE '0'       *IN13            *1             047741
+     C                     END                             E1             047741
+     C*                                                                   047741
+     C                     ENDSR                                          047741
+     C*****************************************************************   047741
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR    - program error subroutine                           *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK                                    S01194
+     C                     MOVE 'Y'       @RUN    1                       S01194
+     C                     DUMP
+     C                     END                                            S01194
+      *
+     C           #PSSR9    ENDSR                            PSSR9 TAG
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * DEFN     - Program definitions                                *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           DEFN      BEGSR
+      * First Key Selection
+     C           FKEY      KLIST
+     C                     KFLD           @FDNO
+     C                     KFLD           @FCY
+     C                     KFLD           @FMM
+     C                     KFLD           @FDD
+     C                     KFLD           @FSEQ
+     C*
+     C** Recieve termination parameter
+     C           *ENTRY    PLIST
+     C                     PARM           @TERM   1
+      *
+     C                     ENDSR
+      *****************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,1029 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+      *****************************************************************
+/*S*D****RPGBASEBND****************************************************                       CUP021
+/*E*I****ALWNULL(*USRCTL)**********************************************                       CUP021
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bridge                                               *
+      *                                                               *
+      *  UP1823 - Action file compatibilty report for UPddddPD        *
+      *                                                               *
+      *  Function:  This program compares the differences between     *
+      *             Action file delivered and the system.             *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *                                                               *
+      *  Last Amend No. CUP021  *REDUNDANT Date 11Feb11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. CUP037  *CREATE    Date 07Dec06               *
+      *                                                               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CUP021 - Rewrite of Action File processing                   *
+      *  CUP037 - Action File for T_WIPCF.                            *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Use of indicators.                                           *
+      *                                                               *
+      *    01 - 21    Null indicators for fields                      *
+      *    30         Error on Read                                   *
+      *    31         EOF on Read                                     *
+      *    32         Chain Fail on Insert routine                    *
+      *    33         Chain Fail on Delete routine                    *
+      *    34         Record there on chain but different             *
+      *    35         Chain Fail on Amend routine                     *
+      *    36         Record there on Chain but different             *
+      *    37         Compare Indicator for Delete Routine            *
+      *    38         Compare Indicator for Amend Routine             *
+      *    39         Switched on if a record is found on file(Delete)*
+      *    40         Conflicts detected                              *
+      *    41         First line of record written                    *
+      *    42         Same Record in Sys and UP for Insert            *
+      *    50 - 52    Null indicators for key fields                  *
+      *    55         Same value for fields allowing null values      *
+      *    65         Do not run report if error on Amends            *
+      *    70         Error on Write                                  *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      * *PSSR - Error processing                                      *
+      * *INZSR - Initialise                                           *
+      *                                                               *
+      *    The *INZSR subroutine will only get called automatically   *
+      *    on entry to the module the first time it is run            *
+      *    (unless you end the program with LR on).  Similarly        *
+      *    D-spec initialisation only happens the first time.  Use    *
+      *    RESET for subsequent passes.                               *
+      *                                                               *
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ F-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+     FUPWPCFL0  IF   E           K DISK    INFSR(*PSSR) Prefix(UP_)  USROPN
+     FGPWPCFL0  IF   E           K DISK    INFSR(*PSSR) Prefix(SYS_) USROPN
+     FUP0803P1  O    E             PRINTER INFSR(*PSSR) INFDS(SPOOL)
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ D-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+     D LDA           E DS           256    EXTNAME(LDA)
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+ 
+     D ACTIONFDTA     UDS           256
+     D SYSFIL                  1     10
+     D UPDFIL                 31     40
+      *
+      ** Data Area in QTEMP giving report header data
+ 
+      ** The following /COPY line includes all the defined fields in the
+      ** PSDS.  They have meaningful names, prefixed by 'PS'.
+ 
+     D/COPY GPCPYSRCG,PSDS
+      *
+      ** Program Status Data Structure
+      *
+      ** +--------------------------------------+
+      ** ¦ Named constants                      ¦
+      ** ¦ ===============                      ¦
+      ** +--------------------------------------+
+ 
+     D Header          C                   'Report of the differences between -
+     D                                     the Existing System Record and the -
+     D                                     Replacement Record'
+ 
+     D Counter         C                   '---------+---------+---------+------
+     D                                     ----+---------+---------+---------+--
+     D                                     --------+---------+---------+'
+ 
+      ** +--------------------------------------+
+      ** ¦ Arrays and Data Structures           ¦
+      ** ¦ ==========================           ¦
+      ** +--------------------------------------+
+     D UpdatArray      S              1A   DIM(339)
+ 
+     D SysArray        S              1A   DIM(339)
+ 
+     D ErrorArray      S              1A   DIM(339)
+ 
+      ** Data Structure for the Update file
+     D                 DS
+     D NCU_WC_ID                      9  0
+     D UP_WC_API
+     D UP_WC_CAT
+     D UP_WC_BONSTP
+     D UP_WC_BOASTP
+     D UP_WC_BOAC
+     D UP_WC_BOACNE
+     D UP_WC_BOACAM
+     D UP_WC_BOACAU
+     D UP_WC_BOACCL
+     D UP_WC_BOACDE
+     D UP_WC_BOACRE
+     D UP_WC_BOACCH
+     D UP_WC_AUTOA
+     D UP_WC_AUTLVL
+     D UP_WC_ZONE
+     D UP_WC_SYSTEM
+     D UP_WC_BOFLD1
+     D UP_WC_BOFLD2
+     D UP_WC_BOFLD3
+     D UP_WC_BOFLD4
+     D UP_WC_BOFLD5
+     D  Updfield               1    339A
+     D  UPDLIN1                1    100A
+     D  UPDLIN2              101    200A
+     D  UPDLIN3              201    300A
+     D  UPDLIN4              301    339A
+      *
+      ** Data Structure for the Core file
+     D                 DS
+     D NCS_WC_ID                      9  0
+     D SYS_WC_API
+     D SYS_WC_CAT
+     D SYS_WC_BONSTP
+     D SYS_WC_BOASTP
+     D SYS_WC_BOAC
+     D SYS_WC_BOACNE
+     D SYS_WC_BOACAM
+     D SYS_WC_BOACAU
+     D SYS_WC_BOACCL
+     D SYS_WC_BOACDE
+     D SYS_WC_BOACRE
+     D SYS_WC_BOACCH
+     D SYS_WC_AUTOA
+     D SYS_WC_AUTLVL
+     D SYS_WC_ZONE
+     D SYS_WC_SYSTEM
+     D SYS_WC_BOFLD1
+     D SYS_WC_BOFLD2
+     D SYS_WC_BOFLD3
+     D SYS_WC_BOFLD4
+     D SYS_WC_BOFLD5
+     D  CoreFld                1    339A
+     D  SYSLIN1                1    100A
+     D  SYSLIN2              101    200A
+     D  SYSLIN3              201    300A
+     D  SYSLIN4              301    339A
+ 
+      ** Data Structure for the Error indicators
+     D                 DS           339
+     D  Indfld                 1    339A
+     D  INDLIN1                1    100A
+     D  INDLIN2              101    200A
+     D  INDLIN3              201    300A
+     D  INDLIN4              301    339A
+ 
+     DSPOOL            DS
+     D SFILE                  83     92
+     D SFNUM                 123    124B 0
+     D OFLLN                 188    189B 0
+     D PRTLN                 367    368B 0
+ 
+      ** +--------------------------------------+
+      ** ¦ Declared variables                   ¦
+      ** ¦ ==================                   ¦
+      ** +--------------------------------------+
+ 
+     D @RUN            S              1
+     D KEY_WC_API      S                   LIKE(UP_WC_API)
+     D KEY_WC_SYSTEM   S                   LIKE(UP_WC_SYSTEM)
+     D KEY_WC_ZONE     S                   LIKE(UP_WC_ZONE)
+     D X               S              5  0
+     D ACTION          S              7
+     D RMLN            S              2  0
+     D Amends          S              5  1
+     D COUNT           S            100
+     D COUNT39         S             39
+     D WAmends         S              5  1
+     D Remainder       S              1
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** +--- Start of Main processing -----------------------------------+
+      ** ¦                                                                ¦
+      ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
+      ** ¦ executed at program activation.                                ¦
+      ** ¦                                                                ¦
+      ** +----------------------------------------------------------------+
+ 
+      *********************************************************************
+      * MAIN PROCEDURE                                                    *
+      *********************************************************************
+      *
+      ** Read in Installation Data
+      *
+     C     *DTAARA       DEFINE                  LDA
+      *
+      ** Sub Routine to check that there are an equal number or Amends
+      ** before running reports.
+      *
+     C                   EXSR      CHKA
+ 
+      *There was no problem with an Odd number of Amends
+     C                   IF        *IN65 = '0'
+      * Set up key list
+     C     KEY           KLIST
+     C                   KFLD      *IN01         KEY_WC_API
+     C                   KFLD      *IN16         KEY_WC_SYSTEM
+     C                   KFLD      *IN15         KEY_WC_ZONE
+ 
+      * Blank fields from action files because there are variable length fields.
+     C                   EVAL      Updfield  = *BLANKS
+ 
+     C                   READ      UPWPCFL0                             3031
+      *
+      * If an Error or End of file reached
+     C                   IF        *IN30 = '1'
+      *
+     C     *LOCK         IN        LDA
+     C                   EVAL      *INU7 = *ON
+     C                   EVAL      *INU8 = *ON
+     C                   EVAL      DBKEY  =  UP_WC_API + UP_WC_SYSTEM +
+     C                                       UP_WC_ZONE
+     C                   EVAL      DBPGM  =  PSProcPgm
+     C                   EVAL      DBASE  =  001
+     C                   EVAL      DBMOD  =  PSProcMod
+     C                   EVAL      DBPROC =  'SR/MAIN'
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ELSE
+      *
+     C                   WRITE     HEADH                                70
+      *
+      * Do while a record exists
+     C                   DOW       *IN31 = '0'
+     C                   EVAL      ACTION = *BLANKS
+     C                   EVAL      Indfld = *BLANKS
+      * Blank fields from system files because there are variable length fields.
+     C                   EVAL      CoreFld = *BLANKS
+      *
+      * If Action Code is Insert
+     C                   IF        UP_WCACTC = 'I'
+     C                   EVAL      KEY_WC_API    = UP_WC_API
+     C                   EVAL      KEY_WC_SYSTEM = UP_WC_SYSTEM
+     C                   EVAL      KEY_WC_ZONE   = UP_WC_ZONE
+     C                   EVAL      *IN01  = %NULLIND(UP_WC_API)
+     C                   EVAL      *IN16  = %NULLIND(UP_WC_SYSTEM)
+     C                   EVAL      *IN15  = %NULLIND(UP_WC_ZONE)
+     C     KEY           CHAIN     GPWPCFL0                           32
+      *
+      * If a record is found on the chain then print out a message
+     C                   IF        *IN32 = '0'
+      *
+     C                   EXSR      SetOnNull
+      *
+      * If the two records are different - Move along Character by Character indicating
+      * differences on the third Array (ErrorArray) ELSE the record saying Identical
+     C                   IF        CoreFld <> Updfield or
+     C                             %NULLIND(UP_WC_API)    <> *IN01 or
+     C                             %NULLIND(UP_WC_CAT)    <> *IN02 or
+     C                             %NULLIND(UP_WC_BONSTP) <> *IN03 or
+     C                             %NULLIND(UP_WC_BOASTP) <> *IN04 or
+     C                             %NULLIND(UP_WC_BOAC)   <> *IN05 or
+     C                             %NULLIND(UP_WC_BOACNE) <> *IN06 or
+     C                             %NULLIND(UP_WC_BOACAM) <> *IN07 or
+     C                             %NULLIND(UP_WC_BOACAU) <> *IN08 or
+     C                             %NULLIND(UP_WC_BOACCL) <> *IN09 or
+     C                             %NULLIND(UP_WC_BOACDE) <> *IN10 or
+     C                             %NULLIND(UP_WC_BOACRE) <> *IN11 or
+     C                             %NULLIND(UP_WC_BOACCH) <> *IN12 or
+     C                             %NULLIND(UP_WC_AUTOA)  <> *IN13 or
+     C                             %NULLIND(UP_WC_AUTLVL) <> *IN14 or
+     C                             %NULLIND(UP_WC_ZONE)   <> *IN15 or
+     C                             %NULLIND(UP_WC_SYSTEM) <> *IN16 or
+     C                             %NULLIND(UP_WC_BOFLD1) <> *IN17 or
+     C                             %NULLIND(UP_WC_BOFLD2) <> *IN18 or
+     C                             %NULLIND(UP_WC_BOFLD3) <> *IN19 or
+     C                             %NULLIND(UP_WC_BOFLD4) <> *IN20 or
+     C                             %NULLIND(UP_WC_BOFLD5) <> *IN21
+     C                   MOVEA     Updfield      UpdatArray
+     C                   MOVEA     CoreFld       SysArray
+     C                   CLEAR                   ErrorArray
+     C                   Z-ADD     1             X
+     C                   DOU       X > 339
+     C     SysArray(X)   COMP      UpdatArray(X)                          43
+      *
+     C                   IF        (X >=  44 and X <=  53) or                   WC_CAT
+     C                             (X >=  56 and X <=  85) or                   WC_BONSTP
+     C                             (X >=  88 and X <= 117) or                   WC_BOASTP
+     C                             (X >= 120 and X <= 129) or                   WC_BOAC
+     C                             (X >= 132 and X <= 132) or                   WC_BOACNE
+     C                             (X >= 135 and X <= 135) or                   WC_BOACAM
+     C                             (X >= 138 and X <= 138) or                   WC_BOACAU
+     C                             (X >= 141 and X <= 141) or                   WC_BOACCL
+     C                             (X >= 144 and X <= 144) or                   WC_BOACDE
+     C                             (X >= 147 and X <= 147) or                   WC_BOACRE
+     C                             (X >= 150 and X <= 150) or                   WC_BOACCH
+     C                             (X >= 153 and X <= 153) or                   WC_AUTOA
+     C                             (X >= 156 and X <= 185) or                   WC_AUTLVL
+     C                             (X >= 232 and X <= 251) or                   WC_BOFLD1
+     C                             (X >= 254 and X <= 273) or                   WC_BOFLD2
+     C                             (X >= 276 and X <= 295) or                   WC_BOFLD3
+     C                             (X >= 298 and X <= 317) or                   WC_BOFLD4
+     C                             (X >= 320 and X <= 339)                      WC_BOFLD5
+     C   43              EXSR      ChkFldWNull
+     C   43              EVAL      *IN43 = *IN55
+     C                   ENDIF
+      *
+     C                   IF        *IN43 = '0'                                  Difference spotted
+     C                   EVAL      *IN39 = '1'
+     C                   MOVEA     '*'           ErrorArray(X)
+     C                   ENDIF
+     C                   ADD       1             X
+     C                   ENDDO
+      * Move error indicator array to field for output
+     C                   MOVEA     ErrorArray    IndFld
+      *
+     C                   MOVEL     'INSERT'      ACTION
+     C                   EXSR      REPORT
+     C                   EVAL      *IN40 = '1'
+     C                   ELSE
+     C                   EVAL      *IN42 = '1'
+     C                   MOVEL     'INSERT'      ACTION
+     C                   EXSR      REPORT
+     C                   EVAL      *IN40 = '1'
+     C                   ENDIF
+     C                   ENDIF
+     C                   ENDIF
+      *
+      * If Action Code is Delete
+     C                   IF        UP_WCACTC = 'D'
+     C                   EVAL      KEY_WC_API    = UP_WC_API
+     C                   EVAL      KEY_WC_SYSTEM = UP_WC_SYSTEM
+     C                   EVAL      KEY_WC_ZONE   = UP_WC_ZONE
+     C                   EVAL      *IN01  = %NULLIND(UP_WC_API)
+     C                   EVAL      *IN16  = %NULLIND(UP_WC_SYSTEM)
+     C                   EVAL      *IN15  = %NULLIND(UP_WC_ZONE)
+     C     KEY           CHAIN     GPWPCFL0                           33
+      *
+      * If a file is not found on the chain print out a message
+     C                   IF        *IN33 = '1'
+     C                   MOVEL     'DELETE'      ACTION
+     C                   EXSR      REPORT
+     C                   EVAL      *IN40 = '1'
+     C                   ELSE
+      *
+      * Set on indicator(s) for core fields with null values.
+     C                   EXSR      SetOnNull
+      *
+      * If the two records are different - Move along Character by Character indicating
+      * differences on the third Array (ErrorArray)
+     C                   IF        CoreFld <> Updfield or
+     C                             %NULLIND(UP_WC_API)    <> *IN01 or
+     C                             %NULLIND(UP_WC_CAT)    <> *IN02 or
+     C                             %NULLIND(UP_WC_BONSTP) <> *IN03 or
+     C                             %NULLIND(UP_WC_BOASTP) <> *IN04 or
+     C                             %NULLIND(UP_WC_BOAC)   <> *IN05 or
+     C                             %NULLIND(UP_WC_BOACNE) <> *IN06 or
+     C                             %NULLIND(UP_WC_BOACAM) <> *IN07 or
+     C                             %NULLIND(UP_WC_BOACAU) <> *IN08 or
+     C                             %NULLIND(UP_WC_BOACCL) <> *IN09 or
+     C                             %NULLIND(UP_WC_BOACDE) <> *IN10 or
+     C                             %NULLIND(UP_WC_BOACRE) <> *IN11 or
+     C                             %NULLIND(UP_WC_BOACCH) <> *IN12 or
+     C                             %NULLIND(UP_WC_AUTOA)  <> *IN13 or
+     C                             %NULLIND(UP_WC_AUTLVL) <> *IN14 or
+     C                             %NULLIND(UP_WC_ZONE)   <> *IN15 or
+     C                             %NULLIND(UP_WC_SYSTEM) <> *IN16 or
+     C                             %NULLIND(UP_WC_BOFLD1) <> *IN17 or
+     C                             %NULLIND(UP_WC_BOFLD2) <> *IN18 or
+     C                             %NULLIND(UP_WC_BOFLD3) <> *IN19 or
+     C                             %NULLIND(UP_WC_BOFLD4) <> *IN20 or
+     C                             %NULLIND(UP_WC_BOFLD5) <> *IN21
+     C                   MOVEA     Updfield      UpdatArray
+     C                   MOVEA     CoreFld       SysArray
+     C                   CLEAR                   ErrorArray
+     C                   Z-ADD     1             X
+     C                   DOU       X > 339
+     C     SysArray(X)   COMP      UpdatArray(X)                          36
+      *
+     C                   IF        (X >=  44 and X <=  53) or                   WC_CAT
+     C                             (X >=  56 and X <=  85) or                   WC_BONSTP
+     C                             (X >=  88 and X <= 117) or                   WC_BOASTP
+     C                             (X >= 120 and X <= 129) or                   WC_BOAC
+     C                             (X >= 132 and X <= 132) or                   WC_BOACNE
+     C                             (X >= 135 and X <= 135) or                   WC_BOACAM
+     C                             (X >= 138 and X <= 138) or                   WC_BOACAU
+     C                             (X >= 141 and X <= 141) or                   WC_BOACCL
+     C                             (X >= 144 and X <= 144) or                   WC_BOACDE
+     C                             (X >= 147 and X <= 147) or                   WC_BOACRE
+     C                             (X >= 150 and X <= 150) or                   WC_BOACCH
+     C                             (X >= 153 and X <= 153) or                   WC_AUTOA
+     C                             (X >= 156 and X <= 185) or                   WC_AUTLVL
+     C                             (X >= 232 and X <= 251) or                   WC_BOFLD1
+     C                             (X >= 254 and X <= 273) or                   WC_BOFLD2
+     C                             (X >= 276 and X <= 295) or                   WC_BOFLD3
+     C                             (X >= 298 and X <= 317) or                   WC_BOFLD4
+     C                             (X >= 320 and X <= 339)                      WC_BOFLD5
+     C   36              EXSR      ChkFldWNull
+     C   36              EVAL      *IN36 = *IN55
+     C                   ENDIF
+      *
+     C                   IF        *IN36 = '0'
+     C                   EVAL      *IN34 = '1'
+     C                   MOVEA     '*'           ErrorArray(X)
+     C                   EndIf
+     C                   ADD       1             X
+     C                   EndDo
+      * Move error indicator array to field for output
+     C                   MOVEA     ErrorArray    IndFld
+      *
+      * Write out all three data structures with the indicator showing
+      * where the error is
+     C                   MOVEL     'DELETE'      ACTION
+     C                   EXSR      REPORT
+     C                   EVAL      *IN40 = '1'
+     C                   ENDIF
+     C                   ENDIF
+     C                   ENDIF
+      *
+      * If Action Code is Amend
+     C                   IF        UP_WCACTC = 'A'
+     C                   EVAL      KEY_WC_API    = UP_WC_API
+     C                   EVAL      KEY_WC_SYSTEM = UP_WC_SYSTEM
+     C                   EVAL      KEY_WC_ZONE   = UP_WC_ZONE
+     C                   EVAL      *IN01  = %NULLIND(UP_WC_API)
+     C                   EVAL      *IN16  = %NULLIND(UP_WC_SYSTEM)
+     C                   EVAL      *IN15  = %NULLIND(UP_WC_ZONE)
+     C     KEY           CHAIN     GPWPCFL0                           35
+      *
+      * If a file is not found on the chain print out a message
+     C                   IF        *IN35 = '1'
+     C                   MOVEL     'AMEND'       ACTION
+     C                   EXSR      REPORT
+     C                   EVAL      *IN40 = '1'
+      * Because amends come in pairs read the after image of amend.
+     C                   READ      UPWPCFL0                               31
+     C                   ELSE
+      *
+      * Set on indicator(s) for core fields with null values.
+     C                   EXSR      SetOnNull
+      *
+      * If the before image record and core record are different, read
+      * the after amend image record and compare it with the core record.
+     C                   IF        CoreFld <> Updfield or
+     C                             %NULLIND(UP_WC_API)    <> *IN01 or
+     C                             %NULLIND(UP_WC_CAT)    <> *IN02 or
+     C                             %NULLIND(UP_WC_BONSTP) <> *IN03 or
+     C                             %NULLIND(UP_WC_BOASTP) <> *IN04 or
+     C                             %NULLIND(UP_WC_BOAC)   <> *IN05 or
+     C                             %NULLIND(UP_WC_BOACNE) <> *IN06 or
+     C                             %NULLIND(UP_WC_BOACAM) <> *IN07 or
+     C                             %NULLIND(UP_WC_BOACAU) <> *IN08 or
+     C                             %NULLIND(UP_WC_BOACCL) <> *IN09 or
+     C                             %NULLIND(UP_WC_BOACDE) <> *IN10 or
+     C                             %NULLIND(UP_WC_BOACRE) <> *IN11 or
+     C                             %NULLIND(UP_WC_BOACCH) <> *IN12 or
+     C                             %NULLIND(UP_WC_AUTOA)  <> *IN13 or
+     C                             %NULLIND(UP_WC_AUTLVL) <> *IN14 or
+     C                             %NULLIND(UP_WC_ZONE)   <> *IN15 or
+     C                             %NULLIND(UP_WC_SYSTEM) <> *IN16 or
+     C                             %NULLIND(UP_WC_BOFLD1) <> *IN17 or
+     C                             %NULLIND(UP_WC_BOFLD2) <> *IN18 or
+     C                             %NULLIND(UP_WC_BOFLD3) <> *IN19 or
+     C                             %NULLIND(UP_WC_BOFLD4) <> *IN20 or
+     C                             %NULLIND(UP_WC_BOFLD5) <> *IN21
+      * Blank fields from action files because there are variable length fields.
+     C                   EVAL      Updfield  = *BLANKS
+     C                   READ      UPWPCFL0                               31
+      *
+      * If The two records are different - Move along Character by Character indicating
+      * differences on the third Array (ErrorArray)
+     C                   IF        CoreFld <> Updfield or
+     C                             %NULLIND(UP_WC_API)    <> *IN01 or
+     C                             %NULLIND(UP_WC_CAT)    <> *IN02 or
+     C                             %NULLIND(UP_WC_BONSTP) <> *IN03 or
+     C                             %NULLIND(UP_WC_BOASTP) <> *IN04 or
+     C                             %NULLIND(UP_WC_BOAC)   <> *IN05 or
+     C                             %NULLIND(UP_WC_BOACNE) <> *IN06 or
+     C                             %NULLIND(UP_WC_BOACAM) <> *IN07 or
+     C                             %NULLIND(UP_WC_BOACAU) <> *IN08 or
+     C                             %NULLIND(UP_WC_BOACCL) <> *IN09 or
+     C                             %NULLIND(UP_WC_BOACDE) <> *IN10 or
+     C                             %NULLIND(UP_WC_BOACRE) <> *IN11 or
+     C                             %NULLIND(UP_WC_BOACCH) <> *IN12 or
+     C                             %NULLIND(UP_WC_AUTOA)  <> *IN13 or
+     C                             %NULLIND(UP_WC_AUTLVL) <> *IN14 or
+     C                             %NULLIND(UP_WC_ZONE)   <> *IN15 or
+     C                             %NULLIND(UP_WC_SYSTEM) <> *IN16 or
+     C                             %NULLIND(UP_WC_BOFLD1) <> *IN17 or
+     C                             %NULLIND(UP_WC_BOFLD2) <> *IN18 or
+     C                             %NULLIND(UP_WC_BOFLD3) <> *IN19 or
+     C                             %NULLIND(UP_WC_BOFLD4) <> *IN20 or
+     C                             %NULLIND(UP_WC_BOFLD5) <> *IN21
+     C                   MOVEA     Updfield      UpdatArray
+     C                   MOVEA     CoreFld       SysArray
+     C                   CLEAR                   ErrorArray
+     C                   Z-ADD     1             X
+     C                   DOU       X > 339
+     C     SysArray(X)   COMP      UpdatArray(X)                          38
+      *
+     C                   IF        (X >=  44 and X <=  53) or                   WC_CAT
+     C                             (X >=  56 and X <=  85) or                   WC_BONSTP
+     C                             (X >=  88 and X <= 117) or                   WC_BOASTP
+     C                             (X >= 120 and X <= 129) or                   WC_BOAC
+     C                             (X >= 132 and X <= 132) or                   WC_BOACNE
+     C                             (X >= 135 and X <= 135) or                   WC_BOACAM
+     C                             (X >= 138 and X <= 138) or                   WC_BOACAU
+     C                             (X >= 141 and X <= 141) or                   WC_BOACCL
+     C                             (X >= 144 and X <= 144) or                   WC_BOACDE
+     C                             (X >= 147 and X <= 147) or                   WC_BOACRE
+     C                             (X >= 150 and X <= 150) or                   WC_BOACCH
+     C                             (X >= 153 and X <= 153) or                   WC_AUTOA
+     C                             (X >= 156 and X <= 185) or                   WC_AUTLVL
+     C                             (X >= 232 and X <= 251) or                   WC_BOFLD1
+     C                             (X >= 254 and X <= 273) or                   WC_BOFLD2
+     C                             (X >= 276 and X <= 295) or                   WC_BOFLD3
+     C                             (X >= 298 and X <= 317) or                   WC_BOFLD4
+     C                             (X >= 320 and X <= 339)                      WC_BOFLD5
+     C   38              EXSR      ChkFldWNull
+     C   38              EVAL      *IN38 = *IN55
+     C                   ENDIF
+      *
+     C                   IF        *IN38 = '0'
+     C                   EVAL      *IN36 = '1'
+     C                   MOVEA     '*'           ErrorArray(X)
+     C                   ENDIF
+     C                   ADD       1             X
+     C                   ENDDO
+      * Move error indicator array to field for output
+     C                   MOVEA     ErrorArray    IndFld
+      *
+      * Write out all three data structures with the indicator showing
+      *  where the error is.
+      * Write the after image data.
+     C                   MOVEL     'AMEND'       ACTION
+     C                   EXSR      REPORT
+     C                   EVAL      *IN40 = '1'
+     C                   ENDIF
+     C                   ELSE
+      *  If the before image record is same as core record,
+      *  read the after image record but nothing is done.
+     C                   READ      UPWPCFL0                               31
+     C                   ENDIF
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   MOVEA     '000000000'   *IN(30)
+     C                   MOVEA     '0'           *IN(39)
+     C                   MOVEA     '00'          *IN(41)
+     C                   EVAL      Updfield  = *BLANKS
+     C                   READ      UPWPCFL0                             3031
+      *
+      * If an Error
+     C                   IF        *IN30 = '1'
+      *
+     C     *LOCK         IN        LDA
+     C                   EVAL      *INU7 = *ON
+     C                   EVAL      *INU8 = *ON
+     C                   EVAL      DBFILE =  'UPWPCFL0'
+     C                   EVAL      DBKEY  =  UP_WC_API + UP_WC_SYSTEM +
+     C                                       UP_WC_ZONE
+     C                   EVAL      DBPGM  =  PSProcPgm
+     C                   EVAL      DBASE  =  002
+     C                   EVAL      DBMOD  =  PSProcMod
+     C                   EVAL      DBPROC =  'SR/MAIN'
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDDO
+     C                   ENDIF
+      * If there are no differences between the two files UP and Sys
+      * Print No Differences ...
+     C                   IF        *IN40 = '0'
+     C                   WRITE     NODIFS                               70
+     C                   ENDIF
+      *
+      * ... else Error in No of Amend Records
+     C                   ELSE
+     C                   WRITE     HEADH
+     C                   WRITE     AMENDERR
+     C                   ENDIF
+      *
+     C                   WRITE     TRAILP                               70
+ 
+ 
+     C                   SETON                                        LR
+     C                   RETURN
+      **********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * ChkFldWNull - Compare the null field indicators for the       *
+      *               fields which allow null values.                 *
+      *               If difference, set *IN55 off.                   *
+      *                                                               *
+      * Called by: Main Prcessing                                     *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+ 
+     C     ChkFldWNull   BEGSR
+      *
+     C                   EVAL      *IN55 = *ON
+      *
+      * Check for the null values of fields.
+     C                   SELECT
+      *
+     C                   WHEN      (X >=  44 and X <=  53)
+     C                   IF        %NULLIND(UP_WC_CAT) <> *IN02
+     C                   EVAL      *IN55 = *OFF
+     C                   ENDIF
+      *
+     C                   WHEN      (X >=  56 and X <=  85)
+     C                   IF        %NULLIND(UP_WC_BONSTP) <> *IN03
+     C                   EVAL      *IN55 = *OFF
+     C                   ENDIF
+      *
+     C                   WHEN      (X >=  88 and X <= 117)
+     C                   IF        %NULLIND(UP_WC_BOASTP) <> *IN04
+     C                   EVAL      *IN55 = *OFF
+     C                   ENDIF
+      *
+     C                   WHEN      (X >= 120 and X <= 129)
+     C                   IF        %NULLIND(UP_WC_BOAC) <> *IN05
+     C                   EVAL      *IN55 = *OFF
+     C                   ENDIF
+      *
+     C                   WHEN      (X >= 132 and X <= 132)
+     C                   IF        %NULLIND(UP_WC_BOACNE) <> *IN06
+     C                   EVAL      *IN55 = *OFF
+     C                   ENDIF
+      *
+     C                   WHEN      (X >= 135 and X <= 135)
+     C                   IF        %NULLIND(UP_WC_BOACAM) <> *IN07
+     C                   EVAL      *IN55 = *OFF
+     C                   ENDIF
+      *
+     C                   WHEN      (X >= 138 and X <= 138)
+     C                   IF        %NULLIND(UP_WC_BOACAU) <> *IN08
+     C                   EVAL      *IN55 = *OFF
+     C                   ENDIF
+      *
+     C                   WHEN      (X >= 141 and X <= 141)
+     C                   IF        %NULLIND(UP_WC_BOACCL) <> *IN09
+     C                   EVAL      *IN55 = *OFF
+     C                   ENDIF
+      *
+     C                   WHEN      (X >= 144 and X <= 144)
+     C                   IF        %NULLIND(UP_WC_BOACDE) <> *IN10
+     C                   EVAL      *IN55 = *OFF
+     C                   ENDIF
+      *
+     C                   WHEN      (X >= 147 and X <= 147)
+     C                   IF        %NULLIND(UP_WC_BOACRE) <> *IN11
+     C                   EVAL      *IN55 = *OFF
+     C                   ENDIF
+      *
+     C                   WHEN      (X >= 150 and X <= 150)
+     C                   IF        %NULLIND(UP_WC_BOACCH) <> *IN12
+     C                   EVAL      *IN55 = *OFF
+     C                   ENDIF
+      *
+     C                   WHEN      (X >= 153 and X <= 153)
+     C                   IF        %NULLIND(UP_WC_AUTOA) <> *IN13
+     C                   EVAL      *IN55 = *OFF
+     C                   ENDIF
+      *
+     C                   WHEN      (X >= 156 and X <= 185)
+     C                   IF        %NULLIND(UP_WC_AUTLVL) <> *IN14
+     C                   EVAL      *IN55 = *OFF
+     C                   ENDIF
+      *
+     C                   WHEN      (X >= 232 and X <= 251)
+     C                   IF        %NULLIND(UP_WC_BOFLD1) <> *IN17
+     C                   EVAL      *IN55 = *OFF
+     C                   ENDIF
+      *
+     C                   WHEN      (X >= 254 and X <= 273)
+     C                   IF        %NULLIND(UP_WC_BOFLD2) <> *IN18
+     C                   EVAL      *IN55 = *OFF
+     C                   ENDIF
+      *
+     C                   WHEN      (X >= 276 and X <= 295)
+     C                   IF        %NULLIND(UP_WC_BOFLD3) <> *IN19
+     C                   EVAL      *IN55 = *OFF
+     C                   ENDIF
+      *
+     C                   WHEN      (X >= 298 and X <= 317)
+     C                   IF        %NULLIND(UP_WC_BOFLD4) <> *IN20
+     C                   EVAL      *IN55 = *OFF
+     C                   ENDIF
+      *
+     C                   WHEN      (X >= 320 and X <= 339)
+     C                   IF        %NULLIND(UP_WC_BOFLD5) <> *IN21
+     C                   EVAL      *IN55 = *OFF
+     C                   ENDIF
+      *
+     C                   ENDSL
+      *
+     C     ChkFldWNullE  ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * REPORT - WRITE To the printer file                            *
+      *                                                               *
+      * Called by: Main Prcessing                                     *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+ 
+     C     REPORT        BEGSR
+      *
+      *
+     C                   IF        (*IN33 = '1') OR
+     C                             (*IN35 = '1') OR
+     C                             (*IN42 = '1')
+      * Overflow check for an Insert that exists or an Amend/Delete that is missing
+     C                   EXSR      OFLOW
+      * Write first 100  characters
+     C                   MOVEL     *BLANKS       UPDLIN
+     C                   MOVEL     UPDLIN1       UPDLIN
+     C                   MOVEL     Counter       COUNT
+     C                   WRITE     DTL1                                 70
+      * Set on *IN41 to stop the appearance of Action
+     C                   EVAL      *IN41 = '1'
+     C                   MOVEL     *BLANKS       UPDLIN
+     C                   MOVEL     UPDLIN2       UPDLIN
+     C                   MOVEL     Counter       COUNT
+     C                   WRITE     DTL1                                 70
+      * write the 101 - 200 th characters
+     C                   MOVEL     *BLANKS       UPDLIN
+     C                   MOVEL     UPDLIN3       UPDLIN
+     C                   MOVEL     Counter       COUNT
+     C                   WRITE     DTL1                                 70
+      * write the 201 - 300 th characters
+     C                   MOVEL     *BLANKS       UPDLIN
+     C                   MOVEL     *BLANKS       COUNT
+     C                   MOVEL     UPDLIN4       UPDLIN
+     C                   MOVEL     Counter       COUNT39
+     C                   MOVEL     COUNT39       COUNT
+     C                   WRITE     DTL1                                 70
+      * Set Off *IN41
+     C                   EVAL      *IN41 ='0'
+     C                   ENDIF
+      *
+     C                   IF        (*IN34 = '1') OR
+     C                             (*IN36 = '1') OR
+     C                             (*IN39 = '1')
+      *
+      * Blank out the first 2 digits of fields of variable lengths in the output field
+     C                   EVAL      %SUBST(IndFld:10:2)  = '  '                  API
+     C                   EVAL      %SUBST(IndFld:42:2)  = '  '                  CAT
+     C                   EVAL      %SUBST(IndFld:54:2)  = '  '                  BONSTP
+     C                   EVAL      %SUBST(IndFld:86:2)  = '  '                  BOASTP
+     C                   EVAL      %SUBST(IndFld:118:2) = '  '                  BOAC
+     C                   EVAL      %SUBST(IndFld:130:2) = '  '                  BOACNE
+     C                   EVAL      %SUBST(IndFld:133:2) = '  '                  BOACAM
+     C                   EVAL      %SUBST(IndFld:136:2) = '  '                  BOACAU
+     C                   EVAL      %SUBST(IndFld:139:2) = '  '                  BOACCL
+     C                   EVAL      %SUBST(IndFld:142:2) = '  '                  BOACDE
+     C                   EVAL      %SUBST(IndFld:145:2) = '  '                  BOACRE
+     C                   EVAL      %SUBST(IndFld:148:2) = '  '                  BOACCH
+     C                   EVAL      %SUBST(IndFld:151:2) = '  '                  AUTOA
+     C                   EVAL      %SUBST(IndFld:154:2) = '  '                  AUTLVL
+     C                   EVAL      %SUBST(IndFld:186:2) = '  '                  ZONE
+     C                   EVAL      %SUBST(IndFld:198:2) = '  '                  SYSTEM
+     C                   EVAL      %SUBST(IndFld:230:2) = '  '                  BOFLD1
+     C                   EVAL      %SUBST(IndFld:252:2) = '  '                  BOFLD2
+     C                   EVAL      %SUBST(IndFld:274:2)  = '  '                 BOFLD3
+     C                   EVAL      %SUBST(IndFld:296:2) = '  '                  BOFLD4
+     C                   EVAL      %SUBST(IndFld:318:2) = '  '                  BOFLD5
+      *
+      * Overflow check for an Insert that exists or an Amend/Delete that is missing
+     C                   EXSR      OFLOW2
+      * Write first 100 characters
+     C                   MOVEL     *BLANKS       SYSLIN
+     C                   MOVEL     *BLANKS       UPDLIN
+     C                   MOVEL     *BLANKS       INDLIN
+     C                   MOVEL     UPDLIN1       UPDLIN
+     C                   MOVEL     INDLIN1       INDLIN
+     C                   MOVEL     SYSLIN1       SYSLIN
+     C                   MOVEL     Counter       COUNT
+     C                   WRITE     DTL2                                 70
+      * Set on *IN41 to stop the appearance of Action
+     C                   EVAL      *IN41 = '1'
+      * write the 101 - 200 th characters
+     C                   MOVEL     *BLANKS       SYSLIN
+     C                   MOVEL     *BLANKS       UPDLIN
+     C                   MOVEL     *BLANKS       INDLIN
+     C                   MOVEL     UPDLIN2       UPDLIN
+     C                   MOVEL     INDLIN2       INDLIN
+     C                   MOVEL     SYSLIN2       SYSLIN
+     C                   WRITE     DTL2                                 70
+      * write the 201 - 300 th characters
+     C                   MOVEL     *BLANKS       SYSLIN
+     C                   MOVEL     *BLANKS       UPDLIN
+     C                   MOVEL     *BLANKS       INDLIN
+     C                   MOVEL     UPDLIN3       UPDLIN
+     C                   MOVEL     INDLIN3       INDLIN
+     C                   MOVEL     SYSLIN3       SYSLIN
+     C                   WRITE     DTL2                                 70
+      * Write last 36 characters
+     C                   MOVEL     *BLANKS       SYSLIN
+     C                   MOVEL     *BLANKS       UPDLIN
+     C                   MOVEL     *BLANKS       INDLIN
+     C                   MOVEL     *BLANKS       COUNT
+     C                   MOVEL     UPDLIN4       UPDLIN
+     C                   MOVEL     INDLIN4       INDLIN
+     C                   MOVEL     SYSLIN4       SYSLIN
+     C                   MOVEL     Counter       COUNT39
+     C                   MOVEL     COUNT39       COUNT
+     C                   WRITE     DTL2                                 70
+      * Set Off *IN41
+     C                   EVAL      *IN41 ='0'
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SetOnNull - Set on null indicators                            *
+      *                                                               *
+      * Called by: Main Prcessing                                     *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+ 
+     C     SetOnNull     BEGSR
+      *
+      * Set on indicator(s) for core fields with null values.
+     C                   EVAL      *IN01 = %NULLIND(SYS_WC_API)
+     C                   EVAL      *IN02 = %NULLIND(SYS_WC_CAT)
+     C                   EVAL      *IN03 = %NULLIND(SYS_WC_BONSTP)
+     C                   EVAL      *IN04 = %NULLIND(SYS_WC_BOASTP)
+     C                   EVAL      *IN05 = %NULLIND(SYS_WC_BOAC)
+     C                   EVAL      *IN06 = %NULLIND(SYS_WC_BOACNE)
+     C                   EVAL      *IN07 = %NULLIND(SYS_WC_BOACAM)
+     C                   EVAL      *IN08 = %NULLIND(SYS_WC_BOACAU)
+     C                   EVAL      *IN09 = %NULLIND(SYS_WC_BOACCL)
+     C                   EVAL      *IN10 = %NULLIND(SYS_WC_BOACDE)
+     C                   EVAL      *IN11 = %NULLIND(SYS_WC_BOACRE)
+     C                   EVAL      *IN12 = %NULLIND(SYS_WC_BOACCH)
+     C                   EVAL      *IN13 = %NULLIND(SYS_WC_AUTOA)
+     C                   EVAL      *IN14 = %NULLIND(SYS_WC_AUTLVL)
+     C                   EVAL      *IN15 = %NULLIND(SYS_WC_ZONE)
+     C                   EVAL      *IN16 = %NULLIND(SYS_WC_SYSTEM)
+     C                   EVAL      *IN17 = %NULLIND(SYS_WC_BOFLD1)
+     C                   EVAL      *IN18 = %NULLIND(SYS_WC_BOFLD2)
+     C                   EVAL      *IN19 = %NULLIND(SYS_WC_BOFLD3)
+     C                   EVAL      *IN20 = %NULLIND(SYS_WC_BOFLD4)
+     C                   EVAL      *IN21 = %NULLIND(SYS_WC_BOFLD5)
+      *
+     C     SetOnNullE    ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * OFLOW - OVERFLOW Processing  for fields that                  *
+      *                 For Inserts that are there and Amends and     *
+      *                 Deletes that are missing                      *
+      *                                                               *
+      * Called by: Main Prcessing                                     *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+ 
+     C     OFLOW         BEGSR
+      *
+     C     OFLLN         SUB       PRTLN         RMLN
+     C                   IF        RMLN <= 8
+     C                   WRITE     HEADH                                70
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * OFLOW2- OVERFLOW Processing for differences on >200 chars     *
+      *         with file differences                                 *
+      *                                                               *
+      * Called by: Main Prcessing                                     *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+ 
+     C     OFLOW2        BEGSR
+      *
+     C     OFLLN         SUB       PRTLN         RMLN
+     C                   IF        RMLN <= 20
+     C                   WRITE     HEADH                                70
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * CHKA  - Check there are an even number of Amend Records       *
+      *         with file differences                                 *
+      *                                                               *
+      * Called by: Main Prcessing                                     *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+ 
+     C     CHKA          BEGSR
+      *
+     C                   READ      UPWPCFL0                               70
+     C                   DOW       *IN70 = '0'
+     C                   IF        UP_WCACTC = 'A'
+     C                   ADD       1             Amends
+     C                   ENDIF
+     C                   READ      UPWPCFL0                               70
+     C                   ENDDO
+      *
+      * Check to see if the No. of Amends is divisible by 2 and not equal 0
+     C                   IF        Amends <> 0
+     C     Amends        DIV       2             WAmends
+     C                   MOVE      WAmends       Remainder
+      * If the remainder is ='5' Set on indicator to stop File processing
+     C                   IF        REMAINDER ='5'
+     C                   EVAL      *IN65 = '1'
+     C                   ENDIF
+     C                   ENDIF
+     C     *START        SETLL     UPWPCFL0
+ 
+     C                   ENDSR
+      **********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Program Initialisation routine                       *
+      *                                                               *
+      * Called by: Implicitly on program activation                   *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+ 
+     C     *INZSR        BEGSR
+      * Initialise program name
+      *
+     C                   MOVEL     'UP1823'      DBPGM
+      *
+     C                   MOVEL     HEADER        HEAD
+      * Open files
+     C                   OPEN      UPWPCFL0
+     C                   OPEN      GPWPCFL0
+     C                   ENDSR
+ 
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *PSSR         BEGSR
+      *
+     C                   IF        @RUN = *BLANK
+     C                   EVAL      @RUN = 'Y'
+     C                   DUMP
+      *
+     C                   ENDIF
+      *
+     C                   EVAL      *INU7 = *ON
+     C                   EVAL      *INU8 = *ON
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+      *
+     C                   ENDSR
+      *

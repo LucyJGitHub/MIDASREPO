@@ -1,0 +1,1687 @@
+     H        1
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Market Instruments Maintenance')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Futures and Options Module                           *
+      *                                                               *
+      *   FF0151  -  MARKET INSTRUMENTS MAINTENANCE                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CAAA03             Date 11Mar04               *
+      *                 220004             Date 24Jul03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CFF006             Date 28Nov00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CPB001             Date 13Sep99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CFF005 *CREATE     Date 15Oct96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CAAA03 - Webfacing Changes                                   *
+      *  220004 - Change call to AOCURRR0 to use DSSDY not DSFDY.     *
+      *  CFF006 - Fractional Ticks Enhancement.                       *
+      *  CPB001 - 'Private Banking' Module                            *
+      *  CFF005 - '?' processing for market instrument.               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *     CREATION REQUIREMENTS                                     *
+      *                                                               *
+      *     IGNDECERR(*NO)                                            *
+      *                                                               *
+      *****************************************************************
+     FINTYP1  IF  E           K        DISK
+     FMARKT   IF  E           K        DISK
+     FMKCTL   IF  E           K        DISK
+     FFF0151DFCF  E                    WORKSTN      KINFDS SCRDS
+     F                                        RRN   KSFILE FF0151S0
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       01         S/FF0151C0  SFLDSP
+     F*       02         S/FF0151C0  SFLDSPCTL
+     F*       03         S/FF0151C0  SFLEND
+     F*       04         S/FF0151C0  ROLLDOWN NOT ALLOWED
+     F*
+     F*       11         REVIEW SCREEN
+     F*
+     F*       20         S/FF0151F1  ERROR-ACTN
+     F*       21         S/FF0151F1  ERROR-MRKT
+     F*       22         S/FF0151F1  ERROR-ISTC
+     F*
+     F*       24         TESTN/LOKUP INDICATOR
+     F*
+     F*       25         ADD RECORD
+     F*       26         PROTECT INDICATOR FOR AMENDMENTS WITH SSF ON
+     F*
+     F*       40         ROLLUP                                           S01179
+     F*       41         ROLLDOWN                                         S01179
+     F*       45         VLDCMDKY INDICATOR FOR DISPLAY FILE              S01179
+     F*                                                                   S01179
+     F*       81         S/FF0151F0  ERROR-AEIN                           FF0011
+     F*       82         S/FF0151F0  ERROR-ALPD                           S01393
+     F*
+     F*       85         Linked enquiry                                   S01393
+     F*       87         S/FF0151F0  NON-DISPLAY SINNR                    S01235
+      *       88         Non-display/Protect Fractional Ticks field       CFF006
+     F*
+     F*       98         DATF = MMDDYY
+     F*       99         WORK
+     F*
+     F*       U7         DATABASE ERROR
+     F*       U8         PROGRAM  ERROR
+     F*
+     F*       'AID' VALUES USED
+     F*
+     F*       01         CA3                                              S01179
+     F*       04         CA10                                             S01179
+     F*       05         CA12                                             S01179
+     F*       RA         ENTER PRESSED
+     F*       UP         ROLLUP
+     F*       DN         ROLLDOWN
+     F*
+     F* NOT USED ARE
+     F*
+     F*       PT         PRINT
+     F*       CL         CLEAR
+     F*       HM         HOME
+     F*
+     E                    CPY@    1   1 80
+     E*
+     E** Extra entry in array for use when program is called as           S01393
+     E** linked enquiry.                                                  S01393
+     E                    INF     1   6 76                                S01393
+     E                    ERR        40  4
+     E                    WER        10  4
+     E                    SMQ        12  1
+     E                    FMQ        12  1
+     E*
+      /COPY ZSRSRC,FFDATEZ1
+     E*
+     E/COPY ZSRSRC,ZDATE1Z1
+     E/COPY ZSRSRC,ZALIGNZ1
+     E** SR.ARRAY FOR BOTH ZALIGN AND ZEDIT
+     E*
+     E/COPY ZSRSRC,ZHOLE                                                  S01195
+     E** SR.ARRAY FOR ZACCH, ZCHKH AND ZFWDT                              S01195
+     I*                                                                   S01195
+     I/COPY ZSRSRC,ZHOLI                                                  S01195
+     I** SR.ARRAY FOR ZACCH, ZCHKH AND ZFWDT                              S01195
+     I*                                                                   S01195
+     I/COPY ZSRSRC,ZHOLDS                                                 S01195
+      **  EXTERNAL DS FOR HOLIDAY DETAILS AND ACCESS OBJECTS              S01195
+     I*                                                                   S01408
+     I/COPY WNCPYSRC,FF0151IIP2                                           S01408
+     I*                                                                   S01408
+     ISCRCTL      DS
+     I*
+     I** KEY FIELDS (TAKEN FROM 'KEY' PORTION OF SCREEN)
+     I                                        1   1 REVW
+     I                                        2   2 ACTN
+     I                                        3   7 ISTT
+     I                                        3   4 MRKT
+     I                                        5   7 ISTC
+     I                                        8  12 PISTT
+     I                                        8   9 PMRKT
+     I                                       10  12 PISTC
+      *
+     IDETS        DS                                                      S01179
+     I*
+     I** DATA STRUCTURE FOR SCREEN DETAIL OUTPUT TO CMTTXT
+     I                                        1  20 SISTN                 S01179
+     I                                       21  21 SISPT                 S01179
+     I                                       22  24 SISCY                 S01179
+     I                                       25  38 SCTAM                 S01179
+     I                                       39  40 SQOTC                 S01179
+     I                                       41  43 STKDM                 S01179
+     I                                       44  55 SMNPF                 S01179
+     I                                       56  70 STKVL                 S01179
+     I                                       71  80 SDBRK                 S01179
+     I                                       81  81 SBCPT                 S01179
+     I                                       82  82 SCCPT                 S01179
+     I                                       83  84 SBCMC                 S01179
+     I                                       85  86 SBCMS                 S01179
+     I                                       87  88 SCCMC                 S01179
+     I                                       89  90 SCCMS                 S01179
+     I                                       91  92 SBCGP                 S01179
+     I                                       93  94 SBCGS                 S01179
+     I                                       95  96 SCCGP                 S01179
+     I                                       97  98 SCCGS                 S01179
+     I                                       99 108 SCMRF                 S01179
+     I                                      109 118 SPRRF                 S01179
+     I                                      119 123 SSTRC                 S01179
+     I                                      124 126 SOTHC                 S01179
+     I                                      127 129 SFTRF                 S01179
+     I                                      130 130 SPUPF                 S01179
+     I                                      131 131 SMQ1                  S01179
+     I                                      132 132 SMQ2                  S01179
+     I                                      133 133 SMQ3                  S01179
+     I                                      134 134 SMQ4                  S01179
+     I                                      135 135 SMQ5                  S01179
+     I                                      136 136 SMQ6                  S01179
+     I                                      137 137 SMQ7                  S01179
+     I                                      138 138 SMQ8                  S01179
+     I                                      139 139 SMQ9                  S01179
+     I                                      140 140 SMQ10                 S01179
+     I                                      141 141 SMQ11                 S01179
+     I                                      142 142 SMQ12                 S01179
+     I                                      143 149 SFTDF                 S01179
+     I                                      150 156 SSEDF                 S01179
+     I                                      157 163 SSPMF                 S01179
+     I                                      164 165 STFPD                 S01179
+     I                                      166 167 SFSPM                 S01179
+     I                                      168 170 SULPD                 S01179
+     I                                      171 175 SALPD                 S01393
+     I                                      176 176 SFRTK                 CFF006
+     I**  H A R D   C O D E D   F I E L D   P O S I T I O N S
+     I                                      131 142 SMQ
+     ICCYK        DS                             12
+     I*
+     I** DATA STRUCTURE FOR CHAIN TO CURRENCY TABLE
+     I                                        1   2 CCY1
+     I                                        9  11 TCCY
+     I                                       12  12 CCY3
+     ISCRMSG      DS                          1 152
+     I*
+     I** DATA STRUCTURE FOR ERROR FF0151F2 TO SCREEN
+     I                                        1  76 ERRMSG
+     I                                       77 152 INFMSG
+     ISCRDS       DS
+     I*
+     I** DISPLAY FORMAT STATUS DATA STRUCTURE
+     I                                      287 288 AID
+     ILDA         DS                            256                       S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I**                                                                  S01117
+     IRUNDT       DS                                                      S01117
+     I** DATA AREA RUNDAT                                                 S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+      **                                                                  S01117
+     ISDCURR    E DSSDCURRPD                                              S01117
+     I** CURRENCY DETAILS                                                 S01117
+     I              A6CYCD                          CURR                  S01117
+     I              A6NBDP                          CDP                   S01117
+     ISDMMOD    E DSSDMMODPD                                              S01235
+     I** Modules details                                                  S01235
+     ISDPORT    E DSSDPORTPD                                              PMC143
+     I** Portfolio Management ICD                                         PMC143
+     ISCSARD    E DSSCSARDPD                                              CFF006
+      ** External DS for SAR Details                                      CFF006
+      **                                                                  S01117
+     I@DSFDY    E DSDSFDY                                                 S01117
+     I*  FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE               S01117
+      **
+      /COPY ZSRSRC,FFDATEZ2
+     I*
+     I/COPY ZSRSRC,ZTNLU1Z1
+     I**   DATA STRUCTURE TO UPDATE LAST TRANSACTION NUMBER DTAARA
+     I*
+     IPSDS       SDS
+     I*
+     I** PROGRAM STATUS DATA STRUCTURE FOR WS/USER ID'S
+     I** and passed parameter indicator,used when called as               S01393
+     I** a linked enquiry.                                                S01393
+     I                                       37  390WWPARM                S01393
+     I                                      244 246 WSID
+     I                                      254 263 USID
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*                                                                   S01408
+     I/COPY WNCPYSRC,FF0151IIP1                                           S01408
+     I*                                                                   S01408
+     C* CALCULATION SPECIFICATIONS:KEY LISTS
+     C*
+      **  DEFINE KEY LIST FOR CHAINING TO INTYP1 FILE
+     C*
+     C           INTP1K    KLIST
+     C                     KFLD           ISTI
+     C                     KFLD           ISTT
+     C*
+      **  DEFINE KEY LIST FOR CHAINING TO INTYP1 FILE-FUTURE TYPE REF
+     C*
+     C           INTP1L    KLIST
+     C                     KFLD           ISTI
+     C                     KFLD           ISTTR   5
+      /EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*
+      ** PERFORM SETUP OF STANDARD FIELDS
+     C*
+     C                     EXSR INIT
+     C*
+      ** MAIN PROCESS - PERFORM UNTIL F3 OR ERROR
+     C*
+     C           AID       DOUEQ'01'
+     C                     EXSR REVIEW
+     C                     END
+     C*
+      ** TERMINATE PROGRAM
+     C*
+     C                     SETON                         LR
+     C*================================================================
+     C*  P R O G R A M     E N D
+     C*================================================================
+      /EJECT
+      ********************************************************************
+      ** INDEX OF SUBROUTINES
+      **
+      ** INIT              INITIALISATION OF STANDARD FIELDS,
+      **                   ACCESS OF STANDING DATA
+      **
+      ** REVIEW            PROCESS SUBFILE SELECTION SCREEN
+      **
+      ** VALIDK            VALIDATE KEY FIELDS
+      **
+      ** ZALIGN            VALIDATE AMOUNT FIELDS
+      **
+      ** FFDATE            CONVERTS DATE FORMULA TO DAY NO.
+      **
+     C*   CALLS:    FFDE31   CALC LAST WORKING DAY IN MONTH
+     C*             FFDN31   CALC SPECIFIED WORKING DAY IN MONTH
+     C*             FFDAAD   ADJUST DAY WITH AN ACTUAL NO. OF DAYS
+     C*             FFDABD   ADJUST DAY WITH NO. OF BUSINESS DAYS IN
+     C*                      MARKET CENTRE CCY
+     C*             FFDACD   ADJUST DAY WITH NO. OF BUSINESS DAYS IN
+     C*                      MARKET CENTRE CCY & INST CCY & OTHER CCY
+     C*             FFDAWD   ADJUST DAY WITH BY 1 BUSINESS DAY IN
+     C*                      MARKET CENTRE CCY IF NOT A WORKING DAY
+     C*             ZCHKH    DETERMINE WHETHER CCY PASSED IS A WORKING*   S01195
+     C*                      DAY FOR THE LAST DAY OUPUT BY ZFWDT/ZBKDT*   S01195
+     C*                      IN THE SPECIFIED LOCATION.               *   S01195
+     C*
+     C*             ZDATE1   CONVERT A DATE TO A NO. OF DAYS
+     C*             ZFWDT    DETERMINE WHETHER A DAY IS A WORKING DAY *   S01195
+     C*                      IN THE SPECIFIED LOCATION;               *   S01195
+     C*                      & FIND THE NEXT WORKING DAY IF IT IS NOT *   S01195
+     C*             ZBKDT    DETERMINE WHETHER A DAY IS A WORKING DAY *   S01195
+     C*                      IN THE SPECIFIED LOCATION;               *   S01195
+     C*                      & FIND THE PREV WORKING DAY IF IT IS NOT *   S01195
+      **
+      ** ZEDIT             FORMAT AMOUNT FIELDS FOR DISPLAY
+      **
+      ** ZDATE1            CONVERT DATE TO DAYNO. AND REPORT IF ERROR
+      **
+      ** ZTNLU1            ACCESS DATAAREA FOR NEXT TRANSACTION NO.
+      **
+      ** INFSR             FILE ERROR HANDLING S/R
+      **
+      ** DBERR             TERMINATE PROGRAM ON DATABASE ERROR
+      **
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      **
+      ** INIT S/R - TO INITIALISE STATIC FIELDS AND ACCESS STANDING DATA
+      ** If program is called as a linked enquiry the market and          S01393
+      ** instrument parameters are moved to the relavent fields           S01393
+      ** and indicator 85 is set on.                                      S01393
+      ** CALLED ONCE AT START OF PROGRAM FROM MAIN LINE
+      ** CALLS NO OTHER ROUTINES
+      **
+      ********************************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+      ** Linked enquiry                                                   S01393
+     C*                                                                   S01393
+     C           *ENTRY    PLIST                                          S01393
+     C           PMRKT     PARM           PPMRKT  2                       S01393
+     C                     PARM           PPISTC  3                       S01393
+     C                     PARM           PPRTCD  4                       S01393
+     C*                                                                   S01393
+      ** PREPARE LDA
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBFILE                          S01117
+     C                     MOVEL*BLANK    DBKEY                           S01117
+     C                     MOVEL'FF0151'  DBPGM
+     C                     Z-ADD*ZEROS    DBASE                           S01117
+     C                     OUT  LDA                                       S01117
+     C*
+      ** CURRENCY RECORD KEY
+     C*
+     C                     MOVEL'20'      CCY1
+     C                     MOVEL'1'       CCY3
+     C*
+     C                     MOVEL*BLANK    WBLNK   1
+     C*
+      ** FOR HIGH INTENSITY SCREEN ATTRIBUTE
+     C*
+     C                     BITOF'01234567'HI      1
+     C                     BITON'267'     HI
+     C                     MOVELHI        INF,3
+     C                     MOVELHI        INF,4
+      *
+     C** IN THE DATAAREA RUNDAT                                           S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C*
+     C           DATF      COMP 'M'                      98MMDDYY, 98 ON
+     C*                                                                   S01235
+     C** DO NOT DISPLAY INSTRUMENT TYPE INPUT FIELD IF NO PORTF MGMT      S01235
+     C*                                                                   S01235
+     C                     CALL 'AOMMODR0'                                S01235
+     C                     PARM *BLANKS   @PRTCD  7                       S01235
+     C                     PARM '*FIRST  '@POPTN  7                       S01235
+     C           SDMMOD    PARM SDMMOD    @DSFDY                          S01235
+     C           @PRTCD    IFNE *BLANKS                                   S01235
+     C           *LOCK     IN   LDA                                       S01235
+     C                     Z-ADD31        DBASE                           S01235
+     C                     MOVE 'SDMMODPD'DBFILE           ***************S01235
+     C                     MOVEL'*NONE'   DBKEY            * DBASE ERR 31*S01235
+     C                     OUT  LDA                        ***************S01235
+     C                     EXSR *PSSR                                     S01235
+     C                     ELSE                                           S01235
+     C           BGPFMG    IFNE 'Y'                                       S01235
+     C           BGN4ST    IFNE 'Y'                                       CPB001
+     C                     MOVE *ON       *IN87                           S01235
+     C                     ENDIF                                          CPB001
+     C                     ELSE                                           S01235
+     C*                                                                   PMC143
+     C                     CALL 'AOPORTR0'                                PMC143
+     C                     PARM *BLANKS   @RTCD   7                       PMC143
+     C                     PARM '*FIRST ' @OPTN   7                       PMC143
+     C           SDPORT    PARM SDPORT    @DSFDY                          PMC143
+     C           @RTCD     IFNE *BLANKS                                   PMC143
+     C           *LOCK     IN   LDA                                       PMC143
+     C                     SETON                     U7U8  ***************PMC143
+     C                     Z-ADD9         DBASE            * DB ERROR 09 *PMC143
+     C                     MOVE 'SDPORTPD'DBFILE           ***************PMC143
+     C                     MOVE *BLANKS   DBKEY                           PMC143
+     C                     OUT  LDA                                       PMC143
+     C                     EXSR *PSSR                                     PMC143
+     C                     END                                            PMC143
+     C*                                                                   PMC143
+     C** If Bank Portfolios are supported, treat as if PM off             CPM003
+     C*                                                                   CPM003
+     C           FCPORS    IFEQ 'B'                                       CPM003
+     C           BGN4ST    ANDNE'Y'                                       CPB001
+     C                     MOVE *ON       *IN87                           CPM003
+     C                     END                                            CPM003
+     C*                                                                   CPM003
+     C                     END                                            PMC143
+     C                     END                                            S01235
+      *                                                                   CFF006
+      **  Access SAR details file to see if switchable feature            CFF006
+      **  CFF006 - Fractional Ticks Enhancement is installed.             CFF006
+      *                                                                   CFF006
+     C                     CALL 'AOSARDR0'                                CFF006
+     C                     PARM *BLANKS   PRTCD   7                       CFF006
+     C                     PARM '*VERIFY' POPTN   7                       CFF006
+     C                     PARM 'CFF006'  PSARD   6                       CFF006
+     C           SCSARD    PARM SCSARD    @DSFDY                          CFF006
+      *                                                                   CFF006
+     C           PRTCD     IFEQ *BLANK                                    CFF006
+     C                     MOVE *OFF      *IN88                           CFF006
+     C                     MOVE 'Y'       CFF006  1                       CFF006
+     C                     ELSE                                           CFF006
+     C                     MOVE *ON       *IN88                           CFF006
+     C                     MOVE 'N'       CFF006                          CFF006
+     C                     ENDIF                                          CFF006
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0151CCP1                                           S01408
+     C*                                                                   S01408
+     C*
+     C           XTINIT    ENDSR                           ** XTINIT ESR**
+     C*===================================================================
+      /EJECT
+     C********************************************************************
+      **
+      ** REVIEW S/R TO PROCESS SUBFILE SELECTION SCREEN
+      ** CALLED FROM MAIN PROCESSING
+      ** CALLS NO OTHER ROUTINES
+      **
+     C********************************************************************
+     C*
+     C           REVIEW    BEGSR
+     C*
+      ** SET OFF PROCESS REVIEW INDICATOR
+      ** SET PROCESSING FLAG TO FORCE SUBFILE REBUILD
+     C*
+     C                     MOVEA'0'       *IN,26
+     C                     MOVEA'0'       *IN,11
+     C                     MOVEL'RA'      AID
+     C*
+      ** PERFORM UNTIL CHANGE OF REQUEST (TO END/KEY SCREEN/DETAIL)
+     C*
+     C           *IN11     DOUEQ'1'
+     C*
+      ** SUBFILE PROCESSING - ROLLUP, ROLLDOWN OR ENTER
+     C*
+      ** REBUILD SUBFILE
+     C*
+     C           AID       IFEQ 'DN'
+     C           AID       OREQ 'UP'
+     C           AID       OREQ 'RA'
+     C*
+      ** WRITE CONTROL RECORD
+     C*
+     C                     MOVEA'000'     *IN,1
+     C                     Z-ADD*ZERO     RRN
+     C                     WRITEFF0151C0
+     C                     MOVEA'1'       *IN,4
+     C*
+      ** SET FILE POINTER - PAGE BACK
+     C*
+     C           AID       IFEQ 'DN'
+     C                     MOVEL'N'       ISTI
+     C                     MOVEL*BLANK    ISTT
+     C                     MOVEL*BLANK    PPAGK   5
+     C           INTP1K    SETLLINTYP1
+     C*
+      **  - PAGE FORWARD
+     C*
+     C                     ELSE
+     C                     MOVEL'N'       ISTI
+     C                     MOVELPISTT     ISTT
+     C                     MOVELPISTT     PPAGK
+     C           INTP1K    SETLLINTYP1
+     C                     END
+     C*
+      ** READ IN DETAILS-FILL UP SUBFILE
+     C*
+     C                     MOVEL*BLANK    MKTN
+     C*
+     C           RRN       DOUEQ18
+     C           MRKT      ORNE MRKTIN
+     C           *IN,03    OREQ '1'
+     C*
+      ** READ DETAILS UNTIL SUBFILE PAGE IS FULL
+      ** OR MRKT CHANGES FROM THAT OF 1ST READ
+     C*
+     C                     READ INTYP1                   03
+     C*
+      ** IF END OF MARKET INSTRUMENT RECORDS REACHED THEN EOF
+     C*
+     C           ISTI      IFEQ 'Y'
+     C           MRKT      ORNE PPMRKT
+     C                     SETON                         03
+     C                     END
+     C*
+     C           *IN,03    IFEQ '0'
+     C*
+      ** IF RECORD IS DELETED, FLAG IT AS SO ON SCREEN
+     C*
+     C           RECI      IFEQ '*'
+     C                     MOVEL'D'       STAT    1
+     C                     ELSE
+     C                     MOVEL*BLANK    STAT
+     C                     END
+     C*
+     C                     ADD  1         RRN     40     04
+     C*
+      ** FIRST TIME OUTPUT TO SUBFILE-SO STORE RECORD MRKT
+     C*
+     C           RRN       IFEQ 1
+     C                     MOVELMRKT      MRKTIN  2
+     C*
+      ** GET MARKET NAME TO DISPLAY ON REVIEW SCREEN
+     C*
+     C           MRKT      CHAINMARKT                99
+     C*
+     C                     END
+     C*
+      ** OUTPUT TO SUBFILE AS LONG AS MRKT OF RECORD JUST READ IS SAME
+      ** AS THAT FROM THE 1ST RECORD OUTPUT TO THE SUBFILE ON THIS PAGE
+     C*
+     C           MRKT      IFEQ MRKTIN
+     C                     WRITEFF0151S0
+     C                     END
+     C*
+      ** RECORD NOW WRITTEN TO SUBFILE
+     C*
+     C                     END
+     C*
+      ** PAGE NOW FULL (OR EOF)
+     C*
+     C                     END
+     C*
+      **  READ ONE MORE RECORD FOR NEXT SCREEN
+     C*
+     C           *IN,03    IFEQ '0'
+     C           MRKT      ANDEQMRKTIN
+     C                     READ INTYP1                   03
+     C                     END
+     C*
+      ** IF NOT EOF SET NEXT 'REVIEW FROM' KEY ELSE SET IT TO BLANK
+     C*
+     C           *IN,03    IFEQ '0'
+     C                     MOVELISTT      PISTT
+     C                     ELSE
+     C                     MOVELPPMRKT    PISTT     P
+     C                     END
+     C*
+      ** FOR SUBFILE CONTROL
+     C*
+     C           *IN,4     IFEQ '1'
+     C                     MOVEA'010'     *IN,1
+     C                     ELSE
+     C                     MOVEA'11'      *IN,1
+     C                     END
+     C*
+      ** END OF PAGING PROCESSING
+     C*
+     C                     END
+     C*
+      ** OUTPUT REVIEW SCREEN AND READ REQUEST
+     C*
+     C           *IN04     IFEQ '0'
+     C                     MOVELINF,1     INFMSG
+     C                     ELSE
+     C                     MOVELINF,5     INFMSG
+     C                     END
+     C**********           WRITEFF0151C0                                                      CAAA03
+     C                     WRITEFF0151F2
+     C                     WRITEFF0151C0                                                      CAAA03
+     C                     READ FF0151C0                 99
+     C                     MOVELERRMSG    HERCD 160
+     C                     MOVELWBLNK     HERCD
+     C                     MOVEL*BLANK    SCRMSG
+     C                     MOVEA*BLANK    ERR
+     C                     MOVEL*BLANK    REVW
+     C*
+      ** PROCESS REQUEST - F3, F12, HELP OR RECORD SELECT
+     C*
+     C** Call S/R to move values into AID                                 S01179
+     C*                                                                   S01179
+     C                     EXSR ASCHGS                                    S01179
+     C*                                                                   S01179
+      ** CK3
+      ** CK12
+     C           AID       IFEQ '01'
+     C           AID       OREQ '05'
+     C                     MOVEA'1'       *IN,11
+     C                     END
+     C** Call S/R to move values into AID                                 S01179
+     C*                                                                   S01179
+     C                     EXSR ASCHGS                                    S01179
+     C*                                                                   S01179
+      ** ENTER PRESSED, PROCESS RECORD SELECTION
+     C*
+     C           AID       IFEQ 'RA'
+     C                     MOVEA'1'       *IN,99
+     C           *IN,04    IFEQ '0'
+     C                     READCFF0151S0                 99
+     C                     END
+     C*
+      ** VALIDATE RECORD SELECTION
+     C*
+     C           *IN99     IFEQ '0'
+     C                     EXSR VALIDK
+     C*
+      ** NO ERRORS, UPDATE SCREEN CAN BE PROCESSED NEXT
+     C*
+     C           SCRMSG    IFEQ *BLANK
+      *
+     C                     SELEC
+     C           ACTN      WHEQ 'E'
+     C                     EXSR UPDATE
+      *
+     C           ACTN      WHEQ '1'
+     C                     MOVE ISTC      PPISTC
+     C                     MOVE *ON       *IN11
+     C                     MOVE '01'      AID
+      *
+     C                     OTHER
+     C                     ENDSL
+      *
+     C                     END
+     C*
+      ** END OF RECORD VALIDATION
+     C*
+     C                     END
+     C*
+      ** END OF ENTER PROCESSING
+     C*
+     C                     END
+     C*
+      ** END OF PROCESSING LOOP
+     C*
+     C                     END
+     C*
+     C           XTREVI    ENDSR                           ** XTREVI ESR**
+     C*
+     C/EJECT
+     C********************************************************************
+      **
+      ** UPDATE S/R TO PROCESS DETAIL SCREEN AND UPDATE FILE
+      ** CALLED FROM MAIN PROCESSING
+      ** CALLS: VALIDD, UPDFLS, INITRC, TRSFS, DEFLTS
+      **
+     C********************************************************************
+     C*
+     C           UPDATE    BEGSR                           ** UPDATE BSR**
+     C*
+      ** SET SCREEN INDICATORS - PROTECT KEY, SET OFF ERROR INDS,
+      ** POSITION CURSOR
+     C*
+     C                     MOVEA'1'       *IN,5
+     C                     MOVEA'0'       *IN,12
+     C                     SETOF                     070809
+     C                     SETOF                     131415
+     C                     SETOF                     171819
+     C                     SETOF                     272829
+     C                     MOVEA'10000000'*IN,30
+     C                     MOVEA'00000000'*IN,38
+     C                     MOVEA'00000000'*IN,46
+     C                     MOVEA'00000000'*IN,54
+     C                     MOVEA'0000'    *IN,74
+     C                     MOVEA'00'      *IN,78
+     C                     MOVE '0'       *IN80                           AUS022
+     C                     MOVEA'0'       *IN,81                          FF0011
+     C                     MOVEA'0'       *IN,82                          S01393
+     C                     MOVEA'0'       *IN,86                          S01235
+     C*
+      ** ACCESS FILE RECORD FOR OLD TNLU TO CHECK AT UPDATE TIME
+      ** IF NO RECORD PRESENTLY ON FILE, ZEROISE STORED TNLU
+     C*
+     C                     Z-ADD*ZERO     STNLU   50
+     C                     MOVEL'N'       ISTI
+     C           INTP1K    CHAININTYP1               99
+     C           *IN,99    IFEQ '0'
+     C                     Z-ADDTNLU      STNLU
+     C                     END
+     C*
+      ** IF DELETED RECORD-ENQUIRY ONLY (RECI IS SET TO BLANK FOR INSERTS)
+     C*
+     C           RECI      IFEQ '*'
+     C                     MOVEL'E'       ACTN
+     C                     MOVEL'DELETED' DELT
+     C                     ELSE
+     C                     MOVEL*BLANK    DELT
+     C                     END
+     C*
+      ** TRANSLATE RECORD DETAILS FROM FILE LAYOUT TO SCREEN LAYOUT
+     C*
+     C                     EXSR TRSFS
+     C*
+      ** DATABASE ERROR CAN OCCUR IN TRSFS - EXIT S/R
+     C*
+     C           *INU7     CABEQ'1'       XTUPDT
+     C*
+      ** SET UP DEFAULTS (DONE ON BLANK FIELDS)
+     C*
+     C                     EXSR DEFLTS
+     C*
+      ** IF DELETE/ENQUIRY PROTECT FIELD INPUT ON S/FF0151F0
+     C*
+     C           ACTN      IFEQ 'E'
+     C                     MOVEA'1'       *IN,6
+     C                     END
+     C*
+      ** PERFORM UNTIL CHANGE OF REQUEST
+     C*
+     C           *IN10     DOUEQ'1'
+     C           *IN11     OREQ '1'
+     C           *IN12     OREQ '1'
+     C*
+      ** FORMAT INFORMATIONAL MESSAGE IF NOT ALREADY PRESENT
+     C*
+     C           INFMSG    IFEQ *BLANK
+     C           ACTN      IFEQ 'E'
+     C*                                                                   S01393
+     C** Use linked enquiry text message if program called as such.       S01393
+     C*                                                                   S01393
+     C  N85                MOVELINF,2     INFMSG                          S01393
+     C   85                MOVELINF,6     INFMSG                          S01393
+     C                     END
+     C                     END
+     C*
+      ** OUTPUT DETAIL SCREEN AND READ - SAVE OLD SCREEN FOR COMPARISON
+     C*
+     C           *LIKE     DEFN DETS      DETO
+     C                     MOVELDETS      DETO
+     C                     WRITEFF0151F1
+     C**********           WRITEFF0151F0                                                      CAAA03
+     C                     WRITEFF0151F2
+     C                     WRITEFF0151F0                                                      CAAA03
+     C                     READ FF0151F0                 99
+     C                     MOVEAERR       HERCD
+     C                     MOVELWBLNK     HERCD
+     C                     MOVELHERCD     WERC    2
+     C                     MOVEL*BLANK    SCRMSG
+     C                     MOVEA*BLANK    ERR
+     C                     MOVEA*BLANK    WER
+     C*
+      ** CMD3, CMD12, HELP, OR ROLL REQUEST PROCESSING
+     C*
+     C** Call S/R to move values into AID                                 S01179
+     C*                                                                   S01179
+     C                     EXSR ASCHGS                                    S01179
+     C*                                                                   S01179
+      ** CK3
+      ** Set exit parameter if program called as linked enquiry           S01393
+     C*
+     C           AID       IFEQ '01'
+     C                     MOVEA'1'       *IN,12
+     C   85                MOVE 'EXIT'    PPRTCD                          S01393
+     C                     END
+     C*
+      ** CK12
+      ** Set exit parameter if program called as a linked enquiry         S01393
+      ** and force program to terminate.                                  S01393
+     C*
+     C           AID       IFEQ '05'
+     C                     MOVEA'1'       *IN,10
+     C   85                MOVE 'PREV'    PPRTCD                          S01393
+     C   85                MOVE '01'      AID                             S01393
+     C                     END
+     C*
+      ** PAGE FORWARD TAKEN, READ NEXT RECORD
+     C*
+     C           AID       IFEQ 'UP'
+     C           ACTN      ANDNE'I'
+     C                     READ INTYP1                   12
+     C*
+      ** END OF MARKET INSTRUMENTS ON FILE
+     C*
+     C           *IN12     IFEQ '0'
+     C           ISTI      ANDEQ'Y'
+     C                     SETON                     12
+     C                     READPINTYP1                   99
+     C                     END
+     C*
+     C*
+      ** CHANGE MESSAGE IF END OF FILE REACHED - NO ROLL FWD
+     C*
+     C           *IN,12    IFEQ '1'
+     C                     MOVELINF,3     INFMSG
+     C                     ELSE
+     C                     MOVEA'1'       *IN,12
+     C                     END
+     C*
+     C                     END
+     C*
+      ** PAGE BACK TAKEN, READ PREVIOUS RECORD
+     C*
+     C           AID       IFEQ 'DN'
+     C           ACTN      ANDNE'I'
+     C                     READPINTYP1                   12
+     C*
+      ** CHANGE MESSAGE IF BEGINNING OF FILE REACHED - NO ROLL BACK
+     C*
+     C           *IN,12    IFEQ '1'
+     C                     MOVELINF,4     INFMSG
+     C                     ELSE
+     C                     MOVEA'1'       *IN,12
+     C                     END
+     C*
+     C                     END
+     C*
+      ** ENTER PRESSED/F10 TAKEN
+      ** Set exit parameter if program called as a linked enquiry         S01393
+      ** and force program to terminate.                                  S01393
+     C*
+     C           AID       IFEQ 'RA'
+     C           AID       OREQ '04'
+     C   85                MOVE 'PREV'    PPRTCD                          S01393
+     C   85                MOVE '01'      AID                             S01393
+     C*
+      ** VALIDATE DETAIL SCREEN INPUT UNLESS THERE IS NO CHANGE SINCE
+      ** WARNING ERRORS WERE ISSUED
+     C*
+     C           DETS      IFNE DETO
+     C           WERC      ORNE ' W'
+     C                     EXSR VALIDD
+     C                     END
+     C*
+      ** N O    D E T A I L   S C R E E N    E R R O R S    -  S T A R T
+     C*
+     C           SCRMSG    IFEQ *BLANK
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0151CCP2                                           S01408
+     C*                                                                   S01408
+     C*
+      ** DETERMINE NEXT SCREEN TO BE DISPLAYED - REVIEW OR KEY
+     C*
+     C           REVW      IFEQ 'Y'
+     C                     MOVELPPAGK     PISTT
+     C                     MOVEA'1'       *IN,11
+     C                     ELSE
+     C                     MOVEA'1'       *IN,10
+     C                     END
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0151CCP3                                           S01408
+     C*                                                                   S01408
+     C*
+      ** END OF CLEAR OF ERRORS PROCESSING
+     C*
+     C                     END
+     C*
+      ** END OF ENTER/F10 PROCESSING
+     C*
+     C                     END
+     C*
+      ** END OF PROCESSING LOOP
+     C*
+     C                     END
+     C*
+      ** RESET PROTECT/NON-DISPLAY INDS
+     C*
+     C                     MOVEA'00'      *IN,5
+     C*
+     C           XTUPDT    ENDSR                           ** XTUPDA ESR**
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      **
+      ** VALIDD S/R - TO VALIDATE DETAIL SCREEN
+      ** CALLED FROM UPDATE S/R
+      ***CALLS:*DEFLTS;*ZEDIT;*ZALIGN;*ZDATE1;*ZDATE5*********************S01195
+      ** CALLS: DEFLTS; ZEDIT; ZALIGN; ZDATE1                             S01195
+      **
+     C********************************************************************
+     C*
+     C           VALIDD    BEGSR
+     C*
+      ** RESET SCREEN ERROR INDICATORS
+     C*
+     C                     SETOF                     070809
+     C                     SETOF                     131415
+     C                     SETOF                     171819
+     C                     SETOF                     272829
+     C                     MOVEA'00000000'*IN,30
+     C                     MOVEA'00000000'*IN,38
+     C                     MOVEA'00000000'*IN,46
+     C                     MOVEA'00000000'*IN,54
+     C                     MOVEA'0000'    *IN,74
+     C                     MOVEA'00'      *IN,78
+     C                     MOVE '0'       *IN80                           AUS022
+     C                     MOVEA'0'       *IN,81                          FF0011
+     C                     MOVEA'0'       *IN,82                          S01393
+     C*
+      ** SET ERROR COUNT TO ZERO
+     C*
+     C                     Z-ADD*ZERO     EC
+     C                     Z-ADD*ZERO     W       10
+     C*
+     C*  IF COMMAND 4 TAKEN
+     C*
+      ** MOVE WARNINGS OT ARRAY IF SOME HAVE OCCURRED
+     C*
+     C           WER,1     IFNE *BLANK
+     C                     ADD  1         EC
+     C                     MOVEAWER       ERR,EC
+     C                     END
+     C*
+      ** IF ERRORS OCCURED, HIGHLIGHT ERROR BAND
+     C*
+     C           EC        IFNE *ZERO
+     C                     MOVEAERR       ERRMSG
+     C                     MOVELHI        ERRMSG
+     C                     END
+     C*
+      ** IF MORE THAN 19 ERRORS OCCURRED, DISPLAY ON SECOND LINE
+     C*
+     C           EC        IFGT 19
+     C                     MOVEAERR,20    INFMSG
+     C                     MOVELHI        INFMSG
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      **
+      ** DEFLTS S/R TO FORMAT DEFAULT FIELD VALUES FOR INSERT SCREEN ETC
+      ** CALLED FROM UPDATE; VALIDD
+      ** CALLS NO OTHER S/R'S
+      **
+     C********************************************************************
+     C           DEFLTS    BEGSR
+     C*
+      ** DEFAULTS FOR RECORD
+     C*
+      ** TICKS VALUE DEFAULTS TO 100
+     C*
+     C           STKDM     IFEQ *BLANK
+     C                     MOVE '100'     STKDM
+     C                     END
+     C*
+      ** PREMIUM UP FRONT DEFAULTS TO 'Y'
+     C*
+     C           SPUPF     IFEQ *BLANK
+     C           SISPT     IFGT '3'                                       AUS022
+     C           SISPT     ANDNE'7'                                       AUS022
+      *                                                                   AUS022
+     C                     MOVE 'Y'       SPUPF
+     C                     END
+     C                     END
+     C*
+     C*                                                                   FF0011
+      ** The American/European option indicator defaults to 'A' for       FF0011
+      ** American.                                                        FF0011
+      *                                                                   FF0011
+     C           SAEIN     IFEQ *BLANK                                    FF0011
+     C           SISPT     IFEQ '4'                                       FF0011
+     C           SISPT     OREQ '5'                                       FF0011
+     C           SISPT     OREQ '6'                                       FF0011
+     C           SISPT     OREQ '8'                                       FF0011
+     C                     MOVE 'A'       SAEIN                           FF0011
+     C                     END                                            FF0011
+     C                     END                                            FF0011
+     C*
+     C                     ENDSR
+     C*******************************************************************
+      /EJECT
+     C********************************************************************
+      **
+      ** TRSFS S/R TO FORMAT RECORD FIELDS FOR SCREEN
+      ** CALLED FROM UPDATE
+      ** CALLS NO OTHER S/R'S
+      **
+     C********************************************************************
+     C*
+     C           TRSFS     BEGSR
+     C*
+      ** TRANSLATE RECORD DETAILS FROM FILE LAYOUT TO SCREEN LAYOUT
+     C*
+     C*
+      ** ALPHA VALUES
+     C*
+      ** INSTRUMENT NAME
+     C                     MOVELISTN      SISTN
+     C*                                                                   S01235
+      ** INSTRUMENT TYPE (PORTFOLIO MGMT)                                 S01235
+     C                     MOVELINNR      SINNR                           S01235
+     C*
+      ** INSTRUMENT CURRENCY
+     C                     MOVELISCY      SISCY
+     C*
+      ** OTHER CURRENCY
+     C                     MOVELOTHC      SOTHC
+     C*
+      ** PREMIUM UP FRONT
+     C                     MOVELPUPF      SPUPF
+     C*
+      ** FUTURE TYPE REF
+     C                     MOVELFTRF      SFTRF
+     C*
+      ** STATUTORY RETURNS
+     C                     MOVELSTRC      SSTRC
+     C*
+      ** PRICING REF
+     C                     MOVELPRRF      SPRRF
+     C*
+      ** COMMODITY REF
+     C                     MOVELCMRF      SCMRF
+     C*
+      ** CUSTOMER CHARGE COMMISSION PATTERN
+     C                     MOVELCCPT      SCCPT
+     C*
+      ** BROKER CHARGE COMMISSION PATTERN
+     C                     MOVELBCPT      SBCPT
+      *                                                                   FF0011
+      ** AMERICAN/EUROPEAN INDICATOR                                      FF0011
+      *                                                                   FF0011
+     C                     MOVELAEIN      SAEIN                           FF0011
+     C*                                                                   FF0011
+      ** MONTHS QUOTED
+     C                     MOVEAISMQ      SMQ
+     C*
+      ** FINAL TRANSACTION DATE
+     C                     MOVELFTDF      SFTDF
+     C*
+      ** SETTLEMENT DATE
+     C                     MOVELSEDF      SSEDF
+     C*
+      ** SPOT MONTH DATE
+     C                     MOVELSPMF      SSPMF
+     C*
+      ** TRANSLATE QUOTATION CONVENTION - SIGNED NUMERIC
+      ** AS THIS IS A DIFFERENT LENGTH ON FILE/SCREEN, MUST BE BLANKED FIRST
+     C*
+     C                     MOVE *BLANK    SQOTC
+     C           QOTC      IFGE 0
+     C                     MOVE QOTC      SQOTC
+     C                     ELSE
+     C                     MOVEL'-'       SQOTC
+     C           *LIKE     DEFN QOTC      WRKN1
+     C                     Z-SUBQOTC      WRKN1
+     C                     MOVE WRKN1     SQOTC
+     C                     END
+     C*
+      ** BLANK IF ZERO
+     C*
+     C           QOTC      IFEQ 0
+     C                     MOVE *BLANK    SQOTC
+     C                     END
+     C*
+      ** INTEGER FIELDS
+     C*
+      ** INSTRUMENT PROCESSING TYPE
+     C           ISPT      IFNE *ZERO
+     C                     MOVELISPT      SISPT
+     C                     ELSE
+     C                     MOVEL*BLANK    SISPT
+     C                     END
+     C*
+      ** CONTRACT TYPE                                                    AUS022
+     C           CNTT      IFNE *ZERO                                     AUS022
+     C                     MOVELCNTT      SCNTT                           AUS022
+     C                     ELSE                                           AUS022
+     C                     MOVEL*BLANK    SCNTT                           AUS022
+     C                     END                                            AUS022
+     C*                                                                   AUS022
+      ** DEFAULT BROKER CODE
+     C********** DBRK      IFNE *ZERO                                                         CSD027
+     C           DBRK      IFNE *BLANKS                                                       CSD027
+     C                     MOVEL*BLANK    SDBRK
+     C                     MOVELDBRK      SDBRK
+     C                     ELSE
+     C                     MOVEL*BLANK    SDBRK
+     C                     END
+     C*
+      ** BROKER COMMISSION CODE
+     C           BCMC      IFNE *ZERO
+     C                     MOVELBCMC      SBCMC
+     C                     ELSE
+     C                     MOVEL*BLANK    SBCMC
+     C                     END
+     C*
+      ** CUSTOMER COMMISSION CODE
+     C           CCMC      IFNE *ZERO
+     C                     MOVELCCMC      SCCMC
+     C                     ELSE
+     C                     MOVEL*BLANK    SCCMC
+     C                     END
+     C*
+      ** BROKER COMMISSION CODE - SAME DAY
+     C           BCMS      IFNE *ZERO
+     C                     MOVELBCMS      SBCMS
+     C                     ELSE
+     C                     MOVEL*BLANK    SBCMS
+     C                     END
+     C*
+      ** CUSTOMER COMMISSION CODE - SAME DAY
+     C           CCMS      IFNE *ZERO
+     C                     MOVELCCMS      SCCMS
+     C                     ELSE
+     C                     MOVEL*BLANK    SCCMS
+     C                     END
+     C*
+      ** BROKER CHARGE CODE - PURCHASES
+     C           BCGP      IFNE *ZERO
+     C                     MOVELBCGP      SBCGP
+     C                     ELSE
+     C                     MOVEL*BLANK    SBCGP
+     C                     END
+     C*
+      ** CUSTOMER CHARGE CODE - PURCHASES
+     C           CCGP      IFNE *ZERO
+     C                     MOVELCCGP      SCCGP
+     C                     ELSE
+     C                     MOVEL*BLANK    SCCGP
+     C                     END
+     C*
+      ** BROKER CHARGE CODE - SALES
+     C           BCGS      IFNE *ZERO
+     C                     MOVELBCGS      SBCGS
+     C                     ELSE
+     C                     MOVEL*BLANK    SBCGS
+     C                     END
+     C*
+      ** CUSTOMER CHARGE CODE - SALES
+     C           CCGS      IFNE *ZERO
+     C                     MOVELCCGS      SCCGS
+     C                     ELSE
+     C                     MOVEL*BLANK    SCCGS
+     C                     END
+     C*
+      ** NUMERIC FIELDS WITH DECIMAL PLACES
+     C*
+      ** TICK DENOMINATOR
+     C           TKDM      IFNE *ZERO
+     C                     MOVEL*BLANK    ZFIELD
+     C                     Z-ADD0         ZADEC
+     C                     Z-ADD3         ZADIG
+     C                     MOVE TKDM      ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    STKDM
+     C                     ELSE
+     C                     MOVEL*BLANK    STKDM
+     C                     END
+      *                                                                   CFF006
+      ** Setup fractional ticks field if enhancement CFF006 is installed. CFF006
+      *                                                                   CFF006
+     C           CFF006    IFEQ 'Y'                                       CFF006
+     C                     MOVE FRTK      SFRTK                           CFF006
+     C                     ENDIF                                          CFF006
+     C*
+      ***UNDERLYING*PERIOD********                                        S01393
+      ** P&L AMORTISATION PERIOD                                          S01393
+     C           ULPD      IFNE *ZERO
+     C                     MOVEL*BLANK    ZFIELD
+     C                     Z-ADD0         ZADEC
+     C                     Z-ADD3         ZADIG
+     C                     MOVE ULPD      ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SULPD
+     C                     ELSE
+     C                     MOVEL*BLANK    SULPD
+     C                     END
+     C*                                                                   S01393
+      ** Underlying Period                                                S01393
+     C           ALPD      IFNE *ZERO                                     S01393
+     C                     MOVEL*BLANK    ZFIELD                          S01393
+     C                     Z-ADD0         ZADEC                           S01393
+     C                     Z-ADD5         ZADIG                           S01393
+     C                     MOVE ALPD      ZFIELD                          S01393
+     C                     EXSR ZEDIT                                     S01393
+     C                     MOVE ZFIELD    SALPD                           S01393
+     C                     ELSE                                           S01393
+     C                     MOVEL*BLANK    SALPD                           S01393
+     C                     END                                            S01393
+     C*
+      ** MINIMUM PRICE FLUCTUATION
+     C           MNPF      IFNE *ZERO
+     C                     MOVEL*BLANK    ZFIELD
+     C                     Z-ADD7         ZADEC
+     C                     Z-ADD4         ZADIG
+     C                     MOVE MNPF      ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SMNPF
+     C                     ELSE
+     C                     MOVEL*BLANK    SMNPF
+     C                     END
+     C*
+      ** TRADED FORWARD PERIODS
+     C           TFPD      IFNE *ZERO
+     C                     MOVEL*BLANK    ZFIELD
+     C                     Z-ADD0         ZADEC
+     C                     Z-ADD2         ZADIG
+     C                     MOVE TFPD      ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    STFPD
+     C                     ELSE
+     C                     MOVEL*BLANK    STFPD
+     C                     END
+     C*
+      ** FORWARD SPOT MONTHS
+     C           FSPM      IFNE *ZERO
+     C                     MOVEL*BLANK    ZFIELD
+     C                     Z-ADD0         ZADEC
+     C                     Z-ADD2         ZADIG
+     C                     MOVE FSPM      ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SFSPM
+     C                     ELSE
+     C                     MOVEL*BLANK    SFSPM
+     C                     END
+     C*
+      ** AMOUNT FIELDS
+     C*
+      ***ACCESS*TABLE*FILE*FOR*INSTRUMENT CURRENCY*DECIMAL*POSITIONS***   S01117
+      ** NO DB ERROR FOR ACTION IS 'I' OR                                 S01117
+      **             FOR ACTION IS 'E' AND DELT IS NOT EQUAL TO BLANK     S01117
+      ** CALL ACCESS OBJECT FOR INSTRUMENT CURRENCY DECIMAL POSITIONS     S01117
+     C*
+     C                     Z-ADD0         CDP
+     C           ACTN      IFNE 'I'                                       S01117
+     C           ACTN      IFNE 'E'                                       S01117
+     C           DELT      OREQ *BLANK                                    S01117
+     C                     CALL 'AOCURRR0'                                S01117
+     C                     PARM '*DBERR'  @RTCD   7                       S01117
+     C                     PARM '*KEY   ' @OPTN   7                       S01117
+     C                     PARM ISCY      @AJCD   3                       S01117
+     C***********SDCURR    PARM SDCURR    @DSFDY                                       S01117 220004
+     C           SDCURR    PARM SDCURR    DSSDY                                               220004
+     C*
+     C           @RTCD     IFNE *BLANKS                                   S01117
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'SDCURRPD'DBFILE           ***************S01117
+     C                     Z-ADD2         DBASE            * DB ERROR 02 *S01117
+     C                     MOVELISCY      DBKEY            ***************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+     C                     END
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     Z-ADDCDP       ICDP    10
+     C*
+      ** NO DB ERROR FOR ACTION IS 'I' OR                                 S01117
+      **             FOR ACTION IS 'E' AND DELT IS NOT EQUAL TO BLANK     S01117
+      ** ACCESS OBJECT FOR OTHER CURRENCY DECIMAL POSITIONS               S01117
+     C*
+     C           ISPT      IFEQ 2
+     C           ISPT      OREQ 5
+     C                     Z-ADD0         CDP
+     C           ACTN      IFNE 'E'                                       S01117
+     C           DELT      OREQ *BLANK                                    S01117
+     C                     CALL 'AOCURRR0'                                S01117
+     C                     PARM '*DBERR'  @RTCD   7                       S01117
+     C                     PARM '*KEY   ' @OPTN   7                       S01117
+     C                     PARM OTHC      @AJCD   3                       S01117
+     C***********SDCURR    PARM SDCURR    @DSFDY                                       S01117 220004
+     C           SDCURR    PARM SDCURR    DSSDY                                               220004
+     C*
+     C           @RTCD     IFNE *BLANKS                                   S01117
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'SDCURRPD'DBFILE           ***************S01117
+     C                     Z-ADD3         DBASE            * DB ERROR 03 *S01117
+     C                     MOVELOTHC      DBKEY            ***************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+     C                     END
+     C*                                                                   S01117
+     C                     Z-ADDCDP       OCDP    10
+     C                     END
+     C*
+      ** TICK VALUE - DEPENDANT ON INSTRUMENT CCY
+     C           TKVL      IFNE *ZERO
+     C                     MOVEL*BLANK    ZFIELD
+     C***********ICDP      ADD  5         ZADEC                           E16371
+     C***********ICDP      ADD  2         ZADEC                     E16371E18188
+     C           ICDP      ADD  5         ZADEC                           E18188
+     C           14        SUB  ZADEC     ZADIG
+     C                     MOVE TKVL      ZFIELD
+     C                     EXSR ZEDIT
+     C***********          MOVE ZFIELD    STKVL                           FO0006
+     C                     MOVELZFIELD    TKVLX  13                       FO0006
+     C                     MOVE *BLANK    STKVL                           FO0006
+     C                     MOVE TKVLX     STKVL                           FO0006
+     C                     ELSE
+     C                     MOVEL*BLANK    STKVL
+     C                     END
+     C*
+      ** AMOUNTS IN INSTRUMENT CURRENCY
+     C*
+     C                     Z-ADDICDP      ZADEC
+     C           13        SUB  ICDP      ZADIG
+     C*
+      ** CONTINGENT AMOUNT
+     C*
+      ** WILL BE IN OTHER CURRENCY FOR PROCESSING TYPE 2&5
+     C*
+     C           CTAM      IFNE 0
+     C           ISPT      IFEQ 2
+     C           ISPT      OREQ 5
+     C                     Z-ADDOCDP      ZADEC
+     C           13        SUB  OCDP      ZADIG
+     C                     END
+     C*
+     C                     MOVE *BLANK    ZFIELD
+     C                     MOVE CTAM      ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SCTAM
+     C                     ELSE
+     C                     MOVE *BLANK    SCTAM
+     C                     END
+     C*
+      ** QUOTED MONTHS MUST BE PROTECTED IF AMEND WITH SSF ON
+     C*
+     C                     MOVEA'00000000'*IN,62
+     C                     MOVEA'0000'    *IN,70
+     C*
+     C           *IN26     IFEQ '1'
+     C*
+      ** FOR EACH OF THE 12 MONTHS, IF THE FILE VALUE IS 'Y', PROTECT IT
+      ** USING THE ERROR INDICATOR FROM THE INDICATOR SUMMARY
+     C*
+     C                     MOVEAISMQ      FMQ
+     C                     Z-ADD62        Y       20
+     C*
+     C                     DO   12        X       20
+     C*
+     C           FMQ,X     IFEQ 'Y'
+     C                     MOVE '1'       *IN,Y
+     C                     END
+     C                     ADD  1         Y
+     C*
+      ** ENDDO
+     C*
+     C                     END
+     C*
+      ** END OF SSF ON FOR AMEND PROCESSING
+     C*
+     C                     END
+     C*
+     C           XTTRSF    ENDSR
+     C********************************************************************
+     C/EJECT
+      /EJECT
+     C********************************************************************
+      **           ****** AS400 CONVERSION ******                         S01179
+      **                                                                  S01179
+      ** ASCHGS S/R TO MOVE THE APPROPRIATE VALUES INTO FIELD AID,        S01179
+      ** DEPENDING ON WHICH FUNCTION KEY HAS BEEN PRESSED.                S01179
+      ** CALLED FROM UPDATE                                               S01179
+      **                                                                  S01179
+     C*================================================================   S01179
+     C*                                                                   S01179
+     C           ASCHGS    BEGSR                                          S01179
+     C*                                                                   S01179
+     C* If ENTER pressed, the VLDCMDKEY indicator will be off             S01179
+     C*                                                                   S01179
+     C           *IN45     IFEQ '0'                                       S01179
+     C                     MOVE 'RA'      AID                             S01179
+     C                     END                                            S01179
+     C*                                                                   S01179
+     C* If F3                                                             S01179
+     C*                                                                   S01179
+     C           *INKC     IFEQ '1'                                       S01179
+     C                     MOVE '01'      AID                             S01179
+     C                     MOVE '0'       *INKC                           S01179
+     C                     END                                            S01179
+     C*                                                                   S01179
+     C* If F10                                                            S01179
+     C*                                                                   S01179
+     C           *INKJ     IFEQ '1'                                       S01179
+     C                     MOVE '04'      AID                             S01179
+     C                     MOVE '0'       *INKJ                           S01179
+     C                     END                                            S01179
+     C*                                                                   S01179
+     C* If F12                                                            S01179
+     C*                                                                   S01179
+     C           *INKL     IFEQ '1'                                       S01179
+     C                     MOVE '05'      AID                             S01179
+     C                     MOVE '0'       *INKL                           S01179
+     C                     END                                            S01179
+     C*                                                                   S01179
+     C* If ROLLUP pressed                                                 S01179
+     C*                                                                   S01179
+     C           *IN40     IFEQ '1'                                       S01179
+     C                     MOVE 'UP'      AID                             S01179
+     C                     MOVE '0'       *IN40                           S01179
+     C                     END                                            S01179
+     C*                                                                   S01179
+     C* If ROLLDOWN pressed                                               S01179
+     C*                                                                   S01179
+     C           *IN41     IFEQ '1'                                       S01179
+     C                     MOVE 'DN'      AID                             S01179
+     C                     MOVE '0'       *IN41                           S01179
+     C                     END                                            S01179
+     C*                                                                   S01179
+     C                     ENDSR                                          S01179
+     C*================================================================
+      /EJECT
+     C*================================================================
+      ** VALIDK S/R TO VALIDATE KEY FIELDS
+      ** CALLED FROM S/R REVIEW
+      ** CALLS NO OTHER S/R'S
+      **
+     C********************************************************************
+     C*
+     C           VALIDK    BEGSR                           ** VALIDK BSR**
+     C*
+      ** RESET ERROR INDICATORS AND SET DEFAULT KEY FIELD FOR FILE
+      ** SET ERROR ARRAY COUNTER TO ZERO
+     C*
+     C                     MOVEA'000'     *IN,20
+     C                     Z-ADD*ZERO     EC      40
+     C*
+      ** VALIDATE ACTION CODE - MUST BE BLANK, 1 OR E
+     C*
+     C           ACTN      IFNE *BLANK
+     C           ACTN      ANDNE'E'
+     C           ACTN      ANDNE'1'
+     C                     ADD  1         EC         20
+     C                     MOVEL' 100'    ERR,EC
+     C                     END
+     C*
+      ** ACTION CODE BLANK - CROSS VALIDATE WITH REFERENCE;
+      ** KEY SHOULD ALSO BE BLANK
+     C*
+     C           ACTN      IFEQ *BLANK
+     C           ISTT      ANDNE*BLANK
+     C*
+     C                     ADD  1         EC         20
+     C                     MOVEL' 101'    ERR,EC
+     C*
+     C                     END
+     C*
+      ** IF ACTION CODE ENTERED KEY SHOULD BE ENTERED AND MRKT SHOULD     E19366
+      ** NOT BE BLANK                                                     E19366
+     C*
+     C           ACTN      IFNE *BLANK
+     C           ISTT      ANDEQ*BLANK
+     C           MRKT      OREQ *BLANK                                    E19366
+     C           ACTN      ANDNE*BLANK                                    E21614
+     C*
+     C                     ADD  1         EC         20
+     C                     MOVEL' 101'    ERR,EC
+     C*
+     C                     END
+     C*
+      ** N O   E R R O R  O N  K E Y  F I E L D S
+     C*
+     C           *IN,20    IFEQ '0'
+     C*
+      ** VALIDATE MARKET CENTRE
+     C*
+      **  IF ENTERED,INSTRUMENT CODE MUST BE ENTERED
+     C*
+     C           MRKT      IFNE *BLANK
+     C           ISTC      ANDEQ*BLANK
+     C                     ADD  1         EC         21
+     C                     MOVEL' 103'    ERR,EC
+     C                     END
+     C*
+      ** IF ENTERED A MARKET CODE MUST EXIST ON MARKTD
+     C*
+     C           MRKT      IFNE *BLANK
+     C           MRKT      CHAINMARKT                99
+     C*
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     ADD  1         EC         21
+     C                     MOVEL' 104'    ERR,EC
+     C                     ELSE
+     C*
+      ** IF MARKET CENTRE FOUND, EOC FOR MARKET MUST NOT BE ACTIVE
+     C*
+     C           MRKT      CHAINMKCTL                99
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C*
+      ** DATABASE ERROR IF MARKET CONTROL RECORD NOT FOUND.
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVELMRKT      DBKEY
+     C                     MOVE 'MKCTL'   DBFILE
+     C                     Z-ADD6         DBASE            ***************S01117
+     C                     SETON                     U7U8LR* DB ERROR 06 *
+     C                     OUT  LDA                        ***************S01117
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C           MKCI      IFEQ 'E'
+     C                     ADD  1         EC         21
+     C                     MOVEL' 105'    ERR,EC
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C                     END
+     C*
+      **  VALIDATE INSTRUMENT CODE AGAINST ACTION, IF INPUT IS VALID
+     C*
+     C           *IN20     IFEQ '0'
+     C           *IN21     ANDEQ'0'
+     C*
+      ** A C T I O N    C O D E    E  - RECORD MUST BE ON FILE
+     C*
+     C           ACTN      IFEQ 'E'
+     C                     MOVE 'N'       ISTI
+     C           INTP1K    CHAININTYP1               99
+     C*
+      ** NO RECORD FOUND
+     C*
+     C           *IN99     IFEQ '1'
+     C                     ADD  1         EC         22
+     C                     MOVEL' 109'    ERR,EC
+     C                     END
+     C*
+     C                     END
+      *
+      ** END OF CROSSREF VALIDATION
+     C*
+     C                     END
+     C           XVALI     TAG                                            S01117
+     C*
+      ** HIGHLIGHT ERRORS IF ANY OCCURRED
+     C*
+     C           EC        IFNE *ZERO
+     C                     MOVEAERR       ERRMSG
+     C                     MOVELHI        ERRMSG
+     C                     MOVEL*BLANK    AID
+     C                     END
+     C*
+     C           XTVALK    ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+      /COPY ZSRSRC,FFDATEZ3
+      /EJECT
+     C** ZALIGN SUBROUTINE
+     C/COPY ZSRSRC,ZALIGNZ2
+     C*
+      /EJECT
+     C** ZEDIT SUBROUTINE
+     C/COPY ZSRSRC,ZEDITZ2
+     C*
+     C/EJECT
+     C** ZTNLU1 SUBROUTINE
+     C/COPY ZSRSRC,ZTNLU1Z2
+     C*
+     C/EJECT
+     C** ZDATE1 SUBROUTINE
+     C/COPY ZSRSRC,ZDATE1Z2
+     C*
+     C/EJECT
+     C********************************************************************S01195
+     C*                                                                   S01195
+     C* ZACCH  --- SUBROUTINE TO ACCESS A HOLIDAY RECORD FOR A            S01195
+     C*            PARTICULAR CURRENCY AND (OPTIONAL) LOCATION.           S01195
+     C*                                                                   S01195
+     C* CALLED FROM: ZFWDT, ZBKDT                                         S01195
+     C*                                                                   S01195
+     C* CALLS: NOTHING                                                    S01195
+     C*                                                                   S01195
+     C********************************************************************S01195
+     C/COPY ZSRSRC,ZACCH                                                  S01195
+     C/EJECT                                                              S01195
+     C********************************************************************S01195
+     C*                                                                   S01195
+     C* ZFWDT  --- SUBROUTINE TO CALCULATE THE NTH WORKING DAY            S01195
+     C*            FORWARD FROM A GIVEN START DATE FOR ANY                S01195
+     C*            PARTICULAR CURRENCY AND (OPTIONAL) LOCATION.           S01195
+     C*                                                                   S01195
+     C* CALLED FROM: FFDATE                                               S01195
+     C*                                                                   S01195
+     C* CALLS: ZACCH                                                      S01195
+     C*                                                                   S01195
+     C********************************************************************S01195
+     C/COPY ZSRSRC,ZFWDT                                                  S01195
+     C/EJECT                                                              S01195
+     C********************************************************************S01195
+     C*                                                                   S01195
+     C* ZBKDT  --- SUBROUTINE TO CALCULATE THE NTH WORKING DAY            S01195
+     C*            BACKWARD FROM A GIVEN START DATE FOR ANY               S01195
+     C*            PARTICULAR CURRENCY AND (OPTIONAL) LOCATION.           S01195
+     C*                                                                   S01195
+     C* CALLED FROM: FFDATE                                               S01195
+     C*                                                                   S01195
+     C* CALLS: ZACCH                                                      S01195
+     C*                                                                   S01195
+     C********************************************************************S01195
+     C/COPY ZSRSRC,ZBKDT                                                  S01195
+     C/EJECT                                                              S01195
+     C********************************************************************S01195
+     C*                                                                   S01195
+     C* ZCHKH  --- SUBROUTINE TO VALIDATE THE GIVEN DATE FOR ANY          S01195
+     C*            PARTICULAR CURRENCY AND (OPTIONAL) LOCATION.           S01195
+     C*                                                                   S01195
+     C* CALLED FROM: FFDATE                                               S01195
+     C*                                                                   S01195
+     C* CALLS: ZACCH                                                      S01195
+     C*                                                                   S01195
+     C/COPY ZSRSRC,ZCHKH                                                  S01195
+     C/EJECT
+     C*****************************************************************
+      **
+      **   SUBROUTINE DBERR:  TO EXIT PROGRAM
+      **
+      **   CALLED FROM SUBROUTINES:
+      **
+      **   CALLS NO OTHER SUBROUTINES
+      **
+     C           DBERR     BEGSR
+     C*                                                                   S01117
+      **   PRODUCE DUMP.                                                  S01117
+     C*                                                                   S01117
+     C                     EXSR *PSSR                                     S01117
+     C*
+      **   LEAVE PROGRAM.
+      ** If program has been called from as a linked enquiry then set     S01393
+      ** return code and return to calling program.                       S01393
+     C*
+     C                     RETRN
+     C   85                MOVE 'ERR '    PPRTCD                          S01393
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 3                                                            S01117
+     C********************************************************************S01117
+      **                                                                  S01117
+      ** *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS         S01117
+      ** CALLED FROM: AFTER ABNORMAL OPERATION OCCURS                     S01117
+      ** CALLS: NOTHING                                                   S01117
+      **                                                                  S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C                     ENDSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0151CCP4                                           S01408
+     C*                                                                   S01408
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+** INF
+ Enter:Review from point;Action Code E,1;F3;F12;Rollup;Rolldown;Help
+ ENQUIRY Enter:F3:F12:Rollup:Rolldown:Help
+ Rollup is not possible
+ Rolldown is not possible
+ No Records Found: Enter Review from point; F12; F3; Help
+ LINKED ENQUIRY Enter: F3; F12; Help
+**   TABDY/TABNO - SHORTNAMES & DAY NUMBERS
+F0S1X2M3U4W5T6
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365

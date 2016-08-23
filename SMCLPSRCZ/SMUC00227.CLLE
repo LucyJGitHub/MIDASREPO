@@ -1,0 +1,112 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Upgrade Bridge files')                       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC00227 - Upgrade Bridge logical files                    */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. AR967491           Date 10May12              */
+/*       Prev Amend No. AR656906 *CREATE    Date 13Oct10             */
+/*                      xxxxxx              Date ddMmmyy             */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR967491 - SMUC00227 enhancement                            */
+/*       AR656906 - Handle tables (non-SQL).                         */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRCLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&AUTL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                            2010')
+ 
+ /* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                            CMDLBL(ERROR))
+ 
+/* Retrieve old system prefix. */
+             CALL       PGM(GPAOSVALR0) PARM(&RTNCDE +
+                          'BrgMidasGlobalPrefix' &SVAL1 +
+                          'BrgDeliveredSrcLib' &SVAL2 ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                          ' ' ' ')
+             IF         COND(&RTNCDE *NE ' ') THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             IF         COND(%SST(&SVAL1 1 4) *EQ '*NRF' *OR +
+                          %SST(&SVAL2 1 4) *EQ '*NRF') THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             CHGVAR     VAR(&PFX) VALUE(%SST(&SVAL1 1 2))
+             CHGVAR     VAR(&LIB) VALUE(&PFX *TCAT 'GVLIB')
+             CHGVAR     VAR(&OWNER) VALUE(&PFX *TCAT 'OWNER')
+             CHGVAR     VAR(&AUTL) VALUE(&PFX *TCAT 'DATABASE')
+             CHGVAR     VAR(&SRCLIB) VALUE(%SST(&SVAL2 1 10))
+ 
+/* Delete files from GVLIB. */
+             DLTF       FILE(&LIB/UPDLVCLK)                                             /*AR967491*/
+             MONMSG     MSGID(CPF0000)                                                  /*AR967491*/
+             DLTF       FILE(&LIB/UPDLVCLL)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(&LIB/UPDLVCLM)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(&LIB/UPDLVCLP)                                             /*AR967491*/
+             MONMSG     MSGID(CPF0000)                                                  /*AR967491*/
+             DLTF       FILE(&LIB/UPDLVCL0)                                             /*AR967491*/
+             MONMSG     MSGID(CPF0000)                                                  /*AR967491*/
+             DLTF       FILE(&LIB/UPDLVCL1)                                             /*AR967491*/
+             MONMSG     MSGID(CPF0000)                                                  /*AR967491*/
+             DLTF       FILE(&LIB/UPDLVCL6)                                             /*AR967491*/
+             MONMSG     MSGID(CPF0000)                                                  /*AR967491*/
+ 
+/* Compile Bridge files. */
+             CRTOBJ     OBJ(&LIB/UPDLVCLK) +
+                          SRCFILE(&SRCLIB/UPDDSSRCGV) +
+                          SRCMBR(UPDLVCLK) OWNER(&OWNER) +
+                          AUTL(&AUTL)                                                   /*AR967491*/
+             CRTOBJ     OBJ(&LIB/UPDLVCLL) +
+                          SRCFILE(&SRCLIB/UPDDSSRCGV) +
+                          SRCMBR(UPDLVCLL) OWNER(&OWNER) +
+                          AUTL(&AUTL)                                                   /*AR967491*/
+             CRTOBJ     OBJ(&LIB/UPDLVCLM) +
+                          SRCFILE(&SRCLIB/UPDDSSRCGV) +
+                          SRCMBR(UPDLVCLM) OWNER(&OWNER) +
+                          AUTL(&AUTL)                                                   /*AR967491*/
+            CRTOBJ     OBJ(&LIB/UPDLVCLP) +
+                         SRCFILE(&SRCLIB/UPDDSSRCGV) +
+                         SRCMBR(UPDLVCLP) OWNER(&OWNER) AUTL(&AUTL)                     /*AR967491*/
+            CRTOBJ     OBJ(&LIB/UPDLVCL0) +
+                         SRCFILE(&SRCLIB/UPDDSSRCGV) +
+                         SRCMBR(UPDLVCL0) OWNER(&OWNER) AUTL(&AUTL)                     /*AR967491*/
+            CRTOBJ     OBJ(&LIB/UPDLVCL1) +
+                         SRCFILE(&SRCLIB/UPDDSSRCGV) +
+                         SRCMBR(UPDLVCL1) OWNER(&OWNER) AUTL(&AUTL)                     /*AR967491*/
+             CRTOBJ     OBJ(&LIB/UPDLVCL6) +
+                          SRCFILE(&SRCLIB/UPDDSSRCGV) +
+                          SRCMBR(UPDLVCL6) OWNER(&OWNER) +
+                          AUTL(&AUTL)                                                   /*AR967491*/
+/*           CRTOBJ     SRCMBR(UPDLVCLL) SRCFILE(&SRCLIB/UPDDSSRCGV) +
+                          PLIB(&LIB) OWNER(&OWNER) AUTL(&AUTL)   **/                    /*AR967491*/
+/*           CRTOBJ     SRCMBR(UPDLVCLM) SRCFILE(&SRCLIB/UPDDSSRCGV) +
+                          PLIB(&LIB) OWNER(&OWNER) AUTL(&AUTL)   **/                    /*AR967491*/
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+ ENDPGM:
+             ENDPGM

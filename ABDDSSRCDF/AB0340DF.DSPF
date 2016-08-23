@@ -1,0 +1,650 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas AB Internal funding maintenance')
+     A*****************************************************************
+     A*                                                               *
+     A*                                                               *
+     A*  Midas - Internal Funding (Internal Dealing)                  *
+     A*                                                               *
+     A*     DSPF/AB0340DF - FUNDING DEAL INPUT                        *
+     A*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     A*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CDL038             Date 10May05               *
+      *  Prev Amend No. CAAA02             Date 16Jul03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     A*  PREV AMEND NO. 112563             DATE 28JAN97               *
+     A*                 099483             Date 12FEB96               *
+     A*                 090199             Date 12JUL95               *
+     A*                 066308             DATE 21MAR94               *
+     A*                 S01393             DATE 23SEP92               *
+     A*                                                               *
+     A*****************************************************************
+     A*                                                               *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CAAA02 - Remove use of INVITE keyword to enable WebFacing    *
+      *           to process screens.                                 *
+      *           INVITE is in this DSPF but is not used.             *
+     A*  112563 - Header and footer changes required for GUI          *
+     A*           Multilanguage support.                              *
+     A*  099483  -  Pgm AB0340 produces dump on output of succesful   *
+     A*             completion message because PUTOVR and OVERLAY     *
+     A*             keyworks not correctly attached to format #MSG.   *
+     A*             Move these keywords to after format text.         *
+     A*  090199  -  Recompile to include new Multi-Language Suport    *
+     A*             messages IDs from 10.6 packaging into core.       *
+     A*  066308 - Output a successful insertion message.              *
+     A*  S01393 - Upgrade Strategic Risk Management to R10.           *
+     A*           Amendment for linked Enquiry from Risk Management.  *
+     A*           When the program is called as a linked enqiury      *
+     A*           the deal number is passed in as a parameter.        *
+     A*           Display screen is conditioned using indicator 68.   *
+     A*           Action code and deal number are non-amendable and   *
+     A*           function keys F7, F8, F15 are disabled              *
+     A*                                                               *
+     A*  E39162 - Change 'PRINT' to 'PRINT(MPRINT)'.                  *
+     A*                                                               *
+     A*****************************************************************
+     A*====================================================================
+     A* Indicator details
+     A* ~~~~~~~~~~~~~~~~~
+     A*  18 - Multi Branch       (Display Branch Codes)
+     A*  19 - Orig Brch Used     (Display Orig Branch)
+     A*  20 - Profit Centres used(Display Profit Centres)
+     A*  60 - AMEND              (Protect Unamendable fields)
+     A*  61 - INSERT or AMEND    (All fields input-capable)
+     A* N61 - DELETE or ENQUIRE  (No fields input-capable)
+     A*  62 - Confirm INSERT     (All fields remain input-capable)
+     A*  63 - Deleted Deal       (No fields input-capable)
+     A*  64 - Confirm DELETE     (No fields input-capable)
+     A*  65 - Confirm INSERT     (No fields input-capable)
+     A*  66 - Position cursor to Deal no.
+     A*                                                        /S01393/
+     A*  68 - LINKED ENQUIRY     (No fields input-capable)
+     A*                                                        /S01393/
+     A*
+     A*  71 - Clear Subfile         (Enquiry subfile only)
+     A*  72 - No data in Subfile    (Enquiry subfile only)
+     A*  73 - Subfile end indicator (Message subfile only)
+     A*
+     A* Error highlighting indicators
+     A* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     A* Source    Field name  Len/Type Ind.  Text
+     A* ~~~~~~~~~ ~~~~~~~~~~~ ~~~~~~~~ ~~~~  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     A*
+     A*           ##DADN         6      23   TEXT('Deal Number 2')
+     A* *DFT      ##ACCD         1      24   TEXT('Action code')
+     A*           ##ORBR         3      25   TEXT('Originating Branch')
+     A*           ##BRC1         3      26   TEXT('Branch 1')
+     A*           ##BRC2         3      27   TEXT('Branch 2')
+     A*           ##PRF1         4      28   TEXT('Profit centre 1')
+     A*           ##PCD1        30           TEXT('Profit centre 1 Desc.')
+     A*           ##PRF2         4      29   TEXT('Profit centre 2')
+     A*           ##PCD2        30           TEXT('Profit centre 2 Desc.')
+     A*
+     A*           ##DLNO         6      30   TEXT('Deal Number 1')
+     A*           ##NTCE         3      31   TEXT('Notice Days')
+     A*           ##STP1         2      32   TEXT('Deal Sub-type 1')
+     A*           ##BOK1         2      33   TEXT('Book Code 1')
+     A*
+     A*           ##LNKR         6      34   TEXT('Linked Reference')
+     A*           ##STP2         2      35   TEXT('Deal Sub-type 2')
+     A*           ##BOK2         2      36   TEXT('Book Code 2')
+     A* *DFT      ##DDAT         6      37   TEXT('Deal date')
+     A* *DFT      ##VDAT         6      38   TEXT('Value date')
+     A*           ##MDAT         6      39   TEXT('Maturity date')
+     A*           ##CCY          3      40   TEXT('Currency')
+     A*           ##AMNP        16      41   TEXT('Amount')
+     A* *DFT      ##BCXR        16      42   TEXT('Base Ccy Rate')
+     A*           ##BRTT         2      43   TEXT('Base Rate')
+     A*           ##RTSP        12      44   TEXT('Spread/Rate')
+     A*           ##ICBS         1      45   TEXT('Calc Method')
+     A*           ##IPFR         6      46   TEXT('Frequency')
+     A*           ##NIDT         6      47   TEXT('Next Interest Date')
+     A*           ##TOTI        16      48   TEXT('Total Interest')
+     A*           ##INTF         2      49   TEXT('Int Freq Day in Month')
+     A*           ##CPTI         1      50   TEXT('Capitalise Interest')
+     A*
+     A*====================================================================
+     A                                      DSPSIZ(24 80 *DS3                  -
+     A                                             27 132 *DS4)
+     A                                      REF(*LIBL/MFRFL)
+     A                                      CHGINPDFT(HI)
+     A*********              START OF CHANGE               /E39162/
+     A*********                             PRINT
+     A                                      PRINT(MPRINT)
+     A*                      END OF CHANGE                 /E39162/
+     A                                      INDARA
+     A          R #SFL1                     SFL
+     A                                      TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A            S#SEL1         1A  B  7  2TEXT('Selector 1')
+     A                                      DSPATR(UL)
+     A            S#DLNO    R    6A  O  7  4REFFLD(DLNO)
+     A                                      DSPATR(HI)
+     A            S#DTP1    R        O  7 12REFFLD(DTYP)
+     A                                      DSPATR(HI)
+     A            S#CCY     R        O  7 16REFFLD(CCY)
+     A                                      DSPATR(HI)
+     A            S#SAMN        17A  O  7 20TEXT('AMOUNT')
+     A                                      DSPATR(HI)
+     A            S#VDAT         7A  O  7 39TEXT('VALUE DATE')
+     A                                      DSPATR(HI)
+     A            S#MDAT         7A  O  7 47TEXT('MATURITY DATE')
+     A                                      DSPATR(HI)
+     A            S#STP1    R        O  7 57REFFLD(DLST)
+     A                                      DSPATR(HI)
+     A            S#BOK1    R        O  7 61REFFLD(BOKC)
+     A                                      DSPATR(HI)
+     A            S#PRF1    R        O  7 65REFFLD(PRFC)
+     A  20                                  DSPATR(HI)
+     A N20                                  DSPATR(ND)
+     A            S#BRC1    R     A  O  7 71REFFLD(BRCA)
+     A  18                                  DSPATR(HI)
+     A N18                                  DSPATR(ND)
+     A            S#STAT         1A  O  7 77TEXT('Status')
+     A                                      DSPATR(HI)
+     A          R #SFC1                     SFLCTL(#SFL1)
+     A                                      TEXT('Subfile Control 1')
+     A                                      CA03(03 '03 - Exit')
+     A                                      CF12(02 '02 - Main Screen')
+     A                                      KEEP
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A N71N72                               SFLDSP
+     A N71                                  SFLDSPCTL
+     A  71                                  SFLCLR
+     A                                      SFLSIZ(0015)
+     A                                      SFLPAG(0014)
+     A            ##SFRC         4S 0H      SFLRCDNBR(CURSOR)
+     A            PGUSER        10A  O  1  2TEXT('User name')
+     A            PGNAME        10A  O  1 13TEXT('Program name')
+     A                                      OVRDTA
+     A                                  1 25'            Midas            '
+     A                                      DSPATR(HI)
+     A            ##RDAT         7A  O  1 72TEXT('MIDAS Run date')
+     A            PGJBNM        10A  O  2  2TEXT('Workstation ID')
+     A                                  2 71TIME
+     A                                  3 24'INTERNAL FUNDING DEAL SELECTION'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A                                  5  4'Deal'
+     A                                  5 11'Deal'
+     A                                  5 16'Ccy'
+     A                                  5 31'Amount'
+     A                                  5 40'Value'
+     A                                  5 47'Maturity'
+     A                                  5 56'Sub'
+     A                                  5 60'Book'
+     A                                  5 65'Prft'
+     A N20                                  DSPATR(ND)
+     A                                  5 70'Brch'
+     A N18                                  DSPATR(ND)
+     A                                  5 75'Status'
+     A                                  6  4'Number'
+     A                                  6 11'Type'
+     A                                  6 40'Date'
+     A                                  6 48'Date'
+     A                                  6 56'Type'
+     A                                  6 65'Cntr'
+     A N20                                  DSPATR(ND)
+     A          R #NDAT                     TEXT('No data in Subfile')
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A                                  9  2'                              *** -
+     A                                      No data found ***                  -
+     A                                               '
+     A                                      DSPATR(HI)
+     A*
+     A          R #CMD1                     TEXT('Command key line 1')
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A**                                             Begin /112563/
+     A***********                      22  2'F3-Exit,   F12-Main Screen        -
+     A                                 22  2'F3=Exit  F12=Main Screen          -
+     A**                                             End   /112563/
+     A                                                                     Roll-
+     A                                       up/down '
+     A                                      DSPATR(HI)
+     A                                      OVRATR
+     A**                                             Begin /112563/
+     A***********                      23  2'ANY-Select                        -
+     A                                 23  2'X=Select                          -
+     A**                                             End   /112563/
+     A                                                                         -
+     A                                               '
+     A                                      DSPATR(HI)
+     A                                      OVRATR
+     A          R #DETL
+     A                                      TEXT('IN Deal Maintenance')
+     A                                      CA03(03 '03 - Exit')
+     A N64                                  CF12(02 '02 - Previous screen')
+     A*                                                        /S01393/
+     A*N64N62N65                            CF07(09 '08 - Next record')
+     A*N64N62N65                            CF08(08 '09 - Prev.record')
+     A*N64N62N65                            CF15(15 '15 - Select screen')
+     A N68
+     AAN64N62N65                            CF07(09 '08 - Next record')
+     A N68
+     AAN64N62N65                            CF08(08 '09 - Prev.record')
+     A N68
+     AAN64N62N65                            CF15(15 '15 - Select screen')
+     A*                                                        /S01393/
+     A  64                                  CF10(05 '05 - Delete')
+     A                                      KEEP
+      ** Start of CAAA02
+     A******************                    INVITE
+      ** End of CAAA02
+     A                                      OVERLAY
+     A                                      FRCDTA
+     A                                      PUTOVR
+     A            PGUSER        10A  O  1  2TEXT('User name')
+     A            PGNAME        10A  O  1 13TEXT('Program name')
+     A                                      OVRDTA
+     A                                  1 25'            Midas            '
+     A                                      DSPATR(HI)
+     A            ##RDAT         7A  O  1 72TEXT('MIDAS Run date')
+     A            PGJBNM        10A  O  2  2TEXT('Workstation ID')
+     A                                  2 71TIME
+     A*                                                        /S01393/
+     A**********                        3 23'INTERNAL FUNDING DEAL MAINTENANCE'
+     A N68                              3 23'INTERNAL FUNDING DEAL MAINTENANCE'
+     A  68                              3 23'INTERNAL FUNDING DEAL ENQUIRY'
+     A*                                                        /S01393/
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A                                  5  2'Action:'
+     A            ##ACCD         1A  B  5 10TEXT('Action Code')
+     A*                                                        /S01393/
+     A*N24******                            DSPATR(UL)
+     A**24******                            DSPATR(RI)
+     A**24******                            DSPATR(PC)
+     A N24N68                               DSPATR(UL)
+     A  24                                  DSPATR(RI PC)
+     A  68                                  DSPATR(PR)
+     A                                      OVRDTA
+     A*                                                        /S01393/
+     A*                                                        /S01393/
+     A**********  ##LIST        12A  O  5 13TEXT('Valid Options')
+     A N68        ##LIST        12A  O  5 13TEXT('Valid Options')
+     A                                      OVRDTA
+     A*                                                        /S01393/
+     A            ##STAT         7A  O  5 63TEXT('STATUS')
+     A  63                                  DSPATR(RI)
+     A  63                                  DSPATR(HI)
+     A  63                                  DSPATR(BL)
+     A N63                                  DSPATR(ND)
+     A                                      OVRDTA
+     A                                  6 27'Sub-'
+     A                                  7 19'Branch'
+     A N18                                  DSPATR(ND)
+     A                                  7 27'Type'
+     A                                  7 34'Book'
+     A                                  7 41'Profit Centre'
+     A N20                                  DSPATR(ND)
+     A                                  8  2'LOAN:'
+     A            ##DLNO    R    6A  B  8 11REFFLD(DEAL)
+     A*                                                        /S01393/
+     A**66******
+     A*O*30******                            DSPATR(PC)
+     A**30******                            DSPATR(RI)
+     A*N30******                            DSPATR(UL)
+     A  66
+     AO 30                                  DSPATR(PC)
+     A  30                                  DSPATR(RI)
+     A N30N68                               DSPATR(UL)
+     A  68                                  DSPATR(PR)
+     A                                      OVRDTA
+     A*                                                        /S01393/
+     A            ##BRC1    R     A  B  8 20REFFLD(BRCA)
+     A  26                                  DSPATR(RI)
+     A  26                                  DSPATR(PC)
+     A  61N26N60                            DSPATR(UL)
+     A N61
+     AO 60
+     AON18                                  DSPATR(PR)
+     A N18                                  DSPATR(ND)
+     A                                      OVRDTA
+     A            ##STP1    R        B  8 28REFFLD(DLST)
+     A  32                                  DSPATR(RI)
+     A  32                                  DSPATR(PC)
+     A  61N32N60                            DSPATR(UL)
+     A  60
+     AON61                                  DSPATR(PR)
+     A                                      OVRDTA
+     A            ##BOK1    R     A  B  8 35REFFLD(BOKC)
+     A                                      TEXT('BOOK CODE')
+     A  33                                  DSPATR(RI)
+     A  33                                  DSPATR(PC)
+     A  61N33                               DSPATR(UL)
+     A N61                                  DSPATR(PR)
+     A                                      OVRDTA
+     A            ##PRF1    R    4A  B  8 42REFFLD(PRFC)
+     A  28                                  DSPATR(RI)
+     A  28                                  DSPATR(PC)
+     A N28 61                               DSPATR(UL)
+     A N20
+     AON61                                  DSPATR(PR)
+     A N20                                  DSPATR(ND)
+     A                                      OVRDTA
+     A            ##PCD1        30A  O  8 47TEXT('Profit Centre 1 Description')
+     A                                      OVRDTA
+     A N20                                  DSPATR(ND)
+     A                                  9  2'DEPOSIT:'
+     A            ##DADN    R    6A  B  9 11REFFLD(DEAL)
+     A  23                                  DSPATR(RI)
+     A  23                                  DSPATR(PC)
+     A  61N23N60                            DSPATR(UL)
+     A  60
+     AON61                                  DSPATR(PR)
+     A                                      OVRDTA
+     A            ##BRC2    R     A  B  9 20REFFLD(BRCA)
+     A  27                                  DSPATR(RI)
+     A  27                                  DSPATR(PC)
+     A  61N27N60                            DSPATR(UL)
+     A  60
+     AON61
+     AON18                                  DSPATR(PR)
+     A N18                                  DSPATR(ND)
+     A                                      OVRDTA
+     A            ##STP2    R        B  9 28REFFLD(DLST)
+     A  35                                  DSPATR(RI)
+     A  35                                  DSPATR(PC)
+     A  61N35N60                            DSPATR(UL)
+     A  60
+     AON61                                  DSPATR(PR)
+     A                                      OVRDTA
+     A            ##BOK2    R     A  B  9 35REFFLD(BOKC)
+     A                                      TEXT('BOOK CODE')
+     A  36                                  DSPATR(RI)
+     A  36                                  DSPATR(PC)
+     A  61N36                               DSPATR(UL)
+     A N61                                  DSPATR(PR)
+     A                                      OVRDTA
+     A            ##PRF2    R     A  B  9 42REFFLD(PRFC)
+     A  29                                  DSPATR(RI)
+     A  29                                  DSPATR(PC)
+     A N29 61                               DSPATR(UL)
+     A N20
+     AON61                                  DSPATR(PR)
+     A N20                                  DSPATR(ND)
+     A                                      OVRDTA
+     A            ##PCD2        30A  O  9 47TEXT('Profit Centre 2 Description')
+     A                                      OVRDTA
+     A N20                                  DSPATR(ND)
+     A                                 11  5'Deal Date:'
+     A            ##DDAT         6A  B 11 16TEXT('DEAL DATE')
+     A  37                                  DSPATR(RI)
+     A  37                                  DSPATR(PC)
+     A  61N37N60                            DSPATR(UL)
+     A  60
+     AON61                                  DSPATR(PR)
+     A                                      OVRDTA
+     A                                 11 26'Value Date:'
+     A            ##VDAT         6A  B 11 38TEXT('VALUE DATE')
+     A  54
+     AO 38                                  DSPATR(RI)
+     A  54
+     AO 38                                  DSPATR(PC)
+     A N60 61N38
+     A N54                                  DSPATR(UL)
+     A  60
+     AON61                                  DSPATR(PR)
+     A                                      OVRDTA
+     A                                 11 47'Maturity Date:'
+     A            ##MDAT         6A  B 11 62TEXT('MATURITY DATE')
+     A  53
+     AO 39                                  DSPATR(RI)
+     A  53
+     AO 39                                  DSPATR(PC)
+     A  61N39N53                            DSPATR(UL)
+     A N61                                  DSPATR(PR)
+     A                                      OVRDTA
+     A                                 12 47'Notice Days:'
+     A            ##NTCE    R    3A  B 12 62REFFLD(NTCE)
+     A  31                                  DSPATR(RI)
+     A  31                                  DSPATR(PC)
+     A  61N31N60                            DSPATR(UL)
+     A  60
+     AON61                                  DSPATR(PR)
+     A                                      OVRDTA
+     A                                 14  5'Currency:'
+     A            ##CCY     R        B 14 15REFFLD(CCY)
+     A  40                                  DSPATR(RI)
+     A  40                                  DSPATR(PC)
+     A  61N40N60                            DSPATR(UL)
+     A  60
+     AON61                                  DSPATR(PR)
+     A                                      OVRDTA
+     A                                 14 21'Amount:'
+     A            ##AMNP    R   16A  B 14 29REFFLD(PCPL)
+     A  41                                  DSPATR(RI)
+     A  41                                  DSPATR(PC)
+     A  61N41N60                            DSPATR(UL)
+     A  60
+     AON61                                  DSPATR(PR)
+     A                                      OVRDTA
+     A                                 14 47'Base Ccy Rate:'
+     A            ##BCXR    R   16A  B 14 62REFFLD(BCYR)
+     A  52
+     AO 42                                  DSPATR(RI)
+     A  52
+     AO 42                                  DSPATR(PC)
+     A  61N42N52                            DSPATR(UL)
+     A N61                                  DSPATR(PR)
+     A                                      OVRDTA
+     A                                 16  2'Interest'
+     A                                      DSPATR(UL)
+     A                                      DSPATR(HI)
+     A                                 17  6'Base Rate:'
+     A            ##BRTT    R     A  B 17 17REFFLD(BRTT)
+     A  56
+     AO 43                                  DSPATR(RI)
+     A  56
+     AO 43                                  DSPATR(PC)
+     A  61N43N56                            DSPATR(UL)
+     A N61                                  DSPATR(PR)
+     A                                      OVRDTA
+     A                                 17 21'Spread/Rate:'
+     A            ##RTSP    R   12A  B 17 34REFFLD(RTSP)
+     A  44                                  DSPATR(RI)
+     A  44                                  DSPATR(PC)
+     A  61N44N60                            DSPATR(UL)
+     A  60
+     AON61                                  DSPATR(PR)
+     A                                      OVRDTA
+     A                                 17 47'Calc Meth:'
+     A            ##ICBS    R     A  B 17 62REFFLD(ICBS)
+     A  45                                  DSPATR(RI)
+     A  45                                  DSPATR(PC)
+     A  61N45N60                            DSPATR(UL)
+     A  60
+     AON61                                  DSPATR(PR)
+     A                                      OVRDTA
+     A                                 18  6'Frequency:'
+     A            ##IPFR    R     A  B 18 17REFFLD(IPFR)
+     A  46                                  DSPATR(RI)
+     A  46                                  DSPATR(PC)
+     A  61N46                               DSPATR(UL)
+     A N61                                  DSPATR(PR)
+     A                                      OVRDTA
+     A                                 18 21'Next Int Date:'
+     A            ##NIDT         6A  B 18 36TEXT('NEXT INTEREST DATE')
+     A  57
+     AO 47                                  DSPATR(RI)
+     A  57
+     AO 47                                  DSPATR(PC)
+     A  61N47N57                            DSPATR(UL)
+     A N61                                  DSPATR(PR)
+     A                                      OVRDTA
+     A                                 18 47'Tot. Interest:'
+     A            ##TOTI    R   16A  B 18 62REFFLD(TOTI)
+     A  48                                  DSPATR(RI)
+     A  48                                  DSPATR(PC)
+     A N60 61N48                            DSPATR(UL)
+     A  60
+     AON61                                  DSPATR(PR)
+     A                                      OVRDTA
+     A                                 19  6'Int Freq Day in Month:'
+     A            ##INTF    R     A  B 19 29REFFLD(INTF)
+     A  49                                  DSPATR(RI)
+     A  49                                  DSPATR(PC)
+     A  61N49                               DSPATR(UL)
+     A N61                                  DSPATR(PR)
+     A                                      OVRDTA
+     A                                 19 47'Cap. Interest:'
+     A            ##CPTI    R        B 19 62REFFLD(CPTI)
+     A  50                                  DSPATR(RI)
+     A  50                                  DSPATR(PC)
+     A N60 61N50                            DSPATR(UL)
+     A  60
+     AON61                                  DSPATR(PR)
+     A                                      OVRDTA
+     A                                 21  6'Linked Deal Ref:'
+     A            ##LNKR    R    6A  B 21 23REFFLD(LNKDN)
+     A  34                                  DSPATR(RI)
+     A  34                                  DSPATR(PC)
+     A  61N34                               DSPATR(UL)
+     A N61                                  DSPATR(PR)
+     A                                      OVRDTA
+     A  19                             21 47'Orig. Branch:'
+     A            ##ORBR         3A  B 21 62TEXT('Originating Branch')
+     A  25                                  DSPATR(RI)
+     A  25                                  DSPATR(PC)
+     A N25 61N60                            DSPATR(UL)
+     A N19
+     AO 60
+     AON61                                  DSPATR(PR)
+     A N19                                  DSPATR(ND)
+     A                                      OVRDTA
+     A          R #CMD2
+     A                                      TEXT('Command key line 2')
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A*                                                        /S01393/
+     A**********                       23  2'F3-Exit   F12-Previous   F8-Next r-
+     A**********                            ec.   F7-Prev.rec.   F15-Select    -
+     A**********                                     '
+     A**                                             Begin /112563/
+     A* 68 ******                      23  2'F3-Exit   F12-Previous'
+     A*N68 ******                      23  2'F3-Exit   F12-Previous   F8-Next r-
+     A***********                           ec.   F7-Prev.rec.   F15-Select    -
+     A  68                             23  2'F3=Exit   F12=Previous'
+     A N68                             23  2'F3=Exit   F12=Previous   F8=Next r-
+     A                                      ec.   F7=Prev.rec.   F15=Select    -
+     A**                                             End   /112563/
+     A                                               '
+     A                                      DSPATR(HI)
+     A                                      OVRATR
+     A*                                                        /S01393/
+     A          R #CMD3                      TEXT('Command key line 3')
+     A                                       OVERLAY
+     A                                       BLINK
+     A                                       PUTOVR
+      * *64 (Confirm Delete if no errors)
+     A**                                             Begin /112563/
+     A***********                      23  2'F3-Exit   ENTER-Cancel      F1-
+     A***********                           0-Confirm Delete               -
+     A                                 23  2'F3=Exit  F10=Confirm Delete   -
+     A                                      or ENTER=Cancel                -
+     A**                                             End   /112563/
+     A                                                       '
+     A                                       DSPATR(HI)
+      *=====================================
+     A          R #CMD4
+     A                                      TEXT('Command key line 4')
+     A                                      OVERLAY
+     A                                      PUTOVR
+      * *62 (Confirm Insert if no errors)
+     A**                                             Begin /112563/
+     A***********                      23  2'F3-Exit   F12-Cancel      ENTER-Co-
+     A***********                           nfirm Insert                       -
+     A                                 23  2'F3=Exit   F12=Cancel      or ENTER-
+     A                                      =Confirm Insert                    -
+     A**                                             End   /112563/
+     A                                               '
+     A                                      DSPATR(HI)
+     A                                      OVRATR
+      *=====================================
+     A          R #CMD5
+     A                                      TEXT('Command key line 5')
+     A                                      OVERLAY
+     A                                      PUTOVR
+      * *65 (Confirm Amend if no errors)
+     A**                                             Begin /112563/
+     A***********                      23  2'F3-Exit   F12-Cancel      ENTER-Co-
+     A***********                           nfirm Amendment                    -
+     A                                 23  2'F3=Exit   F12=Cancel      or ENTER-
+     A                                      =Confirm Amendment                 -
+     A**                                             End   /112563/
+     A                                               '
+     A                                      DSPATR(HI)
+     A*********              Start of Change               /066308/
+     A          R #MSG
+     A                                      TEXT('Successful Insert')
+     A*                                             /Begin 099483/
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A*                                             /End   099483/
+     A                                      CA03(03 '03 - Exit')
+     A N64                                  CF12(02 '02 - Previous screen')
+     A N68
+     AAN64N62N65                            CF07(09 '08 - Next record')
+     A N68
+     AAN64N62N65                            CF08(08 '09 - Prev.record')
+     A N68
+     AAN64N62N65                            CF15(15 '15 - Select screen')
+     A  64                                  CF10(05 '05 - Delete')
+     A*                                             /Begin 099483/
+     A************                          OVERLAY
+     A************                          PUTOVR
+     A*                                             /End   099483/
+     A*
+     A**                                             Begin /112563/
+     A* 68 ******                      23  2'F3-Exit   F12-Previous'
+     A*N68 ******                      23  2'F3-Exit   F12-Previous   F8-Next r-
+     A***********                           ec.   F7-Prev.rec.   F15-Select    -
+     A  68                             23  2'F3=Exit   F12=Previous'
+     A N68                             23  2'F3=Exit   F12=Previous   F8=Next r-
+     A                                      ec.   F7=Prev.rec.   F15=Select    -
+     A**                                             End   /112563/
+     A                                               '
+     A                                      DSPATR(HI)
+     A                                      OVRATR
+     A                                 24  2'Deals'
+     A N59                                  DSPATR(ND)
+     A                                      OVRATR
+     A            DDSIMG         6  0  24  8OVRDTA
+     A N59                                  DSPATR(ND)
+     A                                      OVRATR
+     A                                 24 15'and'
+     A N59                                  DSPATR(ND)
+     A                                      OVRATR
+     A            DDSIM2         6  0  24 19OVRDTA
+     A N59                                  DSPATR(ND)
+     A                                      OVRATR
+     A                                 24 26'successfully inserted.'
+     A N59                                  DSPATR(ND)
+     A                                      OVRATR
+     A*                      End of Change                 /066308/
+      *=====================================
+     A          R #SFLM                     SFL
+     A                                      SFLMSGRCD(24)
+     A                                      TEXT('Message subfile')
+     A            ##MSGK                    SFLMSGKEY
+     A            PGNAME                    SFLPGMQ
+     A          R #SFCM                     SFLCTL(#SFLM)
+     A                                      SFLSIZ(0002)
+     A                                      SFLPAG(0001)
+     A                                      TEXT('Message subfile control')
+     A                                      OVERLAY
+     A                                      SFLDSP
+     A                                      SFLINZ
+     A  73                                  SFLEND
+     A            PGNAME                    SFLPGMQ

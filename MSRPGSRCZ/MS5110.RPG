@@ -1,0 +1,536 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MS Incoming message rerouting')
+      *****************************************************************
+      *                                                               *
+      *  Midas - SWIFT Direct Link Module                             *
+      *                                                               *
+      *   MS5110 - INCOMING MESSAGE REROUTING                         *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 TDA035             Date 02Apr04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 124673             Date 04Jun98               *
+      *                 00000              Date 00XXX00               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CRE026 - Consumer Banking                                    *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
+      *   124673 - Add Century field to key list.                     *
+      *****************************************************************
+      *                                                               *
+      *  C R E A T I O N     P A R A M E T E R S                      *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+     FMS5110DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE MS5110F4
+     F                                              KINFDS INFDS
+     FMUSER   IF  E           K        DISK
+     FSDBRCHL0IF  E           K        DISK
+     FMSIXI2L7IF  E           K        DISK
+     F            MSIXI2D0                          KRENAMEMSIXI27F
+     FMSIXI2L8IF  E           K        DISK
+     F            MSIXI2D0                          KRENAMEMSIXI28F
+     FMSIXI2L2UF  E           K        DISK
+     F            MSIXI2D0                          KRENAMEMSIXI22F
+     FMSMSI2L9UF  E           K        DISK
+      *
+      * ID C  F  H  L    Function of indicators
+      *
+      * 10               EOF MSIXI2PD
+      * 11               READ CHANGED indicator
+      * 12               EOF MSMSI2PD
+      * 20               Subfile display
+      * 21               Subfile display control
+      * 22               Subfile end indicator
+      * 23               Rollup pressed
+      * 30               Error occurred
+      * 31               Branch error
+      * 32               Transaction reference error
+      * 33               Start message ouput date error
+      * 34               Start message output time error
+      * 40               HELP pressed
+      * KC               F3 pressed
+      * KL               F12 pressed
+      *
+     E                    ERCD       19  4               ERROR CODE OUTPUT
+     E                    MSGA    1   3 78
+     E                    SNDRA      12  1               Sender array
+     E                    CPY@    1   1 80
+      *
+     IINFDS       DS
+     I                                    B 378 3790LSTRRN
+      **  Last subfile start RRN
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      **  Local data area data structure
+      *
+     IPSDS       SDS
+     I                                      244 253 WSID
+     I                                      254 263 USRID
+      **  Workstation ID
+      *
+     IDSRUN       DS                             13
+     I                                        1   7 RUNA
+     I                                       13  13 MBIN
+      **  RUNDAT data area
+      *
+     I            DS
+     I                                        1   6 SOSD
+     I                                        1   2 SDYY
+     I                                        3   4 SDMM
+     I                                        5   6 SDDD
+      *
+     I                                        7  10 SOST
+     I                                        7   8 STHH
+     I                                        9  10 STMM
+      **  Subdivide screen fields for validation
+      *
+     C           KEY7      KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           TRNO
+      *
+     C           KEY8      KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           MODEC                           124673
+     C                     KFLD           MODE
+     C                     KFLD           MOTM
+      *
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *   MAIN  - Main process                                        *
+      *   INIT  - Initial process                                     *
+      *   VSEL  - Validate selection                                  *
+      *   ENQY3 - Incoming messages by branch,TRNO                    *
+      *   ENQY4 - Incoming messages by branch,date,time               *
+      *   *PSSR - Error handling                                      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   MAIN - Main process                                         *
+      *   Calls -  INIT Initial process                               *
+      *            VSEL Validate selection                            *
+      *            ENQY3 Incoming messages by branch,TRNO             *
+      *            ENQY4 Incoming messages by branch,date,time        *
+      *****************************************************************
+      *
+     C                     EXSR INIT
+      *
+      **  Display selection screen until F3 pressed
+     C           *INKC     DOWEQ'0'
+      *
+      **  If no errors clear input fields
+     C           *IN30     IFEQ '0'
+     C                     MOVE *BLANKS   SBCH
+     C                     MOVE *BLANKS   STRN
+     C                     MOVE *BLANKS   SOSD
+     C                     MOVE *BLANKS   SOST
+     C                     END
+      *
+     C                     WRITEMS5110F1
+     C                     EXFMTMS5110F2
+      *
+     C                     MOVE *BLANKS   SFMG
+     C                     SETOF                     303132
+     C                     SETOF                     3334
+      *
+     C           ROUF      IFNE 'Y'
+     C                     MOVE '1'       *INKC
+     C                     END
+      *
+      **  If F1 not pressed validate selection
+     C           *INKC     IFEQ '0'
+     C                     EXSR VSEL
+      *
+      **  If selection valid
+     C           *IN30     IFEQ '0'
+      *
+      **  If type & priority entered enquiry by type,priority,date,time
+     C           STRN      IFNE *BLANK
+     C                     EXSR ENQY3
+     C                     ELSE
+     C                     EXSR ENQY4
+     C                     END
+     C                     MOVE *BLANKS   SFMG
+     C                     SETOF                     30
+      *
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     SETON                     LR
+     C/EJECT
+      ********************************************************************
+      *   INIT - Inital process                                       *
+      *   Called by main process                                      *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Set up LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE 'MS5110  'DBPGM
+     C                     OUT  LDA
+      *
+      **  Access RUNDAT to find run date & multibranching indicator
+     C           *NAMVAR   DEFN RUNDAT    DSRUN
+     C                     IN   DSRUN
+      *
+      **  Access MUSER for user's authority
+     C           USRID     CHAINMUSER                89
+      *
+     C           *IN89     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     MOVE '01'      DBASE
+     C                     MOVE USRID     DBKEY            * DB ERROR 01 *
+     C                     MOVE 'MUSER'   DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C           ROUF      IFNE 'Y'
+     C                     MOVE MSGA,2    SFMG
+     C                     SETON                     30
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   VSEL - validate selection                                   *
+      *   Called by - main process                                    *
+      *****************************************************************
+      *
+     C           VSEL      BEGSR
+      *
+      **  Blank out error codes array
+     C                     MOVE *BLANKS   ERCD
+     C                     Z-ADD0         W       20
+      *
+      **  Transaction ref must not be entered if branch is not entered
+     C           SBCH      IFEQ *BLANKS
+     C           STRN      ANDNE*BLANKS
+     C                     SETON                     303132
+     C                     ADD  1         W
+     C                     MOVE '001'     ERCD,W
+     C                     END
+      *
+      **  Start date must not be entered if branch is not entered
+     C           SBCH      IFEQ *BLANKS
+     C           SOSD      ANDNE*BLANKS
+     C                     SETON                     303133
+     C                     ADD  1         W
+     C                     MOVE '001'     ERCD,W
+     C                     END
+      *
+      ** Initialise Century indicator.                                    124673
+     C                     MOVE *BLANKS   CENT    2                       124673
+      *                                                                   124673
+      ****Start*year*must*be*blank*or*01-99***************************    124673
+      **  Start year must be blank or 00-99                               124673
+     C           SOSD      IFNE *BLANK
+      *
+     C***********SDYY      IFLT '01'                                      124673
+     C           SDYY      IFLT '00'                                      124673
+     C           SDYY      ORGT '99'
+     C                     SETON                     3033
+     C                     ADD  1         W
+     C                     MOVE '003'     ERCD,W
+     C                     ELSE                                           124673
+      *                                                                   124673
+      ** Allocate century to entered start date.                          124673
+     C           SDYY      IFLT '72'                                      124673
+     C                     MOVE '20'      CENT                            124673
+     C                     ELSE                                           124673
+     C                     MOVE '19'      CENT                            124673
+     C                     ENDIF                                          124673
+      *                                                                   124673
+     C                     END
+      *
+      **  Start month must be blank or 01-12
+     C           SDMM      IFLT '01'
+     C           SDMM      ORGT '12'
+     C                     SETON                     3033
+     C                     ADD  1         W
+     C                     MOVE '004'     ERCD,W
+     C                     END
+      *
+      **  Start day must be blank or 01-31
+     C           SDDD      IFLT '01'
+     C           SDDD      ORGT '31'
+     C                     SETON                     3033
+     C                     ADD  1         W
+     C                     MOVE '005'     ERCD,W
+     C                     END
+     C                     END
+      *
+      **  Start time must not be entered if day is not entered
+     C           SOSD      IFEQ *BLANKS
+     C           SOST      ANDNE*BLANKS
+     C                     SETON                     3034
+     C                     ADD  1         W
+     C                     MOVE '006'     ERCD,W
+     C                     END
+      *
+      **  Start hours must be blank or 00-23
+     C           SOST      IFNE *BLANK
+      *
+     C           STHH      IFLT '00'
+     C           STHH      ORGT '23'
+     C                     SETON                     3034
+     C                     ADD  1         W
+     C                     MOVE '007'     ERCD,W
+     C                     END
+      *
+      **  Start minutes must be blank or 00-59
+     C           STMM      IFLT '00'
+     C           STMM      ORGT '59'
+     C                     SETON                     3034
+     C                     ADD  1         W
+     C                     MOVE '008'     ERCD,W
+     C                     END
+     C                     END
+      *
+      **  move error codes to message line
+     C                     MOVEAERCD      SFMG
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   ENQY3 - Incoming messages by branch,TRNO                    *
+      *   Called by main process                                      *
+      *****************************************************************
+      *
+     C           ENQY3     BEGSR
+      *
+     C                     MOVE SBCH      BRCA
+     C                     MOVE STRN      TRNO
+      *
+     C           KEY7      SETLLMSIXI2L7
+     C                     READ MSIXI2L7                 10
+      *
+      **  If no Incoming messages found display message
+     C           *IN10     IFEQ '1'
+     C                     SETON                     30
+     C                     MOVE MSGA,1    SFMG
+      *
+     C                     ELSE
+      *
+      **  Clear subfile
+     C                     SETOF                     2021
+     C                     WRITEMS5110F5
+     C                     SETON                     2021
+     C                     Z-ADD1         RRN     50
+      *
+      **  Perform rollup
+     C           *IN23     DOUEQ'0'
+      *
+      **  RRN of first record on page
+     C           *IN22     IFEQ '0'
+     C                     Z-ADDRRN       DSPREC
+     C                     Z-ADD0         @CNT    20
+      *
+      **  Fill subfile page
+     C           *IN10     DOWEQ'0'
+     C           @CNT      ANDLT16
+     C                     WRITEMS5110F4
+     C                     ADD  1         RRN
+     C                     ADD  1         @CNT
+     C                     READ MSIXI2L7                 10
+     C                     END
+      *
+      **  Display subfile until F3, F12, rollup pressed or no errors
+     C           *INKC     DOUEQ'1'
+     C           *INKL     OREQ '1'
+     C           *IN23     OREQ '1'
+     C           *IN30     OREQ '0'
+      *
+     C           *IN10     IFEQ '1'
+     C                     SETON                     22
+     C                     END
+      *
+     C                     WRITEMS5110F3
+     C                     EXFMTMS5110F5
+      *
+     C                     Z-ADDLSTRRN    DSPREC
+     C                     SETOF                     22
+      *
+     C                     EXSR LINK
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   ENQY4 - Incoming messages by branch,date,time               *
+      *   Called by main process                                      *
+      *****************************************************************
+      *
+     C           ENQY4     BEGSR
+      *
+     C                     MOVE SBCH      BRCA
+     C                     MOVE CENT      MODEC                           124673
+     C                     MOVE SOSD      MODE
+     C                     MOVE SOST      MOTM
+      *
+     C           KEY8      SETLLMSIXI2L8
+     C                     READ MSIXI2L8                 10
+      *
+      **  If no Incoming messages found display message
+     C           *IN10     IFEQ '1'
+     C                     SETON                     30
+     C                     MOVE MSGA,1    SFMG
+      *
+     C                     ELSE
+      *
+      **  Clear subfile
+     C                     SETOF                     2021
+     C                     WRITEMS5110F5
+     C                     SETON                     2021
+     C                     Z-ADD1         RRN     50
+      *
+      **  Perform rollup
+     C           *IN23     DOUEQ'0'
+      *
+      **  RRN of first record on page
+     C           *IN22     IFEQ '0'
+     C                     Z-ADDRRN       DSPREC
+     C                     Z-ADD0         @CNT    20
+      *
+      **  Fill subfile page
+     C           *IN10     DOWEQ'0'
+     C           @CNT      ANDLT16
+     C                     WRITEMS5110F4
+     C                     ADD  1         RRN
+     C                     ADD  1         @CNT
+     C                     READ MSIXI2L8                 10
+     C                     END
+      *
+      **  Display subfile until F3, F12, rollup pressed or no errors
+     C           *INKC     DOUEQ'1'
+     C           *INKL     OREQ '1'
+     C           *IN23     OREQ '1'
+     C           *IN30     OREQ '0'
+      *
+     C           *IN10     IFEQ '1'
+     C                     SETON                     22
+     C                     END
+      *
+     C                     WRITEMS5110F3
+     C                     EXFMTMS5110F5
+      *
+     C                     Z-ADDLSTRRN    DSPREC
+     C                     SETOF                     22
+      *
+     C                     EXSR LINK
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   LINK - Process lower link                                   *
+      *   Called by - ENQY3 Incoming messages by branch,TRNO          *
+      *               ENQY4 Incoming messages by branch,date,time     *
+      *****************************************************************
+      *
+     C           LINK      BEGSR
+      *
+      **  If selection not blank
+     C           *INKC     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+     C           *IN23     ANDEQ'0'
+      *
+     C                     SETOF                     30
+     C                     MOVE BRCA      SBRCA   3
+     C                     MOVE MODE      SMODE   60
+     C                     MOVE MOTM      SMOTM   40
+     C                     MOVE TRNO      STRNO  16
+     C                     MOVE MTPY      SMTPY   3
+     C                     MOVE MIR       SMIR   28
+     C                     Z-ADDRRN       SRRN    50
+     C                     READCMS5110F4                 11
+      *
+      **  Advance pointer to first non-blank record
+     C           *IN11     DOWEQ'0'
+      *
+     C           BRCA      IFNE *BLANKS
+     C           BRCA      CHAINSDBRCHL0             89
+     C                     END
+      *
+     C           *IN89     IFEQ '1'
+     C                     SETON                     3035
+     C                     MOVE MSGA,3    SFMG
+     C                     ELSE
+      *
+     C                     MOVE BRCA      @BRCA   3
+     C                     MOVE MIR       @MIR   28
+     C           @MIR      CHAINMSIXI2L2             10
+     C                     MOVE @BRCA     BRCA
+     C                     UPDATMSIXI22F
+      *
+     C           @MIR      CHAINMSMSI2L9             12
+     C           *IN12     DOWEQ'0'
+     C                     MOVE @BRCA     BRCA
+     C                     UPDATMSMSI2D0
+      *
+     C           @MIR      READEMSMSI2L9                 12
+     C                     END
+      *
+     C                     END
+     C                     UPDATMS5110F4
+     C                     SETOF                     3589
+     C                     READCMS5110F4                 11
+     C                     END
+      *
+     C                     MOVE SBRCA     BRCA
+     C                     MOVE SMODE     MODE
+     C                     MOVE SMOTM     MOTM
+     C                     MOVE STRNO     TRNO
+     C                     MOVE SMTPY     MTPY
+     C                     MOVE SMIR      MIR
+     C                     Z-ADDSRRN      RRN
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   *PSSR - Error handling                                      *
+      *   Called by - INIT Initial process                            *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+**  message
+No messages to report
+Only Routing Officer is authorised to reroute messages
+Invalid branch entered
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

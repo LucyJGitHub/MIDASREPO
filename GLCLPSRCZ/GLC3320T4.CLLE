@@ -1,0 +1,117 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Balance Statements - End Task Split')        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC3320T4 - Midas GL Balance Statements - End Task Split    */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. MD021298           Date 27Jun13              */
+/*       Prev Amend No. MD020550           Date 21May13              */
+/*                      AR1097218A         Date 22Apr13              */
+/*                      CGL142             Date 06Aug12              */
+/*                      CGL120   *CREATE   Date 06Aug12              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD021298 - Correction to GLC3320 task split dependencies.   */
+/*       MD020550 - C1 REACRZ vs. RU REACRZ with discrepancy         */
+/*       AR1097218A - GLC0720 seq 10001 failed Out of Balance        */
+/*       CGL142 - Tactical COB changes GL                            */
+/*       CGL120 - GL COB Components Task Split                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&POSTNUM &CNAM &CSEQ)
+ 
+             DCL        VAR(&DRIVER) TYPE(*CHAR) LEN(10) +
+                          VALUE('GLACBAPD')
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DTAQLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&POSTNUM) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&CURRCD) TYPE(*DEC) LEN(10 0)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2012')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Send message to MRUNQ */
+ 
+             SNDPGMMSG  MSG('GLC3320T4 - Balance Statements - End +
+                          Task Split') TOMSGQ(MRUNQ)
+ 
+             IF         COND(&POSTNUM = '3') THEN(DO)
+                RTVMBRD    FILE(GEXBPD) NBRCURRCD(&CURRCD)
+                IF         COND(&CURRCD = 0) THEN(DO)
+                   GOTO       CMDLBL(END)
+                ENDDO
+             ENDDO
+ 
+/* Determine full DTAQLIB library name */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(&DTAQLIB) VALUE(&SYSID *CAT 'DPLIB')
+ 
+/* Retrieve first member description */
+ 
+             RTVMBRD    FILE(&DRIVER) RTNMBR(&MEMBER)
+ 
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)                                       /*CGL142*/
+/* Delete sub-task data queue */
+ 
+ LOOP:       DLTDTAQ    DTAQ(&DTAQLIB/&MEMBER)
+             MONMSG     MSGID(CPF2105 CPF9801)
+ 
+/* Retrieve next member description */
+ 
+             RTVMBRD    FILE(&DRIVER) MBR(&MEMBER *NEXT) +
+                          RTNMBR(&MEMBER)
+             MONMSG     MSGID(CPF3049) EXEC(GOTO CMDLBL(REMOVE))
+ 
+/* Loop for all members in driving file */
+ 
+             GOTO       CMDLBL(LOOP)
+ 
+ REMOVE:
+ 
+/* Remove all members from driving file */
+ 
+             RMVM       FILE(&DRIVER) MBR(*ALL)
+             MONMSG     MSGID(CPF7301 CPF7303)
+ 
+             CALL       PGM(GL3320T4)                                                     /*CGL142*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                                  /*CGL142*/
+             GOTO       CMDLBL(ABNOR)                                                     /*CGL142*/
+             ENDDO                                                                        /*CGL142*/
+                                                                                          /*CGL142*/
+             CLRPFM     FILE(GLACC2AC)                                                /*AR1097218A*/
+                                                                                      /*AR1097218A*/
+             CLRPFM     FILE(GLREACRZ)                                                  /*MD020550*/
+                                                                                        /*MD020550*/
+/**Copy*'E'*records*to*main*ABEXAG*file**/                                              /*MD021298*/
+/**********/                                                                            /*MD021298*/
+/**********  CPYF       FROMFILE(ABEXAGE) TOFILE(ABEXAG) MBROPT(*ADD)*/                 /*MD021298*/
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             SNDPGMMSG  MSG('Program GLC3320T4 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+             ROLLBACK                                                                     /*CGL142*/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)                                    /*CGL142*/
+             ENDCMTCTL                                                                    /*CGL142*/
+             MONMSG     MSGID(CPF0000)                                                    /*CGL142*/
+ 
+END:
+             ENDPGM

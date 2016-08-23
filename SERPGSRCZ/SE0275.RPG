@@ -1,0 +1,751 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Customer Shortname Linked Enquir')
+     F*****************************************************************
+     F*                                                               *
+     A*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE0275 - CUSTOMER SHORTNAME LINKED ENQUIRY                   *
+     F*                                                               *
+     F*  Function:  This program displays all Customers in Shortname  *
+     F*   (I/C)     sequence.  Details shown include Customer         *
+     F*             Shortname, Customer Number, Customer Report Name  *
+     F*             and Town.  A search key may be entered to request *
+     F*             the display of Shortnames from that point         *
+     F*             onwards, alphabetically.  Selection of one        *
+     F*             customer is allowed and the customer number will  *
+     F*             be passed back to the calling program.            *
+     F*                                                               *
+     F*  Called By: SEC04 - CL Component to Control SE Enquiries      *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CAAA03             Date 29Apr04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 052254             Date 10Jan94               *
+      *                 S01117             Date 01Nov90               *
+     F*                 E19964             DATE 30NOV89               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CAAA03 - Webfacing Changes (recompile)                       *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S01117 - Multi-branching                                     *
+     F*  E19964 - NEW CUSTOMER SHORTNAME LINKED ENQUIRY PROGRAM FOR   *   E19964
+     F*           POSITION BY ISSUER ENQUIRY.                         *   E19964
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FSE0275DFCF  E                    WORKSTN
+     F                                        RCDNBRKSFILE SE0270S0
+     FSNAME   IF  E           K        DISK
+     FCLINT   IF  E           K        DISK
+     F            CLINTCAF                          KIGNORE
+     F            CLINTCBF                          KIGNORE
+     F            CLINTCCF                          KIGNORE
+     F            CLINTC1F                          KIGNORE
+     F***TABSE***IF  E           K        DISK                            S01117
+     F*********** TABLETAF                          KIGNORE               S01117
+     F*********** TABTB11F                          KIGNORE               S01117
+     F*********** TABTB36F                          KIGNORE               S01117
+     F*********** TABTB40F                          KIGNORE               S01117
+     F*********** TABTE10F                          KIGNORE               S01117
+     F*********** TABTE20F                          KIGNORE               S01117
+     F*********** TABTG10F                          KIGNORE               S01117
+     F*********** TABTG20F                          KIGNORE               S01117
+     F*********** TABLETHF                          KIGNORE               S01117
+     F*********** TABLETJF                          KIGNORE               S01117
+     F*********** TABLETKF                          KIGNORE               S01117
+     F*********** TABLETLF                          KIGNORE               S01117
+     F*********** TABLETNF                          KIGNORE               S01117
+     F*********** TABLETPF                          KIGNORE               S01117
+     F*********** TABLETXF                          KIGNORE               S01117
+     F*********** TABLET2F                          KIGNORE               S01117
+     F*********** TABLET3F                          KIGNORE               S01117
+     F*********** TABLET5F                          KIGNORE               S01117
+     F*
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   07      F/3                                                 *
+     F*   12      ROLL UP KEY PRESSED                                 *
+     F*   13      ROLL DOWN KEY PRESSED                               *
+     F*   14      NO DETAILS TO DISPLAY                               *
+     F*   16      ERROR MESSAGES                                      *
+     F*   18      DISPLAY SUBFILE CONTROL                             *
+     F*   20      DISPLAY SUBFILE                                     *
+     F*   78      CHARACTER FOUND                                     *
+     F*   80      CHAIN FAILED INDICATOR                              *
+     F*   81      CHAIN FAILED INDICATOR                              *
+     F*   87      DETSR - SUBFILE PROCESSING LOOP                     *
+     F****98******DATE*FORMAT*INDICATOR*FOR*ZSYSTM*********************   S01117
+     F*   98      DATE FORMAT INDICATOR FOR RUNDAT                    *   S01117
+     F*   99      ERROR ON ICDR 1 READ - ZSYSTM                       *
+     F*   U7      WITH U8 FOR DATABASE ERROR                          *
+     F*   U8      WITH U7 FOR DATABASE ERROR                          *
+     F*   LR      TERMINATE PROGRAM                                   *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  I N D E X   T O   S U B R O U T I N E S                      *
+     F*                                                               *
+     F*  SHORT   -  VALIDATE AND PROCESS SHORTNAME ENTERED            *
+     F*  SNREAD  -  LOAD SUBFILE                                      *
+     F*  ROLLUP  -  PROCESS ROLLUP REQUEST                            *
+     F*  ROLLDN  -  PROCESS ROLLDOWN REQUEST                          *
+     F*  DTRQS   -  VALIDATE AND PROCESS SHORTNAME REQUEST            *
+     F*  RETSR   -  END OF PROGRAM PROCESSING                         *
+     F*  *PSSR   -  ERROR HANDLING                                    *   S01117
+     F***ZSYSTM**-**ACCESS*ICDR1*-*TABTB10*****************************   S01117
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E                    ALPNU  37  37  1
+     E                    ALPHA  27  27  1
+     E                    NUM    10  10  1
+     E                    INP        10  1
+     E                    ERR     1   7 79               MESSAGES ARRAY
+     E*
+      /EJECT
+     I*
+     ICPYR@#      DS
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I            DS
+     I*
+     I**  DATA STRUCTURE FOR INPUT FIELD
+     I*
+     I                                        1  10 SHNMIN
+     I                                        1  10 INP
+     I*
+     I***LDA        UDS                            256                    S01117
+     I*
+     I*      Local data area.
+     I*
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I**                                                                  S01117
+     IRUNDT       DS                                                      S01117
+     I**  DATA AREA RUNDAT                                                S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     I**                                                                  S01117
+     I** LINK ENQUIRY DATA AREA
+     ISESDS     E DS
+     I*
+     IPSDS       SDS
+     I*
+     I**   PROGRAM STATUS DATA STRUCTURE
+     I*
+     I                                      244 246 WSID
+     C/EJECT
+     C           *NAMVAR   DEFN           SESDS
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C* Set up copyright parameter
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C**
+     C*
+     C*****************************************************************
+     C**                                                              *
+     C**    MAIN PROCESSING                                           *
+     C**                                                              *
+     C*****CALLS*SR******RETSR,ROLLUP,ROLLDN,SHORT,ZSYSTM**************   S01117
+     C**   CALLS SR      RETSR,ROLLUP,ROLLDN,SHORT                    *   S01117
+     C*                                                               *
+     C*    First clear the subfile,and output the initial screen.     *
+     C*    Then process the input response.                           *
+     C*       F3 then end program                                     *
+     C*       On subsequent cycles also do roll key processing        *
+     C*       Customer number/shortname input - validate              *
+     C*                                                               *
+     C*****************************************************************
+     C**
+     C**       FIRST CYCLE - OUTPUT INITIAL SCREEN
+     C*
+     C***********          MOVEL'SE0270  'PROGNM  8                    ** S01117
+     C                     SETON                     1416
+     C**
+     C           *LOCK     IN   LDA
+     C**                                                                  S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C**
+     C****READ*INSTALLATION*CONTROL*RECORD*1*FOR*RUNDATE******************S01117
+     C**
+     C*******Access*File*and*check*if*record*deleted**********************S01117
+     C**
+     C***********          EXSR ZSYSTM                                    S01117
+     C**
+     C*******If*no*record*found**or*deleted*record************************S01117
+     C**********then*it*is*a*database*error*so*return*to*calling**********S01117
+     C**********program*with*a*return*code*of*'0'*************************S01117
+     C**
+     C************IN99     IFEQ '1'                                       S01117
+     C***********          MOVELPROGNM    DBPGM            ************   S01117
+     C***********          MOVEL'ICDR1'   DBKEY            * DATABASE *   S01117
+     C***********          MOVE 'TABLE'   DBFILE           * ERROR 01 *   S01117
+     C***********          Z-ADD01        DBASE            ************   S01117
+     C***********          SETON                       U7U8               S01117
+     C***********          MOVE '0'       RETNWF                          S01117
+     C***********          EXSR RETSR                                     S01117
+     C***********          END                                            S01117
+     C**
+     C**       CLEAR SUBFILE
+     C**
+     C                     SETOF                     1820
+     C                     WRITESE0270C0
+     C                     MOVEL*BLANKS   SHNMIN
+     C*
+     C**   SCREEN PROCESSING LOOP
+     C*
+     C                     SETON                     87
+     C           *IN87     DOWEQ'1'
+     C**
+     C**    OUTPUT HEADINGS
+     C**
+     C                     WRITESE0270F0
+     C**
+     C**    SAVE LAST SHORTNAME INPUT
+     C**
+     C                     MOVELSHNMIN    SHNMXX 10
+     C**
+     C**   BLANK SHORTNAME OUTPUT
+     C**
+     C                     MOVEL*BLANKS   SHNMIN
+     C**
+     C**  IND. FOR SUBFILE RECORD
+     C**
+     C           *IN14     IFEQ '1'
+     C                     SETOF                     20
+     C                     ELSE
+     C                     SETON                     20
+     C                     END
+     C**
+     C**  IND. FOR SUBFILE CONTROL RECORD
+     C**
+     C                     SETON                     18
+     C**
+     C**  IND. HELP FUNCTION
+     C**
+     C                     Z-ADD1         RCDNBR  30
+     C                     WRITESE0270C0
+     C**
+     C**    PROCESS DETAILS SCREEN
+     C**
+     C                     READ SE0270C0               8080
+     C**
+     C                     MOVE *BLANKS   MSG
+     C*
+     C*    IF COMMAND 3 THEN END PROGRAM
+     C*
+     C           *IN07     IFEQ '1'
+     C                     MOVE '1'       RETNWF  1
+     C                     EXSR RETSR
+     C                     END
+     C*
+     C*    ROLLUP COMMAND
+     C*
+     C           *IN12     IFEQ '1'
+     C                     EXSR ROLLUP
+     C                     ELSE
+     C*
+     C*    ROLLDOWN COMMAND
+     C*
+     C           *IN13     IFEQ '1'
+     C                     EXSR ROLLDN
+     C                     ELSE
+     C*
+     C*    PROCESS SHORTNAME ENTERED
+     C*
+     C           SHNMIN    IFNE *BLANKS
+     C                     EXSR SHORT
+     C                     ELSE
+     C*
+     C*    ELSE CHECK IF CUSTOMER SELECTED
+     C*
+     C           *IN20     IFEQ '0'
+     C                     MOVELERR,1     MSG
+     C                     ELSE
+     C                     EXSR DTRQS
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C           MSG       COMP *BLANKS                  16
+     C*
+     C*
+     C                     END
+     C*
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*    SHORT SR TO VALIDATE AND PROCESS SHORTNAME ENTERED         *
+     C**   CALLED FROM   DETAIL TIME PROCESSING                       *
+     C**   CALLS SR      RETSR,SNREAD                                 *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SHORT     BEGSR                           *** SHORT *****
+     C*
+     C**
+     C**   TEST FOR INVALID SHORTNAME
+     C**
+     C           SHNMIN    IFEQ *BLANKS
+     C                     MOVELERR,1     MSG
+     C                     SETON                     14
+     C                     ELSE
+     C                     MOVELSHNMIN    WRK1    1
+     C           WRK1      LOKUPALPNU                    78
+     C**
+     C           *IN78     IFEQ '0'
+     C                     MOVELERR,2     MSG
+     C                     ELSE
+     C**
+     C**  CHECK IF SHORTNAME/CUSTOMER
+     C**
+     C           WRK1      LOKUPALPHA                    78
+     C**
+     C**  CHECK IF SHORTNAME EXISTS
+     C**
+     C           *IN78     IFEQ '1'
+     C                     MOVE SHNMIN    SKEY   10
+     C           SKEY      CHAINSNAME                80
+     C           *IN80     IFEQ '0'
+     C**
+     C**     IF EXISTS THEN END PROGRAM,PASSING CNUM
+     C**
+     C                     MOVE ' '       RETNWF  1
+     C                     MOVELCNUM      RQDTWF 20
+     C                     EXSR RETSR
+     C                     END
+     C**
+     C**  IF NOT THEN LOAD SUBFILE
+     C**
+     C                     MOVE SHNMIN    SKEY   10
+     C                     EXSR SNREAD
+     C                     ELSE
+     C**
+     C**  CHECK IF CUSTOMER  EXISTS
+     C**
+     C**     CHECK IF INPUT VALID
+     C**
+     C                     Z-ADD0         W       10
+     C           W         DOWLT6
+     C                     ADD  1         W
+     C           INP,W     LOKUPNUM                      78
+     C           *IN78     IFEQ '0'
+     C                     MOVELERR,2     MSG
+     C                     Z-ADD7         W
+     C                     END
+     C                     END
+     C           MSG       IFEQ *BLANKS
+     C                     MOVELSHNMIN    CNUM
+     C           CNUM      CHAINCLINTSEF             80
+     C           *IN80     IFEQ '0'
+     C**
+     C**     IF EXISTS THEN END PROGRAM,PASSING CNUM
+     C**
+     C                     MOVE ' '       RETNWF  1
+     C                     MOVELCNUM      RQDTWF 20
+     C                     EXSR RETSR
+     C                     END
+     C**
+     C**  IF NOT SEND MESSAGE
+     C**
+     C                     MOVELERR,2     MSG
+     C                     SETON                     14
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   SNREAD SUBROUTINE                                          *
+     C**                                                              *
+     C**      CALLED FROM SHORT SUBROUTINE                            *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           SNREAD    BEGSR                              ** SNREAD
+     C**
+     C**       CLEAR SUBFILE
+     C**
+     C                     SETOF                     1820
+     C                     WRITESE0270C0
+     C                     Z-ADD0         RCDNBR
+     C**
+     C**
+     C           SKEY      SETLLSNAME                8080
+     C**
+     C**   END OF FILE
+     C**
+     C           *IN80     IFEQ '1'
+     C                     MOVELERR,5     MSG
+     C                     ELSE
+     C**
+     C                     SETOF                         80
+     C           *IN80     DOWEQ'0'
+     C                     SETOF                     14
+     C**
+     C                     READ SNAME                  8080
+     C           *IN80     IFEQ '0'
+     C**
+     C**   WRITE RECORD TO SUBFILE
+     C**
+     C                     ADD  1         RCDNBR
+     C                     WRITESE0270S0
+     C           RCDNBR    COMP 18                   80  80
+     C**
+     C**   SAVE KEY OF FIRST RECORD
+     C**
+     C           RCDNBR    IFEQ 1
+     C                     MOVELCSNM      CSNMST 10
+     C                     END
+     C                     END
+     C                     END
+     C**
+     C                     END
+     C**
+     C**   SAVE KEY OF LAST RECORD
+     C**
+     C                     MOVELCSNM      CSNMED 10
+     C**
+     C                     ENDSR
+     C**
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   ROLLUP SUBROUTINE                                          *
+     C**                                                              *
+     C**      CALLED FROM DETAIL TIME PROCESSING                      *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           ROLLUP    BEGSR                              ** ROLLUP
+     C**
+     C                     MOVELCSNMED    SKEY
+     C                     Z-ADD0         RCDNBR
+     C**
+     C           SKEY      SETGTSNAME
+     C**
+     C                     SETOF                         80
+     C           *IN80     DOWEQ'0'
+     C**
+     C                     READ SNAME                  8080
+     C**
+     C**   END OF FILE
+     C**
+     C           *IN80     IFEQ '1'
+     C           RCDNBR    IFEQ 0
+     C                     MOVELERR,3     MSG
+     C                     END
+     C                     END
+     C**
+     C**   IF RECORDS FOUND THEN CLEAR SUBFILE
+     C**
+     C           RCDNBR    IFEQ 0
+     C           *IN80     IFEQ '0'
+     C**
+     C**       CLEAR SUBFILE
+     C**
+     C                     SETOF                     1820
+     C                     WRITESE0270C0
+     C                     END
+     C                     END
+     C           *IN80     IFEQ '0'
+     C                     SETOF                     14
+     C**
+     C**   WRITE RECORD TO SUBFILE
+     C**
+     C                     ADD  1         RCDNBR
+     C                     WRITESE0270S0
+     C           RCDNBR    COMP 18                   80  80
+     C**
+     C**   SAVE KEY OF FIRST SHORTNAME
+     C**
+     C           RCDNBR    IFEQ 1
+     C                     MOVELCSNM      CSNMST 10
+     C                     END
+     C                     END
+     C                     END
+     C**
+     C**   SAVE KEY OF LAST  RECORD
+     C**
+     C                     MOVELCSNM      CSNMED 10
+     C**
+     C                     ENDSR
+     C**
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   ROLLDN   SUBROUTINE                                        *
+     C**                                                              *
+     C**      CALLED FROM DETAIL TIME PROCESSING                      *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           ROLLDN    BEGSR                              ** ROLLDN
+     C**
+     C                     MOVELCSNMST    SKEY
+     C                     Z-ADD0         RCDNBR
+     C**
+     C**       CLEAR SUBFILE
+     C**
+     C                     SETOF                     1820
+     C                     WRITESE0270C0
+     C**
+     C**
+     C           SKEY      SETLLSNAME
+     C**
+     C**   READ PREVIOUS 18 RECORDS
+     C**
+     C                     SETOF                         80
+     C           *IN80     DOWEQ'0'
+     C**
+     C                     READPSNAME                    80
+     C**
+     C**   IF BEGINNING OF FILE THEN DISPLAY MESSAGE
+     C**
+     C           *IN80     IFEQ '1'
+     C           RCDNBR    IFEQ 0
+     C                     MOVELERR,4     MSG
+     C                     END
+     C                     END
+     C           *IN80     IFEQ '0'
+     C                     ADD  1         RCDNBR
+     C                     MOVELCSNM      CSNMST
+     C           RCDNBR    COMP 18                   80  80
+     C                     END
+     C                     END
+     C**
+     C**   READ FORWARD  18 RECORDS
+     C**
+     C                     MOVELCSNMST    SKEY
+     C           SKEY      SETLLSNAME
+     C                     Z-ADD0         RCDNBR
+     C                     SETOF                         80
+     C           *IN80     DOWEQ'0'
+     C**
+     C                     READ SNAME                    80
+     C           *IN80     IFEQ '0'
+     C                     SETOF                     14
+     C**
+     C**   WRITE RECORD TO SUBFILE
+     C**
+     C                     ADD  1         RCDNBR
+     C                     WRITESE0270S0
+     C           RCDNBR    COMP 18                   80  80
+     C                     END
+     C                     END
+     C**
+     C**   SAVE KEY OF LAST  RECORD
+     C**
+     C                     MOVELCSNM      CSNMED 10
+     C**
+     C                     ENDSR
+     C**
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*    DTRQS  SR VALIDATE AND PROCESS SHORTNAME REQUEST           *
+     C*                                                               *
+     C**   CALLED FROM   DETAIL TIME PROCESSING                       *
+     C**   CALLS SR      RETSR                                        *
+     C*    This subroutine processes shortname selects,and if valid   *
+     C*    returns the customer number to the calling link enquiry.   *
+     C*    Indicators used                                            *
+     C*    16  on  = non display error message field                  *
+     C*    80  on  = chain fail                                       *
+     C*    81  on  = read failed to subfile                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           DTRQS     BEGSR                           ** DTRQS ***
+     C**
+     C**  CLEAR ERROR MESSAGE FIELD,
+     C**
+     C                     MOVE *BLANKS   MSG
+     C                     MOVE *BLANKS   LEOPSF
+     C**
+     C**  READ FIRST CHANGED RECORD
+     C**
+     C           LEOPSF    DOWEQ' '
+     C                     READCSE0270S0                 81
+     C  N81                END
+     C**
+     C**  NOT FOUND THEN DISPLAY  MESSAGE 1
+     C**
+     C           *IN81     IFEQ '1'
+     C                     MOVELERR,1     MSG
+     C                     ELSE
+     C**
+     C** RESET LEOPSF TO BLANKS
+     C**
+     C                     MOVE LEOPSF    LEOPXX  1
+     C                     MOVE *BLANKS   LEOPSF
+     C                     UPDATSE0270S0
+     C**
+     C** CHECK THAT VALUE IS EQUAL TO 1
+     C**
+     C           LEOPXX    IFNE '1'
+     C                     MOVELERR,6     MSG
+     C           *IN81     DOWEQ'0'
+     C                     READCSE0270S0                 81
+     C                     MOVE *BLANKS   LEOPSF
+     C  N81                UPDATSE0270S0
+     C                     END
+     C                     ELSE
+     C**
+     C**  SAVE KEY VALUE
+     C**
+     C**********           MOVE CNUM      CNUMSV  60                                          CSD027
+     C                     MOVE CNUM      CNUMSV  6                                           CSD027
+     C**
+     C**  CHECK THAT ONLY ONE OPTION REQUESTED
+     C**
+     C           LEOPSF    DOWEQ' '
+     C                     READCSE0270S0                 81
+     C  N81                END
+     C           *IN81     IFEQ '0'
+     C                     MOVELERR,7     MSG
+     C                     MOVE *BLANKS   LEOPSF
+     C                     UPDATSE0270S0
+     C           *IN81     DOWEQ'0'
+     C                     READCSE0270S0                 81
+     C                     MOVE *BLANKS   LEOPSF
+     C  N81                UPDATSE0270S0
+     C                     END
+     C                     ELSE
+     C**
+     C**  VALID -   RETURN TO CALLING PROGRAM - UPDATE DATA AREA
+     C**
+     C                     MOVE ' '       RETNWF
+     C                     MOVEL*BLANKS   RQDTWF
+     C                     MOVELCNUMSV    RQDTWF 20
+     C                     EXSR RETSR
+     C                     END
+     C                     END
+     C                     END
+     C**
+     C**  INVALID INPUT DISPLAY ERROR CODES
+     C**
+     C           MSG       COMP *BLANKS                  16
+     C**
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*    RETSR SR END OF PROGRAM PROCESSING                         *
+     C**   CALLED FROM   DETAIL TIME PROCESSING,SHORT                 *
+     C**   CALLS SR                                                   *
+     C*    This is a standard link enquiry subroutine for ending the  *
+     C*    program.                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           RETSR     BEGSR                           *** RETSR ***
+     C**
+     C**  ACCESS SE DATA AREA
+     C**
+     C           *LOCK     IN   SESDS
+     C                     MOVE RETNWF    RTNC
+     C                     MOVELRQDTWF    RQCUST
+     C                     OUT  SESDS
+     C           *INU7     IFEQ '1'                                       S01117
+     C                     OUT  LDA
+     C                     EXSR *PSSR                                     S01117
+     C                     END                                            S01117
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *  Called by: RETSR + any error                                 *   S01117
+      *  Calls:                                                       *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+      *****************************************************************
+      /EJECT
+     C***COPY*ZSRSRC,ZSYSTMZ1                                             S01117
+      /EJECT
+      ***
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**
+A BCDEFGHIJKLMNOPQRSTUVWXYZ0123456789
+**
+A BCDEFGHIJKLMNOPQRSTUVWXYZ
+**
+0123456789
+**
+ ENTER START OF SHORTNAME OR SELECT A CUSTOMER
+ SHORTNAME INVALID
+ ROLLUP NOT VALID,LAST SHORTNAME DISPLAYED
+ ROLLDOWN KEY NOT VALID,FIRST SHORTNAME DISPLAYED
+ SHORTNAME ENTERED IS AFTER LAST SHORTNAME ON FILE
+ INVALID ENTRY - ENTER A '1' AGAINST THE REQUIRED CUSTOMER
+ MORE THAN ONE CUSTOMER SELECTED

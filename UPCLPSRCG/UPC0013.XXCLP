@@ -1,0 +1,368 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade Module                                      */
+/*                                                                   */
+/*       UPC0013 - Recreate field reference files                    */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. CUP041   *REDUNDANT Date 01Aug14             */
+/*       Prev Amend No. CUT008              Date 08Feb11             */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CPK018  *MOVED     Date 06Jun04              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.01 ---------------------------------------------------*/
+/*                      CPK010             Date 11Oct99              */
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      CUP002 *CREATE     Date 12Jul99              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP041 - New Bridge methodology to combine menu options     */
+/*       CUT008  - CRTOBJ rewrite.                                   */
+/*                 Change of CRTOBJ parameters.                      */
+/*       CPK018 - Field reference files moved to global layer.       */
+/*       CPK010 - Errors found in DBAR3.00 alpha site.               */
+/*       CUP002 - Automate update of field reference file as Bridge  */
+/*                 does not handle this                              */
+/*                                                                   */
+/*********************************************************************/
+/************PGM        PARM(&SBSID &PTFSRC &OWNER &AUTL)                              */ /*CPK010*/
+             PGM        PARM(&SBSID &PTFSRC &OWNER &AUTL &RETURN)                         /*CPK010*/
+ 
+             DCL        VAR(&SBSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&PTFSRC) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&AUTL) TYPE(*CHAR) LEN(10)
+ 
+/**********  DCL        VAR(&DTALIB) TYPE(*CHAR) LEN(10)                               */ /*CPK018*/
+/**********  DCL        VAR(&DVLIB) TYPE(*CHAR) LEN(10)                                */ /*CPK018*/
+             DCL        VAR(&GPLIB) TYPE(*CHAR) LEN(10)                                   /*CPK018*/
+             DCL        VAR(&GVLIB) TYPE(*CHAR) LEN(10)                                   /*CPK018*/
+/**********  DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)                                  */ /*CPK018*/
+/**********  DCL        VAR(&DESTLIB) TYPE(*CHAR) LEN(2)                               */ /*CPK018*/
+             DCL        VAR(&MFRFL) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SCFRFCPD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SCFRFRPD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SCFRFXPD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SCFRF0PD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SCFRF1PD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SCFRF2PD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SCFRF3PD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SCFRF4PD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SCFRF5PD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SCFRF6PD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&UPDLVC) TYPE(*CHAR) LEN(800)
+             DCL        VAR(&SRCF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSRCF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(1)                                   /*CPK010*/
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2001')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Create data area /MIDASMSG in QTEMP */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+ 
+/**********  CHGVAR     VAR(&DTALIB) VALUE(&SBSID *TCAT 'DTALIB')                      */ /*CPK018*/
+/**********  CHGVAR     VAR(&DVLIB) VALUE(&SBSID *TCAT 'DVLIB')                        */ /*CPK018*/
+             CHGVAR     VAR(&GPLIB) VALUE(&SBSID *TCAT 'GPLIB')                           /*CPK018*/
+             CHGVAR     VAR(&GVLIB) VALUE(&SBSID *TCAT 'GVLIB')                           /*CPK018*/
+ 
+/* Call program to check if file MFRFL has been delivered */
+             CALL       PGM(UPDLVCR0) PARM(&MFRFL '*KEY' 'MFRFL' 'LF' +
+                          &UPDLVC)
+             IF         COND(&MFRFL *EQ ' ') THEN(DO)
+                CHGVAR     VAR(&MSRCF) VALUE(%SST(&UPDLVC 94 10))
+/**********     DLTF       FILE(&DTALIB/MFRFL)                                         */ /*CPK018*/
+/**********     MONMSG     MSGID(CPF0000)                                              */ /*CPK018*/
+/**********     DLTF       FILE(&DVLIB/MFRFL)                                             /*CPK018*/
+                DLTF       FILE(&GVLIB/MFRFL)
+                MONMSG     MSGID(CPF0000)
+             ENDDO
+ 
+/* Call programs to check if other field ref. files have been delv'd */
+/**********  CALL       PGM(UPDLVCR0) PARM(&SCFRFCPD '*KEY' +                          */ /*CPK018*/
+/**********               'SCFRFCPD' 'PF' &UPDLVC)                                     */ /*CPK018*/
+             CALL       PGM(UPDLVCR0) PARM(&SCFRFCPD '*KEY' +
+                          'GPFRFCPD' 'PF' &UPDLVC)                                        /*CPK018*/
+             IF         COND(&SCFRFCPD *EQ ' ') THEN(DO)
+/**********     DLTF       FILE(SCFRFCPD)                                              */ /*CPK018*/
+                DLTF       FILE(GPFRFCPD)                                                 /*CPK018*/
+                MONMSG     MSGID(CPF0000)
+                CHGVAR     VAR(&SRCF) VALUE(%SST(&UPDLVC 94 10))
+/**********     CHGVAR     VAR(&DESTLIB) VALUE(%SST(&SRCF 9 2))                        */ /*CPK018*/
+/**********     IF         COND(&DESTLIB *EQ 'DT') THEN(DO)                            */ /*CPK018*/
+/**********        CHGVAR     VAR(&LIB) VALUE(&SBSID *TCAT 'DTALIB')                   */ /*CPK018*/
+/**********     ENDDO                                                                  */ /*CPK018*/
+/**********     IF         COND(&DESTLIB *EQ 'DP') THEN(DO)                            */ /*CPK018*/
+/**********        CHGVAR     VAR(&LIB) VALUE(&SBSID *TCAT 'DPLIB')                    */ /*CPK018*/
+/**********     ENDDO                                                                  */ /*CPK018*/
+/**********     CRTOBJ  SRCMBR(SCFRFCPD) SRCFILE(&PTFSRC/&SRCF) +                      */ /*CPK018*/
+/**********               PLIB(&LIB) OWNER(&OWNER) AUTL(&AUTL)                         */ /*CPK018*/
+/**********     CRTOBJ     SRCMBR(GPFRFCPD) SRCFILE(&PTFSRC/&SRCF) +                   */ /*CUT008*/
+/**********                  PLIB(&GPLIB) OWNER(&OWNER) AUTL(&AUTL)         */ /*CPK018*/ /*CUT008*/
+                CRTOBJ     OBJ(&GPLIB/GPFRFCPD) SRCFILE(&PTFSRC/&SRCF) +
+                             SRCMBR(*OBJ) OWNER(&OWNER) AUTL(&AUTL)                       /*CUT008*/
+             ENDDO
+ 
+/**********  CALL       PGM(UPDLVCR0) PARM(&SCFRFRPD '*KEY' +                          */ /*CPK018*/
+/**********               'SCFRFRPD' 'PF' &UPDLVC)                                     */ /*CPK018*/
+             CALL       PGM(UPDLVCR0) PARM(&SCFRFRPD '*KEY' +
+                          'GPFRFRPD' 'PF' &UPDLVC)                                        /*CPK018*/
+             IF         COND(&SCFRFRPD *EQ ' ') THEN(DO)
+/**********     DLTF       FILE(SCFRFRPD)                                              */ /*CPK018*/
+                DLTF       FILE(GPFRFRPD)                                                 /*CPK018*/
+                MONMSG     MSGID(CPF0000)
+                CHGVAR     VAR(&SRCF) VALUE(%SST(&UPDLVC 94 10))
+/**********     CHGVAR     VAR(&DESTLIB) VALUE(%SST(&SRCF 9 2))                        */ /*CPK018*/
+/**********     IF         COND(&DESTLIB *EQ 'DT') THEN(DO)                            */ /*CPK018*/
+/**********        CHGVAR     VAR(&LIB) VALUE(&SBSID *TCAT 'DTALIB')                   */ /*CPK018*/
+/**********     ENDDO                                                                  */ /*CPK018*/
+/**********     IF         COND(&DESTLIB *EQ 'DP') THEN(DO)                            */ /*CPK018*/
+/**********        CHGVAR     VAR(&LIB) VALUE(&SBSID *TCAT 'DPLIB')                    */ /*CPK018*/
+/**********     ENDDO                                                                  */ /*CPK018*/
+/**********     CRTOBJ  SRCMBR(SCFRFRPD) SRCFILE(&PTFSRC/&SRCF) +                      */ /*CPK018*/
+/**********               PLIB(&LIB) OWNER(&OWNER) AUTL(&AUTL)                         */ /*CPK018*/
+/**********     CRTOBJ     SRCMBR(GPFRFRPD) SRCFILE(&PTFSRC/&SRCF) +                   */ /*CUT008*/
+/**********                  PLIB(&GPLIB) OWNER(&OWNER) AUTL(&AUTL)         */ /*CPK018*/ /*CUT008*/
+                CRTOBJ     OBJ(&GPLIB/GPFRFRPD) SRCFILE(&PTFSRC/&SRCF) +
+                             SRCMBR(*OBJ) OWNER(&OWNER) AUTL(&AUTL)                       /*CUT008*/
+             ENDDO
+ 
+/**********  CALL       PGM(UPDLVCR0) PARM(&SCFRFXPD '*KEY' +                          */ /*CPK018*/
+/**********               'SCFRFXPD' 'PF' &UPDLVC)                                     */ /*CPK018*/
+             CALL       PGM(UPDLVCR0) PARM(&SCFRFXPD '*KEY' +
+                          'GPFRFXPD' 'PF' &UPDLVC)                                        /*CPK018*/
+             IF         COND(&SCFRFXPD *EQ ' ') THEN(DO)
+/**********     DLTF       FILE(SCFRFXPD)                                              */ /*CPK018*/
+                DLTF       FILE(GPFRFXPD)                                                 /*CPK018*/
+                MONMSG     MSGID(CPF0000)
+                CHGVAR     VAR(&SRCF) VALUE(%SST(&UPDLVC 94 10))
+/**********     CHGVAR     VAR(&DESTLIB) VALUE(%SST(&SRCF 9 2))                        */ /*CPK018*/
+/**********     IF         COND(&DESTLIB *EQ 'DT') THEN(DO)                            */ /*CPK018*/
+/**********        CHGVAR     VAR(&LIB) VALUE(&SBSID *TCAT 'DTALIB')                   */ /*CPK018*/
+/**********     ENDDO                                                                  */ /*CPK018*/
+/**********     IF         COND(&DESTLIB *EQ 'DP') THEN(DO)                            */ /*CPK018*/
+/**********        CHGVAR     VAR(&LIB) VALUE(&SBSID *TCAT 'DPLIB')                    */ /*CPK018*/
+/**********     ENDDO                                                                  */ /*CPK018*/
+/**********     CRTOBJ  SRCMBR(SCFRFXPD) SRCFILE(&PTFSRC/&SRCF) +                      */ /*CPK018*/
+/**********               PLIB(&LIB) OWNER(&OWNER) AUTL(&AUTL)                         */ /*CPK018*/
+/**********     CRTOBJ     SRCMBR(GPFRFXPD) SRCFILE(&PTFSRC/&SRCF) +                   */ /*CUT008*/
+/**********                  PLIB(&GPLIB) OWNER(&OWNER) AUTL(&AUTL)         */ /*CPK018*/ /*CUT008*/
+                CRTOBJ     OBJ(&GPLIB/GPFRFXPD) SRCFILE(&PTFSRC/&SRCF) +
+                             SRCMBR(*OBJ) OWNER(&OWNER) AUTL(&AUTL)                       /*CUT008*/
+             ENDDO
+ 
+/**********  CALL       PGM(UPDLVCR0) PARM(&SCFRF0PD '*KEY' +                          */ /*CPK018*/
+/**********               'SCFRF0PD' 'PF' &UPDLVC)                                     */ /*CPK018*/
+             CALL       PGM(UPDLVCR0) PARM(&SCFRF0PD '*KEY' +
+                          'GPFRF0PD' 'PF' &UPDLVC)                                        /*CPK018*/
+             IF         COND(&SCFRF0PD *EQ ' ') THEN(DO)
+/**********     DLTF       FILE(SCFRF0PD)                                              */ /*CPK018*/
+                DLTF       FILE(GPFRF0PD)                                                 /*CPK018*/
+                MONMSG     MSGID(CPF0000)
+                CHGVAR     VAR(&SRCF) VALUE(%SST(&UPDLVC 94 10))
+/**********     CHGVAR     VAR(&DESTLIB) VALUE(%SST(&SRCF 9 2))                        */ /*CPK018*/
+/**********     IF         COND(&DESTLIB *EQ 'DT') THEN(DO)                            */ /*CPK018*/
+/**********        CHGVAR     VAR(&LIB) VALUE(&SBSID *TCAT 'DTALIB')                   */ /*CPK018*/
+/**********     ENDDO                                                                  */ /*CPK018*/
+/**********     IF         COND(&DESTLIB *EQ 'DP') THEN(DO)                            */ /*CPK018*/
+/**********        CHGVAR     VAR(&LIB) VALUE(&SBSID *TCAT 'DPLIB')                    */ /*CPK018*/
+/**********     ENDDO                                                                  */ /*CPK018*/
+/**********     CRTOBJ  SRCMBR(SCFRF0PD) SRCFILE(&PTFSRC/&SRCF) +                      */ /*CPK018*/
+/**********               PLIB(&LIB) OWNER(&OWNER) AUTL(&AUTL)                         */ /*CPK018*/
+/**********     CRTOBJ     SRCMBR(GPFRF0PD) SRCFILE(&PTFSRC/&SRCF) +                   */ /*CUT008*/
+/**********                  PLIB(&GPLIB) OWNER(&OWNER) AUTL(&AUTL)         */ /*CPK018*/ /*CUT008*/
+                CRTOBJ     OBJ(&GPLIB/GPFRF0PD) SRCFILE(&PTFSRC/&SRCF) +
+                             SRCMBR(*OBJ) OWNER(&OWNER) AUTL(&AUTL)                       /*CUT008*/
+             ENDDO
+ 
+/**********  CALL       PGM(UPDLVCR0) PARM(&SCFRF1PD '*KEY' +                          */ /*CPK018*/
+/**********               'SCFRF1PD' 'PF' &UPDLVC)                                     */ /*CPK018*/
+             CALL       PGM(UPDLVCR0) PARM(&SCFRF1PD '*KEY' +
+                          'GPFRF1PD' 'PF' &UPDLVC)                                        /*CPK018*/
+             IF         COND(&SCFRF1PD *EQ ' ') THEN(DO)
+/**********     DLTF       FILE(SCFRF1PD)                                              */ /*CPK018*/
+                DLTF       FILE(GPFRF1PD)                                                 /*CPK018*/
+                MONMSG     MSGID(CPF0000)
+                CHGVAR     VAR(&SRCF) VALUE(%SST(&UPDLVC 94 10))
+/**********     CHGVAR     VAR(&DESTLIB) VALUE(%SST(&SRCF 9 2))                        */ /*CPK018*/
+/**********     IF         COND(&DESTLIB *EQ 'DT') THEN(DO)                            */ /*CPK018*/
+/**********        CHGVAR     VAR(&LIB) VALUE(&SBSID *TCAT 'DTALIB')                   */ /*CPK018*/
+/**********     ENDDO                                                                  */ /*CPK018*/
+/**********     IF         COND(&DESTLIB *EQ 'DP') THEN(DO)                            */ /*CPK018*/
+/**********        CHGVAR     VAR(&LIB) VALUE(&SBSID *TCAT 'DPLIB')                    */ /*CPK018*/
+/**********     ENDDO                                                                  */ /*CPK018*/
+/**********     CRTOBJ  SRCMBR(SCFRF1PD) SRCFILE(&PTFSRC/&SRCF) +                      */ /*CPK018*/
+/**********               PLIB(&LIB) OWNER(&OWNER) AUTL(&AUTL)                         */ /*CPK018*/
+/**********     CRTOBJ     SRCMBR(GPFRF1PD) SRCFILE(&PTFSRC/&SRCF) +                   */ /*CUT008*/
+/**********                  PLIB(&GPLIB) OWNER(&OWNER) AUTL(&AUTL)         */ /*CPK018*/ /*CUT008*/
+                CRTOBJ     OBJ(&GPLIB/GPFRF1PD) SRCFILE(&PTFSRC/&SRCF) +
+                             SRCMBR(*OBJ) OWNER(&OWNER) AUTL(&AUTL)                       /*CUT008*/
+             ENDDO
+ 
+/**********  CALL       PGM(UPDLVCR0) PARM(&SCFRF2PD '*KEY' +                          */ /*CPK018*/
+/**********               'SCFRF2PD' 'PF' &UPDLVC)                                     */ /*CPK018*/
+             CALL       PGM(UPDLVCR0) PARM(&SCFRF2PD '*KEY' +
+                          'GPFRF2PD' 'PF' &UPDLVC)                                        /*CPK018*/
+             IF         COND(&SCFRF2PD *EQ ' ') THEN(DO)
+/**********     DLTF       FILE(SCFRF2PD)                                              */ /*CPK018*/
+                DLTF       FILE(GPFRF2PD)                                                 /*CPK018*/
+                MONMSG     MSGID(CPF0000)
+                CHGVAR     VAR(&SRCF) VALUE(%SST(&UPDLVC 94 10))
+/**********     CHGVAR     VAR(&DESTLIB) VALUE(%SST(&SRCF 9 2))                        */ /*CPK018*/
+/**********     IF         COND(&DESTLIB *EQ 'DT') THEN(DO)                            */ /*CPK018*/
+/**********        CHGVAR     VAR(&LIB) VALUE(&SBSID *TCAT 'DTALIB')                   */ /*CPK018*/
+/**********     ENDDO                                                                  */ /*CPK018*/
+/**********     IF         COND(&DESTLIB *EQ 'DP') THEN(DO)                            */ /*CPK018*/
+/**********        CHGVAR     VAR(&LIB) VALUE(&SBSID *TCAT 'DPLIB')                    */ /*CPK018*/
+/**********     ENDDO                                                                  */ /*CPK018*/
+/**********     CRTOBJ  SRCMBR(SCFRF2PD) SRCFILE(&PTFSRC/&SRCF) +                      */ /*CPK018*/
+/**********               PLIB(&LIB) OWNER(&OWNER) AUTL(&AUTL)                         */ /*CPK018*/
+/**********     CRTOBJ     SRCMBR(GPFRF2PD) SRCFILE(&PTFSRC/&SRCF) +                   */ /*CUT008*/
+/**********                  PLIB(&GPLIB) OWNER(&OWNER) AUTL(&AUTL)          / /*CPK018*/ /*CUT008*/
+                CRTOBJ     OBJ(&GPLIB/GPFRF2PD) SRCFILE(&PTFSRC/&SRCF) +
+                             SRCMBR(*OBJ) OWNER(&OWNER) AUTL(&AUTL)                       /*CUT008*/
+             ENDDO
+ 
+/**********  CALL       PGM(UPDLVCR0) PARM(&SCFRF3PD '*KEY' +                          */ /*CPK018*/
+/**********               'SCFRF3PD' 'PF' &UPDLVC)                                     */ /*CPK018*/
+             CALL       PGM(UPDLVCR0) PARM(&SCFRF3PD '*KEY' +
+                          'GPFRF3PD' 'PF' &UPDLVC)                                        /*CPK018*/
+             IF         COND(&SCFRF3PD *EQ ' ') THEN(DO)
+/**********     DLTF       FILE(SCFRF3PD)                                              */ /*CPK018*/
+                DLTF       FILE(GPFRF3PD)                                                 /*CPK018*/
+                MONMSG     MSGID(CPF0000)
+                CHGVAR     VAR(&SRCF) VALUE(%SST(&UPDLVC 94 10))
+/**********     CHGVAR     VAR(&DESTLIB) VALUE(%SST(&SRCF 9 2))                        */ /*CPK018*/
+/**********     IF         COND(&DESTLIB *EQ 'DT') THEN(DO)                            */ /*CPK018*/
+/**********        CHGVAR     VAR(&LIB) VALUE(&SBSID *TCAT 'DTALIB')                   */ /*CPK018*/
+/**********     ENDDO                                                                  */ /*CPK018*/
+/**********     IF         COND(&DESTLIB *EQ 'DP') THEN(DO)                            */ /*CPK018*/
+/**********        CHGVAR     VAR(&LIB) VALUE(&SBSID *TCAT 'DPLIB')                    */ /*CPK018*/
+/**********     ENDDO                                                                  */ /*CPK018*/
+/**********     CRTOBJ  SRCMBR(SCFRF3PD) SRCFILE(&PTFSRC/&SRCF) +                      */ /*CPK018*/
+/**********               PLIB(&LIB) OWNER(&OWNER) AUTL(&AUTL)                         */ /*CPK018*/
+/**********     CRTOBJ     SRCMBR(GPFRF3PD) SRCFILE(&PTFSRC/&SRCF) +                   */ /*CUT008*/
+/**********                  PLIB(&GPLIB) OWNER(&OWNER) AUTL(&AUTL)         */ /*CPK018*/ /*CUT008*/
+                CRTOBJ     OBJ(&GPLIB/GPFRF3PD) SRCFILE(&PTFSRC/&SRCF) +
+                             SRCMBR(*OBJ) OWNER(&OWNER) AUTL(&AUTL)                       /*CUT008*/
+             ENDDO
+ 
+/**********  CALL       PGM(UPDLVCR0) PARM(&SCFRF4PD '*KEY' +                          */ /*CPK018*/
+/**********               'SCFRF4PD' 'PF' &UPDLVC)                                     */ /*CPK018*/
+             CALL       PGM(UPDLVCR0) PARM(&SCFRF4PD '*KEY' +
+                          'GPFRF4PD' 'PF' &UPDLVC)                                        /*CPK018*/
+             IF         COND(&SCFRF4PD *EQ ' ') THEN(DO)
+/**********     DLTF       FILE(SCFRF4PD)                                              */ /*CPK018*/
+                DLTF       FILE(GPFRF4PD)                                                 /*CPK018*/
+                MONMSG     MSGID(CPF0000)
+                CHGVAR     VAR(&SRCF) VALUE(%SST(&UPDLVC 94 10))
+/**********     CHGVAR     VAR(&DESTLIB) VALUE(%SST(&SRCF 9 2))                        */ /*CPK018*/
+/**********     IF         COND(&DESTLIB *EQ 'DT') THEN(DO)                            */ /*CPK018*/
+/**********        CHGVAR     VAR(&LIB) VALUE(&SBSID *TCAT 'DTALIB')                   */ /*CPK018*/
+/**********     ENDDO                                                                  */ /*CPK018*/
+/**********     IF         COND(&DESTLIB *EQ 'DP') THEN(DO)                            */ /*CPK018*/
+/**********        CHGVAR     VAR(&LIB) VALUE(&SBSID *TCAT 'DPLIB')                    */ /*CPK018*/
+/**********     ENDDO                                                                  */ /*CPK018*/
+/**********     CRTOBJ  SRCMBR(SCFRF4PD) SRCFILE(&PTFSRC/&SRCF) +                      */ /*CPK018*/
+/**********               PLIB(&LIB) OWNER(&OWNER) AUTL(&AUTL)                         */ /*CPK018*/
+/**********     CRTOBJ     SRCMBR(GPFRF4PD) SRCFILE(&PTFSRC/&SRCF) +                   */ /*CUT008*/
+/**********                  PLIB(&GPLIB) OWNER(&OWNER) AUTL(&AUTL)         */ /*CPK018*/ /*CUT008*/
+                CRTOBJ     OBJ(&GPLIB/GPFRF4PD) SRCFILE(&PTFSRC/&SRCF) +
+                             SRCMBR(*OBJ) OWNER(&OWNER) AUTL(&AUTL)                       /*CUT008*/
+             ENDDO
+ 
+/**********  CALL       PGM(UPDLVCR0) PARM(&SCFRF5PD '*KEY' +                          */ /*CPK018*/
+/**********               'SCFRF5PD' 'PF' &UPDLVC)                                     */ /*CPK018*/
+             CALL       PGM(UPDLVCR0) PARM(&SCFRF5PD '*KEY' +
+                          'GPFRF5PD' 'PF' &UPDLVC)                                        /*CPK018*/
+             IF         COND(&SCFRF5PD *EQ ' ') THEN(DO)
+/**********     DLTF       FILE(SCFRF5PD)                                              */ /*CPK018*/
+                DLTF       FILE(GPFRF5PD)                                                 /*CPK018*/
+                MONMSG     MSGID(CPF0000)
+                CHGVAR     VAR(&SRCF) VALUE(%SST(&UPDLVC 94 10))
+/**********     CHGVAR     VAR(&DESTLIB) VALUE(%SST(&SRCF 9 2))                        */ /*CPK018*/
+/**********     IF         COND(&DESTLIB *EQ 'DT') THEN(DO)                            */ /*CPK018*/
+/**********        CHGVAR     VAR(&LIB) VALUE(&SBSID *TCAT 'DTALIB')                   */ /*CPK018*/
+/**********     ENDDO                                                                  */ /*CPK018*/
+/**********     IF         COND(&DESTLIB *EQ 'DP') THEN(DO)                            */ /*CPK018*/
+/**********        CHGVAR     VAR(&LIB) VALUE(&SBSID *TCAT 'DPLIB')                    */ /*CPK018*/
+/**********     ENDDO                                                                  */ /*CPK018*/
+/**********     CRTOBJ  SRCMBR(SCFRF5PD) SRCFILE(&PTFSRC/&SRCF) +                      */ /*CPK018*/
+/**********               PLIB(&LIB) OWNER(&OWNER) AUTL(&AUTL)                         */ /*CPK018*/
+/**********     CRTOBJ     SRCMBR(GPFRF5PD) SRCFILE(&PTFSRC/&SRCF) +                   */ /*CUT008*/
+/**********                  PLIB(&GPLIB) OWNER(&OWNER) AUTL(&AUTL)         */ /*CPK018*/ /*CUT008*/
+                CRTOBJ     OBJ(&GPLIB/GPFRF5PD) SRCFILE(&PTFSRC/&SRCF) +
+                             SRCMBR(*OBJ) OWNER(&OWNER) AUTL(&AUTL)                       /*CUT008*/
+             ENDDO
+ 
+/**********  CALL       PGM(UPDLVCR0) PARM(&SCFRF6PD '*KEY' +                          */ /*CPK018*/
+/**********               'SCFRF6PD' 'PF' &UPDLVC)                                     */ /*CPK018*/
+             CALL       PGM(UPDLVCR0) PARM(&SCFRF6PD '*KEY' +
+                          'GPFRF6PD' 'PF' &UPDLVC)                                        /*CPK018*/
+             IF         COND(&SCFRF6PD *EQ ' ') THEN(DO)
+/**********     DLTF       FILE(SCFRF6PD)                                              */ /*CPK018*/
+                DLTF       FILE(GPFRF6PD)                                                 /*CPK018*/
+                MONMSG     MSGID(CPF0000)
+                CHGVAR     VAR(&SRCF) VALUE(%SST(&UPDLVC 94 10))
+/**********     CHGVAR     VAR(&DESTLIB) VALUE(%SST(&SRCF 9 2))                        */ /*CPK018*/
+/**********     IF         COND(&DESTLIB *EQ 'DT') THEN(DO)                            */ /*CPK018*/
+/**********        CHGVAR     VAR(&LIB) VALUE(&SBSID *TCAT 'DTALIB')                   */ /*CPK018*/
+/**********     ENDDO                                                                  */ /*CPK018*/
+/**********     IF         COND(&DESTLIB *EQ 'DP') THEN(DO)                            */ /*CPK018*/
+/**********        CHGVAR     VAR(&LIB) VALUE(&SBSID *TCAT 'DPLIB')                    */ /*CPK018*/
+/**********     ENDDO                                                                  */ /*CPK018*/
+/**********     CRTOBJ  SRCMBR(SCFRF6PD) SRCFILE(&PTFSRC/&SRCF) +                      */ /*CPK018*/
+/**********               PLIB(&LIB) OWNER(&OWNER) AUTL(&AUTL)                         */ /*CPK018*/
+/**********     CRTOBJ     SRCMBR(GPFRF6PD) SRCFILE(&PTFSRC/&SRCF) +                   */ /*CUT008*/
+/**********                  PLIB(&GPLIB) OWNER(&OWNER) AUTL(&AUTL)         */ /*CPK018*/ /*CUT008*/
+                CRTOBJ     OBJ(&GPLIB/GPFRF6PD) SRCFILE(&PTFSRC/&SRCF) +
+                             SRCMBR(*OBJ) OWNER(&OWNER) AUTL(&AUTL)                       /*CUT008*/
+             ENDDO
+ 
+             IF         COND(&MFRFL *EQ ' ') THEN(DO)
+/**********     CHGVAR     VAR(&DESTLIB) VALUE(%SST(&MSRCF 9 2))                       */ /*CPK018*/
+/**********     IF         COND(&DESTLIB *EQ 'DT') THEN(DO)                            */ /*CPK018*/
+/**********        CHGVAR     VAR(&LIB) VALUE(&SBSID *TCAT 'DTALIB')                   */ /*CPK018*/
+/**********     ENDDO                                                                  */ /*CPK018*/
+/**********     IF         COND(&DESTLIB *EQ 'DV') THEN(DO)                            */ /*CPK018*/
+/**********        CHGVAR     VAR(&LIB) VALUE(&SBSID *TCAT 'DVLIB')                    */ /*CPK018*/
+/**********     ENDDO                                                                  */ /*CPK018*/
+/**********     CRTOBJ     SRCMBR(MFRFL) SRCFILE(&PTFSRC/&MSRCF) +                     */ /*CPK018*/
+/**********               PLIB(&LIB) OWNER(&OWNER) AUTL(&AUTL)                         */ /*CPK018*/
+/**********     CRTOBJ     SRCMBR(MFRFL) SRCFILE(&PTFSRC/&MSRCF) +                     */ /*CUT008*/
+/**********                  PLIB(&GVLIB) OWNER(&OWNER) AUTL(&AUTL)          / /*CPK018*/ /*CUT008*/
+                CRTOBJ     OBJ(&GVLIB/MFRFL) SRCFILE(&PTFSRC/&MSRCF) +
+                             SRCMBR(*OBJ) OWNER(&OWNER) AUTL(&AUTL)                       /*CUT008*/
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ ABNOR:
+/**Set*up*messages for Midas Information Screen  */
+/************RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +                                  */ /*CPK010*/
+/************             MSGDTA('UPC0013') MSG(&MESSAGE)                              */ /*CPK010*/
+/************MONMSG     MSGID(CPF0000)                                                 */ /*CPK010*/
+/************CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)                      */ /*CPK010*/
+/************CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +                       */ /*CPK010*/
+/************             joblog for details')                                         */ /*CPK010*/
+/************CALL       PGM(SCC0010) PARM('UPC0013' 'JOBLOG' 'Y')                      */ /*CPK010*/
+             CHGVAR     VAR(&RETURN) VALUE('F')                                           /*CPK010*/
+ 
+END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+             ENDPGM

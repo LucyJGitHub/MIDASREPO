@@ -1,0 +1,1514 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas SE Trades review')                               *
+     A********************************************************************
+     A**                                                                 *
+     A*  Midas - Securities Trading Module
+     A**                                                                 *
+     A**     DSPF/SE3002DF -  TRADES REVIEW (BULK INPUT)                 *
+     A**                                                                 *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     A**                                                              *
+      *  Last Amend No. AR871625           Date 12Dec11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. 234440             Date 28Jun05               *
+      *                 233607             Date 19May05               *
+      *                 BUG2626            Date 26May04               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CAS006             Date 21Jan03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CSE016             Date 10Jan01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSE023             Date 12Jul00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSE006             Date 03Jun99               *
+      *                 CPB001             DATE 13Sep99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     A*                 CEU005             DATE 03FEB98               *
+     A*                 CAC002             DATE 15SEP96                  *
+     A*                 S01486             DATE 28OCT94                  *
+     A*                 052254             DATE 13JAN94                  *
+     A*                 050725             DATE 11JAN94                  *
+     A*                 065543             DATE 11JAN94                  *
+     A*                 065009             DATE 23DEC93                  *
+     A*                 E43208             DATE 01SEP92                  *
+     A*                 S01117             DATE 24JAN91                  *
+     A*                 S01269             DATE 11JUL90                  *
+     A*                 S01253             DATE 17APR90                  *
+     A*                 E21054             DATE 10FEB90                  *
+     A*                 E21062             DATE 10FEB90                  *
+     A*                 S01199             DATE 03AUG89                  *
+     A*                 S01179             DATE 27/07/89                 *
+     A*                 S01190             DATE 10/03/89                 *
+     A*                 S01175             DATE 11/11/88                 *
+     A*                 S01176             DATE 14/08/88                 *
+     A*                                                                  *
+     A*----------------------------------------------------------------  *
+     A*                                                                  *
+      *  AR871625 - New Stamp Tax fields are missing in Bulk Input       *
+      *  234440 - Eu Tax Amount is missing from screen                   *
+      *  233607 - Fiscal Price doesn't appear on SE Trade screen         *
+      *           of Bulk Input                                          *
+      *  BUG2626- Webfacing Changes.  Protected field @SPRFC when it is  *
+      *           not displayed.                                         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CAS006 - Hedge Accounting Phase B                               *
+      *  CSE016 - Extended Security Descriptions                         *
+      *  CSE023 - Treaty Withholding Tax                                 *
+     A*  CSE006 - Repurchase Agreements (REPOs) enhancement              *
+     A*  CPB001 - 'Private Banking' Module                               *
+     A*  CEU005 - EMU SE Settlement Ccy Conversion.                      *
+     A*  CAC002 - Profit Centre Accounting Development Phase 2:          *
+     A*           If Analytical Accounting is installed, replace         *
+     A*           Profit Centre field with 2 new fields 'Book Profit     *
+     A*           Centre' and 'Transaction Profit Centre'.  A new        *
+     A*           'Margin' field will also be added.                     *
+     A*         - Changed folder ABSENG/R10.6 to ABSENG/DBAR2            *
+     A*  S01486  -  Private Banking Upgrade to Release 10                *
+     A*  052254  -  CURRENT FACTOR amended from 9,8 to 10,9              *
+     A*  050725  -  Protect Pay From/To Branch if Purchase/Sale          *
+     A*  065543  -  Review shows incorrect status                        *
+     A*  065009  -  Countervalue should display if autocharges active.   *
+     A*  E43208  -  Field AIBD changed to ISMA                           *
+     A*  S01117  -  Release 10 Multibranching etc                        *
+     A*  S01269  -  Trade Authorisation                                  *
+     A*  S01253  -  RECOMPILED FOR MULTILANGUAGE SCREENS                 *
+     A*  E21054  -  Program displayed both error fields even when the    *
+     A*             first field was not full.                            *
+     A*  E21062  -  Actual/Difference indicator is not higlighted when   *
+     A*             the field is in error.                               *
+     A*  S01199  -  HELP SYSTEM.                                         *
+     A*  S01179 - AS/400 CONVERSION OF COMMAND KEYS :-                   *
+     A*           CA01 --> CA03; CF02 --> CF12;                          *
+     A*           CA05 - same  ; CF07 --> CF09;                          *
+     A*  S01190 - EUCLID FIX/ENHANCEMENTS                                *
+     A*  S01175 - EUCLID INCORPORATION                                   *
+     A*  S01176 - SECURITIES TRADING 3.1 (AUSTRALIA)                     *
+     A**                                                                 *
+     A********************************************************************
+     A
+     A                                      CHGINPDFT
+     A                                      INDARA
+     A                                      PRINT(MPRINT)
+     A                                      CA03
+     A N40                                  CF12
+     A*                                              Begin /CSE006/
+     A*********************                 CA05
+     A*********************                 CF09
+     A N09                                  CA05
+     A N09                                  CF09
+     A*                                              End   /CSE006/
+     A*                                              Begin /S01199/
+     A*                                              End   /S01199/
+     A*                                              Begin /S01199/
+     A*                                              End   /S01199/
+     A
+     A          R SE3002F1                  TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A                                      PUTOVR
+     A  40                                  BLINK
+     A
+     A*                                              Begin /S01117/
+     A*                                              Begin /S01199/
+     A*                                              End   /S01199/
+      *                                              Begin /CAC002/
+      *                                              End   /CAC002/
+     A*                                              Begin /CPB001/
+     A*                                              End   /CPB001/
+     A*                                              End   /S01117/
+     A***                                            Begin /065543/
+     A            @SLTRL         9A  O  1  4TEXT('Literal')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A            @SLTRT        14A  O  2  4TEXT('Literal')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A***                                            End   /065543/
+     A                                  1 34'TRADES REVIEW'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A                                  1 54TIME
+     A                                      OVRATR
+     A            @SRUNA         7A  O  1 63TEXT('Alpha run date')
+     A                                      OVRDTA
+     A            @SJOB         10A  O  1 71TEXT('Job name')
+     A                                      OVRDTA
+     A
+     A                                  3  1'Action Code'
+     A            @SACTN         1A  O  3 13TEXT('Action code')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A                                  3 16'Trade Reference'
+     A            @STDRF         6A  O  3 39TEXT('Trade reference')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A***                                            Begin /065543/
+     A************@SLTRL         9A  O  3 50TEXT('Literal')
+     A************                          OVRDTA
+     A************                          DSPATR(HI)
+     A***                                            End   /065543/
+     A                                  3 61'Bulk Ref'
+     A            @SBLKR         6A  O  3 71TEXT('Bulk reference')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A***                                            Begin /065543/
+     A*                                              begin /S01269/
+     A************@SLTRT        14A  O  4  1TEXT('Literal')
+     A************                          OVRDTA
+     A************                          DSPATR(HI)
+     A*                                              end   /S01269/
+     A***                                            End   /065543/
+     A
+     A                                  4 16'Security Shortname'
+     A            @SSESN        10A  O  4 39TEXT('Security shortname')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A            @SSRPN        20A  O  4 52TEXT('Security report name')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A
+     A                                  5 16'Client Number/Name'
+     A            @SCNNM        10A  O  5 39TEXT('Client number/name')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A            @SCRNM        20A  O  5 52TEXT('Client report name')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A*/COPY WNCPYSRC,SE3002DF09
+     A**Start of change CSE016
+     A                                  6 16'Security Description'
+     A            @SRNME        41   O  6 39TEXT('Security Description')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A**End of change CSE016
+     A
+     A                                  7  4'Incomplete Ind.'
+     A            @SINCS         1A  B  7 25TEXT('Incomplete indicator')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A*N51N40*****                          DSPATR(UL)
+     A*                                              Begin /CSE006/
+     A*N51N40*****                          DSPATR(UL)
+     A N51N40N09                            DSPATR(UL)
+     A*                                              End   /CSE006/
+     A  51                                  DSPATR(RI PC)
+     A**40********                          DSPATR(PR)
+     A*                                              Begin /CSE006/
+     A**40********                          DSPATR(PR)
+     A  40 09                               DSPATR(PR)
+     A*                                              End   /CSE006/
+     A                                  7 42'Trade Type'
+     A            @STDTP         2A  O  7 65TEXT('Trade type')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A
+     A                                  8  4'Nominal'
+     A            @SNOML        12A  O  8 25TEXT('Nominal')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A                                  8 42'Price/Discount/Yield'
+     A            @STPDY        16A  O  8 65TEXT('Price/disc/yield')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A
+     A                                  9  4'Value Date'
+     A            @STDVD         6A  B  9 25TEXT('Value date')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A*N52N40*****                          DSPATR(UL)
+     A*                                              Start /CSE006/
+     A*N52N40*****                          DSPATR(UL)
+     A N52N40N09                            DSPATR(UL)
+     A*                                              End   /CSE006/
+     A  52                                  DSPATR(RI PC)
+     A**40********                          DSPATR(PR)
+     A*                                              Start /CSE006/
+     A**40********                          DSPATR(PR)
+     A  40 09                               DSPATR(PR)
+     A*                                              End   /CSE006/
+     A*                                              Begin /S01117/
+     A***********                       9 42'Branch Code'
+     A*********** @SBRCD         3A  B  9 65TEXT('Branch code')
+     A  18                              9 42'Booking Branch'
+     A            @SBRCD         3A  O  9 65TEXT('Booking Branch')
+     A************                          OVRDTA
+     A*                                              End   /S01117/
+     A                                      DSPATR(HI)
+     A*                                              Begin /S01117/
+     A*N53N40*******                        DSPATR(UL)
+     A**53**********                        DSPATR(RI PC)
+     A**40**********                        DSPATR(PR)
+     A N18                                  DSPATR(ND)
+     A*                                              End   /S01117/
+     A
+     A                                 10  4'Book'
+     A            @SBPBK         2A  B 10 25TEXT('Book')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A*N54N40*****                          DSPATR(UL)
+     A*                                              Start /CSE006/
+     A*N54N40*****                          DSPATR(UL)
+     A N54N40N09                            DSPATR(UL)
+     A*                                              End   /CSE006/
+     A  54                                  DSPATR(RI PC)
+     A**40********                          DSPATR(PR)
+     A*                                              Start /CSE006/
+     A**40********                          DSPATR(PR)
+     A  40 09                               DSPATR(PR)
+     A*                                              End   /CSE006/
+     A                                 10 42'Clearance Type'
+     A            @SCLTY         1A  B 10 65TEXT('Clearance type')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N55N40                               DSPATR(UL)
+     A  55                                  DSPATR(RI PC)
+     A  40                                  DSPATR(PR)
+     A
+     A                                 11  4'Settlement Currency'
+     A            @SSETC         3A  B 11 25TEXT('Sett. currency')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N56N47                               DSPATR(UL)
+     A  56                                  DSPATR(RI PC)
+     A  47                                  DSPATR(PR)
+     A                                 11 42'Reallowance/sign'
+     A            @SRALL        11A  B 11 65TEXT('Reallowance/sign')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N57N40                               DSPATR(UL)
+     A  57                                  DSPATR(RI PC)
+     A  40                                  DSPATR(PR)
+     A
+     A                                 12  4'Market Centre'
+     A            @SMRKT         2   B 12 25TEXT('Market centre')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N58N40                               DSPATR(UL)
+     A  58                                  DSPATR(RI PC)
+     A  40                                  DSPATR(PR)
+     A                                 12 42'Capacity'
+     A            @SCPCY         1   B 12 65TEXT('Capacity')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N59N40                               DSPATR(UL)
+     A  59                                  DSPATR(RI PC)
+     A  40                                  DSPATR(PR)
+     A
+     A                                 13  4'Price'
+     A                                      OVRATR
+     A N43                                  DSPATR(ND)
+     A            @SPRIC        16A  B 13 25TEXT('Price')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N60N40 43                            DSPATR(UL)
+     A  60    43                            DSPATR(RI PC)
+     A  40
+     AON43                                  DSPATR(PR)
+     A N43                                  DSPATR(ND)
+      *                                              Begin /CAC002/
+     A***********                      13 42'Ex Dividend'
+     A***********                           OVRATR
+     A*N44*******                           DSPATR(ND)
+     A*********** @SEXDV         1A  B 13 65TEXT('Ex dividend')
+     A***********                           OVRDTA
+     A  44                             13 42'Ex Dividend'
+     A  44        @SEXDV         1A  B 13 65TEXT('Ex dividend')
+      *                                              End   /CAC002/
+     A                                      DSPATR(HI)
+     A N70N40 44                            DSPATR(UL)
+     A  70    44                            DSPATR(RI PC)
+     A  40
+     AON44                                  DSPATR(PR)
+      *                                              Begin /CAC002/
+     A*N44*******                           DSPATR(ND)
+      *                                              End   /CAC002/
+     A
+     A**Start of change 233607
+     A                                 14  4'Fiscal Price'
+     A                                      OVRATR
+     A N20                                  DSPATR(ND)
+     A            @SFSPR        16A  B 14 25TEXT('Fiscal Price')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N71N40                               DSPATR(UL)
+     A  71                                  DSPATR(RI PC)
+     A  40
+     AON20                                  DSPATR(PR)
+     A N20                                  DSPATR(ND)
+      *
+     A  45                             14 42'Current Factor'
+     A  45        @SCRFC        11A  O 14 65TEXT('Current factor')
+     A                                      DSPATR(HI)
+      *                                              Begin /CAC002/
+     A***********                      14  4'Current Factor'
+     A***********                           OVRATR
+     A*N45*******                           DSPATR(ND)
+     A**45******                       13 42'Current Factor'                                  233607
+      *                                              End   /CAC002/
+     A*                                              Begin /052254/
+     A*********** @SCRFC        10A  O 14 25TEXT('Current factor')
+      *                                              Begin /CAC002/
+     A*********** @SCRFC        11A  O 14 25TEXT('Current factor')
+     A**45******  @SCRFC        11A  O 13 65TEXT('Current factor')                            233607
+     A**********                            DSPATR(HI)                                        233607
+      *                                              End   /CAC002/
+     A*                                              End   /052254/
+      *                                              Begin /CAC002/
+     A**End of change 233607
+     A***********                           OVRDTA
+     A***********                           DSPATR(HI)
+     A*N45*******                           DSPATR(ND)
+     A***********
+      *
+     A**Start of change 233607
+     A**********                       14  4'Book Profit Centre'                              233607
+     A**********                            OVRATR                                            233607
+     A*N30******                            DSPATR(ND)                                        233607
+     A**********  SBPRC          4A  B 14 25DSPATR(HI)                                        233607
+     A                                 15  4'Book Profit Centre'
+     A                                      OVRATR
+     A N30                                  DSPATR(ND)
+     A            SBPRC          4A  B 15 25DSPATR(HI)
+     A**End of change 233607
+     A                                      OVRDTA
+     A N30                                  DSPATR(ND)
+     A N31N40 30
+     AAN36                                  DSPATR(UL)
+     A  31    30                            DSPATR(RI PC)
+     A  40
+     AO 36
+     AON30                                  DSPATR(PR)
+      *
+     A**Start of change 233607
+     A**********                       14 42'Trans. Profit Centre'                            233607
+     A**********                            OVRATR                                            233607
+     A*N38******                            DSPATR(ND)                                        233607
+     A**********  STPRC          4A  B 14 65DSPATR(HI)                                        233607
+     A                                 15 42'Trans. Profit Centre'
+     A                                      OVRATR
+     A N38                                  DSPATR(ND)
+     A            STPRC          4A  B 15 65DSPATR(HI)
+     A**End of change 233607
+     A                                      OVRDTA
+     A N38                                  DSPATR(ND)
+     A N32N40 38
+     AAN37                                  DSPATR(UL)
+     A  32    38                            DSPATR(RI PC)
+     A  40
+     AO 37
+     AON38                                  DSPATR(PR)
+      *                                              End   /CAC002/
+     A**Start of change 233607
+     A**********                       15  4'Trader I.D.'                                     233607
+     A**********  @STDID         3A  B 15 25TEXT('Trader ID')                                 233607
+     A                                 16  4'Trader I.D.'
+     A            @STDID         3A  B 16 25TEXT('Trader ID')
+     A**End of change 233607
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N40                                  DSPATR(UL)
+     A  40                                  DSPATR(PR)
+     A**Start of change 233607
+     A**********                       15 42'Trade Date'                                      233607
+     A**********  @STDDT         6A  B 15 65TEXT('Trade date')                                233607
+     A                                 16 42'Trade Date'
+     A            @STDDT         6A  B 16 65TEXT('Trade date')
+     A**End of change 233607
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N61N40                               DSPATR(UL)
+     A  61                                  DSPATR(RI PC)
+     A**40********                          DSPATR(PR)
+     A*                                              Start /CSE006/
+     A**40********                          DSPATR(PR)
+     A  40 09                               DSPATR(PR)
+     A*                                              End   /CSE006/
+     A
+     A**Start of change 233607
+     A**********                       16  4'Trade Sub-Type'                                  233607
+     A**********  @STSUB         2A  B 16 25TEXT('Trade sub-type')                            233607
+     A                                 17  4'Trade Sub-Type'
+     A            @STSUB         2A  B 17 25TEXT('Trade sub-type')
+     A**End of change 233607
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N62N40                               DSPATR(UL)
+     A  62                                  DSPATR(RI PC)
+     A  40                                  DSPATR(PR)
+     A**Start of change 233607
+     A**********                       16 42'Link Reference'                                  233607
+     A**********  @SLKRF         6A  B 16 65TEXT('Link reference')                            233607
+     A                                 17 42'Link Reference'
+     A            @SLKRF         6A  B 17 65TEXT('Link reference')
+     A**End of change 233607
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A*N40********                          DSPATR(UL)
+     A**40********                          DSPATR(PR)
+     A*                                              Start /CSE006/
+     A*N40********                          DSPATR(UL)
+     A N40N09                               DSPATR(UL)
+     A**40********                          DSPATR(PR)
+     A  40 09                               DSPATR(PR)
+     A*                                              End   /CSE006/
+     A
+     A**Start of change 233607
+     A**********                       17  4'Market Indicator'                                233607
+     A**********  @STDMI         1A  B 17 25TEXT('Market indicator')                          233607
+     A                                 18  4'Market Indicator'
+     A            @STDMI         1A  B 18 25TEXT('Market indicator')
+     A**End of change 233607
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N63N40                               DSPATR(UL)
+     A  63                                  DSPATR(RI PC)
+     A  40                                  DSPATR(PR)
+     A**Start of change 233607
+     A*********   START OF CHANGE                          /E43208/
+     A*********                        17 42'AIBD/IPPA'
+     A**********                       17 42'ISMA/IPPA'                                       233607
+     A*********   @SAIIP         1A  B 17 65TEXT('AIBD/IPPA')
+     A**********  @SAIIP         1A  B 17 65TEXT('ISMA/IPPA')                                 233607
+     A*           END OF CHANGE                            /E43208/
+     A                                 18 42'ISMA/IPPA'
+     A            @SAIIP         1A  B 18 65TEXT('ISMA/IPPA')
+     A**End of change 233607
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N64N40                               DSPATR(UL)
+     A  64                                  DSPATR(RI PC)
+     A  40                                  DSPATR(PR)
+     A
+     A**Start of change 233607
+     A**********                       18  4'Narrative'                                       233607
+     A**********  @STDNR        35A  B 18 25TEXT('Narrative')                                 233607
+     A                                 19  4'Narrative'
+     A            @STDNR        35A  B 19 25TEXT('Narrative')
+     A**End of change 233607
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N40                                  DSPATR(UL)
+     A  40                                  DSPATR(PR)
+     A
+     A                                 20  4'Accrued Ind.'
+     A                                      OVRATR
+     A N42                                  DSPATR(ND)
+     A            @SACIN         1A  B 20 25TEXT('Accrued indicator')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N65N40 42                            DSPATR(UL)
+     A  65    42                            DSPATR(RI PC)
+     A  40
+     AON42                                  DSPATR(PR)
+     A N42                                  DSPATR(ND)
+     A                                 20 31'Days Adjustment/Sign'
+     A                                      OVRATR
+     A N42                                  DSPATR(ND)
+     A            @SDADJ         4A  B 20 56TEXT('Days adj. sign')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N66N40 42                            DSPATR(UL)
+     A  66    42                            DSPATR(RI PC)
+     A  40
+     AON42                                  DSPATR(PR)
+     A N42                                  DSPATR(ND)
+     A                                 20 64'Act/Diff'
+     A                                      OVRATR
+     A N42                                  DSPATR(ND)
+     A            @SACTD         1   B 20 76TEXT('Act/diff')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N67N40 42                            DSPATR(UL)
+     A***                                            Begin /E21062/
+     A**67****42**                          DSPATR(RI PC)
+     A  67                                  DSPATR(RI PC)
+     A***                                            End   /E21062/
+     A  40
+     AON42                                  DSPATR(PR)
+     A N42                                  DSPATR(ND)
+     A
+     A                                 21  4'Int. Amt./Sign'
+     A                                      OVRATR
+     A N42                                  DSPATR(ND)
+     A            @SITRA        15A  B 21 25TEXT('Int. amt. sign')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N68N40 42                            DSPATR(UL)
+     A  68    42                            DSPATR(RI PC)
+     A  40
+     AON42                                  DSPATR(PR)
+     A N42                                  DSPATR(ND)
+     A
+     A                                 21 42'Coupon Rate'
+     A                                      OVRATR
+     A N42                                  DSPATR(ND)
+     A***************** S01176
+     A************@SCPNR        12A  B 21 65TEXT('Coupon rate')
+     A            @SCPNR        12A  O 21 65TEXT('Coupon rate')
+     A                                      OVRATR
+     A                                      DSPATR(HI)
+     A********N69N40 42                            DSPATR(UL)
+     A*******  69    42                            DSPATR(RI PC)
+     A*********40
+     A********ON42                                  DSPATR(PR)
+     A***************** S01176
+     A***************** S01176
+     A***************** S01176
+     A N42                                  DSPATR(ND)
+     A
+     A            @SERR1        76   O 22  3TEXT('Error messages 1')
+     A                                      OVRDTA
+     A N11                                  DSPATR(ND)
+     A  11                                  DSPATR(RI)
+     A
+     A            @SERR2        76   O 23  3TEXT('Error messages 2')
+     A                                      OVRDTA
+     A***                                            Begin /E21054/
+     A*N11********                          DSPATR(ND)
+     A**11********                          DSPATR(RI)
+     A N07                                  DSPATR(ND)
+     A  07                                  DSPATR(RI)
+     A***                                             End  /E21054/
+     A
+     A            @SCMKT        78   O 24  2TEXT('Command key text')
+     A                                      OVRDTA
+     A********************************************************************
+      **Start of change CAS006
+     A          R SE3002FA                  TEXT('For Input of Interest +
+     A                                      Amount Using N.T.R.')
+     A                                      PUTOVR
+     A  40                                  BLINK
+     A                                  1 34'TRADES REVIEW'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A                                  1 54TIME
+     A                                      OVRATR
+     A            @SRUNA         7   O  1 63TEXT('Alpha run date')
+     A                                      OVRDTA
+     A            @SJOB         10   O  1 71TEXT('Job name')
+     A                                      OVRDTA
+     A
+     A                                  3  1'Action Code'
+     A            @SACTN         1   O  3 13TEXT('Action code')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A                                  3 16'Trade Reference'
+     A            @STDRF         6   O  3 39TEXT('Trade reference')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A
+     A                                  3 61'Bulk Ref'
+     A            @SBLKR         6   O  3 71TEXT('Bulk reference')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A
+     A                                  4 16'Security Shortname'
+     A            @SSESN        10   O  4 39TEXT('Security shortname')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A
+     A            @SSRPN        20   O  4 52TEXT('Security report name')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A
+     A                                  5 16'Client Number/Name'
+     A            @SCNNM        10   O  5 39TEXT('Client number/name')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A
+     A            @SCRNM        20   O  5 52TEXT('Client report name')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A
+     A                                  6 16'Security Description'
+     A            @SRNME        41   O  6 39TEXT('Security Description')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A
+     A                                  8  4'Credit Risk Spread'
+     A            SCRSK         17   B  8 24TEXT('Credit Risk Spread')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N16N40                               DSPATR(UL)
+     A  16                                  DSPATR(RI PC)
+     A  40                                  DSPATR(PR)
+     A
+     A                                  8 42'Liquidity Premium'
+     A            SLQPR         17   B  8 64TEXT('Liquidity Premium')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N17N40                               DSPATR(UL)
+     A  17                                  DSPATR(RI PC)
+     A  40                                  DSPATR(PR)
+     A
+     A                                  9  4'Net Treasury Price'
+     A                                      OVRATR
+     A            SNTCP         17   O  9 24TEXT('Net Treasury Price')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A
+     A                                 10  4'Int Amt Using N-T-R'
+     A                                      OVRATR
+     A N42                                  DSPATR(ND)
+     A            SITRN         16   B 10 25TEXT('Int. Amt. Using N-T-R')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N10N40 42                            DSPATR(UL)
+     A  10    42                            DSPATR(RI PC)
+     A  40
+     AON42                                  DSPATR(PR)
+     A N42                                  DSPATR(ND)
+     A
+     A                                 10 42'Coupon N-T-R'
+     A                                      OVRATR
+     A N42                                  DSPATR(ND)
+     A            SNTCR         16   O 10 65TEXT('Net Treasury Coupon Rate')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N42                                  DSPATR(ND)
+     A
+     A            @SERR1        76   O 22  3TEXT('Error messages 1')
+     A                                      OVRDTA
+     A N11                                  DSPATR(ND)
+     A  11                                  DSPATR(RI)
+     A
+     A
+     A            @SCMKT        78   O 24  2TEXT('Command key text')
+     A                                      OVRDTA
+      **End of change CAS006
+     A********************************************************************
+     A
+     A          R SE3002F2                  TEXT('Second review screen')
+     A                                      PUTOVR
+     A  40                                  BLINK
+     A
+     A*                                              Begin /S01117/
+     A*                                              Begin /S01199/
+      *                                              Begin /CAC002/
+      *                                              End   /CAC002/
+     A*                                              Begin /CEU005/
+     A*                                              End   /CEU005/
+     A*                                              Begin /CPB001/
+     A*                                              End   /CPB001/
+     A*                                              End   /S01199/
+     A*                                              End   /S01117/
+     A                                  1 34'TRADES REVIEW'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A                                  1 54TIME
+     A                                      OVRATR
+     A            @SRUNA         7A  O  1 63TEXT('Alpha run date')
+     A                                      OVRDTA
+     A            @SJOB         10A  O  1 71TEXT('Job name')
+     A                                      OVRDTA
+     A
+     A                                  3  1'Action Code'
+     A            @SACTN         1A  O  3 13TEXT('Action code')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A                                  3 16'Trade Reference'
+     A            @STDRF         6A  O  3 39TEXT('Trade reference')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A            @SLTRL         9A  O  3 50TEXT('Literal')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A                                  3 61'Bulk Ref'
+     A            @SBLKR         6A  O  3 71TEXT('Bulk reference')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A
+     A                                  4 16'Security Shortname'
+     A            @SSESN        10A  O  4 39TEXT('Security shortname')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A            @SSRPN        20A  O  4 52TEXT('Security report name')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A
+     A                                  5 16'Settlement Currency'
+     A            @SSETC         3A  O  5 39TEXT('Settlement currency')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A
+     A                                  5 54'Incomplete Ind.'
+     A                                      OVRATR
+     A N46                                  DSPATR(ND)
+     A            @SINCS         1A  B  5 71TEXT('Incomplete indicator')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A*                                                    /S01176/
+     A*N87*46****                           DSPATR(UL)
+     A**87*46****                           DSPATR(RI PC)
+     A N50 46                               DSPATR(UL)
+     A  50 46                               DSPATR(RI PC)
+     A*                                                    /S01176/
+     A    N46                               DSPATR(ND PR)
+     A                                  6 16'Exchange Rate'
+     A            @STDER        14A  B  6 39TEXT('Exchange rate')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N51N40                               DSPATR(UL)
+     A  51                                  DSPATR(RI PC)
+     A*                                              /Start CEU005/
+     A**40**********************************DSPATR(PR)
+     A  40
+     AO 33                                  DSPATR(PR)
+     A*                                              /End   CEU005/
+     A                                  6 54'M/D'
+     A            @SSMDI         1A  B  6 59TEXT('Mult/div ind.')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N52N40                               DSPATR(UL)
+     A  52                                  DSPATR(RI PC)
+     A*                                              /Start CEU005/
+     A**40**********************************DSPATR(PR)
+     A  40
+     AO 32                                  DSPATR(PR)
+     A*                                              /End   CEU005/
+      *                                              Begin /CAC002/
+     A                                  6 62'Margin'
+     A                                      OVRATR
+     A N39                                  DSPATR(ND)
+     A            SFXMP          8A  B  6 69DSPATR(HI)
+     A                                      OVRDTA
+     A N39                                  DSPATR(ND)
+     A N34N40 39                            DSPATR(UL)
+     A  34    39                            DSPATR(RI PC)
+     A  40
+     AON39                                  DSPATR(PR)
+      *
+     A            SMAMT         17A  O  7 62DSPATR(HI)
+     A                                      OVRDTA
+     A N39                                  DSPATR(ND)
+      *                                              End   /CAC002/
+     A
+     A                                  7 16'Base Currency Rate'
+     A            @SBRTE        14A  B  7 39TEXT('Base currency rate')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N53N40                               DSPATR(UL)
+     A  53                                  DSPATR(RI PC)
+     A  40                                  DSPATR(PR)
+     A
+     A                                  8  4'Settlement Method'
+     A            @SSMTH         2A  B  8 22TEXT('Settlement method')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N54N40                               DSPATR(UL)
+     A  54                                  DSPATR(RI PC)
+     A  40                                  DSPATR(PR)
+     A
+     A***                                            Begin /S01117/
+     A***********                       9  4'Pay From/Branch'
+      **Start of change CGL029
+     A**18******                        9  4'Pay From/Branch'                                 CGL029
+     A*N18******                        9  4'Pay From'                                        CGL029
+     A  18                              9  4'Pay Fr/Brch'
+     A N18                              9  4'Pay Fr'
+      **End of change CGL029
+     A***                                            End   /S01117/
+      **Start of change CGL029
+     A**********  @SPYFM        12A  B  9 22TEXT('Pay from')                                  CGL029
+     A            @SPYFM        18A  B  9 16TEXT('Pay from')
+      **End of change CGL029
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N55N40                               DSPATR(UL)
+     A  55                                  DSPATR(RI PC)
+     A  40                                  DSPATR(PR)
+     A***                                            Begin /S01117/
+     A            @SPYFB         3A  B  9 36TEXT('Pay from branch')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A***                                            Begin /050725/
+     A*N56N40*****                          DSPATR(UL)
+     A N56N40N02                            DSPATR(UL)
+     A***                                              End /050725/
+     A  56                                  DSPATR(RI PC)
+     A***                                            Begin /S01117/
+     A**40************                      DSPATR(PR)
+     A N18
+     A***                                            Begin /050725/
+     AO 02
+     A***                                              End /050725/
+     AO 40                                  DSPATR(PR)
+     A N18                                  DSPATR(ND)
+     A***********                       9 43'Pay To/Branch'
+      **Start of change CGL029
+     A**18******                        9 43'Pay To/Branch'                                   CGL029
+     A  18                              9 43'Pay To/Brch'
+      **End of change CGL029
+     A N18                              9 43'Pay To'
+     A***                                            End   /S01117/
+      **Start of change CGL029
+     A**********  @SPAYT        12A  B  9 59TEXT('Pay to')                                    CGL029
+     A            @SPAYT        18A  B  9 55TEXT('Pay to')
+      **End of change CGL029
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N57N40                               DSPATR(UL)
+     A  57                                  DSPATR(RI PC)
+     A  40                                  DSPATR(PR)
+      **Start of change CGL029
+     A**********  @SPYTB         3A  B  9 73TEXT('Pay to branch')                             CGL029
+     A            @SPYTB         3A  B  9 75TEXT('Pay to branch')
+      **End of change CGL029
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A***                                            Begin /050725/
+     A*N58N40*****                          DSPATR(UL)
+     A N58N40N03                            DSPATR(UL)
+     A***                                              End /050725/
+     A  58                                  DSPATR(RI PC)
+     A***                                            Begin /S01117/
+     A**40**********                        DSPATR(PR)
+     A N18
+     A***                                            Begin /050725/
+     AO 03
+     A***                                              End /050725/
+     AO 40                                  DSPATR(PR)
+     A N18                                  DSPATR(ND)
+     A***                                            End   /S01117/
+     A
+     A                                 10 43'For a/c of'
+     A            @STFA1        10A  B 10 59TEXT('For a/c of 1')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N59N40                               DSPATR(UL)
+     A  59                                  DSPATR(RI PC)
+     A  40                                  DSPATR(PR)
+     A
+     A                                 11 43'A/c Sequence'
+     A            @SASNM         2A  B 11 59TEXT('A/c sequence')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N60N40                               DSPATR(UL)
+     A  60                                  DSPATR(RI PC)
+     A  40                                  DSPATR(PR)
+     A
+     A                                 12  4'Deliver From'
+     A            @SDELF        10A  B 12 22TEXT('Deliver from')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N61N40                               DSPATR(UL)
+     A  61                                  DSPATR(RI PC)
+     A  40                                  DSPATR(PR)
+     A*                                                                   S01175
+     A                                 13  4'For a/c of'
+     A            @SDFFA        10A  B 13 16TEXT('For a/c of del from')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N49N40                               DSPATR(UL)
+     A  49                                  DSPATR(RI PC)
+     A  40                                  DSPATR(PR)
+     A*                                                                   S01175
+     A
+     A                                 12 43'Deliver To'
+     A            @SDELT        10A  B 12 59TEXT('Deliver to')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N62N40                               DSPATR(UL)
+     A  62                                  DSPATR(RI PC)
+     A  40                                  DSPATR(PR)
+     A
+     A                                 13 43'For a/c of'
+     A            @STFA2        10A  B 13 59TEXT('For a/c of 2')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N63N40                               DSPATR(UL)
+     A  63                                  DSPATR(RI PC)
+     A  40                                  DSPATR(PR)
+     A
+     A                                 14  4'Special Instructions'
+     A*                                                    /S01176/
+     A*********** @STDSI        35A  B 14 27TEXT('Special instructions')
+     A*                                                    /S01190/
+     A*********** @STDSI        35A  B 14 26TEXT('Special instructions')
+     A            @STDSI        33A  B 14 26TEXT('Special instructions')
+     A*                                                    /S01176/
+     A*                                                    /S01190/
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N40                                  DSPATR(UL)
+     A  40                                  DSPATR(PR)
+     A
+     A*                                              /Start CEU005/
+     A                                 14 61'''In'' Ccy'
+     A N15                                  DSPATR(ND)
+     A            @SICCY         3A  B 14 71TEXT('IN Ccy Ind.')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N08 15                               DSPATR(UL)
+     A N15                                  DSPATR(ND PR)
+     A  08                                  DSPATR(RI PC)
+     A*                                                /End CEU005/
+     A*                                                    /S01176/       S01176
+     A***********                      14 64'C/H Ind.'                    S01176
+     A*********** @SCLRH         1A  B 14 74TEXT('C/H ind.')              S01176
+     A***********                           OVRDTA                        S01176
+     A***********                           DSPATR(HI)                    S01176
+     A*N49N40****                           DSPATR(UL)                    S01176
+     A**49*******                           DSPATR(RI PC)                 S01176
+     A**40*******                           DSPATR(PR)                    S01176
+     A***********                                          /S01176/       S01176
+     A
+     A                                 15  4'Clearance Type'
+     A*                                                    /S01176/
+     A*********** @SCLTY         1A  B 15 22TEXT('Clearance type')
+     A            @SCLTY         1A  B 15 20TEXT('Clearance type')
+     A*                                                    /S01176/
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N64N40                               DSPATR(UL)
+     A  64                                  DSPATR(RI PC)
+     A  40                                  DSPATR(PR)
+     A*                                                    /S01176/
+     A***********                      15 27'C/H Ind.'
+     A*********** @SCLRH         1A  B 15 37TEXT('C/H ind.')
+     A***********                           OVRDTA
+     A***********                           DSPATR(HI)
+     A*N65N40****                           DSPATR(UL)
+     A**65*******                           DSPATR(RI PC)
+     A**40*******                           DSPATR(PR)
+     A***********                      15 43'Priority Code'
+     A*********** @SPRYC         1   B 15 59TEXT('Priority code')
+     A***********                           OVRDTA
+     A***********                           DSPATR(HI)
+     A*N66N40****                           DSPATR(UL)
+     A**66*******                           DSPATR(RI PC)
+     A**40*******                           DSPATR(PR)
+     A***********                      15 63'Pay Code'
+     A*********** @SPCOD         1A  B 15 73TEXT('Pay code')
+     A***********                           OVRDTA
+     A***********                           DSPATR(HI)
+     A*N67N40****                           DSPATR(UL)
+     A**67*******                           DSPATR(RI PC)
+     A**40*******                           DSPATR(PR)
+     A***********
+     A***********                      17  2'Broker Commission'
+     A*********** @STBCC         2A  B 17 22TEXT('Broker commission code')
+     A***********                           OVRDTA
+     A***********                           DSPATR(HI)
+     A*N68N40****                           DSPATR(UL)
+     A**68*******                           DSPATR(RI PC)
+     A**40*******                           DSPATR(PR)
+     A*********** @STBCA        15A  B 17 26TEXT('Broker commission amount')
+     A***********                           OVRDTA
+     A***********                           DSPATR(HI)
+     A*N69N40****                           DSPATR(UL)
+     A**69*******                           DSPATR(RI PC)
+     A**40*******                           DSPATR(PR)
+     A***********                      17 43'Local Transfer'
+     A**41*******                           DSPATR(ND)
+     A*********** @STTCC         2A  B 17 59TEXT('Local transfer code')
+     A***********                           OVRDTA
+     A***********                           DSPATR(HI)
+     A*N70N40N41*                           DSPATR(UL)
+     A**70*******                           DSPATR(RI PC)
+     A**40*******
+     A**41*******                           DSPATR(PR)
+     A**41*******                           DSPATR(ND)
+     A*********** @STTCA        15A  B 17 63TEXT('Local transfer amount')
+     A***********                           OVRDTA
+     A***********                           DSPATR(HI)
+     A*N71N40N41*                           DSPATR(UL)
+     A**71*******                           DSPATR(RI PC)
+     A**40*******
+     A**41*******                           DSPATR(PR)
+     A**41*******                           DSPATR(ND)
+     A***********
+     A***********                      18  2'Customer Commission'
+     A*********** @STCCC         2A  B 18 22TEXT('Customer commission code')
+     A***********                           OVRDTA
+     A***********                           DSPATR(HI)
+     A*N72N40N48*                           DSPATR(UL)
+     A**72*******                           DSPATR(RI PC)
+     A**40*******
+     A**48*******                           DSPATR(PR)
+     A*********** @STCCA        15A  B 18 26TEXT('Customer commission amt')
+     A***********                           OVRDTA
+     A***********                           DSPATR(HI)
+     A*N73N40N48*                           DSPATR(UL)
+     A**73*******                           DSPATR(RI PC)
+     A**40*******
+     A**48*******                           DSPATR(PR)
+     A***********                      18 43'PMT Charge'
+     A**41*******                           DSPATR(ND)
+     A*********** @STPCC         2A  B 18 59TEXT('PMT charge code')
+     A***********                           OVRDTA
+     A***********                           DSPATR(HI)
+     A*N74N40N41*                           DSPATR(UL)
+     A**74*******                           DSPATR(RI PC)
+     A**40*******
+     A**41*******                           DSPATR(PR)
+     A**41*******                           DSPATR(ND)
+     A*********** @STPCA        15A  B 18 63TEXT('PMT charge amount')
+     A***********                           OVRDTA
+     A***********                           DSPATR(HI)
+     A*N75N40N41*                           DSPATR(UL)
+     A**75*******                           DSPATR(RI PC)
+     A**40*******
+     A**41*******                           DSPATR(PR)
+     A**41*******                           DSPATR(ND)
+     A***********
+     A***********                      19  2'Charges 1'
+     A*********** @STCC1         2A  B 19 22TEXT('Charges 1 code')
+     A***********                           OVRDTA
+     A***********                           DSPATR(HI)
+     A*N76N40****                           DSPATR(UL)
+     A**76*******                           DSPATR(RI PC)
+     A**40*******                           DSPATR(PR)
+     A*********** @STCA1        15A  B 19 26TEXT('Charges 1 amount')
+     A***********                           OVRDTA
+     A***********                           DSPATR(HI)
+     A*N77N40****                           DSPATR(UL)
+     A**77*******                           DSPATR(RI PC)
+     A**40*******                           DSPATR(PR)
+     A***********                      19 43'Charges 2'
+     A*********** @STCC2         2A  B 19 59TEXT('Charges 2 code')
+     A***********                           OVRDTA
+     A***********                           DSPATR(HI)
+     A*N78N40****                           DSPATR(UL)
+     A**78*******                           DSPATR(RI PC)
+     A**40*******                           DSPATR(PR)
+     A*********** @STCA2        15A  B 19 63TEXT('Charges 2 amount')
+     A***********                           OVRDTA
+     A***********                           DSPATR(HI)
+     A*N79N40****                           DSPATR(UL)
+     A**79*******                           DSPATR(RI PC)
+     A**40*******                           DSPATR(PR)
+     A***********
+     A***********                      20 10'3'
+     A*********** @STCC3         2A  B 20 22TEXT('Charges 3 code')
+     A***********                           OVRDTA
+     A***********                           DSPATR(HI)
+     A*N80N40****                           DSPATR(UL)
+     A**80*******                           DSPATR(RI PC)
+     A**40*******                           DSPATR(PR)
+     A*********** @STCA3        15A  B 20 26TEXT('Charges 3 amount')
+     A***********                           OVRDTA
+     A***********                           DSPATR(HI)
+     A*N81N40****                           DSPATR(UL)
+     A**81*******                           DSPATR(RI PC)
+     A**40*******                           DSPATR(PR)
+     A***********                      20 43'Other'
+     A*********** @STOCC         2A  B 20 59TEXT('Other charges code')
+     A***********                           OVRDTA
+     A***********                           DSPATR(HI)
+     A*N82N40****                           DSPATR(UL)
+     A**82*******                           DSPATR(RI PC)
+     A**40*******                           DSPATR(PR)
+     A*********** @STOCA        15A  B 20 63TEXT('Other charges amount')
+     A***********                           OVRDTA
+     A***********                           DSPATR(HI)
+     A*N83N40****                           DSPATR(UL)
+     A**83*******                           DSPATR(RI PC)
+     A**40*******                           DSPATR(PR)
+     A***********
+     A***********                      21  2'Local Tax'
+     A*********** @STLTC         2A  B 21 22TEXT('Local tax code')
+     A***********                           OVRDTA
+     A***********                           DSPATR(HI)
+     A*N84N40****                           DSPATR(UL)
+     A**84*******                           DSPATR(RI PC)
+     A**40*******                           DSPATR(PR)
+     A*********** @STLTA        15A  B 21 26TEXT('Local tax amount')
+     A***********                           OVRDTA
+     A***********                           DSPATR(HI)
+     A*N85N40****                           DSPATR(UL)
+     A**85*******                           DSPATR(RI PC)
+     A**40*******                           DSPATR(PR)
+     A***********                      21 43'VAT Amount'
+     A**41*******                           DSPATR(ND)
+     A*********** @STVCA        15A  B 21 63TEXT('VAT amount')
+     A***********                           OVRDTA
+     A***********                           DSPATR(HI)
+     A*N86N40N41*                           DSPATR(UL)
+     A**86*******                           DSPATR(RI PC)
+     A**40*******
+     A**41*******                           DSPATR(PR)
+     A**41*******                           DSPATR(ND)
+     A*
+     A                                 15 24'Priority Code'
+     A            @SPRYC         1   B 15 39TEXT('Priority code')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N65N40                               DSPATR(UL)
+     A  65                                  DSPATR(RI PC)
+     A  40                                  DSPATR(PR)
+     A*
+     A                                 15 43'Pay Code'
+     A            @SPCOD         1A  B 15 53TEXT('Pay code')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N66N40                               DSPATR(UL)
+     A  66                                  DSPATR(RI PC)
+     A  40                                  DSPATR(PR)
+     A*
+     A                                 15 57'Auto-Settle Ind'
+     A            @SAUTS         1A  B 15 74TEXT('Auto-Settle Ind')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N67N40                               DSPATR(UL)
+     A  67                                  DSPATR(RI PC)
+     A  40                                  DSPATR(PR)
+     A*
+     A                                 16  2'Broker Commission'
+     A            @STBCC         2A  B 16 20TEXT('Broker commission code')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N68N40                               DSPATR(UL)
+     A  68                                  DSPATR(RI PC)
+     A  40                                  DSPATR(PR)
+     A            @STBCA        15A  B 16 23TEXT('Broker commission amount')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N69N40                               DSPATR(UL)
+     A  69                                  DSPATR(RI PC)
+     A  40                                  DSPATR(PR)
+     A*
+     A                                 16 40'Customer Commission'
+     A            @STCCC         2A  B 16 60TEXT('Customer commission code')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N70N40N48                            DSPATR(UL)
+     A  70                                  DSPATR(RI PC)
+     A  40
+     AO 48                                  DSPATR(PR)
+     A            @STCCA        15A  B 16 63TEXT('Customer commission amt')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N71N40N48                            DSPATR(UL)
+     A  71                                  DSPATR(RI PC)
+     A  40
+     AO 48                                  DSPATR(PR)
+     A*
+     A                                 17  2'Charges'
+     A                                 17 11'1.'
+     A            @STCC1         2A  B 17 14TEXT('Charges 1 code')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N72N40                               DSPATR(UL)
+     A  72                                  DSPATR(RI PC)
+     A  40                                  DSPATR(PR)
+     A            @STCA1        15A  B 17 17TEXT('Charges 1 amount')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N73N40                               DSPATR(UL)
+     A  73                                  DSPATR(RI PC)
+     A  40                                  DSPATR(PR)
+     A*
+     A                                 17 34'2.'
+     A            @STCC2         2A  B 17 37TEXT('Charges 2 code')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N74N40                               DSPATR(UL)
+     A  74                                  DSPATR(RI PC)
+     A  40                                  DSPATR(PR)
+     A            @STCA2        15A  B 17 40TEXT('Charges 2 amount')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N75N40                               DSPATR(UL)
+     A  75                                  DSPATR(RI PC)
+     A  40                                  DSPATR(PR)
+     A*
+     A                                 17 57'3.'
+     A            @STCC3         2A  B 17 60TEXT('Charges 3 code')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N76N40                               DSPATR(UL)
+     A  76                                  DSPATR(RI PC)
+     A  40                                  DSPATR(PR)
+     A            @STCA3        15A  B 17 63TEXT('Charges 3 amount')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N77N40                               DSPATR(UL)
+     A  77                                  DSPATR(RI PC)
+     A  40                                  DSPATR(PR)
+     A*
+     A                                 18 11'4.'
+     A            @STCC4         2A  B 18 14TEXT('Charges 4 code')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N78N40                               DSPATR(UL)
+     A  78                                  DSPATR(RI PC)
+     A  40                                  DSPATR(PR)
+     A            @STCA4        15A  B 18 17TEXT('Charges 4 amount')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N79N40                               DSPATR(UL)
+     A  79                                  DSPATR(RI PC)
+     A  40                                  DSPATR(PR)
+     A*
+     A                                 18 34'5.'
+     A            @STCC5         2A  B 18 37TEXT('Charges 5 code')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N80N40                               DSPATR(UL)
+     A  80                                  DSPATR(RI PC)
+     A*/COPY WNCPYSRC,SE3002DF01
+     A  40                                  DSPATR(PR)
+     A*/COPY WNCPYSRC,SE3002DF02
+     A            @STCA5        15A  B 18 40TEXT('Charges 5 amount')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N81N40                               DSPATR(UL)
+     A  81                                  DSPATR(RI PC)
+     A*/COPY WNCPYSRC,SE3002DF03
+     A  40                                  DSPATR(PR)
+     A*/COPY WNCPYSRC,SE3002DF04
+     A*
+     A                                 18 57'6.'
+     A  41                                  DSPATR(ND)
+     A            @STCC6         2A  B 18 60TEXT('Charges 6 code')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N82N40                               DSPATR(UL)
+     A  82                                  DSPATR(RI PC)
+     A  40
+     A*/COPY WNCPYSRC,SE3002DF05
+     AO 41                                  DSPATR(PR)
+     A  41                                  DSPATR(ND)
+     A            @STCA6        15A  B 18 63TEXT('Charges 6 amount')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N83N40                               DSPATR(UL)
+     A  83                                  DSPATR(RI PC)
+     A  40
+     A*/COPY WNCPYSRC,SE3002DF06
+     AO 41                                  DSPATR(PR)
+     A  41                                  DSPATR(ND)
+     A*
+     A                                 19 11'7.'
+     A  41                                  DSPATR(ND)
+     A            @STCC7         2A  B 19 14TEXT('Charges 7 code')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+      ** Start of change AR871625
+     A*N84N40***                            DSPATR(UL)                                      AR871625
+     A N84N40N10                            DSPATR(UL)
+      ** End of change AR871625
+     A  84                                  DSPATR(RI PC)
+     A  40
+     A*/COPY WNCPYSRC,SE3002DF07
+      ** Start of change AR871625
+     AO 10
+      ** End of change AR871625
+     AO 41                                  DSPATR(PR)
+     A  41                                  DSPATR(ND)
+     A            @STCA7        15A  B 19 17TEXT('Charges 7 amount')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+      ** Start of change AR871625
+     A*N85N40***                            DSPATR(UL)                                      AR871625
+     A N85N40N10                            DSPATR(UL)
+      ** End of change AR871625
+     A  85                                  DSPATR(RI PC)
+     A  40
+     A*/COPY WNCPYSRC,SE3002DF08
+      ** Start of change AR871625
+     AO 10
+      ** End of change AR871625
+     AO 41                                  DSPATR(PR)
+     A  41                                  DSPATR(ND)
+     A*
+     A                                 19 35'Tax'
+     A  41                                  DSPATR(ND)
+     A            @STAXA        15A  B 19 40TEXT('Tax Amount')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N86N40                               DSPATR(UL)
+     A  86                                  DSPATR(RI PC)
+     A  40
+     AO 41                                  DSPATR(PR)
+     A  41                                  DSPATR(ND)
+     A*
+     A**Start of change CSE023
+     A  36                             19 56'W/H Tax'
+     A  36        @SWHTX        15A  O 19 64DSPATR(HI)
+     A**End of change CSE023
+      * 065009 BEGIN                                       /065009/
+     A************                     20  2'Broker Comm. Rebate'
+     A**41********                          DSPATR(ND)
+     A************@SBCMR        15A  B 20 23TEXT('Broker Comm. Rebate')
+     A                                 20  2'Rebates: Brok Com'
+     A  41                                  DSPATR(ND)
+     A            @SBCMR        15A  B 20 20TEXT('Broker Comm. Rebate')
+      * 065009 END                                         /065009/
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N87N40                               DSPATR(UL)
+     A  87                                  DSPATR(RI PC)
+     A  40
+     AO 41                                  DSPATR(PR)
+     A  41                                  DSPATR(ND)
+     A*
+      * 065009 BEGIN                                       /065009/
+     A************                     20 40'Customer Comm. Rebate'
+     A**41********                          DSPATR(ND)
+     A************@SCCMR        15A  B 20 63TEXT('Customer Comm. Rebate')
+     A                                 20 36'Cust Com'
+     A  41                                  DSPATR(ND)
+     A            @SCCMR        15A  B 20 45TEXT('Customer Comm. Rebate')
+      * 065009 END                                         /065009/
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N88N40                               DSPATR(UL)
+     A  88                                  DSPATR(RI PC)
+     A  40
+     AO 41                                  DSPATR(PR)
+     A  41                                  DSPATR(ND)
+     A*
+      * 065009 BEGIN                                       /065009/
+     A************                     21 11'Tax Rebate'
+     A**41********                          DSPATR(ND)
+     A************@STXRB        15A  B 21 23TEXT('Tax Rebate')
+     A                                 20 61'Tax'
+     A  41                                  DSPATR(ND)
+     A            @STXRB        15A  B 20 65TEXT('Tax Rebate')
+      * 065009 END                                         /065009/
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N89N40                               DSPATR(UL)
+     A  89                                  DSPATR(RI PC)
+     A  40
+     AO 41                                  DSPATR(PR)
+     A  41                                  DSPATR(ND)
+     A*                                                    /S01176/
+      * 065009 BEGIN                                       /065009/
+      *                                              Begin /CAC002/
+     A*N41*******                      21  2'Countervalue'
+     A*N41******* @STCTR        21A  O 21 15TEXT('Countervalue')
+     A                                 21  2'Countervalue'
+     A  41N30                               DSPATR(ND)
+     A            @STCTR        21A  O 21 15TEXT('Countervalue')
+     A  41N30                               DSPATR(ND)
+      *                                              End   /CAC002/
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+      * 065009 END                                         /065009/
+     A
+      ** Start of change AR871625
+     A                                 22  2'Stamp Tax Liable'
+     A N10                                  DSPATR(ND)
+     A            @STLIA         1A  B 22 20TEXT('Stamp Tax Liable')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N16N17 10                            DSPATR(UL)
+     A  16    10                            DSPATR(RI PC)
+     A  17                                  DSPATR(PR)
+     A N10                                  DSPATR(ND)
+     A                                 22 36'Stamp Tax Amount'
+     A N10                                  DSPATR(ND)
+     A            @STAMT        15A  O 22 54TEXT('Stamp Tax Amount')
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A N10                                  DSPATR(ND)
+      ** End of change AR871625
+      **Start of change 234440
+     A**********  @SERR1        76   O 22  3TEXT('Error messages 1')                          234440
+     A            @SERR1        76   O 23  3TEXT('Error messages 1')
+      **End of change 234440
+     A                                      OVRDTA
+     A N11                                  DSPATR(ND)
+     A  11                                  DSPATR(RI)
+     A
+      **Start of change 234440
+     A**********  @SERR2        76   O 23  3TEXT('Error messages 2')                          234440
+     A**********                            OVRDTA                                            234440
+      **End of change 234440
+     A***                                            Begin /E21054/
+     A*N11********                          DSPATR(ND)
+     A**11********                          DSPATR(RI)
+      **Start of change 234440
+     A*N07******                            DSPATR(ND)                                        234440
+     A**07******                            DSPATR(RI)                                        234440
+      **End of change 234440
+     A***                                            End   /E21054/
+     A
+     A            @SCMKT        78   O 24  2TEXT('Command key text')
+     A                                      OVRDTA
+     A***                                           Begin  /S01117/
+     A N19                              8 28'Origin. Branch'
+     A            @SORBR         3A  B  8 44DSPATR(HI)
+     A                                      OVRDTA
+     A N21N40N19                            DSPATR(UL)
+     A  21                                  DSPATR(RI PC)
+     A  40
+     AO 19                                  DSPATR(PR)
+     A  19                                  DSPATR(ND)
+      *                                              Begin /CAC002/
+     A*N26*******                       8 51'Profit Centre'
+     A                                  8 51'Profit Centre'
+     A  30
+     AO 26                                  DSPATR(ND)
+      *                                              End   /CAC002/
+     A            @SPRFC         4A  B  8 66DSPATR(HI)
+     A                                      OVRDTA
+     A N22N40N27                            DSPATR(UL)
+     A  22                                  DSPATR(RI PC)
+     A  40
+      ** Start of change BUG2626
+     AO 26
+     AO 30
+      ** End of change BUG2626
+     AO 27                                  DSPATR(PR)
+      *                                              Begin /CAC002/
+     A**26*******                           DSPATR(ND)
+     A  30
+     AO 26                                  DSPATR(ND)
+      *                                              End   /CAC002/
+     A***                                           End   /S01117/
+     A***********                                    Begin /S01486/
+     A*                                              Begin /CPB001/
+     A**29*******                      21 40'Prt Ref'
+     A**29******* SPTFR          4A  B 21 48DSPATR(HI)
+     A***********                           OVRDTA
+     A*N28N40****                           DSPATR(UL)
+     A**28*******                           DSPATR(RI PC)
+     A**40*******                           DSPATR(PR)
+      **Start of change 234440
+     A**********                       21 40'Prt Ref'                                         234440
+     A                                 22 02'Portfolio Ref'
+      **End of change 234440
+     A N29N09                               DSPATR(ND)
+      **Start of change 234440
+     A**********  SPTFR          4A  B 21 48DSPATR(HI)                                        234440
+     A            SPTFR          4A  B 22 17DSPATR(HI)
+      **End of change 234440
+     A                                      OVRDTA
+     A N28N40                               DSPATR(UL)
+     A  28                                  DSPATR(RI PC)
+     A  40                                  DSPATR(PR)
+     A N29N09                               DSPATR(ND)
+     A*                                              End   /CPB001/
+      **Start of change 234440
+     A**29******                       21 53'FX Rate'                                         234440
+     A**29******  SSPXR         14A  B 21 61DSPATR(HI)                                        234440
+     A  29                             22 25'FX Rate'
+     A  29        SSPXR         14A  B 22 34DSPATR(HI)
+      **End of change 234440
+     A                                      OVRDTA
+     A N23N40                               DSPATR(UL)
+     A  23                                  DSPATR(RI PC)
+     A  40                                  DSPATR(PR)
+      **Start of change 234440
+     A**29******                       21 76'M/D'                                             234440
+     A**29******  SSPMD          1A  B 21 80DSPATR(HI)                                        234440
+     A  29                             22 50'M/D'
+     A  29        SSPMD          1A  B 22 55DSPATR(HI)
+      **End of change 234440
+     A                                      OVRDTA
+     A N24N40                               DSPATR(UL)
+     A  24                                  DSPATR(RI PC)
+     A  40                                  DSPATR(PR)
+     A***********                                    End   /S01486/
+      **Start of change 234440
+     A  45                             21 40'EU Tax'
+     A  45        @SEUTX        15A  O 21 48DSPATR(HI)
+      **End of change 234440

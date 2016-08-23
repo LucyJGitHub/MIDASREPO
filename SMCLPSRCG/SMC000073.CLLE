@@ -1,0 +1,214 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Input "from" release level - global')        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000073 - Input 'from' release level                      */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. CUP023             Date 17Mar11              */
+/*       Prev Amend No. BUG28037           Date 17Aug10              */
+/*                      BUG27791  *CREATE  Date 10Jun10              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP023 - Addition of sequence numbers for release levels    */
+/*       BUG28037 - Handle IASP.                                     */
+/*       BUG27791 - Identify 'from' release more easily              */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM        PARM(&OPFXSVAL)                                              */ /*BUG28037*/
+             PGM        PARM(&GPFXSVAL &OPFXSVAL)                                       /*BUG28037*/
+ 
+             DCL        VAR(&GPFXSVAL) TYPE(*CHAR) LEN(20)                              /*BUG28037*/
+             DCL        VAR(&OPFXSVAL) TYPE(*CHAR) LEN(20)
+ 
+             DCL        VAR(&GPSBSID) TYPE(*CHAR) LEN(2)                                /*BUG28037*/
+             DCL        VAR(&OLDSBSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&FMGTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PRODUCT) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&REL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SUBRLS) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SVAL) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&AORTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&STM_STR) TYPE(*CHAR) LEN(80)                                 /*CUP023*/
+ 
+             DCLF       FILE(UPGSVALJ0) OPNID(A)
+/**********  DCLF       FILE(GPRELHPD) OPNID(B)                                        */ /*CUP023*/
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2010')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Create data area /MIDASMSG in QTEMP */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+ 
+/* Create and rename temporary source file for RUNSQLSTM. */                              /*CUP023*/
+             DLTF       FILE(QTEMP/RUNSQLSTM)                                             /*CUP023*/
+             MONMSG     MSGID(CPF0000)                                                    /*CUP023*/
+             DLTF       FILE(QTEMP/RUNSQL)                                                /*CUP023*/
+             MONMSG     MSGID(CPF0000)                                                    /*CUP023*/
+             CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                          MBR(RUNSQLSTM) TEXT('Temporary source +
+                          file for SMC000073')                                            /*CUP023*/
+             RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                          NEWOBJ(RUNSQL)                                                  /*CUP023*/
+ 
+/* Check that System Values have an entry. */
+VALIDATE:
+             RCVF       OPNID(A)
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(CHECK)
+             ENDDO
+ 
+             IF         COND(&A_GISVAL *EQ &GPFXSVAL) THEN(DO)                          /*BUG28037*/
+                IF         COND(&A_GIVAL *EQ ' ') THEN(DO)                              /*BUG28037*/
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                /*BUG28037*/
+                ENDDO                                                                   /*BUG28037*/
+                ELSE       CMD(DO)                                                      /*BUG28037*/
+                   CHGVAR     VAR(&GPSBSID) VALUE(&A_GIVAL)                             /*BUG28037*/
+                ENDDO                                                                   /*BUG28037*/
+             ENDDO                                                                      /*BUG28037*/
+ 
+             IF         COND(&A_GISVAL *EQ &OPFXSVAL) THEN(DO)
+                IF         COND(&A_GIVAL *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&OLDSBSID) VALUE(&A_GIVAL)
+                ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(VALIDATE)
+ 
+ CHECK:
+             IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)
+                RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                RTVMSG     MSGID(UPM0004) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (151 50)) VALUE(&MESSAGE)
+                CALL       PGM(SCC0010) PARM('SMC000069' 'ENTER' ' ')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* Set up library list. */                                                              /*BUG28037*/
+             CALL       PGM(GPC000016) PARM(&GPSBSID)                                   /*BUG28037*/
+ 
+/* Create temporary data area to store release data. */
+             DLTDTAARA  DTAARA(QTEMP/SMBRGRELDA)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/SMBRGRELDA) TYPE(*CHAR) LEN(256)
+ 
+/* Attempt to  get release level from System Values. */
+             CALL       PGM(GPAOSVALR0) PARM(&AORTN +
+                          'BrgOldSystemRlsLvl' &SVAL ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ' ')
+             IF         COND(&AORTN *NE '       ') THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             ELSE       CMD(DO)
+                IF         COND(&SVAL *EQ ' ') THEN(DO)
+                   GOTO       CMDLBL(RELH)
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&PRODUCT) VALUE(%SST(&SVAL 1 10))
+                   CHGVAR     VAR(&REL) VALUE(%SST(&SVAL 11 10))
+                   CHGVAR     VAR(&SUBRLS) VALUE(%SST(&SVAL 21 2))
+                   GOTO       CMDLBL(PROMPT)
+                ENDDO
+             ENDDO
+ 
+RELH:
+/* Check if GPRELHPD exists in 'from' system. */
+             CHGVAR     VAR(&FMGTALIB) VALUE(&OLDSBSID *TCAT 'GTALIB')
+             DLTF       FILE(QTEMP/RELH)                                                  /*CUP023*/
+             MONMSG     MSGID(CPF0000)                                                    /*CUP023*/
+ 
+/* Create copy of the latest RELH file and copy 'from' version to it. */                  /*CUP023*/
+             DLTF       FILE(QTEMP/RELHOLD)                                               /*CUP023*/
+             MONMSG     MSGID(CPF0000)                                                    /*CUP023*/
+             CRTDUPOBJ  OBJ(GPRELHPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(RELHOLD)                                    /*CUP023*/
+             CPYF       FROMFILE(&FMGTALIB/GPRELHPD) +
+                          TOFILE(QTEMP/RELHOLD) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)                                              /*CUP023*/
+/* Create copy of the latest RELH to create view. */                                      /*CUP023*/
+             DLTF       FILE(QTEMP/RELHNEW)                                               /*CUP023*/
+             MONMSG     MSGID(CPF0000)                                                    /*CUP023*/
+             CPYF       FROMFILE(GPRELHPD) TOFILE(QTEMP/RELHNEW) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)                                  /*CUP023*/
+ 
+/* Build view to get sequential list of release levels. */                                /*CUP023*/
+             CHGVAR     VAR(&STM_STR) VALUE('create view QTEMP/RELH +
+                          as select b.AXSEQ1 concat b.AXSEQ2 concat +
+                          b.AXSEQ3')                                                      /*CUP023*/
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')                             /*CUP023*/
+             CHGVAR     VAR(&STM_STR) VALUE('concat a.AXRELL concat +
+                          a.AXIREL concat a.AXINFO as ALLRCD')                            /*CUP023*/
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')                             /*CUP023*/
+             CHGVAR     VAR(&STM_STR) VALUE('from QTEMP/RELHOLD a +
+                          left join QTEMP/RELHNEW b')                                     /*CUP023*/
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')                             /*CUP023*/
+             CHGVAR     VAR(&STM_STR) VALUE('on a.AXRELL = b.AXRELL +
+                          and a.AXIREL = b.AXIREL and a.AXINFO = +
+                          b.AXINFO')                                                      /*CUP023*/
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')                             /*CUP023*/
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)                                                   /*CUP023*/
+             MONMSG     MSGID(SQL9010)                                                    /*CUP023*/
+ 
+/* If SCRELHPD is found then read file and find out latest record. */
+/**********  OVRDBF     FILE(GPRELHPD) TOFILE(&FMGTALIB/GPRELHPD)                      */ /*CUP023*/
+             CALL       PGM(SM000006) PARM(&PRODUCT &REL &SUBRLS)
+/**********  DLTOVR     FILE(GPRELHPD)                                                 */ /*CUP023*/
+ 
+PROMPT:
+/* Update temporary data area to supply prompt override program; if values */
+/*  are blank then enter default values.                                   */
+             IF         COND(&REL *EQ ' ') THEN(DO)
+                CHGVAR     VAR(&PRODUCT) VALUE('MidasPlus')
+                CHGVAR     VAR(&REL) VALUE('1.2.1')
+                CHGVAR     VAR(&SUBRLS) VALUE('19')
+             ENDDO
+             CHGDTAARA  DTAARA(QTEMP/SMBRGRELDA (1 10)) VALUE(&PRODUCT)
+             CHGDTAARA  DTAARA(QTEMP/SMBRGRELDA (11 10)) VALUE(&REL)
+             CHGDTAARA  DTAARA(QTEMP/SMBRGRELDA (21 2)) VALUE(&SUBRLS)
+ 
+/**********  ?          RELEASELVL                                                     */ /*CUP023*/
+             ?          RELEASELVL ??PRODUCT(&PRODUCT) ??REL(&REL) +
+                          ??SUBRLS(&SUBRLS)                                               /*CUP023*/
+             MONMSG     MSGID(CPF6801)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+/* Set up messages for Midas Information Screen. */
+/**********  RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +                                  */ /*CUP023*/
+/**********               MSGDTA('SMC000067') MSG(&MESSAGE)                            */ /*CUP023*/
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('SMC000073') MSG(&MESSAGE)                               /*CUP023*/
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details')
+             MONMSG     MSGID(CPF0000)
+/**********  CALL       PGM(SCC0010) PARM('SMC000067' 'ENTER' ' ')                     */ /*CUP023*/
+             CALL       PGM(SCC0010) PARM('SMC000073' 'ENTER' ' ')                        /*CUP023*/
+             MONMSG     MSGID(CPF0000)
+ 
+ENDPGM:
+             ENDPGM

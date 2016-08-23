@@ -1,0 +1,99 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  SEVIBANVAL - Midas SE Validate IBAN Input                    *
+      *                                                               *
+      *  Last Amend No. AR642262           Date 14Sep10               *
+      *  Prev Amend No. CSW210  *CREATE    Date 04May10               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  AR642262 - Error in IBAN validation                          *
+      *  CSW210 - SWIFT 2010 Changes                                  *
+      *                                                               *
+      *****************************************************************
+     C*
+     C*  SRIBAN - Validation for IBAN account
+     C*
+     C*  CALLED FROM  SEVAP1L, SEVAP2L, SEVAWIL, SEVBOF1, SEVDEBTACL
+     C*
+     C*****************************************************************
+     C*
+     C     SrIBAN        BEGSR
+     C                   EVAL      WIBAN35 = *BLANKS
+     C                   EVAL      WIBAN34 = *BLANKS
+     C                   EVAL      ValidIBANFlag = 'N'
+     C                   EVAL      IBANWarningMsg = 'N'
+      *
+     C                   IF        IBANSlash = '/'
+     C                   EVAL      P@IBAN = IBAN34
+     C                   ELSE
+     C                   EVAL      P@IBAN = IBANFld
+     C                   ENDIF
+      *
+      ** If first four characters are "AANN", proceed with IBAN validation
+      *
+     C                   CALL      'AOIBANR3'
+     C                   PARM                    P@RtCd
+     C                   PARM                    P@IBAN
+     C                   PARM                    P@WiBlanks
+     C                   PARM                    P@NoBlanks
+      *
+     C                   EVAL      WChar = %SUBST(P@NoBlanks:1:2)
+     C                   EVAL      WNum = %SUBST(P@NoBlanks:3:2)
+      *
+     C                   EVAL      Pos1 = %Check(AlphaB:WChar)
+     C                   EVAL      Pos3 = %Check(Digits:WNum)
+      *
+     C                   IF        Pos1 = 0 AND
+     C                             Pos3 = 0
+      *
+     C                   EVAL      WIBAN34 = P@NoBlanks
+      *
+     C                   CALL      'AOIBANR5'                           90
+     C                   PARM      *Blanks       P@RtCd
+     C                   PARM                    WIBAN34
+      *
+     C                   IF        *IN90 = *OFF AND
+     C                             P@RtCd = *BLANKS
+     C                   EVAL      WIBAN35 = WIBAN34
+     C                   EVAL      ValidIBANFlag = 'Y'
+     C                   ELSE
+      * Warnings
+     C**********         IF        IBANSlash = '/'                                          AR642262
+     C**********         EVAL      WIBAN35 = '/' + WIBAN34                                  AR642262
+     C**********         ELSE                                                               AR642262
+     C**********         EVAL      WIBAN35 = WIBAN34                                        AR642262
+     C**********         ENDIF                                                              AR642262
+     C                   EVAL      WIBAN35 = IBANFld                                        AR642262
+     C                   EVAL      IBANWarningMsg = 'Y'
+     C                   EVAL      WIX = WIX + 1
+     C                   SELECT
+      *  Invalid ISO country code
+     C                   WHEN      P@RtCd = '      1'
+     C                   EVAL      WMsgIdXAr(WIx) = 'ST00102'
+      *  Invalid BBAN length
+     C                   WHEN      P@RtCd = '      2'
+     C                   EVAL      WMsgIdXAr(WIx) = 'ST00103'
+      *  Invalid character
+     C                   WHEN      P@RtCd = '      3'
+     C                   EVAL      WMsgIdXAr(WIx) = 'ST00104'
+      *  Invalid IBAN length
+     C                   WHEN      P@RtCd = '      4'
+     C                   EVAL      WMsgIdXAr(WIx) = 'ST00105'
+      *  Invalid check digit
+     C                   WHEN      P@RtCd = '      5'
+     C                   EVAL      WMsgIdXAr(WIx) = 'ST00106'
+      *  Other/non-specific warning
+     C                   OTHER
+     C                   EVAL      WMsgIdXAr(WIx) = 'ST00107'
+     C                   ENDSL
+     C                   ENDIF
+ 
+     C                   ENDIF
+     C*
+     C                   ENDSR
+      *****************************************************************
+      * End of /COPY SEVIBANVAL                                       *
+      *****************************************************************

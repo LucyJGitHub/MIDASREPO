@@ -1,0 +1,258 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member of DL0280WRII                           *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CPK021  *CREATE    Date 21Aug04               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CPK021 - DL0280 split into /COPYs:                           *
+      *           - DL0280WRII                                        *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  WRIINT - Write a record to interest history file INTPSDD     *
+      *                                                               *
+      *****************************************************************
+     C           WRIINT    BEGSR
+      *
+      ** Access client BRT details file for A/C holder type & taxable ind
+      *
+     C           CNUM      CHAINSDCBRTL1             18
+     C   18                SETON                     88LRU8
+     C   18                Z-ADDCNUM      XKEY
+     C   18                GOTO WRIIN9
+      *
+     C           ACHLRT    IFEQ 'I'                        B1
+     C           TAXIND    ANDNE'X'
+      *
+     C           ACHLRT    OREQ 'J'
+     C           TAXIND    ANDNE'X'
+      *
+     C           ACHLRT    OREQ 'B'
+     C           TAXIND    ANDNE'X'
+      *
+     C           ACHLRT    OREQ 'C'
+     C           TAXIND    ANDNE'X'
+      *
+     C           ACHLRT    OREQ 'R'
+     C           TAXIND    ANDNE'X'
+      *
+     C           CNUM      CHAINCLINTCBF             18
+     C   18                SETON                     89LRU8
+     C   18                Z-ADDCNUM      XKEY
+     C   18                GOTO WRIIN9
+      *
+     C           CNUM      CHAINCLINTCCF             18
+     C   18                SETON                     89LRU8
+     C   18                Z-ADDCNUM      XKEY
+     C   18                GOTO WRIIN9
+      *
+     C                     MOVE 'D'       RECII            * RENAMED
+     C                     MOVE PCCY      CCYI             * RENAMED
+     C                     MOVELCNUM      CNUMI            * RENAMED
+     C                     Z-ADD*ZEROS    ACOD
+     C                     Z-ADD*ZEROS    ACSQ
+     C                     Z-ADDKYDAT     IPDT
+     C                     MOVE TAXIND    BRTCAT
+     C                     MOVE 'N'       S352RI
+     C                     Z-ADD*ZEROS    CRBRTS
+     C                     Z-ADD*ZEROS    CRBRTC
+     C                     Z-ADD*ZEROS    CRBRTE
+     C                     Z-ADD*ZEROS    LIAPTY
+      *
+     C           TAXIND    IFEQ 'P'
+     C           H1BRTL    ANDEQ'Y'
+     C                     Z-ADDH1SEQN    LIAPTY
+     C                     END
+      *
+     C           TAXIND    IFEQ 'P'
+     C           H2BRTL    ANDEQ'Y'
+     C                     Z-ADDH2SEQN    LIAPTY
+     C                     END
+      *
+      ** If STG ccy
+      *
+     C           PCCY      IFEQ BLCYCD                     B*2
+     C           PCCY      ANDEQBJCYCD
+     C                     Z-ADDWORKD     STGGRI
+     C                     Z-ADDTAXA      STGBRT
+     C           STGGRI    SUB  STGBRT    STGNTI
+      *
+     C                     Z-ADDWORKD     CCYGRI
+     C                     Z-ADDTAXA      CCYBRT
+     C           CCYGRI    SUB  CCYBRT    CCYNTI
+      *
+     C                     Z-ADDWORKD     BCEGRI
+     C                     Z-ADDTAXA      BCEBRT
+     C           BCEGRI    SUB  BCEBRT    BCENTI
+      *
+     C                     Z-ADD1         EXRATE
+     C                     END                             E*2
+      *
+      ** else
+      *
+     C           PCCY      IFNE BLCYCD                     B*2
+     C           PCCY      ORNE BJCYCD                     B*2
+      *
+      ** Convert gross interest amount to sterling and base currency
+      ** equivalent
+      *
+      ** to sterling
+      *
+      ** From Values
+      *
+     C                     Z-ADD1         I       30
+     C           PCCY      LOKUPCY,I                     14
+      *
+     C           *IN14     IFEQ '0'                        B*2
+     C                     SETON                     80LRU8
+     C                     MOVE PCCY      XCCY
+     C                     GOTO WRIIN9
+      *
+     C                     ELSE
+      *
+     C                     MOVE CYD,I     CYDDS
+     C                     Z-ADDWORKD     XAMNT1
+     C                     Z-ADDSPOT      XSPOT1
+     C                     Z-ADDMDIN      XMDIN1
+     C                     Z-ADDCDP       XCDP1
+      *
+      ** To Values
+      *
+     C                     Z-ADD0         XAMNT2
+     C                     Z-ADDSSPOT     XSPOT2
+     C                     Z-ADDSMDIN     XMDIN2
+     C                     Z-ADDSCDP      XCDP2
+      *
+     C                     EXSR CNVERT
+      *
+     C                     Z-ADDXAMNT2    SWORKD 130
+      *
+      ** To Base ccy equivalent
+      *
+      ** To Values
+      *
+     C                     Z-ADD0         XAMNT2
+     C                     Z-ADDBSPOT     XSPOT2
+     C                     Z-ADDBMDIN     XMDIN2
+     C                     Z-ADDBCDP      XCDP2
+      *
+     C                     EXSR CNVERT
+      *
+     C                     Z-ADDXAMNT2    BWORKD 130
+      *
+     C                     END                             E*2
+      *
+     C                     Z-ADDSWORKD    STGGRI
+     C                     Z-ADD0         STGBRT
+     C   23                Z-ADDWKBRSG    STGBRT
+     C           STGGRI    SUB  STGBRT    STGNTI
+      *
+     C                     Z-ADDWORKD     CCYGRI
+     C                     Z-ADDTAXA      CCYBRT
+     C           CCYGRI    SUB  CCYBRT    CCYNTI
+      *
+     C                     Z-ADDBWORKD    BCEGRI
+     C                     Z-ADD0         BCEBRT
+     C   23                Z-ADDWKBRBC    BCEBRT
+     C           BCEGRI    SUB  BCEBRT    BCENTI
+      *
+     C           PCCY      IFEQ BLCYCD
+     C                     Z-ADD1         EXRATE
+     C                     END
+      *
+     C           BJCYCD    IFEQ BLCYCD
+     C                     Z-ADDSPOT      EXRATE
+     C                     END
+      *
+     C           PCCY      IFNE BLCYCD
+     C           BJCYCD    ANDNEBLCYCD
+      *
+      ** Calculate cross rate
+      *
+     C                     MOVE SMDIN     @@MDI1  1
+     C                     MOVE MDIN      @@MDI2  1
+     C                     Z-ADDSSPOT     @@RAT1 138
+     C                     Z-ADDSPOT      @@RAT2 138
+     C                     EXSR ZA0900
+     C                     Z-ADD@@CSRT    EXRATE
+     C                     END
+      *
+     C                     END                             E*2
+      *
+     C                     MOVELBRCA      BRCAI            * RENAMED
+      *
+      ** Write record to file INTPSDD if Account Holder is 'I' or 'J'
+      *
+     C           ACHLRT    IFEQ 'I'                        B2
+     C           ACHLRT    OREQ 'J'
+     C                     MOVE 'A'       RTYP
+     C                     MOVE PSTR      PSTR1
+     C                     WRITEINTPSDDX
+     C                     END                             E2
+      *
+      ** Write record to file INTPSDD if Account Holder is 'R'
+      *
+     C           ACHLRT    IFEQ 'R'                        B2
+     C                     MOVE 'R'       RTYP
+     C                     MOVE PSTR      PSTR1
+      *
+      ** Access Customer Details to retrieve Country of Domicile
+      *
+     C                     MOVE *BLANKS   @CUST
+     C                     MOVELCNUM      @CUST
+     C                     CALL 'AOCUSTR1'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           @CUST
+     C                     PARM           @KYST
+     C           SDCUST    PARM SDCUST    DSLDY
+      *
+      ** Access Country Details to retrieve ISO Country code
+      *
+     C                     MOVE BBCOLC    @LCTR
+     C                     CALL 'AOCTRYR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY    '@OPTN
+     C                     PARM           @LCTR   2
+     C           SDCTRY    PARM SDCTRY    DSFDY
+      *
+     C           A4ISOC    CHAINSDFRCTL0             18
+     C           *IN18     IFEQ *OFF                       B3
+      *
+     C           F0FRDT    IFLE BJRDNB                     B4
+     C                     WRITEINTPSDDX
+     C                     ENDIF                           E4
+      *
+     C                     ELSE
+     C                     WRITEINTPSDDX
+     C                     ENDIF                           E3
+     C                     ENDIF                           E2
+      *
+      ** Write record to file COINTDD if Account Holder is a bank
+      *
+     C           ACHLRT    IFEQ 'B'                        B2
+     C           BTHY      ANDEQ'Y'
+     C                     MOVE 'B'       RTYP
+     C                     WRITECOINTDDX
+     C                     END                             E2
+      *
+      ** Write record to file COINTDD if Account Holder is a corporate
+      ** customer
+      *
+     C           ACHLRT    IFEQ 'C'                        B2
+     C                     MOVE 'C'       RTYP
+     C                     WRITECOINTDDX
+     C                     END                             E2
+      *
+     C                     END                             E1
+      *
+     C           WRIIN9    ENDSR
+      *****************************************************************
+      * End of /COPY DL0280WRII                                       *
+      *****************************************************************

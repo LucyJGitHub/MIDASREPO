@@ -1,0 +1,57 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas UT BankFusion Data Migration Utility')          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities Module                                    */
+/*                                                                   */
+/*       UTC00090 - BankFusion Data Migration Utility                */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2011           */
+/*                                                                   */
+/*       Last Amend No. CBF011  *CREATE    Date 04Jul11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CBF011 - BF Infrastructure: Error Message Handling          */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&OPTION &OVRIDE)
+ 
+             DCL        VAR(&OPTION) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OVRIDE) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&OPTPRM) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&OVRPRM) TYPE(*CHAR) LEN(1)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2011')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Setup parameter for CORE/FUNDED */
+ 
+             IF         COND(&OPTION *EQ 'CORE') THEN(CHGVAR +
+                          VAR(&OPTPRM) VALUE('C'))
+             ELSE       CMD(CHGVAR VAR(&OPTPRM) VALUE('F'))
+ 
+/** Setup parameter for process Overridable Errors */
+ 
+             IF         COND(&OVRIDE *EQ '*NO') THEN(CHGVAR +
+                          VAR(&OVRPRM) VALUE('N'))
+             ELSE       CMD(CHGVAR VAR(&OVRPRM) VALUE('Y'))
+ 
+             CALL       PGM(UT000090) PARM(&OPTPRM &OVRPRM)
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO CMDLBL(ABNOR))
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ABNOR:
+             SNDPGMMSG  MSG('BFDATAMG ended abnormally - see job +
+                          log') TOPGMQ(*EXT)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ENDPGM:
+             ENDPGM

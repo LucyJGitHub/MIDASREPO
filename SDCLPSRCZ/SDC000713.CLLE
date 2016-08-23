@@ -1,0 +1,60 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SD Accounts for Review Audit List Report')      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       CLP/SDC000713 - Accounts for Review Report Audit and List   */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2014           */
+/*                                                                   */
+/*       Last Amend No. CSD092  *CREATE    Date 01May13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSD092 - Account Review                                     */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM        PARM(&SEQ &LVL &ENT)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2014')
+ 
+             DCL        VAR(&SEQ) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&LVL) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ENT) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+/** Monitor for any errors and send appropriate message to MOPERQ */
+             MONMSG     MSGID(RPG0000 CPF0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             SNDMSG     MSG('SDC000713 - Accounts for Review List') +
+                        TOMSGQ(MRUNQ)
+ 
+/** Call the Account Review List program */
+             CHGJOB     SWS(XXXXXX00)
+             CALL       PGM(SD000713) PARM(&SEQ &ENT)
+ 
+/** Monitor for database error and send appropriate message to MOPERQ */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+               SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ MRUNQ)
+               GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ERROR:
+             SNDMSG     MSG('Accounts for Review List has terminated +
+                          abnormally.') TOMSGQ(MOPERQ MRUNQ)
+ 
+END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+             ENDPGM

@@ -1,0 +1,219 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas DL OIS applicable days correction')              *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DSPF/DL1643DF - OIS Applicable Days Correction for all Deals *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *                                                               *
+      *  Last Amend No. 245692             Date 21Sep13               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. 214440  *CREATE    Date 30Jan03               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  245692 - Incorrect validation of rates when the decimal se-  *
+      *           parator in the Dealing ICD was defined as "," ins-  *
+      *           tead of ".".                                        *
+      *         - Applied for MD-23981.                               *
+      *  214440 - New function to Amend Applicable Days for all Deals *
+      *           (OIS)                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     A                                      REF(MFRFL)
+     A                                      CA03(03 'Exit')
+     A                                      CA05(05 'Refresh')
+     A  06                                  CA06(06 'Confirm')
+     A  31                                  CA12(12 'Initial Screen')
+      *
+     A                                      INDARA
+     A                                      MSGLOC(24)
+     A                                      PRINT(*LIBL/MPRINT)
+------*-------------------------------------------------------------------------
+      ***  Subfile Record
+------*-------------------------------------------------------------------------
+      *
+      ***  Loading one Page at a Time Subfile
+      *
+     A          R DL1643S0                  SFL
+     A                                      SETOF(98 'Force input format')
+      *
+     A            #0BSDT         6A  O 12  5DSPATR(HI)
+     A            #0APDY         3  0O 12 13EDTCDE(Z)
+     A                                      DSPATR(HI)
+     A            #0DLNO         6A  O 12 19DSPATR(HI)
+     A            #0OTCD         1A  O 12 28DSPATR(HI)
+      *                                                                                       245692
+      ** Start of change 245692                                                               245692
+      *                                                                                       245692
+     A**********  #0BSRT         9  7O 12 31EDTWRD('0 .       ')                              245692
+     A            W#BSRT        10A  O 12 30                                                  245692
+     A                                      DSPATR(HI)
+     A**********  #0CPRT         8  7O 12 43EDTWRD('0 .       ')                              245692
+     A            W#CPRT        10A  O 12 42                                                  245692
+     A                                      DSPATR(HI)
+     A**********  #0INRT         9  7O 12 53EDTWRD('0 .       ')                              245692
+     A            W#INRT        10A  O 12 53                                                  245692
+     A                                      DSPATR(HI)
+      *                                                                                       245692
+      ** End of change 245692                                                                 245692
+      *                                                                                       245692
+     A            #0AMT         17A  O 12 64DSPATR(HI)
+      *
+------*-------------------------------------------------------------------------
+      ***  Subfile Control
+------*-------------------------------------------------------------------------
+      *
+     A          R DL1643C0                  TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. 2003')
+      *
+     A                                      OVERLAY
+     A  86                                  PUTOVR
+     A                                      SFLCTL(DL1643S0)
+     A                                      SETOF(98 'Force input format')
+     A                                      SFLSIZ(11)
+     A                                      SFLPAG(10)
+     A                                      BLINK
+     A  80                                  SFLCLR
+     A N80                                  SFLDSPCTL
+     A N80 81                               SFLDSP
+     A N80 81 82                            SFLEND(*MORE)
+     A N82                                  ROLLUP(22)
+      *
+     A  83                                  ERASE(DL1643S0)
+      *
+------*-------------------------------------------------------------------------
+      ***  Screen Header
+------*-------------------------------------------------------------------------
+      *
+     A            #0USER        10A  O  1  2
+     A                                  1 13'DL1643DF'
+     A                                  1 28'OIS Applicable Day Correction'
+     A                                      DSPATR(UL HI)
+     A                                  1 67'DATE'
+     A            #0MRDT         7A  O  1 72
+      *
+     A            #0WSID        10A  O  2  2
+     A                                  2 67'TIME'
+     A                                  2 72TIME
+      *
+------*-------------------------------------------------------------------------
+      ***  Input Fields and a list of indicators used.
+      *
+      *     40  - Error on Currency
+      *     41  - Error on Base Rate code
+      *     42  - Error on Position to Date
+------*-------------------------------------------------------------------------
+      *
+     A                                  5  5'Currency Code'
+     A            #0CCY          3A  B  5 19OVRDTA
+     A N40                                  DSPATR(HI)
+     A N40N31                               DSPATR(UL)
+     A  40                                  DSPATR(RI)
+     A  40                                  DSPATR(PC)
+     A  31                                  DSPATR(PR)
+      *
+     A                                  5 26'Base Rate Code'
+     A            #0BSRC         2A  B  5 41OVRDTA
+     A N41                                  DSPATR(HI)
+     A N41N31                               DSPATR(UL)
+     A  41                                  DSPATR(RI)
+     A  41                                  DSPATR(PC)
+     A  31                                  DSPATR(PR)
+      *
+     A                                  5 50'Position to Date '
+     A            #0PDAT         6A  B  5 68OVRDTA
+     A N42                                  DSPATR(HI)
+     A N42                                  DSPATR(UL)
+     A  42                                  DSPATR(RI)
+     A  42                                  DSPATR(PC)
+     A                                      CHECK(FE)
+      *
+------*-------------------------------------------------------------------------
+      ***  Applicable Day Correction
+------*-------------------------------------------------------------------------
+      *
+     A            #0SFRC         4  0H      SFLRCDNBR
+      *
+     A  31                              7 18'Action'
+     A  31        #0ACTN         1A  B  8 20OVRDTA
+     A N45 31                               DSPATR(HI)
+     A N45 31                               DSPATR(UL)
+     A  45 31                               DSPATR(RI)
+     A  45 31                               DSPATR(PC)
+      *
+     A  31                              7 27'Date'
+     A  31        #0DAT1         6A  B  8 26OVRDTA
+     A N46 31                               DSPATR(HI)
+     A N46 31                               DSPATR(UL)
+     A  46 31                               DSPATR(RI)
+     A  46 31                               DSPATR(PC)
+      *
+     A  31                              7 34'App Day'
+     A  31        #0APD1         3A  B  8 36OVRDTA
+     A N47 31                               DSPATR(HI)
+     A N47 31                               DSPATR(UL)
+     A  47 31                               DSPATR(RI)
+     A  47 31                               DSPATR(PC)
+     A  32                                  DSPATR(ND PR)
+     A
+      *
+------*-------------------------------------------------------------------------
+      ***  Column Heading
+------*-------------------------------------------------------------------------
+      *
+     A  31                             10  6'Date'
+     A  31                             10 13'A/Ds'
+     A  31                             10 18'Deal No.'
+     A  31                             10 27'O/T'
+      *                                                                                       245692
+      ** Start of change 245692                                                               245692
+      *                                                                                       245692
+     A**31******                       10 32'Base Rate'                                       245692
+     A  31                             10 31'Base Rate'                                       245692
+      *                                                                                       245692
+      ** End of change 245692                                                                 245692
+      *                                                                                       245692
+     A  31                             10 43'Cmp. Rate'
+     A  31                             10 54'Int. Rate'
+     A  31                             10 68'Int. Amount'
+      *
+------*-------------------------------------------------------------------------
+      ***  FOOTER     Allowed Function Keys
+------*-------------------------------------------------------------------------
+      *
+     A          R DL1643F0
+     A                                      OVERLAY
+     A                                 23  3'F3=Exit'
+     A                                 23 12'F5=Refresh'
+     A  31                             23 24'F12=Initial Screen'
+     A  06                             23 54'F6=Confirm Update'
+      *
+------*-------------------------------------------------------------------------
+      ***  Message Subfile
+------*-------------------------------------------------------------------------
+      *
+     A          R DL1643S1                  TEXT('Program messages')
+     A                                      SFL SFLMSGRCD(24)
+     A            #0MSGK                    SFLMSGKEY
+     A            #0PGM                     SFLPGMQ
+      *
+------*-------------------------------------------------------------------------
+      ***  Message Subfile  Control
+------*-------------------------------------------------------------------------
+      *
+     A          R DL1643C1                  TEXT('Program messages')
+     A                                      SFLCTL(DL1643S1)
+     A                                      SFLPAG(01) SFLSIZ(03)
+     A                                      OVERLAY PUTOVR
+     A                                      SFLINZ SFLDSP SFLDSPCTL
+     A  25
+     AON25                                  SFLEND
+     A            #0PGM                     SFLPGMQ

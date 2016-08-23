@@ -1,0 +1,240 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/                   /*CCB023*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - APIs                                                */
+/*                                                                   */
+/*       APC0400 - End Updater Jobs at COB                           */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*                                                                   */
+/*       Last Amend No. CCB023 *REDUNDANT  Date 06Aug12              */
+/*       Prev Amend No. CER059             Date 19Jul10              */
+/*                      CER034A            Date 19May08              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CAP183             Date 05Jan06              */
+/*                      CGL032             Date 05Jul04              */
+/*                      CAS009             Date 04May04              */
+/*                      CAP079             Date 19Aug02              */
+/*                      CAP078             Date 31Oct02              */
+/*                      CAP077             Date 30Aug02              */
+/*                      CAP076             Date 24May02              */
+/*                      CAP075             Date 12Aug02              */
+/*                      CAP074             Date 26Mar02              */
+/*                      CAP073             Date 18May02              */
+/*                      CSE040             Date 28Mar03              */
+/*                      CAP182             Date 14Mar03              */
+/*                      CSE039             Date 10Mar03              */
+/* Midas Release 4.01 -----------------------------------------------*/
+/*                      CAP055             Date 13Mar02              */
+/*                      CAP072             Date 28Mar02              */
+/*                      CAP071             Date 22Mar02              */
+/*                      CAP068             Date 22Mar02              */
+/*                      CAP069             Date 22Mar02              */
+/*                      CAP070             Date 11Mar02              */
+/*                      CAS001             Date 23Nov01              */
+/*                      CAP067             Date 24Sep01              */
+/*                      CPK015             Date 02Mar02              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/*                      CPK014  *CREATE    Date 09Jan02              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CCB023 - COB Restructure - Input Cycle Termination          */
+/*                Restructuring                                      */
+/*       CER059 - German Feature Upgrade to Delhi                    */
+/*       CER034A - German Features - New Fields and Enquiries        */
+/*       CAP183 - Conversion of Market Prices Input into modular     */
+/*                structure to use APIs                              */
+/*       CGL032 - Automatic Exchange of Information                  */
+/*       CAS009 - Effective Interest Rate/Amortised Cost Accounting  */
+/*       CAP079 - Lending API enhancements - Repayments schedule     */
+/*       CAP078 - Lending API enhancements - Fee input               */
+/*       CAP077 - Lending API enhancements - Manual repayments       */
+/*       CAP076 - Lending API enhancements - Rollover Instructions   */
+/*       CAP075 - Lending API enhancements - Loan amendments         */
+/*       CAP074 - Lending API enhancements - Loans input.            */
+/*       CAP073 - Conversion of MN inputs into modular structure to  */
+/*           use as APIs. Facility input Transaction Details         */
+/*       CSE040 - Securities Statement Processing                    */
+/*       CAP182 - Automatic Settlement of Trades                     */
+/*              - Conversion of SE Trade Settlement Input maintence  */
+/*                function to modular structure to use as APIs.      */
+/*       CSE039 - Automatic Settlement of Trades                     */
+/*       CAP055 - APIs for FRA/IRS Caps/Collars/Floors               */
+/*       CAP072 - Conversion of LE inputs into modular structure to  */
+/*                use as APIs. Fee Settlement and Adjustment input   */
+/*       CAP071 - Conversion of LE inputs into modular structure to  */
+/*                use as APIs. Facility Amendment.                   */
+/*       CAP068 - Conversion of LE inputs into modular structure to  */
+/*                use as APIs. Funding Participants.                 */
+/*       CAP069 - Conversion of LE inputs into modular structure to  */
+/*                use as APIs. Risk Participants.                    */
+/*       CAP070 - Conversion of LE inputs into modular structure to  */
+/*                use as APIs.                                       */
+/*       CAS001 - Net Present Value (NPV) Accounting                 */
+/*       CAP067 - Repurchase Agreements API.                         */
+/*       CPK015 - Program code stripped and rewritten to ease maint. */
+/*       CPK014 - Remove shutdown jobs from SCC0400 and replace with */
+/*                individual CoB components.                         */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+/*/COPY WNCPYSRC,APC0400INT                                          */
+ 
+             DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2002')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/*/COPY WNCPYSRC,APC0400MPS                                          */
+ 
+/* Retrieve the system prefix and shut down the API server. */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREFIX)
+             ENDAPISVR  SYSTEM(&PREFIX)
+ 
+/* Also end the updaters, and delay to give them time to end. */
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) LDNI(Y)
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) DEAM(Y)
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) NASP(Y)
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) NASS(Y)
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) FXDL(Y)
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) FRA(Y)
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) SIRS(Y)
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) CIRS(Y)
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) DPMV(Y)
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) TRAD(Y)
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) TRAN(Y)
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) INTC(Y)
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) FWRT(Y)
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) INTR(Y)
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) PRCS(Y)
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) PFDM(Y)
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) BITH(Y)
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) BITP(Y)
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) OPAY(Y)
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) CUSD(Y)
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) AMAD(Y)
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) IPAY(Y)
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) SECS(Y)
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) SECD(Y)
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) SEDE(Y)
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) SPTR(Y)
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) BSRT(Y)
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) FUND(Y)
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) REPO(Y)                                           /*CAP067*/
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) BYSL(Y)                                           /*CAP067*/
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) YRAT(Y)                                           /*CAS001*/
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) ASGN(Y)                                           /*CAP070*/
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) RPRT(Y)                                           /*CAP069*/
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) FPRT(Y)                                           /*CAP068*/
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) FAMD(Y)                                           /*CAP071*/
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) FEAD(Y)                                           /*CAP072*/
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) FEST(Y)                                           /*CAP072*/
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) CACF(Y)                                           /*CAP055*/
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) MVTS(Y)                                           /*CSE039*/
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) TRSM(Y)                                           /*CAP182*/
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) STPR(Y)                                           /*CSE040*/
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) FCIP(Y)                                           /*CAP073*/
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) CLIP(Y)                                           /*CAP074*/
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) LOAM(Y)                                           /*CAP075*/
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) LERI(Y)                                           /*CAP076*/
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) MAPY(Y)                                           /*CAP077*/
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) FEEM(Y)                                           /*CAP078*/
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) RPSC(Y)                                           /*CAP079*/
+ 
+             ENDAPIDBU  SYSTEM(&PREFIX) DLFE(Y)                                           /*CAS009*/
+                                                                                          /*CAS009*/
+             ENDAPIDBU  SYSTEM(&PREFIX) ACUD(Y)                                           /*CGL032*/
+                                                                                          /*CGL032*/
+             ENDAPIDBU  SYSTEM(&PREFIX) CCTX(Y)                                           /*CGL032*/
+                                                                                          /*CGL032*/
+             ENDAPIDBU  SYSTEM(&PREFIX) JACM(Y)                                           /*CGL032*/
+                                                                                          /*CGL032*/
+             ENDAPIDBU  SYSTEM(&PREFIX) NAHL(Y)                                           /*CGL032*/
+                                                                                          /*CGL032*/
+             ENDAPIDBU  SYSTEM(&PREFIX) NATX(Y)                                           /*CGL032*/
+                                                                                          /*CGL032*/
+             ENDAPIDBU  SYSTEM(&PREFIX) MPRI(Y)                                           /*CAP183*/
+             ENDAPIDBU  SYSTEM(&PREFIX) CUAH(Y)                                          /*CER034A*/
+                                                                                          /*CAP183*/
+/*/COPY WNCPYSRC,APC0400MPE                                          */
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+/*/COPY WNCPYSRC,APC0400ERR                                          */
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          APC0400 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000)
+ 
+END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+/*/COPY WNCPYSRC,APC0400END                                          */
+ 
+             ENDPGM

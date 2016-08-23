@@ -1,0 +1,43 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Take on Program for DEALSDG FOID')           */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Close of Business Processing                        */
+/*                                                                   */
+/*       SMUC29596 - Midas SM Take on Program for DEALSDG Front      */
+/*                   Office ID                                       */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2014           */
+/*                                                                   */
+/*       Last Amend No. MD029596  *CREATE  Date 11Aug14              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD029596 - Take on program which populates Front Office     */
+/*                  Transaction ID of DEALSDG from DLDLDGQD's F1FRID */
+/*                  then run replication program for Global Layer.   */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2014')
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SCRUNSQL   SQL('UPDATE DEALSDG SET FRNT = (SELECT +
+                          DLDLDGQD.F1FRID FROM DLDLDGQD WHERE +
+                          DLDLDGQD.F1DLNO = DEALSDG.DLNO) WHERE +
+                          EXISTS (SELECT * FROM DLDLDGQD WHERE +
+                          DLDLDGQD.F1DLNO = DEALSDG.DLNO)')
+ 
+             CALL       PGM(GOC0100) PARM('GZDEALSDG ')
+ 
+ ABNOR:
+             SNDPGMMSG  MSG('Program SMUC29596 ended abnormally - +
+                          job cancelled') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             ENDPGM

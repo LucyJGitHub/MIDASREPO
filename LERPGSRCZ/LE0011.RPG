@@ -1,0 +1,693 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Initialisation program (tranche 1/2)')        *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Upgrade Utility                                      *
+      *                                                               *
+      *  LE0011 - LE Initialisation Program (Tranche 1/2)             *
+      *                                                               *
+      *  Function:  This program initialise new fields of amended     *
+      *             Lending Files for Tranche 1/2 system test         *
+      *                                                               *
+      *  Called By: LEC0011I - CL LE Initialisation Program           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CLE141             Date 08Feb16               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CLE143             Date 06Dec10               *
+      *                 CLE139             Date 06Dec10               *
+      *                 CLE064             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 CAS019             Date 24Mar07               *
+      *                 CAS016             Date 28Feb06               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE106             Date 28Feb05               *
+      *                 CAS009             Date 16May05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CLE029             Date 04Sep02               *
+      *                 CAP075             Date 08Aug02               *
+      *                 CAP074             Date 08Aug02               *
+      *                 CAP073             Date 08Aug02               *
+      *                 CAS005             Date 16Dec02               *
+      *                 CLE028             Date 27Jun02               *
+      *                 CAS004             Date 26Jun02               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 213099             Date 10Dec02               *
+      *                 205409             Date 01May02               *
+      *                 204452             Date 03May02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAP068             Date 25JUN02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 179738             Date 31May00               *
+      *                 175129  *CREATE    Date 16Feb00               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE141 - Currency and Location Business Day Convention       *
+      *           (Recompile)                                         *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CLE143 - Original Loan Contract Date & Effective Interest    *
+      *           Rate (Recompile)                                    *
+      *  CLE139 - Lending Fee Capitalisation (Recompile)              *
+      *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus (Recompile)                              *
+      *  CAS019 - Upgrade of CAS016 to Midas Plus (Recompile)         *
+      *  CAS016 - IAS18 EIR Recalculation (Fee Amortisation Over      *
+      *           Whole Period) -Recompile.                           *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CLE106 - Syndication Manager (Recompile)                     *
+      *  CAS009 - EIR/AC Accounting (Recompile)                       *
+      *  CGL029 - Increase Account Code to 10 digits (Recompile)      *
+      *  CLE029 - Addition of Severity code and Limit ID to FCLTYFM   *
+      *  CAP075 - Lending API enhancements - Loan Amendment.          *
+      *           (amendment in common with CAP079)                   *
+      *  CAP074 - Lending API enhancements - Loans input.             *
+      *  CAP073 - Conversion of MN inputs into modular structure to   *
+      *           use as APIs. Facility input Transaction Details     *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *           (Recompile)                                         *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s)              *
+      *           (Recompile)                                         *
+      *  CAS004 - Hedge Accounting Phase A (Recompile)                *
+      *  213099 - Always output a '9' to first position of LEALLO     *
+      *           even if last value used began with an '8'           *
+      *  205409 - Force a '9' into 1st position of LEALLO, add an     *
+      *           entry parameter so that all PCRF's can be reset and *
+      *           use branch code if A8MQSM is blank.                 *
+      *  204452 - Recompiled due to changed PF/LEFEED.                *
+      *  CAP068 - Recompiled for changes to FCLTYFM and FCLTYFN.      *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  179738 - PCRF needs to use the first 3 characters of a Queue *
+      *           name rather than the branch. Allow for PCRFs in the *
+      *           system without the first 3 characters.              *
+      *                                                               *
+      *****************************************************************
+     FCLOANCK UF  E                    DISK
+     FCLOAN   UF  E           K        DISK
+     F            CLOANHHF                          KIGNORE
+     F            CLOANCKF                          KIGNORE
+     F            CLOANZ1F                          KIGNORE
+     FFCLTYFM UF  E                    DISK
+     FLOAMSDK UF  E                    DISK
+     FLEFEED  UF  E                    DISK
+     FLEFEEAD UF  E                    DISK
+     FLEPARTPDUF  E                    DISK                               205409
+     FLEFCAMPDUF  E                    DISK                               205409
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   50  - General read indicator                                *
+      *   88  - Chain indicator for CLOAN                             *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      *****************************************************************
+      *
+     ICLOANCLF
+      ** Rename fields on CLOANCL
+     I              RECI                            CLRECI
+     I              RCDT                            CLRCDT
+     I              MRIN                            CLMRIN
+     I              ORED                            CLORED
+     I              LCD                             CLLCD
+     I              CHTP                            CLCHTP
+     I              TNLU                            CLTNLU
+      *****************************************************************
+      *
+      *
+     ISDBRCH    E DSSDBRCHPD
+      **  External DS for Branch Details
+      *
+     ISDCURR    E DSSDCURRPD
+      **  External DS for Currency Details
+      *
+     IDSSDY     E DSDSSDY
+      **  DS for access programs, long data structure
+      *
+      * DS for calculating PC reference                                   158177
+     ILEALLO    E DSLEALLO                                                158177
+      *****************************************************************
+      *
+      ** Entry parameters                                                 205409
+      *                                                                   205409
+     C           *ENTRY    PLIST                                          205409
+     C                     PARM           RESET   1                       205409
+      *                                                                   205409
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C********** *NAMVAR   DEFN           LEALLO                                       158177 CLE148
+      *
+      * Set up fields for CLOANCK
+      *
+     C           LOANCL    KLIST
+     C                     KFLD           LNRF
+     C                     KFLD           CLRCDT
+     C                     MOVE 'A'       CLRCDT
+      *
+     C                     READ CLOANCK                  50
+      *
+     C           *IN50     DOWEQ'0'
+      *
+      *  Access CLOANCL file for Transaction Branch (BRCA)
+      *
+     C           LOANCL    CHAINCLOAN                88
+      *
+     C           *IN88     IFEQ '1'
+     C                     READ CLOANCK                  50
+     C                     ITER
+     C                     ENDIF
+      *
+      ** Access the SDBRCHPD for the details of Transaction Branch
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY   ' POPTN   7
+     C                     PARM BRCA      PBRCA   3
+     C           SDBRCH    PARM SDBRCH    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     READ CLOANCK                  50
+     C                     ITER
+     C                     ENDIF
+      *
+      *  If Rollover Transaction Reference is blank set it to the
+      *  branch code plus 12 digits, 8 of which is obtained from the
+      *  data area LEALLO.
+      *
+     C           RPCR      IFEQ *BLANK
+     C           RESET     OREQ 'Y'                                       205409
+     C********** *LOCK     IN   LEALLO                                                        CLE148
+     C********** PCLAST    ADD  1         PCNEXT  80                                          CLE148
+     C                     EXSR SRLEAL                                                        CLE148
+     C***********          MOVELA8BRCD    W1ST11 11                       179738
+     C           A8MQSM    IFNE *BLANKS                                   205409
+     C                     MOVELA8MQSM    W1ST11 11                       179738
+     C                     ELSE                                           205409
+     C                     MOVELA8BRCD    W1ST11                          205409
+     C                     ENDIF                                          205409
+     C           PCOB      IFEQ *BLANKS                                   205409
+     C                     MOVEL'9'       PCNEXT                          205409
+     C                     ELSE                                           205409
+     C                     MOVEL'8'       PCNEXT                          205409
+     C                     ENDIF                                          205409
+     C                     MOVE PCNEXT    W1ST11
+     C                     MOVELW1ST11    RPCR
+     C                     MOVE '0001'    RPCR
+     C**********           Z-ADDPCNEXT    PCLAST                                              CLE148
+      *                                                                   213099
+      * Always output a '9' to position 1 of data area LEALLO             213099
+     C**********           MOVEL'9'       PCLAST                                       213099 CLE148
+     C**********           OUT  LEALLO                                                        CLE148
+     C***********          ELSE                                    179738 205409
+     C***********          MOVELA8MQSM    W1ST03  3                179738 205409
+     C***********          MOVE RPCR      W#PCRF 15                179738 205409
+     C***********          MOVELW1ST03    W#PCRF                   179738 205409
+     C***********          MOVE W#PCRF    RPCR                     179738 205409
+     C***********          ENDIF                                          205409
+      *
+     C                     UPDATCLOANCKF
+     C                     ENDIF                                          205409
+     C                     READ CLOANCK                  50
+     C                     ENDDO
+      *
+      *****************************************************************
+      *
+      * Set up fields for CLOANCL
+      *
+     C**********           Z-ADD1         LNRF                                                CLE148
+     C                     MOVEL*BLANKS   LNRF                                                CLE148
+     C                     MOVE 'A'       CLRCDT
+      *
+     C           LOANCL    SETLLCLOAN
+     C                     READ CLOAN                    50
+      *
+     C           *IN50     DOWEQ'0'
+      *
+      ** Access the SDBRCHPD for the details of Transaction Branch
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM BRCA      PBRCA
+     C           SDBRCH    PARM SDBRCH    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     READ CLOAN                    50
+     C                     ITER
+     C                     ENDIF
+      *
+      *  If Loan Transaction Reference is blank set it to the
+      *  branch code plus 12 digits, 8 of which is obtained from the
+      *  data area LEALLO.
+      *
+     C           PCRF      IFEQ *BLANK
+     C           RESET     OREQ 'Y'                                       205409
+     C********** *LOCK     IN   LEALLO                                                        CLE148
+     C********** PCLAST    ADD  1         PCNEXT  80                                          CLE148
+     C                     EXSR SRLEAL                                                        CLE148
+     C***********          MOVELA8BRCD    W1ST11 11                       179738
+     C           A8MQSM    IFNE *BLANKS                                   205409
+     C                     MOVELA8MQSM    W1ST11 11                       179738
+     C                     ELSE                                           205409
+     C                     MOVELA8BRCD    W1ST11                          205409
+     C                     ENDIF                                          205409
+     C********** PCOB      IFEQ *BLANKS                                                205409 CLE148
+     C**********           MOVEL'9'       PCNEXT                                       205409 CLE148
+     C**********           ELSE                                                        205409 CLE148
+     C**********           MOVEL'8'       PCNEXT                                       205409 CLE148
+     C**********           ENDIF                                                       205409 CLE148
+     C                     MOVE PCNEXT    W1ST11
+     C                     MOVELW1ST11    PCRF
+     C                     MOVE '0001'    PCRF
+     C**********           Z-ADDPCNEXT    PCLAST                                              CLE148
+      *                                                                   213099
+      * Always output a '9' to position 1 of data area LEALLO             213099
+     C***********          MOVEL'9'       PCLAST                                       213099 CLE148
+     C***********          OUT  LEALLO                                                        CLE148
+     C***********          ELSE                                    179738 205409
+     C***********          MOVELA8MQSM    W1ST03  3                179738 205409
+     C***********          MOVE PCRF      W#PCRF 15                179738 205409
+     C***********          MOVELW1ST03    W#PCRF                   179738 205409
+     C***********          MOVE W#PCRF    PCRF                     179738 205409
+     C***********          ENDIF                                          205409
+      *
+     C                     UPDATCLOANCLF
+     C                     ENDIF                                          205409
+     C                     READ CLOAN                    50
+     C                     ENDDO
+      *
+      *****************************************************************
+      *
+      * Set up fields for FCLTYFM
+      *
+     C                     READ FCLTYFM                  50
+      *
+     C           *IN50     DOWEQ'0'
+      *
+      **  Retrieve the currency details.
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD            B:Return Cd
+     C                     PARM '*KEY'    POPTN            I:Option
+     C                     PARM FCCY      ##CCY   3        I:Currency Code
+     C           SDCURR    PARM *BLANK    DSSDY            O:Format
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     READ FCLTYFM                  50
+     C                     ITER
+     C                     ENDIF
+      *
+      ** Access the SDBRCHPD for the details of Transaction Branch
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM BRCA      PBRCA
+     C           SDBRCH    PARM *BLANK    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     READ FCLTYFM                  50
+     C                     ITER
+     C                     ENDIF
+      *
+      *  If Facility Transaction Reference is blank set it to the
+      *  branch code plus 12 digits, 8 of which is obtained from the
+      *  data area LEALLO.
+      *
+     C           PCRF      IFEQ *BLANK
+     C           RESET     OREQ 'Y'                                       205409
+     C********** *LOCK     IN   LEALLO                                                        CLE148
+     C********** PCLAST    ADD  1         PCNEXT  80                                          CLE148
+     C                     EXSR SRLEAL                                                        CLE148
+     C***********          MOVELA8BRCD    W1ST11 11                       179738
+     C           A8MQSM    IFNE *BLANKS                                   205409
+     C                     MOVELA8MQSM    W1ST11 11                       179738
+     C                     ELSE                                           205409
+     C                     MOVELA8BRCD    W1ST11                          205409
+     C                     ENDIF                                          205409
+     C********** PCOB      IFEQ *BLANKS                                                205409 CLE148
+     C**********           MOVEL'9'       PCNEXT                                       205409 CLE148
+     C**********           ELSE                                                        205409 CLE148
+     C**********           MOVEL'8'       PCNEXT                                       205409 CLE148
+     C**********           ENDIF                                                       205409 CLE148
+     C                     MOVE PCNEXT    W1ST11
+     C                     MOVELW1ST11    PCRF
+     C                     MOVE '0001'    PCRF
+     C**********           Z-ADDPCNEXT    PCLAST                                              CLE148
+      *                                                                   213099
+      * Always output a '9' to position 1 of data area LEALLO             213099
+     C**********           MOVEL'9'       PCLAST                                       213099 CLE148
+     C**********           OUT  LEALLO                                                        CLE148
+     C***********          ELSE                                    179738 205409
+     C***********          MOVELA8MQSM    W1ST03  3                179738 205409
+     C***********          MOVE PCRF      W#PCRF 15                179738 205409
+     C***********          MOVELW1ST03    W#PCRF                   179738 205409
+     C***********          MOVE W#PCRF    PCRF                     179738 205409
+     C***********          ENDIF                                          205409
+      *
+     C                     UPDATFCLTYFMF
+     C                     ENDIF                                          205409
+     C                     READ FCLTYFM                  50
+     C                     ENDDO
+      *****************************************************************
+      *
+      * Set up fields for LOAMSDK
+      *
+     C                     READ LOAMSDK                  50
+      *
+     C           *IN50     DOWEQ'0'
+      *
+      ** Access the SDBRCHPD for the details of Transaction Branch
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM BRCA      PBRCA
+     C           SDBRCH    PARM *BLANK    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     READ LOAMSDK                  50
+     C                     ITER
+     C                     ENDIF
+      *
+      *  If Loan Amendment Transaction Reference is blank set it to the
+      *  branch code plus 12 digits, 8 of which is obtained from the
+      *  data area LEALLO.
+      *
+     C           PCRF      IFEQ *BLANK
+     C           RESET     OREQ 'Y'                                       205409
+     C********** *LOCK     IN   LEALLO                                                        CLE148
+     C********** PCLAST    ADD  1         PCNEXT  80                                          CLE148
+     C                     EXSR SRLEAL                                                        CLE148
+     C***********          MOVELA8BRCD    W1ST11 11                       179738
+     C           A8MQSM    IFNE *BLANKS                                   205409
+     C                     MOVELA8MQSM    W1ST11 11                       179738
+     C                     ELSE                                           205409
+     C                     MOVELA8BRCD    W1ST11                          205409
+     C                     ENDIF                                          205409
+     C********** PCOB      IFEQ *BLANKS                                                205409 CLE148
+     C**********           MOVEL'9'       PCNEXT                                       205409 CLE148
+     C**********           ELSE                                                        205409 CLE148
+     C**********           MOVEL'8'       PCNEXT                                       205409 CLE148
+     C**********           ENDIF                                                       205409 CLE148
+     C                     MOVE PCNEXT    W1ST11
+     C                     MOVELW1ST11    PCRF
+     C                     MOVE '0001'    PCRF
+     C**********           Z-ADDPCNEXT    PCLAST                                              CLE148
+      *                                                                   213099
+      * Always output a '9' to position 1 of data area LEALLO             213099
+     C**********           MOVEL'9'       PCLAST                                       213099 CLE148
+     C**********           OUT  LEALLO                                                        CLE148
+     C***********          ELSE                                    179738 205409
+     C***********          MOVELA8MQSM    W1ST03  3                179738 205409
+     C***********          MOVE PCRF      W#PCRF 15                179738 205409
+     C***********          MOVELW1ST03    W#PCRF                   179738 205409
+     C***********          MOVE W#PCRF    PCRF                     179738 205409
+     C***********          ENDIF                                          205409
+      *
+     C                     UPDATLOAMSDKF
+     C                     ENDIF                                          205409
+     C                     READ LOAMSDK                  50
+     C                     ENDDO
+      *
+      **  Set-up fields for LEFEED records
+      *
+     C                     READ LEFEED                   50
+     C           *IN50     DOWEQ'0'
+      *
+      ** Access the SDBRCHPD for the details of Fee Transaction Branch
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY   ' POPTN   7
+     C                     PARM FEBRCA    PBRCA   3
+     C           SDBRCH    PARM *BLANK    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     READ LEFEED                   50
+     C                     ITER
+     C                     ENDIF
+      *
+      *  If Fee Transaction Reference is blank set it to the branch
+      *  code plus 12 digits, 8 of which is obtained from the
+      *  data area LEALLO.
+      *
+     C           PCRF      IFEQ *BLANK
+     C           RESET     OREQ 'Y'                                       205409
+     C********** *LOCK     IN   LEALLO                                                        CLE148
+     C********** PCLAST    ADD  1         PCNEXT  80                                          CLE148
+     C                     EXSR SRLEAL                                                        CLE148
+     C***********          MOVELA8BRCD    W1ST11 11                       179738
+     C           A8MQSM    IFNE *BLANKS                                   205409
+     C                     MOVELA8MQSM    W1ST11 11                       179738
+     C                     ELSE                                           205409
+     C                     MOVELA8BRCD    W1ST11                          205409
+     C                     ENDIF                                          205409
+     C********** PCOB      IFEQ *BLANKS                                                205409 CLE148
+     C**********           MOVEL'9'       PCNEXT                                       205409 CLE148
+     C**********           ELSE                                                        205409 CLE148
+     C**********           MOVEL'8'       PCNEXT                                       205409 CLE148
+     C**********           ENDIF                                                       205409 CLE148
+     C                     MOVE PCNEXT    W1ST11
+     C                     MOVELW1ST11    PCRF
+     C                     MOVE '0001'    PCRF
+     C**********           Z-ADDPCNEXT    PCLAST                                              CLE148
+      *                                                                   213099
+      * Always output a '9' to position 1 of data area LEALLO             213099
+     C**********           MOVEL'9'       PCLAST                                       213099 CLE148
+     C**********           OUT  LEALLO                                                        CLE148
+     C***********          ELSE                                    179738 205409
+     C***********          MOVELA8MQSM    W1ST03  3                179738 205409
+     C***********          MOVE PCRF      W#PCRF 15                179738 205409
+     C***********          MOVELW1ST03    W#PCRF                   179738 205409
+     C***********          MOVE W#PCRF    PCRF                     179738 205409
+     C***********          ENDIF                                          205409
+      *
+     C                     UPDATLEFEEDF
+     C                     ENDIF                                          205409
+     C                     READ LEFEED                   50
+     C                     ENDDO
+      *
+      *****************************************************************
+      *
+      **  Set-up fields for LEFEEAD records
+      *
+     C                     READ LEFEEAD                  50
+     C           *IN50     DOWEQ'0'
+      *
+      ** Access the SDBRCHPD for the details of Fee Settlement Branch
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY   ' POPTN   7
+     C                     PARM FABRCA    PBRCA   3
+     C           SDBRCH    PARM *BLANK    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     READ LEFEEAD                  50
+     C                     ITER
+     C                     ENDIF
+      *
+      *  If Fee Settlement Reference is blank set it to the branch
+      *  code plus 12 digits, 8 of which is obtained from the
+      *  data area LEALLO.
+      *
+     C           PCRF      IFEQ *BLANK
+     C           RESET     OREQ 'Y'                                       205409
+     C********** *LOCK     IN   LEALLO                                                        CLE148
+     C********** PCLAST    ADD  1         PCNEXT  80                                          CLE148
+     C                     EXSR SRLEAL                                                        CLE148
+     C***********          MOVELA8BRCD    W1ST11 11                       179738
+     C           A8MQSM    IFNE *BLANKS                                   205409
+     C                     MOVELA8MQSM    W1ST11 11                       179738
+     C                     ELSE                                           205409
+     C                     MOVELA8BRCD    W1ST11                          205409
+     C                     ENDIF                                          205409
+     C********** PCOB      IFEQ *BLANKS                                                205409 CLE148
+     C**********           MOVEL'9'       PCNEXT                                       205409 CLE148
+     C**********           ELSE                                                        205409 CLE148
+     C**********           MOVEL'8'       PCNEXT                                       205409 CLE148
+     C**********           ENDIF                                                       205409 CLE148
+     C                     MOVE PCNEXT    W1ST11
+     C                     MOVELW1ST11    PCRF
+     C                     MOVE '0001'    PCRF
+     C**********           Z-ADDPCNEXT    PCLAST                                              CLE148
+      *                                                                   213099
+      * Always output a '9' to position 1 of data area LEALLO             213099
+     C**********           MOVEL'9'       PCLAST                                       213099 CLE148
+     C**********           OUT  LEALLO                                                        CLE148
+     C***********          ELSE                                    179738 205409
+     C***********          MOVELA8MQSM    W1ST03  3                179738 205409
+     C***********          MOVE PCRF      W#PCRF 15                179738 205409
+     C***********          MOVELW1ST03    W#PCRF                   179738 205409
+     C***********          MOVE W#PCRF    PCRF                     179738 205409
+     C***********          ENDIF                                          205409
+     C                     UPDATLEFEEADF
+     C                     ENDIF                                          205409
+     C                     READ LEFEEAD                  50
+     C                     ENDDO
+      *
+     C                     SETON                     LR
+      *
+      *****************************************************************   205409
+      *                                                                   205409
+      **  Set-up fields for LEPARTPD records                              205409
+      *                                                                   205409
+     C                     READ LEPARTPD                 50               205409
+     C           *IN50     DOWEQ'0'                                       205409
+      *                                                                   205409
+      ** Access the SDBRCHPD for the details of Fee Settlement Branch     205409
+      *                                                                   205409
+     C**********           CALL 'AOBRCHR0'                                205409              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   PRTCD   7                       205409
+     C                     PARM '*KEY   ' POPTN   7                       205409
+     C                     PARM BRCA      PBRCA   3                       205409
+     C           SDBRCH    PARM *BLANK    DSSDY                           205409
+      *                                                                   205409
+     C           PRTCD     IFNE *BLANKS                                   205409
+     C                     READ LEPARTPD                 50               205409
+     C                     ITER                                           205409
+     C                     ENDIF                                          205409
+      *                                                                   205409
+      *  If PC Reference is blank set it to the branch                    205409
+      *  code plus 12 digits, 8 of which is obtained from the             205409
+      *  data area LEALLO.                                                205409
+      *                                                                   205409
+     C           PCRF      IFEQ *BLANK                                    205409
+     C           RESET     OREQ 'Y'                                       205409
+     C********** *LOCK     IN   LEALLO                                                 205409 CLE148
+     C********** PCLAST    ADD  1         PCNEXT  80                                   205409 CLE148
+     C                     EXSR SRLEAL                                                        CLE148
+     C           A8MQSM    IFNE *BLANKS                                   205409
+     C                     MOVELA8MQSM    W1ST11 11                       205409
+     C                     ELSE                                           205409
+     C                     MOVELA8BRCD    W1ST11                          205409
+     C                     ENDIF                                          205409
+     C********** PCOB      IFEQ *BLANKS                                                205409 CLE148
+     C**********           MOVEL'9'       PCNEXT                                       205409 CLE148
+     C**********           ELSE                                                        205409 CLE148
+     C**********           MOVEL'8'       PCNEXT                                       205409 CLE148
+     C**********           ENDIF                                                       205409 CLE148
+     C                     MOVE PCNEXT    W1ST11                          205409
+     C                     MOVELW1ST11    PCRF                            205409
+     C                     MOVE '0001'    PCRF                            205409
+     C**********           Z-ADDPCNEXT    PCLAST                                       205409 CLE148
+      *                                                                   213099
+      * Always output a '9' to position 1 of data area LEALLO             213099
+     C**********           MOVEL'9'       PCLAST                                       213099 CLE148
+     C**********           OUT  LEALLO                                                 205409 CLE148
+     C                     UPDATLEPARTD0                                  205409
+     C                     ENDIF                                          205409
+     C                     READ LEPARTPD                 50               205409
+     C                     ENDDO                                          205409
+      *                                                                   205409
+     C                     SETON                     LR                   205409
+      *                                                                   205409
+      *****************************************************************   205409
+      *                                                                   205409
+      **  Set-up fields for LEFCAMPD records                              205409
+      *                                                                   205409
+     C                     READ LEFCAMPD                 50               205409
+     C           *IN50     DOWEQ'0'                                       205409
+      *                                                                   205409
+      ** Access the SDBRCHPD for the details of Fee Settlement Branch     205409
+      *                                                                   205409
+     C**********           CALL 'AOBRCHR0'                                205409              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   PRTCD   7                       205409
+     C                     PARM '*KEY   ' POPTN   7                       205409
+     C                     PARM BRCA      PBRCA   3                       205409
+     C           SDBRCH    PARM *BLANK    DSSDY                           205409
+      *                                                                   205409
+     C           PRTCD     IFNE *BLANKS                                   205409
+     C                     READ LEFCAMPD                 50               205409
+     C                     ITER                                           205409
+     C                     ENDIF                                          205409
+      *                                                                   205409
+      *  If PC Reference is blank set it to the branch                    205409
+      *  code plus 12 digits, 8 of which is obtained from the             205409
+      *  data area LEALLO.                                                205409
+      *                                                                   205409
+     C           PCRF      IFEQ *BLANK                                    205409
+     C           RESET     OREQ 'Y'                                       205409
+     C********** *LOCK     IN   LEALLO                                                 205409 CLE148
+     C********** PCLAST    ADD  1         PCNEXT  80                                   205409 CLE148
+     C                     EXSR SRLEAL                                                        CLE148
+     C           A8MQSM    IFNE *BLANKS                                   205409
+     C                     MOVELA8MQSM    W1ST11 11                       205409
+     C                     ELSE                                           205409
+     C                     MOVELA8BRCD    W1ST11                          205409
+     C                     ENDIF                                          205409
+     C********** PCOB      IFEQ *BLANKS                                                205409 CLE148
+     C**********           MOVEL'9'       PCNEXT                                       205409 CLE148
+     C**********           ELSE                                                        205409 CLE148
+     C**********           MOVEL'8'       PCNEXT                                       205409 CLE148
+     C**********           ENDIF                                                       205409 CLE148
+     C                     MOVE PCNEXT    W1ST11                          205409
+     C                     MOVELW1ST11    PCRF                            205409
+     C                     MOVE '0001'    PCRF                            205409
+     C**********           Z-ADDPCNEXT    PCLAST                                       205409 CLE148
+      *                                                                   213099
+      * Always output a '9' to position 1 of data area LEALLO             213099
+     C**********           MOVEL'9'       PCLAST                                       213099 CLE148
+     C**********           OUT  LEALLO                                                 205409 CLE148
+     C                     UPDATLEFCAMPF                                  205409
+     C                     ENDIF                                          205409
+     C                     READ LEFCAMPD                 50               205409
+     C                     ENDDO                                          205409
+      *                                                                   205409
+     C                     SETON                     LR                   205409
+      *                                                                   205409
+      *****************************************************************                       CLE148
+      *                                                               *                       CLE148
+      *  SRLEAL - Call LEALLO program to allocate the next reference. *                       CLE148
+      *  Called from: Main processing                                 *                       CLE148
+      *                                                               *                       CLE148
+      *****************************************************************                       CLE148
+     C           SRLEAL    BEGSR                                                              CLE148
+      *                                                                                       CLE148
+     C                     CALL 'LEALLO'                                                      CLE148
+     C                     PARM *BLANKS   PRTCD                                               CLE148
+     C                     PARM 'Y'       PUPDT   1                                           CLE148
+     C                     PARM *BLANKS   PCLAST                                              CLE148
+     C                     PARM *BLANKS   PCNEXT  8                                           CLE148
+      *                                                                                       CLE148
+     C                     ENDSR                                                              CLE148
+      *****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

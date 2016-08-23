@@ -1,0 +1,297 @@
+     H        1
+     F****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Message Maintenance Utilities')                  *
+     F****************************************************************
+     F*                                                              *
+     F*  Midas - MESSAGE MAINTENANCE UTILITIES.
+     F*                                                              *
+     F*  ZM0070 - FORMAT FIELD 37 - INTEREST DETAILS.                *
+     F*                                                              *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                              *
+      *  Last Amend No. CDL093             Date 08Apr14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  Prev Amend No.AUS003         DATE.01JUL92                   *
+     F*                E29588         DATE.03/02/92                  *
+     F*                                                              *
+     F****************************************************************
+     F*                                                              *
+      *  CDL093  - MM Interest calculation type 9.                    *
+     F*       AUS003  -  AUSTRALIAN PRODUCT - INTEREST TO MONTH END      *AUS003
+     F*  E29588 - POST COLLECTION RATIONALISATION FIXES.             *
+     F*                                                              *
+     F****************************************************************
+     F* PURPOSE.                                                     *
+     F*                                                              *
+     F*  To format field 37 from the interest rate (ZINRT) , the     *
+     F*  payment date (ZINPD) , the frequency code (ZINFC) , and     *
+     F*  the calculation method.                                     *
+     F*                                                              *
+     F*  The program calls two other standard programs , ZM0010 -    *
+     F*  to format the interest rate , and ZM0060 - to format the    *
+     F*  date from the midas date.                                   *
+     F****************************************************************
+     F*                                                              *
+     F* FUNCTION OF INDICATORS.                                      *
+     F*                                                              *
+     F* 90 - Date and Frequency Details are Blank.                   *
+     F* 91 - Information Field is Blank.                             *
+     F* 92 - Used to Lokup the next blank field in the field 37 array*
+     F*                                                              *
+     F****************************************************************
+     E*
+     E** COPYRIGHT STATEMENT ARRAY.
+     E*
+     E                    CPY@    1   1 80
+     E*
+     E** Array used in calc method messages.
+     E*
+     E/COPY WNCPYSRC,ZM0070E001
+     E**********          ZSIM    1   7 33                                                    CDL093
+     E                    ZSIM    1   8 33                                                    CDL093
+     E/COPY WNCPYSRC,ZM0070E002
+     E*
+     E** Array used in formatting of field 37.
+     E*
+     E                    ZF37       35  1
+      /EJECT
+     E****************************************************************
+     I*
+     I** DSTS STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I/COPY WNCPYSRC,ZM0070I001
+     I****************************************************************
+     C* Parameter Details.
+     C*
+     C* 1. ZINRT   Interest Rate - Input.
+     C* 2. ZINPD   Interest Payment Date - Input.
+     C* 3. ZMDAT   Maturity Date - Input.
+     C* 4. ZINFC   Interest Frequency Code - Input.
+     C* 5. ZCALC   Interest Calculation Method - Input.
+     C* 6. ZSTAG   Field Tag  -  Output.
+     C* 7. @VAR    Field 37 Information - Output.(Moved into array ZF37).
+     C* 8. ZSF72   Field 72 Information - Output.
+     C*
+     C**  Parameters List.
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           ZINRT  117
+     C                     PARM           ZINPD   50
+     C                     PARM           ZMDAT   50
+     C                     PARM           ZINFC   1
+     C                     PARM           ZCALC   10
+     C                     PARM           ZSTAG   1
+     C                     PARM           @VAR   35
+     C                     PARM           ZSF72  35
+     C*
+     C                     MOVEA@VAR      ZF37
+     C                     SETOF                     909192
+     C                     MOVE ' '       TEST
+     C                     MOVE *BLANKS   ZSTAG
+     C                     MOVE *BLANKS   @VAR
+     C                     MOVE *BLANKS   ZSF72
+     C*
+     C/COPY WNCPYSRC,ZM0070C002
+     C**  Set up of information field for negative interest by seeing
+     C**  if the inputted field is less than zero.If it is negative
+     C**  zero subtract the field in order to obtain a positive
+     C**  value.
+     C*
+     C           ZINRT     IFLT 0
+     C                     MOVE 'NEG'     ZSINFO 10
+     C                     Z-SUBZINRT     ZINRT
+     C                     END
+     C*
+     C**  Field tag Determination and information field set-up.
+     C**  If the interest calculation method is anything other than
+     C**  zero put;into the information field (ZSINFO) , see72 as
+     C**  field 72 contains additional information.
+     C**  Also set up the tag field with the appropriate letter
+     C**  dependant on the interest calculation method.
+     C*
+     C           ZCALC     IFNE 0
+     C*
+     C           ZCALC     IFEQ 9                                                             CDL093
+     C                     MOVELZSIM,8    ZSF72                                               CDL093
+     C                     END                                                                CDL093
+      *                                                                                       CDL093
+     C**  Subfield 2 of field 37 should only be used if interest is
+     C**  not to be paid at maturity only
+     C*
+     C           ZMDAT     IFEQ 0
+     C                     MOVEL'SEE72'   ZSINFO
+     C                     MOVELZSIM,ZCALCZSF72
+     C                     END
+     C*
+     C           ZCALC     IFEQ 1
+     C                     MOVE 'E'       ZSTAG
+     C                     END
+     C*
+     C           ZCALC     IFEQ 2
+     C                     MOVE 'B'       ZSTAG
+     C                     END
+     C*
+     C           ZCALC     IFEQ 3
+     C                     MOVE 'A'       ZSTAG
+     C                     END
+     C*
+     C           ZCALC     IFEQ 4
+     C/COPY WNCPYSRC,ZM0070C003
+     C                     MOVE 'C'       ZSTAG
+     C                     END
+     C*
+     C           ZCALC     IFEQ 5
+     C                     MOVE 'B'       ZSTAG
+     C                     END
+     C*
+     C           ZCALC     IFEQ 6
+     C                     MOVE 'C'       ZSTAG
+     C                     END
+      *
+     C/COPY WNCPYSRC,ZM0070C001
+     C                     END
+     C*
+     C**  If the interest rate is zero, indicate this is the case
+     C*
+     C           ZINRT     IFEQ 0
+     C/COPY WNCPYSRC,ZM0070C004
+     C                     MOVELZSIM,7    ZSF72
+     C                     END
+     C*
+     C**  Interest Figure Processing - calls ZM0010 Format Interest Rate
+     C**  The figure  that is returned from the call is the interest figure
+     C**  (ZSINRT).
+     C*
+     C                     CALL 'ZM0010'
+     C                     PARM           ZINRT
+     C                     PARM           ZSINRT 12
+     C*
+     C**  Date and Frequency Processing.
+     C**  Date Processing - If the interest payment date is blank ;
+     C**  blanks are moved to this field (ZINPD). If the interest
+     C**  payment field is not blank , ZM0060 - Format SWIFT Date is
+     C**  called and the returned parameter (ZSDATE) is moved into
+     C**  the date and frequency field (ZSDAFR). The interest
+     C**  frequency code (ZINFC) is then examined and a code is
+     C**  moved into ZSDAFR dependant on ZINFC's value.
+     C*
+     C           ZINPD     IFEQ 0
+     C                     MOVE '1'       *IN90
+     C                     MOVE *BLANKS   ZSDAFR 10
+     C                     ELSE
+     C                     CALL 'ZM0060'
+     C                     PARM           ZINPD
+     C                     PARM           ZSDATE  6
+     C*
+     C                     MOVELZSDATE    ZSDAFR
+     C*
+     C**  Frequency Processing.
+     C*
+     C           ZINFC     IFEQ 'M'
+     C                     MOVE 'M001'    ZSDAFR
+     C                     END
+     C*
+     C           ZINFC     IFEQ 'N'                                       AUS003
+     C                     MOVE 'M001'    ZSDAFR                          AUS003
+     C                     END                                            AUS003
+     C*
+     C           ZINFC     IFEQ 'Q'
+     C                     MOVE 'M003'    ZSDAFR
+     C                     END
+     C*
+     C           ZINFC     IFEQ 'X'
+     C                     MOVE 'M006'    ZSDAFR
+     C                     END
+     C*
+     C           ZINFC     IFEQ 'Y'
+     C                     MOVE 'M012'    ZSDAFR
+     C                     END
+     C*
+     C           ZINFC     IFEQ ' '                                       E29588
+     C                     MOVE *BLANKS   ZSDAFR                          E29588
+     C                     END                                            E29588
+     C*                                                                   E29588
+     C                     END
+     C*
+     C**  Formatting field 37 for output.
+     C*
+     C                     MOVE ZSTAG     TAG37   1
+     C*
+     C           ZSDAFR    IFEQ ' '
+     C                     MOVE '1'       *IN90
+     C                     END
+     C*
+     C           ZSINFO    IFEQ ' '
+     C                     MOVE '1'       *IN91
+     C                     END
+     C*
+     C**  Compress field 37 for output.
+     C**  Initialise an output array.
+     C*
+     C                     MOVEA*BLANKS   ZF37
+     C                     MOVEAZSINRT    ZF37
+     C                     Z-ADD1         F       20
+     C*
+     C**  Locate next blank in ZF37 array.
+     C*
+     C           ' '       LOKUPZF37,F                   92
+     C*
+     C**  If ZSDAFR isn't blank (i.e. *in90 is off) , put it directly
+     C**  after the interest rate (ZSINRT).
+     C*
+     C           *IN90     IFEQ '0'
+     C                     MOVEA'//'      ZF37,F
+     C                     ADD  2         F
+     C                     MOVEAZSDAFR    ZF37,F
+     C                     ADD  10        F
+     C                     END
+     C*
+     C**  If ZSINFO isn't blank (i.e. *in91 is off) , put it directly
+     C**  after ZSDAFR if present or ZSINRT if it is not.
+     C*
+     C           *IN91     IFEQ '0'
+     C                     MOVEA'/'       ZF37,F
+     C                     ADD  1         F
+     C*
+     C**
+     C*
+     C                     MOVELZSINFO    TEST    1
+     C           TEST      IFEQ *BLANK
+     C                     MOVE ZSINFO    HLD3    3
+     C                     MOVEAHLD3      ZF37,F
+     C                     ELSE
+     C                     MOVEAZSINFO    ZF37,F
+     C                     END
+     C                     END
+     C*
+     C**  Move the field into the array for output.
+     C*
+     C                     MOVEAZF37      @VAR
+     C*
+     C*
+     C**  Termination Processing.
+     C*
+     C                     SETON                     LR
+     C*
+     C**********************************************************************
+      ** CDL093: Added element 8 to ZSIM                                                      CDL093
+** CPY@
+(c) Misys International Banking Systems Ltd. 2001
+** ZSIM - CALC METHOD MESSAGES.
+/INTEREST/METHOD IS ACTUAL BY 365
+/INTEREST/METHOD IS ACTUAL BY 360
+/INTEREST/METHOD IS 360 BY 360
+/INTEREST/METHOD IS 365 BY 365
+/INTEREST/METHOD IS 365 BY 360
+/INTEREST/METHOD IS ACTUAL BY 366
+/INTEREST/NON INTEREST BEARING
+/INTEREST/METHOD IS ACTUAL-ACTUAL AFB

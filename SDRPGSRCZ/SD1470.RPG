@@ -1,0 +1,223 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Terminate Market Data Feed')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD1470 - Terminate Market Data Feed                          *
+      *                                                               *
+      *  Function:  This program is called by SDC1470 to send a       *
+      *             message to Market Watch application to stop       *
+      *             the Market Data Feeds to the Midas system.        *
+      *  (phase(s)) I/C                                               *
+      *                                                               *
+      *  Called By: SDC1470 - Terminate MDF                           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4.01 -------------------------------------------*
+      *  Last Amend No. 196570             Date 06Aug01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *  Prev Amend No. CSD006  *CREATE    Date 13Jul00               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  196570 - Patch for Market Data Feed (recompile)              *
+      *  CSD006 - Market Data Feeds                                   *
+      *                                                               *
+      *****************************************************************
+     FSDDRQXPDO   E                    DISK         KINFSR *PSSR
+     F                                              KCOMIT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   80  - Error writing record                                  *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *   LR  - Program Termination                                   *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRMAIN - Detail Processing                                   *
+      *  SRTERM - Program Termination                                 *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *  AOBANKR0 - Access Object for Bank Details                    *
+      *  AOMDFCR0 - Access Object for MDF ICD                         *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IDSSDY     E DSDSSDY
+      ** Dummy data structure used by access programs
+      *
+     IDSFDY     E DSDSFDY
+      ** Dummy data structure used by access programs
+      *
+     ISDBANK    E DSSDBANKPD
+      ** External data structures for Bank Details
+      *
+     ISDMDFC    E DSSDMDFCPD
+      ** External data structures for MDF ICD
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ** Perform Detail Processing.
+      *
+     C                     EXSR SRMAIN
+      *
+      ** Program Termination.
+      *
+     C                     EXSR SRTERM
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRMAIN - Detail Processing                                   *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: None                                                  *
+      *  AOBANKR0    - Access Object for Bank Details                 *
+      *  AOMDFCPD    - Access Object for MDF ICD                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRMAIN    BEGSR                           *** SRMAIN ***
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Define LDA for Database Error
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            *************
+     C                     MOVEL'SDBANKPD'DBFILE           * DBERR 001 *
+     C                     MOVEL'*FIRST'  DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Access MDF ICD
+      *
+     C                     CALL 'AOMDFCR0'
+     C                     PARM '*DBERR ' WRTCD
+     C                     PARM '*FIRST ' WOPTN
+     C           SDMDFC    PARM SDMDFC    DSSDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            *************
+     C                     MOVEL'SDMDFCPD'DBFILE           * DBERR 002 *
+     C                     MOVEL'*FIRST'  DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Write termination details
+      *
+     C                     MOVELMDTRGI    QXNODK
+     C                     MOVEL'0'       QXACKN
+      *
+     C                     WRITESDDRQXD0               80
+      *
+      ** Error updating file
+      *
+     C           *IN80     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE            *************
+     C                     MOVEL'SDDRQXPD'DBFILE           * DBERR 003 *
+     C                     MOVELMDTRGI    DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     COMIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRTERM
+      *****************************************************************
+      *                                                               *
+      *  SRTERM - Program Termination                                 *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRTERM    BEGSR                           *** SRTERM ***
+      *
+      ** End of pgm
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           *** *PSSR ***
+      *
+     C                     CALL 'DBERRCTL'
+     C                     DUMP
+     C                     MOVE *ON       *INLR
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     RETRN
+      *
+     C                     ENDSR
+      ****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

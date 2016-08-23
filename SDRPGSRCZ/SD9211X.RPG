@@ -1,0 +1,1102 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Initialise securities ICD')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD9211X - Midas SD Securities Trading data                   *
+      *                                                               *
+      *  Function:  This program initialises Securities Trading data  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. 224354             Date 16Jan04               *
+      *                 CAS006             Date 21Jan03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSD003             Date 01Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAC001             DATE 14MAR96               *
+      *                 S01496             DATE 19JUL94               *
+      *                 S01464             DATE 17MAY94               *
+      *                 066562             DATE 09FEB94               *
+      *                 S01459             DATE 09FEB94               *
+      *                 S01448             DATE 09OCT93               *
+      *                 S01446             DATE 09OCT93               *
+      *                 041661             DATE 12AUG92               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  224354 - Remove field Historic Prices Retention Period       *
+      *  CAS006 - Hedging with Securities, Forward Rate Agreements    *
+      *           and Forecast Transactions.                          *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - Program removed from SD model.                    *
+      *  CAC001 - Profit Centre Accounting:                           *
+      *           Regenerate & recompile - field SE Profit Centre     *
+      *           added to SDSTRDPD.
+      *  S01496 - Jyske Enhancements:                                 *
+      *           - Regenerate and recompile program over changed     *
+      *             SDSTRDPD.                                         *
+      *  S01464 - Safe Custody Fees Development:                      *
+      *           Regenerate and recompile program over changed       *
+      *           SDSTRDPD.                                           *
+      *  066562 - Field BVAPS renamed to BVAPST on SDSTRDPD.          *
+      *           Regenerate and recompile program.                   *
+      *  S01459 - Addition of headerbox and PSSR processing.          *
+      *  S01448 - REGENERATED DUE TO CHANGE IN SDSTRDPD FILE          *
+      *           LENGTH.                                             *
+      *  S01446 - REGENERATED DUE TO CHANGE IN SDSTRDPD FILE          *
+      *           LENGTH.                                             *
+      *  041661 - REGENERATED BECAUSE PROGRAM HAD FIELD POSITINS      *
+      *           WRONGLY DEFINED IN 'P1PARM' DATA STRUCTURE.         *
+      *           THIS CAUSED THE FIELDS TO BE SHOWN AS BLANK         *
+      *           WHEN SD9211R WAS CALLED                             *
+      *           (COLLATERAL CCY CONVERSION, FX RISK, ALL            *
+      *           HOLDINGS LIMIT FACTOR, CUSTOMER LIMIT FACTOR        *
+      *           AND DISCRETIONARY LIMIT FACTOR)                     *
+      *                                                               *
+      *****************************************************************
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright array
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   70##JDT
+     I                                        1   10##JCC
+     I                                        2   30##JYY
+     I                                        4   50##JMM
+     I                                        6   70##JDD
+     I                                        8  130##JTM
+     I                                        8   90##JHH
+     I                                       10  110##JNN
+     I                                       12  130##JSS
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+      /EJECT
+      *                                                                                       CAS006
+      ** Enhancement File                                                                     CAS006
+      *                                                                                       CAS006
+     ISCSARD    E DSSCSARDPD                                                                  CAS006
+      *                                                                                       CAS006
+      ** Short data structure                                                                 CAS006
+      *                                                                                       CAS006
+     IDSFDY     E DSDSFDY                                                                     CAS006
+      *                                                                                       CAS006
+      ** Datebase error DS                                                                    CAS006
+      *                                                                                       CAS006
+     ILDA       E DSLDA                                                                       CAS006
+      * Parameter declarations
+     IP1PARM      DS                            209
+      * RCD: Midas SD Securities trading ICD retrieval
+      * I : MAP Mark to Market Base Date
+     I                                      126 1270P1MMBD
+      * I : MAP Mark to Market Next Date
+     I                                    P 128 1300P1MMND
+      * I : MAP Back value period
+     I                                    P 144 1450P1BVP
+      * I : MAP Retention of settled trd
+     I                                      146 1470P1ROST
+      * I : MAP Retention of diary
+     I                                      148 1490P1RODY
+      * I : MAP Retention of matured sec.
+     I                                      150 1510P1ROMS
+      * I : MAP Auto-transmission interfc
+     I                                      153 153 P1ATI
+      * I : MAP Collateral Currency Convt
+     I                                    P 159 1600P1CCYC
+      * I : MAP Foreign Exchange Risk
+     I                                    P 161 1620P1FERK
+      * I : MAP All Holdings Limit Factor
+     I                                    P 164 1650P1AHLF
+      * I : MAP Discretionary Limit Fact.
+     I                                    P 166 1670P1DLF
+      * I : MAP Customers Limit Factor
+     I                                    P 168 1690P1CLF
+      **********                                                                       CAS006 224354
+      ***Historic*Prices*Retention*Period******************************                CAS006 224354
+      **********                                                                       CAS006 224354
+     I**********                          P 170 1720P1BHPP                             CAS006 224354
+     IP2PARM      DS
+      * FLD: Securities Trading Func
+      * O : MAP Func Fld Mat. Period
+     I                                        1   6 P2FFMP
+      * O : MAP Func Fld Settled Trades
+     I                                        7  12 P2FFST
+      * O : MAP Func Fld Back Valuation
+     I                                       13  18 P2FFBV
+      * O : MAP Func Fld Diary Entries
+     I                                       19  24 P2FFDE
+      * O : MAP Func Fld Auto Trans
+     I                                       25  30 P2FFAT
+      * O : MAP Func Fld Coll Curr Conv
+     I                                       31  36 P2FFCC
+      * O : MAP Func Fld FX Risk
+     I                                       37  42 P2FFFR
+      * O : MAP Func Fld All Holding Lmt
+     I                                       43  48 P2FFAH
+      * O : MAP Func Fld Disc. Limit Fact
+     I                                       49  54 P2FFLF
+      * O : MAP Func Fld Cust Limit Fact
+     I                                       55  60 P2FFCL
+      * O : MAP Func Fld M to M Base Day
+     I                                       61  66 P2FFBD
+      * O : MAP Func Fld M to M Next Date
+     I                                       67  72 P2FFND
+      **********                                                                       CAS006 224354
+      ***Historic*Prices*Retention*Period******************************                CAS006 224354
+      **********                                                                       CAS006 224354
+     I**********                             73  76 P2BHPP                             CAS006 224354
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           P1PARM           RCD: Securities
+     C           P2FFMP    PARM P2FFMP    WP0001  6        Func Fld Mat. P
+     C           P2FFST    PARM P2FFST    WP0002  6        Func Fld Settle
+     C           P2FFBV    PARM P2FFBV    WP0003  6        Func Fld Back V
+     C           P2FFDE    PARM P2FFDE    WP0004  6        Func Fld Diary
+     C           P2FFAT    PARM P2FFAT    WP0005  6        Func Fld Auto T
+     C           P2FFCC    PARM P2FFCC    WP0006  6        Func Fld Coll C
+     C           P2FFFR    PARM P2FFFR    WP0007  6        Func Fld FX Ris
+     C           P2FFAH    PARM P2FFAH    WP0008  6        Func Fld All Ho
+     C           P2FFLF    PARM P2FFLF    WP0009  6        Func Fld Disc.
+     C           P2FFCL    PARM P2FFCL    WP0010  6        Func Fld Cust L
+     C           P2FFBD    PARM P2FFBD    WP0011  6        Func Fld M to M
+     C           P2FFND    PARM P2FFND    WP0012  6        Func Fld M to M
+      **********                                                                       CAS006 224354
+      ***Historic*Prices*Retention*Period******************************                CAS006 224354
+      **********                                                                       CAS006 224354
+     C********** P2BHPP    PARM P2BHPP    WP0013  4                                    CAS006 224354
+      *****************************************************************
+      * Initialize
+     C                     EXSR ZZINIT
+      *
+      * Init Fields for Sec. Trad
+      * Start of S01459
+      * SD9211X Precompiler - Securities Trading Data  *
+      * Remove Last Amend Box and Creation Parameter Functions
+      * End of S01459
+      * Copyright Statement - Standard Functions  *
+      * Period for Matured Securities
+      * CASE: PAR.Retention of matured sec. is Zero
+     C           P1ROMS    IFEQ *ZERO                      *IF
+     C                     MOVEL*BLANK    P2FFMP           Func Fld Mat. P
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL*BLANK    WUZASF           ZALIGN Screen F
+     C                     MOVELP1ROMS    WUZASF           ZALIGN Screen F
+      * Call ZALIGN & ZEDIT
+      * ZALIGN Screen Field - Standard Functions  *
+     C                     CALL 'ZALIGN'               90  ZALIGN Screen F
+     C           W0RTN     PARM W0RTN     WQ0001  7        *Return code
+     C           WUZASF    PARM WUZASF    WQ0002 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0003  10       ZALIGN No Of De
+     C                     PARM 2         WQ0004  20       ZALIGN No Of Di
+     C           WUZAFF    PARM *BLANK    WQ0005 16        ZALIGN File Fie
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZALIGN'  W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: PGM.*Return code is Old Table Error
+     C           W0RTN     IFEQ '*ERROR*'                  *IF
+     C                     MOVEL'Y'       WUERCD           Err Code
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUERCD           Err Code
+      * ZEDIT Screen Field - Standard Functions  *
+     C                     CALL 'ZEDIT'                90  ZEDIT Screen Fi
+     C           WUZASF    PARM WUZASF    WQ0006 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0007  10       ZALIGN No Of De
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZEDIT'   W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     END                             *FI
+      * Move right Matured Sec. - Securities Trading Data  *
+     C*
+     C*
+     C                     MOVE WUZASF    P2FFMP
+     C*
+     C*
+     C                     END                             *FI
+      * Period for Settled Trades
+      * CASE: PAR.Retention of settled trd is Zero
+     C           P1ROST    IFEQ *ZERO                      *IF
+     C                     MOVEL*BLANK    P2FFST           Func Fld Settle
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL*BLANK    WUZASF           ZALIGN Screen F
+     C                     MOVELP1ROST    WUZASF           ZALIGN Screen F
+      * Call ZALIGN & ZEDIT
+      * ZALIGN Screen Field - Standard Functions  *
+     C                     CALL 'ZALIGN'               90  ZALIGN Screen F
+     C           W0RTN     PARM W0RTN     WQ0008  7        *Return code
+     C           WUZASF    PARM WUZASF    WQ0009 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0010  10       ZALIGN No Of De
+     C                     PARM 2         WQ0011  20       ZALIGN No Of Di
+     C           WUZAFF    PARM *BLANK    WQ0012 16        ZALIGN File Fie
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZALIGN'  W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: PGM.*Return code is Old Table Error
+     C           W0RTN     IFEQ '*ERROR*'                  *IF
+     C                     MOVEL'Y'       WUERCD           Err Code
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUERCD           Err Code
+      * ZEDIT Screen Field - Standard Functions  *
+     C                     CALL 'ZEDIT'                90  ZEDIT Screen Fi
+     C           WUZASF    PARM WUZASF    WQ0013 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0014  10       ZALIGN No Of De
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZEDIT'   W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     END                             *FI
+      * Move right Settled Trades - Securities Trading Data  *
+     C*
+     C*
+     C                     MOVE WUZASF    P2FFST
+     C*
+     C*
+     C                     END                             *FI
+      * Period for Back Valuation
+      * CASE: PAR.Back value period is Historical period = 0
+     C           P1BVP     IFEQ *ZERO                      *IF
+     C                     MOVEL*BLANK    P2FFBV           Func Fld Back V
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL*BLANK    WUZASF           ZALIGN Screen F
+     C                     MOVELP1BVP     WUZASF           ZALIGN Screen F
+      * Call ZALIGN & ZEDIT
+      * ZALIGN Screen Field - Standard Functions  *
+     C                     CALL 'ZALIGN'               90  ZALIGN Screen F
+     C           W0RTN     PARM W0RTN     WQ0015  7        *Return code
+     C           WUZASF    PARM WUZASF    WQ0016 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0017  10       ZALIGN No Of De
+     C                     PARM 3         WQ0018  20       ZALIGN No Of Di
+     C           WUZAFF    PARM *BLANK    WQ0019 16        ZALIGN File Fie
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZALIGN'  W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: PGM.*Return code is Old Table Error
+     C           W0RTN     IFEQ '*ERROR*'                  *IF
+     C                     MOVEL'Y'       WUERCD           Err Code
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUERCD           Err Code
+      * ZEDIT Screen Field - Standard Functions  *
+     C                     CALL 'ZEDIT'                90  ZEDIT Screen Fi
+     C           WUZASF    PARM WUZASF    WQ0020 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0021  10       ZALIGN No Of De
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZEDIT'   W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     END                             *FI
+      * Move right Back Valuation - Securities Trading Data  *
+     C*
+     C*
+     C                     MOVE WUZASF    P2FFBV
+     C*
+     C*
+     C                     END                             *FI
+      **********                                                                       CAS006 224354
+      ***Set*Historic*Price*to*blank*if*CAS006*is*off******************                CAS006 224354
+      **********                                                                       CAS006 224354
+     C********** CAS006    IFEQ 'N'                                                    CAS006 224354
+     C**********           MOVE *BLANKS   P2BHPP                                       CAS006 224354
+     C**********           ELSE                                                        CAS006 224354
+      **********                                                                       CAS006 224354
+      ***Else,*still*set*Historic*Price*to*blanks*if*CAS006*is*********                CAS006 224354
+      ***installed*but*P1BHPP*is*zero**********************************                CAS006 224354
+      **********                                                                       CAS006 224354
+     C********** P1BHPP    IFEQ *ZERO                                                  CAS006 224354
+     C**********           MOVE *BLANKS   P2BHPP                                       CAS006 224354
+     C**********           ELSE                                                        CAS006 224354
+      **********                                                                       CAS006 224354
+      ***Else,*test*if*P1BHPP*is*a*valid*numeric***********************                CAS006 224354
+      **********                                                                       CAS006 224354
+     C**********           MOVEL*BLANK    WUZASF                                       CAS006 224354
+     C**********           MOVE P1BHPP    W1BHPP  4                                    CAS006 224354
+      **********                                                                       CAS006 224354
+     C**********           CALL 'ZALIGN'               90                              CAS006 224354
+     C**********           PARM *BLANKS   WQ0015                                       CAS006 224354
+     C**********           PARM W1BHPP    WQ0016                                       CAS006 224354
+     C**********           PARM *ZERO     WQ0017                                       CAS006 224354
+     C**********           PARM 4         WQ0018                                       CAS006 224354
+     C**********           PARM *BLANK    WQ0019                                       CAS006 224354
+      **********                                                                       CAS006 224354
+      ***Send*database*eror*if*call*to*zalign*ended*in*error***********                CAS006 224354
+      **********                                                                       CAS006 224354
+     C********** *IN90     IFEQ '1'                                                    CAS006 224354
+     C**********           MOVEL'Y2U0032' WQ0015                                       CAS006 224354
+     C**********           MOVEL*BLANKS   W0CLPG                                       CAS006 224354
+     C**********           MOVEL'ZALIGN'  W0CLPG                                       CAS006 224354
+     C**********           MOVEL'Y2U0032' ZAMSID                                       CAS006 224354
+     C**********           MOVEL'Y2USRMSG'ZAMSGF                                       CAS006 224354
+     C**********           MOVELW0CLPG    ZAMSDA                                       CAS006 224354
+     C**********           EXSR ZASNMS                                                 CAS006 224354
+     C**********           ENDIF                                                       CAS006 224354
+      **********                                                                       CAS006 224354
+      ***Turn*on*error*indicator*if*an*error*is*detected*aside*********                CAS006 224354
+      ***from*P1BHPP*being*non-numeric*********************************                CAS006 224354
+      **********                                                                       CAS006 224354
+     C********** WQ0015    IFNE *BLANK                                                 CAS006 224354
+     C**********           MOVE *ON       *IN99                                        CAS006 224354
+     C**********           ENDIF                                                       CAS006 224354
+      **********                                                                       CAS006 224354
+      ***If*P1BHPP*is*not*a*valid*numeric******************************                CAS006 224354
+      **********                                                                       CAS006 224354
+     C********** WQ0015    IFEQ '*ERROR*'                                              CAS006 224354
+     C********** WQ0015    ANDNE*BLANKS                                                CAS006 224354
+     C**********           MOVEL'Y'       WUERCD                                       CAS006 224354
+     C**********           ELSE                                                        CAS006 224354
+      **********                                                                       CAS006 224354
+      ***Else*if*P1BHPP*is*a*valid*numeric*****************************                CAS006 224354
+      **********                                                                       CAS006 224354
+     C**********           MOVEL'N'       WUERCD                                       CAS006 224354
+     C**********           CALL 'ZEDIT'                90                              CAS006 224354
+     C********** W1BHPP    PARM W1BHPP    WQ0027                                       CAS006 224354
+     C**********           PARM *ZERO     WQ0028                                       CAS006 224354
+      **********                                                                       CAS006 224354
+     C********** *IN90     IFEQ '1'                                                    CAS006 224354
+     C**********           MOVEL'Y2U0032' W0RTN                                        CAS006 224354
+     C**********           MOVEL*BLANKS   W0CLPG                                       CAS006 224354
+     C**********           MOVEL'ZEDIT'   W0CLPG                                       CAS006 224354
+     C**********           MOVEL'Y2U0032' ZAMSID                                       CAS006 224354
+     C**********           MOVEL'Y2USRMSG'ZAMSGF                                       CAS006 224354
+     C**********           MOVELW0CLPG    ZAMSDA                                       CAS006 224354
+     C**********           EXSR ZASNMS                                                 CAS006 224354
+     C**********           ENDIF                                                       CAS006 224354
+      **********                                                                       CAS006 224354
+      ***Move*right*validated*Historic*Price***************************                CAS006 224354
+      **********                                                                       CAS006 224354
+     C**********           MOVE W1BHPP    P2BHPP                                       CAS006 224354
+     C**********           ENDIF                                                       CAS006 224354
+     C**********           ENDIF                                                       CAS006 224354
+     C**********           ENDIF                                                       CAS006 224354
+      **********                                                                       CAS006 224354
+      * Period for Diary Entries
+      * CASE: PAR.Retention of diary is Zero
+     C           P1RODY    IFEQ *ZERO                      *IF
+     C                     MOVEL*BLANK    P2FFDE           Func Fld Diary
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL*BLANK    WUZASF           ZALIGN Screen F
+     C                     MOVELP1RODY    WUZASF           ZALIGN Screen F
+      * Call ZALIGN & ZEDIT
+      * ZALIGN Screen Field - Standard Functions  *
+     C                     CALL 'ZALIGN'               90  ZALIGN Screen F
+     C           W0RTN     PARM W0RTN     WQ0022  7        *Return code
+     C           WUZASF    PARM WUZASF    WQ0023 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0024  10       ZALIGN No Of De
+     C                     PARM 2         WQ0025  20       ZALIGN No Of Di
+     C           WUZAFF    PARM *BLANK    WQ0026 16        ZALIGN File Fie
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZALIGN'  W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: PGM.*Return code is Old Table Error
+     C           W0RTN     IFEQ '*ERROR*'                  *IF
+     C                     MOVEL'Y'       WUERCD           Err Code
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUERCD           Err Code
+      * ZEDIT Screen Field - Standard Functions  *
+     C                     CALL 'ZEDIT'                90  ZEDIT Screen Fi
+     C           WUZASF    PARM WUZASF    WQ0027 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0028  10       ZALIGN No Of De
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZEDIT'   W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     END                             *FI
+      * Move right Diary Entries - Securities Trading Data  *
+     C*
+     C*
+     C                     MOVE WUZASF    P2FFDE
+     C*
+     C*
+     C                     END                             *FI
+      * Collateral Currency Conversion
+      * CASE: PAR.Collateral Currency Convt is Zero
+     C           P1CCYC    IFEQ *ZERO                      *IF
+     C                     MOVEL*BLANK    P2FFCC           Func Fld Coll C
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL*BLANK    WUZASF           ZALIGN Screen F
+     C                     MOVEL*BLANK    WUZASF           ZALIGN Screen F
+     C                     MOVELP1CCYC    WUZASF           ZALIGN Screen F
+      * Call ZALIGN & ZEDIT
+      * ZALIGN Screen Field - Standard Functions  *
+     C                     CALL 'ZALIGN'               90  ZALIGN Screen F
+     C           W0RTN     PARM W0RTN     WQ0029  7        *Return code
+     C           WUZASF    PARM WUZASF    WQ0030 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0031  10       ZALIGN No Of De
+     C                     PARM 3         WQ0032  20       ZALIGN No Of Di
+     C           WUZAFF    PARM *BLANK    WQ0033 16        ZALIGN File Fie
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZALIGN'  W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: PGM.*Return code is Old Table Error
+     C           W0RTN     IFEQ '*ERROR*'                  *IF
+     C                     MOVEL'Y'       WUERCD           Err Code
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUERCD           Err Code
+      * ZEDIT Screen Field - Standard Functions  *
+     C                     CALL 'ZEDIT'                90  ZEDIT Screen Fi
+     C           WUZASF    PARM WUZASF    WQ0034 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0035  10       ZALIGN No Of De
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZEDIT'   W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     END                             *FI
+      * Move right Collateral CCY - Securities Trading Data  *
+     C*
+     C*
+     C                     MOVE WUZASF    P2FFCC
+     C*
+     C*
+     C                     END                             *FI
+      * Foreign Exchange Risk
+      * CASE: PAR.Foreign Exchange Risk is Zero
+     C           P1FERK    IFEQ *ZERO                      *IF
+     C                     MOVEL*BLANK    P2FFFR           Func Fld FX Ris
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL*BLANK    WUZASF           ZALIGN Screen F
+     C                     MOVEL*BLANK    WUZASF           ZALIGN Screen F
+     C                     MOVELP1FERK    WUZASF           ZALIGN Screen F
+      * Call ZALIGN & ZEDIT
+      * ZALIGN Screen Field - Standard Functions  *
+     C                     CALL 'ZALIGN'               90  ZALIGN Screen F
+     C           W0RTN     PARM W0RTN     WQ0036  7        *Return code
+     C           WUZASF    PARM WUZASF    WQ0037 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0038  10       ZALIGN No Of De
+     C                     PARM 3         WQ0039  20       ZALIGN No Of Di
+     C           WUZAFF    PARM *BLANK    WQ0040 16        ZALIGN File Fie
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZALIGN'  W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: PGM.*Return code is Old Table Error
+     C           W0RTN     IFEQ '*ERROR*'                  *IF
+     C                     MOVEL'Y'       WUERCD           Err Code
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUERCD           Err Code
+      * ZEDIT Screen Field - Standard Functions  *
+     C                     CALL 'ZEDIT'                90  ZEDIT Screen Fi
+     C           WUZASF    PARM WUZASF    WQ0041 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0042  10       ZALIGN No Of De
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZEDIT'   W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     END                             *FI
+      * Move right Foreign Exchg - Securities Trading Data  *
+     C*
+     C*
+     C                     MOVE WUZASF    P2FFFR
+     C*
+     C*
+     C                     END                             *FI
+      * All Holdings Limit Factor
+      * CASE: PAR.All Holdings Limit Factor is Zero
+     C           P1AHLF    IFEQ *ZERO                      *IF
+     C                     MOVEL*BLANK    P2FFAH           Func Fld All Ho
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL*BLANK    WUZASF           ZALIGN Screen F
+     C                     MOVELP1AHLF    WUZASF           ZALIGN Screen F
+      * Call ZALIGN & ZEDIT
+      * ZALIGN Screen Field - Standard Functions  *
+     C                     CALL 'ZALIGN'               90  ZALIGN Screen F
+     C           W0RTN     PARM W0RTN     WQ0043  7        *Return code
+     C           WUZASF    PARM WUZASF    WQ0044 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0045  10       ZALIGN No Of De
+     C                     PARM 3         WQ0046  20       ZALIGN No Of Di
+     C           WUZAFF    PARM *BLANK    WQ0047 16        ZALIGN File Fie
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZALIGN'  W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: PGM.*Return code is Old Table Error
+     C           W0RTN     IFEQ '*ERROR*'                  *IF
+     C                     MOVEL'Y'       WUERCD           Err Code
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUERCD           Err Code
+      * ZEDIT Screen Field - Standard Functions  *
+     C                     CALL 'ZEDIT'                90  ZEDIT Screen Fi
+     C           WUZASF    PARM WUZASF    WQ0048 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0049  10       ZALIGN No Of De
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZEDIT'   W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     END                             *FI
+      * Move right All Holdings - Securities Trading Data  *
+     C*
+     C*
+     C                     MOVE WUZASF    P2FFAH
+     C*
+     C*
+     C                     END                             *FI
+      * Discretionary Limit Factor
+      * CASE: PAR.Discretionary Limit Fact. is Zero
+     C           P1DLF     IFEQ *ZERO                      *IF
+     C                     MOVEL*BLANK    P2FFLF           Func Fld Disc.
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL*BLANK    WUZASF           ZALIGN Screen F
+     C                     MOVELP1DLF     WUZASF           ZALIGN Screen F
+      * Call ZALIGN & ZEDIT
+      * ZALIGN Screen Field - Standard Functions  *
+     C                     CALL 'ZALIGN'               90  ZALIGN Screen F
+     C           W0RTN     PARM W0RTN     WQ0050  7        *Return code
+     C           WUZASF    PARM WUZASF    WQ0051 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0052  10       ZALIGN No Of De
+     C                     PARM 3         WQ0053  20       ZALIGN No Of Di
+     C           WUZAFF    PARM *BLANK    WQ0054 16        ZALIGN File Fie
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZALIGN'  W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: PGM.*Return code is Old Table Error
+     C           W0RTN     IFEQ '*ERROR*'                  *IF
+     C                     MOVEL'Y'       WUERCD           Err Code
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUERCD           Err Code
+      * ZEDIT Screen Field - Standard Functions  *
+     C                     CALL 'ZEDIT'                90  ZEDIT Screen Fi
+     C           WUZASF    PARM WUZASF    WQ0055 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0056  10       ZALIGN No Of De
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZEDIT'   W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     END                             *FI
+      * Move right Discretionary - Securities Trading Data  *
+     C*
+     C*
+     C                     MOVE WUZASF    P2FFLF
+     C*
+     C*
+     C                     END                             *FI
+      * Customers Limit Factors
+      * CASE: PAR.Customers Limit Factor is Zero
+     C           P1CLF     IFEQ *ZERO                      *IF
+     C                     MOVEL*BLANK    P2FFCL           Func Fld Cust L
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL*BLANK    WUZASF           ZALIGN Screen F
+     C                     MOVELP1CLF     WUZASF           ZALIGN Screen F
+      * Call ZALIGN & ZEDIT
+      * ZALIGN Screen Field - Standard Functions  *
+     C                     CALL 'ZALIGN'               90  ZALIGN Screen F
+     C           W0RTN     PARM W0RTN     WQ0057  7        *Return code
+     C           WUZASF    PARM WUZASF    WQ0058 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0059  10       ZALIGN No Of De
+     C                     PARM 3         WQ0060  20       ZALIGN No Of Di
+     C           WUZAFF    PARM *BLANK    WQ0061 16        ZALIGN File Fie
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZALIGN'  W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: PGM.*Return code is Old Table Error
+     C           W0RTN     IFEQ '*ERROR*'                  *IF
+     C                     MOVEL'Y'       WUERCD           Err Code
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUERCD           Err Code
+      * ZEDIT Screen Field - Standard Functions  *
+     C                     CALL 'ZEDIT'                90  ZEDIT Screen Fi
+     C           WUZASF    PARM WUZASF    WQ0062 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0063  10       ZALIGN No Of De
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZEDIT'   W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     END                             *FI
+      * Move right Customers Limt - Securities Trading Data  *
+     C*
+     C*
+     C                     MOVE WUZASF    P2FFCL
+     C*
+     C*
+     C                     END                             *FI
+      * Mark to Market Base Day
+      * CASE: PAR.Mark to Market Base Date is equal zeros
+     C           P1MMBD    IFEQ *ZERO                      *IF
+     C                     MOVEL*BLANK    P2FFBD           Func Fld M to M
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL*BLANK    WUZASF           ZALIGN Screen F
+     C                     MOVELP1MMBD    WUZASF           ZALIGN Screen F
+      * Call ZALIGN & ZEDIT
+      * ZALIGN Screen Field - Standard Functions  *
+     C                     CALL 'ZALIGN'               90  ZALIGN Screen F
+     C           W0RTN     PARM W0RTN     WQ0064  7        *Return code
+     C           WUZASF    PARM WUZASF    WQ0065 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0066  10       ZALIGN No Of De
+     C                     PARM 3         WQ0067  20       ZALIGN No Of Di
+     C           WUZAFF    PARM *BLANK    WQ0068 16        ZALIGN File Fie
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZALIGN'  W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: PGM.*Return code is Old Table Error
+     C           W0RTN     IFEQ '*ERROR*'                  *IF
+     C                     MOVEL'Y'       WUERCD           Err Code
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUERCD           Err Code
+      * ZEDIT Screen Field - Standard Functions  *
+     C                     CALL 'ZEDIT'                90  ZEDIT Screen Fi
+     C           WUZASF    PARM WUZASF    WQ0069 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0070  10       ZALIGN No Of De
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZEDIT'   W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     END                             *FI
+      * Move right M to M BD - Securities Trading Data  *
+     C*
+     C*
+     C                     MOVE WUZASF    P2FFBD
+     C*
+     C*
+     C                     END                             *FI
+      * Mark to Market Next Date
+      * CASE: PAR.Mark to Market Next Date is zero
+     C           P1MMND    IFEQ *ZERO                      *IF
+     C                     MOVEL*BLANK    P2FFND           Func Fld M to M
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVE P1MMND    WUWMDT           Work Midas Date
+      * Check File Date - Rundate  *
+     C                     CALL 'ZDATE2'               90  Check File Date
+     C                     PARM WUWMDT    WQ0071  50       Work Midas Date
+     C                     PARM WUDFF     WQ0072  1        Date format fla
+     C           WUWCDT    PARM *ZERO     WQ0073  60       Work Converted
+     C           WUWADT    PARM *BLANK    WQ0074  7        Work Alpha Date
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZDATE2'  W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     MOVEL*BLANK    P2FFND           Func Fld M to M
+     C                     MOVELWUWCDT    P2FFND           Func Fld M to M
+     C                     END                             *FI
+      *----------------------------------------------------------------
+      * Exit program
+     C           AAEXIT    TAG
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Exit program: Normal
+      *================================================================
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+      *                                                                                       CAS006
+      ** Define LDA                                                                           CAS006
+      *                                                                                       CAS006
+     C           *NAMVAR   DEFN           LDA                                                 CAS006
+      *                                                                                       CAS006
+     C           W0ICL     IFEQ *BLANK
+     C                     MOVEL'Y'       W0ICL   1        *Initial call
+     C                     ELSE
+     C                     MOVEL'N'       W0ICL
+     C                     END
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+     C                     MOVEL*ZEROS    W0RTW   90
+     C                     MOVEL'400'     W0ENV   3
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+      * Set century digit (If YY prior to 1940 treat as 20YY)
+     C           ##JYY     IFLT 40
+     C                     Z-ADD1         ##JCC
+     C                     ELSE
+     C                     Z-ADD0         ##JCC
+     C                     END
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Define work field ZALIGN Screen Fun Field
+     C                     MOVEL*BLANK    WUZASF 16
+      * Define work field ZALIGN File Field
+     C                     MOVEL*BLANK    WUZAFF 16
+      * Define work field Err Code
+     C                     MOVEL*BLANK    WUERCD  1
+      * Define work field Work Midas Date
+     C                     Z-ADD*ZERO     WUWMDT  50
+      * Define work field Date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      * Define work field Work Converted Date
+     C                     Z-ADD*ZERO     WUWCDT  60
+      * Define work field Work Alpha Date
+     C                     MOVEL*BLANK    WUWADT  7
+     C                     MOVEL'N'       W0PMT   1
+      ***********                                                                      CAS006 224354
+      ***Access*SAR*Details*to*see*if*CAS006*is*installed**************                CAS006 224354
+      ***********                                                                      CAS006 224354
+     C***********          MOVEL'N'       CAS006  1                                    CAS006 224354
+     C***********          CALL 'AOSARDR0'                                             CAS006 224354
+     C***********          PARM *BLANKS   PRTCD   7                                    CAS006 224354
+     C***********          PARM '*VERIFY 'POPTN   7                                    CAS006 224354
+     C***********          PARM 'CAS006'  PSARD   6                                    CAS006 224354
+     C***********SCSARD    PARM SCSARD    DSFDY                                        CAS006 224354
+      ***********                                                                      CAS006 224354
+     C***********PRTCD     IFNE *BLANKS                                                CAS006 224354
+     C***********PRTCD     ANDNE'*NRF   '                                              CAS006 224354
+     C************LOCK     IN   LDA                                                    CAS006 224354
+     C***********          MOVEL'SD9211X' DBPGM                                        CAS006 224354
+     C***********          MOVEL'SCSARDPD'DBFILE                                       CAS006 224354
+     C***********          MOVEL'CAS006'  DBKEY                                        CAS006 224354
+     C***********          Z-ADD1         DBASE                                        CAS006 224354
+     C***********          OUT  LDA                                                    CAS006 224354
+     C***********          EXSR *PSSR                                                  CAS006 224354
+     C***********          ENDIF                                                       CAS006 224354
+      ***********                                                                      CAS006 224354
+     C***********PRTCD     IFEQ *BLANKS                                                CAS006 224354
+     C***********          MOVEL'Y'       CAS006                                       CAS006 224354
+     C***********          ENDIF                                                       CAS006 224354
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      /EJECT
+     CSR         *PSSR     BEGSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+      * Core function specific processing.
+      *
+     C/COPY WNCPYSRC,SD9211XPSC
+      *
+      * Start of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD9211XPS1
+      *
+      * Standard Midas PSSR processing.
+      *
+     C/COPY SDCPYSRC,SDPSSRBCH
+      *
+      * End of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD9211XPS2
+      *
+      *================================================================
+     CSR                   ENDSR
+      *================================================================
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Misys International Banking Systems Ltd. 2001

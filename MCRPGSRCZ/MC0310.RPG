@@ -1,0 +1,628 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MC Filter Generated Entries')                    *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Management Accounts Module                           *
+      *                                                               *
+      *  MC0310 - Filter Generated Entries                            *
+      *                                                               *
+      *  Function: This program filters an APOSTPDF format file into  *
+      *  (COB/IC)  Management Accounts format file which is used to   *
+      *            update the management accounts database via        *
+      *            MC0350.                                            *
+      *                                                               *
+      *  Called by: MCC0310 - Balance Generated Postings              *
+      *             MCC0240 - OPNQRYF for Rework DR/CR Average Bals   *
+      *             MCC0299 - OPNQRYF for Movement Extract            *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 02Mar99               *
+      *                                    Date                       *
+      *                 CMC001 *CREATE     DATE 18MAR96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSD005 - Standing Data Account Narrative.  Add new field     *
+      *           to SDACODPD.  Recompilation of programs.            *
+      *  CTI002 - Recompiled : File SDACODPD changed                  *
+      *  CMC001 - Management Accounts Enhancement for PCA             *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     FMCPOSTPDIP  E           K        DISK         KINFSR *PSSR
+      **  Generated Entries
+     F            MCPCACD0                          KRENAMEGLMOVE
+      *
+     FSDCURRL1IF  E           K        DISK         KINFSR *PSSR
+      **  Currency File
+      *
+     FMCFMVMPDO   E                    DISK         KINFSR *PSSR
+      **  Filtered movements
+     F            MCPCACD0                          KRENAMEMCMOVE
+      *
+     FMC0310AUO   E                    PRINTER                        UC
+      **  Filter Generated Entries Audit Report
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   01  - Initial processing completed                          *
+      *   11  - End of file on SDCURRL1                               *
+      *   20  - Base Ccy Equivalent account                           *
+      *   21  - Spot Trade account                                    *
+      *                                                               *
+      * 90-99 - Standard subroutine indicators.                       *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Program Initialisation                              *
+      *  SRWRTM - Write Movement Entry                                *
+      *  SRCUSD - Access Customer Details                             *
+      *  SRACOD - Access Account Code Details                         *
+      *  SRPRFC - Access Profit Centre Details                        *
+      *                                                               *
+      *  DBERR  - Database Error Handling Subroutine                  *
+      *  *PSSR  - Subroutine to Handle Abnormal Error Conditions      *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+      *
+      **  Array containing Copyright statement
+      *
+     E                    CCYC      999  3               Currency Codes
+     E**********          SPAE      999  4               Spot Trd Eqv A/cs                    CGL029
+     E                    SPAE      999 10                                                    CGL029
+      /SPACE 3
+     IGLMOVE
+     I                                              ACOD  L3
+     I                                              PRFC  L2
+     I                                              ASOC  L1
+      *
+      **  Associated customer number
+     I            DS
+     I**********                              1   60ASOC                                      CSD027
+     I                                        1   6 ASOC                                      CSD027
+     I                                        1   6 ASOCA
+      **  Account Code
+     I            DS
+     I**********                              1   40ACOD                                      CGL029
+     I**********                              1   4 ACODA                                     CGL029
+     I                                        1  100ACOD                                      CGL029
+     I                                        1  10 ACODA                                     CGL029
+      *
+     ILDA       E DSLDA                         256
+      *
+      **  Local data area for database error details
+      **  *LOCK IN LDA immediately before and OUT LDA immediately
+      **  after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     ISDBANK    E DSSDBANKPD
+      **  Bank Details
+      *
+     ISDGELR    E DSSDGELRPD
+      **  General Ledger Details
+      *
+     ISDPCAC    E DSSDPCACPD
+      **  PCA I.C.D Details
+      *
+     ISDTRAD    E DSSDTRADPD
+      **  Trade Details
+     I              QQACCD                          QQACD1                                    CGL029
+      *
+     ISDCUST    E DSSDCUSTPD
+      **  Customer Details
+      *
+     ISDACOD    E DSSDACODPD
+      **  Account code details
+     I              QQACCD                          QQACD2                                    CGL029
+     I              QQFNIC                          FNICQQ                                    CGL029
+     I              QQFNAA                          FNAAQQ                                    CGL029
+      *
+     IGLHBCG    E DSGLHBCGPD
+      **  Control group details
+      *
+     ISDPRFC    E DSSDPRFCPD
+      **  Profit centre details
+      *
+     IDSFDY     E DSDSFDY
+      **  First DS for Access Programs, Short Data Structure
+      *
+     IDSSDY     E DSDSSDY
+      **  Second DS for Access Programs, Long Data Structure
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      **  First cycle to access the standing data
+      *
+     C           *IN01     IFEQ '0'
+     C                     EXSR SRINIT
+     C                     MOVE '1'       *IN01
+     C                     ENDIF
+      *
+      **  Main Processing to:
+      **     1. Suppress Analysis codes for Management A/cs
+      **     2. Ensure FX profit centre is used for Position A/cs
+      *
+      **  On Change of Account Code, get new Analysis Details
+      *
+     C           *INL3     IFEQ *ON
+     C                     MOVE ACODA     @ACOD
+     C                     EXSR SRACOD
+      *
+      **  Check for Spot Trade or Base CCy Equivalent posting
+      *
+     C                     Z-ADDC         X       30
+     C           ACODA     LOKUPSPAE,X                   20
+     C                     ENDIF
+      *
+      **  If Profit Centre is Blank, set to Unallocated Profit Centre
+      **  only if Profit Centres Codes are used
+      *
+     C           PRFC      IFEQ *BLANK
+     C           BKPRCU    ANDEQ'Y'
+     C                     MOVE FTUAPC    PRFC
+     C                     ENDIF
+      *
+      **  If Spot Trade or Base CCy Equivalent posting, ensure
+      **  Posting's profit centre is allowed for FX, else modify.
+      *
+     C           *IN20     IFEQ *ON
+     C           ACODA     OREQ BLSPTA
+      *
+     C           PRFC      IFNE SPRFC
+     C                     MOVE PRFC      SPRFC   4
+     C                     EXSR SRPRFC
+     C                     ENDIF
+      *
+     C           DSFPPC    IFNE *BLANK
+     C                     MOVE DSFPPC    PRFC
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      **  Write Record to MCFMVMPD for Management Accounts
+      *
+     C                     EXSR SRWRTM
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/TITLE SR/SRINIT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Subroutine to Perform Initial Processing            *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *                                                               *
+      *  Calls    :  DBERR - Database Error Handling Subroutine       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR                           ***  SRINIT ***
+      *
+      **  Set up Fields for DB Error
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBPGM
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVEL'MC0310  'DBPGM
+     C                     OUT  LDA
+      *
+      **  Read Bank details via Access program for Title, Run Date, etc
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           *************
+     C                     Z-ADD1         DBASE            * DBERR 001 *
+     C                     MOVEL@OPTN     DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+      **  Read PCA ICD for Primary Funding Gap A/c, Unallocated
+      **  Profit Centre
+      *
+     C                     CALL 'AOPCACR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDPCAC    PARM SDPCAC    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDPCACPD'DBFILE           *************
+     C                     Z-ADD2         DBASE            * DBERR 002 *
+     C                     MOVEL@OPTN     DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+      **  Read Primary Control Group for required analysis fields
+      *
+     C                     CALL 'AOHBCGR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM FTPRCG    @HBCG   2
+     C           GLHBCG    PARM GLHBCG    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GLHBCGPD'DBFILE           *************
+     C                     Z-ADD3         DBASE            * DBERR 003 *
+     C                     MOVELFTPRCG    DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+      **  Get General ledger details via access pgm for Profit Centres
+      **  Used flag
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDGELRPD'DBFILE           *************
+     C                     Z-ADD4         DBASE            * DBERR 004 *
+     C                     MOVEL@OPTN     DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+      **  Call pgm for the 'Spot Trade A/C Code': BLSPTA
+      *
+     C                     CALL 'AOTRADR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDTRAD    PARM SDTRAD    DSFDY
+      *
+      **  DB error if not found
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDTRADPD'DBFILE           *************
+     C                     Z-ADD5         DBASE            * DBERR 005 *
+     C                     MOVEL'*FIRST'  DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+      **  Build Currency array of Spot Trade Equivalent A/cs
+      *
+     C           *LOVAL    SETLLSDCURRL1
+     C                     Z-ADD999       C       30
+     C                     READ SDCURRL1                 11  Read record
+      *
+     C           *IN11     DOWNE'1'
+     C           C         ANDGE1
+      *
+     C                     MOVE A6SPAE    SPAE,C
+     C                     MOVE A6CYCD    CCYC,C
+     C                     SUB  1         C
+     C                     READ SDCURRL1                 11  Read record
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/TITLE SR/SRWRTM
+      *****************************************************************
+      *                                                               *
+      *  SRWRTM - Subroutine to Write Movement Entry                  *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *                                                               *
+      *  Calls    :  SRCUSD - Access Customer Details                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRWRTM    BEGSR
+      *
+      **  If Profit Centres used, Analysis MUST be by Unit
+      *
+     C           BKPRCU    IFNE 'Y'
+     C           A5MAPC    ANDNE'Y'
+     C           HCABPC    OREQ *BLANK
+     C                     MOVE *BLANK    PRFC
+     C                     ENDIF
+      *
+      **  Blank Book if Analysis is not required
+      *
+     C           A5MABK    IFNE 'Y'
+     C           HCABBK    OREQ *BLANK
+     C                     MOVE *BLANK    BOKC
+     C                     ENDIF
+      *
+      **  Blank Product if Analysis is not required
+      *
+     C           A5MAPR    IFNE 'Y'
+     C                     MOVE *BLANKS   OTST
+     C                     MOVE *BLANKS   OTTP
+     C                     ENDIF
+      *
+     C           HCABTT    IFEQ *BLANK
+     C                     MOVE *BLANKS   OTTP
+     C                     ENDIF
+      *
+     C           HCABTS    IFEQ *BLANK
+     C                     MOVE *BLANKS   OTST
+     C                     ENDIF
+      *
+      **  Blank Assoc. Cust if Analysis is not required
+      **  Otherwise Check Customer Details for requirement
+      *
+      **  Only Process on change of Associated Customer
+     C           *INL1     IFEQ *ON
+      *
+     C           A5MAAC    IFNE 'Y'
+     C********** ASOC      OREQ *ZERO                                                         CSD027
+     C**********           Z-ADD*ZERO     ASOC                                                CSD027
+     C           ASOC      OREQ *BLANKS                                                       CSD027
+     C                     MOVE *BLANKS   ASOC                                                CSD027
+     C                     ELSE
+      *
+      **  Access Customer Details for the Customer Profitability Ind.
+      *
+     C                     EXSR SRCUSD
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      **  In Detail Time Zeroise ASOC if A5MAAC NE 'Y'
+      **                              or A5MAAC EQ 'Y' and BBMCAC NE 'Y'
+      *
+     C           A5MAAC    IFNE 'Y'
+     C           A5MAAC    OREQ 'Y'
+     C           BBMCAC    ANDNE'Y'
+     C           HCASCU    OREQ *BLANK
+     C**********           Z-ADD*ZERO     ASOC                                                CSD027
+     C                     MOVE *BLANKS   ASOC                                                CSD027
+     C                     ENDIF
+      *
+      **  Blank Branch if not required for the Control Group
+      *
+     C           HCABBR    IFEQ *BLANK
+     C                     MOVE *BLANK    BRCA
+     C                     ENDIF
+      *
+      **  Zero Customer if not required for the Control Group
+      *
+     C           HCABCU    IFEQ *BLANK
+     C**********           Z-ADD*ZERO     CNUM                                                CSD027
+     C                     MOVE *BLANKS   CNUM                                                CSD027
+     C                     ENDIF
+      *
+      **  Zero A/c Sequence if not required for the Control Group
+      *
+     C           HCABAS    IFEQ *BLANK
+     C                     Z-ADD*ZERO     ACSQ
+     C                     ENDIF
+      *
+      **  For Funding Accounts, Set Account Type to 'F'
+      *
+     C           A5FNAC    IFEQ 'Y'
+     C                     MOVE 'F'       ATYP
+     C                     ENDIF
+      *
+      **  Write MCFMVMPD Management Account Movement Record
+      *
+     C                     WRITEMCMOVE
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/TITLE SR/SRCUSD
+      *****************************************************************
+      *                                                               *
+      *  SRCUSD - Subroutine to Access Customer Details               *
+      *                                                               *
+      *  Called by:  SRWRTM - Write Movement Entry                    *
+      *                                                               *
+      *  Calls    :  DBERR - Database Error Handling Subroutine       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCUSD    BEGSR
+      *
+      **  Access customer details for MA Analysis by Associated
+      **  Customer required indicator
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANK    @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM ASOCA     @CNUM   6
+     C                     PARM           @KYST   6
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCUSTPD'DBFILE           *************
+     C                     Z-ADD6         DBASE            * DBERR 006 *
+     C                     MOVEL@CNUM     DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/TITLE SR/SRACOD
+      *****************************************************************
+      *                                                               *
+      *  SRACOD - Subroutine to Process Change of Account Code        *
+      *                                                               *
+      *  Called by:  Main Processing                                  *
+      *                                                               *
+      *  Calls    :  DBERR - Database Error Handling Subroutine       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRACOD    BEGSR
+      *
+      **  Access account code details
+      *
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANK    @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C**********           PARM           @ACOD   4                                           CGL029
+     C********** SDACOD    PARM SDACOD    DSFDY                                               CGL029
+     C                     PARM           @ACOD  10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDACODPD'DBFILE           *************
+     C                     Z-ADD7         DBASE            * DBERR 007 *
+     C                     MOVEL@ACOD     DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/TITLE SR/SRPRFC
+      *****************************************************************
+      *                                                               *
+      *  SRPRFC - Subroutine to Access Profit Centre details          *
+      *                                                               *
+      *  Called by:  Main Processing                                  *
+      *                                                               *
+      *  Calls    :  DBERR - Database Error Handling Subroutine       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPRFC    BEGSR
+      *
+      **  Call access program AOPRFCR0 for the FX Position Profit Centre
+      *
+     C                     CALL 'AOPRFCR0'
+     C                     PARM '*BLANKS' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM PRFC      @PRFC   4
+     C           SDPRFC    PARM SDPRFC    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDPRFCPD'DBFILE           *************
+     C                     MOVEL@PRFC     DBKEY            * DBERR 008 *
+     C                     Z-ADD8         DBASE            *************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/TITLE SR/DBERR
+      *****************************************************************
+      *                                                               *
+      *  DBERR - Subroutine to Handle Database errors                 *
+      *                                                               *
+      *  Called by:  After Data base error                            *
+      *                                                               *
+      *  Calls    :  *PSSR                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DBERR     BEGSR
+      *
+      **  Write database error details
+      *
+     C                     OPEN MC0310AU
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     CLOSEMC0310AU
+      *
+      **  Set on database error indicators DUMP and exit program
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ENDSR                           ** DBERR **
+      *
+      *****************************************************************
+     C/TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR --- Subroutine to handle abnormal error conditions     *
+      *                                                               *
+      *  Called by:  Abnormal Termination Processing, DBERR           *
+      *                                                               *
+      *  Calls    :  None                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR                           ** *PSSR **
+      *
+      *****************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

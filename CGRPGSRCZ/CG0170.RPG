@@ -1,0 +1,657 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Ref Integrity Check: Correspond. Details')
+/*OVRF*: OVRDBF (File in program) (file on system)                  : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                      *
+     F*                                                               *
+     F*  CG0170 - Referential Integrity Chck                          *
+     F*     CGCSCHL5  Correspondent schedule by primary correspondent *
+     F*     CGCASCL1  Correspondent association retrieval index       *
+     F*     CGCASCL2  Correspondent association by to correspondent   *
+     F*     CGLASCL2  Layout association table by correspondent       *
+     F*     CGUDCRL2  Data reference by correspondent                 *
+     F*     CGXDCRL2  Arc data reference by correspondent             *
+     F*     CGUDCRL3  Data reference by primary correspondent         *
+     F*     CGXDCRL3  Arc data reference by primary correspondent     *
+     F*                                                               *
+     F*  Function:  This program tests the first 10 records and if    *
+     F*             they exist they cannot then be deleted and        *
+     F*             the return code will be set to CGD1202.           *
+     F*                                                               *
+     F*  Called By:                                                   *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01522             Date 21Nov94               *
+      *                                    Date ddmmmyy               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *  S01522 - User Defined Correspondence                         *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*                                                               *
+     F*  90   -    General work indicator                             *
+     F*                                                               *
+     F*****************************************************************
+     F/COPY WNCPYSRC,CG0170DFPG
+      *
+      *  /Copy point for File Definition
+      *
+     FCGCSCHL5IF  E           K        DISK
+     F                                              KINFSR SRFILE
+      *
+      * Correspondent Schedule by primary correspondent.
+      *
+     FCGCASCL1IF  E           K        DISK
+     F                                              KINFSR SRFILE
+      *
+      * Correspondent association retrieval index.
+      *
+     FCGCASCL2IF  E           K        DISK
+     F                                              KINFSR SRFILE
+      *
+      * Correspondent association by to correspondent.
+      *
+     FCGLASCL2IF  E           K        DISK
+     F                                              KINFSR SRFILE
+      *
+      * Layout association table by correspondent.
+      *
+     FCGUDCRL2IF  E           K        DISK
+     F                                              KINFSR SRFILE
+      *
+      * Data reference by correspondent.
+      *
+     FCGXDCRL2IF  E           K        DISK
+     F                                              KINFSR SRFILE
+      *
+      * Arc data reference by correspondent.
+      *
+     FCGUDCRL3IF  E           K        DISK
+     F                                              KINFSR SRFILE
+      *
+      * Data reference by primary correspondent.
+      *
+     FCGXDCRL3IF  E           K        DISK
+     F                                              KINFSR SRFILE
+      *
+      * Arc data reference by primary correspondent.
+      *
+     F/EJECT
+     E/COPY CGCPYSRC,SRERRE
+     E/COPY WNCPYSRC,CG0170DEPG
+      *
+      *  /Copy point for Arrays
+      *
+     E                    CPY@    1   1 80
+      **                                                                                      CSC022
+      ** Array to hold commitment jobs name                                                   CSC022
+      **                                                                                      CSC022
+     E                    WCMT       10 10                                                    CSC022
+      **                                                                                      CSC022
+     I/COPY WNCPYSRC,CG0170DIPG
+      *
+      *  /Copy point for Input Specs
+      *
+     ICPYR@#      DS
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     II#MSG#      DS
+     I                                        1  10 I#CORR
+     I                                       11  16 I#PSCH
+     I                                       17  26 I#PSTP
+     I/COPY CGCPYSRC,SRERRI
+     IRUNDTA    E DSRUNDAT
+      *
+      *  Define rundat data area
+      *
+      **                                                                                      CSC022
+     ISCCMT       DS                            256                                           CSC022
+     I                                        1   30WCMTNO                                    CSC022
+     I                                        4 103 WCJOBS                                    CSC022
+      ** Commitment Control dataarea                                                          CSC022
+      **                                                                                      CSC022
+     ISCSARD    E DSSCSARDPD                                                                  CSC022
+      ** DS for Switchable Features details                                                   CSC022
+      **                                                                                      CSC022
+     IDSFDY     E DSDSFDY                                                                     CSC022
+      **                                                                                      CSC022
+      ** Data Structures used by Access Programs                                              CSC022
+      **                                                                                      CSC022
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7        Return Code
+     C                     PARM           I#PCOR 10        Correspondt
+     C                     PARM           I#CPGM 10        Calling Pgm tr.
+      *
+      * Initialise program
+      *
+     C           *IN50     IFEQ '0'
+     C                     EXSR SRINIT
+     C                     END
+      *
+     I/COPY WNCPYSRC,CG0190C
+      *
+      * Check if Correspondent exists on CGCSCHL5.
+      *
+     C                     EXSR SRCHL5
+      *
+      * Check if Correspondent exists on CGCASCL1.
+      *
+     C                     EXSR SRSCL1
+      *
+      * Check if Correspondent exists on CGCASCL2.
+      *
+     C                     EXSR SRSCL2
+      *
+      * Check if Correspondent exists on CGLASCL2.
+      *
+     C                     EXSR SRSCL@
+      *
+      * Check if Correspondent exists on CGUDCRL2.
+      *
+     C                     EXSR SRCRL2
+      *
+      * Check if Correspondent exists on CGXDCRL2.
+      *
+     C                     EXSR SRCRL@
+      *
+      * Check if Correspondent exists on CGUDCRL3.
+      *
+     C                     EXSR SRCRL3
+      *
+      * Check if Correspondent exists on CGXDCRL3.
+      *
+     C                     EXSR SRCRLA
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      * Return to calling program
+      *
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCHL5   : Process CGCSCHL5                                  *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : None                                              *
+      *                                                               *
+      *****************************************************************
+     CSR         SRCHL5    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRCHL5'  @STK,Q
+      *
+     C                     Z-ADD1         I#NUMR
+      *
+     C           I#PCOR    SETLLCGCSCHL5
+     C           I#PCOR    READECGCSCHL5                 90
+      *
+     C           *IN90     DOWEQ*OFF                       B1
+     C           I#NUMR    ANDLT11
+      *
+      * If record found set return code to CGD1202, and send message.
+      *
+     C                     MOVEL'CGD1202' W0RTN
+      *
+      *  Set up message details.
+      *
+     C                     MOVE *BLANKS   I#MSG#
+     C                     MOVELCPPCOR    I#CORR
+     C                     MOVELCPPSCH    I#PSCH
+     C                     MOVELCPPSTP    I#PSTP
+     C                     MOVELI#MSG#    CGMSDT
+     C                     MOVEL'CGD1203' CGMSID
+     C                     MOVELI#CPGM    CGPGMQ
+     C                     EXSR CGSNMS
+      *
+     C           I#PCOR    READECGCSCHL5                 90
+     C                     ADD  1         I#NUMR
+     C                     ENDDO                           E
+      *
+     C           EXCHL5    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSCL1   : Process CGCASCL1                                  *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : None                                              *
+      *                                                               *
+      *****************************************************************
+     CSR         SRSCL1    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRSCL1'  @STK,Q
+      *
+     C                     Z-ADD1         I#NUMR
+      *
+     C           I#PCOR    SETLLCGCASCL1
+     C           I#PCOR    READECGCASCL1                 90
+      *
+     C           *IN90     DOWEQ*OFF                       B1
+     C           I#NUMR    ANDLT11
+      *
+      * If record found set return code to CGD1202, and send message.
+      *
+     C                     MOVEL'CGD1202' W0RTN
+      *
+      *  Set up message details.
+      *
+     C                     MOVELCAFCOR    CGMSDT
+     C                     MOVEL'CGD1204' CGMSID
+     C                     MOVELI#CPGM    CGPGMQ
+     C                     EXSR CGSNMS
+      *
+     C           I#PCOR    READECGCASCL1                 90
+     C                     ADD  1         I#NUMR
+     C                     ENDDO                           E
+      *
+     C           EXSCL1    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSCL2   : Process CGCASCL2                                  *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : None                                              *
+      *                                                               *
+      *****************************************************************
+     CSR         SRSCL2    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRSCL2'  @STK,Q
+      *
+     C                     Z-ADD1         I#NUMR
+      *
+     C           I#PCOR    SETLLCGCASCL2
+     C           I#PCOR    READECGCASCL2                 90
+      *
+     C           *IN90     DOWEQ*OFF                       B1
+     C           I#NUMR    ANDLT11
+      *
+      * If record found set return code to CGD1202, and send message.
+      *
+     C                     MOVEL'CGD1202' W0RTN
+      *
+      *  Set up message details.
+      *
+     C                     MOVELCATCOR    CGMSDT
+     C                     MOVEL'CGD1205' CGMSID
+     C                     MOVELI#CPGM    CGPGMQ
+     C                     EXSR CGSNMS
+      *
+     C           I#PCOR    READECGCASCL2                 90
+     C                     ADD  1         I#NUMR
+     C                     ENDDO                           E
+      *
+     C           EXSCL2    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSCL@   : Process CGLASCL2                                  *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : None                                              *
+      *                                                               *
+      *****************************************************************
+     CSR         SRSCL@    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRSCL@'  @STK,Q
+      *
+     C                     Z-ADD1         I#NUMR
+      *
+     C           I#PCOR    SETLLCGLASCL2
+     C           I#PCOR    READECGLASCL2                 90
+      *
+     C           *IN90     DOWEQ*OFF                       B1
+     C           I#NUMR    ANDLT11
+      *
+      * If record found set return code to CGD1202, and send message.
+      *
+     C                     MOVEL'CGD1202' W0RTN
+      *
+      *  Set up message details.
+      *
+     C                     MOVEL'CGD1206' CGMSID
+     C                     MOVELI#CPGM    CGPGMQ
+     C                     EXSR CGSNMS
+      *
+     C           I#PCOR    READECGLASCL2                 90
+     C                     ADD  1         I#NUMR
+     C                     ENDDO                           E
+      *
+     C           EXSCL@    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCRL2   : Process CGUDCRL2                                  *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : None                                              *
+      *                                                               *
+      *****************************************************************
+     CSR         SRCRL2    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRCRL2'  @STK,Q
+      *
+     C                     Z-ADD1         I#NUMR
+      *
+     C           I#PCOR    SETLLCGUDCRL2
+     C           I#PCOR    READECGUDCRL2                 90
+      *
+     C           *IN90     DOWEQ*OFF                       B1
+     C           I#NUMR    ANDLT11
+      *
+      * If record found set return code to CGD1202, and send message.
+      *
+     C                     MOVEL'CGD1202' W0RTN
+      *
+      *  Set up message details.
+      *
+     C                     MOVEL'CGD1207' CGMSID
+     C                     MOVELI#CPGM    CGPGMQ
+     C                     EXSR CGSNMS
+      *
+     C           I#PCOR    READECGUDCRL2                 90
+     C                     ADD  1         I#NUMR
+     C                     ENDDO                           E
+      *
+     C           EXCRL2    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCRL@   : Process CGXDCRL2                                  *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : None                                              *
+      *                                                               *
+      *****************************************************************
+     CSR         SRCRL@    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRCRL@'  @STK,Q
+      *
+     C                     Z-ADD1         I#NUMR
+      *
+     C           I#PCOR    SETLLCGXDCRL2
+     C           I#PCOR    READECGXDCRL2                 90
+      *
+     C           *IN90     DOWEQ*OFF                       B1
+     C           I#NUMR    ANDLT11
+      *
+      * If record found set return code to CGD1202, and send message.
+      *
+     C                     MOVEL'CGD1202' W0RTN
+      *
+      *  Set up message details.
+      *
+     C                     MOVEL'CGD1207' CGMSID
+     C                     MOVELI#CPGM    CGPGMQ
+     C                     EXSR CGSNMS
+      *
+     C           I#PCOR    READECGXDCRL2                 90
+     C                     ADD  1         I#NUMR
+     C                     ENDDO                           E
+      *
+     C           EXCRL@    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCRL3   : Process CGUDCRL3                                  *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : None                                              *
+      *                                                               *
+      *****************************************************************
+     CSR         SRCRL3    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRCRL3'  @STK,Q
+      *
+     C                     Z-ADD1         I#NUMR
+      *
+     C           I#PCOR    SETLLCGUDCRL3
+     C           I#PCOR    READECGUDCRL3                 90
+      *
+     C           *IN90     DOWEQ*OFF                       B1
+     C           I#NUMR    ANDLT11
+      *
+      * If record found set return code to CGD1202, and send message.
+      *
+     C                     MOVEL'CGD1202' W0RTN
+      *
+      *  Set up message details.
+      *
+     C                     MOVEL'CGD1208' CGMSID
+     C                     MOVELI#CPGM    CGPGMQ
+     C                     EXSR CGSNMS
+      *
+     C           I#PCOR    READECGUDCRL3                 90
+     C                     ADD  1         I#NUMR
+     C                     ENDDO                           E
+      *
+     C           EXCRL3    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCRLA   : Process CGXDCRL3                                  *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : None                                              *
+      *                                                               *
+      *****************************************************************
+     CSR         SRCRLA    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRCRLA'  @STK,Q
+      *
+     C                     Z-ADD1         I#NUMR
+      *
+     C           I#PCOR    SETLLCGXDCRL3
+     C           I#PCOR    READECGXDCRL3                 90
+      *
+     C           *IN90     DOWEQ*OFF                       B1
+     C           I#NUMR    ANDLT11
+      *
+      * If record found set return code to CGD1202, and send message.
+      *
+     C                     MOVEL'CGD1202' W0RTN
+      *
+      *  Set up message details.
+      *
+     C                     MOVEL'CGD1208' CGMSID
+     C                     MOVELI#CPGM    CGPGMQ
+     C                     EXSR CGSNMS
+      *
+     C           I#PCOR    READECGXDCRL3                 90
+     C                     ADD  1         I#NUMR
+     C                     ENDDO                           E
+      *
+     C           EXCRLA    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialisation                                    *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : None                                              *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      ACT@   80
+      *
+      *  Indicate that set up is complete
+      *
+     C                     SETON                     50
+      *
+      *  Define the number of records to process.
+      *
+     C                     Z-ADD10        I#NUMR  20
+      *
+      *  Get Rundate - Rundate
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    ##MRDT  7        Midas Run date
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      **                                                                                      CSC022
+      ** Initialize CSC022 and Skip Commit/Rollback flags                                     CSC022
+      **                                                                                      CSC022
+     C                     MOVE 'N'       CSC022  1                                           CSC022
+     C                     MOVE 'N'       WCMTSK  1                                           CSC022
+      **                                                                                      CSC022
+      ** Access SAR details file to determine if CSC022 switchable feature                    CSC022
+      ** is switched on                                                                       CSC022
+      **                                                                                      CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   P@RTCD  7                                           CSC022
+     C                     PARM '*VERIFY 'P@OPTN  7                                           CSC022
+     C                     PARM 'CSC022'  P@SARD  6                                           CSC022
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSC022
+      **                                                                                      CSC022
+     C           P@RTCD    IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022                                              CSC022
+      **                                                                                      CSC022
+      ** Get Jobs currently running i batch mode using SCCMRJOB dataarea                      CSC022
+      **                                                                                      CSC022
+     C           *NAMVAR   DEFN SCCMTJOB  SCCMT                                               CSC022
+     C                     IN   SCCMT                                                         CSC022
+      **                                                                                      CSC022
+     C           WCMTNO    IFGT 0                                                             CSC022
+      ** Move committed jobs to arrary for checking                                           CSC022
+     C                     MOVEAWCJOBS    WCMT                                                CSC022
+      ** Verify if job running exists in array                                                CSC022
+     C           ##JOB     LOKUPWCMT                     50                                   CSC022
+     C           *IN50     IFEQ *ON                                                           CSC022
+     C                     MOVE 'Y'       WCMTSK                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+      **                                                                                      CSC022
+     C                     ELSE                                                               CSC022
+      ** Execute *PSSR if CSC022 is not found or Database error                               CSC022
+     C           P@RTCD    IFNE '*NRF'                                                        CSC022
+     C                     MOVEL'CSC022'  W0KEY                                               CSC022
+     C                     MOVEL'SCSARDPD'W0FILE                                              CSC022
+     C                     Z-ADD1         W0ERNB                                              CSC022
+     C                     EXSR SRERR                                                         CSC022
+     C                     ENDIF                                                              CSC022
+      **                                                                                      CSC022
+     C                     ENDIF                                                              CSC022
+      **                                                                                      CSC022
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+     C/COPY CGCPYSRC,SRERRPSSR
+     C/COPY CGCPYSRC,SCGSNMSC
+     C/COPY CGCPYSRC,SRERRC
+**  CPY@ table
+(c) Misys International Banking Systems Ltd. 2001

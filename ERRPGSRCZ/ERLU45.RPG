@@ -1,0 +1,557 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Decision Table - Transaction Types List')        *
+     H****************************************************************
+     H*                                                              *
+     H*          MIDAS ABS - EUROPEAN REPORTING                      *
+     H*                                                              *
+     H*        ERLU45 - DECISION TABLE - TRANSACTION TYPES LIST      *
+     H*                                                              *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+     H*                                                              *
+      *  Last Amend No. CLE134             Date 01Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027A            Date 06May06               *
+      *                 BUG10452           Date 09Feb06               *
+      *                 BUG10406           Date 06Feb06               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CER001             Date 25Apr05               *
+      *                 UPG402             Date 03Oct04               *
+      *                 ULX046             Date 22Oct02               *
+      *                 ADIFIX             Date 03Sep99               *
+     H*                    ULX024              Date 03Sep99          *
+     H*                    ULX011              Date 22Apr98          *
+     H*                    132893              Date 15APR98          *
+     H*                    ULX004              Date 29Oct97          *
+     H*                    50028  ADs          Date 27Jan93          *
+     H*                    ER0101 ADs          Date 24Nov92          *
+     H*                                                              *
+     H*--------------------------------------------------------------*
+     H*                                                              *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CSD027A - Conversion Of Customer Number to Alpha (Recompile) *
+      *  BUG10452 - No item reported on CADREPORT job (Recompile)     *
+      *  BUG10406 - Error in Transaction Types                        *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      * UPG402 - Recompile due to R4.02 upgrade                      *
+     H* ULX046 - Circulars 2002/170-174-175 Integration              *
+     H*          Recompile over new layout of ERLU45P1               *
+     H* ADIFIX - Rename PLDPCD as different definition in INVTPD     *
+     H*          from FDDTSTPD and SDLOANPD                          *
+     H* ULX024 - Trade Innovation/CSSF Reporting Interface           *
+     H* ULX011 - IML Circular 97/138                                 *
+     H* 132893 - SPF/RCF for IBLC/BNB on DBA2.3                      *
+     H* ULX004 - Capital Adequacy                                    *
+     H* 50028  - RECOMPILE BECAUSE PRINTER FILE CHANGES              *
+     H* ER0101 - Decision Key lenght from 6 to 8                     *
+     H*        - Correction in setup of Deal Sub-type narrative      *
+     H*        - Correction in setup of Investment type narrative    *
+     H*        - Instrument Type Key format is changed from 'INSTR ' *
+     H*         (inst-type) ) to 'BKINSTRP' (book/inst_type/put_call)*
+     F*****************************************************************
+     FERLUTTL1IF  E           K        DISK
+     F*
+     FSDDLSTL1IF  E           K        DISK
+     F*** 'DL' ***
+     F*
+     FSDBANKL1IF  E           K        DISK
+     F*
+     FSDLOANL1IF  E           K        DISK
+     F*** 'LE' ***
+     F*
+     FSDFACTL1IF  E           K        DISK
+     F*** 'FC' ***
+     F*
+     F**INVTP***IF**E           K        DISK                             ER0102
+     FINVTO   IF  E           K        DISK                               ER0102
+     F*** 'IV' ***
+     F*
+     F******INTYP   IF  E           K        DISK                         ULX004
+     F*** 'IT' ***
+      *            Book Codes File                                        ULX004
+     FSDBOOKL1IF  E           K        DISK                               ULX004
+     FERTIPTL0IF  E           K        DISK                               ULX024
+      ***  Midas TI Product Code/Type Combination Table                   ULX024
+      *                                                                   ULX024
+     FERTIPCPDIT  F      39           EDISK                               ULX024
+      *                                                                   ULX024
+     F*
+     FERLU45P1O   E             70     PRINTER
+     F                                              KINFDS SPOOL1         132893
+     FERLU45AUO   E                    PRINTER                            132893
+     F                                              KINFDS SPOOLU         132893
+     F*
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*
+     F*       70         OVERFLOW INDICATOR FOR ERLU45P1
+     F*       80         EOF ERLUTTL1
+     F*
+     F*       U7         DATABASE ERROR
+     F*       U8         PROGRAM  ERROR
+     F*
+     F**             *************************
+     F**             ** INDICATORS NOT USED **
+     F**             ** ------------------- **
+     F**             *************************
+     F**
+     F**      ***************************************************
+     F**      * 01   02   03   04   05   06   07   08   09   10 *
+     F**      * 11   12   13   14   15   16   17   18   19   20 *
+     F**      * 21   22   23   24   25   26   27   28   29   30 *
+     F**      * 31   32   33   34   35   36   37   38   39   40 *
+     F**      * 41   42   43   44   45   46   47   48   49   50 *
+     F**      * 51   52   53   54   55   56   57   58   59   60 *
+     F**      * 61   62   63   64   65   66   67   68   69   .. *
+     F**      * 71   72   73   74   75   76   77   78   79   .. *
+     F**      * 81   82   83   84   85   86   87   ..   89   90 *         ULX004
+     F**      * 91   92   93   94   95   96   97   98   ..      *         ULX004
+     F**      ***************************************************
+     E                    TABIT1  1  22  8   TABIT2 30   * IT Narratives  ULX004
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     E** ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+     E    ERTIPCPD        CODE    1  30  4   NARR   35
+     IINVTPDF                                                             ADIFIX
+      ** Rename PLDPCD waiting for a core correction                      ADIFIX
+      *                                                                   ADIFIX
+     I              PLDPCD                          IVDPCD                ADIFIX
+     I*
+     I** DATA STRUCTURE FOR RPG 01021 ERROR HANDLING
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     ILDA        UDS                            256
+     I                                      132 183 DBLOT
+     I******                                132 141 DBFILE                132893
+     I                                      134 141 DBFILE                132893
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I**
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I**
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I***
+     I            DS
+     I                                        1   2 WWKEY1
+     I                                        3   4 WWKEY2
+     I                                        6   9 WWKEY3                                    CLE042
+     I                                        1   9 WWKEY                                     CLE042
+     I****************************************1   4 WWKEY                                     CLE042
+     I*
+     ISPOOLU      DS                                                      132893
+      *                                                                   132893
+      **  File Information Data Structure - AU report                     132893
+     I                                       83  92 SFILEU                132893
+     I                                    B 123 1240SFNUMU                132893
+     ISPOOL1      DS                                                      132893
+      *                                                                   132893
+      **  File Information Data Structure - P1 report                     132893
+     I                                       83  92 SFIL1                 132893
+     I                                    B 123 1240SFNUM1                132893
+     I            DS                                                      ULX004
+     I                                        1   2 XRMOD                 ULX004
+     I**********                              3  10 XRTYPE                           ULX004 BUG10406
+     I                                        3  16 XRTYPE                                  BUG10406
+     I                                        3   4 XRTYP1                ULX004
+     I                                        5   6 XRTYP2                ULX004
+      /EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C**
+     C           KEY4      KLIST
+     C                     KFLD           WWKEY1
+     C                     KFLD           WWKEY2
+     C                     KFLD           WWKEY3                                              CLE042
+     C******                                                              ER0102
+     C***KEY*FOR*INVTP                                                    ER0102
+     C******     IVKEY     KLIST                                          ER0102
+     C******               KFLD           IVKEY1                          ER0102
+     C******               KFLD           IVKEY2                          ER0102
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           PARCTR  2
+     C                     PARM           @RSEQ   5                       132893
+     C                     PARM           @RLEV   1                       132893
+     C*
+     C*----------------- FIRST CYCLE -----------------------------
+     C*
+     C                     EXSR #INIT
+     C*
+     C                     READ ERLUTTL1                 80
+     C*
+     C           *IN80     IFEQ '0'                        - B1
+     C                     WRITEHEADLI
+     C                     ELSE                            - X1
+     C******               WRITEHEADLI                                    132893
+     C******               WRITENODLI                                     132893
+     C                     WRITEHEADAU                                    132893
+     C                     WRITENODTLS                                    132893
+     C                     END                             - E1
+     C*
+     C*------------ DETAIL PROCESSING ----------------------------
+     C*
+     C           *IN80     DOWEQ'0'                        - B1
+     C*
+     C                     MOVE VCMMOD    XRMOD
+     C                     MOVE VCTTYP    XRTYPE
+     C*********************MOVE VCAMTY    XRAMTY                          ULX004
+     C                     MOVE VCAMTY    XRAMTY                          ULX011
+     C                     MOVE VCPRCD    XRPRCD                          ULX004
+     C                     MOVE VCPORT    XRPORT                          ULX004
+     C                     MOVE VCEXTT    XREXTT
+     C                     Z-ADDVCRBND    XRDEBI
+     C                     Z-ADDVCRBNC    XRCRED
+     C                     MOVE VCTYLC    XRTYLC
+     C*
+     C** SETUP DATE IN FORMAT DDMMMYY
+     C                     Z-ADDVCLCD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    XRLCD
+     C*
+     C** SETUP NARRATIVE 'DL'
+     C           VCMMOD    IFEQ 'DL'                       - B2
+     C******               MOVELVCTTYP    KEY2    2                       ER0102
+     C                     MOVELVCTTYP    WRK4    4                       ER0102
+     C                     MOVE WRK4      KEY2    2                       ER0102
+     C           KEY2      CHAINSDDLSTL1             88
+     C           *IN88     IFEQ '0'                        - B3
+     C                     MOVELASDSTN    XRNARA
+     C                     ELSE                            - X3
+     C                     MOVE *BLANKS   XRNARA
+     C                     END                             - E3
+     C                     END                             - E2
+     C*
+     C** SETUP NARRATIVE 'LE'
+     C           VCMMOD    IFEQ 'LE'                       - B2
+     C                     MOVELVCTTYP    WWKEY
+     C           KEY4      CHAINSDLOANL1             88
+     C           *IN88     IFEQ '0'                        - B3
+     C                     MOVELAYLNTD    XRNARA
+     C                     ELSE                            - X3
+     C                     MOVE *BLANKS   XRNARA
+     C                     END                             - E3
+     C                     END                             - E2
+     C*
+     C** SETUP NARRATIVE 'FC'
+     C           VCMMOD    IFEQ 'FC'                       - B2
+     C                     MOVELVCTTYP    KEY3    3
+     C           KEY3      CHAINSDFACTL1             88
+     C           *IN88     IFEQ '0'                        - B3
+     C                     MOVELAMFCNM    XRNARA
+     C                     ELSE                            - X3
+     C                     MOVE *BLANKS   XRNARA
+     C                     END                             - E3
+     C                     END                             - E2
+     C*
+     C** SETUP NARRATIVE 'IV'
+     C           VCMMOD    IFEQ 'IV'                       - B2
+     C******               MOVELVCTTYP    IVKEY1  3                       ER0102
+     C******               MOVE VCTTYP    IVKEY2  3                       ER0102
+     C******     IVKEY     CHAININVTP                88                   ER0102
+     C                     MOVELVCTTYP    IVKEYO  3                       ER0102
+     C           IVKEYO    CHAININVTO                88                   ER0102
+     C           *IN88     IFEQ '0'                        - B3
+     C                     MOVELINAM      XRNARA
+     C                     ELSE                            - X3
+     C                     MOVE *BLANKS   XRNARA
+     C                     END                             - E3
+     C                     END                             - E2
+     C*
+     C** SETUP NARRATIVE 'IT'
+     C           VCMMOD    IFEQ 'IT'                       - B2
+     C******               MOVELVCTTYP    ITKEY   5                       ER0102
+     C**********           MOVELVCTTYP    ITKEY7  7                ER0102 ULX004
+     C**********           MOVE ITKEY7    ITKEY   5                ER0102 ULX004
+     C********** ITKEY     CHAININTYP                88                   ULX004
+      *                                                                   ULX004
+      ** Find Book Code to obtain Hedging Indicator (BDGGIN)              ULX004
+      *                                                                   ULX004
+     C           XRTYP1    CHAINSDBOOKL1             88                   ULX004
+      *                                                                   ULX004
+      ** Build key to derive narrative for screen display                 ULX004
+      *                                                                   ULX004
+     C           *IN88     IFEQ '0'                        - B3
+     C           XRTYP2    CAT  BDHGIN    WW08A            *create TABIT1 ULX004
+     C           WW08A     LOKUPTABIT1    TABIT2         99               ULX004
+      *                                                                   ULX004
+     C           *IN99     IFEQ '1'                        *-------4      ULX004
+     C                     MOVE TABIT2    XRNARA           * IT Narrative ULX004
+     C                     ELSE                            X-------4      ULX004
+     C                     MOVE *BLANKS   XRNARA                          ULX004
+     C                     ENDIF                           *-------4      ULX004
+     C**********           MOVELISTN      XRNARA                          ULX004
+     C                     ELSE                            - X3
+     C                     MOVE *BLANKS   XRNARA
+     C                     END                             - E3
+     C                     END                             - E2
+     C*                                                                   ULX024
+     C** Setup Narrative 'TI'                                             ULX024
+     C           VCMMOD    IFEQ 'TI'                       - B2           ULX024
+      *                                                                   ULX024
+      ** Work fields setup                                                ULX024
+      *                                                                   ULX024
+     C           KWF       KLIST                                          ULX024
+     C                     KFLD           WF3                             ULX024
+     C                     KFLD           WF4                             ULX024
+      *                                                                   ULX024
+     C           4         SUBSTVCTTYP:1  WF3     4                       ULX024
+     C           4         SUBSTVCTTYP:5  WF4     4                       ULX024
+     C*          1         SUBSTVCTTYP:8  WF1     1                       ULX024
+      *                                                                   ULX024
+     C           KWF       CHAINERTIPTL0             99                   ULX024
+     C           *IN99     IFEQ *OFF                       - B3           ULX024
+     C                     MOVELERTIPD    XRNARA                          ULX024
+     C                     ELSE                            - X3           ULX024
+     C                     Z-ADD1         X       20                      ULX024
+     C           WF3       LOKUPCODE,X                   99               ULX024
+     C                     MOVEANARR,X    XRNARA                          ULX024
+     C                     END                             - E3           ULX024
+     C                     END                             - E2           ULX024
+     C**
+     C           *IN70     IFEQ '1'                        - B2
+     C                     WRITEHEADLI
+     C                     MOVE '0'       *IN70
+     C                     END                             - E2
+     C**
+     C                     WRITEDETLI
+     C*
+     C                     READ ERLUTTL1                 80
+     C**
+     C                     END                             - E1
+     C**
+     C*---------------- END DETAILS PROCESSING --------------------
+     C**
+     C** WRITE END OF REPORT
+     C                     WRITEENDLI
+     C*
+     C           *IN80     IFEQ '1'                        - B1
+     C                     MOVE '1'       *INLR
+     C                     END                             - E1
+     C*
+     C                     RETRN
+     C/EJECT
+     C**=================================================================
+      **
+      **  #INIT       SUBROUTINE TO INITIALIZE STATIC FIELDS AND ACCESS STANDING
+      **              DATA CALLED ONCE AT START OF PROGRAM FROM MAIN LINE.
+     C**
+      **     CALLED BY PROGRAM
+      **     CALLS     *PSSR
+      **
+     C**=================================================================
+     C**                                                   *****************
+     C           #INIT     BEGSR                           ** #INIT BEGSR **
+     C**                                                   *****************
+     C**  PREPARE LDA:
+     C**
+     C           *NAMVAR   DEFN           LDA                             132893
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'ERLU45'  DBPGM
+     C*
+     C** SETUP COUNTRY FOR TITLE
+     C                     MOVE PARCTR    XX
+     C**
+     C**  INITIALIZE INDICATORS:
+     C                     MOVE '0'       *IN
+     C**
+     C**  GET INSTALLATION CONTROL DATA RECORD 1:
+     C                     READ SDBANKL1                 80
+     C**
+     C**  IF RECORD NOT FOUND:
+     C           *IN80     IFEQ '1'                        - B1
+     C           *LOCK     IN   LDA                                       132893
+     C                     MOVEL'01'      DBASE            *****************
+     C                     MOVEL'SDBANKL1'DBFILE           ** DB ERROR 01 **
+     C                     MOVEL' NONE '  DBKEY            *****************
+     C                     OUT  LDA                                       132893
+     C                     EXSR *PSSR
+     C                     END                             - E1
+     C**                                                               *****
+      *                                                                   132893
+      * Record Printer file ERLU45P1 on RCF                               132893
+     C                     Z-ADDSFNUM1    ZSNUM                           132893
+     C                     MOVELSFIL1     SFILE                           132893
+      *                                                                   132893
+     C                     EXSR SRZSFL                                    132893
+      *                                                                   132893
+      * Record Printer file ERLU45AU on RCF                               132893
+     C                     Z-ADDSFNUMU    ZSNUM                           132893
+     C                     MOVELSFILEU    SFILE                           132893
+      *                                                                   132893
+     C                     EXSR SRZSFL                                    132893
+      *                                                                   132893
+     C                     MOVE *BLANKS   WW08A   8                       ULX004
+      *                                                                   ULX004
+     C                     ENDSR
+     C*================================================================
+     C*
+     C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+     C**
+     C           ZDATE2    BEGSR                           *** ZDATE2 ***
+     C**
+     C**   CLEAR DATE FIELDS.
+     C                     Z-ADD0         ZDATE   60
+     C                     MOVEL'       ' ZADATE  7
+     C**
+     C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C**
+     C**   DETERMINE YEAR NUMBER.
+     C**
+     C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+     C           ZDAYNO    SUB  1         ZDAYN1  50   99
+     C   99                GOTO ZDEND2
+     C**
+     C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+     C           ZDAYN1    DIV  1461      ZLYR    20
+     C                     MVR            ZDAYN1           SAVE REMAINING
+     C**                                                   DAYS
+     C**   CALCULATE NUMBER OF REMAINING YEARS.
+     C                     Z-ADD1         ZWRK2   20
+     C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+     C           ZDAYN1    COMP ZYDY,ZWRK2             90
+     C  N90      ZWRK2     ADD  1         ZWRK2
+     C  N90                GOTO ZDTAG1
+     C           ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON
+     C**
+     C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+     C  N91      ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+     C**
+     C**   CALCULATE ACTUAL YEAR NUMBER.
+     C           ZLYR      MULT 4         ZWRK3   30
+     C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+     C                     Z-ADDZWRK3     ZYEAR   20
+     C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+     C**
+     C**   DETERMINE MONTH NUMBER.
+     C**
+     C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+     C                     SETOF                     9293
+     C   91      ZDAYN1    COMP 59                     9293
+     C   91N92   ZDAYN1    SUB  1         ZDAYN1
+     C**
+     C**   CALCULATE MONTH NUMBER.
+     C                     Z-ADD2         ZWRK2
+     C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+     C           ZDAYN1    COMP ZMDY,ZWRK2             94
+     C  N94      ZWRK2     ADD  1         ZWRK2
+     C  N94                GOTO ZDTAG2
+     C           ZWRK2     SUB  1         ZWRK2
+     C**
+     C                     Z-ADDZWRK2     ZMTH    20       MONTH
+     C**
+     C**   DETERMINE DAY OF MONTH.
+     C**
+     C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+     C           ZDAYN1    ADD  1         ZDAYN1
+     C**
+     C**   CALCULATE DAY OF MONTH.
+     C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+     C**
+     C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+     C   93      ZDAY      ADD  1         ZDAY
+     C**
+     C**   FORMAT DATE, DDMMYY OR MMDDYY.
+     C  N98                MOVELZDAY      ZWRK4   40
+     C   98                MOVE ZDAY      ZWRK4
+     C  N98                MOVE ZMTH      ZWRK4
+     C   98                MOVELZMTH      ZWRK4
+     C                     MOVELZWRK4     ZDATE
+     C                     MOVE ZYEAR     ZDATE
+     C**
+     C**   FORMAT ALPHA DATE, DDMMMYY.
+     C           ZDAY      COMP 10                     95
+     C                     MOVELZDAY      ZWRK5   5
+     C   95                MOVEL' '       ZWRK5
+     C                     MOVE ZMNM,ZMTH ZWRK5
+     C                     MOVELZWRK5     ZADATE
+     C                     MOVE ZYEAR     ZADATE
+     C**
+     C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*
+     C**
+     C********************************************************************
+      **
+      ** *PSSR  S/R
+      **
+     C*================================================================
+     C           *PSSR     BEGSR
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     WRITEHEADAU                                    132893
+     C                     WRITEDBERROR                                   132893
+     C                     DUMP
+     C                     RETRN
+     C**
+     C                     ENDSR
+     C*****************************************************************   132893
+     C* SRZSFL - Subroutine to call ZSFILE                                132893
+     C*****************************************************************   132893
+     C*                                                                   132893
+     C           SRZSFL    BEGSR                                          132893
+     C*                                                                   132893
+     C                     CALL 'ZSFILE'                                  132893
+     C                     PARM           @RSEQ                           132893
+     C                     PARM           @RENT   3                       132893
+     C                     PARM           SFILE  10                       132893
+     C                     PARM           ZSNUM   60                      132893
+     C                     PARM           ZSERR   1                       132893
+     C*                                                                   132893
+     C** If an error occurred during ZSFILE processing,                   132893
+     C** return to the calling program.                                   132893
+     C*                                                                   132893
+     C           ZSERR     IFEQ 'Y'                                       132893
+     C                     SETON                     U7U8LR               132893
+     C                     RETRN                                          132893
+     C                     END                                            132893
+     C*                                                                   132893
+     C                     ENDSR                                          132893
+      ****************************************************************    132893
+      /EJECT                                                              132893
+      *                                                                   132893
+     C********************************************************************
+**  TABIT1 / TABIT2 - IT Narratives Table                                 ULX004
+1NY     FUTURE/MARKET TRADED/HEDGING                                      ULX004
+1NN     FUTURE/MARKET TRADED/TRADING                                      ULX004
+2NY     FUTURE/MARKET TRADED/HEDGING                                      ULX004
+2NN     FUTURE/MARKET TRADED/TRADING                                      ULX004
+3NY     FUTURE/MARKET TRADED/HEDGING                                      ULX004
+3NN     FUTURE/MARKET TRADED/TRADING                                      ULX004
+4YY     OPTION/OTC/HEDGING                                                ULX004
+4YN     OPTION/OTC/TRADING                                                ULX004
+4NY     OPTION/MARKET TRADED/HEDGING                                      ULX004
+4NN     OPTION/MARKET TRADED/TRADING                                      ULX004
+5YY     OPTION/OTC/HEDGING                                                ULX004
+5YN     OPTION/OTC/TRADING                                                ULX004
+5NY     OPTION/MARKET TRADED/HEDGING                                      ULX004
+5NN     OPTION/MARKET TRADED/TRADING                                      ULX004
+6YY     OPTION/OTC/HEDGING                                                ULX004
+6YN     OPTION/OTC/TRADING                                                ULX004
+6NY     OPTION/MARKET TRADED/HEDGING                                      ULX004
+6NN     OPTION/MARKET TRADED/TRADING                                      ULX004
+7NY     FUTURE/MARKET TRADED/HEDGING                                      ULX004
+7NN     FUTURE/MARKET TRADED/TRADING                                      ULX004
+8NY     OPTION/MARKET TRADED/HEDGING                                      ULX004
+8NN     OPTION/MARKET TRADED/TRADING                                      ULX004
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2005

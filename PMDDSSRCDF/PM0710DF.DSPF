@@ -1,0 +1,769 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas PM Customer master details enquiry')
+     A*****************************************************************
+     A*                                                               *
+     A*  Midas - Portfolio Management Module                      *
+     A*                                                               *
+     A*  DSPF/PM0710DF - CUSTOMER MASTER DETAILS ENQUIRY              *
+     A*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     A*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CPM005             DATE 09JUL96               *
+      *                 S01408             DATE 01APR96               *
+     A*                 080702             DATE 18JAN95               *
+     A*                 S01486             DATE 18JAN95               *
+     A*                 S01486             DATE 18JAN95               *
+     A*                 S01313             DATE 05MAY92               *
+     A*                 B9383 ADIF         DATE 13NOV91               *
+     A*                 R10036             DATE 18/09/90              *
+     A*                 R10033             DATE 18/09/90              *
+     A*                 R10015             DATE 06/09/90              *
+     A*                                                               *
+     A*---------------------------------------------------------------*
+     A*                                                               *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     A*  CPM005 - Private Banking Phase 2                             *
+     A*           Focus Group Changes upgraded to DBA                 *
+     A*           PBFG/5 - INSTRUMENT ASSET/LIABILITY SPLIT           *
+     A*           PBFG/7 - NET COMMITMENT BY CURRENCY                 *
+     A*           PBFG/8 - DISPLAY POSITIONS SPLIT BY CURRENCY        *
+     A*  S01408 - Addition of core hook PM0710DF01                    *
+     A*  080702 - Missing program in upgrade                          *
+     A*  S01486 - Portfolio Management upgrade to R10                 *
+     A*  S01313 - CHANGES FOR PORTFOLIO PERFORMANCE                   *
+     A*  B9383  - SUPPRESS INPUT "FPV DOC" AVAILABLE ONLY FOR         *
+     A*           SWISS BANKS                                         *
+     A*  R10036 - DISPLAY ACCOUNT OFFICER NAME ON 'PORTFOLIO          *
+     A*              MANAGEMENT DETAILS' ENQUIRY SCREEN               *
+     A*  R10033 - SUPPRESS DETAILS OF DEPOTS ON 'SECURITY CUSTOMER    *
+     A*           MASTER DETAILS' ENQUIRY SCREEN                      *
+     A*  R10015 - MODIFY 'CUSTOMER MASTER DETAILS' ENQUIRY SCREEN     *
+     A*           (ADD 'VALUATION' FIELDS)                            *
+     A*                                                               *
+     A*---------------------------------------------------------------*
+     A*     CREATION REQUIREMENTS                                     *
+     A*                                                               *
+     A*      RSTDSP(*YES)                                             *
+     A*      SHARE(*YES)                                              *
+     A*                                                               *
+     A*****************************************************************
+     A*
+     A*  C R E A T I O N     P A R A M E T E R S                      *
+     A*                                                               *
+     A*****************************************************************
+     A                                      DSPSIZ(24 80 *DS3)
+     A                                      VLDCMDKEY(60 'ANY VALID KEY')
+     A                                      PRINT(*LIBL/MPRINT)
+     A                                      INDARA
+     A***********                                    Begin /080702/
+     A************************************* /DOCS')
+     A***********                                    End   /080702/
+     A                                      CA03
+     A                                      CA12
+     A***********                                    Begin /080702/
+     A                                      CA22
+     A**********R*PM0710F1                                              +
+     A          R PM0710F1                  TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A***********                                    End   /080702/
+     A                                      ROLLUP(25)
+     A                                      ROLLDOWN(26)
+     A***********                                    Begin /080702/
+     A***********                       1 12'CUSTOMER MASTER DETAILS ENQUIRY'
+     A***********                           DSPATR(HI)
+     A*********** WSID          10A  O  1 52TEXT('WORKSTATION ID')
+     A*********** DDRUNA         7A  O  1 63TEXT('RUN DATE')
+     A***********                       1 72TIME
+     A            USER          10A  O  1  2
+     A                                  1 13'PM0710'
+     A                                  1 20'CUSTOMER MASTER DETAILS ENQUIRY'
+     A                                      DSPATR(HI)
+     A            DDRUNA         7A  O  1 72
+      *
+     A            WKSTN         10A  O  2  2
+     A                                  2 71TIME
+     A***********                                    End   /080702/
+     A                                  3  2'Customer number'
+     A            DDCUST         6A  O  3 18DSPATR(HI)
+     A                                  3 36'Name'
+     A            DDCNA1        35A  O  3 42DSPATR(HI)
+     A                                  4  2'Short name'
+     A            DDCSSN        10A  O  4 18DSPATR(HI)
+     A                                  4 37'and'
+     A            DDCNA2        35A  O  4 42DSPATR(HI)
+     A                                  5 33'Address'
+     A            DDCNA3        35A  O  5 42DSPATR(HI)
+     A            DDCNA4        35A  O  6 42DSPATR(HI)
+     A                                  8  2'Report name'
+     A            DDCRNM        20A  O  8 18DSPATR(HI)
+     A                                  8 60'Town'
+     A            DDCRTN        10A  O  8 67DSPATR(HI)
+     A                                 10  2'Parent Indicator'
+     A            DDPAIN         1A  O 10 27DSPATR(HI)
+     A                                 10 49'Parent'
+     A            DDPCNB         6A  O 10 71DSPATR(HI)
+     A                                 11  2'Account Officer'
+     A            DDACOC         2A  O 11 27DSPATR(HI)
+     A            DDACON        30A  O 11 31DSPATR(HI)
+     A                                 12  2'Country of citizenship'
+     A            DDCNCZ         2A  O 12 27DSPATR(HI)
+     A                                 13  2'Country of domicile'
+     A            DDCOLC         2A  O 13 27DSPATR(HI)
+     A                                 14  2'Institution'
+     A            DDLINC         2A  O 14 27DSPATR(HI)
+     A            DDLINM        30A  O 14 31DSPATR(HI)
+     A                                 15  2'Industry'
+     A            DDLICD         3A  O 15 27DSPATR(HI)
+     A            DDLINA        30A  O 15 31DSPATR(HI)
+     A                                 16  2'Sort Code'
+     A            DDCASC         8A  O 16 27DSPATR(HI)
+     A                                 16 49'Branch'
+     A            DDBRCD         3A  O 16 71DSPATR(HI)
+     A                                 17  2'Suspended Date'
+     A            DDSSDT         7A  O 17 27DSPATR(HI)
+     A                                 17 49'Branch Ind.'
+     A            DDBSIN         1A  O 17 71DSPATR(HI)
+     A                                 18  2'Date of First Contact'
+     A            DDDOIC         7A  O 18 27DSPATR(HI)
+     A                                 18 49'Bank'
+     A            DDBNBI         1A  O 18 71DSPATR(HI)
+     A                                 19  2'Phone'
+     A            DDCTNB        12A  O 19 27DSPATR(HI)
+     A                                 19 49'Reuter Id'
+     A            DDREID         4A  O 19 71DSPATR(HI)
+     A                                 20  2'Customer Type'
+     A            DDCSTY         1A  O 20 27DSPATR(HI)
+     A                                 20 49'Tax/Non Tax'
+     A            DDTAIN         1A  O 20 71DSPATR(HI)
+     A                                 23  2'F3=Exit  F12=Previous  Rollup'
+     A***********                                    Begin /080702/
+     A**61*******                      23 50'  Attn=Enquiry Selection'
+     A  61                             23 50'F22=Enquiry Selection'
+     A***********                                    End   /080702/
+     A                                 24  2'You are at the top of page'
+     A N62                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+     A            DDCNNM        30   O 12 31DSPATR(HI)
+     A            DDBCTW        30A  O 13 31DSPATR(HI)
+     A          R PM0710F2
+     A                                      ROLLUP(25)
+     A                                      ROLLDOWN(26)
+     A**
+     A***********                                    Begin /080702/
+     A***********                       1 12'CUSTOMER MASTER DETAILS ENQUIRY'
+     A***********                           DSPATR(HI)
+     A*********** WSID          10A  O  1 52TEXT('WORKSTATION ID')
+     A*********** DDRUNA         7A  O  1 63TEXT('RUN DATE')
+     A***********                       1 72TIME
+     A            USER          10A  O  1  2
+     A                                  1 13'PM0710'
+     A                                  1 20'CUSTOMER MASTER DETAILS ENQUIRY'
+     A                                      DSPATR(HI)
+     A            DDRUNA         7A  O  1 72
+      *
+     A            WKSTN         10A  O  2  2
+     A                                  2 71TIME
+     A***********                                    End   /080702/
+     A                                  3  2'Customer'
+     A            DDCUST         6A  O  3 13DSPATR(HI)
+     A            DDCRNM        20A  O  3 21DSPATR(HI)
+     A N11                              4  2'Alternate Adresses'
+     A                                      DSPATR(HI)
+     A  11                             13 17'*** No Alternate Addresses for +
+     A                                       this Customer ***'
+     A                                      DSPATR(HI)
+     A N11                              5  2'Address Code'
+     A N11        DDADC1         1A     5 15DSPATR(HI)
+     A N11                              5 25'Name'
+     A N11                              6 26'and'
+     A N11                              7 22'Address'
+     A N11        DDCN11        35A     5 30DSPATR(HI)
+     A N11        DDCN12        35A     6 30DSPATR(HI)
+     A N11        DDCN13        35A     7 30DSPATR(HI)
+     A N11        DDCN14        35A     8 30DSPATR(HI)
+     A N11                              9 20'Telephone'
+     A N11        DDTEL1        12A     9 30DSPATR(HI)
+     A N11                              9 45'Telex'
+     A N11        DDTXN1        12A     9 51DSPATR(HI)
+     A N11                             11  2'Address Code'
+     A N11        DDADC2         1A    11 15DSPATR(HI)
+     A N11                             11 25'Name'
+     A N11                             12 26'and'
+     A N11                             13 22'Address'
+     A N11        DDCN21        35A    11 30DSPATR(HI)
+     A N11        DDCN22        35A    12 30DSPATR(HI)
+     A N11        DDCN23        35A    13 30DSPATR(HI)
+     A N11        DDCN24        35A    14 30DSPATR(HI)
+     A N11                             15 20'Telephone'
+     A N11        DDTEL2        12A    15 30DSPATR(HI)
+     A N11                             15 45'Telex'
+     A N11        DDTXN2        12A    15 51DSPATR(HI)
+     A N11                             17  2'Address Code'
+     A N11        DDADC3         1A    17 15DSPATR(HI)
+     A N11                             17 25'Name'
+     A N11                             18 26'and'
+     A N11                             19 22'Address'
+     A N11        DDCN31        35A    17 30DSPATR(HI)
+     A N11        DDCN32        35A    18 30DSPATR(HI)
+     A N11        DDCN33        35A    19 30DSPATR(HI)
+     A N11        DDCN34        35A    20 30DSPATR(HI)
+     A N11                             21 20'Telephone'
+     A N11        DDTEL3        12A    21 30DSPATR(HI)
+     A N11                             21 45'Telex'
+     A N11        DDTXN3        12A    21 51DSPATR(HI)
+     A                                 23  2'F3=Exit  F12=Previous  Rollup  +
+     A                                       Rolldown'
+     A***********                                    Begin /080702/
+     A**61*******                      23 43'Attn=Enquiry Selection'
+     A  61                             23 43'F22=Enquiry Selection'
+     A***********                                    End   /080702/
+     A          R PM0710F3
+     A                                      ROLLUP(25)
+     A                                      ROLLDOWN(26)
+     A**
+     A***********                                    Begin /080702/
+     A***********                       1 12'CUSTOMER MASTER DETAILS ENQUIRY'
+     A***********                           DSPATR(HI)
+     A*********** WSID          10A  O  1 52TEXT('WORKSTATION ID')
+     A*********** DDRUNA         7A  O  1 63TEXT('RUN DATE')
+     A***********                       1 72TIME
+     A            USER          10A  O  1  2
+     A                                  1 13'PM0710'
+     A                                  1 20'CUSTOMER MASTER DETAILS ENQUIRY'
+     A                                      DSPATR(HI)
+     A            DDRUNA         7A  O  1 72
+      *
+     A            WKSTN         10A  O  2  2
+     A                                  2 71TIME
+     A***********                                    End   /080702/
+     A**  /* R10015 START */
+     A*************************         3  2'Customer'
+     A*********** DDCUST ******  6A  O  3 13DSPATR(HI)
+     A*********** DDCRNM ****** 20A  O  3 21DSPATR(HI)
+     A*************************         4  2'                              -
+     A*************************                                            -
+     A*************************                               '
+     A*************************             DSPATR(UL)
+     A*************************         5  2'Portfolio Management Details'
+     A*************************             DSPATR(HI)
+     A*************************
+     A*************************         6  2'A/c Officer'
+     A*********** DDACOC ******  2A     6 16DSPATR(HI)
+     A*************************         6 31'Date Assumed Responsibility'
+     A*********** DDDASS ******  7A     6 61DSPATR(HI)
+     A*************************         7  2'Language Spoken'
+     A*********** DDLANG ****** 20A     7 20DSPATR(HI)
+     A*************************         7 43'Date of Birth'
+     A*********** DDBDAT ******  7A     7 61DSPATR(HI)
+     A*************************         8  2'Customer Base Currency'
+     A*********** DDCSBY ******  3A     8 27DSPATR(HI)
+     A*************************         9  2'Safe Indicator'
+     A*********** DDSAFI ******  1A     9 19DSPATR(HI)
+     A*************************         9 23'Documentation Status'
+     A*********** DDDCMS ******  1A     9 46DSPATR(HI)
+     A*************************         9 50'FPV Document'
+     A*********** DDFPVC ******  1A     9 65DSPATR(HI)
+     A*************************
+     A*************************        10  2'-----------------------------+
+     A*************************              -------------------------------+
+     A*************************              ------------------'
+     A*************************        11  2'Lombard Credits Details'
+     A*************************             DSPATR(HI)
+     A*N50 ********************        12  2'Customer Base Currency'
+     A*N50 ****** DDCCY *******  3A    12 27DSPATR(HI)
+     A*N50 ********************        13  2'Pledges Received Increases +
+     A*************************              Borrowing Power'
+     A*N50 ****** DDINBP ******  1A    13 47DSPATR(HI)
+     A*N50 ********************        13 52'Pledges Calculation'
+     A*N50 ****** DDPLEC ******  1A    13 74DSPATR(HI)
+     A*N50 ********************        14  2'Lombard Credit Report  Date'
+     A*N50 ****** DDREPD ******  7A    14 32DSPATR(HI)
+     A*N50 ********************        14 41'Frequency'
+     A*N50 ****** DDREPF ******  1A    14 53DSPATR(HI)
+     A*N50 ********************        14 56'Day Number'
+     A*N50 ****** DDREPN ******  2A    14 69DSPATR(HI)
+     A**50 ********************        13 22'*** Non Lombard Credits +
+     A*************************              Customer ***'
+     A*************************             DSPATR(HI)
+     A*************************
+     A*************************        15  2'-----------------------------+
+     A*************************              -------------------------------+
+     A*************************              ------------------'
+     A*************************        16  2'Fiduciary Loans & Deposits Details'
+     A*************************             DSPATR(HI)
+     A*N51 ********************        17  2'Stand.Comm.Code'
+     A*N51 ********************        17 19'% of Standard Commission'
+     A*N51 ********************        17 46'No Comm.'
+     A*N51 ********************        17 56'% Comm.to'
+     A*N51 ********************        17 69'Exempt from'
+     A*N51 ********************        18  2'Loan    Deposit'
+     A*N51 ********************        18 19'Loan             Deposit'
+     A*N51 ********************        18 46'L.    D.'
+     A*N51 ********************        18 57'Adviser'
+     A*N51 ********************        18 68'Paym.Charges'
+     A*N51 ****** DDSCDL ******  2A    20  3DSPATR(HI)
+     A*N51 ****** DDSCDD ******  2A    20 12DSPATR(HI)
+     A*N51 ****** DDPSCL ****** 12A    20 19DSPATR(HI)
+     A*N51 ****** DDPSCD ****** 12A    20 32DSPATR(HI)
+     A*N51 ****** DDNCL *******  1A    20 46DSPATR(HI)
+     A*N51 ****** DDNCD *******  1A    20 52DSPATR(HI)
+     A*N51 ****** DDPFCA ****** 12A    20 55DSPATR(HI)
+     A*N51 ****** DDEPCH ******  1A    20 74DSPATR(HI)
+     A**51 ********************        19 22'***    Non Fiduciary +
+     A*************************              Customer    ***'
+     A*************************             DSPATR(HI)
+     A***********                                    Begin /080702/
+     A***********                       2  2'Customer'
+     A*********** DDCUST         6A  O  2 13DSPATR(HI)
+     A*********** DDCRNM        20A  O  2 21DSPATR(HI)
+     A*                                 3  2'                              -
+     A*                                                                    -
+     A*                                                       '
+     A*                                     DSPATR(UL)
+     A**
+     A***********                       3  2'Portfolio Management Details'
+     A***********                           DSPATR(HI)
+     A**
+     A***********                       4  2'A/c Officer'
+     A*********** DDACOC         2A     4 14DSPATR(HI)
+     A** /* R10036 START */
+     A*********** DDACON        30A  O  4 18DSPATR(HI)
+     A********************************* 5 22'Date Assumed Responsibility'
+     A*********** DDDASS ******* 7A *** 5 50DSPATR(HI)
+     A** /* R10036 END */
+     A**
+     A***********                       5  2'Lang.Spoken'
+     A*********** DDLANG        20A     5 14DSPATR(HI)
+     A***********                       5 36'Date of Birth'
+     A*********** DDBDAT         7A     5 50DSPATR(HI)
+     A***********                       5 59'Customer Base Ccy'
+     A*********** DDCSBY         3A     5 77DSPATR(HI)
+     A**
+     A***********                       6  2'Safe Indicator'
+     A*********** DDSAFI         1A     6 17DSPATR(HI)
+     A***********                       6 27'Documentation Status'
+     A*********** DDDCMS         1A     6 48DSPATR(HI)
+     A* >>>>> B9383 >>>>>
+     A************                      7 57'FPV Document'
+     A************DDFPVC         1A     7 70DSPATR(HI)
+     A* <<<<< B9383 <<<<<
+     A**
+     A***********                       7  2'Valuation Frequency'
+     A*********** DDVLFQ         1A     7 22DSPATR(HI)
+     A***********                       7 27'Day in Month'
+     A*********** DDVLDM         2A     7 40DSPATR(HI)
+     A***********                       7 50'Next Valuation Date'
+     A*********** DDVLND         6A     7 70DSPATR(HI)
+     A**
+     A***********                       8  2'Sections of Valuation +
+     A***********                           Statement to be Printed:'
+     A***START S01313***
+     A****                              9 45'Daily Cashflow Information'
+     A****        DDS3VR         1A     9 75DSPATR(HI)
+     A****
+     A****                             10 10'Sector Breakdown'
+     A****        DDS2VR         1A    10 41DSPATR(HI)
+     A****                             10 45'Monthly Cashflow Information'
+     A****        DDS4VR         1A    10 75DSPATR(HI)
+     A****
+     A****                             11 10'Breakdown by Valuation Group'
+     A****        DDS6VR         1A    11 41DSPATR(HI)
+     A****                             11 45'Yearly Cashflow Information'
+     A****        DDS5VR         1A    11 75DSPATR(HI)
+     A***********                       9  4'Position Details'
+     A*********** DDS1VR         1A  O  9 30DSPATR(HI)
+     A***********                       9 33'Sector Breakdown'
+     A*********** DDS2VR         1A  O  9 54DSPATR(HI)
+     A***********                      10  4'Performance For Past Year'
+     A*********** DDS3VR         1A  O 10 30DSPATR(HI)
+     A***********                      10 33'Tax Year To Date'
+     A*********** DDS4VR         1A  O 10 54DSPATR(HI)
+     A***********                      10 57'Additional Period'
+     A*********** DDS5VR         1A  O 10 75DSPATR(HI)
+     A***********                      11 04'Daily Cashflows'
+     A*********** DDS6VR         1A  O 11 30DSPATR(HI)
+     A***********                      11 33'Monthly'
+     A*********** DDS7VR         1A  O 11 54DSPATR(HI)
+     A***********                      11 57'Yearly'
+     A*********** DDS8VR         1A  O 11 75DSPATR(HI)
+     A***END S01313***
+     A**
+     A***********                      12  2'-----------------------------+
+     A***********                            -------------------------------+
+     A***********                            ------------------'
+     A***********                      13  2'Lombard Credits Details'
+     A***********                           DSPATR(HI)
+     A*N50*******                      14  2'Customer Base Currency'
+     A*N50******* DDCCY          3A    14 27DSPATR(HI)
+     A*N50*******                      15  2'Pledges Received Increases +
+     A***********                            Borrowing Power'
+     A*N50******* DDINBP         1A    15 47DSPATR(HI)
+     A*N50*******                      15 52'Pledges Calculation'
+     A*N50******* DDPLEC         1A    15 74DSPATR(HI)
+     A*N50*******                      16  2'Lombard Credit Report  Date'
+     A*N50******* DDREPD         7A    16 32DSPATR(HI)
+     A*N50*******                      16 41'Frequency'
+     A*N50******* DDREPF         1A    16 53DSPATR(HI)
+     A*N50*******                      16 56'Day Number'
+     A*N50******* DDREPN         2A    16 69DSPATR(HI)
+     A**50*******                      15 22'*** Non Lombard Credits +
+     A***********                            Customer ***'
+     A***********                           DSPATR(HI)
+     A***********
+     A***********                      17  2'-----------------------------+
+     A***********                            -------------------------------+
+     A***********                            ------------------'
+     A***********                      18  2'Fiduciary Loans & Deposits Details'
+     A***********                           DSPATR(HI)
+     A*N51*******                      19  2'Stand.Comm.Code'
+     A*N51*******                      19 19'% of Standard Commission'
+     A*N51*******                      19 46'No Comm.'
+     A*N51*******                      19 56'% Comm.to'
+     A*N51*******                      19 69'Exempt from'
+     A*N51*******                      20  2'Loan    Deposit'
+     A*N51*******                      20 19'Loan             Deposit'
+     A*N51*******                      20 46'L.    D.'
+     A*N51*******                      20 57'Adviser'
+     A*N51*******                      20 68'Paym.Charges'
+     A*N51******* DDSCDL         2A    21  3DSPATR(HI)
+     A*N51******* DDSCDD         2A    21 12DSPATR(HI)
+     A*N51******* DDPSCL        12A    21 19DSPATR(HI)
+     A*N51******* DDPSCD        12A    21 32DSPATR(HI)
+     A*N51******* DDNCL          1A    21 46DSPATR(HI)
+     A*N51******* DDNCD          1A    21 52DSPATR(HI)
+     A*N51******* DDPFCA        12A    21 55DSPATR(HI)
+     A*N51******* DDEPCH         1A    21 74DSPATR(HI)
+     A**51*******                      20 22'***    Non Fiduciary +
+     A***********                            Customer    ***'
+     A***********                           DSPATR(HI)
+     A                                  3  2'Customer'
+     A            DDCUST         6A  O  3 13DSPATR(HI)
+     A            DDCRNM        20A  O  3 21DSPATR(HI)
+     A**
+     A                                  4  2'Portfolio Management Details'
+     A                                      DSPATR(HI)
+     A**
+     A                                  5  2'A/c Officer'
+     A            DDACOC         2A     5 14DSPATR(HI)
+     A            DDACON        30A  O  5 18DSPATR(HI)
+     A**
+     A                                  6 36'Date of Birth'
+     A            DDBDAT         7A     6 50DSPATR(HI)
+     A                                  6 59'Customer Base Ccy'
+     A            DDCSBY         3A     6 77DSPATR(HI)
+     A**
+     A                                  7  2'Safe Indicator'
+     A            DDSAFI         1A     7 17DSPATR(HI)
+     A                                  7 27'Documentation Status'
+     A            DDDCMS         1A     7 48DSPATR(HI)
+     A**
+     A                                  8  2'Valuation Frequency'
+     A            DDVLFQ         1A     8 22DSPATR(HI)
+     A                                  8 27'Day in Month'
+     A            DDVLDM         2A     8 40DSPATR(HI)
+     A                                  8 50'Next Valuation Date'
+     A            DDVLND         6A     8 70DSPATR(HI)
+     A**
+     A                                  9  2'Sections of Valuation +
+     A                                      Statement to be Printed:'
+     A*                                              Begin /CPM005/
+     A                                 10  4'Inst.Summary.'
+     A            DDS9VR         1A    10 18DSPATR(HI)
+     A                                 10 20'Curr.Sum.'
+     A            DDS0VR         1A    10 30DSPATR(HI)
+     A**********                       10  4'Position Details'
+     A**********  DDS1VR         1A  O 10 30DSPATR(HI)
+     A                                 10 33'Position Details'
+     A            DDS1VR         1A  O 10 54DSPATR(HI)
+     A**********                       10 33'Sector Breakdown'
+     A**********  DDS2VR         1A  O 10 54DSPATR(HI)
+     A                                 10 57'Sector Breakdown'
+     A            DDS2VR         1A  O 10 75DSPATR(HI)
+     A*                                              End /CPM005/
+     A                                 11  4'Performance For Past Year'
+     A            DDS3VR         1A  O 11 30DSPATR(HI)
+     A                                 11 33'Tax Year To Date'
+     A            DDS4VR         1A  O 11 54DSPATR(HI)
+     A                                 11 57'Additional Period'
+     A            DDS5VR         1A  O 11 75DSPATR(HI)
+     A                                 12 04'Daily Cashflows'
+     A            DDS6VR         1A  O 12 30DSPATR(HI)
+     A                                 12 33'Monthly'
+     A            DDS7VR         1A  O 12 54DSPATR(HI)
+     A                                 12 57'Yearly'
+     A            DDS8VR         1A  O 12 75DSPATR(HI)
+     A                                 13  2'-----------------------------+
+     A                                       -------------------------------+
+     A                                       ------------------'
+     A                                 14  2'Portfolio Lending Details'
+     A                                      DSPATR(HI)
+     A N50                             15  2'Customer Base Currency'
+     A N50        DDCCY          3A    15 27DSPATR(HI)
+     A N50                             16  2'Pledges Received Increases +
+     A                                       Borrowing Power'
+     A N50        DDINBP         1A    16 47DSPATR(HI)
+     A N50                             16 52'Pledges Calculation'
+     A N50        DDPLEC         1A    16 74DSPATR(HI)
+     A N50                             17  2'Portfolio Lending Report Date'
+     A N50        DDREPD         7A    17 32DSPATR(HI)
+     A N50                             17 41'Frequency'
+     A N50        DDREPF         1A    17 53DSPATR(HI)
+     A N50                             17 56'Day Number'
+     A N50        DDREPN         2A    17 69DSPATR(HI)
+     A  50                             16 22'*** Non Portfolio Lending +
+     A                                       Customer ***'
+     A                                      DSPATR(HI)
+     A**
+     A                                 18  2'-----------------------------+
+     A                                       -------------------------------+
+     A                                       ------------------'
+     A***********                                    End   /080702/
+     A**  /* R10015 END */
+     A*                                                   /*S01408*/
+     A*/COPY WNCPYSRC,PM0710DF01                          /*S01408*/
+     A*                                                   /*S01408*/
+     A                                 23  2'F3=Exit  F12=Previous  Rollup  +
+     A                                       Rolldown'
+     A***********                                    Begin /080702/
+     A**61*******                      23 50'  Attn=Enquiry Selection'
+     A  61                             23 50'  F22=Enquiry Selection'
+     A***********                                    End   /080702/
+     A**
+     A** FOURTH FORMAT - SECURITIES TRADING - CUSTOMER DETAILS
+     A**
+     A          R PM0710F4
+     A                                      ROLLUP(25)
+     A                                      ROLLDOWN(26)
+     A**
+     A***********                                    Begin /080702/
+     A***********                       1 12'CUSTOMER MASTER DETAILS ENQUIRY'
+     A***********                           DSPATR(HI)
+     A*********** WSID          10A  O  1 52TEXT('WORKSTATION ID')
+     A*********** DDRUNA         7A  O  1 63TEXT('RUN DATE')
+     A***********                       1 72TIME
+     A            USER          10A  O  1  2
+     A                                  1 13'PM0710'
+     A                                  1 20'CUSTOMER MASTER DETAILS ENQUIRY'
+     A                                      DSPATR(HI)
+     A            DDRUNA         7A  O  1 72
+      *
+     A            WKSTN         10A  O  2  2
+     A                                  2 71TIME
+     A***********                                    End   /080702/
+     A                                  3  2'Customer'
+     A            DDCUST         6A  O  3 13DSPATR(HI)
+     A            DDCRNM        20A  O  3 21DSPATR(HI)
+     A*                                 4  2'                              -
+     A*                                                                    -
+     A*                                                       '
+     A*                                     DSPATR(UL)
+     A                                  5  2'Securities Trading - Customer +
+     A                                       Details'
+     A                                      DSPATR(HI)
+     A                                  7  2'Classification'
+     A            DDCLAS         1A     7 29DSPATR(HI)
+     A                                  8  2'Account Code/Sequence'
+     A**Start of change CGL029
+     A**********  DDACCD         4A     8 29DSPATR(HI)                                        CGL029
+     A**********  DDACSN         2A     8 34DSPATR(HI)                                        CGL029
+     A            DDACCD        10A     8 27DSPATR(HI)
+     A            DDACSN         2A     8 38DSPATR(HI)
+     A**End of change CGL029
+     A                                  8 41'Statement Frequency'
+     A            DDSTFQ         1A     8 66DSPATR(HI)
+     A                                  9  2'Next Statement Date'
+     A            DDNSDT         7A     9 29DSPATR(HI)
+     A                                  9 41'Statement Base Date'
+     A            DDSBDM         2A     9 66DSPATR(HI)
+     A                                 10  2'Alternative Name/Address'
+     A            DDADCD         1A    10 29DSPATR(HI)
+     A                                 10 41'Statutory Returns Code'
+     A            DDSRCD         5A    10 66DSPATR(HI)
+     A                                 11  2'Cedel Fungibility Ind.'
+     A            DDCFIN         1A    11 29DSPATR(HI)
+     A                                 11 41'Pledge Agreement'
+     A            DDPLAG         1A    11 66DSPATR(HI)
+     A                                 12  2'Tax Code'
+     A            DDTCD          2A    12 29DSPATR(HI)
+     A                                 12 41'Auto Settle Indicator'
+     A            DDASIN         1A    12 66DSPATR(HI)
+     A                                 13  2'Narrative'
+     A            DDNARR         1A    13 29DSPATR(HI)
+     A**
+     A**  /* R10033 START */
+     A******************************** 15  3'Depot Name'
+     A******************************** 15 17'Reference'
+     A******************************** 15 30'Partic'
+     A******************************** 15 44'Depot Name'
+     A******************************** 15 58'Reference'
+     A******************************** 15 71'Partic'
+     A*********** DDDP01 ****** 10A ** 17  3DSPATR(HI)
+     A*********** DDRF01 ******  6A ** 17 18DSPATR(HI)
+     A*********** DDPR01 ******  2A ** 17 32DSPATR(HI)
+     A*********** DDDP02 ****** 10A ** 17 44DSPATR(HI)
+     A*********** DDRF02 ******  6A ** 17 59DSPATR(HI)
+     A*********** DDPR02 ******  2A ** 17 73DSPATR(HI)
+     A*********** DDDP03 ****** 10A ** 18  3DSPATR(HI)
+     A*********** DDRF03 ******  6A ** 18 18DSPATR(HI)
+     A*********** DDPR03 ******  2A ** 18 32DSPATR(HI)
+     A*********** DDDP04 ****** 10A ** 18 44DSPATR(HI)
+     A*********** DDRF04 ******  6A ** 18 59DSPATR(HI)
+     A*********** DDPR04 ******  2A ** 18 73DSPATR(HI)
+     A*********** DDDP05 ****** 10A ** 19  3DSPATR(HI)
+     A*********** DDRF05 ******  6A ** 19 18DSPATR(HI)
+     A*********** DDPR05 ******  2A ** 19 32DSPATR(HI)
+     A*********** DDDP06 ****** 10A ** 19 44DSPATR(HI)
+     A*********** DDRF06 ******  6A ** 19 59DSPATR(HI)
+     A*********** DDPR06 ******  2A ** 19 73DSPATR(HI)
+     A*********** DDDP07 ****** 10A ** 20  3DSPATR(HI)
+     A*********** DDRF07 ******  6A ** 20 18DSPATR(HI)
+     A*********** DDPR07 ******  2A ** 20 32DSPATR(HI)
+     A*********** DDDP08 ****** 10A ** 20 44DSPATR(HI)
+     A*********** DDRF08 ******  6A ** 20 59DSPATR(HI)
+     A*********** DDPR08 ******  2A ** 20 73DSPATR(HI)
+     A*********** DDDP09 ****** 10A ** 21  3DSPATR(HI)
+     A*********** DDRF09 ******  6A ** 21 18DSPATR(HI)
+     A*********** DDPR09 ******  2A ** 21 32DSPATR(HI)
+     A*********** DDDP10 ****** 10A ** 21 44DSPATR(HI)
+     A*********** DDRF10 ******  6A ** 21 59DSPATR(HI)
+     A*********** DDPR10 ******  2A ** 21 73DSPATR(HI)
+     A**  /* R10033 END */
+     A                                 23  2'F3=Exit  F12=Previous  Rollup  +
+     A                                       Rolldown'
+     A***********                                    Begin /080702/
+     A  61                             23 50'  F22=Enquiry Selection'
+     A**61*******                      23 50'  Attn=Enquiry Selection'
+     A***********
+     A***FIFTH*FORMAT*-*FUTURE*&*OPTIONS***-*CUSTOMER*DETAILS*******************
+     A***********
+     A**********R PM0710F5
+     A***********                           ROLLUP(25)
+     A***********                           ROLLDOWN(26)
+     A***********
+     A***********                       1 12'CUSTOMER MASTER DETAILS ENQUIRY'
+     A***********                           DSPATR(HI)
+     A*********** WSID          10A  O  1 52TEXT('WORKSTATION ID')
+     A*********** DDRUNA         7A  O  1 63TEXT('RUN DATE')
+     A***********                       1 72TIME
+     A***********                       3  2'Customer'
+     A*********** DDCUST         6A  O  3 13DSPATR(HI)
+     A*********** DDCRNM        20A  O  3 21DSPATR(HI)
+     A***********                       4  2'                              -
+     A***********                                                          -
+     A***********                                             '
+     A***********                           DSPATR(UL)
+     A***********                       5  2'Future & Options - Customer +
+     A***********                            Details'
+     A***********                           DSPATR(HI)
+     A***********
+     A***********                       7  2'Broker Y/N'
+     A*********** DDBKIN         1A  O  7 27DSPATR(HI)
+     A***********                       8  2'Settlement Type'
+     A*********** DDSTTY         2A  O  8 27DSPATR(HI)
+     A***********                       8 38'Settlement Account'
+     A*********** DDSMAC        12A  O  8 60DSPATR(HI)
+     A***********                       9  2'Counterparty Nostro'
+     A*********** DDCPNO        10A  O  9 27DSPATR(HI)
+     A***********                       9 38'For Account of'
+     A*********** DDFACO        10A  O  9 60DSPATR(HI)
+     A***********                      10  2'Correspondance Address'
+     A*********** DDCOAD         1A  O 10 27DSPATR(HI)
+     A***********                      10 38'For the Attention of'
+     A*********** DDFTAO        20A  O 10 60DSPATR(HI)
+     A***********                      12  2'Telex Confirmation'
+     A*********** DDTXCI         1A  O 12 27DSPATR(HI)
+     A***********                      12 38'Contract Limit'
+     A*********** DDCTLM         5A  O 12 60DSPATR(HI)
+     A***********                      13  2'Position Combined'
+     A*********** DDPCIN         1A  O 13 27DSPATR(HI)
+     A***********                      13 38'Automatic Closure'
+     A*********** DDACIN         1A  O 13 60DSPATR(HI)
+     A***********                      15  2'Collateral Currency'
+     A*********** DDCYCD         3A  O 15 27DSPATR(HI)
+     A***********                      15 38'Collateral Amount'
+     A*********** DDCOAM        13A  O 15 60DSPATR(HI)
+     A***********                      16  2'Collateral Description'
+     A*********** DDCODE        20A  O 16 27DSPATR(HI)
+     A***********
+     A***********                      18 24'Statement'
+     A***********                      18 45'Revaluation'
+     A***********                      19  2'Frequency'
+     A*********** DDSTFQ         1A  O 19 28DSPATR(HI)
+     A*********** DDRVFQ         1A  O 19 50DSPATR(HI)
+     A***********                      20  2'Base Day'
+     A*********** DDDMFS         2A  O 20 27DSPATR(HI)
+     A*********** DDRVBD         2A  O 20 49DSPATR(HI)
+     A***********                      21  2'Next Date'
+     A*********** DDNSDT         7A  O 21 25DSPATR(HI)
+     A*********** DDNRDT         7A  O 21 47DSPATR(HI)
+     A***********                      23  2'F3=Exit  F12=Previous  Rolldown'
+     A**61*******                      23 50'  Attn=Enquiry Selection'
+     A***********                      24  2'You are at the bottom of page'
+     A*N63*******                           DSPATR(ND)
+     A***********                           DSPATR(HI)
+     A***********                                    End   /080702/
+     A          R PM0710F6
+     A                                      ROLLUP(25)
+     A                                      ROLLDOWN(26)
+     A**
+     A***********                                    Begin /080702/
+     A********************************* 1 12'CUSTOMER MASTER DETAILS ENQUIRY'
+     A************************************* DSPATR(HI)
+     A*********** WSID          10A  O  1 52TEXT('WORKSTATION ID')
+     A*********** DDRUNA         7A  O  1 63TEXT('RUN DATE')
+     A********************************* 1 72TIME
+     A            USER          10A  O  1  2
+     A                                  1 13'PM0710'
+     A                                  1 20'CUSTOMER MASTER DETAILS ENQUIRY'
+     A                                      DSPATR(HI)
+     A            DDRUNA         7A  O  1 72
+      *
+     A            WKSTN         10A  O  2  2
+     A                                  2 71TIME
+     A***********                                    End   /080702/
+     A                                  3  2'Customer'
+     A            DDCUST         6A  O  3 13DSPATR(HI)
+     A            DDCRNM        20A  O  3 21DSPATR(HI)
+     A                                  4  2'Alternate Adresses'
+     A                                      DSPATR(HI)
+     A                                  5  2'Address Code'
+     A            DDADC4         1A     5 15DSPATR(HI)
+     A                                  5 25'Name'
+     A                                  6 26'and'
+     A                                  7 22'Address'
+     A            DDCN41        35A     5 30DSPATR(HI)
+     A            DDCN42        35A     6 30DSPATR(HI)
+     A            DDCN43        35A     7 30DSPATR(HI)
+     A            DDCN44        35A     8 30DSPATR(HI)
+     A                                  9 20'Telephone'
+     A            DDTEL4        12A     9 30DSPATR(HI)
+     A                                  9 45'Telex'
+     A            DDTXN4        12A     9 51DSPATR(HI)
+     A                                 11  2'Address Code'
+     A            DDADC5         1A    11 15DSPATR(HI)
+     A                                 11 25'Name'
+     A                                 12 26'and'
+     A                                 13 22'Address'
+     A            DDCN51        35A    11 30DSPATR(HI)
+     A            DDCN52        35A    12 30DSPATR(HI)
+     A            DDCN53        35A    13 30DSPATR(HI)
+     A            DDCN54        35A    14 30DSPATR(HI)
+     A                                 15 20'Telephone'
+     A            DDTEL5        12A    15 30DSPATR(HI)
+     A                                 15 45'Telex'
+     A            DDTXN5        12A    15 51DSPATR(HI)
+     A                                 23  2'F3=Exit  F12=Previous  Rollup  +
+     A                                       Rolldown'
+     A***********                                    Begin /080702/
+     A**61*******                      23 43'Attn=Enquiry Selection'
+     A  61                             23 43'F22=Enquiry Selection'
+     A***********                                    End   /080702/

@@ -1,0 +1,152 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    DFTACTGRP(*NO) ACTGRP(REC3666T1)                            */
+/*EXI    TEXT('Midas RE Generate I/E Entries - Start Task Split')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Retail Module                                       */
+/*                                                                   */
+/*       REC3666T1 - RE Generate I/E Entries - Start task split      */
+/*                                                                   */
+/*       (c) Misys Banking Systems Ltd. 2012                         */
+/*                                                                   */
+/*       Last Amend No. CRE093  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       CRE093 - Tactical COB changes REC3666                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE &CNAM &CSEQ)
+ 
+/* Declare file and variables */
+ 
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DTAQLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NAME1) TYPE(*CHAR) LEN(5) VALUE('REACR')
+             DCL        VAR(&NAME2_C) TYPE(*CHAR) LEN(5) VALUE('00001')
+             DCL        VAR(&NAME2_N) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CNAME) TYPE(*CHAR) LEN(10) +
+                          VALUE('REC3666')
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&LOOP) TYPE(*DEC) LEN(3 0) VALUE(1)
+ 
+             DCLF       FILE(CBCMPNLC)
+             DCLF       FILE(TABTBRE) OPNID(REICD)
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2012')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Send message to MRUNQ */
+ 
+             SNDPGMMSG  MSG('REC3666T1 - RE Generate I/E Entries') +
+                          TOMSGQ(MRUNQ)
+ 
+             RCVF       RCDFMT(TABTBREF) OPNID(REICD)
+ 
+/* Determine full JLIB and DTAQLIB library name */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(&DTAQLIB) VALUE(&SYSID *CAT 'DPLIB')
+ 
+/* Clear index file and trailer files. */
+ 
+             CLRPFM     FILE(REACRIPD)
+             CLRPFM     FILE(REACRLZZ)
+             CLRPFM     FILE(REGEIEZZ)
+ 
+/* Remove all members from driving file */
+ 
+             RMVM       FILE(REACRDPD) MBR(*ALL)
+             MONMSG     MSGID(CPF7301 CPF7303)
+ 
+/* Clear main data queue */
+ 
+             CALL       PGM(QCLRDTAQ) PARM(REACRSERVE '*LIBL')
+             MONMSG     MSGID(CPF9801)
+ 
+/* Retrieve number of sub-tasks */
+ 
+CHAIN:
+             RCVF       RCDFMT(@CMPNLC)
+             CHGVAR     VAR(&NAME2_N) VALUE(&DHCSEQ)
+             IF         COND((&DHCOTT *NE &CNAME) *OR (&NAME2_N *NE +
+                          &CSEQ)) THEN(DO)
+                GOTO       CMDLBL(CHAIN)
+             ENDDO
+ 
+             CHGVAR     VAR(&NAME2_C) VALUE(&DHCSEQ)
+LOOP:
+             IF         COND(&LOOP *GT &DHTSNO) THEN(DO)
+                GOTO       CMDLBL(START)
+             ENDDO
+ 
+             CHGVAR     VAR(&MEMBER) VALUE(&NAME1 *CAT &NAME2_C)
+ 
+/* Create data queue if it doesn't already exist and */
+/* set authorities. */
+ 
+             ADDPFM     FILE(REACRDPD) MBR(&MEMBER)
+             CHKOBJ     OBJ(&DTAQLIB/&MEMBER) OBJTYPE(*DTAQ)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CRTDTAQ    DTAQ(&DTAQLIB/&MEMBER) MAXLEN(50)
+             ENDDO
+             CALL       PGM(QCLRDTAQ) PARM(&MEMBER &DTAQLIB)
+ 
+             IF         COND(&LOOP *EQ 1) THEN(DO)
+                   CHGVAR     VAR(&NAME2_N) VALUE(01000)
+                   CHGVAR     VAR(&NAME2_N) VALUE(&NAME2_N * &CSEQ)
+             ENDDO
+ 
+             CHGVAR     VAR(&LOOP) VALUE(&LOOP + 1)
+             CHGVAR     VAR(&NAME2_N) VALUE(&NAME2_N + 1)
+             CHGVAR     VAR(&NAME2_C) VALUE(&NAME2_N)
+             GOTO       CMDLBL(LOOP)
+ 
+/* Start journalling driving/update files */
+ 
+START:
+             CLRPFM     FILE(ACRLAR)
+             CLRPFM     FILE(RTZZ) MBR(ACRL)
+             IF         COND(&MODE *EQ 'ONE') THEN(DO)
+                CLRPFM FILE(GEIERHH)
+                CLRPFM FILE(GEIERPD)
+                CLRPFM FILE(GEIERZZ)
+                IF         COND(&REICD_ACSM *EQ 'Y') THEN(DO)
+                CLRPFM FILE(GEIERPD0)
+                ENDDO
+             ENDDO
+             IF         COND(&MODE *EQ 'TWO') THEN(DO)
+                CLRPFM FILE(GEIER2HH)
+                CLRPFM FILE(GEIER2PD)
+                CLRPFM FILE(GEIER2ZZ)
+                IF         COND(&REICD_ACSM *EQ 'Y') THEN(DO)
+                CLRPFM FILE(GEIER2PD0)
+                ENDDO
+             ENDDO
+ 
+             OVRDBF     FILE(RTZZ) MBR(ACRL)
+ 
+/* Write Header & Trailer GEIERHH, GEIERZZ, GEIER2HH, */
+/* GEIER2ZZ, RTZZ */
+ 
+             CALL       RE3666T1 PARM(&MODE)
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             SNDPGMMSG  MSG('Program REC3666T1 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+END:
+             ENDPGM

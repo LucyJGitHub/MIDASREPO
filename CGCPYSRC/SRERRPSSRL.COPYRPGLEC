@@ -1,0 +1,129 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPGLE)                                 *
+      *                                                               *
+      *  SRERRPSSRL - Midas CG Standard *PSSR error subroutine.       *
+      *                                                               *
+      *  Subroutine *PSSR handles program errors.                     *
+      *  This is the ILE version of /Copy SRERRPSSR. This source      *
+      *  should be made concurrent with /Copy SRERRPSSR.              *
+      *                                                               *
+      *  Note: this routine requires copy member SRERRDLE or          *
+      *        its equivalent in the input specifications.            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *  Last Amend No. CLE011  *CREATE    Date 07Nov00               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *                                                               *
+      *****************************************************************
+     C     *PSSR         BEGSR
+      *
+     C                   DUMP
+     C                   ROLBK                                          90
+      *
+      ** If second time through, halt:
+      *
+     C     @@PSSR        IFNE      *BLANK
+     C                   SETON                                        H1  LR
+     C                   RETURN
+     C                   ENDIF
+      *
+      ** Flag routine as started; define action code:
+      *
+     C                   MOVE      'Y'           @@PSSR            1
+     C                   MOVE      W0ACT         W0ACT             8
+      *
+     C                   SELECT
+      *
+      ** Test field W0ACT (set externally but defined here):
+      ** ______________________________________________________________
+      *
+     C     W0ACT         WHENNE    '*PRINT  '
+     C     ##STCD        ANDEQ     121
+     C     W0ACT         ORNE      '*PRINT  '
+     C     ##STCD        ANDEQ     122
+      *
+      ** In diagnostic mode, with an array index error --
+      **  issue a specific message and return:
+     C                   CALL      'AOCREPT'                            9090
+     C                   PARM      'CGD1262'     #MSGID            7
+     C                   PARM      'CGUSRMSG'    #MSGF            10
+     C                   PARM      *BLANKS       #MSGFL           10
+     C                   PARM      *BLANKS       #MSGDT          256
+     C                   PARM      '*PRV '       #MSGR             5
+     C                   PARM      '*'           #PRGM            10
+     C                   PARM      'MOPERQ '     #MSGQ            10
+     C                   PARM      '*INFO  '     #MSGT             7
+      *
+      ** Reset subroutine flag:
+     C                   MOVE      'N'           @@PSSR
+      *
+      ** ______________________________________________________________
+      *
+     C     W0ACT         WHENEQ    '*PRINT  '
+      *
+      ** In print mode --
+      **  issue a specific message and return:
+     C                   MOVE      '*ERROR '     W0RTN             7
+     C                   CALL      'AOCREPT'                            9090
+     C                   PARM      'CGD1262'     #MSGID
+     C                   PARM      'CGUSRMSG'    #MSGF
+     C                   PARM      *BLANKS       #MSGFL
+     C                   PARM      *BLANKS       #MSGDT
+     C                   PARM      '*PRV '       #MSGR
+     C                   PARM      '*'           #PRGM
+     C                   PARM      'MOPERQ '     #MSGQ
+     C                   PARM      '*INFO  '     #MSGT
+      *
+      ** Reset subroutine flag:
+     C                   MOVE      'N'           @@PSSR
+      *
+      ** ______________________________________________________________
+      *
+     C                   OTHER
+      *
+      ** Any other mode or type of error.
+      *
+      ** Set LDA values and format message for MOPERQ:
+     C                   MOVE      ##PGM         ERPGM
+     C                   MOVE      ##RTVN        ERFILE
+     C     ##MSID        CAT(P)    ##SQNO        ERKEY
+     C                   Z-ADD     998           ERERNB
+     C                   MOVEL     ##MSWK        ERNARR
+      *
+      ** Move data to the LDA data area:
+     C     *LOCK         IN        LDA
+     C                   MOVEL     W0KEY         DBKEY
+     C                   Z-ADD     W0ERNB        DBASE
+     C                   MOVEL     W0FILE        DBFILE
+     C                   MOVEL     ##PGM         DBPGM
+     C                   OUT       LDA
+      *
+      ** Provide a fuller report:
+     C                   MOVEA     @STK          #@STK           100
+      *
+     C                   CALL      'CGZERROR'                           9090
+     C                   PARM                    ##ERTN            7
+     C                   PARM                    DSPGM
+     C                   PARM                    ERDTA
+     C                   PARM                    #@STK
+      *
+      ** End the program:
+     C                   SETON                                        U7U8LR
+     C                   MOVE      '*ERROR*'     W0RTN             7
+     C                   RETURN
+      *
+     C                   ENDSL
+      *
+     C                   ENDSR
+      *****************************************************************
+      * End of /COPY SRERRPSSRL                                       *
+      *****************************************************************

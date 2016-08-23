@@ -1,0 +1,225 @@
+     H        1
+      *****************************************************************
+/*S*D****RPGBASE*******************************************************                       CUP021
+      *****************************************************************
+      *                                                               *
+      *  Midas - Upgrade module                                       *
+      *                                                               *
+      *  UP1122 - Process Report of Incoming msg translation          *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CUP021  *REDUNDANT Date 11Feb11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Prev Amend No. BUG24370           Date 16Jun09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CUP006 *CREATE     Date 07Dec99               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CUP021 - Rewrite of Action File processing                   *
+      *  BUG24370 - New fields tags & sequences are missing           *
+      *  CUP006  -  Make upgrade of DTALIB files easier               *
+      *                                                               *
+      *****************************************************************
+      * ID F  C  H  L    FUNCTION OF INDICATORS
+      *
+      *       20      End of file
+      *       30      Chain - record not found
+      *       69      Read, write, update or delete fail
+      *
+     FUPINFML0IF  E           K        DISK         KINFSR *PSSR
+     FMEINFML2UF  E           K        DISK         KINFSR *PSSR A
+     F            @INFML2                           KRENAMEINFMF
+      *
+      /EJECT
+      * Array containing Copyright statement
+     E                    CPY@    1   1 80
+      *
+      * Fields with the same name will need to be renamed.
+     IINFMF
+     I              FMNWRK                          NWRK
+     I              FMMTPY                          MTPY
+     I              FMMSEQ                          MSEQ                                    BUG24370
+     I              FMMTAG                          MTAG
+     I              FMFTFD                          FTFD
+     I              FMFTSP                          FTSP
+     I              FMNARR                          NARR
+     I              FMRECI                          RECI
+     I              FMAJOB                          AJOB
+     I              FMAUSR                          AUSR
+     I              FMATIM                          ATIM
+     I              FMARDT                          ARDT
+     I              FMAACT                          AACT
+     I              FMRDNB                          RDNB
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           COMP      KLIST
+     C                     KFLD           FMNWRK
+     C                     KFLD           FMMTPY
+     C                     KFLD           FMMSEQ                                            BUG24370
+     C                     KFLD           FMMTAG
+     C                     KFLD           FMFTFD
+      *
+      *
+     C           *LOVAL    SETLLUPINFML0
+      *
+     C                     READ UPINFML0               6920
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+     C           *IN20     DOWEQ'0'
+      *
+     C           FMACTC    IFEQ 'I'
+     C                     EXSR SETVAL
+     C                     WRITEINFMF                  69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           FMACTC    IFEQ 'D'
+     C           COMP      CHAINMEINFML2             3069
+     C           *IN69     IFEQ *ON
+     C           *IN30     OREQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+      *
+     C                     ELSE
+     C                     EXSR SETVAL
+     C                     DELETINFMF                  69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      * If Action code = AMEND then read next record
+     C           FMACTC    IFEQ 'A'
+     C                     MOVELFMNWRK    NWRKX   6
+     C                     MOVELFMMTPY    MTPYX   3
+     C                     MOVELFMMSEQ    MSEQX   3                                         BUG24370
+     C                     MOVELFMMTAG    MTAGX   5
+     C                     MOVELFMFTFD    FTFDX  10
+     C                     READ UPINFML0               6920
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+      * If Network, Message type, the message field tags and the FT
+      * field name do not match exit
+      *  - or if EOF indicator is on
+     C           FMNWRK    IFNE NWRKX
+     C           FMMTPY    ANDNEMTPYX
+     C           FMMSEQ    ANDNEMSEQX                                                       BUG24370
+     C           FMMTAG    ANDNEMTAGX
+     C           FMFTFD    ANDNEFTFDX
+     C           *IN20     OREQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+     C           COMP      CHAINMEINFML2             3069
+     C           *IN69     IFEQ *ON
+     C           *IN30     OREQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+      *
+     C                     ELSE
+      *
+     C                     EXSR SETVAL
+     C                     UPDATINFMF                  69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     READ UPINFML0               6920
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C           ENDPGM    TAG
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *****************************************************************
+      *
+      * SETVAL subroutine - set values for deletes/writes/updates
+      *
+      *****************************************************************
+     C           SETVAL    BEGSR
+      * Set values to update record
+     C                     MOVELFMNWRK    NWRK
+     C                     MOVELFMMTPY    MTPY
+     C                     MOVELFMMSEQ    MSEQ                                              BUG24370
+     C                     MOVELFMMTAG    MTAG
+     C                     MOVELFMFTFD    FTFD
+     C                     MOVELFMFTSP    FTSP
+     C                     MOVELFMNARR    NARR
+     C                     MOVELFMRECI    RECI
+     C                     MOVELFMAJOB    AJOB
+     C                     MOVELFMAUSR    AUSR
+     C                     MOVELFMATIM    ATIM
+     C                     MOVELFMARDT    ARDT
+     C                     MOVELFMAACT    AACT
+     C                     MOVELFMRDNB    RDNB
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: None                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      ********************************************************************
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

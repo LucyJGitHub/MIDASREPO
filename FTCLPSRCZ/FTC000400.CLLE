@@ -1,0 +1,74 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('FT - Unlock Payment Record')                          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Fund Transfer Module                                */
+/*                                                                   */
+/*       FTC000400 - FT Unlock Payment Record                        */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2015           */
+/*                                                                   */
+/*       Last Amend No. MD024626 *CREATE   Date 19Oct15              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*        MD024626 - No access to Payment after expired or closed    */
+/*                   session. New screen created to unlock payment   */
+/*                   Applied for MD-36065.                           */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RETU &DTAARA &USER &MODE)
+             DCL        VAR(&RETU)   TYPE(*CHAR) LEN(7)
+             DCL        VAR(&DTAARA) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BUFFER) TYPE(*CHAR) LEN(512)
+             DCL        VAR(&JOBNO)  TYPE(*CHAR) LEN(6)
+             DCL        VAR(&JOBNM)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&USERN)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&USER)   TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MODE)   TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Misys International +
+                          Banking Systems Ltd. 2015')
+
+/** Global Monitor Message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO CMDLBL(DBERR))
+
+             CHGJOB     SWS(00000000)
+             SNDPGMMSG  MSG('FT - Unlock Payment Record') TOMSGQ(MRUNQ)
+
+             RTVDTAARA  DTAARA(&DTAARA (1 512)) RTNVAR(&BUFFER)
+             CHGVAR     VAR(&JOBNM) VALUE(%SST(&BUFFER 20 10))
+             CHGVAR     VAR(&JOBNO) VALUE(%SST(&BUFFER 40 6))
+             CHGVAR     VAR(&USERN) VALUE(%SST(&BUFFER 30 10))
+             CHGVAR     VAR(&RETU) VALUE('     ')
+
+             IF         ((&MODE *EQ '*SAME') *AND  (&USER *NE &USERN)) THEN(DO)
+                CHGVAR     VAR(&RETU) VALUE('*USER')
+                GOTO       CMDLBL(END)
+             ENDDO
+
+             IF         ((&MODE *EQ '*ANY')  *AND  (&USER *NE &USERN)) THEN(DO)
+                CHGVAR     VAR(&RETU) VALUE('*NONE')
+                CHGJOB     SWS(XXXXXX00)
+                GOTO       CMDLBL(END)
+             ENDDO
+
+             ENDJOB     JOB(&JOBNO/&USERN/&JOBNM) OPTION(*IMMED) DELAY(1)
+             MONMSG     MSGID(CPF1342) EXEC(DO)
+                CHGVAR     VAR(&RETU) VALUE('*NEND')
+                GOTO       CMDLBL(END)
+
+             ENDDO
+             DLTDTAARA  DTAARA(&DTAARA)
+             GOTO       CMDLBL(END)
+
+/** Abnormal termination */
+ DBERR:      SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program FTC000400 ended +
+                          abnormally - see joblog ') TOMSGQ(MOPERQ)
+             CHGVAR     VAR(&RETU) VALUE('*ERROR')
+             CHGJOB     SWS(XXXXXX11)
+
+/** End program */
+ END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International Banking Systems Ltd 2015')
+             ENDPGM

@@ -1,0 +1,1646 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FD MM Interest Rates File List')
+     F****************************************************************
+     F*                                                              *
+     F*  Midas - Standing Data Module
+     F*                                                              *
+     F*     FD0560 - INTEREST RATES FILE LIST - AS400                *
+     F*                                                              *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                              *
+      *  Last Amend No. AR851109           Date 09Mar15               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CPK014             Date 04Oct01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+     F*                 CSD006             Date   18Jan01             *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                    S01319             Date    8OCT91         *
+     F*                    S01328             DATE   14FEB91         *
+     F*                    S01117             DATE   01FEB91         *
+     F*                    S01194             DATE   01FEB91         *
+     F*                    E16016             DATE   19/01/89        *
+     F*                    E12796             DATE   06/04/88        *
+     F*                                                              *
+     F****************************************************************
+     F*                                                              *
+      *  AR851109 - Cannot enter -ve rates. Applied for MD033488.     *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CPK014 - Release 4 packaging.  Rename of field which is too  *
+      *           long for OPM program.                               *
+     F*     CSD006 - Market Data Feed changes                        *
+     F*     S01319 - Remove redundant processing                     *
+     F*              Rename FDTOTSRR
+     F*     S01328 - FRA/IRS REVALUATION -                           *
+     F*              1) EXTEND RATES OUT TO 10 YEARS                 *
+     F*              2) REPLACE MM1017 WITH ZRATE1 TO CENTRE RATE    *
+     F*              3) CONVERT DATE TO DDMMMYY USING ZDATE2         *
+     F*     S01194 - STANDING DATA CHANGES                           *
+     F*     S01117 - REL.10 MULTIBRANCHING                           *
+     F*     E16016 - Correct periods for overnight, tom/next         *
+     F*              and spot.                                       *
+     F*                                                              *
+     F*     E12796 - PROGRAM COMPILED DUE TO FILE CHANGE FDINTRPP    *
+     F*                                                              *
+     F****************************************************************
+     F*
+     F**  INDICATOR FUNCTION SUMMARY
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     F*
+     F********11*********END*OF*FILE*ON*READ*OF*FDINSTLL************S01328S01319
+     F*       59         CSD006 SAR INSTALLED                             CSD006
+     F*       54         AT LEAST ONE SET OF DETAILS OUTPUT - USED FOR    S01328
+     F*                  PRINTER FILE CONDITIONING.                       S01328
+     F********62**       AT LEAST ONE SET OF DETAILS OUTPUT               S01328
+     F*       63         PROGRAM CALLED AT END OF DAY
+     F*       64         INPUT AND CALCULATED FILE TOTALS DO NOT AGREE
+     F********78*********READ OF FDINSTLL                                 S01328
+     F********78*********READ*FAIL*FDINSTLL.************************S01328S01319
+     F*       80         DATA BASE ERROR INDICATOR
+     F*       98         DATE FORMAT INDICATOR = 'M'                      S01328
+     F*       U7         DATA BASE ERROR (JOB SWITCH)
+     F********U8*********DATA BASE ERROR (JOB SWITCH)                     S01328
+     F*       U8         FILE CONTROLS OUT OF BALANCE                     S01328
+     F*       L1         LEVEL BREAK INDICATOR
+     F*
+     F*****************************************************************
+     F*FDINSTLLIF**E**********K********DISK*********KINFSR**PSSR******UC**S01319
+     FFDTTOTLLIF  E           K        DISK         KINFSR *PSSR      UC
+     F*DICDRLLIF**E*          K        DISK         KINFSR *PSSR          S01194
+     F**********  TABTB11F                          KIGNORE               S01194
+     F**********  TABTB20F                          KIGNORE               S01194
+     F*FDCCYTLLIF**E*****      K        DISK         KINFSR *PSSR         S01194
+     FFDINTRLLIP  E           K        DISK         KINFSR *PSSR
+     F*D0560RRO***E*                   PRINTER      KINFSR *PSSR          S01117
+     FFD0560P1O   E                    PRINTER      KINFSR *PSSR      UC  S01117
+     F                                              KINFDS SPOOL          S01117
+     F*FDTOTSRRO***E*******************PRINTER******KINFSR**PSSR**********S01319
+     F**********************************************KINFDS*SPOOLU***S01117S01319
+     FFD0560AUO   E                    PRINTER      KINFSR *PSSR          S01319
+     F                                              KINFDS SPOOLU         S01319
+     E********************@PRNM***1***1*45********************************S01319
+     E********************************************************************S01319
+     E****ARRAY*TO*HOLD*FDTOTSRR*TITLE*TEXT*******************************S01319
+     E**********          @P      4  12  9                                S01328
+     E                    @P      4  24  9                                S01328
+     E*
+     E**  ARRAY TO HOLD PERIOD DESCRIPTIONS
+     E********************@W         13  1                                S01328
+     E********************                                                S01328
+     E****ARRAY*USED*BY*INTERNAL STANDARD SUBROUTINE, MM1017.             S01328
+     E*                                                                   S01328
+     E/COPY ZSRSRC,ZRATE1Z1                                               S01328
+     E/COPY ZSRSRC,ZSEDITZ1                                                                 AR851109
+     E*                                                                   S01328
+     E                    CPY@    1   1 80
+     E**  COPYRIGHT ARRAY.
+     E/COPY ZSRSRC,ZDATE2Z1                                               S01328
+     E/EJECT
+     I*
+     I**  CURRENCY CODE SETS ON LEVEL BREAK INDICATOR WHEN INPUT
+     I**  VALUE IS DIFFERENT FROM PRECEDING RECORD
+     IFDINTRP0
+     I                                              HWCCY L1
+     I              HWTMESTMP                       HWTMST                                    CPK014
+     I*                                                                   S01194
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*                                                                   S01194
+     IDSSDY     E DSDSSDY                                                 S01194
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01194
+     ISDBANK    E DSSDBANKPD                                              S01194
+     I*                                                                   S01194
+     ISDCURR    E DSSDCURRPD                                              S01194
+     I* CURRENCY DETAILS ACCESSED VIA ACCESS PROGRAM                      S01194
+     I*
+      ** BANK DETAILS                                                     S01194
+     IPSDS       SDS
+     I*
+     I**  PROGRAM STATUS DATA STRUCTURE
+     I                                      244 253 @JOB
+     I                                      254 263 @USER
+     I********** UDS                            256                       S01117
+     I*                                                                   S01117
+     I** DATA AREA FOR DATABASE ERROR INFORMATION                         S01117
+     I*                                                                   S01117
+     IDBERR       DS                            256                       S01117
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I**********                            181 183 DBASE                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*                                                                   S01117
+     I** SPOOL INFORMATION DATA STRUCTURE FOR ZSFILE                      S01117
+     I*                                                                   S01117
+     ISPOOL       DS                                                      S01117
+     I                                       83  92 SFILE                 S01117
+     I                                    B 123 1240SFNUM                 S01117
+     I*                                                                   S01117
+     ISPOOLU      DS                                                      S01117
+     I*                                                                   S01117
+     I** SPOOL INFORMATION DATA STRUCTURE FOR ZSFILE - AU REPORT          S01117
+     I*                                                                   S01117
+     I                                       83  92 SFILEU                S01117
+     I                                    B 123 1240SFNUMU                S01117
+      *                                                                   CSD006
+      * Data structure to format the data feed timestamp                  CSD006
+      *                                                                   CSD006
+     I                                        1  10 WKDATE                CSD006
+     I                                        1   4 WKCCYY                CSD006
+     I                                        6   7 WKDFMO                CSD006
+     I                                        9  10 WKDFDD                CSD006
+     I                                       11  18 WKTIME                CSD006
+     I                                       11  12 WKDFHH                CSD006
+     I                                       14  15 WKDFMI                CSD006
+     I                                       17  18 WKDFSS                CSD006
+     I*                                                                   S01117
+     I/COPY ZSRSRC,ZSEDITZ2                                                                 AR851109
+     I              10000000              C         WPOWER                                  AR851109
+     I/EJECT
+     C*
+     C**  INITIAL PROCESSING - ONLY PERFORM ON FIRST CYCLE
+     C           @FCYC     IFNE 'Y'                        B1
+     C                     EXSR #A                         *1
+     C                     END                             E1
+     C*
+     C**  MAIN PROCESSING
+     C                     EXSR #B
+     C*
+     C**  TERMINATION PROCESSING
+     CLR                   EXSR #C
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  INDEX TO SUBROUTINES                                         *
+     C*                                                               *
+     C*   1. #B     - MAIN PROCESSING                                 *
+     C*   2. #BA    - OUTPUT OF PERIOD DESCRIPTION TO PRINTER:TYPE D  *
+     C*   3. #BB    - OUTPUT OF PERIOD DESCRIPTION TO PRINTER:TYPE W  *
+     C*   4. #BC    - OUTPUT OF PERIOD DESCRIPTION TO PRINTER:TYPE M  *
+     C*   5. #BD    - OUTPUT OF PERIOD DESCRIPTION TO PRINTER:TYPE Y  *
+     C*   6. ZA0150 - STANDARD SUBROUTINE TO ACCESS I.C.D.            *
+     C*   7. #A     - INITIAL PROCESSING                              *
+     C*   8. #C     - TERMINATION PROCESSING                          *
+     C*   9. #CA    - FILE CONTROL PROCESSING                         *
+     C***10.*MM1017*-*CONVERTS*A RATE TO DISPLAY FORMAT               *   S01328
+     C*  10. ZRATE1 - CONVERTS A RATE TO DISPLAY FORMAT               *   S01328
+     C*  11. *PSSR  - ERROR HANDLING SUBROUTINE                       *
+     C*                                                               *
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #B - MAIN PROCESSING.                                        *
+     C********CONTROLS SET UP OF FD0560RR DETAILS.                    *   S01117
+     C********OUTPUTS FD0560RR DETAILS.                               *   S01117
+     C*       CONTROLS SET UP OF FD0560P1 DETAILS.                    *   S01117
+     C*       OUTPUTS FD0560P1 DETAILS.                               *   S01117
+     C*                                                               *
+     C*  CALLED BY:  CONTROL PROCESSING                               *
+     C*                                                               *
+     C*  CALLS:      #BA                                              *
+     C*              #BB                                              *
+     C*              #BC                                              *
+     C*              #BD                                              *
+     C*                                                               *
+     C*  WORK FIELDS:@CALC    TOTAL NUMBER OF DETAILS OUTPUT          *
+     C*              @RECP    NUMBER OF DETAILS OUTPUT ON THIS PAGE   *
+     C*              @CCYR    NUMBER OF RECORDS READ FOR THIS CURRENCY*
+     C***************@CCYKY***KEY*TO*ACCESS*FDCCYTLL********          *   S01194
+     C***************@CCYK1***PART*OF*@CCYKY*ABOVE**********          *   S01194
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #B        BEGSR
+     C*
+     C**  IF DATA BASE ERROR HAS OCCURRED OR LOGICAL DELETE
+     C**  FLAG OF THE INPUT RECORD IS NOT BLANK, NO MORE
+     C**  PROCESSING IN THIS ROUTINE
+     C           *IN80     IFEQ '1'                        B1
+     C           HWDLTF    ORNE *BLANK                     *1
+     C                     GOTO #B9                        *1
+     C                     END                             E1
+     C**********                                                          S01194
+     C****IF*THERE*IS*A*CHANGE*OF*CURRENCY,*READ*CURRENCY*FILE*           S01194
+     C****RECORD*CORRESPONDING*TO*CURRENCY*FIELD*ON*FDINTRLL***           S01194
+     C** IF THERE IS A CHANGE OF CURRENCY  CALL ACCESS PROGRAM            S01194
+032  C** FOR CURRENCY DETAILS.                                            S01194
+032  C*                                                                   S01194
+     C           *INL1     IFEQ '1'                        B1
+     C**********           MOVEL'20'      @CCYKY 12        *1             S01194
+     C**********           MOVE '1'       @CCYK1  4        *1             S01194
+     C**********           MOVELHWCCY     @CCYK1           *1             S01194
+     C**********           MOVE @CCYK1    @CCYKY           *1             S01194
+     C**********                                                          S01194
+     C********** @CCYKY    CHAINFDCCYTLL             80    *1             S01194
+     C**********                                                          S01194
+     C                     CALL 'AOCURRR0'                                S01194
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*KEY   ' @OPTN   7                       S01194
+     C                     PARM HWCCY     @CRKEY  3                       S01194
+     C           SDCURR    PARM SDCURR    DSSDY                           S01194
+     C*                                                                   S01194
+     C           @RTCD     IFNE *BLANK                                    S01194
+     C                     SETON                     80                   S01194
+     C                     END                                            S01194
+     C*                                                                   S01194
+     C****IF*DATA*BASE*ERROR*HAS*OCCURRED,*SET*ON*U7,*U8*AND*LR*****      S01117
+     C****AND*EXIT*ROUTINE***********************                         S01117
+     C*                                                                   S01117
+     C**  IF DATA BASE ERROR HAS OCCURRED, CALL SR. *PSSR                 S01117
+     C*                                                                   S01117
+     C           *IN80     IFEQ '1'                        B*2
+     C**********           MOVEL'FDCCYTLL'DBFILE           **2            S01194
+     C**********           MOVEL'001'     DBASE            **2            S01194
+     C**********           MOVEL@CCYKY    DBKEY                           S01194
+     C                     MOVEL'SDCURRPD'DBFILE           *************  S01194
+     C                     MOVEL'001'     DBASE            * DBERR 001 *  S01194
+     C                     MOVELHWCCY     DBKEY            *************  S01194
+     C                     EXSR *PSSR                                     S01194
+     C**********           MOVE '1'       *INU7            * DBERROR 001 *S01194
+     C**********           MOVE '1'       *INU8            ***************S01194
+     C**********           MOVE '1'       *INLR            **2            S01194
+     C                     GOTO #B9                        **2
+     C                     END                             E*2
+     C*
+     C**  SET UP OUTPUT FIELDS FOR CURRENCY AND CURRENCY NAME
+     C                     MOVE HWCCY     RRCCY            *1
+     C**********           MOVE CCNM      RRCCNM           *1             S01194
+     C                     MOVE A6CYNM    RRCCNM           *1             S01194
+     C*
+     C                     END                             E1
+     C*
+     C****IF*3*DETAILS*HAVE*ALREADY*BEEN*OUTPUT*ON*THIS*PAGE*             S01328
+     C****SKIP*TO*NEXT*PAGE*AND*OUTPUT*NEW*HEADINGS*                      S01328
+     C********** @RECP     IFEQ 3                          B1             S01328
+     C**********           WRITEFD0560R0                   *1             S01328
+     C**********           Z-ADD0         @RECP            *1             S01328
+     C**********           END                             E1             S01328
+     C*
+     C**  SET UP PERIOD FIELD USING PERIOD TYPE AND PERIOD FIELD TO
+     C**  ACCESS THE PERIOD ARRAY
+     C           HWTPRD    CASEQ'D'       #BA
+     C           HWTPRD    CASEQ'W'       #BB
+     C           HWTPRD    CASEQ'M'       #BC
+     C           HWTPRD    CASEQ'Y'       #BD
+     C                     END
+     C*
+     C**  INCREMENT FIELDS TO SHOW CALCULATED NUMBER OF RECORDS
+     C**  READ AND NUMBER OF RECORDS READ FOR THIS CURRENCY
+     C                     ADD  1         @CALC
+     C                     ADD  1         @CCYR
+     C*
+     C****IF*12*RECORDS*HAVE*BEEN*READ*FOR*THIS*CURRENCY,*WRITE****       S01328
+     C****DETAIL*RECORD****************                                   S01328
+     C********** @CCYR     IFEQ 12                         B1             S01328
+     C*                                                                   S01328
+     C**  IF 21 RECORDS HAVE BEEN READ FOR THIS CURRENCY, OPEN THE        S01328
+     C**  PRINTER FILE.SET FLAG TO INDICATE THAT THE FILE IS OPEN         S01328
+     C*                                                                   S01328
+     C           @CCYR     IFEQ 21                                        S01328
+     C           OPN       IFNE 'Y'                                       S01328
+     C                     OPEN FD0560P1                                  S01328
+     C                     MOVE 'Y'       OPN     1                       S01328
+     C*                                                                   S01328
+     C* Format the Borrow Rate Timestamp Field if CSD006 is on            CSD006
+     C*                                                                   CSD006
+     C           *IN50     IFEQ *ON                                       CSD006
+     C                     MOVE HWBOTS    WKTMST 14                       CSD006
+     C                     MOVE ' /  /  ' WKDATE                          CSD006
+     C                     MOVE ' :  :  ' WKTIME                          CSD006
+     C           4         SUBSTWKTMST:1  WKCCYY                          CSD006
+     C           2         SUBSTWKTMST:5  WKDFMO                          CSD006
+     C           2         SUBSTWKTMST:7  WKDFDD                          CSD006
+     C           2         SUBSTWKTMST:9  WKDFHH                          CSD006
+     C           2         SUBSTWKTMST:11 WKDFMI                          CSD006
+     C           2         SUBSTWKTMST:13 WKDFSS                          CSD006
+     C                     MOVE WKDATE    WKDTBR                          CSD006
+     C                     MOVE WKTIME    WKTMBR                          CSD006
+     C*                                                                   CSD006
+     C* Format the Lending Rate Timestamp Field if CSD006 is on           CSD006
+     C*                                                                   CSD006
+     C                     MOVE HWLETS    WKTMST 14                       CSD006
+     C                     MOVE ' /  /  ' WKDATE                          CSD006
+     C                     MOVE ' :  :  ' WKTIME                          CSD006
+     C           4         SUBSTWKTMST:1  WKCCYY                          CSD006
+     C           2         SUBSTWKTMST:5  WKDFMO                          CSD006
+     C           2         SUBSTWKTMST:7  WKDFDD                          CSD006
+     C           2         SUBSTWKTMST:9  WKDFHH                          CSD006
+     C           2         SUBSTWKTMST:11 WKDFMI                          CSD006
+     C           2         SUBSTWKTMST:13 WKDFSS                          CSD006
+     C                     MOVE WKDATE    WKDTLD                          CSD006
+     C                     MOVE WKTIME    WKTMLD                          CSD006
+     C                     ENDIF                                          CSD006
+     C*                                                                   CSD006
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF                    S01117
+     C*                                                                   S01117
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01117
+     C*                                                                   S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ                             S01117
+     C                     PARM *BLANKS   SENTY   3                       S01117
+     C                     PARM           SFILE                           S01117
+     C                     PARM           ZSNUM                           S01117
+     C                     PARM           ZSERR   1                       S01117
+     C**                                                                  S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+      *                                                                   S01117
+      **  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01117
+      *                                                                   S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C*                                                                   S01328
+     C**  IF 2 DETAILS HAVE ALREADY BEEN OUTPUT ON THIS PAGE              S01328
+     C**  SKIP TO NEXT PAGE AND OUTPUT NEW HEADINGS                       S01328
+     C*                                                                   S01328
+     C           @RECP     IFEQ 2                          B1             S01328
+     C                     WRITEFD0560R0                   *1             S01328
+     C                     Z-ADD0         @RECP            *1             S01328
+     C                     END                             E1             S01328
+     C*                                                                   S01328
+     C**  WRITE THE DETAILS OUT TO THE PRINTER FILE                       S01117
+     C*                                                                   S01117
+     C                     WRITEFD0560R1                   *1
+     C**********                                                          S01117
+     C****SET*INDICATOR THAT AT LEAST ONE SET OF DETAILS                  S01328
+     C****BEEN*OUTPUT                                                     S01328
+     C**********           MOVE '1'       *IN62            *1             S01328
+     C*                                                                   S01328
+     C**  SET INDICATOR FOR PRINTER FILE TO SHOW THAT AT LEAST            S01328
+     C**  ONE DETAIL RECORD HAS BEEN PRINTED.                             S01328
+     C*                                                                   S01328
+     C                     MOVE '1'       *IN54            *1             S01328
+     C*
+     C**  INITIALISE NUMBER OF RECORDS READ FOR THIS CURRENCY
+     C                     Z-ADD0         @CCYR            *1
+     C*
+     C**  INCREMENT FIELD TO SHOW NUMBER OF DETAILS ALREADY
+     C**  OUTPUT ON THIS PAGE
+     C                     ADD  1         @RECP            *1
+     C                     END                             E1
+     C*
+     C           #B9       ENDSR                           **#B9**
+     C*
+     C****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #BA    - OUTPUT OF PERIOD DESCRIPTION, PERIOD    *
+     C*                       DATE,BORROW AND LEND RATE TO PRINT FILE;*
+     C*                       SPECIFICALLY FOR THE CASE WHERE THE     *
+     C*                       PERIOD TYPE IS 'D'                      *
+     C*                                                               *
+     C*  FIELDS DEFINED:    @P   - Array to hold period descriptions  *
+     C*                                                               *
+     C*  CALLED BY : #B                                               *
+     C***CALLS*****:*MM1017**                                         *   S01328
+     C*  CALLS     : ZRATE1 - CONVERT DATE FOR DISPLAY                *   S01328
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #BA       BEGSR
+     C*
+     C****If*the*period*type*is*'D'*and*the*period*is*'0',*output         E16016
+     C**  If the period type is 'D' and the period is '1', output         E16016
+     C**  'Overnight' as Period Description.
+     C***********HWPRD     IFEQ 0                          B1             E16016
+     C           HWPRD     IFEQ 1                          B1             E16016
+     C*
+     C                     MOVE @P,1      RRDS1            *1
+     C*
+     C*                                                                   S01328
+     C** CONVERT DATE TO DDMMMYY FORMAT                                   S01328
+     C*                                                                   S01328
+     C**********           MOVE HWPRDD    RRPD1            *1             S01328
+     C                     MOVE HWPRDN    ZDAYNO           *1             S01328
+     C                     EXSR ZDATE2                                    S01328
+     C                     MOVE ZADATE    RRPD1                           S01328
+     C*
+     C**********           MOVE HWBRRT    @@INPR           *1                               AR851109
+     C*********************EXSR MM1017                     *1             S01328
+     C**********           EXSR ZRATE1                                               S01328 AR851109
+     C**********           MOVE @@OUTR    RRBR1            *1                               AR851109
+     C                     EXSR FRMTB                                                       AR851109
+     C                     MOVE ZOUT21    RRBR1                                             AR851109
+     C*
+     C**********           MOVE HWLDRT    @@INPR           *1                               AR851109
+     C*********************EXSR MM1017                     *1             S01328
+     C**********           EXSR ZRATE1                                               S01328 AR851109
+     C**********           MOVE @@OUTR    RRLR1            *1                               AR851109
+     C                     EXSR FRMTL                                                       AR851109
+     C                     MOVE ZOUT21    RRLR1                                             AR851109
+     C*
+     C                     END                             E1
+     C*
+     C****If*the*period*type*is*'D'*and*the*period*is*'1',*output         E16016
+     C**  If the period type is 'D' and the period is '2', output         E16016
+     C**  'Tom/Next' as Period Description.
+     C***********HWPRD     IFEQ 1                          B1             E16016
+     C           HWPRD     IFEQ 2                          B1             E16016
+     C*
+     C                     MOVE @P,2      RRDS2            *1
+     C*
+     C*                                                                   S01328
+     C** CONVERT DATE TO DDMMMYY FORMAT                                   S01328
+     C*                                                                   S01328
+     C**********           MOVE HWPRDD    RRPD2            *1             S01328
+     C                     MOVE HWPRDN    ZDAYNO           *1             S01328
+     C                     EXSR ZDATE2                                    S01328
+     C                     MOVE ZADATE    RRPD2                           S01328
+     C*
+     C**********           MOVE HWBRRT    @@INPR           *1                               AR851109
+     C*********************EXSR MM1017                     *1             S01328
+     C**********           EXSR ZRATE1                                    S01328            AR851109
+     C**********           MOVE @@OUTR    RRBR2            *1                               AR851109
+     C                     EXSR FRMTB                                                       AR851109
+     C                     MOVE ZOUT21    RRBR2                                             AR851109
+     C*
+     C**********           MOVE HWLDRT    @@INPR           *1                               AR851109
+     C*********************EXSR MM1017                     *1             S01328
+     C**********           EXSR ZRATE1                                    S01328            AR851109
+     C**********           MOVE @@OUTR    RRLR2            *1                               AR851109
+     C                     EXSR FRMTL                                                       AR851109
+     C                     MOVE ZOUT21    RRLR2                                             AR851109
+     C*
+     C                     END                             E1
+     C*
+     C****If*the*period*type*is*'D'*and*the*period*is*'2','3','4','5'     E16016
+     C****or*'6'*output*'Spot*Next'*as*Period*Description.                E16016
+     C**  If the period type is 'D' and the period is '3','4','5','6'     E16016
+     C**  or '7' output 'Spot Next' as Period Description.                E16016
+     C***********HWPRD     IFGE 2                          B1             E16016
+     C***********HWPRD     ANDLE6                          X1             E16016
+     C           HWPRD     IFGE 3                          B1             E16016
+     C           HWPRD     ANDLE7                          X1             E16016
+     C*
+     C                     MOVE @P,3      RRDS3            *1
+     C*
+     C*                                                                   S01328
+     C** CONVERT DATE TO DDMMMYY FORMAT                                   S01328
+     C*                                                                   S01328
+     C**********           MOVE HWPRDD    RRPD3            *1             S01328
+     C                     MOVE HWPRDN    ZDAYNO           *1             S01328
+     C                     EXSR ZDATE2                                    S01328
+     C                     MOVE ZADATE    RRPD3                           S01328
+     C*
+     C**********           MOVE HWBRRT    @@INPR           *1                               AR851109
+     C*********************EXSR MM1017                     *1             S01328
+     C**********           EXSR ZRATE1                                               S01328 AR851109
+     C**********           MOVE @@OUTR    RRBR3            *1                               AR851109
+     C                     EXSR FRMTB                                                       AR851109
+     C                     MOVE ZOUT21    RRBR3                                             AR851109
+     C*
+     C**********           MOVE HWLDRT    @@INPR           *1                               AR851109
+     C*********************EXSR MM1017                     *1             S01328
+     C**********           EXSR ZRATE1                                               S01328 AR851109
+     C**********           MOVE @@OUTR    RRLR3            *1                               AR851109
+     C                     EXSR FRMTL                                                       AR851109
+     C                     MOVE ZOUT21    RRLR3                                             AR851109
+     C*
+     C                     END                             E1
+     C*
+     C           #BA9      ENDSR                           **#BA9**
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #BB    - OUTPUT OF PERIOD DESCRIPTION, PERIOD    *
+     C*                       DATE,BORROW AND LEND RATE TO PRINT FILE;*
+     C*                       SPECIFICALLY FOR THE CASE WHERE THE     *
+     C*                       PERIOD TYPE IS 'W'                      *
+     C*                                                               *
+     C*  FIELDS DEFINED:    @P   - Array to hold period descriptions  *
+     C*                                                               *
+     C*  CALLED BY : #B                                               *
+     C*  CALLS     : ZRATE1 - CONVERTS RATE FOR DISPLAY               *   S01328
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #BB       BEGSR
+     C*
+     C**  If the period type is 'W' and the period is '1', output
+     C**  '1 Week' as Period Description.
+     C           HWPRD     IFEQ 1                          B1
+     C*
+     C                     MOVE @P,4      RRDS4            *1
+     C*
+     C*                                                                   S01328
+     C** CONVERT DATE TO DDMMMYY FORMAT                                   S01328
+     C*                                                                   S01328
+     C**********           MOVE HWPRDD    RRPD4            *1             S01328
+     C                     MOVE HWPRDN    ZDAYNO           *1             S01328
+     C                     EXSR ZDATE2                                    S01328
+     C                     MOVE ZADATE    RRPD4                           S01328
+     C*
+     C**********           MOVE HWBRRT    @@INPR           *1                               AR851109
+     C*********************EXSR MM1017                     *1             S01328
+     C**********           EXSR ZRATE1                                               S01328 AR851109
+     C**********           MOVE @@OUTR    RRBR4            *1                               AR851109
+     C                     EXSR FRMTB                                                       AR851109
+     C                     MOVE ZOUT21    RRBR4                                             AR851109
+     C*
+     C**********           MOVE HWLDRT    @@INPR           *1                               AR851109
+     C*********************EXSR MM1017                     *1             S01328
+     C**********           EXSR ZRATE1                                               S01328 AR851109
+     C**********           MOVE @@OUTR    RRLR4            *1                               AR851109
+     C                     EXSR FRMTL                                                       AR851109
+     C                     MOVE ZOUT21    RRLR4                                             AR851109
+     C*
+     C                     END                             E1
+     C*
+     C**  If the period type is 'W' and the period is '2', output
+     C**  '2 Weeks' as Period Description.
+     C           HWPRD     IFEQ 2                          B1
+     C*
+     C                     MOVE @P,5      RRDS5            *1
+     C*
+     C*                                                                   S01328
+     C** CONVERT DATE TO DDMMMYY FORMAT                                   S01328
+     C*                                                                   S01328
+     C**********           MOVE HWPRDD    RRPD5            *1             S01328
+     C                     MOVE HWPRDN    ZDAYNO           *1             S01328
+     C                     EXSR ZDATE2                                    S01328
+     C                     MOVE ZADATE    RRPD5                           S01328
+     C*
+     C**********           MOVE HWBRRT    @@INPR           *1                               AR851109
+     C*********************EXSR MM1017                     *1             S01328
+     C**********           EXSR ZRATE1                                               S01328 AR851109
+     C**********           MOVE @@OUTR    RRBR5            *1                               AR851109
+     C                     EXSR FRMTB                                                       AR851109
+     C                     MOVE ZOUT21    RRBR5                                             AR851109
+     C*
+     C**********           MOVE HWLDRT    @@INPR           *1                               AR851109
+     C*********************EXSR MM1017                     *1             S01328
+     C**********           EXSR ZRATE1                                               S01328 AR851109
+     C**********           MOVE @@OUTR    RRLR5            *1                               AR851109
+     C                     EXSR FRMTL                                                       AR851109
+     C                     MOVE ZOUT21    RRLR5                                             AR851109
+     C*
+     C                     END                             E1
+     C*
+     C**  If the period type is 'W' and the period is '3',
+     C**  output '3 Weeks' as Period Description.
+     C           HWPRD     IFEQ 3                          B1
+     C*
+     C                     MOVE @P,6      RRDS6            *1
+     C*
+     C*                                                                   S01328
+     C** CONVERT DATE TO DDMMMYY FORMAT                                   S01328
+     C*                                                                   S01328
+     C**********           MOVE HWPRDD    RRPD6            *1             S01328
+     C                     MOVE HWPRDN    ZDAYNO           *1             S01328
+     C                     EXSR ZDATE2                                    S01328
+     C                     MOVE ZADATE    RRPD6                           S01328
+     C*
+     C**********           MOVE HWBRRT    @@INPR           *1                               AR851109
+     C*********************EXSR MM1017                     *1             S01328
+     C**********           EXSR ZRATE1                                               S01328 AR851109
+     C**********           MOVE @@OUTR    RRBR6            *1                               AR851109
+     C                     EXSR FRMTB                                                       AR851109
+     C                     MOVE ZOUT21    RRBR6                                             AR851109
+     C*
+     C**********           MOVE HWLDRT    @@INPR           *1                               AR851109
+     C*********************EXSR MM1017                     *1             S01328
+     C**********           EXSR ZRATE1                                               S01328 AR851109
+     C**********           MOVE @@OUTR    RRLR6            *1                               AR851109
+     C                     EXSR FRMTL                                                       AR851109
+     C                     MOVE ZOUT21    RRLR6                                             AR851109
+     C*
+     C                     END                             E1
+     C*
+     C           #BB9      ENDSR                           **#BB9**
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #BC    - OUTPUT OF PERIOD DESCRIPTION, PERIOD    *
+     C*                       DATE,BORROW AND LEND RATE TO PRINT FILE;*
+     C*                       SPECIFICALLY FOR THE CASE WHERE THE     *
+     C*                       PERIOD TYPE IS 'M'                      *
+     C*                                                               *
+     C*  FIELDS DEFINED:    @P   - Array to hold period descriptions  *
+     C*                                                               *
+     C*  CALLED BY : #B                                               *
+     C*  CALLS     : ZRATE1 - CONVERTS RATE TO DISPLAY                *   S01328
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #BC       BEGSR
+     C*
+     C**  If the period type is 'M' and the period is '1', output
+     C**  '1 Month' as Period Description.
+     C           HWPRD     IFEQ 1                          B1
+     C*
+     C                     MOVE @P,7      RRDS7            *1
+     C*
+     C*                                                                   S01328
+     C** CONVERT DATE TO DDMMMYY FORMAT                                   S01328
+     C*                                                                   S01328
+     C**********           MOVE HWPRDD    RRPD7            *1             S01328
+     C                     MOVE HWPRDN    ZDAYNO           *1             S01328
+     C                     EXSR ZDATE2                                    S01328
+     C                     MOVE ZADATE    RRPD7                           S01328
+     C*
+     C**********           MOVE HWBRRT    @@INPR           *1                               AR851109
+     C*********************EXSR MM1017                     *1             S01328
+     C**********           EXSR ZRATE1                                    S01328            AR851109
+     C**********           MOVE @@OUTR    RRBR7            *1                               AR851109
+     C                     EXSR FRMTB                                                       AR851109
+     C                     MOVE ZOUT21    RRBR7                                             AR851109
+     C*
+     C**********           MOVE HWLDRT    @@INPR           *1                               AR851109
+     C*********************EXSR MM1017                     *1             S01328
+     C**********           EXSR ZRATE1                                               S01328 AR851109
+     C**********           MOVE @@OUTR    RRLR7            *1                               AR851109
+     C                     EXSR FRMTL                                                       AR851109
+     C                     MOVE ZOUT21    RRLR7                                             AR851109
+     C*
+     C                     END                             E1
+     C*
+     C**  If the period type is 'M' and the period is '2', output
+     C**  '2 Months' as Period Description.
+     C           HWPRD     IFEQ 2                          B1
+     C*
+     C                     MOVE @P,8      RRDS8            *1
+     C*
+     C*                                                                   S01328
+     C** CONVERT DATE TO DDMMMYY FORMAT                                   S01328
+     C*                                                                   S01328
+     C**********           MOVE HWPRDD    RRPD8            *1             S01328
+     C                     MOVE HWPRDN    ZDAYNO           *1             S01328
+     C                     EXSR ZDATE2                                    S01328
+     C                     MOVE ZADATE    RRPD8                           S01328
+     C*
+     C**********           MOVE HWBRRT    @@INPR           *1                               AR851109
+     C*********************EXSR MM1017                     *1             S01328
+     C**********           EXSR ZRATE1                                               S01328 AR851109
+     C**********           MOVE @@OUTR    RRBR8            *1                               AR851109
+     C                     EXSR FRMTB                                                       AR851109
+     C                     MOVE ZOUT21    RRBR8                                             AR851109
+     C*
+     C**********           MOVE HWLDRT    @@INPR           *1                               AR851109
+     C*********************EXSR MM1017                     *1             S01328
+     C**********           EXSR ZRATE1                                               S01328 AR851109
+     C**********           MOVE @@OUTR    RRLR8            *1                               AR851109
+     C                     EXSR FRMTL                                                       AR851109
+     C                     MOVE ZOUT21    RRLR8                                             AR851109
+     C*
+     C                     END                             E1
+     C*
+     C**  If the period type is 'M' and the period is '3',
+     C**  output '3 Months' as Period Description.
+     C           HWPRD     IFEQ 3                          B1
+     C*
+     C                     MOVE @P,9      RRDS9            *1
+     C*
+     C*                                                                   S01328
+     C** CONVERT DATE TO DDMMMYY FORMAT                                   S01328
+     C*                                                                   S01328
+     C**********           MOVE HWPRDD    RRPD9            *1             S01328
+     C                     MOVE HWPRDN    ZDAYNO           *1             S01328
+     C                     EXSR ZDATE2                                    S01328
+     C                     MOVE ZADATE    RRPD9                           S01328
+     C*
+     C**********           MOVE HWBRRT    @@INPR           *1                               AR851109
+     C*********************EXSR MM1017                     *1             S01328
+     C**********           EXSR ZRATE1                                               S01328 AR851109
+     C**********           MOVE @@OUTR    RRBR9            *1                               AR851109
+     C                     EXSR FRMTB                                                       AR851109
+     C                     MOVE ZOUT21    RRBR9                                             AR851109
+     C*
+     C**********           MOVE HWLDRT    @@INPR           *1                               AR851109
+     C*********************EXSR MM1017                     *1             S01328
+     C**********           EXSR ZRATE1                                    S01328            AR851109
+     C**********           MOVE @@OUTR    RRLR9            *1                               AR851109
+     C                     EXSR FRMTL                                                       AR851109
+     C                     MOVE ZOUT21    RRLR9                                             AR851109
+     C*
+     C                     END                             E1
+     C*
+     C**  If the period type is 'M' and the period is '6', output
+     C**  '6 Months' as Period Description.
+     C           HWPRD     IFEQ 6                          B1
+     C*
+     C                     MOVE @P,10     RRDS10           *1
+     C*
+     C*                                                                   S01328
+     C** CONVERT DATE TO DDMMMYY FORMAT                                   S01328
+     C*                                                                   S01328
+     C**********           MOVE HWPRDD    RRPD10                          S01328
+     C                     MOVE HWPRDN    ZDAYNO                          S01328
+     C                     EXSR ZDATE2                                    S01328
+     C                     MOVE ZADATE    RRPD10                          S01328
+     C*
+     C**********           MOVE HWBRRT    @@INPR           *1                               AR851109
+     C*********************EXSR MM1017                     *1             S01328
+     C**********           EXSR ZRATE1                                               S01328 AR851109
+     C**********           MOVE @@OUTR    RRBR10           *1                               AR851109
+     C                     EXSR FRMTB                                                       AR851109
+     C                     MOVE ZOUT21    RRBR10                                            AR851109
+     C*
+     C**********           MOVE HWLDRT    @@INPR           *1                               AR851109
+     C*********************EXSR MM1017                     *1             S01328
+     C**********           EXSR ZRATE1                                               S01328 AR851109
+     C**********           MOVE @@OUTR    RRLR10           *1                               AR851109
+     C                     EXSR FRMTL                                                       AR851109
+     C                     MOVE ZOUT21    RRLR10                                            AR851109
+     C*
+     C                     END                             E1
+     C*
+     C**  If the period type is 'M' and the period is '9',
+     C**  output '9 Months' as Period Description.
+     C           HWPRD     IFEQ 9                          B1
+     C*
+     C                     MOVE @P,11     RRDS11           *1
+     C*
+     C*                                                                   S01328
+     C** CONVERT DATE TO DDMMMYY FORMAT                                   S01328
+     C*                                                                   S01328
+     C**********           MOVE HWPRDD    RRPD11           *1             S01328
+     C                     MOVE HWPRDN    ZDAYNO           *1             S01328
+     C                     EXSR ZDATE2                                    S01328
+     C                     MOVE ZADATE    RRPD11                          S01328
+     C*
+     C**********           MOVE HWBRRT    @@INPR           *1                               AR851109
+     C*********************EXSR MM1017                     *1             S01328
+     C**********           EXSR ZRATE1                                               S01328 AR851109
+     C**********           MOVE @@OUTR    RRBR11           *1                               AR851109
+     C                     EXSR FRMTB                                                       AR851109
+     C                     MOVE ZOUT21    RRBR11                                            AR851109
+     C*
+     C**********           MOVE HWLDRT    @@INPR           *1                               AR851109
+     C*********************EXSR MM1017                     *1             S01328
+     C**********           EXSR ZRATE1                                               S01328 AR851109
+     C**********           MOVE @@OUTR    RRLR11           *1                               AR851109
+     C                     EXSR FRMTL                                                       AR851109
+     C                     MOVE ZOUT21    RRLR11                                            AR851109
+     C*
+     C                     END                             E1
+     C*
+     C           #BC9      ENDSR                           **#BC9**
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #BD    - OUTPUT OF PERIOD DESCRIPTION, PERIOD    *
+     C*                       DATE,BORROW AND LEND RATE TO PRINT FILE;*
+     C*                       SPECIFICALLY FOR THE CASE WHERE THE     *
+     C*                       PERIOD TYPE IS 'Y'                      *
+     C*                                                               *
+     C*  FIELDS DEFINED:    @P   - Array to hold period descriptions  *
+     C*                                                               *
+     C*  CALLED BY : #B                                               *
+     C*  CALLS     : ZRATE1 - CONVERTS RATE FOR DISPLAY               *   S01328
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #BD       BEGSR
+     C*
+     C**  If the period type is 'Y' and the period is '1', output
+     C**  '1 Year' as Period Description.
+     C           HWPRD     IFEQ 1                          B1
+     C*
+     C                     MOVE @P,12     RRDS12           *1
+     C*
+     C*                                                                   S01328
+     C** CONVERT DATE TO DDMMMYY FORMAT                                   S01328
+     C*                                                                   S01328
+     C**********           MOVE HWPRDD    RRPD12           *1             S01328
+     C                     MOVE HWPRDN    ZDAYNO                          S01328
+     C                     EXSR ZDATE2                                    S01328
+     C                     MOVE ZADATE    RRPD12                          S01328
+     C*
+     C**********           MOVE HWBRRT    @@INPR                                            AR851109
+     C*********************EXSR MM1017                                    S01328
+     C**********           EXSR ZRATE1                                               S01328 AR851109
+     C**********           MOVE @@OUTR    RRBR12                                            AR851109
+     C                     EXSR FRMTB                                                       AR851109
+     C                     MOVE ZOUT21    RRBR12                                            AR851109
+     C*
+     C**********           MOVE HWLDRT    @@INPR                                            AR851109
+     C*********************EXSR MM1017                                    S01328
+     C**********           EXSR ZRATE1                                               S01328 AR851109
+     C**********           MOVE @@OUTR    RRLR12                                            AR851109
+     C                     EXSR FRMTL                                                       AR851109
+     C                     MOVE ZOUT21    RRLR12                                            AR851109
+     C*
+     C                     END
+     C*                                                                   S01328
+     C**  If the period type is 'Y' and the period is '2', output         S01328
+     C**  '2 Years' as Period Description.                                S01328
+     C           HWPRD     IFEQ 2                                         S01328
+     C*                                                                   S01328
+     C                     MOVE @P,13     RRDS13                          S01328
+     C*                                                                   S01328
+     C*                                                                   S01328
+     C** CONVERT DATE TO DDMMMYY FORMAT                                   S01328
+     C*                                                                   S01328
+     C                     MOVE HWPRDN    ZDAYNO                          S01328
+     C                     EXSR ZDATE2                                    S01328
+     C                     MOVE ZADATE    RRPD13                          S01328
+     C*                                                                   S01328
+     C**********           MOVE HWBRRT    @@INPR                                     S01328 AR851109
+     C**********           EXSR ZRATE1                                               S01328 AR851109
+     C**********           MOVE @@OUTR    RRBR13                                     S01328 AR851109
+     C                     EXSR FRMTB                                                       AR851109
+     C                     MOVE ZOUT21    RRBR13                                            AR851109
+     C*                                                                   S01328
+     C**********           MOVE HWLDRT    @@INPR                                     S01328 AR851109
+     C**********           EXSR ZRATE1                                               S01328 AR851109
+     C**********           MOVE @@OUTR    RRLR13                                     S01328 AR851109
+     C                     EXSR FRMTL                                                       AR851109
+     C                     MOVE ZOUT21    RRLR13                                            AR851109
+     C*                                                                   S01328
+     C                     END                                            S01328
+     C*                                                                   S01328
+     C**  If the period type is 'Y' and the period is '3', output         S01328
+     C**  '3 Years' as Period Description.                                S01328
+     C           HWPRD     IFEQ 3                                         S01328
+     C*                                                                   S01328
+     C                     MOVE @P,14     RRDS14                          S01328
+     C*                                                                   S01328
+     C*                                                                   S01328
+     C** CONVERT DATE TO DDMMMYY FORMAT                                   S01328
+     C*                                                                   S01328
+     C                     MOVE HWPRDN    ZDAYNO                          S01328
+     C                     EXSR ZDATE2                                    S01328
+     C                     MOVE ZADATE    RRPD14                          S01328
+     C*                                                                   S01328
+     C**********           MOVE HWBRRT    @@INPR                                     S01328 AR851109
+     C**********           EXSR ZRATE1                                               S01328 AR851109
+     C**********           MOVE @@OUTR    RRBR14                                     S01328 AR851109
+     C                     EXSR FRMTB                                                       AR851109
+     C                     MOVE ZOUT21    RRBR14                                            AR851109
+     C*                                                                   S01328
+     C**********           MOVE HWLDRT    @@INPR                                     S01328 AR851109
+     C**********           EXSR ZRATE1                                               S01328 AR851109
+     C**********           MOVE @@OUTR    RRLR14                                     S01328 AR851109
+     C                     EXSR FRMTL                                                       AR851109
+     C                     MOVE ZOUT21    RRLR14                                            AR851109
+     C*                                                                   S01328
+     C                     END                                            S01328
+     C*                                                                   S01328
+     C**  If the period type is 'Y' and the period is '4', output         S01328
+     C**  '4 Years' as Period Description.                                S01328
+     C           HWPRD     IFEQ 4                                         S01328
+     C*                                                                   S01328
+     C                     MOVE @P,15     RRDS15                          S01328
+     C*                                                                   S01328
+     C*                                                                   S01328
+     C** CONVERT DATE TO DDMMMYY FORMAT                                   S01328
+     C*                                                                   S01328
+     C                     MOVE HWPRDN    ZDAYNO                          S01328
+     C                     EXSR ZDATE2                                    S01328
+     C                     MOVE ZADATE    RRPD15                          S01328
+     C*                                                                   S01328
+     C**********           MOVE HWBRRT    @@INPR                                     S01328 AR851109
+     C**********           EXSR ZRATE1                                               S01328 AR851109
+     C**********           MOVE @@OUTR    RRBR15                                     S01328 AR851109
+     C                     EXSR FRMTB                                                       AR851109
+     C                     MOVE ZOUT21    RRBR15                                            AR851109
+     C*                                                                   S01328
+     C**********           MOVE HWLDRT    @@INPR                                     S01328 AR851109
+     C**********           EXSR ZRATE1                                               S01328 AR851109
+     C**********           MOVE @@OUTR    RRLR15                                     S01328 AR851109
+     C                     EXSR FRMTL                                                       AR851109
+     C                     MOVE ZOUT21    RRLR15                                            AR851109
+     C*                                                                   S01328
+     C                     END                                            S01328
+     C*                                                                   S01328
+     C**  If the period type is 'Y' and the period is '5', output         S01328
+     C**  '5 Years' as Period Description.                                S01328
+     C*                                                                   S01328
+     C           HWPRD     IFEQ 5                                         S01328
+     C*                                                                   S01328
+     C                     MOVE @P,16     RRDS16                          S01328
+     C*                                                                   S01328
+     C*                                                                   S01328
+     C** CONVERT DATE TO DDMMMYY FORMAT                                   S01328
+     C*                                                                   S01328
+     C                     MOVE HWPRDN    ZDAYNO                          S01328
+     C                     EXSR ZDATE2                                    S01328
+     C                     MOVE ZADATE    RRPD16                          S01328
+     C*                                                                   S01328
+     C**********           MOVE HWBRRT    @@INPR                                     S01328 AR851109
+     C**********           EXSR ZRATE1                                               S01328 AR851109
+     C**********           MOVE @@OUTR    RRBR16                                     S01328 AR851109
+     C                     EXSR FRMTB                                                       AR851109
+     C                     MOVE ZOUT21    RRBR16                                            AR851109
+     C*                                                                   S01328
+     C**********           MOVE HWLDRT    @@INPR                                     S01328 AR851109
+     C**********           EXSR ZRATE1                                               S01328 AR851109
+     C**********           MOVE @@OUTR    RRLR16                                     S01328 AR851109
+     C                     EXSR FRMTL                                                       AR851109
+     C                     MOVE ZOUT21    RRLR16                                            AR851109
+     C*                                                                   S01328
+     C                     END                                            S01328
+     C*                                                                   S01328
+     C**  If the period type is 'Y' and the period is '6', output         S01328
+     C**  '6 Years' as Period Description.                                S01328
+     C           HWPRD     IFEQ 6                                         S01328
+     C*                                                                   S01328
+     C                     MOVE @P,17     RRDS17                          S01328
+     C*                                                                   S01328
+     C*                                                                   S01328
+     C** CONVERT DATE TO DDMMMYY FORMAT                                   S01328
+     C*                                                                   S01328
+     C                     MOVE HWPRDN    ZDAYNO                          S01328
+     C                     EXSR ZDATE2                                    S01328
+     C                     MOVE ZADATE    RRPD17                          S01328
+     C*                                                                   S01328
+     C**********           MOVE HWBRRT    @@INPR                                     S01328 AR851109
+     C**********           EXSR ZRATE1                                               S01328 AR851109
+     C**********           MOVE @@OUTR    RRBR17                                     S01328 AR851109
+     C                     EXSR FRMTB                                                       AR851109
+     C                     MOVE ZOUT21    RRBR17                                            AR851109
+     C*                                                                   S01328
+     C**********           MOVE HWLDRT    @@INPR                                     S01328 AR851109
+     C**********           EXSR ZRATE1                                               S01328 AR851109
+     C**********           MOVE @@OUTR    RRLR17                                     S01328 AR851109
+     C                     EXSR FRMTL                                                       AR851109
+     C                     MOVE ZOUT21    RRLR17                                            AR851109
+     C*                                                                   S01328
+     C                     END                                            S01328
+     C*                                                                   S01328
+     C**  If the period type is 'Y' and the period is '7', output         S01328
+     C**  '7 Years' as Period Description.                                S01328
+     C           HWPRD     IFEQ 7                                         S01328
+     C*                                                                   S01328
+     C                     MOVE @P,18     RRDS18                          S01328
+     C*                                                                   S01328
+     C*                                                                   S01328
+     C** CONVERT DATE TO DDMMMYY FORMAT                                   S01328
+     C*                                                                   S01328
+     C                     MOVE HWPRDN    ZDAYNO                          S01328
+     C                     EXSR ZDATE2                                    S01328
+     C                     MOVE ZADATE    RRPD18                          S01328
+     C*                                                                   S01328
+     C**********           MOVE HWBRRT    @@INPR                                     S01328 AR851109
+     C**********           EXSR ZRATE1                                               S01328 AR851109
+     C**********           MOVE @@OUTR    RRBR18                                     S01328 AR851109
+     C                     EXSR FRMTB                                                       AR851109
+     C                     MOVE ZOUT21    RRBR18                                            AR851109
+     C*                                                                   S01328
+     C**********           MOVE HWLDRT    @@INPR                                     S01328 AR851109
+     C**********           EXSR ZRATE1                                               S01328 AR851109
+     C**********           MOVE @@OUTR    RRLR18                                     S01328 AR851109
+     C                     EXSR FRMTL                                                       AR851109
+     C                     MOVE ZOUT21    RRLR18                                            AR851109
+     C*                                                                   S01328
+     C                     END                                            S01328
+     C*                                                                   S01328
+     C**  If the period type is 'Y' and the period is '8', output         S01328
+     C**  '8 Years' as Period Description.                                S01328
+     C           HWPRD     IFEQ 8                                         S01328
+     C*                                                                   S01328
+     C                     MOVE @P,19     RRDS19                          S01328
+     C*                                                                   S01328
+     C*                                                                   S01328
+     C** CONVERT DATE TO DDMMMYY FORMAT                                   S01328
+     C*                                                                   S01328
+     C                     MOVE HWPRDN    ZDAYNO                          S01328
+     C                     EXSR ZDATE2                                    S01328
+     C                     MOVE ZADATE    RRPD19                          S01328
+     C*                                                                   S01328
+     C**********           MOVE HWBRRT    @@INPR                                     S01328 AR851109
+     C**********           EXSR ZRATE1                                               S01328 AR851109
+     C**********           MOVE @@OUTR    RRBR19                                     S01328 AR851109
+     C                     EXSR FRMTB                                                       AR851109
+     C                     MOVE ZOUT21    RRBR19                                            AR851109
+     C*                                                                   S01328
+     C**********           MOVE HWLDRT    @@INPR                                     S01328 AR851109
+     C**********           EXSR ZRATE1                                               S01328 AR851109
+     C**********           MOVE @@OUTR    RRLR19                                     S01328 AR851109
+     C                     EXSR FRMTL                                                       AR851109
+     C                     MOVE ZOUT21    RRLR19                                            AR851109
+     C*                                                                   S01328
+     C                     END                                            S01328
+     C*
+     C*                                                                   S01328
+     C**  If the period type is 'Y' and the period is '9', output         S01328
+     C**  '9 Years' as Period Description.                                S01328
+     C           HWPRD     IFEQ 9                                         S01328
+     C*                                                                   S01328
+     C                     MOVE @P,20     RRDS20                          S01328
+     C*                                                                   S01328
+     C*                                                                   S01328
+     C** CONVERT DATE TO DDMMMYY FORMAT                                   S01328
+     C*                                                                   S01328
+     C                     MOVE HWPRDN    ZDAYNO                          S01328
+     C                     EXSR ZDATE2                                    S01328
+     C                     MOVE ZADATE    RRPD20                          S01328
+     C*                                                                   S01328
+     C**********           MOVE HWBRRT    @@INPR                                     S01328 AR851109
+     C**********           EXSR ZRATE1                                               S01328 AR851109
+     C**********           MOVE @@OUTR    RRBR20                                     S01328 AR851109
+     C                     EXSR FRMTB                                                       AR851109
+     C                     MOVE ZOUT21    RRBR20                                            AR851109
+     C*                                                                   S01328
+     C**********           MOVE HWLDRT    @@INPR                                     S01328 AR851109
+     C**********           EXSR ZRATE1                                               S01328 AR851109
+     C**********           MOVE @@OUTR    RRLR20                                     S01328 AR851109
+     C                     EXSR FRMTL                                                       AR851109
+     C                     MOVE ZOUT21    RRLR20                                            AR851109
+     C*                                                                   S01328
+     C                     END                                            S01328
+     C*                                                                   S01328
+     C*                                                                   S01328
+     C**  If the period type is 'Y' and the period is '10', output        S01328
+     C**  '10 Years' as Period Description.                               S01328
+     C           HWPRD     IFEQ 10                                        S01328
+     C*                                                                   S01328
+     C                     MOVE @P,21     RRDS21                          S01328
+     C*                                                                   S01328
+     C*                                                                   S01328
+     C** CONVERT DATE TO DDMMMYY FORMAT                                   S01328
+     C*                                                                   S01328
+     C                     MOVE HWPRDN    ZDAYNO                          S01328
+     C                     EXSR ZDATE2                                    S01328
+     C                     MOVE ZADATE    RRPD21                          S01328
+     C*                                                                   S01328
+     C**********           MOVE HWBRRT    @@INPR                                     S01328 AR851109
+     C**********           EXSR ZRATE1                                               S01328 AR851109
+     C**********           MOVE @@OUTR    RRBR21                                     S01328 AR851109
+     C                     EXSR FRMTB                                                       AR851109
+     C                     MOVE ZOUT21    RRBR21                                            AR851109
+     C*                                                                   S01328
+     C**********           MOVE HWLDRT    @@INPR                                     S01328 AR851109
+     C**********           EXSR ZRATE1                                               S01328 AR851109
+     C**********           MOVE @@OUTR    RRLR21                                     S01328 AR851109
+     C                     EXSR FRMTL                                                       AR851109
+     C                     MOVE ZOUT21    RRLR21                                            AR851109
+     C*                                                                   S01328
+     C                     END                                            S01328
+     C*
+     C           #BD9      ENDSR                           **#BD9**
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C********SUBROUTINE ZA0150 - THIS SUBROUTINE CHAINS TO FILE LF/  *   S01194
+     C********FDICDRLL TO GET THE INSTALLATION CONTROL DETAILS RECORD *   S01194
+     C********1 (HELD ON PF/TABTB10)                                  *   S01194
+     C********INDICATOR 80 IS SET ON IF THE CHAIN FAILS OR THE RECORD *   S01194
+     C********IS FLAGGED FOR DELETION.                                *   S01194
+     C********IF INDICATOR 80 IS SET ON DETAILS OF THE ATTEMPTED      *   S01194
+     C********ACCESS ARE PLACED IN THE LDA.                           *   S01194
+     C********                                                        *   S01194
+     C********FIELDS USED : SS0150 - KEY USED TO ACCESS FDICDRLL      *   S01194
+     C*                                                               *   S01194
+     C*       SUBROUTINE ZA0150 - THIS SUBROUTINE CALLS THE ACCESS    *   S01194
+     C*       PROGRAM AOBANKR0 TO GET INSTALLATION CONTROL DATA.      *   S01194
+     C*       INDICATOR 80 IS SET ON IF THE CALL TO AOBANKR0 FAILS.   *   S01194
+     C*       DETAILS OF THE ATTEMPTED ACCESS ARE PLACED IN THE LDA   *   S01194
+     C*       IF THE ACCESS PROGRAM FAILS.                            *   S01194
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           ZA0150    BEGSR
+     C**********                                                          S01194
+     C***SET*UP*KEY*TO*OBTAIN*FORMAT*TABTB10F*'01        10'*             S01194
+     C**********           MOVEL'01'      SS0150 12                       S01194
+     C**********           MOVE '10'      SS0150                          S01194
+     C**********                                                          S01194
+     C***CHAIN*TO FILE FDICDRLL                                           S01194
+     C********** SS0150    CHAINFDICDRLL             80                   S01194
+     C********** RECI      IFNE 'D'                        B1             S01194
+     C**********           MOVE '1'       *IN80            *1             S01194
+     C**********           END                             E1             S01194
+     C**********                                                          S01194
+     C***DEAL*WITH DATA BASE ERROR                                        S01194
+     C********** *IN80     IFEQ '1'                        ***************S01194
+     C**********           MOVEL'FDICDRLL'DBFILE           *             *S01194
+     C**********           MOVEL'900'     DBASE            * DBERROR 900 *S01194
+     C**********           MOVELSS0150    DBKEY            *             *S01194
+     C**********           END                             ***************S01194
+     C**                                                                  S01194
+     C**   ACCESS BANK DETAILS                                            S01194
+     C**                                                                  S01194
+     C                     CALL 'AOBANKR0'                                S01194
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*FIRST ' @OPTN   7                       S01194
+     C           SDBANK    PARM SDBANK    DSFDY                           S01194
+     C*                                                                   S01194
+     C** IF ACCESS PROGRAM FAILS CALL SR. *PSSR                           S01194
+     C*                                                                   S01194
+     C           @RTCD     IFNE *BLANK                     ************   S01194
+     C                     MOVEL'SDBANKPD'DBFILE           * DBERR 03 *   S01194
+     C                     Z-ADD3         DBASE            ************   S01194
+     C                     EXSR *PSSR                                     S01194
+     C                     END                                            S01194
+     C*
+     C           ZA0159    ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE:  #A  - INITIAL PROCESSING                        *
+     C*                                                               *
+     C*  CALLED BY :  CONTROL PROCESSING                              *
+     C*                                                               *
+     C*  CALLS     :  ZA0150                                          *
+     C*                                                               *
+     C*  USES:        @FCYC    FIRST CYCLE PROCESSING FLAG.           *
+     C*               @TYPP    FIELD TO INDICATE TYPE OF PROCESSING   *
+     C*               @CALC    FIELD CONTAINING CALCULATED NUMBER OF  *
+     C*                        DETAILS ALREADY OUTPUT                 *
+     C*               @RECP    FIELD CONTAINING NUMBER OF DETAILS     *
+     C*                        ALREADY OUTPUT ON THIS PAGE            *
+     C*               @CCYR    FIELD CONTAINING NUMBER OF RECORDS     *
+     C*                        READ FOR THIS CURRENCY                 *
+     C*                                                               *
+     C*****************************************************************
+     C/EJECT                                                              S01328
+     C*****************************************************************   S01328
+     C/COPY ZSRSRC,ZDATE2Z2                                               S01328
+     C*****************************************************************   S01328
+     C/EJECT                                                              S01328
+     C*****************************************************************   S01328
+     C*
+     C           #A        BEGSR
+     C*
+     C**  RECEIVE PARAMETER INDICATING TYPE OF PROCESSING
+     C           *ENTRY    PLIST
+     C                     PARM           SEQ     5                       S01117
+     C                     PARM           @TYPP   2
+     C*
+     C**  SET FIRST CYCLE PROCESSING FLAG.
+     C                     MOVE 'Y'       @FCYC   1
+     C                     MOVEACPY@      BIS@   80
+     C                     Z-ADD7         ZDECS                                             AR851109
+      *                                                                   CSD006
+      **  Access SAR details file to see if CSD006  is installed.         CSD006
+      *                                                                   CSD006
+     C                     CALL 'AOSARDR0'                                CSD006
+     C                     PARM '       ' @RTCD                           CSD006
+     C                     PARM '*VERIFY' @OPTN                           CSD006
+     C                     PARM 'CSD006'  @SARD   6                       CSD006
+      *                                                                   CSD006
+     C           @RTCD     IFEQ *BLANK                                    CSD006
+     C                     MOVE '1'       *IN50                           CSD006
+     C                     ELSE                                           CSD006
+     C                     MOVE '0'       *IN50                           CSD006
+     C                     END                                            CSD006
+     C*
+     C**  ACCESS INSTALLATION CONTROL DATA
+     C                     EXSR ZA0150
+     C*                                                                   S01117
+     C** IF SR. ZA0150 FAILS GOTO END                                     S01117
+     C*                                                                   S01117
+     C           *IN80     IFEQ '1'                                       S01117
+     C                     GOTO #A9                                       S01117
+     C                     END                                            S01117
+     C**********           MOVE RUNA      RRRUNA                          S01194
+     C**********           MOVE TITL      RRTITL                          S01194
+     C*                                                                   S01194
+     C**  LOAD PRINTER FILE FIELDS WITH DATE AND TITLE                    S01194
+     C*                                                                   S01194
+     C                     MOVE BJURPT    RRTITL                          S01194
+     C                     MOVE BJMRDT    RRRUNA                          S01194
+     C*                                                                   S01194
+     C** CHECK DATE FORMAT INDICATOR AND SET *IN98 IF 'M'                 S01194
+     C** USED IN SR. ZDATE2                                               S01194
+     C*                                                                   S01194
+     C           BJDFIN    COMP 'M'                      98               S01194
+     C*
+     C**  INITIALISE FIELDS CONTAINING NUMBER OF DETAILS
+     C**  ALREADY OUTPUT AND NUMBER OF RECORDS READ FOR
+     C**  THIS CURRENCY
+     C                     Z-ADD0         @CALC   50
+     C                     Z-ADD0         @CCYR   20
+     C*
+     C**  INITIALISE FIELD CONTAINING NUMBER OF DETAILS
+     C**  ALREADY OUTPUT ON THIS PAGE TO MAXIMUM NUMBER
+     C**  WHICH CAN BE OUTPUT ON A PAGE
+     C**********           Z-ADD3         @RECP   20                      S01328
+     C                     Z-ADD2         @RECP   20                      S01328
+     C*
+     C****OPEN*FILE*FDINSTLL.*********************************************S01319
+     C*********************OPEN*FDINSTLL**********************************S01319
+     C*********************READ*FDINSTLL***************7811***************S01319
+     C*************************************************************S01117 S01319
+     C***IF*READ*FAILS*CALL*SR.**PSSR******************************S01117 S01319
+     C*************************************************************S01117 S01319
+     C************IN78*****IFEQ*'1'********************************S01117 S01319
+     C*********************MOVEL'FDINSTLL'DBFILE*************DBERR*S01117 S01319
+     C*********************Z-ADD4*********DBASE********************S01117 S01319
+     C*********************EXSR**PSSR******************************S01117 S01319
+     C*********************END*************************************S01117 S01319
+     C*
+     C           #A9       ENDSR                           **#A9**
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #C - TERMINATION PROCESSING                                  *
+     C*                                                               *
+     C*                                                               *
+     C*  CALLED BY : CONTROL PROCESSING                               *
+     C*                                                               *
+     C*  CALLS     : ZA0150                                           *
+     C*            : #CA                                              *
+     C*                                                               *
+     C*  USES:       @FCYC  - FIRST CYCLE PROCESSING FLAG             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #C        BEGSR
+     C*
+     C**  SET UP PROGRAM NAME
+     C**********           MOVEL'FD0560'  DBPGM                           S01328
+     C**********           MOVEL'FD0560'  RRPGM                           S01328
+     C*********************MOVEL'FD0560AU'RRPGM*********************S01328S01319
+     C*
+     C****SET*UP*STANDARD*TOTALS*REPORT*TITLE*****************************S01319
+     C*********************MOVEL@PRNM,1***RRPRNM**************************S01319
+     C*                                                                   S01117
+     C** CALL ZSFILE  FOR AUDIT REPORT                                    S01117
+     C*                                                                   S01117
+     C                     Z-ADDSFNUMU    ZSNUM   60                      S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ                             S01117
+     C                     PARM *BLANK    ETTY    3                       S01117
+     C                     PARM           SFILEU                          S01117
+     C                     PARM           ZSNUM                           S01117
+     C                     PARM           PERR    1                       S01117
+     C*                                                                   S01117
+     C** IF ERROR CODE = 'Y' THEN TERMINATE THE PROGRAM                   S01117
+     C*                                                                   S01117
+     C           PERR      IFEQ 'Y'                                       S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C*
+     C*                                                                   S01328
+     C** IF DATABASE ERROR BYPASS NEXT BIT OF PROCESSING                  S01328
+     C*                                                                   S01328
+     C           *IN80     IFEQ '1'                                       S01328
+     C                     GOTO ERR                                       S01328
+     C                     END                                            S01328
+     C*                                                                   S01328
+     C**  IF #A HAS NOT BEEN PERFORMED BECAUSE FDINTRLL HAS NO
+     C**  RECORDS, ACCESS I.C.D. RECORD
+     C           @FCYC     IFNE 'Y'                        B1
+     C                     EXSR ZA0150                     *1
+     C           *IN80     IFEQ '1'                                       S01117
+     C                     GOTO ERR                                       S01117
+     C                     END                                            S01117
+     C**********           MOVE TITL      RRTITL           *1             S01194
+     C**********           MOVE RUNA      RRRUNA           *1             S01194
+     C*                                                                   S01194
+     C** LOAD PRINTER FILE FIELDS                                         S01194
+     C*                                                                   S01194
+     C                     MOVE BJURPT    RRTITL           *1             S01194
+     C                     MOVE BJMRDT    RRRUNA           *1             S01194
+     C                     END                             E1
+     C*
+     C**  PROCESSING IF DATA BASE ERROR HAS OCCURRED IN THIS
+     C**  PROGRAM
+     C           ERR       TAG                                            S01328
+     C           *IN80     IFEQ '1'                        B1
+     C*
+     C****OUTPUT*DETAIL*REPORT*AND*TOTALS*REPORT*HEADINGS****             S01117
+     C**  OUTPUT TOTALS REPORT HEADINGS                                   S01117
+     C**********           WRITEFD0560R0                   *1             S01117
+     C                     WRITEFDTOTSR0                   *1
+     C*
+     C****LOAD*PRINTER*FILE*WITH*ERROR*DATA,*PRINT*ERROR*MESSAGE*         S01117
+     C****AND*EXIT*PROGRAM*                                               S01117
+     C**********           MOVE DBASE     RRBASE           *1             S01117
+     C**********           MOVE DBFILE    RRFILE           *1             S01117
+     C**********           MOVELDBKEY     RRKEY            *1             S01117
+     C**********           WRITEFD0560R3                   *1             S01117
+     C*                                                                   S01117
+     C** PRINT ERROR MESSAGE  AND EXIT PROGRAM                            S01117
+     C*                                                                   S01117
+     C                     WRITEFDTOTSR3                   *1
+     C**********           MOVE '1'       *INU7            *1             S01117
+     C**********           MOVE '1'       *INU8            *1             S01117
+     C                     GOTO #C9                        *1
+     C                     END                             E1
+     C*
+     C**  PRODUCE STANDARD TOTALS REPORT
+     C                     EXSR #CA
+     C*
+     C**  IF A DATA BASE ERROR HAS OCCURRED, BYPASS FURTHER
+     C**  PROCESSING
+     C           *INU8     CABEQ'1'       #C9
+     C**********                                                          S01117
+     C****IF*NO DETAILS HAVE YET BEEN OUTPUT, OUTPUT DETAIL               S01117
+     C****HEADERS                                                         S01117
+     C********** *IN62     IFEQ '0'                        B1             S01117
+     C**********           WRITEFD0560R0                   *1             S01117
+     C**********           END                             E1             S01117
+     C*
+     C**  REPORT TRAILERS
+     C****PRINTS*'END*OF*REPORT'*IF**IN62*ON,*OTHERWISE,*'NO*             S01328
+     C****DETAILS*TO*REPORT'************                                  S01328
+     C**  PRINTS 'END OF REPORT' IF *IN54 ON.                             S01328
+     C**                                                                  S01328
+     C           *IN54     IFEQ '1'                                       S01328
+     C                     WRITEFD0560R2
+     C                     END                                            S01328
+     C*
+     C           #C9       ENDSR                           **#C9**
+     C*
+     C*****************************************************************
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*   #CA - PRODUCES STANDARD TOTALS REPORT                      *
+     C*                                                              *
+     C*       CALLED BY:   #C                                        *
+     C*                                                              *
+     C*       CALLS:                                                 *
+     C*                                                              *
+     C*       USES:        @TYPP    RUN TYPE INPUT PARAMETER         *
+     C*                    @CALC    FIELD CONTAINING CALCULATED      *
+     C*                             NUMBER OF DETAILS OUTPUT         *
+     C*                    @TOTKY   KEY TO ACCESS FDINTRLL           *
+     C*                                                              *
+     C****************************************************************
+     C*
+     C           #CA       BEGSR
+     C*
+     C**  SET UP CALCULATED NUMBER OF RECORDS FIELD
+     C                     Z-ADD@CALC     RRCALC
+     C*********************                                               S01328
+     C****SET*UP*TIME*FIELD                                               S01328
+     C*********************TIME           RRTIME                          S01328
+     C*
+     C**  IF TYPE OF PROCESSING IS 'END OF DAY' RETRIEVE INPUT
+     C**  NUMBER OF RECORDS ON FILE
+     C           @TYPP     IFEQ 'ED'                       B1
+     C*
+     C**  SET ON *IN63 TO PRINT FIELDS ON REPORT
+     C                     MOVE '1'       *IN63            *1
+     C*
+     C**  OPEN FDTTOTLL UNDER USER CONTROL
+     C                     OPEN FDTTOTLL                   *1
+     C*
+     C**  SET UP KEY TO OBTAIN RECORD FOR FILE FDINTRLL
+     C                     MOVEL'HW'      @TOTKY 12        *1
+     C*
+     C**  READ RECORD CONTROL TOTALS DATA FILE
+     C**  - *IN80 SET ON IF RECORD NOT FOUND
+     C**  IF *IN80 IS ON, DATA BASE ERROR HAS OCCURRED
+     C           @TOTKY    CHAINFDTTOTLL             80    *1
+     C           *IN80     IFEQ '1'                        B*2
+     C                     MOVEL'FDINTRLL'DBKEY            ***************
+     C                     MOVEL'FDTTOTLL'DBFILE           * DBERROR 002 *
+     C                     MOVEL'002'     DBASE            ***************
+     C                     EXSR *PSSR                                     S01117
+     C**********                                                          S01117
+     C***LOAD*PRINTER WITH ERROR DATA                                     S01117
+     C**********           MOVE DBASE     RRBASE           **2            S01117
+     C**********           MOVE DBFILE    RRFILE           **2            S01117
+     C**********           MOVELDBKEY     RRKEY            **2            S01117
+     C*
+     C****PRINT*HEADINGS*FOR*DETAIL*REPORT*AND*TOTALS*REPORT****          S01117
+     C**  PRINT HEADINGS FOR TOTALS REPORT                                S01117
+     C                     WRITEFDTOTSR0                   **2
+     C**********           WRITEFD0560R0                   **2            S01117
+     C*
+     C****OUTPUT*DATA*BASE*ERROR*FORMATS*FOR*DETAILS*REPORT*AND***        S01117
+     C****TOTALS*REPORT****
+     C**  OUTPUT DATA BASE ERROR FORMATS FOR DETAILS REPORT               S01117
+     C                     WRITEFDTOTSR3                   **2
+     C**********           WRITEFD0560R3                   **2            S01117
+     C**********                                                          S01117
+     C****SET*ON*DATA*BASE ERROR INDICATORS                               S01117
+     C**********           MOVE '1'       *INU7            **2            S01117
+     C**********           MOVE '1'       *INU8            **2            S01117
+     C*
+     C**  BYPASS FURTHER PROCESSING
+     C                     GOTO #CA1                       **2
+     C*
+     C                     END                             E*2
+     C*
+     C**  SET UP INPUT NUMBER OF RECORDS FIELD
+     C                     Z-ADDNREC      RRNREC           *1
+     C*
+     C**  IF CALCULATED AND INPUT NUMBER OF RECORDS DO NOT AGREE
+     C**  SET ON *IN64 TO PRINT '***  DIFFERENCE  ***' ON REPORT
+     C           NREC      IFNE @CALC                      B*2
+     C                     MOVE '1'       *IN64            **2
+     C                     MOVE '1'       *INU8            **2            S01328
+     C                     END                             E*2
+     C*
+     C                     END                             E1
+     C*
+     C**  PRINT STANDARD TOTALS REPORT
+     C                     WRITEFDTOTSR0
+     C*
+     C           #CA1      TAG                             **#CA1**
+     C*
+     C**  IF RUN TYPE IS 'ED', CLOSE FDTTOTLL FILE
+     C           @TYPP     IFEQ 'ED'                       B1
+     C                     CLOSEFDTTOTLL                   *1
+     C                     END                             E1
+     C*
+     C****CLOSE*FILE*FDINSTLL*********************************************S01319
+     C*********************CLOSEFDINSTLL**********************************S01319
+     C*
+     C           #CA9      ENDSR
+     C*
+     C*****************************************************************   S01328
+      /EJECT                                                              S01328
+      ****************************************************************                      AR851109
+      *                                                              *                      AR851109
+      *   FRMTB - Format Borrow Rate                                 *                      AR851109
+      *                                                              *                      AR851109
+      *       CALLED BY:   #BA, #BB, #BC, #BD                        *                      AR851109
+      *                                                              *                      AR851109
+      *       CALLS:       ZSEDIT                                    *                      AR851109
+      *                                                              *                      AR851109
+      *       USES:        WTEMP    RUN TYPE INPUT PARAMETER         *                      AR851109
+      *                                                              *                      AR851109
+      ****************************************************************                      AR851109
+      *                                                                                     AR851109
+     C           FRMTB     BEGSR                                                            AR851109
+      *                                                                                     AR851109
+     C           HWBRRT    MULT WPOWER    ZFLD15                                            AR851109
+     C                     EXSR ZSEDIT                                                      AR851109
+     C                     ENDSR                                                            AR851109
+     C*****************************************************************   S01328
+      /EJECT                                                                                AR851109
+      ****************************************************************                      AR851109
+      *                                                              *                      AR851109
+      *   FRMTL - Format Lending Rate                                *                      AR851109
+      *                                                              *                      AR851109
+      *       CALLED BY:   #BA, #BB, #BC, #BD                        *                      AR851109
+      *                                                              *                      AR851109
+      *       CALLS:       ZSEDIT                                    *                      AR851109
+      *                                                              *                      AR851109
+      *       USES:        WTEMP    RUN TYPE INPUT PARAMETER         *                      AR851109
+      *                                                              *                      AR851109
+      ****************************************************************                      AR851109
+      *                                                                                     AR851109
+     C           FRMTL     BEGSR                                                            AR851109
+      *                                                                                     AR851109
+     C           HWLDRT    MULT WPOWER    ZFLD15                                            AR851109
+     C                     EXSR ZSEDIT                                                      AR851109
+     C                     ENDSR                                                            AR851109
+     C*****************************************************************                     AR851109
+     C/COPY ZSRSRC,ZRATE1Z2                                               S01328
+     C/COPY ZSRSRC,ZSEDITZ3                                                                 AR851109
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************   S01328
+     C*******************                                             *   S01328
+     C**MM1017*-*Subroutine to convert a rate to display, no sign     *   S01328
+     C*******************                                             *   S01328
+     C**CALLED*BY*:**#BA, #BB, #BC, #BD                               *   S01328
+     C*******************                                             *   S01328
+     C**CALLS*:**********                                             *   S01328
+     C*******************                                             *   S01328
+     C**INPUT**:*@@INPR*Rate to be edited.                            *   S01328
+     C*******************                                             *   S01328
+     C**OUTPUT*:*@@OUTR*Edited output rate.                           *   S01328
+     C*******************                                             *   S01328
+     C**USES*:***@@INPR*Rate to be edited.                            *   S01328
+     C***********@@OUTR*Edited output rate.                           *   S01328
+     C***********@@DECS*Field to hold decimal digits for input rate.  *   S01328
+     C***********@@INTS*Field to hold integers for input rate.        *   S01328
+     C***********@@N****Counter field.                                *   S01328
+     C***********@@Q****Second counter field.                         *   S01328
+     C***********@@STRP*Rate start position after zero suppression.   *   S01328
+     C***********@W*****Work array.                                   *   S01328
+     C*******************                                             *   S01328
+     C*****************************************************************   S01328
+     C***********MM1017**  BEGSR                                          S01328
+     C*******************                                                 S01328
+     C****Define*fields*used.                                             S01328
+     C*******************  Z-ADD@@INPR    @@INPR 117                      S01328
+     C*******************  MOVE *BLANKS   @@OUTR 13                       S01328
+     C*******************  MOVE *BLANKS   @@DECS  7                       S01328
+     C*******************  MOVE *BLANKS   @@INTS  4                       S01328
+     C*******************  Z-ADD0         @@N     20                      S01328
+     C*******************  Z-ADD0         @@Q     20                      S01328
+     C*******************  Z-ADD0         @@STRP  20                      S01328
+     C*******************                                                 S01328
+     C****Initialise*work array.                                          S01328
+     C*******************  MOVEA*BLANKS   @W                              S01328
+     C*******************                                                 S01328
+     C****If*the*rate*is*negative reverse the sign.                       S01328
+     C***********@@INPR**  IFLT 0                          B1             S01328
+     C*******************  Z-SUB@@INPR    @@INPR           *1             S01328
+     C*******************  END                             E1             S01328
+     C*******************                                                 S01328
+     C****Seperate*integers and decimal digits into two fields.           S01328
+     C*******************  MOVE @@INPR    @@DECS                          S01328
+     C*******************  MOVEL@@INPR    @@INTS                          S01328
+     C*******************                                                 S01328
+     C****Move*integers,*decimal seperator and decimal digits into        S01328
+     C****work*array.****                                                 S01328
+     C*******************  MOVEA@@INTS    @W                              S01328
+     C*******************  MOVE IDDCSP    @W,5                            S01328
+     C*******************  MOVEA@@DECS    @W,6                            S01328
+     C*******************                                                 S01328
+     C****Remove*leading*zeros from the rate and replace with blanks.     S01328
+     C*******************  Z-ADD1         @@N                             S01328
+     C***********@@N*****  DOWLE3                          B1             S01328
+     C***********@W,@@N**  ANDEQ'0'                        X1             S01328
+     C*******************  MOVE *BLANK    @W,@@N           *1             S01328
+     C*******************  ADD  1         @@N              *1             S01328
+     C*******************  END                             E1             S01328
+     C*******************                                                 S01328
+     C*******************  Z-ADD@@N       @@STRP                          S01328
+     C*******************                                                 S01328
+     C****Truncate*trailing zeros and replace with blanks. If rate is     S01328
+     C****an*integer*a*single zero after the decimal place should be      S01328
+     C****displayed.*****                                                 S01328
+     C*******************  Z-ADD12        @@N                             S01328
+     C***********@@N*****  DOWGE7                          B1             S01328
+     C***********@W,@@N**  ANDEQ'0'                        X1             S01328
+     C*******************  MOVE *BLANK    @W,@@N           *1             S01328
+     C*******************  SUB  1         @@N              *1             S01328
+     C*******************  END                             E1             S01328
+     C*******************                                                 S01328
+     C****Right*justify*the array.                                        S01328
+     C*******************  Z-ADD12        @@Q                             S01328
+     C***********@@N*****  IFNE @@Q                        B1             S01328
+     C***********@@N*****  DOWGE@@STRP                       B2           S01328
+     C*******************  MOVE @W,@@N    @W,@@Q             *2           S01328
+     C*******************  MOVE *BLANK    @W,@@N             *2           S01328
+     C*******************  SUB  1         @@N                *2           S01328
+     C*******************  SUB  1         @@Q                *2           S01328
+     C*******************  END                               E1           S01328
+     C*******************  END                             E2             S01328
+     C*******************                                                 S01328
+     C****Move*the*final*array into the output field.                     S01328
+     C*******************  MOVEA@W        @@OUTR                          S01328
+     C*******************                                                 S01328
+     C***********M10179**  ENDSR                           **M10179**     S01328
+     C*******************                                                 S01328
+     C*EJECT*************                                                 S01328
+     C*****************************************************************
+     C*                                                               *
+     C*  *PSSR - ERROR HANDLING SUBROUTINE.                           *
+     C*                                                               *
+     C*  CALLED BY:  EXECUTES WHENEVER FILE OR PROGRAM EXCEPTION      *
+     C*              ERROR OCCURS.                                    *
+     C*  CALLS :                                                      *
+     C*                                                               *
+     C*  USES:                                                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C           @RUN      IFEQ *BLANK                                    S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C           *NAMVAR   DEFN LDA       @LDA  256                       S01117
+     C           *LOCK     IN   @LDA                                      S01117
+     C                     MOVE 'FD0560  'DBPGM                           S01117
+     C*                                                                   S01117
+     C** LOAD LDA WITH DATABASE ERROR INFORMATION FROM DBERR              S01117
+     C*                                                                   S01117
+     C                     MOVE DBERR     @LDA                            S01117
+     C                     OUT  @LDA                                      S01117
+     C*                                                                   S01117
+     C** LOAD AUDIT PRINTER FILE WITH ERROR INFORMATION                   S01117
+     C*                                                                   S01117
+     C*********************MOVEL'FD0560AU'RRPGM*********************S01117S01319
+     C                     MOVEL'FD0560'  RRPGM  10                       S01319
+     C                     MOVE DBASE     RRBASE                          S01117
+     C                     MOVE DBFILE    RRFILE                          S01117
+     C                     MOVE DBKEY     RRKEY                           S01117
+     C                     SETON                     U7U8LR               S01117
+     C*                                                                   S01117
+     C** SET ON DATABASE ERROR INDICATOR AND DUMP                         S01117
+     C*                                                                   S01117
+     C                     SETON                     80                   S01117
+     C                     DUMP
+     C                     END                                            S01117
+     C                     ENDSR                            ***PSSR9**
+     C*
+     C*****************************************************************
+     C*
+      **@PRNMR*ARRAY*FOR*FDTOTSRR*TITLE*TEXT******************************S01319
+INTERE*ST*RATE*FILE*LIST**************************************************S01319
+**  @P ARRAY CONTAINING PERIOD DESCRIPTIONS.
+OVERNIGHTTOM/NEXT SPOT NEXT 1 WEEK
+ 2 WEEKS  3 WEEKS  1 MONTH  2 MONTHS
+ 3 MONTHS 6 MONTHS 9 MONTHS 1 YEAR
+ 2 YEARS  3 YEARS  4 YEARS  5 YEARS
+ 6 YEARS  7 YEARS  8 YEARS  9 YEARS
+10 YEARS
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN                      S01328
+0366073110961461                                                          S01328
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR                        S01328
+000031059090120151181212243273304334365                                   S01328
+**   ZMNM - MONTHS SHORT NAMES                                            S01328
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC                                      S01328

@@ -1,0 +1,71 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas LE Monthly Hist Proc/Rprtg - Task Split')       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Customer Lending Module                             */
+/*                                                                   */
+/*       LEC100100A - Monthly History Processing and Reporting       */
+/*                    Task Split                                     */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. MD019855A          Date 03May13              */
+/*       Prev Amend No. CLE137 *CREATE     Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD019855A - LEC10A 00003 in FOOB during Day 3 EN COB        */
+/*       CLE137 - LE Monthly History processing                      */
+/*                                                                   */
+/*********************************************************************/
+             PGM     PARM(&CSEQ)
+ 
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
+             DCL        VAR(&WKSEQ) TYPE(*CHAR) LEN(5)
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2012')
+ 
+             SNDPGMMSG  MSG('LEC1001 - LE Monthly History processing +
+                          and reporting.') TOMSGQ(MRUNQ)
+ 
+/* Set performance overrides for sequential processing */
+ 
+             OVRDBF     FILE(LEHISUPD) NBRRCDS(1000) SEQONLY(*YES 2000)
+ 
+/* Determine sequence number from the task split sequence */
+/* which has 0100x where X is task # */
+ 
+             CHGVAR     VAR(&WKSEQ) VALUE(&CSEQ)
+ 
+             CHGJOB     SWS(XXXXX000)
+ 
+/* Override */
+ 
+             OVRPRTF    FILE(MPRINTCF) PAGESIZE(56 132)
+ 
+             CALL       PGM(LE0900)
+                                                                                       /*MD019855A*/
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)                               /*MD019855A*/
+             COMMIT                                                                    /*MD019855A*/
+             ENDDO                                                                     /*MD019855A*/
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             GOTO       CMDLBL(END)
+ 
+ /* Abnormal termination */
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          LE0900 ended abnormally - see joblog ') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ /* End program */
+ 
+ END:
+             DLTOVR     FILE(MPRINTCF)
+             ENDPGM

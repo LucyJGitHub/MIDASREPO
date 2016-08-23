@@ -1,0 +1,435 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL OIS shadow postings merge')                   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL1654 - OIS Shadow Postings Merge                           *
+      *                                                               *
+      *  Function:  This program will merge OIS posting records from  *
+      *             PF/DLOPOSPD into the Account Keys file PF/DKEYSDP *
+      *             after being called during Dealing Shadow Posting  *
+      *             run.                                              *
+      *                                                               *
+      *  Called By: DLC10 - Shadow Posting for Dealing                *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. MD034805           Date 06Aug15               *
+      *  Prev Amend No. AR821740           Date 29Aug11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 BUG7335            Date 25May05               *
+      *                 CGL020             Date 12Dec02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CIR007  *CREATE    Date 11May01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD034805 - File out of Balance in DKEYSZZ when an OIS deal   *
+      *             with negative interest amount is to be settled.   *
+      *  AR821740 - COB - No stamp tax account keys generated         *
+      *             (Recompile)                                       *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  BUG7140- File control is calculated using only the amount    *
+      *           from the first record from DLOPOSL2.                *
+      *  CGL020 - Midas Compliance Watch - Additional A/C Postings    *
+      *           Information                                         *
+      *  CIR007 - Overnight Index Swaps                               *
+      *                                                               *
+      *****************************************************************
+     FDLOPOSL2UF  E           K        DISK         KINFSR *PSSR
+     FDKEYSZZ UF  E                    DISK         KINFSR *PSSR
+     FDKEYSDP O   E                    DISK         KINFSR *PSSR
+      *****************************************************************
+      *                                                               *
+      *  Use of indicators.                                           *
+      *                                                               *
+      *    01         File-access indicator for the primary file      *
+      *    50         General file-access indicator                   *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRZADD - Adds amount (WZAMT) to total (WZTOTI,WZTOTD)        *
+      *  SRZSUM - Carry out addition for SR/SRZADD                    *
+      *  *PSSR  - Error processing                                    *
+      *  *INZSR - Initialise                                          *
+      *                                                               *
+      *    The *INZSR subroutine will only get called automatically   *
+      *    on entry to the module the first time it is run            *
+      *    (unless you end the program with LR on).                   *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** Array containing Copyright statement
+     E                    CPY@    1   1 80
+      *
+      ** Rename same field names
+     IDKEYSZZF
+     I              RECI                            KZRECI
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+      ** First data structure for access objects
+     IDSFDY     E DSDSFDY
+      *
+      ** External data structure for bank details
+     ISDBANK    E DSSDBANKPD
+      *
+     IDSDKEY    E DSDKEYSDP
+      *
+     I**********  DS                                                                          CGL020
+     I**********                              1 153 L3PREC                                    CGL020
+     IDSPSTR      DS                                                                          CGL020
+     I                                        1 153 PRECA                                     CGL020
+     I                                      154 332 PRECB                                     CGL020
+     I                                    P  32  380WPEAMT
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** Read DLOPOSPD records that have not been shadow posted
+      *
+     C                     READ DLOPOSL2                 01
+      *
+     C***********          MOVELL3PSTR    DSPSTR                                      CGL020 BUG7335
+      *                                                                                       CGL020
+     C           *IN01     DOWEQ*OFF
+      *
+      ** If the Value Date on the DLOPOSPD record is equal to today's
+      ** date, then we merge the record into DKEYSDP.
+     C           L3VDAT    IFEQ BJRDNB
+      *
+      ** Increment Number of records by 1
+     C                     ADD  1         NORE
+     C                     MOVELL3PSTR    DSPSTR                                             BUG7335
+      *
+      ** Set up Hash totals
+     C           WPEAMT    DIV  1000      WZAMT
+     C           WZAMT     IFLT 0                                                           MD034805
+     C                     Z-SUBWZAMT     WZAMT                                             MD034805
+     C                     ENDIF                                                            MD034805
+     C                     Z-ADDHRWN      WZTOTI
+     C                     Z-ADDHRDC      WZTOTD
+     C                     EXSR SRZADD
+     C                     Z-ADDWZTOTI    HRWN
+     C                     Z-ADDWZTOTD    HRDC
+      *
+      ***Write*record*on*DKEYSDP*from*L3PREC**********                                        CGL020
+     C**********           MOVELL3PREC    DSDKEY    P                                         CGL020
+      ** Write record on DKEYSDP from L3PSTR                                                  CGL020
+     C                     MOVELL3PSTR    DSDKEY    P                                         CGL020
+      *
+     C                     WRITEDKEYSDPF
+      *
+      ** Change Dealing Shadow Posting Indicator to 'Y'
+     C                     MOVE 'Y'       L3SIND
+      *
+     C                     UPDATDLOPOSD0
+      *
+     C                     ENDIF
+      *
+     C                     READ DLOPOSL2                 01
+      *
+     C                     ENDDO
+      *
+      ** Update DKEYSZZ with new Hash Totals
+      *
+     C                     UPDATDKEYSZZF
+      *
+      ** Termination Processing
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRZADD     - Adds amount (WZAMT) to total (WZTOTI,WZTOTD)    *
+      *                                                               *
+      *  Called by: Main processing                                   *
+      *                                                               *
+      *  Calls:     SRZSUM                                            *
+      *                                                               *
+      *****************************************************************
+     C           SRZADD    BEGSR
+      *
+     C                     Z-ADDWZAMT     WZAMT  153
+     C           WZAMT     IFNE 0
+      ** Split WZAMT into Integer and Decimal fields
+     C                     Z-ADDWZAMT     WZAMTI 150
+     C                     MOVE WZAMT     WZAMTD  30
+      ** Both WZAMTI and WZAMTD comtain a 'sign' zone now
+     C                     EXSR SRZSUM
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRZSUM     - Carry out addition for SR/SRZADD                *
+      *                                                               *
+      *          Parameters passed -                                  *
+      *                     I/P WZAMTI WZAMTD                         *
+      *                     O/P WZTOTI WZTOTD WZNEGD                  *
+      *                                                               *
+      *  Called by: SRZADD                                            *
+      *                                                               *
+      *  Calls:     None                                              *
+      *                                                               *
+      *****************************************************************
+     C           SRZSUM    BEGSR
+      *
+     C                     Z-ADDWZTOTI    WZTOTI 150
+     C                     Z-ADDWZTOTD    WZTOTD  30
+     C                     MOVE 'N'       WZNEGA  1
+     C                     MOVE 'N'       WZNEGT  1
+      *
+     C           WZAMTI    IFNE 0
+     C           WZAMTD    ORNE 0
+      *
+      ** Determine sign of WZAMTI & D
+     C           WZAMTI    IFLT 0
+     C           WZAMTI    OREQ 0
+     C           WZAMTD    ANDLT0
+     C                     MOVE 'Y'       WZNEGA
+     C                     ENDIF
+      *
+      ** Determine sign of WZTOTI & D
+     C           WZTOTI    IFLT 0
+     C           WZTOTI    OREQ 0
+     C           WZTOTD    ANDLT0
+     C                     MOVE 'Y'       WZNEGT
+     C                     ENDIF
+      *
+     C           WZTOTI    IFEQ 0
+     C           WZTOTD    ANDEQ0
+      *
+      ** If WZTOTAL = 0, return WZAMOUNT
+     C                     Z-ADDWZAMTI    WZTOTI
+     C                     Z-ADDWZAMTD    WZTOTD
+      *
+     C                     ELSE
+      *
+      ** If signs differ bypass overflow checks
+     C           WZNEGA    IFEQ WZNEGT
+      *
+     C           WZAMTD    ADD  WZTOTD    WZWK2   40
+     C           WZWK2     IFGT 999
+     C           WZWK2     ORLT -999
+     C           WZNEGA    IFEQ 'N'
+     C           WZAMTI    ADD  1         WZWK3  150
+     C                     ELSE
+     C           WZAMTI    SUB  1         WZWK3
+     C                     ENDIF
+     C           WZTOTI    ADD  WZWK3     WZWK3
+     C                     ELSE
+     C           WZTOTI    ADD  WZAMTI    WZWK3
+     C                     ENDIF
+      *
+      ** If Modulus of WZWK3 < Modulus of WZTOTI then O/F has occured
+     C           WZNEGA    IFEQ 'N'
+     C           WZWK3     ANDLTWZTOTI
+     C           WZNEGA    OREQ 'Y'
+     C           WZWK3     ANDGTWZTOTI
+      ** If O/F, zeroize WZAMT and WZTOT fields left intact
+     C                     Z-ADD0         WZAMT  153
+     C                     ELSE
+     C                     Z-ADDWZWK2     WZTOTD
+     C                     Z-ADDWZWK3     WZTOTI
+     C                     ENDIF
+      *
+      ** The signs are different
+     C                     ELSE
+      *
+      ** IF WZAMT was negative, make it positive to comp with WZTOT
+     C           WZNEGA    IFEQ 'Y'
+     C                     Z-SUBWZAMTI    WZAMTI 150
+     C                     Z-SUBWZAMTD    WZAMTD  30
+     C                     ENDIF
+      *
+      ** IF WZTOT was negative, make it positive to comp with WZAMT
+     C           WZNEGT    IFEQ 'Y'
+     C                     Z-SUBWZTOTI    WZTOTI
+     C                     Z-SUBWZTOTD    WZTOTD
+     C                     ENDIF
+      *
+      ** Both WZAMT and WZTOT are now positive
+      ** If WZTOT = WZAMT, return zero
+     C           WZTOTI    IFEQ WZAMTI
+     C           WZTOTD    ANDEQWZAMTD
+      *
+     C                     Z-ADD0         WZTOTI
+     C                     Z-ADD0         WZTOTD
+      *
+     C                     ELSE
+      *
+      ** IF WZTOT > WZAMT
+     C           WZTOTI    IFGT WZAMTI
+     C           WZTOTI    OREQ WZAMTI
+     C           WZTOTD    ANDGTWZAMTD
+      *
+     C           WZAMTD    IFGT WZTOTD
+     C           WZTOTI    SUB  1         WZTOTI
+     C           WZTOTD    ADD  1000      WZWK2
+     C                     ENDIF
+     C           WZTOTI    SUB  WZAMTI    WZTOTI
+     C           WZAMTD    IFGT WZTOTD
+     C           WZWK2     SUB  WZAMTD    WZTOTD
+     C                     ELSE
+     C           WZTOTD    SUB  WZAMTD    WZTOTD
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ** If WZAMT > WZTOT
+     C           WZTOTD    IFGT WZAMTD
+     C           WZAMTI    SUB  1         WZWK3  150
+     C           WZAMTD    ADD  1000      WZWK2
+     C           WZWK3     SUB  WZTOTI    WZTOTI
+     C           WZWK2     SUB  WZTOTD    WZTOTD
+     C                     ELSE
+     C           WZAMTI    SUB  WZTOTI    WZTOTI
+     C           WZAMTD    SUB  WZTOTD    WZTOTD
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Reverse sign of WZTOT if larger I/P fields were negative
+     C           WZTOTI    IFGT WZAMTI
+     C           WZNEGT    ANDEQ'Y'
+     C           WZTOTI    OREQ WZAMTI
+     C           WZTOTD    ANDGTWZAMTD
+     C           WZNEGT    ANDEQ'Y'
+     C           WZTOTI    ORLE WZAMTI
+     C           WZNEGA    ANDEQ'Y'
+     C           WZTOTI    OREQ WZAMTI
+     C           WZTOTD    ANDLEWZAMTD
+     C           WZNEGA    ANDEQ'Y'
+     C                     Z-SUBWZTOTI    WZTOTI
+     C                     Z-SUBWZTOTD    WZTOTD
+     C                     ENDIF
+      *
+      ** Restore sign of WZAMTI & WZAMTD if it was reversed
+     C           WZNEGA    IFEQ 'Y'
+     C                     Z-SUBWZAMTI    WZAMTI
+     C                     Z-SUBWZAMTD    WZAMTD
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** If WZTOTD is zero and WZTOTI is negative, set up WZNEGD
+     C           WZTOTD    IFEQ 0
+     C           WZTOTI    ANDLT0
+     C                     MOVE '.000-'   WZNEGD  5
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *INZSR    - Program Initialisation routine                   *
+      *                                                               *
+      *  Called by: Implicitly on program activation                  *
+      *                                                               *
+      *  Calls:     AOBANKR0                                          *
+      *                                                               *
+      *****************************************************************
+     C           *INZSR    BEGSR
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Set up copyright parameter
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Initialise LDA fields
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DL1654'  DBPGM     P
+     C                     Z-ADD0         DBASE
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     OUT  LDA
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVELPOPTN     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     READ DKEYSZZ                  50
+     C           *IN50     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE
+     C                     MOVEL'DKEYSZZ 'DBFILE
+     C                     MOVEL'*FIRST ' DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *  Called by: Error processing routines                         *
+      *                                                               *
+      *  Calls:     DBERRCTL                                          *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

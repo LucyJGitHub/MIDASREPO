@@ -1,0 +1,213 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UT Convert spool file Utility')                 */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities Module                                    */
+/*                                                                   */
+/*       UTC000016 - Midas UT Convert spool file Utility             */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2015           */
+/*                                                                   */
+/*       Last Amend No. CUT016   *Create   Date 10Apr15              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       CUT016 - iSeries Spooled Files Conversion                   */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FROMFILE &TOSTMF &TODIR &QUALJOB &SPLID &TOFMT +
+                          &STMFOPT &STMFCODPAG &TITLE &BOOKMARK &BMARKPOS +
+                          &BMARKKEY &PAGFMT)
+
+             DCL        VAR(&FROMFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOSTMF) TYPE(*CHAR) LEN(64)
+             DCL        VAR(&TODIR) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&QUALJOB) TYPE(*CHAR) LEN(26)
+             DCL        VAR(&INTJOB) TYPE(*CHAR) LEN(16)
+             DCL        VAR(&INTSPLID) TYPE(*CHAR) LEN(16)
+             DCL        VAR(&JOB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&USER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JOBNBR) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&SPLID) TYPE(*DEC) LEN(4 0)
+             DCL        VAR(&HEXSPLID) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&TOFMT) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&STMFOPT) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&STMFCODPAG) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&CODEPAGE) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&TITLE) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&BOOKMARK) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&BMARKPOS) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&BMARKKEY) TYPE(*CHAR) LEN(388)
+             DCL        VAR(&SPLINFO) TYPE(*CHAR) LEN(1133)
+             DCL        VAR(&INFOLEN) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&PAGELEN) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&SPLNBR) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&PATH) TYPE(*CHAR) LEN(1024)
+             DCL        VAR(&CTLCHAR) TYPE(*CHAR) LEN(7) VALUE('*NONE')
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&MSGKEY) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE(N)
+             DCL        VAR(&PAGFMT) TYPE(*CHAR) LEN(11)
+
+
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2015')
+
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 CPF9999) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+/* Extract job name from qualified Job name  */
+
+             CHGVAR     VAR(&JOB) VALUE(%SST(&QUALJOB 1 10))
+             CHGVAR     VAR(&USER) VALUE(%SST(&QUALJOB 11 10))
+             CHGVAR     VAR(&JOBNBR) VALUE(%SST(&QUALJOB 21 6))
+
+/* Convert special value * to current job details   */
+
+             IF         COND(&JOB *EQ '*') THEN(DO)
+             RTVJOBA    JOB(&JOB) USER(&USER) NBR(&JOBNBR)
+             ENDDO
+
+/* Set up spooled file number from special values   */
+
+             CHGVAR     VAR(&SPLNBR) VALUE(&SPLID)
+             IF         COND(&SPLID *EQ -2) THEN(DO)
+             CHGVAR     VAR(&SPLNBR) VALUE('*LAST')
+             ENDDO
+             IF         COND(&SPLID *EQ -3) THEN(DO)
+             CHGVAR     VAR(&SPLNBR) VALUE('*ONLY')
+             ENDDO
+
+/* Create first work file    */
+
+             DLTF       FILE(QTEMP/UTTOOPTD)
+             MONMSG     MSGID(CPF2105)
+             CRTPF      FILE(QTEMP/UTTOOPTD) RCDLEN(378) +
+                          SIZE(100000 10000 10)
+             CHGVAR     VAR(&TOFILE) VALUE('UTTOOPTD')
+
+/* Create second work file if not converting to plain text       */
+
+             IF         COND(&TOFMT *NE '*TEXT') THEN(DO)
+             DLTF       FILE(QTEMP/UTSPLFTD)
+             MONMSG     MSGID(CPF2105)
+             CRTPF      FILE(QTEMP/UTSPLFTD) RCDLEN(382) +
+                          SIZE(100000 10000 10)
+             CHGVAR     VAR(&TOFILE) VALUE('UTSPLFTD')
+             ENDDO
+
+/* If converting to HTML or PDF, we need control characters      */
+
+             IF         COND(&TOFMT *NE '*TEXT') THEN(DO)
+
+             CHGVAR     VAR(&CTLCHAR) VALUE('*PRTCTL')
+
+/* Set up Title if a special value                               */
+
+             IF         COND(&TITLE *EQ '*STMFILE') THEN(DO)
+             CHGVAR     VAR(&TITLE) VALUE(&TOSTMF)
+             ENDDO
+             IF         COND(&TITLE *EQ '*NONE') THEN(DO)
+             CHGVAR     VAR(&TITLE) VALUE(' ')
+             ENDDO
+
+             ENDDO
+
+/* Copy spooled file into work file                               */
+
+             CPYSPLF    FILE(&FROMFILE) TOFILE(QTEMP/&TOFILE) +
+                          JOB(&JOBNBR/&USER/&JOB) SPLNBR(&SPLNBR) +
+                          MBROPT(*REPLACE) CTLCHAR(&CTLCHAR)
+
+/* If converting to HTML or PDF, call API to get spooled file info */
+
+             IF         COND(&TOFMT *NE '*TEXT') THEN(DO)
+
+             CHGVAR     VAR(%BIN(&HEXSPLID)) VALUE(&SPLID)
+             IF         COND(&SPLNBR *EQ '*ONLY') THEN(CHGVAR +
+                          VAR(%BIN(&HEXSPLID)) VALUE(0))
+             IF         COND(&SPLNBR *EQ '*LAST') THEN(CHGVAR +
+                          VAR(%BIN(&HEXSPLID)) VALUE(-1))
+             CHGVAR     VAR(%BIN(&INFOLEN)) VALUE(1133)
+             CALL       PGM(QUSRSPLA) PARM(&SPLINFO &INFOLEN +
+                          'SPLA0100' &QUALJOB &INTJOB &INTSPLID +
+                          &FROMFILE &HEXSPLID)
+             CHGVAR     VAR(&PAGELEN) VALUE(%SST(&SPLINFO 425 4))
+             OVRDBF     FILE(UTTOOPTD) TOFILE(QTEMP/UTTOOPTD) +
+                          OVRSCOPE(*JOB)
+             OVRDBF     FILE(UTSPLFTD) TOFILE(QTEMP/UTSPLFTD) +
+                          OVRSCOPE(*JOB)
+
+/* Convert spooled file data to HTML format                          */
+
+             IF         COND(&TOFMT *EQ '*HTML') THEN(DO)
+             CALL       PGM(UT000017) PARM(&TITLE &PAGELEN)
+             ENDDO
+
+/* Convert spooled file data to PDF format                           */
+
+             IF         COND(&TOFMT *EQ '*PDF') THEN(DO)
+                CALL       PGM(UT000016) PARM(&TITLE &SPLINFO &BOOKMARK &BMARKPOS +
+                             &BMARKKEY &PAGFMT)
+             ENDDO
+
+             ENDDO
+
+/* Set codepage of stream file to be created                         */
+
+             CHGVAR     VAR(&CODEPAGE) VALUE(&STMFCODPAG)
+             IF         COND(&STMFCODPAG *EQ -1) THEN(CHGVAR +
+                          VAR(&CODEPAGE) VALUE(*PCASCII))
+             IF         COND(&STMFCODPAG *EQ -2) THEN(CHGVAR +
+                          VAR(&CODEPAGE) VALUE(*STMF))
+
+/* Convert spooled file data in work file to stream file             */
+
+             CHGVAR     VAR(&PATH) VALUE(&TODIR *TCAT '/' *CAT &TOSTMF)
+             CPYTOSTMF  +
+                          FROMMBR('/qsys.lib/qtemp.lib/UTTOOPTD.file+
+                          /UTTOOPTD.mbr') TOSTMF(&PATH) +
+                          STMFOPT(&STMFOPT) STMFCODPAG(&CODEPAGE)
+
+/* Send completion message                                           */
+
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Spooled +
+                          file' *BCAT &FROMFILE *BCAT 'copied to +
+                          stream file' *BCAT &TOSTMF) TOMSGQ(MOPERQ MRUNQ)
+
+/* Delete work file(s)                                               */
+
+             DLTF       FILE(QTEMP/UTTOOPTD)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(QTEMP/UTSPLFTD)
+             MONMSG     MSGID(CPF2105)
+
+
+/* Finish  */
+             RETURN
+
+ERROR:
+             IF         COND(&RECURSIVE *EQ 'N') THEN(DO)
+                CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+RCVMSG:
+                RCVMSG     MSGTYPE(*DIAG) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                             MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                IF         COND(&MSGID *NE ' ') THEN(DO)
+                   SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                                MSGDTA(&MSGDTA) MSGTYPE(*DIAG)
+                   GOTO       CMDLBL(RCVMSG)
+                ENDDO
+                RCVMSG     MSGTYPE(*EXCP) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                             MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                             MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
+             ENDDO
+
+ENDPGM:
+             ENDPGM

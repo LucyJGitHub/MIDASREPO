@@ -1,0 +1,629 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Mand'y Flds for Cmplte Deals Audit Rpt')
+     F****************************************************************
+     F*                                                              *
+     F*  Midas  MM DEALER MODULE
+     F*                                                              *
+     F*     MM0017    - MANDATORY FIELDS COMPLETE DEALS AUDIT REPORT *
+     F*                                                              *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                              *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01319             Date 27SEP91               *
+     F*                 E28363             Date 10SEP91               *
+     F*                    E23462             DATE  2OCT90           *
+     F*                    E20742             DATE 15FEB90           *
+     F*                                                              *
+     F*     BASED ON FX0250                    DATE COPIED 27/11/86  *
+     F*                                                              *
+     F****************************************************************
+     F*                                                              *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *       S01319 - Remove redundant processing                   *
+     F*       E28363 - RENAME OF DRS TO DEALING                      *
+     F*       E23462  -REMOVE ALL REFERENCES TO DRS           ).     *
+0010 F*       E20742  -  Report name is not initialised.Therefore if *   *
+     F*                  *LDA is not clear the Pgm name is rubbish.  *
+     F*                                                              *
+     F****************************************************************
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*       61         END OF PAGE (OVERFLOW).
+     F*       63         FILE HAS BEEN UPDATED BY FORBIDDEN PROGRAM
+     F*       64         DATABASE RECOVERY HAS REVERSED CHANGE.
+     F*       65         NUMBER OF RECORDS ON MMMCOMPP IS NOT 1.
+     F*       66         FILE HAS BEEN UPDATED BY FORBIDDEN PROGRAM
+     F*       67         VALID RECORDS ARE PRESENT.
+     F*       69         ENTRY HAS NOT BEEN RECOVERED.
+     F*       76         NO REC. FOUND ON MMMCOMLL
+     F*       80         DATABASE ERROR INDICATOR.
+     F*       U7         DATABASE ERROR (JOB SWITCH).
+     F*       U8         DATABASE ERROR OR FILES OUT OF BALANCE.
+     F*       LR         LAST RECORD.
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     FFDRCVRLLIF  E           K        DISK         KINFSR *PSSR
+     FFDICDRLLIF  E           K        DISK         KINFSR *PSSR
+     F            TABTB11F                          KIGNORE
+     F            TABTB20F                          KIGNORE
+     FMMMCOMLLIF  E                    DISK         KINFSR *PSSR
+     F                                              KINFDS DSAUDT
+     FMMAUDELLIPE E           K        DISK         KINFSR *PSSR
+     F*MMAUDBRRO***E********************PRINTER******KINFSR**PSSR*********S01319
+     FMM0017AUO   E                    PRINTER      KINFSR *PSSR          S01319
+     F                                              KINFDS SPOOLU         S01319
+     F*MM0017RRO***E*************61*****PRINTER******KINFSR**PSSR*********S01319
+     FMM0017P1O   E             61     PRINTER      KINFSR *PSSR      UC  S01319
+     F                                              KINFDS SPOOL          S01319
+     E*
+     E**  ARRAY TO HOLD HEADER FOR CONTROL REPORT
+     E                    @TITL   1   4 45
+     E                    CPY@    1   1 80
+     IDSAUDT      DS
+     I                                    B 156 1590RRNREC
+     IPSDS       SDS
+     I                                      244 253 @JOB
+     I                                      254 263 @USER
+     I** PROGRAM STATUS DATA STRUCTURE
+     I*
+     I           UDS
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+     I** DATA STRUCTURE TO HOLD INFORMATION ON DATABASE ERROR.
+     I*
+     ISPOOL       DS                                                      S01319
+     I**   FILE INFORMATION DATA STRUCTURE                                S01319
+     I                                       83  92 SFILE                 S01319
+     I                                    B 123 1240SFNUM                 S01319
+     I**                                                                  S01319
+     ISPOOLU      DS                                                      S01319
+     I**   FILE INFORMATION DATA STRUCTURE                                S01319
+     I                                       83  92 SFILEU                S01319
+     I                                    B 123 1240SFNUMU                S01319
+     C/EJECT
+     C                     MOVEACPY@      BIS@   80
+     C*****************************************************************
+     C*                                                               *
+     C* MAIN     - MAIN : CONTROLS PROGRAM LOGIC.                     *
+     C*                                                               *
+     C* CALLS    #A       - INITIAL PROCESSING.                       *
+     C*          #B       - MAIN PROCESSING                           *
+     C*          #C       - FINAL PROCESSING.                         *
+     C*                                                               *
+     C* CALLED BY         -                                           *
+     C*                                                               *
+     C* FLDS USED  @CYCLE - INDICATOR SET ON IF SR:#A IS CARRIED OUT. *
+     C*                                                               *
+     C*****************************************************************
+     C                     MOVEL*BLANKS   DBPGM                           E20742
+     C                     MOVEL'MM0017'  DBPGM
+     C                     MOVE DBPGM     RRPGM
+     C*
+     C**   PERFORM #A ONLY ON FIRST CYCLE.
+     C           @CYCLE    IFNE '1'                        B1
+     C                     EXSR #A                         *1
+     C                     END                             E1
+     C                     EXSR #B
+     C*
+     C**  EXECUTE #C AT LR.
+     CLR                   EXSR #C
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C* SUBROUTINES USED                                              *
+     C*                                                               *
+     C*  01  #B       - MAIN PROCESSING                               *
+     C*  02  #BA      - LOAD & STORE BEFORE FIELDS.                   *
+     C*  03  #BB      - LOAD CHANGED AFTER FIELDS.                    *
+     C*  04  #A       - INITIAL PROCESSING.                           *
+     C*  05  #C       - FINAL PROCESSING.                             *
+     C*  06  ZA0150   - ACCESS INSTALLATION FILE.     L/F:FDICDRLL    *
+     C*  07  *PSSR    - UNMONITORED ERROR IN PROGRAM.                 *
+     C*                                                               *
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #B       - MAIN PROCESSING                                    *
+     C*                                                               *
+     C* CALLS    #BA      - LOAD & STORE BEFORE FIELDS.               *
+     C*          #BB      - LOAD CHANGED AFTER FIELDS.                *
+     C*                                                               *
+     C* CALLED BY  MAIN   - MAIN : CONTROLS PROGRAM LOGIC.            *
+     C*                                                               *
+     C* FLDS USED  @CYCLE - INDICATOR SET ON IF SR:#A IS CARRIED OUT. *
+     C*                                                               *
+     C*****************************************************************
+     C           #B        BEGSR
+     C*
+     C**  EXIT IF THERE IS A DATABASE ERROR.
+     C           *IN80     IFEQ '1'                        B1
+     C                     GOTO #B9                        *1
+     C                     END                             E1
+     C**
+     C*** File Fields loaded to before/after fields
+     C***   depending on journal entry Type
+     C*
+     C**  Journal entry type update before rollback or update before
+     C**  image.
+     C           HEENTT    IFEQ 'UB'                       B1
+     C           HEENTT    OREQ 'BR'                       *1
+     C*
+     C**  If record has been logically deleted before fields left
+     C**  blank otherwise load journal details.
+     C           HEDLTF    IFEQ '*'                        B*2
+     C                     MOVE 'INS'     RRTYPE           **2
+     C                     ELSE                            X*2
+     C                     EXSR #BA                        **2
+     C                     MOVE 'AMD'     RRTYPE           **2
+     C                     END                             E*2
+     C*
+     C**  If entry type is UB, store entry type
+     C           HEENTT    IFEQ 'UB'                       B*2
+     C                     MOVE 'UB'      @ENTT   2        **2
+     C                     END                             E*2
+     C*
+     C**  END PROCESSING FOR THIS RECORD.
+     C                     GOTO #B9                        *1
+     C                     END                             E1
+     C*
+     C**  Journal entry type update after rollback or update after
+     C**  image.
+     C           HEENTT    IFEQ 'UR'                       B1
+     C           HEENTT    OREQ 'UP'                       *1
+     C*
+     C**  If journal entry type is 'UP' and previous entry type is
+     C**  not 'UB', skip following processing
+     C           HEENTT    IFEQ 'UP'                       B*2
+     C           @ENTT     ANDNE'UB'                       **2
+     C                     GOTO #B1                        **2
+     C                     END                             E*2
+     C*
+     C**  If record has been logically deleted leave after fields
+     C**  blank otherwise load journal details.
+     C           HEDLTF    IFEQ '*'                        B*2
+     C                     MOVE 'DEL'     RRTYPE           **2
+     C                     ELSE                            X*2
+     C                     EXSR #BB                        **2
+     C                     END                             E*2
+     C                     END                             E1
+     C*
+     C**  Journal entry type record added.
+     C**  Leave before fields as blank & load after fields.
+     C           #B1       TAG
+     C           HEENTT    IFEQ 'PT'                       B1
+     C           HEENTT    OREQ 'UP'                       *1
+     C*
+     C**  If journal entry type is 'UP' and previous entry type
+     C**  is 'UB', skip following processing
+     C           HEENTT    IFEQ 'UP'                       B*2
+     C           @ENTT     ANDEQ'UB'                       **2
+     C                     GOTO #B2                        **2
+     C                     END                             E*2
+     C*
+     C                     EXSR #BB                        *1
+     C                     MOVE 'INS'     RRTYPE           *1
+     C                     END                             E1
+     C*
+     C**  Journal entry type delete for rollback or delete.
+     C**  Leave after fields as blank & load before fields.
+     C           HEENTT    IFEQ 'DR'                       B1
+     C           HEENTT    OREQ 'DL'                       *1
+     C                     EXSR #BA                        *1
+     C                     MOVE 'DEL'     RRTYPE           *1
+     C                     END                             E1
+     C*
+     C** CHAIN TO THE RECOVERY SEQUENCE FILE TO SEE IF ENTRY HAS
+     C** NOT BEEN RECOVERED
+     C           #B2       TAG
+     C           HESEQN    SETGTFDRCVRLL
+     C                     READPFDRCVRLL                 69
+     C           *IN69     IFEQ '0'                        B1
+     C           FRPNT     ANDLEHESEQN                     *1
+     C           TOPNT     ANDGEHESEQN                     *1
+     C                     MOVE '1'       *IN64            *1
+     C                     END                             E1
+     C*
+     C**   *IN66 Set on if Program performing update is not normal
+     C           HEPGM     IFNE 'MM0003'                   B1
+     C                     MOVE '1'       *IN63            *1
+     C*
+     C**  PRINT EXCEPTION ERROR MESSAGE AT BOTTOM OF REPORT.
+     C                     MOVE '1'       *IN66            *1
+     C                     ELSE                            X1
+     C                     MOVE '0'       *IN63            *1
+     C                     END                             E1
+     C*
+     C**   IF END OF PAGE (*IN61) PRINT HEADERS.
+     C           *IN61     IFEQ '1'                        B1
+     C                     WRITEMM0017R0                   *1
+     C                     MOVE '0'       *IN61            *1
+     C                     WRITEMM0017R1                   *1
+     C                     END                             E1
+     C*
+     C**   PRINT DETAIL LINE IF JOURNAL ENTRY TYPE IS
+     C**   'UP','UR','PT','DR' OR 'DL'.
+     C           HEENTT    IFEQ 'UP'                       *1
+     C           HEENTT    OREQ 'UR'                       *1
+     C           HEENTT    OREQ 'PT'                       *1
+     C           HEENTT    OREQ 'DR'                       *1
+     C           HEENTT    OREQ 'DL'                       *1
+     C*
+     C**   LOAD OTHER DETAILS TO BE OUTPUT.
+     C                     MOVE HEPGM     RRPGM            *1
+     C                     MOVE HEJOB     RRJOB            *1
+     C                     MOVE HETIME    RRTIME           *1
+     C                     MOVE HEUSER    RRUSER           *1
+     C*
+     C**   *IN67 SET ON TO INDICATE DETAIL LINE PRODUCED.
+     C                     MOVE '1'       *IN67            *1
+     C*
+     C** PRINT DETAIL LINE.
+     C                     WRITEMM0017R2                   *1
+     C*
+     C**  RESET ALL OUTPUT LINES TO BLANKS & INDICATORS.
+     C                     MOVE *BLANKS   RRPGM            *1
+     C                     MOVE *BLANKS   RRJOB            *1
+     C                     Z-ADD0         RRTIME           *1
+     C                     MOVE *BLANKS   RRUSER           *1
+     C*********************MOVE**BLANKS***RRBRSB************1**********   S01319
+     C                     MOVE *BLANKS   RRCNMB           *1
+     C                     MOVE *BLANKS   RRBKCB           *1
+     C                     MOVE *BLANKS   RRDSTB           *1
+     C*********************MOVE**BLANKS***RROITB************1**********   S01319
+     C*********************MOVE**BLANKS***RRCITB************1**********   S01319
+     C*********************MOVE**BLANKS***RROIMB************1**********   S01319
+     C*********************MOVE**BLANKS***RRCIMB************1**********   S01319
+     C*********************MOVE**BLANKS***RRBRSA************1**********   S01319
+     C                     MOVE *BLANKS   RRCNMA           *1
+     C                     MOVE *BLANKS   RRBKCA           *1
+     C                     MOVE *BLANKS   RRDSTA           *1
+     C*********************MOVE**BLANKS***RROITA************1**********   S01319
+     C*********************MOVE**BLANKS***RRCITA************1**********   S01319
+     C*********************MOVE**BLANKS***RROIMA************1**********   S01319
+     C*********************MOVE**BLANKS***RRCIMA************1**********   S01319
+     C                     MOVE '0'       *IN64            *1
+     C*
+     C                     MOVE '  '      @ENTT            *1
+     C                     END                             E1
+     C*
+     C           #B9       ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #BA      - LOAD & STORE BEFORE FIELDS.                        *
+     C*                                                               *
+     C* CALLS             -                                           *
+     C*                                                               *
+     C* CALLED BY  #B     - MAIN PROCESSING                           *
+     C*                                                               *
+     C* FLDS USED  NONE                                               *
+     C*                                                               *
+     C*****************************************************************
+     C           #BA       BEGSR
+     C*
+     C*********************MOVE*HEBRSM****RRBRSB**************************S01319
+     C                     MOVE HECNMM    RRCNMB
+     C                     MOVE HEBKCM    RRBKCB
+     C                     MOVE HEDSTM    RRDSTB
+     C*********************MOVE*HEOITM****RROITB**************************S01319
+     C*********************MOVE*HECITM****RRCITB**************************S01319
+     C*********************MOVE*HEOIMD****RROIMB**************************S01319
+     C*********************MOVE*HECIMD****RRCIMB**************************S01319
+     C*
+     C           #BA9      ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #BB      - LOAD CHANGED AFTER FIELDS.                         *
+     C*                                                               *
+     C* CALLS             -                                           *
+     C*                                                               *
+     C* CALLED BY  #B     - MAIN PROCESSING                           *
+     C*                                                               *
+     C* FLDS USED  NONE                                               *
+     C*                                                               *
+     C*****************************************************************
+     C           #BB       BEGSR
+     C*
+     C** If after fields are changed then print them else leave blank
+     C***********HEBRSM****IFNE*RRBRSB*********************B1*************S01319
+     C*********************MOVE*HEBRSM****RRBRSA************1*************S01319
+     C*********************END*****************************E1*************S01319
+     C           HECNMM    IFNE RRCNMB                     B1
+     C                     MOVE HECNMM    RRCNMA           *1
+     C                     END                             E1
+     C           HEBKCM    IFNE RRBKCB                     B1
+     C                     MOVE HEBKCM    RRBKCA           *1
+     C                     END                             E1
+     C           HEDSTM    IFNE RRDSTB                     B1
+     C                     MOVE HEDSTM    RRDSTA           *1
+     C                     END                             E1
+     C***********HEOITM****IFNE*RROITB*********************B1*************S01319
+     C*********************MOVE*HEOITM****RROITA************1*************S01319
+     C*********************END*****************************E1*************S01319
+     C***********HECITM****IFNE*RRCITB*********************B1*************S01319
+     C*********************MOVE*HECITM****RRCITA************1*************S01319
+     C*********************END*****************************E1*************S01319
+     C***********HEOIMD****IFNE*RROIMB*********************B1*************S01319
+     C*********************MOVE*HEOIMD****RROIMA************1*************S01319
+     C*********************END*****************************E1*************S01319
+     C***********HECIMD****IFNE*RRCIMB*********************B1*************S01319
+     C*********************MOVE*HECIMD****RRCIMA************1*************S01319
+     C*********************END*****************************E1*************S01319
+     C*
+     C           #BB9      ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #A       - INITIAL PROCESSING.                                *
+     C*                                                               *
+     C* CALLS    ZA0150   - ACCESS INSTALLATION FILE.     L/F:FDICDRLL*
+     C*                                                               *
+     C* CALLED BY  MAIN   - MAIN : CONTROLS PROGRAM LOGIC.            *
+     C*                                                               *
+     C* FLDS USED  @CYCLE - INDICATOR SET ON IF SR:#A IS CARRIED OUT. *
+     C*            @TITL  - TITLE FOR TOTALS REPORT.                  *
+     C*                                                               *
+     C*****************************************************************
+     C           #A        BEGSR
+     C                     MOVE '1'       @CYCLE  1
+     C*
+     C**  ACCESS ICD FILE.
+     C                     EXSR ZA0150
+     C*
+     C**  LOAD HEADERS.
+     C                     MOVE RUNA      RRRUNA
+     C                     MOVE TITL      RRTITL
+     C                     MOVE 'MMMCOMLL'RRFILE
+     C                     MOVEL@TITL,1   RRPRNM
+     C                     MOVE @TITL,2   RRPRNM
+     C                     MOVEL@TITL,3   RRPRUL
+     C                     MOVE @TITL,4   RRPRUL
+     C**                                                                  S01319
+     C                     OPEN MM0017P1                                  S01319
+     C**                                                                  S01319
+     C* REPORT SPOOL FILE GENERATION                                      S01319
+     C* transfer binary data into numeric field                           S01319
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01319
+     C                     CALL 'ZSFILE'                                  S01319
+     C                     PARM           SEQ     5                       S01319
+     C                     PARM *BLANKS   @PARM   3                       S01319
+     C                     PARM           SFILE                           S01319
+     C                     PARM           ZSNUM                           S01319
+     C                     PARM *BLANK    ZSERR   1                       S01319
+     C*                                                                   S01319
+     C** Error during ZSFILE processing, return to calling program        S01319
+     C           ZSERR     IFEQ 'Y'                                       S01319
+     C                     SETON                     U7U8LR               S01319
+     C                     EXSR *PSSR                                     S01319
+     C                     RETRN                                          S01319
+     C                     END                                            S01319
+     C*
+     C** REPORT HEADINGS.
+     C                     WRITEMMAUDBR0
+     C                     WRITEMM0017R0
+     C                     WRITEMM0017R1
+     C*
+     C**  EXIT IF THERE IS A DATABASE ERROR.
+     C           *IN80     IFEQ '1'                        B1
+     C*
+     C**  SET ON *IN67 SINCE THERE ARE DETAILS IN AUDIT FILE.
+     C                     MOVE '1'       *IN67            *1
+     C                     GOTO #A9                        *1
+     C                     END                             E1
+     C*
+     C** Initialise all fields output to printer to blanks.
+     C*********************MOVE**BLANKS***RRBRSB***********************   S01319
+     C                     MOVE *BLANKS   RRCNMB
+     C                     MOVE *BLANKS   RRBKCB
+     C                     MOVE *BLANKS   RRDSTB
+     C*********************MOVE**BLANKS***RROITB***********************   S01319
+     C*********************MOVE**BLANKS***RRCITB***********************   S01319
+     C*********************MOVE**BLANKS***RROIMB***********************   S01319
+     C*********************MOVE**BLANKS***RRCIMB***********************   S01319
+     C*********************MOVE**BLANKS***RRBRSA***********************   S01319
+     C                     MOVE *BLANKS   RRCNMA
+     C                     MOVE *BLANKS   RRBKCA
+     C                     MOVE *BLANKS   RRDSTA
+     C*********************MOVE**BLANKS***RROITA***********************   S01319
+     C*********************MOVE**BLANKS***RRCITA***********************   S01319
+     C*********************MOVE**BLANKS***RROIMA***********************   S01319
+     C*********************MOVE**BLANKS***RRCIMA***********************   S01319
+     C*
+     C           #A9       ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #C       - FINAL PROCESSING.                                  *
+     C*                                                               *
+     C* CALLS    ZA0150   - ACCESS INSTALLATION FILE.     L/F:FDICDRLL*
+     C*                                                               *
+     C* CALLED BY  MAIN   - MAIN : CONTROLS PROGRAM LOGIC.            *
+     C*                                                               *
+     C* FLDS USED  @CYCLE - INDICATOR SET ON IF SR:#A IS CARRIED OUT. *
+     C*            @TITL  - TITLE FOR TOTALS REPORT.                  *
+     C*                                                               *
+     C*****************************************************************
+     C           #C        BEGSR
+     C*
+     C* REPORT SPOOL FILE GENERATION                                      S01319
+     C* transfer binary data into numeric field                           S01319
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      S01319
+     C                     CALL 'ZSFILE'                                  S01319
+     C                     PARM           SEQ     5                       S01319
+     C                     PARM *BLANKS   @PARM   3                       S01319
+     C                     PARM           SFILEU                          S01319
+     C                     PARM           ZSNUMU                          S01319
+     C                     PARM *BLANK    ZSERR   1                       S01319
+     C*                                                                   S01319
+     C** Error during ZSFILE processing, return to calling program        S01319
+     C           ZSERR     IFEQ 'Y'                                       S01319
+     C                     SETON                     U7U8LR               S01319
+     C                     EXSR *PSSR                                     S01319
+     C                     RETRN                                          S01319
+     C                     END                                            S01319
+     C*
+     C** IF #A HAS NOT BEEN PERFORMED BECAUSE FILE HAD NO RECORDS THEN
+     C** INITIAL PROCESSING IS CARRIED OUT IN #C.
+     C           @CYCLE    IFNE '1'                        B1
+     C*
+     C** ACCESS INSTALLATION FILE & LOAD HEADERS.
+     C                     EXSR ZA0150                     *1
+     C                     MOVE TITL      RRTITL           *1
+     C                     MOVEL*BLANKS   DBPGM                           E20742
+     C                     MOVEL'MM0017'  DBPGM            *1
+     C                     MOVE DBPGM     RRPGM            *1
+     C                     MOVE RUNA      RRRUNA           *1
+     C*
+     C**  Load control details for control totals report.
+     C                     MOVE 'MMMCOMLL'RRFILE           *1
+     C                     MOVEL@TITL,1   RRPRNM           *1
+     C                     MOVE @TITL,2   RRPRNM           *1
+     C                     MOVEL@TITL,3   RRPRUL           *1
+     C                     MOVE @TITL,4   RRPRUL           *1
+     C*
+     C** REPORT HEADINGS.
+     C*********************WRITEMM0017R0********************1*************S01319
+     C*********************WRITEMM0017R1********************1*************S01319
+     C                     WRITEMMAUDBR0                   *1
+     C                     END                             E1
+     C*
+     C**  EXIT IF THERE IS A DATABASE ERROR.
+     C           *IN80     IFEQ '1'                        B1
+     C*
+     C**  LOAD PRINTER FILE WITH ERROR DATA , PRINT ERROR MESSAGE
+     C**  & EXIT PROGRAM.
+     C                     MOVE DBASE     RRDBSE           *1
+     C                     MOVE DBPGM     RRPGM            *1
+     C                     MOVE DBFILE    RRDBFL           *1
+     C                     MOVE DBKEY     RRDKEY           *1
+     C*
+     C**  SET ON *IN67 SINCE ONLY 'END OF REPORT' TRAILER IS NEEDED.
+     C                     MOVE '1'       *IN67            *1
+     C           @CYCLE    IFEQ '1'                        B*2            S01319
+     C                     WRITEMM0017R4                   **2            S01319
+     C                     WRITEMM0017R3                   **2            S01319
+     C                     END                             E*2            S01319
+     C                     WRITEMMAUDBR2                   *1
+     C                     MOVE '1'       *INU7            *1
+     C                     MOVE '1'       *INU8            *1
+     C                     MOVE '1'       *INLR            *1
+     C                     GOTO #C9                        *1
+     C                     END                             E1
+     C*
+     C** SET UP INFDS
+     C                     READ MMMCOMLL                 76
+     C*
+     C**  If number of records on MMMCOMLL is not 1 print
+     C**  ** DIFFERENCE ** on controls report & set on U8
+     C**  (files out of balance).
+     C           RRNREC    IFNE 1                          B1
+     C                     MOVE '1'       *IN65            *1
+     C                     MOVE '1'       *INU8            *1
+     C                     ELSE                            X1
+     C                     MOVE '0'       *IN65            *1
+     C                     END                             E1
+     C*
+     C*** Print Control Totals on Second Output Queue.
+     C                     WRITEMMAUDBR1
+     C**
+     C           @CYCLE    IFEQ '1'                                       S01319
+     C** REPORT TRAILER. ("End of Report")
+     C                     WRITEMM0017R3
+     C                     END                                            S01319
+     C                     WRITEMMAUDBR3                                  S01319
+     C*
+     C****If*Report*Totals*did*not*match*,*report*also*on*main*report*****S01319
+     C************IN65*****IFEQ*'1'************************B1*************S01319
+     C*********************MOVE*'1'********IN61*************1*************S01319
+     C*********************WRITEMM0017R0********************1*************S01319
+     C*********************MOVE*'0'********IN61*************1*************S01319
+     C*********************WRITEMM0017R5********************1*************S01319
+     C********************************************************************S01319
+     C****SET*ON**IN67*&*OFF**IN65*SINCE*ONLY*THE*'END*OF*****************S01319
+     C****REPORT'*TRAILER*IS*NEEDED.**************************************S01319
+     C*********************MOVE*'1'********IN67*************1*************S01319
+     C*********************MOVE*'0'********IN65*************1*************S01319
+     C*********************WRITEMM0017R3********************1*************S01319
+     C*********************END*****************************E1*************S01319
+     C*
+     C           #C9       ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* ZA0150   - ACCESS INSTALLATION FILE.     L/F:FDICDRLL         *
+     C*                                                               *
+     C* CALLS             -                                           *
+     C*                                                               *
+     C* CALLED BY  #A     - INITIAL PROCESSING.                       *
+     C*            #C     - FINAL PROCESSING.                         *
+     C*                                                               *
+     C* FLDS USED         -                                           *
+     C*                                                               *
+     C*****************************************************************
+     C           ZA0150    BEGSR
+     C*
+     C** SET UP KEY TO OBTAIN FORMAT TABTB10F '01        10'
+     C                     MOVEL'01'      SS0150 12
+     C                     MOVE '10'      SS0150
+     C*
+     C** CHAIN TO FILE FDICDRLL
+     C           SS0150    CHAINFDICDRLL             80
+     C           RECI      IFNE 'D'                        B1
+     C                     MOVE '1'       *IN80            *1
+     C                     END                             E1
+     C*
+     C** DEAL WITH DATA BASE ERROR
+     C           *IN80     IFEQ '1'                        ***************
+     C                     MOVEL'FDICDRLL'DBFILE           *             *
+     C                     MOVEL'900'     DBASE            * DBERROR 900 *
+     C                     MOVELSS0150    DBKEY            *             *
+     C                     END                             ***************
+     C*
+     C           ZA0159    ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR    - UNMONITORED ERROR IN PROGRAM.                      *
+     C*                                                               *
+     C* CALLS             -                                           *
+     C*                                                               *
+     C* CALLED BY         -                                           *
+     C*                                                               *
+     C* FLDS USED         -                                           *
+     C*                                                               *
+     C*****************************************************************
+     C           *PSSR     BEGSR
+     C                     DUMP
+     C                     ENDSR
+     C***   @TITL - TITLE FOR CONTROL REPORT.                             E23462
+     C*MIDAS DEALING ROOM SYSTEM - MM DEALER MANDATO                      E23462
+     C*MIDAS DEALING             - MM DEALER MANDATO                      E28363
+**   @TITL - TITLE FOR CONTROL REPORT.
+          Midas           - MM DEALER MANDATO
+RY FIELDS FOR COMPLETE DEALS AUDIT REPORT.                              CONTROL
+---------------------------------------------
+------------------------------------------                              CONTROL
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

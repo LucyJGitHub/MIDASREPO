@@ -1,0 +1,571 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Customer Security Positions Extract')         *
+     F********************************************************************
+     F*                                                                  *
+     F*    Midas CUSTOMER LENDING MODULE                             *
+     F*                                                                  *
+     F*    LE0752  - CUSTOMER SECURITY POSITIONS EXTRACT FOR LENDING     *
+     F*              PORTFOLIO                                           *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      *  Last Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CSE071             Date 19Jul05               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSE031             Date 06Dec01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 149607             Date 20Jul00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                   052254                  Date 10Jan94           *
+     F*                   S01397                  Date 17Sep92           *
+     F*                   E38627                  DATE 21APR92           *
+     F*                   S01220                  DATE 25JUN91           *
+     F*                   S01314                  DATE 04APR91           *
+     F*                   E18360                  DATE 22/05/89          *
+     F*                   E16812                  DATE 27/02/89          *
+     F*                   E15935                  DATE 27/02/89          *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+     F*  CSE031 - Coupon Fixing for Floating Rate Notes.                 *
+     F*           (Recompiled due to change LF/CPONSJ2)                  *
+     F*  149607 - Database error occured at LE0748 due to invalid        *
+     F*           account officer. This program was not compiled         *
+     F*           when CSE005 introduced a new field in LF/CPOSNJ2       *
+     F*           Recompiled due to change LF/CPONSJ2                    *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8          *
+     F*           to 10,9                                                *
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013.    *
+     F*          - Recompiled for New Zealand Bond Formula               *
+     F*  E38627 - Before executing SR/ZHASH, the Amount field should be  *
+     F*           MOVEd not Z-ADDed to the Input field. The result of    *
+     F*           not doing so is a Hash Total 1000 times too large.     *
+     F*    S01220 - RECOMPILE FOR RISK MANAGEMENT CHANGES TO PF/SECTYD   *
+     F*    S01314 - CHGS MADE DURING PTF INCORPORATION                   *
+     F*    E18360 - INITILISE WORK FIELD EXTREC WITH 1 PREVENTING        *E18360
+     F*             FILES OUT OF BALANCE IN LE0748.                      *E18360
+     F*    E16812 - Allow for Nominal Decimal Places.                    *E16812
+     F*    E15935 - Control total on CPOSNA includes records with        *E15935
+     F*             RECI= H, CPOSNJ2 selects records with RECI= D only.  *E15935
+     F*                                                                  *
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FLE0752AUO   E                    PRINTER
+     FFPORTT2 O   E                    DISK         KINFDS FPT2DS
+     F                                              KINFSR FPT2SR
+     FFPORTFP O   E                    DISK         KINFDS FPFPDS
+     F                                              KINFSR FPFPSR
+     F*CPOSNA**IF* E           K        DISK                              E15935
+     FCPOSNJ2 IF  E           K        DISK
+     FSECTY   IF  E           K        DISK                               E16812
+     FCLINT   IF  E           K        DISK
+     F            CLINTCAF                          KIGNORE
+     F            CLINTCCF                          KIGNORE
+     F            CLINTC1F                          KIGNORE
+     F            CLINTSEF                          KIGNORE
+     FTABSE   IF  E           K        DISK
+     F* ICD 1     TABTB10F                          KIGNORE
+     F            TABTB11F                          KIGNORE
+     F* ICD SE    TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F************TABLETJF                          KIGNORE               S01314
+     F            TABLETKF                          KIGNORE
+     F            TABLETLF                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABLETAF                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F**********************************************************************
+     F*
+     F*  FUNCTION OF INDICATORS
+     F*
+     F*    31     END OF FILE FOR CPOSNJ2
+     F*    33     RECORD NOT FOUND WHEN CHAINING TO SECTY FILE            E16812
+     F*    41     RECORD NOT FOUND WHEN CHAINING TO CLINT FILE
+     F*****50*****USED TO CONDITION DIFFERENCE MESSAGE ON AUDIT PRINT FIL E15935
+     F*    97     USED TO CONDITION STATUS BEING OUTPUT IN AUDIT PRINT FILE
+     F*    99     USED IN THE Z-SUBROUTINES
+     F*    U7-U8  DATABASE ERROR
+     F*    U8     DIFFERENCE BETWEEN CALC AND FILE TOTALS OF RECORDS
+     F*
+     F*    I N D E X   T O   S U B R O U T I N E S
+     F*
+     F*    FIRST   -  OBTAINS ICD INFO
+     F*    W01     -  WRITING CHILD/LONER RECORD TO EXTRACT FILE FPORTFP
+     F*    W02     -  WRITING PARENT RECORD TO EXTRACT FILE FPORTFP
+     F*    FPFPSR  -  PERFORMS DB ERROR IF ERROR WHEN WRITING RECORDS TO THE
+     F*               EXTRACT FILE FPORTFP
+     F*    FPT2SR  -  PERFORMS DB ERROR IF ERROR WHEN WRITING RECORDS TO THE
+     F*               EXTRACT AUDIT FILE FPORTT2
+     F*    AUDIT   -  OUTPUTS CONTROL REPORT
+     F*    ZSYSTM  -  OBTAINS  ICD TABTB10 INFO.
+     F*    ZICDSE  -  OBTAINS ICD SE INFO FROM TABTB36
+     F*    ZHASH   -  CALCULATES THE HASH VALUE OF AMOUNTS
+     F*
+     F**********************************************************************
+     E                    CPY@    1   1 80
+     E*
+     E* ARRAYS USED IN CALCULATING THE HASH TOTALS
+     E*
+0076 E                    INT         1 15 0             ZHASH INTEGERS
+0077 E                    DEC         1  3 0             ZHASH DECIMALS
+     E/COPY ZSRSRC,ZPOWER8Z1                                              E16812
+     E*
+     I* RENAME SOME INPUT FIELDS THAT ARE OUTPUT TO EXTRACT FILE
+     I*
+     ICPOSNJ2F
+     I**************CSBR                            BRCD                  S01314
+     I              CSBA                            BRCA                  S01314
+     I              NMCY                            GUCY
+     I              CPAR                            PARN
+     I              ACOC                            CACOC
+     I*
+     I* LDA DATA STRUCTURE USED FOR DB ERRORS.
+     I*
+     ILDA        UDS                            256
+     I                                      134 177 DBLOT
+     I                                      134 138 DBFILE
+     I                                      139 167 DBKEY
+     I                                      168 175 DBPGM
+     I                                      176 1770DBASE
+     I*
+     I* THE FOLLOWING DATA STRUCTURE IS USED TO OUTPUT THE KEY FOR A RECORD
+     I* IF AN ERROR OCCURS WHILST WRITING RECORD TO EXTRACT FILE FPORTFP
+     I*
+     I            DS
+     I                                        1   2 ACOC
+     I**********                              3   80PARN                                      CSD027
+     I**********                              9  140CNUM                                      CSD027
+     I                                        3   8 PARN                                      CSD027
+     I                                        9  14 CNUM                                      CSD027
+     I                                       15  15 PCIN
+     I                                       16  160CRLT
+     I                                       17  17 GUIN
+     I                                       18  20 GUCY
+     I                                       21  21 RECS
+     I***************************************22  240BRCD                  S01314
+     I                                       22  24 BRCA                  S01314
+     I                                        1  24 FPFPKY
+     I*
+     I* THE FOLLOWING DATA STRUCTURE IS USED TO OUTPUT THE KEY FOR RECORD
+     I* IF AN ERROR OCCURS WHILST WRITING RECORD TO EXTRACT AUDIT FILE
+     I*
+     I            DS
+     I                                        1   50NORE
+     I                                        6  200HRWN
+     I                                       21  230HRDC
+     I                                        1  23 FPT2KY
+     I*
+     I* TWO DATA STRUCTURES THAT CONTAIN THE FILE STATUS INFORMATION OF THE
+     I* FILE BEING WRITTEN TO.
+     I*
+     IFPFPDS      DS
+     I                                     *STATUS  FFPSTS
+     I*
+     IFPT2DS      DS
+     I                                     *STATUS  FT2STS
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I*
+      /COPY ZSRSRC,ZHASHZ2
+     I*
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C********************************************************************
+     C*
+     C* CLEAR LDA
+     C*
+     C                     MOVE *BLANK    DBLOT
+     C                     MOVE 'LE0752  'DBPGM
+     C*
+     C* SET UP THE KEY LIST FOR CHAINING TO THE CLIENT FILE TO PICK UP
+     C* THE PARENT  A/C OFFICER CODE
+     C*
+     C           KCLNTB    KLIST
+     C                     KFLD           PARN
+     C                     KFLD           KYFLD2
+     C*
+     C* INITIALISE WORK FIELDS
+     C*
+     C                     MOVE 'A'       KYFLD2  1
+     C                     Z-ADD0         CPOSCT  50
+     C**********           Z-ADD0         EXTREC  50                      E18360
+     C                     Z-ADD1         EXTREC  50                      E18360
+     C                     Z-ADD0         MKTVAL
+     C*
+     C* INITIALISE 2 OUTPUT FIELDS TO ZEROS
+     C*
+     C                     Z-ADD0         EXPD
+     C**********           Z-ADD0         PSLN                                                CLE148
+     C                     MOVEL*BLANKS   PSLN                                                CLE148
+     C*
+     C* INITIALISE THE TWO FIELDS USED AS SUBSCRIPTS IN Z-SUBROUTINE ZHASH
+     C*
+     C                     Z-ADD1         S
+     C                     Z-ADD1         Z
+     C*
+     C* OBTAIN ICD INFO
+     C*
+     C                     EXSR FIRST
+     C*
+     C* CHECK FOR DATABASE ERRORS
+     C*
+     C           *INU7     IFEQ '1'
+     C                     GOTO EAUDIT
+     C                     END
+     C*
+     C* READ THE FIRST RECORD IN FILE CPOSNJ2, IF EOF NOT REACHED, LOOP
+     C* TO PROCESS ALL RECORDS.
+     C*
+     C                     READ CPOSNJ2F                 31
+     C           *IN31     DOWEQ'0'
+     C*
+     C* INCREMENT COUNT OF THE NUMBER OF CPOSNJ2 RECORDS READ BY 1
+     C*
+     C                     ADD  1         CPOSCT
+     C*                                                                   E15935
+     C           RECI      CABNE'D'       NXTREC                          E15935
+     C*
+     C* IF FIRST RECORD OF NEW CUSTOMER, CHAIN TO THE CLINT FILE TO PICK UP
+     C* THE PARENTS A/C OFFICER CODE.
+     C*
+     C           CSCN      IFNE PRVCST
+     C********** PARN      ANDNE0                                                             CSD027
+     C           PARN      ANDNE*BLANKS                                                       CSD027
+     C*
+     C           KCLNTB    CHAINCLINT                41
+     C*
+     C* IF RECORD NOT FOUND OR DELETED, PERFORM STD DB ERROR.
+     C*
+     C           *IN41     IFEQ '1'
+     C           RECI      OREQ '*'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE 'CLINT'   DBFILE           *****************
+     C                     MOVELPARN      KEYF    7        ** DB ERROR 03 **
+     C                     MOVE KYFLD2    KEYF             *****************
+     C                     MOVELKEYF      DBKEY
+     C                     Z-ADD3         DBASE
+     C                     GOTO EAUDIT
+     C                     END
+     C*
+     C                     MOVE ACOC      PACOC   2
+     C                     END
+     C*
+     C* MOVE CUSTOMER NUMBER TO CHECK FIELD FOR COMPARE TO FIND FIRST RECORD
+     C* FOR A CUSTOMER.
+     C*
+     C**********           Z-ADDCSCN      PRVCST  60                                          CSD027
+     C                     MOVE CSCN      PRVCST  6                                           CSD027
+     C*
+     C* MARKET VALUE = NOMINAL * MARKET PRICE
+     C* (DIVIDE BY 100 IF PRICE BASIS IS P)
+     C*
+     C* Allow for nominal decimal places                                  E16812
+     C*                                                                   E16812
+     C           CSSC      CHAINSECTYDF              33                   E16812
+     C*                                                                   E16812
+     C* If record not found or deleted, perform std db error.             E16812
+     C*                                                                   E16812
+     C           *IN33     IFEQ '1'                                       E16812
+     C           RECI      OREQ '*'                                       E16812
+     C                     MOVE '1'       *INU7                           E16812
+     C                     MOVE '1'       *INU8                           E16812
+     C                     MOVE 'SECTY'   DBFILE           ***************E16812
+     C                     MOVELCSSC      DBKEY            ** DB ERROR 07 E16812
+     C                     Z-ADD7         DBASE            ***************E16812
+     C                     GOTO EAUDIT                                    E16812
+     C                     END                                            E16812
+     C*                                                                   E16812
+     C           5         SUB  NMDP      DC      10                      E16812
+     C*                                                                   E16812
+     C           TVCL      IFEQ 'V'
+     C***********CSNV      MULT MKPR      MKTVAL 152H                     E16812
+     C           CSNV      MULT POWER8,DC NOMNAL 154                      E16812
+     C                     ELSE
+     C***********CSNT      MULT MKPR      MKTVAL    H                     E16812
+     C           CSNT      MULT POWER8,DC NOMNAL                          E16812
+     C                     END
+     C*                                                                   E16812
+     C           NOMNAL    MULT MKPR      MKTVAL 152H                     E16812
+     C*
+     C           SPBS      IFEQ 'P'
+     C           MKTVAL    DIV  100       GUAM      H
+     C                     ELSE
+     C                     Z-ADDMKTVAL    GUAM      H
+     C                     END
+     C*
+     C* WRITE A CHILD/LONER EXTRACT RECORD
+     C*
+     C                     EXSR W01
+     C*
+     C* WRITE A PARENT EXTRACT RECORD
+     C*
+     C********** PARN      IFNE 0                                                             CSD027
+     C           PARN      IFNE *BLANKS                                                       CSD027
+     C                     EXSR W02
+     C                     END
+     C*
+     C           NXTREC    TAG                                            E15935
+     C                     READ CPOSNJ2F                 31
+     C                     END
+     C*
+     C* EXECUTE THE AUDIT SR AND THEN END PGM.
+     C*
+     C           EAUDIT    TAG
+     C                     EXSR AUDIT
+     C                     SETON                     LR
+     C**********************************************************************
+     C*
+     C* FIRST - SUBROUTINE TO ACCESS ICD INFORMATION
+     C*
+     C           FIRST     BEGSR                           ** FIRST **
+     C*
+     C* ACCESS ICDS FROM TABTB10 AND TABTB36. IF ERROR OCCURS PERFORM DB
+     C* ERROR ROUTINE.
+     C*
+     C                     EXSR ZSYSTM
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE 'TABLE'   DBFILE           *****************
+     C                     MOVELZTABKY    DBKEY            ** DB ERROR 01 **
+     C                     Z-ADD1         DBASE            *****************
+     C*
+     C                     ELSE
+     C                     EXSR ZICDSE
+     C*
+     C           *INU7     IFEQ '1'
+     C                     MOVE 'TABLE'   DBFILE           *****************
+     C                     MOVELZTABKY    DBKEY            ** DB ERROR 02 **
+     C                     Z-ADD2         DBASE            *****************
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C**********************************************************************
+     C*
+     C*  W01  - SUBROUTINE TO WRITE A CHILD/LONER RECORD TO THE FILE FPORTFP
+     C*
+     C           W01       BEGSR
+     C*
+     C* SET UP THE REMAINING FIELDS OF THE RECORD TO BE OUTPUT.
+     C*
+     C                     MOVE 'D'       RECI
+     C**********           Z-ADDCSCN      CNUM                                                CSD027
+     C                     MOVE CSCN      CNUM                                                CSD027
+     C*
+     C* IF PARENT NO. <> 0 SET THE PARENT/CUSTOMER INDICATOR TO 'C' ELSE SET
+     C* IT TO 'L'
+     C*
+     C********** PARN      IFNE 0                                                             CSD027
+     C           PARN      IFNE *BLANKS                                                       CSD027
+     C                     MOVE 'C'       PCIN
+     C                     ELSE
+     C                     MOVE 'L'       PCIN
+     C                     END
+     C*
+     C                     Z-ADD9         CRLT
+     C                     MOVE CACOC     ACOC
+     C                     MOVE 'U'       GUIN
+     C                     MOVE 'S'       RECS
+     C*
+     C* WRITE RECORD TO THE EXTRACT FILE.
+     C*
+     C                     WRITEFPORTFPF
+     C*
+     C* ADD 1 TO COUNT OF RECORDS WRITTEN TO THE EXTRACT FILE. THEN EXECUTE
+     C* SR ZHASH TO ACCUMULATE THE HASH TOTALS.
+     C*
+     C                     ADD  1         EXTREC  50
+     C***********          Z-ADDGUAM      ZZAMT                           E38627
+     C                     MOVE GUAM      ZZAMT                           E38627
+     C                     EXSR ZHASH
+     C*
+     C                     ENDSR
+     C**********************************************************************
+     C*
+     C*  W02  - SUBROUTINE TO WRITE A PARENT RECORD TO THE FILE FPORTFP
+     C*
+     C           W02       BEGSR
+     C*
+     C* SET UP THE REMAINING FIELDS OF THE RECORD TO BE OUTPUT AS A PARENT
+     C* RECORD.
+     C*
+     C                     MOVE 'D'       RECI
+     C**********           Z-ADD999999    CNUM                                                CSD027
+     C                     MOVE '999999'  CNUM                                                CSD027
+     C*
+     C                     MOVE 'P'       PCIN
+     C*
+     C                     Z-ADD9         CRLT
+     C                     MOVE PACOC     ACOC
+     C                     MOVE 'U'       GUIN
+     C                     MOVE 'S'       RECS
+     C*
+     C* WRITE RECORD TO EXTRACT FILE.
+     C*
+     C                     WRITEFPORTFPF
+     C*
+     C* ADD 1 TO COUNT OF RECORDS WRITTEN TO THE EXTRACT FILE. THEN EXECUTE
+     C* SR ZHASH TO ACCUMULATE THE HASH TOTALS.
+     C*
+     C                     ADD  1         EXTREC  50
+     C***********          Z-ADDGUAM      ZZAMT                           E38627
+     C                     MOVE GUAM      ZZAMT                           E38627
+     C                     EXSR ZHASH
+     C*
+     C                     ENDSR
+     C**********************************************************************
+     C*
+     C*   FPFPSR - SUBROUTINE FOR ERROR HANDLING OF RECORDS BEING WRITTEN TO
+     C*            THE EXTRACT FILE FPORTFP
+     C*
+     C           FPFPSR    BEGSR
+     C*
+     C                     MOVE 'FPORT'   DBFILE
+     C                     MOVELFPFPKY    DBKEY            *****************
+     C                     Z-ADD4         DBASE            ** DB ERROR 04 **
+     C                     MOVE FFPSTS    DBSTAT  5        *****************
+     C                     MOVE '1'       *IN97
+     C                     SETON                     99U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+     C*
+     C**********************************************************************
+     C*
+     C*   AUDIT  - SUBROUTINE TO WRITE EXTRACT AUDIT FILE RECORD AND TOEN TO
+     C*            PRODUCE STD AUDIT REPORT.
+     C*
+     C           AUDIT     BEGSR
+     C*
+     C* IF NO DB ERROR AHS OCCURRED, WRITE OUT THE EXTRACT AUDIT FILE RECORD
+     C*
+     C           *INU7     IFEQ '0'
+     C*
+     C                     MOVE 'T'       RECI
+     C                     Z-ADDEXTREC    NORE
+     C                     Z-ADDINT,S     HRWN
+     C                     Z-ADDDEC,S     HRDC
+     C*
+     C                     WRITEFPORTT2F
+     C***********                                                         E15935
+     C**READ THE AUDIT RECORD FOR FILE CPOSNJ2, IF RECORD NOT FOUND,      E15935
+     C**PERFORM STD DB ERROR                                              E15935
+     C***********                                                         E15935
+     C***********          READ CPOSNAF                  99               E15935
+     C************IN99     IFEQ '1'                                       E15935
+     C***********                                                         E15935
+     C***********          MOVE '1'       *INU7                           E15935
+     C***********          MOVE '1'       *INU8                           E15935
+     C***********          MOVE 'CPOSN'   DBFILE           ***************E15935
+     C***********          MOVEL'AUDIT'   DBKEY            ** DB ERROR 05 E15935
+     C***********          Z-ADD5         DBASE            ***************E15935
+     C***********                                                         E15935
+     C**IF AUDIT RECORD READ, CHECK FOR DIFFERENCE IN THE NUMBER OF RECORDE15935
+     C**READ FROM FILE CPOSNJ2 BY PGM AND THE NO OF RECORDS ON AUDIT RECORE15935
+     C**IF DIFFERENT SET ON *IN50 AND *INU8 FOR SO DIFFERENCE MESSAGE ON  E15935
+     C**AUDIT REPORT.                                                     E15935
+     C***********                                                         E15935
+     C***********          ELSE                                           E15935
+     C***********CPOSCT    IFNE NORE                                      E15935
+     C***********          SETON                     50  U8               E15935
+     C***********                                                         E15935
+     C***********          END                                            E15935
+     C***********          END                                            E15935
+     C                     END
+     C*
+     C* WRITE THE HEADINGS ON AUDIT REPORT.
+     C*
+     C                     WRITEHEADAU
+     C*
+     C* IF *INU7 ON WRITE DB ERROR TO AUDIT PRINT FILE
+     C*
+     C           *INU7     IFEQ '1'
+     C                     WRITEERROR
+     C*
+     C* IF *INU7 OFF, CHECK FOR NO RECORDS READ FROM CPOSNJ2 AND WRITE
+     C* "NO DETAILS TO REPORT"
+     C*
+     C                     ELSE
+     C           CPOSCT    IFEQ 0
+     C                     WRITENONE
+     C                     ELSE
+     C*
+     C* WRITE CONTROL DETAILS TO AUDIT PRINT FILE AFTER MOVING THE HASH
+     C* TOTALS TO OUTPUT FIELDS
+     C*
+     C                     Z-ADDINT,S     OHASH1
+     C                     Z-ADDDEC,S     OHASH2
+     C                     WRITECONTROL
+     C                     END
+     C                     END
+     C*
+     C* WRITE OUT REPORT TRAILER.
+     C*
+     C                     WRITETRAILAU
+     C*
+     C                     ENDSR
+     C**********************************************************************
+     C*
+     C*   FPT2SR - SUBROUTINE FOR ERROR HANDLING OF RECORDS BEING WRITTEN TO
+     C*            THE EXTRACT AUDIT FILE FPORTT2
+     C*
+     C           FPT2SR    BEGSR
+     C*
+     C                     MOVE 'FPORT'   DBFILE
+     C                     MOVELFPT2KY    DBKEY            *****************
+     C                     Z-ADD6         DBASE            ** DB ERROR 06 **
+     C                     MOVE FT2STS    DBSTAT  5        *****************
+     C                     MOVE '1'       *IN97
+     C                     SETON                     99U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+     C*
+     C**********************************************************************
+      /COPY ZSRSRC,ZSYSTMZ1
+      /COPY ZSRSRC,ZICDSEZ1
+      /COPY ZSRSRC,ZHASHZ3
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION                      E16812
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000

@@ -1,0 +1,388 @@
+      *****************************************************************
+/*STD *  PFBASE                                                       *
+/*EXS *  PF_STD                                                       *
+/*EXI *  TEXT('Midas FT Valid incoming payments')                     *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Funds Transfer Module                                *
+      *                                                               *
+      *  PF/FTVIPAYPD - Valid Incoming Payments                       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CFT157             Date 29Aug14               *
+      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER030             Date 09Jul08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CFT032             Date 11Sep06               *
+      *                 CDL049             Date 31Mar06               *
+      *                 CSD027             Date 13Apr06               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CAP136  *CREATE    Date 15Nov99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CFT157 - Stop FT Transaction after Authorisation.            *
+      *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER030 - Multicash German Feature                            *
+      *  CFT032 - Account line in field 50X in MT103                  *
+      *  CDL049 - Addition of a Reference Rate field                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CAP136 - Conversion of FT Incoming Payment inputs into       *
+      *           modular structure to use as APIs.                   *
+      *                                                               *
+      *****************************************************************
+     A                                      REF(MFRFL)
+      *
+     A          R FTVIPAYD0                 TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+      *
+     A            IPRECI    R               REFFLD(RECI)
+     A            IPPREF    R               REFFLD(PREF)
+     A            IPPYTP    R               REFFLD(PYTP)
+     A            IPPYST    R               REFFLD(PYST)
+     A            IPSNTP    R               REFFLD(SNTP)
+     A            IPSND1    R               REFFLD(SND1)
+     A            IPSND2    R               REFFLD(SND2)
+     A            IPSND3    R               REFFLD(SND3)
+     A            IPSND4    R               REFFLD(SND4)
+     A            IPRCRT    R               REFFLD(RCRT)
+      * Start of CSD027
+     A************IPRCCO    R               REFFLD(RCCO)
+     A            IPRCCO    R   10A         REFFLD(RCCO)
+      * End of CSD027
+     A            IPACBT    R               REFFLD(ACBT)
+     A**Start of change CGL029
+     A**********  IPACBK    R               REFFLD(ACFT)                                      CGL029
+     A            QQACBK        12A
+     A**End of change CGL029
+     A            IPBNCT    R               REFFLD(BNCT)
+     A            IPBNC1    R               REFFLD(BNC1)
+     A            IPBNC2    R               REFFLD(BNC2)
+     A            IPBNC3    R               REFFLD(BNC3)
+     A            IPBNC4    R               REFFLD(BNC4)
+     A            IPBNC5    R               REFFLD(BNC5)
+     A            IPSMAM    R               REFFLD(SMAM)
+     A            IPSMAMD   R               REFFLD(SMAMD)
+     A            IPSMCY    R               REFFLD(SMCY)
+     A            IPMDIN    R               REFFLD(MDIN)
+     A            IPRATE    R               REFFLD(RATE)
+     A            IPRATED   R               REFFLD(RATED)
+     A            IPOVRD    R               REFFLD(OVRD)
+     A            IPPYAM    R               REFFLD(PYAM)
+     A            IPPYAMD   R               REFFLD(PYAMD)
+     A            IPPCCY    R               REFFLD(PCCY)
+     A            IPSLDT    R               REFFLD(SLDT)
+     A            IPSLDTD1  R               REFFLD(SLDTD1)
+     A            IPSLDTD2  R               REFFLD(SLDTD2)
+     A            IPSLDTD3  R               REFFLD(SLDTD3)
+     A            IPPVDT    R               REFFLD(PVDT)
+     A            IPPVDTD1  R               REFFLD(PVDTD1)
+     A            IPPVDTD2  R               REFFLD(PVDTD2)
+     A            IPPVDTD3  R               REFFLD(PVDTD3)
+     A            IPADDC    R               REFFLD(ADDC)
+     A            IPSWPC    R               REFFLD(SWPC)
+     A            IPRLPR    R               REFFLD(RLPR)
+     A            IPORBT    R               REFFLD(ORBT)
+     A            IPORB1    R               REFFLD(ORB1)
+     A            IPORB2    R               REFFLD(ORB2)
+     A            IPORB3    R               REFFLD(ORB3)
+     A            IPORB4    R               REFFLD(ORB4)
+     A            IPORB5    R               REFFLD(ORB5)
+     A            IPSNCT    R               REFFLD(SNCT)
+     A            IPSNC1    R               REFFLD(SNC1)
+     A            IPSNC2    R               REFFLD(SNC2)
+     A            IPSNC3    R               REFFLD(SNC3)
+     A            IPSNC4    R               REFFLD(SNC4)
+     A            IPSNC5    R               REFFLD(SNC5)
+     A            IPORCT    R               REFFLD(ORCT)
+     A            IPORC1    R               REFFLD(ORC1)
+     A            IPORC2    R               REFFLD(ORC2)
+     A            IPORC3    R               REFFLD(ORC3)
+     A            IPORC4    R               REFFLD(ORC4)
+     A            IPDTP1    R               REFFLD(DTP1)
+     A            IPDTP2    R               REFFLD(DTP2)
+     A            IPDTP3    R               REFFLD(DTP3)
+     A            IPDTP4    R               REFFLD(DTP4)
+     A            IPDTCH    R               REFFLD(DTCH)
+     A            IPBBI1    R               REFFLD(BBI1)
+     A            IPBBI2    R               REFFLD(BBI2)
+     A            IPBBI3    R               REFFLD(BBI3)
+     A            IPBBI4    R               REFFLD(BBI4)
+     A            IPBBI5    R               REFFLD(BBI5)
+     A            IPBBI6    R               REFFLD(BBI6)
+     A            IPDNBC    R               REFFLD(DNBC)
+     A            IPINBT    R               REFFLD(INBT)
+     A            IPINB1    R               REFFLD(INB1)
+     A            IPINB2    R               REFFLD(INB2)
+     A            IPINB3    R               REFFLD(INB3)
+     A            IPINB4    R               REFFLD(INB4)
+     A            IPINB5    R               REFFLD(INB5)
+     A            IPTRCT    R               REFFLD(TRCT)
+     A            IPTRCM    R               REFFLD(TRCM)
+     A            IPTRCMD   R               REFFLD(TRCMD)
+     A            IPTXCH    R               REFFLD(TXCH)
+     A            IPTXCHD   R               REFFLD(TXCHD)
+     A            IPCQCH    R               REFFLD(CQCH)
+     A            IPCQCHD   R               REFFLD(CQCHD)
+     A            IPADCH    R               REFFLD(ADCH)
+     A            IPADCHD   R               REFFLD(ADCHD)
+     A            IPTLCH    R               REFFLD(TLCH)
+     A            IPTLCHD   R               REFFLD(TLCHD)
+     A            IPMSCH    R               REFFLD(MSCH)
+     A            IPMSCHD   R               REFFLD(MSCHD)
+     A            IPCDRT    R               REFFLD(CDRT)
+     A**Start of change CGL029
+     A**********  IPCDRO    R               REFFLD(CDRO)                                      CGL029
+     A            QQCDRO        12S
+     A**End of change CGL029
+     A            IPLCHT    R               REFFLD(LCHT)
+     A            IPLCD     R               REFFLD(LCD)
+     A            IPCHTP    R               REFFLD(CHTP)
+     A            IPAUP1    R               REFFLD(AUP1)
+     A            IPAUP2    R               REFFLD(AUP2)
+     A            IPAUIN    R               REFFLD(AUIN)
+     A            IPIACG    R               REFFLD(IACG)
+     A            IPSACG    R               REFFLD(SACG)
+     A            IPPACG    R               REFFLD(PACG)
+     A            IPSMSG    R               REFFLD(SMSG)
+     A            IPPMSG    R               REFFLD(PMSG)
+     A            IPOEDT    R               REFFLD(OEDT)
+     A            IPOEDTD1  R               REFFLD(OEDTD1)
+     A            IPOEDTD2  R               REFFLD(OEDTD2)
+     A            IPOEDTD3  R               REFFLD(OEDTD3)
+     A            IPADIN    R               REFFLD(ADIN)
+     A            IPSRNM    R               REFFLD(SRNM)
+     A            IPSBCQ    R               REFFLD(SBCQ)
+     A            IPPBCQ    R               REFFLD(PBCQ)
+     A            IPINUSR1  R               REFFLD(INUSR1)
+     A            IPINUSR2  R               REFFLD(INUSR2)
+     A            IPOPIN    R               REFFLD(OPIN)
+     A            IPSRTE    R               REFFLD(SRTE)
+     A            IPPRTE    R               REFFLD(PRTE)
+     A            IPDUMA1   R               REFFLD(DUMA1)
+     A            IPDUMA2   R               REFFLD(DUMA2)
+     A            IPDUMA3   R               REFFLD(DUMA3)
+     A            IPDUMA4   R               REFFLD(DUMA4)
+     A            IPDUMA5   R               REFFLD(DUMA5)
+     A            IPDUMA6   R               REFFLD(DUMA6)
+     A            IPBRCA    R               REFFLD(BRCA)
+     A            IPORBR    R               REFFLD(ORBR)
+     A            IPACBB    R               REFFLD(ACBB)
+     A            IPCDBR    R               REFFLD(CDBRFT)
+     A            IPMIR     R               REFFLD(MIR)
+     A            IPISEQ    R               REFFLD(ISEQ)
+     A            IPBOKC    R               REFFLD(BOKC)
+     A            IPPRFC    R               REFFLD(PRFC)
+     A            IPINRCRT  R               REFFLD(RCRT)
+     A            IPINRCO1  R               REFFLD(RCO1)
+     A            IPINRCO2  R               REFFLD(RCO2)
+     A            IPINRCO3  R               REFFLD(RCO3)
+     A            IPINRCO4  R               REFFLD(RCO4)
+     A            IPINRCO5  R               REFFLD(RCO5)
+     A            IPINACBT  R               REFFLD(ACBT)
+     A            IPINACB1  R               REFFLD(ACB1)
+     A            IPINACB2  R               REFFLD(ACB2)
+     A            IPINACB3  R               REFFLD(ACB3)
+     A            IPINACB4  R               REFFLD(ACB4)
+     A            IPINACB5  R               REFFLD(ACB5)
+     A            IPINTRNO  R               REFFLD(TRNO)
+     A            IPINMTPY  R               REFFLD(MTPY)
+     A            IPINLVL1  R               REFFLD(LVL1)
+     A            IPINLVL2  R               REFFLD(LVL2)
+     A            IPINMSGR  R               TEXT('Msg Unique Reference')
+     A                                      COLHDG('Msg Unique' +
+     A                                             'Reference')
+     A                                      REFFLD(MSGR)
+      *
+     A            IPINKPRT  R               TEXT('Part Number (Key)')
+     A                                      COLHDG('Part Number' +
+     A                                             '(Key)')
+     A                                      REFFLD(KPRT)
+      *
+     A            IPINVAT1  R               TEXT('Trf C V.A.T. Flag')
+     A                                      COLHDG('Trf Com. ' +
+     A                                             'V.A.T. Flag')
+     A                                      REFFLD(IND)
+      *
+     A            IPINVAT2  R               TEXT('Telex V.A.T. Flag')
+     A                                      COLHDG('Telex V.A.T.' +
+     A                                             ' Flag')
+     A                                      REFFLD(IND)
+      *
+     A            IPINVAT3  R               TEXT('Cheq. V.A.T. Flag')
+     A                                      COLHDG('Cheq. V.A.T.' +
+     A                                             ' Flag')
+     A                                      REFFLD(IND)
+      *
+     A            IPINVAT4  R               TEXT('Cst A V.A.T. Flag')
+     A                                      COLHDG('Cost Abroad ' +
+     A                                             'V.A.T. Flag')
+     A                                      REFFLD(IND)
+      *
+     A            IPINVAT5  R               TEXT('SWFT V.A.T. Flag')
+     A                                      COLHDG('SWIFT Priority ' +
+     A                                             'V.A.T. Flag')
+     A                                      REFFLD(IND)
+      *
+     A            IPINVAT6  R               TEXT('Misc V.A.T. Flag')
+     A                                      COLHDG('Miscellaneous ' +
+     A                                             'V.A.T. Flag')
+     A                                      REFFLD(IND)
+      *
+     A            IPINVAT7  R               TEXT('FX cm V.A.T. Flag')
+     A                                      COLHDG('FX/Change Com ' +
+     A                                             'V.A.T. Flag')
+     A                                      REFFLD(IND)
+      *
+     A            IPINCHCM  R               TEXT('FX/Chnge Commission')
+     A                                      COLHDG('FX/Change Comm' +
+     A                                             'ission')
+     A                                      REFFLD(TRCM)
+      *
+     A            IPINVATT  R               TEXT('Total V.A.T. Charge')
+     A                                      COLHDG('Total V.A.T. ' +
+     A                                             'Charge')
+     A                                      REFFLD(TRCM)
+      *
+     A            IPINDUM7  R               TEXT('FX/Chnge (Ccy Ent.)')
+     A                                      COLHDG('FX/Change Commi' +
+     A                                             'ssion (Ccy ent.)')
+     A                                      REFFLD(DUMA1)
+      *
+     A            IPINDUM8  R               TEXT('Total VAT(Ccy Ent.)')
+     A                                      COLHDG('Total V.A.T. Ch' +
+     A                                             'arge (Ccy Ent.)')
+     A                                      REFFLD(DUMA1)
+      *
+     A            IPINOPRF  R               TEXT('Linked to Outgoing')
+     A                                      COLHDG('Linked to Outgo' +
+     A                                             'ing Payment')
+     A                                      REFFLD(PREF)
+      *
+     A            IPINVATR  R               TEXT('V.A.T. Rate')
+     A                                      COLHDG('V.A.T. Rate')
+     A                                      REFFLD(CPNR)
+      *
+     A            IPFXMP    R               REFFLD(FWPP)
+     A                                      TEXT('FX Margin Points')
+     A                                      COLHDG('FX' +
+     A                                             'Margin' +
+     A                                             'Points')
+      *
+     A            IPFXMD    R               REFFLD(MDIN)
+     A                                      TEXT('FX Multiply/Divide Indicator')
+     A                                      COLHDG('FX' +
+     A                                             'Multiply/Divide' +
+     A                                             'Indicator')
+      *
+     A            IPMBSI    R               REFFLD(SPIN)
+     A                                      TEXT('Margin Buy/Sell Indicator')
+     A                                      COLHDG('Margin' +
+     A                                             'Buy/Sell' +
+     A                                             'Indicator')
+      *
+     A            IPMSIG    R               REFFLD(SPIN)
+     A                                      TEXT('Margin Sign')
+     A                                      COLHDG('Margin' +
+     A                                             'Sign')
+      *
+     A            IPMAMT    R               REFFLD(AABC)
+     A                                      TEXT('Margin Amount')
+     A                                      COLHDG('Margin' +
+     A                                             'Amount')
+      *
+     A            IPNDCY    R               REFFLD(SMCY)
+     A                                      TEXT('Notified Delivery Currency')
+     A                                      COLHDG('Notified' +
+     A                                             'Delivery' +
+     A                                             'Currency')
+      *
+     A            IPNDAM    R               REFFLD(PSAT)
+     A                                      TEXT('Notified Delivery Amount')
+     A                                      COLHDG('Notified' +
+     A                                             'Delivery Amount')
+      *
+     A            IPINREPI       1          TEXT('Replication Indicator')
+     A                                      COLHDG('Replication' 'Indicator')
+      *
+     A            IPFDLR    R               REFFLD(ZZ030)
+     A                                      TEXT('Fontis dealer''s ref.')
+     A                                      COLHDG('Fontis dealer''s' +
+     A                                             'ref.')
+      *
+     A            IPFRNT    R               REFFLD(FOTRNID)
+      *
+     A            IPREPA    R               REFFLD(RPRLOC)
+      *
+     A            IPTMST    R               REFFLD(TIMESTMP)
+     A**Start of change CGL029
+      * Start of CSD027
+     A************IPACBK        18A
+     A            IPACBK    R   18A         REFFLD(ACFT)
+     A************IPCDRO        18S
+     A            IPCDRO    R   18A         REFFLD(CDRO)
+      * End of CSD027
+     A**End of change CGL029
+     A**Start of change CDL049
+     A            IPRRAT        13P 8       TEXT('Reference Rate')
+     A                                      COLHDG('Reference Rate')
+     A**End of change CDL049
+      ** Start of change CFT032
+     A            IPORC5    R               REFFLD(ORC5)
+     A                                      TEXT('Ordering Customer 5')
+     A                                      COLHDG('Ordering Customer 5')
+      ** End of change CFT032
+      ** Start of change CER030
+     A            IPRTTY         5A         TEXT('Transaction Type')
+     A                                      COLHDG('Transaction Type')
+      *
+     A            IPEXT1        65A         TEXT('Extended Narrative +
+     A                                            1')
+     A                                      COLHDG('Ext Narr 1')
+      *
+     A            IPEXT2        65A         TEXT('Extended Narrative +
+     A                                            2')
+     A                                      COLHDG('Ext Narr 2')
+      *
+     A            IPEXT3        65A         TEXT('Extended Narrative +
+     A                                            3')
+     A                                      COLHDG('Ext Narr 3')
+      *
+     A            IPEXT4        65A         TEXT('Extended Narrative +
+     A                                            4')
+     A                                      COLHDG('Ext Narr 4')
+      *
+     A            IPEXT5        65A         TEXT('Extended Narrative +
+     A                                            5')
+     A                                      COLHDG('Ext Narr 5')
+      *
+     A            IPEXT6        65A         TEXT('Extended Narrative +
+     A                                            6')
+     A                                      COLHDG('Ext Narr 6')
+     ** End of change CER030
+      **Start of change CFT120
+     A            IPCDRC         3A         TEXT('Charges to Debit of+
+     A                                            Currency')
+     A                                      COLHDG('Charges' 'DR' 'Ccy')
+      **End of change CFT120
+      **Start of change CFT157
+     A            IPDATE    R               TEXT('Stop Date')
+     A                                      COLHDG('Stop' 'Date')
+     A                                      REFFLD(LCD)
+     A            IPSUSR    R               TEXT('Stop User')
+     A                                      COLHDG('Stop' 'User')
+     A                                      REFFLD(INUSR1)
+     A            IPSAUS    R               TEXT('Stop Authorise User')
+     A                                      COLHDG('Stop' 'Auth' 'User')
+     A                                      REFFLD(INUSR1)
+      **End of change CFT157

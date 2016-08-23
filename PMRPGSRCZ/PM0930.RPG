@@ -1,0 +1,625 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Extract current Turnover-SE Extract')         *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module.                     *
+     F*                                                               *
+     F*  RPG/PM0930 - EXTRACT CURRENT TURNOVER - SE EXTRACT           *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. BUG23967           Date 15May09               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 234300             Date 29Sep06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 182961             Date 21Apr01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPM004             Date 28Feb96               *
+      *                 S01486             Date 04Jul94               *
+     F*                 33615              DATE 01JUL91               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG23967 - Add Local Industry Code Field.                    *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus (Recompile)                              *
+      *  234300 - Recompiled over changed in PF/HSTTRD.               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  182961 - Database error occurred due to a blank key field    *
+      *           (Instrument Type).  The default Instrument type in  *
+      *           PF/SDPORTPD is taken if a blank instrument type is  *
+      *           encountered.                                        *
+     F*  CPM004 - Portfolios by Branch Internal Customer No. rather   *
+     F*           than Trade Counterparty.                            *
+     F*  S01486 - Portfolio Management Upgrade to Release 10.         *
+     F*  33615  - OUTPUT INSTRUMENT DISPLAY GROUP TO FILE             *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F**SDBANKPDIF  E           K        DISK         KINFSR *PSSR        S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F*
+     F**HSTTRPT IF  E           K        DISK                             S01486
+     FPMHSTRL0IF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     F*
+     FSECTY   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F*
+     FINVTP   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F**SDPLINPDIF  E           K        DISK                        33615S01486
+     F** PREFIX: PD                                                  33615S01486
+     F***                                           KINFSR *PSSR     33615S01486
+     F*
+     F**PMCUTVPPUF  E           K        DISK                      A      S01486
+     FPMCUTVPDUF  E           K        DISK                      A        S01486
+     F* PREFIX SB
+     F                                              KINFSR *PSSR
+     F                                              KINFDS INFDS
+     FSDPORTPDIF  E                    DISK         KINFSR *PSSR          182961
+     F*
+     FPM0930AUO   E                    PRINTER
+     F                                              KINFSR *PSSR
+     F*
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*                Unused indicators
+     F*                -----------------
+     F*       01  02  03  04  05  06  07  08  09  10
+     F*       11  12  13  14  15  16  17  18  19  20
+     F*       21  22  23  24  25  26  27  28  29  30
+     F*       31  32  33  34  35  36  37  38  39  40
+     F*       41  42  43  44  45  46  47  48  49  50
+     F*       51  52  53  54  55  56  57  58  59  60
+     F*       61  62  63  64  65  66  67  68  69  71
+     F*       ..  ..  ..  ..  ..  76  77  78  79  80
+     F*       81  82  83  84  85  86  87  88  89  90
+     F*       91  92  93  94  95  96  ..  ..  ..
+     F*
+     F*
+     F*       U7         DATABASE ERROR
+     F*       U8         PROGRAM  ERROR
+     F*       LR         END OF PROGRAM
+     F*
+     F********71*********DB ERROR 01 SDBANKPD                             S01486
+     F********72*********EOF HSTTRPT                                      S01486
+     F*       72         EOF PMHSTRL0                                     S01486
+     F*       73         DB ERROR 02 SECTY
+     F*       74         DB EROOR 03 INVTP
+     F********75*********CHAIN ON PMCUTVPP                                S01486
+     F*       75         CHAIN ON PMCUTVPD                                S01486
+     F*
+     F*       97         USED IN ZDATE2
+     F*       98         USED IN ZDATE2
+     F*       99         USED IN ZDATE2
+     F*
+     F*
+     E*=========================================================================
+     E* ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+     E* ARRAY FOR SR ZDATE2
+      /COPY ZSRSRC,ZDATE2Z1
+     I*
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I** EXTERNAL DS FOR BANK DETAILS                                     S01486
+     ISDPLIN    E DSSDPLINPD                                              S01486
+      ** INSTRUMENT TYPES DETAILS ACCESSED VIA ACCESS PROGRAM             S01486
+     IDSFDY     E DSDSFDY                                                 S01486
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01486
+     I*                                                                   S01486
+     IDSSDY     E DSDSSDY                                                 S01486
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01486
+     I** DATA STRUCTURE FOR RPG 01021 ERROR HANDLING
+     I*
+     IINFDS       DS
+     I                                     *STATUS  STATUS
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     I****LDA********UDS****************************256                   S01486
+     I***************************************32 183 DBLOT                 S01486
+     I**************************************132 141 DBFILE                S01486
+     ILDA         DS                            256                       S01486
+     I                                      134 183 DBLOT                 S01486
+     I                                      134 141 DBFILE                S01486
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I** DATA STRUCTURE FOR ZTNLU1
+     I*
+     I*    MIDAS 'Next Available Transaction No.' Data Area  MNATN .
+     IDNATN       DS                              5
+     I                                        1   50FNATN
+     I*
+     I** DATA TO FORMAT DATE MM/DD/YY
+     I*
+     IDATE        DS
+     I                                        1   20DAY
+     I                                        3   40MONTH
+     I                                        5   60YEAR
+     I**
+     I** DATA STRUCTURE FOR LAST UPDATE
+     I**
+     I            DS
+     I                                        1   20WWDLUP
+     I                                        3   5 WWMLUP
+     I                                        6   70WWYLUP
+     I                                        1   7 WWHLUP
+     I**
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*                                                                   CPM004
+     I** Input parameters on call to AOPLCSR1                             CPM004
+     II@PARM      DS                            256                       CPM004
+     I                                        1   1 I#PORS                CPM004
+     I                                        2   5 I#R997                CPM004
+     I                                        6  15 I#CUST                CPM004
+     I                                       16  18 I#TDBA                CPM004
+     I                                       19  20 I#BOOK                CPM004
+     I                                       21  24 I#PTFR                CPM004
+     I                                       25  34 I#CPGM                CPM004
+     I*                                                                   CPM004
+     I** Output parameters on call to AOPLCSR1                            CPM004
+     IO@PARM      DS                            256                       CPM004
+     I                                        1   2 O#BOOK                CPM004
+     I                                        3   6 O#PTFR                CPM004
+     I                                        7  12 O#BICN                CPM004
+     I                                       13  22 O#CRNM                CPM004
+     I                                       23  24 O#ACOF                CPM004
+      *                                                                   CPM004
+     ISDPORT    E DSSDPORTPD                                              CPM004
+     I**  SD Portfolio Management ICD details                             CPM004
+      *                                                                   CPM004
+     ISDPLCS    E DSSDPLCSPD                                              CPM004
+     I**  SD Portfolio Management Customer details                        CPM004
+     I*                                                                   CPM004
+     C*================================================================
+     C*
+     C                     MOVEACPY@      CPY2@  80
+     C*
+     C** CALCULATION SPECIFICATIONS:KEY LISTS
+     C*
+     C****DEFINE KEY LIST FOR CHAINING TO LF/HSTTRPT                      S01486
+     C**  DEFINE KEY LIST FOR CHAINING TO LF/PMHSTRL0                     S01486
+     C*
+     C           P1KEY     KLIST
+     C                     KFLD           KKTDSS
+     C*
+     C**  DEFINE KEY LIST FOR CHAINING TO LF/INVTP
+     C*
+     C           P2KEY     KLIST
+     C                     KFLD           KKNMCY            NOMINAL CCY
+     C                     KFLD           KKSITP            INVESTMENT TYPE
+     C*
+     C****DEFINE*KEY*LIST*FOR CHAINING TO PF/PMCUTVPP                     S01486
+     C**  DEFINE KEY LIST FOR CHAINING TO PF/PMCUTVPD                     S01486
+     C*
+     C           P3KEY     KLIST
+     C                     KFLD           KKTCNR
+     C                     KFLD           KKPTFR
+     C                     KFLD           KKINNR
+     C                     KFLD           KKCCYI
+     C**********           KFLD           KKSIDY                                            BUG23967
+     C                     KFLD           KKLOIC                                            BUG23967
+     C                     KFLD           KKYRNO
+     C                     KFLD           KKMTHN
+     C*
+     C**  DEFINE KEY LIST FOR CHAINING TO LF/SECTY
+     C*
+     C           P4KEY     KLIST
+     C                     KFLD           KKSESN
+     C*================================================================
+      /EJECT
+     C*================================================================
+     C*  MAIN PROCESSING
+     C*================================================================
+     C*
+     C** PERFORM SETUP OF STANDARD FIELDS & ACCESS ICD1
+     C*
+     C                     EXSR #A
+     C*
+     C***READ*LF/HSTTRPT                                                  S01486
+     C*
+     C***********          READ HSTTRPT                  72               S01486
+     C                     READ PMHSTRL0                 72               S01486
+      *                                                                   CPM004
+      * Portfolios By Trade Branch Internal Customer Number.              CPM004
+     C           FCPORS    IFEQ 'B'                                       CPM004
+     C           TDBA      IFNE WWTDBA                                    CPM004
+     C                     EXSR PORTF                                     CPM004
+     C                     ENDIF                                          CPM004
+      * Overwrite Trade Counterparty with Internal Customer Number.       CPM004
+     C                     MOVE O#BICN    TCNR                            CPM004
+     C                     ENDIF                                          CPM004
+     C*
+     C           *IN72     DOWEQ'0'                        B1      ** DOWE **
+     C*
+     C*  ON CHANGE OF SECURITY SHORTNAME
+     C** ACCESS PF/SECTY  TO OBTAIN THE INDUSTRY CODE
+     C*
+     C           WWSESN    IFNE TDSS                       B*2
+     C           WWSESN    OREQ *BLANK
+     C*
+     C                     MOVE TDSS      KKSESN
+     C           P4KEY     CHAINSECTYDF              73
+     C*  DB ERROR IF NO RECORD FOUND
+     C           *IN73     IFEQ '1'                        B**3
+     C***********          MOVEL'02'      DBASE            ***************S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD2         DBASE            ***************S01486
+     C                     MOVEL'SECTY'   DBFILE           **DB ERROR 02**
+     C                     MOVELTDSS      DBKEY            ***************
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END                             E**3
+     C*
+     C                     END                             E*2
+      *                                                                   182961
+      ** Instrument type is defaulted from PF/SDPORTPD if a blank         182961
+      ** instrument type is found.                                        182961
+      ** Indicator 35 was used as the operation's resulting indicator.    182961
+      *                                                                   182961
+     C           INNR      IFEQ *BLANKS                                   182961
+     C           1         SETLLSDPORTPD                                  182961
+     C                     READ SDPORTPD                 35               182961
+     C                     MOVE FCDINR    INNR                            182961
+     C                     ENDIF                                          182961
+     C*
+     C*  CHAIN WITH NOMINAL CURRENCY AND INVESTMENT TYPE OFF LF/SECTY
+     C** TO LF/INVTP TO GET THE PM INSTRUMENT TYPE
+     C*
+     C                     MOVE NMCY      KKNMCY
+     C                     MOVE SITP      KKSITP
+     C           P2KEY     CHAININVTPDF              74
+     C*  DB ERROR IF NO RECORD FOUND
+     C           *IN74     IFEQ '1'                        B**3
+     C***********          MOVEL'03'      DBASE            ***************S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD3         DBASE            ***************S01486
+     C                     MOVEL'INVTP'   DBFILE           **DB ERROR 03**
+     C                     MOVELNMCY      DBKEY            ***************
+     C                     MOVE SITP      DBKEY
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END                             E**3
+     C*                                                                   33615
+     C***OBTAIN*DISPLAY GROUP CODE FROM PF/SDPLINPD                  33615S01486
+     C***********INNR      CHAINSDPLINPD             74              33615S01486
+     C************IN74     IFEQ '1'                        B**3  ****33615S01486
+     C***********          MOVEL'22'      DBASE       **DB ERROR 02**33615S01486
+     C                     CALL 'AOPLINR0'                                S01486
+     C                     PARM *BLANKS   PRTCD   7                       S01486
+     C                     PARM '*KEY'    POPTN   7                       S01486
+     C                     PARM INNR      PLIN    3                       S01486
+     C           SDPLIN    PARM SDPLIN    DSFDY                           S01486
+      *                                                                   S01486
+     C           PRTCD     IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD5         DBASE            **DB ERROR 05**33615
+     C                     MOVEL'SDPLINPD'DBFILE           ***************33615
+     C                     MOVELINNR      DBKEY                           33615
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     33615
+     C                     END                             E**3           33615
+     C* NO FURTHER PROCESSING IF RECORD NOT FOUND
+     C           *IN73     IFEQ '0'                        B*2
+     C           *IN74     ANDEQ'0'                        B*2
+     C*
+     C** CONVERT TRANSACTION DATE FROM MIDAS DAY NUMBER USING ZDATE2
+     C** AND EXTRACT YEAR AND MONTH FROM DATE
+     C*
+     C                     MOVE TDDT      ZDAYNO           TRADE DATE
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DATE
+     C*
+     C***CHAIN TO PF/PMCUTVPP                                             S01486
+     C** CHAIN TO PF/PMCUTVPD                                             S01486
+     C*
+     C                     MOVE TCNR      KKTCNR
+     C                     MOVE PTFR      KKPTFR
+     C                     MOVE INNR      KKINNR
+     C                     MOVE CCYI      KKCCYI
+     C**********           MOVE SIDY      KKSIDY                                            BUG23967
+     C                     MOVE LOIC      KKLOIC                                            BUG23967
+     C                     MOVE YEAR      KKYRNO
+     C                     MOVE MONTH     KKMTHN
+     C*
+     C           P3KEY     CHAINPMCUTVP0             75
+     C*
+     C***IF*A*RECORD WITH THAT KEY EXISTS, UPDATE PF/PMCUTVPP PER #U01    S01486
+     C** IF A RECORD WITH THAT KEY EXISTS, UPDATE PF/PMCUTVPD PER #U01    S01486
+     C*  ELSE WRITE THE RECORD PER #W01
+     C*
+     C           *IN75     IFEQ '0'                        B**3
+     C                     EXSR #U01
+     C                     ADD  1         WWCOU1
+     C                     ELSE                            X**3
+     C                     EXSR #W01
+     C                     ADD  1         WWCOUN
+     C                     END                             E**3
+     C*
+     C                     END                             E*2
+     C* KEEP INSTRUMENT TYPE
+     C                     MOVE SESN      WWSESN  5
+     C*
+     C***********          READ HSTTRPT                  72               S01486
+     C                     READ PMHSTRL0                 72               S01486
+     C*
+      * Portfolios By Trade Branch Internal Customer Number.              CPM004
+     C           FCPORS    IFEQ 'B'                                       CPM004
+     C           TDBA      IFNE WWTDBA                                    CPM004
+     C                     EXSR PORTF                                     CPM004
+     C                     ENDIF                                          CPM004
+      * Overwrite Trade Counterparty with Internal Customer Number.       CPM004
+     C                     MOVE O#BICN    TCNR                            CPM004
+     C                     ENDIF                                          CPM004
+      *                                                                   CPM004
+     C                     END                             E1      ** ENDDO **
+     C*
+     C** PRODUCE AUDIT REPORT TO SHOW HOW MANY NEW RECORDS HAVE BEEN WRITTEN
+     C*
+     C                     EXSR #W03
+     C** TERMINATE PROGRAM
+     C*
+     C                     SETON                         LR
+     C*================================================================
+     C*  P R O G R A M     E N D
+     C*================================================================
+      /EJECT
+     C*=========================================================================
+      ** INDEX OF SUBROUTINES
+      **
+      ** #A       INITIALISATION OF STANDARD FIELDS,
+      **          ACCESS OF STANDING DATA
+      **
+      ***#U01*****UPDATE PF/PMCUTVPP                                      S01486
+      ** #U01     UPDATE PF/PMCUTVPD                                      S01486
+      **
+      ***#W01*****WRITE TO PF/PMCUTVPP, RECORD READ OFF LF/DEALSP2        S01486
+      ** #W01     WRITE TO PF/PMCUTVPD,                                   S01486
+      **
+      ** #W02     PRODUCE AUDIT REORT
+      **
+      ** ZDATE2   CONVERT MIDAS DAY NUMBER TO DDMMYY
+      **
+      ** *PSSR    FILE ERROR HANDLING S/R
+      **
+     C*=========================================================================
+      /EJECT
+     C*=========================================================================
+      **
+      ** #A   S/R - TO INITIALISE STATIC FIELDS AND ACCESS STANDING DATA
+      ** CALLED ONCE AT START OF PROGRAM FROM MAIN LINE
+      ** CALLS NO OTHER ROUTINES
+      **
+     C*=========================================================================
+     C*
+     C           #A        BEGSR                           ** #A    BSR **
+     C*
+     C** DEFINE FIELDS
+     C*
+     C           *LIKE     DEFN TDSS      KKTDSS
+     C           *LIKE     DEFN SESN      KKSESN
+     C           *LIKE     DEFN NMCY      KKNMCY            NOMINAL CCY
+     C           *LIKE     DEFN SITP      KKSITP            INVESTMENT TYPE
+     C*
+     C           *LIKE     DEFN TCNR      KKTCNR
+     C           *LIKE     DEFN PTFR      KKPTFR
+     C           *LIKE     DEFN INNR      KKINNR
+     C           *LIKE     DEFN CCYI      KKCCYI            INVESTMENT CCY
+     C********** *LIKE     DEFN SIDY      KKSIDY            INDUSTRY CODE                   BUG23967
+     C           *LIKE     DEFN LOIC      KKLOIC                                            BUG23967
+     C           *LIKE     DEFN SBYRNO    KKYRNO
+     C           *LIKE     DEFN SBMTHN    KKMTHN
+     C           *LIKE     DEFN TDBA      WWTDBA                          CPM004
+     C*
+     C** PREPARE LDA
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'PM0930'  DBPGM
+     C                     OUT  LDA                                       S01486
+     C**
+     C** INITIALIZE INDICATORS
+     C*
+     C                     MOVE '0'       *IN
+     C**
+     C** INITIALIZE COUNTER
+     C*
+     C                     Z-ADD0         WWCOUN  50
+     C                     Z-ADD0         WWCOU1  50
+     C*
+     C** GET INSTALLATION CONTROL DATA RECORD 1
+     C*
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM '*DBERR ' @RTCD   7                       S01486
+     C                     PARM '*FIRST ' @OPTN   7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+     C           @RTCD     IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVEL'SDBANKPD'DBFILE           ***************S01486
+     C                     Z-ADD1         DBASE            * DBERROR  01 *S01486
+     C                     MOVEL@OPTN     DBKEY            ***************S01486
+     C                     MOVEL@OPTN     DBOPTN  7                       S01486
+     C                     OUT  LDA                                       S01486
+     C*********************READ SDBANKPD                 71               S01486
+     C************IN71*****IFEQ '1'                                       S01486
+     C***ERROR*************                                               S01486
+     C*********************MOVEL'SDBANKPD'DBFILE           ***************S01486
+     C*********************MOVEL*BLANKS   DBKEY                           S01486
+     C***********          MOVEL'01'      DBASE            **DB ERROR 01**S01486
+     C***********          MOVEL'SDBANKPD'DBFILE           ***************S01486
+     C***********          MOVEL*BLANK    DBKEY                           S01486
+     C                     EXSR *PSSR
+     C                     END
+     C*
+      ** Get Portfolios Supported Indicator.                              CPM004
+     C                     CALL 'AOPORTR0'                                CPM004
+     C                     PARM *BLANKS   @RTCD                           CPM004
+     C                     PARM '*FIRST'  @OPTN                           CPM004
+     C           SDPORT    PARM SDPORT    DSFDY                           CPM004
+      *                                                                   CPM004
+     C           @RTCD     IFNE *BLANKS                                   CPM004
+     C           *LOCK     IN   LDA                                       CPM004
+     C                     Z-ADD7         DBASE            ***************CPM004
+     C                     MOVE 'SDPORTPD'DBFILE           * DB ERROR 07 *CPM004
+     C                     MOVEL'*FIRST'  DBKEY            ***************CPM004
+     C                     OUT  LDA                                       CPM004
+     C                     EXSR *PSSR                                     CPM004
+     C                     ENDIF                                          CPM004
+     C*                                                                   CPM004
+     C           XT#A      ENDSR                           ** XT#A   ESR**
+     C*===================================================================
+      /EJECT
+     C*===================================================================
+      ** #U01        :       S/R TO UPDATE PF/PMCUTVPP                    S01486
+      ***#U01********:       S/R TO UPDATE PF/PMCUTVPD                    S01486
+      ** CALLED FROM :       MAIN PROCESSING
+      ** CALLS       :
+     C*===================================================================
+     C*
+     C           #U01      BEGSR                           ** #U01  BSR **
+     C*
+     C                     ADD  TCSR      SBTNVR
+     C                     ADD  0         SBTNVF
+     C                     UPDATPMCUTVP0
+     C*
+     C           XT#BA     ENDSR                           ** XT#BA  ESR**
+     C*=========================================================================
+      /EJECT
+     C**========================================================================
+     C** #W01        :    S/R TO WRITE TO PF/PMCUTVPP                     S01486
+     C***#W01********:****S/R TO WRITE TO PF/PMCUTVPD                     S01486
+     C** CALLED FROM :    MAIN PROCESSING
+     C** CALLS       :
+     C**========================================================================
+     C           #W01      BEGSR                           ** #W01   BSR  **
+     C                     MOVE 'D'       SBRECI
+     C                     MOVE TCNR      SBCNUM
+     C                     MOVE PTFR      SBPTFR
+     C                     MOVE INNR      SBINNR
+     C                     MOVE PDDSPG    SBDSPG                          33615
+     C                     MOVE CCYI      SBICCY
+     C**********           MOVE SIDY      SBLIND                                            BUG23967
+     C                     MOVE LOIC      SBLOIC                                            BUG23967
+     C                     MOVE YEAR      SBYRNO
+     C                     MOVE MONTH     SBMTHN
+     C                     Z-ADDTCSR      SBTNVR
+     C                     Z-ADD0         SBTNVF
+     C                     Z-ADD0         SBNUCO
+     C**
+     C                     WRITEPMCUTVP0
+     C**
+     C                     ENDSR                           ** #W01   ESR  **
+     C*=========================================================================
+      /EJECT
+     C*=========================================================================
+      ** #W03        :  S/R TO WRITE THE AUDIT REPORT
+      ** CALLED FROM :  MAIN PROCESSING
+      ** CALLS       :
+     C*=========================================================================
+     C*
+     C           #W03      BEGSR                           ** #W03   BSR **
+     C*
+     C***********          MOVE BJURPT    RRHEAD                          S01486
+     C***********          MOVE BJMRDT    RRDATE                          S01486
+     C                     MOVE WWCOUN    RRCOUN
+     C                     MOVE WWCOU1    RRCOU1
+     C                     WRITEPM0930A0
+     C*
+     C                     ENDSR                           ** #W03    ESR **
+     C*=========================================================================
+      /EJECT
+     C*=========================================================================
+      ** ZDATE2      :  S/R TO CONVERT MIDAS DAY NUMBER   TO DDMMYY
+      ** CALLED FROM :  MAIN PROCESSING
+      ** CALLS       :
+     C*=========================================================================
+      /COPY ZSRSRC,ZDATE2Z2
+     C*=========================================================================
+      /EJECT
+     C*=========================================================================
+      ** *PSSR       :      FILE EXCEPTION ERROR HANDLING SUBROUTINE
+      ** CALLED FROM :      #A  ,  #CC
+      ** CALLS       :
+     C*=========================================================================
+     C           *PSSR     BEGSR                            ** *PSRR BSR**
+     C**
+     C** ROLL BACK CHANGES , DUMP AND RETURN TO THE CALLING PROGRAM
+     C**
+     C           @RUN      IFEQ *BLANK                                    S01486
+     C                     MOVE 'Y'       @RUN    1                       S01486
+     C                     WRITEPM0930A0                                  S01486
+     C***********          SETON                     LRU7U8               S01486
+     C                     SETON                     U7U8                 S01486
+     C                     WRITEERRORAU                                   S01486
+     C                     END                                            S01486
+     C                     DUMP
+     C                     SETON                         LR               S01486
+     C                     RETRN
+     C**
+     C                     ENDSR                            ** *PSRR ESR**
+     C*=========================================================================
+      ** PORTF       :      Retrieve Internal Customer Number             CPM004
+      ** CALLED FROM :      Main Processing                               CPM004
+      ** CALLS       :      *PSSR                                         CPM004
+     C*=========================================================================
+      *                                                                   CPM004
+     C           PORTF     BEGSR                                          CPM004
+      *                                                                   CPM004
+     C                     MOVE FCPORS    I#PORS                          CPM004
+     C                     MOVE TDBA      I#TDBA                          CPM004
+      *                                                                   CPM004
+     C                     CALL 'AOPLCSR1'                                CPM004
+     C                     PARM *BLANKS   @RTCD                           CPM004
+     C                     PARM '*KEY   ' @OPTN                           CPM004
+     C                     PARM           I@PARM                          CPM004
+     C                     PARM *BLANKS   O@PARM                          CPM004
+     C           SDPLCS    PARM SDPLCS    DSFDY                           CPM004
+      *                                                                   CPM004
+     C           @RTCD     IFNE *BLANKS                                   CPM004
+     C           *LOCK     IN   LDA                                       CPM004
+     C                     Z-ADD6         DBASE            ***************CPM004
+     C                     MOVE 'SDPLCSPD'DBFILE           * DB ERROR 06 *CPM004
+     C                     MOVELTDBA      DBKEY            ***************CPM004
+     C                     OUT  LDA                                       CPM004
+     C                     EXSR *PSSR                                     CPM004
+     C                     ELSE                                           CPM004
+     C                     MOVE TDBA      WWTDBA                          CPM004
+     C                     ENDIF                                          CPM004
+      *                                                                   CPM004
+      *                                                                   CPM004
+     C                     ENDSR                                          CPM004
+      *                                                                   CPM004
+     C*=========================================================================
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

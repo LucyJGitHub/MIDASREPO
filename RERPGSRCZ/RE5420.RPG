@@ -1,0 +1,762 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Accrued interest adjustments today report')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *  RE5420 - Accrued Interest Adjustments Today Report           *
+      *                                                               *
+      *  Function:  This program produces the detail report for       *
+      *             accrued interest adjustments generated today.     *
+      *             The layout of the report is similar to RE3664P1.  *
+      *             The report details to be taken from the new       *
+      *             extract file LF/REINCXL0.                         *
+      *                                                               *
+      *  Called By: REC5420 - Accrued Interest Adjustments Today      *
+      *                       report component                        *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 220738             Date 28Aug03               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 198071             Date 10Oct01               *
+      *                 164936             Date 20Jul01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 132486             Date 27Jun01               *
+      *                 138266             Date 21Nov00               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 15May01               *
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CPK010             Date 11Oct99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 130467             Date 26May98               *
+      *                 CCB003  *Create    Date 10Oct96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  220738  - Dump if customer is closed                         *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  198071 - Use full account number instead of retail account   *
+      *           number in checking if a new account is to be        *
+      *           printed.                                            *
+      *  164936 - Interest Adjustment Accrued column in report show   *
+      *           incorrect decimal point.                            *
+      *  132486 - Empty report must be enrolled in RCF.               *
+      *  138266 - Col. of manual adj. show alpha code in RE5420P1 when*
+      *           value is negative.  Add code to convert neg. value  *
+      *           into positive then print CR to define as credit     *
+      *           Gen. Int. Adj  also amended to avoid similar error. *
+      *  CSD006 - Use DSSDY for call to AOCURRR0.                     *
+      *  CPK010 - Changed call to AOCUSTR0 to use DSSDY so that it    *
+      *           matches AOCUSTR0.                                   *
+      *  130467 - Amounts not being formatted correctly. Additional   *
+      *           editing for current interest rate.                  *
+      *  CCB003 - COB Performance Enhancements - Task Split           *
+      *                                                               *
+      *****************************************************************
+     FREINCXL0IF  E           K        DISK
+      ** Re Interest Adjustments Extract
+      *
+     FRE5420P1O   E             89     PRINTER                        UC
+     F                                              KINFDS SPOOL
+      ** Accrued Interest Adjustments Today Report
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Function of indicators                                       *
+      *  ----------------------                                       *
+      *                                                               *
+      *     50 - Set ON if no records read from LF/REINCXL0           *
+      *     51 - Set ON after first time through program              *
+      *     52 - Multibranching ON                                    *
+      *     53 - Interest Type                                        *
+      *     54 - Write account details on new page                    *
+      *     80 - Currency File Indicator                              *
+      *     81 - Currency Array Indicator                             *
+      *     82 - Currency not found in array                          *
+      *     89 - Overflow Indicator                                   *
+      *                                                               *
+      * 90-99 - Standard MIDAS subroutines                            *
+      *                                                               *
+      *  U7+U8 - Database error                                       *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     E                    CCYA      200  3
+     E                    DPA       200  1 0
+      ** Arrays reading in details of currencies: name and decimal pos.
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+      *
+     E/COPY ZSRSRC,ZEDITZ1
+     E/COPY ZSRSRC,ZFRPEDZ1                                               130467
+      *
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     IRATYPE      DS
+     I                                        1   8 TYPEP
+     I                                        1   2 INTYP
+     I I            '/'                       3   3 SLASH
+     I                                        4   8 SUTYP
+      ** (Rate/)TYPE field used if INTR is zero
+      *
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+      *                                                                   130467
+     I/COPY ZSRSRC,ZFRPEDZ2                                               130467
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     ISDBANK    E DSSDBANKPD
+     I              BJURPT                          TITL
+     I              BJMRDT                          RUNA
+      ** Data Structure for Bank ICD Information
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ** Data Structure for branch details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Data Structure for currency details
+      *
+     ISDCUST    E DSSDCUSTPD
+      ** Data Structure for customer details
+     I              QQDFAC                          QQDFAX                                    CGL029
+      *
+     ISDMMOD    E DSSDMMODPD
+      ** Data Structure for Midas modules details
+      *
+     IDSFDY     E DSDSFDY
+      ** Data structure for access objects, short data structure
+      *
+     IDSSDY     E DSDSSDY                                                                     CPK010
+      ** Data structure for access objects, long data structure                               CPK010
+      *                                                                                       CPK010
+     IDSLDY     E DSDSLDY                                                                     220738
+     I*  Data structure for access objects, very long data structure                          220738
+      *                                                                                       220738
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *
+     C                     EXSR INIT
+     C                     EXSR MAIN
+     C                     EXSR EXIT
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  MAIN - Main Processing                                       *
+      *                                                               *
+      *  Called By: CONTROL MOD.                                      *
+      *  Calls:     ZDATE2, ZEDIT, *PSSR                              *
+      *****************************************************************
+     C           MAIN      BEGSR
+      *
+      ** Loop while records read
+     C           *IN80     DOWEQ'0'
+      *
+      ** Multibranch Indicator on..
+     C           *IN52     IFEQ '1'
+      *
+      ** If first time through or branch has changed..
+     C           *IN51     IFEQ '0'
+     C           BRCOLD    ORNE BRCA
+      *
+      ** If not first time through (i.e. branch has changed)
+     C           *IN51     IFEQ '1'
+      *
+      ** Write 'End of report for branch'
+     C                     WRITEENDP2
+     C                     CLOSERE5420P1
+     C                     OPEN RE5420P1
+      *
+      ** Set page number and report branch field for new branch report
+     C                     Z-ADD0         PAGE
+     C                     ENDIF
+      *
+      ** Write header details
+     C                     WRITEHEADP1
+      *
+      ** Call access program for branch details
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG    '@RTCD
+     C                     PARM '*KEY    '@OPTN
+     C                     PARM BRCA      @BRCD   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBRCHPD'DBFILE           ************
+     C                     MOVELBRCA      DBKEY            * DBERR 01 *
+     C                     Z-ADD1         DBASE            ************
+     C                     MOVEL@OPTN     DBOPTN
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Moving branch name into print field
+     C                     MOVE A8BRNM    BRNM
+      *
+      ** Write Branch Header details
+     C                     WRITEHEADP2
+      *
+      ** Write Column Header details
+     C                     WRITEHEADP3
+      *
+      ** Ensure Account details written
+     C                     MOVE '1'       *IN54
+      *
+      ** Call ZSFILE to log spool file details for report
+     C                     Z-ADDSFNUM     ZSNUM
+     C                     MOVELSFILE     ZSNAM
+     C                     CALL 'ZSFILE'
+     C                     PARM           ZSEQ    5
+     C                     PARM BRCA      ZENT    3
+     C                     PARM           ZSNAM  10
+     C                     PARM           ZSNUM   60
+     C                     PARM *BLANKS   ZERR    1
+      *
+      ** If error perform database error handling and exit program
+     C           ZERR      IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'ZSFILE'  DBFILE           ************
+     C                     MOVEL'RE5420P1'DBKEY            * DBERR 02 *
+     C                     Z-ADD2         DBASE            ************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Format details..
+     C                     EXSR FORMAT
+      *
+      ** Write account details if different account or new page..
+     C********** ACNO      IFNE OLDACN                                                        198071
+     C           CNUM      IFNE WOCNUM                                                        198071
+     C           CCY       ORNE WOCCY                                                         198071
+     C           ACOD      ORNE WOACOD                                                        198071
+     C           ACSQ      ORNE WOACSQ                                                        198071
+     C           BRCA      ORNE BRCOLD                                                        198071
+     C           *IN54     OREQ '1'
+     C                     WRITEDETLP1
+     C                     MOVE '0'       *IN54
+     C                     ENDIF
+      *
+      ** Write details
+     C                     WRITEDETLP2
+      *
+      ** Setup for new page..
+     C           *IN89     IFEQ '1'
+     C                     WRITEHEADP1
+      *
+      ** Account details to be written on new page
+     C                     MOVE '1'       *IN54
+      *
+      ** If multibranching, write branch name out
+     C           *IN52     IFEQ '1'
+     C                     WRITEHEADP2
+     C                     ENDIF
+      *
+     C                     WRITEHEADP3
+     C                     MOVE '0'       *IN89
+     C                     ENDIF
+      *
+      ** Set on 'Not first time through program' flag
+     C           *IN51     IFEQ '0'
+     C                     MOVE '1'       *IN51
+     C                     ENDIF
+      *
+      ** Moving Current Branch name into old branch name
+      ** and Current Account number into old account number
+     C                     MOVELBRCA      BRCOLD
+     C**********           Z-ADDCNUM      WOCNUM  60                                   198071 CSD027
+     C                     MOVE CNUM      WOCNUM  6                                           CSD027
+     C                     MOVELCCY       WOCCY   3                                           198071
+     C**********           Z-ADDACOD      WOACOD  40                                   198071 CGL029
+     C                     Z-ADDACOD      WOACOD 100                                          CGL029
+     C                     Z-ADDACSQ      WOACSQ  20                                          198071
+     C                     Z-ADDACNO      OLDACN 100
+      *
+      ** Read record and loop back..
+     C                     READ REINCXL0                 80
+     C                     ENDDO
+      *
+      ** IF NO MORE RECORDS...
+      ** Write Trailer..
+      *
+     C           *IN80     IFEQ '1'
+      *
+      ** If no records processed..
+      *
+     C           *IN50     IFEQ '1'
+      ** Write Main Header and 'No Records'
+     C                     WRITEHEADP1
+     C                     WRITEHEADP3
+     C                     WRITENONE
+     C                     WRITEENDP1
+     C                     ELSE
+      *
+      ** If some records already processed..
+      ** Multibranch on..
+     C           *IN52     IFEQ '1'
+     C                     WRITEENDP2
+     C                     ELSE
+      *
+      ** Multibranch off..
+     C                     WRITEENDP1
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  FORMAT - Format details                                      *
+      *                                                               *
+      *  Called By: MAIN                                              *
+      *  Calls:     -                                                 *
+      *****************************************************************
+     C           FORMAT    BEGSR
+      *
+      ** Check if currency exists and find position on array.
+     C                     Z-ADD1         I       30
+     C           CCY       LOKUPCCYA,I                   82
+      *
+      ** If not found, database error
+     C           *IN82     IFEQ '0'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE           ************
+     C                     MOVELCCY       DBKEY  29        * DBERR 03 *
+     C                     Z-ADD3         DBASE            ************
+     C                     MOVEL@OPTN     DBOPTN
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Save Currency decimal places
+     C                     Z-ADDDPA,I     WDECS   20
+      *
+      ** Set up POST
+     C                     SELEC
+     C           POST      WHEQ 'C'
+     C                     MOVEL'CR '     POSTP
+     C           POST      WHEQ 'D'
+     C                     MOVEL'DR '     POSTP
+     C           POST      WHEQ 'H'
+     C                     MOVEL'CHG'     POSTP
+     C                     OTHER
+     C                     MOVE *BLANKS   POSTP
+     C                     ENDSL
+      *
+      ** Set up Currency formats for..
+      ** a) Manual Int Adj
+      ** If credit, set up 'CR' field and make value positive             138266
+     C           MADJ      IFLT 0                                         138266
+     C                     Z-SUBMADJ      WMADJ  130                      138266
+     C                     MOVE 'CR'      RCDTM                           138266
+     C                     ELSE                                           138266
+     C                     Z-ADDMADJ      WMADJ                           138266
+     C                     MOVE *BLANKS   RCDTM                           138266
+     C                     ENDIF                                          138266
+     C                     Z-ADDWDECS     ZADEC
+     C**********           MOVE MADJ      ZFIELD                          138266
+     C                     MOVE WMADJ     ZFIELD                          138266
+     C                     MOVE 'C'       ZECODE  1                       130467
+     C***********          EXSR ZEDIT                                     130467
+     C                     EXSR ZFRPED                                    130467
+     C***********          MOVE ZFIELD    MADJP                           130467
+     C                     MOVELZFIELD    MADJP                           130467
+      *
+      ** b) Generated Int Adj
+      ** If credit, set up 'CR' field and make value positive             138266
+     C           GADT      IFLT 0                                         138266
+     C                     Z-SUBGADT      WGADT  130                      138266
+     C                     MOVE 'CR'      RCDTG                           138266
+     C                     ELSE                                           138266
+     C                     Z-ADDGADT      WGADT                           138266
+     C                     MOVE *BLANKS   RCDTG                           138266
+     C                     ENDIF                                          138266
+     C                     Z-ADDWDECS     ZADEC
+     C**********           MOVE GADT      ZFIELD                          138266
+     C                     MOVE WGADT     ZFIELD                          138266
+     C                     MOVE 'C'       ZECODE                          130467
+     C***********          EXSR ZEDIT                                     130467
+     C                     EXSR ZFRPED                                    130467
+     C***********          MOVE ZFIELD    GADTP                           130467
+     C                     MOVELZFIELD    GADTP                           130467
+      *
+      ** c) Accrued Int Adj
+      **    If credit, set up 'CR' field and make +ve
+     C           AIAP      IFLT 0
+     C                     Z-SUBAIAP      WAIAP  130
+     C                     MOVE 'CR'      CREDT
+     C                     ELSE
+     C                     Z-ADDAIAP      WAIAP
+     C                     MOVE *BLANKS   CREDT
+     C                     ENDIF
+      *
+     C**********           Z-ADDA6NBDP    ZADEC                           164936
+     C                     Z-ADDWDECS     ZADEC                           164936
+     C                     MOVE WAIAP     ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    AIAPP
+      *
+      ** Get Customer details
+     C                     MOVE CNUM      @CNUM  10
+     C**********           CALL 'AOCUSTR0'                                                    220738
+     C                     CALL 'AOCUSTR1'                                                    220738
+     C                     PARM *BLANK    @RTCD
+     C                     PARM '*KEY  '  @OPTN
+     C                     PARM @CNUM     @KCNUM 10
+     C                     PARM           @KCNST  7
+     C********** SDCUST    PARM SDCUST    DSFDY                                               CPK010
+     C********** SDCUST    PARM SDCUST    DSSDY                                        CPK010 220738
+     C           SDCUST    PARM SDCUST    DSLDY                                               220738
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           BBCLST    ANDNE'Y'                                                           220738
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCUSTPD'DBFILE           ************
+     C                     MOVEL@CNUM     DBKEY            * DBERR 04 *
+     C                     Z-ADD4         DBASE            ************
+     C                     MOVEL@OPTN     DBOPTN
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Convert Capitalisation Date to DDMMMYY...
+     C                     MOVE CPDA      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    CPDAP
+      *
+      ** Convert Posted Today to print field
+     C                     SELEC
+     C           PTFL      WHEQ 'Y'
+     C                     MOVE 'YES'     PTPRP
+     C           PTFL      WHEQ 'S'
+     C                     MOVE 'SUS'     PTPRP
+     C           PTFL      WHEQ 'I'
+     C                     MOVE 'INV'     PTPRP
+     C           PTFL      WHEQ 'L'
+     C                     MOVE 'LOW'     PTPRP
+     C           PTFL      WHEQ 'A'
+     C                     MOVE 'ALT'     PTPRP
+     C                     OTHER
+     C                     MOVE *BLANKS   PTPRP
+     C                     ENDSL
+      *
+      ** Setting non-zero interest to 7 decimal places
+     C           INTR      IFNE *ZERO
+     C                     MOVE '1'       *IN53
+     C***********          Z-ADD7         ZADEC                           130467
+     C***********          MOVE INTR      ZFIELD                          130467
+     C***********          EXSR ZEDIT                                     130467
+     C***********          MOVE ZFIELD    INTRP                           130467
+      *
+      ** If no interest, print int.type and sub-type
+     C                     ELSE
+     C                     MOVE '0'       *IN53
+     C                     MOVE INTP      INTYP
+     C                     MOVE INST      SUTYP
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * CCYARR - Currencies Array                                     *
+      *          Sets up an array of currencies and an array of       *
+      *          decimal places for those currencies                  *
+      *                                                               *
+      * Called by: INIT                                               *
+      * Calls: None                                                   *
+      *****************************************************************
+     C           CCYARR    BEGSR
+      *
+      **   Set array index to zero.
+     C                     Z-ADD0         X       30
+      *
+      ** Read currency details first time
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANK    @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C                     PARM CCY       @K101   3
+     C***********SDCURR    PARM SDCURR    DSFDY                           CSD006
+     C           SDCURR    PARM SDCURR    DSSDY                           CSD006
+      *
+      ** If return code not blank after first read of currencies file
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE           ************
+     C                     MOVELCCY       DBKEY            * DBERR 08 *
+     C                     Z-ADD8         DBASE            ************
+     C                     MOVEL@OPTN     DBOPTN
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Loop to read currency detail records into array
+      ** until no more records to read or array full
+     C           *IN80     DOWEQ'0'
+     C           *IN81     ANDEQ'0'
+      *
+      ** Increment array index.
+     C           X         ADD  1         X
+      *
+      ** Move data into arrays.
+     C                     MOVE A6CYCD    CCYA,X
+     C                     MOVE A6NBDP    DPA,X
+      *
+      ** Read currency details.
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANK    @RTCD
+     C                     PARM '*NEXT  ' @OPTN
+     C                     PARM CCY       @K101   3
+     C***********SDCURR    PARM SDCURR    DSFDY                           CSD006
+     C           SDCURR    PARM SDCURR    DSSDY                           CSD006
+      *
+      ** If return code not blank
+     C           @RTCD     IFNE *BLANKS
+      *
+      ** If no more records to read..
+     C           @RTCD     IFEQ '*EOF  '
+     C                     MOVE '1'       *IN80
+      *
+      ** Otherwise database error..
+     C                     ELSE
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE           ************
+     C                     MOVELCCY       DBKEY            * DBERR 09 *
+     C                     Z-ADD9         DBASE            ************
+     C                     MOVEL@OPTN     DBOPTN
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Check for full array. *IN81 on if full.
+     C           X         IFEQ 200
+     C                     MOVE '1'       *IN81
+     C                     ENDIF
+      *
+      ** Loop back to read next record.
+     C                     ENDDO
+      *
+      ** If more currency details to read and array full..
+     C           *IN80     IFEQ '0'
+     C           *IN81     ANDEQ'1'
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE           ************
+     C                     MOVELCCY       DBKEY            * DBERR 10 *
+     C                     Z-ADD10        DBASE            ************
+     C                     MOVEL@OPTN     DBOPTN
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * INIT - Initialisation routine                                 *
+      *                                                               *
+      * Called by: CONTROL MOD.                                       *
+      * Calls: None                                                   *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+      ** Set up copyright parameter
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Open printer file
+     C                     OPEN RE5420P1
+      *
+      ** Read in Installation Data
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Access Bank ICD File for bank report heading, rundate and
+      ** date format indicator
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG    '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     Z-ADD5         DBASE            * DBERR 05 *
+     C                     MOVEL@OPTN     DBOPTN  7        ************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Check date format and move rundate to print field
+     C           BJDFIN    COMP 'M'                      98
+      *
+      ** Call Modules details file for multibranch indicator
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*MSG    '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDMMOD    PARM SDMMOD    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDMMODPD'DBFILE           ************
+     C                     Z-ADD6         DBASE            * DBERR 06 *
+     C                     MOVEL@OPTN     DBOPTN           ************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           BGMBIN    IFEQ 'Y'
+     C                     MOVE '1'       *IN52
+     C                     ELSE
+      *
+      ** Call ZSFILE to log spool file details for report
+     C                     Z-ADDSFNUM     ZSNUM
+     C                     MOVELSFILE     ZSNAM
+     C                     CALL 'ZSFILE'
+     C                     PARM           ZSEQ    5
+     C                     PARM *BLANKS   ZENT    3
+     C                     PARM           ZSNAM  10
+     C                     PARM           ZSNUM   60
+     C                     PARM *BLANKS   ZERR    1
+      *
+      ** If error perform database error handling and exit program
+     C           ZERR      IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'ZSFILE'  DBFILE           ************
+     C                     MOVEL'RE5420P1'DBKEY            * DBERR 07 *
+     C                     Z-ADD7         DBASE            ************
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Load up currency array with decimal point place details
+     C                     EXSR CCYARR
+      *
+      ** Do first read before main loop
+     C                     READ REINCXL0                 80
+     C           *IN80     IFEQ '1'
+     C                     MOVE '1'       *IN50
+      ** If no record found call ZSFILE to ensure empty RE5410P1 will be                      132486
+      ** enrolled in ZSFILE.                                                                  132486
+     C           *IN52     IFEQ '1'                                                           132486
+      *                                                                                       132486
+      ** Call ZSFILE to log spool file details for report                                     132486
+     C                     Z-ADDSFNUM     ZSNUM                                               132486
+     C                     MOVELSFILE     ZSNAM                                               132486
+     C                     CALL 'ZSFILE'                                                      132486
+     C                     PARM           ZSEQ    5                                           132486
+     C                     PARM *BLANKS   ZENT    3                                           132486
+     C                     PARM           ZSNAM  10                                           132486
+     C                     PARM           ZSNUM   60                                          132486
+     C                     PARM *BLANKS   ZERR    1                                           132486
+      *                                                                                       132486
+      ** If error perform database error handling and exit program                            132486
+     C           ZERR      IFEQ 'Y'                                                           132486
+     C           *LOCK     IN   LDA                                                           132486
+     C                     Z-ADD9         DBASE                                               132486
+     C                     MOVEL'RE5410'  DBPGM             ***********                       132486
+     C                     MOVEL'RE5410P1'DBKEY             * DBERR 09*                       132486
+     C                     MOVEL'ZSFILE'  DBFILE            ***********                       132486
+     C                     EXSR *PSSR                                                         132486
+     C                     ENDIF                                                              132486
+     C                     ENDIF                                                              132486
+      *                                                                                       132486
+     C                     ELSE
+      *
+      ** If Multibranching off, write header now..
+     C           *IN52     IFEQ '0'
+     C                     WRITEHEADP1
+     C                     WRITEHEADP3
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * EXIT - Exit Routine                                           *
+      *                                                               *
+      * Called by: C.MOD                                              *
+      *                                                               *
+      * Calls: None                                                   *
+      *****************************************************************
+     C           EXIT      BEGSR
+      *
+     C                     SETON                         LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *                                                               *
+      * Called by: INIT, MAIN, FORMAT                                 *
+      * Calls: None                                                   *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C                     MOVEL'RE5420'  DBPGM
+     C                     OUT  LDA
+      *
+     C                     WRITEERRP1
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/COPY ZSRSRC,ZDATE2Z2
+      *****************************************************************
+     C/COPY ZSRSRC,ZFRPEDZ3                                               130467
+     C/COPY ZSRSRC,ZEDITZ2
+      *****************************************************************
+** ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+** ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+** ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** CPY@ - Object copyright
+(c) Misys International Banking Systems Ltd. 2001

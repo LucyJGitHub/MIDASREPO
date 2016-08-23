@@ -1,0 +1,2880 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Edit safe custody fees ICD')                  *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD9371R - Safe Custody Fees ICD Maintenance                  *
+      *                                                               *
+      *  Function:  This program maintains safe custody fees ICD      *
+      *             record.                                           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 01Mar99               *
+      *                 CTI002             Date 23Sep98               *
+      *                 CSD003             Date 02JAN98               *
+      *                 093071             DATE 29AUG96               *
+      *                 CAC001             DATE 08JAN96               *
+      *                 091864             DATE 29NOV95               *
+      *                 072456             DATE 30JUN94               *
+      *                 S01464             DATE 04MAY94               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (recompile)                                         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSD005 - Standing Data Account Narrative.  Add new field     *
+      *           to SDACODPD.  Recompilation of programs.            *
+      *  CTI002 - Recompiled : File SDACODPD changed                  *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - Program removed from SD model.                    *
+      *  093071 - Settlement Generation Days may not be zero.         *
+      *  CAC001 - Profit Centre Accounting.                           *
+      *           Additional field 'Profit Centre for Safe Custody    *
+      *           Fees'                                               *
+      *  091864 - Validation of Settlement frequency corrected so     *
+      *           that Settlement frequency is not less than Accrual  *
+      *           frequency.                                          *
+      *  072456 - Change Control to S01464 (post system test).        *
+      *           - Next Accrual Date may not be before run date.     *
+      *           - Next Settlement Date may not be before run date.  *
+      *           - Use program ZBKDT to calculate Next Generation    *
+      *             date.                                             *
+      *  S01464 - New program created for this SAR.                   *
+      *                                                               *
+      *****************************************************************
+     F*Edit safe custody fees   Initialise Program F-spec
+     F/COPY WNCPYSRC,SD9371RFPG
+     FSD9371R#CF  E                    WORKSTN                        UC
+     F                                              KINFDS INFDS#
+     F                                              KINFSR *PSSR
+      * DSP: Midas SD Safe custody fees ICD maintenance
+      *
+     FSDSCFEL1IF  E           K        DISK                           UC
+     F                                              KINFDS INFDS1
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Safe custody fees ICD retrieval
+      *
+     FSDCURRL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0001
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Currency codes retrieval
+      *
+     FSDACODL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0002
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Account codes retrieval
+      *
+     FSDPRFCL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0003
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Profit centres retrieval
+      *
+     FSDMMODL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0004
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Midas module flags retrieval
+      *
+     FSDGELRL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0005
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD General ledger ICD details retrieval
+      *
+     FSDSCFEL0UF  E           K        DISK                           UC
+     F                                              KCOMIT
+     F                                              KINFDS ID0006
+     F                                              KINFSR *PSSR
+      * UPD : Midas SD Safe custody fees ICD update
+      *
+     FSDFCTLL0UF  E           K        DISK                           UC
+     F                                              KCOMIT
+     F                                              KINFDS ID0007
+     F                                              KINFSR *PSSR
+      * UPD : Midas SD Standing data controls update
+      *
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright array
+     E*Edit safe custody fees   Initialise Program E-spec
+     E/COPY WNCPYSRC,SD9371REPG
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+     I/COPY QWINDSRC,SD9370GDTA                                           S01229
+     I*Edit safe custody fees   Initialise Program I-spec
+     I/COPY WNCPYSRC,SD9371RIPG
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   70##JDT
+     I                                        1   10##JCC
+     I                                        2   30##JYY
+     I                                        4   50##JMM
+     I                                        6   70##JDD
+     I                                        8  130##JTM
+     I                                        8   90##JHH
+     I                                       10  110##JNN
+     I                                       12  130##JSS
+      * ABO DEFINE LARGE STRING FOR CL CMD
+     IYARTCM      DS                            512
+     I                                        1   1 DUMMY1
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+     IINFDS1    E DSY2I1DSP
+      * File information data structure
+      *
+     I@1DBRC    E DSSDSCFEL0
+      * UPD : Midas SD Safe custody fees ICD update
+      * Current/previous master file format fields for change control
+      *
+     I***#1DBRC*     DS                             55                                        CGL029
+     I#1DBRC      DS                           9999                                           CGL029
+      * Stored master file format fields
+     I                                        1   1 #1DB1
+      *
+     I***YARDC*      DS                             55                                        CGL029
+     IYARDCS      DS                           9999                                           CGL029
+     IQSDFC1    E DSSDFCTLL0
+      * UPD : Midas SD Standing data controls update
+     IYBRDCS      DS                             22
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+     IID0001      DS                            528
+      * File information data structure
+      *
+     IID0002      DS                            528
+      * File information data structure
+      *
+     IID0003      DS                            528
+      * File information data structure
+      *
+     IID0004      DS                            528
+      * File information data structure
+      *
+     IID0005      DS                            528
+      * File information data structure
+      *
+     IID0006      DS                            528
+      * File information data structure
+      *
+     IID0007      DS                            528
+      * File information data structure
+      *
+      /EJECT
+      * Parameter declarations
+     IP1PARM      DS                             10
+      * KEY: Midas SD Safe custody fees ICD retrieval
+      * I : RST Safe Custody Fees ICD Key
+     I                                        1  10 P1SCFE
+     I            DS
+     I                                        1 132 ZAMSDA
+      * Message data for 'Custody fees per Cust/Por'
+      * Fees Per Customer/Folio
+     I                                        1   1 ZA0001
+      * Message data for 'Fees per portfolio invald'
+      * Fees Group Per Portfolio
+     I                                        1   1 ZA0002
+      * Message data for 'Fee per portfolio invald'
+      * Fees Group Per Portfolio
+     I                                        1   1 ZA0003
+      * Message data for 'Auto posting is invalid'
+      * Auto Posting Indicator
+     I                                        1   1 ZA0004
+      * Message data for 'Charg Curr must be enterd'
+      * Bank Charging Currency
+     I                                        1   3 ZA0005
+      * Message data for 'Bank charging curr invald'
+      * Bank Charging Currency
+     I                                        1   3 ZA0006
+      * Message data for 'Income A/C must be enterd'
+      * Income A/C screen
+     I**********                              1   4 ZA0007                                    CGL029
+     I                                        1  10 ZA0007                                    CGL029
+      * Message data for 'Income A/C invalid'
+      * Income A/C screen
+     I**********                              1   4 ZA0008                                    CGL029
+     I                                        1  10 ZA0008                                    CGL029
+      * Message data for 'Accrual A/C must be entrd'
+      * Accrual A/C screen
+     I**********                              1   4 ZA0009                                    CGL029
+     I                                        1  10 ZA0009                                    CGL029
+      * Message data for 'Accrual A/C invalid'
+      * Accrual A/C screen
+     I**********                              1   4 ZA0010                                    CGL029
+     I                                        1  10 ZA0010                                    CGL029
+      * Message data for 'Profit Centre cde not val'
+      * Pft Cntr For Safe Ctdy Fe
+     I                                        1   4 ZA0011
+      * Message data for 'Settle. gen days not 1-14'
+      * Settlement Gen days scrn
+     I                                        1   2 ZA0012
+      * Message data for 'Setlmnt Gen days numeric'
+      * Settlement Gen days scrn
+     I                                        1   2 ZA0013
+      * Message data for 'Settle. gen days not 1-14'
+      * Settlement Gen days scrn
+     I                                        1   2 ZA0014
+      * Message data for 'Accrual frq must be entrd'
+      * Accrual Frequency
+     I                                        1   1 ZA0015
+      * Message data for 'Invalid Accrual Freq'
+      * Accrual Frequency
+     I                                        1   1 ZA0016
+      * Message data for 'Day in month must be blnk'
+      * Accrual day in month scrn
+     I                                        1   2 ZA0017
+      * Message data for 'Accrl day must be entered'
+      * Accrual day in month scrn
+     I                                        1   2 ZA0018
+      * Message data for 'Accrual day mnth numeric'
+      * Accrual day in month scrn
+     I                                        1   2 ZA0019
+      * Message data for 'Accrual day in month 1-31'
+      * Accrual day in month scrn
+     I                                        1   2 ZA0020
+      * Message data for 'Next Accrual date invalid'
+      * Next Accrual date screen
+     I                                        1   6 ZA0021
+      * Message data for 'Next Acrual date LT today'
+      * Next Accrual date screen
+     I                                        1   6 ZA0022
+      * Message data for 'Next Accrual Date is reqd'
+      * Next Accrual date screen
+     I                                        1   6 ZA0023
+      * Message data for 'Settlement Frequency req.'
+      * Settlement Frequency
+     I                                        1   1 ZA0024
+      * Message data for 'Settl. Frq  GE  Acc Frq'
+      * Settlement Frequency
+     I                                        1   1 ZA0025
+      * Message data for 'Settl. Frq  GE  Acc Frq'
+      * Settlement Frequency
+     I                                        1   1 ZA0026
+      * Message data for 'Settl. Frq  GE  Acc Frq'
+      * Settlement Frequency
+     I                                        1   1 ZA0027
+      * Message data for 'Settlement Freq invalid'
+      * Settlement Frequency
+     I                                        1   1 ZA0028
+      * Message data for 'Settle Day in Mnth is req'
+      * Setlmnt day in month scrn
+     I                                        1   2 ZA0029
+      * Message data for 'Settl day in month numerc'
+      * Setlmnt day in month scrn
+     I                                        1   2 ZA0030
+      * Message data for 'Settl Day in Month 1 - 31'
+      * Setlmnt day in month scrn
+     I                                        1   2 ZA0031
+      * Message data for 'Next Settle date invalid'
+      * Next Setlmnt date scrn
+     I                                        1   6 ZA0032
+      * Message data for 'Next settle date LT Today'
+      * Next Setlmnt date scrn
+     I                                        1   6 ZA0033
+      * Message data for 'Next Settlmnt date is req'
+      * Next Setlmnt date scrn
+     I                                        1   6 ZA0034
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           P1PARM           KEY: Safe Custo
+      *****************************************************************
+      * Initialize
+     C                     EXSR ZZINIT
+      *
+      * Display and process key screen
+     C                     EXSR BADSKY
+      * Terminate program
+     C                     EXSR ZXEXPG
+      *****************************************************************
+      /EJECT
+     CSR         BADSKY    BEGSR
+      *================================================================
+      * Display and process key screen
+      *================================================================
+      * Initialize key screen
+     C                     EXSR MDIZ#K
+      * Bypass first display of key screen is possible
+     C                     MOVEL'Y'       W0BYP   1
+      * Signal start of transaction
+     C                     MOVEL'Y'       W0TRN   1
+     C           W0TRN     DOWEQ'Y'
+     C           W0TRN     OREQ 'K'
+      * Ensure transaction continues (if reset)
+     C                     MOVEL'Y'       W0TRN   1
+      * Conduct screen conversation
+     C           W0TRN     DOWEQ'Y'
+      * Is bypass key screen still viable?
+     C           W0BYP     IFEQ 'Y'
+     C           #1SCFE    IFEQ *BLANK                     Safe Custody Fe
+      * One or more key fields is blank
+     C           *IN05     OREQ '1'
+      * HOME: Reset screen fields
+     C                     MOVEL'N'       W0BYP
+     C                     END
+     C                     END
+      * Bypass key screen
+     C           W0BYP     IFNE 'Y'
+      * Display key screen
+     C                     EXSR BBEXFM
+     C                     END
+      * Cancel key screen bypass
+     C                     MOVEL'N'       W0BYP
+      * Process response to key screen
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * HOME: Reset screen fields
+     C   05                CAS            BDHMKY
+      * Process key screen input
+     C                     CAS            BEPRKY
+     C                     END
+     C           W0TRN     DOWEQ'R'
+     C                     MOVEL'Y'       W0TRN
+     C                     EXSR BEPRKY
+     C                     END
+      *
+     C                     END
+     C                     END
+      *================================================================
+     CSR         BAEXIT    ENDSR
+      /EJECT
+     CSR         BBEXFM    BEGSR
+      *================================================================
+      * Display key screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GADSAK
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * PUTOVR unless conditioned fields change
+     C                     SETON                         86*
+     C           *IN89     IFNE BBIN89
+     C                     SETOF                         86*
+     C                     END
+     C                     MOVE *IN89     BBIN89  1
+      * Set cursor by *SET CURSOR data
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y0SET
+     C                     END
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#RCDKEY
+      * Test cursor
+     C                     EXSR Y8TST
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1
+      * Reset global error indicator
+     C                     SETOF                         99*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         BBEXIT    ENDSR
+      /EJECT
+     CSR         BDHMKY    BEGSR
+      *================================================================
+      * Process HOME key
+      *================================================================
+     C                     MOVEL'N'       W0TRN
+      *================================================================
+     CSR         BDEXIT    ENDSR
+      /EJECT
+     CSR         BEPRKY    BEGSR
+      *================================================================
+      * Process key screen input
+      *================================================================
+      * Initialise detail screen
+     C                     EXSR MAIZ#1
+      * Validate key fields
+     C                     EXSR BFVLKY
+     C           *IN99     CABEQ'1'       BEEXIT
+      * Check for existing record
+     C           KRTV      KLIST
+     C                     KFLD           FBSCFE           Safe Custody Fe
+      * Setup key
+     C                     MOVEL#1SCFE    FBSCFE           Safe Custody Fe
+     C           KRTV      CHAIN@SCFEL1              9091  *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     SETON                     99    *
+     C                     GOTO BEEXIT
+     C                     END                             FI 91
+      *
+      * If record does not exist, error
+     C           *IN90     IFEQ '1'
+     C                     SETON                     99    *
+      * Send message 'Safe Custody Fees ICD  NF'
+     C                     MOVEL'USR2242' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     EXSR MBFL#1
+      * CALC: Detail screen function fields
+      * 00/Copy member SD9371RSFF - Safe Custody Fees ICD  *
+     C*Edit safe custody fees   Calc Detail Function Flds
+     C/COPY WNCPYSRC,SD9371RSFF
+      * USER: Initialize detail screen (existing record)
+      * Custody Fees Per Cust/Portfolio
+      * CASE: WRK.Protect Fees per Cust/Por is Protect
+     C           WUPFCP    IFEQ 'Y'                        *IF
+     C                     MOVEL'C'       #1CFCP           Fees Per Custom
+     C                     END                             *FI
+      * Custody Fee Groups per Portfolio
+      * CASE: WRK.Protect fee groups Portfo is Protect
+     C           WUPFGP    IFEQ 'Y'                        *IF
+     C                     MOVEL'N'       #1FGCP           Fees Group Per
+     C                     END                             *FI
+      * Income Account Code
+      * CASE: DB1.Income A/c Code is Zero
+     C           FBINCA    IFEQ *ZERO                      *IF
+     C                     MOVEL*BLANK    #DIACS           Income A/C scre
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVELFBINCA    #DIACS           Income A/C scre
+     C                     END                             *FI
+      * Accrual Account Code
+      * CASE: DB1.Accrual Account Code is Zero
+     C           FBAACT    IFEQ *ZERO                      *IF
+     C                     MOVEL*BLANK    #DAACS           Accrual A/C scr
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVELFBAACT    #DAACS           Accrual A/C scr
+     C                     END                             *FI
+      * Save Settlement Gen days and Next Settlement Date.
+     C                     Z-ADDFBSGDY    WUSSGS           saved settlemen
+     C                     Z-ADDFBSNDA    WUSNTS           saved next sett
+      * Settlement Generation Days
+      * CASE: DB1.Settlement Gen Days is Zero
+     C           FBSGDY    IFEQ *ZERO                      *IF
+     C                     MOVEL*BLANK    #DSGDS           Settlement Gen
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL*BLANK    WUZASF           ZALIGN Screen F
+     C                     MOVELFBSGDY    WUZASF           ZALIGN Screen F
+      * Call ZALIGN & ZEDIT
+      * ZALIGN Screen Field - Standard Functions  *
+     C                     CALL 'ZALIGN'               90  ZALIGN Screen F
+     C           W0RTN     PARM W0RTN     WQ0001  7        *Return code
+     C           WUZASF    PARM WUZASF    WQ0002 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0003  10       ZALIGN No Of De
+     C                     PARM 2         WQ0004  20       ZALIGN No Of Di
+     C           WUZAFF    PARM *BLANK    WQ0005 16        ZALIGN File Fie
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZALIGN'  W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: PGM.*Return code is Old Table Error
+     C           W0RTN     IFEQ '*ERROR*'                  *IF
+     C                     MOVEL'Y'       WUERCD           Err Code
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUERCD           Err Code
+      * ZEDIT Screen Field - Standard Functions  *
+     C                     CALL 'ZEDIT'                90  ZEDIT Screen Fi
+     C           WUZASF    PARM WUZASF    WQ0006 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0007  10       ZALIGN No Of De
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZEDIT'   W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     END                             *FI
+      * Zalign Setlmnt Gen days - Safe Custody Fees ICD  *
+     C*
+     C                     MOVE WUZASF    #DSGDS
+     C*
+     C                     END                             *FI
+      * Next Settlement generation date
+      * CASE: DB1.Next Settlement Gen Day is Zero
+     C           FBNSGD    IFEQ *ZERO                      *IF
+     C                     MOVEL*BLANK    #DNGDS           Next gen date s
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     Z-ADDFBNSGD    WUWMDT           Work Midas Date
+      * Check File Date - Rundate  *
+     C                     CALL 'ZDATE2'               90  Check File Date
+     C                     PARM WUWMDT    WQ0008  50       Work Midas Date
+     C                     PARM WUDFF     WQ0009  1        Date format fla
+     C           WUWCDT    PARM *ZERO     WQ0010  60       Work Converted
+     C           WUWADT    PARM *BLANK    WQ0011  7        Work Alpha Date
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZDATE2'  W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     MOVEL*BLANK    #DNGDS           Next gen date s
+     C                     MOVELWUWCDT    #DNGDS           Next gen date s
+     C                     END                             *FI
+      * Accrual Day in Month
+      * CASE: DB1.Accrual Day in Month is Zero
+     C           FBADYM    IFEQ *ZERO                      *IF
+     C                     MOVEL*BLANK    #DADMS           Accrual day in
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL*BLANK    WUZASF           ZALIGN Screen F
+     C                     MOVELFBADYM    WUZASF           ZALIGN Screen F
+      * Call ZALIGN & ZEDIT
+      * ZALIGN Screen Field - Standard Functions  *
+     C                     CALL 'ZALIGN'               90  ZALIGN Screen F
+     C           W0RTN     PARM W0RTN     WQ0012  7        *Return code
+     C           WUZASF    PARM WUZASF    WQ0013 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0014  10       ZALIGN No Of De
+     C                     PARM 2         WQ0015  20       ZALIGN No Of Di
+     C           WUZAFF    PARM *BLANK    WQ0016 16        ZALIGN File Fie
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZALIGN'  W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: PGM.*Return code is Old Table Error
+     C           W0RTN     IFEQ '*ERROR*'                  *IF
+     C                     MOVEL'Y'       WUERCD           Err Code
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUERCD           Err Code
+      * ZEDIT Screen Field - Standard Functions  *
+     C                     CALL 'ZEDIT'                90  ZEDIT Screen Fi
+     C           WUZASF    PARM WUZASF    WQ0017 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0018  10       ZALIGN No Of De
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZEDIT'   W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     END                             *FI
+      * Zalign Acrual day in mnth - Safe Custody Fees ICD  *
+     C*
+     C                     MOVE WUZASF    #DADMS
+     C*
+     C                     END                             *FI
+      * Next Accrual date
+      * CASE: DB1.Next Accrual Date is Zero
+     C           FBANDA    IFEQ *ZERO                      *IF
+     C                     MOVEL*BLANK    #DNADS           Next Accrual da
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     Z-ADDFBANDA    WUWMDT           Work Midas Date
+      * Check File Date - Rundate  *
+     C                     CALL 'ZDATE2'               90  Check File Date
+     C                     PARM WUWMDT    WQ0019  50       Work Midas Date
+     C                     PARM WUDFF     WQ0020  1        Date format fla
+     C           WUWCDT    PARM *ZERO     WQ0021  60       Work Converted
+     C           WUWADT    PARM *BLANK    WQ0022  7        Work Alpha Date
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZDATE2'  W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     MOVEL*BLANK    #DNADS           Next Accrual da
+     C                     MOVELWUWCDT    #DNADS           Next Accrual da
+     C                     END                             *FI
+      * Settlement Day in Month
+      * CASE: DB1.Settlement Day in Month is Zero
+     C           FBSDYM    IFEQ *ZERO                      *IF
+     C                     MOVEL*BLANK    #DSDMS           Setlmnt day in
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL*BLANK    WUZASF           ZALIGN Screen F
+     C                     MOVELFBSDYM    WUZASF           ZALIGN Screen F
+      * Call ZALIGN & ZEDIT
+      * ZALIGN Screen Field - Standard Functions  *
+     C                     CALL 'ZALIGN'               90  ZALIGN Screen F
+     C           W0RTN     PARM W0RTN     WQ0023  7        *Return code
+     C           WUZASF    PARM WUZASF    WQ0024 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0025  10       ZALIGN No Of De
+     C                     PARM 2         WQ0026  20       ZALIGN No Of Di
+     C           WUZAFF    PARM *BLANK    WQ0027 16        ZALIGN File Fie
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZALIGN'  W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: PGM.*Return code is Old Table Error
+     C           W0RTN     IFEQ '*ERROR*'                  *IF
+     C                     MOVEL'Y'       WUERCD           Err Code
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUERCD           Err Code
+      * ZEDIT Screen Field - Standard Functions  *
+     C                     CALL 'ZEDIT'                90  ZEDIT Screen Fi
+     C           WUZASF    PARM WUZASF    WQ0028 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0029  10       ZALIGN No Of De
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZEDIT'   W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     END                             *FI
+      * Zalign Stlmnt day in mnth - Safe Custody Fees ICD  *
+     C*
+     C                     MOVE WUZASF    #DSDMS
+     C*
+     C                     END                             *FI
+      * Next Settlement date
+      * CASE: DB1.Next Settlement Date is Zero
+     C           FBSNDA    IFEQ *ZERO                      *IF
+     C                     MOVEL*BLANK    #DNXDS           Next Setlmnt da
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     Z-ADDFBSNDA    WUWMDT           Work Midas Date
+      * Check File Date - Rundate  *
+     C                     CALL 'ZDATE2'               90  Check File Date
+     C                     PARM WUWMDT    WQ0030  50       Work Midas Date
+     C                     PARM WUDFF     WQ0031  1        Date format fla
+     C           WUWCDT    PARM *ZERO     WQ0032  60       Work Converted
+     C           WUWADT    PARM *BLANK    WQ0033  7        Work Alpha Date
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZDATE2'  W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     MOVEL*BLANK    #DNXDS           Next Setlmnt da
+     C                     MOVELWUWCDT    #DNXDS           Next Setlmnt da
+     C                     END                             *FI
+      * 00/Copy member SD9371RISE - Safe Custody Fees ICD  *
+     C*Edit safe custody fees   Initialise Dtl Exist Rcd
+     C/COPY WNCPYSRC,SD9371RISE
+     C                     END
+      *
+      *..................................................
+     C   99                GOTO BEEXIT
+      * No error: Display and process details
+     C                     EXSR CADSDA
+      *
+      *================================================================
+     CSR         BEEXIT    ENDSR
+      /EJECT
+     CSR         BFVLKY    BEGSR
+      *================================================================
+      * Validate key fields
+      *================================================================
+      * USER: Validate key screen
+      * 00/Copy member SD9371RVKS - Safe Custody Fees ICD  *
+     C*Edit safe custody fees   Validate Key Screen
+     C/COPY WNCPYSRC,SD9371RVKS
+      *================================================================
+     CSR         BFEXIT    ENDSR
+      /EJECT
+     CSR         CADSDA    BEGSR
+      *================================================================
+      * Display and process detail screen
+      *================================================================
+      * Conduct detail screen conversation
+      * - repeat until screen control flag is reset:
+     C           W0TRN     DOWEQ'Y'
+      * Display detail screen
+     C                     EXSR CBEXFM
+      * Process response to detail screen
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * Redisplay previous screen
+     C   12                CAS            CCDSPV
+      * HOME: Reset screen fields
+     C   05                CAS            CCDSPV
+      * Process detail screen input
+     C                     CAS            CFPRSC
+     C                     END
+     C           W0TRN     IFEQ 'R'
+     C           W0PMD     IFEQ 'ADD'
+     C                     EXSR MAIZ#1
+     C                     END
+     C                     END
+      *
+     C                     END
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         CBEXFM    BEGSR
+      *================================================================
+      * Display screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GBDSAD
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * PUTOVR unless conditioned fields change
+     C                     SETON                         86*
+     C           *IN89     IFNE CBIN89
+     C                     SETOF                         86*
+     C                     END
+     C                     MOVE *IN89     CBIN89  1
+      * Set cursor by *SET CURSOR data
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y1SET
+     C                     END
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT2
+     C                     EXFMT#RCDDTL1
+      * Test cursor
+     C                     EXSR Y8TST
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1
+      * Reset global error indicator
+     C                     SETOF                         99*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         CBEXIT    ENDSR
+      /EJECT
+     CSR         CCDSPV    BEGSR
+      *================================================================
+      * Redisplay previous screen
+      *================================================================
+      * USER: Process key screen request
+      * 00/Copy member SD9371RPKR - Safe Custody Fees ICD  *
+     C*Edit safe custody fees   Process Key Screen Rqst
+     C/COPY WNCPYSRC,SD9371RPKR
+     C                     MOVEL'USR0790' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C   05                MOVEL'R'       W0TRN
+     C   12                MOVEL'K'       W0TRN
+      *================================================================
+     CSR         CCEXIT    ENDSR
+      /EJECT
+     CSR         CFPRSC    BEGSR
+      *================================================================
+      * Validate record
+      *================================================================
+      * Confirm/update is not deferred
+     C                     MOVEL'N'       W0DCF   1
+      * Validate details
+     C                     EXSR DCVLDL
+      * QUIT if error:
+     C   99                GOTO CFEXIT
+      * Defer confirm/update requested
+     C           W0DCF     CABEQ'Y'       CFEXIT
+      * No error: update record
+     C                     EXSR EBPR##
+      *================================================================
+     CSR         CFEXIT    ENDSR
+      /EJECT
+     CSR         DCVLDL    BEGSR
+      *================================================================
+      * Validate details
+      *================================================================
+      * Validate Fees Per Customer/Folio
+     C                     MOVEL*BLANK    W0RTN
+     C                     MOVEL#1CFCP    W0NSRQ  1        Fees Per Custom
+      * Name search required?
+     C           W0NSRQ    IFEQ '?'
+     C                     CALL 'Y2VLLSR'              90  *
+     C                     PARM           W0RTN   7
+     C                     PARM 1179330   Y2LSNO  70
+     C           #1CFCP    PARM #1CFCP    W0EXVL 20        Fees Per Custom
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      *
+      * Validate Fees Group Per Portfolio
+     C                     MOVEL*BLANK    W0RTN
+     C                     MOVEL#1FGCP    W0NSRQ  1        Fees Group Per
+      * Name search required?
+     C           W0NSRQ    IFEQ '?'
+     C                     CALL 'Y2VLLSR'              90  *
+     C                     PARM           W0RTN   7
+     C                     PARM 1179341   Y2LSNO  70
+     C           #1FGCP    PARM #1FGCP    W0EXVL 20        Fees Group Per
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      *
+      * Validate Auto Posting Indicator
+     C                     MOVEL*BLANK    W0RTN
+     C                     MOVEL#1AUPI    W0NSRQ  1        Auto Posting In
+      * Name search required?
+     C           W0NSRQ    IFEQ '?'
+     C                     CALL 'Y2VLLSR'              90  *
+     C                     PARM           W0RTN   7
+     C                     PARM 1179347   Y2LSNO  70
+     C           #1AUPI    PARM #1AUPI    W0EXVL 20        Auto Posting In
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      *
+      * Validate Accrual Frequency
+     C                     MOVEL*BLANK    W0RTN
+     C                     MOVEL#1AFRQ    W0NSRQ  1        Accrual Frequen
+      * Name search required?
+     C           W0NSRQ    IFEQ '?'
+     C                     CALL 'Y2VLLSR'              90  *
+     C                     PARM           W0RTN   7
+     C                     PARM 1179385   Y2LSNO  70
+     C           #1AFRQ    PARM #1AFRQ    W0EXVL 20        Accrual Frequen
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      *
+      * Validate Settlement Frequency
+     C                     MOVEL*BLANK    W0RTN
+     C                     MOVEL#1SFRE    W0NSRQ  1        Settlement Freq
+      * Name search required?
+     C           W0NSRQ    IFEQ '?'
+     C                     CALL 'Y2VLLSR'              90  *
+     C                     PARM           W0RTN   7
+     C                     PARM 1179408   Y2LSNO  70
+     C           #1SFRE    PARM #1SFRE    W0EXVL 20        Settlement Freq
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      *
+      * USER: Validate detail screen fields
+      * Custody Fees Per Customer/Portfolio
+      * CASE: WRK.Protect Fees per Cust/Por is Do not protect
+     C           WUPFCP    IFEQ 'N'                        *IF
+      * CASE: DTL.Fees Per Customer/Folio is Valid values
+     C           #1CFCP    IFEQ 'C'                        *IF
+     C           #1CFCP    OREQ 'P'
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#1CFCP    ZA0001           Fees Per Custom
+      * Send message 'Custody fees per Cust/Por'
+     C                     MOVEL'USR2249' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9931  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+      * Custody Fee Groups Per Portfolio
+      * CASE: WRK.Protect fee groups Portfo is Do not protect
+     C           WUPFGP    IFEQ 'N'                        *IF
+      * CASE: DTL.Fees Per Customer/Folio is Customer Positions
+     C           #1CFCP    IFEQ 'C'                        *IF
+      * The only valid value is 'N'.
+      * CASE: DTL.Fees Group Per Portfolio is No
+     C           #1FGCP    IFEQ 'N'                        *IF
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#1FGCP    ZA0002           Fees Group Per
+      * Send message 'Fees per portfolio invald'
+     C                     MOVEL'USR2250' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9932  *
+      *
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * CASE: DTL.Fees Group Per Portfolio is Valid values
+     C           #1FGCP    IFEQ 'N'                        *IF
+     C           #1FGCP    OREQ 'Y'
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#1FGCP    ZA0003           Fees Group Per
+      * Send message 'Fee per portfolio invald'
+     C                     MOVEL'USR2251' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9932  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * Automatic Posting of Fee Settlements
+      * CASE: DTL.Auto Posting Indicator is Valid Values
+     C           #1AUPI    IFEQ 'N'                        *IF
+     C           #1AUPI    OREQ 'Y'
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#1AUPI    ZA0004           Auto Posting In
+      * Send message 'Auto posting is invalid'
+     C                     MOVEL'USR2252' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9933  *
+      *
+     C                     END                             *FI
+      * Bank Charging Currency
+      * CASE: DTL.Bank Charging Currency is Blank
+     C           #1BCGC    IFEQ *BLANK                     *IF
+      * Setup message data for message
+     C                     MOVEL#1BCGC    ZA0005           Bank Charging C
+      * Send message 'Charg Curr must be enterd'
+     C                     MOVEL'USR2253' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9934  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL#1BCGC    WUTQKF           Test ? in Key F
+     C                     MOVEL#1BCGC    WUCYCD           Currency Code
+      * CASE: WRK.Test ? in Key Field is Question Mark
+     C           WUTQKF    IFEQ '?'                        *IF
+      * Select Currency Codes - Currency Codes  *
+     C                     CALL 'SD0020S'              90  Select Currency
+     C                     PARM *BLANK    W0RTN   7
+     C           WUCYCD    PARM WUCYCD    WQ0034  3        Currency Code
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0020S' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+     C                     MOVELWUCYCD    #1BCGC           Bank Charging C
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Bank charging currency must be a valid currency on SDCURRPD.
+      * Check for ccy existance - Currency Codes  *
+     C                     EXSR SARVGN
+      * CASE: PGM.*Return code is *Record does not exist
+     C           W0RTN     IFEQ 'Y2U0005'                  *IF
+      * Setup message data for message
+     C                     MOVEL#1BCGC    ZA0006           Bank Charging C
+      * Send message 'Bank charging curr invald'
+     C                     MOVEL'USR2254' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9934  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * Income Account Code
+      * CASE: DTL.Income A/C screen is Blank
+     C           #DIACS    IFEQ *BLANK                     *IF
+      * Setup message data for message
+     C                     MOVEL#DIACS    ZA0007           Income A/C scre
+      * Send message 'Income A/C must be enterd'
+     C                     MOVEL'USR2255' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9935  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL#DIACS    WUTQKF           Test ? in Key F
+     C                     MOVEL#DIACS    WUACCD           Account Code
+      * CASE: WRK.Test ? in Key Field is Question Mark
+     C           WUTQKF    IFEQ '?'                        *IF
+      * Select Account Codes - Account Codes  *
+     C                     CALL 'SD0031S'              90  Select Account
+     C                     PARM *BLANK    W0RTN   7
+     C********** WUACCD    PARM WUACCD    WQ0035  4        Account Code                       CGL029
+     C           WUACCD    PARM WUACCD    WQ0035 10                                           CGL029
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0031S' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+     C                     MOVELWUACCD    #DIACS           Income A/C scre
+     C                     MOVE WUACCD    #1INCA           Income A/c Code
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Check Account Code exists - Account Codes  *
+     C                     EXSR SBRVGN
+      * CASE: PGM.*Return code is *Record does not exist
+     C           W0RTN     IFEQ 'Y2U0005'                  *IF
+      * Setup message data for message
+     C                     MOVEL#DIACS    ZA0008           Income A/C scre
+      * Send message 'Income A/C invalid'
+     C                     MOVEL'USR2256' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9935  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVE WUACCD    #1INCA           Income A/c Code
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * Accrual Account Code
+      * CASE: DTL.Accrual A/C screen is Blank
+     C           #DAACS    IFEQ *BLANK                     *IF
+      * Setup message data for message
+     C                     MOVEL#DAACS    ZA0009           Accrual A/C scr
+      * Send message 'Accrual A/C must be entrd'
+     C                     MOVEL'USR2257' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9936  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Accrual A/C has been entered.
+     C                     MOVEL#DAACS    WUTQKF           Test ? in Key F
+     C                     MOVEL#DAACS    WUACCD           Account Code
+      * CASE: WRK.Test ? in Key Field is Question Mark
+     C           WUTQKF    IFEQ '?'                        *IF
+      * Select Account Codes - Account Codes  *
+     C                     CALL 'SD0031S'              90  Select Account
+     C                     PARM *BLANK    W0RTN   7
+     C********** WUACCD    PARM WUACCD    WQ0036  4        Account Code                       CGL029
+     C           WUACCD    PARM WUACCD    WQ0036 10                                           CGL029
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0031S' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+     C                     MOVELWUACCD    #DAACS           Accrual A/C scr
+     C                     MOVE WUACCD    #1AACT           Accrual Account
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Check Account Code exists - Account Codes  *
+     C                     EXSR SCRVGN
+      * CASE: PGM.*Return code is *Record does not exist
+     C           W0RTN     IFEQ 'Y2U0005'                  *IF
+      * Setup message data for message
+     C                     MOVEL#DAACS    ZA0010           Accrual A/C scr
+      * Send message 'Accrual A/C invalid'
+     C                     MOVEL'USR2258' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9936  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVE WUACCD    #1AACT           Accrual Account
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * Profit Centre for Safe Custody Fees  (CAC001)
+      * CASE:
+      *  - c1 AND c2
+      *   |- c1    : WRK.Profit Centres Used is Yes
+      *   |- c2    : WRK.Analytical Accounting is Yes
+      *   '-
+     C                     MOVEL'0'       Y0CX01  1
+     C           WUPRCU    IFEQ 'Y'                        *IF
+     C           WUN0ST    IFEQ 'Y'                        *IF
+     C                     MOVEL'1'       Y0CX01
+     C                     END                             *FI
+     C                     END                             *FI
+     C           Y0CX01    IFEQ '1'                        *IF
+      * CASE: DTL.Pft Cntr For Safe Ctdy Fe is Not Blank
+     C           #1PCSF    IFNE *BLANK                     *IF
+      * Profit Centre for Safe Custody Fees has been entered.
+      * CASE: DTL.Pft Cntr For Safe Ctdy Fe is '?'
+     C           #1PCSF    IFEQ '?'                        *IF
+      * Select Profit Centres - Profit Centres  *
+     C                     CALL 'SD0480S'              90  Select Profit C
+     C                     PARM *BLANK    W0RTN   7
+     C           #1PCSF    PARM #1PCSF    WQ0037  4        Profit Centre C
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0480S' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     9937  *
+     C                     END
+      * If a Profit Centre is not selected blank out '?'
+      * CASE: DTL.Pft Cntr For Safe Ctdy Fe is '?'
+     C           #1PCSF    IFEQ '?'                        *IF
+     C                     MOVEL*BLANK    #1PCSF           Pft Cntr For Sa
+     C                     END                             *FI
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Retrieve Profit Centre - Profit Centres  *
+     C                     EXSR SDRVGN
+      * CASE: PGM.*Return code is *Record does not exist
+     C           W0RTN     IFEQ 'Y2U0005'                  *IF
+      * Setup message data for message
+     C                     MOVEL#1PCSF    ZA0011           Pft Cntr For Sa
+      * Send message 'Profit Centre cde not val'
+     C                     MOVEL'USR2855' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9937  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * Settlement Generation Days
+      * CASE: DTL.Settlement Gen days scrn is Blank
+     C           #DSGDS    IFEQ *BLANK                     *IF
+     C                     Z-ADD*ZERO     #1SGDY           Settlement Gen
+      * Start of change 093071
+      * Setup message data for message
+     C                     MOVEL#DSGDS    ZA0012           Settlement Gen
+      * Send message 'Settle. gen days not 1-14'
+     C                     MOVEL'USR2260' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9938  *
+      *
+      * End of change 093071
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL*BLANK    WUZASF           ZALIGN Screen F
+     C                     MOVEL#DSGDS    WUZASF           ZALIGN Screen F
+      * Call ZALIGN & ZEDIT
+      * ZALIGN Screen Field - Standard Functions  *
+     C                     CALL 'ZALIGN'               90  ZALIGN Screen F
+     C           W0RTN     PARM W0RTN     WQ0038  7        *Return code
+     C           WUZASF    PARM WUZASF    WQ0039 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0040  10       ZALIGN No Of De
+     C                     PARM 2         WQ0041  20       ZALIGN No Of Di
+     C           WUZAFF    PARM *BLANK    WQ0042 16        ZALIGN File Fie
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZALIGN'  W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: PGM.*Return code is Old Table Error
+     C           W0RTN     IFEQ '*ERROR*'                  *IF
+     C                     MOVEL'Y'       WUERCD           Err Code
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUERCD           Err Code
+      * ZEDIT Screen Field - Standard Functions  *
+     C                     CALL 'ZEDIT'                90  ZEDIT Screen Fi
+     C           WUZASF    PARM WUZASF    WQ0043 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0044  10       ZALIGN No Of De
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZEDIT'   W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     END                             *FI
+      * CASE: WRK.Err Code is Error Found
+     C           WUERCD    IFEQ 'Y'                        *IF
+      * Setup message data for message
+     C                     MOVEL#DSGDS    ZA0013           Settlement Gen
+      * Send message 'Setlmnt Gen days numeric'
+     C                     MOVEL'USR2259' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9938  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Settlement Gen days is numeric
+      * Zalign Setlmnt Gen days - Safe Custody Fees ICD  *
+     C*
+     C                     MOVE WUZASF    #DSGDS
+     C*
+     C                     MOVE WUZAFF    #1SGDY           Settlement Gen
+      * Start of change 093071
+      * Check if Settlement Gen days is between 1 & 14.
+      * CASE: DTL.Settlement Gen Days is Valid value
+     C           #1SGDY    IFGE 1                          *IF
+     C           #1SGDY    ANDLE14
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#DSGDS    ZA0014           Settlement Gen
+      * Send message 'Settle. gen days not 1-14'
+     C                     MOVEL'USR2260' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9938  *
+      *
+     C                     END                             *FI
+      * End of change 093071
+     C                     END                             *FI
+     C                     END                             *FI
+      * Accrual Frequency
+      * CASE: DTL.Accrual Frequency is Blank
+     C           #1AFRQ    IFEQ *BLANK                     *IF
+      * Setup message data for message
+     C                     MOVEL#1AFRQ    ZA0015           Accrual Frequen
+      * Send message 'Accrual frq must be entrd'
+     C                     MOVEL'USR2262' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9939  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * CASE: DTL.Accrual Frequency is Valid values
+     C           #1AFRQ    IFEQ 'M'                        *IF
+     C           #1AFRQ    OREQ 'Q'
+     C           #1AFRQ    OREQ 'W'
+     C           #1AFRQ    OREQ 'Y'
+     C           #1AFRQ    OREQ 'X'
+     C/COPY WNCPYSRC,SD9371RC04
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#1AFRQ    ZA0016           Accrual Frequen
+      * Send message 'Invalid Accrual Freq'
+     C                     MOVEL'USR2261' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9939  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+      * Accrual Day in Month
+      * CASE: DTL.Accrual Frequency is Weekly
+     C           #1AFRQ    IFEQ 'W'                        *IF
+     C/COPY WNCPYSRC,SD9371RC05
+      * Accrual day in month must be Blank.
+      * CASE: DTL.Accrual day in month scrn is Blank
+     C           #DADMS    IFEQ *BLANK                     *IF
+     C                     Z-ADD*ZERO     #1ADYM           Accrual Day in
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#DADMS    ZA0017           Accrual day in
+      * Send message 'Day in month must be blnk'
+     C                     MOVEL'USR2264' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9940  *
+      *
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * CASE: DTL.Accrual day in month scrn is Blank
+     C           #DADMS    IFEQ *BLANK                     *IF
+      * Setup message data for message
+     C                     MOVEL#DADMS    ZA0018           Accrual day in
+      * Send message 'Accrl day must be entered'
+     C                     MOVEL'USR2283' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9940  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL*BLANK    WUZASF           ZALIGN Screen F
+     C                     MOVEL#DADMS    WUZASF           ZALIGN Screen F
+      * Call ZALIGN & ZEDIT
+      * ZALIGN Screen Field - Standard Functions  *
+     C                     CALL 'ZALIGN'               90  ZALIGN Screen F
+     C           W0RTN     PARM W0RTN     WQ0045  7        *Return code
+     C           WUZASF    PARM WUZASF    WQ0046 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0047  10       ZALIGN No Of De
+     C                     PARM 2         WQ0048  20       ZALIGN No Of Di
+     C           WUZAFF    PARM *BLANK    WQ0049 16        ZALIGN File Fie
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZALIGN'  W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: PGM.*Return code is Old Table Error
+     C           W0RTN     IFEQ '*ERROR*'                  *IF
+     C                     MOVEL'Y'       WUERCD           Err Code
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUERCD           Err Code
+      * ZEDIT Screen Field - Standard Functions  *
+     C                     CALL 'ZEDIT'                90  ZEDIT Screen Fi
+     C           WUZASF    PARM WUZASF    WQ0050 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0051  10       ZALIGN No Of De
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZEDIT'   W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     END                             *FI
+      * CASE: WRK.Err Code is Error Found
+     C           WUERCD    IFEQ 'Y'                        *IF
+      * Setup message data for message
+     C                     MOVEL#DADMS    ZA0019           Accrual day in
+      * Send message 'Accrual day mnth numeric'
+     C                     MOVEL'USR2263' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9940  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Accrual Day in month is numeric
+      * Zalign Acrual day in mnth - Safe Custody Fees ICD  *
+     C*
+     C                     MOVE WUZASF    #DADMS
+     C*
+     C                     MOVE WUZAFF    #1ADYM           Accrual Day in
+      * Check if Accrual Day in Month is between 1 & 31.
+      * CASE: DTL.Accrual Day in Month is Valid Value (01- 31)
+     C           #1ADYM    IFGE 01                         *IF
+     C           #1ADYM    ANDLE31
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#DADMS    ZA0020           Accrual day in
+      * Send message 'Accrual day in month 1-31'
+     C                     MOVEL'USR2265' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9940  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * Next Accrual date
+      * CASE: DTL.Next Accrual date screen is Entered
+     C           #DNADS    IFNE *BLANK                     *IF
+     C                     MOVE #DNADS    WUWSDT           Work Screen Dat
+      * Check Screen Date - Rundate  *
+     C                     CALL 'ZDATE1'               90  Check Screen Da
+     C           W0RTN     PARM W0RTN     WQ0052  7        *Return code
+     C           WUWSDT    PARM WUWSDT    WQ0053  60       Work Screen Dat
+     C           WUDFF     PARM WUDFF     WQ0054  1        Date format fla
+     C           WUWFDT    PARM *ZERO     WQ0055  50       Work File Date
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZDATE1'  W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * Check return code.
+      * CASE: PGM.*Return code is Old Table Error
+     C           W0RTN     IFEQ '*ERROR*'                  *IF
+      * Setup message data for message
+     C                     MOVEL#DNADS    ZA0021           Next Accrual da
+      * Send message 'Next Accrual date invalid'
+     C                     MOVEL'USR2266' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9941  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     Z-ADDWUWFDT    #1ANDA           Next Accrual Da
+      * Start of change 072456.
+      * Check that date is not before rundate.
+      * CASE: DTL.Next Accrual Date LT WRK.Run day number
+     C           #1ANDA    IFLT WURDNB                     *IF
+      * Setup message data for message
+     C                     MOVEL#DNADS    ZA0022           Next Accrual da
+      * Send message 'Next Acrual date LT today'
+     C                     MOVEL'USR2267' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9941  *
+      *
+     C                     END                             *FI
+      * End of change 072456.
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#DNADS    ZA0023           Next Accrual da
+      * Send message 'Next Accrual Date is reqd'
+     C                     MOVEL'USR2280' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9941  *
+      *
+     C                     END                             *FI
+      * Settlement Frequency
+      * CASE: DTL.Settlement Frequency is Blank
+     C           #1SFRE    IFEQ *BLANK                     *IF
+      * Setup message data for message
+     C                     MOVEL#1SFRE    ZA0024           Settlement Freq
+      * Send message 'Settlement Frequency req.'
+     C                     MOVEL'USR2268' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9942  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * CASE: DTL.Settlement Frequency is Valid values
+     C           #1SFRE    IFEQ 'X'                        *IF
+     C           #1SFRE    OREQ 'M'
+     C           #1SFRE    OREQ 'Q'
+     C           #1SFRE    OREQ 'Y'
+     C/COPY WNCPYSRC,SD9371RC01
+      * Start E091864
+      * CASE:
+      *  - c1 AND c2
+      *   |- c1    : DTL.Accrual Frequency is Quarterly
+      *   |- c2    : DTL.Settlement Frequency is Monthly
+      *   '-
+     C                     MOVEL'0'       Y0CX01  1
+     C           #1AFRQ    IFEQ 'Q'                        *IF
+     C           #1SFRE    IFEQ 'M'                        *IF
+     C                     MOVEL'1'       Y0CX01
+     C                     END                             *FI
+     C                     END                             *FI
+     C           Y0CX01    IFEQ '1'                        *IF
+      * Setup message data for message
+     C                     MOVEL#1SFRE    ZA0025           Settlement Freq
+      * Send message 'Settl. Frq  GE  Acc Frq'
+     C                     MOVEL'USR2270' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9942  *
+      *
+     C                     END                             *FI
+      * CASE:
+      *  - c1 AND c2
+      *   |- c1    : DTL.Accrual Frequency is Half yearly
+      *   |- c2    : DTL.Settlement Frequency is Monthly/Quarterly
+      *   '-
+     C                     MOVEL'0'       Y0CX01  1
+     C           #1AFRQ    IFEQ 'X'                        *IF
+     C           #1SFRE    IFEQ 'M'                        *IF
+     C           #1SFRE    OREQ 'Q'
+     C                     MOVEL'1'       Y0CX01
+     C                     END                             *FI
+     C                     END                             *FI
+     C           Y0CX01    IFEQ '1'                        *IF
+      * Setup message data for message
+     C                     MOVEL#1SFRE    ZA0026           Settlement Freq
+      * Send message 'Settl. Frq  GE  Acc Frq'
+     C                     MOVEL'USR2270' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9942  *
+      *
+     C                     END                             *FI
+      * CASE:
+      *  - c1 AND c2
+      *   |- c1    : DTL.Accrual Frequency is Yearly
+      *   |- c2    : DTL.Settlement Frequency is Mthly/Qrtly/Half Yearly
+      *   '-
+     C                     MOVEL'0'       Y0CX01  1
+     C           #1AFRQ    IFEQ 'Y'                        *IF
+     C           #1SFRE    IFEQ 'X'                        *IF
+     C           #1SFRE    OREQ 'M'
+     C           #1SFRE    OREQ 'Q'
+     C                     MOVEL'1'       Y0CX01
+     C                     END                             *FI
+     C                     END                             *FI
+     C           Y0CX01    IFEQ '1'                        *IF
+      * Setup message data for message
+     C                     MOVEL#1SFRE    ZA0027           Settlement Freq
+      * Send message 'Settl. Frq  GE  Acc Frq'
+     C                     MOVEL'USR2270' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9942  *
+      *
+     C                     END                             *FI
+      * End E091864
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#1SFRE    ZA0028           Settlement Freq
+      * Send message 'Settlement Freq invalid'
+     C                     MOVEL'USR2269' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9942  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+      * Settlement Day in Month
+     C/COPY WNCPYSRC,SD9371RC02
+      * CASE: DTL.Setlmnt day in month scrn is Blank
+     C           #DSDMS    IFEQ *BLANK                     *IF
+      * Setup message data for message
+     C                     MOVEL#DSDMS    ZA0029           Setlmnt day in
+      * Send message 'Settle Day in Mnth is req'
+     C                     MOVEL'USR2271' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9943  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL*BLANK    WUZASF           ZALIGN Screen F
+     C                     MOVEL#DSDMS    WUZASF           ZALIGN Screen F
+      * Call ZALIGN & ZEDIT
+      * ZALIGN Screen Field - Standard Functions  *
+     C                     CALL 'ZALIGN'               90  ZALIGN Screen F
+     C           W0RTN     PARM W0RTN     WQ0056  7        *Return code
+     C           WUZASF    PARM WUZASF    WQ0057 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0058  10       ZALIGN No Of De
+     C                     PARM 2         WQ0059  20       ZALIGN No Of Di
+     C           WUZAFF    PARM *BLANK    WQ0060 16        ZALIGN File Fie
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZALIGN'  W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: PGM.*Return code is Old Table Error
+     C           W0RTN     IFEQ '*ERROR*'                  *IF
+     C                     MOVEL'Y'       WUERCD           Err Code
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUERCD           Err Code
+      * ZEDIT Screen Field - Standard Functions  *
+     C                     CALL 'ZEDIT'                90  ZEDIT Screen Fi
+     C           WUZASF    PARM WUZASF    WQ0061 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0062  10       ZALIGN No Of De
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZEDIT'   W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     END                             *FI
+      * CASE: WRK.Err Code is Error Found
+     C           WUERCD    IFEQ 'Y'                        *IF
+      * Setup message data for message
+     C                     MOVEL#DSDMS    ZA0030           Setlmnt day in
+      * Send message 'Settl day in month numerc'
+     C                     MOVEL'USR2272' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9943  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Settlement Day in month is numeric
+      * Zalign Stlmnt day in mnth - Safe Custody Fees ICD  *
+     C*
+     C                     MOVE WUZASF    #DSDMS
+     C*
+     C                     MOVE WUZAFF    #1SDYM           Settlement Day
+      * Check if Settlement Day in Month is between 1 & 31.
+      * CASE: DTL.Settlement Day in Month is Valid value (01 - 31)
+     C           #1SDYM    IFGE 01                         *IF
+     C           #1SDYM    ANDLE31
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#DSDMS    ZA0031           Setlmnt day in
+      * Send message 'Settl Day in Month 1 - 31'
+     C                     MOVEL'USR2273' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9943  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C/COPY WNCPYSRC,SD9371RC03
+      * Next Settlement date
+      * CASE: DTL.Next Setlmnt date scrn is Entered
+     C           #DNXDS    IFNE *BLANK                     *IF
+     C                     MOVE #DNXDS    WUWSDT           Work Screen Dat
+      * Check Screen Date - Rundate  *
+     C                     CALL 'ZDATE1'               90  Check Screen Da
+     C           W0RTN     PARM W0RTN     WQ0063  7        *Return code
+     C           WUWSDT    PARM WUWSDT    WQ0064  60       Work Screen Dat
+     C           WUDFF     PARM WUDFF     WQ0065  1        Date format fla
+     C           WUWFDT    PARM *ZERO     WQ0066  50       Work File Date
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZDATE1'  W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * Check return code.
+      * CASE: PGM.*Return code is Old Table Error
+     C           W0RTN     IFEQ '*ERROR*'                  *IF
+      * Setup message data for message
+     C                     MOVEL#DNXDS    ZA0032           Next Setlmnt da
+      * Send message 'Next Settle date invalid'
+     C                     MOVEL'USR2274' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9944  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     Z-ADDWUWFDT    #1SNDA           Next Settlement
+      * Start of change 072456.
+      * Date must be after today's date
+      * CASE: DTL.Next Settlement Date LT WRK.Run day number
+     C           #1SNDA    IFLT WURDNB                     *IF
+      * Setup message data for message
+     C                     MOVEL#DNXDS    ZA0033           Next Setlmnt da
+      * Send message 'Next settle date LT Today'
+     C                     MOVEL'USR2275' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9944  *
+      *
+     C                     END                             *FI
+      * End of change 072456.
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#DNXDS    ZA0034           Next Setlmnt da
+      * Send message 'Next Settlmnt date is req'
+     C                     MOVEL'USR2281' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9944  *
+      *
+     C                     END                             *FI
+      * Re-calculate Next Generation Date, only if 'Settlement Gen Days'
+      * and/or 'Next Settlement Date' has been amended.
+      * Calculate Next Generation Date
+      * CASE:
+      *  - c1 AND c2 OR c1 OR c2
+      *   |- c1    : WRK.saved settlement gen days NE DTL.Settlement Gen
+      *   |- c2    : WRK.saved next settlment date NE DTL.Next Settlement
+      *   '-
+     C                     MOVEL'0'       Y0CX01  1
+     C           WUSSGS    IFNE #1SGDY                     *IF
+     C           WUSNTS    IFNE #1SNDA                     *IF
+     C                     MOVEL'1'       Y0CX01
+     C                     END                             *FI
+     C                     END                             *FI
+     C           Y0CX01    IFNE '1'                        *IF
+     C           WUSSGS    IFNE #1SGDY                     *IF
+     C                     MOVEL'1'       Y0CX01
+     C                     END                             *FI
+     C                     END                             *FI
+     C           Y0CX01    IFNE '1'                        *IF
+     C           WUSNTS    IFNE #1SNDA                     *IF
+     C                     MOVEL'1'       Y0CX01
+     C                     END                             *FI
+     C                     END                             *FI
+     C           Y0CX01    IFEQ '1'                        *IF
+      * Start of change 072456.
+      * Find nth Working Day Back - Standard Functions  *
+     C                     CALL 'ZBKDT'                90  Find nth Workin
+     C                     PARM #1SNDA    WQ0067  50       Next Settlement
+     C                     PARM #1SGDY    WQ0068  20       Settlement Gen
+     C           WUNSGD    PARM *ZERO     WQ0069  50       Next Settlement
+     C                     PARM #1BCGC    WQ0070  3        Bank Charging C
+     C                     PARM *BLANK    WQ0071  3        Location Code
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZBKDT'   W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     Z-ADDWUNSGD    #1NSGD           Next Settlement
+     C                     Z-ADDWUNSGD    WUWMDT           Work Midas Date
+      * End of change 072456.
+      * Check File Date - Rundate  *
+     C                     CALL 'ZDATE2'               90  Check File Date
+     C                     PARM WUWMDT    WQ0072  50       Work Midas Date
+     C                     PARM WUDFF     WQ0073  1        Date format fla
+     C           WUWCDT    PARM *ZERO     WQ0074  60       Work Converted
+     C           WUWADT    PARM *BLANK    WQ0075  7        Work Alpha Date
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZDATE2'  W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     MOVEL*BLANK    #DNGDS           Next gen date s
+     C                     MOVELWUWCDT    #DNGDS           Next gen date s
+     C                     Z-ADD#1SGDY    WUSSGS           saved settlemen
+     C                     Z-ADD#1SNDA    WUSNTS           saved next sett
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     END                             *FI
+      * CALC: Detail screen function fields
+      * 00/Copy member SD9371RSFF - Safe Custody Fees ICD  *
+     C*Edit safe custody fees   Calc Detail Function Flds
+     C/COPY WNCPYSRC,SD9371RSFF
+      * USER: Validate detail screen relations
+      * 00/Copy member SD9371RVSR - Safe Custody Fees ICD  *
+     C*Edit safe custody fees   Validate Screen Relns
+     C/COPY WNCPYSRC,SD9371RVSR
+      *================================================================
+     CSR         DCEXIT    ENDSR
+      /EJECT
+     CSR         EBPR##    BEGSR
+      *================================================================
+      * Process record:
+      *================================================================
+      * Process update request
+     C           W0PMD     CASNE'ADD'     EECHRQ
+     C                     END
+     C           W0RTN     IFNE *BLANK
+      * ROLLBACK required
+     C                     MOVEL'Y2U0018' P0RTN
+     C                     EXSR ZYEXPG
+     C                     END
+     C           W0RTN     IFEQ *BLANK
+      * USER: Process command keys
+      * 00/Copy member SD9371RPCK - Safe Custody Fees ICD  *
+     C*Edit safe custody fees   Process Command Keys
+     C/COPY WNCPYSRC,SD9371RPCK
+      * Restart program for next record
+     C                     MOVEL'N'       W0TRN
+     C                     END
+      *================================================================
+     CSR         EBEXIT    ENDSR
+      /EJECT
+     CSR         EECHRQ    BEGSR
+      *================================================================
+      * Process update request
+      *================================================================
+      * USER: Change DBF record
+      * Change Safe Custody Fees - Safe Custody Fees ICD  *
+     C                     EXSR SECHRC
+     C           W0RTN     IFNE *BLANK
+      * Data update error
+      * Reset screen fields if changed record
+     C           W0RTN     CASEQ'Y2U0007' MBFL#1
+     C                     END
+     C                     ELSE
+      * Send message '*Record changed'
+     C                     MOVEL'Y2U0012' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END
+      *================================================================
+     CSR         EEEXIT    ENDSR
+      /EJECT
+     CSR         GADSAK    BEGSR
+      *================================================================
+      * Set key screen conditioning indicators
+      *================================================================
+     C           W0PMD     COMP 'ADD'                    89*
+      *================================================================
+     CSR         GAEXIT    ENDSR
+      /EJECT
+     CSR         GBDSAD    BEGSR
+      *================================================================
+      * Set detail screen conditioning indicators
+      *================================================================
+     C           W0PMD     COMP 'ADD'                    89*
+      * Protect key fields on detail screen
+     C                     SETON                     88    *
+     C                     MOVEL'0'       *IN79
+     C           WUPFCP    IFEQ 'Y'                        *IF
+     C                     MOVEL'1'       *IN79
+     C                     END                             *FI
+     C                     MOVEL'0'       *IN78
+     C           WUPFGP    IFEQ 'Y'                        *IF
+     C                     MOVEL'1'       *IN78
+     C                     END                             *FI
+     C                     MOVEL'0'       *IN77
+     C           WUDPCT    IFEQ 'N'                        *IF
+     C                     MOVEL'1'       *IN77
+     C                     END                             *FI
+      * Enable key screen
+     C                     SETON                     87    *
+      *================================================================
+     CSR         GBEXIT    ENDSR
+      /EJECT
+     CSR         MAIZ#1    BEGSR
+      *================================================================
+      * Initialise record - except for key fields and "neither" paramete
+      *================================================================
+     C                     Z-ADD*ZERO     #1LCD            Last Change Dat
+     C                     MOVEL*BLANK    #1TYLC           Type of Last Ch
+     C                     Z-ADD*ZERO     #1INCA           Income A/c Code
+     C                     Z-ADD*ZERO     #1AACT           Accrual Account
+     C                     Z-ADD*ZERO     #1SGDY           Settlement Gen
+     C                     Z-ADD*ZERO     #1NSGD           Next Settlement
+     C                     Z-ADD*ZERO     #1ADYM           Accrual Day in
+     C                     Z-ADD*ZERO     #1ANDA           Next Accrual Da
+     C                     Z-ADD*ZERO     #1SDYM           Settlement Day
+     C                     Z-ADD*ZERO     #1SNDA           Next Settlement
+     C                     Z-ADD*ZERO     #1LCRD           Last Accrual Da
+     C                     Z-ADD*ZERO     #1CCRD           Current Accrual
+     C                     MOVEL*BLANK    #1CFCP           Fees Per Custom
+     C                     MOVEL*BLANK    #1FGCP           Fees Group Per
+     C                     MOVEL*BLANK    #1AUPI           Auto Posting In
+     C                     MOVEL*BLANK    #1BCGC           Bank Charging C
+     C                     MOVEL*BLANK    #DIACS           Income A/C scre
+     C                     MOVEL*BLANK    #DAACS           Accrual A/C scr
+     C                     MOVEL*BLANK    #1PCSF           Pft Cntr For Sa
+     C                     MOVEL*BLANK    #DSGDS           Settlement Gen
+     C                     MOVEL*BLANK    #DNGDS           Next gen date s
+     C                     MOVEL*BLANK    #1AFRQ           Accrual Frequen
+     C                     MOVEL*BLANK    #DADMS           Accrual day in
+     C                     MOVEL*BLANK    #DNADS           Next Accrual da
+     C                     MOVEL*BLANK    #1SFRE           Settlement Freq
+     C                     MOVEL*BLANK    #DSDMS           Setlmnt day in
+     C                     MOVEL*BLANK    #DNXDS           Next Setlmnt da
+      *================================================================
+     CSR         MAEXIT    ENDSR
+      /EJECT
+     CSR         MBFL#1    BEGSR
+      *================================================================
+      * Move @SCFEL1 fields to screen
+      *================================================================
+     C                     MOVELFBSCFE    #1SCFE           Safe Custody Fe
+     C                     Z-ADDFBLCD     #1LCD            Last Change Dat
+     C                     MOVELFBTYLC    #1TYLC           Type of Last Ch
+     C                     Z-ADDFBINCA    #1INCA           Income A/c Code
+     C                     Z-ADDFBAACT    #1AACT           Accrual Account
+     C                     Z-ADDFBSGDY    #1SGDY           Settlement Gen
+     C                     Z-ADDFBNSGD    #1NSGD           Next Settlement
+     C                     Z-ADDFBADYM    #1ADYM           Accrual Day in
+     C                     Z-ADDFBANDA    #1ANDA           Next Accrual Da
+     C                     Z-ADDFBSDYM    #1SDYM           Settlement Day
+     C                     Z-ADDFBSNDA    #1SNDA           Next Settlement
+     C                     Z-ADDFBLCRD    #1LCRD           Last Accrual Da
+     C                     Z-ADDFBCCRD    #1CCRD           Current Accrual
+     C                     MOVELFBCFCP    #1CFCP           Fees Per Custom
+     C                     MOVELFBFGCP    #1FGCP           Fees Group Per
+     C                     MOVELFBAUPI    #1AUPI           Auto Posting In
+     C                     MOVELFBBCGC    #1BCGC           Bank Charging C
+     C                     MOVELFBPCSF    #1PCSF           Pft Cntr For Sa
+     C                     MOVELFBAFRQ    #1AFRQ           Accrual Frequen
+     C                     MOVELFBSFRE    #1SFRE           Settlement Freq
+      * Hold existing record image
+     C                     MOVEL@1DBRC    #1DBRC
+      *================================================================
+     CSR         MBEXIT    ENDSR
+      /EJECT
+     CSR         MDIZ#K    BEGSR
+      *================================================================
+      * Initialize key screen
+      *================================================================
+     C                     MOVELP1SCFE    #1SCFE           Safe Custody Fe
+      * USER: Initialize key screen
+      * 00/Copy member SD9371RIKS - Safe Custody Fees ICD  *
+     C*Edit safe custody fees   Initialise Key Screen
+     C/COPY WNCPYSRC,SD9371RIKS
+      *================================================================
+     CSR         MDEXIT    ENDSR
+      /EJECT
+     CSR         SARVGN    BEGSR
+      *================================================================
+      * Check for ccy existance - Currency Codes  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSA     KLIST
+     C                     KFLD           A6CYCD           Currency Code
+      * Move fields to key list
+     C                     MOVELWUCYCD    A6CYCD           Currency Code
+     C           KRSSA     CHAIN@A6REA3              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0071' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SAEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL'Y2U0003' W0RTN            *Return code
+     C                     END
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     CSR         SBRVGN    BEGSR
+      *================================================================
+      * Check Account Code exists - Account Codes  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSB     KLIST
+     C                     KFLD           A5ACCD           Account Code
+      * Move fields to key list
+     C                     MOVELWUACCD    A5ACCD           Account Code
+     C           KRSSB     CHAIN@A5REA6              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0069' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SBEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL'Y2U0003' W0RTN            *Return code
+     C                     END
+      *================================================================
+     CSR         SBEXIT    ENDSR
+      /EJECT
+     CSR         SCRVGN    BEGSR
+      *================================================================
+      * Check Account Code exists - Account Codes  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSC     KLIST
+     C                     KFLD           A5ACCD           Account Code
+      * Move fields to key list
+     C                     MOVELWUACCD    A5ACCD           Account Code
+     C           KRSSC     CHAIN@A5REA6              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0069' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SCEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL'Y2U0003' W0RTN            *Return code
+     C                     END
+      *================================================================
+     CSR         SCEXIT    ENDSR
+      /EJECT
+     CSR         SDRVGN    BEGSR
+      *================================================================
+      * Retrieve Profit Centre - Profit Centres  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSD     KLIST
+     C                     KFLD           DSPCCD           Profit Centre C
+      * Move fields to key list
+     C                     MOVEL#1PCSF    DSPCCD           Profit Centre C
+     C           KRSSD     CHAIN@DSREHC              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0647' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SDEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL'Y2U0003' W0RTN            *Return code
+      * PAR = DB1 By name
+     C                     END
+      *================================================================
+     CSR         SDEXIT    ENDSR
+      /EJECT
+     CSR         SECHRC    BEGSR
+      *================================================================
+      * Change Safe Custody Fees - Safe Custody Fees ICD  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Set PGM.*Record Data Changed flag
+     C                     MOVE 'N'       YARDC   1
+      *
+      * Move key fields to @SCFEL0
+     C                     MOVEL#1SCFE    FBSCFE           Safe Custody Fe
+      *
+     C           KLCHSE    KLIST
+     C                     KFLD           FBSCFE           Safe Custody Fe
+     C           KLCHSE    CHAIN@SCFEL0              9091  *
+      *
+     C           *IN90     IFEQ '1'
+      * Record not found
+     C                     MOVEL'Y2U0009' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'Y2U0009' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO SEEXIT
+     C                     END
+      *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     GOTO SEEXIT
+     C                     END
+      *
+      * Check for changed record
+     C           #1DBRC    IFNE @1DBRC                     IF
+     C                     MOVEL'Y2U0007' W0RTN   7
+      * Send message '*Update not accepted'
+     C                     MOVEL'Y2U0007' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+      * Release record lock
+     C                     UNLCKSDSCFEL0               91  *
+     C                     GOTO SEEXIT
+     C                     END                             FI #1DBRC
+      * Store record data for null update check
+     C**********           MOVE @1DBRC    YARDCS                                              CGL029
+     C                     MOVEL@1DBRC    YARDCS                                              CGL029
+      * USER: Processing after Data read
+      * Save last change date from data base file.
+     C                     Z-ADDFBLCD     WULCD            Last Change Dat
+      * Move non-key fields to @SCFEL0
+     C                     Z-ADDWURDNB    FBLCD            Last Change Dat
+     C                     MOVEL'A'       FBTYLC           Type of Last Ch
+     C                     MOVEL#1CFCP    FBCFCP           Fees Per Custom
+     C                     MOVEL#1FGCP    FBFGCP           Fees Group Per
+     C                     MOVEL#1AUPI    FBAUPI           Auto Posting In
+     C                     MOVEL#1BCGC    FBBCGC           Bank Charging C
+     C                     Z-ADD#1INCA    FBINCA           Income A/c Code
+     C                     Z-ADD#1AACT    FBAACT           Accrual Account
+     C                     Z-ADD#1SGDY    FBSGDY           Settlement Gen
+     C                     Z-ADD#1NSGD    FBNSGD           Next Settlement
+     C                     MOVEL#1AFRQ    FBAFRQ           Accrual Frequen
+     C                     Z-ADD#1ADYM    FBADYM           Accrual Day in
+     C                     Z-ADD#1ANDA    FBANDA           Next Accrual Da
+     C                     MOVEL#1SFRE    FBSFRE           Settlement Freq
+     C                     Z-ADD#1SDYM    FBSDYM           Settlement Day
+     C                     Z-ADD#1SNDA    FBSNDA           Next Settlement
+     C                     Z-ADD#1LCRD    FBLCRD           Last Accrual Da
+     C                     Z-ADD#1CCRD    FBCCRD           Current Accrual
+     C                     MOVEL#1PCSF    FBPCSF           Pft Cntr For Sa
+      *
+      * Set PGM.*Record Data Changed flag
+     C           @1DBRC    IFNE YARDCS
+     C                     MOVE 'Y'       YARDC
+     C                     END
+      * USER: Processing before Data update
+      * CASE: WRK.Window processing requir. is Yes
+     C           WUWDPR    IFEQ 'Y'                        *IF
+      * WM call Window Manager - Window manager  *
+     C/COPY WNCPYSRC,WN0481CCP1                                           S01408
+     C***********          CALL 'WIND01'                                  S01212
+     C                     CALL 'WN0010'                                  S01212
+     C*********************PARM           ##PGM            Program        S01212
+     C                     PARM ##PGM     UPGM   10        Program        S01212
+     C*********************PARM *BLANK    FKEY    2        Function Key   S01212
+     C                     PARM *BLANK    UFKEY   2        Function Key   S01212
+     C*********************PARM           WUMEST           Action  S01212 S01229
+     C*********************PARM           WUWMAC           Action  S01212 S01229
+     C                     PARM 'A'       UACTCD  1        Action  S01212 S01229
+     C                     PARM           DATA             Trans Data     S01212
+     C                     PARM *BLANK    W0RTN            Return Code    S01212
+     C                     PARM           SPARE 256        Spare Field    LN0355
+      * WM Check Return
+      * CASE: PAR.*Return code is *User QUIT requested
+     C           W0RTN     IFEQ 'Y2U9999'                  *IF
+     C                     MOVELW0RTN     P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     ELSE
+      * CASE: PAR.*Return code is WN Window Error
+     C           W0RTN     IFEQ 'USR0563'                  *IF
+      * Send message 'WN Window Error'
+     C                     MOVEL'USR0563' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO SEEXIT                     *QUIT
+     C                     ELSE
+      * CASE: PAR.*Return code is *DBF update error
+     C           W0RTN     IFEQ 'Y2U0004'                  *IF
+      * Send message 'WN Database Error'
+     C                     MOVEL'USR0567' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO SEEXIT                     *QUIT
+     C                     ELSE
+      * CASE: PAR.*Return code is *Previous Screen
+     C           W0RTN     IFEQ 'USR0790'                  *IF
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO SEEXIT                     *QUIT
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * 00/Copy member SD9371RBUW - Safe Custody Fees ICD  *
+     C*Edit safe custody fees   Before Update, Window on
+     C/COPY WNCPYSRC,SD9371RBUW
+     C                     END                             *FI
+      * 00/Copy member SD9371RBDU - Safe Custody Fees ICD  *
+     C*Edit safe custody fees   Processing Before Update
+     C/COPY WNCPYSRC,SD9371RBDU
+      * Set PGM.*Record Data Changed flag
+     C           @1DBRC    IFNE YARDCS
+     C                     MOVE 'Y'       YARDC
+     C                     END
+      * If changed update record otherwise release record
+     C           YARDC     IFEQ 'Y'
+     C                     UPDAT@SCFEL0                91  *
+     C                     ELSE
+      * Release record lock
+     C                     UNLCKSDSCFEL0               91  *
+     C                     END
+     C           *IN91     IFEQ '1'
+      * Change error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+      *
+      * Update saved record image
+     C                     MOVEL@1DBRC    #1DBRC
+      * DBF change successful
+      * USER: Processing after Data update
+      * Standing data controls update.
+      * CASE: WRK.Last Change Date NE WRK.Run day number
+     C           WULCD     IFNE WURDNB                     *IF
+      * Only update the file controls if this record has not been
+      * updated today.
+     C                     Z-ADD*ZERO     WUNORC           No. of Records
+     C                     Z-ADD*ZERO     WUNOIN           No. of Inserts
+     C                     Z-ADD*ZERO     WUNODL           No. of Deletes
+     C                     Z-ADD1         WUNOAM           No. of Amends
+      * Change Standing Data Cont - Standing Data Controls  *
+     C                     EXSR SFCHRC
+     C                     END                             *FI
+      * 00/Copy member SD9371RADU - Safe Custody Fees ICD  *
+     C*Edit safe custody fees   Processing After Update
+     C/COPY WNCPYSRC,SD9371RADU
+     C                     END
+      *================================================================
+     CSR         SEEXIT    ENDSR
+      /EJECT
+     CSR         SFCHRC    BEGSR
+      *================================================================
+      * Change Standing Data Cont - Standing Data Controls  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Set PGM.*Record Data Changed flag
+     C                     MOVE 'N'       YBRDC   1
+      *
+      * Move key fields to @AHREAU
+     C                     MOVE *BLANK    AHFLNM           Filename
+     C                     MOVEL'SDICDRPD'AHFLNM           Filename
+      *
+     C           KLCHSF    KLIST
+     C                     KFLD           AHFLNM           Filename
+     C           KLCHSF    CHAIN@AHREAU              9091  *
+      *
+     C           *IN90     IFEQ '1'
+      * Record not found
+     C                     MOVEL'Y2U0009' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'Y2U0009' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO SFEXIT
+     C                     END
+      *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     GOTO SFEXIT
+     C                     END
+      *
+      * Store record data for null update check
+     C                     MOVE QSDFC1    YBRDCS
+      * USER: Processing after Data read
+     C                     ADD  AHNORC    WUNORC           No. of Records
+     C                     ADD  AHNOIN    WUNOIN           No. of Inserts
+     C                     ADD  AHNOAM    WUNOAM           No. of Amends
+     C                     ADD  AHNODL    WUNODL           No. of Deletes
+      * Move non-key fields to @AHREAU
+     C                     Z-ADDWUNORC    AHNORC           No. of Records
+     C                     Z-ADDWUNOIN    AHNOIN           No. of Inserts
+     C                     Z-ADDWUNOAM    AHNOAM           No. of Amends
+     C                     Z-ADDWUNODL    AHNODL           No. of Deletes
+      *
+      * Set PGM.*Record Data Changed flag
+     C           QSDFC1    IFNE YBRDCS
+     C                     MOVE 'Y'       YBRDC
+     C                     END
+      * If changed update record otherwise release record
+     C           YBRDC     IFEQ 'Y'
+     C                     UPDAT@AHREAU                91  *
+     C                     ELSE
+      * Release record lock
+     C                     UNLCKSDFCTLL0               91  *
+     C                     END
+     C           *IN91     IFEQ '1'
+      * Change error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+      *
+      * DBF change successful
+     C                     END
+      *================================================================
+     CSR         SFEXIT    ENDSR
+      /EJECT
+     CSR         SGRVGN    BEGSR
+      *================================================================
+      * Get 'Window required' ind - MIDAS Modules  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSG     KLIST
+     C                     KFLD           BGMODS           Modules
+      * Move fields to key list
+     C                     MOVE *BLANK    BGMODS           Modules
+     C                     MOVEL'MMOD'    BGMODS           Modules
+     C           KRSSG     CHAIN@BGREC8              90    *
+      * Data record not found
+     C   90                MOVEL'USR0096' W0RTN   7
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+      * CASE: DB1.Window processing requir. is Yes
+     C           BGWDPR    IFEQ 'Y'                        *IF
+     C                     MOVEL'Y'       WUWDPR           Window processi
+     C                     END                             *FI
+     C                     END
+      *================================================================
+     CSR         SGEXIT    ENDSR
+      /EJECT
+     CSR         SHRVGN    BEGSR
+      *================================================================
+      * Get Portfolio Management - MIDAS Modules  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSH     KLIST
+     C                     KFLD           BGMODS           Modules
+      * Move fields to key list
+     C                     MOVE *BLANK    BGMODS           Modules
+     C                     MOVEL'MMOD'    BGMODS           Modules
+     C           KRSSH     CHAIN@BGREC8              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0096' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SHEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL'Y2U0003' W0RTN            *Return code
+      * PAR = DB1 By name
+     C                     MOVELBGPFMG    WUPFMG           Portfolio Manag
+     C                     END
+      *================================================================
+     CSR         SHEXIT    ENDSR
+      /EJECT
+     CSR         SIRVGN    BEGSR
+      *================================================================
+      * Get Analytical Accounting - MIDAS Modules  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSI     KLIST
+     C                     KFLD           BGMODS           Modules
+      * Move fields to key list
+     C                     MOVE *BLANK    BGMODS           Modules
+     C                     MOVEL'MMOD'    BGMODS           Modules
+     C           KRSSI     CHAIN@BGREC8              90    *
+      * Data record not found
+     C   90                MOVEL'USR0096' W0RTN   7
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+      * CASE: DB1.Analytical Accounting is Yes
+     C           BGN0ST    IFEQ 'Y'                        *IF
+     C                     MOVEL'Y'       WUN0ST           Analytical Acco
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUN0ST           Analytical Acco
+     C                     END                             *FI
+     C                     END
+      *================================================================
+     CSR         SIEXIT    ENDSR
+      /EJECT
+     CSR         SJRVGN    BEGSR
+      *================================================================
+      * Check Profit Centres Used - General Ledger Details  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSJ     KLIST
+     C                     KFLD           BKGNLG           General Ledger
+      * Move fields to key list
+     C                     MOVE *BLANK    BKGNLG           General Ledger
+     C                     MOVEL'GELR'    BKGNLG           General Ledger
+     C           KRSSJ     CHAIN@BKREEC              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0199' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SJEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL'Y2U0003' W0RTN            *Return code
+      * PAR = DB1 By name
+     C                     MOVELBKPRCU    WUPRCU           Profit Centres
+     C                     END
+      *================================================================
+     CSR         SJEXIT    ENDSR
+      /EJECT
+     CSR         Y0SET     BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y0EXIT    ENDSR
+      /EJECT
+     CSR         Y1SET     BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y1EXIT    ENDSR
+      /EJECT
+     CSR         Y8TST     BEGSR
+      *================================================================
+      * Test cursor
+      *================================================================
+     C           @#DFMT    IFEQ '#RCDKEY'
+      * KEY Screen
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+     C                     END
+     C           @#DFMT    IFEQ '#RCDDTL1'
+      * DETAIL Screen
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+     C                     END
+      *================================================================
+     CSR         Y8EXIT    ENDSR
+      /EJECT
+     CSR         Y9CLR     BEGSR
+      *================================================================
+      * Clear *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y9EXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZHHPKY    BEGSR
+      *================================================================
+      * Display HELP text
+      *================================================================
+      * Signal help request
+     C                     MOVEL'Y'       W0HLP   1
+      *
+      * Extract cursor row and column
+     C           @#RWCL    DIV  256       ZHCSRW  50       Row
+     C                     MVR            ZHCSCL  50       Column
+      *
+      * Save cursor position for redisplay
+     C                     Z-ADDZHCSRW    ZZCSRW  30       Row
+     C                     Z-ADDZHCSCL    ZZCSCL  30       Column
+      *
+      *
+     C                     CALL 'YDDSHPR'
+     C                     PARM ##PGM     W0HPMB 10        Help text sourc
+     C                     PARM *BLANK    YYHPFL 10        Help text file
+     C                     PARM *BLANK    YYHPLB 10        Help text libra
+     C                     PARM           W0RTN   7
+     C                     PARM '*START'  YYHLVN 10        Help label
+     C                     PARM '*NORMAL' YYUSOP 10        Options
+     C                     PARM ZHCSRW    YYRW    50       Row
+     C                     PARM ZHCSCL    YYCL    50       Column
+     C                     PARM 1         YYLGCT  50       # of grps
+     C                     PARM W0GRP     YYLGVN 10        Label grps
+      *
+      * Clear set cursor DDS indicator
+     C  N94                MOVEL'OFF'     WCSRLC
+     C  N94                SETON                     94    *
+      *================================================================
+     CSR         ZHEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel and exit from key screen
+      *================================================================
+      * USER: Exit program processing
+      * 00/Copy member SD9371REPP - Safe Custody Fees ICD  *
+     C*Edit safe custody fees   Exit Program Processing
+     C/COPY WNCPYSRC,SD9371REPP
+      * CASE: KEY.*CMD key is *Exit
+     C           *IN03     IFEQ '1'                        *IF
+     C                     MOVEL'Y2U9999' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     END                             *FI
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C           W0ICL     IFEQ *BLANK
+     C                     MOVEL'Y'       W0ICL   1        *Initial call
+     C                     ELSE
+     C                     MOVEL'N'       W0ICL
+     C                     END
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+     C                     MOVEL*ZEROS    W0RTW   90
+     C                     MOVEL'400'     W0ENV   3
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+      * Set century digit (If YY prior to 1940 treat as 20YY)
+     C           ##JYY     IFLT 40
+     C                     Z-ADD1         ##JCC
+     C                     ELSE
+     C                     Z-ADD0         ##JCC
+     C                     END
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Obtain default message file
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      * Define work field Protect Fees per Cust/Por
+     C                     MOVEL*BLANK    WUPFCP  1
+      * Define work field Protect fee groups Portfo
+     C                     MOVEL*BLANK    WUPFGP  1
+      * Define work field saved settlement gen days
+     C                     Z-ADD*ZERO     WUSSGS  20
+      * Define work field saved next settlment date
+     C                     Z-ADD*ZERO     WUSNTS  50
+      * Define work field ZALIGN Screen Fun Field
+     C                     MOVEL*BLANK    WUZASF 16
+      * Define work field ZALIGN File Field
+     C                     MOVEL*BLANK    WUZAFF 16
+      * Define work field Err Code
+     C                     MOVEL*BLANK    WUERCD  1
+      * Define work field Work Midas Date
+     C                     Z-ADD*ZERO     WUWMDT  50
+      * Define work field Date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      * Define work field Work Converted Date
+     C                     Z-ADD*ZERO     WUWCDT  60
+      * Define work field Work Alpha Date
+     C                     MOVEL*BLANK    WUWADT  7
+      * Define work field Test ? in Key Field
+     C                     MOVEL*BLANK    WUTQKF  1
+      * Define work field Currency Code
+     C                     MOVEL*BLANK    WUCYCD  3
+      * Define work field Account Code
+     C**********           MOVEL*BLANK    WUACCD  4                                           CGL029
+     C                     MOVEL*BLANK    WUACCD 10                                           CGL029
+      * Define work field Profit Centres Used
+     C                     MOVEL*BLANK    WUPRCU  1
+      * Define work field Analytical Accounting
+     C                     MOVEL*BLANK    WUN0ST  1
+      * Define work field Work Screen Date
+     C                     Z-ADD*ZERO     WUWSDT  60
+      * Define work field Work File Date
+     C                     Z-ADD*ZERO     WUWFDT  50
+      * Define work field Run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      * Define work field Next Settlement Gen Day
+     C                     Z-ADD*ZERO     WUNSGD  50
+      * Define work field Last Change Date
+     C                     Z-ADD*ZERO     WULCD   50
+      * Define work field Window processing requir.
+     C                     MOVEL*BLANK    WUWDPR  1
+      * Define work field No. of Records
+     C                     Z-ADD*ZERO     WUNORC  50
+      * Define work field No. of Inserts
+     C                     Z-ADD*ZERO     WUNOIN  50
+      * Define work field No. of Deletes
+     C                     Z-ADD*ZERO     WUNODL  50
+      * Define work field No. of Amends
+     C                     Z-ADD*ZERO     WUNOAM  50
+      * Define work field Display Profit Centre
+     C                     MOVEL*BLANK    WUDPCT  1
+      * Define work field Midas Run Date
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUSUC   1
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WUMBIN  1
+      * Define work field Portfolio Management
+     C                     MOVEL*BLANK    WUPFMG  1
+      * Flag no *SET CURSOR in the program
+     C                     MOVE 'N'       YSETCS  1
+     C                     MOVE *BLANK    WCSRLC  3
+      * Define *Synon program work fields
+     C                     MOVEL*BLANKS   W0CFL  10        *Cursor field
+     C                     Z-ADD*ZEROS    W0CRW   50       *Cursor row
+     C                     Z-ADD*ZEROS    W0CCL   50       *Cursor column
+      * Move main file information to JOB context
+     C                     MOVE @1FFL     ZZFFL  10        Main file name
+     C                     MOVE @1FLB     ZZFLB  10        Main file lib
+     C                     MOVE @1FMB     ZZFMB  10        Main file mbr
+     C                     MOVE ZZFFL     @1FFL  10
+     C                     MOVE ZZFLB     @1FLB  10
+     C                     MOVE ZZFMB     @1FMB  10
+     C                     CALL 'Y2QLVNR'
+     C                     PARM           ZZFFL  10
+     C                     PARM           ZZFLB  10
+     C                     PARM           ZZFQL  21        LIBRARY/FILE
+      * Open files
+     C                     OPEN SD9371R#
+     C                     OPEN SDSCFEL1
+     C                     OPEN SDCURRL1
+     C                     OPEN SDACODL1
+     C                     OPEN SDPRFCL1
+     C                     OPEN SDMMODL1
+     C                     OPEN SDGELRL1
+     C                     OPEN SDSCFEL0
+     C                     OPEN SDFCTLL0
+     C                     MOVEL'N'       W0PMT   1
+      * Set to *CHANGE mode
+     C                     MOVEL'CHG'     W0PMD   3
+     C                     MOVEL*BLANK    W0GRP   1
+      * USER: Initialize program
+      * SD9371R Precompiler - Safe Custody Fees ICD  *
+      * Copyright Statement 1994 - Standard Functions  *
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT  7        RUN DATE
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB           RUNDAY NO.
+     C                     MOVE SUC       WUSUC            SET UP COMPLT
+     C                     MOVE DFF       WUDFF            DTE FMT FLAG
+     C                     MOVE MBIN      WUMBIN           MULTI BR. IND
+      * Get 'Window required' ind - MIDAS Modules  *
+     C                     EXSR SGRVGN
+      * Data Struct. Safe Custody - Safe Custody Fees ICD  *
+      * Get Portfolio Management - MIDAS Modules  *
+     C                     EXSR SHRVGN
+      * Check whether Portfolio Management is installed or not
+      * CASE: WRK.Portfolio Management is Yes
+     C           WUPFMG    IFEQ 'Y'                        *IF
+     C                     MOVEL'N'       WUPFCP           Protect Fees pe
+     C                     MOVEL'N'       WUPFGP           Protect fee gro
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'Y'       WUPFCP           Protect Fees pe
+     C                     MOVEL'Y'       WUPFGP           Protect fee gro
+     C                     END                             *FI
+      * Start CAC001
+      * Get Analytical Accounting - MIDAS Modules  *
+     C                     EXSR SIRVGN
+      * Check Profit Centres Used - General Ledger Details  *
+     C                     EXSR SJRVGN
+      * Display Profit Centre for Safe Custody Fees?
+      * CASE: WRK.Analytical Accounting is Yes
+     C           WUN0ST    IFEQ 'Y'                        *IF
+      * CASE: WRK.Profit Centres Used is Yes
+     C           WUPRCU    IFEQ 'Y'                        *IF
+     C                     MOVEL'Y'       WUDPCT           Display Profit
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUDPCT           Display Profit
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUDPCT           Display Profit
+     C                     END                             *FI
+      * End CAC001
+      * 00/Copy member SD9371RFPG - Safe Custody Fees ICD  *
+      * 00/Copy member SD9371REPG - Safe Custody Fees ICD  *
+      * 00/Copy member SD9371RIPG - Safe Custody Fees ICD  *
+      * 00/Copy member SD9371RCPG - Safe Custody Fees ICD  *
+     C*Edit safe custody fees   Initialise Program C-spec
+     C/COPY WNCPYSRC,SD9371RCPG
+      * 00/Copy member SD9371ROPG - Safe Custody Fees ICD  *
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      /EJECT
+     CSR         *PSSR     BEGSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+      * Core function specific processing.
+      *
+     C/COPY WNCPYSRC,SD9371RPSC
+      *
+      * Start of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD9371RPS1
+      *
+      * Standard Midas PSSR processing.
+      *
+     C/COPY SDCPYSRC,SDPSSRICD
+      *
+      * End of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD9371RPS2
+      *
+      *================================================================
+     CSR                   ENDSR
+      *================================================================
+     O*Edit safe custody fees   Initialise Program O-spec
+     O/COPY WNCPYSRC,SD9371ROPG
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,1997 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Fees due for settlement')                     *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  Midas Customer Lending Module                                *
+      *                                                               *
+      *  LER160 - Fees Due for Settlement                             *
+      *                                                               *
+      *  Function: This program reports all fees due for settlement   *
+      *  (COB)     prior to or on the next working day. The report    *
+      *            will also show fees past due for settlement.       *
+      *                                                               *
+      *  Called By:LERC16                                             *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CLE134             Date 01Aug12               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *                 CLE139             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 247150             Date 29Jul07               *
+      *                 247810             Date 07Jun07               *
+      *                 243496B            Date 12Apr07               *
+      *                 247136             Date 19Apr07               *
+      *                 246188             Date 22Mar07               *
+      *                 246363             Date 13Mar07               *
+      *                 245614             Date 08Mar07               *
+      *                 245803             Date 20Feb07               *
+      *                 243496             Date 24Nov06               *
+      *                 227253             Date 26May06               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE106             Date 27Apr05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CAS006             Date 21Jan03               *
+      *                 CAS005             Date 16Dec02               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 204452             Date 02May02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 193475             Date 29Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CLE009             Date 26Apr99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 153792             Date 24Feb99               *
+      *                 141453             Date 17Feb99               *
+      *                 CLE005             Date 02Dec96               *
+      *                 100515             Date 22May96               *
+      *                 087671             Date 08Jun95               *  *
+      *                 053270             DATE 27APR93               *  *
+      *                 045725             DATE 20NOV92               *
+      *                 BH3410             DATE 10JUL92               *
+      *                 CB0086             DATE 14MAY92               *
+      *                 MOF60              DATE 02APR92               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CLE139 - Lending Fee Capitalisation                          *
+      *  247150 - LER160P2 page overflow is wrong.                    *
+      *  247810 - Various problems                                    *
+      *           Blank officer after this fix now                    *
+      *           shows *****************                             *
+      *           Coding for FTFI equal to blanks is unclear in       *
+      *           (subr SRH000)                                       *
+      *           Impact of changing this code is unknown, therefore  *
+      *           a less risky option is to have an else for the      *
+      *           PFTI equals blanks                                  *
+      *           Also applied 246188 below                           *
+      *  247136 - Applied fix BH3410 for P2 and P3 reports to display *
+      *           Account Officer Name.                               *
+      *  246188 - Save account officer code written to the printer    *
+      *           file for later use in retrieving the account        *
+      *           officer name.                                       *
+      *  246363 - Incorrect account officer (Apply GEMS 245614 to P2  *
+      *           and P3 reports                                      *
+      *  245614 - Incorrect accnt offcr description and space needed  *
+      *  243496B- In LER160P1, fees (with past due amount) due the    *
+      *           next day is reported as an overdue. Apply 199724.   *
+      *         - Use the Fee Adjustment Amount FEAMTA from PF/LEFEAM *
+      *           Applied 216123 (plus re-open & 221326 correction).  *
+      *           Use the Fee Adjustment Amount,FEAMTA,from PF/LEFEAM *
+      *           in the Amount Due field for LER160P1, P2, P3 regard-*
+      *           less if CLE005 is switched on or off.               *
+      *  227253 - Include adjustment amount for fee with payment date *
+      *           falling on holiday.                                 *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CLE106 - Syndication Manager                                 *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits (Recompile)      *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  CAS005 - Enahancements to CAS001, CAS002 and CAS004          *
+      *           (Recompile)                                         *
+      *  204452 - Recompiled due to changed PF/LEFEED.                *
+      *  193475 - 'Receivable', 'Payable' or 'Internal' fee indicator *
+      *           will only show on report if CLE006 is ON.           *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  CLE009 - LE I/C Swift Message Generation for Fees            *
+      *           Recompiled due to changes in LEFEED                 *
+      *  153792 - Fees due for settlement report shold show           *
+      *           syndicated fees better                              *
+      *  141453 - Recompiled due to changes in PF/LEFEED              *
+      *  CLE005 - Customer Lending Enhancements - Others (T3)         *
+      *  100515 - Recompile program due to changes in LEFEED.         *
+      *  087671 - Output correct number of decimal places for each    *
+      *           currency.                                           *
+      *         - Output 'End of Branch' correctly for LER161P1,      *
+      *           instead of outputting it twice for LER160P1.        *
+      *  053270 - Wrong Account Officer Code appearing                *
+      *  045725 - Fees due for settlement is sometimes missing due    *
+      *           date.                                               *
+      *  BH3410 - BHF - Account officer not reporting correctly       *
+      *  CB0086 - If fee acount officer not blank on fee file output  *
+      *           this value to report.                               *
+      *                                                               *
+     F*****************************************************************
+      *------------------------------------------------------------------**
+      *
+     FLEFEEAO IP  E           K        DISK
+      * Lending Fees - by account officer
+      *
+     FLEFEEA1 IF  E           K        DISK                               153792
+     F            LEFEEDF                           KRENAMELEFEEA1F       153792
+     FLEFEEA2 IF  E           K        DISK                               153792
+     F            LEFEEDF                           KRENAMELEFEEA2F       153792
+     FCLOAN   IF  E           K        DISK                               153792
+     F            CLOANHHF                          KIGNORE               153792
+     F            CLOANCKF                          KIGNORE               153792
+     F            CLOANZ1F                          KIGNORE               153792
+     FFCLTYL1 IF  E           K        DISK                               153792
+     FLEFEAM  IF  E           K        DISK                                                  243496B
+      *                                                                                      243496B
+     FLER160P1O   E             80     PRINTER      KINFDS SPOOL      UC
+      * Fees Due for Settlement - Overdue Fees
+      *
+     FLER160P2O   E             81     PRINTER      KINFDS SPOOL1     UC
+      * Fees Due for Settlement - Auto-Settlement
+      *
+     FLER160P3O   E             82     PRINTER      KINFDS SPOOL2     UC
+      * Fees Due for Settlement - Manual Settlement
+      *
+     FLER160AUO   E                    PRINTER      KINFDS SPOOLU
+      *
+     F*****************************************************************
+     F*
+     F*   Function of Indicators
+     F*
+     F* 01    First Cycle Indicator.
+     F* 07    'No Details' - Overdue Fees
+     F* 08    'No Details' - Auto-Settlement Fees.
+     F* 09    'No Details' - Manual Settlement Fees.
+     F* 10    'No Branch Details' conditioned output
+     F* 20    SAR CLE005 is Present                                       CLE005
+      * 21    CHAIN Indicator                                         *   153792
+      * 22    READ Indicator                                          *   153792
+      * 23    LOKUP Indicator                                         *   153792
+      * 24    Details for Primary Fee Indicator                       *   153792
+      * 25    CLE004 Indicator                                        *   153792
+      * 26    Print Account Officer                                   *   153792
+      * 27    Check if facility/loan is same with that of primary fee *   153792
+      * 28    SAR CLE006 is present                                   *                       193475
+     F* 50    Account Officer Found (i.e. not blank)
+     F* 51    LER160P1 header just printed
+     F* 52    LER160P2 header just printed
+     F* 53    LER160P3 header just printed
+     F* 60    Number of Decimal Places = 0
+     F* 61    Number of Decimal Places = 1
+     F* 62    Number of Decimal Places = 2
+     F* 63    Number of Decimal Places = 3
+     F* 80    Overflow indicator - LER160P1
+     F* 81    Overflow indicator - LER160P2
+     F* 82    Overflow indicator - LER160P3
+     F* U7&U8 Database error handling
+     F*
+     F*****************************************************************
+     F*
+     F* Subroutine Index
+     F*
+     F* B0000 - Initial Subroutine
+     F* C0000 - Subroutine to process overdue fees
+     F* D0000 - Subroutine to process auto-settlement fees
+     F* E0000 - Subroutine to process manual settlement fees
+     F* F0000 - Report totals and audit report
+      * SRG000 - Participant/Primary Fee/Loan Checking                *   153792
+      * SRH000 - Access to Participant Reference File                 *   153792
+      * SRI000 - Print Record Read                                    *   153792
+     F* *PSSR - Abnormal error conditions
+     F*
+     F*****************************************************************
+     F/SPACE 3
+     E                    FAR         6  1               Facility (nnn/nn)
+     E                    CPY@    1   1 80               Copyright Stayement
+     E                    WARR      999 20                                153792
+     E                    WAR2      999 21                                153792
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/EJECT
+     ILEFEEDF
+     I                                              FEBRCA
+     I***********                                   FEACOF                247810
+     I                                              FEACOFL1              247810
+     I                                              FECNUM
+     I            DS
+      * Fee Reference
+     I************                            1  19 FER                   BH3410
+     I************                            1  19 @FR                   BH3410
+     I***********                             1   2 FEACOF                BH3410
+     I***********                             4   90FECNUM                BH3410
+     I***********                            11  16 @LORF                 BH3410
+     I***********                            11  16 FAR                   BH3410
+     I***********                            18  190FEFSEQ                BH3410
+     I                                        1  16 FER                   BH3410
+     I                                        1  16 @FR                   BH3410
+     I**********                              1   60FECNUM                             BH3410 CSD027
+     I                                        1   6 FECNUM                                    CSD027
+     I                                        8  13 @LORF                 BH3410
+     I                                        8  13 FAR                   BH3410
+     I                                       15  160FEFSEQ                BH3410
+     I            DS
+      * DS to determine dec point
+     I                                        1  130@DSAMT
+     I                                        1  131@DSAM1
+     I                                        1  132@DSAM2
+     I                                        1  133@DSAM3
+     ISPOOL       DS
+      ** File information data structure
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 367 3680LINE
+     ISPOOL1      DS
+      ** File information data structure
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 367 3680LINE1
+     ISPOOL2      DS
+      ** File information data structure
+     I                                       83  92 SFILE2
+     I                                    B 123 1240SFNUM2
+     I                                    B 367 3680LINE2
+      *
+     ISPOOLU      DS
+      ** File information data structure
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     IDSFDY     E DSDSFDY
+      ** First DS for access programs, short data structure
+      *
+     IDSSDY     E DSDSSDY
+      ** Second DS for access programs, long data structure
+      *
+     IPSDS       SDS
+     I*
+     I** Program Status
+     I*
+     I                                      244 253 JOB
+     I                                      254 263 USER
+     ILDA       E DSLDA
+      * Database error datastructure
+      *
+     IRUNDAT    E DS
+      ** Data area RUNDAT
+     I              AGDFF                           DATF
+     I              AGMBIN                          MBIN
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ** External DS for branch name details
+     I              A8BRNM                          BRNM
+      *
+     ISDACOF    E DSSDACOFPD
+      ** Account Officer Details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Currency Type
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank details
+      *
+     ISDCUST    E DSSDCUSTPD
+     I              QQDFAC                          DFACQQ                                    CGL029
+     I*
+     I**  External DS for customer details
+      *                                                                   CLE005
+     ISCSARD    E DSSCSARDPD                                              CLE005
+      ** External DS for SAR Details                                      CLE005
+      *
+     C/EJECT
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Define LDA
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Lock in dataarea RUNDAT
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+     C           PLIST1    PLIST                            DAY - DATE
+     C                     PARM           DATE5   50        conversion
+     C                     PARM           DATE6   60
+     C                     PARM           DATE7   7
+     C                     PARM           GRTCD   1
+      *                                                                   153792
+     C           KEY       KLIST                                          153792
+     C                     KFLD           BRCA                            153792
+     C                     KFLD           CNUM                            153792
+     C                     KFLD           FACT                            153792
+     C                     KFLD           FCNO                            153792
+      *                                                                   153792
+     C           KEY1      KLIST                                          153792
+     C                     KFLD           FEBRCA                          153792
+     C                     KFLD           FEACOF                          153792
+     C                     KFLD           PCRF                            153792
+      *                                                                   153792
+     C           KEY2      KLIST                                          153792
+     C                     KFLD           LNRF                            153792
+     C                     KFLD           RCDT                            153792
+      *                                                                                      243496B
+      ** Define key list for read of LEFEAM file.                                            243496B
+      *                                                                                      243496B
+     C           FEAAMT    KLIST                                                             243496B
+     C                     KFLD           FEBRCA                                             243496B
+     C                     KFLD           FECNUM                                             243496B
+     C                     KFLD           FEFACL                                             243496B
+     C                     KFLD           FELOAN                                             243496B
+     C                     KFLD           FEFSEQ                                             243496B
+      *
+     C           *LIKE     DEFN FEACOF    @AO1             overdue
+     C           *LIKE     DEFN FEACOF    @AO2             auto
+     C           *LIKE     DEFN FEACOF    @AO3             manual
+     C********** *LIKE     DEFN FEACOF    @AOX                                                247810
+     C           *LIKE     DEFN FECNUM    @CUS
+     C           *LIKE     DEFN FEFCCY    @CCY
+      *
+     C           *INL1     IFEQ *ON                                                           247810
+      *
+     C           FEACOF    IFEQ *BLANKS                                                       247810
+     C                     MOVE *ALL'*'   AZACON                                              247810
+     C                     ELSE                                                               247810
+     C                     MOVE FEACOF    CUACOF  2                                           247810
+     C                     CALL 'AOACOFR0'                                                    247810
+     C                     PARM '*BLANKS' WRTCD   7                                           247810
+     C                     PARM '*KEY   ' WOPTN   7                                           247810
+     C                     PARM CUACOF    WACOF   2                                           247810
+     C           SDACOF    PARM SDACOF    DSFDY                                               247810
+     C           WRTCD     IFNE *BLANKS                                                       247810
+     C                     MOVE *ALL'*'   AZACON                                              247810
+     C                     ENDIF                                                              247810
+     C                     ENDIF                                                              247810
+     C                     ENDIF                                                              247810
+      *
+     C           *IN01     IFEQ '0'
+     C                     EXSR B0000                      initialisation
+     C                     END
+     C           FEDIND    CABEQ' '       AEXIT            ignore blank
+      *
+      * If the account officer is blank set the report value to be *'s
+      * otherwise use the value from the fee file even if it is no
+      * longer valid. This means that fees with invalid account officer
+      * will be reported as such rather than with *'s which is not in
+      * itself invalid.
+      *
+     C***********FEACOF    IFNE @AOX                                                          247810
+      *                                                                                       247810
+     C***********FEACOF    IFEQ *BLANKS                                                       247810
+     C***********          MOVE *ALL'*'   AZACON                                              247810
+     C***********          ELSE                                                        CB0086 247810
+     C***********          MOVE FEACOF    CUACOF  2                                    CB0086 247810
+     C***********          CALL 'AOACOFR0'                                             CB0086 247810
+     C***********          PARM '*BLANKS' WRTCD   7                                    CB0086 247810
+     C***********          PARM '*KEY   ' WOPTN   7                                    CB0086 247810
+     C***********          PARM CUACOF    WACOF   2                                    CB0086 247810
+     C***********SDACOF    PARM SDACOF    DSFDY                                        CB0086 247810
+     C***********WRTCD     IFNE *BLANKS                                                CB0086 247810
+     C***********          MOVE *ALL'*'   AZACON                                       CB0086 247810
+     C***********          END                                                         CB0086 247810
+     C***********          END                                                                247810
+      *
+     C***********          MOVE FEACOF    @AOX                                                247810
+     C***********          END                                                                247810
+      *
+     C           FECNUM    IFNE @CUS                       obtain new
+     C                     MOVELFECNUM    KEYC   10        customer no.
+     C                     CALL 'AOCUSTR0'             99
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           KEYC
+     C                     PARM           KEYSTS  7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS                    B2
+     C                     MOVE *ALL'*'   BBCRNM 20
+     C           *LOCK     IN   LDA                         ************
+     C                     MOVELFECNUM    DBKEY             * DBERR 02 *
+     C                     Z-ADD2         DBASE             ************
+     C                     MOVEL'SDCUSTPD'DBFILE
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     OUT  LDA
+     C                     EXSR F0000
+     C                     END                             E2
+      *
+     C                     MOVE FECNUM    @CUS
+     C                     END                             E1
+      *
+     C           FEFCCY    IFNE @CCY
+     C                     CALL 'AOCURRR0'             99
+     C                     PARM '*MSG    '@RTCD
+     C                     PARM '*KEY    '@OPTN
+     C                     PARM FEFCCY    CURKEY  3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA                         ************
+     C                     MOVELFEFCCY    DBKEY             * DBERR 03 *
+     C                     Z-ADD3         DBASE             ************
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     OUT  LDA
+     C                     EXSR F0000
+     C                     END                             ** E001
+      *
+     C                     MOVEA'0000'    *IN,60                          087671
+     C           A6NBDP    IFEQ 0
+     C                     MOVE '1'       *IN60
+     C                     ELSE
+     C           A6NBDP    IFEQ 1
+     C                     MOVE '1'       *IN61
+     C                     ELSE
+     C           A6NBDP    IFEQ 2
+     C                     MOVE '1'       *IN62
+     C                     ELSE
+     C           A6NBDP    IFEQ 3
+     C                     MOVE '1'       *IN63
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     MOVE FEFCCY    @CCY
+     C                     END
+      *
+     C           FEFACL    IFNE 0
+     C                     MOVE FEFACL    @LORF            Facility
+     C                     MOVE FAR,2     FAR,1
+     C                     MOVE FAR,3     FAR,2
+     C                     MOVE FAR,4     FAR,3
+     C                     MOVE '/'       FAR,4
+     C                     ELSE                            or
+     C                     MOVE FELOAN    @LORF            Loan
+     C                     END
+      *
+      ** When branch code changes, output 'No Details To Report for
+      ** This Branch' to the relevant Printer file.
+     C           MBIN      IFEQ 'Y'
+     C           FEBRCA    IFNE STRBRC
+     C*
+     C           *IN07     IFEQ '1'
+     C           FLG1      ANDEQ' '
+     C                     WRITELER160T3
+     C                     ELSE
+     C           *IN10     IFEQ '1'
+     C                     WRITELER160T4
+     C                     END
+     C                     END
+     C*
+     C           *IN08     IFEQ '1'
+     C           FLG1      ANDEQ' '
+     C                     WRITELER161T3
+     C                     ELSE
+     C           *IN10     IFEQ '1'
+     C************         WRITELER160T4                                  087671
+     C                     WRITELER161T4                                  087671
+     C                     END
+     C                     END
+     C*
+     C           *IN09     IFEQ '1'
+     C           FLG1      ANDEQ' '
+     C                     WRITELER162T3
+     C                     ELSE
+     C           *IN10     IFEQ '1'
+     C                     WRITELER162T4
+     C                     END
+     C                     END
+     C*
+     C                     SETON                     070809
+     C*
+     C** Move 1 into FLG1 to show that ALL the indicators are on. If
+     C** this is the case then these formats should not be output
+     C** as it signifies that there are no details for this branch
+     C** for any report. The flag is reset in the subroutines that
+     C** process the detail records for output
+     C*
+     C                     MOVE '1'       FLG1    1
+     C                     SETOF                     10
+     C                     END
+     C                     END
+      *
+      ** Get Branch Code for output.
+     C                     MOVE FEBRCA    @AORL   3
+      *
+      ** When branch code changes open new spool file
+     C           MBIN      IFEQ 'Y'
+     C           FEBRCA    ANDNESTRBRC
+     C*
+     C** Before closing one report and opening the next, check that
+     C** there will be at least one detail to report
+     C*
+     C           FEDIND    IFEQ 'A'
+     C           FEDIND    OREQ 'B'
+     C           FEDIND    OREQ 'C'
+     C*
+     C                     MOVE FEBRCA    STRBRC  3
+     C*
+     C* Setup LER160P1 for output
+     C                     SETOF                     80
+     C                     CLOSELER160P1
+      *
+      ** File has been opened field
+     C                     MOVE 'Y'       P1OP    1
+     C                     OPEN LER160P1
+     C                     Z-ADD0         PAGE
+      *
+      ** Ensure report spool file recorded by RCF
+     C                     Z-ADDSFNUM     ZSNUM
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM FEBRCA    SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM   60
+     C                     PARM           ZSERR   1
+      *
+      ** If error during ZSFILE processing, return to calling program
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C* Setup LER160P2 for output
+     C                     SETOF                     81
+     C                     CLOSELER160P2
+      *
+      ** File has been opened field
+     C                     MOVE 'Y'       P2OP    1
+     C                     OPEN LER160P2
+     C                     Z-ADD0         PAGE1
+      *
+      ** Ensure report spool file recorded by RCF
+     C                     Z-ADDSFNUM1    ZSNUM
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM FEBRCA    SENTY
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR
+      *
+      ** If error during ZSFILE processing, return to calling program
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C* Setup LER160P3 for output
+     C                     SETOF                     82
+     C                     CLOSELER160P3
+      *
+      ** File has been opened field
+     C                     MOVE 'Y'       P3OP    1
+     C                     OPEN LER160P3
+     C                     Z-ADD0         PAGE2
+      *
+      ** Ensure report spool file recorded by RCF
+     C                     Z-ADDSFNUM2    ZSNUM
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM FEBRCA    SENTY
+     C                     PARM           SFILE2
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR
+      *
+      ** If error during ZSFILE processing, return to calling program
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+      ** If system is multibranching obtain branch name for output
+     C**********           CALL 'AOBRCHR0'             99                                     CGL029
+     C                     CALL 'AOBRCHR1'             99                                     CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM FEBRCA    @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA                         ************
+     C                     MOVELFEBRCA    DBKEY             * DBERR 04 *
+     C                     Z-ADD4         DBASE             ************
+     C                     MOVEL'SDBRCHPD'DBFILE
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     OUT  LDA
+     C                     EXSR F0000
+     C                     END
+      *
+      ** Output header for LER160P1
+     C                     WRITELER160H1
+     C                     WRITELER160H2
+     C                     WRITELER160H3
+      *
+      ** Output header for LER160P2
+     C                     WRITELER161H1
+     C                     WRITELER161H2
+     C                     WRITELER161H3
+      *
+      ** Output header for LER160P3
+     C                     WRITELER162H1
+     C                     WRITELER162H2
+     C                     WRITELER162H3
+      *
+      ** If system multibranching
+     C                     END
+      ** and there is a detail in the new branch
+     C                     END
+      *
+      ** If system is not multibranching set up single spool file.
+      ** Setup spool file for LER160P1.
+     C           MBIN      IFNE 'Y'
+     C           P1OP      ANDNE'Y'
+     C                     CLOSELER160P1
+     C                     MOVE 'Y'       P1OP
+     C                     SETOF                     80
+     C                     OPEN LER160P1
+     C                     Z-ADD0         PAGE
+      *
+      ** Ensure report spool file recorded by RCF
+     C                     Z-ADDSFNUM     ZSNUM
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR
+      *
+      ** If error during ZSFILE processing, return to calling program
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+      ** Output header for LER160P1
+     C                     WRITELER160H1
+     C                     WRITELER160H3
+      *
+      ** Setup spool file for LER160P2.
+     C           MBIN      IFNE 'Y'
+     C           P2OP      ANDNE'Y'
+     C                     CLOSELER160P2
+     C                     MOVE 'Y'       P2OP
+     C                     SETOF                     81
+     C                     OPEN LER160P2
+     C                     Z-ADD0         PAGE1
+      *
+      ** Ensure report spool file recorded by RCF
+     C                     Z-ADDSFNUM1    ZSNUM
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR
+      *
+      ** If error during ZSFILE processing, return to calling program
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+      ** Output header for LER160P2
+     C                     WRITELER161H1
+     C                     WRITELER161H3
+     C                     END
+      *
+      ** Setup spool file for LER160P3.
+     C           MBIN      IFNE 'Y'
+     C           P3OP      ANDNE'Y'
+     C                     CLOSELER160P3
+     C                     MOVE 'Y'       P3OP
+     C                     SETOF                     82
+     C                     OPEN LER160P3
+     C                     Z-ADD0         PAGE2
+      *
+      ** Ensure report spool file recorded by RCF
+     C                     Z-ADDSFNUM2    ZSNUM
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILE2
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR
+      *
+      ** If error during ZSFILE processing, return to calling program
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+      ** Output header for LER160P3
+     C                     WRITELER162H1
+     C                     WRITELER162H3
+     C                     END
+      *
+      ** MBIN IFNE 'Y' end
+     C                     END
+     C                     MOVE FEDIND    @DUE    1
+     C           FEDIND    CASEQ'A'       C0000            OVERDUE
+     C                     END
+     C           FEDIND    IFEQ 'A'                                                          243496B
+     C           BJRDNB    IFLT FEDDAT                                                       243496B
+     C           FEPAMP    ANDNE0                                                            243496B
+     C           FEPLPD    ANDNE0                                                            243496B
+     C           FEAUTO    IFEQ 'Y'                                                          243496B
+     C           FEAUTO    OREQ 'C'                                                           CLE134
+     C           CLE134    ANDEQ'Y'                                                           CLE134
+     C           FEAUT2    OREQ 'C'                                                           CLE134
+     C           CLE134    ANDEQ'Y'                                                           CLE134
+     C                     MOVE 'B'       @DUE                                               243496B
+     C                     ELSE                                                              243496B
+     C                     MOVE 'C'       @DUE                                               243496B
+     C                     END                                                               243496B
+     C                     END                                                               243496B
+     C                     END                                                               243496B
+     C           @DUE      CASEQ'B'       D0000            auto
+     C           @DUE      CASEQ'C'       E0000            manual
+     C                     END
+      *
+     C           AEXIT     TAG
+      *
+     CLRN01                EXSR B0000                      initial s/r
+      *
+     CLR         @REP      IFNE 0
+     CLR                   WRITELER160T2
+     CLR                   WRITELER161T2
+     CLR                   WRITELER162T2
+     CLR                   END
+     CLR                   EXSR F0000
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  B0000 --- Initial Subroutine
+     C*
+     C*  CALLED FROM: Main Processing
+     C*
+     C*  CALLS: Nothing
+     C*
+     C********************************************************************
+     C           B0000     BEGSR
+      *
+     C                     SETON                     015152 control
+     C                     SETON                     53     ind 50
+     C                     Z-ADD0         @DSAMT
+     C                     MOVEL'LER160'  DBPGM
+      *
+      ** Access bank details
+     C                     CALL 'AOBANKR0'             99
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS                                ***
+     C           *LOCK     IN   LDA                          **********
+     C                     Z-ADD1         DBASE              * DBERR  01 *
+     C                     MOVEL'BANK'    DBKEY              *************
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     OUT  LDA
+     C                     EXSR F0000
+     C                     ELSE
+     C*
+     C**  Check system date format: ddmmyy (*IN98 off), mmddyy (*IN98 on)
+     C*
+     C           DATF      IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+     C*
+     C                     END
+      *                                                                   CLE005
+      ** Check if SAR CLE005 is present                                   CLE005
+      *                                                                   CLE005
+     C                     CALL 'AOSARDR0'                                CLE005
+     C                     PARM *BLANKS   P@RTCD  7                       CLE005
+     C                     PARM '*KEY   ' P@OPTN  7                       CLE005
+     C                     PARM 'CLE005'  P@SARD  6                       CLE005
+     C           SCSARD    PARM SCSARD    DSFDY                           CLE005
+      *                                                                   CLE005
+     C           P@RTCD    IFEQ *BLANKS                                   CLE005
+     C                     MOVE *ON       *IN20                           CLE005
+     C                     ELSE                                           CLE005
+      *                                                                   CLE005
+      ** Handle Database Error                                            CLE005
+      *                                                                   CLE005
+     C           P@RTCD    IFNE '*NRF    '                                CLE005
+     C           *LOCK     IN   LDA                                       CLE005
+     C                     MOVE 'SCSARDPD'DBFILE           ************   CLE005
+     C                     Z-ADD015       DBASE            * DBERR 15 *   CLE005
+     C                     MOVEL'CLE005  'DBKEY            ************   CLE005
+     C                     SETON                     U7U8                 CLE005
+     C                     OUT  LDA                                       CLE005
+     C                     EXSR *PSSR                                     CLE005
+     C                     EXSR F0000                                     CLE005
+     C                     ENDIF                                          CLE005
+      *                                                                   CLE005
+     C                     ENDIF                                          CLE005
+      *                                                                                       193475
+      ** Check if SAR CLE006 is present                                                       193475
+      *                                                                                       193475
+     C                     CALL 'AOSARDR0'                                                    193475
+     C                     PARM *BLANKS   P@RTCD  7                                           193475
+     C                     PARM '*KEY   ' P@OPTN  7                                           193475
+     C                     PARM 'CLE006'  P@SARD  6                                           193475
+     C           SCSARD    PARM SCSARD    DSFDY                                               193475
+      *                                                                                       193475
+     C           P@RTCD    IFEQ *BLANKS                                                       193475
+     C                     MOVE '1'       *IN28                                               193475
+     C                     ELSE                                                               193475
+      *                                                                                       193475
+      ** Handle Database Error                                                                193475
+      *                                                                                       193475
+     C           P@RTCD    IFNE '*NRF    '                                                    193475
+     C           *LOCK     IN   LDA                                                           193475
+     C                     MOVE 'SCSARDPD'DBFILE           ************                       193475
+     C                     Z-ADD017       DBASE            * DBERR 17 *                       193475
+     C                     MOVEL'CLE006  'DBKEY            ************                       193475
+     C                     SETON                     U7U8                                     193475
+     C                     OUT  LDA                                                           193475
+     C                     EXSR *PSSR                                                         193475
+     C                     EXSR F0000                                                         193475
+     C                     ENDIF                                                              193475
+      *                                                                                       193475
+     C                     ENDIF                                                              193475
+      *                                                                   153792
+      ** Check if SAR CLE004 is present.                                  153792
+      *                                                                   153792
+     C                     CALL 'AOSARDR0'                                153792
+     C                     PARM *BLANKS   P@RTCD  7                       153792
+     C                     PARM '*KEY   ' P@OPTN  7                       153792
+     C                     PARM 'CLE004'  P@SARD  6                       153792
+     C           SCSARD    PARM SCSARD    DSFDY                           153792
+      *                                                                   153792
+     C           P@RTCD    IFEQ *BLANKS                                   153792
+     C                     MOVE '1'       *IN25                           153792
+     C                     ELSE                                           153792
+      *                                                                   153792
+      ** Handle Database Error.                                           153792
+      *                                                                   153792
+     C           P@RTCD    IFNE '*NRF    '                                153792
+     C           *LOCK     IN   LDA                                       153792
+     C                     MOVE 'SCSARDPD'DBFILE           ************   153792
+     C                     Z-ADD016       DBASE            * DBERR 16 *   153792
+     C                     MOVEL'CLE004  'DBKEY            ************   153792
+     C                     SETON                     U7U8                 153792
+     C                     OUT  LDA                                       153792
+     C                     EXSR *PSSR                                     153792
+     C                     EXSR F0000                                     153792
+     C                     ENDIF                                          153792
+      *                                                                   153792
+     C                     ENDIF                                          153792
+      *
+     C                     Z-ADD1         X       30                      153792
+     C                     Z-ADD1         A       30                      153792
+      *                                                                                       CLE134
+     C                     CALL 'AOSARDR0'                                                    CLE134
+     C                     PARM *BLANKS   P@RTCD  7                                           CLE134
+     C                     PARM '*KEY   ' P@OPTN  7                                           CLE134
+     C                     PARM 'CLE134'  P@SARD  6                                           CLE134
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE134
+      *                                                                                       CLE134
+     C           P@RTCD    IFEQ *BLANKS                                                       CLE134
+     C                     MOVE 'Y'       CLE134  1                                           CLE134
+     C                     ELSE                                                               CLE134
+     C                     MOVE 'N'       CLE134  1                                           CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                   153792
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  C0000 --- Subroutine to process Overdue Fees
+     C*
+     C*  CALLED FROM: Main Processing
+     C*
+     C*  CALLS: Nothing
+     C*
+     C********************************************************************
+     C           C0000     BEGSR
+     C                     ADD  1         @REP    50
+     C                     SETOF                     07
+     C                     SETON                     10
+     C*
+     C** Reset the flag to allow the output of the appropriate
+     C** format on all the reports
+     C*
+     C                     MOVE ' '       FLG1
+      *
+     C***********                                                       BH3410
+     C***********FEACOF    IFNE @AO1                       set account  BH3410
+     C                     MOVE FEACOF    @AO1             officer
+     C                     MOVELFEACOF    @AO                             BH3410
+     C                     MOVELFEACOF    SVACOF  2                                           246188
+     C                     MOVE AZACON    @AO              name if not
+     C                     SETON                     50    already on
+     C***********          ELSE                            this report  BH3410
+     C***********          MOVE *BLANK    @AO                           BH3410
+     C                     SETOF                     50
+     C***********          END                                          BH3410
+      *
+     C           *IN51     IFEQ '1'
+     C                     SETOF                     5051
+     C                     END
+      *
+      *                                                                                      243496B
+      ** Do not include in LER160P1 the fees that are not due yet.                           243496B
+      *                                                                                      243496B
+     C           BJRDNB    IFLT FEDDAT                                                       243496B
+     C           FEPAMP    ANDNE0                                                            243496B
+     C           FEPLPD    ANDNE0                                                            243496B
+     C                     Z-ADDFEPAMP    @DSAMT                                             243496B
+     C                     Z-ADDFEPLPD    ZDAYNO                                             243496B
+     C                     EXSR ZDATE2                                                       243496B
+     C                     MOVE ZADATE    @DD                                                243496B
+     C                     ELSE                                                              243496B
+      *                                                                                      243496B
+     C                     Z-ADDFEAMTP    @DSAMT
+      *                                                                                      243496B
+     C           FEPEND    IFLE BJRDNB                                                       243496B
+     C                     Z-ADDFEAMTP    @DSAMT                                             243496B
+     C                     ENDIF                                                             243496B
+      *                                                                                      243496B
+     C                     Z-ADDFEDDAT    ZDAYNO            Convert
+     C                     EXSR ZDATE2                      Start date
+     C                     MOVE ZADATE    @DD
+     C                     END                                                               243496B
+      *
+     C           *IN80     IFEQ '1'                        Print
+     C                     WRITELER160H1                   Header
+     C           MBIN      IFEQ 'Y'
+     C                     WRITELER160H2
+     C                     END
+     C                     WRITELER160H3
+     C                     SETOF                     8050
+     C                     END
+      *                                                                   CLE005
+      ***If*SAR*CLE005*is*Present**************************************                CLE005 193475
+      ** If SAR CLE006 is present                                                             193475
+      *                                                                   CLE005
+     C********** *IN20     IFEQ *ON                                                    CLE005 193475
+     C           *IN28     IFEQ '1'                                                           193475
+      *                                                                   CLE005
+      ** Format Fee Indicator for output                                  CLE005
+      *                                                                   CLE005
+     C                     MOVEL'RCV'     RPTFI                           CLE005
+     C           PTFI      IFEQ 'P'                                       CLE005
+     C           PTFI      OREQ 'S'                                                           CLE106
+     C           PTFI      OREQ 'R'                                                           CLE106
+     C                     MOVEL'PAY'     RPTFI                           CLE005
+     C                     ENDIF                                          CLE005
+     C           PTFI      IFEQ 'I'                                       CLE005
+     C                     MOVEL'INT'     RPTFI                           CLE005
+     C                     ENDIF                                          CLE005
+      *                                                                   CLE005
+     C                     ENDIF                                          CLE005
+      *
+      ** Check if loan or facility fee.                                   153792
+      *                                                                   153792
+     C                     MOVE '0'       *IN24                           153792
+     C                     MOVE FEBRCA    BRCA                            153792
+     C                     MOVE FECNUM    CNUM                            153792
+     C                     MOVELFEFACL    FACT                            153792
+     C                     MOVE FEFACL    FCNO                            153792
+     C                     MOVE FEFSEQ    FSEQ1   20                      153792
+     C                     MOVELPCRF      SPCRF  15                       153792
+     C                     MOVELPCRF      WPCRF  11                       153792
+      *                                                                   153792
+     C           FEFACL    IFEQ 0                                         153792
+     C**********           MOVE FECNUM    LNUM    60                                   153792 CSD027
+     C                     MOVE FECNUM    LNUM    6                                           CSD027
+     C                     MOVE FELOAN    LNRF                            153792
+     C                     MOVE 'A'       RCDT                            153792
+      *                                                                   153792
+     C           KEY2      CHAINCLOAN                21                   153792
+      *                                                                   153792
+     C           *IN21     IFEQ '0'                                       153792
+     C                     MOVE FCUS      CNUM                            153792
+     C                     MOVE FTYP      FACT                            153792
+     C                     MOVE FSEQ      FCNO                            153792
+     C                     ENDIF                                          153792
+     C                     ENDIF                                          153792
+      *                                                                   153792
+     C           KEY       CHAINFCLTYL1              21                   153792
+      *                                                                   153792
+      ** Move syndication indicator to report field.                      153792
+      *                                                                   153792
+     C           *IN21     IFEQ '0'                                       153792
+     C                     MOVE SYIN      RSYIN                           153792
+     C                     ENDIF                                          153792
+      *                                                                   153792
+     C                     EXSR SRG000                                    153792
+     C***********          WRITELER160D1                                  153792
+      *
+     C           CEXIT     ENDSR
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  D0000 --- Subroutine to process Auto-Settlement Fees
+     C*
+     C*  CALLED FROM: Main Processing
+     C*
+     C*  CALLS: Nothing
+     C*
+     C********************************************************************
+     C           D0000     BEGSR
+     C                     ADD  1         @REP
+     C                     SETOF                     08
+     C                     SETON                     10
+     C*
+     C** Reset the flag to allow the output of the appropriate
+     C** format on all the reports
+     C*
+     C                     MOVE ' '       FLG1
+      *
+     C********** FEACOF    IFNE @AO2                        set account                       247136
+      *                                                                   153792
+     C           *IN26     IFEQ '0'                                       153792
+     C                     MOVE @AO2      W@AO2   2                       153792
+     C                     MOVELFEACOF    WAO    33                       153792
+     C                     MOVE AZACON    WAO                             153792
+     C                     ENDIF                                          153792
+      *                                                                   153792
+     C                     MOVE FEACOF    @AO2              officer
+     C                     MOVELFEACOF    @AO                             053270
+     C                     MOVELFEACOF    SVACOF                                              246188
+     C                     MOVE AZACON    @AO               name if not
+     C                     SETON                     50     already on
+     C**********           ELSE                            this report                        247136
+     C**********           MOVE *BLANK    @AO                                                 247136
+     C**********           SETOF                     50                                       247136
+     C**********           END                                                                247136
+      *
+     C           *IN52     IFEQ '1'                        header just
+     C                     SETOF                     5052  printed
+     C                     END
+      *
+     C           FECALT    IFNE *BLANK
+     C           FECALT    ANDNE*ZERO
+     C                     Z-ADDFEAMTP    @DSAMT
+     C                     ELSE
+     C                     Z-ADDFEFAMT    @DSAMT
+     C                     END
+      *
+     C           FECAPI    IFEQ 'Y'                                                           CLE139
+     C                     MOVE 'YES'     @CAPIT                                              CLE139
+     C                     ELSE                                                               CLE139
+     C                     MOVE 'NO '     @CAPIT                                              CLE139
+     C                     END                                                                CLE139
+      *                                                                                      243496B
+      ** Do not include in LER160P2 the fees that are past due.                              243496B
+      *                                                                                      243496B
+     C           FEDIND    IFEQ 'A'                                                          243496B
+     C           BJRDNB    ANDLTFEDDAT                                                       243496B
+     C           FEPAMP    ANDNE0                                                            243496B
+     C           FEPLPD    ANDNE0                                                            243496B
+     C           FEAMTP    SUB  FEPAMP    @DSAMT                                             243496B
+     C                     END                                                               243496B
+      *                                                                                      243496B
+     C                     MOVE '0'       *IN30                                              243496B
+     C           FEAAMT    CHAINLEFEAMF              30                                      243496B
+      *                                                                                      243496B
+     C           *IN30     IFEQ '0'                                                          243496B
+     C                     ADD  FEOAMT    @DSAMT                                             243496B
+     C                     ENDIF                                                             243496B
+      *                                                                                      243496B
+     C           FEPYON    IFEQ 'E'
+     C***********          MOVE FEPEND    DATE5             Convert       045725
+     C                     MOVE FEPEND    ZDAYNO            Convert       045725
+     C                     ELSE
+      *
+     C           FEPYON    IFEQ 'N'
+     C                     Z-ADDFEDDAT    ZDAYNO
+     C                     ELSE
+     C                     Z-ADDFEPSTD    ZDAYNO
+     C                     END
+     C                     END
+     C                     EXSR ZDATE2                      Start date
+     C                     MOVE ZADATE    @DD
+      *
+     C           *IN81     IFEQ '1'                        Print
+     C                     WRITELER161H1                   Header
+     C           MBIN      IFEQ 'Y'
+     C                     WRITELER161H2
+     C                     END
+     C**********           WRITELER161H1                                                      247150
+     C                     SETOF                     8150
+     C                     END
+      *                                                                   CLE005
+      ***If*SAR*CLE005*is*Present**************************************                CLE005 193475
+      ** If SAR CLE006 is present                                                             193475
+      *                                                                   CLE005
+     C********** *IN20     IFEQ *ON                                                    CLE005 193475
+     C           *IN28     IFEQ '1'                                                           193475
+      *                                                                   CLE005
+      ** Format Fee Indicator for output                                  CLE005
+      *                                                                   CLE005
+     C                     MOVEL'RCV'     RPTFI                           CLE005
+     C           PTFI      IFEQ 'P'                                       CLE005
+     C           PTFI      OREQ 'S'                                                           CLE106
+     C           PTFI      OREQ 'R'                                                           CLE106
+     C                     MOVEL'PAY'     RPTFI                           CLE005
+     C                     ENDIF                                          CLE005
+     C           PTFI      IFEQ 'I'                                       CLE005
+     C                     MOVEL'INT'     RPTFI                           CLE005
+     C                     ENDIF                                          CLE005
+      *                                                                   CLE005
+     C                     ENDIF                                          CLE005
+      *
+      ** Check if loan or facility fee.                                   153792
+      *                                                                   153792
+     C                     MOVE '0'       *IN24                           153792
+     C                     MOVE FEBRCA    BRCA                            153792
+     C                     MOVE FECNUM    CNUM                            153792
+     C                     MOVELFEFACL    FACT                            153792
+     C                     MOVE FEFACL    FCNO                            153792
+     C                     MOVE FEFSEQ    FSEQ1                           153792
+     C                     MOVELPCRF      SPCRF                           153792
+     C                     MOVELPCRF      WPCRF                           153792
+      *                                                                   153792
+     C           FEFACL    IFEQ 0                                         153792
+     C**********           MOVE FECNUM    LNUM    60                                   153792 CSD027
+     C                     MOVE FECNUM    LNUM    6                                           CSD027
+     C                     MOVE FELOAN    LNRF                            153792
+     C                     MOVE 'A'       RCDT                            153792
+      *                                                                   153792
+     C           KEY2      CHAINCLOAN                21                   153792
+      *                                                                   153792
+     C           *IN21     IFEQ '0'                                       153792
+     C                     MOVE FCUS      CNUM                            153792
+     C                     MOVE FTYP      FACT                            153792
+     C                     MOVE FSEQ      FCNO                            153792
+     C                     ENDIF                                          153792
+     C                     ENDIF                                          153792
+      *                                                                   153792
+     C           KEY       CHAINFCLTYL1              21                   153792
+      *                                                                   153792
+      ** Move syndication indicator to report filed.                      153792
+      *                                                                   153792
+     C           *IN21     IFEQ '0'                                       153792
+     C                     MOVE SYIN      RSYIN                           153792
+     C                     ENDIF                                          153792
+      *                                                                   153792
+     C                     EXSR SRG000                                    153792
+     C***********          WRITELER161D1                                  153792
+      *
+     C                     ENDSR
+     C/EJECT
+      ********************************************************************
+      *
+      *  E0000 --- Subroutine to process Manual-Settlement Fees
+      *
+      *  CALLED FROM: Main Processing
+      *
+      *  CALLS: Nothing
+      *
+      ********************************************************************
+     C           E0000     BEGSR
+     C                     ADD  1         @REP
+     C                     SETOF                     09
+     C                     SETON                     10
+     C*
+     C** Reset the flag to allow the output of the appropriate
+     C** format on all the reports
+     C*
+     C                     MOVE ' '       FLG1
+      *
+     C********** FEACOF    IFNE @AO3                                                          247136
+      *                                                                   153792
+     C           *IN26     IFEQ '0'                                       153792
+     C                     MOVE @AO3      W@AO3   2                       153792
+     C                     MOVELFEACOF    WAO                             153792
+     C                     MOVE AZACON    WAO                             153792
+     C                     ENDIF                                          153792
+      *                                                                   153792
+     C                     MOVE FEACOF    @AO3
+     C                     MOVELFEACOF    @AO                             053270
+     C                     MOVELFEACOF    SVACOF                                              246188
+     C                     MOVE AZACON    @AO
+     C                     SETON                     50
+     C**********           ELSE                                                               247136
+     C**********           MOVE *BLANK    @AO                                                 247136
+     C**********           SETOF                     50                                       247136
+     C**********           END                                                                247136
+      *
+     C           *IN53     IFEQ '1'
+     C                     SETOF                     5053
+     C                     END
+      *
+     C           FECALT    IFNE *BLANK
+     C           FECALT    ANDNE*ZERO
+     C                     Z-ADDFEAMTP    @DSAMT
+     C                     ELSE
+     C                     Z-ADDFEFAMT    @DSAMT
+     C                     END
+      *
+      ** Do not include in LER160P3 the fees that are past due.                              243496B
+      *                                                                                      243496B
+     C           FEDIND    IFEQ 'A'                                                          243496B
+     C           BJRDNB    ANDLTFEDDAT                                                       243496B
+     C           FEPAMP    ANDNE0                                                            243496B
+     C           FEPLPD    ANDNE0                                                            243496B
+     C           FEAMTP    SUB  FEPAMP    @DSAMT                                             243496B
+     C                     END                                                               243496B
+      *                                                                                      243496B
+     C           FEPYON    IFEQ 'E'
+     C***********          MOVE FEPEND    DATE5             Convert       045725
+     C                     MOVE FEPEND    ZDAYNO            Convert       045725
+     C                     ELSE
+      *
+     C           FEPYON    IFEQ 'N'
+     C                     Z-ADDFEDDAT    ZDAYNO
+     C                     ELSE
+     C                     Z-ADDFEPSTD    ZDAYNO
+     C                     END
+     C                     END
+      *
+     C                     EXSR ZDATE2                      Start date
+     C                     MOVE ZADATE    @DD
+      *
+     C           *IN82     IFEQ '1'                        Print
+     C                     WRITELER162H1                   Header
+     C           MBIN      IFEQ 'Y'
+     C                     WRITELER162H2
+     C                     END
+     C                     WRITELER162H3
+     C                     SETOF                     8250
+     C                     END
+      *                                                                   CLE005
+      ***If*SAR*CLE005*is*Present**************************************                CLE005 193475
+      ** If SAR CLE006 is present                                                             193475
+      *                                                                   CLE005
+     C********** *IN20     IFEQ *ON                                                    CLE005 193475
+     C           *IN28     IFEQ '1'                                                           193475
+      *                                                                   CLE005
+      ** Format Fee Indicator for output                                  CLE005
+      *                                                                   CLE005
+     C                     MOVEL'RCV'     RPTFI                           CLE005
+     C           PTFI      IFEQ 'P'                                       CLE005
+     C           PTFI      OREQ 'S'                                                           CLE106
+     C           PTFI      OREQ 'R'                                                           CLE106
+     C                     MOVEL'PAY'     RPTFI                           CLE005
+     C                     ENDIF                                          CLE005
+     C           PTFI      IFEQ 'I'                                       CLE005
+     C                     MOVEL'INT'     RPTFI                           CLE005
+     C                     ENDIF                                          CLE005
+      *                                                                   CLE005
+     C                     ENDIF                                          CLE005
+      *
+      ** Check if loan or facility fee.                                   153792
+      *                                                                   153792
+     C                     MOVE '0'       *IN24                           153792
+     C                     MOVE FEBRCA    BRCA                            153792
+     C                     MOVE FECNUM    CNUM                            153792
+     C                     MOVELFEFACL    FACT                            153792
+     C                     MOVE FEFACL    FCNO                            153792
+     C                     MOVE FEFSEQ    FSEQ1                           153792
+     C                     MOVELPCRF      SPCRF                           153792
+     C                     MOVELPCRF      WPCRF                           153792
+      *                                                                   153792
+     C           FEFACL    IFEQ 0                                         153792
+     C                     MOVE FECNUM    LNUM                            153792
+     C                     MOVE FELOAN    LNRF                            153792
+     C                     MOVE 'A'       RCDT                            153792
+      *                                                                   153792
+     C           KEY2      CHAINCLOAN                21                   153792
+      *                                                                   153792
+     C           *IN21     IFEQ '0'                                       153792
+     C                     MOVE FCUS      CNUM                            153792
+     C                     MOVE FTYP      FACT                            153792
+     C                     MOVE FSEQ      FCNO                            153792
+     C                     ENDIF                                          153792
+     C                     ENDIF                                          153792
+      *                                                                   153792
+     C           KEY       CHAINFCLTYL1              21                   153792
+      *                                                                   153792
+      ** Move syndication indicator to report filed.                      153792
+      *                                                                   153792
+     C           *IN21     IFEQ '0'                                       153792
+     C                     MOVE SYIN      RSYIN                           153792
+     C                     ENDIF                                          153792
+      *                                                                   153792
+     C                     EXSR SRG000                                    153792
+     C***********          WRITELER162D1                                  153792
+      *
+     C                     ENDSR
+     C/EJECT
+      ********************************************************************
+      *
+      *  F0000 --- Subroutine to produce report totals and write
+      *            Audit Report
+      *
+      *  CALLED FROM: Main Processing
+      *
+      *  CALLS: Nothing
+      *
+      ********************************************************************
+     C           F0000     BEGSR
+      *
+     C                     Z-ADD0         PAGE
+      ** Ensure report spool file recorded by RCF
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM           ZSERR
+      *
+     C           ZSERR     IFEQ 'Y'
+      ** Error during ZSFILE processing, return to calling program
+     C                     SETON                     U7U8LR
+     C                     ELSE
+      *
+     C                     WRITELER16AU1
+      *
+      * If there is an error output the error format to the report
+      *
+     C           *INU7     IFEQ '1'
+     C                     WRITEDBFMT
+     C                     ELSE
+      *
+     C           @REP      IFEQ 0                          Nothing to
+     C                     WRITELER16AU2                   Report
+     C                     ELSE
+     C                     WRITELER16AU3                   Totals
+     C                     END
+      *
+     C                     END
+     C                     END
+      *
+     C                     RETRN
+     C                     ENDSR
+      *****************************************************************   153792
+      *                                                               *   153792
+      *  SRG000 --- Participant/Primary Fee Checking                  *   153792
+      *                                                               *   153792
+      *  CALLED FROM: C0000, D0000, E0000                             *   153792
+      *                                                               *   153792
+      *  CALLS: SRH000                                                *   153792
+      *                                                               *   153792
+      *****************************************************************   153792
+      *                                                                   153792
+     C           SRG000    BEGSR                                          153792
+      *                                                                   153792
+      ** If record is a receivable fee, write record.                     153792
+      *                                                                   153792
+     C           PTFI      IFEQ ' '                                       153792
+      *                                                                   153792
+     C           *IN26     IFEQ '1'                                       153792
+     C           @DUE      ANDNE'A'                                       153792
+     C                     MOVE W@AO      @AO                             153792
+     C                     MOVE '1'       *IN50                           153792
+     C                     MOVE '0'       *IN26                           153792
+     C                     ENDIF                                          153792
+      *                                                                   153792
+     C                     SELEC                                          153792
+     C           @DUE      WHEQ 'A'                                       153792
+     C           @DSAMT    IFNE *ZERO                                                         245614
+     C                     WRITELER160D1                                  153792
+     C                     ENDIF                                                              245614
+     C           @DUE      WHEQ 'B'                                       153792
+     C           @DSAMT    IFNE *ZERO                                                         246363
+     C                     WRITELER161D1                                  153792
+     C                     ENDIF                                                              246363
+     C           @DUE      WHEQ 'C'                                       153792
+     C           @DSAMT    IFNE *ZERO                                                         246363
+     C                     WRITELER162D1                                  153792
+     C                     ENDIF                                                              246363
+     C                     ENDSL                                          153792
+      *                                                                   153792
+      ** Execute SR to Access Participant Reference File.                 153792
+      *                                                                   153792
+     C                     EXSR SRH000                                    153792
+     C***********          ENDIF                                          153792 247810
+     C                     ELSE                                                  247810
+      *                                                                   153792
+      ** If record read is payable/internal fee, check for the            153792
+      ** existence of its primary fee in primary reference file.          153792
+      *                                                                   153792
+     C***********PTFI      IFNE ' '                                       153792 247810
+     C                     MOVE *BLANKS   WFLD   20                       153792
+     C                     MOVE *BLANKS   LFLD   21                       153792
+     C                     MOVELFEBRCA    WFLD1   5                       153792
+     C                     MOVE FEACOF    WFLD1                           153792
+      *                                                                   153792
+     C           FEFACL    IFNE 0                                         153792
+     C                     MOVELWFLD1     WFLD                            153792
+     C                     MOVELFECNUM    WFLD2  11                       153792
+     C                     MOVE FEFACL    WFLD2                           153792
+     C                     MOVELWFLD2     TFLD   15                       153792
+     C                     ELSE                                           153792
+     C                     MOVELWFLD1     LFLD                            153792
+     C                     MOVELFECNUM    WFLDL  12                       153792
+     C                     MOVE FELOAN    WFLDL                           153792
+     C                     MOVELWFLDL     TFLD2  16                       153792
+     C                     ENDIF                                          153792
+      *                                                                   153792
+     C                     MOVELFEFSEQ    WFLD3   3                       153792
+     C                     MOVE FEDIND    WFLD3                           153792
+     C                     MOVELWFLD3     WFLD4   4                       153792
+     C                     MOVE RSYIN     WFLD4                           153792
+     C           FEFACL    IFNE 0                                         153792
+     C                     MOVE WFLD4     TFLD                            153792
+     C                     MOVE TFLD      WFLD                            153792
+     C                     ELSE                                           153792
+     C                     MOVE WFLD4     TFLD2                           153792
+     C                     MOVE TFLD2     LFLD                            153792
+     C                     ENDIF                                          153792
+      *                                                                   153792
+     C                     Z-ADD1         Y                               153792
+     C           FEFACL    IFNE 0                                         153792
+     C           WFLD      LOKUPWARR,Y                   23               153792
+     C                     ELSE                                           153792
+     C           LFLD      LOKUPWAR2,Y                   23               153792
+     C                     ENDIF                                          153792
+      *                                                                   153792
+      ** If found in array, clear record then exit subroutine.            153792
+      *                                                                   153792
+     C           *IN23     IFEQ '1'                                       153792
+     C           FEFACL    IFNE 0                                         153792
+     C                     MOVE *BLANKS   WARR,Y                          153792
+     C                     ELSE                                           153792
+     C                     MOVE *BLANKS   WAR2,Y                          153792
+     C                     ENDIF                                          153792
+     C                     GOTO GEXIT                                     153792
+     C                     ENDIF                                          153792
+      *                                                                   153792
+      ** Else, check for primary fee.                                     153792
+      *                                                                   153792
+     C                     MOVE BRCA      FEBRCA                          153792
+     C                     MOVE ACOF      FEACOF                          153792
+     C                     MOVE *BLANKS   PCRFT   4                       153792
+     C                     MOVELWPCRF     PCRF                            153792
+     C                     MOVE PCRFT     PCRF                            153792
+      *                                                                   153792
+     C                     MOVE FEBRCA    WBRCA   3                       153792
+     C                     MOVE FEACOF    WFACOF  2                       153792
+     C                     MOVE FEFACL    WFACL   50                      153792
+     C**********           MOVE FELOAN    WFLOAN  60                                   153792 CLE148
+     C                     MOVE FELOAN    WFLOAN  6                                           CLE148
+      *                                                                   153792
+     C           KEY1      SETLLLEFEEA1                                   153792
+      *                                                                   153792
+     C           *IN22     DOUEQ'1'                                       153792
+      *                                                                   153792
+     C                     READ LEFEEA1                  22               153792
+      *                                                                   153792
+     C           *IN22     IFEQ '0'                                       153792
+     C                     MOVELPCRF      WPCRF2                          153792
+     C           WPCRF     IFEQ WPCRF2                                    153792
+     C                     MOVE '1'       *IN22                           153792
+     C                     MOVE '0'       *IN21                           153792
+     C                     ELSE                                           153792
+     C                     MOVE '1'       *IN21                           153792
+     C                     ENDIF                                          153792
+     C                     ENDIF                                          153792
+     C                     ENDDO                                          153792
+      *                                                                   153792
+      ** If primary fee does not exist, write participant fee.            153792
+      *                                                                   153792
+     C           *IN21     IFEQ '1'                                       153792
+     C                     MOVE WBRCA     FEBRCA                          153792
+     C                     MOVE WFACOF    FEACOF                          153792
+     C                     MOVE SPCRF     PCRF                            153792
+     C           KEY1      CHAINLEFEEA2              22                   153792
+     C                     MOVELFECNUM    KEYC                            153792
+      *                                                                   153792
+     C           *IN26     IFEQ '1'                                       153792
+     C           @DUE      ANDNE'A'                                       153792
+     C                     MOVE W@AO      @AO                             153792
+     C                     MOVE '1'       *IN50                           153792
+     C                     MOVE '0'       *IN26                           153792
+     C                     ENDIF                                          153792
+      *                                                                   153792
+     C                     EXSR SRI000                                    153792
+     C                     ENDIF                                          153792
+      *                                                                   153792
+      ** Check if facility/loan is same with that of primary fee.         153792
+      *                                                                   153792
+     C                     MOVE '0'       *IN27                           153792
+      *                                                                   153792
+     C           WFACL     IFEQ 0                                         153792
+     C********** WFLOAN    ANDNE0                                                      153792 CLE148
+     C           WFLOAN    ANDNE*BLANKS                                                       CLE148
+     C           FEFACL    ANDEQ0                                         153792
+     C********** FELOAN    ANDNE0                                                      153792 CLE148
+     C           FELOAN    ANDNE*BLANKS                                                       CLE148
+     C           WFACL     ORNE 0                                         153792
+     C********** WFLOAN    ANDEQ0                                                      153792 CLE148
+     C           WFLOAN    ANDEQ*BLANKS                                                       CLE148
+     C           FEFACL    ANDNE0                                         153792
+     C********** FELOAN    ANDEQ0                                                      153792 CLE148
+     C           FELOAN    ANDEQ*BLANKS                                                       CLE148
+     C                     MOVE '1'       *IN27                           153792
+     C                     ENDIF                                          153792
+      *                                                                   153792
+      ** If primary fee exists but not for the same report (different due 153792
+      ** indicator), write participant fee.                               153792
+      *                                                                   153792
+     C           *IN21     IFEQ '0'                                       153792
+     C           @DUE      ANDNEFEDIND                                    153792
+     C                     MOVE WBRCA     FEBRCA                          153792
+     C                     MOVE WFACOF    FEACOF                          153792
+     C                     MOVE SPCRF     PCRF                            153792
+     C           KEY1      CHAINLEFEEA2              22                   153792
+     C                     MOVELFECNUM    KEYC                            153792
+      *                                                                   153792
+     C           FEACOF    IFNE W@AO2                                     153792
+     C           FEDIND    ANDEQ'B'                                       153792
+     C           FEACOF    ORNE W@AO3                                     153792
+     C           FEDIND    ANDEQ'C'                                       153792
+     C                     MOVE WAO       W@AO                            153792
+     C                     MOVE '1'       *IN26                           153792
+     C                     ENDIF                                          153792
+      *                                                                   153792
+     C           *IN26     IFEQ '1'                                       153792
+     C           @DUE      ANDNE'A'                                       153792
+     C                     MOVE W@AO      @AO                             153792
+     C                     MOVE '1'       *IN50                           153792
+     C                     MOVE '0'       *IN26                           153792
+     C                     ENDIF                                          153792
+      *                                                                   153792
+     C                     EXSR SRI000                                    153792
+     C                     GOTO GEXIT                                     153792
+     C                     ENDIF                                          153792
+      *                                                                   153792
+      ** If primary fee exists for the same report (same due indicator),  153792
+      ** check array.                                                     153792
+      *                                                                   153792
+     C           *IN21     IFEQ '0'                                       153792
+     C           @DUE      ANDEQFEDIND                                    153792
+     C           WPCRF     IFNE WPCRF2                                    153792
+     C           *IN27     OREQ '0'                                       153792
+      *                                                                   153792
+     C                     MOVE WBRCA     FEBRCA                          153792
+     C                     MOVE WFACOF    FEACOF                          153792
+     C                     MOVE SPCRF     PCRF                            153792
+      *                                                                   153792
+     C           KEY1      CHAINLEFEEA2              22                   153792
+      *                                                                   153792
+     C           *IN26     IFEQ '1'                                       153792
+     C           @DUE      ANDNE'A'                                       153792
+     C                     MOVE W@AO      @AO                             153792
+     C                     MOVE '1'       *IN50                           153792
+     C                     MOVE '0'       *IN26                           153792
+     C                     ENDIF                                          153792
+     C                     MOVELFECNUM    KEYC                            153792
+     C                     EXSR SRI000                                    153792
+     C                     GOTO GEXIT                                     153792
+      *                                                                   153792
+     C                     ENDIF                                          153792
+      *                                                                   153792
+     C                     MOVE *BLANKS   WFLD                            153792
+     C                     MOVE *BLANKS   LFLD                            153792
+     C                     MOVELFEBRCA    WFLD1                           153792
+     C                     MOVE FEACOF    WFLD1                           153792
+      *                                                                   153792
+     C           FEFACL    IFNE 0                                         153792
+     C                     MOVELWFLD1     WFLD                            153792
+     C                     MOVELFECNUM    WFLD2                           153792
+     C                     MOVE FEFACL    WFLD2                           153792
+     C                     MOVELWFLD2     TFLD                            153792
+     C                     ELSE                                           153792
+     C                     MOVELWFLD1     LFLD                            153792
+     C                     MOVELFECNUM    WFLDL                           153792
+     C                     MOVE FELOAN    WFLDL                           153792
+     C                     MOVELWFLDL     TFLD2                           153792
+     C                     ENDIF                                          153792
+      *                                                                   153792
+     C                     MOVELFEFSEQ    WFLD3                           153792
+     C                     MOVE FEDIND    WFLD3                           153792
+     C                     MOVELWFLD3     WFLD4                           153792
+     C                     MOVE RSYIN     WFLD4                           153792
+     C           FEFACL    IFNE 0                                         153792
+     C                     MOVE WFLD4     TFLD                            153792
+     C                     MOVE TFLD      WFLD                            153792
+     C                     ELSE                                           153792
+     C                     MOVE WFLD4     TFLD2                           153792
+     C                     MOVE TFLD2     LFLD                            153792
+     C                     ENDIF                                          153792
+      *                                                                   153792
+     C                     Z-ADD1         Y                               153792
+     C           FEFACL    IFNE 0                                         153792
+     C           WFLD      LOKUPWARR,Y                   23               153792
+     C                     ELSE                                           153792
+     C           LFLD      LOKUPWAR2,Y                   23               153792
+     C                     ENDIF                                          153792
+      *                                                                   153792
+      ** If not found in array, store details, else clear record in array.153792
+      *                                                                   153792
+     C           *IN23     IFEQ '1'                                       153792
+     C           FEFACL    IFNE 0                                         153792
+     C                     MOVE *BLANKS   WARR,Y                          153792
+     C                     ELSE                                           153792
+     C                     MOVE *BLANKS   WAR2,Y                          153792
+     C                     ENDIF                                          153792
+     C                     ELSE                                           153792
+     C           FEFACL    IFNE 0                                         153792
+     C                     MOVE WFLD      WARR,X                          153792
+     C                     ADD  1         X                               153792
+     C                     ELSE                                           153792
+     C                     MOVE LFLD      WAR2,A                          153792
+     C                     ADD  1         A                               153792
+     C                     ENDIF                                          153792
+     C                     ENDIF                                          153792
+      *                                                                   153792
+     C           FEACOF    IFNE W@AO2                                     153792
+     C           FEDIND    ANDEQ'B'                                       153792
+     C           FEACOF    ORNE W@AO3                                     153792
+     C           FEDIND    ANDEQ'C'                                       153792
+     C                     MOVE WAO       W@AO   33                       153792
+     C                     MOVE '1'       *IN26                           153792
+     C                     ENDIF                                          153792
+      *                                                                   153792
+     C                     ENDIF                                          153792
+     C                     ENDIF                                          153792
+      *                                                                   153792
+     C           GEXIT     TAG                                            153792
+      *                                                                   153792
+     C                     ENDSR                                          153792
+      *                                                                   153792
+      *****************************************************************   153792
+      *                                                               *   153792
+      *  SRH000 --- Access to Participant Reference File              *   153792
+      *                                                               *   153792
+      *  CALLED FROM: SRG000                                          *   153792
+      *                                                               *   153792
+      *  CALLS: None                                                  *   153792
+      *                                                               *   153792
+      *****************************************************************   153792
+      *                                                                   153792
+     C           SRH000    BEGSR                                          153792
+      *                                                                   153792
+     C                     MOVE '0'       *IN21                           153792
+     C                     MOVE '0'       *IN22                           153792
+     C                     MOVE FEBRCA    WBRCA                           153792
+     C                     MOVE FEACOF    WFACOF                          153792
+      *                                                                   153792
+      ** Read participant file.                                           153792
+      *                                                                   153792
+     C           KEY1      SETLLLEFEEA2                                   153792
+     C           *LOVAL    SETLLFCLTYL1                                   153792
+      *                                                                   153792
+     C           *IN22     DOUEQ'1'                                       153792
+      *                                                                   153792
+     C                     READ LEFEEA2                  22               153792
+      *                                                                   153792
+     C                     MOVE FEBRCA    BRCA                            153792
+     C                     MOVE FECNUM    CNUM                            153792
+     C                     MOVELFEFACL    FACT                            153792
+     C                     MOVE FEFACL    FCNO                            153792
+     C                     MOVE FELOAN    LNRF                            153792
+     C                     MOVE 'A'       RCDT                            153792
+     C                     MOVELPCRF      WPCRF2 11                       153792
+      *                                                                   153792
+     C********** FELOAN    IFNE 0                                                      153792 CLE148
+     C           FELOAN    IFNE *BLANKS                                                       CLE148
+      *                                                                   153792
+     C           KEY2      CHAINCLOAN                21                   153792
+      *                                                                   153792
+     C           *IN21     IFEQ '0'                                       153792
+     C                     MOVE FCUS      CNUM                            153792
+     C                     MOVE FTYP      FACT                            153792
+     C                     MOVE FSEQ      FCNO                            153792
+     C                     ENDIF                                          153792
+     C                     ENDIF                                          153792
+      *                                                                   153792
+     C           *IN22     IFEQ '0'                                       153792
+      *                                                                   153792
+     C           KEY       CHAINFCLTYL1              21                   153792
+      *                                                                   153792
+      ** If a participant is found.                                       153792
+      *                                                                   153792
+     C           *IN21     IFEQ '0'                                       153792
+     C           WBRCA     ANDEQFEBRCA                                    153792
+     C           WFACOF    ANDEQFEACOF                                    153792
+     C           WPCRF     ANDEQWPCRF2                                    153792
+     C           @DUE      ANDEQFEDIND                                    153792
+      *                                                                   153792
+     C                     MOVE '1'       *IN24                           153792
+     C                     MOVE SYIN      RSYIN                           153792
+      *                                                                   153792
+      ** Check array.                                                     153792
+      *                                                                   153792
+     C                     MOVE *BLANKS   WFLD                            153792
+     C                     MOVE *BLANKS   LFLD                            153792
+     C                     MOVELBRCA      WFLD1                           153792
+     C                     MOVE ACOF      WFLD1                           153792
+      *                                                                   153792
+     C           FEFACL    IFNE 0                                         153792
+     C                     MOVELWFLD1     WFLD                            153792
+     C                     MOVELFACT      FACL    5                       153792
+     C                     MOVE FCNO      FACL                            153792
+     C                     MOVELCNUM      WFLD2                           153792
+     C                     MOVE FACL      WFLD2                           153792
+     C                     MOVELWFLD2     TFLD                            153792
+     C                     ELSE                                           153792
+     C                     MOVELWFLD1     LFLD                            153792
+     C                     MOVELCNUM      WFLDL                           153792
+     C                     MOVE LNRF      WFLDL                           153792
+     C                     MOVELWFLDL     TFLD2                           153792
+     C                     ENDIF                                          153792
+      *                                                                   153792
+     C                     MOVELFEFSEQ    WFLD3                           153792
+     C                     MOVE FEDIND    WFLD3                           153792
+     C                     MOVELWFLD3     WFLD4                           153792
+     C                     MOVE RSYIN     WFLD4                           153792
+     C           FEFACL    IFNE 0                                         153792
+     C                     MOVE WFLD4     TFLD                            153792
+     C                     MOVE TFLD      WFLD                            153792
+     C                     ELSE                                           153792
+     C                     MOVE WFLD4     TFLD2                           153792
+     C                     MOVE TFLD2     LFLD                            153792
+     C                     ENDIF                                          153792
+      *                                                                   153792
+     C                     Z-ADD1         Y       30                      153792
+     C           FEFACL    IFNE 0                                         153792
+     C           WFLD      LOKUPWARR,Y                   23               153792
+     C                     ELSE                                           153792
+     C           LFLD      LOKUPWAR2,Y                   23               153792
+     C                     ENDIF                                          153792
+      *                                                                   153792
+      ** If not found in array, store details, else exit subroutine.      153792
+      *                                                                   153792
+     C           *IN23     IFEQ '0'                                       153792
+     C           FEFACL    IFNE 0                                         153792
+     C                     MOVE WFLD      WARR,X                          153792
+     C                     ADD  1         X                               153792
+     C                     ELSE                                           153792
+     C                     MOVE LFLD      WAR2,A                          153792
+     C                     ADD  1         A                               153792
+     C                     ENDIF                                          153792
+     C                     ELSE                                           153792
+     C           FEFACL    IFNE 0                                         153792
+     C                     MOVE *BLANKS   WARR,Y                          153792
+     C                     ELSE                                           153792
+     C                     MOVE *BLANKS   WAR2,Y                          153792
+     C                     ENDIF                                          153792
+     C                     GOTO HEXIT                                     153792
+     C                     ENDIF                                          153792
+      *                                                                   153792
+      ** Format Customer Number and Fee Reference.                        153792
+      *                                                                   153792
+     C                     MOVELCNUM      @FR                             153792
+      *                                                                   153792
+     C           FEFACL    IFNE 0                                         153792
+     C                     MOVELFACT      @LORF                           153792
+     C                     MOVE '/'       @LORF                           153792
+     C                     MOVE FCNO      @LORF                           153792
+     C                     ENDIF                                          153792
+      *                                                                   153792
+     C                     MOVELCNUM      KEYC                            153792
+     C                     EXSR SRI000                                    153792
+      *                                                                   153792
+     C                     ENDIF                                          153792
+     C                     ENDIF                                          153792
+      *                                                                   153792
+     C           HEXIT     TAG                                            153792
+     C                     ENDDO                                          153792
+      *                                                                   153792
+     C                     ENDSR                                          153792
+      *                                                                   153792
+      *****************************************************************   153792
+      *                                                               *   153792
+      *  SRI000 --- Print Record Read                                 *   153792
+      *                                                               *   153792
+      *  CALLED FROM: SRH000, Main Processing                         *   153792
+      *                                                               *   153792
+      *  CALLS: None                                                  *   153792
+      *                                                               *   153792
+      *****************************************************************   153792
+      *                                                                   153792
+     C           SRI000    BEGSR                                          153792
+      *                                                                   153792
+      ** Retrieve account officer name.                                   153792
+      *                                                                   153792
+     C           FEACOF    IFEQ *BLANKS                                   153792
+     C                     MOVE *ALL'*'   AZACON                          153792
+     C                     ELSE                                           153792
+     C**********           MOVE FEACOF    CUACOF  2                                    153792 246188
+     C                     MOVE SVACOF    CUACOF  2                                           246188
+     C                     CALL 'AOACOFR0'                                153792
+     C                     PARM '*BLANKS' WRTCD   7                       153792
+     C                     PARM '*KEY   ' WOPTN   7                       153792
+     C                     PARM CUACOF    WACOF   2                       153792
+     C           SDACOF    PARM SDACOF    DSFDY                           153792
+     C           WRTCD     IFNE *BLANKS                                   153792
+     C                     MOVE *ALL'*'   AZACON                          153792
+     C                     ENDIF                                          153792
+     C                     ENDIF                                          153792
+      *                                                                   153792
+     C**********           MOVELFEACOF    @AO                                          153792 246188
+     C                     MOVE AZACON    @AO                             153792
+      *                                                                   153792
+      ** Retrieve Customer Name and Town.                                 153792
+      *                                                                   153792
+     C                     CALL 'AOCUSTR0'             99                 153792
+     C                     PARM '*MSG   ' @RTCD                           153792
+     C                     PARM '*KEY   ' @OPTN                           153792
+     C                     PARM           KEYC                            153792
+     C                     PARM           KEYSTS  7                       153792
+     C           SDCUST    PARM SDCUST    DSSDY                           153792
+      *                                                                   153792
+     C           @RTCD     IFNE *BLANKS                                   153792
+     C                     MOVE *ALL'*'   BBCRNM 20                       153792
+     C           *LOCK     IN   LDA                         ************  153792
+     C                     MOVELFECNUM    DBKEY             * DBERR 02 *  153792
+     C                     Z-ADD2         DBASE             ************  153792
+     C                     MOVEL'SDCUSTPD'DBFILE                          153792
+     C                     SETON                     U7U8LR               153792
+     C                     EXSR *PSSR                                     153792
+     C                     OUT  LDA                                       153792
+     C                     EXSR F0000                                     153792
+     C                     ENDIF                                          153792
+     C                     MOVE FECNUM    @CUS                            153792
+      *                                                                   153792
+      ** Retrieve Currency Details.                                       153792
+      *                                                                   153792
+     C                     CALL 'AOCURRR0'             99                 153792
+     C                     PARM '*MSG    '@RTCD                           153792
+     C                     PARM '*KEY    '@OPTN                           153792
+     C                     PARM FEFCCY    CURKEY  3                       153792
+     C           SDCURR    PARM SDCURR    DSSDY                           153792
+      *                                                                   153792
+     C           @RTCD     IFNE *BLANKS                                   153792
+     C           *LOCK     IN   LDA                         ************  153792
+     C                     MOVELFEFCCY    DBKEY             * DBERR 03 *  153792
+     C                     Z-ADD3         DBASE             ************  153792
+     C                     MOVEL'SDCURRPD'DBFILE                          153792
+     C                     SETON                     U7U8LR               153792
+     C                     EXSR *PSSR                                     153792
+     C                     OUT  LDA                                       153792
+     C                     EXSR F0000                                     153792
+     C                     ENDIF                                          153792
+      *                                                                   153792
+     C                     MOVEA'0000'    *IN,60                          153792
+     C                     SELEC                                          153792
+     C           A6NBDP    WHEQ 0                                         153792
+     C                     MOVE '1'       *IN60                           153792
+     C           A6NBDP    WHEQ 1                                         153792
+     C                     MOVE '1'       *IN61                           153792
+     C           A6NBDP    WHEQ 2                                         153792
+     C                     MOVE '1'       *IN62                           153792
+     C           A6NBDP    WHEQ 3                                         153792
+     C                     MOVE '1'       *IN63                           153792
+     C                     ENDSL                                          153792
+     C                     MOVE FEFCCY    @CCY                            153792
+      *                                                                   153792
+      ** Format Amount Due.                                               153792
+      *                                                                   153792
+     C           FECALT    IFNE *BLANK                                    153792
+     C           FECALT    ANDNE*ZERO                                     153792
+     C                     Z-ADDFEAMTP    @DSAMT                          153792
+     C                     ADD  FEAMTA    @DSAMT                                              227253
+     C                     ELSE                                           153792
+     C                     Z-ADDFEFAMT    @DSAMT                          153792
+     C                     ENDIF                                          153792
+      *                                                                                      243496B
+     C                     MOVE '0'       *IN30                                              243496B
+     C           FEAAMT    CHAINLEFEAMF              30                                      243496B
+      *                                                                                      243496B
+     C           *IN30     IFEQ '0'                                                          243496B
+     C                     ADD  FEOAMT    @DSAMT                                             243496B
+     C                     ENDIF                                                             243496B
+      *                                                                   153792
+      ** Format Due Date.                                                 153792
+      *                                                                   153792
+     C           FEDIND    IFEQ 'A'                                       153792
+     C                     Z-ADDFEDDAT    ZDAYNO                          153792
+      *                                                                   153792
+     C                     ELSE                                           153792
+      *                                                                   153792
+     C                     SELEC                                          153792
+     C           FEPYON    WHEQ 'E'                                       153792
+     C                     MOVE FEPEND    ZDAYNO                          153792
+     C           FEPYON    WHEQ 'N'                                       153792
+     C                     Z-ADDFEDDAT    ZDAYNO                          153792
+     C                     OTHER                                          153792
+     C                     Z-ADDFEPSTD    ZDAYNO                          153792
+     C                     ENDSL                                          153792
+     C                     ENDIF                                          153792
+      *                                                                   153792
+     C                     EXSR ZDATE2                                    153792
+     C                     MOVE ZADATE    @DD                             153792
+      *                                                                   153792
+      ** Format Fee Indicator.                                            153792
+      *                                                                   153792
+     C********** *IN20     IFEQ *ON                                                    153792 193475
+     C           *IN28     IFEQ '1'                                                           193475
+     C                     SELEC                                          153792
+     C           PTFI      WHEQ ' '                                       153792
+     C                     MOVEL'RCV'     RPTFI                           153792
+     C           PTFI      WHEQ 'P'                                       153792
+     C           PTFI      OREQ 'S'                                                           CLE106
+     C           PTFI      OREQ 'R'                                                           CLE106
+     C                     MOVEL'PAY'     RPTFI                           153792
+     C           PTFI      WHEQ 'I'                                       153792
+     C                     MOVEL'INT'     RPTFI                           153792
+     C                     ENDSL                                          153792
+     C                     ENDIF                                          153792
+      *                                                                   153792
+     C                     SELEC                                          153792
+     C           @DUE      WHEQ 'A'                                       153792
+     C           @DSAMT    IFNE *ZERO                                                         245614
+     C                     WRITELER160D1                                  153792
+     C                     ENDIF                                                              245614
+     C           @DUE      WHEQ 'B'                                       153792
+     C********** *IN50     IFEQ '0'                                                    153792 247136
+     C**********           MOVE *BLANKS   @AO                                          153792 247136
+     C**********           ENDIF                                                       153792 247136
+     C           @DSAMT    IFNE *ZERO                                                         246363
+     C                     WRITELER161D1                                  153792
+     C                     ENDIF                                                              246363
+     C           @DUE      WHEQ 'C'                                       153792
+     C********** *IN50     IFEQ '0'                                                    153792 247136
+     C**********           MOVE *BLANKS   @AO                                          153792 247136
+     C**********           ENDIF                                                       153792 247136
+     C           @DSAMT    IFNE *ZERO                                                         246363
+     C                     WRITELER162D1                                  153792
+     C                     ENDIF                                                              246363
+     C                     ENDSL                                          153792
+      *                                                                   153792
+     C                     ENDSR                                          153792
+      *                                                                   153792
+      ********************************************************************
+      *
+      *  *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS
+      *
+      *  CALLED FROM: AFTER ABNORMAL OPERATION OCCURS
+      *
+      *  CALLS: NOTHING
+      *
+      ********************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C                     ENDSR                           ** *PSSR **
+      *
+      ********************************************************************
+     C/TITLE SR/ZDATE2
+     C/COPY ZSRSRC,ZDATE2Z2
+     C********************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

@@ -1,0 +1,347 @@
+0003 H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Int Capit'n Req-Branch & 'All' Optio')           *
+0002 F*****************************************************************
+0003 F*                                                               *
+     F*  Midas - General Ledger Module
+0005 F*                                                               *
+0006 F*  GL0299 - INTEREST/CAPITALISATION REQUEST                     *
+0007 F*           BRANCH AND 'ALL' OPTIONS UPDATE                     *
+0008 F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+0010 F*                                                               *
+      *  Last Amend No. CRE073             Date 06Dec10               *
+      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01413             Date 13Apr93               *
+      *                 HK0000             Date 14Mar89               *
+     F*                 S01117                  14MAR89               *
+0011 F*                 S01194                  14MAR89               *
+0011 F*                 S01197                  14MAR89               *
+0012 F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  S01413 - Retail 3 Incorporation                              *
+     F*  S01197 - RE -- > GL CONVERSION                               *
+     F*  S01194 - NEW STANDING DATA                                   *
+     F*  S01117 - MULTIBRANCHING.                                     *
+     F*  HK0000 - ACCNT FILE SHOULD BE COMMITTED                      *
+     F*                                                               *
+0013 F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+0014 F*CCNT   UP  F     400 15AI     2 DISK                               S01413
+0014 F***ACCNT** UP  F     424 18AI     2 DISK                                         S01413 CGL029
+     FACCNT   UP  F     573 24AI     2 DISK                                                   CGL029
+     F                                              KCOMIT                HK0000
+     FSDBANKL1IF  E                    DISK                               S01413
+0015 F*       FUNCTION OF INDICATORS
+0016 F*       74      ACCNT FILE - RECORD FOUND, CLOSED
+0017 F*       73      ACCNT FILE - RECORD FOUND, DELETED
+0018 F*       71      ACCNT FILE - RECORD FOUND, LIVE
+0019 F*       76      FIRST CYCLE IND
+     E                    CPY@    1   1 80
+0020 I*
+0021 I*    MASTER FILE - DETAIL RECORD - ACCOUNT DETAILS FILE - S/ACCNT
+0022 I*
+0023 IACCNT   NS  74   1 CC
+0024 I       OR   73   1 C*
+0025 I       OR   71   1 CD
+0026 I                                        1   1 MRECI
+0027 I**********                              2   70CNUM                                      CSD027
+0027 I                                        2   7 CNUM                                      CSD027
+0028 I                                        8  10 CCY
+0029 I**********                             11  140ACOD                                      CGL029
+     I                                       11  140ACODQQ                                    CGL029
+0030 I                                       15  160ACSQ
+0031 I***********                            23  250BRCD                  S01117
+0032 I                                       23  25 BRCDA
+0033 I                                       26  26 ATYP
+0034 I                                       27  27 STYP
+0035 I                                       29  29 ACST
+0036 I                                    P  30  320DACO
+0037 I                                    P  33  350DACC
+0038 I                                       36  55 ANAM
+0039 I                                    P  56  630LDBL
+0040 I                                    P  64  710CLBL
+0041 I                                       72  72 STFQ
+0042 I                                       73  740STDY
+0043 I                                    P  75  770LSTD
+0044 I                                    P  78  800NSTD
+0045 I                                    P  81  820LSTP
+0046 I                                    P  83  900CFSB
+0047 I                                    P  91  930LMVD
+0048 I                                    P  94 1010EPLB
+0049 I                                    P 102 1090EPCB
+0050 I                                    P 110 1170YTDB
+0051 I                                      118 118 GLBT
+0052 I                                    P 138 1400DLIM
+0053 I                                    P 141 1430LRCR
+0054 I                                    P 144 1510RTCB
+0055 I                                    P 152 1590RTLB
+0056 I                                    P 160 1660DITM
+0057 I                                    P 167 1730CITM
+0058 I                                      190 1990ACNO
+0059 I                                      200 200 RETB
+0060 I                                      201 201 ODSC
+0061 I                                    P 202 2070ODLN
+0062 I                                    P 208 2100ODED
+0063 I                                    P 211 2120DIOD
+0064 I                                      213 2150FACT
+0065 I                                      216 2170FCNO
+0066 I                                      218 219 EFAC
+0067 I                                    P 220 2270HELD
+0068 I                                    P 228 2330MINB
+0069 I                                    P 234 2360LACD
+0070 I                                    P 237 2380LISPX
+0071 I                                    P 239 2410RRNM
+0072 I                                      242 2430DRIB
+0073 I                                    P 244 2497DRIS
+0074 I                                    P 250 2520DRCD
+0075 I                                      253 2530DRIC
+0076 I                                      254 254 DRIF
+0077 I                                      255 2560DRDY
+0078 I                                    P 257 2590NDID
+0079 I                                    P 260 2620LDID
+0080 I                                    P 263 2690LDIA
+0081 I                                    P 271 2730LPAR
+0082 I                                    P 274 2800DIIE
+0083 I                                      303 303 DDIS
+0084 I                                    P 307 3090OLDR
+0085 I                                      318 3190CRIB
+0086 I                                    P 320 3257CRIS
+0087 I                                    P 326 3280CRCD
+0088 I                                      329 3290CRIC
+0089 I                                      330 330 CRIF
+0090 I                                      331 3320CRDY
+0091 I                                    P 333 3350NCID
+0092 I                                    P 336 3380LCID
+0093 I                                    P 339 3450LCIA
+0094 I                                    P 347 3490LPAP
+0095 I                                    P 350 3560CIIE
+0096 I                                      379 379 CDIS
+0097 I                                    P 383 3850OLCR
+0098 I                                    P 394 3960MLCD
+0099 I                                      397 397 MCHTP
+0100 I                                    P 398 4000MTNLU
+     I**********                            419 4220LTAC                               S01413 CGL029
+     I                                      419 4220LTACQQ                                    CGL029
+     I                                      554 5630ACOD                                      CGL029
+     I                                      564 5730LTAC                                      CGL029
+0101 I                                        1 200 MOLD1
+0102 I                                      201 400 MOLD2
+0103 I*
+0104 I*    CATCHALL
+0105 I        NS
+0106 I                                        1   1 MRECI
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+0107 I*
+0108 I* LOCAL DATA AREA
+0109 I*
+0110 ILDA        UDS                            256
+0111 I                                        1   8 LPROC
+0112 I                                      112 114 LBRCD
+0113 I                                      115 129 LACCNT
+0114 I                                      130 130 LGLBT
+0115 I                                      131 131 LDDIS
+0116 I                                      132 132 LCDIS
+0117 I                                      133 133 LATYP
+     I***********                           134 138 LFILE                 S01194
+     I***********                           139 167 LKEY                  S01194
+     I***********                           168 175 LPROG                 S01194
+     I***********                           176 1770LDBNO                 S01194
+0073 I**********                            181 1850LRUND                 S01194
+0074 I**********                            186 192 LRUNA                 S01194
+0075 I**********                            193 193 LDATF                 S01194
+0076 I***********                           194 1940LSFLG                 S01194
+0077 I**********                            195 1960LKEYL                 S01194
+0078 I**********                            197 202 LISP                  S01194
+0079 I**********                            203 203 LTWOL                 S01194
+0080 I**********                            204 2040LLDLP                 S01194
+0081 I**********                            205 2090LTNLU                 S01194
+0082 I**********                            210 210 LDELM                 S01194
+0083 I**********                            211 211 LDUD                  S01194
+     I                                      134 141 DBFILE                S01194
+     I                                      142 170 DBKEY                 S01194
+     I                                      171 180 DBPGM                 S01194
+     I                                      181 1830DBASE                 S01194
+0073 I                                      184 1880LRUND                 S01194
+0074 I                                      189 195 LRUNA                 S01194
+0075 I                                      196 196 LDATF                 S01194
+0076 I                                      197 197 LSFLG                 S01194
+0077 I                                      198 1990LKEYL                 S01194
+0078 I                                      200 205 LISP                  S01194
+0079 I                                      206 206 LTWOL                 S01194
+0080 I                                      207 2070LLDLP                 S01194
+0081 I                                      208 2120LTNLU                 S01194
+0082 I                                      213 213 LDELM                 S01194
+0083 I                                      214 214 LDUD                  S01194
+     I                                      215 215 LRET2                 S01413
+     I                                      216 216 LRUSE                 S01413
+     I                                      217 2200LLTAC                 S01413
+     I**                                                                  S01117
+     I** DATA AREA RUNDAT                                                 S01117
+     I**                                                                  S01117
+     IRUNDT       DS                                                      S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     I**                                                                  S01413
+     ISDRETL    E DSSDRETLPD                                              S01413
+     I**  EXTERNAL DS FOR RETAIL ICDR DETAILS                             S01413
+     I*                                                                   S01413
+     IDSFDY     E DSDSFDY                                                 S01413
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01413
+     I*                                                                   S01413
+     C           *ENTRY    PLIST                                          S01117
+     C                     PARM           MODULE  1                       S01117
+     C/COPY WNCPYSRC,GL0299C001
+0133 C*
+0134 C* FIRST CYCLE PROCESSING
+0135 C*
+     C                     SETOF                     1024                 S01413
+     C                     MOVEACPY@      BIS@   80
+0136 C   76                GOTO ENDFC
+0137 C                     SETON                     76
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C           *LOCK     IN   LDA
+     C                     IN   RUNDT                                     S01117
+     C*                                                                   S01413
+     C** GET INSTALLATION CONTROL DATA RECORD 1                           S01413
+     C*                                                                   S01413
+     C                     READ SDBANKL1                 80               S01413
+     C*                                                                   S01413
+     C** GET ICD3 FOR RETAIL LDAC USED                                    S01413
+     C*                                                                   S01413
+     C           LRET2     IFEQ 'Y'                                       S01413
+      *                                                                   S01413
+     C                     CALL 'AORETLR0'                                S01413
+     C                     PARM '*DBERR ' @RTCD   7                       S01413
+     C                     PARM '*FIRST ' @OPTN   7                       S01413
+     C           SDRETL    PARM SDRETL    DSFDY                           S01413
+      *                                                                   S01413
+     C                     END                                            S01413
+0138 C*
+0139 C* SET UP STANDARD PROGRAM FIELDS
+0140 C*
+0141 C                     MOVELLISP      WPROG   8
+0142 C                     MOVE '9  '     WPROG
+0143 C                     MOVELWPROG     SPID    6
+0144 C*
+0145 C* SET UP STANDARD LDA FIELDS
+0146 C*
+0147 C**********           MOVE WPROG     LPROG                           S01194
+0147 C                     MOVE WPROG     DBPGM                           S01194
+0148 C                     Z-ADD9         LLDLP
+0149 C*
+0150 C* TEST FOR BLANK BRANCH CODE IN LDA
+0151 C*
+0152 C           LBRCD     COMP '   '                5050
+0153 C*
+0154 C**
+0155 C***SET*ON*INDICATORS*TO*SHOW*REQUESTS*MADE*IN*RE0298*****           S01197
+0155 C** SET ON INDICATORS TO SHOW REQUESTS MADE IN GL0298                S01197
+0156 C**
+0157 C                     TESTB'1'       LGLBT          60
+0158 C                     TESTB'0'       LGLBT          61
+0159 C           LDDIS     COMP 'D'                      62
+0160 C           LDDIS     COMP 'M'                      64
+0161 C           LCDIS     COMP 'D'                      63
+0162 C           LCDIS     COMP 'M'                      65
+0163 C**
+0164 C           ENDFC     TAG                             ** ENDFC TAG **
+0165 C*
+0166 C* IGNORE CLOSED ACCOUNTS,DELETED RECORDS
+0167 C*
+0168 C  N71                GOTO END
+0169 C*
+0170 C* BRANCH CODE ENTERED,COMPARE WITH RECORD
+0171 C*
+0172 C                     SETOF                     40
+0173 C   50      BRCDA     COMP LBRCD                    40
+     C*                                                                   S01117
+     C*    CHECK IF THE BRANCH CODE ON ACCOUNTS FILE JUST READ, IS        S01117
+     C*    VALID  FOR  THE  USER, WHEN MULTIBRANCHING INDICATOR           S01117
+     C*    IS YES & THE BRANCH CODE IN LDA IS BLANK                       S01117
+     C*                                                                   S01117
+     C           *IN50     IFNE '1'                                       S01117
+     C           MBIN      ANDEQ'Y'                                       S01117
+     C                     CALL 'ZVBBU'                                   S01117
+     C                     PARM BRCDA     @BRCX   3                       S01117
+     C                     PARM           @OTCD   10                      S01117
+     C           @OTCD     IFNE 0                                         S01117
+     C                     SETON                     40                   S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+0174 C   50N40             GOTO END
+0175 C* UPDATE INDICATOR FIELDS FOR O/P TO SELECTED S/ACCNT RECORDS
+0176 C* - IF DEMAND STMNT/CAP ALREADY REQUESTED,DO NOT OVERRIDE WITH MNMT
+0177 C*
+0178 C                     MOVE GLBT      OGLBT   1
+0179 C                     MOVE DDIS      ODDIS
+0180 C                     MOVE CDIS      OCDIS
+0181 C                     TESTB'1'       OGLBT          41
+0182 C   60                BITON'1'       OGLBT
+0183 C   61N41             BITON'0'       OGLBT
+0184 C           ODDIS     COMP 'D'                      41
+0185 C   62                MOVE 'D'       ODDIS   1
+0186 C   64N41             MOVE 'M'       ODDIS
+0187 C           OCDIS     COMP 'D'                      41
+0188 C   63                MOVE 'D'       OCDIS   1
+0189 C   65N41             MOVE 'M'       OCDIS
+0190 C*
+0191 C* DO NOT SET ON CAPITALISATION INDICATORS
+0192 C* FOR NON-RETAIL ACCOUNTS
+0193 C*
+0194 C           ATYP      COMP 'R'                  2424
+     C/COPY WNCPYSRC,GL0299C002
+     C        N24LTAC      COMP *ZERO                1010                 S01413
+     C/COPY WNCPYSRC,GL0299C003
+     C           *IN24     IFEQ '0'                                       S01413
+     C           BMLDAI    ANDEQ'Y'                                       S01413
+     C           DACO      ANDEQBJRDNB                                    S01413
+     C                     SETON                       10                 S01413
+     C                     END                                            S01413
+0195 C*
+0196 C           END       TAG                             ** END TAG ****
+0197 CLR                   MOVE '0  '     LPROC
+0197 CLR                   OUT  LDA
+0198 C*
+0199 OACCNT   D        71 50 40
+0200 O       OR        71N50N40
+0201 O                         OGLBT    118
+0202 O***********           N24ODDIS    303                               S01413
+0203 O***********           N24OCDIS    379                               S01413
+0202 O                   N10N24ODDIS    303                               S01413
+0203 O                   N10N24OCDIS    379                               S01413
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,129 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas FT Return Status Background Job')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - Funds Transfer                                   */
+/*                                                                   */
+/*       FTC000988 - FT Return Status Background Job                 */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2015           */
+/*                                                                   */
+/*       Last Amend No. MD031644 *CREATE   Date 05Jan15              */
+/*       Prev Amend No. Xnnnnn             Date ddmmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD031644 - SP7 Build issue (Rework of CFT158 Return         */
+/*                  Status of Interfaced FT Payments). Unable        */
+/*                  to compile GP002900 due to zonal access.         */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+/* Declare work variables */
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PFRNT) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&PTRAN) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&PPREF) TYPE(*CHAR) LEN(16)
+ 
+/* Declare parameters to QRCVDTAQ */
+             DCL        VAR(&DTQNAM)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTQLIB)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTQLEN)  TYPE(*DEC)  LEN(5 0)
+             DCL        VAR(&DTQDTA)  TYPE(*CHAR) LEN(60)
+             DCL        VAR(&DTQWAIT) TYPE(*DEC)  LEN(5 0)
+ 
+/* Declare parameters to AOSVALR0 */
+             DCL        VAR(&POP01) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&POP02) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&POP03) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&POP04) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&POP05) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&POP06) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&POP07) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&POP08) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&POP09) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&POP10) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&PVL01) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVL02) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVL03) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVL04) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVL05) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVL06) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVL07) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVL08) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVL09) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVL10) TYPE(*CHAR) LEN(200)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2015')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Start commitment control */
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351)
+ 
+/* Create data area in QTEMP */
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+/* Do not run if FTRETS_xx job is already running */
+             ALCOBJ     OBJ((FTRETSLCK *DTAARA *EXCL)) WAIT(0)
+             MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(ENDCLPGM))
+ 
+             CHGVAR     VAR(&DTQNAM) VALUE('FTRETSDTQ')
+             CHGVAR     VAR(&DTQLIB) VALUE('*LIBL')
+             CHGVAR     VAR(&DTQLEN) VALUE(60)
+             CHGVAR     VAR(&DTQDTA) VALUE(' ')
+             CHGVAR     VAR(&DTQWAIT) VALUE(-1)
+ 
+/* Receive message from data queue until 'END' message is encountered  */
+RECEIVE:
+             CALL       PGM(QRCVDTAQ) PARM(&DTQNAM &DTQLIB &DTQLEN +
+                          &DTQDTA &DTQWAIT)
+ 
+/* No message read, loop back to re-read the data queue */
+             IF         COND(&DTQDTA *EQ ' ') THEN(DO)
+             GOTO       CMDLBL(RECEIVE)
+             ENDDO
+ 
+/* END message received, terminate processing */
+             IF         COND(%SST(&DTQDTA 1 3) = 'END') THEN(DO)
+             GOTO       CMDLBL(ENDCLPGM)
+             ENDDO
+ 
+/* Data was received, extract the expected information */
+             CHGVAR     VAR(&PFRNT) VALUE(%SST(&DTQDTA 1 20))
+             CHGVAR     VAR(&PTRAN) VALUE(%SST(&DTQDTA 21 20))
+             CHGVAR     VAR(&PPREF) VALUE(%SST(&DTQDTA 41 16))
+ 
+/* Call program to build status message and send to MQ queue */
+             CALL       PGM(FT000988) PARM(&PFRNT &PTRAN &PPREF)
+ 
+/* If error encountered, resend back data to the data queue to avoid */
+/* losing it and so the message can be processed again. */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             CALL       PGM(QSNDDTAQ) PARM(&DTQNAM &DTQLIB +
+                          &DTQLEN  &DTQDTA)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+             ELSE       CMD(GOTO CMDLBL(RECEIVE))
+ 
+/* Abnormal Processing */
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+             SNDMSG     MSG('FTC000988 - FT Return Status Background +
+                          job has ended in error. Check dump for +
+                          information.') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/* End program */
+ ENDCLPGM:
+             ENDCMTCTL
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             ENDPGM

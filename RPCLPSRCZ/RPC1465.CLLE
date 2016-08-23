@@ -1,0 +1,159 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas RP All for Customers      - take on - select')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Private Banking Module                              */
+/*                                                                   */
+/*       RPC1465 - All Transactions/Positions for Customer take on.  */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. CLE134             Date 01Aug12              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Prev Amend No. BG18886            Date 27May08              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4.01 -----------------------------------------------*/
+/*                      198158             Date 24Oct01              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.05 ---------------------------------------------------*/
+/*                      CPB002  *CREATE    Date 01Jun99              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CLE134 - Past Due Call Loan Processing (Recompile)          */
+/*       BG18886 - Amend non-standard codes.                         */
+/*       198158 - To validate Account Manager and Acc. officer, a new*/
+/*                value for return code has been added. *ErrCust     */
+/*       CPB002 - New Private Banking Customer Processing.           */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+/*-------------------------------------------------------------------*/
+/*  Variables declaration.                                           */
+/*-------------------------------------------------------------------*/
+ 
+             DCL        VAR(&Option)     TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ReturnCode) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&Command)    TYPE(*CHAR) LEN(128)
+             DCL        VAR(&Length)     TYPE(*DEC)  LEN(15 5) VALUE(128)
+ 
+             DCL        VAR(&Msgdta)     TYPE(*CHAR) LEN(128)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2001')
+ 
+/*-------------------------------------------------------------------*/
+/*  Transactions/Positions Take on file declaration.                 */
+/*  Selecting only records with "All for customer" flag = 'Y'.       */
+/*-------------------------------------------------------------------*/
+ 
+             DCLF       FILE(RPTPTOL2) RCDFMT(RPTPTOD0)
+ 
+/*-------------------------------------------------------------------*/
+/*  Global Monitor Message.                                          */
+/*-------------------------------------------------------------------*/
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/*-------------------------------------------------------------------*/
+/*  Set switches U7 and U8 off.                                      */
+/*-------------------------------------------------------------------*/
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/*-------------------------------------------------------------------*/
+/*  Set Requested PB Customer Flag, only if full take on processing  */
+/*  is done within the scope of Private Banking Customers take on.   */
+/*-------------------------------------------------------------------*/
+ 
+             IF         COND(%SWITCH(0XXXXXXX)) THEN(DO)
+ 
+                   /* Set Customer Details file (OPNQRYF) to the beginning of file. */
+                   POSDBF     OPNID(SDCUSTPD) POSITION(*START)
+ 
+                   CHGVAR     VAR(&Option) VALUE('S')
+                   CALLPRC    PRC(RP1475) PARM(&Option)
+ 
+                   /* Get Return Code from Customer Selection Data Area. */
+                   RTVDTAARA  DTAARA(RPCUST (1 10)) RTNVAR(&ReturnCode)
+ 
+                   /* If any error occurred while processing take on. */
+/************IF         COND(&RETURNCODE *= ' ' *AND &RETURNCODE *= +       */ /*198158*/
+/************             '*Warning') THEN(DO)                              */ /*198158*/
+/************IF         COND(&RETURNCODE *= ' ' *AND &RETURNCODE *= +       */ /*198158 BG18886*/
+/************             '*Warning' *AND &RETURNCODE *= '*ErrCust') THEN(DO)   *198158 BG18886*/
+             IF         COND(&RETURNCODE *NE ' ' *AND &RETURNCODE +
+                          *NE '*Warning' *AND &RETURNCODE *NE +
+                          '*ErrCust') THEN(DO)                                 /*198158 BG18886*/
+                         GOTO       CMDLBL(ENDPGM)
+                   ENDDO
+ 
+             ENDDO
+ 
+/*-------------------------------------------------------------------*/
+/*  Process all Transactions/Positions for selected customer(s).     */
+/*-------------------------------------------------------------------*/
+ 
+ RCVF:       RCVF
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(RESET))
+ 
+             CHGVAR     VAR(&Command) VALUE(' ')
+             CHGVAR     VAR(&Command) VALUE(&TPPCMD *CAT &TPPARA)
+ 
+             CALL       PGM(QCMDEXC) PARM(&Command &Length)
+ 
+             /* Get Return Code from Customer Selection Data Area. */
+             RTVDTAARA  DTAARA(RPCUST (1 10)) RTNVAR(&ReturnCode)
+ 
+             /* If any error occurred while processing take on. */
+/************IF         COND(&RETURNCODE *= ' ' *AND &RETURNCODE *= +       */ /*198158*/
+/************             '*Warning') THEN(DO)                              */ /*198158*/
+/************IF         COND(&RETURNCODE *= ' ' *AND &RETURNCODE *= +       */ /*198158 BG18886*/
+/************             '*Warning' *AND &RETURNCODE *= '*ErrCust')THEN(DO)*/ /*198158 BG18886*/
+             IF         COND(&RETURNCODE *NE ' ' *AND &RETURNCODE *NE +
+                          '*Warning' *AND &RETURNCODE *NE '*ErrCust') THEN(DO) /*198158 BG18886*/
+                   CHGVAR     VAR(&Msgdta) VALUE(&TPINAR)
+                   SNDPGMMSG  MSGID(RP00003) MSGF(PBUSRMSG) MSGDTA(&Msgdta) +
+                                TOPGMQ(*PRV) TOMSGQ(MOPERQ)
+             ENDDO
+ 
+             GOTO       CMDLBL(RCVF)
+ 
+/*-------------------------------------------------------------------*/
+/*  Reset Requested PB Customer Flag, only if full take on processing*/
+/*  is done within the scope of Private Banking Customers take on.   */
+/*-------------------------------------------------------------------*/
+ 
+ RESET:
+                   /* Set Customer Details file (OPNQRYF) to the beginning of file. */
+                   POSDBF     OPNID(SDCUSTPD) POSITION(*START)
+ 
+                   CHGVAR     VAR(&Option) VALUE('R')
+                   CALLPRC    PRC(RP1475) PARM(&Option)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/*-------------------------------------------------------------------*/
+/*  Abnormal Termination.                                            */
+/*-------------------------------------------------------------------*/
+ 
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             CHGDTAARA  DTAARA(RPCUST (1 10)) VALUE('AbnormlEnd')
+ 
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/*-------------------------------------------------------------------*/
+/*  End processing.                                                  */
+/*-------------------------------------------------------------------*/
+ 
+ ENDPGM:
+             ENDPGM

@@ -1,0 +1,839 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME Add network msg to database')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Message Management Module                            *
+     F*                                                               *
+     F*  ME1020 - Add Network Message to Database                     *
+     F*                                                               *
+     F*  Function:  This program adds records to the I.M.M.           *
+     F*             database.                                         *
+     F*                                                               *
+     F*  Called By: MS1900  - Extract SWIFT Messages for IMM          *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Last Amend No. CSW209             Date 01Apr09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CFT006             Date 26Nov99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 145199             Date 16Oct98               *
+     F*                 069250             DATE 03MAY94               *
+     F*                 S01435             DATE 23JUL93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSW209 - SWIFT 2009 Changes                                  *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+     F*  CFT006 - MT101/2 message addtion for outgoing/incoming RFT   *
+     F*  145199 - Recompile for changes to MEINCRPD and MEINMPPD made *
+     F*           in Year 2000 fix 124673.                            *
+     F*  069250 - Remove dummy OVRDBF command from creation parms.    *
+     F*  S01435 - Incoming Message Management                         *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*                                                               *
+     F*  50    First cycle                                            *
+     F*  90    Chain fail                                             *
+     F*  99    EOF on Read                                            *
+     F*                                                               *
+     F*  U7/U8 Error Ocurred                                          *
+     F*  LR    End program                                            *
+     F*                                                               *
+     F*****************************************************************
+     FMEINCRPDO   E           K        DISK         KINFSR SRFILEA    UC
+     F                                              KCOMIT
+      *
+      *  Incoming Message Control
+      *
+     FMEINDTPDO   E           K        DISK         KINFSR SRFILEA    UC
+     F                                              KCOMIT
+      *
+      *  Incoming Message Detail - data field longer than 35 chars
+      *
+     FMEIN35PDO   E           K        DISK         KINFSR SRFILEA    UC
+     F                                              KCOMIT
+      *
+      *  Incoming Message Detail - data field less or equal to 35 chars
+      *
+     FMEINMPPDO   E           K        DISK         KINFSR SRFILEA    UC
+     F                                              KCOMIT
+      *
+      *  Incoming Message Part Details
+      *
+     FMEINFTPDO   E           K        DISK         KINFSR SRFILEA    UC
+     F                                              KCOMIT
+      *
+      *  Incoming Message FT Details
+      *
+     FMEIRFTPDO   E           K        DISK         KINFSR SRFILEA    UC         CFT006
+     F                                              KCOMIT                       CFT006
+      *                                                                          CFT006
+      *  FT Message Management 101 and 102 Totals                                CFT006
+      *                                                                          CFT006
+     F/COPY WNCPYSRC,ME1020DFPG
+      *
+      *  /Copy point for File Definition
+      *
+     F/EJECT
+     E                    CPY@    1   1 80
+      *
+      *  Copyright table
+      *
+     E/COPY WNCPYSRC,ME1020DEPG
+      *
+      *  /Copy point for Arrays
+      *
+     E/COPY MECPYSRC,SRERRE
+      *
+      *  end of Copysource for error processing
+      *
+     E                    MSG       150  1
+      *
+      *  Message Detail data field array
+      *
+     E/EJECT
+     I/COPY WNCPYSRC,ME1020DIPG
+      *
+      *  /Copy point for Input specifications
+      *
+      *
+     ICPYR@#      DS
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     I/COPY MECPYSRC,SRERRI
+      *
+      *  End of Program Error Processing copysource member
+      *
+     IRUNDTA    E DSRUNDAT
+      *
+      *  Define rundat data area
+      *
+     IMEDTA     E DSMEDTA
+      *
+      *  Message Management Data Area
+      *
+     IINCR      E DSMEINCRPD
+      *
+      *  Define Incoming Message Control data structure
+      *
+     IINDT      E DSMEINDTPD
+      *
+      *  Define Incoming Message Detail > 35 chars data structure
+      *
+     IINDS      E DSMEIN35PD
+      *
+      *  Define Incoming Message Detail <= 35 chars data structure
+      *
+     IINMP      E DSMEINMPPD
+      *
+      *  Define Incoming Message Part Detail data structure
+      *
+     IINLF      E DSMEINLFPD
+      *
+      *  Define Incoming Message Log File
+      *
+     IINMC      E DSMEINMCPD
+      *
+      *  Define parameters to be passed for message checking
+      *
+     IIRFT      E DSMEIRFTPD                                              CFT006
+      *                                                                   CFT006
+      *  Define FT message management 101 and 102 totals data structure   CFT006
+      *                                                                   CFT006
+     IDSFDY     E DSDSFDY
+      *
+      * Data Structures used by Access Programs
+      *
+     ISDMMOD    E DSSDMMODPD
+      *                                                                   CFT006
+      * Switchable Features Descriptions *                                CFT006
+      *                                                                   CFT006
+     ISCSARD    E DSSCSARDPD                                              CFT006
+      *
+      *  Midas Modules *
+      *
+     IW0DATA      DS                            512
+      *
+      *  Define data structure used to pass file data structures
+      *
+      *
+     IACTION      DS                            132
+      *  Breakdown of Action Result Data
+      *
+     I                                        1   6 ANETW
+     I                                        7  140AMSGR
+     I                                       15  42 AMIR
+     I                                       43  70 AMOR
+      *
+     IMSGDET      DS
+      *  Breakdown of Message Line
+      *
+     I                                        1  35 M35
+     I                                       36 100 M100
+     I/EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0ACT   8
+     C                     PARM           W0DATA
+     C                     PARM           W0RTN   7
+      *
+      *  Set up primary reference
+      *
+     C                     MOVELW0DATA    W0PREF
+      *
+      * Initialise program
+      *
+     C           *IN50     IFEQ '0'
+     C                     EXSR SRINIT
+     C                     END
+      *
+      *  Determine the mode of processing and execute subroutine :-
+      *
+      *
+      *  Action Code : *ADDMSG
+      *  ---------------------
+      *
+      *  Called from MS1900 to verify that the Incomimg Message may be
+      *  added to the data base. Once verified, control returns to the
+      *  MS1900 and from there the message details are extracted and
+      *  this program called again with the action codes listed below.
+      *
+      *
+      *  Action Code : *MSGDATA
+      *  ----------------------
+      *
+      *  Called from MS1900 to add the Incoming Message Detail record.
+      *  One record for each line of the message.
+      *
+      *
+      *  Action Code : *MSGPART
+      *  ----------------------
+      *
+      *  Called from MS1900 to add the Incoming Message Midas
+      *  Transaction records, Header and Detail.
+      *
+      *  One record for each Part of the Block Identifier 4 section of
+      *  the message. A new part is processed for each ocurrence of the
+      *  tag :20:.
+      *
+      *
+      *  Action Code : *MSGHEAD
+      *  ----------------------
+      *
+      *  Called from MS1900 to add the Incoming Message Control
+      *  record. One control record for each message.
+      *
+      *                                                                         CFT006
+      *  Action Code : *RFTCTRL                                                 CFT006
+      *  ----------------------                                                 CFT006
+      *                                                                         CFT006
+      *  Called from MS1900 to add a record into                                CFT006
+      *  a specific 101/102 control file                                        CFT006
+      *
+      *
+      *  If invalid Action Code passed then report as an error.
+      *
+     C           W0ACT     CASEQ'*ADDMSG 'SRADD
+     C           W0ACT     CASEQ'*MSGDATA'SRDETL
+     C           W0ACT     CASEQ'*MSGPART'SRPART
+     C           W0ACT     CASEQ'*MSGHEAD'SRHEAD
+     C           W0ACT     CASEQ'*RFTCTRL'SRRFTC                                CFT006
+     C                     CAS            SRACT
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *  Return to calling program
+      *
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRADD    : Verify that message may be added to the database. *
+      *                                                               *
+      *  CALLED BY: Main processing section                           *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRADD     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRADD '  @STK,Q
+      *
+      *  /Copy point for *ADDMSG action
+      *
+     C/COPY WNCPYSRC,ME1020DADD
+      *
+      * Move passed parameter data to relevant data structure
+      * and on to called program's data structure
+      *
+     C                     MOVELW0DATA    INMC
+     C                     MOVELINMC      W1DATA
+     C           *LIKE     DEFN INMC      W1DATA
+      *
+      * Verify message
+      *
+     C                     CALL 'ME1030'               90
+     C                     PARM '*ADDMSG 'W1ACT   8
+     C                     PARM           W1DATA
+     C                     PARM *BLANKS   W1RTN   7
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           W1RTN     OREQ '*ERROR*'
+     C                     MOVEL'ME1030  'W0FILE           ***************
+     C                     MOVEL'*CALL'   W0KEY            * DB ERROR 01 *
+     C                     Z-ADD1         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Process for valid message if return code is 'MIN0090'
+      *
+     C           W1RTN     IFEQ 'MIN0090'
+     C                     MOVELW1DATA    INMC
+      *
+      *  Get Unique Message Reference no. and place in parameter
+      *  data structure.
+      *
+      *  The no. may not neccessarily be in sequence - no audit is to
+      *  be performed to check if the no. is sequential on the
+      *  Incoming Message Control file.
+      *
+     C           *NAMVAR   DEFN           MEDTA
+     C           *LOCK     IN   MEDTA
+     C                     ADD  1         DAMSGR
+     C                     OUT  MEDTA
+      *
+      *  Set parameter with message reference to be passed back to
+      *  calling program
+      *
+     C                     Z-ADDDAMSGR    MCMSGR
+     C                     MOVELINMC      W0DATA
+      *
+     C                     END
+      *
+      *  Add record to Incoming Message Log File to record whether
+      *  message is valid or not.
+      *
+      *  Fill Action Result Data structure
+      *
+     C                     MOVELMCNWRK    ANETW            Network
+     C                     Z-ADDMCMSGR    AMSGR            Unique Ref.
+     C                     MOVELMCMIR     AMIR             Input Ref.   ID
+     C                     MOVELMCMOR     AMOR             Output Ref.
+      *
+      *  Fill record format data structure with available data
+      *
+     C                     CLEARINLF
+      *
+     C                     Z-ADDMCMSGR    LFMSGR           Unique Ref.
+     C                     Z-ADD0         LFKPRT           Part No.
+     C                     MOVEL'MIN0056' LFMSID           Action - Msg ID
+     C                     MOVELACTION    LFMSDT           Action Data
+     C                     MOVELW1RTN     LFARSM           Action Result
+     C                     MOVELACTION    LFARSD           Act Result Data
+     C                     MOVELMCCPGM    LFCPGM           Calling Process
+     C                     MOVEL##PGM     LFRPGM           Called Process
+      *
+      *  N.B. Audit Stamp details are determined in called program
+      *
+     C                     EXSR SRLOG
+      *
+      * Return to calling program for further processing based on the
+      * value of the return code.
+      *
+     C                     MOVELW1RTN     W0RTN
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXADD     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDETL   : Add Incoming Message Details to the Database      *
+      *                                                               *
+      *  CALLED BY: Main processing section                           *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRDETL    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRDETL'  @STK,Q
+      *
+      *  /Copy point for add details to database
+      *
+     C/COPY WNCPYSRC,ME1020DDET
+      *
+      *  Move passed parameter data to relevant data structures.
+      *  At this stage do not know which details file to update so set
+      *  up both.
+      *
+     C                     MOVELW0DATA    INDT
+     C                     MOVELW0DATA    INDS
+      *
+      *  Determine which record format to be added. This is based on
+      *  the actual length of the data string for the message line
+      *
+     C                     MOVELDTMFLD    MSGDET
+      *
+      *  Add record dependant on length of data string
+      *
+     C           M100      IFEQ *BLANKS
+     C           CSW209    IFEQ 'Y'                                                           CSW209
+     C                     MOVEL*BLANKS   DSMSEQ                                              CSW209
+     C                     MOVELDTMSEQ    DSMSEQ                                              CSW209
+     C                     ENDIF                                                              CSW209
+     C                     WRITE@IN35PD
+     C                     ELSE
+     C                     WRITE@INDTPD
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXDETL    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPART   : Add Incoming Message Midas Transaction Record     *
+      *                                                               *
+      *  CALLED BY: Main processing section                           *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRPART    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRPART'  @STK,Q
+      *
+      *  /Copy point for add part details to database
+      *
+     C/COPY WNCPYSRC,ME1020DPRT
+      *
+      * Move passed parameter data to relevant data structure
+      *
+     C                     MOVELW0DATA    INMP
+      *
+      * Indicate if payment message
+      *
+     C                     MOVELMCPMFG    MPPMFG
+      *
+      *  Add record
+      *
+     C                     WRITE@INMPPD
+      *
+      * If FT and payment message write record to MEINFTPD
+      *
+     C           MPPMFG    IFEQ 'P'
+     C           BGFDTR    ANDEQ'Y'
+     C                     CLEAR@INFTPD
+     C                     Z-ADDMPMSGR    FTMSGR
+     C                     Z-ADDMPKPRT    FTKPRT
+     C                     WRITE@INFTPD
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXPART    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************   CFT006
+      *                                                               *   CFT006
+      *  SRRFTC   : Add control record for 101                        *   CFT006
+      *                                                               *   CFT006
+      *  CALLED BY: Main processing section                           *   CFT006
+      *                                                               *   CFT006
+      *  CALLS    :         -                                         *   CFT006
+      *                                                               *   CFT006
+      *****************************************************************   CFT006
+     CSR         SRRFTC    BEGSR                                          CFT006
+      *                                                                   CFT006
+      *  Set up subroutine stack name                                     CFT006
+      *                                                                   CFT006
+     C                     ADD  1         Q                               CFT006
+     C                     MOVEL'SRRFTC'  @STK,Q                          CFT006
+      *                                                                   CFT006
+     C           CFT006    IFNE 'Y'                                       CFT006
+     C           CFT008    ANDNE'Y'                                       CFT006
+     C                     GOTO EXRFCT                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * Move passed parameter data to relevant data structure             CFT006
+      *                                                                   CFT006
+     C                     MOVELW0DATA    IRFT                            CFT006
+      *                                                                   CFT006
+      *  Add record                                                       CFT006
+      *                                                                   CFT006
+     C                     WRITEMEIRFTD0                                  CFT006
+      *                                                                   CFT006
+      *  Unwind subroutine stack name                                     CFT006
+      *                                                                   CFT006
+     C           EXRFCT    TAG                                            CFT006
+     C                     MOVEA*BLANKS   @STK,Q                          CFT006
+     C                     SUB  1         Q                               CFT006
+      *                                                                   CFT006
+     CSR                   ENDSR                                          CFT006
+     C/EJECT                                                              CFT006
+      *****************************************************************
+      *                                                               *
+      *  SRHEAD   : Add Incoming Message Control Record               *
+      *                                                               *
+      *  CALLED BY: Main processing section                           *
+      *                                                               *
+      *  CALLS    :         -                                         *
+      *                                                               *
+      *****************************************************************
+     CSR         SRHEAD    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRHEAD'  @STK,Q
+      *
+      *  /Copy point for add header details to database
+      *
+     C/COPY WNCPYSRC,ME1020DHDR
+      *
+      * Move passed parameter data to relevant data structure
+      *
+     C                     MOVELW0DATA    INCR
+      *
+      * If branch information is not default and CRBRCA is not blank
+      * then still use MCBRCA as this is an override.
+      *
+     C           MCBRCA    IFNE *BLANKS
+     C                     MOVELMCBRCA    CRBRCA
+     C                     END
+      *
+      *  Set up audit stamp
+      *
+     C                     TIME           TIME    60
+      *
+     C                     MOVEL##JOB     CRAJOB           Job Name
+     C                     MOVEL##USR     CRAUSR           User
+     C                     Z-ADDTIME      CRATIM           Action Time
+     C                     MOVELAGMRDT    CRARDT           Action Date
+     C                     MOVEL'I'       CRAACT           Action Type
+     C                     Z-ADDAGRDNB    CRRDNB           Run Day No.
+      *
+      *  Add record
+      *
+     C                     WRITE@INCRPD
+      *
+      *  Update received network information
+      *
+     C           *LOCK     IN   MEDTA
+     C           CRNWRK    IFEQ 'SWIFT '                   Network
+     C                     Z-ADDDAMSGR    DAMSG1
+     C                     END
+      *
+      *  /Copy point to allow other network updates
+      *
+     C/COPY WNCPYSRC,ME1020NWRK
+      *
+     C                     OUT  MEDTA
+      *
+      *  Add record to Incoming Message Log File
+      *
+      *  Fill Action Result Data structure
+      *
+     C                     MOVELCRNWRK    ANETW            Network
+     C                     Z-ADDCRMSGR    AMSGR            Unique Ref.
+     C                     MOVELCRMIR     AMIR             Input Ref.   ID
+     C                     MOVELCRMOR     AMOR             Output Ref.
+      *
+      *  Fill record format data structure with available data
+      *
+     C                     CLEARINLF
+      *
+     C                     Z-ADDCRMSGR    LFMSGR           Unique Ref.
+     C                     Z-ADD0         LFKPRT           Part No.
+     C                     MOVEL'MIN0057' LFMSID           Action - Msg ID
+     C                     MOVELACTION    LFMSDT           Action Data
+     C                     MOVEL'MIN0090' LFARSM           Action Result
+     C                     MOVELACTION    LFARSD           Act Result Data
+     C                     MOVELMCCPGM    LFCPGM           Calling Process
+     C                     MOVEL##PGM     LFRPGM           Called Process
+      *
+      *  N.B. Audit Stamp details are determined in called program
+      *
+     C                     EXSR SRLOG
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXHEAD    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRLOG    : Add Incoming Message Log File record              *
+      *                                                               *
+      *  CALLED BY: SRADD   - Verify Incoming Message                 *
+      *             SRHEAD  - Add Incoming Message Control record     *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRLOG     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRLOG '  @STK,Q
+      *
+      *  /Copy point for add log file details to database
+      *
+     C/COPY WNCPYSRC,ME1020DALF
+      *
+      *  Set up data to be passed using the rcd format data structure
+      *
+     C                     CALL 'ME1040'               90
+     C                     PARM '*ADD    'W2ACT   8
+     C                     PARM           INLF
+     C                     PARM *BLANKS   W2RTN   7
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           W2RTN     OREQ '*ERROR*'
+     C                     MOVEL'ME1040  'W0FILE           ***************
+     C                     MOVEL'*CALL'   W0KEY            * DB ERROR 02 *
+     C                     Z-ADD2         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXLOG     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRACT    : Undefined action - error                          *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRACT     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRACT '  @STK,Q
+      *
+      *  Database error undefined action
+      *
+     C                     MOVEL'*ACTION 'W0FILE           ***************
+     C                     MOVELW0ACT     W0KEY            * DB ERROR 03 *
+     C                     Z-ADD3         W0ERNB           ***************
+     C                     MOVEL'MEM5006' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXACT     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    * SRACCS - valid access                             *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *  Indicate that set up is complete
+      *
+     C                     SETON                     50
+      *                                                                   CFT006
+      *  Access SAR details file to see if CFT006 is installed.           CFT006
+      *                                                                   CFT006
+     C                     CALL 'AOSARDR0'             90                 CFT006
+     C                     PARM *BLANKS   P@RTCD  7                       CFT006
+     C                     PARM '*VERIFY' P@OPTN  7                       CFT006
+     C                     PARM 'CFT006'  @SARD   6                       CFT006
+     C           SCSARD    PARM *BLANKS   DSFDY                           CFT006
+      *                                                                   CFT006
+      *  Allow Batch Authorisation processing                             CFT006
+      *                                                                   CFT006
+     C           P@RTCD    IFEQ *BLANKS                                   CFT006
+     C           *IN90     ANDEQ'0'                                       CFT006
+     C                     MOVEL'Y'       CFT006                          CFT006
+     C                     ELSE                                           CFT006
+     C                     MOVEL'N'       CFT006  1                       CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      *  Access SAR details file to see if CFT008 is installed.           CFT006
+      *                                                                   CFT006
+     C                     CALL 'AOSARDR0'             90                 CFT006
+     C                     PARM *BLANKS   P@RTCD  7                       CFT006
+     C                     PARM '*VERIFY' P@OPTN  7                       CFT006
+     C                     PARM 'CFT008'  @SARD   6                       CFT006
+     C           SCSARD    PARM *BLANKS   DSFDY                           CFT006
+      *                                                                   CFT006
+      *  Allow Batch Authorisation processing                             CFT006
+      *                                                                   CFT006
+     C           P@RTCD    IFEQ *BLANKS                                   CFT006
+     C           *IN90     ANDEQ'0'                                       CFT006
+     C                     MOVEL'Y'       CFT008                          CFT006
+     C                     ELSE                                           CFT006
+     C                     MOVEL'N'       CFT008  1                       CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                                       CSW209
+      ** Check if SWIFT2009 is installed                                                      CSW209
+      *                                                                                       CSW209
+     C                     MOVEL'N'       CSW209  1                                           CSW209
+     C                     CALL 'SWIF2009'                                                    CSW209
+     C                     PARM *BLANKS   PRTCD   7                                           CSW209
+      *                                                                                       CSW209
+     C           PRTCD     IFEQ 'CSW2009'                                                     CSW209
+     C                     MOVEL'Y'       CSW209                                              CSW209
+     C                     ENDIF                                                              CSW209
+      *
+      * Open Files
+      *
+     C                     OPEN MEINCRPD
+     C                     OPEN MEINDTPD
+     C                     OPEN MEIN35PD
+     C                     OPEN MEINMPPD
+     C                     OPEN MEINFTPD
+     C           CFT006    IFEQ 'Y'                                       CFT006
+     C           CFT008    OREQ 'Y'                                       CFT006
+     C                     OPEN MEIRFTPD                                  CFT006
+     C                     ENDIF                                          CFT006
+      *
+      *  Get Rundate information
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      *
+      * Get modules information
+      *
+     C                     CALL 'AOMMODR0'             9090
+     C                     PARM *BLANKS   P@RTCD  7        B:Return code
+     C                     PARM '*FIRST ' P@OPTN  7        I:Option
+     C           SDMMOD    PARM *BLANKS   DSFDY            O:Module Flg
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           P@RTCD    OREQ '*ERROR*'
+     C                     MOVEL'AOMMODR0'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD4         W0ERNB           * DB ERROR 04 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+     C/COPY WNCPYSRC,ME1020DCPG
+      *
+      *  /Copy point for Calculations
+      *
+     C/EJECT
+      *
+      *  File and Program Error Processing
+      *
+     C/COPY MECPYSRC,SRERRC
+     C/EJECT
+     C/COPY WNCPYSRC,ME1020DOPG
+      *
+      *  /Copy point for Outputs
+      *
+**  CPY@ table
+(c) Misys International Banking Systems Ltd. 2001

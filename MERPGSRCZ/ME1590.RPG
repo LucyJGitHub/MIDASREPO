@@ -1,0 +1,484 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME Translate message field data')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management Module                            *
+      *                                                               *
+      *  ME1590 - Translate Message Field Data to MIDAS Equivalent    *
+      *                                                               *
+      *  Function:  This program translates the contents of a single  *
+      *             175 character message field.  The program also    *
+      *             receives general details for the message itself   *
+      *             which will enable it to find the correct          *
+      *             comparison record on the Contents Translation     *
+      *             table (MEDECDPD).                                 *
+      *                                                               *
+      *  Called By: ME1580  - Translate whole Message                 *
+      *                                                               *
+      *  Calls    : ME1400 - Access SWIFT identifier information      *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 162671             Date 24Jun99               *
+      *                 162506             Date 23Jun99               *
+      *                 CFT002  *CREATE    Date 05May98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *  162671 - Default translation field                           *
+      *  162506 - Change priority of possible translations            *
+      *           NWRK/TAG/CCY before NWRK/TAG                        *
+      *  CFT002 - Straight Through Processing Phase 1                 *
+      *           Based on ME1580 original references:                *
+      *           S01489/DBF258/DBF241/DBF133/DBF124/DBF076           *
+      *           DBF026/DBF025/HUB001                                *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Indicator usage                                              *
+      *  ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯                                              *
+      *                                                               *
+      *  11    Record Identifier for MEINDTS2                         *
+      *  12    Record Identifier for MEINDTS2                         *
+      *  50    First cycle completed                                  *
+      *  60    EOF on MEINDTS2                                        *
+      *  61    EOF on MEINFML1                                        *
+      *  63    Match found on table LOKUP                             *
+      *  90    Chain fail                                             *
+      *  91    Chain fail                                             *
+      *  99    EOF on Read                                            *
+      *                                                               *
+      *  U7/U8 Error Ocurred                                          *
+      *  LR    End program                                            *
+      *                                                               *
+      *****************************************************************
+     F/EJECT
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *   SRINIT   - Initialisation subroutine                        *
+      *   SRLKUP   - Look up data base for data                       *
+      *   SRYENK   - Special Processing for Yenksi Fields             *
+      *   SRSWFT   - Special Processing for SWIFT  Fields             *
+      *   TRANSL   - Translate incoming data to Midas Equivalent      *
+      *                                                               *
+      *****************************************************************
+     F/EJECT
+     FMEDECDL2IF  E           K        DISK         KINFSR SRFILE
+     F                                              KINFDS INFDS1
+      *  Incoming Message Translation File
+      *
+     F/COPY WNCPYSRC,ME1590YENF
+      *
+      *  SD Customer Details Extension File (keyed on bank code)
+      *
+      /EJECT
+     E                    CPY@    1   1 80
+      *  Array containing Copyright statement
+      *
+      ***  FIRST COMPILE TIME ARRAY ***
+      * Arrays
+      *
+      *  Copysource for error processing
+      *
+     E/COPY MECPYSRC,SRERRE
+      *                                                                                       CSC022
+      ** Array of Commitment Job Names                                                        CSC022
+     E                    CMTJOB     10 10                                                    CSC022
+     E/EJECT
+      *
+      *  Error Processing copysource member
+      *
+     I/COPY MECPYSRC,SRERRI
+      *  Copy data structures for error handling
+      *
+     IINFDS1    E DSY2I1DSP
+      * File information data structure
+      *
+     IP1MDET      DS
+      * KEY: Incoming Msg Translation  Retrieval index
+      * I : MAP Network
+     I                                        1   6 P2NWRK
+      * I : MAP Message Field Tag
+     I                                        7  11 P2MTAG
+      * I : MAP Currency
+     I                                       12  14 P2CYCD
+      * I : MAP Sender
+     I                                       15  34 P2SNDR
+      * I : MAP Message type
+     I                                       35  37 P2MTPY
+      *
+     IP2INDA      DS                            175
+      * KEY: Msg Translation  Data
+      *
+     I                                        1  35 I2IND1
+     I                                       36  70 I2IND2
+     I                                       71 105 I2IND3
+     I                                      106 140 I2IND4
+     I                                      141 175 I2IND5
+      *
+     ISDCUST    E DSSDCUSTPD
+      *
+      *  Calling parameter data structure for AOCUSTR0
+      *
+     ISDCNST    E DSSDCNSTPD
+      *
+      *  Calling parameter data structure for ME1400
+      *
+     IMEBICD    E DSMEBICDPD
+      *
+      *  Calling parameter data structure for ME1400
+      *
+     I/COPY WNCPYSRC,ME1590I001
+      *
+     IDSMTR       DS
+      *
+      *  Define fields for message transalation
+      *
+     I                                        1 132 #MSDTA
+     I                                      133 264 #MSTX1
+      *
+     I#MSTX2      DS                            512
+      *
+      *  Define fields for extended message
+      *
+     I                                        1 256 #MSTXA
+     I                                      257 512 #MSTXB
+      *
+     ISCCMT       DS                            256                                           CSC022
+     I                                        1   30CMTNUM                                    CSC022
+     I                                        4 103 CMTARR                                    CSC022
+     I/EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P1MDET           Msg details
+     C                     PARM           P2INDA           Incoming field
+     C                     PARM           P3RTN   7        Return Code
+     C                     PARM           P3DFLT  1        Default trnsltn                    162671
+      *****************************************************************
+      * Initialise program
+     C                     EXSR INIT
+      * Look up Data Base
+     C                     EXSR SRLKUP
+      * If no match key found
+     C   90                MOVEL'NORECRD' P3RTN
+      * If match key found
+      * Special Processing for Yenksi
+     C           P2NWRK    IFEQ 'YENKSI'
+     C                     EXSR SRYENK
+     C                     END
+      *
+      * Special Processing for SWIFT
+      *
+     C           P2NWRK    IFEQ 'SWIFT '
+     C** We apply the default translation only if specified in menu                           162671
+     C** MMXR                                                                                 162671
+     C           P3DFLT    IFEQ 'Y'                                                           162671
+     C                     EXSR SRSWFT
+     C                     END                                                                162671
+     C                     END
+     C/COPY WNCPYSRC,ME1590C002
+      *
+     C  N90                EXSR TRANSL
+      * Return to calling pgm
+     C                     RETRN
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  LOKUP    : Look up data base for data                        *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRLKUP    BEGSR
+      *
+      * Match on full key
+      *
+     C           KRTV      CHAIN@DECDL2              90
+     C           *IN90     IFEQ '1'
+      *
+      * Match without Sender
+      *
+     C                     MOVEL*BLANKS   DCSNDR           Sender
+     C           KRTV      CHAIN@DECDL2              90
+     C           *IN90     IFEQ '1'
+      *
+      * Match without Currency
+      *
+     C                     MOVEL*BLANKS   DCCYCD           Currency
+     C           KRTV      CHAIN@DECDL2              90
+     C           *IN90     IFEQ '1'
+      *                                                                                       162506
+      * Match with Network, Message Tag, Currency only                                        162506
+      *                                                                                       162506
+     C                     MOVELP2CYCD    DCCYCD           Currency                           162506
+     C                     MOVEL*BLANKS   DCMTPY           Message Type                       162506
+     C           KRTV      CHAIN@DECDL2              90                                       162506
+     C           *IN90     IFEQ '1'                                                           162506
+      *                                                                                       162506
+      * Match without Currency                                                                162506
+      *                                                                                       162506
+     C                     MOVEL*BLANKS   DCCYCD           Currency                           162506
+     C           KRTV      CHAIN@DECDL2              90                                       162506
+     C           *IN90     IFEQ '1'                                                           162506
+      ****                                                                                    162506
+      **Match*without*Message*Type                                                            162506
+      ****                                                                                    162506
+     C*********************MOVEL*BLANKS   DCMTPY           Message Type                       162506
+     C***********KRTV      CHAIN@DECDL2              90                                       162506
+     C************IN90     IFEQ '1'                                                           162506
+      ****                                                                                    162506
+      **Match*with*Network,*Message*Tag,*Currency*only                                        162506
+      ****                                                                                    162506
+     C*********************MOVELP2CYCD    DCCYCD           Currency                           162506
+     C***********KRTV      CHAIN@DECDL2              90                                       162506
+     C************IN90     IFEQ '1'                                                           162503
+      *
+      * Match with Network Currency only
+      *
+     C                     MOVELP2CYCD    DCCYCD           Currency
+     C                     MOVEL*BLANKS   DCMTAG           Message Field T
+     C           KRTV      CHAIN@DECDL2              90
+     C           *IN90     IFEQ '1'
+      *
+      * Match without Tag
+      *
+     C                     MOVEL*BLANKS   DCCYCD           Currency
+     C                     MOVEL*BLANKS   DCMTAG           Message Field T
+     C           KRTV      CHAIN@DECDL2              90
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *
+     CSR         EXLKUP    ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRYENK   : Special Processing for Yenksi Fields              *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRYENK    BEGSR
+      *
+     C           1         SUBSTP2INDA:1  ##001   1
+      *
+     C                     SELEC
+      *
+      * If BOJ and SNDR field and no conversion try to find
+      * customer number.
+      *
+     C           *IN90     WHEQ '1'
+     C           P2NWRK    ANDEQ'YENKSI'
+     C           P2MTAG    ANDEQ'SNDR  '
+      *
+      * If B22 or B10 take first four characters and read extension
+      * file
+      *
+     C           P2MTPY    IFEQ 'B10'
+     C           P2MTPY    OREQ 'B22'
+      *
+      *  Chain to the customer extension file to get the bank name
+      *
+     C                     MOVELP2INDA    #HWCDE  4
+      /COPY WNCPYSRC,ME1590YENC
+     C           *IN91     IFEQ '0'
+     C                     MOVEL*BLANKS   P2INDA
+     C                     MOVELBBCUST    P2INDA
+     C                     MOVEL*BLANKS   P3RTN
+     C                     MOVEL*IN91     *IN91   1
+     C                     ELSE
+      *
+      *  Move text that BOJ customer is not on file
+      *
+     C                     MOVELP2INDA    ##070  70
+     C                     MOVE ##BOJ     ##070
+     C                     MOVEL##070     P2INDA
+     C                     MOVEL'BOJ MBR' P3RTN
+     C                     END
+     C                     END
+     C                     ENDSL
+      *
+     CSR         EXYENK    ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSWFT   : Special Processing for SWIFT  Fields              *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRSWFT    BEGSR
+      *
+     C           1         SUBSTP2MTAG:4  ##001   1
+      *
+      * Conversion only if Sender field or field is type A
+      *
+     C           *IN90     IFEQ '1'
+     C           P2MTAG    ANDEQ'SNDR  '
+     C           *IN90     OREQ '1'
+     C           ##001     ANDEQ'A'
+      *
+      * Check for "/" in first character
+      *
+     C           1         SUBSTP2INDA:1  ##001
+      *
+      *  Call Access object to validate identifier
+      *
+     C           ##001     IFNE '/'
+     C           8         SUBSTP2INDA:1  W9BICC
+     C           3         SUBSTP2INDA:9  W9BICB
+     C                     ELSE
+     C           8         SUBSTP2INDA:36 W9BICC
+     C           3         SUBSTP2INDA:44 W9BICB
+     C                     END
+      *
+     C                     CALL 'ME1400'
+     C                     PARM *BLANKS   W9RTN   7
+     C                     PARM           W9BICC  8
+     C                     PARM           W9BICB  3
+     C                     PARM           SDCUST
+     C                     PARM           SDCNST
+     C                     PARM           MEBICD
+     C                     PARM *BLANKS   W9CUST  1
+     C                     PARM *BLANKS   W9CNST  1
+     C                     PARM *BLANKS   W9BICD  1
+      *
+      * If Customer details found then return with Customer Number
+      *
+     C           W9CUST    IFEQ 'Y'
+     C                     MOVEL'0'       *IN90
+     C                     MOVEL*BLANKS   DCMDEQ
+     C                     MOVELBBCUST    DCMDEQ
+     C                     END
+      *
+     C                     END
+     C/COPY WNCPYSRC,ME1590C001
+      *
+     CSR         EXSWFT    ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  INIT     : Initialization for main process                   *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         INIT      BEGSR
+      *
+      *  Set up copyright parameter
+      *
+     C                     MOVEACPY@      BIS@   80
+      * Retrival key for Content Translation Table
+     C           KRTV      KLIST
+     C                     KFLD           DCNWRK           Network
+     C                     KFLD           DCMTAG           Message Field T
+     C                     KFLD           DCMTPY           Message type
+     C                     KFLD           DCCYCD           Currency
+     C                     KFLD           DCSNDR           Sender
+     C                     KFLD           DCIND1
+     C                     KFLD           DCIND2
+     C                     KFLD           DCIND3
+     C                     KFLD           DCIND4
+     C                     KFLD           DCIND5
+      * Move key data from msg details
+     C                     MOVELP2NWRK    DCNWRK           Network
+     C                     MOVELP2MTAG    DCMTAG           Message Field T
+     C                     MOVELP2CYCD    DCCYCD           Currency
+     C                     MOVELP2SNDR    DCSNDR           Sender
+     C                     MOVELP2MTPY    DCMTPY           Message type
+     C                     MOVELI2IND1    DCIND1           Text
+     C                     MOVELI2IND2    DCIND2           Text
+     C                     MOVELI2IND3    DCIND3           Text
+     C                     MOVELI2IND4    DCIND4           Text
+     C                     MOVELI2IND5    DCIND5           Text
+      *
+      *  Get text BOJ Member not on customer details
+      *
+      /COPY WNCPYSRC,ME1590YENM
+      *
+     C                     MOVEL#MSTX1    ##BOJ  35        Reference
+      *                                                                                       CSC022
+      ** Check if CSC022 is switched *ON.                                                     CSC022
+      *                                                                                       CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   @RTCD   7                                           CSC022
+     C                     PARM '*VERIFY' @OPTN   7                                           CSC022
+     C                     PARM 'CSC022'  @SARD   6                                           CSC022
+      *                                                                                       CSC022
+     C           @RTCD     IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022  1                                           CSC022
+     C           *NAMVAR   DEFN SCCMTJOB  SCCMT                                               CSC022
+     C                     IN   SCCMT                                                         CSC022
+     C                     Z-ADD1         C       30                                          CSC022
+     C                     MOVEL*BLANKS   WCMTSK  1                                           CSC022
+     C                     MOVEACMTARR    CMTJOB                                              CSC022
+     C           CMTNUM    IFGT 0                                                             CSC022
+     C           C         DOWLECMTNUM                                                        CSC022
+     C           ##JOB     IFEQ CMTJOB,C                                                      CSC022
+     C                     MOVEL'Y'       WCMTSK                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ADD  1         C                                                   CSC022
+     C                     ENDDO                                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ELSE                                                               CSC022
+     C                     MOVE 'N'       CSC022                                              CSC022
+     C                     ENDIF                                                              CSC022
+      *
+     CSR                   ENDSR
+     C/EJECT
+     C/COPY WNCPYSRC,ME1590C003
+      *****************************************************************
+      *                                                               *
+      *  TRANSL   : Translate incoming data to Midas Equivalent       *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         TRANSL    BEGSR
+      *
+     C                     MOVEL*BLANKS   P2INDA
+     C                     MOVELDCMDEQ    P2INDA
+     C                     MOVEL*BLANK    P3RTN
+      *
+     CSR                   ENDSR
+      *****************************************************************
+      *                                                               *
+      * File and Program Error Processing                             *
+      *                                                               *
+      *****************************************************************
+     C/COPY MECPYSRC,SRERRC
+      *
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,582 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Alternate Account Discrepancy')                  *
+      *****************************************************************
+      *                                                               *
+      *  Midas General Ledger Module                                  *
+      *                                                               *
+      *  UTGL0022 - Alternate Account Records Check                   *
+      *  Function:  This program reads Alternate Account Records and  *
+      *             checks for discrepancies with other files.        *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *                                                               *
+      *  Last Amend No. CER049             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. BUG11679           Date 05Jul06               *
+      *                 237346             Date 16Feb06               *
+      *                 230815             Date 06Dec04               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CER049 - Stamp Tax (Recompile)                               *
+      *  BUG11679 - Additional Conversion of Customer Number to Alpha.*
+      *  237346 - TO USE UTILITY CREATED FOR 230815                   *
+      *           (CHANGES NEEDED FOR MIDASPLUS)                      *
+      *  230815 - Report incorrect Alternate Account records.         *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *         F U N C T I O N    O F   I N D I C A T O R S          *
+      *                                                               *
+      *      01 - Read/Chain to LF/UTGL22L4                           *
+      *      02 - End of report                                       *
+      *      10 - Read/Chain to LF/UTGL22L1                           *
+      *      11 - Print 'DR'                                          *
+      *      20 - Read/Chain to LF/UTGL22L2                           *
+      *      21 - Print 'CR'                                          *
+      *      25 - UTGL22P2 Overflow indicator                         *
+      *      26 - Negative NOALT                                      *
+      *      27 - Update mode                                         *
+      *      30 - Read/Chain to LF/UTGL22L3                           *
+      *      31 - Print 'CHG'                                         *
+      *      37 - Records exist for reporting.                        *
+      *      40 - Chain to LF/ACCNT                                   *
+      *      60 - Chain to LF/REHISB                                  *
+      *      61 - Print 'Using GL A/C no.'                            *
+      *      71 - Print 'Using Retail A/C no.'                        *
+      *      81 - Skip one extra line                                 *
+      *      85 - Print '*** DIFFERENCE ***'                          *
+      *      LR - End of file                                         *
+      *   U7,U8 - Database Error                                      *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     FUTGL22L4UF  E           K        DISK
+     F            REIACDF                           KRENAMEUT22L4F
+     FUTGL22L1IF  E           K        DISK
+     F            REIACDF                           KRENAMEUT22L1F
+     FUTGL22L2IF  E           K        DISK
+     F            REIACDF                           KRENAMEUT22L2F
+     FUTGL22L3IF  E           K        DISK
+     F            REIACDF                           KRENAMEUT22L3F
+     FACCNT   IF  E           K        DISK
+     FREHISBL UF  E           K        DISK
+     FUTGL22P1O   E                    PRINTER
+     FUTGL22P2O   E             25     PRINTER
+      /EJECT
+     E                    CPY@    1   1 80
+      /SPACE 3
+     IUT22L1F
+     I              RECI                            ARECI
+     I              CNUM                            ACNUM
+     I              CCY                             ACCY
+     I              ACOD                            AACOD
+     I              ACSQ                            AACSQ
+     I              DICT                            ADICT
+     I              DCST                            ADCST
+     I              DACP                            ADACP
+     I              DICP                            ADICP
+     I              CICT                            ACICT
+     I              CCST                            ACCST
+     I              CACP                            ACACP
+     I              CICP                            ACICP
+     I              CHGT                            ACHGT
+     I              CHST                            ACHST
+     I              CHAC                            ACHAC
+     I              PTRA                            APTRA
+     I              PRCH                            APRCH
+     I              NRCA                            ANRCA
+     I              RCA                             ARRCA
+     I              MCLB                            AMCLB
+     I              BRCA                            ABRCA
+     I              ZZ015                           AZZ015
+     I              NOALT                           ANOALT
+     I              TCHO                            ATCHO
+     I              DRBR                            ADRBR
+     I              CRBR                            ACRBR
+     I              CHBR                            ACHBR
+     I              PBKU                            APBKU
+     I              REPI                            AREPI
+     I              ACODQQ                          AACODQ                                    237346
+     I              DACPQQ                          ADACPQ                                    237346
+     I              CACPQQ                          ACACPQ                                    237346
+     I              CHACQQ                          ACHACQ                                    237346
+     IUT22L2F
+     I              RECI                            BRECI
+     I              CNUM                            BCNUM
+     I              CCY                             BCCY
+     I              ACOD                            BACOD
+     I              ACSQ                            BACSQ
+     I              DICT                            BDICT
+     I              DCST                            BDCST
+     I              DACP                            BDACP
+     I              DICP                            BDICP
+     I              CICT                            BCICT
+     I              CCST                            BCCST
+     I              CACP                            BCACP
+     I              CICP                            BCICP
+     I              CHGT                            BCHGT
+     I              CHST                            BCHST
+     I              CHAC                            BCHAC
+     I              PTRA                            BPTRA
+     I              PRCH                            BPRCH
+     I              NRCA                            BNRCA
+     I              RCA                             BRRCA
+     I              MCLB                            BMCLB
+     I              BRCA                            BBRCA
+     I              ZZ015                           BZZ015
+     I              NOALT                           BNOALT
+     I              TCHO                            BTCHO
+     I              DRBR                            BDRBR
+     I              CRBR                            BCRBR
+     I              CHBR                            BCHBR
+     I              PBKU                            BPBKU
+     I              REPI                            BREPI
+     I              ACODQQ                          BACODQ                                    237346
+     I              DACPQQ                          BDACPQ                                    237346
+     I              CACPQQ                          BCACPQ                                    237346
+     I              CHACQQ                          BCHACQ                                    237346
+     IUT22L3F
+     I              RECI                            CRECI
+     I              CNUM                            CCNUM
+     I              CCY                             CCCY
+     I              ACOD                            CACOD
+     I              ACSQ                            CACSQ
+     I              DICT                            CDICT
+     I              DCST                            CDCST
+     I              DACP                            CDACP
+     I              DICP                            CDICP
+     I              CICT                            CCICT
+     I              CCST                            CCCST
+     I              CACP                            CCACP
+     I              CICP                            CCICP
+     I              CHGT                            CCHGT
+     I              CHST                            CCHST
+     I              CHAC                            CCHAC
+     I              PTRA                            CPTRA
+     I              PRCH                            CPRCH
+     I              NRCA                            CNRCA
+     I              RCA                             CRRCA
+     I              MCLB                            CMCLB
+     I              BRCA                            CBRCA
+     I              ZZ015                           CZZ015
+     I              NOALT                           CNOALT
+     I              TCHO                            CTCHO
+     I              DRBR                            CDRBR
+     I              CRBR                            CCRBR
+     I              CHBR                            CCHBR
+     I              PBKU                            CPBKU
+     I              REPI                            CREPI
+     I              ACODQQ                          CACODQ                                    237346
+     I              DACPQQ                          CDACPQ                                    237346
+     I              CACPQQ                          CCACPQ                                    237346
+     I              CHACQQ                          CCHACQ                                    237346
+     IREHISPPF
+     I              RECI                            BRECI
+     I              DICT                            BDICT
+     I              CICT                            BCICT
+      *
+     ILDA       E DSLDA                         256
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+     I            DS
+     I*****                                   1  18 WALT                                      237346
+     I                                        1  24 WALT                                      237346
+     I**********                              1   60WCNUM                                   BUG11679
+     I                                        1   6 WCNUM                                   BUG11679
+     I                                        7   9 WCCY
+     I******                                 10  130WACOD                                     237346
+     I******                                 14  150WACSQ                                     237346
+     I******                                 16  18 WBRCA                                     237346
+     I                                       10  190WACOD                                     237346
+     I                                       20  210WACSQ                                     237346
+     I                                       22  24 WBRCA                                     237346
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           MODE    1
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+     C           MODE      IFEQ 'U'
+     C           MODE      OREQ 'u'
+     C                     MOVE '1'       *IN27
+     C                     ELSE
+     C                     MOVE '0'       *IN27
+     C                     ENDIF
+     C                     Z-ADD0         RNOAC
+     C           ACNT      KLIST
+     C                     KFLD           WCNUM
+     C                     KFLD           WCCY
+     C                     KFLD           WACOD
+     C                     KFLD           WACSQ
+     C                     KFLD           WBRCA
+     C           REHISB    KLIST
+     C                     KFLD           WBRCA
+     C                     KFLD           WCNUM
+     C                     KFLD           WCCY
+     C                     KFLD           WACOD
+     C                     KFLD           WACSQ
+     C           KEY       KLIST
+     C*****                KFLD           WNO    15                                           237346
+     C                     KFLD           WNO    21                                           237346
+     C                     KFLD           WBR     3
+      *
+      ** Read Bank details via Access program
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C           SDBANK    PARM           SDBANK
+      *
+      ** If record not found, exit via DBERR subroutine
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'UTGL0022'DBPGM
+     C                     MOVEL'SDBANKPD'DBFILE           *************
+     C                     Z-ADD1         DBASE            * DBERR 001 *
+     C                     MOVEL@OPTN     DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     SETOF                     102030
+     C                     SETOF                     40  80
+     C                     SETOF                     818586
+     C                     Z-ADD6         LNCNT   20
+     C                     WRITEPAGHDG
+     C                     WRITEP2HEAD
+     C                     READ UT22L4F                  01
+     C           *IN01     DOWEQ'0'
+     C                     MOVE '1'       *IN02
+     C                     MOVE '0'       *IN80
+     C                     MOVE CNUM      WCNUM
+     C                     MOVE CCY       WCCY
+     C                     MOVE ACOD      WACOD
+     C                     MOVE ACSQ      WACSQ
+     C                     MOVE BRCA      WBRCA
+     C                     MOVE CNUM      RCNUM
+     C                     MOVE CCY       RCCY
+     C                     MOVE ACOD      RACOD
+     C                     MOVE ACSQ      RACSQ
+     C                     MOVE BRCA      RBRCA
+     C                     Z-ADD0         WNOALT  30
+     C                     Z-ADDNOALT     WNALT   30
+     C                     MOVE *BLANK    ALTF    1
+      *
+     C                     MOVE WALT      WBR
+     C                     MOVELWALT      WNO
+     C           KEY       CHAINUT22L1F              10
+     C           *IN10     DOWEQ'0'
+     C           ARECI     IFEQ 'D'
+     C                     EXSR NEXT
+     C           *IN80     IFEQ '0'
+     C                     SETON                     116180
+     C                     END
+     C           *IN61     IFEQ '1'
+     C                     ADD  1         LNCNT
+     C                     END
+     C                     MOVE ACNUM     CNUM
+     C                     MOVE ACCY      CCY
+     C                     MOVE AACOD     ACOD
+     C                     MOVE AACSQ     ACSQ
+     C                     MOVE ABRCA     BRCA
+     C                     WRITEDETAIL
+     C                     ADD  1         WNOALT
+     C                     SETOF                     1161
+     C                     END
+     C                     READEUT22L1F                  10
+     C                     END
+      *
+     C           KEY       CHAINUT22L2F              20
+     C                     MOVE '1'       *IN86
+     C           *IN20     DOWEQ'0'
+     C           BRECI     IFEQ 'D'
+     C                     EXSR NEXT
+     C           *IN80     IFEQ '0'
+     C                     SETON                     6180
+     C                     END
+     C           *IN61     IFEQ '1'
+     C                     ADD  1         LNCNT
+     C                     END
+     C           *IN86     IFEQ '1'
+     C                     MOVE '1'       *IN21
+     C                     END
+     C                     MOVE BCNUM     CNUM
+     C                     MOVE BCCY      CCY
+     C                     MOVE BACOD     ACOD
+     C                     MOVE BACSQ     ACSQ
+     C                     MOVE BBRCA     BRCA
+     C                     WRITEDETAIL
+     C                     ADD  1         WNOALT
+     C                     SETOF                     216186
+     C                     END
+     C                     READEUT22L2F                  20
+     C                     END
+      *
+     C           KEY       CHAINUT22L3F              30
+     C                     MOVE '1'       *IN86
+     C           *IN30     DOWEQ'0'
+     C           CRECI     IFEQ 'D'
+     C                     EXSR NEXT
+     C           *IN80     IFEQ '0'
+     C                     SETON                     6180
+     C                     END
+     C           *IN61     IFEQ '1'
+     C                     ADD  1         LNCNT
+     C                     END
+     C           *IN86     IFEQ '1'
+     C                     MOVE '1'       *IN31
+     C                     MOVE '0'       *IN86
+     C                     END
+     C                     MOVE CCNUM     CNUM
+     C                     MOVE CCCY      CCY
+     C                     MOVE CACOD     ACOD
+     C                     MOVE CACSQ     ACSQ
+     C                     MOVE CBRCA     BRCA
+     C                     WRITEDETAIL
+     C                     ADD  1         WNOALT
+     C                     SETOF                     3161
+     C                     END
+     C                     READEUT22L3F                  30
+     C                     END
+      *
+     C           ACNT      CHAINACCNT                40
+      *
+     C******               MOVELACNO      WNUM   15                                           237346
+     C                     MOVELACNO      WNUM   21                                           237346
+     C                     MOVELACNO      RACNO
+     C                     MOVE *BLANK    WBRC    3
+     C                     SETOF                     102030
+     C                     SETOF                     8086
+      *
+     C           WNUM      CHAINUT22L1F              10
+     C           *IN10     DOWEQ'0'
+     C           RECI      IFEQ 'D'
+     C                     EXSR NEXT
+     C           *IN80     IFEQ '0'
+     C                     SETON                     117180
+     C                     END
+     C           *IN71     IFEQ '1'
+     C                     ADD  1         LNCNT
+     C                     END
+     C                     MOVE ACNUM     CNUM
+     C                     MOVE ACCY      CCY
+     C                     MOVE AACOD     ACOD
+     C                     MOVE AACSQ     ACSQ
+     C                     MOVE ABRCA     BRCA
+     C                     WRITEDETAIL
+     C                     ADD  1         WNOALT
+     C                     SETOF                     1171
+     C                     END
+     C                     READEUT22L1F                  10
+     C                     END
+      *
+     C           WNUM      CHAINUT22L2F              20
+     C                     MOVE '1'       *IN86
+     C           *IN20     DOWEQ'0'
+     C           RECI      IFEQ 'D'
+     C                     EXSR NEXT
+     C           *IN80     IFEQ '0'
+     C                     SETON                     7180
+     C                     END
+     C           *IN71     IFEQ '1'
+     C                     ADD  1         LNCNT
+     C                     END
+     C           *IN86     IFEQ '1'
+     C                     MOVE '1'       *IN21
+     C                     END
+     C                     MOVE BCNUM     CNUM
+     C                     MOVE BCCY      CCY
+     C                     MOVE BACOD     ACOD
+     C                     MOVE BACSQ     ACSQ
+     C                     MOVE BBRCA     BRCA
+     C                     WRITEDETAIL
+     C                     ADD  1         WNOALT
+     C                     SETOF                     217186
+     C                     END
+     C                     READEUT22L2F                  20
+     C                     END
+      *
+     C           WNUM      CHAINUT22L3F              30
+     C                     MOVE '1'       *IN86
+     C           *IN30     DOWEQ'0'
+     C           RECI      IFEQ 'D'
+     C                     EXSR NEXT
+     C           *IN80     IFEQ '0'
+     C                     SETON                     7180
+     C                     END
+     C           *IN86     IFEQ '1'
+     C                     MOVE '1'       *IN31
+     C                     MOVE '0'       *IN86
+     C                     END
+     C           *IN71     IFEQ '1'
+     C                     ADD  1         LNCNT
+     C                     END
+     C                     MOVE CCNUM     CNUM
+     C                     MOVE CCCY      CCY
+     C                     MOVE CACOD     ACOD
+     C                     MOVE CACSQ     ACSQ
+     C                     MOVE CBRCA     BRCA
+     C                     WRITEDETAIL
+     C                     ADD  1         WNOALT
+     C                     SETOF                     3171
+     C                     END
+     C                     READEUT22L3F                  30
+     C                     END
+      *
+     C           REHISB    CHAINREHISBL              60
+      *
+     C                     MOVE ALTI      RALTIB
+     C                     MOVE ALTF      RALTIA
+      *
+      ** Report a/c if flagged as an alternative on history but not
+      ** defined as an alt. for any a/c on REIACD, or if NOALT is not
+      ** zero but a/c is not defined as an alt. for any a/c on REIACD.
+      *
+     C           ALTF      IFEQ *BLANK
+     C           ALTI      IFEQ 'Y'
+     C           NOALT     ORNE *ZERO
+     C           LNCNT     IFGE 58
+     C                     WRITEPAGHDG
+     C                     Z-ADD8         LNCNT
+     C                     ELSE
+     C                     ADD  2         LNCNT
+     C                     END
+     C                     WRITEDETHDG
+     C                     END
+     C                     END
+      *
+     C           ALTF      IFEQ *BLANK
+     C           ALTI      ANDEQ'Y'
+     C           ALTF      OREQ *BLANK
+     C           NOALT     ANDNE*ZERO
+     C           ALTF      OREQ 'Y'
+      *
+     C           LNCNT     IFGE 55
+     C                     WRITEPAGHDG
+     C                     Z-ADD10        LNCNT
+     C                     MOVE '0'       *IN81
+     C                     ELSE
+     C                     ADD  5         LNCNT
+     C                     MOVE '1'       *IN81
+     C                     END
+      *
+     C           WNOALT    IFNE NOALT
+     C                     MOVE '1'       *IN85
+     C                     ELSE
+     C                     MOVE '0'       *IN85
+     C                     ENDIF
+     C           NOALT     IFLT 0
+     C                     Z-SUBNOALT     RNOALB
+     C                     MOVE '1'       *IN26
+     C                     ELSE
+     C                     Z-ADDNOALT     RNOALB
+     C                     MOVE '0'       *IN26
+     C                     ENDIF
+     C                     Z-ADDWNOALT    RNOALA
+     C                     WRITETOTAL
+     C                     MOVE '0'       *IN81
+      *
+     C           *IN60     IFEQ '0'
+     C           WNOALT    IFNE NOALT
+     C           ALTF      OREQ 'Y'
+     C           ALTI      ANDNE'Y'
+     C           ALTF      ORNE 'Y'
+     C           ALTI      ANDEQ'Y'
+     C           *IN25     IFEQ '1'
+     C                     WRITEP2HEAD
+     C                     MOVE '0'       *IN25
+     C                     ENDIF
+     C                     WRITEP2DETL
+     C                     ADD  1         RNOAC
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           MODE      IFEQ 'U'
+     C           MODE      OREQ 'u'
+      *
+     C           *IN60     IFEQ '0'
+     C           ALTF      IFEQ 'Y'
+     C                     MOVE 'Y'       ALTI
+     C                     ELSE
+     C                     MOVE *BLANK    ALTI
+     C                     END
+     C                     UPDATREHISPPF
+     C                     END
+     C                     Z-ADDWNOALT    NOALT
+     C                     UPDATUT22L4F
+     C           ACNT      SETGTUT22L4F
+     C                     END
+      *
+     C                     END
+     C                     READ UT22L4F                  01
+      *
+     C                     END
+     C                     EXSR NEXT
+     C           RNOAC     IFLE 0
+     C                     MOVE '1'       *IN37
+     C                     ENDIF
+     C                     WRITEEND
+     C                     WRITEP2TRAIL
+     C                     SETON                     LR
+      *****************************************************************
+      *
+      *  SR/NEXT -- Subroutine to increment line number and print
+      *             page heading when necessary.
+      *
+      *****************************************************************
+     C           NEXT      BEGSR
+      *
+     C           ALTF      IFEQ *BLANK
+     C           *IN01     ANDEQ'0'
+     C           LNCNT     IFGE 58
+     C                     WRITEPAGHDG
+     C                     Z-ADD8         LNCNT
+     C                     ELSE
+     C                     ADD  2         LNCNT
+     C                     END
+     C                     WRITEDETHDG
+     C                     MOVE 'Y'       ALTF
+     C                     END
+      *
+     C           LNCNT     IFGE 58
+     C                     WRITEPAGHDG
+     C                     Z-ADD7         LNCNT
+     C                     ELSE
+     C                     ADD  1         LNCNT
+     C                     END
+     C                     ENDSR
+      ********************************************************************
+      *
+      *  *PSSR --- Subroutine to handle abnormal error conditions.
+      *
+      *  CALLED FROM: After abnormal operation occurs
+      *
+      *  CALLS: NOTHING
+      *
+      ********************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     WRITEP2ERR
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+     C                     ENDSR                           ** *PSSR **
+      *
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2004

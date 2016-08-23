@@ -1,0 +1,769 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Fiduciary Deposits Enquiry')                  *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL2100 - Fiduciary Deposits Enquiry                          *
+      *                                                               *
+      *  Function:  This program is called by DLC2100 when feature    *
+      *  (phase(s)) CDL006 is activated to allow enquiry              *
+      *                                                               *
+      *  Called By: DLC2100 - Fiduciary Enquiry                       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CGL165             Date 17Feb15               *
+      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CDL049             Date 05Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL020             Date 03Feb04               *
+      *                 CDL019             Date 03Feb04               *
+      *                 CDL018             Date 03Feb04               *
+      *                 CDL017             Date 03Feb04               *
+      *                 CDL016             Date 03Feb04               *
+      *                 222727             Date 05Nov03               *
+      *                 CDL010             Date 02Aug02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CDL006  *CREATE    Date 26Apr99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CDL020 - Apply Base Rate at Value Date (Recompile)           *
+      *  CDL019 - Allow Base Rate Changes on Fixed Deposits/Loans     *
+      *           (Recompile)                                         *
+      *  CDL018 - Multiple Settlement Accounts on Loans/Deposits      *
+      *           (Recompile)                                         *
+      *  CDL017 - Penalty Fee & Early Maturity of Fixed Term Loan/Dep *
+      *           (Recompile)                                         *
+      *  CDL016 - Automatic rollover of Fixed Term Loans/Deposits     *
+      *           (Recompile)                                         *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+      *  CDL010 - Prevent last user that actioned the trade from      *
+      *           authorising it.Recompile due to changes in MMDELDPP.*
+      *  CDL006 - Dealing Fiduciary.                                  *
+      *                                                               *
+      *****************************************************************
+     FDL2100DFCF  E                    WORKSTN      KINFDS DSPFDS
+     F                                        SWRRN1KSFILE DL2100S1
+     FMMDELDL2IF  E           K        DISK         KINFSR *PSSR
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   03  - Program terminated                                    *
+      *   25  - Rollup                                                *
+      *   49  - More records to display                               *
+      *   51  - SFL 1                                                 *
+      *   61  - Clear subfile                                         *
+      *   62  - Protect selection field                               *
+      *   65  - Off and 61 off = subfile display                      *
+      *   70  - MMDELDL2 EoF                                          *
+      *   78  - Reversed field                                        *
+      *   90  - READC                                                 *
+      *                                                               *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Program Initialisation                              *
+      *  SRMAIN - Detail Processing                                   *
+      *  SRENT1 - Enter on screen                                     *
+      *  SRREAD - Read records selected on SFL                        *
+      *  SRSETP - Initialise indicators                               *
+      *  SRLOAD - Build subfile at start                              *
+      *  SRROLL - Roll keys processing                                *
+      *  SRTERM - Program Termination                                 *
+      *  ZASNMS - Send message to message queue                       *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *  ZDATE2 - Convert Midas Day Number into Date (DDMMYY/MMDDYY)  *
+      *  ZALIGN - Align numeric fields                                *
+      *  ZEDIT  - Insert decimal places                               *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E/COPY ZSRSRC,ZEDITZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+      /SPACE 3
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IWWDATE      DS
+     I                                        1   20WWDDAY
+     I                                        3   40WWMNTH
+     I                                        5   60WWYEAR
+      *
+     IPSDS       SDS
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USID
+      *
+     IDSPFDS      DS
+     I                                    B 378 3790CPFPOS
+      *
+     IDSSDY     E DSDSSDY
+      ** Dummy data structure used by access programs
+      *
+     IDSFDY     E DSDSFDY
+      ** Dummy data structure used by access programs
+      *
+     ISDBANK    E DSSDBANKPD
+      ** External data structures for Bank Details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** External data structures for currency deatails
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ** Perform Initialisation.
+      *
+     C                     EXSR SRINIT
+      *
+      ** Perform Detail Processing.
+      *
+     C                     EXSR SRMAIN
+      *
+      ** Program Termination.
+      *
+     C                     EXSR SRTERM
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *  AOBANKR0 - Access Object for Bank Details                    *
+      *  Y2CLMSC  - Clear Message Queue                               *
+      *  SRLOAD   - Build Subfile                                     *
+      *  ZASNMS   - Send Messages                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR                           *** SRINIT ***
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Define LDA for Database Error
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Set up user details
+      *
+     C                     MOVELUSID      SUSID
+     C                     MOVELWSID      SWSID
+      *
+      ** Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     Z-ADD001       DBASE            *************
+     C                     MOVEL'SDBANKPD'DBFILE           * DBERR 001 *
+     C                     MOVEL'*FIRST'  DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELBJMRDT    SMRDT
+      *
+      ** Set indicator *IN98 to indicate which date format to use
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+      ** Select the program MSGQ for error msg.
+      *
+     C                     MOVEL'*'       TOPQ
+     C                     MOVEL'*PRV'    TOPRQ
+     C                     MOVEL'*'       SDPGMQ
+     C                     MOVEL'GBDRSMM 'PMSGF  10
+      *
+      ** Fill in fields for subroutine ZASNMS
+      *
+     C                     MOVEL'DL2100'  ZAPGM  10        Message queue
+     C                     MOVEL'GBDRSMM 'ZAMSGF 10        Message file
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.
+      *
+      ** Initialize program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           TOPQ   10
+     C                     PARM           TOPRQ   5
+      *
+      ** Clear SFL
+      *
+     C                     Z-ADD*ZEROS    SWRRN1
+     C                     Z-ADD*ZEROS    WWRANG
+     C                     MOVE *ON       *IN61
+     C                     WRITEDL2100C1
+     C                     MOVE *OFF      *IN65
+     C                     MOVE *OFF      *IN61
+      *
+      ** Setup SFL
+      *
+     C           *LOVAL    SETLLMMDELDL2
+     C                     EXSR SRLOAD
+      *
+      ** Build a blank SFL when empty
+      *
+     C           SWRRN1    IFEQ *ZEROS
+     C                     Z-ADD0         WWLINE
+      *
+     C           WWLINE    DOWLT13
+     C                     MOVE *ON       *IN62
+     C                     MOVEL*BLANKS   S1SSEL
+     C                     MOVEL*BLANKS   S1DLNO
+     C                     MOVEL*BLANKS   S1DTYP
+     C                     MOVEL*BLANKS   S1STYP
+     C                     MOVEL*BLANKS   S1CURR
+     C                     MOVEL*BLANKS   S1AMNT
+     C                     MOVEL*BLANKS   S1VDAT
+     C                     MOVEL*BLANKS   S1MDAT
+     C                     MOVEL*BLANKS   S1CNUM
+     C                     MOVEL*BLANKS   S1STAT
+     C                     MOVEL*BLANKS   S1DELT
+     C                     MOVEL*BLANKS   S1LNKN
+     C                     ADD  1         SWRRN1
+     C                     ADD  1         WWLINE
+     C                     WRITEDL2100S1
+     C                     ENDDO
+      *
+      ** Display "No Data to display"
+      *
+     C                     MOVEL'DLM2000' ZAMSID
+     C                     MOVEL*BLANKS   ZAMSDA
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** Setup Screen to display
+      *
+     C                     MOVE *ON       *IN51
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRMAIN
+      *****************************************************************
+      *                                                               *
+      *  SRMAIN - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *  Y2CLMSC  - Clear Message Queue                               *
+      *  SRTERM   - Program Termination                               *
+      *  SRROLL   - Roll Keys Processing                              *
+      *  SRENT1   - Enter on Screen                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRMAIN    BEGSR                           *** SRMAIN ***
+      *
+     C           *INLR     DOWEQ*OFF
+      *
+      ** Write message
+      *
+     C                     WRITEDL2100C0
+      *
+      ** Write detail records
+      *
+     C           *IN51     IFEQ *ON
+     C                     WRITEDL2100F1
+     C                     EXFMTDL2100C1
+     C                     ENDIF
+      *
+      ** Initialize program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           TOPQ   10
+     C                     PARM           TOPRQ   5
+      *
+     C                     SELEC
+      *
+      ** Program terminated
+      *
+     C           *IN51     WHEQ *ON
+     C           *IN03     ANDEQ*ON
+     C                     EXSR SRTERM
+      *
+      ** Build subfile
+      *
+     C           *IN51     WHEQ *ON
+     C           *IN25     ANDEQ*ON
+     C                     EXSR SRROLL
+      *
+      ** Enter on screen
+      *
+     C           *IN51     WHEQ *ON
+     C                     EXSR SRENT1
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRENT1
+      *****************************************************************
+      *                                                               *
+      *  SRENT1 - Enter on screen                                     *
+      *                                                               *
+      *  Called By: SRMAIN subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  SRSETP   - Initialise Indicators                             *
+      *  SRREAD   - Read Selected Record on Subfile                   *
+      *  SRLOAD   - Build Subfile                                     *
+      *  ZASNMS   - Send Messages                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRENT1    BEGSR                           *** SRENT1 ***
+      *
+      ** Setup Error Indicator
+      *
+     C                     EXSR SRSETP
+      *
+      ** Read SFL and go to SRREAD if at least one record selected
+      *
+     C                     READCDL2100S1                 90
+     C           *IN90     IFEQ *OFF
+     C                     EXSR SRREAD
+     C                     ELSE
+      *
+      ** Clear SFL
+      *
+     C                     MOVE *ON       *IN61
+     C                     WRITEDL2100C1
+     C                     MOVE *OFF      *IN61
+     C                     Z-ADD*ZEROS    SWRRN1
+     C                     Z-ADD*ZEROS    WWRANG
+      *
+      ** Review from
+      *
+     C           SDREVI    IFNE *BLANKS
+     C                     MOVE SDREVI    WWREVI  60
+     C                     ELSE
+     C                     MOVE *ZEROS    WWREVI
+     C                     ENDIF
+      *
+     C           WWREVI    SETLLMMDELDL2
+     C                     EXSR SRLOAD
+      *
+     C                     MOVE *ON       *IN51
+      *
+      ** Build a blank SFL when empty
+      *
+     C           SWRRN1    IFEQ *ZEROS
+     C                     Z-ADD0         WWLINE
+      *
+     C           WWLINE    DOWLT13
+     C                     MOVE *ON       *IN62
+     C                     MOVEL*BLANKS   S1SSEL
+     C                     MOVEL*BLANKS   S1DLNO
+     C                     MOVEL*BLANKS   S1DTYP
+     C                     MOVEL*BLANKS   S1STYP
+     C                     MOVEL*BLANKS   S1CURR
+     C                     MOVEL*BLANKS   S1AMNT
+     C                     MOVEL*BLANKS   S1VDAT
+     C                     MOVEL*BLANKS   S1MDAT
+     C                     MOVEL*BLANKS   S1CNUM
+     C                     MOVEL*BLANKS   S1STAT
+     C                     MOVEL*BLANKS   S1DELT
+     C                     MOVEL*BLANKS   S1LNKN
+     C                     ADD  1         SWRRN1
+     C                     ADD  1         WWLINE
+     C                     WRITEDL2100S1
+     C                     ENDDO
+      *
+      ** Display "No Data to display"
+      *
+     C                     MOVEL'DLM2000' ZAMSID
+     C                     MOVEL*BLANKS   ZAMSDA
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRREAD
+      *****************************************************************
+      *                                                               *
+      *  SRREAD - Read records selected on SFL                        *
+      *                                                               *
+      *  Called By: SRENT1 subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  DL2100B  - Fiduciary Inquiry                                 *
+      *  SRTERM   - Program Termination                               *
+      *  ZASNMS   - Send Messages                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRREAD    BEGSR                           *** SRREAD ***
+      *
+      ** Do while until records selected
+      *
+     C           *IN90     DOWEQ*OFF
+     C                     SELEC
+      *
+     C           S1SSEL    WHEQ *BLANKS
+     C                     MOVE *OFF      *IN78
+     C                     UPDATDL2100S1
+      *
+     C           S1SSEL    WHEQ 'E'
+     C                     MOVEL*BLANKS   WRTCD
+     C                     CALL 'DL2100B'
+     C                     PARM           S1DLNO
+     C                     PARM           S1DTYP
+     C                     PARM           S1LNKN
+     C                     PARM           WRTCD
+      *
+     C           WRTCD     IFEQ 'Y2U9999'
+     C                     EXSR SRTERM
+     C                     ELSE
+     C                     MOVEL*BLANKS   S1SSEL
+     C                     UPDATDL2100S1
+     C                     ENDIF
+      *
+     C                     OTHER
+     C                     MOVE *ON       *IN78
+     C                     MOVEL'DLM2001' ZAMSID
+     C                     MOVEL*BLANKS   ZAMSDA
+     C                     EXSR ZASNMS
+     C                     UPDATDL2100S1
+     C                     ENDSL
+      *
+     C                     READCDL2100S1                 90
+     C                     ENDDO
+      *
+     C                     MOVE *ON       *IN51
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRSETP
+      *****************************************************************
+      *                                                               *
+      *  SRSETP - Initialise indicators                               *
+      *                                                               *
+      *  Called By: SRENT1, SRROLL subroutines                        *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRSETP    BEGSR                           *** SRSETP ***
+      *
+     C                     MOVE *OFF      *IN51
+     C                     MOVE *OFF      *IN62
+     C                     MOVE *OFF      *IN78
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRLOAD
+      *****************************************************************
+      *                                                               *
+      *  SRLOAD - Build subfile at start                              *
+      *                                                               *
+      *  Called By: SRINIT, SRENT1 , SRROLL subroutines               *
+      *                                                               *
+      *  Calls:                                                       *
+      *  AOCURRR0 - Access Object for Currency Details                *
+      *  ZEDIT    - Inserts decimal points into numeric fields        *
+      *  *PSSR    - Error Subroutine                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRLOAD    BEGSR                           *** SRLOAD ***
+      *
+     C                     READ MMDELDL2                 70
+      *
+     C                     Z-ADD0         WWLINE  20
+     C                     Z-ADDWWRANG    SWRRN1
+      *
+     C           *IN70     DOWEQ*OFF
+     C           WWLINE    ANDLT13
+      *
+      ** Deal Type must be FL, DP, LP, FT, DT, or LT
+      *
+     C           HKMTYP    IFEQ 'FL'
+     C           HKMTYP    OREQ 'DP'
+     C           HKMTYP    OREQ 'LP'
+     C           HKMTYP    OREQ 'FT'
+     C           HKMTYP    OREQ 'DT'
+     C           HKMTYP    OREQ 'LT'
+     C                     MOVEL*BLANKS   S1SSEL
+     C                     MOVE HKDN38    S1DLNO
+     C                     MOVE HKMTYP    S1DTYP
+     C                     MOVE HKSTYP    S1STYP
+     C                     MOVELHKCCY     S1CURR
+      *
+      ** Get Currency Decimal Places
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM S1CURR    WAJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           WRTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     Z-ADD002       DBASE            *************
+     C                     MOVEL'SDCURRPD'DBFILE           * DBERR 002 *
+     C                     MOVELS1CURR    DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDA6NBDP    ZCDP    10
+      *
+     C           HKAMNP    IFLT *ZEROS
+     C                     Z-SUBHKAMNP    HKAMNP
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE HKAMNP    ZFIELD
+     C                     Z-ADDZCDP      ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    S1AMNT
+      *
+     C                     MOVE HKVDYY    WWYEAR
+     C                     MOVE HKVDMM    WWMNTH
+     C                     MOVE HKVDDD    WWDDAY
+     C                     MOVE WWDATE    S1VDAT
+      *
+      ** If deal type is FL or FT setup maturity date else setup notice days
+      *
+     C           HKMTYP    IFEQ 'FL'
+     C           HKMTYP    OREQ 'FT'
+     C           HKMDYY    IFNE *ZEROS
+     C                     MOVE HKMDYY    WWYEAR
+     C                     MOVE HKMDMM    WWMNTH
+     C                     MOVE HKMDDD    WWDDAY
+     C                     MOVE WWDATE    S1MDAT
+     C                     ELSE
+     C                     MOVEL*BLANKS   S1MDAT
+     C                     ENDIF
+     C                     ELSE
+      *
+      ** Deal type is DP, LP, DT or LT
+      *
+     C           HKNTCE    IFLE *ZEROS
+     C                     MOVEL*BLANKS   S1MDAT
+     C                     ELSE
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE HKNTCE    ZFIELD
+     C                     Z-ADD*ZEROS    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    S1MDAT
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     MOVE HKCNUM    S1CNUM
+      *
+     C                     MOVE HKDSTS    S1STAT
+      *
+     C                     MOVE HKDDLT    S1DELT
+      *
+     C                     MOVE HKLNKN    S1LNKN
+      *
+     C                     ADD  1         SWRRN1
+     C                     ADD  1         WWLINE
+     C                     WRITEDL2100S1
+     C                     ENDIF
+      *
+     C                     READ MMDELDL2                 70
+     C                     ENDDO
+      *
+     C                     Z-ADDSWRRN1    WWRANG  40
+      *
+     C           *IN70     IFEQ *OFF
+     C                     MOVE *ON       *IN49
+     C                     ELSE
+     C                     MOVE *OFF      *IN49
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRROLL
+      *****************************************************************
+      *                                                               *
+      *  SRROLL - Roll keys processing                                *
+      *                                                               *
+      *  Called By: SRMAIN subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  SRSETP   - Initialise Indicators                             *
+      *  SRLOAD   - Build Subfile                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRROLL    BEGSR                           *** SRROLL ***
+      *
+      ** Reset work indicators
+      *
+     C                     EXSR SRSETP
+      *
+      ** Load SFL and redisplay screen SFL
+      *
+     C                     EXSR SRLOAD
+     C                     MOVE *ON       *IN51
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRTERM
+      *****************************************************************
+      *                                                               *
+      *  SRTERM - Program Termination                                 *
+      *                                                               *
+      *  Called By: Main Processing, SRMAIN, SRREAD subroutines       *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRTERM    BEGSR                           *** SRTERM ***
+      *
+      ** End of pgm
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/ZASNMS
+      *****************************************************************
+      *                                                               *
+      *  ZASNMS - Send message to message queue                       *
+      *                                                               *
+      *  Called By: SRINIT, SRENT1, SRREAD subroutines                *
+      *                                                               *
+      *  Calls:                                                       *
+      *  Y2SNMGC  - Send Messages                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZASNMS    BEGSR                           *** ZASNMS ***
+      *
+      ** Message file specified is PMSGF
+      *
+     C                     MOVELPMSGF     ZAMSGF
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+      ** Clear all fields for default mechanism next time.
+      *
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C                     MOVEL*BLANK    ZAMSGF           Message file
+     C                     MOVEL*BLANK    ZAMSID           Message id.
+      *
+     C           ZAEXIT    ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           *** *PSSR ***
+      *
+     C                     CALL 'DBERRCTL'
+     C                     DUMP
+     C                     MOVE *ON       *INLR
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     RETRN
+      *
+     C                     ENDSR
+      ****************************************************************
+     C/COPY ZSRSRC,ZEDITZ2
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZALIGNZ2
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

@@ -1,0 +1,214 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SD Limit Utilisation Report')                   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       SDC000798 - Midas SD Limit Utilisation Report               */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2008           */
+/*                                                                   */
+/*       Last Amend No. CER059             Date 19Jul10              */
+/*       Prev Amend No. BUG24935           Date 17Jul09              */
+/*                      BUG24574           Date 07Jul09              */
+/*                      CER048  *CREATE    Date 19May08              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CER059 - German Feature Upgrade to Delhi                    */
+/*       BUG24935 - Limit Utilisation Report shows a minus           */
+/*                  figure/incorrect Threshold Excess                */
+/*       BUG24574 - Withholding Tax - R4 vs M+                       */
+/*       CER048 - German Features - Taxes                            */
+/*                                                                   */
+/*********************************************************************/
+ 
+/** Start Program */
+             PGM        PARM(&RSEQ &RLEV &RENT &PARM)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                        Misys International Banking Systems Ltd. 2008')
+ 
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
+ 
+             DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RENT) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&PARM) TYPE(*CHAR) LEN(246)
+ 
+             DCL        VAR(&CUSN) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&CUSF) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&CUST) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&TAXT) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ACOF) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&BRCA) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&ALL) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&YEAR) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&QYSL1) TYPE(*CHAR) LEN(150)
+             DCL        VAR(&SEL) TYPE(*CHAR) LEN(4)
+ 
+             DCL        VAR(&FILE1) TYPE(*CHAR) LEN(08) +
+                          VALUE('SDINPHL1')
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MBRNAME) TYPE(*CHAR) LEN(10)                               /*BUG24574*/
+ 
+/** Global monitor message */
+             MONMSG     MSGID(CPF0000 CPI0000 CPA0000 MCH0000 +
+                          RPG0000) EXEC(GOTO CMDLBL(ABNOR))
+ 
+             CHGVAR     VAR(&CUSN) VALUE(%SST(&PARM 1 6))
+             CHGVAR     VAR(&CUSF) VALUE(%SST(&PARM 7 6))
+             CHGVAR     VAR(&CUST) VALUE(%SST(&PARM 13 6))
+             CHGVAR     VAR(&TAXT) VALUE(%SST(&PARM 23 2))
+             CHGVAR     VAR(&ACOF) VALUE(%SST(&PARM 25 2))
+             CHGVAR     VAR(&BRCA) VALUE(%SST(&PARM 27 3))
+             CHGVAR     VAR(&ALL) VALUE(%SST(&PARM 30 1))
+             CHGVAR     VAR(&YEAR) VALUE(%SST(&PARM 33 2))
+ 
+ /** Set off Switches */
+              CHGJOB     SWS(00000000)
+ 
+ /** Clear the selected customers file for Limit Utilisation */
+              CLRPFM     FILE(SDLMUTPD)
+ 
+ /** Test if Customer is selected */
+              IF         COND(&CUSN *NE ' ') THEN(DO)
+ 
+              CHGVAR     VAR(&SEL) VALUE('CUSN')
+              CHGVAR     VAR(&QYSL1) VALUE('(BBCUST *EQ "' *CAT +
+                           &CUSN *CAT '")')
+ 
+              ENDDO
+ 
+ /** Test if Customer from and customer to are selected */
+              IF         COND((&CUSF *NE ' ') *AND (&CUST *NE ' ')) +
+                           THEN(DO)
+ 
+              CHGVAR     VAR(&SEL) VALUE('FRTO')
+              CHGVAR     VAR(&QYSL1) VALUE('(BBCUST=%RANGE("' *CAT +
+                           &CUSF *CAT '" "' *CAT &CUST *CAT '"))')
+ 
+              ENDDO
+ 
+ /** Test if Tax Type is selected */
+              IF         COND(&TAXT *NE ' ') THEN(DO)
+ 
+              CHGVAR     VAR(&SEL) VALUE('TAXT')
+              CHGVAR     VAR(&QYSL1) VALUE('(AXETXS *EQ "' *CAT +
+                           &TAXT *CAT '")')
+ 
+              ENDDO
+ 
+ /** Test if Account officer is selected */
+              IF         COND(&ACOF *NE ' ') THEN(DO)
+ 
+              CHGVAR     VAR(&SEL) VALUE('ACOF')
+              CHGVAR     VAR(&QYSL1) VALUE('(BBACOC *EQ "' *CAT +
+                           &ACOF *CAT '")')
+ 
+              ENDDO
+ 
+ /** Test if Branch Code is selected */
+              IF         COND(&BRCA *NE ' ') THEN(DO)
+ 
+              CHGVAR     VAR(&SEL) VALUE('BRCH')
+              CHGVAR     VAR(&QYSL1) VALUE('(BBBRCD *EQ "' *CAT +
+                           &BRCA *CAT '")')
+ 
+              ENDDO
+ 
+ /** Selection Requested other 'ALL', open query file */
+              IF         COND(&QYSL1 *NE ' ') THEN(DO)
+ 
+              OVRDBF     FILE(SDCUATJ0) SHARE(*YES)
+ 
+              OPNQRYF    FILE((SDCUATJ0)) FORMAT(SDCUATJ0) +
+                           QRYSLT(&QYSL1) KEYFLD((AXCUST) (AXCTTX))
+ 
+              ENDDO
+ 
+ /** Call SD000799 To retrieve Selected Customers */
+              CALL       PGM(SD000799) PARM(&SEL)
+ 
+ /** If U7 U8 on */
+              IF COND(%SWITCH(XXXXXX11)) THEN(DO)
+                     RTVDTAARA DTAARA(LDA *ALL) RTNVAR(&LDA)
+                     CHGVAR VAR(&MEM) VALUE(%SST(&LDA 134 50))
+                     SNDPGMMSG MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                               TOMSGQ(MOPERQ MRUNQ)
+              GOTO       CMDLBL(ENDPGM)
+              ENDDO
+ 
+ /** Call SD000811 to delete duplicate records */
+              CALL       PGM(SD000811)
+ 
+ /** If U7 U8 on */
+              IF COND(%SWITCH(XXXXXX11)) THEN(DO)
+                     RTVDTAARA DTAARA(LDA *ALL) RTNVAR(&LDA)
+                     CHGVAR VAR(&MEM) VALUE(%SST(&LDA 134 50))
+                     SNDPGMMSG MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                               TOMSGQ(MOPERQ MRUNQ)
+              GOTO       CMDLBL(ENDPGM)
+              ENDDO
+ 
+ /** CLose query File */
+              IF         COND(&QYSL1 *NE ' ') THEN(DO)
+              DLTOVR     FILE(SDCUATJ0)
+              CLOF       OPNID(SDCUATJ0)
+              ENDDO
+ 
+ /** Override the history header and details files, with */
+ /** the relevant history files of the selected year. */
+ 
+              IF         COND(&YEAR *NE '  ') THEN(DO)
+ 
+/**********   CHGVAR     VAR(&FILE) VALUE(&FILE1 *CAT &YEAR)         */                 /*BUG24574*/
+/**********   OVRDBF     FILE(SDINPHL1) TOFILE(&FILE) SHARE(*YES)    */                 /*BUG24574*/
+/**********   CHGVAR     VAR(&MBRNAME) VALUE('SDINPHPD' *CAT &YEAR)        /*BUG24574*/ /*BUG24935*/
+/**********   OVRDBF     FILE(SDINPHPD) MBR(&MBRNAME) SHARE(*YES)          /*BUG24574*/ /*BUG24935*/
+              CHGVAR     VAR(&MBRNAME) VALUE('SDINPHL1' *CAT &YEAR)                     /*BUG24935*/
+              OVRDBF     SDINPHL1 SDINPHL1 &MBRNAME SHARE(*YES)                         /*BUG24935*/
+              CHGVAR     VAR(&MBRNAME) VALUE('SDINPHL3' *CAT &YEAR)                     /*BUG24935*/
+              OVRDBF     SDINPHL3 SDINPHL3 &MBRNAME SHARE(*YES)                         /*BUG24935*/
+ 
+              ENDDO
+ 
+ /** Call SD000798 Limit Utilisation Report */
+              CALL       PGM(SD000798) PARM(&RSEQ &PARM)
+ 
+ /** Close overrides and close query files */
+ 
+              IF         COND(&YEAR *NE '  ') THEN(DO)
+ 
+              DLTOVR     FILE(SDINPHL1)
+              MONMSG     MSGID(CPF9841)
+              DLTOVR     FILE(SDINPHL3)                                                 /*BUG24935*/
+              MONMSG     MSGID(CPF9841)                                                 /*BUG24935*/
+              DLTOVR     FILE(SDCSINL2)
+              MONMSG     MSGID(CPF9841)
+ 
+              ENDDO
+ 
+ /** If U7 U8 on*/
+              IF COND(%SWITCH(XXXXXX11)) THEN(DO)
+                     RTVDTAARA DTAARA(LDA *ALL) RTNVAR(&LDA)
+                     CHGVAR VAR(&MEM) VALUE(%SST(&LDA 134 50))
+                     SNDPGMMSG MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                               TOMSGQ(MOPERQ MRUNQ)
+              GOTO       CMDLBL(ENDPGM)
+              ENDDO
+ 
+              GOTO       CMDLBL(ENDPGM)
+ 
+ /** Send Message to User alerting failure. */
+  ABNOR:      SNDPGMMSG  MSG('SDC000798 ENDED ABNORMALLY') +
+                           TOMSGQ(MRUNQ MOPERQ)
+              MONMSG     MSGID(CPF0000)
+              CHGJOB     SWS(XXXXXX11)
+              DMPCLPGM
+ 
+  ENDPGM:     CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                      Misys International Banking Systems Ltd.')
+              ENDPGM

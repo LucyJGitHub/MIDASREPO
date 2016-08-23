@@ -1,0 +1,58 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    DFTACTGRP(*NO)                                              */
+/*EXI *  TEXT('Midas FRS Clear pf mbrs (extract & audit/excptn)')    */
+/*XBIA   OVRDBF FILE(QAFDMBRL) TOFILE(QAFDMBRL)                      */
+/*********************************************************************/
+/*                                                                   */
+/*       MidasPlus - FRS Regulatory Reporting                        */
+/*                                                                   */
+/*       RNC000013 - Clear file members                              */
+/*                   Called by RNC000010, (extract initialisation)   */
+/*                   to clear extract, audit & exception members.    */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. CRN001  *CREATE    Date 27Sep05              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CRN001 - FRS Regulatory Reporting                           */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM        PARM(&ERROR &FILE)
+ 
+             DCL        VAR(&ERROR) TYPE(*LGL)
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
+             DCLF       FILE(QTEMP/QAFDMBRL)
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2005')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))
+ 
+             CHKOBJ     OBJ(&FILE) OBJTYPE(*FILE) MBR(*FIRST)
+             MONMSG     MSGID(CPF9815) EXEC(GOTO CMDLBL(ENDPGM))
+ 
+             DSPFD      FILE(&FILE) TYPE(*MBRLIST) OUTPUT(*OUTFILE) +
+                          OUTFILE(QTEMP/QAFDMBRL)
+ 
+/* Read through list and clear member. */
+ RCVF:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(ENDPGM))
+ 
+             CLRPFM     FILE(&MLFILE) MBR(&MLNAME)
+             GOTO       CMDLBL(RCVF)
+ 
+ ABNOR:
+             CHGVAR     VAR(&ERROR) VALUE('1')
+ 
+ ENDPGM:
+             ENDPGM

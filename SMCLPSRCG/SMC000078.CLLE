@@ -1,0 +1,79 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Shell to check joblog outfile')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation Module                               */
+/*                                                                   */
+/*       SMC000078 - Check joblog outfile                            */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. CUP003  *CREATE    Date 02Aug10              */
+/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP003 - New utility to read joblog outfile.                */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FILE &FMLIB &TOLIB &FMT &RTNCODE)
+ 
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FMT) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7)
+ 
+             DCL        VAR(&LF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGDATA) TYPE(*CHAR) LEN(20000)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2010')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/*  Create and populate outfile. */
+             DLTF       FILE(QTEMP/JOBLOG)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/SMC000078F)
+             MONMSG     MSGID(CPF0000)
+             CRTDUPOBJ  OBJ(UPJOBLTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(SMC000078F)
+             DSPJOBLOG  OUTPUT(*OUTFILE) OUTFILE(QTEMP/JOBLOG)
+             CPYF       FROMFILE(QTEMP/JOBLOG) +
+                          TOFILE(QTEMP/SMC000078F) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+ 
+             OVRDBF     FILE(UPJOBLTPD) TOFILE(QTEMP/SMC000078F)
+             CALL       PGM(UTAOJOBL) PARM('CPF5009' '*LAST  ' +
+                          &MSGDATA &RTNCODE)
+             DLTOVR     FILE(UPJOBLTPD)
+             IF         COND(&RTNCODE *NE ' ') THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* Name of the logical should be the first 10 characters of the QMHMDT field; */
+/* position 774 of &MSGDATA (note 1st 2 characters denote length of field).   */
+             CHGVAR     VAR(&LF) VALUE(%SST(&MSGDATA 776 10))
+             RMVM       FILE(&LF) MBR(*ALL)
+             MONMSG     MSGID(CPF0000) EXEC(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* Now attempt copy again. */
+             CPYF       FROMFILE(&FMLIB/&FILE) TOFILE(&TOLIB/&FILE) +
+                          FROMMBR(*ALL) TOMBR(*FROMMBR) +
+                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)
+             MONMSG     MSGID(CPF0000) EXEC(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             CHGVAR     VAR(&RTNCODE) VALUE('*ERROR')
+ENDPGM:
+             ENDPGM

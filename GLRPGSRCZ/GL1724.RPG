@@ -1,0 +1,630 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Post Summary Processing')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - General Ledger Module                                *
+     F*                                                               *
+     F*  GL1724 - Post Summary Processing                             *
+     F*                                                               *
+     F*  (c) Misys Banking Systems Ltd. 2006                          *
+     F*                                                               *
+      *  Last Amend No. MD037920           Date 26Apr16               *
+      *  Prev Amend No. MD037802           Date 26Apr16               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 BUG27090           Date 18Feb10               *
+      *                 242911             Date 10Oct06               *
+     F*                 242178             Date 12Sep06               *
+     F*                 CGL047 *Create     Date 30Jun06               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD037920 - 1. program fail when GLPSUMPD is empty.           *
+      *             2. correct #DBER processing                       *
+      *  MD037802 - All GPI postings have blank narrative.            *
+     F*  BUG27090 - GLC1723 00001 DB error                            *
+     F*  242911 - Update GEGPIZZ when writing to summary file.        *
+     F*  242178 - Summary posting not generated because of rec count  *
+     F*  CGL047 - Generic Postings Interface                          *
+     F*                                                               *
+     F*****************************************************************
+     FGLPSUMPDIP  E                    DISK
+     F            APOSTPDF                          KRENAME@PSUMPPF
+     FGEGPIPD O   E                    DISK
+     FGL1724AUO   E                    PRINTER      KINFDS SPOOLU
+     FGL1724P1O   E             11     PRINTER      KINFDS SPOOL1
+     FGEGPIZZ UF  E                    DISK                                                   242911
+      * Generic posting interface postings trailer                                            242911
+      *                                                                                       242911
+     F*****************************************************************
+     F*                                                               *
+     F*   F U N C T I O N   O F   I N D I C A T O R S                 *
+     F*                                                               *
+     F*   11   Detail line overflow indicator                         *
+     F*   L1   DRCR level break                                       *
+     F*   L2   ACSQ level break                                       *
+     F*   L3   ACOD level break                                       *
+     F*   L4   CCY level break                                        *
+     F*   L5   CNUM level break                                       *
+     F*   L6   BRCA level break                                       *
+     F*   U7   Database Errors                                        *
+     F*   U8   Database Errors                                        *
+     F*                                                               *
+     F*****************************************************************
+     E                    RRPNAR  1   1 30
+     E**  Array for SR. ZSEDIT
+     E                    ZS1        15  1 0
+     E                    ZS2        21  1
+     E** Array for Copyright Insertion
+     E                    CPY@    1   1 80
+     I@PSUMPPF
+     I                                              BRCA  L6
+     I                                              CNUM  L5
+     I                                              CCY   L4
+     I                                              ACOD  L3
+     I                                              ACSQ  L2
+     I                                              DRCR  L1
+     I*
+     I**  DS for ZSEDIT subroutine
+     I            DS
+     I                                        1  150WORK15
+     I                                        1  150ZS1
+     ISDBANK    E DSSDBANKPD
+     I*
+     ISDMMOD    E DSSDMMODPD
+     I* Module Details Accessed via access program
+     I*
+     ISCSARD    E DSSCSARDPD
+     I* SAR File details accessed via access program AOSARDR0
+     I*
+     ICGPNAR    E DSCGPNARPD
+     I* UDC Multi-Language Narrative Data Structure
+     I*
+     I##PRM1      DS
+      **  Data Structure for Customer and Branch
+      *
+     I                                        1   6 A#CUST
+     I                                        7   9 A#BRCA
+      *
+     ISDCUST    E DSSDCUSTPD
+     I* Customer details
+     I*
+     ILDA         DS                            256
+     I**  Local data area for data base errors.
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     IDSFDY     E DSDSFDY
+     I* First DS for access programs
+     I*
+     IDSSDY     E DSDSSDY
+     I* First DS for access programs
+     I**
+     ISDCURR    E DSSDCURRPD
+     I**  External DS for Currency Details
+      *
+     ISPOOL1      DS
+     I** File information data structure
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+      *
+     ISPOOLU      DS
+     I** File information data structure
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      /EJECT
+      *****************************************************************
+      *   M A I N    P R O G R A M                                    *
+      *****************************************************************
+      *
+      ** Write report heading
+     C           *IN11     IFEQ '1'
+     C           *INL3     OREQ '1'
+     C                     WRITEHEADP1
+     C                     MOVE '0'       *IN11
+     C                     END
+      *
+      **  Get currency details
+     C           *INL4     IFEQ '1'
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM CCY       @KEY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE           ***************
+     C                     MOVEL@KEY      DBKEY            * DBERROR 002 *
+     C                     Z-ADD002       DBASE            ***************
+     C                     EXSR #DBER
+     C                     END
+     C                     END
+      *
+      **  Accumulate posting amount
+     C                     ADD  PSTA      PSTAS
+      *
+      **  Accumulate totals
+     C           DRCR      IFEQ 0
+     C                     ADD  PSTA      TOTAC
+     C                     ELSE
+     C                     SUB  PSTA      TOTAC
+     C                     END
+     C                     Z-ADDA6NBDP    ZDECS
+      *
+      **  Edit posting amount
+     C                     MOVE PSTA      PSTAN  130
+     C                     MOVE PSTAN     ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PSTAR
+     C                     WRITEDETLP1
+     C*
+     C** ZEROISE/BLANK OUT 'ASSOCIATED CUSTOMER', 'DEAL LOAN REF' AND
+     C** 'FOR ACCOUNT OF' FIELDS AS THESE ARE IRRELEVANT.
+     C                     MOVE *ZEROS    ASOC
+     C                     MOVE *BLANKS   DLREF
+     C                     MOVE *BLANKS   FACO
+     C*
+     CL1                   Z-ADDPSTAS     PSTA
+     CL1                   MOVEARRPNAR    PNAR
+     C*
+     C* Get the posting narrative values:
+     CL1                   EXSR SRPNAR
+     C*
+     C* If Primary file empty, do not output record                    r
+     C****L1**** NORE1     IFEQ 0                                                             242178
+     C****L1****           ELSE                                                               242178
+     CL1         PSTA      IFNE 0                                                             242178
+     CL1                   WRITEAPOSTPDF
+     C**L1                 ADD  1         NORE1                                               242911
+      *                                                                                       242911
+      **  Accumulate file controls                                                            242911
+     CL1                   ADD  1         ##NORE                                              242911
+     CL1         PSTA      DIV  1000      ZZAMT                                               242911
+     CL1                   EXSR GLZADD                                                        242911
+     CL1                   END
+     CL1                   Z-ADD0         PSTAS  130
+     CL2         TOTAC     IFLT 0
+     CL2                   Z-SUBTOTAC     TOTAC
+     CL2                   MOVE 'CR'      SIGN
+     CL2                   ELSE
+     CL2         TOTAC     IFEQ 0
+     CL2                   MOVE '  '      SIGN
+     CL2                   ELSE
+     CL2                   MOVE 'DR'      SIGN
+     CL2                   END
+     CL2                   END
+     CL2                   MOVE TOTAC     ZFLD15
+     CL2                   EXSR ZSEDIT
+     CL2                   MOVE ZOUT21    TOTAR
+     CL2         TOTAC     IFEQ 0
+     CL2                   WRITEHEADP1
+     CL2                   ENDIF
+     CL2                   WRITETOTAL
+     CL2                   Z-ADD0         TOTAC  130
+     CLRNU7NU8             WRITETRAILP1
+     CLRNU7NU8             WRITETOTREC
+     CLRNU7NU8             MOVE 'T'       RECI                                                242911
+     CLRNU7NU8             Z-ADD##NORE    NORE1                                               242911
+     CLRNU7NU8             Z-ADDZZTOTI    HRWN                                                242911
+     CLRNU7NU8             Z-ADDZZTOTD    HRDC                                                242911
+     CLRNU7NU8             UPDATAPOSTZZF                                                      242911
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #DBER    -   Data Base Error Handling.                        *
+     C*                                                               *
+     C* CALLS                                                         *
+     C*                                                               *
+     C* CALLED BY -  #A     : Initialization processing.              *
+     C*                                                               *
+     C*****************************************************************
+     C           #DBER     BEGSR
+     C*
+     C                     SETON                     U7U8LR
+     C                     WRITEERRAU
+     C                     WRITEERRAP
+     C                     OUT  LDA
+     C                     RETRN
+     C*
+     C           #DBER9    ENDSR                           **#DBER9***
+      /EJECT
+     C********************************************************************
+     CSR         ZSEDIT    BEGSR                           **  ZSEDIT   *
+     C*
+     C* Define/Clear fields
+     C*
+     C                     Z-ADDZFLD15    ZFLD15 150
+     C                     Z-ADDZDECS     ZDECS   10
+     C                     MOVE ZECODE    ZECODE  1
+     C                     MOVE *BLANKS   ZOUT21 21
+     C*
+     C*       SET UP WORK FIELDS
+     C*
+     C                     Z-ADD0         ZS1
+     C                     MOVE ' '       ZS2
+     C*
+     C                     Z-ADD15        Z1      20
+     C                     Z-ADD20        Z2      20
+     C*
+     C           15        SUB  ZDECS     ZINTS   20
+     C*
+     C* Check if numeric field is negative
+     C*
+     C           ZFLD15    IFLT *ZEROS
+     C                     MOVE '-'       ZS2,21
+     C                     Z-SUBZFLD15    ZFLD15
+     C                     END
+     C*
+     C                     Z-ADDZFLD15    WORK15
+     C*
+     C*       CHECK TO SEE IF THERE ARE ANY DECIMAL PLACES
+     C*
+     C           ZDECS     CABEQ0         ZS10
+     C*
+     C*       SET UP DECIMALS
+     C*
+     C                     Z-ADD*ZEROS    ZCNT    10
+     C           ZCNT      DOUEQZDECS
+     C                     MOVE ZS1,Z1    ZS2,Z2
+     C                     SUB  1         Z2
+     C                     ADD  1         ZCNT
+     C                     SUB  1         Z1
+     C                     END
+     C*
+     C*       PUT IN DECIMAL PLACE
+     C*
+     C                     MOVE '.'       ZS2,Z2
+     C                     SUB  1         Z2
+     C*
+     C           ZS10      TAG                             ** ZS10 TAG **
+     C*
+     C*       SET UP INTEGERS
+     C                     Z-ADD*ZEROS    CNT3    10
+     C           Z1        DOUEQ*ZEROS
+     C                     MOVE ZS1,Z1    ZS2,Z2
+     C                     SUB  1         Z1
+     C                     SUB  1         Z2
+     C*
+     C* If edit code is 'J', insert a ',' before each group of three
+     C* digits - not if beginning of array reached.
+     C           Z2        IFGT *ZEROS
+     C           ZECODE    ANDEQ'J'
+     C                     ADD  1         CNT3
+     C           CNT3      IFEQ 3
+     C                     MOVE ','       ZS2,Z2
+     C                     SUB  1         Z2
+     C                     Z-ADD*ZEROS    CNT3
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C*       PUT IN LEADING BLANKS
+     C                     Z-ADD1         Z2
+     C           ZS2,Z2    DOWEQ'0'
+     C           ZS2,Z2    OREQ ' '
+     C           ZS2,Z2    OREQ ','
+     C                     MOVE ' '       ZS2,Z2
+     C                     ADD  1         Z2
+     C           Z2        CABEQ22        ZS20
+     C                     END
+     C*
+     C*       IF NO INTEGERS PUT IN LEADING ZERO
+     C*
+     C           ZS20      TAG                             ** ZS20 TAG **
+     C*
+     C           Z2        IFEQ 22
+     C                     SUB  2         Z2
+     C                     MOVE '0'       ZS2,Z2
+     C                     ELSE
+     C*
+     C           ZS2,Z2    IFEQ '.'
+     C                     SUB  1         Z2
+     C                     MOVE '0'       ZS2,Z2
+     C                     END
+     C                     END
+     C*
+     C*       SET UP OUTPUT FIELD
+     C                     MOVEAZS2       ZOUT21
+     C*
+     CSR                   ENDSR
+      /EJECT
+     C********************************************************************
+     C**  Subroutine SRPNAR determines the required narratives.         **
+     C********************************************************************
+     C           SRPNAR    BEGSR                           * S R P N A R *
+     C*
+     C* Define the data structure parameter:
+     C           *LIKE     DEFN CGPNAR    ##PNAR
+     C*
+     C* If the facility is switched off or unavailable,
+     C*  or UDC is not installed, exit this subroutine:
+     C           REPNAR    IFNE 'Y'
+     C           *INLR     OREQ '1'                                                         MD037920
+     C                     GOTO EXPNAR
+     C                     ENDIF
+     C*
+     C* Determine the customer's name:
+     C                     MOVELCNUM      ##KEY     P
+     C*
+     C                     CALL 'AOCUSTR0'
+     C                     PARM           ##RTN   7
+     C                     PARM '*KEY   ' ##OPT   7
+     C                     PARM           ##KEY  10
+     C                     PARM           ##STS   7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C*
+     C           ##RTN     IFNE *BLANKS
+     C           *LOCK     IN   LDA                                                         MD037920
+     C                     MOVEL'SDCUSTPD'DBFILE             *************
+     C                     MOVEL'101'     DBASE              * DBERR 101 *
+     C                     MOVEL##KEY     DBKEY              *************
+     C                     EXSR #DBER
+     C                     ENDIF
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Determine the value for the posting narrative using AOPNARR0:
+     C                     CLEARCGPNAR
+     C                     CLEAR##PRM1
+     C*
+     C                     MOVE 'EE'      MNMODI
+     C                     MOVE CNUM      MNCUST
+     C                     MOVE CCY       MNCYCD
+     C                     MOVE ACOD      MNACCD
+     C                     MOVE ACSQ      MNACSQ
+     C                     MOVE BRCA      MNBRCA
+     C                     MOVE BOKC      MNBOKC
+     C                     MOVE BBCRNM    MNCRNM
+     C                     MOVE PNAR      MNNARR
+     C                     MOVE ASOC      MNASOC
+     C                     MOVE ACNO      MNRACN
+     C*
+     C                     CALL 'AOPNARR0'
+     C                     PARM           ##RTN
+     C                     PARM 'GB00001' ##MGID  7
+     C                     PARM           ##PRM1
+     C           CGPNAR    PARM CGPNAR    ##PNAR
+     C                     PARM           ##NARR 50
+     C*
+     C           ##RTN     IFNE *BLANKS
+     C                     MOVEL'CGPNARPD'DBFILE             *************
+     C                     MOVEL'102'     DBASE              * DBERR 102 *
+     C                     MOVELMNCUST    DBKEY              *************
+     C                     EXSR #DBER
+     C                     ENDIF
+     C*
+     C                     MOVEL##NARR    PNAR      P
+     C*
+     C           EXPNAR    TAG                             < EXPNAR
+     C*
+     C*
+     C                     ENDSR
+     C/EJECT                                                                                  242911
+     C********************************************************************                    242911
+     C* SUBROUTINE TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL (ZZTOTI,ZZTOTD)                      242911
+     C*   IND '99' IS SET BY AN OVERFLOW ERROR                                                242911
+     C*                                                                                       242911
+     CSR         GLZADD    BEGSR                           *** GLZADD ****                    242911
+     C*                                                                                       242911
+     CSR                   Z-ADDZZAMT     ZZAMT  153     91-DEFINE ZZAMT                      242911
+     CSR 91                GOTO ZZAEND                     AMT = 0.BYPASS                     242911
+     C*                                                                                       242911
+     C* SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS                                           242911
+     CSR                   Z-ADDZZAMT     ZZAMTI 150       INTEGER FIELD                      242911
+     CSR                   MOVE ZZAMT     ZZAMTD  30       DECIMAL FIELD                      242911
+     C* BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW                                      242911
+     C*                                                                                       242911
+     CSR                   EXSR GLZSUM                                                        242911
+     CSR         ZZAEND    ENDSR                           ** ZZAEND TAG *                    242911
+     C*                                                                                       242911
+     C********************************************************************                    242911
+     C* SUBROUTINE TO CARRY OUT THE ADDITION FOR SUBROUTINES -                                242911
+     C*                        GLZADD, GLZSUB, GLZCMP.                                        242911
+     C*          PARAMETERS PASSED -                                                          242911
+     C*                     I/P ZZAMTI ZZAMTD                                                 242911
+     C*                     O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.                           242911
+     C*                                                                                       242911
+     CSR         GLZSUM    BEGSR                           *** GLZSUM ****                    242911
+     C*                                                                                       242911
+     CSR                   Z-ADDZZTOTI    ZZTOTI 150       DEFINE ZZTOTI                      242911
+     CSR                   Z-ADDZZTOTD    ZZTOTD  30       DEFINE ZZTOTD                      242911
+     CSR                   SETOF                     919293                                   242911
+     CSR                   SETOF                     949599                                   242911
+     C*                                                                                       242911
+     C*    DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG                                          242911
+     CSR         ZZAMTI    COMP 0                      9293                                   242911
+     CSR 93      ZZAMTD    COMP 0                      9293                                   242911
+     CSR 93                GOTO ZZSEND                     ZERO BYPASS                        242911
+     C*                                                                                       242911
+     C*    DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.                                           242911
+     CSR         ZZTOTI    COMP 0                      9193                                   242911
+     CSR 93      ZZTOTD    COMP 0                      9193                                   242911
+     C*                                                                                       242911
+     C*    IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.                                               242911
+     CSR 93                Z-ADDZZAMTI    ZZTOTI                                              242911
+     CSR 93                Z-ADDZZAMTD    ZZTOTD                                              242911
+     CSR 93                GOTO ZZSEND                     ZERO BYPASS                        242911
+     C*    IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.                                            242911
+     CSR 91N92                                                                                242911
+     CORN91 92             GOTO ZZOFPS                                                        242911
+     C*                                                                                       242911
+     CSR         ZZAMTD    ADD  ZZTOTD    ZZWK2   40                                          242911
+     CSR         ZZWK2     COMP 999                  93    '93' = CARRY                       242911
+     CSRN93      ZZWK2     COMP -999                   93    INTO INTEGER.                    242911
+     C*                                                                                       242911
+     CSR 93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VE                    242911
+     CSR    93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VE                    242911
+     CSR 93      ZZTOTI    ADD  ZZWK3     ZZWK3                                               242911
+     CSRN93      ZZTOTI    ADD  ZZAMTI    ZZWK3                                               242911
+     C*                                                                                       242911
+     C* IF THE MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED                        242911
+     CSRN92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS.                     242911
+     CSR 92      ZZWK3     COMP ZZTOTI               99     NEGATIVE                          242911
+     CSRN99                Z-ADDZZWK2     ZZTOTD                                              242911
+     CSRN99                Z-ADDZZWK3     ZZTOTI                                              242911
+     C*                                                                                       242911
+     C* IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT INTACT.                     242911
+     CSR 99                Z-ADD0         ZZAMT  153                                          242911
+     CSR                   GOTO ZZSEND                                                        242911
+     C*                                                                                       242911
+     C* THE 'SIGNS' ARE DIFFERENT                                                             242911
+     CSR         ZZOFPS    TAG                             ** ZZOFPS TAG**                    242911
+     C* IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT                                242911
+     C*                                                                                       242911
+     CSR 92                Z-SUBZZAMTI    ZZAMTI 150                                          242911
+     CSR 92                Z-SUBZZAMTD    ZZAMTD  30                                          242911
+     C*                                                                                       242911
+     C* IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.                               242911
+     C*                                                                                       242911
+     CSR 91                Z-SUBZZTOTI    ZZTOTI                                              242911
+     CSR 91                Z-SUBZZTOTD    ZZTOTD                                              242911
+     C* BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.                                                242911
+     C*                                                                                       242911
+     CSR         ZZTOTI    COMP ZZAMTI               93  95                                   242911
+     CSR 95      ZZTOTD    COMP ZZAMTD               93  95                                   242911
+     C*                                                                                       242911
+     C* IF ZZTOT EQ. ZZAMT RETURN ZERO.                                                       242911
+     CSR 95                Z-ADD0         ZZTOTI                                              242911
+     CSR 95                Z-ADD0         ZZTOTD                                              242911
+     CSR 95                GOTO ZZSEND                                                        242911
+     C*                                                                                       242911
+     C* IF ZZTOT GT. ZZAMT.                                                                   242911
+     CSR 93      ZZAMTD    COMP ZZTOTD               94                                       242911
+     CSR 93 94   ZZTOTI    SUB  1         ZZTOTI                                              242911
+     CSR 93 94   ZZTOTD    ADD  1000      ZZWK2                                               242911
+     CSR 93      ZZTOTI    SUB  ZZAMTI    ZZTOTI                                              242911
+     CSR 93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD                                              242911
+     CSR 93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD                                              242911
+     C*                                                                                       242911
+     C*                                                                                       242911
+     C* IF ZZAMT GT. ZZTOT.                                                                   242911
+     CSRN93      ZZTOTD    COMP ZZAMTD               94                                       242911
+     CSRN93 94   ZZAMTI    SUB  1         ZZWK3  150                                          242911
+     CSRN93 94   ZZAMTD    ADD  1000      ZZWK2                                               242911
+     CSRN93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI                                              242911
+     CSRN93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI                                              242911
+     CSRN93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD                                              242911
+     CSRN93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD                                              242911
+     C*                                                                                       242911
+     C* REVERSE SIGN OF ZZTOT IF LARGER I/P FIELDS WERE NEGATIVE                              242911
+     CSR                   SETOF                     94                                       242911
+     CSR 93 91                                                                                242911
+     CORN93 92             SETON                     94                                       242911
+     CSR 94                Z-SUBZZTOTI    ZZTOTI                                              242911
+     CSR 94                Z-SUBZZTOTD    ZZTOTD                                              242911
+     C**                                                                                      242911
+     C**   RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.                                242911
+     CSR 92                Z-SUBZZAMTI    ZZAMTI                                              242911
+     CSR 92                Z-SUBZZAMTD    ZZAMTD                                              242911
+     CSR         ZZSEND    TAG                             ** ZZSEND TAG *                    242911
+     C**                                                                                      242911
+     C**   IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.                               242911
+     CSR                   SETOF                     96                                       242911
+     CSR         ZZTOTD    COMP 0                        91                                   242911
+     CSR 91      ZZTOTI    COMP 0                      96                                     242911
+     CSR 96                MOVE '.000-'   ZZNEGD  5                                           242911
+     CSR                   ENDSR                             ** ENDSR **                      242911
+      /EJECT
+     C********************************************************************
+     C**  *INZSR - Initialisation Routine                               **
+     C********************************************************************
+     C           *INZSR    BEGSR
+      *
+      **  Define LDA
+     C           *NAMVAR   DEFN           LDA
+      *
+      **  Initialise program name
+     C                     MOVEL'GL1724'  DBPGM
+      *
+      **  Get bank details
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     MOVEL*BLANKS   DBKEY            * DBERROR 001 *
+     C                     Z-ADD001       DBASE            ***************
+     C                     EXSR #DBER
+     C                     END
+      *
+      **  Call module prog. for module details.
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDMMOD    PARM SDMMOD    DSFDY
+     C           @RTCD     IFNE *BLANK                     B1
+     C           *LOCK     IN   LDA                         1
+     C                     MOVEL'SDMMODPD'DBFILE           * * * * * * *
+     C                     Z-ADD86        DBASE            * DBERR 86  *
+     C                     MOVEL@OPTN     DBKEY            * * * * * * *
+     C                     EXSR #DBER                       1
+     C                     ENDIF                           X1
+      *
+      ****Check*if*feature*EEPNAR*is*on                                                     MD037802
+      **  Check if feature GLPNAR is on                                                     MD037802
+     C                     MOVE 'N'       REPNAR  1
+     C           BGN1ST    IFEQ 'Y'
+     C                     CALL 'AOSARDR0'
+     C                     PARM '       ' @RTCD
+     C                     PARM '*VERIFY' @OPTN
+     C**********           PARM 'EEPNAR'  @SARD   6                                         MD037802
+     C                     PARM 'GLPNAR'  @SARD   6                                         MD037802
+     C           SCSARD    PARM SCSARD    DSFDY
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       REPNAR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Move copyright statement
+     C                     MOVEACPY@      MISYS@ 80
+      *
+      **  Record printer file for RCF
+     C                     Z-ADDSFNUM1    ZSNUM   60                      S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ     5                       S01117
+     C                     PARM *BLANK    @PARM   3                       S01117
+     C                     PARM           SFILE1                          S01117
+     C                     PARM           ZSNUM                           S01117
+     C                     PARM           ZSERR   1                       S01117
+      *
+      **  Record printer file for RCF
+     C                     Z-ADDSFNUMU    ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANK    @PARM   3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      **  Write report headings
+     C                     WRITEHEADAU
+      *                                                                                       242911
+      **  Read Trailer record for subsequent update                                           242911
+     C           1         CHAINGEGPIZZ              88                                       242911
+     C********** @RTCD     IFNE *BLANK                     B1                        242911 BUG27090
+     C           *IN88     IFEQ *ON                                                         BUG27090
+     C           *LOCK     IN   LDA                         1                                 242911
+     C                     MOVEL'GEGPIZZ' DBFILE           * * * * * * *                      242911
+     C                     Z-ADD88        DBASE            * DBERR 88  *                      242911
+     C                     MOVEL'*FIRST'  DBKEY            * * * * * * *                      242911
+     C                     EXSR #DBER                       1                                 242911
+     C                     ENDIF                           X1                                 242911
+      *                                                                                       242911
+      **  Initialise GLZADD work fields from Trailer values                                   242911
+      *                                                                                       242911
+     C                     Z-ADDHRWN      ZZTOTI                                              242911
+     C                     Z-ADDHRDC      ZZTOTD                                              242911
+     C                     Z-ADDNORE1     ##NORE  50                                          242911
+      *
+     C                     ENDSR
+     C********************************************************************
+** EEPNAR
+Generic Post Summary
+** CPY@
+(c) Misys Banking Systems Ltd. 2006

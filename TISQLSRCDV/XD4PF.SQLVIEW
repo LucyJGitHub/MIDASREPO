@@ -1,0 +1,51 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Trade Innovation Interface                                    */
+/*                                                                             */
+/*       D4PF - Rates from SDBSHSPD and SDBSRTPD                               */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2004                     */
+/*                                                                             */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/*       Last Amend No. 245028             Date 02Mar07                        */
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*       Prev Amend No. BUG4148            Date 06Sep04                        */
+/*                      BUG3481            Date 28Jun04                        */
+/*                      CTI004  *CREATE    Date 08Jun04                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       245028 - Do not display history rates if backvalued.                  */
+/*       BUG4148 - Rename D4PF to avoid problems with historic base rates      */
+/*       BUG3481 - Convert Base Rate code number field to numeric.             */
+/*       CTI004 - Midas-TI database integration                                */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+/*SELECT*0*AS*D4DTE,*(G0CYCD*CONCAT*CHAR(G0BSRC))*AS*D4BRR*,*****              */        /*BUG3481*/
+  SELECT 0 AS D4DTE, (G0CYCD CONCAT CHAR(DIGITS(G0BSRC),2)) AS D4BRR,           :        /*BUG3481*/
+  G0VDTO AS D4DTEH, 'A' AS D4DFLG, G0CBSR AS D4BRAR, 0 AS D4DLM,                :
+  '' AS DUALACTION, 0 AS CUSER, 0 AS AUSER                                      :
+/*FROM*SDBSHSPD*WHERE*G0CHGD*='Y'*****                                          :         /*245028*/
+  FROM SDBSHSPD LEFT JOIN SDBSRTPD                                              :         /*245028*/
+    ON G0CYCD=BACYCD AND G0BSRC=BABSRC                                          :         /*245028*/
+    WHERE G0CHGD ='Y' AND G0VDTO <> 0 AND G0VDTO <> 6991231                     :         /*245028*/
+          AND G0VDTO < BAVDTO                                                   :         /*245028*/
+  UNION SELECT 0 AS D4DTE, (BACYCD CONCAT CHAR(BABSRC))                         :
+/*AS*D4BRR*,*BAVDTO*AS*D4DTEH,*'A'*AS*D4DFLG,*BACBSR*AS*D4BRAR,                 :
+  AS D4BRR , BAVDTO AS D4DTEH, 'A' AS D4DFLG, BACBRT AS D4BRAR,                 :         /*245028*/
+  0 AS D4DLM,'' AS DUALACTION, 0 AS CUSER, 0 AS AUSER                           :
+/*FROM*SDBSRTPD*WHERE*BAVDRC*IS*NOT*NULL*****                                  */        /*BUG3481*/
+  FROM SDBSRTPD WHERE BAVDTO <> 0 AND BAVDTO <> 6991231                         :        /*BUG3481*/
+  UNION SELECT 0 AS D4DTE, (BACYCD CONCAT CHAR(BABSRC)) AS D4BRR ,              :
+  6991231 AS D4DTEH, 'Z' AS D4DFLG, BANBRT AS D4BRAR, 0 AS D4DLM,               :
+  '' AS DUALACTION, 0 AS CUSER, 0 AS AUSER FROM SDBSRTPD;                       :
+/*******************************************************************************/
+ ;                                                                              :
+  label on procedure **********/**********                                      :
+   is 'Midas TI Rates details                            ';                     :
+                                                                                :

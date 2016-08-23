@@ -1,0 +1,429 @@
+     H        1
+      *****************************************************************
+/*OVR *: OVRDBF FILE(SECED) SHARE(*NO)                              : *
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Security detail validations')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE0041 - Securities Details Validations                      *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. 234300             Date 29Sep06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 222727             Date 05Nov03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSE015             Date 06Dec99               *
+      *                 CSE017             Date 20Oct99               *
+      *                 CSE012             Date 16Aug99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU017             Date 03Apr98               *
+      *                 CSE007  *CREATE    Date 19Jan98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  234300 - Recompiled over changed in PF/HSTTRD.               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+      *  CSE015 - Forward Valued Depot Movements (Recompile)          *
+      *  CSE017 - Cum/Ex Indicator on Depot Movement (Recompile)      *
+      *  CSE012 - SE Depot Movement Narratives (Recompiled).          *
+      *  CEU017 - Securities Redenomination Euro Changes              *
+      *           Just Recompile                                      *
+      *  CSE007 - Corporate Actions                                   *
+      *                                                               *
+      *****************************************************************
+      /TITLE FUNCTION OF INDICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *  ===========================================                  *
+      *                                                               *
+      *   20      record TRADSDL3/TRADSDF read (trades)               *
+      *   21      record TRADSDL3/DPTMVDF read (depot moves)          *
+      *   22      record SECED   /SNDEVDF read (non diary events)     *
+      *   23      record SECED   /SEDEVDF read (diary events)         *
+      *   33      READ FAIL/END OF FILE                               *
+      *   34      All possible error are reached                      *
+      *                                                               *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *  ===============================                              *
+      *                                                               *
+      *   P001 - Check using file POSETCHK position settlements       *
+      *   P002 - Check using file TRADSDL3 trades / depot moves       *
+      *   P003 - Check using file SECED    Diary events               *
+      *   P004 - Check using file SEERRFL5 Early redemptions          *
+      *                                                               *
+      *****************************************************************
+      /TITLE FILES DESCRIPTION
+      *****************************************************************
+      *
+     FPOSETCHKIF  E           K        DISK
+     FTRADSDL3IF  E           K        DISK
+     F            HSTTRDF                           KIGNORE
+     FSECED   IF  E           K        DISK
+     FSEERRFL5IF  E           K        DISK
+      *
+      *****************************************************************
+      /TITLE E-SPECIFICATIONS
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      *
+      **  Array of validation errors
+     E                    ERR         9  3
+      *
+      *****************************************************************
+      /TITLE I-SPECIFICATIONS
+      *****************************************************************
+      *
+     ITRADSDF     20
+     IDPTMVDF     21
+     ISNDEVDF     22
+     ISEDEVDF     23
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      **         P R O G R A M    S T A R T                           *
+      *****************************************************************
+      *
+      ** ENTRY PLIST
+      *
+      *        WPVREQ : VALIDATION REQUIRED (V,M,B)
+      *        WPSESN : SECURITY SHORTNAME
+      *        WPCCY  : CURRENCY
+      *        WPDAT1 : DATE 1
+      *        ERR    : ARRAY OF VALIDATION ERRORS
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           WPVREQ  1
+     C                     PARM           WPSESN 10
+     C                     PARM           WPCCY   3
+     C                     PARM           WPDAT1  50
+     C                     PARM           ERR
+      *
+      ** KLIST'S
+     C           KEY1      KLIST
+     C                     KFLD           WPSESN
+      *
+     C           KEY2      KLIST
+     C                     KFLD           WPSESN
+     C                     KFLD           WTDVD   50
+     C                     KFLD           WTDRF   6
+      *
+     C           KEY3      KLIST
+     C                     KFLD           WPSESN
+     C                     KFLD           WPDAT1
+     C                     KFLD           WWA2    2
+      *
+     C           KEY4      KLIST
+     C                     KFLD           WPSESN
+     C                     KFLD           WWHIGH  50
+      *
+      ** Access Switchable feature S01496 SE Private Banking Enhancements
+      *
+     C                     MOVE 'N'       S01496
+     C                     CALL 'AOSARDR0'
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'S01496'  @SARD   6
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       S01496  1
+     C                     END
+      *
+     C                     Z-ADD0         EC      30
+      *
+     C                     EXSR P001
+      *
+     C           WPVREQ    IFEQ 'M'
+     C           WPVREQ    OREQ 'B'
+     C                     EXSR P002
+     C                     ENDIF
+      *
+     C           WPVREQ    IFEQ 'M'
+     C                     EXSR P003
+     C                     ENDIF
+      *
+     C           WPVREQ    IFEQ 'M'
+     C           S01496    ANDEQ'Y'
+     C                     EXSR P004
+     C                     ENDIF
+      *
+     C                     RETRN
+      *
+      *****************************************************************
+      **         P R O G R A M    E N D                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      /TITLE SR/P001
+      *****************************************************************
+      *                                                               *
+      *  P001 - Subroutine provides all validations required for file *
+      *         POSETCHK (positions settlement)                       *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+     C           P001      BEGSR
+      *
+     C                     MOVE '0'       *IN34
+      *
+     C           KEY1      SETLLPOSETCHK
+     C                     READ POSETCHK               3333
+      *
+      * All records for the same security
+     C           *IN33     DOWEQ'0'
+     C           WPSESN    ANDEQPSSH
+     C           *IN34     ANDEQ'0'
+      *
+      * Value Currency
+     C           WPVREQ    IFEQ 'V'
+     C           WPCCY     ANDNEPNCY
+     C                     ADD  1         EC
+     C                     MOVEA'W05'     ERR,EC
+     C                     MOVE '1'       *IN34
+     C                     ENDIF
+      *
+      * Maturity date
+     C           WPVREQ    IFEQ 'M'
+     C           WPDAT1    ANDLEPSVL
+     C                     ADD  1         EC
+     C                     MOVEA'500'     ERR,EC
+     C                     MOVE '1'       *IN34
+     C                     ENDIF
+      *
+      * Change of day/divisor basis
+     C           WPVREQ    IFEQ 'B'
+     C                     ADD  1         EC
+     C                     MOVEA'W06'     ERR,EC
+     C                     MOVE '1'       *IN34
+     C                     ENDIF
+      *
+     C                     READ POSETCHK               3333
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      /TITLE SR/P002
+      *****************************************************************
+      *                                                               *
+      *  P002   Subroutine provides all validations required for file *
+      *         TRADSDL3 (Trades by security and date)                *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+     C           P002      BEGSR
+      *
+     C                     MOVE 'N'       E501    1
+     C                     MOVE 'N'       E502    1
+     C                     MOVE 'N'       WW07    1
+     C                     MOVE 'N'       WW08    1
+      *
+     C                     MOVE *HIVAL    WTDVD
+     C                     MOVE *ZEROS    WTDRF
+      *
+     C           KEY2      SETLLTRADSDL3
+      *
+     C                     MOVE '0'       *IN34
+     C                     MOVE '0'       *IN20
+     C                     MOVE '0'       *IN21
+     C                     READ TRADSDL3               3333
+     C   20                MOVELTDSS      WWSN   10
+     C   21                MOVELDPSS      WWSN
+      *
+      * All records for the same security
+     C           *IN33     DOWEQ'0'
+     C           WPSESN    ANDEQWWSN
+     C           *IN34     ANDEQ'0'
+      *
+      * Validation required 'M' (maturity date)
+     C           WPVREQ    IFEQ 'M'
+      *
+      * Check if trades exists with value date after new maturity date
+     C           *IN20     IFEQ '1'
+     C           E501      ANDEQ'N'
+     C           RECI      ANDNE'*'
+     C           TDVD      ANDGEWPDAT1
+     C                     ADD  1         EC
+     C                     MOVEA'501'     ERR,EC
+     C                     MOVE 'Y'       E501
+     C                     ENDIF
+      *
+      * Check if depot movements exists with date in or date out after
+      * new maturity date
+     C           *IN21     IFEQ '1'
+     C           E502      ANDEQ'N'
+     C           RECI      ANDNE'*'
+     C           DPMD      IFGE WPDAT1
+     C           DPDO      ORGE WPDAT1
+     C                     ADD  1         EC
+     C                     MOVEA'502'     ERR,EC
+     C                     MOVE 'Y'       E502
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * If both erros, do'nt read more
+     C           E501      IFEQ 'Y'
+     C           E502      ANDEQ'Y'
+     C                     MOVE '1'       *IN34
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      * Validation required 'B' (day basis or divisor basis)
+     C           WPVREQ    IFEQ 'B'
+      *
+      * Check if trades exists with value date after last coupon date
+     C           *IN20     IFEQ '1'
+     C           WW07      ANDEQ'N'
+     C           RECI      ANDNE'*'
+     C           TDVD      ANDGTWPDAT1
+     C                     ADD  1         EC
+     C                     MOVEA'W07'     ERR,EC
+     C                     MOVE 'Y'       WW07
+     C                     ENDIF
+      *
+      * Check if depot movements exists with date in or date out after
+      * last coupon date
+     C           *IN21     IFEQ '1'
+     C           WW08      ANDEQ'N'
+     C           RECI      ANDNE'*'
+     C           DPMD      IFGT WPDAT1
+     C           DPDO      ORGT WPDAT1
+     C                     ADD  1         EC
+     C                     MOVEA'W08'     ERR,EC
+     C                     MOVE 'Y'       WW08
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * If both warnings, do'nt read more
+     C           WW07      IFEQ 'Y'
+     C           WW08      ANDEQ'Y'
+     C                     MOVE '1'       *IN34
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     MOVE '0'       *IN20
+     C                     MOVE '0'       *IN21
+     C                     READ TRADSDL3               3333
+     C   20                MOVELTDSS      WWSN   10
+     C   21                MOVELDPSS      WWSN
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      /TITLE SR/P003
+      *****************************************************************
+      *                                                               *
+      *  P003 - Subroutine provides all validations required for file *
+      *         SECED (Diary and non diary events)                    *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+     C           P003      BEGSR
+      *
+     C                     MOVE *BLANKS   WWA2
+      *
+     C           KEY3      SETLLSECED
+      *
+     C                     MOVE '0'       *IN34
+     C                     MOVE '0'       *IN22
+     C                     MOVE '0'       *IN23
+     C                     READ SECED                  3333
+     C   22                MOVE SNSN      WWSN
+     C   22                MOVE SNET      WWET    2
+     C   23                MOVE SDSN      WWSN
+     C   23                MOVE SDET      WWET
+      *
+      * All records for the same security
+     C           *IN33     DOWEQ'0'
+     C           WPSESN    ANDEQWWSN
+     C           *IN34     ANDEQ'0'
+      *
+      * Check if diary events exists with event date after new mat. date
+     C           WWET      IFNE 'MA'
+     C                     ADD  1         EC
+     C                     MOVEA'503'     ERR,EC
+     C                     MOVE '1'       *IN34
+     C                     ENDIF
+      *
+     C                     MOVE '0'       *IN22
+     C                     MOVE '0'       *IN23
+     C                     READ SECED                  3333
+     C   22                MOVE SNSN      WWSN
+     C   22                MOVE SNET      WWET
+     C   23                MOVE SDSN      WWSN
+     C   23                MOVE SDET      WWET
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      /TITLE SR/P004
+      *****************************************************************
+      *                                                               *
+      *  P004 - Subroutine provides validations required for file     *
+      *         SEERRFL5 (Early Redemptions)                          *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+     C           P004      BEGSR
+      *
+     C                     MOVE *HIVAL    WWHIGH
+      *
+     C           KEY4      SETGTSEERRFL5
+      *
+     C                     READPSEERRFL5                 33
+      *
+      * Record found for the same security and ER Date *GT than maturity
+      *
+     C           *IN33     IFEQ '0'
+     C           VASESN    ANDEQWPSESN
+     C           VAERRD    ANDGEWPDAT1
+     C           VAERST    ANDNE'R'
+     C           VARECI    ANDEQ'D'
+      *
+     C                     ADD  1         EC
+     C                     MOVEA'506'     ERR,EC
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,131 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UT Validity checker for UTWRKVLDL')             */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       UTC000030V - UTWRKVLDL validity checker                     */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. CUT007 *RENAME     Date 15Dec10              */
+/*       Prev Amend No. BUG27989*CREATE    Date 08Aug10              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUT007 - Renamed from UTC000034V.  Rewrite of UTWRKVLDL.    */
+/*       BUG27989A -  HATS should run with/without LDAP (Reopen)     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&VLDL)
+ 
+             DCL        VAR(&VLDL) TYPE(*CHAR) LEN(20)
+ 
+             DCL        VAR(&VLDLNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&VLDLLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1)
+ 
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2010')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CHGVAR     VAR(&VLDLNAME) VALUE(%SST(&VLDL 1 10))
+             CHGVAR     VAR(&VLDLLIB) VALUE(%SST(&VLDL 11 10))
+ 
+/* If the library is not a list then check that it exists. */
+             IF         COND(%SST(&VLDLLIB 1 1) *NE '*') THEN(DO)
+                CHKOBJ     OBJ(&VLDLLIB) OBJTYPE(*LIB) AUT(*USE)
+                MONMSG     MSGID(CPF9801) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000Library' *BCAT &VLDLLIB *BCAT +
+                                'does not exist.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+                MONMSG     MSGID(CPF9802) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000User is not authorised to +
+                                library' *BCAT &VLDLLIB *TCAT '.') +
+                                MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+             ELSE       CMD(DO)
+                IF         COND(&VLDLLIB *NE '*CURLIB' *AND &VLDLLIB +
+                             *NE '*LIBL' *AND &VLDLLIB *NE '*USRLIBL') +
+                             THEN(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000Library' *BCAT &VLDLLIB *BCAT +
+                                'is not valid.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+ 
+/* If validation list is not *ALL then check that validation list exists. */
+             IF         COND(&VLDLNAME *NE '*ALL') THEN(DO)
+/* CHKOBJ does not work for '*USRLIBL'. */
+                IF         COND(&VLDLLIB *NE '*USRLIBL') THEN(DO)
+                   CHKOBJ     OBJ(&VLDLLIB/&VLDLNAME) OBJTYPE(*VLDL)
+                   MONMSG     MSGID(CPF9801) EXEC(DO)
+                      SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                   MSGDTA('0000Validation list' *BCAT +
+                                   &VLDLLIB *TCAT '/' *TCAT &VLDLNAME *BCAT +
+                                   'does not exist.') MSGTYPE(*DIAG)
+                      CHGVAR     VAR(&ERROR) VALUE('Y')
+                      GOTO       CMDLBL(ERROR)
+                   ENDDO
+                ENDDO
+                ELSE       CMD(DO)
+                   DSPOBJD    OBJ(*USRLIBL/&VLDLNAME) OBJTYPE(*VLDL) +
+                                OUTPUT(*OUTFILE) OUTFILE(QTEMP/UTC000030V)
+                   MONMSG     MSGID(CPF2105) EXEC(DO)
+                      SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                   MSGDTA('0000Validation list' *BCAT +
+                                   &VLDLLIB *TCAT '/' *TCAT &VLDLNAME *BCAT +
+                                   'does not exist.') MSGTYPE(*DIAG)
+                      CHGVAR     VAR(&ERROR) VALUE('Y')
+                      GOTO       CMDLBL(ERROR)
+                   ENDDO
+                ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+/* If validity error then send message back to command . . . */
+             IF         COND(&ERROR *EQ 'Y') THEN(DO)
+                SNDPGMMSG  MSGID(CPF0002) MSGF(QCPFMSG) MSGTYPE(*ESCAPE)
+             ENDDO
+/* . . .  else send generic message. */
+             ELSE       CMD(DO)
+                IF         COND(&RECURSIVE *EQ 'N') THEN(DO)
+                   CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+RCVMSG:
+                   RCVMSG     MSGTYPE(*DIAG) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                                MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                   IF         COND(&MSGID *NE ' ') THEN(DO)
+                      SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                                   MSGDTA(&MSGDTA) MSGTYPE(*DIAG)
+                      GOTO       CMDLBL(RCVMSG)
+                   ENDDO
+                   RCVMSG     MSGTYPE(*EXCP) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                                MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                   SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                                MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
+                ENDDO
+             ENDDO
+ 
+ENDPGM:
+             ENDPGM

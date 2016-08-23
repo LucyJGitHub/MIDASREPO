@@ -1,0 +1,541 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL IRS discount factors rebuild')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - FRA/IRS Module                                       *
+     F*                                                               *
+     F*  DL1965 - IRS Discount Factors Rebuild                        *
+     F*                                                               *
+     F*  This program is called by DLC1935 - IRS Rates Maintenance    *
+     F*  Program whenever the Swap Rates are maintained.              *
+     F*  DL1965 reads through all swap rates, calculates              *
+     F*  the discount factors and writes them to DLIRDFPD.            *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. 247544             Date 16May07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CIR013             Date 25Apr05               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 194012             Date 08Jun01              *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 182370             Date 05Jun01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CIR004             Date 20Jan00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CIR001             Date 13Jun95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  247544 - Increase definition of W@NLP2 to match w/ ZINTDYZ2  *
+      *           processing as amended by 242286.  (Recompile)       *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CIR013 - Additional Calculation Method for FRA/IRS/CCF       *
+      *           Recompile over ZCBDYS.                              *
+     F*  194012 - Change maximum no. of permitted Swap Rate entry     *
+     F*           from 90 to 150.                                     *
+      *  182370 - Incorrect calculation of number of days for calcu-  *
+      *           lation basis 6. Amended /COPY such that for calcu-  *
+      *           lation basis 6, the number of days per year is      *
+      *           equal to 366 when the year in question is a leap    *
+      *           year, and 365 days/year for non-leap years. Calcu-  *
+      *           lation was made so that processing would be in-line *
+      *           with that of /COPY ZINTDY.                          *
+      *  CIR004 - Dealing Calculation Method Change (Recompiled due   *
+      *           change in ZCBDYSZ1)                                 *
+     F*  CIR001 - Interest Rate Calendars                             *
+     F*                                                               *
+     F*****************************************************************
+     F* INDEX OF INDICATORS
+     F*
+     F*   70    - End of file for DLSWPRL3
+     F*   71    - Error on DLSWPRL3
+     F*   72    - End of file for DLIRDFL1
+     F*   U7/U8 - Database error
+     F*                                                               *
+     F*****************************************************************
+     FDLSWPRL3IF  E           K        DISK         KINFSR *PSSR
+     FDLIRDFL1UF  E           K        DISK         KINFSR *PSSR A
+     E*
+     E                    CPY@    1   1 80
+     E** Array for Copyright Statement
+     E*
+     E**********          PRDN       50  5 0                                                  194012
+     E                    PRDN      159  5 0                                                  194012
+     E** Array for Period Dates (Midas Day Number) from DLSWPRL3
+     E*
+     E**********          RT         50 11 7                                                  194012
+     E                    RT        159 11 7                                                  194012
+     E** Array for Rates from DLSWPRL3
+     E*
+     E**********          RTW        50 11 9                                                  194012
+     E                    RTW       159 11 9                                                  194012
+     E** Array for Rates from DLSWPRL3 (weighted)
+     E*
+     E**********          DF         50 20 9                                                  194012
+     E                    DF        159 20 9                                                  194012
+     E** Array for Discount Factor
+     E*
+     E**********          CDF        50 20 9                                                  194012
+     E                    CDF       159 20 9                                                  194012
+     E/COPY WNCPYSRC,DL1965E001
+     E** Array for Cumulative Discount Factor
+     E                    ZF29   14  32  5 0
+     E                    ZYDY    4   4  4 0
+     E                    ZMDY   13  13  3 0
+     E                    ZMNM   12  12  3
+     E/COPY ZSRSRC,ZHOLE
+     E/COPY ZSRSRC,ZDATE9Z1                                               182370
+     E*
+     I            DS
+     I                                        1   60IRYMD
+     I                                        1   20IRPDYR
+     I                                        3   40IRPDMN
+     I                                        5   60IRPDDY
+     I            DS
+     I                                        1   60##YMD
+     I                                        1   20##PDYR
+     I                                        3   40##PDMN
+     I                                        5   60##PDDY
+     I/COPY ZSRSRC,ZHOLI
+     I/COPY ZSRSRC,ZHOLDS
+     IDBERR       DS                            256
+     I** LOCAL DATA AREA FOR DATABASE ERROR
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     ISDBANK    E DSSDBANKPD
+      ** BANK DETAILS ACCESSED VIA ACCESS PORGRAM
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I/COPY WNCPYSRC,DL1965I001
+     I/COPY ZSRSRC,ZDATE9Z2                                               182370
+     I/COPY ZSRSRC,ZDAT10Z1                                               182370
+      *                                                                   182370
+      ** Data structure for subroutine ZCBDYS                             182370
+     I            DS                                                      182370
+     I                                        1   80ZZDAT1                182370
+     I                                        1   40ZZYYA                 182370
+     I                                        5   60ZZMMA                 182370
+     I                                        7   80ZZDDA                 182370
+      *                                                                   182370
+     I            DS                                                      182370
+     I                                        1   80ZZDAT2                182370
+     I                                        1   40ZZYYB                 182370
+     I                                        5   60ZZMMB                 182370
+     I                                        7   80ZZDDB                 182370
+      *                                                                   182370
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C* SUBROUTINES USED                                              *
+     C*                                                               *
+     C*  DELET - Delete all records from DLIRDFPD before Rebuilding   *
+     C*  LOAD  - Load Rates Arrays                                    *
+     C*  CALC  - Calculate Discount Factors                           *
+     C*  WRITE - Write record to DLIRDFL1                             *
+     C*  *PSSR - Error Subroutine                                     *
+     C*                                                               *
+     C*****************************************************************
+     C*                                                               *
+     C*              Main Line Processing                             *
+     C*                                                               *
+     C* CALLS      -  DELET   - Delete all records from DLIRDFPD      *
+     C*               LOAD    - Load Rates Arrays                     *
+     C*               CALC    - Calculate Discount Factors            *
+     C*               WRITE   - Write record to DLIRDFL1              *
+     C*                                                               *
+     C*****************************************************************
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** CALL ACCESS PROGRAM FOR BANK DETAILS
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR  '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'DBFILE            *************
+     C                     MOVEL'001'     DBASE             *DBERROR 001*
+     C                     MOVEL@OPTN     DBKEY             *************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Set Date Format Indicator
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     END
+      *
+     C/COPY WNCPYSRC,DL1965C001
+      ** Initialize
+     C                     MOVEL*BLANK    ##CCY   3
+     C                     MOVEL*BLANK    ##INCL  1
+     C                     MOVEL*BLANK    ##FREQ  1
+     C*
+     C** Delete first all records from DLIRDFL1
+     C** before rebuilding
+     C                     EXSR DELET
+     C*
+     C** Read the IRS Rates
+     C           *LOVAL    SETLLDLSWPRD0
+     C                     READ DLSWPRD0                 70
+     C*
+     C           *IN70     DOWEQ'0'
+     C*
+     C** On change of currency
+     C*
+     C           IRCCY     IFNE @CCY
+     C                     MOVELIRCCY     @CCY    3
+     C*
+     C**  IF CURRENCY THE SAME AS THE LOCAL CURRENCY SPOT DATE IS TODAY
+     C*
+     C           IRCCY     IFEQ BJCYCD
+     C                     Z-ADDBJRDNB    ##SPOT  50
+     C                     ELSE
+     C*
+     C**  ELSE SPOT DATE IS TWO WORKING DAYS FROM TODAY
+     C*
+     C                     MOVE IRCCY     ZCCY
+     C                     MOVE *BLANKS   ZLOC
+     C                     Z-ADDBJRDNB    ZDAYNO
+     C                     Z-ADD2         ZNRDYS
+     C                     EXSR ZFWDT
+     C                     Z-ADDZDYNBR    ##SPOT
+     C                     END
+     C                     END
+     C*
+     C** On change of currency, int.cal.mth. or frequency code
+     C*
+     C           IRCCY     IFNE ##CCY
+     C           IRINCL    ORNE ##INCL
+     C           IRFREQ    ORNE ##FREQ
+     C/COPY WNCPYSRC,DL1965C002
+     C                     MOVELIRCCY     ##CCY
+     C                     MOVELIRINCL    ##INCL
+     C                     MOVELIRFREQ    ##FREQ
+     C*
+     C** Initialise array index and arrays
+     C**********           Z-ADD1         X       20                                          194012
+     C                     Z-ADD1         X       30                                          194012
+     C                     Z-ADD*ZERO     PRDN
+     C                     Z-ADD*ZERO     RT
+     C                     Z-ADD*ZERO     RTW
+     C                     Z-ADD*ZERO     DF
+     C                     Z-ADD*ZERO     CDF
+     C*
+     C** Initialise previous day number
+     C                     Z-ADD##SPOT    ##MMDN  50
+     C*
+     C** Define Period 1 and Compounding Rate according to Frequency
+     C                     Z-ADD*ZERO     ##YMD
+     C                     Z-ADD1         ##COMR  20
+     C                     SELEC
+     C           IRFREQ    WHEQ 'X'
+     C                     Z-ADD6         ##PDMN
+     C                     Z-ADD2         ##COMR
+     C           IRFREQ    WHEQ 'Y'
+     C                     Z-ADD1         ##PDYR
+     C                     Z-ADD1         ##COMR
+     C                     ENDSL
+      *
+     C                     END
+     C*
+     C** Load rates into an array
+     C                     EXSR LOAD
+     C*
+     C** Calculate discount factors
+     C                     EXSR CALC
+     C*
+     C** Write record to Discount Factors file
+     C                     EXSR WRITE
+     C*
+     C** Read next IRS rate
+     C                     READ DLSWPRD0                 70
+     C                     END
+     C*
+     C** Terminate program
+     C                     MOVEL'1'       *INLR
+     C*****************************************************************
+     C*                                                               *
+     C* LOAD      - Load Rates Arrays                                 *
+     C*                                                               *
+     C* CALLS      -  ZCBDYS  - Calculate days & divisor basis        *
+     C*                                                               *
+     C* CALLED BY    Main Line Processing                             *
+     C*                                                               *
+     C*****************************************************************
+     C           LOAD      BEGSR
+     C*
+     C** Increment array index by 1
+     C                     ADD  1         X
+     C*
+     C** Move the Period Date
+     C                     MOVELIRMMDN    PRDN,X
+     C*
+     C** Move the rates from file into arrays
+     C           IRRATE    DIV  100       RT,X
+     C           IRRATE    DIV  100       RTW,X
+     C*
+     C** If within Period 1
+     C/COPY WNCPYSRC,DL1965C010
+     C           IRYMD     IFLT ##YMD
+     C/COPY WNCPYSRC,DL1965C011
+     C*
+     C** Calculate the number of days/divisor basis from spot date
+     C                     Z-ADD##SPOT    ZCBSDT
+     C                     Z-ADDIRMMDN    ZCBEDT
+     C                     MOVELIRINCL    ZCBCBS
+     C                     EXSR ZCBDYS
+     C*
+     C** Weight the rate by number of days/divisor basis
+     C                     MULT ZCBDAY    RTW,X
+     C                     DIV  ZCBDIV    RTW,X
+     C*
+     C** Update previous day number
+     C                     Z-ADD##SPOT    ##MMDN
+     C*
+     C** Else if beyond Period 1
+     C                     ELSE
+     C*
+     C** If method is actual/actual
+     C*
+     C           IRINCL    IFEQ '6'
+     C*
+     C** Weight the rate by the compounding rate
+     C                     DIV  ##COMR    RTW,X
+     C/COPY WNCPYSRC,DL1965C012
+     C*
+     C** Else (if method is not actual/actual)
+     C*
+     C                     ELSE
+     C*
+     C** Calculate the number of days/divisor basis in the period
+     C*
+     C                     Z-ADD##MMDN    ZCBSDT
+     C                     Z-ADDIRMMDN    ZCBEDT
+     C                     MOVELIRINCL    ZCBCBS
+     C                     EXSR ZCBDYS
+     C*
+     C** Weight the rate by number of days/divisor basis in the period
+     C                     MULT ZCBDAY    RTW,X
+     C                     DIV  ZCBDIV    RTW,X
+     C                     END
+     C*
+     C** Update previous day number
+     C                     Z-ADDIRMMDN    ##MMDN
+     C                     END
+     C*
+     C           LOAD9     ENDSR
+     C*****************************************************************
+     C*                                                               *
+     C* CALC       - Calculate Discount Factors                       *
+     C*                                                               *
+     C* CALLS        WRITE - Set up file fields                       *
+     C*                      and write record to DLIRDFL1             *
+     C*                                                               *
+     C* CALLED BY    Main Line Processing                             *
+     C*                                                               *
+     C* FLDS USED    X     - Array Index                              *
+     C*              Y     - Second Array Index (one less than X)     *
+     C*              PRDN  - Period Date (Midas Day Number)           *
+     C*              RT    - Array for Rate                           *
+     C*              RTW   - Array for Rate (weighted)                *
+     C*              DF    - Array for Discount Factor                *
+     C*              CDF   - Array for Cumulative Discount Factor     *
+     C*                                                               *
+     C* CALCULATIONS :                                                *
+     C*                                                               *
+     C* a)  Discount Factor for Period 1:                             *
+     C*                                                               *
+     C*                          1                                    *
+     C*      DF,(prd 1) = ---------------                             *
+     C*                   1 + RTW,(prd 1)                             *
+     C*                                                               *
+     C* b)  Discount Factor for Periods 2 and onwards                 *
+     C*                                                               *
+     C*                   1 - {RT,(prd X) x CDF,(prd X-1)}            *
+     C*      DF,(prd X) = ----------------------------------          *
+     C*                            1 + RTW,(prd X)                    *
+     C*                                                               *
+     C*  Where CDF,(prd X-1) =  DF,1 +  DF,2 + ..... +  DF,(prd X-1)  *
+     C*                                                               *
+     C*****************************************************************
+     C           CALC      BEGSR
+     C*
+     C** Process for Period 1
+     C** --------------------
+     C/COPY WNCPYSRC,DL1965C007
+     C           IRYMD     IFLE ##YMD
+     C/COPY WNCPYSRC,DL1965C008
+     C*
+     C** Discount Factor = 1 / ( 1 + Weighted Rate)
+     C*
+     C           1         ADD  RTW,X     WWFLD1
+     C           1         DIV  WWFLD1    DF,X      H
+     C*
+     C** Cumulative Discount Factor = Weighted Discount Factor
+     C*
+     C                     Z-ADDDF,X      CDF,X
+     C           IRINCL    IFEQ '6'
+     C*
+     C** Weight the discount factor by the compounding rate
+     C                     DIV  ##COMR    CDF,X     H
+     C                     ELSE
+     C*
+     C** Weight the discount factor by number of days/divisor basis
+     C                     MULT ZCBDAY    CDF,X
+     C                     DIV  ZCBDIV    CDF,X     H
+     C                     END
+     C/COPY WNCPYSRC,DL1965C009
+     C*
+     C                     ELSE
+     C*
+     C** Process for Period 1 onwards
+     C** -----------------------------
+     C*
+     C/COPY WNCPYSRC,DL1965C004
+     C** Ensure second counter is one less
+     C           X         SUB  1         Y       20
+     C*
+     C** Discount Factor
+     C**   DF,X = (1 - (RT,X x CDF,{X-1})) /  ( 1 + RTW,X)
+     C*
+     C           RT,X      MULT CDF,Y     WWFLD1 209
+     C           1         SUB  WWFLD1    WWFLD2 209
+     C           1         ADD  RTW,X     WWFLD3 209
+     C           WWFLD2    DIV  WWFLD3    DF,X      H
+     C*
+     C** Cumulative Discount Factor
+     C**   CDF,X = CDF,{X-1} + Adjusted DF,X
+     C*
+     C           IRINCL    IFEQ '6'
+     C           DF,X      DIV  ##COMR    WWFLD1    H
+     C                     ELSE
+     C           DF,X      MULT ZCBDAY    WWFLD1
+     C                     DIV  ZCBDIV    WWFLD1    H
+     C                     END
+     C           CDF,Y     ADD  WWFLD1    CDF,X
+     C                     END
+     C/COPY WNCPYSRC,DL1965C005
+     C*
+     C           CALC9     ENDSR
+     C/COPY WNCPYSRC,DL1965C006
+     C*****************************************************************
+     C*                                                               *
+     C* WRITE      - Write a record to DLIRDFL1                       *
+     C*                                                               *
+     C* CALLS      -                                                  *
+     C*                                                               *
+     C* CALLED BY    CALC  - Calculate Discount Factors               *
+     C*                                                               *
+     C*****************************************************************
+     C           WRITE     BEGSR
+     C*
+     C/COPY WNCPYSRC,DL1965C003
+     C*  Currency
+     C                     MOVE IRCCY     I2CCY
+     C*
+     C*  Interest Calculation Method
+     C                     MOVE IRINCL    I2INCL
+     C*
+     C*  Frequency Code
+     C                     MOVE IRFREQ    I2FREQ
+     C*
+     C*  Period Date (Midas Day Number)
+     C                     Z-ADDPRDN,X    I2MMDN
+     C*
+     C*  Period Years/Months/Days
+     C                     Z-ADDPRDN,X    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZYEAR     I2PDYR
+     C                     Z-ADDZMTH      I2PDMN
+     C                     Z-ADDZDAY      I2PDDY
+     C*
+     C*  Discount Factor
+     C                     Z-ADDDF,X      I2DF
+     C*
+     C*  Cumulative Discount Factor
+     C                     Z-ADDCDF,X     I2CDF
+     C*
+     C                     WRITEDLIRDFD0
+     C*
+     C           WRIT9     ENDSR
+     C*****************************************************************
+     C/TITLE DELET
+     C*****************************************************************
+     C*                                                               *
+     C* DELET      - Delete all records from Discount Factors file    *
+     C*                                                               *
+     C* CALLS      -                                                  *
+     C*                                                               *
+     C* CALLED BY    Main Line Processing                             *
+     C*                                                               *
+     C*****************************************************************
+     C           DELET     BEGSR
+     C*
+     C*  Set lower limits on the file, DLIRDFPD (Discount Factors)
+     C           *LOVAL    SETLLDLIRDFL1
+     C*
+     C*  Read the file, delete if record found and repeat until EOF.
+     C                     READ DLIRDFL1                 72
+     C           *IN72     DOWEQ'0'
+     C                     DELETDLIRDFL1
+     C                     READ DLIRDFL1                 72
+     C                     END
+     C*
+     C           DELE9     ENDSR
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR      - Error Subroutine                                 *
+     C*                                                               *
+     C*****************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C** If not yet processed then process for a dump
+     C           WWRUN     IFNE 'Y'
+     C                     MOVEL'Y'       WWRUN   1
+     C                     MOVEL'DL1965'  DBPGM
+     C           *NAMVAR   DEFN LDA       @LDA  256
+     C           *LOCK     IN   @LDA
+     C                     MOVELDBERR     @LDA
+     C                     OUT  @LDA
+     C                     MOVEL'1'       *INU7
+     C                     MOVEL'1'       *INU8
+     C                     MOVEL'1'       *INLR
+     C                     DUMP
+     C                     END
+     C*
+     C                     RETRN
+     C*
+     C           PSSR9     ENDSR
+     C*****************************************************************
+     C/COPY ZSRSRC,ZCBDYSZ1
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZFWDT
+     C/COPY ZSRSRC,ZACCH
+     C/COPY ZSRSRC,ZDATE9Z3                                               182370
+     C/COPY ZSRSRC,ZDAT10Z2                                               182370
+     C*****************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**   ZF29 DAY NOS OF FEB 29 TO 2096 (INCLUDING 2000)
+0006001521029820444305904073650882610287117481320914670161311759219053
+2051421975234362489726358278192928030741322023366335124365853804639507
+40968424294389045351
+**   ZYDY - YEARS IN DAYS CUMULATIVE IN FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+     X/COPY ZSRSRC,ZDATE9Z4                                               182370

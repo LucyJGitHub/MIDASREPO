@@ -1,0 +1,313 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UP Create driving file')                        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade Module                                      */
+/*                                                                   */
+/*       UPC0010 - Create Driving file                               */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. CUP042 *REWRITE    Date 12May15              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Prev Amend No. CUP033             Date 18Sep06              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CSM005             Date 21Sep05              */
+/*                      CPK020             Date 29Jul04              */
+/*                      CPK019  *MOVED     Date 29Jun04              */
+/*                      CUP024             Date 13Jun03              */
+/* Midas Release 4.01 -----------------------------------------------*/
+/*                      CPK015             Date 04Apr02              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.02 ---------------------------------------------------*/
+/*                      CUP006             Date 21Dec99              */
+/*                      164905             Date 30Nov99              */
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      CPK009             Date 02Aug99              */
+/*                      CUP002             Date 15Apr99              */
+/*                      CUP001 *CREATE     Date 23Jul98              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP042 - Reworking of command to simplify it.               */
+/*       CUP033 - Removal of System Value /COPYs                     */
+/*       CSM005 - Changes to /COPYs.  Recompile.                     */
+/*       CPK020 - Handle deliverable data.                           */
+/*       CPK019 - Use global system values and move to global layer. */
+/*       CUP024 - Migration of Bridge ICD to the System Values file. */
+/*       CPK015 - 4.01 packaging.  Handling DZLIB.  Recompile.       */
+/*       CUP006 - New program called that tests for both shared      */
+/*                formats and logicals being delivered.              */
+/*       164905 - Pgm loops if error message received in ABNOR       */
+/*                processing - add MONMSG for each command in ABNOR. */
+/*       CPK009 - Call program to handle shared format files.        */
+/*       CUP002 - Add prompt to prevent people creating driving      */
+/*                 file inadvertently.                               */
+/*       CUP001 - Introduction of BRIDGE                             */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE)
+ 
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(4)
+ 
+             DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&BRGBRGLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BRGSRCLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BRGDTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NBRCURRCD) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&REPLY1) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&ERRORFLAG) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10) +
+                          VALUE('UPC0010')
+             DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7)
+ 
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK1) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK2) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL3) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK3) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL4) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK4) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL5) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK5) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL6) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK6) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL7) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK7) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL8) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK8) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL9) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK9) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL10) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK0) TYPE(*CHAR) LEN(20)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2001')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Prepare temporary files, job, etc. */
+             CALLSUBR   SUBR(PREPARE)
+ 
+/* Retrieve required System Values. */
+             CALLSUBR   SUBR(RTVSVAL)
+/* For a general error just report. */
+             IF         COND(&ERRORFLAG *EQ 'E') THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+/* If a System Value is blank then send specific error message. */
+             IF         COND(&ERRORFLAG *EQ 'B') THEN(DO)
+                CALLSUBR   SUBR(BLANKSVAL)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* Set up library list. */
+             CALLSUBR   SUBR(SETUPLIBL)
+ 
+             IF         COND(&MODE *EQ '*CRT') THEN(DO)
+/* Send message to screen to ask if user really wants to run this */
+/*  option.                                                       */
+                RTVMSG     MSGID(UPM0025) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                CALL       PGM(SCC0010) PARM(&ERRPGM 'OPTION' &REPLY1)
+                IF         COND(&REPLY1 *EQ 'N') THEN(DO)
+                   GOTO       CMDLBL(ENDPGM)
+                ENDDO
+                CHGVAR     VAR(&ERRPGM) VALUE('CRTDLVLST')
+                CRTDLVLST  SRC(&BRGSRCLIB/*ALL) DLVLIB(&BRGBRGLIB) +
+                             DTA(&BRGDTALIB) CRTOPT(*REPLACE)
+/* Check for problems with deliverables list creation. */
+                CALLSUBR   SUBR(CHKDLVLST)
+             ENDDO
+ 
+             IF         COND(&MODE *EQ '*MNT') THEN(DO)
+                OVRMSGF    MSGF(STUSRMSG) TOMSGF(GBSTUSRMSG)
+                OVRMSGF    MSGF(Y2USRMSG) TOMSGF(GBY2USRMSG)
+                OVRMSGF    MSGF(SDUSRMSG) TOMSGF(GBSDUSRMSG)
+                CHGVAR     VAR(&ERRPGM) VALUE('UPDDLVLST')
+                UPDDLVLST  DLVLIB(&BRGBRGLIB)
+                DLTOVR     FILE(STUSRMSG Y2USRMSG SDUSRMSG)
+             ENDDO
+ 
+             IF         COND(&MODE *EQ '*MRG') THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('MRGDLVLST')
+                ?MRGDLVLST
+                MONMSG     MSGID(CPF6801) EXEC(DO)
+                   GOTO       CMDLBL(ENDPGM)
+                ENDDO
+             ENDDO
+ 
+             IF         COND(&MODE *EQ '*TXT') THEN(DO)
+                RMVLIBLE   LIB(&BRGBRGLIB)
+                MONMSG     MSGID(CPF0000)
+                ADDLIBLE   LIB(&BRGBRGLIB)
+                CHGVAR     VAR(&ERRPGM) VALUE('UP000091')
+                CALL       PGM(UP000091) PARM('*TXT')
+             ENDDO
+ 
+             IF         COND(&MODE *EQ '*STS') THEN(DO)
+                RMVLIBLE   LIB(&BRGBRGLIB)
+                MONMSG     MSGID(CPF0000)
+                ADDLIBLE   LIB(&BRGBRGLIB)
+                CHGVAR     VAR(&ERRPGM) VALUE('UP000091')
+                CALL       PGM(UP000091) PARM('*STS')
+             ENDDO
+ 
+/* Reset the library list. */
+             RSTLIBL    SAVEDLIBL(UPC0010)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA(&ERRPGM) MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details')
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+             CALL       PGM(SCC0010) PARM(&ERRPGM 'JOBLOG' 'Y')
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+/******************************************************************************/
+/*                                                                            */
+/* Subroutine to prepare for run.                                             */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(PREPARE)
+ 
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES) SWS(XXXXXX00)
+ 
+/* Create data area for screen message handling. */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800)
+ 
+             ENDSUBR
+ 
+/******************************************************************************/
+/*                                                                            */
+/* Subroutine to retrieve System Values.                                      */
+/* Note: even if the job is being run for a zone it still needs to retrieve   */
+/*  some global values.                                                       */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(RTVSVAL)
+ 
+/* Retrieve the appropriate System Values and perform other layer specific */
+/*  code.                                                                  */
+             CHGVAR     VAR(&SVALK1) VALUE('BrgMidasGlobalPrefix')
+             CHGVAR     VAR(&SVALK2) VALUE('BrgDeliveredBrgLib')
+             CHGVAR     VAR(&SVALK3) VALUE('BrgDeliveredSrcLib')
+             CHGVAR     VAR(&SVALK4) VALUE('BrgDeliveredDtaLib')
+             CHGVAR     VAR(&ERRPGM) VALUE('GPAOSVALR0')
+             CALL       PGM(GPAOSVALR0) PARM(&RTNCODE &SVALK1 &SVAL1 +
+                          &SVALK2 &SVAL2 &SVALK3 &SVAL3 &SVALK4 +
+                          &SVAL4 &SVALK5 &SVAL5 &SVALK6 &SVAL6 +
+                          &SVALK7 &SVAL7 &SVALK8 &SVAL8 &SVALK9 +
+                          &SVAL9 &SVALK0 &SVAL10)
+             CALLSUBR   SUBR(CHECKSVAL)
+             CHGVAR     VAR(&PFX) VALUE(%SST(&SVAL1 1 2))
+             CHGVAR     VAR(&BRGBRGLIB) VALUE(%SST(&SVAL2 1 10))
+             CHGVAR     VAR(&BRGSRCLIB) VALUE(%SST(&SVAL3 1 10))
+             CHGVAR     VAR(&BRGDTALIB) VALUE(%SST(&SVAL4 1 10))
+ 
+             ENDSUBR
+ 
+/******************************************************************************/
+/*                                                                            */
+/* Subroutine for checking the call to System Values.                         */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(CHECKSVAL)
+ 
+             IF         COND(&RTNCODE *NE ' ') THEN(DO)
+                CHGVAR     VAR(&ERRORFLAG) VALUE('E')
+             ENDDO
+             IF         COND(%SST(&SVAL1 1 1) *EQ '*') THEN(DO)
+                CHGVAR     VAR(&ERRORFLAG) VALUE('E')
+             ENDDO
+             IF         COND(&SVAL1 *EQ ' ') THEN(DO)
+                CHGVAR     VAR(&ERRORFLAG) VALUE('B')
+             ENDDO
+             IF         COND(%SST(&SVAL2 1 1) *EQ '*') THEN(DO)
+                CHGVAR     VAR(&ERRORFLAG) VALUE('E')
+             ENDDO
+             IF         COND(&SVAL2 *EQ ' ') THEN(DO)
+                CHGVAR     VAR(&ERRORFLAG) VALUE('B')
+             ENDDO
+             IF         COND(%SST(&SVAL3 1 1) *EQ '*') THEN(DO)
+                CHGVAR     VAR(&ERRORFLAG) VALUE('E')
+             ENDDO
+             IF         COND(&SVAL3 *EQ ' ') THEN(DO)
+                CHGVAR     VAR(&ERRORFLAG) VALUE('B')
+             ENDDO
+             IF         COND(%SST(&SVAL4 1 1) *EQ '*') THEN(DO)
+                CHGVAR     VAR(&ERRORFLAG) VALUE('E')
+             ENDDO
+             IF         COND(&SVAL4 *EQ ' ') THEN(DO)
+                CHGVAR     VAR(&ERRORFLAG) VALUE('B')
+             ENDDO
+ 
+             ENDSUBR
+ 
+/******************************************************************************/
+/*                                                                            */
+/* Subroutine for reporting blank System Values.                              */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(BLANKSVAL)
+ 
+             RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             RTVMSG     MSGID(UPM0004) MSGF(UTMSGF) MSG(&MESSAGE)
+             CHGDTAARA  DTAARA(MIDASMSG (151 50)) VALUE(&MESSAGE)
+             CALL       PGM(SCC0010) PARM(&ERRPGM 'ENTER' ' ')
+ 
+             ENDSUBR
+ 
+/******************************************************************************/
+/*                                                                            */
+/* Subroutine to set up the library list.                                     */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(SETUPLIBL)
+ 
+/* As the creation relies on a complete library list to retrieve object */
+/*  information no changes are done.  Save the list onlyi.               */
+             SAVLIBL    SAVDTL(UPC0010)
+ 
+             ENDSUBR
+ 
+/******************************************************************************/
+/*                                                                            */
+/* Check if the deliverables list creation had a problem.                     */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(CHKDLVLST)
+ 
+/* Check if the error file has any records. */
+             RTVMBRD    FILE(QTEMP/UPERRMQT) NBRCURRCD(&NBRCURRCD)
+             IF         COND(&NBRCURRCD *GT 0) THEN(DO)
+                RTVMSG     MSGID(UPM0002) MSGF(UTMSGF) MSGDTA(&ERRPGM) +
+                             MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                RTVMSG     MSGID(UPM0034) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE(&MESSAGE)
+                RTVMSG     MSGID(UPM0035) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (301 50)) VALUE(&MESSAGE)
+                CALL       PGM(SCC0010) PARM(&ERRPGM 'ENTER' ' ')
+             ENDDO
+ 
+             ENDSUBR
+ 
+ENDPGM:
+             ENDPGM

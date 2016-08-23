@@ -1,0 +1,160 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SD Set TI Customer Flag')                       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       SDC000037 - Set TI Customer Flag                            */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. BUG5168 *CREATE    Date 15Mar05              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BUG5168 - Set TI Customer Flag (BBTICS) in PF/SDCUSTPD if   */
+/*                 customer is a TI customer.                        */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE)
+ 
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PREF) TYPE(*CHAR) LEN(2)
+ 
+/*  Global monitor message  */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+             CHGJOB     SWS(00000000)
+ 
+/*  Start of program  */
+ 
+             SNDPGMMSG  MSG('SDC000037 - Set BBTICS to ''Y'' +
+                          to TI customers in PF/SDCUSTPD') +
+                          TOMSGQ(MRUNQ MOPERQ)
+ 
+/*  Invalid parameter  */
+ 
+             IF         COND((&MODE *NE 'U') *AND (&MODE *NE +
+                          'u') *AND (&MODE *NE 'A') *AND +
+                          (&MODE *NE 'a')) THEN(DO)
+                SNDPGMMSG  MSG('SDC000037- Invalid parameter passed.') +
+                             TOMSGQ(MRUNQ MOPERQ)
+                SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                             MSGDTA('SDC000037- Invalid parameter +
+                             passed. Should be ''U'', ''u'' or +
+                             ''A'', ''a''') TOMSGQ(MRUNQ MOPERQ) +
+                             MSGTYPE(*ESCAPE)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/*  Create back-up in xxDPLIB if in UPDATE mode  */
+ 
+             IF         COND((&MODE *EQ 'U') *OR (&MODE *EQ +
+                          'u')) THEN(DO)
+ 
+/*  Retrieve system prefix  */
+ 
+                RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREF)
+                CHGVAR     VAR(&DPLIB) VALUE(&PREF *TCAT 'DPLIB')
+ 
+/*  Copy SDCUSTPD  */
+ 
+                CPYF       FROMFILE(SDCUSTPD) TOFILE(&DPLIB/XSDCUSTPD) +
+                             MBROPT(*REPLACE) CRTFILE(*YES)
+                MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                   SNDUSRMSG  MSG('Error occurred in copying PF/SDCUSTPD to +
+                                PF/XSDCUSTPD. Process terminated.') +
+                                MSGTYPE(*INFO)
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+ 
+/*  Copy SDFCTLPA  */
+ 
+                CPYF       FROMFILE(SDFCTLPA) TOFILE(&DPLIB/XSDFCTLPA) +
+                             MBROPT(*REPLACE) CRTFILE(*YES)
+                MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                   SNDUSRMSG  MSG('Error occurred in copying PF/SDFCTLPA to +
+                                PF/XSDFCTLPA. Process terminated.') +
+                                MSGTYPE(*INFO)
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+             ENDDO
+ 
+/*  Create LDA if it doesn't exist  */
+ 
+             CHKOBJ     OBJ(QTEMP/LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9815 CPF9801) EXEC(DO)
+                CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             ENDDO
+ 
+/*  Call SD000037  */
+ 
+             CHGJOB     SWS(XXXXXX00)
+             CALL       PGM(SD000037) PARM(&MODE)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ERROR))
+ 
+/*  Call pgm/SD000037 again to check if files already updated  */
+ 
+             IF         COND((&MODE *EQ 'U') *OR (&MODE *EQ +
+                          'u')) THEN(DO)
+                CALL       PGM(SD000037) PARM('A')
+             ENDDO
+ 
+ 
+/*  Delete back-up file if program completed normally  */
+ 
+             IF         COND((&MODE *EQ 'U') *OR (&MODE *EQ +
+                          'u')) THEN(DO)
+                DLTF       FILE(&DPLIB/XSDCUSTPD)
+                MONMSG     MSGID(CPF2105)
+                DLTF       FILE(&DPLIB/XSDFCTLPA)
+                MONMSG     MSGID(CPF2105)
+             ENDDO
+ 
+             SNDPGMMSG  MSG('SDC000037 completed normally.') +
+                          TOPGMQ(*EXT) TOMSGQ(MRUNQ MOPERQ)
+             GOTO       CMDLBL(END)
+ERROR:
+             IF         COND((&MODE *EQ 'U') *OR (&MODE *EQ +
+                          'u')) THEN(DO)
+ 
+/*  Restore SDCUSTPD  */
+ 
+                CPYF       FROMFILE(&DPLIB/XSDCUSTPD) TOFILE(SDCUSTPD) +
+                             MBROPT(*REPLACE)
+                MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                   SNDUSRMSG  MSG('Error occurred in restoring PF/XSDCUSTPD +
+                                to PF/SDCUSTPD. Process terminated.') +
+                                MSGTYPE(*INFO)
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+ 
+/*  Restore SDFCTLPA  */
+ 
+                CPYF       FROMFILE(&DPLIB/XSDFCTLPA) TOFILE(SDFCTLPA) +
+                             MBROPT(*REPLACE)
+                MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                   SNDUSRMSG  MSG('Error occurred in restoring +
+                                PF/XSDFCTLPA to PF/SDFCTLPA. Process +
+                                terminated.') MSGTYPE(*INFO)
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+             ENDDO
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+             SNDPGMMSG  MSG('Error occurred in SDC000037.') +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+END:
+             ENDPGM

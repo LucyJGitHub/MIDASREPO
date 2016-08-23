@@ -1,0 +1,2957 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Split Extended settlements')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD2420 - Handle Screen Inputs of Split/Extended Settlements  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CDL025  *CREATE    Date 17Nov04               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  CDL025 - FX Netting Payment Generation                       *
+      *                                                               *
+      *****************************************************************
+     FSD2420DFCF  E                    WORKSTN
+     F*  Extended Settlements detail screen
+     FSDCUSTL1IF  E           K        DISK
+     F*  Client Details
+     FSDCUSTL2IF  E           K        DISK
+     F*  Client Details
+     FSDFNMSL3IF  E           K        DISK
+     F*  Standard settlement instructions for extended settlements
+     FSDCNSTL1IF  E           K        DISK
+     F*  Counterparty Nostros
+     F*
+     F*
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                       *
+     F*                                                               *
+     F*       01  Enable F10                                          *
+     F*       02  Non-display and protect of Receipt Settlement Ccy   *
+     F*           screen field                                        *
+     F*       03  Exit from program                                   *
+     F*       07  Protect new screen fields                           *
+     F*       08  Error in Receipt Settlement Ccy                     *
+     F*       09  Non-display and protect of Payment Settlement Ccy   *
+     F*           and 'In' Currency screen field                      *
+     F*       11  Error in Payment Settlement Ccy                     *
+     F*       12  Return to first screen                              *
+     F*       14  Error in 'In' Ccy in Field 72                       *
+     F*       28  Error - Definition Sender to Receiver 1             *
+     F*       29                                                      *
+     F*       31  Error - Receipt Settlement Type                     *
+     F*       32  Error - Payment Settlement Type                     *
+     F*       33  Error - Receipt Our Nostro                          *
+     F*       34  Error - Payment Our Nostro                          *
+     F*       35  Error - Receipt of MT100                            *
+     F*       36  Error - Ordering Customer                           *
+     F*       37  Error - Ordering Customer                           *
+     F*       38  Error - Ordering Bank                               *
+     F*       39  Error - Ordering Bank                               *
+     F*       40  Error - Recipient's Correspondent                   *
+     F*       41  Error - Repipient's Correspondent Account Line      *
+     F*       42  Error - Intermediary Bank                           *
+     F*       43  Error - Intermediary Bank                           *
+     F*       44  Error - Intermediary Bank Account Line              *
+     F*       45  Error - Intermediary Bank Account Line              *
+     F*       46  Error - "Account With" Bank                         *
+     F*       47  Error - "Account With" Bank Account Line            *
+     F*       48  Error - Beneficiary                                 *
+     F*       49  Error - Beneficiary Account Line                    *
+     F*       50  Error - Payment Details 1                           *
+     F*       51  Error - Payment Details 2                           *
+     F*       52  Error - Payment Details 3                           *
+     F*       53  Error - Payment Details 4                           *
+     F*       54  Error - Details of Charges                          *
+     F*       55  Error - Bank to Bank Information 1                  *
+     F*       56  Error - Bank to Bank Information 2                  *
+     F*       57  Error - Bank to Bank Information 3                  *
+     F*       58  Error - Bank to Bank Information 4                  *
+     F*       59  Error - Bank to Bank Information 5                  *
+     F*       60  Error - Bank to Bank Information 6                  *
+     F*       61  Error - Cover MT202 required                        *
+     F*       62  Error - Definition Sender to Receiver 2             *
+     F*       63  Error - Definition Sender to Receiver 3             *
+     F*       64  Error - Definition Sender to Receiver 4             *
+     F*       65  Error code found in @ERR table                      *
+     F*       66  Error - Definition Sender to Receiver 5             *
+     F*       67  Error - Definition Sender to Receiver 6             *
+     F*       68  Error - Settlement Sender to Receiver 1             *
+     F*       69  Error - Settlement Sender to Receiver 2             *
+     F*       70  Error - Settlement Sender to Receiver 3             *
+     F*       71  Error - Settlement Sender to Receiver 4             *
+     F*       72  Error - Settlement Sender to Receiver 5             *
+     F*       73  Error - Settlement Sender to Receiver 6             *
+     F*       74  Error - Condition 1                                 *
+     F*       75  Error - Condition 2                                 *
+     F*       76  Error - Condition 3                                 *
+     F*       77  Error - Condition 4                                 *
+     F*       78  Protect payment fields                              *
+     F*       79  Protect receipt fields                              *
+     F*       80  System has multibranching flag set on               *
+     F*       81  Error - Condition 5                                 *
+     F*       82  Error - Condition 6                                 *
+     F*       83  Error - ISDA rules version                          *
+     F*       84  Error - Agreement Type                              *
+     F*       85  Error - Agreement date                              *
+     F*       86                                                      *
+     F*       87  VALIDATION TO BE DONE YET ? FLAG                    *
+     F*       88  Error - Agreement version                           *
+     F*       90  Chain fail on SDCUSTPD, SDCNSTPD, SDEXSTPD          *
+     F*       95  On after first entry into program                   *
+     F*       98                                                      *
+     F*       99                                                      *
+     F*   NOCHG1  Receipt details - Our Nostro - not amended          *
+     F*   NOCHG2  Payment details - Our Nostro - not amended          *
+     F*       U7  Database error                                      *
+     F*       U8  Database error                                      *
+     F*       LR  Database error, end of program                      *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*            INDEX TO SUBROUTINES                               *
+     F*            --------------------                               *
+     F*   #A     - Initial processing                                 *
+     F*   AMD    - Amend processing                                   *
+     F*   AUT    - Authorisation processing                           *
+     F*   #B     - Main processin                                     *
+     F*   #C     - Termination processing                             *
+     F*   CONV   - Convert customer numbers to shortnames             *
+     F*   CVTA   - Convert customer number to shortname               *
+     F*   CVTB   - Convert counterparty to shortname                  *
+     F*   DEL    - Delete processing                                  *
+     F*   ENQ    - Enquiry processing                                 *
+     F*   INS    - Insert processing                                  *
+     F*   PARMA  - Load screen from passed parameters                 *
+     F*   PARMB  - Load parameters from screen fields                 *
+     F*   RESET  - Clear screen                                       *
+     F*   RTV    - Retrieve standard instructions                     *
+     F*   CUST   - Retrieve Customer name from SDCUSTL1               *
+     F*   NOST   - Retrieve Counterparty Nostro name                  *
+     F*   ERROR  - Output error messages                              *
+     F*   SSIA   - Obtain customer number for chaining to SSI file    *
+     F*   SSIB   - Retrieve Receipt Settlement Instructions for FX    *
+     F*   SSIC   - Retrieve Pay/Receive Instructions for Prime ccy    *
+     F*   VAL    - Validate screen input                              *
+     F*  SRREDF  - Re-access Default Settlement Instructions          *
+     F*   ZA0240 - Display error message                              *
+     F*   ZA0250 - Clear error messages                               *
+     F*****************************************************************
+      /EJECT
+     E                    UER        50  3
+     E                    @ERR    1 193  4   @IND   12
+     E**  ERROR CODES WITH ASSOCIATED INDICATORS TABLE
+     E                    @INDA       6  2
+     E**  HOLDS ONE ERROR CODE'S INDICATORS
+     E                    CPY@    1   1 80
+     I*********************************************************************
+      /EJECT
+     I*********************************************************************
+     I*
+     IWSCRN2      DS
+     I                                        1  35 RDSR1
+     I                                       36  70 RDSR2
+     I                                       71 105 RDSR3
+     I                                      106 140 RDSR4
+     I                                      141 175 RDSR5
+     I                                      176 210 RDSR6
+     I                                      211 245 RSSR1
+     I                                      246 280 RSSR2
+     I                                      281 315 RSSR3
+     I                                      316 350 RSSR4
+     I                                      351 385 RSSR5
+     I                                      386 420 RSSR6
+     I                                      421 455 RCND1
+     I                                      456 490 RCND2
+     I                                      491 525 RCND3
+     I                                      526 560 RCND4
+     I                                      561 595 RCND5
+     I                                      596 630 RCND6
+     I                                      631 634 RISDA
+     I                                      635 640 RAGTY
+     I                                      641 646 RAGDT
+     I                                      647 650 RAGVV
+     I*
+     IWPARM3      DS                            650
+     I*
+     I@PARM1    E DSSETLIAB
+     I** data structure for passing parameters to/from calling program
+     I*
+     I@PARM2    E DSSETLIAZ
+     I** data structure for passing parameters to/from calling program
+     I*
+     I@PARM3    E DSSDSETLPD
+     I** data structure for passing parameters to/from calling program
+     I*
+     ISCSARD    E DSSCSARDPD
+     I** SAR details
+     I*
+     ISDFAIS    E DSSDFAISPD
+     I** FRA/IRS ICD Details
+     I*
+     ISDNOST    E DSSDNOSTPD
+      ** Nostro Details
+      *
+     IDSFDY     E DSDSFDY
+     I** Short data structure for use by access programs
+     I*
+     I* Data structures:-
+     IPSDS       SDS
+     I                                     *PARMS   @PARMS
+     I                                      244 253 @JOB
+     I**  Program status data structure.
+     IRUNDAT      DS                             13
+     I                                        1   7 @RUND
+     I                                       13  13 @MBIN
+     I*   RUN DATE DATA AREA - Run Date
+     I@WRK15      DS
+     I                                        1   3 @WRK3
+     I                                        4  21 @WRK12
+     I*
+     I**  Working ds to split branch from rest of settlement details
+     I*
+     ILDA         DS                            256
+     I                                      200 200 NOCHG1
+     I                                      202 202 NOCHG2
+     I**  LOCAL DATA AREA
+     ISDCURR    E DSSDCURRPD
+      ***  External data structures for Currency Details
+     ISDGELR    E DSSDGELRPD
+     I              QQACCD                          QQACC1
+      ***  External data structures for General Ledger Details
+     IDSSDY     E DSDSSDY
+      **  Second data structure for Access Programs, long DS
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C                     MOVEACPY@      BIS@   80
+     C*                                                               *
+     C* CONTROL                                                       *
+     C*                                                               *
+     C* CALLS    #A       - Initial processing                        *
+     C*          #B       - Main processing handles screen processing *
+     C*          #C       - Termination processing                    *
+     C*          PARMA    - Load screen from passed parameters        *
+     C*                                                               *
+     C* CALLED BY         -                                           *
+     C*                                                               *
+     C*****************************************************************
+     C*  Initial Processing (if first entry into program)
+     C*
+     C*  FIRST ENTRY INTO PROGRAM
+     C                     Z-ADD1         COUNT   10
+     C                     Z-ADD1         COUNT1  10
+     C           *IN95     IFEQ '0'
+     C                     EXSR #A
+     C                     END
+     C*
+     C*  Termination Parameter is Terminate
+     C           PMTERM    IFEQ 'T'
+     C*
+     C*  closedown program - Rundate
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+     C*
+     C*  Move control parameters to screen
+     C                     EXSR PARMA
+     C*
+     C*  Main Processing
+     C           *IN03     DOWNE'1'
+     C           *IN12     ANDNE'1'
+     C           *INKH     ANDNE'1'
+     C           CIR003    IFEQ 'Y'
+     C           PMTTYP    ANDEQ'RX'
+     C                     ELSE
+     C                     MOVE *OFF      *IN25
+     C                     MOVE 'N'       WEXST   1
+     C                     ENDIF
+     C                     EXSR #B
+     C                     END
+     C*
+     C*  Termination Processing
+     C                     EXSR #C
+     C*
+     C           ENDPGM    TAG
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #A       - Initial processing                                 *
+     C*                                                               *
+     C* CALLS       RESET - Clear screen                              *
+     C*                                                               *
+     C* CALLED BY   CONTROL                                           *
+     C*                                                               *
+     C*****************************************************************
+     C           #A        BEGSR
+     C*
+     C                     MOVEL'SD2420'  PMDPGM
+     C*
+     C**  Run date in DDMMMYY
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     c*
+     C** If system is multibranched set on *in for display file use
+     C           @MBIN     COMP 'Y'                      80
+     c**
+     C                     MOVEL@JOB      #WID    3
+     C**
+     C                     Z-ADD0         DBNUM   20
+     C                     MOVEL*BLANKS   ZAMSID 10
+     C                     MOVE *BLANK    @RCODE  7
+     C                     MOVEL'SD2420'  ##PGM  10
+     C                     MOVEL*BLANKS   MSGKEY  4
+      *
+      **  Access SAR details file to see if CIR003 is installed
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'CIR003'  @SARD   6
+      *
+     C           @RTCD     IFNE *BLANK
+     C           @RTCD     ANDNE'*NRF   '
+     C                     MOVEL'SCSARDPD'PMDBFL
+     C                     MOVEL'SD2420'  PMDPGM
+     C                     Z-ADD03        PMDBSE
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     ELSE
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       CIR003  1
+     C                     ELSE
+     C                     MOVE 'N'       CIR003
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C*
+     C** Access Switchable Feature Details
+     C*
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*VERIFY 'POPTN   7
+     C                     PARM 'CLE033'  PSARD   6
+     C*
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       CLE033  1
+     C                     ELSE
+     C                     MOVE 'N'       CLE033
+     C                     ENDIF
+      *
+      ** Check if switchable feature CSW005 is switched on.
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*VERIFY' P@OPTN  7
+     C                     PARM 'CLE031'  P@SARD  6
+     C           SCSARD    PARM SCSARD    DSFDY
+     C*
+     C                     MOVE 'N'       CLE031  1
+     C           P@RTCD    IFEQ *BLANK
+     C                     MOVE 'Y'       CLE031  1
+     C                     MOVE '0'       *IN09
+     C                     MOVE '0'       *IN02
+     C                     ELSE
+     C           P@RTCD    IFNE '*NRF   '
+     C                     MOVEL'SCSARDPD'PMDBFL           **************
+     C                     MOVEL'SD2420'  PMDPGM           ** DBASE 01 **
+     C                     Z-ADD01        PMDBSE           **************
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INLR
+     C                     MOVE 'T'       PMTERM
+     C                     MOVE '1'       *IN09
+     C                     MOVE '1'       *IN02
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C**  Access SAR details file to see if CLE003 is installed
+     C*
+     C                     CALL 'AOSARDR0'
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'CLE003'  @SARD   6
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       CLE003  1
+     C                     ELSE
+     C                     MOVE 'N'       CLE003
+     C                     ENDIF
+     C*
+     C                     MOVEL*BLANKS   CSW005  1
+     C                     MOVEL*BLANKS   CSW011  1
+     C*
+     C** Check if switchable feature CSW005 is switched on.
+     C*
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*VERIFY' P@OPTN  7
+     C                     PARM 'CSW005'  P@SARD  6
+     C           SCSARD    PARM SCSARD    DSFDY
+     C*
+     C           P@RTCD    IFNE *BLANK
+     C           P@RTCD    ANDNE'*NRF   '
+     C                     MOVEL'SCSARDPD'PMDBFL           **************
+     C                     MOVEL'SD2420'  PMDPGM           ** DBASE 01 **
+     C                     Z-ADD01        PMDBSE           **************
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INLR
+     C                     MOVE 'T'       PMTERM
+     C                     END
+     C*
+     C           P@RTCD    IFEQ *BLANKS
+     C                     MOVEL'Y'       CSW005
+     C*
+     C** Retrieve FRA/IRS ICD details:
+     C                     CALL 'AOFAISR0'
+     C                     PARM '*DBERR'  P@RTCD  7
+     C                     PARM '*FIRST'  P@OPTN  7
+     C           SDFAIS    PARM SDFAIS    DSFDY
+     C*
+     C           P@RTCD    IFNE *BLANKS
+     C                     MOVEL'SDFAISPD'PMDBFL           **************
+     C                     MOVEL'SD2420'  PMDPGM           ** DBASE 02 **
+     C                     Z-ADD02        PMDBSE           **************
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     MOVE 'T'       PMTERM
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*VERIFY' P@OPTN  7
+     C                     PARM 'CSW011'  P@SARD  6
+     C*
+     C           P@RTCD    IFEQ *BLANKS
+     C                     MOVEL'Y'       CSW011
+     C                     ENDIF
+     C*
+     C** Check if SWIFT 2000 Changes is on.
+      *
+     C                     CALL 'SWIF2000'
+     C                     PARM *BLANKS   P@RTCD
+      *
+     C           P@RTCD    IFEQ 'CSW200'
+     C                     MOVEL'Y'       CSW200  1
+     C                     ENDIF
+     C*
+     C*
+      * Clear Screen fields
+     C                     EXSR RESET
+     C*
+     C* Prevent calling this sub-routine after
+     C* first entry
+     C                     SETON                     95
+     C*
+     C**  Access General Ledger Details
+     C*
+     C                     CALL 'AOGELRR1'
+     C                     PARM '*DBERR  'PRTCD
+     C                     PARM '*FIRST  'POPTN
+     C           SDGELR    PARM SDGELR    DSSDY
+     C*
+     C** Access Switchable Feature Details
+     C*
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*VERIFY 'POPTN   7
+     C                     PARM 'CEU003'  PSARD   6
+     C           SCSARD    PARM SCSARD    DSSDY
+     C*
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       CEU003  1
+     C                     MOVE '0'       *IN02
+     C                     MOVE '0'       *IN09
+     C                     ELSE
+     C                     MOVE 'N'       CEU003
+     C                     MOVE '1'       *IN02
+     C                     MOVE '1'       *IN09
+     C                     ENDIF
+      *
+      ** Check if switchable feature CDL008 is switched on
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*VERIFY' P@OPTN
+     C                     PARM 'CDL008'  P@SARD
+     C           SCSARD    PARM SCSARD    DSFDY
+      *
+     C           P@RTCD    IFNE *BLANK
+     C           P@RTCD    ANDNE'*NRF   '
+     C                     MOVEL'SCSARDPD'PMDBFL           ************
+     C                     MOVEL'SD2420'  PMDPGM           * DBASE 23 *
+     C                     Z-ADD23        PMDBSE           ************
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     MOVE 'T'       PMTERM
+     C                     ENDIF
+      *
+     C           P@RTCD    IFEQ *BLANKS
+     C                     MOVEL'Y'       CDL008  1
+     C                     ELSE
+     C                     MOVEL'N'       CDL008
+     C                     ENDIF
+      *
+     C                     MOVE *OFF      WWARN   1
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #B       -   Main processing                                  *
+     C*                                                               *
+     C* CALLS    INS      - Insert processing                         *
+     C*          AMD      - Amend Processing                          *
+     C*          AUTH     - Authorisation Processing                  *
+     C*          DEL      - Delete Processing                         *
+     C*          ENQ      - Enquiry Processing                        *
+     C*          FMT      - Write screen                              *
+     C*                                                               *
+     C* CALLED BY      CONTROL                                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #B        BEGSR
+     C*
+     C**  Parameters passed into the program
+     C           *ENTRY    PLIST
+     C                     PARM           @RCODE
+     C                     PARM           @SEQN   4
+     C                     PARM           @PARM1
+     C                     PARM           @PARM2
+     C                     PARM           @DLNUM  6
+     C                     PARM           @PARM3
+     C*
+     C**  Use IND 10 to simplify checking if CSW005 is supported
+     C**  and Deal Type is any of 'FR', 'RS' or 'RX'
+     C*
+     C           CSW005    IFEQ 'Y'
+     C*
+     C           PMTTYP    IFEQ 'FR'
+     C           PMTTYP    OREQ 'RS'
+     C           PMTTYP    OREQ 'RX'
+     C                     MOVE *ON       *IN10
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C           CSW011    IFEQ 'Y'
+     C           PMTTYP    ANDEQ'FR'
+     C                     MOVE *ON       *IN10
+     C                     ENDIF
+     C*
+     C** Set Screen Display Indicator
+     C           PMCPGM    IFEQ 'FXFX'
+     C                     SETON                     26
+     C                     ENDIF
+     C*
+     C*  If Action code is Insert
+     C           PMACTC    IFEQ 'I'
+     C                     EXSR INS
+     C                     END
+     C*
+     C*  If action code is Amend
+     C           PMACTC    IFEQ 'A'
+     C                     EXSR AMD
+     C                     END
+     C*
+     C*  If action code is Delete
+     C           PMACTC    IFEQ 'D'
+     C                     EXSR DEL
+     C                     END
+     C*
+     C*  If action code is Enquiry
+     C           PMACTC    IFEQ 'E'
+     C                     EXSR ENQ
+     C                     END
+     C*
+     C*  If action code is Authorisation
+     C           PMACTC    IFEQ 'X'
+     C                     EXSR AUT
+     C                     END
+     C*
+     C*  Write screen
+     C                     EXSR FMT
+     C*
+     C                     ENDSR
+     C*********************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #C       - Termination processing                             *
+     C*                                                               *
+     C* CALLS             NONE                                        *
+     C*                                                               *
+     C* CALLED BY         CONTROL                                     *
+     C*                   CVTA - Convert customer number to shortname *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #C        BEGSR
+     C*
+     C**  Database error detected - terminate program
+     C           @RCODE    IFNE *BLANKS
+     C                     MOVEL'T'       PMTERM
+     C                     MOVELDBNUM     PMDBSE
+     C*                    SETON                     LRU7U8
+     C                     END
+     C*
+     C*  F3 - Exit from Program, having terminated validation program
+     C           *IN03     IFEQ '1'
+     C                     MOVE 'T'       #PJ1ST
+     C                     MOVE '03'      #PJYST
+     C                     MOVE 'T'       PMTERM
+     C                     MOVE '03'      PMCMDP
+     C                     MOVEL'0'       *IN12
+     C                     MOVEL'1'       *INLR
+     C                     END
+     C*
+     C*  F12 - Return to Previous screen
+     C           *IN12     IFEQ '1'
+     C                     MOVEL'12'      #PJYST
+     C                     MOVEL'12'      PMCMDP
+     C                     SETOF                     12
+     C                     SETOF                     30
+     C                     END
+      *
+     C           *INKH     IFEQ '1'
+     C           WEXST     ANDEQ'Y'
+     C                     MOVEL'08'      #PJYST
+     C                     MOVEL'08'      PMCMDP
+     C                     MOVE *OFF      *INKH
+     C                     ENDIF
+     C*
+     C*  SET OFF VALIDATION TO BE DONE YET FLAG
+     C                     SETOF                     87
+     C                     RETRN
+     C*
+     C                     ENDSR                           **#C9**
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* AMD      -   Amend Processing                                 *
+     C*                                                               *
+     C* CALLS       CONV  - Convert Customer numbers to shortnames    *
+     C*             VAL   - Validate screen input                     *
+     C*                                                               *
+     C* CALLED BY         #B - Main processing                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           AMD       BEGSR
+      *
+     C           #1JPST    IFEQ '01'
+     C           #1JPST    OREQ '07'
+     C           #1JPST    OREQ '08'
+     C           #1JPST    OREQ '02'
+     C           #1JPST    OREQ '12'
+      *
+     C           #1JQST    IFEQ '01'
+     C           #1JQST    OREQ '07'
+     C           #1JQST    OREQ '08'
+     C           #1JQST    OREQ '02'
+     C           #1JQST    OREQ '12'
+      *
+      ** Access SDNOSTPD to get CLS Dummy Nostro Ind. of Receipt Nostro
+      *
+     C           PMRSCY    IFEQ *BLANKS
+     C                     MOVE PMRCCY    WCCY    3
+     C                     ELSE
+     C                     MOVE PMRSCY    WCCY
+     C                     ENDIF
+      *
+     C           *IN80     IFEQ *ON
+     C                     MOVEL#1DTT2    WNOST   2
+     C                     ELSE
+     C                     MOVEL#1DTTX    WNOST
+     C                     ENDIF
+      *
+     C                     CALL 'AONOSTR0'
+     C                     PARM '*VERIFY' P@RTCD
+     C                     PARM '*KEY   ' P@OPTN
+     C                     PARM *BLANK    @CUST   6
+     C                     PARM WCCY      @CCY    3
+     C                     PARM *BLANKS   @ACCD  10
+     C                     PARM *BLANKS   @ACSN   2
+     C                     PARM WNOST     @NOST   2
+     C                     PARM *BLANKS   @BRCD   3
+     C                     PARM *BLANKS   @CSSN  10
+     C                     PARM *BLANKS   @PNOI   1
+     C           SDNOST    PARM SDNOST    DSFDY
+      *
+     C                     MOVE A7CLSD    WCLSD1  1
+      *
+      ** Access SDNOSTPD to get CLS Dummy Nostro Ind. of Payment Nostro
+      *
+     C           PMPSCY    IFEQ *BLANKS
+     C                     MOVE PMPCCY    WCCY
+     C                     ELSE
+     C                     MOVE PMPSCY    WCCY
+     C                     ENDIF
+      *
+     C           *IN80     IFEQ *ON
+     C                     MOVEL#1DWT2    WNOST
+     C                     ELSE
+     C                     MOVEL#1DWTX    WNOST
+     C                     ENDIF
+      *
+     C                     CALL 'AONOSTR0'
+     C                     PARM '*VERIFY' P@RTCD
+     C                     PARM '*KEY   ' P@OPTN
+     C                     PARM *BLANK    @CUST
+     C                     PARM WCCY      @CCY
+     C                     PARM *BLANKS   @ACCD
+     C                     PARM *BLANKS   @ACSN
+     C                     PARM WNOST     @NOST
+     C                     PARM *BLANKS   @BRCD
+     C                     PARM *BLANKS   @CSSN
+     C                     PARM *BLANKS   @PNOI
+     C           SDNOST    PARM SDNOST    DSFDY
+      *
+     C                     MOVE A7CLSD    WCLSD2  1
+      *
+     C           WCLSD1    IFEQ 'Y'
+     C           WCLSD2    ANDEQ'Y'
+     C                     MOVE 'Y'       A7CLSD
+     C                     ELSE
+     C                     MOVE 'N'       A7CLSD
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     MOVE 'N'       A7CLSD
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     MOVE 'N'       A7CLSD
+     C                     ENDIF
+      *
+      *** Settlements should not be cleared on amend.
+     C           CDL008    IFEQ 'Y'
+     C           PMTTYP    IFEQ 'CL'
+     C           A7CLSD    ANDEQ'N'
+     C           PMTTYP    ORNE 'CL'
+     C           A7CLSD    ANDEQ'Y'
+     C                     EXSR RTV
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C* if first call, not to validate
+     C           PMVALO    IFEQ 'N'
+     C                     EXSR CONV
+     C                     MOVE 'Y'       PMVALO
+     C*
+     C           *IN10     IFEQ *ON
+     C                     MOVEL'Y'       WSVAL   1
+     C                     EXSR PARMB
+     C                     ELSE
+     C                     MOVEL*BLANKS   WSVAL
+     C                     ENDIF
+     C*
+     C                     ELSE
+     C*
+     C*  VALIDATE IF NOT FIRST DISPLAY OF SCREEN 2 FROM SCREEN 1
+     C*  (I.E. USER SHOULD PRESS ENTER ON SCREEN 2 TO VALIDATE)
+     C*  IF ERRORS EXIST FROM PREVIOUS VALIDATION, DISPLAY THEM
+     C           *IN87     IFEQ '1'
+     C           PMERCD    ORNE *BLANKS
+      *
+     C                     MOVE #1JPST    #1JPSN  20
+     C                     MOVE #1JQST    #1JQSN  20
+      *
+      *  IF RECEIPT SETTLEMENT METHOD HAS CHANGED, DEFAULT THE
+      *  RECEIPT SETTLEMENT INSTRUCTIONS
+      *
+     C           PMRSTM    IFNE #1JPSN
+     C                     MOVE 'Y'       PMDEFR
+     C                     END
+      *
+      *  IF PAY SETTLEMENT METHOD HAS CHANGED OR IT IS 07, DEFAULT THE
+      *  PAY SETTLEMENT INSTRUCTIONS
+      *
+     C           PMPSTM    IFNE #1JQSN
+     C           #1JQSN    OREQ 07
+     C                     MOVE 'Y'       PMDEFT
+     C                     END
+      *
+     C** Validation for FRAIRS will be done in SR/FMT
+     C           *IN10     IFEQ *OFF
+     C                     EXSR VAL
+     C                     ENDIF
+     C                     END
+     C                     END
+     C                     SETON                     87
+     C*
+     C                     ENDSR
+     C*
+     C*********************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* AUTH     -   Authorisation Processing                         *
+     C*                                                               *
+     C* CALLS       CONV  - Convert Customer numbers to shortnames    *
+     C*             VAL   - Validate screen input                     *
+     C*                                                               *
+     C* CALLED BY         #B - Main processing                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           AUT       BEGSR
+     C*
+     C                     EXSR CONV
+     C*
+     C           PMVALO    IFEQ 'Y'
+     C                     EXSR VAL
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*********************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* CONV     -   Convert customer/counterparty numbers to names   *
+     C*                                                               *
+     C* CALLS    CVTA  -  Convert customer number to shortname        *
+     C*          CVTB  -  Convert counterparty number to shortname    *
+     C*                                                               *
+     C* CALLED BY      INS     -  Insert processing                   *
+     C*                AMD     -  Amend processing                    *
+     C*                AUTH    -  Authorize processing                *
+     C*                DEL     -  Delete processing                   *
+     C*                ENQ     -  Enquire processing                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           CONV      BEGSR
+     C*
+     C*  RECEIPT ORDERING CUSTOMER
+     C                     MOVEL#1DBCD    @FLD6   6
+     C                     EXSR CVTA
+     C                     MOVEL@FLD10    #DEJTX
+     C*
+     C*  RECEIPT ORDERING BANK
+     C                     MOVEL#1DACD    @FLD6
+     C                     EXSR CVTA
+     C                     MOVEL@FLD10    #DEHTX
+     C*
+     C*  PAYMENT ORDERING CUSTOMER
+     C                     MOVEL#1DDCD    @FLD6   6
+     C                     EXSR CVTA
+     C                     MOVEL@FLD10    #DEITX
+     C*
+     C*  PAYMENT ORDERING BANK
+     C                     MOVEL#1DCCD    @FLD6
+     C                     EXSR CVTA
+     C                     MOVEL@FLD10    #DEGTX
+     C*
+     C*  RECEIPT INTERMEDIARY BANK
+     C                     MOVEL#1DUTX    @FLD8   8
+     C                     EXSR CVTB
+     C                     MOVEL@FLD10    #DETTX
+     C*
+     C*  PAYMENT INTERMEDIARY BANK
+     C                     MOVEL#1DXTX    @FLD8
+     C                     EXSR CVTB
+     C                     MOVEL@FLD10    #DEUTX
+     C*
+     C*  PAYMENT RECIPIENT'S CORRESPONDENT
+     C                     MOVEL#1DYTX    @FLD8
+     C                     EXSR CVTB
+     C                     MOVEL@FLD10    #DESTX
+     C*
+     C***RECIPIENT*OF*MT100
+     C*  RECIPIENT OF PAYMENT INSTRUCTION
+     C                     MOVEL#1DZTX    @FLD8
+     C                     EXSR CVTB
+     C                     MOVEL@FLD10    #DEPTX
+     C*
+     C*  ACCOUNT WITH BANK
+     C                     MOVEL#1D0TX    @FLD8
+     C                     EXSR CVTB
+     C                     MOVEL@FLD10    #DEQTX
+     C*
+     C*  BENNEFICIARY
+     C                     MOVEL#1D1TX    @FLD8
+     C                     EXSR CVTB
+     C                     MOVEL@FLD10    #DERTX
+     C*
+     C                     ENDSR
+     C*********************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* CVTA - Convert customer number to shortname                   *
+     C*                                                               *
+     C* CALLS        CUST  -  Retrieve customer name from SDCUSTL1    *
+     C*              #C    -  Termination processing                  *
+     C*                                                               *
+     C* CALLED BY  CONV   -  Convert customer numbers to shortnames   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           CVTA      BEGSR
+     C*
+     C                     MOVEL*BLANKS   @FLD10 10
+     C           @FLD6     IFNE *ZEROS
+     C           @FLD6     ANDNE*BLANKS
+     C                     EXSR CUST
+     C*
+     C           *IN90     IFEQ '1'
+     C                     ADD  1         DBNUM
+     C                     MOVEL@FLD6     PMDBKY
+     C                     EXSR #C
+     C                     END
+     C*
+     C                     MOVELBBCSSN    @FLD10
+     C                     END
+     C*
+     C                     ENDSR
+     C*********************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* CVTB  -  Convert counterparty number to shortname (by         *
+     C*          chaining to Counterparty NOSTRO file)                *
+     C*                                                               *
+     C* CALLS        NOST  - Retrieve Counterparty Nostro name        *
+     C*              CVTA  -  Convert customer number to shortname    *
+     C*                                                               *
+     C* CALLED BY  CONV   -                                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           CVTB      BEGSR
+     C*
+     C                     MOVEL*BLANKS   @FLD10 10
+     C*
+     C           @FLD8     IFNE *ZEROS
+     C           @FLD8     ANDNE*BLANKS
+     C                     EXSR NOST
+     C*
+     C           *IN90     IFEQ '0'
+     C*********************MOVEL@CNAME    @FLD10
+     C                     MOVEL@FLD8     @FLD10
+     C                     ELSE
+     C                     MOVEL@FLD8     @FLD6
+     C                     EXSR CVTA
+     C                     END
+     C*
+     C                     END
+     C*                                                                ****
+     C                     ENDSR
+     C*********************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* DEL      -   Delete Processing                                *
+     C*                                                               *
+     C* CALLS        CONV - Convert Customer numbers to shortnames    *
+     C*                                                               *
+     C* CALLED BY    #B   -  MAIN processing                          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           DEL       BEGSR
+     C*
+     C                     EXSR CONV
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* ENQ      -   Enquiry Processing                               *
+     C*                                                               *
+     C* CALLS        CONV - Convert customer names to shortnames      *
+     C*                                                               *
+     C* CALLED BY    #B   - MAIN processing                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           ENQ       BEGSR
+     C*
+     C                     EXSR CONV
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* FMT      -   WRITE Screen                                     *
+     C*                                                               *
+     C* CALLS             NONE                                        *
+     C*                                                               *
+     C* CALLED BY         #B - MAIN processing                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           FMT       BEGSR
+     C*
+     C           PMACTC    IFNE 'I'
+     C           PMACTC    ANDNE'A'
+     C           PMRUND    SUB  PMBVPD    STARTD  50
+     C           PMDTPY    IFLT STARTD
+     C           PMDTPY    ANDNE0
+     C           WPPAY     ANDEQ'Y'
+     C                     MOVE 'Y'       PMPPAY
+     C                     END
+     C           PMDTRC    IFLT STARTD
+     C           PMDTRC    ANDNE0
+     C           WPRCV     ANDEQ'Y'
+     C                     MOVE 'Y'       PMPRCV
+     C                     END
+     C                     END
+     C*
+     C*  Set indicator to protect receipt instruction
+     C                     MOVEA'00'      *IN,78
+     C*
+     C           PMPRCV    IFEQ 'Y'
+     C                     MOVEL'1'       *IN79
+     C                     END
+     C*
+     C*  Set indicator to protect payment instruction
+     C           PMPPAY    IFEQ 'Y'
+     C                     MOVEL'1'       *IN78
+     C                     END
+     C*
+     C*  Only show deal number if it is passed, this saves having to
+     C*  change the SD maintenance program.
+     C           @PARMS    IFGT 3
+     C                     MOVE @DLNUM    #DLNO
+     C                     END
+      *
+     C                     MOVE '0'       *IN01
+     C                     MOVE '0'       *IN07
+     C*
+     C** If CEU003 is supported
+     C*
+     C           CEU003    IFEQ 'Y'
+     C                     MOVE '0'       *IN02
+     C                     MOVE '0'       *IN09
+     C*
+     C**  Fields are only amendable during Insert and Amend modes
+     C*
+     C           PMACTC    IFEQ 'I'
+     C           PMACTC    OREQ 'A'
+     C                     MOVE '1'       *IN01
+     C                     ELSE
+     C                     MOVE '1'       *IN07
+     C                     ENDIF
+     C*
+     C**  Payment Settlement Side Only
+     C*
+     C           WPRCV     IFEQ 'Y'
+     C           *IN01     ANDEQ'1'
+     C                     MOVE '1'       *IN02
+     C                     ENDIF
+     C*
+     C**  Receipt Settlement Side Only
+     C*
+     C           WPPAY     IFEQ 'Y'
+     C           *IN01     ANDEQ'1'
+     C                     MOVE '1'       *IN09
+     C                     ENDIF
+     C*
+     C           *IN02     IFEQ '0'
+     C************IN01     ANDEQ'1'
+     C*
+     C**  Access Currency Details
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*DBERR  'PRTCD
+     C                     PARM '*KEY    'POPTN
+     C                     PARM PMRCCY    PCURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C           A6INCY    IFNE 'Y'
+     C*
+     C           PMRCCY    IFNE BKEURO
+     C                     MOVE '1'       *IN02
+     C                     ENDIF
+     C*
+     C                     ELSE
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C           *IN09     IFEQ '0'
+     C*
+     C**  Access Currency Details
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*DBERR  'PRTCD
+     C                     PARM '*KEY    'POPTN
+     C                     PARM PMPCCY    PCURR
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C           A6INCY    IFNE 'Y'
+     C*
+     C           PMPCCY    IFNE BKEURO
+     C                     MOVE '1'       *IN09
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C           *IN02     IFEQ '1'
+     C           *IN09     ANDEQ'1'
+     C                     MOVE '0'       *IN01
+     C                     ENDIF
+     C*
+     C                     ENDIF
+      *
+      ** If FRA/IRS (*IN10=*ON) and Roll Down (*N16=*ON)
+      ** perform validation routine to highlight fields in error
+      ** and set off *IN16 to display second screen upon Roll Up
+      *
+     C           *IN10     IFEQ *ON
+     C           *IN16     ANDEQ*ON
+     C                     MOVE *OFF      *IN16
+     C           PMACTC    IFNE 'E'
+     C                     EXSR VAL
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           WEXST     IFEQ 'Y'
+     C                     ELSE
+     C                     MOVE *BLANKS   SEDAT
+     C                     MOVE *ON       *IN17
+     C                     ENDIF
+      *
+     C           *IN13     DOUEQ'0'
+      *
+     C                     TIME           #TIME   60
+      *
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     WRITE#RCDDTL1
+     C*
+     C           *IN30     IFEQ '0'
+     C                     MOVE *BLANKS   SAV1   12
+     C                     MOVE #1DTTX    SAV1
+     C                     MOVE *BLANKS   SAV2   12
+     C                     MOVE #1DWTX    SAV2
+     C                     SETON                     30
+     C                     END
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C                     READ #RCDDTL1                 99
+     C*
+     C                     MOVE '0'       *IN08
+     C                     MOVE '0'       *IN11
+     C                     MOVE '0'       *IN14
+     C*
+     C**  Re-defaulting
+     C*
+     C           *IN13     IFEQ '1'
+     C           CEU003    ANDEQ'Y'
+     C*
+     C           #PJUST    IFNE 'FXFX'
+     C           WPRCV     ANDEQ'N'
+     C           WPPAY     ANDEQ'N'
+     C           SRSCY     ANDNESPSCY
+     C           WTTYP     ANDNE'RX'
+     C                     CALL 'ZA0250'
+     C                     SETON                     7375
+     C                     MOVEL'ESM0847' ZAMSID
+     C                     CALL 'ZA0240'
+     C                     PARM           ZAMSID
+     C                     MOVEL*BLANK    ZAMSID
+     C                     ELSE
+     C                     EXSR SRREDF
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+      *
+      ** If Deal Type is 'FR' or 'RS' or 'RX'
+      *
+     C           *LOCK     IN   LDA
+     C           *IN10     IFEQ *ON
+      *
+      ** If <ENTER> is taken from the first settlement screen
+      ** then validate the screen values
+      *
+     C           *IN03     IFEQ *OFF
+     C           *IN12     ANDEQ*OFF
+     C           *IN15     ANDEQ*OFF
+     C           PMACTC    ANDEQ'A'
+      *
+     C           *IN03     OREQ *OFF
+     C           *IN12     ANDEQ*OFF
+     C           *IN15     ANDEQ*OFF
+     C           PMACTC    ANDEQ'I'
+      *
+     C                     OUT  LDA
+     C                     EXSR VAL
+     C           *LOCK     IN   LDA
+     C*
+     C                     ELSE
+     C*
+     C                     SELEC
+     C           PMACTC    WHEQ 'A'
+     C           WSVAL     ANDNE*BLANKS
+     C                     MOVEL*BLANKS   WSVAL
+     C           PMACTC    WHEQ 'I'
+     C           WNVAL     ANDNE*BLANKS
+     C                     MOVEL*BLANKS   WNVAL
+     C                     ENDSL
+      *
+      ** If <ROLL UP> is taken from first settlement screen
+      ** then display the second settlement screen until
+      ** <F3> or <F12> or <ROLL DOWN> is taken
+      *
+     C           *IN15     IFEQ *ON
+     C*
+     C                     MOVE *OFF      *IN15
+     C*
+     C           *IN03     DOWEQ*OFF
+     C           *IN12     ANDEQ*OFF
+     C           *INKH     ANDEQ*OFF
+     C           *IN16     ANDEQ*OFF
+      *
+     C                     SELEC
+     C           PMTTYP    WHEQ 'RX'
+     C                     MOVEA'00'      *IN,04
+     C           PMTTYP    WHEQ 'RS'
+     C                     MOVEA'01'      *IN,04
+     C           PMTTYP    WHEQ 'FR'
+      *
+      ** ISDA fields will only be displayed if CSW005 is ON
+      ** OR CSW011 and CSW200 are ON
+      *
+     C           CSW005    IFEQ 'Y'
+     C           CSW011    OREQ 'Y'
+     C           CSW200    ANDEQ'Y'
+     C                     MOVEA'01'      *IN,04
+     C                     ELSE
+     C                     MOVEA'11'      *IN,04
+     C                     ENDIF
+      *
+     C                     ENDSL
+     C*
+     C**  Protect fields on Enquiry or Reversal
+     C*
+     C           PMACTC    IFEQ 'E'
+     C           PMACTC    OREQ 'D'
+     C                     MOVE *ON       *IN06
+     C                     ELSE
+     C                     MOVE *OFF      *IN06
+     C                     ENDIF
+     C*
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     WRITE#HEAD2
+     C                     EXFMT#RCDDTL2
+      *
+      ** If <ENTER> is taken from the second settlement screen
+      ** then validate the screen values
+      *
+     C           *IN03     IFEQ *OFF
+     C           *IN12     ANDEQ*OFF
+     C           *IN16     ANDEQ*OFF
+     C           WSVAL     ANDNE'Y'
+     C           PMACTC    ANDEQ'A'
+     C           *IN03     OREQ *OFF
+     C           *IN12     ANDEQ*OFF
+     C           *IN16     ANDEQ*OFF
+     C           WNVAL     ANDNE'Y'
+     C           PMACTC    ANDEQ'I'
+     C*
+     C                     OUT  LDA
+     C                     EXSR VAL
+     C           *LOCK     IN   LDA
+     C*
+     C                     ELSE
+     C*
+     C                     SELEC
+     C           PMACTC    WHEQ 'A'
+     C           WSVAL     ANDNE*BLANKS
+     C                     MOVEL*BLANKS   WSVAL
+     C           PMACTC    WHEQ 'I'
+     C           WNVAL     ANDNE*BLANKS
+     C                     MOVEL*BLANKS   WNVAL
+     C                     ENDSL
+     C*
+     C                     ENDIF
+     C                     ENDDO
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C                     MOVE '0'       NOCHG1
+     C                     MOVE '0'       NOCHG2
+     C           #1DTTX    IFEQ SAV1
+     C                     MOVE '1'       NOCHG1
+     C                     END
+     C           #1DWTX    IFEQ SAV2
+     C                     MOVE '1'       NOCHG2
+     C                     END
+     C                     OUT  LDA
+     C*
+     C                     ENDDO
+     C*
+     C                     ENDSR
+     C*********************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* INS      -   Insert Processing                                *
+     C*                                                               *
+     C* CALLS        RTV   -                                          *
+     C*              CONV  -  Convert customer numbers to shortnames  *
+     C*              PARMB -                                          *
+     C*              VAL   - Validate screen input                    *
+     C*                                                               *
+     C* CALLED BY    #B    -                                          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           INS       BEGSR
+     C*
+     C           PMFRST    IFEQ 'Y'
+     C           CUSNOF    ORNE PMCSNM
+     C           PRCCYF    ORNE PMRCCY
+     C           PPCCYF    ORNE PMPCCY
+     C*
+     C           *IN10     IFEQ *ON
+     C                     MOVEL'Y'       WNVAL   1
+     C                     ELSE
+     C                     MOVEL'N'       WNVAL
+     C                     ENDIF
+     C*
+     C**  STORE PREVIOUS VALUE OF CUST. NO. (#PDVCD) FOR COMPARE
+     C**  IF FIELD HAS BEEN CHANGED AND IF YES, PROCESS LIKE
+     C**  IT IS FIRST DISPLAY OF SCREEN
+     C*
+     C                     MOVEL#PDVCD    CUSNOF 10
+     C                     MOVEL#1AJCD    PRCCYF  3
+     C                     MOVEL#PABAL    PPCCYF  3
+     C*
+     C                     EXSR RTV
+     C                     EXSR CONV
+     C                     MOVEL'N'       PMFRST
+     C                     MOVEL'Y'       PMDEFT
+     C                     MOVEL'Y'       PMDEFR
+     C                     EXSR PARMB
+     C*
+     C                     ELSE
+     C*
+     C*  VALIDATE IF NOT FIRST DISPLAY OF SCREEN 2 FROM SCREEN 1
+     C*  (I.E. USER SHOULD PRESS ENTER ON SCREEN 2 TO VALIDATE)
+     C*  IF ERRORS EXIST FROM PREVIOUS VALIDATION, DISPLAY THEM
+     C           *IN87     IFEQ '1'
+     C           PMERCD    ORNE *BLANKS
+     C           *IN10     OREQ *OFF
+     C                     EXSR VAL
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     SETON                     87
+     C*
+     C                     ENDSR
+     C*********************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* PARMA    -   Load screen from passed parameters               *
+     C*              (FIELDS REQUIRING CONVERSION ARE MOVED INTO      *
+     C*              WORK FIELDS FIRST)                               *
+     C*                                                               *
+     C* CALLS             NONE                                        *
+     C*                                                               *
+     C* CALLED BY         #B                                          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           PARMA     BEGSR
+     C*
+     C***************      MOVELPMBRCD    #PDSNB
+     C                     MOVELPMBRCA    #PDSNB
+     C                     MOVELPMPCYA    #PAFNB
+     C                     MOVELPMDPGM    #PAGTX
+     C                     MOVELPMRUND    #PAKTX
+     C                     Z-ADDPMBVPD    #PJANB
+     C                     MOVELPMFRST    #PK7ST
+     C                     MOVELPMRETP    #PK8ST
+     C                     MOVELPMCSNM    #PDVCD
+     C                     MOVELPMRETS    #PK9ST
+     C                     MOVELPMCHIM    #PLAST
+     C                     MOVELPMDBFL    #PDWCD
+     C                     MOVELPMDBKY    #PAXNA
+     C                     MOVELPMDBSE    #PM0NB
+     C                     MOVELPMERCD    #PAYNA
+     C                     MOVELPMPCCY    #PABAL
+     C                     MOVELPMFFND    #PGGST
+     C                     MOVELPMACTC    #PJTST
+     C                     MOVELPMCPGM    #PJUST
+     C                     MOVELPMTTYP    #PJVST
+     C                     Z-ADDPMDTRC    #PKXNB
+     C                     Z-ADDPMDTPY    #PKYNB
+     C                     MOVELPMPRCV    #PJWST
+     C                     MOVELPMPPAY    #PJXST
+     C                     MOVELPMCMDP    #PJYST
+     C                     MOVELPMSDTV    #PJ0ST
+     C                     MOVELPMTERM    #PJ1ST
+     C                     MOVELPMRCCY    #1AJCD
+     C**
+     C                     MOVELPMRSTM    #1JPST
+     C                     MOVELPMPSTM    #1JQST
+     C  N80                MOVELPMRONS    #1DTTX
+     C*
+     C** ONLY PROCESS SETTLMNT BRNCH IF METHOD 05 (AND MBIN IS SET ON)
+     C           *IN80     IFEQ '1'                        B1
+     C           CLE033    OREQ 'Y'
+     C           PMRSTM    ANDEQ09
+     C                     MOVE *BLANKS   #1DTT2           **2
+     C           PMRSTM    IFEQ 05                         B*2
+     C           PMRSTM    OREQ 09
+     C           CLE033    ANDEQ'Y'
+      *
+      *
+     C                     MOVELPMROBR    #1DTT2           **2
+     C                     MOVE PMRONS    #1DTT2           **2
+     C                     ELSE                            X*2
+     C                     MOVELPMRONS    #1DTT2           **2
+     C                     END                             E*2
+     C                     END                             E1
+      *
+     C  N80                MOVELPMPONS    #1DWTX
+     C*
+     C** ONLY PROCESS SETTLMNT BRNCH IF METHOD 05 (AND MBIN IS SET ON)
+     C           *IN80     IFEQ '1'                        B1
+     C           CLE033    OREQ 'Y'
+     C           PMPSTM    ANDEQ09
+     C                     MOVE *BLANKS   #1DWT2           **2
+     C           PMPSTM    IFEQ 05                         B*2
+     C           PMPSTM    OREQ 09
+     C           CLE033    ANDEQ'Y'
+     C                     MOVELPMPOBR    #1DWT2           **2
+     C                     MOVE PMPONS    #1DWT2           **2
+     C                     ELSE                            X*2
+     C                     MOVELPMPONS    #1DWT2           **2
+     C                     END                             E*2
+     C                     END                             E1
+     C                     MOVELPARVNO    #1DZTX
+     C                     MOVELPAROCN    #1DBCD
+     C                     MOVELPAPOCN    #1DDCD
+     C                     MOVELPAROBN    #1DACD
+     C                     MOVELPAPOBN    #1DCCD
+     C                     MOVELPARCRN    #1DYTX
+     C                     MOVELPMRCRA    #1D8TX
+     C                     MOVELPARIBN    #1DUTX
+     C                     MOVELPAPIBN    #1DXTX
+     C                     MOVELPMRIBA    #1DVTX
+     C                     MOVELPMPIBA    #1D7TX
+     C                     MOVELPAAWBN    #1D0TX
+     C                     MOVELPMAWBA    #1D9TX
+     C                     MOVELPABENN    #1D1TX
+     C                     MOVELPMBENA    #1EATX
+     C                     MOVELPMDTP1    #1D2TX
+     C                     MOVELPMDTP2    #1D3TX
+     C                     MOVELPMDTP3    #1D4TX
+     C                     MOVELPMDTP4    #1D5TX
+     C                     MOVELPMDCHG    #1C9CD
+     C                     MOVELPMBTB1    #1D6TX
+     C                     MOVELPMBTB2    #1EBTX
+     C                     MOVELPMBTB3    #1ECTX
+     C                     MOVELPMBTB4    #1EDTX
+     C                     MOVELPMBTB5    #1EETX
+     C                     MOVELPMBTB6    #1EFTX
+     C                     MOVELPMCVMR    #1CVMR
+     C*
+     C                     MOVELPMRIBN    #DETTX
+     C                     MOVELPMROBN    #DEHTX
+     C                     MOVELPMROCN    #DEJTX
+     C                     MOVELPMPIBN    #DEUTX
+     C                     MOVELPMPOBN    #DEGTX
+     C                     MOVELPMPOCN    #DEITX
+     C                     MOVELPMRCRN    #DESTX
+     C                     MOVELPMRVNO    #DEPTX
+     C                     MOVELPMAWBN    #DEQTX
+     C                     MOVELPMBENN    #DERTX
+     C*
+     C           CEU003    IFEQ 'Y'
+     C                     MOVELPMPRCV    WPRCV   1
+     C                     MOVELPMPPAY    WPPAY   1
+     C                     MOVELPMRSCY    SRSCY   3
+     C                     MOVELPMPSCY    SPSCY   3
+     C                     MOVELPMIC72    SIC72   3
+     C                     MOVELPMTTYP    WTTYP   2
+     C*
+     C           PMDTPY    IFLT PMDTRC
+     C           PMDTPY    ANDGT0
+     C           PMDTRC    OREQ 0
+     C                     Z-ADDPMDTPY    WDTRP   50
+     C                     ELSE
+     C                     Z-ADDPMDTRC    WDTRP
+     C                     ENDIF
+     C*
+     C                     ENDIF
+      *
+     C** FRA/IRS specific fields:
+     C*
+     C           CSW005    IFEQ 'Y'
+     C           CSW011    OREQ 'Y'
+     C           PMTTYP    IFEQ 'FR'
+     C           PMTTYP    OREQ 'RS'
+     C           CSW005    ANDEQ'Y'
+     C           PMTTYP    OREQ 'RX'
+     C           CSW005    ANDEQ'Y'
+     C                     MOVEL@PARM3    WSCRN2
+     C           RISDA     IFEQ *ZEROS
+     C                     MOVE *BLANKS   RISDA
+     C                     ENDIF
+     C           RAGDT     IFEQ '000000'
+     C                     MOVEL*BLANKS   RAGDT
+     C                     ENDIF
+     C           RAGVV     IFEQ *ZEROS
+     C                     MOVEL*BLANKS   RAGVV
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C                     ENDSR
+     C*********************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* PARMB  -  Load screen fields into parameters for validation   *
+     C*                                                               *
+     C* CALLS             NONE                                        *
+     C*                                                               *
+     C* CALLED BY         INS -  Insert processing                    *
+     C*                   VAL -  Validate screen input                *
+     C*****************************************************************
+     C*
+     C           PARMB     BEGSR
+     C**
+     C** If question mark is entered in the settlement method field,
+     C** call the Valid list pgm for Receipt Settlement method Y2VLLWR
+     C**
+     C           #1JPST    IFEQ '? '
+     C*
+     C                     CALL 'Y2VLLWR'              90
+     C                     PARM           W0RTN   7
+     C                     PARM 1123203   Y2LSNO  70
+     C           #1JPST    PARM #1JPST    W0EXVL 20        Receipt - Settl
+     C*
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'Y2VLLWR' PMDBFL           **************
+     C                     MOVEL'SD2420'  PMDPGM           ** DBASE 21 **
+     C                     Z-ADD21        PMDBSE           **************
+     C                     SETON                     U7U8LR
+     C                     MOVE 'T'       PMTERM
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     MOVEL#1JPST    PMRSTM
+     C  N80                MOVEL#1DTTX    PMRONS
+     C*
+     C** ONLY PROCESS SETTLMNT BRNCH IF METHOD 05 (AND MBIN IS SET ON)
+     C           *IN80     IFEQ '1'                        B1
+     C           #1JPST    OREQ '09'
+     C           CLE033    ANDEQ'Y'
+     C           #1JPST    IFEQ '05'                       B*2
+     C           #1JPST    OREQ '09'
+     C           CLE033    ANDEQ'Y'
+     C                     MOVEL#1DTT2    @WRK15           **2
+     C                     MOVE @WRK3     PMROBR           **2
+     C                     MOVEL@WRK12    PMRONS           **2
+     C                     ELSE                            X*2
+     C*
+     C           PMPRCV    IFEQ 'Y'
+     C           PMACTC    ANDEQ'A'
+     C                     ELSE
+     C                     MOVE *BLANKS   PMROBR           **2
+     C                     END
+     C                     MOVEL#1DTT2    PMRONS           **2
+     C                     END                             E*2
+     C                     END                             E1
+     C                     MOVEL#1DACD    PAROBN
+     C                     MOVEL#1DBCD    PAROCN
+     C                     MOVEL#1DUTX    PARIBN
+     C                     MOVEL#1DVTX    PMRIBA
+     C**
+     C** If question mark is entered in the settlement method field,
+     C** call the Valid list pgm for Pay Settlement method Y2VLLWR
+     C**
+     C           #1JQST    IFEQ '? '
+     C*
+     C                     CALL 'Y2VLLWR'              90
+     C                     PARM           W0RTN   7
+     C                     PARM 1123203   Y2LSNO  70
+     C           #1JQST    PARM #1JQST    W0EXVL 20        Pay - Settle
+     C*
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'Y2VLLWR' PMDBFL           **************
+     C                     MOVEL'SD2420'  PMDPGM           ** DBASE 22 **
+     C                     Z-ADD22        PMDBSE           **************
+     C                     SETON                     U7U8LR
+     C                     MOVE 'T'       PMTERM
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     MOVEL#1JQST    PMPSTM
+     C  N80                MOVEL#1DWTX    PMPONS
+     C*
+     C** ONLY PROCESS SETTLMNT BRNCH IF METHOD 05 (AND MBIN IS SET ON)
+     C           *IN80     IFEQ '1'                        B1
+     C           #1JQST    OREQ '09'
+     C           CLE033    ANDEQ'Y'
+     C           #1JQST    IFEQ '05'                       B*2
+     C           #1JQST    OREQ '09'
+     C           CLE033    ANDEQ'Y'
+     C                     MOVEL#1DWT2    @WRK15           **2
+     C                     MOVE @WRK3     PMPOBR           **2
+     C                     MOVEL@WRK12    PMPONS           **2
+     C                     ELSE                            X*2
+     C           PMPPAY    IFEQ 'Y'
+     C           PMACTC    ANDEQ'A'
+     C                     ELSE
+     C                     MOVE *BLANKS   PMPOBR           **2
+     C                     END
+     C                     MOVEL#1DWT2    PMPONS           **2
+     C                     END                             E*2
+     C                     END                             E1
+     C                     MOVEL#1DCCD    PAPOBN
+     C                     MOVEL#1DDCD    PAPOCN
+     C                     MOVEL#1DXTX    PAPIBN
+     C                     MOVEL#1D7TX    PMPIBA
+     C                     MOVEL#1DYTX    PARCRN
+     C                     MOVEL#1D8TX    PMRCRA
+     C                     MOVEL#1DZTX    PARVNO
+     C                     MOVEL#1D0TX    PAAWBN
+     C                     MOVEL#1D9TX    PMAWBA
+     C                     MOVEL#1D1TX    PABENN
+     C                     MOVEL#1EATX    PMBENA
+     C                     MOVEL#1D2TX    PMDTP1
+     C                     MOVEL#1D3TX    PMDTP2
+     C                     MOVEL#1D4TX    PMDTP3
+     C                     MOVEL#1D5TX    PMDTP4
+     C                     MOVEL#1C9CD    PMDCHG
+     C                     MOVEL#1D6TX    PMBTB1
+     C                     MOVEL#1EBTX    PMBTB2
+     C                     MOVEL#1ECTX    PMBTB3
+     C                     MOVEL#1EDTX    PMBTB4
+     C                     MOVEL#1EETX    PMBTB5
+     C                     MOVEL#1EFTX    PMBTB6
+     C                     MOVEL#1CVMR    PMCVMR
+     C                     MOVEL#PJTST    PMACTC
+     C                     MOVEL#PJUST    PMCPGM
+     C                     MOVEL#PJVST    PMTTYP
+     C                     MOVEL#PDVCD    PMCSNM
+     C                     Z-ADD#PKXNB    PMDTRC
+     C                     Z-ADD#PKYNB    PMDTPY
+     C                     MOVEL#PABAL    PMPCCY
+     C                     MOVEL#1AJCD    PMRCCY
+     C                     MOVEL#PGGST    PMFFND
+     C                     MOVEL#PDSNB    PMBRCA
+     C                     MOVEL#PJWST    PMPRCV
+     C                     MOVEL#PJXST    PMPPAY
+     C                     MOVEL#PJYST    PMCMDP
+     C                     MOVEL#PJ0ST    PMSDTV
+     C                     MOVEL#PJ1ST    PMTERM
+     C                     MOVEL#PK7ST    PMFRST
+     C                     MOVEL#PK8ST    PMRETP
+     C                     MOVEL#PK9ST    PMRETS
+     C                     MOVEL#PAFNB    PMPCYA
+     C                     MOVEL#PLAST    PMCHIM
+     C                     Z-ADD#PJANB    PMBVPD
+     C                     Z-ADD#PAKTX    PMRUND
+     C                     MOVEL#PDWCD    PMDBFL
+     C                     MOVEL#PAXNA    PMDBKY
+     C                     MOVEL#PAGTX    PMDPGM
+     C                     MOVEL#PM0NB    PMDBSE
+     C                     MOVEL#PAYNA    PMERCD
+     C                     MOVEL#DETTX    PMRIBN
+     C                     MOVEL#DEHTX    PMROBN
+     C                     MOVEL#DEJTX    PMROCN
+     C                     MOVEL#DEUTX    PMPIBN
+     C                     MOVEL#DEGTX    PMPOBN
+     C                     MOVEL#DEITX    PMPOCN
+     C                     MOVEL#DESTX    PMRCRN
+     C                     MOVEL#DEPTX    PMRVNO
+     C                     MOVEL#DEQTX    PMAWBN
+     C                     MOVEL#DERTX    PMBENN
+     C*
+     C** If CEU003 is supported
+     C*
+     C           CEU003    IFEQ 'Y'
+     C                     MOVELSRSCY     PMRSCY
+     C                     MOVELSPSCY     PMPSCY
+     C                     MOVELSIC72     PMIC72
+     C                     ENDIF
+      *
+     C*
+     C           *IN10     IFEQ *ON
+     C                     MOVELWSCRN2    @PARM3
+     C                     ENDIF
+     C                     ENDSR
+     C*********************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* RESET    -   Clear screen fields                              *
+     C*                                                               *
+     C* CALLS             NONE                                        *
+     C*                                                               *
+     C* CALLED BY         #A - Initial processing                     *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           RESET     BEGSR
+     C*
+     C                     MOVEL*BLANKS   #PDSNB  3
+     C                     MOVEL*BLANKS   #PAFNB 10
+     C                     MOVEL*BLANKS   #PAGTX  8
+     C                     Z-ADD0         #PAKTX  50
+     C                     Z-ADD0         #PJANB  30
+     C                     MOVEL*BLANKS   #PK7ST  1
+     C                     MOVEL*BLANKS   #PK8ST  1
+     C                     MOVEL*BLANKS   #PDVCD 10
+     C                     MOVEL*BLANKS   #PK9ST  1
+     C                     MOVEL*BLANKS   #PLAST  1
+     C                     MOVEL*BLANKS   #PDWCD  5
+     C                     MOVEL*BLANKS   #PAXNA 29
+     C                     MOVEL*BLANKS   #PM0NB  2
+     C                     MOVEL*BLANKS   #PAYNA150
+     C                     MOVEL*BLANKS   #PABAL  3
+     C                     MOVEL*BLANKS   #PGGST  1
+     C                     MOVEL*BLANKS   #PJTST  1
+     C                     MOVEL*BLANKS   #PJUST  4
+     C                     MOVEL*BLANKS   #PJVST  2
+     C                     Z-ADD0         #PKXNB  50
+     C                     Z-ADD0         #PKYNB  50
+     C                     MOVEL*BLANKS   #PJWST  1
+     C                     MOVEL*BLANKS   #PJXST  1
+     C                     MOVEL*BLANKS   #PJYST  2
+     C                     MOVEL*BLANKS   #PJ0ST  1
+     C                     MOVEL*BLANKS   #PJ1ST  1
+     C                     MOVEL*BLANKS   #1AJCD  3
+     C                     MOVEL*BLANKS   #1JPST
+     C                     MOVEL*BLANKS   #1JQST
+     C                     MOVEL*BLANKS   #1DTTX
+     C                     MOVEL*BLANKS   #1DWTX
+     C                     MOVEL*BLANKS   #1DZTX  8
+     C                     MOVEL*BLANKS   #1CVMR  1
+     C                     MOVEL*BLANKS   #1DBCD  6
+     C                     MOVEL*BLANKS   #1DDCD  6
+     C                     MOVEL*BLANKS   #1DACD  6
+     C                     MOVEL*BLANKS   #1DCCD  6
+     C                     MOVEL*BLANKS   #1DYTX  8
+     C                     MOVEL*BLANKS   #1D8TX
+     C                     MOVEL*BLANKS   #1DUTX  8
+     C                     MOVEL*BLANKS   #1DXTX  8
+     C                     MOVEL*BLANKS   #1DVTX
+     C                     MOVEL*BLANKS   #1D7TX
+     C                     MOVEL*BLANKS   #1D0TX  8
+     C                     MOVEL*BLANKS   #1D9TX
+     C                     MOVEL*BLANKS   #1D1TX  8
+     C                     MOVEL*BLANKS   #1EATX
+     C                     MOVEL*BLANKS   #1D2TX
+     C                     MOVEL*BLANKS   #1D3TX
+     C                     MOVEL*BLANKS   #1D4TX
+     C                     MOVEL*BLANKS   #1D5TX
+     C                     MOVEL*BLANKS   #1C9CD
+     C                     MOVEL*BLANKS   #1D6TX
+     C                     MOVEL*BLANKS   #1EBTX
+     C                     MOVEL*BLANKS   #1ECTX
+     C                     MOVEL*BLANKS   #1EDTX
+     C                     MOVEL*BLANKS   #1EETX
+     C                     MOVEL*BLANKS   #1EFTX
+     C                     MOVELPMCVMR    #1CVMR
+     C                     MOVEL*BLANKS   #1DWT2
+     C                     MOVEL*BLANKS   #1DTT2
+     C*
+     C** Clear all 3 new screen fields
+     C*
+     C                     MOVEL*BLANKS   SRSCY
+     C                     MOVEL*BLANKS   SPSCY
+     C                     MOVEL*BLANKS   SIC72
+     C                     MOVEL*BLANKS   SPRTE
+     C                     MOVEL*BLANKS   SRRTE
+     C                     MOVEL*BLANKS   SPCEI
+     C                     MOVEL*BLANKS   SRCEI
+     C*
+     C** For FRA/IRS, initialise screen 2 fields:
+     C*
+     C           CSW005    IFEQ 'Y'
+     C           CSW011    OREQ 'Y'
+     C                     CLEARWSCRN2
+     C                     ENDIF
+     C*
+     C                     ENDSR
+     C*********************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* RTV      -   Retrieve standard settlement instructions        *
+     C*                                                               *
+     C* CALLS  SSIA - Obtain customer number for chaining to SSI file *
+     C*        SSIB - Retrieve Receipt Settlement Instructions for FX *
+     C*                                                               *
+     C* CALLED BY     INS - Insert processing                         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           RTV       BEGSR
+     C*
+     C*  Calling program is FX Deal Input (FX0820)
+     C           #PJUST    IFEQ 'FXFX'
+     C*  Federal Funds ?
+     C           #PGGST    IFEQ 'Y'
+     C                     MOVEL'FF'      DTYPE   2
+     C                     ELSE
+     C*
+     C                     MOVEL'FX'      DTYPE
+     C                     END
+     C                     END
+     C*
+     C*  Calling program is Loan/Deposit Deal Input (MM0028)
+     C           #PJUST    IFEQ 'MMLD'
+     C*
+     C*  Federal Funds ?
+     C           #PGGST    IFEQ 'Y'
+     C                     MOVEL'MF'      DTYPE
+     C                     ELSE
+     C*
+     C                     MOVEL'MM'      DTYPE
+     C                     END
+     C                     END
+     C*
+     C*  Calling program is NA's Bought Deal Input (MM0026)
+     C           #PJUST    IFEQ 'MMNB'
+     C*
+     C*  Federal Funds ?
+     C           #PGGST    IFEQ 'Y'
+     C                     MOVEL'FP'      DTYPE
+     C                     ELSE
+     C*
+     C                     MOVEL'NP'      DTYPE
+     C                     END
+     C                     END
+     C*
+     C*  Calling program is NA's Sold Deal Input (MM0027)
+     C           #PJUST    IFEQ 'MMNS'
+     C*
+     C*  Federal Funds ?
+     C           #PGGST    IFEQ 'Y'
+     C                     MOVEL'FS'      DTYPE
+     C                     ELSE
+     C*
+     C                     MOVEL'NS'      DTYPE
+     C                     END
+     C                     END
+      *
+      *  Calling program is any of the Customer Lending input programs
+      *
+     C           #PJUST    IFEQ 'LEND'
+     C                     MOVEL'LE'      DTYPE
+     C                     ENDIF
+     C*
+     C                     MOVEL#PABAL    WSTCY   3
+     C*  FRA/IRS?
+     C           *IN10     IFEQ *ON
+     C                     MOVELPMTTYP    DTYPE
+     C                     ENDIF
+     C*
+     C*  Load Payment and Receipt instructions for Prime currency
+     C                     EXSR SSIA
+     C*
+     C*  IF FX, overwrite Receipt instructions with Buy currency's
+     C*  receipt instructions
+     C*  Do also for Cross Currency IRSs
+     C           #PJUST    IFEQ 'FXFX'
+     C           CSW005    OREQ 'Y'
+     C           PMTTYP    ANDEQ'RX'
+     C                     MOVELPMRCCY    WSTCY
+     C                     EXSR SSIB
+     C                     END
+     C*
+     C*  Set off the first entry flag
+     C                     MOVEL'N'       #PK7ST
+     C                     ENDSR
+     C*********************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* CUST     -  Retrieve Customer name from SDCUSTL1              *
+     C*                                                               *
+     C* CALLS             NONE                                        *
+     C*                                                               *
+     C* CALLED BY        CVTA - Convert customer number to shortname  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           CUST      BEGSR
+     C*
+     C           @FLD6     CHAINSDCUSTL1             90
+     C*
+     C* IF no record found
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'Y2U0005' @RCODE
+     C                     MOVEL'SDCUS'   PMDBFL
+     C                     END
+     C*
+     C                     ENDSR
+     C*********************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* NOST     -  Retrieve Counterparty Nostro Name                 *
+     C*                                                               *
+     C* CALLS            NONE                                         *
+     C*                                                               *
+     C* CALLED BY  CVTB  -  Convert counterparty number to shortname  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           NOST      BEGSR
+     C*
+     C                     MOVEL*BLANKS   @CNAME
+     C           @FLD8     CHAINSDCNSTL1             90
+     C*
+     C*  record found
+     C           *IN90     IFEQ '0'
+     C                     MOVE AWCSN2    @CNAME 10
+     C                     MOVELAWCSN1    @CNAME
+     C                     END
+     C*
+     C                     ENDSR
+     C*********************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* ERROR    - CALL PROGRAM ZA0240 TO OUTPUT ERROR MESSAGES       *
+     C*                                                               *
+     C* CALLS             NONE                                        *
+     C*                                                               *
+     C* CALLED BY         INS - Insert processing                     *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           ERROR     BEGSR
+     C*
+     C                     MOVELERR       ERRCDE  4
+     C*
+     C*  Search for error code and it's indicators in array
+     C                     Z-ADD1         W       30
+     C           ERRCDE    LOKUP@ERR,W                   65
+     C*
+     C*  Set on the error's related indicators to highlight fields
+     C           *IN65     IFEQ '1'
+     C                     MOVEA@IND,W    @INDA
+     C                     Z-ADD1         X       10
+     C           X         DOWLT7
+     C           @INDA,X   ANDNE*BLANKS
+     C                     MOVE @INDA,X   Y       20
+     C                     MOVE '1'       *IN,Y
+     C                     ADD  1         X
+     C                     END
+     C                     END
+      ** If the retail account is in error and the settlement method
+      ** is 04, highlight the settlement method field instead of the
+      ** settlement account, which will be blank.
+      *
+     C           PMRSTM    IFEQ 04
+     C           ERRCDE    ANDEQ'912'
+     C           PMRSTM    OREQ 04
+     C           ERRCDE    ANDEQ'913'
+     C                     MOVE '0'       *IN33
+     C                     MOVE '1'       *IN31
+     C                     END
+      *
+      ** Do the same for the pay side
+      *
+     C           PMPSTM    IFEQ 04
+     C           ERRCDE    ANDEQ'942'
+     C           PMPSTM    OREQ 04
+     C           ERRCDE    ANDEQ'943'
+     C                     MOVE '0'       *IN34
+     C                     MOVE '1'       *IN32
+     C                     END
+     C*
+     C                     MOVELERR       @WRK1   1
+     C*
+     C** Error codes starting with 'X' have been sent already in
+     C** the program message queue.
+     C*
+     C           @WRK1     IFNE 'X'
+     C*  Display error message
+     C                     MOVEL'ESM0'    @WRK7   7
+     C                     MOVE ERR       @WRK7
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL@WRK7     ZAMSID
+     C                     CALL 'ZA0240'
+     C                     PARM           ZAMSID
+     C                     ENDIF
+     C*
+     C                     ENDSR
+     C*********************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* SSIA     - Obtain customer number for chaining to SSI file    *
+     C*                                                               *
+     C* CALLS  SSIC - Retrieve Pay/Receive Instructions for Prime ccy *
+     C*                                                               *
+     C* CALLED BY         INS - Insert processing                     *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SSIA      BEGSR
+     C*
+     C*  Retrieve Customer Number from Customer details file (key is
+     C*  SHORTNAME)
+     C           #PDVCD    CHAINSDCUSTL2             90
+     C           *IN90     IFEQ '0'
+     C                     MOVELBBCUST    @CUST   6
+     C                     EXSR SSIC
+     C                     ELSE
+     C*
+     C*  Shortname not found => 6 digit number
+     C*
+     C                     MOVE #PDVCD    @WRK4   4
+     C*
+     C           @WRK4     IFEQ *BLANKS
+     C                     MOVEL#PDVCD    @CUST
+     C*
+     C*  Retrieve pay/receive instructions for Prime currency
+     C                     EXSR SSIC
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*********************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* SSIB -  Retrieve Receipt Settlement Instructions for Buy      *
+     C*         currency (only called if deal type is 'FXFX')         *
+     C*                                                               *
+     C* CALLS             NONE                                        *
+     C*                                                               *
+     C* CALLED BY         INS - Insert processing                     *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SSIB      BEGSR
+     C*
+     C** Move blanks into the settlement fields to ensure that if
+     C** a customer is changed the old fields do not remain and if
+     C** the deal is an FX that the receipt instructions are the BUY
+     C** currency's not the SELL currency.
+     C*
+     C           PMRCCY    IFNE 'USD'
+     C           #PJUST    ANDEQ'FXFX'
+     C                     MOVEL'FX'      DTYPE
+     C                     END
+     C*
+     C                     MOVEL*BLANK    W0RTN   7
+     C                     MOVELWSTCY     LCYCD
+     C                     MOVEL@CUST     LCUST
+     C                     MOVEL@SEQN     LSEQN
+     C                     MOVELDTYPE     LTRTY
+      *
+     C           CDL008    IFEQ 'Y'
+     C           PMTTYP    ANDEQ'CL'
+     C           #PJUST    ANDEQ'FXFX'
+     C                     MOVEL'CL'      LTRTY
+     C                     ENDIF
+     C*
+     C           USKEY     CHAINSDFNMSL3             90
+     C*
+     C** If CEU003 is supported
+     C           CEU003    IFEQ 'Y'
+     C           *IN90     ANDEQ'0'
+     C*
+     C           LSTCY     IFNE *BLANKS
+     C           *IN13     ANDEQ'0'
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*DBERR  'PRTCD
+     C                     PARM '*KEY    'POPTN
+     C                     PARM WSTCY     PCURR
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C           A6INCY    IFEQ 'Y'
+     C           WDTRP     ANDGEA6TPSD
+     C           WSTCY     OREQ BKEURO
+     C*
+     C                     MOVELLSTCY     SRSCY
+     C*
+     C**  Access Currency Details
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY    'POPTN
+     C                     PARM LSTCY     PCURR
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE '1'       *IN90
+     C                     ELSE
+     C*
+     C           A6INCY    IFEQ 'Y'
+     C           WDTRP     ANDGEA6TPSD
+     C           LSTCY     OREQ BKEURO
+     C                     MOVELLSTCY     WSTCY
+     C                     MOVELWSTCY     LCYCD
+     C                     MOVEL@CUST     LCUST
+     C                     MOVEL@SEQN     LSEQN
+     C                     MOVELDTYPE     LTRTY
+     C*
+     C           USKEY     CHAINSDFNMSL3             90
+     C*
+     C                     ELSE
+     C                     MOVEL*BLANKS   SRSCY
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     ELSE
+     C                     MOVEL*BLANKS   SRSCY
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C           *IN90     IFEQ '0'
+     C                     MOVELLRSTY     #1JPST
+      *
+     C** FOR A MULTIBRANCHED SYSTEM SET UP BRANCHES IF SETT. METHOD 05
+     C                     MOVE *BLANKS   #1DTTX
+     C                     MOVE *BLANKS   #1DTT2
+     C           LRSTY     IFEQ '05'
+     C           LRSTY     OREQ '09'
+     C           CLE033    ANDEQ'Y'
+     C  N80                MOVELLRONO     #1DTTX
+     C   80                MOVELLORBR     #1DTT2
+     C   80                MOVE LRONO     #1DTT2
+     C                     ELSE
+     C  N80                MOVELLRONO     #1DTTX
+     C   80                MOVELLRONO     #1DTT2
+     C                     END
+      *
+     C                     MOVELLROBN     #1DACD
+     C                     MOVELLROCS     #1DBCD
+     C                     MOVELLRIBN     #1DUTX
+     C                     MOVELLRIBL     #1DVTX
+     C*
+     C** INSERT BANK TO BANK INFO AND DETAILS OF PAYMENT
+      *
+      * else if no instructions for Buy Currency, set fields to
+      * blanks so no default to Sell Currency values
+     C                     ELSE
+     C                     MOVEL*BLANKS   #1JPST
+     C                     MOVEL'00'      #1JPST
+     C                     MOVE *BLANKS   #1DTTX
+     C                     MOVE *BLANKS   #1DTT2
+     C                     MOVE *BLANKS   #1DACD
+     C                     MOVE *BLANKS   #1DBCD
+     C                     MOVE *BLANKS   #1DUTX
+     C                     MOVE *BLANKS   #1DVTX
+     C           CEU003    IFEQ 'Y'
+     C                     MOVEL*BLANKS   #DEJTX
+     C                     MOVEL*BLANKS   #DEHTX
+     C                     MOVEL*BLANKS   #DETTX
+     C                     ENDIF
+     C                     END
+     C*
+     C                     ENDSR
+     C*********************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* SSIC - Retrieve pay/receive Standard Settlement Instructions  *
+     C*       for Prime currency (for FX this will be the Sell ccy)   *
+     C*                                                               *
+     C* CALLS             NONE                                        *
+     C*                                                               *
+     C* CALLED BY  SSIA - Obtain customer number for chaining to SSI  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SSIC      BEGSR
+     C*
+     C*  Define Keylist for SSI file
+     C*     CURRENCY + CUSTOMER + DEAL TYPE
+     C*
+     C           USKEY     KLIST
+     C                     KFLD           LCYCD
+     C                     KFLD           LCUST
+     C                     KFLD           LSEQN
+     C*
+     C                     MOVELWSTCY     LCYCD
+     C                     MOVEL@CUST     LCUST
+     C                     MOVEL@SEQN     LSEQN
+     C                     MOVELDTYPE     LTRTY
+      *
+     C           CDL008    IFEQ 'Y'
+     C           PMTTYP    ANDEQ'CL'
+     C           #PJUST    ANDEQ'FXFX'
+     C                     MOVEL'CL'      LTRTY
+     C                     ENDIF
+     C*
+     C           USKEY     CHAINSDFNMSL3             90
+     C*
+     C** If CEU003 is supported
+     C*
+     C           CEU003    IFEQ 'Y'
+     C           *IN90     ANDEQ'0'
+     C*
+     C* Save 'Include ERI in field 72' for later use.
+     C*
+     C                     MOVE LIERI     WUIERI  1
+     C*
+     C           LSTCY     IFNE *BLANKS
+     C           *IN13     ANDEQ'0'
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*DBERR  'PRTCD
+     C                     PARM '*KEY    'POPTN
+     C                     PARM WSTCY     PCURR
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C           A6INCY    IFEQ 'Y'
+     C           WDTRP     ANDGEA6TPSD
+     C           WSTCY     OREQ BKEURO
+     C*
+     C                     MOVEL*BLANKS   SRSCY
+     C                     MOVEL*BLANKS   SPSCY
+     C*
+     C           WPPAY     IFEQ 'N'
+     C                     MOVELLSTCY     SPSCY
+     C                     ENDIF
+     C*
+     C           WPRCV     IFEQ 'N'
+     C           PMCPGM    ANDNE'FXFX'
+     C           WPRCV     OREQ 'N'
+     C           CSW005    ANDEQ'Y'
+     C           WTTYP     ANDNE'RX'
+     C                     MOVELLSTCY     SRSCY
+     C                     ENDIF
+     C*
+     C**  Access Currency Details
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY    'POPTN
+     C                     PARM LSTCY     PCURR
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE '1'       *IN90
+     C                     ELSE
+     C*
+     C           A6INCY    IFEQ 'Y'
+     C           WDTRP     ANDGEA6TPSD
+     C           LSTCY     OREQ BKEURO
+     C                     MOVELLSTCY     WSTCY
+     C                     MOVELWSTCY     LCYCD
+     C                     MOVEL@CUST     LCUST
+     C                     MOVEL@SEQN     LSEQN
+     C                     MOVELDTYPE     LTRTY
+     C*
+     C           USKEY     CHAINSDFNMSL3             90
+     C*
+     C                     ELSE
+     C                     MOVEL*BLANKS   SRSCY
+     C                     MOVEL*BLANKS   SPSCY
+     C                     MOVEL*BLANKS   SIC72
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     ELSE
+     C                     MOVEL*BLANKS   SRSCY
+     C                     MOVEL*BLANKS   SPSCY
+     C                     MOVEL*BLANKS   SIC72
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C*
+     C*
+     C*
+     C           *IN90     IFEQ '0'
+     C                     MOVELLRSTY     #1JPST
+     C*
+     C** FOR A MULTIBRANCHED SYSTEM SET UP BRANCHES FOR SETT METH.05
+     C                     MOVE *BLANKS   #1DWT2
+     C                     MOVE *BLANKS   #1DTT2
+     C           LRSTY     IFEQ '05'
+     C           LRSTY     OREQ '09'
+     C           CLE033    ANDEQ'Y'
+      *
+      *
+     C  N80                MOVELLRONO     #1DTTX
+     C   80                MOVE LRONO     #1DTT2
+     C   80                MOVELLORBR     #1DTT2
+     C                     ELSE
+     C  N80                MOVELLRONO     #1DTTX
+     C   80                MOVELLRONO     #1DTT2
+     C                     END
+      *
+     C           LPSTY     IFEQ '05'
+     C           LPSTY     OREQ '09'
+     C           CLE033    ANDEQ'Y'
+     C  N80                MOVELLPONO     #1DWTX
+     C   80                MOVE LPONO     #1DWT2
+     C   80                MOVELLOPBR     #1DWT2
+     C                     ELSE
+     C  N80                MOVELLPONO     #1DWTX
+     C   80                MOVELLPONO     #1DWT2
+     C                     END
+      *
+     C                     MOVELLROBN     #1DACD
+     C                     MOVELLROCS     #1DBCD
+     C                     MOVELLRIBN     #1DUTX
+     C                     MOVELLRIBL     #1DVTX
+     C                     MOVELLPSTY     #1JQST
+     C*
+     C*
+     C** FOR NA SOLD, PAYMENT INSTRUCTIONS SHOULD BE BLANK
+     C*
+     C           DTYPE     IFEQ 'NS'                       NA SOLD
+     C*
+     C** If CEU003 is supported
+     C*
+     C           CEU003    IFEQ 'Y'
+     C                     MOVEL*BLANKS   SPSCY
+     C                     MOVEL*BLANKS   SIC72
+     C                     ENDIF
+     C*
+     C                     MOVEL'00'      #1JQST
+     C                     MOVE *BLANKS   #1DWT2
+     C                     MOVEL*BLANKS   #1DWTX
+     C                     MOVEL*BLANKS   #1DCCD
+     C                     MOVEL*BLANKS   #1DDCD
+     C                     MOVEL*BLANKS   #1DXTX
+     C                     MOVEL*BLANKS   #1D7TX
+     C                     MOVEL*BLANKS   #1DYTX
+     C                     MOVEL*BLANKS   #1D8TX
+     C                     MOVEL*BLANKS   #1DZTX
+     C                     MOVEL*BLANKS   #1D0TX
+     C                     MOVEL*BLANKS   #1D9TX
+     C                     MOVEL*BLANKS   #1D1TX
+     C                     MOVEL*BLANKS   #1EATX
+     C                     MOVEL*BLANKS   #1D2TX
+     C                     MOVEL*BLANKS   #1D3TX
+     C                     MOVEL*BLANKS   #1D4TX
+     C                     MOVEL*BLANKS   #1D5TX
+     C                     MOVEL*BLANKS   #1C9CD
+     C                     MOVEL*BLANKS   #1D6TX
+     C                     MOVEL*BLANKS   #1EBTX
+     C                     MOVEL*BLANKS   #1ECTX
+     C                     MOVEL*BLANKS   #1EDTX
+     C                     MOVEL*BLANKS   #1EETX
+     C                     MOVEL*BLANKS   #1EFTX
+     C                     MOVEL*BLANKS   #1CVMR
+     C                     ELSE
+     C*
+     C           CEU003    IFEQ 'Y'
+     C*
+     C           PMPCCY    IFNE BKEURO
+     C           SPSCY     ANDEQBKEURO
+     C           WUIERI    ANDEQ'Y'
+     C                     MOVELPMPCCY    SIC72
+     C                     ELSE
+     C                     MOVE *BLANKS   SIC72
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     MOVELLPOBN     #1DCCD
+     C                     MOVELLPOCS     #1DDCD
+     C                     MOVELLPIBN     #1DXTX
+     C                     MOVELLPIBA     #1D7TX
+     C                     MOVELLRCNO     #1DYTX
+     C                     MOVELLRCAL     #1D8TX
+     C                     MOVELLRCNB     #1DZTX
+     C                     MOVELLACBN     #1D0TX
+     C                     MOVELLACBL     #1D9TX
+     C                     MOVELLBYNB     #1D1TX
+     C                     MOVELLBACL     #1EATX
+     C                     MOVELLDPY1     #1D2TX
+     C                     MOVELLDPY2     #1D3TX
+     C                     MOVELLDPY3     #1D4TX
+     C                     MOVELLDPY4     #1D5TX
+     C                     MOVELLDECG     #1C9CD
+     C                     MOVELLBBI1     #1D6TX
+     C                     MOVELLBBI2     #1EBTX
+     C                     MOVELLBBI3     #1ECTX
+     C                     MOVELLBBI4     #1EDTX
+     C                     MOVELLBBI5     #1EETX
+     C                     MOVELLBBI6     #1EFTX
+     C                     MOVELLCVMR     #1CVMR
+     C                     END
+     C*
+     C           *IN10     IFEQ *ON
+     C                     MOVELLDSR1     RDSR1
+     C                     MOVELLDSR2     RDSR2
+     C                     MOVELLDSR3     RDSR3
+     C                     MOVELLDSR4     RDSR4
+     C                     MOVELLDSR5     RDSR5
+     C                     MOVELLDSR6     RDSR6
+     C                     MOVELLSSR1     RSSR1
+     C                     MOVELLSSR2     RSSR2
+     C                     MOVELLSSR3     RSSR3
+     C                     MOVELLSSR4     RSSR4
+     C                     MOVELLSSR5     RSSR5
+     C                     MOVELLSSR6     RSSR6
+     C                     MOVELLCND1     RCND1
+     C                     MOVELLCND2     RCND2
+     C                     MOVELLCND3     RCND3
+     C                     MOVELLCND4     RCND4
+     C                     MOVELLCND5     RCND5
+     C                     MOVELLCND6     RCND6
+     C                     MOVELLISDA     RISDA
+     C                     MOVELLAGTY     RAGTY
+     C                     MOVELLAGDT     RAGDT
+     C                     MOVELLAGVC     RAGVV
+     C                     MOVE LAGVV     RAGVV
+     C                     ENDIF
+     C*
+     C                     ELSE
+     C*
+     C** If CEU003 is supported
+     C*
+     C           CEU003    IFEQ 'Y'
+     C                     MOVEL*BLANKS   SIC72
+     C                     ENDIF
+     C*
+     C*
+     C                     MOVEL'00'      #1JPST
+     C                     MOVEL*BLANKS   #1DTTX
+     C                     MOVEL*BLANKS   #1DTT2
+     C                     MOVEL*BLANKS   #1DACD
+     C                     MOVEL*BLANKS   #1DBCD
+     C                     MOVEL*BLANKS   #1DUTX
+     C                     MOVEL*BLANKS   #1DVTX
+     C                     MOVEL'00'      #1JQST
+     C                     MOVEL*BLANKS   #1DWTX
+     C                     MOVEL*BLANKS   #1DWT2
+     C                     MOVEL*BLANKS   #1DCCD
+     C                     MOVEL*BLANKS   #1DDCD
+     C                     MOVEL*BLANKS   #1DXTX
+     C                     MOVEL*BLANKS   #1D7TX
+     C                     MOVEL*BLANKS   #1DYTX
+     C                     MOVEL*BLANKS   #1D8TX
+     C                     MOVEL*BLANKS   #1DZTX
+     C                     MOVEL*BLANKS   #1D0TX
+     C                     MOVEL*BLANKS   #1D9TX
+     C                     MOVEL*BLANKS   #1D1TX
+     C                     MOVEL*BLANKS   #1EATX
+     C                     MOVEL*BLANKS   #1D2TX
+     C                     MOVEL*BLANKS   #1D3TX
+     C                     MOVEL*BLANKS   #1D4TX
+     C                     MOVEL*BLANKS   #1D5TX
+     C                     MOVEL*BLANKS   #1C9CD
+     C                     MOVEL*BLANKS   #1D6TX
+     C                     MOVEL*BLANKS   #1EBTX
+     C                     MOVEL*BLANKS   #1ECTX
+     C                     MOVEL*BLANKS   #1EDTX
+     C                     MOVEL*BLANKS   #1EETX
+     C                     MOVEL*BLANKS   #1EFTX
+     C                     MOVEL*BLANKS   #1CVMR
+     C           CEU003    IFEQ 'Y'
+     C                     MOVEL*BLANKS   #DEITX
+     C                     MOVEL*BLANKS   #DEGTX
+     C                     MOVEL*BLANKS   #DESTX
+     C                     MOVEL*BLANKS   #DEUTX
+     C                     MOVEL*BLANKS   #DEQTX
+     C                     MOVEL*BLANKS   #DERTX
+     C                     ENDIF
+     C*
+     C                     CLEARWSCRN2
+     C*
+     C           PMTTYP    IFEQ 'RS'
+     C           PMTTYP    OREQ 'RX'
+     C*
+     C           BQISDA    IFNE *BLANKS
+     C                     MOVELBQISDA    RISDA
+     C                     ELSE
+     C                     MOVEL'1991'    RISDA
+     C                     ENDIF
+     C*
+     C           BQAGTY    IFNE *BLANKS
+     C                     MOVELBQAGTY    RAGTY
+     C                     ELSE
+     C                     MOVEL'ISDA'    RAGTY
+     C                     ENDIF
+     C*
+     C           BQAGDT    IFNE *BLANKS
+     C                     MOVELBQAGDT    RAGDT
+     C                     ELSE
+     C                     MOVEL'871012'  RAGDT
+     C                     ENDIF
+     C*
+     C           BQAGVV    IFNE *BLANKS
+     C                     MOVE BQAGVV    RAGVV
+     C                     MOVELBQAGVC    RAGVV
+     C                     ELSE
+     C                     MOVEL'1987'    RAGVV
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*********************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* VAL      - Validate screen input                              *
+     C*                                                               *
+     C* CALLS             ZA0250 - CLEAR SCREEN MESSAGE QUEUE         *
+     C*                   ZA0240 - DISPLAY MESSAGE                    *
+     C*                                                               *
+     C* CALLED BY         INS - Insert processing                     *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           VAL       BEGSR
+     C*
+     C*  Pass screen inputs to control parameters
+     C                     EXSR PARMB
+     C*
+     C**  Clear screen message queue.
+     C                     CALL 'ZA0250'
+     C*
+     C           PMRUND    SUB  PMBVPD    STARTD  50
+     C           CLE003    IFNE 'Y'
+     C           PMACTC    IFNE 'I'
+     C           PMDTPY    IFLT STARTD
+     C           PMDTPY    ANDNE0
+     C           WPPAY     ANDEQ'Y'
+     C                     MOVE 'Y'       PMPPAY
+     C                     END
+     C           PMDTRC    IFLT STARTD
+     C           PMDTRC    ANDNE0
+     C           WPRCV     ANDEQ'Y'
+     C                     MOVE 'Y'       PMPRCV
+     C                     END
+     C                     END
+     C                     ENDIF
+     C*
+     C* Move initialised fields into data structure to be passed as
+     C* @PARM2
+     C           *IN10     IFEQ *ON
+     C                     MOVEL@PARM3    WPARM3
+     C                     ENDIF
+     C*
+     C                     CALL 'SD2410'               90
+     C                     PARM           @PARM1
+     C                     PARM           @PARM2
+     C                     PARM           WPARM3
+     C*
+     C           *IN10     IFEQ *ON
+     C                     MOVELWPARM3    @PARM3
+     C                     ENDIF
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVE '0'       NOCHG1
+     C                     MOVE '0'       NOCHG2
+     C                     OUT  LDA
+     C*
+     C** Move default ordering bank/customer fields set up by SD2410
+     C** onto screen. These will subsequently be written to DEALS file
+     C** and thence to SWIFT message.
+     C*
+     C                     MOVELPMPOCN    #DEITX
+     C                     MOVELPMPOBN    #DEGTX
+     C                     MOVELPMROCN    #DEJTX
+     C                     MOVELPMROBN    #DEHTX
+     C*
+     C** If CEU003 is supported
+     C*
+     C           CEU003    IFEQ 'Y'
+     C                     MOVELPMRSCY    SRSCY
+     C                     MOVELPMPSCY    SPSCY
+     C                     MOVELPMIC72    SIC72
+     C                     ENDIF
+      *
+     C*
+     C           PMPSTM    IFEQ 05                         B1
+     C           *IN80     IFEQ '1'                        B2
+     C                     MOVE *BLANKS   #1DWT2           **2
+     C                     MOVELPMPOBR    #1DWT2           **2
+     C                     MOVE PMPONS    #1DWT2           **2
+     C                     ELSE                            X*2
+     C                     MOVELPMPONS    #1DWTX           **2
+     C                     END                             X*2
+     C                     END                             X*1
+     C*
+     C           PMRSTM    IFEQ 05                         B1
+     C           *IN80     IFEQ '1'                        B2
+     C                     MOVE *BLANKS   #1DTT2           **2
+     C                     MOVELPMROBR    #1DTT2           **2
+     C                     MOVE PMRONS    #1DTT2           **2
+     C                     ELSE                            X*2
+     C                     MOVELPMRONS    #1DTTX           **2
+     C                     END                             X*2
+     C                     END                             X*1
+     C*
+     C*  Call to program ended in error.
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+     C*
+     C                     MOVELPMRIBN    #DETTX
+     C                     MOVELPMPIBN    #DEUTX
+     C                     MOVELPMRCRN    #DESTX
+     C                     MOVELPMRVNO    #DEPTX
+     C                     MOVELPMAWBN    #DEQTX
+     C                     MOVELPMBENN    #DERTX
+     C                     MOVELPMBTB1    #1D6TX
+     C                     MOVELPMBTB2    #1EBTX
+     C                     MOVELPMBTB3    #1ECTX
+     C                     MOVELPMBTB4    #1EDTX
+     C                     MOVELPMBTB5    #1EETX
+     C                     MOVELPMBTB6    #1EFTX
+     C                     MOVELPMPIBA    #1D7TX
+     C                     MOVELPMAWBA    #1D9TX
+     C                     MOVELPMDCHG    #1C9CD
+     C                     MOVELPMBENA    #1EATX
+     C                     MOVELPMRIBA    #1DVTX
+     C* FOR SETTLEMENT TYPE 05 IT IS POSSIBLE TO HAVE ? ON BRANCH SO
+     C* BRANCH MUST BE MOVED BACK INTO FIELD TO OVERWRITE THE ?
+     C           PMPSTM    IFEQ 05
+     C                     MOVELPMPOBR    #1DWT2
+     C                     END
+     C           PMRSTM    IFEQ 05
+     C                     MOVELPMROBR    #1DTT2
+     C                     END
+     C*
+     C* For Settlement Types 01, 02, 07, 08 and 12 return values to
+     C* the screen after ? processing.
+     C*
+     C           PMPSTM    IFEQ 01
+     C           PMPSTM    OREQ 02
+     C           PMPSTM    OREQ 07
+     C           PMPSTM    OREQ 08
+     C           PMPSTM    OREQ 12
+     C                     MOVELPMPONS    #1DWT2
+     C                     END
+     C*
+     C           PMRSTM    IFEQ 01
+     C           PMRSTM    OREQ 02
+     C           PMRSTM    OREQ 07
+     C           PMRSTM    OREQ 08
+     C           PMRSTM    OREQ 12
+     C                     MOVELPMRONS    #1DTT2
+     C                     END
+     C*
+     C*  If settlement details not valid output error message and
+     C*  highlight fields in error
+     C           PMSDTV    IFEQ 'N'
+     C                     MOVEAPMERCD    UER
+     C                     Z-ADD1         Z       20
+     C*
+     C*  DO WHILE error codes returned remain to be processed
+     C           Z         DOWLT51
+     C           UER,Z     ANDNE*BLANKS
+     C                     MOVELUER,Z     ERR     3
+     C                     EXSR ERROR
+     C*
+     C*  Increment index
+     C                     ADD  1         Z
+     C                     END
+     C*
+     C                     ELSE
+     C*  valid
+     C*
+     C*
+     C*
+     C*  Display message "Validation Complete - Press F12 to Return"
+     C*
+     C                     MOVEL'ESM0800' ZAMSID
+     C                     CALL 'ZA0240'
+     C                     PARM           ZAMSID
+     C                     MOVEL*BLANK    ZAMSID
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*********************************************************************
+     C*                                                               *
+     C*  SRREDF - Re-access Default Settlement Instructions           *
+     C*                                                               *
+     C*  Called By: FMT - Write Screen                                *
+     C*                                                               *
+     C*  Calls    : SSIA - Obtain Customer Number for chaining to SSI *
+     C*                  File                                         *
+     C*             SSIB - Retrieve Rec Settlement Instructions for   *
+     C*                  Prime Currency                               *
+     C*             VAL - Validate Screen Input                       *
+     C*                                                               *
+     C*****************************************************************
+     C           SRREDF    BEGSR
+     C*
+     C                     EXSR RTV
+     C*
+     C           SPSCY     IFNE *BLANKS
+     C                     MOVELSPSCY     WSTCY
+     C                     ELSE
+     C                     MOVELPMPCCY    WSTCY
+     C                     ENDIF
+     C*
+     C                     EXSR SSIA
+     C*
+     C           SRSCY     IFNE *BLANKS
+     C                     MOVELSRSCY     WSTCY
+     C                     ELSE
+     C                     MOVELPMRCCY    WSTCY
+     C                     ENDIF
+     C*
+     C                     EXSR SSIB
+     C*
+     C                     EXSR CONV
+      *
+     C                     EXSR VAL
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /EJECT
+     C*
+     C*
+      /EJECT
+     C*****************************************************************
+** Array contains Error message ID & associated indicators
+200 44
+201 41
+202 45
+203 47
+204 49
+699 3638
+700 43
+701 47
+702 3739
+703 46
+704 43
+705 46
+879 36
+750 54
+889 61
+890 61
+891 555657585960
+892 555657585960
+893 555657585960
+894 555657585960
+895 555657585960
+958 40
+962 43
+963 43
+964 43
+965 45
+966 45
+967 45
+968 45
+969 45
+970 46
+971 46
+972 46
+973 46
+974 47
+975 47
+976 47
+977 47
+978 48
+980 48
+981 49
+982 49
+983 49
+984 49
+985 49
+986 54
+987 50515253
+988 555657585960
+989 555657585960
+990 555657585960
+993 555657585960
+994 555657585960
+995 555657585960
+997 555657585960
+998 555657585960
+999 49
+895 555657585960
+896 44
+897 555657585960
+898 43
+899 41
+900 31
+901 31
+902 31
+903 31
+904 31
+905 31
+906 31
+907 33
+908 33
+909 33
+910 33
+911 33
+912 33
+913 33
+914 33
+915 36
+917 38
+918 38
+919 3638
+920 54
+921 38
+922 42
+923 42
+924 44
+925 44
+926 42
+927 44
+928 44
+929 32
+930 32
+931 32
+932 44
+933 32
+934 32
+935 32
+936 32
+937 34
+938 34
+939 34
+940 34
+941 34
+942 34
+943 34
+944 34
+945 37
+946 37
+947 39
+948 39
+949 39
+950 39
+951 39
+952 35
+953 35
+954 35
+955 35
+956 40
+957 40
+959 40
+960 41
+961 54
+881 34
+882 34
+883 34
+884 33
+885 33
+886 33
+887 34
+888 33
+889 34
+890 33
+803 36
+804 37
+991 31
+992 32
+153 555657585960
+979 43
+847 0811
+848 11
+849 14
+850 08
+851 08
+853 11
+854 11
+855 14
+856 14
+857 14
+858 14
+862 08
+400 74
+401 84
+402 85
+403 85
+404 88
+405 88
+406 83
+407 83
+408 83
+409 84
+X01 286263646667
+X02 686970717273
+X03 747576778182
+X04 74
+805 33
+806 34
+414 83
+415 85
+416 88
+300
+301 33
+302 34
+303 31
+304 32
+305 33
+306 34
+996 54
+801 08
+802 08
+808 11
+809 11
+810 08
+811 11
+812 08
+813 11
+814 08
+815 11
+865 08
+866 11
+878 08
+880 11
+748 08
+749 11
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2004

@@ -1,0 +1,997 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Fiduciary deposit customer details')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD1510 - Fiduciary Deposit Customer Details                  *
+      *                                                               *
+      *  Function:  This program validates the additional fiduciary   *
+      *             details for the customer once evoked and          *
+      *             subsequently updtaes the fields on the customer   *
+      *             files.                                            *
+      *                                                               *
+      *  Called By: SD0014V - Midas SD Further Customer Details       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. BUG10651           Date 22Feb06               *
+      *                 CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 BUG5139            Date 10Mar05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CSC022             Date 24Feb04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSW024             Date 31Aug01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSD007             Date 28Aug00               *
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CDL006  *CREATE    Date 26Apr99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  BUG10651 - Fiduciary Customer details blanks out during      *
+      *             Standing Data Authorisation.                      *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  BUG5139 - Unable to process additional customer during       *
+      *            insert                                             *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSW024 - S.W.I.F.T. MT3xx Field 82/83/87. (Recompiled)       *
+      *  CSD007 - Customer Closing (Recompiled over SDCUSTL0)         *
+      *  CDL008 - Continuous Linked Settlement (recompile SDCUSTPD)   *
+      *  CDL006 - Dealing Fiduciary                                   *
+      *                                                               *
+      *****************************************************************
+     FSD1510DFCF  E                    WORKSTN      KINFSR *PSSR
+     FSDCCGRL1IF  E           K        DISK         KINFSR *PSSR
+     FSDCUSTL1IF  E           K        DISK         KINFSR *PSSR
+     FSDCUSTL0UF  E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+      ** RTV : Customer Details Shadow file by key                                           BUG5139
+      *                                                                                      BUG5139
+     FSDCDSHL1IF  E           K        DISK                                                  BUG5139
+     F            @BBREBF                           KRENAME@BBREBFZ                          BUG5139
+     F                                              KINFSR *PSSR                             BUG5139
+      ** UPD : Customer Details Shadow file by key                                           BUG5139
+      *                                                                                      BUG5139
+     F***SDCDSHL0UF  E           K        DISK                                      BUG5139 BUG10651
+     FSDCDSHL0UF  E           K        DISK                      A                          BUG10651
+     F            @BBREBG                           KRENAME@BBREBGZ                          BUG5139
+     F                                              KINFSR *PSSR                             BUG5139
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *                   Function of Indicators                      *
+      *                  ------------------------                     *
+      *                                                               *
+      *  14 - F5 Indicator                                            *
+      *  17 - UPDAT Indicator                                         *
+      *  20 - Error Validation Indicator                              *
+      *  24 - TESTN Indicator                                         *
+      *  36 - CHAIN Indicator                                         *
+      *  41 - Error on Commission Group field                         *
+      *  42 - Error on Charge Group field                             *
+      *  43 - Error on Agent field                                    *
+      *  44 - Error on Agent's Percentage field                       *
+      *  45 - Error on Trust Agreement Status field                   *
+      *  46 - Error on Narrative field                                *
+      *  47 - Error on Default Account Code field                     *
+      *  48 - Error on Default Account Sequence field                 *
+      *  51 - Protect Screen fields                                   *
+      *  86 - PUTOVR Indicator                                        *
+      *  99 - ZALIGN Indicator                                        *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E                    CPY@    1   1 80
+      *
+      ** Commitment Control Array                                                             CSC022
+     E                    WCMTAR     10 10                                                    CSC022
+      *                                                                                       CSC022
+     E/COPY ZSRSRC,ZSEDITZ1
+     E/COPY ZSRSRC,ZALIGNZ1
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data area RUNDAT
+      *
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     IDATA        DS                           1024
+      ** For Window Program Processing
+      *
+     IPGMDS     ESDSY2PGDSP
+      ** Program Status Data Structure
+      *
+     ISDCUST    E DSSDCUSTPD
+      ** Customer Details
+      *
+     ISDRETL    E DSSDRETLPD
+      ** Retail Details
+      *
+     ISDACOD    E DSSDACODPD
+      ** Account Code Details
+     I              QQACCD                          QQACCX                                    CGL029
+      *
+     ISDDEAL    E DSSDDEALPD
+      ** Dealing Details
+     I              QQACCD                          QQACCY                                    CGL029
+      *
+     IDSSDY     E DSDSSDY
+      ** DS for Access Programs, Long Data Structure
+      *
+     IDSLDY     E DSDSLDY
+      ** DS for Access Programs, Extend Data Structure
+      *
+      ** Dummy Data Structures used by Access Programs.                                       CSC022
+     IDSFDY     E DSDSFDY                                                                     CSC022
+      *                                                                                       CSC022
+      ** Switchable Features File                                                             CSC022
+     ISCSARD    E DSSCSARDPD                                                                  CSC022
+      *                                                                                       CSC022
+      ** Commitment Control dataarea                                                          CSC022
+     ISCCMT       DS                            256                                           CSC022
+     I                                        1   30WCMTNO                                    CSC022
+     I                                        4 103 WCMTJB                                    CSC022
+      *                                                                                       CSC022
+     I/COPY ZSRSRC,ZSEDITZ2
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Execute for initial set up of fields
+      *
+     C                     EXSR SRINIT
+      *
+      ** Execute for screen conversation and processing
+      *
+     C                     EXSR SRPROC
+      *
+      ** Execute for termination processing
+      *
+     C                     EXSR SREXIT
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRINIT - Initial Program Processing                           *
+      *                                                               *
+      * Called by: Main Routine                                       *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Retrieve passed parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           WRTCD   7
+     C                     PARM           WCUST   6
+     C                     PARM           WACOD   1
+      *
+      ** Update screen time
+      *
+     C                     TIME           ##TME
+      *
+      ** Define necessary work fields
+      *
+     C                     MOVE *BLANKS   WAGNT  10
+      *
+     C                     MOVE *ON       *IN86
+      *
+      ** Retrieve system rundate
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVELRUNA      ##MRDT
+      *
+      ** Blank out return code
+      *
+     C                     MOVE *BLANKS   WRTCD
+      *                                                                                       CSC022
+      ** Access SAR details file to determine if CSC022 is on.                                CSC022
+      *                                                                                       CSC022
+     C                     MOVE 'N'       CSC022  1                                           CSC022
+     C                     MOVE 'N'       WSKIP   1                                           CSC022
+      *                                                                                       CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   @RTCD   7                                           CSC022
+     C                     PARM '*VERIFY' @OPTN   7                                           CSC022
+     C                     PARM 'CSC022'  @SARD   6                                           CSC022
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSC022
+      *                                                                                       CSC022
+     C           @RTCD     IFNE *BLANKS                                                       CSC022
+     C           @RTCD     ANDNE'*NRF   '                                                     CSC022
+     C                     MOVEL'SCSARDPD'DBFILE                                              CSC022
+     C                     Z-ADD6         DBASE                                               CSC022
+     C                     MOVEL'CSC022'  DBKEY                                               CSC022
+     C                     EXSR *PSSR                                                         CSC022
+     C                     ENDIF                                                              CSC022
+      *                                                                                       CSC022
+     C           @RTCD     IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022                                              CSC022
+     C           *NAMVAR   DEFN SCCMTJOB  SCCMT                                               CSC022
+     C                     IN   SCCMT                                                         CSC022
+      *                                                                                       CSC022
+     C           WCMTNO    IFGT 0                                                             CSC022
+     C                     MOVEAWCMTJB    WCMTAR                                              CSC022
+     C           ##JOB     LOKUPWCMTAR                   10                                   CSC022
+     C           *IN10     IFEQ *ON                                                           CSC022
+     C                     MOVE 'Y'       WSKIP                                               CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRPROC - Main Body of Processing                              *
+      *                                                               *
+      * Called by: Main Routine                                       *
+      *                                                               *
+      * Calls: SRINSF, SREXIT, SRVALD, SRUPDF, SRWNDW                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPROC    BEGSR
+      *
+     C                     EXSR SRINSF
+     C                     WRITESD1510F1
+     C                     WRITESD1510F3
+     C                     EXFMTSD1510F0
+      *
+     C                     MOVE 'Y'       W0TRN   1
+      *
+     C           W0TRN     DOWEQ'Y'
+      *
+      ** If F3 was pressed
+      *
+     C           *INKC     IFEQ *ON
+     C                     EXSR SREXIT
+     C                     ENDIF
+      *
+      ** If F12 was pressed
+      *
+     C           *INKL     IFEQ *ON
+     C                     MOVE 'USR0790' WRTCD
+     C                     EXSR SREXIT
+     C                     ENDIF
+      *
+      ** If F5 was pressed
+      *
+     C           *INKE     IFEQ *ON
+     C           *IN14     ANDEQ*ON
+     C                     EXSR SRINSF
+      *
+      ** Clear messages from program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM
+     C                     PARM '*SAME'   ZAPGRL
+      *
+      ** Reset first message only flag
+      *
+     C                     MOVEL'Y'       ZAFSMS  1
+      *
+     C                     WRITESD1510F3
+     C                     EXFMTSD1510F0
+     C                     ENDIF
+      *
+      ** If F3, F5 or F12 was pressed, do not validate fields
+      *
+     C           *INKC     IFEQ *OFF
+     C           *INKE     ANDEQ*OFF
+     C           *INKL     ANDEQ*OFF
+      *
+      ** If Action Code is Insert or Amend
+      *
+     C           WACOD     IFEQ 'I'
+     C           WACOD     OREQ 'A'
+      *
+      ** Validate input
+      *
+     C                     EXSR SRVALD
+      *
+      ** If no errors encountered
+      *
+     C           *IN20     IFEQ *OFF
+     C                     EXSR SRWNDW
+     C                     EXSR SRUPDF
+     C                     MOVE 'N'       W0TRN
+     C                     ELSE
+     C                     TIME           ##TME
+     C                     WRITESD1510F1
+     C                     WRITESD1510F3
+     C                     EXFMTSD1510F0
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     MOVE 'N'       W0TRN
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRINSF - Initialise Screen Field                              *
+      *                                                               *
+      * Called by: SRPROC                                             *
+      *                                                               *
+      * Calls: *PSSR                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINSF    BEGSR
+      *
+     C                     MOVE 'Y'       W0TRN
+      *
+      ** Initialise screen fields
+      *
+     C                     MOVE *BLANKS   SCUST
+     C                     MOVE *BLANKS   SCSSN
+     C                     MOVE *BLANKS   SCRNM
+     C                     MOVE *BLANKS   SCRTN
+     C                     MOVE *BLANKS   SCOMG
+     C                     MOVE *BLANKS   SCHRG
+     C                     MOVE *BLANKS   SAGNT
+     C                     MOVE *BLANKS   SAGNP
+     C                     MOVE *BLANKS   STRAS
+     C                     MOVE *BLANKS   SNAR1
+     C                     MOVE *BLANKS   SNAR2
+     C                     MOVE *BLANKS   SNAR3
+     C                     MOVE *BLANKS   SNAR4
+     C                     MOVE *BLANKS   SDFAC
+     C                     MOVE *BLANKS   SDFAS
+      *
+      ** Clear all fields for default mechanism next time
+      *
+     C                     MOVEL*BLANK    ZAPGM
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *
+     C                     MOVE *ON       *IN14
+     C                     MOVE *OFF      *IN20
+     C                     MOVE *OFF      *IN24
+     C                     MOVE *OFF      *IN41
+     C                     MOVE *OFF      *IN42
+     C                     MOVE *OFF      *IN43
+     C                     MOVE *OFF      *IN44
+     C                     MOVE *OFF      *IN45
+     C                     MOVE *OFF      *IN46
+     C                     MOVE *OFF      *IN47
+     C                     MOVE *OFF      *IN48
+     C                     MOVE *OFF      *IN51
+      *
+      ** Access customer details file SDCUSTPD via access object pgm
+      *
+     C           WCUST     CHAINSDCUSTL1             36
+      *                                                                                      BUG5139
+      ** Check if records exists in the shadow file.                                         BUG5139
+      *                                                                                      BUG5139
+     C           *IN36     IFEQ *ON                                                          BUG5139
+     C           WCUST     CHAINSDCDSHL1             36                                      BUG5139
+     C                     ENDIF                                                             BUG5139
+      *
+      ** Database error in file
+      *
+     C           *IN36     IFEQ *ON
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     Z-ADD01        DBASE            ************
+     C                     MOVEL'SDCUSTPD'DBFILE           * DBERR 01 *
+     C                     MOVELWCUST     DBKEY            ************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Move file field to screen field
+      *
+     C                     MOVE BBCUST    SCUST
+     C                     MOVE BBCSSN    SCSSN
+     C                     MOVE BBCRTN    SCRTN
+     C                     MOVE BBCRNM    SCRNM
+     C                     MOVE BBCOMG    SCOMG
+     C                     MOVE BBCHRG    SCHRG
+     C                     MOVELBBAGNT    SAGNT
+     C                     MOVELBBTRAS    STRAS
+     C                     MOVELBBNAR1    SNAR1
+     C                     MOVELBBNAR2    SNAR2
+     C                     MOVELBBNAR3    SNAR3
+     C                     MOVELBBNAR4    SNAR4
+      *
+     C           BBDFAC    IFNE *ZEROS
+     C                     MOVE BBDFAC    SDFAC
+     C                     ENDIF
+      *
+     C           BBDFAS    IFNE *ZEROS
+     C                     MOVE BBDFAS    SDFAS
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   ZECODE
+     C                     MOVE BBAGNP    ZFLD15
+     C                     Z-ADD3         ZDECS
+     C                     EXSR ZSEDIT
+      *
+     C           BBAGNP    IFNE *ZEROS
+     C                     MOVE ZOUT21    WPRCT   7
+     C                     MOVELWPRCT     SAGNP
+     C                     ENDIF
+      *
+      ** Set on indicator for input capable fields
+      *
+     C           WACOD     IFEQ 'D'
+     C           WACOD     OREQ 'E'
+     C                     MOVE *OFF      *IN41
+     C                     MOVE *OFF      *IN42
+     C                     MOVE *OFF      *IN43
+     C                     MOVE *OFF      *IN44
+     C                     MOVE *OFF      *IN45
+     C                     MOVE *OFF      *IN46
+     C                     MOVE *OFF      *IN47
+     C                     MOVE *OFF      *IN48
+     C                     MOVE *OFF      *IN14
+     C                     MOVE *ON       *IN51
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRVALD - Validation Routine                                   *
+      *                                                               *
+      * Called by: SRPROC                                             *
+      *                                                               *
+      * Calls: *PSSR                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRVALD    BEGSR
+      *
+      ** Clear messages from program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM
+     C                     PARM '*SAME'   ZAPGRL
+      *
+      ** Reset first message only flag
+      *
+     C                     MOVEL'Y'       ZAFSMS
+      *
+     C                     MOVE *OFF      *IN20
+     C                     MOVE *OFF      *IN41
+     C                     MOVE *OFF      *IN42
+     C                     MOVE *OFF      *IN43
+     C                     MOVE *OFF      *IN44
+     C                     MOVE *OFF      *IN45
+     C                     MOVE *OFF      *IN46
+     C                     MOVE *OFF      *IN47
+     C                     MOVE *OFF      *IN48
+      *
+      ** Access Dealing file
+      *
+     C**********           CALL 'AODEALR0'                                                    CGL029
+     C                     CALL 'AODEALR1'                                                    CGL029
+     C                     PARM '*MSG    '@RTCD
+     C                     PARM '*FIRST  '@OPTN
+     C           SDDEAL    PARM SDDEAL    DSSDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     Z-ADD04        DBASE            ************
+     C                     MOVEL'SDDEALPD'DBFILE           * DBERR 04 *
+     C                     EXSR *PSSR                      ************
+     C                     ENDIF
+      *
+      ** Validate Commission Group
+      *
+     C           SCOMG     IFNE *BLANK
+     C           SCOMG     CHAINSDCCGRL1             36
+      *
+      ** Valid record must exist
+      *
+     C           *IN36     IFEQ *ON
+     C                     MOVE *ON       *IN41
+     C                     MOVE *ON       *IN20
+     C                     MOVEL'USR8619' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** Field should be blank
+      *
+     C           BNCOTK    IFEQ 'N'
+     C                     MOVE *ON       *IN41
+     C                     MOVE *ON       *IN20
+     C                     MOVEL'USR8620' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Validate Charge Group
+      *
+     C           *IN20     IFEQ *OFF
+      *
+     C           SCHRG     IFNE *BLANK
+     C           SCHRG     CHAINSDCCGRL1             36
+      *
+      ** Valid record must exist
+      *
+     C           *IN36     IFEQ *ON
+     C                     MOVE *ON       *IN42
+     C                     MOVE *ON       *IN20
+     C                     MOVEL'USR8621' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** Field should be blank
+      *
+     C           BNCHTK    IFEQ 'N'
+     C                     MOVE *ON       *IN42
+     C                     MOVE *ON       *IN20
+     C                     MOVEL'USR8622' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Validate Agent
+      *
+     C           *IN20     IFEQ *OFF
+      *
+     C           SAGNT     IFNE *BLANKS
+      *
+     C                     CALL 'AOCUSTR1'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM SAGNT     @KEY1  10
+     C                     PARM           @KYST   7
+     C           SDCUST    PARM SDCUST    DSLDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE *ON       *IN20
+     C                     MOVE *ON       *IN43
+     C                     MOVEL'USR8623' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     MOVE *BLANKS   WAGNT
+     C                     MOVELBBCUST    WAGNT
+     C                     MOVELWAGNT     SAGNT
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Validate Agent's Percentage
+      *
+     C           *IN20     IFEQ *OFF
+      *
+     C           SAGNP     IFNE *BLANKS
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE SAGNP     ZFIELD
+     C                     Z-ADD3         ZADEC
+     C                     Z-ADD2         ZADIG
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ *ON
+     C                     MOVE *ON       *IN20
+     C                     MOVE *ON       *IN44
+     C                     MOVEL'USR8626' ZAMSID
+     C                     MOVEL*BLANKS   ZAMSDA
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           SAGNT     IFEQ *BLANKS
+     C           SAGNP     ANDNE*BLANKS
+     C                     MOVE *ON       *IN20
+     C                     MOVE *ON       *IN44
+     C                     MOVEL'USR8624' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+      *
+     C           SAGNT     IFNE *BLANKS
+     C           SAGNP     ANDEQ*BLANK
+     C                     MOVE *ON       *IN20
+     C                     MOVE *ON       *IN44
+     C                     MOVEL'USR8625' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           *IN44     IFEQ *OFF
+     C                     MOVE ZFIELD    WAGNP   53
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Validate Trust Agreement Status
+      *
+     C           *IN20     IFEQ *OFF
+      *
+     C           STRAS     IFEQ *BLANKS
+     C                     MOVE *ON       *IN20
+     C                     MOVE *ON       *IN45
+     C                     MOVEL'USR8627' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C           STRAS     IFNE '1'
+     C           STRAS     ANDNE'2'
+     C           STRAS     ANDNE'3'
+     C           STRAS     ANDNE'4'
+     C           STRAS     ANDNE'5'
+     C           STRAS     ANDNE*BLANKS
+     C                     MOVE *ON       *IN20
+     C                     MOVE *ON       *IN45
+     C                     MOVEL'USR8628' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Validate Restrictions/Narrative
+      *
+     C           *IN20     IFEQ *OFF
+      *
+     C           SNAR1     IFEQ *BLANKS
+     C           SNAR2     ANDNE*BLANKS
+     C           SNAR3     ANDNE*BLANKS
+     C           SNAR4     ANDNE*BLANKS
+     C           SNAR1     OREQ *BLANKS
+     C           SNAR2     ANDNE*BLANKS
+     C           SNAR3     ANDNE*BLANKS
+     C           SNAR4     ANDEQ*BLANKS
+     C           SNAR1     OREQ *BLANKS
+     C           SNAR2     ANDNE*BLANKS
+     C           SNAR3     ANDEQ*BLANKS
+     C           SNAR4     ANDNE*BLANKS
+     C           SNAR1     OREQ *BLANKS
+     C           SNAR2     ANDNE*BLANKS
+     C           SNAR3     ANDEQ*BLANKS
+     C           SNAR4     ANDEQ*BLANKS
+     C           SNAR1     OREQ *BLANKS
+     C           SNAR2     ANDEQ*BLANKS
+     C           SNAR3     ANDNE*BLANKS
+     C           SNAR4     ANDNE*BLANKS
+     C           SNAR1     OREQ *BLANKS
+     C           SNAR2     ANDEQ*BLANKS
+     C           SNAR3     ANDNE*BLANKS
+     C           SNAR4     ANDEQ*BLANKS
+     C           SNAR1     OREQ *BLANKS
+     C           SNAR2     ANDEQ*BLANKS
+     C           SNAR3     ANDEQ*BLANKS
+     C           SNAR4     ANDNE*BLANKS
+     C                     MOVE *ON       *IN20
+     C                     MOVE *ON       *IN46
+     C                     MOVEL'USR8629' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Validate Default Account Code
+      *
+     C           *IN20     IFEQ *OFF
+      *
+     C           SDFAC     IFEQ *BLANKS
+      *
+     C                     CALL 'AORETLR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDRETL    PARM SDRETL    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     Z-ADD05        DBASE            ************
+     C                     MOVEL'SDRETLPD'DBFILE           * DBERR 05 *
+     C                     EXSR *PSSR                      ************
+     C                     ELSE
+     C                     MOVE BMACCD    SDFAC
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C**********           PARM SDFAC     @ACCD   4                                           CGL029
+     C                     PARM SDFAC     @ACCD  10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE *ON       *IN20
+     C                     MOVE *ON       *IN47
+     C                     MOVEL'USR8630' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     MOVE A5ACCD    SDFAC
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Validate Default Account Sequence
+      *
+     C           *IN20     IFEQ *OFF
+      *
+     C           SDFAS     IFNE *BLANKS
+      *
+     C                     TESTN          SDFAS      24
+      *
+     C           *IN24     IFEQ *OFF
+     C                     MOVE *ON       *IN20
+     C                     MOVE *ON       *IN48
+     C                     MOVEL'USR8618' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+      *
+     C           SDFAS     IFLT '01'
+     C           SDFAS     ORGT '99'
+     C                     MOVE *ON       *IN20
+     C                     MOVE *ON       *IN48
+     C                     MOVEL'USR8618' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     MOVE '01'      SDFAS
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRUPDF - Update of Record on File                             *
+      *                                                               *
+      * Called by: SRPROC                                             *
+      *                                                               *
+      * Calls: *PSSR                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRUPDF    BEGSR
+      *
+     C                     MOVE 'N'       SHADOW  1                                          BUG5139
+     C           WCUST     CHAINSDCUSTL0             36
+      *                                                                                      BUG5139
+      ** Check if record exists in the shadow file                                           BUG5139
+      *                                                                                      BUG5139
+     C           *IN36     IFEQ *ON                                                          BUG5139
+     C           WCUST     CHAINSDCDSHL0             36                                      BUG5139
+     C                     MOVE 'Y'       SHADOW                                             BUG5139
+     C                     ENDIF                                                             BUG5139
+      *
+      ** Database error in file
+      *
+     C           *IN36     IFEQ *ON
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     Z-ADD02        DBASE            ************
+     C                     MOVEL'SDCUSTPD'DBFILE           * DBERR 02 *
+     C                     EXSR *PSSR                      ************
+     C                     ELSE
+      *
+      ** Move screen fields to mapped file fields
+      *
+     C                     MOVE SCOMG     BBCOMG
+     C                     MOVE SCHRG     BBCHRG
+     C                     MOVELSAGNT     BBAGNT
+     C                     MOVE WAGNP     BBAGNP
+     C                     MOVE STRAS     BBTRAS
+     C                     MOVELSNAR1     BBNAR1
+     C                     MOVELSNAR2     BBNAR2
+     C                     MOVELSNAR3     BBNAR3
+     C                     MOVELSNAR4     BBNAR4
+     C                     MOVE SDFAC     BBDFAC
+     C                     MOVE SDFAS     BBDFAS
+     C                     ENDIF
+      *
+     C           SHADOW    IFEQ 'Y'                                                          BUG5139
+     C                     UPDAT@BBREBGZ               17                                    BUG5139
+      *                                                                                      BUG5139
+      ** Database error in file                                                              BUG5139
+      *                                                                                      BUG5139
+     C           *IN17     IFEQ *ON                                                          BUG5139
+     C                     MOVE *ON       *INU7                                              BUG5139
+     C                     MOVE *ON       *INU8                                              BUG5139
+     C                     Z-ADD7         DBASE                                              BUG5139
+     C                     MOVEL'SDCDSHPD'DBFILE                                             BUG5139
+     C                     EXSR *PSSR                                                        BUG5139
+     C                     ENDIF                                                             BUG5139
+     C                     ELSE                                                              BUG5139
+     C**********           UPDAT@BBREBG                17                                   BUG10651
+     C                     WRITE@BBREBGZ               17                                   BUG10651
+      *
+      ** Database error in file
+      *
+     C           *IN17     IFEQ *ON
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     Z-ADD03        DBASE            ************
+     C                     MOVEL'SDCUSTPD'DBFILE           * DBERR 03 *
+     C                     EXSR *PSSR                      ************
+     C                     ENDIF
+      *                                                                                      BUG5139
+     C                     ENDIF                                                             BUG5139
+      *
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C           WSKIP     OREQ 'N'                                                           CSC022
+     C           CSC022    ANDEQ'Y'                                                           CSC022
+     C                     COMIT
+     C                     ENDIF                                                              CSC022
+     C                     UNLCKSDCUSTL0
+      *
+     C                     MOVE 'N'       W0TRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRWNDW   - Window Processing                                  *
+      *                                                               *
+      * Called by: SRPROC                                             *
+      *                                                               *
+      * Calls: ZASNMS                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRWNDW    BEGSR
+      *
+      ** Call window manager WN0010
+      *
+     C                     CALL 'WN0010'
+     C                     PARM 'SD1510'  #PGM   10
+     C                     PARM           KEY     2
+     C                     PARM WACOD     ACTN    1
+     C                     PARM           DATA
+     C                     PARM *BLANK    P@RTN   7
+     C                     PARM           SPARE
+      *
+      ** Process return code
+      *
+     C           P@RTN     IFNE *BLANK
+     C                     MOVELP@RTN     ZAMSID
+     C                     MOVEL'WNMSGF  'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SREXIT - Exit Program                                         *
+      *                                                               *
+      * Called by: Main Routine, SRPROC                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SREXIT    BEGSR
+      *
+     C           *INKC     IFEQ *ON
+     C                     MOVE 'Y2U9999' WRTCD
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  ZASNMS    - Send Message to Program's Message Queue          *
+      *                                                               *
+      *  Calls     - Y2SNMGC                                          *
+      *                                                               *
+      *  Called by - SRVALD                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10
+     C                     PARM           ZAPGRL  5
+     C                     PARM           ZAMSID  7
+     C                     PARM           ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTP  7
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *                                                               *
+      * Called by: SRINSF, SRVALD, SRUPDF                             *
+      *                                                               *
+      * Calls: DBERRCTL                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+      *
+     C                     MOVE 'Y'       @RUN    1
+     C                     MOVE 'PSSR'    WRTCD
+     C                     DUMP
+     C                     MOVE *ON       *INLR
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+     C/COPY ZSRSRC,ZSEDITZ3
+     C/COPY ZSRSRC,ZALIGNZ2
+      *****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

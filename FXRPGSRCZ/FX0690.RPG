@@ -1,0 +1,1111 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FX Daily deals file reorganisation')             *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - FX Dealer Module
+     F*                                                               *
+     F*  FX0690  -  DAILY DEALS FILE REORGANIZATION.                  *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. MD027863           Date 29Jan15               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 AR970738           Date 04Dec12               *
+      *                 CSW212             Date 03May12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER020             Date 19May08               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 242477             Date 27Sep06               *
+      *                 CDL049             Date 07Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG10705R          Date 09Mar06               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CDL010             Date 02Aug02               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 197217             Date 18Feb02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAS001             Date 23Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 090432             Date 24Jun96               *
+     F*                 S01408             DATE 24MAY96              *
+     F*                 085089             DATE 23MAY96              *
+     F*                 S01408             DATE 18APR95               *
+     F*                 055367             DATE 10JAN94               *
+     F*                 046303             DATE 10JAN94               *
+     F*                 S01453             DATE 14DEC93               *
+     F*                 E38323             DATE 30JUL92               *
+     F*                 E19225             DATE 23JUN90               *
+     F*                 S01194             DATE 27JAN90               *
+     F*                 S01195             DATE 22FEB90               *
+     F*                 E14319             DATE 15/07/88              *
+     F*                 E13603             DATE 03/06/88              *
+     F*                 S01136             DATE 10/12/87              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+      *                                                               *
+      *  MD027863 - Do not drop records from DLDLDBQD when correspon- *
+      *           ding record exists on DLBHISPD                      *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  AR970738 - Drop credit lines extension records only for      *
+      *             non-authorized deleted deals. Apply fix 263291A.  *
+      *             (Child: AR970741)                                 *
+      *  CSW212 - SWIFT 2012 Changes (Recompile)                      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus (Recompile)                              *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  242477 - Applied fix 199711. Incorrect update for SWAP broker*
+      *           deals which caused immature purging of records from *
+      *           DEALS file. Condition the deletion of record from   *
+      *           front office file if record not in back office.     *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG10705R- Remove extension records when FXDEALPP records    *
+      *             are also deleted.                                 *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CDL010 - Prevent last user that actioned the trade from      *
+      *           authorising it.Recompile due to changes in FXDEALPP.*
+      *  197217 - If accrual for non-working day indicator is 2       *
+      *           (retrospective), compare value date with run date,  *
+      *           not next working day to set the deal matured.       *
+      *  CAS001 - Net Present Value (NPV) Accounting (Recompile)      *
+      *  CDL008 - Continuous Linked Settlement (Recompiled)           *
+     F*  090432 - Remove checking on Date format indicator when       *
+     F*           updating Day and month of last update fields as     *
+     F*           rundate format (Char) on SDBANKPD is always DDMMMYY *
+     F*  S01408 - Addition of Core Hook FX0690IIP1                    *
+     F*         - Addition of Core Hook FX0690CCP1                    *
+     F*         - Addition of Core Hook FX0690CCP2                    *
+     F*         - Addition of Core Hook FX0690CCP3                    *
+     F*  085089 - Change E19225 to delete any record from FXDEALPP    *
+     F*           if the deal doesn't exist on the deals file.        *
+     F*  S01408 - Addition of Core Hook FX0690CEIP                    *
+     F*         - Addition of Core Hook FX0690CCPG                    *
+     F*         - Addition of Core Hook FX0690FFPG                    *
+     F*  055367 - Standing Data changes S01194 have not moved the     *
+     F*           new Run day BJMRDT to the data-structure RUNA so    *
+     F*           that the Month-of-Last-Update FHMLUP is being       *
+     F*           blanked out.                                        *
+     F*  046303 - /COPY source subr. ZFWDT amended to prevent array   *
+     F*           error if no holiday record found - fixed by S01434. *
+     F*           Program recompiled.                                 *
+     F*  S01453 - MARGIN AND FX POSITIONS/POINTS AND BASE CURRENCY    *
+     F*           POSITIONS/POINTS ADDED TO FX INPUT (RECOMPILED)     *
+     F*  E38323 - Recompiled due to a change in source file ZFWDT     *
+     F*           subroutine                                          *
+     F*  E19225 - Physically delete logically deleted records         *
+     F*           from FXDEALPP if not on DEALS.                      *
+     F*  S01194 - STANDING DATA CHANGES FOR RELEASE 10                *
+     F*  S01195 - NEW HOLIDAYS PROCESSING                             *
+     F*  E14319 - REMOVE IGNORES OF ICD RECORD FORMATS.               *
+     F*  E13603 - FXDEALPP NOT UPDATED IF DEAL HAS BEEN DELETED       *
+     F*  S01136 - SHOULD NOT MATURE OPTION IF END DATE = NEXT WORK DAY*
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                       *
+     F*                                                               *
+      *      30          End of file on DLDEALL5                      *                     BUG10705
+     F*      61          end of file on FXDEALLL                      *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FFXDEALLLUF  E           K        DISK         KINFSR *PSSR      UC
+     F*FDTABJLLIF**E**********K********DISK*********KINFSR *PSSR******UC  S01195
+     F*FDICDRLLIF**E**********K********DISK*********KINFSR *PSSR******UC  S01194
+     F********    TABTB20F                          KIGNORE               E14319
+     FDEALS   IF  E           K        DISK         KINFSR *PSSR          E19225
+     FDEALSH  IF  E           K        DISK         KINFSR *PSSR                              242477
+     F            DEALSDBF                          KIGNORE                                   242477
+     F            DEALSDCF                          KIGNORE                                   242477
+     F            DEALSDDF                          KIGNORE                                   242477
+     F            DEALSDEF                          KIGNORE                                   242477
+     F            DEALSDGF                          KIGNORE                                   242477
+     F            DLCHISD0                          KIGNORE                                   242477
+     F            DLDHISD0                          KIGNORE                                   242477
+     F            DLEHISD0                          KIGNORE                                   242477
+     F            DLGHISD0                          KIGNORE                                   242477
+     F*                                                                   S01408
+     FDLDEALL5UF  E           K        DISK         KINFSR *PSSR      UC                    BUG10705
+     F/COPY WNCPYSRC,FX0690FFPG                                           S01408
+     F*                                                                   S01408
+     E*
+     E**  COPYRIGHT ARRAY                                                 S01194
+     E                    CPY@    1   1 80                                S01194
+      *
+      ****ARRAY*FOR*SR.*ZA0680*-*CUMULATIVE*DAYS*IN*YEAR*FOR*4*YEAR*PERIODS01195
+     **ARRAY FOR SR. ZA0710 - CUMULATIVE DAYS IN YEAR FOR 4 YEAR PERIOD   S01195
+     E                    @YD     4   4  5 0A                             S01195
+     **                                                                   S01195
+      ****ARRAY*FOR SR. ZA0680 - CUMULATIVE DAYS IN YEAR PER MONTH        S01195
+      **ARRAY FOR SR. ZA0710 - CUMULATIVE DAYS IN YEAR PER MONTH          S01195
+     E                    @MD    13  13  5 0A                             S01195
+      *
+      *
+      ****USED*BY*SR.*ZA0830*-*CURRENCY*RECORDS****                       S01195
+     E************        @CY        50  3                                S01195
+      *
+     E/COPY ZSRSRC,ZHOLE                                                  S01195
+      ****DATA*STRUCTURE*FOR*SR.*ZA0680*-*DATE*INPUT*TO*SUBROUTINE        S01195
+     I************DS                                                      S01195
+     I************                            1   80@@DTIN                S01195
+     I************                            1   40@@YYYY                S01195
+     I************                            3   40@@YY                  S01195
+     I************                            1   20@@CC                  S01195
+     I************                            5   60@@MTH                 S01195
+     I************                            7   80@@DAY                 S01195
+      *
+      *
+     I************DS                                                      S01195
+      ************                                                        S01195
+      ****USED*BY*SR.*ZA0830*-*ARRAY*DATA*STRUCTURE***                    S01195
+     I************                            1 150 @CY                   S01195
+     I************                            1  75 @@CY1                 S01195
+     I************                           76 150 @@CY2                 S01195
+      *   DATA STRUCTURE FOR SR. ZA0710 - FIELD IS @@Z71Y
+     I            DS
+     I                                        1   40@@Z71Y
+     I                                        1   10@@SSY1
+     I                                        2   20@@SSY2
+     I                                        3   30@@SSY3
+     I                                        4   40@@SSY4
+      **  DATA STRUCTURE FOR SR. ZA0710 - FIELD IS @@VDT
+     I            DS
+     I                                        1   80@@VDT
+     I                                        1   40@@YR
+     I                                        5   60@@Z71M
+     I                                        7   80@@Z71D
+      *
+      ** data structure to set up dates as 8N
+     I            DS                              8
+     I                                        1   40@YEAR
+     I                                        5   60@MNTH
+     I                                        7   80@DAY
+     I                                        1   80@DATE
+      *
+      ** data structure to split up runa
+     IRUNA        DS
+     I                                        1   20@RDD1
+     I                                        3   5 @RDM1
+     I****************************************1   3 @RDM2                 090432
+     I****************************************4   50@RDD2                 090432
+     I                                        6   70@RDY
+     I           UDS
+      *
+      **  Local data area for data base errors.
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+     IPSDS       SDS
+      *
+      **  Program status data structure.
+     I                                      254 263 @USER
+     I*                                                                   S01194
+     ISDBANK    E DSSDBANKPD                                              S01194
+     I** DATA STRUCTURE FOR BANK DETAILS                                  S01194
+     I*                                                                   197217
+     ISDGELR    E DSSDGELRPD                                              197217
+     I*                                                                   S01194
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*                                                                   S01117
+     IDSSDY     E DSDSSDY                                                 S01195
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01195
+     I*                                                                   S01195
+     I/COPY ZSRSRC,ZHOLI                                                  S01195
+     I*                                                                   S01408
+     I/COPY WNCPYSRC,FX0690IIP1                                           S01408
+     I*                                                                   S01408
+      /EJECT
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * MAIN     - control process                                    *
+      *                                                               *
+      * CALLS    #A       - initialize                                *
+      *          #B       - main process                              *
+      *          #C       - terminate                                 *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * MAIN     - control process                                    *
+      *                                                               *
+      * CALLS    #A       - initialize                                *
+      *          #B       - main processing                           *
+      *          #C       - terminate                                 *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C                     EXSR #A
+      *
+     C                     EXSR #B
+      *
+     C                     EXSR #C
+      *
+     C           ENDPGM    TAG
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      * SUBROUTINES USED                                              *
+      *                                                               *
+      *  01  #B       - main process                                  *
+      *  02  ZA0710   - Midas day number to YYYYMMDD                  *
+      ***03**ZA0730***-*determine*next*working*day*********************   S01195
+      ***04**ZA0680***-*date*to*midas*day*number***********************   S01195
+      ***05**ZA0830***-*is*day*a*holiday*in*currency*******************   S01195
+      *  03  ZFWDT    - standard sub.to calc nth working day forward  *   S01195
+      *  04  ZACCH    - standard sub.used in conjunction with ZFWDT   *   S01195
+      *  06  #A       - initialize                                    *
+      *  07  #C       - terminate                                     *
+      *  08  *PSSR    - error processing                              *
+      *                                                               *
+      * EXTERNAL ROUTINE                                              *
+      *                                                               *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * #B       - main process                                       *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MAIN   - control process                           *
+      *                                                               *
+      * FLDS USED  @YEAR  - year                                      *
+      *            @MNTH  - month                                     *
+      *            @DAY   - day                                       *
+      *            @DATE  - date 8N                                   *
+      *            @NWD   - next working day                          *
+      *            @DATE1 - saved date of swap deal                   *
+      *            @SDN38 - saved deal number of swap                 *
+      *            @DLNO  - key to deals file                         *
+      *            @RDD1  - runa field                                *
+      *            @RDM1  - runa field                                *
+     C*************@RDD2**-*runa*field*********************************** 090432
+     C*************@RDM2**-*runa*field*********************************** 090432
+      *            @RDY   - runa field                                *
+      *            @USER  - user name                                 *
+      *                                                               *
+      *****************************************************************
+     C           #B        BEGSR
+      *
+      ** exit if data base error
+     C           *INU7     CABEQ'1'       #B9
+      *
+      ** loop here until all records on FXDEALLL have been read
+     C           *IN61     DOWEQ'0'                        B1
+      *  CHAIN TO THE MIDAS DEALS FILE, IF THE DEAL DOES NOT EXIST        E19225
+      *  ON THAT AND HAS BEEN LOGICALLY DELETED FROM FXDEALPP, THEN       E19225
+      *  PHYSICALLY DELETE IT FROM FXDEALPP, OTHERWISE CONTINUE           E19225
+      *  AS NORMAL.                                                       E19225
+      *                                                                   E19225
+     C           FHDN38    CHAINDEALS                99    *1             E19225
+     C           *IN99     IFEQ '1'                        B*2            E19225
+     C********** FHDDLT    ANDEQ'D'                        **2     E19225 085089
+      *                                                                                       242477
+     C           FHDN38    CHAINDEALSH               20                                       242477
+      *                                                                                       242477
+      ** If not found in DEALSDB file, try to search the record in                            242477
+      ** DLBHISPD file. This is to avoid immature purging of 1st leg                          242477
+      ** of the swap when record is already moved to historic files.                          242477
+      *                                                                                       242477
+     C           *IN20     IFEQ '0'                                                           242477
+     C           FSLI      ANDEQ1                                                             242477
+     C           OTDT      ANDGTBJRDNB                                                        242477
+     C                     MOVE '0'       *IN99                                               242477
+     C                     ELSE                                                               242477
+     C                     DELETFXDEALP0                   **2            E19225
+     C           *IN20     IFEQ '1'                                                         MD027863
+     C                     EXSR DELEXT                                                      BUG10705
+     C                     ENDIF                                                            MD027863
+     C                     ENDIF                                                              242477
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FX0690CCPG                                           S01408
+     C*                                                                   S01408
+     C**********           ELSE                            X*2                         E19225 242477
+     C                     ENDIF                                                              242477
+     C           *IN99     IFEQ '0'                                                           242477
+      *                                                                   E19225
+      *
+      ** if the deal status is authorized
+      ** or deal has already matured due to error in swap                                     242477
+      ** processing, change FHDSTS to 'E' for 1st leg deals.                                  242477
+      *                                                                                       242477
+     C           FHDSTS    IFEQ 'A'                        B**3
+     C           FHDDLT    ANDNE'D'                        ***3           E13603
+     C           FHDSTS    OREQ 'M'                                                           242477
+     C           *IN20     ANDEQ'0'                                                           242477
+     C           FSLI      ANDEQ1                                                             242477
+     C           OTDT      ANDGTBJRDNB                                                        242477
+     C                     MOVE '0'       *IN60            ***3
+      *
+      ** if the deal is an option get option to date
+     C           FHDTYP    IFEQ 'O'                        B***4
+     C                     Z-ADDFHDOEY    @YEAR            ****4
+     C                     Z-ADDFHDOEM    @MNTH            ****4
+     C                     Z-ADDFHDOED    @DAY             ****4
+     C                     ELSE                            X***4
+      *
+      ** else use the value date
+     C                     Z-ADDFHVDYY    @YEAR            ****4
+     C                     Z-ADDFHVDMM    @MNTH            ****4
+     C                     Z-ADDFHVDDD    @DAY             ****4
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FX0690CCP1                                           S01408
+     C*                                                                   S01408
+     C                     END                             E***4
+      *
+      ** if the deal type is option and the date used is
+      ** less than or equal to the next working day, set the deal
+      ** to being matured
+      ** If accrual for non-working day ind is 2, then use the run        197217
+      ** date, not next working day.                                      197217
+     C           BKANWD    IFEQ '2'                                       197217
+     C           @DATE     IFLE @RUND                                     197217
+     C           FHDTYP    ANDEQ'O'                                       197217
+     C                     MOVE 'M'       FHDSTS                          197217
+     C                     MOVE '1'       *IN60                           197217
+     C                     ENDIF                                          197217
+     C                     ELSE                                           197217
+     C           @DATE     IFLT @NWD                       B***4
+     C           FHDTYP    ANDEQ'O'                        ****4
+     C********** @DATE     OREQ @NWD                       ****4          S01136
+     C********** FHDTYP    ANDEQ'O'                        ****4          S01136
+     C                     MOVE 'M'       FHDSTS           ****4
+     C                     MOVE '1'       *IN60            ****4
+     C                     END                             E***4
+     C                     ENDIF                                          197217
+      *
+      ** if the deal type is ' ' or T and the date used is less than
+      ** the next working day then set the deal to matured
+      ** If accrual for non-working day ind is 2, then use the run        197217
+      ** date, not next working day.                                      197217
+     C           BKANWD    IFEQ '2'                                       197217
+     C           @DATE     IFLE @RUND                                     197217
+     C           FHDTYP    ANDEQ' '                                       197217
+     C           @DATE     ORLE @RUND                                     197217
+     C           FHDTYP    ANDEQ'T'                                       197217
+     C                     MOVE 'M'       FHDSTS                          197217
+     C                     MOVE '1'       *IN60                           197217
+     C                     ENDIF                                          197217
+     C                     ELSE                                           197217
+     C           @DATE     IFLT @NWD                       B***4
+     C           FHDTYP    ANDEQ' '                        ****4
+     C           @DATE     ORLT @NWD                       ****4
+     C           FHDTYP    ANDEQ'T'                        ****4
+     C                     MOVE 'M'       FHDSTS           ****4
+     C                     MOVE '1'       *IN60            ****4
+     C                     END                             E***4
+     C                     ENDIF                                          197217
+      *
+      ** if the deal type is S get the other leg of the swap, using
+      ** the related deal number. If this leg is the earlier leg then
+      ** set the status to E otherwise set both legs to M, only if the
+      ** value date is less than the next working day
+     C           @DATE     IFLT @NWD                       B***4
+     C           FHDTYP    ANDEQ'S'                        ****4
+      *
+      ** save the date
+     C                     Z-ADD@DATE     @DATE1  80       ****4
+      *
+      ** get the related deal
+     C                     MOVE FHDN38    @SDN38  60       ****4
+     C                     MOVE FHDADN    @DLNO   60       ****4
+     C           @DLNO     CHAINFXDEALLL             62    ****4
+      *
+      ** if the record is not found, or has been deleted, then it is
+      ** a data base error.
+     C           *IN62     IFEQ '1'                        B****5
+     C           FHDDLT    OREQ 'D'                        *****5
+     C           FHDLTF    OREQ '*'                        *****5
+     C                     MOVE '1'       *INU7            ***************
+     C                     MOVE '1'       *INU8            *             *
+     C                     MOVE '1'       *INLR            * DB ERROR 001*
+     C                     MOVEL'FXDEALLL'DBFILE           *             *
+     C                     MOVEL@DLNO     DBKEY            ***************
+     C                     MOVE '001'     DBASE            *****5
+     C                     GOTO #B9                        *****5
+     C                     END                             E****5
+      *
+      ** if the saved date is least, then set status on original
+      ** deal to E
+     C                     Z-ADDFHVDYY    @YEAR            ****4
+     C                     Z-ADDFHVDMM    @MNTH            ****4
+     C                     Z-ADDFHVDDD    @DAY             ****4
+     C           @DATE1    IFLT @DATE                      B****5
+     C           @SDN38    CHAINFXDEALLL             62    *****5
+     C           *IN62     IFEQ '1'                        B*****6
+     C           FHDDLT    OREQ 'D'                        ******6
+     C           FHDLTF    OREQ '*'                        ******6
+     C                     MOVE '1'       *INU7            ***************
+     C                     MOVE '1'       *INU8            *             *
+     C                     MOVE '1'       *INLR            * DB ERROR 002*
+     C                     MOVEL'FXDEALLL'DBFILE           *             *
+     C                     MOVEL@DLNO     DBKEY            ***************
+     C                     MOVE '002'     DBASE            ******6
+     C                     GOTO #B9                        ******6
+     C                     END                             E*****6
+     C                     MOVE 'E'       FHDSTS           *****5
+     C                     MOVE '1'       *IN60            *****5
+     C                     ELSE                            *****5
+      *
+      ** set both sides to status M
+     C                     MOVE 'M'       FHDSTS           *****5
+     C                     MOVE 'A'       FHLACT           *****5
+     C***********DATF      IFEQ 'D'                        B*****6        S01194
+     C***********BJDFIN    IFEQ 'D'                        B*****6 S01194 090432
+     C                     MOVE @RDD1     FHDLUP           ******6
+     C                     MOVE @RDM1     FHMLUP           ******6
+     C***********          ELSE                            X*****6        090432
+     C***********          MOVE @RDD2     FHDLUP           ******6        090432
+     C***********          MOVE @RDM2     FHMLUP           ******6        090432
+     C***********          END                             E*****6        090432
+     C                     MOVE @RDY      FHYLUP           *****5
+     C*********************Z-ADDRUND      FHLCD            *****5         S01194
+     C                     Z-ADDBJRDNB    FHLCD            *****5         S01194
+     C                     MOVEL@USER     FHLUID           *****5
+     C                     TIME           FHTLUP           *****5
+     C                     UPDATFXDEALP0                   *****5
+     C           @SDN38    CHAINFXDEALLL             62    *****5
+     C           *IN62     IFEQ '1'                        B*****6
+     C           FHDDLT    OREQ 'D'                        ******6
+     C           FHDLTF    OREQ '*'                        ******6
+     C                     MOVE '1'       *INU7            ***************
+     C                     MOVE '1'       *INU8            *             *
+     C                     MOVE '1'       *INLR            * DB ERROR 003*
+     C                     MOVEL'FXDEALLL'DBFILE           *             *
+     C                     MOVEL@DLNO     DBKEY            ***************
+     C                     MOVE '003'     DBASE            ******6
+     C                     GOTO #B9                        ******6
+     C                     END                             E*****6
+     C                     MOVE 'M'       FHDSTS           *****5
+     C                     MOVE '1'       *IN60            *****5
+     C                     END                             E****5
+     C                     END                             E***4
+      *
+      ** update the file if the record needs updating
+     C           *IN60     IFEQ '1'                        B***4
+     C                     MOVE 'A'       FHLACT           ****4
+     C***********DATF      IFEQ 'D'                        B***4          S01194
+     C***********BJDFIN    IFEQ 'D'                        B****5  S01194 090432
+     C                     MOVE @RDD1     FHDLUP           *****5
+     C                     MOVE @RDM1     FHMLUP           *****5
+     C***********          ELSE                            X****5         090432
+     C***********          MOVE @RDD2     FHDLUP           *****5         090432
+     C***********          MOVE @RDM2     FHMLUP           *****5         090432
+     C***********          END                             E****5         090432
+     C                     MOVE @RDY      FHYLUP           ****4
+     C*********************Z-ADDRUND      FHLCD            ****4          S01194
+     C                     Z-ADDBJRDNB    FHLCD            ****4          S01194
+     C                     MOVEL@USER     FHLUID           ****¢
+     C                     TIME           FHTLUP           ****4
+     C                     UPDATFXDEALP0                   ****4
+     C                     END                             E***4
+      *
+     C                     END                             E**3
+      *
+     C                     END                             E*2            E19225
+      ** read the next record on file
+     C                     READ FXDEALLL                 61*1
+      *
+     C                     END                             E1
+      *
+     C           #B9       ENDSR                           #B9 TAG
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *       TITLE:CALCULATE MIDAS DAY NO. TO DRS (YYYYMMDD) FORMAT. *
+      *                                                               *
+      *       SUBROUTINE ZA0710 EXPECTS FIELD '@@DAYN' TO BE          *
+      *       PASSED TO IT IN 5,0 FORMAT.IF THE ABOVE FIELD IS LESS   *
+      *       THAN 1 IT RETURNS 1 IN FIELD '@@RTN'.THE MAIN PROGRAM   *
+      *       SHOULD CHECK FOR THIS CONDITION AND DO THE NECESSARY.   *
+      *       IF '@@RTN' IS NOT EQUAL TO 1 IT RETURNS THE FIELD       *
+      *       '@@VDT'  IN 'YYYYMMDD' FORMAT.                          *
+      *                                                               *
+      * NOTE: FIELD TO BE DEFINED BY EXTERNAL ROUTINE IS
+      *                                                               *
+      *       1) @@DAYN   LENGTH 5,0.                                 *
+      *                                                               *
+      *       FIELDS USED AND ALREADY DEFINED IN THE ROUTINE ARE:     *
+      *                                                               *
+      *       1) @@VDT    LENGTH 8,0 DEFINED BY A DS.                 *
+      *       2) @@RTN    LENGTH 1,0.                                 *
+      *       3) @@I      LENGTH 2,0 USED TO ACCESS ARRAY @YD         *
+      *       4) @@J      LENGTH 2,0 USED TO ACCESS ARRAY @MD         *
+      *       5) @@Z71Y   LENGTH 4,0 DEFINED BY A DS.                 *
+      *       6) @@RDAY   LENGTH 5,0.                                 *
+      *       7) @@LEAP   LENGTH 1,0.
+      *                                                               *
+      *       INDICATORS USED ARE:                                    *
+      *                                                               *
+      *       1) 80       CHECK FOR LOW AND EQUAL ON ARRAY @YD        *
+      *       2) 81       CHECK FOR LOW ON ARRAY @MD.                 *
+      *                                                               *
+      * INPUT FIELD:       @@DAYN                                     *
+      *                                                               *
+      * OUTPUT FIELD:      @@VDT                                      *
+      *                                                               *
+      * WORK FIELDS:       @@RTN                                      *
+      *                    @@Z71Y                                     *
+      *                    @@RDAY                                     *
+      *                    @@LEAP                                     *
+      *                    @@I                                        *
+      *                    @@J                                        *
+      *                                                               *
+      * ARRAYS USED:       @YD COMPILE TIME ARRAY.
+      *                    @MD COMPILE TIME ARRAY.
+      *
+      *****************************************************************
+      *
+     C           ZA0710    BEGSR
+      *
+     C                     SETOF                     8081
+     C                     Z-ADD0         @@RTN   10
+     C                     Z-ADD0         @@VDT
+     C                     Z-ADD1         @@I     20
+     C                     Z-ADD1         @@J     20
+     C                     Z-ADD1         @@LEAP  10
+      *
+     C           @@DAYN    IFLT 1
+     C                     Z-ADD1         @@RTN
+     C                     GOTO ZA0719
+     C                     END
+      *
+      * DIVISION TO DETERMINE WETHER LEAP YEAR.
+      *
+     C           @@DAYN    DIV  1461      @@Z71Y
+     C                     MVR            @@RDAY  50
+      *
+      * CALCULATING YEAR.
+      *
+     C           @@Z71Y    MULT 4         @@Z71Y
+     C                     ADD  1972      @@Z71Y
+      *
+      * CHECKING IF YEAR IS GREATER THAN OR EQUAL TO 2100
+      *
+     C           @@Z71Y    IFGE 2100
+     C                     ADD  @@SSY2    @@RDAY
+     C                     END
+      *
+      * LOKUP ARRAY @YD TO SEE HOW MANY YEARS OF A FOUR YEAR CYCLE
+      * HAVE PASSED.
+      *
+     C           @@RDAY    LOKUP@YD,@@I                8080
+      *
+      * IF YEAR IS A LEAP YEAR SSLEAP IS SET TO ZERO.
+      *
+     C           *IN80     IFEQ '0'
+     C                     Z-ADD0         @@LEAP
+     C                     END
+      *
+      * ADD INDEX TO YEAR TO GIVE CORRECT YEAR AND ADJUST '@@RDAY'.
+      *
+     C           @@LEAP    IFEQ 1
+     C           @@RDAY    SUB  @YD,@@I   @@RDAY
+     C                     ADD  @@I       @@Z71Y
+     C                     END
+      *
+      * PROCESSING FOR A LEAP YEAR.
+      *
+     C           @@LEAP    IFEQ 0
+      *
+      * IF '@@RDAY' = 60 DATE MUST BE 29TH OF FEBRUARY.
+      *
+     C           @@RDAY    IFEQ 60
+     C                     Z-ADD29        @@Z71D
+     C                     Z-ADD2         @@Z71M
+     C                     GOTO ZA0711
+     C                     END
+      *
+      * IF '@@RDAY' > 60 DATE IS AFTER 29TH OF FEBRUARY,CONVERSION CAN
+      * PROCEED AS USUAL AFTER SUBTRACTING THE EXTRA DAY FOR THE LEAP
+      * YEAR. NOTE : '@@RDAY' < 60 CONVERSION PROCEEDS AS USUAL.
+      *
+     C           @@RDAY    IFGT 60
+     C           @@RDAY    SUB  1         @@RDAY
+     C                     END
+      *
+     C                     END
+      *
+      * IF DAY '@@DAYN' IS EXACTLY DIVISIBLE BY 1461 (NUMBER OF DAYS
+      * IN 4 YEARS) THEN DATE MUST BE LAST DAY OF PREVIOUS FOUR YEAR
+      * GROUP.
+      *
+     C           @@RDAY    IFEQ 0
+     C                     Z-ADD31        @@Z71D
+     C                     Z-ADD12        @@Z71M
+     C                     SUB  1         @@Z71Y
+     C                     GOTO ZA0711
+     C                     END
+      *
+      * LOOK UP ARRAY ARRAY @MD TO DETERMINE WHICH MONTH '@@RDAY'
+      * OCCURS IN
+      *
+     C           @@RDAY    LOKUP@MD,@@J                81
+     C                     Z-ADD@@J       @@Z71M
+     C           @@RDAY    SUB  @MD,@@J   @@Z71D
+      *
+      * DS @@VDT  IS RETURNED IN YYYYMMDD FORMAT
+      *
+     C           ZA0711    TAG
+      *
+     C                     MOVE @@Z71Y    @@YR
+      *
+     C           ZA0719    ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      ************                                                    *   S01195
+      ********TITLE:DETERMINE NEXT WORKING DAY.                       *   S01195
+      ************                                                    *   S01195
+      ********SUBROUTINE ZA0730 EXPECTS FIELD '@@DTIN' TO BE          *   S01195
+      ********PASSED TO IT IN 'YYYYMMDD' FORMAT.IT THEN DETERMINES    *   S01195
+      ********THE*NEXT WORKING DAY AND RETURNS.                       *   S01195
+      ************                                                    *   S01195
+      **INPUT**:@@DTIN DATE (YYYYMMDD) - IN DATA STRUCTURE (SIZE : 8N)*   S01195
+      **********@@CCY  CURRENCY CODE   - IN FORMAT(3A)                *   S01195
+      ************                                                    *   S01195
+      **OUTPUT*:@@VDT  DATE (YYYYMMDD) - IN DATA STRUCTURE (SIZE : 8N)*   S01195
+      ************                                                    *   S01195
+      **USES*:***@@MDNO MIDAS DAY NO USED BY SR ZA0680                *   S01195
+      ***********@@DAYN MIDAS DAY NO USED BY SR ZA0710                *   S01195
+      ***********@@MNO  MIDAS DAY NO USED BY SR ZA0830                *   S01195
+      ***********@@HIND HOLIDAY IND.RETURNED BY ZA0830                *   S01195
+      ************                                                    *   S01195
+      *****************************************************************   S01195
+     C***********ZA0730    BEGSR                                          S01195
+      ************                                                        S01195
+      **CONVERT*YYYYMMDD FORMAT TO MIDAS DAY NO.                          S01195
+      ************                                                        S01195
+     C************         EXSR ZA0680                                    S01195
+      ************                                                        S01195
+     C***********ZA0731    TAG                                            S01195
+      ************                                                        S01195
+     C************         ADD  1         @@MDNO  50                      S01195
+      ************                                                        S01195
+      **CHECK*IF*DAY NO. IS A HOLIDAY          .                          S01195
+      ************                                                        S01195
+     C************         Z-ADD@@MDNO    @@MNO   50                      S01195
+      ************                                                        S01195
+     C************         EXSR ZA0830                                    S01195
+      ************                                                        S01195
+     C***********@@HIND    IFEQ 'H'                                       S01195
+     C************         GOTO ZA0731                                    S01195
+     C************         END                                            S01195
+      ************                                                        S01195
+      **CONVERT*MIDAS DAY NO. TO YYYYMMDD FORMAT.                         S01195
+      ************                                                        S01195
+     C************         Z-ADD@@MDNO    @@DAYN  50                      S01195
+      ************                                                        S01195
+     C************         EXSR ZA0710                                    S01195
+      ************                                                        S01195
+     C***********ZA0739    ENDSR                                       ** S01195
+      *****************************************************************
+      /EJECT
+      *******************************************************************
+      ************                                                        S01195
+      **ZA0680*-*THIS SUBROUTINE CONVERTS YYYYMMDD FORMAT DATE TO         S01195
+      ***********MIDAS DAY NUMBER FORMAT (NO. DAYS FROM 31/12/71)         S01195
+      ************                                                        S01195
+      **CALLED*BY*:                                                       S01195
+      ************                                                        S01195
+      **CALLS*:***                                                        S01195
+      ************                                                        S01195
+      **INPUT**:*@@DTIN DATE (YYYYMMDD) - IN DATA STRUCTURE (SIZE : 8N)   S01195
+      ************                                                        S01195
+      **OUTPUT*:*@@MDNO MIDAS DAY NUMBER  (SIZE : 5N)                     S01195
+      ************                                                        S01195
+      **USES*:***@@CC   NUMBER OF CENTURIES IN DATE                       S01195
+      ***********@@DAY  DAY NUMBER                                        S01195
+      ***********@@REM  REMAINDER FROM DIVIDE                             S01195
+      ***********@@MTH  MONTH NUMBER                                      S01195
+      ***********@MD    COMPILATION TIME ARRAY FOR CUMULATIVE DAYS IN     S01195
+      ************      MONTH                                             S01195
+      ***********@@WK2  WORK FIELD (2,0)                                  S01195
+      ***********@@WK5  WORK FIELD (5,0)                                  S01195
+      ***********@@YYYY YEAR (4 CHARACTER)                                S01195
+      ***********@@YY   YEAR (2 CHARACTER)                                S01195
+      ***********@YD    COMPILATION TIME ARRAY FOR CUMULATIVE DAYS IN     S01195
+      ************      A FOUR YEAR PERIOD                                S01195
+      ************                                                        S01195
+      ******************************************************************* S01195
+      ************                                                        S01195
+     C***********ZA0680    BEGSR                                          S01195
+      ************                                                        S01195
+      ****CLEAR*OUT ANY 'OLD' DATA IN FIELD                               S01195
+     C************         Z-ADD0         @@MDNO  50                      S01195
+      ************                                                        S01195
+      *****IF*DATE GREATER THAN 31/12/2071 NEED EXTRA PROCESSING          S01195
+     C***********@@YYYY    IFGE 2072                       B1             S01195
+      ************                                                        S01195
+      ******MULTIPLY BY NUMBER OF DAYS IN CENTURY (SINCE 1971)            S01195
+     C***********@@CC      SUB  19        @@WK2   20       *1             S01195
+     C***********@@WK2     MULT 36524     @@MDNO           *1             S01195
+      ************                                                        S01195
+      ****YEAR*2000 IS A LEAP YEAR MUST ALLOW EXTRA DAY                   S01195
+     C************         ADD  1         @@MDNO           *1             S01195
+     C************         END                             E1             S01195
+      ************                                                        S01195
+     C***********@@YYYY    ADD  28        @@WK2                           S01195
+      ************                                                        S01195
+     C***********@@WK2     DIV  4         @@WK2                           S01195
+     C************         MVR            @@REM   10                      S01195
+      ************                                                        S01195
+      ******MULTIPLY BY NUMBER OF DAYS IN FOUR YEAR PERIOD                S01195
+     C***********@@WK2     MULT 1461      @@WK5   50                      S01195
+     C************         ADD  @@WK5     @@MDNO                          S01195
+      ************                                                        S01195
+      ****CHECK*REMAINDER AND MONTH NUMBER                                S01195
+     C***********@@REM     IFEQ 0                          B1             S01195
+     C***********@@MTH     ANDGT2                          B1             S01195
+     C************         ADD  1         @@MDNO           *1             S01195
+     C************         END                             E1             S01195
+      ************                                                        S01195
+      ****YEAR*NOT LEAP YEAR,  ADD CUMULATIVE DAYS FOR YEAR               S01195
+     C***********@@REM     IFNE 0                          B1             S01195
+     C************         ADD  @YD,@@REM @@MDNO           *1             S01195
+     C************         END                             E1             S01195
+      ************                                                        S01195
+      ****ADD*MONTHS THIS YEAR                                            S01195
+     C************         ADD  @MD,@@MTH @@MDNO                          S01195
+      ************                                                        S01195
+      ****ADD*DAYS THIS MONTH                                             S01195
+     C************         ADD  @@DAY     @@MDNO                          S01195
+      ************                                                        S01195
+     C***********ZA0689    ENDSR                           **ZA0689 TAG** S01195
+      *****************************************************************
+      /EJECT
+      ***********************************************************************
+      ***************                                                     S01195
+      **ZA0830*-*THIS SUBROUTINE FINDS OUT WHETHER A PARTICULAR DAY       S01195
+      ***********IS*A HOLIDAY IN A PARTICULAR CURRENCY                    S01195
+      ***************                                                     S01195
+      **CALLED*BY*:**                                                     S01195
+      ***************                                                     S01195
+      **CALLS*:******                                                     S01195
+      ***************                                                     S01195
+      **INPUT**:*@@MNO  MIDAS DAY NUMBER 5N                               S01195
+      ***********@@CCY  CURRENCY CODE 3A                                  S01195
+      ***************                                                     S01195
+      **OUTPUT*:*@@HIND HOLIDAY/WORKING DAY INDICATOR 1A                  S01195
+      ***************                                                     S01195
+      **USES*:***@@MNO  MIDAS DAY NUMBER                                  S01195
+      ***********@@CCY  CURRENCY CODE                                     S01195
+      ***********@@ONCE FIRST TIME THROUGH INDICATOR                      S01195
+      ***********@@CY1  FIRST HALF OF CURRENCY ARRAY                      S01195
+      ***********@@CY2  SECOND HALF OF CURRENCY ARRAY                     S01195
+      ***********@@MNO6 MIDAS NUMBER WITH TRAILING BLANK                  S01195
+      ***********@@HIND HOLIDAY/WORKING DAY INDICATOR                     S01195
+      ***********@@INEX INCLUDE/EXCLUDE INDICATOR                         S01195
+      ***************                                                     S01195
+      ***********INDICATORS                                               S01195
+      ***********80*RECORD NOT FOUND                                      S01195
+      ***********81*CURRENCY NOT FOUND ON RECORD                          S01195
+      ***************                                                     S01195
+      ******************************************************************  S01195
+     C***********ZA0830    BEGSR                                          S01195
+      ***************                                                     S01195
+      ***OPEN*CURRENCY/HOLIDAY FILE IF FIRST TIME THROUGH                 S01195
+     C***********@@ONCE    IFNE 'Y'                        B1             S01195
+     C***************      OPEN FDTABJLL                   *1             S01195
+     C***************      MOVE 'Y'       @@ONCE  1        *1             S01195
+     C***************      END                             E1             S01195
+      ***************                                                     S01195
+      ***BLANK*OUT*ARRAY                                                  S01195
+     C***************      MOVE *BLANKS   @@CY1                           S01195
+     C***************      MOVE *BLANKS   @@CY2                           S01195
+      ***************                                                     S01195
+      ***ACCESS*TABLE ON FIRST KEY                                        S01195
+     C***************      MOVEL@@MNO     @@MNO6  6                       S01195
+     C***************      MOVE @@MNO6    SS0830 12                       S01195
+     C***************      MOVEL'22    '  SS0830                          S01195
+     C***************      MOVE '1'       SS0830                          S01195
+     C***********SS0830    CHAINTABLETJF             80                   S01195
+      ***************                                                     S01195
+      ***IF*RECORD*NOT FOUND OR DELETED                                   S01195
+     C********** *IN80     IFEQ '1'                        B1             S01195
+     C***********RECI      OREQ '*'                        *1             S01195
+     C***************      MOVE 'W'       @@HIND           *1             S01195
+     C***************      GOTO ZA0839                     *1             S01195
+     C***************      END                             E1             S01195
+      ***************                                                     S01195
+      ***MOVE*FIRST*25 CURRENCIES TO ARRAY                                S01195
+     C***************      MOVE HCCY      @@CY1                           S01195
+      ***************                                                     S01195
+      ***ACCESS*TABLE ON SECOND KEY                                       S01195
+     C***************      MOVE '2'       SS0830                          S01195
+     C***********SS0830    CHAINTABLETJF             80                   S01195
+      ***************                                                     S01195
+      ***IF*SECOND*RECORD FOUND AND NOT DELETED                           S01195
+     C********** *IN80     IFEQ '0'                        B1             S01195
+     C***********RECI      ANDNE'*'                        *1             S01195
+     C***************      MOVE HCCY      @@CY2            *1             S01195
+     C***************      END                             E1             S01195
+      ***************                                                     S01195
+      ***SEARCH*ARRAY FOR INPUT CURRENCY                                  S01195
+     C***********@@CCY     LOKUP@CY                      81               S01195
+      ***************                                                     S01195
+      ***IF*INPUT*CURRENCY IS IN ARRAY                                    S01195
+     C********** *IN81     IFEQ '1'                        B1             S01195
+      ***************                                                     S01195
+      ***IF*INCLUDE/EXCLUDE INDICATOR EQ 'E'                              S01195
+     C***********INEX      IFEQ 'E'                        B*2            S01195
+     C***************      MOVE 'W'       @@HIND  1        **2            S01195
+     C***************      ELSE                            X*2            S01195
+     C***************      MOVE 'H'       @@HIND           **2            S01195
+     C***************      END                             E*2            S01195
+     C***************      END                             E1             S01195
+      ***************                                                     S01195
+      ***IF*INPUT*CURRENCY IS NOT IN ARRAY                                S01195
+     C********** *IN81     IFEQ '0'                        B1             S01195
+      ***************                                                     S01195
+      ***IF*INCLUDE/EXCLUDE INDICATOR EQ 'I'                              S01195
+     C***********INEX      IFEQ 'I'                        B*2            S01195
+     C***************      MOVE 'W'       @@HIND           **2            S01195
+     C***************      ELSE                            X*2            S01195
+     C***************      MOVE 'H'       @@HIND           **2            S01195
+     C***************      END                             E*2            S01195
+     C***************      END                             E1             S01195
+     C***********ZA0839    ENDSR                                          S01195
+      *****************************************************************
+     C/COPY ZSRSRC,ZACCH                                                  S01195
+     C/COPY ZSRSRC,ZFWDT                                                  S01195
+     C*****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * #A       - initialize                                         *
+      *                                                               *
+      * CALLS    ZA0710   - Midas day number to YYYYMMDD              *
+      ***********ZA0730***-*determine*next*working*day*****************   S01195
+      *                                                               *
+      * CALLED BY  MAIN   - control process                           *
+      *                                                               *
+      * FLDS USED  @KEY   - key to icd files                          *
+      *            @NWD   - next working day                          *
+      *                                                               *
+      *****************************************************************
+     C           #A        BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80                       S01194
+      *
+     C                     MOVEL'FX0690'  DBPGM
+      *
+      ** open the files
+     C                     OPEN FXDEALLL
+     C                     OPEN DLDEALL5                                                    BUG10705
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FX0690CCP2                                           S01408
+     C*                                                                   S01408
+     C*********************OPEN FDTABJLL                                  S01195
+     C*********************OPEN FDICDRLL                                  S01194
+      *                                                                   S01194
+      ***get*icd*1*and*2****************                                  S01194
+     C*********************MOVE *BLANKS   @KEY   12                       S01194
+     C*********************MOVEL'01'      @KEY                            S01194
+     C*********************MOVE '10'      @KEY                            S01194
+     C***********@KEY******CHAINFDICDRLL             63                   S01194
+     C********** *IN63*****IFEQ '1'                        B1             S01194
+     C***********RECI******ORNE 'D'                        *1             S01194
+     C*********************MOVE '1'       *INU7            *1             S01194
+     C*********************MOVE '1'       *INU8            ***************S01194
+     C*********************MOVE '1'       *INLR            *             *S01194
+     C*********************MOVEL'FDICDRLL'DBFILE           * DB ERROR 004*S01194
+     C*********************MOVEL@KEY      DBKEY            *             *S01194
+     C*********************MOVE '004'     DBASE            ***************S01194
+     C*********************GOTO #A9                        *1             S01194
+     C*********************END                             E1             S01194
+      *                                                                   S01194
+     C*********************MOVE '11'      @KEY                            S01194
+     C***********@KEY******CHAINFDICDRLL             63                   S01194
+     C********** *IN63*****IFEQ '1'                        B1             S01194
+     C***********RECI******ORNE 'D'                        *1             S01194
+     C*********************MOVE '1'       *INU7            *1             S01194
+     C*********************MOVE '1'       *INU8            ***************S01194
+     C*********************MOVE '1'       *INLR            *             *S01194
+     C*********************MOVEL'FDICDRLL'DBFILE           * DB ERROR 005*S01194
+     C*********************MOVEL@KEY      DBKEY            *             *S01194
+     C*********************MOVE '005'     DBASE            ***************S01194
+     C*********************GOTO #A9                        *1             S01194
+     C*********************END                             E1             S01194
+      *
+     C*                                                                   S01194
+     C** ACCESS BANK DETAILS VIA ACCESS PROGRAM                           S01194
+     C                     CALL 'AOBANKR0'                                S01194
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*FIRST ' @OPTN   7                       S01194
+     C           SDBANK    PARM SDBANK    DSFDY                           S01194
+     C*                                                                   S01194
+     C           @RTCD     IFNE *BLANK                                    S01194
+     C                     MOVE '1'       *INU7            ***************S01194
+     C                     MOVE '1'       *INU8            * DB ERROR 004*S01194
+     C                     MOVEL'004'     DBASE            ***************S01194
+     C                     MOVEL'SDBANKPD'DBFILE                          S01194
+     C                     MOVEL@OPTN     DBKEY                           S01194
+     C                     EXSR *PSSR                                     S01194
+     C                     GOTO #A9                                       S01194
+     C                     END                                            S01194
+     C*                                                                   055367
+     C** Move the new Run Day BJMRDT to the data-structure RUNA           055367
+     C** to update the day of last update on FXDEALPP                     055367
+     C*                                                                   055367
+     C                     MOVE BJMRDT    RUNA                            055367
+      *                                                                   197217
+      ** Convert run date number to YYYYMMDD format                       197217
+      *                                                                   197217
+     C                     Z-ADDBJRDNB    @@DAYN                          197217
+     C                     EXSR ZA0710                                    197217
+     C                     Z-ADD@@VDT     @RUND   80                      197217
+     C*                                                                   S01194
+      ** calculate the date of the next working day
+     C*********************Z-ADDRUND      @@DAYN                          S01195
+     C*********************EXSR ZA0710                                    S01195
+     C*********************Z-ADD@@VDT     @@DTIN                          S01195
+     C*********************MOVE LOCY      @@CCY   3                       S01195
+     C*********************EXSR*ZA0730                                    S01195
+     C*********************Z-ADD@@VDT     @NWD    80                      S01195
+     C                     Z-ADDBJRDNB    ZDAYNO                          S01195
+     C                     MOVE BJLCCY    ZCCY    3                       S01195
+     C                     MOVE BJSLCD    ZLOC    3                       S01195
+     C                     Z-ADD1         ZNRDYS  20                      S01195
+     C                     EXSR ZFWDT                                     S01195
+     C                     Z-ADDZDYNBR    @@DAYN  50                      S01195
+     C                     EXSR ZA0710                                    S01195
+     C                     Z-ADD@@VDT     @NWD    80                      S01195
+     C*                                                                   197217
+     C** Access GL details.                                               197217
+     C*                                                                   197217
+     C**********           CALL 'AOGELRR0'                                197217              CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD                           197217
+     C                     PARM '*FIRST ' @OPTN                           197217
+     C********** SDGELR    PARM SDGELR    DSFDY                           197217              CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C*                                                                   197217
+     C           @RTCD     IFNE *BLANK                                    197217
+     C                     MOVE '1'       *INU7            ***************197217
+     C                     MOVE '1'       *INU8            * DB ERROR 005*197217
+     C                     MOVEL'005'     DBASE            ***************197217
+     C                     MOVEL'SDGELRPD'DBFILE                          197217
+     C                     MOVEL@OPTN     DBKEY                           197217
+     C                     EXSR *PSSR                                     197217
+     C                     GOTO #A9                                       197217
+     C                     END                                            197217
+      *
+      ** close the two files no longer used
+     C*********************CLOSEFDTABJLL                                  S01195
+     C*********************CLOSEFDICDRLL                                  S01194
+      *
+      ** get the first record from FXDEALLL
+     C                     READ FXDEALLL                 61
+      *
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FX0690CEIP                                           S01408
+     C*                                                                   S01408
+     C           #A9       ENDSR                           #A9 TAG
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * #C       - terminate                                          *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MAIN   - control process                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           #C        BEGSR
+      *
+      ** close the files
+     C                     CLOSEFXDEALLL
+     C                     CLOSEDLDEALL5                                                    BUG10705
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FX0690CCP3                                           S01408
+     C*                                                                   S01408
+      *
+      ** set on last record indicator to terminate program
+     C                     MOVE '1'       *INLR
+      *
+     C           #C9       ENDSR                           #C9 TAG
+      *****************************************************************
+      */EJECT                                                                               BUG10705
+      *****************************************************************                     BUG10705
+      ** DELEXT - Delete extension record                                                   BUG10705
+      *****************************************************************                     BUG10705
+     C           DELEXT    BEGSR                                                            BUG10705
+     C           FHDSTS    IFEQ 'C'                                                         AR970738
+     C           FHDDLT    ANDEQ'D'                                                         AR970738
+     C                     MOVELFHDN38    F1DLNO                                            BUG10705
+     C           F1DLNO    CHAINDLDLDBD0             30                                     BUG10705
+     C           *IN30     IFEQ '0'                                                         BUG10705
+     C                     DELETDLDLDBD0                                                    BUG10705
+     C                     ENDIF                                                            BUG10705
+     C                     ENDIF                                                            AR970738
+     C                     ENDSR                                                            BUG10705
+      *                                                                                     BUG10705
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR    - error processing                                   *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C                     DUMP
+      *
+     C           #PSSR9    ENDSR                           #PSSR9 TAG
+      *****************************************************************
+      /EJECT
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+** @YD  USED BY SR. ZA0710 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZA0710 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365

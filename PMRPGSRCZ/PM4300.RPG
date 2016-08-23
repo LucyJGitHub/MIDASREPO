@@ -1,0 +1,779 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Copy Performance Events to Workfiles')        *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module                          *
+     F*                                                               *
+     F*  PM4300 - Copy Performance Events to Workfiles                *
+     F*                                                               *
+     F*  Calls: AOBANKR0 - Access object for Bank I.C.D. details      *
+     F*         AOCUSTR0 - Access object for Customers details        *
+     F*         AOACOFR0 - Access object for Account Officers         *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 083014             Date 02Jul96               *
+      *                 075998             Date 20Dec95               *
+     F*                 101266             DATE 08FEB96               *
+     F*                 094891             DATE 23OCT95               *
+     F*                 085871             DATE 16MAR95               *
+     F*                 085862             DATE 16MAR95               *
+     F*                 S01486             DATE 09NOV94               *
+     F*                 71348              DATE 30MAY94               *
+     F*                 53103              DATE 09NOV93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*  083014 - Field Reversal Indicator added in PF/PMPTWKQ0       *
+     F*           Program recompiled only.                            *
+     F*  075998 - Portfolio/Future & Options performance              *
+     F*  101266 - Bank Portfolios                                     *
+     F*  094891 - The temporary files in QTEMP have been renamed to   *
+     F*           make them unique and allow QTEMP to appear anywhere *
+     F*           in the library list - amend pgm to reference these  *
+     F*           files.                                              *
+     F*  085871 - GET PERFORMANCE RECONCILIATION TO WORK              *
+     F*  085862 - RECOMPILED DUE TO CHANGE TO PF/PMPCAAPD             *
+     F*  S01486 - Portfolio Management Upgrade to Release 10          *
+     F*  71348  - CORRECT SPOOL FILE NAMES FOR LEUMI                  *
+     F*  53103  - FILE CREATED FOR PERFORMANCE RECONCILIATION CHANGES *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F***OVRDBF FILE(PMPTWKT0) TOFILE(PMPTWKQ0) SHARE(*NO)         094891 101266
+     F***OVRDBF FILE(PMPCWKT0) TOFILE(PMPCWKQ0) SHARE(*NO)         094891 101266
+     F***OVRDBF FILE(PMPTRRT0) TOFILE(PMPTRRQ0) SHARE(*NO)         094891 101266
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F***Performance*Transactions*Events*Workfile*-*'QU'***************   S01486
+     F***PMPTWKPPO***E                    DISK                            S01486
+     F** Performance Transactions Events Workfile - 'TE'                  S01486
+     F***PMPTWKQ0O   E                    DISK                      S01486094891
+     F***PMPTWKT0O   E                    DISK                     094891 101266
+     FPMPTWKQ0O   E                    DISK                               101266
+     F                                              KINFSR *PSSR
+     F*
+     F***Performance*Cash*Events*Workfile*-*'QS'***********************   S01486
+     F***PMPCWKPPO***E                    DISK                            S01486
+     F** Performance Cash Events Workfile - 'EW'                          S01486
+     F***FPMPCWKQ0O   E                    DISK                     S01486094891
+     F***PMPCWKT0O   E                    DISK                     094891 101266
+     FPMPCWKQ0O   E                    DISK                               101266
+     F                                              KINFSR *PSSR
+     F*
+     F** Portfolios Requiring Reconciliation Reporting
+     F***PMPTRRPPIF**E                    DISK                            S01486
+     F***PMPTRRQ0IF  E                    DISK                      S01486094891
+     F***PMPTRRT0IF  E                    DISK                     094891 101266
+     FPMPTRRQ0IF  E                    DISK                               101266
+     F                                              KINFSR *PSSR
+     F*
+     F** Cash events by Date
+     FPMPCAAL6IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F*
+     F** Transaction events by Date
+     FPMPTRAL6IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F*
+     F** Cash events by Portfolio and Date
+     FPMPCAAL3IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F            PMPCAAP0                          KRENAMEPMPCAAPX
+     F*
+     F** Transaction events by Portfolio and Date
+     FPMPTRAL4IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F            PMPTRAP0                          KRENAMEPMPTRAPX
+     F*
+     F***Clients*details*-*'BB'****************************************   S01486
+     F***SDCUSTL0IF**E           K        DISK                            S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F***********                                                   71348 S01486
+     F***Clients*details*-*'AZ'************************************ 71348 S01486
+     F***SDACOFL0IF**E           K        DISK                      71348 S01486
+     F***********                                   KINFSR *PSSR    71348 S01486
+     F***********                                                         S01486
+     F***Bank*Details*File*-*Prefix*BJ*********************************   S01486
+     F***SDBANKPDIF**E                    DISK         KINFSR *PSSR    UC S01486
+     F*
+     F* Printer File.
+     F***PM4300AUO***E                    PRINTER                         S01486
+     FPM4300AUO   E                    PRINTER      KINFDS SPOOLU         S01486
+     F*
+     F*****************************************************************
+     F*
+     F*       71         FILE OPERATIONS INDICATOR - PMPTRAL6
+     F********72*********FILE OPERATIONS*INDICATOR*-*SDCUSTL0**********   S01486
+     F*       73         FILE OPERATIONS INDICATOR - PMPCAAL6
+     F********74*********FILE OPERATIONS*INDICATOR*-*PMPTRRPP**********   S01486
+     F********74*********FILE*OPERATIONS*INDICATOR*-*PMPTRRQ0*******S01486094891
+     F********74*********FILE OPERATIONS INDICATOR - PMPTRRT0      094891 101266
+     F*       74         FILE OPERATIONS INDICATOR - PMPTRRQ0             101266
+     F*       75         FILE OPERATIONS INDICATOR - PMPCAAL3
+     F*       76         FILE OPERATIONS INDICATOR - PMPTRAL4
+     F********77*********FILE OPERATIONS*INDICATOR*-*SDBANKPD**********   S01486
+     F*
+     F*       U7         DATABASE ERROR
+     F*       U8         PROGRAM  ERROR
+     F*
+     F**             *************************
+     F**             ** INDICATORS NOT USED **
+     F**             ** ------------------- **
+     F**             *************************
+     F**
+     F**      ***************************************************
+     F**      * ..   ..   ..   ..   ..   ..   ..   ..   ..   .. *
+     F**      * ..   ..   ..   ..   ..   ..   ..   ..   ..   .. *
+     F**      * ..   ..   ..   ..   ..   ..   ..   ..   ..   .. *
+     F**      * ..   ..   ..   ..   ..   ..   ..   ..   ..   .. *
+     F**      * ..   ..   ..   ..   ..   ..   ..   ..   ..   .. *
+     F**      * ..   ..   ..   ..   ..   ..   ..   ..   ..   .. *
+     F**      * ..   ..   ..   ..   ..   ..   ..   ..   ..   .. *
+     F**      * 71   72   73   74   75   76   77   ..   ..   .. *
+     F**      * ..   ..   ..   ..   ..   ..   ..   ..   ..   .. *
+     F**      * ..   ..   ..   ..   ..   ..   ..   ..   ..   .. *
+     F**      ***************************************************
+     F*********************************************************************
+     E** ARRAY FOR COPYRIGHT
+     E*
+     E                    CPY@    1   1 80
+     E*********************************************************************
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     I***LDA********UDS                            256                    S01486
+     ILDA         DS                            256                       S01486
+     I                                      132 183 DBLOT
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*                                                                   S01486
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I** Dummy DS for Bank Details                                        S01486
+     I*                                                                   S01486
+     ISDCUST    E DSSDCUSTPD                                              S01486
+     I** Dummy DS for Client Details                                      S01486
+     I*                                                                   S01486
+     ISDACOF    E DSSDACOFPD                                              S01486
+     I** Dummy DS for Account Officer details                             S01486
+     I*                                                                   S01486
+     IDSFDY     E DSDSFDY                                                 S01486
+     I** First DS for Access Programs, short data structure               S01486
+     I*                                                                   S01486
+     IDSSDY     E DSDSSDY                                                 S01486
+     I** Second DS for Access Prpgrams, long data structure               S01486
+     I*                                                                   S01486
+     I**  File information data structure - Audit                         S01486
+     ISPOOLU      DS                                                      S01486
+     I                                       83  92 SFILEU                S01486
+     I                                    B 123 1240SFNUMU                S01486
+     I**
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C*================================================================
+     C*                                                                   S01486
+     C**  Copyright Statement                                             S01486
+     C*                                                                   S01486
+     C                     MOVEACPY@      ACT@   80                       S01486
+     C*
+     C*  Receive MODE parameter from calling program
+     C           *ENTRY    PLIST
+     C                     PARM           MODE    1
+     C*
+     C*  Define fields
+     C           *LIKE     DEFN QUCNUM    WWCNUM
+     C*
+     C**  DEFINE KEY LIST TO PROCESS PMPCAAL3
+     C           PCAA      KLIST
+     C                     KFLD           R2CUST
+     C                     KFLD           R2PTFR
+     C                     KFLD           R2PESD
+     C*
+     C**  DEFINE KEY LIST TO PROCESS PMPCAAL3
+     C           PCBB      KLIST
+     C                     KFLD           R2CUST
+     C                     KFLD           R2PTFR
+     C*                                                                   S01486
+     C**  Prepare LDA.                                                    S01486
+     C*                                                                   S01486
+     C           *NAMVAR   DEFN           LDA                             S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVE *BLANKS   DBFILE                          S01486
+     C                     MOVE *BLANKS   DBKEY                           S01486
+     C                     Z-ADD*ZERO     DBASE                           S01486
+     C                     MOVE 'PM4300'  DBPGM                           S01486
+     C                     OUT  LDA                                       S01486
+     C*
+     C*  Get bank details - used in audit report
+     C**********           OPEN SDBANKPD               77                 S01486
+     C**********           READ SDBANKPD               7777               S01486
+     C**********                                                          S01486
+     C********** *IN77     IFEQ *ON                                       S01486
+     C**********           MOVEL'001'     DBASE            ***************S01486
+     C**********           MOVEL'SDBANKPD'DBFILE           * DB ERROR 01 *S01486
+     C**********           MOVE *BLANKS   DBKEY            ***************S01486
+     C**********           EXSR *PSSR                                     S01486
+     C**********           END                                            S01486
+     C**********           CLOSESDBANKPD                                  S01486
+     C*                                                                   S01486
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM *BLANKS   @RTCD   7                       S01486
+     C                     PARM '*FIRST ' @OPTN   7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+     C*                                                                   S01486
+     C           @RTCD     IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD1         DBASE            ***************S01486
+     C                     MOVE 'SDBANKPD'DBFILE           * DB ERROR 01 *S01486
+     C                     MOVE *BLANKS   DBKEY            ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*
+     C*  If MODE '1'
+     C           MODE      IFEQ '1'                        B1
+     C*
+     C*  Read first PMPTRAL6 record for today
+     C           BJRDNB    CHAINPMPTRAL6             71
+     C*
+     C           *IN71     DOWEQ*OFF                       B2
+     C*
+     C*  If change of customer
+     C           QUCNUM    IFNE WWCNUM                     B3
+     C                     MOVE QUCNUM    WWCUST  6
+     C********** WWCUST    CHAIN@BBREBG              72                   S01486
+     C**********                                                          S01486
+     C********** *IN72     IFEQ *ON                        B4             S01486
+     C**********           MOVEL'002'     DBASE            ***************S01486
+     C**********           MOVEL'SDCUSTL0'DBFILE           * DB ERROR 02 *S01486
+     C**********           MOVELWWCUST    DBKEY            ***************S01486
+     C**********           EXSR *PSSR                                     S01486
+     C**********           END                             E4             S01486
+     C*                                                                   S01486
+     C                     CALL 'AOCUSTR0'                                S01486
+     C                     PARM *BLANKS   @RTCD   7                       S01486
+     C                     PARM '*KEY    '@OPTN   7                       S01486
+     C                     PARM WWCUST    @KEY1  10                       S01486
+     C                     PARM           @KYST   7                       S01486
+     C           SDCUST    PARM SDCUST    DSSDY                           S01486
+     C*                                                                   S01486
+     C           @RTCD     IFNE *BLANK                                    S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD2         DBASE            ***************S01486
+     C                     MOVE 'SDCUSTPD'DBFILE           * DB ERROR 02 *S01486
+     C                     MOVE WWCUST    DBKEY            ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     END                                            S01486
+     C**********                                                    71348 S01486
+     C***OBTAIN*ACCOUNT OFFICER PRINTER LOCATION CODE               71348 S01486
+     C********** BBACOC    CHAINSDACOFL0             72             71348 S01486
+     C**********                                                    71348 S01486
+     C********** *IN72     IFEQ *ON                        B4       71348 S01486
+     C*                                                                   S01486
+     C**  Obtain department code of the account officer if not blank      S01486
+     C*                                                                   S01486
+     C           BBACOC    IFEQ *BLANK                                    S01486
+     C                     MOVE *BLANKS   WLDPCD  3                       S01486
+     C                     ELSE                                           S01486
+     C*                                                                   S01486
+     C                     CALL 'AOACOFR0'                                S01486
+     C                     PARM *BLANKS   @RTCD                           S01486
+     C                     PARM '*KEY   ' @OPTN                           S01486
+     C                     PARM BBACOC    WLACOF  2                       S01486
+     C           SDACOF    PARM SDACOF    DSSDY                           S01486
+     C*                                                                   S01486
+     C           @RTCD     IFNE *BLANK                                    S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C***********          MOVEL'022'     DBASE            *********71348 S01486
+     C***********          MOVEL'SDACOFL0'DBFILE           * DB ERRO71348 S01486
+     C                     Z-ADD4         DBASE            ***************S01486
+     C                     MOVE 'SDACOFPD'DBFILE           * DB ERROR 04 *S01486
+     C                     MOVELBBACOC    DBKEY            ***************71348
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     71348
+     C                     END                             E4             71348
+     C*                                                                   S01486
+     C                     MOVE AZDPCD    WLDPCD                          S01486
+     C                     END                                            S01486
+     C*
+     C                     MOVE QUCNUM    WWCNUM
+     C*
+     C                     ENDIF                           E3
+     C*
+     C***Set*fields*PMPTWKPP*******************************************   S01486
+     C***********          MOVE QUREMI    QURODI                          S01486
+     C***********          MOVE *BLANK    QUPFMP                          S01486
+     C*                                                                   S01486
+     C****Set*fields*PMPTWKQ0.************************************* S01486094891
+     C****Set*fields PMPTWKT0.                                     094891 101266
+     C**  Set fields PMPTWKQ0.                                            101266
+     C*                                                                   S01486
+     C                     MOVE QUREMI    TERODI                          S01486
+     C                     MOVE *BLANK    TEPFMP                          S01486
+     C****                 MOVE 'N'       QUPRRE                          71348
+     C****                 MOVE *BLANKS   QUAOPR                          71348
+     C***********          MOVE 'A'       QUPRRE                    71348 S01486
+     C***********          MOVE AZPRTL    QUAOPR                    71348 S01486
+     C***********          MOVE BBACOC    QUACOF                          S01486
+     C***********          Z-ADD*ZERO     QUDIFF                          S01486
+     C***********          MOVE *BLANKS   QUPTCY                          S01486
+     C***********          Z-ADD*ZERO     QUPCDP                          S01486
+     C                     MOVE BBACOC    TEACOF                          S01486
+     C                     MOVE WLDPCD    TEDPCD                          S01486
+     C                     Z-ADD*ZERO     TEDIFF                          S01486
+     C                     MOVE *BLANKS   TEPTCY                          S01486
+     C                     Z-ADD*ZERO     TEPCDP                          S01486
+     C****
+     C***For ex-coupon events reverse In/Out indicator for interest
+     C***events
+     C****       QUPFMC    IFEQ 'IP'
+     C****       QUACIN    ANDEQ'X'
+     C****       QUMODI    ANDEQ'SE'
+     C****                 Z-SUBQUTAMT    QUTAMT
+     C****                 END
+     C*
+     C*  For reversals alter in/out indicator
+     C           QUREVI    IFEQ 'Y'                        B3
+     C           QUINIO    IFEQ 'I'                        B4
+     C                     MOVE 'O'       QUINIO
+     C                     ELSE                            X4
+     C                     MOVE 'I'       QUINIO
+     C                     END                             E4
+     C                     END                             E3
+     C*
+     C****Setup*output*fields*for*file*PMPTWKQ0.*****************   S01486094891
+     C****Setup*output*fields for file PMPTWKT0.                   094891 101266
+     C**  Setup output fields for file PMPTWKQ0.                          101266
+     C*                                                                   S01486
+     C                     EXSR #SETTE                                    S01486
+     C*                                                                   S01486
+     C***Write*record*to*PMPTWKPP**************************************   S01486
+     C****Write*record*to*PMPTWKQ0*******************************   S01486094891
+     C****Write*record*to PMPTWKT0                                 094891 101266
+     C**  Write record to PMPTWKQ0                                        101266
+     C*                                                                   S01486
+     C                     WRITEPMPTWKPF
+     C*
+     C                     ADD  1         WWNBTW  50
+     C*
+     C*  Read next MPTRAL6 record for today
+     C           BJRDNB    READEPMPTRAL6                 71
+     C*
+     C                     ENDDO                           E2
+     C*
+     C**********           Z-ADD*ZERO     WWCNUM                                              CSD027
+     C                     MOVE *BLANKS   WWCNUM                                              CSD027
+     C*
+     C*  Read first PMPCAAL6 for today
+     C           BJRDNB    CHAINPMPCAAL6             73
+     C*
+     C           *IN73     DOWEQ*OFF                       B2
+     C*
+     C*  If change of customer
+     C           QSCNUM    IFNE WWCNUM                     B3
+     C                     MOVE QSCNUM    WWCUST
+     C********** WWCUST    CHAIN@BBREBG              72                   S01486
+     C**********                                                          S01486
+     C********** *IN72     IFEQ *ON                        B4             S01486
+     C**********           MOVEL'003'     DBASE            ***************S01486
+     C**********           MOVEL'SDCUSTL0'DBFILE           * DB ERROR 03 *S01486
+     C**********           MOVELWWCUST    DBKEY            ***************S01486
+     C**********           EXSR *PSSR                                     S01486
+     C**********           END                             E4             S01486
+     C*                                                                   S01486
+     C                     CALL 'AOCUSTR0'                                S01486
+     C                     PARM *BLANKS   @RTCD   7                       S01486
+     C                     PARM '*KEY    '@OPTN   7                       S01486
+     C                     PARM WWCUST    @KEY1  10                       S01486
+     C                     PARM           @KYST   7                       S01486
+     C           SDCUST    PARM SDCUST    DSSDY                           S01486
+     C*                                                                   S01486
+     C           @RTCD     IFNE *BLANK                                    S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD3         DBASE            ***************S01486
+     C                     MOVE 'SDCUSTPD'DBFILE           * DB ERROR 03 *S01486
+     C                     MOVE WWCUST    DBKEY            ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     END                                            S01486
+     C**********                                                    71348 S01486
+     C***OBTAIN*ACCOUNT OFFICER PRINTER LOCATION CODE               71348 S01486
+     C********** BBACOC    CHAINSDACOFL0             72             71348 S01486
+     C**********                                                    71348 S01486
+     C********** *IN72     IFEQ *ON                        B4       71348 S01486
+     C*                                                                   S01486
+     C**  Obtain department code of the account officer if not blank      S01486
+     C*                                                                   S01486
+     C           BBACOC    IFEQ *BLANK                                    S01486
+     C                     MOVE *BLANKS   WLDPCD                          S01486
+     C                     ELSE                                           S01486
+     C*                                                                   S01486
+     C                     CALL 'AOACOFR0'                                S01486
+     C                     PARM *BLANKS   @RTCD                           S01486
+     C                     PARM '*KEY   ' @OPTN                           S01486
+     C                     PARM BBACOC    WLACOF  2                       S01486
+     C           SDACOF    PARM SDACOF    DSSDY                           S01486
+     C*                                                                   S01486
+     C           @RTCD     IFNE *BLANK                                    S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C***********          MOVEL'022'     DBASE            *********71348 S01486
+     C***********          MOVEL'SDACOFL0'DBFILE           * DB ERRO71348 S01486
+     C                     Z-ADD5         DBASE            ***************S01486
+     C                     MOVE 'SDACOFPD'DBFILE           * DB ERROR 05 *S01486
+     C                     MOVELBBACOC    DBKEY            ***************71348
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     71348
+     C                     END                             E4             71348
+     C*                                                                   S01486
+     C                     MOVE AZDPCD    WLDPCD                          S01486
+     C                     END                                            S01486
+     C*
+     C                     MOVE QSCNUM    WWCNUM
+     C*
+     C                     ENDIF                           E3
+     C*
+     C***Set*fields*PMPCWKPP*******************************************   S01486
+     C***********          MOVE QSREMI    QSRODI                          S01486
+     C***********          MOVE *BLANK    QSPFMP                          S01486
+     C*                                                                   S01486
+     C****Set*fields*PMPCWKQ0.************************************  S01486094891
+     C****Set*fields*PMPCWKT0.                                     094891 101266
+     C**  Set fields PMPCWKQ0.                                            101266
+     C*                                                                   S01486
+     C                     MOVE QSREMI    EWRODI                          S01486
+     C                     MOVE *BLANK    EWPFMP                          S01486
+     C****                 MOVE 'N'       QSPRRE                          71348
+     C****                 MOVE *BLANKS   QSAOPR                          71348
+     C***********          MOVE 'A'       QSPRRE                    71348 S01486
+     C***********          MOVE AZPRTL    QSAOPR                    71348 S01486
+     C***********          MOVE BBACOC    QSACOF                          S01486
+     C***********          Z-ADD*ZERO     QSDIFF                          S01486
+     C***********          MOVE *BLANKS   QSPTCY                          S01486
+     C***********          Z-ADD*ZERO     QSPCDP                          S01486
+     C                     MOVE BBACOC    EWACOF                          S01486
+     C                     MOVE WLDPCD    EWDPCD                          S01486
+     C                     Z-ADD*ZERO     EWDIFF                          S01486
+     C                     MOVE *BLANKS   EWPTCY                          S01486
+     C                     Z-ADD*ZERO     EWPCDP                          S01486
+     C*
+     C****Setup*output*fields*for*file*PMPCWKQ0*******************  S01486094891
+     C****Setup*output*fields for file PMPCWKT0                    094891 101266
+     C*** Setup output fields for file PMPCWKQ0                           101266
+     C*                                                                   S01486
+     C                     EXSR #SETEW                                    S01486
+     C*                                                                   S01486
+     C***Write*record*to*PMPCWKPP**************************************   S01486
+     C****Write*record*to*PMPCWKQ0.******************************   S01486094891
+     C****Write*record*to PMPCWKT0.                                094891 101266
+     C**  Write record to PMPCWKQ0.                                       101266
+     C*                                                                   S01486
+     C                     WRITEPMPCWKPF
+     C*
+     C                     ADD  1         WWNBCW  50
+     C*
+     C*  Read next PMPCAAL6 for today
+     C           BJRDNB    READEPMPCAAL6                 73
+     C*
+     C                     ENDDO                           E2
+     C*
+     C                     ENDIF                           E1
+     C*
+     C*  If MODE '2'
+     C           MODE      IFEQ '2'                        B1
+     C*
+     C***Read*PMPTRRPP*************************************************   S01486
+     C***********          READ PMPTRRPP                 74               S01486
+     C*                                                                   S01486
+     C****Read*PMPTRRQ0.*****************************************   S01486094891
+     C****Read*PMPTRRT0.                                           094891 101266
+     C**  Read PMPTRRQ0.                                                  101266
+     C*                                                                   S01486
+     C***********          READ PMPTRRQ0                 74         S01486094891
+     C***********          READ PMPTRRT0                 74        094891 101266
+     C                     READ PMPTRRQ0                 74               101266
+     C*
+     C           *IN74     DOWEQ*OFF                       B2
+     C*
+     C*  Set PMPCAAL3 file pointer
+     C           PCAA      SETLLPMPCAAL3
+     C*
+     C           PCBB      READEPMPCAAL3                 75
+     C*
+     C           *IN75     DOWEQ*OFF                       B3
+     C*
+     C***Set*fields*PMPCWKPP*******************************************   S01486
+     C***********          MOVE QSREMI    QSRODI                          S01486
+     C***********          MOVE R2PEPE    QSPFMP                          S01486
+     C***********          MOVE R2PRRE    QSPRRE                          S01486
+     C***********          MOVE R2AOPR    QSAOPR                          S01486
+     C***********          MOVE R2ACOF    QSACOF                          S01486
+     C***********          Z-ADDR2DIFF    QSDIFF                          S01486
+     C***********          MOVE R2PTCY    QSPTCY                          S01486
+     C***********          Z-ADDR2PCDP    QSPCDP                          S01486
+     C*                                                                   S01486
+     C****Set*fields*PMPCWKQ0.************************************  S01486094891
+     C****Set*fields*PMPCWKT0.                                     094891 101266
+     C**  Set fields PMPCWKQ0.                                            101266
+     C*                                                                   S01486
+     C                     MOVE QSREMI    EWRODI                          S01486
+     C                     MOVE R2PEPE    EWPFMP                          S01486
+     C                     MOVE R2ACOF    EWACOF                          S01486
+     C                     MOVE R2DPCD    EWDPCD                          S01486
+     C                     Z-ADDR2DIFF    EWDIFF                          S01486
+     C                     MOVE R2PTCY    EWPTCY                          S01486
+     C                     Z-ADDR2PCDP    EWPCDP                          S01486
+     C*
+     C****Setup*output*fields*for*file*PMPCWKQ0.******************* S01486094891
+     C****Setup*output fields for file PMPCWKT0.                   094891 101266
+     C**  Setup output fields for file PMPCWKQ0.                          101266
+     C*                                                                   S01486
+     C                     EXSR #SETEW                                    S01486
+     C*                                                                   S01486
+     C***Write*record*to*PMPCWKPP**************************************   S01486
+     C****Write*record*to*PMPCWKQ0.******************************   S01486094891
+     C****Write*record*to PMPCWKT0.                                094891 101266
+     C**  Write record to PMPCWKQ0.                                       101266
+     C*                                                                   S01486
+     C                     WRITEPMPCWKPF
+     C*
+     C                     ADD  1         WWNBCW
+     C*
+     C*  Read PMPCAAL3
+     C           PCBB      READEPMPCAAL3                 75
+     C*
+     C                     ENDDO                           E3
+     C*
+     C*  Set PMPTRAL4 file pointer
+     C           PCAA      SETLLPMPTRAL4
+     C*
+     C           PCBB      READEPMPTRAL4                 76
+     C*
+     C           *IN76     DOWEQ*OFF                       B3
+     C*
+     C***Set*fields*PMPTWKPP*******************************************   S01486
+     C***********          MOVE QUREMI    QURODI                          S01486
+     C***********          MOVE R2PEPE    QUPFMP                          S01486
+     C***********          MOVE R2PRRE    QUPRRE                          S01486
+     C***********          MOVE R2AOPR    QUAOPR                          S01486
+     C***********          MOVE R2ACOF    QUACOF                          S01486
+     C***********          Z-ADDR2DIFF    QUDIFF                          S01486
+     C***********          MOVE R2PTCY    QUPTCY                          S01486
+     C***********          Z-ADDR2PCDP    QUPCDP                          S01486
+     C*                                                                   S01486
+     C****Set*fields*PMPTWKQ0.***********************************   S01486094891
+     C****Set*fields*PMPTWKT0.                                     094891 101266
+     C**  Set fields PMPTWKQ0.                                            101266
+     C*                                                                   S01486
+     C                     MOVE QUREMI    TERODI                          S01486
+     C                     MOVE R2PEPE    TEPFMP                          S01486
+     C                     MOVE R2ACOF    TEACOF                          S01486
+     C                     MOVE R2DPCD    TEDPCD                          S01486
+     C                     Z-ADDR2DIFF    TEDIFF                          S01486
+     C                     MOVE R2PTCY    TEPTCY                          S01486
+     C                     Z-ADDR2PCDP    TEPCDP                          S01486
+     C****
+     C***For ex-coupon events reverse In/Out indicator for interest
+     C***events
+     C****       QUPFMC    IFEQ 'IP'
+     C****       QUACIN    ANDEQ'X'
+     C****       QUMODI    ANDEQ'SE'
+     C****                 Z-SUBQUTAMT    QUTAMT
+     C****                 END
+     C*
+     C*  For reversals alter in/out indicator
+     C           QUREVI    IFEQ 'Y'                        B3
+     C           QUINIO    IFEQ 'I'                        B4
+     C                     MOVE 'O'       QUINIO
+     C                     ELSE                            X4
+     C                     MOVE 'I'       QUINIO
+     C                     END                             E4
+     C                     END                             E3
+     C*
+     C****Setup*output*fields*for*file*PMPTWKQ0.********************S01486094891
+     C****Setup*output*fields for file PMPTWKT0.                   094891 101266
+     C**  Setup output fields for file PMPTWKQ0.                          101266
+     C*                                                                   S01486
+     C                     EXSR #SETTE                                    S01486
+     C*                                                                   S01486
+     C***Write*record*to*PMPTWKPP**************************************   S01486
+     C****Write*record*to*PMPTWKQ0.******************************   S01486094891
+     C**  Write record to PMPTWKQ0.                                       094891
+     C*                                                                   S01486
+     C                     WRITEPMPTWKPF
+     C*
+     C                     ADD  1         WWNBTW
+     C*
+     C*  Read PMPTRAL4
+     C           PCBB      READEPMPTRAL4                 76
+     C*
+     C                     ENDDO                           E3
+     C*
+     C*
+     C***Read*PMPTRRPP*************************************************   S01486
+     C***********          READ PMPTRRPP                 74               S01486
+     C****Read*PMPTRRQ0.*****************************************   S01486094891
+     C****Read*PMPTRRT0.                                           094891 101266
+     C**  Read PMPTRRQ0.                                                  101266
+     C*                                                                   S01486
+     C***********          READ PMPTRRQ0                 74         S01486094891
+     C***********          READ PMPTRRT0                 74        094891 101266
+     C                     READ PMPTRRQ0                 74               101266
+     C                     ENDDO                           E2
+     C*
+     C                     ENDIF                           E1
+     C*
+     C***Write*Audit*Report*of*Number*of*Records*written*to*PMPCWKPP***   S01486
+     C***************************************************to*PMPTWKPP***   S01486
+     C****Write*Audit*Report*of*Number*of*Records*written*to*PMPCWKQS01486094891
+     C****and*to*PMPTWKQ0.******************************************S01486094891
+     C****Write*Audit Report of Number of Records written to PMPCWK094891 101266
+     C****and*to*PMPTWKT0.                                         094891 101266
+     C**  Write Audit Report of Number of Records written to PMPCWKQ0     101266
+     C**  and to PMPTWKQ0.                                                101266
+     C*                                                                   S01486
+     C                     Z-ADDWWNBTW    RRNBTW  50
+     C                     Z-ADDWWNBCW    RRNBCW  50
+     C*
+     C*  Write headings and Totals.
+     C*
+     C                     WRITEHEAD
+     C                     WRITEDETL
+     C*
+     C*  Write footings.
+     C***********          WRITEENDAU                                     S01486
+     C*
+     C*
+     C*  TERMINATE PROGRAM
+     C*
+     C                     SETON                         LR
+     C*================================================================
+      /EJECT                                                              S01486
+     C*****************************************************************   S01486
+     C*                                                               *   S01486
+     C***#SETTE*-*Subr.*to*setup*output*fields*for*file*PMPTWKQ0*** S01486094891
+     C***#SETTE*-*Subr. to setup output fields for file PMPTWKT0   094891 101266
+     C*  #SETTE - Subr. to setup output fields for file PMPTWKQ0      *   101266
+     C*                                                               *   S01486
+     C*****************************************************************   S01486
+     C*                                                                   S01486
+     C           #SETTE    BEGSR                                          S01486
+     C*                                                                   S01486
+     C                     MOVE QUCNUM    TECNUM                          S01486
+     C                     MOVE QUPTFR    TEPTFR                          S01486
+     C                     MOVE QUINNR    TEINNR                          S01486
+     C                     MOVE QUCCY     TECCY                           S01486
+     C                     MOVE QUTDSS    TETDSS                          S01486
+     C                     MOVE QUPDAT    TEPDAT                          S01486
+     C                     MOVE QUTRNB    TETRNB                          S01486
+     C                     MOVE QUMODI    TEMODI                          S01486
+     C                     MOVE QUTTYP    TETTYP                          S01486
+     C                     MOVE QUPFMC    TEPFMC                          S01486
+     C                     MOVE QUTAMT    TETAMT                          S01486
+     C                     MOVE QUMFXR    TEMFXR                          S01486
+     C                     MOVE QUMPRC    TEMPRC                          S01486
+     C                     MOVE QUINIO    TEINIO                          S01486
+     C                     MOVE QUCPTC    TECPTC                          S01486
+     C                     MOVE QUEVRF    TEEVRF                          S01486
+     C                     MOVE QUREPS    TEREPS                          S01486
+     C                     MOVE QUNMDP    TENMDP                          S01486
+     C                     MOVE QUSPBS    TESPBS                          S01486
+     C                     MOVE QUFPSI    TEFPSI                          075998
+     C*                                                                   S01486
+     C                     ENDSR                                          S01486
+     C*                                                                   S01486
+     C*****************************************************************   S01486
+      /EJECT                                                              S01486
+     C*****************************************************************   S01486
+     C*                                                               *   S01486
+     C***#SETEW*-*Subr.*to*setup*output*fields*for*file*PMPCWKQ0****S01486094891
+     C***#SETEW*-*Subr. to setup output fields for file PMPCWKT0   094891 101266
+     C*  #SETEW - Subr. to setup output fields for file PMPCWKQ0      *   101266
+     C*                                                               *   S01486
+     C*****************************************************************   S01486
+     C*                                                                   S01486
+     C           #SETEW    BEGSR                                          S01486
+     C*                                                                   S01486
+     C                     MOVE QSCNUM    EWCNUM                          S01486
+     C                     MOVE QSPTFR    EWPTFR                          S01486
+     C                     MOVE QSINNR    EWINNR                          S01486
+     C                     MOVE QSCCY     EWCCY                           S01486
+     C                     MOVE QSCSHD    EWCSHD                          S01486
+     C                     MOVE QSCSHA    EWCSHA                          S01486
+     C                     MOVE QSINIO    EWINIO                          S01486
+     C                     MOVE QSACOD    EWACOD                          S01486
+     C                     MOVE QSACSQ    EWACSQ                          S01486
+     C                     MOVE QSCPTC    EWCPTC                          S01486
+     C                     MOVE QSMFXR    EWMFXR                          S01486
+     C                     MOVE QSDLNO    EWDLNO                          S01486
+     C                     MOVE QSFXAT    EWFXAT                          S01486
+     C                     MOVE QSEVRF    EWEVRF                          S01486
+     C                     MOVE QSREPS    EWREPS                          S01486
+     C                     MOVE QSBRCA    EWBRCA                          085871
+     C                     MOVE QSACCU    EWACCU                          101266
+     C*                                                                   S01486
+     C                     ENDSR                                          S01486
+     C*                                                                   S01486
+     C*****************************************************************   S01486
+      /EJECT
+     C*================================================================
+      **
+      ** *PSSR  S/R
+      **
+     C*================================================================
+     C           *PSSR     BEGSR
+     C*                                                                   S01486
+     C                     MOVE DBPGM     RRPGM                           S01486
+     C                     MOVE DBFILE    RRFILE                          S01486
+     C                     MOVE DBKEY     RRKEY                           S01486
+     C                     MOVE DBASE     RRBASE                          S01486
+     C                     WRITEHEAD                                      S01486
+     C                     WRITEPM4300ER                                  S01486
+     C*
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     DUMP
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*================================================================
+     C*  P R O G R A M     E N D
+     C*================================================================
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

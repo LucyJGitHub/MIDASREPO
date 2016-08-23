@@ -1,0 +1,3367 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Assignments details maintenance')             *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *
+      *  LE2023 - Assignments Details Maintenance                     *
+      *                                                               *
+      *  Function:  This program allows entry and maintenance of the  *
+      *             of the funding participant members within a       *
+      *             syndicate.                                        *
+      *             This could be run in any of the four modes        *
+      *             available, depending on the parameter passed to it*
+      *                                                               *
+      *               1. Interactive ('I') - The program is called    *
+      *             from LE2020, facilities input. Data is processed  *
+      *             through a screen in the standard way.             *
+      *                                                               *
+      *               2. Interactive Enquiry ('E') - The program is   *
+      *             called from LE0170, facilities enquiry. It may    *
+      *             also be called from LE2020, where it is appropriate
+      *             to restrict the action to enquiry. Data is        *
+      *             processed through a screen in the standard way.   *
+      *                                                               *
+      *               3. Record ('R') - Run interactively but updates *
+      *             are done to a new 'test harness' file (LE2023PD)  *
+      *                                                               *
+      *               4. Mode 'P' - Play - The program is run         *
+      *             interactively or in batch through a Midas test    *
+      *             environment. Data is read in from the 'test       *
+      *             harness' file written in mode 'R'. Updates will   *
+      *             be done as in mode 'I'.                           *
+      *                                                               *
+      *               5. Mode 'B' - Batch - The program is run in     *
+      *             batch, called by a communications control program.*
+      *             Data which has been entered via a PC front end    *
+      *             is received from a message queue and passed to    *
+      *             the program as a parameter. Updates to the Midas  *
+      *             database will be done as appropriate to the       *
+      *             contents of the parameter and a message will be   *
+      *             returned to the control program.                  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CLE134             Date 01Aug12               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE106             Date 25Feb05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 222373             Date 28Oct03               *
+      *                 CLE031             Date 03Feb03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CPK015             Date 28Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 178424             Date 10May01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CRT004             Date 04May00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 160630             Date 19May99               *
+      *                 158645             Date 12Apr99               *
+      *                 158162             Date 31Mar99               *
+      *                 155538             Date 16Feb99               *
+      *                 154868             Date 10Feb99               *
+      *                 158135 (BT1466)    Date 09Feb99               *
+      *                 148847             Date 11Feb99               *
+      *                 148534             Date 09Dec99               *
+      *                 140720 (BT1008)    Date 15Feb99               *
+      *                 135152             Date 11Feb99               *
+      *                 134008             Date 10Feb99               *
+      *                 132565             Date 04Feb99               *
+      *                 CEU004             Date 02Feb98               *
+      *                 123857             Date 27Oct97               *
+      *                 123801             Date 06Oct97               *
+      *                 123476             Date 02Oct97               *
+      *                 123390             Date 24Sep97               *
+      *                 122052             Date 21AUG97               *
+      *                 121783             Date 14AUG97               *
+      *                 120057             Date 17JUL97               *
+      *                 120468             Date 09JUL97               *
+      *                 119892             Date 30JUN97               *
+      *                 CLE004  *CREATE    Date 11JUN97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CLE106 - Syndication Manager                                 *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  222373 - Parameter Mismatch                                  *
+      *  CLE031 - Lending Enhancements.                               *
+      *  CPK015 - Release 4.01 Packaging:                             *
+      *           - A default timestamp string is required for WRITE. *
+      *  178424 - Upon pressing F23 when enquiring or amending an     *
+      *           expired syndicated facility, system encounters a    *
+      *           database error. Remove condition which checks for   *
+      *           MODE not = 'B' and RECI = 'D'.                      *
+      *           Modification to 132565.                             *
+      *  CRT004 - Cashier Midas TCP/IP interface.                     *
+      *             Recompiled over SDBRCHPD Changes                  *
+      *  160630 - The error on syndicate share when the amount/       *
+      *           percentage is greater than the portion left on the  *
+      *           syndicate should have different error message.      *
+      *  158645 - Settlement details not appearing for second of two  *
+      *           duplicate assignments (similar to 158162).          *
+      *  158162 - Two assignments entered via LM with same to and from*
+      *           customers and same value date corrupt the share     *
+      *           amount/percentage written to file.                  *
+      *  155538 - PCRF field not setup correctly for assignments en-  *
+      *           tered directly in Midas LE2023.                     *
+      *  154868 - Loan Manager and Midas Assignment records do not    *
+      *           match as Loan Manager has latest available info.    *
+      *  148847 - Screen handling/workflow is wrong after second      *
+      *           screen.                                             *
+      *  158135 - Allow multiple assignments for the same combination *
+      *           of assigned to/assigned from/value date.            *
+      *  148534 - Show Report Customer Name & Report Town details     *
+      *           for 'Assigned To' & 'Assigned From' customer.       *
+      *  140720 - Settlement details not getting set up correctly     *
+      *           when in batch mode (BT1008)                         *
+      *  135152 - There needs to be a separate standard settlement    *
+      *           instruction transaction type for Lending - use of   *
+      *           'MM' is not sufficiently flexible                   *
+      *  134008 - Extended settlement instructions are not setting up *
+      *           the branch correctly for '05' method.               *
+      *  132565 - Reversing a facility with assignments crashes when  *
+      *           the assignments are reversed.                       *
+      *  CEU004 - LE Settlement Ccy Conversion Upgrade to DBA R2.0    *
+      *  123857 - F12 from subfile should take you to Facilities      *
+      *           Maintenance                                         *
+      *         - F3 should exit facilities maintenance program       *
+      *  123801 - Return exact settlement detail error in batch mode  *
+      *  123476 - Include value date on assignments file when         *
+      *           inserting. Allow assignee more than one assignment. *
+      *           Allow amendment of assignemnts with value date      *
+      *           equal to run date. Include extra col in subfile.    *
+      *  123390 - Amending 2 assignment participants from the PC      *
+      *           dumps if the larger share is sent first. Remove     *
+      *           validation of share amount for batch mode.          *
+      *  122052 - Name of message file not set up correctly.          *
+      *  121783 - Call new access object AOBRCHR1 instead of AOBRCHR0 *
+      *           (uses the long data structure DSSDY)                *
+      *  120057 - Need to set PTAI to 'A' when inserting.             *
+      *  120468 - Include a DUMP in SRBERR subroutine for Batch and   *
+      *           Play modes.                                         *
+      *  119892 - Rename SPARE to SPARF                               *
+      *  CLE004 - Customer Lending Enhancements - Syndications.       *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *    F U N C T I O N   O F   I N D I C A T O R S                *
+      *                                                               *
+      *    03      F3 PRESSED EXIT PROGRAM
+      *    05      F5 PRESSED Refresh screen
+      *    09      F9 PRESSED GO TO ADD MODE
+      *    10      F10 PRESSED to Reverse
+      *    12      F12 PRESSED GOTO PREVIOUS SCREEN
+      *    14      F14 Pressed go to settlement screen
+      *    25      Message subfile
+      *    29      READC and CHAIN Subfile record
+      *    30      Subfile display (SFLDSP)
+      *    31      SFLDSPCTL
+      *    32      SFLEND(*MORE)
+      *    33      Subfile clear (SLFCLR)
+      *    35      SFLNXTCHG
+      *    40      Invalid subfile selection
+      *    41      Invalid Syndicate member
+      *    42      Invalid introducing customer
+      *    43      Invalid joining date
+      *    44      Invalid Share type
+      *    45      Invalid Share (amount/percentage)
+      *    50      Test Field for Numerics
+      *    55      Protect Fields
+      *    56      Enable F10
+      *    60      No Records Found in Subfile
+      *    61      Enquiry Mode
+      *    70      READ and/or CHAIN Files
+      *    90-99   Used by standard subroutine
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *                   ~~~~~~~~~~~~~~~~~~~~                        *
+      *  INITPR  -  Initial processing                                *
+      *  BLDSFL  -  Build Subfile                                     *
+      *  REVIEW  -  Intractive processing                             *
+      *  MAPFLD  -  Map the input data read from the transmitted msg  *
+      *  VLDSFL  -  Validate subfile selection                        *
+      *  VLDALL  -  Validate subfile selection (Insert, amend, reverse*
+      *  VLDENQ  -  Validate subfile selection for enquiry            *
+      *  PROSEL  -  Process Enter from subfile screen                 *
+      *  ENQRYS  -  Process enquiry screen                            *
+      *  REVERS  -  Process Reverse  screen                           *
+      *  AMENDS  -  Process Amend screen                              *
+      *  POPSCR  -  Move fields to screen                             *
+      *  ENTER2  -  Enter key pressed from detail screen in reverse mode
+      *  VLDDET  -  Validate Syndicate member details                 *
+      *  VLDCUS  -  Validate Assignment Member                        *
+      *  VLDINC  -  Validate Introducing Customer                     *
+      *  VLDJDT  -  Validate Joining Date                             *
+      *  VLDSHR  -  Validate Share (Amount/Percentage)                *
+      *  SR2410  -  Validate settlement details                       *
+      *  SRWNDW  -  Window processing subroutine                      *
+      *  UPDFLE  -  Update facility filoe                             *
+      *  CALCSO  -  Calculate total share                             *
+      *  CALCAV  -  Calculate available share                         *
+      *  WRITER  -  Process third detail screen                       *
+      *  AMENDR  -  Update Facility File                              *
+      *  REVERR  -  Reverse a record                                  *
+      *  LOADFM  -  Load details to Facility file                     *
+      *  FEXSET  -  Setup details for settlement screen               *
+      *  MFSSCR  -  Move field to settlement screnn (SETLIAB)         *
+      *  SHRTNM  -  Setup SETLIAZ (used in SD2410)                    *
+      *  INITIS  -  Clear settlement screen for insert                *
+      *  CF03    -  Terminate program                                 *
+      *  CF05    -  Refresh screen                                    *
+      *  CF09    -  Insert a record                                   *
+      *  CF10    -  Confirm deletion of a record                      *
+      *  CF12    -  Previous screen                                   *
+      *  CF14    -  Settlement screen                                 *
+      *  CLRSC   -  Clear Screen fields for insert                    *
+      *  CLEARM  -  Clears message from the program message queue     *
+      *  ZASNMS  -  Sends message to the program message queue        *
+      *  SRBERR  -  Format batch error details                        *
+      *  *PSSR   -  Error handling subroutine                         *
+      *****************************************************************
+      *
+      ***Facilities*file*                                                 132565
+     F***LEFCLTL0IF**E        K        DISK         KINFSR *PSSR          132565
+     F************FCLTYFMF                          KRENAMEFCLTL0         132565
+      *
+      ** Assignments Play/Record file
+     FLE2023PDUF  E           K        DISK         KINFSR *PSSR A    UC
+      *
+      ** Assignments Details file
+     FLEPARTL2UF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+      *                                                                   132565
+      ** Facilities Details file                                          132565
+     FFCLTY   IF  E           K        DISK         KINFSR *PSSR          132565
+     F            FCLTYHHF                          KIGNORE               132565
+     F            FCLTYFNF                          KIGNORE               132565
+     F            FCLTYZZF                          KIGNORE               132565
+      *
+      **
+     FLE2023DFCF  E                    WORKSTN      KINFSR *PSSR      UC
+     F                                        RRN1  KSFILE LE2023S1
+     F/COPY WNCPYSRC,LEH00495
+      *
+      *****************************************************************
+      /EJECT
+      *
+      ** Compile Time Arrays
+      *  ~~~~~~~~~~~~~~~~~~~
+     E                    STAMP   1   1 26                                                    CPK015
+      ** Array containing dummy timestamp                                                     CPK015
+      ** Array containing Copyright statement
+     E                    CPY@    1   1 80
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+      *
+      ** Run Time Arrays
+      *  ~~~~~~~~~~~~~~~
+      *
+     E/COPY ZSRSRC,ZALIGNZ1
+      *
+      /SPACE 3
+     E/COPY WNCPYSRC,LEH00496
+      **
+     ILEPARTD0                                                                                CPK015
+     I              STMP                            LPSTMP                                    CPK015
+     I              PRTR                            LPPRTR                                    CLE106
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+     ILDA       E DSLDA                         256
+     I              SPARE                           SPARF                 119892
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      *                                     134 141 DBFILE
+      *                                     142 170 DBKEY
+      *                                     171 180 DBPGM
+      *                                     181 1830DBASE
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      **  Job date/time
+     IJBDTTM      DS
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+      *
+      ** First DS for access programs, short data structure
+     IDSFDY     E DSDSFDY
+      *
+      ** Second DS for access programs, long data structure
+     IDSSDY     E DSDSSDY
+      *
+      ** Bank Details
+     ISDBANK    E DSSDBANKPD
+      *                                                                   CEU004
+      ** External DS for SAR details                                      CEU004
+     ISCSARD    E DSSCSARDPD                                              CEU004
+     I              LCD                             LCDSAR                CEU004
+      *
+      ** Branch Code Details
+     ISDBRCH    E DSSDBRCHPD
+      *
+      ** Currency Details
+     ISDCURR    E DSSDCURRPD
+      *
+      ** Customer Details
+     ISDCUST    E DSSDCUSTPD
+     I              QQDFAC                          Q1DFAC                                    CGL029
+      *
+      ** Facility Type Details, read by access program.
+     ISDFACT    E DSSDFACTPD
+      *
+      ** data structure for passing a parameter to synon screen
+      ** handling program.
+     ISETLIB    EIDSSETLIAB
+      *
+      ** data structure for passing a parameter to synon screen
+      ** handling program.
+     ISETLIZ    E DSSETLIAZ
+     I@PARM3    E DSSDSETLPD                                              222373
+      *
+      ** IN Message Format
+     IP#INMF    E DSLER1MFPD
+     I              QQPONS                          Q1PONS                                    CGL029
+     I              QQRONS                          Q1RONS                                    CGL029
+      *
+      ** OUT Message Format
+     IP#OUMF    E DSLER2MFPD
+      *
+      * DS for calculating PC reference                                   155538
+     ILEALLO    E DSLEALLO                                                155538
+      *                                                                   155538
+     I            DS
+      ** Separate date values
+     I                                        1   6 WDATE
+     I                                        1   2 WDAT1
+     I                                        3   4 WDAT2
+     I                                        5   6 WDAT3
+      *
+     I            DS
+      ** Date format for test harness file
+     I                                        1   8 WTDAT
+     I                                        1   2 WTDT1
+     I I            '/'                       3   3 WFIL1
+     I                                        4   5 WTDT2
+     I I            '/'                       6   6 WFIL2
+     I                                        7   8 WTDT3
+      *
+     I            DS
+      ** Separate time values
+     I                                        1   60WTIME
+     I                                        1   2 WTIM1
+     I                                        3   4 WTIM2
+     I                                        5   6 WTIM3
+      *
+     I            DS
+      ** Time format for test harness file
+     I                                        1   8 WTTIM
+     I                                        1   2 WTTM1
+     I I            ':'                       3   3 WFIL3
+     I                                        4   5 WTTM2
+     I I            ':'                       6   6 WFIL4
+     I                                        7   8 WTTM3
+      *
+     I            DS
+     I                                        1   6 W1INUM
+     I                                        7  190W1SHAM
+     I                                       20  340W1SHPC
+      *
+     I/COPY ZSRSRC,ZTNLU1Z1
+      *
+      ** Data to be passed to window program
+     I/COPY QWINDSRC,LE2023GDTA
+      *
+      /EJECT
+      * ===============================================================
+      **                  D E F I N I T I O N S
+      * ===============================================================
+      *
+      ** PARAMETER Lists
+      ** ~~~~~~~~~~~~~~~
+     C           *ENTRY    PLIST
+     C                     PARM           P#MODE  1        Batch/Interacti
+     C                     PARM           P#INMF           IN Message format
+     C                     PARM           P#OUMF           OUT Message format
+      *
+      ** Define Fields
+      ** ~~~~~~~~~~~~~
+      *
+     C           *LIKE     DEFN CNUM      K#CNUM
+     C           *LIKE     DEFN ZDAYNO    W#DAYN
+     C           *LIKE     DEFN SHPC      W#SHRC
+     C           *LIKE     DEFN FAMT      W#AVAM
+     C           *LIKE     DEFN SHPC      W#AVPC
+     C           *LIKE     DEFN FAMT      W#FAMT
+     C           *LIKE     DEFN BRCA      K#BRCA
+     C           *LIKE     DEFN FACT      K#FACT
+     C           *LIKE     DEFN FCNO      K#FCNO
+      *
+     C           *LIKE     DEFN OSDB      W1ROBR
+     C           *LIKE     DEFN OMDB      W1POBR
+     C           *LIKE     DEFN R1RSTM    W1RSTM
+     C           *LIKE     DEFN PMRONS    W1RONS
+     C           *LIKE     DEFN R1RIBN    W1RIBN
+     C           *LIKE     DEFN R1RIBA    W1RIBA
+     C           *LIKE     DEFN R1ROBN    W1ROBN
+     C           *LIKE     DEFN R1ROCN    W1ROCN
+     C           *LIKE     DEFN R1PSTM    W1PSTM
+     C           *LIKE     DEFN PMPONS    W1PONS
+     C           *LIKE     DEFN R1PIBN    W1PIBN
+     C           *LIKE     DEFN R1PIBA    W1PIBA
+     C           *LIKE     DEFN R1POBN    W1POBN
+     C           *LIKE     DEFN R1POCN    W1POCN
+     C           *LIKE     DEFN R1CVMR    W1CVMR
+     C           *LIKE     DEFN R1RCRN    W1RCRN
+     C           *LIKE     DEFN R1RCRA    W1RCRA
+     C           *LIKE     DEFN R1RVNO    W1RVNO
+     C           *LIKE     DEFN R1AWBN    W1AWBN
+     C           *LIKE     DEFN R1AWBA    W1AWBA
+     C           *LIKE     DEFN R1BENN    W1BENN
+     C           *LIKE     DEFN R1BENA    W1BENA
+     C           *LIKE     DEFN PMDTP1    W1DTP1
+     C           *LIKE     DEFN PMDTP2    W1DTP2
+     C           *LIKE     DEFN PMDTP3    W1DTP3
+     C           *LIKE     DEFN PMDTP4    W1DTP4
+     C           *LIKE     DEFN R1DCHG    W1DCHG
+     C           *LIKE     DEFN PMBTB1    W1BTB1
+     C           *LIKE     DEFN PMBTB2    W1BTB2
+     C           *LIKE     DEFN PMBTB3    W1BTB3
+     C           *LIKE     DEFN PMBTB4    W1BTB4
+     C           *LIKE     DEFN PMBTB5    W1BTB5
+     C           *LIKE     DEFN PMBTB6    W1BTB6
+     C           *LIKE     DEFN R1MNUM    W1MNUM
+     C           *LIKE     DEFN MNUM      K#MNUM
+     C********** *LIKE     DEFN S#INUM    Z#INUM                    123476158135
+     C                     MOVE *BLANK    W#INUM  6                       158135
+     C**********           Z-ADD0         K#INUM  60                                   158135 CSD027
+     C                     MOVE *BLANKS   K#INUM  6                                           CSD027
+     C                     Z-ADD0         K#VDTC  50                      158135
+     C                     MOVE *BLANK    K#PCRF 15                       158645
+      *                                                                   CEU004
+     C           *LIKE     DEFN PMPSCY    W1SCCY                          CEU004
+     C           *LIKE     DEFN PMIC72    W1ICCY                          CEU004
+      *                                                                                       CLE031
+     C           CLE031    IFEQ 'Y'                                                           CLE031
+     C           *LIKE     DEFN PMREXR    W1REXR                                              CLE031
+     C           *LIKE     DEFN PMREXI    W1REXI                                              CLE031
+     C           *LIKE     DEFN PMPSCY    W1PSCY                                              CLE031
+     C           *LIKE     DEFN PMPEXR    W1PEXR                                              CLE031
+     C           *LIKE     DEFN PMPEXI    W1PEXI                                              CLE031
+     C                     ENDIF                                                              CLE031
+      *
+      ** Key Lists
+      ** ~~~~~~~~~
+      *
+      ** Key list to access Prime Facility
+     C           K#LTL0    KLIST
+     C                     KFLD           K#CNUM
+     C                     KFLD           K#FACT
+     C                     KFLD           K#FCNO
+      *
+      ** Key list to access Assignment Details For a prime
+      ** Facility
+     C           K#LTL2    KLIST
+     C                     KFLD           K#BRCA
+     C                     KFLD           K#CNUM
+     C                     KFLD           K#FACT
+     C                     KFLD           K#FCNO
+      *
+      ** Key list to check to access a particular assignment
+     C           K#LTL3    KLIST
+     C                     KFLD           K#BRCA
+     C                     KFLD           K#CNUM
+     C                     KFLD           K#FACT
+     C                     KFLD           K#FCNO
+     C                     KFLD           K#MNUM
+     C                     KFLD           K#INUM                          123476
+     C                     KFLD           K#VDTC                          123476
+     C                     KFLD           K#PCRF                          158645
+      *
+      * ===============================================================
+      *
+      *                M A I N        P R O C E S S I N G
+      *
+      * ===============================================================
+      *
+      ** Initialisation
+     C                     EXSR INITPR
+      *
+      ** Interactive, Record and Interactive Enquiry
+     C           P#MODE    IFEQ 'I'
+     C           P#MODE    OREQ 'R'
+     C           P#MODE    OREQ 'E'
+      *
+      ** Build Subfile
+     C                     EXSR BLDSFL
+      *
+      ** Display Screen
+     C                     EXSR REVIEW
+      *
+     C                     ENDIF
+      *
+      ** Batch
+     C           P#MODE    IFEQ 'B'
+      *
+      ** Map incoming data into the screen fields
+     C                     EXSR MAPFLD
+      *
+      ** Validate Detail from Parameter
+     C           W#ACTN    IFEQ 'I'
+     C           W#ACTN    OREQ 'A'
+     C                     EXSR VLDDET
+     C                     ELSE
+     C                     EXSR UPDFLE
+     C                     ENDIF
+      *
+      ** Set up details of returned message format
+     C                     MOVE R1MSGT    R2MSGT
+     C                     MOVE R1TRUS    R2TRUS
+     C                     MOVE R1TRWS    R2TRWS
+     C                     MOVE R1TNRF    R2TNRF
+     C                     MOVE R1TRSN    R2TRSN
+     C                     MOVE R1ACTN    R2ACTN
+     C                     MOVE R1TRDS    R2TRDS
+     C                     MOVE R1TRTS    R2TRTS
+     C                     MOVE R1NRBA    R2NRBA
+     C                     MOVE R1CNUM    R2CNUM
+     C                     MOVE R1FACT    R2FACT
+     C                     MOVE R1FCNO    R2FCNO
+     C                     MOVE R1MNUM    R2MNUM
+     C                     MOVE R1INUM    R2INUM
+      *
+     C                     ENDIF
+      *
+      ** Play
+     C           P#MODE    IFEQ 'P'
+      *
+     C                     READ LE2023PD                 70
+     C           *IN70     DOWEQ*OFF
+      *
+      ** Validate Detail from Parameter
+     C                     EXSR VLDDET
+      *
+     C                     READ LE2023PD                 70
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+      **  Terminate program
+     C                     EXSR CF03
+      *
+      /EJECT
+      *****************************************************************
+      * REVIEW   : Process Intractive processing                      *
+      * Called by: Main routine                                       *
+      * Calls    : CF03, CF05, CF09, PROSEL                           *
+      *****************************************************************
+     C           REVIEW    BEGSR
+      *
+      **  Clear Message subfile
+     C                     EXSR CLEARM
+      *
+      ** Continue to redisplay the screen if *IN30 remains off
+     C           *IN03     DOWEQ*OFF
+     C           *IN12     ANDEQ*OFF                                      123857
+      *
+     C                     WRITELE2023F2                   Header
+     C                     WRITELE2023F5                   Function Keys
+     C                     WRITE#MSGCTL                    Messages
+     C   60                WRITELE2023F4                   No Records  s
+     C                     EXFMTLE2023C1                   Subfile Control
+      *
+      **  this is used in CF05 (refresh)
+     C                     MOVE 'SFL'     W#F5MD  3
+      *
+      **  F3  - Exit
+     C           *IN03     CASEQ'1'       CF03
+      *                                   ****
+      **  F5 - Refresh
+     C           *IN05     CASEQ'1'       CF05
+      *
+      **  F9 - Add
+     C           *IN09     CASEQ'1'       CF09
+      *                                                                   123857
+      **  F12 - Previuos                                                  123857
+     C           *IN12     CASEQ'1'       CF03                            123857
+      *                                   ****
+      **  Enter Key Processing
+     C                     CAS            PROSEL
+      *                                   ******
+      *
+     C                     ENDCS
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * BLDSFL   : Build subfile                                      *
+      * Called by: Main routine, CF05                                 *
+      * Calls    : None.                                              *
+      *****************************************************************
+     C           BLDSFL    BEGSR
+      *
+     C                     Z-ADD*ZEROS    RRN1    40
+     C                     Z-ADD*ZEROS    W#TSAM 150
+     C                     Z-ADD*ZEROS    W#TSHP 150
+     C                     MOVE 'N'       W#FLAG
+     C                     MOVE 'N'       W#CF14
+      *
+      **  Clear subfile
+     C                     MOVEA'0001'    *IN,30
+     C                     WRITELE2023C1
+      *
+      **  Read all assignment, members
+     C           K#LTL2    SETLLLEPARTL2
+     C           K#LTL2    READELEPARTL2                 70
+      *
+     C           *IN70     DOWEQ*OFF
+      *
+     C                     MOVE *BLANKS   S#SEL
+     C                     MOVE *OFF      *IN40
+      *
+     C                     MOVE MNUM      S#CNUM           Member Number
+     C                     MOVE ' '       S#SEL
+      *
+      ** Assignment Share Amount/Percentage
+      *  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     C           SHTP      IFEQ 'A'
+      *
+     C                     MOVE *BLANK    ZFIELD
+     C                     MOVE SHAM      ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    S#SHAR
+      * SHTP = 'P'
+     C                     ELSE
+     C                     MOVE *BLANK    ZFIELD
+     C                     MOVE SHPC      ZFIELD
+     C                     Z-ADD12        ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    S#SHAR
+     C                     ENDIF
+      *
+      **  Add to total amounts
+     C                     ADD  SHAM      W#TSAM
+     C                     ADD  SHPC      W#TSHP
+      *
+      ** Share Type
+      *  ~~~~~~~~~~
+     C                     MOVE SHTP      S#SHTP
+      *                                                                   123476
+      ** History Flag                                                     123476
+      *  ~~~~~~~~~~~~                                                     123476
+     C           VDTC      IFLT BJRDNB                                    123476
+     C                     MOVE 'H'       S#HIST                          123476
+     C                     ELSE                                           123476
+     C                     MOVE *BLANKS   S#HIST                          123476
+     C                     ENDIF                                          123476
+      *                                                                   123476
+      *  Populate Hidden Field (Value Date)                               123476
+      *  ~~~~~~~~~~~~~~~~~~~~~                                            123476
+     C                     MOVE VDTC      H#VDTC                          123476
+     C                     MOVE INUM      H#INUM                          123476
+     C                     MOVE PCRF      H#PCRF 15                       158645
+      *                                                                                       CLE106
+     C           CLE106    IFEQ 'Y'                                                           CLE106
+     C                     MOVE *BLANKS   H#PRTR                                              CLE106
+      *                                                                                       CLE106
+     C           LPPRTR    IFEQ 'P'                                                           CLE106
+     C                     MOVEL'FUNDING' H#PRTR                                              CLE106
+     C                     ENDIF                                                              CLE106
+      *                                                                                       CLE106
+     C           LPPRTR    IFEQ 'I'                                                           CLE106
+     C                     MOVEL'INTERNAL'H#PRTR                                              CLE106
+     C                     ENDIF                                                              CLE106
+      *                                                                                       CLE106
+     C           LPPRTR    IFEQ 'R'                                                           CLE106
+     C                     MOVEL'RISK   ' H#PRTR                                              CLE106
+     C                     ENDIF                                                              CLE106
+      *                                                                                       CLE106
+     C           LPPRTR    IFEQ 'S'                                                           CLE106
+     C                     MOVEL'SUB    ' H#PRTR                                              CLE106
+     C                     ENDIF                                                              CLE106
+      *                                                                                       CLE106
+     C                     ENDIF                                                              CLE106
+      *
+      ** Customer Shortname
+      ** ~~~~~~~~~~~~~~~~~~
+      *  Access the Customer Details file
+      *
+     C                     MOVE MNUM      P#MNUM  6
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '       ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM P#MNUM    @CNUM  10
+     C                     PARM           @CNST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD6         DBASE
+     C                     MOVEL'SDCUSTPD'DBFILE
+     C                     MOVELP#MNUM    DBKEY
+     C                     MOVEL'LE2023'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+      *
+     C                     ELSE
+     C                     MOVE BBCSSN    S#CSSN           Short Name
+     C                     ENDIF
+      *
+      ** Assignment Date
+      ** ~~~~~~~~~~~~~~~
+     C                     MOVE JDTE      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     S#JDTE
+      *                                                                                       CLE106
+      ** Sequence Number                                                                      CLE106
+      *  ~~~~~~~~~~~~~~~                                                                      CLE106
+     C           CLE106    IFEQ 'Y'                                                           CLE106
+     C                     MOVE SEQN      S#SEQN                                              CLE106
+     C                     ENDIF                                                              CLE106
+      *
+     C                     ADD  1         RRN1
+      *
+     C                     WRITELE2023S1
+     C           K#LTL2    READELEPARTL2                 70
+      *
+     C                     ENDDO
+      *
+      ** Set on subfile display indicators.
+     C           RRN1      IFGT 0
+     C                     MOVEA'1110'    *IN,30
+      *
+      *  Records found
+     C                     MOVE *OFF      *IN60
+      *  Position subfile
+     C                     Z-ADD1         ##SFRC           Position page
+      *
+     C                     ELSE
+      *  Records not found
+      *
+     C                     MOVEA'0100'    *IN,30
+     C                     MOVE *ON       *IN60
+     C                     Z-ADD0         ##SFRC           Position page
+     C                     ENDIF
+      *
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * MAPFLD   : Map the input data read from the transmitted msg   *
+      * Called by: Main routine                                       *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           MAPFLD    BEGSR
+      *                                                                   CEU004
+     C           CEU004    IFEQ 'Y'                                       CEU004
+     C           CLE031    OREQ 'Y'                                                           CLE031
+     C                     MOVE R1SCCY    W1SCCY                          CEU004
+     C                     MOVE R1ICCY    W1ICCY                          CEU004
+     C                     ENDIF                                          CEU004
+      *
+      **  Map the input data read from the teansmitted message.
+     C                     MOVE R1ACTN    W#ACTN
+     C                     MOVELR1INUM    S#INUM
+     C                     MOVELR1MNUM    S#CNUM
+     C                     MOVELR1MNUM    S#MNUM
+      *
+     C                     MOVELR1JDTE    S#JDTE
+     C                     MOVE R1JDTE    W#TWO   2
+     C                     MOVE W#TWO     S#JDTE
+      *
+     C                     MOVE R1SHTP    S#SHTP
+      *
+     C           R1SHTP    IFEQ 'P'
+     C                     MOVE R1SHPC    S#SHAR
+     C                     ENDIF                                          154868
+     C                     MOVE SHPC      W1SHPC
+     C                     Z-ADD3         ZADIG                           154868
+     C                     MOVE *BLANK    ZFIELD                          154868
+     C                     MOVE R1SHPC    ZFIELD                          154868
+     C                     Z-ADD12        ZADEC                           154868
+     C                     MOVE *OFF      *IN99                           154868
+     C                     EXSR ZALIGN                                    154868
+     C                     MOVE ZFIELD    SHPC                            154868
+     C                     MOVE ZFIELD    S#SHPC 150                      158162
+      *
+     C***********          ELSE                                           154868
+      *
+     C           R1SHTP    IFEQ 'A'
+     C                     MOVE R1SHAM    S#SHAR
+     C                     ENDIF                                          154868
+     C                     MOVE SHAM      W1SHAM
+     C           13        SUB  A6NBDP    ZADIG                           154868
+     C                     MOVE *BLANK    ZFIELD                          154868
+     C                     MOVE R1SHAM    ZFIELD                          154868
+     C                     Z-ADDA6NBDP    ZADEC                           154868
+     C                     MOVE *OFF      *IN99                           154868
+     C                     EXSR ZALIGN                                    154868
+     C                     MOVE ZFIELD    SHAM                            154868
+     C                     MOVE ZFIELD    S#SHAM 130                      158162
+     C***********          ENDIF                                          154868
+     C***********          ENDIF                                          154868
+      *
+      **  Settlement details.
+     C                     MOVELR1PONS    W1POBR
+     C                     MOVELR1RONS    W1ROBR
+     C                     MOVE R1RSTM    W1RSTM
+      *
+      ****Test*for*Branch*code*for*Receive*instructions*******************140720
+     C***********          TESTN          W1ROBR     50                   140720
+     C************IN50     IFEQ *OFF                                      140720
+     C***********          MOVELR1RONS    W1TWO   2                       140720
+      ***********                                                         140720
+      ****Test*for*Nostro*number******************************************140720
+     C***********          TESTN          W1TWO      50                   140720
+     C***********          ENDIF                                          140720
+      ***********                                                         140720
+     C************IN50     IFEQ *OFF                                      140720
+     C                     MOVE R1RONS    W1RONS
+     C***********          ELSE                                           140720
+     C***********          MOVELR1RONS    W1RONS                          140720
+     C***********          MOVE *BLANKS   W1ROBR                          140720
+     C***********          ENDIF                                          140720
+      *
+      ****Test*for*Branch*code*for*Payment*instructions*******************140720
+     C***********          TESTN          W1POBR     50                   140720
+     C************IN50     IFEQ *OFF                                      140720
+     C***********          MOVELR1PONS    W1TWO                           140720
+      ***********                                                         140720
+      ****Test*for*Nostro*number******************************************140720
+     C***********          TESTN          W1TWO      50                   140720
+     C***********          ENDIF                                          140720
+      ***********                                                         140720
+     C************IN50     IFEQ *OFF                                      140720
+     C                     MOVE R1PONS    W1PONS
+     C***********          ELSE                                           140720
+     C***********          MOVELR1PONS    W1PONS                          140720
+     C***********          MOVE *BLANKS   W1POBR                          140720
+     C***********          ENDIF                                          140720
+      *
+     C                     MOVE R1RIBN    W1RIBN
+     C                     MOVE R1RIBA    W1RIBA
+     C                     MOVE R1ROBN    W1ROBN
+     C                     MOVE R1ROCN    W1ROCN
+     C                     MOVE R1PSTM    W1PSTM
+     C                     MOVE R1PIBN    W1PIBN
+     C                     MOVE R1PIBA    W1PIBA
+     C                     MOVE R1POBN    W1POBN
+     C                     MOVE R1POCN    W1POCN
+     C                     MOVE R1CVMR    W1CVMR
+     C                     MOVE R1RCRN    W1RCRN
+     C                     MOVE R1RCRA    W1RCRA
+     C                     MOVE R1RVNO    W1RVNO
+     C                     MOVE R1AWBN    W1AWBN
+     C                     MOVE R1AWBA    W1AWBA
+     C                     MOVE R1BENN    W1BENN
+     C                     MOVE R1BENA    W1BENA
+     C           35        SUBSTR1DTP1:1  W1DTP1
+     C           35        SUBSTR1DTP1:36 W1DTP2
+     C           35        SUBSTR1DTP1:71 W1DTP3
+     C           35        SUBSTR1DTP1:106W1DTP4
+     C                     MOVE R1DCHG    W1DCHG
+     C           35        SUBSTR1BTB1:1  W1BTB1
+     C           35        SUBSTR1BTB1:36 W1BTB2
+     C           35        SUBSTR1BTB1:71 W1BTB3
+     C           35        SUBSTR1BTB1:106W1BTB4
+     C           35        SUBSTR1BTB1:141W1BTB5
+     C           35        SUBSTR1BTB1:176W1BTB6
+      *                                                                                       CLE031
+     C           CLE031    IFEQ 'Y'                                                           CLE031
+     C                     MOVE R1REXR    W1REXR                                              CLE031
+     C                     MOVE R1REXI    W1REXI                                              CLE031
+     C                     MOVE R1PSCY    W1PSCY                                              CLE031
+     C                     MOVE R1PEXR    W1PEXR                                              CLE031
+     C                     MOVE R1PEXI    W1PEXI                                              CLE031
+     C                     ENDIF                                                              CLE031
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * UPDFLE   : Update Assignments file                            *
+      * Called by: CF10, VLDDET                                       *
+      * CallS    : WRITER, AMENDR, REVERR                             *
+      *****************************************************************
+     C           UPDFLE    BEGSR
+      *
+      ** Record Mode 'R'
+      *
+     C           P#MODE    IFEQ 'R'
+      *
+      * Write the contents of the detail screen.
+     C                     Z-ADDBJRDNB    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     WDATE
+     C                     MOVE WDAT1     WTDT1
+     C                     MOVE WDAT2     WTDT2
+     C                     MOVE WDAT3     WTDT3
+     C                     MOVE WTDAT     DTST
+      *
+     C                     TIME           WTIME
+     C                     MOVE WTIM1     WTTM1
+     C                     MOVE WTIM2     WTTM2
+     C                     MOVE WTIM3     WTTM3
+     C                     MOVE WTTIM     TMST
+      *
+      *
+     C                     MOVE *BLANKS   RMSV
+     C                     MOVE *BLANKS   RMID
+     C                     MOVE *BLANKS   RMTY
+      *                                                                   CEU004
+     C           CEU004    IFEQ 'Y'                                       CEU004
+     C           P#MODE    ANDEQ'R'                                       CEU004
+     C           CLE031    OREQ 'Y'                                                           CLE031
+     C           P#MODE    ANDEQ'R'                                                           CLE031
+     C                     MOVE PMPSCY    PMSCCY                          CEU004
+     C                     MOVE PMIC72    PMICCY                          CEU004
+     C                     ENDIF                                          CEU004
+      *                                                                   CEU004
+     C                     WRITELE2023D0
+      *
+     C                     ENDIF
+      *
+      **  Write assignment record
+     C           W#ACTN    IFEQ 'I'
+      *
+     C           P#MODE    IFNE 'B'
+     C           W#CF14    IFEQ 'N'
+     C                     EXSR INITIS
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     EXSR WRITER
+     C                     ENDIF
+      *
+      **  Update assignment record
+     C           W#ACTN    IFEQ 'A'
+     C                     EXSR AMENDR
+     C                     ENDIF
+      *
+      **  Delete assignment record
+     C           W#ACTN    IFEQ 'R'
+     C                     MOVE S#BRCA    K#BRCA
+     C                     MOVE S#FCNM    K#CNUM
+     C                     MOVE S#FACT    K#FACT
+     C                     MOVE S#FCNO    K#FCNO
+     C                     MOVE S#CNUM    K#MNUM
+     C                     MOVE H#INUM    W#INUM                          123476
+     C                     MOVE W#INUM    K#INUM                          123476
+     C                     MOVE H#VDTC    K#VDTC                          123476
+     C                     MOVE H#PCRF    K#PCRF                          158645
+     C           K#LTL3    SETLLLEPARTL2             70
+     C           *IN70     IFEQ *OFF
+     C                     EXSR REVERR
+     C                     ELSE
+     C                     MOVE 'Y'       W#ERR2
+      *
+      **  Display Message
+     C                     MOVEL'LEP0025' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           W#ERR2    IFNE 'Y'
+      *
+     C           P#MODE    IFEQ 'I'
+     C           P#MODE    OREQ 'R'
+     C                     MOVE *OFF      *IN40
+     C                     EXSR BLDSFL
+      *
+      **  Clear Screen
+     C           W#ACTN    IFEQ 'I'
+     C                     EXSR CLRSC
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      **  Commit the database changes
+     C           P#MODE    IFNE 'B'
+     C                     COMIT
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * WRITER   : Write a record to assignment file                  *
+      * Called by: UPDFLE                                             *
+      * Calls    : LOADFM                                             *
+      *****************************************************************
+     C           WRITER    BEGSR
+      *
+      **  Write record
+     C                     EXSR LOADFM
+     C                     MOVEASTAMP,1   LPSTMP           Default Timestamp                  CPK015
+     C                     WRITELEPARTD0
+      *
+      **  Rebuild subfile
+     C                     MOVE 'Y'       W#RBLD
+      *
+     C           P#MODE    IFNE 'P'
+     C           P#MODE    ANDNE'B'
+      *
+      **  Clear Message subfile (to add a new record)
+     C                     EXSR CLEARM
+      *
+      **  Display Message (Record added)
+     C***********          MOVEL'LEP0021' ZAMSID                          120057
+     C                     MOVEL'LEP0037' ZAMSID                          120057
+     C                     EXSR ZASNMS
+      *
+      **  Clear Screen
+     C                     EXSR CLRSC
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      * AMENDR   : Update assignment File                             *
+      * Called by: UPDFLE                                             *
+      * Calls    : LOADFM                                             *
+      *****************************************************************
+     C           AMENDR    BEGSR
+      *
+      **  Set up K#LTL3
+      *
+     C                     MOVE S#BRCA    K#BRCA
+     C                     MOVE S#FCNM    K#CNUM
+     C                     MOVE S#FACT    K#FACT
+     C                     MOVE S#FCNO    K#FCNO
+     C                     MOVE S#CNUM    K#MNUM
+     C                     MOVE INUM      K#INUM                          123476
+     C                     MOVE H#VDTC    K#VDTC                          123476
+     C                     MOVE H#PCRF    K#PCRF                          158645
+     C           K#LTL3    CHAINLEPARTL2             70
+      *
+     C           *IN70     IFEQ *OFF
+      *
+     C                     EXSR LOADFM
+     C                     UPDATLEPARTD0
+      *
+     C                     MOVE 'Y'       W#RBLD
+      *
+     C           P#MODE    IFNE 'P'
+     C           P#MODE    ANDNE'B'
+      *
+      **  Display Message (Record updated)
+     C                     MOVEL'LEP0022' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C***********          ELSE                                           123476
+      *
+     C***********          MOVE 'Y'       W#ERR2                          123476
+     C***********          MOVEL'LEP0026' ZAMSID                          123476
+     C***********          EXSR ZASNMS                                    123476
+      *
+     C                     ENDIF
+      *
+      **  Move to previous screen
+     C                     MOVE *ON       *IN12
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * REVERR   : Reverse a record                                   *
+      * Called by: UPDFLE                                             *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           REVERR    BEGSR
+      *
+      **  Set up K#LTL3
+      *
+     C                     MOVE S#BRCA    K#BRCA
+     C                     MOVE S#FCNM    K#CNUM
+     C                     MOVE S#FACT    K#FACT
+     C                     MOVE S#FCNO    K#FCNO
+     C                     MOVE S#CNUM    K#MNUM
+     C                     MOVELS#INUM    W#INUM                          123476
+     C                     MOVE W#INUM    K#INUM                          123476
+     C                     MOVE H#VDTC    K#VDTC                          123476
+     C                     MOVE H#PCRF    K#PCRF                          158645
+     C           K#LTL3    CHAINLEPARTL2             70
+      *
+     C           *IN70     IFEQ *OFF
+     C                     DELETLEPARTD0
+     C***********          ELSE                                           123476
+     C***********          MOVE 'Y'       W#ERR2                          123476
+      *
+      ****Display*Message**********************************************   123476
+     C***********          MOVEL'LEP0026' ZAMSID                          123476
+     C***********          EXSR ZASNMS                                    123476
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * CF03     : Exit program                                       *
+      * Called by: PROSEL, REVIEW, CF05, CF09, ENQRYS, REVERS, AMENDS *
+      * Calls    : None.                                              *
+      *****************************************************************
+     C           CF03      BEGSR
+      *
+      ** Close SD2400 program and end this program's processing
+     C           P#MODE    IFNE 'B'
+     C           P#MODE    ANDNE'P'
+     C                     MOVE 'T'       PMTERM
+     C                     CALL 'SD2400'
+     C                     PARM           @RTCD
+     C                     PARM           SETLIB
+     C                     PARM           SETLIZ
+     C                     PARM           @DLNUM  6                       222373
+     C                     PARM           @PARM3                          222373
+     C                     ENDIF
+      *
+     C           P#MODE    IFNE 'B'                                       123857
+     C************IN12     ANDEQ*OFF                               123857 148847
+     C           *IN12     IFEQ *OFF                                      148847
+     C                     MOVE 'T'       R2MSGS                          123857
+     C                     ELSE                                           148847
+     C           WENTR     IFEQ 'N'                                       148847
+     C                     MOVE 'P'       R2MSGS                          148847
+     C                     ENDIF                                          148847
+     C                     ENDIF                                          148847
+      *                                                                   148847
+     C                     ENDIF                                          123857
+      *                                                                   123857
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * CF05     : Refresh Screen                                     *
+      * Called by: REVIEW, CF09, AMENDS                               *
+      * Calls    : BLDSFL, CLRSC, POPSCR.                             *
+      *****************************************************************
+     C           CF05      BEGSR
+      *
+      ** Clear Message subfile
+     C                     EXSR CLEARM
+      *
+      ** If it is in Subfile Mode
+     C           W#F5MD    IFEQ 'SFL'
+      *
+     C           W#RBLD    IFEQ 'Y'
+     C                     MOVE 'N'       W#RBLD  1
+      *
+     C           *IN60     IFEQ *OFF
+     C           W#ACTN    ANDNE'I'
+     C           W#RRN1    CHAINLE2023S1             70
+     C                     MOVE ' '       S#SEL
+     C                     MOVE *OFF      *IN40            RI & PC
+     C                     MOVE *OFF      *IN35            SFLNXTCHG
+     C                     UPDATLE2023S1
+     C                     ENDIF
+      *
+      ** Build Subfile
+     C                     EXSR BLDSFL
+      *
+      ** Clear Selection field
+     C                     ELSE
+     C           *IN60     IFEQ *OFF
+     C           1         CHAINLE2023S1             29
+     C           *IN29     DOWEQ*OFF
+     C                     MOVE ' '       S#SEL
+     C                     MOVE *OFF      *IN40            RI & PC
+     C                     MOVE *OFF      *IN35            SFLNXTCHG
+     C                     UPDATLE2023S1
+     C                     READCLE2023S1                 29
+     C                     ENDDO
+     C                     ENDIF
+      *
+      ** Position to first page
+     C                     Z-ADD1         ##SFRC           SFLRCDNBR
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ** If it is in Insert Mode
+     C           W#F5MD    IFEQ 'INS'
+     C                     EXSR CLRSC
+     C                     SETOF                     414243
+     C                     SETOF                     4445
+      *
+     C                     ELSE
+      *
+      ** If it is in Amend Mode
+     C           W#F5MD    IFEQ 'UPD'
+     C                     SETOF                     414243
+     C                     SETOF                     4445
+     C                     EXSR POPSCR
+      *
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * CF09     : Insert a record                                    *
+      * Called by: REVIEW                                             *
+      * Calls    : CLRSC, CF03, CF05, CF12, CF14, VLDDET              *
+      *****************************************************************
+     C           CF09      BEGSR
+      *
+      **  Clear Message subfile
+     C                     EXSR CLEARM
+      *
+      **  Clear Screen
+     C                     EXSR CLRSC
+      *
+     C                     MOVE 'I'       W#ACTN
+     C                     MOVE *OFF      *IN55            Dont Protrct
+     C                     MOVE *OFF      *IN56            Disable F10
+     C                     MOVE *OFF      *IN12
+     C                     MOVE 'Y'       W#VSET
+      *
+     C                     MOVE 'INS'     W#F5MD  3
+      *
+     C           *IN03     DOWEQ*OFF
+     C           *IN12     ANDEQ*OFF
+      *
+     C                     WRITELE2023F2                   Header
+     C                     WRITELE2023F1                   Function Keys
+     C                     WRITE#MSGCTL                    Messages
+     C                     EXFMTLE2023F3                   Screen
+      *                                                                   123476
+     C                     MOVE *OFF      *IN42                           123476
+      *
+      **  F3  - Exit
+     C           *IN03     CASEQ'1'       CF03
+      *                                   ****
+      **  F5  - Refresh
+     C           *IN05     CASEQ'1'       CF05
+      *                                   ****
+      **  F12 - Previous
+     C           *IN12     CASEQ'1'       CF12
+      *                                   ****
+      **  F14 - Settlements
+     C           *IN14     CASEQ'1'       CF14
+      *                                   ****
+      **  Enter Key Processing
+     C                     CAS            VLDDET
+      *                                   ******
+     C                     ENDCS
+      *
+     C                     ENDDO
+      *
+     C                     MOVE *OFF      *IN09
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * CF10     : Process third detail screen                        *
+      * Called by: REVERS                                             *
+      * Calls    : UPDFLE                                             *
+      *****************************************************************
+     C           CF10      BEGSR
+      *
+      ** Clear Message subfile
+     C                     EXSR CLEARM
+      ** Update assignment file
+     C                     EXSR UPDFLE
+      *
+     C           W#ERR2    IFNE 'Y'
+      *
+      **  Display Message (Record Deleted)
+      *
+     C           P#MODE    IFNE 'P'
+     C           P#MODE    ANDNE'B'
+     C                     MOVEL'LEP0030' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * CF12     : Previous screen                                    *
+      * Called by: ENQRYS, AMENDS, REVERS, CF09                       *
+      * Calls    : None.                                              *
+      *****************************************************************
+     C           CF12      BEGSR
+      *
+      ** Clear Message subfile
+     C                     EXSR CLEARM
+      *
+     C                     SETOF                     414344
+     C                     SETOF                     45
+     C                     MOVE 'N'       W#FLAG
+     C                     MOVE 'N'       W#CF14
+      *
+     C           *IN60     IFEQ *OFF
+     C           W#ACTN    ANDNE'I'
+     C           W#RRN1    CHAINLE2023S1             29
+     C                     MOVE *ON       *IN35
+     C                     MOVE *ON       *IN40
+     C           *IN42     IFEQ *ON
+     C                     MOVE *BLANKS   S#INUM
+     C                     SETOF                     42
+     C                     ENDIF
+     C                     UPDATLE2023S1
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * CF14     : Extended Settlement Details                        *
+      * Called by: ENQRYS, AMENDS, REVERS, CF09                       *
+      * Calls    : FEXSET                                             *
+      *****************************************************************
+     C           CF14      BEGSR
+      *
+     C                     MOVE 'Y'       W#CF14  1
+      *
+      ** Setup parameters for call to SETLIB
+     C           W#FLAG    IFEQ 'N'
+     C                     EXSR FEXSET
+     C                     ENDIF
+     C                     MOVE *BLANKS   PMTERM
+      *
+     C                     CALL 'SD2400'
+     C                     PARM           @RTCD
+     C                     PARM           SETLIB
+     C                     PARM           SETLIZ
+     C                     PARM           @DLNUM  6                       222373
+     C                     PARM           @PARM3                          222373
+      *
+      ** Terminate program if database error returned
+     C           PMDBSE    IFNE *ZERO
+     C           *LOCK     IN   LDA
+     C                     MOVELPMDBFL    DBFILE
+     C                     MOVE PMDBSE    DBASE
+     C                     MOVELPMDBKY    DBKEY
+     C                     MOVELPMDPGM    DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           PMCMDP    IFEQ '03'
+     C                     MOVE '1'       *IN03
+     C                     MOVE '0'       *IN14
+      *
+     C                     ELSE
+     C           PMCMDP    IFEQ '12'
+     C           W#ACTN    ANDNE'R'
+     C           W#ACTN    ANDNE'E'
+      *
+      ** SETTLEMENT DETAIL VALID OR F12 IS PRESSED W/OUT VALIDATION
+      ** (I.E. ENTER NOT PRESSED IN THE SETTLEMENT SCREEEN)
+      *
+     C           PMSDTV    IFEQ 'Y'
+     C           PMSDTV    OREQ 'N'
+     C           PMERCD    ANDEQ*BLANKS
+     C                     MOVE 'Y'       W#VSET  1
+     C                     MOVE 'Y'       W#FLAG  1
+     C                     ENDIF
+      *
+      ** SETTLEMENT DETAIL IN ERROR
+     C           PMERCD    IFNE *BLANKS
+     C                     MOVE 'N'       W#VSET
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     MOVE 'N'       PMFRST
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * CLRSC    : Clear Screen fields                                *
+      * Called by: WRITER, CF05, CF09                                 *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           CLRSC     BEGSR
+      *
+     C                     MOVE *BLANK    S#MNUM
+     C                     MOVE *BLANK    S#INUM
+     C                     MOVE *BLANK    S#JDTE
+     C                     MOVE *BLANK    S#SHTP
+     C                     MOVE *BLANK    S#SHAR
+     C                     MOVE *BLANK    S#MRNM                          148534
+     C                     MOVE *BLANK    S#MRTN                          148534
+     C                     MOVE *BLANK    S#IRNM                          148534
+     C                     MOVE *BLANK    S#IRTN                          148534
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * FEXSET   : Setup details for settlement screen                *
+      * Called by: CF14                                               *
+      * Calls    : MFSSCR, INITIS                                     *
+      *****************************************************************
+     C           FEXSET    BEGSR
+      *
+      ** SETUP DETAILS FOR SETTLEMENT SCREEN IF FIRST TIME PASS THROUGH
+      ** EXTENDED SETTLEMENT SCREEN.
+      *
+     C                     MOVE W#ACTN    PMACTC
+     C***********          MOVE 'MMLD'    PMCPGM                          135152
+     C                     MOVE 'LEND'    PMCPGM                          135152
+     C                     Z-ADD0         PMDBSE
+     C                     MOVE *BLANKS   PMERCD
+     C                     MOVE 'Y'       PMFRST
+     C                     Z-ADDBJRDNB    PMRUND
+      *
+      ** DETERMINE IF PAY & RECEIVE SETTLEMENT SCREEN WILL BE
+      ** PROTECTED.
+      *
+     C           W#ACTN    IFEQ 'E'
+     C           W#ACTN    OREQ 'R'
+     C                     MOVE 'Y'       PMPRCV
+     C                     MOVE 'Y'       PMPPAY
+     C                     ELSE
+     C                     MOVE 'N'       PMPRCV
+     C                     MOVE 'N'       PMPPAY
+     C                     ENDIF
+      *
+      ** MOVE FILE VALUES TO SD2400 PARAMETERS TO BE
+      ** DISPALYED ON SETTLEMENT SCREEN FOR AMEND OR REVERSE.
+      ** INITIALIZE SD2400 PARAMETERS FOR INSERT.
+      *
+     C           P#MODE    IFNE 'P'
+     C           W#ACTN    IFEQ 'A'
+     C           W#ACTN    OREQ 'E'
+     C           W#ACTN    OREQ 'R'
+     C           W#ACTN    OREQ 'I'
+     C                     EXSR MFSSCR
+     C                     ENDIF
+     C                     ENDIF
+      *                                                                   CEU004
+     C           CEU004    IFEQ 'Y'                                       CEU004
+     C           P#MODE    ANDEQ'P'                                       CEU004
+     C           CLE031    OREQ 'Y'                                                           CLE031
+     C           P#MODE    ANDEQ'P'                                                           CLE031
+     C                     MOVE PMSCCY    PMPSCY                          CEU004
+     C                     MOVE PMSCCY    PMRSCY                          CEU004
+     C                     MOVE PMICCY    PMIC72                          CEU004
+     C                     ENDIF                                          CEU004
+      *
+     C           W#ACTN    IFEQ 'I'
+     C           P#MODE    IFEQ 'I'
+     C           P#MODE    OREQ 'R'
+     C                     EXSR INITIS
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE S#CNUM    PMCSNM
+     C                     MOVE S#BRCA    PMBRCA
+     C                     MOVE S#FCCY    PMRCCY
+     C                     MOVE S#FCCY    PMPCCY
+     C                     MOVE *BLANK    PMFFND
+     C                     MOVE *BLANK    PMCMDP
+      *
+      ** FOR INSERT CLEAR OUT ERROR CODES FOR EVERY ENTRY TO
+      ** EXTENDED SETTLEMENT (I.E. SD2400 TREATS EVERY ENTRY
+      ** TO THE SETTLEMENT SCREEN AS IF IT'S THE FIRST
+      ** TIME FOR INSERT
+      *
+     C           W#ACTN    IFEQ 'I'
+     C                     MOVE *BLANKS   PMERCD
+     C                     ENDIF
+      *
+      ** VALIDATION ONLY FLAG
+      *
+     C           PMFRST    IFEQ 'N'
+     C                     MOVE 'Y'       PMVALO
+     C                     ELSE
+     C                     MOVE 'N'       PMVALO
+     C                     ENDIF
+      *
+      ** SETTLEMENT DETAIL VALID FLAG, DATE OF RECEIPT AND PAYMENT.
+      *
+     C           W#ACTN    IFEQ 'E'
+     C           W#ACTN    OREQ 'R'
+     C                     MOVE 'Y'       PMSDTV
+     C                     Z-ADD0         PMDTRC
+     C                     Z-ADD0         PMDTPY
+     C                     ENDIF
+      *
+     C           W#ACTN    IFEQ 'I'
+     C           W#ACTN    OREQ 'A'
+     C                     MOVE 'N'       PMSDTV
+     C                     ENDIF
+      *
+      ** SET UP DATE OF RECEIPT
+     C                     Z-ADDBJRDNB    PMDTRC
+      *
+      ** SET UP DATE OF PAYMENT
+     C                     Z-ADDBJRDNB    PMDTPY
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * MFSSCR   : Move field to settlement screnn (SETLIAB)          *
+      * Called by: FEXSET                                             *
+      * Calls    : SHRTNM                                             *
+      *****************************************************************
+     C           MFSSCR    BEGSR
+      *                                                                   CEU004
+     C           CEU004    IFEQ 'Y'                                       CEU004
+     C           CLE031    OREQ 'Y'                                                           CLE031
+     C                     MOVE W1SCCY    PMPSCY                          CEU004
+     C                     MOVE W1SCCY    PMRSCY                          CEU004
+     C                     MOVE W1ICCY    PMIC72                          CEU004
+     C                     ENDIF                                          CEU004
+      *
+     C                     Z-ADDW1RSTM    PMRSTM
+     C                     MOVE W1RONS    PMRONS
+     C                     MOVE W1RIBN    PARIBN
+     C                     MOVE W1RIBA    PMRIBA
+      *
+     C********** W1ROBN    IFNE 0                                                             CSD027
+     C           W1ROBN    IFNE *BLANKS                                                       CSD027
+     C                     MOVE W1ROBN    PAROBN
+     C                     ELSE
+     C                     MOVE *BLANKS   PAROBN
+     C                     ENDIF
+      *
+     C********** W1ROCN    IFNE 0                                                             CSD027
+     C           W1ROCN    IFNE *BLANKS                                                       CSD027
+     C                     MOVE W1ROCN    PAROCN
+     C                     ELSE
+     C                     MOVE *BLANKS   PAROCN
+     C                     ENDIF
+      *
+     C                     Z-ADDW1PSTM    PMPSTM
+     C                     MOVE W1PONS    PMPONS
+     C                     MOVE W1PIBN    PAPIBN
+     C                     MOVE W1PIBA    PMPIBA
+      *
+     C********** W1POBN    IFNE 0                                                             CSD027
+     C           W1POBN    IFNE *BLANKS                                                       CSD027
+     C                     MOVE W1POBN    PAPOBN
+     C                     ELSE
+     C                     MOVE *BLANKS   PAPOBN
+     C                     ENDIF
+      *
+     C********** W1POCN    IFNE 0                                                             CSD027
+     C           W1POCN    IFNE *BLANKS                                                       CSD027
+     C                     MOVE W1POCN    PAPOCN
+     C                     ELSE
+     C                     MOVE *BLANKS   PAPOCN
+     C                     END
+      *
+     C                     MOVE W1CVMR    PMCVMR
+     C                     MOVE W1RCRN    PARCRN
+     C                     MOVE W1RCRA    PMRCRA
+     C                     MOVE W1RVNO    PARVNO
+     C                     MOVE W1AWBN    PAAWBN
+     C                     MOVE W1AWBA    PMAWBA
+     C                     MOVE W1BENN    PABENN
+     C                     MOVE W1BENA    PMBENA
+     C                     MOVE W1DTP1    PMDTP1
+     C                     MOVE W1DTP2    PMDTP2
+     C                     MOVE W1DTP3    PMDTP3
+     C                     MOVE W1DTP4    PMDTP4
+     C                     MOVE W1DCHG    PMDCHG
+     C                     MOVE W1BTB1    PMBTB1
+     C                     MOVE W1BTB2    PMBTB2
+     C                     MOVE W1BTB3    PMBTB3
+     C                     MOVE W1BTB4    PMBTB4
+     C                     MOVE W1BTB5    PMBTB5
+     C                     MOVE W1BTB6    PMBTB6
+      *                                                                   134008
+      * Strip out the branch if settlement method is not '05'             134008
+      *                                                                   134008
+     C           W1PSTM    IFEQ 05                                        134008
+     C                     MOVE W1POBR    PMPOBR
+     C                     ELSE                                           134008
+     C                     MOVE *BLANKS   PMPOBR                          134008
+     C                     ENDIF                                          134008
+      *                                                                   134008
+     C           W1RSTM    IFEQ 05                                        134008
+     C                     MOVE W1ROBR    PMROBR
+     C                     ELSE                                           134008
+     C                     MOVE *BLANKS   PMROBR                          134008
+     C                     ENDIF                                          134008
+      *                                                                                       CLE031
+     C           CLE031    IFEQ 'Y'                                                           CLE031
+     C                     MOVE W1SCCY    PMRSCY                                              CLE031
+     C                     MOVE W1REXR    PMREXR                                              CLE031
+     C           W1REXR    IFNE *BLANKS                                                       CLE031
+     C                     MOVE *BLANKS   ZFIELD                                              CLE031
+     C                     MOVE W1REXR    ZFIELD                                              CLE031
+     C                     Z-ADD8         ZADEC                                               CLE031
+     C                     Z-ADD5         ZADIG                                               CLE031
+     C                     MOVE *OFF      *IN99                                               CLE031
+     C                     EXSR ZALIGN                                                        CLE031
+     C                     Z-ADD*ZEROS    WSEXR  138                                          CLE031
+     C                     MOVELZFIELD    WSEXR                                               CLE031
+     C           *IN99     IFEQ *ON                                                           CLE031
+     C           WSEXR     OREQ *ZEROS                                                        CLE031
+     C                     MOVE *BLANKS   PMREXR                                              CLE031
+     C                     ENDIF                                                              CLE031
+     C                     ENDIF                                                              CLE031
+     C                     MOVE W1REXI    PMREXI                                              CLE031
+     C           W1REXI    IFEQ 'N'                                                           CLE031
+     C                     MOVE *BLANKS   PMREXI                                              CLE031
+     C                     ENDIF                                                              CLE031
+     C                     MOVE W1PSCY    PMPSCY                                              CLE031
+     C                     MOVE W1PEXR    PMPEXR                                              CLE031
+     C           W1PEXR    IFNE *BLANKS                                                       CLE031
+     C                     MOVE W1PEXR    ZFIELD                                              CLE031
+     C                     Z-ADD8         ZADEC                                               CLE031
+     C                     Z-ADD5         ZADIG                                               CLE031
+     C                     MOVE *OFF      *IN99                                               CLE031
+     C                     EXSR ZALIGN                                                        CLE031
+     C                     Z-ADD*ZEROS    WSEXR                                               CLE031
+     C                     MOVELZFIELD    WSEXR                                               CLE031
+     C           *IN99     IFEQ *ON                                                           CLE031
+     C           WSEXR     OREQ *ZEROS                                                        CLE031
+     C                     MOVE *BLANKS   PMPEXR                                              CLE031
+     C                     ENDIF                                                              CLE031
+     C                     ENDIF                                                              CLE031
+     C                     MOVE W1PEXI    PMPEXI                                              CLE031
+     C           W1PEXI    IFEQ 'N'                                                           CLE031
+     C                     MOVE *BLANKS   PMPEXI                                              CLE031
+     C                     ENDIF                                                              CLE031
+     C                     ENDIF                                                              CLE031
+      *
+      ** Setup SETLIAZ fields
+     C                     EXSR SHRTNM
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * INITIS   : Clear settlement screen for insert                 *
+      * Called by: FEXSET                                             *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           INITIS    BEGSR
+      *                                                                   CEU004
+     C           CEU004    IFEQ 'Y'                                       CEU004
+     C           CLE031    OREQ 'Y'                                                           CLE031
+     C                     MOVE *BLANKS   PMRSCY                          CEU004
+     C                     MOVE *BLANKS   PMPSCY                          CEU004
+     C                     MOVE *BLANKS   PMIC72                          CEU004
+     C                     ENDIF                                          CEU004
+      *
+     C                     Z-ADD0         PMRSTM
+     C                     MOVE *BLANKS   PMRONS
+     C                     MOVE *BLANKS   PARIBN
+     C                     MOVE *BLANKS   PMRIBN
+     C                     MOVE *BLANKS   PMRIBA
+     C                     MOVE *BLANKS   PAROBN
+     C                     MOVE *BLANKS   PMROBN
+     C                     MOVE *BLANKS   PAROCN
+     C                     MOVE *BLANKS   PMROCN
+     C                     Z-ADD0         PMPSTM
+     C                     MOVE *BLANKS   PMPONS
+     C                     MOVE *BLANKS   PAPIBN
+     C                     MOVE *BLANKS   PMPIBN
+     C                     MOVE *BLANKS   PMPIBA
+     C                     MOVE *BLANKS   PAPOBN
+     C                     MOVE *BLANKS   PMPOBN
+     C                     MOVE *BLANKS   PAPOCN
+     C                     MOVE *BLANKS   PMPOCN
+     C                     MOVE *BLANKS   PMCVMR
+     C                     MOVE *BLANKS   PARCRN
+     C                     MOVE *BLANKS   PMRCRN
+     C                     MOVE *BLANKS   PMRCRA
+     C                     MOVE *BLANKS   PARVNO
+     C                     MOVE *BLANKS   PMRVNO
+     C                     MOVE *BLANKS   PAAWBN
+     C                     MOVE *BLANKS   PMAWBN
+     C                     MOVE *BLANKS   PMAWBA
+     C                     MOVE *BLANKS   PABENN
+     C                     MOVE *BLANKS   PMBENN
+     C                     MOVE *BLANKS   PMBENA
+     C                     MOVE *BLANKS   PMDTP1
+     C                     MOVE *BLANKS   PMDTP2
+     C                     MOVE *BLANKS   PMDTP3
+     C                     MOVE *BLANKS   PMDTP4
+     C                     MOVE *BLANKS   PMDCHG
+     C                     MOVE *BLANKS   PMBTB1
+     C                     MOVE *BLANKS   PMBTB2
+     C                     MOVE *BLANKS   PMBTB3
+     C                     MOVE *BLANKS   PMBTB4
+     C                     MOVE *BLANKS   PMBTB5
+     C                     MOVE *BLANKS   PMBTB6
+     C                     MOVE *BLANKS   PMPOBR
+     C                     MOVE *BLANKS   PMROBR
+      *                                                                                       CLE031
+     C           CLE031    IFEQ 'Y'                                                           CLE031
+     C                     MOVE *BLANKS   PMREXR                                              CLE031
+     C                     MOVE *BLANKS   PMREXI                                              CLE031
+     C                     MOVE *BLANKS   PMPSCY                                              CLE031
+     C                     MOVE *BLANKS   PMPEXR                                              CLE031
+     C                     MOVE *BLANKS   PMPEXI                                              CLE031
+     C                     ENDIF                                                              CLE031
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SHRTNM   : Setup SETLIAZ (used in SD2410)                     *
+      * Called by: MFSSCR                                             *
+      * Calls    : None.                                              *
+      *****************************************************************
+     C           SHRTNM    BEGSR
+      *
+      ** COUNTERPARTY PAY INSTRUCTIONS.
+     C                     MOVE *BLANKS   PMRIBN
+     C                     MOVELPARIBN    PMRIBN
+      *
+      ** RCPT - RCPT - ORDERING BANK NO.
+     C                     MOVE *BLANKS   PMROBN
+     C                     MOVELPAROBN    PMROBN
+      *
+      ** RCPT - ORDERING CUSTOMER NO.
+     C                     MOVE *BLANKS   PMROCN
+     C                     MOVELPAROCN    PMROCN
+      *
+      ** PAY - INTERMEDIARY BANK NO.
+     C                     MOVE *BLANKS   PMPIBN
+     C                     MOVELPAPIBN    PMPIBN
+      *
+      ** PAY - ORDERING BANK NO.
+      *
+     C                     MOVE *BLANKS   PMPOBN
+     C                     MOVELPAPOBN    PMPOBN
+      *
+      ** PAY - ORDERING CUSTOMER NO.
+      *
+     C                     MOVE *BLANKS   PMPOCN
+     C                     MOVELPAPOCN    PMPOCN
+      *
+      ** RECEIVER CORRESPONDENT NO.
+      *
+     C                     MOVE *BLANKS   PMRCRN
+     C                     MOVELPARCRN    PMRCRN
+      *
+      ** RECEIVER NUMBER
+      *
+     C                     MOVE *BLANKS   PMRVNO
+     C                     MOVELPARVNO    PMRVNO
+      *
+      ** COUNTERPARTY RECEIVE INSTRUCTIONS.
+      *
+     C                     MOVE *BLANKS   PMAWBN
+     C                     MOVELPAAWBN    PMAWBN
+      *
+      ** FOR ACCOUNT OF INSTRUCTIONS.
+      *
+     C                     MOVE *BLANKS   PMBENN
+     C                     MOVELPABENN    PMBENN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * PROSEL   : Process Enter from subfile screen                  *
+      * Called by: REVIEW                                             *
+      * Calls    : VLDSFL, ENQRYS, REVERS, AMENDS                     *
+      *****************************************************************
+     C           PROSEL    BEGSR
+      *
+      **  Process selction only if records exist on subfile
+     C           *IN60     IFEQ *OFF
+      *
+      **  Clear Message subfile
+     C                     EXSR CLEARM
+      *
+      **  Validate all changes in subfile
+     C                     EXSR VLDSFL
+      *
+      **  If no errors execute valid option subroutine
+     C           W#ERR1    IFEQ 'N'
+      *
+     C                     SELEC
+     C           W#ACTN    WHEQ 'E'
+     C                     EXSR ENQRYS
+     C           W#ACTN    WHEQ 'R'
+     C                     EXSR REVERS
+     C           W#ACTN    WHEQ 'A'
+     C                     EXSR AMENDS
+     C                     ENDSL
+      *                                                                   123857
+     C                     MOVE *OFF      *IN12                           123857
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *                                                                   123857
+     C           R1ACTN    IFEQ 'X'                                       123857
+     C           *IN60     IFEQ *ON                                       123857
+     C           W#CNT1    OREQ *ZEROS                                    123857
+     C                     MOVE *ON       *IN12                           123857
+     C                     MOVE 'Y'       WENTR                           148847
+     C                     EXSR CF03                                      123857
+     C                     ENDIF                                          123857
+     C                     ENDIF                                          123857
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * VLDSFL   : Validate subfile selection                         *
+      * Called by: PROSEL                                             *
+      * Calls    : VLDENQ, VLDALL                                     *
+      *****************************************************************
+     C           VLDSFL    BEGSR
+      *
+     C                     MOVE 'N'       W#ERR1  1
+     C                     Z-ADD*ZEROS    W#CNT1  30
+      *
+      **  Read all changed records
+     C                     READCLE2023S1                 70
+     C           *IN70     DOWEQ*OFF
+      *
+     C           P#MODE    IFEQ 'E'
+     C                     EXSR VLDENQ
+     C                     ELSE
+     C                     EXSR VLDALL
+     C                     ENDIF
+      *
+     C           S#SEL     IFEQ ' '
+     C                     MOVE *OFF      *IN40            RI & PC
+     C                     MOVE *OFF      *IN35            SFLNXTCHG
+     C                     ELSE
+     C                     MOVE *ON       *IN35            SFLNXTCHG
+     C                     MOVE *ON       *IN40            RI & PC
+     C                     ADD  1         W#CNT1
+     C                     ENDIF
+      *
+     C           S#SEL     IFNE ' '
+     C                     Z-ADDRRN1      W#RRN1  40       Save it
+     C                     Z-ADDRRN1      ##SFRC           Position page
+     C                     MOVE S#SEL     W#ACTN  1        Save it
+     C                     ENDIF
+      *
+     C                     UPDATLE2023S1
+      *
+      **  Read next changed record
+     C                     READCLE2023S1                 70
+      *
+     C                     ENDDO
+      *
+      **  More than one selection
+     C           W#CNT1    IFGT 1
+      *
+     C                     MOVE 'Y'       W#ERR1  1
+      *
+      **  Display Message
+     C                     MOVEL'LEP0027' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C                     ELSE
+      *
+      **  No selection made therefore do nothing
+     C           W#CNT1    IFEQ 0
+     C                     MOVEL'Y'       W#ERR1           Error
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * VLDALL   : Validate subfile selection                         *
+      *            (Insert, Amend, Dlete and Enquire                  *
+      * Called by: VLDSFL                                             *
+      * Calls    : None.                                              *
+      *****************************************************************
+      *    VLDALL - Validate input for Enquiry, Amend and Insert
+     C           VLDALL    BEGSR
+      *
+      **  Only 'A' 'E' or 'R' can be used to make a valid selection
+     C           S#SEL     IFNE 'E'
+     C           S#SEL     ANDNE'A'
+     C           S#SEL     ANDNE'R'
+     C           S#SEL     ANDNE' '
+      *
+     C                     MOVE *ON       *IN40            RI & PC
+      *
+      **  Display Message if not already displayed
+     C           W#ERR1    IFEQ 'N'
+     C                     MOVEL'LEP0003' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEL'Y'       W#ERR1           Error
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *                                                                   123476
+      *  Only allow amendment of assignments with processing date         123476
+      *  equal to run date, otherwise error.                              123476
+      *                                                                   123476
+     C           S#SEL     IFEQ 'A'                                       123476
+     C           H#VDTC    ANDNEBJRDNB                                    123476
+     C                     MOVEL'LEP0038' ZAMSID                          123476
+     C                     EXSR ZASNMS                                    123476
+     C                     MOVEL'Y'       W#ERR1           Error          123476
+     C                     ENDIF                                          123476
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * VLDENQ   : Validate subfile selection for Enquiry             *
+      * Called by: VLDSFL                                             *
+      * Calls    : None.                                              *
+      *****************************************************************
+     C           VLDENQ    BEGSR
+      *
+      **  Only 'E' can be used to make a valid selection
+     C           S#SEL     IFNE 'E'
+     C           S#SEL     ANDNE' '
+      *
+     C                     MOVE *ON       *IN40            RI & PC
+      *
+      **  Display Message if not already displayed
+     C           W#ERR1    IFEQ 'N'
+     C                     MOVEL'LEP0002' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEL'Y'       W#ERR1           Error
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * ENQRYS   : Process enquiry screen                             *
+      * Called by: PROSEL                                             *
+      * Calls    : POPSCR, CF03, CF12, CF14                           *
+      *****************************************************************
+     C           ENQRYS    BEGSR
+      *
+      **  Clear Message subfile
+     C                     EXSR CLEARM
+      *
+      **  Move File fields to screen
+     C                     EXSR POPSCR
+      *
+     C                     MOVE *OFF      *IN12
+     C                     MOVE *ON       *IN55            Protect Fields
+     C                     MOVE *OFF      *IN56            Disable F10
+      *
+      **  Display screen until F12 or F3 pressed
+     C           *IN03     DOWEQ*OFF
+     C           *IN12     ANDEQ*OFF
+      *
+     C                     WRITELE2023F1                   Function Keys
+     C                     WRITE#MSGCTL                    Messages
+     C                     EXFMTLE2023F3                   Screen
+      *
+      **  F3  - Exit
+     C           *IN03     CASEQ'1'       CF03
+      *                                   ****
+      **  F12- Previous
+     C           *IN12     CASEQ'1'       CF12
+      *                                   ****
+      **  F14 - Settlements
+     C           *IN14     CASEQ'1'       CF14
+      *                                   ****
+      **  Procsee Window
+     C                     CAS            SRWNDW
+      *                                   ******
+     C                     ENDCS
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * POPSCR   : Move fields to screen                              *
+      * Called by: REVERS, AMENDS, ENQRYS, CF05                       *
+      * Calls    : None.                                              *
+      *****************************************************************
+     C           POPSCR    BEGSR
+      *
+      **  Chain to subfile
+     C           W#RRN1    CHAINLE2023S1             70
+      *
+      **  Set up K#LTL3
+      *
+     C                     MOVE S#BRCA    K#BRCA
+     C                     MOVE S#FCNM    K#CNUM
+     C                     MOVE S#FACT    K#FACT
+     C                     MOVE S#FCNO    K#FCNO
+     C                     MOVE S#CNUM    K#MNUM
+     C                     MOVELS#CNUM    S#MNUM
+     C                     MOVE H#INUM    K#INUM                          123476
+     C                     MOVELH#VDTC    K#VDTC                          123476
+     C                     MOVELH#PCRF    K#PCRF                          158645
+     C           K#LTL3    CHAINLEPARTL2            N70
+      *
+      *  Populate Hidden Fields
+      ** ~~~~~~~~~~~~~~~~~~~~~~
+     C                     MOVE INUM      W1INUM
+     C                     MOVE SHPC      W1SHPC
+     C                     MOVE SHAM      W1SHAM
+      *
+     C                     MOVE RSTM      W1RSTM
+     C                     MOVE RONS      W1RONS
+     C                     MOVE RIBN      W1RIBN
+     C                     MOVE RIBA      W1RIBA
+     C                     MOVE ROBN      W1ROBN
+     C                     MOVE ROCN      W1ROCN
+     C                     MOVE PSTM      W1PSTM
+     C                     MOVE PONS      W1PONS
+     C                     MOVE PIBN      W1PIBN
+     C                     MOVE PIBA      W1PIBA
+     C                     MOVE POBN      W1POBN
+     C                     MOVE POCN      W1POCN
+     C                     MOVE CVMR      W1CVMR
+     C                     MOVE RCRN      W1RCRN
+     C                     MOVE RCRA      W1RCRA
+     C                     MOVE RVNO      W1RVNO
+     C                     MOVE AWBN      W1AWBN
+     C                     MOVE AWBA      W1AWBA
+     C                     MOVE BENN      W1BENN
+     C                     MOVE BENA      W1BENA
+     C                     MOVE DTP1      W1DTP1
+     C                     MOVE DTP2      W1DTP2
+     C                     MOVE DTP3      W1DTP3
+     C                     MOVE DTP4      W1DTP4
+     C                     MOVE DCHG      W1DCHG
+     C                     MOVE BTB1      W1BTB1
+     C                     MOVE BTB2      W1BTB2
+     C                     MOVE BTB3      W1BTB3
+     C                     MOVE BTB4      W1BTB4
+     C                     MOVE BTB5      W1BTB5
+     C                     MOVE BTB6      W1BTB6
+     C                     MOVE OMDB      W1POBR
+     C                     MOVE OSDB      W1ROBR
+      *                                                                   CEU004
+     C           CEU004    IFEQ 'Y'                                       CEU004
+     C           CLE031    OREQ 'Y'                                                           CLE031
+     C                     MOVE SCCY      W1SCCY                          CEU004
+     C                     MOVE ICCY      W1ICCY                          CEU004
+     C                     ENDIF                                          CEU004
+      *
+      **  Access the Customer Details file
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '       ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM W1INUM    @CNUM  10
+     C                     PARM           @CNST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C                     MOVE *BLANKS   S#INUM
+     C                     MOVELBBCUST    S#INUM
+     C                     MOVE *BLANKS   S#IRNM                          148534
+     C                     MOVE *BLANKS   S#IRTN                          148534
+     C                     MOVELBBCRNM    S#IRNM                          148534
+     C                     MOVELBBCRTN    S#IRTN                          148534
+      *                                                                   148534
+      **  Access the Customer Details file                                148534
+     C                     CALL 'AOCUSTR0'                                148534
+     C                     PARM '       ' @RTCD                           148534
+     C                     PARM '*KEY   ' @OPTN                           148534
+     C                     PARM S#MNUM    @CNUM                           148534
+     C                     PARM           @CNST                           148534
+     C           SDCUST    PARM SDCUST    DSSDY                           148534
+     C                     MOVE *BLANKS   S#MRNM                          148534
+     C                     MOVE *BLANKS   S#MRTN                          148534
+     C                     MOVELBBCRNM    S#MRNM                          148534
+     C                     MOVELBBCRTN    S#MRTN                          148534
+      *                                                                                       CLE031
+     C           CLE031    IFEQ 'Y'                                                           CLE031
+      *                                                                                       CLE031
+     C           REXR      IFEQ 0                                                             CLE031
+     C                     MOVE *BLANKS   W1REXR                                              CLE031
+     C                     ELSE                                                               CLE031
+     C                     MOVE *BLANKS   ZFIELD                                              CLE031
+     C                     MOVE REXR      ZFIELD                                              CLE031
+     C                     Z-ADD8         ZADEC                                               CLE031
+     C                     EXSR ZEDIT                                                         CLE031
+     C                     MOVE ZFIELD    W1REXR                                              CLE031
+     C                     ENDIF                                                              CLE031
+      *                                                                                       CLE031
+     C                     MOVE REXI      W1REXI                                              CLE031
+     C                     MOVE PSCY      W1PSCY                                              CLE031
+      *                                                                                       CLE031
+     C           PEXR      IFEQ 0                                                             CLE031
+     C                     MOVE *BLANKS   W1PEXR                                              CLE031
+     C                     ELSE                                                               CLE031
+     C                     MOVE *BLANKS   ZFIELD                                              CLE031
+     C                     MOVE PEXR      ZFIELD                                              CLE031
+     C                     Z-ADD8         ZADEC                                               CLE031
+     C                     EXSR ZEDIT                                                         CLE031
+     C                     MOVE ZFIELD    W1PEXR                                              CLE031
+     C                     ENDIF                                                              CLE031
+      *                                                                                       CLE031
+     C                     MOVE PEXI      W1PEXI                                              CLE031
+     C                     ENDIF                                                              CLE031
+      *                                                                                       CLE106
+      ** Participation Type                                                                   CLE106
+      *  ~~~~~~~~~~~~~~~~~~                                                                   CLE106
+     C           CLE106    IFEQ 'Y'                                                           CLE106
+     C                     MOVE H#PRTR    S#PRTR                                              CLE106
+     C                     ENDIF                                                              CLE106
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * REVERS   : Process deletion screen                            *
+      * Called by: PROSEL                                             *
+      * Calls    : POPSCR, CF03, CF10, CF12, CF14, ENTER2             *
+      *****************************************************************
+     C           REVERS    BEGSR
+      *
+      **  Clear Message subfile
+     C                     EXSR CLEARM
+      *
+     C                     MOVE *OFF      *IN10
+     C                     MOVE *OFF      *IN12
+     C                     MOVE *ON       *IN55            Protect Fiel
+     C                     MOVE *ON       *IN56            Enable F10
+      *
+      **  Move File fields to screen
+     C                     EXSR POPSCR
+      *
+      **  Display screen until
+     C           *IN03     DOWEQ*OFF
+     C           *IN12     ANDEQ*OFF
+     C           *IN10     ANDEQ*OFF
+      *
+     C                     WRITELE2023F1                   Function Keys
+     C                     WRITE#MSGCTL                    Messages
+     C                     EXFMTLE2023F3                   Screen
+      *
+      **  F3  - Exit
+     C           *IN03     CASEQ'1'       CF03
+      *                                   ****
+      **  F10- Revers
+     C           *IN10     CASEQ'1'       CF10
+      *                                   ****
+      **  F12- Previuos
+     C           *IN12     CASEQ'1'       CF12
+      *                                   ****
+      **  F14 - Settlements
+     C           *IN14     CASEQ'1'       CF14
+      *                                   ****
+      **  Enter Key Processing
+     C                     CAS            ENTER2
+      *
+     C                     ENDCS
+      *
+     C                     ENDDO
+      *
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * ENTER2   : F10 should be pressed and not enter for delete     *
+      * Called by: REVERS                                             *
+      * Calls    : NONE.                                              *
+      *****************************************************************
+     C           ENTER2    BEGSR
+      *
+      ** Clear Message subfile
+     C                     EXSR CLEARM
+      *
+      **  Display Message
+     C                     MOVEL'LEP0024' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * VLDDET   : Validate Assignment member details                 *
+      * Called by: Main routine, CF09                                 *
+      * Calls    : VLDCUS, VLDFCT, VLDINC, VLDJDT, VLDVDT, VLDSHR,    *
+      *            VLDRCI, VLDSKM, SR2410, SRWNDW, UPDFLE             *
+      *****************************************************************
+     C           VLDDET    BEGSR
+      *
+     C                     MOVE 'N'       W#ERR2  1        Error
+      *
+     C           P#MODE    IFNE 'B'
+     C           P#MODE    ANDNE'P'
+      *
+      ** Setof invalid error indicators
+     C                     SETOF                     414243
+     C                     SETOF                     444546
+     C                     SETOF                     474849
+     C                     SETOF                     505152
+      *
+      ** Clear Message subfile
+     C                     EXSR CLEARM
+      *
+     C                     ENDIF
+      *
+     C           W#ACTN    IFEQ 'I'
+      *
+      ** Validate Assignment Member
+     C                     EXSR VLDCUS
+     C                     ENDIF
+      *
+      **  Validate Introducing Customer
+     C                     EXSR VLDINC
+      *
+      **  Validate Joining Date
+     C                     EXSR VLDJDT
+      *
+      *
+      **  Validate Share
+     C                     EXSR VLDSHR
+      *
+      **  Validate settlement details
+     C           P#MODE    IFEQ 'P'
+     C           P#MODE    OREQ 'B'
+     C                     EXSR SR2410
+     C                     ENDIF
+      *
+      **
+     C           W#ERR2    IFEQ 'N'
+     C           W#VSET    ANDEQ'Y'
+      *
+     C           P#MODE    IFEQ 'I'
+     C           P#MODE    OREQ 'R'
+     C                     EXSR SRWNDW
+     C                     ENDIF
+      *
+     C                     EXSR UPDFLE
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * VLDCUS   : Validate Assignment Member                         *
+      * Called by: VLDDET                                             *
+      * Calls    : None.                                              *
+      *****************************************************************
+     C           VLDCUS    BEGSR
+      *
+      **  Validate Assignment Member
+      *
+      **  Check if the Assignment member has been entered
+     C           S#MNUM    IFEQ *BLANKS
+      *
+     C                     MOVE *BLANKS   S#MRNM                          148534
+     C                     MOVE *BLANKS   S#MRTN                          148534
+      *                                                                   148534
+     C                     MOVE 'Y'       W#ERR2           Error
+     C                     MOVE *ON       *IN41            RI & PC
+      *
+      **  Display Message
+     C                     MOVEL'LEP0036' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C                     ELSE
+      *
+      ** Access the Customer Details file
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '       ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM S#MNUM    @CNUM  10
+     C                     PARM           @CNST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      **  Display Message
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'LEP0032' ZAMSID
+     C                     MOVE 'Y'       W#ERR2           Error          120468
+     C                     EXSR ZASNMS
+     C***********          MOVE 'Y'       W#ERR2           Error          120468
+     C                     MOVE *ON       *IN41            RI & PC
+      *
+     C                     ELSE
+      *
+     C                     MOVE *BLANKS   S#MNUM
+     C                     MOVELBBCUST    S#MNUM
+     C                     MOVELBBCUST    K#MNUM                          123476
+     C                     MOVE *BLANKS   S#MRNM                          148534
+     C                     MOVE *BLANKS   S#MRTN                          148534
+     C                     MOVELBBCRNM    S#MRNM                          148534
+     C                     MOVELBBCRTN    S#MRTN                          148534
+      *
+      **Check*if*already*exists****************************************   123476
+     C***********          MOVE BRCA      K#BRCA                          123476
+     C***********          MOVE BBCUST    K#MNUM                          123476
+     C***********K#LTL3    CHAINLEPARTL2             70                   123476
+     C************IN70     IFEQ *OFF                                      123476
+     C***********          MOVE 'Y'       W#ERR2           Error          123476
+     C***********          MOVE *ON       *IN41            RI & PC        123476
+      *
+      ****Display*Message**********************************************   123476
+     C***********          MOVEL'LEP0033' ZAMSID                          123476
+     C***********          EXSR ZASNMS                                    123476
+      *
+     C***********          ENDIF                                          123476
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * VLDINC   : Validate Introducing Customer                      *
+      * Called by: VLDDET                                             *
+      * Calls    : None.                                              *
+      *****************************************************************
+     C           VLDINC    BEGSR
+      *
+     C           S#INUM    IFEQ *BLANKS
+      *
+      ** Access Branch Details for Internal Customer Number
+      *
+     C***********          CALL 'AOBRCHR0'                                121783
+     C                     CALL 'AOBRCHR1'                                121783
+     C                     PARM '       ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM S#BRCA    @BRCA   3
+     C***********SDBRCH    PARM SDBRCH    DSFDY                           121783
+     C           SDBRCH    PARM SDBRCH    DSSDY                           121783
+     C                     MOVE *BLANKS   S#INUM
+     C                     MOVELA8BICN    S#INUM
+      *                                                                   148534
+      ** Access the Customer Details file                                 148534
+     C                     CALL 'AOCUSTR0'                                148534
+     C                     PARM '       ' @RTCD                           148534
+     C                     PARM '*KEY   ' @OPTN                           148534
+     C                     PARM S#INUM    @CNUM                           148534
+     C                     PARM           @CNST                           148534
+     C           SDCUST    PARM SDCUST    DSSDY                           148534
+     C                     MOVE *BLANKS   S#IRNM                          148534
+     C                     MOVE *BLANKS   S#IRTN                          148534
+     C                     MOVELBBCRNM    S#IRNM                          148534
+     C                     MOVELBBCRTN    S#IRTN                          148534
+      *
+     C                     ELSE
+      *
+      ** Access the Customer Details file
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '       ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM S#INUM    @CNUM  10
+     C                     PARM           @CNST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      **  Display Message
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'LEP0031' ZAMSID
+     C                     MOVE 'Y'       W#ERR2           Error
+     C                     MOVE *ON       *IN42            RI & PC
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     MOVE *BLANKS   S#INUM
+     C                     MOVELBBCUST    S#INUM
+     C                     MOVELBBCUST    W1INUM
+     C                     MOVE *BLANKS   S#IRNM                          148534
+     C                     MOVE *BLANKS   S#IRTN                          148534
+     C                     MOVELBBCRNM    S#IRNM                          148534
+     C                     MOVELBBCRTN    S#IRTN                          148534
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *                                                                   123476
+      **Validate*the*Assigned*to/Assigned*from*and*value*date*combin123476158135
+      **to*see*if*it*exists*already                                 123476158135
+      **********                                                    123476158135
+     C********** W#ACTN    IFEQ 'A'                                 123476158135
+     C**********           MOVELINUM      Z#INUM                    123476158135
+     C**********           ENDIF                                    123476158135
+      **********                                                    123476158135
+     C********** S#INUM    IFNE Z#INUM                              123476158135
+     C**********           MOVE BRCA      K#BRCA                    123476158135
+     C**********           MOVELS#INUM    W#INUM  6                 123476158135
+     C**********           MOVE W#INUM    K#INUM  60                123476158135
+     C**********           MOVE BJRDNB    K#VDTC  50                123476158135
+     C********** K#LTL3    CHAINLEPARTL2             70             123476158135
+     C********** *IN70     IFEQ *OFF                                123476158135
+     C**********           MOVE 'Y'       W#ERR2           Error    123476158135
+     C**********           MOVE *ON       *IN41            RI & PC  123476158135
+      **********                                                    123476158135
+      ****Display Message                                           123476158135
+     C**********           MOVEL'LEP0033' ZAMSID                    123476158135
+     C**********           EXSR ZASNMS                              123476158135
+      **********                                                    123476158135
+     C**********           ENDIF                                    123476158135
+     C**********           ENDIF                                    123476158135
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * VLDJDT   : Validate Joining Date                              *
+      * Called by: VLDDET                                             *
+      * Calls    : None.                                              *
+      *****************************************************************
+     C           VLDJDT    BEGSR
+      *
+     C           S#JDTE    IFEQ *BLANKS
+      *
+      ** Default to the system date
+     C                     MOVE BJRDNB    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     S#JDTE
+      *
+      ** convert to Midas date format
+     C                     MOVE *OFF      *IN99
+     C                     MOVE S#JDTE    ZDATE
+     C                     EXSR ZDATE1
+      *
+     C                     ELSE
+      *
+      ** convert to Midas date format
+     C                     MOVE *OFF      *IN99
+     C                     MOVE S#JDTE    ZDATE
+     C                     EXSR ZDATE1
+     C           *IN99     IFEQ *ON                        invalid
+      *
+      **  Display Message
+     C                     MOVEL'LEP0011' ZAMSID
+     C                     MOVE 'Y'       W#ERR2           Error          120468
+     C                     EXSR ZASNMS
+     C***********          MOVE 'Y'       W#ERR2           Error          120468
+     C                     MOVE *ON       *IN43            RI & PC
+      *
+     C                     ELSE                            Valid
+     C           ZDAYNO    IFGT BJRDNB                     GT than Run dat
+      *
+      **  Display Message
+     C                     MOVEL'LEP0011' ZAMSID
+     C                     MOVE 'Y'       W#ERR2           Error          120468
+     C                     EXSR ZASNMS
+     C***********          MOVE 'Y'       W#ERR2           Error          120468
+     C                     MOVE *ON       *IN43            RI & PC
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     MOVE ZDAYNO    W#DAYN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * VLDSHR   : Validate Share (Amount/Percentage)                 *
+      * Called by: VLDDET                                             *
+      * Calls    : CALCSO, CALCAV                                     *
+      *****************************************************************
+     C           VLDSHR    BEGSR
+      *
+      **  Validate the Share Type
+     C           S#SHTP    IFNE 'P'
+     C           S#SHTP    ANDNE'A'
+      *
+      **  Display Message
+     C                     MOVEL'LEP0034' ZAMSID
+     C                     MOVE 'Y'       W#ERR2           Error          120468
+     C                     EXSR ZASNMS
+     C***********          MOVE 'Y'       W#ERR2           Error          120468
+     C                     MOVE *ON       *IN44            RI & PC
+      *
+     C                     ELSE
+      *
+      **  Validate Share
+     C           S#SHAR    IFEQ *BLANKS
+      *
+      **  Display Message
+     C                     MOVEL'LEP0035' ZAMSID
+     C                     MOVE 'Y'       W#ERR2           Error          120468
+     C                     EXSR ZASNMS
+     C***********          MOVE 'Y'       W#ERR2           Error          120468
+     C                     MOVE *ON       *IN45            RI & PC
+      *
+     C                     ELSE
+      *
+     C           S#SHTP    IFEQ 'P'
+     C                     Z-ADD3         ZADIG
+     C                     MOVE *BLANK    ZFIELD
+     C                     MOVE S#SHAR    ZFIELD
+     C                     Z-ADD12        ZADEC
+     C                     MOVE *OFF      *IN99
+     C                     EXSR ZALIGN
+      *
+     C                     ELSE
+     C           S#SHTP    IFEQ 'A'
+     C           13        SUB  A6NBDP    ZADIG
+     C                     MOVE *BLANK    ZFIELD
+     C                     MOVE S#SHAR    ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     MOVE *OFF      *IN99
+     C                     EXSR ZALIGN
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           ZFIELD    IFEQ *BLANK
+     C           *IN99     OREQ *ON
+      *
+      **  Display Message
+     C                     MOVEL'LEP0035' ZAMSID
+     C                     MOVE 'Y'       W#ERR2           Error          120468
+     C                     EXSR ZASNMS
+     C***********          MOVE 'Y'       W#ERR2           Error          120468
+     C                     MOVE *ON       *IN45            RI & PC
+      *
+     C                     ELSE
+      *
+      *  Save share for a later calculation
+     C                     Z-ADD0         W#SHRC
+     C                     MOVE ZFIELD    W#SHRC
+      *
+     C           W#SHRC    IFEQ 0
+      *
+      **  Display Message
+     C                     MOVEL'LEP0035' ZAMSID
+     C                     MOVE 'Y'       W#ERR2           Error          120468
+     C                     EXSR ZASNMS
+     C***********          MOVE 'Y'       W#ERR2           Error          120468
+     C                     MOVE *ON       *IN45            RI & PC
+     C                     ENDIF
+      *
+      **  Calculate share amount/percentage if in batch or play mode
+     C           P#MODE    IFEQ 'B'
+     C           P#MODE    OREQ 'P'
+     C                     EXSR CALCSO
+     C                     ENDIF
+      *
+      **  Calculate available share amount/perecntage
+     C                     EXSR CALCAV
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * CALCSO   : Calculate total share                              *
+      * Called by: VLDSHR                                             *
+      * Calls    : None.                                              *
+      *****************************************************************
+     C           CALCSO    BEGSR
+      *
+     C                     Z-ADD0         W#TSAM
+     C                     Z-ADD0         W#TSHP
+      *
+     C           K#LTL2    SETLLLEPARTL2
+     C           K#LTL2    READELEPARTL2                 70
+      *
+     C           *IN70     DOWEQ*OFF
+     C                     ADD  SHAM      W#TSAM
+     C                     ADD  SHPC      W#TSHP
+     C           K#LTL2    READELEPARTL2                 70
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * CALCAV   : Calculate available share                          *
+      * Called by: VLDSHR                                             *
+      * Calls    : None.                                              *
+      *****************************************************************
+     C           CALCAV    BEGSR
+      *
+     C           P#MODE    IFEQ 'B'
+     C           P#MODE    OREQ 'P'
+     C                     MOVE S#BRCA    K#BRCA
+     C                     MOVE S#FCNM    K#CNUM
+     C                     MOVE S#FACT    K#FACT
+     C                     MOVE S#FCNO    K#FCNO
+     C                     MOVE S#CNUM    K#MNUM
+     C                     MOVE H#VDTC    K#VDTC                          123476
+     C                     MOVE H#PCRF    K#PCRF                          158645
+     C           K#LTL3    CHAINLEPARTL2             70
+     C                     MOVE SHAM      W1SHAM
+     C                     MOVE SHPC      W1SHPC
+     C                     ENDIF
+      *
+      **   Calculate available share amount
+     C           W#FAMT    SUB  W#TSAM    W#AVAM
+     C           W#ACTN    IFEQ 'A'
+     C           W#AVAM    ADD  W1SHAM    W#AVAM
+     C                     ENDIF
+      *
+      **   Calculate available share percentage
+     C                     MOVEL1         W#100N 150
+      *
+     C           W#100N    SUB  W#TSHP    W#AVPC
+     C           W#ACTN    IFEQ 'A'
+     C           W#AVPC    ADD  W1SHPC    W#AVPC
+     C                     ENDIF
+      *
+     C           S#SHTP    IFEQ 'A'
+     C           P#MODE    ANDNE'B'                                       123390
+     C           W#SHRC    IFGT W#AVAM
+      *
+      **  Display Message
+     C***********          MOVEL'LEP0035' ZAMSID                          160630
+     C                     MOVEL'LEP0044' ZAMSID                          160630
+     C                     MOVE 'Y'       W#ERR2           Error          120468
+     C                     EXSR ZASNMS
+     C***********          MOVE 'Y'       W#ERR2           Error          120468
+     C                     MOVE *ON       *IN45            RI & PC
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      *
+     C           S#SHTP    IFEQ 'P'
+     C           P#MODE    ANDNE'B'                                       123390
+     C           W#SHRC    IFGT W#AVPC
+      *
+      **  Display Message
+     C***********          MOVEL'LEP0035' ZAMSID                          160630
+     C                     MOVEL'LEP0044' ZAMSID                          160630
+     C                     EXSR ZASNMS
+     C                     MOVE 'Y'       W#ERR2           Error
+     C                     MOVE *ON       *IN45            RI & PC
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * LOADFM   : Load details to Facility file                      *
+      * Called by: AMENDR, WRITER, REVERR                             *
+      * Calls    : LE2024                                             *
+      *****************************************************************
+      *
+     C           LOADFM    BEGSR
+      *
+     C                     MOVE S#FCNM    CNUM
+     C                     MOVE S#FACT    FACT
+     C                     MOVE S#FCNO    FCNO
+      *
+     C           P#MODE    IFEQ 'B'
+     C                     MOVE R1PCOB    PCOB
+     C                     ELSE
+     C                     MOVE *BLANKS   PCOB
+     C                     ENDIF
+      *
+     C***********P#MODE    IFEQ 'B'                                       155538
+     C           P#MODE    IFNE 'B'                                       155538
+     C           W#ACTN    ANDEQ'I'
+     C                     MOVELA8MQSM    W#1ST3  3
+     C***********          MOVELW#1ST3    PCRF      P                     155538
+     C********** *NAMVAR   DEFN           LEALLO                                       155538 CLE148
+     C********** *LOCK     IN   LEALLO                                                 155538 CLE148
+     C********** PCLAST    ADD  1         PCNEXT  80                                   155538 CLE148
+     C                     CALL 'LEALLO'                                                      CLE148
+     C                     PARM *BLANKS   PRTCD   7                                           CLE148
+     C                     PARM 'Y'       PUPDT   1                                           CLE148
+     C                     PARM *BLANKS   PCLAST                                              CLE148
+     C                     PARM *BLANKS   PCNEXT  8                                           CLE148
+      *                                                                                       CLE148
+     C                     MOVE PCNEXT    W1ST11 11                       155538
+     C                     MOVELW#1ST3    W1ST11                          155538
+     C                     MOVELW1ST11    PCRF                            155538
+     C                     MOVE '0001'    PCRF                            155538
+     C**********           Z-ADDPCNEXT    PCLAST                                       155538 CLE148
+     C**********           OUT  LEALLO                                                 155538 CLE148
+     C                     ELSE
+     C           P#MODE    IFEQ 'B'
+     C                     MOVE R1TNRF    PCRF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     EXSR ZTNLU1
+      *
+     C                     MOVELS#INUM    INUM
+     C                     MOVELS#MNUM    MNUM
+     C                     MOVELS#FCCY    CCY
+      *                                                                   120057
+     C           W#ACTN    IFEQ 'I'                                       120057
+     C                     MOVE 'A'       PTAI                            120057
+     C                     MOVE BJRDNB    VDTC                            123476
+     C                     ENDIF                                          120057
+      *
+      ** convert to Midas date format
+     C                     MOVE S#JDTE    ZDATE
+     C                     EXSR ZDATE1
+     C                     MOVE ZDAYNO    JDTE
+      *
+     C                     MOVE S#SHTP    SHTP
+      *
+     C           P#MODE    IFNE 'B'                                       154868
+     C           S#SHTP    IFEQ 'A'
+     C           13        SUB  A6NBDP    ZADIG
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     MOVE *BLANK    ZFIELD
+     C                     MOVE S#SHAR    ZFIELD
+     C                     EXSR ZALIGN
+     C                     MOVE ZFIELD    SHAM
+      *
+      *  Calculate percentage
+     C                     MOVE W#FAMT    P#PAMT 13
+     C                     MOVE *BLANKS   P#SHPC 15
+     C                     MOVE ZFIELD    P#FAMT 13
+     C                     MOVE S#SHTP    P#SHTP  1
+     C                     CALL 'LE2024'
+     C                     PARM           P#PAMT
+     C                     PARM           P#SHPC
+     C                     PARM           P#FAMT
+     C                     PARM           P#SHTP
+      *
+     C                     MOVE P#SHPC    SHPC
+     C                     MOVE P#SHPC    W#NUMB
+     C                     ADD  W#NUMB    W#TSHP
+      *
+     C                     ELSE
+      *
+     C                     Z-ADD3         ZADIG
+     C                     Z-ADD12        ZADEC
+     C                     MOVE *BLANK    ZFIELD
+     C                     MOVE S#SHAR    ZFIELD
+     C                     MOVE *OFF      *IN99
+     C                     EXSR ZALIGN
+     C                     MOVE ZFIELD    SHPC
+      *
+      **  Calculate Amount
+     C                     MOVE W#FAMT    P#PAMT 13
+     C                     MOVE ZFIELD    P#SHPC 15
+     C                     MOVE *BLANKS   P#FAMT 13
+     C                     MOVE S#SHTP    P#SHTP  1
+     C                     CALL 'LE2024'
+     C                     PARM           P#PAMT
+     C                     PARM           P#SHPC
+     C                     PARM           P#FAMT
+     C                     PARM           P#SHTP
+      *
+     C                     MOVE P#FAMT    SHAM
+     C                     MOVE P#FAMT    W#NUMB 150
+     C                     ADD  W#NUMB    W#TSAM
+      *
+     C                     ENDIF
+      *                                                                   158162
+     C                     ELSE                                           158162
+      *                                                                   158162
+      ** Batch mode  - must restore share amount/percent                  158162
+     C                     Z-ADDS#SHAM    SHAM                            158162
+     C                     Z-ADDS#SHPC    SHPC                            158162
+     C                     ENDIF                                          154868
+      *
+      ** Settlement details
+     C                     EXSR PRSETT
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * PRSETT   : Load settlemnt details into file                   *
+      * Called by: LOADFM                                             *
+      * Calls    : None.                                              *
+      *****************************************************************
+     C           PRSETT    BEGSR
+      *                                                                   CEU004
+     C           CEU004    IFEQ 'Y'                                       CEU004
+     C           CLE031    OREQ 'Y'                                                           CLE031
+     C                     MOVE PMPSCY    SCCY                            CEU004
+     C                     MOVE PMIC72    ICCY                            CEU004
+     C                     ENDIF                                          CEU004
+      *
+     C                     MOVE PMROBR    OSDB
+     C                     MOVE PMPOBR    OMDB
+     C                     MOVE PMPSTM    PSTM
+     C                     MOVE PMRSTM    RSTM
+     C                     MOVE PMPONS    PONS
+     C                     MOVE PMRONS    RONS
+      *
+     C                     MOVELPMRIBA    RIBA
+     C                     MOVELPAAWBN    AWBN
+     C                     MOVELPARIBN    RIBN
+     C                     MOVELPABENN    BENN
+     C                     MOVELPMBTB1    BTB1
+     C                     MOVELPMBTB2    BTB2
+     C                     MOVELPMBTB3    BTB3
+     C                     MOVELPMBTB4    BTB4
+     C                     MOVELPMBTB5    BTB5
+     C                     MOVELPMBTB6    BTB6
+     C                     MOVE PMCVMR    CVMR
+     C                     MOVE PAROBN    ROBN
+     C                     MOVE PAROCN    ROCN
+     C                     MOVE PAPOBN    POBN
+     C                     MOVE PAPOCN    POCN
+     C                     MOVE PAPIBN    PIBN
+     C                     MOVE PMPIBA    PIBA
+     C                     MOVE PARCRN    RCRN
+     C                     MOVE PMRCRA    RCRA
+     C                     MOVE PARVNO    RVNO
+     C                     MOVE PMAWBA    AWBA
+     C                     MOVE PMBENA    BENA
+     C                     MOVE PMDTP1    DTP1
+     C                     MOVE PMDTP2    DTP2
+     C                     MOVE PMDTP3    DTP3
+     C                     MOVE PMDTP4    DTP4
+     C                     MOVE PMDCHG    DCHG
+      *                                                                                       CLE031
+     C           CLE031    IFEQ 'Y'                                                           CLE031
+      *                                                                                       CLE031
+     C                     MOVE PMRSCY    SCCY                                                CLE031
+     C           PMREXR    IFEQ *ZERO                                                         CLE031
+     C                     Z-ADD0         REXR                                                CLE031
+     C                     ELSE                                                               CLE031
+     C                     MOVE *BLANKS   ZFIELD 16                                           CLE031
+     C                     MOVE PMREXR    ZFIELD                                              CLE031
+     C                     MOVE *BLANKS   ZAFLD  16                                           CLE031
+     C                     Z-ADD5         ZADIG                                               CLE031
+     C                     Z-ADD8         ZADEC                                               CLE031
+     C                     EXSR ZALIGN                                                        CLE031
+     C                     MOVE ZFIELD    WZREX0 130                                          CLE031
+     C           WZREX0    DIV  100000000 WZREX8 138                                          CLE031
+     C                     Z-ADDWZREX8    REXR                                                CLE031
+     C                     ENDIF                                                              CLE031
+      *                                                                                       CLE031
+     C                     MOVE PMREXI    REXI                                                CLE031
+     C                     MOVE PMPSCY    PSCY                                                CLE031
+      *                                                                                       CLE031
+     C           PMPEXR    IFEQ *ZERO                                                         CLE031
+     C                     Z-ADD0         PEXR                                                CLE031
+     C                     ELSE                                                               CLE031
+     C                     MOVE *BLANKS   ZFIELD 16                                           CLE031
+     C                     MOVE PMPEXR    ZFIELD                                              CLE031
+     C                     MOVE *BLANKS   ZAFLD  16                                           CLE031
+     C                     Z-ADD5         ZADIG                                               CLE031
+     C                     Z-ADD8         ZADEC                                               CLE031
+     C                     EXSR ZALIGN                                                        CLE031
+     C                     MOVE ZFIELD    WZPEX0 130                                          CLE031
+     C           WZPEX0    DIV  100000000 WZPEX8 138                                          CLE031
+     C                     Z-ADDWZPEX8    PEXR                                                CLE031
+     C                     ENDIF                                                              CLE031
+      *                                                                                       CLE031
+     C                     MOVE PMPEXI    PEXI                                                CLE031
+     C                     ENDIF                                                              CLE031
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * AMENDS   : Process Amednd Screen                              *
+      * Called by: PROSEL                                             *
+      * Calls    : POPSCR, CF03, CF05, CF12, CF14, VLDDET             *
+      *****************************************************************
+     C           AMENDS    BEGSR
+      *
+      **  Clear Message subfile
+     C                     EXSR CLEARM
+      *
+      **  Move File fields to screen
+     C                     EXSR POPSCR
+      *
+     C                     MOVE *OFF      *IN55            Dont Protrct
+     C                     MOVE *OFF      *IN56            Disable F10
+     C                     MOVE *OFF      *IN12
+     C                     MOVE 'UPD'     W#F5MD  3
+      *  Valid settlement details
+     C                     MOVE 'Y'       W#VSET
+      *
+      **  Display screen until F03 or F12 pressed
+     C           *IN03     DOWEQ*OFF
+     C           *IN12     ANDEQ*OFF
+      *
+     C                     WRITELE2023F1                   Function Keys
+     C                     WRITE#MSGCTL                    Messages
+     C                     EXFMTLE2023F3                   Screen
+      *
+      *
+      **  F3  - Exit
+     C           *IN03     CASEQ'1'       CF03
+      *                                   ****
+      **  F5  - Refresh
+     C           *IN05     CASEQ'1'       CF05
+      *                                   ****
+      **  F12 - Previous
+     C           *IN12     CASEQ'1'       CF12
+      *                                   ****
+      **  F14 - Settlements
+     C           *IN14     CASEQ'1'       CF14
+      *                                   ****
+      **  Enter Key Processing
+     C                     CAS            VLDDET
+      *                                   ******
+     C                     ENDCS
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SR2410   : Validate settlement details (Batch or Play)        *
+      * Called by: VLDDET                                             *
+      * Calls    : FEXSET                                             *
+      *****************************************************************
+     C           SR2410    BEGSR
+      *
+      ** Set up fields on call to SD2410 for settlement validation
+      ** Process settlement branch only if method 05 and multibranching
+      *
+     C                     EXSR FEXSET
+     C                     MOVE 'Y'       W#VSET
+      *
+     C                     CALL 'SD2410'
+     C                     PARM           SETLIB
+     C                     PARM           SETLIZ
+     C                     PARM           @PARM3                          222373
+      *
+      ** Terminate program if database error returned
+      *
+     C           PMDBSE    IFNE *ZERO
+     C           *LOCK     IN   LDA
+     C                     MOVELPMDBFL    DBFILE
+     C                     Z-ADDPMDBSE    DBASE
+     C                     MOVELPMDBKY    DBKEY
+     C                     MOVELPMDPGM    DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Settlement detail in error
+     C           PMERCD    IFNE *BLANKS
+     C***********          MOVEL'LEP0029' ZAMSID                          123801
+     C           3         SUBSTPMERCD:1  WSERR   3                       123801
+     C                     MOVEL'ESM0'    ZAMSID                          123801
+     C                     MOVE WSERR     ZAMSID                          123801
+     C                     MOVEL'DRSMM   'ZAMSGF                          123801
+     C                     MOVE 'Y'       W#ERR2           Error          120468
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRWNDW   : Window processing subroutine                       *
+      * Called by: ENQRYS, VLDDET                                     *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           SRWNDW    BEGSR
+      *
+     C/COPY WNCPYSRC,LE2023MOV1
+      *
+      **  Call window manager WN0010
+     C                     CALL 'WN0010'
+     C                     PARM 'LE2023'  #PGM   10
+     C                     PARM           KEY     2
+     C                     PARM W#ACTN    ACTION  1
+     C                     PARM           DATA
+     C                     PARM *BLANK    #RTRN   7
+     C******               PARM           SPARF 256                       119892
+     C                     PARM           SPARE 256                       119892
+      *
+      ** Process return code
+     C           #RTRN     IFNE *BLANK
+     C                     MOVEL#RTRN     ZAMSID
+     C***********          MOVEL'WNMSGF'  ZAMSGF                          122052
+     C                     MOVEL'WNMSGF  'ZAMSGF                          122052
+     C                     EXSR ZASNMS
+     C                     MOVEL'LERMSGF' ZAMSGF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * INITPR   : Initial Processing                                 *
+      * Called by: Main routine                                       *
+      * Calls    : None.                                              *
+      *****************************************************************
+     C           INITPR    BEGSR
+      *
+      **   Define the LDA for error handling
+     C           *NAMVAR   DEFN           LDA
+      *
+      **   Subfile indicators
+     C                     MOVE *ON       *IN25
+     C                     Z-ADD1         ##SFRC           SFLRCDNBR
+      *
+      **   SETLIAZ Parameters
+     C                     MOVE 'Y'       PMRETP
+     C                     MOVE 'Y'       PMRETS
+     C                     MOVE 'N'       W#FLAG
+     C                     MOVE 'N'       W#CF14
+      *
+      ** Access Bank Detailes
+      *  ~~~~~~~~~~~~~~~~~~~~
+     C                     CALL 'AOBANKR0'
+     C                     PARM '       ' @RTCD   7        B:Return Code
+     C                     PARM '*FIRST ' @OPTN   7        I:Option
+     C           SDBANK    PARM SDBANK    DSFDY            O:Format
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE                       ***
+     C                     Z-ADD1         DBASE                        1 *
+     C                     MOVEL@OPTN     DBKEY                        ***
+     C                     MOVEL'LE2023'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *                                                                   CEU004
+      ** Access SAR details file to see if Customer Lending               CEU004
+      ** Enhancements - Ccy Conversion Upgrade to DBA R2.0                CEU004
+      *                                                                   CEU004
+     C                     CALL 'AOSARDR0'                                CEU004
+     C                     PARM *BLANK    PRTCD   7                       CEU004
+     C                     PARM '*KEY   ' POPTN   7                       CEU004
+     C                     PARM 'CEU004'  PSARD   6                       CEU004
+     C           SCSARD    PARM SCSARD    DSFDY                           CEU004
+      *                                                                   CEU004
+     C           PRTCD     IFEQ *BLANK                                    CEU004
+     C                     MOVE 'Y'       CEU004  1                       CEU004
+     C                     ELSE                                           CEU004
+     C                     MOVE 'N'       CEU004                          CEU004
+     C           PRTCD     IFNE '*NRF   '                                 CEU004
+     C           *LOCK     IN   LDA                                       CEU004
+     C                     MOVEL'SCSARDPD'DBFILE           ************   CEU004
+     C                     Z-ADD5         DBASE            * DBERR 05 *   CEU004
+     C                     MOVEL'CEU004'  DBKEY            ************   CEU004
+     C                     OUT  LDA                                       CEU004
+     C                     EXSR *PSSR                                     CEU004
+     C                     ENDIF                                          CEU004
+     C                     ENDIF                                          CEU004
+      *
+      ***  Check System Date Format, DDMMYY (*IN98 off)
+      ***                            MMDDYY (*IN98 on).
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     END
+      *
+     C                     MOVE BJMRDT    S#RUNA           Midas run date
+      *
+      ** Access the Facility in LEFCLTL0 (Prime facility)
+      *  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     C                     MOVE R1CNUM    K#CNUM
+     C                     MOVE R1FACT    K#FACT
+     C                     MOVE R1FCNO    K#FCNO
+     C***********K#LTL0    CHAINLEFCLTL0             70                   132565
+     C           K#LTL0    CHAINFCLTYFMF            N70                   132565
+      *
+     C           *IN70     IFEQ *ON
+     C           FSTS      ORNE 'C'                                       132565
+     C           FSTS      ANDNE'A'                                       132565
+     C           FSTS      ANDNE'R'                                       132565
+     C********** P#MODE    ORNE 'B'                                132565 178424
+     C********** RECI      ANDNE'D'                                132565 178424
+     C           P#MODE    OREQ 'B'                                       132565
+     C           R1TRSN    ANDEQ'0001'                                    132565
+     C           RECI      ANDNE'D'                                       132565
+     C           *LOCK     IN   LDA
+     C***********          MOVEL'LEFCLTL0'DBFILE                       ***132565
+     C                     MOVEL'FCLTYFM 'DBFILE                       ***132565
+     C                     Z-ADD2         DBASE                        2 *
+     C                     MOVE K#CNUM    DBKEY                        ***
+     C                     MOVEL'LE2023'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+      *
+     C                     ELSE
+      *  Save prime facility amount
+     C                     Z-ADDFAMT      W#FAMT           Prim facility
+      *
+      ** Set up LEPARTL2 Key (K#LTL2)
+     C                     MOVE BRCA      K#BRCA           Branch
+     C                     MOVE R1CNUM    K#CNUM           Customer No
+     C                     MOVE R1FACT    K#FACT           Facility Type
+     C                     MOVE R1FCNO    K#FCNO           Facility No
+      *
+     C                     ENDIF
+      *
+      ** Access the branch codes Record
+      *  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     C***********          CALL 'AOBRCHR0'                                121783
+     C                     CALL 'AOBRCHR1'                                121783
+     C                     PARM '       ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM BRCA      @BRCA   3
+     C***********SDBRCH    PARM SDBRCH    DSFDY                           121783
+     C           SDBRCH    PARM SDBRCH    DSSDY                           121783
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBRCHPD'DBFILE                       ***
+     C                     Z-ADD3         DBASE                        3 *
+     C                     MOVELBRCA      DBKEY                        ***
+     C                     MOVEL'LE2023'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Access the currency details, using AOCURRR0 for the currency
+      ** defined on the Facility record to pick up the currency decimal
+      ** places.
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '       ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM FCCY      @CCY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE                       ***
+     C                     Z-ADD4         DBASE                        4 *
+     C                     MOVELFCCY      DBKEY                        ***
+     C                     MOVEL'LE2023'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  Populate screen header
+     C                     MOVE BRCA      S#BRCA           Branch
+     C                     MOVE FCCY      S#FCCY           Currency
+     C                     MOVE R1CNUM    S#FCNM           Facility Custom
+     C                     MOVE R1FACT    S#FACT           Facility Type
+     C                     MOVE R1FCNO    S#FCNO           Facility No
+     C                     MOVE *BLANK    ZFIELD
+     C                     MOVE W#FAMT    ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    S#FAMT           Facility Amount
+     C/COPY WNCPYSRC,LEH00497
+      *
+      ** Open Display file LE2023DF
+      *  ~~~~~~~~~~~~~~~~~~~~~~~~~~
+     C           P#MODE    IFEQ 'I'
+     C           P#MODE    OREQ 'R'
+     C           P#MODE    OREQ 'E'
+     C                     OPEN LE2023DF
+     C                     ENDIF
+      *
+      ** Open the Facilities Play/Record file LE2023PD
+      *  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     C           P#MODE    IFEQ 'R'
+     C           P#MODE    OREQ 'P'
+     C                     OPEN LE2023PD
+     C                     ENDIF
+      *
+     C                     MOVEL'LERMSGF 'ZAMSGF
+     C                     MOVE USER      S#USER
+     C                     MOVE WSID      S#WSID
+     C                     MOVE BJMRDT    S#RUNA
+      *
+     C           P#MODE    IFEQ 'E'
+     C                     MOVE *ON       *IN61
+     C                     ENDIF
+      *                                                                   148847
+     C                     MOVE 'N'       WENTR   1                       148847
+      *
+      ** Access SAR details file to see if CLE031 is installed                                CLE031
+      *                                                                                       CLE031
+     C                     MOVE 'N'       CLE031  1                                           CLE031
+     C                     CALL 'AOSARDR0'                                                    CLE031
+     C                     PARM *BLANK    PRTCD                                               CLE031
+     C                     PARM '*KEY   ' POPTN                                               CLE031
+     C                     PARM 'CLE031'  PSARD                                               CLE031
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE031
+      *                                                                                       CLE031
+     C           PRTCD     IFEQ *BLANK                                                        CLE031
+     C                     MOVE 'Y'       CLE031                                              CLE031
+     C                     ELSE                                                               CLE031
+     C           PRTCD     IFNE '*NRF   '                                                     CLE031
+     C           *LOCK     IN   LDA                                                           CLE031
+     C                     MOVEL'SCSARDPD'DBFILE                                              CLE031
+     C                     Z-ADD7         DBASE                                               CLE031
+     C                     MOVEL'CLE031'  DBKEY                                               CLE031
+     C                     OUT  LDA                                                           CLE031
+     C                     EXSR *PSSR                                                         CLE031
+     C                     ENDIF                                                              CLE031
+     C                     ENDIF                                                              CLE031
+      *                                                                                       CLE106
+      **  Check if CLE106 (Syndication Manager) is switched on                                CLE106
+      *                                                                                       CLE106
+     C                     CALL 'AOSARDR0'                                                    CLE106
+     C                     PARM *BLANK    @RTCD                                               CLE106
+     C                     PARM '*VERIFY' @OPTN                                               CLE106
+     C                     PARM 'CLE106'  @SARD   6                                           CLE106
+      *                                                                                       CLE106
+     C           @RTCD     IFEQ *BLANK                                                        CLE106
+     C                     MOVE 'Y'       CLE106  1                                           CLE106
+     C                     ELSE                                                               CLE106
+     C                     MOVE 'N'       CLE106                                              CLE106
+      *                                                                                       CLE106
+      **  Data base error in file SCSARDPD                                                    CLE106
+      *                                                                                       CLE106
+     C           @RTCD     IFNE '*NRF    '                                                    CLE106
+     C           *LOCK     IN   LDA                                                           CLE106
+     C                     SETON                       U7U8                                   CLE106
+     C                     Z-ADD8         DBASE            ***************                    CLE106
+     C                     MOVEL'SCSARDPD'DBFILE           *DB ERROR 008 *                    CLE106
+     C                     MOVEL'CLE106'  DBKEY            ***************                    CLE106
+     C                     OUT  LDA                                                           CLE106
+     C                     EXSR *PSSR                                                         CLE106
+     C                     ENDIF                                                              CLE106
+     C                     ENDIF                                                              CLE106
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+      *
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     MOVE 'D'       R2MSGS
+      *
+     C           P#MODE    IFNE 'P'
+     C           P#MODE    ANDNE'B'
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF
+     C                     RETRN
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  ZASNMS - Sends messages to the program's message queue       *
+      *  Called by: Almost all screens with validation                *
+      *  Calls    : None                                              *
+      *****************************************************************
+     C           ZASNMS    BEGSR
+      *
+     C           P#MODE    IFEQ 'B'
+     C           P#MODE    OREQ 'P'
+     C                     EXSR SRBERR
+      *
+     C                     ELSE
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRBERR  -  Set up batch error details                         *
+      * Called by: ZASNMS - Sends messages to the program msgq        *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           SRBERR    BEGSR
+      *
+     C                     CALL 'Y2RVMGC'
+     C                     PARM           @RTCD
+     C                     PARM           ZAMSID           Message Id.
+     C                     PARM           ZAMSGF           Message file.
+     C                     PARM           ZAMSDA           Message data.
+     C                     PARM           ZAMSTX132        Messge text
+      *                                                                   120468
+      *  Include DUMP here for problems during batch and play modes.      120468
+      *                                                                   120468
+     C           W#ERR2    IFEQ 'Y'                                       120468
+     C                     DUMP                                           120468
+     C                     ENDIF                                          120468
+      *
+      ** If batch mode, set up details of returned message format
+      ** otherwise update message severity/id/text of test harness file
+      *
+     C           P#MODE    IFEQ 'B'
+     C                     MOVE R1MSGT    R2MSGT
+     C                     MOVE R1TRUS    R2TRUS
+     C                     MOVE R1TRWS    R2TRWS
+     C                     MOVE R1TNRF    R2TNRF
+     C                     MOVE R1TRSN    R2TRSN
+     C                     MOVE R1ACTN    R2ACTN
+     C                     MOVE R1TRDS    R2TRDS
+     C                     MOVE R1TRTS    R2TRTS
+     C                     MOVE R1NRBA    R2NRBA
+     C                     MOVEL'E'       R2MSGS
+     C                     MOVELZAMSID    R2MSGI
+     C                     MOVELZAMSTX    R2MSTX
+     C                     MOVE R1CNUM    R2CNUM
+     C                     MOVE R1FACT    R2FACT
+     C                     MOVE R1FCNO    R2FCNO
+     C                     MOVE R1MNUM    R2MNUM
+     C                     MOVE R1INUM    R2INUM
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *  Play Mode
+     C                     ELSE
+     C                     MOVEL'E'       RMSV
+     C                     MOVELZAMSID    RMID
+     C                     MOVELZAMSTX    RMTY
+     C                     UPDATLE2023D0
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * CLEARM  -  Clears the message queue                           *
+      * Called by: All validation subroutines                         *
+      * Calls    : Y2CLMSC                                            *
+      *****************************************************************
+     C           CLEARM    BEGSR
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZALIGNZ2L
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+     C/COPY ZSRSRC,ZEDITZ2L
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+     C/COPY ZSRSRC,ZTNLU1Z2
+** STAMP - Dummy timestamp                                                                    CPK015
+0001-01-01-00.00.00.000000                                                                    CPK015
+** CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

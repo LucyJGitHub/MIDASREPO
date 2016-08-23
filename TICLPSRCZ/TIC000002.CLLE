@@ -1,0 +1,210 @@
+/*********************************************************************/
+/*S*D****CLPBASEBND***************************************************/                 /*MD029775*/
+/*STD    CLPBASEBND                                                  */                 /*MD030956*/
+/*EXI    TEXT('Midas TI Database Backups')                           */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - TI Module                                           */
+/*                                                                   */
+/*       TIC000002 - TI Database Backups                             */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2007           */
+/*                                                                   */
+/*       Last Amend No. MD030956*REINSTATE Date 09Oct14              */
+/*       Prev Amend No. MD029775*REDUNDANT Date 19Aug14              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      CSC033    *CREATE  Date 22May07              */
+/*                      nnnnnn             Date ddmmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD030956 - Additional changes to BFM-TI enhancement.        */
+/*                  Reinstated for future use in case of downgrade.  */
+/*       MD029775 - TI/Midas EOD sync will no longer be used by TI   */
+/*                  Plus                                             */
+/*       CSC033 - Include global libraries in backups.               */
+/*                Move BUG4848 and 235616 codes from CLP/SDC1797     */
+/*                to an external TI program. This is to compile      */
+/*                SDC1797 successfully even without MBASETI lib      */
+/*                in the library list.                               */
+/*                                                                   */
+/*********************************************************************/
+/**/
+             PGM
+ 
+             DCL        VAR(&SMSG) TYPE(*CHAR) LEN(132)
+             DCL        VAR(&RMSG) TYPE(*CHAR) LEN(132)
+             DCL        VAR(&DEVI) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DEPSRV) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&UNITMN) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&KBSAVF) TYPE(*CHAR) LEN(10) VALUE('KAP       ')
+             DCL        VAR(&TISAVF) TYPE(*CHAR) LEN(10) VALUE('          ')
+             DCL        VAR(&TISAV2) TYPE(*CHAR) LEN(10) VALUE('TI        ')
+             DCL        VAR(&DAY) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&RUNDAT) TYPE(*CHAR) LEN(13)
+             DCL        VAR(&TIBKLIB) TYPE(*CHAR) LEN(10) +
+                          VALUE('TIBACKUPS')
+             DCL        VAR(&JNSTAT) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&KEYVAR) TYPE(*CHAR) LEN(4)
+/*/COPY WNCPYSRC,TIH00010                                            */
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                                 2001')
+/**/
+             DCLF       FILE(T2PF)
+/**/
+/* Global monitor message */
+/**/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+/**/
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
+             CHGJOB     SWS(XXXXXX00)
+/**/
+/* Create data area MIDASMSG in QTEMP */
+/**/
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+/*/COPY WNCPYSRC,TIH00011                                            */
+/**/
+             CHKOBJ OBJ(TIBACKUPS) OBJTYPE(*LIB)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(ENDPGM))
+/*/COPY WNCPYSRC,TIH00012                                            */
+ 
+/*  OBTAIN MEDIA, DEVICE NAME & AND VOLUME ID FOR I-C SAVE FROM JNSTAT */
+/**/
+/* JNSTAT */
+/**/
+             CHKOBJ     OBJ(JNSTAT) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+               CHGVAR     VAR(&SMSG) VALUE('Job terminated +
+                          - JNSTAT not found ')
+               SNDMSG  MSG(&SMSG) TOMSGQ(MOPERQ)
+               CHGJOB     SWS(XXXXXX11)
+               GOTO       CMDLBL(ENDPGM)
+             ENDDO
+/**/
+               RTVDTAARA  DTAARA(JNSTAT) RTNVAR(&JNSTAT)
+               CHGVAR     VAR(&DEVI) VALUE(%SUBSTRING(&JNSTAT 53 10))
+/**/
+/* SYSTEM ID AND RUN DATE*/
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             RTVDTAARA  DTAARA(RUNDAT) RTNVAR(&RUNDAT)
+             IF         COND(%SST(&RUNDAT 1 1) = ' ') THEN(CHGVAR +
+                          VAR(%SST(&RUNDAT 1 1)) VALUE('0'))
+/*/COPY WNCPYSRC,TIH00013                                            */
+ 
+READ:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(ENDREAD)
+             ENDDO
+ 
+/* Only carry out check if unit mnemonic belongs to this system. */
+             IF         COND(%SST(&T2UMN 1 2) *NE &SYSID) THEN(DO)
+                GOTO       CMDLBL(READ)
+             ENDDO
+ 
+             CHGVAR     VAR(&DEPSRV) VALUE(&T2DSM)
+             CHGVAR     VAR(&UNITMN) VALUE(&T2UMN)
+ 
+             GOTO       CMDLBL(READ)
+ENDREAD:
+               CHGVAR     VAR(%SUBSTRING(&KBSAVF 4 2)) +
+                          VALUE(&DEPSRV)
+               CHGVAR     VAR(%SUBSTRING(&KBSAVF 6 5)) +
+                          VALUE(%SST(&RUNDAT 1 5))
+ 
+               CHGVAR     VAR(%SUBSTRING(&TISAVF 1 2)) +
+                          VALUE(&DEPSRV)
+               CHGVAR     VAR(%SUBSTRING(&TISAVF 3 3)) +
+                          VALUE(&UNITMN)
+               CHGVAR     VAR(%SUBSTRING(&TISAVF 6 5)) +
+                          VALUE(%SST(&RUNDAT 1 5))
+ 
+/*/COPY WNCPYSRC,TIH00014                                            */
+             SAVSAVFDTA SAVF(TIBACKUPS/&KBSAVF) DEV(&DEVI) +
+                          VOL(*MOUNTED) USEOPTBLK(*NO) +
+                          OUTPUT(*PRINT)
+ 
+             MONMSG     MSGID(CPF0000) EXEC(DO)
+ 
+/* If error during save, end program */
+ 
+               CHGVAR     VAR(&SMSG) VALUE('Job terminated +
+                          - file ' *CAT &KBSAVF *CAT ' NOT saved')
+               SNDMSG  MSG(&SMSG) TOMSGQ(MOPERQ)
+               CHGJOB     SWS(XXXXXX11)
+               GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+             SAVSAVFDTA SAVF(TIBACKUPS/&TISAVF) DEV(&DEVI) +
+                          VOL(*MOUNTED) USEOPTBLK(*NO) +
+                          OUTPUT(*PRINT)
+ 
+             MONMSG     MSGID(CPF0000) EXEC(DO)
+ 
+/* If error during save, end program */
+ 
+               CHGVAR     VAR(&SMSG) VALUE('Job terminated +
+                          - file ' *CAT &TISAVF *CAT ' NOT saved')
+               SNDMSG  MSG(&SMSG) TOMSGQ(MOPERQ)
+               CHGJOB     SWS(XXXXXX11)
+               GOTO       CMDLBL(ENDPGM)
+             ENDDO
+/* */
+/* Save TIxxYYYday as save by TI KCMSAV by CSCS server  */
+/* */
+               CHGVAR     VAR(%SUBSTRING(&TISAV2 3 2)) +
+                          VALUE(&DEPSRV)
+               CHGVAR     VAR(%SUBSTRING(&TISAV2 5 3)) +
+                          VALUE(&UNITMN)
+               RTVSYSVAL SYSVAL(QDAYOFWEEK) RTNVAR(&DAY)
+               CHGVAR     VAR(%SUBSTRING(&TISAV2 8 3)) +
+                          VALUE(%SST(&DAY 2 3))
+ 
+             SAVSAVFDTA SAVF(TIBACKUPS/&TISAV2) DEV(&DEVI) +
+                          VOL(*MOUNTED) USEOPTBLK(*NO) +
+                          OUTPUT(*PRINT)
+             MONMSG     MSGID(CPF0000) EXEC(DO)
+ 
+/* If error during save, end program */
+ 
+               CHGVAR     VAR(&SMSG) VALUE('Job terminated +
+                          - file ' *CAT &TISAVF *CAT ' NOT saved')
+               SNDMSG  MSG(&SMSG) TOMSGQ(MOPERQ)
+               CHGJOB     SWS(XXXXXX11)
+               GOTO       CMDLBL(ENDPGM)
+             ENDDO
+/*/COPY WNCPYSRC,TIH00015                                            */
+/* */
+             CHGVAR     VAR(&RMSG) VALUE('Y')
+             SNDPGMMSG  MSG('Deleting TI Save files.') TOMSGQ(QSYSOPR)
+             SNDPGMMSG  MSG('Delete TI Save files? Y/N') +
+                          TOMSGQ(MOPERQ) MSGTYPE(*INQ) KEYVAR(&KEYVAR)
+             RCVMSG     MSGKEY(&KEYVAR) WAIT(300) KEYVAR(&KEYVAR) +
+                          MSG(&RMSG)
+             IF ((&RMSG *EQ 'Y') *OR (&RMSG *EQ 'y')) THEN(DO)
+             DLTF       FILE(&TIBKLIB/&KBSAVF)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(&TIBKLIB/&TISAVF)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(&TIBKLIB/&TISAV2)
+             MONMSG     MSGID(CPF0000)
+             ENDDO
+/**/
+             GOTO       CMDLBL(ENDPGM)
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          TIC000002 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+/**/
+ENDPGM:
+             RETURN
+             ENDPGM

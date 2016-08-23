@@ -1,0 +1,230 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Setup PM Files with new Base Currency')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module                          *
+     F*                                                               *
+     F*  PM6450 - SETUP PM FILES WITH NEW BASE CURRENCY               *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CPM005             Date 19JUN96               *
+     F*                 S01124             Date 13JUN94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  CPM005 - Private Banking Phase 2                             *
+     F*           Focus Group Changes upgraded to DBA                 *
+     F*  S01124  -  PBFG/1 - CHANGE CUSTOMER/PORTFOLIO BASE CURRENCY  *
+     F*                                                               *
+     F*****************************************************************
+     FPMPCBCL1IF  E           K        DISK         KINFSR *PSSR
+     F* Portfolio Change Base Currency - Prefix 'FM'
+     F*
+     F***SDBANKL1IF**E           K        DISK         KINFSR *PSSR       CPM005
+     F**Bank*Details*file*************************************************CPM005
+     F***********                                                         CPM005
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+     E*
+     E** ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+     I*
+     IPMSTAT      DS                            256
+     I                                       69  69 CHCY
+     I                                       70  70 VARQ
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     I***LDA********UDS                            256                    CPM005
+     I***********                           132 183 DBLOT                 CPM005
+     I***********                           132 141 DBFILE                CPM005
+     ILDA         DS                            256                       CPM005
+     I                                      134 183 DBLOT                 CPM005
+     I                                      134 141 DBFILE                CPM005
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I** DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     IWKEY1       DS
+     I                                        1   60WCUST
+     I                                        7  10 WPTFR
+     I*
+     ISDBANK    E DSSDBANKPD                                              CPM005
+     I** EXTERNAL DS FOR BANK DETAILS                                     CPM005
+     I*                                                                   CPM005
+     IDSFDY     E DSDSFDY                                                 CPM005
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                CPM005
+     I*                                                                   CPM005
+      ********************************************************************
+      /EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*
+     C** DEFINE KEY
+     C           KEY1      KLIST
+     C                     KFLD           FMCUST
+     C                     KFLD           FMPTFR
+     C*
+      ********************************************************************
+     C*
+     C** INITIALIZATION PROCESSING
+     C                     EXSR #INIT
+     C*
+     C** MAIN PROCESSING
+     C                     EXSR MAIN
+     C*
+     C** UPDATE DTAARA/PMSTAT
+     C           *LOCK     IN   PMSTAT
+     C                     MOVE WWCHCY    CHCY
+     C                     MOVE WWVARQ    VARQ
+     C                     OUT  PMSTAT
+     C*
+     C** TERMINATION PROCESSING
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #INIT    - INITIAL PROCESSING                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - ERROR IN FILE                                         *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     -                                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C**                                                   *****************
+     C           #INIT     BEGSR                           ** #INIT BEGSR **
+     C**                                                   *****************
+     C**  PREPARE LDA:
+     C**
+     C           *NAMVAR   DEFN           LDA                             CPM005
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'PM6450'  DBPGM
+     C*
+     C**  INITIALIZE INDICATORS:
+     C                     MOVE '0'       *IN
+     C**
+     C**  GET INSTALLATION CONTROL DATA RECORD 1:
+     C***********          READ SDBANKL1                 81               CPM005
+     C                     CALL 'AOBANKR0'                                CPM005
+     C                     PARM *BLANKS   WWRTCD  7                       CPM005
+     C                     PARM '*FIRST ' WWOPTN  7                       CPM005
+     C           SDBANK    PARM SDBANK    DSFDY                           CPM005
+     C**
+     C**  IF RECORD NOT FOUND:
+     C************IN81     IFEQ '1'                        - B1           CPM005
+     C           WWRTCD    IFNE *BLANKS                                   CPM005
+     C                     MOVEL'001'     DBASE            *****************
+     C***********          MOVEL'SDBANKL1'DBFILE           * DB ERROR 01 *CPM005
+     C                     MOVE 'SDBANKPD'DBFILE           * DB ERROR 01 *CPM005
+     C                     MOVEL' NONE '  DBKEY            *****************
+     C                     EXSR *PSSR
+     C                     END                             - E1
+     C*
+     C**********           Z-ADD*ZEROS    WWCUST  60                                          CSD027
+     C                     MOVE *BLANKS   WWCUST  6                                           CSD027
+     C                     MOVE *BLANKS   WWPTFR  4
+     C*
+     C** SETUP FIELDS FOR DTAARA/PMSTAT TO 'N'
+     C           *NAMVAR   DEFN           PMSTAT
+     C*
+     C                     MOVE 'N'       WWCHCY  1
+     C                     MOVE 'N'       WWVARQ  1
+     C*
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C**                                                   *************
+     C           MAIN      BEGSR                           ** SR/MAIN **
+     C*                                                    *************
+     C** POSITION ON FILE LF/PMPCBCL1
+     C           *LOVAL    SETLLPMPCBCL1
+     C                     READ PMPCBCL1                 80
+     C*
+     C** DO WHILE NOT EOF
+     C           *IN80     DOWEQ'0'                        - B0
+     C*
+     C** SETUP CHANGE OF CURRENCY FIELD FOR DTAARA/PMSTAT
+     C           WWCHCY    IFEQ 'N'                        - B1
+     C                     MOVE 'Y'       WWCHCY
+     C                     END                             - E1
+     C*
+     C** SETUP PRINT VALUATION REQUIRED FIELD FOR DTAARA/PMSTAT
+     C           WWVARQ    IFEQ 'N'                        - B1
+     C           FMSTFM    ANDNE*BLANKS
+     C                     MOVE 'Y'       WWVARQ
+     C                     END                             - E1
+     C*
+     C** READ NEXT RECORD
+     C                     READ PMPCBCL1                 80
+     C*
+     C** END OF LOOP
+     C                     END                             - E0
+     C*
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - ERROR IN FILE                                         *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #INIT    - INITIAL PROCESSING                                    *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     OUT  LDA                                       CPM005
+      *                                                                   CPM005
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C                     RETRN
+     C*
+     C                     ENDSR
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

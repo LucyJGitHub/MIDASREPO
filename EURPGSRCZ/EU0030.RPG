@@ -1,0 +1,819 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas EU EMU BCAE conversion report')
+      *****************************************************************
+      *                                                               *
+      *  Midas - EMU Module                                           *
+      *                                                               *
+      *  EU0030 - Midas EMU BCAE Conversion Report                    *
+      *                                                               *
+      *  Function:  This program is a new COB report that will list   *
+      *  (COB)     those transactions whose base currency equivalents *
+      *            or rates to base currency have been amended by the *
+      *            system. This report will be in transaction branch, *
+      *            transaction module and transaction identifier      *
+      *            sequence.                                          *
+      *                                                               *
+      *  Called By: EUC0020 - EMU Base Currency Conversion - Part I   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU001  *CREATE    Date 08Sep97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CEU001 - EMU Base Currency for Accounting Conversion         *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     FFDMNTHLLIF  E                    DISK         KINFSR *PSSR
+     FEUBCATPDIF  E           K        DISK         KINFSR *PSSR
+     FEUBCACPDIF  E                    DISK         KINFSR *PSSR
+     FEU0030P1O   E             03     PRINTER      KINFDS SPOOL1     UC
+     F                                              KINFSR *PSSR
+     FEU0030AUO   E                    PRINTER      KINFDS SPOOLU     UC
+     F                                              KINFSR *PSSR
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   01  - Print Header and Leave a Space                        *
+      *   02  - Not Multibranching                                    *
+      *   03  - Printer Overflow                                      *
+      *   05  - End of File for EUBCACPD                              *
+      *   06  - End of File for FFMNTHLL                              *
+      *   07  - End of File for EUBCATPD                              *
+      *                                                               *
+      *   98  - Date Format: DDMMMYY (off); MMMDDYY (on)              *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT   - Program Initialisation                            *
+      *  SRTRAN   - Access First Record of EUBCATPD                   *
+      *  SRLOOP   - Performs all Process for each Record              *
+      *  SRDATE   - Performs ZDATE8 for Value and Maturity Dates      *
+      *  SRBSCY   - Performs ZSEDIT for Old Base Currency Equivalent/ *
+      *             Rate and New Base Currency Equivalent/Rate        *
+      *  SRCURR   - Calls AOCURRR0                                    *
+      *  SRBRCH   - Calls AOBRCHR0                                    *
+      *  SRDEAL   - Moves Dealing to Field RMODL                      *
+      *  SRLEND   - Moves Lending to Field RMODL                      *
+      *  SRFUND   - Moves Funds Transfer to Field RMODL               *
+      *  SRSECU   - Moves Securities Trading to Field RMODL           *
+      *                                                               *
+      *  SRPRNT - Print Transaction Details                           *
+      *  SRAUDT - Produce Audit Report and End Program                *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *  ZDATE8 - Convert Midas Day Number into Date (DDMMMYY/MMMDDYY)*
+      *  ZSEDIT - Edit an Amount                                      *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E/COPY ZSRSRC,ZDATE8Z1
+     E/COPY ZSRSRC,ZSEDITZ1
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     I/COPY ZSRSRC,ZDATE8Z2
+     I/COPY ZSRSRC,ZSEDITZ2
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     ILDA       E DSLDA                         256
+      *
+      **  Local data area for database error details
+      **  *LOCK IN LDA immediately before and OUT LDA immediately
+      **  after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     ISPOOL1      DS
+      **  File Information Data Structure for EU0030P1.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      **  File Information Data Structure for EU0030AU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     ISDCUST    E DSSDCUSTPD
+      ***  External data structures for Customer Details
+     ISDBANK    E DSSDBANKPD
+      ***  External data structures for Bank Details
+     ISDCURR    E DSSDCURRPD
+      ***  External data structures for Currency Details
+     ISDBRCH    E DSSDBRCHPD
+      ***  External data structures for Branch Details
+     I              QQDFAC                          #DFAC1                                    CGL029
+      *                                                                                       CGL029
+     IDSFDY     E DSDSFDY
+      **  First data structure for Access Programs, short DS
+     IDSSDY     E DSDSSDY
+      **  Second data structure for Access Programs, long DS
+     C/EJECT
+     C*================================================================
+     C*  P R O G R A M   S T A R T                                    *
+     C*================================================================
+     C*
+     C**  Set up copyright parameter
+     C*
+     C                     MOVEACPY@      MKI@   80
+     C*
+     C                     EXSR SRINIT
+     C*
+     C                     EXSR SRTRAN
+     C*
+     C                     SETON                     LR
+     C*
+     C*================================================================
+     C*  P R O G R A M   E N D                                        *
+     C*================================================================
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRINIT - Subroutine to do Program Initialisation.            *
+     C*                                                               *
+     C*  Called By: Main Processing                                   *
+     C*                                                               *
+     C*  Calls    : *PSSR  - Program Error Processing                 *
+     C*             AOBANKR0 Access Program                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRINIT    BEGSR
+     C*
+     C***  Read in Installation Data
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C**   Access RUNDAT for multibranching indicator
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*
+     C           AGMBIN    IFEQ 'Y'
+     C                     MOVE '0'       *IN02
+     C                     ELSE
+     C                     MOVE '1'       *IN02
+     C                     ENDIF
+     C*
+     C                     MOVE 'N'       WOPEN   1
+     C*
+     C***  Call Access Program for Bank Details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST  'POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C***  Handle Database Error.
+     C*
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     MOVEL'*FIRST  'DBKEY            * DBERR 01 *
+     C                     Z-ADD1         DBASE            ************
+     C                     MOVEL'EU0030'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C***  Check System Date Format, DDMMMYY (*IN98 off)
+     C***                            MMMDDYY (*IN98 on).
+     C*
+     C           BJDFIN    IFEQ 'D'
+     C                     MOVE '0'       *IN98
+     C                     ELSE
+     C                     MOVE '1'       *IN98
+     C                     ENDIF
+     C*
+     C***  Access EUBCATPD for Run Conversion, Old and New Base
+     C***  Currency
+     C*
+     C                     READ EUBCACPD                 05
+     C*
+     C***  End the program when Run Conversion is not 'Y'
+     C*
+     C           *IN05     IFEQ '0'
+     C           BCRUNC    ANDNE'Y'
+     C           *IN05     OREQ '1'
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C                     MOVE BCOBCY    WCCY    3
+     C                     EXSR SRCURR
+     C                     Z-ADDA6NBDP    WOBDP   10
+     C                     MOVE BCNBCY    WCCY
+     C                     EXSR SRCURR
+     C                     Z-ADDA6NBDP    WNBDP   10
+     C                     MOVE BCOBCY    ROBCY
+     C                     MOVE BCNBCY    RNBCY
+     C*
+     C***  Access records of FDMNTHLL for ZDATE8
+     C*
+     C                     READ FDMNTHLL                 06
+     C*
+     C***  Handle Database Error.
+     C*
+     C           *IN06     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'FDMNTHLL'DBFILE           ************
+     C                     MOVEL*BLANKS   DBKEY            * DBERR 02 *
+     C                     Z-ADD2         DBASE            ************
+     C                     MOVEL'EU0030'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C*                                                               *
+     C*  SRTRAN - Access First Record of EUBCATPD.                    *
+     C*                                                               *
+     C*  Called By: Main Processing                                   *
+     C*                                                               *
+     C*  Calls    : SRAUDT - Produce Audit Report and End Program     *
+     C*             SRLOOP - Performs all Process for each Record     *
+     C*             SRBRCH - Calls AOBRCHR0                           *
+     C*             SRDEAL - Moves Dealing to Field RMODL             *
+     C*             SRLEND - Moves Lending to Field RMODL             *
+     C*             SRFUND - Moves Funds Transfer to Field RMODL      *
+     C*             SRSECU - Moves Securities Trading to Field RMODL  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRTRAN    BEGSR
+     C                     READ EUBCATPD                 07
+     C*
+     C           *IN07     IFEQ '1'
+     C                     EXSR SRAUDT
+     C                     ELSE
+     C*
+     C                     EXSR SRBRCH
+     C*
+     C                     MOVE BABRCA    RBRCA
+     C                     MOVE BAMODL    RMDLE
+     C                     MOVE *BLANKS   RMODL
+     C                     MOVELA8BRNM    RBRNM
+     C                     MOVE BAMODL    WMODL   2
+     C*
+     C           BAMODL    CASEQ'DL'      SRDEAL
+     C           BAMODL    CASEQ'LE'      SRLEND
+     C           BAMODL    CASEQ'FT'      SRFUND
+     C           BAMODL    CASEQ'SE'      SRSECU
+     C                     END
+     C*
+     C                     EXSR SRLOOP
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C*                                                               *
+     C*  SRLOOP - Performs all Process for each Record                *
+     C*                                                               *
+     C*  Called By: SRTRAN - Access First record of EUBCATPD          *
+     C*                                                               *
+     C*  Calls    : SRCURR - Calls AOCURRR0                           *
+     C*             SRDATE - Performs ZDATE8 for Value and Maturity   *
+     C*                      Dates                                    *
+     C*             SRBSCY - Performs ZSEDIT for Old Base Currency    *
+     C*                      Equivalent/Rate and New Base Currency    *
+     C*                      Equivalent/Rate                          *
+     C*             SRPRNT - Print Transaction Details                *
+     C*             ZSEDIT - Edit the Amounts                         *
+     C*             AOCUSTR0 Access Program                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRLOOP    BEGSR
+     C           *IN07     DOWEQ'0'
+     C                     MOVE *BLANKS   RCUST
+     C                     MOVE *BLANKS   RTAMT
+     C                     MOVE *BLANKS   ROAMT
+     C*
+     C********** BACUST    IFNE 0                                                             CSD027
+     C           BACUST    IFNE *BLANKS                                                       CSD027
+     C                     MOVE BACUST    PCUST   6
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY    'POPTN
+     C                     PARM           PCUST
+     C                     PARM           PSTNM   7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C*
+     C***  Handle Database Error.
+     C*
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCUSTPD'DBFILE           ************
+     C                     MOVELPCUST     DBKEY            * DBERR 05 *
+     C                     Z-ADD5         DBASE            ************
+     C                     MOVEL'EU0030'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     MOVE BACUST    RCUST
+     C                     ENDIF
+     C*
+     C                     MOVE BACCY1    WCCY
+     C*
+     C                     EXSR SRCURR
+     C*
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE *BLANK    ZECHAR
+     C                     Z-ADDBAAMT1    ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C*
+     C                     EXSR ZSEDIT
+     C*
+     C                     MOVE ZOUT21    RTAMT
+     C*
+     C           BACCY2    IFNE *BLANKS
+     C                     MOVE BACCY2    WCCY
+     C*
+     C                     EXSR SRCURR
+     C*
+     C                     Z-ADDBAAMT2    ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C*
+     C                     EXSR ZSEDIT
+     C*
+     C                     MOVE ZOUT21    ROAMT
+     C                     ENDIF
+     C*
+     C                     EXSR SRDATE
+     C                     EXSR SRBSCY
+     C                     EXSR SRPRNT
+     C                     ENDDO
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C*                                                               *
+     C*  SRDATE - Performs ZDATE8 for Value and Maturity Dates        *
+     C*                                                               *
+     C*  Called By: SRLOOP - Performs all Process for each Record     *
+     C*                                                               *
+     C*  Calls    : ZDATE8 - Converts Day Number to Date Format       *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRDATE    BEGSR
+     C                     MOVE *BLANKS   RMTDT
+     C                     Z-ADDBAVDAT    ZDAYNO
+     C*
+     C                     EXSR ZDATE8
+     C*
+     C                     MOVE ZADATE    RVLDT
+     C*
+     C           BAMDAT    IFNE 0
+     C                     Z-ADDBAMDAT    ZDAYNO
+     C*
+     C                     EXSR ZDATE8
+     C*
+     C                     MOVE ZADATE    RMTDT
+     C                     ENDIF
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C*                                                               *
+     C*  SRBSCY - Performs ZSEDIT for Old Base Currency Equivalent/   *
+     C*           Rate and New Base Currency Equivalent/Rate          *
+     C*                                                               *
+     C*  Called By: SRLOOP - Performs all Process for each Record     *
+     C*                                                               *
+     C*  Calls    : ZSEDIT - Edit the Amounts                         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRBSCY    BEGSR
+     C                     Z-ADD0         WOBCR  150
+     C                     Z-ADD0         WNBCR  150
+     C                     MOVE *BLANKS   ROBCE
+     C                     MOVE *BLANKS   RNBCE
+     C*
+     C           BAOBCE    IFEQ 0
+     C                     MOVE BAOBCR    WOBCR
+     C                     Z-ADDWOBCR     ZFLD15
+     C                     Z-ADD8         ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     ELSE
+     C                     Z-ADDBAOBCE    ZFLD15
+     C                     Z-ADDWOBDP     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     ENDIF
+     C*
+     C                     EXSR ZSEDIT
+     C*
+     C                     MOVE ZOUT21    ROBCE
+     C*
+     C           BANBCE    IFEQ 0
+     C                     MOVE BANBCR    WNBCR
+     C                     Z-ADDWNBCR     ZFLD15
+     C                     Z-ADD8         ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     ELSE
+     C                     Z-ADDBANBCE    ZFLD15
+     C                     Z-ADDWNBDP     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     ENDIF
+     C*
+     C                     EXSR ZSEDIT
+     C*
+     C                     MOVE ZOUT21    RNBCE
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C*                                                               *
+     C*  SRCURR - Calls AOCURRR0                                      *
+     C*                                                               *
+     C*  Called by: SRINIT - Subroutine to do Program Initialisation  *
+     C*             SRLOOP - Performs all Process for each Record     *
+     C*                                                               *
+     C*  Calls    : *PSSR  - Program Error Processing                 *
+     C*             AOCURRR0 Access Program                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRCURR    BEGSR
+     C*
+     C***  Call Access Program for Currency Details
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY    'POPTN
+     C                     PARM WCCY      PCURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C***  Handle Database Error.
+     C*
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE           ************
+     C                     MOVELWCCY      DBKEY            * DBERR 03 *
+     C                     Z-ADD3         DBASE            ************
+     C                     MOVEL'EU0030'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C*                                                               *
+     C*  SRBRCH - Calls AOBRCHR0                                      *
+     C*                                                               *
+     C*  Called by: SRPRNT - Print Transaction Details                *
+     C*             SRTRAN - Access First Record of EUBCATPD          *
+     C*                                                               *
+     C*  Calls    : *PSSR  - Program Error Processing                 *
+     C*             AOBRCHR0 Access Program                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C**
+     C           SRBRCH    BEGSR
+     C*
+     C***  Call Access Program for Branch Details
+     C*
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY    'POPTN
+     C                     PARM BABRCA    PBRCH   3
+     C           SDBRCH    PARM SDBRCH    DSSDY
+     C*
+     C***  Handle Database Error.
+     C*
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBRCHPD'DBFILE           ************
+     C                     MOVELBABRCA    DBKEY            * DBERR 04 *
+     C                     Z-ADD4         DBASE            ************
+     C                     MOVEL'EU0030'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C*                                                               *
+     C*  SRDEAL - Moves Dealing to Field RMODL                        *
+     C*                                                               *
+     C*  Called by: SRPRNT - Print Transaction Details                *
+     C*             SRTRAN - Access First Record of EUBCATPD.         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRDEAL    BEGSR
+     C                     MOVEL'DEALING' RMODL
+     C                     ENDSR
+     C*****************************************************************
+     C*                                                               *
+     C*  SRLEND - Moves Lending to Field RMODL                        *
+     C*                                                               *
+     C*  Called by: SRPRNT - Print Transaction Details                *
+     C*             SRTRAN - Access First Record of EUBCATPD.         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRLEND    BEGSR
+     C                     MOVEL'LENDING' RMODL
+     C                     ENDSR
+     C*****************************************************************
+     C*                                                               *
+     C*  SRFUND - Moves Funds Transfer to Field RMODL                 *
+     C*                                                               *
+     C*  Called by: SRPRNT - Print Transaction Details                *
+     C*             SRTRAN - Access First Record of EUBCATPD.         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRFUND    BEGSR
+     C                     MOVEL'FUNDS '  WMDNM1 14
+     C                     MOVEL'TRANSFER'WMDNM2  8
+     C                     MOVE WMDNM2    WMDNM1
+     C                     MOVELWMDNM1    RMODL
+     C                     ENDSR
+     C*****************************************************************
+     C*                                                               *
+     C*  SRSECU - Moves Securities Trading to Field RMODL             *
+     C*                                                               *
+     C*  Called by: SRPRNT - Print Transaction Details                *
+     C*             SRTRAN - Access First Record of EUBCATPD.         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRSECU    BEGSR
+     C                     MOVEL'SECURITI'WMDNM3 18
+     C                     MOVEL'ES TRADI'WMDNM4 10
+     C                     MOVEL'NG'      WMDNM5  2
+     C                     MOVE WMDNM5    WMDNM4
+     C                     MOVE WMDNM4    WMDNM3
+     C                     MOVELWMDNM3    RMODL
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRPRNT - Print Transaction Details                           *
+     C*                                                               *
+     C*  Called By:  SRLOOP - Performs all Process for each Record    *
+     C*                                                               *
+     C*  Calls    :  SRBRCH - Calls AOBRCHR0                          *
+     C*              SRDEAL - Moves Dealing to Field RMODL            *
+     C*              SRLEND - Moves Lending to Field RMODL            *
+     C*              SRFUND - Moves Funds Transfer to Field RMODL     *
+     C*              SRSECU - Moves Securities Trading to Field RMODL *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRPRNT    BEGSR                           ** SRPRNT **
+     C*
+     C**  Open printer file EU0030P1 if not yet open.
+     C*
+     C           WOPEN     IFEQ 'N'
+     C*
+     C                     MOVE 'Y'       WOPEN
+     C                     OPEN EU0030P1
+     C                     MOVE '1'       *IN01
+     C                     WRITEEU0030D0
+     C*
+     C                     MOVE *BLANKS   SENTY
+     C                     Z-ADDSFNUM1    ZSNUM   60
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C**  Check that sufficient lines remain for the Format. If not,
+     C**  write out the Main Headings on a new page.
+     C*
+     C                     Z-ADD0         DIFLN1  20
+     C                     Z-ADD2         RQDLN1  20
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C*
+     C           DIFLN1    IFLE RQDLN1
+     C                     MOVE '1'       *IN01
+     C                     WRITEEU0030D0
+     C                     ENDIF
+     C*
+     C                     MOVE *BLANKS   RTRID
+     C                     MOVE BATRID    RTRID
+     C                     MOVE BACCY1    RCCY1
+     C                     MOVE BACCY2    RCCY2
+     C*
+     C                     WRITEEU0030D1
+     C                     MOVE '0'       *IN01
+     C                     MOVE *BLANKS   RMODL
+     C*
+     C***  Access succeeding records of EUBCATPD
+     C*
+     C                     READ EUBCATPD                 07
+     C*
+     C                     MOVE BAMODL    RMDLE
+     C           BAMODL    CASEQ'DL'      SRDEAL
+     C           BAMODL    CASEQ'LE'      SRLEND
+     C           BAMODL    CASEQ'FT'      SRFUND
+     C           BAMODL    CASEQ'SE'      SRSECU
+     C                     END
+     C*
+     C***  If Transaction branch has change from previous record,
+     C***  print header on a next page.
+     C*
+     C           *IN07     IFEQ '0'
+     C           BABRCA    ANDNERBRCA
+     C*
+     C           AGMBIN    IFEQ 'Y'
+     C                     WRITEEU0030D3
+     C                     CLOSEEU0030P1
+     C                     OPEN EU0030P1
+     C                     ENDIF
+     C*
+     C                     MOVE BAMODL    WMODL
+     C                     MOVE *BLANKS   RBRNM
+     C*
+     C                     EXSR SRBRCH
+     C*
+     C                     MOVELA8BRNM    RBRNM
+     C                     MOVE BABRCA    RBRCA
+     C                     MOVE '1'       *IN01
+     C                     WRITEEU0030D0
+     C                     ELSE
+     C*
+     C***  If Transaction Module has change from previous record,
+     C***  print header on next page.
+     C*
+     C           BAMODL    IFNE WMODL
+     C           *IN07     ANDEQ'0'
+     C                     MOVE '1'       *IN01
+     C                     WRITEEU0030D0
+     C                     MOVE BAMODL    WMODL
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C***  Print trailer after all transactions are read.
+     C*
+     C           *IN07     IFEQ '1'
+     C                     WRITEEU0030D3
+     C                     ENDIF
+     C*
+     C           SRPRN9    ENDSR                           ** SRPRN9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRAUDT - Print Audit Report                                  *
+     C*                                                               *
+     C*  Called By:  SRLOOP - Performs all Process for each Record    *
+     C*              *PSSR  - Program Error Processing Subroutine     *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRAUDT    BEGSR                           ** SRAUDT **
+     C*
+     C**  If P1 report is open, print report footer
+     C*
+     C           WOPEN     IFEQ 'Y'
+     C*
+     C**  Check that sufficient lines remain for the Format. If not,
+     C**  write out the Main Headings on a new page.
+     C*
+     C                     Z-ADD2         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C*
+     C           DIFLN1    IFLE RQDLN1
+     C           BABRCA    ORNE RBRCA
+     C                     WRITEEU0030D0
+     C                     ENDIF
+     C*
+     C                     WRITEEU0030D2
+     C                     ENDIF
+     C*
+     C**  Print Audit File if no details to report or database error.
+     C*
+     C           WOPEN     IFEQ 'N'
+     C           *INU7     OREQ '1'
+     C           *INU8     ANDEQ'1'
+     C*
+     C                     OPEN EU0030AU
+     C                     WRITEEU0030A0
+     C           *INU7     IFEQ '1'
+     C           *INU8     ANDEQ'1'
+     C                     WRITEEU0030A2
+     C                     ELSE
+     C                     WRITEEU0030A1
+     C                     ENDIF
+     C*
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C           SRAUD9    ENDSR                           ** SRAUD9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  *PSSR  - Error control subroutine                            *
+     C*                                                               *
+     C*  Called by: SRINIT - Subroutine to do Program Initialisation  *
+     C*             SRBRCH - Calls AOBRCHR0                           *
+     C*             SRCURR - Calls AOCURRR0                           *
+     C*                                                               *
+     C*  Calls    : SRAUDT - Print Audit Report                       *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C*
+     C**  Check to see that *PSSR has not already been called.
+     C*
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     EXSR SRAUDT
+     C                     ENDIF
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C*
+     C           WPSS9     ENDSR                           ** WPSS9 **
+     C*
+     C*****************************************************************
+     C/TITLE SR/ZSEDIT
+     C/COPY ZSRSRC,ZSEDITZ31
+     C/TITLE SR/ZDATE8
+     C/COPY ZSRSRC,ZDATE8Z3
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   CPY@
+(c) Misys International Banking Systems Ltd. 2001

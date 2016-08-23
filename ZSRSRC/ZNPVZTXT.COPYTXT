@@ -1,0 +1,104 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  XXXXXXX - (/COPY Name)                                       *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      *  Last Amend No. nnnnnn  *CREATE    Date ddmmmyy               *
+      *  Prev Amend No. nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  nnnnnn - (change description)                                *
+      *                                                               *
+      *****************************************************************
+  STANDARD SUBROUTINE - ZNPV
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 
+  Purpose:
+  ~~~~~~~~
+  To Calculate the Net Present Value of a Future Amount using Money
+  Market Rates.
+ 
+  Notes for when including in RPG Program:
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   /COPY ZSRSRC,ZCBDYSZ1 should be included in the 'C' specifications
+   /COPY ZSRSRC,ZDATE2Z1 should be included in the 'E' specifications
+   /COPY ZSRSRC,ZDATE2Z2 should be included in the 'C' specifications
+   /COPY ZSRSRC,ZINTPLZ1 should be included in the 'C' specifications
+   /COPY ZSRSRC,ZNPVZ1   should be included in the 'C' specifications
+   The contents of ZSRSRC,ZDATE2Z3 should be included at the correct
+   point in the Compile Time Array Data.
+ 
+  Requirements:
+  ~~~~~~~~~~~~~
+   This Subroutine requires two Files to be included in the File
+   declarations of the program:
+    DLINTRL2 - Money Market Interest Rates File (1 year and less)
+    DLMMDFL1 - Money Market Discount Factors Table
+ 
+  Input:
+  ~~~~~~
+  ZNPSDT ( 5,0) Spot Date from PF/SDCURRPD
+  ZNPFDT ( 5,0) Future Date   (Date of Amount to be Present Valued)
+  ZNPAMT (13,0) Future Amount (Amount to be Present Valued)
+  ZNPCCY ( 3A ) Currency
+  ZCBCBS ( 1,0) Calculation Basis (for SR/ZCBDYS)
+  ZNPBOF ( 1A ) Bid/Offer Flag (Set to 'B' or not 'B')
+ 
+  Output:
+  ~~~~~~~
+  ZNPOUT (13,0) Net Present Value of Future Amount
+  ZNPRAT (11,7) Discount Rate (if used)
+  ZNPDF  (11,9) Discount Factor (if used)
+  *IN93 is set on if no Rates for Currency on File
+ 
+  Procedure:
+  ~~~~~~~~~~
+   Initialise fields.
+   Set up Key List: (used for either Input File) = Currency/Future Date
+   Which Rate or Factor to use depends on the following:
+     Profit = Lend   = Offer = Theirs = Receive.
+     Loss   = Borrow = Bid   = Ours   = Pay.
+ 
+  CASE 1: The Future Date is one year or less from Spot Date.
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   First find the Money Market Rate to use for discounting from the
+     Interest Rates Logical.
+     If there is an exact match, use that Rate.
+     If there is only one record for the Currency, use that Rate.
+     If Date is before first Date on file for Currency, use first Rate.
+     If Date is after last Date on File for Currency, use last Rate.
+     If no records for Currency, return *IN93 set on.
+     Else interpolate Broken Rate from the Rates either side of the
+       required Date, (using SR/ZINTPL).
+ 
+   Present Value is then calculated as:
+ 
+                    Future Amount
+   Present Value = ---------------
+                        1 + X
+ 
+              Discount Rate * Days in Period
+   where X = --------------------------------
+                    Days in Year * 100
+ 
+   Days in Period and Days in Year are dependent on the Calculation
+     Basis and should be calculated using SR/ZCBDYS.
+ 
+  CASE 2: The Future Date is more than one year ahead.
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   The Discount Factor is determined in exactly the same way as the
+     Rate in Case 1, but using the Money Market Discount Factors Table.
+ 
+   Present Value is then calculated as:
+ 
+                     Future Amount
+   Present Value = -----------------
+                    Discount Factor
+ 

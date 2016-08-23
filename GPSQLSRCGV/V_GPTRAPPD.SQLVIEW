@@ -1,0 +1,117 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing Module                                      */
+/*                                                                             */
+/*       V_GPTRAPPD - Global Transactions                                      */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2003                     */
+/*                                                                             */
+/*       Last Amend No. CSF011             Date 12Sep11                        */
+/*       Prev Amend No. CER059             Date 19Jul10                        */
+/*                      CER043             Date 02Jun08                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/*                      BG18886            Date 02Jun08                        */
+/*                      BUG17427           Date 04Apr08                        */
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      BUG11273           Date 28Apr06                        */
+/*                      CSD031             Date 10Apr06                        */
+/*                      BUG1127            Date 28Apr06                        */
+/*                      CSD027             Date 10Dec05                        */
+/*                      BUG7169            Date 29Jun05                        */
+/*                      BUG5404            Date 18Jan05                        */
+/*                      BUG3860            Date 06Aug04                        */
+/*                      CLE025             Date 20Oct03                        */
+/*                      BUG1912            Date 12May04                        */
+/*                      BG2010             Date 21Apr04                        */
+/*                      CGP001  *CREATE    Date 20Aug03                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       CSF011 - Customer Name on Inputs (Recompile)                          */
+/*       CER059 - German Feature Upgrade to Delhi                              */
+/*       CER043 - German Features LF041-00 New Fields and Defaulting           */
+/*                (Recompile)                                                  */
+/*       BG18886 - Amend non-standard codes.                                   */
+/*       BUG17427 - Global Enquiries - Settlement Cashflows                    */
+/*       BUG11273 - Attempt to write duplicate record in GPGLCUSL.             */
+/*                  Add GPGLCUSL.CGBRCD as new key(unique). (Recompile)        */
+/*       CSD031 - Enhanced Centralised Static Data (Recompile)                 */
+/*       BUG11273 - Attempt to write duplicate record in GPGLCUSL.             */
+/*                  Add GPGLCUSL.CGBRCD as new key(unique). (Recompile)        */
+/*       CSD027 - Conversion Of Customer Number to Alpha                       */
+/*       BUG7169- Product sequence is 9 for other grouped trades               */
+/*       BUG5404- Local Cust Shortname added to GPGLCUSL (Recompile)           */
+/*       BUG3860 - SQL performance                                             */
+/*       CLE025 - Credit Lines (Recompile)                                     */
+/*       BUG1912- SQL performance analysis required                            */
+/*       BG2010 - Move to GTALIB (Recompile)                                   */
+/*       CGP001 - Global Processing                                            */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+  SELECT                                                                        :
+***CASE*WHEN*GPPRODXPD.PDGPRD*IS*NULL*THEN*'OTHER'**ELSE*GPPRODXPD.PDGPRD*******:BUG17427
+   CASE WHEN GPPRODXPD.PDGPRD IS NULL                                           :BUG17427
+   OR GPPRODXPD.PDGPRD = ' ' THEN 'OTHER'  ELSE GPPRODXPD.PDGPRD                :BUG17427
+   END AS PRODUCT,                                                              :
+***CASE*WHEN*GPPRODXPD.PDGPRD*IS*NULL*THEN*'Other'*ELSE*GPPRODPD.PDDESC*********:BUG17427
+   CASE WHEN GPPRODXPD.PDGPRD IS NULL                                           :BUG17427
+   OR GPPRODXPD.PDGPRD = ' ' THEN 'Other'  ELSE GPPRODPD.PDDESC                 :BUG17427
+   END AS PRODDESC,                                                             :
+***GPPRODPD.PDDSEQ AS PRODSEQ,**************************************************:BUG7169
+***CASE*WHEN*GPPRODPD.PDDSEQ*IS*NULL*THEN*'9'*ELSE*GPPRODPD.PDDSEQ**************:BUG17427 BUG7169
+   CASE WHEN GPPRODPD.PDDSEQ IS NULL                                            :BUG17427
+   OR GPPRODPD.PDDSEQ = ' ' THEN '9' ELSE GPPRODPD.PDDSEQ                       :BUG17427
+   END AS PRODSEQ,                                                              :BUG7169
+   V_GPGLCUSL.*,                                                                :
+   P_NOML,P_CCY,P_ONOM,P_OCCY,P_TVDI,P_MKPR,P_MKVL,P_AITD,                      :
+   GPTRAPPD.*,                                                                  :
+   SMMODDESC,                                                                   :
+***DIGITS(T_CNUM)*AS*PADCNUM,***************************************************:BUG3860
+   T_CNMA AS PADCNUM,                                                           :BUG3860
+***GPTRAPPD.T_SMOD****GPTRAPPD.T_BRCA*AS*CUSSEC,********************************:BG18886
+   GPTRAPPD.T_SMOD CONCAT GPTRAPPD.T_BRCA AS CUSSEC,                            :
+   DATE(T_TDAT+719892) AS FT_TDAT,                                              :
+   DATE(T_SDAT+719892) AS FT_SDAT,                                              :
+   DATE(T_EDAT+719892) AS FT_EDAT,                                              :
+   DEC(T_MKVL*C1.SCALING,15,4) AS "ST_MKVL",                                    :
+   DEC(T_MKVL*C1.SCALING*C1.RATE,15,4) AS "BST_MKVL",                           :
+   DEC(P_MKVL*C1.SCALING,15,4) AS "SP_MKVL",                                    :
+   DEC(P_MKVL*C1.SCALING*C1.RATE,15,4) AS "BSP_MKVL"                            :
+  FROM GPTRAPPD                                                                 :
+**INNER*JOIN*V_GPGLCUSL*ON*T_CUBR*=*CGBRCD*AND*DIGITS(T_CNUM)*=*CGCUST**********:BUG1912
+  INNER JOIN GPGLCUSL V_GPGLCUSL ON T_ZONE = CGZONE AND T_CNUM = CGCNUM         :BUG1912
+  INNER JOIN GPPOSNPD GPPOSNPD ON P_ID = T_ID                                   :
+  LEFT JOIN V_GLOBRATE C1 ON C1.CCY=T_VCCY                                      :
+  LEFT JOIN GPPRODXPD ON PDTRTP = T_TRTP AND PDTRST = T_TRST AND                :
+  PDZONE = T_ZONE                                                               :
+  LEFT JOIN GPPRODPD ON GPPRODXPD.PDGPRD=GPPRODPD.PDGPRD                        :
+  LEFT JOIN T_SMODSEC ON T_SMOD = SMSMOD                                        :
+  WHERE  P_TVDI = 'T'  AND (P_ASLI = 'A' OR P_ASLI = ''                         :
+**OR**(P_ASLI*=*'L'*AND*T_SMOD**='FXDL'*AND*T_SMOD**='CIRS'*AND*T_SMOD**********:BG18886
+***='SIRS'*AND*T_SMOD**='FRAS'*AND*T_SMOD**='CFCO'));***************************:BG18886
+  OR  (P_ASLI = 'L' AND T_SMOD <> 'FXDL' AND T_SMOD <> 'CIRS' AND T_SMOD        :BG18886
+  <> 'SIRS' AND T_SMOD <> 'FRAS' AND T_SMOD <> 'CFCO'));                        :BG18886
+                                                                                :
+ * DESCRIBESTART                                                                :
+ * DESCRIBEFIELD PRODUCT    AS PDGPRD     USING GPPRODXPD                       :
+ * DESCRIBEFIELD PRODDESC   AS PDDESC     USING GPPRODPD                        :
+***DESCRIBEFIELD*PADCNUM****AS*T_CNUM*****USING GPTRAPPD************************:BUG3860
+ * DESCRIBEFIELD PADCNUM    AS T_CNMA     USING GPTRAPPD                        :BUG3860
+ * DESCRIBEFIELD FT_TDAT    AS T_TDAT     USING GPTRAPPD                        :
+ * DESCRIBEFIELD FT_SDAT    AS T_SDAT     USING GPTRAPPD                        :
+ * DESCRIBEFIELD FT_EDAT    AS T_EDAT     USING GPTRAPPD                        :
+ * DESCRIBEFIELD ST_MKVL    AS T_MKVL     USING GPTRAPPD                        :
+ * DESCRIBEFIELD BST_MKVL   AS T_MKVL     USING GPTRAPPD   (BASECCY)            :
+ * DESCRIBEFIELD SP_MKVL    AS P_MKVL     USING GPPOSNPD                        :
+ * DESCRIBEFIELD BSP_MKVL   AS P_MKVL     USING GPPOSNPD   (BASECCY)            :
+ * DESCRIBEEND                                                                  :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas GP Global Transactions                      ';                     :
+                                                                                :

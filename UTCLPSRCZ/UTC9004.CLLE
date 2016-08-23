@@ -1,0 +1,383 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas UT Generate field seq. no's for API files')     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities module                                    */
+/*                                                                   */
+/*       UTC9004 - CPP for GENFLDNOS command.                        */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4.01.03 --------------------------------------------*/
+/*       Last Amend No. CUP021 *CREATE     Date 12Jan03              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP021 - Re-write of GENFLDNOS, to make it file driven.     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&APINAME &SUBM &JOBQLIB)
+ 
+             DCL        VAR(&APINAME) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&SUBM) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&JOBQLIB) TYPE(*CHAR) LEN(20)
+ 
+             DCL        VAR(&JOBQ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+ 
+/* Check variable, used to extract all records for a particular */
+/* API - needed if *ALL specified.                              */
+             DCL        VAR(&CHECK) TYPE(*CHAR) LEN(4)
+ 
+/* End of file flag                                             */
+             DCL        VAR(&EOF) TYPE(*CHAR) LEN(1)
+ 
+/* Position in array                                            */
+             DCL        VAR(&POS) TYPE(*DEC) LEN(3 0)
+ 
+/* Error message for interactive jobs                           */
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+ 
+/* Index/number of detail files, in decimal and binary        */
+             DCL        VAR(&IDX) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&BIN) TYPE(*CHAR) LEN(2)
+ 
+/* Detail file name */
+             DCL        VAR(&DETFILE) TYPE(*CHAR) LEN(10)
+ 
+ /* The description of the detail file */
+             DCL        VAR(&DTLTEXT) TYPE(*CHAR) LEN(50)
+ 
+/* Count of entries in the detail parameter */
+             DCL        VAR(&DETCOUNT) TYPE(*DEC) LEN(2 0)
+ 
+ /* Return code */
+             DCL        VAR(&RETURNCODE) TYPE(*CHAR) LEN(10)
+ 
+/* Start position of list (binary field) */
+             DCL        VAR(&STARTPOS) TYPE(*CHAR) LEN(4)
+ 
+/* Length of a list entry (binary field) */
+             DCL        VAR(&ENTRYLEN) TYPE(*CHAR) LEN(4)
+ 
+/* Number of list entries (binary field) */
+             DCL        VAR(&NUMBOFENT) TYPE(*DEC) LEN(9 0)
+ 
+/* The first (and only) format in the header file */
+             DCL        VAR(&HEADFORMAT) TYPE(*CHAR) LEN(10)
+ 
+/* Start position of file names in Detail parameter */
+             DCL        VAR(&DETSTART) TYPE(*DEC) LEN(3 0) VALUE(3)
+ 
+/* The format names for detail files that were entered (up to 20) */
+             DCL        VAR(&MOREFORMAT) TYPE(*CHAR) LEN(200)
+ 
+/* A single detail file and library entry from the list  */
+/* of detail files  */
+             DCL        VAR(&DETAILFILE) TYPE(*CHAR) LEN(20)
+ 
+/* A single format name for a detail file */
+             DCL        VAR(&DETAILFMT) TYPE(*CHAR) LEN(10)
+ 
+/* The start position in the list of detail formats. */
+             DCL        VAR(&FMTSTART) TYPE(*DEC) LEN(3 0) VALUE(1)
+ 
+/* Parameters for UTC9005 - UPDGENFLD validity checker          */
+/* Header file and library */
+             DCL        VAR(&HEADER) TYPE(*CHAR) LEN(20)
+ 
+/* Detail files (up to 20), with a 2-byte binary count first */
+             DCL        VAR(&DETAIL) TYPE(*CHAR) LEN(402)
+ 
+/* Job switches - set on by UTC9005 if error                 */
+             DCL        VAR(&SWITCH) TYPE(*CHAR) LEN(8)
+ 
+/* Parameters for QUSRMBRD - retrieve member description        */
+             DCL        VAR(&RECEIVER) TYPE(*CHAR) LEN(145)
+             DCL        VAR(&RCVLEN) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&OVERRIDE) TYPE(*CHAR) LEN(1) VALUE('0')
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(40)
+ 
+/* Number of records in existing ZAFLDNPD member - binary/decimal */
+             DCL        VAR(&BINRCDS) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&NBROFRCDS) TYPE(*DEC) LEN(5 0)
+ 
+/* Parameters for UT9004 - RPG to add the fields                */
+/* Detail files (up to 20), without the 2-byte binary count */
+             DCL        VAR(&DETAILARRY) TYPE(*CHAR) LEN(400)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2003')
+ 
+             DCLF       FILE(UTGENFL0)
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* If submit requested extract batch queue and submit             */
+             IF         COND(&SUBM *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&JOBQ) VALUE(%SST(&JOBQLIB 1 10))
+                CHGVAR     VAR(&LIB) VALUE(%SST(&JOBQLIB 11 10))
+                CHGVAR     VAR(&SUBM) VALUE('X')
+                SBMJOB     CMD(CALL PGM(UTC9004) PARM(&APINAME &SUBM +
+                          &JOBQLIB))
+                GOTO       CMDLBL(END)
+             ENDDO
+/** +
+    Create the required user spaces: one for the format lists and +
+    one for the field lists. +
+**/
+             CRTUSRSPC  USRSPC(QTEMP/FORMATS) DELETE(*YES)
+             CRTUSRSPC  USRSPC(QTEMP/FIELDS) DELETE(*YES)
+ 
+/* Initialise variables                                            */
+/* The file names are stored in an array with a 2 long counter at  */
+/* the front - therefore the start position is 3.                  */
+             CHGVAR     VAR(&POS) VALUE(3)
+             CHGVAR     VAR(&EOF) VALUE('N')
+             CHGVAR     VAR(&IDX) VALUE(0)
+ 
+/* Initialise receiver length parameter for QUSRMBRD      */
+             CHGVAR     VAR(%BIN(&RCVLEN)) VALUE(145)
+ 
+/* If *ALL requested, remove all members from ZAFLDNPD first       */
+             IF         COND(&APINAME *EQ '*ALL') THEN(DO)
+                RMVM       FILE(ZAFLDNPD) MBR(*ALL)
+                MONMSG     MSGID(CPF7301)
+             ENDDO
+ 
+/* If single API requested, use OPNQRYF to override to that API in */
+/* UTGENFL0                                                        */
+             IF         COND(&APINAME *NE '*ALL') THEN(DO)
+                OPNQRYF    FILE((UTGENFL0)) QRYSLT('HFAPIN *EQ "' *TCAT +
+                          &APINAME *TCAT '"')
+                MONMSG     MSGID(CPF4174) EXEC(DO)
+                   CLOF       OPNID(UTGENFL0)
+                   OPNQRYF    FILE((UTGENFL0)) QRYSLT('HFAPIN *EQ "' *TCAT +
+                             &APINAME *TCAT '"')
+                ENDDO
+             ENDDO
+ 
+LOOP:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+ 
+/* End of file checks:                                           */
+/* Check whether field details have been retrieved but not yet   */
+/* processed                                                     */
+                IF         COND(&IDX *GT 0) THEN(DO)
+                   CHGVAR     VAR(&EOF) VALUE('Y')
+                   GOTO       CMDLBL(PROCESS)
+                ENDDO
+                ELSE       CMD(DO)
+                   GOTO       CMDLBL(END)
+                ENDDO
+             ENDDO
+ 
+/* If *ALL was requested, and this is a new API, process it.      */
+/* Return here to get details of the record just read after       */
+/* processing.                                                    */
+             IF         COND(&CHECK *NE &HFAPIN *AND &CHECK *NE '    ' +
+                         *AND &APINAME *EQ '*ALL') THEN(GOTO +
+                          CMDLBL(PROCESS))
+GetNewAPI:
+ 
+/* If this is the first matching record, add it to the header     */
+/* field and save the actual API name in the check variable       */
+             IF         COND(&HFSEQN *EQ 1) THEN(DO)
+                CHGVAR     VAR(&CHECK) VALUE(&HFAPIN)
+                CHGVAR     VAR(&HEADER) VALUE(&HFFILE *CAT &HFFLIB)
+                GOTO       CMDLBL(LOOP)
+             ENDDO
+ 
+/* If this is a continuation field, add it to the 'Detail file'   */
+/* parameter array                                                */
+             IF         COND(&HFAPIN *EQ &CHECK) THEN(DO)
+                CHGVAR     VAR(%SST(&Detail &POS 20)) VALUE(&HFFILE +
+                       *CAT &HFFLIB)
+                CHGVAR     VAR(&POS) VALUE(&POS +20)
+                CHGVAR     VAR(&IDX) VALUE(&IDX +1)
+ 
+/* If there is still room in the array, get another record.       */
+                IF         COND(&IDX *LT 20) THEN(DO)
+                   GOTO       CMDLBL(LOOP)
+                ENDDO
+             ENDDO
+ 
+/* Call UTC9005 to validate file details                          */
+Process:
+             CHGVAR     VAR(%BIN(&BIN)) VALUE(&IDX)
+             CHGVAR     VAR(%SST(&DETAIL 1 2)) VALUE(&BIN)
+             CHGJOB     SWS(XXXXXX00)
+             CALL       PGM(UTC9005) PARM(&HFAPIN &DETAIL &HEADER)
+             RTVJOBA    SWS(&SWITCH)
+             IF         COND(%SST(&SWITCH 7 2) *EQ '11') THEN(DO)
+                CHGJOB     SWS(XXXXXX00)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+/* +
+   If this is not an extension to an existing definition, then +
+   add a member to the field numbers file, with the same name +
+   as the primary detail file.                                +
+   First extract the detail file name from the file and library +
+   combination. +
+**/
+             IF         COND(&HEADER *NE '*EXTEND') THEN(DO)
+                CHGVAR     VAR(&DETFILE) VALUE(%SST(&DETAIL 3 10))
+                RTVMBRD    FILE(&DETFILE) TEXT(&DTLTEXT)
+                ADDPFM     FILE(ZAFLDNPD) MBR(&DETFILE) TEXT(&DTLTEXT)
+                MONMSG     MSGID(CPF7306) EXEC(DO)
+                   RMVM       FILE(ZAFLDNPD) MBR(&DETFILE)
+                   ADDPFM     FILE(ZAFLDNPD) MBR(&DETFILE) TEXT(&DTLTEXT)
+                ENDDO
+/** +
+    Place the list of formats in the header file in the formats user +
+    space +
+**/
+                CALL       PGM(QUSLRCD) PARM('FORMATS   QTEMP     ' +
+                          'RCDL0100' &HEADER '1')
+ 
+/* Retrieve the starting position of the list within the user space */
+                RTVUSRSPCI USRSPC(QTEMP/FORMATS) STRPOS(&STARTPOS) +
+                          NBRENT(&NUMBOFENT) ENTLEN(&ENTRYLEN)
+ 
+/* Retrieve the first user space detail entry (ie first format name) */
+               CALL       PGM(QUSRTVUS) PARM('FORMATS   QTEMP     ' +
+                         &STARTPOS &ENTRYLEN &HEADFORMAT)
+             ENDDO
+/** +
+    Read through the detail parameter extracting the file names, and    +
+    generate a list of format names to pass to UT9004.                  +
+*/
+             CHGVAR     VAR(&DETCOUNT) VALUE(0)
+             CHGVAR     VAR(&DETSTART) VALUE(3)
+             CHGVAR     VAR(&FMTSTART) VALUE(1)
+ 
+NextDetail:
+/* +
+   Extract the detail file and library from the list until all +
+   detail entries have been processed +
+*/
+             IF         COND(&DETCOUNT *GE &IDX *OR &DETCOUNT = 20) +
+                          THEN(GOTO CMDLBL(ADDFILE))
+ 
+             CHGVAR     VAR(&DETAILFILE) VALUE(%SST(&DETAIL +
+                          &DETSTART 20))
+             CHGVAR     VAR(&DETSTART) VALUE(&DETSTART + 20)
+ 
+/** +
+    Place the list of formats in the detail file in the formats user +
+    space +
+**/
+             CALL       PGM(QUSLRCD) PARM('FORMATS   QTEMP     ' +
+                          'RCDL0100' &DETAILFILE '1')
+ 
+/* Retrieve the starting position of the list within the user space */
+             RTVUSRSPCI USRSPC(QTEMP/FORMATS) STRPOS(&STARTPOS) +
+                          NBRENT(&NUMBOFENT) ENTLEN(&ENTRYLEN)
+ 
+/* Retrieve the first user space detail entry (ie first format name) */
+             CALL       PGM(QUSRTVUS) PARM('FORMATS   QTEMP     ' +
+                          &STARTPOS &ENTRYLEN &DETAILFMT)
+/** +
+    Put the format name in the appropriate position of the MoreFormat  +
+    variable. +
+**/
+             CHGVAR     VAR(%SST(&MOREFORMAT &FMTSTART 10)) +
+                          VALUE(&DETAILFMT)
+             CHGVAR     VAR(&FMTSTART) VALUE(&FMTSTART + 10)
+ 
+             CHGVAR     VAR(&DETCOUNT) VALUE(&DETCOUNT + 1)
+             GOTO       CMDLBL(NEXTDETAIL)
+ 
+/** +
+    Pass control to the RPG module that does the work, first +
+    overriding to the correct member.  Get the current number +
+    of records in it if this is an extension list.  +
+**/
+AddFile:
+             IF         COND(&HEADER = '*EXTEND') THEN(DO)
+                CALL       PGM(QUSRMBRD) PARM(&RECEIVER &RCVLEN +
+                             'MBRD0200' 'ZAFLDNPD  *LIBL' &DETFILE +
+                             &OVERRIDE &ERROR)
+                CHGVAR     VAR(&BINRCDS) VALUE(%SST(&RECEIVER 141 4))
+                CHGVAR     VAR(&NBROFRCDS) VALUE(%BIN(&BINRCDS))
+             ENDDO
+             ELSE       CMD(DO)
+                CHGVAR     VAR(&NBROFRCDS) VALUE(0)
+             ENDDO
+             OVRDBF     FILE(ZAFLDNPD) MBR(&DETFILE)
+             CHGVAR     VAR(&DETAILARRY) VALUE(%SST(&DETAIL 3 400))
+             CALLPRC    PRC(UT9004) PARM(&RETURNCODE &HEADER +
+                          &HEADFORMAT &IDX &DETAILARRY &MOREFORMAT +
+                          &NBROFRCDS)
+             DLTOVR     FILE(ZAFLDNPD)
+ 
+/* End in error if the return code is nonblank. */
+             IF         COND(&RETURNCODE *NE ' ') THEN(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* If end of file, end program.                                   */
+             IF         COND(&EOF = 'Y') THEN(GOTO CMDLBL(END))
+ 
+/* Reset variables                                                */
+             CHGVAR     VAR(&HEADER) VALUE(' ')
+             CHGVAR     VAR(&DETAIL) VALUE(' ')
+             CHGVAR     VAR(&POS) VALUE(3)
+ 
+/* Reset variables - if 20 detail files have been retrieved, set  */
+/* the 'Header' variable to the special value '*EXTEND' so that   */
+/* any subsequent files for this API will be added to the same    */
+/* member in ZAFLDNPD                                             */
+             IF         COND(&IDX *EQ 20) THEN(DO)
+                CHGVAR     VAR(&HEADER) VALUE('*EXTEND')
+             ENDDO
+             CHGVAR     VAR(&IDX) VALUE(0)
+ 
+/* If this is an extension list, exactly twenty records will have */
+/* read. Read next.  If not an extension list, the next record    */
+/* will have been read, so process that record.                   */
+             IF         COND(&HEADER *EQ '*EXTEND') THEN(GOTO +
+                          CMDLBL(LOOP))
+             GOTO       CMDLBL(GetNewAPI)
+ 
+ ABNOR:
+/* Interactive mode: Set up messages for Midas Information Screen  */
+             IF         COND(&SUBM *EQ 'N') THEN(DO)
+ 
+/* Create data area MIDASMSG in QTEMP */
+                DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+                MONMSG     MSGID(CPF0000)
+                CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                             VALUE(' ')
+                RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) MSGDTA(UTC9004) +
+                          MSG(&MESSAGE)
+                MONMSG     MSGID(CPF0000)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                MONMSG     MSGID(CPF0000)
+                CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                             joblog for details')
+                MONMSG     MSGID(CPF0000)
+                CALL       PGM(SCC0010) PARM('GENFLDNOS' 'JOBLOG' 'Y')
+                MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ 
+/* Batch mode: Send message to MOPERQ                              */
+             ELSE       CMD(DO)
+                SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                             UTC9004 ended abnormally - see job log') +
+                             TOMSGQ(MOPERQ)
+                MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ 
+END:
+             CLOF       OPNID(UTGENFL0)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             ENDPGM

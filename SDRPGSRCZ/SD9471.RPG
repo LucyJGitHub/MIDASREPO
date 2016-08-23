@@ -1,0 +1,866 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Market Data Feed ICD maintenance')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD9471 - MARKET DATA FEEDS ICD                               *
+      *           Combined Maintenance and Enquiry                    *
+      *                                                               *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *  Last Amend No. CSD006  *CREATE    Date 04Sep00               *
+      *  Prev Amend No.                    Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD006 - Market Data Feeds                                   *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      * 03 - EXIT                                                     *
+      * 21 - 33  SCREEN ERRORS                                        *
+      * 70 - TOGGLE ENQUIRY/MAINTENANCE MODE                          *
+      * 85 - SCAN RESULTS                                             *
+      * 90 - READ SCREEN / CALL PROGRAM ERROR                         *
+      * 99 - READ END OF FILE                                         *
+      *                                                               *
+      *****************************************************************
+     FSDMDFCL0UF  E           K        DISK                      A
+      ** Midas SD Market Data Feed ICD
+      *
+     FSD9471DFCF  E                    WORKSTN
+      ** Midas SD Market Data Feed Maintenance & Enquiry Display File
+      *
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     I** Data structure for SDMMOD access object
+     ISDMMOD    E DSSDMMODPD
+     I** Data structure for SDMDFS access object
+     ISDMDFS    E DSSDMDFSPD
+     I** Short Data Structure for Access Objects
+     IDSFDY     E DSDSFDY
+      *
+     I** Data structure for comparison file fields
+     I          E DSSDMDFCPD
+     I                                        2 243 WKPREV
+      *
+     I** Data structure for temporary work fields
+     I            DS
+     I                                        1   1 WKRECI
+     I                                        2  33 WKTRGI
+     I                                    P  34  362WKSPTL
+     I                                    P  37  392WKSRTL
+     I                                    P  40  422WKFRTL
+     I                                    P  43  452WKIRTL
+     I                                    P  46  482WKBRTL
+     I                                       49  80 WKDSPS
+     I                                       81 112 WKDSRS
+     I                                      113 144 WKDFRS
+     I                                      145 176 WKDBOS
+     I                                      177 208 WKDLES
+     I                                      209 240 WKDBRS
+     I                                      241 2430WKHRTP
+     I                                    P 244 2460WKLCD
+     I                                      247 247 WKTYLC
+     I                                    P 248 2500WKTNLU
+     I                                      251 2552WZON2D
+     I                                      256 2580WZON0D
+     I                                      259 264 WKTOLA
+     I                                    P 265 2672WKTOLN
+     I                                      268 273 WKTOLP
+     I                                       49 240 WQMARK
+     I                                        2 243 WKNEW
+      *
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P@RTCD  7
+     C                     PARM           P@MODE  1
+      *****************************************************************
+      *
+      * INITIALISATION
+     C                     EXSR INIT
+      *
+      * MAIN PROCESSING
+     C                     EXSR MAIN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * MAIN PROCESSING
+      *****************************************************************
+     CSR         MAIN      BEGSR
+      *
+     C                     READ SDMDFCL0                 99
+      *
+      ** Determine Mode of operation (Insert, Amend or Enquire)
+      *
+     C           P@MODE    IFEQ 'M'
+     C           *IN99     IFEQ *ON
+     C                     MOVE 'I'       WKACTN  1
+     C                     MOVE 'I'       WKTYLC
+     C                     ELSE
+     C                     MOVE 'A'       WKACTN
+     C                     MOVE 'A'       WKTYLC
+     C                     MOVE *ON       WFIRST  1
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVE 'E'       WKACTN
+     C                     ENDIF
+      *
+      ** Execute Mode
+      *
+     C           WKACTN    CASEQ'I'       INSERT
+     C           WKACTN    CASEQ'A'       AMEND
+     C           WKACTN    CASEQ'E'       ENQUIR
+     C                     ENDCS
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     CSR                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * INSERT PROCESSING
+      *****************************************************************
+     CSR         INSERT    BEGSR
+      *
+     C                     MOVE *ON       LOOP    1
+     C           LOOP      DOWEQ*ON
+     C           *IN03     ANDEQ*OFF
+      *
+      * Update screen time and display screen
+      *
+     C                     TIME           SCTIME
+     C                     WRITE#MSGCTL
+     C                     WRITERCDDTL
+     C                     READ RCDDTL                   90
+      *
+      ** Validate and update if there are no errors
+      *
+     C                     MOVE *OFF      WQUERY  1
+     C           *IN03     IFEQ *OFF
+     C                     EXSR VALID
+     C           ERRGEN    IFEQ *OFF
+     C           WQUERY    ANDEQ*OFF
+     C                     EXSR UPDATE
+     C                     MOVE *OFF      LOOP
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     CSR                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * AMEND PROCESSING
+      *****************************************************************
+     CSR         AMEND     BEGSR
+      *
+      ** If first time through, convert file data for the screen
+      *
+     C           WFIRST    IFEQ *ON
+     C                     EXSR CONVRT
+     C                     ENDIF
+      *
+     C                     MOVE *ON       LOOP
+     C           LOOP      DOWEQ*ON
+     C           *IN03     ANDEQ*OFF
+      *
+      * Update screen time and display any messages and screen
+      *
+     C                     TIME           SCTIME
+     C                     WRITE#MSGCTL
+     C                     WRITERCDDTL
+     C                     READ RCDDTL                   90
+      *
+      * Validate and update if there are no errors
+      *
+     C                     MOVE *OFF      WQUERY
+     C           *IN03     IFEQ *OFF
+     C                     EXSR VALID
+     C           ERRGEN    IFEQ *OFF
+     C           WQUERY    ANDEQ*OFF
+     C                     EXSR UPDATE
+     C                     MOVE *OFF      LOOP
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     CSR                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * ENQUIRE PROCESSING
+      *****************************************************************
+     CSR         ENQUIR    BEGSR
+      *
+      ** If the user has not selected F3/Exit from the screen
+      *
+     C           *IN03     IFNE *ON
+      *
+      ** Convert file data for the screen
+      *
+     C                     EXSR CONVRT
+     C                     MOVE *ON       *IN70
+      *
+      * Update screen time and display screen
+      *
+     C                     TIME           SCTIME
+     C                     WRITERCDDTL
+     C                     EXFMTRCDDTL
+      *
+     C                     ENDIF
+      *
+     CSR                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * CONVERT - Convert file data for display on screen
+      *****************************************************************
+     CSR         CONVRT    BEGSR
+      *
+      ** If Amend, flag that first call to this routine is done
+      *
+     C           WKACTN    IFEQ 'A'
+     C                     MOVE *OFF      WFIRST
+     C                     ENDIF
+      *
+      ** Convert Market Data Feed Client Identifier
+      *
+     C                     MOVE MDTRGI    SCTRGI
+      *
+      ** Convert Security Price Tolerance
+      *
+     C           MDSPTL    IFNE 0
+     C                     Z-ADDMDSPTL    WNSPTL  52
+     C                     MOVE WNSPTL    WASPTL
+     C                     CALL 'ZEDIT'                90
+     C                     PARM           WASPTL 16
+     C                     PARM 2         WQ0015  10
+     C                     MOVE WASPTL    SCSPTL
+     C                     ELSE
+     C                     MOVE '  0.00'  SCSPTL
+     C                     ENDIF
+      *
+      ** Convert Spot Rate Tolerance
+      *
+     C           MDSRTL    IFNE 0
+     C                     Z-ADDMDSRTL    WNSRTL  52
+     C                     MOVE WNSRTL    WASRTL
+     C                     CALL 'ZEDIT'                90
+     C                     PARM           WASRTL 16
+     C                     PARM 2         WQ0015  10
+     C                     MOVE WASRTL    SCSRTL
+     C                     ELSE
+     C                     MOVE '  0.00'  SCSRTL
+     C                     ENDIF
+      *
+      ** Convert Forward Rate Tolerance
+      *
+     C           MDFRTL    IFNE 0
+     C                     Z-ADDMDFRTL    WNFRTL  52
+     C                     MOVE WNFRTL    WAFRTL
+     C                     CALL 'ZEDIT'                90
+     C                     PARM           WAFRTL 16
+     C                     PARM 2         WQ0015  10
+     C                     MOVE WAFRTL    SCFRTL
+     C                     ELSE
+     C                     MOVE '  0.00'  SCFRTL
+     C                     ENDIF
+      *
+      ** Convert Interest Rate Tolerance
+      *
+     C           MDIRTL    IFNE 0
+     C                     Z-ADDMDIRTL    WNIRTL  52
+     C                     MOVE WNIRTL    WAIRTL
+     C                     CALL 'ZEDIT'                90
+     C                     PARM           WAIRTL 16
+     C                     PARM 2         WQ0015  10
+     C                     MOVE WAIRTL    SCIRTL
+     C                     ELSE
+     C                     MOVE '  0.00'  SCIRTL
+     C                     ENDIF
+      *
+      ** Convert Base Rate Tolerance
+      *
+     C           MDBRTL    IFNE 0
+     C                     Z-ADDMDBRTL    WNBRTL  52
+     C                     MOVE WNBRTL    WABRTL
+     C                     CALL 'ZEDIT'                90
+     C                     PARM           WABRTL 16
+     C                     PARM 2         WQ0015  10
+     C                     MOVE WABRTL    SCBRTL
+     C                     ELSE
+     C                     MOVE '  0.00'  SCBRTL
+     C                     ENDIF
+      *
+      ** Convert Default Security Price Data Source,
+      **         Default Spot Rates Data Source,
+      **         Default Forward Rates Data Source,
+      **         Default Borrowing Rates Data Source,
+      **         Default Lending Rates Data Source and
+      **         Default Base Rates Data Source
+      *
+     C                     MOVE MDDSPS    SCDSPS
+     C                     MOVE MDDSRS    SCDSRS
+     C                     MOVE MDDFRS    SCDFRS
+     C                     MOVE MDDBOS    SCDBOS
+     C                     MOVE MDDLES    SCDLES
+     C                     MOVE MDDBRS    SCDBRS
+      *
+      ** Convert History Retention Period
+      *
+     C           MDHRTP    IFNE 0
+     C                     MOVE MDHRTP    WAHRTP
+     C                     CALL 'ZEDIT'                90
+     C                     PARM           WAHRTP 16
+     C                     PARM 0         WQ0015  10
+     C                     MOVE WAHRTP    SCHRTP
+     C                     ELSE
+     C                     MOVE *BLANKS   SCHRTP
+     C                     ENDIF
+      *
+     CSR                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * VALIDATION - Validate user input on screen
+      *****************************************************************
+     CSR         VALID     BEGSR
+      *
+      * Clear messages from program message queue, reset error flags
+     C                     CALL 'ZA0250'
+     C                     MOVE *OFF      ERRGEN  1
+     C                     MOVE *ZEROS    WKZERO 13
+     C                     MOVEAWKZERO    *IN,21
+      *
+      *
+      ** Validate Market Data Feed Client Identifier
+      *
+     C           SCTRGI    IFEQ *BLANKS
+     C                     MOVEL'USR5551' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN21
+     C                     MOVE *ON       ERRGEN
+     C                     ELSE
+     C                     MOVE SCTRGI    WKTRGI
+     C                     ENDIF
+      *
+      ** Validate Security Price Tolerance
+      *
+     C                     MOVE SCSPTL    WKTOLA  6
+     C                     EXSR TOLERN
+     C           ERRCUR    IFEQ *OFF
+     C                     MOVE WKTOLA    SCSPTL
+     C                     MOVE WKTOLN    WKSPTL
+     C                     ELSE
+     C                     MOVEL'USR5552' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN22
+     C                     ENDIF
+      *
+      *
+      ** Validate Spot Rate Tolerance
+      *
+     C                     MOVE SCSRTL    WKTOLA
+     C                     EXSR TOLERN
+     C           ERRCUR    IFEQ *OFF
+     C                     MOVE WKTOLA    SCSRTL
+     C                     MOVE WKTOLN    WKSRTL
+     C                     ELSE
+     C                     MOVEL'USR5553' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN23
+     C                     ENDIF
+      *
+      *
+      ** Validate Forward Rate Tolerance
+      *
+     C                     MOVE SCFRTL    WKTOLA
+     C                     EXSR TOLERN
+     C           ERRCUR    IFEQ *OFF
+     C                     MOVE WKTOLA    SCFRTL
+     C                     MOVE WKTOLN    WKFRTL
+     C                     ELSE
+     C                     MOVEL'USR5554' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN24
+     C                     ENDIF
+      *
+      *
+      ** Validate Interest Rate Tolerance
+      *
+     C                     MOVE SCIRTL    WKTOLA
+     C                     EXSR TOLERN
+     C           ERRCUR    IFEQ *OFF
+     C                     MOVE WKTOLA    SCIRTL
+     C                     MOVE WKTOLN    WKIRTL
+     C                     ELSE
+     C                     MOVEL'USR5555' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN25
+     C                     ENDIF
+      *
+      *
+      ** Validate Base Rate Tolerance
+      *
+     C                     MOVE SCBRTL    WKTOLA
+     C                     EXSR TOLERN
+     C           ERRCUR    IFEQ *OFF
+     C                     MOVE WKTOLA    SCBRTL
+     C                     MOVE WKTOLN    WKBRTL
+     C                     ELSE
+     C                     MOVEL'USR5556' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN26
+     C                     ENDIF
+      *
+      *
+      ** Validate Default Security Price Data Source
+      *
+     C                     SELEC
+      *
+      ** Optional unless Securities Trading module is installed
+      *
+     C           SCDSPS    WHEQ *BLANKS
+     C           BGSECS    ANDEQ'Y'
+     C                     MOVEL'USR5557' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN27
+     C                     MOVE *ON       ERRGEN
+      *
+     C           SCDSPS    WHNE *BLANK
+     C                     MOVE SCDSPS    WKMDFS 32
+     C                     EXSR ACCMDF
+     C           ERRCUR    IFEQ *OFF
+     C                     MOVE WKMDFS    SCDSPS
+     C                     MOVE WKMDFS    WKDSPS
+     C                     ELSE
+     C                     MOVE *ON       *IN27
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+      ** Validate Default Spot Rates Data Source
+      *
+     C                     SELEC
+      ** Mandatory
+     C           SCDSRS    WHEQ *BLANKS
+     C                     MOVEL'USR5559' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN28
+     C                     MOVE *ON       ERRGEN
+      *
+     C           SCDSRS    WHNE *BLANK
+     C                     MOVE SCDSRS    WKMDFS
+     C                     EXSR ACCMDF
+     C           ERRCUR    IFEQ *OFF
+     C                     MOVE WKMDFS    SCDSRS
+     C                     MOVE WKMDFS    WKDSRS
+     C                     ELSE
+     C                     MOVE *ON       *IN28
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+      *
+      ** Validate Default Forward Rates Data Source
+      *
+     C                     SELEC
+      *
+      ** Optional unless Dealing FX module is installed
+      *
+     C           SCDFRS    WHEQ *BLANKS
+     C           BGDLMM    ANDEQ'Y'
+     C                     MOVEL'USR5561' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN29
+     C                     MOVE *ON       ERRGEN
+      *
+     C           SCDFRS    WHNE *BLANK
+     C                     MOVE SCDFRS    WKMDFS
+     C                     EXSR ACCMDF
+     C           ERRCUR    IFEQ *OFF
+     C                     MOVE WKMDFS    SCDFRS
+     C                     MOVE WKMDFS    WKDFRS
+     C                     ELSE
+     C                     MOVE *ON       *IN29
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+      *
+      ** Validate Default Borrowing Rates Data Source
+      *
+     C                     SELEC
+      *
+      ** Optional unless Dealing MM module is installed
+      *
+     C           SCDBOS    WHEQ *BLANKS
+     C           BGDLMM    ANDEQ'Y'
+     C                     MOVEL'USR5563' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN30
+     C                     MOVE *ON       ERRGEN
+      *
+     C           SCDBOS    WHNE *BLANK
+     C                     MOVE SCDBOS    WKMDFS 32
+     C                     EXSR ACCMDF
+     C           ERRCUR    IFEQ *OFF
+     C                     MOVE WKMDFS    SCDBOS
+     C                     MOVE WKMDFS    WKDBOS
+     C                     ELSE
+     C                     MOVE *ON       *IN30
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+      *
+      ** Validate Default Lending Rates Data Source
+      *
+     C                     SELEC
+      *
+      ** Optional unless Dealing MM module is installed
+      *
+     C           SCDLES    WHEQ *BLANKS
+     C           BGDLMM    ANDEQ'Y'
+     C                     MOVEL'USR5565' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN31
+     C                     MOVE *ON       ERRGEN
+      *
+     C           SCDLES    WHNE *BLANK
+     C                     MOVE SCDLES    WKMDFS 32
+     C                     EXSR ACCMDF
+     C           ERRCUR    IFEQ *OFF
+     C                     MOVE WKMDFS    SCDLES
+     C                     MOVE WKMDFS    WKDLES
+     C                     ELSE
+     C                     MOVE *ON       *IN31
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+      *
+      ** Validate Default Base Rates Data Source
+      *
+     C                     SELEC
+      *
+      ** Mandatory
+      *
+     C           SCDBRS    WHEQ *BLANKS
+     C                     MOVEL'USR5567' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN32
+     C                     MOVE *ON       ERRGEN
+      *
+     C           SCDBRS    WHNE *BLANK
+     C                     MOVE SCDBRS    WKMDFS 32
+     C                     EXSR ACCMDF
+     C           ERRCUR    IFEQ *OFF
+     C                     MOVE WKMDFS    SCDBRS
+     C                     MOVE WKMDFS    WKDBRS
+     C                     ELSE
+     C                     MOVE *ON       *IN32
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+      *
+      ** Validate History Retention Period
+      *
+      ** Mandatory
+      *
+     C           SCHRTP    IFEQ *BLANK
+     C                     MOVEL'USR5569' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN33
+     C                     MOVE *ON       ERRGEN
+     C                     ELSE
+      *
+      * 3 digit numeric (0 < nnn < 1000)
+      *
+     C                     MOVE *BLANKS   PASCRF
+     C                     MOVELSCHRTP    PASCRF
+     C                     CALL 'ZALIGN'               90
+     C                     PARM *BLANKS   PARTNC  7
+     C                     PARM           PASCRF 16
+     C                     PARM 0         PADECI  10
+     C                     PARM 3         PANUMR  20
+     C                     PARM *BLANK    PAFILF 16
+      *
+     C                     MOVE PAFILF    WZON0D
+     C           PARTNC    IFEQ '*ERROR*'
+     C           WZON0D    OREQ 0
+     C                     MOVEL'USR5570' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       ERRGEN
+     C                     MOVE *ON       *IN33
+     C                     ELSE
+     C                     Z-ADDWZON0D    WKHRTP
+     C                     CALL 'ZEDIT'                90
+     C                     PARM           PAFILF
+     C                     PARM 0         PADECI
+     C                     MOVE PAFILF    SCHRTP
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     CSR                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * TOLERN - Common routine to validate tolerance fields
+      *****************************************************************
+     CSR         TOLERN    BEGSR
+      *
+      ** Default, 999.99
+      *
+     C           WKTOLA    IFEQ *BLANK
+     C                     MOVE '999.99'  WKTOLA
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   PASCRF
+     C                     MOVELWKTOLA    PASCRF
+     C                     CALL 'ZALIGN'               90
+     C                     PARM *BLANKS   PARTNC
+     C                     PARM           PASCRF
+     C                     PARM 2         PADECI
+     C                     PARM 3         PANUMR
+     C                     PARM *BLANK    PAFILF
+      *
+     C           PARTNC    IFEQ '*ERROR*'
+     C                     MOVE *ON       ERRGEN
+     C                     MOVE *ON       ERRCUR  1
+     C                     ELSE
+     C                     MOVE *OFF      ERRCUR
+     C                     MOVE PAFILF    WZON2D
+     C                     Z-ADDWZON2D    WKTOLN
+     C                     CALL 'ZEDIT'                90
+     C                     PARM           PAFILF
+     C                     PARM 2         PADECI
+     C                     MOVE PAFILF    WKTOLA
+     C                     ENDIF
+      *
+     CSR                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * ACCMDF - Employ access object to validate default source codes
+      *****************************************************************
+     CSR         ACCMDF    BEGSR
+      *
+     C           '?'       SCAN WKMDFS                   85
+     C           *IN85     IFEQ *ON
+     C                     MOVE *ON       WQUERY
+     C                     ENDIF
+      *
+      ** Access object checks SDMDFSL0 for Market Data Source
+      *  (if not found, error message generated by access program)
+      *
+     C                     CALL 'AOMDFSR0'               99
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C           WKMDFS    PARM WKMDFS    @MDFS  32
+     C           SDMDFS    PARM SDMDFS    DSFDY
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE *OFF      ERRCUR
+     C                     ELSE
+     C           @RTCD     IFEQ '*NRF   '
+     C                     MOVE *ON       ERRCUR  1
+     C                     MOVE *ON       ERRGEN
+     C                     ELSE
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'SDMDFSPD'DBFILE           *DB ERROR 001 *
+     C                     MOVELSCDSPS    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *
+     CSR                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * UPDATE - Write or update record on file
+      *****************************************************************
+     CSR         UPDATE    BEGSR
+      *
+      ** Position file cursor and update if changed record
+      *
+     C           MDTRGI    CHAINSDMDFCL0             99
+     C           WKPREV    IFNE WKNEW
+     C           MDTNLU    ADD  1         MDTNLU
+     C                     MOVE 'D'       MDRECI
+     C                     MOVE WKTRGI    MDTRGI
+     C                     Z-ADDWKSPTL    MDSPTL
+     C                     Z-ADDWKSRTL    MDSRTL
+     C                     Z-ADDWKFRTL    MDFRTL
+     C                     Z-ADDWKIRTL    MDIRTL
+     C                     Z-ADDWKBRTL    MDBRTL
+     C                     MOVE WKDSPS    MDDSPS
+     C                     MOVE WKDSRS    MDDSRS
+     C                     MOVE WKDFRS    MDDFRS
+     C                     MOVE WKDBOS    MDDBOS
+     C                     MOVE WKDLES    MDDLES
+     C                     MOVE WKDBRS    MDDBRS
+     C                     Z-ADDWKHRTP    MDHRTP
+     C                     Z-ADDAGRDNB    MDLCD
+     C                     MOVE WKTYLC    MDTYLC
+      *
+      ** Update or write according to whether existing or new record
+      *
+     C           *IN99     IFEQ *OFF
+     C                     UPDATSDMDFCD0
+     C                     ELSE
+     C                     Z-ADD1         MDTNLU
+     C                     WRITESDMDFCD0
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     CSR                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * INIT PROCESSING
+      *****************************************************************
+     CSR         INIT      BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+     C                     MOVE WSID      SCJOB
+     C                     MOVE USER      SCUSER
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE AGMRDT    SCMRDT
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      *
+      ** Check if CSD006 is switched on
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM '       ' @RTCD
+     C                     PARM '*VERIFY' @OPTN
+     C                     PARM 'CSD006'  @SARD   6
+      *
+      ** Do not perform this function if CSD006 is off
+      *
+     C           @RTCD     IFNE *BLANK
+     C           @RTCD     IFEQ '*NRF '
+     C                     MOVE '*ERROR'  P@RTCD
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ELSE
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVEL'SCSARDPD'DBFILE           *DB ERROR 002 *
+     C                     MOVEL'CSD006'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *
+      ** Access Modules File
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDMMOD    PARM SDMMOD    DSFDY
+      *
+      *
+     CSR                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Send message to program's message queue
+      *****************************************************************
+     CSR         ZASNMS    BEGSR
+     C                     CALL 'ZA0350'
+     C                     PARM 'SDUSRMSG'ZAMSGF 10        Message file
+     C                     PARM           ZAMSID 10        Message ID
+     C                     PARM           ZAMSDT 45        Message data
+     C                     MOVE *BLANK    ZAMSGF
+     C                     MOVE *BLANK    ZAMSID
+     C                     MOVE *BLANK    ZAMSDT
+     CSR                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (MANY)                                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

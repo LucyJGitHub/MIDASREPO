@@ -1,0 +1,35 @@
+/********************************************************************/
+/*                                                                  */
+/*  Midas - /COPY Member (CLP)                                      */
+/*                                                                  */
+/*  CGL135_113 - /copy for GLC450                                   */
+/*                                                                  */
+/*  GLC450 - REAL TIME POSTINGS                                     */
+/*                                                                  */
+/*       Last Amend No. MD031009           Date 16Oct14             */
+/*       Prev Amend No. MD023889 *CREATE   Date 10Dec13             */
+/*------------------------------------------------------------------*/
+/*       MD031009 - Re-compile missing sources (Recompile)          */
+/*       MD023889 - Accounting Rules Process (GL account creation)  */
+/*------------------------------------------------------------------*/
+ 
+/* Check if CGL135 is installed */
+ 
+             CHGVAR     VAR(&PRTCD) VALUE('       ')
+             CHGVAR     VAR(&POPTN) VALUE('*VERIFY')
+             CHGVAR     VAR(&PSARD) VALUE('CGL135')
+ 
+             CALL       PGM(AOSARDR0) PARM(&PRTCD &POPTN &PSARD &SCSARD)
+ 
+             IF         COND(&PRTCD *EQ '       ') THEN(DO)
+/* Call GL000594 to create non existing Accounts                    */
+             CALL       PGM(GL000594) PARM(&PRTCD &BNUM)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             ROLLBACK
+             CALL       PGM(GL0451) PARM(&BNUM)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             ENDDO
+ 

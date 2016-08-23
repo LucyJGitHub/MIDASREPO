@@ -1,0 +1,2557 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MC Update man accs with movements')              *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Management Accounting Module
+      *                                                               *
+      *  MC0235 - Update Management Accounts with Movements           *
+      *                                                               *
+      *  Function: This program is called from the Management Account *
+      *  (I/C Int) Review function when Opening Balances have been    *
+      *            calculated, or from the Select Control Group       *
+      *            for Update function. This program writes/updates   *
+      *            the Management Account records for the Control     *
+      *            Group from the last posting date to the run date   *
+      *            using extracted movements.                         *
+      *                                                               *
+      *  Called by: MC0220                                            *
+      *             MCC0264                                           *
+      *             MCC0265                                           *
+      *                                                               *
+      *  Calls: AOBANKR0 - Access bank details                        *
+      *         AOCURRR0 - Access currency details                    *
+      *         AOMMODR0 - Access Midas Module details                *   CED002
+      *         AODFTFR0 -                                            *   CED002
+      *         GL0765   - Currency conversion                        *
+      *         ZSFILE   - RCF processing                             *
+      *         ED0410   - Write change details to PF/EDBULKPD        *   CED002
+      *                                                               *
+      *  Parameters: 2A Group code                                    *
+      *              1A Return code                                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Last Amend No. CGL030             Date 18Dec09               *
+      *  Prev Amend No. CAP204             Date 04Feb10               *
+      *                 CGL047             Date 31Jan06               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 239785             Date 18May06               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 193379             Date 17May01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 130363             Date 30Apr99               *
+      *                 130304             Date 03MAR98               *
+      *                 CED002             DATE 20JUN97               *
+      *                 CRE004             Date 20Jan97               *
+      *                 S01408             DATE 16AUG96               *
+      *                 CMC001             DATE 18MAR96               *
+      *                 099528             DATE 14JUN96               *
+      *                 069461             DATE 13APR94               *
+      *                 S01427             DATE 29JUL93               *
+      *                 052433             DATE 19MAR93               *
+      *                 052033             DATE 08MAR93               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CGL030 - Sundry Postings                                     *
+      *  CAP204 - Teller Related APIs - Account Transfer              *
+      *  CGL047 - Generic Posting Interface                           *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  239785 - DBerr when recreating balances due to historic      *
+      *           postings with ACCNTAB record purged already.        *
+      *           Set DACO to 0 if account details not found.         *
+      *           Applied fix 221097.                                 *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  193379 - The call to AOCURRR0 used the DSFDY datastructure   *
+      *           rather than the DSSDY. Changed to use DSSDY.        *
+      *  130363 - No. of DR days in period getting negative.          *
+      *  130304 - Zeroise Work fields and initialise numeric fields   *
+      *           when no record found, to correct average balances.  *
+      *  CED002 - Export Data Enhancement for GIB.                    *
+      *           Creation parameters changed to ignore decimal       *
+      *           data errors.                                        *
+      *  CRE004 - Sweep Accounting:                                   *
+      *           Amended to process new Sweep Accounting Generated   *
+      *           Entries and associated Generated Entry Type('V').   *
+      *  S01408 - Core Hook MC0235CCP1 Added                          *
+      *  CMC001 - Management Accounts Enhancement for PCA:            *
+      *           Only a separate Income/Expense summary record will  *
+      *           be maintained if the Management Account Group has a *
+      *           greater detailed breakdown than the Prime Management*
+      *           Account Group.                                      *
+      *  099528 - Extension of page number from max.9999 to max.999999*
+      *  069461 - Process new generated entry types for fixed a/c     *
+      *           and statement charge postings.                      *
+      *  S01427 - R10 Chips Incorporation. Add Chips to generated     *
+      *           entry types.                                        *
+      *  052433 - Averages for Retained earning account wrong         *
+      *  052033 - Zero Term 2 dates corrupt term 2 Averages           *
+      *                                                               *
+      *****************************************************************
+      /SPACE
+     FGLHBCGL0UF  E           K        DISK
+      * Historic Balance Control groups
+      /SPACE
+     FGLAVBLL0UF  E           K        DISK
+      * Average Balances
+      /SPACE
+     FGLHIBLL0UF  E           K        DISK
+      * Historic Balances
+      *                                                                   CED002
+     FGLHIBLL1IF  E           K        DISK                               CED002
+      * Historic Balances                                                 CED002
+      /SPACE
+     FUPDBALPDIF  E           K        DISK
+     F            GLMOVEPDF                         KRENAMEUPDBAL
+      * Extracted movements
+      /SPACE
+     FGLPERDL1IF  E           K        DISK
+      * Period details
+      /SPACE
+     FACCNT   IF  E           K        DISK
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+      * Account details
+      /SPACE
+     FGLGPICL1IF  E           K        DISK                                                   CGL047
+      * Generic posting interface control data                                                CGL047
+      *                                                                                       CGL047
+     FGLHIBLPDO   E                    DISK
+      * Historic balances (output)
+      /SPACE
+     FGLAVBLPDO   E                    DISK
+      * Average balances (output)
+      /SPACE
+     FMC0235P1O   E                    PRINTER      KINFDS MCRPT      UC
+      * Audit report
+      /SPACE
+     FMC0235AUO   E                    PRINTER      KINFDS MCAUD      UC
+      * Error report
+     F/COPY WNCPYSRC,MC0235F001
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  40  -  End of file on read of UPDBALPD                       *
+      *  41  -  CHAIN failure on GLAVBLL0                             *
+      *  42  -  CHAIN failure on GLHIBLL0                             *
+      *  43  -  CHAIN failure on GLPERDL1                             *
+      *  44  -  CHAIN failure on GLHIBLL0 income/expense record       *
+      *  45  -  Printer overflow error                                *
+      *  46  -  Print movements header on new page processing         *
+      *  50  -  Work indicator for LOKUP                              *
+      *  60  -  '(Continued)' flag on report header                   *
+      *  61  -  'Analysis by a/c codes' flag is set                   *
+      *  62  -  'Analysis by currency' flag is set                    *
+      *  63  -  'Analysis by branch' flag is set                      *
+      ***64**-**'Analysis*by*a/c*seq'*flag*is*set**********************   CMC001
+      ***65**-**'Analysis*by*profit*centre'*flag*is*set****************   CMC001
+      ***66**-**'Analysis*by*book*codes'*flag*is*set*******************   CMC001
+      ***67**-**'Analysis*by*transaction*type'*flag*is*set*************   CMC001
+      ***68**-**'Analysis*by*trans.*subtype'*flag*is*set***************   CMC001
+      ***69**-**'Analysis*by*assoc.*customer'*flag*is*set**************   CMC001
+      ***70**-**'Analysis*by*a/c*codes'*flag*is*set********************   CMC001
+      *  64  -  'Analysis by Customer' flag is set                    *   CMC001
+      *  65  -  'Analysis by a/c seq' flag is set                     *   CMC001
+      *  66  -  'Analysis by profit centre' flag is set               *   CMC001
+      *  67  -  'Analysis by book codes' flag is set                  *   CMC001
+      *  68  -  'Analysis by transaction type' flag is set            *   CMC001
+      *  69  -  'Analysis by trans. subtype' flag is set              *   CMC001
+      *  70  -  'Analysis by assoc. customer' flag is set             *   CMC001
+      *  71  -  T1 processing is used                                 *
+      *  72  -  T2 processing is used                                 *
+      *  73  -  Print literal 'BROUGHT FORWARD TOTALS'                *
+      *  74  -  Print literal 'MOVEMENT ADJUSTMENTS'                  *
+      *  75  -  Print literal 'CARRIED FORWARD TOTALS'                *
+      *  98  -  Date format indicator                                 *
+      *  99  -  Fatal error                                           *
+      *  U7  -  Database error                                        *
+      *  U8  -  Database error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  MAIN    -  Main processing, process UPDBALPD records         *
+      *  OLDKEY  -  Old key processing for UPDBALPD                   *
+      *  NEWKEY  -  New key processing for UPDBALPD                   *
+      *  RESET   -  Reset fields for key change processing            *
+      *  UPDMTD  -  Update movements-to-date and weighted balances    *
+      *             (control)                                         *
+      *  #UPDMV  -  Update movements-to-date and weighted balances    *
+      *             (calculation)                                     *
+      *  UPOPWK  -  Update output work fields (control)               *
+      *  #UPOPW  -  Update output work fields (calculation)           *
+      *  UPINEX  -  Update/write income/expense summary record        *
+      *  PRTMOV  -  Print movement details                            *
+      *  P1D1    -  Print opening/closing balance line                *
+      *  P1D2    -  Print debit/credit details line                   *
+      *  P1H1    -  Print top of page on audit report                 *
+      *  #FMAT   -  Format 19,0 amount                                *
+      *  ZDATE2  -  Convert day number to date                        *
+      *  DBERR   -  Error processing                                  *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+     E                    CPY@    1   1 80               Copyright
+     E********************GE1    17  17  1               Entry Type       S01427
+     E********************GE2     1  17 14               Entry Type       S01427
+     E***********         GE1    18  18  1               Entry TypeS01427 069461
+     E***********         GE2     1  18 14               Entry TypeS01427 069461
+     E***********         GE1    21  21  1               Entry Type069461 CMC001
+     E***********         GE2     1  21 14               Entry Type069461 CMC001
+     E********************GE1    23  23  1               Entry Type CMC001CRE004
+     E********************GE2     1  23 14               Entry Type CMC001CRE004
+     E**********          GE1    24  24  1               Entry Type       CRE004              CAP204
+     E                    GE1    25  25  1               Entry Type                           CAP204
+     E**********          GE2     1  24 14               Entry Type       CRE004              CAP204
+     E                    GE2     1  25 14               Entry Type                           CAP204
+     E                    XDP     1   7  7 3             Adjust dp's
+     E                    ZS1        19  1 0             Used by #FMAT
+     E                    ZS2        27  1               Used by #FMAT
+     E                    JRNENT   3971  1               Journal Entry    CED002
+      * Copy in date formatting arrays
+      /COPY ZSRSRC,ZDATE2Z1
+      /SPACE 3
+      * Data structures for access programs
+     IDSBANK    E DSSDBANKPD
+     IDSCURR    E DSSDCURRPD
+     ISCSARD    E DSSCSARDPD                                              CMC001
+      **  SAR details                                                     CMC001
+      *                                                                   CMC001
+     ISDPCAC    E DSSDPCACPD                                              CMC001
+      **  PCA Details                                                     CMC001
+      *                                                                   CMC001
+     ISDMMOD    E DSSDMMODPD                                              CED002
+      **  Midas Module details                                            CED002
+      *                                                                   CED002
+     IGLHBCG    E DSGLHBCGPD                                              CMC001
+      **  Historic Balance Control Groups                                 CMC001
+      *                                                                   CMC001
+     IGLAVBL    E DSGLAVBLPD                                              CED002
+      **  Average Balance                                                 CED002
+      *                                                                   CED002
+     IEDDFTF    E DSEDDFTFPD                                              CED002
+      *  DS for EDDFTFPD                                                  CED002
+      *                                                                   CED002
+     IPSDS       SDS                                                      CED002
+      *  Program status data structure.                                   CED002
+     I                                     *PROGRAM ##PGM                 CED002
+      *                                                                   CED002
+     IDSFDY     E DSDSFDY
+     IDSSDY     E DSDSSDY                                                                     193379
+      /SPACE
+     I/COPY WNCPYSRC,MC0235I001
+     IDS1         DS
+      * Used by SR/#FMAT, links array and field to be formatted
+     I                                        1  190ZWRK19
+     I                                        1  190ZS1
+      /SPACE
+     ISVHIBL    E DSGLHIBLPD                  2
+      * Multiple occurrence DS to save GLHIBLL0 data
+     I              QQACCD                          ACCDQQ                                    CGL029
+     ILDA       E DSLDA
+      * Local data structure used for error handling
+     IMCRPT       DS
+      * File information DS for MC0235P1 report
+     I                                       83  92 PFILE1
+     I                                    B 123 1240PFNUM1
+     IMCAUD       DS
+      * File information DS for MC0235AU report
+     I                                       83  92 PFILEA
+     I                                    B 123 1240PFNUMA
+      /EJECT
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+     C                     Z-ADD*ZEROS    PAGENO  60                      099528
+      /SPACE
+      * Receive parameters
+     C           *ENTRY    PLIST
+     C                     PARM           XGRPC   2        Group code
+     C                     PARM           XRETC   1        Return code
+      /SPACE
+      * Set up copyright
+     C                     MOVEACPY@      BIS@   80
+      /SPACE
+      * Blank out income/expense key fields
+     C                     MOVEL*BLANKS   @BL4    4
+     C                     MOVEL*BLANKS   @BL2    2
+     C                     MOVEL*BLANKS   @BL10A 10
+     C                     MOVEL*BLANKS   @BL10B 10
+     C                     MOVEL*ZEROS    @BL6    6
+      /SPACE
+      * Define the error DS
+     C           *NAMVAR   DEFN           LDA
+      *                                                                   CED002
+     C           *LIKE     DEFN A6CYCD    W#CCY                           CED002
+      *                                                                   CED002
+      /SPACE
+      * Get bank details - Error if not found
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*KEY   ' P@OPTN  7
+     C           DSBANK    PARM DSBANK    DSFDY
+     C           P@RTCD    IFNE *BLANKS                    --- B001
+     C                     MOVEL'AOBANKR0'#FILE   8        ************
+     C                     Z-ADD1         #BASE   30       * Error 01 *
+     C                     MOVEL*BLANKS   #KEY   29        ************
+     C                     EXSR DBERR
+     C                     END                             --- E001
+      /SPACE
+      * Setup the date format indicator used by sr/ZDATE2
+     C           BJDFIN    IFEQ 'M'                        --- B001
+     C                     SETON                     98
+     C                     END                             --- E001
+      *                                                                   CMC001
+      **  Check if Management Accounts Enhancement for PCA is installed   CMC001
+      *                                                                   CMC001
+     C                     MOVE 'N'       CMC001  1                       CMC001
+     C                     CALL 'AOSARDR0'                                CMC001
+     C                     PARM *BLANKS   P@RTCD                          CMC001
+     C                     PARM '*VERIFY' P@OPTN                          CMC001
+     C                     PARM 'CMC001'  P@SARN  6                       CMC001
+     C           SCSARD    PARM SCSARD    DSFDY                           CMC001
+      *                                                                   CMC001
+      **  If error in accessing SAR details, issue DB error               CMC001
+      *                                                                   CMC001
+     C           P@RTCD    IFNE *BLANKS                                   CMC001
+     C           P@RTCD    IFNE '*NRF'                                    CMC001
+     C                     MOVEL'SCSARDPD'#FILE             ***********   CMC001
+     C                     Z-ADD11        #BASE             * DBASE 11*   CMC001
+     C                     MOVELP@SARN    #KEY              ***********   CMC001
+     C                     EXSR DBERR                                     CMC001
+     C                     ENDIF                                          CMC001
+     C                     ELSE                                           CMC001
+     C                     MOVE 'Y'       CMC001                          CMC001
+     C                     ENDIF                                          CMC001
+     C/COPY WNCPYSRC,MCH00013
+      *                                                                   CMC001
+      **  If Management Accounts enhancement is installed, access PCA     CMC001
+      **  details to get 'Prime Mgmt A/C Group'                           CMC001
+      *                                                                   CMC001
+     C                     MOVE *BLANKS   WRTCD   7                       CMC001
+     C           CMC001    IFEQ 'Y'                                       CMC001
+     C                     CALL 'AOPCACR0'                                CMC001
+     C                     PARM *BLANKS   P@RTCD                          CMC001
+     C                     PARM '*FIRST ' P@OPTN                          CMC001
+     C           SDPCAC    PARM SDPCAC    DSFDY                           CMC001
+      *                                                                   CMC001
+      **  If no PCA details, issue DB error                               CMC001
+      *                                                                   CMC001
+     C           P@RTCD    IFNE *BLANKS                                   CMC001
+     C                     MOVEL'SDPCACPD'#FILE             ***********   CMC001
+     C                     Z-ADD12        #BASE             * DBASE 12*   CMC001
+     C                     MOVELP@OPTN    #KEY              ***********   CMC001
+     C                     EXSR DBERR                                     CMC001
+      *                                                                   CMC001
+      **  Otherwise, access GLHBCGPD for Analysis Fields using 'Prime     CMC001
+      **  Mgmt A/C Group'                                                 CMC001
+      *                                                                   CMC001
+     C                     ELSE                                           CMC001
+     C                     CALL 'AOHBCGR0'                                CMC001
+     C                     PARM *BLANKS   P@RTCD                          CMC001
+     C                     PARM '*KEY   ' P@OPTN                          CMC001
+     C                     PARM FTPRCG    P@CGCD  2                       CMC001
+     C           GLHBCG    PARM GLHBCG    DSFDY                           CMC001
+      *                                                                   CMC001
+      **  If error in accessing GLHBCGPD besides *NRF, issue DB error     CMC001
+      *                                                                   CMC001
+     C           P@RTCD    IFNE *BLANKS                                   CMC001
+     C           P@RTCD    IFNE '*NRF'                                    CMC001
+     C                     MOVEL'GLHBCGPD'#FILE             ***********   CMC001
+     C                     Z-ADD13        #BASE             * DBASE 13*   CMC001
+     C                     MOVELP@CGCD    #KEY              ***********   CMC001
+     C                     EXSR DBERR                                     CMC001
+     C                     ENDIF                                          CMC001
+      *                                                                   CMC001
+      **  Otherwise, set Prime Group Analysis fields                      CMC001
+      *                                                                   CMC001
+     C                     ELSE                                           CMC001
+     C                     MOVE HCABPC    WABPC   1                       CMC001
+     C                     MOVE HCABBK    WABBK   1                       CMC001
+     C                     MOVE HCABTT    WABTT   1                       CMC001
+     C                     MOVE HCABTS    WABTS   1                       CMC001
+     C                     MOVE HCASCU    WASCU   1                       CMC001
+     C                     ENDIF                                          CMC001
+      *                                                                   CMC001
+      **  Save return code from GLHBCGPD access                           CMC001
+      *                                                                   CMC001
+     C                     MOVE P@RTCD    WRTCD                           CMC001
+     C                     ENDIF                                          CMC001
+     C                     ENDIF                                          CMC001
+      *                                                                   CMC001
+      **  Initialise other Prime Group Analysis fields                    CMC001
+      *                                                                   CMC001
+     C                     MOVE *BLANKS   WPRFC   4                       CMC001
+     C                     MOVE *BLANKS   WBOKC   2                       CMC001
+     C                     MOVE *BLANKS   WOTTP  10                       CMC001
+     C                     MOVE *BLANKS   WOTST  10                       CMC001
+     C**********           Z-ADD0         WASOC   60                                   CMC001 CSD027
+     C**********           MOVE *ZEROS    WACNB   6                                    CMC001 CSD027
+     C                     MOVE *BLANKS   WASOC   6                                           CSD027
+     C                     MOVE *BLANKS   WACNB   6                                           CSD027
+      *                                                                   CMC001
+      **  If Management Accounts enhancement is off or Primary Control    CMC001
+      **  Group not found, blank out below Prime Group Analysis fields    CMC001
+      *                                                                   CMC001
+     C           CMC001    IFEQ 'N'                                       CMC001
+     C           WRTCD     OREQ '*NRF'                                    CMC001
+     C                     MOVE *BLANKS   WABPC                           CMC001
+     C                     MOVE *BLANKS   WABBK                           CMC001
+     C                     MOVE *BLANKS   WABTT                           CMC001
+     C                     MOVE *BLANKS   WABTS                           CMC001
+     C                     MOVE *BLANKS   WASCU                           CMC001
+     C                     ENDIF                                          CMC001
+      /SPACE
+      * Get group details - Error if not found
+     C           XGRPC     CHAIN@BNREDZ              99
+     C           *IN99     IFEQ '1'                        --- B001
+     C                     MOVEL'GLHBCGL0'#FILE            ************
+     C                     Z-ADD2         #BASE            * Error 02 *
+     C                     MOVELXGRPC     #KEY             ************
+     C                     EXSR DBERR
+     C                     ELSE                            --- X001
+     C                     EXCPTUNLCK
+     C                     END                             --- E001
+      /SPACE
+      * If group currency entered, get decimal places and store
+     C           HCCCYB    IFNE *BLANKS                    --- B001
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*KEY   ' P@OPTN
+     C                     PARM HCCCYB    P@CURR  3
+     C********** DSCURR    PARM DSCURR    DSFDY                                               193379
+     C           DSCURR    PARM DSCURR    DSSDY                                               193379
+     C           P@RTCD    IFNE *BLANKS                    --- B002
+     C                     MOVEL'AOCURRR0'#FILE            ************
+     C                     Z-ADD3         #BASE            * Error 03 *
+     C                     MOVELP@CURR    #KEY             ************
+     C                     EXSR DBERR
+     C                     END                             --- E002
+     C                     Z-ADDA6NBDP    GRPDP   10
+     C                     MOVE A6CYCD    W#CCY                           CED002
+     C                     END                             --- E001
+      *                                                                   CED002
+      ** Call Midas Module Access program to check if Eureka (ED)         CED002
+      ** module flag is on.                                               CED002
+      *                                                                   CED002
+     C                     CALL 'AOMMODR0'                                CED002
+     C                     PARM '*MSG   ' RTNCD   7                       CED002
+     C                     PARM '*FIRST ' OPTN    7                       CED002
+     C           SDMMOD    PARM SDMMOD    DSFDY                           CED002
+      *                                                                   CED002
+     C           RTNCD     IFNE *BLANKS                                   CED002
+     C                     MOVEL'SDMMODPD'#FILE             ***********   CED002
+     C                     Z-ADD14        #BASE             * DBASE 14*   CED002
+     C                     MOVELOPTN      #KEY              ***********   CED002
+     C                     EXSR DBERR                                     CED002
+     C                     ENDIF                                          CED002
+      *                                                                   CED002
+      ** ED module flag is on.                                            CED002
+      *                                                                   CED002
+     C           BGNZST    IFEQ 'Y'                                       CED002
+      *                                                                   CED002
+      ** Call Access program AODFTFR0.                                    CED002
+      *                                                                   CED002
+     C                     CALL 'AODFTFR0'                                CED002
+     C                     PARM 'GLHIBLPD'FILENM 10                       CED002
+     C                     PARM XGRPC     MBRNM  10                       CED002
+     C                     PARM 'MC0235  'PGMID  10                       CED002
+     C                     PARM *BLANKS   RTNCD   7                       CED002
+     C           EDDFTF    PARM EDDFTF    DSFDY                           CED002
+      *                                                                   CED002
+     C           RTNCD     IFEQ *BLANK                                    CED002
+     C                     MOVE 'Y'       CED002  1                       CED002
+     C                     ELSE                                           CED002
+     C                     MOVE 'N'       CED002                          CED002
+     C                     ENDIF                                          CED002
+      *                                                                   CED002
+     C                     ENDIF                                          CED002
+      *                                                                   CED002
+      /SPACE
+      * Set 'analysis' indicators
+     C           HCABAC    COMP *BLANKS              6161
+     C           HCABCY    COMP *BLANKS              6262
+     C           HCABBR    COMP *BLANKS              6363
+     C           HCABCU    COMP *BLANKS              6464
+     C           HCABAS    COMP *BLANKS              6565
+     C           HCABPC    COMP *BLANKS              6666
+     C           HCABBK    COMP *BLANKS              6767
+     C           HCABTT    COMP *BLANKS              6868
+     C           HCABTS    COMP *BLANKS              6969
+     C           HCASCU    COMP *BLANKS              7070
+      /SPACE
+      * If audit report required, open print file
+     C           HCUPAU    IFEQ 'Y'                        --- B001
+     C                     OPEN MC0235P1
+     C                     Z-ADDPFNUM1    PSNUM
+     C                     CALL 'ZSFILE'
+     C                     PARM *BLANKS   PSEQ
+     C                     PARM *BLANKS   PPARM
+     C                     PARM           PFILE1
+     C                     PARM           PSNUM
+     C                     PARM           PSERR
+     C           PSERR     IFNE *BLANKS                    --- B002
+     C                     MOVEL'ZSFILE'  #FILE            ************
+     C                     Z-ADD4         #BASE            * Error 04 *
+     C                     MOVEL*BLANKS   #KEY             ************
+     C                     EXSR DBERR
+     C                     END                             --- E002
+     C                     END                             --- E001
+      /SPACE
+      * Save last posting date/time in work field
+     C                     Z-ADDHCLPDT    WLPDT  110
+     C/COPY WNCPYSRC,MC0235C001
+      /SPACE
+      * Perform main processing (process UPDBALPD)
+     C                     EXSR MAIN
+      /SPACE
+      * Update the group control record with new last posting date/time
+     C           XGRPC     CHAIN@BNREDZ              99
+     C           *IN99     IFEQ '1'                        --- B001
+     C                     MOVEL'GLHBCGL0'#FILE            ************
+     C                     Z-ADD5         #BASE            * Error 05 *
+     C                     MOVELXGRPC     #KEY             ************
+     C                     EXSR DBERR
+     C                     END                             --- E001
+     C                     Z-ADDWLPDT     HCLPDT
+     C                     UPDAT@BNREDZ
+      /SPACE
+      * Print 'end of report' line
+     C           HCUPAU    IFEQ 'Y'                        --- B001
+     C                     WRITEMC0235T3               45
+     C                     END                             --- E001
+      *                                                                   CED002
+      ** If Extract GLHIBLPD to ED module flag is on call ED0410          CED002
+      ** to close any open batch.                                         CED002
+      *                                                                   CED002
+     C           CED002    IFEQ 'Y'                                       CED002
+     C                     CALL 'ED0410'                                  CED002
+     C                     PARM '*CLOSE'  MODE    7                       CED002
+     C                     PARM 'GLHIBLPD'FNAME  10                       CED002
+     C                     PARM XGRPC     MNAME  10                       CED002
+     C                     PARM ##PGM     PNAME  10                       CED002
+     C                     PARM '  '      JRNA    2                       CED002
+     C                     PARM           JRNENT                          CED002
+     C                     PARM *BLANKS   RTCD    1                       CED002
+     C                     ENDIF                                          CED002
+      /SPACE
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *                                                               *
+     C                     SETON                         LR           *
+     C                     RETRN                                      *
+      *                                                               *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  KLISTS                                                       *
+      *                                                               *
+      *****************************************************************
+      /SPACE
+      * Key to GLAVBLL0, GLHIBLL0
+     C           KEY1      KLIST
+     C                     KFLD           HCCGCD
+     C                     KFLD           BRCA
+     C                     KFLD           CCY
+     C                     KFLD           ABACCD
+     C                     KFLD           ABCUST
+     C                     KFLD           ABACSN
+     C                     KFLD           PRFC
+     C                     KFLD           BOKC
+     C                     KFLD           OTTP
+     C                     KFLD           OTST
+     C                     KFLD           ABACNB
+     C                     KFLD           ABPDCT
+     C                     KFLD           ABPDYR
+     C                     KFLD           ABPDNY
+      /SPACE
+      * Key to GLPERDL1
+     C           KEY2      KLIST
+     C                     KFLD           HCPSTC
+     C                     KFLD           ABPDCT
+     C                     KFLD           ABPDYR
+     C                     KFLD           ABPDNY
+      /SPACE
+      * Key to ACCNT
+     C           KEY3      KLIST
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C                     KFLD           BRCA
+      /SPACE
+      * Key to GLHIBLL0 income/expense
+      *                                                                   CMC001
+      **  Blanks will be used for the fields that are not being           CMC001
+      **  analysed by the Prime Group Analysis fields                     CMC001
+      *                                                                   CMC001
+     C           KEY4      KLIST
+     C                     KFLD           HCCGCD
+     C                     KFLD           BRCA
+     C                     KFLD           CCY
+     C                     KFLD           ABACCD
+     C                     KFLD           ABCUST
+     C                     KFLD           ABACSN
+     C***********          KFLD           @BL4                            CMC001
+     C***********          KFLD           @BL2                            CMC001
+     C***********          KFLD           @BL10A                          CMC001
+     C***********          KFLD           @BL10B                          CMC001
+     C***********          KFLD           @BL6                            CMC001
+     C                     KFLD           WPRFC                           CMC001
+     C                     KFLD           WBOKC                           CMC001
+     C                     KFLD           WOTTP                           CMC001
+     C                     KFLD           WOTST                           CMC001
+     C                     KFLD           WACNB                           CMC001
+     C                     KFLD           ABPDCT
+     C                     KFLD           ABPDYR
+     C                     KFLD           ABPDNY
+      /SPACE
+      * Key to restore GLHIBLL0 record
+     C           KEY5      KLIST
+     C                     KFLD           HBCGCD
+     C                     KFLD           HBBRCD
+     C                     KFLD           HBCYCD
+     C                     KFLD           HBACCD
+     C                     KFLD           HBCUST
+     C                     KFLD           HBACSN
+     C                     KFLD           HBPCCD
+     C                     KFLD           HBBKCD
+     C                     KFLD           HBOTTP
+     C                     KFLD           HBTSTY
+     C                     KFLD           HBACNB
+     C                     KFLD           HBPDCT
+     C                     KFLD           HBPDYR
+     C                     KFLD           HBPDNY
+      *                                                                   CED002
+      * Key to GLHIBLL0 record to check for new account                   CED002
+     C           KEY6      KLIST                                          CED002
+     C                     KFLD           HBCGCD                          CED002
+     C                     KFLD           HBBRCD                          CED002
+     C                     KFLD           HBCYCD                          CED002
+     C                     KFLD           HBACCD                          CED002
+     C                     KFLD           HBCUST                          CED002
+     C                     KFLD           HBACSN                          CED002
+     C                     KFLD           HBPCCD                          CED002
+     C                     KFLD           HBBKCD                          CED002
+     C                     KFLD           HBOTTP                          CED002
+     C                     KFLD           HBTSTY                          CED002
+     C                     KFLD           HBACNB                          CED002
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  MAIN   - Main processing, process UPDBALPD records           *
+      *                                                               *
+      *****************************************************************
+     C           MAIN      BEGSR
+      /SPACE
+      * Set period change detect field to invalid value to trigger
+      * change processing on first record read.
+     C                     Z-SUB1         CDCPNB
+      /SPACE
+      * Read file sequentially, exit at EoF
+     C           *IN40     DOUEQ'1'                        --- B001
+     C                     READ UPDBAL                   40
+     C           *IN40     IFEQ '0'                        --- B002
+     C/COPY WNCPYSRC,MC0235C002
+      /SPACE
+      * Perform change processing if change detected
+     C           BRCA      IFNE CDBRCA                     --- B003
+     C           CCY       ORNE CDCCY
+     C           ACOD      ORNE CDACOD
+     C           CNUM      ORNE CDCNUM
+     C           ACSQ      ORNE CDACSQ
+     C           PRFC      ORNE CDPRFC
+     C           BOKC      ORNE CDBOKC
+     C           OTTP      ORNE CDOTTP
+     C           OTST      ORNE CDOTST
+     C           ASOC      ORNE CDASOC
+     C           CPNB      ORNE CDCPNB
+     C           CDCPNB    IFNE -1                         --- B004
+     C                     EXSR OLDKEY
+     C                     END                             --- E004
+     C                     EXSR NEWKEY
+     C                     END                             --- E003
+      /SPACE
+      * If currency code does not equal the 'currency of balances' from
+      * the group control record (and 'currency of balances' is non-blank)
+      * convert the amount via GL0765
+     C/COPY WNCPYSRC,MC0235C011
+     C           CCY       IFNE HCCCYB                     --- B003
+     C           HCCCYB    ANDNE*BLANKS
+     C                     CALL 'GL0765'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM           CCY
+     C                     PARM           HCCCYB
+     C                     PARM           EVDT
+     C                     PARM PAMT      CVAMT  190
+     C           P@RTCD    IFNE *BLANKS                    --- B004
+     C                     MOVEL'GL0765'  #FILE            ************
+     C                     Z-ADD6         #BASE            * Error 06 *
+     C                     MOVEL*BLANKS   #KEY             ************
+     C                     EXSR DBERR
+     C                     END                             --- E004
+     C                     ELSE                            --- X003
+     C                     Z-ADDPAMT      CVAMT
+     C                     END                             --- E003
+     C/COPY WNCPYSRC,MC0235C012
+      /SPACE
+      * Store event date if greater than previous value saved
+     C           EVDT      IFGT HIEVDT                     --- B003
+     C                     Z-ADDEVDT      HIEVDT
+     C                     END                             --- E003
+      /SPACE
+      **If*generated*entry*type*is*not*'X'*or*'Y'.****                    052433
+      * Update movements-to-date and weighted balances
+     C***********GETP      IFNE 'X'                        --- B003       052433
+     C***********GETP      ANDNE'Y'                                       052433
+     C                     EXSR UPDMTD
+      /SPACE
+      * If account is an income or expense account (account section is
+      * 'IN' or 'EX') and the record is at management account level (at
+      * least one of the management a/c key fields is non-blank/zero)
+      * then update/write the income/expense summary record, else update
+      * the output work fields)
+     C***********PRFC      IFEQ *BLANKS                    --- B004       CMC001
+     C***********BOKC      ANDEQ*BLANKS                                   CMC001
+     C***********OTTP      ANDEQ*BLANKS                                   CMC001
+     C***********OTST      ANDEQ*BLANKS                                   CMC001
+     C***********ASOC      ANDEQ0                                         CMC001
+     C           PRFC      IFEQ WPRFC                                     CMC001
+     C           BOKC      ANDEQWBOKC                                     CMC001
+     C           OTTP      ANDEQWOTTP                                     CMC001
+     C           OTST      ANDEQWOTST                                     CMC001
+     C           ASOC      ANDEQWASOC                                     CMC001
+     C                     EXSR UPOPWK                     Upd work
+     C                     ELSE                            --- X004
+     C           @ACSC     IFEQ 'IN'                       --- B005
+     C/COPY WNCPYSRC,MC0235C014
+     C           @ACSC     OREQ 'EX'
+     C/COPY WNCPYSRC,MC0235C003
+     C                     EXSR UPINEX                     Upd Inc/Exp
+     C                     ELSE                            --- X005
+     C                     EXSR UPOPWK                     Upd work
+     C                     END                             --- E005
+     C                     END                             --- E004
+      /SPACE
+      ***********                                                         052433
+      **If*generated*entry*type*is*'X'*or*'Y'.                            052433
+      **Update/write*the*summary*record*******                            052433
+     C***********          ELSE                            --- X003       052433
+     C***********          EXSR UPINEX                     Upd Inc/Exp    052433
+     C***********          END                             --- E003       052433
+      /SPACE
+      * If audit report required then print a report line
+     C           HCUPAU    IFEQ 'Y'                        --- B003
+     C                     EXSR PRTMOV
+     C                     END                             --- E003
+      /SPACE
+      * Store posting date/time if greater than previous value saved
+     C           PDTM      IFGT WLPDT                      --- B003
+     C                     Z-ADDPDTM      WLPDT
+     C                     END                             --- E003
+      /SPACE
+     C                     END                             --- E002
+     C/COPY WNCPYSRC,MC0235C004
+     C                     END                             --- E001
+      /SPACE
+      * If no records processed, print header and message (if audit
+      * list required)
+     C           CDCPNB    IFEQ -1                         --- B001
+     C           HCUPAU    IFEQ 'Y'                        --- B002
+     C                     EXSR P1H1
+     C                     WRITEMC0235T2               45
+     C                     END                             --- E002
+      /SPACE
+      * Final processing for last record
+     C                     ELSE                            --- X001
+     C                     EXSR OLDKEY
+     C                     END                             --- E001
+      /SPACE
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  OLDKEY - Processing for old key                              *
+      *                                                               *
+      *****************************************************************
+     C           OLDKEY    BEGSR
+      /SPACE
+      * Do not print movements header on page throw
+     C                     SETOF                     46
+      /SPACE
+      * If audit report required, print movement adjustments
+     C           HCUPAU    IFEQ 'Y'                        --- B001
+      /SPACE
+      * Select 'movement adjustments' literal
+     C                     SETON                     74
+     C                     SETOF                     73  75
+      /SPACE
+      * Set the number of decimal places
+     C                     Z-ADDGRPDP     #FMDP   10
+      /SPACE
+      * Set up the work fields for the print routine
+     C*******              Z-ADDWPDOB     P#PDOB
+     C*******              Z-ADDWPDCB     P#PDCB
+     C           WPDOB     ADD  WXPDOB    P#PDOB
+     C           WPDCB     ADD  WXPDCB    P#PDCB
+     C                     Z-ADDWPMTD     P#PMTD
+     C                     Z-ADDWT1MT     P#T1MT
+     C                     Z-ADDWT2MT     P#T2MT
+     C                     Z-ADDWYMTD     P#YMTD
+     C                     Z-ADDWWPBL     P#WPBL
+     C                     Z-ADDWWT1B     P#WT1B
+     C                     Z-ADDWWT2B     P#WT2B
+     C                     Z-ADDWWYBL     P#WYBL
+      /SPACE
+      * Print the movement adjustment details
+     C                     EXSR P1D1
+      /SPACE
+      * Print DR/CR average balances if DR/CR average balances set, and
+      * account section is not income or expense
+     C           HCADCB    IFNE 'N'                        --- B002
+     C           @ACSC     ANDNE'IN'
+     C           @ACSC     ANDNE'EX'
+     C/COPY WNCPYSRC,MC0235C005
+      /SPACE
+      * Set up the debit work fields
+     C                     Z-ADDWPDMT     P#PDMT
+     C                     Z-ADDWYDMT     P#YDMT
+     C                     Z-ADDWT1DM     P#T1DM
+     C                     Z-ADDWT2DM     P#T2DM
+     C                     Z-ADDWWPDB     P#WPDB
+     C                     Z-ADDWWYDB     P#WYDB
+     C                     Z-ADDWW1DB     P#W1DB
+     C                     Z-ADDWW2DB     P#W2DB
+     C                     Z-ADDWPDDD     P#PDDD
+     C                     Z-ADDWYDDD     P#YDDD
+     C                     Z-ADDWT1DD     P#T1DD
+     C                     Z-ADDWT2DD     P#T2DD
+      /SPACE
+      * Set up the credit work fields
+     C                     Z-ADDWPCMT     P#PCMT
+     C                     Z-ADDWYCMT     P#YCMT
+     C                     Z-ADDWT1CM     P#T1CM
+     C                     Z-ADDWT2CM     P#T2CM
+     C                     Z-ADDWWPCB     P#WPCB
+     C                     Z-ADDWWYCB     P#WYCB
+     C                     Z-ADDWW1CB     P#W1CB
+     C                     Z-ADDWW2CB     P#W2CB
+     C                     Z-ADDWPDDC     P#PDDC
+     C                     Z-ADDWYDDC     P#YDDC
+     C                     Z-ADDWT1DC     P#T1DC
+     C                     Z-ADDWT2DC     P#T2DC
+      /SPACE
+      * Print the movement adjustment debit/credit details
+     C                     EXSR P1D2
+     C                     END                             --- E002
+     C                     END                             --- E001
+      /SPACE
+      * If no record was found on GLHIBLL0, write one
+      * (note that key fields will have been set up in SR/NEWKEY)
+     C           *IN42     IFEQ '1'                        --- B001
+      /SPACE
+      * Set up start dates
+     C                     Z-ADD@SOYD     HBSOYD
+     C                     Z-ADD@ST1D     HBST1D
+     C                     Z-ADD@ST2D     HBST2D
+     C                     Z-ADD@SPDD     HBSPDD
+      /SPACE
+      * Set up end date
+     C                     Z-ADD@EPDD     HBEPDD
+      /SPACE
+      * Set up amounts from work fields
+     C                     Z-ADDWPDOB     HBPDOB
+     C                     Z-ADDWPDCB     HBPDCB
+     C                     Z-ADDWPMTD     HBPMTD
+     C                     Z-ADDWT1MT     HBT1MT
+     C                     Z-ADDWT2MT     HBT2MT
+     C                     Z-ADDWYMTD     HBYMTD
+     C                     Z-ADDWWPBL     HBWPBL
+     C                     Z-ADDWWT1B     HBWT1B
+     C                     Z-ADDWWT2B     HBWT2B
+     C                     Z-ADDWWYBL     HBWYBL
+      /SPACE
+      **Set*up*account*section*and*last*movement*date*from*UPDBALPD       CED002
+      * Set up account section from UPDBALPD                              CED002
+     C                     MOVEL@ACSC     HBACSC
+     C*********************Z-ADDHIEVDT    HBLMDT                          CED002
+      /SPACE                                                              CED002
+      *                                                                   CED002
+      ** If Extract GLHIBLPD to ED module flag is on, call ED0410         CED002
+      ** to log changes.                                                  CED002
+      *                                                                   CED002
+     C           CED002    IFEQ 'Y'                                       CED002
+      *                                                                   CED002
+     C           KEY6      SETLLGLHIBLL1                 89               CED002
+     C           *IN89     IFEQ *ON                                       CED002
+      * set up last movement date from UPDBALPD                           CED002
+     C                     Z-ADDHIEVDT    HBLMDT                          CED002
+     C                     ELSE                                           CED002
+      * or set last movement date to zero if this is a new account        CED002
+     C                     CLEARHBLMDT                                    CED002
+     C                     ENDIF                                          CED002
+      *                                                                   CED002
+     C                     MOVELXGRPC     MNAME     P                     CED002
+     C                     MOVEASVHIBL    JRNENT    P                     CED002
+      *                                                                   CED002
+     C                     CALL 'ED0410'                                  CED002
+     C                     PARM '*UPDATE' MODE                            CED002
+     C                     PARM 'GLHIBLPD'FNAME                           CED002
+     C                     PARM           MNAME                           CED002
+     C                     PARM 'MC0235  'PNAME                           CED002
+     C                     PARM 'PT'      JRNA                            CED002
+     C                     PARM           JRNENT                          CED002
+     C                     PARM *BLANK    RTCD                            CED002
+      *                                                                   CED002
+      ** Program Error                                                    CED002
+      *                                                                   CED002
+     C           RTCD      IFNE *BLANK                                    CED002
+     C                     MOVEL'ED0410'  #FILE            ************   CED002
+     C                     Z-ADD15        #BASE            * Error 15 *   CED002
+     C                     MOVEL*BLANKS   #KEY             ************   CED002
+     C                     EXSR DBERR                                     CED002
+     C                     ENDIF                                          CED002
+      *                                                                   CED002
+     C                     ENDIF                                          CED002
+      *                                                                   CED002
+      ** Set up last movement date from UPDBALPD                          CED002
+     C                     Z-ADDHIEVDT    HBLMDT                          CED002
+      /SPACE
+      * Write the record
+     C                     WRITEGLHIBLD0
+      /SPACE
+      * If record found, update existing details
+     C                     ELSE                            --- X001
+      /SPACE
+      * Add amounts from work fields
+     C                     ADD  WPDOB     HBPDOB
+     C                     ADD  WPDCB     HBPDCB
+     C                     ADD  WPMTD     HBPMTD
+     C                     ADD  WT1MT     HBT1MT
+     C                     ADD  WT2MT     HBT2MT
+     C                     ADD  WYMTD     HBYMTD
+     C                     ADD  WWPBL     HBWPBL
+     C                     ADD  WWT1B     HBWT1B
+     C                     ADD  WWT2B     HBWT2B
+     C                     ADD  WWYBL     HBWYBL
+      /SPACE
+      * If event date is less than existing last movement date, and
+      * DR/CR average balances is set, and account section is not
+      * income or expense, set last movement date to 99999, else set
+      * it to the event date.
+     C           HIEVDT    IFLT HBLMDT                     --- B002
+     C           HCADCB    ANDNE'N'
+     C           @ACSC     ANDNE'IN'
+     C           @ACSC     ANDNE'EX'
+     C                     Z-ADD99999     HBLMDT
+     C                     ELSE                            --- X002
+     C                     Z-ADDHIEVDT    HBLMDT
+     C                     END                             --- E002
+      /SPACE
+      *                                                                   CED002
+      ** If Extract GLHIBLPD to ED Module flag is on, call ED0410         CED002
+      ** to log changes.                                                  CED002
+      *                                                                   CED002
+     C           CED002    IFEQ 'Y'                                       CED002
+     C                     MOVELXGRPC     MNAME     P                     CED002
+     C                     MOVEASVHIBL    JRNENT    P                     CED002
+      *                                                                   CED002
+     C                     CALL 'ED0410'                                  CED002
+     C                     PARM '*UPDATE' MODE                            CED002
+     C                     PARM 'GLHIBLPD'FNAME                           CED002
+     C                     PARM           MNAME                           CED002
+     C                     PARM 'MC0235  'PNAME                           CED002
+     C                     PARM 'UP'      JRNA                            CED002
+     C                     PARM           JRNENT                          CED002
+     C                     PARM *BLANKS   RTCD                            CED002
+      *                                                                   CED002
+      ** Program Error                                                    CED002
+      *                                                                   CED002
+     C           RTCD      IFNE *BLANKS                                   CED002
+     C                     MOVEL'ED0410'  #FILE            ************   CED002
+     C                     Z-ADD16        #BASE            * Error 16 *   CED002
+     C                     MOVEL*BLANKS   #KEY             ************   CED002
+     C                     EXSR DBERR                                     CED002
+     C                     ENDIF                                          CED002
+      *                                                                   CED002
+     C                     ENDIF                                          CED002
+     C/COPY WNCPYSRC,MC0235C006
+      /SPACE                                                              CED002
+      * Update the record
+     C                     UPDAT@BORED6                    GLHIBLL0
+      /SPACE
+     C                     END                             --- E001
+      /SPACE
+      * If DR/CR average balances set and account section is not income
+      * or expense, then write/update GLAVBLPD
+     C           HCADCB    IFNE 'N'                        --- B001
+     C           @ACSC     ANDNE'IN'
+     C           @ACSC     ANDNE'EX'
+     C/COPY WNCPYSRC,MC0235C007
+      /SPACE
+      * Record not found, WRITE new one
+     C           *IN41     IFEQ '1'                        --- B002
+      /SPACE
+      * Copy key fields from GLHIBLPD
+     C                     MOVELHBCGCD    ABCGCD
+     C                     MOVELHBBRCD    ABBRCD
+     C                     MOVELHBCYCD    ABCYCD
+     C                     MOVELHBACCD    ABACCD
+     C                     MOVELHBCUST    ABCUST
+     C                     MOVELHBACSN    ABACSN
+     C                     MOVELHBPCCD    ABPCCD
+     C                     MOVELHBBKCD    ABBKCD
+     C                     MOVELHBOTTP    ABOTTP
+     C                     MOVELHBTSTY    ABTSTY
+     C                     MOVELHBACNB    ABACNB
+     C                     MOVELHBPDCT    ABPDCT
+     C                     MOVELHBPDYR    ABPDYR
+     C                     MOVELHBPDNY    ABPDNY
+      /SPACE
+      * Set up amounts from work fields
+     C                     Z-ADDWPDDD     ABPDDD
+     C           ABPDDD    IFLT *ZERO                                     130363
+     C                     Z-ADD*ZEROS    ABPDDD                          130363
+     C                     ENDIF                                          130363
+      *                                                                   130363
+     C                     Z-ADDWPDMT     ABPDMT
+     C                     Z-ADDWWPDB     ABWPDB
+     C                     Z-ADDWPDDC     ABPDDC
+     C           ABPDDC    IFLT *ZERO                                     130363
+     C                     Z-ADD*ZEROS    ABPDDC                          130363
+     C                     ENDIF                                          130363
+      *                                                                   130363
+     C                     Z-ADDWPCMT     ABPCMT
+     C                     Z-ADDWWPCB     ABWPCB
+     C                     Z-ADDWT1DD     ABT1DD
+     C           ABT1DD    IFLT *ZERO                                     130363
+     C                     Z-ADD*ZEROS    ABT1DD                          130363
+     C                     ENDIF                                          130363
+      *                                                                   130363
+     C                     Z-ADDWT1DM     ABT1DM
+     C                     Z-ADDWW1DB     ABW1DB
+     C                     Z-ADDWT1DC     ABT1DC
+     C           ABT1DC    IFLT *ZERO                                     130363
+     C                     Z-ADD*ZEROS    ABT1DC                          130363
+     C                     ENDIF                                          130363
+      *                                                                   130363
+     C                     Z-ADDWT1CM     ABT1CM
+     C                     Z-ADDWW1CB     ABW1CB
+     C                     Z-ADDWT2DD     ABT2DD
+     C           ABT2DD    IFLT *ZERO                                     130363
+     C                     Z-ADD*ZEROS    ABT2DD                          130363
+     C                     ENDIF                                          130363
+      *                                                                   130363
+     C                     Z-ADDWT2DM     ABT2DM
+     C                     Z-ADDWW2DB     ABW2DB
+     C                     Z-ADDWT2DC     ABT2DC
+     C           ABT2DC    IFLT *ZERO                                     130363
+     C                     Z-ADD*ZEROS    ABT2DC                          130363
+     C                     ENDIF                                          130363
+      *                                                                   130363
+     C                     Z-ADDWT2CM     ABT2CM
+     C                     Z-ADDWW2CB     ABW2CB
+     C                     Z-ADDWYDDD     ABYDDD
+     C           ABYDDD    IFLT *ZERO                                     130363
+     C                     Z-ADD*ZEROS    ABYDDD                          130363
+     C                     ENDIF                                          130363
+      *                                                                   130363
+     C                     Z-ADDWYDMT     ABYDMT
+     C                     Z-ADDWWYDB     ABWYDB
+     C                     Z-ADDWYDDC     ABYDDC
+     C           ABYDDC    IFLT *ZERO                                     130363
+     C                     Z-ADD*ZEROS    ABYDDC                          130363
+     C                     ENDIF                                          130363
+      *                                                                   130363
+     C                     Z-ADDWYCMT     ABYCMT
+     C                     Z-ADDWWYCB     ABWYCB
+      /SPACE
+      *                                                                   CED002
+      ** If Extract GLHIBLPD to ED module flag is on, call ED0410         CED002
+      ** to log changes.                                                  CED002
+      *                                                                   CED002
+     C           CED002    IFEQ 'Y'                                       CED002
+     C                     MOVELXGRPC     MNAME     P                     CED002
+     C                     MOVEAGLAVBL    JRNENT    P                     CED002
+      *                                                                   CED002
+     C                     CALL 'ED0410'                                  CED002
+     C                     PARM '*UPDATE' MODE                            CED002
+     C                     PARM 'GLAVBLPD'FNAME                           CED002
+     C                     PARM           MNAME                           CED002
+     C                     PARM 'MC0235  'PNAME                           CED002
+     C                     PARM 'PT'      JRNA                            CED002
+     C                     PARM           JRNENT                          CED002
+     C                     PARM *BLANKS   RTCD                            CED002
+      *                                                                   CED002
+      ** Program Error                                                    CED002
+      *                                                                   CED002
+     C           RTCD      IFNE *BLANKS                                   CED002
+     C                     MOVEL'ED0410'  #FILE            ************   CED002
+     C                     Z-ADD17        #BASE            * Error 17 *   CED002
+     C                     MOVEL*BLANKS   #KEY             ************   CED002
+     C                     EXSR DBERR                                     CED002
+     C                     ENDIF                                          CED002
+      *                                                                   CED002
+     C                     ENDIF                                          CED002
+      *                                                                   CED002
+     C                     WRITEGLAVBLD0
+      /SPACE
+      * Record found, update amounts
+     C                     ELSE                            --- X002
+      /SPACE
+      * Add amounts from work fields
+     C                     ADD  WPDDD     ABPDDD
+     C           ABPDDD    IFLT *ZERO                                     130363
+     C                     Z-ADD*ZEROS    ABPDDD                          130363
+     C                     ENDIF                                          130363
+      *                                                                   130363
+     C                     ADD  WPDMT     ABPDMT
+     C                     ADD  WWPDB     ABWPDB
+     C                     ADD  WPDDC     ABPDDC
+     C           ABPDDC    IFLT *ZERO                                     130363
+     C                     Z-ADD*ZEROS    ABPDDC                          130363
+     C                     ENDIF                                          130363
+      *                                                                   130363
+     C                     ADD  WPCMT     ABPCMT
+     C                     ADD  WWPCB     ABWPCB
+     C                     ADD  WT1DD     ABT1DD
+     C           ABT1DD    IFLT *ZERO                                     130363
+     C                     Z-ADD*ZEROS    ABT1DD                          130363
+     C                     ENDIF                                          130363
+      *                                                                   130363
+     C                     ADD  WT1DM     ABT1DM
+     C                     ADD  WW1DB     ABW1DB
+     C                     ADD  WT1DC     ABT1DC
+     C           ABT1DC    IFLT *ZERO                                     130363
+     C                     Z-ADD*ZEROS    ABT1DC                          130363
+     C                     ENDIF                                          130363
+      *                                                                   130363
+     C                     ADD  WT1CM     ABT1CM
+     C                     ADD  WW1CB     ABW1CB
+     C                     ADD  WT2DD     ABT2DD
+     C           ABT2DD    IFLT *ZERO                                     130363
+     C                     Z-ADD*ZEROS    ABT2DD                          130363
+     C                     ENDIF                                          130363
+      *                                                                   130363
+     C                     ADD  WT2DM     ABT2DM
+     C                     ADD  WW2DB     ABW2DB
+     C                     ADD  WT2DC     ABT2DC
+     C           ABT2DC    IFLT *ZERO                                     130363
+     C                     Z-ADD*ZEROS    ABT2DC                          130363
+     C                     ENDIF                                          130363
+      *                                                                   130363
+     C                     ADD  WT2CM     ABT2CM
+     C                     ADD  WW2CB     ABW2CB
+     C                     ADD  WYDDD     ABYDDD
+     C           ABYDDD    IFLT *ZERO                                     130363
+     C                     Z-ADD*ZEROS    ABYDDD                          130363
+     C                     ENDIF                                          130363
+      *                                                                   130363
+     C                     ADD  WYDMT     ABYDMT
+     C                     ADD  WWYDB     ABWYDB
+     C                     ADD  WYDDC     ABYDDC
+     C           ABYDDC    IFLT *ZERO                                     130363
+     C                     Z-ADD*ZEROS    ABYDDC                          130363
+     C                     ENDIF                                          130363
+      *                                                                   130363
+     C                     ADD  WYCMT     ABYCMT
+     C                     ADD  WWYCB     ABWYCB
+      *                                                                   CED002
+      ** If Extract GLHIBLPD to ED module flag is on, call ED0410         CED002
+      ** to log changes.                                                  CED002
+      *                                                                   CED002
+     C           CED002    IFEQ 'Y'                        --- B003       CED002
+     C                     MOVELXGRPC     MNAME     P                     CED002
+     C                     MOVEAGLAVBL    JRNENT    P                     CED002
+      *                                                                   CED002
+     C                     CALL 'ED0410'                                  CED002
+     C                     PARM '*UPDATE' MODE                            CED002
+     C                     PARM 'GLAVBLPD'FNAME                           CED002
+     C                     PARM           MNAME                           CED002
+     C                     PARM 'MC0235'  PNAME                           CED002
+     C                     PARM 'UP'      JRNA                            CED002
+     C                     PARM           JRNENT                          CED002
+     C                     PARM *BLANKS   RTCD                            CED002
+      *                                                                   CED002
+      ** Program Error                                                    CED002
+      *                                                                   CED002
+     C           RTCD      IFNE *BLANKS                    --- B004       CED002
+     C                     MOVEL'ED0410'  #FILE            ************   CED002
+     C                     Z-ADD18        #BASE            * Error 18 *   CED002
+     C                     MOVEL*BLANKS   #KEY             ************   CED002
+     C                     EXSR DBERR                                     CED002
+     C                     ENDIF                           --- E004       CED002
+      *                                                                   CED002
+     C                     ENDIF                           --- E003       CED002
+      *
+     C                     UPDAT@BPRED3                    GLAVBLL0
+     C                     END                             --- E002
+     C                     END                             --- E001
+      /SPACE
+      * If audit report required, print carried forward details
+     C           HCUPAU    IFEQ 'Y'                        --- B001
+      /SPACE
+      * Select 'carried forward' literal
+     C                     SETON                     75
+     C                     SETOF                     73  74
+      /SPACE
+      * Set up the work fields for the print routine
+     C                     Z-ADDHBPDOB    P#PDOB
+     C                     Z-ADDHBPDCB    P#PDCB
+     C                     Z-ADDHBPMTD    P#PMTD
+     C                     Z-ADDHBT1MT    P#T1MT
+     C                     Z-ADDHBT2MT    P#T2MT
+     C                     Z-ADDHBYMTD    P#YMTD
+     C                     Z-ADDHBWPBL    P#WPBL
+     C                     Z-ADDHBWT1B    P#WT1B
+     C                     Z-ADDHBWT2B    P#WT2B
+     C                     Z-ADDHBWYBL    P#WYBL
+      /SPACE
+      * Print the carried forward details
+     C                     EXSR P1D1
+      /SPACE
+      * Print DR/CR average balances if DR/CR average balances set, and
+      * account section is not income or expense
+     C           HCADCB    IFNE 'N'                        --- B002
+     C           @ACSC     ANDNE'IN'
+     C           @ACSC     ANDNE'EX'
+     C/COPY WNCPYSRC,MC0235C008
+      /SPACE
+      * Set up the debit work fields
+     C                     Z-ADDABPDMT    P#PDMT
+     C                     Z-ADDABYDMT    P#YDMT
+     C                     Z-ADDABT1DM    P#T1DM
+     C                     Z-ADDABT2DM    P#T2DM
+     C                     Z-ADDABWPDB    P#WPDB
+     C                     Z-ADDABWYDB    P#WYDB
+     C                     Z-ADDABW1DB    P#W1DB
+     C                     Z-ADDABW2DB    P#W2DB
+     C                     Z-ADDABPDDD    P#PDDD
+     C                     Z-ADDABYDDD    P#YDDD
+     C                     Z-ADDABT1DD    P#T1DD
+     C                     Z-ADDABT2DD    P#T2DD
+      /SPACE
+      * Set up the credit work fields
+     C                     Z-ADDABPCMT    P#PCMT
+     C                     Z-ADDABYCMT    P#YCMT
+     C                     Z-ADDABT1CM    P#T1CM
+     C                     Z-ADDABT2CM    P#T2CM
+     C                     Z-ADDABWPCB    P#WPCB
+     C                     Z-ADDABWYCB    P#WYCB
+     C                     Z-ADDABW1CB    P#W1CB
+     C                     Z-ADDABW2CB    P#W2CB
+     C                     Z-ADDABPDDC    P#PDDC
+     C                     Z-ADDABYDDC    P#YDDC
+     C                     Z-ADDABT1DC    P#T1DC
+     C                     Z-ADDABT2DC    P#T2DC
+      /SPACE
+      * Print the carried forward debit/credit details
+     C                     EXSR P1D2
+      /SPACE
+      * If event date is less than existing last movement date then
+      * write 'back-valued movements processed' line
+     C           HIEVDT    IFLT HBLMDT                     --- B003
+      /SPACE
+      * Check sufficient lines left, new page if required
+     C           @LINES    IFLT 2                          --- B004
+     C                     EXSR P1H1
+     C                     END                             --- E004
+      /SPACE
+     C                     WRITEMC0235T1               45
+     C                     SUB  2         @LINES
+     C                     END                             --- E003
+      /SPACE
+     C                     END                             --- E002
+     C                     END                             --- E001
+      /SPACE
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  NEWKEY - Processing for new key                              *
+      *                                                               *
+      *****************************************************************
+     C           NEWKEY    BEGSR
+      /SPACE
+      * Reset fields
+     C                     EXSR RESET
+      /SPACE
+      * Save account section
+     C                     MOVELACSC      @ACSC   2
+      /SPACE
+      * Get decimal places for movement currency if different from the
+      * currency of balances
+     C           CCY       IFNE HCCCYB                     --- B001
+      *                                                                   CED002
+      * Only call if currency has changed                                 CED002
+     C           CCY       IFNE W#CCY                                     CED002
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*KEY   ' P@OPTN
+     C                     PARM CCY       P@CURR
+     C********** DSCURR    PARM DSCURR    DSFDY                                               193379
+     C           DSCURR    PARM DSCURR    DSSDY                                               193379
+     C           P@RTCD    IFNE *BLANKS                    --- B002
+     C                     MOVEL'AOCURRR0'#FILE            ************
+     C                     Z-ADD7         #BASE            * Error 07 *
+     C                     MOVELP@CURR    #KEY             ************
+     C                     EXSR DBERR
+     C                     END                             --- E002
+     C                     MOVE A6CYCD    W#CCY                           CED002
+     C                     ENDIF                                          CED002
+     C                     Z-ADDA6NBDP    MOVDP
+      *                                                                   CED002
+     C                     ELSE                            --- X001
+     C                     Z-ADDGRPDP     MOVDP   10
+     C                     END                             --- E001
+      /SPACE
+      * If group currency not set, set decimal places for group to that
+      * for this movement
+     C           HCCCYB    IFEQ *BLANKS                    --- B001
+     C                     Z-ADDMOVDP     GRPDP
+     C                     END                             --- E001
+      /SPACE
+      * Reset 'continued' literal on report
+     C                     SETOF                     60
+      /SPACE
+      * Set up key fields for CHAIN (if numeric field is zero, set key
+      * field to blank)
+     C                     MOVELACOD      ABACCD
+     C                     MOVELCNUM      ABCUST
+     C                     MOVELACSQ      ABACSN
+     C                     MOVELASOC      ABACNB
+     C                     MOVELCPNB      ABPDCT
+     C                     MOVELCPNB      WK4A    4
+     C                     MOVE WK4A      ABPDYR
+     C                     MOVE CPNB      ABPDNY
+      *                                                                   CMC001
+      **  Set up fields analysed by Prime Group Analysis fields           CMC001
+      *                                                                   CMC001
+     C           CMC001    IFEQ 'Y'                                       CMC001
+     C           WABPC     IFNE *BLANKS                                   CMC001
+     C                     MOVELPRFC      WPRFC                           CMC001
+     C                     ENDIF                                          CMC001
+     C           WABBK     IFNE *BLANKS                                   CMC001
+     C                     MOVELBOKC      WBOKC                           CMC001
+     C                     ENDIF                                          CMC001
+     C           WABTT     IFNE *BLANKS                                   CMC001
+     C                     MOVELOTTP      WOTTP                           CMC001
+     C                     ENDIF                                          CMC001
+     C           WABTS     IFNE *BLANKS                                   CMC001
+     C                     MOVELOTST      WOTST                           CMC001
+     C                     ENDIF                                          CMC001
+     C           WASCU     IFNE *BLANKS                                   CMC001
+     C**********           Z-ADDASOC      WASOC                                        CMC001 CSD027
+     C                     MOVE ASOC      WASOC                                               CSD027
+     C                     MOVELASOC      WACNB                           CMC001
+     C                     ENDIF                                          CMC001
+     C                     ENDIF                                          CMC001
+      *                                                                   CMC001
+     C           KEY1      CHAIN@BPRED3              41    GLAVBLL0
+     C           KEY1      CHAIN@BORED6              42    GLHIBLL0
+      /SPACE
+      * If historic balance record found then store fields
+     C           *IN42     IFEQ '0'                        --- B001
+     C                     Z-ADDHBSPDD    @SPDD   50
+     C                     Z-ADDHBEPDD    @EPDD   50
+     C                     Z-ADDHBST1D    @ST1D   50
+     C                     Z-ADDHBST2D    @ST2D   50
+     C                     Z-ADDHBSOYD    @SOYD   50
+      /SPACE
+      * If no historic balance record found, then -
+      *    If current period = 0 then exit with error
+      *    Else attempt to get period record for period, if not found
+      *         then exit with error
+     C                     ELSE                            --- X001
+     C           CPNB      IFEQ 0                          --- B002
+     C                     MOVEL'GLHIBLL0'#FILE            ************
+     C                     Z-ADD8         #BASE            * Error 08 *
+     C                     MOVEL'See Dump'#KEY             ************
+     C                     EXSR DBERR
+     C                     ELSE                            --- X002
+     C           KEY2      CHAIN@BLREDV              43    GLPERDL1
+     C           *IN43     IFEQ '1'                        --- B003
+     C                     MOVEL'GLPERDL1'#FILE            ************
+     C                     Z-ADD9         #BASE            * Error 09 *
+     C                     MOVEL'See Dump'#KEY             ************
+     C                     EXSR DBERR
+      /SPACE
+      * Store fields
+     C                     ELSE                            --- X003
+      *                                                                   130304
+      ** Initialise Decimal fields.                                       130304
+     C                     Z-ADD0         HBSOYD                          130304
+     C                     Z-ADD0         HBST1D                          130304
+     C                     Z-ADD0         HBST2D                          130304
+     C                     Z-ADD0         HBSPDD                          130304
+     C                     Z-ADD0         HBEPDD                          130304
+     C                     Z-ADD0         HBPDOB                          130304
+     C                     Z-ADD0         HBPDCB                          130304
+     C                     Z-ADD0         HBPMTD                          130304
+     C                     Z-ADD0         HBT1MT                          130304
+     C                     Z-ADD0         HBT2MT                          130304
+     C                     Z-ADD0         HBYMTD                          130304
+     C                     Z-ADD0         HBWPBL                          130304
+     C                     Z-ADD0         HBWT1B                          130304
+     C                     Z-ADD0         HBWT2B                          130304
+     C                     Z-ADD0         HBWYBL                          130304
+     C                     Z-ADD0         HBLMDT                          130304
+      *                                                                   130304
+     C                     Z-ADDDTSPDD    @SPDD
+     C                     Z-ADDDTEPDD    @EPDD
+     C                     Z-ADDDTST1D    @ST1D
+     C                     Z-ADDDTST2D    @ST2D
+     C                     Z-ADDDTSOYD    @SOYD
+      /SPACE
+      * Set up key fields here (SR/UPINEX needs them to restore record)
+     C                     MOVELHCCGCD    HBCGCD
+     C                     MOVELBRCA      HBBRCD
+     C                     MOVELCCY       HBCYCD
+     C                     MOVELABACCD    HBACCD
+     C                     MOVELABCUST    HBCUST
+     C                     MOVELABACSN    HBACSN
+     C                     MOVELPRFC      HBPCCD
+     C                     MOVELBOKC      HBBKCD
+     C                     MOVELOTTP      HBOTTP
+     C                     MOVELOTST      HBTSTY
+     C                     MOVELABACNB    HBACNB
+     C                     MOVELABPDCT    HBPDCT
+     C                     MOVELABPDYR    HBPDYR
+     C                     MOVELABPDNY    HBPDNY
+     C                     END                             --- E003
+     C                     END                             --- E002
+      /SPACE
+     C                     END                             --- E001
+      /SPACE
+      * If 'average over a/c open' specified then get associated ACCNTAB
+      * record, error if not found.
+     C           HCAOAO    IFEQ 'Y'                        --- B001
+     C           KEY3      CHAINACCNTABF             99    ACCNT
+     C********** *IN99     IFEQ '1'                        --- B002                           239785
+     C**********           MOVEL'ACCNT'   #FILE            ************                       239785
+     C**********           Z-ADD10        #BASE            * Error 10 *                       239785
+     C**********           MOVEL'See Dump'#KEY             ************                       239785
+     C**********           EXSR DBERR                                                         239785
+     C**********           END                             --- E002                           239785
+      *                                                                                       239785
+      ** If Account details not available, no DBerr, set DACO to 0.                           239785
+      *                                                                                       239785
+     C           *IN99     IFEQ '1'                                                           239785
+     C                     Z-ADD0         DACO                                                239785
+     C                     END                                                                239785
+      /SPACE
+      **If*'average*over*a/c*open',*set*start*dates*to*greater*of*account 052033
+      **opened*date*and*start*date,*and*period*end*date*to*lesser*of      052033
+      **account*closed*date*(if*not*zero)*and*period*end*date.*****       052033
+      *                                                                   052033
+      * If 'average over a/c open', set start dates to greater of account 052033
+      * opened date and start date, If Start Date not Zero                052033
+      *                                                                   052033
+     C           DACO      IFGT @SPDD                      --- B002
+     C                     Z-ADDDACO      @SPDD
+     C                     END                             --- E002
+     C           DACO      IFGT @ST1D                      --- B002
+     C           @ST1D     ANDNE*ZERO                                     052033
+     C                     Z-ADDDACO      @ST1D
+     C                     END                             --- E002
+     C           DACO      IFGT @ST2D                      --- B002
+     C           @ST2D     ANDNE*ZERO                                     052033
+     C                     Z-ADDDACO      @ST2D
+     C                     END                             --- E002
+     C           DACO      IFGT @SOYD                      --- B002
+     C                     Z-ADDDACO      @SOYD
+     C                     END                             --- E002
+     C***********DACC      IFLT @EPDD                      --- B002       052033
+     C***********DACC      ANDNE0                                         052033
+     C***********          Z-ADDDACC      @EPDD                           052033
+     C***********          END                             --- E002       052033
+     C                     END                             --- E001
+      /SPACE
+      * If audit report required, print headings
+     C           HCUPAU    IFEQ 'Y'                        --- B001
+      /SPACE
+      * Calculate number of days in period as end date - start date + 1.
+     C           @EPDD     SUB  @SPDD     P1PDYS
+     C                     ADD  1         P1PDYS
+      /SPACE
+      * Format start and end dates via ZDATE2
+     C                     Z-ADD@SPDD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    P1PSTR
+     C                     Z-ADD@EPDD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    P1PEND
+      /SPACE
+      * If historic balance record found format last movement date
+      * for output, else leave it blank.
+     C           *IN42     IFEQ '0'                        --- B002
+     C                     Z-ADDHBLMDT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    P1LMVD
+     C                     ELSE                            --- X002
+     C                     MOVEL*BLANKS   P1LMVD
+     C                     END                             --- E002
+      /SPACE
+      * Format period year/number for output
+     C                     MOVELCPNB      P1PYR
+     C                     MOVE CPNB      P1PNO
+      /SPACE
+      * Determine if term 1/2 are used by checking if start dates are
+      * non-zero
+     C                     SETOF                     71  72
+     C           @ST1D     COMP 0                    7171
+     C           @ST2D     COMP 0                    7272
+      /SPACE
+      * Write top of page details
+     C                     EXSR P1H1
+      /SPACE
+      * Select 'brought forward' literal
+     C                     SETON                     73
+     C                     SETOF                     74  75
+      /SPACE
+      * Set the number of decimal places
+     C                     Z-ADDGRPDP     #FMDP
+      /SPACE
+      * Set up the work fields for the print routine
+     C                     Z-ADDHBPDOB    P#PDOB 190
+     C                     Z-ADDHBPDCB    P#PDCB 190
+     C                     Z-ADDHBPMTD    P#PMTD 190
+     C                     Z-ADDHBT1MT    P#T1MT 190
+     C                     Z-ADDHBT2MT    P#T2MT 190
+     C                     Z-ADDHBYMTD    P#YMTD 190
+     C                     Z-ADDHBWPBL    P#WPBL 190
+     C                     Z-ADDHBWT1B    P#WT1B 190
+     C                     Z-ADDHBWT2B    P#WT2B 190
+     C                     Z-ADDHBWYBL    P#WYBL 190
+      /SPACE
+      * Print the brought forward details
+     C                     EXSR P1D1
+      /SPACE
+      * Print DR/CR average balances if DR/CR average balances set, and
+      * account section is not income or expense
+     C           HCADCB    IFNE 'N'                        --- B002
+     C           @ACSC     ANDNE'IN'
+     C           @ACSC     ANDNE'EX'
+     C/COPY WNCPYSRC,MC0235C009
+      /SPACE
+      * Set up the debit work fields
+     C                     Z-ADDABPDMT    P#PDMT 190
+     C                     Z-ADDABYDMT    P#YDMT 190
+     C                     Z-ADDABT1DM    P#T1DM 190
+     C                     Z-ADDABT2DM    P#T2DM 190
+     C                     Z-ADDABWPDB    P#WPDB 190
+     C                     Z-ADDABWYDB    P#WYDB 190
+     C                     Z-ADDABW1DB    P#W1DB 190
+     C                     Z-ADDABW2DB    P#W2DB 190
+     C                     Z-ADDABPDDD    P#PDDD  30
+     C                     Z-ADDABYDDD    P#YDDD  30
+     C                     Z-ADDABT1DD    P#T1DD  30
+     C                     Z-ADDABT2DD    P#T2DD  30
+      /SPACE
+      * Set up the credit work fields
+     C                     Z-ADDABPCMT    P#PCMT 190
+     C                     Z-ADDABYCMT    P#YCMT 190
+     C                     Z-ADDABT1CM    P#T1CM 190
+     C                     Z-ADDABT2CM    P#T2CM 190
+     C                     Z-ADDABWPCB    P#WPCB 190
+     C                     Z-ADDABWYCB    P#WYCB 190
+     C                     Z-ADDABW1CB    P#W1CB 190
+     C                     Z-ADDABW2CB    P#W2CB 190
+     C                     Z-ADDABPDDC    P#PDDC  30
+     C                     Z-ADDABYDDC    P#YDDC  30
+     C                     Z-ADDABT1DC    P#T1DC  30
+     C                     Z-ADDABT2DC    P#T2DC  30
+      /SPACE
+      * Print the brought forward debit/credit details
+     C                     EXSR P1D2
+     C                     END                             --- E002
+      /SPACE
+      * Print movement headings
+     C                     WRITEMC0235H2               45
+     C                     SUB  4         @LINES
+      /SPACE
+      * Print movements header on page throw
+     C                     SETON                     46
+      /SPACE
+     C                     END                             --- E001
+      /SPACE
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  RESET  - Reset fields on change of key                       *
+      *                                                               *
+      *****************************************************************
+     C           RESET     BEGSR
+      /SPACE
+      * Reset save DS, so that fields are cleared
+     C           1         OCUR SVHIBL                     Save details
+      /SPACE
+      * Reset change detection fields
+     C                     MOVELBRCA      CDBRCA
+     C                     MOVELCCY       CDCCY
+     C                     Z-ADDACOD      CDACOD
+     C**********           Z-ADDCNUM      CDCNUM                                              CSD027
+     C                     MOVE CNUM      CDCNUM                                              CSD027
+     C                     Z-ADDACSQ      CDACSQ
+     C                     MOVELPRFC      CDPRFC
+     C                     MOVELBOKC      CDBOKC
+     C                     MOVELOTTP      CDOTTP
+     C                     MOVELOTST      CDOTST
+     C**********           Z-ADDASOC      CDASOC                                              CSD027
+     C                     MOVE ASOC      CDASOC                                              CSD027
+     C                     Z-ADDCPNB      CDCPNB  60
+      /SPACE
+      * Reset field used to save highest value of event date for current
+      * key
+     C                     Z-ADD0         HIEVDT  50
+      /SPACE
+      * Zero relevant fields on average and historic balance records
+      * before CHAIN
+     C                     Z-ADD0         ABPDDD
+     C                     Z-ADD0         ABPDMT
+     C                     Z-ADD0         ABWPDB
+     C                     Z-ADD0         ABPDDC
+     C                     Z-ADD0         ABPCMT
+     C                     Z-ADD0         ABWPCB
+     C                     Z-ADD0         ABT1DD
+     C                     Z-ADD0         ABT1DM
+     C                     Z-ADD0         ABW1DB
+     C                     Z-ADD0         ABT1DC
+     C                     Z-ADD0         ABT1CM
+     C                     Z-ADD0         ABW1CB
+     C                     Z-ADD0         ABT2DD
+     C                     Z-ADD0         ABT2DM
+     C                     Z-ADD0         ABW2DB
+     C                     Z-ADD0         ABT2DC
+     C                     Z-ADD0         ABT2CM
+     C                     Z-ADD0         ABW2CB
+     C                     Z-ADD0         ABYDDD
+     C                     Z-ADD0         ABYDMT
+     C                     Z-ADD0         ABWYDB
+     C                     Z-ADD0         ABYDDC
+     C                     Z-ADD0         ABYCMT
+     C                     Z-ADD0         ABWYCB
+     C                     Z-ADD0         HBPDOB
+     C                     Z-ADD0         HBPDCB
+     C                     Z-ADD0         HBPMTD
+     C                     Z-ADD0         HBT1MT
+     C                     Z-ADD0         HBT2MT
+     C                     Z-ADD0         HBYMTD
+     C                     Z-ADD0         HBWPBL
+     C                     Z-ADD0         HBWT1B
+     C                     Z-ADD0         HBWT2B
+     C                     Z-ADD0         HBWYBL
+      /SPACE
+      * Reset balance work fields
+     C                     Z-ADD0         WPDOB  190       Opening bal.
+     C                     Z-ADD0         WPDCB  190       Closing bal.
+     C                     Z-ADD0         WXPDOB 190       Open bal.(INEX)
+     C                     Z-ADD0         WXPDCB 190       Close bal(INEX)
+      /SPACE
+      * Movements to date
+     C                     Z-ADD0         WPMTD  190       Period
+     C                     Z-ADD0         WYMTD  190       Year
+     C                     Z-ADD0         WT1MT  190       T1
+     C                     Z-ADD0         WT2MT  190       T2
+      /SPACE
+      * Weighted balance
+     C                     Z-ADD0         WWPBL  190       Period
+     C                     Z-ADD0         WWYBL  190       Year
+     C                     Z-ADD0         WWT1B  190       T1
+     C                     Z-ADD0         WWT2B  190       T2
+      /SPACE
+      * Debit movements
+     C                     Z-ADD0         WPDMT  190       Period
+     C                     Z-ADD0         WYDMT  190       Year
+     C                     Z-ADD0         WT1DM  190       T1
+     C                     Z-ADD0         WT2DM  190       T2
+      /SPACE
+      * Credit movements
+     C                     Z-ADD0         WPCMT  190       Period
+     C                     Z-ADD0         WYCMT  190       Year
+     C                     Z-ADD0         WT1CM  190       T1
+     C                     Z-ADD0         WT2CM  190       T2
+      /SPACE
+      * Debit weighted balances
+     C                     Z-ADD0         WWPDB  190       Period
+     C                     Z-ADD0         WWYDB  190       Year
+     C                     Z-ADD0         WW1DB  190       T1
+     C                     Z-ADD0         WW2DB  190       T2
+      /SPACE
+      * Credit weighted balances
+     C                     Z-ADD0         WWPCB  190       Period
+     C                     Z-ADD0         WWYCB  190       Year
+     C                     Z-ADD0         WW1CB  190       T1
+     C                     Z-ADD0         WW2CB  190       T2
+      /SPACE
+      * Days in debit
+     C                     Z-ADD0         WPDDD   30       Period
+     C                     Z-ADD0         WYDDD   30       Year
+     C                     Z-ADD0         WT1DD   30       T1
+     C                     Z-ADD0         WT2DD   30       T2
+      /SPACE
+      * Days in credit
+     C                     Z-ADD0         WPDDC   30       Period
+     C                     Z-ADD0         WYDDC   30       Year
+     C                     Z-ADD0         WT1DC   30       T1
+     C                     Z-ADD0         WT2DC   30       T2
+      * Work fields.                                                      130304
+     C                     Z-ADD0         #WAMT                           130304
+     C                     Z-ADD0         #WAMT2                          130304
+     C                     Z-ADD0         #WMTD                           130304
+     C                     Z-ADD0         #WCMTD                          130304
+     C                     Z-ADD0         #WDMTD                          130304
+     C                     Z-ADD0         #WDAT                           130304
+     C                     Z-ADD0         #WDAT2                          130304
+     C                     Z-ADD0         #WDC                            130304
+     C                     Z-ADD0         #WDD                            130304
+     C                     Z-ADD0         #WWCB                           130304
+     C                     Z-ADD0         #WWDB                           130304
+      *                                                                   130304
+      /SPACE
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  UPDMTD - Update movements to date (controller)               *
+      *                                                               *
+      *****************************************************************
+     C           UPDMTD    BEGSR
+      /SPACE
+      * Update period work fields
+     C                     Z-ADD@SPDD     #STDAT  50
+     C                     EXSR #UPDMV
+     C                     ADD  #WAMT     WWPBL            Weighted bal
+     C                     ADD  #WMTD     WPMTD            Move to date
+     C                     ADD  #WDMTD    WPDMT            Debit moves
+     C                     ADD  #WCMTD    WPCMT            Credit moves
+      /SPACE
+      * Update year work fields
+     C                     Z-ADD@SOYD     #STDAT
+     C                     EXSR #UPDMV
+     C                     ADD  #WAMT     WWYBL            Weighted bal
+     C                     ADD  #WMTD     WYMTD            Move to date
+     C                     ADD  #WDMTD    WYDMT            Debit moves
+     C                     ADD  #WCMTD    WYCMT            Credit moves
+      /SPACE
+      * If T1 start date is non-zero, update T1 work fields
+     C           @ST1D     IFNE 0                          --- B001
+     C                     Z-ADD@ST1D     #STDAT
+     C                     EXSR #UPDMV
+     C                     ADD  #WAMT     WWT1B            Weighted bal
+     C                     ADD  #WMTD     WT1MT            Move to date
+     C                     ADD  #WDMTD    WT1DM            Debit moves
+     C                     ADD  #WCMTD    WT1CM            Credit moves
+     C                     END                             --- E001
+      /SPACE
+      * If T2 start date is non-zero, update T2 work fields
+     C           @ST2D     IFNE 0                          --- B001
+     C                     Z-ADD@ST2D     #STDAT
+     C                     EXSR #UPDMV
+     C                     ADD  #WAMT     WWT2B            Weighted bal
+     C                     ADD  #WMTD     WT2MT            Move to date
+     C                     ADD  #WDMTD    WT2DM            Debit moves
+     C                     ADD  #WCMTD    WT2CM            Credit moves
+     C                     END                             --- E001
+      /SPACE
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #UPDMV - Update movements to date (calculation)              *
+      *                                                               *
+      *****************************************************************
+     C           #UPDMV    BEGSR
+      /SPACE
+      * Set 'work date' to greater of start date and event date
+     C           #STDAT    IFGT EVDT                       --- B001
+     C                     Z-ADD#STDAT    #WDAT   50
+     C                     ELSE                            --- X001
+     C                     Z-ADDEVDT      #WDAT
+     C                     END                             --- E001
+      /SPACE
+      * Set up amount to update weighted balance in #WAMT. This is
+      * calculated as converted posting amount x (end of period date -
+      * 'work date' + 1).
+     C           @EPDD     SUB  #WDAT     #WAMT  190
+     C                     ADD  1         #WAMT
+     C           CVAMT     MULT #WAMT     #WAMT
+      /SPACE
+      * Zero work fields for amount to update movements to date (#WMTD),
+      * and debit/credit movements to date (#WDMTD/#WCMTD)
+     C                     Z-ADD0         #WMTD  190
+     C                     Z-ADD0         #WDMTD 190
+     C                     Z-ADD0         #WCMTD 190
+      /SPACE
+      * If the event date is on or after the start date then...
+      * Update Movement totals if not a Transfer posting                  052433
+     C           EVDT      IFGE #STDAT                     --- B001
+     C           GETP      ANDNE'X'                                       052433
+     C           GETP      ANDNE'Y'                                       052433
+      /SPACE
+      *  ...update the movements to date by the converted posting amount
+     C                     ADD  CVAMT     #WMTD
+      /SPACE
+      *   ...if DR/CR av. bals. is not N, and the account section is not
+      *      income or expense then...
+     C           HCADCB    IFNE 'N'                        --- B002
+     C           @ACSC     ANDNE'IN'
+     C           @ACSC     ANDNE'EX'
+     C/COPY WNCPYSRC,MC0235C010
+      /SPACE
+      *     ...if void flag is set and the posting amount is positive,
+      *        or void flag is off and the posting amount is negative,
+      *        then add the posting amount to the credit movements to date
+      *        field, else add it to the debit movements to date field.
+     C           VOIN      IFEQ 1                          --- B003
+     C           CVAMT     ANDGT0
+     C           VOIN      OREQ 0
+     C           CVAMT     ANDLT0
+     C                     ADD  CVAMT     #WCMTD
+     C                     ELSE                            --- X003
+     C                     ADD  CVAMT     #WDMTD
+     C                     END                             --- E003
+     C                     END                             --- E002
+     C                     END                             --- E001
+      /SPACE
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  UPOPWK - Update output work fields (controller)              *
+      *                                                               *
+      *****************************************************************
+     C           UPOPWK    BEGSR
+      /SPACE
+      * If event date is before start of period date, update period
+      * opening balance with posting amount
+     C           EVDT      IFLT @SPDD                      --- B001
+     C                     ADD  CVAMT     WPDOB
+     C                     END                             --- E001
+      /SPACE
+      * Update period work fields
+     C                     Z-ADD@SPDD     #STDAT
+     C                     EXSR #UPOPW
+     C                     SUB  #WWDB     WWPDB            Weighted DB
+     C                     SUB  #WWCB     WWPCB            Weighted CR
+     C                     SUB  #WDD      WPDDD            DB days
+     C                     SUB  #WDC      WPDDC            CR days
+      /SPACE
+      * Update year work fields
+     C                     Z-ADD@SOYD     #STDAT
+     C                     EXSR #UPOPW
+     C                     SUB  #WWDB     WWYDB            Weighted DB
+     C                     SUB  #WWCB     WWYCB            Weighted CR
+     C                     SUB  #WDD      WYDDD            DB days
+     C                     SUB  #WDC      WYDDC            CR days
+      /SPACE
+      * Update T1 work fields if T1 start date non-zero
+     C           @ST1D     IFNE 0                          --- B001
+     C                     Z-ADD@ST1D     #STDAT
+     C                     EXSR #UPOPW
+     C                     SUB  #WWDB     WW1DB            Weighted DB
+     C                     SUB  #WWCB     WW1CB            Weighted CR
+     C                     SUB  #WDD      WT1DD            DB days
+     C                     SUB  #WDC      WT1DC            CR days
+     C                     END                             --- E001
+      /SPACE
+      * Update T2 work fields if T2 start date non-zero
+     C           @ST2D     IFNE 0                          --- B001
+     C                     Z-ADD@ST2D     #STDAT
+     C                     EXSR #UPOPW
+     C                     SUB  #WWDB     WW2DB            Weighted DB
+     C                     SUB  #WWCB     WW2CB            Weighted CR
+     C                     SUB  #WDD      WT2DD            DB days
+     C                     SUB  #WDC      WT2DC            CR days
+     C                     END                             --- E001
+      /SPACE
+      * Add posting amount to period closing balance work field
+     C                     ADD  CVAMT     WPDCB
+      /SPACE
+      * Update period work fields
+     C                     Z-ADD@SPDD     #STDAT
+     C                     EXSR #UPOPW
+     C                     ADD  #WWDB     WWPDB            Weighted DB
+     C                     ADD  #WWCB     WWPCB            Weighted CR
+     C                     ADD  #WDD      WPDDD            DB days
+     C                     ADD  #WDC      WPDDC            CR days
+      /SPACE
+      * Update year work fields
+     C                     Z-ADD@SOYD     #STDAT
+     C                     EXSR #UPOPW
+     C                     ADD  #WWDB     WWYDB            Weighted DB
+     C                     ADD  #WWCB     WWYCB            Weighted CR
+     C                     ADD  #WDD      WYDDD            DB days
+     C                     ADD  #WDC      WYDDC            CR days
+      /SPACE
+      * Update T1 work fields if T1 start date non-zero
+     C           @ST1D     IFNE 0                          --- B001
+     C                     Z-ADD@ST1D     #STDAT
+     C                     EXSR #UPOPW
+     C                     ADD  #WWDB     WW1DB            Weighted DB
+     C                     ADD  #WWCB     WW1CB            Weighted CR
+     C                     ADD  #WDD      WT1DD            DB days
+     C                     ADD  #WDC      WT1DC            CR days
+     C                     END                             --- E001
+      /SPACE
+      * Update T2 work fields if T2 start date non-zero
+     C           @ST2D     IFNE 0                          --- B001
+     C                     Z-ADD@ST2D     #STDAT
+     C                     EXSR #UPOPW
+     C                     ADD  #WWDB     WW2DB            Weighted DB
+     C                     ADD  #WWCB     WW2CB            Weighted CR
+     C                     ADD  #WDD      WT2DD            DB days
+     C                     ADD  #WDC      WT2DC            CR days
+     C                     END                             --- E001
+      /SPACE
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #UPOPW - Update output work fields (calculation)             *
+      *                                                               *
+      *****************************************************************
+     C           #UPOPW    BEGSR
+      /SPACE
+      * Initialize work fields
+     C                     Z-ADD0         #WWDB  190       Weighted DB
+     C                     Z-ADD0         #WWCB  190       Weighted CR
+     C                     Z-ADD0         #WDD    30       DB days
+     C                     Z-ADD0         #WDC    30       CR days
+      /SPACE
+      * If DR/CR av. bals. is not N, and the account section is not
+      *  income or expense then...
+     C           HCADCB    IFNE 'N'                        --- B001
+     C           @ACSC     ANDNE'IN'
+     C           @ACSC     ANDNE'EX'
+     C/COPY WNCPYSRC,MC0235C013
+      /SPACE
+      * Set 'work date' to greater of start date and event date
+     C           #STDAT    IFGT EVDT                       --- B002
+     C                     Z-ADD#STDAT    #WDAT
+     C                     ELSE                            --- X002
+     C                     Z-ADDEVDT      #WDAT
+     C                     END                             --- E002
+      /SPACE
+      * Calculate 'work amount' as period closing balance from
+      * GLHIBLL0 + period closing balance work field
+     C           HBPDCB    ADD  WPDCB     #WAMT
+      /SPACE
+      * Calculate 'work date 2' as end of period date - work date + 1
+     C           @EPDD     SUB  #WDAT     #WDAT2  50
+     C                     ADD  1         #WDAT2
+      /SPACE
+      * Calculate 'work amount 2' as work amount x work date 2
+     C           #WAMT     MULT #WDAT2    #WAMT2 190
+      /SPACE
+      * If work amount is positive, add work amount 2 to weighted
+      * DB balance, and work date 2 to days in debit
+     C           #WAMT     IFGT 0                          --- B002
+     C                     ADD  #WAMT2    #WWDB
+     C                     ADD  #WDAT2    #WDD
+     C                     END                             --- E002
+      /SPACE
+      * If work amount is negative, add work amount 2 to weighted
+      * CR balance, and work date 2 to days in credit
+     C           #WAMT     IFLT 0                          --- B002
+     C                     ADD  #WAMT2    #WWCB
+     C                     ADD  #WDAT2    #WDC
+     C                     END                             --- E002
+     C                     END                             --- E001
+      /SPACE
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  UPINEX - Update/write income/expense summary                 *
+      *                                                               *
+      *****************************************************************
+     C           UPINEX    BEGSR
+      /SPACE
+      * Save current GLHIBLL0 values in multiple-ocur DS
+     C           2         OCUR SVHIBL
+      /SPACE
+      * Attempt to get income/expense record
+     C           KEY4      CHAIN@BORED6              44    GLHIBLL0
+      /SPACE
+      * If no record found, then write one
+     C           *IN44     IFEQ '1'                        --- B001
+      /SPACE
+      * Set up group code from parameter.
+     C                     MOVELXGRPC     HBCGCD
+      /SPACE
+      * Set up key fields from UPDBALPD.
+     C                     MOVELBRCA      HBBRCD
+     C                     MOVELCCY       HBCYCD
+     C                     MOVELABACCD    HBACCD
+     C                     MOVELABCUST    HBCUST
+     C                     MOVELABACSN    HBACSN
+     C***********          MOVEL*BLANKS   HBPCCD                          CMC001
+     C***********          MOVEL*BLANKS   HBBKCD                          CMC001
+     C***********          MOVEL*BLANKS   HBOTTP                          CMC001
+     C***********          MOVEL*BLANKS   HBTSTY                          CMC001
+     C                     MOVELWPRFC     HBPCCD                          CMC001
+     C                     MOVELWBOKC     HBBKCD                          CMC001
+     C                     MOVELWOTTP     HBOTTP                          CMC001
+     C                     MOVELWOTST     HBTSTY                          CMC001
+     C                     MOVELABPDCT    HBPDCT
+     C                     MOVELABPDYR    HBPDYR
+     C                     MOVELABPDNY    HBPDNY
+     C***********          MOVEL*ZEROS    HBACNB                          CMC001
+     C                     MOVELWACNB     HBACNB                          CMC001
+      /SPACE
+      * Set up start dates
+     C                     Z-ADD@SOYD     HBSOYD
+     C                     Z-ADD@ST1D     HBST1D
+     C                     Z-ADD@ST2D     HBST2D
+     C                     Z-ADD@SPDD     HBSPDD
+      /SPACE
+      * Set up end date
+     C                     Z-ADD@EPDD     HBEPDD
+      /SPACE
+      * If event date is before start of period date, then set
+      * opening balance to movement amount, else make it zero.
+     C           EVDT      IFLT HBSPDD                     --- B002
+     C                     Z-ADDCVAMT     HBPDOB
+     C                     Z-ADDCVAMT     WXPDOB
+     C                     ELSE                            --- X002
+     C                     Z-ADD0         HBPDOB
+     C                     END                             --- E002
+      /SPACE
+      * Closing balance set to movement amount
+     C                     Z-ADDCVAMT     HBPDCB
+     C                     Z-ADDCVAMT     WXPDCB
+      /SPACE
+      * Other amounts set to zero
+     C                     Z-ADD0         HBPMTD
+     C                     Z-ADD0         HBT1MT
+     C                     Z-ADD0         HBT2MT
+     C                     Z-ADD0         HBYMTD
+     C                     Z-ADD0         HBWPBL
+     C                     Z-ADD0         HBWT1B
+     C                     Z-ADD0         HBWT2B
+     C                     Z-ADD0         HBWYBL
+      /SPACE
+      * Set up account section and last movement date from UPDBALPD
+     C                     MOVEL@ACSC     HBACSC
+     C                     Z-ADDHIEVDT    HBLMDT
+      *                                                                   CED002
+      ** If Extract GLHIBLPD to ED module flag is on, call ED0410         CED002
+      ** to log changes.                                                  CED002
+      *                                                                   CED002
+     C           CED002    IFEQ 'Y'                                       CED002
+     C                     MOVELXGRPC     MNAME     P                     CED002
+     C                     MOVEASVHIBL    JRNENT    P                     CED002
+      *                                                                   CED002
+     C                     CALL 'ED0410'                                  CED002
+     C                     PARM '*UPDATE' MODE                            CED002
+     C                     PARM 'GLHIBLPD'FNAME                           CED002
+     C                     PARM           MNAME                           CED002
+     C                     PARM 'MC0235  'PNAME                           CED002
+     C                     PARM 'PT'      JRNA                            CED002
+     C                     PARM           JRNENT                          CED002
+     C                     PARM *BLANKS   RTCD                            CED002
+      *                                                                   CED002
+      ** Program Error                                                    CED002
+      *                                                                   CED002
+     C           RTCD      IFNE *BLANKS                                   CED002
+     C                     MOVEL'ED0410'  #FILE            ************   CED002
+     C                     Z-ADD19        #BASE            * Error 19 *   CED002
+     C                     MOVEL*BLANKS   #KEY             ************   CED002
+     C                     EXSR DBERR                                     CED002
+     C                     ENDIF                                          CED002
+      *                                                                   CED002
+     C                     ENDIF                                          CED002
+      /SPACE
+      * Write the record
+     C                     WRITEGLHIBLD0
+      /SPACE
+      * If record found, update existing details
+     C                     ELSE                            --- X001
+      /SPACE
+      * If event date is before start of period date, then add movement
+      * amount to opening period balance
+     C           EVDT      IFLT HBSPDD                     --- B002
+     C                     ADD  CVAMT     HBPDOB
+     C                     ADD  CVAMT     WXPDOB
+     C                     END                             --- E002
+      /SPACE
+      * Add posting amount to closing balance
+     C                     ADD  CVAMT     HBPDCB
+     C                     ADD  CVAMT     WXPDCB
+      /SPACE
+      * If event date after last movement date, set last movement date
+      * to event date.
+     C           HIEVDT    IFGT HBLMDT                     --- B002
+     C                     Z-ADDHIEVDT    HBLMDT
+     C                     END                             --- E002
+      *                                                                   CED002
+      ** If Extract GLHIBLPD to ED module flag is on, call ED0410         CED002
+      ** to log changes.                                                  CED002
+      *                                                                   CED002
+     C           CED002    IFEQ 'Y'                                       CED002
+     C                     MOVELXGRPC     MNAME     P                     CED002
+     C                     MOVEASVHIBL    JRNENT    P                     CED002
+      *                                                                   CED002
+     C                     CALL 'ED0410'                                  CED002
+     C                     PARM '*UPDATE' MODE                            CED002
+     C                     PARM 'GLHIBLPD'FNAME                           CED002
+     C                     PARM           MNAME                           CED002
+     C                     PARM 'MC0235  'PNAME                           CED002
+     C                     PARM 'UP'      JRNA                            CED002
+     C                     PARM           JRNENT                          CED002
+     C                     PARM *BLANKS   RTCD                            CED002
+      *                                                                   CED002
+      ** Program Error                                                    CED002
+      *                                                                   CED002
+     C           RTCD      IFNE *BLANKS                                   CED002
+     C                     MOVEL'ED0410'  #FILE            ************   CED002
+     C                     Z-ADD20        #BASE            * Error 20 *   CED002
+     C                     MOVEL*BLANKS   #KEY             ************   CED002
+     C                     EXSR DBERR                                     CED002
+     C                     ENDIF                                          CED002
+      *                                                                   CED002
+     C                     ENDIF                                          CED002
+      /SPACE
+      * Update the record
+     C                     UPDAT@BORED6                    GLHIBLL0
+      /SPACE
+     C                     END                             --- E001
+      /SPACE
+      * Restore original GLHIBLL0 values
+     C           1         OCUR SVHIBL
+     C           KEY5      CHAIN@BORED6              42    GLHIBLL0
+      /SPACE
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PRTMOV - Print movement details                              *
+      *                                                               *
+      *****************************************************************
+     C           PRTMOV    BEGSR
+      /SPACE
+      * Movement date
+     C                     Z-ADDEVDT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    P1MDAT
+      /SPACE
+      * Expand account section literal
+     C                     Z-ADD1         @       30
+     C                     MOVEL*BLANKS   P1MTYP
+     C           GETP      LOKUPGE1,@                    50 =
+     C   50                MOVELGE2,@     P1MTYP
+     C  N50                MOVELGETP      P1MTYP
+     C*                                                                   S01408
+      ** Check if generic posting interface                                                   CGL047
+     C           *IN50     IFEQ *OFF                                                          CGL047
+     C           GETP      CHAINGLGPICL1             90                                       CGL047
+     C           *IN90     IFEQ *OFF                                                          CGL047
+     C           GETP      OREQ 'Z'                                                           CGL047
+     C           'INTER'   CAT  'FACE'    P1MTYP    P                                         CGL047
+     C                     MOVEL*ON       *IN50                                               CGL047
+     C                     ENDIF                                                              CGL047
+     C                     ENDIF                                                              CGL047
+     C           GETP      IFEQ '2'                                                           CGL030
+     C                     MOVEL'SUNDRY'  P1MTYP    P                                         CGL030
+     C                     MOVEL*ON       *IN50                                               CGL030
+     C                     END                                                                CGL030
+     C/COPY WNCPYSRC,MC0235CCP1                                           S01408
+     C*                                                                   S01408
+      /SPACE
+      * Movement amount
+     C                     Z-ADDMOVDP     #FMDP
+     C                     Z-ADDPAMT      ZFLD19
+     C                     EXSR #FMAT
+     C                     MOVE ZOUT27    P1MAMT
+      /SPACE
+      * Conversion rate (adjust for difference in decimal places)
+     C           CVAMT     IFNE 0                          --- B001
+     C           PAMT      DIV  CVAMT     P1MRAT
+     C                     ELSE                            --- X001
+     C                     Z-ADD0         P1MRAT
+     C                     END                             --- E001
+     C           4         ADD  GRPDP     @
+     C                     SUB  MOVDP     @
+     C                     MULT XDP,@     P1MRAT
+      /SPACE
+      * Converted amount
+     C                     Z-ADDGRPDP     #FMDP
+     C                     Z-ADDCVAMT     ZFLD19
+     C                     EXSR #FMAT
+     C                     MOVE ZOUT27    P1MCVA
+      /SPACE
+      * Days to end
+     C           @EPDD     SUB  EVDT      P1MDYS
+     C                     ADD  1         P1MDYS
+      /SPACE
+      * Weighted amount
+     C           CVAMT     MULT P1MDYS    ZFLD19
+     C                     EXSR #FMAT
+     C                     MOVE ZOUT27    P1MWGA
+      /SPACE
+      * Void indicator
+     C           VOIN      IFEQ 1                          --- B001
+     C                     MOVEL'Y'       P1MVOI
+     C                     ELSE                            --- X002
+     C                     MOVEL*BLANKS   P1MVOI
+     C                     END                             --- E001
+      /SPACE
+      * Check sufficient lines left, new page if required
+     C           @LINES    IFLT 1                          --- B001
+     C                     EXSR P1H1
+     C                     END                             --- E001
+      /SPACE
+     C                     WRITEMC0235D3               45
+     C                     SUB  1         @LINES
+      /SPACE
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  P1D1   - Print opening/closing balance details               *
+      *                                                               *
+      *****************************************************************
+     C           P1D1      BEGSR
+      /SPACE
+      * Format the amounts
+     C                     Z-ADDP#PDOB    ZFLD19
+     C                     EXSR #FMAT
+     C                     MOVE ZOUT27    P1PDOB
+     C                     Z-ADDP#PDCB    ZFLD19
+     C                     EXSR #FMAT
+     C                     MOVE ZOUT27    P1PDCB
+     C                     Z-ADDP#PMTD    ZFLD19
+     C                     EXSR #FMAT
+     C                     MOVE ZOUT27    P1PMTD
+     C                     Z-ADDP#T1MT    ZFLD19
+     C                     EXSR #FMAT
+     C                     MOVE ZOUT27    P1T1MT
+     C                     Z-ADDP#T2MT    ZFLD19
+     C                     EXSR #FMAT
+     C                     MOVE ZOUT27    P1T2MT
+     C                     Z-ADDP#YMTD    ZFLD19
+     C                     EXSR #FMAT
+     C                     MOVE ZOUT27    P1YMTD
+     C                     Z-ADDP#WPBL    ZFLD19
+     C                     EXSR #FMAT
+     C                     MOVE ZOUT27    P1WPBL
+     C                     Z-ADDP#WT1B    ZFLD19
+     C                     EXSR #FMAT
+     C                     MOVE ZOUT27    P1WT1B
+     C                     Z-ADDP#WT2B    ZFLD19
+     C                     EXSR #FMAT
+     C                     MOVE ZOUT27    P1WT2B
+     C                     Z-ADDP#WYBL    ZFLD19
+     C                     EXSR #FMAT
+     C                     MOVE ZOUT27    P1WYBL
+      /SPACE
+      * Check sufficient lines left, new page if required
+     C           @LINES    IFLT 4                          --- B001
+     C                     EXSR P1H1
+     C                     END                             --- E001
+      /SPACE
+     C                     WRITEMC0235D1               45
+     C                     SUB  4         @LINES
+      /SPACE
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  P1D2   - Print debit/credit details                          *
+      *                                                               *
+      *****************************************************************
+     C           P1D2      BEGSR
+      /SPACE
+      * Format the debit amounts
+     C                     Z-ADDP#PDMT    ZFLD19
+     C                     EXSR #FMAT
+     C                     MOVE ZOUT27    P1PDMT
+     C                     Z-ADDP#YDMT    ZFLD19
+     C                     EXSR #FMAT
+     C                     MOVE ZOUT27    P1YDMT
+     C                     Z-ADDP#T1DM    ZFLD19
+     C                     EXSR #FMAT
+     C                     MOVE ZOUT27    P1T1DM
+     C                     Z-ADDP#T2DM    ZFLD19
+     C                     EXSR #FMAT
+     C                     MOVE ZOUT27    P1T2DM
+     C                     Z-ADDP#WPDB    ZFLD19
+     C                     EXSR #FMAT
+     C                     MOVE ZOUT27    P1WPDB
+     C                     Z-ADDP#WYDB    ZFLD19
+     C                     EXSR #FMAT
+     C                     MOVE ZOUT27    P1WYDB
+     C                     Z-ADDP#W1DB    ZFLD19
+     C                     EXSR #FMAT
+     C                     MOVE ZOUT27    P1W1DB
+     C                     Z-ADDP#W2DB    ZFLD19
+     C                     EXSR #FMAT
+     C                     MOVE ZOUT27    P1W2DB
+     C                     Z-ADDP#PDDD    P1PDDD
+     C                     Z-ADDP#YDDD    P1YDDD
+     C                     Z-ADDP#T1DD    P1T1DD
+     C                     Z-ADDP#T2DD    P1T2DD
+      /SPACE
+      * Format the credit amounts
+     C                     Z-ADDP#PCMT    ZFLD19
+     C                     EXSR #FMAT
+     C                     MOVE ZOUT27    P1PCMT
+     C                     Z-ADDP#YCMT    ZFLD19
+     C                     EXSR #FMAT
+     C                     MOVE ZOUT27    P1YCMT
+     C                     Z-ADDP#T1CM    ZFLD19
+     C                     EXSR #FMAT
+     C                     MOVE ZOUT27    P1T1CM
+     C                     Z-ADDP#T2CM    ZFLD19
+     C                     EXSR #FMAT
+     C                     MOVE ZOUT27    P1T2CM
+     C                     Z-ADDP#WPCB    ZFLD19
+     C                     EXSR #FMAT
+     C                     MOVE ZOUT27    P1WPCB
+     C                     Z-ADDP#WYCB    ZFLD19
+     C                     EXSR #FMAT
+     C                     MOVE ZOUT27    P1WYCB
+     C                     Z-ADDP#W1CB    ZFLD19
+     C                     EXSR #FMAT
+     C                     MOVE ZOUT27    P1W1CB
+     C                     Z-ADDP#W2CB    ZFLD19
+     C                     EXSR #FMAT
+     C                     MOVE ZOUT27    P1W2CB
+     C                     Z-ADDP#PDDC    P1PDDC
+     C                     Z-ADDP#YDDC    P1YDDC
+     C                     Z-ADDP#T1DC    P1T1DC
+     C                     Z-ADDP#T2DC    P1T2DC
+      /SPACE
+      * Check sufficient lines left, new page if required
+     C           @LINES    IFLT 6                          --- B001
+     C                     EXSR P1H1
+     C                     END                             --- E001
+      /SPACE
+     C                     WRITEMC0235D2               45
+     C                     SUB  6         @LINES
+      /SPACE
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  P1H1   - Print top of page                                   *
+      *                                                               *
+      *****************************************************************
+     C           P1H1      BEGSR
+      /SPACE
+     C                     ADD  1         PAGENO                          099528
+     C                     WRITEMC0235H1               45
+     C                     Z-ADD45        @LINES  30       Lines left
+     C                     SETON                     60    'continued'
+      /SPACE
+      * Print movement headings if required
+     C           *IN46     IFEQ '1'                        --- B001
+     C                     WRITEMC0235H2               45
+     C                     SUB  4         @LINES
+     C                     END                             --- E001
+      /SPACE
+     C                     ENDSR
+      /EJECT
+      **************************************************************
+      *
+      * SR/#FMAT - Format a 19,0 numeric field adding trailing +/-,
+      *           decimal point, commas every three digits and no
+      *           leading zero (unless amount is zero). Outputs a
+      *           27A field. Was based on ZFRPED.
+      *           (copied from SR/#CA in MC0215)
+      *
+      * Input fields:    ZFLD19 19,0 field to be formatted
+      *                  #FMDP   decimal places
+      *
+      * Output fields    ZOUT27 27A  formatted field
+      *
+      **************************************************************
+     C           #FMAT     BEGSR
+      *
+      ** Define/Clear fields
+     C                     Z-ADDZFLD19    ZFLD19 190
+     C                     MOVE *BLANKS   ZOUT27 27
+      *
+      ** Set up work fields and arrays
+     C                     Z-ADD0         ZS1
+     C                     MOVE ' '       ZS2
+      ** Z1 is the index for the number to be formatted array
+     C                     Z-ADD19        Z1      20
+      ** Z2 is the index for the output array
+     C                     Z-ADD26        Z2      20
+      *
+      ** Check if numeric field is negative and set up - sign
+     C           ZFLD19    IFLT *ZEROS                     B1
+     C                     MOVE '-'       ZS2,27           *1
+     C                     Z-SUBZFLD19    ZFLD19           *1
+     C                     ELSE                            X1
+     C                     MOVE ' '       ZS2,27           *1
+     C                     END                             E1
+      *
+     C                     Z-ADDZFLD19    ZWRK19 190
+      *
+      ** Check for zero decimal places
+     C           #FMDP     CABEQ0         #CA1             CAB
+      *
+      ** Set up decimals
+     C                     Z-ADD*ZEROS    ZCNT    10
+     C           ZCNT      DOUEQ#FMDP                      B1
+      *
+      ** Move number into array until decimal places end, array ZS1
+      ** contains the number to be formatted, array ZS2 contains the
+      ** formatted number
+     C                     MOVE ZS1,Z1    ZS2,Z2           *1
+     C                     SUB  1         Z2               *1
+     C                     ADD  1         ZCNT             *1
+     C                     SUB  1         Z1               *1
+     C                     END                             E1
+      *
+      ** Put in decimal place
+     C                     MOVE '.'       ZS2,Z2
+     C                     SUB  1         Z2
+      *
+     C           #CA1      TAG                             ** #CA1 TAG **
+      *
+      ** Set up integers
+     C                     Z-ADD*ZEROS    CNT3    10
+     C           Z1        DOUEQ*ZEROS                     B1
+     C                     MOVE ZS1,Z1    ZS2,Z2           *1
+     C                     SUB  1         Z1               *1
+     C                     SUB  1         Z2               *1
+      *
+      ** Insert a ',' before each group of three digits - not if
+      ** beginning of array reached.
+     C           Z2        IFGT *ZEROS                     B*2
+     C                     ADD  1         CNT3             **2
+     C           CNT3      IFEQ 3                          B**3
+     C                     MOVE ','       ZS2,Z2           ***3
+     C                     SUB  1         Z2               ***3
+     C                     Z-ADD*ZEROS    CNT3             ***3
+     C                     END                             E**3
+     C                     END                             E*2
+      *
+     C                     END                             E1
+      *
+      ** Put in leading blanks
+     C                     Z-ADD1         Z2
+     C           ZS2,Z2    DOWEQ'0'                        B1
+     C           ZS2,Z2    OREQ ' '                        B1
+     C           ZS2,Z2    OREQ ','                        B1
+     C                     MOVE ' '       ZS2,Z2           *1
+     C                     ADD  1         Z2               *1
+     C           Z2        CABEQ27        #CA2             CAB
+     C                     END                             E1
+      *
+      ** If no integers put in leading zero
+     C           #CA2      TAG                             ** #CA2 TAG **
+      *
+     C           ZS2,Z2    IFEQ '.'                        B1
+     C           Z2        OREQ 27                         B1
+     C                     SUB  1         Z2               *1
+     C                     MOVE '0'       ZS2,Z2           *1
+     C                     END                             E1
+      *
+      ** Set up output field
+     C                     MOVEAZS2       ZOUT27
+      *
+     C           #CA9      ENDSR
+      **************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  DBERR  - Error handling                                      *
+      *                                                               *
+      *****************************************************************
+     C           DBERR     BEGSR
+      /SPACE
+     C           *LOCK     IN   LDA
+     C                     MOVEL#FILE     DBFILE
+     C                     Z-ADD#BASE     DBASE
+     C                     MOVEL#KEY      DBKEY
+     C                     MOVEL'MC0235'  DBPGM
+     C                     DUMP
+     C                     OUT  LDA
+      /SPACE
+      * Write error report
+     C                     OPEN MC0235AU
+     C                     Z-ADDPFNUMA    PSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM *BLANKS   PSEQ    5
+     C                     PARM *BLANKS   PPARM   3
+     C                     PARM           PFILEA
+     C                     PARM           PSNUM
+     C                     PARM           PSERR   1
+     C                     WRITEMC0235A1               45
+      /SPACE
+     C                     MOVEL'Y'       XRETC
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      /SPACE
+     C                     ENDSR
+      /SPACE 3
+     O@BNREDZ E                UNLCK
+      /SPACE 3
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  GE1 - Generated Entry Types                                           S01427
+ OEICDFRXAJUSMYGTHPQKBNVL                                           CMC001CRE004              CAP204
+**  GE2 - Generated entry Type literals
+BATCH INPUT
+STANDING ORDER   O
+CUST EXCHANGE    E
+I/E POSTING      I
+CAPITALISATION   C
+DEAL             D
+FORWARD REVAL.   F
+SPOT REVAL.      R
+TRANS. F/C I/E   X
+NUMBERED A/C     A
+HOLD MAIL        J
+CUST. LENDING    U
+SEC. TRADING     S
+AMOUNT ACCRUAL   M
+TRANS. B/C I/E   Y
+FUNDS TRANSFER   G
+FUTURE/OPTION    T
+CHIPS/MIDAS      H                                                        S01427
+FIXED A/C CHG    P
+STMT CHARGE      Q                                                        S01427
+PROFIT CENTRE    K                                                        S01427
+SAFE CUST FEES   B                                                        CMC001
+TELLER TRANS.    N                                                        CMC001
+SWEEP ACCTG.     V                                                        CRE004
+ACCT TRANSFER    L                                                                            CAP204
+**  XDP - Adjust rate to allow for difference in currency dp's
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN used by sr/ZDATE2
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR used by sr/ZDATE2
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES used by sr/ZDATE2
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

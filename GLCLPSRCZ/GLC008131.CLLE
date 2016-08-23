@@ -1,0 +1,321 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Stamp Tax A/C Keys - on DL/LE/RE Avg Bal')   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Leger                                       */
+/*                                                                   */
+/*       GLC008131 - Stamp Tax - Generates Tax Account Keys on RE    */
+/*                   Debit Interest, Retail Debit Avg Balance,       */
+/*                   Lending/Dealing Average Balance and Charges     */
+/*                   & Commissions                                   */
+/*                                                                   */
+/*                 Account Keys are generated in the files           */
+/*                 GLVCLSIN - Stamp Tax on Retail Debit Interest     */
+/*                 GLVCLSRE - Retail on Interest and Average         */
+/*                 GLVCLSDL - Dealing Average                        */
+/*                 GLVCLSLE - Lending Average                        */
+/*                 GLVCLSCC - Charges and Commissions                */
+/*                                                                   */
+/*                 AVERAGES (&UPDAV)                                 */
+/*                 -----------------                                 */
+/*                 If the Update Flag is 'Y' the records are         */
+/*                 copied to GLVCLSPD Mbrs STAMPRE, STAMPDL          */
+/*                 and STAMPLE. These are then used by GL008110      */
+/*                                                                   */
+/*                 RE DEBIT INTEREST (&UPDIN)                        */
+/*                 --------------------------                        */
+/*                 If the Update Flag is 'Y' the records are         */
+/*                 copied from GLVCLSIN to GLVCLSPD mbr STAMPRE.     */
+/*                 This is then used by GL008110.                    */
+/*                                                                   */
+/*                 RE DEBIT INTEREST (&UPDCC)                        */
+/*                 --------------------------                        */
+/*                 If the Update Flag is 'Y' the records are         */
+/*                 copied from GLVCLSCC to GLVCLSPD mbr STAMPRE.     */
+/*                 This is then used by GL008110.                    */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. AR824348           Date 02Sep11              */
+/*       Prev Amend No. AR820965           Date 26Aug11              */
+/*                      AR818409           Date 22Aug11              */
+/*                      CER049  *Create    Date 06Dec10              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       AR824348 - Naming convention errors                         */
+/*       AR820965 - Component GLC008131 00001 failed                 */
+/*       AR818409 - Component GLC008131 00001 is taking too long     */
+/*                  to run                                           */
+/*       CER049 - Stamp Tax                                          */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&UPDAV &UPDIN &UPDCC &CNAM &CSEQ)
+/**/
+/** UPDIN = Stamp Tax on Retail Debit Interest Update Flag. Postings will be generated */
+/**         if this field is Y */
+/** UPDAV = Stamp Tax on Averages Update Flag. Postings will be generated if this field is */
+/**         Y */
+/**/
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                           Misys International Banking Systems Ltd. 2010')
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
+             DCL        VAR(&UPDAV) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&UPDIN) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&UPDCC) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&SEQU) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&BUSY) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DILIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&PGMC) TYPE(*CHAR) LEN(10) +
+                          VALUE('GLC008131 ')
+/**/
+/** DB error defintion */
+/**/
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+/**/
+/** Declare parameters for access object AOSARDR0 */
+/**/
+             DCL        VAR(&CCB009) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&DSFDY) TYPE(*CHAR) LEN(60)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+/**/
+/** Global monitor message */
+/**/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+/**/
+/** Retrieve the system prefix xx                                              */
+/**/
+             CHGJOB     SWS(XXXXXX00)
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PRE)
+             CHGVAR     VAR(&DMLIB) VALUE(&PRE *TCAT 'DMLIB')
+             CHGVAR     VAR(&DPLIB) VALUE(&PRE *TCAT 'DPLIB')
+             CHGVAR     VAR(&DILIB) VALUE(&PRE *TCAT 'DILIB')
+             CHGVAR     VAR(&SEQU) VALUE(&CSEQ)
+/**/
+/** Check if CCB009 is active  */
+/**/
+             CALL       PGM(AOSARDR0) PARM(&RTCD '*VERIFY'   +
+                          'CCB009' &DSFDY)
+             IF         COND(&RTCD = '       ') THEN(CHGVAR +
+                          VAR(&CCB009) VALUE('Y'))
+/**/
+/** Check if restart*/
+/**/
+             CALL       CB0160 PARM(&CNAM &CSEQ &BUSY)
+/**/
+/** Clear files*/
+             CHGPF      FILE(GLVCLSPD) MAXMBRS(*NOMAX)
+/**/
+             CHKOBJ     OBJ(GLVCLSPD) OBJTYPE(*FILE) MBR(STAMPRE)
+             MONMSG     MSGID(CPF9815) EXEC(ADDPFM FILE(GLVCLSPD) +
+                          MBR(STAMPRE))
+/**/
+             CHKOBJ     OBJ(GLVCLSPD) OBJTYPE(*FILE) MBR(STAMPLE)
+             MONMSG     MSGID(CPF9815) EXEC(ADDPFM FILE(GLVCLSPD) +
+                          MBR(STAMPLE))
+/**/
+             CHKOBJ     OBJ(GLVCLSPD) OBJTYPE(*FILE) MBR(STAMPDL)
+             MONMSG     MSGID(CPF9815) EXEC(ADDPFM FILE(GLVCLSPD) +
+                          MBR(STAMPDL))
+/**/
+             CLRPFM     FILE(GLVCLSIN)
+             MONMSG     MSGID(CPF0000)
+/**/
+             CLRPFM     FILE(GLVCLSRE)
+             MONMSG     MSGID(CPF0000)
+/**/
+             CLRPFM     FILE(GLVCLSDL)
+             MONMSG     MSGID(CPF0000)
+/**/
+             CLRPFM     FILE(GLVCLSLE)
+             MONMSG     MSGID(CPF0000)
+/**/
+             CLRPFM     FILE(GLVCLSCC)
+             MONMSG     MSGID(CPF0000)
+/**/
+             CLRPFM     FILE(GLVCLSPD) MBR(STAMPRE)
+             MONMSG     MSGID(CPF0000)
+/**/
+             CLRPFM     FILE(GLVCLSPD) MBR(STAMPLE)
+             MONMSG     MSGID(CPF0000)
+/**/
+             CLRPFM     FILE(GLVCLSPD) MBR(STAMPDL)
+             MONMSG     MSGID(CPF0000)
+/**/
+/**********  CLRPFM     FILE(GL8131PD)                               */               /* AR824348 */
+             CLRPFM     FILE(GLSTRPPD)                                                /* AR824348 */
+             MONMSG     MSGID(CPF0000)
+/**/
+/**********  CLRPFM     FILE(GL8131CY)                               */               /* AR824348 */
+             CLRPFM     FILE(GLSTCYPD)                                                /* AR824348 */
+             MONMSG     MSGID(CPF0000)
+/**/
+/** No restart - save object */
+/**/
+/**********  IF         COND(&BUSY *EQ 'N') THEN(DO) */                               /* AR820965 */
+             IF         COND(&BUSY *NE 'Y') THEN(DO)                                  /* AR820965 */
+/**/
+             CHKOBJ     OBJ(&DILIB/SAVFGL8131) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+             CRTSAVF    FILE(&DILIB/SAVFGL8131) TEXT('Save of +
+                          Stamp Tax files before update')
+             ENDDO
+             CLRSAVF    FILE(&DILIB/SAVFGL8131)
+/**/
+/** Save data */
+/**/
+             SAVOBJ     OBJ(GLACNTQD DLDLDCQD CLONCLQD SDSTMDPD) +
+                        LIB(&DMLIB) DEV(*SAVF) SAVF(&DILIB/SAVFGL8131)
+/**/
+/** Set active flag */
+/**/
+             CHGVAR     VAR(&BUSY) VALUE('Y')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &BUSY)
+/**/
+             ENDDO
+             ELSE       CMD(DO)
+/**/
+/** Restore copy of SDSTM* Files */
+/**/
+             RSTOBJ     OBJ(GLACNTQD DLDLDCQD CLONCLQD SDSTMDPD) +
+                        SAVLIB(&DMLIB) DEV(*SAVF) SAVF(&DILIB/SAVFGL8131)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             DLYJOB     DLY(60)
+             ENDDO
+/**/
+/** Start journalling extension files PF/SDSTM* & GLVCLS*  to         */
+/** journal ICJRN.                                                    */
+/** If file is already journalled continue processing.                */
+/**/
+             STRJRNPF   FILE(*LIBL/GLACNTQD) JRN(*LIBL/ICJRN) +
+                          IMAGES(*BOTH) OMTJRNE(*OPNCLO)
+             MONMSG     MSGID(CPF7030)
+/**/
+             STRJRNPF   FILE(*LIBL/DLDLDCQD) JRN(*LIBL/ICJRN) +
+                          IMAGES(*BOTH) OMTJRNE(*OPNCLO)
+             MONMSG     MSGID(CPF7030)
+/**/
+             STRJRNPF   FILE(*LIBL/CLONCLQD) JRN(*LIBL/ICJRN) +
+                          IMAGES(*BOTH) OMTJRNE(*OPNCLO)
+             MONMSG     MSGID(CPF7030)
+/**/
+             STRJRNPF   FILE(*LIBL/SDSTMDPD) JRN(*LIBL/ICJRN) +
+                          IMAGES(*BOTH) OMTJRNE(*OPNCLO)
+             MONMSG     MSGID(CPF7030)
+/**/
+             STRJRNPF   FILE(*LIBL/GLVCLSPD) JRN(*LIBL/ICJRN) +
+                          IMAGES(*BOTH) OMTJRNE(*OPNCLO)
+             MONMSG     MSGID(CPF7030)
+/**/
+/** GL008131 - generate Stamp Tax A/C Keys on Average Balances and */
+/**            Dr RE Interest */
+/**/
+             CALL       PGM(GL008131)
+ 
+/** AVERAGES */
+/** If postings are not to be generated, do not copy postings for averages to */
+/** GLVCLSPD, else do */
+/**/
+             IF         COND(&UPDAV *EQ 'Y') THEN(DO)
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+/**/
+             CPYF       FROMFILE(GLVCLSRE) TOFILE(GLVCLSPD) +
+                          TOMBR(STAMPRE) MBROPT(*ADD) FMTOPT(*MAP +
+                          *DROP)
+             MONMSG     MSGID(CPF2817) EXEC(CHGJOB SWS(XXXXXX11))
+/**/
+             CPYF       FROMFILE(GLVCLSDL) TOFILE(GLVCLSPD) +
+                          TOMBR(STAMPDL) MBROPT(*ADD) FMTOPT(*MAP +
+                          *DROP)
+             MONMSG     MSGID(CPF2817) EXEC(CHGJOB SWS(XXXXXX11))
+/**/
+             CPYF       FROMFILE(GLVCLSLE) TOFILE(GLVCLSPD) +
+                          TOMBR(STAMPLE) MBROPT(*ADD) FMTOPT(*MAP +
+                          *DROP)
+             MONMSG     MSGID(CPF2817) EXEC(CHGJOB SWS(XXXXXX11))
+/**/
+             ENDDO
+             ENDDO
+/**/
+/** STAMP TAX ON RETAIL DEBIT INTEREST POSTINGS */
+/** If postings are not to be generated, do not copy postings for RE debit interest to */
+/** GLVCLSPD, else do */
+/**/
+             IF         COND(&UPDIN *EQ 'Y') THEN(DO)
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+/**/
+             CPYF       FROMFILE(GLVCLSIN) TOFILE(GLVCLSPD) +
+                          TOMBR(STAMPRE) MBROPT(*ADD) FMTOPT(*MAP +
+                          *DROP)
+             MONMSG     MSGID(CPF2817) EXEC(CHGJOB SWS(XXXXXX11))
+/**/
+             ENDDO
+             ENDDO
+/**/
+             IF         COND(&UPDCC *EQ 'Y') THEN(DO)
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+/**/
+             CPYF       FROMFILE(GLVCLSCC) TOFILE(GLVCLSPD) +
+                          TOMBR(STAMPRE) MBROPT(*ADD) FMTOPT(*MAP +
+                          *DROP)
+             MONMSG     MSGID(CPF2817) EXEC(CHGJOB SWS(XXXXXX11))
+/**/
+             ENDDO
+             ENDDO
+/**/
+/** DB error */
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+             SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ MRUNQ)
+             CHGVAR     VAR(&MEM) VALUE('GLC008131 - Job Terminated, +
+                        Database in Error')
+             SNDPGMMSG  MSG(&MEM) TOPGMQ(*EXT) TOMSGQ(MRUNQ MOPERQ)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+/**/
+/** Set OK flag */
+/**/
+             CHGVAR     VAR(&BUSY) VALUE('N')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &BUSY)
+/**/
+             GOTO       CMDLBL(END)
+/**/
+ ABNOR:
+/* */
+             CHGJOB     SWS(XXXXXX11)
+/**/
+ END:
+/**/
+/** If CCB009 (COB Journalling) off, end journalling                */
+/**/
+             IF         COND(&CCB009 *NE 'Y') THEN(DO)
+/**/
+             ENDJRNPF   FILE(GLACNTQD)
+             MONMSG     MSGID(CPF7032)
+/**/
+/**********  ENDJRNPF   FILE(DLDLCLQD)                               */                 /*AR818409*/
+             ENDJRNPF   FILE(DLDLDCQD)                                                  /*AR818409*/
+             MONMSG     MSGID(CPF7032)
+/**/
+             ENDJRNPF   FILE(CLONCLQD)
+             MONMSG     MSGID(CPF7032)
+/**/
+             ENDJRNPF   FILE(SDSTMDPD)
+             MONMSG     MSGID(CPF7032)
+/**/
+             ENDJRNPF   FILE(GLVCLSPD)
+             MONMSG     MSGID(CPF7032)
+ 
+             ENDDO
+/**/
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
+                          Banking Systems Ltd. 2010')
+             ENDPGM

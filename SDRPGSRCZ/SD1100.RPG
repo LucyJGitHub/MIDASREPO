@@ -1,0 +1,494 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Available customer numbers report')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module
+      *                                                               *
+      *  SD1100 - Available Customer Numbers Report                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. BG12497            Date 20Nov06               *
+      *  Prev Amend No. CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 104078             Date 05Jun96               *
+      *                 S01408             Date 18Apr96               *
+     F*                 E27499                DATE 08OCT91            *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  BG12497 - Conversion Of Customer Number to Alpha             *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+     F*   104078  -  Make the modulus 10 validation switchable on the *
+     F*              Bank ICD field.                                  *
+     F*   S01408  -  Addition of hook SD1100CCP2                      *
+     F*              Addition of hook SD1100CCP1                      *
+     F*              Addition of hook SD1100EEP2                      *
+     F*              Addition of hook SD1100EEP1                      *
+     F*   E27499  -  New report allowing the user to define the       *
+     F*              customer number range to be reported and         *
+     F*              giving a choice between 1) All available         *
+     F*              numbers in the range 2) Available numbers        *
+     F*              after the last used in the range.                *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*****************************************************************
+     FSDCUSTL1IF  E           K        DISK
+     FSD1100P1O   E             10     PRINTER      KINFDS SPOOL
+     F/EJECT
+      *
+     E                    LINE        5  6
+     E                    ZCA1        6  1
+     E                    ZCA2        6  1 0
+     E*                                                                   S01408
+     E/COPY WNCPYSRC,SD1100EEP1                                           S01408
+     E*                                                                   S01408
+     E                    ZCA3        8  1 0
+     E*                                                                   S01408
+     E/COPY WNCPYSRC,SD1100EEP2                                           S01408
+     E*                                                                   S01408
+     E                    SPLIT       3  6
+     E                    CPY@    1   1 80
+      *
+     I            DS
+     I                                        1   60ZCNUM
+     I                                        7   70ZCHK
+      *
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      ** Access bank details.
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** First DS for access programs, short data structure.
+      *
+     IDSFDY     E DSDSFDY
+      *                                                                                      BG12497
+      * System Value                                                                         BG12497
+     I            DS                                                                         BG12497
+     I I            'CustAlphaAllow      '    1  20 SVALK1                                   BG12497
+      *
+      ** Parameter list
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           RSEQ    5
+     C                     PARM           RPARM 100
+      *
+      ** Split RPARM into it's components
+      *
+     C                     MOVEARPARM     SPLIT
+     C                     MOVEASPLIT,1   RANGEB  6
+     C                     MOVEASPLIT,2   RANGEE  6
+     C                     MOVEASPLIT,3   OPTION  6
+      *
+      ** Setup copyright statement.
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+     C           OPTION    IFEQ '*NEXT'
+     C                     SETON                     40
+     C                     END
+      *
+      ** Ensure report spool file recorded by RCF.
+      *
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           RSEQ
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ** If error during ZSFILE processing, return to calling program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7LR
+     C                     RETRN
+     C                     END
+      *
+      ** Define LDA.
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Get bank title and rundate.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     WRITEHEADER
+     C                     WRITEERROR
+     C                     WRITEFINAL
+     C           *LOCK     IN   LDA                        ***************
+     C                     MOVEL'SDBANKPD'DBFILE           * DBERROR 01  *
+     C                     Z-ADD1         DBASE            ***************
+     C                     OUT  LDA
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+      ** Initialise counters.
+      *
+     C                     Z-ADD1         F       10
+     C                     Z-ADD1         RANGE   20
+     C                     Z-ADD0         COUNT   20
+      *                                                                                      BG12497
+      ** Check whether alpha customer numbers are in use.                                    BG12497
+      *                                                                                      BG12497
+     C                     CALL 'AOSVALR0'                                                   BG12497
+     C                     PARM *BLANKS   RTNCDE  7                                          BG12497
+     C                     PARM           SVALK1 20                                          BG12497
+     C                     PARM           SVAL1 200                                          BG12497
+     C                     PARM           SVALK2 20                                          BG12497
+     C                     PARM           SVAL2 200                                          BG12497
+     C                     PARM           SVALK3 20                                          BG12497
+     C                     PARM           SVAL3 200                                          BG12497
+     C                     PARM           SVALK4 20                                          BG12497
+     C                     PARM           SVAL4 200                                          BG12497
+     C                     PARM           SVALK5 20                                          BG12497
+     C                     PARM           SVAL5 200                                          BG12497
+     C                     PARM           SVALK6 20                                          BG12497
+     C                     PARM           SVAL6 200                                          BG12497
+     C                     PARM           SVALK7 20                                          BG12497
+     C                     PARM           SVAL7 200                                          BG12497
+     C                     PARM           SVALK8 20                                          BG12497
+     C                     PARM           SVAL8 200                                          BG12497
+     C                     PARM           SVALK9 20                                          BG12497
+     C                     PARM           SVAL9 200                                          BG12497
+     C                     PARM           SVALK0 20                                          BG12497
+     C                     PARM           SVAL10200                                          BG12497
+      *                                                                                      BG12497
+     C           RTNCDE    IFEQ *BLANKS                                                      BG12497
+     C                     MOVELSVAL1     ALPHYN  1                                          BG12497
+     C                     ELSE                                                              BG12497
+      *                                                                                      BG12497
+     C           *LOCK     IN   LDA                                                          BG12497
+     C                     MOVEL'SDSVALPD'DBFILE                                             BG12497
+     C                     MOVELSVALK1    DBKEY                                              BG12497
+     C                     Z-ADD2         DBASE                                              BG12497
+     C                     OUT  LDA                                                          BG12497
+     C                     MOVE *ON       *INU7                                              BG12497
+     C                     MOVE *ON       *INU8                                              BG12497
+     C                     RETRN                                                             BG12497
+      *                                                                                      BG12497
+     C                     ENDIF                                                             BG12497
+      *
+      ** Setup start and end values.
+      *
+     C           RANGEB    IFEQ '*FIRST'
+      *                                                                                      BG12497
+      *  If alpha customer numbers are in use, set value to 'AAAAAA'.                        BG12497
+      *                                                                                      BG12497
+     C           ALPHYN    IFEQ 'Y'                                                          BG12497
+      *                                                                                      BG12497
+     C                     MOVE 'AAAAAA'  RANGEB                                             BG12497
+      *                                                                                      BG12497
+      *  If alpha customer numbers are NOT in use, set value to '000000'.                    BG12497
+      *                                                                                      BG12497
+     C                     ELSE                                                              BG12497
+      *                                                                                      BG12497
+     C                     MOVE '000000'  RANGEB
+      *                                                                                      BG12497
+     C                     ENDIF                                                             BG12497
+      *                                                                                      BG12497
+     C                     END
+      *
+     C           RANGEE    IFEQ '*LAST'
+     C                     MOVE '999999'  RANGEE
+     C                     END
+      *
+     C                     MOVE RANGEB    BEGIN   6
+     C                     MOVE RANGEE    ENDNUM  6
+      *
+      ** Write header record.
+      *
+     C                     WRITEHEADER
+      *
+      ** If the next available customer number report has been
+      ** requested then set file to the end of the specified range.
+      *
+     C           OPTION    IFEQ '*NEXT'
+     C           ENDNUM    SETLLSDCUSTL1             50
+      *
+      ** Read the previous record and determine if it is within the
+      ** user specified range.
+      *
+     C                     READPSDCUSTL1                 52
+     C           BBCUST    IFGT BEGIN
+     C                     MOVE BBCUST    BEGIN
+     C                     END
+      *
+     C                     END
+      *
+     C           BEGIN     DOWLTENDNUM
+      *
+      ** Check to see if Modulus 10 validation is to be executed          104078
+     C           BJMODT    IFEQ 'Y'                                       104078
+     C                     EXSR MODCHK
+     C                     ENDIF                                          104078
+      *
+     C           *IN99     DOWEQ'1'
+      *                                                                                      BG12497
+      *  If alpha customer numbers are in use, call program SDNXTCUS to calculate            BG12497
+      *  next customer number.                                                               BG12497
+      *                                                                                      BG12497
+     C           ALPHYN    IFEQ 'Y'                                                          BG12497
+      *                                                                                      BG12497
+     C                     MOVE '      '  BEGIN2                                             BG12497
+     C                     CALL 'SDNXTCUS'                                                   BG12497
+     C                     PARM BEGIN     BEGIN2  6                                          BG12497
+     C                     PARM           ENDNUM                                             BG12497
+     C                     PARM           NXTONE  6                                          BG12497
+     C                     PARM *BLANKS   RTNCOD  7                                          BG12497
+      *                                                                                      BG12497
+      *  If start customer number was not valid, use the next higher valid                   BG12497
+      *  number, which will have been generated by SDNXTCUS.                                 BG12497
+      *                                                                                      BG12497
+     C           BEGIN2    IFEQ BEGIN                                                        BG12497
+      *                                                                                      BG12497
+     C                     MOVE NXTONE    BEGIN                                              BG12497
+      *                                                                                      BG12497
+     C                     ELSE                                                              BG12497
+      *                                                                                      BG12497
+     C                     MOVE BEGIN2    BEGIN                                              BG12497
+      *                                                                                      BG12497
+     C                     ENDIF                                                             BG12497
+      *                                                                                      BG12497
+     C           RTNCOD    IFEQ '*MAX   '                                                    BG12497
+      *                                                                                      BG12497
+     C                     MOVE '999999'  BEGIN                                              BG12497
+      *                                                                                      BG12497
+     C                     ENDIF                                                             BG12497
+      *                                                                                      BG12497
+      *  If alpha customer numbers are NOT in use, add 1 to customer numnber.                BG12497
+      *                                                                                      BG12497
+     C                     ELSE                                                              BG12497
+      *                                                                                      BG12497
+     C                     MOVE BEGIN     ZBEGIN  60
+     C                     ADD  1         ZBEGIN
+     C                     MOVE ZBEGIN    BEGIN
+      ** Check to see if Modulus 10 validation is to be executed          104078
+     C           BJMODT    IFEQ 'Y'                                       104078
+     C                     EXSR MODCHK
+     C                     ELSE                                           104078
+     C                     MOVE *OFF      *IN99                           104078
+     C                     ENDIF                                          104078
+      *                                                                                      BG12497
+     C                     ENDIF                                                             BG12497
+      *                                                                                      BG12497
+     C                     END
+      *
+      ** Position customer file at start value.
+      *
+     C           BEGIN     SETLLSDCUSTL1             53  54
+      *
+      ** Accept number if customer does not exist.
+      *
+     C           *IN54     IFEQ '0'
+     C                     MOVE BEGIN     LINE,F
+     C                     ADD  1         F       10
+     C                     SETON                     20
+     C                     END
+      *
+      ** Print line when full.
+      *
+     C           F         IFGT 5
+     C                     MOVE LINE,1    LINE01
+     C                     MOVE LINE,2    LINE02
+     C                     MOVE LINE,3    LINE03
+     C                     MOVE LINE,4    LINE04
+     C                     MOVE *BLANK    LINE05
+     C           LINE,5    IFLE ENDNUM
+     C                     MOVE LINE,5    LINE05
+     C                     END
+     C                     WRITEDETAIL
+     C                     SETON                     60
+     C                     ADD  1         COUNT
+     C           COUNT     IFEQ 50
+     C                     Z-ADD0         COUNT
+     C                     WRITEHEADER
+     C                     END
+     C                     Z-ADD1         F
+     C                     MOVEA*BLANKS   LINE
+     C                     END
+      *
+      *  If alpha customer numbers are in use, call program SDNXTCUS to calculate            BG12497
+      *  next customer number.                                                               BG12497
+      *                                                                                      BG12497
+     C           ALPHYN    IFEQ 'Y'                                                          BG12497
+      *                                                                                      BG12497
+     C                     MOVE '      '  BEGIN2                                             BG12497
+     C                     CALL 'SDNXTCUS'                                                   BG12497
+     C                     PARM BEGIN     BEGIN2                                             BG12497
+     C                     PARM           ENDNUM                                             BG12497
+     C                     PARM           NXTONE  6                                          BG12497
+     C                     PARM *BLANKS   RTNCOD  7                                          BG12497
+      *                                                                                      BG12497
+      *  If start customer number was not valid, use the next higher valid                   BG12497
+      *  number, which will have been generated by SDNXTCUS.                                 BG12497
+      *                                                                                      BG12497
+     C           BEGIN2    IFEQ BEGIN                                                        BG12497
+      *                                                                                      BG12497
+     C                     MOVE NXTONE    BEGIN                                              BG12497
+      *                                                                                      BG12497
+     C                     ELSE                                                              BG12497
+      *                                                                                      BG12497
+     C                     MOVE BEGIN2    BEGIN                                              BG12497
+      *                                                                                      BG12497
+     C                     ENDIF                                                             BG12497
+      *                                                                                      BG12497
+     C           RTNCOD    IFEQ '*MAX   '                                                    BG12497
+      *                                                                                      BG12497
+     C                     MOVE '999999'  BEGIN                                              BG12497
+      *                                                                                      BG12497
+     C                     ENDIF                                                             BG12497
+      *                                                                                      BG12497
+      *  If alpha customer numbers are NOT in use, add 1 to customer numnber.                BG12497
+      *                                                                                      BG12497
+     C                     ELSE                                                              BG12497
+      *                                                                                      BG12497
+     C                     MOVE BEGIN     ZBEGIN
+     C                     ADD  1         ZBEGIN
+     C                     MOVE ZBEGIN    BEGIN
+      *                                                                                      BG12497
+     C                     ENDIF                                                             BG12497
+      *                                                                                      BG12497
+     C           BEGIN     IFEQ '999999'
+     C                     SETON                     59
+     C                     END
+      *
+     C                     END
+      *
+      ** End of report processsing.
+      *
+     C                     EXSR ENDRPT
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  MODCHK SR. TO MOD.10 CHECK DIGIT VERIFY A SIX DIGIT NUMBER.  *
+      *                                                               *
+      *****************************************************************
+      *
+     C/COPY WNCPYSRC,SD1100C002
+     C           MODCHK    BEGSR
+      *
+     C           BEGIN     IFGT '999995'
+     C                     EXSR ENDRPT
+     C                     END
+      *
+      ** Move customer number to alpha field and array.
+      *
+     C                     MOVE BEGIN     ZCNUM
+     C                     MOVE ZCNUM     ZWRK6   6
+     C                     MOVEAZWRK6     ZCA1
+     C                     MOVE ZCA1      ZCA2
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SD1100CCP1                                           S01408
+     C*                                                                   S01408
+      *
+      ** Multiply first, third and fifth digits by 2.
+      *
+     C           ZCA2,1    MULT 2         ZDIG1   20
+     C           ZCA2,3    MULT 2         ZDIG3   20
+     C           ZCA2,5    MULT 2         ZDIG5   20
+      *
+      ** Move relevant digits into array for XFOOT to add elements.
+      *
+     C                     MOVELZDIG1     ZCA3,1
+     C                     MOVE ZDIG1     ZCA3,2
+     C                     MOVE ZCA2,2    ZCA3,3
+     C                     MOVELZDIG3     ZCA3,4
+     C                     MOVE ZDIG3     ZCA3,5
+     C                     MOVE ZCA2,4    ZCA3,6
+     C                     MOVELZDIG5     ZCA3,7
+     C                     MOVE ZDIG5     ZCA3,8
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SD1100CCP2                                           S01408
+     C*                                                                   S01408
+      *
+      ** Add elements and obtain check digit.
+      *
+     C                     XFOOTZCA3      ZCHK
+     C           10        SUB  ZCHK      ZCHK
+      *
+      ** Compare calculated check digit with input.
+      *
+     C           ZCHK      COMP ZCA2,6               9999
+      *
+     C/COPY WNCPYSRC,SD1100C001
+     C                     ENDSR
+     C/COPY WNCPYSRC,SD1100C003
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  ENDRPT SR. END OF REPORT PROCESSING.                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ENDRPT    BEGSR
+      *
+     C                     MOVE *BLANKS   LINE01
+     C                     MOVE *BLANKS   LINE02
+     C                     MOVE *BLANKS   LINE03
+     C                     MOVE *BLANKS   LINE04
+     C                     MOVE *BLANKS   LINE05
+      *
+      ** Check for any un-reported customer numbers.
+      *
+     C           F         IFGT 2
+     C                     MOVE LINE,1    LINE01
+     C                     SETON                     60
+     C                     END
+      *
+     C           F         IFGT 3
+     C                     MOVE LINE,2    LINE02
+     C                     END
+      *
+     C           F         IFGT 4
+     C                     MOVE LINE,3    LINE03
+     C                     END
+      *
+     C           F         IFGT 5
+     C                     MOVE LINE,4    LINE04
+     C                     END
+      *
+     C                     WRITEDETAIL
+      *
+     C                     WRITEFINAL
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      ********************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

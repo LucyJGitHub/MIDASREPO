@@ -1,0 +1,63 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas OF Accounting Rules DTAARA Drop')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC000601 - Midas OF Accounting Rules DTAARA Drop           */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. MD023886 *Create   Date 29Nov13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD023886 - Retention of files of posting amounts/accounting */
+/*                  events injected into Accounting Rule             */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&BATCHID)
+ 
+             DCL        VAR(&BATCHID) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2013')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                          VALUE(' ')
+             MONMSG     MSGID(CPF0000)
+             CHGJOB SWS(00000000)
+ 
+ 
+/* Delete Dataarea */
+ 
+             DLTDTAARA  DTAARA(&BATCHID)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal termination */
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC000601 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:         RCLRSC
+             MONMSG     MSGID(CPF0000 MCH0000)
+             RCLRSC     LVL(*CALLER)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             RCLACTGRP  ACTGRP(*ELIGIBLE)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             ENDPGM

@@ -1,0 +1,1074 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE CI accnt details/stopped chqs extracts')      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *  RE4460 - CI Account Details/Stopped Cheques Extract          *
+      *                                                               *
+      *  Function:  This program creates the Account Details Download *
+      *  (I/C Init) and Stopped Cheques Extract files to hold various *
+      *             account details and stopped cheques info for      *
+      *             download to the PC based Retail Banking Hall      *
+      *             product to enable it to run in an off-line mode,  *
+      *             if necessary.  These 2 files will be populated    *
+      *             and downloaded at I/C Initiation.                 *
+      *                                                               *
+      *  Called By: REC4460 - CI Accnt Details/Stopped Chqs Extract   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. AR1005262          Date 03Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. 237291             Date 08Dec05               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 184203             Date 07Feb01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CRT004             Date 04May00               *
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 164278             Date 19APR99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 118794             Date 05Jun97               *
+      *                 CCB002             Date 25JUL96               *
+      *                 CRT003  *CREATE    Date 22JUL96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  AR1005262 - Performance fix. Cache currency details          *
+      *  237291 - REC4460 failed in COB. Fix will ensure that custo-  *
+      *           mer details will not be accessed when the account's *
+      *           RECI is not equal to 'D'. Thus, preventing the      *
+      *           database error from happening. Apply 203703.        *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  184203 - Change Account download for Savings Accounts.       *
+      *  CRT004 - Cashier Midas TCP/IP interface.                     *
+      *             Recompiled over SDBRCHPD Changes                  *
+      *  CDL008 - Continuous Linked Settlement (recompile SDBRCHPD)   *
+      *  164278   The Held Items and Overdraft Line should be taken   *
+      *           into the calculation of Available Balance.          *
+      *           (AVBL=CLBLN+ODLN-HELD)                              *
+      *  118794 - Amend amounts to be left justified.                 *
+      *  CCB002 - COB Performance Enhancements.                       *
+      *           Access now via access object.                       *
+      *           MEMOS is now accessed via GL/RE key rather than old *
+      *           relative record number.                             *
+      *  CRT003 - Cashier Interface.                                  *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     FACCNTL1 IF  E           K        DISK
+      **  Retail Account Details
+      *
+     F***MEMOS***IF  E                    DISK                            CCB002
+      ****RE*Shadow*balances**                                            CCB002
+      *
+     FSTOPCL1 IF  E           K        DISK
+      **  RE Stopped Cheques
+      *
+     FSDBRCHPDUF  E           K        DISK         KINFSR *PSSR
+     F**  Midas SD Branch File
+     F*
+     FRECIADPDO   E                    DISK         KINFSR *PSSR
+      **  CI Account Details Download
+      *
+     FRECISCPDO   E                    DISK         KINFSR *PSSR
+      **  CI Stopped Cheques Extract
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *                  FUNCTION OF INDICATORS                       *
+      *                  ----------------------                       *
+      *                                                               *
+      *  11 - EOF                                                     *
+      *  12 - Available Balance is (+) or 0, debit                    *
+      *  13 - Available Balance is (-), credit                        *
+      *  14 - Test of bits of RETB, Retail Indicators                 *
+      *  15 - Test of bits of RETB, Retail Indicators                 *
+      *  16 - Chain fail                                              *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  *INZSR -  Initialisation.                                    *
+      *  *PSSR  -  Program Error.                                     *
+      *  DBERR  -  Database Error Handling.                           *
+      *  SREDIT -  Edit Signed Balance Value                          *
+      *  WRTACO -  Account Details Processing                         *
+      *  WRTSTP -  Stopped Cheques Processing                         *
+      *  ZDATE9 -  Convert dayno to date fmt YYYYMMDD                 *
+      *  ZEDIT  -  Insert dec. pt. and blank out leading zeroes       *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      /COPY ZSRSRC,ZDATE9Z1
+      ** Array for ZDATE9
+      *
+      /COPY ZSRSRC,ZEDITZ1
+      ** Array for SR.ZEDIT
+      *
+      ** Arrays to cache currency details                                                  AR1005262
+      *                                                                                    AR1005262
+     E                    CURR      250  3               Currency                          AR1005262
+     E                    #CDP      250  1 0             Decimal Places                    AR1005262
+      /EJECT
+      *
+     I***MEMOSMDF***                                                      CCB002
+      ***Renamed*field*of*MEMOS**                                         CCB002
+      **************                                                      CCB002
+     I**************RECI                            MERECI                CCB002
+      *
+     ISTOPCSDF
+      ** Renamed fields of STOPCL1
+      *
+     I              RECI                            CQRECI
+     I              CNUM                            CQCNUM
+     I              CCY                             CQCCY
+     I              ACOD                            CQACOD
+     I              ACSQ                            CQACSQ
+     I              ACNO                            CQACNO
+     I              BRCA                            CQBRCA
+     I              LCD                             CQLCD
+     I              CHTP                            CQCHTP
+     I              TNLU                            CQTNLU
+      *
+     ICITFTS    E DSCITFTS                        2
+      ** Data area for Unique Time Stamp
+      *
+     I                                        1   2 WNNSS
+      *
+     IDSMEMS    E DSMEMOS                                                 CCB002
+      ** External data structure for MEMOS Details                        CCB002
+      ** Renamed fields in PF/MEMOS                                       CCB002
+      *                                                                   CCB002
+     I              CNUM                            MECNUM                CCB002
+     I              CCY                             MECCY                 CCB002
+     I              ACOD                            MEACOD                CCB002
+     I              ACSQ                            MEACSQ                CCB002
+     I              ACNO                            MEACNO                CCB002
+     I              BRCA                            MEBRCA                CCB002
+      *                                                                   CCB002
+     IUMEMER      DS                                                      CCB002
+      ** Data structure for database error on call to AOMEMSR0/AOMEMSU0   CCB002
+      *                                                                   CCB002
+     I**********                              1   60U0CNUM                             CCB002 CSD027
+     I                                        1   6 U0CNUM                                    CSD027
+     I                                        7   9 U0CUCD                CCB002
+     I**********                             10  130U0ACCD                             CCB002 CGL029
+     I**********                             14  150U0ACSQ                             CCB002 CGL029
+     I**********                             16  18 U0BRCA                             CCB002 CGL029
+     I                                       10  190U0ACCD                                    CGL029
+     I                                       20  210U0ACSQ                                    CGL029
+     I                                       22  24 U0BRCA                                    CGL029
+      *                                                                   CCB002
+     I            DS
+      ** Data Structure for editted values
+      *
+     I                                        1  17 WC17
+     I                                        2  17 WC16
+     I                                        3  17 WC15
+     I                                        4  17 WC14
+     I                                        5  17 WC13
+     I                                        6  17 WC12
+     I                                        7  17 WC11
+     I                                        8  17 WC10
+     I                                        9  17 WC9
+     I                                       10  17 WC8
+     I                                       11  17 WC7
+     I                                       12  17 WC6
+     I                                       13  17 WC5
+     I                                       14  17 WC4
+     I                                       15  17 WC3
+     I                                       16  17 WC2
+     I                                       17  17 WC1
+      *
+     I            DS
+      ** Data Structure for External Account No. for RECIADPD
+      *
+     I                                        1  13 EXNO
+     I                                        1   3 BRCA
+     I                                        4  130ACNO
+      *
+     I            DS
+      ** Data Structure for External Account No. for RECISCPD
+      *
+     I                                        1  13 CQEXNO
+     I                                        1   3 CQBRCA
+     I                                        4  130CQACNO
+      *
+      /COPY ZSRSRC,ZDATE9Z2
+      ** Data structure for ZDATE9
+      *
+     ISDBANK    E DSSDBANKPD
+      **  SD Bank ICD
+      *
+     ISDCUST    E DSSDCUSTPD
+      ** Customer details
+     I              QQDFAC                          QQDFAX                                    CGL029
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Currency Details
+      *
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, Short data structure
+      *
+     IDSSDY     E DSDSSDY
+      ** DS for access programs, Long  data structure
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            MAIN   - Control Processing.                       *
+      *                                                               *
+      * CALLS      WRTACO - Account Details Processing                *
+      *            WRTSTP - Stopped Cheques Processing                *
+      *                                                               *
+      *****************************************************************
+      *
+     C                     MOVEACPY@      MKI@   80
+      *
+      ** Account Details Processing
+      *
+     C                     EXSR WRTACO
+      *
+      ** Stopped Cheques Processing
+      *
+     C                     EXSR WRTSTP
+      *
+      ** Update Branch Status
+      *
+     C                     EXSR BRCHST
+      *
+     C                     SETON                     LR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            WRTACO - Account Details Processing                *
+      *                                                               *
+      * CALLED BY  MAIN   - Control Processing                        *
+      *                                                               *
+      * CALLS      DBERR  - Database Error Handling                   *
+      *            SREDIT - Edit Signed Balance Value                 *
+      *            ZDATE9 - Cvt day no to date fmt YYYYMMDD           *
+      *                                                               *
+      *****************************************************************
+     C           WRTACO    BEGSR                           ** WRTACO **
+      *
+     C                     READ ACCNTL1                  11
+      *
+     C           *IN11     DOWEQ'0'
+      *
+     C           RECI      IFEQ 'D'                                                           237291
+     C                     MOVE CNUM      WCNUM   6
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM WCNUM     @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   LDA
+     C                     Z-ADD02        DBASE
+     C                     MOVEL'SDCUSTPD'DBFILE
+     C                     MOVE WCNUM     DBKEY
+     C                     EXSR DBERR
+     C                     END
+      *
+      ** Set the data to be written to RECIADPD
+      *
+     C                     MOVE BRCA      RUBRCA
+     C                     Z-ADDACNO      RUACNO
+     C                     MOVELEXNO      RUEXNO
+     C                     MOVE BBCNA1    RUCRNM
+     C                     MOVELANAM      RUANAM
+     C                     MOVE CCY       RUCCY
+      *                                                                   184203
+      ** Set the refer flag to prevent debit balance.                     184203
+     C           STYP      IFEQ 'S'                                       184203
+     C                     MOVEL'Y'       RURF10                          184203
+     C                     ELSE                                           184203
+     C                     MOVEL'N'       RURF10                          184203
+     C                     END                                            184203
+      *
+      ** Get the MEMOS record
+      *
+     C***********RRNM      CHAINMEMOS                16                   CCB002
+      *                                                                   CCB002
+      ** Chain access object AOMEMSR0                                     CCB002
+      *                                                                   CCB002
+     C                     CALL 'AOMEMSR0'                                CCB002
+     C                     PARM *BLANK    W0RTCD  7        I:Return code  CCB002
+     C                     PARM '*KEY   ' W0OPTN  7        O:Option       CCB002
+     C                     PARM 0         W0RETL 100       O:Retail A/C NoCCB002
+     C**********           PARM CNUM      W0CNUM  60       O:Customer No.              CCB002 CSD027
+     C                     PARM CNUM      W0CNUM  6        O:Customer No.                     CSD027
+     C                     PARM CCY       W0CCY   3        O:Currency     CCB002
+     C**********           PARM ACOD      W0ACCD  40       O:Account Code              CCB002 CGL029
+     C                     PARM ACOD      W0ACCD 100                                          CGL029
+     C                     PARM ACSQ      W0ACSQ  20       O:Account Seq. CCB002
+     C                     PARM BRCA      W0BRCA  3        O:Branch       CCB002
+     C           DSMEMS    PARM DSMEMS    DSFDY                           CCB002
+      *                                                                   CCB002
+     C************IN16     IFEQ '1'                                       CCB002
+     C           W0RTCD    IFNE *BLANK                                    CCB002
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   LDA
+     C                     Z-ADD03        DBASE
+     C***********          MOVEL'MEMOS'   DBFILE                          CCB002
+     C***********          Z-ADDRRNM      WRRNM   50                      CCB002
+     C***********          MOVE WRRNM     DBKEY                           CCB002
+     C                     MOVE 'AOMEMSR0'DBFILE                          CCB002
+     C**********           Z-ADDW0CNUM    U0CNUM                                       CCB002 CSD027
+     C                     MOVE W0CNUM    U0CNUM                                              CSD027
+     C                     MOVE W0CCY     U0CUCD                          CCB002
+     C                     Z-ADDW0ACCD    U0ACCD                          CCB002
+     C                     Z-ADDW0ACSQ    U0ACSQ                          CCB002
+     C                     MOVE W0BRCA    U0BRCA                          CCB002
+     C                     MOVELUMEMER    DBKEY                           CCB002
+     C                     EXSR DBERR
+     C                     END
+      *
+      ** Get the no of decimal places
+      *
+      ** Are the details for this CCY already stored in the arrays                         AR1005262
+      *                                                                                    AR1005262
+     C                     MOVELCCY       ##KC                                             AR1005262
+     C                     EXSR ##CHKC                                                     AR1005262
+     C           ##FIC     IFEQ 'Y'                                                        AR1005262
+      *                                                                                    AR1005262
+      ** Found in the arrays so use the details from there                                 AR1005262
+      *                                                                                    AR1005262
+     C                     EXSR ##SETC                                                     AR1005262
+     C                     ELSE                                                            AR1005262
+      *                                                                                    AR1005262
+      ** Not found in arrays so go to DB                                                   AR1005262
+      *                                                                                    AR1005262
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM CCY       @CCY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   LDA
+     C                     Z-ADD04        DBASE
+     C                     MOVEL'SDCURRL1'DBFILE
+     C                     MOVELCCY       DBKEY
+     C                     EXSR DBERR
+      *
+     C                     ELSE
+     C                     Z-ADDA6NBDP    WDEC    10
+      *                                                                                    AR1005262
+      ** Found on the DB and not in the array so add to the array                          AR1005262
+      *                                                                                    AR1005262
+     C                     EXSR ##ADDC                                                     AR1005262
+     C                     ENDIF                                                           AR1005262
+      *
+      ** Get available balance
+      *
+     C                     MOVE *BLANK    WSGN    1
+     C                     Z-ADDCLBLN     WSNUM  150 1213
+      *                                                                   164278
+      ** Apply Overdraft Line only if it has not expired.                 164278
+     C           ODED      IFGE BJRDNB                                    164278
+      *                                                                   164278
+      ** If overdraft limit is not zero                                   164278
+     C           ODLN      IFNE 0                                         164278
+      *                                                                   164278
+      ** If currency decimal place is 1                                   164278
+     C           WDEC      IFEQ 1                                         164278
+     C           ODLN      MULT 10        ODLN                            164278
+     C                     END                                            164278
+      *                                                                   164278
+      ** If currency decimal place is 2                                   164278
+     C           WDEC      IFEQ 2                                         164278
+     C           ODLN      MULT 100       ODLN                            164278
+     C                     END                                            164278
+      *                                                                   164278
+      ** If currency decimal place is 3                                   164278
+     C           WDEC      IFEQ 3                                         164278
+     C           ODLN      MULT 1000      ODLN                            164278
+     C                     END                                            164278
+      *                                                                   164278
+     C                     END                                            164278
+      *                                                                   164278
+     C                     SUB  ODLN      WSNUM                           164278
+     C                     END                                            164278
+     C                     ADD  HELD      WSNUM      1213                 164278
+     C                     MOVE 'Y'       WSIND   1
+      *
+     C                     EXSR SREDIT
+     C*********************MOVE WC17      RUAVBL                          118794
+     C                     MOVEL@WKAM     RUAVBL                          118794
+      *
+      ** Get Funds to be cleared
+      *
+     C                     MOVE *BLANK    WSGN
+     C           CLBLN     SUB  LDBLN     WSNUM      1213
+     C                     MOVE 'N'       WSIND
+      *
+     C                     EXSR SREDIT
+     C*********************MOVE WC17      RUFDCL                          118794
+     C                     MOVEL@WKAM     RUFDCL                          118794
+     C                     END
+      *
+      ** Set date/time stamp
+      *
+     C           *LOCK     IN   CITFTS
+     C                     Z-ADD0         WNSN    20
+     C                     MOVE WNNSS     WNSN
+     C                     ADD  1         WNSN
+      *
+     C                     MOVE *BLANKS   WNNSS
+     C                     MOVE WNSN      WNNSS
+     C                     OUT  CITFTS
+      *
+     C                     Z-ADDBJRDNB    @@DAYN  50
+     C                     EXSR ZDATE9
+     C           @@RTN     IFEQ '0'
+     C                     MOVE @@VDT     WCDAT   7
+     C                     END
+     C           @@YR      IFGE 2000
+     C                     MOVEL'1'       WCDAT
+     C                     ELSE
+     C                     MOVEL'0'       WCDAT
+     C                     END
+      *
+     C                     TIME           WTIME   60
+     C                     MOVE WTIME     WTIMEC  6
+      *
+     C           WCDAT     CAT  WTIMEC    WDT13  13
+     C           WDT13     CAT  WNNSS     RUDTTM
+      *
+      ** Set the referral indicators
+      *
+     C                     TESTB'0'       RETB           14
+     C                     TESTB'1'       RETB           15
+     C           *IN14     IFEQ '1'
+     C           *IN15     ANDEQ'1'
+     C                     MOVE 'Y'       RURFAL
+     C                     ELSE
+     C                     MOVE 'N'       RURFAL
+     C                     END
+      *
+     C           *IN15     IFEQ '1'
+     C                     MOVE 'Y'       RURFCR
+     C                     ELSE
+     C                     MOVE 'N'       RURFCR
+     C                     END
+      *
+     C           *IN14     IFEQ '1'
+     C                     MOVE 'Y'       RURFDR
+     C                     ELSE
+     C                     MOVE 'N'       RURFDR
+     C                     END
+      *
+     C                     TESTB'6'       RETB           15
+     C           *IN15     IFEQ '1'
+     C                     MOVE 'Y'       RUACDL
+     C                     ELSE
+     C                     MOVE 'N'       RUACDL
+     C                     END
+      *
+     C                     TESTB'2'       RETB           14
+     C                     TESTB'3'       RETB           15
+     C           *IN14     IFEQ '1'
+     C           *IN15     OREQ '1'
+     C                     MOVE 'Y'       RUACBL
+     C                     ELSE
+     C                     MOVE 'N'       RUACBL
+     C                     END
+      *
+     C                     TESTB'4'       RETB           15
+     C           *IN15     IFEQ '1'
+     C                     MOVE 'Y'       RUACDO
+     C                     ELSE
+     C                     MOVE 'N'       RUACDO
+     C                     END
+      *
+     C           RECI      IFEQ 'C'
+     C           ACST      OREQ 'C'
+     C                     MOVE 'Y'       RUACCL
+     C                     ELSE
+     C                     MOVE 'N'       RUACCL
+     C                     END
+      *                                                                   184203
+      ** Add in the Account type.                                         184203
+     C                     MOVELATYP      RUCTYP                          184203
+     C           STYP      IFNE *BLANKS                                   184203
+     C                     MOVE STYP      RUCTYP                          184203
+     C                     ELSE                                           184203
+     C                     MOVE 'C'       RUCTYP                          184203
+     C                     END                                            184203
+      *
+      ** Write the account details download
+      *
+     C                     WRITERECIADD0
+     C                     ENDIF                                                              237291
+      *
+     C                     READ ACCNTL1                  11
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                                                    AR1005262
+      *  ##CHKC  - Check the currency details                                              AR1005262
+      *                                                                                    AR1005262
+     C********************************************************************                 AR1005262
+     C           ##CHKC    BEGSR                                                           AR1005262
+      *                                                                                    AR1005262
+      ** Set off the currency found indicator                                              AR1005262
+      *                                                                                    AR1005262
+     C                     MOVEL*BLANK    ##FIC   1                                        AR1005262
+      *                                                                                    AR1005262
+      ** Save the state of indicator 87 so it can be reset at the end                      AR1005262
+      ** of the SR as it may be used elsewhere in the code                                 AR1005262
+      *                                                                                    AR1005262
+     C           *IN87     IFEQ *ON                                                        AR1005262
+     C                     MOVEL'Y'       #IN87   1                                        AR1005262
+     C                     ELSE                                                            AR1005262
+     C                     MOVEL'N'       #IN87                                            AR1005262
+     C                     ENDIF                                                           AR1005262
+      *                                                                                    AR1005262
+     C                     SETOF                         87                                AR1005262
+      *                                                                                    AR1005262
+      ** Restore Q from ##QSV in case Q is used elsewhere in the code                      AR1005262
+      *                                                                                    AR1005262
+     C                     Z-ADD##QSV     Q       40                                       AR1005262
+      *                                                                                    AR1005262
+      ** Are we looking for the same details as the last time this                         AR1005262
+      ** subroutine was called i.e. is Q already set correctly?                            AR1005262
+      ** If so then use the data rather than do another LOKUP                              AR1005262
+      ** First make sure that we don't reference the 0th array element                     AR1005262
+      *                                                                                    AR1005262
+     C           Q         IFEQ 0                                                          AR1005262
+     C                     Z-ADD1         Q                                                AR1005262
+     C                     ENDIF                                                           AR1005262
+      *                                                                                    AR1005262
+      ** Now see if this search is same as last one performed                              AR1005262
+      ** If we have a match then seton 87 so the code after this                           AR1005262
+      ** subroutine knows it can use Q directly                                            AR1005262
+      *                                                                                    AR1005262
+     C           ##KC      IFEQ CURR,Q                                                     AR1005262
+     C                     SETON                         87                                AR1005262
+     C                     ELSE                                                            AR1005262
+      *                                                                                    AR1005262
+      ** Otherwise hunt in the array and seton 87 if found                                 AR1005262
+      *                                                                                    AR1005262
+     C                     Z-ADD1         Q                                                AR1005262
+     C           ##KC      LOKUPCURR,Q                   87                                AR1005262
+     C                     ENDIF                                                           AR1005262
+      *                                                                                    AR1005262
+      ** Save Q for next time                                                              AR1005262
+      *                                                                                    AR1005262
+     C           *IN87     IFEQ *ON                                                        AR1005262
+     C                     Z-ADDQ         ##QSV                                            AR1005262
+      *                                                                                    AR1005262
+      ** Set the indicator to show the data was found                                      AR1005262
+      *                                                                                    AR1005262
+     C                     MOVEL'Y'       ##FIC                                            AR1005262
+     C                     ENDIF                                                           AR1005262
+      *                                                                                    AR1005262
+      ** Reset the state of indicator 87.                                                  AR1005262
+      *                                                                                    AR1005262
+     C           #IN87     IFEQ 'Y'                                                        AR1005262
+     C                     MOVEL*ON       *IN87                                            AR1005262
+     C                     ELSE                                                            AR1005262
+     C                     MOVEL*OFF      *IN87                                            AR1005262
+     C                     ENDIF                                                           AR1005262
+      *                                                                                    AR1005262
+     C                     ENDSR                                                           AR1005262
+      *                                                                                    AR1005262
+      ********************************************************************                 AR1005262
+      /EJECT                                                                               AR1005262
+      ********************************************************************                 AR1005262
+      *                                                                                    AR1005262
+      *  ##SETB  - Set up the SDCURRPD fields as expected by this program                  AR1005262
+      *            from the array fields                                                   AR1005262
+      *                                                                                    AR1005262
+      ********************************************************************                 AR1005262
+     C           ##SETC    BEGSR                                                           AR1005262
+      *                                                                                    AR1005262
+     C                     MOVELCURR,Q    A6CYCD                                           AR1005262
+     C                     Z-ADD#CDP,Q    A6NBDP                                           AR1005262
+      *                                                                                    AR1005262
+     C                     ENDSR                                                           AR1005262
+     C********************************************************************                 AR1005262
+      /EJECT                                                                               AR1005262
+      ********************************************************************                 AR1005262
+      *                                                                                    AR1005262
+      * ##ADDC - Adds the SDCURRPD fields used in the code to the                          AR1005262
+      * arrays                                                                             AR1005262
+      *                                                                                    AR1005262
+      ********************************************************************                 AR1005262
+     C           ##ADDC    BEGSR                                                           AR1005262
+      *                                                                                    AR1005262
+      ** If there is still room in the array then add the details                          AR1005262
+      *                                                                                    AR1005262
+     C           ##QNDX    IFLT 251                                                        AR1005262
+     C                     ADD  1         ##QNDX                                           AR1005262
+     C                     Z-ADD##QNDX    Q                                                AR1005262
+     C                     MOVELA6CYCD    CURR,Q                                           AR1005262
+     C                     Z-ADDA6NBDP    #CDP,Q                                           AR1005262
+     C                     ENDIF                                                           AR1005262
+      *                                                                                    AR1005262
+      ** Update ##QSV so next call to ##CHKC checks this latest adddition                  AR1005262
+      ** to the array firss                                                                AR1005262
+      *                                                                                    AR1005262
+     C                     Z-ADDQ         ##QSV                                            AR1005262
+     C                     Z-ADDA6NBDP    WDEC                                             AR1005262
+      *                                                                                    AR1005262
+     C                     ENDSR                                                           AR1005262
+      ********************************************************************                 AR1005262
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            WRTSTP - Stopped Cheques Processing                *
+      *                                                               *
+      * CALLED BY  MAIN   - Control Processing                        *
+      *                                                               *
+      * CALLS      DBERR  - Database Error Handling                   *
+      *            SREDIT - Edit Signed Balance Value                 *
+      *                                                               *
+      *****************************************************************
+     C           WRTSTP    BEGSR                           ** WRTSTP **
+      *
+     C                     READ STOPCL1                  11
+      *
+     C           *IN11     DOWEQ'0'
+      *
+     C           CQRECI    IFEQ 'D'
+     C                     MOVE CQBRCA    RTBRCA
+     C                     Z-ADDCQACNO    RTACNO
+     C                     MOVE *BLANKS   RTSTRF
+     C                     MOVE STCR      RTSTRF
+     C                     MOVE *BLANKS   RTFSSR
+     C                     MOVE FCHQ      RTFSSR
+     C                     MOVE *BLANKS   RTLSSR
+     C                     MOVE TCHQ      RTLSSR
+      *
+      ** Get the no of decimal places
+      *
+      ** Are the details for this CCY already stored in the arrays                         AR1005262
+      *                                                                                    AR1005262
+     C                     MOVELCQCCY     ##KC                                             AR1005262
+     C                     EXSR ##CHKC                                                     AR1005262
+     C           ##FIC     IFEQ 'Y'                                                        AR1005262
+      *                                                                                    AR1005262
+      ** Found in the arrays so use the details from there                                 AR1005262
+      *                                                                                    AR1005262
+     C                     EXSR ##SETC                                                     AR1005262
+     C                     ELSE                                                            AR1005262
+      *                                                                                    AR1005262
+      ** Not found in arrays so go to DB                                                   AR1005262
+      *                                                                                    AR1005262
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM CQCCY     @CCY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   LDA
+     C                     Z-ADD05        DBASE
+     C                     MOVEL'SDCURRL1'DBFILE
+     C                     MOVELCQCCY     DBKEY
+     C                     EXSR DBERR
+      *
+     C                     ELSE
+     C                     Z-ADDA6NBDP    WDEC
+      *                                                                                    AR1005262
+      ** Found on the DB and not in the array so add to the array                          AR1005262
+      *                                                                                    AR1005262
+     C                     EXSR ##ADDC                                                     AR1005262
+     C                     ENDIF                                                           AR1005262
+      *
+      ** Get stopped amount
+      *
+     C                     MOVE *BLANK    WSGN
+     C                     Z-ADDSTPA      WSNUM      1213
+     C                     MOVE 'N'       WSIND
+      *
+     C                     EXSR SREDIT
+     C*********************MOVE WC17      RTSTAM                          118794
+     C                     MOVEL@WKAM     RTSTAM                          118794
+     C                     END
+      *
+      ** Load External A/c No. for Stopped Cheques extract
+     C                     MOVELCQEXNO    RTEXNO
+      *
+      ** Write the stopped chq extract
+      *
+     C                     WRITERECISCD0
+     C                     END
+      *
+     C                     READ STOPCL1                  11
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            BRCHST - Branch Status Update.                     *
+      *                                                               *
+      * CALLED BY  MAIN   - Control Processing                        *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      *****************************************************************
+     C           BRCHST    BEGSR                           ** BRCHST **
+      *
+      **  Update branch status to 'D' ownload.
+      *
+     C                     READ SDBRCHD0                 70
+      *
+     C           *IN70     DOWEQ'0'
+      *
+     C           A8BRST    IFNE 'N'
+     C                     MOVE 'D'       A8BRST
+     C                     UPDATSDBRCHD0
+     C                     ENDIF
+      *
+     C                     READ SDBRCHD0                 70
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SREDIT - Edit Signed Balance Value                 *
+      *                                                               *
+      * CALLED BY  WRTACO - Account Details Processing                *
+      *            WRTSTP - Stopped Cheques Processing                *
+      *                                                               *
+      * CALLS      ZEDIT  - Ins dec pt and blank out leading zeroes   *
+      *                                                               *
+      *****************************************************************
+     C           SREDIT    BEGSR                           ** SREDIT **
+      *
+     C                     MOVEL*BLANKS   @WKAM  17                       118794
+      *                                                                   118794
+     C           *IN12     IFEQ '1'
+     C                     MOVE '+'       WSGN
+     C                     END
+      *
+     C           *IN13     IFEQ '1'
+     C                     MOVE '-'       WSGN
+     C                     Z-SUBWSNUM     WSNUM
+     C                     END
+      *
+     C                     MOVE *BLANKS   WC17
+      *
+      ** Put the decimal pt if any
+      *
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE WSNUM     ZFIELD
+     C                     Z-ADDWDEC      ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    WC16
+      *
+      ** Put the appropiate numeric value sign
+      *
+     C***********WSIND     IFEQ 'Y'                                       118794
+     C***********WSNUM     IFNE 0                                         118794
+     C                     Z-ADD0         WP      20
+     C           ' '       CHECKWC16:1    WP
+      *
+     C                     SELEC
+      *
+     C           WP        WHEQ 1
+     C           WSIND     IFEQ 'Y'                                       118794
+     C                     MOVELWSGN      WC17
+     C                     ENDIF                                          118794
+     C           WSNUM     IFEQ 0                                         118794
+     C                     MOVELWC16      @WKAM                           118794
+     C                     ELSE                                           118794
+     C                     MOVELWC17      @WKAM                           118794
+     C                     ENDIF                                          118794
+     C           WP        WHEQ 2
+     C           WSIND     IFEQ 'Y'                                       118794
+     C                     MOVELWSGN      WC16
+     C                     ENDIF                                          118794
+     C           WSNUM     IFEQ 0                                         118794
+     C                     MOVELWC15      @WKAM                           118794
+     C                     ELSE                                           118794
+     C                     MOVELWC16      @WKAM                           118794
+     C                     ENDIF                                          118794
+     C           WP        WHEQ 3
+     C           WSIND     IFEQ 'Y'                                       118794
+     C                     MOVELWSGN      WC15
+     C                     ENDIF                                          118794
+     C           WSNUM     IFEQ 0                                         118794
+     C                     MOVELWC14      @WKAM                           118794
+     C                     ELSE                                           118794
+     C                     MOVELWC15      @WKAM                           118794
+     C                     ENDIF                                          118794
+     C           WP        WHEQ 4
+     C           WSIND     IFEQ 'Y'                                       118794
+     C                     MOVELWSGN      WC14
+     C                     ENDIF                                          118794
+     C           WSNUM     IFEQ 0                                         118794
+     C                     MOVELWC13      @WKAM                           118794
+     C                     ELSE                                           118794
+     C                     MOVELWC14      @WKAM                           118794
+     C                     ENDIF                                          118794
+     C           WP        WHEQ 5
+     C           WSIND     IFEQ 'Y'                                       118794
+     C                     MOVELWSGN      WC13
+     C                     ENDIF                                          118794
+     C           WSNUM     IFEQ 0                                         118794
+     C                     MOVELWC12      @WKAM                           118794
+     C                     ELSE                                           118794
+     C                     MOVELWC13      @WKAM                           118794
+     C                     ENDIF                                          118794
+     C           WP        WHEQ 6
+     C           WSIND     IFEQ 'Y'                                       118794
+     C                     MOVELWSGN      WC12
+     C                     ENDIF                                          118794
+     C           WSNUM     IFEQ 0                                         118794
+     C                     MOVELWC11      @WKAM                           118794
+     C                     ELSE                                           118794
+     C                     MOVELWC12      @WKAM                           118794
+     C                     ENDIF                                          118794
+     C           WP        WHEQ 7
+     C           WSIND     IFEQ 'Y'                                       118794
+     C                     MOVELWSGN      WC11
+     C                     ENDIF                                          118794
+     C           WSNUM     IFEQ 0                                         118794
+     C                     MOVELWC10      @WKAM                           118794
+     C                     ELSE                                           118794
+     C                     MOVELWC11      @WKAM                           118794
+     C                     ENDIF                                          118794
+     C           WP        WHEQ 8
+     C           WSIND     IFEQ 'Y'                                       118794
+     C                     MOVELWSGN      WC10
+     C                     ENDIF                                          118794
+     C           WSNUM     IFEQ 0                                         118794
+     C                     MOVELWC9       @WKAM                           118794
+     C                     ELSE                                           118794
+     C                     MOVELWC10      @WKAM                           118794
+     C                     ENDIF                                          118794
+     C           WP        WHEQ 9
+     C           WSIND     IFEQ 'Y'                                       118794
+     C                     MOVELWSGN      WC9
+     C                     ENDIF                                          118794
+     C           WSNUM     IFEQ 0                                         118794
+     C                     MOVELWC8       @WKAM                           118794
+     C                     ELSE                                           118794
+     C                     MOVELWC9       @WKAM                           118794
+     C                     ENDIF                                          118794
+     C           WP        WHEQ 10
+     C           WSIND     IFEQ 'Y'                                       118794
+     C                     MOVELWSGN      WC8
+     C                     ENDIF                                          118794
+     C           WSNUM     IFEQ 0                                         118794
+     C                     MOVELWC7       @WKAM                           118794
+     C                     ELSE                                           118794
+     C                     MOVELWC8       @WKAM                           118794
+     C                     ENDIF                                          118794
+     C           WP        WHEQ 11
+     C           WSIND     IFEQ 'Y'                                       118794
+     C                     MOVELWSGN      WC7
+     C                     ENDIF                                          118794
+     C           WSNUM     IFEQ 0                                         118794
+     C                     MOVELWC6       @WKAM                           118794
+     C                     ELSE                                           118794
+     C                     MOVELWC7       @WKAM                           118794
+     C                     ENDIF                                          118794
+     C           WP        WHEQ 12
+     C           WSIND     IFEQ 'Y'                                       118794
+     C                     MOVELWSGN      WC6
+     C                     ENDIF                                          118794
+     C           WSNUM     IFEQ 0                                         118794
+     C                     MOVELWC5       @WKAM                           118794
+     C                     ELSE                                           118794
+     C                     MOVELWC6       @WKAM                           118794
+     C                     ENDIF                                          118794
+     C           WP        WHEQ 13
+     C           WSIND     IFEQ 'Y'                                       118794
+     C                     MOVELWSGN      WC5
+     C                     ENDIF                                          118794
+     C           WSNUM     IFEQ 0                                         118794
+     C                     MOVELWC4       @WKAM                           118794
+     C                     ELSE                                           118794
+     C                     MOVELWC5       @WKAM                           118794
+     C                     ENDIF                                          118794
+     C           WP        WHEQ 14
+     C           WSIND     IFEQ 'Y'                                       118794
+     C                     MOVELWSGN      WC4
+     C                     ENDIF                                          118794
+     C           WSNUM     IFEQ 0                                         118794
+     C                     MOVELWC3       @WKAM                           118794
+     C                     ELSE                                           118794
+     C                     MOVELWC4       @WKAM                           118794
+     C                     ENDIF                                          118794
+     C           WP        WHEQ 15
+     C           WSIND     IFEQ 'Y'                                       118794
+     C                     MOVELWSGN      WC3
+     C                     ENDIF                                          118794
+     C           WSNUM     IFEQ 0                                         118794
+     C                     MOVELWC2       @WKAM                           118794
+     C                     ELSE                                           118794
+     C                     MOVELWC3       @WKAM                           118794
+     C                     ENDIF                                          118794
+     C           WP        WHEQ 16
+     C           WSIND     IFEQ 'Y'                                       118794
+     C                     MOVELWSGN      WC2
+     C                     ENDIF                                          118794
+     C           WSNUM     IFEQ 0                                         118794
+     C                     MOVELWC1       @WKAM                           118794
+     C                     ELSE                                           118794
+     C                     MOVELWC2       @WKAM                           118794
+     C                     ENDIF                                          118794
+      *
+     C                     ENDSL
+     C***************      ENDIF                                          118794
+     C***************      ENDIF                                          118794
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZDATE9Z3
+      *
+      *****************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZEDITZ2
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *             DBERR - Database Error Handling.                  *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                   -                                           *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      *****************************************************************
+     C           DBERR     BEGSR                           ** DBERR  **
+      *
+     C                     MOVEL'RE4460'  DBPGM
+     C                     OUT  LDA
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR             - Program error                             *
+      *                                                               *
+      * CALLS      DBERR  -                                           *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR  **
+      *
+      **  Check to see that *PSSR has not been called yet
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            *INZSR - Initialisation Subroutine                 *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           *INZSR    BEGSR                           ** *INZSR **
+      *
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   LDA
+      *
+     C           *NAMVAR   DEFN           CITFTS
+     C                     IN   CITFTS
+      *
+     C                     MOVEL*BLANKS   DBFILE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     Z-ADD0         DBASE
+      *
+      ** Get the Bank ICD
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD01        DBASE
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+      ** Set up index used by ccy arrays                                                   AR1005262
+      *                                                                                    AR1005262
+     C                     Z-ADD0         ##QNDX                                           AR1005262
+      *                                                                                    AR1005262
+     C           *LIKE     DEFN BJCYCD    ##KC                                             AR1005262
+     C           *LIKE     DEFN Q         ##QSV                                            AR1005262
+     C           *LIKE     DEFN Q         ##QNDX                                           AR1005262
+      *                                                                                    AR1005262
+     C                     ENDSR
+      *****************************************************************
+**  CPY@  OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365

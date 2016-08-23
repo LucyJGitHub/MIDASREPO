@@ -1,0 +1,959 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Depot Movements Extract')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE0960 - DEPOT MOVEMENTS EXTRACT                             *
+     F*                                                               *
+     F*  Function: To extract details of Depot Positions, Depot       *
+     F*   (COB)    Movements and Settlements required for the         *
+     F*            Monthly Depot Movements Report.                    *
+     F*                                                               *
+     F*  Called by: SEC0907 - Monthly Depot Movements                 *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. BUG3122            Date 17Jul04               *
+      *                 222727             Date 05Nov03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSE015             Date 06Dec99               *
+      *                 CSE017             Date 20Oct99               *
+      *                 CSE012             Date 16Aug99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 077392             Date 30Apr96               *  *
+      *                 S01502             Date 08Jul94               *
+     F*                 S01445             DATE 04NOV93               *
+     F*                 052254             DATE 10JAN94               *
+     F*                 048406             DATE 22MAR93               *
+     F*                 E34092             DATE 08JAN92               *
+     F*                 E32674             DATE 03DEC91               *
+     F*                 E29170             DATE 31OCT91               *
+     F*                 S01117             DATE 14FEB91               *
+     F*                 S01271             DATE 19JUN90               *
+     F*                 E19503             DATE 30MAY89               *
+     F*                 E18009             DATE 27/04/89              *
+     F*                 E16181             DATE 24/02/89              *
+     F*                 E13650             DATE 06/09/88              *
+     F*                 E15032             DATE 06/09/88              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG3122 - Recompiled due to changes in SDSECSPD.             *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+      *  CSE015 - Forward Valued Depot Movements (Recompile)          *
+      *  CSE017 - Cum/Ex Indicator on Depot Movements (Recompile)     *
+      *  CSE012 - SE Depot Movement Narratives (Recompiled).          *
+     F*  077392 - B/F BALANCE MUST BE BASED ON SEDE AND NOT ON DDTE   *  *
+     F*  S01502 - BLI Telekurs Processing.  Recompiled due to change  *
+     F*           in length of SESTAT, 133 long.                      *
+     F*  S01445 - DEPOT MOVEMENT CHARGES ENHANCEMENT.                 *
+     F*           Recompiled due to changes in PF/DPTMVD.             *
+     F*  052254 - RECOMPILED AS CURRENT FACTOR AMENDED FROM 9,8       *
+     F*           TO 10,9                                             *
+     F*  048406 - Bank title does not appear in SE0960AU. Field name  *
+     F*           TITL is not used in the program since SDBANKPD is   *
+     F*           now being used instead of TABTB10. Fix will rename  *
+     F*           field BJURPT to TITL.                               *
+     F*  E34092 - File Control for PF/SETLEA is a count of Live recs, *
+     F*           but LF/SETLEJF selects only Historic records. So,   *
+     F*           PF/SETLEA processing has been removed from program, *
+     F*           and the File count removed from the Audit Report.   *
+     F*           Also removed *DIFFERENCE*, (was never used anyway). *
+     F*  E32674 - Recompiled due to error in DPTMVD                   *
+     F*  E29170 - Report Control Facility changes                     *
+     F*  S01117 - Multibranching                                      *
+     F*  S01271 - Recompiled for Pay/Receive in Input Cycle changes   *
+     F*            to TRADSD and/or DPTMVD                            *
+     F*  E19503 - Program erroneously disregarded DPOSH records with  *   E19503
+     F*           DDTE equal to last working day of previous month.   *   E19503
+     F*  E18009 - Recompile over corredt SESTAT, 128 long.            *   E18009
+     F*  E16181 - Fix for Movements Input and Deleted on the same day.*   E16181
+     F*  E13650 - Ignore Customer depot movements                     *   E13650
+     F*  E15032 - Portfolio Customer Side of trade settlement not     *   E15032
+     F*           included in report.                                 *   E15032
+     F*                                                               *
+     F*****************************************************************
+      *
+     FDPOSH   IF  E           K        DISK
+     F***CLINT***IF  E           K        DISK                            S01117
+     F*********** CLINTCBF                          KIGNORE               S01117
+     F*           CLINTSEF                          KIGNORE
+     F*********** CLINTC1F                          KIGNORE               S01117
+     F*********** CLINTCCF                          KIGNORE               S01117
+     F*********** CLINTCAF                          KIGNORE               S01117
+     F***TABICD**IF  E           K        DISK                            S01117
+     F*********** TABLETAF                          KIGNORE               S01117
+     F*           TABTB10F                          KIGNORE
+     F*           TABTB11F                          KIGNORE
+     F*********** TABTB35F                          KIGNORE               S01117
+     F*********** TABTB36F                          KIGNORE               S01117
+     F*********** TABTB20F                          KIGNORE               S01117
+     F*********** TABTB30F                          KIGNORE               S01117
+     F*********** TABTB40F                          KIGNORE               S01117
+     F*********** TABTB50F                          KIGNORE               S01117
+     F*********** TABTB55F                          KIGNORE               S01117
+     F**********  TABTB70F                          KIGNORE
+     F*********** TABTE10F                          KIGNORE               S01117
+     F*********** TABTE20F                          KIGNORE               S01117
+     F*********** TABTG10F                          KIGNORE               S01117
+     F*********** TABTG20F                          KIGNORE               S01117
+     F*********** TABLETHF                          KIGNORE               S01117
+     F*********** TABLETRF                          KIGNORE               S01117
+     F*********** TABLETXF                          KIGNORE               S01117
+     F*********** TABLET5F                          KIGNORE               S01117
+     FDPOSNA  IF  E                    DISK
+     FSETLEJF IF  E           K        DISK
+     F***SETLEA**IF**E***                 DISK                            E34092
+     FDPTMV   IF  E           K        DISK
+     FDPTMVA  IF  E                    DISK
+     FMDMEXD  O   E                    DISK         KINFDS IDDDS
+     F                                              KINFSR IDDSR
+     FMDMEXA  O   E                    DISK         KINFDS IDADS
+     F                                              KINFSR IDASR
+     FSE0960AUO   E                    PRINTER
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   10  - Error on Chain.                                       *
+     F*   57  - DIFFERENCE MSG REQUIRED - DPOSNA                      *
+     F****58**-*DIFFERENCE*MSG*REQUIRED*-*SETLEA***********************   E34092
+     F*   59  - DIFFERENCE MSG REQUIRED - DPTMVA                      *
+     F*   80  - END OF FILE ON DPOSH                                  *
+     F*   81  - END OF FILE ON SETLEJF                                *
+     F*   82  - END OF FILE ON DPTMV                                  *
+     F*   84  - CONTROLS SELECTING OF RECORDS FROM DPOSH              *
+     F*                                                               *
+     F* 90-99 - Used in Standard Subroutines.                         *
+     F*                                                               *
+     F*   U7  - Database Error.                                       *
+     F*   U8  - Database / Control Error                              *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  FIRST  - FIRST TIME PROCESSING                               *
+     F*  W01    - WRITE EXTRACT RECORD - POSITION                     *
+     F*  W02    - WRITE EXTRACT RECORD - SETTLEMENT IN                *
+     F*  W03    - WRITE EXTRACT RECORD - SETTLEMENT OUT               *
+     F*  W04    - WRITE EXTRACT RECORD - MOVEMENT IN                  *
+     F*  W05    - WRITE EXTRACT RECORD - MOVEMENT OUT                 *
+     F*  W07    - WRITE EXTRACT RECORD - MOVEMENT OUT (BB/BL)         *
+     F*  W08    - WRITE EXTRACT RECORD - MOVEMENT IN  (BB/BL)         *
+     F*  AUDIT  - AUDIT TIME PROCESSING                               *
+     F*  *PSSR  - DUMP program on error                               *   S01117
+     F*                                                               *
+     F*  IDDSR  - HANDLE ERRORS IN MDMEXD                             *
+     F*  IDASR  - HANDLE ERRORS IN MDMEXA                             *
+     F*                                                               *
+     F***ZSYSTM*-*ACCESS*ICD*RECORD************************************  S01117
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      /SPACE 3
+     I*
+     I* RENAME USED FIELD ON DPOSNA  ETC - UNLIKE THAT ON MDMEXA
+     IDPOSNAF
+     I              NORE                            ZIN80
+     I***SETLEAF***                                                       E34092
+     I***********   NORE                            ZIN81                 E34092
+     IDPTMVAF
+     I              NORE                            ZIN82
+     I*
+     IIDDDS       DS                            366
+     I                                     *STATUS  STSIDD
+     IIDADS       DS                            366
+     I                                     *STATUS  STSIDA
+     I*
+     ISESTAT    E DS
+      *
+      *****Local*Data*Area*for*DB*Error*Information***********************S01117
+     I***LDA*****   UDS                            256                    S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+      *                                                                   S01117
+     ILDA         DS                            256                       S01117
+      *                                                                   S01117
+      ** Local data area for database error details                       S01117
+      ** *LOCK IN LDA immediately before and OUT LDA immediately          S01117
+      ** after each database error handling.                              S01117
+      *                                                                   S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+      *                                                                   S01117
+     I            DS
+     I                                        1  25 MKEY
+     I***********                             1   30DMBH                  S01117
+     I                                        1   3 DMBA                  S01117
+     I**********                              4   90DMDE                                      CSD027
+     I                                        4   9 DMDE                                      CSD027
+     I                                       10  19 DMSE
+     I                                       20  20 DMRC
+     I                                       21  250DMDT
+      *                                                                   S01117
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     IRUNDT       DS                                                      S01117
+      *                                                                   S01117
+      ** RUNDAT data area                                                 S01117
+      *                                                                   S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+      *                                                                   S01117
+     ISDBANK    E DSSDBANKPD                                              S01117
+     I              BJURPT                          TITL                  048406
+      *                                                                   S01117
+      ** Bank Details                                                     S01117
+      *                                                                   S01117
+     ISDSECS    E DSSDSECSPD                                              S01117
+      *                                                                   S01117
+      ** Securities Customers                                             S01117
+      *                                                                   S01117
+     IDSFDY     E DSDSFDY                                                 S01117
+      *                                                                   S01117
+      ** Short data structure for access programs (200 long)              S01117
+      *                                                                   S01117
+     IDSSDY     E DSDSSDY                                                 S01117
+      *                                                                   S01117
+      ** Long data structure for access programs (800 long)               S01117
+      *                                                                   S01117
+     C/EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ***  Set up Program Info
+      *
+      ** Prepare LDA                                                      S01117
+      *                                                                   S01117
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBLOT                           S01117
+     C                     MOVE 'SE0960  'DBPGM
+     C                     OUT  LDA                                       S01117
+      *
+      ***  Define fields
+     C************LIKE     DEFN DSBR      LTBR                            S01117
+     C           *LIKE     DEFN DSBA      LTBA                            S01117
+     C           *LIKE     DEFN DSSC      LTSC
+     C           *LIKE     DEFN DDPT      LTPT
+     C           *LIKE     DEFN DDTE      LTTE
+     C           *LIKE     DEFN DSNS      LTNS
+      *
+      ***  Access ICD Information
+     C                     EXSR FIRST
+     C***********                                                         S01117
+     C**CHECK*FOR*DATABASE*ERRORS*                                        S01117
+     C***********                                                         S01117
+     C************IN99     CABEQ'1'       EAUDIT                          S01117
+     C*
+     C** SET DEFAULT VALUES FOR DATE AND AMOUNT IF NO DPOSH RECORD
+     C                     Z-ADDWKEM      LTTE
+     C                     Z-ADD0         LTNS
+     C*
+     C** READ EACH POSITION RECORD VIA DPOSH
+     C*
+     C                     READ DPOSH                    80
+     C           *IN80     IFEQ '0'
+     C***********          MOVE DSBR      LTBR                            S01117
+     C                     MOVE DSBA      LTBA                            S01117
+     C                     MOVE DSSC      LTSC
+     C                     MOVE DDPT      LTPT
+     C                     END
+     C*
+     C           *IN80     DOWNE'1'
+     C*
+     C** Maintain count of records input
+     C                     ADD  1         ZCT80
+     C*
+     C** Check whether record is to be extracted -
+     C*
+     C** NEW BRANCH/SECURITY/DEPOT - OUTPUT RECORD FOR LAST
+     C***********DSBR      IFNE LTBR                                      S01117
+     C           DSBA      IFNE LTBA                                      S01117
+     C           DSSC      ORNE LTSC
+     C           DDPT      ORNE LTPT
+     C                     EXSR W01
+     C***********          SETOF                     84                   077392
+     C                     SETOF                     8483                 077392
+     C                     END
+     C*
+     C** STORE DETAILS FOR RECORD IF DATE EARLIER THAN PREV EOM
+     C                     SETON                     84
+     C***********DDTE      IFLT WKEM                                      E19503
+     C           DDTE      IFLE WKEM                                      E19503
+     C           *IN83     ANDEQ'0'                                       077392
+     C                     MOVE DDTE      LTTE
+     C                     MOVE DSNS      LTNS
+     C                     MOVE '1'       *IN83                           077392
+     C                     END
+     C*
+     C***********          MOVE DSBR      LTBR                            S01117
+     C                     MOVE DSBA      LTBA                            S01117
+     C                     MOVE DSSC      LTSC
+     C                     MOVE DDPT      LTPT
+     C*
+     C** Read next record
+     C                     READ DPOSH                    80
+     C                     END
+     C*
+     C** OUTPUT RECORD FOR LAST DPOSH SET IF FOUND
+     C           *IN84     IFEQ '1'
+     C                     EXSR W01
+     C                     END
+     C*
+     C** READ EACH SETTLEMENT RECORD VIA SETLEJF
+     C*
+     C                     READ SETLEJF                  81
+     C           *IN81     DOWNE'1'
+     C*
+     C** Maintain count of records input
+     C                     ADD  1         ZCT81
+     C*
+     C** Check whether record is to be extracted -
+     C           SEDE      IFGT WKEM
+     C*                                                                   E15032
+     C*  Produce extract records for portfolio customer's part of trade   E15032
+     C                     MOVE 'N'       WPORTF  1                       E15032
+     C***********          MOVE SCPN      CNUM                      E15032S01117
+     C***********CNUM      CHAINCLINTSEF             10             E15032S01117
+     C************IN10     IFEQ '0'                                 E15032S01117
+     C***********C1DI      IFEQ 'S'                                 E15032S01117
+     C***********C1DI      OREQ 'D'                                 E15032S01117
+      *                                                                   S01117
+      ** Access securities clients details                                S01117
+      *                                                                   S01117
+     C                     CALL 'AOSECSR0'                                S01117
+     C                     PARM *BLANKS   @RTCD   7                       S01117
+     C                     PARM '*KEY   ' @OPTN   7                       S01117
+     C                     PARM SCPN      @AENB   6                       S01117
+     C           SDSECS    PARM SDSECS    DSSDY                           S01117
+      *                                                                   S01117
+     C           @RTCD     IFEQ *BLANKS                                   S01117
+     C           BFCLAS    IFEQ 'S'                                       S01117
+     C           BFCLAS    OREQ 'D'                                       S01117
+     C                     MOVE 'Y'       WPORTF                          E15032
+     C                     END                                            E15032
+     C                     END                                            E15032
+     C*                                                                   E15032
+     C           STET      IFEQ 'TP'                                      E15032
+     C********** DELF      ANDNE*ZEROS                                                 E15032 CSD027
+     C           DELF      ANDNE*BLANKS                                                       CSD027
+     C           WPORTF    ANDEQ'Y'                                       E15032
+     C** Record is to be extracted                                        E15032
+     C                     EXSR W03                                       E15032
+     C                     END                                            E15032
+     C*                                                                   E15032
+     C           STET      IFEQ 'TS'                                      E15032
+     C********** DELT      ANDNE*ZEROS                                                 E15032 CSD027
+     C           DELT      ANDNE*BLANKS                                                       CSD027
+     C           WPORTF    ANDEQ'Y'                                       E15032
+     C** Record is to be extracted                                        E15032
+     C                     EXSR W02                                       E15032
+     C                     END                                            E15032
+     C*                                                                   E15032
+     C*
+     C           STET      IFEQ 'TP'
+     C********** DELT      ANDNE*ZEROS                                                        CSD027
+     C           DELT      ANDNE*BLANKS                                                       CSD027
+     C** Record is to be extracted
+     C                     EXSR W02
+     C                     END
+     C*
+     C           STET      IFEQ 'TS'
+     C********** DELF      ANDNE*ZEROS                                                        CSD027
+     C           DELF      ANDNE*BLANKS                                                       CSD027
+     C** Record is to be extracted
+     C                     EXSR W03
+     C                     END
+     C*
+     C                     END
+     C*
+     C** Read next record
+     C                     READ SETLEJF                  81
+     C                     END
+     C*
+     C** READ EACH MOVEMENT RECORD VIA DPTMV
+     C*
+     C                     READ DPTMV                    82
+     C           *IN82     DOWNE'1'
+     C*
+     C** Maintain count of records input
+AW   C           RECI      IFNE '*'
+     C                     ADD  1         ZCT82
+AW   C                     END
+     C*                                                                   E16181
+     C** Ignore if Input and Deleted on the same day.                     E16181
+     C*                                                                   E16181
+     C           ORED      IFEQ LCD                                       E16181
+     C           CHTP      ANDEQ'D'                                       E16181
+     C                     GOTO IGNDEP                                    E16181
+     C                     END                                            E16181
+     C*
+     C** Check whether record is to be extracted -
+     C** NB DPMD IS IN DATE , DPDO IS OUT DATE
+     C*
+     C           DPMV      IFEQ 'WI'
+     C           DPMV      OREQ 'DT'
+     C           DPMV      OREQ 'BL'
+     C           DPMV      OREQ 'BB'
+     C           DPMD      IFGT WKEM
+     C           DPMD      ANDLERUND
+     C** Record is to be extracted
+     C                     EXSR W04
+     C                     END
+     C                     END
+     C*
+     C           DPMV      IFEQ 'WO'
+     C*********  DPMV      OREQ 'BL'
+     C*********  DPMV      OREQ 'BB'
+     C           DPDO      IFGT WKEM
+     C           DPDO      ANDLERUND
+     C** Record is to be extracted
+     C                     EXSR W05
+     C                     END
+     C                     END
+     C*
+     C***IF*BB/BL*RECORD*-*ACCESS*CLINTSE*RECORD*********************     E13650
+     C***********DPMV      IFEQ 'BB'                                      E13650
+     C***********DPMV      OREQ 'BL'                                      E13650
+     C***********DPBN      CHAINCLINTSEF             10                   E13650
+     C************IN10     IFEQ '1'                                       E13650
+     C***********RECI      OREQ '*'                                       E13650
+     C***********          MOVE '1'       *INU7                           E13650
+     C***********          MOVE '1'       *INU8                           E13650
+     C***********          MOVE 'CLINT'   DBFILE           ***************E13650
+     C***********          MOVELDPBN      DBKEY            ** DB ERROR 07 E13650
+     C***********          Z-ADD7         DBASE            ***************E13650
+     C***********          GOTO EAUDIT                                    E13650
+     C***********          END                                            E13650
+      ***********                                                         E13650
+     C***********C1DI      IFEQ 'S'                                       E13650
+     C***********C1DI      OREQ 'D'                                       E13650
+      ***********                                                         E13650
+     C***********DPDO      IFGT WKEM                                      E13650
+     C***********DPDO      ANDLERUND                                      E13650
+     C***Record*is*to*be*extracted*************************************   E13650
+     C***********          EXSR W05                                       E13650
+     C***********          END                                            E13650
+     C***********          END                                            E13650
+     C***********          END                                            E13650
+     C*
+     C           DPMV      IFEQ 'DT'
+     C           DPMD      IFGT WKEM
+     C           DPMD      ANDLERUND
+     C** Record is to be extracted
+     C                     EXSR W05
+     C                     END
+     C                     END
+     C*
+     C           DPMV      IFEQ 'BB'
+     C           DPMV      OREQ 'BL'
+     C           DPDO      IFGT WKEM
+     C           DPDO      ANDLERUND
+     C** Record is to be extracted
+     C                     EXSR W07
+     C                     END
+     C                     END
+     C*
+     C***********DPMV      IFEQ 'BL'                                      E13650
+     C***********DPMV      OREQ 'BB'                                      E13650
+      ***********                                                         E13650
+     C***********C1DI      IFEQ 'S'                                       E13650
+     C***********C1DI      OREQ 'D'                                       E13650
+      ***********                                                         E13650
+     C***********DPMD      IFGT WKEM                                      E13650
+     C***********DPMD      ANDLERUND                                      E13650
+     C***Record*is*to*be*extracted*************************************   E13650
+     C***********          EXSR W08                                       E13650
+     C***********          END                                            E13650
+     C***********          END                                            E13650
+     C***********          END                                            E13650
+     C*
+     C           IGNDEP    TAG                                            E16181
+     C*                                                                   E16181
+     C** Read next record
+     C                     READ DPTMV                    82
+     C                     END
+     C*
+     C           EAUDIT    TAG                             *** EAUDIT ***
+     C*
+     C* OUTPUT RUN CONTROL REPORT
+     C*
+     C                     EXSR AUDIT
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *                                                               *
+     C                     SETON                     LR
+      *                                                               *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  W01    - Subroutine to write Extract record - Position       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           W01       BEGSR                           ***  W01   ***
+     C*
+     C** Set up and output extract record
+     C                     MOVE 'D'       RECI
+     C***********          MOVE LTBR      DMBH                            S01117
+     C                     MOVE LTBA      DMBA                            S01117
+     C                     MOVE LTPT      DMDE
+     C                     MOVE LTSC      DMSE
+     C                     MOVE 'B'       DMRC
+     C                     Z-ADDLTTE      DMDT
+     C                     Z-ADDLTNS      DMNM
+     C*
+     C** Output record
+     C                     WRITEMDMEXDF
+     C*
+     C** Maintain count of records written
+     C                     ADD  1         ZROUT
+     C*
+     C** SET DEFAULT VALUES FOR DATE AND AMOUNT IF NO DPOSH RECORD
+     C                     Z-ADDWKEM      LTTE
+     C                     Z-ADD0         LTNS
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  W02    - Subroutine to write Extract record - Settlement In. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           W02       BEGSR                           ***  W02   ***
+     C*
+     C** Set up and output extract record
+     C                     MOVE 'D'       RECI
+     C***********          MOVE SBCD      DMBH                            S01117
+     C                     MOVE SBCA      DMBA                            S01117
+     C                     MOVE DELT      DMDE
+     C                     MOVE SSSN      DMSE
+     C                     MOVE 'M'       DMRC
+     C                     Z-ADDSEDE      DMDT
+     C                     Z-ADDSNMS      DMNM
+     C*
+     C** Output record
+     C                     WRITEMDMEXDF
+     C*
+     C** Maintain count of records written
+     C                     ADD  1         ZROUT
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  W03    - Subroutine to write Extract record - Settlement Out.*
+      *                                                               *
+      *****************************************************************
+      *
+     C           W03       BEGSR                           ***  W03   ***
+     C*
+     C** Set up and output extract record
+     C                     MOVE 'D'       RECI
+     C***********          MOVE SBCD      DMBH                            S01117
+     C                     MOVE SBCA      DMBA                            S01117
+     C                     MOVE DELF      DMDE
+     C                     MOVE SSSN      DMSE
+     C                     MOVE 'M'       DMRC
+     C                     Z-ADDSEDE      DMDT
+     C           SNMS      IFGT 0
+     C           SNMS      MULT -1        DMNM
+     C                     ELSE
+     C                     Z-ADDSNMS      DMNM
+     C                     END
+     C*
+     C** Output record
+     C                     WRITEMDMEXDF
+     C*
+     C** Maintain count of records written
+     C                     ADD  1         ZROUT
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  W04    - Subroutine to write Extract record - Movement In.   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           W04       BEGSR                           ***  W04   ***
+     C*
+     C** Set up and output extract record
+     C                     MOVE 'D'       RECI
+     C***********          MOVE DPBC      DMBH                            S01117
+     C                     MOVE DPBA      DMBA                            S01117
+     C                     MOVE DPID      DMDE
+     C                     MOVE DPSS      DMSE
+     C                     MOVE 'M'       DMRC
+     C                     Z-ADDDPMD      DMDT
+     C                     Z-ADDDPNA      DMNM
+     C*
+     C** Output record
+     C                     WRITEMDMEXDF
+     C*
+     C** Maintain count of records written
+     C                     ADD  1         ZROUT
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  W05    - Subroutine to write Extract record - Movement Out.  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           W05       BEGSR                           ***  W05   ***
+     C*
+     C** Set up and output extract record
+     C                     MOVE 'D'       RECI
+     C***********          MOVE DPBC      DMBH                            S01117
+     C                     MOVE DPBA      DMBA                            S01117
+     C                     MOVE DPOD      DMDE
+     C                     MOVE DPSS      DMSE
+     C                     MOVE 'M'       DMRC
+      *
+     C           DPMV      IFEQ 'DT'
+     C                     Z-ADDDPMD      DMDT
+     C                     ELSE
+     C                     Z-ADDDPDO      DMDT
+     C                     END
+      *
+     C           DPNA      IFGT 0
+     C           DPNA      MULT -1        DMNM
+     C                     ELSE
+     C                     Z-ADDDPNA      DMNM
+     C                     END
+     C*
+     C** Output record
+     C                     WRITEMDMEXDF
+     C*
+     C** Maintain count of records written
+     C                     ADD  1         ZROUT
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  W07    - Subroutine to write Extract record - Movement In    *
+      *                                                       - BB/BL *
+      *****************************************************************
+      *
+     C           W07       BEGSR                           ***  W07   ***
+     C*
+     C** Set up and output extract record
+     C                     MOVE 'D'       RECI
+     C***********          MOVE DPBC      DMBH                            S01117
+     C                     MOVE DPBA      DMBA                            S01117
+     C                     MOVE DPID      DMDE
+     C                     MOVE DPSS      DMSE
+     C                     MOVE 'M'       DMRC
+     C                     Z-ADDDPDO      DMDT
+      *
+     C           DPNA      IFGT 0
+     C           DPNA      MULT -1        DMNM
+     C                     ELSE
+     C                     Z-ADDDPNA      DMNM
+     C                     END
+     C*
+     C** Output record
+     C                     WRITEMDMEXDF
+     C*
+     C** Maintain count of records written
+     C                     ADD  1         ZROUT
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  W08    - Subroutine to write Extract record - Movement Out   *
+      *                                                       - BB/BL *
+      *****************************************************************
+      *
+     C           W08       BEGSR                           ***  W08   ***
+     C*
+     C** Set up and output extract record
+     C                     MOVE 'D'       RECI
+     C***********          MOVE DPBC      DMBH                            S01117
+     C                     MOVE DPBA      DMBA                            S01117
+     C                     MOVE DPOD      DMDE
+     C                     MOVE DPSS      DMSE
+     C                     MOVE 'M'       DMRC
+     C                     Z-ADDDPMD      DMDT
+      *
+     C           DPNA      IFGT 0
+     C           DPNA      MULT -1        DMNM
+     C                     ELSE
+     C                     Z-ADDDPNA      DMNM
+     C                     END
+     C*
+     C** Output record
+     C                     WRITEMDMEXDF
+     C*
+     C** Maintain count of records written
+     C                     ADD  1         ZROUT
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  FIRST  - Subroutine to Access ICD Information.               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FIRST     BEGSR                           *** FIRST  ***
+      *                                                                   S01117
+     C***********                                                         S01117
+     C**ACCESS*ICD*                                                       S01117
+     C***********                                                         S01117
+     C***********          EXSR ZSYSTM                                    S01117
+     C************IN99     IFEQ '1'                                       S01117
+     C***********          MOVE '1'       *INU7                           S01117
+     C***********          MOVE '1'       *INU8                           S01117
+     C***********          MOVE 'TABLE'   DBFILE           ***************S01117
+     C***********          MOVEL'ICDR1'   DBKEY            * DB ERROR 01 *S01117
+     C***********          Z-ADD1         DBASE            ***************S01117
+     C***********          END                                            S01117
+     C***********                                                         S01117
+     C**ACCESS*ICD 2                                                      S01117
+     C***********                                                         S01117
+     C***********          EXSR ZICD2                                     S01117
+     C************IN99     IFEQ '1'                                       S01117
+     C***********          MOVE '1'       *INU7                           S01117
+     C***********          MOVE '1'       *INU8                           S01117
+     C***********          MOVE 'TABLE'   DBFILE           ***************S01117
+     C***********          MOVEL'ICDR2'   DBKEY            * DB ERROR 07 *S01117
+     C***********          Z-ADD7         DBASE            ***************S01117
+     C***********          END                                            S01117
+      *                                                                   S01117
+      ** Read in RUNDAT data area for Midas run date                      S01117
+      *                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+      *                                                                   S01117
+      ** Access bank details                                              S01117
+      *                                                                   S01117
+     C                     CALL 'AOBANKR0'                                S01117
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C           SDBANK    PARM SDBANK    DSFDY                           S01117
+     C           @RTCD     IFNE *BLANKS                                   S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE '1'       *INU7                           S01117
+     C                     MOVE '1'       *INU8                           S01117
+     C                     MOVE 'SDBANKPD'DBFILE           ***************S01117
+     C                     MOVEL'FIRST'   DBKEY            * DB ERROR 08 *S01117
+     C                     Z-ADD8         DBASE            ***************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END
+     C*
+     C* Access SESTAT for previous end of moth date
+     C*
+     C           *NAMVAR   DEFN           SESTAT
+     C                     IN   SESTAT
+     C                     MOVE EOPM      WKEM    50
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  AUDIT  - Subroutine to Update Audit record and Output        *
+      *           Control Report.                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR                           *** AUDIT  ***
+     C*
+     C           *INU8     IFEQ '0'
+     C*
+     C* ACCESS DPOSNA RECORD
+     C                     READ DPOSNA                   10
+     C           *IN10     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE 'DPOSN'   DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY            * DB ERROR 02 *
+     C                     Z-ADD2         DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     ELSE
+     C* CHECK RECORD COUNTS
+     C           ZIN80     IFNE ZCT80
+     C                     SETON                     57U8
+     C                     END
+     C                     END
+     C*
+     C**ACCESS*SETLEA*RECORD*******************************************   E34092
+     C***********          READ SETLEA                   10               E34092
+     C************IN10     IFEQ '1'                                       E34092
+     C************LOCK     IN   LDA                                S01117 E34092
+     C***********          MOVE '1'       *INU7                           E34092
+     C***********          MOVE '1'       *INU8                           E34092
+     C***********          MOVE 'SETLE'   DBFILE           ***************E34092
+     C***********          MOVEL'AUDIT'   DBKEY            * DB ERROR 03 *E34092
+     C***********          Z-ADD3         DBASE            ***************E34092
+     C***********          OUT  LDA                                S01117 E34092
+     C***********          END                                            E34092
+     C*
+     C* ACCESS DPTMVA RECORD
+     C                     READ DPTMVA                   10
+     C           *IN10     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE 'DPTMV'   DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY            * DB ERROR 04 *
+     C                     Z-ADD4         DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     ELSE
+     C* CHECK RECORD COUNTS
+     C           ZIN82     IFNE ZCT82
+     C                     SETON                     59U8
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C* OUTPUT CONTROL REPORT
+     C*
+     C                     WRITEHEADAU
+     C           *INU7     IFEQ '0'
+     C                     WRITECONTROL
+     C                     ELSE
+     C                     WRITEERROR
+     C                     END
+     C***********                                                         E29170
+     C***********          WRITETRAILAU                                   E29170
+     C*
+     C* OUTPUT CONTROL RECORD TO MDMEXA
+     C*
+     C           *INU8     IFEQ '0'
+     C                     Z-ADDZROUT     NORE
+     C                     WRITEMDMEXAF
+     C                     END
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  IDDSR  - Subroutine for Error Handling of MDMEXD.            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           IDDSR     BEGSR                           *** IDDSR  ***
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'MDMEXD'  DBFILE           ***************
+     C                     MOVELMKEY      DBKEY            * DB ERROR 05 *
+     C                     Z-ADD5         DBASE            ***************
+     C                     MOVE STSIDD    DBSTAT
+     C                     SETON                     808182
+     C                     SETON                     99U7U8
+     C                     OUT  LDA                                       S01117
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  IDASR  - Subroutine for Error Handling of MDMEXA.            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           IDASR     BEGSR                           *** IDASR  ***
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'MDMEXA'  DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY            * DB ERROR 06 *
+     C                     Z-ADD6         DBASE            ***************
+     C                     MOVE STSIDA    DBSTAT
+     C                     SETON                     808182
+     C                     SETON                     99U7U8
+     C                     OUT  LDA                                       S01117
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      * *PSSR  - Database error subroutine.                           *   S01117
+      *          This subroutine DUMPs the program just once.         *   S01117
+      *                                                               *   S01117
+      * Called by: FIRST                                              *   S01117
+      *                                                               *   S01117
+      * Calls: None                                                   *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR SR ** S01117
+      *                                                                   S01117
+     C           @RUN      IFEQ *BLANK                                    S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+      *                                                                   S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+      ********************************************************************S01117
+      ***/EJECT**                                                         S01117
+     C***/COPY*ZSRSRC,ZICD2Z1                                             S01117
+      ***/EJECT**                                                         S01117
+     C***/COPY*ZSRSRC,ZSYSTMZ1                                            S01117
+      /EJECT
+      ***
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

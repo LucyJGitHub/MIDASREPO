@@ -1,0 +1,134 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  DL0280 - DL0280UICT                                          *
+      *                                                               *
+      *  Last Amend No. MD024874A          Date 19Aug14               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER054             Date 07Apr09               *
+      *                 BUG23123           Date 09Mar09               *
+      *                 CER048A            Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 235174             Date 27Jul05               *
+      *                 CGL031  *CREATE    Date 05Jul04               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD024874A - Trading imbalance at interim interest payment    *
+      *              date. Move @@ENDD to WEVDAT.                     *
+      *            - MM deal tax calculated twice for Maturity Date.  *
+      *              Create SDCSINL10 logical file similar to         *
+      *              LF/SDCSINL6 but with new key TSEDAT.             *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER054 - German Features - Church Tax                        *
+      *  BUG23123 - Report: Does not show Retail Account Number       *
+      *                     Date is not Midas Standard Date           *
+      *                     Period should be actual int. calc. period *
+      *                     Secondary Tax amount is not printed       *
+      *                     Added field TSSLID                        *
+      *                     (Recompile)                               *
+      *  CER048A - German Features - Taxes                            *
+      *  235174 - Deposit a/c keys do not consider Joint A/c country. *
+      *  CGL031 - Taxation on Savings Income                          *
+      *                                                               *
+      *****************************************************************
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SEUICT - Subroutine to compute EU Withholding Tax at         *
+      *           interest payment date.                              *
+      *                                                               *
+      *****************************************************************
+     C     SEUICT        BEGSR
+      *
+     C                   MOVE      ' '           WEUTXI            1
+     C                   MOVE      'D'           WKMODI            1
+     C                   Z-ADD     @@ENDD        WEVDAT                                    MD024874A
+     C                   Z-ADD     0             WKTSRS           15 0
+     C                   Z-ADD     0             WKTXSC           15 0
+     C                   Z-ADD     0             WKTXSB           15 0
+      *                                                                                      CER048A
+     C                   EVAL      WKStxo = *ZEROS                                           CER048A
+     C                   EVAL      WKStxt = *ZEROS                                           CER048A
+     C                   EVAL      WKStxb = *ZEROS                                           CER048A
+     C                   EVAL      WKTtxo = *ZEROS                                            CER054
+     C                   EVAL      WKTtxt = *ZEROS                                            CER054
+     C                   EVAL      WKTtxb = *ZEROS                                            CER054
+      *
+     C*****KYEUTI        SETLL     SDCSINL6                           42                   MD024874A
+     C*****KYEUTI        READE     SDCSINL6                               42               MD024874A
+     C     KYEUTI        SETLL     SDCSINL10                          42                   MD024874A
+     C     KYEUTI        READE     SDCSINL10                              42               MD024874A
+      *
+      ** Process if customer status is 'T'.
+      *
+     C     *IN42         DOWEQ     '0'
+      *
+     C     TSSTAT        IFEQ      'T'
+      *
+     C                   MOVE      'Y'           WEUTXI
+      *
+      ** Accumulate Tax Amount in original currency if Original Ccy
+      ** is equal to tax currency
+      *
+     C     TSOCCY        IFEQ      TSTXCY
+     C                   ADD       TSTXSR        WKTSRS
+      *                                                                                      CER048A
+     C                   EVAL      WKStxo = WKStxo + TSSTDO                                  CER048A
+     C                   EVAL      WKTtxo = WKTtxo + TSTTDO                                   CER054
+      *                                                                                      CER048A
+     C                   ENDIF
+      *
+      ** If original currency is different from tax currency,
+      ** accumulate tax in original currency,
+      ** accumulate tax in tax currency,
+      ** accumulate tax in base currency.
+      *
+     C     TSOCCY        IFNE      TSTXCY
+     C                   ADD       TSTXSR        WKTSRS
+     C                   ADD       TSTXSC        WKTXSC
+     C                   ADD       TSTXSB        WKTXSB
+      *                                                                                      CER048A
+      ** Accumulate secondary tax in original currency                                       CER048A
+      ** Accumulate secondary tax in tax currency                                            CER048A
+      ** Accumulate secondary tax in base currency                                           CER048A
+      *                                                                                      CER048A
+     C                   EVAL      WKStxo = WKStxo + TSSTDO                                  CER048A
+     C                   EVAL      WKStxt = WKStxt + TSSTDT                                  CER048A
+     C                   EVAL      WKStxb = WKStxb + TSSTDB                                  CER048A
+      *                                                                                      CER048A
+      ** Accumulate third tax in original currency                                            CER054
+      ** Accumulate third tax in tax currency                                                 CER054
+      ** Accumulate third tax in base currency                                                CER054
+      *                                                                                       CER054
+     C                   EVAL      WKTtxo = WKTtxo + TSTTDO                                   CER054
+     C                   EVAL      WKTtxt = WKTtxt + TSTTDT                                   CER054
+     C                   EVAL      WKTtxb = WKTtxb + TSTTDB                                   CER054
+      *                                                                                       CER054
+     C                   ENDIF
+      *                                                                                       235174
+      ** Generate EU a/c keys for tax amount.                                                 235174
+      *                                                                                       235174
+     C                   EXSR      SREIUS                                                     235174
+      *                                                                                       235174
+     C                   ENDIF
+      *
+     C*****KYEUTI        READE     SDCSINL6                               42               MD024874A
+     C     KYEUTI        READE     SDCSINL10                              42               MD024874A
+     C                   ENDDO
+      *
+     C**********         Z-ADD     WKTSRS        TAXA                                        CER048A
+     C                   EVAL      TAXA = WKTSRS + WKStxo                                    CER048A
+     C                             + WKTtxo                                                   CER054
+      *
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * End of /COPY XXXXXXX                                          *
+      *****************************************************************

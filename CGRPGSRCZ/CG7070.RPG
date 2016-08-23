@@ -1,0 +1,1921 @@
+     H        1
+      *******************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Audit Letter Processing')                     *
+      *****************************************************************
+      *                                                               *
+      *  Midas  -   User Defined Correspondence                       *
+      *                                                               *
+      *  CG7070 -   CG Select customers for Audit Letter extract run  *
+      *                                                               *
+      *  Function : Filter out customers with active accounts or      *
+      *             transactions , that are subject to Audit Letter   *
+      *             Generation.                                       *
+      *                                                               *
+      *  Called by: CGC7070 - COB Processing                          *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *                                                               *
+      *  Last Amend No. CGL165             Date 17Feb15               *
+      *  Prev Amend No. CER070             Date 25Nov14               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER045             Date 20Jul09               *
+      *                 BUG23826C          Date 15Jun09               *
+      *                 BUG23826B          Date 11Jun09               *
+      *                 BUG24194           Date 05Jun09               *
+      *                 BUG23826A          Date 28May09               *
+      *                 BUG23826           Date 01May09               *
+      *                 BUG23586A          Date 22Apr09               *
+      *                 BUG23250B          Date 17Apr09               *
+      *                 BUG23250A          Date 27Mar09               *
+      *                 CER041  *CREATE    Date 19May08               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance Receive Settlement Instructions             *
+      *           (Recompiled)                                        *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER045 - German Features - Reporting Bundesbank (Recompile)  *
+      *  BUG23826C - IR Audit Letter must be produce for single custom*
+      *              er seletion                                      *
+      *  BUG23826B - IR Audit Letter must be produce if transation is *
+      *              available                                        *
+      *  BUG24194 - All active customers within the range should be   *
+      *             supplied with an audit letter                     *
+      *  BUG23826A - Correspondence should not produce when Zero Conf *
+      *              is 'N' and transaction is not present for module *
+      *  BUG23826 - Suppressed the Zero conf processing for [RE, LE,  *
+      *             MM, and FR] when Zero Conf flag is set to Y       *
+      *  BUG23586A - Zero Confirmation Flag=Y for a customer does not *
+      *              completely produce Audit Letter for all Business *
+      *  BUG23250B - Add processing for LO FA, RE when ZCNF is 'Y'    *
+      *  BUG23250A - Show Zero Confirmation on Display in Edit Mode   *
+      *  CER041 - Audit Letters Correspondence                        *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Loans by Customer
+      *
+     FLELOANLDIF  E           K        DISK
+      *
+      ** Loans by Customer / Branch
+      *
+     FLELOANLEIF  E           K        DISK
+     F            CLOANCLF                          KRENAMECLOAN2LF
+      *
+      ** Facilities (Lending)
+      *
+     FLEFCLTLRIF  E           K        DISK
+      *
+     FLEFCLTLSIF  E           K        DISK
+     F            FCLTYFMF                          KRENAMEFCLTY2MF
+      *
+      ** Retail
+      *
+     FGLACNTL6IF  E           K        DISK
+      *
+     FGLACNTL7IF  E           K        DISK
+     F            ACCNTABF                          KRENAMEACCNT2BF
+      *
+      ** Money Market (MM)
+      *
+     FDLDEALL9IF  E           K        DISK
+      *
+     FDLDEALLAIF  E           K        DISK
+     F            DEALSDCF                          KRENAMEDEALS2CF
+      *
+      ** Foreign Exchange (FX)
+      *
+     FDLDEALL6IF  E           K        DISK
+      *
+     FDLDEALL7IF  E           K        DISK
+     F            DEALSDBF                          KRENAMEDEALS2BF
+      *
+     FCGAUHDL0UF  E           K        DISK                      A
+      *
+     F***CGAUSLL0IF  E           K        DISK                                             BUG23250A
+     FCGAUSLL0UF  E           K        DISK                                                BUG23250A
+      *
+     F***SDCUSTJ2IF  E           K        DISK                                              BUG24194
+     FSDCUSTL1IF  E           K        DISK                                                 BUG24194
+      *
+      ** Additional logicals need to be specified for additional mod:
+      ** for DEALSDG (FRA, IRS) --> module-ID  FR, IR
+      ** for TRADSD (Securities) --> module-ID  SE
+      ** for TRANSD (Fut./Options) --> module-ID  FF
+      *
+     FDLDEALLCIF  E           K        DISK
+      *
+     FTRADCS  IF  E           K        DISK
+      *
+     FFFTRNSL0IF  E           K        DISK
+      *
+      *****************************************************************
+      *                                                               *
+      * USED INDICATORS:                                              *
+      *                                                               *
+      *   80 -  Read CGAUSLL0                                         *
+      *   81 -  Read LELOANLD                                         *
+      *   82 -  Chain LELOANLD, LELOANLE                              *
+      *   83 -  Read GLACNTL6                                         *
+      *   84 -  Read DLDEALL9                                         *
+      *   85 -  Chain CGAUHDL0                                        *
+      *   86 -  Read DLDEALL6                                         *
+      *   87 -  Chain GLACNTL6, GLACNTL7                              *
+      *   88 -  Chain DLDEALL9, DLDEALLA                              *
+      *   89 -  Chain DLDEALL6, DLDEALL7                              *
+      *   90 -  Chain LEFCLTLR, LEFCLTLS                              *
+      *   91 -  Read LEFCLTLR                                         *
+      *   92 -  Chain SDCUSTJ2                                        *
+      *   93 -  Read & Chain DLDEALLC                                 *
+      *   94 -  Chain & READE TRADCS                                  *
+      *   95 -  Chain & READE FFTRNSL0                                *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+      *
+     ITRADSDF
+     I              CRSK                            TRCRSK
+     ICPYR        DS
+     I                                        1  80 CPY@
+      *                                                                                     BUG24194
+      ** External DS for Additional Customer Details                                        BUG24194
+     ISDACUS    E DSSDACUSPD                                                                BUG24194
+      *                                                                                     BUG24194
+      ** DS for access programs, long data structure                                        BUG24194
+     IDSLDY     E DSDSLDY                                                                   BUG24194
+      *
+      ** Required Keylists
+      *
+     C           KEY1      KLIST
+     C                     KFLD           W1CNUM  6
+     C                     KFLD           WMODID  2
+     C                     KFLD           W1BRCH  3
+     C*
+     C           KEY2      KLIST
+     C**********           KFLD           W2CNUM  60                                          CER059
+     C                     KFLD           W2CNUM  6                                           CER059
+     C                     KFLD           W2BRCH  3
+      *
+      ** Main Processing
+      *
+      ** Read first record from Audit Letters Selection file
+      *
+     C                     READ CGAUSLL0                 80
+     C           *IN80     DOWEQ*OFF
+      *
+     C                     SELEC
+      *
+      ** Customer number range chosen
+      *
+     C           CNUMTO    WHNE *BLANK
+      *
+     C**********           MOVELCNUMFR    CNFRN   60                                          CER059
+     C**********           MOVELCNUMTO    CNTON   60                                          CER059
+     C                     MOVELCNUMFR    CNFRN   6                                           CER059
+     C                     MOVELCNUMTO    CNTON   6                                           CER059
+      *
+      ** When all modules chosen, select customers for which zero
+      ** confirmations are required
+      *
+     C                     EXSR SRZCON
+      *
+      ** If module 'LE' or 'ALL' chosen
+      *
+     C           MODLE     IFEQ 'Y'
+     C           MODAL     OREQ 'Y'
+      *
+     C           *LOVAL    SETLLLELOANLD
+     C                     READ LELOANLD                 81
+      *
+     C           *IN81     DOWEQ*OFF
+      *
+      ** If customer No. from LELOANLD within range and
+      ** specific branch code chosen
+      *
+     C           CNUM      IFGE CNFRN
+     C           CNUM      ANDLECNTON
+     C           BRCA      ANDEQBRCHNR
+     C           RECI      ANDEQ'D'
+      *
+      ** Or if customer No. from LELOANLD within range and
+      ** Branch code 'ALL' chosen
+      *
+     C           CNUM      ORGE CNFRN
+     C           CNUM      ANDLECNTON
+     C           BRCHNR    ANDEQ'ALL'
+     C           RECI      ANDEQ'D'
+      *
+     C                     MOVEL'LO'      ID      2
+      *
+     C           RECI      IFEQ 'D'
+     C                     MOVEL'Y'       WCONF                                            BUG23826A
+     C                     EXSR SRWTR
+     C                     MOVEL*BLANKS   WCONF                                            BUG23826A
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     READ LELOANLD                 81
+      *
+     C                     ENDDO
+      *
+      ** Read Facility File
+      *
+     C           *LOVAL    SETLLLEFCLTLR
+     C                     READ LEFCLTLR                 91
+      *
+     C           *IN91     DOWEQ*OFF
+      *
+      ** If customer No. from LEFCLTLR within range and
+      ** Specific branch code chosen
+      *
+     C           CNUM      IFGE CNFRN
+     C           CNUM      ANDLECNTON
+     C           BRCA      ANDEQBRCHNR
+     C           RECI      ANDEQ'D'
+      *
+      ** Or if customer No. from LEFCLTLR within range and
+      ** Branch code 'ALL' chosen
+      *
+     C           CNUM      ORGE CNFRN
+     C           CNUM      ANDLECNTON
+     C           BRCHNR    ANDEQ'ALL'
+     C           RECI      ANDEQ'D'
+      *
+     C                     MOVEL'FA'      ID
+     C                     MOVEL'Y'       WCONF                                            BUG23826A
+     C                     EXSR SRWTR
+     C                     MOVEL*BLANKS   WCONF                                            BUG23826A
+     C                     ENDIF
+      *
+     C                     READ LEFCLTLR                 91
+      *
+     C                     ENDDO
+     C                     ENDIF
+      *
+      ** If module RE or 'ALL' chosen
+      *
+     C           MODRE     IFEQ 'Y'
+     C           MODAL     OREQ 'Y'
+     C           *LOVAL    SETLLGLACNTL6
+     C                     READ GLACNTL6                 83
+      *
+     C           *IN83     DOWEQ*OFF
+      *
+      ** If customer No. from GLACNTL6 within range and
+      ** Specific branch code chosen
+      *
+     C           CNUM      IFGE CNFRN
+     C           CNUM      ANDLECNTON
+     C           BRCA      ANDEQBRCHNR
+      *
+      ** Or if customer No. from GLACNTL6 within range and
+      ** Branch code 'ALL' chosen
+      *
+     C           CNUM      ORGE CNFRN
+     C           CNUM      ANDLECNTON
+     C           BRCHNR    ANDEQ'ALL'
+      *
+     C                     MOVEL'RE'      ID
+      *
+      ** Check for RETAIL and NOT CLOSED
+      *
+     C           ATYP      IFEQ 'R'
+     C           DACC      ANDEQ0
+      *
+     C                     MOVEL'Y'       WCONF                                            BUG23826A
+     C                     EXSR SRWTR
+     C                     MOVEL*BLANKS   WCONF                                            BUG23826A
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     READ GLACNTL6                 83
+      *
+     C                     ENDDO
+     C                     ENDIF
+      *
+      ** If module 'MM' or 'ALL' chosen
+      *
+     C           MODMM     IFEQ 'Y'
+     C           MODAL     OREQ 'Y'
+     C           *LOVAL    SETLLDLDEALL9
+     C                     READ DLDEALL9                 84
+      *
+     C           *IN84     DOWEQ*OFF
+      *
+      ** If customer No. from DLDEALL9 within range and
+      ** Specific branch code chosen
+      *
+     C           CNUM      IFGE CNFRN
+     C           CNUM      ANDLECNTON
+     C           BRCA      ANDEQBRCHNR
+     C           RECI      ANDEQ'D'
+      *
+      ** Or if customer No. from DLDEALL9 within range and
+      ** Branch code 'ALL' chosen
+      *
+     C           CNUM      ORGE CNFRN
+     C           CNUM      ANDLECNTON
+     C           BRCHNR    ANDEQ'ALL'
+     C           RECI      ANDEQ'D'
+      *
+     C                     MOVEL'MM'      ID
+      *
+     C           RECI      IFEQ 'D'
+     C                     MOVEL'Y'       WCONF                                            BUG23826A
+     C                     EXSR SRWTR
+     C                     MOVEL*BLANKS   WCONF                                            BUG23826A
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     READ DLDEALL9                 84
+      *
+     C                     ENDDO
+     C                     ENDIF
+      *
+      ** If module 'FX' or 'ALL' chosen
+      *
+     C           MODFX     IFEQ 'Y'
+     C           MODAL     OREQ 'Y'
+     C           *LOVAL    SETLLDLDEALL6
+     C                     READ DLDEALL6                 86
+     C           *IN86     DOWEQ*OFF
+      *
+      ** If customer No. from DLDEALL6 within range and
+      ** Specific branch code chosen
+      *
+     C           CNUM      IFGE CNFRN
+     C           CNUM      ANDLECNTON
+     C           BRCA      ANDEQBRCHNR
+     C           RECI      ANDEQ'D'
+      *
+      ** Or if customer No. from DLDEALL6 within range and
+      ** Branch code 'ALL' chosen
+      *
+     C           CNUM      ORGE CNFRN
+     C           CNUM      ANDLECNTON
+     C           BRCHNR    ANDEQ'ALL'
+     C           RECI      ANDEQ'D'
+      *
+     C                     MOVEL'FX'      ID
+      *
+     C           RECI      IFEQ 'D'
+     C                     MOVEL'Y'       WCONF   1                                        BUG23826A
+     C                     EXSR SRWTR
+     C                     MOVEL*BLANKS   WCONF                                            BUG23826A
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     READ DLDEALL6                 86
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+      ** Bring in additional coding for other modules (FR,IR,SE,FF)
+      *
+      ** If Module 'FR' or 'IR' or 'ALL' chosen
+      *
+     C           MODFR     IFEQ 'Y'
+     C           MODIR     OREQ 'Y'
+     C           MODAL     OREQ 'Y'
+     C           *LOVAL    SETLLDLDEALLC
+     C                     READ DLDEALLC                 93
+      *
+     C           *IN93     DOWEQ*OFF
+      *
+      ** If customer No. from DLDEALLC within range and
+      ** Specific branch code chosen
+      *
+     C           CNUM      IFGE CNFRN
+     C           CNUM      ANDLECNTON
+     C           BRCA      ANDEQBRCHNR
+     C           RECI      ANDEQ'D'
+      *
+      ** Or if customer No. from DLDEALLC within range and
+      ** Branch code 'ALL' chosen
+      *
+     C           CNUM      ORGE CNFRN
+     C           CNUM      ANDLECNTON
+     C           BRCHNR    ANDEQ'ALL'
+     C           RECI      ANDEQ'D'
+      *
+      ** Processing for 'FR'
+      *
+     C           MODFR     IFEQ 'Y'
+     C           DTYP      ANDEQ'FR'                                                       BUG23826B
+     C           RECI      ANDEQ'D'                                                        BUG23826B
+     C           MODAL     OREQ 'Y'                                                        BUG23826B
+     C           DTYP      ANDEQ'FR'
+     C           RECI      ANDEQ'D'
+      *
+     C                     MOVEL'FR'      ID
+     C                     MOVEL'Y'       WCONF                                            BUG23826A
+     C                     EXSR SRWTR
+     C                     MOVEL*BLANKS   WCONF                                            BUG23826A
+      *
+     C                     ENDIF
+      *
+      ** Processing for 'IR' (<> 'FR')
+      *
+     C           MODIR     IFEQ 'Y'
+     C           MODAL     OREQ 'Y'                                                        BUG23826B
+     C********** DTYP      ANDNE'FR'                                                       BUG23826B
+     C********** RECI      ANDEQ'D'                                                        BUG23826B
+     C           RECI      IFEQ 'D'                                                        BUG23826B
+     C           DTYP      IFEQ 'RS'                                                       BUG23826B
+     C           DTYP      OREQ 'RX'                                                       BUG23826B
+      *
+     C                     MOVEL'IR'      ID
+     C                     MOVEL'Y'       WCONF                                            BUG23826A
+     C                     EXSR SRWTR
+     C                     MOVEL*BLANKS   WCONF                                            BUG23826A
+      *
+     C                     ENDIF                                                           BUG23826B
+      *                                                                                    BUG23826B
+     C                     ENDIF                                                           BUG23826B
+      *                                                                                    BUG23826B
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     READ DLDEALLC                 93
+      *
+     C                     ENDDO
+     C                     ENDIF
+      *
+      ** If Module 'SE' or 'ALL' chosen
+      *
+     C           MODSE     IFEQ 'Y'
+     C           MODAL     OREQ 'Y'
+     C           *LOVAL    SETLLTRADCS
+     C                     READ TRADCS                   94
+      *
+     C           *IN94     DOWEQ*OFF
+      *
+      ** If customer No. from DLDEALL9 within range and
+      ** Specific branch code chosen
+      *
+     C           TCNR      IFGE CNFRN
+     C           TCNR      ANDLECNTON
+     C           TDBA      ANDEQBRCHNR
+     C           RECI      ANDEQ'D'
+      *
+      ** Or if customer No. from TRADCS within range and
+      ** Branch code 'ALL' chosen
+      *
+     C           TCNR      ORGE CNFRN
+     C           TCNR      ANDLECNTON
+     C           BRCHNR    ANDEQ'ALL'
+     C           RECI      ANDEQ'D'
+      *
+     C                     MOVEL'SE'      ID
+      *
+     C           RECI      IFEQ 'D'
+     C                     MOVEL'Y'       WCONF                                            BUG23826A
+     C                     EXSR SRWTR
+     C                     MOVEL*BLANKS   WCONF                                            BUG23826A
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     READ TRADCS                   94
+      *
+     C                     ENDDO
+     C                     ENDIF
+      *
+      ** If Module 'FF' or 'ALL' chosen
+      *
+     C           MODFF     IFEQ 'Y'
+     C           MODAL     OREQ 'Y'
+     C           *LOVAL    SETLLFFTRNSL0
+     C                     READ FFTRNSL0                 95
+      *
+     C           *IN95     DOWEQ*OFF
+      *
+      ** If Customer No. from FFTRNSL0 within range and
+      ** Specific branch code chosen
+      *
+     C           CUSC      IFGE CNFRN
+     C           CUSC      ANDLECNTON
+     C           BRCA      ANDEQBRCHNR
+     C           RECI      ANDEQ'D'
+      *
+      ** Or if customer No. from TRADCS within range and
+      ** Branch code 'ALL' chosen
+      *
+     C           CUSC      ORGE CNFRN
+     C           CUSC      ANDLECNTON
+     C           BRCHNR    ANDEQ'ALL'
+     C           RECI      ANDEQ'D'
+      *
+     C                     MOVEL'FF'      ID
+      *
+     C           RECI      IFEQ 'D'
+     C                     MOVEL'Y'       WCONF                                            BUG23826A
+     C                     EXSR SRWTR
+     C                     MOVEL*BLANKS   WCONF                                            BUG23826A
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     READ FFTRNSL0                 95
+      *
+     C                     ENDDO
+     C                     ENDIF
+      *
+      ** SINGLE customer number chosen
+      *
+     C                     OTHER
+      *
+      ** If Module 'LE' or 'ALL' chosen
+      *
+     C           MODLE     IFEQ 'Y'
+     C           MODAL     OREQ 'Y'
+      *
+      ** Loan File
+      *
+     C                     EXSR SRLORD
+      *
+     C           WFOUND    IFEQ 'Y'
+     C           RECI      ANDEQ'D'
+      *
+     C                     MOVEL'LO'      ID
+     C                     EXSR SRWTR
+     C                     MOVEL*BLANK    WFOUND
+      *
+     C                     ENDIF
+      *
+      ** Facility File
+      *
+     C                     EXSR SRFARD
+      *
+     C           WFOUND    IFEQ 'Y'
+      *
+     C                     MOVEL'FA'      ID
+     C                     EXSR SRWTR
+     C                     MOVEL*BLANK    WFOUND
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** If Module 'RE' or 'ALL' chosen
+      *
+     C           MODRE     IFEQ 'Y'
+     C           MODAL     OREQ 'Y'
+      *
+     C                     EXSR SRRERD
+      *
+     C           WFOUND    IFEQ 'Y'
+     C                     MOVEL'RE'      ID
+      *
+      ** Check for RETAIL and NOT CLOSED
+      *
+     C           ATYP      IFEQ 'R'
+     C           DACC      ANDEQ0
+     C                     MOVEL'Y'       WCONF                                            BUG23826A
+     C                     EXSR SRWTR
+     C                     MOVEL*BLANKS   WCONF                                            BUG23826A
+     C                     ENDIF
+      *
+     C                     MOVEL*BLANK    WFOUND
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** If Module 'MM' or 'ALL' chosen
+      *
+     C           MODMM     IFEQ 'Y'
+     C           MODAL     OREQ 'Y'
+      *
+     C                     EXSR SRMMRD
+      *
+     C           WFOUND    IFEQ 'Y'
+     C           RECI      ANDEQ'D'
+      *
+     C                     MOVEL'MM'      ID
+     C                     MOVEL'Y'       WCONF                                            BUG23826A
+     C                     EXSR SRWTR
+     C                     MOVEL*BLANKS   WCONF                                            BUG23826A
+     C                     MOVEL*BLANK    WFOUND
+      *
+     C                     ELSE
+      *
+      ***Chain*with*CustNo.*to*SDCUSTJ2*to*check*for*Zero-confirmation                      BUG24194
+      ** Chain with CustNo. to SDCUSTL1 to check for Active Customer                        BUG24194
+      *
+     C********** CNUMFR    CHAINSDCUSTJ2             92                                     BUG24194
+     C           CNUMFR    CHAINSDCUSTL1             92                                     BUG24194
+     C           *IN92     IFEQ *OFF
+     C********** E5ZCFG    ANDEQ'Y'                                                        BUG23250A
+     C********** DZEROC    IFNE 'N'                                               BUG23250A BUG23826
+     C********** E5ZCFG    IFEQ 'Y'                                               BUG23250A BUG23826
+     C********** DZEROC    OREQ 'Y'                                               BUG23250A BUG23826
+      *
+      ** Retrieve Customer details
+      *
+     C                     MOVE BBCUST    WCNUM
+      *
+     C                     MOVELBBCUST    CNUM
+     C                     MOVEL'Y'       FZERO
+     C                     MOVELBBBRCD    BRCA
+      *
+     C                     MOVEL'MM'      ID
+     C                     MOVEL'Y'       WCONF                                            BUG23826A
+     C                     EXSR SRWTR
+     C                     MOVEL*BLANKS   WCONF                                            BUG23826A
+      *
+     C**********           ENDIF                                                  BUG23250A BUG23826
+     C**********           ENDIF                                                  BUG23250A BUG23826
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If Module 'FR' or 'ALL' chosen
+      *
+     C           MODFR     IFEQ 'Y'
+     C           MODAL     OREQ 'Y'
+      *
+     C                     EXSR SRFRRD
+      *
+     C           WFOUND    IFEQ 'Y'
+     C           RECI      ANDEQ'D'
+      *
+     C                     MOVEL'FR'      ID
+     C                     MOVEL'Y'       WCONF                                            BUG23826A
+     C                     EXSR SRWTR
+     C                     MOVEL*BLANKS   WCONF                                            BUG23826A
+     C                     MOVEL*BLANK    WFOUND
+      *
+     C                     ELSE
+      *
+      ***Chain*with*CustNo.*to*SDCUSTJ2*to*check*for*Zero-confirmation                      BUG24194
+      ** Chain with CustNo. to SDCUSTL1 to check for Active Customer                        BUG24194
+      *
+     C********** CNUMFR    CHAINSDCUSTJ2             92                                     BUG24194
+     C           CNUMFR    CHAINSDCUSTL1             92                                     BUG24194
+     C           *IN92     IFEQ *OFF
+     C********** E5ZCFG    ANDEQ'Y'                                                        BUG23250A
+     C********** DZEROC    IFNE 'N'                                               BUG23250A BUG23826
+     C********** E5ZCFG    IFEQ 'Y'                                               BUG23250A BUG23826
+     C********** DZEROC    OREQ 'Y'                                               BUG23250A BUG23826
+      *
+      ** Retrieve Customer details
+      *
+     C                     MOVE BBCUST    WCNUM
+      *
+     C                     MOVELBBCUST    CNUM
+     C                     MOVEL'Y'       FZERO
+     C                     MOVELBBBRCD    BRCA
+      *
+     C                     MOVEL'FR'      ID
+     C                     MOVEL'Y'       WCONF                                            BUG23826A
+     C                     EXSR SRWTR
+     C                     MOVEL*BLANKS   WCONF                                            BUG23826A
+      *
+     C**********           ENDIF                                                  BUG23250A BUG23826
+     C**********           ENDIF                                                  BUG23250A BUG23826
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If Module 'IR' or 'ALL' chosen
+      *
+     C           MODIR     IFEQ 'Y'
+     C           MODAL     OREQ 'Y'
+      *
+     C                     EXSR SRIRRD
+      *
+     C           WFOUND    IFEQ 'Y'
+     C           RECI      ANDEQ'D'
+      *
+     C                     MOVEL'IR'      ID
+     C                     MOVEL'Y'       WCONF                                            BUG23826A
+     C                     EXSR SRWTR
+     C                     MOVEL*BLANKS   WCONF                                            BUG23826A
+     C                     MOVEL*BLANK    WFOUND
+      *
+     C                     ELSE
+      *
+      ***Chain*with*CustNo.*to*SDCUSTJ2*to*check*for*Zero-confirmation                      BUG24194
+      ** Chain with CustNo. to SDCUSTL1 to check for Active Customer                        BUG24194
+      *
+     C********** CNUMFR    CHAINSDCUSTJ2             92                                     BUG24194
+     C           CNUMFR    CHAINSDCUSTL1             92                                     BUG24194
+     C           *IN92     IFEQ *OFF
+     C********** E5ZCFG    ANDEQ'Y'                                                        BUG23250A
+     C********** DZEROC    IFNE 'N'                                               BUG23250A BUG23826
+     C********** E5ZCFG    IFEQ 'Y'                                               BUG23250A BUG23826
+     C********** DZEROC    OREQ 'Y'                                               BUG23250A BUG23826
+      *
+      ** Retrieve Customer details
+      *
+     C                     MOVE BBCUST    WCNUM
+      *
+     C                     MOVELBBCUST    CNUM
+     C                     MOVEL'Y'       FZERO
+     C                     MOVELBBBRCD    BRCA
+      *
+     C                     MOVEL'IR'      ID
+     C                     MOVEL'Y'       WCONF                                            BUG23826A
+     C                     EXSR SRWTR
+     C                     MOVEL*BLANKS   WCONF                                            BUG23826A
+      *
+     C**********           ENDIF                                                  BUG23250A BUG23826
+     C**********           ENDIF                                                  BUG23250A BUG23826
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If Module 'SE' or 'ALL' chosen
+      *
+     C           MODSE     IFEQ 'Y'
+     C           MODAL     OREQ 'Y'
+      *
+     C                     EXSR SRSERD
+      *
+     C           WFOUND    IFEQ 'Y'
+     C           RECI      ANDEQ'D'
+      *
+     C                     MOVEL'SE'      ID
+     C                     MOVEL'Y'       WCONF                                            BUG23826A
+     C                     EXSR SRWTR
+     C                     MOVEL*BLANKS   WCONF                                            BUG23826A
+     C                     MOVEL*BLANK    WFOUND
+      *
+     C                     ELSE
+      *
+      ***Chain*with*CustNo.*to*SDCUSTJ2*to*check*for*Zero-confirmation                      BUG24194
+      ** Chain with CustNo. to SDCUSTL1 to check for Active Customer                        BUG24194
+      *
+     C********** CNUMFR    CHAINSDCUSTJ2             92                                     BUG24194
+     C           CNUMFR    CHAINSDCUSTL1             92                                     BUG24194
+     C           *IN92     IFEQ *OFF
+     C********** E5ZCFG    ANDEQ'Y'                                                        BUG23250A
+     C********** DZEROC    IFNE 'N'                                               BUG23250A BUG23826
+     C********** E5ZCFG    IFEQ 'Y'                                               BUG23250A BUG23826
+     C********** DZEROC    OREQ 'Y'                                               BUG23250A BUG23826
+      *
+      ** Retrieve Customer details
+      *
+     C                     MOVE BBCUST    WCNUM
+      *
+     C                     MOVELBBCUST    CNUM
+     C                     MOVEL'Y'       FZERO
+     C                     MOVELBBBRCD    BRCA
+      *
+     C                     MOVEL'SE'      ID
+     C                     MOVEL'Y'       WCONF                                            BUG23826A
+     C                     EXSR SRWTR
+     C                     MOVEL*BLANKS   WCONF                                            BUG23826A
+      *
+     C**********           ENDIF                                                  BUG23250A BUG23826
+     C**********           ENDIF                                                  BUG23250A BUG23826
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If Module 'FF' or 'ALL' chosen
+      *
+     C           MODFF     IFEQ 'Y'
+     C           MODAL     OREQ 'Y'
+      *
+     C                     EXSR SRFFRD
+      *
+     C           WFOUND    IFEQ 'Y'
+     C           RECI      ANDEQ'D'
+      *
+     C                     MOVEL'FF'      ID
+     C                     MOVEL'Y'       WCONF                                            BUG23826A
+     C                     EXSR SRWTR
+     C                     MOVEL*BLANKS   WCONF                                            BUG23826A
+     C                     MOVEL*BLANK    WFOUND
+      *
+     C                     ELSE
+      *
+      ***Chain*with*CustNo.*to*SDCUSTJ2*to*check*for*Zero-confirmation                      BUG24194
+      ** Chain with CustNo. to SDCUSTL1 to check for Active Customer                        BUG24194
+      *
+     C********** CNUMFR    CHAINSDCUSTJ2             92                                     BUG24194
+     C           CNUMFR    CHAINSDCUSTL1             92                                     BUG24194
+     C           *IN92     IFEQ *OFF
+     C********** E5ZCFG    ANDEQ'Y'                                                        BUG23250A
+     C********** DZEROC    IFNE 'N'                                               BUG23250A BUG23826
+     C********** E5ZCFG    IFEQ 'Y'                                               BUG23250A BUG23826
+     C********** DZEROC    OREQ 'Y'                                               BUG23250A BUG23826
+      *
+      ** Retrieve Customer details
+      *
+     C                     MOVE BBCUST    WCNUM
+      *
+     C                     MOVELBBCUST    CNUM
+     C                     MOVEL'Y'       FZERO
+     C                     MOVELBBBRCD    BRCA
+      *
+     C                     MOVEL'FF'      ID
+     C                     MOVEL'Y'       WCONF                                            BUG23826A
+     C                     EXSR SRWTR
+     C                     MOVEL*BLANKS   WCONF                                            BUG23826A
+      *
+     C**********           ENDIF                                                  BUG23250A BUG23826
+     C**********           ENDIF                                                  BUG23250A BUG23826
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  If Modul 'FX' or 'ALL' chosen
+      *
+     C           MODFX     IFEQ 'Y'
+     C           MODAL     OREQ 'Y'
+      *
+     C                     EXSR SRFXRD
+      *
+     C           WFOUND    IFEQ 'Y'
+     C           RECI      IFEQ 'D'
+      *
+     C                     MOVEL'FX'      ID
+     C                     MOVEL'Y'       WCONF                                            BUG23826A
+     C                     EXSR SRWTR
+     C                     MOVEL*BLANKS   WCONF                                            BUG23826A
+      *
+     C                     ENDIF
+     C                     MOVEL*BLANK    WFOUND
+     C                     ELSE
+      *
+      ***Chain*with*CustNo.*to*SDCUSTJ2*to*check*for*Zero-confirmation                      BUG24194
+      ** Chain with CustNo. to SDCUSTL1 to check for Active Customer                        BUG24194
+      *
+     C********** CNUMFR    CHAINSDCUSTJ2             92                                     BUG24194
+     C           CNUMFR    CHAINSDCUSTL1             92                                     BUG24194
+     C           *IN92     IFEQ *OFF
+     C********** E5FXCU    ANDEQ'Y'                                                         BUG24194
+      *                                                                                     BUG24194
+     C                     CALL 'AOACUSR0'                                                  BUG24194
+     C                     PARM *BLANKS   PRTCD   7                                         BUG24194
+     C                     PARM '*KEY   ' POPTN   7                                         BUG24194
+     C                     PARM CNUMFR    P@CUST  6                                         BUG24194
+     C           SDACUS    PARM SDACUS    DSLDY                                             BUG24194
+      *                                                                                     BUG24194
+     C           PRTCD     IFEQ *BLANKS                                                     BUG24194
+     C           E5FXCU    ANDEQ'Y'                                                         BUG24194
+      *
+      ** Retrieve Customer details
+      *
+     C                     MOVE BBCUST    WCNUM
+      *
+     C                     MOVELBBCUST    CNUM
+     C                     MOVEL'Y'       FZERO
+     C                     MOVELBBBRCD    BRCA
+      *
+     C                     MOVEL'FX'      ID
+     C                     MOVEL'Y'       WCONF                                            BUG23826A
+     C                     EXSR SRWTR
+     C                     MOVEL*BLANKS   WCONF                                            BUG23826A
+      *
+     C                     ENDIF                                                            BUG24194
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *                                                                                    BUG23250A
+     C                     MOVEL*BLANKS   DZEROC                                           BUG23250A
+     C                     UPDATCGAUSLD0                                                   BUG23250A
+      *
+      ** Read next record of CGAUSLL0
+      *
+     C                     READ CGAUSLL0                 80
+     C                     ENDDO
+      *
+      ** Program Ends here
+      *
+     C                     MOVE *ON       *INLR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRLORD - Execute if Module LE or all modules chosen           *
+      *                                                               *
+      * Function - Get record from CLOANCL                            *
+      *                                                               *
+      *****************************************************************
+     C           SRLORD    BEGSR
+      *
+      ** Default : no
+      *
+     C                     MOVEL'N'       FZERO
+     C                     MOVE '0'       *IN82
+      *
+      ** Branch Code='ALL'
+      *
+     C           BRCHNR    IFEQ 'ALL'
+     C                     MOVELCNUMFR    W2CNUM
+     C           W2CNUM    SETLLLELOANLD
+     C           W2CNUM    READECLOANCLF                 82
+     C           *IN82     DOWEQ*OFF
+      *
+     C           RECI      IFEQ 'D'
+     C                     MOVEL'Y'       WFOUND
+     C                     MOVE '1'       *IN82
+     C                     ENDIF
+      *
+      ** Next record for that group
+      *
+     C  N82      W2CNUM    READECLOANCLF                 82
+      *
+     C                     ENDDO
+      *
+     C                     MOVEL'ALL'     BRCA
+      *
+      ** Branch Code not 'ALL'
+      *
+     C                     ELSE
+     C                     MOVELCNUMFR    W2CNUM
+     C                     MOVELBRCHNR    W2BRCH
+     C           KEY2      SETLLLELOANLE
+     C           KEY2      READECLOAN2LF                 82
+     C           *IN82     DOWEQ*OFF
+      *
+     C           RECI      IFEQ 'D'
+     C                     MOVEL'Y'       WFOUND
+     C                     MOVE '1'       *IN82
+     C                     ENDIF
+      *
+      ** Next record for that group
+      *
+     C  N82      KEY2      READECLOAN2LF                 82
+      *
+     C                     ENDDO
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRRERD- Execute if Module RE or all modules chosen           *
+      *                                                               *
+      *  Function - Get record from ACCNTAB                           *
+      *                                                               *
+      *****************************************************************
+     C           SRRERD    BEGSR
+      *
+      ** Default : no
+      *
+     C                     MOVEL'N'       FZERO
+     C                     MOVE '0'       *IN87
+      *
+      ** Branch Code='ALL'
+      *
+     C           BRCHNR    IFEQ 'ALL'
+     C                     MOVELCNUMFR    W2CNUM
+     C           W2CNUM    SETLLGLACNTL6
+     C           W2CNUM    READEACCNTABF                 87
+      *
+     C           *IN87     DOWEQ*OFF
+      *
+     C           RECI      IFEQ 'D'
+     C           ATYP      ANDEQ'R'
+     C           DACC      ANDEQ0
+      *
+     C                     MOVEL'Y'       WFOUND  1
+     C                     MOVE '1'       *IN87
+      *
+     C                     ENDIF
+      *
+      ** Next record for that group
+      *
+     C  N87      W2CNUM    READEACCNTABF                 87
+      *
+     C                     ENDDO
+      *
+     C                     MOVEL'ALL'     BRCA
+      *
+      ** Branch Code not 'ALL'
+      *
+     C                     ELSE
+      *
+     C                     MOVELCNUMFR    W2CNUM
+     C                     MOVELBRCHNR    W2BRCH
+      *
+     C           KEY2      SETLLGLACNTL7
+     C           KEY2      READEACCNT2BF                 87
+      *
+     C           *IN87     DOWEQ*OFF
+      *
+      ** Check for RETAIL and NOT CLOSED
+      *
+     C           RECI      IFEQ 'D'
+     C           DACC      ANDEQ0
+     C           ATYP      ANDEQ'R'
+      *
+     C                     MOVEL'Y'       WFOUND  1
+     C                     MOVE '1'       *IN87
+      *
+     C                     ENDIF
+      *
+      ** Next record for that group
+      *
+     C  N87      KEY2      READEACCNT2BF                 87
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRMMRD - Execute if Module MM or all modules chosen          *
+      *                                                               *
+      *  Function - Get record from DEALSDC                           *
+      *                                                               *
+      *****************************************************************
+     C           SRMMRD    BEGSR
+      *
+      ** Called from single-customer processing
+      *
+     C           CNUMTO    IFEQ *BLANKS
+     C                     MOVELCNUMFR    W2CNUM
+      *
+      ** Called from customer range processing
+      *
+     C                     ELSE
+     C                     MOVELBBCUST    W2CNUM
+     C                     ENDIF
+      *
+      ** Default : no
+      *
+     C                     MOVEL'N'       FZERO
+     C                     MOVE '0'       *IN88
+      *
+      ** Branch Code='ALL'
+      *
+     C           BRCHNR    IFEQ 'ALL'
+     C           W2CNUM    SETLLDLDEALL9
+     C           W2CNUM    READEDLDEALL9                 88
+      *
+     C           *IN88     DOWEQ*OFF
+      *
+     C           RECI      IFEQ 'D'
+     C                     MOVEL'Y'       WFOUND  1
+     C                     MOVE '1'       *IN88
+     C                     ENDIF
+      *
+      ** Next record for that group
+      *
+     C  N88      W2CNUM    READEDEALSDCF                 88
+     C                     ENDDO
+      *
+     C                     MOVEL'ALL'     BRCA
+      *
+      ** Branch Code not 'ALL'
+      *
+     C                     ELSE
+     C                     MOVELBRCHNR    W2BRCH
+      *
+     C           KEY2      SETLLDLDEALLA
+     C           KEY2      READEDEALS2CF                 88
+      *
+     C           *IN88     DOWEQ*OFF
+      *
+     C           RECI      IFEQ 'D'
+     C                     MOVEL'Y'       WFOUND  1
+     C                     MOVE '1'       *IN88
+     C                     ENDIF
+      *
+      ** Next record for that group
+      *
+     C  N88      KEY2      READEDEALS2CF                 88
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFRRD - Execute if Module FR or all modules chosen          *
+      *                                                               *
+      *  Fucntion - Get record from DEALSDG                           *
+      *                                                               *
+      *****************************************************************
+     C           SRFRRD    BEGSR
+      *
+      ** Called from single-customer processing
+      *
+     C           CNUMTO    IFEQ *BLANKS
+     C                     MOVELCNUMFR    W2CNUM
+      *
+      ** Called from customer range processing
+      *
+     C                     ELSE
+      *
+     C                     MOVELBBCUST    W2CNUM
+     C                     ENDIF
+      *
+      ** Default : no
+      *
+     C                     MOVEL'N'       FZERO
+     C                     MOVE '0'       *IN93
+      *
+      ** Branch Code='ALL'
+      *
+     C           BRCHNR    IFEQ 'ALL'
+     C           W2CNUM    SETLLDLDEALLC
+     C           W2CNUM    READEDLDEALLC                 93
+      *
+     C           *IN93     DOWEQ*OFF
+      *
+     C           RECI      IFEQ 'D'
+     C           DTYP      ANDEQ'FR'                                                       BUG23586A
+     C                     MOVEL'Y'       WFOUND  1
+     C                     MOVE '1'       *IN93
+     C                     ENDIF
+      *
+      ** Next record for that group
+      *
+     C  N93      W2CNUM    READEDLDEALLC                 93
+     C                     ENDDO
+      *
+     C                     MOVEL'ALL'     BRCA
+      *
+      ** Branch Code not 'ALL'
+      *
+     C                     ELSE
+     C                     MOVELBRCHNR    W2BRCH
+      *
+     C           KEY2      SETLLDLDEALLC
+     C           KEY2      READEDLDEALLC                 93
+      *
+     C           *IN93     DOWEQ*OFF
+      *
+     C           RECI      IFEQ 'D'
+     C           DTYP      ANDEQ'FR'                                                       BUG23586A
+     C                     MOVEL'Y'       WFOUND  1
+     C                     MOVE '1'       *IN93
+     C                     ENDIF
+      *
+      ** Next record for that group
+      *
+     C  N93      KEY2      READEDLDEALLC                 93
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRIRRD - Execute if Module IR or all modules chosen          *
+      *                                                               *
+      *  Function - Get record from DEALSDG                           *
+      *                                                               *
+      *****************************************************************
+     C           SRIRRD    BEGSR
+      *
+      ** Called from single-customer processing
+      *
+     C           CNUMTO    IFEQ *BLANKS
+     C                     MOVELCNUMFR    W2CNUM
+      *
+      ** Called from customer range processing
+      *
+     C                     ELSE
+      *
+     C                     MOVELBBCUST    W2CNUM
+     C                     ENDIF
+      *
+      ** Default : no
+      *
+     C                     MOVEL'N'       FZERO
+     C                     MOVE '0'       *IN93
+      *
+      ** Branch Code='ALL'
+      *
+     C           BRCHNR    IFEQ 'ALL'
+     C           W2CNUM    SETLLDLDEALLC
+     C           W2CNUM    READEDLDEALLC                 93
+      *
+     C           *IN93     DOWEQ*OFF
+      *
+     C           RECI      IFEQ 'D'
+     C********** DTYP      ANDEQ'IR'                                             BUG23586A BUG23826B
+     C           DTYP      ANDEQ'RS'                                                       BUG23826B
+     C           RECI      OREQ 'D'                                                        BUG23826B
+     C           DTYP      ANDEQ'RX'                                                       BUG23826B
+     C                     MOVEL'Y'       WFOUND  1
+     C                     MOVE '1'       *IN93
+     C                     ENDIF
+      *
+      ** Next record for that group
+      *
+     C  N93      W2CNUM    READEDLDEALLC                 93
+     C                     ENDDO
+      *
+     C                     MOVEL'ALL'     BRCA
+      *
+      ** Branch Code not 'ALL'
+      *
+     C                     ELSE
+      *
+     C                     MOVELBRCHNR    W2BRCH
+      *
+     C           KEY2      SETLLDLDEALLC
+     C           KEY2      READEDLDEALLC                 93
+      *
+     C           *IN93     DOWEQ*OFF
+      *
+     C           RECI      IFEQ 'D'
+     C********** DTYP      ANDEQ'IR'                                             BUG23586A BUG23826C
+     C           DTYP      ANDEQ'RS'                                                       BUG23826C
+     C           RECI      OREQ 'D'                                                        BUG23826C
+     C           DTYP      ANDEQ'RX'                                                       BUG23826C
+     C                     MOVEL'Y'       WFOUND  1
+     C                     MOVE '1'       *IN93
+     C                     ENDIF
+      *
+      ** Next record for that group
+      *
+     C  N93      KEY2      READEDLDEALLC                 93
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSERD - Execute if Module SE or all modules chosen          *
+      *                                                               *
+      *  Function - Get record from TRADSD                            *
+      *                                                               *
+      *****************************************************************
+     C           SRSERD    BEGSR
+      *
+      ** Called from single-customer processing
+      *
+     C           CNUMTO    IFEQ *BLANKS
+     C                     MOVELCNUMFR    W2CNUM
+      *
+      ** Called from customer range processing
+      *
+     C                     ELSE
+      *
+     C                     MOVELBBCUST    W2CNUM
+     C                     ENDIF
+      *
+      ** Default : no
+      *
+     C                     MOVEL'N'       FZERO
+     C                     MOVE '0'       *IN94
+      *
+      ** Branch Code='ALL'
+      *
+     C           BRCHNR    IFEQ 'ALL'
+      *
+     C           W2CNUM    SETLLTRADCS
+     C           W2CNUM    READETRADCS                   94
+      *
+     C           *IN94     DOWEQ*OFF
+      *
+     C           RECI      IFEQ 'D'
+     C                     MOVEL'Y'       WFOUND  1
+     C                     MOVE '1'       *IN94
+     C                     ENDIF
+      *
+      ** Next record for that group
+      *
+     C  N94      W2CNUM    READETRADCS                   94
+     C                     ENDDO
+      *
+     C                     MOVEL'ALL'     BRCA
+      *
+      ** Branch Code not 'ALL'
+      *
+     C                     ELSE
+      *
+     C                     MOVELBRCHNR    W2BRCH
+      *
+     C           KEY2      SETLLTRADCS
+     C           KEY2      READETRADCS                   94
+      *
+     C           *IN94     DOWEQ*OFF
+      *
+     C           RECI      IFEQ 'D'
+     C                     MOVEL'Y'       WFOUND  1
+     C                     MOVE '1'       *IN94
+     C                     ENDIF
+      *
+      ** Next record for that group
+      *
+     C  N94      KEY2      READETRADCS                   94
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFFRD - Execute if Module FF or all modules chosen          *
+      *                                                               *
+      *  Function - Get record from TRANSD                            *
+      *                                                               *
+      *****************************************************************
+     C           SRFFRD    BEGSR
+      *
+      ** Called from single-customer processing
+      *
+     C           CNUMTO    IFEQ *BLANKS
+     C                     MOVELCNUMFR    W2CNUM
+      *
+      ** Called from customer range processing
+      *
+     C                     ELSE
+      *
+     C                     MOVELBBCUST    W2CNUM
+     C                     ENDIF
+      *
+      ** Default : no
+      *
+     C                     MOVEL'N'       FZERO
+     C                     MOVE '0'       *IN95
+      *
+      ** Branch Code='ALL'
+      *
+     C           BRCHNR    IFEQ 'ALL'
+      *
+     C           W2CNUM    SETLLFFTRNSL0
+     C           W2CNUM    READEFFTRNSL0                 95
+      *
+     C           *IN95     DOWEQ*OFF
+      *
+     C           RECI      IFEQ 'D'
+     C                     MOVEL'Y'       WFOUND  1
+     C                     MOVE '1'       *IN95
+     C                     ENDIF
+      *
+      ** Next record for that group
+      *
+     C  N95      W2CNUM    READEFFTRNSL0                 95
+      *
+     C                     ENDDO
+      *
+     C                     MOVEL'ALL'     BRCA
+      *
+      ** Branch Code not 'ALL'
+      *
+     C                     ELSE
+      *
+     C                     MOVELBRCHNR    W2BRCH
+      *
+     C           KEY2      SETLLFFTRNSL0
+     C           KEY2      READEFFTRNSL0                 95
+      *
+     C           *IN95     DOWEQ*OFF
+      *
+     C           RECI      IFEQ 'D'
+     C                     MOVEL'Y'       WFOUND  1
+     C                     MOVE '1'       *IN95
+     C                     ENDIF
+      *
+      ** Next record for that group
+      *
+     C  N95      KEY2      READEFFTRNSL0                 95
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRFXRD - Execute if Module FX or all modules chosen           *
+      *                                                               *
+      * Function - Get record from DEALSDB                            *
+      *                                                               *
+      *****************************************************************
+     C           SRFXRD    BEGSR
+      *
+      ** Called from Single-customer processing
+      *
+     C           CNUMTO    IFEQ *BLANKS
+     C                     MOVELCNUMFR    W2CNUM
+      * Called from customer range processing
+     C                     ELSE
+     C                     MOVELBBCUST    W2CNUM
+     C                     ENDIF
+      *
+      ** Default : no
+      *
+     C                     MOVEL'N'       FZERO
+     C                     MOVE '0'       *IN89
+      *
+      ** Branch Code='ALL'
+      *
+     C           BRCHNR    IFEQ 'ALL'
+      *
+     C           W2CNUM    SETLLDLDEALL7
+     C           W2CNUM    READEDEALS2BF                 89
+      *
+     C           *IN89     DOWEQ*OFF
+      *
+     C           RECI      IFEQ 'D'
+     C                     MOVEL'Y'       WFOUND
+     C                     MOVE '1'       *IN89
+     C                     ENDIF
+      *
+      ** Next record for that group
+      *
+     C  N89      W2CNUM    READEDEALS2BF                 89
+      *
+     C                     ENDDO
+      *
+     C                     MOVEL'ALL'     BRCA
+      *
+      ** Branch Code not 'ALL'
+      *
+     C                     ELSE
+      *
+     C                     MOVELBRCHNR    W2BRCH
+      *
+     C           KEY2      SETLLDLDEALL7
+     C           KEY2      READEDEALS2BF                 89
+      *
+     C           *IN89     DOWEQ*OFF
+      *
+     C           RECI      IFEQ 'D'
+     C                     MOVEL'Y'       WFOUND
+     C                     MOVE '1'       *IN89
+     C                     ENDIF
+      *
+      ** Next record for that group
+      *
+     C  N89      KEY2      READEDEALS2BF                 89
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRFARD - Execute if Module LE or all modules chosen           *
+      *                                                               *
+      * Function - Get record from CLOANCL                            *
+      *                                                               *
+      *****************************************************************
+     C           SRFARD    BEGSR
+      *
+      ** Default : no
+      *
+     C                     MOVEL'N'       FZERO
+     C                     MOVE '0'       *IN90
+      *
+      ** Branch Code='ALL'
+      *
+     C           BRCHNR    IFEQ 'ALL'
+     C                     MOVELCNUMFR    W2CNUM
+      *
+     C           W2CNUM    SETLLLEFCLTLR
+     C           W2CNUM    READEFCLTYFMF                 90
+      *
+     C           *IN90     DOWEQ*OFF
+      *
+     C           RECI      IFEQ 'D'
+     C                     MOVEL'Y'       WFOUND  1
+     C                     MOVE '1'       *IN90
+     C                     ENDIF
+      *
+      ** Next record for that group
+      *
+     C  N90      W2CNUM    READEFCLTYFMF                 90
+     C                     ENDDO
+      *
+     C                     MOVEL'ALL'     BRCA
+      *
+      ** Branch Code not 'ALL'
+      *
+     C                     ELSE
+      *
+     C                     MOVELCNUMFR    W2CNUM
+     C                     MOVELBRCHNR    W2BRCH
+      *
+     C           KEY2      SETLLLEFCLTLS
+     C           KEY2      READEFCLTY2MF                 90
+      *
+     C           *IN90     DOWEQ*OFF
+      *
+     C           RECI      IFEQ 'D'
+     C                     MOVEL'Y'       WFOUND
+     C                     MOVE '1'       *IN90
+     C                     ENDIF
+      *
+      ** Next record for that group
+      *
+     C  N90      KEY2      READEFCLTY2MF                 90
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRWTR - Write record to CGAUHDL0                             *
+      *                                                               *
+      *****************************************************************
+     C           SRWTR     BEGSR
+      *
+     C           DZEROC    IFEQ *BLANKS                                                     BUG23826
+     C**********           MOVE E5ZCFG    DZEROC                                   BUG23826 BUG24194
+     C                     MOVE 'N'       DZEROC                                            BUG24194
+     C                     ENDIF                                                            BUG23826
+      *                                                                                     BUG23826
+     C           ID        IFEQ 'SE'
+     C                     MOVELTCNR      W1CNUM
+      *
+     C                     ELSE
+     C           ID        IFEQ 'FF'
+     C                     MOVELCUSC      W1CNUM
+      *
+     C                     ELSE
+     C                     MOVELCNUM      W1CNUM
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVELID        WMODID
+      *
+      ** Chain with branch field from CGAUHDPD
+      *
+     C                     MOVELBRCHNR    W1BRCH
+      *
+      ** Check if customer is active
+      *
+     C                     MOVE W1CNUM    WCNUM   6
+      *                                                                                    BUG23250A
+     C           DZEROC    IFEQ 'Y'                                                        BUG23250A
+     C                     MOVEL'Y'       FZERO                                            BUG23250A
+     C                     ELSE                                                            BUG23250A
+      *                                                                                    BUG23250A
+     C           DZEROC    IFEQ 'N'                                                        BUG23250A
+     C                     MOVEL'N'       FZERO                                            BUG23250A
+     C                     ENDIF                                                           BUG23250A
+      *                                                                                    BUG23250A
+     C                     ENDIF                                                           BUG23250A
+      *                                                                                    BUG23826A
+      ** Set Flag for Modules when Zcnf is 'N' and no Transaction                          BUG23826A
+      *                                                                                    BUG23826A
+     C           WCONF     IFNE 'Y'                                                        BUG23826A
+     C           FZERO     ANDEQ'N'                                                        BUG23826A
+     C                     MOVEL'N'       FMODP                                            BUG23826A
+     C                     ELSE                                                            BUG23826A
+     C                     MOVEL'Y'       FMODP                                            BUG23826A
+     C                     ENDIF                                                           BUG23826A
+      *                                                                                    BUG23250A
+      ** Save the Value of Zero-confirmation Flag for Updation                             BUG23250A
+      *                                                                                    BUG23250A
+     C                     MOVE FZERO     SZERO   1                                        BUG23250A
+      *
+     C********** WCNUM     CHAINSDCUSTJ2             95                                     BUG24194
+     C           WCNUM     CHAINSDCUSTL1             95                                     BUG24194
+      *
+      ** Write to Audit Letter Header File, only for active customer                        BUG24194
+      *                                                                                     BUG24194
+     C           *IN95     IFEQ *OFF
+     C           BBDTDL    ANDEQ0
+     C           BBCLST    ANDEQ*BLANKS                                                     BUG24194
+      *
+     C           KEY1      CHAINCGAUHDL0             85
+      *
+     C           *IN85     IFEQ *ON
+      *
+     C                     MOVELWCNUM     FCUST
+     C                     MOVELID        FMOID
+      *
+     C                     MOVELBRCHNR    FBRCA
+      *
+     C                     MOVEL'N'       FCOPR
+      *
+     C                     WRITECGAUHDD0
+      *                                                                                    BUG23250A
+     C                     ELSE                                                            BUG23250A
+      *                                                                                    BUG23250A
+     C           SZERO     IFEQ 'Y'                                                        BUG23250A
+     C           FZERO     IFEQ *BLANKS                                                    BUG23250A
+     C           FZERO     OREQ 'N'                                                        BUG23250A
+     C                     MOVEL'Y'       FZERO                                            BUG23250A
+     C                     ENDIF                                                           BUG23250A
+     C                     ENDIF                                                           BUG23250A
+      *                                                                                    BUG23250A
+     C                     UPDATCGAUHDD0                                                   BUG23250A
+      *                                                                                    BUG23250A
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     MOVEL*BLANKS   FMODP                                            BUG23826A
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRZCON - Select customers that require a Zero-Confirmation   *
+      *           in case ALL modules were selected for Audit letters *
+      *                                                               *
+      *****************************************************************
+     C           SRZCON    BEGSR
+      *
+     C           MODAL     IFEQ 'Y'
+     C           MODFX     OREQ 'Y'
+     C********** MODMM     OREQ 'Y'                                                         BUG23826
+     C********** MODFR     OREQ 'Y'                                                         BUG23826
+     C           MODIR     OREQ 'Y'
+     C           MODFF     OREQ 'Y'
+     C********** MODLE     OREQ 'Y'                                               BUG23250B BUG23826
+     C********** MODRE     OREQ 'Y'                                               BUG23250B BUG23826
+     C           MODSE     OREQ 'Y'                                                         BUG23826
+      *
+      ** Evaluate flag in customer extension file
+      *
+     C********** *LOVAL    SETLLSDCUSTJ2                                                    BUG24194
+     C**********           READ SDCUSTJ2                 92                                 BUG24194
+     C           *LOVAL    SETLLSDCUSTL1                                                    BUG24194
+     C                     READ SDCUSTL1                 92                                 BUG24194
+      *
+     C           *IN92     DOWEQ*OFF
+      *
+     C                     MOVE *BLANKS   WFOUND
+      *
+      ** Default  : no
+      *
+     C                     MOVEL'N'       FZERO
+      *
+      ** Zero-Confirmation required
+      *
+     C********** E5ZCFG    IFEQ 'Y'                                                         BUG23826
+     C********** DZEROC    OREQ 'Y'                                               BUG23250A BUG23826
+     C           BBCUST    IFGE CNUMFR
+     C           BBCUST    ANDLECNUMTO
+      *
+      ** Search for FX deals for that customer
+      ** Customer is also a FX Customer
+      *
+     C********** E5FXCU    IFEQ 'Y'                                                        BUG23250B
+     C           MODFX     IFEQ 'Y'
+     C           MODAL     OREQ 'Y'
+      *
+     C                     EXSR SRFXRD
+      *
+     C           WFOUND    IFNE 'Y'
+      *
+     C                     MOVELBBCUST    CNUM
+     C                     MOVEL'FX'      ID
+     C                     MOVEL'Y'       FZERO
+     C                     MOVELBBBRCD    BRCA
+      *
+      ** Write FX record
+      *
+     C                     EXSR SRWTR
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C**********           ENDIF                                                           BUG23250B
+      *
+      ***Sarch*for*MM*deals*for*that*customer                                               BUG23826
+      *                                                                                     BUG23826
+     C**********           MOVE *BLANKS   WFOUND                                            BUG23826
+     C**********           MOVELBBCUST    W2CNUM                                            BUG23826
+      **********                                                                            BUG23826
+     C********** MODMM     IFEQ 'Y'                                                         BUG23826
+     C********** MODAL     OREQ 'Y'                                                         BUG23826
+      **********                                                                            BUG23826
+     C**********           EXSR SRMMRD                                                      BUG23826
+      **********                                                                            BUG23826
+     C********** WFOUND    IFNE 'Y'                                                         BUG23826
+      **********                                                                            BUG23826
+     C**********           MOVELBBCUST    CNUM                                              BUG23826
+     C**********           MOVEL'MM'      ID                                                BUG23826
+     C**********           MOVEL'Y'       FZERO                                             BUG23826
+     C**********           MOVELBBBRCD    BRCA                                              BUG23826
+      **********                                                                            BUG23826
+      ***Write*MM*deals*record                                                              BUG23826
+      **********                                                                            BUG23826
+     C**********           EXSR SRWTR                                                       BUG23826
+      **********                                                                            BUG23826
+     C**********           ENDIF                                                            BUG23826
+     C**********           ENDIF                                                            BUG23826
+      **********                                                                            BUG23826
+      ***Search*for*FR*deals*for*that*customer                                              BUG23826
+      **********                                                                            BUG23826
+     C**********           MOVE *BLANKS   WFOUND                                            BUG23826
+     C**********           MOVELBBCUST    W2CNUM                                            BUG23826
+      **********                                                                            BUG23826
+     C********** MODFR     IFEQ 'Y'                                                         BUG23826
+     C********** MODAL     OREQ 'Y'                                                         BUG23826
+      **********                                                                            BUG23826
+     C**********           EXSR SRFRRD                                                      BUG23826
+      **********                                                                            BUG23826
+     C********** WFOUND    IFNE 'Y'                                                         BUG23826
+      **********                                                                            BUG23826
+     C**********           MOVELBBCUST    CNUM                                              BUG23826
+     C**********           MOVEL'FR'      ID                                                BUG23826
+     C**********           MOVEL'Y'       FZERO                                             BUG23826
+     C**********           MOVELBBBRCD    BRCA                                              BUG23826
+      **********                                                                            BUG23826
+      ***Write*FR*deals*record                                                              BUG23826
+      **********                                                                            BUG23826
+     C**********           EXSR SRWTR                                                       BUG23826
+      **********                                                                            BUG23826
+     C**********           ENDIF                                                            BUG23826
+      **********                                                                            BUG23826
+     C**********           ENDIF                                                            BUG23826
+      *
+      ** Search for IR deals for that customer
+      *
+     C                     MOVE *BLANKS   WFOUND
+     C                     MOVELBBCUST    W2CNUM
+      *
+     C           MODIR     IFEQ 'Y'
+     C           MODAL     OREQ 'Y'
+      *
+     C                     EXSR SRIRRD
+      *
+     C           WFOUND    IFNE 'Y'
+      *
+     C                     MOVELBBCUST    CNUM
+     C                     MOVEL'IR'      ID
+     C                     MOVEL'Y'       FZERO
+     C                     MOVELBBBRCD    BRCA
+      *
+      ** Write IR deals record
+      *
+     C                     EXSR SRWTR
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Search for SE deals for that customer
+      *
+     C                     MOVE *BLANKS   WFOUND
+     C                     MOVELBBCUST    W2CNUM
+      *
+     C           MODSE     IFEQ 'Y'
+     C           MODAL     OREQ 'Y'
+      *
+     C                     EXSR SRSERD
+      *
+     C           WFOUND    IFNE 'Y'
+      *
+     C                     MOVELBBCUST    TCNR
+     C                     MOVEL'SE'      ID
+     C                     MOVEL'Y'       FZERO
+     C                     MOVELBBBRCD    BRCA
+      *
+      ** Write SE deals record
+      *
+     C                     EXSR SRWTR
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *                                                                                    BUG23250B
+      ***Search*for*LO*deals*for*that*customer                                    BUG23250B BUG23826
+      **********                                                                  BUG23250B BUG23826
+     C**********           MOVE *BLANKS   WFOUND                                  BUG23250B BUG23826
+     C**********           MOVELBBCUST    W2CNUM                                  BUG23250B BUG23826
+      **********                                                                  BUG23250B BUG23826
+     C********** MODLE     IFEQ 'Y'                                               BUG23250B BUG23826
+     C********** MODAL     OREQ 'Y'                                               BUG23250B BUG23826
+      **********                                                                  BUG23250B BUG23826
+     C**********           EXSR SRLORD                                            BUG23250B BUG23826
+      **********                                                                  BUG23250B BUG23826
+     C********** WFOUND    IFNE 'Y'                                               BUG23250B BUG23826
+      **********                                                                  BUG23250B BUG23826
+     C**********           MOVELBBCUST    CNUM                                    BUG23250B BUG23826
+     C**********           MOVEL'LO'      ID                                      BUG23250B BUG23826
+     C**********           MOVEL'Y'       FZERO                                   BUG23250B BUG23826
+     C**********           MOVELBBBRCD    BRCA                                    BUG23250B BUG23826
+      **********                                                                  BUG23250B BUG23826
+      ***Write*LO*deals*record                                                    BUG23250B BUG23826
+      **********                                                                  BUG23250B BUG23826
+     C**********           EXSR SRWTR                                             BUG23250B BUG23826
+      **********                                                                  BUG23250B BUG23826
+     C**********           ENDIF                                                  BUG23250B BUG23826
+      **********                                                                  BUG23250B BUG23826
+     C**********           ENDIF                                                  BUG23250B BUG23826
+      **********                                                                  BUG23250B BUG23826
+      ***Search*for*FA*deals*for*that*customer                                    BUG23250B BUG23826
+      **********                                                                  BUG23250B BUG23826
+     C**********           MOVE *BLANKS   WFOUND                                  BUG23250B BUG23826
+     C**********           MOVELBBCUST    W2CNUM                                  BUG23250B BUG23826
+      **********                                                                  BUG23250B BUG23826
+     C********** MODLE     IFEQ 'Y'                                               BUG23250B BUG23826
+     C********** MODAL     OREQ 'Y'                                               BUG23250B BUG23826
+      **********                                                                  BUG23250B BUG23826
+     C**********           EXSR SRFARD                                            BUG23250B BUG23826
+      **********                                                                  BUG23250B BUG23826
+     C********** WFOUND    IFNE 'Y'                                               BUG23250B BUG23826
+      **********                                                                  BUG23250B BUG23826
+     C**********           MOVELBBCUST    CNUM                                    BUG23250B BUG23826
+     C**********           MOVEL'FA'      ID                                      BUG23250B BUG23826
+     C**********           MOVEL'Y'       FZERO                                   BUG23250B BUG23826
+     C**********           MOVELBBBRCD    BRCA                                    BUG23250B BUG23826
+      **********                                                                  BUG23250B BUG23826
+      ***Write*FA*deals*record                                                    BUG23250B BUG23826
+      **********                                                                  BUG23250B BUG23826
+     C**********           EXSR SRWTR                                             BUG23250B BUG23826
+      **********                                                                  BUG23250B BUG23826
+     C**********           ENDIF                                                  BUG23250B BUG23826
+      **********                                                                  BUG23250B BUG23826
+     C**********           ENDIF                                                  BUG23250B BUG23826
+      **********                                                                  BUG23250B BUG23826
+      ***Search*for*RE*deals*for*that*customer                                    BUG23250B BUG23826
+      **********                                                                  BUG23250B BUG23826
+     C**********           MOVE *BLANKS   WFOUND                                  BUG23250B BUG23826
+     C**********           MOVELBBCUST    W2CNUM                                  BUG23250B BUG23826
+      **********                                                                  BUG23250B BUG23826
+     C********** MODRE     IFEQ 'Y'                                               BUG23250B BUG23826
+     C********** MODAL     OREQ 'Y'                                               BUG23250B BUG23826
+      **********                                                                  BUG23250B BUG23826
+     C**********           EXSR SRRERD                                            BUG23250B BUG23826
+      **********                                                                  BUG23250B BUG23826
+     C********** WFOUND    IFNE 'Y'                                               BUG23250B BUG23826
+      **********                                                                  BUG23250B BUG23826
+     C**********           MOVELBBCUST    CNUM                                    BUG23250B BUG23826
+     C**********           MOVEL'RE'      ID                                      BUG23250B BUG23826
+     C**********           MOVEL'Y'       FZERO                                   BUG23250B BUG23826
+     C**********           MOVELBBBRCD    BRCA                                    BUG23250B BUG23826
+      **********                                                                  BUG23250B BUG23826
+      ***Write*RE*deals*record                                                    BUG23250B BUG23826
+      **********                                                                  BUG23250B BUG23826
+     C**********           EXSR SRWTR                                             BUG23250B BUG23826
+      **********                                                                  BUG23250B BUG23826
+     C**********           ENDIF                                                  BUG23250B BUG23826
+      **********                                                                  BUG23250B BUG23826
+     C**********           ENDIF                                                  BUG23250B BUG23826
+      *
+      ** Search for FF deals for that customer
+      *
+     C                     MOVE *BLANKS   WFOUND
+     C                     MOVELBBCUST    W2CNUM
+      *
+     C           MODFF     IFEQ 'Y'
+     C           MODAL     OREQ 'Y'
+      *
+     C                     EXSR SRFFRD
+      *
+     C           WFOUND    IFNE 'Y'
+      *
+     C                     MOVELBBCUST    CUSC
+     C                     MOVEL'FF'      ID
+     C                     MOVEL'Y'       FZERO
+     C                     MOVELBBBRCD    BRCA
+      *
+      ** Write FF deals record
+      *
+     C                     EXSR SRWTR
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C**********           ENDIF                                                            BUG23826
+      *
+     C**********           READ SDCUSTJ2                 92                                 BUG24194
+     C                     READ SDCUSTL1                 92                                 BUG24194
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2004

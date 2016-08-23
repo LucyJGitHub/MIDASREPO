@@ -1,0 +1,432 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER LU folder paths for PCFiles')
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting Module                            *
+      *                                                               *
+      *  ERLU58 - validate Swiss Folder Paths fo PCFile downloaded    *
+      *                                                               *
+      *  Function:  This program Will manage ERLUDPPD contents        *
+      *  (phase(s)) I/C for EOD Download                              *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CER001             Date 25Apr05               *
+      *  Prev Amend No. ULX008             Date 23Feb00               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  ULX008 - CSSF Statutory Reporting : Commissariat aux Bourses *
+      *                                                               *
+      *****************************************************************
+     FERLU58DFCF  E                    WORKSTN      KINFSR *PSSR
+      ***  Display file
+      *
+     FERLUDPPDUF  E                    DISK         KINFSR *PSSR A
+      ***  ER CH Download Folder paths for PCfile
+      *
+     FSDBANKL1IF  E           K        DISK         KINFSR *PSSR
+      ***  BANK Details
+      *
+      /EJECT
+     E                    CPY@    1   1 80
+      ***  Array containing Copyright statement
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      ***  Local data area for database error details
+      *
+     IPSDS       SDS
+      ***  Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 SWSID
+     I                                      254 263 SUSER
+      *
+     ISCSARD    E DSSCSARDPD
+      ***  SWITCHABILITY
+      *
+     IDSCOMP      DS
+      ***  Previous input
+     I                                        1  63 CPRT14
+      *
+     IDSINP       DS
+      ***  Current input
+     I                                        1  63 SRT14
+      *
+      *ALPHA is used for CHEKR keyword (look the path and retain position
+      *from the first character which is not in this table.)
+     I              'ABCDEFGHIJKLMNOPQRST-C         ALPHA
+     I              'UVWXYZ.0123456789_'
+      *
+      *****************************************************************
+      *                     M A I N L I N E S                         *
+      *****************************************************************
+      *
+      ***  Read ERLUDPPD content
+      *
+     C                     MOVE *BLANKS   DSCOMP
+     C           1         SETLLERLUDPPD
+     C                     READ ERLUDPD0                 89
+      *
+     C           *IN89     IFEQ *ON
+     C                     MOVE *BLANKS   DWRT14
+     C                     WRITEERLUDPD0
+     C                     ENDIF
+      *
+      ***  Fill Screen fields
+      *
+     C                     MOVELDWRT14    SRT14     P
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM PGM       ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C           *INKC     DOWEQ*OFF
+      *
+     C                     WRITE#MSGCTL
+     C                     EXFMTERLU58F1
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM PGM       ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+      ***  If entre two time with something entered move *ON KC to leave
+      *
+     C           *INKC     IFEQ *OFF
+     C           DSCOMP    ANDNE*BLANKS                    at least 1 validation
+     C           *IN20     ANDEQ*OFF                       and last is valid
+      *
+     C           DSCOMP    IFEQ DSINP
+     C                     MOVE *ON       *INKC
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           *INKC     IFEQ *OFF
+      *
+      ***  Validate DWRT14
+      *
+     C                     EXSR SRVAL
+      *
+     C           *IN20     IFEQ *OFF                       DWRT14 OK
+     C                     EXSR UPDAT
+     C                     ENDIF
+      *
+     C                     MOVE DSINP     DSCOMP           For Comparison
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      *****************************************************************
+      *              E N D    O F     M A I N L I N E S               *
+      *****************************************************************
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      /EJECT
+      *****************************************************************
+      *  SRVAL  - Validate Folder Path                                *
+      *  ------                                                       *
+      *  Called by : Mainlines                                        *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           SRVAL     BEGSR
+      *
+      ***  Reset Error Indicator 20
+      *
+     C                     MOVEA'0'       *IN,20
+      *
+      ***  Validate RT14 Folder Path
+      *
+     C           SRT14     IFNE *BLANKS                    B1
+     C                     MOVE SRT14     WWPATH 63
+      *
+     C                     EXSR SPATH                      Validate
+      *
+     C                     MOVELWWPATH    SRT14     P
+     C           WWERR     IFNE 0                          B2
+     C                     MOVE *ON       *IN20
+     C                     SELEC                           B3
+     C           WWERR     WHEQ 1
+      *
+      ***  'List or Expression not Valid. '
+      *
+     C                     MOVE 'ERL0822' ZAMSID
+      *
+     C           WWERR     WHEQ 2
+      *
+      ***  Folder not found
+      *
+     C                     MOVEL'ERL0823' ZAMSID
+      *
+     C           WWERR     WHEQ 3
+      *
+      ***  Not authorised to folder
+      *
+     C                     MOVEL'ERL0824' ZAMSID
+      *
+     C           WWERR     WHEQ 4
+      *
+      ***  Argument error
+      *
+     C                     MOVEL'ERL0822' ZAMSID
+      *
+     C           WWERR     WHEQ 5
+      *
+      ***  Folder does not exist
+      *
+     C                     MOVEL'ERL0825' ZAMSID
+      *
+     C           WWERR     WHEQ 6
+      *
+      ***  Other error during Folder Validation
+      *
+     C                     MOVEL'ERL0826' ZAMSID
+     C                     ENDSL                           E3
+      *
+     C                     EXSR ZASNMS
+      *
+     C                     ENDIF                           E2
+     C                     ENDIF                           E1
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SPATH  - Validate Path                                       *
+      *  ------                                                       *
+      *  Called by : Mainlines                                        *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           SPATH     BEGSR
+      *
+     C                     Z-ADD0         WWERR   10
+      *
+      ***  1) Left Align
+      *
+     C           WWPATH    IFNE *BLANKS
+     C           ' '       CHECKWWPATH    F       20       FIRST
+     C           64        SUB  F         L       20       LAST
+     C                     MOVE *BLANKS   LONG63 63
+     C           L         SUBSTWWPATH:F  LONG63
+     C                     MOVELLONG63    WWPATH
+     C                     ENDIF
+      *
+      ***  2) Looking for Folder name and Path
+      *
+     C           ' '       CHEKRWWPATH    E       20
+     C           ALPHA     CHEKRWWPATH:E  START   20     99
+     C           *IN99     IFNE *ON                        B1
+     C                     MOVELWWPATH    FOLDER    P          Folder
+     C                     MOVEL'*NONE'   PATH      P          Path
+     C                     ELSE                            X1
+     C           START     IFEQ 0                          B2
+     C                     Z-ADD1         WWERR
+     C                     ELSE                            X2
+     C                     Z-ADDSTART     C       20
+     C           1         SUBSTWWPATH:C  SLASH   1
+     C           SLASH     IFNE '/'                        B3
+     C                     Z-ADD1         WWERR                no / found
+     C                     ELSE                            X3
+     C           E         SUB  START     LEN     20
+     C           START     ADD  1         S       20
+     C           START     SUB  1         END     20
+     C           LEN       IFNE 0                          B4
+     C           END       ANDNE0
+     C           LEN       SUBSTWWPATH:S  FOLDER 12 P          Folder
+     C           END       SUBSTWWPATH:1  PATH   51 P          Path
+     C                     ELSE                            X4 0 CHAR
+     C                     Z-ADD1         WWERR
+     C                     ENDIF                           E4
+     C                     ENDIF                           E3
+     C                     ENDIF                           E2
+     C                     ENDIF                           E1
+      *
+      ***  No Input error, check Folder Existance
+      *
+     C           WWERR     IFEQ 0                          B1
+      *
+      ***  VALIDATE THE FOLDER AND ITS PATH
+      *
+     C                     CALL 'ERCHKFLR'
+     C                     PARM FOLDER    PFOLDE 12
+     C                     PARM PATH      PPATH  51
+     C                     PARM *BLANKS   PMSGID  7
+      *
+     C           PMSGID    IFNE *BLANKS                    B2
+      *
+     C                     SELEC
+      *
+      ***  Folder not found
+      *
+     C           PMSGID    WHEQ 'CPF8A77'
+     C                     Z-ADD2         WWERR
+      *
+      ***  Not authorised to folder
+      *
+     C           PMSGID    WHEQ 'CPD8A75'
+     C                     Z-ADD3         WWERR
+      *
+      ***  Argument error
+      *
+     C           PMSGID    WHEQ 'CPD0047'
+     C                     Z-ADD4         WWERR
+      *
+      ***  Folder does not exist
+      *
+     C           PMSGID    WHEQ 'CPD8A97'
+     C                     Z-ADD5         WWERR
+      *
+      ***  Other error
+      *
+     C                     OTHER
+     C                     Z-ADD6         WWERR
+     C                     ENDSL
+     C                     ENDIF                           E2
+     C                     ENDIF                           E1
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  UPDAT  - Update Record of ERLUDPPD                           *
+      *  ------                                                       *
+      *  Called by : Mainlines                                        *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           UPDAT     BEGSR
+      *
+     C           1         SETLLERLUDPPD
+     C                     READ ERLUDPPD                 89
+     C                     MOVELSRT14     DWRT14    P
+     C                     UPDATERLUDPD0
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  *INZSR - Initial subroutine                                  *
+      *  ------                                                       *
+      *  Called by : Automatically at start of program                *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+      ***  Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ***  Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ***  Access ERBANKPD Details (Download of SDBANKPD)
+      *
+     C           *LOVAL    SETLLSDBANKL1
+     C                     READ SDBANKL1                 89
+     C           *IN89     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'SDBANKL1'DBFILE           * DB ERROR 01 *
+     C                     MOVEL'*FIRST'  DBKEY     P      ***************
+     C                     MOVELPGM       DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Retrieve Run day (3 first letters)
+      *
+     C                     MOVELBJMRDT    SRUNA
+      *
+      ***  check ULX008 is installed
+      *
+     C                     MOVE 'N'       ULX008  1
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'ULX008'  @SARD   6
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       ULX008
+      *
+     C                     ELSE
+      *
+      ***  Leave Program, when ULX008 is not present
+      ***  (Because of ULX008 is the First path *** !!!!
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  ZASNMS : SEND MESSAGE TO PROGRAM'S MESSAGE QUEUE             *
+      *  ------                                                       *
+      *  Called by : SRVAL                                            *
+      *  Calls                                                        *
+      *****************************************************************
+     C           ZASNMS    BEGSR
+      *
+      ***  message file specified use PMSGF
+      *
+     C           ZAMSGF    IFEQ *BLANKS
+     C**********           MOVEL'ERUSRMSG'ZAMSGF           ER MSGF                            CER001
+     C                     MOVEL'STUSRMSG'ZAMSGF           ST MSGF                            CER001
+     C                     ENDIF
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+      ***   Clear all fields for default mechanism next time.
+      *
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C                     MOVEL*BLANK    ZAMSGF           Message file
+     C                     MOVEL*BLANK    ZAMSID           Message id.
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  *PSSR  - Program exception error routine                     *
+      *  ------                                                       *
+      *  Called automatically if a program error occurs, or directly  *
+      *  by the program code using EXSR.                              *
+      *  This subroutine DUMPs the program just once.                 *
+      *  Called by :                                                  *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2005

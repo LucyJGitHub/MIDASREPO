@@ -1,0 +1,156 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas FF Apply overrides')                            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - Financial Futurea and Options                    */
+/*                                                                   */
+/*       FFAPYOVR - Apply FF multimember overrides.                  */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Last Amend No. CAP191             Date 26Nov09              */
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CER001             Date 25Apr05              */
+/*                      CAP183             Date 05Jan06              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      CAP004  *CREATE    Date 21Jul98              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CAP191 - MQ Enabling of FUND and EXTR APIs                  */
+/*       CER001 - LUX Upgrade to MidasPlus                           */
+/*       CAP183 - Conversion of Market Prices Input into modular     */
+/*                structure to use APIs.                             */
+/*       CAP004 - Conversion of Midas inputs to APIs                 */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM        PARM(&RETURNCODE &TO)
+ 
+/*/COPY WNCPYSRC,FFAPYOVRM01                                         */
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                     /*CER001*/
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                                     /*CER001*/
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                                     /*CER001*/
+             DCL        VAR(&ULX604) TYPE(*CHAR) LEN(1)                                   /*CER001*/
+             DCL        VAR(&ULX605) TYPE(*CHAR) LEN(1)                                   /*CER001*/
+ 
+ 
+             DCL        VAR(&RETURNCODE) TYPE(*CHAR) LEN(10)
+ 
+/** +
+    Member to override to: +
+**/
+             DCL        VAR(&TO) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&TOMEMBER) TYPE(*CHAR) LEN(10)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2001')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/*/COPY WNCPYSRC,FFAPYOVRM02                                         */
+/**/                                                                                      /*CER001*/
+/* Check if ULX604 is installed */                                                        /*CER001*/
+/**/                                                                                      /*CER001*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CER001*/
+             CHGVAR     VAR(&SARD) VALUE('ULX604')                                        /*CER001*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD)                             /*CER001*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                          VAR(&ULX604) VALUE('Y'))                                        /*CER001*/
+/**/                                                                                      /*CER001*/
+/* Check if ULX605 is installed */                                                        /*CER001*/
+/**/                                                                                      /*CER001*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CER001*/
+             CHGVAR     VAR(&SARD) VALUE('ULX605')                                        /*CER001*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD)                             /*CER001*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                          VAR(&ULX605) VALUE('Y'))                                        /*CER001*/
+ 
+/** +
+    If the 'TO' parameter is 'OT' (for OTCs) set the TOMEMBER +
+    variable to 'OTC'.  Otherwise just set it to the value +
+    received. +
+**/
+             IF         COND(&TO *EQ 'OT') THEN(DO)
+                CHGVAR     VAR(&TOMEMBER) VALUE('OTC')
+             ENDDO
+ 
+             ELSE       CMD(DO)
+                CHGVAR     VAR(&TOMEMBER) VALUE(&TO)
+             ENDDO
+ 
+ 
+/** +
+    Apply all the necessary overrides.  Note that the override +
+    scope is explicitly set to *ACTGRPDFN, which is the default, to +
+    prevent potential problems caused by compiling on machines +
+    where the default has been changed.  This value is essential +
+    for these overrides to function correctly in ILE programs. +
+**/
+/*           OVRDBF     FILE(TRANS) MBR(&TOMEMBER)  OVRSCOPE(*ACTGRPDFN) */               /*CAP191*/
+/*           OVRDBF     FILE(TRANS8) MBR(&TOMEMBER) OVRSCOPE(*ACTGRPDFN) */               /*CAP191*/
+/*           OVRDBF     FILE(TRANSA) MBR(&TOMEMBER) OVRSCOPE(*ACTGRPDFN) */               /*CAP191*/
+/*           OVRDBF     FILE(TRSET) MBR(&TOMEMBER)  OVRSCOPE(*ACTGRPDFN) */               /*CAP191*/
+/*           OVRDBF     FILE(POSTNC) MBR(&TOMEMBER) OVRSCOPE(*ACTGRPDFN) */               /*CAP191*/
+/*           OVRDBF     FILE(POSTNK) MBR(&TOMEMBER) OVRSCOPE(*ACTGRPDFN) */               /*CAP191*/
+/*           OVRDBF     FILE(PRICS) MBR(&TOMEMBER)  OVRSCOPE(*ACTGRPDFN) */               /*CAP191*/
+/*           OVRDBF     FILE(PRICS2) MBR(&TOMEMBER)  OVRSCOPE(*ACTGRPDFN)*/        /*CAP183 CAP191*/
+/*           OVRDBF     FILE(PRICS3) MBR(&TOMEMBER)  OVRSCOPE(*ACTGRPDFN)*/        /*CAP183 CAP191*/
+/*           OVRDBF     FILE(PRICSA) MBR(&TOMEMBER)  OVRSCOPE(*ACTGRPDFN)*/        /*CAP183 CAP191*/
+/*           OVRDBF     FILE(CLOST) MBR(&TOMEMBER)  OVRSCOPE(*ACTGRPDFN) */               /*CAP191*/
+/*           OVRDBF     FILE(CLOST2) MBR(&TOMEMBER) OVRSCOPE(*ACTGRPDFN) */               /*CAP191*/
+/*           OVRDBF     FILE(MEMOSM) MBR(&TOMEMBER) OVRSCOPE(*ACTGRPDFN) */               /*CAP191*/
+/*           OVRDBF     FILE(PRONOM) MBR(&TOMEMBER) OVRSCOPE(*ACTGRPDFN) */               /*CAP191*/
+/*           OVRDBF     FILE(FFACMVD) MBR(&TOMEMBER) OVRSCOPE(*ACTGRPDFN)*/               /*CAP191*/
+ 
+             OVRDBF     FILE(TRANS) MBR(&TOMEMBER)  OVRSCOPE(*JOB)                        /*CAP191*/
+             OVRDBF     FILE(TRANS8) MBR(&TOMEMBER) OVRSCOPE(*JOB)                        /*CAP191*/
+             OVRDBF     FILE(TRANSA) MBR(&TOMEMBER) OVRSCOPE(*JOB)                        /*CAP191*/
+             OVRDBF     FILE(TRSET) MBR(&TOMEMBER)  OVRSCOPE(*JOB)                        /*CAP191*/
+             OVRDBF     FILE(POSTNC) MBR(&TOMEMBER) OVRSCOPE(*JOB)                        /*CAP191*/
+             OVRDBF     FILE(POSTNK) MBR(&TOMEMBER) OVRSCOPE(*JOB)                        /*CAP191*/
+             OVRDBF     FILE(PRICS) MBR(&TOMEMBER)  OVRSCOPE(*JOB)                        /*CAP191*/
+             OVRDBF     FILE(PRICS2) MBR(&TOMEMBER)  OVRSCOPE(*JOB)                       /*CAP191*/
+             OVRDBF     FILE(PRICS3) MBR(&TOMEMBER)  OVRSCOPE(*JOB)                       /*CAP191*/
+             OVRDBF     FILE(PRICSA) MBR(&TOMEMBER)  OVRSCOPE(*JOB)                       /*CAP191*/
+             OVRDBF     FILE(CLOST) MBR(&TOMEMBER)  OVRSCOPE(*JOB)                        /*CAP191*/
+             OVRDBF     FILE(CLOST2) MBR(&TOMEMBER) OVRSCOPE(*JOB)                        /*CAP191*/
+             OVRDBF     FILE(MEMOSM) MBR(&TOMEMBER) OVRSCOPE(*JOB)                        /*CAP191*/
+             OVRDBF     FILE(PRONOM) MBR(&TOMEMBER) OVRSCOPE(*JOB)                        /*CAP191*/
+             OVRDBF     FILE(FFACMVD) MBR(&TOMEMBER) OVRSCOPE(*JOB)                       /*CAP191*/
+ 
+/*/COPY WNCPYSRC,FFAPYOVRM03                                         */
+             IF         COND(&ULX604 *EQ 'Y' *OR &ULX605 *EQ 'Y') +
+                          THEN(DO)                                                        /*CER001*/
+/*           OVRDBF     FILE(FFTRX2L0) MBR(&TOMEMBER) +
+                        OVRSCOPE(*ACTGRPDFN)              */                       /*CER001 CAP191*/
+/*           OVRDBF     FILE(FFTRX2PD) MBR(&TOMEMBER) +
+                        OVRSCOPE(*ACTGRPDFN)              */                       /*CER001 CAP191*/
+             OVRDBF     FILE(FFTRX2L0) MBR(&TOMEMBER) +
+                        OVRSCOPE(*JOB)                                                    /*CAP191*/
+             OVRDBF     FILE(FFTRX2PD) MBR(&TOMEMBER) +
+                        OVRSCOPE(*JOB)                                                    /*CAP191*/
+             ENDDO                                                                        /*CER001*/
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+/*/COPY WNCPYSRC,FFAPYOVRM04                                         */
+ 
+             CHGJOB     SWS(XXXXXX11)
+             CHGVAR     VAR(&RETURNCODE) VALUE('Error')
+ 
+ 
+ END:
+ 
+/*/COPY WNCPYSRC,FFAPYOVRM05                                         */
+ 
+             ENDPGM

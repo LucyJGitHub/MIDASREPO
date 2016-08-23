@@ -1,0 +1,307 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas MX Daily housekeeping - BoE')                   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Meridian Export Module                              */
+/*                                                                   */
+/*       MXC004807 - Daily Housekeeping - BoE                        */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2014           */
+/*                                                                   */
+/*       Last Amend No. LLN022A *CREATE    Date 30Oct14              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       LLN022A - BOE Upgrade to MidasPlus                          */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN( 7)
+             DCL        VAR(&ERMS) TYPE(*CHAR) LEN(30)
+             DCL        VAR(&COB)  TYPE(*CHAR) LEN( 1) VALUE(Y)
+             DCL        VAR(&SOM)  TYPE(*CHAR) LEN( 1) VALUE(N)
+             DCL        VAR(&CURSOM) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&PRVSOM) TYPE(*CHAR) LEN(5)
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2014')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('MXC004807 - Midas MX Daily Housekeeping +
+                          - BoE purging and update') TOMSGQ(MRUNQ)
+ 
+/* Copy DEALING account keys */
+             CPYF       FROMFILE(MXAKDLPD) TOFILE(BYAKDLPP) +
+                          FROMMBR(SOM) TOMBR(SOM) MBROPT(*ADD)
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+             CPYF       FROMFILE(MXAKDLPD) TOFILE(BYAKDLPP) +
+                          FROMMBR(POST1) TOMBR(POST1) MBROPT(*ADD)
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+             CPYF       FROMFILE(MXAKDLPD) TOFILE(BYAKDLPP) +
+                          FROMMBR(POST5) TOMBR(POST5) MBROPT(*ADD)
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+/* Copy LENDING account keys */
+             CPYF       FROMFILE(MXAKLFPD) TOFILE(BYAKLFPP) +
+                          FROMMBR(SOM) TOMBR(SOM) MBROPT(*ADD)
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+             CPYF       FROMFILE(MXAKLFPD) TOFILE(BYAKLFPP) +
+                          FROMMBR(POST1) TOMBR(POST1) MBROPT(*ADD)
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+             CPYF       FROMFILE(MXAKLFPD) TOFILE(BYAKLFPP) +
+                          FROMMBR(POST5) TOMBR(POST5) MBROPT(*ADD)
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+             CPYF       FROMFILE(MXAKLNPD) TOFILE(BYAKLNPP) +
+                          FROMMBR(SOM) TOMBR(SOM) MBROPT(*ADD)
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+             CPYF       FROMFILE(MXAKLNPD) TOFILE(BYAKLNPP) +
+                          FROMMBR(POST1) TOMBR(POST1) MBROPT(*ADD)
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+             CPYF       FROMFILE(MXAKLNPD) TOFILE(BYAKLNPP) +
+                          FROMMBR(POST5) TOMBR(POST5) MBROPT(*ADD)
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+/* Copy SECURITIES account keys */
+             CPYF       FROMFILE(MXAKSEPD) TOFILE(BYAKSEPP) +
+                          FROMMBR(SOM) TOMBR(SOM) MBROPT(*ADD)
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+             CPYF       FROMFILE(MXAKSEPD) TOFILE(BYAKSEPP) +
+                          FROMMBR(POST1) TOMBR(POST1) MBROPT(*ADD)
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+             CPYF       FROMFILE(MXAKSEPD) TOFILE(BYAKSEPP) +
+                          FROMMBR(POST5) TOMBR(POST5) MBROPT(*ADD)
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+/* Copy Futures and Options account keys */
+             CPYF       FROMFILE(BYFOKYPP) TOFILE(BYAKFFPP) +
+                          MBROPT(*ADD)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+/* Clear Futures and Options account keys daily file */
+             CLRPFM     FILE(BYFOKYPP)
+ 
+/**** CLEAR ALL THE BALANCES FILES *****/
+             CLRPFM     FILE(MXDEFFTPD)
+             CLRPFM     FILE(MXDEFFBPD)
+ 
+/**** UPDATE DATES ON DATA-AREA MXEXPCTL     ***********/
+/**** AND CHECK IF THE START OF THE MONTH    ***********/
+             CALL       PGM(MXEXCTUPD) PARM(&RTCD &ERMS &COB &SOM)
+ 
+             IF COND(%SWITCH(XXXXXX11)) THEN(DO)
+               SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                            MXC004807 ended abnormally - see job log') +
+                            TOMSGQ(MOPERQ MRUNQ)
+               GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* IF START OF MONTH, SAVE THEN CLEAR MONTHLY EVENTS FILES */
+             IF         COND(&SOM *EQ 'Y') THEN(DO)
+             CLRPFM     FILE(MXMEFFTPD)
+             CLRPFM     FILE(MXMEFFBPD)
+             ENDDO
+ 
+/* IF START OF MONTH, PURGE SAVED DATA FILES */
+/* DROP ALL RECORDS WITH AN LCD < PREVIOUS START OF MONTH DATE*/
+/* THIS MEANS 2 MONTHS OF DATA IS HELD ON THESE FILES */
+             IF         COND(&SOM *EQ 'Y') THEN(DO)
+             RTVDTAARA  DTAARA(MXEXPCTL (06 5)) RTNVAR(&CURSOM)                           /*185462*/
+             RTVDTAARA  DTAARA(MXEXPCTL (11 5)) RTNVAR(&PRVSOM)
+ 
+/*  DEALING account keys */
+             CPYF       FROMFILE(BYAKDLPP) TOFILE(QTEMP/BYAKDLTP) +
+                          FROMMBR(SOM) TOMBR(SOM) MBROPT(*REPLACE) +
+                          CRTFILE(*YES) INCREL((*IF EDAT *GE +
+                          &PRVSOM))
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+             CPYF       FROMFILE(QTEMP/BYAKDLTP) +
+                          TOFILE(*LIBL/BYAKDLPP) FROMMBR(SOM) +
+                          TOMBR(SOM) MBROPT(*REPLACE) CRTFILE(*NO)
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+             CPYF       FROMFILE(BYAKDLPP) TOFILE(QTEMP/BYAKDLTP) +
+                          FROMMBR(POST1) TOMBR(POST1) +
+                          MBROPT(*REPLACE) CRTFILE(*YES) +
+                          INCREL((*IF EDAT *GE &PRVSOM))
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+             CPYF       FROMFILE(QTEMP/BYAKDLTP) +
+                          TOFILE(*LIBL/BYAKDLPP) FROMMBR(POST1) +
+                          TOMBR(POST1) MBROPT(*REPLACE) CRTFILE(*NO)
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+             CPYF       FROMFILE(BYAKDLPP) TOFILE(QTEMP/BYAKDLTP) +
+                          FROMMBR(POST5) TOMBR(POST5) +
+                          MBROPT(*REPLACE) CRTFILE(*YES) +
+                          INCREL((*IF EDAT *GE &PRVSOM))
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+             CPYF       FROMFILE(QTEMP/BYAKDLTP) +
+                          TOFILE(*LIBL/BYAKDLPP) FROMMBR(POST5) +
+                          TOMBR(POST5) MBROPT(*REPLACE) CRTFILE(*NO)
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+/*  FACILITIES account keys */
+             CPYF       FROMFILE(BYAKLFPP) TOFILE(QTEMP/BYAKLFTP) +
+                          FROMMBR(SOM) TOMBR(SOM) MBROPT(*REPLACE) +
+                          CRTFILE(*YES) INCREL((*IF LKEDAT *GE +
+                          &PRVSOM))
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+             CPYF       FROMFILE(QTEMP/BYAKLFTP) +
+                          TOFILE(*LIBL/BYAKLFPP) FROMMBR(SOM) +
+                          TOMBR(SOM) MBROPT(*REPLACE) CRTFILE(*NO)
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+             CPYF       FROMFILE(BYAKLFPP) TOFILE(QTEMP/BYAKLFTP) +
+                          FROMMBR(POST1) TOMBR(POST1) +
+                          MBROPT(*REPLACE) CRTFILE(*YES) +
+                          INCREL((*IF LKEDAT *GE &PRVSOM))
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+             CPYF       FROMFILE(QTEMP/BYAKLFTP) +
+                          TOFILE(*LIBL/BYAKLFPP) FROMMBR(POST1) +
+                          TOMBR(POST1) MBROPT(*REPLACE) CRTFILE(*NO)
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+             CPYF       FROMFILE(BYAKLFPP) TOFILE(QTEMP/BYAKLFTP) +
+                          FROMMBR(POST5) TOMBR(POST5) +
+                          MBROPT(*REPLACE) CRTFILE(*YES) +
+                          INCREL((*IF LKEDAT *GE &PRVSOM))
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+             CPYF       FROMFILE(QTEMP/BYAKLFTP) +
+                          TOFILE(*LIBL/BYAKLFPP) FROMMBR(POST5) +
+                          TOMBR(POST5) MBROPT(*REPLACE) CRTFILE(*NO)
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+/*  LENDING account keys */
+             CPYF       FROMFILE(BYAKLNPP) TOFILE(QTEMP/BYAKLNTP) +
+                          FROMMBR(SOM) TOMBR(SOM) MBROPT(*REPLACE) +
+                          CRTFILE(*YES) INCREL((*IF EDAT *GE &PRVSOM))
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+             CPYF       FROMFILE(QTEMP/BYAKLNTP) +
+                          TOFILE(*LIBL/BYAKLNPP) FROMMBR(SOM) +
+                          TOMBR(SOM) MBROPT(*REPLACE) CRTFILE(*NO)
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+             CPYF       FROMFILE(BYAKLNPP) TOFILE(QTEMP/BYAKLNTP) +
+                          FROMMBR(POST1) TOMBR(POST1) +
+                          MBROPT(*REPLACE) CRTFILE(*YES) +
+                          INCREL((*IF EDAT *GE &PRVSOM))
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+             CPYF       FROMFILE(QTEMP/BYAKLNTP) +
+                          TOFILE(*LIBL/BYAKLNPP) FROMMBR(POST1) +
+                          TOMBR(POST1) MBROPT(*REPLACE) CRTFILE(*NO)
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+             CPYF       FROMFILE(BYAKLNPP) TOFILE(QTEMP/BYAKLNTP) +
+                          FROMMBR(POST5) TOMBR(POST5) +
+                          MBROPT(*REPLACE) CRTFILE(*YES) +
+                          INCREL((*IF EDAT *GE &PRVSOM))
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+             CPYF       FROMFILE(QTEMP/BYAKLNTP) +
+                          TOFILE(*LIBL/BYAKLNPP) FROMMBR(POST5) +
+                          TOMBR(POST5) MBROPT(*REPLACE) CRTFILE(*NO)
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+/*  SECURITIES account keys */
+             CPYF       FROMFILE(BYAKSEPP) TOFILE(QTEMP/BYAKSETP) +
+                          FROMMBR(SOM) TOMBR(SOM) MBROPT(*REPLACE) +
+                          CRTFILE(*YES) INCREL((*IF EVDT *GE &PRVSOM))
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+             CPYF       FROMFILE(QTEMP/BYAKSETP) +
+                          TOFILE(*LIBL/BYAKSEPP) FROMMBR(SOM) +
+                          TOMBR(SOM) MBROPT(*REPLACE) CRTFILE(*NO)
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+             CPYF       FROMFILE(BYAKSEPP) TOFILE(QTEMP/BYAKSETP) +
+                          FROMMBR(POST1) TOMBR(POST1) +
+                          MBROPT(*REPLACE) CRTFILE(*YES) +
+                          INCREL((*IF EVDT *GE &PRVSOM))
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+             CPYF       FROMFILE(QTEMP/BYAKSETP) +
+                          TOFILE(*LIBL/BYAKSEPP) FROMMBR(POST1) +
+                          TOMBR(POST1) MBROPT(*REPLACE) CRTFILE(*NO)
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+             CPYF       FROMFILE(BYAKSEPP) TOFILE(QTEMP/BYAKSETP) +
+                          FROMMBR(POST5) TOMBR(POST5) +
+                          MBROPT(*REPLACE) CRTFILE(*YES) +
+                          INCREL((*IF EVDT *GE &PRVSOM))
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+             CPYF       FROMFILE(QTEMP/BYAKSETP) +
+                          TOFILE(*LIBL/BYAKSEPP) FROMMBR(POST5) +
+                          TOMBR(POST5) MBROPT(*REPLACE) CRTFILE(*NO)
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+/*  Futures and Options account keys */
+             CPYF       FROMFILE(BYAKFFPP) TOFILE(QTEMP/BYAKFFTP) +
+                          FROMMBR(SOM) TOMBR(SOM) MBROPT(*REPLACE) +
+                          CRTFILE(*YES) INCREL((*IF EVDT *GE &PRVSOM))
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+             CPYF       FROMFILE(QTEMP/BYAKFFTP) +
+                          TOFILE(*LIBL/BYAKFFPP) FROMMBR(SOM) +
+                          TOMBR(SOM) MBROPT(*REPLACE) CRTFILE(*NO)
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+             CPYF       FROMFILE(BYAKFFPP) TOFILE(QTEMP/BYAKFFTP) +
+                          FROMMBR(POST1) TOMBR(POST1) +
+                          MBROPT(*REPLACE) CRTFILE(*YES) +
+                          INCREL((*IF EVDT *GE &PRVSOM))
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+             CPYF       FROMFILE(QTEMP/BYAKFFTP) +
+                          TOFILE(*LIBL/BYAKFFPP) FROMMBR(POST1) +
+                          TOMBR(POST1) MBROPT(*REPLACE) CRTFILE(*NO)
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+             CPYF       FROMFILE(BYAKFFPP) TOFILE(QTEMP/BYAKFFTP) +
+                          FROMMBR(POST5) TOMBR(POST5) +
+                          MBROPT(*REPLACE) CRTFILE(*YES) +
+                          INCREL((*IF EVDT *GE &PRVSOM))
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+             CPYF       FROMFILE(QTEMP/BYAKFFTP) +
+                          TOFILE(*LIBL/BYAKFFPP) FROMMBR(POST5) +
+                          TOMBR(POST5) MBROPT(*REPLACE) CRTFILE(*NO)
+             MONMSG     MSGID(CPF2817 CPF2869)
+ 
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+/* Abnormal termination */
+               SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                            MXC004807 ended abnormally - see job log') +
+                            TOMSGQ(MOPERQ MRUNQ)
+               MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+ 
+             ENDPGM

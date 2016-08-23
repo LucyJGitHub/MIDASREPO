@@ -1,0 +1,80 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Set up initial Futures and Options')         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000099 - Set up initial Futures and Options              */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. CUP004  *CREATE    Date 07Oct10              */
+/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       CUP004 - New utility to replace SCBEGIN.                    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PFX &ERRPGM)
+ 
+             DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&FF) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7) VALUE(' ')
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE('N')
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2010')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Check if Futures and Options is switched on - data area MMOD and file SDMMODPD. */
+             RTVDTAARA  DTAARA(MMOD (50 1)) RTNVAR(&FF)
+             CALL       PGM(AOMMODR0) PARM(&RTNCODE '*FIRST' &FMT)
+             IF         COND(&RTNCODE *NE ' ') THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('AOMMODR0')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             IF         COND(&FF *NE 'Y' *OR %SST(&FMT 41 1) *NE +
+                          'Y') THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('*NOT ON')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* Update relevant data areas. */
+             CHGDTAARA  DTAARA(FFSTAT (1 1)) VALUE('Y')
+             CHGDTAARA  DTAARA(FFSTAT (10 2)) VALUE('NN')
+             CHGDTAARA  DTAARA(FFTEMP (1 1)) VALUE('Y')
+             CHGDTAARA  DTAARA(FFTEMP (10 2)) VALUE('NN')
+             CHGDTAARA  DTAARA(NACON) VALUE('000000')
+             CHGDTAARA  DTAARA(NATMPR) VALUE('000000')
+ 
+/* Clear relevant files. */
+             CLRPFM     FILE(CMPRND)
+ 
+/* Call program to initialise headers and trailers.             */
+/*  (as no member is specified first member is updated (OTCs)). */
+             CALL       PGM(FF0000)
+             CALL       PGM(FF0001)
+ 
+/* Set up file containing list of components to be run in EOC. */
+             CALL       PGM(FF0004)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             IF         COND(&RECURSIVE *NE 'Y') THEN(DO)
+                CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+                IF         COND(&ERRPGM *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&ERRPGM) VALUE('SMC000099')
+                ENDDO
+             ENDDO
+ 
+ENDPGM:
+             ENDPGM

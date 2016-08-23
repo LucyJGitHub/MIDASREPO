@@ -1,0 +1,226 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Profitability extract for facilities')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LER441 - Profitability Extract for Facilities                *
+      *                                                               *
+      *  Function:  This program outputs a new extract file wherein   *
+      *  (COB)      the facility customer is the agent customer.      *
+      *                                                               *
+      *  Called By: LERC440 - Midas LE Produce Profitablity File :    *
+      *                       Facility                                *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 163668   *CREATE   Date 14Jul99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  163668 - Profitability showing on facility customer not on   *
+      *           agent customer                                      *
+      *                                                               *
+      *****************************************************************
+     FPEFCJL0 IF  E                    DISK
+     FFCLTY   IF  E           K        DISK
+     F            FCLTYHHF                          KIGNORE
+     F            FCLTYFNF                          KIGNORE
+     F            FCLTYZZF                          KIGNORE
+     FLEPRFCPDO   E                    DISK                      A
+      *
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     ISDCUST    E DSSDCUSTPD                                              163668
+      ** Customer Details                                                 163668
+      *                                                                   163668
+     ISDACOF    E DSSDACOFPD                                              163668
+      ** Account Officer Details                                          163668
+      *                                                                   163668
+     IDSSDY     E DSDSSDY
+      * Second DS for access programs, long data structure
+      *
+      *================================================================
+      *  M A I N   P R O C E S S I N G                                *
+      *================================================================
+      *
+     C                     EXSR SRINIT
+      *
+     C                     READ PEFCJL0                  01
+      *
+     C           *IN01     DOWEQ'0'
+     C                     MOVE BRCA      WBRCA   3
+     C                     MOVELFDFACN    WFTYP   30
+     C                     MOVE FDFACN    WFSEQ   20
+     C           KFCLT     CHAINFCLTYFMF             02
+      *
+      ** If not found, treat as non-syndicated.
+      *
+     C           *IN02     IFEQ '1'
+     C                     MOVE ' '       PRTR
+     C**********           Z-ADD*ZERO     ANUM                                                CSD027
+     C                     MOVE *BLANKS   ANUM                                                CSD027
+     C                     MOVE '0'       *IN02
+     C                     ENDIF
+      *
+     C**********           Z-ADDFDFCUS    FDFACL                                              CSD027
+     C                     MOVE FDFCUS    FDFACL                                              CSD027
+      *
+     C           *IN02     IFEQ '0'
+     C           PRTR      ANDEQ'A'
+     C           *IN02     OREQ '0'
+     C           PRTR      ANDEQ' '
+     C********** ANUM      ANDNE0                                                             CSD027
+     C           ANUM      ANDNE*BLANKS                                                       CSD027
+     C           *IN02     OREQ '0'
+     C           PRTR      ANDEQ'I'
+     C                     SELEC
+     C           PRTR      WHEQ 'A'
+     C           PRTR      OREQ ' '
+     C********** ANUM      ANDNE0                                                             CSD027
+     C**********           Z-ADDANUM      FDFCUS                                              CSD027
+     C           ANUM      ANDNE*BLANKS                                                       CSD027
+     C                     MOVE ANUM      FDFCUS                                              CSD027
+     C           PRTR      WHEQ 'I'
+     C**********           Z-ADDPMFC      FDFCUS                                              CSD027
+     C                     MOVE PMFC      FDFCUS                                              CSD027
+     C                     ENDSL
+      *                                                                   163668
+      ** Get account officer                                              163668
+      *                                                                   163668
+     C                     MOVE FDFCUS    WFCUS   6                       163668
+     C                     CALL 'AOCUSTR0'                                163668
+     C                     PARM *BLANKS   PRTCD   7                       163668
+     C                     PARM '*KEY    'POPTN   7                       163668
+     C                     PARM WFCUS     PCUST  10                       163668
+     C                     PARM *BLANKS   PKYST   7                       163668
+     C           SDCUST    PARM SDCUST    DSSDY                           163668
+      *                                                                   163668
+     C                     MOVE BBACOC    FDACOF                          163668
+      *                                                                   163668
+      ** Get department                                                   163668
+      *                                                                   163668
+     C                     CALL 'AOACOFR0'                                163668
+     C                     PARM *BLANKS   PRTCD                           163668
+     C                     PARM '*KEY    'POPTN                           163668
+     C                     PARM BBACOC    PCUST  10                       163668
+     C           SDACOF    PARM SDACOF    DSSDY                           163668
+      *                                                                   163668
+     C                     SELEC                                          163668
+     C           PRTCD     WHEQ *BLANKS                                   163668
+     C                     MOVE AZDPCD    FDDEPT                          163668
+     C           PRTCD     WHEQ '*NRF'                                    163668
+     C                     MOVE '**'      FDACOF                          163668
+     C                     MOVE '***'     FDDEPT                          163668
+     C                     ENDSL                                          163668
+     C                     ENDIF                                          163668
+     C                     MOVE WBRCA     BRCA
+      *
+     C                     WRITELEPRFCD0
+     C                     READ PEFCJL0                  01
+     C                     ENDDO
+      *
+     C                     SETON                     LR
+     C*
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+     C           KFCLT     KLIST
+     C                     KFLD           FDFCUS
+     C                     KFLD           WFTYP
+     C                     KFLD           WFSEQ
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+      *
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

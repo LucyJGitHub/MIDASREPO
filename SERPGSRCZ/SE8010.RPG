@@ -1,0 +1,162 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE SEDEVD Field Set up')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Security Trading Module                          *
+     F*                                                               *
+     F*  SE8010 - BLI SE4 SEDEVD Field Set-up for S01510              *
+     F*                                                               *
+     F*  Function: This program initialises the ex-date using the     *
+     F*           computed date depending on the securities'          *
+     F*           ex-date default field if the event type is 'DV'.    *
+     F*           All records with event type not equal to 'DV'       *
+     F*           will have a zero ex-date.                           *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CSE071             Date 19Jul05               *
+      *                 CAS006             Date 21Jan03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 188006             Date 05Jan01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 S01510 *CREATE     Date 10Aug94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+     F*  188006 - Error of SETUP file SEDEVD                          *
+     F*  S01510 - Dividend payments based on ex-date                  *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FFDDIV   UF  E                    DISK         KINFSR *PSSR
+     FSECTY   IF  E           K        DISK
+     F*
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  ZBKDT  - Calculate the nth working day back from a given     *
+     F*           start date for a currency and (optional) location   *
+     F*  ZCHKH  - Determine if holiday in given Currency              *
+     F*  ZDATE2 - DAYNO - DATE conversion                             *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E**  Array for Object Copyright Statement
+     E*
+     E/COPY ZSRSRC,ZHOLE
+     E** SR.ARRAY FOR BOTH ZACCH AND ZCHKH
+     E*
+     ISECTYDF                                                             188006
+     I              RECI                            YRECI                 188006
+     I              LCD                             YLCD                  188006
+     I              NMCY                            YNMCY                 188006
+     I              CHTP                            YCHTP                 188006
+     I              TNLU                            YTNLU                 188006
+     I              ZZ005                           YZZ005                188006
+     I*
+     I/COPY ZSRSRC,ZHOLI
+      **  EXTERNAL DS FOR HOLIDAY DETAILS
+     I*
+     I/COPY ZSRSRC,ZHOLDS
+      **  EXTERNAL DS FOR HOLIDAY DETAILS AND ACCESS OBJECTS
+     C/EJECT
+     C*
+     C**  Copyright Statement
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C**  Entry parameters
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           W0MODE  1
+     C*
+     C*================================================================
+     C*   M A I N   P R O C E S S I N G
+     C*================================================================
+     C*
+     C*
+     C**  Process SEDEVD records
+     C*
+     C                     READ SEDEVDF                  20
+     C*
+     C           *IN20     DOWEQ'0'
+     C*
+     C**  Initialise Ex-date
+     C*
+     C           SDXD      IFEQ 0
+     C*
+     C           SDSN      CHAINSECTYDF              30
+     C*
+     C           *IN30     IFEQ '0'
+      * Calculate default Ex-date
+     C                     MOVELEDFT      ZNRDYS
+     C*
+     C           ZNRDYS    IFNE *ZEROS
+     C                     MOVE EDFT      WEDFT   1
+     C*
+     C           WEDFT     IFEQ 'W'
+     C                     Z-ADDSDED      ZDAYNO
+     C                     MOVE VLCY      ZCCY
+     C                     MOVE *BLANKS   ZLOC
+     C                     EXSR ZBKDT
+     C                     Z-ADDZDYNBR    SDXD
+     C                     ELSE
+     C           SDED      SUB  ZNRDYS    SDXD
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C                     Z-ADDSDED      SDXD
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     UPDATSEDEVDF
+     C                     READ SEDEVDF                  20
+     C*
+     C                     END
+     C*
+     C** End the program processing
+     C*
+     C                     MOVE '1'       *INLR
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C*  *PSSR  -  Error processing subroutine                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+      /EJECT
+     C/COPY ZSRSRC,ZBKDT
+     C/EJECT
+     C/COPY ZSRSRC,ZACCH
+     C/EJECT
+     C/COPY ZSRSRC,ZCHKH
+** CPY@ - OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

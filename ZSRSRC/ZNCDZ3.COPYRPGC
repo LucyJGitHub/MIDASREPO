@@ -1,0 +1,372 @@
+     C********************************************************************
+     C*    SUBROUTINE- ZNCD
+     C*    DETERMINE NEXT COUPON DATE
+     C*
+     C**
+     C**  INPUT - CD ARRAY - COUPON DATES - SECTYD SECURITY FILE
+     C**          CR ARRAY - RATE/PAYT INDICS - SECTYD SECURITY FILE
+     C**          FCPN - FIRST COUPON DATE - SECTYD SECURITY FILE
+     C**          MATY - MATURITY DATE - SECTYD SECURITY FILE
+     C**          ECD - EVENT CONTROL DTAE - ZEVCD PROCESS
+     C*************IN98*-*DATE*FORMAT*-*FROM*TABTC10*RECORD*VIA*ZSYSTM****S01117
+     C**          *IN98 - DATE FORMAT - FROM RUNDAT VIA PROGRAM           S01117
+      **         HCY1         CSE071 Holidays                        **   CSE071
+      **         HCY2         CSE071 Holidays                        **   CSE071
+      **         HCY3         CSE071 Holidays                        **   CSE071
+      **         HCY4         CSE071 Holidays                        **   CSE071
+      **         HCY5         CSE071 Holidays                        **   CSE071
+      **         HCY6         CSE071 Holidays                        **   CSE071
+      **         HCY7         CSE071 Holidays                        **   CSE071
+      **         HCY8         CSE071 Holidays                        **   CSE071
+      **         HCY9         CSE071 Holidays                        **   CSE071
+     C**
+     C**  OUTPUT - NCD (5,0) - NEXT COUPON DATE
+     C**
+     C**  CALLS  - ZDATE1
+     C**           ZDATE2
+     C**           SE0045 - Effect of holidays on FRN coupon dates
+     C**
+     C********************************************************************
+     C**                                                                 *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      **   Last Amend No. CSE071                  Date 19Jul05           *
+      * Midas Release 4.01 -------------------------------------------*
+      **   Prev Amend No. CSE031                  Date 09Nov01           *
+      *                   180707                  Date 25Jul00
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     C**                  140698                  DATE 13AUG98           *
+     C**                  CSE005                  DATE 22JAN97           *
+     C**                  100228                  DATE 30MAY96           *
+     C**                  091254                  DATE 20OCT95           *
+     C**                  061823                  DATE 20OCT95           *
+     C**                  S01117                  DATE 18JAN91           *
+     C**                  E20085                  DATE 06NOV89           *
+     C**                  E17876                  DATE 11/04/89          *
+     C**                  E17704                  DATE 31/03/89          *
+     C**                                                                 *
+     C**-----------------------------------------------------------------*
+     C**                                                                 *
+     C**   CSE071 - Multiple Holidays Re Securities                      *
+     C**   CSE031 - Coupon Fixing for Floating Rate Notes                *
+     C**   180707 - No Position Settlements generated due to wrong Last  *
+     C**            Coupon Date written to PF/SECACD. Fix is to retain   *
+     C**            Previous Next Coupon Date before adjusting to new    *
+     C**            Next Coupon Date by SE0045 before executing SR ZLCD. *
+     C**   140698 - Define new fields used from securities file.         *
+     C**   CSE005 - Effect of holidays on FRN coupon dates               *
+     C**   100228 - Process added to allow 29Feb to be used in the       *
+     C**            the coupon array in the Securities detail.           *
+     C**   091254 - When the first coupon date do not correspond  to     *
+     C**            a coupon date in the coupon date array, the next     *
+     C**            coupon date will be incorrect if the ECD is equal    *
+     C**            to first coupon date.                                *
+     C**   061823 - If the First Coupon Date = Event Control Date, use   *
+     C**            this date for the Next Coupon Date.                  *
+     C**            This caters for the case where the coupon date would *
+     C**            fall on a holiday, so the First Coupon Date has been *
+     C**            input as the next working day.  However, no coupon   *
+     C**            was generated on this day.                           *
+     C**   S01117 - Multibranching Release 10.                           *
+     C**   E20085 - INTEREST AND COUPONS CALCULATIONS REWRITE  -         *
+     C**            - If Event Control Date is less than the Initial     *E20085
+     C**              date of the Security, use Initial Date as the      *E20085
+     C**              date for the calculation of Next Coupon Date.      *E20085
+     C**            - First Coupon is not a mandatory field, so          *E20085
+     C**              only do the check against it if it is not zero.    *E20085
+     C**            - Next Coupon date is today if today is a coupon     *E20085
+     C**              date - reverse of E17876.                          *E20085
+     C**   E17876 - REMOVE E17704, CAUSES SE2100 LOOP IN ALL TEST SYS'S. *E17876
+     C**   E17704 - NEXT COUPON DATE IS TODAY IF TODAY IS A COUPON DATE. *E17704
+     C**                                                                 *
+     C********************************************************************
+     C*
+     C           ZNCD      BEGSR                           *** ZNCD   ***
+      *                                                                   CSE031
+      **  Save value of NCD for compare later                             CSE031
+     C                     Z-ADDNCD       UUNCD   50                      CSE031
+     C*
+     C* CALL ZDATE2 TO OBTAIN MMDD FOR EVENT CONTROL DATE
+     C***  Use the greater of ECD and ITLD as basis for the calculation   E20085
+     C*                                                                   E20085
+     C           ECD       IFGE ITLD                                      E20085
+     C                     Z-ADDECD       ZDAYNO
+     C                     ELSE                                           E20085
+     C                     Z-ADDITLD      ZDAYNO                          E20085
+     C                     END                                            E20085
+     C*
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     ZZECD4  40
+     C           *IN98     IFEQ '0'
+     C                     MOVELZZECD4    ZZWRKD
+     C                     MOVE ZZECD4    ZZWRKM
+     C                     Z-ADDZZWRKD    ZZECD4
+     C                     MOVELZZWRKM    ZZECD4
+     C                     END
+      *
+      * IF DATE FORMAT IS DDMMYY TURN ROUND ARRAY OF COUPON DATES TO MMDD
+     C           *IN98     IFEQ '0'
+     C                     DO   12        X       20
+     C                     MOVE CD,X      ZZWRKM  20
+     C                     MOVELCD,X      ZZWRKD  20
+     C                     Z-ADDZZWRKD    CD,X
+     C                     MOVELZZWRKM    CD,X
+     C                     END
+     C                     END
+      * GET YEAR FOR ECD
+     C                     MOVE ZDATE     ZECDYR  20
+      *
+      * FIND NEXT COUPON DATE FROM ARRAYS -
+      *  IF RATE/PAYT INDS ALL BLANK NCD = MATURITY DATE
+     C                     Z-ADDMATY      NCD     50
+     C           CRDS      IFNE *BLANKS
+      *  IF RATE/PAYT INDS NOT ALL BLANK -
+      *    SEARCH FOR NEXT HIGHEST COUPON
+     C                     MOVE '0'       ZFOUND  1
+     C                     Z-ADD0         TX      20                      100228
+     C                     DO   12        X
+     C           CR,X      IFEQ 'P'
+     C           CR,X      OREQ 'C'
+     C*                                                                   100228
+     C** If 29Feb is used in the coupon array, then there is a need to    100228
+     C** check if the current year is a leap year. If it is not,          100228
+     C** the coupon date is changed to 28. But there is a need to store   100228
+     C** the date so that it can be restored back after the check.        100228
+     C*                                                                   100228
+     C                     MOVE CD,X      ZZWRKD                          100228
+     C                     MOVELCD,X      ZZWRKM                          100228
+     C           ZZWRKM    IFEQ 2                                         100228
+     C           ZZWRKD    ANDEQ29                                        100228
+     C                     Z-ADDZECDYR    ZZYR    20                      100228
+     C           ZZYR      ADD  28        ZZYR                            100228
+     C           ZZYR      DIV  4         ZZYR                            100228
+     C                     MVR            ZMVR    10                      100228
+     C           ZMVR      IFGT 0                                         100228
+     C                     Z-ADDX         TX                              100228
+     C                     MOVE '28'      CD,X                            100228
+     C                     END                                            100228
+     C                     END                                            100228
+     C*                                                                   100228
+     C***********ZZECD4    IFLT CD,X                                      E17704
+     C***********ZZECD4    IFLE CD,X                                E17704E17876
+     C***********ZZECD4    IFLT CD,X                                E17876E20085
+     C***********ZZECD4    IFLE CD,X                               E20085 091254
+     C           ZZECD4    IFLT CD,X                                      091254
+     C                     MOVE '1'       ZFOUND
+     C                     GOTO ZNCD00
+     C                     ELSE                                           091254
+     C           ZZECD4    IFEQ CD,X                                      091254
+     C                     Z-ADDZECDYR    ZDATE                           091254
+     C                     MOVELCD,X      ZDATE                           091254
+     C           *IN98     IFEQ '0'                                       091254
+     C                     MOVELZDATE     ZZWRK   40                      091254
+     C                     MOVE ZZWRK     ZZWRKM                          091254
+     C                     MOVELZZWRK     ZZWRKD                          091254
+     C                     Z-ADDZZWRKD    ZZWRK                           091254
+     C                     MOVELZZWRKM    ZZWRK                           091254
+     C                     MOVELZZWRK     ZDATE                           091254
+     C                     END                                            091254
+     C                     EXSR ZDATE1                                    091254
+     C                     Z-ADDZDAYNO    NCD                             091254
+     C           NCD       IFGT FCPN                                      091254
+     C           NCD       SUB  FCPN      @DDIF   50                      091254
+     C           @DDIF     IFGT 10                                        091254
+     C                     MOVE '1'       ZFOUND                          091254
+     C                     GOTO ZNCD00                                    091254
+     C                     END                                            091254
+     C                     END                                            091254
+     C                     END                                            091254
+     C                     END
+     C                     END
+     C                     END
+      *      FOUND - ADD ECD'S YY TO FORM DATE
+     C           ZNCD00    TAG                             ZNCD00 TAG
+     C           ZFOUND    IFEQ '1'
+     C                     Z-ADDZECDYR    ZDATE
+     C                     MOVELCD,X      ZDATE
+      *      NOT FOUND - USE FIRST COUPON
+      *                  ADD NEXT YEAR'S YY TO FORM DATE
+     C                     ELSE
+     C                     DO   12        X
+     C           CR,X      IFEQ 'P'
+     C           CR,X      OREQ 'C'
+     C*                                                                   100228
+     C** If 29Feb is used in the coupon array, then there is a need to    100228
+     C** check if the current year is a leap year. If it is not,          100228
+     C** the coupon date is changed to 28. But there is a need to store   100228
+     C** the date so that it can be restored back after the check.        100228
+     C*                                                                   100228
+     C           TX        IFNE 0                                         100228
+     C                     MOVE '29'      CD,TX                           100228
+     C                     Z-ADD0         TX                              100228
+     C                     END                                            100228
+     C*                                                                   100228
+     C                     MOVE CD,X      ZZWRKD                          100228
+     C                     MOVELCD,X      ZZWRKM                          100228
+     C           ZZWRKM    IFEQ 2                                         100228
+     C           ZZWRKD    ANDEQ29                                        100228
+     C           ZECDYR    ADD  1         ZZYR                            100228
+     C           ZZYR      ADD  28        ZZYR                            100228
+     C           ZZYR      DIV  4         ZZYR                            100228
+     C                     MVR            ZMVR    10                      100228
+     C           ZMVR      IFGT 0                                         100228
+     C                     Z-ADDX         TX                              100228
+     C                     MOVE '28'      CD,X                            100228
+     C                     END                                            100228
+     C                     END                                            100228
+     C*                                                                   100228
+     C                     Z-ADDZECDYR    ZDATE
+     C                     ADD  1         ZDATE
+     C                     MOVELCD,X      ZDATE
+     C                     MOVE '1'       ZFOUND
+     C                     GOTO ZNCD01
+     C                     END
+     C                     END
+     C                     END
+     C           ZNCD01    TAG                             ZNCD01 TAG
+      *
+      * CONVERT DATE TO DAY NO USING ZDATE1
+      * (NOT DONE IF NO RATE/PAYT IND IS P OR C)
+      * IF DDMMYY FORMAT TURN ROUND TO MMDDYY
+     C           ZFOUND    IFEQ '1'
+     C           *IN98     IFEQ '0'
+     C                     MOVELZDATE     ZZWRK   40
+     C                     MOVE ZZWRK     ZZWRKM
+     C                     MOVELZZWRK     ZZWRKD
+     C                     Z-ADDZZWRKD    ZZWRK
+     C                     MOVELZZWRKM    ZZWRK
+     C                     MOVELZZWRK     ZDATE
+     C                     END
+     C                     EXSR ZDATE1
+     C                     Z-ADDZDAYNO    NCD
+     C                     END
+      *
+      * IF NCD > MATURITY DATE , RESET NCD = MATURITY DATE
+     C           NCD       IFGT MATY
+     C                     Z-ADDMATY      NCD
+     C                     END
+     C                     END
+     C*
+     C* If the First Coupon Date is not zero, then                        E20085
+     C* IF NCD < 1ST COUPON DATE , RESET NCD = 1ST COUPON DATE
+     C*                                                                   E20085
+     C***********NCD       IFLT FCPN                                      E20085
+     C           FCPN      IFNE *ZEROS                                    E20085
+     C***********NCD       ANDLTFCPN                               E20085 091254
+     C           NCD       IFLE FCPN                                      091254
+     C           ECD       ORLE FCPN                                      091254
+     C                     Z-ADDFCPN      NCD
+     C                     END                                            091254
+     C                     END
+     C*                                                                   100228
+     C** Restore 29Feb to the array if it is changed.                     100228
+     C*                                                                   100228
+     C           TX        IFNE 0                                         100228
+     C                     MOVE '29'      CD,TX                           100228
+     C                     END                                            100228
+      *                                                                   061823
+      ** If the First Coupon date is not zero, and is equal to the        061823
+      ** Event Control Date, set the Next Coupon date to this date.       061823
+      *                                                                   061823
+     C           FCPN      IFNE *ZEROS                                    061823
+     C           FCPN      ANDEQECD                                       061823
+     C                     Z-ADDFCPN      NCD                             061823
+     C                     END                                            061823
+      *
+      * IF DATE FORMAT IS DDMMYY TURN BACK ARRAY OF COUPON DATES TO DD/MM
+     C           *IN98     IFEQ '0'
+     C                     DO   12        X       20
+     C                     MOVELCD,X      ZZWRKM  20
+     C                     MOVE CD,X      ZZWRKD  20
+     C                     Z-ADDZZWRKM    CD,X
+     C                     MOVELZZWRKD    CD,X
+     C                     END
+     C                     END
+      **                                                                  CSE005
+      ** If BCNV is not blank then call SE0045                            CSE005
+      ** OR BCNV is not 'N' then call SE0045                              CSE031
+      ** but ensure that the fields used from securities file SECTYD      140698
+      ** are defined as not all programs calling ZNCD use this file.      140698
+      **                                                                  140698
+     C                     MOVE NMCY      NMCY    3                       140698
+     C                     MOVE SITP      SITP    3                       140698
+     C                     MOVE BCNV      BCNV    1                       140698
+      *                                                                   180707
+      ** At this stage, the field NCD holds details of real Last Coupon   180707
+      ** Date. Save this field into work field ZZNCD for use in SE2100.   180707
+      *                                                                   180707
+     C                     Z-ADDNCD       ZZNCD   50                      180707
+      **                                                                  CSE005
+     C           BCNV      IFNE ' '                                       CSE005
+     C           BCNV      ANDNE'N'                                       CSE031
+     C                     MOVE 'N'       NCI     1                       CSE005
+     C                     CALL 'SE0045'                                  CSE005
+     C                     PARM           SITP                            CSE005
+     C                     PARM           ECD                             CSE005
+     C                     PARM           ITLD                            CSE005
+     C                     PARM           FCPN                            CSE005
+     C                     PARM           CD                              CSE005
+     C                     PARM           CR                              CSE005
+     C                     PARM           NMCY                            CSE005
+     C                     PARM           NCD                             CSE005
+     C                     PARM           NCI                             CSE005
+     C                     PARM           BCNV                            CSE005
+     C                     PARM           MATY                            CSE005
+     C                     PARM           LCPN                            CSE031
+     C                     PARM           HCY1                            CSE071
+     C                     PARM           HCY2                            CSE071
+     C                     PARM           HCY3                            CSE071
+     C                     PARM           HCY4                            CSE071
+     C                     PARM           HCY5                            CSE071
+     C                     PARM           HCY6                            CSE071
+     C                     PARM           HCY7                            CSE071
+     C                     PARM           HCY8                            CSE071
+     C                     PARM           HCY9                            CSE071
+      *                                                                   CSE031
+      ** Check if feature CSE031 is on                                    CSE031
+     C                     CALL 'AOSARDR0'                                CSE031
+     C                     PARM           URTNCD  7                       CSE031
+     C                     PARM '*VERIFY' UOPTN   7                       CSE031
+     C                     PARM 'CSE031'  UUKEY   6                       CSE031
+     C                     PARM           UDSFDY 76                       CSE031
+      *                                                                   CSE071
+     C                     MOVE 'N'       CSE031  1                       CSE071
+     C           URTNCD    IFEQ *BLANKS                                   CSE071
+     C                     MOVE 'Y'       CSE031                          CSE071
+     C                     ENDIF                                          CSE071
+      *                                                                   CSE071
+      ** Check if feature CSE071 is on                                    CSE071
+     C                     CALL 'AOSARDR0'                                CSE071
+     C                     PARM           URTNCD                          CSE071
+     C                     PARM '*VERIFY' UOPTN                           CSE071
+     C                     PARM 'CSE071'  UUKEY                           CSE071
+     C                     PARM           UDSFDY                          CSE071
+      *                                                                   CSE071
+     C                     MOVE 'N'       CSE071  1                       CSE071
+     C           URTNCD    IFEQ *BLANKS                                   CSE071
+     C                     MOVE 'Y'       CSE071                          CSE071
+     C                     ENDIF                                          CSE071
+      *                                                                   CSE031
+      ** If CSE031 feature is on                                          CSE031
+      ** or CSE071 feature is on                                          CSE071
+     C********** URTNCD    IFEQ *BLANKS                             CSE031CSE071
+     C           CSE031    IFEQ 'Y'                                       CSE071
+     C           CSE071    OREQ 'Y'                                       CSE071
+      *                                                                   CSE031
+      ** Set NCD to next coupon date on file SECTYD if it is greater      CSE031
+      ** than the event control date.                                     CSE031
+     C           UUNCD     IFGE ECD                                       CSE031
+     C                     Z-ADDUUNCD     NCD                             CSE031
+     C                     ENDIF                                          CSE031
+     C                     ENDIF                                          CSE031
+      *                                                                   CSE031
+     C                     ENDIF                                          CSE005
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      *****************************************************************
+      * End of /COPY XXXXXXX                                          *
+      *****************************************************************

@@ -1,0 +1,890 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+      *****************************************************************
+/*S*D****RPGBASEBND****************************************************                       CLE164
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LE000695 - Midas LE Settlement Accounts with                 *
+      *           'Block All Debits' = 'Y' Report                     *
+      *                                                               *
+      *  Called By: LEC0695                                           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *                                                               *
+      *  Last Amend No. CLE164  *REDUNDANT Date 18Aug14               *
+      *  Prev Amend No. CLE134  *CREATE    Date 01Aug12               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *         - CC04: Block DR Account                              *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      *  *INZSR        -  Program Initialisation Routine              *
+      *  SRDelete      -  Delete all records flagged for delete       *
+      *  *PSSR         -  Delete all records flagged for delete       *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+ 
+     FLEACCNL1  IF   E           K Disk    InfSR(*PSSR)
+      ** LE Repayment Priority
+ 
+     FLEACCNL7  IF   E           K Disk    InfSR(*PSSR)
+     F                                     Rename(LEACCND0:LEACCNL7F)
+     F                                     Prefix(L)
+      ** LE Repayment Priority
+ 
+     FCLOANC    IF   E           K Disk    InfSR(*PSSR)
+     F                                     Ignore(CLOANHHF:CLOANCKF:CLOANZ1F)
+      ** LE Loans File
+ 
+     FLOAMSOM4  IF   E           K Disk    InfSR(*PSSR)
+      ** LE Loan amendments
+ 
+     FLEPDUEL1  IF   E           K Disk    InfSR(*PSSR)
+      ** LE Past Due & Original Loan Link
+ 
+     FLEPDUFL1  IF   E           K Disk    InfSR(*PSSR)
+      ** LE Past Due & Original Fees Link
+ 
+     FACCNTL0   IF   E           K Disk    InfSR(*PSSR)
+      ** GL Account details - full a/c number
+ 
+     FLE000695P1O    E             Printer InfDs(Spool1)
+     F                                     OFLInd(OverFlow)
+     F                                     UsrOpn
+      ** All Non Matured Deals
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+ 
+      ** The following /COPY line includes (among others)
+      ** the LDA layout and the copyright array definition:
+     D/COPY ZACPYSRC,STD_D_SPEC
+ 
+      ** The following /COPY line includes all the defined fields
+      ** in the  Program Status Data Structures.
+      ** They have meaningful names, prefixed by 'PS'.
+     D/COPY ZACPYSRC,PSDS
+ 
+      /EJECT
+      ** +--------------------------------------+
+      ** | Arrays and Data Structures           |
+      ** | ==========================           |
+      ** +--------------------------------------+
+ 
+      ** First DS for access programs, short data structure
+     D DSFDY         E DS                  ExtName(DSFDY)
+ 
+      ** Second DS For Access Programs, Long Data Structure
+     D DSSDY         E DS                  ExtName(DSSDY)
+ 
+      ** Externally described DS for bank details
+     D SDBANK        E DS                  ExtName(SDBANKPD)
+ 
+      ** Customer Details format for access object pgm
+     D SDCUST        E DS                  ExtName(SDCUSTPD)
+ 
+      ** Currency Details format for access object pgm
+     D SDCURR        E DS                  ExtName(SDCURRPD)
+ 
+      ** File Information Data Structure for LE000695P1
+     D Spool1          DS
+     D  SFile                 83     92
+     D  SFNum                123    124B 0
+     D  OFLLn                188    189B 0
+     D  PRTLn                367    368B 0
+      *
+ 
+      ** +--------------------------------------+
+      ** | Variables and Named constants        |
+      ** | =============================        |
+      ** +--------------------------------------+
+ 
+     D @RUN            S              1
+     D DSIntDue        S             15  0 INZ
+ 
+      ** Define Pass Parameters
+     D PRtCd           S              7A
+     D POptn           S              7A
+     D PCust           S             10A
+     D PCcy            S              3A
+     D PKySt           S              7A
+ 
+     D PSeq            S              5S 0
+     D PNum            S              6S 0
+     D PEnty           S              3A
+     D PErr            S              1A
+ 
+     D PSard           S              6A
+ 
+     D NoDetl          S               N   Inz(*OFF)
+     D OverFlow        S               N
+ 
+      ** System Value Parameters
+     D BlockDebit      S              1A
+     D POP01           S             20A
+     D PVL01           S            200A
+     D POP02           S             20A
+     D PVL02           S            200A
+     D POP03           S             20A
+     D PVL03           S            200A
+     D POP04           S             20A
+     D PVL04           S            200A
+     D POP05           S             20A
+     D PVL05           S            200A
+     D POP06           S             20A
+     D PVL06           S            200A
+     D POP07           S             20A
+     D PVL07           S            200A
+     D POP08           S             20A
+     D PVL08           S            200A
+     D POP09           S             20A
+     D PVL09           S            200A
+     D POP10           S             20A
+     D PVL10           S            200A
+ 
+     D KCNUM           S              6A
+     D KACCY           S              3A
+     D KACOD           S             10S 0
+     D KACSQ           S              2S 0
+     D KBRCA           S              3A
+     D KLNRF           S              6
+ 
+     D WrkOutInt       S             13S 0
+     D WkRound         S             13S 0
+     D CLE005          S              1A
+ 
+     D ZIBEG           S              5S 0
+     D ZIEND           S              5S 0
+     D ZICALC          S              1S 0
+     D ZIAMT           S             15S 0
+     D ZIRATE          S             11S 7
+     D ZINTR           S             30S 9
+ 
+     D ZDAYNO          S              5S 0
+     D ZDATE           S              6S 0
+     D ZADATE          S              7A
+ 
+     D ZFLD15          S             15S 0
+     D ZDECS           S              1S 0
+     D ZECODE          S              1A
+     D ZOUT21          S             21A
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                M A I N  P R O C E S S I N G                   *
+      *****************************************************************
+     C     *LOVAL        SETLL     LEACCNL1
+     C                   READ      LEACCNL1
+ 
+      ** Process Repayment Priority Records
+ 
+     C                   DOW       NOT %EOF(LEACCNL1)
+ 
+      ** Only Print details for Block All Debits = 'Y'
+ 
+     C     KeyACCNT      CHAIN     ACCNTL0
+     C                   IF        %FOUND(ACCNTL0)
+     C                   TESTB     '2'           RETB                     80
+ 
+     C                   IF        *IN80 = *ON
+ 
+     C                   EXSR      ChkSysValue
+     C                   IF        BlockDebit = 'Y'
+ 
+     C                   EXSR      SRPrintDT
+     C                   EXSR      SRAllLend
+     C                   EXSR      SRAllPDCL
+ 
+     C     KeyLEAC3      SETGT     LEACCNL1
+ 
+     C                   ENDIF
+     C                   ENDIF
+     C                   ENDIF
+ 
+     C                   READ      LEACCNL1
+     C                   ENDDO
+ 
+     C                   IF        NoDetl = *OFF
+     C                   WRITE     NoDetail
+     C                   ENDIF
+     C                   WRITE     Trailer
+ 
+     C                   CLOSE     LE000695P1
+     C                   EVAL      *INLR = *ON
+ 
+     C                   RETURN
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  ChkSysValue - Check System Values                            *
+      *                                                               *
+      *  Called by: Main routine                                      *
+      *                                                               *
+      *  Calls    : AOSVALR0                                          *
+      *                                                               *
+      *****************************************************************
+     C     ChkSysValue   BEGSR
+ 
+      ** Retrieve PDCL Block Debit system value
+ 
+     C                   EVAL      @RTCD = *BLANKS
+     C                   EVAL      POP01 = 'PDCLBlockDebit'
+     C                   EVAL      PVL01 = *BLANKS
+ 
+     C                   CALL      'AOSVALR0'
+     C                   PARM                    @RTCD
+     C                   PARM                    POP01
+     C                   PARM                    PVL01
+     C                   PARM      *BLANKS       POP02
+     C                   PARM      *BLANKS       PVL02
+     C                   PARM      *BLANKS       POP03
+     C                   PARM      *BLANKS       PVL03
+     C                   PARM      *BLANKS       POP04
+     C                   PARM      *BLANKS       PVL04
+     C                   PARM      *BLANKS       POP05
+     C                   PARM      *BLANKS       PVL05
+     C                   PARM      *BLANKS       POP06
+     C                   PARM      *BLANKS       PVL06
+     C                   PARM      *BLANKS       POP07
+     C                   PARM      *BLANKS       PVL07
+     C                   PARM      *BLANKS       POP08
+     C                   PARM      *BLANKS       PVL08
+     C                   PARM      *BLANKS       POP09
+     C                   PARM      *BLANKS       PVL09
+     C                   PARM      *BLANKS       POP10
+     C                   PARM      *BLANKS       PVL10
+ 
+     C                   EVAL      BlockDebit = *BLANKS
+     C                   IF        @RTCD  = *BLANKS
+     C                   MOVEL     PVL01         BlockDebit
+     C                   ENDIF
+     C                   ENDSR
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPrintDT - Print Detail                                     *
+      *                                                               *
+      *  Called by: Main routine                                      *
+      *                                                               *
+      *  Calls    : AOCUSTR1, AOCURRR0                                *
+      *                                                               *
+      *****************************************************************
+     C     SRPrintDT     BEGSR
+ 
+      ** Output Customer Short Name
+ 
+     C                   EVAL      PCust = RPCNUM
+     C                   CALL      'AOCUSTR1'
+     C                   PARM      *BLANKS       PRtcd
+     C                   PARM      '*KEY   '     POptn
+     C                   PARM                    PCust
+     C                   PARM                    PKySt
+     C     SDCUST        PARM      SDCUST        DSSDY
+ 
+     C                   EVAL      P#CUST = RPCNUM
+     C                   EVAL      P#CSSN = BBCSSN
+ 
+      ** Output Account
+ 
+     C                   EVAL      P#BRCA = RPBRCA
+     C                   EVAL      P#CNUM = RPCNUM
+     C                   EVAL      P#ACCY = RPACCY
+     C                   EVAL      P#ACOD = RPACOD
+     C                   EVAL      P#ACSQ = RPACSQ
+     C                   EVAL      P#ACNO = ACNO
+     C                   EVAL      P#ANAM = ANAM
+ 
+      ** Retieve No. of Decimal Places
+ 
+     C                   EVAL      PCcy = RPACCY
+     C                   CALL      'AOCURRR0'
+     C                   PARM      *BLANKS       PRtcd
+     C                   PARM      '*KEY   '     POptn
+     C                   PARM                    PCcy
+     C     SDCURR        PARM      SDCURR        DSSDY
+ 
+      ** Output Ledger Balance
+ 
+     C                   MOVE      LDBL          ZFLD15
+     C                   EVAL      ZDECS=A6NBDP
+     C                   EXSR      FMTAMT
+     C                   EVAL      P#LDBL= ZOUT21
+ 
+      ** Output Cleared Balance
+ 
+     C                   MOVE      CLBL          ZFLD15
+     C                   EVAL      ZDECS=A6NBDP
+     C                   EXSR      FMTAMT
+     C                   EVAL      P#CLBL= ZOUT21
+ 
+      ** Output Minimum Balance
+ 
+     C                   MOVE      MINB          ZFLD15
+     C                   EVAL      ZDECS=0
+     C                   EXSR      FMTAMT
+     C                   EVAL      P#MINB = %SUBST(ZOUT21:9:13)
+ 
+      ** OverFlow ?
+ 
+     C                   IF        OverFlow = *ON
+     C                   WRITE     Header
+     C                   EVAL      OverFlow = *OFF
+     C                   ENDIF
+ 
+      ** Details printed ?
+ 
+     C                   IF        NoDetl = *OFF
+     C                   EVAL      NoDetl = *ON
+     C                   ENDIF
+ 
+     C                   WRITE     Header
+     C                   WRITE     Detail1
+ 
+     C                   ENDSR
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRAllLend - List All Lending Transactions defined against    *
+      *             this Settlement Account.                          *
+      *                                                               *
+      *  Called by: Main routine                                      *
+      *                                                               *
+      *  Calls    : AOCURRR0                                          *
+      *                                                               *
+      *****************************************************************
+     C     SRAllLend     BEGSR
+ 
+     C     KeyLEAC1      SETLL     LEACCNL7
+     C     KeyLEAC2      READE     LEACCNL7
+ 
+      ** OverFlow ?
+ 
+     C                   IF        OverFlow = *ON
+     C                   WRITE     Header
+     C                   WRITE     Detail1
+     C                   EVAL      OverFlow = *OFF
+     C                   ENDIF
+ 
+     C                   WRITE     Header2
+ 
+      ** Process Repayment Priority Records
+ 
+     C                   DOW       NOT %EOF(LEACCNL7)
+ 
+     C                   MOVEL     LRPLTYP       CHECK             1
+     C                   IF        CHECK<>'X' AND CHECK<>'Y' AND CHECK<>'Z'
+ 
+      ** OverFlow ?
+ 
+     C                   IF        OverFlow = *ON
+     C                   WRITE     Header
+     C                   WRITE     Detail1
+     C                   WRITE     Header2
+     C                   EVAL      OverFlow = *OFF
+     C                   ENDIF
+ 
+      ** Reset Output Indicators
+ 
+     C                   MOVE      *OFF          *IN81
+     C                   MOVE      *OFF          *IN82
+     C                   MOVE      *OFF          *IN83
+ 
+      ** Loan
+ 
+     C                   IF        LRPLNRF <> *BLANK
+     C                   MOVE      *ON           *IN81
+     C                   MOVE      LRPLNRF       P#LNRF
+     C                   MOVE      LRPLTYP       P#LTYP
+     C                   ENDIF
+ 
+      ** Facility
+ 
+     C                   IF        LRPLNRF = *BLANK AND LRPFLNR = *BLANK
+     C                   MOVE      *ON           *IN82
+     C                   MOVE      LRPFFCN       P#LNRF
+     C                   MOVE      LRPFFAC       P#FFAC
+     C                   MOVE      LRPFFNO       P#FFNO
+     C                   ENDIF
+ 
+      ** Fee
+ 
+     C                   IF        LRPLNRF = *BLANK AND LRPFLNR <> *BLANK
+     C                   MOVE      *ON           *IN83
+     C                   MOVE      LRPFLNR       P#LNRF
+     C                   MOVE      LRPFACT       P#FACT
+     C                   MOVE      LRPFSE1       P#FSE1
+     C                   MOVE      LRPFCOD       P#FCOD
+     C                   ENDIF
+ 
+      ** Next Payment Amount and Value Date
+ 
+     C     LRPLNRF       CHAIN     LOAMSOM4
+     C                   IF        %FOUND(LOAMSOM4)
+ 
+      ** Payment Amount
+ 
+     C                   EVAL      PCcy = CCY
+     C                   CALL      'AOCURRR0'
+     C                   PARM      *BLANKS       PRtcd
+     C                   PARM      '*KEY   '     POptn
+     C                   PARM                    PCcy
+     C     SDCURR        PARM      SDCURR        DSSDY
+ 
+     C                   MOVE      PRAM          ZFLD15
+     C                   EVAL      ZDECS = A6NBDP
+     C                   EXSR      FMTAMT
+     C                   EVAL      P#PRAM = ZOUT21
+ 
+      ** Value Date
+ 
+     C                   MOVE      VDAT          ZDAYNO
+     C                   EXSR      ZDATE2
+     C                   MOVE      ZADATE        P#VDAT
+ 
+     C                   ELSE
+     C                   EVAL      P#PRAM = *BLANKS
+     C                   EVAL      P#VDAT = *BLANKS
+     C                   ENDIF
+ 
+     C                   WRITE     Detail2
+     C                   ENDIF
+ 
+     C     KeyLEAC2      READE     LEACCNL7
+     C                   ENDDO
+ 
+     C                   ENDSR
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRAllPDCL - List All PDCLs defined against this Settlement   *
+      *             Account.                                          *
+      *                                                               *
+      *  Called by: Main routine                                      *
+      *                                                               *
+      *  Calls    : AOCURRR0                                          *
+      *                                                               *
+      *****************************************************************
+     C     SRAllPDCL     BEGSR
+ 
+     C     KeyLEAC1      SETLL     LEACCNL7
+     C     KeyLEAC2      READE     LEACCNL7
+ 
+      ** OverFlow ?
+ 
+     C                   IF        OverFlow = *ON
+     C                   WRITE     Header
+     C                   WRITE     Detail1
+     C                   EVAL      OverFlow = *OFF
+     C                   ENDIF
+ 
+     C                   WRITE     Header3
+ 
+      ** Process Repayment Priority Records
+ 
+     C                   DOW       NOT %EOF(LEACCNL7)
+ 
+     C                   MOVEL     LRPLTYP       CHECK
+     C                   IF        CHECK='X' OR CHECK='Y' OR CHECK='Z'
+ 
+      ** OverFlow ?
+ 
+     C                   IF        OverFlow = *ON
+     C                   WRITE     Header
+     C                   WRITE     Detail1
+     C                   WRITE     Header3
+     C                   EVAL      OverFlow = *OFF
+     C                   ENDIF
+ 
+     C                   MOVE      LRPLNRF       P#LNRF
+     C                   MOVE      LRPLTYP       P#LTYP
+ 
+      ** Current Principal Amount and Outstanding Accrued Interests
+ 
+     C     LRPLNRF       CHAIN     CLOANC
+ 
+      ** Current Principal
+ 
+     C                   EVAL      PCcy = CCY
+     C                   CALL      'AOCURRR0'
+     C                   PARM      *BLANKS       PRtcd
+     C                   PARM      '*KEY   '     POptn
+     C                   PARM                    PCcy
+     C     SDCURR        PARM      SDCURR        DSSDY
+ 
+     C                   MOVE      CPAM          ZFLD15
+     C                   EVAL      ZDECS=A6NBDP
+     C                   EXSR      FMTAMT
+     C                   EVAL      P#CPAM = ZOUT21
+ 
+      ** Outstanding Accrued Interests
+ 
+     C                   EVAL      DSintdue = 0
+     C                   EXSR      SrIntOut
+     C                   EVAL      DSIntDue = WrkOutInt
+ 
+     C                   MOVE      DSIntDue      ZFLD15
+     C                   EVAL      ZDECS=A6NBDP
+     C                   EXSR      FMTAMT
+     C                   EVAL      P#OAI = ZOUT21
+ 
+      ** Link to Original Transaction
+ 
+     C                   IF        CHECK='X' OR CHECK='Y'
+     C     LRPLNRF       CHAIN     LEPDUEL1
+     C                   MOVE      YPORG         P#LINK
+     C                   ELSE
+     C     LRPLNRF       CHAIN     LEPDUFL1
+     C                   MOVE      YPORG         P#LINK
+     C                   ENDIF
+ 
+     C                   WRITE     Detail3
+     C                   ENDIF
+ 
+      ** Set pointer to correct place for LEACCNL1
+ 
+     C                   MOVE      LRPCNUM       KCNUM
+     C                   MOVE      LRPACCY       KACCY
+     C                   MOVE      LRPACOD       KACOD
+     C                   MOVE      LRPACSQ       KACSQ
+     C                   MOVE      LRPBRCA       KBRCA
+     C                   MOVE      LRPLNRF       KLNRF
+ 
+     C     KeyLEAC2      READE     LEACCNL7
+     C                   ENDDO
+ 
+     C                   ENDSR
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRIntOut - Outstanding Interest                              *
+      *                                                               *
+      *  Called by: SRAllPDCL                                         *
+      *                                                               *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+     C     SRIntOut      BEGSR
+ 
+      ** Outstanding Interest
+ 
+     C                   Z-ADD     0             WrkOutInt
+ 
+      ** Set End date
+ 
+     C                   IF        Vdat > BJRDNB AND CLE005 = 'Y'
+     C                   EVAL      ZIEND = Vdat
+     C                   ELSE
+     C                   EVAL      ZIEND = BJRDNB
+     C                   ENDIF
+ 
+     C                   IF        Mdat <> 0 AND Mdat < BJRDNB
+     C                   EVAL      ZIEND = Mdat
+     C                   ENDIF
+ 
+      ** Start Date
+ 
+     C                   EVAL      ZIBEG = Iacd
+ 
+      ** Add 1 to End date dependin on ADDI indicator
+ 
+     C**********         IF        Addi = 'B' AND ZIEND = Mdat AND
+     C**********                   Ored < Mdat
+     C                   IF        ((Addi = 'B') OR (Addi = 'L')) AND
+     C                             ZIEND = Mdat AND Ored < Mdat
+     C                   EVAL      ZIEND = ZIEND + 1
+     C                   ENDIF
+ 
+      ** Add 1 to End date if Original Entry date
+      ** is after maturity date
+ 
+     C**********         IF        Addi = 'B' AND Ored >= Mdat
+     C                   IF        ((Addi = 'B') OR (Addi = 'L')) AND
+     C                             Ored >= Mdat
+     C                   EVAL      ZIEND = ZIEND + 1
+     C                   ENDIF
+ 
+      ** Set parameters required for interest calculation
+     C                   EVAL      ZICALC = ICBS
+     C                   EVAL      ZIRATE = INTR
+     C                   EVAL      ZIAMT  = CPAM
+     C                   EXSR      SRGLINTC
+ 
+      ** Round Interest depending on RDFC indicator
+ 
+     C                   IF        RDFC = 'Y'
+     C                   Z-ADD     ZINTR         WkRound
+     C                   Z-ADD     WkRound       ZINTR
+     C                   ELSE
+     C                   Z-ADD(H)  ZINTR         WkRound
+     C                   Z-ADD     WkRound       ZINTR
+     C                   ENDIF
+ 
+      ** Calculate Interest Outstanding
+ 
+     C                   EVAL      WrkOutInt = ZINTR + AITC + AIAP +
+     C                             AIMN - IPRD - ICTD - IWOD
+ 
+     C                   ENDSR
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRGLINTC - Calculate Interest on period                      *
+      *                                                               *
+      *  Called by: SRIntOut                                          *
+      *                                                               *
+      *  Calls    : GLINTC                                            *
+      *                                                               *
+      *****************************************************************
+     C     SRGLINTC      BEGSR
+ 
+     C                   CLEAR                   ZINTR
+     C                   CALL      'GLINTC'
+ 
+      ** Starting date
+ 
+     C                   PARM                    ZIBEG
+ 
+      ** Finishing date
+ 
+     C                   PARM                    ZIEND
+ 
+      ** Calc. Basis
+ 
+     C                   PARM                    ZICALC
+ 
+      ** Principal
+ 
+     C                   PARM                    ZIAMT
+ 
+      ** Rate of intrst
+ 
+     C                   PARM                    ZIRATE
+ 
+      ** Interest
+ 
+     C                   PARM                    ZINTR
+ 
+     C                   ENDSR
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  ZDATE2 - Covert Date                                         *
+      *                                                               *
+      *****************************************************************
+     C     ZDATE2        BEGSR
+ 
+     C                   CALL      'ZDATE2'
+     C                   PARM                    ZDAYNO
+     C                   PARM                    BJDFIN
+     C                   PARM      *ZEROS        ZDATE
+     C                   PARM                    ZADATE
+ 
+     C                   ENDSR
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  FMTAMT - Format Amount for Output                            *
+      *                                                               *
+      *****************************************************************
+     C     FMTAMT        BEGSR
+ 
+     C                   CALL      'ZSEDIT'
+     C                   PARM                    ZFLD15
+     C                   PARM                    ZDECS
+     C                   PARM      *BLANKS       ZECODE
+     C                   PARM                    ZOUT21
+     C
+     C                   EVAL      ZFLD15 = *ZEROS
+ 
+     C                   ENDSR
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  RCFP1  - Subroutine to register the Printer File via RCF.    *
+      *                                                               *
+      *****************************************************************
+     C     RCFP1         BEGSR
+ 
+      ** Ensure Report Spool File recorded by RCF.
+ 
+     C                   OPEN      LE000695P1
+     C                   EVAL      PNum = SFNUM
+ 
+     C                   CALL      'ZSFILE'
+     C                   PARM                    PSeq
+     C                   PARM      *BLANKS       PEnty
+     C                   PARM                    SFile
+     C                   PARM                    PNum
+     C                   PARM                    PErr
+ 
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+ 
+     C                   IF        PErr = 'Y'
+     C                   EVAL      *INU7 = *ON
+     C                   EVAL      *INU8 = *ON
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+     C                   ENDIF
+ 
+     C                   ENDSR
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Program Initialisation Routine                       *
+      *                                                               *
+      *  Called by: Implicitly on program activation                  *
+      *                                                               *
+      *  Calls    : AOBANKR0 - Access Bank Details                    *
+      *             *PSSR                                             *
+      *                                                               *
+      *****************************************************************
+     C     *INZSR        BEGSR
+ 
+      ** Entry Parameters
+ 
+     C     *ENTRY        PLIST
+     C                   PARM                    PSeq
+ 
+      ** Define LDA
+ 
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBPGM = 'LE000695'
+     C                   EVAL      DBFILE = *BLANKS
+     C                   EVAL      DBKEY = *BLANKS
+     C                   EVAL      DBASE = 0
+     C                   OUT       LDA
+ 
+      ** Initialise Key Lists
+ 
+     C     KeyACCNT      KLIST
+     C                   KFLD                    RPCNUM
+     C                   KFLD                    RPACCY
+     C                   KFLD                    RPACOD
+     C                   KFLD                    RPACSQ
+     C                   KFLD                    RPBRCA
+ 
+     C     KeyLEAC1      KLIST
+     C                   KFLD                    RPBRCA
+     C                   KFLD                    RPACCY
+     C                   KFLD                    RPCNUM
+     C                   KFLD                    RPACOD
+     C                   KFLD                    RPACSQ
+     C                   KFLD                    RPLNRF
+ 
+     C     KeyLEAC2      KLIST
+     C                   KFLD                    RPBRCA
+     C                   KFLD                    RPACCY
+     C                   KFLD                    RPCNUM
+     C                   KFLD                    RPACOD
+     C                   KFLD                    RPACSQ
+ 
+     C     KeyLEAC3      KLIST
+     C                   KFLD                    KBRCA
+     C                   KFLD                    KACCY
+     C                   KFLD                    KCNUM
+     C                   KFLD                    KACOD
+     C                   KFLD                    KACSQ
+     C                   KFLD                    KLNRF
+ 
+      ** Access bank details.
+ 
+     C                   CALL      'AOBANKR0'
+     C                   PARM      *BLANKS       PRtcd
+     C                   PARM      '*FIRST '     POptn
+     C     SDBANK        PARM      SDBANK        DSFDY
+ 
+      ** Database error
+ 
+     C                   IF        PRtcd <> *BLANK
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBFILE= 'SDBANKPD'
+     C                   EVAL      DBKEY = POptn
+     C                   EVAL      DBASE = 001
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+      ** Check if CLE005 is ON
+ 
+     C                   CALL      'AOSARDR0'
+     C                   PARM      *BLANK        PRtcd
+     C                   PARM      '*VERIFY'     POptn
+     C                   PARM      'CLE005'      PSard
+ 
+     C                   IF        PRtcd = *BLANK
+     C                   MOVE      'Y'           CLE005
+     C                   ELSE
+     C                   MOVE      'N'           CLE005
+     C                   ENDIF
+ 
+      ** Open and Register Print
+ 
+     C                   IF        NOT %OPEN(LE000695P1)
+     C                   EXSR      RCFP1
+     C                   ENDIF
+ 
+     C                   ENDSR
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR   -  Error Handling Subroutine                         *
+      *                                                               *
+      *  Called by: Various                                           *
+      *                                                               *
+      *  Calls    : DBERRCTL - Database Error Control                 *
+      *                                                               *
+      *****************************************************************
+     C     *PSSR         BEGSR
+ 
+     C                   DUMP
+ 
+     C                   IF        @RUN = *BLANK
+     C                   EVAL      @RUN = 'Y'
+     C                   CALL      'DBERRCTL'
+     C                   ENDIF
+ 
+     C                   EVAL      *INU7 = *ON
+     C                   EVAL      *INU8 = *ON
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+ 
+     C                   ENDSR
+      /EJECT
+      *****************************************************************
+** CPY@
+(c) MIsys International Banking Systems Ltd. 2012

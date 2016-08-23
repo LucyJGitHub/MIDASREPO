@@ -1,0 +1,655 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas EM L/C EOD Update of EMCEXX2')                   *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Exposure Management Module                       *
+     F*                                                               *
+     F*  EM0705 - Update of PF/EMCEXX2 (I/C Exposure Detail File)     *
+     F*           with current L/C and Negotiation liability.         *
+     F*                                                               *
+     F*  Function:  This program was created for the Leo Midas        *
+     F*             Integration project. It is used to update the     *
+     F*             Lending Exposure on the Input Cycle Exposure      *
+     F*             File (PF/EMCEXX2) with the LC and Negotiation     *
+     F*             Liability from Leo.                               *
+     F*                                                               *
+     F*  Phases - CoB                                                 *
+     F*                                                               *
+     F*  Called By: EMC0603 - EM Create Input Cycle Exposure File     *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                                    Date                       *
+     F*                 S01473             DATE 26JUL94               *
+     F*                                    DATE ddmmmyy               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *  CTI002 - Recompiled : File SDACODPD changed                  *
+     F*  S01473 - Created for Leo Midas Integration                   *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F****************************************************************
+     F*
+     FEMCEX   UF  E           K        DISK
+     F            EMCEXX1F                          KIGNORE
+     F            EMCEXX3F                          KIGNORE
+     FSDCURRPDIF  E           K        DISK
+     FEM0705P1O   E             30     PRINTER
+     FEM0705AUO   E             31     PRINTER
+      ********************************************************************
+      *
+      * ID F  C  H  L    FUNCTION OF INDICATORS
+      *       10      Work
+      *       30      Printer File overflow indicator
+      *       31      Printer File overflow indicator
+      *       40      LOKUP indicator
+      *       80      File chain error
+      *       85      EOF indicator for SDCURRPD
+      *       90-99   Standard subroutine use
+      *       U7+U8   Database Error
+     F********************************************************************
+     E                    CURR      150  3               Currency
+     E                    SPRT      150 13 8             Spot Rate
+     E                    MDIN      150  1               Mult/Div Ind.
+     E                    NBDP      150  2 0             No. Decimal Places
+     E                    POWR    1   7  7 3             Powers of Ten
+     E                    CPY@    1   1 80               Copyright
+     E                    @WRK       17  1               LIB/PGM NAME     S01474
+     E/COPY ZSRSRC,ZDATE1Z1
+     E*
+      /EJECT
+      *
+     I@FMT1       DS
+     I                                        1 256 X@DS1
+     I                                      257 512 X@DS2
+     I                                      513 768 X@DS3
+      **  Data structure for the outgoing rcd format of the LCMAST file
+      *
+     I@FMT2       DS
+     I                                        1 256 W@DS1
+     I                                      257 512 W@DS2
+     I                                      513 768 W@DS3
+     I                                      7691024 W@DS4
+     I                                     10251280 W@DS5
+     I                                     12811536 W@DS6
+     I                                     15371792 W@DS7
+      **  Data structure for the outgoing rcd format of the LCNEGS file
+      *
+     ID@MAST      DS                                                      S01467
+     I***  Leo LCMAST file details                                        S01467
+     I*                                                                   S01467
+     I                                        3  10 LMCRNO                S01467
+     I                                       11  11 LMTNO                 S01467
+     I                                       33  40 LMCNO                 S01467
+     I                                    P  57  642LMLAMT                S01467
+     I                                       73  75 LMCCY                 S01467
+     I                                      149 149 LMSTAT                S01467
+     I                                      657 6620LMFCN                 S01467
+     ID@NEGS      DS                                                      S01467
+     I***  Leo LCNEGS file details                                        S01467
+     I*                                                                   S01467
+     I                                        3  10 LNCRNO                S01467
+     I                                       11  11 LNTNO                 S01467
+     I                                       12  130LNNO                  S01467
+     I                                    P  23  302LNCLAR                S01467
+     I                                       31  31 LNDST                 S01467
+     I                                       40  42 LNCCY                 S01467
+     I                                       64  71 LNCNO                 S01467
+     I                                      514 514 LNPRO2                S01467
+     I                                    P 524 5270LNMDT                 S01467
+     I                                    P 564 5670LNVAL                 S01467
+     I                                     11241124 LNPST                 S01467
+     I                                     161416190LNFCN                 S01467
+     ID@CPRO      DS                                                      S01467
+     I***  Leo CUSPRO (CPACRN) file details                               S01467
+     I*                                                                   S01467
+     I                                        1   80CPCNO                 S01467
+     I                                    P   9  120CPUPD                 S01467
+     I                                       13  20 CPUSR                 S01467
+     I                                       21  28 CPACR                 S01467
+     I                                       29  29 CPSTAT                S01467
+     I                                       30  64 CPNAM                 S01467
+     I                                       65  68 CPBCOD                S01467
+     I                                       69  73 CPRES                 S01467
+     I                                       74  78 CPRIS                 S01467
+     I                                       79  84 CPRESP                S01467
+     I                                       85  96 CPACNO                S01467
+     I                                       97 108 CPTAX                 S01467
+     I                                      109 109 CPBANK                S01467
+     I                                    P 119 1220CPCD                  S01467
+     I                                      123 126 CPOF1                 S01467
+     I                                      127 130 CPOF2                 S01467
+     I                                      131 142 CPALT                 S01467
+     I*                                                                   S01467
+     ISDBANK    E DSSDBANKPD
+      **  External Data structure for bank details.
+      *
+     ISDEXPM    E DSSDEXPMPD
+      **  External Data structure for bank details.
+      *
+     IDSFDY     E DSDSFDY
+      **  Short data structure for access programs
+      *
+     IDSSDY     E DSDSSDY
+      **  Long data structure for access programs
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     I           UDS
+     I                                       51  60 LIBLM
+     I                                       61  70 LIBLN
+     I                                       71  80 LIBCA
+      *
+     I            DS
+     I                                        1   60LDATE
+     I                                        1   20YR2
+     I                                        3   60MNDY4
+      /EJECT
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *   main process                                                *
+      *   INIT - Initial Processing                                   *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *   MAIN - main process                                         *
+      *   Called by - none                                            *
+      *   Calls - INIT Initial Process.                               *
+      *****************************************************************
+      *
+      ** Execute initialisation subroutine.
+     C                     EXSR INIT
+      *
+      ** Update EMCEXX2 with L/C liability.
+      ** Access LCMAST via the Access Object CAOULM
+     C                     CALL CAOULM
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C                     PARM '       ' @KEYM  11
+     C                     PARM '       ' @KEYST  7
+     C           D@MAST    PARM           @FMT1
+      *
+     C           @RTCD     DOWEQ*BLANKS
+     C                     EXSR LCUPDT
+      *
+      ** Read the next record on LCMAST
+     C                     CALL CAOULM
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*NEXT  ' @OPTN   7
+     C                     PARM '       ' @KEYM  11
+     C                     PARM '       ' @KEYST  7
+     C           D@MAST    PARM           @FMT1
+     C                     END
+      *
+      ** Update EMCEXX2 with Negotiation liability.
+      ** Access LCNEGS via the Access Object CAOULN
+     C                     CALL CAOULN
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*FIRST'  @OPTN   7
+     C                     PARM '       ' @KEYN  13
+     C                     PARM '       ' @KEYST  7
+     C           D@NEGS    PARM           @FMT2
+      *
+     C           @RTCD     DOWEQ*BLANKS
+     C                     EXSR LNUPDT
+     C                     CALL CAOULN
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*NEXT'   @OPTN   7
+     C                     PARM '       ' @KEYN  13
+     C                     PARM '       ' @KEYST  7
+     C           D@NEGS    PARM           @FMT2
+     C                     END
+      *
+     C                     WRITERPTCOMR
+     C                     WRITERPTCOMA
+     C                     SETON                     LR
+     C***********          OUT  LDA                                       S01473
+     C                     RETRN
+      /EJECT
+      *****************************************************************
+      *   CNVCCY - Perform transaction currency / EM limit currency   *
+      *            conversion                                         *
+      *   Called by - LCUPDT                                          *
+      *             - LNUPDT                                          *
+      *****************************************************************
+     C           CNVCCY    BEGSR
+      *
+      ** Calculate the transaction currency/exp. mgt. currency exchange
+      ** rate and multiply/divide indicator.
+     C           @CCY      IFEQ BUCYCD
+     C           @LIAMT    MULT 1         @EXAMT 130H
+     C                     ELSE
+      *
+      ** Access currency arrays for details of transaction currency -
+      ** spot rate, spot rate multiply/divide indicator, and number of
+      ** decimal places.
+     C                     Z-ADD1         Z
+     C           @CCY      LOKUPCURR,Z                   40
+     C           *IN40     IFNE '1'
+     C                     SETON                     U7U8LR***************
+     C                     MOVE 'SDCURRPD'DBFILE           * DB ERROR 01 *
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL@CCY      DBKEY
+     C                     ELSE
+     C                     Z-ADDSPRT,Z    LSPOT  138
+     C                     MOVE MDIN,Z    LMDIN   1
+     C                     Z-ADDNBDP,Z    LNDP    10
+      *
+     C           EMDIN     IFEQ LMDIN
+     C           ESPOT     DIV  LSPOT     @EXPR  138H
+     C                     ELSE
+     C           ESPOT     MULT LSPOT     @EXPR     H
+     C                     END
+      *
+      ** Adjust exchange rate for difference in number of decimal places
+      ** between exp. mgt. and L/C currencies.
+     C           ENDP      SUB  LNDP      @F      10
+     C           @F        ADD  4         @F
+     C           EMDIN     IFEQ 'M'
+     C           @EXPR     DIV  POWR,@F   @EXPR     H
+     C                     ELSE
+     C           @EXPR     MULT POWR,@F   @EXPR     H
+     C                     END
+     C           @LIAMT    MULT @EXPR     @EXAMT    H
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *   LCUPDT - Update EMCEXX2 with LC liability                   *
+      *   Called by - Main Processing                                 *
+      *   Calls     - ZDATE1                                          *
+      *               CNVCCY                                          *
+      *               EXRPT                                           *
+      *****************************************************************
+     C           LCUPDT    BEGSR
+      *
+      ** Exclude L/C's on which there is no liability - deleted, cancelled,
+      ** expired, advised export L/C's, or L/C's generated from third
+      ** party negotiations.
+     C           LMSTAT    IFEQ 'D'
+     C           LMSTAT    OREQ 'X'
+     C           LMFCN     OREQ 0
+     C           LMLAMT    OREQ 0
+     C*
+     C                     ELSE
+      *
+      ** Access CPACRN via the Access Object with a key of the
+      ** 'Received From Customer of LC'.
+     C                     CALL CAOUCA
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C                     PARM LMCNO     @KEY1   8
+     C                     PARM '       ' @KYST   7
+     C           D@CPRO    PARM           @FMT3 256
+      *
+      ** If no record is found on cpacrn
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '003'     DBASE              * * * * * * *
+     C                     MOVEL'LMCNO'   DBKEY              * DBERR 001 *
+     C                     MOVEL'CPACRN  'DBFILE             * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C                     MOVE CPCNO     @LCRFR  6
+      *
+      ** Access exposure management file LF/EMCEX using key of L/C received
+      ** from customer. Update lending exposure field MLEE by L/C liability
+      ** after conversion routine called.
+      ** If a record does not exist print transaction on exception report.
+     C                     Z-ADDLMLAMT    @LIAMT 152
+     C                     MOVE LMCCY     @CCY    3
+     C                     EXSR CNVCCY
+     C           *INU7     IFNE '1'
+     C           @LCRFR    CHAINEMCEX                99
+     C           *IN99     IFEQ '1'
+     C                     MOVE LMCRNO    PRLCNO
+     C                     MOVE LMTNO     PRLTNO
+     C                     EXSR EXRPT
+     C                     ELSE
+     C                     ADD  @EXAMT    MLEE
+     C                     EXCPTUPDEXM
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+     C           LCEND     ENDSR                           **  LCEND    **
+      *
+      /EJECT
+      *****************************************************************
+      *   LNUPDT - Update EMCEXX2 with Negotiation Liability          *
+      *   Called by - main process                                    *
+      *   Calls     - ZDATE1  Standard Date Processing                *
+      *             - CNVCCY                                          *
+      *             - EXRPT                                           *
+      *****************************************************************
+     C           LNUPDT    BEGSR
+      *
+      ** Exclude Negotiations on which there is no liability - deleted,
+      ** advised export negotiations, or third party negotiations.
+     C           LNDST     IFEQ 'D'
+     C           LNFCN     OREQ 0
+     C                     GOTO LNEND
+     C                     END
+      *
+      ** Exclude Negotiations if expired.
+      ** Check Value Date for verified sight negotiations.
+     C           LNPRO2    IFEQ 'N'
+     C           LNPST     ANDEQ'V'
+      *
+      ** Use Midas subroutine ZDATE1 to convert Neg. value date from
+      ** yymmdd to Midas day number; and compare to Run Date.
+     C                     Z-ADDLNVAL     LDATE
+     C                     MOVE YR2       ZDATE
+     C                     MOVELMNDY4     ZDATE
+     C                     EXSR ZDATE1
+      *
+     C           ZDAYNO    IFGE BJRDNB
+     C                     GOTO LNEND
+     C                     END
+     C                     END
+      *
+      ** Check Maturity Date for verified usance negotiations.
+     C           LNPRO2    IFNE 'N'
+     C           LNPST     ANDEQ'V'
+      *
+      ** Use Midas subroutine ZDATE1 to convert Neg. maturity date from
+      ** yymmdd to Midas day number; and compare to Run Date.
+     C                     Z-ADDLNMDT     LDATE
+     C                     MOVE YR2       ZDATE
+     C                     MOVELMNDY4     ZDATE
+     C                     EXSR ZDATE1
+     C*
+     C           ZDAYNO    IFGE BJRDNB
+     C                     GOTO LNEND
+     C                     END
+     C                     END
+      *
+      ** Access CPACRN for L/C Customer
+      ** via the Access Object
+     C                     CALL CAOUCA
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C                     PARM LNCNO     @KEY1   8
+     C                     PARM '       ' @KYST   7
+     C           D@CPRO    PARM           @FMT3 256
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     SETON                     U7U8LR***************
+     C                     MOVE 'CPACRN  'DBFILE           * DB ERROR 03 *
+     C                     Z-ADD3         DBASE            ***************
+     C                     MOVELLNCNO     DBKEY
+     C                     GOTO LNEND
+     C                     ELSE
+     C                     MOVE CPCNO     @LCRFR
+     C                     END
+      *
+      ** Access exposure management file LF/EMCEX using key of L/C received
+      ** from customer. Update lending exposure field MLEE by L/C liability
+      ** after conversion routine called.
+      ** If a record does not exist print transaction on exception report.
+     C                     Z-ADDLNCLAR    @LIAMT
+     C                     MOVE LNCCY     @CCY
+     C                     EXSR CNVCCY
+     C           *INU7     IFNE '1'
+     C           @LCRFR    CHAINEMCEX                99
+     C           *IN99     IFEQ '1'
+     C                     MOVE LNCRNO    PRLCNO
+     C                     MOVE LNTNO     PRLTNO
+     C                     MOVE LNNO      PRLNNO
+     C                     EXSR EXRPT
+     C                     ELSE
+     C                     ADD  @EXAMT    MLEE
+     C                     EXCPTUPDEXM
+     C                     END
+     C                     END
+     C*
+     C           LNEND     ENDSR                           **  LNEND    **
+     C*
+      /EJECT
+      *****************************************************************
+      *   INIT - initial process                                      *
+      *   Called by - main process                                    *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Set up LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE 'EM0705  'DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+     C                     SETOF                     U7U8
+      *
+      **  Access SDBANKPD for report title and Midas Run Date
+     C                     CALL 'AOBANKR0'
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** If no record is found on sdbankpd.
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '001'     DBASE              * * * * * * *
+     C                     MOVEL'FIRST'   DBKEY              * DBERR 001 *
+     C                     MOVEL'SDBANKPD'DBFILE             * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Set the *IN98 for the date format. If this is 'D' (DDMMYY)
+      ** *IN98 = 0, if this is 'M' (MMDDYY) *IN98 = 1.
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     END
+      *
+      ** Set up Last Change Date as today, and last change type as 'A'
+      ** for PF/EMCEXX2
+     C                     Z-ADDBJRDNB    LCD
+     C                     MOVE 'A'       CHTP
+      *
+      ** Print report header.
+     C                     MOVE BJURPT    RRTITL
+     C                     MOVE BJMRDT    RRRUNA
+     C                     WRITERPTHDRR
+     C                     WRITERPTHDRA
+     C                     MOVE 'Y'       AUDHDR  1
+      *
+      ** Access Exposure Management Installation Control Data for
+      ** limit currency.
+     C                     CALL 'AOEXPMR0'
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDEXPM    PARM SDEXPM    DSFDY
+      *
+      ** If no record is found on sdexpmpd.
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '002'     DBASE              * * * * * * *
+     C                     MOVEL'FIRST'   DBKEY              * DBERR 002 *
+     C                     MOVEL'SDEXPMPD'DBFILE             * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Read SDCURRPD and setup currency detail arrays - currency,
+      ** spot rate, spot rate multiply/divide indicator, and number of
+      ** decimal places.
+     C                     Z-ADD0         Z       30
+     C                     READ SDCURRPD                 85
+     C           *IN85     DOWEQ'0'
+     C           Z         ANDLE150
+     C                     ADD  1         Z
+     C                     MOVE A6CYCD    CURR,Z
+     C                     Z-ADDA6SPRT    SPRT,Z
+     C                     MOVE A6MDIN    MDIN,Z
+     C                     Z-ADDA6NBDP    NBDP,Z
+     C                     READ SDCURRPD                 85
+     C                     END
+      *
+      ** Access currency arrays for details of exp. mgt. currency -
+      ** spot rate, spot rate multiply/divide indicator, and number of
+      ** decimal places.
+     C                     Z-ADD1         Z
+     C           BUCYCD    LOKUPCURR,Z                   40
+     C           *IN40     IFNE '1'
+     C                     SETON                     U7U8LR***************
+     C                     MOVE 'SDCURRPD'DBFILE           * DB ERROR 06 *
+     C                     Z-ADD6         DBASE            ***************
+     C                     MOVELBUCYCD    DBKEY
+     C                     ELSE
+     C                     Z-ADDSPRT,Z    ESPOT  138
+     C                     MOVE MDIN,Z    EMDIN   1
+     C                     Z-ADDNBDP,Z    ENDP    10
+     C                     END
+      *
+      ***  Set up Leo access program calls
+      *
+     C                     MOVE *BLANKS   @WRK                            S01474
+     C                     MOVE *BLANKS   LIBNM                           S01474
+     C                     MOVE '/CAOULM' WVAR    7                       S01474
+     C                     MOVELLIBLM     LIBNM  10                       S01474
+     C                     MOVEALIBNM     @WRK                            S01474
+     C                     Z-ADD1         H       20                      S01474
+      *                                                                   S01474
+     C           *BLANK    LOKUP@WRK,H                   14               S01474
+     C                     MOVEAWVAR      @WRK,H                          S01474
+      *                                                                   S01474
+     C                     MOVEA@WRK      CAOULM 17                       S01474
+      *
+     C                     MOVE *BLANKS   @WRK                            S01474
+     C                     MOVE *BLANKS   LIBNM                           S01474
+     C                     MOVE '/CAOULN' WVAR                            S01474
+     C                     MOVELLIBLN     LIBNM                           S01474
+     C                     MOVEALIBNM     @WRK                            S01474
+     C                     Z-ADD1         H                               S01474
+      *                                                                   S01474
+     C           *BLANK    LOKUP@WRK,H                   14               S01474
+     C                     MOVEAWVAR      @WRK,H                          S01474
+      *                                                                   S01474
+     C                     MOVEA@WRK      CAOULN 17                       S01474
+      *
+     C                     MOVE *BLANKS   @WRK                            S01474
+     C                     MOVE *BLANKS   LIBNM                           S01474
+     C                     MOVE '/CAOUCA' WVAR                            S01474
+     C                     MOVELLIBCA     LIBNM                           S01474
+     C                     MOVEALIBNM     @WRK                            S01474
+     C                     Z-ADD1         H                               S01474
+      *                                                                   S01474
+     C           *BLANK    LOKUP@WRK,H                   14               S01474
+     C                     MOVEAWVAR      @WRK,H                          S01474
+      *                                                                   S01474
+     C                     MOVEA@WRK      CAOUCA 17                       S01474
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *   EXRPT - Output transaction details to exception report if   *
+      *           no record is found on EMCEXX2                       *
+      *   Called by - LCUPDT                                          *
+      *               LNUPDT                                          *
+      *   Calls -                                                     *
+      *****************************************************************
+     C           EXRPT     BEGSR
+      *
+      ** Format fields for output.
+     C                     MOVE @LCRFR    PRLCNU
+     C                     Z-ADD@EXAMT    PRLAMT
+     C                     MOVE @CCY      PRLCCY
+      *
+      ** Print transaction details.
+     C                     WRITERPTDETR
+      *
+      ** Print header if End of Page.
+     C           *IN30     IFEQ '1'
+     C                     WRITERPTHDRR
+     C                     SETOF                     30
+     C                     END
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *   *PSSR - error handling                                      *
+      *   Called by - CCYCNV                                          *
+      *             - LCUPDT                                          *
+      *             - LNUPDT                                          *
+      *             - INIT                                            *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      **  Write database error to report
+     C           PSSRER    IFNE 'Y'
+     C                     MOVE 'Y'       PSSRER  1
+      *
+     C           AUDHDR    IFNE 'Y'
+     C                     WRITERPTHDRA
+     C                     END
+     C                     WRITERPTERRA
+      *
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+     C*
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/EJECT
+     O*
+     O** Update exposure management file
+     O*
+     OEMCEXX2FE                UPDEXM
+     O                         MLEE
+     O                         LCD
+     O                         CHTP
+     O*
+      /EJECT
+**  POWR - ARRAY FOR POWERS OF 10
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+** CPY@   Object Copyright
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365

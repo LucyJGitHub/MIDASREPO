@@ -1,0 +1,70 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SC Set Global journal caching on or off')       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC003002 - Midas SC Set Global journal caching on or off   */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. MD023896 *CREATE   Date 06Dec13              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD023896 - Switching on of Journal Cache for global layer   */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE)
+ 
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&PRFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7) VALUE(' ')
+             DCL        VAR(&SETCACHE) TYPE(*CHAR) LEN(1)
+ 
+/*/COPY SDCPYSRC,SDSVALDCL                                         */
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2013')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Get system values */
+ 
+             CALL       PGM(AOSVALR0) PARM(&PRTCD +
+                          'UseIBMJournalCacheG?' &SVAL1 +
+                          'BrgMidasSystemPrefix' &SVAL2 +
+                          &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                          &SVALK5 &SVAL5 &SVALK6 &SVAL6 +
+                          &SVALK7 &SVAL7 &SVALK8 &SVAL8 +
+                          &SVALK9 &SVAL9 &SVALK10 &SVAL10)
+ 
+             IF         COND(&PRTCD *EQ ' ') THEN(DO)
+                CHGVAR     VAR(&SETCACHE) VALUE(%SST(&SVAL1 1 1))
+                CHGVAR     VAR(&PRFX)     VALUE(%SST(&SVAL2 1 2))
+             ENDDO
+ 
+             IF         COND(&SETCACHE *EQ 'Y') THEN(DO)
+                CALL       PGM(GPCADPTWRP) PARM(GPC003001 &MODE &PRFX)
+                   IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                      GOTO       CMDLBL(ABNOR)
+                   ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000)
+             SNDPGMMSG  MSG('Program SCC003002 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             ENDPGM

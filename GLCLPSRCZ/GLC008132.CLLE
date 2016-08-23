@@ -1,0 +1,121 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Stamp Tax Reset A/C being closed today')     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Leger                                       */
+/*                                                                   */
+/*       GLC008132 - Stamp Tax - Reset Accounts being closed today   */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd 2010            */
+/*                                                                   */
+/*       Last Amend No. AR820958           Date 26Aug11              */
+/*       Prev Amend No. CER049  *Create    Date 06Dec10              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       AR820958 - Component GLC008132 00001 failed                 */
+/*       CER049 - Stamp Tax                                          */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+             DCL        VAR(&MKICPY) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                           Misys International Banking +
+                           Systems Ltd. 2010')
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
+             DCL        VAR(&BUSY) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DILIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
+ 
+/* DB error defintion */
+ 
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Retrieve the system prefix xx                                              */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PRE)
+             CHGVAR     VAR(&DMLIB) VALUE(&PRE *TCAT 'DMLIB')
+             CHGVAR     VAR(&DPLIB) VALUE(&PRE *TCAT 'DPLIB')
+             CHGVAR     VAR(&DILIB) VALUE(&PRE *TCAT 'DILIB')
+ 
+/* Check if restart*/
+ 
+             CALL       CB0160 PARM(&CNAM &CSEQ &BUSY)
+ 
+             CLRPFM     FILE(GLCLOSPD)
+             MONMSG     MSGID(CPF0000)
+ 
+/* No restart - save object */
+ 
+/**********  IF         COND(&BUSY *EQ 'N') THEN(DO)                 */                 /*AR820958*/
+             IF         COND(&BUSY *NE 'Y') THEN(DO)                                    /*AR820958*/
+ 
+             CHKOBJ     OBJ(&DILIB/SAVFGL8132) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+             CRTSAVF    FILE(&DILIB/SAVFGL8132) TEXT('Save of +
+                          Account File  before update')
+             ENDDO
+             CLRSAVF    FILE(&DILIB/SAVFGL8132)
+ 
+/* Save data */
+ 
+             SAVOBJ     OBJ(ACCNTAB) LIB(&DMLIB) DEV(*SAVF) +
+                          SAVF(&DILIB/SAVFGL8132)
+ 
+/* Set active flag */
+ 
+             CHGVAR     VAR(&BUSY) VALUE('Y')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &BUSY)
+ 
+             ENDDO
+             ELSE       CMD(DO)
+ 
+/* Restore copy of ACCNTAB Files */
+ 
+             RSTOBJ     OBJ(ACCNTAB) SAVLIB(&DMLIB) +
+                          DEV(*SAVF) SAVF(&DILIB/SAVFGL8132)
+             DLYJOB     DLY(60)
+             ENDDO
+ 
+/* GL008132 - Reset Accounts being closed today */
+ 
+             CALL       PGM(GL008132)
+ 
+/* DB error  */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+             SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ MRUNQ)
+             CHGVAR     VAR(&MEM) VALUE('GLC008132 - Job Terminated, +
+                        Database in Error')
+             SNDPGMMSG  MSG(&MEM) TOPGMQ(*EXT) TOMSGQ(MRUNQ MOPERQ)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Set OK flag  */
+ 
+             CHGVAR     VAR(&BUSY) VALUE('N')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &BUSY)
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+ END:
+ 
+             CHGVAR     VAR(&MKICPY) VALUE('(c) Misys International +
+                          Banking Systems Ltd. 2010')
+ 
+             ENDPGM

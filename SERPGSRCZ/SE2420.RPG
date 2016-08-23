@@ -1,0 +1,693 @@
+     H        1                                                           SE0720
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Gen A/c Keys-Ctg Liab @ Maturity')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE2420 - GENERATE A/C KEYS - CONTINGENT LIABILITIES          *
+     F*                               AT MATURITY                     *
+     F*                                                               *
+     F*  Function: To provide generated account keys to reverse       *
+     F*   (COB)    contingent liability entries passed for Trades,    *
+     F*            on Sales to Market clients.  One key is produced   *
+     F*            per branch/counterparty/security, summing all      *
+     F*            previously posted amounts.                         *
+     F*                                                               *
+     F*  Called by: SEC0607B - Generate A/C Keys-Contingent Liability *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CSE071             Date 19Jul05               *
+      *                 BUG3122            Date 17Jul04               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CGL020             Date 12Dec02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 127796             Date 24Feb98               *
+     F*                 CAC002             Date 15Sep96               *
+     F*                 061349             Date 16Jan94               *
+     F*                 054257             DATE 10JAN94               *
+     F*                 052254             DATE 10JAN94               *
+     F*                 S01401             DATE 16JUN93               *
+     F*                 S01397             DATE 10SEP92               *
+     F*                 E29170             DATE 07NOV91               *
+     F*                 S01117             DATE 31MAY91               *
+     F*                 S01269             DATE 01AUG90               *
+     F*                 E20651             DATE 30JAN90               *
+     F*                 E19975             DATE 23NOV89               *
+     F*                 E19953             DATE 03NOV89               *
+     F*                 E18803             DATE 17AUG89               *
+     F*                 E16772             DATE 19/06/89              *
+     F*                 E14522             DATE 08/08/88              *
+     F*                 E13817             DATE 22/06/88              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  BUG3122 - Recompiled due to changes in SDSECSPD.             *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  CGL020 - Midas Compliance Watch - Additional A/C Postings    *
+     F*           Information (Recompile)                             *
+     F*  127796 - SE0050 only writes to SEPCCD for safe custody       *
+     F*           and discretionary customers, so no point looking    *
+     F*           for a record is this customer is a market one.      *
+     F*  CAC002 - Profit Centre Accounting Development - Phase 2      *
+     F*           If Analytical Accounting is available, define the   *
+     F*           profit centre for posting.                          *
+     F*  061349 - Check that profit centres are used before chaining  *
+     F*           to SEPCCD.                                          *
+     F*  054257 - RECOMPILED as PREV CURRENT FACTOR amended from 9,8  *
+     F*           to 10,9                                             *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S01401 - MT5xx SWIFT Messages Feature:                       *
+     F*          - Recompiled due to changes to files.                *
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+     F*          - Recompiled due to changes to files.                *
+     F*  E29170 - Report Control Facility changes                     *
+     F*  S01117 - Multibranching (Release 10)                         *
+     F*  S01269 - Trade authorisation: recompiled over changed        *
+     F*           file TABSE.                                         *
+     F*  E20651 - DB ERROR NUMBERS USED IN MORE THAN ONE PLACE.       *   E20651
+     F*           NEW ERROR NUMBERS AS FOLLOWS:                       *   E20651
+     F*           DB ERROR 01 -> 04                                   *   E20651
+     F*           DB ERROR 01 -> 05                                   *   E20651
+     F*  E19975 - ISSR shouldn't be zeroized before writing           *   E19975
+     F*           SEKEYD as  issuer should appear on account keys.    *   E19975
+     F*  E19953 - BLANK NOMINAL CURRENCY IN A/C KEY CAUSES DB ERROR.  *   E19953
+     F*  E18803 - SET ACCOUNT KEY SEQUENCE NO. TO ZERO TO ALLOW FOR   *   E18803
+     F*           MULTI-BRANCH SYSTEMS.                               *   E18803
+     F*  E16772 - Recompiled for the Dividend Payment Amount field    *   E16772
+     F*           changes.                                            *   E16772
+     F*  E14522 - TEST CONVERTIBLE INDICATOR (POSN 14 IN ACCOUNT      *   E14522
+     F*           KEY) CORRECTLY.                                     *   E14522
+     F*  E13817 - OUTPUT 'FV' KEY WITH NOMINAL CURRENCY AND           *   E13817
+     F*           NOM. DECIMAL PLACES.                                *   E13817
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FMATAC   IP  E           K        DISK
+     FCLIAB   UF  E           K        DISK
+     FSECTY   IF  E           K        DISK
+     FCLIABA  UF  E                    DISK
+     FSEPCCD  IF  E           K        DISK                               S01117
+     FTABSE   IF  E           K        DISK
+     F            TABLETAF                          KIGNORE
+     F            TABTB11F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F*********** TABLETJF                          KIGNORE               S01117
+     F            TABLETKF                          KIGNORE
+     F            TABLETLF                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     FSEKEYA  O   E                    DISK                      A
+     FSEKEYD  O   E                    DISK                      A
+     FSE2420AUO   E                    PRINTER
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   32       1st time read of CLIABD for Sec/Br/Cntrparty       *
+     F*   33       General work indicator                             *
+     F*   69       Used to Control first cycle processing             *
+     F*90-99    Used in standard sub-routines                         *
+     F*   U7    Database error                                        *
+     F*   U8    Database / Control error                              *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  I N D E X   T O   S U B R O U T I N E S                      *
+     F*                                                               *
+     F*   ACKEY  - Write out generated a/c key records                *
+     F*   ZICDSE - Access ICD record for Securities Trading           *
+     F*   ZSYSTM - Access ICD record                                  *
+     F*   ZHASH  - Calculate hash value for run control               *
+     F*   *PSSR  - Exception error routine                            *   S01117
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+0076 E                    INT         1 15 0             ZHASH INTEGERS
+0077 E                    DEC         1  3 0             ZHASH DECIMALS
+      /COPY ZSRSRC,ZPOWER8Z1                                              E13817
+     E                    CPY@    1   1 80
+      /EJECT
+     I*
+     ICPYR@#      DS
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     IKSEPCR      DS                                                      S01117
+     I*                                                                   S01117
+     I* Book Position Profit Centre (PF/SEPCBD)                           S01117
+     I*                                                                   S01117
+     I**********                              1   60KTCNR                              S01117 CSD027
+     I                                        1   6 KTCNR                                     CSD027
+     I                                        7   9 KTDBA                 S01117
+     I                                       10  19 KTDSS                 S01117
+     I*                                                                   S01117
+     ILDA         DS                            256                       S01117
+     I*                                                                   S01117
+     I** Local Data Area, used in Database Error Reporting                S01117
+     I*                                                                   S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I***********LDA        UDS                 256                       S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 177 DBASE                 S01117
+     I*
+     I            DS
+     I                                        1  20 ACKY
+     I                                        1   3 INVTYP
+     I                                        4   4 EVTCOD
+     I                                       14  14 CONVRT
+     I                                       19  20 AMTCOD
+     I*
+     ISDGELR    E DSSDGELRPD                                              061349
+     I*                                                                   061349
+     I** General ledger details                                           061349
+     I*                                                                   061349
+     ISDMMOD    E DSSDMMODPD                                              CAC002
+     I**  Modules File Details                                            CAC002
+     I*                                                                   CAC002
+     ISDSTRD    E DSSDSTRDPD                                              CAC002
+     I**  Securities Trading Details                                      CAC002
+     I*                                                                   CAC002
+     IDSFDY     E DSDSFDY                                                 CAC002
+     I*  First DS for Access Programs, Short Data Structure               CAC002
+     I*                                                                   CAC002
+     I*                                                                   CAC002
+     ISDSECS    E DSSDSECSPD                                              127796
+     I              QQACCD                          QQACC1                                    CGL029
+     I**  Security Customer Detsils.                                      127796
+     I*                                                                   127796
+     IDSSDY     E DSDSSDY                                                 CAC002
+     I*  Second DS for Access Programs, Long Data Structure               CAC002
+     I*                                                                   CAC002
+      /COPY ZSRSRC,ZHASHZ2
+      /EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T                                  *
+     C*================================================================
+     C*
+     C           *IN69     IFEQ '0'
+     C*                                                                   S01117
+     C* Customer Position Profit Centre (file PF/SEPCCD)                  S01117
+     C*                                                                   S01117
+     C           KSEPCC    KLIST                                          S01117
+     C                     KFLD           KTCNR                           S01117
+     C                     KFLD           KTDBA                           S01117
+     C                     KFLD           KTDSS                           S01117
+     C*
+     C* Prepare LDA
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANKS   DBLOT
+     C                     MOVE 'SE2420  'DBPGM
+     C                     OUT  LDA                                       S01117
+     C*
+     C* Get Installation Control Data record 1
+     C*
+     C                     EXSR ZSYSTM
+     C*
+     C* If error in ZSYSTM, abend program
+     C*
+     C           *IN99     IFEQ '1'                        ***************
+     C           *LOCK     IN   LDA                        **           **S01117
+     C***********          MOVE '01'      DBASE            **DB*ERROR*01**E20651
+     C***********          MOVE '04'      DBASE     **DB ERROR 04**E20651 S01117
+     C                     Z-ADD04        DBASE            **DB ERROR 04**S01117
+     C                     MOVEL'TABLE'   DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY
+     C                     WRITEHEADAU
+     C                     WRITEERROR
+     C***********          WRITETRAILAU                                   E29170
+     C                     SETON                     U7U8LR
+     C                     OUT  LDA                                       S01117
+     C                     DUMP                                           S01117
+     C                     RETRN
+     C                     END
+     C*
+     C* Get Installation Control Data record for Securities trading
+     C*
+     C                     EXSR ZICDSE
+     C*
+     C* If error in ZICDSE, abend program
+     C*
+     C           *IN99     IFEQ '1'                        ***************
+     C           *LOCK     IN   LDA                        **           **S01117
+     C***********          MOVE '02'      DBASE            **DB ERROR 02**S01117
+     C                     Z-ADD02        DBASE            **DB ERROR 02**S01117
+     C                     MOVEL'TABLE'   DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY
+     C                     WRITEHEADAU
+     C                     WRITEERROR
+     C***********          WRITETRAILAU                                   E29170
+     C                     SETON                     U7U8LR
+     C                     OUT  LDA                                       S01117
+     C                     DUMP                                           S01117
+     C                     RETRN
+     C                     END
+     C*                                                                   CAC002
+     C**  Check if Analytical Accounting module is installed.             CAC002
+     C*                                                                   CAC002
+     C                     CALL 'AOMMODR0'                                CAC002
+     C                     PARM '*MSG   ' @RTCD                           CAC002
+     C                     PARM '*FIRST ' @OPTN                           CAC002
+     C           SDMMOD    PARM SDMMOD    DSFDY                           CAC002
+      *                                                                   CAC002
+     C           @RTCD     IFNE *BLANKS                                   CAC002
+     C           *LOCK     IN   LDA                                       CAC002
+     C                     Z-ADD7         DBASE            ************   CAC002
+     C                     MOVEL'SDMMODPD'DBFILE           * DBERR 07 *   CAC002
+     C                     MOVEL@OPTN     DBKEY            ************   CAC002
+     C                     OUT  LDA                                       CAC002
+     C                     SETON                     U7U8                 CAC002
+     C                     WRITEHEADAU                                    CAC002
+     C                     WRITEERROR                                     CAC002
+     C                     DUMP                                           CAC002
+     C                     RETRN                                          CAC002
+     C                     ENDIF                                          CAC002
+     C*                                                                   CAC002
+     C**  Access Securities Trading details                               CAC002
+     C*                                                                   CAC002
+     C                     CALL 'AOSTRDR0'                                CAC002
+     C                     PARM '*MSG   ' @RTCD                           CAC002
+     C                     PARM '*FIRST ' @OPTN                           CAC002
+     C           SDSTRD    PARM SDSTRD    DSSDY                           CAC002
+      *                                                                   CAC002
+     C           @RTCD     IFNE *BLANKS                                   CAC002
+     C           *LOCK     IN   LDA                                       CAC002
+     C                     Z-ADD8         DBASE            ************   CAC002
+     C                     MOVEL'SDSTRDPD'DBFILE           * DBERR 08 *   CAC002
+     C                     MOVEL@OPTN     DBKEY            ************   CAC002
+     C                     OUT  LDA                                       CAC002
+     C                     SETON                     U7U8                 CAC002
+     C                     WRITEHEADAU                                    CAC002
+     C                     WRITEERROR                                     CAC002
+     C                     DUMP                                           CAC002
+     C                     RETRN                                          CAC002
+     C                     ENDIF                                          CAC002
+     C*
+     C* Define work fields
+     C*
+     C           *LIKE     DEFN TDSS      XTDSS
+     C************LIKE     DEFN TDBR      XTDBR                           S01117
+     C           *LIKE     DEFN TDBA      XTDBA                           S01117
+     C           *LIKE     DEFN TCNR      XTCNR
+     C           *LIKE     DEFN EVAM      TOTNOM
+     C*
+     C                     Z-ADD*ZEROS    ZZAMT
+     C*
+     C                     SETON                     69
+     C                     END
+     C*
+      /EJECT
+     C*
+     C* Count records in
+     C*
+     C                     ADD  1         MTRRD
+     C*
+     C* Fetch security details
+     C*
+     C           SASN      CHAINSECTYDF              33
+     C*                                                                   E13817
+     C* Fetch Nominal currency decimal places                             E13817
+     C*                                                                   E13817
+     C                     MOVELNMCY      WK4     4                       E13817
+     C                     MOVEL'20      'TKEY   12                       E13817
+     C                     MOVE 1         WK4                             E13817
+     C                     MOVE WK4       TKEY                            E13817
+     C           TKEY      CHAINTABTG10F             86                   E13817
+     C  N86      RECI      COMP 'D'                  8686                 E13817
+     C           *IN86     IFEQ '1'                                       E13817
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'TABSE'   DBFILE           ***************E13817
+     C                     MOVELTKEY      DBKEY            ** DB ERROR 98 E13817
+     C***********          MOVEL'98'      DBASE            ********E13817 S01117
+     C                     Z-ADD98        DBASE            ***************S01117
+     C                     WRITEHEADAU                                    E13817
+     C                     WRITEERROR                                     E13817
+     C***********          WRITETRAILAU                             E13817E29170
+     C                     SETON                     U7U8LR               E13817
+     C                     OUT  LDA                                       S01117
+     C                     DUMP                                           S01117
+     C                     RETRN                                          E13817
+     C                     END                                            E13817
+     C*
+     C* Read all Contingent liability records for this security
+     C*
+     C           SASN      SETLLCLIABDF
+     C                     SETOF                     3233
+     C           *IN33     DOWEQ'0'
+     C           SASN      READECLIABDF                  33
+     C           *IN33     IFEQ '0'
+     C*
+     C* 1st time for Security/Branch/Counterparty
+     C*
+     C           *IN32     IFEQ '0'
+     C                     MOVE TDSS      XTDSS
+     C***********          MOVE TDBR      XTDBR                           S01117
+     C                     MOVE TDBA      XTDBA                           S01117
+     C                     MOVE TCNR      XTCNR
+     C                     SETON                     32
+     C                     END
+     C*
+     C* If change of Security/Branch/Counterparty, write out A/C key
+     C*
+     C           TDSS      IFNE XTDSS
+     C***********TDBR      ORNE XTDBR                                     S01117
+     C           TDBA      ORNE XTDBA                                     S01117
+     C           TCNR      ORNE XTCNR
+     C*
+     C* Do not output record if amount is zero
+     C*
+     C           TOTNOM    IFNE *ZEROS
+     C                     EXSR ACKEY
+     C                     END
+     C*
+     C                     SETOF                     32
+     C                     END
+     C*
+     C* Add nominal amount to total
+     C*
+     C                     ADD  NOML      TOTNOM
+     C*
+     C* Flag record as dropped and keep running total
+     C*
+     C                     MOVE '*'       RECI
+     C                     EXCPTDROPCL
+     C                     ADD  1         CLDEL
+     C*
+     C                     END
+     C                     END
+     C*
+     C* Catch EOF and write a/c key if any records read
+     C*
+     C   33 32             DO
+     C*
+     C* Do not output record if amount is zero
+     C*
+     C           TOTNOM    IFNE *ZEROS
+     C                     EXSR ACKEY
+     C                     END
+     C*
+     C                     END
+     C*
+      /SPACE 3
+     C*
+     C* LR processing
+     C*
+     CLR                   DO
+     C*
+     C* If no records read, perform 1st time calcs for audit report
+     C*
+     CL0         MTRRD     IFEQ *ZEROS
+     C*
+     C* Prepare LDA
+     C*
+     CL0                   MOVE *BLANKS   DBLOT
+     CL0                   MOVE 'SE2420  'DBPGM
+     C*
+     C* Get Installation Control Data record 1
+     C*
+     CL0                   EXSR ZSYSTM
+     C*
+     C* If error in ZSYSTM, abend program
+     C*
+     CL0         *IN99     IFEQ '1'                        ***************
+     CL0         *LOCK     IN   LDA                        **           **S01117
+     C**********L0         MOVE '01'      DBASE            **DB*ERROR*01**E20651
+     C**L0*******          MOVE '05'      DBASE     **DB ERROR 05**E20651 S01117
+     CL0                   Z-ADD05        DBASE            **DB ERROR 05**S01117
+     CL0                   MOVEL'TABLE'   DBFILE           ***************
+     CL0                   MOVELZTABKY    DBKEY
+     CL0                   WRITEHEADAU
+     CL0                   WRITEERROR
+     C*0*********          WRITETRAILAU                                   E29170
+     CL0                   SETON                     U7U8
+     CL0                   OUT  LDA                                       S01117
+     CL0                   DUMP                                           S01117
+     CL0                   RETRN
+     CL0                   END
+     C*
+     CL0                   END
+     C*
+     C* Fetch Contingent Liability audit record
+     C*
+     CL0         1         CHAINCLIABAF              33
+     CL0         *LOCK     IN   LDA                                       S01117
+     CL0         *IN33     IFEQ '1'                        ***************
+     C**L0*******          MOVE '03'      DBASE            **DB ERROR 03**S01117
+     CL0                   Z-ADD03        DBASE            **DB ERROR 03**S01117
+     CL0                   MOVEL'CLIAB'   DBFILE           ***************
+     CL0                   MOVEL'AUDIT'   DBKEY
+     CL0                   WRITEHEADAU
+     CL0                   WRITEERROR
+     C*0*********          WRITETRAILAU                                   E29170
+     CL0                   SETON                     U7U8
+     CL0                   OUT  LDA                                       S01117
+     CL0                   DUMP                                           S01117
+     CL0                   RETRN
+     CL0                   ELSE
+     C*
+     C* Calculate new number of records
+     C*
+     CL0                   Z-ADDNORE      CLRNO
+     CL0         CLRNO     SUB  CLDEL     CLNEW
+     C*
+     C* Update audit file
+     C*
+     CL0                   Z-ADDCLNEW     NORE
+     CL0                   UPDATCLIABAF
+     C*
+     C* Print audit report
+     C*
+     CL0                   WRITEHEADAU
+     CL0                   WRITEDETLAU
+     C*
+     C* Write a/c key audit record
+     C*
+     CL0                   Z-ADDNORECS    NORE
+     CL0                   Z-ADDHSHINT    HRWN
+     CL0                   Z-ADDHSHDEC    HRDC
+     CL0                   WRITESEKEYAF
+     C*
+     CL0                   END
+     C*
+     CLR                   END
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* ACKEY SR. writes out the generated account key records        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     CSR         ACKEY     BEGSR
+     C*
+     C                     MOVE 'D'       RECI
+     C                     MOVE *BLANKS   ACKY
+     C                     MOVE SITP      INVTYP
+     C                     MOVE 'M'       EVTCOD
+     C                     MOVE ' '       CONVRT
+     C           CIAK      IFEQ 'Y'
+     C           SCVI      ANDEQ'Y'                                       E14522
+     C                     MOVE SCVI      CONVRT
+     C                     END
+     C                     MOVE 'FV'      AMTCOD
+     C                     MOVE XTCNR     CSTN
+     C***********          MOVE XTDBR     BRCH                            S01117
+     C                     MOVE XTDBA     BRHA                            S01117
+     C************         Z-ADD1         ASQN                            E18803
+     C                     Z-ADD0         ASQN                            E18803
+     C                     Z-ADDMATY      EVDT
+     C**********           Z-ADDTOTNOM    EVAM                            E13817
+     C           5         SUB  NMDP      ZI      10                      E13817
+     C                     ADD  CDP       ZI      10                      E13817
+     C           TOTNOM    MULT POWER8,ZI EVAM      H                     E13817
+     C                     MOVE NMCY      EVCY
+     C                     Z-ADD*ZEROS    STLT
+     C                     MOVE *BLANKS   STLA
+     C                     MOVE '0'       RVRS
+     C*********************Z-ADD*ZEROS    ISSR                            E19975
+     C**********           Z-ADD*ZEROS    KCUST                                        E19975 CSD027
+     C                     MOVE *BLANKS   KCUST                                               CSD027
+     C                     Z-ADD*ZEROS    KNCA
+     C***************      MOVE *BLANKS   KCCY                            E19953
+     C                     MOVE NMCY      KCCY                            E19953
+     C                     Z-ADD*ZEROS    KBCA
+     C                     MOVE XTDSS     SESH
+     C*                                                                   CAC002
+     C**  If Analytical Accounting is installed, set the profit centre    CAC002
+     C**  SE ICD default profit centre.                                   CAC002
+     C*                                                                   CAC002
+     C           BGN0ST    IFEQ 'Y'                                       CAC002
+     C                     MOVE BVSEPC    PRFC                            CAC002
+     C                     ELSE                                           CAC002
+     C*                                                                   061349
+     C** Check that profit centres are used                               061349
+     C*                                                                   061349
+     C**********           CALL 'AOGELRR0'                                061349              CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*DBERR ' @RTCD   7                       061349
+     C                     PARM '*FIRST ' @OPTN   7                       061349
+     C**********           PARM SDGELR    SDGELR                          061349              CGL029
+     C                     PARM SDGELR    DSSDY                                               CGL029
+     C*                                                                   061349
+     C**  Check customer is safe custody or discretionary customer        127796
+     C**  or else there will be no SEPCCD record to find.                 127796
+     C*                                                                   127796
+     C                     MOVE XTCNR     WCUST   6                       127796
+     C                     CALL 'AOSECSR0'                                127796
+     C                     PARM           @RTCD   7                       127796
+     C                     PARM '*KEY   ' @OPTN   7                       127796
+     C                     PARM WCUST     @SCKY   6                       127796
+     C           SDSECS    PARM SDSECS    DSSDY                           127796
+     C*                                                                   127796
+     C           BKPRCU    IFEQ 'Y'                                       061349
+     C           BFCLAS    ANDEQ'S'                                       127796
+     C           BKPRCU    OREQ 'Y'                                       127796
+     C           BFCLAS    ANDEQ'D'                                       127796
+     C*                                                                   127796
+     C*                                                                   S01117
+     C* First obtain Customer Position Profit Centre Details              S01117
+     C*                                                                   S01117
+     C                     EXSR PPCCHN                                    S01117
+     C*                                                                   S01117
+     C**  Output Profit Centre from Customer Position                     S01117
+     C*                                                                   S01117
+     C                     MOVE PCCU      PRFC                            S01117
+     C*
+     C                     ELSE                                           061349
+     C                     MOVE *BLANKS   PRFC                            061349
+     C                     END                                            061349
+     C*                                                                   061349
+     C                     ENDIF                                          CAC002
+      *                                                                   CAC002
+     C                     WRITESEKEYDF
+     C*
+     C                     Z-ADD*ZEROS    TOTNOM
+     C*
+     C* Keep total for audit record
+     C*
+     C                     ADD  1         NORECS
+     C*
+     C* Fetch and keep hash totals for audit record
+     C*
+     C                     Z-ADDEVAM      ZZAMT
+     C                     Z-ADD1         S
+     C                     Z-ADD1         Z
+     C                     EXSR ZHASH
+     C                     Z-ADDINT,S     HSHINT
+     C                     Z-ADDDEC,S     HSHDEC
+     C*
+     CSR                   ENDSR
+     C*
+     C*****************************************************************
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  PPCCHN - Subroutine to Chain to Book Position Profit Centre  *   S01117
+      *  Called from: Main processing                                 *   S01117
+      *  Calls:                                                       *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           PPCCHN    BEGSR                           *** PPCCHN *** S01117
+     C*                                                                   S01117
+     C**  SET UP KEY CHAIN                                                S01117
+     C*                                                                   S01117
+     C**********           Z-ADDXTCNR     KTCNR                                        S01117 CSD027
+     C                     MOVE XTCNR     KTCNR                                               CSD027
+     C                     MOVE XTDBA     KTDBA                           S01117
+     C                     MOVE XTDSS     KTDSS                           S01117
+     C*                                                                   S01117
+     C           KSEPCC    CHAINSEPCCDF              80                   S01117
+     C           *IN80     IFEQ '1'                                       S01117
+     C           RECI      OREQ '*'                                       S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'SEPCCD'  DBFILE           ***************S01117
+     C                     MOVELKSEPCR    DBKEY            * DB ERROR 06 *S01117
+     C                     Z-ADD06        DBASE            ***************S01117
+     C                     SETON                     U7U8                 S01117
+     C                     OUT  LDA                                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+     C*****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZHASHZ3
+      /EJECT
+     C/COPY ZSRSRC,ZICDSEZ1
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+      /EJECT
+     OCLIABDF E                DROPCL
+     O                         RECI
+      /EJECT
+      ***
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

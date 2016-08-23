@@ -1,0 +1,1188 @@
+     H        1
+      *****************************************************************
+/*S*D****RPGBASE*******************************************************                       CCB023
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LE2330 - Midas LE Unauthorised Loans Check                   *
+      *                                                               *
+      *  Function:  This program will process all customer lending    *
+      *  (I/C and   transactions performed during the day.  If any    *
+      *    COB)     are found which have not been authorized, the     *
+      *             unauthorized transactions audit report will be    *
+      *             produced and the user will be informed of the     *
+      *             error condition and prompted to re-open input     *
+      *             cycle.                                            *
+      *                                                               *
+      *                                                               *
+      *  Called By: LEC2330 - Unauthorised Loans Report Control       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CCB023 *REDUNDANT  Date 06Aug12               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 244279             Date 07Dec06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE106             Date 23Feb05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CLE030             Date 20Sep02               *
+      *                 CAS006             Date 21Jan03               *
+      *                 CAS005             Date 16Dec02               *
+      *                 CLE028             Date 27Jun02               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 201123             Date 24Jul02               *
+      *                 204452             Date 03May02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 199974             Date 20Dec01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CRT004             Date 04May00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 176443             Date 18Apr00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CLE009             Date 26Apr99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 158637 (BT0664)    Date 31Mar98               *
+      *                 144923             Date 16Oct98               *
+      *                 141453             Date 17Feb99               *
+      *                 127658             Date 25Nov97               *
+      *                 123846             Date 03Oct97               *
+      *                 123231             Date 19Sep97               *
+      *                 122603             Date 04SEP97               *
+      *                 121783             Date 20AUG97               *
+      *                 CLE002 *Create     Date 02Dec96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CCB023 - COB Restructure - Input Cycle Termination           *
+      *           Restructuring                                       *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  244279 - Include adjustments to accrued interest/margin in   *
+      *           enquiry and report.                                 *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CLE106 - Syndication Manager (Recompile)                     *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CLE030 - Customer Lending Enhancement - Release Authorisation*
+      *           Recompile due to the changes in LF/LELOANL1,        *
+      *           LF/LELOAML1, LF/LELOANL3                            *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  CAS005 - Enahancements to CAS001, CAS002 and CAS004          *
+      *           (Recompile)                                         *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s)              *
+      *  201123 - Include Original Borrower in this report when       *
+      *           processing type of loan is either 64, 65, 68 or 71. *
+      *  204452 - Recompiled due to changed PF/LEFEED.                *
+      *  199974 - Value date not generated correctly for Fees, MFUs,  *
+      *           Facilities, Guarantees and Rollovers.               *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  CRT004 - Cashier Midas TCP/IP interface.                     *
+      *             Recompiled over SDBRCHPD Changes                  *
+      *  176443 - Avoid MCH3601 to be sent.                           *
+      *           Pass correct parameter to AOCUSTR0.                 *
+      *  CLE009 - LE I/C Swift Message Generation for Fees            *
+      *           Recompiled due to changes in LEFEED                 *
+      *  158637 - LEFEESL1 does not exist, use LEFEEDL3               *
+      *  144923 - Fee Adjustments being reported instead of Fee       *
+      *           Settlements. Adjustments don't need to be authorised*
+      *  141453 - Recompiled due to changes in PF/LEFEED              *
+      *  127658 - Unauthorised facility amendments and manual         *
+      *           facility utilisation not included in the report     *
+      *  123846 - Unauthorised fees should only be reported if        *
+      *           CLE005 is ON                                        *
+      *  123231 - Mis-spelled REPAYMENT SCHEDULE                      *
+      *  122603 - Value date in non-standard format                   *
+      *  121783 - Call new access object AOBRCHR1 instead of AOBRCHR0 *
+      *           (uses the long data structure DSSDY)                *
+      *  CLE002 - Customer Lending Enhancements - Authorisation       *
+      *                                                               *
+      *****************************************************************
+     FLE2330AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU
+     FLE2330P1O   E                    PRINTER
+     F                                              KINFDS SPOOL1
+     FLELOANL1IF  E           K        DISK         KINFSR *PSSR
+     FLELOANL3IF  E           K        DISK         KINFSR *PSSR
+     F***LELOAML1IF  E           K        DISK         KINFSR *PSSR                           244279
+     FLELOAMLDIF  E           K        DISK         KINFSR *PSSR                              244279
+     FLEFCLTL1IF  E           K        DISK         KINFSR *PSSR
+     FLEGTEEL1IF  E           K        DISK         KINFSR *PSSR
+     F***LEFEESL1IF  E           K        DISK                            158637
+     FLEFEEDL3IF  E           K        DISK                               158637
+     F***LEFEEAL1IF  E           K        DISK         KINFSR *PSSR       144923
+     FLEFEEAL3IF  E           K        DISK         KINFSR *PSSR          144923
+     FLEFCAML2IF  E           K        DISK         KINFSR *PSSR          127658
+     FLEMNFUL2IF  E           K        DISK         KINFSR *PSSR          127658
+     FCLOAN   IF  E           K        DISK         KINFSR *PSSR                              199974
+     F            CLOANCKF                          KIGNORE                                   199974
+     F            CLOANCLF                          KRENAMECLOANCL                            199974
+     F            CLOANHHF                          KIGNORE                                   199974
+     F            CLOANZ1F                          KIGNORE                                   199974
+     F/COPY WNCPYSRC,LE2330F001
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   37  - Multibranching ON                                     *
+      *                                                               *
+      *                                                               *
+      *   80  - End of File for CLOAN                                 *                       199974
+      *   89  - End of File                                           *
+      *                                                               *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INIT   - Program Initialisation                              *
+      *  PROCES - Detail Processing                                   *
+      *  REPORT - Process Report Lines                                *
+      *                                                               *
+      *  WP1REC - Format and Write a Detail Record to the Report      *
+      *  WP1END - Write End of Report                                 *
+      *                                                               *
+      *  AUDIT  - Produce Audit Report and End Program                *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *  RCFP1  - RCF Processing for P1 Report                        *
+      *  RCFAU  - RCF Processing for Audit Report                     *
+      *                                                               *
+      *  ZDATE2 - Convert Midas Day Number into Date (DDMMYY/MMDDYY)  *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E***********         TNAR    1  19 22                                127658
+     E/COPY WNCPYSRC,LE2330E001
+     E**********          TNAR    1  24 22                                             127658 244279
+     E                    TNAR    1  26 22                                                    244279
+     E/COPY WNCPYSRC,LE2330E002
+      *
+      ** Array containing Transaction type Narrative
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+      /SPACE 3
+     E/COPY WNCPYSRC,LEH00461
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     ISPOOL1      DS
+      ***  File Information Data Structure for MMNNNNPY.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      ***  File Information Data Structure for MMNNNNAU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+      ***  Dummy Data Structures used by Access Programs.
+      *
+     ISDBANK    E DSSDBANKPD
+      ***  External data structures for Bank Details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ***  External data structures for Branch Details
+      *
+     ISDCUST    E DSSDCUSTPD
+     I              QQDFAC                          QQDFA1                                    CGL029
+      ***  External data structures for Customer Details
+      *
+     ISCSARD    E DSSCSARDPD                                                                  CLE028
+      ** SAR details                                                                          CLE028
+      *                                                                                       CLE028
+     IDSFDY     E DSDSFDY
+      ***  Short data structures for Access Objects
+      *                                                                   121783
+     IDSSDY     E DSDSSDY                                                 121783
+      ** Long data structure for access objects                           121783
+     I/COPY WNCPYSRC,LE2330I001
+      *                                                                   121783
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+      *
+     C                     EXSR INIT
+      *
+      ***  Perform Detail Processing.
+      *
+     C                     EXSR PROCES
+      *
+      ***  Output Audit Report and End Program.
+      *
+     C                     EXSR AUDIT
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  AOBANKR0 Access Program                                      *
+      *  RCFAU  - RCF Processing for Audit Report                     *
+      *  RCFP1  - RCF Processing for P1 Report                        *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR                           ***  INIT  ***
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ***  Receive Parameter List.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PERR    1
+     C                     PARM           PSEQ    5
+      *
+      ***  Initialise LDA field.
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'LE2330'  DBPGM
+     C                     OUT  LDA
+      *
+      ***  Call Access Program for Bank Details - Title, Run Date and
+      ***  Run Day Number.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ***  Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD001       DBASE            * DB ERROR 01 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Check System Date Format, DDMMYY (*IN98 off)
+      ***                            MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     ENDIF
+      *                                                                  123846
+      **  Access Switchable SAR details for the existence of CLE005      123846
+     C                     CALL 'AOSARDR0'                               123846
+     C                     PARM *BLANK    PRTCD                          123846
+     C                     PARM '*VERIFY' POPTN                          123846
+     C                     PARM 'CLE005'  PSARD   6                      123846
+      *                                                                  123846
+     C           PRTCD     IFEQ *BLANK                                   123846
+     C                     MOVE 'Y'       CLE005  1                      123846
+     C                     ELSE                                          123846
+     C                     MOVE 'N'       CLE005                         123846
+     C                     ENDIF                                         123846
+      *                                                                                       CLE028
+      ** Determine if Flat Rate Personal Loans (Rule of 78s) is                               CLE028
+      ** installed                                                                            CLE028
+      *                                                                                       CLE028
+     C                     CALL 'AOSARDR0'                                                    CLE028
+     C                     PARM *BLANKS   PRTCD                                               CLE028
+     C                     PARM '*VERIFY' POPTN                                               CLE028
+     C                     PARM 'CLE028'  PSARD   6                                           CLE028
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE028
+      *                                                                                       CLE028
+     C           PRTCD     IFNE *BLANKS                                                       CLE028
+     C           PRTCD     ANDNE'*NRF   '                                                     CLE028
+     C           *LOCK     IN   LDA                                                           CLE028
+     C                     MOVEL'SCSARDPD'DBFILE                                              CLE028
+     C                     Z-ADD004       DBASE                                               CLE028
+     C                     MOVELPSARD     DBKEY                                               CLE028
+     C                     OUT  LDA                                                           CLE028
+     C                     EXSR *PSSR                                                         CLE028
+     C                     ENDIF                                                              CLE028
+      *                                                                                       CLE028
+     C           PRTCD     IFEQ *BLANKS                                                       CLE028
+     C                     MOVE 'Y'       CLE028  1                                           CLE028
+     C                     ELSE                                                               CLE028
+     C                     MOVE 'N'       CLE028                                              CLE028
+     C                     ENDIF                                                              CLE028
+      *                                                                                       CLE028
+     C/COPY WNCPYSRC,LE2330C002
+      *
+      ***  RCF Processing for Printer File
+      *
+     C                     EXSR RCFP1
+      *
+      ***  RCF Processing for Audit File.
+      *
+     C                     EXSR RCFAU
+      *
+      ***  Report Work fields.
+      *
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/PROCES
+      *****************************************************************
+      *                                                               *
+      *  PROCES - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  REPORT - Process Report Lines                                *
+      *  WP1END - Write End of Report                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROCES    BEGSR                           *** PROCES ***
+      *
+      ***  Do While Not EOF LELOANL1
+      *
+     C                     MOVE *OFF      *IN89
+     C                     MOVE *BLANKS   OLNOZ                                               201123
+     C           *IN89     DOWEQ*OFF
+      *
+     C                     READ LELOANL1                 89
+      *
+     C           *IN89     IFEQ *OFF
+      *
+      ***  Determine Transaction Type Narrative
+      *
+     C           PTYP      IFGE 60
+     C           PTYP      ANDLE63
+     C           PTYP      OREQ 70
+     C           PTYP      OREQ 80                                                            CLE028
+     C           CLE028    ANDEQ'Y'                                                           CLE028
+     C                     MOVELTNAR,1    PTRAN
+     C                     ENDIF
+      *
+     C           PTYP      IFEQ 64
+     C           PTYP      OREQ 65
+     C           CLE005    OREQ 'Y'                                       127658
+     C           PTYP      ANDEQ68                                        127658
+     C           CLE005    OREQ 'Y'                                       127658
+     C           PTYP      ANDEQ71                                        127658
+     C                     MOVELTNAR,2    PTRAN
+     C                     MOVELOLNO      OLNOZ                                               201123
+     C                     ENDIF
+      *
+     C           PTYP      IFEQ 66
+     C           PTYP      OREQ 67
+     C           CLE005    OREQ 'Y'                                       127658
+     C           PTYP      ANDEQ69                                        127658
+     C           CLE005    OREQ 'Y'                                       127658
+     C           PTYP      ANDEQ72                                        127658
+     C                     MOVELTNAR,3    PTRAN
+     C                     ENDIF
+      *
+      ***  Print Loan Number and Branch
+      *
+     C                     MOVELLNRF      PLNRF
+     C                     MOVELBRCA      PBRCA
+      *
+      ***  Print Insert/Amend User Profile
+      *
+     C                     MOVELIUSR      PIUPR
+     C                     MOVELAUSR      PAUPR
+      *
+      ***  Process Report Lines.
+      *
+     C                     EXSR REPORT
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ***  Do While Not EOF LELOANL3
+      *
+     C                     MOVE *OFF      *IN89
+     C           *IN89     DOWEQ*OFF
+      *
+     C                     READ LELOANL3                 89
+      *
+     C           *IN89     IFEQ *OFF
+      *
+      ***  Determine Transaction Type Narrative
+      *
+     C                     MOVELTNAR,4    PTRAN
+      *
+      ***  Print Loan Number and Branch
+      *
+     C                     MOVELLNRF      PLNRF
+     C                     MOVELBRCA      PBRCA
+      *
+      ***  Print Insert/Amend User Profile
+      *
+     C                     MOVELRIUS      PIUPR
+     C                     MOVELRAUS      PAUPR
+      *                                                                                       199974
+      ** Chain CLOAN to Get Rollover Details                                                  199974
+      *                                                                                       199974
+     C           CLOANK    KLIST                                                              199974
+     C**********           KFLD           WLNRF   60                                   199974 CLE148
+     C                     KFLD           WLNRF   6                                           CLE148
+     C                     KFLD           WRCDT   1                                           199974
+      *                                                                                       199974
+     C                     MOVEL'A'       WRCDT                                               199974
+     C**********           Z-ADDLNRF      WLNRF                                        199974 CLE148
+     C                     MOVELLNRF      WLNRF                                               CLE148
+     C           CLOANK    CHAINCLOAN                80                                       199974
+      *                                                                                       199974
+     C           *IN80     IFEQ '0'                                                           199974
+     C                     Z-ADDRLDT      VDAT                                                199974
+     C                     ENDIF                                                              199974
+      *
+      ***  Process Report Lines.
+      *
+     C                     EXSR REPORT
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ***  Do While Not EOF LEFCLTL1
+      *
+     C                     MOVE *OFF      *IN89
+     C           *IN89     DOWEQ*OFF
+      *
+     C                     READ LEFCLTL1                 89
+      *
+     C           *IN89     IFEQ *OFF
+      *
+      ***  Determine Transaction Type Narrative
+      *
+     C                     MOVELTNAR,5    PTRAN
+      *
+      ***  Print Customer Number, Facility Type/Seq and Branch
+      *
+     C                     MOVELCNUM      PCNUM
+     C                     MOVELFACT      PFACT
+     C                     MOVE '-  '     PFACT
+     C                     MOVE FCNO      PFACT
+     C                     MOVELBRCA      PBRCA
+     C                     Z-ADDDTAP      VDAT                                                199974
+      *
+      ***  Print Insert/Amend User Profile
+      *
+     C                     MOVELIUSR      PIUPR
+     C                     MOVELAUSR      PAUPR
+     C/COPY WNCPYSRC,LEH00462
+      *
+      ***  Process Report Lines.
+      *
+     C                     EXSR REPORT
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      *****Do*While*Not*EOF*LELOAML1                                                          244279
+      ***  Do While Not EOF LELOAMLD                                                          244279
+      *
+     C                     MOVE *OFF      *IN89
+     C           *IN89     DOWEQ*OFF
+      *
+     C**********           READ LELOAML1                 89                                   244279
+     C                     READ LELOAMLD                 89                                   244279
+      *
+     C           *IN89     IFEQ *OFF
+      *
+      ***  Determine Transaction Type Narrative
+      *
+     C           AMTP      IFEQ 'MR'
+     C                     MOVELTNAR,6    PTRAN
+     C                     ENDIF
+      *
+     C           AMTP      IFEQ 'RE'
+     C                     MOVELTNAR,7    PTRAN
+     C                     ENDIF
+      *
+     C           AMTP      IFEQ 'PI'
+     C                     MOVELTNAR,8    PTRAN
+     C                     ENDIF
+      *
+     C           AMTP      IFEQ 'SC'
+     C                     MOVELTNAR,9    PTRAN
+     C                     ENDIF
+      *
+     C           AMTP      IFEQ 'BR'
+     C                     MOVELTNAR,10   PTRAN
+     C                     ENDIF
+      *
+     C           AMTP      IFEQ 'SA'
+     C                     MOVELTNAR,11   PTRAN
+     C                     ENDIF
+      *
+     C           AMTP      IFEQ 'LS'
+     C                     MOVELTNAR,12   PTRAN
+     C                     ENDIF
+      *
+     C           AMTP      IFEQ 'PT'
+     C           AMTP      OREQ 'PF'
+     C                     MOVELTNAR,13   PTRAN
+     C                     ENDIF
+      *                                                                                       244279
+     C           AMTP      IFEQ 'MI'                                                          244279
+     C                     MOVELTNAR,25   PTRAN                                               244279
+     C                     ENDIF                                                              244279
+      *                                                                                       244279
+     C           AMTP      IFEQ 'MM'                                                          244279
+     C                     MOVELTNAR,26   PTRAN                                               244279
+     C                     ENDIF                                                              244279
+      *
+      ***  Print Loan Number, Value Date, Seq and Loan Amendment Branch
+      *
+     C                     MOVELLNRF      PLNRF
+     C***********          Z-ADDVDAT      PVDAT                           122603
+     C                     MOVELLASN      PLASN
+     C           AMTP      IFEQ 'MM'                                                          244279
+     C           AMTP      OREQ 'MI'                                                          244279
+     C                     MOVE *BLANKS   PLASN                                               244279
+     C                     ENDIF                                                              244279
+     C                     MOVELBRCA      PBRCA
+      *
+      ***  Print Insert/Amend User Profile
+      *
+     C                     MOVELIUSR      PIUPR
+     C                     MOVELAUSR      PAUPR
+      *
+      ***  Process Report Lines.
+      *
+     C                     EXSR REPORT
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ***  Do While Not EOF LEGTEEL1
+      *
+     C                     MOVE *OFF      *IN89
+     C           *IN89     DOWEQ*OFF
+      *
+     C                     READ LEGTEEL1                 89
+      *
+     C           *IN89     IFEQ *OFF
+      *
+      ***  Determine Transaction Type Narrative
+      *
+     C           GSCI      IFEQ 'G'
+     C                     MOVELTNAR,14   PTRAN
+     C                     ENDIF
+      *
+     C           GSCI      IFEQ 'C'
+     C                     MOVELTNAR,15   PTRAN
+     C                     ENDIF
+      *
+     C           GSCI      IFEQ 'S'
+     C                     MOVELTNAR,16   PTRAN
+     C                     ENDIF
+      *
+      ***  Print Customer Number, Seq, Facility, Loan and Branch
+      *
+     C                     MOVELCNUM      PCNUM
+     C                     MOVELGUSN      PLASN
+     C                     Z-ADDSTTD      VDAT                                                199974
+      *
+     C                     MOVELFCLN      #FCLN1  1
+     C                     MOVE FCLN      #FCLN5  5
+     C                     MOVE FCLN      #FCLN2  2
+     C********** #FCLN1    IFEQ 'F'                                                           CLE148
+     C           #FCLN1    IFEQ ' '                                                           CLE148
+     C                     MOVEL#FCLN5    PFACT
+     C                     MOVE '-  '     PFACT
+     C                     MOVE #FCLN2    PFACT
+     C                     ELSE
+     C                     MOVELFCLN      PLNRF
+     C                     ENDIF
+      *
+     C                     MOVELBRCA      PBRCA
+      *
+      ***  Print Insert/Amend User Profile
+      *
+     C                     MOVELIUSR      PIUPR
+     C                     MOVELAUSR      PAUPR
+      *
+      ***  Process Report Lines.
+      *
+     C                     EXSR REPORT
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ***  Do While Not EOF LEFEESL1
+      *
+     C           CLE005    IFEQ 'Y'                                       123846
+      *                                                                   123846
+     C                     MOVE *OFF      *IN89
+     C           *IN89     DOWEQ*OFF
+      *
+     C****                 READ LEFEESL1                 89               158637
+     C                     READ LEFEEDL3                 89               158637
+      *
+     C           *IN89     IFEQ *OFF
+      *
+      ***  Determine Transaction Type Narrative
+      *
+     C           FEFACL    IFNE *ZERO
+     C                     MOVELTNAR,17   PTRAN
+     C                     ENDIF
+      *
+     C********** FELOAN    IFNE *ZERO                                                         CLE148
+     C           FELOAN    IFNE *BLANKS                                                       CLE148
+     C                     MOVELTNAR,18   PTRAN
+     C                     ENDIF
+      *
+      ***  Print Customer Number, Seq, Facility/Loan and Branch
+      *
+     C                     MOVELFECNUM    PCNUM
+     C                     MOVE FEFSEQ    PLASN
+     C                     MOVELFEBRCA    PBRCA
+     C                     Z-ADDFEPSTD    VDAT                                                199974
+      *
+     C           FEFACL    IFNE *ZERO
+     C                     MOVELFEFACL    #FCLN5
+     C                     MOVE FEFACL    #FCLN2
+     C                     MOVEL#FCLN5    PFACT
+     C                     MOVE '-  '     PFACT
+     C                     MOVE #FCLN2    PFACT
+     C                     ENDIF
+      *
+     C********** FELOAN    IFNE *ZERO                                                         CLE148
+     C           FELOAN    IFNE *BLANKS                                                       CLE148
+     C                     MOVELFELOAN    PLNRF
+     C                     ENDIF
+      *
+      ***  Print Insert/Amend User Profile
+      *
+     C                     MOVELIUSR      PIUPR
+     C                     MOVELAUSR      PAUPR
+     C/COPY WNCPYSRC,LEH00463
+      *
+      ***  Process Report Lines.
+      *
+     C                     EXSR REPORT
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      *****Do*While*Not*EOF*LEFEEAL1******************                    144923
+      ***  Do While Not EOF LEFEEAL3                                      144923
+      *
+     C                     MOVE *OFF      *IN89
+     C           *IN89     DOWEQ*OFF
+      *
+     C***********          READ LEFEEAL1                 89               144923
+     C                     READ LEFEEAL3                 89               144923
+      *
+     C           *IN89     IFEQ *OFF
+      *
+      ***  Determine Transaction Type Narrative
+      *
+     C                     MOVELTNAR,19   PTRAN
+      *
+      ***  Print Customer Number, Seq, Facility and Branch
+      *
+     C                     MOVELFACNUM    PCNUM
+     C                     MOVE FAFSEQ    PLASN
+     C                     MOVELFABRCA    PBRCA
+     C                     Z-ADDFAVDAT    VDAT                                                199974
+      *
+     C                     MOVELFAFACL    #FCLN5
+     C                     MOVE FAFACL    #FCLN2
+     C                     MOVEL#FCLN5    PFACT
+     C                     MOVE '-  '     PFACT
+     C                     MOVE #FCLN2    PFACT
+      *
+      ***  Print Insert/Amend User Profile
+      *
+     C                     MOVELIUSR      PIUPR
+     C                     MOVELAUSR      PAUPR
+      *
+      ***  Process Report Lines.
+      *
+     C                     EXSR REPORT
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *                                                                   127658
+      **  Process Unauthorised Facility Amendments                        127658
+      *                                                                   127658
+     C                     MOVE '0'       *IN89                           127658
+     C           *IN89     DOWEQ'0'                                       127658
+     C                     READ LEFCAML2                 89               127658
+     C           *IN89     IFEQ '0'                                       127658
+     C           FATP      IFEQ 'FI'                                      127658
+     C                     MOVELTNAR,20   PTRAN                           127658
+     C                     ENDIF                                          127658
+     C           FATP      IFEQ 'FD'                                      127658
+     C                     MOVELTNAR,21   PTRAN                           127658
+     C                     ENDIF                                          127658
+     C           FATP      IFEQ 'RC'                                      127658
+     C                     MOVELTNAR,22   PTRAN                           127658
+     C                     ENDIF                                          127658
+     C           FATP      IFEQ 'FR'                                      127658
+     C                     MOVELTNAR,23   PTRAN                           127658
+     C                     ENDIF                                          127658
+     C                     MOVELBRCA      PBRCA                           127658
+     C                     MOVELCNUM      PCNUM                           127658
+     C                     MOVELFACT      PFACT                           127658
+     C                     MOVE '-  '     PFACT                           127658
+     C                     MOVE FCNO      PFACT                           127658
+     C                     Z-ADDVLDT      VDAT                            127658
+     C                     MOVELSQNO      PLASN                           127658
+     C                     MOVELIUSR      PIUPR                           127658
+     C                     MOVELAUSR      PAUPR                           127658
+     C/COPY WNCPYSRC,LEH00464
+     C                     EXSR REPORT                                    127658
+     C                     ENDIF                                          127658
+     C                     ENDDO                                          127658
+      *                                                                   127658
+      **  Process Unauthorised Manual Facility Utilisation                127658
+      *                                                                   127658
+     C                     MOVE '0'       *IN89                           127658
+     C           *IN89     DOWEQ'0'                                       127658
+     C                     READ LEMNFUL2                 89               127658
+     C           *IN89     IFEQ '0'                                       127658
+     C                     MOVELTNAR,24   PTRAN                           127658
+     C                     MOVELBRCA      PBRCA                           127658
+     C                     MOVE *BLANKS   PLNRF                           127658
+     C                     MOVE *BLANKS   OLNOZ                                               201123
+     C                     MOVELCNUM      PCNUM                           127658
+     C                     MOVELFACT      PFACT                           127658
+     C                     MOVE '-  '     PFACT                           127658
+     C                     MOVE FCNO      PFACT                           127658
+     C                     MOVELSQNO      PLASN                           127658
+     C                     MOVELIUSR      PIUPR                           127658
+     C                     MOVELAUSR      PAUPR                           127658
+     C**********           Z-ADD0         VDAT                                         127658 199974
+     C                     Z-ADDSTDT      VDAT                                                199974
+     C                     EXSR REPORT                                    127658
+     C                     ENDIF                                          127658
+     C                     ENDDO                                          127658
+      *                                                                   123846
+     C                     ENDIF                                          123846
+     C/COPY WNCPYSRC,LE2330C001
+      *
+      ***  Write End of Report
+      *
+     C                     EXSR WP1END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/REPORT
+      *****************************************************************
+      *                                                               *
+      *  REPORT - Process Report Lines.                               *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls:                                                       *
+      ***AOBRCHR0*Access*Program***************************************   121783
+      *  AOBRCHR1 Access Program                                      *   121783
+      *  AOCUSTR0 Access Program                                      *
+      *  WP1REC - Format and Write a Detail Record to the Report      *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           REPORT    BEGSR                           *** REPORT ***
+      *
+      ***  Validate Branch Code
+      *
+     C           PBRCA     IFNE *BLANK
+      *
+     C***********          CALL 'AOBRCHR0'                                121783
+     C                     CALL 'AOBRCHR1'                                121783
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY   ' POPTN   7
+     C                     PARM PBRCA     PBRCD   3
+     C           SDBRCH    PARM SDBRCH    DSSDY                           121783
+     C***********SDBRCH    PARM SDBRCH    DSFDY                           121783
+      *
+      ***  Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBRCHPD'DBFILE           ***************
+     C                     MOVELPBRCA     DBKEY            * DB ERROR 02 *
+     C                     Z-ADD002       DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ***  Validate Customer Number
+      *
+     C           PCNUM     IFNE '000000'
+     C           PCNUM     ANDNE*BLANKS
+      *
+     C                     MOVELPCNUM     PKEY1  10
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY   ' POPTN   7
+     C                     PARM           PKEY1
+     C                     PARM           PKYST   7
+     C***********SDCUST    PARM SDCUST    DSFDY                           176443
+     C           SDCUST    PARM SDCUST    DSSDY                           176443
+      *
+      ***  Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDCUSTPD'DBFILE           ***************
+     C                     MOVELPCNUM     DBKEY            * DB ERROR 03 *
+     C                     Z-ADD003       DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ***  Set Return Code to 'E'
+      *
+     C                     MOVEL'E'       PERR
+      *
+      ***  Write out the record.
+      *
+     C                     EXSR WP1REC
+      *
+      ***  Increment Record Count
+      *
+     C                     ADD  1         RCOUNT  50
+      *
+      ***  Initialise Detail Record
+      *
+     C                     MOVE *BLANKS   PTRAN
+     C                     MOVE *BLANKS   PBRCA
+     C                     MOVE *BLANKS   PLNRF
+     C                     MOVE *BLANKS   OLNOZ                                               201123
+     C                     MOVE *BLANKS   PCNUM
+     C                     MOVE *BLANKS   PFACT
+     C***********          Z-ADD*ZERO     PVDAT                           122603
+     C                     MOVE *BLANKS   PVDAT                           122603
+     C                     MOVE *BLANKS   PLASN
+     C                     MOVE *BLANKS   PIUPR
+     C                     MOVE *BLANKS   PAUPR
+     C/COPY WNCPYSRC,LEH00465
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/WP1REC
+      *****************************************************************
+      *                                                               *
+      *  WP1REC - Subroutine to Write a Detail record to the Report.  *
+      *                                                               *
+      *  Called By: REPORT                                            *
+      *  Calls:                                                       *
+      *  ZDATE2 - Convert Midas Day Number into Date (DDMMYY/MMDDYY)  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WP1REC    BEGSR                           *** WP1REC ***
+      *
+      ***  Format Value Date for Output
+      *
+     C***********PVDAT     IFNE *ZERO                                     122603
+     C           VDAT      IFNE *ZERO                                     122603
+      *
+     C***********          Z-ADDPVDAT     ZDAYNO                          122603
+     C                     Z-ADDVDAT      ZDAYNO                          122603
+     C                     EXSR ZDATE2
+     C***********          Z-ADDZDATE     PVDAT                           122603
+     C                     MOVE ZADATE    PVDAT                           122603
+      *
+     C                     ENDIF
+      *
+      ***  Format Other Fields
+      *
+     C********** PLNRF     IFEQ '000000'                                                      CLE148
+     C**********           MOVE *BLANKS   PCNUM                                               CLE148
+     C**********           ENDIF                                                              CLE148
+      *
+     C********** PCNUM     IFEQ '000000'                                                      CSD027
+     C**********           MOVE *BLANKS   PCNUM                                               CSD027
+     C**********           ENDIF                                                              CSD027
+      *
+     C           PFACT     IFEQ '000-00'
+     C                     MOVE *BLANKS   PFACT
+     C                     ENDIF
+      *
+     C           PLASN     IFEQ '000'
+     C                     MOVE *BLANKS   PLASN
+     C                     ENDIF
+      *
+      ***  Check that sufficient lines remain for the Format. If not,
+      ***  write out the Main Headings on a new page.
+      *
+     C                     Z-ADD1         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+      ***  Write out Detail Record.
+      *
+     C                     WRITEDETAIL
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/WP1END
+      *****************************************************************
+      *                                                               *
+      *  WP1END - Subroutine to Write End of Report.                  *
+      *                                                               *
+      *  Called By: REPORT                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WP1END    BEGSR                           *** WP1END ***
+      *
+      ***  Check that sufficient lines remain for the Format. If not,
+      ***  write out the Main Headings on a new page.
+      *
+     C                     Z-ADD4         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+      ***  Write out Total Format.
+      *
+     C                     WRITETRAILP1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/AUDIT
+      *****************************************************************
+      *                                                               *
+      *  AUDIT  - Subroutine to Output Audit report and End Program.  *
+      *                                                               *
+      *  Called By: Main Processing, *PSSR                            *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR                           *** AUDIT  ***
+      *
+      ***  Output Report Header and File Controls.
+      *
+     C                     WRITEHEADAU
+     C                     WRITECONTROL
+      *
+      ***  If there is a DB Error, Output the DB Error Information.
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ***  Or, if no records read, Output "No Details" message.
+      *
+     C           RCOUNT    IFEQ 0
+     C                     WRITENODTLS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  End Program and Return.
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     EXSR AUDIT
+     C                     ENDIF
+      *
+      ***  If *PSSR already run, then just end the program here.
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RCFP1
+      *****************************************************************
+      *                                                               *
+      *  RCFP1  - Subroutine to register the P1 Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFP1     BEGSR                            *** RCFP1  ***
+      *
+      ***  Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RCFAU
+      *****************************************************************
+      *                                                               *
+      *  RCFAU  - Subroutine to register the AU Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFAU     BEGSR                            *** RCFAU  ***
+      *
+      ***  Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/ZDATE2
+     C/COPY ZSRSRC,ZDATE2Z2
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  TNAR
+LOAN                  1
+PARTS PURCHASED       2
+PARTS SOLD            3
+ROLLOVER              4
+FACILITY              5
+MANUAL REPAYMENT      6
+REPAYMENT SCHEDULE    7                                                   123231
+PRINCIPAL INCREASE    8
+SPREAD CHANGE         9
+BASE RATE CHANGE      10
+STOP/START ACCRUAL    11
+LOAN SUBTYPE CHANGE   12
+TRANSFER OF PRINCIPAL 13
+GUARANTEES            14
+COLLATERAL            15
+SECURITIES            16
+FACILITY FEE          17
+LOAN FEE              18
+FEE SETTLEMENT        19
+FACILITY INCREASE     20                                                  127658
+FACILITY DECREASE     21                                                  127658
+REVOLVING CR CHANGE   22                                                  127658
+FACILITY REACTIVATION 23                                                  127658
+MANUAL FCLTY UTIL     24
+ACCRUED INTEREST ADJ. 25                                                                      244279
+ACCRUED MARGIN ADJ.   26                                                                      244279
+     X/COPY WNCPYSRC,LEH00466
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

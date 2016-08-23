@@ -1,0 +1,417 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD TI customer list report')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Trade Inovation (TI) Module                          *
+      *                                                               *
+      *  SD0371P - TI Customer List Report                            *
+      *                                                               *
+      *  Program Function: Lists TI Customer                          *
+      *                                                               *
+      *  Phase(s): I/C by Menu Request                                *
+      *                                                               *
+      *  Called By: SDC541P                                           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 183145             Date 29Dec00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CTI001  *CREATE    Date 16Jul97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  183145 - Audit report for TI Customer details should be      *
+      *           generated.                                          *
+      *  CTI001 - Midas / Trade Innovation Interface Phase 1          *
+      *                                                               *
+      *****************************************************************
+      *
+      * TI Customers
+     FSDTICSPDIF  E                    DISK         KINFSR *PSSR
+      *
+     FSD0371AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU
+     FSD0371P1O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL1
+     FSDFCTLL1UF  E           K        DISK         KINFSR *PSSR          183145
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   89  - End of File                                           *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  AUDIT  - Produce Audit Report and End Program                *
+      *  *PSSR  - Program Error processing Subroutine                 *
+      *  RCFP1  - RCF processing for P1 Report                        *
+      *  RCFAU  - RCF processing for Audit Report                     *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+      *
+     IDBERR     E DSLDA                         256
+      ** Local data area for database error details
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     ISPOOL1      DS
+      ***  File Information Data Structure for TI0311P1.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      ***  File Information Data Structure for TI0311AU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     IDSSDY     E DSDSSDY
+      ** External DS for Access Objects
+      *
+     IDSFDY     E DSDSFDY                                                 183145
+      ** External DS for Access Objects                                   183145
+      *                                                                   183145
+     ISDCUST    E DSSDCUSTPD
+      ** External DS for Customer Bank Details
+      *
+     ISDBANK    E DSSDBANKPD                                              183145
+      ** External DS for Bank Details                                     183145
+      *                                                                   183145
+     I              BJURPT                          ##URPT                183145
+     I              BJMRDT                          ##MRDT                183145
+     I              BJDFIN                          ##DFIN                183145
+      *                                                                   183145
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+     C                     READ SDTICSPD                 89
+      *
+     C           *IN89     IFEQ *OFF
+      *
+     C                     OPEN SD0371P1
+     C                     EXSR RCFP1
+      *
+     C           *IN89     DOWEQ*OFF
+      *                                                                   183145
+     C           TCTYLC    IFEQ 'A'                                       183145
+     C           TCTYLC    OREQ 'I'                                       183145
+     C                     ADD  1         WUWKNB                          183145
+     C                     END                                            183145
+      *                                                                   183145
+     C           *IN10     IFEQ '1'                                       183145
+     C           TCLCD     ANDEQBJRDNB                                    183145
+     C           *IN10     OREQ '0'                                       183145
+      *
+      ** Get Customer Details by access object
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM TCCUST    @KEY   10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      ** Check File Date - Rundate                                        183145
+      *                                                                   183145
+     C                     CALL 'ZDATE2'               90  Check File Date183145
+     C                     PARM TCLCD     WQ0029  50       Work Midas Date183145
+     C                     PARM ##DFIN    WQ0030  1        Date format fla183145
+     C           WUWCDT    PARM *ZERO     WQ0031  60       Work Converted 183145
+     C           #TCLCD    PARM *BLANK    WQ0032  7        Work Alpha Date183145
+      *                                                                   183145
+      ** PAR.alpha of last change = Condition name of PAR.Type of Last Cha183145
+      *                                                                   183145
+     C                     CALL 'Y2RVCNR'              90                 183145
+     C                     PARM           W0RTN   7        Return code    183145
+     C                     PARM 1100584   Y2LSNO  70       List number    183145
+     C                     PARM TCTYLC    W0INVL 20        Type of Last   183145
+     C                     PARM ' '       W0VLMP  1        Value mapped?  183145
+     C           #TTYLC    PARM           W0CNNM 25        alpha of last  183145
+      *                                                                   183145
+     C                     ADD  1         RCOUNT
+      *
+      ** Check that sufficient lines remain for the Format.
+     C                     Z-ADD19        RQDLN1  30
+     C           OFLLN1    SUB  PRTLN1    DIFLN1  30
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+     C                     WRITEDETAIL
+      *                                                                   183145
+     C                     ENDIF                                          183145
+      *
+     C                     READ SDTICSPD                 89
+      *
+     C                     ENDDO
+      *
+     C           RCOUNT    IFEQ 0                                         183145
+     C                     WRITENODETL1                                   183145
+     C                     ELSE                                           183145
+     C           *IN10     IFEQ '1'                                       183145
+     C                     WRITETOTALP1                                   183145
+     C                     END                                            183145
+     C                     WRITETRAILP1
+     C                     END                                            183145
+     C                     CLOSESD0371P1
+      *
+     C                     ENDIF
+      *
+     C                     EXSR AUDIT
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Automatically                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PRTNCD  7
+     C                     PARM           PMODE   1
+     C                     PARM           PSEQ    5
+     C                     PARM           PLEVEL  1
+     C                     PARM           PENT    3
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ***  Initialise LDA field.
+      *
+     C                     MOVEL'SD0371P' DBPGM
+      *
+     C           *NAMVAR   DEFN LDA       @LDA  256
+      *
+     C                     CALL 'AOBANKR0'                                183145
+     C                     PARM '*MSG   ' @RTCD   7                       183145
+     C                     PARM '*FIRST ' @OPTN   7                       183145
+     C           SDBANK    PARM SDBANK    DSFDY                           183145
+     C           @RTCD     IFNE *BLANK                                    183145
+     C           *LOCK     IN   @LDA                                      183145
+     C                     MOVEL'SDBANKPD'DBFILE           ***************183145
+     C                     MOVEL@OPTN     DBKEY            * DBERROR 001 *183145
+     C                     Z-ADD001       DBASE            ***************183145
+     C                     OUT  @LDA                                      183145
+     C                     EXSR *PSSR                                     183145
+     C                     ENDIF                                          183145
+      *                                                                   183145
+     C           PMODE     IFEQ 'A'                                       183145
+     C                     MOVE *ON       *IN10                           183145
+     C                     ENDIF                                          183145
+      *                                                                   183145
+      ** Define keylist                                                   183145
+      *                                                                   183145
+     C           KRSSA     KLIST                                          183145
+     C                     KFLD           AHFLNM           Filename       183145
+      *                                                                   183145
+     C                     Z-ADD0         WUWKNB  50                      183145
+     C                     Z-ADD0         WUWCDT  60                      183145
+      *                                                                   183145
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/AUDIT
+      *****************************************************************
+      *                                                               *
+      *  AUDIT  - Subroutine to Output Audit report and End Program.  *
+      *                                                               *
+      *  Called By: Main Processing, *PSSR                            *
+      *  Calls: None.                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR
+      *
+      ***  RCF Processing for Audit File.
+     C                     EXSR RCFAU
+      *
+      ***  Output Report Header and File Controls.
+     C                     WRITEHEADAU
+      *                                                                   183145
+     C           *IN10     IFEQ '0'                                       183145
+     C                     WRITECONTROL
+     C                     ELSE                                           183145
+      *                                                                   183145
+     C                     MOVEL'SDTICSPD'AHFLNM                          183145
+     C           KRSSA     CHAINSDFCTLL1             90                   183145
+     C           *IN90     IFEQ '0'                                       183145
+     C                     Z-ADDAHNOIN    ZTNORI                          183145
+     C                     Z-ADDAHNOAM    ZTNORA                          183145
+     C                     Z-ADDAHNODL    ZTNORD                          183145
+     C                     Z-ADDAHNORC    ZTNORF                          183145
+     C                     Z-ADDWUWKNB    ZTCROD                          183145
+     C           ZTCROD    IFNE ZTNORF                                    183145
+     C                     MOVE '1'       *INU8                           183145
+     C                     MOVE '1'       *IN79                           183145
+     C                     ELSE                                           183145
+     C                     Z-ADD0         AHNOIN           No. of Inserts 183145
+     C                     Z-ADD0         AHNOAM           No. of Amends  183145
+     C                     Z-ADD0         AHNODL           No. of Deletes 183145
+      *                                                                   183145
+     C                     UPDAT@AHREAV                91                 183145
+     C                     END                                            183145
+     C                     WRITEZZFINTTL                                  183145
+     C                     END                                            183145
+     C                     ENDIF                                          183145
+      *
+      ***  If there is a DB Error, Output the DB Error Information.
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+     C                     ENDIF
+      *
+      ***  If there are no details
+     C           RCOUNT    IFEQ 0
+     C                     WRITENODTLS
+     C                     ENDIF
+      *
+      ***  End Program and Return.
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+     C           *LOCK     IN   @LDA
+     C                     MOVELDBERR     @LDA
+     C                     OUT  @LDA
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     EXSR AUDIT
+     C                     ENDIF
+      *
+      ***  If *PSSR already run, then just end the program here.
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RCFP1
+      *****************************************************************
+      *                                                               *
+      *  RCFP1  - Subroutine to register the P1 Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFP1     BEGSR
+      *
+      ***  Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ***  If Error occurs during ZSFILE Processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RCFAU
+      *****************************************************************
+      *                                                               *
+      *  RCFAU  - Subroutine to register the AU Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFAU     BEGSR
+      *
+      ***  Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM *BLANKS   SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      ***  If Error occurs during ZSFILE Processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

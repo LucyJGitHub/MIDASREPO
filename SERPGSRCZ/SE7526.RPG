@@ -1,0 +1,1921 @@
+     H        1
+      *****************************************************************
+/*XBIA*  OVRDBF FILE(SECTYX) TOFILE(SECTY) SHARE(*NO)                 *
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Redenominated security codes maintenance')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module                            *
+     F*                                                               *
+     F*  SE7526 - Redenominated Security Codes Maintenance            *
+     F*                                                               *
+     F*  Function: This program allows the user to amend Security     *
+     F*            Codes including ISIN numbers                       *
+     F*                                                               *
+     F*  Called By: SEC7526 from menu option.                         *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027A            Date 17May06               *
+      *                 CSE075             Date 17Nov05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CAS006             Date 21Jan03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CPK015             Date 01Jul02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 172724             Date 13Jun01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 14May01               *
+      *                 CAP060             Date 14May01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSE023             Date 12Jul00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSE011             Date 26Aug99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPL002             Date 08Mar99               *
+      *                 CEU032  *CREATE    Date 19Nov98               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027A - Conversion of cust. no. to alpha (post 103 build)  *
+      *  CSE075 - US Enhanced Treasury Upgrade to MidasPlus           *
+      *           (Recompile)                                         *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  CPK015 - Release 4.01 Packaging:                             *
+      *           - A default timestamp string is required for WRITE. *
+      *           - Removal of help processing (MSG array removed).   *
+      *  172724 - Help key not managed.                               *
+      *  CSD006 - Market Data Feed (RECOMPILE)                        *
+      *  CAP060 - Midas APIs, Security Prices Full API                *
+      *  CSE023 - Treaty Withholding Tax (Recompiled)                 *
+      *  CSE011 - Securities Trading Duplicate Security Codes         *
+      *           Check.                                              *
+     F*  CPL002 - Midas-Plato Interface (Recomipled)                  *
+     F*  CEU032 - Securities Redenomination Euro Changes              *
+     F*                                                               *
+     F*****************************************************************
+      *
+      ** Display file
+      *
+     FSE7526DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE SE7526S1
+     F                                              KINFSR *PSSR
+      *
+      ** SE Securities
+      *
+     FSECTYX  UF  E           K        DISK         KCOMIT
+     F                                              KINFSR *PSSR
+      *
+      ** SE securities audit
+      *
+     FSECTYA  UF  E                    DISK         KCOMIT
+     F                                              KINFSR *PSSR
+      *
+      ** SE Investment types
+      *
+     FINVTP   IF  E           K        DISK         KINFSR *PSSR
+      *
+      ** SE EXTEL price valuation detail
+      *
+     FEXVALD  UF  E           K        DISK         KCOMIT       A
+     F                                              KINFSR *PSSR
+      *
+      ** SE EXTEL price valuation trailer
+      *
+     FEXVALZ  UF  E                    DISK         KCOMIT
+     F                                              KINFSR *PSSR
+     FSECTYL2 IF  E           K        DISK                           UC  CSE011
+      ** Securities by Telekurs                                           CSE011
+      *                                                                   CSE011
+     FSECTYL1 IF  E           K        DISK                           UC  CSE011
+      ** Securities by ISIN Number                                        CSE011
+      *                                                                   CSE011
+     FSECTYL0 IF  E           K        DISK                           UC  CSE011
+      ** Securities by CUSIP Number                                       CSE011
+      *                                                                   CSE011
+     FSECTYL3 IF  E           K        DISK                           UC  CSE011
+      ** Securities by Sedol Number                                       CSE011
+      *                                                                   CSE011
+     FSECTE   IF  E           K        DISK                           UC  CSE011
+      ** Securities by EUCLID Code                                        CSE011
+      *                                                                   CSE011
+     F            SECTYDF                           KRENAMESECTYDL5       CSE011
+     FSECT2   IF  E           K        DISK                           UC  CSE011
+      ** Securities by Depot Reference 2                                  CSE011
+      *                                                                   CSE011
+     F            SECTYDF                           KRENAMESECTYDL6       CSE011
+     FSECT3   IF  E           K        DISK                           UC  CSE011
+      ** Securities by Depot Reference 3                                  CSE011
+      *                                                                   CSE011
+     F            SECTYDF                           KRENAMESECTYDL7       CSE011
+      *
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   03  - CA03 from all screens                                 *
+     F*   04  - Messages and cmd keys OVRDTA                          *
+     F*   05  - CF05 from SE7526F2                                    *
+     F*   12  - CF12 from SE7526F1 and SE7526F2                       *
+     F*                                                               *
+     F*   30  - Screen SE7526F0- Currency code                        *
+     F*                                                               *
+     F*   31  - Screen SE7526F1- Selection code                       *
+     F*                                                               *
+     F*   32  - Screen SE7526F2 - Isin number                         *
+     F*   33  - Screen SE7526F2 - Extel ref.                          *
+     F*   34  - Screen SE7526F2 - Security ref at Depot 1             *
+     F*   35  - Screen SE7526F2 - Security ref at Depot 2             *
+     F*   36  - Screen SE7526F1 - Security ref at Depot 3             *
+     F*   37  - Screen SE7526F2 - Isin number                         *
+     F*   38  - Screen SE7526F2 - Telekurs                            *   CSE011
+     F*   39  - Screen SE7526F2 - Cusip Number                        *   CSE011
+     F*                                                               *
+     F*   40  - Screen SE7526F1- SFLCLR                               *
+     F*   41  - Screen SE7526F1- SFLDSP                               *
+     F*   42  - Screen SE7526F1- SFLDSPCTL                            *
+     F*   43  - Screen SE7526F1- SFLEND                               *
+     F*   49  - Screen SE7526F1- SFLNXTCHG                            *
+     F*                                                               *
+     F*   50  - MSG SFL - SFLEND                                      *
+     F*   51  - ReadE to SECTYD via SECTYL2 - Telekurs                *   CSE011
+     F*   52  - ReadE to SECTYD via SECTYL0 - Cusip                   *   CSE011
+     F*   53  - ReadE to SECTYD via SECTYL1 - Isin                    *   CSE011
+     F*   54  - ReadE to SECTYD via SECTYL3 - Sedol                   *   CSE011
+     F*   55  - ReadE to SECTYD via SECTE   - Depot 1                 *   CSE011
+     F*   56  - ReadE to SECTYD via SECT2   - Depot 2                 *   CSE011
+     F*   57  - ReadE to SECTYD via SECT3   - Depot 3                 *   CSE011
+     F*                                                               *
+     F*   83  - Chain to SECTYA                                       *
+     F*   84  - Chain to EXVALZ                                       *
+     F*   85  - Chain to EXVALD with new security shortname           *
+     F*   86  - Used for CHECK in ISIN validation                     *
+     F*   87  - Chain to INVTP with nominal ccy and investment type   *
+     F*   88  - Chain to SECTY with new security short name           *
+     F*   89  - Chain to SE7526F1 for SFL update                      *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  NAME   - FUNCTION                                            *
+     F*                                                               *
+     F*  INIT   - Initialisation Processing                           *
+     F*  PROC0  - Process SE7526F0                                    *
+     F*  SCRS1  - Control of SE7526F1                                 *
+     F*  FILS1  - Control of SFL SE7526F1                             *
+     F*  INISF1 - Initialise SFL SE7526F1                             *
+     F*  LODSF1 - Write records to SFL SE7526F1                       *
+     F*  DSPS1  - Display SE7526F1                                    *
+     F*  CHKSF1 - Check selected records from SFL SE7526F1            *
+     F*  PROSL1 - Process selections from SFL SE7526F1                *
+     F*  SCRS2  - Control of SE7526F2                                 *
+     F*  FILS2  - Move data to SE7526F2 fields                        *
+     F*  DSPS2  - Display SE7526F2                                    *
+     F*  PROC2  - Process SE7526F2                                    *
+     F*  VALIDD - Validate data from SE7526F2                         *
+     F*  UPDATE - Update SECTY file                                   *
+     F*  SECAUD - Update SECTYA file                                  *
+     F*  SNDMSG - Send program message handling                       *
+     F*  INFSR  - File exception/error handling                       *
+     F*  *PSSR  - Abnormal error conditions                           *
+     F*                                                               *
+     F*****************************************************************
+     E                    STAMP   1   1 26                                                    CPK015
+      ** Array containing dummy timestamp                                                     CPK015
+     E                    CPY@    1   1 80               Copyright
+     E                    WAMSG   1  10 76                                CSE011
+     E                    WE         76  1                                CSE011
+     E                    CMD     1   4 76               Cmd keys
+     E                    @CHK2   1   1 10               Check string
+     E                    @A          7  1               Work array       CEU006
+     E                    IS1        12  1               ISIN VALIDATIONS S01401
+     E                    IS2        12  1               ISIN VALIDATIONS S01401
+     E                    ALPHA1 37  37  1               ALPHABETIC ARRAY S01401
+     E                    ALPHA2 36  36  1               ALPHABETIC ARRAY S01401
+     E**********          MSG     1   1 50               Messages                      172724 CPK015
+      *
+      ** Program Status Data Structure
+      *
+     IPSDS       SDS
+     I                                        1  10 #PGM
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+      *
+      ** For error messages to screen
+      *
+     IMSGDS       DS
+     I I            ' '                       1   7 MSGID
+     I I            'SEUSRMSG'                8  17 MSGF
+     I I            '*LIBL'                  18  27 MSGLIB
+     I I            ' '                      28 283 MSGDTA
+     I I            '*PRV'                  284 288 MSGREL
+      *
+      ** Local data area dor database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Data area for run date
+      *
+     IRUNDT       DS
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+      *
+      **  Standard Data Area Layout for System flags and Run Date
+      *
+     IRUNDAT    E DS
+      *
+      ** BANK     DETAILS
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** CURRENCY DETAILS
+      *
+     ISDCURR    E DSSDCURRPD
+      *
+      ** Securities Trading ICD
+      *
+     ISDSTRD    E DSSDSTRDPD
+      *                                                                   CSE011
+      **  External data structures for Switchable Features Details        CSE011
+     ISCSARD    E DSSCSARDPD                                              CSE011
+      *
+      ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+      *
+     IDSSDY     E DSDSSDY
+      *
+      ** DATA AREA OF MENU USER
+      *
+     IZMUSER      DS                             17
+     I                                       11  13 USRBCH
+      *
+      ** DATA STRUCTURE FOR SETUP OF COMMIT TEXT
+      *
+     ICMTTXT      DS
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  25 ACTNX
+     I                                       26  35 USIDX
+     I                                       51 306 DET
+      *
+      *  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+      *
+     I            DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      *  DATA STRUCTURE FOR EXTEL VALIDATION
+      *
+     I            DS
+     I                                        1  10 @CHK2
+     I                                        1  10 CHK2
+      *
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           @F3     1
+      *
+     C                     EXSR INIT
+      *
+      ** Process SE7526F0 until F3 has been pressed
+      *
+     C           *IN03     DOWEQ*OFF
+     C           @SCR0     OREQ @YES
+      *
+     C                     MOVE @NO       @S
+      *
+      ** Cmd keys
+      *
+     C                     MOVELCMD,1     CMDMSG
+     C                     WRITECMDKEY
+      *
+      ** Messages
+      *
+     C                     WRITEMSGCTL
+      *
+      ** Screen - Enter currency
+      *
+     C                     EXFMTSE7526F0
+      *                                                                   172724
+     C**********           EXSR HELP                                                   172724 CPK015
+      *
+      * Clear message subfile
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM #PGM      FTPGMQ 10
+     C                     PARM '*SAME'   FTPGRL  5
+      *
+      * Reset message sent flag
+      *
+     C                     MOVEL'N'       FTMSGS  1
+      *
+      * End program
+      *
+     C           *IN03     IFEQ *ON
+     C                     LEAVE
+     C                     ENDIF
+      *
+      ** If not F3 process SE7526F0
+      *
+     C                     EXSR PROC0
+      *
+      ** If no error on SE7526F0 display SE7526F1
+      *
+     C           @SCR0     IFEQ @NO
+     C                     EXSR SCRS1
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C                     SETON                         LR
+     C                     RETRN
+      *
+      *================================================================
+      *  S U B R O U T I N E S                                        *
+      *================================================================
+      *****************************************************************
+      *                                                               *
+      *  INIT - Initialisation Processing                             *
+      *                                                               *
+      *  CALLED FROM : Main processing                                *
+      *                                                               *
+      *  CALLS :                                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      **  Read in DTAARA/RUNDAT
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      **  Read in DTAARA/ZMUSER
+      *
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   ZMUSER
+      *
+      **  Read in DTAARA/LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SE7526'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Init work variables
+      *
+     C                     Z-ADD1         @YES    10
+     C                     Z-ADD0         @NO     10
+     C                     MOVE @NO       @S      10
+      *
+     C                     MOVE @NO       @SCR0   10       ERR SE7526F0
+     C                     MOVE @NO       @SCR1   10       ERR SE7526F1
+     C                     MOVE @NO       @SCR2   10       ERR SE7526F2
+      *                                                                   CSE011
+     C           *LIKE     DEFN T2RF      WT2RF                           CSE011
+     C           *LIKE     DEFN ISIN      WISIN                           CSE011
+     C           *LIKE     DEFN CSPN      WCSPN                           CSE011
+     C           *LIKE     DEFN SREF      WSREF                           CSE011
+     C           *LIKE     DEFN DASR      WDASR                           CSE011
+     C           *LIKE     DEFN DCSR      WDCSR                           CSE011
+     C           *LIKE     DEFN DDSR      WDDSR                           CSE011
+      *
+     C           *LIKE     DEFN ISIN      @ISIN
+      *
+      ** Klist for SECTY
+      *
+     C           KSECTY    KLIST
+     C                     KFLD           S1SRRB
+      *
+      ** Klist for EXVALD
+      *
+     C           KEXVA     KLIST
+     C                     KFLD           S1SRRB
+      *
+      ** Klist for INVTP
+      *
+     C           *LIKE     DEFN NMCY      @NMCY
+     C           *LIKE     DEFN SITP      @SITP
+      *
+     C           KINVTP    KLIST
+     C                     KFLD           @NMCY
+     C                     KFLD           @SITP
+      *
+      ** Retrieve Bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA                        ************
+     C                     MOVEL'SDBANKPD'DBFILE           *ERROR 001 *
+     C                     MOVEL'001'     DBASE            ************
+     C                     MOVEL@OPTN     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Retrieve Securities Trading details
+      *
+     C                     CALL 'AOSTRDR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDSTRD    PARM SDSTRD    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA                        ************
+     C                     MOVEL'SDSTRDPD'DBFILE           *ERROR 002 *
+     C                     MOVEL'002'     DBASE            ************
+     C                     MOVEL@OPTN     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *                                                                   CSE011
+      ** Access Switchable Feature Details, Check if CSE011 is            CSE011
+      ** switch on and open necessary files.                              CSE011
+      *                                                                   CSE011
+     C                     CALL 'AOSARDR0'                                CSE011
+     C                     PARM *BLANKS   PRTCD   7                       CSE011
+     C                     PARM '*VERIFY 'POPTN   7                       CSE011
+     C                     PARM 'CSE011'  PSARD   6                       CSE011
+     C           SCSARD    PARM SCSARD    DSSDY                           CSE011
+      *                                                                   CSE011
+     C           PRTCD     IFNE *BLANKS                                   CSE011
+     C           PRTCD     ANDNE'*NRF '                                   CSE011
+     C                     MOVEL'008'     DBASE                           CSE011
+     C                     MOVEL'SCSARDPD'DBFILE                          CSE011
+     C                     MOVELPSARD     DBKEY                           CSE011
+     C                     OUT  LDA                                       CSE011
+     C                     EXSR *PSSR                                     CSE011
+     C                     ENDIF                                          CSE011
+      *                                                                   CSE011
+     C           PRTCD     IFEQ *BLANKS                                   CSE011
+     C                     MOVE 'Y'       CSE011  1                       CSE011
+     C                     ELSE                                           CSE011
+     C                     MOVE 'N'       CSE011                          CSE011
+     C                     ENDIF                                          CSE011
+      *                                                                   CSE011
+     C           CSE011    IFEQ 'Y'                                       CSE011
+     C                     OPEN SECTYL2                                   CSE011
+     C                     OPEN SECTYL1                                   CSE011
+     C                     OPEN SECTYL0                                   CSE011
+     C                     OPEN SECTYL3                                   CSE011
+     C                     OPEN SECTE                                     CSE011
+     C                     OPEN SECT2                                     CSE011
+     C                     OPEN SECT3                                     CSE011
+     C                     ENDIF                                          CSE011
+      *
+      * Clear message subfile
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM #PGM      FTPGMQ 10
+     C                     PARM '*SAME'   FTPGRL  5
+      *
+      * Reset message sent flag
+      *
+     C                     MOVEL'N'       FTMSGS  1
+      *
+     C           XINIT     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  PROC0 - Process SE7526F0                                     *
+      *                                                               *
+      *  CALLED FROM : Main routine                                   *
+      *                                                               *
+      *  CALLS :                                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROC0     BEGSR
+      *
+      ** Clear err indicators for SE7526F0
+      *
+     C                     MOVE @NO       @SCR0
+     C                     MOVE *OFF      *IN30
+      *
+      ** Validate currency
+      ** Must be valid currency and an 'In' currency
+      *
+     C           '?'       SCAN S0CURR    @S
+      *
+     C           S0CURR    IFEQ *BLANKS                    ccy blank
+     C                     MOVE *ON       *IN30
+     C                     MOVE @YES      @SCR0
+     C                     MOVEL'CO01000' MSGID
+     C                     EXSR SNDMSG
+     C                     ELSE
+      *
+     C                     MOVE S0CURR    @CYCD
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           @CYCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE '*NOSEL '
+     C           @RTCD     ANDNE'*NRF   '
+     C                     MOVE A6CYCD    S0CURR
+      *
+      ** Currency is valid now check if 'In'
+      *
+     C           A6INCY    IFNE 'Y'
+     C           A6TPSD    ORGE BJRDNB
+     C                     MOVE *ON       *IN30            ccy not in
+     C                     MOVE @YES      @SCR0
+     C                     MOVEL'CO01003' MSGID
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           @RTCD     IFEQ '*NRF   '
+     C                     MOVE *ON       *IN30            invalid ccy
+     C                     MOVE @YES      @SCR0
+     C                     MOVEL'CO01002' MSGID
+     C                     EXSR SNDMSG
+     C                     ELSE
+     C           @RTCD     IFNE '*NOSEL '
+     C           @RTCD     ANDNE*BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVELS0CURR    DBKEY            ************
+     C                     MOVEL'SDCURRPD'DBFILE           *ERROR 003 *
+     C                     MOVEL'003'     DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** If '?' for currency then redisplsy currency screen with
+      ** choice
+      *
+     C           @S        IFEQ @YES
+     C                     MOVE @YES      @SCR0
+     C                     ENDIF
+      *
+     C           XPROC0    ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  SCRS1 - Control of SE7526F1                                  *
+      *                                                               *
+      *  CALLED FROM : Main routine                                   *
+      *                                                               *
+      *  CALLS :                                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SCRS1     BEGSR
+      *
+      ** Fill screen
+      *
+     C                     EXSR FILS1
+      *
+     C                     MOVE *OFF      *IN03            cmd keys
+     C                     MOVE *OFF      *IN12
+      *
+      ** loop until F3/F5/F12 or while screen error
+      *
+     C           *IN03     DOWEQ*OFF
+     C           *IN05     ANDEQ*OFF
+     C           *IN12     ANDEQ*OFF
+     C           @SCR1     OREQ @YES
+      *
+     C                     MOVE *OFF      *IN31            err
+     C                     MOVE @NO       @SCR1
+      *
+      ** Display SFL or no recs screen
+      *
+     C           RRN       IFNE 0
+     C                     EXSR DSPS1
+     C                     ELSE
+     C                     EXSR DSPS1X                     NO RECS
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     MOVE *OFF      *IN05
+      *
+     C           XSCRS1    ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  FILS1  - Control of SFL SE7526F1                             *
+      *                                                               *
+      *  CALLED FROM : SCRS1                                          *
+      *                                                               *
+      *  CALLS :                                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FILS1     BEGSR
+      *
+     C                     EXSR INISF1                     init sfl
+      *
+     C                     EXSR LODSF1                     load sfl
+      *
+     C           XFILS1    ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  INISF1 - initialise SFL SE7526F1                             *
+      *                                                               *
+      *  CALLED FROM : FILS1                                          *
+      *                                                               *
+      *  CALLS :                                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INISF1    BEGSR
+      *
+     C                     MOVE *OFF      *IN41
+     C                     MOVE *OFF      *IN42
+     C                     Z-ADD0         RRN
+      *
+     C                     MOVE *ON       *IN40
+     C                     WRITESE7526C1
+     C                     MOVE *OFF      *IN40
+      *
+     C           XINSF1    ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  LODSF1 - Write records to SFL SE7526F1                       *
+      *                                                               *
+      *  CALLED FROM : FILS1                                          *
+      *                                                               *
+      *  CALLS :                                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           LODSF1    BEGSR
+      *
+     C                     MOVE *OFF      *IN49
+      *
+     C           *LOVAL    SETLLSECTYDF
+      *
+     C                     READ SECTYDF                  43
+      *
+     C           *IN43     DOWEQ*OFF
+      *
+      ** Nominal ccy must be same as entered ccy
+      ** Redenominated replaced by cannot be blank
+      *
+     C           NMCY      IFEQ S0CURR
+     C           SRRB      ANDNE*BLANKS
+      *
+     C                     MOVE *BLANKS   S1ACTN
+     C                     MOVE SESN      S1SESN
+     C                     MOVE SRPN      S1SRPN
+     C                     MOVE SRRB      S1SRRB
+     C                     ADD  1         RRN
+     C                     MOVE *ON       *IN41
+     C                     WRITESE7526S1                   sfl rec
+      *
+     C                     ENDIF
+      *
+     C                     READ SECTYDF                  43
+      *
+     C                     ENDDO
+      *
+     C                     MOVE *ON       *IN42            sfl control
+      *
+     C           RRN       IFNE 0
+     C                     Z-ADD1         RRN              top screen
+     C                     ENDIF
+      *
+     C           XLODF1    ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  DSPS1  - Display SE7526F1                                    *
+      *                                                               *
+      *  CALLED FROM : SCRS1                                          *
+      *                                                               *
+      *  CALLS :                                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DSPS1     BEGSR
+      *
+      ** Cmd keys
+      *
+     C                     MOVELCMD,2     CMDMSG
+     C                     WRITECMDKEY
+      *
+      ** Messages
+      *
+     C                     WRITEMSGCTL
+      *
+      ** selection sfl screen
+      *
+     C                     EXFMTSE7526C1
+      *                                                                   172724
+     C**********           EXSR HELP                                                   172724 CPK015
+      *
+      * Clear message subfile
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM #PGM      FTPGMQ 10
+     C                     PARM '*SAME'   FTPGRL  5
+      *
+      * Reset message sent flag
+      *
+     C                     MOVEL'N'       FTMSGS  1
+      *
+      ** Check selection s until F3 or F5
+      *
+     C           *IN03     IFNE *ON
+     C           *IN12     ANDNE*ON
+      *
+     C                     EXSR CHKSF1
+      *
+     C                     ENDIF
+      *
+     C           XDSPS1    ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  DSPS1X - Display NORECS screen                               *
+      *           As SE7526F1 but SFL has no records                  *
+      *                                                               *
+      *  CALLED FROM : SCRS1                                          *
+      *                                                               *
+      *  CALLS :                                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DSPS1X    BEGSR
+      *
+      ** Cmd keys
+      *
+     C                     MOVELCMD,4     CMDMSG
+     C                     WRITECMDKEY
+      *
+      ** Messages
+      *
+     C                     WRITEMSGCTL
+      *
+      ** No records sfl selection screen
+      *
+     C                     EXFMTNORECS
+      *                                                                   172724
+     C**********           EXSR HELP                                                   172724 CPK015
+      *
+      * Clear message subfile
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM #PGM      FTPGMQ 10
+     C                     PARM '*SAME'   FTPGRL  5
+      *
+      * Reset message sent flag
+      *
+     C                     MOVEL'N'       FTMSGS  1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  CHKSF1 - Check selected records from SFL SE7526F1            *
+      *                                                               *
+      *  CALLED FROM : DSPS1                                          *
+      *                                                               *
+      *  CALLS :                                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CHKSF1    BEGSR
+      *
+     C                     READCSE7526S1                 49
+      *
+      * Read all selected records until no more, or F3,F5 or F12
+      *
+     C           *IN49     DOWEQ*OFF
+     C           *IN03     ANDEQ*OFF
+     C           *IN05     ANDEQ*OFF
+     C           *IN12     ANDEQ*OFF
+      *
+      ** Process selection
+      *
+     C                     EXSR PROSL1
+      *
+     C           @SCR1     IFEQ @YES
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C                     READCSE7526S1                 49
+      *
+     C                     ENDDO
+      *
+     C           XCHKS1    ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  PROSL1 - Process selections from SFL SE7526F1                *
+      *                                                               *
+      *  CALLED FROM : CHKSF1                                         *
+      *                                                               *
+      *  CALLS :                                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROSL1    BEGSR
+      *
+     C                     SELEC
+      *
+      ** Selection blanked after incorrect selection
+      *
+     C           S1ACTN    WHEQ ' '                        correct err
+     C           RRN       CHAINSE7526S1             89
+     C                     MOVE *OFF      *IN31
+     C                     MOVE @NO       @SCR1
+     C                     UPDATSE7526S1
+      *
+      ** Incorrect selection
+      *
+     C           S1ACTN    WHNE 'A'                        err
+     C           S1ACTN    ANDNE' '
+     C           RRN       CHAINSE7526S1             89
+     C                     MOVE *ON       *IN31
+     C                     MOVE @YES      @SCR1
+     C                     MOVE *ON       *IN49
+     C                     UPDATSE7526S1
+     C                     MOVEL'CO01001' MSGID
+     C                     EXSR SNDMSG
+      *
+      ** Correct selection
+      *
+     C                     OTHER                           correct
+     C           RRN       CHAINSE7526S1             89
+     C                     MOVE *OFF      *IN31
+     C                     MOVE @NO       @SCR1
+     C                     MOVE *BLANKS   S1ACTN
+     C                     UPDATSE7526S1
+      *
+      * Clear message subfile
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM #PGM      FTPGMQ 10
+     C                     PARM '*SAME'   FTPGRL  5
+      *
+      * Reset message sent flag
+      *
+     C                     MOVEL'N'       FTMSGS  1
+      *
+     C                     EXSR SCRS2
+      *
+     C                     ENDSL
+      *
+     C           XPRSL1    ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  SCRS2 - Control of SE7526F2                                  *
+      *                                                               *
+      *  CALLED FROM : PROSL1                                         *
+      *                                                               *
+      *  CALLS :                                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SCRS2     BEGSR
+      *
+      ** Fill update screen fields
+      *
+     C                     EXSR FILS2
+      *
+     C                     MOVE *OFF      *IN03            cmd keys
+     C                     MOVE *OFF      *IN05
+     C                     MOVE *OFF      *IN12
+      *
+      * Loop while not F3,F5 and F12, or while error on screen
+      *
+     C           *IN03     DOWEQ*OFF
+     C           *IN05     ANDEQ*OFF
+     C           *IN12     ANDEQ*OFF
+     C           @SCR2     OREQ @YES
+      *
+     C                     EXSR DSPS2
+      *
+     C                     ENDDO
+      *
+     C                     MOVE *OFF      *IN12
+      *                                                                   CSE011
+      ** If feature CSE011 is installed, clear previous warning           CSE011
+      ** messages and re-initialise control flags.                        CSE011
+      *                                                                   CSE011
+     C           CSE011    IFEQ 'Y'                                       CSE011
+      *                                                                   CSE011
+     C                     MOVE 'N'       WFIRST                          CSE011
+     C                     MOVE 'N'       WSCR2                           CSE011
+      *                                                                   CSE011
+      ** Clear message subfile                                            CSE011
+      *                                                                   CSE011
+     C                     CALL 'Y2CLMSC'                                 CSE011
+     C                     PARM #PGM      FTPGMQ 10                       CSE011
+     C                     PARM '*SAME'   FTPGRL  5                       CSE011
+      *                                                                   CSE011
+      ** Reset message sent flag                                          CSE011
+      *                                                                   CSE011
+     C                     MOVEL'N'       FTMSGS                          CSE011
+      *                                                                   CSE011
+     C                     ENDIF                                          CSE011
+      *
+     C           XSCRS2    ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  FILS2 - Move data to SE7526F2 fields                         *
+      *                                                               *
+      *  CALLED FROM : SCRS2                                          *
+      *                                                               *
+      *  CALLS :                                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FILS2     BEGSR
+      *
+      ** Use NEW Security Shortname from SFL to read record
+      ** from SECTY
+      *
+     C           KSECTY    CHAINSECTYDF              88
+      *
+     C           *IN88     IFEQ *OFF
+      *
+      ** Security short name
+      *
+     C                     MOVELSESN      S2SESN
+      *
+      ** Security report name
+      *
+     C                     MOVELSRPN      S2SRPN
+      *
+      ** Security full name 1 and 2
+      *
+     C                     MOVELSFN1      S2SFN1
+     C                     MOVELSFN2      S2SFN2
+      *
+      ** Telekurs (Valoren) Ref
+      *
+     C                     MOVELT2RF      S2T2RF
+      *
+      ** ISIN number
+      ** Save original ISIN number
+      *
+     C                     MOVELISIN      @ISIN
+      *
+     C                     MOVELISIN      S2ISIN
+      *
+      ** CUSIP number
+      *
+     C                     MOVELCSPN      S2CSPN
+      *
+      ** Sedol (EXTEL) number
+      *
+     C                     MOVELSREF      S2SREF
+      *
+      ** Security ref at Depot 1
+      *
+     C                     MOVELDASR      S2DASR
+      *
+      ** Security ref at Depot 2
+      *
+     C                     MOVELDCSR      S2DCSR
+      *
+      ** Security ref at Depot 3
+      *
+     C                     MOVELDDSR      S2DDSR
+      *
+     C                     ELSE
+      *
+     C           *LOCK     IN   LDA                        ************
+     C                     MOVEL'SECTY   'DBFILE           *ERROR 004 *
+     C                     MOVEL'004'     DBASE            ************
+     C                     MOVEL@OPTN     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+      *
+     C                     ENDIF
+      *
+      ** Use Nominal ccy and Investment type to read record
+      ** from INVTP
+      *
+     C                     MOVELNMCY      @NMCY
+     C                     MOVELSITP      @SITP
+      *
+     C           KINVTP    CHAININVTPDF              87
+      *
+     C           *IN87     IFEQ *OFF
+      *
+      ** Settlement Depot 1
+      *
+     C**********           Z-ADDSDC1      S2SDC1                                             CSD027A
+     C                     MOVE SDC1      S2SDC1                                             CSD027A
+      *
+      ** Settlement Depot 2
+      *
+     C**********           Z-ADDSDC2      S2SDC2                                             CSD027A
+     C                     MOVE SDC2      S2SDC2                                             CSD027A
+      *
+      ** Settlement Depot 3
+      *
+     C**********           Z-ADDSDC3      S2SDC3                                             CSD027A
+     C                     MOVE SDC3      S2SDC3                                             CSD027A
+      *
+     C                     ELSE
+      *
+     C           *LOCK     IN   LDA                        ************
+     C                     MOVEL'INVTP   'DBFILE           *ERROR 005 *
+     C                     MOVEL'005'     DBASE            ************
+     C                     MOVEL@OPTN     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+      *
+     C                     ENDIF
+      *                                                                   CSE011
+      ** Initialise work indicators for feature CSE011 if feature is      CSE011
+      ** installed.                                                       CSE011
+      *                                                                   CSE011
+     C           CSE011    IFEQ 'Y'                                       CSE011
+     C                     MOVE *ALL'0'   WOFF7   7                       CSE011
+     C                     MOVE *ALL'0'   WOFF5   5                       CSE011
+     C                     MOVEAWOFF7     *IN,51                          CSE011
+     C                     MOVEAWOFF5     *IN,32                          CSE011
+     C                     MOVE '0'       *IN38                           CSE011
+     C                     MOVE '0'       *IN39                           CSE011
+     C                     MOVE 'N'       WFIRST  1                       CSE011
+     C                     MOVE 'N'       WSCR2   1                       CSE011
+     C                     MOVE 'N'       WFOUND  1                       CSE011
+     C                     ENDIF                                          CSE011
+      *
+     C           XFILS2    ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  DSPS2 - Display SE7526F2                                     *
+      *                                                               *
+      *  CALLED FROM : SCRS2                                          *
+      *                                                               *
+      *  CALLS :                                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DSPS2     BEGSR
+      *
+      ** Cmd keys
+      *
+     C                     MOVELCMD,3     CMDMSG
+     C                     WRITECMDKEY                     CMD KEYS
+      *
+      ** Messages
+      *
+     C                     WRITEMSGCTL                     MESSAGES
+      *
+      ** Update screen
+      *
+     C                     EXFMTSE7526F2
+      *                                                                   172724
+     C**********           EXSR HELP                                                   172724 CPK015
+      *
+      * Clear message subfile
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM #PGM      FTPGMQ 10
+     C                     PARM '*SAME'   FTPGRL  5
+      *
+      * Reset message sent flag
+      *
+     C                     MOVEL'N'       FTMSGS  1
+      *
+     C                     MOVE *OFF      *IN32            ERROR
+     C                     MOVE *OFF      *IN33            ERROR
+     C                     MOVE *OFF      *IN34            ERROR
+     C                     MOVE *OFF      *IN35            ERROR
+     C                     MOVE *OFF      *IN36            ERROR
+     C                     MOVE @NO       @SCR2
+      *
+     C                     EXSR PROC2
+      *
+     C           XDSPS2    ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  PROC2 - Process SE7526F2                                     *
+      *                                                               *
+      *  CALLED FROM : DSPS2                                          *
+      *                                                               *
+      *  CALLS :                                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROC2     BEGSR
+      *
+     C           *IN03     IFEQ *OFF
+     C           *IN05     ANDEQ*OFF
+     C           *IN12     ANDEQ*OFF
+      *
+      ** If not F3/F5/F12 then validate SE7526F2
+      *
+     C                     EXSR VALIDD
+      *                                                                   CSE011
+      ** If feature CSE011 is installed, Send warning message for         CSE011
+      ** duplicate record found.                                          CSE011
+      *                                                                   CSE011
+     C           CSE011    IFEQ 'Y'                                       CSE011
+      *                                                                   CSE011
+     C           WSCR2     IFEQ 'Y'                                       CSE011
+     C           WFIRST    ANDEQ'N'                                       CSE011
+     C                     MOVE 'Y'       WFIRST                          CSE011
+     C                     MOVE @YES      @SCR2                           CSE011
+     C                     ELSE                                           CSE011
+     C                     MOVE @NO       @SCR2                           CSE011
+     C                     ENDIF                                          CSE011
+      *                                                                   CSE011
+     C                     ENDIF                                          CSE011
+      *
+      *** If no errors then update security files
+      *
+     C           @SCR2     IFNE @YES
+     C                     EXSR UPDATE
+     C                     EXSR SECAUD
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           *IN03     IFEQ *ON
+     C                     MOVE 'Y'       @F3
+     C                     ENDIF
+      *
+     C           XPROC2    ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  VALIDD- Validate data from SE7526F2                          *
+      *                                                               *
+      *  CALLED FROM : PROC2                                          *
+      *                                                               *
+      *  CALLS :                                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           VALIDD    BEGSR
+      *
+      ** Validate ISIN number
+      *                                                                   S01401
+      ***  Set Off Validation Indicator.                                  S01401
+      *                                                                   S01401
+     C                     MOVE *OFF      *IN32                           S01401
+      *                                                                   S01401
+      ***  If the Security for ISIN/COMMON is not blank.                  S01401
+      *                                                                   S01401
+     C           S2ISIN    IFNE @ISIN
+      *                                                                   S01401
+      ***  Initialise values used in validation processing.               S01401
+      *                                                                   S01401
+     C                     MOVE *OFF      *IN37                           S01401
+     C                     MOVE 'N'       WWEOSF  1
+     C                     Z-ADD0         I       20                      S01401
+     C                     Z-ADD0         J       20                      S01401
+     C                     MOVEAS2ISIN    IS1                             S01401
+     C                     MOVEA*BLANKS   IS2                             S01401
+      *                                                                   S01401
+     C           I         DOWLE11                                        S01401
+     C           *IN32     ANDEQ'0'                                       S01401
+     C                     ADD  1         I                               S01401
+      *                                                                   S01401
+      ***  Check if Characters are in Array ALPHA1 (0..9,A..Z,BLANK).     S01401
+      *                                                                   S01401
+     C           IS1,I     LOKUPALPHA1                   37               S01401
+      *                                                                   S01401
+      ***  If Character is not found.                                     S01401
+      *                                                                   S01401
+     C           *IN37     IFEQ *OFF                                      S01401
+     C                     MOVE *ON       *IN32                           S01401
+     C                     ELSE                                           S01401
+      *                                                                   S01401
+      ***  Check if Characters are in Array ALPHA2 (0..9,A..Z).           S01401
+      *                                                                   S01401
+     C           IS1,I     LOKUPALPHA2                   37               S01401
+      *                                                                   S01401
+      ***  If Character is found.                                         S01401
+      *                                                                   S01401
+     C           *IN37     IFEQ *ON                                       S01401
+      *                                                                   S01401
+     C           WWEOSF    IFEQ 'N'                                       S01401
+     C                     ADD  1         J                               S01401
+     C                     MOVEAIS1,I     IS2,J                           S01401
+     C                     ELSE                                           S01401
+     C                     MOVE *ON       *IN32                           S01401
+     C                     ENDIF                                          S01401
+      *                                                                   S01401
+     C                     ELSE                                           S01401
+      *                                                                   S01401
+     C           J         IFGT 0                                         S01401
+     C                     MOVE 'Y'       WWEOSF                          S01401
+     C                     ENDIF                                          S01401
+      *                                                                   S01401
+     C                     ENDIF                                          S01401
+      *                                                                   S01401
+     C                     ENDIF                                          S01401
+     C                     ENDDO                                          S01401
+      *                                                                   S01401
+      ***  If Security Code for ISIN/COMMON is invalid.                   S01401
+      *                                                                   S01401
+     C           *IN32     IFEQ *ON                                       S01401
+     C                     MOVE @YES      @SCR2
+     C                     MOVEL'CO01005' MSGID
+     C                     EXSR SNDMSG
+     C                     ENDIF                                          S01401
+      *                                                                   S01401
+     C                     ENDIF                                          S01401
+      *                                                                   CSE011
+      ** If feature CSE011 is installed.                                  CSE011
+      *                                                                   CSE011
+     C           CSE011    IFEQ 'Y'                                       CSE011
+      *                                                                   CSE011
+      ** Validate entry for ISIN Number                                   CSE011
+      *                                                                   CSE011
+     C           S2ISIN    IFNE *BLANKS                                   CSE011
+     C           S2ISIN    ANDNEWISIN                                     CSE011
+      *                                                                   CSE011
+      ** Keep ISIN Number input.                                          CSE011
+      *                                                                   CSE011
+     C                     MOVELS2ISIN    WISIN                           CSE011
+     C                     MOVE 'N'       WFOUND                          CSE011
+      *                                                                   CSE011
+     C           S2ISIN    SETLLSECTYL1              53                   CSE011
+     C           S2ISIN    READESECTYL1                  53               CSE011
+      *                                                                   CSE011
+     C                     MOVEL*BLANKS   WSESN                           CSE011
+     C                     MOVELS2SESN    WSESN                           CSE011
+      *                                                                   CSE011
+     C           *IN53     DOWEQ'0'                                       CSE011
+     C           WFOUND    ANDEQ'N'                                       CSE011
+      *                                                                   CSE011
+      ** Check if Security Shortname is different                         CSE011
+      *                                                                   CSE011
+     C           SESN      IFNE WSESN                                     CSE011
+     C                     MOVE 'Y'       WFOUND                          CSE011
+     C                     ELSE                                           CSE011
+     C           S2ISIN    READESECTYL1                  53               CSE011
+     C                     ENDIF                                          CSE011
+      *                                                                   CSE011
+     C                     ENDDO                                          CSE011
+      *                                                                   CSE011
+      ** ISIN Number has been used by another security.                   CSE011
+      *                                                                   CSE011
+     C           WFOUND    IFEQ 'Y'                                       CSE011
+     C                     MOVEL*BLANKS   WISIN                           CSE011
+     C                     MOVE '1'       *IN32                           CSE011
+     C                     MOVE 'Y'       WSCR2                           CSE011
+     C                     MOVEAWAMSG,2   WE        P                     CSE011
+     C                     MOVEAISIN      WE,11     P                     CSE011
+     C                     MOVEAWAMSG,8   WE,24     P                     CSE011
+     C                     MOVEASESN      WE,41     P                     CSE011
+     C                     MOVEAWAMSG,9   WE,52     P                     CSE011
+     C                     MOVEASRPN      WE,53     P                     CSE011
+     C                     MOVEAWAMSG,10  WE,73     P                     CSE011
+     C                     MOVEAWE        MSGDTA    P                     CSE011
+     C                     MOVEL'CO01008' MSGID                           CSE011
+     C                     EXSR SNDMSG                                    CSE011
+     C                     ENDIF                                          CSE011
+      *                                                                   CSE011
+     C                     ENDIF                                          CSE011
+      *                                                                   CSE011
+     C                     ENDIF                                          CSE011
+      *
+      ** Validate EXTEL (Sedol) reference
+      *
+     C                     CLEAR@A
+     C                     CLEAR@B
+      *
+     C           CHK2      CHECKS2SREF    @T      10
+      *
+     C                     MOVE S2SREF    @B      7
+      *
+     C                     SELEC
+     C           @T        WHEQ 7
+     C           1         SUBST@B:1      @A,2
+     C           1         SUBST@B:2      @A,3
+     C           1         SUBST@B:3      @A,4
+     C           1         SUBST@B:4      @A,5
+     C           1         SUBST@B:5      @A,6
+     C           1         SUBST@B:6      @A,7
+     C           @T        WHEQ 6
+     C           1         SUBST@B:1      @A,3
+     C           1         SUBST@B:2      @A,4
+     C           1         SUBST@B:3      @A,5
+     C           1         SUBST@B:4      @A,6
+     C           1         SUBST@B:5      @A,7
+     C           @T        WHEQ 5
+     C           1         SUBST@B:1      @A,4
+     C           1         SUBST@B:2      @A,5
+     C           1         SUBST@B:3      @A,6
+     C           1         SUBST@B:4      @A,7
+     C           @T        WHEQ 4
+     C           1         SUBST@B:1      @A,5
+     C           1         SUBST@B:2      @A,6
+     C           1         SUBST@B:3      @A,7
+     C           @T        WHEQ 3
+     C           1         SUBST@B:1      @A,6
+     C           1         SUBST@B:2      @A,7
+     C           @T        WHEQ 2
+     C           1         SUBST@B:1      @A,7
+     C                     OTHER
+     C           1         DO   7         @C      10
+     C           1         SUBST@B:@C     @A,@C
+     C                     ENDDO
+     C                     ENDSL
+      *
+     C                     MOVEA@A        @SREF1  7
+     C                     MOVE @SREF1    @SREF2  70
+      *
+     C           S2SREF    IFNE *BLANKS
+     C           BVEXOP    ANDEQ'Y'
+      *
+     C           KEXVA     CHAINEXVALDF              85
+      *
+     C           *IN85     IFEQ *OFF
+      *                                                                   CSE011
+      ** If feature CSE011 is installed.                                  CSE011
+      *                                                                   CSE011
+     C           CSE011    IFEQ 'Y'                                       CSE011
+      *                                                                   CSE011
+      ** Validate entry for SREF Number                                   CSE011
+      *                                                                   CSE011
+     C           S2SREF    IFNE *BLANKS                                   CSE011
+     C           S2SREF    ANDNEWSREF                                     CSE011
+      *                                                                   CSE011
+      ** Keep SREF Number input.                                          CSE011
+      *                                                                   CSE011
+     C                     MOVELS2SREF    WSREF                           CSE011
+     C                     MOVE 'N'       WFOUND                          CSE011
+      *                                                                   CSE011
+     C           S2SREF    SETLLSECTYL3              54                   CSE011
+     C           S2SREF    READESECTYL3                  54               CSE011
+      *                                                                   CSE011
+     C                     MOVEL*BLANKS   WSESN                           CSE011
+     C                     MOVELS2SESN    WSESN                           CSE011
+     C           *IN54     DOWEQ'0'                                       CSE011
+     C           WFOUND    ANDEQ'N'                                       CSE011
+      *                                                                   CSE011
+      ** Check if Security Shortname is different                         CSE011
+      *                                                                   CSE011
+     C           SESN      IFNE WSESN                                     CSE011
+     C                     MOVE 'Y'       WFOUND                          CSE011
+     C                     ELSE                                           CSE011
+     C           S2SREF    READESECTYL3                  54               CSE011
+     C                     ENDIF                                          CSE011
+      *                                                                   CSE011
+     C                     ENDDO                                          CSE011
+      *                                                                   CSE011
+      ** SREF Number has been used by another security.                   CSE011
+      *                                                                   CSE011
+     C           WFOUND    IFEQ 'Y'                                       CSE011
+     C                     MOVEL*BLANKS   WSREF                           CSE011
+     C                     MOVE '1'       *IN33                           CSE011
+     C                     MOVE 'Y'       WSCR2                           CSE011
+     C                     MOVEAWAMSG,4   WE        P                     CSE011
+     C                     MOVEASREF      WE,18     P                     CSE011
+     C                     MOVEAWAMSG,8   WE,26     P                     CSE011
+     C                     MOVEASESN      WE,43     P                     CSE011
+     C                     MOVEAWAMSG,9   WE,54     P                     CSE011
+     C                     MOVEASRPN      WE,55     P                     CSE011
+     C                     MOVEAWAMSG,10  WE,75     P                     CSE011
+     C                     MOVEAWE        MSGDTA    P                     CSE011
+     C                     MOVEL'CO01009' MSGID                           CSE011
+     C                     EXSR SNDMSG                                    CSE011
+     C                     ENDIF                                          CSE011
+      *                                                                   CSE011
+     C                     ENDIF                                          CSE011
+      *                                                                   CSE011
+     C                     ENDIF                                          CSE011
+      *
+     C           @SREF2    IFNE A1P
+     C           *IN33     ANDEQ'0'                                       CSE011
+     C                     Z-ADD@SREF2    A1P
+     C                     Z-ADDRUND      LCD
+     C                     MOVE 'A'       CHTP
+     C                     Z-ADDNATN      TNLU
+     C                     UPDATEXVALDF
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     MOVE S2SESN    SESN
+     C                     MOVE 'Y'       EXAP
+     C                     Z-ADD@SREF2    A1P
+     C                     Z-ADD0         UPBD
+     C                     Z-ADD0         LPBD
+     C                     Z-ADD0         PMOV
+     C                     Z-ADDRUND      LCD
+     C                     MOVE 'I'       CHTP
+     C                     Z-ADDNATN      TNLU
+     C                     MOVEASTAMP,1   PRTMST           Default Timestamp                  CPK015
+     C                     WRITEEXVALDF
+      *
+     C           1         CHAINEXVALZF              84
+      *
+     C           *IN84     IFEQ *OFF
+     C           RECI      ANDEQ'Z'
+     C                     ADD  1         NINS
+     C                     ADD  1         NORE
+     C                     UPDATEXVALZF
+     C                     ELSE
+      *
+     C           *LOCK     IN   LDA                        ************
+     C                     MOVEL'EXVALZ  'DBFILE           *ERROR 006 *
+     C                     MOVEL'006'     DBASE            ************
+     C                     MOVEL@OPTN     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Validate Security reference at depot 1
+      *
+     C********** S2SDC1    IFEQ 0                                                            CSD027A
+     C           S2SDC1    IFEQ *BLANKS                                                      CSD027A
+     C           S2DASR    ANDNE*BLANKS
+     C                     MOVE *ON       *IN34
+     C                     MOVE @YES      @SCR2
+     C                     MOVEL'CO01004' MSGID
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *                                                                   CSE011
+      ** If feature CSE011 is installed.                                  CSE011
+      *                                                                   CSE011
+     C           CSE011    IFEQ 'Y'                                       CSE011
+      *                                                                   CSE011
+      ** Validate entry for depot 1                                       CSE011
+      *                                                                   CSE011
+     C           S2DASR    IFNE *BLANKS                                   CSE011
+     C           S2DASR    ANDNEWDASR                                     CSE011
+      *                                                                   CSE011
+      ** Keep depot 1 input.                                              CSE011
+      *                                                                   CSE011
+     C                     MOVELS2DASR    WDASR                           CSE011
+     C                     MOVE 'N'       WFOUND                          CSE011
+      *                                                                   CSE011
+     C           S2DASR    SETLLSECTE                55                   CSE011
+     C           S2DASR    READESECTE                    55               CSE011
+      *                                                                   CSE011
+     C                     MOVEL*BLANKS   WSESN                           CSE011
+     C                     MOVELS2SESN    WSESN                           CSE011
+     C           *IN55     DOWEQ'0'                                       CSE011
+     C           WFOUND    ANDEQ'N'                                       CSE011
+      *                                                                   CSE011
+      ** Check if Security Shortname is different                         CSE011
+      *                                                                   CSE011
+     C           SESN      IFNE WSESN                                     CSE011
+     C                     MOVE 'Y'       WFOUND                          CSE011
+     C                     ELSE                                           CSE011
+     C           S2DASR    READESECTE                    55               CSE011
+     C                     ENDIF                                          CSE011
+      *                                                                   CSE011
+     C                     ENDDO                                          CSE011
+      *                                                                   CSE011
+      ** depot 1 entry has been used by another security.                 CSE011
+      *                                                                   CSE011
+     C           WFOUND    IFEQ 'Y'                                       CSE011
+     C                     MOVEL*BLANKS   WDASR                           CSE011
+     C                     MOVE '1'       *IN34                           CSE011
+     C                     MOVE 'Y'       WSCR2                           CSE011
+     C                     MOVEAWAMSG,5   WE        P                     CSE011
+     C                     MOVEADASR      WE,17     P                     CSE011
+     C                     MOVEAWAMSG,8   WE,30     P                     CSE011
+     C                     MOVEASESN      WE,47     P                     CSE011
+     C                     MOVEAWE        MSGDTA    P                     CSE011
+     C                     MOVEL'CO01010' MSGID                           CSE011
+     C                     EXSR SNDMSG                                    CSE011
+     C                     ENDIF                                          CSE011
+      *                                                                   CSE011
+     C                     ENDIF                                          CSE011
+      *                                                                   CSE011
+     C                     ENDIF                                          CSE011
+      *
+      ** Validate Security reference at depot 2
+      *
+     C********** S2SDC2    IFEQ 0                                                            CSD027A
+     C           S2SDC2    IFEQ *BLANKS                                                      CSD027A
+     C           S2DCSR    ANDNE*BLANKS
+     C                     MOVE *ON       *IN35
+     C                     MOVE @YES      @SCR2
+     C                     MOVEL'CO01004' MSGID
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *                                                                   CSE011
+      ** If feature CSE011 is installed.                                  CSE011
+      *                                                                   CSE011
+     C           CSE011    IFEQ 'Y'                                       CSE011
+      *                                                                   CSE011
+      ** Validate entry for depot 2                                       CSE011
+      *                                                                   CSE011
+     C           S2DCSR    IFNE *BLANKS                                   CSE011
+     C           S2DCSR    ANDNEWDCSR                                     CSE011
+      *                                                                   CSE011
+      ** Keep depot 2 input.                                              CSE011
+      *                                                                   CSE011
+     C                     MOVELS2DCSR    WDCSR                           CSE011
+     C                     MOVE 'N'       WFOUND                          CSE011
+      *                                                                   CSE011
+     C           S2DCSR    SETLLSECT2                56                   CSE011
+     C           S2DCSR    READESECT2                    56               CSE011
+      *                                                                   CSE011
+     C                     MOVEL*BLANKS   WSESN                           CSE011
+     C                     MOVELS2SESN    WSESN                           CSE011
+     C           *IN56     DOWEQ'0'                                       CSE011
+     C           WFOUND    ANDEQ'N'                                       CSE011
+      *                                                                   CSE011
+      ** Check if Security Shortname is different                         CSE011
+      *                                                                   CSE011
+     C           SESN      IFNE WSESN                                     CSE011
+     C                     MOVE 'Y'       WFOUND                          CSE011
+     C                     ELSE                                           CSE011
+     C           S2DCSR    READESECT2                    56               CSE011
+     C                     ENDIF                                          CSE011
+      *                                                                   CSE011
+     C                     ENDDO                                          CSE011
+      *                                                                   CSE011
+      ** depot 2 entry has been used by another security.                 CSE011
+      *                                                                   CSE011
+     C           WFOUND    IFEQ 'Y'                                       CSE011
+     C                     MOVEL*BLANKS   WDCSR                           CSE011
+     C                     MOVE '1'       *IN35                           CSE011
+     C                     MOVE 'Y'       WSCR2                           CSE011
+     C                     MOVEAWAMSG,6   WE        P                     CSE011
+     C                     MOVEADCSR      WE,17     P                     CSE011
+     C                     MOVEAWAMSG,8   WE,30     P                     CSE011
+     C                     MOVEASESN      WE,47     P                     CSE011
+     C                     MOVEAWE        MSGDTA    P                     CSE011
+     C                     MOVEL'CO01011' MSGID                           CSE011
+     C                     EXSR SNDMSG                                    CSE011
+     C                     ENDIF                                          CSE011
+      *                                                                   CSE011
+     C                     ENDIF                                          CSE011
+      *                                                                   CSE011
+     C                     ENDIF                                          CSE011
+      *
+      ** Validate Security reference at depot 3
+      *
+     C********** S2SDC3    IFEQ 0                                                            CSD027A
+     C           S2SDC3    IFEQ *BLANKS                                                      CSD027A
+     C           S2DDSR    ANDNE*BLANKS
+     C                     MOVE *ON       *IN36
+     C                     MOVE @YES      @SCR2
+     C                     MOVEL'CO01004' MSGID
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *                                                                   CSE011
+      ** If feature CSE011 is installed.                                  CSE011
+      *                                                                   CSE011
+     C           CSE011    IFEQ 'Y'                                       CSE011
+      *                                                                   CSE011
+      ** Validate entry for depot 3                                       CSE011
+      *                                                                   CSE011
+     C           S2DDSR    IFNE *BLANKS                                   CSE011
+     C           S2DDSR    ANDNEWDDSR                                     CSE011
+      *                                                                   CSE011
+      ** Keep depot 3 input.                                              CSE011
+      *                                                                   CSE011
+     C                     MOVELS2DDSR    WDDSR                           CSE011
+     C                     MOVE 'N'       WFOUND                          CSE011
+      *                                                                   CSE011
+     C           S2DDSR    SETLLSECT3                57                   CSE011
+     C           S2DDSR    READESECT3                    57               CSE011
+      *                                                                   CSE011
+     C                     MOVEL*BLANKS   WSESN                           CSE011
+     C                     MOVELS2SESN    WSESN                           CSE011
+     C           *IN57     DOWEQ'0'                                       CSE011
+     C           WFOUND    ANDEQ'N'                                       CSE011
+      *                                                                   CSE011
+      ** Check if Security Shortname is different                         CSE011
+      *                                                                   CSE011
+     C           SESN      IFNE WSESN                                     CSE011
+     C                     MOVE 'Y'       WFOUND                          CSE011
+     C                     ELSE                                           CSE011
+     C           S2DDSR    READESECT3                    57               CSE011
+     C                     ENDIF                                          CSE011
+      *                                                                   CSE011
+     C                     ENDDO                                          CSE011
+      *                                                                   CSE011
+      ** depot 3 entry has been used by another security.                 CSE011
+      *                                                                   CSE011
+     C           WFOUND    IFEQ 'Y'                                       CSE011
+     C                     MOVEL*BLANKS   WDDSR                           CSE011
+     C                     MOVE '1'       *IN36                           CSE011
+     C                     MOVE 'Y'       WSCR2                           CSE011
+     C                     MOVEAWAMSG,7   WE        P                     CSE011
+     C                     MOVEADDSR      WE,17     P                     CSE011
+     C                     MOVEAWAMSG,8   WE,30     P                     CSE011
+     C                     MOVEASESN      WE,47     P                     CSE011
+     C                     MOVEAWE        MSGDTA    P                     CSE011
+     C                     MOVEL'CO01012' MSGID                           CSE011
+     C                     EXSR SNDMSG                                    CSE011
+     C                     ENDIF                                          CSE011
+      *                                                                   CSE011
+     C                     ENDIF                                          CSE011
+      *                                                                   CSE011
+     C                     ENDIF                                          CSE011
+      *                                                                   CSE011
+      ** If feature CSE011 is installed perform the following             CSE011
+      ** validation.                                                      CSE011
+      *                                                                   CSE011
+     C           CSE011    IFEQ 'Y'                                       CSE011
+      *                                                                   CSE011
+      ** Validate entry for Telekurs Reference.                           CSE011
+      *                                                                   CSE011
+     C           S2T2RF    IFNE *BLANKS                                   CSE011
+     C           S2T2RF    ANDNEWT2RF                                     CSE011
+      *                                                                   CSE011
+      ** Keep Telekurs (Valoren) Reference input.                         CSE011
+      *                                                                   CSE011
+     C                     MOVELS2T2RF    WT2RF                           CSE011
+     C                     MOVE 'N'       WFOUND                          CSE011
+      *                                                                   CSE011
+     C           S2T2RF    SETLLSECTYL2              51                   CSE011
+     C           S2T2RF    READESECTYL2                  51               CSE011
+      *                                                                   CSE011
+     C                     MOVEL*BLANKS   WSESN  10                       CSE011
+     C                     MOVELS2SESN    WSESN                           CSE011
+     C           *IN51     DOWEQ'0'                                       CSE011
+     C           WFOUND    ANDEQ'N'                                       CSE011
+      *                                                                   CSE011
+      ** Check if Security Shortname is different                         CSE011
+      *                                                                   CSE011
+     C           SESN      IFNE WSESN                                     CSE011
+     C                     MOVE 'Y'       WFOUND                          CSE011
+     C                     ELSE                                           CSE011
+     C           S2T2RF    READESECTYL2                  51               CSE011
+     C                     ENDIF                                          CSE011
+      *                                                                   CSE011
+     C                     ENDDO                                          CSE011
+      *                                                                   CSE011
+      ** Telekurs reference has been used by another security.            CSE011
+      *                                                                   CSE011
+     C           WFOUND    IFEQ 'Y'                                       CSE011
+     C                     MOVEL*BLANKS   WT2RF                           CSE011
+     C                     MOVE '1'       *IN38                           CSE011
+     C                     MOVE 'Y'       WSCR2                           CSE011
+     C                     MOVEAWAMSG,1   WE        P                     CSE011
+     C                     MOVEAT2RF      WE,9      P                     CSE011
+     C                     MOVEAWAMSG,8   WE,22     P                     CSE011
+     C                     MOVEASESN      WE,39     P                     CSE011
+     C                     MOVEAWAMSG,9   WE,51     P                     CSE011
+     C                     MOVEASRPN      WE,52     P                     CSE011
+     C                     MOVEAWAMSG,10  WE,72     P                     CSE011
+     C                     MOVEAWE        MSGDTA    P                     CSE011
+     C                     MOVEL'CO01006' MSGID                           CSE011
+     C                     EXSR SNDMSG                                    CSE011
+     C                     ENDIF                                          CSE011
+      *                                                                   CSE011
+     C                     ENDIF                                          CSE011
+      *                                                                   CSE011
+      ** Validate entry for Cusip Number                                  CSE011
+      *                                                                   CSE011
+     C           S2CSPN    IFNE *BLANKS                                   CSE011
+     C           S2CSPN    ANDNEWCSPN                                     CSE011
+      *                                                                   CSE011
+      ** Keep Cusip Number input.                                         CSE011
+      *                                                                   CSE011
+     C                     MOVELS2CSPN    WCSPN                           CSE011
+     C                     MOVE 'N'       WFOUND                          CSE011
+      *                                                                   CSE011
+     C           S2CSPN    SETLLSECTYL0              52                   CSE011
+     C           S2CSPN    READESECTYL0                  52               CSE011
+      *                                                                   CSE011
+     C                     MOVEL*BLANKS   WSESN                           CSE011
+     C                     MOVELS2SESN    WSESN                           CSE011
+     C           *IN52     DOWEQ'0'                                       CSE011
+     C           WFOUND    ANDEQ'N'                                       CSE011
+      *                                                                   CSE011
+      ** Check if Security Shortname is different                         CSE011
+      *                                                                   CSE011
+     C           SESN      IFNE WSESN                                     CSE011
+     C                     MOVE 'Y'       WFOUND                          CSE011
+     C                     ELSE                                           CSE011
+     C           S2CSPN    READESECTYL0                  52               CSE011
+     C                     ENDIF                                          CSE011
+      *                                                                   CSE011
+     C                     ENDDO                                          CSE011
+      *                                                                   CSE011
+      ** Cusip Number has been used by another security.                  CSE011
+      *                                                                   CSE011
+     C           WFOUND    IFEQ 'Y'                                       CSE011
+     C                     MOVEL*BLANKS   WCSPN                           CSE011
+     C                     MOVE '1'       *IN39                           CSE011
+     C                     MOVE 'Y'       WSCR2                           CSE011
+     C                     MOVEAWAMSG,3   WE        P                     CSE011
+     C                     MOVEACSPN      WE,12                           CSE011
+     C                     MOVEAWAMSG,8   WE,22                           CSE011
+     C                     MOVEASESN      WE,39                           CSE011
+     C                     MOVEAWAMSG,9   WE,50                           CSE011
+     C                     MOVEASRPN      WE,51                           CSE011
+     C                     MOVEAWAMSG,10  WE,71                           CSE011
+     C                     MOVEAWE        MSGDTA    P                     CSE011
+     C                     MOVEL'CO01007' MSGID                           CSE011
+     C                     EXSR SNDMSG                                    CSE011
+     C                     ENDIF                                          CSE011
+      *                                                                   CSE011
+     C                     ENDIF                                          CSE011
+      *                                                                   CSE011
+     C                     ENDIF                                          CSE011
+      *
+     C           XVALID    ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  UPDATE - Update SECTY file                                   *
+      *                                                               *
+      *  CALLED FROM :                                                *
+      *                                                               *
+      *  CALLS :                                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           UPDATE    BEGSR
+      *
+     C           KSECTY    CHAINSECTYDF              88
+      *
+     C           *IN88     IFEQ *OFF
+      *
+     C                     MOVELS2T2RF    T2RF
+     C                     MOVELS2ISIN    ISIN
+     C                     MOVELS2CSPN    CSPN
+     C                     MOVELS2SREF    SREF
+     C                     MOVELS2DASR    DASR
+     C                     MOVELS2DCSR    DCSR
+     C                     MOVELS2DDSR    DDSR
+      *
+     C                     UPDATSECTYDF
+      *
+     C                     MOVE *ON       *IN12
+      *
+     C                     ENDIF
+      *
+     C           XUPDAT    ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  SECAUD - Update SECTYA file                                  *
+      *                                                               *
+      *  CALLED FROM :                                                *
+      *                                                               *
+      *  CALLS :                                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SECAUD    BEGSR
+      *
+     C           1         CHAINSECTYAF              83
+      *
+     C           *IN83     IFEQ *OFF
+      *
+     C                     ADD  1         SAMD
+     C                     Z-ADDRUND      LCD
+     C                     MOVE 'A'       CHTP
+     C                     Z-ADDNATN      TNLU
+      *
+     C                     UPDATSECTYAF
+      *
+     C                     ELSE
+      *
+     C           *LOCK     IN   LDA                        ************
+     C                     MOVEL'SECTYA  'DBFILE           *ERROR 007 *
+     C                     MOVEL'007'     DBASE            ************
+     C                     MOVEL@OPTN     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+      *
+     C                     ENDIF
+      *
+     C                     COMIT
+      *
+     C           XSECAD    ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * SNDMSG - Send program message handling                        *
+      *                                                               *
+      * CALLED FROM :                                                 *
+      *                                                               *
+      * CALLS :                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SNDMSG    BEGSR
+      *
+     C           MSGID     IFNE *BLANKS
+      *
+     C                     CALL 'AOCREPT'
+     C                     PARM           MSGID
+     C                     PARM           MSGF
+     C                     PARM           MSGLIB
+     C                     PARM           MSGDTA
+     C                     PARM '*SAME'   MSGREL
+     C                     PARM           #PGM
+     C                     PARM *BLANK    FTMSGQ 10
+     C                     PARM *BLANK    FTMSGT  7
+      *
+     C                     ENDIF
+      *
+      ** Reset message Id
+      *
+     C                     RESETMSGDS
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * *PSSR - Abnormal error conditions                             *
+      *                                                               *
+      * CALLED FROM :                                                 *
+      *                                                               *
+      * CALLS :                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     MOVE *ON       *INU7                           S01117
+     C                     MOVE *ON       *INU8                           S01117
+     C                     MOVE *ON       *INLR                           S01117
+     C                     DUMP                                           S01117
+     C                     RETRN
+     C                     ENDIF                                          S01117
+      *
+     C                     ENDSR
+      *
+      *****************************************************************                172724 CPK015
+      *****************************************************************                172724 CPK015
+      ***HELP*-*Help*key*not*available*in*this*option.*****************                172724 CPK015
+      *****************************************************************                172724 CPK015
+      *****************************************************************                172724 CPK015
+     C********** HELP      BEGSR                                                       172724 CPK015
+     C********** *IN13     IFEQ *ON                                                    172724 CPK015
+     C**********           MOVE MSG,1     ERRMSG                                       172724 CPK015
+     C**********           EXFMTHLPMSG                                                 172724 CPK015
+     C**********           ENDIF                                                       172724 CPK015
+     C**********           ENDSR                                                       172724 CPK015
+      *                                                                   172724
+** STAMP - Dummy timestamp                                                                    CPK015
+0001-01-01-00.00.00.000000                                                                    CPK015
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  WAMSG (CSE011)                                                        CSE011
+Code TK                                                                   CSE011
+Code ISIN                                                                 CSE011
+Code CUSIP                                                                CSE011
+SEDOL/EXTEL code                                                          CSE011
+Security Ref. 1                                                           CSE011
+Security Ref. 2                                                           CSE011
+Security Ref. 3                                                           CSE011
+already used for                                                          CSE011
+(                                                                         CSE011
+)                                                                         CSE011
+** CMD
+ F3=Exit    Enter for Redenominated Securities
+ F3=Exit    F12=Initial screen    Enter    Select:A=Amend
+ F3=Exit    F12=Previous Screen    F5=Initial Screen    Enter
+ F3=Exit    F12=Previous Screen
+** @CHK2
+0123456789
+**   ALPHA1 - All Alhanumerics and Blank
+0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ
+**   ALPHA2 - All Alphanumerics excluding Blank
+0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ

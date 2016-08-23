@@ -1,0 +1,831 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Currency change events creation')             *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE7525 -  Currency Change Events Creation                    *
+      *                                                               *
+      *  Function:  The Currency Change events and Allocation will be *
+      *             created                                           *
+      *                                                               *
+      *  Called by: SE7521  -  Securities Redenomination Bulk Maint.  *
+      *                                                               *
+      *  Calls    : AOBANKR0 - Access Program for Bank Details        *
+      *             AOSTRDR0 - Access Program for Securities Trading  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CSC023             Date 28Jan04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CPK014             Date 11Oct01               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CSE020             Date 21Mar00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 149983             Date 10Dec98               *
+      *                 149787             Date 30Nov98               *
+      *                 138962             Date 28Aug98               *
+      *                 136933             Date 25Jun98               *
+      *                 136428             Date 15Jun98               *
+      *                 135685             Date 28May98               *
+      *                 CEU017 *CREATE     Date 26Feb98               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus (Recompile)                              *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSC023 - SBMJOB output queue must be *JOBD.                  *
+      *  CPK014 - Submit jobs with user *JOBD                         *
+      *  CSE020 - Corporate Actions Domino Effect Processing          *
+      *           (Recompiled due to changes in PF/SECORFPD)          *
+      *  149983 - EMU: Block OLD Security for Sale as well            *
+      *  149787 - Duplicate CO refs are being generated because the   *
+      *           header SECORFPA is not updated with the next avail- *
+      *           able reference number until much later after        *
+      *           SECORFPD is updated.                                *
+      *  138962 - EMU: Problems when allocating reference numbers     *
+      *           to several users using the option at same time.     *
+      *  136933 - Block OLD Security from the allocation effective    *
+      *           Date when generating the 'CC' events.               *
+      *  136428 - Recompile due to addition of Days Basis and Divisor *
+      *           Basis field in SECORBPD.                            *
+      *  135685 - It's not feasible to enter the Compensation Price   *
+      *           at the Bulk level as the Bulk will have many        *
+      *           Securities all giving a cash compensation at a      *
+      *           different level. Therefore, allow the entry of      *
+      *           'MARKET' which will use the Market Price of the     *
+      *           Security at allocation effective date.              *
+      *  CEU017- Securities Redenomination Euro Changes               *
+      *                                                               *
+      *****************************************************************
+      *
+     FSECORSL0UF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+      **  Securities Redenomination Bulk Securities
+      *
+     FSECORBL0UF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+      **  Securities Redenomination Bulk Detail
+      *
+     F***SECORFL0UF**E           K        DISK         KINFSR *PSSR A     138962
+     FSECORFL0O   E           K        DISK         KINFSR *PSSR          138962
+     F                                              KCOMIT
+      **  Corporate Action References
+      *
+     FSECORFL1IF  E           K        DISK         KINFSR *PSSR          138962
+     F            SECORFD0                          KRENAMESECORFD1       138962
+      **  Corporate Action References                                     138962
+      *                                                                   138962
+     FSECORFPAUF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+      **  Corporate Action Reference Number
+      *
+     FSECOCCL0UF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+      **  Currency Change File
+      *
+     FSEDPOHL0IF  E           K        DISK         KINFSR *PSSR
+      **   Midas Corporate Actions - Depots update index
+      *
+     FSECOBKL2UF  E           K        DISK         KINFSR *PSSR A        136933
+     F                                              KCOMIT                136933
+      *                                                                   136933
+      **   MU - SE CORPORATE ACTIONS Blocked Positions                    136933
+     FSE7525AUO   E                    PRINTER      KINFSR *PSSR
+      ** Audit Report
+      *
+      /EJECT
+      *****************************************************************
+      *  F U N C T I O N    O F    I N D I C A T O R S                *
+      *                                                               *
+      *  80    Chain indicator                                        *
+      *  81    Read indicator for SECORSPD                            *
+      *  82    Read indicator for SECORFPA                            *
+      *  83    Read indicator for SEDPOHL0                            *
+      *                                                               *
+      *  LR    Last record indicator                                  *
+      *  U7-U8 Database error indicator                               *
+      *****************************************************************
+      /SPACE 3
+      ****************************************************************
+      *  S U B R O U T I N E    I N D E X                            *
+      *                                                              *
+      *  SRAUDT - Generates Audit report                             *
+      *  SRCALL - Calls SE7550 to for automatic allocation processing*
+      *  SRCC   - Writes record to SECOCCPD                          *
+      *  SRINIT - Program Initialisation                             *
+      *  SRNEXT - Setup next available Reference number              *
+      *  SRPROC - Process records from SECORSPD                      *
+      *  SRREF  - Writes record to SECORFPD                          *
+      *                                                              *
+      *  *PSSR  - Error routine                                      *
+      ****************************************************************
+      /EJECT
+      ****************************************************************
+     E                    CPY@    1   1 80
+      *
+     E                    CMD     1   3 80               SBMJOB
+      ****************************************************************
+     ISECORFD1                                                            138962
+     I              MARECI                          YYRECI                138962
+     I              MALCD                           YYLCD                 138962
+     I              MACHTP                          YYCHTP                138962
+     I              MALUID                          YYLUID                138962
+     I              MACORF                          YYCORF                138962
+     I              MAJOBN                          YYJOBN                138962
+     I              MAUSER                          YYUSER                138962
+     I              MAJNBR                          YYJNBR                138962
+     I              MASESN                          YYSESN                138962
+     I              MACOAT                          YYCOAT                138962
+     I              MAPTYP                          YYPTYP                138962
+     I              MACOAN                          YYCOAN                138962
+     I              MACOEX                          YYCOEX                138962
+     I              MAALEF                          YYALEF                138962
+     I              MANBOP                          YYNBOP                138962
+     I              MATDVD                          YYTDVD                138962
+     I              MACOPD                          YYCOPD                138962
+     I              MATDDT                          YYTDDT                138962
+     I              MAEVDT                          YYEVDT                138962
+     I              MACPNB                          YYCPNB                138962
+     I              MASHMD                          YYSHMD                138962
+     I              MALTBS                          YYLTBS                138962
+     I              MAOCPV                          YYOCPV                138962
+     I              MANCPV                          YYNCPV                138962
+     I              MAONML                          YYONML                138962
+     I              MANNML                          YYNNML                138962
+     I              MACUPC                          YYCUPC                138962
+     I              MAEXPC                          YYEXPC                138962
+     I              MACLRD                          YYCLRD                138962
+     I              MACLRT                          YYCLRT                138962
+     I              MADLRD                          YYDLRD                138962
+     I              MADLRT                          YYDLRT                138962
+     I              MABLOS                          YYBLOS                138962
+     I              MABLOP                          YYBLOP                138962
+     I              MABFRD                          YYBFRD                138962
+     I              MABEND                          YYBEND                138962
+     I              MAREFO                          YYREFO                138962
+     I              MACONR                          YYCONR                138962
+     I              MADFNR                          YYDFNR                138962
+     I              MADFCP                          YYDFCP                138962
+     I              MADFSP                          YYDFSP                138962
+     I              MALREQ                          YYLREQ                138962
+     I              MALPRO                          YYLPRO                138962
+     I              MALTSI                          YYLTSI                138962
+     I              MASTAT                          YYSTAT                138962
+      *
+      **  Data Structure for compilation - Copyright insertion
+     ICPYR@$      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@$$
+      *
+      **  Data Structure for command string for QCMDEXC
+     ICMDTXT      DS                            240
+     I                                       81 160 CMDTX2                                    CPK014
+     I                                      161 240 CMDTX3                                    CPK014
+     I                                       12  20 @CJOB
+     I                                       14  19 @REF
+     I                                       20  20 @ACTI
+     I                                       72  77 @REFN
+     I                                       83  85 @BRCD
+     I                                       91  96 @DEPT
+      *
+     IRUNDAT    E DS
+      **  Standard Data Area Layout for System flags and Run Date
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IZMUSER      DS                             17
+      ** Data area ZMUSER
+     I                                       11  13 BVBRCD
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+     I                                      254 263 WUSER
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     ISDSTRD    E DSSDSTRDPD
+      ** Securites Trading ICD
+      *
+     IDSSDY     E DSDSSDY
+      ** Long Data Structure
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            MAIN   - Main Routine.                             *
+      *                                                               *
+      * CALLS      SRAUDT - Writes record to SECORFPD                 *
+      *            SRINIT - Program Initialisation                    *
+      *            SRPROC - Process records from SECORSPD             *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *ENTRY    PLIST                           ** Main **
+     C                     PARM           PBLKR   60
+     C                     PARM           PRETRN  1        Return code
+      *
+      **  Perform Initialisation
+      *
+     C                     EXSR SRINIT
+      *
+     C                     EXSR SRPROC
+      *
+     C                     EXSR SRAUDT
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRINIT - Program Initialisation                    *
+      *                                                               *
+      * CALLS      AOBANKR0 - Access Program for Bank Details         *
+      *            AOSTRDR0 - Access Program for Securities Trading   *
+      *            *PSSR  - Error routine                             *
+      *            SRAUDT   - Generates Audit report                  *
+      *                                                               *
+      * CALLED BY  MAIN   - Main routine                              *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR                           ** SRINIT **
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      WCPY   80
+      *
+      **  Initialise LDA field.
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SE7525'  DBPGM
+     C                     Z-ADD0         DBASE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBFILE
+     C                     OUT  LDA
+      *
+      **  Read in DTAARA/ZMUSER
+      *
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   ZMUSER
+      *
+      **  Read in DTAARA/RUNDAT
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      ** Access the Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD001       DBASE
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL'*FIRST'  DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **   Access to Securities Trading Data
+      *
+     C                     CALL 'AOSTRDR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST'  POPTN
+     C           SDSTRD    PARM SDSTRD    DSSDY
+      *
+      **   If Record not found
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD002       DBASE
+     C                     MOVE 'SDSTRDPD'DBFILE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           PBLKR     SETLLSECORSD0
+     C           PBLKR     READESECORSD0                 81
+      *
+     C           *IN81     IFEQ '1'
+     C                     EXSR SRAUDT
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRPROC - Process records from SECORSPD             *
+      *                                                               *
+      * CALLS      *PSSR  - Error routine                             *
+      *            SRCC   - Writes record to SECOCCPD                 *
+      *            SRREF  - Writes record from SECORSPD               *
+      *                                                               *
+      * CALLED BY  MAIN   - Main routine                              *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPROC    BEGSR                           ** SRPROC **
+      *
+     C           PBLKR     CHAINSECORBD0             80
+      *
+     C           *IN80     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD003       DBASE
+     C                     MOVEL'SECORBPD'DBFILE
+     C                     MOVELPBLKR     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           *LOVAL    SETLLSECORFPA
+     C                     READ SECORFPA            N    82
+      *
+     C           *IN82     IFEQ '1'
+     C                     MOVE 'D'       MXRECI
+     C                     Z-ADDBJRDNB    MXLCD
+     C                     MOVE 'I'       MXCHTP
+     C                     MOVE WUSER     MXLUID
+     C                     MOVE '000001'  MXCORF
+     C                     WRITESECORFP0
+     C                     COMIT
+     C                     ENDIF
+      *
+     C           PBLKR     SETLLSECORSD0
+     C           PBLKR     READESECORSD0                 81
+      *
+     C           *IN81     DOWEQ'0'
+      *
+     C                     EXSR SRREF
+      *
+     C                     EXSR SRCC
+      *
+      ** ALLOCATE CORPORATE REFERENCE USING SE7550
+     C                     EXSR SRCALL
+      *
+     C                     ADD  1         WTOTAL  50
+     C                     MOVE WCORF     NCCORF
+      *
+     C                     UPDATSECORSD0
+      *
+     C           PBLKR     READESECORSD0                 81
+     C                     ENDDO
+      *
+     C           PBLKR     CHAINSECORBD0             80
+     C                     MOVE 'L'       NBSTAT
+     C                     UPDATSECORBD0
+      *
+     C********** *LOVAL    SETLLSECORFPA                                  149787
+     C**********           READ SECORFPA                 82               149787
+     C********** *IN82     IFEQ '0'                                       149787
+     C**********           MOVE BJRDNB    MXLCD                           149787
+     C**********           MOVE WUSER     MXLUID                          149787
+     C**********           MOVE 'A'       MXCHTP                          149787
+     C**********           ADD  1         WNEXT                           149787
+     C**********                                                          149787
+     C**********           MOVE WNEXT     MXCORF                          149787
+     C**********           UPDATSECORFP0                                  149787
+     C**********           ENDIF                                          149787
+      *
+     C                     COMIT
+      *
+     C           *IN80     IFEQ '1'
+     C           *IN80     ANDEQ'0'
+     C                     WRITESECORSD0
+     C                     WRITESECORBD0
+     C                     READ SECOCCD0                 84
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRREF  - Writes record to SECORFPD                 *
+      *                                                               *
+      * CALLS      SRNEXT - Setup next available Reference number     *
+      *                                                               *
+      * CALLED BY  SRPROC - Process records from SECORSPD             *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRREF     BEGSR                           ** SRREF  **
+      *
+     C**********           EXSR SRNEXT                                    138962
+      *
+     C                     CLEARSECORFD0
+      *
+     C                     MOVE 'D'       MARECI
+     C                     Z-ADDBJRDNB    MALCD
+     C                     MOVE 'I'       MACHTP
+     C                     MOVE WUSER     MALUID
+     C**********           MOVE WCORF     MACORF                          138962
+     C                     MOVE NCOSEC    MASESN
+     C                     MOVE NBCOAT    MACOAT
+     C                     MOVE 'CC'      MAPTYP
+     C                     MOVE NBCOAN    MACOAN
+     C                     MOVE NBCOEX    MACOEX
+     C                     MOVE NBALEF    MAALEF
+     C                     Z-ADD1         MANBOP
+     C                     MOVE NBTDVD    MATDVD
+     C                     MOVE NBCOPD    MACOPD
+     C                     MOVE NBTDDT    MATDDT
+     C                     MOVE NBEVDT    MAEVDT
+     C                     MOVE 'N'       MALTBS
+     C*****                MOVE 'N'       MABLOS                          136933
+     C                     MOVE 'E'       MABLOS                          136933
+     C                     MOVE 'N'       MABLOP
+     C                     Z-ADDNBALEF    MABFRD                          136933
+     C           MABFRD    IFLE BJRDNB                                    136933
+     C           BJRDNB    ADD  1         MABFRD                          136933
+     C                     ENDIF                                          136933
+     C                     Z-ADD*HIVAL    MABEND                          136933
+     C                     MOVE 'N'       MAREFO
+     C                     MOVE 'N'       MALREQ
+     C                     MOVE 'N'       MALTSI
+      *  'I' OR 'L'  ???????????????????????????????????
+     C                     MOVE 'L'       MASTAT
+      *
+     C                     EXSR SRNEXT                                    138962
+     C                     MOVE WCORF     MACORF                          138962
+     C                     WRITESECORFD0
+      *                                                                   136933
+      **   ACCESS BLOCKING FILE WITH THE CORPORATE ACTION REFERENCE       136933
+     C           MACORF    CHAINSECOBKL2             89                   136933
+      *                                                                   136933
+      **   IF BLOCK EXISTS, REVERSE THE CURRENT BLOCKING RECORD           136933
+     C           *IN89     IFEQ '0'                        B*1            136933
+     C                     MOVE '*'       MURECI                          136933
+     C                     UPDATSECOBKD0                                  136933
+     C                     ENDIF                           E*1            136933
+      *                                                                   149983
+      **   ACCESS BLOCKING FILE WITH THE CORPORATE ACTION REFERENCE       149983
+     C           MACORF    CHAINSECOBKL2             89                   149983
+      *                                                                   149983
+      **   IF BLOCK EXISTS, REVERSE THE CURRENT BLOCKING RECORD           149983
+     C           *IN89     IFEQ '0'                        B*1            149983
+     C                     MOVE '*'       MURECI                          149983
+     C                     UPDATSECOBKD0                                  149983
+     C                     ENDIF                           E*1            149983
+      *                                                                   136933
+      **   CREATE THE NEW BLOCKING RECORD IF BLOCK POSITION 'E' OR'W'     136933
+     C           MABLOS    IFEQ 'E'                        B*1            136933
+     C           MABLOS    OREQ 'W'                                       136933
+     C                     MOVE 'D'       MURECI                          136933
+     C                     Z-ADDBJRDNB    MULCD                           136933
+     C                     MOVE 'I'       MUCHTP                          136933
+     C                     MOVE WUSER     MULUID                          136933
+     C                     MOVE BVBRCD    MUBRCD                          136933
+     C**********           Z-ADD*ZEROS    MUCNUM                                       136933 CSD027
+     C                     MOVE *BLANKS   MUCNUM                                              CSD027
+     C                     MOVE *BLANKS   MUPTFR                          136933
+     C                     MOVE 'P'       MUBLTY                          136933
+     C                     MOVE MASESN    MUSESN                          136933
+     C                     MOVE MABEND    MUBEDT                          136933
+     C                     Z-ADD*ZEROS    MUNOMB                          136933
+      *                                                                   136933
+     C                     MOVELMACOAT    WWBNAR  9                       136933
+     C                     MOVE MACORF    WWBNAR                          136933
+     C                     MOVELWWBNAR    MUBNAR                          136933
+      *                                                                   136933
+     C                     Z-ADD1         MUSEQN                          136933
+     C                     MOVE MABFRD    MUBSTT                          136933
+     C                     MOVE MABLOS    MUBEWI                          136933
+     C                     MOVE MACORF    MUCORF                          136933
+     C                     WRITESECOBKD0                                  136933
+     C                     MOVE 'S'       MUBLTY                          149983
+     C                     WRITESECOBKD0                                  149983
+     C                     ENDIF                           E*1            136933
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRNEXT - Setup next available Reference number     *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  SRREF  - Writes record to SECORFPD                 *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRNEXT    BEGSR                           ** SRNEXT **
+      *                                                                   138962
+     C           *LOVAL    SETLLSECORFPA                                  138962
+     C**********           READ SECORFPA            N    82        138962 149787
+     C                     READ SECORFPA                 82               149787
+      *
+      **   Setup next available Reference number
+      *
+     C                     MOVE MXCORF    WNEXT   60
+     C                     MOVE MXCORF    WCORF   6
+     C                     MOVE '0'       *IN80
+      *
+     C********** WCORF     CHAINSECORFD0             80                   138962
+     C           WCORF     CHAINSECORFD1             80                   138962
+      *
+     C           *IN80     DOWEQ'0'
+      *
+     C                     ADD  1         WNEXT
+     C                     MOVE WNEXT     WCORF
+      *
+     C********** WCORF     CHAINSECORFD0             80                   138962
+     C           WCORF     CHAINSECORFD1             80                   138962
+     C                     ENDDO
+      *                                                                   149787
+     C                     MOVE BJRDNB    MXLCD                           149787
+     C                     MOVE WUSER     MXLUID                          149787
+     C                     MOVE 'A'       MXCHTP                          149787
+     C                     ADD  1         WNEXT                           149787
+      *                                                                   149787
+     C                     MOVE WNEXT     MXCORF                          149787
+     C                     UPDATSECORFP0                                  149787
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRCC   - Writes record to SECOCCPD                 *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  SRPROC - Process records from SECORSPD             *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCC      BEGSR                           ** SRCC   **
+      *
+     C                     CLEARSECOCCD0
+      *
+     C                     MOVE 'D'       NARECI
+     C                     MOVE BJRDNB    NALCD
+     C                     MOVE 'I'       NACHTP
+     C                     MOVE WUSER     NALUID
+     C                     MOVE WCORF     NACORF
+     C                     MOVE NBNCCY    NANCCY
+     C                     MOVE NBNDCP    NANMDP
+     C                     MOVE NBVCCY    NAVCCY
+     C                     MOVE NCNSEC    NANSEC
+     C                     MOVE NBDMLT    NADMLT
+     C                     MOVE NBONSZ    NAONSZ
+     C                     MOVE NBNNSZ    NANNSZ
+     C                     MOVE NBRNDN    NARNDN
+     C                     MOVE NBRNDS    NARNDS
+     C                     MOVE NBCOMP    NACOMP
+     C                     MOVELNBTXT1    NATXT1
+     C                     MOVELNBTXT2    NATXT2
+     C                     MOVELNBTXT3    NATXT3
+     C                     MOVELNBTXT4    NATXT4
+     C                     MOVE PBLKR     NABLKR
+     C                     MOVE NBMRKI    NAMRKI                          135685
+      *
+     C                     WRITESECOCCD0
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRAUDT - Generates Audit Report                    *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Routine.                             *
+      *            SRINIT - Program Initialisation                    *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR                           ** SRAUDT **
+      *
+      **  If there is a DB Error, Output the DB Error Information.
+      *
+     C                     SELEC
+     C           *INU7     WHEQ '1'
+      *
+     C                     WRITESE7525A1
+     C                     WRITESE7525A2
+     C                     WRITESE7525A5
+     C                     WRITESE7525A6
+      *
+     C           *INU7     WHEQ '0'
+      *
+      **  Or, if no records read, Output "No Details" message.
+      *
+     C           WTOTAL    IFEQ 0
+      *
+     C                     WRITESE7525A1
+     C                     WRITESE7525A2
+     C                     WRITESE7525A4
+     C                     WRITESE7525A6
+      *
+     C                     ELSE
+      *
+     C                     MOVE WTOTAL    RRPROG
+     C                     WRITESE7525A1
+     C                     WRITESE7525A2
+     C                     WRITESE7525A3
+     C                     WRITESE7525A6
+      *
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+      **  End Program and Return.
+      *
+     C                     CLOSE*ALL
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRCALL - Calls SE7550 for automatic allocation     *
+      *                     processing                                *
+      *                                                               *
+      * CALLS      SE7550 - External program for automatic allocation *
+      *                     processing                                *
+      *                                                               *
+      * CALLED BY  SRPROC - Process records from SECORSPD             *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCALL    BEGSR                           ** SRCALL **
+      *
+     C           WKEY1     KLIST
+     C                     KFLD           WDSBA
+     C                     KFLD           WDDPT
+     C                     KFLD           WDSSC
+     C                     KFLD           WDDTE
+      *
+     C           WKEY2     KLIST
+     C                     KFLD           WDSBA
+     C                     KFLD           WDDPT
+     C                     KFLD           WDSSC
+     C                     KFLD           WDDTE2
+      *
+     C           *LOVAL    SETLLSEDPOHL0
+     C                     READ SEDPOHL0                 83
+      *
+     C           *IN83     IFEQ '0'
+      *
+     C                     MOVELDSBA      WDSBA   3
+     C**********           MOVELDDPT      WDDPT   60                                          CSD027
+     C                     MOVELDDPT      WDDPT   6                                           CSD027
+      *
+     C           *IN83     DOWEQ'0'
+      *
+     C                     MOVE MACOEX    WDDTE   50
+      *
+     C                     MOVE MASESN    WDSSC  10
+      *
+     C           WKEY1     SETGTSEDPOHL0
+      *
+     C                     READPSEDPOHL0                 83
+      *
+     C           *IN83     IFEQ '0'
+      *
+     C           DSSC      IFEQ WDSSC
+     C           DSBA      ANDEQWDSBA
+     C           DDPT      ANDEQWDDPT
+      *
+     C                     MOVE WDDPT     WDEPO   6
+      *
+     C                     MOVEL*BLANKS   CMDTXT
+     C***********          MOVEL*BLANKS   CMDTX1160                                           CPK014
+     C                     Z-ADD240       CMDLEN 155
+     C***********          MOVELCMD,1     CMDTX1                                              CPK014
+     C***********          MOVE CMD,2     CMDTX1                                              CPK014
+     C***********          MOVELCMDTX1    CMDTXT                                              CPK014
+     C***********          MOVE CMD,3     CMDTXT                                              CPK014
+     C                     MOVELCMD,1     CMDTXT                                              CPK014
+     C                     MOVELCMD,2     CMDTX2                                              CPK014
+     C                     MOVELCMD,3     CMDTX3                                              CPK014
+      *
+     C                     MOVELMACORF    @REF
+     C                     MOVEL'L'       @ACTI
+      *
+     C                     MOVELMACORF    @REFN
+     C                     MOVELWDSBA     @BRCD
+     C                     MOVELWDEPO     @DEPT
+      *
+     C                     CALL 'QCMDEXC'
+     C                     PARM           CMDTXT
+     C                     PARM           CMDLEN
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVEL*HIVAL    WDSSC
+     C                     MOVEL*HIVAL    WDDTE2  50
+      *
+     C           WKEY2     SETGTSEDPOHL0
+      *
+     C                     READ SEDPOHL0                 83
+      *
+     C           *IN83     IFEQ '0'
+     C                     MOVELDSBA      WDSBA
+     C                     MOVELDDPT      WDDPT
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            *PSSR  - Program Exception Error Routine.          *
+      *                                                               *
+      * CALLS      SRAUDT - Generates Audit report                    *
+      *                                                               *
+      * CALLED BY  SRINIT - Program initialisation                    *
+      *            SRPROC - Process records from SECORSPD             *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** PSSR **
+      *
+     C                     MOVE 'E'       PRETRN           Return code
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     MOVEL'SE7525'  DBPGM
+      *
+      ** Dump and return to the calling program
+      *
+     C                     MOVE '1'       *INLR
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     DUMP
+     C                     EXSR SRAUDT
+     C                     RETRN
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  CMD - CALL 'QCMDEXC' TO SBMJOB
+SBMJOB JOB(COnnnnnnx) JOBD(BULKTJOBD) RQSDTA('CALL PGM(SEC7550) PARM(''xxxxxx''
+''xxx'' ''xxxxxx'' ''  '' ''          '' ''  '' ''      '' ''    '')')
+MSGQ(MOPERQ) RTGDTA(*NONE) INLLIBL(*JOBD) USER(*JOBD) OUTQ(*JOBD)                             CSC023

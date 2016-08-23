@@ -1,0 +1,76 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Re-initialise objects')                      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000126 - Re-initialise objects                           */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2007           */
+/*                                                                   */
+/*       Last Amend No. CUP042 *RENAMED    Date 31Dec14              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Prev Amend No. CUP038  *CREATE    Date 29Mar07              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP042 - Changes for Bridge deliverable data split          */
+/*              - Renamed from SMC000032 and moved from the zone.    */
+/*       CUP038 - New implementation utility.                        */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&CMDLEN) TYPE(*DEC) LEN(15 5) VALUE(80)
+             DCL        VAR(&DTAARAA) TYPE(*CHAR) LEN(2000)
+ 
+/**********  DCLF       FILE(SMINZFPD)                                                 */ /*CUP042*/
+             DCLF       FILE(SMINZJW0)                                                    /*CUP042*/
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2007')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+INZ:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* Ignore logically deleted records. */                                                   /*CUP042*/
+             IF         COND(&IFDEL *EQ 'Y') THEN(DO)                                     /*CUP042*/
+                GOTO       CMDLBL(INZ)                                                    /*CUP042*/
+             ENDDO                                                                        /*CUP042*/
+ 
+/* Check if object is in the library list. */
+             CHKOBJ     OBJ(&IFOBJ) OBJTYPE(&IFTYPE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                GOTO       CMDLBL(INZ)
+             ENDDO
+ 
+/* If data area is not blank then do not initialise. */
+             IF         COND(&IFTYPE *EQ '*DTAARA') THEN(DO)
+                RTVDTAARA  DTAARA(&IFOBJ) RTNVAR(&DTAARAA)
+                IF         COND(&DTAARAA *NE ' ') THEN(DO)
+                   GOTO       CMDLBL(INZ)
+                ENDDO
+             ENDDO
+ 
+/* Perform action on file or data area. */
+             CALL       PGM(QCMDEXC) PARM(&IFCMD &CMDLEN)
+/* Monitor for file already containing data. */
+             MONMSG     MSGID(CPF3132)
+ 
+             GOTO       CMDLBL(INZ)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+ENDPGM:
+             ENDPGM

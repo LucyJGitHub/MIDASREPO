@@ -1,0 +1,299 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ABS ER IML Correction Amount Update')
+     H****************************************************************
+     H*                                                              *
+     H*          MIDAS ABS - EUROPEAN REPORTING                      *
+     H*                                                              *
+     H*        ERLU111  -  CORRECTION AMOUNT UPDATE                  *
+     H*                                                              *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+     H*                                                              *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027A            Date 12May06               *
+      *  Prev Amend No. CER001             Date 25Apr05               *
+      *                 CAD016 PT          Date 11Sep98               *
+      *                 ER_R10             Date 25Oct94               *
+     H*                 ERL441 PT              DATE 03OCT94          *
+     H*                 ERL421 PT  *CREATE     DATE 17AUG94          *
+     H*                                                              *
+     H****************************************************************
+     H*                                                              *
+      *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+     H*  CAD016 - ERLU111 MUST RUN AGAIN (RECOMPILED)                *
+     H*  ER_R10 - EUROPEAN REPORTING - LUXEMBOURG UPGRADE IN R10     *
+     H*         - ADD BRANCH CODE (R10 MULTIBRANCHING)               *
+     H*  ERL441 - TO SET CREDITOR BALANCE POSITIVE ON FILE           *
+     H*  ERL421 - WRITTEN TO UPDATE CORRECTION AMOUNTS FROM A/C      *
+     H*                                                              *
+     F*****************************************************************
+      /TITLE FUNCTION OF INDICATORS
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*  ===========================================                  *
+     F*                                                               *
+     F*   01      Main cycle reading.                                 *
+     F*   02      Key WECOAC in ACCNT not found.                      *
+     F*                                                               *
+     F*   81 - 83 DB ERROR                                            *
+     F*                                                               *
+     F*                                                               *
+     F*   SWITCHES USED IN PROGRAM                                    *
+     F*                                                               *
+     F*       U7         Database error                               *
+     F*       U8         Database error                               *
+     F*                                                               *
+     F**             *************************                        *
+     F**             ** INDICATORS NOT USED **                        *
+     F**             ** ------------------- **                        *
+     F**             *************************                        *
+     F**                                                              *
+     F**      ***************************************************     *
+     F**      * xx   xx   03   04   05   06   07   08   09   10 *     *
+     F**      * 11   12   13   14   15   16   17   18   19   20 *     *
+     F**      * 21   22   23   24   25   26   27   28   29   30 *     *
+     F**      * 31   32   33   34   35   36   37   38   39   40 *     *
+     F**      * 41   42   43   44   45   46   47   48   49   50 *     *
+     F**      * 51   52   53   54   55   56   57   58   59   60 *     *
+     F**      * 61   62   63   64   65   66   67   68   69   70 *     *
+     F**      * 71   72   73   74   75   76   77   78   79   80 *     *
+     F**      * xx   xx   xx   84   85   86   87   83   89   90 *     *
+     F**      * 91   92   93   94   95   96   97   98   99      *     *
+     F**      ***************************************************     *
+     F*****************************************************************
+      /TITLE SUBROUTINE INDEX
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*  ===============================                              *
+     F*                                                               *
+     F* MAIN     - Main processing.                                   *
+     F* #UPDAC   - Update file ACCNTBX6, field WECOAC.                *
+     F* *PSSR    - Error handling.                                    *
+     F*                                                               *
+     F*****************************************************************
+      /TITLE FILE DEFINITION
+     F*****************************************************************
+     F*                                                               *
+     F*  F I L E   D E F I N I T I O N                                *
+     F*  =============================                                *
+     F*                                                               *
+     F*
+     F* ER Audit Report
+     FERLU111AO   E                    PRINTER
+     F*
+     F* ICD Bank Details
+     FSDBANKPDIF  E                    DISK
+     F*
+     F* ER - Accounts Extension file
+     F**ACCNTBX6UF  E                    DISK         KINFSR *PSSR                            CER001
+     FREACX1PDUF  E                    DISK         KINFSR *PSSR                              CER001
+     F*
+     F* ER - Account Master
+     FACCNT   IF  E           K        DISK         KINFSR *PSSR
+     F*
+     F*****************************************************************
+      /TITLE E-SPECIFICATIONS
+     E*****************************************************************
+     E*
+     E                    CPY@    1   1 80                 COPYRIGHT STAT.
+     E*
+     E*****************************************************************
+      /TITLE FIELDS SPECIFICATIONS
+     I*****************************************************************
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     ILDA        UDS                            256
+     I                                      132 183 DBLOT
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I** DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I** Data structure to translate WECOAC to KEYAC for CHAIN oper.
+     I*
+     I            DS
+     I**********                              1  15 WECOAC                                    CER001
+     I                                        1  21 WECOAC                                    CER001
+     I**********                              1   60WCNUM                                    CSD027A
+     I                                        1   6 WCNUM                                    CSD027A
+     I                                        7   9 WCCY
+     I**********                             10  130WACOD                                     CER001
+     I                                       10  190WACOD                                     CER001
+     I**********                             14  150WACSQ                                     CER001
+     I                                       20  210WACSQ                                     CER001
+     I*
+     I*****************************************************************
+      /EJECT
+      *****************************************************************
+      /TITLE MAIN PROCESSING SPECIFICATIONS
+      *----------------------------------------------------------------
+      ***          M   A   I   N
+      *----------------------------------------------------------------
+      *
+      *  Initialization
+      *
+      *  Prepare LDA
+      *
+     C                     MOVEL*BLANKS   DBLOT
+     C                     MOVEL'ERLU111 'DBPGM
+     C*
+     C**  Get ICD Bank Details
+     C           1         SETLLSDBANKPD
+     C                     READ SDBANKPD                 81
+      *
+      *  DB ERROR
+      *
+     C           *IN81     IFEQ *ON
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           **DB ERROR 01**
+     C                     MOVEL'BANK'    DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      *  Key for ACCNT
+      *
+     C           KEYAC     KLIST
+     C                     KFLD           WCNUM
+     C                     KFLD           WCCY
+     C                     KFLD           WACOD
+     C                     KFLD           WACSQ
+     C                     KFLD           WBRCA                           ER_R10
+      *
+      *  First reading
+      *
+     C**********           READ ACCNTBX6               8101                                   CER001
+     C                     READ REACX1PD               8101                                   CER001
+      *
+      *  Main cycle
+      *
+     C           *IN01     DOWEQ*OFF
+      *
+      *  DB ERROR
+      *
+     C           *IN81     IFEQ *ON
+     C                     Z-ADD2         DBASE            ***************
+     C**********           MOVEL'ACCNTBX6'DBFILE           **DB ERROR 02**                    CER001
+     C                     MOVEL'REACX1PD'DBFILE           **DB ERROR 02**                    CER001
+     C                     MOVEL'READ'    DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      *  If Correction Amount not blank, update file ACCNTBX6
+      *
+     C           WECOAC    IFNE *BLANKS
+     C                     EXSR #UPDAC
+     C                     ENDIF
+      *
+      *  Next reading
+      *
+     C**********           READ ACCNTBX6               8101                                   CER001
+     C                     READ REACX1PD               8101                                   CER001
+      *
+      *  End of main cycle
+      *
+     C                     ENDDO
+     C*
+     C*  Write audit report
+     C                     WRITEHEADAU
+     C                     WRITEENDRPT
+      *
+     C                     SETON                       LR
+      *
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+      *
+      ***  #UPDAC   : Update ACCNTABX6.
+      ***  Called   : MAIN
+      ***  Calls    : *PSSR
+      *
+      *---------------------------------------------------------------*
+      *
+     C           #UPDAC    BEGSR
+      *
+      *  Find Corr. Account record in ACCNT
+      *
+     C                     MOVE *OFF      *IN02
+     C                     MOVE WECOBR    WBRCA   3                       ER_R10
+     C           KEYAC     CHAINACCNTABF             0282
+      *
+     C           *IN82     IFEQ *ON
+     C                     Z-ADD3         DBASE            ***************
+     C                     MOVEL'ACCNTABF'DBFILE           **DB ERROR 03**
+     C                     MOVEL'CHAIN'   DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      *  Update ACCNTBX6
+      *
+     C           *IN02     IFEQ *ON
+     C           RECI      ORNE 'D'
+     C           ACST      OREQ 'C'
+     C                     Z-ADD*ZERO     WECOAM
+     C                     ELSE
+     C           LDBL      IFGE *ZEROS                                    ERL441
+     C                     Z-ADDLDBL      WECOAM
+     C                     ELSE                                           ERL441
+     C                     Z-SUBLDBL      WECOAM                          ERL441
+     C                     ENDIF                                          ERL441
+     C                     ENDIF
+      *
+     C                     UPDATACCNTBF6               83
+      *
+     C           *IN83     IFEQ *ON
+     C                     Z-ADD4         DBASE            ***************
+     C**********           MOVEL'ACCNTBX6'DBFILE           **DB ERROR 04**                    CER001
+     C                     MOVEL'REACX1PD'DBFILE           **DB ERROR 04**                    CER001
+     C                     MOVEL'UPDAT'   DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+      *
+      ***  *PSSR    :
+      ***  Called   : MAIN, #UPDAC
+      ***  Calls    : none
+      *
+      *---------------------------------------------------------------*
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+      *
+      *  Write end database error details
+     C                     WRITEHEADAU
+     C                     WRITEERROR
+     C                     WRITEENDRPT
+      *
+      ***  Print DUMP and cancel program
+      *
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+     C*****************************************************************
+     C/EJECT
+      *===================================================================
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2005

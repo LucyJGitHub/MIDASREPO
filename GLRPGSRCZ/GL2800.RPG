@@ -1,0 +1,994 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Fontis Account Details Maintenance')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Midas-Fontis Interface                               *
+      *                                                               *
+      *  GL2800 - Fontis Account Details Maintenance                  *
+      *                                                               *
+      *  Function - To add, enquire and update details on the         *
+      *             Fontis Accounts File.                             *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. BUG2368            Date 30Apr04               *
+      *                 CSC022             Date 24Feb04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CGL004 *CREATE     Date 15Jan97               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG2368- Programs looking at wrong dataarea for CSC022       *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CGL004 - Midas-Fontis Interface                              *
+      *                                                               *
+     F*****************************************************************
+      *
+     FACCNT   IF  E           K        DISK
+     FGLFONAL0UF  E           K        DISK                      A
+     F                                              KCOMIT
+     F*
+     FGL2800DFCF  E                    WORKSTN
+     F*
+      *
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*  03 - CMD/03 key/ Exit requested                              *
+     F*  05 - CMD/05 key/ Refresh screen                              *
+     F*  12 - CMD/12 key/ Previous screen                             *
+     F*                                                               *
+     F*                                                               *
+     F*  29 - Protect fields when enquiry selected                    *
+     F*  30 - Error on input parameter validation                     *
+     F*  31 - Error in INFONA field                                   *
+     F*  32 - Error in INATVD field                                   *
+     F*  33 - Error in INDATV field                                   *
+     F*  34 - Error in INGN42 field                                   *
+     F*  35 - Error in INWD42 field                                   *
+     F*                                                               *
+     F*  50 - Error on Account Details validation                     *
+     F*                                                               *
+     F*  84 - Chain of ACCNT unsuccessful                             *
+     F*  85 - Chain of GLFONAL0 unsuccessful                          *
+     F*  89 - Error in write/update to file                           *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E     I N D E X                            *
+     F*                                                               *
+     F*  INIT  - Initial Processing                                   *
+     F*  DETL  - Detail Processing                                    *
+     F*  CLOSE - Closedown of program                                 *
+     F*  EXIT  - CMD/3 Processing                                     *
+     F*  PREV  - CMD/12 Processing                                    *
+     F*  PROCES- Detail Screen Processing                             *
+     F*  RESET - CMD/5 Processing                                     *
+     F*  SNDMSG- SEND PROGRAM MESSAGE                                 *
+     F*  UPDAT - Update Fontis Account Details                        *
+     F*  VLDT1 - Validate Fontis Account Details                      *
+     F*  VLDT2 - Validate Input parameters                            *
+     F*  ZDATE1- Format Date for output                               *
+     F*  ZDATE2- Format Date for output                               *
+     F*                                                               *
+     F*****************************************************************
+     E*
+     E                    CPY@    1   1 80
+     E** Array containing Copyright statement
+     E*
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR. ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR. ARRAY
+     E                    ZMNM   12  12  3               ZDATE SR. ARRAY
+      *                                                                                       CSC022
+      ** Array to hold commitment jobs name                                                   CSC022
+      *                                                                                       CSC022
+     E                    WCMT       10 10                                                    CSC022
+      *
+     IA@CPY       DS
+     I** Copyright Array
+     I*
+     I                                        1  80 CPY@
+      *
+     ILDA         DS
+      ** Local data area for database error details
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I            DS
+     I** Data Structure for Chaining LF/ACCNT
+     I*
+     I**********                              1  18 ACCNO                                     CGL029
+     I                                        1  24 ACCNO                                     CGL029
+     I                                        1   3 KBRCD
+     I**********                              4   90KCNUM                                     CSD027
+     I                                        4   9 KCNUM                                     CSD027
+     I                                       10  12 KCCY
+     I**********                             13  160KACOD                                     CGL029
+     I**********                             17  180KACSQ                                     CGL029
+     I                                       13  220KACOD                                     CGL029
+     I                                       23  240KACSQ                                     CGL029
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+      *
+     ISDBANK    E DSSDBANKPD
+      ** External DS for Bank Details
+      *
+      *
+     IDSFDY     E DSDSFDY
+      ** First DS for Access programs, Short Data Structure
+      *
+     ISCSARD    E DSSCSARDPD                                                                  CSC022
+      ** External DS for SAR Details                                                          CSC022
+      *                                                                                       CSC022
+     IWDSJOB    E DSSCCMTJOB                                                                  CSC022
+     I              COMITNUM                        WCMTNO                                    CSC022
+     I              COMITJOB1                       WJOB01                                    CSC022
+     I              COMITJOB2                       WJOB02                                    CSC022
+     I              COMITJOB3                       WJOB03                                    CSC022
+     I              COMITJOB4                       WJOB04                                    CSC022
+     I              COMITJOB5                       WJOB05                                    CSC022
+     I              COMITJOB6                       WJOB06                                    CSC022
+     I              COMITJOB7                       WJOB07                                    CSC022
+     I              COMITJOB8                       WJOB08                                    CSC022
+     I              COMITJOB9                       WJOB09                                    CSC022
+     I              COMITJOB10                      WJOB10                                    CSC022
+     I                                        4 103 WCJOBS                                    CSC022
+      ** Commitment Control dataarea                                                          CSC022
+      *                                                                                       CSC022
+      *
+      *****************************************************************
+      *                                                               *
+      *   M A I N   P R O C E S S I N G                               *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Parameter list
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+     C**********           PARM           ACNM   18                                           CGL029
+     C                     PARM           ACNM   24                                           CGL029
+     C                     PARM           ACTC    1
+      *
+      **  Initialise Data
+      *
+     C                     EXSR INIT
+      *
+      **  Detail Processing
+      *
+     C                     EXSR DETL
+      *
+      **  Closedown Processing
+      *
+     C                     EXSR CLOSE
+      *
+      *****************************************************************
+      /TITLE SR/INIT
+      *****************************************************************
+      *                                                               *
+      *  INIT - Subroutine for Program Initialisation                 *
+      *                                                               *
+      *  Called by:  Main Processing                                  *
+      *                                                               *
+      *  Calls:                                                       *
+      *  AOBANKR0 - Access Program                                    *
+      *  VLDT2                                                        *
+      *  CLOSE                                                        *
+      *  RESET                                                        *
+      *  *PSSR                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      ** Set up Copyright Parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Initialise LDA field
+      *
+     C                     MOVEL'GL2800'  DBPGM
+      *
+      ** Set on Message Subfile end indicator
+      *
+     C                     MOVE *ON       *IN10
+     C                     MOVE *ON       *IN11
+      *
+      ** Call Access Program for Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM 'DBERR  ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY             ************
+     C                     Z-ADD001       DBASE             * DBERR 001*
+     C                     EXSR *PSSR                       ************
+     C                     ENDIF
+      *
+      ** Access SAR details file to determine if CSC022 switchable feature                    CSC022
+      ** is switched on                                                                       CSC022
+      *                                                                                       CSC022
+     C                     MOVE 'N'       CSC022  1                                           CSC022
+     C                     MOVE 'N'       WCMTSK  1                                           CSC022
+      *                                                                                       CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   @RTCD                                               CSC022
+     C                     PARM '*VERIFY' @OPTN                                               CSC022
+     C                     PARM 'CSC022'  PSARD                                               CSC022
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSC022
+      *                                                                                       CSC022
+     C           @RTCD     IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022                                              CSC022
+     C                     MOVE 'N'       WCMTSK                                              CSC022
+      *                                                                                       CSC022
+     C                     IN   WDSJOB                                                        CSC022
+      *                                                                                       CSC022
+     C           WCMTNO    IFGT 0                                                             CSC022
+     C                     MOVEAWCJOBS    WCMT                                                CSC022
+     C                     Z-ADD1         I       20                                          CSC022
+      *                                                                                       CSC022
+     C           JOB       LOKUPWCMT,I                   51                                   CSC022
+     C           *IN50     IFEQ *ON                                                           CSC022
+     C                     MOVE 'Y'       WCMTSK                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+      *                                                                                       CSC022
+     C                     ELSE                                                               CSC022
+     C           @RTCD     IFNE '*NRF'                                                        CSC022
+     C           *LOCK     IN   LDA                                                           CSC022
+     C                     MOVEL'CSC022'  DBFILE                                              CSC022
+     C                     MOVEL'SCSARDPD'DBKEY                                               CSC022
+     C                     Z-ADD2         DBASE                                               CSC022
+     C                     OUT  LDA                                                           CSC022
+     C                     EXSR *PSSR                                                         CSC022
+     C                     ENDIF                                                              CSC022
+      *                                                                                       CSC022
+     C           *LIKE     DEFN SARN      PSARD                                               CSC022
+     C************NAMVAR   DEFN           WDSJOB                                       CSC022BUG2368
+     C           *NAMVAR   DEFN SCCMTJOB  WDSJOB                                             BUG2368
+     C           *NAMVAR   DEFN           LDA                                                 CSC022
+      *                                                                                       CSC022
+     C                     ENDIF                                                              CSC022
+      *                                                                                       CSC022
+     C           BJDFIN    COMP 'M'                      98
+      *
+      ** Validate input parameters
+      *
+     C                     EXSR VLDT2
+      *
+      ** Input Invalid, End program
+      *
+     C           *IN30     IFEQ *ON
+     C                     EXSR CLOSE
+     C                     ENDIF
+      *
+      ** Call Subroutine to set Fontis Details File
+      *
+     C                     EXSR RESET
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/DETL
+      *****************************************************************
+      *                                                               *
+      *  DETL - Subroutine for Detail Processing                      *
+      *                                                               *
+      *  Called by:  Main Processing                                  *
+      *                                                               *
+      *  Calls:                                                       *
+      *  ZA0250                                                       *
+      *  EXIT                                                         *
+      *  PREV                                                         *
+      *  RESET                                                        *
+      *  PROCES                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DETL      BEGSR
+      *
+      ** Continue to redisplay the screen if CMD/3 remains off
+      *
+     C           *IN03     DOUEQ'1'
+      *
+     C                     WRITE#MSGCTL
+     C                     EXFMTGL2800F0
+      *
+      ** Call External Program to clear Error messages
+      *
+     C                     CALL 'ZA0250'
+      *
+      ** Process responses
+      ** Exit Request
+     C           *IN03     CASEQ'1'       EXIT
+      ** Refresh Screen
+     C           *IN05     CASEQ'1'       RESET
+      ** Previous Screen
+     C           *IN12     CASEQ'1'       PREV
+      ** Detail Screen Processing
+     C                     CAS            PROCES
+     C                     ENDCS
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/CLOSE
+      *****************************************************************
+      *                                                               *
+      *  CLOSE - Subroutine for Closedown of program                  *
+      *                                                               *
+      *  Called by:  Main Processing                                  *
+      *              EXIT, PREV                                       *
+      *                                                               *
+      *  Calls: NONE                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CLOSE     BEGSR
+      *
+      ** Terminate the program
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/EXIT
+      *****************************************************************
+      *                                                               *
+      *  EXIT - Subroutine for CMD/3 processing                       *
+      *                                                               *
+      *  Called by:  DETL                                             *
+      *                                                               *
+      *  Calls: CLOSE                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           EXIT      BEGSR
+     C                     MOVE 'Y2U9999' W0RTN
+     C                     EXSR CLOSE
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/PREV
+      *****************************************************************
+      *                                                               *
+      *  PREV - Subroutine for CMD/12 processing                      *
+      *                                                               *
+      *  Called by:  DETL                                             *
+      *                                                               *
+      *  Calls: CLOSE                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PREV      BEGSR
+      *
+      **   Set F12 return code and end program
+      *
+     C                     MOVE 'USR0790' W0RTN
+     C                     EXSR CLOSE
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/PROCES
+      *****************************************************************
+      *                                                               *
+      *  PROCES- Subroutine to Process Detail Screen                  *
+      *                                                               *
+      *  Called by:  DETL                                             *
+      *                                                               *
+      *  Calls:                                                       *
+      *  CLOSE                                                        *
+      *  VLDT1                                                        *
+      *  UPDAT                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROCES    BEGSR
+      *
+      ** If the action code is Enquire then simply exit from program
+      *
+     C           ACTC      IFEQ 'E'
+     C                     EXSR CLOSE
+     C                     ENDIF
+      *
+      ** If action code is Insert or Amend, then call subroutine to
+      ** validate input
+      *
+     C           ACTC      IFEQ 'A'                        B001
+     C           ACTC      OREQ 'I'
+     C                     SETOF                     503132
+     C                     SETOF                     333435
+     C                     EXSR VLDT1
+      *
+      ** If input valid, update file GLFONAL0.
+      *
+     C           *IN50     IFEQ '0'                        B002
+     C                     EXSR UPDAT
+     C                     EXSR CLOSE
+      *
+      ** Input invalid, display error messages.
+      *
+     C                     ELSE                            X002
+     C                     WRITE#MSGCTL
+     C                     ENDIF                           E002
+      *
+     C                     ENDIF                           E001
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RESET
+      *****************************************************************
+      *                                                               *
+      *  RESET - Subroutine to reset Fontis Account Details           *
+      *                                                               *
+      *  Called by:  INIT, DETL                                       *
+      *                                                               *
+      *  Calls:                                                       *
+      *  ZDATE2                                                       *
+      *                                                               *
+      *****************************************************************
+     C           RESET     BEGSR
+      *
+      ** Set up Subfile fields
+      *
+     C                     TIME           INTIME
+     C                     MOVELUSER      INUSER
+     C                     MOVELWSID      INWSID
+     C                     MOVELBJMRDT    INRUNA
+     C                     MOVELACTC      INACTN
+     C                     MOVELKBRCD     INBRCA
+     C                     MOVELKCNUM     INCNUM
+     C                     MOVELKCCY      INCCY
+     C                     MOVELKACOD     INACOD
+     C                     MOVELKACSQ     INACSQ
+     C                     MOVELACNO      INACNO
+     C                     MOVELANAM      INANAM
+      *
+      ** Find account in Fontis Account details file
+      *
+     C           ACNM      CHAINGLFONAL0             85
+      *
+      ** If the account exists, set up fields for display
+      *
+     C           *IN85     IFEQ '0'                        B001
+      *
+     C                     MOVELF1FONA    INFONA
+      *
+     C           F1ATVD    IFEQ 0                          B002
+     C                     MOVE *BLANK    INATVD
+     C                     ELSE                            X002
+     C                     MOVE F1ATVD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     INATVD
+     C                     ENDIF                           E002
+      *
+     C           F1DATV    IFEQ 0                          B002
+     C                     MOVE *BLANK    INDATV
+     C                     ELSE                            X002
+     C                     MOVE F1DATV    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     INDATV
+     C                     ENDIF                           E002
+      *
+     C                     MOVELF1FNSQ    INFNSQ
+      *
+     C                     MOVE F1WD42    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     INWD42
+      *
+     C                     MOVELF1GN42    INGN42
+      *
+     C                     ELSE                            X001
+      *
+      ** If account does not exist, initialise screen fields for
+      ** insertion.
+      *
+     C                     MOVEL*BLANK    INFONA
+     C                     MOVEL*BLANK    INATVD
+     C                     MOVEL*BLANK    INDATV
+      *
+     C           ACTC      IFEQ 'I'                        B002
+     C                     MOVEL'00000'   INFNSQ
+     C                     ELSE                            X002
+     C                     MOVEL*BLANKS   INFNSQ
+     C                     ENDIF                           E001
+      *
+     C                     MOVEL*BLANK    INWD42
+     C                     MOVEL*BLANK    INGN42
+      *
+     C                     ENDIF                           E001
+      *
+      ** If action is enquiry, switch on indicator to protect fields.
+      *
+     C                     MOVE *OFF      *IN29
+      *
+     C           ACTC      IFEQ 'E'
+     C                     MOVE *ON       *IN29
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/SNDMSG
+      *****************************************************************
+      *                                                               *
+      *  SNDMSG- Subroutine to Update Fontis Account Details file     *
+      *                                                               *
+      *  Called by:  VLDT1                                            *
+      *                                                               *
+      *  Calls:                                                       *
+      *  Y2SNMGC                                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SNDMSG    BEGSR
+      *
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     ENDIF
+      *
+     C                     MOVEL'GLUSRMSG'ZAMSGF
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/UPDAT
+      *****************************************************************
+      *                                                               *
+      *  UPDAT - Subroutine to Update Fontis Account Details file     *
+      *                                                               *
+      *  Called by:  PROCES                                           *
+      *                                                               *
+      *  Calls:                                                       *
+      *  ZDATE1                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           UPDAT     BEGSR
+      *
+      ** If indicator 85 is on then no record currently exists
+      ** so write a new record, set up new fields.
+      *
+     C           *IN85     IFEQ '1'
+      *
+      ** If Electronic Banking enabled is blank, default to Y.
+      *
+     C           INFONA    IFEQ *BLANK
+     C                     MOVEL'Y'       INFONA
+     C                     ENDIF
+      *
+     C                     MOVE INFONA    F1FONA
+      *
+      ** If activation date entered, change to Midas Day No.
+      ** otherwise default to 0.
+      *
+     C           INATVD    IFNE *BLANK
+     C                     MOVE INATVD    ZDATE
+     C                     EXSR ZDATE1
+     C                     MOVE ZDAYNO    F1ATVD
+     C                     ELSE
+     C                     Z-ADD0         F1ATVD
+     C                     ENDIF
+      *
+      ** If De-activation date entered, change to Midas Day No.
+      ** otherwise default to 0.
+      *
+     C           INDATV    IFNE *BLANK
+     C                     MOVE INDATV    ZDATE
+     C                     EXSR ZDATE1
+     C                     MOVE ZDAYNO    F1DATV
+     C                     ELSE
+     C                     Z-ADD0         F1DATV
+     C                     ENDIF
+      *
+      ** If in Insert mode, then Last Fontis Sequence No. default
+      ** to 00000, otherwise keep screen value.
+      *
+     C           ACTC      IFEQ 'I'
+     C                     MOVE '00000'   F1FNSQ
+     C                     ELSE
+     C                     MOVE INFNSQ    F1FNSQ
+     C                     ENDIF
+      *
+      ** If Next MT942 date entered, then change to Midas Day No.
+      ** otherwise, default to next working day
+      *
+     C           INWD42    IFNE *BLANK
+     C                     MOVE INWD42    ZDATE
+     C                     EXSR ZDATE1
+     C                     MOVE ZDAYNO    F1WD42
+     C                     ELSE
+     C                     MOVE BJDNWD    F1WD42
+     C                     ENDIF
+      *
+      ** If Generate Interim Statement is blank default to Y.
+      *
+     C           INGN42    IFNE *BLANK
+     C                     MOVE INGN42    F1GN42
+     C                     ELSE
+     C                     MOVE 'Y'       F1GN42
+     C                     ENDIF
+      *
+     C                     MOVE ACNM      F1FULA
+      *
+      ** Write new record.
+      *
+     C                     WRITEGLFONAD0               89
+      *
+     C                     ELSE
+      *
+      ** Record currently exists so need to update
+      *
+      *
+      ** If Electronic Banking enabled is blank, default to Y.
+      *
+     C           INFONA    IFEQ *BLANK
+     C                     MOVEL'Y'       INFONA
+     C                     ENDIF
+      *
+     C                     MOVE INFONA    F1FONA
+      *
+      ** If activation date entered, change to Midas Day No.
+      ** otherwise default to 0.
+      *
+     C           INATVD    IFNE *BLANK
+     C                     MOVE INATVD    ZDATE
+     C                     EXSR ZDATE1
+     C                     MOVE ZDAYNO    F1ATVD
+     C                     ELSE
+     C                     Z-ADD0         F1ATVD
+     C                     ENDIF
+      *
+      ** If De-activation date entered, change to Midas Day No.
+      ** otherwise default to 0.
+      *
+     C           INDATV    IFNE *BLANK
+     C                     MOVE INDATV    ZDATE
+     C                     EXSR ZDATE1
+     C                     MOVE ZDAYNO    F1DATV
+     C                     ELSE
+     C                     Z-ADD0         F1DATV
+     C                     ENDIF
+      *
+      ** If in Insert mode, then Last Fontis Sequence No. default
+      ** to 00000, otherwise keep screen value.
+      *
+     C           ACTC      IFEQ 'I'
+     C                     MOVE '00000'   F1FNSQ
+     C                     ELSE
+     C                     MOVE INFNSQ    F1FNSQ
+     C                     ENDIF
+      *
+      ** If Next MT942 date entered, then change to Midas Day No.
+      ** otherwise, default to next working day
+      *
+     C           INWD42    IFNE *BLANK
+     C                     MOVE INWD42    ZDATE
+     C                     EXSR ZDATE1
+     C                     MOVE ZDAYNO    F1WD42
+     C                     ELSE
+     C                     MOVE BJDNWD    F1WD42
+     C                     ENDIF
+      *
+      ** If Generate Interim Statement is blank default to Y.
+      *
+     C           INGN42    IFNE *BLANK
+     C                     MOVE INGN42    F1GN42
+     C                     ELSE
+     C                     MOVE 'Y'       F1GN42
+     C                     ENDIF
+      *
+      ** Update record.
+      *
+     C                     UPDATGLFONAD0               89
+      *
+     C                     ENDIF
+      *
+     C           *IN89     IFEQ '1'
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C           CSC022    OREQ 'Y'                                                           CSC022
+     C           WCMTSK    ANDEQ'N'                                                           CSC022
+     C                     ROLBK
+     C                     ELSE                                                               CSC022
+     C                     SETON                     U7U8                                     CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ELSE
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C           CSC022    OREQ 'Y'                                                           CSC022
+     C           WCMTSK    ANDEQ'N'                                                           CSC022
+     C                     COMIT
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/VLDT1
+      *****************************************************************
+      *                                                               *
+      * VLDT1 - Subroutine to validate Fontis account details         *
+      *                                                               *
+      * Called by: PROCES                                             *
+      *                                                               *
+      * Calls:                                                        *
+      * ZDATE1                                                        *
+      * SNDMSG                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           VLDT1     BEGSR
+      *
+      ** Validate Electronic Banking enabled.
+      ** Field can not be blank.
+      *                                                    B001
+     C           INFONA    IFEQ *BLANK
+     C                     MOVE *ON       *IN31
+     C                     MOVE *ON       *IN50
+      * Send message,'*Field Mandatory'.
+     C                     MOVEL'USR0900' ZAMSID  7
+     C                     EXSR SNDMSG
+     C                     ENDIF                           E001
+      *
+      ** Electronic Banking Enabled field must be Y or N
+      *
+     C           INFONA    IFNE 'Y'                        B001
+     C           INFONA    ANDNE'N'
+     C           INFONA    ANDNE*BLANK
+     C                     MOVE *ON       *IN31
+     C                     MOVE *ON       *IN50
+      * Send message, '*Must be Y or N'.
+     C                     MOVEL'USR0901' ZAMSID
+     C                     EXSR SNDMSG
+     C                     ENDIF                           E001
+      *
+      ** Validate Fontis activation date
+      *
+     C           INATVD    IFNE *BLANKS                    B001
+      *
+     C                     MOVE INATVD    ZDATE
+     C                     EXSR ZDATE1
+     C                     MOVE ZDAYNO    ##ATVD  50
+      *
+      ** Invalid date.
+      *
+     C           *IN99     IFEQ '1'                        B002
+     C                     MOVE *ON       *IN32
+     C                     MOVE *ON       *IN50
+      * Send Message, '*Invalid date entered'
+     C                     MOVEL'USR0903' ZAMSID
+     C                     EXSR SNDMSG
+     C                     ENDIF                           E002
+      *
+     C                     ENDIF                           E001
+      *
+      ** Validate De-Activation date
+      *
+     C           INDATV    IFNE *BLANK                     B001
+      *
+     C                     MOVE INDATV    ZDATE
+     C                     EXSR ZDATE1
+     C                     MOVE ZDAYNO    ##DATV  50
+      *
+      ** Invalid date
+      *
+     C           *IN99     IFEQ '1'                        B002
+     C                     MOVE *ON       *IN50
+     C                     MOVE *ON       *IN33
+      * Send Message, '*Invalid date entered'
+     C                     MOVEL'USR0904' ZAMSID
+     C                     EXSR SNDMSG
+     C                     ENDIF                           E002
+      *
+      ** De-activation date must be after Activation date
+      *
+     C           ##DATV    IFLT ##ATVD                     B002
+     C                     MOVE *ON       *IN33
+     C                     MOVE *ON       *IN50
+      * Send Message, '*Date must be after Act. date'.
+     C                     MOVEL'USR0905' ZAMSID
+     C                     EXSR SNDMSG
+     C                     ENDIF                           E002
+      *
+     C                     ENDIF                           E001
+      *
+      ** Validate Generate Interim Statement.
+      ** Field can not be blank.
+      *
+     C           INGN42    IFEQ *BLANK                     B001
+     C                     MOVE *ON       *IN34
+     C                     MOVE *ON       *IN50
+      * Send Message, '*Mandatory field'
+     C                     MOVEL'USR0923' ZAMSID
+     C                     EXSR SNDMSG
+     C                     ENDIF                           E001
+      *
+      ** Field must contain Y or N.
+      *
+     C           INGN42    IFNE 'Y'                        B001
+     C           INGN42    ANDNE'N'
+     C           INGN42    ANDNE*BLANKS
+     C                     MOVE *ON       *IN34
+     C                     MOVE *ON       *IN50
+      * Send Message, '*Must be Y or N'
+     C                     MOVEL'USR0927' ZAMSID
+     C                     EXSR SNDMSG
+     C                     ENDIF                           E001
+      *
+      ** Validate Next Interim Statement Date
+      *
+     C           INWD42    IFNE *BLANKS                    B001
+     C                     MOVE INWD42    ZDATE
+     C                     EXSR ZDATE1
+     C                     MOVE ZDAYNO    ##WD42  50
+      *
+      ** Invalid date.
+      *
+     C           *IN99     IFEQ '1'                        B002
+     C                     MOVE *ON       *IN35
+     C                     MOVE *ON       *IN50
+      * Send message, '*Invalid Date.'
+     C                     MOVEL'USR0929' ZAMSID
+     C                     EXSR SNDMSG
+     C                     ENDIF                           E002
+      *
+      ** If Fontis enabled today, must be on or after
+      ** next working day.
+      *
+     C           ##ATVD    IFEQ BJRDNB                     B002
+     C           INGN42    ANDEQ'Y'
+      *
+     C           ##WD42    IFLT BJDNWD                     B003
+     C                     MOVE *ON       *IN35
+     C                     MOVE *ON       *IN50
+      *Send message, '*Must be on or after next working day.'
+     C                     MOVEL'USR0931' ZAMSID
+     C                     EXSR SNDMSG
+     C                     ENDIF                           E003
+      *
+     C                     ENDIF                           E002
+      *
+      ** Must be after Activation Date.
+      *
+     C           ##WD42    IFLT ##ATVD                     B003
+     C           INGN42    ANDEQ'Y'
+     C                     MOVE *ON       *IN35
+     C                     MOVE *ON       *IN50
+      *Send message, '*Must be after Activation Date.'
+     C                     MOVEL'USR0905' ZAMSID
+     C                     EXSR SNDMSG
+     C                     ENDIF                           E003
+      *
+     C                     ENDIF                           E001
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/VLDT2
+      *****************************************************************
+      *                                                               *
+      * VLDT2 - Subroutine to validate Input Parameters               *
+      *                                                               *
+      * Called by: INIT                                               *
+      *                                                               *
+      * Calls:                                                        *
+      * ZA0240                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           VLDT2     BEGSR
+      *
+     C                     MOVE *OFF      *IN30
+      *
+      ** If Action Code is not I,A,D or E, input invalid.
+      *
+     C           ACTC      IFNE 'I'
+     C           ACTC      ANDNE'A'
+     C           ACTC      ANDNE'D'
+     C           ACTC      ANDNE'E'
+     C                     MOVE *ON       *IN30
+     C                     MOVEL'USR0907' W0RTN
+     C                     ENDIF
+      *
+      ** Define key list for Chaining to LF/ACCNT
+      *
+     C           KACCNT    KLIST
+     C                     KFLD           KCNUM
+     C                     KFLD           KCCY
+     C                     KFLD           KACOD
+     C                     KFLD           KACSQ
+     C                     KFLD           KBRCD
+      *
+     C                     MOVE ACNM      ACCNO
+      *
+      ** Find valid account
+      *
+     C           KACCNT    CHAINACCNT                86
+      *
+      ** If Account does not exist output error message
+      *
+     C           *IN86     IFEQ '1'
+     C                     MOVE *ON       *IN30
+     C                     MOVEL'USR0908' W0RTN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      *
+      *****************************************************************
+      /TITLE SR/ZDATE2
+     C/COPY ZSRSRC,ZDATE2Z2
+      *
+      *****************************************************************
+      /TITLE SR/ZDATE1
+     C/COPY ZSRSRC,ZDATE1Z2
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+** CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  ZYDY - Years in Days Cumulative. Four Year Span
+0366073110961461
+**  ZMDY - Months in Days Cumulative through year
+000031059090120151181212243273304334365
+**  ZMNM - Months Short Names
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

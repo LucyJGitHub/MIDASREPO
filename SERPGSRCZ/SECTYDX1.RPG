@@ -1,0 +1,163 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE MT5xx to switch on feature S01401')           *
+      *****************************************************************
+      *                                                               *
+      *    Midas SECURITIES TRADING                                   *
+      *                                                               *
+      *    RPG/SECTYDX1 - SECURITIES EXTENDED FILE GENERATION         *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CRE073             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSE075             Date 17Nov05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CAS006             Date 21Jan03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSE031             Date 13Dec01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 15May01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSE023             Date 12Jul00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CAP137             Date 07Feb00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01401             DATE 29MAR93               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE075 - US Enhanced Treasury Upgrade to MidasPlus           *
+      *           (Recompile)                                         *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  CSE031 - Coupon Fixing for Floating Rate Notes.              *
+      *           Recompiled due to changes in SECTYD.                *
+      *  CSD006 - Market Data Feed (Recompile)                        *
+      *  CSE023 - Treaty Withholding Tax.                             *
+      *  CAP137 - Conversion of SE Security inputs into modular       *
+      *           structure to use as APIs (SECTYD)                   *
+      *    S01401 - The generation of MT500 SWIFT Messages if the     *
+      *             option is available.  NEW PROGRAM.                *
+      *                                                               *
+      *****************************************************************
+     FSECTYD  UF  E                    DISK
+     FINVTP   IF  E           K        DISK
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *    01     - SECTYD Chain/Read fail indicator                  *
+      *    02     - INVTP Chain/Read fail indicator                   *
+      *    03     - SECTYD Chain/Read end of file indicator           *
+      *    U7-U8  -  Data base                                        *
+      *    *INLR  -  End processing                                   *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INIT   - Process Insert                                      *
+      *                                                               *
+      *****************************************************************
+     E                    CPY@    1   1 80
+      /EJECT
+      *****************************************************************
+      ** RENAME DUPLICATE FIELDS
+      *
+     IINVTPDF
+     I              RECI                            VTRECI
+     I              LCD                             VTLCD
+     I              CHTP                            VTCHTP
+     I              TNLU                            VTTNLU
+      *
+     ILDA         DS                            256
+      *
+      * Data structure for data-bAse error processing.
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      /EJECT
+      *************************************************************************-
+      * Main processing                                               *
+      *************************************************************************-
+      *
+     C                     EXSR INIT
+      *
+     C           *IN01     DOWEQ*OFF
+      *
+     C           KINVTP    CHAININVTP                02
+     C           *IN02     IFEQ *ON
+      **   Prepare LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SECTYDX1'DBPGM
+     C                     Z-ADD02        DBASE            ************
+     C                     MOVEL'INVTP   'DBFILE           * DBER 002 *
+     C                     MOVELNMCY      DBKEY            ************
+     C                     MOVE SITP      DBKEY
+     C                     OUT  LDA
+     C                     SETON                     LRU7U8
+     C                     RETRN
+     C                     ENDIF
+      *
+     C           PROT      IFEQ '4'
+     C           PROT      OREQ '7'
+     C                     MOVE 'SHS'     SWTP
+     C                     ELSE
+     C                     MOVE 'MSC'     SWTP
+     C                     ENDIF
+     C                     MOVELDASR      ISIN
+      *
+     C                     UPDATSECTYDF
+      *
+     C                     READ SECTYD                   01
+     C                     ENDDO
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *****************************************************************
+      *  INIT - Routine to handle initial processing.                 *
+      *****************************************************************
+     C           INIT      BEGSR
+      **  Copyright Statement
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Access Investment Types
+     C           KINVTP    KLIST
+     C                     KFLD           NMCY
+     C                     KFLD           SITP
+      **   Prepare LDA
+     C           *NAMVAR   DEFN           LDA
+      *
+     C                     READ SECTYD                 0301
+      *
+     C           *IN03     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SECTYDX1'DBPGM
+     C                     Z-ADD01        DBASE            ************
+     C                     MOVEL'SECTYD  'DBFILE           * DBER 001 *
+     C                     MOVEL'        'DBKEY            ************
+     C                     OUT  LDA
+     C                     SETON                     LRU7U8
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,1538 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Trade Number Ranges Maintenance')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE0100 - TRADE NUMBER RANGES MAINTENANCE                     *
+     F*                                                               *
+     F*  Function: This program allows the review, amendment and      *
+     F*   (I/C)    deletion of Trade Number Ranges.                   *
+     F*                                                               *
+     F*  Called By: SEC02 - Input Cycle Processing                    *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      *  Last Amend No. 193754             Date 20Jun01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 104122             Date 08Apr97               *
+      *                 099443             Date 23Apr96               *
+     F*                 052254             DATE 07JAN94               *
+     F*                 E28796             DATE 29OCT90               *
+     F*                 S01117             DATE 29OCT90               *
+     F*                 S01199             DATE 01SEP89               *
+     F*                 E17169             DATE 17JUL89               *
+     F*                 E17172             DATE 19/04/89              *
+     F*                 S01158             DATE 05/05/88              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  193754 - FCOOB occurred due to amended deleted ranges.       *
+      *           Program should not allow further action on deleted  *
+      *           ranges. Also, SNTRN should only be validated on     *
+      *           Action Code 'A'.                                    *
+     F*  104122 - For amend, allow the update of the next available   *
+     F*           number.                                             *
+     F*  099443 - File Controls Out of Balance if insert over         *
+     F*           a deleted range. Use correct fields.                *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  E28796 - Program changed to compare numeric values of first  *
+     F*           and last range numbers instead of character values. *
+     F*  S01117 - MULTIBRANCHING                                      *
+     F*  S01199 -  Help System.                                    *   S01199
+     F*  E17169 - File Controls Out of Balance (SE0375).              *   E17169
+     F*  E17172 - Error Code 742 given if the Last Trade Number is    *   E17172
+     F*           not Greater Than the First Trade Number.            *   E17172
+     F*  S01158 - POST INCORPORATION DEVELOPMENT FIX.                 *   S01158
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F*SE0100FM**CF  F     231            WORKSTN                         S01117
+     FSE0100DFCF  F     231            WORKSTN
+     F*TABSE**IF* E           K        DISK                               S01117
+     F*********** TABLETAF                          KIGNORE               S01117
+     F*********** TABTB10F                          KIGNORE               S01117
+     F*********** TABTB11F                          KIGNORE               S01117
+     F*********** TABTB36F                          KIGNORE               S01117
+     F*********** TABTB40F                          KIGNORE               S01117
+     F*********** TABTE10F                          KIGNORE               S01117
+     F*********** TABTE20F                          KIGNORE               S01117
+     F*********** TABTG10F                          KIGNORE               S01117
+     F*********** TABTG20F                          KIGNORE               S01117
+     F*********** TABLETHF                          KIGNORE               S01117
+     F*********** TABLETJF                          KIGNORE               S01117
+     F*********** TABLETKF                          KIGNORE               S01117
+     F*********** TABLETLF                          KIGNORE               S01117
+     F*********** TABLETNF                          KIGNORE               S01117
+     F*********** TABLETPF                          KIGNORE               S01117
+     F*********** TABLETRF                          KIGNORE               S01117
+     F*********** TABLETXF                          KIGNORE               S01117
+     F*********** TABLET2F                          KIGNORE               S01117
+     F*********** TABLET3F                          KIGNORE               S01117
+     F*********** TABLET5F                          KIGNORE               S01117
+     FTNRAN   UF  E           K        DISK                      A
+     F                                              KCOMIT
+     F                                              KINFDS INFDS
+     F                                              KINFSR INFSR
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   01  - WRKSTN - INITIAL   SCREEN, CODE SF.                   *
+     F*   02  -        - INSERTION SCREEN, CODE SI.                   *
+     F*   03  -        - AMENDMENT SCREEN, CODE SA.                   *
+     F*   04  -        - DELETION  SCREEN, CODE SD.                   *
+     F*   05  -        - ENQUIRY   SCREEN, CODE SE.                   *
+     F*   06  -        - CATCHALL.                                    *
+     F****07**-*TABLE**-*ICD*1.*******                                *   S01117
+     F*   08  - TNRAN  - HEADER RECORD.                               *
+     F*   09  -        - DETAIL RECORD.                               *
+     F*   15  - FIRST CYCLE INDICATOR                                 *
+     F****16**-*WORKSTATION*READ*FAILURE/HELP*FACILITY*SELECTED********   S01199
+     F*   16  - WORKSTATION READ FAILURE                              *   S01199
+     F*                                                               *
+     F*   21  - FIRST OR ENQUIRE SCREEN READ                          *
+     F*                                                               *
+     F*   22  - WRKSTN-TRADE NUMBER RANGE CODE IN ERROR               *
+     F*   23  - WRKSTN-TRADE NUMBER RANGE NAME BLANK.                 *
+     F*   24  - POSITION CURSOR AT 'LTIR' - LAST TRADE NO.            *
+     F*   25  - POSITION CURSOR AT 'FTIR' - FIRST TRADE NO.           *
+     F*   26  - GENERAL WORK IND.                                     *
+     F*   27  - ERROR RANGE                                           *
+     F*   28  - ERROR 1ST TRADE NO. FIELD                             *
+     F*   29  - ERROR LAST TRADE NO. FIELD                            *
+     F*   30  - 1ST TRADE NO. HAS BEEN CHANGED                        *
+     F*   31  - SKIP TO END OF SUBROUTINE WRITE                       *
+     F*   32  - ERROR MESSAGE FIELD BLANK                             *
+     F*   35  - NON-DISPLAY NEXT TRADE NO.                            *
+     F*                                                               *
+     F*   40  - PREVENT OUTPUT TO WORKSTN, OVERRIDEN BY 41.           *
+     F*   41  - OUTPUT INITIAL SCREEN, ID.SF, TO WORKSTN.             *
+     F*   42  - PASS INITIAL FIELDS FROM INPUT TO OUTPUT WORKSTN.     *
+     F*   43  - PASS OTHER FIELDS FROM INPUT TO OUTPUT WORKSTN.       *
+     F*   44  - PASS FIELDS FROM TRADE RANGE NUMBER RCD TO WORKSTN.   *
+     F*   48  - DELETED RANGE CODE (TODAY)                            *
+     F*   49  - OUTPUT TO TNRANABF TO RELEASE                         *
+     F*   50  - OUTPUT TO TNRANAAF TO RELEASE                         *
+     F*   52  - ACTION CODE IS 'I' - INSERTION.                       *
+     F*   53  - ACTION CODE IS 'A' - AMENDMENT.                       *
+     F*   54  - ACTION CODE IS 'D' - DELETION.                        *
+     F*   55  - ACTION CODE IS 'E' - ENQUIRY.                         *
+     F*   56  - ACTION CODE NOT I, A, D OR E, ERROR.                  *
+     F*   60  - INVALID KEY                                           *
+     F*   61  - TNRAN DETAIL - ACTIVE                                 *
+     F*   62  - TNRAN DETAIL - DELETED                                *
+     F*   63  - OFF = ALLOW DELETE                                    *
+     F*   64  - ND KEY FIELDS SCREEN 2                                *
+     F*                                                               *
+     F*  EXCEPTION OUTPUT/UPDATE INDICATORS ARE-                      *
+     F*   71  - UPDATE TNRAN DETAIL RECORD.                           *
+     F*   72  - UPDATE TNRAN HEADER RECORD.                           *
+     F*   75  - CHAIN TO TNRAN FILE FAILED IF ON.                     *
+     F****76**-*CHAIN*TO*TABLE*FILE*FAILED*IF*ON.                     *   S01117
+     F*                                                               *
+     F*   79  - RECORD UPDATED BY ANOTHER WORKSTATION.                *
+     F*                                                               *
+     F*   80  - IF ACTION/TRADE NUMBER RANGE CODES ARE VALID, PROTECT *
+     F*         THESE FIELDS ON SCREEN AND OUTPUT NEW SCREEN ID.      *
+     F*   81  - NOT USED                                              *
+     F*   82  - PROTECT TRADE NUMBER RANGE NAME & LAST TRAD NO.       *
+     F*   83  - ERROR CODE LINE IS NON-DISPLAY IF ON.                 *
+     F*   84  - ERROR MESSAGE LINE IS NON DISPLAY IF ON.              *
+     F*   85  - PROTECT FIRST TRADE NO. RANGE                         *
+     F*   86  - WRITE FIRST SCREEN                                    *
+     F*   87  - WRITE SECOND SCREEN                                   *
+     F*   98  - ZSYSTM, DATE FORMAT MMDDYY IF ON.                     *
+     F****98**-*ZSYSTM,*DATE*FORMAT*MMDDYY*IF*ON.                     *   S01117
+     F*   98  - DATE FORMAT MMDDYY IF ON.                             *   S01117
+     F****99**-*ZSYSTM,*INSTALLATION*CONTROL*DATA*RECORD*NOT*FOUND.   *   S01117
+     F*   99  - ZSYSTM, INSTALLATION CONTROL DATA RECORD NOT FOUND.   *
+     F*                                                               *
+     F*   KJ  - F/10 DELETE RECORD REQUEST, VALID IF DELETE SCREEN.   *
+     F*   KL  - F/12 INITIAL SCREEN REQUEST.                          *
+     F*   KC  - F/3  END OF PROGRAM REQUEST.                          *
+     F*                                                               *
+     F* U7 U8 - DATABASE ERROR, REQUIRED RECORDS NOT FOUND.           *
+     F*         N.B. U7 & U8 END THE PROGRAM AND CONDITION            *
+     F*         FOLLOWING CL EXECUTION.                               *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E                    ERRMSG  1   9 47               ERROR MESSAGES
+     E                    ERCD       10  4               ERROR CODE OUTPUT
+     E                    STRT       99  6 0             START RANGE TRADE
+     E                    ENDR       99  6 0             END RANGE TRADE
+     E                    RNGE       99  2 0             RANGE NOS. ARRAY
+     E/COPY ZSRSRC,ZALIGNZ1
+      /EJECT
+     I*
+     I**  WORKSTATION FILE.
+     I*
+     I***********SE0100FMNS  01   1 CS   2 CF                             S01117
+     ISE0100DFNS  01   1 CS   2 CF                                        S01117
+     I                                        1   2 SCID
+     I                                        3   4 SRANG           23
+     I                                        5   5 ACTCD
+     I***********                             1  52 LOTSCN                104122
+     I                                        1  58 LOTSCN                104122
+     I        NS  02   1 CS   2 CI
+     I       OR   03   1 CS   2 CA
+     I       OR   04   1 CS   2 CD
+     I       OR   05   1 CS   2 CE
+     I                                        1   2 SCID
+     I                                        3   8 SFTIR
+     I                                        9  14 SLTIR
+     I***********                            15  49 SDESC                 104122
+     I***********                            50  51 SRANG           23    104122
+     I***********                            52  52 ACTCD                 104122
+     I***********                             1  52 LOTSCN                104122
+     I                                       15  20 SNTRN                 104122
+     I                                       21  55 SDESC                 104122
+     I                                       56  57 SRANG           23    104122
+     I                                       58  58 ACTCD                 104122
+     I                                        1  58 LOTSCN                104122
+     I*
+     I**  CATCHALL.
+     I*
+     I        NS  06
+     I*TABTB10F****07***                                                  S01117
+     I******************                                                  S01117
+     I****TABLE*FILE*-*ICD*1.******************************************   S01117
+     I******************                                                  S01117
+     ITNRANAAF    08
+     I*
+     I**  TNRAN FILE - HEADER.
+     I*
+     I              RECI                            RECIA
+     I              RECT                            RECTA
+     I              RANG                            RANGA
+     ITNRANABF    09
+     I*
+     I**  TNRAN FILE - DETAIL.
+     I*
+     I              RECI                            RECIB
+     I              RECT                            RECTB
+     I              RANG                            RANGB
+     I              LCD                             LCDB
+     I              CHTP                            CHTPB
+     I              TNLU                            TNLUB
+     I            DS
+     I*
+     I**  DATA STRUCTURE FOR TNRANAAF
+     I*
+     I                                        1   1 RECIA
+     I                                        2   30RECTA
+     I                                       12  130RANGA
+     I                                       14  180NORE1
+     I                                       19  230NOIN
+     I                                       24  270NAMD
+     I                                       29  330NODE
+     I                                    P  34  360LCD
+     I                                       37  37 CHTP
+     I                                    P  38  400TNLU
+     I                                        1  40 LOTAA
+     I*
+     I**   DATA STRUCTURE FOR TNRANABF
+     I*
+     I            DS
+     I                                        1   1 RECIB
+     I                                        2   30RECTB
+     I                                       12  130RANGB
+     I                                       14  190FTIR
+     I                                       20  250LTIR
+     I                                       26  60 DESC
+     I                                       61  660NTRN
+     I                                    P  67  690LCDB
+     I                                       70  70 CHTPB
+     I                                    P  71  730TNLUB
+     I                                       67  73 LSTC
+     I                                    P  74  760LCDS
+     I                                       77  77 CHTPS
+     I                                    P  78  800TNLUS
+     I                                       74  80 LSTCS
+     I                                        1  73 LOTAB
+     I*
+     I**      DATA STRUCTURE FOR TNRAN KEY
+     I*
+     I            DS
+     I                                        1   20RECT
+     I                                       11  120TKEY
+     I                                        1  12 TNRKDS
+     I*
+     I**      PROGRAM STATUS DATA STRUCTURE.
+     I*
+     IPSDS       SDS
+     I                                      244 246 WSID
+     I                                      245 246 WSID2
+     I                                      254 263 USRID
+     I*
+     I**      LOCAL DATA AREA
+     I*
+     I** *LOCK IN LDA immediately before and OUT LDA immediately          S01117
+     I** after each database error handling.                              S01117
+     I*                                                                   S01117
+     I*DA********UDS                            256                       S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*
+     I**  DATA STRUCTURE  TO UPDATE LAST TRANSACTION NUMBER DTAARA
+     I*
+     I/COPY ZSRSRC,ZTNLU1Z1
+     IINFDS       DS
+     I                                     *STATUS  STATUS
+     I*
+     I**  DATA STRUCTURE TO PROVIDE TEXT ON COMIT ENTRY IN JOURNAL
+     ICMTTXT      DS
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  25 ACTCD
+     I                                       26  35 USRIDX
+     I                                       51  62 TNRKDX
+     I***********                            63 114 LOTSCN                104122
+     I                                       63 120 LOTSCN                104122
+     I*
+     I** DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I** DATA AREA RUNDAT                                                 S01117
+     IRUNDT       DS                                                      S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     I*                                                                   S01117
+     I** DATA AREA OF MENU USER                                           S01117
+     IZMUSER      DS                             17                       S01117
+     I*                                                                   S01117
+     I                                       11  13 USRBCH                S01117
+      *                                                                   S01117
+     C/EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+     C           STATUS    IFEQ 01021
+     C                     Z-ADD0         STATUS
+     C                     GOTO INFTAG
+     C                     END
+     C*
+     C**  START OF CYCLE
+     C*
+     C           START     TAG                             *** START ***
+     C*
+     C                     SETOF                     010203
+     C                     SETOF                     040506
+     C*
+     C*****READ*WORKSTATION*FILE*/*HELP*FACILITY***********************   S01199
+     C**  READ WORKSTATION FILE IF FIRST TIME THROUGH                     S01199
+     C*
+     C           *IN15     IFEQ '1'
+     C           *IN16     DOUEQ'0'
+     C***********          READ SE0100FM                 16               S01117
+     C                     READ SE0100DF                 16               S01117
+     C************IN16     IFEQ '1'                                       S01199
+     C************         MOVEAERCD      HERCD 160                       S01199
+     C************         MOVEL'SE0100'  HBPGM   6                       S01199
+     C************         CALL 'MHELP'                                   S01199
+     C************         PARM           HBPGM                           S01199
+     C************         PARM           HERCD                           S01199
+     C************         END                                            S01199
+     C                     END
+     C                     GOTO ENDFC
+     C                     END
+     C*
+     C** FIRST CYCLE ONLY CALCULATIONS.
+     C*
+     C                     SETOF                     31
+     C*
+     C   15                GOTO ENDFC
+     C                     SETON                     15
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANKS   DBLOT                           S01117
+     C                     MOVE 'SE0100  'DBPGM
+     C                     OUT  LDA                                       S01117
+     C*
+     C*                                                                   S01117
+     C** IN THE DATAAREA RUNDAT                                           S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C*                                                                   S01117
+     C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.                    S01117
+     C*                                                                   S01117
+     C           DATF      COMP 'M'                      98               S01117
+     C*                                                                   S01117
+     C** IN THE DATAAREA ZMUSER                                           S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN           ZMUSER                          S01117
+     C                     IN   ZMUSER                                    S01117
+     C*                                                                   S01117
+     C***GET*INSTALLATION*CONTROL*DATA*RECORD*AND*RELEASE.****************S01117
+     C***********                                                         S01117
+     C***********          EXSR ZSYSTM                                    S01117
+     C**N99******          GOTO ENDZSY                                    S01117
+     C***********                                                         S01117
+     C***********          SETON                     U7U8LR               S01117
+     C***********          MOVE 'TABLE'   DBFILE           ***************S01117
+     C***********          MOVELZTABKY    DBKEY            * DB ERROR 01 *S01117
+     C***********          Z-ADD01        DBASE            ***************S01117
+     C***********          GOTO ENDD                                      S01117
+     C***********                                                         S01117
+     C***********ENDZSY    TAG                             *** ENDZSY *** S01117
+     C*
+     C** SETUP BLANK AND ZERO FIELDS.
+     C*
+     C                     MOVE ' '       BLANKS150
+     C                     MOVE ' '       BLNK16 16
+     C                     Z-ADD0         ZERO05  50
+     C*
+     C           ENDFC     TAG                             ** ENDFC TAG **
+     C*
+     C** RESET INDICATORS.
+     C*
+     C                     SETOF                     404142
+     C                     SETOF                     434455
+     C                     SETOF                     567922
+     C                     SETOF                     80  82
+     C                     SETOF                     282957
+     C                     SETOF                     606566
+     C*
+     C                     SETON                     8384
+     C                     SETOF                     48
+     C                     MOVE '0'       *IN36                           104122
+     C*
+     C** CLEAR ERROR OUTPUT AREA AND WORKFIELD.
+     C*
+     C                     MOVE BLANKS    ERCD
+     C                     MOVE BLANKS    ERMSG
+     C                     Z-ADD0         S       20
+     C*
+     C** SET FIRST OR ENQUIRE INDICATOR
+     C*
+     C                     SETOF                     21
+     C   01
+     COR 05                SETON                     21
+     C*
+     C**  RESET LAST UPDATE DATA FIELDS FOR NEW TRANSACTION.
+     C*
+     C   21                Z-ADD0         LCDS
+     C   21                MOVE ' '       CHTPS
+     C   21                Z-ADD0         TNLUS
+     C*
+     C**  HANDLE INPUT AND TAKE APPROPRIATE ACTION.
+     C*
+     C**  COMMAND KEY TESTS, SET WRKSTN CONTROL INDS IF NEEDED.
+     C*
+     C   KC                SETON                     40
+     C   KC                GOTO ENDD                       END OF JOB
+     C*
+     C   KL                GOTO SFOUT                      SCREEN SF REQ.
+     C*                                                    SCREEN
+     C*
+     C   KJ 04             GOTO UDLOG                      DELETE RECORD
+     C*
+     C**  INVALID KEY OR INVALID COMAND KEY FOR SCREEN TYPE TESTS
+     C*
+     C   04
+     COR KJN04             SETON                     4243
+     C   42                SETOF                     842223
+     C   42                SETOF                     2425
+     C   42N02N03          SETON                     8085
+     C   42N02N03          SETON                     82
+     C   42                SETON                     646331
+     C   42                SETON                     87
+     C   42 04             SETOF                     63
+     C   42 04             SETON                     8285
+     C   42                MOVE ERRMSG,4  ERMSG  47
+     C   42 04             MOVE ERRMSG,5  ERMSG
+     C   42                GOTO SCNOUT
+     C*
+     C**  ACTION SCREEN TYPE.
+     C*
+     C   21                GOTO INITAL
+     C   02
+     COR 03                GOTO INSAMD
+     C*
+     C**   FIRST CYCLE BLANK SCREEN,             OR F/12 INPUT,
+     C**   OUTPUT INITIAL SCREEN, ID SF.
+     C*
+     C           SFOUT     TAG                             ** SFOUT TAG **
+     C   KL 23             SETOF                     23
+     C                     SETON                     4041
+     C                     SETON                     823585
+     C                     SETOF                     2524
+     C*
+     C                     Z-ADD0         FTIRL
+     C                     Z-ADD0         LTIRL
+     C*
+     C                     GOTO SCNOUT
+     C*
+     C**  HANDLE INITIAL SCREEN, TYPE SF OR 'SE' SCREEN
+     C*
+     C           INITAL    TAG                             ** INITAL TAG *
+     C*
+     C**  VALIDATE ACTION CODE.
+     C*
+     C                     SETOF                     27
+     C                     SETOF                     535455
+     C           ACTCD     COMP 'I'                  565652  INSERT
+     C   56      ACTCD     COMP 'A'                  565653  AMEND
+     C   56      ACTCD     COMP 'D'                  565654  DELETE
+     C   56      ACTCD     COMP 'E'                  565655  ENQUIRY
+     C*                                                                   S01117
+     C           *IN56     IFEQ '0'                                       S01117
+     C*                                                                   S01117
+     C**  IF SINGLE BRANCH ENVIRONMENT                                    S01117
+     C*                                                                   S01117
+     C           MBIN      IFNE 'Y'                                       S01117
+     C                     CALL 'ZVACTU'                                  S01117
+     C                     PARM ACTCD     @ZACTN  1                       S01117
+     C                     PARM           @ERR    10                      S01117
+     C**                                                                  S01117
+     C           @ERR      IFNE *ZERO                                     S01117
+     C                     ADD  1         S                               S01117
+     C                     MOVE '303'     ERCD,S                          S01117
+     C                     SETOF                     8384                 S01117
+     C                     SETON                     42  82               S01117
+     C                     SETON                     85                   S01117
+     C                     GOTO SCNOUT                                    S01117
+     C                     END                                            S01117
+     C                     ELSE                                           S01117
+     C*                                                                   S01117
+     C**   IF MULTIBRANCHING ENVIRONMENT                                  S01117
+     C*                                                                   S01117
+     C                     CALL 'ZVACTBU'                                 S01117
+     C                     PARM ACTCD     @ZACTN  1                       S01117
+     C                     PARM USRBCH    @ZBR    3                       S01117
+     C                     PARM           @ERR    10                      S01117
+     C**                                                                  S01117
+     C           @ERR      IFNE *ZERO                                     S01117
+     C                     ADD  1         S                               S01117
+     C                     MOVE '304'     ERCD,S                          S01117
+     C                     SETOF                     8384                 S01117
+     C                     SETON                     42  82               S01117
+     C                     SETON                     85                   S01117
+     C                     GOTO SCNOUT                                    S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C****SET*ERROR*CODE,MESSAGE*&*WORKSTATION*CONTROL*INDICATORS         S01117
+     C***********                                                         S01117
+     C**N56******          GOTO RANGV                                     S01117
+     C***********          SETOF                     8384                 S01117
+     C***********          SETON                     42  82               S01117
+     C***********          SETON                     85                   S01117
+     C*
+     C**   VALIDATE TRADE RANGE NUMBER CODE - ENSURE NUMERIC
+     C*
+     C           RANGV     TAG                             ** RANGV TAG **
+     C*
+     C   52 23             GOTO INSBLK
+     C   56      SRANG     COMP '  '                     57
+     C   57                GOTO RANGER
+     C                     MOVE BLNK16    ZFIELD
+     C                     MOVE SRANG     ZFIELD
+     C                     Z-ADD2         ZADIG
+     C                     Z-ADD0         ZADEC
+     C                     EXSR ZALIGN
+     C  N99                MOVE ZFIELD    VRANG   20
+     C  N99      VRANG     COMP 0                        99
+     C   99                SETON                     6022
+     C*
+     C**  AT THIS POINT IF THERE IS AN ERROR EITHER IN THE RANGE
+     C**  CODE OR THE ACTION CODE, THEN NO FURTHER VALIDATION IS
+     C**  POSSIBLE.
+     C*
+     C   22
+     COR 56                GOTO RANGER
+     C*
+     C**  PROCESSING FOR ACTION CODE  = 'I' AND RANGE CODE NON-BLANK
+     C*
+     C  N52                GOTO RANGV2
+     C*
+     C**  CHAIN TO TNRAN USING RANGE NUMBER INPUT, RELEASE IF FOUND
+     C*
+     C                     Z-ADDVRANG     TKEY    20
+     C                     EXSR TNRCHN
+     C  N75 09             SETON                     49
+     C  N75 08             SETON                     50
+     C  N75                EXSR EXCPTN
+     C*
+     C**  CHECK FOR A LIVE RANGE ALREADY ON FILE
+     C*
+     C  N75 61             SETON                     65
+     C  N75 61             GOTO RANGER
+     C   75                GOTO SFOK
+     C*
+     C**  HAVE CHAINED TO A DELETED RECORD
+     C**  IS RANGE DELETED TODAY ?
+     C*
+     C           LCDB      COMP RUND                 48  48
+     C   48                GOTO RANGER
+     C                     GOTO SFOK
+     C*
+     C** PROCESSING FOR ACTION CODE 'I' AND RANGE CODE BLANK.
+     C*
+     C           INSBLK    TAG                             ** INSBLK TAG *
+     C                     SETOF                     23
+     C                     Z-ADD1         NRNO    30
+     C           CHNAGN    TAG                             ** CHNAGN **
+     C                     Z-ADDNRNO      TKEY
+     C                     EXSR TNRCHN
+     C  N75 08             SETON                     50
+     C  N75 09             SETON                     49
+     C  N75                EXSR EXCPTN
+     C*
+     C**  FOUND AN UNUSED RANGE NUMBER ?
+     C*
+     C   75                Z-ADDNRNO      VRANG
+     C   75                MOVE NRNO      SRANG
+     C   75                GOTO SFOK
+     C   61                GOTO ADDONE
+     C*
+     C**  RANGE DELETED TODAY ?
+     C*
+     C           LCDB      COMP RUND                   50
+     C   50                Z-ADDNRNO      VRANG
+     C   50                MOVE NRNO      SRANG
+     C   50                GOTO SFOK
+     C           ADDONE    TAG                             ** ADDONE TAG *
+     C           NRNO      ADD  1         NRNO
+     C           NRNO      COMP 100                      27
+     C   27                GOTO RANGER
+     C                     GOTO CHNAGN
+     C*
+     C**  DETERMINE IF AMEND/DELETE/ENQUIRY NOT ON FILE
+     C**   OR IF THE RANGE HAS BEEN DELETED TODAY
+     C*
+     C           RANGV2    TAG                             ** RANGV2 TAG *
+     C                     Z-ADDVRANG     TKEY
+     C                     EXSR TNRCHN
+     C  N75 08             SETON                     50
+     C  N75 09             SETON                     49    RELEASE FILE IF
+     C  N75                EXSR EXCPTN                     RECORD FOUND
+     C*
+     C**  IF NO RECORD FOUND, THIS IS AN ERROR
+     C*
+     C   75                SETON                     66
+     C   75                GOTO RANGER
+     C*
+     C**  CHECK IF RANGE DELETED TODAY
+     C*
+     C   62      LCDB      COMP RUND                 48  48
+     C   62 48             GOTO RANGER
+      *                                                                                       193754
+      ** If range deleted, then no further action should be allowed.                          193754
+      *                                                                                       193754
+     C           *IN62     IFEQ '1'                                                           193754
+     C           *IN53     IFEQ '1'                                                           193754
+     C           *IN54     OREQ '1'                                                           193754
+     C           *IN55     OREQ '1'                                                           193754
+     C                     GOTO RANGER                                                        193754
+     C                     ENDIF                                                              193754
+     C                     ENDIF                                                              193754
+     C*
+     C   61
+     COR 62N48             Z-ADDNTRN      VNTRN   60
+     C   61
+     COR 62N48             MOVE LOTAB     LOTABS 73
+     C   61
+     COR 62N48             GOTO SFOK
+     C*
+     C           RANGER    TAG                             ** RANGER TAG *
+     C*
+     C**  SET ERROR CODE,MESSAGE AND WRITTEN CONTROL INDICATORS
+     C*
+     C           S         ADD  1         S
+     C***66*****           MOVE '004'     ERCD,S                                              193754
+     C***66*****           MOVE ERRMSG,2  ERMSG            NOT FOUND                          193754
+     C           *IN62     IFEQ '1'                                                           193754
+     C           *IN53     ANDEQ'1'                                                           193754
+     C           *IN62     OREQ '1'                                                           193754
+     C           *IN54     ANDEQ'1'                                                           193754
+     C           *IN62     OREQ '1'                                                           193754
+     C           *IN55     ANDEQ'1'                                                           193754
+     C           *IN66     OREQ '1'                                                           193754
+     C                     MOVE '004'     ERCD,S                                              193754
+     C                     MOVE ERRMSG,2  ERMSG            NOT FOUND                          193754
+     C                     ENDIF                                                              193754
+     C*
+     C   65                MOVE '003'     ERCD,S
+     C   65                MOVE ERRMSG,3  ERMSG            ALREADY ON FILE
+     C*
+     C   52 27             MOVE '731'     ERCD,S
+     C   52 27             MOVE ERRMSG,7  ERMSG            RANGE FULL
+     C*
+     C   48                MOVE '732'     ERCD,S
+     C   48                MOVE ERRMSG,8  ERMSG            RANGE DELTD. TDY.
+     C*
+     C   60 22             MOVE '733'     ERCD,S
+     C   60 22             MOVE ERRMSG,9  ERMSG            RANGE CODE
+     C*
+     C   56 22   S         ADD  1         S
+     C   56                MOVE '002'     ERCD,S
+     C   56      ERMSG     COMP *BLANK                   32
+     C   56 32             MOVE ERRMSG,1  ERMSG
+     C*
+     C                     SETON                     42  82
+     C                     SETON                     85
+     C                     SETOF                     8384
+     C   27
+     COR 48                SETON                     22
+     C   65
+     COR 66                SETON                     56
+     C                     GOTO SCNOUT
+     C*
+     C**  VALID ACTION CODE,TRADE NUMBER RANGE CODE
+     C*
+     C           SFOK      TAG                             ** SFOK TAG **
+     C*
+     C**  STORE THE CONTENTS OF THE RECORD
+     C*
+     C                     SETOF                     50
+     C   61                MOVE FTIR      FTIRL   60
+     C   61                MOVE LTIR      LTIRL   60
+     C   61                MOVE NTRN      WNTRN   60                      104122
+     C*
+     C                     SETOF                     852425
+     C  N52                SETOF                     35
+     C*
+     C** IF AMENDMENT AND NEXT AVAILABLE TRADE NO. NOT EQUAL TO FIRST TRADE
+     C** NO. PROTECT FIRST TRADE NO.
+     C*
+     C   53      VNTRN     COMP FTIR                 8585
+     C   53 85             SETON                     24    POSITION
+     C   53N85             SETON                     25       ''
+     C*                                                       ''
+     C  N53                SETON                     25    CURSOR
+     C*
+     C**  SAVE LAST UPDATE DATA, USING DATA STRUCTURE.
+     C*
+     C   61                MOVE LSTC      LSTCS
+     C*
+     C**  SET WRKSTN CONTROL INDICATORS.
+     C*
+     C                     SETON                     4280
+     C  N52                SETON                     44
+     C  N52N53             SETON                     8285
+     C                     SETOF                     232829
+     C                     GOTO SCNOUT
+     C*
+     C**  HANDLE INSERTIONS AND AMENDMENTS.
+     C*
+     C           INSAMD    TAG                             ** INSAMD TAG *
+     C*
+     C**  LOAD RANGE ARRAYS
+     C*
+     C                     EXSR LOAD
+     C*
+     C                     SETOF                     30
+     C*
+     C**  VALIDATE FIRST TRADE NO. IN RANGE
+     C*
+     C**  IF 'AMEND' AND
+     C**  'SFTIR' ON I/P EQ THE PREVIOUS 'SFTIR' ON O/P
+     C**  THEN BYPASS CHECKS FOR  FIRST TRADE NO. RANGE
+     C*
+     C   03                MOVE SFTIR     SFTIRN  60
+     C   03      SFTIRN    COMP FTIRL                    26
+     C   03 26             Z-ADDSFTIRN    VFTIR
+     C   03 26             GOTO FCHEND
+     C*
+     C**  CHECK SFTIR IS NUMERIC
+     C*
+     C                     SETOF                     28
+     C                     MOVE BLNK16    ZFIELD
+     C                     MOVE SFTIR     ZFIELD
+     C                     Z-ADD6         ZADIG
+     C                     Z-ADD0         ZADEC
+     C                     EXSR ZALIGN
+     C  N99                MOVE ZFIELD    VFTIR   60
+     C   99                SETON                     28
+     C  N28      VFTIR     COMP 000000                   99 OR EQUAL TO
+     C  N28N99   VFTIR     COMP 999999                   99 ZERO OR 999999
+     C  N28 99             SETON                     28
+     C*
+     C   28      S         ADD  1         S
+     C   28                MOVE '734'     ERCD,S
+     C   28                GOTO FCHEND
+     C*
+     C**  IF 'VFTIR' IS IN A RANGE  -  ERROR
+     C**  IF 'AMEND' AND WITHIN ITS OWN RANGE - OK
+     C*
+     C           FRANGE    TAG                             ** FRANGE **
+     C                     Z-ADDVFTIR     RTRAD
+     C                     EXSR RNGCHK
+     C   27 03   VRANG     COMP RNGE,Y               2727
+     C   27      S         ADD  1         S
+     C*
+     C   27 03             MOVE '737'     ERCD,S
+     C   27 02             MOVE '736'     ERCD,S
+     C   27                SETON                     28    R.I.  'FDELS'
+     C*
+     C  N28 03             SETON                     30
+     C*
+     C           FCHEND    TAG                             ** FCHEND TAG**
+     C*
+     C**  VALIDATE LAST TRADE NUMBER IN RANGE.
+     C*
+     C**   IF 'AMEND' AND
+     C**   'SLTIR' ON I/P EQ THE PREVIOUS 'SLTIR' ON O/P
+     C**   THEN BYPASS REST OF CHECKS
+     C*
+     C   03                MOVE SLTIR     SLTIRN  60
+     C   03                MOVE SNTRN     WNTRN1  60                      104122
+     C   03      SLTIRN    COMP LTIRL                    26
+     C   03 26   WNTRN1    COMP WNTRN                    26               104122
+     C   03 26             Z-ADDSLTIRN    VLTIR
+     C   03 26             Z-ADDWNTRN1    VNTRN                           104122
+     C   03 26             GOTO LCHEND
+     C*
+     C**   MUST BE NUMERIC
+     C*
+     C                     SETOF                     29
+     C                     MOVE BLNK16    ZFIELD
+     C                     MOVE SLTIR     ZFIELD
+     C                     Z-ADD6         ZADIG
+     C                     Z-ADD0         ZADEC
+     C                     EXSR ZALIGN
+     C  N99                MOVE ZFIELD    VLTIR   60
+     C   99                SETON                     29
+     C*
+     C  N29      VLTIR     COMP 000000                   99 OR EQUAL TO
+     C  N29N99   VLTIR     COMP 999999                   99 ZERO OR 999
+     C  N29 99             SETON                     29
+     C*
+     C   29      S         ADD  1         S
+     C   29                MOVE '735'     ERCD,S
+     C   29                GOTO LCHEND
+      *                                                                                       193754
+      ** Skip validation if Action Code is not 'A'.                                           193754
+      *                                                                                       193754
+     C  N03                GOTO LRANGE                                                        193754
+     C*                                                                   104122
+     C** SNTRN must be numeric.                                           104122
+     C*                                                                   104122
+     C                     MOVE '0'       *IN36                           104122
+     C                     MOVE BLNK16    ZFIELD                          104122
+     C                     MOVE SNTRN     ZFIELD                          104122
+     C                     Z-ADD6         ZADIG                           104122
+     C                     Z-ADD0         ZADEC                           104122
+     C                     EXSR ZALIGN                                    104122
+     C  N99                MOVE ZFIELD    WSNTRN  60                      104122
+     C   99                MOVE '1'       *IN36                           104122
+     C*                                                                   104122
+     C** Check if the screen value is equal to '000000'.                  104122
+     C*                                                                   104122
+     C           *IN36     IFNE '1'                                       104122
+     C           WSNTRN    ANDEQ0                                         104122
+     C                     MOVE '1'       *IN36                           104122
+     C                     ENDIF                                          104122
+     C*                                                                   104122
+     C** Error if not numeric or equal to '000000'.                       104122
+     C*                                                                   104122
+     C   36                ADD  1         S                               104122
+     C   36                MOVE '743'     ERCD,S                          104122
+     C   36                GOTO LCHEND                                    104122
+     C*                                                                   104122
+     C** Check if there is a change in the screen and the file values.    104122
+     C*                                                                   104122
+     C           WSNTRN    IFNE VNTRN                                     104122
+     C                     Z-ADDWSNTRN    VNTRN                           104122
+     C                     ENDIF                                          104122
+     C*                                                                   104122
+     C** Check if the next available no. is greater than the first        104122
+     C** trade no. in range.                                              104122
+     C*                                                                   104122
+     C           FTIRL     IFGT VNTRN                                     104122
+     C                     ADD  1         S                               104122
+     C                     MOVE '744'     ERCD,S                          104122
+     C                     MOVE '1'       *IN36                           104122
+     C                     GOTO LCHEND                                    104122
+     C                     ENDIF                                          104122
+     C*
+     C**  IF AMEND, MUST BE GREATER THAN NEXT AVAILABLE NO. ON
+     C**  RANGE RECORD.
+     C*
+     C  N03                GOTO LRANGE                     NOT AMEND
+     C*
+     C                     MOVE '0'       *IN36                           104122
+     C           VLTIR     COMP VNTRN                  29
+     C   29      S         ADD  1         S
+     C   29                MOVE '738'     ERCD,S
+     C   29                ADD  1         S                               104122
+     C   29                MOVE '745'     ERCD,S                          104122
+     C   29                MOVE '1'       *IN36                           104122
+     C   29                GOTO LCHEND
+     C*
+     C**   IF 'VLTIR' IS IN A RANGE  -  ERROR
+     C**   IF 'AMEND' AND WITHIN ITS OWN RANGE - OK
+     C*
+     C           LRANGE    TAG                             ** LRANGE **
+     C                     Z-ADDVLTIR     RTRAD   60
+     C                     EXSR RNGCHK
+     C   27 03   VRANG     COMP RNGE,Y               2727
+     C   27      S         ADD  1         S
+     C   27 03             MOVE '740'     ERCD,S
+     C   27 02             MOVE '739'     ERCD,S
+     C   27                SETON                     29    R.I.  'LDEL'
+     C*
+     C           LCHEND    TAG                             ** LCHEND TAG**
+     C*
+     C**  IF AN ERROR ON 'LTIR' OR 'FTIR' THEN BYPASS
+     C**  OVERLAPPING RANGE CHECK
+     C*
+     C   36                                                               104122
+     COR 28                                                               104122
+     C***28*****                                                          104122
+     COR 29                GOTO ERRCHK
+     C*
+     C**CHECK*TO*SEE*IF*LAST*TRADE*NO.*IS*GE*FIRST*TRADE*NO.              E17172
+     C**  CHECK TO SEE IF LAST TRADE NO. IS > FIRST TRADE NO.             E17172
+     C*
+     C***********SLTIR     COMP SFTIR                  29  -ERROR IF LESS E17172
+     C***********SLTIR     COMP SFTIR                  2929-ERROR IFE17172 SE001
+     C           VLTIR     COMP VFTIR                  2929-ERROR IF LESS  SE001
+     C   29      S         ADD  1         S
+     C   29                MOVE '742'     ERCD,S
+     C   29                GOTO ERRCHK
+     C*
+     C**  IF 'AMEND' AND 'FTIR' & 'LTIR' BOTH
+     C**  UNCHANGED - BYPASS FURTHER CHECKS
+     C*
+     C   03      VLTIR     COMP LTIRL                    26
+     C   03 26   VFTIR     COMP FTIRL                    26
+     C   03 26             GOTO ERRCHK
+     C*
+     C**  THIS SECTION OF CODE IS TO CHECK THAT 'VLTIR' AND 'VFTIR'
+     C**  DO NOT SPAN ANOTHER RANGE
+     C**    IE.... START AND END NOS. OF EVERY OTHER RANGE
+     C**      ARE EITHER BOTH LESS  OR  BOTH GREATER THAN
+     C**       'VFTIR'  OR  'VLTIR'
+     C*
+     C                     Z-ADD1         Y
+     C           LOOP2     TAG                             **LOOP THRU
+     C                     SETOF                     2627
+     C           Y         COMP X                    26     * ARRAY ENTRYS
+     C*
+     C   26                GOTO ENDL2                       *
+     C*
+     C**  IF OWN RANGE BYPASS
+     C*
+     C           RNGE,Y    COMP VRANG                    26
+     C   26                GOTO ENDIF
+     C*
+     C*
+     C           STRT,Y    COMP VFTIR                  26
+     C   26      ENDR,Y    COMP VFTIR                  26
+     C*
+     C           STRT,Y    COMP VLTIR                27
+     C   27      ENDR,Y    COMP VLTIR                27
+     C*
+     C   26
+     COR 27                GOTO ENDIF
+     C*
+     C           S         ADD  1         S
+     C                     MOVE '741'     ERCD,S
+     C                     SETON                     2829
+     C           ENDIF     TAG                              * ENDIF TAG **
+     C           Y         ADD  1         Y
+     C  N28                GOTO LOOP2
+     C           ENDL2     TAG                              *ENDL2 TAG*
+     C*
+     C           ERRCHK    TAG                             *** ERRCHK ***
+     C*
+     C           S         COMP 0                        26-ANY ERRORS
+     C  N26                SETOF                     83
+     C  N26                SETON                     424380
+     C  N26                GOTO SCNOUT
+     C*
+     C*
+     C**  AMEND NEXT TRADE NO. OF THE RANGE
+     C*
+     C**   IF 'INSERT'... THEN SAME AS  'FTIR'... FIRST TRADE NO. RANGE
+     C*
+     C   02                Z-ADDVFTIR     VNTRN
+     C*
+     C**  IF 'AMEND' AND 'FTIR' CHANGED
+     C**  THEN SAME AS  'FTIR'
+     C*
+     C   03 30             Z-ADDVFTIR     VNTRN
+     C*
+     C**  CALCULATIONS TO UPDATE TABLE FILE.
+     C*
+     C           UDLOG     TAG                             ** UDLOG TAG **
+     C*
+     C**  IF A DATABASE ERROR IS FOUND INDICATORS
+     C**  ARE SET TO - REFLECT THE ERROR CONDITION, RELEASE
+     C**  FILES, RELEASE THE SCREEN AND TO END THE PROGRAM.
+     C*
+     C**  CHECK STATUS OF RECORD UNCHANGED.
+     C*
+     C                     Z-ADDVRANG     TKEY
+     C                     EXSR TNRCHN
+     C  N61                Z-ADD0         LCDB
+     C  N61                MOVE ' '       CHTPB
+     C  N61                Z-ADD0         TNLUB
+     C           LSTC      COMP LSTCS                7979
+     C*
+     C           INFTAG    TAG                             *** INFTAG ***
+     C  N79                GOTO RECOK
+     C*
+     C**  IF RECORD CHANGED, RELEASE FILES, SET ERROR MESSAGE,
+     C**  SET SCREEN CONTROL INDICATORS AND BYPASS.
+     C*
+     C     N75             SETON                     49
+     C                     SETON                     428082
+     C      61             SETON                     44
+     C                     SETOF                     242526
+     C                     SETOF                     84
+     C      03 61
+     COR    02 62          SETOF                     8582
+     C*
+     C**  SAVE LAST UPDATE DATA IF FURTHER ACTION ALLOWED
+     C*
+     C      61N02          MOVE LSTC      LSTCS
+     C                     EXSR EXCPTN
+     C                     MOVE ERRMSG,6  ERMSG
+     C*
+     C**  SWITCH SCREEN TO ENQUIRE
+     C*
+     C                     MOVE 'E'       OACT
+     C                     SETOF                     525354
+     C                     SETON                     554421
+     C                     SETON                     3163
+     C                     SETOF                     2264
+     C                     SETON                     878285
+     C                     GOTO SCNOUT
+     C           RECOK     TAG
+     C*
+     C**  OBTAIN LAST TRANSACTION NUMBER  AND SET UP STANDARD OUTPUT
+     C**  INFORMATION
+     C*
+     C                     EXSR ZTNLU1
+     C                     MOVE 'SE'      MDID    2
+     C                     MOVEL'SE0100'  PGMN    8
+     C                     MOVE WSID      WSIDX   3
+     C                     MOVE USRID     USRIDX 10
+     C                     MOVE TNRKDS    TNRKDX
+     C*
+     C**   UPDATE/ADD TNRAN FILE RECORD
+     C*
+     C                     Z-ADDVRANG     RANGB
+     C  N04                Z-ADDVFTIR     FTIR
+     C  N04                Z-ADDVLTIR     LTIR
+     C                     MOVE SDESC     DESC
+     C                     Z-ADDVNTRN     NTRN
+     C                     Z-ADDRUND      LCDB
+     C   52                MOVE 'I'       ACTCD
+     C   53                MOVE 'A'       ACTCD
+     C   54                MOVE 'D'       ACTCD
+     C                     MOVE ACTCD     CHTPB
+     C                     Z-ADDNATN      TNLUB
+     C   04                MOVE '*'       RECIB
+     C   02                MOVE 'D'       RECIB
+     C   02 75             Z-ADD00        RECTB
+     C                     SETON                     71
+     C                     MOVE '0'       *IN77                           099443
+     C           *IN02     IFEQ '1'                                       099443
+     C           *IN75     ANDEQ'0'                                       099443
+     C                     MOVE '1'       *IN77                           099443
+     C                     ENDIF                                          099443
+     C                     TIME           MTIME
+     C                     EXSR EXCPTN
+     C*
+     C**  GET TNRAN HEADER RECORD READY FOR UPDATE.
+     C*
+     C                     MOVE '00'      RECT
+     C                     Z-ADD00        TKEY
+     C           TNRKEY    CHAINTNRAN                75
+     C*
+     C**  IF HEADER NOT FOUND, DATABASE ERROR.
+     C*
+     C   08      RECIA     COMP 'H'                      08
+     C  N08                SETON                     U7U8
+     C  NU8                GOTO SKPDB4
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TNRAN'   DBFILE           ***************
+     C                     MOVELTNRKDS    DBKEY            * DB ERROR 04 *
+     C                     Z-ADD04        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     SETON                     504046
+     C                     EXSR EXCPTN
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENDD
+     C           SKPDB4    TAG
+     C*
+     C**  INCREMENT NO. & TYPE OF UPDATES.
+     C*
+     C                     MOVE LOTAA     LOTAAS 40
+     C           CHTPS     COMP 'I'                      17
+     C           CHTPS     COMP 'A'                      18
+     C   02      NOIN      ADD  1         NOIN
+     C   02      NORE1     ADD  1         NORE1
+     C   03N18   NAMD      ADD  1         NAMD
+     C   03 17   NOIN      SUB  1         NOIN
+     C***04*17** NOIN      SUB  1         NOIN                            S01158
+     C   04 17   NOIN      SUB  1         NOIN                            E17169
+     C   04 18   NAMD      SUB  1         NAMD
+     C   04      NODE      ADD  1         NODE
+     C***04******NORE1     SUB  1         NORE1                           S01158
+     C                     Z-ADDRUND      LCD
+     C                     MOVE 'A'       CHTP
+     C                     Z-ADDNATN      TNLU
+     C*                                                                   099443
+     C** If it was an update over a deleted record, then we need to       099443
+     C** subtract from the total no. of records (NORE1) and the no.       099443
+     C** of deleted records (NODE).                                       099443
+     C*                                                                   099443
+     C           *IN77     IFEQ '1'                                       099443
+     C                     SUB  1         NORE1                           099443
+     C                     SUB  1         NODE                            099443
+     C                     ENDIF                                          099443
+     C*
+     C**  UPDATE TNRAN HEADER
+     C*
+     C                     SETON                     72
+     C                     TIME           MTIME
+     C                     EXSR EXCPTN
+     C*
+     C*
+     C**  END COMMITMENT CYCLE
+     C*
+     C           CMTTXT    COMIT
+     C*
+     C**  OUTPUT INITIAL SCREEN
+     C*
+     C                     SETON                     4041
+     C                     SETON                     823585
+     C                     SETOF                     252422
+     C*
+     C                     Z-ADD0         FTIRL
+     C                     Z-ADD0         LTIRL
+     C*
+     C**  OBTAIN TIME FOR SCREEN DISPLAY.
+     C*
+     C           SCNOUT    TAG                             ** SCNOUT TAG *
+     C                     TIME           MTIME   60
+     C*
+     C           ENDD      TAG                             ** ENDD TAG **
+     C*
+     C**  RELEASE OF WORKSTATION TO END PROGRAM.
+     C*
+     C   KC
+     COR U8                SETON                     LR
+     C*
+      *================================================================
+      **  WRITE OUTPUT SCREEN AND RETURN TO TOP OF CYCLE, OR END      *
+      *                                                               *
+     C  NLR                EXSR WRITE
+     C  NLR                GOTO START
+      *                                                               *
+      *================================================================
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  WRITE - SR TO WRITE TO THE WORKSTATION                       *
+     C*  CALLED BY: MAIN                                              *
+     C*  CALLS: EXCPTN                                                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           WRITE     BEGSR                           *** WRITE ***
+     C*
+     C**  SET DISPLAY FILE INDICATORS
+     C*
+     C   52                SETON                     35
+     C  N52                SETOF                     35
+     C   31                GOTO WRIT01
+     C  N83
+     CORN84                GOTO WRIT00
+     C                     SETON                     63
+     C                     SETOF                     64
+     C   21 52 80          SETON                     64    INSERT
+     C   21 53 80          SETON                     64    AMEND
+     C   21 54 80          SETON                     64    DELETE
+     C   21 54 80          SETOF                     63    DELETE
+     C   21 55 80          SETOF                       2425ENQUIRE
+      *
+     C           WRIT00    TAG                             *** WRIT00 ***
+     C*
+     C**  SAVE KEY FIELDS IF NO ERROR
+     C*
+     C  N41 83 84          MOVE SRANG     ORANG   2
+     C  N41 83 84          MOVE ACTCD     OACT    1
+     C*
+     C**  IF 41 ON OR ERROR FROM 'SF' SCREEN, DISPLAY INITIAL SCREEN
+     C*
+     C   41
+     COR 01N83
+     COR 01N84             SETON                     86
+     C  N41N01
+     CORN41 83
+     CORN41 84             SETON                     87
+      *
+     C           WRIT01    TAG                             *** WRIT01 ***
+      *
+     C                     EXSR EXCPTN
+     C                     SETOF                     868731
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  RNGCHK -  CHECK WHETHER A TRADE NO. LIES WITHIN GIVEN RANGE  *
+     C*  CALLED BY: MAIN                                              *
+     C*                                                               *
+     C*  INPUT  - TRADE NO. 'RTRAD'                                   *
+     C*         - ARRAYS OF START & END NOS.FOR UP TO 99 RANGES -     *
+     C*           STRT, ENDR.                                         *
+     C*  OUTPUT - IND. 27 ON IF TRADE NO. WITHIN ONE OF THESE         *
+     C*           RANGES                                              *
+     C*                                                               *
+     C*****************************************************************
+      *
+     C           RNGCHK    BEGSR                           *** RNGCHK ***
+      *
+     C                     SETOF                     27
+     C                     Z-ADD1         Y
+      *
+      ***  Loop While Array entries not processed.
+      *
+     C           LOOP4     TAG                             *** LOOP4  ***
+      *
+     C           Y         COMP X                    26
+     C   26                GOTO ENDL4
+     C*
+     C**  IF 'RTRAD' NOT LT 'STRT,Y'
+     C*
+     C           RTRAD     COMP STRT,Y               26  26
+     C*
+     C**  AND IF 'RTRAD' LE 'ENDR,Y'
+     C*
+     C   26      RTRAD     COMP ENDR,Y                 2727
+     C*
+     C**   THEN ERROR SO QUIT
+     C*
+     C   27                GOTO ENDL4
+     C           Y         ADD  1         Y
+     C                     GOTO LOOP4
+      *
+     C           ENDL4     TAG                             *** ENDL4  ***
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  LOAD - SR TO LOAD 3 ARRAYS -                                 *
+     C*  CALLED BY: MAIN                                              *
+     C*  CALLS:     TNRCHN                                            *
+     C*                                                               *
+     C*         RNGE - RANGE NOS. FOR UP TO 99 RANGES.                *
+     C*         STRT - START OF EACH RANGE.                           *
+     C*         ENDR - END OF EACH RANGE.                             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           LOAD      BEGSR                           ***  LOAD  ***
+      *
+     C                     Z-ADD0         STRT
+     C                     Z-ADD0         ENDR
+     C                     Z-ADD0         RNGE
+     C                     Z-ADD1         X       30
+     C                     Z-ADD1         Y       30
+     C                     Z-ADD1         W       20
+     C*
+     C           LOOP1     TAG                             *** LOOP1  ***
+      *
+     C                     MOVE W         TKEY
+     C                     EXSR TNRCHN
+     C   61                MOVE FTIR      STRT,X
+     C   61                MOVE LTIR      ENDR,X
+     C   61                MOVE RANGB     RNGE,X
+     C   61      X         ADD  1         X
+     C           Y         ADD  1         Y
+     C           W         ADD  1         W
+     C           Y         COMP 99                     2626
+     C   26                GOTO LOOP1
+     C           X         SUB  1         X
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  TNRCHN  - SR TO RANDOM ACCESS TNRAN FILE                     *
+     C*  CALLED BY: MAIN, LOAD                                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           TNRCHN    BEGSR                           *** TNRCHN ***
+     C*
+     C**  KEY LIST FOR TNRAN
+     C*
+     C           TNRKEY    KLIST
+     C                     KFLD           RECT
+     C*                    KFLD           ZZZ004
+     C                     KFLD           ZZ008
+     C                     KFLD           TKEY
+     C*
+     C**  RESET INDICATORS.
+     C*
+     C                     SETOF                     080949
+     C                     SETOF                     6162
+     C                     MOVE '00'      RECT
+     C*
+     C**  RANDOM ACCESS TNRAN FILE BY KEY.
+     C*
+     C           TNRKEY    CHAINTNRAN                75    ON NOT THERE
+     C   09      RECIB     COMP 'D'                  626261
+     C           *IN62     IFEQ '1'                                       S01158
+     C           *IN52     ANDEQ'1'                                       S01158
+     C           RECIB     ANDEQ'*'                                       S01158
+     C           LCDB      COMP RUND                 626261               S01158
+     C                     END                                            S01158
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  EXCPTN - SR TO PERFORM EXCEPTION TIME OUTPUT                 *
+     C*              AND RESET EXCEPTION CONTROL INDICATORS.          *
+     C*  CALLED BY: MAIN, WRITE, DSERR                                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           EXCPTN    BEGSR                           *** EXCPTN ***
+     C*
+     C**  EXCEPTION OUTPUT.
+     C*
+     C                     EXCPT
+     C*
+     C**  RESET INDICATORS.
+     C*
+     C                     SETOF                     717249
+     C                     SETOF                     50
+     C*
+     C                     ENDSR
+     C*
+      *****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  DSERR -  SR TO SET INDICATORS TO RELEASE FILES AND WORKSTN   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           DSERR     BEGSR                           *** DSERR  ***
+     C*
+     C                     SETON                     4046
+     C  N78                SETON                     47
+     C                     EXSR EXCPTN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  FILE EXCEPTION / ERROR HANDLING SUBROUTINE                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           INFSR     BEGSR                           *** INFSR  ***
+     C*
+     C**  CHECK ERROR TYPE
+     C*
+     C           STATUS    IFEQ 01021
+     C*
+     C**  CHAIN FILE TO GET CURRENT DETAILS
+     C*
+     C           TNRKEY    CHAINTNRAN                75
+     C*
+     C           *IN75     IFEQ '0'
+     C                     MOVE '01021'   STATUS
+     C*
+     C**  ROLLBACK UPDATES ALREADY DONE
+     C*
+     C                     ROLBK
+     C*
+     C**  SET ON 'RECORD UPDATED BY ANOTHER WORKSTATION' INDICATOR
+     C*
+     C                     SETON                     79
+     C*
+     C**  RESET OTHER INDICATORS
+     C*
+     C                     SETOF                     717249
+     C                     SETOF                     50
+     C*
+     C                     MOVE '*DETC '  EXTTAG  6
+     C*
+     C                     ELSE
+     C*
+     C                     MOVE '*CANCL'  EXTTAG
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C                     MOVE '*CANCL'  EXTTAG
+     C                     END
+     C*
+     C                     ENDSREXTTAG
+     C*
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+     C*****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZALIGNZ2
+      /EJECT
+     C***/COPY*ZSRSRC,ZSYSTMZ1***                                         S01117
+      /EJECT
+     C/COPY ZSRSRC,ZTNLU1Z2
+     O/EJECT
+     O*
+     O**  OUTPUT TO WORK-STATION.
+     O*
+     O***********SE0100FME        86                                      S01117
+     OSE0100DFE        86                                                 S01117
+     O                                   K8 'SE0100F1'
+     O                                    2 'SF'
+     O                         RUNA       9
+     O                         MTIME     17 '  .  .  '
+     O                         WSID      20
+     O                         ERCD      60
+     O                         ERMSG    145
+     O                 42      SRANG    174
+     O                 01N83   SRANG    174
+     O                 42      ACTCD    175
+     O                 01N83   ACTCD    175
+     O        E        87
+     O                                   K8 'SE0100F2'
+     O                         SCID       2
+     O                 21 52 80           2 'SI'
+     O                 21 53 80           2 'SA'
+     O                 21 54 80           2 'SD'
+     O                 21 55 80           2 'SE'
+     O                         RUNA       9
+     O                         MTIME     17 '  .  .  '
+     O                         WSID      20
+     O                         ORANG     22
+     O                         OACT      23
+     O                 43      SFTIR     29
+     O                N83      SFTIR     29
+     O                 44      FTIR      29
+     O                 43      SLTIR     35
+     O                N83      SLTIR     35
+     O                 44      LTIR      35
+     O                N52      VNTRN     41
+     O                 44      NTRN      41
+     O                 36N29   SNTRN     41                               104122
+     O                 43      SDESC     76
+     O                N83      SDESC     76
+     O                 44      DESC      76
+     O                         ERCD     116
+     O                         ERMSG    201
+     O                 05N83   SRANG    230
+     O                 05N83   ACTCD    231
+     O*
+     O**   NB. ERCD & ERMSG ARE DISPLAYED AS 76 CHARACTERS ON SCREEN.
+     O*
+     O**   TNRAN FILE OUTPUT.
+     O*
+     O**   UPDATE TNRAN HEADER RECORD.
+     O*
+     OTNRANAAFE        72
+     O                         NORE1
+     O                         NOIN
+     O                         NAMD
+     O                         NODE
+     O                         LCD
+     O                         CHTP
+     O                         TNLU
+     O*
+     O**   UPDATE TNRAN DETAIL RECORD.
+     O*
+     O**   INSERTION-NEW.
+     O*
+     OTNRANABFEADD     71 02 75
+     O                         *ALL
+     O*
+     O**  AMENDMENT OR DELETION OR INSERT OVER AN EXISTING REC.
+     O*
+     OTNRANABFE        71 03
+     O       OR        71 04
+     O       OR        71 02N75
+     O                         *ALL
+     O*
+     O**  TNRAN FILE - RELEASE
+     O*
+     OTNRANAAFE        50
+     OTNRANABFE        49
+     O*
+      /EJECT
+      ***
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ERRMSG - ERROR MESSAGES
+ACTION CODE IS MISSING OR INVALID                1
+ACTION CODE 'A' 'D' OR 'E' BUT NO RECORD EXISTS  2
+ACTION CODE 'I' BUT RECORD ALREADY EXISTS        3
+INVALID COMMAND KEY                              4
+INVALID KEY                                      5
+RECORD HAS BEEN UPDATED BY ANOTHER WORK STATION  6
+ALL RANGE CODES ARE ALREADY ALLOCATED            7
+RANGE DELETED TODAY                              8
+INVALID RANGE CODE                               9

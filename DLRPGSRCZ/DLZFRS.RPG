@@ -1,0 +1,683 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL FRA settlement amount calculation')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - FRA/IRS Module                                       *
+     F*                                                               *
+     F*  DLZFRS - FRA Settlement Amount Calculation.                  *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CIR013             Date 07Apr05               *
+      *  Prev Amend No. CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CIR004             Date 20Jan00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSW005  *CREATE    Date 08Jul96               *
+      *                 000000             Date DDMMMYY               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CIR013 - Additional Calculation Method for FRA/IRS/CCF       *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CIR004 - Dealing Calculation Method Change                   *
+     F*  CSW005 - MT34n and MT36n Message Generation for FRA/IRS.     *
+     F*           Externalised version of SR/DLRADS.                  *
+     F*                                                               *
+     F*****************************************************************
+      *----------------------------------------------------------------
+      * ID  F  C  H  L    FUNCTION OF INDICATORS
+      *
+      *       90-99       STANDARD SUBROUTINES
+      *----------------------------------------------------------------
+      /SPACE 5
+      /COPY ZSRSRC,ZDATE2Z1
+     E                    CPY@    1   1 80
+      /COPY ZSRSRC,ZDATE9Z1                                                                   CIR013
+      /SPACE 5
+     I*
+     I* Dummy data structures used by access programs
+     I* (DSSDY only used if file record over 150 chars. long)
+     I*
+     IDSFDY     E DSDSFDY
+     ISCSARD    E DSSCSARDPD                                              CIR004
+      ** Data structure for Switchable Features Details File              CIR004
+     ISDDEAL    E DSSDDEALPD
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+      /COPY ZSRSRC,ZDATE9Z2                                                                   CIR013
+     I* Dealing details accessed via access program
+      /SPACE 5
+     C**************************************************************************
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Recive parameters:
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P#VDAT  50       * Value Date
+     C                     PARM           P#MDAT  50       * Maturity Date
+     C                     PARM           P#PAMT 130       * Principal Amount
+     C                     PARM           P#IANP 130       * Accrued Intr.
+     C                     PARM           P#ICBS  10       * Calculation Basis
+     C                     PARM           P#SETF  1        * Settlement Formula
+     C                     PARM           P#RFLT 117       * Floating Rate
+     C                     PARM           P#RFIX 117       * Fixed Rate
+     C                     PARM           P#PYIN  1        * Pay/Rec Indicator
+     C                     PARM           P#TAXI  1        * Taxable Indicator
+     C                     PARM           O#NETA 130       * Net Settlement Amt.
+     C                     PARM           O#TAXA 130       * Tax Amount Payable
+     C                     PARM           O#RETC  7        * Return Code
+      *                                                                   CIR004
+      ** Access Switchable Features Details                               CIR004
+      *                                                                   CIR004
+     C                     CALL 'AOSARDR0'                                CIR004
+     C                     PARM *BLANKS   PRTCD   7                       CIR004
+     C                     PARM '*VERIFY 'POPTN   7                       CIR004
+     C                     PARM 'CIR004'  PSARD   6                       CIR004
+     C           SCSARD    PARM SCSARD    DSFDY                           CIR004
+     C           PRTCD     IFEQ *BLANKS                                   CIR004
+     C                     MOVE 'Y'       CIR004  1                       CIR004
+     C                     ELSE                                           CIR004
+     C                     MOVE 'N'       CIR004                          CIR004
+     C                     ENDIF                                          CIR004
+      *
+      ** Set up work fields from parameters:
+      *
+     C                     Z-ADDP#VDAT    W#VDAT  50
+     C                     Z-ADDP#MDAT    W#MDAT  50
+     C                     Z-ADDP#PAMT    W#PAMT 130
+     C                     Z-ADDP#IANP    W#IANP 130
+     C                     Z-ADDP#ICBS    W#ICBS  10
+     C                     MOVELP#SETF    W#SETF  1
+     C                     Z-ADDP#RFIX    W#RFIX 117
+     C                     Z-ADDP#RFLT    W#RFLT 117
+     C                     MOVELP#PYIN    W#PYIN  1
+     C                     MOVELP#TAXI    W#TAXI  1
+     C                     Z-ADD*ZERO     W#SETA 130
+     C                     Z-ADD*ZERO     O#NETA
+     C                     Z-ADD*ZERO     O#TAXA
+     C                     MOVEL*BLANKS   O#RETC
+      *
+      ** Initialise work fields:
+      *
+     C                     Z-ADD0         W#ICVL  30
+     C                     Z-ADD0         W#SDAT  50
+     C                     Z-ADD0         W#EDAT  50
+     C                     Z-ADD0         W#EDT1  50
+     C                     Z-ADD0         W#PERD  50
+     C                     Z-ADD0         W#STYR  20
+     C                     Z-ADD0         W#STDT  40
+     C                     Z-ADD0         W#STDY  20
+     C                     Z-ADD0         W#STMH  20
+     C                     Z-ADD0         W#ENYR  20
+     C                     Z-ADD0         W#ENWK  40
+     C                     Z-ADD0         W#ENDY  20
+     C                     Z-ADD0         W#ENMH  20
+     C                     Z-ADD0         W#WK01  40
+     C                     Z-ADD0         W#WK02  40
+     C                     Z-ADD0         W#WK03  10
+     C                     Z-ADD0         W#WK04  40
+     C                     Z-ADD0         W#WK05  20
+     C                     Z-ADD0         W#WK06  40
+     C                     Z-ADD0         W#WK07 117
+     C                     Z-ADD0         W#WK08 309
+     C                     Z-ADD0         W#WK09  50
+     C                     Z-ADD0         W#WK10 147
+     C                     Z-ADD0         W#WK11 147
+     C                     Z-ADD0         W#WK12 150
+     C                     Z-ADD0         W#WK13 129
+     C                     Z-ADD0         W#WK14 150
+     C                     Z-ADD0         W#WK15 157
+     C                     Z-ADD0         W#WK16  10
+     C                     Z-ADD0         W#WK17 309
+     C                     Z-ADD0         W#SETL 180
+     C                     Z-ADD0         W#RNDF 117
+     C                     Z-ADD0         W#RDSA 150
+     C                     Z-ADD0         W#DSSA 130
+     C                     Z-ADD0         W#DSCF 117
+     C                     Z-ADD0         W#SDTN  60
+     C                     Z-ADD0         W#EDTN  60
+     C                     Z-ADD0         W#SLPY  50
+     C                     Z-ADD0         W#ELPY  50
+     C                     SETOF                     89
+      *
+      **  Set date format to DDMMYY.
+      *
+     C                     MOVEL'0'       *IN98
+      *
+      **  1) Australian Settlement Formula
+      *
+     C           W#SETF    IFEQ 'A'
+      *
+      **  Calculate discounted settlement amount using Australian
+      **    formula.
+      **  Calculate days to maturity:
+      *
+     C           W#MDAT    SUB  W#VDAT    W#WK09
+      *
+      **  Multiply face value by (DAYS IN YEAR x 100)
+      *
+     C           W#PAMT    MULT 36500     W#SETL
+      *
+      **  Calculate proceeds from floating rate
+      *
+     C           W#WK09    MULT W#RFLT    W#WK08
+     C                     ADD  36500     W#WK08
+     C           W#WK08    IFNE *ZEROS
+     C           W#SETL    DIV  W#WK08    W#RDSA    H
+     C                     ELSE
+     C                     Z-ADD*ZEROS    W#RDSA
+     C                     END
+      *
+      **  Calculate proceeds from fixed amount
+      *
+     C           W#WK09    MULT W#RFIX    W#WK08
+     C                     ADD  36500     W#WK08
+     C           W#WK08    IFNE *ZEROS
+     C           W#SETL    DIV  W#WK08    W#WK14    H
+     C                     ELSE
+     C                     Z-ADD*ZEROS    W#WK14
+     C                     END
+      *
+      **  Calculate discounted settlement amount
+      *
+     C           W#RDSA    IFGT W#WK14
+     C           W#RDSA    SUB  W#WK14    W#DSSA
+     C                     ELSE
+     C           W#WK14    SUB  W#RDSA    W#DSSA
+     C                     END
+      *
+     C                     ELSE
+      *
+      **  2) US Settlement Formula
+      *
+     C           W#SETF    IFEQ 'U'
+      *
+      **  Calculate discounted settlement amount using US formula
+      **  Calculate days to maturity
+      *
+     C           W#MDAT    SUB  W#VDAT    W#WK09
+      *
+      **  Multiply interest settlement rate by days to maturity
+      **  and add (DAYS IN YEAR x 100)
+      *
+     C           W#RFLT    MULT W#WK09    W#WK15
+     C                     ADD  36000     W#WK15
+      *
+      **  Calculate difference in rates
+      *
+     C           W#RFLT    IFGT W#RFIX
+     C           W#RFLT    SUB  W#RFIX    W#WK07
+     C                     ELSE
+     C           W#RFIX    SUB  W#RFLT    W#WK07
+     C                     END
+      *
+      **  Multiply difference in rates by days to maturity and
+      **  contract amount
+      *
+     C           W#WK07    MULT W#WK09    W#WK08
+     C           W#WK08    MULT W#PAMT    W#WK08
+      *
+      **  Calculate discounted settlement amount
+      *
+     C           W#WK15    IFNE *ZEROS
+     C           W#WK08    DIV  W#WK15    W#DSSA    H
+     C                     ELSE
+     C                     Z-ADD*ZEROS    W#DSSA
+     C                     END
+      *
+     C                     ELSE
+      *
+      **  3) UK Settlement Formula
+      *
+      **  Determine value associated with interest calculation basis
+      *
+     C           W#ICBS    IFEQ 2
+     C           W#ICBS    OREQ 3
+     C           W#ICBS    OREQ 5
+     C           W#ICBS    OREQ 7                                         CIR004
+     C           CIR004    ANDEQ'Y'                                       CIR004
+     C                     Z-ADD360       W#ICVL
+     C                     END
+      *
+     C           W#ICBS    IFEQ 1
+     C           W#ICBS    OREQ 4
+     C                     Z-ADD365       W#ICVL
+     C                     END
+      *
+     C           W#ICBS    IFEQ 6
+     C                     Z-ADD366       W#ICVL
+     C                     END
+      *
+      **  Set start date equal to value date
+      *
+     C                     Z-ADDW#VDAT    W#SDAT
+      *
+      **  Process until end date is greater than maturity date
+      *
+     C           *IN89     DOUEQ'1'
+      *
+     C                     Z-ADDW#SDAT    ZDAYNO
+     C                     EXSR ZDATE2
+      *
+      **  Increment by 1 year
+      *
+     C                     ADD  1         ZYEAR
+     C                     MOVE ZYEAR     ZDATE
+     C                     EXSR ZDATE1
+      *
+      ** If SR/ZDATE1 ends in error, add 365 days instead.
+      *
+     C           *IN99     IFEQ '1'
+     C           W#EDAT    ADD  365       W#EDAT
+     C                     ELSE
+     C                     Z-ADDZDAYNO    W#EDAT
+     C                     END
+      *
+      **  Check to see if maturity date falls between period end date
+      **  and period end date + 10 (This will only happen if an FRA
+      **  was entered with an increased maturity date due to the
+      **  actual maturity date falling on a non-working day).
+      **  If it does do the later discounted settlement amount
+      **  calculation upto maturity date otherwise upto the period
+      **  end date.
+      *
+     C           W#EDAT    ADD  10        W#EDT1
+      *
+      **  If the end date is greater than the maturity date
+      **  replace the end date with the maturity date
+      *
+     C           W#EDAT    IFGE W#MDAT
+     C           W#EDAT    ORLT W#MDAT
+     C           W#EDT1    ANDGEW#MDAT
+     C                     SETON                     89
+     C                     Z-ADDW#MDAT    W#EDAT
+     C                     END
+      *                                                                   CIR013
+     C           W#ICBS    IFEQ 9                                         CIR013
+      *                                                                   CIR013
+      * Convert start date to YYYYMMDD format                             CIR013
+     C                     Z-ADDW#SDAT    @@DAYN  50                      CIR013
+     C                     EXSR ZDATE9                                    CIR013
+     C                     Z-ADD@@VDT     ZZDATA  80                      CIR013
+     C                     Z-ADD@@YR      ZZYY1   40                      CIR013
+      *                                                                   CIR013
+      * Convert end date to YYYYMMDD format                               CIR013
+     C                     Z-ADDW#EDAT    @@DAYN                          CIR013
+     C                     EXSR ZDATE9                                    CIR013
+     C                     Z-ADD@@VDT     ZZDATB  80                      CIR013
+     C                     Z-ADD@@YR      ZZYY2   40                      CIR013
+      *                                                                   CIR013
+     C                     EXSR #FEB29                                    CIR013
+      *                                                                   CIR013
+     C           #29FEB    IFEQ 'Y'                                       CIR013
+     C                     Z-ADD366       W#ICVL                          CIR013
+     C                     ELSE                                           CIR013
+     C                     Z-ADD365       W#ICVL                          CIR013
+     C                     ENDIF                                          CIR013
+      *                                                                   CIR013
+     C                     ENDIF                                          CIR013
+      *
+      **  Calculate the period between the start and end date
+      *
+     C           W#ICBS    IFEQ 1
+     C           W#ICBS    OREQ 2
+     C           W#ICBS    OREQ 6
+     C           W#ICBS    OREQ 9                                         CIR013
+     C           #29FEB    ANDEQ'Y'                                       CIR013
+     C           W#EDAT    SUB  W#SDAT    W#PERD
+     C                     END
+      *
+      **  If the end date is less than or equal to the maturity date
+      *
+     C           *IN89     IFEQ '0'
+      *
+     C           W#ICBS    IFEQ 3
+     C           W#ICBS    OREQ 4
+     C           W#ICBS    OREQ 7                                         CIR004
+     C           CIR004    ANDEQ'Y'                                       CIR004
+     C           W#ICBS    OREQ 9                                         CIR013
+     C           #29FEB    ANDEQ'N'                                       CIR013
+     C                     Z-ADDW#ICVL    W#PERD
+     C                     END
+      *
+     C           W#ICBS    IFEQ 5
+     C                     Z-ADD365       W#PERD
+     C                     END
+      *
+     C                     ELSE
+      *
+      **  The end date was replaced by the maturity date
+      *
+     C           W#ICBS    IFEQ 4
+     C           W#ICBS    OREQ 5
+     C           W#ICBS    OREQ 9                                         CIR013
+     C           #29FEB    ANDEQ'N'                                       CIR013
+     C           W#EDAT    SUB  W#SDAT    W#PERD
+      *
+      **  Convert both start and end date numbers to dates
+      *
+     C                     Z-ADDW#SDAT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     W#SDTN
+      *
+     C                     Z-ADDW#EDAT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     W#EDTN
+      *
+      **  Attempt to calculate the day number for 29 FEB.
+      *
+     C           *IN98     IFEQ '0'
+     C                     MOVEL'2902'    W#SDTN
+     C                     MOVEL'2902'    W#EDTN
+     C                     ELSE
+     C                     MOVEL'0229'    W#SDTN
+     C                     MOVEL'0229'    W#EDTN
+     C                     END
+      *
+     C                     Z-ADDW#SDTN    ZDATE
+     C                     EXSR ZDATE1
+     C                     Z-ADDZDAYNO    W#SLPY
+      *
+      **  If a day number is found, check if it lies between the start
+      **    and end date.
+      *
+     C           *IN99     IFEQ '0'
+      *
+     C           W#SLPY    IFGE W#SDAT
+     C           W#SLPY    ANDLEW#EDAT
+     C           W#PERD    SUB  1         W#PERD
+     C                     END
+     C                     END
+      *
+     C                     Z-ADDW#EDTN    ZDATE
+     C                     EXSR ZDATE1
+     C                     Z-ADDZDAYNO    W#ELPY
+      *
+     C           *IN99     IFEQ '0'
+      *
+     C           W#ELPY    IFGE W#SDAT
+     C           W#ELPY    ANDLEW#EDAT
+     C           W#PERD    SUB  1         W#PERD
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+      **  For method 3, split both start and end dates into their
+      **    respective day, month and year portions.
+      *
+     C           W#ICBS    IFEQ 3
+     C           W#ICBS    OREQ 7                                         CIR004
+     C           CIR004    ANDEQ'Y'                                       CIR004
+      *
+     C                     Z-ADD0         W#PERD
+      *
+     C                     Z-ADDW#SDAT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     W#SDTN
+      *
+     C                     MOVE W#SDTN    W#STYR
+     C                     MOVE W#SDTN    W#STDT
+     C           *IN98     IFEQ '0'
+     C                     MOVELW#SDTN    W#STDY
+     C                     MOVELW#STDT    W#STMH
+     C                     ELSE
+     C                     MOVELW#SDTN    W#STMH
+     C                     MOVELW#STDT    W#STDY
+     C                     END
+      *
+     C                     Z-ADDW#EDAT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     W#EDTN
+      *
+     C                     MOVE W#EDTN    W#ENYR
+     C                     MOVE W#EDTN    W#ENWK
+     C           *IN98     IFEQ '0'
+     C                     MOVELW#EDTN    W#ENDY
+     C                     MOVELW#ENWK    W#ENMH
+     C                     ELSE
+     C                     MOVELW#EDTN    W#ENMH
+     C                     MOVELW#ENWK    W#ENDY
+     C                     END
+      *
+      **  Check start date for leap year
+      *
+     C           W#STYR    ADD  1900      W#WK01
+     C           W#WK01    DIV  4         W#WK02
+     C                     MVR            W#WK03
+      *
+      **  Check end date for leap year allowing for change in century
+      *
+     C           W#ENYR    ADD  1900      W#WK04
+     C           W#WK04    IFLT W#WK01
+     C                     ADD  100       W#WK04
+     C                     END
+     C           W#WK04    DIV  4         W#WK02
+     C                     MVR            W#WK16
+      *
+      **  If start month does not equal 2,subtract day portion from 30
+      **  setting negative result to zero for actual days in month
+      *
+     C           W#STMH    IFNE 2
+     C           30        SUB  W#STDY    W#PERD
+     C           W#PERD    IFLT 0
+     C                     Z-ADD0         W#PERD
+     C                     END
+     C                     END
+      *
+      **  If month = 2
+      *
+     C           W#STMH    IFEQ 2
+      *
+      **  If it is not a leap year, subtract day portion from 28
+      *
+     C           W#WK03    IFNE 0
+     C           28        SUB  W#STDY    W#PERD
+     C                     ELSE
+      *
+      **  If it is a leap year, subtract dat portion from 29
+      *
+     C           29        SUB  W#STDY    W#PERD
+     C                     END
+     C                     END
+      *
+      **  Adjust start month & year to cater for year end
+      *
+     C           W#STMH    IFEQ 12
+     C                     Z-ADD0         W#STMH
+     C                     ADD  1         W#WK01
+     C                     END
+      *
+      **  If end month is not equal to 2 and end day is 31; or month
+      **  equals 2 and it is not a leap year and end day equals 28;
+      **  or month equals 2 and it is a leap year and end day
+      **  equals 29 then add 30 to period count
+      *
+     C           W#ENMH    IFNE 2
+     C           W#ENDY    ANDEQ31
+     C           W#ENMH    OREQ 2
+     C           W#WK16    ANDNE0
+     C           W#ENDY    ANDEQ28
+     C           W#ICBS    ANDEQ3                                         CIR004
+     C           W#ENMH    OREQ 2
+     C           W#WK16    ANDEQ0
+     C           W#ENDY    ANDEQ29
+     C           W#ICBS    ANDEQ3                                         CIR004
+     C                     ADD  30        W#PERD
+     C                     ELSE
+      *
+      **  Add day number portion to period count
+      *
+     C                     ADD  W#ENDY    W#PERD
+      *
+     C                     END
+      *
+      **  Subtract 1 from end month
+      *
+     C                     SUB  1         W#ENMH
+      *
+      **  If start year and end year are the same, subtract start
+      **  month from end month
+      *
+     C           W#WK01    IFEQ W#WK04
+     C           W#ENMH    SUB  W#STMH    W#WK05
+     C                     ELSE
+      *
+      **  Add end month to result of subtracting start month from 12
+      *
+     C           12        SUB  W#STMH    W#WK05
+     C           W#ENMH    ADD  W#WK05    W#WK05
+     C                     END
+      *
+      **  Multiply the number of months by 30 and add to the period
+      *
+     C           W#WK05    MULT 30        W#WK06
+     C                     ADD  W#WK06    W#PERD
+      *
+     C                     END
+      *
+     C                     END
+      *
+      **  Calculate this period's discounted settlement amount using
+      **  this equation where SS = Settlement amount
+      **                       D = PERIOD
+      **
+      **        SS = (BASE RATE - FIXED RATE) x D x PRINCIPAL
+      **             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      **             (INTEREST CALC BASIS x 100) + (BASE RATE x D)
+      *
+     C           W#RFLT    IFGE W#RFIX
+     C           W#RFLT    SUB  W#RFIX    W#WK07
+     C                     ELSE
+     C           W#RFIX    SUB  W#RFLT    W#WK07
+     C                     END
+      *
+     C           W#WK07    MULT W#PERD    W#WK08
+      *
+      * Multiply now by principal to get larger value for dividing
+      * and avoid errors due to half-adjusting small numbers later
+      *
+     C           W#WK08    MULT W#PAMT    W#WK12
+     C           W#ICVL    MULT 100       W#WK09
+     C           W#RFLT    MULT W#PERD    W#WK10
+     C           W#WK09    ADD  W#WK10    W#WK11
+     C           W#WK12    DIV  W#WK11    W#SETL    H
+      *
+      **  If value date = start date then first period so initialise
+      **  running discount factor to 1
+      *
+     C           W#VDAT    IFEQ W#SDAT
+     C                     Z-ADD1         W#RNDF
+     C                     Z-ADDW#SETL    W#DSSA
+     C                     ELSE
+      *
+      **  Divide the discounted settlement amount by the running
+      **  discount factor to rediscount this period's settlement amount
+      **  back to the start date
+      *
+     C           W#SETL    DIV  W#RNDF    W#RDSA    H
+      *
+      **  Add the rediscounted settlement amount to the running
+      **  discounted settlement total
+      *
+     C           W#RDSA    ADD  W#DSSA    W#DSSA
+      *
+     C                     END
+      *
+      **  Calculate this period's discount factor using the equation
+      **
+      **    FACTOR = 1 +     (D x BASE RATE)
+      **                 ~~~~~~~~~~~~~~~~~~~~~~~~~~
+      **                 (INTEREST CALC BASIS x 100)
+      *
+     C           W#WK10    DIV  W#WK09    W#WK13    H
+     C           1         ADD  W#WK13    W#DSCF    H
+      *
+      **  Multiply the discount factor by the running discount factor
+      **  to obtain the new running discount factor for rediscounting
+      **  settlement amounts back to start date
+      *
+     C           W#DSCF    MULT W#RNDF    W#RNDF    H
+      *
+      **  Set the start date to the end date
+      *
+     C                     Z-ADDW#EDAT    W#SDAT
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+      **  Add the net accrued interest adjustments not posted to the
+      **  running discounted settlement total to give the discounted
+      **  settlement amount total.
+      *
+     C           W#IANP    ADD  W#DSSA    W#SETA
+      *
+      ** If amount is taxable, calculate the net of tax amount.
+      *
+     C           W#PYIN    IFEQ 'P'
+     C           W#TAXI    ANDEQ'Y'
+      *
+      * Call Access prog. for Tax rate.
+      *
+     C**********           CALL 'AODEALR0'                                                    CGL029
+     C                     CALL 'AODEALR1'                                                    CGL029
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C********** SDDEAL    PARM SDDEAL    DSFDY                                               CGL029
+     C           SDDEAL    PARM SDDEAL    DSSDY                                               CGL029
+      *
+      * Handle database error
+     C           @RTCD     IFNE *BLANKS
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C           W#SETA    MULT BNHKTR    W#WK17
+     C           W#WK17    DIV  100       O#TAXA    H
+     C           W#SETA    SUB  O#TAXA    O#NETA
+      *
+     C                     ELSE
+     C                     Z-ADDW#SETA    O#NETA
+     C                     Z-ADD*ZERO     O#TAXA
+     C                     ENDIF
+      *
+      **  End the program and return.
+      *
+     C                     SETON                     LR
+      *
+     C**************************************************************************
+      /SPACE 5
+     C**************************************************************************
+     C           *PSSR     BEGSR
+      *
+      **  Dump the program and return.
+      *
+     C                     MOVEL'*ERROR ' O#RETC
+     C                     DUMP
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+     C********************************************************************
+     C/COPY ZSRSRC,ZDATE9Z3                                                                   CIR013
+     C/COPY ZSRSRC,ZFEB29                                                                     CIR013
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZDATE2Z3
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN                        CIR013
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR                           CIR013
+00000000310005900090001200015100181002120024300273003040033400365

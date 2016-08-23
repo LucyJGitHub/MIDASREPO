@@ -1,0 +1,73 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UT CHKSRCHEX validity checker')                 */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities Module                                    */
+/*                                                                   */
+/*       UTC000013V - Validity checker for CHKSRCHEX                 */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2007           */
+/*                                                                   */
+/*       Last Amend No. CUT015  *CREATE    Date 15Sep09              */
+/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUT015 - New utility.                                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&OLDLIB &NEWLIB)
+ 
+             DCL        VAR(&OLDLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NEWLIB) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2009')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Check if library exists. */
+             CHKOBJ     OBJ(&OLDLIB) OBJTYPE(*LIB) AUT(*USE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                             MSGDTA('0000Library' *BCAT &OLDLIB *BCAT +
+                             'does not exist.') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+             MONMSG     MSGID(CPF9802) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000You +
+                             do not have authority to' *BCAT &OLDLIB +
+                             *TCAT '.') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             CHKOBJ     OBJ(&NEWLIB) OBJTYPE(*LIB) AUT(*USE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                             MSGDTA('0000Library' *BCAT &NEWLIB *BCAT +
+                             'does not exist.') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+             MONMSG     MSGID(CPF9802) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000You +
+                             do not have authority to' *BCAT &NEWLIB +
+                             *TCAT '.') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+ 
+ ABNOR:
+             IF         COND(&ERROR *EQ 'Y') THEN(SNDPGMMSG +
+                          MSGID(CPF0002) MSGF(QCPFMSG) +
+                          MSGTYPE(*ESCAPE))
+END:
+             ENDPGM

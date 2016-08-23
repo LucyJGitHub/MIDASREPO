@@ -1,0 +1,723 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Remove all but last request')                 *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                          *
+     F*                                                               *
+     F*  CG5288 - Remove all but last confirmation                    *
+     F*                                                               *
+     F*  Function:  This program move records to split up             *
+     F*             bulk request                                      *
+     F*                                                               *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CGL165             Date 17Feb15               *
+      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 05Jul06               *
+      *                 237063             Date 20Nov05               *
+      *                 CDL038             Date 10May05               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG7411            Date 01Jun05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 229544             Date 15Sep04               *
+      *                 CSC022             Date 24Feb04               *
+      *                 222727             Date 05Nov03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CCG015             Date 13JUN01               *
+      *                 190022             Date 15Jan99               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSE015             Date 06Dec99               *
+      *                 CSE017             Date 20Oct99               *
+      *                 CSE012             Date 16Aug99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 094586             Date 28Jun95               *
+      *                 088008             Date 12Jun95               *
+     F*                 S01522             DATE 19MAY95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance Receive Settlement Instructions             *
+      *           (Recompiled)                                        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  237063 - EU Tax fixes upgrade to MP build 103 (Recompile).   *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG7411- CDL028 fields missing from DLGHISPD (Recompile)     *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  229544 - Recompiled due to inserted fields in DLCHISPD.      *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+      *  CCG015 - Correspondence Manager Phase 1 (Recompile)          *
+      *  190022 - Recompiled due to increased size of OVRPRTF string  *
+      *           in PF/CGPRTPPD and PF/CGPGENPD files.               *
+      *  CSE015 - Forward Valued Depot Movements (Recompile)          *
+      *  CSE017 - Cum/Ex Indicator on Depot Movements (Recompile)     *
+      *  CSE012 - SE Depot Movement Narratives (Recompiled).          *
+     F*  094586 - Print last confirmation                             *
+     F*  088008 - Access deals file to ascertain whether the deal     *
+     F*           was amended today.                                  *
+     F*  S01522 - User Defined Correspondence                         *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*                                                               *
+     F*  50    First cycle                                            *
+     F*  90    General work indicator                                 *
+     F*                                                               *
+     F*  U7/U8 Error Ocurred                                          *
+     F*  LR    End program                                            *
+     F*                                                               *
+     F*****************************************************************
+     FCGPGENL4UF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+      * RTV : Print Generator           For I/C deals and trades
+      *
+     FCGUDCRL0UF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+     F                                              KCOMIT
+     FDEALS   IF  E           K        DISK                           UC  094586
+     F                                              KINFSR SRFILE         094586
+     FTRADS   IF  E           K        DISK                           UC  094586
+     F                                              KINFSR SRFILE         094586
+     FDPTMV   IF  E           K        DISK                           UC  094586
+     F                                              KINFSR SRFILE         094586
+     FDEALSH  IF  E           K        DISK                           UC  094586
+     F                                              KINFSR SRFILE         094586
+     F            DEALSDBF                          KIGNORE               094586
+     F            DEALSDCF                          KIGNORE               094586
+     F            DEALSDDF                          KIGNORE               094586
+     F            DEALSDEF                          KIGNORE               094586
+     F            DEALSDGF                          KIGNORE               094586
+     F/EJECT
+     E                    CPY@    1   1 80
+      *
+      *  Copyright table
+      *
+      **                                                                                      CSC022
+      ** Array to hold commitment jobs name                                                   CSC022
+      **                                                                                      CSC022
+     E                    WCMT       10 10                                                    CSC022
+      **                                                                                      CSC022
+     E/COPY CGCPYSRC,SRERRE
+      *
+      *  end of Copysource for error processing
+      *
+     E/EJECT
+      *
+     ICPYR@#      DS
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     I/COPY CGCPYSRC,SRERRI
+      *
+      *  End of Program Error Processing copysource member
+      *
+     ICGDTA     E DSCGDTA
+      *
+      *  Definition of CGDTA
+      *
+     IRUNDTA    E DSRUNDAT
+      *
+      *  Define rundat data area
+      *
+     IDSFDY     E DSDSFDY
+     I*
+     I* Data Structures used by Access Programs
+     I*
+     IDSSDY     E DSDSSDY
+     I*
+     I* Data Structures used by Access Programs
+     I*
+     IP#UDCL    E DSCGUDCLPD
+      **  External DS for parameters based on PF/CGUDCLPD
+      *
+      **                                                                                      CSC022
+     ISCSARD    E DSSCSARDPD                                                                  CSC022
+      ** MIDAS Switchable Features Accessed Via Access Program                                CSC022
+      **                                                                                      CSC022
+      *
+      * Data Structures used by Access Programs
+      *
+     I##MSDT      DS
+     I                                        1   80#1ITEM
+     I                                        9  18 #1DCOR
+     I                                       19  260#2ITEM
+     I                                       27  36 #2DCOR
+     I************DS                                               088008 094586
+     I************                            1   60##DLNO         088008 094586
+     I************                            1  15 #WMTRN         088008 094586
+     I            DS                                                      094586
+     I                                        1  15 #WMTRN                094586
+      * Deals Key                                                         094586
+     I                                        1   60##DLNO                094586
+      * Trades Key                                                        094586
+     I                                        1   6 ##TDRF                094586
+      * Depot Movements Key                                               094586
+     I                                        1  10 ##DPSS                094586
+     I                                       11  16 ##DPRN                094586
+      **                                                                                      CSC022
+     ISCCMT       DS                            256                                           CSC022
+     I                                        1   30WCMTNO                                    CSC022
+     I                                        4 103 WCJOBS                                    CSC022
+      ** Commitment Control dataarea                                                          CSC022
+      **                                                                                      CSC022
+     I*-------------------------------------------------------------------088008
+     I* Named constants                                                   088008
+     I              'CANC_TODAY'          C         #TEXT1                088008
+     I              'DEAL_DEAL '          C         #TEXT2                088008
+     I              'DEPOTM_BBL'          C         #TEXT3                094586
+     I              'DEPOTM_DT '          C         #TEXT4                094586
+     I              'DEPOTM_PR '          C         #TEXT5                094586
+     I              'DEPOTM_WIO'          C         #TEXT6                094586
+     I              'TRADE     '          C         #TEXT7                094586
+     I/EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+     C                     PARM           W0PATH 10
+      *
+      *  Set up primary reference
+      *
+     C                     MOVELW0PATH    W0PREF
+      *
+      * Initialise program
+      *
+     C           *IN50     IFEQ '0'
+     C                     EXSR SRINIT
+     C                     END
+      *
+      * Read records in CGPGENL4 File
+      *
+     C                     READ CGPGENL4                 91
+     C           *IN91     IFEQ '1'
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+      *                                                                   094586
+      *  Chain to reference to get further reference info                 094586
+      *                                                                   094586
+     C           UDCRL0    CHAINCGUDCRL0            N90                   094586
+      *
+      *  Save information for level break
+      *
+     C           *LIKE     DEFN B2MTRN    ##MTRN
+     C                     MOVELB2MTRN    ##MTRN
+     C           *LIKE     DEFN B2PRTD    ##PRTD
+     C                     MOVELB2PRTD    ##PRTD
+     C           *LIKE     DEFN B2PTYP    ##PTYP
+     C                     MOVELB2PTYP    ##PTYP
+     C           *LIKE     DEFN B2PSTP    ##PSTP
+     C                     MOVELB2PSTP    ##PSTP
+     C           *LIKE     DEFN B2PCOR    ##PCOR
+     C                     MOVELB2PCOR    ##PCOR
+     C           *LIKE     DEFN B2DCOR    ##DCOR
+     C                     MOVELB2DCOR    ##DCOR
+     C           *LIKE     DEFN B2ISTS    ##ISTS
+     C                     MOVELB2ISTS    ##ISTS
+     C           *LIKE     DEFN B2ITEM    ##ITEM
+     C                     Z-ADDB2ITEM    ##ITEM
+     C           *LIKE     DEFN DRRDNB    ##RDNB                          094586
+     C                     Z-ADDDRRDNB    ##RDNB                          094586
+      ***********                                                  088008 094586
+      **Access*deals file.                                         088008 094586
+     C***********B2PTYP    IFEQ #TEXT2                             088008 094586
+     C***********          MOVELB2MTRN    #WMTRN                   088008 094586
+     C***********##DLNO    CHAINDEALS                99            088008 094586
+      ***********                                                  088008 094586
+     C***********RECI      IFNE 'D'                                088008 094586
+     C***********ORED      ANDEQWURDNB                             088008 094586
+     C************LIKE     DEFN B2PCOR    #ADMSG                   088008 094586
+     C***********          MOVEL#TEXT1    #ADMSG                   088008 094586
+     C***********          EXSR SRRMV                              088008 094586
+     C***********          DELET@PGENL4                            088008 094586
+     C***********          ENDIF                                   088008 094586
+     C***********          ENDIF                                   088008 094586
+      *                                                                   094586
+      * Access deals file.                                                094586
+     C                     SELEC                           SB1            094586
+     C           B2PTYP    WHEQ #TEXT2                                    094586
+     C                     MOVELB2MTRN    #WMTRN                          094586
+     C           ##DLNO    CHAINDEALS                99                   094586
+      *                                                                   094586
+      * If not found, access historic deals.                              094586
+      *                                                                   094586
+     C           *IN99     IFEQ *ON                        B*2            094586
+     C           ##DLNO    CHAINDEALSH               99                   094586
+     C                     ENDIF                           E*2            094586
+      *                                                                   094586
+      * 2 conditions - Remove the record from CGPGENL4 if                 094586
+      * 1. The deal is not a live deal, the deal was entered today and    094586
+      *    the deal was found on DEALS or DEALSH.                         094586
+      * 2. The deal was not entered today and the deal was (deleted) on   094586
+      *    the day it was input and the deal was found on either DEALS    094586
+      *    or DEALSH and the deal was not live,matured,historic.          094586
+      *                                                                   094586
+     C           RECI      IFNE 'D'                        B*2            094586
+     C           ORED      ANDEQWURDNB                     B*2            094586
+     C           *IN99     ANDEQ*OFF                       B*2            094586
+     C           ORED      ORNE WURDNB                     B*2            094586
+     C           ORED      ANDEQDRRDNB                     B*2            094586
+     C           *IN99     ANDEQ*OFF                       B*2            094586
+     C           RECI      ANDNE'D'                        B*2            094586
+     C           RECI      ANDNE'N'                        B*2            094586
+     C           RECI      ANDNE'M'                        B*2            094586
+     C           *LIKE     DEFN B2PCOR    #ADMSG                          094586
+      *                                                                   094586
+      * If 'PPFN' then mark as printed                                    094586
+      *                                                                   094586
+     C           B2ISTS    IFEQ 'PPFN'                     B**3           094586
+     C                     MOVEL#TEXT1    #ADMSG                          094586
+     C                     EXSR SRRMV                                     094586
+     C                     ENDIF                           E**3           094586
+      *                                                                   094586
+     C                     DELET@PGENL4                                   094586
+     C                     ENDIF                           E*2            094586
+      *                                                                   094586
+      * Access Trade file.                                                094586
+     C           B2PTYP    WHEQ #TEXT7                     SB1            094586
+      *                                                                   094586
+      * Key to Trades                                                     094586
+     C           KTRADS    KLIST                                          094586
+     C                     KFLD           ##TDRF                          094586
+      *                                                                   094586
+      * Chain to Trades                                                   094586
+     C                     MOVELB2MTRN    #WMTRN                          094586
+     C           KTRADS    CHAINTRADSDF              92                   094586
+      *                                                                   094586
+     C           RECI      IFEQ 'C'                        B*2            094586
+     C           TOED      ANDEQWURDNB                     B*2            094586
+      *                                                                   094586
+      * If 'PPFN' then mark as printed                                    094586
+      *                                                                   094586
+     C           B2ISTS    IFEQ 'PPFN'                     B**3           094586
+     C                     MOVEL#TEXT1    #ADMSG                          094586
+     C                     EXSR SRRMV                                     094586
+     C                     ENDIF                           E**3           094586
+      *                                                                   094586
+     C                     DELET@PGENL4                                   094586
+     C                     ENDIF                           E*2            094586
+      *                                                                   094586
+      * Access Depot Movements.                                           094586
+     C           B2PTYP    WHEQ #TEXT3                     SB1            094586
+     C           B2PTYP    OREQ #TEXT4                     SB1            094586
+     C           B2PTYP    OREQ #TEXT5                     SB1            094586
+     C           B2PTYP    OREQ #TEXT6                     SB1            094586
+      *                                                                   094586
+      * Key to Depot Movements                                            094586
+     C           KDPTMV    KLIST                                          094586
+     C                     KFLD           ##DPSS                          094586
+     C                     KFLD           ##DPRN                          094586
+      *                                                                   094586
+      * Chain to Depot Movements                                          094586
+     C                     MOVELB2MTRN    ##DPRN                          094586
+     C                     MOVELDRFREF    ##DPSS                          094586
+     C           KDPTMV    CHAINDPTMVDF              92                   094586
+      *                                                                   094586
+     C           RECI      IFNE 'D'                        B*2            094586
+     C           ORED      ANDEQWURDNB                     B*2            094586
+      *                                                                   094586
+      * If 'PPFN' then mark as printed                                    094586
+      *                                                                   094586
+     C           B2ISTS    IFEQ 'PPFN'                     B**3           094586
+     C                     MOVEL#TEXT1    #ADMSG                          094586
+     C                     EXSR SRRMV                                     094586
+     C                     ENDIF                           B**3           094586
+      *                                                                   094586
+     C                     DELET@PGENL4                                   094586
+     C                     ENDIF                           B*2            094586
+     C                     ENDSL                           SE1            094586
+      *
+      * Read records in CGPGENL4 file
+      *
+     C                     READ CGPGENL4                 91
+      *
+     C           *IN91     DOWEQ'0'
+      *                                                                   094586
+      *  Chain to reference to get further reference info                 094586
+      *                                                                   094586
+     C           UDCRL0    CHAINCGUDCRL0            N90                   094586
+      *
+      * Check if same transaction, if so delete
+      *
+     C           B2MTRN    IFEQ ##MTRN
+     C           B2PRTD    ANDEQ##PRTD
+     C           B2PTYP    ANDEQ##PTYP
+     C           B2PSTP    ANDEQ##PSTP
+     C           B2PCOR    ANDEQ##PCOR
+     C           B2DCOR    ANDEQ##DCOR
+     C           DRRDNB    ANDEQ##RDNB                                    094586
+      *
+      * If first is 'PPFN' then mark as printed
+      *
+     C           B2ISTS    IFEQ 'PPFN'
+     C                     MOVEL*BLANKS   #ADMSG                          088008
+     C                     EXSR SRRMV
+     C                     ENDIF
+      *
+     C                     DELET@PGENL4
+     C                     ELSE
+      *
+      * save new information
+      *
+     C                     MOVELB2MTRN    ##MTRN
+     C                     MOVELB2PRTD    ##PRTD
+     C                     MOVELB2PTYP    ##PTYP
+     C                     MOVELB2PSTP    ##PSTP
+     C                     MOVELB2PCOR    ##PCOR
+     C                     MOVELB2DCOR    ##DCOR
+     C                     MOVELB2ISTS    ##ISTS
+     C                     Z-ADDB2ITEM    ##ITEM
+     C                     Z-ADDDRRDNB    ##RDNB                          094586
+      ***********                                                  088008 094586
+      **Access*deals file.                                         088008 094586
+     C***********B2PTYP    IFEQ #TEXT2                             088008 094586
+     C***********          MOVELB2MTRN    #WMTRN                   088008 094586
+     C***********##DLNO    CHAINDEALS                99            088008 094586
+      ***********                                                  088008 094586
+     C***********RECI      IFNE 'D'                                088008 094586
+     C***********ORED      ANDEQWURDNB                             088008 094586
+     C***********          MOVEL#TEXT1    #ADMSG                   088008 094586
+     C***********          EXSR SRRMV                              088008 094586
+     C***********          DELET@PGENL4                            088008 094586
+     C***********          ENDIF                                   088008 094586
+     C***********          ENDIF                                   088008 094586
+      *                                                                   094586
+      * Access deals file.                                                094586
+     C                     SELEC                           SB3            094586
+     C           B2PTYP    WHEQ #TEXT2                                    094586
+     C                     MOVELB2MTRN    #WMTRN                          094586
+     C           ##DLNO    CHAINDEALS                99                   094586
+      *                                                                   094586
+      * If not found, access historic deals.                              094586
+      *                                                                   094586
+     C           *IN99     IFEQ *ON                        B*2            094586
+     C           ##DLNO    CHAINDEALSH               99                   094586
+     C                     ENDIF                           E*2            094586
+      *                                                                   094586
+      * 2 conditions - Remove the record from CGPGENL4 if                 094586
+      * 1. The deal is not a live deal, the deal was entered today and    094586
+      *    the deal was found on DEALS or DEALSH.                         094586
+      * 2. The deal was not entered today and the deal was (deleted) on   094586
+      *    the day it was input and the deal was found on either DEALS    094586
+      *    or DEALSH and the deal was not live,matured,historic.          094586
+      *                                                                   094586
+      *                                                                   094586
+     C           RECI      IFNE 'D'                        B***4          094586
+     C           ORED      ANDEQWURDNB                     B***4          094586
+     C           *IN99     ANDEQ*OFF                       B***4          094586
+     C           ORED      ORNE WURDNB                     B***4          094586
+     C           ORED      ANDEQDRRDNB                     B***4          094586
+     C           *IN99     ANDEQ*OFF                       B***4          094586
+     C           RECI      ANDNE'D'                        B***4          094586
+     C           RECI      ANDNE'N'                        B***4          094586
+     C           RECI      ANDNE'M'                        B***4          094586
+      *                                                                   094586
+      * If 'PPFN' then mark as printed                                    094586
+      *                                                                   094586
+     C           B2ISTS    IFEQ 'PPFN'                     B****5         094586
+     C                     MOVEL#TEXT1    #ADMSG                          094586
+     C                     EXSR SRRMV                                     094586
+     C                     ENDIF                           E****5         094586
+      *                                                                   094586
+     C                     DELET@PGENL4                                   094586
+     C                     ENDIF                           E***4          094586
+      *                                                                   094586
+      * Access Trade file.                                                094586
+     C           B2PTYP    WHEQ #TEXT7                     SB3            094586
+      *                                                                   094586
+      * Chain to Trades                                                   094586
+     C                     MOVELB2MTRN    #WMTRN                          094586
+     C           KTRADS    CHAINTRADSDF              92                   094586
+      *                                                                   094586
+     C           RECI      IFEQ 'C'                        B***4          094586
+     C           TOED      ANDEQWURDNB                     B***4          094586
+      *                                                                   094586
+      * If 'PPFN' then mark as printed                                    094586
+      *                                                                   094586
+     C           B2ISTS    IFEQ 'PPFN'                     B****5         094586
+     C                     MOVEL#TEXT1    #ADMSG                          094586
+     C                     EXSR SRRMV                                     094586
+     C                     ENDIF                           E****5         094586
+      *                                                                   094586
+     C                     DELET@PGENL4                                   094586
+     C                     ENDIF                           E***4          094586
+      *                                                                   094586
+      * Access Depot Movements.                                           094586
+     C           B2PTYP    WHEQ #TEXT3                     SB3            094586
+     C           B2PTYP    OREQ #TEXT4                     SB3            094586
+     C           B2PTYP    OREQ #TEXT5                     SB3            094586
+     C           B2PTYP    OREQ #TEXT6                     SB3            094586
+      *                                                                   094586
+      * Chain to Depot Movements                                          094586
+     C                     MOVELB2MTRN    ##DPRN                          094586
+     C                     MOVELDRFREF    ##DPSS                          094586
+     C           KDPTMV    CHAINDPTMVDF              92                   094586
+      *                                                                   094586
+     C           RECI      IFNE 'D'                        B***4          094586
+     C           ORED      ANDEQWURDNB                     B***4          094586
+      *                                                                   094586
+      * If 'PPFN' then mark as printed                                    094586
+      *                                                                   094586
+     C           B2ISTS    IFEQ 'PPFN'                     B****5         094586
+     C                     MOVEL#TEXT1    #ADMSG                          094586
+     C                     EXSR SRRMV                      E****5         094586
+     C                     ENDIF                                          094586
+      *                                                                   094586
+     C                     DELET@PGENL4                                   094586
+     C                     ENDIF                           E***4          094586
+      *                                                                   094586
+     C                     ENDSL                           SE3            094586
+      *
+     C                     ENDIF
+      *
+      * Read records in CGPGENL4 file
+      *
+     C                     READ CGPGENL4                 91
+     C                     ENDDO
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *  Return to calling program
+      *
+     C                     SETON                     LR
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRRMV    : Remove extra entries and log                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRRMV     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRRMV '  @STK,Q
+      *
+      **  Key list for LF/CGUDCRL0, UDC Reference file
+     C           UDCRL0    KLIST
+     C                     KFLD           B2ITEM
+     C                     KFLD           B2DCOR
+      *
+      *  Chain to reference and set to printed
+      *
+     C           UDCRL0    CHAINCGUDCRL0             90
+      *
+      **  Record not found
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'CGUDCRL0'W0FILE
+     C                     MOVELB2ITEM    ##ITMA  8
+     C           ##ITMA    CAT  B2DCOR    W0KEY            ***************
+     C                     Z-ADD1         W0ERNB           * DB ERROR 01 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      * Set flag and update
+      *
+     C                     MOVE 'PRTD'    DRISTS
+     C                     UPDAT@UDCRL0
+      *
+      * Set up log record for item
+      *
+     C                     CLEARP#UDCL
+     C                     Z-ADDB2ITEM    DLITEM
+     C                     MOVE B2DCOR    DLDCOR
+      *                                                                   088008
+     C           #ADMSG    IFEQ #TEXT1                                    088008
+     C                     MOVEL'CGD2523' DLMSID                          088008
+     C                     ELSE                                           088008
+     C                     MOVEL'CGD2498' DLMSID
+     C                     ENDIF                                          088008
+      *
+     C                     CLEAR##MSDT
+     C                     Z-ADDB2ITEM    #1ITEM
+     C                     MOVELB2DCOR    #1DCOR
+     C                     Z-ADD##ITEM    #2ITEM
+     C                     MOVEL##DCOR    #2DCOR
+     C                     MOVEL##MSDT    DLMSDT
+      *
+     C                     CALL 'CG9030'               9090
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM '*WRITE  '##ACT   8
+     C                     PARM           P#UDCL
+     C                     PARM *BLANKS   ##TITL  7
+     C                     PARM *BLANKS   ##ULIN  7
+     C                     PARM 'YES'     ##CMT   3
+      *
+      **  Error on call
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'CG9030'  W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD2         W0ERNB           * DB ERROR 02 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      **                                                                                      CSC022
+      ** Execute commit if SAR CSC022 is not enrolled or                                      CSC022
+      **   job is not currently running in batch mode                                         CSC022
+      **                                                                                      CSC022
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C           CSC022    OREQ 'Y'                                                           CSC022
+     C           WCMTSK    ANDEQ'N'                                                           CSC022
+     C                     COMIT
+     C                     ENDIF                                                              CSC022
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXRMV     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      ACT@   80
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *  Indicate that set up is complete
+      *
+     C                     SETON                     50
+     C                     Z-ADD0         ##CNT   50
+      *
+      *  Open files
+      *
+     C                     OPEN CGPGENL4
+     C                     OPEN CGUDCRL0
+     C                     OPEN DEALS                                     088008
+     C                     OPEN TRADS                                     094586
+     C                     OPEN DPTMV                                     094586
+     C                     OPEN DEALSH                                    094586
+      *
+      *  Get Rundate information
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      *
+      * Get CGDTA set up
+      *
+     C           *NAMVAR   DEFN           CGDTA
+     C                     IN   CGDTA
+      **                                                                                      CSC022
+      ** Initialize CSC022 and Skip Commit/Rollback flags                                     CSC022
+     C                     MOVE 'N'       CSC022  1                                           CSC022
+     C                     MOVE 'N'       WCMTSK  1                                           CSC022
+      **                                                                                      CSC022
+      ** Access SAR details file to determine if CSC022 switchable feature                    CSC022
+      ** is switched on                                                                       CSC022
+      **                                                                                      CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   P@RTCD  7                                           CSC022
+     C                     PARM '*VERIFY' P@OPTN  7                                           CSC022
+     C                     PARM 'CSC022'  P@SARD  6                                           CSC022
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSC022
+      **                                                                                      CSC022
+     C           P@RTCD    IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022                                              CSC022
+      **                                                                                      CSC022
+      ** Get Jobs currently running i batch mode using SCCMTJOB dataarea                      CSC022
+      **                                                                                      CSC022
+     C           *NAMVAR   DEFN SCCMTJOB  SCCMT                                               CSC022
+     C                     IN   SCCMT                                                         CSC022
+      **                                                                                      CSC022
+     C           WCMTNO    IFGT 0                                                             CSC022
+      ** Move committed jobs to arrary for checking                                           CSC022
+     C                     MOVEAWCJOBS    WCMT                                                CSC022
+      ** Verify if job running exists in array                                                CSC022
+     C           ##JOB     LOKUPWCMT                     50                                   CSC022
+     C           *IN50     IFEQ *ON                                                           CSC022
+     C                     MOVE 'Y'       WCMTSK                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+      **                                                                                      CSC022
+     C                     ELSE                                                               CSC022
+      ** Execute *PSSR if CSC022 is not found or Database error                               CSC022
+     C           P@RTCD    IFNE '*NRF'                                                        CSC022
+     C                     MOVEL'CSC022'  W0KEY                                               CSC022
+     C                     MOVEL'SCSARDPD'W0FILE                                              CSC022
+     C                     Z-ADD3         W0ERNB                                              CSC022
+     C                     EXSR SRERR                                                         CSC022
+     C                     ENDIF                                                              CSC022
+      **                                                                                      CSC022
+     C                     ENDIF                                                              CSC022
+      ** For copysource SRERRC                                                                CSC022
+     C                     MOVE WCMTSK    WCMTSK  1                                           CSC022
+      **                                                                                      CSC022
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *
+      *  File and Program Error Processing
+      *
+     C/COPY CGCPYSRC,SRERRC
+     C/EJECT
+     C********************************************************************
+     C** Subroutine *PSSR handles program errors.                       **
+     C********************************************************************
+     C*
+     C/COPY CGCPYSRC,SRERRPSSR
+     C*
+     C********************************************************************
+     C/EJECT
+**  CPY@ table
+(c) Misys International Banking Systems Ltd. 2001

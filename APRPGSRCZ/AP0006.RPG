@@ -1,0 +1,373 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas API Reporting prompt')
+      *****************************************************************
+      *                                                               *
+      *  Midas - API                                                  *
+      *                                                               *
+      *  AP0006 - API reporting prompt                                *
+      *                                                               *
+      *  Function:  This program allows selection of the API reports  *
+      *             in three different sequences.                     *
+      *                                                               *
+      *  Called By: None                                              *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CAAA03             Date 22Mar04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CAP002  *Create    Date 20Feb98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CAAA03 - Webfacing changes.  Re-compiled due to changes done *
+      *           over AP0006DF.                                      *
+      *  CAP002 - Conversion of transaction inputs into modular       *
+      *           structure to use as APIs.                           *
+      *                                                               *
+      *****************************************************************
+     FAP0006DFCF  E                    WORKSTN
+      ** Display file
+      *
+      *****************************************************************
+      *
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement.
+      *
+      *****************************************************************
+      /EJECT
+      *
+     ILDA       E DSLDA                         256
+     I              SPARE                           W24
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     IDSFDY     E DSDSFDY
+      ** Data structure used for access objects
+      *
+     IRPARM       DS                            100
+      *  Parameters passed back to RCF
+     I                                        1   1 S1RSEQ
+     I                                        2   2 U1INSE
+     I                                        3   3 U1AMDS
+     I                                        4   4 U1DELS
+     I                                        5   5 U1AUTH
+      *
+     IA@CPY       DS
+      * Copyright array
+     I                                        1  80 CPY@
+      /EJECT
+      *****************************************************************
+      * Indicator Summary                                             *
+      *                                                               *
+      * 03 - Exit program                                             *
+      * 40 - Selection field in error                                 *
+      * 41 - Selection field in error - Insert                        *
+      * 42 - Selection field in error - Amend                         *
+      * 43 - Selection field in error - Delete                        *
+      * 44 - Selection field in error - Authorise                     *
+      * U7 - General error indicators                                 *
+      * U8 - As above                                                 *
+      * LR - Last Record Indicator                                    *
+      *                                                               *
+      ********************************************************************
+      *                                                                  *
+      *            M A I N    P R O C E S S I N G                        *
+      *                                                                  *
+      ********************************************************************
+      *
+      ** Initial processing
+      *
+     C                     EXSR #PINIT
+      *
+      ** Main processing
+      *
+     C                     EXSR #PMAIN
+      *
+      ** Termination processing
+      *
+     C                     EXSR #PTERM
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *
+      * SR/#PINIT - Initial processing
+      *
+      ********************************************************************
+      *
+     C           #PINIT    BEGSR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           RSEQ    5                       E40890
+     C                     PARM           RLEV    1                       E40890
+     C                     PARM           RENT    3                       E40890
+     C                     PARM           RPARM 100                       E40890
+     C                     PARM           RACT    1                       E40890
+     C                     PARM           RCMD    1                       E40890
+      *
+      * Initialise appropriate work fields
+      *
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     MOVE '0'       *IN40
+     C                     MOVE *BLANK    @ERR    1
+      *
+      ** Define Local Data Area for error handling
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Access Bank details via access program
+      *  (database error handling done in access program)
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      *  Date format
+      *
+     C           BJDFIN    IFEQ 'D'
+     C                     MOVE *OFF      *IN98
+     C                     ELSE
+     C                     MOVE *ON       *IN98
+     C                     END
+      *
+      ** Clear messages from program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *
+      * SR/#PMAIN - Main processing
+      *
+      ********************************************************************
+      *
+     C           #PMAIN    BEGSR
+      *
+      ** Do until no errors, or until F3 taken.
+      *
+     C           *IN03     DOWEQ*OFF
+      *
+      ** Output Prompt screen.
+      *
+     C                     MOVE *ON       *IN86
+     C                     WRITE#MSGCTL
+      *
+     C                     EXFMTAP0006F1
+      *
+      ** F3 pressed - exit from request.
+      *
+     C           *IN03     IFEQ *ON
+     C                     MOVE 'E'       RCMD
+     C                     GOTO EXIT
+     C                     ENDIF
+      *
+      ** Clear messages from program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+      ** Perform screen validation
+      *
+     C                     EXSR #VALID
+      *
+      * If validation has been completed successfully, end loop.
+      *
+     C           @ERR      IFEQ *BLANKS
+     C                     MOVE *ON       *IN03
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C           EXIT      TAG
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SR/#VALID - Validate detail screen                            *
+      *                                                               *
+      * Called by: Main processing                                    *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+     C           #VALID    BEGSR
+      *
+     C                     MOVEA'00000'   *IN,40
+     C                     MOVE *BLANK    @ERR
+      *
+      * Validate Selection field
+      *
+     C           S1RSEQ    IFNE '1'
+     C           S1RSEQ    ANDNE'2'
+     C           S1RSEQ    ANDNE'3'
+     C                     MOVE *ON       *IN40
+     C                     MOVE '@'       @ERR
+     C                     MOVEL'USR0553' ZAMSID
+     C                     EXSR #PSMSG
+     C                     ENDIF
+      *
+      * Validate Action Code Section fields
+      *
+     C           S1INSE    IFNE 'X'
+     C           S1INSE    ANDNE' '
+     C                     MOVE *ON       *IN41
+     C                     MOVE '@'       @ERR
+     C                     MOVEL'USR0553' ZAMSID
+     C                     EXSR #PSMSG
+     C                     ELSE
+     C           S1INSE    IFEQ 'X'
+     C                     MOVE 'I'       U1INSE
+     C                     ENDIF
+     C                     ENDIF
+     C           S1AMDS    IFNE 'X'
+     C           S1AMDS    ANDNE' '
+     C                     MOVE *ON       *IN42
+     C                     MOVE '@'       @ERR
+     C                     MOVEL'USR0553' ZAMSID
+     C                     EXSR #PSMSG
+     C                     ELSE
+     C           S1AMDS    IFEQ 'X'
+     C                     MOVE 'A'       U1AMDS
+     C                     ENDIF
+     C                     ENDIF
+     C           S1DELS    IFNE 'X'
+     C           S1DELS    ANDNE' '
+     C                     MOVE *ON       *IN43
+     C                     MOVE '@'       @ERR
+     C                     MOVEL'USR0553' ZAMSID
+     C                     EXSR #PSMSG
+     C                     ELSE
+     C           S1DELS    IFEQ 'X'
+     C                     MOVE 'D'       U1DELS
+     C                     ENDIF
+     C                     ENDIF
+     C           S1AUTH    IFNE 'X'
+     C           S1AUTH    ANDNE' '
+     C                     MOVE *ON       *IN44
+     C                     MOVE '@'       @ERR
+     C                     MOVEL'USR0553' ZAMSID
+     C                     EXSR #PSMSG
+     C                     ELSE
+     C           S1AUTH    IFEQ 'X'
+     C                     MOVE 'X'       U1AUTH
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SR/#PSMSG - Send program error messages                       *
+      *                                                               *
+      * Called by:                                                    *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+     C           #PSMSG    BEGSR
+      *
+     C           ZAPGM     IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGM
+     C                     END
+      *
+      ** If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVEL'XXUSRMSG'ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      * SR/#PTERM - Termination processing
+      *
+      *****************************************************************
+      *
+     C           #PTERM    BEGSR
+      *
+      * Blank parameter field if CF03 taken
+      *
+     C           RCMD      IFEQ 'E'
+     C                     MOVE *BLANKS   RPARM
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INLR            last record
+     C                     RETRN                           exit
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called By :                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

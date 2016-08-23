@@ -1,0 +1,114 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas ER Bundesbank Reporting Control')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - European Reporting Module                           */
+/*                                                                   */
+/*       ERC000186 - Midas ER Bundesbank Reporting Control           */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2009           */
+/*                                                                   */
+/*       Last Amend No. CER059             Date 19Jul10              */
+/*       Prev Amend No. BUG26221 *CREATE   Date 30Sep09              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CER059 - German Feature Upgrade to Delhi                    */
+/*       BUG26221 - FX deal TOD transaction was excluded in the csv  */
+/*                  file extracted after COB                         */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BREPT) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSG)   TYPE(*CHAR) LEN(80) VALUE(*BLANKS)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2009')
+ 
+             CHGJOB     SWS(XXXXXX00)
+             MONMSG     MSGID(CPF0000)
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('ERC000186 - Midas ER Bundesbank +
+                          Reporting job stared') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(&DMLIB) VALUE(&SYSID *CAT 'DMLIB')
+ 
+             RTVDTAARA  DTAARA(ERBUNDREPT (1 10)) RTNVAR(&BREPT)
+ 
+             IF         COND(&BREPT *NE ' ') THEN(DO)
+ 
+             IF         COND(&BREPT *EQ 'FX_EXTRACT') THEN(GOTO +
+                          CMDLBL(FX_EXTRACT))
+ 
+             IF         COND(&BREPT *EQ 'FX_EXPORT') THEN(GOTO +
+                          CMDLBL(FX_EXPORT))
+ 
+             ENDDO
+ 
+/* FX Deals Extract */
+ 
+FX_EXTRACT:
+             CHGDTAARA  DTAARA(ERBUNDREPT (1 10)) VALUE('FX_EXTRACT')
+ 
+             CLRPFM     FILE(&DMLIB/ERDVTIPD)
+ 
+             MONMSG     MSGID(CPF3142 CPF3203 CPF3156) EXEC(DO)
+             CHGVAR     VAR(&MSG) VALUE('while clearing the FX Deals +
+                          Extract Files')
+                 GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             CALL       PGM(ER000196)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             CHGVAR     VAR(&MSG) VALUE('while executing the FX +
+                          Deals Extract')
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+FX_EXPORT:
+             CHGDTAARA  DTAARA(ERBUNDREPT (1 10)) VALUE('FX_EXPORT')
+ 
+             CALL       PGM(MXC0010) PARM('ERDVTIFF' '*NONE     ')
+             CALL       PGM(MXC0020) PARM('ERDVTIFF' 'C' '*NONE     ')
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             CHGVAR     VAR(&MSG) VALUE('while executing the FX +
+                          Deals Data Export')
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal terminations */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+             SNDPGMMSG  MSG('Program ERC000186 ended abnormally ' +
+                          *CAT &MSG) TOMSGQ(MOPERQ)
+             GOTO       CMDLBL(END2)
+ 
+END:
+             CHGDTAARA  DTAARA(ERBUNDREPT (1 10)) VALUE(' ')
+             SNDPGMMSG  MSG('Program ERC000186 ended normally ' *CAT +
+                          &MSG) TOMSGQ(MRUNQ MOPERQ)
+ 
+END2:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
+                          Banking Systems Ltd.')
+             ENDPGM

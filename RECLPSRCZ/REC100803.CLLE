@@ -1,0 +1,166 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas RE Cash Management Live Frnt End Hier Update')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Retail module                                       */
+/*                                                                   */
+/*       REC100803 - Cash Management Live Frnt End Hierarchy Update  */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. CRE008 *CREATE       Date 19Feb02            */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CRE008 - Cash Management                                    */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&PRE)    TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&DMLIB)  TYPE(*CHAR) LEN(7)
+             DCL        VAR(&DPLIB)  TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MEM)    TYPE(*CHAR) LEN(70)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2002')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(00000000)
+ 
+             SNDPGMMSG  MSG('REC100803 - Cash Management Live Front +
+                          End Hierarchy Update') TOMSGQ(MRUNQ)
+ 
+/* Determine file libraries */
+ 
+             RTVDTAARA  DTAARA(SDSTAT *ALL) RTNVAR(&SDSTAT)
+             CHGVAR     VAR(&PRE) VALUE(%SST(&SDSTAT 6 2))
+             CHGVAR     VAR(&DMLIB) VALUE(&PRE *TCAT 'DMLIB')
+             CHGVAR     VAR(&DPLIB) VALUE(&PRE *TCAT 'DPLIB')
+ 
+/* Create files */
+ 
+             DLTF     FILE(&DPLIB/RELACCHPDN)
+             MONMSG     MSGID(CPF0000)
+             CRTDUPOBJ  OBJ(RELACCHPD) FROMLIB(&DMLIB) +
+                          OBJTYPE(*FILE) TOLIB(&DPLIB) +
+                          NEWOBJ(RELACCHPDN) DATA(*NO)
+ 
+             DLTF     FILE(&DPLIB/RELACCMPDN)
+             MONMSG     MSGID(CPF0000)
+             CRTDUPOBJ  OBJ(RELACCMPD) FROMLIB(&DMLIB) +
+                          OBJTYPE(*FILE) TOLIB(&DPLIB) +
+                          NEWOBJ(RELACCMPDN) DATA(*NO)
+ 
+             DLTF     FILE(&DPLIB/RELZSHXPDN)
+             MONMSG     MSGID(CPF0000)
+             CRTDUPOBJ  OBJ(RELZSHXPD) FROMLIB(&DMLIB) +
+                          OBJTYPE(*FILE) TOLIB(&DPLIB) +
+                          NEWOBJ(RELZSHXPDN) DATA(*NO)
+ 
+             DLTF       FILE(&DPLIB/RELZSMXPDN)
+             MONMSG     MSGID(CPF0000)
+             CRTDUPOBJ  OBJ(RELZSMXPD) FROMLIB(&DMLIB) +
+                          OBJTYPE(*FILE) TOLIB(&DPLIB) +
+                          NEWOBJ(RELZSMXPDN) DATA(*NO)
+ 
+             DLTF     FILE(&DPLIB/RELGAHXPDN)
+             MONMSG     MSGID(CPF0000)
+             CRTDUPOBJ  OBJ(RELGAHXPD) FROMLIB(&DMLIB) +
+                          OBJTYPE(*FILE) TOLIB(&DPLIB) +
+                          NEWOBJ(RELGAHXPDN) DATA(*NO)
+ 
+             DLTF     FILE(&DPLIB/RELGAMXPDN)
+             MONMSG     MSGID(CPF0000)
+             CRTDUPOBJ  OBJ(RELGAMXPD) FROMLIB(&DMLIB) +
+                          OBJTYPE(*FILE) TOLIB(&DPLIB) +
+                          NEWOBJ(RELGAMXPDN) DATA(*NO)
+ 
+/* Cash Management 'Live' Front End Hierarchy Update */
+/*===================================================*/
+ 
+             CALL       PGM(RE100406)
+ 
+/* Abnormal ending: */
+ 
+             IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             RCLACTGRP  ACTGRP(*ELIGIBLE)
+ 
+/* Update live files */
+ 
+             CPYF       FROMFILE(&DPLIB/RELACCHPDN) +
+                          TOFILE(&DMLIB/RELACCHPD) MBROPT(*REPLACE)
+             MONMSG     (CPF2817) CMPDTA(CPF2869) +
+                        EXEC(CLRPFM RELACCHPD)
+ 
+             CPYF       FROMFILE(&DPLIB/RELACCMPDN) +
+                          TOFILE(&DMLIB/RELACCMPD) MBROPT(*REPLACE)
+             MONMSG     (CPF2817) CMPDTA(CPF2869) +
+                        EXEC(CLRPFM RELACCMPD)
+ 
+             CPYF       FROMFILE(&DPLIB/RELZSHXPDN) +
+                          TOFILE(&DMLIB/RELZSHXPD) MBROPT(*REPLACE)
+             MONMSG     (CPF2817) CMPDTA(CPF2869) +
+                        EXEC(CLRPFM RELZSHXPD)
+ 
+             CPYF       FROMFILE(&DPLIB/RELZSMXPDN) +
+                          TOFILE(&DMLIB/RELZSMXPD) MBROPT(*REPLACE)
+             MONMSG     (CPF2817) CMPDTA(CPF2869) +
+                        EXEC(CLRPFM RELZSMXPD)
+ 
+             CPYF       FROMFILE(&DPLIB/RELGAHXPDN) +
+                          TOFILE(&DMLIB/RELGAHXPD) MBROPT(*REPLACE)
+             MONMSG     (CPF2817) CMPDTA(CPF2869) +
+                        EXEC(CLRPFM RELGAHXPD)
+ 
+             CPYF       FROMFILE(&DPLIB/RELGAMXPDN) +
+                          TOFILE(&DMLIB/RELGAMXPD) MBROPT(*REPLACE)
+             MONMSG     (CPF2817) CMPDTA(CPF2869) +
+                        EXEC(CLRPFM RELGAMXPD)
+ 
+             DLTF       FILE(&DPLIB/RELACCHPDN)
+             DLTF       FILE(&DPLIB/RELACCMPDN)
+             DLTF       FILE(&DPLIB/RELZSHXPDN)
+             DLTF       FILE(&DPLIB/RELZSMXPDN)
+             DLTF       FILE(&DPLIB/RELGAHXPDN)
+             DLTF       FILE(&DPLIB/RELGAMXPDN)
+ 
+/* Normal ending: */
+/*================*/
+ 
+NORMAL:
+             GOTO       CMDLBL(ENDPGM)
+ 
+/* Abnormal ending: */
+/*==================*/
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+             RCLACTGRP  ACTGRP(*ELIGIBLE)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+/* Report an error */
+ 
+             CHGVAR     VAR(&MEM) VALUE('REC100803 - Cash Management +
+                          Live Front End Hierarchy Update FAILED')
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+             SNDPGMMSG  MSGID(MEM5052) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+ENDPGM:
+             ENDPGM

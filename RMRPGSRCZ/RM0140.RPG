@@ -1,0 +1,1128 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IRM Securities Trading Tmark Extract')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Interest Risk Management Module                  *
+     F*                                                               *
+     F*  RM0140 - Securities Trading Tmark Extract                    *
+     F*                                                               *
+     F*  Function:  This program extracts data from both the          *
+     F*  (COB)      securities trading value date book positions      *
+     F*             and forward value-dated trades, for download      *
+     F*             to Tmark.                                         *
+     F*                                                               *
+     F*  Called By: RMC0140 - Securities Trading Tmark Extract        *
+     F*                       Control Program                         *
+     F*                                                               *
+     F*  Calls    : RM0510 - IRM Extract Filter                       *
+     F*             RM0520 - Write to Transaction Extract File        *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSE031             Date 06Dec01               *
+      *                 180707             Date 25Jul00               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 CSE005             Date 04FEB97               *
+     F*                 095017             Date 24OCT95               *
+     F*                 CRM001  *CREATE    Date 06FEB95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  CSE031 - Coupon Fixing for Floating Rate Notes.              *
+     F*           (recompilation due to change to ZNCD/ZLCD)          *
+     F*  180707 - No Position Settlements generated. Recompile over   *
+     F*           changes in /COPY ZNCDZ3.                            *
+     F*  CSE005 - Effect of holidays on FRN Coupon Dates              *
+     F*           (recompilation due to change to ZNCD/ZLCD)          *
+     F*  095017 - REMOVE CURRENCY CODE FROM BASE RATE AS NOT          *
+     F*           REQUIRED BY TMARK.                                  *
+     F*  CRM001 - Midas/Tmark Interface                               *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FBKPHV   IF  E           K        DISK         KINFSR *PSSR
+     F** Book Positions Headers - Value Date
+     F*
+     FSECTY   IF  E           K        DISK         KINFSR *PSSR
+     F** Securities Trading Details
+     F*
+     FBKPOS   IF  E           K        DISK         KINFSR *PSSR
+     F** Book Positions Details
+     F*
+     FSEPCBD  IF  E           K        DISK         KINFSR *PSSR
+     F** Book Positions Profit Centre
+     F*
+     FINVTP   IF  E           K        DISK         KINFSR *PSSR
+     F** Investment Types
+     F*
+     FTRADBO  IF  E           K        DISK         KINFSR *PSSR
+     F** Trades by book, branch, security and market
+     F*
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   30  - Read fail on BKPHV                                    *
+     F*   31  - Chain/read fail on SECTY, INVTP, SEPCBD, and BKPOS    *
+     F*   32  - Read fail on TRADBO                                   *
+     F*                                                               *
+     F*   LR  - Last record indicator                                 *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*   #LINIT - Initialisation subroutine                          *
+     F*   #LRLFR - Setup Rollover Frequency                           *
+     F*   #LRLDY - Setup Rollover Day                                 *
+     F*   #LINFR - Setup Interest Payment Frequency                   *
+     F*   #LINDY - Setup Interest Payment Day                         *
+     F*   #LEXTR - Extract forward value-dated trades                 *
+     F*   #LSETB - Setup all fields on the Interim Transaction        *
+     F*            Extract File for the book position                 *
+     F*   #LSETT - Setup all fields on the Interim Transaction        *
+     F*            Extract File for trades                            *
+     F*   ZCNSD  - Subroutine to calculate consideration              *
+     F*   ZDATE1 - Convert date format to day number                  *
+     F*   ZDATE2 - Convert day number to date formats                 *
+     F*   ZNCD   - Determine Next Coupon Date                         *
+     F*   ZNRD   - Determine Next Rollover Date                       *
+     F*                                                               *
+     F*   *PSSR  - Standard Error Processing                          *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E** Array containing Copyright statement
+     E*
+     E/COPY ZSRSRC,ZDATE2Z1
+     E*
+     E/COPY ZSRSRC,ZNCDZ1
+     E*
+     E/COPY ZSRSRC,ZPOWER8Z1
+     E*
+     I/EJECT
+     I*
+     IWKYIN       DS                              6
+     I**  Data structure for INVTP key fields
+     I*
+     I                                        1   3 NMCY
+     I                                        4   6 SITP
+     I*
+     IWKYBK       DS                             20
+     I**  Data structure for BKPOS key fields
+     I*
+     I                                        1  10 BHSC
+     I                                       11  13 BHBA
+     I                                       14  15 BHBK
+     I                                       16  16 BHMK
+     I                                       17  17 BHTV
+     I                                    P  18  200LPSD
+     I*
+     IRUNDAT    E DSRUNDAT
+     I** Data Area giving Installation Control Details
+     I*
+     ILDA       E DSLDA                         256
+     I**  Local data area for database error details
+     I*
+     ID@ITEX    E DSRMITEXPD
+     I**  Data structure for Interim Transaction Extract File details
+     I**  Rename fields common to SECTY and SEPCBD
+     I*
+     I              DYBS                            DDYBS
+     I              DVBS                            DDVBS
+     I*
+     IDSSDY     E DSDSSDY
+     I**  Data structure to hold the outgoing record format
+     I*
+     ISDBANK    E DSSDBANKPD
+     I**  Data structure for bank details
+     I*
+     ISDBRCH    E DSSDBRCHPD
+     I**  Data structure for branch details
+     I*
+     ISDCURR    E DSSDCURRPD
+     I**  Data structure for branch details
+     I*
+     IDSFDY     E DSDSFDY
+     I**  Short data structure for access programs
+     I*
+     I/COPY ZSRSRC,ZNCDZ2
+     I*
+     C/EJECT
+     C*
+     C**  Set up copyright parameter
+     C*
+     C                     MOVEACPY@      ACT@   80
+     C*
+     C**  Define work fields
+     C*
+     C           *LIKE     DEFN BHSC      WSVSC
+     C           *LIKE     DEFN BHBA      WSVBR
+     C           *LIKE     DEFN BHBK      WSVBK
+     C           *LIKE     DEFN BHMK      WSVMK
+     C           *LIKE     DEFN NMCY      WSVCY
+     C           *LIKE     DEFN PCBK      WSVPR
+     C           *LIKE     DEFN INVT      WSVSI
+     C*
+     C**  Define key list for LF/INVTP
+     C*
+     C           KYIN      KLIST
+     C                     KFLD           NMCY
+     C                     KFLD           SITP
+     C*
+     C**  Define key list for PF/SEPCBD
+     C*
+     C           KYPC      KLIST
+     C                     KFLD           BHBK
+     C                     KFLD           BHBA
+     C                     KFLD           BHSC
+     C                     KFLD           BHMK
+     C*
+     C**  Define key list for LF/BKPOS
+     C*
+     C           KYBK      KLIST
+     C                     KFLD           BHSC
+     C                     KFLD           BHBA
+     C                     KFLD           BHBK
+     C                     KFLD           BHMK
+     C                     KFLD           BHTV
+     C                     KFLD           LPSD
+     C*
+     C**  Define key list for LF/TRADBO (to set lower limits)
+     C*
+     C           KYTRD     KLIST
+     C                     KFLD           BHBK
+     C                     KFLD           BHBA
+     C                     KFLD           BHSC
+     C                     KFLD           BHMK
+     C                     KFLD           BJDNWD
+     C*
+     C**  Define key list for LF/TRADBO
+     C*
+     C           KYTR      KLIST
+     C                     KFLD           BHBK
+     C                     KFLD           BHBA
+     C                     KFLD           BHSC
+     C                     KFLD           BHMK
+     C*
+     C*****************************************************************
+     C**  M A I N   P R O C E S S I N G
+     C*****************************************************************
+     C*
+     C**  Perform initialisation
+     C*
+     C                     EXSR #LINIT
+     C*
+     C                     READ BKPHV                    30
+     C*
+     C**  Do while not end of file
+     C*
+     C           *IN30     DOWEQ'0'
+     C*
+     C**  On change of security
+     C*
+     C           BHSC      IFNE WSVSC
+     C*
+     C**  Get security details
+     C*
+     C           BHSC      CHAINSECTY                31
+     C           *IN31     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SECTY   'DBFILE           **************
+     C                     MOVELBHSC      DBKEY            * DBERROR 03 *
+     C                     Z-ADD3         DBASE            **************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     MOVE RECI      WRECI   1
+     C*
+     C**  Get investment type details
+     C*
+     C           KYIN      CHAININVTP                31
+     C           *IN31     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'INVTP   'DBFILE           **************
+     C                     MOVELWKYIN     DBKEY            * DBERROR 04 *
+     C                     Z-ADD4         DBASE            **************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C**  If processing type from INVTPD is NOT '2', '4', or '7'
+     C*
+     C           PROT      IFNE '2'
+     C           PROT      ANDNE'4'
+     C           PROT      ANDNE'7'
+     C*
+     C**  On change of nominal currency from LF/SECTY, get currency
+     C**  details using access object
+     C*
+     C           NMCY      IFNE WSVCY
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANK    P@RTCD
+     C                     PARM '*KEY  '  P@OPTN
+     C                     PARM NMCY      P@CYCD  3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C           P@RTCD    IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDCURRPD'DBFILE           **************
+     C                     MOVELNMCY      DBKEY            * DBERROR 05 *
+     C                     Z-ADD5         DBASE            **************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C**  Save current currency and currency decimal places
+     C*
+     C                     MOVE NMCY      WSVCY
+     C                     Z-ADDA6NBDP    WCYDP   10
+     C*
+     C                     ENDIF
+     C*
+     C**  Determine security's rollover frequency
+     C*
+     C                     EXSR #LRLFR
+     C*
+     C**  Determine security's rollover day and next rollover date
+     C*
+     C                     EXSR #LRLDY
+     C*
+     C**  Determine security's interest payment frequency
+     C*
+     C                     EXSR #LINFR
+     C*
+     C**  Determine security's interest payment day & next coupon date
+     C*
+     C                     EXSR #LINDY
+     C*
+     C**  End of if processing type
+     C                     ENDIF
+     C*
+     C**  End of on change of security
+     C                     ENDIF
+     C*
+     C**  If record from LF/SECTY is live and processing type is
+     C**  NOT '2', '4', or '7'
+     C*
+     C           WRECI     IFEQ 'D'
+     C           PROT      ANDNE'2'
+     C           PROT      ANDNE'4'
+     C           PROT      ANDNE'7'
+     C*
+     C**  On change of branch on BKPHV, get branch details using AO
+     C*
+     C           BHBA      IFNE WSVBR
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANK    P@RTCD
+     C                     PARM '*KEY  '  P@OPTN
+     C                     PARM BHBA      P@BRCA  3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*
+     C           P@RTCD    IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBRCHPD'DBFILE           **************
+     C                     MOVELBHBA      DBKEY            * DBERROR 06 *
+     C                     Z-ADD6         DBASE            **************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C**  On change of security, branch, book, or market on BKPHV,
+     C**  get profit centre from SEPCBD
+     C*
+     C           BHSC      IFNE WSVSC
+     C           BHBA      ORNE WSVBR
+     C           BHBK      ORNE WSVBK
+     C           BHMK      ORNE WSVMK
+     C*
+     C           KYPC      SETLLSEPCBD
+     C           KYPC      READESEPCBD                   31
+     C           *IN31     IFEQ '1'
+     C                     MOVE *BLANKS   PCBK
+     C                     ENDIF
+     C*
+     C                     MOVE BHSC      WSVSC
+     C                     MOVE BHMK      WSVMK
+     C*
+     C                     ENDIF
+     C*
+     C**  On change of branch (from BKPHV), profit centre (from
+     C**  SEPCBD), book (from BKPHV), or investment type (from BKPHV)
+     C*
+     C           BHBA      IFNE WSVBR
+     C           PCBK      ORNE WSVPR
+     C           BHBK      ORNE WSVBK
+     C           INVT      ORNE WSVSI
+     C*
+     C                     CALL 'RM0510'
+     C                     PARM           BHBA
+     C                     PARM           PCBK
+     C                     PARM           BHBK
+     C                     PARM *BLANKS   WDTST   4
+     C                     PARM *BLANKS   WLTST   4
+     C                     PARM           INVT
+     C                     PARM *BLANKS   WISTT   3
+     C                     PARM *BLANKS   WRTCD   7
+     C*
+     C**  Check value of return code
+     C*
+     C           WRTCD     IFEQ '*ERROR'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C           WRTCD     IFEQ '*END'
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C**  Save current values
+     C*
+     C                     MOVE BHBA      WSVBR
+     C                     MOVE PCBK      WSVPR
+     C                     MOVE BHBK      WSVBK
+     C                     MOVE INVT      WSVSI
+     C*
+     C                     ENDIF
+     C*
+     C**  Process only not to be omitted records
+     C*
+     C           WRTCD     IFNE '*OMIT'
+     C*
+     C**  Access the latest book position
+     C*
+     C           KYBK      CHAINBKPOS                31
+     C           *IN31     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'BKPOS   'DBFILE           **************
+     C                     MOVELWKYBK     DBKEY            * DBERROR 07 *
+     C                     Z-ADD7         DBASE            **************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C**  Calculate the par nominal value of the position
+     C*
+     C                     Z-ADDNPSN      ZNOML
+     C                     Z-ADD100       ZPRC
+     C                     Z-ADDWCYDP     ZCDP
+     C                     EXSR ZCNSD
+     C                     Z-ADDZCONS     WPNMB  150
+     C*
+     C**  Clear fields on Interim Transaction Extract File
+     C*
+     C                     CLEARD@ITEX
+     C*
+     C**  Setup all fields on the Interim transaction extract file
+     C**  to write a record for the book position
+     C*
+     C                     EXSR #LSETB
+     C*
+     C**  Write a record to the Transaction Extract file
+     C*
+     C                     CALL 'RM0520'
+     C                     PARM D@ITEX    DSSDY
+     C                     PARM *BLANKS   WRTCD
+     C*
+     C**  Check if error occurred
+     C*
+     C           WRTCD     IFEQ '*ERROR'
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C**  Extract forward value-dated trades (for the position being
+     C**  processed)
+     C*
+     C                     EXSR #LEXTR
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C**  Read next record and get value of record ID
+     C*
+     C                     READ BKPHV                    30
+     C*
+     C                     ENDDO
+     C*
+     C**  Seton LR and return to calling program
+     C*
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #LINIT - Subroutine to perform initial processing             *
+     C*                                                               *
+     C* Called by: Main processing                                    *
+     C*                                                               *
+     C* Calls: *PSSR                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LINIT    BEGSR                           ** #LINIT SR **
+     C*
+     C**  Read in data area RUNDAT
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*
+     C**  Set Date Format Indicator *IN98 on if date format is MMDDYY
+     C*
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     ENDIF
+     C*
+     C**  Set up database error details
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'RM0140'  DBPGM
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD*ZEROS    DBASE
+     C                     OUT  LDA
+     C*
+     C**  Get bank details using access object
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANK    P@RTCD  7
+     C                     PARM '*FIRST'  P@OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C**  Check if error occurred
+     C*
+     C           P@RTCD    IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE           **************
+     C                     MOVEL'*FIRST'  DBKEY            * DBERROR 01 *
+     C                     Z-ADD1         DBASE            **************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C**  Event control date is equal to the date of next working day
+     C*
+     C                     Z-ADDBJDNWD    ECD     50
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #LRLFR-  Subroutine to determine Rollover Frequency           *
+     C*                                                               *
+     C* Called by: Main processing                                    *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LRLFR    BEGSR                           ** #LRLFR SR **
+     C*
+     C                     SELEC
+     C*
+     C**  Rollover frequency is the Rate Change frequency if the
+     C**  Rate Change frequency is 'D', 'W', or 'M'
+     C*
+     C           RCFQ      WHEQ 'D'
+     C           RCFQ      OREQ 'W'
+     C           RCFQ      OREQ 'M'
+     C                     MOVE RCFQ      WRLFQ   1
+     C*
+     C                     OTHER
+     C*
+     C**  Count number of occurrences of 'C' and 'R' in the Coupon/Rate
+     C**  Indicator Array (CR01-CR12)
+     C*
+     C                     Z-ADD*ZEROS    WCNTR   20
+     C*
+     C                     DO   12        WX      20
+     C                     MOVE CR,WX     WCHAR   1
+     C           WCHAR     IFEQ 'C'
+     C           WCHAR     OREQ 'R'
+     C                     ADD  1         WCNTR
+     C                     ENDIF
+     C                     ENDDO
+     C*
+     C**  Set Rollover Frequency depending on the number of 'C' & 'R'
+     C*
+     C                     SELEC
+     C           WCNTR     WHEQ 0
+     C                     MOVE *BLANKS   WRLFQ
+     C           WCNTR     WHEQ 1
+     C                     MOVE 'Y'       WRLFQ
+     C           WCNTR     WHEQ 2
+     C                     MOVE 'X'       WRLFQ
+     C           WCNTR     WHEQ 4
+     C                     MOVE 'Q'       WRLFQ
+     C           WCNTR     WHEQ 12
+     C                     MOVE 'M'       WRLFQ
+     C                     ENDSL
+     C*
+     C                     ENDSL
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #LRLDY - Subroutine to determine Rollover Day and Next        *
+     C*          Rollover Date                                        *
+     C*                                                               *
+     C* Called by: Main processing                                    *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LRLDY    BEGSR                           ** #LRLDY SR **
+     C*
+     C**  Find first occurrence of 'C' or 'R' in the Coupon/Rate ind.
+     C*
+     C                     DO   12        WX
+     C                     MOVE CR,WX     WCHAR
+     C           WCHAR     IFEQ 'C'
+     C           WCHAR     OREQ 'R'
+     C                     LEAVE
+     C                     ENDIF
+     C                     ENDDO
+     C*
+     C**  If no such occurrence is found
+     C*
+     C           WX        IFEQ 13
+     C*
+     C                     Z-ADD*ZEROS    WRLDY   20
+     C           NCHD      IFNE *ZEROS
+     C                     Z-ADDNCHD      WNRLD   50
+     C*
+     C**  Get day number depending on date format (*IN98 on = MMDDYY)
+     C*
+     C           *IN98     IFEQ '1'
+     C                     MOVE WNRLD     WRLDY
+     C                     ELSE
+     C                     MOVELWNRLD     WRLDY
+     C                     ENDIF
+     C                     ELSE
+     C                     Z-ADD*ZEROS    WNRLD
+     C                     ENDIF
+     C*
+     C                     ELSE
+     C*
+     C**  Set the Rollover Day to the first 2 characters of the
+     C**  corresponding occurrence of the Dividend Payment Day/Month
+     C**  array (CD01-CD12)
+     C*
+     C                     Z-ADDCD,WX     WDATE   40
+     C*
+     C**  Get day number depending on date format (*IN98 on = MMDDYY)
+     C*
+     C           *IN98     IFEQ '1'
+     C                     MOVE WDATE     WRLDY
+     C                     ELSE
+     C                     MOVELWDATE     WRLDY
+     C                     ENDIF
+     C*
+     C**  Calculate Next Rollover Date
+     C*
+     C                     EXSR ZNRD
+     C                     Z-ADDNRD       WNRLD
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #LINFR - Subroutine to determine Interest Payment Frequency   *
+     C*                                                               *
+     C* Called by: Main processing                                    *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LINFR    BEGSR                           ** #LINFR SR **
+     C*
+     C**  Count number of occurrences of 'C' and 'P' in Coupon/Rate
+     C**  Indicator Array (CR01-CR12)
+     C*
+     C                     Z-ADD*ZEROS    WCNTR
+     C*
+     C                     DO   12        WX
+     C                     MOVE CR,WX     WCHAR
+     C           WCHAR     IFEQ 'C'
+     C           WCHAR     OREQ 'P'
+     C                     ADD  1         WCNTR
+     C                     ENDIF
+     C                     ENDDO
+     C*
+     C**  Set Interest Payment Frequency based on the number of C and P
+     C*
+     C                     SELEC
+     C           WCNTR     WHEQ 0
+     C                     MOVE *BLANKS   WIPFR   1
+     C           WCNTR     WHEQ 1
+     C                     MOVE 'Y'       WIPFR
+     C           WCNTR     WHEQ 2
+     C                     MOVE 'X'       WIPFR
+     C           WCNTR     WHEQ 4
+     C                     MOVE 'Q'       WIPFR
+     C           WCNTR     WHEQ 12
+     C                     MOVE 'M'       WIPFR
+     C                     ENDSL
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #LINDY - Subroutine to determine Interest Payment Day and     *
+     C*          Next Coupon Date                                     *
+     C*                                                               *
+     C* Called by: Main processing                                    *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LINDY    BEGSR                           ** #LINDY SR **
+     C*
+     C**  Find first occurrence of 'C' or 'P' in Coupon/Rate indicators
+     C*
+     C                     DO   12        WX
+     C                     MOVE CR,WX     WCHAR
+     C           WCHAR     IFEQ 'C'
+     C           WCHAR     OREQ 'P'
+     C                     LEAVE
+     C                     ENDIF
+     C                     ENDDO
+     C*
+     C**  If no such occurrence is found
+     C*
+     C           WX        IFEQ 13
+     C*
+     C                     Z-ADD*ZEROS    WIPDY   20
+     C                     Z-ADD*ZEROS    WNCPD   50
+     C*
+     C                     ELSE
+     C*
+     C**  Set the Interest Payment Day to the first 2 characters of the
+     C**  corresponding occurrence of the Dividend Payment Day/Month
+     C**  array (CD01 to CD12).
+     C*
+     C                     Z-ADDCD,WX     WDATE
+     C*
+     C**  Get day number depending on date format (*IN98 on = MMDDYY)
+     C*
+     C           *IN98     IFEQ '1'
+     C                     MOVE WDATE     WIPDY
+     C                     ELSE
+     C                     MOVELWDATE     WIPDY
+     C                     ENDIF
+     C*
+     C**  Calculate the Next Coupon Date
+     C*
+     C                     EXSR ZNCD
+     C                     Z-ADDNCD       WNCPD
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #LEXTR - Subroutine to extract forward value-dated trades     *
+     C*                                                               *
+     C* Called by: Main processing                                    *
+     C*                                                               *
+     C* Calls: #LSETT                                                 *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LEXTR    BEGSR                           ** #LEXTR SR **
+     C*
+     C           KYTRD     SETLLTRADBO
+     C           KYTR      READETRADBO                   32
+     C*
+     C**  Do while not end of file on LF/TRADBO
+     C*
+     C           *IN32     DOWEQ'0'
+     C*
+     C**  Clear fields on Interim Transaction Extract File
+     C*
+     C                     CLEARD@ITEX
+     C*
+     C**  Calculate the par nominal value of the trade
+     C*
+     C                     Z-ADDNOML      ZNOML
+     C                     Z-ADD100       ZPRC
+     C                     Z-ADDWCYDP     ZCDP
+     C                     EXSR ZCNSD
+     C                     Z-ADDZCONS     WPNMT  150
+     C*
+     C**  Setup all fields on Interim transaction extract file to
+     C**  write a record for the trade
+     C*
+     C                     EXSR #LSETT
+     C*
+     C**  Write a record to the Transaction Extract file
+     C*
+     C                     CALL 'RM0520'
+     C                     PARM D@ITEX    DSSDY
+     C                     PARM *BLANKS   WRTCD
+     C*
+     C**  Check if error occurred
+     C*
+     C           WRTCD     IFEQ '*ERROR'
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C           KYTR      READETRADBO                   32
+     C*
+     C                     ENDDO
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #LSETB - Subroutine to setup all fields on the Interim        *
+     C*          Transaction Extract File in order to write a record  *
+     C*          for a book position                                  *
+     C*                                                               *
+     C* Called by: Main processing                                    *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LSETB    BEGSR                           ** #LSETB SR **
+     C*
+     C**  Trade ID (Security Shortname)
+     C                     MOVELBHSC      TMID
+     C*
+     C**  Instrument type
+     C                     MOVE 'SC'      IRTY
+     C*
+     C**  Customer number (Branch Internal Customer)
+     C                     MOVELA8BICN    CNUM
+     C*
+     C**  Branch code
+     C                     MOVE BHBA      BRCA
+     C*
+     C**  Profit Centre
+     C                     MOVE PCBK      PRFC
+     C*
+     C**  Book code
+     C                     MOVE BHBK      BOKC
+     C*
+     C**  Currency (Nominal ccy)
+     C                     MOVE NMCY      CCY
+     C*
+     C**  Index Type
+     C           WRLFQ     IFNE *BLANK
+     C                     MOVE *BLANK    IDXT
+     C                     ELSE
+     C                     MOVE 'F'       IDXT
+     C                     ENDIF
+     C*
+     C**  Index
+     C           WRLFQ     IFNE *BLANK
+     C******************** MOVELNMCY      INDX                            095017
+     C******************** MOVE BASC      INDX                            095017
+     C                     MOVELBASC      INDX                            095017
+     C                     ELSE
+     C                     MOVE *BLANKS   INDX
+     C                     ENDIF
+     C*
+     C**  Deal date and Value Date
+     C           CPNR      IFNE *ZEROS
+     C                     Z-ADDLCPN      DDAT
+     C                     Z-ADDLCPN      VDAT
+     C                     ELSE
+     C                     Z-ADDLPSD      DDAT
+     C                     Z-ADDLPSD      VDAT
+     C                     ENDIF
+     C*
+     C**  Maturity date
+     C                     Z-ADDMATY      MDAT
+     C*
+     C**  Principal (Par nominal value)
+     C                     Z-ADDWPNMB     PCPL
+     C*
+     C**  Interest Rate (Coupon rate)
+     C                     Z-ADDCPNR      INTR
+     C*
+     C**  Rate/Spread
+     C           RCFQ      IFNE *BLANKS
+     C                     Z-ADDBASS      RTSP
+     C                     ENDIF
+     C*
+     C**  Spread indicator
+     C           RCFQ      IFNE *BLANKS
+     C                     MOVE SPRI      SPIN
+     C                     ENDIF
+     C*
+     C**  Rollover frequency
+     C                     MOVE WRLFQ     RLFQ
+     C*
+     C**  Rollover date (Next rollover day)
+     C                     Z-ADDWNRLD     RLDT
+     C*
+     C**  Rollover day
+     C                     Z-ADDWRLDY     RLDY
+     C*
+     C**  Reset term (Rollover frequency)
+     C                     MOVELWRLFQ     RETM
+     C*
+     C**  Interest Payment Frequency
+     C                     MOVE WIPFR     IPFR
+     C*
+     C**  Next Interest Payment Date
+     C                     Z-ADDWNCPD     NIDT
+     C*
+     C**  Interest Frequency day in month
+     C                     Z-ADDWIPDY     INTF
+     C*
+     C**  Interest Holiday Rule
+     C                     MOVEL'A'       IHOL
+     C*
+     C**  Interest Holiday Adjustment Rule
+     C                     MOVE 'R'       IHAR
+     C*
+     C**  Day Basis
+     C                     MOVE DYBS      DDYBS
+     C*
+     C**  Divisor Basis
+     C                     MOVE DVBS      DDVBS
+     C*
+     C**  Interest Method
+     C           CPNR      IFNE *ZEROS
+     C                     MOVE 'YAR'     INTM
+     C                     ELSE
+     C                     MOVE 'DAD'     INTM
+     C                     ENDIF
+     C*
+     C**  Security Market Price
+     C                     Z-ADDAPPB      MKPR
+     C*
+     C**  Principal Indicator
+     C                     MOVE 'P'       PRPI
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #LSETT - Subroutine to setup all fields on the Interim        *
+     C*          Transaction Extract File inorder to write a record   *
+     C*          for a trade                                          *
+     C*                                                               *
+     C* Called by: #LEXTR                                             *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LSETT    BEGSR                           ** #LSETT SR **
+     C*
+     C**  Trade ID (Security Shortname)
+     C                     MOVELBHSC      TMID
+     C*
+     C**  Instrument type
+     C                     MOVE 'SC'      IRTY
+     C*
+     C**  Customer number (Branch Internal Customer)
+     C                     MOVELA8BICN    CNUM
+     C*
+     C**  Branch code
+     C                     MOVE BHBA      BRCA
+     C*
+     C**  Profit Centre
+     C                     MOVE PCBK      PRFC
+     C*
+     C**  Book code
+     C                     MOVE BHBK      BOKC
+     C*
+     C**  Currency (Nominal ccy)
+     C                     MOVE NMCY      CCY
+     C*
+     C**  Index Type
+     C           WRLFQ     IFNE *BLANK
+     C                     MOVE *BLANK    IDXT
+     C                     ELSE
+     C                     MOVE 'F'       IDXT
+     C                     ENDIF
+     C*
+     C**  Index
+     C           WRLFQ     IFNE *BLANK
+     C******************** MOVELNMCY      INDX                            095017
+     C******************** MOVE BASC      INDX                            095017
+     C                     MOVELBASC      INDX                            095017
+     C                     ELSE
+     C                     MOVE *BLANKS   INDX
+     C                     ENDIF
+     C*
+     C**  Deal date and Value Date
+     C           CPNR      IFNE *ZEROS
+     C                     Z-ADDLCPN      DDAT
+     C                     Z-ADDLCPN      VDAT
+     C                     ELSE
+     C                     Z-ADDTDVD      DDAT
+     C                     Z-ADDTDVD      VDAT
+     C                     ENDIF
+     C*
+     C**  Maturity date
+     C                     Z-ADDMATY      MDAT
+     C*
+     C**  Principal (Par nominal value)
+     C           TDTP      IFEQ 'TP'
+     C                     Z-ADDWPNMT     PCPL
+     C                     ELSE
+     C                     Z-SUBWPNMT     PCPL
+     C                     ENDIF
+     C*
+     C**  Interest Rate (Coupon rate)
+     C                     Z-ADDCPNR      INTR
+     C*
+     C**  Rate/Spread (Base rate spread)
+     C           RCFQ      IFNE *BLANKS
+     C                     Z-ADDBASS      RTSP
+     C                     ENDIF
+     C*
+     C**  Spread indicator
+     C           RCFQ      IFNE *BLANKS
+     C                     MOVE SPRI      SPIN
+     C                     ENDIF
+     C*
+     C**  Rollover frequency
+     C                     MOVE WRLFQ     RLFQ
+     C*
+     C**  Rollover date (Next rollover day)
+     C                     Z-ADDWNRLD     RLDT
+     C*
+     C**  Rollover day
+     C                     Z-ADDWRLDY     RLDY
+     C*
+     C**  Reset term (Rollover frequency)
+     C                     MOVELWRLFQ     RETM
+     C*
+     C**  Interest Payment Frequency
+     C                     MOVE WIPFR     IPFR
+     C*
+     C**  Next Interest Payment Date
+     C                     Z-ADDWNCPD     NIDT
+     C*
+     C**  Interest Frequency day in month
+     C                     Z-ADDWIPDY     INTF
+     C*
+     C**  Interest Holiday Rule
+     C                     MOVEL'A'       IHOL
+     C*
+     C**  Interest Holiday Adjustment Rule
+     C                     MOVE 'R'       IHAR
+     C*
+     C**  Day Basis
+     C                     MOVE DYBS      DDYBS
+     C*
+     C**  Divisor Basis
+     C                     MOVE DVBS      DDVBS
+     C*
+     C**  Interest Method
+     C           CPNR      IFNE *ZEROS
+     C                     MOVE 'YAR'     INTM
+     C                     ELSE
+     C                     MOVE 'DAD'     INTM
+     C                     ENDIF
+     C*
+     C**  Security Market Price
+     C                     Z-ADDPRIC      MKPR
+     C*
+     C**  Principal Indicator
+     C                     MOVE 'P'       PRPI
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR  - Program exception error routine                      *
+     C*          Called automatically if a program error occurs,      *
+     C*          or directly by the program code using EXSR.          *
+     C*                                                               *
+     C* Called by: Any file or program errors                         *
+     C*            Main processing                                    *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+     C*
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C*
+     C/COPY ZSRSRC,ZDATE1Z2
+     C*
+     C/COPY ZSRSRC,ZDATE2Z2
+     C*
+     C/COPY ZSRSRC,ZCNSDZ1
+     C*
+     C/COPY ZSRSRC,ZNCDZ3
+     C*
+     C/COPY ZSRSRC,ZNRDZ3
+     C*
+**  CPY@ - Copyright Statement
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000

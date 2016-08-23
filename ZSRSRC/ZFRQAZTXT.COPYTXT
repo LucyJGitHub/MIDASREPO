@@ -1,0 +1,108 @@
+     C*****************************************************************
+     C**                                                              *
+     C**  ZFRQAZTXT - TEXT FILE                                       *
+     C**                                                              *
+     C**                                                              *
+     C*****************************************************************
+     C**                                                              *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+     * Midas Release 4 --------------- Base -------------------------*
+     C**   Last Amend No. E22581        DATE  10AUG90                 *
+     C**                                                              *
+     C**--------------------------------------------------------------*
+     C**                                                              *
+     C**   E22581 - CORRECT TEXT WHICH DESCRIBES POSITIONING OF       *
+     C**            SLASH COPIES                                      *
+     C**--------------------------------------------------------------*
+  STANDARD SUBROUTINE - ZFRQA
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 
+  Purpose:
+  ~~~~~~~~
+   To calculate the day number of the next payment/statement date
+   from current date/day in month and frequency code.
+ 
+  Notes for when including in RPG pgm for compiling:
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   /COPY ZSRSRC ZAOZ1 should be included in the 'I' specifications
+   /COPY ZSRSRC ZAOZ2 should be included in the 'I' specifications
+   /COPY ZSRSRC ZFRQAZ1 should be included in the 'E' specifications
+***/COPY*ZSRSRC*ZFRQAZ2*should*be*included*in*the*'I' specifications     *E22581
+***/COPY*ZSRSRC*ZFRQAZ3*should*be*included*in*the*subroutine*section     *E22581
+   /COPY ZSRSRC ZFRQAZ2 should be included in the 'C' specifications     *E22581
+   /COPY ZSRSRC ZFRQAZ3 should be included as a Compile Time Array       *E22581
+ 
+   Notes: (1)- If ZDATE5 is required in same pgm do not include both
+               ZDATE5Z1 and ZFRQAZ1, as they are the same
+ 
+   Requirements:
+   ~~~~~~~~~~~~
+   The program using ZFRQA must also contain the ZDATE1, ZDATE2
+   and ZCHKH subroutines.
+ 
+   Physical file format and TABLETJ is used in this routine
+   TABLETJ is should be defined as a keyed physical file.
+ 
+   The field HCCY from TABLETJ (Holidays records) is loaded into an
+   array ZHC of 50 elements, to contain both records 1 and 2 for any
+   date.
+ 
+   The field APDA from TABTB11 (ICD record 2) is used in this routine,
+   and so TABTB11 should be accessed during initial processing in the
+   program
+ 
+   The access object SDGELRL1 is used in this subroutine. This has
+   two associated sets of Input Specifications, ZAOZ1 should be
+   included only if no other 200-byte access programs are used;
+   ZAOZ2 should be included if AOGELRR0 is not used elsewhere in the
+   program.
+ 
+   Input:
+   ~~~~~
+ 
+   ZFREQ   -     A one character field containing the frequency
+                 code.
+ 
+   ZDAYNO  -     A five digit field containing the base date
+                 (day number of current payment date).
+ 
+   ZMDAY   -     A two digit field containing the day of the month
+                 (required only for certain frequencies:
+                 M R T Q X Y L B) on which payment should fall
+ 
+   ZCCY    -     A three character field containing the currency
+                 code. For processing to check a working day has
+                 been found, this currency code is used.
+ 
+   ZLOC    -     A three character field containing the location
+                 code. This may be left blank if no location is
+                 required.
+ 
+   Procedure:
+   ~~~~~~~~~
+ 
+   1.   ZDAYNO is converted using ZDATE2 into ZMTH, ZYEAR and ZDAY.
+ 
+   2.   The required number of days is added to ZDAYNO for any
+        frequencies less than one month.
+ 
+   3.   For other frequencies, the required number of months/days
+        is applied to ZMTH, ZDAY and ZYEAR as appropriate.
+ 
+   4.   ZDATE is converted using ZDATE1 into a MIDAS day number.
+ 
+   5.   If required, the next working day after that calculated
+        is found, using ZCHKH
+ 
+   Output:
+   ~~~~~~
+ 
+   ZDAYNO - a five digit field containing the day no. for the next
+            payment date calculated
+ 
+   ZZERR@ - a 7 alpha field set to blank if the subroutine runs
+          - successfully and '*ERROR ' if an error occurs.
+ 

@@ -1,0 +1,841 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas SD Branch codes maintenance')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  DSPF/SD0061R# - Edit branch codes                            *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. CSW208             Date 15Apr08               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 29Nov05               *
+      *                 TDA080             Date 29Mar04               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CGL013             DATE 19Feb02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CLE015             DATE 13Dec01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CRT004             DATE 04MAY00               *
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CFT004             Date 15Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 126665             Date 26Nov97               *
+      *                 CSD003             Date 27OCT97               *
+      *                 CTI001             DATE 28JUL97               *
+      *                 CLE004             DATE 14FEB97               *
+      *                 CRT003             DATE 17JUN96               *
+      *                 S01522             DATE 10OCT94               *
+      *                 S01486             DATE 14JUN94               *
+      *                 S01461             DATE 14JAN94               *
+      *                 S01459             DATE 14JAN94               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSW208 - SWIFT Changes 2008                                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  TDA080 - *IN70 usage of CGL013 conflicts with CLE015.        *
+      *           Use *IN82 instead.                                  *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CGL013 - MT94x Message Generation.                           *
+      *  CLE015 - Functionality moved from Syndicated Lending to      *
+      *           Customer Lending                                    *
+      *  CRT004 - Cashier Midas TCP/IP interface.                     *
+      *  CDL008 - Continuous Linked Settlement                        *
+      *  CFT004 - Straight Through Processing Phase 2                 *
+      *         - International Bank Account Numbers                  *
+      *  126665 - TI Branch Number should not be amendable.           *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - File removed from SD model.                       *
+      *  CTI001 - Midas-Trade Innovation Interface:                   *
+      *           - Addition of 8 new fields.                         *
+      *  CLE004 - Lending Enhancement:                                *
+      *           addition of 5 new fields.                           *
+      *  CRT003 - Branch Automation Interface:                        *
+      *           If BAI is 'on' call second screen (SD0061R)         *
+      *           containing BAI fields.                              *
+      *  S01522 - User Defined Correspondence development, and        *
+      *           the removal of F5 processing.                       *
+      *  S01486 - Private Banking:                                    *
+      *           Addition of Branch Town.                            *
+      *  S01461 - The Midas Export module processing was removed      *
+      *           and moved to the Eureka platform.                   *
+      *  S01459 - Addition of Midas headerbox.                        *
+      *                                                               *
+      *****************************************************************
+     A                                      INDARA
+     A                                      PRINT(MPRINT)
+     A                                      CHGINPDFT
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0061R#99
+     A          R #RCDKEY                   TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A*/COPY WNCPYSRC,SD0061R#98
+     A                                      SETOF(98 'Force input format')
+     A                                      BLINK OVERLAY
+     A                                      INDTXT(86 'Enable PUTOVR')
+     A  86                                  PUTOVR
+     A                                      INDTXT(89 '89')
+     A* Command keys............................................................
+     A                                      VLDCMDKEY(29 'Valid command key')
+     A                                      CA03(03 'Exit.')
+     A                                      CF09(09 'Change mode.')
+     A* SETOFFS.................................................................
+     A                                      SETOF(99 'Global error flag')
+     A                                      SETOF(31 'Invalid: #1BRCD')
+     A*.........................................................................
+     A            ##USR         10      1  2TEXT('*USER')
+     A N25                                  OVRDTA
+     A            ##PGM         10   H      TEXT('*PROGRAM')
+     A                                  1 13'SD0061R1'
+     A            ##MRDT         7      1 72TEXT('Midas Run Date')
+     A N25                                  OVRDTA
+     A            ##JOB         10      2  2TEXT('*JOB')
+     A N25                                  OVRDTA
+     A                                  2 34'New Branch Code'
+     A                                      DSPATR(HI)
+     A            ##TME          6  0   2 71TEXT('*TIME')
+     A                                      EDTWRD('  :  :  ')
+     A N25                                  OVRDTA
+     A                                  4  2'Branch Code.............:'
+     A            #1BRCD         3   B  4 28TEXT('Branch code')
+     A                                      CHECK(FE)
+     A N25                                  OVRDTA
+     A  31                                  DSPATR(RI PC)
+     A N31                                  DSPATR(UL HI)
+     A N25                                  OVRATR
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0061R#97
+     A          R #CMDTXT1                  TEXT('Command keys')
+     A*/COPY WNCPYSRC,SD0061R#96
+     A                                      OVERLAY PUTOVR
+     A            ##CTX1        78     23  2TEXT('Command Text 1')
+     A N25                                  OVRDTA
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0061R#95
+     A          R #RCDDTL1                  TEXT('Details')
+     A*/COPY WNCPYSRC,SD0061R#94
+     A                                      SETOF(98 'Force input format')
+     A                                      BLINK OVERLAY
+     A                                      INDTXT(86 'Enable PUTOVR')
+     A  86                                  PUTOVR
+     A                                      INDTXT(89 '''ADD'' mode')
+     A                                      INDTXT(88 'Protect key fields')
+     A                                      INDTXT(87 'Enable key screen')
+     A* Command keys............................................................
+     A                                      VLDCMDKEY(29 'Valid command key')
+     A                                      CA03(03 'Exit.')
+     A  87                                  CA12(12 'Key screen.')
+     A N89                                  CF10(10 'Delete.')
+     A* SETOFFS.................................................................
+     A                                      SETOF(99 'Global error flag')
+     A                                      SETOF(31 'Invalid: #1BRNM')
+     A                                      SETOF(32 'Invalid: #1BICN')
+     A                                      SETOF(33 'Invalid: #1RDFC')
+     A                                      SETOF(34 'Invalid: #1LCCD')
+     A                                      SETOF(35 'Invalid: #DSCDE')
+     A                                      SETOF(36 'Invalid: #1CMCD')
+     A                                      SETOF(37 'Invalid: #1PCSS')
+     A                                      SETOF(38 'Invalid: #1GBCD')
+     A                                      SETOF(39 'Invalid: #1BTWN')
+     A                                      SETOF(40 'Invalid: #1BTID')
+     A                                      SETOF(41 'Invalid: #DSASF')
+     A                                      SETOF(42 'Invalid: #1DFAC')
+     A                                      SETOF(43 'Invalid: #1DTAC')
+     A                                      SETOF(44 'Invalid: #1MQSM')
+     A                                      SETOF(45 'Invalid: #1MQRT')
+     A                                      SETOF(46 'Invalid: #1MQBU')
+     A                                      SETOF(47 'Invalid: #1MQDF')
+     A                                      SETOF(48 'Invalid: #1TIBR')
+     A                                      SETOF(49 'Invalid: #1TIDS')
+     A                                      SETOF(50 'Invalid: #1BRNB')
+     A                                      SETOF(51 'Invalid: #1BRA1')
+     A                                      SETOF(52 'Invalid: #1BRA2')
+     A                                      SETOF(53 'Invalid: #1BRA3')
+     A                                      SETOF(54 'Invalid: #1BRA4')
+     A                                      SETOF(55 'Invalid: #1BRA5')
+      *                                              Begin /CFT004/
+     A                                      SETOF(56 'Invalid: #1IBID')
+     A                                      SETOF(57 'Invalid: #1GENM')
+     A                                      SETOF(58 'Invalid: #1GLFM')
+     A                                      SETOF(59 'Invalid: #1BID1')
+     A                                      SETOF(60 'Invalid: #1BID2')
+      *                                              End   /CFT004/
+      *                                              Begin /CDL008/
+     A                                      SETOF(66 'Invalid: #DEDAT')
+     A                                      SETOF(67 'Invalid: #DCOTI')
+     A                                      SETOF(68 'Invalid: #1DCLC')
+     A                                      SETOF(69 'Invalid: #DTDCE')
+      *                                              End   /CDL008/
+      *                                              Begin /CGL013/
+      **Start of change TDA080
+     A**********                            SETOF(70 'Invalid: #1TMOF #1SIGN')                TDA080
+     A                                      SETOF(82 'Invalid: #1TMOF #1SIGN')
+      ** End of change TDA080
+     A                                      SETOF(71 'Invalid: #1STOF #1SSIN')
+      *                                              End   /CGL013/
+     A*.........................................................................
+     A            ##USR         10      1  2TEXT('*USER')
+     A N25                                  OVRDTA
+     A            ##PGM         10   H      TEXT('*PROGRAM')
+     A                                  1 13'SD0061R2'
+     A            ##MRDT         7      1 72TEXT('Midas Run Date')
+     A N25                                  OVRDTA
+     A            ##JOB         10      2  2TEXT('*JOB')
+     A N25                                  OVRDTA
+     A                                  2 29'Branch Codes Maintenance'
+     A                                      DSPATR(HI)
+     A            ##TME          6  0   2 71TEXT('*TIME')
+     A                                      EDTWRD('  :  :  ')
+     A N25                                  OVRDTA
+     A            #DSORT         1   H      TEXT('Sort Code Status Field')
+     A            #1OGID        10   H      TEXT('Midas Export Value OGID')
+     A            #1BRSN         3   H      TEXT('Branch Shortname')
+     A            #1RECI         1   H      TEXT('Record Id')
+     A            #1STCD         6  0H      TEXT('Sort Code')
+     A            #1SUOP         4  0H      TEXT('Sunday Opening Time')
+     A            #1SUCL         4  0H      TEXT('Sunday Closing Time')
+     A            #1SUOV         1   H      TEXT('Sunday Times Override')
+     A            #1MOOP         4  0H      TEXT('Monday Opening Time')
+     A            #1MOCL         4  0H      TEXT('Monday Closing Time')
+     A            #1MOOV         1   H      TEXT('Monday Times Override')
+     A            #1TUOP         4  0H      TEXT('Tuesday Opening Time')
+     A            #1TUCL         4  0H      TEXT('Tuesday Closing Time')
+     A            #1TUOV         1   H      TEXT('Tuesday Times Override')
+     A            #1WEOP         4  0H      TEXT('Wednesday Opening Time')
+     A            #1WECL         4  0H      TEXT('Wednesday Closing Time')
+     A            #1WEOV         1   H      TEXT('Wednesday Times Override')
+     A            #1THOP         4  0H      TEXT('Thursday Opening Time')
+     A            #1THCL         4  0H      TEXT('Thursday Closing Time')
+     A            #1THOV         1   H      TEXT('Thursday Times Override')
+     A            #1FYOP         4  0H      TEXT('Friday Opening Time')
+     A            #1FYCL         4  0H      TEXT('Friday Closing Time')
+     A            #1FYOV         1   H      TEXT('Friday Times Override')
+     A            #1SAOP         4  0H      TEXT('Saturday Opening Time')
+     A            #1SACL         4  0H      TEXT('Saturday Closing Time')
+     A            #1SAOV         1   H      TEXT('Saturday Times Override')
+     A            #1BRST         1   H      TEXT('Branch Status')
+      * Begin /CSD027/
+     A**********  #1SYCU         6  0H      TEXT('Synd Agent-Customer Ref')                   CSD027
+     A            #1SYCU         6A  H      TEXT('Synd Agent-Customer Ref')
+      * End /CSD027/
+     A            #DTIBS         4   H      TEXT('TI Branch Number (Screen)')
+     A            #1LCD          5  0H      TEXT('Last Change Date')
+     A            #1TYLC         1   H      TEXT('Type of Last Change')
+      *                                              Begin /CDL008/
+     A            #1EDAT         1  0H      TEXT('Eligible Date for +
+     A                                      CLS Deals')
+     A            #1COTI         4  0H      TEXT('CLS Cut Off Time')
+     A            #1TDCE         5   H      TEXT('Time Difference +
+     A                                      from CET')
+      *                                              End   /CDL008/
+      *                                              Begin /CRT004/
+     A            #1LLIS         1   H      TEXT('TCP/IP Listener')
+     A            #1TCPP         4  0H      TEXT('TCP/IP Port Number')
+      *                                              End   /CRT004/
+     A                                  4  2'Branch Code.............:'
+     A            #1BRCD         3      4 28TEXT('Branch code')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *                                              Begin /CDL008/
+     A***********                       6  2'Branch Name.............:'
+     A*********** #1BRNM        30   B  6 28TEXT('Branch Name')
+     A                                  4 34'Branch Name...:'
+     A            #1BRNM        30   B  4 50TEXT('Branch Name')
+      *                                              End   /CDL008/
+     A                                      CHECK(LC)
+     A N25                                  OVRDTA
+     A  31                                  DSPATR(RI PC)
+     A N31                                  DSPATR(UL HI)
+     A N25                                  OVRATR
+      *                                              Start /CGL013/
+     A                                  5  2'Time Offset/Sign........:'
+     A  72                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1TMOF         4  0B  5 28TEXT('Time Offset against UTC')
+     A                                      EDTWRD('0   ')
+     A N25                                  OVRDTA
+     A**Start of change CSW208
+     A**72******                            DSPATR(ND PR)                                     CSW208
+     A  72                                  DSPATR(ND)
+     A  83                                  DSPATR(PR)
+     A**End of change CSW208
+     A**Start of change TDA080
+     A*N72N70                               DSPATR(UL HI)                                     TDA080
+     A*N72 70                               DSPATR(RI PC)                                     TDA080
+     A**Start of change CSW208
+     A*N72N82***                            DSPATR(UL HI)                                     CSW208
+     A N72N82                               DSPATR(HI)
+     A N72N82N83                            DSPATR(UL)
+     A**End of change CSW208
+     A N72 82                               DSPATR(RI PC)
+     A**End of change TDA080
+     A N25                                  OVRATR
+     A            #1SIGN         1   B  5 33TEXT('Time Offset Sign')
+     A N25                                  OVRDTA
+     A**Start of change CSW208
+     A**72******                            DSPATR(ND PR)                                     CSW208
+     A  72                                  DSPATR(ND)
+     A  83                                  DSPATR(PR)
+     A**End of change CSW208
+     A**Start of change TDA080
+     A*N72N70                               DSPATR(UL HI)                                     TDA080
+     A*N72 70                               DSPATR(RI PC)                                     TDA080
+     A**Start of change CSW208
+     A*N72N82***                            DSPATR(UL HI)                                     CSW208
+     A N72N82                               DSPATR(HI)
+     A N72N82N83                            DSPATR(UL)
+     A**End of change CSW208
+     A N72 82                               DSPATR(RI PC)
+     A**End of change TDA080
+     A N25                                  OVRATR
+     A                                  6  2'System Offset/Sign......:'
+     A  72                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1STOF         4  0B  6 28TEXT('System Time Offset')
+     A                                      EDTWRD('0   ')
+     A N25                                  OVRDTA
+     A**Start of change CSW208
+     A**72******                            DSPATR(ND PR)                                     CSW208
+     A  72                                  DSPATR(ND)
+     A  83                                  DSPATR(PR)
+     A*N72N71***                            DSPATR(UL HI)                                     CSW208
+     A N72N71                               DSPATR(HI)
+     A N72N71N83                            DSPATR(UL)
+     A**End of change CSW208
+     A N72 71                               DSPATR(RI PC)
+     A N25                                  OVRATR
+     A            #1SSIN         1   B  6 33TEXT('System Time Offset Sign')
+     A N25                                  OVRDTA
+     A**Start of change CSW208
+     A**72******                            DSPATR(ND PR)                                     CSW208
+     A  72                                  DSPATR(ND)
+     A  83                                  DSPATR(PR)
+     A*N72N71***                            DSPATR(UL HI)                                     CSW208
+     A N72N71                               DSPATR(HI)
+     A N72N71N83                            DSPATR(UL)
+     A**End of change CSW208
+     A N72 71                               DSPATR(RI PC)
+     A N25                                  OVRATR
+      *                                              End   /CGL013/
+     A                                  7  2'Branch Internal Customer:'
+     A            #1BICN         6   B  7 28TEXT('Branch Internal Customer')
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  32                                  DSPATR(RI PC)
+     A N79N32                               DSPATR(UL)
+     A N32                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *                                              Begin /CDL008/
+     A***********                       7 42'Round Down Interest.......:'
+     A*********** #1RDFC         1   B  7 70TEXT('Round Down Interest Ind')
+     A                                  5 42'Round Down Interest.......:'
+     A            #1RDFC         1   B  5 70TEXT('Round Down Interest +
+     A                                      Ind')
+      *                                              End   /CDL008/
+     A N25                                  OVRDTA
+     A  33                                  DSPATR(RI PC)
+     A N33                                  DSPATR(UL HI)
+     A N25                                  OVRATR
+     A                                  8  2'Location Code...........:'
+     A            #1LCCD         3   B  8 28TEXT('Location Code')
+     A N25                                  OVRDTA
+     A  34                                  DSPATR(RI PC)
+     A N34                                  DSPATR(UL HI)
+     A N25                                  OVRATR
+      *                                              Begin /CDL008/
+     A***********                       8 42'Sort Code.................:'
+     A                                  6 42'Sort +
+     A                                      Code.................:'
+      *                                              End   /CDL008/
+     A  78                                  DSPATR(ND)
+     A N25                                  OVRATR
+      *                                              Begin /CDL008/
+     A*********** #DSCDE         6   B  8 70TEXT('Sort Code Screen Field')
+     A            #DSCDE         6   B  6 70TEXT('Sort Code Screen +
+     A                                      Field')
+      *                                              End   /CDL008/
+     A N25                                  OVRDTA
+     A  78                                  DSPATR(PR)
+     A  35                                  DSPATR(RI PC)
+     A  78N35                               DSPATR(ND)
+     A N78N35                               DSPATR(UL HI)
+     A N25                                  OVRATR
+     A                                  9  2'Company Code............:'
+     A            #1CMCD         3   B  9 28TEXT('Company Code')
+     A N25                                  OVRDTA
+     A  36                                  DSPATR(RI PC)
+     A N36                                  DSPATR(UL HI)
+     A N25                                  OVRATR
+      *                                              Begin /CDL008/
+     A***********                       9 42'PC Subsystem for Auto-recs:'
+     A                                  7 42'PC Subsystem for +
+     A                                      Auto-recs:'
+      *                                              End   /CDL008/
+     A  77                                  DSPATR(ND)
+     A N25                                  OVRATR
+      *                                              Begin /CDL008/
+     A*********** #1PCSS        10   B  9 70TEXT('PC Subsystem')
+     A            #1PCSS        10   B  7 70TEXT('PC Subsystem')
+      *                                              End   /CDL008/
+     A N25                                  OVRDTA
+     A  77                                  DSPATR(PR)
+     A  37                                  DSPATR(RI PC)
+     A  77N37                               DSPATR(ND)
+     A N77N37                               DSPATR(UL HI)
+     A N25                                  OVRATR
+     A                                 10  2'Global Branch Code......:'
+     A  76                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1GBCD         3   B 10 28TEXT('Global Branch Code')
+     A N25                                  OVRDTA
+     A  76                                  DSPATR(PR)
+     A  38                                  DSPATR(RI PC)
+     A  76N38                               DSPATR(ND)
+     A N76N38                               DSPATR(UL HI)
+     A N25                                  OVRATR
+      *                                              Begin /CDL008/
+     A***********                      10 42'Branch Town...............:'
+     A*********** #1BTWN        10   B 10 70TEXT('Branch Town')
+     A                                  8 42'Branch +
+     A                                      Town...............:'
+     A            #1BTWN        10   B  8 70TEXT('Branch Town')
+      *                                              End   /CDL008/
+     A N25                                  OVRDTA
+     A  39                                  DSPATR(RI PC)
+     A N39                                  DSPATR(UL HI)
+     A N25                                  OVRATR
+     A                                 11  2'Branch TID..............:'
+     A            #1BTID        12   B 11 28TEXT('Branch TID Address')
+     A N25                                  OVRDTA
+     A  40                                  DSPATR(RI PC)
+     A N40                                  DSPATR(UL HI)
+     A N25                                  OVRATR
+      *                                              Begin /CDL008/
+     A***********                      11 42'Syndication Agent.........:'
+     A                                  9 42'Syndication +
+     A                                      Agent.........:'
+      *                                              End   /CDL008/
+     A  75                                  DSPATR(ND)
+     A N25                                  OVRATR
+      *                                              Begin /CDL008/
+     A*********** #DSASF        10   B 11 70TEXT('Syndication Agent ScrFld')
+     A            #DSASF        10   B  9 70TEXT('Syndication Agent +
+     A                                      ScrFld')
+      *                                              End   /CDL008/
+     A N25                                  OVRDTA
+     A  75                                  DSPATR(PR)
+     A  41                                  DSPATR(RI PC)
+     A  75N41                               DSPATR(ND)
+     A N75N41                               DSPATR(UL HI)
+     A N25                                  OVRATR
+     A                                 12  2'''Due From'' Account Code.:'
+     A  76                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A**Start of change CGL029
+     A**********  #1DFAC         4   B 12 28TEXT('Due From A/c')                              CGL029
+     A            #1DFAC        10   B 12 28TEXT('Due From A/c')
+     A**End of change CGL029
+     A N25                                  OVRDTA
+     A  76                                  DSPATR(PR)
+     A  42                                  DSPATR(RI PC)
+     A  76N42                               DSPATR(ND)
+     A N76N42                               DSPATR(UL HI)
+     A N25                                  OVRATR
+      *                                              Begin /CDL008/
+     A***********                      12 42'''Due To'' Account Code.....:'
+     A                                 10 42'''Due To'' Account +
+     A                                      Code.....:'
+      *                                              End   /CDL008/
+     A  76                                  DSPATR(ND)
+     A N25                                  OVRATR
+      *                                              Begin /CDL008/
+     A*********** #1DTAC         4   B 12 70TEXT('Due To A/c')
+     A**Start of change CGL029
+     A**********  #1DTAC         4   B 10 70TEXT('Due To A/c')                                CGL029
+     A            #1DTAC        10   B 10 70TEXT('Due To A/c')
+     A**End of change CGL029
+      *                                              End   /CDL008/
+     A N25                                  OVRDTA
+     A  76                                  DSPATR(PR)
+     A  43                                  DSPATR(RI PC)
+     A  76N43                               DSPATR(ND)
+     A N76N43                               DSPATR(UL HI)
+     A N25                                  OVRATR
+     A                                 13  2'MQ for Sent Messages....:'
+      *                                              Begin /CLE015/
+     A**75**************                    DSPATR(ND)
+     A  70                                  DSPATR(ND)
+      *                                              End   /CLE015/
+     A N25                                  OVRATR
+     A            #1MQSM        10   B 13 28TEXT('MQ for Sent Messages')
+     A N25                                  OVRDTA
+      *                                              Begin /CLE015/
+     A**75**************                    DSPATR(PR)
+     A  70                                  DSPATR(PR)
+      *                                              End   /CLE015/
+     A  44                                  DSPATR(RI PC)
+      *                                              Begin /CLE015/
+     A**75N44***********                    DSPATR(ND)
+     A*N75N44***********                    DSPATR(UL HI)
+     A  70N44                               DSPATR(ND)
+     A N70N44                               DSPATR(UL HI)
+      *                                              End   /CLE015/
+     A N25                                  OVRATR
+      *                                              Begin /CDL008/
+     A***********                      13 42'MQ for Returned Messages..:'
+     A                                 11 42'MQ for Returned +
+     A                                      Messages..:'
+      *                                              End   /CDL008/
+      *                                              Begin /CLE015/
+     A**75**************                    DSPATR(ND)
+     A  70                                  DSPATR(ND)
+      *                                              End   /CLE015/
+     A N25                                  OVRATR
+      *                                              Begin /CDL008/
+     A*********** #1MQRT        10   B 13 70TEXT('MQ for Returned Messages')
+     A            #1MQRT        10   B 11 70TEXT('MQ for Returned +
+     A                                      Messages')
+      *                                              End   /CDL008/
+     A N25                                  OVRDTA
+      *                                              Begin /CLE015/
+     A**75**************                    DSPATR(PR)
+     A  70                                  DSPATR(PR)
+      *                                              End   /CLE015/
+     A  45                                  DSPATR(RI PC)
+      *                                              Begin /CLE015/
+     A**75N45************                   DSPATR(ND)
+     A*N75N45************                   DSPATR(UL HI)
+     A  70N45                               DSPATR(ND)
+     A N70N45                               DSPATR(UL HI)
+      *                                              End   /CLE015/
+     A N25                                  OVRATR
+     A                                 14  2'MQ for Bulk Transfer....:'
+      *                                              Begin /CLE015/
+     A**75**************                    DSPATR(ND)
+     A  70                                  DSPATR(ND)
+      *                                              End   /CLE015/
+     A N25                                  OVRATR
+     A            #1MQBU        10   B 14 28TEXT('MQ for Bulk Transfer')
+     A N25                                  OVRDTA
+      *                                              Begin /CLE015/
+     A**75**************                    DSPATR(PR)
+     A  70                                  DSPATR(PR)
+      *                                              End   /CLE015/
+     A  46                                  DSPATR(RI PC)
+      *                                              Begin /CLE015/
+     A**75N46***********                    DSPATR(ND)
+     A*N75N46***********                    DSPATR(UL HI)
+     A  70N46                               DSPATR(ND)
+     A N70N46                               DSPATR(UL HI)
+      *                                              End   /CLE015/
+     A N25                                  OVRATR
+      *                                              Begin /CDL008/
+     A***********                      14 42'MQ for Drip Feed..........:'
+     A                                 12 42'MQ for Drip +
+     A                                      Feed..........:'
+      *                                              End   /CDL008/
+      *                                              Begin /CLE015/
+     A**75**************                    DSPATR(ND)
+     A  70                                  DSPATR(ND)
+      *                                              End   /CLE015/
+     A N25                                  OVRATR
+      *                                              Begin /CDL008/
+     A*********** #1MQDF        10   B 14 70TEXT('MQ for Drip Feed')
+     A            #1MQDF        10   B 12 70TEXT('MQ for Drip Feed')
+      *                                              End   /CDL008/
+     A N25                                  OVRDTA
+      *                                              Begin /CLE015/
+     A**75**************                    DSPATR(PR)
+     A  70                                  DSPATR(PR)
+      *                                              End   /CLE015/
+     A  47                                  DSPATR(RI PC)
+      *                                              Begin /CLE015/
+     A**75N47***********                    DSPATR(ND)
+     A*N75N47***********                    DSPATR(UL HI)
+     A  70N47                               DSPATR(ND)
+     A N70N47                               DSPATR(UL HI)
+      *                                              End   /CLE015/
+     A N25                                  OVRATR
+     A                                 15  2'TI Branch...............:'
+     A  74                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1TIBR         4   B 15 28TEXT('TI Branch Number')
+     A N25                                  OVRDTA
+      *                                                    Begin of /*126665*/
+     A**74*************************         DSPATR(PR)
+     A  74
+     AO 73                                  DSPATR(PR)
+      *                                                    End of   /*126665*/
+     A  48                                  DSPATR(RI PC)
+     A  74N48                               DSPATR(ND)
+      *                                                    Begin of /*126665*/
+     A*N74N48**********************         DSPATR(UL HI)
+     A N74N48                               DSPATR(HI)
+     A N74N48N73                            DSPATR(UL)
+      *                                                    End of   /*126665*/
+     A N25                                  OVRATR
+      *                                              Begin /CDL008/
+     A***********                      15 42'TI Departmental Server....:'
+     A                                 13 42'TI Departmental +
+     A                                      Server....:'
+      *                                              End   /CDL008/
+     A  74                                  DSPATR(ND)
+     A N25                                  OVRATR
+      *                                              Begin /CDL008/
+     A*********** #1TIDS         2   B 15 70TEXT('TI Departmental Server')
+     A            #1TIDS         2   B 13 70TEXT('TI Departmental +
+     A                                      Server')
+      *                                              End   /CDL008/
+     A* Condition: Allow all values
+     A                                      COMP(GE ' ')
+     A                                      DSPATR(MDT)
+     A                                      CHECK(AB)
+     A N25                                  OVRDTA
+     A  74                                  DSPATR(PR)
+     A  49                                  DSPATR(RI PC)
+     A  74N49                               DSPATR(ND)
+     A N74N49                               DSPATR(UL HI)
+     A N25                                  OVRATR
+     A                                 16  2'TI Branch Telephone Nbr.:'
+     A  74                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1BRNB        16   B 16 28TEXT('TI Branch Telephone Nbr')
+     A N25                                  OVRDTA
+     A  74                                  DSPATR(PR)
+     A  50                                  DSPATR(RI PC)
+     A  74N50                               DSPATR(ND)
+     A N74N50                               DSPATR(UL HI)
+     A N25                                  OVRATR
+     A                                 17  2'TI Brch Name and Address:'
+     A  74                                  DSPATR(ND)
+     A N25                                  OVRATR
+      *                                              Begin /CFT004/
+     A************#1BRA1        35   B 17 28TEXT('TI Brch Name and Addr 1')
+     A            #1BRA1        35   B 18  2TEXT('TI Brch Name and Addr 1')
+      *                                              End   /CFT004/
+     A                                      CHECK(LC)
+     A N25                                  OVRDTA
+     A  74                                  DSPATR(PR)
+     A  51                                  DSPATR(RI PC)
+     A  74N51                               DSPATR(ND)
+     A N74N51                               DSPATR(UL HI)
+     A N25                                  OVRATR
+      *                                              Begin /CFT004/
+     A************#1BRA2        35   B 18 28TEXT('TI Brch Name and Addr 2')
+     A            #1BRA2        35   B 19  2TEXT('TI Brch Name and Addr 2')
+      *                                              End   /CFT004/
+     A                                      CHECK(LC)
+     A N25                                  OVRDTA
+     A  74                                  DSPATR(PR)
+     A  52                                  DSPATR(RI PC)
+     A  74N52                               DSPATR(ND)
+     A N74N52                               DSPATR(UL HI)
+     A N25                                  OVRATR
+      *                                              Begin /CFT004/
+     A************#1BRA3        35   B 19 28TEXT('TI Brch Name and Addr 3')
+     A            #1BRA3        35   B 20  2TEXT('TI Brch Name and Addr 3')
+      *                                              End   /CFT004/
+     A                                      CHECK(LC)
+     A N25                                  OVRDTA
+     A  74                                  DSPATR(PR)
+     A  53                                  DSPATR(RI PC)
+     A  74N53                               DSPATR(ND)
+     A N74N53                               DSPATR(UL HI)
+     A N25                                  OVRATR
+      *                                              Begin /CFT004/
+     A************#1BRA4        35   B 20 28TEXT('TI Brch Name and Addr 4')
+     A            #1BRA4        35   B 21  2TEXT('TI Brch Name and Addr 4')
+      *                                              End   /CFT004/
+     A                                      CHECK(LC)
+     A N25                                  OVRDTA
+     A  74                                  DSPATR(PR)
+     A  54                                  DSPATR(RI PC)
+     A  74N54                               DSPATR(ND)
+     A N74N54                               DSPATR(UL HI)
+     A N25                                  OVRATR
+      *                                              Begin /CFT004/
+     A************#1BRA5        35   B 21 28TEXT('TI Brch Name and Addr 5')
+     A            #1BRA5        35   B 22  2TEXT('TI Brch Name and Addr 5')
+      *                                              End   /CFT004/
+     A                                      CHECK(LC)
+     A N25                                  OVRDTA
+     A  74                                  DSPATR(PR)
+     A  55                                  DSPATR(RI PC)
+     A  74N55                               DSPATR(ND)
+     A N74N55                               DSPATR(UL HI)
+     A N25                                  OVRATR
+      *                                              Begin /CFT004/
+      *                                              Begin /CDL008/
+     A***********                      17 42'IBAN bank/branch id.......:'
+     A                                 14 42'IBAN bank/branch +
+     A                                      id.......:'
+      *                                              End   /CDL008/
+     A N61                                  DSPATR(ND)
+     A N25                                  OVRATR
+      *                                              Begin /CDL008/
+     A*********** #1IBID        10   B 17 70TEXT('IBAN bank/branch id')
+     A            #1IBID        10   B 14 70TEXT('IBAN bank/branch id')
+      *                                              End   /CDL008/
+     A N25                                  OVRDTA
+     A N61                                  DSPATR(PR)
+     A  56                                  DSPATR(RI PC)
+     A N61N56                               DSPATR(ND)
+     A  61N56                               DSPATR(UL HI)
+     A N25                                  OVRATR
+      *                                              Begin /CDL008/
+     A***********                      18 42'IBAN Generation Method....:'
+     A                                 15 42'IBAN Generation +
+     A                                      Method....:'
+      *                                              End   /CDL008/
+     A N61                                  DSPATR(ND)
+     A N25                                  OVRATR
+      *                                              Begin /CDL008/
+     A*********** #1GENM         1   B 18 70TEXT('IBAN generation method')
+     A            #1GENM         1   B 15 70TEXT('IBAN generation +
+     A                                      method')
+      *                                              End   /CDL008/
+     A N25                                  OVRDTA
+     A N61                                  DSPATR(PR)
+     A  57                                  DSPATR(RI PC)
+     A N61N57                               DSPATR(ND)
+     A  61N57                               DSPATR(UL HI)
+     A N25                                  OVRATR
+      *                                              Begin /CDL008/
+     A***********                      19 42'BBAN GL Account Format....:'
+     A                                 16 45'BBAN GL Account +
+     A                                      Format.:'
+      *                                              End   /CDL008/
+     A N61                                  DSPATR(ND)
+     A N25                                  OVRATR
+      *                                              Begin /CDL008/
+     A*********** #1GLFM         1   B 19 70TEXT('BBAN GL account format')
+     A            #1GLFM         1   B 16 70TEXT('BBAN GL account +
+     A                                      format')
+      *                                              End   /CDL008/
+     A N25                                  OVRDTA
+     A N61                                  DSPATR(PR)
+     A  58                                  DSPATR(RI PC)
+     A N61N58                               DSPATR(ND)
+     A  61N58                               DSPATR(UL HI)
+     A N25                                  OVRATR
+      *                                              Begin /CDL008/
+     A***********                      20 42'Short-form Branch 1.......:'
+     A                                 17 42'Short-form Branch +
+     A                                      1.......:'
+      *                                              End   /CDL008/
+     A N61                                  DSPATR(ND)
+     A N25                                  OVRATR
+      *                                              Begin /CDL008/
+     A*********** #1BID1         1   B 20 70TEXT('Short-form branch 1')
+     A            #1BID1         1   B 17 70TEXT('Short-form branch 1')
+      *                                              End   /CDL008/
+     A N25                                  OVRDTA
+     A N61                                  DSPATR(PR)
+     A  59                                  DSPATR(RI PC)
+     A N61N59                               DSPATR(ND)
+     A  61N59                               DSPATR(UL HI)
+     A N25                                  OVRATR
+      *                                              Begin /CDL008/
+     A***********                      21 42'Short-form Branch 2.......:'
+     A                                 18 42'Short-form Branch +
+     A                                      2.......:'
+      *                                              End   /CDL008/
+     A N61                                  DSPATR(ND)
+     A N25                                  OVRATR
+      *                                              Begin /CDL008/
+     A*********** #1BID2         2   B 21 70TEXT('Short-form branch 2')
+     A            #1BID2         2   B 18 70TEXT('Short-form branch 2')
+      *                                              End   /CDL008/
+     A N25                                  OVRDTA
+     A N61                                  DSPATR(PR)
+     A  60                                  DSPATR(RI PC)
+     A N61N60                               DSPATR(ND)
+     A  61N60                               DSPATR(UL HI)
+     A N25                                  OVRATR
+      *                                              End   /CFT004/
+      *                                              Begin /CDL008/
+     A                                 19 42'Eligible Date (CLS +
+     A                                      Deals).:'
+     A  80                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #DEDAT         1   B 19 70TEXT('Eligible Date for +
+     A                                      CLS Deals (Screen)')
+     A N25                                  OVRDTA
+     A  80                                  DSPATR(PR)
+     A  66                                  DSPATR(RI PC)
+     A  80N66                               DSPATR(ND)
+     A N80N66                               DSPATR(UL HI)
+     A N25                                  OVRATR
+     A                                 20 42'CLS Cut Off +
+     A                                      Time..........:'
+     A  80                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #DCOTI         4   B 20 70TEXT('CLS Cut Off Time +
+     A                                      (Screen)')
+     A N25                                  OVRDTA
+     A  80                                  DSPATR(PR)
+     A  67                                  DSPATR(RI PC)
+     A  80N67                               DSPATR(ND)
+     A N80N67                               DSPATR(UL HI)
+     A N25                                  OVRATR
+     A                                 21 42'Default CLS by +
+     A                                      Customer...:'
+     A  80                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1DCLC         1   B 21 70TEXT('Default CLS by +
+     A                                      Customer')
+     A N25                                  OVRDTA
+     A  80                                  DSPATR(PR)
+     A  68                                  DSPATR(RI PC)
+     A  80N68                               DSPATR(ND)
+     A N80N68                               DSPATR(UL HI)
+     A N25                                  OVRATR
+     A                                 22 42'Time Difference from +
+     A                                      CET..:'
+     A  80                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #DTDCE         5   B 22 70TEXT('Time Difference +
+     A                                      from CET')
+     A N25                                  OVRDTA
+     A  80                                  DSPATR(PR)
+     A  69                                  DSPATR(RI PC)
+     A  80N69                               DSPATR(ND)
+     A N80N69                               DSPATR(UL HI)
+     A N25                                  OVRATR
+      *                                              End   /CDL008/
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0061R#93
+     A          R #CMDTXT2                  TEXT('Command keys')
+     A*/COPY WNCPYSRC,SD0061R#92
+     A                                      OVERLAY PUTOVR
+     A            ##CTX1        78     23  2TEXT('Command Text 1')
+     A N25                                  OVRDTA
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0061R#91
+     A          R #MSGRCD                   TEXT('Program messages')
+     A*/COPY WNCPYSRC,SD0061R#90
+     A                                      SFL SFLMSGRCD(24)
+     A            MSGKEY                    SFLMSGKEY
+     A            ##PGM                     SFLPGMQ
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0061R#89
+     A          R #MSGCTL                   TEXT('Program messages')
+     A*/COPY WNCPYSRC,SD0061R#88
+     A                                      SFLCTL(#MSGRCD)
+     A                                      SFLPAG(01) SFLSIZ(03)
+     A  86                                  OVERLAY PUTOVR
+     A                                      SFLINZ SFLDSP SFLDSPCTL
+     A  25
+     AON25                                  SFLEND
+     A            ##PGM                     SFLPGMQ
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0061R#87

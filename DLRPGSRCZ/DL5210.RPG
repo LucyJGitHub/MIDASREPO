@@ -1,0 +1,1806 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Accruals Using Net-Treasury-Rate')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL5210 - Midas DL Accruals Using Net-Treasury-Rate           *
+      *                                                               *
+      *  Function:  This program will be used to produced a new       *
+      *       'Interest Accruals by Branch report'.                   *
+      *                                                               *
+      *  NOTE: Check DL0521 for changes that may apply to it if there *
+      *        are amendments done to this program.                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Last Amend No. CSC042             Date 16Feb09               *
+      *  Prev Amend No. 220738             DATE 28AUG03               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL033             Date 10Feb05               *
+      *                 CSW037A            Date 02May05               *
+      *                 BUG3798            Date 12Mar05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CAS005  *CREATE    Date 16Dec02               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSC042 - COB Performance fix. Only access AOBRCHR0 on change of *
+      *           branch rather than every record as input file sorted by*
+      *           branch                                                 *
+      *           Try to keep calls to AOCUST to a minimum by reusing *
+      *           data if this call is same as last call              *
+      *           ALSO APPLIED 220738
+      *  220738 - Dump if customer is closed                          *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type                              *
+      *  CDL033 - Floating Rate CDs Issued                            *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG3798 - Tries to execute SRAUDT twice if no details on     *
+      *            ACEXNL1, causing an incorrect db error.            *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *                                                               *
+      *****************************************************************
+     FACEXNL1 IF  E           K        DISK
+     F            ACCEXNPF                          KIGNORE
+      ** Midas DL Sorted Accruals Extract File by N-T-R
+      *
+     FACCEXNP IF  E                    DISK
+      ** Midas DL Accruals Using N-T-R Extract Detail
+      *
+     FFDDTSTL1IF  E           K        DISK                                                   CDL038
+      ** Deal Types/Sub Types                                                                 CDL038
+      *                                                                                       CDL038
+     FDL5210AUO   E                    PRINTER      KINFDS SPOOLU
+      ** Midas DL Accruals Using N-T-R Extract - Audit File
+      *
+     FDL5210P1O   E             87     PRINTER      KINFDS SPOOL1     UC
+      ** Midas DL Accruals Using N-T-R Extract - Printer File
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   15  - Deal Type is '15'                                     *
+      *   16  - Deal Type is '16'                                     *
+      *   17  - Deal Type is '17'                                     *
+      *   19  - Deal Type is '20'                                     *
+      *   20  - Notice Day is Zero                                    *
+      *   21  - Notice Day is Negative                                *
+      *   22  - Notice Day is Positve                                 *
+      *   23  - Interest Rate is Zero                                 *
+      *   24  - UBRTT is Positive                                     *
+      *   25  - TBRTT is Positive                                     *
+      *   35  - Loan/Dep. Record - Code '15' or '16'                  *
+      *   43  - RECID- D                                              *
+      *   44  - RECID- E                                              *
+      *   45  - RECID- F                                              *
+      *   46  - RECID- G                                              *
+      *   51  - Our total unsettled interest not zero                 *
+      *   52  - Their total unsettled interest not zero               *
+      *   60  - FRA/IRS Deal Type                                     *
+      *   61  - Deal Type 'FR' - Future Rate Agreement                *
+      *   62  - Deal Type 'RS' - Interest Rate Swap                   *
+      *   63  - Deal Type 'RX' - Cross Currency Interest Rate Swap    *
+      *   64  - Deal Type RF, RR, RA - Interest Rate CAP/COLLAR       *
+      *   65  - FRA/IRS - OUR   Rate Present, rate to print           *
+      *   66  - FRA/IRS - THEIR Rate Present, rate to print           *
+      *   67  - FRA/IRS - OUR   Accrual Amounts to print              *
+      *   68  - FRA/IRS - THEIR Accrual Amounts to print              *
+      *   69  - 'RX' - OUR Details Record           -OR-              *
+      *         'RF', 'RR, 'RP' - Providers details are OURS          *
+      *   70  - 'RX' - THEIR Details Record         -OR-              *
+      *         'RP', 'RF', 'RR' - Providers details are OURS         *
+      *   71  - 'RP', 'RF', 'RR - Floor Rate present                  *
+      *   72  - 'G' deal type - Fee Amortised                         *
+      *   80  - No. of Records Difference                             *
+      *   81  - Hash Total Difference                                 *
+      *                                                               *
+      *   89  - End of File                                           *
+      *                                                               *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Program Initialisation                              *
+      *  SRMAIN - Subroutine to do the Detail Processing.             *
+      *  SRREPT - Process Report Lines                                *
+      *  SRDETL - Subroutine to process details to report.            *
+      *  SRCHCK- Subroutine to Check if Totals are to be printed      *
+      *  SRACDT - Convert accrual period to alpha format.             *
+      *  SRENDR - End of Branch report                                *
+      *  SRCCY  - Process Change in Currency                          *
+      *  SRDTYP - Process Change in Deal Type                         *
+      *  SRDLST - Process Change in Deal Sub-type                     *
+      *  SRBRCA - Read Branch Deatails.                               *
+      *  SRCUST - Read Customer Deatails.                             *
+      *  SRCURR - Read Currency Deatails.                             *
+      *  SRGDLS - Read Subtype Details.                               *
+      *  SRTOTL - Accumulate the totals                               *
+      *                                                               *
+      *  SRPREC - Format and Write a Detail Record to the Report      *
+      *                                                               *
+      *  SRAUDT - Produce Audit Report and End Program                *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *  RCFP1  - RCF Processing for P1 Report                        *
+      *  RCFAU  - RCF Processing for Audit Report                     *
+      *                                                               *
+      *  ZDATE2 - Convert Midas Day Number into Date (DDMMYY/MMDDYY)  *
+      *  ZFRPED - Edit an Amount                                      *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E                    ##BR      999  3               Branch Codes                         CSC042
+     E                    ##BC      999  3               Company Codes                        CSC042
+      *
+      ** Array containing Copyright statement
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZFRPEDZ1
+     E**********          TAB1    1  44  2   TAB2   50                                        CDL033
+     E                    TAB1    1  46  2   TAB2   50                                        CDL033
+      /SPACE 3
+      *
+     IACCEXNOF
+     I              RECI                            RECID
+     I                                              NOTD        222120
+     I                                              INTR            23
+     I                                              UBRTT       2424
+     I                                              TBRTT       25
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     ISPOOL1      DS
+      ** File Information Data Structure for DL5210P1.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      ** File Information Data Structure for DL5210AU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     ISCSARD    E DSSCSARDPD
+      ** Dummy Data Structures used by Access Programs.
+      *
+     IDSFDY     E DSDSFDY
+      ** Fisrt DS for access programs, Short Data Structure
+      *
+     IDSSDY     E DSDSSDY
+      ** Second DS for access programs, Long Data Structure
+     IDSLDY     E DSDSLDY                                                                     220738
+     I*  THIRD DS FOR ACCESS PROGRAMS, VERY LONG DATA STRUCTURE                               220738
+      *
+     ISDBANK    E DSSDBANKPD
+      ** External data structures for Bank Details
+      *
+     ISDDLST    E DSSDDLSTPD
+      ** External DS for Deal Subtype Deatails
+      *
+     ISDCUST    E DSSDCUSTPD
+      ** External DS for Customer Details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** External DS for Currency Details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ** External DS for Branch Details
+     I              QQDFAC                          QQDFA1                                    CGL029
+      *
+     I/COPY ZSRSRC,ZFRPEDZ2
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ** Perform Initialisation.
+      *
+     C                     EXSR SRINIT
+      *
+      ** Perform Detail Processing.
+      *
+     C                     EXSR SRMAIN
+      *
+      ** Output Audit Report and End Program.
+      *
+     C                     EXSR SRAUDT
+      *
+     C                     MOVE *ON       *INLR
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+     C                     Z-ADD0         ##BNDX  40                                          CSC042
+     C           *LIKE     DEFN ##BNDX    B                                                   CSC042
+     C           *LIKE     DEFN ##BNDX    ##BSV                                               CSC042
+      *
+      ** Receive Parameter List.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQ    5
+      *
+      ** Initialise LDA field.
+      *
+     C                     MOVEL'DL5210'  DBPGM
+      *
+      ** Call Access Program for Bank Details - Title, Run Date and
+      ** Run Day Number.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     Z-ADD001       DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Check System Date Format, DDMMYY (*IN98 off)
+      **                           MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+      ** Access RUNDAT for multibranching indicator
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+     C           AGMBIN    IFEQ 'Y'
+     C                     MOVE *ON       *IN37
+     C                     MOVE 'N'       WBRHD
+     C                     ENDIF
+      *
+      ** Check if switchable feature CIR001 is switched on
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*VERIFY' POPTN
+     C                     PARM 'CIR001'  PSARD   6
+     C           SCSARD    PARM SCSARD    DSFDY
+      *
+     C           PRTCD     IFNE *BLANK
+     C           PRTCD     ANDNE'*NRF   '
+     C                     MOVEL'SCSARDPD'DBFILE
+     C                     Z-ADD002       DBASE
+     C                     MOVEL'CIR001'  DBKEY
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       CIR001  1
+     C                     MOVE *ON       *IN05
+     C                     ELSE
+     C                     MOVE 'N'       CIR001
+     C                     MOVE *OFF      *IN05
+     C                     ENDIF
+      *
+      ** Check if switchable feature CIR002 is switched on
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*VERIFY' POPTN
+     C                     PARM 'CIR002'  PSARD
+     C           SCSARD    PARM SCSARD    DSFDY
+      *
+     C           PRTCD     IFNE *BLANK
+     C           PRTCD     ANDNE'*NRF   '
+     C                     MOVEL'SCSARDPD'DBFILE
+     C                     Z-ADD003       DBASE
+     C                     MOVEL'CIR002'  DBKEY
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       CIR002  1
+     C                     ELSE
+     C                     MOVE 'N'       CIR002
+     C                     ENDIF
+      *
+      ** Check if switchable feature CDL006 is switched on
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM '       ' PRTCD
+     C                     PARM '*VERIFY' POPTN
+     C                     PARM 'CDL006'  PSARD
+     C           SCSARD    PARM SCSARD    DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           PRTCD     ANDNE'*NRF   '
+     C                     MOVEL'SCSARDPD'DBFILE
+     C                     MOVEL'CDL006'  DBKEY
+     C                     Z-ADD004       DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       CDL006  1
+     C                     ELSE
+     C                     MOVE 'N'       CDL006
+     C                     ENDIF
+      *
+      ** Check if switchable feature CIR006 is switched on
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*VERIFY' POPTN
+     C                     PARM 'CIR006'  PSARD
+     C           SCSARD    PARM SCSARD    DSFDY
+      *
+     C           PRTCD     IFNE *BLANK
+     C           PRTCD     ANDNE'*NRF   '
+     C                     MOVEL'SCSARDPD'DBFILE
+     C                     Z-ADD005       DBASE
+     C                     MOVEL'CIR006'  DBKEY
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       CIR006  1
+     C                     ELSE
+     C                     MOVE 'N'       CIR006
+     C                     ENDIF
+      *
+      ** RCF Processing for Audit File.
+      *
+     C                     EXSR RCFAU
+      *
+      ** Report Work fields.
+      *
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+     C                     Z-ADD0         WPCPL1 130
+     C                     Z-ADD0         WAMAD1 130
+     C                     Z-ADD0         WAMTA1 130
+     C                     Z-ADD0         WPCPL2 130
+     C                     Z-ADD0         WAMAD2 130
+     C                     Z-ADD0         WAMTA2 130
+     C                     Z-ADD0         WPCPL3 130
+     C                     Z-ADD0         WAMAD3 130
+     C                     Z-ADD0         WAMTA3 130
+      *
+     C                     READ ACCEXNNF                 89
+      *
+     C           *IN89     IFEQ *ON
+     C                     Z-ADD006       DBASE
+     C                     MOVEL'H'       DBKEY
+     C                     MOVEL'ACCEXNN' DBFILE
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     Z-ADD2         RCOUNT
+     C                     ENDIF
+      *
+     C                     Z-ADDTDAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RDATE
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRMAIN
+      *****************************************************************
+      *                                                               *
+      *  SRMAIN - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRMAIN    BEGSR
+      *
+      ** Read first record from File.
+      *
+     C                     READ ACEXNL1                  89
+      *
+      ** If End of Records, (*IN89), Perform: Audit Reporting (No
+      ** Records).
+      *
+     C           *IN89     IFEQ *ON
+     C                     Z-ADD0         RCOUNT
+      *                                                                                      BUG3798
+      *  Do not perform subroutine SRAUDT here, because it will be called anyway.            BUG3798
+      *  It can't be called twice.   .                                                       BUG3798
+      *                                                                                      BUG3798
+     C**********           EXSR SRAUDT                                                       BUG3798
+     C                     ELSE
+      *
+      ** RCF Processing for Printer File
+      *
+     C                     EXSR RCFP1
+     C                     EXSR SRBRCA
+     C                     ENDIF
+      *
+      ** Do Until End of File.
+      *
+     C           *IN89     DOWEQ*OFF
+      *
+      ** Count records read.
+      *
+     C                     ADD  1         RCOUNT
+      *
+     C                     MOVE UBRTT     RUBRTT
+      *
+      ** Process Report Lines.
+      *
+     C                     EXSR SRREPT
+      *
+      ** Accumulate totals
+      *
+     C                     EXSR SRTOTL
+      *
+      ** Save key fields to work fields
+      *
+     C                     MOVE BRCA      WKBRCA  3
+     C                     MOVE CCY       WKCCY   3
+     C                     MOVE DTYP      WKDTYP  2
+     C                     MOVE DLST      WKDLST  2
+     C                     MOVE CLAS      WKCLAS  4                                           CDL038
+     C                     MOVE RECID     WKRECI  1
+     C**********           Z-ADDCNUM      WKCNUM  60                                          CSD027
+     C                     MOVE CNUM      WKCNUM  6                                           CSD027
+      *
+      ** Read next record.
+      *
+     C                     READ ACEXNL1                  89
+      *
+      ** Check if totals are to be printed.
+      *
+     C                     EXSR SRCHCK
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRREPT
+      *****************************************************************
+      *                                                               *
+      *  SRREPT - Process Report Lines.                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRREPT    BEGSR
+      *
+     C           RECID     COMP 'D'                      43
+     C           RECID     COMP 'E'                      44
+     C           RECID     COMP 'F'                      45
+      *
+     C           CIR001    IFEQ 'Y'
+     C           RECID     COMP 'G'                      46
+     C                     ENDIF
+      *
+     C           WHEAD1    IFEQ 'Y'
+      *
+     C           WBRHD     IFEQ 'Y'
+     C           *IN37     ANDEQ'1'
+     C                     CLOSEDL5210P1
+     C                     OPEN DL5210P1
+     C                     MOVE 'N'       WBRHD   1
+     C                     ENDIF
+     C           *IN87     IFEQ *OFF
+     C                     WRITEHEADP1
+     C                     ENDIF
+     C                     MOVE 'N'       WHEAD1
+     C                     ENDIF
+      *
+      ** Check if Deal Type Narrative has to be print out
+      *
+     C           WKDTYP    IFNE DTYP
+      *
+     C                     MOVE *OFF      *IN35
+     C           RCDC      COMP 15                       15
+     C           RCDC      COMP 16                       16
+     C           RCDC      COMP 20                       19
+      *
+     C           *IN15     IFEQ *ON
+     C           *IN16     OREQ *ON
+     C                     MOVE *ON       *IN35
+     C                     ENDIF
+      *
+      ** If internal contract deal type is required
+      *
+     C           *IN19     IFEQ *OFF
+      *
+      ** Changed to print DTYPE instead of record type as narrative
+     C           DTYP      LOKUPTAB1      TAB2           50
+     C           *IN50     IFEQ *OFF
+     C                     MOVEL'TAB1    'DBFILE
+     C                     Z-ADD007       DBASE
+     C                     MOVEL'*KEY'    DBOPTN
+     C                     MOVELDTYP      DBKEY
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           *IN50     IFEQ *ON
+     C           CDL006    ANDEQ'N'
+      *
+     C           DTYP      IFEQ 'FL'
+     C           DTYP      OREQ 'DP'
+     C           DTYP      OREQ 'LP'
+     C           DTYP      OREQ 'FT'
+     C           DTYP      OREQ 'DT'
+     C           DTYP      OREQ 'LT'
+     C                     MOVEL'TAB1    'DBFILE
+     C                     MOVELDTYP      DBKEY
+     C                     Z-ADD008       DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           *IN50     IFEQ *ON
+     C***********CDL006    ANDEQ'Y'                                                           CDL038
+     C                     MOVELTAB2      RNARR1 50
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           *IN87     IFEQ *ON
+     C                     MOVE *OFF      *IN87
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+     C                     WRITEHEADP2
+     C                     MOVE *BLANKS   WKDLST
+     C                     MOVE *BLANKS   WKCLAS                                              CDL038
+     C                     ENDIF
+      *
+      ** Check if Deal Subtype Narrative has to be print out
+      *
+     C           WKDLST    IFNE DLST
+     C           WKCLAS    ORNE CLAS                                                          CDL038
+     C                     EXSR SRGDLS
+     C*********************MOVELASDSTC    RNARR2 33                                           CDL038
+     C*********************MOVE ASDSTN    RNARR2                                              CDL038
+     C                     MOVELDLST      RNAR2A  6                                           CDL038
+     C                     MOVE CLAS      RNAR2A                                              CDL038
+     C                     MOVELDSTCNR    RNAR2B 35                                           CDL038
+      *
+     C           *IN87     IFEQ *ON
+     C                     MOVE *OFF      *IN87
+     C                     WRITEHEADP1
+     C                     WRITEHEADP2
+     C                     ENDIF
+      *
+     C                     WRITEHEADP3
+     C                     ENDIF
+      *
+     C                     MOVE CNUM      RCNUM
+      *
+      ** Customer Name and Town
+      *
+     C                     MOVE *BLANKS   PCNUM
+     C                     MOVE RCNUM     PCNUM
+     C                     EXSR SRCUST
+      *
+     C                     MOVE BBCRNM    RCNAME
+     C                     MOVE BBCRTN    RTOWN
+     C                     MOVE DLNO      RLNRF
+      *
+      ** Format Date
+      *
+     C                     EXSR SRACDT
+      *
+      ** Interest Rate
+      *
+     C           INTR      MULT 10000000  ZFLD15
+     C                     Z-ADD7         ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RINTR
+      *
+     C           *IN19     IFEQ *ON
+     C           *IN23     ANDEQ*ON
+     C                     MOVE *BLANKS   RINTR
+     C                     ENDIF
+      *
+      ** Access the currency details
+      *
+     C                     MOVE CCY       PCCY
+     C                     EXSR SRCURR
+      *
+     C                     MOVE CCY       RCCY
+     C                     Z-ADDA6NBDP    ZDECS
+      *
+     C                     Z-ADDPCPL      ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RPCPL
+      *
+     C                     Z-ADDAMAD      ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RAMAD
+      *
+     C                     Z-ADDAMTA      ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RAMTA
+      *
+      ** Process details.
+      *
+     C                     EXSR SRDETL
+      *
+      ** Write out the record.
+      *
+     C                     EXSR SRPREC
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRCHCK
+      *****************************************************************
+      *                                                               *
+      *  SRCHCK- Subroutine to Check if Totals are to be printed      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCHCK    BEGSR
+      *
+      ** Change of Branch
+      *
+     C           WKBRCA    IFNE BRCA
+     C           *IN89     OREQ *ON
+     C                     EXSR SRDLST
+     C                     EXSR SRDTYP
+     C                     EXSR SRCCY
+     C                     EXSR SRENDR
+     C           *IN89     IFEQ *OFF
+     C                     EXSR SRBRCA
+     C                     MOVE 'Y'       WHEAD1
+     C                     MOVE 'Y'       WBRHD
+     C                     ENDIF
+     C                     GOTO ECHK
+     C                     ENDIF
+      *
+      ** Change in Record ID.
+      *
+     C           WKRECI    IFNE RECID
+     C           WKBRCA    ANDEQBRCA
+     C                     EXSR SRDLST
+     C                     EXSR SRDTYP
+     C                     EXSR SRCCY
+     C                     MOVE 'Y'       WHEAD1
+     C                     ENDIF
+      *
+      ** Change in Currency
+      *
+     C           WKCCY     IFNE CCY
+     C           WKRECI    ANDEQRECID
+     C           WKBRCA    ANDEQBRCA
+     C                     EXSR SRDLST
+     C                     EXSR SRDTYP
+     C                     EXSR SRCCY
+     C                     MOVE 'Y'       WHEAD1
+     C                     ENDIF
+      *
+      ** Change in Deal Type
+      *
+     C           WKDTYP    IFNE DTYP
+     C           WKCCY     ANDEQCCY
+     C           WKRECI    ANDEQRECID
+     C           WKBRCA    ANDEQBRCA
+     C                     EXSR SRDLST
+     C                     EXSR SRDTYP
+     C                     ENDIF
+      *
+      ** Change in Deal Subtype
+      *
+     C           WKDLST    IFNE DLST
+     C           WKDTYP    ANDEQDTYP
+     C           WKCCY     ANDEQCCY
+     C           WKRECI    ANDEQRECID
+     C           WKBRCA    ANDEQBRCA
+     C           WKCLAS    ORNE CLAS                                                          CDL038
+     C           WKDTYP    ANDEQDTYP                                                          CDL038
+     C           WKCCY     ANDEQCCY                                                           CDL038
+     C           WKRECI    ANDEQRECID                                                         CDL038
+     C           WKBRCA    ANDEQBRCA                                                          CDL038
+     C                     EXSR SRDLST
+     C                     ENDIF
+      *
+     C           ECHK      ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRDTYP
+      *****************************************************************
+      *                                                               *
+      *  SRDTYP - Process Change in Deal Type                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDTYP    BEGSR
+      *
+     C                     Z-ADDA6NBDP    ZDECS
+      *
+     C                     Z-ADDWPCPL2    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RDTPR
+      *
+     C                     Z-ADDWAMAD2    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RDTIAD
+      *
+     C                     Z-ADDWAMTA2    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RDTITA
+      *
+     C           *IN87     IFEQ *ON
+     C                     MOVE *OFF      *IN87
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+     C                     WRITETOTAL2
+      *
+      ** Initialize total fields for Loan Type/Sub-type
+      *
+     C                     Z-ADD0         WPCPL2
+     C                     Z-ADD0         WAMAD2
+     C                     Z-ADD0         WAMTA2
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRDLST
+      *****************************************************************
+      *                                                               *
+      *  SRDLST - Process Change in Deal Sub-type                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDLST    BEGSR
+      *
+     C                     Z-ADDA6NBDP    ZDECS
+      *
+     C                     Z-ADDWPCPL1    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RDSPR
+      *
+     C                     Z-ADDWAMAD1    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RDSIAD
+      *
+     C                     Z-ADDWAMTA1    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RDSITA
+      *
+     C           *IN87     IFEQ *ON
+     C                     MOVE *OFF      *IN87
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+     C                     WRITETOTAL1
+      *
+      ** Initialize total fields for Loan Type/Sub-type
+      *
+     C                     Z-ADD0         WPCPL1
+     C                     Z-ADD0         WAMAD1
+     C                     Z-ADD0         WAMTA1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRCCY
+      *****************************************************************
+      *                                                               *
+      *  SRCCY  - Process Change in Currency                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCCY     BEGSR
+      *
+     C                     MOVE WKCCY     RCCYT
+     C                     Z-ADDA6NBDP    ZDECS
+      *
+     C                     Z-ADDWPCPL3    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RCYPR
+      *
+     C                     Z-ADDWAMAD3    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RCYIAD
+      *
+     C                     Z-ADDWAMTA3    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RCYITA
+      *
+     C           *IN87     IFEQ *ON
+     C                     MOVE *OFF      *IN87
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+     C                     WRITETOTAL3
+      *
+      ** Initialize total fields for Currency change
+      *
+     C                     Z-ADD0         WPCPL3
+     C                     Z-ADD0         WAMAD3
+     C                     Z-ADD0         WAMTA3
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRENDR
+      *****************************************************************
+      *                                                               *
+      *  SRENDR - End of Branch report                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRENDR    BEGSR
+      *
+     C                     MOVE WKBRCA    RBRCA
+     C                     WRITETRAILP
+      *
+      ** Initialize total fields
+      *
+     C                     Z-ADD0         WPCPL3
+     C                     Z-ADD0         WAMAD3
+     C                     Z-ADD0         WAMTA3
+     C                     Z-ADD0         WPCPL2
+     C                     Z-ADD0         WAMAD2
+     C                     Z-ADD0         WAMTA2
+     C                     Z-ADD0         WPCPL1
+     C                     Z-ADD0         WAMAD1
+     C                     Z-ADD0         WAMTA1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRDETL
+      *****************************************************************
+      *                                                               *
+      *  SRDETL - Subroutine to process details to report.            *
+      *                                                               *
+      *  Called By: SRMAIN                                            *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDETL    BEGSR
+      *
+     C                     MOVEA'00'      *IN,51
+     C                     MOVE *OFF      *IN58
+     C           CIR002    IFEQ 'Y'
+     C           CIR006    OREQ 'Y'
+     C           OTUI      IFNE 0
+     C                     MOVE *ON       *IN51
+     C                     ENDIF
+      *
+     C           TTUI      IFNE 0
+     C                     MOVE *ON       *IN52
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Set Print Control Conditions.
+      ** Identify FRA/IRS Deal records.
+      *
+     C                     MOVEA'00000000'*IN,60
+     C                     MOVEA'0000'    *IN,68
+      *
+     C           CIR001    IFEQ 'Y'
+     C                     MOVE *OFF      *IN72
+     C                     ENDIF
+      *
+     C           CIR001    IFEQ 'Y'
+     C           RECID     ANDEQ'G'
+     C                     MOVE *ON       *IN72
+     C                     ELSE
+      *
+     C           DTYP      IFEQ 'FR'
+     C                     MOVE *ON       *IN61
+     C                     ENDIF
+      *
+     C           DTYP      IFEQ 'RS'
+     C                     MOVE *ON       *IN62
+     C                     ENDIF
+      *
+     C           DTYP      IFEQ 'RX'
+     C                     MOVE *ON       *IN63
+     C                     ENDIF
+      *
+     C           DTYP      IFEQ 'RF'
+     C           DTYP      OREQ 'RR'
+     C           DTYP      OREQ 'RP'
+     C                     MOVE *ON       *IN64
+     C                     ENDIF
+      *
+      ** If Floor Deal do not output Ceiling Rate.
+      ** Output Floor Rate.
+      *
+     C                     MOVE *OFF      *IN11
+      *
+     C           DTYP      IFEQ 'RF'
+     C                     MOVE *ON       *IN11
+     C                     ENDIF
+      *
+     C           *IN61     IFEQ *ON
+     C           *IN62     OREQ *ON
+     C           *IN63     OREQ *ON
+     C           *IN64     OREQ *ON
+     C                     MOVE *ON       *IN60
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           *IN60     IFEQ *ON
+      *
+      ** FRA/IRS Determine Rate present.
+      *
+     C           URTPI     IFEQ 'Y'
+     C                     MOVE *ON       *IN65
+     C                     ENDIF
+     C           TRTPI     IFEQ 'Y'
+     C                     MOVE *ON       *IN66
+     C                     ENDIF
+      *
+      ** FR - if both rates present find accrual amounts to print.
+      *
+     C           *IN61     IFEQ *ON
+     C           *IN65     ANDEQ*ON
+     C           *IN66     ANDEQ*ON
+     C           TAMAD     IFEQ 0
+     C           TAMTA     ANDEQ0
+     C                     MOVE *ON       *IN67
+     C                     ELSE
+     C                     MOVE *ON       *IN68
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** RS/RX - if rate present, set accrual amount to ptint.
+      *
+     C           *IN62     IFEQ *ON
+     C           *IN63     OREQ *ON
+     C           *IN65     IFEQ *ON
+     C                     MOVE *ON       *IN67
+     C                     ENDIF
+     C           *IN66     IFEQ *ON
+     C                     MOVE *ON       *IN68
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** RX - determine if record is for OUR or THEIR details.
+      *
+     C           *IN63     IFEQ *ON
+     C           ACFD      IFNE 0
+     C                     MOVE *ON       *IN69
+     C                     ELSE
+     C                     MOVE *ON       *IN70
+     C                     MOVE *BLANKS   RUBRTT
+     C                     MOVE TBRTT     RTBRTT
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** RP, RF, RR - determine if providers details OURS or THEIRS.
+      *
+     C           *IN64     IFEQ *ON
+     C           UBRTT     IFNE 0
+     C                     MOVE *ON       *IN69
+     C                     ELSE
+     C                     MOVE *ON       *IN70
+     C                     MOVE *BLANKS   RUBRTT
+     C                     MOVE TBRTT     RTBRTT
+     C                     ENDIF
+      *
+      ** RP, RF. RR - if providers rate present, set accrual amounts
+      ** to print.
+      *
+     C           *IN69     IFEQ *ON
+     C           *IN65     ANDEQ*ON
+     C           *IN70     OREQ *ON
+     C           *IN66     ANDEQ*ON
+     C           TAMAD     IFEQ 0
+     C           TAMTA     ANDEQ0
+     C                     MOVE *ON       *IN67
+     C                     ELSE
+     C                     MOVE *ON       *IN68
+     C                     ENDIF
+     C                     END
+      *
+      ** RP, RF, RR - check if floor rate present.
+      *
+     C           FLRIND    IFEQ 'Y'
+     C                     MOVE *ON       *IN71
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           TBRTT     IFEQ 0
+     C                     MOVE *BLANKS   RTBRTT
+     C                     ENDIF
+      *
+     C           *IN62     IFNE '1'
+     C           *IN63     ANDNE'1'
+     C           *IN64     ANDNE'1'
+      *
+     C           AMAD      IFEQ 0
+     C           AMTA      ANDEQ0
+     C                     MOVE *BLANKS   RAMAD
+     C                     ENDIF
+      *
+     C           AMTA      IFEQ 0
+     C                     MOVE *BLANKS   RAMTA
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** FRA/IRS Deal Types may contain report data in their fields
+      **   'RS' Deal Type convert their dates.
+      **   'RX' Deal Type, convert their dates for report.
+      **   'RP', 'RF', 'RR' Deal Type, convert their dates for report.
+      *
+     C           DTYP      IFEQ 'RS'
+     C           DTYP      OREQ 'RX'
+      *
+     C           DTYP      IFEQ 'RS'
+     C           TBRTT     ANDNE0
+     C                     MOVE TBRTT     RTBRTT
+     C                     ENDIF
+      *
+     C           *IN70     IFEQ *ON
+      *
+     C           DTYP      IFEQ 'RX'
+     C           TBRTT     ANDNE0
+     C                     MOVE *ON       *IN24
+     C                     MOVE TBRTT     RUBRTT
+     C                     ENDIF
+      *
+     C                     Z-ADDTACFD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RACFR
+      *
+     C                     Z-ADDTACTD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RACTD
+      *
+     C           TEINR     MULT 10000000  ZFLD15
+     C                     Z-ADD7         ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RINTR
+      *
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     Z-ADDTAMAD     ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RAMAD
+      *
+     C                     Z-ADDTAMTA     ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RAMTA
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           DTYP      IFEQ 'RS'
+     C           RECID     ANDNE'G'
+     C           *IN64     OREQ *ON
+     C                     MOVE *ON       *IN58
+      *
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     Z-ADDOTUI      ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ROTUI
+      *
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     Z-ADDTTUI      ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RTTUI
+      *
+     C                     Z-ADDTACFD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RTACFR
+      *
+     C                     Z-ADDTACTD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RTACTD
+      *
+     C           TEINR     MULT 10000000  ZFLD15
+     C                     Z-ADD7         ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RTEINR
+      *
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     Z-ADDTAMAD     ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RTAMAD
+      *
+     C                     Z-ADDTAMTA     ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RTAMTA
+      *
+     C           *IN64     IFEQ *ON
+      *
+     C           CLRAT     MULT 10000000  ZFLD15
+     C                     Z-ADD7         ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RCLRAT 13
+      *
+     C           FLRAT     MULT 10000000  ZFLD15
+     C                     Z-ADD7         ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RFLRAT
+      *
+     C           ACFD      IFEQ 0
+     C                     MOVE RTACFR    RACFR
+     C                     ENDIF
+      *
+     C           *IN64     IFEQ '1'
+     C           *IN65     IFEQ '1'
+     C                     MOVE RINTR     RTEINR
+     C                     ENDIF
+      *
+     C           *IN11     IFEQ *OFF
+     C                     MOVE RCLRAT    RINTR
+     C                     ELSE
+     C                     MOVE RFLRAT    RINTR
+     C                     ENDIF
+      *
+     C           *IN67     IFEQ '1'
+     C                     MOVE RAMAD     RTAMAD
+     C                     MOVE RAMTA     RTAMTA
+     C           UBRTT     IFNE 0
+     C                     MOVE UBRTT     RTBRTT
+     C                     ELSE
+     C                     MOVE TBRTT     RTBRTT
+     C                     ENDIF
+     C                     MOVE *BLANKS   RAMAD
+     C                     MOVE *BLANKS   RAMTA
+     C                     MOVE *BLANKS   RUBRTT
+     C                     ENDIF
+      *
+     C           ACTD      IFNE 0
+     C                     Z-ADDACTD      ZDAYNO
+     C                     ELSE
+     C                     Z-ADDTACTD     ZDAYNO
+     C                     ENDIF
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RACTD
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRPREC
+      *****************************************************************
+      *                                                               *
+      *  SRPREC - Subroutine to Write a Detail record to the Report.  *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPREC    BEGSR
+      *
+      ** Check that sufficient lines remain for the Format. If not,
+      ** write out the Main Headings on a new page.
+      *
+     C           *IN61     IFEQ *ON
+     C           *IN62     OREQ *ON
+     C           *IN64     OREQ *ON
+     C           *IN72     OREQ *ON
+     C           CIR001    ANDEQ'Y'
+     C           RQDLN1    ADD  1         RQDLN1
+     C                     ENDIF
+      *
+      ** RS Total unsettled interest line
+      *
+     C           CIR002    IFEQ 'Y'
+     C           CIR006    OREQ 'Y'
+      *
+     C           *IN62     IFEQ *ON
+     C           *IN51     IFEQ *ON
+     C                     ADD  1         RQDLN1
+     C                     ENDIF
+     C           *IN52     IFEQ *ON
+     C                     ADD  1         RQDLN1
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** RR, RF, RP Total unsettled interest line
+      *
+     C           *IN64     IFEQ *ON
+     C           *IN51     IFEQ *ON
+     C           *IN52     OREQ *ON
+     C                     ADD  1         RQDLN1
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** If ACTD is not be printed.
+      *
+     C           *IN35     IFEQ *ON
+     C           *IN21     ANDEQ*OFF
+     C                     MOVE *BLANKS   RACTD
+     C                     ENDIF
+      *
+     C                     Z-ADD1         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     MOVE *ON       *IN87
+     C                     ENDIF
+      *
+     C           *IN87     IFEQ *ON
+     C                     WRITEHEADP1
+     C                     WRITEHEADP2
+     C                     WRITEHEADP3
+     C                     MOVE *OFF      *IN87
+     C                     ENDIF
+      *
+      ** Write out Detail Record.
+      *
+     C                     WRITEDETAIL1
+     C           RTOWN     IFNE *BLANKS
+     C           *IN61     ANDEQ*OFF
+     C                     WRITEDETAIL2
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRAUDT
+      *****************************************************************
+      *                                                               *
+      *  SRAUDT - Subroutine to Output Audit report and End Program.  *
+      *                                                               *
+      *  Called By: Main Processing, PROCES, *PSSR                    *
+      *  Calls: None.                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR
+      *
+     C                     READ ACCEXNPF                 89
+     C           *IN89     IFEQ *ON
+     C                     Z-ADD009       DBASE
+     C                     MOVEL'Z'       DBKEY
+     C                     MOVEL'ACCEXNP' DBFILE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE NORE      RNORE
+      *
+     C           NORE      IFNE RCOUNT
+     C                     MOVE *ON       *IN86
+     C                     ENDIF
+      *
+      ** Output Report Header and File Controls.
+      *
+     C                     WRITEHEADAU
+      *
+     C           RCOUNT    IFEQ 0
+     C                     WRITENODTLS
+     C                     ELSE
+     C                     WRITECONTROL
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      ** Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+      *
+      ** If *PSSR already run, then just end the program here.
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RCFP1
+      *****************************************************************
+      *                                                               *
+      *  RCFP1  - Subroutine to register the P1 Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFP1     BEGSR
+      *
+     C                     OPEN DL5210P1
+      *
+      ** Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RCFAU
+      *****************************************************************
+      *                                                               *
+      *  RCFAU  - Subroutine to register the AU Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFAU     BEGSR
+      *
+      ** Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRACDT
+      *****************************************************************
+      *                                                               *
+      *  SRACDT - Convert accrual period to alpha format.             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRACDT    BEGSR
+      *
+     C                     Z-ADDACFD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RACFR
+      *
+     C                     Z-ADDACTD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RACTD
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRTOTL
+      *****************************************************************
+      *                                                               *
+      *  SRTOTL - Accumulate the totals                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRTOTL    BEGSR
+      *
+      ** Accumulate Principal Amount for Deal Sub-type in WPCPL1
+      ** Accumulate Accrued to Date for Deal Sub-type in WAMAD1
+      ** Accumulate Amount to Accrue for Deal Sub-type in WAMTA1
+      *
+     C           WPCPL1    ADD  PCPL      WPCPL1 130
+     C           WAMAD1    ADD  AMAD      WAMAD1 130
+     C           WAMTA1    ADD  AMTA      WAMTA1 130
+      *
+      ** FRA/IRS Deal Types may have Accrual amounts in their fields.
+      ** Accumulate Their Accrued to Date for Deal Sub-Type in WAMAD1
+      ** Accumulate Their Amount to Accrue for Deal Sub-Type in WAMTA1
+      *
+     C                     ADD  TAMAD     WAMAD1
+     C                     ADD  TAMTA     WAMTA1
+      *
+      ** Add sub-totals to running totals
+      *
+     C           WPCPL2    ADD  PCPL      WPCPL2 130
+     C           WAMAD2    ADD  AMAD      WAMAD2 130
+     C           WAMTA2    ADD  AMTA      WAMTA2 130
+      *
+     C                     ADD  TAMAD     WAMAD2
+     C                     ADD  TAMTA     WAMTA2
+      *
+     C           WPCPL3    ADD  PCPL      WPCPL3 130
+     C           WAMAD3    ADD  AMAD      WAMAD3 130
+     C           WAMTA3    ADD  AMTA      WAMTA3 130
+      *
+     C                     ADD  TAMAD     WAMAD3
+     C                     ADD  TAMTA     WAMTA3
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRBRCA
+      *****************************************************************
+      *                                                               *
+      *  SRBRCA - Read Branch Deatails.                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRBRCA    BEGSR
+      *
+     C                     MOVELBRCA      ##KB                                                CSC042
+     C                     EXSR ##CHKB                                                        CSC042
+      * If branch is in the array then use the details                                        CSC042
+     C           ##FIC     IFEQ 'Y'                        *** B10                            CSC042
+     C                     EXSR ##SETB                                                        CSC042
+     C                     ELSE                            *** X10                            CSC042
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' PRTCD   7
+     C                     PARM '*KEY   ' POPTN   7
+     C                     PARM BRCA      PBRCH   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C           PRTCD     IFNE *BLANK
+     C                     MOVEL'SDBRCHPD'DBFILE
+     C                     Z-ADD010       DBASE
+     C                     MOVELPOPTN     DBOPTN  7
+     C                     MOVELBRCA      DBKEY
+     C                     EXSR *PSSR
+     C                     ELSE                                                               CSC042
+      * Details found on the DB so add them to the array                                      CSC042
+      * if the array still has room                                                           CSC042
+     C                     EXSR ##ADDB                                                        CSC042
+     C                     ENDIF
+     C                     END                             *** E10                            CSC042
+      *
+     C                     MOVE 'Y'       WHEAD1  1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT                                                                                  CSC042
+     C********************************************************************                    CSC042
+      *                                                                                       CSC042
+      * ##CHKB - Subroutine to check the Branch in the arrays                                 CSC042
+      *                                                                                       CSC042
+     C           ##CHKB    BEGSR                                                              CSC042
+      *                                                                                       CSC042
+     C           *LIKE     DEFN A8BRCD    ##KB                                                CSC042
+      *                                                                                       CSC042
+      * Set off the branch found indicator                                                    CSC042
+     C                     MOVEL*BLANK    ##FIC   1                                           CSC042
+      *                                                                                       CSC042
+      * Save the state of indicator 30 so it can be reset at the end                          CSC042
+      * of the SR as it may be used elsewhere in the code                                     CSC042
+     C           *IN30     IFEQ *ON                                                           CSC042
+     C                     MOVEL'Y'       #IN30   1                                           CSC042
+     C                     ELSE                                                               CSC042
+     C                     MOVEL'N'       #IN30                                               CSC042
+     C                     END                                                                CSC042
+      *                                                                                       CSC042
+     C                     SETOF                         30                                   CSC042
+      *                                                                                       CSC042
+      * Restore the saved Value of B                                                          CSC042
+     C                     Z-ADD##BSV     B                                                   CSC042
+      *                                                                                       CSC042
+     C* Check whether details for Branch already in array                                     CSC042
+      *                                                                                       CSC042
+      * Is this the same as the last LOKUP, if so we can bypass                               CSC042
+      * the LOKUP                                                                             CSC042
+      * Defend against B being 0                                                              CSC042
+     C           B         IFEQ 0                                                             CSC042
+     C                     Z-ADD1         B                                                   CSC042
+     C                     END                                                                CSC042
+      *                                                                                       CSC042
+      * If the branch being checked is the same then use these                                CSC042
+      * details rather than doing a LOKUP                                                     CSC042
+     C           ##KB      IFEQ ##BR,B                                                        CSC042
+      * Found so seton 30                                                                     CSC042
+     C                     SETON                         30                                   CSC042
+     C                     ELSE                                                               CSC042
+     C                     Z-ADD1         B                                                   CSC042
+     C           ##KB      LOKUP##BR,B                   30                                   CSC042
+     C                     END                                                                CSC042
+      *                                                                                       CSC042
+      * Save the last update to B                                                             CSC042
+     C           *IN30     IFEQ *ON                                                           CSC042
+     C                     Z-ADDB         ##BSV                                               CSC042
+      * Set the indicator to show the data was found                                          CSC042
+     C                     MOVEL'Y'       ##FIC                                               CSC042
+     C                     END                                                                CSC042
+      *                                                                                       CSC042
+      * Reset the state of indicator 30.                                                      CSC042
+     C           #IN30     IFEQ 'Y'                                                           CSC042
+     C                     MOVEL*ON       *IN30                                               CSC042
+     C                     ELSE                                                               CSC042
+     C                     MOVEL*OFF      *IN30                                               CSC042
+     C                     END                                                                CSC042
+      *                                                                                       CSC042
+     C                     ENDSR                                                              CSC042
+      ********************************************************************                    CSC042
+      /EJECT                                                                                  CSC042
+      ********************************************************************                    CSC042
+      *                                                                                       CSC042
+      * ##SETB - Sets up the SDBRCHPD fields used in the code from the                        CSC042
+      * arrays                                                                                CSC042
+      *                                                                                       CSC042
+     C           ##SETB    BEGSR                                                              CSC042
+      *                                                                                       CSC042
+     C                     MOVEL##BR,B    A8BRCD                                              CSC042
+     C                     MOVEL##BC,B    A8CMCD                                              CSC042
+      *                                                                                       CSC042
+     C                     ENDSR                                                              CSC042
+      *                                                                                       CSC042
+      ********************************************************************                    CSC042
+      /EJECT                                                                                  CSC042
+      ********************************************************************                    CSC042
+      *                                                                                       CSC042
+      * ##ADDB - Adds the SDBRCHPD fields used in the code to the                             CSC042
+      * arrays                                                                                CSC042
+      *                                                                                       CSC042
+     C           ##ADDB    BEGSR                                                              CSC042
+      *                                                                                       CSC042
+      * If there is still room in the array then add the details                              CSC042
+     C           ##BNDX    IFLT 999                                                           CSC042
+     C                     ADD  1         ##BNDX                                              CSC042
+     C                     Z-ADD##BNDX    B                                                   CSC042
+     C                     MOVELA8BRCD    ##BR,B                                              CSC042
+     C                     MOVELA8CMCD    ##BC,B                                              CSC042
+     C                     END                                                                CSC042
+      *                                                                                       CSC042
+      * Update ##BSV  so next call to ##CHKB checks this latest adddition                     CSC042
+      * to the array firss                                                                    CSC042
+     C                     Z-ADDB         ##BSV                                               CSC042
+      *                                                                                       CSC042
+     C                     ENDSR                                                              CSC042
+      ********************************************************************                    CSC042
+      /EJECT                                                                                  CSC042
+      /TITLE SR/SRGDLS
+      *****************************************************************
+      *                                                               *
+      *  SRGDLS - Read Subtype Details.                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRGDLS    BEGSR
+      *
+     C                     CALL 'AODLSTR0'
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM DLST      PAQCD   2
+     C           SDDLST    PARM SDDLST    DSFDY
+      *
+     C           PRTCD     IFNE *BLANK
+     C                     MOVEL'SDDLSTPD'DBFILE
+     C                     Z-ADD011       DBASE
+     C                     MOVELPOPTN     DBOPTN
+     C                     MOVELDLST      DBKEY
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*                                                                   CDL038
+     C**   ACCESS DEAL TYPE/SUB-TYPE NARRATIVE                            CDL038
+     C*                                                                   CDL038
+     C           DTSTK     KLIST                                          CDL038
+     C                     KFLD           DTYP                            CDL038
+     C                     KFLD           DLST                            CDL038
+     C                     KFLD           CLAS                            CDL038
+     C           DTSTK     CHAINFDDTSTL1             99                   CDL038
+     C*                                                                   CDL038
+     C           *IN99     IFEQ *OFF                                      CDL038
+     C                     MOVELNARR11    DSTCNR                          CDL038
+     C                     ELSE                                           CDL038
+     C                     MOVEL*BLANK    DSTCNR                          CDL038
+     C                     MOVELASDSTN    DSTCNR 35                       CDL038
+     C                     ENDIF                                          CDL038
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRCURR
+      *****************************************************************
+      *                                                               *
+      *  SRCURR - Read Currency Deatails.                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCURR    BEGSR
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM           PCCY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFNE *BLANK
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     Z-ADD012       DBASE
+     C                     MOVELPOPTN     DBOPTN
+     C                     MOVELCCY       DBKEY
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRCUST
+      *****************************************************************
+      *                                                               *
+      *  SRCUST - Read Customer Deatails.                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCUST    BEGSR
+      *
+     C******               CALL 'AOCUSTR0'                                                    220738
+     C           *LIKE     DEFN BBCUST    ##LCUS                                              CSC042
+     C           *LIKE     DEFN BBCLST    ##LLST                                              CSC042
+     C           *LIKE     DEFN BBCRNM    ##LCNM                                              CSC042
+     C           *LIKE     DEFN BBCRTN    ##LCTN                                              CSC042
+     C           PCNUM     IFEQ ##LCUS                                                        CSC042
+     C                     MOVEL##LLST    BBCLST                                              CSC042
+     C                     MOVEL##LCNM    BBCRNM                                              CSC042
+     C                     MOVEL##LCTN    BBCRTN                                              CSC042
+     C                     ELSE                                                               CSC042
+     C                     CALL 'AOCUSTR1'                                                    220738
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM           PCNUM  10
+     C                     PARM *BLANKS   PKYST   7
+     C******     SDCUST    PARM SDCUST    DSSDY                                               220738
+     C           SDCUST    PARM SDCUST    DSLDY                                               220738
+      *
+     C           PRTCD     IFNE *BLANK
+     C           BBCLST    ANDNE'Y'                                                           220738
+     C                     MOVEL'SDCUSTPD'DBFILE
+     C                     Z-ADD013       DBASE
+     C                     MOVELPOPTN     DBOPTN
+     C                     MOVELPCNUM     DBKEY
+     C                     EXSR *PSSR
+     C                     ELSE                                                               CSC042
+     C                     MOVELBBCUST    ##LCUS                                              CSC042
+     C                     MOVELBBCLST    ##LLST                                              CSC042
+     C                     MOVELBBCRNM    ##LCNM                                              CSC042
+     C                     MOVELBBCRTN    ##LCTN                                              CSC042
+     C                     ENDIF
+     C                     END                                                                CSC042
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/ZDATE2
+     C/COPY ZSRSRC,ZDATE2Z2
+      /TITLE SR/ZFRPED
+     C/COPY ZSRSRC,ZFRPEDZ3
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2002
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   TAB1/TAB2 DEAL TYPE/DEAL TYPE NARRATIVE (ADDED IN TABLES FOR SART8528
+CSCERTIFICATE OF DEPOSIT SOLD
+BSBOND SOLD
+BRBILL REDISCOUNTED
+TSTREASURY BILL SOLD
+RABANK ACCEPTANCE REDISCOUNTED
+TRTRADE ACCEPTANCE REDISCOUNTED
+C1PRIMARY CERTIFICATE OF DEPOSIT PURCHASED
+C2SECONDARY CERTIFICATE OF DEPOSIT PURCHASED
+BPBOND PURCHASED
+BDBILL DISCOUNTED
+TBTREASURY BILL PURCHASED
+DABANK ACCEPTANCE DISCOUNTED
+TATRADE ACCEPTANCE DISCOUNTED
+FPFOREIGN EXCHANGE PURCHASE
+FSFOREIGN EXCHANGE SALE
+CXCROSS DEAL
+PIPURCHASE TO COVER INTEREST COMMITMENT
+SISALE TO COVER INTEREST COMMITMENT
+OPOPTION
+OTOPTION TAKEDOWN
+SWSWAP
+ITINTERBANK TAKING
+IPINTERBANK PLACING
+TDTIME DEPOSIT
+TITIME LOAN
+CDCALL/NOTICE DEPOSIT TAKING
+CLCALL/NOTICE DEPOSIT PLACING
+CICERTIFICATE OF DEPOSIT ISSUED
+LNCOMMERCIAL LOAN
+DLDEMAND LOAN
+FRFUTURE RATE AGREEMENT
+RSSINGLE CURRENCY INTEREST RATE SWAP
+RXCROSS CURRENCY INTEREST RATE SWAP
+RPINTEREST RATE CAP
+RFINTEREST RATE FLOOR
+RRINTEREST RATE COLLAR
+ILINTERNAL LOAN
+IDINTERNAL DEPOSIT
+FLFIDUCIARY DEPOSITS TERM PLACING
+DPFIDUCIARY DEPOSITS CALL PLACING
+LPFIDUCIARY LOANS PLACING
+FTFIDUCIARY DEPOSITS TERM TAKING
+DTFIDUCIARY DEPOSITS CALL TAKING
+LTFIDUCIARY LOANS TAKING
+CFFLOATING RATE CD                                                                            CDL033

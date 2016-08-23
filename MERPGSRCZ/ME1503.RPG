@@ -1,0 +1,1662 @@
+     H        1
+     F*****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME Repair function')                             *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management Module                            *
+      *                                                               *
+      *  ME1503 - Repair function                                     *
+      *                                                               *
+      *  Function:  This program used the user defined functions to   *
+      *             replace the contents of a message tag by an other *
+      *             value.                                            *
+      *             As entry It receives the contents of the message  *
+      *             tag and details of the repair function. In        *
+      *             output it indicates which part of the message     *
+      *             can be changed (provided that the return code is  *
+      *             correct)                                          *
+      *                                                               *
+      *  Called By: FT0300  - FT Auto Generation                      *
+      *  Calls : Programs in MEUPGMPD                                 *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. MD022652           Date 07Oct13               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER030             Date 09Jul08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 BUG24998           Date 17Jul09               *
+      *                 CSW209             Date 01Apr09               *
+      *                 BUG24039           Date 01Apr09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 CSW207             Date 19Jun07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CFT014             Date 25May00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 177118             Date 29Mar00               *
+      *                 CFT006             Date 19Dec99               *
+      *                 CFT007             Date 18Nov99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CFT002  *Create    Date 29Mar99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD022652 - Excluded Phase Processing                         *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER030 - Multicash German Feature                            *
+      *  BUG24998 - Bank operation code is missing (Recompile)        *
+      *  CSW209 - SWIFT 2009 Changes                                  *
+      *  BUG24039 - Field P70 error                                   *
+      *  CSW207 - SWIFT 2007 Changes                                  *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+      *  CFT014 - Addition of MT103 messages                          *
+      *  177118 - Problem with setting up the tag field when repairing*
+      *           into a field from a blank field. If the tag is not  *
+      *           mapped then FT0300 cannot process the repaired      *
+      *           value.                                              *
+      *  CFT006 - MT101/2 message addtion for out/inc RFT CCT         *
+      *  CFT007 - BIC Database Plus Integration                       *
+      *  CFT002 - Straight Through Processing Phase 1                 *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Indicator usage                                              *
+      *  ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯                                              *
+      *                                                               *
+      *  50    First cycle completed                                  *
+      *  90    EOF on Read                                            *          CFT006
+      *  99    EOF on Read                                            *
+      *                                                               *
+      *  U7/U8 Error Ocurred                                          *
+      *  LR    End program                                            *
+      *                                                               *
+      *****************************************************************
+     F/EJECT
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *   #HINIT   - Initialise and define fields                     *
+      *   #CKRPF   - Checkings repair function (User defined)         *
+      *   #RTVTG   - Retrieve Tag Values                              *
+      *   #RNRPF   - Run Repair Function                              *
+      *   #TAG     - Retrieve the value of a given tag                *
+      *   #MAPR    - Map the Repair Tag                               *   CFT006
+      *   *PSSR    - Error handling                                   *
+      *                                                               *
+      *****************************************************************
+     F/EJECT
+      *                                                                   CFT006
+      ** Midas ME User Repair                                             CFT006
+      *                                                                   CFT006
+     FMEURPRL0IF  E           K        DISK                               CFT006
+     F                                              KINFSR SRFILE         CFT006
+      *
+      *  Incoming Message Detail - multiple formats
+      *
+     FMEINDTS2IF  E           K        DISK         KINFSR SRFILE
+      *
+      * ME Repair Program
+      *
+     FMEUPGMPDIT  F      15           EDISK         KINFSR SRFILE
+      *
+     E                    CPY@    1   1 80               Copyright table
+     E    MEUPGMPD        @RP     1 200 15
+     E/COPY ZSRSRC,RTCCYSE1
+     E/COPY ZSRSRC,ZDATE1Z1
+     E/COPY ZSRSRC,ZHOLE
+     E/COPY MECPYSRC,SRERRE
+      /EJECT
+      *
+     ICPYR@#      DS
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     IRUNDTA    E DSRUNDAT
+      *
+      *  Define rundat data area
+      *
+      *
+      *  Incoming message details data structures copy member
+      *
+      /COPY MECPYSRC,SME1100P
+      *
+      *  Data Structures used by Access Objects
+      *
+     IDSFDY     E DSDSFDY
+     ISCSARD    E DSSCSARDPD                                              CFT007
+      *
+      *  Repair Tag Description
+      *
+     I/COPY WNCPYSRC,ME1503I001
+     IPRFDDT      DS
+     I                                        1 256 WRFDDT
+     I                                        6 256 WRTGVL
+      *
+      *  Input TAG description
+      *
+     IPIFDDT      DS
+     I                                        1 256 WIFDDT
+     I                                        6 256 WITGVL
+     I@RPDS       DS
+     I                                        1   5 @RPFNC
+     I                                        6  15 @RPPGM
+      *
+      *  Data structures used by holiday checking
+      *
+     I/COPY ZSRSRC,ZHOLI
+     I/COPY ZSRSRC,ZHOLDS
+      *
+      *  End of Program Error Processing copysource member
+      *
+     I/COPY MECPYSRC,SRERRI
+      *
+      /EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           RPMTPY           Message type         CFT006
+     C                     PARM           RPMSET           Message sequence     CFT006
+     C                     PARM           PHEAD            General Details
+     C                     PARM           PDATA            Message Details
+     C                     PARM           PDAT2                                               CSW209
+     C*********************PARM           RPRTAG  5        Repair Tag           CFT006
+     C*********************PARM           RPITAG  5        Input  Tag           CFT006
+     C*********************PARM           RPKVAL  5        Repair function      CFT006
+     C*********************PARM           PTAGPR           Parameter Tag        CFT006
+     C*********************PARM           PRFDDT           Repair Tag Details   CFT006
+     C                     PARM           W0RTN   7        Return Code
+     C/COPY WNCPYSRC,ME1503C003
+      *
+      * Initialise program
+      *
+     C           *IN50     IFEQ '0'
+     C                     EXSR #HINIT
+     C                     ENDIF
+      *                                                                   CFT006
+     C           KYRPL0    KLIST                                          CFT006
+     C                     KFLD           RPMTPY                          CFT006
+     C                     KFLD           RPMSET                          CFT006
+      *                                                                   CFT006
+     C           KYRPL0    SETLLMEURPRL0                 90               CFT006
+     C           *IN90     IFNE '1'                                       CFT006
+     C                     GOTO EXMAIN                                    CFT006
+     C                     ENDIF                                          CFT006
+     C           KYRPL0    READEMEURPRL0                 90               CFT006
+     C           *IN90     DOWEQ'0'                                       CFT006
+      *
+     C                     MOVEL*BLANK    W0RTN
+      *
+      ** Check repair function
+     C           W0RTN     IFEQ *BLANK
+     C                     EXSR #CKRPF
+     C                     ENDIF
+      ** Retrieve Tag values
+     C           W0RTN     IFEQ *BLANK
+     C                     EXSR #RTVTG
+     C                     ENDIF
+      ** Run repair function for mapping
+     C           W0RTN     IFEQ *BLANK
+     C                     EXSR #RNRPF
+     C                     ENDIF
+      ** Update PDATA                                                     CFT006
+     C           W0RTN     IFEQ '*MAP'                                    CFT006
+     C                     EXSR #MAPR                                     CFT006
+     C                     MOVEL*BLANK    W0RTN                           CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+     C           KYRPL0    READEMEURPRL0                 90               CFT006
+     C                     ENDDO                                          CFT006
+      *
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXMAIN    TAG                                            CFT006
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *  Return to calling program
+      *
+     C                     RETRN
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #HINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    :        -                                          *
+      *                                                               *
+      *****************************************************************
+     CSR         #HINIT    BEGSR
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'#HINIT'  @STK,Q
+      *
+      * Set keylist for Message Details File
+      *
+     C           KYINDT    KLIST
+     C                     KFLD           PHMSGR
+     C                     KFLD           WKPART
+     C                     KFLD           WTAG
+     C           *LIKE     DEFN PHPART    WKPART
+      *
+      *  Get Rundate information
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+     C           WUDFF     COMP 'M'                      98
+      *
+      *  Convert Midas date to YYMMDD format
+      *
+     C                     CALL 'ZM0060'
+     C                     PARM WURDNB    P@RDNB  50
+     C                     PARM *BLANKS   ##YMD   6
+     C/COPY WNCPYSRC,ME1503C001
+     C                     SETON                     50
+      *                                                                   CFT007
+      *  Access SAR details file to see if CFT007 is installed.           CFT007
+      *                                                                   CFT007
+     C                     CALL 'AOSARDR0'                                CFT007
+     C                     PARM *BLANKS   P@RTCD  7                       CFT007
+     C                     PARM '*VERIFY' P@OPTN  7                       CFT007
+     C                     PARM 'CFT007'  @SARD   6                       CFT007
+     C           SCSARD    PARM *BLANKS   DSFDY                           CFT007
+      *                                                                   CFT007
+      *  Allow BIC Database Plus Integration                              CFT007
+      *                                                                   CFT007
+     C           P@RTCD    IFEQ *BLANKS                                   CFT007
+     C                     MOVE *ON       CFT007  1                       CFT007
+     C                     ENDIF                                          CFT007
+      *                                                                                       CSW209
+     C                     CALL 'SWIF2009'                                                    CSW209
+     C                     PARM           P@RTCD                                              CSW209
+     C           P@RTCD    IFEQ 'CSW2009'                                                     CSW209
+     C                     MOVE 'Y'       CSW209  1                                           CSW209
+     C                     ELSE                                                               CSW209
+     C                     MOVE 'N'       CSW209                                              CSW209
+     C                     ENDIF                                                              CSW209
+      *                                                                                       CSW209
+      *                                                                   CFT007
+      *                                                                                     MD022652
+      ** Access SAR details file to see if CFT050 is installed.                             MD022652
+      *                                                                                     MD022652
+     C                     CALL 'AOSARDR0'                                                  MD022652
+     C                     PARM *BLANKS   PRTCD   7                                         MD022652
+     C                     PARM '*VERIFY' POPTN   7                                         MD022652
+     C                     PARM 'CFT050'  PSARD   6                                         MD022652
+     C           SCSARD    PARM *BLANKS   DSFDY                                             MD022652
+      *                                                                                     MD022652
+      ** CFT007 process will take place when CFT050 is switched on                          MD022652
+      *                                                                                     MD022652
+     C           PRTCD     IFEQ *BLANKS                                                     MD022652
+     C                     MOVE *ON       CFT007                                            MD022652
+     C                     ENDIF                                                            MD022652
+      *                                                                                     MD022652
+      *  Unwind subroutine stack name
+      *
+     C           #HXINI    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *                                                                                       CER030
+      ** Check the switchable feature CER031                                                  CER030
+      *                                                                                       CER030
+     C                     CALL 'AOSARDR0'                                                    CER030
+     C                     PARM *BLANKS   PRTCD   7                                           CER030
+     C                     PARM '*VERIFY' POPTN   7                                           CER030
+     C                     PARM 'CER031'  PSARD   6                                           CER030
+     C           SCSARD    PARM SCSARD    DSFDY                                               CER030
+      *                                                                                       CER030
+     C           PRTCD     IFEQ *BLANKS                                                       CER030
+     C                     MOVEL'Y'       CER031  1                                           CER030
+     C                     ELSE                                                               CER030
+     C                     MOVEL'N'       CER031                                              CER030
+     C                     ENDIF                                                              CER030
+      *
+     CSR                   ENDSR
+      *****************************************************************
+      *                                                               *
+      *  #CKRPF   : CHECKINGS  REPAIR FUNCTION (USER DEFINED)         *
+      *                                                               *
+      *  CALLED BY: MAIN                                              *
+      *                                                               *
+      *  CALLS    :        -                                          *
+      *                                                               *
+      *****************************************************************
+     CSR         #CKRPF    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'#CKRPF'  @STK,Q
+      *
+     C                     MOVEL'*ERROR'  W0RTN
+      *
+      ** Must look like a function
+     C                     MOVELRPKVAL    WUASTK  1
+     C           WUASTK    IFNE '*'
+     C                     GOTO CKRPFF
+     C                     ENDIF
+      *
+      * IF BIC DB+ is on and repair function is *BICP, go to end of SR    CFT007
+     C*                                                                   CFT007
+     C           CFT007    IFEQ *ON                                       CFT007
+     C           RPKVAL    ANDEQ'*BICP'                                   CFT007
+     C                     MOVE *BLANKS   W0RTN                           CFT007
+     C                     GOTO CKRPFF                                    CFT007
+     C                     ENDIF                                          CFT007
+     C*                                                                   CFT007
+      ** Check that the user defined function exists
+      ** (So as to be abble to call the programm tied to it)
+      *
+      ** Its no use performing the search if the array is empty
+     C           WEMPCK    IFEQ *BLANKS
+     C           @RP,1     IFEQ *BLANKS
+     C                     MOVEL'Y'       WEMPCK  1
+     C                     GOTO CKRPFF
+     C                     ELSE
+     C                     MOVEL'N'       WEMPCK
+     C                     ENDIF
+     C                     ELSE
+     C           WEMPCK    IFEQ 'Y'
+     C                     GOTO CKRPFF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Before performing a dichotomic search we ensure that
+      ** the array is sorted and the beginning and the end are
+      ** known
+     C           WSRTCK    IFEQ *BLANK
+     C                     MOVEL'Y'       WSRTCK  1
+      *
+      ** Length of @RP = end of the array
+     C                     Z-ADD200       WE      30
+     C           *LIKE     DEFN WE        WB
+     C           *LIKE     DEFN WE        WS
+     C           *LIKE     DEFN WE        WF
+     C           *LIKE     DEFN WE        WP
+      *
+     C                     SORTA@RP
+      *
+      ** Determine the beginning of the Array
+     C                     Z-ADD1         WB
+     C           WB        DOWLTWE
+     C           @RP,WB    IFNE *BLANK
+     C                     LEAVE
+     C                     ENDIF
+     C                     ADD  1         WB
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+      ** SEARCH
+     C                     Z-ADDWB        WS
+     C                     Z-ADDWE        WF
+     C           WS        DOWLEWF
+      ** WP = (WS + WF) / 2
+     C           WS        ADD  WF        WP
+     C           WP        MULT 0.5       WP
+     C                     MOVEA@RP,WP    @RPDS
+     C                     SELEC
+      ** Search succeeds
+     C           @RPFNC    WHEQ RPKVAL
+      ** Other S/R can be processed
+     C                     MOVEL*BLANK    W0RTN
+     C                     LEAVE
+      *
+     C           @RPFNC    WHLT RPKVAL
+      ** Search will be performed at the right side of pivot
+      ** WS = WP + 1
+     C           WP        ADD  1         WS
+      *
+     C           @RPFNC    WHGT RPKVAL
+      ** Search will be performed at the left side of pivot
+      ** WF = WP - 1
+     C           WP        SUB  1         WF
+      *
+     C                     ENDSL
+     C                     ENDDO
+      *
+      *  Unwind subroutine stack name
+      *
+     C           CKRPFF    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     CSR                   ENDSR
+      *****************************************************************
+      *                                                               *
+      *  #RTVTG   : Retrieve Tag Values                               *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : #TAG (S/R)                                        *
+      *                                                               *
+      *****************************************************************
+     CSR         #RTVTG    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'#RTVTG'  @STK,Q
+      *
+     C                     MOVEL*BLANK    PTAGPR
+     C                     MOVEL*BLANK    WRFDDT
+     C                     MOVEL*BLANK    WIFDDT
+      *
+     C           *LIKE     DEFN RPITAG    WTAG
+     C           *LIKE     DEFN RPITAG    WTAGP
+     C           *LIKE     DEFN RPITAG    PTAGPR
+     C           *LIKE     DEFN WIFDDT    WFDDT
+      *
+     C           RPITAG    IFNE *BLANK
+      *
+     C                     MOVE 'Y'       INPTAG  1                       CFT006
+     C                     MOVELRPITAG    WTAG
+     C                     EXSR #TAG
+     C           WTAGP     IFEQ *BLANK
+     C                     MOVEL'*ERROR'  W0RTN
+     C                     GOTO RTVTGF
+     C                     ENDIF
+      *
+     C                     MOVELWFDDT     WIFDDT
+     C                     ENDIF
+      *
+     C           RPRTAG    IFEQ *BLANK
+     C                     MOVEL'*ERROR'  W0RTN
+     C                     GOTO RTVTGF
+     C                     ENDIF
+      *
+     C                     MOVE 'N'       INPTAG                          CFT006
+     C                     MOVELRPRTAG    WTAG
+     C                     EXSR #TAG
+     C           WTAGP     IFEQ *BLANK
+     C                     MOVEL'*ERROR'  W0RTN
+     C                     GOTO RTVTGF
+     C                     ENDIF
+      *
+     C                     MOVELWFDDT     WRFDDT
+     C                     MOVELWTAGP     PTAGPR
+      *
+      *
+      *  Unwind subroutine stack name
+      *
+     C           RTVTGF    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     CSR                   ENDSR
+      *****************************************************************
+      *                                                               *
+      *  #RNRPF   : RUN REPAIR FUNCTION                               *
+      *                                                               *
+      *  CALLED BY: MAIN                                              *
+      *                                                               *
+      ***CALLS****:*                                                  *   CFT007
+      *  CALLS    : #BICP                                             *   CFT007
+      *                                                               *
+      *****************************************************************
+     CSR         #RNRPF    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'#RNRPF'  @STK,Q
+      *                                                                   CFT007
+      ** Execute SR to call BIC Database Plus Function                    CFT007
+     C           CFT007    IFEQ *ON                                       CFT007
+     C           RPKVAL    ANDEQ'*BICP'                                   CFT007
+     C                     EXSR #BICP                                     CFT007
+      *                                                                   CFT007
+     C                     ELSE                                           CFT007
+      *                                                                   CFT007
+      ** Call Repair Function
+     C           *LIKE     DEFN WRTGVL    P#RPP1
+     C           *LIKE     DEFN WITGVL    P#RPP2
+     C           *LIKE     DEFN W0RTN     P#RETN
+     C                     CALL @RPPGM                 90
+     C           W0RTN     PARM *BLANK    P#RETN
+     C                     PARM           PHEAD                                               CSW209
+     C                     PARM           PDATA                                               CSW209
+     C                     PARM           PDAT2                                               CSW209
+     C                     PARM WITGVL    P#RPP2
+     C                     PARM WRTGVL    P#RPP1
+     C/COPY WNCPYSRC,ME1503C005
+     C           P#RETN    IFEQ '*MAP'
+     C           *IN90     ANDEQ'0'
+      ** Only the repair tag can be amended by the repair function
+     C                     MOVELP#RPP1    WRTGVL
+     C                     ELSE
+     C           W0RTN     IFEQ *BLANK
+     C                     MOVEL'*ERROR'  W0RTN
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF                                          CFT007
+      *                                                                   CFT007
+      *  Unwind subroutine stack name
+      *
+     C           RNRPFF    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     CSR                   ENDSR
+      *****************************************************************   CFT007
+      *                                                               *   CFT007
+      *  #BICP    : BIC DATABASE PLUS FUNCTION                        *   CFT007
+      *                                                               *   CFT007
+      *  CALLED BY: #RNRPF                                            *   CFT007
+      *                                                               *   CFT007
+      *  CALLS    :        -                                          *   CFT007
+      *                                                               *   CFT007
+      *****************************************************************   CFT007
+     CSR         #BICP     BEGSR                                          CFT007
+      *                                                                   CFT007
+      *  Set up subroutine stack name                                     CFT007
+      *                                                                   CFT007
+     C                     ADD  1         Q       50                      CFT007
+     C                     MOVEL'#BICP '  @STK,Q                          CFT007
+      *                                                                   CFT007
+      * Get the option value from the tag field                           CFT007
+      *                                                                   CFT007
+     C                     MOVE WTAG      WUFLOP  2                       CFT007
+     C                     MOVELWUFLOP    @IOPTN                          CFT007
+      *                                                                   CFT007
+     C           @IOPTN    IFNE 'A'                                       CFT007
+     C           @IOPTN    ANDNE'B'                                       CFT007
+     C           @IOPTN    ANDNE'C'                                       CFT007
+     C           @IOPTN    ANDNE'D'                                       CFT007
+     C                     MOVE *BLANKS   @IOPTN                          CFT007
+     C                     ENDIF                                          CFT007
+      *                                                                   CFT007
+      * Determine the currency of the message                             CFT007
+      *                                                                   CFT007
+     C                     MOVELPDCA      DSTRAN                          CFT007
+     C                     MOVE TVCCY     @ICCY                           CFT007
+     C                     MOVELWRTGVL    @ITGVL                          CFT007
+      *                                                                   CFT007
+      * Clear the output field                                            CFT007
+     C                     MOVE *BLANKS   P#RPP1                          CFT007
+      *                                                                   CFT007
+      * Call the BIC Plus repair program                                  CFT007
+      *                                                                   CFT007
+     C                     CALL 'ME1610'                                  CFT007
+     C                     PARM           @ITGVL251                       CFT007
+     C                     PARM           @IOPTN  1                       CFT007
+     C                     PARM           @ICCY   3                       CFT007
+     C                     PARM *BLANK    @ORPFL251                       CFT007
+     C                     PARM *BLANK    @ORTCD  7                       CFT007
+      *                                                                   CFT007
+      * Pass data returned from repair to output field                    CFT007
+      *                                                                   CFT007
+     C           @ORTCD    IFEQ '*MAP'                                    CFT007
+     C                     MOVE @ORPFL    WRTGVL                          CFT007
+     C                     MOVE @ORTCD    W0RTN                           CFT007
+     C                     ENDIF                                          CFT007
+      *                                                                   CFT007
+      *  Unwind subroutine stack name                                     CFT007
+      *                                                                   CFT007
+     C           BICPF     TAG                                            CFT007
+     C                     MOVEA*BLANKS   @STK,Q                          CFT007
+     C                     SUB  1         Q                               CFT007
+     CSR                   ENDSR                                          CFT007
+      *****************************************************************
+      *                                                               *
+      *  #TAG     : RETRIEVE TAG VALUE                                *
+      *                                                               *
+      *  CALLED BY: #RTVTG                                            *
+      *                                                               *
+      *  CALLS    :        -                                          *
+      *                                                               *
+      *****************************************************************
+     CSR         #TAG      BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'#TAG  '  @STK,Q
+      *
+     C                     MOVE *BLANKS   WFDDT
+      ** To know wich parameter of PDATA has been extracted
+     C                     MOVE *BLANKS   WTAGP
+     C                     MOVE *LOVAL    WKPART
+      *
+      ** Depends on the message tag
+      ** set up details
+      *
+     C                     SELEC
+      *
+     C           WTAG      WHEQ ':20: '                    Trans Ref
+     C           WTAG      OREQ 'BJ20 '                    Trans Ref
+      *                                                                   CFT006
+     C           INPTAG    IFEQ 'Y'                                       CFT006
+     C           RPITGH    ANDEQ'N'                                       CFT006
+     C           INPTAG    OREQ 'N'                                       CFT006
+     C           RPRTGH    ANDEQ'N'                                       CFT006
+     C                     MOVELP20       WFDDT
+     C                     MOVEL'P20'     WTAGP
+     C                     ELSE                                           CFT006
+     C                     MOVELPH20      WFDDT                           CFT006
+     C                     MOVEL'PH20'    WTAGP                           CFT006
+     C                     ENDIF                                          CFT006
+      *
+     C           WTAG      WHEQ ':21: '                    Related Ref
+     C           WTAG      OREQ 'BJ21 '                    Related Ref
+     C                     MOVELP21       WFDDT
+     C                     MOVEL'P21'     WTAGP
+      *
+     C           WTAG      WHEQ ':32A:'                    1st amount A
+     C           WTAG      OREQ ':32B:'                    1st amount A
+     C           WTAG      OREQ ':32C:'                    1st amount C
+     C           WTAG      OREQ ':32D:'                    1st amount D
+     C           WTAG      OREQ ':32P:'                    1st amount P
+     C           WTAG      OREQ ':32R:'                    1st amount R
+     C           WTAG      OREQ 'BJ32 '                    1st amount BOJ
+      *                                                                   CFT006
+     C           INPTAG    IFEQ 'Y'                                       CFT006
+     C           RPITGH    ANDEQ'N'                                       CFT006
+     C           INPTAG    OREQ 'N'                                       CFT006
+     C           RPRTGH    ANDEQ'N'                                       CFT006
+      *                                                                   CFT006
+     C           WTAG      IFEQ ':32B:'                                   CFT006
+      *                                                                   CFT006
+     C           RPMTPY    IFEQ '101'                                     CFT006
+     C           RPMTPY    OREQ '102'                                     CFT006
+     C                     MOVELP32B      WFDDT                           CFT006
+     C                     MOVEL'P32B'    WTAGP                           CFT006
+     C                     ELSE                                           CFT006
+     C                     MOVELPDCA      WFDDT
+     C                     MOVEL'PDCA'    WTAGP
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+     C                     ELSE                                           CFT006
+     C                     MOVELPDCA      WFDDT                           CFT006
+     C                     MOVEL'PDCA'    WTAGP                           CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+     C                     ELSE                                           CFT006
+     C                     MOVELPH32A     WFDDT                           CFT006
+     C                     MOVEL'PH32A'   WTAGP                           CFT006
+     C                     ENDIF                                          CFT006
+      *
+     C           WTAG      WHEQ ':50: '                    Ord Cust
+     C           WTAG      OREQ ':50A:'                    Ord Cust       CFT014
+     C           WTAG      OREQ ':50K:'                    Ord Cust       CFT014
+     C           WTAG      OREQ ':50H:'                    Ord Cust       CFT006
+     C           WTAG      OREQ ':50F:'                    Ord Cust       CSW207
+     C           WTAG      OREQ 'BJ50D'                    Ord Cust
+      *                                                                   CFT006
+     C           INPTAG    IFEQ 'Y'                                                           CSW209
+     C           RPIMSQ    ANDEQ'B'                                                           CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C           INPTAG    OREQ 'N'                                                           CSW209
+     C           RPRMSQ    ANDEQ'B'                                                           CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELPB50      WFDDT                                               CSW209
+     C                     MOVEL'PB50'    WTAGP                                               CSW209
+     C                     ELSE                                                               CSW209
+     C           INPTAG    IFEQ 'Y'                                       CFT006
+     C           RPITGH    ANDEQ'N'                                       CFT006
+     C           INPTAG    OREQ 'N'                                       CFT006
+     C           RPRTGH    ANDEQ'N'                                       CFT006
+     C                     MOVELP50       WFDDT
+     C                     MOVEL'P50'     WTAGP
+     C                     ELSE                                           CFT006
+     C                     MOVELPH50      WFDDT                           CFT006
+     C                     MOVEL'PH50'    WTAGP                           CFT006
+     C                     ENDIF                                          CFT006
+     C                     ENDIF                                                              CSW209
+      *
+     C           WTAG      WHEQ ':52A:'                    Ord Bank
+     C           WTAG      OREQ ':52B:'                    Ord Bank       CFT006
+     C           WTAG      OREQ ':52C:'                    Ord Bank       CFT006
+     C           WTAG      OREQ ':52D:'                    Ord Bank
+     C           WTAG      OREQ 'BJ52D'                    Ord Bank
+      *                                                                   CFT006
+     C           INPTAG    IFEQ 'Y'                                                           CSW209
+     C           RPIMSQ    ANDEQ'B'                                                           CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C           INPTAG    OREQ 'N'                                                           CSW209
+     C           RPRMSQ    ANDEQ'B'                                                           CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELPB52      WFDDT                                               CSW209
+     C                     MOVEL'PB52'    WTAGP                                               CSW209
+     C                     ELSE                                                               CSW209
+     C           INPTAG    IFEQ 'Y'                                       CFT006
+     C           RPITGH    ANDEQ'N'                                       CFT006
+     C           INPTAG    OREQ 'N'                                       CFT006
+     C           RPRTGH    ANDEQ'N'                                       CFT006
+     C                     MOVELP52       WFDDT
+     C                     MOVEL'P52'     WTAGP
+     C                     ELSE                                           CFT006
+     C                     MOVELPH52      WFDDT                           CFT006
+     C                     MOVEL'PH52'    WTAGP                           CFT006
+     C                     ENDIF                                          CFT006
+     C                     ENDIF                                                              CSW209
+      *
+     C           WTAG      WHEQ ':53A:'                    Sndr Corr
+     C           WTAG      OREQ ':53B:'                    Sndr Corr
+     C           WTAG      OREQ ':53C:'                    Sndr Corr      CFT006
+     C           WTAG      OREQ ':53D:'                    Sndr Corr
+      *                                                                   CFT006
+     C           INPTAG    IFEQ 'Y'                                       CFT006
+     C           RPITGH    ANDEQ'N'                                       CFT006
+     C           INPTAG    OREQ 'N'                                       CFT006
+     C           RPRTGH    ANDEQ'N'                                       CFT006
+     C                     MOVELP53       WFDDT
+     C                     MOVEL'P53'     WTAGP
+     C                     ELSE                                           CFT006
+     C                     MOVELPH53      WFDDT                           CFT006
+     C                     MOVEL'PH53'    WTAGP                           CFT006
+     C                     ENDIF                                          CFT006
+      *
+     C           WTAG      WHEQ ':54A:'                    Rcvr Corr
+     C           WTAG      OREQ ':54B:'                    Rcvr Corr
+     C           WTAG      OREQ ':54D:'                    Rcvr Corr
+      *                                                                   CFT006
+     C           INPTAG    IFEQ 'Y'                                       CFT006
+     C           RPITGH    ANDEQ'N'                                       CFT006
+     C           INPTAG    OREQ 'N'                                       CFT006
+     C           RPRTGH    ANDEQ'N'                                       CFT006
+     C                     MOVELP54       WFDDT
+     C                     MOVEL'P54'     WTAGP
+     C                     ELSE                                           CFT006
+     C                     MOVELPH54      WFDDT                           CFT006
+     C                     MOVEL'PH54'    WTAGP                           CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT014
+     C           WTAG      WHEQ ':55A:'                    3rd Reim Part  CFT014
+     C           WTAG      OREQ ':55B:'                    3rd Reim Part  CFT014
+     C           WTAG      OREQ ':55D:'                    3rd Reim Part  CFT014
+     C                     MOVELP55       WFDDT                           CFT014
+     C                     MOVEL'P55'     WTAGP                           CFT014
+      *
+     C           WTAG      WHEQ ':56A:'                    Intermediary
+     C           WTAG      OREQ ':56C:'                    Intermediary   CFT006
+     C           WTAG      OREQ ':56D:'                    Intermediary
+     C           INPTAG    IFEQ 'Y'                                                           CSW209
+     C           RPIMSQ    ANDEQ'B'                                                           CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C           INPTAG    OREQ 'N'                                                           CSW209
+     C           RPRMSQ    ANDEQ'B'                                                           CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELPB56      WFDDT                                               CSW209
+     C                     MOVEL'PB56'    WTAGP                                               CSW209
+     C                     ELSE                                                               CSW209
+     C                     MOVELP56       WFDDT
+     C                     MOVEL'P56'     WTAGP
+     C                     ENDIF                                                              CSW209
+      *
+     C           WTAG      WHEQ ':57A:'                    A/c with Inst
+     C           WTAG      OREQ ':57B:'                    A/c with Inst
+     C           WTAG      OREQ ':57C:'                    A/c with Inst  CFT006
+     C           WTAG      OREQ ':57D:'                    A/c with Inst
+     C           WTAG      OREQ 'BJ57D'                    A/c with Inst
+     C           INPTAG    IFEQ 'Y'                                                           CSW209
+     C           RPIMSQ    ANDEQ'B'                                                           CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C           INPTAG    OREQ 'N'                                                           CSW209
+     C           RPRMSQ    ANDEQ'B'                                                           CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELPB57      WFDDT                                               CSW209
+     C                     MOVEL'PB57'    WTAGP                                               CSW209
+     C                     ELSE                                                               CSW209
+     C                     MOVELP57       WFDDT
+     C                     MOVEL'P57'     WTAGP
+     C                     ENDIF                                                              CSW209
+      *
+     C           WTAG      WHEQ ':58A:'                    Beneficiary
+     C           WTAG      OREQ ':58D:'                    Beneficiary Bank
+     C           WTAG      OREQ 'BJ58D'                    Beneficiary Bank
+     C                     MOVELP58       WFDDT
+     C                     MOVEL'P58'     WTAGP
+      *
+     C           WTAG      WHEQ ':59: '                    Beneficiary Cust
+     C           WTAG      OREQ ':59A:'                    Beneficiary Cust CFT014
+     C           WTAG      OREQ 'BJ59D'                    Beneficiary Cust
+     C           INPTAG    IFEQ 'Y'                                                           CSW209
+     C           RPIMSQ    ANDEQ'B'                                                           CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C           INPTAG    OREQ 'N'                                                           CSW209
+     C           RPRMSQ    ANDEQ'B'                                                           CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELPB59      WFDDT                                               CSW209
+     C                     MOVEL'PB59'    WTAGP                                               CSW209
+     C                     ELSE                                                               CSW209
+     C                     MOVELP59       WFDDT
+     C                     MOVEL'P59'     WTAGP
+     C                     ENDIF                                                              CSW209
+      *
+     C           WTAG      WHEQ ':72: '                    Bank-bank info
+     C           WTAG      OREQ 'BJ72 '                    Bank-bank info
+      *                                                                   CFT006
+     C           INPTAG    IFEQ 'Y'                                                           CSW209
+     C           RPIMSQ    ANDEQ'B'                                                           CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C           INPTAG    OREQ 'N'                                                           CSW209
+     C           RPRMSQ    ANDEQ'B'                                                           CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELPB72      WFDDT                                               CSW209
+     C                     MOVEL'PB72'    WTAGP                                               CSW209
+     C                     ELSE                                                               CSW209
+     C           INPTAG    IFEQ 'Y'                                       CFT006
+     C           RPITGH    ANDEQ'N'                                       CFT006
+     C           INPTAG    OREQ 'N'                                       CFT006
+     C           RPRTGH    ANDEQ'N'                                       CFT006
+     C                     MOVELP72       WFDDT
+     C                     MOVEL'P72'     WTAGP
+     C/COPY WNCPYSRC,ME1503C002
+     C                     ELSE                                           CFT006
+     C                     MOVELPH72      WFDDT                           CFT006
+     C                     MOVEL'PH72'    WTAGP                           CFT006
+     C                     ENDIF                                          CFT006
+     C                     ENDIF                                                              CSW209
+     C/COPY WNCPYSRC,ME1503C004
+      *
+     C           WTAG      WHEQ 'SNDR '                    Sender
+     C                     MOVELPSN       WFDDT
+     C                     MOVEL'PSN'     WTAGP
+      *                                                                   CFT006
+     C           WTAG      WHEQ ':21R:'                    Cust ref       CFT006
+     C                     MOVELPH21R     WFDDT                           CFT006
+     C                     MOVEL'PH21R'   WTAGP                           CFT006
+      *                                                                   CFT006
+     C           WTAG      WHEQ ':50L:'                    Inst Party     CFT006
+      *                                                                   CFT006
+     C           INPTAG    IFEQ 'Y'                                       CFT006
+     C           RPITGH    ANDEQ'N'                                       CFT006
+     C           INPTAG    OREQ 'N'                                       CFT006
+     C           RPRTGH    ANDEQ'N'                                       CFT006
+     C                     MOVELP50L      WFDDT                           CFT006
+     C                     MOVEL'P50L'    WTAGP                           CFT006
+     C                     ELSE                                           CFT006
+     C                     MOVELPH50L     WFDDT                           CFT006
+     C                     MOVEL'PH50L'   WTAGP                           CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+     C           WTAG      WHEQ ':51A:'                    Sending Ins    CFT006
+     C                     MOVELPH51A     WFDDT                           CFT006
+     C                     MOVEL'PH51A'   WTAGP                           CFT006
+      *                                                                   CFT006
+     C           WTAG      WHEQ ':30: '                    Exec date      CFT006
+     C                     MOVELPH30      WFDDT                           CFT006
+     C                     MOVEL'PH30'    WTAGP                           CFT006
+      *                                                                   CFT006
+     C           WTAG      WHEQ ':25: '                    Authoris.      CFT006
+     C                     MOVELPH25      WFDDT                           CFT006
+     C                     MOVEL'PH25'    WTAGP                           CFT006
+      *                                                                   CFT006
+     C           WTAG      WHEQ ':21F:'                    Fx Ref         CFT006
+     C                     MOVELP21F      WFDDT                           CFT006
+     C                     MOVEL'P21F'    WTAGP                           CFT006
+      *                                                                   CFT006
+     C           WTAG      WHEQ ':23B:'                    Bnk Op Cde     CFT014
+     C                     MOVELP23B      WFDDT                           CFT014
+     C                     MOVEL'P23B'    WTAGP                           CFT014
+      *                                                                   CFT014
+     C           WTAG      WHEQ ':23E:'                    Inst Code      CFT006
+     C                     MOVELP23E      WFDDT                           CFT006
+     C                     MOVEL'P23E'    WTAGP                           CFT006
+      *                                                                   CFT006
+     C           WTAG      WHEQ ':77B:'                    Reg Report.    CFT006
+      *                                                                   CFT006
+     C           INPTAG    IFEQ 'Y'                                       CFT006
+     C           RPITGH    ANDEQ'N'                                       CFT006
+     C           INPTAG    OREQ 'N'                                       CFT006
+     C           RPRTGH    ANDEQ'N'                                       CFT006
+     C                     MOVELP77B      WFDDT                           CFT006
+     C                     MOVEL'P77B'    WTAGP                           CFT006
+     C                     ELSE                                           CFT006
+     C                     MOVELPH77B     WFDDT                           CFT006
+     C                     MOVEL'PH77B'   WTAGP                           CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+     C           WTAG      WHEQ ':33B:'                    Orig Amount    CFT006
+     C           INPTAG    IFEQ 'Y'                                                           CSW209
+     C           RPIMSQ    ANDEQ'B'                                                           CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C           INPTAG    OREQ 'N'                                                           CSW209
+     C           RPRMSQ    ANDEQ'B'                                                           CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELPB33B     WFDDT                                               CSW209
+     C                     MOVEL'PB33B'   WTAGP                                               CSW209
+     C                     ELSE                                                               CSW209
+     C                     MOVELP33B      WFDDT                           CFT006
+     C                     MOVEL'P33B'    WTAGP                           CFT006
+     C                     ENDIF                                                              CSW209
+      *                                                                   CFT006
+     C           WTAG      WHEQ ':25A:'                    Charges acc    CFT006
+     C                     MOVELP25A      WFDDT                           CFT006
+     C                     MOVEL'P25A'    WTAGP                           CFT006
+      *                                                                   CFT006
+     C           WTAG      WHEQ ':36: '                    Exchg Rate     CFT006
+      *                                                                   CFT006
+     C           INPTAG    IFEQ 'Y'                                       CFT006
+     C           RPITGH    ANDEQ'N'                                       CFT006
+     C           INPTAG    OREQ 'N'                                       CFT006
+     C           RPRTGH    ANDEQ'N'                                       CFT006
+     C                     MOVELP36       WFDDT                           CFT006
+     C                     MOVEL'P36'     WTAGP                           CFT006
+     C                     ELSE                                           CFT006
+     C                     MOVELPH36      WFDDT                           CFT006
+     C                     MOVEL'PH36'    WTAGP                           CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+     C           WTAG      WHEQ ':23: '                    Bank Opcd      CFT006
+     C                     MOVELPH23      WFDDT                           CFT006
+     C                     MOVEL'PH23'    WTAGP                           CFT006
+      *                                                                   CFT006
+     C           WTAG      WHEQ ':26T:'                    Trns Code      CFT006
+      *                                                                   CFT006
+     C           INPTAG    IFEQ 'Y'                                       CFT006
+     C           RPITGH    ANDEQ'N'                                       CFT006
+     C           INPTAG    OREQ 'N'                                       CFT006
+     C           RPRTGH    ANDEQ'N'                                       CFT006
+     C                     MOVELP26T      WFDDT                           CFT006
+     C                     MOVEL'P26T'    WTAGP                           CFT006
+     C                     ELSE                                           CFT006
+     C                     MOVELPH26T     WFDDT                           CFT006
+     C                     MOVEL'PH26T'   WTAGP                           CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+     C           WTAG      WHEQ ':71F:'                    Sender Charg   CFT006
+      *                                                                   CFT006
+     C           INPTAG    IFEQ 'Y'                                       CFT006
+     C           RPITGH    ANDEQ'N'                                       CFT006
+     C           INPTAG    OREQ 'N'                                       CFT006
+     C           RPRTGH    ANDEQ'N'                                       CFT006
+      ** FT field: Senders Charges can have multiples lines               CFT014
+      ** (e.g. MT103)                                                     CFT014
+     C           P71FX     IFNE *BLANK                                    CFT014
+     C                     MOVELP71FX     WFDDT                           CFT014
+     C                     MOVEL'P71FX'   WTAGP                           CFT014
+     C                     ELSE                                           CFT014
+     C                     MOVELP71F      WFDDT                           CFT006
+     C                     MOVEL'P71F'    WTAGP                           CFT006
+     C                     ENDIF                                          CFT014
+     C                     ELSE                                           CFT006
+     C                     MOVELPH71F     WFDDT                           CFT006
+     C                     MOVEL'PH71F'   WTAGP                           CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+     C           WTAG      WHEQ ':71G:'                    Recv Charg     CFT006
+      *                                                                   CFT006
+     C           INPTAG    IFEQ 'Y'                                       CFT006
+     C           RPITGH    ANDEQ'N'                                       CFT006
+     C           INPTAG    OREQ 'N'                                       CFT006
+     C           RPRTGH    ANDEQ'N'                                       CFT006
+     C                     MOVELP71G      WFDDT                           CFT006
+     C                     MOVEL'P71G'    WTAGP                           CFT006
+     C                     ELSE                                           CFT006
+     C                     MOVELPH71G     WFDDT                           CFT006
+     C                     MOVEL'PH71G'   WTAGP                           CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+     C           WTAG      WHEQ ':19: '                    Sum Amt        CFT006
+     C                     MOVELPH19      WFDDT                           CFT006
+     C                     MOVEL'PH19'    WTAGP                           CFT006
+      *                                                                   CFT006
+     C           WTAG      WHEQ ':71:'                     Detl of Chrge  CFT006
+     C           WTAG      OREQ ':71A:'                    Detl of Chrge  CFT006
+      *                                                                   CFT006
+     C           INPTAG    IFEQ 'Y'                                       CFT006
+     C           RPITGH    ANDEQ'N'                                       CFT006
+     C           INPTAG    OREQ 'N'                                       CFT006
+     C           RPRTGH    ANDEQ'N'                                       CFT006
+     C                     MOVELP71       WFDDT                           CFT006
+     C                     MOVEL'P71'     WTAGP                           CFT006
+     C                     ELSE                                           CFT006
+     C                     MOVELPH71      WFDDT                           CFT006
+     C                     MOVEL'PH71'    WTAGP                           CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                                       CER030
+     C           WTAG      WHEQ 'PEXN '                                                       CER030
+     C           CER031    IFEQ 'Y'                                                           CER030
+     C                     MOVELPEXN      WFDDT                                               CER030
+     C                     MOVEL'PEXN'    WTAGP                                               CER030
+     C                     ENDIF                                                              CER030
+      *
+     C           WTAG      WHEQ ':70:'                                                      BUG24039
+     C           INPTAG    IFEQ 'Y'                                                           CSW209
+     C           RPIMSQ    ANDEQ'B'                                                           CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C           INPTAG    OREQ 'N'                                                           CSW209
+     C           RPRMSQ    ANDEQ'B'                                                           CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELPB70      WFDDT                                               CSW209
+     C                     MOVEL'PB70'    WTAGP                                               CSW209
+     C                     ELSE                                                               CSW209
+     C                     MOVELP70       WFDDT                                             BUG24039
+     C                     MOVEL'P70'     WTAGP                                             BUG24039
+     C                     ENDIF                                                              CSW209
+      *                                                                                     BUG24039
+     C           WTAG      WHEQ '103: '                                                       CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELP103      WFDDT                                               CSW209
+     C                     MOVEL'P103'    WTAGP                                               CSW209
+      *                                                                                       CSW209
+     C           WTAG      WHEQ '108: '                                                       CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELP108      WFDDT                                               CSW209
+     C                     MOVEL'P108'    WTAGP                                               CSW209
+      *                                                                                       CSW209
+     C           WTAG      WHEQ '113: '                                                       CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELP113      WFDDT                                               CSW209
+     C                     MOVEL'P113'    WTAGP                                               CSW209
+      *                                                                                       CSW209
+     C           WTAG      WHEQ '115: '                                                       CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELP115      WFDDT                                               CSW209
+     C                     MOVEL'P115'    WTAGP                                               CSW209
+      *                                                                                       CSW209
+     C           WTAG      WHEQ '119: '                                                       CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELP119      WFDDT                                               CSW209
+     C                     MOVEL'P119'    WTAGP                                               CSW209
+      *                                                                                       CSW209
+     C           WTAG      WHEQ '1:   '                    Header Blk 1
+     C           WTAG      OREQ '2:   '                    Header Blk 2
+     C           WTAG      OREQ '3:   '                    Header Blk 3
+     C           WTAG      OREQ '4:   '                    Header Blk 4
+     C           WTAG      OREQ '5:   '                    Header Blk 5
+     C           WTAG      OREQ 'BJ06 '                    Authen'n Code
+     C           WTAG      OREQ 'S:   '                    Trailer Blk S
+     C           WTAG      OREQ 'CHK: '                    Checksum
+     C           WTAG      OREQ 'COP: '                    COP???
+     C           WTAG      OREQ 'DLM: '                    Delayed message
+     C           WTAG      OREQ 'ENC: '                    Encryption
+     C           WTAG      OREQ 'MAC: '                    Authen'n Code
+     C           WTAG      OREQ 'PDE: '                    Possible Dup.
+     C           WTAG      OREQ 'PDM: '                    Possible Dup.
+     C           WTAG      OREQ 'QTA: '                    Interruption
+     C           WTAG      OREQ 'REJ: '                    Rejection
+     C           WTAG      OREQ 'RTV: '                    Retrieved msg
+     C           WTAG      OREQ 'SUP: '                    Supervisor msg
+     C           WTAG      OREQ 'SAB: '                    Auth'n bypassed
+     C           WTAG      OREQ 'SAC: '                    Auth'n correct
+     C           WTAG      OREQ 'SAI: '                    Auth'n incorrec
+     C           WTAG      OREQ 'SAO: '                    Auth'n correct
+     C           WTAG      OREQ 'SPD: '                    Sys Poss Dup
+     C           WTAG      OREQ 'SYS: '                    Sys Originated
+     C           WTAG      OREQ 'TNG: '                    Training
+     C           WTAG      OREQ 'TRN: '                    Trans Ref
+     C           WTAG      OREQ 'UND: '                    Unroutable msg
+     C           WTAG      OREQ '11R: '                    Original msg
+     C           WTAG      OREQ '11S: '                    Original msg
+     C                     Z-ADD0         WKPART
+     C           KYINDT    SETLLMEINDTS2                 99
+     C           *IN99     IFEQ '1'
+     C           KYINDT    READEMEINDTS2                 99
+     C           *IN99     IFEQ '0'
+     C           WTAG      IFEQ '2:   '
+     C                     MOVELDTMFLD    WFDDT
+     C                     MOVEL'MFLD'    WTAGP
+     C                     ELSE
+     C                     MOVELDSMF35    WFDDT
+     C                     MOVEL'MF35'    WTAGP
+     C                     ENDIF
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVE *BLANKS   WFDDT
+     C                     ENDIF
+      *
+     C                     OTHER                           Other details
+     C           KYINDT    SETLLMEINDTS2                 99
+     C           *IN99     IFEQ '1'
+     C           KYINDT    READEMEINDTS2                 99
+     C           *IN99     IFEQ '0'
+     C           WTAG      IFEQ '2:   '
+     C                     MOVELDTMFLD    WFDDT
+     C                     MOVEL'MFLD'    WTAGP
+     C                     ELSE
+     C                     MOVELDSMF35    WFDDT
+     C                     MOVEL'MF35'    WTAGP
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *                                                                   177118
+     C           WFDDT     IFEQ *BLANKS                                   177118
+     C                     MOVELWTAG      WFDDT                           177118
+     C                     ENDIF                                          177118
+      *
+      *  Unwind subroutine stack name
+      *
+     C           TAGF      TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     CSR                   ENDSR
+      /EJECT
+      *****************************************************************   CFT006
+      *                                                               *   CFT006
+      *  #MAPR    : MAP REPAIR TAG INTO PDATA                         *   CFT006
+      *                                                               *   CFT006
+      *  CALLED BY: MAIN PROCESSING                                   *   CFT006
+      *                                                               *   CFT006
+      *  CALLS    :        -                                          *   CFT006
+      *                                                               *   CFT006
+      *****************************************************************   CFT006
+     CSR         #MAPR     BEGSR                                          CFT006
+      *                                                                   CFT006
+      *  Set up subroutine stack name                                     CFT006
+      *                                                                   CFT006
+     C                     ADD  1         Q       50                      CFT006
+     C                     MOVEL'#MAPR '  @STK,Q                          CFT006
+      *                                                                   CFT006
+      * Sender                                                            CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'PSN'                                     CFT006
+     C                     MOVELPRFDDT    PSN                             CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * Transaction Reference no.                                         CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'P20'                                     CFT006
+     C                     MOVELPRFDDT    P20                             CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * Related Reference                                                 CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'P21'                                     CFT006
+     C                     MOVELPRFDDT    P21                             CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * Value Date/Ccy/Amount                                             CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'PDCA'                                    CFT006
+     C                     MOVELPRFDDT    PDCA                            CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * Ordering Customer                                                 CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'P50'                                     CFT006
+     C                     MOVELPRFDDT    P50                             CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * Ordering Institution                                              CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'P52'                                     CFT006
+     C                     MOVELPRFDDT    P52                             CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * Senders Correspondent                                             CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'P53'                                     CFT006
+     C                     MOVELPRFDDT    P53                             CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * Receivers Correspondent                                           CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'P54'                                     CFT006
+     C                     MOVELPRFDDT    P54                             CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT014
+      * 3rd Reimbursement Institution                                     CFT014
+      *                                                                   CFT014
+     C           PTAGPR    IFEQ 'P55'                                     CFT014
+     C                     MOVELPRFDDT    P55                             CFT014
+     C                     GOTO EXMAPR                                    CFT014
+     C                     ENDIF                                          CFT014
+      *                                                                   CFT006
+      * Intermediary                                                      CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'P56'                                     CFT006
+     C                     MOVELPRFDDT    P56                             CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * Account with Institution                                          CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'P57'                                     CFT006
+     C                     MOVELPRFDDT    P57                             CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * Beneficiary Institution/ Beneficiary Customer                     CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'P58'                                     CFT006
+     C                     MOVELPRFDDT    P58                             CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'P59'                                     CFT006
+     C                     MOVELPRFDDT    P59                             CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * Details of Payment                                                CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'P70'                                     CFT006
+     C                     MOVELPRFDDT    P70                             CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                                       CER030
+      ** Extended Narrative                                                                   CER030
+      *                                                                                       CER030
+     C           CER031    IFEQ 'Y'                                                           CER030
+      *                                                                                       CER030
+     C           PTAGPR    IFEQ 'PEXN'                                                        CER030
+     C                     MOVELPRFDDT    PEXN                                                CER030
+     C                     GOTO EXMAPR                                                        CER030
+     C                     ENDIF                                                              CER030
+      *                                                                                       CER030
+     C                     ENDIF                                                              CER030
+      *                                                                   CFT006
+      * Details of Charges                                                CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'P71'                                     CFT006
+     C                     MOVELPRFDDT    P71                             CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * Bank to Bank Information                                          CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'P72'                                     CFT006
+     C                     MOVELPRFDDT    P72                             CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * Transaction amount (Header)                                       CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'PH32A'                                   CFT006
+     C                     MOVELPRFDDT    PH32A                           CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * Ordering customer (Header)                                        CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'PH50'                                    CFT006
+     C                     MOVELPRFDDT    PH50                            CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * Ordering bank (Header)                                            CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'PH52'                                    CFT006
+     C                     MOVELPRFDDT    PH52                            CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * Sender's correspondant (Header)                                   CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'PH53'                                    CFT006
+     C                     MOVELPRFDDT    PH53                            CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * Receiver's correspondant (Header)                                 CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'PH54'                                    CFT006
+     C                     MOVELPRFDDT    PH54                            CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * Payment charges (Header)                                          CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'PH71'                                    CFT006
+     C                     MOVELPRFDDT    PH71                            CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * Bank to bank information (Header)                                 CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'PH72'                                    CFT006
+     C                     MOVELPRFDDT    PH72                            CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * Instructing party (Header)                                        CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'PH50L'                                   CFT006
+     C                     MOVELPRFDDT    PH50L                           CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * Instructing party                                                 CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'P50L'                                    CFT006
+     C                     MOVELPRFDDT    P50L                            CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * Instructing party (Header)                                        CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'PH50'                                    CFT006
+     C                     MOVELPRFDDT    PH50                            CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * FX Reference                                                      CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'P21F'                                    CFT006
+     C                     MOVELPRFDDT    P21F                            CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT014
+      * Bank Operation Code                                               CFT014
+      *                                                                   CFT014
+     C           PTAGPR    IFEQ 'P23B'                                    CFT014
+     C                     MOVELPRFDDT    P23B                            CFT014
+     C                     GOTO EXMAPR                                    CFT014
+     C                     ENDIF                                          CFT014
+      *                                                                   CFT006
+      * Instruction code                                                  CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'P23E'                                    CFT006
+     C                     MOVELPRFDDT    P23E                            CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * Regulatory reporting                                              CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'P77B'                                    CFT006
+     C                     MOVELPRFDDT    P77B                            CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * Original amount                                                   CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'P33B'                                    CFT006
+     C                     MOVELPRFDDT    P33B                            CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * Charges account                                                   CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'P25A'                                    CFT006
+     C                     MOVELPRFDDT    P25A                            CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * Exchange rate (Header)                                            CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'PH36'                                    CFT006
+     C                     MOVELPRFDDT    PH36                            CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * Exchange rate                                                     CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'P36'                                     CFT006
+     C                     MOVELPRFDDT    P36                             CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * Sender's charges (Header)                                         CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'PH71F'                                   CFT006
+     C                     MOVELPRFDDT    PH71F                           CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * Sender's charges                                                  CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'P71F'                                    CFT006
+     C                     MOVELPRFDDT    P71F                            CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      * Multiple lines                                                    CFT014
+     C           PTAGPR    IFEQ 'P71FX'                                   CFT014
+     C                     MOVELPRFDDT    P71FX                           CFT014
+     C                     GOTO EXMAPR                                    CFT014
+     C                     ENDIF                                          CFT014
+      *                                                                   CFT006
+      * Receiver's charges (Header)                                       CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'PH71G'                                   CFT006
+     C                     MOVELPRFDDT    PH71G                           CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * Receiver's charges                                                CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'P71G'                                    CFT006
+     C                     MOVELPRFDDT    P71G                            CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * Transaction amount                                                CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'P32B'                                    CFT006
+     C                     MOVELPRFDDT    P32B                            CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * Customer reference                                                CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'PH21R'                                   CFT006
+     C                     MOVELPRFDDT    PH21R                           CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * Sending institution                                               CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'PH51A'                                   CFT006
+     C                     MOVELPRFDDT    PH51A                           CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * Execution date                                                    CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'PH30'                                    CFT006
+     C                     MOVELPRFDDT    PH30                            CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * Authorisation                                                     CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'PH25'                                    CFT006
+     C                     MOVELPRFDDT    PH25                            CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * Bank operation code                                               CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'PH23'                                    CFT006
+     C                     MOVELPRFDDT    PH23                            CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * Transction code                                                   CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'PH26T'                                   CFT006
+     C                     MOVELPRFDDT    PH26T                           CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * Sum of amounts                                                    CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'PH19'                                    CFT006
+     C                     MOVELPRFDDT    PH19                            CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * File reference / sender reference                                 CFT006
+      *                                                                   CFT006
+     C           PTAGPR    IFEQ 'PH20'                                    CFT006
+     C                     MOVELPRFDDT    PH20                            CFT006
+     C                     GOTO EXMAPR                                    CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                                       CSW209
+     C           PTAGPR    IFEQ 'PB50'                                                        CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELPRFDDT    PB50                                                CSW209
+     C                     GOTO EXMAPR                                                        CSW209
+     C                     ENDIF                                                              CSW209
+      *                                                                                       CSW209
+     C           PTAGPR    IFEQ 'PB52'                                                        CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELPRFDDT    PB52                                                CSW209
+     C                     GOTO EXMAPR                                                        CSW209
+     C                     ENDIF                                                              CSW209
+      *                                                                                       CSW209
+     C           PTAGPR    IFEQ 'PB56'                                                        CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELPRFDDT    PB56                                                CSW209
+     C                     GOTO EXMAPR                                                        CSW209
+     C                     ENDIF                                                              CSW209
+      *                                                                                       CSW209
+     C           PTAGPR    IFEQ 'PB57'                                                        CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELPRFDDT    PB57                                                CSW209
+     C                     GOTO EXMAPR                                                        CSW209
+     C                     ENDIF                                                              CSW209
+      *                                                                                       CSW209
+     C           PTAGPR    IFEQ 'PB59'                                                        CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELPRFDDT    PB59                                                CSW209
+     C                     GOTO EXMAPR                                                        CSW209
+     C                     ENDIF                                                              CSW209
+      *                                                                                       CSW209
+     C           PTAGPR    IFEQ 'PB70'                                                        CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELPRFDDT    PB70                                                CSW209
+     C                     GOTO EXMAPR                                                        CSW209
+     C                     ENDIF                                                              CSW209
+      *                                                                                       CSW209
+     C           PTAGPR    IFEQ 'PB72'                                                        CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELPRFDDT    PB72                                                CSW209
+     C                     GOTO EXMAPR                                                        CSW209
+     C                     ENDIF                                                              CSW209
+      *                                                                                       CSW209
+     C           PTAGPR    IFEQ 'PB33B'                                                       CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELPRFDDT    PB33B                                               CSW209
+     C                     GOTO EXMAPR                                                        CSW209
+     C                     ENDIF                                                              CSW209
+      *                                                                                       CSW209
+     C           PTAGPR    IFEQ 'P103'                                                        CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELPRFDDT    P103                                                CSW209
+     C                     GOTO EXMAPR                                                        CSW209
+     C                     ENDIF                                                              CSW209
+      *                                                                                       CSW209
+     C           PTAGPR    IFEQ 'P108'                                                        CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELPRFDDT    P108                                                CSW209
+     C                     GOTO EXMAPR                                                        CSW209
+     C                     ENDIF                                                              CSW209
+      *                                                                                       CSW209
+     C           PTAGPR    IFEQ 'P113'                                                        CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELPRFDDT    P113                                                CSW209
+     C                     GOTO EXMAPR                                                        CSW209
+     C                     ENDIF                                                              CSW209
+      *                                                                                       CSW209
+     C           PTAGPR    IFEQ 'P115'                                                        CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELPRFDDT    P115                                                CSW209
+     C                     GOTO EXMAPR                                                        CSW209
+     C                     ENDIF                                                              CSW209
+      *                                                                                       CSW209
+     C           PTAGPR    IFEQ 'P119'                                                        CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELPRFDDT    P119                                                CSW209
+     C                     GOTO EXMAPR                                                        CSW209
+     C                     ENDIF                                                              CSW209
+      *                                                                   CFT006
+      *  Unwind subroutine stack name                                     CFT006
+      *                                                                   CFT006
+     C           EXMAPR    TAG                                            CFT006
+     C                     MOVEA*BLANKS   @STK,Q                          CFT006
+     C                     SUB  1         Q                               CFT006
+      *                                                                   CFT006
+     CSR                   ENDSR                                          CFT006
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            DBERR  - Database Error Handling                   *
+      *                                                               *
+      * CALLS      *PSSR  - Program  error                            *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           DBERR     BEGSR                           ** DBERR  **
+      *
+     C                     MOVEL'ME1503'  DBPGM
+     C                     OUT  LDA
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  Subroutine to handle abnormal error conditions        *
+      *                                                               *
+      *  Called by:  FIRST                                            *
+      *                                                               *
+      *  Calls    :  -                                                *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+      *
+     C                     RETRN
+      *
+     C                     ENDSR                           ** *PSSR **
+     C/COPY ZSRSRC,ZACCH
+      /EJECT
+     C/COPY ZSRSRC,ZCHKH
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+     C/COPY MECPYSRC,SRERRC
+      /EJECT
+     C/COPY MECPYSRC,SMESNMSC
+      /EJECT
+**  CPY@ table
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365

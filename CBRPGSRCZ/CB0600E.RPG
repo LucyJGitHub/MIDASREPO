@@ -1,0 +1,637 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CB Display auto COB detail')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Close of Business Processing                     *
+     F*                                                               *
+     F*  CB0600E -  Display Auto C.O.B. Det   Display record(1 screen)*
+     F*                                                               *
+     F*  Function:  This program is display Auto COB type records     *
+     F*  (phase(s)) ANY                                               *
+     F*                                                               *
+     F*  Called By: CB0600D - Display Auto C.O.B. Opt.  Display file  *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 126248             Date 19NOV97               *
+     F*                 S01495             Date 01OCT94               *
+     F*                 S01375             DATE 22APR92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  126248 - Screen should read "termination", not "termation"   *
+     F*  S01495 - COB Enhancements.                                   *
+     F*  S01375 - Automatic Close of Business                         *
+     F*                                                               *
+     F*****************************************************************
+      *================================================================
+     F*
+     F/COPY WNCPYSRC,CB0600EFPG
+     F*
+     FCB0600E#CF  E                    WORKSTN
+     F                                              KINFDS INFDS#
+      * DSP: Display Auto C.O.B. Det   Display record(1 screen)
+      *
+     FCBACOBL1IF  E           K        DISK
+     F                                              KINFDS INFDS1
+      * RTV : Automatic C.O.B. Data     Retrieval index
+      *
+     FSDMMODL1IF  E           K        DISK
+      * RTV : MIDAS Modules             Retrieval index
+      *
+      /EJECT
+     E                    CPY@    1   1 80
+     E*
+     E** Array containing Copyright statement
+     E*
+     E*
+     E/COPY WNCPYSRC,CB0600EEPG
+     E*
+      /EJECT
+     I/COPY QWINDSRC,CB0600EDTA                                           S01229
+     I*
+     I/COPY WNCPYSRC,CB0600EIPG
+     I*
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+     IINFDS1    E DSY2I1DSP
+      * File information data structure
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     I* Get Rundate - Rundate  *
+     IRUNDTA    E DSRUNDAT
+      /EJECT
+      * Parameter declarations
+     IP1PARM      DS                             10
+      * KEY: Automatic C.O.B. Data     Retrieval index
+      * I : RST Auto C.O.B. key
+     I                                        1  10 P1AUTO
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           P1PARM           KEY: Automatic
+      *****************************************************************
+      * Initialise
+     C                     EXSR ZZINIT
+      *
+      * Display and process key screen
+     C                     EXSR BADSKY
+      * Terminate program
+     C                     EXSR ZXEXPG
+      *****************************************************************
+      /EJECT
+     CSR         BADSKY    BEGSR
+      *================================================================
+      * Display and process key screen
+      *================================================================
+      * Initialise key screen
+     C                     EXSR MDIZ#K
+      * Bypass first display of key screen is possible
+     C                     MOVEL'Y'       W0BYP   1
+      * Signal start of transaction
+     C                     MOVEL'Y'       W0TRN   1
+      *
+     C           W0TRN     DOWEQ'Y'
+     C           W0TRN     OREQ 'R'
+      * Ensure transaction continues (if reset)
+     C                     MOVEL'Y'       W0TRN   1
+      * Initialise detail screen
+     C                     EXSR MAIZ#1
+      * Conduct screen conversation
+     C           W0TRN     DOWEQ'Y'
+      * Is bypass key screen still viable?
+     C           W0BYP     IFEQ 'Y'
+     C           #1AUTO    IFEQ *BLANK                     Auto C.O.B. key
+      * One or more key fields is blank
+     C                     MOVEL'N'       W0BYP
+     C                     END
+     C                     END
+      * Bypass key screen
+     C           W0BYP     IFNE 'Y'
+      * Display key screen
+     C                     EXSR BBEXFM
+     C                     END
+      * Cancel key screen bypass
+     C                     MOVEL'N'       W0BYP
+      * Process response to key screen
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * HOME: Reset screen fields
+     C   30                CAS            BDHMKY
+      * Process key screen input
+     C                     CAS            BEPRKY
+     C                     END
+      *
+     C                     END
+     C                     END
+      *================================================================
+     CSR         BAEXIT    ENDSR
+      /EJECT
+     CSR         BBEXFM    BEGSR
+      *================================================================
+      * Display key screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GADSAK
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+      * Enable PUTOVR
+     C                     SETON                     86
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#RCDKEY
+     C                     MOVEL'N'       W0HLP   1
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+      *================================================================
+     CSR         BBEXIT    ENDSR
+      /EJECT
+     CSR         BDHMKY    BEGSR
+      *================================================================
+      * Process HOME key
+      *================================================================
+     C                     MOVEL'N'       W0TRN
+      *================================================================
+     CSR         BDEXIT    ENDSR
+      /EJECT
+     CSR         BEPRKY    BEGSR
+      *================================================================
+      * Process key screen input
+      *================================================================
+      * Validate key fields
+     C                     EXSR BFVLKY
+     C           *IN99     CABEQ'1'       BEEXIT
+      * Check restriction within
+     C                     EXSR VACKRL
+      * Check for existing record
+     C           KRTV      KLIST
+     C                     KFLD           AAAUTO           Auto C.O.B. key
+      * Setup key
+     C                     MOVEL#1AUTO    AAAUTO           Auto C.O.B. key
+     C           KRTV      CHAIN@ACOBF1              9091  *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     SETON                     99    *
+     C                     GOTO BEEXIT
+     C                     END                             FI 91
+      *
+      * If record does not exist, then signal error
+     C           *IN90     IFEQ '1'
+     C                     SETON                     99    *
+      * Send message 'Automatic C.O.B. Data  NF'
+     C                     MOVEL'CCS0003' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     EXSR MBFL#1
+     C*
+     C/COPY WNCPYSRC,CB0600ESFF
+     C*
+     C                     END
+     C*
+     C/COPY WNCPYSRC,CB0600EISE
+     C*
+      *
+     C   99                GOTO BEEXIT
+      * No error: Display and process details
+     C                     EXSR CADSDA
+      *
+      *================================================================
+     CSR         BEEXIT    ENDSR
+      /EJECT
+     CSR         BFVLKY    BEGSR
+      *================================================================
+      * Validate key fields
+      *================================================================
+     C*
+     C/COPY WNCPYSRC,CB0600EVKS
+     C*
+      *================================================================
+     CSR         BFEXIT    ENDSR
+      /EJECT
+     CSR         CADSDA    BEGSR
+      *================================================================
+      * Display and process detail screen
+      *================================================================
+      * Conduct detail screen conversation
+      * - repeat until screen control flag is reset:
+     C           W0TRN     DOWEQ'Y'
+      * Display detail screen
+     C                     EXSR CBEXFM
+      * Process response to detail screen
+     C   03                CAS            ZXEXPG
+      * HOME: Reset screen fields
+      * Process detail screen input
+      * Redisplay previous screen
+     C   12                CAS            CCDSPV
+     C                     CAS            CFPRSC
+     C                     END
+      *
+     C                     END
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         CBEXFM    BEGSR
+      *================================================================
+      * Display screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GBDSAD
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+      * Enable PUTOVR
+     C                     SETON                     86
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT2
+     C                     EXFMT#RCDDTL1
+     C                     MOVEL'N'       W0HLP   1
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+      *================================================================
+     CSR         CBEXIT    ENDSR
+      /EJECT
+     CSR         CCDSPV    BEGSR
+      *================================================================
+      * Redisplay previous screen
+      *================================================================
+     C                     MOVEL'R'       W0TRN
+     C*
+     C/COPY WNCPYSRC,CB0600EPKR
+     C*
+      *================================================================
+     CSR         CCEXIT    ENDSR
+      /EJECT
+     CSR         CFPRSC    BEGSR
+      *================================================================
+      * Validate record
+      *================================================================
+      * Confirm/update is not deferred
+     C                     MOVEL'N'       W0DCF   1
+      * Validate details
+     C                     EXSR DCVLDL
+      * QUIT if error:
+     C   99                GOTO CFEXIT
+      * Defer confirm/update requested
+     C           W0DCF     CABEQ'Y'       CFEXIT
+      *================================================================
+     CSR         CFEXIT    ENDSR
+      /EJECT
+     CSR         DCVLDL    BEGSR
+      *================================================================
+      * Validate details
+      *================================================================
+     C*
+     C/COPY WNCPYSRC,CB0600EVSR
+     C*
+      *
+      * CASE: WRK.Window processing requir. is Yes
+     C           WUWDPR    IFEQ 'Y'                        *IF
+     C                     MOVEL'E'       WUWMAC  1        WM action code
+      * WM call Window Manager - Window manager  *
+     C                     CALL 'WN0010'                                  S01212
+     C                     PARM ##PGM     UPGM   10        Program        S01212
+     C                     PARM *BLANK    UFKEY   2        Function Key   S01212
+     C                     PARM 'I'       UACTCD  1        Action  S01212 S01229
+     C                     PARM           DATA             Trans Data     S01212
+     C                     PARM *BLANK    W0RTN            Return Code    S01212
+     C                     PARM           SPARE1256        Spare Field    LN0355
+      * WM Check Return
+      * CASE: PAR.*Return code is *User QUIT requested
+     C           W0RTN     IFEQ 'Y2U9999'                  *IF
+     C                     MOVELW0RTN     P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     ELSE
+      * CASE: PAR.*Return code is WN Window Error
+     C           W0RTN     IFEQ 'USR0563'                  *IF
+      * Send message 'WN Window Error'
+     C                     MOVEL'USR0563' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DCEXIT                     *QUIT
+     C                     ELSE
+      * CASE: PAR.*Return code is *DBF update error
+     C           W0RTN     IFEQ 'Y2U0004'                  *IF
+      * Send message 'WN Database Error'
+     C                     MOVEL'USR0567' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DCEXIT                     *QUIT
+     C                     ELSE
+      * CASE: PAR.*Return code is *Previous Screen
+     C           W0RTN     IFEQ 'USR0790'                  *IF
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DCEXIT                     *QUIT
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C*
+     C/COPY WNCPYSRC,CB0600ECBW
+     C*
+     C                     END                             *FI
+     C                     END                             *FI
+     C*
+     C/COPY WNCPYSRC,CB0600ECBU
+     C*
+      *================================================================
+     CSR         DCEXIT    ENDSR
+      /EJECT
+     CSR         GADSAK    BEGSR
+      *================================================================
+      * Set key screen conditioning indicators
+      *================================================================
+      *================================================================
+     CSR         GAEXIT    ENDSR
+      /EJECT
+     CSR         GBDSAD    BEGSR
+      *================================================================
+      * Set detail screen conditioning indicators
+      *================================================================
+      * Protect key fields on detail screen
+     C                     SETON                     88    *
+      * Disable key screen
+     C                     SETOF                     87    *
+      *================================================================
+     CSR         GBEXIT    ENDSR
+      /EJECT
+     CSR         MAIZ#1    BEGSR
+      *================================================================
+      * Initialise record - except for key fields
+      *================================================================
+     C                     MOVEL*BLANK    #1AJOB           Job name
+     C                     MOVEL*BLANK    #1AACT           Action Type
+     C                     Z-ADD*ZERO     #1RDNB           Run day number
+     C                     MOVEL*BLANK    #1CBNA           Auto C.O.B. Nar
+     C***********          MOVEL*BLANK    #1NDSO           Next Day Set UpS01495
+     C***********          MOVEL*BLANK    #1ICIN           Input Cycle IniS01495
+     C***********          MOVEL*BLANK    #1PDPO           Prompt Display S01495
+     C                     MOVEL*BLANK    #1TSFO           Term save of RC
+     C                     MOVEL*BLANK    #1NSSO           NDSU save of DB
+     C                     MOVEL*BLANK    #1MSGS           Input Cycle Msg
+     C                     Z-ADD*ZERO     #1SASP           Savefile ASP Op
+     C                     MOVEL*BLANK    #1CSAV           Clear Savefiles
+     C                     MOVEL*BLANK    #1SSAV           Submit Save Sav
+     C                     MOVEL*BLANK    #1MON            DB SAVF name -
+     C                     MOVEL*BLANK    #1TUE            DB SAVF name -
+     C                     MOVEL*BLANK    #1WED            DB SAVF name -
+     C                     MOVEL*BLANK    #1THR            DB SAVF name -
+     C                     MOVEL*BLANK    #1FRI            DB SAVF name -
+     C                     MOVEL*BLANK    #1SAT            DB SAVF name -
+     C                     MOVEL*BLANK    #1SUN            DB SAVF name -
+     C                     MOVEL*BLANK    #1AUSR           User name
+     C                     MOVEL*BLANK    #1ARDT           Action Date
+     C                     Z-ADD*ZERO     #1ATIM           Action Time
+      *================================================================
+     CSR         MAEXIT    ENDSR
+      /EJECT
+     CSR         MBFL#1    BEGSR
+      *================================================================
+      * Move @ACOBF1 fields to screen
+      *================================================================
+     C                     MOVELAAAJOB    #1AJOB           Job name
+     C                     MOVELAAAACT    #1AACT           Action Type
+     C                     Z-ADDAARDNB    #1RDNB           Run day number
+     C                     MOVELAAAUTO    #1AUTO           Auto C.O.B. key
+     C                     MOVELAACBNA    #1CBNA           Auto C.O.B. Nar
+     C***********          MOVELAANDSO    #1NDSO           Next Day Set UpS01495
+     C***********          MOVELAAICIN    #1ICIN           Input Cycle IniS01495
+     C***********          MOVELAAPDPO    #1PDPO           Prompt Display S01495
+     C                     MOVELAATSFO    #1TSFO           Term save of RC
+     C                     MOVELAANSSO    #1NSSO           NDSU save of DB
+     C                     MOVELAAMSGS    #1MSGS           Input Cycle Msg
+     C                     Z-ADDAASASP    #1SASP           Savefile ASP Op
+     C                     MOVELAACSAV    #1CSAV           Clear Savefiles
+     C                     MOVELAASSAV    #1SSAV           Submit Save Sav
+     C                     MOVELAAMON     #1MON            DB SAVF name -
+     C                     MOVELAATUE     #1TUE            DB SAVF name -
+     C                     MOVELAAWED     #1WED            DB SAVF name -
+     C                     MOVELAATHR     #1THR            DB SAVF name -
+     C                     MOVELAAFRI     #1FRI            DB SAVF name -
+     C                     MOVELAASAT     #1SAT            DB SAVF name -
+     C                     MOVELAASUN     #1SUN            DB SAVF name -
+     C                     MOVELAAAUSR    #1AUSR           User name
+     C                     MOVELAAARDT    #1ARDT           Action Date
+     C                     Z-ADDAAATIM    #1ATIM           Action Time
+      *================================================================
+     CSR         MBEXIT    ENDSR
+      /EJECT
+     CSR         MDIZ#K    BEGSR
+      *================================================================
+      * Initialise key screen
+      *================================================================
+     C                     MOVELP1AUTO    #1AUTO           Auto C.O.B. key
+     C*
+     C/COPY WNCPYSRC,CB0600EIKS
+     C*
+      *================================================================
+     CSR         MDEXIT    ENDSR
+      /EJECT
+     CSR         VACKRL    BEGSR
+      *================================================================
+      * Check restriction within
+      *================================================================
+      * Name search required?
+     C                     MOVEL#1AUTO    WK1X01  1        Auto C.O.B. key
+     C           WK1X01    IFEQ '?'                        Auto C.O.B. key
+     C                     CALL 'CB0600S'              90  *
+     C                     PARM           W0RTN   7
+     C           #1AUTO    PARM #1AUTO    WQ0001 10        Auto C.O.B. key
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      *================================================================
+     CSR         VAEXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGM     IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGM
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGM
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZHHPKY    BEGSR
+      *================================================================
+      * Display HELP text
+      *================================================================
+      * Signal help request
+     C                     MOVEL'Y'       W0HLP   1
+     C                     CALL 'YDDSHPR'
+     C                     PARM ##PGM     W0HPMB 10        Help text sourc
+     C                     PARM *BLANK    YYHPFL 10        Help text file
+     C                     PARM *BLANK    YYHPLB 10        Help text libra
+     C                     PARM           W0RTN   7
+      *================================================================
+     CSR         ZHEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel and exit from key screen
+      *================================================================
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+      * Initialise indicators for re-entry
+     C                     MOVE '0'       *IN
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Obtain default message file
+     C                     MOVEL'MIDAS'   ZADFMF 10
+     C*
+      * USER: Initialise program
+     C*
+     C** Set up copyright parameter
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C           *NAMVAR   DEFN           LDA
+      * Retrieve Midas Date - R10 Standard Functions  *
+     C* Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    ##MRDT  7        Midas Run date
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      *
+      * Get 'Window required' ind - MIDAS Modules  *
+     C                     EXSR TCRVGN
+     C*
+     C/COPY WNCPYSRC,CB0600ECPG
+     C*
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      /EJECT
+     CSR         TCRVGN    BEGSR
+      *================================================================
+      * Get 'Window required' ind - MIDAS Modules  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSTC     KLIST
+     C                     KFLD           BGMODS           Modules
+      * Move fields to key list
+     C                     MOVE *BLANK    BGMODS           Modules
+     C                     MOVEL'MMOD'    BGMODS           Modules
+     C           KRSTC     CHAIN@BGREC8              90    *
+      * DBF record not found
+     C   90                MOVEL'USR0096' W0RTN   7
+     C           *IN90     IFEQ '0'
+      * USER: Process DBF record
+      * CASE: DB1.Window processing requir. is Yes
+     C           BGWDPR    IFEQ 'Y'                        *IF
+     C                     MOVEL'Y'       WUWDPR  1        Window processi
+     C                     END                             *FI
+     C                     END
+      *================================================================
+     CSR         TCEXIT    ENDSR
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

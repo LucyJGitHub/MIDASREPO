@@ -1,0 +1,132 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas CB Generic CPYF COB component')                 */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Close of Business Processing                        */
+/*                                                                   */
+/*       CBC000610 - Midas CB Generic CPYF COB component             */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. MD022098 *RENAMED  Date 28Aug13              */
+/*       Prev Amend No. MD021155           Date 19Jul13              */
+/*                      MD020430           Date 15May13              */
+/*                      CCB022B *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD022098 - Continuous CoB improvement                       */
+/*                - Renamed from LEC000610                           */
+/*                - Applied for MD023539                             */
+/*       MD021155 - COB Restructure Phase 1 Remnants                 */
+/*                - Restructure MD020430                             */
+/*       MD020430 - MCLONCL/CK file discrepancies due to MBROPT mode */
+/*       CCB022B - COB Restructure - COB File Manager                */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM        PARM(&FMFLE &TOFLE)                        */                   /*MD020430*/
+/**********  PGM        PARM(&FMFLE &TOFLE &MBROPT &FROMMBR_OP +   */                   /*MD021155*/
+/**********               &TOMBR_OP &FMTOPT_OP)                    */          /*MD020430 MD021155*/
+             PGM        PARM(&FMFLE &TOFLE &MBROPT &FROMMBR &TOMBR +
+                          &FMTOPT)                                                      /*MD021155*/
+ 
+             DCL        VAR(&FMFLE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOFLE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MBROPT) TYPE(*CHAR) LEN(10)                                /*MD020430*/
+                                                                                        /*MD020430*/
+/**Optional*Parameters**********************************************/          /*MD020430 MD021155*/
+/*******************************************************************/          /*MD020430 MD021155*/
+/**********  DCL        VAR(&FROMMBR_OP) TYPE(*CHAR) LEN(10)       */          /*MD020430 MD021155*/
+/**********  DCL        VAR(&TOMBR_OP) TYPE(*CHAR) LEN(10)         */          /*MD020430 MD021155*/
+/**********  DCL        VAR(&FMTOPT_OP) TYPE(*CHAR) LEN(10)        */          /*MD020430 MD021155*/
+/*******************************************************************/          /*MD020430 MD021155*/
+/**Defaulted*Parameters*********************************************/          /*MD020430 MD021155*/
+/*******************************************************************/          /*MD020430 MD021155*/
+             DCL        VAR(&FROMMBR) TYPE(*CHAR) LEN(10)                               /*MD020430*/
+             DCL        VAR(&TOMBR) TYPE(*CHAR) LEN(10)                                 /*MD020430*/
+             DCL        VAR(&FMTOPT) TYPE(*CHAR) LEN(10)                                /*MD020430*/
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2012')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/**Default*values*for*optional*parameters***************************/          /*MD020430 MD021155*/
+/*******************************************************************/          /*MD020430 MD021155*/
+/**********  CALLSUBR   SUBR(DFTVAL)                               */          /*MD020430 MD021155*/
+/*******************************************************************/          /*MD020430 MD021155*/
+/**********  CPYF       FROMFILE(&FMFLE) TOFILE(&TOFLE) +            */                 /*MD020430*/
+/**********                MBROPT(*REPLACE) FMTOPT(*NONE)            */                 /*MD020430*/
+/**********  MONMSG     (CPF2817) CMPDTA(CPF2869) +                  */                 /*MD020430*/
+/**********                EXEC(CLRPFM &TOFLE)                       */                 /*MD020430*/
+             IF         COND(&FMTOPT *EQ '*MAP *DROP') THEN(DO)                         /*MD020430*/
+                CPYF       FROMFILE(&FMFLE) TOFILE(&TOFLE) +
+                             FROMMBR(&FROMMBR) TOMBR(&TOMBR) +
+                             MBROPT(&MBROPT) FMTOPT(*MAP *DROP)                         /*MD020430*/
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)                      /*MD020430*/
+                   CLRPFM     FILE(&TOFLE)                                              /*MD020430*/
+                ENDDO                                                                   /*MD020430*/
+             ENDDO                                                                      /*MD020430*/
+             ELSE       CMD(DO)                                                         /*MD020430*/
+                CPYF       FROMFILE(&FMFLE) TOFILE(&TOFLE) +
+                             FROMMBR(&FROMMBR) TOMBR(&TOMBR) +
+                             MBROPT(&MBROPT) FMTOPT(&FMTOPT)                            /*MD020430*/
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)                      /*MD020430*/
+                   CLRPFM     FILE(&TOFLE)                                              /*MD020430*/
+                ENDDO                                                                   /*MD020430*/
+             ENDDO                                                                      /*MD020430*/
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             SNDPGMMSG  MSG('Program LEC000610 ended abnormally +
+                          - job cancelled') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+/*********************************************************************/                 /*MD020430*/
+/*********************************************************************/        /*MD020430 MD021155*/
+/**DFTVAL*-*Default*values*for*optional*parameters********************/        /*MD020430 MD021155*/
+/*********************************************************************/        /*MD020430 MD021155*/
+/*********************************************************************/                 /*MD020430*/
+/*******************************************************************/          /*MD020430 MD021155*/
+/**********  SUBR       SUBR(DFTVAL)                               */          /*MD020430 MD021155*/
+/*******************************************************************/          /*MD020430 MD021155*/
+/**********  CHGVAR     VAR(&FROMMBR) VALUE(&FROMMBR_OP)           */          /*MD020430 MD021155*/
+/**********  MONMSG     MSGID(MCH3601) EXEC(DO)                    */          /*MD020430 MD021155*/
+/**********     CHGVAR     VAR(&FROMMBR) VALUE('*FIRST')           */          /*MD020430 MD021155*/
+/**********  ENDDO                                                 */          /*MD020430 MD021155*/
+/*******************************************************************/          /*MD020430 MD021155*/
+/**********  CHGVAR     VAR(&TOMBR) VALUE(&TOMBR_OP)               */          /*MD020430 MD021155*/
+/**********  MONMSG     MSGID(MCH3601) EXEC(DO)                    */          /*MD020430 MD021155*/
+/**********     CHGVAR     VAR(&TOMBR) VALUE('*FIRST')             */          /*MD020430 MD021155*/
+/**********  ENDDO                                                 */          /*MD020430 MD021155*/
+/*******************************************************************/          /*MD020430 MD021155*/
+/**********  CHGVAR     VAR(&FMTOPT) VALUE(&FMTOPT_OP)             */          /*MD020430 MD021155*/
+/**********  MONMSG     MSGID(MCH3601) EXEC(DO)                    */          /*MD020430 MD021155*/
+/**********     CHGVAR     VAR(&FMTOPT) VALUE('*NONE')             */          /*MD020430 MD021155*/
+/**********  ENDDO                                                 */          /*MD020430 MD021155*/
+/*******************************************************************/          /*MD020430 MD021155*/
+/**********  IF         COND(&FROMMBR *EQ ' ') THEN(DO)            */          /*MD020430 MD021155*/
+/**********     CHGVAR     VAR(&FROMMBR) VALUE('*FIRST')           */          /*MD020430 MD021155*/
+/**********  ENDDO                                                 */          /*MD020430 MD021155*/
+/*******************************************************************/          /*MD020430 MD021155*/
+/**********  IF         COND(&TOMBR *EQ ' ') THEN(DO)              */          /*MD020430 MD021155*/
+/**********     CHGVAR     VAR(&TOMBR) VALUE('*FIRST')             */          /*MD020430 MD021155*/
+/**********  ENDDO                                                 */          /*MD020430 MD021155*/
+/*******************************************************************/          /*MD020430 MD021155*/
+/**********  IF         COND(&FMTOPT *EQ ' ') THEN(DO)             */          /*MD020430 MD021155*/
+/**********     CHGVAR     VAR(&FMTOPT) VALUE('*NONE')             */          /*MD020430 MD021155*/
+/**********  ENDDO                                                 */          /*MD020430 MD021155*/
+/*******************************************************************/          /*MD020430 MD021155*/
+/**********  ENDSUBR                                               */          /*MD020430 MD021155*/
+/**End*DFTVAL*subroutine********************************************/          /*MD020430 MD021155*/
+/*******************************************************************/          /*MD020430 MD021155*/
+ END:
+             ENDPGM

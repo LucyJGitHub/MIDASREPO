@@ -1,0 +1,78 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SM Update zone System Values')                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000077 - Update zone System Values                       */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. BUG27957           Date 30Jul10              */
+/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       BUG27957 - Standardise update of System Values.             */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&SBSID &GSBSID)
+ 
+             DCL        VAR(&SBSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&GSBSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SYSVAL) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&DVLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SYSVALVAL) TYPE(*CHAR) LEN(200)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2010')
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CHGVAR     VAR(&DVLIB) VALUE(&SBSID *TCAT 'DVLIB')
+ 
+             OVRDBF     FILE(SDSVALL0) TOFILE(&DVLIB/SDSVALL0)
+ 
+/* Set up System Value JavaPathStem. */
+             CHGVAR     VAR(&SYSVAL) VALUE('JavaPathStem')
+             CHGVAR     VAR(&SYSVALVAL) +
+                          VALUE('/QOpenSys/Misys/MidasPlus/' *TCAT +
+                          &GSBSID)
+             CALL       PGM(SD009510) PARM(&SYSVAL &SYSVALVAL ' ')
+ 
+/* Update zone prefix. */
+             CHGVAR     VAR(&SYSVAL) VALUE(' ')
+             CHGVAR     VAR(&SYSVALVAL) VALUE(' ')
+             CHGVAR     VAR(&SYSVAL) VALUE('BrgMidasSystemPrefix')
+             CHGVAR     VAR(&SYSVALVAL) VALUE(&SBSID)
+             CALL       PGM(SD009510) PARM(&SYSVAL &SYSVALVAL ' ')
+ 
+             CHGVAR     VAR(&SYSVAL) VALUE(' ')
+             CHGVAR     VAR(&SYSVAL) VALUE('OMELiveGlobalPrefix')
+             CALL       PGM(SD009510) PARM(&SYSVAL &SYSVALVAL ' ')
+ 
+/* Update global layer prefix. */
+             CHGVAR     VAR(&SYSVAL) VALUE(' ')
+             CHGVAR     VAR(&SYSVALVAL) VALUE(' ')
+             CHGVAR     VAR(&SYSVAL) VALUE('BrgMidasGlobalPrefix')
+             CHGVAR     VAR(&SYSVALVAL) VALUE(&GSBSID)
+             CALL       PGM(SD009510) PARM(&SYSVAL &SYSVALVAL ' ')
+ 
+             CHGVAR     VAR(&SYSVAL) VALUE(' ')
+             CHGVAR     VAR(&SYSVAL) VALUE('GlobalSystemPrefix')
+             CALL       PGM(SD009510) PARM(&SYSVAL &SYSVALVAL ' ')
+ 
+             CHGVAR     VAR(&SYSVAL) VALUE(' ')
+             CHGVAR     VAR(&SYSVAL) VALUE('OMELiveGlobalPrefix')
+             CALL       PGM(SD009510) PARM(&SYSVAL &SYSVALVAL ' ')
+ 
+             DLTOVR     FILE(SDSVALL0)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ENDPGM:
+             ENDPGM

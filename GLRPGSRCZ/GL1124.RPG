@@ -1,0 +1,641 @@
+0001 H        1                                                           S01117
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Amount accrual input - delete screen')        *
+0001 H***********                                                         S01117
+0002 F********************************************************************GL1124
+0003 F*                                                                  *GL1124
+     F*  Midas  GENERAL LEDGER MODULE                                 GL1124
+0005 F*                                                                  *GL1124
+0006 F*     GL1124 - AMOUNT ACCRUAL INPUT - S/AMACC                      *GL1124
+0007 F*              DELETE SCREEN VALIDATION                            *GL1124
+0008 F*                                                                  *GL1124
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+0010 F*                                                                  *GL1124
+      *  Last Amend No. MD029265           Date 15Aug14               *
+      *  Prev Amend No. AR1094265          Date 07Mar13               *
+      *                 AR851552           Date 11Feb13               *
+      *                 CGL141             Date 12Dec12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CGL003             Date 12Dec96               *
+      *                 S01199             Date 27Feb90               *
+0011 F*                   - S01117   DATE - 27/04/89                     *GL1124
+     F*                   - S01194   DATE - 27/04/89                     *
+0012 F*                                                                  *GL1124
+     F********************************************************************
+     F*                                                                  *
+      *  MD029265 - Cannot complete accrual input insert due to       *
+      *             missing narrative upon 'Enter' (Recompile)        *
+      *  AR1094265 - Associated Customer in accrual input must be the *
+      *              same with the input                              *
+      *  AR851552 - Associated Customer filed is empty upon enquiry   *
+      *             for a deleted accrual input. Ensure that Assoc    *
+      *             Customer is saved after deletion of amount accrual*
+      *             (Child: AR851553)                                 *
+      *  CGL141 - Amount Accruals Extended Narrative.                 *
+      *           Added Hooks: CGL141_021 to CGL141_022               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*     CGL003 - ADDITION OF FIELDS FOR ACCRUAL FREQUENCY ON          CGL003
+     F*              AMOUNT ACCRUALS
+0012 F*     S01199 - HELP SYSTEM                                         *GL1121
+     F*     S01117  -  MULTIBRANCHING                                    *
+     F*     S01194  -  NEW STANDING DATA                                 *
+     F*                                                                  *
+0013 F********************************************************************GL1124
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+0016 FGL1120FMCF  E                    WORKSTN                            GL1124
+0020 F*                                                                   GL1124
+0021 F*       FUNCTION OF INDICATORS                                      GL1124
+0022 F*       STANDARD INPUT PROGRAM INDICATORS                           GL1124
+     F*       40      SETOF IF MULTIBRANCHING INDICATOR IS ON             S01117
+0015 F*       45      SET ON IF ERROR DURING READ FROM THE WORK STATION * GL1124
+     F*************** & HELP IND                                          S01199
+0023 F********U7******DATABASE ERROR                                      GL1124
+0023 F*       U7 U8   DATABASE ERROR                                      GL1124
+0024 F*       89      BLINK ACTION CODE LABEL                             GL1124
+0025 F*       88      NON-DISPLAY ERROR MESSAGE/CODES                     GL1124
+0026 F*       87      NON-DISPLAY CHANGE DETAILS                          GL1124
+0027 F*       86      NON-DISPLAY USEFUL DATA                             GL1124
+0028 F*       85      OUTPUT ENQUIRE - SE - SCREEN                        GL1124
+0029 F*       84      OUTPUT DELETE - SD - SCREEN                         GL1124
+0030 F*       83      OUTPUT AMEND - SA - SCREEN                          GL1124
+0031 F*       82      OUTPUT INSERT - SI - SCREEN                         GL1124
+0032 F*       81      OUTPUT INITIAL - SF - SCREEN                        GL1124
+0033 F*       80      BLINK DELETE CHECK FIELD LABEL                      GL1124
+0034 F*       79      SYSTEM SET-UP FLAG ON                               GL1124
+0035 F*       78      SD SCREEN READ IN                                   GL1124
+0036 F*       77      DELETE INCLUDES SETTING RECI TO *, OTHERWISE LEAVE  GL1124
+0037 F*       76      UPDATE WORKSTATION TRANSACTION FILE                 GL1124
+0038 F*       75      FIRST CYCLE IND                                     GL1124
+     F*       50     PROFIT CENTRE USED                                   S01117
+     F*       51     PROFIT CENTRE AMEND                                  S01117
+     F*       53     PROFIT CENTRE DEFAULT                                S01117
+0038 F*       39      TABTB11 READ ERROR                                  S01117
+0039 F*       NON-STANDARD INPUT PROGRAM INDICATORS                       GL1124
+     E                    CPY@    1   1 80
+0040 E*    STANDARD TABLES/ARRAYS                                         GL1124
+0041 E                    ERCD       19  4               ERROR CODES      GL1124
+0042 E                    ERCM    1   2 79               ERROR MESSAGES   GL1124
+0043 E*    NON-STANDARD TABLES/ARRAYS                                     GL1124
+0044 I*    STANDARD FILES                                                 GL1124
+0045 I*                                                                   GL1124
+0046 I*    WORKSTATION FILE                                               GL1124
+0047 I*                                                                   GL1124
+0048 I*    FORMAT - DELETE SCREEN                                         GL1124
+0049 I*                                                                   GL1124
+0050 IGL1120F3    78                                                      GL1124
+0075 I*                                                                   GL1124
+0079 I*                                                                   GL1124
+0080 I*    WORKSTATION TRANSACTION DATA AREA                           D  GL1124
+0081 I*                                                                   GL1124
+0082 IWSTRN      UDS                            860                       GL1124
+0083 I                                        1   1 MRECI                 GL1124
+0084 I                                        2   70MREFN                 GL1124
+0085 I                                        8   8 MREFT                 GL1124
+0086 I                                    P  31  330MTNLU                 GL1124
+0087 I                                    P  34  360MORED                 GL1124
+0088 I                                    P  37  390MLCD                  GL1124
+0089 I                                       40  40 MCHTP                 GL1124
+0090 I                                    P  41  470MHASH                 GL1124
+0091 I                                    P  41  470MAMNT                 GL1124
+0092 I                                       48  50 MCCY                  GL1124
+0093 I                                    P  51  530MSDAT                 GL1124
+0094 I                                    P  54  560MMDAT                 GL1124
+0095 I**********                             57  600MDRAC                              GL1124 CGL029
+     I                                       57  600QQDRAC                                    CGL029
+0096 I                                       61  660MDRCN                 GL1124
+0097 I**********                             67  700MCRAC                              GL1124 CGL029
+     I                                       67  700QQCRAC                                    CGL029
+0098 I                                       71  760MCRCN                 GL1124
+0099 I                                       77 106 MNARR                 GL1124
+0100 I                                    P 107 1130MAMPD                 GL1124
+0101 I                                      114 1150MDRSQ                 GL1124
+0102 I                                      116 1170MCRSQ                 GL1124
+     I                                      126 128 BRCA                  S01117
+     I                                      129 129 MAPFQ                 CGL003
+     I                                      130 1310MFDAY                 CGL003
+     I                                    P 132 1340MAPDA                 CGL003
+     I                                      135 1440MDRAC                                     CGL029
+     I                                      145 1540MCRAC                                     CGL029
+     I***********                           128 200 WST200                S01117
+     I***********                           129 200 WST200         S01117 CGL003
+     I**********                            135 200 WST200                             CGL003 CGL029
+     I**********                            155 200 WST200                           CGL029 AR851552
+     I**********                            155 1600WST160                        AR851552 AR1094265
+     I                                      155 160 WST160                                 AR1094265
+     I                                      161 200 WST200                                  AR851552
+     I                                      201 400 WST400
+     I                                      401 600 WST600
+     I                                      601 800 WST800
+     I                                      801 860 WST860
+     I                                      401 401 WST401
+     I                                    P 402 4040WST404
+     I                                    P 405 4070WST407
+     I                                      408 409 WST409
+     I                                      410 418 WST418
+     I                                      419 429 WST429
+     I                                      430 430 WST430
+     I                                      431 431 WST431
+     I                                      461 467 WST467
+     I                                      468 469 WST469
+     I                                      470 475 WST475
+     I                                      476 478 WST478
+     I                                      479 484 WST484
+     I                                      485 485 WST485
+     I                                      486 488 WST488
+     I***********                           489 502 WST502                S01117
+     I***********                           503 508 WST508                S01117
+     I***********                           509 514 WST514                S01117
+     I***********                           515 518 WST518                S01117
+     I***********                           519 520 WST520                S01117
+     I***********                           521 526 WST526                S01117
+     I***********                           527 530 WST530                S01117
+     I***********                           531 532 WST532                S01117
+     I***********                           533 538 WST538                S01117
+     I***********                           539 568 WST568                S01117
+     I                                      489 491 WST491                S01117
+     I                                      492 505 WST505                S01117
+     I                                      506 509 WST509                S01117
+     I                                      510 515 WST515                S01117
+     I                                      516 521 WST521                S01117
+     I**********                            522 525 WST525                             S01117 CGL029
+     I**********                            526 527 WST527                             S01117 CGL029
+     I**********                            528 533 WST533                             S01117 CGL029
+     I**********                            534 537 WST537                             S01117 CGL029
+     I**********                            538 539 WST539                             S01117 CGL029
+     I**********                            540 545 WST545                             S01117 CGL029
+     I**********                            546 575 WST575                             S01117 CGL029
+     I**********                            576 576 WST576                             CGL003 CGL029
+     I**********                            577 578 WST578                             CGL003 CGL029
+     I**********                            579 584 WST584                             CGL003 CGL029
+     I                                      522 531 WST525                                    CGL029
+     I                                      532 533 WST527                                    CGL029
+     I                                      534 539 WST533                                    CGL029
+     I                                      540 549 WST537                                    CGL029
+     I                                      550 551 WST539                                    CGL029
+     I                                      552 557 WST545                                    CGL029
+     I                                      558 587 WST575                                    CGL029
+     I                                      588 588 WST576                                    CGL029
+     I                                      589 590 WST578                                    CGL029
+     I                                      591 596 WST584                                    CGL029
+0105 I*                                                                   GL1124
+0106 I*    NON-STANDARD FILES                                             GL1124
+0107 I*                                                                   GL1124
+0108 I*    NON-STANDARD DATA STRUCTURES                                   GL1124
+     I*                                                                   S01117
+     I/COPY WNCPYSRC,GL1124I003
+     I* External DTAARA for run-date                                      S01117
+     I*                                                                   S01117
+     IRUNDT       DS                                                      S01117
+     I                                       13  13 MBIN                  S01117
+0109 I*                                                                   GL1124
+0110 I*    STANDARD LOCAL DATA AREA FIELDS                                GL1124
+0111 I*                                                                   GL1124
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+0112 ILDA        UDS                            256                       GL1124
+0113 I                                        1   8 LPROC                 GL1124
+     I***********                           134 138 LFILE                 S01194
+     I***********                           139 167 LKEY                  S01194
+     I***********                           168 175 LPROG                 S01194
+     I***********                           176 1770LDBNO                 S01194
+0073 I**********                            181 1850LRUND                 S01194
+0074 I**********                            186 192 LRUNA                 S01194
+0075 I**********                            193 193 LDATF                 S01194
+0076 I***********                           194 1940LSFLG                 S01194
+0077 I**********                            195 1960LKEYL                 S01194
+0078 I**********                            197 202 LISP                  S01194
+0079 I**********                            203 203 LTWOL                 S01194
+0080 I**********                            204 2040LLDLP                 S01194
+0081 I**********                            205 2090LTNLU                 S01194
+0082 I**********                            210 210 LDELM                 S01194
+0083 I**********                            211 211 LDUD                  S01194
+     I                                      134 141 DBFILE                S01194
+     I                                      142 170 DBKEY                 S01194
+     I                                      171 180 DBPGM                 S01194
+     I                                      181 1830DBASE                 S01194
+0073 I                                      184 1880LRUND                 S01194
+0074 I                                      189 195 LRUNA                 S01194
+0075 I                                      196 196 LDATF                 S01194
+0076 I                                      197 197 LSFLG                 S01194
+0077 I                                      198 1990LKEYL                 S01194
+0078 I                                      200 205 LISP                  S01194
+0079 I                                      206 206 LTWOL                 S01194
+0080 I                                      207 2070LLDLP                 S01194
+0081 I                                      208 2120LTNLU                 S01194
+0082 I                                      213 213 LDELM                 S01194
+0083 I                                      214 214 LDUD                  S01194
+     I*
+     ISDGELR    E DSSDGELRPD                                              S01117
+     I**   GENERAL LEDGER DETAILS                                         S01117
+     I*                                                                   S01117
+     I*
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I/COPY WNCPYSRC,GL1124I001
+     I/COPY OFCPYSRCZ,CGL141_021                                                              CGL141
+     IPSDS       SDS
+     I                                      244 246 SWID
+     I/COPY WNCPYSRC,GL1124I002
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+     C*  LOCK IN DATA AREAS
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           WSTRN
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C           *LOCK     IN   LDA
+     C           *LOCK     IN   WSTRN
+     C*
+0129 C*  FIRST CYCLE PROCESSING                                           GL1124
+     C**                                                                  S01117
+     C           *IN75     IFEQ '0'                                       S01117
+     C                     MOVEACPY@      BIS@   80
+     C*                                                                   S01117
+     C                     MOVEL'GL1124'  DBPGM                           S01117
+     C**                                                                  S01117
+     C** CHECK THE MULTIBRANCHING INDICATOR IN THE DATA AREA RUNDAT       S01117
+     C** IS ON OR NOT                                                     S01117
+     C**                                                                  S01117
+     C                     IN   RUNDT                                     S01117
+     C           MBIN      IFEQ 'Y'                                       S01117
+     C                     SETOF                     40                   S01117
+     C                     ELSE                                           S01117
+     C                     SETON                     40                   S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C** CHECK IF PROFIT CENTRE PROCESSING IS REQUIRED                    S01117
+     C**                                                                  S01117
+     C                     EXSR PRUSED                                    S01117
+     C           *INU7     IFEQ '1'                                       S01117
+     C                     GOTO END                                       S01117
+     C                     END                                            S01117
+     C*                                                                   CGL003
+     C* CHECK IF ACCRUAL FREQUENCY SWITCHABLE FEATURE IS SWITCHED ON      CGL003
+     C*                                                                   CGL003
+     C                     CALL 'AOSARDR0'                                CGL003
+     C                     PARM *BLANKS   #RTCD   7                       CGL003
+     C                     PARM '*VERIFY' #OPTN   7                       CGL003
+     C                     PARM 'CGL003'  WSARD   6                       CGL003
+     C*                                                                   CGL003
+     C           #RTCD     IFNE *BLANKS                                   CGL003
+     C           #RTCD     ANDNE'*NRF    '                                CGL003
+     C                     MOVEL'AOSARDR0'DBFILE                          CGL003
+     C                     Z-ADD3         DBASE            ***************CGL003
+     C                     MOVELWSARD     DBKEY            * DBERROR 03  *CGL003
+     C                     MOVE #OPTN     DBOPTN  7        ***************CGL003
+     C                     SETON                     U7U8LR               CGL003
+     C                     EXSR *PSSR                                     CGL003
+     C                     ENDIF                                          CGL003
+     C*                                                                   CGL003
+     C           #RTCD     IFEQ *BLANK                                    CGL003
+     C                     MOVE 'Y'       CGL003  1                       CGL003
+     C                     MOVE *ON       *IN46                           CGL003
+     C                     ENDIF                                          CGL003
+      *                                                                                     AR851552
+     C                     CALL 'AOSARDR0'                                                  AR851552
+     C                     PARM *BLANKS   #RTCD                                             AR851552
+     C                     PARM '*VERIFY' #OPTN                                             AR851552
+     C                     PARM 'CGL064'  WSARD                                             AR851552
+      *                                                                                     AR851552
+     C           #RTCD     IFEQ *BLANK                                                      AR851552
+     C                     MOVE 'Y'       CGL064  1                                         AR851552
+     C                     MOVE *ON       *IN54                                             AR851552
+     C                     ELSE                                                             AR851552
+     C                     MOVE 'N'       CGL064                                            AR851552
+     C                     MOVE *OFF      *IN54                                             AR851552
+     C                     ENDIF                                                            AR851552
+     C**                                                                  S01117
+     C                     END                                            S01117
+0130 C*                                                                   GL1124
+     C           *IN45     DOUEQ'0'
+0271 C                     READ GL1120FM                 45               GL1121
+     C************IN45     IFEQ '1'                                       S01199
+     C************         MOVEAERCD      HERCD 160                       S01199
+     C************         MOVEL'GL1120'  HBPGM   8                       S01199
+     C************         CALL 'MHELP'                                   S01199
+     C************         PARM           HBPGM                           S01199
+     C************         PARM           HERCD                           S01199
+     C************         END                                            S01199
+     C                     END
+0134 C   75                GOTO ENDFC                                     GL1124
+0135 C                     SETON                     75                   GL1124
+0136 C*                                                                   GL1124
+0137 C*  SET-UP STANDARD INPUT PROGRAM FIELDS  -  WPROG IS THIS PROGRAM   GL1124
+0138 C*                                                                   GL1124
+0139 C                     MOVELLISP      WPROG   8                       GL1124
+0140 C                     MOVE '4  '     WPROG                           GL1124
+0141 C                     MOVELWPROG     SPID    6                       GL1124
+0142 C*  SET-UP STANDARD LDA FIELDS                                       GL1124
+0143 C***********          MOVE WPROG     LPROG                           S01194
+0143 C                     MOVE WPROG     DBPGM                           S01194
+0144 C                     Z-ADD4         LLDLP                           GL1124
+0145 C*  SET-UP STANDARD BLANK FIELDS                                     GL1124
+0146 C                     MOVE ' '       BLK200200                       GL1124
+0147 C*                                                                   GL1124
+0148 C           LDATF     COMP 'M'                      98* DATE FORMAT  GL1124
+0149 C***********LSFLG     COMP 1                        79* SSF          S01194
+     C           LSFLG     COMP 'Y'                      79*SSF           S01194
+0150 C           LDELM     COMP '*'                      77* DELETE METHODGL1124
+0151 C*                                                                   GL1124
+0152 C                     Z-ADD0         ZERO05  50                      GL1124
+0153 C*                                                                   GL1124
+0154 C*  LOG PROGRAM NAME                                                 GL1124
+0155 C*                                                                   GL1124
+0156 C                     MOVE LISP      WLOGP   6                       GL1124
+0157 C                     MOVE '9'       WLOGP                           GL1124
+0158 C*                                                                   GL1124
+0159 C*  INITIALISE FIELD TO BLANK OUT KEY/ACTION CODE                    GL1124
+0160 C*                                                                   GL1124
+0161 C                     MOVE ' '       BLK7    7                       GL1124
+0162 C*                                                                   GL1124
+0163 C           ENDFC     TAG                             ** ENDFC TAG   GL1124
+0164 C*                                                                   GL1124
+0165 C*  INITIALISE STANDARD INDICATORS                                   GL1124
+0166 C                     SETON                     888786* NON-DISPLAY  GL1124
+0167 C                     SETOF                     8980  * BLINK LABELS GL1124
+0168 C                     SETOF                     858483* OUTPUT       GL1124
+0169 C                     SETOF                     8281  * SCREENS      GL1124
+0170 C                     SETOF                     76    * OUTPUT WTRN  GL1124
+0171 C*                                                                   GL1124
+0172 C*  INITIALISE NON-STANDARD INDS                                     GL1124
+0173 C*                                                                   GL1124
+0174 C*                                                                   GL1124
+0175 C*  CHECK FOR CORRECT SCREEN READ IN                                 GL1124
+0176 C*                                                                   GL1124
+0177 C   78                GOTO PROCES                                    GL1124
+0178 C***********          SETON                     U7LR                 S01117
+0179 C***********          MOVE 'SCREN'   LFILE                           S01194
+0180 C***********          MOVE BLK200    LKEY                            S01194
+0181 C***********          MOVEL'SD'      LKEY                            S01194
+0182 C***********          MOVE 'FOUND   'LKEY                            S01194
+0183 C***********          MOVE SID       LKEY                            S01194
+0184 C***********          MOVE '92'      LDBNO            ** DB ERROR 92 S01194
+0178 C                     SETON                     U7U8LR               S01117
+0179 C                     MOVEL'SCREN'   DBFILE                          S01194
+0180 C                     MOVE BLK200    DBKEY                           S01194
+0181 C                     MOVEL'SD'      DBKEY                           S01194
+0182 C                     MOVE 'FOUND   'DBKEY                           S01194
+0183 C                     MOVE SID       DBKEY                           S01194
+0184 C                     MOVE '92'      DBASE            ** DB ERROR 92 S01194
+     C                     EXSR *PSSR                                     S01194
+0185 C                     GOTO END                                       GL1124
+0186 C*                                                                   GL1124
+0187 C           PROCES    TAG                             ** PROCES TAG  GL1124
+0188 C*                                                                   GL1124
+0189 C*  CLEAR ERROR CODE ARRAY, RESET INDEX                              GL1124
+0190 C*                                                                   GL1124
+0191 C                     MOVE BLK200    ERMSG  79                       GL1124
+0192 C                     MOVE '    '    ERCD                            GL1124
+0193 C                     Z-ADD0         S       20                      GL1124
+0194 C*                                                                   GL1124
+0195 C*  IF F3, END THE PROGRAM                                           GL1124
+0196 C*                                                                   GL1124
+0197 C   KC                MOVEL'**      'LPROC                           GL1124
+0198 C   KC                SETON                     LR                   GL1124
+0199 C   KC                GOTO END                                       GL1124
+0200 C*                                                                   GL1124
+0201 C*  IF F12, OUTPUT BLANK INITIAL SCREEN                              GL1124
+0202 C*                                                                   GL1124
+0203 C   KL                EXSR SUBSF                                     GL1124
+0204 C   KL                GOTO END                                       GL1124
+0205 C*                                                                   GL1124
+0206 C*  IF NOT F10, REOUTPUT DELETE SCREEN WITH MESSAGE                  GL1124
+0207 C*                                                                   GL1124
+0208 C  NKJ                EXSR SUBSD                                     GL1124
+0209 C  NKJ                SETOF                     88                   GL1124
+0210 C  NKJ      S         ADD  1         S                               GL1124
+0211 C  NKJ                MOVE ' 916'    ERCD,S                          GL1124
+0212 C  NKJ                MOVE ERCM,1    ERMSG                           GL1124
+0213 C  NKJ                GOTO END                                       GL1124
+0214 C*                                                                   GL1124
+0215 C*  IF F10 KEY ENTERED, NOW VALIDATE DELETE CHECK FIELD              GL1124
+0216 C*                                                                   GL1124
+0222 C*                                                                   GL1124
+0223 C*                                                                   GL1124
+0224 C*  S IS NON-ZERO IF THERE ARE ANY ERRORS                            GL1124
+0225 C*                                                                   GL1124
+0226 C           S         COMP 0                    8484                 GL1124
+0227 C*                                                                   GL1124
+0228 C*  IF THERE ARE ANY ERRORS, REOUTPUT THE                            GL1124
+0229 C*  DELETE SCREEN WITH ERROR CODES                                   GL1124
+0230 C*                                                                   GL1124
+0231 C   84                EXSR SUBSD                                     GL1124
+0232 C   84                SETOF                     88                   GL1124
+0233 C   84                GOTO END                                       GL1124
+0234 C*                                                                   GL1124
+0235 C*  OTHERWISE, UPDATE THE WORKSTATION TRANSACTION FILE               GL1124
+0236 C*  WITH THE MASTER FILE RECORD                                      GL1124
+0237 C*                                                                   GL1124
+0238 C*  UPDATE WTRN FILE AND EXECUTE UPDATE PROGRAM                      GL1124
+0239 C*                                                                   GL1124
+0240 C                     SETON                     76LR                 GL1124
+0241 C                     MOVE '9  '     LPROC                           GL1124
+     C*
+     C           CGL064    IFEQ 'Y'                                                         AR851552
+     C                     MOVE SASOC     WST160                                            AR851552
+     C                     ELSE                                                             AR851552
+     C**********           Z-ADD0         WST160                                  AR851552 AR1094265
+     C                     MOVE *BLANKS   WST160                                           AR1094265
+     C                     ENDIF                                                            AR851552
+     C*
+     C                     MOVE 'D'       WST401
+     C                     Z-ADDZERO05    WST404
+     C                     Z-ADDZERO05    WST407
+     C                     MOVE SWID      WST409
+     C***********          MOVE LFILE     WST418                          S01194
+     C                     MOVE DBFILE    WST418                          S01194
+     C                     MOVE WLOGP     WST429
+     C                     MOVE '1'       WST430
+     C                     MOVE 'D'       WST431
+     C*
+     C*  SETUP DATA AREA WSTRN
+     C*
+     C                     MOVE *BLANKS   WST200
+     C                     MOVE *BLANKS   WST400
+     C                     MOVE *BLANKS   WST600
+     C                     MOVE *BLANKS   WST800
+     C                     MOVE *BLANKS   WST860
+     C*
+     C   77                MOVE '*'       MRECI
+     C                     Z-ADDZERO05    MTNLU
+     C                     Z-ADDLRUND     MLCD
+     C                     MOVE 'D'       MCHTP
+     C*
+     C                     MOVE 'D'       WST401
+     C                     Z-ADDZERO05    WST404
+     C                     Z-ADDZERO05    WST407
+     C                     MOVE SWID      WST409
+     C***********          MOVE LFILE     WST418                          S01194
+     C                     MOVE DBFILE    WST418                          S01194
+     C                     MOVE WLOGP     WST429
+     C                     MOVE '1'       WST430
+     C                     MOVE 'D'       WST431
+     C*
+     C* SETUP SCREEN  IN DATA AREA
+     C*
+0242 C*                                                                   GL1124
+     C                     MOVE RUNA      WST467
+     C                     MOVE SID       WST469
+     C                     MOVE SPID      WST475
+     C                     MOVE SWID      WST478
+     C                     MOVE FAREF     WST484
+     C                     MOVE ACTN      WST485
+     C***********          MOVE SCCY      WST488                          S01117
+     C***********          MOVE SAMNT     WST502                          S01117
+     C***********          MOVE SSTDT     WST508                          S01117
+     C***********          MOVE SMDAT     WST514                          S01117
+     C***********          MOVE SDRCO     WST518                          S01117
+     C***********          MOVE SDRSQ     WST520                          S01117
+     C***********          MOVE SDRCN     WST526                          S01117
+     C***********          MOVE SCRCO     WST530                          S01117
+     C***********          MOVE SCRSQ     WST532                          S01117
+     C***********          MOVE SCRCN     WST538                          S01117
+     C***********          MOVE SPNAR     WST568                          S01117
+     C                     MOVE SBRCA     WST488                          S01117
+     C                     MOVE SCCY      WST491                          S01117
+     C                     MOVE SAMNT     WST505                          S01117
+     C                     MOVE SPRFC     WST509                          S01117
+     C                     MOVE SSTDT     WST515                          S01117
+     C                     MOVE SMDAT     WST521                          S01117
+     C                     MOVE SDRCO     WST525                          S01117
+     C                     MOVE SDRSQ     WST527                          S01117
+     C                     MOVE SDRCN     WST533                          S01117
+     C                     MOVE SCRCO     WST537                          S01117
+     C                     MOVE SCRSQ     WST539                          S01117
+     C                     MOVE SCRCN     WST545                          S01117
+     C                     MOVE SPNAR     WST575                          S01117
+     C                     MOVE SAPFQ     WST576                          CGL003
+     C                     MOVE SFDAY     WST578                          CGL003
+     C                     MOVE SAPDA     WST584                          CGL003
+     C*
+     C/COPY WNCPYSRC,GL1124C001
+     C/COPY OFCPYSRCZ,CGL141_022                                                              CGL141
+     C*
+0243 C           END       TAG                             ** END TAG     GL1124
+0244 C*                                                                   GL1124
+0245 C*  SETOF OUTPUT INDS IF DATABASE ERROR                              GL1124
+0246 C*                                                                   GL1124
+0247 C   U7                SETOF                     818476               GL1124
+     C*
+     C*  SETUP OUTPUT
+     C*
+     C                     MOVEAERCD      ERCOD
+     C*
+     C   81                WRITEGL1120F1
+     C   84                WRITEGL1120F3
+0248 C*                                                                   GL1124
+     C*
+     C                     OUT  LDA
+     C                     OUT  WSTRN
+     C   LR                RETRN
+     C*
+     C/EJECT                                                              S01117
+0251 C********************************************************************GL1124
+0252 C**                                                                  GL1124
+0253 C**   SUBR. - TO SET UP INITIAL SCREEN OUTPUT                        GL1124
+0254 C**                                                                  GL1124
+0255 C           SUBSF     BEGSR                           ***  SUBSF  ***GL1124
+0256 C                     SETON                     81LR                 GL1124
+     C                     MOVE *BLANKS   FAREF
+     C                     MOVE *BLANKS   ACTN
+0257 C                     MOVE '1  '     LPROC                           GL1124
+0258 C                     MOVE 'SF'      SID                             GL1124
+0259 C                     ENDSR                                          GL1124
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+0260 C********************************************************************GL1124
+0261 C**                                                                  GL1124
+0262 C**   SUBR. - TO SET UP DELETE SCREEN OUTPUT                         GL1124
+0263 C**                                                                  GL1124
+0264 C           SUBSD     BEGSR                           ***  SUBSD  ***GL1124
+0265 C                     SETON                     84                   GL1124
+0266 C                     MOVE '4  '     LPROC                           GL1124
+0267 C                     MOVE 'SD'      SID                             GL1124
+0268 C                     ENDSR                                          GL1124
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+0976 C********************************************************************S01117
+     C*                                                                   S01117
+     C*   PRUSED --- SUBROUTINE TO FOR PROFIT CENTRE PROCESSING           S01117
+     C*                                                                   S01117
+     C*   CALLED FROM : 1ST CYCLE                                         S01117
+     C*                                                                   S01117
+     C*   CALLS : NOTHING                                                 S01117
+0976 C********************************************************************S01117
+     C*                                                                   S01117
+     C           PRUSED    BEGSR                           **** PRUSED    S01117
+     C*                                                                   S01117
+     C**********           CALL 'AOGELRR0'                                             S01117 CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*DBERR ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C********** SDGELR    PARM SDGELR    DSFDY                                        S01117 CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS                                   S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     MOVEL'SDGELRPD'DBFILE                          S01117
+     C                     MOVEL@OPTN     DBOPTN  7        ***************S01117
+     C                     MOVEL@OPTN     DBKEY            * DB ERROR 1  *S01117
+     C                     Z-ADD1         DBASE            ***************S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE                                           S01117
+0972 C*  CHECK IF 'PROFIT CENTRE USED' IN ICD IS OFF AND SETON 50        *S01117
+     C           BKPRCU    IFEQ 'Y'                                       S01117
+     C                     SETON                     50                   S01117
+     C                     END                                            S01117
+0972 C*  CHECK IF 'PROFIT CENTRE AMEND' IN ICD IS OFF AND SETON 51       *S01117
+     C           BKPRCA    IFEQ 'Y'                                       S01117
+     C                     SETON                     51                   S01117
+     C                     END                                            S01117
+0972 C*  CHECK IF 'PROFIT CENTRE DEFAULT' IN ICD IS OFF AND SETON 53     *S01117
+     C           BKPCDU    IFEQ 'Y'                                       S01117
+     C                     SETON                     53                   S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+0269 C********************************************************************GL1124
+     C/EJECT                                                              S01117
+0102 C********************************************************************S01117
+     C*                                                                   S01117
+     C* *PSSR  --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS         S01117
+     C*                                                                   S01117
+     C* CALLED FROM: AFTER ABNORNAL OPERATION OCCURS                      S01117
+     C*                                                                   S01117
+     C* CALLS: NOTHING                                                    S01117
+     C*                                                                   S01117
+     C*****************************************************************   S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C*                                                                   S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                           ** *PSSR **    S01117
+     C********************************************************************S01117
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**   ERROR MESSAGES
+ENTER F10 KEY FOR DELETE
+INCORRECT DELETE CHECK FIELD ENTERED

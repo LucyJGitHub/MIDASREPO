@@ -1,0 +1,309 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Copy of renamed files in Midas Plus')        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000031 - Copy renamed files                              */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2007           */
+/*                                                                   */
+/*       Last Amend No. AR911540           Date 10Feb12              */
+/*       Prev Amend No. BUG27793           Date 08Jun10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      CUP038             Date 07Sep07              */
+/*                      CSM010             Date 22Jun07              */
+/*                      CSD027             Date 18Apr07              */
+/*                      CER001  *CREATE    Date 16Apr07              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       AR911540 - Need to create file for SQL up front.            */
+/*       BUG27793 - Make migration multi-streamed.                   */
+/*       CUP038 - As this program is always going to be called       */
+/*                by another program then don't clear UPEEMQT here.  */
+/*       CSM010 - Applied by CSD027.                                 */
+/*       CSD027 - Change customer numbers to alphanumeric.           */
+/*       CER001 - MidasPlus 1.3 packaging.  Lux features.            */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FROMLIB &TOLIB)
+ 
+             DCL        VAR(&FROMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&FROMMBR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOMBR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1)
+/**********  DCL        VAR(&GENERROR) TYPE(*CHAR) LEN(1)                              */ /*CUP038*/
+             DCL        VAR(&GENERROR) TYPE(*CHAR) LEN(1)                               /*BUG27793*/
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE('N')                   /*BUG27793*/
+             DCL        VAR(&ERRORMSG) TYPE(*CHAR) LEN(100)
+/**********  DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)                            */ /*BUG27793*/
+ 
+             DCLF       FILE(SMZNMGPD)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2007')
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Set status to ACTIVE. */                                                             /*BUG27793*/
+             CALL       PGM(SM000008) PARM('SMC000031' '*PGM' +
+                          '*UPDATE' 'ACTIVE')                                           /*BUG27793*/
+ 
+             CHKOBJ     OBJ(QTEMP/UPERRMQT) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CRTPF      FILE(QTEMP/UPERRMQT) RCDLEN(100) +
+                             TEXT('Temporary file for holding error +
+                             messages')
+             ENDDO
+/**********  CLRPFM     FILE(QTEMP/UPERRMQT)                                           */ /*CUP038*/
+             CLRPFM     FILE(QTEMP/UPERRMQT)                                            /*BUG27793*/
+ 
+/** Create and rename temporary source file for RUNSQLSTM. */                           /*AR911540*/
+             DLTF       FILE(QTEMP/RUNSQLSTM)                                           /*AR911540*/
+             MONMSG     MSGID(CPF0000)                                                  /*AR911540*/
+             DLTF       FILE(QTEMP/RUNSQL)                                              /*AR911540*/
+             MONMSG     MSGID(CPF0000)                                                  /*AR911540*/
+             CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                          MBR(RUNSQLSTM) TEXT('Temporary source +
+                          file for SMC000031')                                          /*AR911540*/
+             RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                          NEWOBJ(RUNSQL)                                                /*AR911540*/
+ 
+READFILE:
+/* If the file is multi-membered then attempt to remove member with old name */
+/*  from new file.                                                           */
+             IF         COND(&ERROR *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&ERRORMSG) VALUE('File' *BCAT &ZNOBJ +
+                             *BCAT 'has not copied successfully.')
+                CALL       PGM(UP008010) PARM('*WRITE ' 'SMC000031 ' +
+                             &ERRORMSG)
+                CHGVAR     VAR(&ERROR) VALUE('N')
+/**********     CHGVAR     VAR(&GENERROR) VALUE('Y')                                   */ /*CUP038*/
+                CHGVAR     VAR(&GENERROR) VALUE('Y')                                    /*BUG27793*/
+             ENDDO
+ 
+             IF         COND(&ZNOBJ *NE ' ' *AND &ZNMMBR *EQ 'Y') +
+                          THEN(DO)
+                RMVM       FILE(&ZNNOBJ) MBR(&ZNOBJ)
+                MONMSG     MSGID(CPF0000)
+             ENDDO
+ 
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+/**********     GOTO       CMDLBL(ERRORCHECK)                                          */ /*CUP038*/
+/**********     GOTO       CMDLBL(ENDPGM)                                 */ /*CUP038*/ /*BUG27793*/
+                GOTO       CMDLBL(ERRORCHECK)                                           /*BUG27793*/
+             ENDDO
+ 
+/* Only copy objects if it has a new name.... */
+             IF         COND(&ZNNOBJ *NE ' ') THEN(DO)
+/* Check if it is multi-membered. */
+                IF         COND(&ZNMMBR *EQ 'Y') THEN(DO)
+                   CHGVAR     VAR(&FROMMBR) VALUE('*ALL')
+                   CHGVAR     VAR(&TOMBR) VALUE('*FROMMBR')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&FROMMBR) VALUE('*FIRST')
+                   CHGVAR     VAR(&TOMBR) VALUE('*FIRST')
+                ENDDO
+/* Check if it can be copied or it needs a program. */                                    /*CSD027*/
+                IF         COND(&ZNCPYF *EQ '*COPY') THEN(DO)
+ 
+                   CPYF       FROMFILE(&FROMLIB/&ZNOBJ) +
+                                TOFILE(&TOLIB/&ZNNOBJ) FROMMBR(&FROMMBR) +
+                                TOMBR(&TOMBR) MBROPT(*REPLACE) +
+                                CRTFILE(*NO) FMTOPT(*NONE)
+/* If from-file doesn't exist then just read next record. */
+                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2802) EXEC(DO)
+                      GOTO       CMDLBL(READFILE)
+                   ENDDO
+/* If to-file does not exist then flag. */
+                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2861) EXEC(DO)
+                      CHGVAR     VAR(&ERROR) VALUE('Y')
+                      GOTO       CMDLBL(READFILE)
+                   ENDDO
+/* If insufficient authority to either from-file or to-file. */
+                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2864) EXEC(DO)
+                      CHGVAR     VAR(&ERROR) VALUE('Y')
+                      GOTO       CMDLBL(READFILE)
+                   ENDDO
+                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2862) EXEC(DO)
+                      CHGVAR     VAR(&ERROR) VALUE('Y')
+                      GOTO       CMDLBL(READFILE)
+                   ENDDO
+/* If from-file or to-file is locked, or to-file is in use. */
+                   MONMSG     MSGID(CPF2952 CPF2909) EXEC(DO)
+                      CHGVAR     VAR(&ERROR) VALUE('Y')
+                      GOTO       CMDLBL(READFILE)
+                   ENDDO
+/* If to-file has insufficient allowed number of members. */
+                   MONMSG     MSGID(CPF2888) EXEC(DO)
+                      CHGVAR     VAR(&ERROR) VALUE('Y')
+                      GOTO       CMDLBL(READFILE)
+                   ENDDO
+/* If from-file not found; this error may be caused by an existing */
+/*  override.                                                      */
+                   MONMSG     MSGID(CPF2875) EXEC(DO)
+                      CHGVAR     VAR(&ERROR) VALUE('Y')
+                      GOTO       CMDLBL(READFILE)
+                   ENDDO
+/* If error in writing to 'to' member then try *MAP *DROP. */
+                   MONMSG     MSGID(CPF2972) EXEC(DO)
+                      GOTO       CMDLBL(TAG02)
+                   ENDDO
+/* If from-file has no members or its only member is empty. */
+                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2868) EXEC(DO)
+                      RMVM       FILE(&TOLIB/&ZNNOBJ) MBR(*ALL)
+                      MONMSG     MSGID(CPF7301)
+                      GOTO       CMDLBL(READFILE)
+                   ENDDO
+                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+                      GOTO       CMDLBL(READFILE)
+                   ENDDO
+                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2870) EXEC(DO)
+                      GOTO       CMDLBL(READFILE)
+                   ENDDO
+/* If from-file has more fields than to-file then try *MAP *DROP. */
+                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2965) EXEC(DO)
+                      GOTO       CMDLBL(TAG02)
+                   ENDDO
+/* If different FMTOPT required */
+                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2969) EXEC(DO)
+                      GOTO       CMDLBL(TAG02)
+                   ENDDO
+                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2963) EXEC(DO)
+                      GOTO       CMDLBL(TAG02)
+                   ENDDO
+                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2962) EXEC(DO)
+                      GOTO       CMDLBL(TAG02)
+                   ENDDO
+ 
+                   GOTO       CMDLBL(READFILE)
+ 
+TAG02:
+                   CPYF       FROMFILE(&FROMLIB/&ZNOBJ) +
+                                TOFILE(&TOLIB/&ZNNOBJ) FROMMBR(&FROMMBR) +
+                                TOMBR(&TOMBR) MBROPT(*REPLACE) +
+                                CRTFILE(*NO) FMTOPT(*MAP *DROP)
+/*     Message monitoring for CPYF FMTOPT(*MAP *DROP) - Category 1   */
+/* If from-file or to-file is locked, or to-file is in use */
+                   MONMSG     MSGID(CPF2952 CPF2909) EXEC(DO)
+                      CHGVAR     VAR(&ERROR) VALUE('Y')
+                      GOTO       CMDLBL(READFILE)
+                   ENDDO
+/* If to-file has insufficient allowed number of members. */
+                   MONMSG     MSGID(CPF2888) EXEC(DO)
+                      CHGVAR     VAR(&ERROR) VALUE('Y')
+                      GOTO       CMDLBL(READFILE)
+                   ENDDO
+/* If to-file has incorrect data in any fields. */
+                   MONMSG     MSGID(CPF2972) EXEC(DO)
+                      CHGVAR     VAR(&ERROR) VALUE('Y')
+                      GOTO       CMDLBL(READFILE)
+                   ENDDO
+/* If from-file has no members or its only member is empty. */
+                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2868) EXEC(DO)
+                      GOTO       CMDLBL(READFILE)
+                   ENDDO
+                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+                      GOTO       CMDLBL(READFILE)
+                   ENDDO
+                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2870) EXEC(DO)
+                      GOTO       CMDLBL(READFILE)
+                   ENDDO
+/* If different FMTOPT required */
+                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2963) EXEC(DO)
+                      GOTO       CMDLBL(TAG03)
+                   ENDDO
+ 
+                   GOTO       CMDLBL(READFILE)
+ 
+TAG03:
+                   CPYF       FROMFILE(&FROMLIB/&ZNOBJ) +
+                                TOFILE(&TOLIB/&ZNNOBJ) FROMMBR(&FROMMBR) +
+                                TOMBR(&TOMBR) MBROPT(*REPLACE) +
+                                CRTFILE(*NO) FMTOPT(*NOCHK)
+/*     Message monitoring for CPYF FMTOPT(*NOCHK) - Category 1       */
+/* If from-file or to-file is locked, or to-file is in use. */
+                   MONMSG     MSGID(CPF2952 CPF2909) EXEC(DO)
+                      CHGVAR     VAR(&ERROR) VALUE('Y')
+                      GOTO       CMDLBL(READFILE)
+                   ENDDO
+/* If to-file has insufficient allowed number of members. */
+                   MONMSG     MSGID(CPF2888) EXEC(DO)
+                      CHGVAR     VAR(&ERROR) VALUE('Y')
+                      GOTO       CMDLBL(READFILE)
+                   ENDDO
+/* If from-file has no members or its only member is empty. */
+                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2868) EXEC(DO)
+                      GOTO       CMDLBL(READFILE)
+                   ENDDO
+                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+                      GOTO       CMDLBL(READFILE)
+                   ENDDO
+                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2870) EXEC(DO)
+                      GOTO       CMDLBL(READFILE)
+                   ENDDO
+ 
+                   GOTO       CMDLBL(READFILE)
+ 
+                ENDDO
+                ELSE       CMD(DO)                                                        /*CSD027*/
+                   IF         COND(&ZNCPYF *EQ '*PROGRAM') THEN(DO)                       /*CSD027*/
+                      CALL       PGM(SMC000033) PARM(&ZNOBJ &ZNNOBJ &FROMLIB +
+                                   &TOLIB &FROMMBR &TOMBR)                                /*CSD027*/
+                      GOTO       CMDLBL(READFILE)                                         /*CSD027*/
+                   ENDDO                                                                  /*CSD027*/
+                ENDDO                                                                     /*CSD027*/
+             ENDDO
+ 
+             GOTO       CMDLBL(READFILE)
+ 
+/*ERRORCHECK:                                                                          */ /*CUP038*/
+/**********  IF         COND(&GENERROR *EQ 'Y') THEN(DO)                               */ /*CUP038*/
+/**********     CALL       PGM(UP008010) PARM('*REPORT' 'SMC000031 ' +                 */ /*CUP038*/
+/**********                  &ERRORMSG)                                                */ /*CUP038*/
+/**********  ENDDO                                                                     */ /*CUP038*/
+ERRORCHECK:                                                                             /*BUG27793*/
+             IF         COND(&GENERROR *EQ 'Y') THEN(DO)                                /*BUG27793*/
+                CALL       PGM(UP008010) PARM('*REPORT' 'SMC000031 ' +
+                             &ERRORMSG)                                                 /*BUG27793*/
+                CALL       PGM(SM000008) PARM('SMC000031' '*PGM' +
+                             '*UPDATE' 'FAILED')                                        /*BUG27793*/
+                SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('One or +
+                             more errors when running SMC000031 +
+                             (renamed files).  Check spool files.') +
+                             MSGTYPE(*DIAG)                                             /*BUG27793*/
+             ENDDO                                                                      /*BUG27793*/
+             ELSE       CMD(DO)                                                         /*BUG27793*/
+/* If successful then update driving file. */                                           /*BUG27793*/
+                CALL       PGM(SM000008) PARM('SMC000031' '*PGM' +
+                             '*UPDATE' 'PASSED')                                        /*BUG27793*/
+             ENDDO                                                                      /*BUG27793*/
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+/**Set*up*general*error*message.**/ /*                                               */ /*BUG27793*/
+/**********  CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE('SMC000031 - Copy of +       */ /*BUG27793*/
+/**********               renamed ER files has failed,')                             */ /*BUG27793*/
+/**********  MONMSG     MSGID(CPF0000)                                               */ /*BUG27793*/
+/**********  CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('check +                     */ /*BUG27793*/
+/**********               joblog for details.')                                      */ /*BUG27793*/
+/**********  MONMSG     MSGID(CPF0000)                                               */ /*BUG27793*/
+/**********  CALL       PGM(SCC0010) PARM('SMC000031' 'JOBLOG' 'Y')                  */ /*BUG27793*/
+/**********  MONMSG     MSGID(CPF0000 MCH0000)                                       */ /*BUG27793*/
+             IF         COND(&RECURSIVE *EQ 'N') THEN(DO)
+                CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+/* Set status to FAILED. */                                                             /*BUG27793*/
+                CALL       PGM(SM000008) PARM('SMC000031' '*PGM' +
+                             '*UPDATE' 'FAILED')                                        /*BUG27793*/
+             ENDDO                                                                      /*BUG27793*/
+ENDPGM:
+             ENDPGM

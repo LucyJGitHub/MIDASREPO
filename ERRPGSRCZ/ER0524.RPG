@@ -1,0 +1,304 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER Manpo file trailer update - Bonds Rev')
+      ********************************************************************
+      *                                                                  *
+      *    MIDAS ABS - EUROPEAN REPORTING                                *
+      *                                                                  *
+      *    ER0524 - Postings file trailer update - Bonds revaluation     *
+      *                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CER001             Date 25Aug05               *
+      *  Prev Amend No. CAD024 PT          Date 08Jan98               *
+      *                 49264 AF           Date 06Jan93               *
+      *                                                                  *
+     F********************************************************************
+      *                                                                  *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *    CAD024 - Write trailer when not found                         *
+      *****49264*-*Empty*trailer*file*GEBRZZ******************************                    CER001
+      *    49264 - Empty trailer file GLBRX1PA                        *                       CER001
+     F********************************************************************
+     F***GEBRZZ  IF  E                    DISK                                                CER001
+     FGLBRX1PAIF  E                    DISK                                                   CER001
+     F                                              KINFSR *PSSR
+     F*****APOSTZZ UF  E           K        DISK                          CAD024
+     FAPOSTZZ UF  E           K        DISK                      A        CAD024
+     F            APOSTZZF                          KRENAMEAPOSTZZ0
+     F                                              KINFSR *PSSR
+     F*
+     F********************************************************************
+      *
+     F* ID F  C  H  L    Function of indicators
+      * ---------------------------------------
+      *   70 : Record not found on generated entries
+      *        trailer file
+      *
+      *   71 : Record not found on postings trailer file
+      *
+      *   U7 U8 : Database error
+      *
+      *   LR :  end of program
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *
+      **   For compilation  - copyright insertion
+     E                    CPY@    1   1 80
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                   CAD024
+     IAPOSTZZ0                                                            CAD024
+      ** Rename fields for APOSTZZ format                                 CAD024
+     I              RECI                            PRECI                 CAD024
+     I              NORE1                           PNORE1                CAD024
+     I              HRWN                            PHRWN                 CAD024
+     I              HRDC                            PHRDC                 CAD024
+      *
+      **   Data structure for compilation  - Copyright insertion
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      **   Local data area for data base errors:
+     ILDA        UDS                            256
+     I                                      132 183 DBLOT
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I********************************************************************
+      /EJECT
+      **********************************************************************
+      **                                                                  *
+      **           INDEX OF SUBROUTINES                                   *
+      **           --------------------                                   *
+      **   *PSSR  - File exeption error handling subroutine               *
+      **                                                                  *
+      *********************************************************************
+     C                     MOVEL*BLANK    DBLOT                            49264
+     C                     MOVEL'ER0524'  DBPGM                            49264
+      *****                                                               CAD024
+      *****                                                               CAD024
+      *****Access bonds revaluation generated entries trailer             CAD024
+     C*****                READ GEBRZZ                   70               CAD024
+      *****                                                               CAD024
+     C*****      *IN70     IFEQ '1'                        *B1            CAD024
+     C******               Z-ADD1         DBASE            ***************C49264
+     C******               MOVEL'GEBRZZ  'DBFILE           * DB ERROR 01 *C49264
+     C******               EXSR *PSSR                      ***************C49264
+     C*****                MOVE '1'       *INLR                           C49264
+     C*****                RETRN                                          C49264
+     C*****                END                             *E1            CAD024
+     C*****                Z-ADDNORE1     WWNORE  50                      CAD024
+     C*****                Z-ADDHRWN      ZZAMTI                          CAD024
+     C*****                Z-ADDHRDC      ZZAMTD                          CAD024
+      *****                                                               CAD024
+      *****Access manual postings trailer                                 CAD024
+     C*****                READ APOSTZZ                  71            E  CAD024
+      *****                                                               CAD024
+     C*****      *IN71     IFEQ '1'                        *B1            CAD024
+     C*****                Z-ADD2         DBASE            ***************CAD024
+     C*****                MOVEL'APOSTZZ 'DBFILE           * DB ERROR 02 *CAD024
+     C*****                EXSR *PSSR                      ***************CAD024
+     C*****                END                             *E1            CAD024
+      *****                                                               CAD024
+     C*****                Z-ADDHRWN      ZZTOTI                          CAD024
+     C*****                Z-ADDHRDC      ZZTOTD                          CAD024
+      *****                                                               CAD024
+     C*****                EXSR GLZSUM                                    CAD024
+      *****                                                               CAD024
+     C*****                Z-ADDZZTOTI    HRWN                            CAD024
+     C*****                Z-ADDZZTOTD    HRDC                            CAD024
+     C*****                ADD  WWNORE    NORE1                           CAD024
+      *****                                                               CAD024
+     C*****                UPDATAPOSTZZ0                                  CAD024
+      *                                                                   CAD024
+     C                     Z-ADD0         WNORE1  50                      CAD024
+      *                                                                   CAD024
+      ** Access record on new Trailer file                                CAD024
+     C**********           READ GEBRZZ                   70               CAD024              CER001
+     C                     READ GLBRX1PA                 70               CAD024              CER001
+      *                                                                   CAD024
+      ** If no record on file then database error                         CAD024
+     C           *IN70     IFEQ '1'                                       CAD024
+     C                     MOVE '1'       *INLR                           CAD024
+     C                     RETRN                                          CAD024
+     C                     ENDIF                                          CAD024
+      *                                                                   CAD024
+      ** Accumulate total number of records                               CAD024
+     C                     ADD  NORE1     WNORE1                          CAD024
+      *                                                                   CAD024
+      ** Accumulate hash total amounts                                    CAD024
+     C                     Z-ADDHRWN      ZZAMTI                          CAD024
+     C                     Z-ADDHRDC      ZZAMTD                          CAD024
+     C                     EXSR GLZSUM                                    CAD024
+      *                                                                   CAD024
+     C                     READ APOSTZZ                  71               CAD024
+      *                                                                   CAD024
+      ** Update trailer fields                                            CAD024
+     C           *IN71     IFEQ '0'                                       CAD024
+     C                     ADD  PNORE1    WNORE1                          CAD024
+     C                     Z-ADDPHRWN     ZZAMTI                          CAD024
+     C                     Z-ADDPHRDC     ZZAMTD                          CAD024
+     C                     EXSR GLZSUM                                    CAD024
+     C                     ENDIF                                          CAD024
+      *                                                                   CAD024
+     C                     MOVE 'T'       PRECI                           CAD024
+     C                     Z-ADDWNORE1    PNORE1                          CAD024
+     C                     Z-ADDZZTOTI    PHRWN                           CAD024
+     C                     Z-ADDZZTOTD    PHRDC                           CAD024
+      *                                                                   CAD024
+     C           *IN71     IFEQ '0'                                       CAD024
+     C                     UPDATAPOSTZZ0                                  CAD024
+     C                     ELSE                                           CAD024
+     C                     ADD  2         PNORE1                          CAD024
+     C                     WRITEAPOSTZZ0                                  CAD024
+     C                     ENDIF                                          CAD024
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      **************************************************************************
+      /EJECT
+      **************************************************************************
+      *
+      ** *PSSR  -  File exception error handling subroutine
+      *
+      ** Called by Main processing
+      *
+      ** Calls  -
+      *
+      *=========================================================================
+     C           *PSSR     BEGSR                            ** *PSRR BSR**
+      *
+      **   Dump and return to calling program
+     C                     MOVE '1'       *INLR
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+      *
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR                            ** *PSRR ESR**
+     C**************************************************************************
+      /EJECT
+     C********************************************************************RF5210
+     C* SUBROUTINE TO CARRY OUT THE ADDITION FOR SUBROUTINES -            RF5210
+     C*                        GLZADD, GLZSUB, GLZCMP.                    RF5210
+     C*          PARAMETERS PASSED -                                      RF5210
+     C*                     I/P ZZAMTI ZZAMTD                             RF5210
+     C*                     O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.       RF5210
+     C*                                                                   RF5210
+     CSR         GLZSUM    BEGSR                           *** GLZSUM ****RF5210
+     C*                                                                   RF5210
+     CSR                   Z-ADDZZTOTI    ZZTOTI 150       DEFINE ZZTOTI  RF5210
+     CSR                   Z-ADDZZTOTD    ZZTOTD  30       DEFINE ZZTOTD  RF5210
+     CSR                   SETOF                     919293               RF5210
+     CSR                   SETOF                     949599               RF5210
+     C*                                                                   RF5210
+     C*    DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG                      RF5210
+     CSR         ZZAMTI    COMP 0                      9293               RF5210
+     CSR 93      ZZAMTD    COMP 0                      9293               RF5210
+     CSR 93                GOTO ZZSEND                     ZERO BYPASS    RF5210
+     C*                                                                   RF5210
+     C*    DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.                       RF5210
+     CSR         ZZTOTI    COMP 0                      9193               RF5210
+     CSR 93      ZZTOTD    COMP 0                      9193               RF5210
+     C*                                                                   RF5210
+     C*    IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.                           RF5210
+     CSR 93                Z-ADDZZAMTI    ZZTOTI                          RF5210
+     CSR 93                Z-ADDZZAMTD    ZZTOTD                          RF5210
+     CSR 93                GOTO ZZSEND                     ZERO BYPASS    RF5210
+     C*    IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.                        RF5210
+     CSR 91N92                                                            RF5210
+     CORN91 92             GOTO ZZOFPS                                    RF5210
+     C*                                                                   RF5210
+     CSR         ZZAMTD    ADD  ZZTOTD    ZZWK2   40                      RF5210
+     CSR         ZZWK2     COMP 999                  93    '93' = CARRY   RF5210
+     CSRN93      ZZWK2     COMP -999                   93    INTO INTEGER.RF5210
+     C*                                                                   RF5210
+     CSR 93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VERF5210
+     CSR    93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VERF5210
+     CSR 93      ZZTOTI    ADD  ZZWK3     ZZWK3                           RF5210
+     CSRN93      ZZTOTI    ADD  ZZAMTI    ZZWK3                           RF5210
+     C*                                                                   RF5210
+     C* IF THE MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED    RF5210
+     CSRN92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS. RF5210
+     CSR 92      ZZWK3     COMP ZZTOTI               99     NEGATIVE      RF5210
+     CSRN99                Z-ADDZZWK2     ZZTOTD                          RF5210
+     CSRN99                Z-ADDZZWK3     ZZTOTI                          RF5210
+     C*                                                                   RF5210
+     C* IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT INTACT. RF5210
+     CSR 99                Z-ADD0         ZZAMT  153                      RF5210
+     CSR                   GOTO ZZSEND                                    RF5210
+     C*                                                                   RF5210
+     C* THE 'SIGNS' ARE DIFFERENT                                         RF5210
+     CSR         ZZOFPS    TAG                             ** ZZOFPS TAG**RF5210
+     C* IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT            RF5210
+     C*                                                                   RF5210
+     CSR 92                Z-SUBZZAMTI    ZZAMTI 150                      RF5210
+     CSR 92                Z-SUBZZAMTD    ZZAMTD  30                      RF5210
+     C*                                                                   RF5210
+     C* IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.           RF5210
+     C*                                                                   RF5210
+     CSR 91                Z-SUBZZTOTI    ZZTOTI                          RF5210
+     CSR 91                Z-SUBZZTOTD    ZZTOTD                          RF5210
+     C* BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.                            RF5210
+     C*                                                                   RF5210
+     CSR         ZZTOTI    COMP ZZAMTI               93  95               RF5210
+     CSR 95      ZZTOTD    COMP ZZAMTD               93  95               RF5210
+     C*                                                                   RF5210
+     C* IF ZZTOT EQ. ZZAMT RETURN ZERO.                                   RF5210
+     CSR 95                Z-ADD0         ZZTOTI                          RF5210
+     CSR 95                Z-ADD0         ZZTOTD                          RF5210
+     CSR 95                GOTO ZZSEND                                    RF5210
+     C*                                                                   RF5210
+     C* IF ZZTOT GT. ZZAMT.                                               RF5210
+     CSR 93      ZZAMTD    COMP ZZTOTD               94                   RF5210
+     CSR 93 94   ZZTOTI    SUB  1         ZZTOTI                          RF5210
+     CSR 93 94   ZZTOTD    ADD  1000      ZZWK2                           RF5210
+     CSR 93      ZZTOTI    SUB  ZZAMTI    ZZTOTI                          RF5210
+     CSR 93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD                          RF5210
+     CSR 93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD                          RF5210
+     C*                                                                   RF5210
+     C*                                                                   RF5210
+     C* IF ZZAMT GT. ZZTOT.                                               RF5210
+     CSRN93      ZZTOTD    COMP ZZAMTD               94                   RF5210
+     CSRN93 94   ZZAMTI    SUB  1         ZZWK3  150                      RF5210
+     CSRN93 94   ZZAMTD    ADD  1000      ZZWK2                           RF5210
+     CSRN93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI                          RF5210
+     CSRN93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI                          RF5210
+     CSRN93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD                          RF5210
+     CSRN93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD                          RF5210
+     C*                                                                   RF5210
+     C* REVERSE SIGN OF ZZTOT IF LARGER I/P FIELDS WERE NEGATIVE          RF5210
+     CSR                   SETOF                     94                   RF5210
+     CSR 93 91                                                            RF5210
+     CORN93 92             SETON                     94                   RF5210
+     CSR 94                Z-SUBZZTOTI    ZZTOTI                          RF5210
+     CSR 94                Z-SUBZZTOTD    ZZTOTD                          RF5210
+     C**                                                                  RF5210
+     C**   RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.            RF5210
+     CSR 92                Z-SUBZZAMTI    ZZAMTI                          RF5210
+     CSR 92                Z-SUBZZAMTD    ZZAMTD                          RF5210
+     CSR         ZZSEND    TAG                             ** ZZSEND TAG *RF5210
+     C**                                                                  RF5210
+     C**   IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.           RF5210
+     CSR                   SETOF                     96                   RF5210
+     CSR         ZZTOTD    COMP 0                        91               RF5210
+     CSR 91      ZZTOTI    COMP 0                      96                 RF5210
+     CSR 96                MOVE '.000-'   ZZNEGD  5                       RF5210
+     CSR                   ENDSR                             ** ENDSR **  RF5210
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2005

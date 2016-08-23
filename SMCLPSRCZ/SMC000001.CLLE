@@ -1,0 +1,172 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SM Call GOC0100 for entire zone')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000001 - Call GOC0100 for entire zone                    */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*                                                                   */
+/*       Last Amend No. BUG27786           Date 18May10              */
+/*       Prev Amend No. BUG27785           Date 18May10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*                      BG27459            Date 13Apr09              */
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      259613             Date 27Mar09              */
+/*                      253507             Date 14Mar08              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CPK025             Date 21Sep05              */
+/*                      CUP033             Date 08Jun06              */
+/*                      CSM005             Date 21Sep05              */
+/*                      CSM003             Date 30May05              */
+/*                      CUP025  *CREATE    Date 25Oct04              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       BUG27786 - Make call to initialise files file-driven.       */
+/*       BUG27785 - Use overrides rather than rename.                */
+/*       BG27459 - Initialise and populate GPGLCUSL and move         */
+/*                 initialization of GZFCLTLVPD to SMC0000035.       */
+/*       259613 - Call GOCFCLTLV to update GZFCLTLVPD.               */
+/*       253507 - Initialise file GPCUSGPD.                          */
+/*       CPK025 - The update of GZSDBANKPD is not working.  Rename   */
+/*                version in implementation library.                 */
+/*       CUP033 - Removal of System Value /COPYs.                    */
+/*       CSM005 - Changes to /COPYs.  Recompile.                     */
+/*       CSM003 - Use system value rather than UPSTAT.               */
+/*       CUP025 - New program for implementation.                    */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM                                                                       */ /*CUP033*/
+/**********  PGM        PARM(&PFXSVAL &BRGSVAL)                           */ /*CUP033*/ /*BUG27785*/
+             PGM        PARM(&PFXSVAL)                                                  /*BUG27785*/
+ 
+             DCL        VAR(&PFXSVAL) TYPE(*CHAR) LEN(20)                                 /*CUP033*/
+/**********  DCL        VAR(&BRGSVAL) TYPE(*CHAR) LEN(20)                 */ /*CUP033*/ /*BUG27785*/
+/**COPY*UPCPYSRCG,UPGSVALDCL*                                        */ /*             */ /*CUP033*/
+             DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1) VALUE('N')                     /*CUP033*/
+/**********  DCL        VAR(&PTFUPG) TYPE(*CHAR) LEN(10)                  */ /*CUP033*/ /*BUG27785*/
+/**********  DCL        VAR(&UPSTAT) TYPE(*CHAR) LEN(256)                                 /*CUP033*/
+             DCL        VAR(&SBSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&ERRORFLAG) TYPE(*CHAR) LEN(1) VALUE('N')                   /*BUG27786*/
+ 
+             DCLF       FILE(UPSVALJ0)                                                    /*CUP033*/
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2004')
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(00000000)
+ 
+/* Create Midas Info Screen data area in QTEMP */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG MSGID(CPF2105)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          TEXT('Midas Info Screen Data Area')
+ 
+VALIDATE:                                                                                 /*CUP033*/
+             RCVF                                                                         /*CUP033*/
+             MONMSG     MSGID(CPF0864) EXEC(DO)                                           /*CUP033*/
+                GOTO       CMDLBL(CHECK)                                                  /*CUP033*/
+             ENDDO                                                                        /*CUP033*/
+ 
+             IF         COND(&GISVAL *EQ &PFXSVAL) THEN(DO)                               /*CUP033*/
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)                                  /*CUP033*/
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+                ELSE       CMD(DO)                                                        /*CUP033*/
+                   CHGVAR     VAR(&SBSID) VALUE(&GIVAL)                                   /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+             ENDDO                                                                        /*CUP033*/
+ 
+/**********  IF         COND(&GISVAL *EQ &BRGSVAL) THEN(DO)               */ /*CUP033*/ /*BUG27785*/
+/**********     IF         COND(&GIVAL *EQ ' ') THEN(DO)                  */ /*CUP033*/ /*BUG27785*/
+/**********        CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                  */ /*CUP033*/ /*BUG27785*/
+/**********     ENDDO                                                     */ /*CUP033*/ /*BUG27785*/
+/**********     ELSE       CMD(DO)                                        */ /*CUP033*/ /*BUG27785*/
+/**********        CHGVAR     VAR(&PTFUPG) VALUE(&GIVAL)                  */ /*CUP033*/ /*BUG27785*/
+/**********     ENDDO                                                     */ /*CUP033*/ /*BUG27785*/
+/**********  ENDDO                                                        */ /*CUP033*/ /*BUG27785*/
+ 
+             GOTO       CMDLBL(VALIDATE)                                                  /*CUP033*/
+ 
+/**COPY*UPCPYSRCG,UPGSVALCL1*                                        */ /*             */ /*CUP033*/
+/**********  IF         COND(&PTFUPG *EQ ' ') THEN(DO)                                 */ /*CSM003*/
+/**********  IF         COND(&PTFUPG *EQ ' ' *OR &SBSID *EQ ' ') +                     */ /*CUP033*/
+/**********               THEN(DO)                                          */ /*CSM003*/ /*CUP033*/
+ CHECK:                                                                                   /*CUP033*/
+             IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)                                 /*CUP033*/
+/* Set up messages for Midas Information Screen  */
+                RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                RTVMSG     MSGID(UPM0004) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (151 50)) VALUE(&MESSAGE)
+                CALL       PGM(SCC0010) PARM('SMC000001' 'ENTER' ' ')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/**Retrieve*'new'*prefix*from*data*area*UPSTAT.**/ /*                                  */ /*CSM003*/
+/**********  RTVDTAARA  DTAARA(&PTFUPG/UPSTAT) RTNVAR(&UPSTAT)                         */ /*CSM003*/
+/**********  CHGVAR     VAR(&SBSID) VALUE(%SST(&UPSTAT 62 2))                          */ /*CSM003*/
+/**********  IF         COND(&SBSID *EQ ' ') THEN(DO)                                  */ /*CSM003*/
+/**********     GOTO       CMDLBL(ABNOR)                                               */ /*CSM003*/
+/**********  ENDDO                                                                     */ /*CSM003*/
+ 
+/* Set up library list. */
+             CALL       PGM(UPC0014) PARM(&SBSID)
+ 
+/**Rename*GZSDBANKPD*in*Implementation*library*away.**/ /*                */ /*CPK025*/ /*BUG27785*/
+/**********  RNMOBJ     OBJ(&PTFUPG/GZSDBANKPD) OBJTYPE(*FILE) +                     */ /*BUG27785*/
+/**********               NEWOBJ(GZSDBANK)                                */ /*CPK025*/ /*BUG27785*/
+/**********  MONMSG     MSGID(CPF0000)                                    */ /*CPK025*/ /*BUG27785*/
+ 
+/* Call program to perform multiple calls to GOC0100. */
+             CALL       PGM(GOC0100A)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/**Rename*GZSDBANKPD*back.**/ /*                                          */ /*CPK025*/ /*BUG27785*/
+/**********  RNMOBJ     OBJ(&PTFUPG/GZSDBANK) OBJTYPE(*FILE) +                       */ /*BUG27785*/
+/**********               NEWOBJ(GZSDBANKPD)                              */ /*CPK025*/ /*BUG27785*/
+/**********  MONMSG     MSGID(CPF0000)                                    */ /*CPK025*/ /*BUG27785*/
+ 
+/**Initialise*GPCUSGPD.**/ /*                                             */ /*253507*/ /*BUG27786*/
+/**********  CLRPFM     FILE(GPCUSGPD)                                    */ /*253507*/ /*BUG27786*/
+/**********  CALL       PGM(GPTCSTGEN)                                    */ /*253507*/ /*BUG27786*/
+ 
+/**Initialise*GPGLCUSL***/ /*                                            */ /*BG27459*/ /*BUG27786*/
+/**********  CLRPFM     FILE(GPGLCUSL)                                   */ /*BG27459*/ /*BUG27786*/
+/**********  CALL       PGM(GPGLCSGEN)                                   */ /*BG27459*/ /*BUG27786*/
+ 
+/**Populate*GZFCLTLVPD.**/ /*                                             */ /*259613*/ /*BUG27786*/
+/*********   CLRPFM     FILE(GZFCLTLVPD)                                       */ /*BG27459 259613*/
+/**********  CALL       PGM(GOCFCLTLV)                                    */ /*259613*/ /*BUG27786*/
+ 
+/* Call program to initialise additional files. */                                      /*BUG27786*/
+             CALL       PGM(SMC000066) PARM('A' &ERRORFLAG)                             /*BUG27786*/
+             IF         COND(&ERRORFLAG *EQ 'Y') THEN(DO)                               /*BUG27786*/
+                CALL       PGM(UP008010) PARM('*REPORT' 'SMC000066' ' ')                /*BUG27786*/
+             ENDDO                                                                      /*BUG27786*/
+ 
+             GOTO       CMDLBL(ENDPGM)
+ABNOR:
+/* Set up messages for Midas Information Screen  */
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('SMC000001') MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details')
+             MONMSG     MSGID(CPF0000)
+             CALL       PGM(SCC0010) PARM('SMC000001' 'JOBLOG' 'Y')
+             MONMSG     MSGID(CPF0000)
+ENDPGM:
+             ENDPGM

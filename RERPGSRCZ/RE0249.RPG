@@ -1,0 +1,915 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Retl ICD by Ccy Maint-Log/Mast File')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module
+     F*                                                               *
+     F*  RE0249 - RETAIL ICD BY CCY MAINTENANCE - S/RECCY FILE UPDATE *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*      1990,1993                                                *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *  Prev Amend No. 173636             Date 13Jan00               *
+      *                 CDE002             Date 21Dec99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 S01413             DATE 13APR93               *
+     F*                 S01117                  17APR90               *
+     F*                 E11562                  21SEP87               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  173636  -  Error messages not displayed / some fields not    *
+     F*             updating properly.                                *
+     F*  CDE002  -  Revenue Analysis                                  *
+     F*  S01413  -  Release 3 Incorporation.                          *
+     F*  S01117  -  Release Ten Multibranching -LDA Position Changes  *
+     F*  E11562  -  Check for Update by another workstation           *
+     F*             not included in the program. Program amended      *
+     F*             to include check                                  *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F***RE0240FMCF  F     275            WORKSTN                         S01413
+     F***RE0240FMCF  F     893            WORKSTN                   S01413CDE002
+     FRE0240FMCF  F     917            WORKSTN                            CDE002
+     F***RECCY   UF  F     128 12AI     2 DISK                            S01413
+     F***RECCY   UF  F     512 12AI     2 DISK                      S01413CDE002
+     FRECCY   UF  F     530 12AI     2 DISK                               CDE002
+     F                                              KCOMIT
+     F***RECCYD  O   F     128            DISK                            S01413
+     F***RECCYD  O   F     512            DISK                      S01413CDE002
+     FRECCYD  O   F     530            DISK                               CDE002
+     F                                              KCOMIT
+     F                                              KINFDS INFDS
+     F                                              KINFSR INFSR
+     F*
+     F*       FUNCTION OF INDICATORS
+     F*       02      SET ON IF ERROR DURING READ FROM THE WORKSTATION
+     F*       SUNDRY INDS
+     F*       03      WORKSTN FILE
+     F*       06      S/RECCY CATCHALL
+     F*       07      SET ON IF ERROR DURING READ FROM THE WORK STATION
+     F*                 AND HELP INDICATOR
+     F*       34      WORK INDICATOR                                      S01413
+     F*       49      DELETE INCLUDES SETTING RECI TO *, OTHERWISE LEAVE
+     F*       FILE UPDATE INDICATORS
+     F*       51      UPDATE S/RECCY DETAIL RECORD
+     F*       54      UPDATE RECCY TRAILER RECORD
+     F*       RECORD ID INDICATORS
+     F*       64      RECORD UPDATED BY ANOTHER WORKSTATION
+     F*       65      WTRN - SD RECORD
+     F*       66      WTRN - SA RECORD
+     F*       67      WTRN - SI RECORD
+     F*       71      SPARE
+     F*       72      S/RECCY FILE - NO RECORD FOUND
+     F*       73      S/RECCY FILE - TRAILER
+     F*       74      S/RECCY FILE - DETAIL RECORD
+     F*       75      S/RECCY FILE - HEADER
+     F*       STANDARD INPUT PROGRAM INDICATORS
+     F*       76      SD SCREEN READ IN
+     F*       77      SA SCREEN READ IN
+     F*       78      SI SCREEN READ IN
+     F*       79      SYSTEM SET-UP FLAG ON
+     F*       80      BLINK DELETE CHECK FIELD LABEL
+     F*       81      OUTPUT INITIAL - SF - SCREEN
+     F*       82      OUTPUT INSERT - SI - SCREEN
+     F*       83      OUTPUT AMEND - SA - SCREEN
+     F*       84      OUTPUT DELETE - SD - SCREEN
+     F*       85      OUTPUT ENQUIRE - SE - SCREEN
+     F*       86      NON-DISPLAY USEFUL DATA
+     F*       87      NON-DISPLAY CHANGE DETAILS
+     F*       88      NON-DISPLAY ERROR MESSAGE/CODES
+     F*       89      BLINK ACTION CODE LABEL
+     F*       U7      DATABASE ERROR
+     F*
+     F/EJECT
+     E*    STANDARD TABLES/ARRAYS
+0068 E                    ERCD       19  4               ERROR CODE       E11562
+0069 E                    ERCM    1   1 79               ERROR MSGS       E11562
+     E                    NR          5  5 0
+     E                    WN          5 15 0
+     E                    DC          5  3 0
+     E                    AM1         8 13 3                              S01413
+     E                    AM2         8 13 3                              S01413
+     E                    CPY@    1   1 80
+     E/EJECT
+     I*
+     I*    WORKSTATION FILE
+     I*
+     IRE0240FMNS
+     I*
+     I*    S/RECCY - HEADER RECORD
+     I*
+     IRECCY   NS  75   1 CA
+     I*
+     I*    S/RECCY - TRAILER
+     I*
+     I        NS  73   1 CZ
+     I                                        1   1 RECI
+     I                                    P  31  330TNLU
+     I                                       34  34 IRRI
+     I                                    P  35  49 NR
+     I                                    P  50  89 WN
+     I                                    P  90  99 DC
+     I                                        1 128 OLD3
+     I*
+     I*    S/RECCY - DETAIL RECORD
+     I*
+     I        NS  74
+     I*
+     I*    STANDARD S/RECCY TNLU AND OLD HASH AMOUNT
+     I                                    P  31  330MTNLU
+     I                                    P  41  470OLDH
+     I                                    P 513 5187DRMG                  CDE002
+     I                                    P 519 5247CRMG                  CDE002
+     I                                    P 525 5270DRMD                  CDE002
+     I                                    P 528 5300CRMD                  CDE002
+     I*    OLD S/RECCY CHARACTER STRINGS
+     I***********                             1 128 OLD1                  S01413
+     I                                        1 251 OLD1                  S01413
+     I                                      252 307 OLD2                  S01413
+     I*
+     I*    STANDARD LOCAL DATA AREA FIELDS
+     I*
+     ILDA        UDS                            256
+     I                                        1   8 LPROC
+     I**********                            134 138 LFILE                 S01117
+     I**********                            139 167 LKEY                  S01117
+     I**********                            168 175 LPROG                 S01117
+     I**********                            176 1770LDBNO                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I                                      134 141 LFILE                 S01117
+     I                                      142 170 LKEY                  S01117
+     I                                      171 180 LPROG                 S01117
+     I                                      181 1830LDBNO                 S01117
+      *                                                                   S01117
+     I***********                           181 1850LRUND                 S01117
+     I***********                           186 192 LRUNA                 S01117
+     I***********                           193 193 LDATF                 S01117
+     I***********                           194 1940LSFLG                 S01117
+     I***********                           195 1960LKEYL                 S01117
+     I***********                           197 202 LISP                  S01117
+     I***********                           203 203 LTWOL                 S01117
+     I***********                           204 2040LLDLP                 S01117
+     I***********                           205 2090LTNLU                 S01117
+     I***********                           210 210 LDELM                 S01117
+     I***********                           211 211 LDUD                  S01117
+     I                                      187 1910LRUND                 S01117
+     I                                      192 198 LRUNA                 S01117
+     I                                      199 199 LDATF                 S01117
+     I                                      200 200 LSFLG                 S01194
+     I                                      201 2020LKEYL                 S01117
+     I                                      203 208 LISP                  S01117
+     I                                      209 209 LTWOL                 S01117
+     I                                      210 2100LLDLP                 S01117
+     I                                      211 2150LTNLU                 S01117
+     I                                      216 216 LDELM                 S01117
+     I                                      217 217 LDUD                  S01117
+     I************* WTRAN DTAARA CHANGED *****************                S01413
+     I*
+     I*    WORKSTATION TRANSACTION DATA STRUCTURE
+     I*
+     I*TRAN******UDS                            860                       S01413
+     IWTRAN      UDS                           1600                       S01413
+     I                                        1 251 WTRAN1                S01413
+     I                                      252 400 WTRAN2                S01413
+     I                                      401 600 WTRAN3                S01413
+     I                                      601 800 WTRAN4                S01413
+     I                                      8011000 WTRAN5                S01413
+     I                                     10011200 WTRAN6                S01413
+     I                                     12011400 WTRAN7                S01413
+     I                                     14011600 WTRAN8                S01413
+     I*
+     I*    RECCY FILE KEY
+     I                                        2  13 WRECKY
+     I*    STANDARD NEW HASH AMOUNT
+     I                                    P  41  470NEWH
+     I*    NEW S/RECCY CHARACTER STRINGS
+     I***********                             1 128 NEW1                  S01413
+     I***********                             1 200 NEW200                S01413
+     I                                        1 251 NEW1                  S01413
+     I***********                           252 307 NEW2            S01413173636
+     I                                      252 337 NEW2                  173636
+     I                                    P 252 2583WAMO1                 S01413
+     I                                    P 259 2653WAMO2                 S01413
+     I                                    P 266 2723WAMO3                 S01413
+     I                                    P 273 2793WAMO4                 S01413
+     I                                    P 280 2863WAMO5                 S01413
+     I                                    P 287 2933WAMO6                 S01413
+     I                                    P 294 3003WAMO7                 S01413
+     I                                    P 301 3073WAMO8                 S01413
+     I                                      338 338 NOFCUS                S01413
+     I                                      339 339 NOCUSF                S01413
+     I                                    P 340 3457WDRMG                 CDE002
+     I                                    P 346 3517WCRMG                 CDE002
+     I                                      449 4540WTIME
+     I*    STANDARD SCREEN FIELDS                                         S01413
+     I                                      8011000 WCN080                S01413
+     I                                     10011200 WCN100                S01413
+     I                                     12011400 WCN120                S01413
+     I                                     14011476 WCN130                S01413
+     I                                      952 965 SAMO1                 S01413
+     I                                      9891002 SAMO2                 S01413
+     I                                     10261039 SAMO3                 S01413
+     I                                     10631076 SAMO4                 S01413
+     I                                     11001113 SAMO5                 S01413
+     I                                     11371150 SAMO6                 S01413
+     I                                     11741187 SAMO7                 S01413
+     I                                     12111224 SAMO8                 S01413
+     I*    STANDARD SCREEN FIELDS
+     I                                      461 490 WCN30
+     I                                      461 716 WCN256
+     I                                      461 660 WCN060                S01413
+     I*
+     I                                      468 469 SID
+     IPSDS       SDS
+     I                                      244 246 WSID
+     I                                      245 246 WSID2
+     I                                      254 263 USRID
+     I*
+     I*    DATA STRUCTURE  TO UPDATE LAST TRANSACTION NUMBER DTAARA
+     I*
+     IDNATN       DS                              5
+     I                                        1   50FNATN
+     I*
+     I*
+     I*    DATA STRUCTURE FOR FILE EXCEPTION/ERROR HANDLING SUBROUTINE
+     I*
+     IINFDS       DS
+     I                                     *STATUS  STATUS
+     I*
+     I*
+     I*    DATA STRUCTURE TO PROVIDE TEXT ON COMIT ENTRY IN JOURNAL
+     I*
+     I***CMTTXT      DS                            306                    S01413
+     ICMTTXT      DS                           1050                       S01413
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  25 SIDX
+     I                                       26  35 USRIDX
+     I                                       51 306 WCN25X
+     I                                       51 250 WCN06X                S01413
+     I                                      251 450 WCN08X                S01413
+     I                                      451 650 WCN10X                S01413
+     I                                      651 850 WCN12X                S01413
+     I                                      8511050 WCN13X                S01413
+     I*
+     ISCSARD    E DSSCSARDPD                                              CDE002
+     I* SAR file details                                                  CDE002
+     I*                                                                   CDE002
+     IDSFDY     E DSDSFDY                                                 CDE002
+     I* First DS for access programs, short data structure                CDE002
+     I*                                                                   CDE002
+     IDSSDY     E DSDSSDY                                                 CDE002
+     I* Second DS for access programs, long data structure                CDE002
+     I*                                                                   CDE002
+     I/EJECT
+     C                     MOVEACPY@      BIS@   80
+     C*    FILE EXCEPTION/ERROR HANDLING FOR RECCYD
+     C*
+     C           STATUS    IFEQ 01021
+     C                     EXSR UDLOG
+     C                     GOTO ENA
+     C                     END
+     C*
+     C*  SET-UP STANDARD INPUT PROGRAM FIELDS  -  WPROG IS THIS PROGRAM
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           WTRAN
+     C**
+     C           *LOCK     IN   LDA
+     C           *LOCK     IN   WTRAN
+     C**
+     C**    Access Switchable Features file to see if CDE002 is present   CDE002
+     C                     CALL 'AOSARDR0'                                CDE002
+     C                     PARM *BLANKS   @RTCD   7                       CDE002
+     C                     PARM '*VERIFY' @OPTN   7                       CDE002
+     C                     PARM 'CDE002'  @SARD   6                       CDE002
+     C           SCSARD    PARM SCSARD    DSFDY                           CDE002
+     C                     MOVE 'N'       CDE002                          CDE002
+     C*                                                                   CDE002
+     C** If core feature is switched ON, set on indicator and variable    CDE002
+     C** field to condition the rest of the processing                    CDE002
+     C           @RTCD     IFEQ *BLANKS                                   CDE002
+     C                     MOVE 'Y'       CDE002  1                       CDE002
+     C                     ELSE                                           CDE002
+     C*                                                                   CDE002
+     C** Else, database error (return code other than *NRF)               CDE002
+     C           @RTCD     IFNE '*NRF   '                                 CDE002
+     C                     MOVEL'RE0241 ' DBPGM                           CDE002
+     C                     MOVEL'SCSARDPD'DBFILE           ************   CDE002
+     C                     MOVEL'CDE002'  DBKEY            * DBERR 01 *   CDE002
+     C                     Z-ADD1         DBASE            ************   CDE002
+     C                     OUT  LDA                                       CDE002
+     C                     EXSR *PSSR                                     CDE002
+     C                     SETON                     U7U8LR               CDE002
+     C                     GOTO END                                       CDE002
+     C                     ENDIF                                          CDE002
+     C                     ENDIF                                          CDE002
+     C*                                                                   CDE002
+     C   13                READ RE0240FM                 02
+     C**
+     C                     SETOF                     02
+     C**
+     C                     MOVELLISP      WPROG   8
+     C                     MOVE '9  '     WPROG
+     C                     MOVELWPROG     SPID    6
+     C*  SET-UP STANDARD LDA FIELDS
+     C                     MOVE WPROG     LPROG
+     C                     Z-ADD9         LLDLP
+     C*  SET-UP STANDARD BLANK FIELDS
+     C                     MOVE '    '    BLK04   4
+     C                     Z-ADD0         ZERO05  50
+     C*  INITIALISE STANDARD INDICATORS
+     C                     SETOF                     64
+     C                     SETON                     88    * NON-DISPLAY
+     C           LDATF     COMP 'M'                      98* DATE FORMAT
+     C********** LSFLG     COMP 1                        79* SSF          S01194
+     C           LSFLG     COMP 'Y'                      79* SSF          S01194
+     C           LDELM     COMP '*'                      49* DELETE METHOD
+     C*
+     C*  DETERMINE TYPE OF WTRAN RECORD, I, A, OR D
+     C*
+     C           SID       COMP 'SI'                     67
+     C           SID       COMP 'SA'                     66
+     C           SID       COMP 'SD'                     65
+     C*
+     C  N67N66N65          SETON                     U7LR
+     C   U7                MOVE 'WTRAN'   LFILE
+     C   U7                MOVE *BLANKS   LKEY
+     C   U7                MOVEL'1'       LKEY
+     C   U7                MOVE SID       LKEY
+     C   U7                MOVE '01'      LDBNO            * DB ERROR 01 *
+     C   U7                GOTO END
+0197  *                                                                   E11562
+0208  *  CLEAR ERROR CODE ARRAY, RESET INDEX                              E11562
+0210 C                     MOVE *BLANKS   ERMSG  79                       E11562
+0211 C                     MOVE *BLANKS   ERCD                            E11562
+0212 C                     Z-ADD0         S       20                      E11562
+0217  *                                                                   E11562
+0218 C                     Z-ADD0         ZERO05  50                      E11562
+     C*
+     C*  SET-UP KEY FOR S/RECCY TRAILER
+     C                     MOVEL'99999999'TRLRKY 12
+     C                     MOVE '999D'    TRLRKY
+     C*
+     C*  EXECUTE UPDATE PROCEDURE
+     C*
+     C                     EXSR UDLOG
+     C*
+     C           ENA       TAG                             ** ENA TAG
+     C*
+     C  NLR                EXSR SUBSF
+     C*
+     C*
+     C           END       TAG                             ** END TAG
+     C*
+     C                     OUT  LDA
+     C                     OUT  WTRAN
+     C**
+     C                     EXCPT
+     C**
+     C**   END OF COMMITMENT CYCLE.
+     C  NU7N64   CMTTXT    COMIT
+     C**
+     C                     RETRN
+     C*
+     C********************************************************************
+     C**
+     C**   SUBR. - TO SET UP INITIAL SCREEN OUTPUT
+     C**
+     C           SUBSF     BEGSR                           ***  SUBSF  ***
+     C                     SETON                     81
+     C                     MOVE '1  '     LPROC
+     C                     MOVE 'SF'      SID     2
+     C                     ENDSR
+     C********************************************************************
+     C**
+     C**   SUBR. - TO CHAIN TO S/RECCY
+     C**
+     C           RECCCH    BEGSR                           *** RECCCH  ***
+     C                     SETOF                     727374
+     C                     SETOF                     75
+     C           RECKEY    CHAINRECCY                72
+     C                     ENDSR
+     C********************************************************************
+     C**
+     C**   SUBR. - TO PERFORM EXCEPTION OUTPUT
+     C**
+     C           EXEPT     BEGSR                           ***  EXEPT  ***
+     C                     EXCPT
+     C                     SETOF                     515481
+     C                     ENDSR
+     C********************************************************************
+     C**
+     C**   SUBR. - TO PERFORM UPDATING
+     C**
+     C           UDLOG     BEGSR                           ***  UDLOG  ***
+     C**
+     C*
+     C                     TIME           WTIME
+0293 C*  ZEROISE MASTER FILE TNLU                                         E11562
+0294 C                     Z-ADD0         MTNLU                           E11562
+     C*
+     C*  UPDATE CHAIN TO S/RECCY DETAIL RECORD
+     C                     MOVE WRECKY    RECKEY 12
+     C                     EXSR RECCCH
+0299 C*  CHECK IF STATUS CHANGED                                          E11562
+0300 C           MTNLU     COMP LTNLU                6464                 E11562
+     C**                                                                  E11562
+     C           INFTAG    TAG                             ** INFTAG TAG *E11562
+0301 C*                                                                   E11562
+0302 C*  OUTPUT INITIAL SCREEN WITH MSG IF STATUS CHANGED                 E11562
+0303 C  N64                GOTO UDLOG1                                    E11562
+0304 C                     EXSR SUBSF                                     E11562
+0305 C                     SETOF                     88                   E11562
+0306 C           S         ADD  1         S                               E11562
+0308 C                     MOVELERCM,1    ERMSG                           E11562
+0309 C                     EXSR EXEPT                                     E11562
+0310 C                     GOTO UDEND                                     E11562
+0311 C*                                                                   E11562
+0312 C           UDLOG1    TAG                             ** UDLOG1 TAG  E11562
+0313 C*                                                                   E11562
+     C*
+     C***MOVE*OLD*RECCY*RECORD*INTO*OLD200********                        S01413
+     C*  MOVE OLD RECCY RECORD INTO OLD251                                S01413
+     C*
+     C***********          MOVELOLD1      OLD200200                       S01413
+     C                     MOVELOLD1      OLD251251                       S01413
+     C**   RESORT AMOUNTS INTO CORRECT POSITIONS                          S01413
+     C**                                                                  S01413
+     C                     Z-ADDWAMO1     AM1,1                           S01413
+     C                     Z-ADDWAMO2     AM1,2                           S01413
+     C                     Z-ADDWAMO3     AM1,3                           S01413
+     C                     Z-ADDWAMO4     AM1,4                           S01413
+     C                     Z-ADDWAMO5     AM1,5                           S01413
+     C                     Z-ADDWAMO6     AM1,6                           S01413
+     C                     Z-ADDWAMO7     AM1,7                           S01413
+     C                     Z-ADDWAMO8     AM1,8                           S01413
+     C                     Z-ADD1         Y       10                      S01413
+     C           1         DO   8         X       10                      S01413
+     C           X         IFEQ 1                                         S01413
+     C                     TESTB'0'       NOFCUS         34               S01413
+     C                     ELSE                                           S01413
+     C           X         IFEQ 2                                         S01413
+     C                     TESTB'1'       NOFCUS         34               S01413
+     C                     ELSE                                           S01413
+     C           X         IFEQ 3                                         S01413
+     C                     TESTB'2'       NOFCUS         34               S01413
+     C                     ELSE                                           S01413
+     C           X         IFEQ 4                                         S01413
+     C                     TESTB'3'       NOFCUS         34               S01413
+     C                     ELSE                                           S01413
+     C           X         IFEQ 5                                         S01413
+     C                     TESTB'4'       NOFCUS         34               S01413
+     C                     ELSE                                           S01413
+     C           X         IFEQ 6                                         S01413
+     C                     TESTB'5'       NOFCUS         34               S01413
+     C                     ELSE                                           S01413
+     C           X         IFEQ 7                                         S01413
+     C                     TESTB'6'       NOFCUS         34               S01413
+     C                     ELSE                                           S01413
+     C           X         IFEQ 8                                         S01413
+     C                     TESTB'7'       NOFCUS         34               S01413
+     C                     END                                            S01413
+     C                     END                                            S01413
+     C                     END                                            S01413
+     C                     END                                            S01413
+     C                     END                                            S01413
+     C                     END                                            S01413
+     C                     END                                            S01413
+     C                     END                                            S01413
+     C           *IN34     IFEQ '1'                                       S01413
+     C                     Z-ADDAM1,Y     AM2,X                           S01413
+     C           Y         ADD  1         Y                               S01413
+     C                     END                                            S01413
+     C                     END                                            S01413
+     C                     Z-ADDAM2,1     WAMO1                           S01413
+     C                     Z-ADDAM2,2     WAMO2                           S01413
+     C                     Z-ADDAM2,3     WAMO3                           S01413
+     C                     Z-ADDAM2,4     WAMO4                           S01413
+     C                     Z-ADDAM2,5     WAMO5                           S01413
+     C                     Z-ADDAM2,6     WAMO6                           S01413
+     C                     Z-ADDAM2,7     WAMO7                           S01413
+     C                     Z-ADDAM2,8     WAMO8                           S01413
+     C*
+      **   If CDE002 is set and ...                                       CDE002
+     C           CDE002    IFEQ 'Y'                                       CDE002
+      *                                                                   CDE002
+      **   ... record is being inserted default DR/CR Margin Change       CDE002
+      **       dates to rundate.                                          CDE002
+     C           SID       IFEQ 'SI'                                      CDE002
+     C                     Z-ADDLRUND     DRMD                            CDE002
+     C                     Z-ADDLRUND     CRMD                            CDE002
+     C                     ENDIF                                          CDE002
+      *                                                                   CDE002
+      **   ... record is being amended default DR/CR Margin Change        CDE002
+      **       dates to rundate if DR/CR Margin has changed.              CDE002
+     C           SID       IFEQ 'SA'                                      CDE002
+      *                                                                   CDE002
+     C           DRMG      IFNE WDRMG                                     CDE002
+     C                     Z-ADDLRUND     DRMD                            CDE002
+     C                     ENDIF                                          CDE002
+     C           CRMG      IFNE WCRMG                                     CDE002
+     C                     Z-ADDLRUND     CRMD                            CDE002
+     C                     ENDIF                                          CDE002
+      *                                                                   CDE002
+     C                     ENDIF                                          CDE002
+      *                                                                   CDE002
+     C                     ENDIF                                          CDE002
+     C**
+     C**   OBTAIN LAST TRANSACTION NUMBER AND PREPARE STANDARD
+     C**   INFORMATION FOR CMTTXT DATA STRUCTURE
+     C                     EXSR ZTNLU1
+     C                     MOVE 'RE'      MDID
+     C                     MOVEL'RE0249'  PGMN
+     C                     MOVE WSID      WSIDX
+     C                     TIME           MTIME
+     C                     MOVE SID       SIDX
+     C                     MOVE USRID     USRIDX
+     C                     MOVE WCN256    WCN25X
+     C                     MOVE WCN060    WCN06X                          S01413
+     C                     MOVE WCN080    WCN08X                          S01413
+     C                     MOVE WCN100    WCN10X                          S01413
+     C                     MOVE WCN120    WCN12X                          S01413
+     C                     MOVE WCN130    WCN13X                          S01413
+     C*  UPDATE S/RECCY DETAIL RECORD
+     C                     SETON                     51
+     C                     EXSR EXEPT
+     C*
+     C*
+     C*  UPDATE CHAIN TO S/RECCY TRAILER
+     C                     MOVE TRLRKY    RECKEY
+     C                     EXSR RECCCH
+     C  N73                SETON                     U7LR
+     C  N73                MOVEL'RECCY'   LFILE
+     C  N73                MOVE *BLANKS   LKEY
+     C  N73                MOVELRECKEY    LKEY
+     C  N73                MOVE '06'      LDBNO            * DB ERROR 06 *
+     C  N73                GOTO UDEND
+     C*
+     C*  MOVE OLD S/RECCY TRAILER INTO OLD200
+     C*
+     C***********          MOVELOLD3      OLD200                          S01413
+     C                     MOVELOLD3      OLD200200                       S01413
+     C*
+     C*  IF THERE IS NO HASH TOTAL FIELD ON S/RECCY DETAIL RECORD,
+     C*  THEN ZEROISE OLDH/NEWH AND CONTINUE AS IF THERE IS.
+     C*
+     C                     Z-ADD0         OLDH   130
+     C                     Z-ADD0         NEWH   130
+     C*
+     C*  UPDATE FILE CONTROLS
+     C*
+     C*  UPDATE NUMBER AND HASH OF RECORDS ON FILE
+     C*
+     C*  NOT DONE FOR DELETE IF RECI NOT SET TO *
+     C*
+     C   65N49             GOTO UDLOG2
+     C*
+     C                     SETOF                     96
+     C*
+     C*  INSERT
+     C   67                Z-ADD1         H          97    *  ADD
+     C   67                MOVE NEWH      ZZAMT
+     C*  AMEND
+     C   66                Z-ADD1         H          97    *  ADD
+     C   66      NEWH      SUB  OLDH      WRK15  150
+     C   66                MOVE WRK15     ZZAMT
+     C*  SUPPRESS UPDATE OF NR,1 FOR AMENDMENT
+     C   66                SETON                     96
+     C*  DELETE - IF * PUT IN RECORD ID
+     C   65                Z-ADD1         H            97  *  SUBTRACT
+     C   65                MOVE OLDH      ZZAMT
+     C*
+     C                     EXSR NPZHSH
+     C*
+     C           UDLOG2    TAG                             ** UDLOG2 TAG
+     C*
+     C*  UPDATE NUMBER AND HASH OF RECORDS INSERTED/AMENDED/DELETED TODAY
+     C*
+     C                     SETOF                     96
+     C*
+     C*  INSERT
+     C   67                Z-ADD3         H          97    *  ADD
+     C   67                MOVE NEWH      ZZAMT
+     C*  AMEND
+     C   66                Z-ADD4         H          97    *  ADD
+     C   66      NEWH      SUB  OLDH      WRK15
+     C   66                MOVE WRK15     ZZAMT
+     C*  DELETE - WHETHER RECORD ID SET TO * OR NOT
+     C   65                Z-ADD5         H          97    *  ADD
+     C   65                MOVE OLDH      ZZAMT
+     C*
+     C                     EXSR NPZHSH
+     C*
+     C*  UPDATE S/RECCY TRAILER
+     C                     SETON                     54
+     C                     EXSR EXEPT
+     C*
+     C           UDEND     ENDSR                           ** UDEND TAG
+     C********************************************************************
+     C**                                                                 *
+     C**  SUBROUTINE TO EXECUTE HELP MODULE.                             *
+     C*
+     C********************************************************************
+     C**
+     C**   SUBR. - SUBROUTINE TO ADD  -97 ON-  OR SUBTRACT  -97 OFF-  1
+     C**           TO/FROM NR,H AND TO ADD/SUBTRACT ZZAMT TO/FROM WN/DC,H.
+     C**           96 ON SUPPRESSES THE UPDATE OF NR,H - USED FOR AMEND
+     C**
+     C           NPZHSH    BEGSR                           ***  NPZHSH ***
+     C                     Z-ADDH         H       10
+     C*
+     C   97N96   NR,H      ADD  1         NR,H
+     C  N97N96   NR,H      SUB  1         NR,H
+     C*
+     C                     Z-ADDWN,H      ZZTOTI
+     C                     Z-ADDDC,H      ZZTOTD
+     C   97                EXSR GLZADD
+     C  N97                EXSR GLZSUB
+     C                     Z-ADDZZTOTI    WN,H
+     C                     Z-ADDZZTOTD    DC,H
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C* SUBROUTINE TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL (ZZTOTI,ZZTOTD)
+     C*   IND '99' IS SET BY AN OVERFLOW ERROR
+     C*
+     CSR         GLZADD    BEGSR                           *** GLZADD ****
+     C*
+     CSR                   Z-ADDZZAMT     ZZAMT  153     91-DEFINE ZZAMT
+     CSR 91                GOTO ZZAEND                     AMT = 0.BYPASS
+     C*
+     C* SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS
+     CSR                   Z-ADDZZAMT     ZZAMTI 150       INTEGER FIELD
+     CSR                   MOVE ZZAMT     ZZAMTD  30       DECIMAL FIELD
+     C* BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW
+     C*
+     CSR                   EXSR GLZSUM
+     CSR         ZZAEND    ENDSR                           ** ZZAEND TAG *
+     C*
+     C********************************************************************
+     C* SUBROUTINE TO SUBTRACT AN AMOUNT (ZZAMT) FROM THE TOTAL
+     C*                                                   (ZZTOTI,ZZTOTD)
+     C*  IND '99' IS SET BY AN OVERFLOW ERROR
+     CSR         GLZSUB    BEGSR                           *** GLZSUB ****
+     C* PROCESSING. JUST REVERSE THE 'SIGN' AND ADD
+     CSR                   Z-SUBZZAMT     ZZAMT  153       REVERSE 'SIGN'
+     CSR                   EXSR GLZADD                       AND 'ADD'
+     CSR                   Z-SUBZZAMT     ZZAMT            RESTORE 'SIGN'
+     CSR                   ENDSR
+     C********************************************************************
+     C* SUBROUTINE TO CARRY OUT THE ADDITION FOR SUBROUTINES -
+     C*                        GLZADD, GLZSUB, GLZCMP.
+     C*          PARAMETERS PASSED -
+     C*                     I/P ZZAMTI ZZAMTD
+     C*                     O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.
+     C*
+     CSR         GLZSUM    BEGSR                           *** GLZSUM ****
+     C*
+     CSR                   Z-ADDZZTOTI    ZZTOTI 150       DEFINE ZZTOTI
+     CSR                   Z-ADDZZTOTD    ZZTOTD  30       DEFINE ZZTOTD
+     CSR                   SETOF                     919293
+     CSR                   SETOF                     949599
+     C*
+     C*    DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG
+     CSR         ZZAMTI    COMP 0                      9293
+     CSR 93      ZZAMTD    COMP 0                      9293
+     CSR 93                GOTO ZZSEND                     ZERO BYPASS
+     C*
+     C*    DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.
+     CSR         ZZTOTI    COMP 0                      9193
+     CSR 93      ZZTOTD    COMP 0                      9193
+     C*
+     C*    IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.
+     CSR 93                Z-ADDZZAMTI    ZZTOTI
+     CSR 93                Z-ADDZZAMTD    ZZTOTD
+     CSR 93                GOTO ZZSEND                     ZERO BYPASS
+     C*    IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.
+     CSR 91N92
+     CORN91 92             GOTO ZZOFPS
+     C*
+     CSR         ZZAMTD    ADD  ZZTOTD    ZZWK2   40
+     CSR         ZZWK2     COMP 999                  93    '93' = CARRY
+     CSRN93      ZZWK2     COMP -999                   93    INTO INTEGER.
+     C*
+     CSR 93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VE
+     CSR    93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VE
+     CSR 93      ZZTOTI    ADD  ZZWK3     ZZWK3
+     CSRN93      ZZTOTI    ADD  ZZAMTI    ZZWK3
+     C*
+     C* IF THE MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED
+     CSRN92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS.
+     CSR 92      ZZWK3     COMP ZZTOTI               99     NEGATIVE
+     CSRN99                Z-ADDZZWK2     ZZTOTD
+     CSRN99                Z-ADDZZWK3     ZZTOTI
+     C*
+     C* IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT INTACT.
+     CSR 99                Z-ADD0         ZZAMT  153
+     CSR                   GOTO ZZSEND
+     C*
+     C* THE 'SIGNS' ARE DIFFERENT
+     CSR         ZZOFPS    TAG                             ** ZZOFPS TAG**
+     C* IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT
+     C*
+     CSR 92                Z-SUBZZAMTI    ZZAMTI 150
+     CSR 92                Z-SUBZZAMTD    ZZAMTD  30
+     C*
+     C* IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.
+     C*
+     CSR 91                Z-SUBZZTOTI    ZZTOTI
+     CSR 91                Z-SUBZZTOTD    ZZTOTD
+     C* BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.
+     C*
+     CSR         ZZTOTI    COMP ZZAMTI               93  95
+     CSR 95      ZZTOTD    COMP ZZAMTD               93  95
+     C*
+     C* IF ZZTOT EQ. ZZAMT RETURN ZERO.
+     CSR 95                Z-ADD0         ZZTOTI
+     CSR 95                Z-ADD0         ZZTOTD
+     CSR 95                GOTO ZZSEND
+     C*
+     C* IF ZZTOT GT. ZZAMT.
+     CSR 93      ZZAMTD    COMP ZZTOTD               94
+     CSR 93 94   ZZTOTI    SUB  1         ZZTOTI
+     CSR 93 94   ZZTOTD    ADD  1000      ZZWK2
+     CSR 93      ZZTOTI    SUB  ZZAMTI    ZZTOTI
+     CSR 93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD
+     CSR 93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD
+     C*
+     C*
+     C* IF ZZAMT GT. ZZTOT.
+     CSRN93      ZZTOTD    COMP ZZAMTD               94
+     CSRN93 94   ZZAMTI    SUB  1         ZZWK3  150
+     CSRN93 94   ZZAMTD    ADD  1000      ZZWK2
+     CSRN93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI
+     CSRN93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI
+     CSRN93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD
+     CSRN93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD
+     C*
+     C* REVERSE SIGN OF ZZTOT IF LARGER I/P FIELDS WERE NEGATIVE
+     CSR                   SETOF                     94
+     CSR 93 91
+     CORN93 92             SETON                     94
+     CSR 94                Z-SUBZZTOTI    ZZTOTI
+     CSR 94                Z-SUBZZTOTD    ZZTOTD
+     C**
+     C**   RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.
+     CSR 92                Z-SUBZZAMTI    ZZAMTI
+     CSR 92                Z-SUBZZAMTD    ZZAMTD
+     CSR         ZZSEND    TAG                             ** ZZSEND TAG *
+     C**
+     C**   IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.
+     CSR                   SETOF                     96
+     CSR         ZZTOTD    COMP 0                        91
+     CSR 91      ZZTOTI    COMP 0                      96
+     CSR 96                MOVE '.000-'   ZZNEGD  5
+     CSR                   ENDSR                             ** ENDSR **
+     C********************************************************************
+     C**
+     C**   ZTNLU1 SR. - TO LOCK THE TRANSACTION NUMBER DATA AREA AND
+     C**                THEN UPDATE AND RELEASE THE DATA AREA.
+     C**
+     C           ZTNLU1    BEGSR
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     MOVE FNATN     NATN    50
+     C                     MOVE FNATN     ZZWK05  50
+     C                     ADD  1         ZZWK05
+     C                     MOVE ZZWK05    FNATN
+     C                     OUT  DNATN
+     C                     ENDSR
+     C**
+     C**
+     C********************************************************************
+     C**
+     C**   FILE EXCEPTION / ERROR HANDLING SUBROUTINE
+     C**
+     C           INFSR     BEGSR
+     C**
+     C**   CHECK ERROR TYPE
+     C           STATUS    IFEQ 01021
+     C**
+     C**   CHAIN TO FILE TO GET CURRENT DETAILS
+     C           RECKEY    CHAINRECCY                72
+     C**
+     C           *IN72     IFEQ '0'
+     C**
+     C**   ROLL BACK UPDATES ALREADY DONE
+     C                     ROLBK
+     C**
+     C**   SET ON 'RECORD UPDATED BY ANOTHER WORKSTATION' INDICATOR
+     C                     SETON                     64
+     C**
+     C**   RESET OTHER INDICATORS
+     C                     SETOF                     515481
+     C**
+     C                     MOVE '*DETC '  EXTTAG  6
+     C**
+     C                     ELSE
+     C**
+     C                     MOVE '*CANCL'  EXTTAG
+     C                     END
+     C**
+     C                     ELSE
+     C**
+     C                     MOVE '*CANCL'  EXTTAG
+     C                     END
+     C**
+     C                     ENDSREXTTAG
+     C**
+     C**
+     C********************************************************************
+     C********************************************************************CDE002
+     C*                                                                   CDE002
+     C* *PSSR  --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS         CDE002
+     C*                                                                   CDE002
+     C* CALLED FROM: AFTER ABNORNAL OPERATION OCCURS                      CDE002
+     C*                                                                   CDE002
+     C* CALLS: NOTHING                                                    CDE002
+     C*                                                                   CDE002
+     C********************************************************************CDE002
+     C*                                                                   CDE002
+     C           *PSSR     BEGSR                           ** *PSSR **    CDE002
+     C*                                                                   CDE002
+     C           @RUN      IFEQ *BLANKS                                   CDE002
+     C                     MOVE 'Y'       @RUN    1                       CDE002
+     C                     DUMP                                           CDE002
+     C                     ENDIF                                          CDE002
+     C*                                                                   CDE002
+     C                     ENDSR                                          CDE002
+     C****************************************************************    CDE002
+     C/EJECT
+     O*  WORKSTATION - INITIAL SCREEN OUTPUT
+     O*
+     ORE0240FME        81
+     O                                   K8 'RE0240F1'
+     O                         WCN30     30
+     O                         SID        9
+     O                         SPID      15
+     O                         WTIME     23 '  .  .  '
+     O                 88      BLK04     30
+0665 O*  ERROR FIELDS                                                     E11562
+0666 O                         ERMSG    109                               E11562
+0667 O                         ERCD     188                               E11562
+     O*
+     O*  RECCY  FILE - DETAIL RECORD UPDATE, FOR INSERT
+     O*  WHEN NO RECORD ON FILE
+     O*
+     ORECCYD  E        51 72
+     O***********              NEW1     128                               S01413
+     O                         NEW1     251                               S01413
+     O***********              NEW2     307                         S01413173636
+     O                         NEW2     337                               173636
+     O                         NATN      33P
+     O                         WDRMG    518P                              CDE002
+     O                         WCRMG    524P                              CDE002
+     O                         DRMD     527P                              CDE002
+     O                         CRMD     530P                              CDE002
+     O*
+     O*  RECCY  FILE - DETAIL RECORD UPDATE, FOR INSERT OVER DELETED/
+     O*  BACKED OUT RECORD AND AMEND/DELETE
+     O*
+     ORECCY   E        51N72
+     O***********              NEW1     128                               S01413
+     O                         NEW1     251                               S01413
+     O***********              NEW2     307                         S01413173636
+     O                         NEW2     337                               173636
+     O                         NATN      33P
+     O                         WDRMG    518P                              CDE002
+     O                         WCRMG    524P                              CDE002
+     O                         DRMD     527P                              CDE002
+     O                         CRMD     530P                              CDE002
+     O*
+     O*  RECCY  FILE - TRAILER UPDATE
+     O*
+     ORECCY   E        54
+     O                         OLD3     128
+     O                         NATN      33P
+     O                                   34 'Y'
+     O                         NR        49P
+     O                         WN        89P
+     O                         DC        99P
+**   ERROR MESSAGES          (1st added by E11562)
+THIS RECORD HAS BEEN UPDATED BY ANOTHER WORKSTATION
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

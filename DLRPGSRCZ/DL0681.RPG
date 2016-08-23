@@ -1,0 +1,647 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Maturing FX Deals Report')                    *
+/*OVRF*: OVRDBF EMDDRPQ1 EMDDRP                                     : *
+/*OVRF*: OVRDBF EMDDRNQ1 EMDDRN                                     : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Dealing Module
+     F*                                                               *
+     F*  DL0681 - MATURING FOREIGN EXCHANGE DEALS                     *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CGL165             Date 17Feb15               *
+      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CDL049             Date 05Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CDL002             Date 23Apr97               *
+      *                 S01408             Date 05Aug96               *
+     F*                 051252             DATE 08DEC93               *
+     F*                 S01393             DATE 22SEP92               *
+     F*                 BHF853             DATE 23OCT90               *
+     F*                 E337               DATE 23APR90               *
+     F*                 E00049             DATE 20NOV89               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance Receive Settlement Instructions             *
+      *           (Recompiled)                                        *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type                              *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  CDL002 - FX Netting. Exclude netted FX deal events and       *
+     F*           include FX net events.                              *
+     F*  S01408 - Core Hook DL0681FFP1 Added                          *
+     F*         - Core Hook DL0681EEP1 Added                          *
+     F*         - Core Hook DL0681CCP2 Added                          *
+     F*         - Core Hook DL0681CCP1 Added                          *
+     F*  051252 - Label printer file title with 'PARENT' or           *
+     F*           'NON-PARENT' if there are no details to report.     *
+     F*  S01393 - Recompiled for SRM                                  *
+     F*  BHF853 - CHANGE REPORT PROCESSING                            *
+     F*  E337   - CALL TO PROGRAM MUST HAVE SEQ. NO PASSED            *
+     F*  E00049 - Fields not printed in header if have empty files    *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  NEW PROGRAM FOR R10 - MULTIBRANCHING                         *
+     F*                                                               *
+     F*****************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*    U1         PARENT FILE TO BE PROCESSED
+     F*    U2         NON PARENT FILE TO BE PROCESSED
+     F*    U3         PARENT NET FILE TO BE PROCESSED                     CDL002
+     F*    U4         NON PARENT NET FILE TO BE PROCESSED                 CDL002
+     F*       20      FIRST CYCLE CALCULATIONS DONE
+     F*       21      EVENT TO BE INCLUDED IN REPORT
+     F*       23      LIMIT EXISTS FOR CUSTOMER
+     F*       25      TOTAL EXCEEDS MDDR
+     F*       26      NO DETAILS TO REPORT
+     F*     27-28     CONDITION PRINTING ON CONTROL BREAK
+     F*       29      AT LEAST 1 REC. HAS BEEN SELECTED IN CONTROL GRP.
+     F*       30      BASE CURRENCY FOR LIMITS HAS 0 D.P.
+     F*       31                                   1 D.P.
+     F*       32                                   2 D.P.
+     F*       33                                   3 D.P.
+     F*       40      OUTPUT HEADINGS ONLY ONCE.                          BHF853
+     F*       85      No record on DEALS                              *   CDL002
+     F*             L1VALUE DATE
+     F*             L2CUSTOMER NUMBER
+     F*        U7&U8  DATABASE ERROR
+     F*           U8  FILE CONTROLS OUT OF BALANCE
+     FEMDDRP  IP  E           K        DISK                           U1
+     FEMDDRN  IS  E           K        DISK                           U2
+     FFXNEVTLEIS  E           K        DISK                           U3  CDL002
+     FFXNEVTLFIS  E           K        DISK                           U4  CDL002
+      *                                                                   CDL002
+      * Deals                                                             CDL002
+     FDEALS   IF  E           K        DISK                           UC  CDL002
+     F            DEALSDAF                          KIGNORE               CDL002
+     F            DEALSDCF                          KIGNORE               CDL002
+     F            DEALSDDF                          KIGNORE               CDL002
+     F            DEALSDEF                          KIGNORE               CDL002
+     F            DEALSDFF                          KIGNORE               CDL002
+     F            DEALSDGF                          KIGNORE               CDL002
+     F*                                                                   S01408
+     F/COPY WNCPYSRC,DL0681FFP1                                           S01408
+     F*                                                                   S01408
+     FDL0681P1O   F     132     OF     PRINTER      KINFDS SPOOL
+     E                    CPY@    1   1 80
+     E********************TABETY  1   4  4                                CDL002
+     E                    TABETY  1   5  4                                CDL002
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     E                    INT         2 15 0
+     E                    DEC         2  3 0
+     E*                                                                   S01408
+     E/COPY WNCPYSRC,DL0681EEP1                                           S01408
+     E*                                                                   S01408
+     I**   EVENTS FILE - PARENT RECORD.
+     I*
+     IEMDDRPF     01
+     I**********************************************PTNU  L2              CDL002
+     I**********************************************EDAT  L1              CDL002
+     I                                              EDAT  L1
+     I                                              PTNU  L2M1            CDL002
+     I                                              NAME    M2            CDL002
+     I*
+     I*    EVENTS FILE - NON PARENT RECORD.
+     I*
+     IEMDDRNF     02
+     I**********************************************CUNR  L2              CDL002
+     I**********************************************EDAT  L1              CDL002
+     I                                              EDAT  L1              CDL002
+     I                                              CUNR  L2M1            CDL002
+     I                                              NAME    M2            CDL002
+     I*                                                                   CDL002
+     I**   FX Nets EVENTS FILE - PARENT RECORD.                           CDL002
+     IFXNEVTDE    03                                                      CDL002
+     I                                              EDAT  L1              CDL002
+     I                                              PTNU  L2M1            CDL002
+     I                                              NAME    M2            CDL002
+     I*                                                                   CDL002
+     I*    FX Nets EVENTS FILE - NON PARENT RECORD.                       CDL002
+     IFXNEVTDF    04                                                      CDL002
+     I                                              EDAT  L1              CDL002
+     I                                              CUNR  L2M1            CDL002
+     I                                              NAME    M2            CDL002
+     I*
+     ISPOOL       DS
+     I** FILE INFORMATION DATA STRUCTURE
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 243 2460SWRIT
+     I*
+     I@BINRY      DS
+     I** DEFINE A BLANK BINARY FIELD FOR USE WITH SWRIT
+     I                                    B   1   40@BKBIN
+     I*
+     ISDBANK    E DSSDBANKPD
+     I*
+     ISDDEAL    E DSSDDEALPD
+     I*
+     ISDCURR    E DSSDCURRPD
+     I*
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*                                                                   S01117
+     IDSSDY     E DSDSSDY                                                 S01194
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01194
+     I/EJECT
+     C*
+     C**   FIRST CYCLE CALCULATIONS.
+     C                     SETOF                     21
+     C   28                SETOF                     2728
+     C   20                GOTO NOTFC
+     C                     SETON                     20
+     C                     MOVEACPY@      BIS@   80
+     C*
+      * ENTRY PARAMETER REQUIRED BY RCF                                   E337
+     C           *ENTRY    PLIST                                          E337
+     C                     PARM           SEQ                             E337
+      *                                                                   E337
+     C* CALL A/O AOBANKR0
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKL1'DBFILE 10        ************
+     C                     MOVEL'01'      DBASE   2        * DBERR 01 *
+     C                     MOVEL@OPTN     DBOPTN  7        ************
+     C                     GOTO ERROR
+     C                     END
+     C*
+     C           BJDFIN    COMP 'M'                      98MMDDYY, 98 ON
+     C*
+     C* CALL A/O AODEALR0
+     C*
+     C**********           CALL 'AODEALR0'                                                    CGL029
+     C                     CALL 'AODEALR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C********** SDDEAL    PARM SDDEAL    DSFDY                                               CGL029
+     C           SDDEAL    PARM SDDEAL    DSSDY                                               CGL029
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDDEALL1'DBFILE           ************
+     C                     MOVEL'02'      DBASE            * DBERR 02 *
+     C                     MOVEL@OPTN     DBOPTN           ************
+     C                     GOTO ERROR
+     C                     END
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM BNCYCD    @K101   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDCURRL0'DBFILE           ************
+     C                     MOVEL'03'      DBASE            * DBERR 03 *
+     C                     MOVEL@OPTN     DBOPTN           ************
+     C                     MOVELBNCYCD    DBKEY  29
+     C                     GOTO ERROR
+     C                     END
+     C*
+     C           A6NBDP    COMP 1                      3031
+     C           A6NBDP    COMP 2                    33  32
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,DL0681CCP1                                           S01408
+     C*                                                                   S01408
+      * FX Netting?                                                       CDL002
+     C                     MOVE 'N'       CDL002  1                       CDL002
+     C           *INU3     IFEQ *ON                                       CDL002
+     C           *INU4     OREQ *ON                                       CDL002
+     C                     MOVE 'Y'       CDL002                          CDL002
+      * Net FX Customer Exposure?                                         CDL002
+     C           BNNTCE    IFEQ 'Y'                                       CDL002
+     C                     MOVE BNNTCE    W#NTCE  1                       CDL002
+     C                     OPEN DEALS                                     CDL002
+     C*********************MOVE 'NETT'    W#DTYP  5                CDL002 CDL038
+     C                     MOVEL' NETT'   W#DTYP  9                       CDL038
+     C                     ENDIF                                          CDL002
+     C                     ENDIF                                          CDL002
+      *                                                                   CDL002
+     C*
+     C**   DETAIL CALCULATIONS.
+     C           NOTFC     TAG                             ** NOTFC TAG **
+     C*
+     C**   RESET MDDR-EXCEEDED INDICATOR
+     C   L1                SETOF                     25    NEW DATE
+     C*
+     C**   RESET RECORD-SELECTED IND. ON CONTROL BREAK
+     C   L1                SETOF                     29    NEW DATE
+     C*
+     C**   CONDITION PRINTING ON CONTROL BREAK
+     C   L2                                                NEW CUSTOMER
+     COR 28 29             SETOF                     28    ALREADY PRINTED
+     C   L2                SETON                     27
+     C*
+     C**   RESET IND.FOR EXISTENCE OF LIMIT
+     C   L2                SETOF                     23    NEW CUSTOMER
+     C   L2                Z-ADD0         MDDR   120
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,DL0681CCP2                                           S01408
+     C*                                                                   S01408
+     C*
+     C**   OBTAIN MDDR , IF AMOUNT IS BLANK THEN NO LIMIT.
+     C   L2      DZMDDR    COMP 0                    23
+     C*
+     C   L2 23   DZMDDR    MULT 1000      MDDR
+     C*
+     C*********************
+     C*
+     C**   PROCESS EVENT RECORDS
+     C*
+     C**   CHECK EVENT TYPE.
+     C           ETYP      LOKUPTABETY                   21
+     C  N21                GOTO END
+      *                                                                   CDL002
+      *                                                                   CDL002
+      * Net FX Customer Exposure?                                         CDL002
+     C           W#NTCE    IFEQ 'Y'                                       CDL002
+      *   FX Deal Events for Parent?                                      CDL002
+     C           *IN01     IFEQ *ON                                       CDL002
+      *   FX Deal Events for Customer?                                    CDL002
+     C           *IN02     OREQ *ON                                       CDL002
+      *                                                                   CDL002
+     C           DLNO      CHAINDEALSDBF             85                   CDL002
+     C           *IN85     IFEQ *ON                                       CDL002
+     C                     MOVEL'DEALS   'DBFILE           ************   CDL002
+     C                     MOVEL'04'      DBASE            * DBERR 04 *   CDL002
+     C                     MOVELDLNO      DBKEY            ************   CDL002
+     C                     SETON                     U7U8LR               CDL002
+     C                     EXSR *PSSR                                     CDL002
+     C                     GOTO END                                       CDL002
+     C                     ELSE                                           CDL002
+     C*   Exclude netted FX deal events                                   CDL002
+     C           NETBR     IFNE *BLANKS                                   CDL002
+     C                     CLEAR*IN21                                     CDL002
+     C                     GOTO END                                       CDL002
+     C                     ENDIF                                          CDL002
+     C                     ENDIF                                          CDL002
+     C                     ENDIF                                          CDL002
+     C                     ENDIF                                          CDL002
+     C*                                                                   CDL002
+      *   Net buy event for parent?                                       CDL002
+     C           *IN03     IFEQ *ON                                       CDL002
+      *   Net buy event for customer?                                     CDL002
+     C           *IN04     OREQ *ON                                       CDL002
+     C*     Include FX net buy events                                     CDL002
+     C           INOI      IFNE 'I'                                       CDL002
+     C           W#NTCE    ORNE 'Y'                                       CDL002
+     C                     CLEAR*IN21                                     CDL002
+     C                     GOTO END                                       CDL002
+     C                     ENDIF                                          CDL002
+     C                     ENDIF                                          CDL002
+     C*                                                                   CDL002
+     C*
+     C**   INCREMENT COUNT OF DEALS WRITTEN.
+     C           NRIT      ADD  1         NRIT    70
+     C*
+     C**   CONVERT VALUE DATE TO DDMMMYY FORMAT
+     C  N29                Z-ADDEDAT      ZDAYNO
+     C  N29                EXSR ZDATE2
+     C*
+     C**   SETON IND. SHOWING A REC. HAS BEEN SELECTED IN THIS CONTROL GRP
+     C  N29                SETON                     29
+     C*
+     C**   ADD LIMIT CURRENCY EQUIVALENT TO TOTAL FOR VALUE DATE.
+     C           TOTAL     ADD  LCEQ      TOTAL  130
+     C*
+     C                     GOTO END
+     C*
+     C*
+     C*********************
+     C*
+     C**   SET ERROR INDICATORS.
+     C           ERROR     TAG                             ** ERROR TAG **
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C*
+     C           END       TAG                             ** END TAG **
+     C   27 29             SETON                     28
+     C*
+     C**   TOTAL CALCULATIONS.
+     C**   COMPARE TOTAL FOR VALUE DATE WITH MDDR
+     CL1                   SETON                     40                   BHF853
+     CL1 30                Z-ADDTOTAL     TOTV   130
+     CL1 31      TOTAL     DIV  10        TOTV
+     CL1 32      TOTAL     DIV  100       TOTV
+     CL1 33      TOTAL     DIV  1000      TOTV
+     CL1         TOTV      COMP MDDR                 25
+     C*
+     C**   CHECK IF NO DETAILS REPORTED.
+     CLR         NRIT      COMP 0                        26
+     C*                                                                   E00049
+     C* IF NO DETAILS CALL A/O AOBANKR0                                   E00049
+     C*                                                                   E00049
+     CLR         *IN26     IFEQ '1'                                       E00049
+     CLR                   CALL 'AOBANKR0'                                E00049
+     CLR                   PARM '*MSG   ' @RTCD   7                       E00049
+     CLR                   PARM '*FIRST ' @OPTN   7                       E00049
+     CLR         SDBANK    PARM SDBANK    DSFDY
+     C*                                                                   E00049
+     CLR         @RTCD     IFNE *BLANK                                    E00049
+     CLR                   MOVEL'SDBANKL1'DBFILE 10        ************   E00049
+     CLR                   MOVEL'01'      DBASE   2        * DBERR 01 *   E00049
+     CLR                   MOVEL@OPTN     DBOPTN  7        ************   E00049
+     CLR                   GOTO ERR2                                      E00049
+     CLR                   END                                            E00049
+     C*                                                                   E00049
+     C* CALL A/O AODEALR0                                                 E00049
+     C*                                                                   E00049
+     C**LR******           CALL 'AODEALR0'                                E00049              CGL029
+     CLR                   CALL 'AODEALR1'                                                    CGL029
+     CLR                   PARM '*MSG   ' @RTCD                           E00049
+     CLR                   PARM '*FIRST ' @OPTN                           E00049
+     C**LR****** SDDEAL    PARM SDDEAL    DSFDY                                               CGL029
+     CLR         SDDEAL    PARM SDDEAL    DSSDY                                               CGL029
+     C*                                                                   E00049
+     CLR         @RTCD     IFNE *BLANK                                    E00049
+     CLR                   MOVEL'SDDEALL1'DBFILE           ************   E00049
+     CLR                   MOVEL'02'      DBASE            * DBERR 02 *   E00049
+     CLR                   MOVEL@OPTN     DBOPTN           ************   E00049
+     CLR                   GOTO ERR2                                      E00049
+     CLR                   ELSE                                           E00049
+     CLR                   GOTO END2                                      E00049
+     CLR                   END                                            E00049
+     C**   SET ERROR INDICATORS.                                          E00049
+     CLR         ERR2      TAG                             ** ERR2 TAG  **E00049
+     CLR                   SETON                     U7U8LR               E00049
+     CLR                   EXSR *PSSR                                     E00049
+     CLR                   END                                            E00049
+     CLR         END2      TAG                             ** END2 TAG  **E00049
+     C*                                                                   E00049
+     C*
+     C** ENSURE SPOOL FILE RECORDED BY RCF ONCE - ONLY IF P1 IS WRITTEN
+     C** TO. SWRIT IS INCREMENTED FOR EVERY SUCCESSFUL WRITE TO THE
+     C** FILE - IF IT IS BLANK (OR 0) THEN NOTHING HAS BEEN WRITTEN TO
+     C** THE FILE. UNABLE TO COMPARE SWRIT TO *BLANKS SO USE @BKBIN -
+     C** AN UNITIALISED BINARY FIELD.
+     CLR         SWRIT     IFNE 0
+     CLR         SWRIT     ANDNE@BKBIN
+      ** TRANSFER BINARY DATA INTO NUMERIC FIELD                          S01117
+     CLR                   Z-ADDSFNUM     ZSNUM   60                      S01117
+     CLR                   CALL 'ZSFILE'
+     CLR                   PARM           SEQ     5
+     CLR                   PARM *BLANK    @PARM   3
+     CLR                   PARM           SFILE
+     CLR                   PARM           ZSNUM
+     CLR                   PARM *BLANK    ZSERR   1                       S01117
+     C*                                                                   S01117
+     CLR         ZSERR     IFEQ 'Y'                                       S01117
+     CLR                   SETON                     U7U8                 S01117
+     CLR                   RETRN                                          S01117
+     CLR                   END                                            S01117
+     CLR                   END
+     C*
+     C********************************************************************
+     C**                       SUBROUTINES
+     C********************************************************************
+     C**
+     C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+     C**
+     C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+     C**
+     C           ZDATE2    BEGSR                           *** ZDATE2 ***
+     C**
+     C**   CLEAR DATE FIELDS.
+     C                     Z-ADD0         ZDATE   60
+     C                     MOVEL'       ' ZADATE  7
+     C**
+     C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C**
+     C**   DETERMINE YEAR NUMBER.
+     C**
+     C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+     C           ZDAYNO    SUB  1         ZDAYN1  50   99
+     C   99                GOTO ZDEND2
+     C**
+     C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+     C           ZDAYN1    DIV  1461      ZLYR    20
+     C                     MVR            ZDAYN1           SAVE REMAINING
+     C**                                                   DAYS
+     C**   CALCULATE NUMBER OF REMAINING YEARS.
+     C                     Z-ADD1         ZWRK2   20
+     C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+     C           ZDAYN1    COMP ZYDY,ZWRK2             90
+     C  N90      ZWRK2     ADD  1         ZWRK2
+     C  N90                GOTO ZDTAG1
+     C           ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON
+     C**
+     C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+     C  N91      ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+     C**
+     C**   CALCULATE ACTUAL YEAR NUMBER.
+     C           ZLYR      MULT 4         ZWRK3   30
+     C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+     C                     Z-ADDZWRK3     ZYEAR   20
+     C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+     C**
+     C**   DETERMINE MONTH NUMBER.
+     C**
+     C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+     C                     SETOF                     9293
+     C   91      ZDAYN1    COMP 59                     9293
+     C   91N92   ZDAYN1    SUB  1         ZDAYN1
+     C**
+     C**   CALCULATE MONTH NUMBER.
+     C                     Z-ADD2         ZWRK2
+     C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+     C           ZDAYN1    COMP ZMDY,ZWRK2             94
+     C  N94      ZWRK2     ADD  1         ZWRK2
+     C  N94                GOTO ZDTAG2
+     C           ZWRK2     SUB  1         ZWRK2
+     C**
+     C                     Z-ADDZWRK2     ZMTH    20       MONTH
+     C**
+     C**   DETERMINE DAY OF MONTH.
+     C**
+     C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+     C           ZDAYN1    ADD  1         ZDAYN1
+     C**
+     C**   CALCULATE DAY OF MONTH.
+     C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+     C**
+     C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+     C   93      ZDAY      ADD  1         ZDAY
+     C**
+     C**   FORMAT DATE, DDMMYY OR MMDDYY.
+     C  N98                MOVELZDAY      ZWRK4   40
+     C   98                MOVE ZDAY      ZWRK4
+     C  N98                MOVE ZMTH      ZWRK4
+     C   98                MOVELZMTH      ZWRK4
+     C                     MOVELZWRK4     ZDATE
+     C                     MOVE ZYEAR     ZDATE
+     C**
+     C**   FORMAT ALPHA DATE, DDMMMYY.
+     C           ZDAY      COMP 10                     95
+     C                     MOVELZDAY      ZWRK5   5
+     C   95                MOVEL' '       ZWRK5
+     C                     MOVE ZMNM,ZMTH ZWRK5
+     C                     MOVELZWRK5     ZADATE
+     C                     MOVE ZYEAR     ZADATE
+     C**
+     C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*
+     C**
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     O*DL0681P1H**203***L2                                                BHF853
+     ODL0681P1H  203   L2N40                                              BHF853
+     O       OR  203   OFNLR
+     O                                   24 'REFERENCE DL0681P1'
+     O                         BJURPT    89
+     O                                  104 'DATE'
+     O                         BJMRDT   112
+     O                                  122 'PAGE'
+     O                         PAGE     127
+     O********H**1     L2                                                 BHF853
+     O        H  1     L2N40                                              BHF853
+     O       OR  1     OFNLR
+     O                                   63 'MATURING FOREIGN'
+     O                                   82 'EXCHANGE DEALS IN '
+     O                         BNCYCD    85
+     O********H**2     L2                                                 BHF853
+     O        H  2     L2N40                                              BHF853
+     O       OR  2     OFNLR
+     O                                   71 '------------------------'
+     O                                   85 '--------------'
+     O********H**2     L2                                                 BHF853
+     O        H  1     L2N40                                              BHF853
+     O       OR  2     OFNLR
+     O                                   18 'CONSOLIDATED'
+     O********H**2     L2                                                 BHF853
+     O        H  2     L2N40                                              BHF853
+     O       OR  2     OFNLR
+     O                                   12 'CUSTOMER'
+     O                 U1                21 '- PARENT'
+     O                 U2                20 '- CHILD'
+     O***********************************65 'VALUE   TYPE   DEAL NO'                          CDL038
+     O                                   65 'VALUE   TYPE     DEAL NO'                        CDL038
+     O                                   83 'AMOUNT'
+     O                                  118 'TOTAL            MDDR'
+     O********D*1*     21 29                                              BHF853
+     O        D 2      21 29                                              BHF853
+     O                 28 U1   PTNU       6
+     O                 28 U2   CUNR       6
+     O                 28      NAME      27
+     O                 28      TOWN      38
+     O***************  28 U1             40 'P'
+     O***************  28 U2             40 'C'
+     O*************************ZADATE    49                               CDL038
+     O*************************DTYP      53                               CDL038
+     O*************************          54 '-'                           CDL038
+     O*************************DLST      56                               CDL038
+     O*****************03******W#DTYP    56                        CDL002 CDL038
+     O*****************04******W#DTYP    56                        CDL002 CDL038
+     O                         ZADATE    46                               CDL038
+     O                         DTYP      50                               CDL038
+     O                                   51 '-'                           CDL038
+     O                         DLST      53                               CDL038
+     O                         CLAS      57                               CDL038
+     O                 03      W#DTYP    57                               CDL038
+     O                 04      W#DTYP    57                               CDL038
+     O                         DLNO      64
+     O                 30      LCEQ      83 ' ,   ,   ,   , 0 '
+     O                 31      LCEQ      83 '   ,   ,   , 0 . '
+     O                 32      LCEQ      83 '  ,   ,   , 0 .  '
+     O                 33      LCEQ      83 ' ,   ,   , 0 .   '
+     O        T 00     L1N26NU7
+     O       AND       29
+     O                 30      TOTAL  B 102 ' ,   ,   ,   , 0 '
+     O                 31      TOTAL  B 102 '   ,   ,   , 0 . '
+     O                 32      TOTAL  B 102 '  ,   ,   , 0 .  '
+     O                 33      TOTAL  B 102 ' ,   ,   , 0 .   '
+     O                    23   MDDR     118 '   ,   ,   , 0 '
+     O                 25 23            128 'EXCEEDED'
+     O                N23               128 'NO LIMIT'
+     O        T  203   LR 26NU7
+     O       AND      NU8
+     O                                   24 'REFERENCE DL0681P1'
+     O                         BJURPT    89
+     O                                  104 'DATE'
+     O                         BJMRDT   112
+     O                                  122 'PAGE'
+     O                         PAGE     127
+     O        T  1     LR 26NU7
+     O       AND      NU8
+     O***********************************63 'MATURING FOREIGN'            051252
+     O***********************************82 'EXCHANGE DEALS IN '          051252
+     O*************************BNCYCD****85                               051252
+     O                                   58 'MATURING FOREIGN'            051252
+     O                                   77 'EXCHANGE DEALS IN '          051252
+     O                         BNCYCD    80                               051252
+     O                    U1             89 '- PARENT'                    051252
+     O                    U2             93 '- NON-PARENT'                051252
+     O        T  2     LR 26NU7
+     O       AND      NU8
+     O***********************************71 '------------------------'    051252
+     O***********************************85 '--------------'              051252
+     O                                   66 '------------------------'    051252
+     O                                   80 '--------------'              051252
+     O        T   21   LR 26NU7
+     O       AND      NU8
+     O                                   58 '***   NO DETAILS TO'
+     O                                   71 'REPORT   ***'
+     O        T 3      LR U7 U8                                           S01117
+     O                                   71 '*** PRINT TERMINATED ***'    S01117
+     O        T 1      LR U7 U8                                           S01117
+     O                                   57 'DATABASE ERROR'              S01117
+     O                         DBASE     61                               S01117
+     O                                   67 'FILE'                        S01117
+     O                         DBFILE    78                               S01117
+     O        T 13     LR U7 U8                                           S01117
+     O                                   49 'OPTION'                      S01117
+     O                         DBOPTN    57                               S01117
+     O                                   66 'KEY'                         S01117
+     O                         DBKEY     96                               S01117
+     O        T   57   LR
+     O                                   73 '*** END OF REPORT ***'
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**   TABETY  TABLE OF EVENT TYPES TO BE INCLUDED.
+11V1
+12V1
+13V1
+14V1
+NTV1                                                                      CDL002
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

@@ -1,0 +1,93 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SM Term and Notice upgrade - customer field')   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation Module                               */
+/*                                                                   */
+/*       SMUC00223 - Term and Notice upgrade for files with          */
+/*                   customer number fields                          */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. BUG27909*CREATE    Date 14Jul10              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BUG27909 - Migration programs amendment                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FLIB)
+ 
+             DCL        VAR(&FLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                            2010')
+ 
+/** Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                            CMDLBL(ABNOR))
+ 
+/** Create and rename temporary source file for RUNSQLSTM. */
+             DLTF       FILE(QTEMP/RUNSQLSTM)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/RUNSQL)
+             MONMSG     MSGID(CPF0000)
+             CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                          MBR(RUNSQLSTM) TEXT('Temporary source +
+                          file for SMUC00223')
+             RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                          NEWOBJ(RUNSQL)
+ 
+/** Retrieve system prefix. */
+             CALL       PGM(AOSVALR0) PARM(&RTCD +
+                          'BrgMidasSystemPrefix' &SVAL1 ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ')
+             IF         COND(%SST(&SVAL1 1 4) *EQ '*NRF' *OR &RTCD +
+                          *NE ' ') THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/** Set To Library. */
+             CHGVAR     VAR(&TLIB) VALUE(%SST(&SVAL1 1 2) *TCAT 'DMLIB')
+ 
+/** Upgrade REPRPNPP customer number fields. */
+             CALL       PGM(SMC000033) PARM(REPRPNPP REPRPNPD &FLIB +
+                             &TLIB *FIRST *FIRST)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/** Upgrade RERCH1PD customer number fields. */
+             CALL       PGM(SMC000033) PARM(RERCH1PD RERCH1PD &FLIB +
+                             &TLIB *FIRST *FIRST)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/** Upgrade RERCH2PD customer number fields. */
+             CALL       PGM(SMC000033) PARM(RERCH2PD RERCH2PD &FLIB +
+                             &TLIB *FIRST *FIRST)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/** Upgrade RERCH3PD customer number fields. */
+             CALL       PGM(SMC000033) PARM(RERCH3PD RERCH3PD &FLIB +
+                             &TLIB *FIRST *FIRST)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000)
+ 
+ END:
+             ENDPGM

@@ -1,0 +1,435 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Change profit centre on postings exract')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas GENERAL LEDGER MODULE
+     F*                                                                  *
+     F*      GL1585 - REVIEW POSTINGS' PROFIT CENTRE                     *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 06May06               *
+      *  Prev Amend No. CGL020             Date 12Dec02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CGL007             Date 26Mar99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 075323             Date 13Jan98               *  *
+      *                 S10736             Date 03Sep92               *  *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  CGL020 - Midas Compliance Watch - Additional A/C Postings    *
+     F*           Information (Recompile)                             *
+      *  CGL007 - Account Postings Enquiry (Recompile)                *
+     F*   075323  -  Recompiled over amended PF/PSTPRF2.                 *
+     F*   S10736  -  MANAGEMENT ACCOUNTING                               *
+     F*           -  RECOMPILED OVER NEW PF/APOSTPD, GLACPHPD,           *
+     F*              LF/GLPOSTL1, GLPOSTL2, GLPOSTL3, GLPOSTL4, APOSTL3. *
+     F*                                                                  *
+     F********************************************************************
+     F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FPSTPRF1 IF  E           K        DISK
+     FPSTPRF2 IF  E           K        DISK
+     FAPOSTPD UF  E                    DISK
+     F            APOSTPDF                          KRENAMEAPOST1
+     FGLACPHPDUF  E                    DISK
+     F            APOSTPDF                          KRENAMEAPOST2
+     FGLPOSTL1UF  E           K        DISK
+     F                                              KINFDS INFDS1
+     FGLPOSTL2UF  E           K        DISK
+     F            GLACPHPD                          KRENAMEAPOST3
+     F                                              KINFDS INFDS2
+     FGLPOSTL3UF  E           K        DISK
+     F                                              KINFDS INFDS3
+     FGLPOSTL4UF  E           K        DISK
+     F                                              KINFDS INFDS4
+     FPSTPRF3 O   E                    DISK
+     F*
+     F* FUNCTION OF INDICATORS
+     F*
+     F* 10  PROFIT CENTRE NOT BLANK - POSTINGS CHANGES REQUIRED BY PRFC
+     F* 11  ACCOUNT DETAILS NOT BLANK - POSTINGS CHANGES REQUIRED BY
+     F*                                 ACCOUNT
+     F* 30  MULTIBRANCHING ENVIRONMENT
+     F* 31  CUSTOMER SHORTNAME USER
+     F*
+     F* 88  END OF FILE
+     F* 89  END OF FILE - DATABASE ERROR
+     F*
+     F* U7 -U8 DATABASE ERROR
+     F*
+     E                    CPY@    1   1 80
+     I*
+     I* RENAME FIELDS FOR DISTINCTION
+     I*
+     IPSTPRF1R
+     I              PRFC                            PRFCX
+     I              CNUM                            CNUMX
+     I              CCY                             CCYX
+     I              ACOD                            ACODX
+     I              ACSQ                            ACSQX
+     I              BRCA                            BRCAX
+     I              CSNM                            CSNMX
+     I              ACNO                            ACNOX
+     IPSTPRF2R
+     I              BRCA                            BRCAZ
+     I*
+     I* FILE INFORMATION DATA STRUCTURE FOR GLPOSTL1
+     I*
+     IINFDS1      DS
+     I                                      261 270 FORM1
+     I                                    B 397 4000RRNUM1
+     I*
+     I* FILE INFORMATION DATA STRUCTURE FOR GLPOSTL2
+     I*
+     IINFDS2      DS
+     I                                      261 270 FORM2
+     I                                    B 397 4000RRNUM2
+     I*
+     I* FILE INFORMATION DATA STRUCTURE FOR GLPOSTL3
+     I*
+     IINFDS3      DS
+     I                                      261 270 FORM3
+     I                                    B 397 4000RRNUM3
+     I*
+     I* FILE INFORMATION DATA STRUCTURE FOR GLPOSTL4
+     I*
+     IINFDS4      DS
+     I                                      261 270 FORM4
+     I                                    B 397 4000RRNUM4
+     I**
+     I*     LOCAL DATA AREA
+     I**
+     ILDA        UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I**
+     I*     PROGRAMME STATUS DATA SRUCTURE
+     I**
+     IPSDS       SDS
+     I                                      244 246 WSID
+     I                                      245 246 WSID2
+     I                                      244 253 SWSID
+     I                                      254 263 USRID
+     I*
+0276 I*
+     I* DATA STRUCTURES FOR USE WITH ACCESS OBJECTS
+     I*
+     ISDMMOD    E DSSDMMODPD
+     I              BGMBIN                          MBIN
+     I*
+     ISDBANK    E DSSDBANKPD
+     I              BJMRDT                          RUNA
+     I              BJURPT                          TITLE
+     I              BJRDNB                          RUND
+     I*
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C* INITIAL PROCESSING
+     C*
+     C* OBTAIN RUN DATE AND TITLE FROM SDBANKPD
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG    '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL'GL1585'  DBPGM
+     C                     Z-ADD01        DBASE
+     C                     SETON                     U7U8
+     C                     END
+     C*
+     C* OBTAIN MBIN FROM SDMMODPD
+     C*
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*MSG    '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDMMOD    PARM SDMMOD    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'SDMMODPD'DBFILE
+     C                     MOVEL'GL1585'  DBPGM
+     C                     Z-ADD02        DBASE
+     C                     SETON                     U7U8
+     C                     GOTO END
+     C                     END
+     C*
+     C*  CHECK MBIN
+     C*
+     C           MBIN      COMP 'Y'                      30
+     C*
+     C*  READ POSTINGS PROFIT CENTRE CHANGE - REQUEST PARAMETERS FILE
+     C*
+     C                     READ PSTPRF1                  89
+     C*
+     C*  SET ON INDICATORS DEPENDING ON TYPE OF ENTRY
+     C*
+     C           PRFCX     COMP *BLANKS              1010
+     C********** CNUMX     COMP 0                    1111                                     CSD027
+     C           CNUMX     COMP *BLANKS              1111                                     CSD027
+     C           CCYX      COMP *BLANKS              1111
+     C           ACODX     COMP 0                    1111
+     C           ACSQX     COMP 0                    1111
+     C           CSNMX     COMP *BLANKS              3131
+     C*
+     C*  IF RECORD IS PRESENT
+     C*
+     C           *IN89     IFEQ '0'
+     C*
+     C* IF REQUEST WAS PRFC/ALL BRANCHES/ALL POSTINGS DO UPDAL3
+     C* IF REQUEST WAS A/C/PRFC/ALL BRANCHES/ALL POSTINGS DO UPDAL4
+     C* IF REQUEST WAS PRFC/SPECIFIC BRANCH/ALL POSTINGS DO UPDAL1
+     C* IF REQUEST WAS A/C/PRFC/SPECIFIC BRANCH/ALL POSTINGS DO UPDAL2
+     C* IF REQUEST WAS FOR SPECIFIC POSTINGS DO UPDIND
+     C*
+     C           ALLREQ    IFEQ 'Y'
+     C*
+     C           *IN11     IFEQ '1'
+     C*
+     C           BRCAX     IFEQ 'ALL'
+     C                     EXSR UPDAL3
+     C                     ELSE
+     C                     EXSR UPDAL2
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C           BRCAX     IFEQ 'ALL'
+     C                     EXSR UPDAL4
+     C                     ELSE
+     C                     EXSR UPDAL1
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C*  IF INDIVIDUAL CHANGES WERE REQUESTED, APPLY THEM
+     C*
+     C                     EXSR UPDIND
+     C                     END
+     C*
+     C                     END
+     C*
+     C           END       TAG
+     C*
+     C                     SETON                     LR
+     C*
+     C*****************************************************************
+     C*
+     C*   SUBROUTINE TO UPDATE PROFIT CENTRE REQUESTS
+     C*
+     C*   CALLED FROM : MAIN PROCESSING
+     C*
+     C           UPDAL1    BEGSR
+     C*
+     C           KEY1      KLIST
+     C                     KFLD           PRFCX
+     C                     KFLD           BRCAX
+     C                     KFLD           FDATEM
+     C*
+     C           KEY1      SETLLGLPOSTL2             88
+     C                     READ GLPOSTL2                 88
+     C*
+     C           *IN88     DOWEQ'0'
+     C           PRFC      ANDEQPRFCX
+     C           BRCA      ANDEQBRCAX
+     C           PSTD      ANDLETDATEM
+     C*
+     C                     MOVE NPRFC     PRFC
+     C                     Z-ADDRRNUM2    POSRRN
+     C*
+     C                     WRITEPSTPRF3R
+     C*
+     C           FORM2     IFEQ 'APOSTPD1'
+     C                     UPDATAPOSTPD1
+     C                     ELSE
+     C                     UPDATAPOST3
+     C                     END
+     C*
+     C                     READ GLPOSTL2                 88
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C*
+     C*   SUBROUTINE TO UPDATE ACCOUNT REQUESTS
+     C*
+     C*   CALLED FROM : MAIN PROCESSING
+     C*
+     C           UPDAL3    BEGSR
+     C*
+     C           KEY3      KLIST
+     C                     KFLD           PRFCX
+     C                     KFLD           CNUMX
+     C                     KFLD           CCYX
+     C                     KFLD           ACODX
+     C                     KFLD           ACSQX
+     C                     KFLD           FDATEM
+     C*
+     C           KEY3      SETLLGLPOSTL3             88
+     C                     READ GLPOSTL3                 88
+     C*
+     C           *IN88     DOWEQ'0'
+     C           PRFC      ANDEQPRFCX
+     C           CNUM      ANDEQCNUMX
+     C           CCY       ANDEQCCYX
+     C           ACOD      ANDEQACODX
+     C           ACSQ      ANDEQACSQX
+     C           PSTD      ANDLETDATEM
+     C*
+     C                     MOVE NPRFC     PRFC
+     C                     Z-ADDRRNUM3    POSRRN
+     C*
+     C                     WRITEPSTPRF3R
+     C*
+     C           FORM3     IFEQ 'APOSTPD3'
+     C                     UPDATAPOSTPD3
+     C                     ELSE
+     C                     UPDATGLACPHP3
+     C                     END
+     C*
+     C                     READ GLPOSTL3                 88
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C*
+     C*   SUBROUTINE TO UPDATE PROFIT CENTRE REQUESTS
+     C*
+     C*   CALLED FROM : MAIN PROCESSING
+     C*
+     C           UPDAL4    BEGSR
+     C*
+     C           KEY4      KLIST
+     C                     KFLD           PRFCX
+     C                     KFLD           FDATEM
+     C*
+     C           KEY4      SETLLGLPOSTL4             88
+     C                     READ GLPOSTL4                 88
+     C*
+     C           *IN88     DOWEQ'0'
+     C           PRFC      ANDEQPRFCX
+     C           PSTD      ANDLETDATEM
+     C*
+     C                     MOVE NPRFC     PRFC
+     C                     Z-ADDRRNUM4    POSRRN
+     C*
+     C                     WRITEPSTPRF3R
+     C*
+     C           FORM4     IFEQ 'APOSTPD4'
+     C                     UPDATAPOSTPD4
+     C                     ELSE
+     C                     UPDATGLACPHP4
+     C                     END
+     C*
+     C                     READ GLPOSTL4                 88
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C*
+     C*   SUBROUTINE TO UPDATE ACCOUNT REQUESTS
+     C*
+     C*   CALLED FROM : MAIN PROCESSING
+     C*
+     C           UPDAL2    BEGSR
+     C*
+     C           KEY2      KLIST
+     C                     KFLD           PRFCX
+     C                     KFLD           CNUMX
+     C                     KFLD           CCYX
+     C                     KFLD           ACODX
+     C                     KFLD           ACSQX
+     C                     KFLD           BRCAX
+     C                     KFLD           FDATEM
+     C*
+     C           KEY2      SETLLGLPOSTL1             88
+     C                     READ GLPOSTL1                 88
+     C*
+     C           *IN88     DOWEQ'0'
+     C           PRFC      ANDEQPRFCX
+     C           CNUM      ANDEQCNUMX
+     C           CCY       ANDEQCCYX
+     C           ACOD      ANDEQACODX
+     C           ACSQ      ANDEQACSQX
+     C           BRCA      ANDEQBRCAX
+     C           PSTD      ANDLETDATEM
+     C*
+     C                     MOVE NPRFC     PRFC
+     C                     Z-ADDRRNUM1    POSRRN
+     C*
+     C                     WRITEPSTPRF3R
+     C*
+     C           FORM1     IFEQ 'APOSTPDF'
+     C                     UPDATAPOSTPDF
+     C                     ELSE
+     C                     UPDATGLACPHPF
+     C                     END
+     C*
+     C                     READ GLPOSTL1                 88
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C*
+     C*   SUBROUTINE TO UPDATE INDIVIDUAL REQUESTS
+     C*
+     C*   CALLED FROM : MAIN PROCESSING
+     C*
+     C           UPDIND    BEGSR
+     C*
+     C                     READ PSTPRF2                  88
+     C*
+     C           *IN88     DOWEQ'0'
+     C*
+     C*  UPDATE THE APPROPRIATE FORMAT
+     C*
+     C           POSIND    IFEQ 'L'
+     C           POSRRN    CHAINAPOST1               88
+     C*
+     C*  MOVE NEW PROFIT CENTRE TO POSITION
+     C*
+     C                     MOVE NPRFC     PRFC
+     C                     UPDATAPOST1
+     C                     ELSE
+     C           POSRRN    CHAINAPOST2               88
+     C*
+     C*  MOVE NEW PROFIT CENTRE TO POSITION
+     C*
+     C                     MOVE NPRFC     PRFC
+     C                     UPDATAPOST2
+     C                     END
+     C*
+     C                     WRITEPSTPRF3R
+     C*
+     C                     READ PSTPRF2                  88
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

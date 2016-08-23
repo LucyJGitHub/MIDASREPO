@@ -1,0 +1,421 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Pay/receive netting extract')                 *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *     DL0352  - PAY/RECEIVE Netting Deals update                *
+      *                                                               *
+      *  Function:  This program will read the Pay/Receive file       *
+      *  and for each net reference processed, all deals which form   *
+      *  part of a net will have their Telex indicators updated.      *
+      *  The Net itself will then have its own Pay/Receive            *
+      *  indicators updated.                                          *
+      *  (phase(s))                                                   *
+      *                                                               *
+      *  Called By: DLC0350 - MIDAS I/C Pay/Receive Processing        *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CDL094             Date 11Jun14               *
+      *  Prev Amend No. CSW212             Date 03May12               *
+      *                 CER059             Date 19Jul10               *
+      *                 BUG25189           Date 27Jul09               *
+      *                 CER020             Date 19May08               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 05Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL025             Date 25Jan05               *
+      *                 CAS005             Date 16Dec02               *
+      *                 CAS004             Date 26Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 127319             Date 09Dec97               *
+      *                 CDL002             Date 15Apr97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CDL094 - Enhance Receive Settlement Instructions             *
+      *           (Recompiled)                                        *
+      *  CSW212 - SWIFT 2012 Changes (Recompile)                      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG25189 - MARG field on DLCHISPD contains invalid data after*
+      *             the close of business (Recompile)                 *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus (Recompile)                              *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CDL025 - FX Netting Payment Generation                       *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *           (Recompile)                                         *
+      *  CAS004 - Hedge Accounting Phase A (Recompile)                *
+      *  CDL008 - Continuous Linked Settlement (Recompiled)           *
+      *     127319 - Update correct Telex indicator for FX SALE       *
+      *     CDL002 - FX Netting                                       *
+      *                                                               *
+      *****************************************************************
+      *
+      *  Basic Logic:
+      *
+      *   The netting pay receive file is read, and for each
+      *   net reference all deals relating to that ref are
+      *   accessed via DEALS and the appropriate telex indicator
+      *   is then updated on the deals file.
+      *   The pay receive indicator for the net itself is
+      *   then updated.
+      *****************************************************************
+     FDLPREXL0IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *  Pay receive extract file by net number
+     FFXNETML3UF  E           K        DISK
+     F                                              KINFSR *PSSR
+      ** FX Confirmed split nets master file                                             CDL025
+     FFXNETSL0UF  E           K        DISK                                              CDL025
+     F                                              KINFSR *PSSR                         CDL025
+      *  Deals extension file by buy net ref
+     FDLDEALL1UF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F                                              KCOMIT
+     F            DLBHISD0                          KIGNORE
+      *  Deals extension file by sell net ref
+     FDLDEALL2UF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F                                              KCOMIT
+     F            DLBHISD0                          KIGNORE
+     F            DEALSDBF                          KRENAMEDEALSB
+      *  FX Midas deals
+     FDL0352AUO   E                    PRINTER
+      *  Audit trail
+      *
+      * ID C  F  H  L    Function of indicators
+      *    25            Error processing
+      *    26            READE Fail on DLDEALL1 or DLDEALL2
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E/COPY ZSRSRC,ZDATE9Z1
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     I/COPY ZSRSRC,ZDATE9Z2
+      *
+     I@BANK     E DSSDBANKPD
+      * DATA STRUCTURE FOR BANK DETAILS
+      *                                                                                  CDL025
+     ISCSARD    E DSSCSARDPD                                                             CDL025
+     I* SAR FILE DETAILS ACCESSED VIA ACCESS PROGRAM  AOSARDR0                           CDL025
+      *
+     IDSFDY     E DSDSFDY
+      * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     IPSDS       SDS
+      *   Retrieve UsrId From Programme Status Data Structure
+     I                                        1  10 ##PGM
+     I                                     *PARMS   NOPARM
+     I                                      244 253 WRKSID
+     I                                      254 263 USERID
+     I                                      264 269 JOBNBR
+      *
+     ILCLDTA     UDS
+      **  Local data area for PGM-TO-PGM info
+     I                                      101 111 CALPGM
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      **  Access bank details for run date, next working day
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG    '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           @BANK     PARM @BANK     DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'DBFILE           *************
+     C                     MOVEL'900'     DBASE            * DBERR 900 *
+     C                     MOVEL@OPTN     DBOPTN  7        *************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Check if CDL025 is switched *ON.                                                CDL025
+     C                     CALL 'AOSARDR0'                                               CDL025
+     C                     PARM *BLANKS   @RTCD                                          CDL025
+     C                     PARM '*VERIFY' @OPTN                                          CDL025
+     C                     PARM 'CDL025'  @SARD   6                                      CDL025
+     C           SCSARD    PARM SCSARD    DSFDY                                          CDL025
+      *                                                                                  CDL025
+     C           @RTCD     IFNE *BLANKS                                                  CDL025
+     C                     MOVE 'N'       CDL025  1                                      CDL025
+     C                     ELSE                                                          CDL025
+     C                     MOVE 'Y'       CDL025                                         CDL025
+     C                     ENDIF                                                         CDL025
+      *                                                                                  CDL025
+      **  convert Midas run day number to YYYYMMDD
+      *
+     C                     Z-ADDBJRDNB    @@DAYN  50
+     C                     EXSR ZDATE9
+     C                     MOVEL@@VDT     CHGDAT  8
+      *
+      *   M A I N   P R O C E S S I N G
+      *-------------------------------------------------------------------
+      *
+      **  Read all netting pay/receive records
+      *
+     C                     READ DLPREXL0                 LR
+      *
+     C           *INLR     DOWEQ'0'
+      *
+      **  find all deals for this buy net
+      *
+     C           KDLSW     KLIST
+     C                     KFLD           NTRF
+     C           KDLSW     SETLLDLDEALL1
+     C           KDLSW     READEDLDEALL1                 26
+      *
+     C           *IN26     DOWEQ'0'
+      *
+      **  update relevant telex indicator for deal
+      **  if deals purchase currency is the net currency use
+      **  1st indicator
+      *
+     C           PUCY      IFEQ CCY
+     C                     BITON'0'       TLXI
+     C                     UPDATDEALSDBF               25
+      *
+     C           *IN25     IFEQ '1'                        ************
+     C                     MOVE '001'     DBASE            * DBERR 001*
+     C                     MOVEL'DEALS   'DBFILE           ************  *
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      **  access next deal
+      *
+     C           KDLSW     READEDLDEALL1                 26
+      *
+     C                     ENDDO
+      *
+      *
+      **  find all deals for this sell net
+      *
+     C           KDLSW     SETLLDLDEALL2
+     C           KDLSW     READEDLDEALL2                 26
+      *
+     C           *IN26     DOWEQ'0'
+      *
+      **  update relevant telex indicator for deal
+      **  if deals purchase currency is the net currency use 1st indicator
+      *
+     C           SLCY      IFEQ CCY
+     C***********          BITON'2'       TLXI                            127319
+     C                     BITON'1'       TLXI                            127319
+     C                     UPDATDEALSB                 25
+      *
+     C           *IN25     IFEQ '1'                        ************
+     C                     MOVE '003'     DBASE            * DBERR 003*
+     C                     MOVEL'DEALS   'DBFILE           ************  *
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      **  access next deal
+      *
+     C           KDLSW     READEDLDEALL2                 26
+      *
+     C                     ENDDO
+      *
+      **  update the pay receive flag for the net Split details                          CDL025
+     C           CDL025    IFEQ 'Y'                                                      CDL025
+     C           SSEQ      ANDNE0                                                        CDL025
+      *                                                                                  CDL025
+     C           KNETS     KLIST                                                         CDL025
+     C                     KFLD           NTRF                                           CDL025
+     C                     KFLD           SSEQ                                           CDL025
+      *                                                                                  CDL025
+     C           KNETS     CHAINFXNETSL0             25                                  CDL025
+      *                                                                                  CDL025
+     C           *IN25     IFEQ '1'                        ************                  CDL025
+     C                     MOVE '008'     DBASE            * DBERR 008*                  CDL025
+     C                     MOVEL'FXNETSL0'DBFILE           ************  *               CDL025
+     C                     EXSR *PSSR                                                    CDL025
+     C                     ENDIF                                                         CDL025
+      *                                                                                  CDL025
+      **  reversal generated                                                             CDL025
+     C           ASRECI    IFEQ 'R'                                                      CDL025
+     C           ASPRGI    ANDEQ'G'                                                      CDL025
+     C                     MOVE 'R'       ASPRGI                                         CDL025
+     C                     ENDIF                                                         CDL025
+      *                                                                                  CDL025
+      **  generated                                                                      CDL025
+     C           ASRECI    IFEQ 'C'                                                      CDL025
+     C                     MOVE 'G'       ASPRGI                                         CDL025
+     C                     ENDIF                                                         CDL025
+      *                                                                                  CDL025
+     C                     MOVELCHGDAT    ASDTCH    P                                    CDL025
+     C                     TIME           ASCHTI                                         CDL025
+     C                     MOVE 'A'       ASCHTY                                         CDL025
+     C                     MOVE USERID    ASCHUS                                         CDL025
+     C                     MOVE WRKSID    ASCHWS                                         CDL025
+      *                                                                                  CDL025
+     C                     UPDATFXNETSD0               25                                CDL025
+      *                                                                                  CDL025
+     C           *IN25     IFEQ '1'                        ************                  CDL025
+     C                     MOVE '007'     DBASE            * DBERR 007*                  CDL025
+     C                     MOVEL'FXNETSL0'DBFILE           ************  *               CDL025
+     C                     EXSR *PSSR                                                    CDL025
+     C                     ENDIF                                                         CDL025
+      *                                                                                  CDL025
+      **  Update the Net Master File                                                     CDL025
+     C           *LIKE     DEFN NTRF      SVNTRF                                         CDL025
+      *                                                                                  CDL025
+     C           NTRF      IFNE SVNTRF                                                   CDL025
+     C           NTRF      CHAINFXNETML3             25                                  CDL025
+      *                                                                                  CDL025
+     C           *IN25     IFEQ '1'                        ************                  CDL025
+     C                     MOVE '009'     DBASE            * DBERR 009*                  CDL025
+     C                     MOVEL'FXNETML3'DBFILE           ************  *               CDL025
+     C                     EXSR *PSSR                                                    CDL025
+     C                     ENDIF                                                         CDL025
+      *                                                                                  CDL025
+     C                     MOVE ASPRGI    AMPRGI                                         CDL025
+     C                     MOVELCHGDAT    AMDTCH    P                                    CDL025
+     C                     TIME           AMCHTI                                         CDL025
+     C                     MOVE 'A'       AMCHTY                                         CDL025
+     C                     MOVE USERID    AMCHUS                                         CDL025
+     C                     MOVE WRKSID    AMCHWS                                         CDL025
+      *                                                                                  CDL025
+     C                     UPDATFXNETMD0               25                                CDL025
+      *                                                                                  CDL025
+     C           *IN25     IFEQ '1'                        ************                  CDL025
+     C                     MOVE '010'     DBASE            * DBERR 010*                  CDL025
+     C                     MOVEL'FXNETML3'DBFILE           ************  *               CDL025
+     C                     EXSR *PSSR                                                    CDL025
+     C                     ENDIF                                                         CDL025
+      *                                                                                  CDL025
+     C                     MOVE NTRF      SVNTRF                                         CDL025
+     C                     ENDIF                                                         CDL025
+     C                     ENDIF                                                         CDL025
+      *                                                                                  CDL025
+      **  update the pay receive flag for the net
+      **  If not a Split Netting                                                         CDL025
+     C           SSEQ      IFEQ 0                                                        CDL025
+     C           NTRF      CHAINFXNETML3             25
+      *
+     C           *IN25     IFEQ '1'                        ************
+     C                     MOVE '005'     DBASE            * DBERR 005*
+     C                     MOVEL'FXNETML3'DBFILE           ************  *
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  reversal generated
+      *
+     C           AMRECI    IFEQ 'R'
+     C           AMPRGI    ANDEQ'G'
+     C                     MOVE 'R'       AMPRGI
+     C                     ENDIF
+      *
+      **  generated
+      *
+     C           AMRECI    IFEQ 'C'
+     C                     MOVE 'G'       AMPRGI
+     C                     ENDIF
+      *
+     C                     MOVELCHGDAT    AMDTCH    P
+     C                     TIME           AMCHTI
+     C                     MOVE 'A'       AMCHTY
+     C                     MOVE USERID    AMCHUS
+     C                     MOVE WRKSID    AMCHWS
+      *
+     C                     UPDATFXNETMD0               25
+      *
+     C           *IN25     IFEQ '1'                        ************
+     C                     MOVE '006'     DBASE            * DBERR 006*
+     C                     MOVEL'FXNETML3'DBFILE           ************  *
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF                                                         CDL025
+      *
+     C                     COMIT
+      *
+      **  access next net
+      *
+     C                     READ DLPREXL0                 LR
+     C                     ENDDO
+      *****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZDATE9Z3
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SUBROUTINE: *PSSR - Error handling subroutine.               *
+      *                                                               *
+      *  FIELDS USED:                                                 *
+      *                                                               *
+      *  CALLED BY : This routine is called if there are any program  *
+      *              or file errors.                                  *
+      *  CALLS :                                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      **  SET @ERR1 TO 'Y' TO PREVENT LOOPING IF FURTHER ERRORS
+     C           @ERR1     IFNE 'Y'                        B1
+     C                     MOVE 'Y'       @ERR1   1        *1
+      *
+     C                     MOVEL'DL0352'  DBPGM            *1
+     C                     MOVE '1'       *INU6            *1
+     C           DBASE     IFEQ *BLANKS
+     C                     MOVE '991'     DBASE            *1
+     C                     END
+      *
+      *
+      ** output details to report
+      *
+     C                     WRITEDL0352AH
+     C                     WRITEDL0352DB
+      *
+     C                     DUMP                            *1
+     C                     END                             E1
+      *
+     C                     MOVE '1'       *INU7            *1
+     C                     MOVE '1'       *INU8            *1
+     C                     MOVE '1'       *INLR
+      *
+     C                     RETRN
+      *
+     C           #PSSR9    ENDSR                                     *
+      *
+      *****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+  366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+    0000310005900090001200015100181002120024300273003040033400365

@@ -1,0 +1,169 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas MS Midas/CAS communications')                   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas SWIFT Direct Link : Midas/CAS interface               */
+/*                                                                   */
+/*       MSC8010M - Midas/CAS communications                         */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*    This source is centrally supported and must ONLY be            */
+/*    amended by Core Development Personnel                          */
+/*                                                                   */
+/*    /COPY, Client or Country amendments must not be                */
+/*    applied to this source.                                        */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. CSC023             Date 30Jan04              */
+/* Midas Release 4.01 -----------------------------------------------*/
+/*       Prev Amend No. CPK015             Date 06Jun02              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/*                      CPK014             Date 14Nov01              */
+/* Midas DBA 3.05 ---------------------------------------------------*/
+/*                      192801             Date 02May01              */
+/* Midas DBA 3.02 ---------------------------------------------------*/
+/*                      157817             Date 06Oct99              */
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      CPK009             Date 09Aug99              */
+/*                      119422             Date 17JUN97              */
+/*                      CSW008 *CREATE     Date 26JUL96              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/* This module is a component of MS8010 (Midas/CAS communications)   */
+/*                                                                   */
+/* It should be called with the following parameters:                */
+/*    o  IO     : I => incoming ¦ O => Outgoing                      */
+/*    o  LMAPID : Name of CASmf session l-mapid                      */
+/*    o  ACCP   : Alternative access path (if required)              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       CSC023 - MidasPlus additional packaging.  SBMJOB change.    */
+/*                OUTQ must always be *JOBD.                         */
+/*       CPK015 - Release 4.01 Packaging:                            */
+/*                - MSQC dtaq now created in DPLIB.                  */
+/*                - MSQM dtaq now created in DPLIB.                  */
+/*       CPK014 - Submit jobs with user *JOBD                        */
+/*       192801 - Change SBMJOB to use CASJOBD                       */
+/*       157817 - Change RTGDTA to pick up language overrides        */
+/*       CPK009 - Packaging for DBA3 release. STRCMTCTL values set   */
+/*                to CMTSCOPE(*JOB).                                 */
+/*       119422 - Change logging level for incoming job log          */
+/*       CSW008 - Midas/CAS interface                                */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM        PARM(&LMAPID &IO &ACCP)
+ 
+             DCL        VAR(&IO) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&LMAPID) TYPE(*CHAR) LEN(26)
+             DCL        VAR(&ACCP) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&XLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)                                   /*CPK015*/
+             DCL        VAR(&DTANAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTQM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTQC) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CNUM) TYPE(*CHAR) LEN(6)
+ 
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2001')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Create LDA */
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF0000)
+ 
+/* Initialisation */
+             RTVJOBA    TYPE(&JOBTYPE)
+             RTVJOBA    NBR(&CNUM) TYPE(&JOBTYPE)
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(00000000)
+ 
+/* Create and lock data area to prove we are active */
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREFIX)
+             CHGVAR     VAR(&XLIB) VALUE(&PREFIX *CAT 'XLIB')
+             CHGVAR     VAR(&DPLIB) VALUE(&PREFIX *CAT 'DPLIB')                           /*CPK015*/
+             CHGVAR     VAR(&DTANAM) VALUE('MCAS' *CAT &CNUM)
+             CRTDTAARA  DTAARA(&XLIB/&DTANAM) TYPE(*CHAR) LEN(1)
+             ALCOBJ     OBJ((&XLIB/&DTANAM *DTAARA *EXCL))
+ 
+/* Start commitment control (unless run interactively) */
+             IF         COND(&JOBTYPE = '0') THEN(DO)
+/**********     STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE))         /*CPK009*/
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
+                          CMTSCOPE(*JOB)                              /*CPK009*/
+             ENDDO
+ 
+/* Start compression server for outgoing (Tx) session */
+             IF         COND(&IO *EQ 'O') THEN(DO)
+             CHGVAR     VAR(&DTQM) VALUE('MSQM' *CAT &CNUM)
+             CHGVAR     VAR(&DTQC) VALUE('MSQC' *CAT &CNUM)
+/**********  CRTDTAQ    DTAQ(&XLIB/&DTQM) MAXLEN(12050) */                                /*CPK015*/
+/**********  CRTDTAQ    DTAQ(&XLIB/&DTQC) MAXLEN(50) */                                   /*CPK015*/
+             CRTDTAQ    DTAQ(&DPLIB/&DTQM) MAXLEN(12050)                                  /*CPK015*/
+             CRTDTAQ    DTAQ(&DPLIB/&DTQC) MAXLEN(50)                                     /*CPK015*/
+/*********** SBMJOB     CMD(CALL PGM(MS8200P) PARM(&CNUM &ACCP)) +            */
+/***********              JOB(MS_M2A_SRV) JOBD(MBATCH) JOBQ(MSJOBQ) +         */
+/***********              RTGDTA(MULTILANGUAGE) MSGQ(MOPERQ)   /*157817 192801*/
+/***********              RTGDTA(CASCOMMS) MSGQ(MOPERQ)               /*157817*/
+/************SBMJOB     CMD(CALL PGM(MS8200P) PARM(&CNUM &ACCP)) +                        /*CPK014*/
+/************             JOB(MS_M2A_SRV) JOBD(CASJOBD) JOBQ(MSJOBQ) +                    /*CPK014*/
+/************             RTGDTA(MULTILANGUAGE) MSGQ(MOPERQ)          /*192801*/          /*CPK014*/
+/************SBMJOB     CMD(CALL PGM(MS8200P) PARM(&CNUM &ACCP)) +                        /*CSC023*/
+/************             JOB(MS_M2A_SRV) JOBD(CASJOBD) +                                 /*CSC023*/
+/************             JOBQ(MSJOBQ) USER(*JOBD) +                                      /*CSC023*/
+/************             RTGDTA(MULTILANGUAGE) MSGQ(MOPERQ)                   /*CPK014*/ /*CSC023*/
+             SBMJOB     CMD(CALL PGM(MS8200P) PARM(&CNUM &ACCP)) +
+                          JOB(MS_M2A_SRV) JOBD(CASJOBD) +
+                          JOBQ(MSJOBQ) USER(*JOBD) +
+                          RTGDTA(MULTILANGUAGE) MSGQ(MOPERQ) OUTQ(*JOBD)                  /*CSC023*/
+/*********** CHGJOB     LOGCLPGM(*NO) ********************************* 119422*/
+                          ENDDO
+ 
+             CHGJOB     LOGCLPGM(*NO)                                 /*119422*/
+ 
+/* Call-bound MS8010M communications program */
+             QSYS/CALLPRC PRC(MS8010M) PARM(&LMAPID &DTQM &DTQC &IO)
+ 
+/* Database error processing */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                ROLLBACK
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Normal end */
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal end */
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             IF         COND(&JOBTYPE = '0') THEN(DO)
+               SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                            mmCnnnn ended abnormally - see job log') +
+                            TOMSGQ(MOPERQ)
+               MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ 
+/* Delete 'active' data area here --- just in case called */
+/* interactively. */
+ END:        DLTDTAARA  DTAARA(&DTANAM)
+             MONMSG     MSGID(CPF0000)
+ 
+             ENDPGM

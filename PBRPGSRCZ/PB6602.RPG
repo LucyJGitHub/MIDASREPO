@@ -1,0 +1,586 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PB Forward FX Revaluation - Trigger Program')
+      *****************************************************************
+      *                                                               *
+      *  Midas - PB Module                                            *
+      *                                                               *
+      *  PB6602 - Forward FX Revaluation - Trigger Program            *
+      *                                                               *
+      *  Function:  This module is a trigger for FWDRTFE.             *
+      *                                                               *
+      *  Called By: Automatic                                         *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. 202756             Date 21Mar02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *  Prev Amend No. 195910             Date 15Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CPB002  *CREATE    Date 13Dec99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  202756 - The program does not manage the possibility to have *
+      *           25 rates.                                           *
+      *           For each currency, the program process by ascending *
+      *           date the rates. If it is an old date, it flags the  *
+      *           TOF rate has 'delete', otherwise, it updates or     *
+      *           add the TOF rate.                                   *
+      *           The program stops when the rates new and old are    *
+      *           zero,or after 50 loops.                             *
+      *           But, when there are 25 new dates and/or 25 old dates*
+      *           with some dates equal, there is less than 50 loops, *
+      *           and the 25th date is not zero.                      *
+      *           To avoid to modified the loop, the fix sets to      *
+      *           zero the 25th date processed. By this way, the pgm  *
+      *           can do a last loop to process the second 25th date  *
+      *           if required.                                        *
+      *  195910 - Send to interface all forward rate of the currency  *
+      *           changed in FWDRTFE.                                 *
+      *  CPB002 - Meridian DBA Middleware Replication Customization.  *
+      *                                                               *
+      *****************************************************************
+     FFWDRMIR UF  E           K        DISK         KINFSR *PSSR A
+      *** TOF Forward Rates Details
+      *
+      *****************************************************************
+     E                    NDAY       25  5 0
+     E                    ODAY       25  5 0
+      **  Array contains Number of days forward
+      *
+     E                    NRAT       25 13 8
+     E                    ORAT       25 13 8
+      **  Array contains Forward rates
+      *
+     E                    NSIG       25  1
+     E                    OSIG       25  1
+      **  Array contains Sign
+      *
+     E                    NPNT       25 13 8
+     E                    OPNT       25 13 8
+      **  Array contains Forward points
+      *
+     E                    CPY@    1   1 80
+      **  Copyright Array
+      *
+      *****************************************************************
+     IPSDS       SDS
+      **  Program Status DS
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     ILDA       E DSLDA                         256
+      **  Local Data Area for DB Errors
+      *
+      **                                    134 141 DBFILE
+      **                                    142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IPARM1       DS                           4628
+      ***  Program Status Data Structure
+      *
+      * Physical file name
+     I                                        1  10 FNAME
+      * Physical file library
+     I                                       11  20 LNAME
+      * Member name
+     I                                       21  30 MNAME
+      * Trigger event 1=Ins, 2=Del, 3=Upd
+     I                                       31  31 TEVEN
+      * Trigger time  1=After, 2=Before
+     I                                       32  32 TTIME
+      * Commit lock level
+     I                                       33  33 CMTLCK
+      * Reserved
+     I                                       34  36 FILL1
+      * CCSID
+     I                                    B  37  400CCSID
+      * Reserved
+     I                                       41  48 FILL2
+      * Offset to the original record (Add 1!)
+     I                                    B  49  520OLDOFF
+      * length of the original record
+     I                                    B  53  560OLDLEN
+      * Offset to the original record null byte map (Add 1!)
+     I                                    B  57  600ONOFF
+      * length of the null byte map
+     I                                    B  61  640ONLEN
+      * Offset to the new record (Add 1!)
+     I                                    B  65  680NEWOFF
+      * length of the new record
+     I                                    B  69  720NEWLEN
+      * Offset to the new record null byte map (Add 1!)
+     I                                    B  73  760NNOFF
+      * length of the null byte map
+     I                                    B  77  800NNLEN
+      * Reserved
+     I                                       81  96 RESV3
+      *
+     IPARM2       DS
+      ***  Trigger Buffer Length
+     I                                    B   1   40LENG
+      *
+     INEWREC    E DSFWDRTFE
+      **  Record to be inserted or new values
+     I                                    P   5  79 NDAY
+     I                                    P  80 254 NRAT
+     I                                      412 436 NSIG
+     I                                    P 437 611 NPNT
+      *
+     IOLDREC      DS                            611
+      **  Old values
+     I                                        1   1 ORECI
+     I                                        2   4 OCCY
+     I                                        5  79 ODFW
+     I                                    P   5  79 ODAY
+     I                                       80 254 ORFW
+     I                                    P  80 254 ORAT
+     I                                    P 255 2570OLCD
+     I                                      258 258 OCHTP
+     I                                    P 259 2610OTNLU
+     I                                      262 411 OPFW
+     I                                      412 436 OSFW
+     I                                      412 436 OSIG
+     I                                      437 611 OPNF
+     I                                    P 437 611 OPNT
+      *
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, short DS
+      *
+     IDSSDY     E DSDSSDY
+      **  Second DS for access programs, Long DS
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** +--- Start of Main processing -----------------------------------+
+      ** ¦                                                                ¦
+      ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
+      ** ¦ executed at program activation.                                ¦
+      ** ¦                                                                ¦
+      ** +----------------------------------------------------------------+
+      *
+      ***  If no record change, bypass this processing
+      *
+     C           RECI      IFNE ORECI
+     C           CCY       ORNE OCCY
+     C           DFW       ORNE ODFW
+     C           RFW       ORNE ORFW
+     C           SFW       ORNE OSFW
+     C           PNF       ORNE OPNF
+      *
+     C                     SELEC
+      *
+      ***  In Case of Insertion
+      *
+     C           TEVEN     WHEQ '1'
+     C                     EXSR SRINSR
+      *
+      ***  In Case of Update
+      *
+     C           TEVEN     WHEQ '3'
+     C                     EXSR SRUPDT
+      *
+      ***  Other not managed
+      *
+     C                     OTHER
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE                           ************
+     C                     MOVE 'INSERT'  DBKEY                           * DBERR 01 *
+     C                     MOVELFNAME     DBFILE    P                     ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDSL
+     C                     ENDIF
+      *
+      ***  End program.
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SRINSR - Trigger Event: Insertion                            *
+      *****************************************************************
+      *
+     C           SRINSR    BEGSR
+      *
+      ***  Do While not 25 process or Number of days Forward not equal to zero
+      *
+     C                     Z-ADD1         X       20
+     C           X         DOWLE25
+     C           NDAY,X    ANDNE0
+      *
+      ***  Check if the Currency already exist in the file
+      *
+     C                     MOVE 'N'       WWFND   1
+     C                     MOVE CCY       WWCCY   3
+     C           WWCCY     SETLLFWDRMIR
+     C           WWCCY     READEFWDRMIR                  89
+      *
+     C           *IN89     DOWEQ*OFF
+     C           WWFND     ANDEQ'N'
+      *
+      ***  Found if same currency and same day forward
+      *
+     C           NDAY,X    IFEQ FWDFW
+     C                     MOVE 'Y'       WWFND
+     C                     ENDIF
+     C           WWCCY     READEFWDRMIR                  89
+     C                     ENDDO
+      *
+      ***  If Feature S01432 is active (It means forward points are present)
+      *
+     C           S01432    IFEQ 'Y'
+     C           NSIG,X    IFEQ '+'
+     C                     Z-ADDNPNT,X    FWPNF            Forward Points
+     C                     ELSE
+     C                     Z-SUBNPNT,X    FWPNF            Forward Points
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE CCY       FWCCY            Currency Code
+     C                     Z-ADDNDAY,X    FWDFW            Days Forward
+     C                     Z-ADDNRAT,X    FWRFW            Forward Rates
+     C                     Z-ADDLCD       FWLCD            Last Change Date
+     C                     MOVE CHTP      FWCHTP           Last Change Type
+     C                     MOVE 'D'       FWRECI           Record Id
+      *
+      ***  Write a record in FWDRMIR
+      *
+     C           WWFND     IFEQ 'N'
+     C                     WRITEFWDRMIR0
+     C                     ELSE
+     C                     UPDATFWDRMIR0
+     C                     ENDIF
+     C                     ADD  1         X
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SRUPDT - Trigger Event: Update                               *
+      *****************************************************************
+      *
+     C           SRUPDT    BEGSR
+      *
+      ***  Do while all records are process
+      *
+     C                     Z-ADD1         WWPROC  20
+     C                     Z-ADD1         X       20       Indicator For Old Rec
+     C                     Z-ADD1         Y       20       Indicator For New Rec
+     C                     MOVE 'N'       ENDPRC  1        End of processing
+      *
+     C           WWPROC    DOWLE50
+     C           ENDPRC    ANDNE'Y'
+      *
+      ***  Check The Greater number day forward
+      *
+     C           NDAY,Y    IFLE ODAY,X
+     C           NDAY,Y    ANDNE0
+     C                     MOVE 'NEW'     WSTATU  3
+     C                     ELSE
+     C           ODAY,X    IFEQ 0
+     C                     MOVE 'NEW'     WSTATU  3
+     C                     ELSE
+     C                     MOVE 'OLD'     WSTATU  3
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  Check if the Currency and Day Forward already exist in the file
+      *
+     C                     MOVE 'N'       WWFND   1
+     C                     MOVE CCY       WWCCY   3
+     C           WWCCY     SETLLFWDRMIR
+     C           WWCCY     READEFWDRMIR                  89
+      *
+     C           *IN89     DOWEQ*OFF
+     C           WWFND     ANDEQ'N'
+      *
+      ***  Found if same currency and same day forward
+      *
+     C           ODAY,X    IFEQ FWDFW
+     C           WSTATU    ANDEQ'OLD'
+     C                     MOVE 'Y'       WWFND
+     C                     ENDIF
+      *
+     C           NDAY,Y    IFEQ FWDFW
+     C           WSTATU    ANDEQ'NEW'
+     C                     MOVE 'Y'       WWFND
+     C                     ENDIF
+      *
+     C           WWFND     IFNE 'Y'
+     C           WWCCY     READEFWDRMIR                  89
+     C                     ENDIF
+     C                     ENDDO
+      *
+      ***  Check if there is some change
+      *
+     C           WWFND     IFEQ 'N'
+     C                     MOVE 'Y'       WWCHG   1
+     C                     ELSE
+     C                     MOVE 'N'       WWCHG
+     C                     ENDIF
+      *
+     C           WSTATU    IFEQ 'OLD'
+     C           WWFND     ANDEQ'Y'
+     C                     MOVE 'Y'       WWCHG
+     C                     ENDIF
+      *
+     C           WSTATU    IFEQ 'NEW'
+     C           WWFND     ANDEQ'Y'
+      *
+     C                     Z-ADD0         WWPNF  138
+     C           S01432    IFEQ 'Y'
+     C           NSIG,Y    IFEQ '+'
+     C                     Z-ADDNPNT,Y    WWPNF
+     C                     ELSE
+     C                     Z-SUBNPNT,Y    WWPNF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           RECI      IFNE FWRECI
+     C           NRAT,Y    ORNE FWRFW
+     C           WWPNF     ORNE FWPNF
+     C                     MOVE 'Y'       WWCHG
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *** If no change, bypass the update and write process
+      *
+     C********** WWCHG     IFEQ 'Y'                                             195910
+      *
+     C           WSTATU    IFEQ 'NEW'
+     C                     EXSR SRNEW
+     C                     ENDIF
+      *
+     C           WSTATU    IFEQ 'OLD'
+     C                     EXSR SROLD
+     C                     ENDIF
+      *
+      ***  Write a record in FWDRMIR
+      *
+     C           WWFND     IFEQ 'N'
+     C                     WRITEFWDRMIR0
+     C                     ELSE
+     C                     UPDATFWDRMIR0
+     C                     ENDIF
+     C**********           ENDIF                                                195910
+      *
+      ***  Setup index array for old and new array
+      *
+     C                     SELEC
+     C           NDAY,Y    WHEQ ODAY,X
+     C           NDAY,Y    IFNE 0
+     C                     ADD  1         Y
+     C                     ENDIF
+     C           ODAY,X    IFNE 0
+     C                     ADD  1         X
+     C                     ENDIF
+      *
+     C           NDAY,Y    WHLT ODAY,X
+     C           NDAY,Y    ANDNE0
+     C                     ADD  1         Y
+      *
+     C           NDAY,Y    WHLT ODAY,X
+     C           ODAY,X    ANDNE0
+     C                     ADD  1         X
+      *
+     C           NDAY,Y    WHGT ODAY,X
+     C           ODAY,X    ANDNE0
+     C                     ADD  1         X
+      *
+     C           NDAY,Y    WHGT ODAY,X
+     C           NDAY,Y    ANDNE0
+     C                     ADD  1         Y
+     C                     ENDSL
+      *
+     C           Y         IFEQ 26                                                            202756
+     C                     Z-ADD25        Y                                                   202756
+     C                     Z-ADD*ZEROS    NDAY,Y                                              202756
+     C                     ENDIF                                                              202756
+      *                                                                                       202756
+     C           X         IFEQ 26                                                            202756
+     C                     Z-ADD25        X                                                   202756
+     C                     Z-ADD*ZEROS    ODAY,X                                              202756
+     C                     ENDIF                                                              202756
+      *                                                                                       202756
+      ***  Stop processing if number of day is equal to 0
+      *
+     C           WWPROC    IFLE 50
+     C           NDAY,Y    ANDEQ0
+     C           ODAY,X    ANDEQ0
+     C                     MOVE 'Y'       ENDPRC
+     C                     ENDIF
+      *
+     C                     ADD  1         WWPROC
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SRNEW  - Setup to Update or write new record                 *
+      *****************************************************************
+      *
+     C           SRNEW     BEGSR
+      *
+      ***  If Feature S01432 is active (It means forward points are present)
+      *
+     C                     Z-ADD0         FWPNF            Forward Points
+     C           S01432    IFEQ 'Y'
+     C           NSIG,Y    IFEQ '+'
+     C                     Z-ADDNPNT,Y    FWPNF            Forward Points
+     C                     ELSE
+     C                     Z-SUBNPNT,Y    FWPNF            Forward Points
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE CCY       FWCCY            Currency Code
+      *
+      *** Not setup Days Forwards and Forwards Rate if day is 0.
+      *
+     C                     Z-ADDNDAY,Y    FWDFW            Days Forward
+     C                     Z-ADDNRAT,Y    FWRFW            Forward Rates
+     C                     Z-ADDLCD       FWLCD            Last Change Date
+     C                     MOVE CHTP      FWCHTP           Last Change Type
+      *
+     C           RECI      IFNE 'D'
+     C                     MOVE '*'       FWRECI           Record ID
+     C                     ELSE
+     C                     MOVE 'D'       FWRECI           Record ID
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SROLD  - Setup to delete recod                               *
+      *****************************************************************
+      *
+     C           SROLD     BEGSR
+      *
+      ***  If Feature S01432 is active (It means forward points are present)
+      *
+     C                     Z-ADD0         FWPNF            Forward Points
+     C           S01432    IFEQ 'Y'
+     C           OSIG,X    IFEQ '+'
+     C                     Z-ADDOPNT,X    FWPNF            Forward Points
+     C                     ELSE
+     C                     Z-SUBOPNT,X    FWPNF            Forward Points
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE CCY       FWCCY            Currency Code
+      *
+      *** Not setup Days Forwards and Forwards Rate if day is 0.
+      *
+     C                     Z-ADDODAY,X    FWDFW            Days Forward
+     C                     Z-ADDORAT,X    FWRFW            Forward Rates
+     C                     Z-ADDLCD       FWLCD            Last Change Date
+     C                     MOVE CHTP      FWCHTP           Last Change Type
+     C                     MOVE '*'       FWRECI           Record Id
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  *INZSR - Program Initialisation subroutine                   *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+      ***  Set up copyright parameter.
+      *
+     C                     MOVEACPY@      MKI@   80
+      *
+      ***  Define the LDA.
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVELPGM       DBPGM     P
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBFILE
+     C                     Z-ADD0         DBASE
+     C                     OUT  LDA
+      *
+      *** Set up the entry parameter list.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PARM1
+     C                     PARM           PARM2
+      *
+     C           NEWOFF    ADD  1         ST      90
+     C           NEWLEN    SUBSTPARM1:ST  NEWREC
+      *
+     C           OLDOFF    ADD  1         ST      90
+     C           OLDLEN    SUBSTPARM1:ST  OLDREC
+      *
+      ***  Access SAR details file to determine if FX Interface
+      ***  is switched on
+      *
+     C                     MOVEL'N'       S01432  1
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'S01432'  @SARD   6
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVEL'Y'       S01432
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      ***  Handle Database Error.
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C                     DUMP
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+**   CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,514 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas BoE Branch Codes Maint./Dsp. Window')            *
+      *****************************************************************
+      *                                                               *
+      *    MIDAS    - BANK OF ENGLAND RETURNS MODULE                  *
+      *                                                               *
+      *    BYBRCHW0 - BRANCH CODES MAINTENANCE WINDOW                 *
+      *                                                               *
+      * (C) COPYRIGHT ACT INTERNATIONAL LTD. 1995.                    *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *    LAST AMEND NO LLN016           DATE 12MAY00                *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LLN016 - Upgrade BoE to DBAR3.                               *
+      *                                                               *
+      *****************************************************************
+      *
+     FBYBRCHY0UF  E           K        DISK         KCOMIT       A
+      *** Branch Codes Extension File (Update)
+      *
+     FBYBRCH#0CF  E                    WORKSTN
+      *** DSP: BoE Branch Codes Maintenance Window Display File
+      *
+     F*****************************************************************
+      *
+      *** Arrays/Tables
+     E                    CPY@    1   1 80               ACT Copyright array
+     E                    FOOT    1   2 36               Footers
+      *
+     E/EJECT
+     E*****************************************************************
+      *
+      *** ACT Copyright
+      *
+     IA@CPY       DS
+     I                                        1  80 CPY@
+     I            DS
+     I I            'GBBYUSRMSG'              1  10 MSGFBY                LLN007
+      *
+      *** Data Structure DATA
+      *
+     I/COPY QWINDSRC,SD0060GDTA
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *                                                                   LLN007
+      *  Data structure for retrieval of DTAARA/RUNDAT                    LLN007
+     IRUNDAT    E DSRUNDAT                                                LLN007
+      *
+     IPSDS       SDS
+     I                                     *PROGRAM ##PGM
+      /EJECT
+      *================================================================
+      *         M A I N L I N E    P R O C E S S I N G
+      *================================================================
+      *
+      *** Initialisation Subroutine
+      *
+     C                     EXSR #LINIT
+      *
+      *** Only process if BOE module is switched on
+      *** and when in multibranching mode
+     C           LLN007    IFEQ 'Y'                                       LLN007
+     C           AGMBIN    ANDEQ'Y'                                       136195
+      *
+      *** Access the Branch Codes Extension File
+     C                     EXSR #LACSS
+      *
+      *** Detail processing for window
+     C                     EXSR #LDETL
+      *
+      *** End of 'BOE switch on' process
+     C                     ENDIF                           E1
+      *
+      *** End Process Subroutine
+     C                     EXSR #LEPGM
+      /EJECT
+      *================================================================
+      * #LACSS - Retrieve data from Branch Codes Extension File
+      *================================================================
+     C           #LACSS    BEGSR
+      *
+      *** Default screen fields according to action
+     C                     SELEC
+      *
+      *** Default output fields to 'Y'on insert
+     C           ACTN      WHEQ 'I'
+     C                     MOVE 'Y'       #LBEXT
+      *
+      ** Get extension file details on amend or enquire
+     C           ACTN      WHEQ 'A'
+     C           ACTN      OREQ 'E'
+     C           #1BRCD    CHAINBYBRCHY0            N90
+     C           *IN90     IFEQ '0'
+     C                     MOVELA8IBOE    #LBEXT                          136195
+     C                     ELSE
+     C                     MOVE 'Y'       #LBEXT                          136195
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+     C                     ENDSR
+      /EJECT
+      *================================================================
+      * #LDETL - Detail Processing for Window
+      *================================================================
+     C           #LDETL    BEGSR
+      *                                                                   LLN001
+      *** Define window position                                          LLN001
+     C                     Z-ADDSROW      SWROW                           LLN001
+     C                     Z-ADDSCOL      SWCOL                           LLN001
+      *
+      *** Protect fields if necessary
+     C           ACTN      IFEQ 'E'                        B1
+     C           ACTN      OREQ 'D'                        O1
+     C                     SETON                     88
+     C                     ENDIF                           E1
+      *
+      *** Setup footer, enable keys as appropriate
+     C           ACTN      IFEQ 'D'                        B1
+     C                     SETON                     87
+     C                     MOVEAFOOT,2    #LFOOT
+     C                     ELSE                            X1
+     C                     MOVEAFOOT,1    #LFOOT
+     C                     ENDIF                           E1
+      *
+      *** Process according to action type
+     C           ACTN      CASEQ'I'       #LINAM           Insert/Amend
+     C           ACTN      CASEQ'A'       #LINAM           Insert/Amend
+     C           ACTN      CASEQ'D'       #LDLET           Delete
+     C           ACTN      CASEQ'E'       #LENQY           Enquiry
+     C                     ENDCS
+      *
+     C                     ENDSR                                       ous
+      /EJECT
+      *================================================================
+      * #LINAM - Insert/Amend Processing
+      *================================================================
+     C           #LINAM    BEGSR
+      *
+      *** Repeat process until Exit Condition = 'Y'
+     C           #LWESC    DOWEQ'N'                        B1
+      *
+      *** Write Window
+     C                     EXSR #LWRTW
+      *
+      *** Clear messages
+     C                     EXSR #LCLRM
+      *
+      *** Process response/input
+     C           *IN03     CASEQ'1'       #LEXIT           Exit
+     C           *IN12     CASEQ'1'       #LPREV           Previous
+     C                     CAS            #LVALD           Validate
+     C                     ENDCS
+      *
+     C                     ENDDO                           E1 (Do)
+      *
+      * Perform update processing
+     C                     EXSR #LUPDT
+      *
+     C                     ENDSR
+      /EJECT
+      *================================================================
+      * #LVALD - Validate Screen Input Fields
+      *================================================================
+     C           #LVALD    BEGSR
+      *
+      *** Reset indicators etc.
+     C                     SETOF                     31
+     C                     MOVE 'Y'       #LWESC                       on
+      *
+      *** if single-branched system then BoE-extract defaults to 'Y'
+     C           AGMBIN    IFEQ 'N'                        B1             136195
+     C                     MOVE 'Y'       #LBEXT                       on
+     C                     ENDIF                           E1
+      *
+      *** BoE Extract
+     C           #LBEXT    IFNE *BLANKS                    B1
+     C           #LBEXT    ANDNE'Y'
+     C           #LBEXT    ANDNE'N'
+      *
+     C                     MOVE 'BOE0300' ZAMSID
+     C           LLN007    IFEQ 'Y'                                       LLN007
+     C                     MOVE 'BYM0101' ZAMSID                          LLN007
+     C                     ENDIF                                          LLN007
+     C                     EXSR ZASNMS
+     C                     SETON                     31
+     C                     MOVE 'N'       #LWESC
+     C                     ENDIF                           E1
+      *
+      *** if user enters blanks, move 'Y' to field
+      *** and move 'N' to exit field to redisplay window
+     C           #LBEXT    IFEQ *BLANKS                    B1
+     C                     MOVE 'Y'       #LBEXT
+     C                     MOVE 'N'       #LWESC
+     C                     ENDIF                           E1
+      *
+     C                     ENDSR
+      /EJECT
+      *================================================================
+      * #LUPDT - Update Record on Branch Codes Extension File
+      *================================================================
+     C           #LUPDT    BEGSR
+      *
+      *** Access the Branch Codes Extension Record
+     C           #1BRCD    CHAINBYBRCHY0             90
+      *
+      *** Move screen values to file fields
+     C                     MOVE #1BRCD    A8BRCD
+     C                     MOVE #LBEXT    A8IBOE
+      *
+      *** If Chain successful
+     C           *IN90     IFEQ '0'
+     C                     UPDATBYBRCHD0               90
+     C                     ELSE
+     C                     WRITEBYBRCHD0               90
+     C           LLN007    IFEQ 'Y'                                       LLN007
+     C                     CALL 'BYC9090'                                 LLN007
+     C                     PARM 'I'       ULACTN  1                       LLN007
+     C                     PARM #1BRCD    ULBRCD  3                       LLN007
+     C                     PARM *BLANK    ULRTCD                          LLN007
+     C                     ENDIF                                          LLN007
+     C                     ENDIF
+      *
+      *
+     C                     ENDSR
+      /EJECT
+      *================================================================
+      * #LDLET - Delete Processing
+      *================================================================
+     C           #LDLET    BEGSR
+      *
+      * Repeat process until Exit Condition = 'Y'
+     C           #LWESC    DOWEQ'N'                        B1
+      *
+      *** Delete Record
+      *
+     C           LLN007    IFEQ 'Y'                                       LLN007
+     C                     CALL 'BYC9090'                                 LLN007
+     C                     PARM 'D'       ULACTN                          LLN007
+     C                     PARM #1BRCD    ULBRCD                          LLN007
+     C                     PARM *BLANK    ULRTCD                          LLN007
+     C           ULRTCD    IFNE *BLANK                                    LLN007
+     C                     EXSR #LDBER                                    LLN007
+     C                     ENDIF                                          LLN007
+     C                     ENDIF                                          LLN007
+      *
+      *** if single-branched system set on delete ind
+     C           AGMBIN    IFEQ 'N'                        B2             136195
+     C                     MOVE '1'       *IN10
+     C                     ENDIF                           E2
+      *
+      *
+      *
+     C                     EXSR #LDLRC
+      *
+     C                     ENDDO                           E1 (Do)
+      *
+     C                     ENDSR
+      /EJECT
+      *================================================================
+      * #LDLRC - Delete Record from Branch Codes Extension File
+      *================================================================
+     C           #LDLRC    BEGSR
+      *
+      * Access the Branch Codes Extension Record
+     C           #1BRCD    CHAINBYBRCHY0             90
+      *
+      * If Chain successful
+     C           *IN90     IFEQ '0'                        B1
+      *
+      *** Delete Record from file
+      *
+     C                     DELETBYBRCHD0               93
+      *
+      *** If Delete successful
+      *
+     C           *IN93     IFEQ '0'                        B2
+      *
+      *** Set Exit Condition
+      *
+     C                     MOVE 'Y'       #LWESC           Exit Condition
+      *
+     C                     ELSE                            X2
+      *
+      *** File Delete Error
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVE 'Y2U0004' WORTN
+     C                     MOVEL'BYBRCHY0'DBFILE
+     C                     MOVELDATA      DBKEY
+     C                     MOVEL##PGM     DBPGM
+     C                     Z-ADD6         DBASE            DB ERROR 006
+     C                     OUT  LDA
+     C                     EXSR #LDBER
+     C                     ENDIF                           E2
+      *
+     C                     ELSE                            X1
+      *
+      * Database Error - Record not found
+     C           *LOCK     IN   LDA
+     C                     MOVE 'USR0561' WORTN
+     C                     MOVEL'BYBRCHY0'DBFILE
+     C                     MOVELDATA      DBKEY
+     C                     MOVEL##PGM     DBPGM
+     C                     Z-ADD7         DBASE            DB ERROR 007
+     C                     OUT  LDA
+     C                     EXSR #LDBER
+     C                     ENDIF                           E1
+      *
+     C                     ENDSR
+      /EJECT
+      *================================================================
+      * #LENQY - Enquiry Processing
+      *================================================================
+     C           #LENQY    BEGSR
+      *
+      *** if system is multi-branched then display window
+      *
+     C***        BGMBIN    IFEQ 'Y'                        B1             136195
+     C           AGMBIN    IFEQ 'Y'                        B1             136195
+      *
+      *** Repeat process until Exit Condition = 'Y'
+      *
+     C           #LWESC    DOWEQ'N'                        B2
+      *
+      *** Write Window
+      *
+     C                     EXSR #LWRTW
+      *
+      *** Clear messages
+      *
+     C                     EXSR #LCLRM
+      *
+      *** Process response/input
+      *
+     C           *IN03     CASEQ'1'       #LEXIT           Exit
+     C           *IN12     CASEQ'1'       #LPREV           Previous
+     C                     ENDCS
+     C                     MOVE 'Y'       #LWESC
+      *
+     C                     ENDDO                           E2
+      *
+     C                     ENDIF                           E1
+      *
+     C                     ENDSR
+      /EJECT
+      *================================================================
+      * #LWRTW - Display Window (Blank/Message Sfl/Details)
+      *================================================================
+     C           #LWRTW    BEGSR
+      *
+     C***        BGMBIN    IFEQ 'Y'                        B1             136195
+     C           AGMBIN    IFEQ 'Y'                        B1             136195
+      *
+     C                     WRITE#MSGCTL
+     C                     EXFMT#WINDOF
+      *
+     C                     ENDIF                           E1
+      *
+     C                     ENDSR
+      /EJECT
+      *================================================================
+      * #LCLRM - Clear messages from program's message queue
+      *================================================================
+     C           #LCLRM    BEGSR
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C                     ENDSR
+      /EJECT
+      *================================================================
+      * #LEPGM - Quit program
+      *================================================================
+     C           #LEPGM    BEGSR
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDSR
+      /EJECT
+      *================================================================
+      * #LEXIT - F3 Processing
+      *================================================================
+     C           #LEXIT    BEGSR
+     C                     MOVE 'Y2U9999' WORTN
+     C                     EXSR #LEPGM
+     C                     ENDSR
+      /EJECT
+      *================================================================
+      * #LPREV - F12 Processing
+      *================================================================
+     C           #LPREV    BEGSR
+     C                     MOVE 'USR0790' WORTN
+     C                     EXSR #LEPGM
+     C                     ENDSR
+      /EJECT
+      *================================================================
+      * ZASNMS - Send message to program's message queue
+      *================================================================
+     C           ZASNMS    BEGSR
+     C           ZAPGM     IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGM
+     C                     ENDIF
+     C           ZAMSGF    IFEQ *BLANK
+     C           LLN007    IFEQ 'Y'                                       LLN007
+     C                     MOVELMSGFBY    ZAMSGF                          LLN007
+     C                     ENDIF                                          LLN007
+     C                     ENDIF
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default next time
+     C                     MOVEL*BLANK    ZAPGM
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+     C                     ENDSR
+      /EJECT
+      *================================================================
+      * #LINIT - Program Initialisation
+      *================================================================
+     C           #LINIT    BEGSR
+      *
+      * Entry Parameters from Calling Program
+     C           *ENTRY    PLIST
+     C                     PARM           ACTN    1
+     C                     PARM           DATA
+     C                     PARM           WORTN   7
+     C                     PARM           WLEN    30
+     C                     PARM           WWID    30
+     C                     PARM           SROW    30
+     C                     PARM           SCOL    30
+     C                     PARM           TITLE   10
+     C                     PARM           SPARE 256
+      *
+      * Define the LDA for Error Handling
+     C           *NAMVAR   DEFN           LDA
+      *                                                                   LLN007
+      *  Retrieve RUNDAT for multi-branching indicator                    LLN007
+     C           *NAMVAR   DEFN           RUNDAT                          LLN007
+     C                     IN   RUNDAT                                    LLN007
+     C                     UNLCKRUNDAT                                    LLN007
+      *                                                                   LLN007
+      * Check to see if Yellow book changes (LLN007) is switched on.      LLN007
+     C                     MOVEL'LLN007'  ULSARN  6        SAR number fielLLN007
+     C                     MOVEL*BLANK    ULRTCD  7        Access Pgm RetuLLN007
+      * SAR switched on check - Standard Functions  *                     LLN007
+     C                     CALL 'AOSARDR0'             90  SAR switched onLLN007
+     C           ULRTCD    PARM ULRTCD    ULAPRC  7        Access Pgm RetuLLN007
+     C                     PARM '*VERIFY' ULOPTA  7        Option for ACCOLLN007
+     C           ULSARN    PARM ULSARN    ULSARD  6        SAR number fielLLN007
+     C                     PARM *BLANK    ULAODN 76        Access obj dummLLN007
+      *                                                                   LLN007
+     C           *IN90     IFEQ '1'                                       LLN007
+      * Call to program ended in error                                    LLN007
+     C                     MOVEL'Y2U0032' WORTN                           LLN007
+      * Send message '*Error occured on CALL...'                          LLN007
+     C                     MOVEL'Y2U0032' ZAMSID                          LLN007
+     C                     MOVEL'Y2USRMSG'ZAMSGF                          LLN007
+     C                     MOVEL'AOSARDR0'ZAMSDA           Message data   LLN007
+     C                     EXSR ZASNMS                                    LLN007
+     C                     END                                            LLN007
+      *                                                                   LLN007
+      * Check SCSARDPD to determine if S01424 has been switched on.       LLN007
+      * Access Pgm Return Code is AP No Record Found                      LLN007
+     C           ULRTCD    IFEQ '*NRF'                     *IF            LLN007
+     C                     MOVEL'N'       LLN007  1        BoE Yellow bookLLN007
+     C                     ELSE                                           LLN007
+      * Otherwise...                                                      LLN007
+     C                     MOVEL'Y'       LLN007           BoE Yellow bookLLN007
+     C                     ENDIF                                          LLN007
+      *
+      * Define Work Fields
+     C                     MOVE 'N'       #LWESC  1        Exit Condition
+     C*
+     C                     ENDSR
+      /EJECT
+      *================================================================
+      * #LDBER - Database Error Processing
+      *================================================================
+     C           #LDBER    BEGSR
+      *
+      *** Set on U7 and U8
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+      *
+      *** Produce program dump
+      *
+     C                     DUMP
+      *
+      *** Leave program
+      *
+     C                     EXSR #LEPGM
+      *
+     C                     ENDSR
+** CPY@
+(c) Misys International Banking Systems Ltd. 2000
+** FOOT     : Footers for window
+F3=Exit  F12=Previous
+F3=Exit  F12=Previous  F10=Delete

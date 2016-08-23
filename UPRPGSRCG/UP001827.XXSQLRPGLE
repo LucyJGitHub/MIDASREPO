@@ -1,0 +1,245 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+      *****************************************************************
+/*S*D****RPGSQLBND*****************************************************                       CUP021
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bridge                                               *
+      *                                                               *
+      *  UP001827 - Process Action File for T_GPOVCFPD                *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *                                                               *
+      *  Last Amend No. CUP021  *REDUNDANT Date 11Feb11               *
+      *  Prev Amend No. BUG27776*CREATE    Date 10Jun10               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CUP021 - Rewrite of Action File processing                   *
+      *  BUG27776 - Missing Overridable Errors for RATM and RABC      *
+      *                                                               *
+      *****************************************************************
+      *
+     D PSDS           SDS
+      *
+      ** Program Status Data Structure.
+      *
+     D  PGM              *PROC
+     D  WSID                 244    253
+     D  USER                 254    263
+      *
+     DACTFDS         E DS                  EXTNAME(UPOVCFPD)  PREFIX(X)
+      *
+     DA2APIInd         S              2B 0
+     DA2NAMEInd        S              2B 0
+     DA2MSGDInd        S              2B 0
+     DA2TEXTInd        S              2B 0
+     DA2CLASInd        S              2B 0
+     DA2LCDInd         S              2B 0
+     DA2TYLCInd        S              2B 0
+     DA2OREDInd        S              2B 0
+     D APIX            S                   LIKE(XA2API)
+     D NAMEX           S                   LIKE(XA2NAME)
+     D MSGDX           S                   LIKE(XA2MSGD)
+     D @RUN            S              1
+      *
+     C/EXEC SQL WHENEVER SQLERROR GO TO TAGSQLERR
+     C/END-EXEC
+      *
+      ** Set pointer for retrieving record from UPOVCFPD.
+      *
+     C/EXEC SQL DECLARE ActionF_crsr CURSOR FOR
+     C+  Select *
+     C+  from UPOVCFPD
+     C+  where A2ACTC = 'A' or A2ACTC = 'D' or A2ACTC = 'I'
+     C+  order by A2ACTC, A2API, A2NAME, A2MSGD
+     C/END-EXEC
+      *
+      ** Open UPOVCFPD.
+      *
+     C/EXEC SQL
+     C+  Open ActionF_crsr
+     C/END-EXEC
+      *
+      ** Get record from UPOVCFPD into fields prefixed with X.
+      *
+     C/EXEC SQL
+     C+  Fetch ActionF_crsr  into
+     C+    :XA2ACTC,
+     C+    :XA2OEID,
+     C+    :XA2API:A2APIInd,
+     C+    :XA2NAME:A2NAMEInd,
+     C+    :XA2MSGD:A2MSGDInd,
+     C+    :XA2TEXT:A2TEXTInd,
+     C+    :XA2CLAS:A2CLASInd,
+     C+    :XA2LCD:A2LCDInd,
+     C+    :XA2TYLC:A2TYLCInd,
+     C+    :XA2ORED:A2OREDInd
+     C/END-EXEC
+      *
+      ** Process while there is no error or not EOF.
+      *
+     C                   DOW       SQLCOD =  0
+      *
+     C                   IF        XA2ACTC = 'I'
+      *
+      ** If insert, insert record into T_GPOVCFPD setting the auto
+      ** generated number as calculated.
+      *
+     C/EXEC SQL
+     C+ Insert into T_GPOVCFPD (
+     C+ A2API,
+     C+ A2NAME,
+     C+ A2MSGD,
+     C+ A2TEXT,
+     C+ A2CLAS,
+     C+ A2LCD,
+     C+ A2TYLC,
+     C+ A2ORED
+     C+ )
+     C+ values(
+     C+ :XA2API:A2APIInd,
+     C+ :XA2NAME:A2NAMEInd,
+     C+ :XA2MSGD:A2MSGDInd,
+     C+ :XA2TEXT:A2TEXTInd,
+     C+ :XA2CLAS:A2CLASInd,
+     C+ :XA2LCD:A2LCDInd,
+     C+ :XA2TYLC:A2TYLCInd,
+     C+ :XA2ORED:A2OREDInd
+     C+ )
+     C/END-EXEC
+      *
+     C                   ENDIF
+      *
+      ** If Delete, delete record from file T_GPOVCFPD
+      *
+     C                   IF        XA2ACTC = 'D'
+      *
+     C/EXEC SQL
+     C+ Delete from T_GPOVCFPD
+     C+ where A2API = :XA2API and A2NAME = :XA2NAME
+     C+   and A2MSGD = :XA2MSGD
+     C/END-EXEC
+      *
+      ** Error if no record found, run *PSSR.
+      *
+     C                   IF        SQLCOD = 100
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   ENDIF
+      *
+      ** If Action code = AMEND then read next record.
+      *
+     C                   IF        XA2ACTC = 'A'
+      *
+     C                   EVAL      APIX    = XA2API
+     C                   EVAL      NAMEX   = XA2NAME
+     C                   EVAL      MSGDX   = XA2MSGD
+      *
+      ** Get next record from file UPOVCFPD.
+      *
+     C/EXEC SQL
+     C+  Fetch ActionF_crsr  into
+     C+    :XA2ACTC,
+     C+    :XA2OEID,
+     C+    :XA2API:A2APIInd,
+     C+    :XA2NAME:A2NAMEInd,
+     C+    :XA2MSGD:A2MSGDInd,
+     C+    :XA2TEXT:A2TEXTInd,
+     C+    :XA2CLAS:A2CLASInd,
+     C+    :XA2LCD:A2LCDInd,
+     C+    :XA2TYLC:A2TYLCInd,
+     C+    :XA2ORED:A2OREDInd
+     C/END-EXEC
+      *
+      ** If key fields of the next record from UPOVCFPD do not match or
+      ** no more record, run *PSSR.
+      *
+     C                   IF        XA2API  <> APIX  OR
+     C                             XA2NAME <> NAMEX OR
+     C                             XA2MSGD <> MSGDX OR
+     C                             SQLCOD = 100
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+      ** Update T_GPOVCFPD with values from UPOVCFPD record.
+      *
+     C/EXEC SQL
+     C+ Update T_GPOVCFPD  set
+     C+    A2API       = :XA2API:A2APIInd,
+     C+    A2NAME      = :XA2NAME:A2NAMEInd,
+     C+    A2MSGD      = :XA2MSGD:A2MSGDInd,
+     C+    A2TEXT      = :XA2TEXT:A2TEXTInd,
+     C+    A2CLAS      = :XA2CLAS:A2CLASInd,
+     C+    A2LCD       = :XA2LCD:A2LCDInd,
+     C+    A2TYLC      = :XA2TYLC:A2TYLCInd,
+     C+    A2ORED      = :XA2ORED:A2OREDInd
+     C+ where A2API  = :XA2API and A2NAME = :XA2NAME
+     C+   and A2MSGD = :XA2MSGD
+     C/END-EXEC
+      *
+      ** Error if no record found in T_WIPCF.
+      *
+     C                   IF        SQLCOD = 100
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   ENDIF
+      *
+      ** Get next record from Action file UPOVCFPD
+      *
+     C/EXEC SQL
+     C+  Fetch ActionF_crsr  into
+     C+    :XA2ACTC,
+     C+    :XA2OEID,
+     C+    :XA2API:A2APIInd,
+     C+    :XA2NAME:A2NAMEInd,
+     C+    :XA2MSGD:A2MSGDInd,
+     C+    :XA2TEXT:A2TEXTInd,
+     C+    :XA2CLAS:A2CLASInd,
+     C+    :XA2LCD:A2LCDInd,
+     C+    :XA2TYLC:A2TYLCInd,
+     C+    :XA2ORED:A2OREDInd
+     C/END-EXEC
+      *
+     C                   ENDDO
+      *
+     C/EXEC SQL
+     C+  Close  ActionF_crsr
+     C/END-EXEC
+      *
+     C                   SETON                                        LR
+     C                   RETURN
+      *
+     C     TAGSQLERR     TAG
+      *
+     C                   EXSR      *PSSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: None                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *PSSR         BEGSR
+      *
+     C                   IF        @RUN = *BLANK
+     C                   EVAL      @RUN = 'Y'
+     C                   DUMP
+     C                   ENDIF
+      *
+     C                   SETON                                        U7U8LR
+     C                   RETURN
+      *
+     C                   ENDSR
+      *

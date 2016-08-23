@@ -1,0 +1,494 @@
+     H        1                                                           MC84P
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MC Account Balance Criteria Prompt')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Management Accounting Module
+     F*                                                               *
+     F*  MC84P   - Select 'Analyse By' Criteria                       *
+     F*                                                               *
+     F*  Function: This program allows selection of 'Analyse By'      *
+     F*            criteria in a user specified hierarchy             *
+     F*                                                               *
+     F*  Called by: GLC84P - MCBL Prompt                              *
+     F*                                                               *
+     F*  Parameters: 2A Group code                                    *
+     F*              1A Return code                                   *
+     F*              1A Report Currency                               *
+     F*              9A Analysis                                      *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  LAST AMEND NO. XXXXXX             DATE XXXXXXX               *
+     F*  NEW PROGRAM    S01416             DATE 17MAY93               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  S01416 - Account Balances Report                             *
+     F*                                                               *
+     F*****************************************************************
+      *
+      /SPACE
+      * DISPLAY FILE
+      * Analyse By options
+     FMC84PDF CF  E                    WORKSTN
+      *
+      /SPACE
+      *INPUT FILE
+      * Historic Balance Control Groups
+     FGLHBCGL0IF  E           K        DISK
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  03  -  F03 taken                                             *
+      *  05  -  F05 taken                                             *
+      *  12  -  F12 taken                                             *
+      *  30  -  Error on screen                                       *
+      *  31  -  Error on S1 entry                                     *
+      *  32  -  Error on S2 entry                                     *
+      *  33  -  Error on S3 entry                                     *
+      *  34  -  Error on S4 entry                                     *
+      *  35  -  Error on S5 entry                                     *
+      *  36  -  Error on S6 entry                                     *
+      *  37  -  Error on S7 entry                                     *
+      *  38  -  Error on S8 entry                                     *
+      *  40  -  Screen Entry is 0                                     *
+      *  41  -  Screen Entry is 1                                     *
+      *  42  -  Screen Entry is 2                                     *
+      *  43  -  Screen Entry is 3                                     *
+      *  44  -  Screen Entry is 4                                     *
+      *  45  -  Screen Entry is 5                                     *
+      *  46  -  Screen Entry is 6                                     *
+      *  47  -  Screen Entry is 7                                     *
+      *  48  -  Screen Entry is 8                                     *
+      *  51  -  Chain to GLHBCGL0 failed                              *
+      *  70  -  LOKUP successful                                      *
+      *  U7  -  Database error                                        *
+      *  U8  -  Database error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  P01 - Set up screen for output                               *
+      *  P02 - Validate selection options                             *
+      *  P03 - Move selections to parameter field                     *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+     E                    CPY@    1   1 80
+     E                    ANAL    1   9 32                 Analysis txt
+     E                    ARY         9  1               Analysis flds
+      /SPACE 3
+     ILDA       E DSLDA
+      * Local data structure used for error handling
+     IRUNDAT    E DS
+      * Run Date DS
+      * DS for Program Info
+     IPSDS       SDS
+     I                                      244 253 SWSID
+     I                                      254 263 SUSER
+      /EJECT
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      * Receive parameters
+     C           *ENTRY    PLIST
+     C                     PARM           XGRPC   2        Group code
+     C                     PARM           XRETC   1        Return code
+     C                     PARM           XRCCY   1        Return code
+     C                     PARM           XANAL   9        Analysis
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      * Define the error DS
+     C           *NAMVAR   DEFN           LDA
+      *
+      * In the Dataarea RUNDAT
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      * Move run date (alpha) to screen field for display
+     C                     MOVELAGMRDT    SMRDT   7
+      *
+      * Set up initial screen
+     C                     EXSR P01
+      *
+      * Display screen until F3 or valid entry (*IN30 off)
+     C           *IN30     DOUEQ'0'                        --- B001
+     C           XANAL     ANDEQSANAL
+      *
+      * Move screen selections to the Analysis parameters
+     C                     EXSR P03
+      * Save Analysis codes to check for change
+     C                     MOVE XANAL     SANAL   9
+      *
+      * Write select screen
+     C                     EXFMTSELECT
+     C                     MOVEL' '       XRETC
+      *
+      * Exit pgm if F3
+     C           *IN03     IFEQ '1'                        --- B002
+     C                     MOVEL'E'       XRETC
+     C                     SETON                         LR
+     C                     RETRN
+     C                     END                             --- E002
+      *
+      * Exit pgm if F12
+     C           *IN12     IFEQ '1'                        --- B002
+     C                     MOVEL'Y'       XRETC
+     C                     SETON                         LR
+     C                     RETRN
+     C                     END                             --- E002
+      *
+      * If F05 re-display initial screen
+     C           *IN05     IFEQ '1'                        --- B002
+     C                     EXSR P01
+     C                     MOVE '1'       *IN30            Re-display
+     C                     ELSE                            --- Else
+      *
+      * Validate selection criteria
+     C                     EXSR P02
+      *
+     C                     END                             --- E002
+      *
+      * Move screen selections to the Analysis parameters
+     C           *IN30     IFEQ '0'                        --- B002
+     C                     EXSR P03
+     C                     EXSR P01
+     C                     END                             --- E002
+     C                     END                             --- E001
+      *
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *                                                               *
+     C                     SETON                         LR           *
+     C                     RETRN                                      *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  P01 - Set-Up Screen for Output                               *
+      *                                                               *
+      *****************************************************************
+      /SPACE
+     C           P01       BEGSR
+      /SPACE
+      * Chain to Control Groups file using the received parameter
+     C           XGRPC     CHAINGLHBCGL0             51
+     C           *IN51     IFEQ '1'                        ---B001
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GLHBCGL0'DBFILE           ************
+     C                     Z-ADD1         DBASE            * Error 01 *
+     C                     MOVELXGRPC     DBKEY            ************
+     C                     MOVEL'MC84P   'DBPGM
+     C                     DUMP
+     C                     OUT  LDA
+     C                     MOVE 'Y'       XRETC
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END                             ---E001
+      /SPACE
+      * Move Analysis fields into array ARY
+     C           XANAL     IFEQ *BLANK
+     C           *IN05     OREQ '1'
+     C                     MOVE HCABCY    ARY,1            Currencies
+     C                     MOVE HCABBR    ARY,2            Branches
+     C                     MOVE HCABCU    ARY,3            Customers
+     C                     MOVE HCABAS    ARY,4            A/c Seq.
+     C                     MOVE HCABPC    ARY,5            Prof. Centre
+     C                     MOVE HCABBK    ARY,6            Books
+     C                     MOVE HCABTT    ARY,7            Trans. Type
+     C                     MOVE HCABTS    ARY,8            Tr. Sub-Type
+     C                     MOVE HCASCU    ARY,9            Assoc. Cust.
+     C                     ELSE
+     C                     MOVEAXANAL     ARY,1
+     C                     END
+      /SPACE
+      * Dis-allow Analysis by Currency if Balances held in Orig. CCy
+      * AND report is in Actual Currency
+     C           HCCCYB    IFEQ *BLANK
+     C           XRCCY     ANDEQ'A'
+     C                     MOVE *BLANK    ARY,1
+     C                     END
+      /SPACE
+      * Initialise screen indicators
+     C                     MOVE '0'       *IN,30
+     C                     MOVE '0'       *IN,40
+     C                     MOVEA'00000000'*IN,31
+     C                     MOVEA'00000000'*IN,41
+     C                     MOVE *BLANK    TEXT0
+     C                     MOVE *BLANK    TEXT1
+     C                     MOVE *BLANK    TEXT2
+     C                     MOVE *BLANK    TEXT3
+     C                     MOVE *BLANK    TEXT4
+     C                     MOVE *BLANK    TEXT5
+     C                     MOVE *BLANK    TEXT6
+     C                     MOVE *BLANK    TEXT7
+     C                     MOVE *BLANK    TEXT8
+      /SPACE
+      * Establish 'Analyse By' order & move appropriate text into
+      * screen fields from array ANAL
+     C                     Z-ADD*ZEROS    ORDERN  10
+     C                     Z-ADD*ZEROS    NUMBER  10
+     C                     DO   10                         DO
+     C                     Z-ADD1         X       20
+     C                     MOVE ORDERN    ORDERA  1
+     C           ORDERA    LOKUPARY,X                    70
+      *
+     C           *IN70     IFEQ '1'                         ---B001
+      *
+     C           NUMBER    IFEQ 0                           ---B002
+     C                     MOVE '0'       S0
+     C                     MOVEAANAL,X    TEXT0
+     C                     Z-ADDX         VAR0    20
+     C                     MOVE '1'       *IN40
+     C                     END                              ---E002
+     C           NUMBER    IFEQ 1                           ---B002
+     C                     MOVE '1'       S1
+     C                     MOVEAANAL,X    TEXT1
+     C                     Z-ADDX         VAR1    20
+     C                     MOVE '1'       *IN41
+     C                     END                              ---E002
+     C           NUMBER    IFEQ 2                           ---B002
+     C                     MOVE '2'       S2
+     C                     MOVEAANAL,X    TEXT2
+     C                     Z-ADDX         VAR2    20
+     C                     MOVE '1'       *IN42
+     C                     END                              ---E002
+     C           NUMBER    IFEQ 3                           ---B002
+     C                     MOVE '3'       S3
+     C                     MOVEAANAL,X    TEXT3
+     C                     Z-ADDX         VAR3    20
+     C                     MOVE '1'       *IN43
+     C                     END                              ---E002
+     C           NUMBER    IFEQ 4                           ---B002
+     C                     MOVE '4'       S4
+     C                     MOVEAANAL,X    TEXT4
+     C                     Z-ADDX         VAR4    20
+     C                     MOVE '1'       *IN44
+     C                     END                              ---E002
+     C           NUMBER    IFEQ 5                           ---B002
+     C                     MOVE '5'       S5
+     C                     MOVEAANAL,X    TEXT5
+     C                     Z-ADDX         VAR5    20
+     C                     MOVE '1'       *IN45
+     C                     END                              ---E002
+     C           NUMBER    IFEQ 6                           ---B002
+     C                     MOVE '6'       S6
+     C                     MOVEAANAL,X    TEXT6
+     C                     Z-ADDX         VAR6    20
+     C                     MOVE '1'       *IN46
+     C                     END                              ---E002
+     C           NUMBER    IFEQ 7                           ---B002
+     C                     MOVE '7'       S7
+     C                     MOVEAANAL,X    TEXT7
+     C                     Z-ADDX         VAR7    20
+     C                     MOVE '1'       *IN47
+     C                     END                              ---E002
+     C           NUMBER    IFEQ 8                           ---B002
+     C                     MOVE '8'       S8
+     C                     MOVEAANAL,X    TEXT8
+     C                     Z-ADDX         VAR8    20
+     C                     MOVE '1'       *IN48
+     C                     END                              ---E002
+      *
+     C                     ADD  1         NUMBER
+     C                     END                              ---E001
+      *
+     C                     ADD  1         ORDERN
+     C                     END                              ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  P02 - Validate selection options                             *
+      *                                                               *
+      *****************************************************************
+      /SPACE
+     C           P02       BEGSR
+      /SPACE
+      * Initialise screen indicators
+     C                     MOVE '0'       *IN30
+     C                     MOVEA'00000000'*IN,31
+      /SPACE
+      * (Validation of S0 is not needed as it is the first entry)
+      *
+      /SPACE
+      * Validate the S1 entry is not the same as a previous entry
+     C           S1        IFNE *BLANKS                    ---B001
+     C           S1        IFEQ S0                         ---B002
+     C                     MOVE '1'       *IN30
+     C                     MOVE '1'       *IN31
+     C                     END                             ---E002
+     C                     END                             ---E001
+      /SPACE
+      * Validate the S2 entry is not the same as a previous entry
+     C           S2        IFNE *BLANKS                    ---B001
+     C           S2        IFEQ S0                         ---B002
+     C           S2        OREQ S1
+     C                     MOVE '1'       *IN30
+     C                     MOVE '1'       *IN32
+     C                     END                             ---E002
+     C                     END                             ---E001
+      /SPACE
+      * Validate the S3 entry is not the same as a previous entry
+     C           S3        IFNE *BLANKS                    ---B001
+     C           S3        IFEQ S0                         ---B002
+     C           S3        OREQ S1
+     C           S3        OREQ S2
+     C                     MOVE '1'       *IN30
+     C                     MOVE '1'       *IN33
+     C                     END                             ---E002
+     C                     END                             ---E001
+      /SPACE
+      * Validate the S4 entry is not the same as a previous entry
+     C           S4        IFNE *BLANKS                    ---B001
+     C           S4        IFEQ S0                         ---B002
+     C           S4        OREQ S1
+     C           S4        OREQ S2
+     C           S4        OREQ S3
+     C                     MOVE '1'       *IN30
+     C                     MOVE '1'       *IN34
+     C                     END                             ---E002
+     C                     END                             ---E001
+      /SPACE
+      * Validate the S5 entry is not the same as a previous entry
+     C           S5        IFNE *BLANKS                    ---B001
+     C           S5        IFEQ S0                         ---B002
+     C           S5        OREQ S1
+     C           S5        OREQ S2
+     C           S5        OREQ S3
+     C           S5        OREQ S4
+     C                     MOVE '1'       *IN30
+     C                     MOVE '1'       *IN35
+     C                     END                             ---E002
+     C                     END                             ---E001
+      /SPACE
+      * Validate the S6 entry is not the same as a previous entry
+     C           S6        IFNE *BLANKS                    ---B001
+     C           S6        IFEQ S0                         ---B002
+     C           S6        OREQ S1
+     C           S6        OREQ S2
+     C           S6        OREQ S3
+     C           S6        OREQ S4
+     C           S6        OREQ S5
+     C                     MOVE '1'       *IN30
+     C                     MOVE '1'       *IN36
+     C                     END                             ---E002
+     C                     END                             ---E001
+      /SPACE
+      * Validate the S7 entry is not the same as a previous entry
+     C           S7        IFNE *BLANKS                    ---B001
+     C           S7        IFEQ S0                         ---B002
+     C           S7        OREQ S1
+     C           S7        OREQ S2
+     C           S7        OREQ S3
+     C           S7        OREQ S4
+     C           S7        OREQ S5
+     C           S7        OREQ S6
+     C                     MOVE '1'       *IN30
+     C                     MOVE '1'       *IN37
+     C                     END                             ---E002
+     C                     END                             ---E001
+      /SPACE
+      * Validate the S8 entry is not the same as a previous entry
+     C           S8        IFNE *BLANKS                    ---B001
+     C           S8        IFEQ S0                         ---B002
+     C           S8        OREQ S1
+     C           S8        OREQ S2
+     C           S8        OREQ S3
+     C           S8        OREQ S4
+     C           S8        OREQ S5
+     C           S8        OREQ S6
+     C           S8        OREQ S7
+     C                     MOVE '1'       *IN30
+     C                     MOVE '1'       *IN38
+     C                     END                             ---E002
+     C                     END                             ---E001
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  P03 - Move screen selections into corresponding place in the *
+      *        Analysis parameter field                               *
+      *                                                               *
+      *****************************************************************
+      /SPACE
+     C           P03       BEGSR
+      /SPACE
+      * Place the screen selections into the appropriate array element
+      * of ARY and the move the array into the Analysis parameter
+      *
+     C           *IN40     IFEQ '1'                         ---B001
+     C                     Z-ADDVAR0      X
+     C                     MOVE S0        ARY,X
+     C                     END                              ---E001
+     C           *IN41     IFEQ '1'                         ---B001
+     C                     Z-ADDVAR1      X
+     C                     MOVE S1        ARY,X
+     C                     END                              ---E001
+     C           *IN42     IFEQ '1'                         ---B001
+     C                     Z-ADDVAR2      X
+     C                     MOVE S2        ARY,X
+     C                     END                              ---E001
+     C           *IN43     IFEQ '1'                         ---B001
+     C                     Z-ADDVAR3      X
+     C                     MOVE S3        ARY,X
+     C                     END                              ---E001
+     C           *IN44     IFEQ '1'                         ---B001
+     C                     Z-ADDVAR4      X
+     C                     MOVE S4        ARY,X
+     C                     END                              ---E001
+     C           *IN45     IFEQ '1'                         ---B001
+     C                     Z-ADDVAR5      X
+     C                     MOVE S5        ARY,X
+     C                     END                              ---E001
+     C           *IN46     IFEQ '1'                         ---B001
+     C                     Z-ADDVAR6      X
+     C                     MOVE S6        ARY,X
+     C                     END                              ---E001
+     C           *IN47     IFEQ '1'                         ---B001
+     C                     Z-ADDVAR7      X
+     C                     MOVE S7        ARY,X
+     C                     END                              ---E001
+     C           *IN48     IFEQ '1'                         ---B001
+     C                     Z-ADDVAR8      X
+     C                     MOVE S8        ARY,X
+     C                     END                              ---E001
+      *
+      * Move the array into the Analysis parameter
+     C                     MOVEAARY       XANAL
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  ANAL
+Analysis by Currencies
+Analysis by Branches
+Analysis by Customers
+Analysis by Account Sequence
+Analysis by Profit Centre
+Analysis by Books
+Analysis by Transaction Type
+Analysis by Transaction Sub-Type
+Analysis by Associated Customer

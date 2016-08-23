@@ -1,0 +1,448 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CB Display CoB trace')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Close of Business Processing                         *
+      *                                                               *
+      *  CB0535  - DISPLAY COB TRACE                                  *
+      *                                                               *
+      *  Function:  This program is in charge to display the          *
+      *             actions traced during CoB.                        *
+      *                                                               *
+      *  Called By: CB0532                                            *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CAAA03             Date 23Apr04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01420             Date 22MAY95               *
+      *                                    Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CAAA03 - Webfacing Changes.                                  *
+      *  S01420 - CoB Enhancements                                    *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     FCB0535DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE CB0535S0
+     F                                              KINFDS INFDS#
+      * DSP: COB Active Users Display File
+      *
+     FCBTRACPDIF  E                    DISK
+     F                                              KINFDS INFDS1
+      ************************************************************
+      *   I N D I C A T O R S   U S E D
+      *-----------------------------------------------------------
+      *   03      Exit requested
+      *   05      Refresh requested
+      *   25
+      *   27      Next page requested
+      *   35      Selection error
+      *   36      Protect input field
+      *   80      SFCLR
+      *   81      SFLDSP
+      *   82      SFLEND
+      *   84      SFLNXTCHG
+      *   86      PUTOVR
+      *   88      READ #SFLRCD
+      *   90      Call ended in error
+      *   98      Force input
+      *   99      Global error
+      ************************************************************
+      *
+      *              *************************
+      *              ** INDICATORS NOT USED **
+      *              ** ------------------- **
+      *              *************************
+      *
+      *       ***************************************************
+      *       * 01   02   ..   04   ..   06   07   08   09   10 *
+      *       * 11   12   13   14   15   16   17   18   19   20 *
+      *       * 21   22   23   24   ..   26   ..   28   29   30 *
+      *       * 31   32   33   34   ..   ..   37   38   39   40 *
+      *       * 41   42   43   44   45   46   47   48   49   50 *
+      *       * 51   52   53   54   55   56   57   58   59   60 *
+      *       * 61   62   63   64   65   66   67   68   69   70 *
+      *       * 71   72   73   74   75   76   77   78   79   .. *
+      *       * ..   ..   83   ..   85   ..   87   ..   89   .. *
+      *       * 91   92   93   94   95   96   97   ..   ..      *
+      *       ***************************************************
+      ***********************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E                    TMP       200  1
+      * Data structures:-
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure.
+     IJBDTTM      DS
+      * Job date/time.
+     I                                        1   60WWJDT
+     I                                        1   20WWJYY
+     I                                        3   40WWJMM
+     I                                        5   60WWJDD
+     I                                        7  120WWJTM
+     I                                        7   80WWJHH
+     I                                        9  100WWJNN
+     I                                       11  120WWJSS
+      *
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure.
+      *
+     IINFDS1    E DSY2I1DSP
+      * File information data structure.
+      *
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+     I            DS
+     I                                        1   2 WWDAY
+     I I            '/'                       3   3 WWTRT1
+     I                                        4   5 WWMTH
+     I I            '/'                       6   6 WWTRT2
+     I                                        7   8 WWYER
+     I                                        1   8 WWDATE
+     I            DS
+     I                                        1   2 WWHOR
+     I I            ':'                       3   3 WWTRH1
+     I                                        4   5 WWMIN
+     I I            ':'                       6   6 WWTRH2
+     I                                        7   8 WWSEC
+     I                                        1   8 WWTIME
+     I            DS
+     I                                        1  10 DDUSER
+     I                                       13  22 DDJOB
+     I                                       25  31 DDNBR
+     I                                       34  42 DDDATE
+     I                                       45  53 DDTIME
+     I                                       56  59 DDPHAS
+     I                                       62  70 DDDATS
+     I                                        1  77 DDFULL
+     I                                        3  77 DDACTN
+      /EJECT
+      *****************************************************************
+      * Initialise
+     C                     EXSR ZZINIT
+      *
+     C                     DO   *HIVAL
+      * Initialise & load subfile page.
+     C                     EXSR BAIZSF
+     C                     MOVEL'N'       W0RSF   1
+      * Display screen until reload requested:
+     C           W0RSF     DOWEQ'N'
+      * Display screen.
+     C                     EXSR CAEXFM
+      *   Process response:
+      * Cancel & exit program.
+     C                     SELEC
+     C           *IN03     WHEQ *ON
+     C                     EXSR ZYEXPG
+      * HOME: Request subfile reload.
+     C           *IN05     WHEQ *ON
+     C                     MOVE 'Y'       W0RSF
+      *   Display next SFL page.
+     C           *IN27     WHEQ *ON
+     C                     EXSR BBLDSF
+      *   Process screen input.
+     C                     OTHER
+     C                     EXSR DAPR##
+     C                     ENDSL
+      *
+     C                     ENDDO                           OD W0RSF
+     C                     ENDDO                           OD *HIVAL
+      *****************************************************************
+      /EJECT
+      *================================================================
+      * BAIZSF subroutine.
+      * Initialise & Load subfile page.
+      *================================================================
+     C           BAIZSF    BEGSR
+      * Clear subfile.
+     C                     SETON                     80
+     C                     WRITECB0535C0
+     C                     SETOF                     80
+      * Reset no of records in subfile.
+     C                     Z-ADD*ZERO     WWRRMX  50 81     SETOF 81
+     C           1         SETLLCBTRACD0             82
+     C                     READ CBTRACD0                 82*82=EOF
+      * Load subfile page.
+     C                     Z-ADD0         WWRROK  50
+     C                     EXSR BBLDSF
+     C           BAEXIT    ENDSR
+      *================================================================
+      /EJECT
+      *================================================================
+      * BBLDSF
+      * Load subfile page.
+      *================================================================
+     C           BBLDSF    BEGSR
+      * Re-establish fields in read-ahead record.
+     C   27                DO
+     C  N82                READPCBTRACD0                 90*
+     C  N82                READ CBTRACD0                 90*
+     C                     ENDDO
+      *
+      * Setof record error indicator.
+     C                     SETOF                         35
+      * Start at previous highest record in SFL.
+     C                     Z-ADDWWRRMX    RRN     50
+      * Reset count of DBF records read.
+     C                     Z-ADD0         WWRRRD  50
+     C                     MOVEL*BLANK    WWFLAG  1
+     C                     MOVE '>'       DDSIGN
+     C                     MOVE *ON       *IN83
+      *................................................................
+      * Load next SFL page until SFL page full
+     C           *IN82     DOWEQ'0'                        DO
+     C           WWRROK    ANDLTWWSFPG
+     C           TRUSER    IFEQ ##USR
+      * Load SFL fields.
+     C                     EXSR MBFL#1
+      * Output to subfile.
+     C                     ADD  1         RRN        81    *
+     C                     ADD  1         WWRROK
+      *
+     C                     WRITECB0535S0
+     C**
+     C           WWFLAG    IFEQ 'Y'
+     C                     MOVE ' '       DDSIGN
+     C                     MOVE *OFF      *IN83
+     C                     ELSE
+     C                     MOVE '>'       DDSIGN
+     C                     MOVE *ON       *IN83
+     C                     END
+      * Increment records read count.
+     C                     ADD  1         WWRRRD
+     C                     END
+     C           WWFLAG    IFEQ *BLANK
+     C           BYPASS    TAG
+     C                     READ CBTRACD0                 82*82=EOF
+     C                     END
+     C                     ENDDO                           OD 1 - WWSFPG
+      *................................................................
+      * If no DBF records found, display error message.
+     C           RRN       IFEQ *ZERO
+     C           *IN82     ANDEQ*ON
+      * Send message '*No data to display'
+     C                     MOVEL'Y2U0008' ZAMSID           Message id.
+     C                     MOVEL'Y2USRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     ENDIF                           FI RRN  = *ZERO
+      *
+      *................................................................
+      * Save highest SFL record load can continue at end point.
+     C           RRN       IFGT WWRRMX
+     C           WWRRMX    ADD  1         SFLRRN
+     C                     Z-ADDRRN       WWRRMX
+     C                     ENDIF
+     C                     Z-ADD0         WWRROK
+     C           BBEXIT    ENDSR
+      *================================================================
+      /EJECT
+      *================================================================
+      * CAEXFM
+      * Display screen.
+      *================================================================
+     C           CAEXFM    BEGSR
+      * Update screen time.
+     C                     TIME           WWTME            Screen time.
+     C                     WRITECB0535C1
+     C                     WRITECB0535T1
+     C                     EXFMTCB0535C0
+     C                     MOVE '0'       *IN89
+      * Update job time.
+     C                     TIME           WWJTM            Job time.
+      * Clear messages from program message queue.
+     C                     CALL 'Y2CLMSC'
+     C                     PARM DDPGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag.
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C                     SETOF                         88*
+     C           CAEXIT    ENDSR
+      *================================================================
+      /EJECT
+      *================================================================
+      * DAPR##
+      * Process screen input.
+      *================================================================
+     C           DAPR##    BEGSR
+      * Maintain subfile position where possible.
+     C           @#SFRC    IFGT *ZERO
+     C                     Z-ADD@#SFRC    SFLRRN
+     C                     ENDIF
+      * Reload subfile requested:
+     C           W0RSF     CABEQ'Y'       DAEXIT
+     C           *IN81     IFEQ '1'
+      * Process subfile records.
+     C                     EXSR DBPRSF
+     C                     END
+      * If error, Quit processing:
+     C           *IN99     CABEQ'1'       DAEXIT
+     C           DAEXIT    ENDSR
+      *================================================================
+      /EJECT
+      *================================================================
+      * DBPRSF
+      * Process modified subfile records.
+      *================================================================
+     C           DBPRSF    BEGSR
+     C                     READCCB0535S0                 88*
+     C           *IN88     DOWEQ*OFF
+      * Process SFL record.
+     C***                  EXSR DCPRSR
+     C                     UPDATCB0535S0
+     C                     READCCB0535S0                 88*
+     C                     ENDDO
+     C           DBEXIT    ENDSR
+      *================================================================
+      /EJECT
+      *================================================================
+      * MBFL#1
+      * Move CBUSERD0   fields to subfile.
+      *================================================================
+     C           MBFL#1    BEGSR
+     C                     MOVEL*BLANKS   DDFULL
+     C           WWFLAG    IFEQ *BLANK                     B1
+     C                     MOVELTRUSER    DDUSER           User ID
+     C                     MOVELTRJOB     DDJOB            Job Name
+     C                     MOVELTRNBR     DDNBR            Job Number
+     C                     SELEC
+     C           TRPHAS    WHEQ 'A'
+     C                     MOVEL'ICS'     DDPHAS
+     C           TRPHAS    WHEQ 'B'
+     C                     MOVEL'ICT'     DDPHAS
+     C           TRPHAS    WHEQ 'C'
+     C                     MOVEL'COB'     DDPHAS
+     C           TRPHAS    WHEQ 'D'
+     C                     MOVEL'NSD'     DDPHAS
+     C           TRPHAS    WHEQ 'F'
+     C                     MOVEL'INI'     DDPHAS
+     C                     ENDSL
+     C           2         SUBSTTRDATS:1  WWDAY
+     C           2         SUBSTTRDATS:3  WWMTH
+     C           2         SUBSTTRDATS:5  WWYER
+     C                     MOVELWWDATE    DDDATS
+     C           2         SUBSTTRDATE:1  WWDAY
+     C           2         SUBSTTRDATE:3  WWMTH
+     C           2         SUBSTTRDATE:5  WWYER
+     C                     MOVELWWDATE    DDDATE
+     C           2         SUBSTTRTIME:1  WWHOR
+     C           2         SUBSTTRTIME:3  WWMIN
+     C           2         SUBSTTRTIME:5  WWSEC
+     C                     MOVELWWTIME    DDTIME           SYS TIME
+     C                     Z-ADD75        Y       30
+     C                     Z-ADD1         Z       30
+     C                     Z-ADD1         X       30
+     C           '&'       SCAN TRACTN:1  Z
+     C                     MOVEATRACTN    TMP,1
+     C                     MOVEL*BLANK    TMP,Z
+     C                     MOVEATMP       TRACTN
+     C                     MOVEL'Y'       WWFLAG  1
+     C                     ELSE
+     C           X         IFLT Z
+     C           Y         SUBSTTRACTN:X  DDACTN
+     C           X         ADD  75        X
+     C                     ELSE
+     C                     MOVEL*BLANK    WWFLAG
+     C                     END
+     C**
+     C                     END
+     C                     MOVELDDFULL    DDLINE
+     C           MBEXIT    ENDSR
+      *================================================================
+      /EJECT
+      *================================================================
+      * ZASNMS
+      * Send message to program's message queue.
+      *================================================================
+     C           ZASNMS    BEGSR
+     C           ZAPGM     IFEQ *BLANK
+     C                     MOVELDDPGM     ZAPGM
+     C                     ENDIF
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      * Clear all fields for default mechanism next time.
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSID           Message Id.
+     C                     MOVEL*BLANK    ZAMSGF           Message file.
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C           ZAEXIT    ENDSR
+      *================================================================
+      /EJECT
+      *================================================================
+      * ZYEXPG
+      * Exit program: Direct.
+      *================================================================
+     C           ZYEXPG    BEGSR
+      * Terminate program.
+     C                     SETON                     LR
+      *
+      * Exit program.
+     C                     RETRN
+      *
+     C           ZYEXIT    ENDSR
+      *================================================================
+      /EJECT
+      *================================================================
+      * ZZINIT
+      * Initialisation.
+      *================================================================
+     C           ZZINIT    BEGSR
+      *
+      *
+     C                     MOVEACPY@      ACT@   80
+     C                     MOVEL##PGM     DDPGM
+      *
+      * Setup job date/time.
+     C                     Z-ADDUDATE     WWJDT            Job date.
+     C                     TIME           WWJTM            Job time.
+     C                     TIME           WWTME   60       Screen time.
+      * Define work field midas rundate
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUSUC   1
+      * Define work field date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      *
+     C                     Z-ADD14        WWSFPG  30       SFLPAG
+     C                     Z-ADD1         SFLRRN
+     C                     Z-ADD*ZERO     WWRRMX           MAX RECNO
+      *................................................................
+      * USER: Initialise program
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      SRUNA
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB
+     C                     MOVE SUC       WUSUC
+     C                     MOVE DFF       WUDFF
+     C                     MOVE ##USR     SUSER
+     C                     MOVE ##JOB     SWSID
+     C           ZZEXIT    ENDSR
+      *================================================================
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

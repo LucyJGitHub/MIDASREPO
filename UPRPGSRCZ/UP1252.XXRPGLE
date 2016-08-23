@@ -1,0 +1,223 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+      *****************************************************************
+/*S*D****RPGBASEBND****************************************************                       CUP021
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bridge                                               *
+      *                                                               *
+      *  UP1252 - Process Action File for MEINFMPD                    *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *                                                               *
+      *  Last Amend No. CUP021  *REDUNDANT Date 11Feb11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Prev Amend No. BUG24370           Date 16Jun09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4.01.03 ----------------------------------------*
+      *                 CUP019 *CREATE     Date 30May02               *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CUP021 - Rewrite of Action File processing                   *
+      *  BUG24370 - New fields tags & sequences are missing           *
+      *  CUP019 - Creation of new set of Action File utilities.       *
+      *                                                               *
+      *****************************************************************
+      * Function of indicators
+      *
+      *       20      End of file
+      *       30      Chain - record not found
+      *       69      Read, write, update or delete fail
+      *
+     FUPINF2L0  IF   E           K DISK    INFSR(*PSSR)
+     FMEINFML0  UF A E           K DISK    INFSR(*PSSR)
+     F                                     RENAME(@INFML0:INF2F)
+      /EJECT
+      *
+     D LDA           E DS           256    EXTNAME(LDA)
+      *
+      * Local data area for database error details
+      * *LOCK IN LDA immediately before and OUT LDA immediately
+      * after each database error handling.
+      *
+      *                                     134 141 DBFILE
+      *        Defines:                     142 170 DBKEY
+      *                                     171 180 DBPGM
+      *                                     181 1830DBASE
+      *
+     D PSDS           SDS
+      *
+      ** Program Status Data Structure.
+      *
+     D  PGM              *PROC
+     D  WSID                 244    253
+     D  USER                 254    263
+      *
+      * Fields with the same name will need to be renamed.
+     IINF2F
+     I              FMNWRK                      NWRK
+     I              FMMTPY                      MTPY
+     I              FMMSEQ                      MSEQ                                        BUG24370
+     I              FMMTAG                      MTAG
+     I              FMFTFD                      FTFD
+     I              FMFTSP                      FTSP
+     I              FMNARR                      NARR
+     I              FMRECI                      RECI
+     I              FMAJOB                      AJOB
+     I              FMAUSR                      AUSR
+     I              FMATIM                      ATIM
+     I              FMARDT                      ARDT
+     I              FMAACT                      AACT
+     I              FMRDNB                      RDNB
+      *
+     C     COMP          KLIST
+     C                   KFLD                    FMNWRK
+     C                   KFLD                    FMMTPY
+     C                   KFLD                    FMMSEQ                                     BUG24370
+     C                   KFLD                    FMMTAG
+     C                   KFLD                    FMFTFD
+      *
+     C     *LOVAL        SETLL     UPINF2L0
+      *
+     C                   READ      UPINF2L0                             6920
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+      *
+     C     *IN20         DOWEQ     '0'
+      *
+     C     FMACTC        IFEQ      'I'
+     C                   EXSR      SETVAL
+     C                   WRITE     INF2F                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C     FMACTC        IFEQ      'D'
+     C     COMP          CHAIN     MEINFML0                           3069
+     C     *IN69         IFEQ      *ON
+     C     *IN30         OREQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+      *
+     C                   ELSE
+     C                   DELETE    INF2F                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   ENDIF
+      *
+      * If Action code = AMEND then read next record.
+     C     FMACTC        IFEQ      'A'
+     C                   MOVEL     FMNWRK        NWRKX             6
+     C                   MOVEL     FMMTPY        MTPYX             3
+     C                   MOVEL     FMMSEQ        MSEQX             3                        BUG24370
+     C                   MOVEL     FMMTAG        MTAGX             5
+     C                   MOVEL     FMFTFD        FTFDX            10
+     C                   READ      UPINF2L0                             6920
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+      *
+      * If key fields do not match exit
+      *  - or if EOF indicator is on.
+     C     FMNWRK        IFNE      NWRKX
+     C     FMMTPY        ANDNE     MTPYX
+     C     FMMSEQ        ANDNE     MSEQX                                                    BUG24370
+     C     FMMTAG        ANDNE     MTAGX
+     C     FMFTFD        ANDNE     FTFDX
+     C     *IN20         OREQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+      *
+     C     COMP          CHAIN     MEINFML0                           3069
+     C     *IN69         IFEQ      *ON
+     C     *IN30         OREQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+      *
+     C                   ELSE
+      *
+     C                   EXSR      SETVAL
+     C                   UPDATE    INF2F                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   ENDIF
+      *
+     C                   READ      UPINF2L0                             6920
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+      *
+     C                   ENDDO
+      *
+     C     ENDPGM        TAG
+     C                   SETON                                        LR
+     C                   RETURN
+      *
+      *****************************************************************
+      *                                                               *
+      * SETVAL subroutine - set values for deletes/writes/updates     *
+      *                                                               *
+      *****************************************************************
+     C     SETVAL        BEGSR
+      * Set values to update record.
+     C                   MOVEL     FMNWRK        NWRK
+     C                   MOVEL     FMMTPY        MTPY
+     C                   MOVEL     FMMSEQ        MSEQ                                       BUG24370
+     C                   MOVEL     FMMTAG        MTAG
+     C                   MOVEL     FMFTFD        FTFD
+     C                   MOVEL     FMFTSP        FTSP
+     C                   MOVEL     FMNARR        NARR
+     C                   MOVEL     FMRECI        RECI
+     C                   MOVEL     FMAJOB        AJOB
+     C                   MOVEL     FMAUSR        AUSR
+     C                   MOVEL     FMATIM        ATIM
+     C                   MOVEL     FMARDT        ARDT
+     C                   MOVEL     FMAACT        AACT
+     C                   MOVEL     FMRDNB        RDNB
+      *
+     C                   ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: None                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *PSSR         BEGSR                                                  ** *PSSR SR **
+      *
+     C     @RUN          IFEQ      *BLANK
+     C                   MOVE      'Y'           @RUN              1
+     C                   DUMP
+     C                   END
+      *
+     C                   SETON                                        U7U8LR
+     C                   RETURN
+      *
+     C                   ENDSR
+      ********************************************************************

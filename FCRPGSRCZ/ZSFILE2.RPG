@@ -1,0 +1,712 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FC Set-up spool numbers file (specify group)')   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Report Control Facility Module                       *
+      *                                                               *
+      *  ZSFILE2 - Set Up Spool File Numbers File (Specify Group)     *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *                                                               *
+      *  NOTE: This program is almost an exact duplicate of the pgm   *
+      *        ZSFILE except that it allows the reporting group to    *
+      *        be specified as a parameter. Therefore, any change to  *
+      *        this program will probably also need to be applied to  *
+      *        ZSFILE under the same change number.                   *
+      *                                                               *
+      *  Last Amend No. CCB020             Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Prev Amend No. CSC042             Date 16Feb09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 TDA035             Date 02Apr04               *
+      * Midas Release 4.01.03 ----------------------------------------*
+      *                 216350  *CREATE    Date 18Mar03               *
+      *                 xxxxxx             Date nnXxxnn               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
+      *  CSC042 - COB performance fix. Stop the meaningless messages  *
+      *           saying MAARCDPD has been changed to SEQONLY(*NO)    *
+      *  CRE026 - Consumer Banking (Recompile)                        *
+      *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
+      *  216350 - Duplicate of ZSFILE with an extra parameter to      *
+      *           define the reporting group when it differs from     *
+      *           the logically calculated one.                       *
+      *           - This program includes all the ZSFILE changes upto *
+      *             and including SC189818.                           *
+      *                                                               *
+      *****************************************************************
+     FFCRREQL0UF  E           K        DISK                      A
+     FFCRSFXL1IF  E           K        DISK
+     FFCREPTL1IF  E           K        DISK
+     FMAARCPL2IF  E           K        DISK
+     FFCMOUTL1IF  E           K        DISK
+     FMUSER   IF  E           K        DISK
+     FFCSFNOL0UF  E           K        DISK                      A
+     F***MAARCDPDO   E                    DISK                                                CSC042
+     FMAARCDPDO   E                    DISK                           UC                      CSC042
+     F****************************************************************
+     F*         FUNCTION OF INDICATORS
+     F*
+     F*   30    CHAIN FAIL TO MANDATORY OUTPUT INSTRUCTIONS
+     F*   31    CHAIN FAIL TO MUSER
+     F*   32    CHAIN FAIL TO REPORT REQUESTS
+     F*   33    END OF RECORDS ON ARCHIVE CONTENTS PERM FOR REPORT
+     F*   35    CHAIN FAIL TO SPOOL FILE NUMBERS
+     F*
+     F*   LR,U7&U8 SET ON IN EVENT OF DATABASE ERROR
+     F*
+     F****************************************************************
+     E                    CPY@    1   1 80
+     E                    #CMD    1   1 80                                                    CSC042
+     I*
+     IRSFXDS      DS
+     I*
+     I** DATASTRUCTURE FOR REPORT SUFFIX CHAIN FAIL
+     I*
+     I                                        1  10 D5RNAM
+     I                                       11  20 SFNAME
+     I*
+     ILDA         DS                            256
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR STORE
+     I*
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     IREPSEQ      DS
+     I*
+     I** REPORT SEQUENCE NUMBER
+     I*
+     I                                        1   50SEQ
+     I*
+     IRUNDAT      DS
+     I*
+      ** DATA AREA OF BANK DETAILS
+     I*
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     I*
+     I**MPHAS*******DS                                                                        CCB020
+     I*
+     I***PHASE*OF*DAY                                                                         CCB020
+     I*
+     I**********                              1   1 PHASE                                     CCB020
+     I*
+     I** Parameter list to pass to write to optical disk header record
+     I*
+     IIHEAD       DS
+     I                                        1 198 HEADER
+     I                                        1   4 OUTPUT
+     I                                        5  14 REPORT
+     I                                       15  24 USERID
+     I                                       25  34 JOBNAM
+     I                                       35  40 JOBNBR
+     I                                       41  44 SPLFNO
+     I                                       45  45 RPTLVL
+     I                                       46  48 ENTITY
+     I                                       49  53 RSEQNO
+     I                                       54  63 PRTFNM
+     I*
+     I*
+     IPSDS       SDS
+     I*
+     I** PROGRAM STATUS DATA STRUCTURE FOR USER ETC.
+     I*
+     I                                      244 253 JBNM
+     I                                      254 263 JUSR
+     I                                      264 269 JBNB
+     I*
+     ISPOOLN      DS
+     I*
+     I** SPOOL FILE NUMBER CONVERSION TO ALPHA
+     I*
+     I                                        1   60SFNOS
+     I*
+     IRCFICD    E DSSDRCFPD
+      *
+     C           CSC042    IFNE 'Y'                                                           CSC042
+     C                     MOVEACPY@      BIS@   80
+     C                     MOVEL'Y'       CSC042  1                                           CSC042
+     C                     CALL 'QCMDEXC'                                                     CSC042
+     C                     PARM #CMD,1    PARM1  80                                           CSC042
+     C                     PARM 80        PARM2  155                                          CSC042
+     C                     OPEN MAARCDPD                                                      CSC042
+     C                     END                                                                CSC042
+      *
+      ** Accept Parameters
+      *
+     C           *ENTRY    PLIST
+     C           RQSQ      PARM           RSQNCE  5
+     C                     PARM           PRNAM  10
+     C                     PARM           ETTY
+     C           SFNAME    PARM           SFN    10
+     C                     PARM           SFNOP   60
+     C                     PARM           ERR     1
+      *
+      *
+      ** Define Key List for chain to Permanent Archive Contents File
+      *
+     C           ARCP      KLIST
+     C                     KFLD           D5RNAM
+     C                     KFLD           PSQN
+      *
+     C           *LIKE     DEFN D5RQSQ    RQSQ
+     C           *LIKE     DEFN ECPSQN    PSQN
+     C           *LIKE     DEFN ECRSFX    RSFX
+     C           *LIKE     DEFN D5ETTY    ETTY
+     C           *LIKE     DEFN D6SFNO    SFNO
+      *
+      ** Convert spool file number to 4 alpha
+      *
+     C                     Z-ADDSFNOP     SFNOS
+     C                     MOVE SFNOS     SFNO
+     C                     MOVE ERR       LEVEL   1
+      *
+      * Initialise FCKEY with SFNAME value
+      *
+     C                     MOVE SFNAME    FCKEY  10
+      *
+      ** Check what value should be recorded in the user data
+      *
+     C                     MOVEL'*FIRST'  P@OPTN  7
+      *
+     C                     CALL 'AORCFR0'
+     C                     PARM           P@RTCD  7        B:Return code
+     C                     PARM           P@OPTN           I:Option
+     C                     PARM           RCFICD           O:Format
+      *
+      ** Check return code
+     C           P@RTCD    IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     MOVEL'SDRCFL0 'DBFILE           * DB ERR  005 *
+     C                     Z-ADD5         DBASE            ***************
+     C                     MOVEL'ZSFILE2' DBPGM
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     END
+      *
+      ** Update or write to report requests file
+     C                     EXSR REPRQU
+      *
+      ** Update or write to spool files numbers file
+     C                     EXSR REST
+      *
+      ** Write header records to optical disk header file
+     C                     EXSR ODHDR
+     C                     SETON                     LR
+      *
+     C                     RETRN
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      ** Calls Subroutine DBERR
+      ********************************************************************
+      *
+     C           REPRQU    BEGSR
+      *
+      *
+      ** If sequence number is blank then a
+      ** mandatory report is being processed
+      *
+     C           RQSQ      IFEQ *BLANK
+      *
+      ** Obtain next sequence number from data area REPSEQ
+      ** and update data area for next request
+      *
+     C           *NAMVAR   DEFN           REPSEQ
+     C           *LOCK     IN   REPSEQ
+     C                     MOVE SEQ       RQSQ
+     C                     ADD  1         SEQ
+     C                     OUT  REPSEQ
+      *
+      ** return sequence number used to calling pgm
+     C                     MOVE RQSQ      RSQNCE
+      *
+      **           Receive Data area RUNDAT for multibranching indicator
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      *************Receive*Data*area*MPHAS*for*phase*of*day************                       CCB020
+      *
+     C********** *NAMVAR   DEFN           MPHAS                                               CCB020
+     C**********           IN   MPHAS                                                         CCB020
+      *                                                                                       CCB020
+      ** CBFLAGQT Phase Check                                                                 CCB020
+      *                                                                                       CCB020
+     C                     MOVEL'CBC00100'@CBPRM  9                                           CCB020
+     C                     MOVE '1'       @CBPRM                                              CCB020
+     C                     CALL @CBPRM                                                        CCB020
+     C                     PARM *BLANKS   CBFLG   4                                           CCB020
+      *
+      ***If*the*phase*of*day*is*Close*of*Business*or*Next*Day*Set*Up***                       CCB020
+      ***set*Report*Produced*in*COB*flag*to*'Y',*otherwise*set*********                       CCB020
+      ***Report*Produced*in*Input*Cycle*flag*to*'Y'********************                       CCB020
+      *
+     C*********  PHASE     IFEQ 'C'                                                           CCB020
+     C*********  PHASE     OREQ 'D'                                                           CCB020
+     C           CBFLG     IFEQ '*YES'                                                        CCB020
+     C                     MOVE 'Y'       D5COBR
+     C                     MOVE 'N'       D5IPCY
+     C                     ELSE
+     C                     MOVE 'Y'       D5IPCY
+     C                     MOVE 'N'       D5COBR
+     C                     END
+      *
+     C                     MOVE 'N'       D5PDFL
+      *
+      **           Access Report Descriptions using
+      **            spool file name to set limits
+      *
+      * Where a program name has been passed
+      *
+     C           PRNAM     IFNE *BLANK
+     C                     MOVELPRNAM     FCKEY
+     C           FCKEY     CHAINFCREPTL1             32
+     C                     ELSE
+      *
+      ** Where printer files names are program name + suffix
+      *
+     C           SFNAME    SETLLFCREPTL1
+      *
+      ** Read previous record to the one to which the pointer is set,
+      ** as Report Descriptions File is keyed on Report name
+      ** and key used for SETLL is the printer file name
+      *
+     C                     READPFCREPTL1                 32
+      *
+     C                     ENDIF
+      *
+      ** If a record is found determine whether the first six
+      ** characters of the report name match the first six
+      ** characters of the spool file name
+      *
+     C           *IN32     IFEQ '0'
+     C                     MOVELDXRNAM    REPTR   6
+     C                     MOVELSFNAME    SFNMR   6
+     C           REPTR     COMP SFNMR                3232
+     C                     END
+      *
+      ** If no matching record is found, attempt chain
+      ** with the spool file name, as this may be a Midas/Q
+      ** report for which the print file name will be the
+      ** same as the Report Name
+      *
+     C           *IN32     IFEQ '1'
+     C           FCKEY     CHAINFCREPTL1             32
+     C                     END
+      *
+      **           IF no matching record found,
+      **                Database error
+      *
+     C           *IN32     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVELSFNMR     DBKEY            ***************
+     C                     MOVEL'FCREPTL0'DBFILE           * DB ERR  003 *
+     C                     Z-ADD3         DBASE            ***************
+     C                     MOVEL'ZSFILE2' DBPGM
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     END
+      *
+      ** Access the Mandatory Output Instructions File to determine
+      ** if there are Mandatory Output Instructions for this report
+      *
+     C                     MOVE *BLANKS   D2DLS1
+     C                     MOVE *BLANKS   D2DLS2
+     C                     MOVE *BLANKS   D2USRO
+     C                     MOVE *BLANKS   D2ARMF
+     C                     MOVE *BLANKS   D2AROD
+     C*
+     C           DXRNAM    CHAINFCMOUTL1             30
+      *
+      *
+      ** If a record is found then set User Id, Output Inst and
+      ** Distribution Required as defined on the record
+      **
+      ** Else
+      ** Set the default values for these fields:-
+      ** Set User Id to be MIDAS, then determine default output Id
+      ** and whether distribution is required.
+      *
+     C           *IN30     IFEQ '0'
+     C                     MOVE D2DFTU    D5USRR
+     C                     MOVE D2DFTO    D5SOID
+     C                     MOVE D2DRQD    D5DRQD
+     C                     ELSE
+     C                     MOVE *BLANKS   D5USRR
+     C                     MOVEL'MIDAS'   D5USRR
+      *
+      ** SET UP DEFAULT OUTPUT ID: FROM REPORT DESCRIPTION IF AVAILABLE
+      ** OTHERWISE, SET TO 'MIDAS'
+      *
+     C           DXDFTO    IFNE *BLANK
+     C                     MOVE DXDFTO    D5SOID
+     C                     ELSE
+     C                     MOVEL'MIDAS'   D5SOID
+     C                     END
+      *
+      *
+      ** Set distribution for report request regardless of
+      ** whether multibranching is on or not.
+      *
+      ** IF ENTITY IS BLANK, REPORT SET TO SYSTEM LEVEL, SO SET
+      ** DISTRIBUTION TO 'N', ELSE SET TO YES
+      *
+     C           ETTY      IFEQ *BLANK
+     C                     MOVE 'N'       D5DRQD
+     C                     ELSE
+     C                     MOVE 'Y'       D5DRQD
+     C                     END
+      *
+      *
+     C                     END
+      *
+      ** If in a Multibranch system, then set the
+      ** Default Branch for the requesting User
+      *
+      *
+      **                Access MUSER for Default Branch of user
+      *
+     C           D5USRR    CHAINMUSER                31
+      *
+      **                IF no record found,
+      **                     Database error
+      *
+     C           *IN31     IFEQ '1'
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVELD5USRR    DBKEY            ***************
+     C                     MOVEL'MUSER'   DBFILE           * DB ERR  001 *
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'ZSFILE2' DBPGM
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     END
+      *
+      *
+      ** For all mandatory report requests,
+      ** set up fields to write to report requests file
+      *
+     C                     MOVELDXRNAM    D5RNAM
+     C                     MOVE RQSQ      D5RQSQ
+     C                     MOVE DBRN      D5DBRN
+     C                     MOVE D2DLS1    D5DLS1
+     C                     MOVE D2DLS2    D5DLS2
+     C                     MOVE D2USRO    D5USRO
+     C                     MOVE D2ARMF    D5ARMF
+     C                     MOVE D2AROD    D5AROD
+     C                     MOVELJUSR      D5JUSR
+     C                     MOVELJBNM      D5JBNM
+     C                     MOVE JBNB      D5JBNB
+      *
+      ** In a Multi-branched system set up the level and entity fields
+      ** to be the same for Single Branch environment.
+      *
+     C           ETTY      IFEQ *BLANK
+     C                     MOVE *BLANKS   D5ETTY
+     C                     MOVE 'S'       D5LVL
+     C                     END
+      *
+     C           ETTY      IFNE *BLANK
+     C                     MOVE 'ALL'     D5ETTY
+      *
+      ** If Multibranching is on and Account Officer Level is not
+      ** available then the Report level is 'B'; Else 'A'.
+     C           MBIN      IFEQ 'Y'
+      *
+     C           DXALVL    IFEQ 'Y'
+     C                     MOVE 'A'       D5LVL
+     C                     ELSE
+     C                     MOVE 'B'       D5LVL
+     C                     END
+      *
+     C                     ELSE
+     C                     MOVE 'A'       D5LVL
+     C                     END
+      *
+     C                     END
+      *
+      ** In a Single branch system ensure that the
+      ** level and entity fields are blank
+      *
+     C           MBIN      IFEQ 'N'
+     C                     MOVE *BLANKS   D5ETTY
+     C                     MOVE *BLANKS   D5LVL
+     C                     END
+      *
+      ** Check if company level is specified
+      *
+     C           LEVEL     IFEQ 'C'
+     C                     MOVE 'ALL'     D5ETTY
+     C                     MOVE 'C'       D5LVL
+     C                     END
+      *
+      ** Write record to file
+      *
+     C                     WRITE@D5REI8
+      *
+      ** If Archiving has been requested, access the
+      ** archive contents permanent file for the report details
+      *
+     C           D2ARMF    IFEQ 'Y'
+     C           D2AROD    OREQ 'Y'
+     C                     MOVE '00'      PSQN
+     C           ARCP      SETLLMAARCPL2
+     C           ARCP      READEMAARCPL2                 33
+      *
+      * For each record which exists for the report,
+      * write a record to the Daily Archive Contents File
+      *
+     C           *IN33     DOWEQ'0'
+     C                     MOVE D5RNAM    EBRNAM
+     C                     MOVE D5RQSQ    EBRQSQ
+     C                     MOVE ECARID    EBARID
+     C                     MOVE ECRSFX    EBRSFX
+     C                     MOVE 'N'       EBCFLG
+     C                     MOVE 'N'       EBACFL
+     C                     WRITEMAARCDD0
+     C           ARCP      READEMAARCPL2                 33
+     C                     END
+      *
+     C                     END
+      *
+      ** Else if the sequence number is not blank, then a
+      ** requested report is being processed
+      *
+     C                     ELSE
+      *
+      ** Access the Report Requests file
+      *
+     C           RQSQ      CHAINFCRREQL0             32
+      *
+      **           IF no record found
+      **                Database error
+      *
+     C           *IN32     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVELRQSQ      DBKEY            ***************
+     C                     MOVEL'FCRREQL0'DBFILE           * DB ERR  004 *
+     C                     Z-ADD4         DBASE            ***************
+     C                     MOVEL'ZSFILE2' DBPGM
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     END
+      *
+      ** Update the report requests record with the job details
+      *
+     C                     MOVELJUSR      D5JUSR
+     C                     MOVELJBNM      D5JBNM
+     C                     MOVELJBNB      D5JBNB
+     C                     UPDAT@D5REI8
+      *
+     C                     END
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      ** S/R REST - PERFORM WRITE TO SPOOL FILE NUMBERS
+      ** CALLED FROM MAIN PROCESSING
+      ** Calls Subroutine DBERR
+      ********************************************************************
+      *
+     C           REST      BEGSR
+      *
+      ** Set up sequence number, print file name and entity
+      ** for the write of a record to the spool file numbers file
+      ** or chain to the spool file numbers file if this is a restart
+      *
+     C                     MOVE RQSQ      D6RQSQ
+     C                     MOVELSFNAME    D6RSFX
+     C                     MOVE ETTY      D6XETY
+      *
+      ** Access spool file numbers file for the current details in case
+      ** of re-start
+      *
+     C           SFNOKY    KLIST
+     C                     KFLD           D6RQSQ
+     C                     KFLD           D6RSFX
+     C                     KFLD           D6XETY
+     C                     KFLD           D6SFNO
+      *
+     C                     MOVE SFNO      D6SFNO
+      *
+     C           SFNOKY    CHAINFCSFNOL0             35
+      *
+      ** Set up spool file number and status for the write to or
+      ** update of a record on the spool file numbers file
+      *
+     C                     MOVE 'N'       D6PSTS
+      *
+      ** If a record was found on the spool file numbers file
+      ** then update the file
+      ** Else write a new record to the file
+      *
+     C           *IN35     IFEQ '0'
+     C                     UPDAT@D6REJB
+     C                     ELSE
+     C*
+     C** Access the report print file name file
+     C** for the value of the audit file flag
+     C*
+     C           RSFXK     KLIST
+     C                     KFLD           D5RNAM
+     C                     KFLD           SFNAME
+     C           RSFXK     CHAINFCRSFXL1             33
+      *
+      **           IF no record found
+      **                Database error
+      *
+     C           *IN33     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVELRSFXDS    DBKEY            ***************
+     C                     MOVEL'FCRSFXL0'DBFILE           * DB ERR  002 *
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVEL'ZSFILE2' DBPGM
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     END
+      *
+     C                     MOVE DYAURP    D6AURP
+     C                     WRITE@D6REJB
+     C                     END
+      *
+      ** Update user data with the entity.
+     C                     EXSR UDATA
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      ** S/R ODHDR - WRITE RECORDS TO OPTICAL DISK HEADER RECORDS FILE
+      ** CALLED FROM MAIN PROCESSING
+      ** CALLS MA0640 - CREATE HEADER RECORDS FOR OPTICAL DISK PROCESSING
+      ********************************************************************
+      *
+     C           ODHDR     BEGSR
+      *
+      ** Write header records to optical disk header file if optical
+      ** disk is requested.
+      *
+     C           D5AROD    IFEQ 'Y'
+     C                     MOVE *BLANKS   HEADER
+     C                     MOVE *BLANKS   @ERROR  1
+     C                     MOVE 'OHDR'    OUTPUT
+     C                     MOVE D5RNAM    REPORT
+      *
+     C           D5USRO    IFEQ *BLANKS
+     C                     MOVE D5JUSR    USERID
+     C                     ELSE
+     C                     MOVE D5USRO    USERID
+     C                     END
+      *
+     C                     MOVE D5JBNM    JOBNAM
+     C                     MOVE D5JBNB    JOBNBR
+     C                     MOVE SFNO      SPLFNO
+     C                     MOVE D5LVL     RPTLVL
+     C                     MOVE D6XETY    ENTITY
+     C                     MOVE D5RQSQ    RSEQNO
+     C                     MOVELD6RSFX    PRTFNM
+     C                     CALL 'MA0640'
+     C                     PARM           HEADER
+     C                     PARM           @ERROR
+      *
+     C           @ERROR    IFEQ 'Y'
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+     C*  S/R DBERR - TO PROCESS DATABASE ERRORS AND TERMINATE PROGRAM
+     C*  Called from subroutines - REPRQU
+     C*                          - REST
+     C*  Calls subroutine - *PSSR
+     C*
+     C********************************************************************
+     C*
+     C           DBERR     BEGSR
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     RETRN
+     C                     ENDSR
+     C********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S/R UDATA - UPDATE USER DATA                                 *
+      *  CALLED FROM                                                  *
+      *                                                               *
+      *****************************************************************
+     C           UDATA     BEGSR
+      *
+     C           D0UDTA    IFNE *BLANK
+     C           D0UDTA    ANDNE'R'
+      *
+      ** Initialise user data field
+     C                     MOVE *BLANK    USRDTA 10
+      *
+      ** If entity is to be recorded in the user data
+     C           D0UDTA    IFEQ 'E'
+     C                     MOVELETTY      USRDTA
+     C           USRDTA    IFEQ *BLANK
+     C                     MOVEL'SYSTEM'  USRDTA
+     C                     END
+     C                     END
+      *
+      ** Call FCC0320 to update the user data
+     C                     CALL 'FCC0320'
+     C                     PARM           SFN
+     C                     PARM           USRDTA
+     C                     PARM           BERR    1
+      *
+      ** Error during FC0320 processing, run PSSR.
+     C           BERR      IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     RETRN
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+     C*  S/R *PSSR - ERROR ROUTINE
+     C*  CALLED FROM DBERR
+     C*
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     MOVE 'Y'       ERR
+     C                     DUMP
+     C                     END
+     C                     ENDSR
+     C********************************************************************
+** CPY@
+(c) Misys International Banking Systems Ltd. 2003
+**                                                                                            CSC042
+OVRDBF FILE(MAARCDPD) TOFILE(*FILE) OVRSCOPE(*JOB) SEQONLY(*NO)                               CSC042

@@ -1,0 +1,1936 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT BIC plus enquiry')                            *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas   FUNDS TRANSFER MODULE                                *
+     F*                                                               *
+     F*  FT0900  - BIC plus enquiry                                   *
+     F*                                                               *
+     F*  Function - This program run in two modes, controlled by      *
+     F*             parameters. It can either run 'Stand alone'(to    *
+     F*             provide a 'normal' enquiry function) or it can be *
+     F*             called directly from the payment functions.       *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. MD023143A          Date 06Nov13               *
+      *  Prev Amend No. MD023143           Date 30Oct13               *
+      *                 MD023611A          Date 25Nov13               *
+      *                 MD023611           Date 20Nov13               *
+      *                 CFT050             Date 03Jun13               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+     F*                 243560             Date 24Nov06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+     F*                 CFT007  *CREATE    Date 25Oct99               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD023143A - 1 = Select should be displayed in the Bank direc-*
+      *             tory Plus Search Screen of CUAP (Reopen)          *
+      *  MD023143 - 1 = Select should be displayed in the Bank direc- *
+      *             tory Plus Search Screen of CUAP                   *
+      *  MD023611A - Branch and Location are switched each time F18 is*
+      *              keyed (Reopen)                                   *
+      *  MD023611 - Branch and Location are switched each time F18 is *
+      *             keyed                                             *
+      *  CFT050 - SWIFTRef Directories upload                         *
+     F*  243560 - Display enquiry screen correctly to avoid           *
+     F*           webfacing application error.                        *
+     F*  CFT007 - BIC Database Plus Integration                       *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FFT0900DFCF  E                    WORKSTN
+     F                                        @SFK  KSFILE FT0900F0
+     F*
+     FMEBICPL0IF  E           K        DISK                           UC
+     F* BIC Plus file
+     FMEBICPJ0IF  E           K        DISK                           UC                      CFT050
+      * BIC plus/Bank Directory plus file by BIKEY                                            CFT050
+     F            @BICPPD                           KRENAMEBICPJLF                            CFT050
+      *                                                                                       CFT050
+     FMEZIPPL0IF  E           K        DISK
+     F* ZIP placement and clearing code
+     F*
+      /EJECT
+      *
+      *   INDICATOR USAGE
+      *   ---------------
+      *
+      *   01      READ  operation on format
+      *   02      READC operation on subfile
+      *   22      HELP requested
+      *   23      SFLCLR
+      *   24      SFLDSP
+      *   25      SFLEND
+      *   29      ROLLUP requested
+      *   30      SFLDSPCTL on subfile
+      *   40      Switch between Branch and location
+      *   41      Footer Indicator
+      *   42      Stand alone enquiry mode
+      *   50      SCAN Indicator
+      *   51      SCAN Indicator
+      *   72      MEBICPL0 is opened
+      *   72      or MEBICPJ0 is opened when CFT050 is active                                 CFT050
+      *   73      CHAIN FT0900F0
+      *   75      CFT050 is ON                                                                CFT050
+      *
+      *   90 - 99 Used in validation/conversion routines (Z s/r's)
+      *
+      *   U7      Data base error
+      *   U8      Data base error
+      *
+      /EJECT
+      *
+      *   SUB-ROUTINE DEFINITIONS
+      *   -----------------------
+      *
+      *   INIT    Initialisation
+      *   VALID   Validate field selection
+      *   BLDQRY  Build command for the open query file
+      *   BLDSFL  Build a subfile page
+      *   SMODE   Stand alone enquiry mode
+      *   PMODE   In line prompt mode
+      *   SFMODE  In line search mode
+      *   SWITCH  Switch between Location and branch
+      *   DETAIL  Display details of a record
+      *   DETAIL  Display details of a record
+      *   EXIT    Close file and exit program
+      *   DBERR   Error handling
+      *
+      /EJECT
+      *
+     E                    CPY@    1   1 80
+     E                    APOS    1   1  1
+     E**********          QRY     1   6 80                             array                  CFT050
+     E                    QRY     1  12 80                                                    CFT050
+     E                    COM       250  1                             array
+      * Working arrays for the seach criteria
+     E                    SCH        35  1                             array
+     E                    WRD         5 35                             array
+     E                    WSG         5  1                             array
+     E                    WLN         5  2 0                           array
+     E                    QSLT      210  1
+     E                    CMD       310  1
+     I* Constant for query selection
+     I              '(BSINDX *CT '        C         CINDX
+     I              '(BIINST *CT '        C         CINST
+     I              '(BIBNCH *CT '        C         CBNCH
+     I              '(BILOCN *CT '        C         CLOCN
+     I              '(BIBIC  *CT '        C         CBIC
+     I              '(BINATI *CT '        C         CNATI
+     I              '(BICHIP *CT '        C         CCHIP
+     I              '(B3LEIC *CT '        C         CLEIC                                     CFT050
+     I              '*AND '               C         CAND
+     I              '*AND¬ '              C         CANDN
+      /EJECT
+      * Data structure for compilation - Copyright insertion
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *  Error reporting data structure
+     ILDA         DS                            256
+     I                                      134 141 @DBFIL
+     I                                      142 170 @DBKEY
+     I                                      171 180 @DBPGM
+     I                                      181 1830@DBASE
+     I                                      134 183 @DBALL
+      * Program data structure
+     IPGMDS     ESDSY2PGDSP
+      *  Data structure to insert variables into error message
+     I@ERR        DS                             76
+     I                                        6  14 @SJOB
+      *
+     I*     Data Structure for FT0900F2
+     ISCRSEL      DS
+     I                                        1  35 @2INSV
+     I                                       36  70 @2LBRV
+     I                                       71  81 @2BICV
+     I                                       82  96 @2NATV
+     I                                       97 102 @2CHPV
+     I                                      103 122 @2LEIC                                    CFT050
+     I* Data Structure for query selection
+     ICOMMD       DS                            310
+     I                                        1  80 COM1
+     I                                       81 122 COM2
+     I                                      123 252 COM3A
+     I                                       81 310 COM3B
+     I                                        1 310 CMD
+     I            DS
+     I                                        1 210 QSLT
+     I                                        1 210 QSLT2
+     I@OADD       DS                            175
+      * Output Data Structure for reformatted address
+     I                                        1  35 OADD1
+     I                                       36  70 OADD2
+     I                                       71 105 OADD3
+     I                                      106 140 OADD4
+     I                                      141 175 OADD5
+     IWKADD       DS                            140
+      * Working Data Structure for reformatted address
+     I                                        1  35 WADD1
+     I                                       36  70 WADD2
+     I                                       71 105 WADD3
+     I                                      106 140 WADD4
+     I*
+      **  Data structure for search criteria
+     I            DS
+     I                                        1  35 @2CRIV
+     I                                        1  35 SCH
+      *
+      **  Data structure to retrieve Rundate
+     IRUNDAT      DS                             13
+     I                                        1   7 SRUNA
+      *
+     IDSFDY     E DSDSFDY
+     IDSSDY     E DSDSSDY
+     ISDBANK    E DSSDBANKPD
+      /EJECT
+      *****************************************************************
+      *  MAIN PROCESSING
+      *****************************************************************
+      *
+      * Initialise program
+     C                     MOVEACPY@      BIS@   80
+     C                     EXSR INIT
+      *
+     C           @IMODE    IFEQ 'S'
+      * Provide additional function for the stand-alone enquiry
+     C                     SETON                     42
+     C           @ICRIT    IFEQ *BLANKS
+     C                     EXSR SMODE
+     C                     ELSE
+     C                     MOVE @ICRIT    @2CRIV
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           @IMODE    IFEQ 'P'
+      * Provide the in-line prompt enquiry function
+     C           @ICRIT    IFEQ *BLANKS
+     C                     EXSR SMODE
+     C                     ELSE
+     C                     MOVE @ICRIT    @2CRIV
+     C                     ENDIF
+     C           @RTCD     IFEQ *BLANKS
+     C                     EXSR PMODE
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           @IMODE    IFEQ 'S'
+     C           @IMODE    OREQ 'F'
+     C           @IMODE    IFEQ 'F'
+     C           @ICRIT    IFEQ *BLANKS
+     C                     EXSR SMODE
+     C                     ELSE
+     C                     MOVE @ICRIT    @2CRIV
+     C                     EXSR VALID
+     C           WOK       IFNE 'Y'
+     C                     EXSR SMODE
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      * Provide the search enquiry function for the in-line search
+      * and the stand-alone enquiry
+     C           @RTCD     IFEQ *BLANKS
+     C                     EXSR SFMODE
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * Terminate program
+     C                     EXSR EXIT
+     C                     SETON                     LR
+     C                     RETRN
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SMODE    : Display and read Selection Screen                 *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     C           SMODE     BEGSR
+      *
+     C                     MOVE 'N'       WOK     1
+     C                     SETOF                       1823
+      *
+     C           *INKC     DOWEQ*OFF
+     C           *INKL     ANDEQ*OFF
+     C           WOK       ANDEQ'N'
+      *
+      * Display screen
+     C                     TIME           ##TIME
+     C                     WRITEFT0900F2
+     C                     WRITE#MSGCTL
+     C                     WRITEFTFOOTER
+      *
+      * Process while HELP pressed
+     C                     READ FT0900F2                 01
+      *                                                               c
+      ** Clear messages from program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     FTPGMQ 10
+     C                     PARM '*SAME'   FTPGRL  5
+      *
+     C                     SELEC
+      *
+      * Exit
+     C           *INKC     WHEQ *ON                        F03
+     C                     MOVEL'F3'      @RTCD
+      *
+      * Previous
+     C           *INKL     WHEQ *ON                        F12
+     C                     MOVEL'F12'     @RTCD
+      *
+      * Switch (Location / Branch)
+     C           *INKS     WHEQ *ON                        F18
+     C           *IN40     IFEQ *OFF
+     C                     MOVE *ON       *IN40
+     C                     ELSE
+     C                     MOVE *OFF      *IN40
+     C                     ENDIF
+      *
+      * Valid
+     C                     OTHER
+     C                     EXSR VALID
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+      *
+     C                     ENDSR                           DSPLY  end
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  VALID    : Validate search criteria                          *
+      *                                                               *
+      *  CALLED BY: SMODE                                             *
+      *             PMODE                                             *
+      *             SFMODE                                            *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     C           VALID     BEGSR
+      *
+      * At least one search field must be entered
+     C           SCRSEL    IFEQ *BLANKS
+     C           @2CRIV    ANDEQ*BLANKS
+     C                     MOVEL'FTM2427' ZAMSID
+     C                     ENDIF
+      *
+      * Avoid conflict between the selection field
+     C           SCRSEL    IFNE *BLANKS
+     C           @2CRIV    ANDNE*BLANKS
+     C                     MOVEL'FTM2416' ZAMSID
+     C                     ENDIF
+      *
+      *
+      * Do not allow apostrophes and double quotes
+     C           APOS,1    SCAN SCRSEL                   50
+     C           APOS,1    SCAN @2CRIV                   51
+     C           *IN50     IFEQ *ON
+     C           *IN51     OREQ *ON
+     C                     MOVEL'FTM2420' ZAMSID
+     C                     ENDIF
+     C           '"'       SCAN SCRSEL                   50
+     C           *IN50     IFEQ *ON
+     C                     MOVEL'FTM2423' ZAMSID
+     C                     ENDIF
+      *
+      * If error send message to program message queue
+     C           ZAMSID    IFNE *BLANKS
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     MOVE 'Y'       WOK
+     C                     SETON                     23
+     C                     WRITEFT0900F1
+     C                     SETOF                     23
+     C                     Z-ADD1         @SFR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PMODE    : In-line prompt mode                               *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     C           PMODE     BEGSR
+      *
+      ** Construct the open query file
+     C                     EXSR VALID
+     C           WOK       IFNE 'Y'
+     C                     EXSR SMODE
+     C                     ENDIF
+     C           @RTCD     IFEQ *BLANKS
+     C                     EXSR BLDQRY
+      *
+      ** Execute the query
+     C                     CALL 'QCMDEXC'
+     C                     PARM           COMMD
+     C                     PARM           PRMLEN 155
+      *
+      * Open BIC database plus file
+     C           CFT050    IFNE 'Y'                                                           CFT050
+     C                     OPEN MEBICPL0
+     C                     SETON                         72
+     C                     READ MEBICPL0                 70
+     C                     ELSE                                                               CFT050
+      *                                                                                       CFT050
+      ** Use of MEBICPJ0                                                                      CFT050
+      *                                                                                       CFT050
+     C                     OPEN MEBICPJ0                                                      CFT050
+     C                     SETON                         72                                   CFT050
+     C                     READ MEBICPJ0                 70                                   CFT050
+     C                     ENDIF                                                              CFT050
+      *
+     C           *IN70     IFEQ *ON
+      * If no record found, provide the search enquiry function
+     C                     EXSR SFMODE
+      *
+     C                     ELSE
+     C           CFT050    IFNE 'Y'                                                           CFT050
+     C                     READ MEBICPL0                 70
+     C                     ELSE                                                               CFT050
+      *                                                                                       CFT050
+      ** Use of MEBICPJ0                                                                      CFT050
+      *                                                                                       CFT050
+     C                     READ MEBICPJ0                 70                                   CFT050
+     C                     ENDIF                                                              CFT050
+     C           *IN70     IFEQ *OFF
+      * If more than one record, provide the search enquiry function
+     C                     EXSR SFMODE
+      *
+     C                     ELSE
+      * Retrieve ZIP and clearing code information
+     C           BICNTY    CHAINMEZIPPL0             71
+      *
+     C           *IN71     IFNE *OFF
+      * Set 'place ZIP last indicator' and clearing prefix to defaults
+     C                     MOVE *BLANK    ZIZLST
+     C                     MOVEL'//'      ZICPFX
+     C                     ENDIF
+      *
+     C           ZICPFX    IFEQ *BLANKS
+      * Set clearing prefix to defaults
+     C                     MOVEL'//'      ZICPFX
+     C                     ENDIF
+      *
+     C           BICHIP    IFNE *BLANKS
+     C                     MOVE BICHIP    @OCHIP
+     C                     ENDIF
+      *
+     C           BIBIC     IFNE *BLANKS
+     C           BINATI    IFNE *BLANKS
+     C           ZICPFX    IFEQ '//  '
+     C           '//'      CAT  BINATI    WPXNAT 19
+     C                     ELSE
+     C           ZICPFX    CAT  BINATI    WPXNAT
+     C                     ENDIF
+     C                     MOVELWPXNAT    OADD1
+      * Remove 'XXX' from position 9 to 11 of the BIC
+     C           3         SUBSTBIBIC:9   WXXX    3
+     C           WXXX      IFEQ 'XXX'
+     C                     MOVE '   '     BIBIC
+     C                     ENDIF
+     C                     MOVELBIBIC     OADD2
+     C                     MOVE 'AC'      @OUTCD
+     C                     ELSE
+      * Remove 'XXX' from position 9 to 11 of the BIC
+     C           3         SUBSTBIBIC:9   WXXX
+     C           WXXX      IFEQ 'XXX'
+     C                     MOVE '   '     BIBIC
+     C                     ENDIF
+     C                     MOVELBIBIC     OADD1
+     C                     MOVEL'A'       @OUTCD
+     C                     ENDIF
+     C                     ELSE
+      * If 'BIC' is blank, call the 'address reformatting routine'
+     C                     CALL 'FT0910'
+     C                     PARM           BIINST           I:Institution
+     C                     PARM           BIADDR           I:Address
+     C                     PARM           BILOCN           I:Location
+     C                     PARM           BIZIP            I:ZIP
+     C                     PARM           ZIZLST           I:Place ZIP last Ind.
+     C                     PARM           WKADD            O:4 address lines
+     C                     PARM *BLANKS   @RTCD   7        O:Return Code
+      *
+      * If data lost, call the  'manual repair routine'
+     C           @RTCD     IFNE *BLANKS                    B004
+      *
+     C                     MOVE WKADD     WK1ADD140
+     C                     MOVE @RTCD     @WRN    7
+      *
+     C                     CALL 'FT0930'
+     C                     PARM           WK1ADD
+     C                     PARM           BIINST
+     C                     PARM           BIADDR
+     C                     PARM           BILOCN
+     C                     PARM           BIZIP
+     C                     PARM           @WRN
+     C                     PARM *BLANKS   WKADD
+     C                     PARM *BLANKS   @RTCD
+     C                     ENDIF
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C           BINATI    IFNE *BLANKS
+     C           ZICPFX    IFEQ '//  '
+     C           '//'      CAT  BINATI    WPXNAT
+     C                     ELSE
+     C           ZICPFX    CAT  BINATI    WPXNAT
+     C                     ENDIF
+     C                     MOVELWPXNAT    OADD1
+     C                     MOVE WADD1     OADD2
+     C                     MOVE WADD2     OADD3
+     C                     MOVE WADD3     OADD4
+     C                     MOVE WADD4     OADD5
+     C                     MOVE 'DC'      @OUTCD
+     C                     ELSE
+      * If National Id is Blank
+     C                     MOVELWKADD     @OADD
+     C                     MOVEL'D'       @OUTCD
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SFMODE   : In-line search enquiry mode                       *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *             PMODE                                             *
+      *                                                               *
+      *  CALLS    : VALID                                             *
+      *             BLDQRY                                            *
+      *             BLDSFL                                            *
+      *                                                               *
+      *****************************************************************
+     C           SFMODE    BEGSR
+      *
+      ** If in 'Stand-alone enquiry mode ' or  'in line search mode'
+     C           @IMODE    IFNE 'P'                        ---B00
+      *
+      * Construct the open query file
+     C                     EXSR VALID
+      *
+     C                     EXSR BLDQRY
+      ** Execute the query
+     C                     CALL 'QCMDEXC'
+     C                     PARM           COMMD
+     C                     PARM           PRMLEN 155
+      *
+      * Open BIC database plus file
+     C                     SETON                         72
+     C           CFT050    IFNE 'Y'                                                           CFT050
+     C                     OPEN MEBICPL0
+     C                     READ MEBICPL0                 70
+     C                     ELSE                                                               CFT050
+      *                                                                                       CFT050
+      ** Use of MEBICPJ0                                                                      CFT050
+      *                                                                                       CFT050
+     C                     OPEN MEBICPJ0                                                      CFT050
+     C                     READ MEBICPJ0                 70                                   CFT050
+     C                     ENDIF                                                              CFT050
+      *
+     C                     ELSE                            ---X00
+     C           CFT050    IFNE 'Y'                                                           CFT050
+     C                     READPMEBICPL0                 70
+     C                     ELSE                                                               CFT050
+      *                                                                                       CFT050
+      ** Use of MEBICPJ0                                                                      CFT050
+      *                                                                                       CFT050
+     C                     READPMEBICPJ0                 70                                   CFT050
+     C                     ENDIF                                                              CFT050
+     C                     ENDIF                           ---E00
+      ** Clear messages from program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     FTPGMQ 10
+     C                     PARM '*SAME'   FTPGRL  5
+      *
+     C                     MOVE 'N'       WOK
+     C           *INKC     DOWEQ*OFF                       ---B00
+     C           *INKL     ANDEQ*OFF
+     C           WOK       ANDEQ'N'
+     C           *IN70     IFEQ *ON                        ---B01
+     C                     SETOF                     41
+      * If no record found, write a message on the screen and wait for
+      * a new selection
+     C                     TIME           ##TIME
+     C**********           WRITEFT0900F2                    Top Screen                        243560
+     C**********           WRITEFTFOOTER                                                      243560
+     C**********           WRITE#MSGCTL                     messages                          243560
+     C                     WRITEFTNORECD                    'No Record'
+     C                     WRITE#MSGCTL                     messages                          243560
+     C                     WRITEFT0900F2                    Top Screen                        243560
+     C                     WRITEFTFOOTER                                                      243560
+      *
+     C                     READ FT0900F2                 01 Top Screen
+      *
+      ** Clear messages from program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     FTPGMQ 10
+     C                     PARM '*SAME'   FTPGRL  5
+      *
+     C           *INKS     IFEQ *ON                        F18 --B02
+     C           *IN40     IFEQ *OFF                           --B03
+     C                     MOVE *ON       *IN40
+     C**********           MOVE CBRCA     @LOCBR                                           MD023611A
+     C                     MOVE CLOCA     @LOCBR                                           MD023611A
+     C                     ELSE                            ---X03
+     C                     MOVE *OFF      *IN40
+     C**********           MOVE CLOCA     @LOCBR                                           MD023611A
+     C                     MOVE CBRCA     @LOCBR                                           MD023611A
+     C                     ENDIF                           ---E03
+      ** Reset value of @LOCBR if no records in subfile                                     MD023611
+     C           @SFR      IFEQ 1                                                           MD023611
+     C                     SETON                     23                                     MD023611
+     C                     WRITEFT0900F1                                                    MD023611
+     C                     SETOF                     23                                     MD023611
+     C                     ENDIF                                                            MD023611
+     C                     ELSE                            ---X02
+      *
+     C           *INKC     IFEQ *OFF                       ---B03
+     C           *INKL     ANDEQ*OFF
+     C                     EXSR VALID
+     C           WOK       IFEQ 'Y'                        ---B04
+      * Close query and file
+     C           CFT050    IFNE 'Y'                                                           CFT050
+     C                     CALL 'QCMDEXC'
+     C                     PARM           QRY,6
+     C                     PARM 20        PRMLEN 155
+     C                     CLOSEMEBICPL0
+     C                     ELSE                                                               CFT050
+      *                                                                                       CFT050
+      ** Use of MEBICPJ0                                                                      CFT050
+      *                                                                                       CFT050
+     C                     CALL 'QCMDEXC'                                                     CFT050
+     C                     PARM           QRY,12                                              CFT050
+     C                     PARM 20        PRMLEN 155                                          CFT050
+     C                     CLOSEMEBICPJ0                                                      CFT050
+     C                     ENDIF                                                              CFT050
+     C                     EXSR BLDQRY
+     C                     CALL 'QCMDEXC'
+     C                     PARM           COMMD
+     C                     PARM           PRMLEN 155
+      ** Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     FTPGMQ 10
+     C                     PARM '*SAME'   FTPGRL  5
+      *
+     C           CFT050    IFNE 'Y'                                                           CFT050
+     C                     OPEN MEBICPL0
+     C                     SETON                         72
+     C                     READ MEBICPL0                 70
+     C                     ELSE                                                               CFT050
+      *                                                                                       CFT050
+      ** Use of MEBICPJ0                                                                      CFT050
+      *                                                                                       CFT050
+     C                     OPEN MEBICPJ0                                                      CFT050
+     C                     SETON                         72                                   CFT050
+     C                     READ MEBICPJ0                 70                                   CFT050
+     C                     ENDIF                                                              CFT050
+      *
+     C                     MOVE 'N'       WOK
+     C                     ENDIF                           ---E04
+     C                     ENDIF                           ---E03
+     C                     ENDIF                           ---E02
+      *
+     C                     ELSE                            ---X01
+      * Record found
+     C                     SETON                     41
+      *
+      * Build Subfil1
+     C                     EXSR BLDSFL
+      *
+     C                     MOVE 'N'       WOK1    1
+     C           *INKC     DOWEQ*OFF                       ---B02
+     C           *INKL     ANDEQ*OFF
+     C           WOK1      ANDEQ'N'
+     C           WOK       ANDEQ'N'
+     C                     TIME           ##TIME
+     C**********           WRITEFT0900F2                    Top Screen
+     C**********           WRITEFT0900F1                    Subfile
+     C**********           WRITEFTFOOTER                     Cmd key
+     C**********           WRITE#MSGCTL                     messages
+     C                     WRITEFT0900F1                    Subfile                           243560
+     C                     WRITEFT0900F2                    Top Screen                        243560
+     C                     WRITE#MSGCTL                     messages                          243560
+     C                     WRITEFTFOOTER                     Cmd key                          243560
+      *
+     C                     READ FT0900F1                 01 subfile
+     C                     READ FT0900F2                 01 Top Screen
+      * Save Cursor Position
+     C           @SFPOS    IFGT *ZERO
+     C                     Z-ADD@SFPOS    @SFREC
+     C                     ENDIF
+      *
+      ** Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     FTPGMQ 10
+     C                     PARM '*SAME'   FTPGRL  5
+      *
+     C                     SELEC                           ---B03
+     C           *INKC     WHEQ *ON                        F3
+     C                     MOVEL'F12'     @RTCD
+     C           *INKL     WHEQ *ON                        F12
+     C                     MOVEL'F3'      @RTCD
+     C           *INKS     WHEQ *ON                        F18
+     C           *IN40     IFEQ *OFF
+     C                     MOVE *ON       *IN40
+     C**********           MOVE CBRCA     @LOCBR                                           MD023611A
+     C                     MOVE CLOCA     @LOCBR                                           MD023611A
+     C                     ELSE
+     C                     MOVE *OFF      *IN40
+     C**********           MOVE CLOCA     @LOCBR                                           MD023611A
+     C                     MOVE CBRCA     @LOCBR                                           MD023611A
+     C                     ENDIF
+      ** Reset value of @LOCBR if no records in subfile                                     MD023611
+     C           @SFR      IFEQ 1                                                           MD023611
+     C                     SETON                     23                                     MD023611
+     C                     WRITEFT0900F1                                                    MD023611
+     C                     SETOF                     23                                     MD023611
+     C                     ENDIF                                                            MD023611
+     C                     EXSR SWITCH
+     C           *IN29     WHEQ *ON                        Page Down
+     C           *IN25     ANDEQ'0'                                                           243560
+     C                     SETOF                     29                                       243560
+     C                     EXSR BLDSFL
+      *
+      * Check subfile changes
+     C                     OTHER                           ---X03
+     C           @0SEL     DOUNE*BLANKS
+     C           *IN02     OREQ *ON
+     C                     READCFT0900F0                 02 Subfile
+     C                     ENDDO
+     C           *IN02     IFEQ *OFF                       ---B04
+     C                     MOVE *BLANKS   ZICPFX
+      * - ENQUIRY
+     C           @0SEL     IFEQ 'E'                        ---B05
+     C           @0SEL     OREQ '1'                                                         MD023143
+     C           CFT050    ANDEQ'Y'                                                         MD023143
+     C           LNKFLG    ANDEQ'1LINK'                                                     MD023143
+     C           CFT050    IFNE 'Y'                                                           CFT050
+     C                     EXSR DETAIL
+     C                     ELSE                                                               CFT050
+      *                                                                                       CFT050
+      ** Dislay CFT050 Database details (MEBIB3PD/MEIBN3PD)                                   CFT050
+      *                                                                                       CFT050
+     C           @0SEL     IFNE '1'                                                        MD023143A
+     C                     CALL 'MS000101'                                                    CFT050
+     C                     PARM *BLANKS   MENKEY                                              CFT050
+     C                     PARM           @0HKEY                                              CFT050
+     C                     ENDIF                                                           MD023143A
+      *                                                                                       CFT050
+     C           @0SEL     IFEQ '1'                                                         MD023143
+     C                     MOVEL@0HKEY    @OADD                                               CFT050
+     C                     MOVE *ON       *INKC                                            MD023143A
+     C                     ENDIF                                                            MD023143
+     C                     ENDIF                                                              CFT050
+      *                                                                                       CFT050
+     C                     MOVE *OFF      *INKL
+     C                     ENDIF                           ---E05
+      *
+      * In Stand alone enquiry mode, only option 'E' is allowed
+     C           *IN42     IFEQ *ON
+     C           @0SEL     ANDNE*BLANKS
+     C           @0SEL     ANDNE'E'
+     C           CFT050    ANDNE'Y'                                                         MD023143
+      **                                                                                    MD023143
+     C           CFT050    OREQ 'Y'                                                         MD023143
+     C           @0SEL     ANDNE*BLANKS                                                     MD023143
+     C           @0SEL     ANDNE'E'                                                         MD023143
+     C           @0SEL     ANDNE'1'                                                         MD023143
+     C           *IN42     ANDEQ*ON                                                        MD023143A
+      **                                                                                    MD023143
+     C           CFT050    OREQ 'Y'                                                         MD023143
+     C           @0SEL     ANDNE*BLANKS                                                     MD023143
+     C           @0SEL     ANDNE'E'                                                         MD023143
+     C           *IN76     ANDNE'1'                                                         MD023143
+     C           *IN42     ANDEQ*ON                                                        MD023143A
+      **                                                                                    MD023143
+     C           CFT050    IFEQ 'Y'                                                         MD023143
+     C           *IN76     ANDEQ'1'                                                         MD023143
+     C           *IN42     ANDEQ*ON                                                        MD023143A
+     C                     MOVEL'FTM2429' ZAMSID                                            MD023143
+     C                     ELSE                                                             MD023143
+     C                     MOVEL'FTM2419' ZAMSID
+     C                     ENDIF                                                            MD023143
+     C                     EXSR ZASNMS
+     C                     ELSE
+      * - DEFAULT
+     C           @0SEL     IFEQ 'X'                        ---B05
+     C           @0BIC     IFEQ *BLANKS                    ---B06
+     C                     MOVEL'D'       @0SEL
+     C                     ELSE
+     C                     MOVEL'A'       @0SEL
+     C                     ENDIF                           ---E06
+     C                     ENDIF                           ---E05
+      *
+     C                     SELEC                           ---B05
+      * - BIC
+     C           @0SEL     WHEQ 'A'
+     C           @0BIC     IFEQ *BLANKS                    ---B06
+     C                     MOVEL'FTM2417' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     MOVE @0BIC     WXXX
+     C           WXXX      IFEQ 'XXX'
+     C                     MOVE '   '     @0BIC
+     C                     ENDIF
+     C                     MOVEL@0BIC     OADD1
+     C                     MOVEL@0CHIP    @OCHIP
+     C                     MOVEL'A'       @OUTCD
+     C                     MOVE 'Y'       WOK
+      * Return the clearing code if possible
+     C           @0NATI    IFNE *BLANKS                    ---B07
+      * Retrieve ZIP and clearing code information
+     C           @0HCNT    CHAINMEZIPPL0             71
+     C           *IN71     IFEQ *ON
+     C                     MOVEL'//'      ZICPFX
+     C                     ENDIF
+     C           ZICPFX    IFEQ *BLANKS
+      * Set clearing prefix to defaults
+     C                     MOVEL'//'      ZICPFX
+     C                     ENDIF
+      *
+     C           ZICPFX    IFEQ '//  '
+     C           '//'      CAT  @0NATI    WPXNAT
+     C                     ELSE
+     C           ZICPFX    CAT  @0NATI    WPXNAT
+     C                     ENDIF
+     C                     MOVELWPXNAT    OADD1
+     C                     MOVEL@0BIC     OADD2
+     C                     MOVEL'AC'      @OUTCD
+     C                     ENDIF                           ---E07
+     C                     ENDIF                           ---E06
+      * - BRANCH
+     C           @0SEL     WHEQ 'B'
+     C           @0HBRC    IFNE *BLANKS                    ---B06
+     C                     MOVEL@0HBRC    OADD1
+      * Check if loss of data
+     C           35        SUBST@0HBRC:36 WK35   35
+     C           WK35      IFNE *BLANKS                    ---B07
+      * Call 'Manual repair of reformatted branch'
+     C                     CALL 'FT0920'
+     C                     PARM OADD1     PICBH  35
+     C                     PARM @0HINS    PIINS 105
+     C                     PARM @0HBRC    PIBCH  70
+     C                     PARM @0HCIT    PICIT  35
+     C                     PARM @0HLOC    PILOC  90
+     C                     PARM           POBCH  35
+     C                     PARM           @RTCD
+     C           @RTCD     IFNE *BLANKS                    ---B08
+     C           @RTCD     IFEQ 'F3'                       ---B09
+     C                     MOVE *ON       *INKC
+     C                     ELSE
+     C                     MOVE '*BLANKS' @RTCD
+     C                     ENDIF                           ---E09
+     C                     ELSE                            ---X08
+     C                     MOVELPOBCH     OADD1
+     C                     MOVE 'Y'       WOK
+     C                     MOVEL@0CHIP    @OCHIP
+     C                     MOVEL'B'       @OUTCD
+     C                     ENDIF                           ---E08
+      * no lost of data
+     C                     ELSE                            ---X07
+     C                     MOVE 'Y'       WOK
+     C                     MOVEL@0CHIP    @OCHIP
+     C                     MOVEL'B'       @OUTCD
+     C                     ENDIF                           ---E07
+      * if branch field is blank , use city
+     C                     ELSE                            ---X06
+     C                     MOVEL@0HCIT    OADD1
+     C                     MOVE 'Y'       WOK
+     C                     MOVEL@0CHIP    @OCHIP
+     C                     MOVEL'B'       @OUTCD
+     C                     ENDIF                           ---E06
+      * Return the clearing code if possible
+     C           @0NATI    IFNE *BLANKS                    ---B06
+     C           WOK       ANDEQ'Y'
+      * Retrieve ZIP and clearing code information
+     C           @0HCNT    CHAINMEZIPPL0             71
+     C           *IN71     IFEQ *ON
+     C                     MOVEL'//'      ZICPFX
+     C                     ENDIF
+     C           ZICPFX    IFEQ *BLANKS
+      * Set clearing prefix to defaults
+     C                     MOVEL'//'      ZICPFX
+     C                     ENDIF
+      *
+     C           ZICPFX    IFEQ '//  '
+     C           '//'      CAT  @0NATI    WPXNAT
+     C                     ELSE
+     C           ZICPFX    CAT  @0NATI    WPXNAT
+     C                     ENDIF
+     C                     MOVE OADD1     OADD2
+     C                     MOVE *BLANKS   OADD1
+     C                     MOVELWPXNAT    OADD1
+     C                     MOVEL'BC'      @OUTCD
+     C                     ENDIF                           ---E06
+      * - CLEARING CODE
+     C           @0SEL     WHEQ 'C'
+     C           @0NATI    IFEQ *BLANKS                    ---B06
+     C                     MOVEL'FTM2418' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            ---X06
+      * Retrieve ZIP and clearing code information
+     C           @0HCNT    CHAINMEZIPPL0             71
+     C           *IN71     IFEQ *ON
+     C                     MOVEL'//'      ZICPFX
+     C                     ENDIF
+     C           ZICPFX    IFEQ *BLANKS
+      * Set clearing prefix to defaults
+     C                     MOVEL'//'      ZICPFX
+     C                     ENDIF
+      *
+     C           ZICPFX    IFEQ '//  '
+     C           '//'      CAT  @0NATI    WPXNAT
+     C                     ELSE
+     C           ZICPFX    CAT  @0NATI    WPXNAT
+     C                     ENDIF
+     C                     MOVELWPXNAT    OADD1
+     C                     MOVE 'Y'       WOK
+     C                     MOVEL@0CHIP    @OCHIP
+     C                     MOVE 'C '      @OUTCD
+     C                     ENDIF                           ---E06
+      * - ADDRESS
+     C           @0SEL     WHEQ 'D'
+      * Retrieve ZIP and clearing code information
+     C           @0HCNT    CHAINMEZIPPL0             71
+     C           *IN71     IFEQ *ON
+     C                     MOVE *BLANK    ZIZLST
+     C                     MOVEL'//'      ZICPFX
+     C                     ENDIF
+     C           ZICPFX    IFEQ *BLANKS
+      * Set clearing prefix to defaults
+     C                     MOVEL'//'      ZICPFX
+     C                     ENDIF
+      *
+      *  call the 'address reformatting routine'
+     C                     CALL 'FT0910'
+     C                     PARM @0HINS    PIINST105        I:Institution
+     C                     PARM @0HADD    PIADDR140        I:Address
+     C                     PARM @0HLOC    PILOCN 90        I:Location
+     C                     PARM @0HZIP    PIZIP  15        I:ZIP
+     C                     PARM ZIZLST    PIZLST  1        I:Place ZIP last Ind.
+     C                     PARM           WKADD            O:4 address lines
+     C                     PARM *BLANKS   PRTCD   7        O:Return Code
+      * If data lost, call the  'manual repair routine'
+     C           PRTCD     IFNE *BLANKS                    ---B06
+      *
+     C                     MOVE WKADD     WK1ADD140
+     C                     MOVE PRTCD     @WRN    7
+      *
+     C                     CALL 'FT0930'
+     C                     PARM           WK1ADD
+     C                     PARM @0HINS    PIINST
+     C                     PARM @0HADD    PIADDR
+     C                     PARM @0HLOC    PILOCN
+     C                     PARM @0HZIP    PIZIP
+     C                     PARM           @WRN
+     C                     PARM *BLANKS   WKADD
+     C                     PARM *BLANKS   PRTCD
+     C           PRTCD     IFEQ 'F3'                       ---B07
+     C                     MOVEL'F3'      @RTCD
+     C                     MOVE *ON       *INKC
+     C                     ENDIF                           ---E07
+     C                     ENDIF                           ---E06
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVELWKADD     @OADD
+     C                     MOVE 'Y'       WOK
+     C                     MOVEL@0CHIP    @OCHIP
+     C                     MOVEL'D'       @OUTCD
+      * Return the clearing code if possible
+     C           @0NATI    IFNE *BLANKS                    ---B06
+     C           ZICPFX    IFEQ '//  '
+     C           '//'      CAT  @0NATI    WPXNAT
+     C                     ELSE
+     C           ZICPFX    CAT  @0NATI    WPXNAT
+     C                     ENDIF
+     C                     MOVE WKADD     @OADD
+     C                     MOVE *BLANKS   OADD1
+     C                     MOVELWPXNAT    OADD1
+     C                     MOVEL'DC'      @OUTCD
+     C                     ENDIF                           ---E06
+     C                     ENDIF
+      *
+      ** 1=Link, display error message                                                     MD023143A
+     C           @0SEL     WHEQ '1'                                                        MD023143A
+     C           *IN42     IFEQ *OFF                                                       MD023143A
+     C                     MOVEL'FTM0011' ZAMSID                                           MD023143A
+     C                     EXSR ZASNMS                                                     MD023143A
+     C                     ENDIF                                                           MD023143A
+      *                                                                                    MD023143A
+     C                     ENDSL                           ---E05
+     C                     ENDIF
+      *
+      * Process the other entries (only for enquiry)
+     C           *IN02     DOWEQ*OFF
+     C                     MOVE ' '       @0SEL
+     C                     UPDATFT0900F0                    Subfile
+     C                     READCFT0900F0                 02 Subfile
+     C                     MOVE *OFF      *INKL
+     C           @0SEL     IFEQ 'E'                        ---B05
+     C           @0SEL     OREQ '1'                                                         MD023143
+     C           CFT050    ANDEQ'Y'                                                         MD023143
+     C           LNKFLG    ANDEQ'1LINK'                                                     MD023143
+     C           CFT050    IFNE 'Y'                                                           CFT050
+     C                     EXSR DETAIL
+     C                     ELSE                                                               CFT050
+      *                                                                                       CFT050
+      ** Dislay CFT050 Database details (MEBIB3PD/MEIBN3PD)                                   CFT050
+      *                                                                                       CFT050
+     C           @0SEL     IFNE '1'                                                        MD023143A
+     C                     CALL 'MS000101'                                                    CFT050
+     C                     PARM *BLANKS   MENKEY  1                                           CFT050
+     C                     PARM           @0HKEY                                              CFT050
+     C                     ENDIF                                                           MD023143A
+      *                                                                                       CFT050
+     C           @0SEL     IFEQ '1'                                                         MD023143
+     C                     MOVEL@0HKEY    @OADD                                               CFT050
+     C                     MOVE *ON       *INKC                                            MD023143A
+     C                     ENDIF                                                            MD023143
+     C                     ENDIF                                                              CFT050
+      *                                                                                       CFT050
+     C                     ENDIF                           ---E05
+     C                     ENDDO
+      *
+      * If no change in the subfile, request a new enquiry
+     C                     ELSE                            ---X04
+     C                     EXSR VALID
+     C           WOK       IFEQ 'Y'                        ---B05
+     C           CFT050    IFNE 'Y'                                                           CFT050
+     C                     CLOSEMEBICPL0
+     C                     CALL 'QCMDEXC'
+     C                     PARM           QRY,6
+     C                     PARM 20        PRMLEN 155
+     C                     ELSE                                                               CFT050
+      *                                                                                       CFT050
+      ** Use of MEBICPJ0                                                                      CFT050
+      *                                                                                       CFT050
+     C                     CLOSEMEBICPJ0                                                      CFT050
+     C                     CALL 'QCMDEXC'                                                     CFT050
+     C                     PARM           QRY,12                                              CFT050
+     C                     PARM 20        PRMLEN 155                                          CFT050
+     C                     ENDIF                                                              CFT050
+      *
+     C                     EXSR BLDQRY
+      ** Execute the query
+     C                     CALL 'QCMDEXC'
+     C                     PARM           COMMD
+     C                     PARM           PRMLEN 155
+      ** Clear messages  (close & open query file)
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     FTPGMQ 10
+     C                     PARM '*SAME'   FTPGRL  5
+      *
+     C           CFT050    IFNE 'Y'                                                           CFT050
+     C                     OPEN MEBICPL0
+     C                     SETON                         72
+     C                     READ MEBICPL0                 70
+     C                     ELSE                                                               CFT050
+      *                                                                                       CFT050
+      ** Use of MEBICPJ0                                                                      CFT050
+      *                                                                                       CFT050
+     C                     OPEN MEBICPJ0                                                      CFT050
+     C                     SETON                         72                                   CFT050
+     C                     READ MEBICPJ0                 70                                   CFT050
+     C                     ENDIF                                                              CFT050
+      *
+     C                     MOVE 'Y'       WOK1
+     C                     MOVE 'N'       WOK
+     C                     ENDIF                           ---E05
+     C                     ENDIF                           ---E04
+     C                     ENDSL                           ---E03
+     C                     ENDDO                           ---E02
+     C                     ENDIF                           ---E01
+     C                     ENDDO                           ---E00
+      *
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SWITCH   : Switch between Location and branch                *
+      *                                                               *
+      *  CALLED BY: SFMODE                                            *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     C           SWITCH    BEGSR
+      *
+     C                     Z-ADD1         @SFK
+     C           @SFK      DOWLT@SFR
+     C           @SFK      CHAINFT0900F0             73
+     C           *IN40     IFEQ *OFF
+     C                     MOVEL@0HLOC    @0LOCB
+     C                     ELSE
+     C                     MOVEL@0HBRC    @0LOCB
+     C                     ENDIF
+     C                     UPDATFT0900F0
+     C                     ADD  1         @SFK
+     C                     ENDDO
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  BLDQRY   : Construct Open Query File Command for BIC+ query  *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *             PMODE                                             *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     C           BLDQRY    BEGSR
+      *
+     C                     MOVE *BLANKS   QSLT
+     C                     MOVE *BLANKS   COMMD
+      * I)   USING SEARCH CRITERIA
+     C           @2CRIV    IFNE *BLANKS
+     C                     MOVE *BLANKS   WSG
+     C                     MOVE *BLANKS   WRD
+     C                     Z-ADD0         WLN
+      *   A) Identify the first 5 words in the array SCH wich contains
+      *      the search criteria
+     C                     Z-ADD1         P1      20       Word Beg
+     C                     Z-ADD1         P2      20       Word End
+     C                     Z-ADD1         P3      10       Word Number
+      *                                                    up to 5
+     C           P1        DOWLE35
+     C           P3        ANDLE5
+     C                     SELEC
+      *
+     C           SCH,P1    WHEQ '+'
+     C                     ADD  1         P1
+     C           SCH,P1    WHEQ '-'
+     C                     MOVE '-'       WSG,P3
+     C                     ADD  1         P1
+      *
+     C           SCH,P1    WHEQ '"'
+     C           P1        ANDNE35
+     C                     ADD  1         P1
+     C           '"'       SCAN @2CRIV:P1 P2
+      * Avoid array error, if second '"' not found
+     C           P2        IFEQ 0
+     C           ' '       CHEKR@2CRIV    P2
+     C           P2        IFGT P1
+     C           P2        SUB  P1        WLN,P3
+     C                     ELSE
+     C                     Z-ADD1         WLN,P3
+     C                     ENDIF
+     C                     ELSE
+     C                     SUB  1         P2
+     C           2         ADD  P2        PSAVE   20
+     C                     ADD  1         P2
+     C           P2        SUB  P1        LEN     20
+     C           LEN       SUBST@2CRIV:P1 WRD,P3
+     C                     Z-ADDLEN       WLN,P3
+     C                     ADD  1         P3
+     C                     Z-ADDPSAVE     P1
+     C                     ENDIF
+     C*
+     C           SCH,P1    WHNE *BLANK
+     C           ' '       SCAN @2CRIV:P1 P2
+     C           P2        IFEQ 0
+     C                     Z-ADD36        P2
+     C                     ENDIF
+     C           P2        SUB  P1        LEN
+     C           LEN       SUBST@2CRIV:P1 WRD,P3
+     C                     Z-ADDLEN       WLN,P3
+     C                     ADD  1         P3
+     C                     Z-ADDP2        P1
+     C*
+     C                     OTHER
+     C                     ADD  1         P1
+     C                     ENDSL
+     C                     ENDDO
+     C*
+     C*
+      *   B) Build the query
+      *      First identified search word
+     C                     Z-ADD1         P1
+     C                     Z-ADD1         P2
+     C                     Z-ADD1         P       30
+     C           WLN,1     IFNE *ZERO
+     C                     MOVELWRD,1     WCHAR   1
+     C           WSG,1     IFEQ '-'
+     C                     MOVE '¬'       QSLT,P
+     C                     ADD  1         P
+     C                     ENDIF
+     C           P2        DOWLE12
+     C           1         SUBSTCINDX:P2  QSLT,P
+     C                     ADD  1         P
+     C                     ADD  1         P2
+     C                     ENDDO
+     C                     MOVE '"'       QSLT,P
+     C                     ADD  1         P
+     C           P1        DOWLEWLN,1
+     C           1         SUBSTWRD,1:P1  QSLT,P
+      * Remove unwanted '"'
+     C           QSLT,P    IFEQ '"'
+     C                     MOVE ' '       QSLT,P
+     C                     ENDIF
+     C                     ADD  1         P
+     C                     ADD  1         P1
+     C                     ENDDO
+     C                     MOVE '"'       QSLT,P
+     C                     ADD  1         P
+     C                     MOVE ')'       QSLT,P
+     C                     ADD  2         P
+      *
+      *     Next identified search words
+     C                     Z-ADD2         P3
+     C           P3        DOWLE5
+     C           WLN,P3    ANDNE*ZERO
+     C                     Z-ADD1         P1
+     C                     Z-ADD1         P2
+     C                     MOVELWRD,P3    WCHAR   1
+     C           WSG,P3    IFEQ '-'
+     C           P2        DOWLE6
+     C           1         SUBSTCANDN:P2  QSLT,P
+     C                     ADD  1         P
+     C                     ADD  1         P2
+     C                     ENDDO
+     C                     ELSE
+     C           P2        DOWLE5
+     C           1         SUBSTCAND:P2   QSLT,P
+     C                     ADD  1         P
+     C                     ADD  1         P2
+     C                     ENDDO
+     C                     ENDIF
+     C                     Z-ADD1         P2
+     C           P2        DOWLE12
+     C           1         SUBSTCINDX:P2  QSLT,P
+     C                     ADD  1         P
+     C                     ADD  1         P2
+     C                     ENDDO
+     C                     MOVE '"'       QSLT,P
+     C                     ADD  1         P
+     C           P1        DOWLEWLN,P3
+     C           1         SUBSTWRD,P3:P1 QSLT,P
+      * Remove unwanted '"'
+     C           QSLT,P    IFEQ '"'
+     C                     MOVE ' '       QSLT,P
+     C                     ENDIF
+     C                     ADD  1         P
+     C                     ADD  1         P1
+     C                     ENDDO
+     C                     MOVE '"'       QSLT,P
+     C                     ADD  1         P
+     C                     MOVE ')'       QSLT,P
+     C                     ADD  2         P
+     C*
+     C                     ADD  1         P3
+     C                     ENDDO
+     C                     ENDIF
+      *  Create the query command
+     C           CFT050    IFNE 'Y'                                                           CFT050
+     C                     MOVELQRY,1     COM1
+     C                     MOVELQRY,3     COM2
+     C                     ELSE                                                               CFT050
+      *                                                                                       CFT050
+      ** Use of MEBICPJ0                                                                      CFT050
+      *                                                                                       CFT050
+     C                     MOVELQRY,7     COM1                                                CFT050
+     C                     MOVELQRY,9     COM2                                                CFT050
+     C                     ENDIF                                                              CFT050
+     C                     MOVELQSLT2     COM3A
+     C           P         ADD  123       P4      30
+     C                     Z-ADD1         P1
+      *                                                                                       CFT050
+     C           CFT050    IFNE 'Y'                                                           CFT050
+     C           P1        DOWLE38
+     C           1         SUBSTQRY,4:P1  CMD,P4
+     C                     ADD  1         P1
+     C                     ADD  1         P4
+     C                     ENDDO
+     C                     ELSE                                                               CFT050
+      *                                                                                       CFT050
+      ** Use of MEBICPJ0 / MEBICIPD join                                                      CFT050
+      *                                                                                       CFT050
+     C********** P1        DOWLE39                                                   CFT050 MD023611
+     C           P1        DOWLE59                                                          MD023611
+     C           1         SUBSTQRY,10:P1 CMD,P4                                              CFT050
+     C                     ADD  1         P1                                                  CFT050
+     C                     ADD  1         P4                                                  CFT050
+     C                     ENDDO                                                              CFT050
+     C                     ENDIF                                                              CFT050
+      *                                                                                       CFT050
+     C                     Z-ADDP4        PRMLEN
+      **
+      * II)  USING FIELD SELECTION
+     C                     ELSE
+     C                     Z-ADD1         P1
+     C                     Z-ADD1         P2
+     C                     Z-ADD1         P       30
+     C                     MOVE 'N'       WAND    1
+      * Institution
+     C           @2INSV    IFNE *BLANKS
+     C           P1        DOWLE12
+     C           1         SUBSTCINST:P1  QSLT,P
+     C                     ADD  1         P
+     C                     ADD  1         P1
+     C                     ENDDO
+     C                     MOVE '"'       QSLT,P
+     C                     ADD  1         P
+     C           ' '       CHEKR@2INSV    P2
+     C                     Z-ADD1         P1
+     C           P1        DOWLEP2
+     C           1         SUBST@2INSV:P1 QSLT,P
+     C                     ADD  1         P
+     C                     ADD  1         P1
+     C                     ENDDO
+     C                     MOVE '"'       QSLT,P
+     C                     ADD  1         P
+     C                     MOVE ')'       QSLT,P
+     C                     ADD  2         P
+     C                     MOVE 'Y'       WAND
+     C                     ENDIF
+      *
+      * Branch or Location  ( If *IN40 =*ON , this is branch)
+     C           @2LBRV    IFNE *BLANKS
+     C                     Z-ADD1         P1
+     C                     Z-ADD1         P2
+     C           WAND      IFEQ 'Y'
+     C           P1        DOWLE5
+     C           1         SUBSTCAND:P1   QSLT,P
+     C                     ADD  1         P
+     C                     ADD  1         P1
+     C                     ENDDO
+     C                     ADD  1         P
+     C                     ENDIF
+     C           *IN40     IFEQ *ON
+     C                     MOVE CBNCH     WFIELD 12
+     C                     ELSE
+     C                     MOVE CLOCN     WFIELD
+     C                     ENDIF
+     C                     Z-ADD1         P1
+     C           P1        DOWLE12
+     C           1         SUBSTWFIELD:P1 QSLT,P
+     C                     ADD  1         P
+     C                     ADD  1         P1
+     C                     ENDDO
+     C                     MOVE '"'       QSLT,P
+     C                     ADD  1         P
+     C           ' '       CHEKR@2LBRV    P2
+     C                     Z-ADD1         P1
+     C           P1        DOWLEP2
+     C           1         SUBST@2LBRV:P1 QSLT,P
+     C                     ADD  1         P
+     C                     ADD  1         P1
+     C                     ENDDO
+     C                     MOVE '"'       QSLT,P
+     C                     ADD  1         P
+     C                     MOVE ')'       QSLT,P
+     C                     ADD  2         P
+     C                     MOVE 'Y'       WAND
+     C                     ENDIF
+      *
+      * BIC
+     C           @2BICV    IFNE *BLANKS
+     C                     Z-ADD1         P1
+     C                     Z-ADD1         P2
+     C           WAND      IFEQ 'Y'
+     C           P1        DOWLE5
+     C           1         SUBSTCAND:P1   QSLT,P
+     C                     ADD  1         P
+     C                     ADD  1         P1
+     C                     ENDDO
+     C                     ADD  1         P
+     C                     ENDIF
+     C                     Z-ADD1         P1
+     C           P1        DOWLE12
+     C           1         SUBSTCBIC:P1   QSLT,P
+     C                     ADD  1         P
+     C                     ADD  1         P1
+     C                     ENDDO
+     C                     MOVE '"'       QSLT,P
+     C                     ADD  1         P
+     C           ' '       CHEKR@2BICV    P2
+     C                     Z-ADD1         P1
+     C           P1        DOWLEP2
+     C           1         SUBST@2BICV:P1 QSLT,P
+     C                     ADD  1         P
+     C                     ADD  1         P1
+     C                     ENDDO
+     C                     MOVE '"'       QSLT,P
+     C                     ADD  1         P
+     C                     MOVE ')'       QSLT,P
+     C                     ADD  2         P
+     C                     MOVE 'Y'       WAND
+     C                     ENDIF
+      *
+      * National Id
+     C           @2NATV    IFNE *BLANKS
+     C                     Z-ADD1         P1
+     C                     Z-ADD1         P2
+     C           WAND      IFEQ 'Y'
+     C           P1        DOWLE5
+     C           1         SUBSTCAND:P1   QSLT,P
+     C                     ADD  1         P
+     C                     ADD  1         P1
+     C                     ENDDO
+     C                     ADD  1         P
+     C                     ENDIF
+     C                     Z-ADD1         P1
+     C           P1        DOWLE12
+     C           1         SUBSTCNATI:P1  QSLT,P
+     C                     ADD  1         P
+     C                     ADD  1         P1
+     C                     ENDDO
+     C                     MOVE '"'       QSLT,P
+     C                     ADD  1         P
+     C           ' '       CHEKR@2NATV    P2
+     C                     Z-ADD1         P1
+     C           P1        DOWLEP2
+     C           1         SUBST@2NATV:P1 QSLT,P
+     C                     ADD  1         P
+     C                     ADD  1         P1
+     C                     ENDDO
+     C                     MOVE '"'       QSLT,P
+     C                     ADD  1         P
+     C                     MOVE ')'       QSLT,P
+     C                     ADD  2         P
+     C                     MOVE 'Y'       WAND
+     C                     ENDIF
+      *
+      * CHIPS
+     C           @2CHPV    IFNE *BLANKS
+     C                     Z-ADD1         P1
+     C                     Z-ADD1         P2
+     C           WAND      IFEQ 'Y'
+     C           P1        DOWLE5
+     C           1         SUBSTCAND:P1   QSLT,P
+     C                     ADD  1         P
+     C                     ADD  1         P1
+     C                     ENDDO
+     C                     ADD  1         P
+     C                     ENDIF
+     C                     Z-ADD1         P1
+     C           P1        DOWLE12
+     C           1         SUBSTCCHIP:P1  QSLT,P
+     C                     ADD  1         P
+     C                     ADD  1         P1
+     C                     ENDDO
+     C                     MOVE '"'       QSLT,P
+     C                     ADD  1         P
+     C           ' '       CHEKR@2CHPV    P2
+     C                     Z-ADD1         P1
+     C           P1        DOWLEP2
+     C           1         SUBST@2CHPV:P1 QSLT,P
+     C                     ADD  1         P
+     C                     ADD  1         P1
+     C                     ENDDO
+     C                     MOVE '"'       QSLT,P
+     C                     ADD  1         P
+     C                     MOVE ')'       QSLT,P
+     C                     ADD  2         P
+     C                     ENDIF
+      *                                                                                       CFT050
+      ** LEI CODE is available with CFT050                                                    CFT050
+      *                                                                                       CFT050
+     C           @2LEIC    IFNE *BLANKS                                                       CFT050
+     C                     Z-ADD1         P1                                                  CFT050
+     C                     Z-ADD1         P2                                                  CFT050
+      *                                                                                       CFT050
+      ** Add ' *AND ' operator                                                                CFT050
+      *                                                                                       CFT050
+     C           WAND      IFEQ 'Y'                                                           CFT050
+     C           P1        DOWLE5                                                             CFT050
+     C           1         SUBSTCAND:P1   QSLT,P                                              CFT050
+     C                     ADD  1         P                                                   CFT050
+     C                     ADD  1         P1                                                  CFT050
+     C                     ENDDO                                                              CFT050
+     C                     ADD  1         P                                                   CFT050
+     C                     ENDIF                                                              CFT050
+      *                                                                                       CFT050
+      ** ADD '(B3LEIC *CT "'                                                                  CFT050
+      *                                                                                       CFT050
+     C                     Z-ADD1         P1                                                  CFT050
+     C           P1        DOWLE12                                                            CFT050
+     C           1         SUBSTCLEIC:P1  QSLT,P                                              CFT050
+     C                     ADD  1         P                                                   CFT050
+     C                     ADD  1         P1                                                  CFT050
+     C                     ENDDO                                                              CFT050
+     C                     MOVE '"'       QSLT,P                                              CFT050
+     C                     ADD  1         P                                                   CFT050
+      *                                                                                       CFT050
+      ** Search last Char of @2LEIC selection Criteria                                        CFT050
+      *                                                                                       CFT050
+     C           ' '       CHEKR@2LEIC    P2                                                  CFT050
+      *                                                                                       CFT050
+      ** Add @2LEIC Content + ") in Qry selection string                                      CFT050
+      *                                                                                       CFT050
+     C                     Z-ADD1         P1                                                  CFT050
+     C           P1        DOWLEP2                                                            CFT050
+     C           1         SUBST@2LEIC:P1 QSLT,P                                              CFT050
+     C                     ADD  1         P                                                   CFT050
+     C                     ADD  1         P1                                                  CFT050
+     C                     ENDDO                                                              CFT050
+     C                     MOVE '"'       QSLT,P                                              CFT050
+     C                     ADD  1         P                                                   CFT050
+     C                     MOVE ')'       QSLT,P                                              CFT050
+     C                     ADD  2         P                                                   CFT050
+      *                                                                                       CFT050
+      ** Advice next selection field to use or not the                                        CFT050
+      ** AND operator in the query string                                                     CFT050
+      *                                                                                       CFT050
+     C                     MOVE 'Y'       WAND                                                CFT050
+     C                     ENDIF                                                              CFT050
+      *  Create the query command
+     C           CFT050    IFNE 'Y'                                                           CFT050
+     C                     MOVELQRY,2     COM1
+     C                     ELSE                                                               CFT050
+      *                                                                                       CFT050
+      ** Use of MEBICPJ0                                                                      CFT050
+      *                                                                                       CFT050
+     C                     MOVELQRY,8     COM1                                                CFT050
+     C                     ENDIF                                                              CFT050
+     C                     MOVELQSLT2     COM3B
+     C           P         ADD  81        P4      30
+     C                     Z-ADD1         P1
+     C                     Z-ADD20        X1      30                                        MD023611
+     C           CFT050    IFEQ 'Y'                                                         MD023611
+     C                     Z-ADD37        X1                                                MD023611
+     C                     ENDIF                                                            MD023611
+     C********** P1        DOWLE20                                                          MD023611
+     C           P1        DOWLEX1                                                          MD023611
+     C           CFT050    IFNE 'Y'                                                           CFT050
+     C           1         SUBSTQRY,5:P1  CMD,P4
+     C                     ELSE                                                               CFT050
+      *                                                                                       CFT050
+      ** Use of MEBICPJ0                                                                      CFT050
+      *                                                                                       CFT050
+     C           1         SUBSTQRY,11:P1 CMD,P4                                              CFT050
+     C                     ENDIF                                                              CFT050
+     C                     ADD  1         P1
+     C                     ADD  1         P4
+     C                     ENDDO
+     C                     Z-ADDP4        PRMLEN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  DETAIL   : Display Detail of a record from BIC+              *
+      *                                                               *
+      *  CALLED BY: SFMODE                                            *
+      *                                                               *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     C           DETAIL    BEGSR
+      *
+      * Write the details to the display file
+      *  Institution
+     C           70        SUBST@0HINS:1  @3INS1
+     C           35        SUBST@0HINS:71 @3INS2
+      *  Branch
+     C                     MOVE @0HBRC    @3BRCA
+      *  Address
+     C           35        SUBST@0HADD:1  @3ADD1
+     C           35        SUBST@0HADD:36 @3ADD2
+     C           35        SUBST@0HADD:71 @3ADD3
+     C           35        SUBST@0HADD:106@3ADD4
+      * City
+     C                     MOVEL@0HCIT    @3CITY
+      * ZIP Code
+     C                     MOVEL@0HZIP    @3ZIP1
+      * Country
+     C                     MOVE @0HCNT    @3CNTY
+      * BIC
+     C                     MOVEL@0BIC     @3BIC
+      * National bank code
+     C                     MOVEL@0NATI    @3NATI
+      * CHIPS code
+     C                     MOVEL@0CHIP    @3CHIP
+      * PO Box information
+     C                     MOVEL@0HPNB    @3POBN
+     C                     MOVEL@0HPZP    @3PZIP
+     C                     MOVEL@0HPLC    @3PLOC
+      *
+     C           *INKC     DOWEQ*OFF
+     C           *INKL     ANDEQ*OFF
+     C                     TIME           ##TIME
+     C                     WRITEFTFOOTER                     Cmd key
+     C                     WRITE#MSGCTL                     messages
+     C                     WRITEFT0900F3                    Subfile
+     C                     READ FT0900F3                 01 Top Screen
+     C                     ENDDO
+      *
+     C           *INKC     IFEQ *ON
+     C                     MOVEL'F3'      @RTCD
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  BLDSFL   : Construct a subfile page                          *
+      *                                                               *
+      *  CALLED BY: SFMODE                                            *
+      *                                                               *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     C           BLDSFL    BEGSR
+      *
+      *
+     C                     SETOF                     26
+     C                     SETON                         25
+     C                     SETON                         23
+     C                     SETOF                         30
+      *
+     C                     Z-ADD@SFR      @SFK    70
+     C                     Z-ADD@SFK      @SFREC
+      *
+      *
+      * Write a page of records
+     C           *IN70     IFEQ '0'
+     C                     SETON                     24
+     C                     Z-ADD1         Z       20
+     C*
+     C** Do while less than 18 and not end of file
+     C*
+     C           Z         DOWLT6
+     C           *IN70     ANDEQ'0'
+     C*
+      * Continue if Z is less than 18
+     C           Z         IFLT 6                          B002
+      * Selection field
+     C                     MOVE *BLANK    @0SEL
+      * Information fields
+     C           *IN40     IFEQ *OFF
+     C                     MOVELBILOCN    @0LOCB
+     C                     ELSE
+     C                     MOVELBIBNCH    @0LOCB
+     C                     ENDIF
+     C                     MOVELBIINST    @0INST
+     C                     MOVELBINATI    @0NATI
+     C                     MOVELBIBIC     @0BIC
+     C                     MOVELBICHIP    @0CHIP
+      * Hidden fields
+     C                     MOVELBIBNCH    @0HBRC
+     C                     MOVELBILOCN    @0HLOC
+     C                     MOVELBIINST    @0HINS
+     C                     MOVELBICITY    @0HCIT
+     C                     MOVELBICNTY    @0HCNT
+     C                     MOVELBIADDR    @0HADD
+     C                     MOVELBIZIP     @0HZIP
+     C                     MOVELBIPOBN    @0HPNB
+     C                     MOVELBIPOBZ    @0HPZP
+     C                     MOVELBIPOBL    @0HPLC
+     C           CFT050    IFEQ 'Y'                                                           CFT050
+     C                     MOVELB3LEIC    @0LEIC                                              CFT050
+     C                     MOVELB3KEY     @0HKEY                                              CFT050
+     C                     ENDIF                                                              CFT050
+     C*
+     C** Write record to subfile and read next record
+     C*
+     C                     WRITEFT0900F0
+     C                     ADD  1         @SFK
+     C           CFT050    IFNE 'Y'                                                           CFT050
+     C                     READ MEBICPL0                 70
+     C                     ELSE                                                               CFT050
+      *                                                                                       CFT050
+      ** Use of MEBICPJ0                                                                      CFT050
+      *                                                                                       CFT050
+     C                     READ MEBICPJ0                 70                                   CFT050
+     C                     ENDIF                                                              CFT050
+     C                     ADD  1         Z
+     C                     END
+     C                     END                             E001
+     C*
+     C           *IN70     IFEQ '0'
+     C                     SETOF                     25
+     C                     END
+     C                     END                             E001
+     C                     Z-ADD@SFK      @SFR    70
+     C                     SETOF                     23
+     C                     SETON                     30
+      *
+      *
+     C                     ENDSR
+      /EJECT
+      *******************************************************************
+      *  DBERR  - Error handling                                        *
+      *******************************************************************
+     C           DBERR     BEGSR
+      *
+      * Close MEBICPPD
+     C           *IN72     IFEQ *ON
+     C           CFT050    IFNE 'Y'                                                           CFT050
+     C                     CLOSEMEBICPL0
+     C                     CALL 'QCMDEXC'
+     C                     PARM           QRY,6
+     C                     PARM 20        PRMLEN 155
+     C                     ELSE                                                               CFT050
+      *                                                                                       CFT050
+      ** Use of MEBICPJ0                                                                      CFT050
+      *                                                                                       CFT050
+     C                     CLOSEMEBICPJ0                                                      CFT050
+     C                     CALL 'QCMDEXC'                                                     CFT050
+     C                     PARM           QRY,12                                              CFT050
+     C                     PARM 20        PRMLEN 155                                          CFT050
+     C                     ENDIF                                                              CFT050
+     C                     ENDIF
+      *
+     C                     DUMP
+     C                     MOVEL@DBALL    @DBSAV
+     C           *LOCK     IN   LDA
+     C                     MOVEL@DBSAV    @DBALL
+     C                     MOVEL'FT0900'  @DBPGM
+     C                     OUT  LDA
+      *
+      *  Allocate dataarea to blanks
+      *
+     C                     EXSR DALLOC
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR                           DBERR  ends
+      *
+      *****************************************************************
+      * SUBROUTINE TO DEALLOCATE DATAAREA
+      *****************************************************************
+      *
+     C           DALLOC    BEGSR                           *** DALLOC
+      *
+      * Call CL program to de-allocate
+      *
+     C                     MOVE *BLANKS   @RTCDE  7
+     C                     MOVE 'FT'      @MODLE  2
+     C                     MOVE *BLANKS   @TREF  15
+     C                     MOVE *BLANKS   @RTINF 80
+     C                     CALL 'AOC8000'
+     C                     PARM           @RTCDE
+     C                     PARM           @MODLE
+     C                     PARM           @TREF
+     C                     PARM           @RTINF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  ZASNMS   : Send message to program's message queue           *
+      *                                                               *
+      *  CALLED BY:                                                   *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         ZASNMS    BEGSR
+      *
+     C                     CALL 'ZA0340'
+     C                     PARM 'FTUSRMSG'ZAMSGF 10
+     C                     PARM           ZAMSID 10
+      *
+     C                     CLEARZAMSID
+     CSR                   ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  EXIT     : Exit the program                                  *
+      *                                                               *
+      *  CALLED BY: Main                                              *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         EXIT      BEGSR
+      *
+      *F12 ?
+     C           *INKL     IFEQ *ON
+     C                     MOVEL'F12'     @RTCD
+     C                     ENDIF
+      *
+      *F3  ?
+     C           *INKC     IFEQ *ON
+     C                     MOVEL'F3 '     @RTCD
+     C                     ENDIF
+      *
+      * Close the file and the query
+     C           *IN72     IFEQ *ON
+     C           CFT050    IFNE 'Y'                                                           CFT050
+     C                     CLOSEMEBICPL0
+     C                     CALL 'QCMDEXC'
+     C                     PARM           QRY,6
+     C                     PARM 20        PRMLEN 155
+     C                     ELSE                                                               CFT050
+      *                                                                                       CFT050
+      ** Use of MEBICPJ0                                                                      CFT050
+      *                                                                                       CFT050
+     C                     CLOSEMEBICPJ0                                                      CFT050
+     C                     CALL 'QCMDEXC'                                                     CFT050
+     C                     PARM           QRY,12                                              CFT050
+     C                     PARM 20        PRMLEN 155                                          CFT050
+     C                     ENDIF                                                              CFT050
+     C                     ENDIF
+      *
+     C                     SETON                     LR
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *******************************************************************
+      *  INIT  Program initialisation                                   *
+      *******************************************************************
+     CSR         INIT      BEGSR
+      *
+      ** Access Standing Data Bank Details.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG  '  @RTCD
+     C                     PARM '*FIRST'  @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Data base error in file SDBANKPD.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD001       @DBASE           ***************
+     C                     MOVEL'SDBANKPD'@DBFIL           *DB ERROR 001 *
+     C                     MOVEL'*FIRST'  @DBKEY           ***************
+     C                     OUT  LDA
+     C                     ENDIF
+      *
+      * Obtain default message file
+     C                     MOVEL'FTUSRMSG'ZADFMF 10
+      ** retrieve messages
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'FTM2421' #MSGID  7
+     C                     PARM 'FTUSRMSG'#MSGF  10
+     C                     PARM           #MSDTA132
+     C                     PARM *BLANKS   #MSTX1132
+     C                     PARM *BLANKS   #MSTX2132
+     C                     MOVEL#MSTX1    CLOCA   8
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'FTM2422' #MSGID  7
+     C                     PARM 'FTUSRMSG'#MSGF  10
+     C                     PARM           #MSDTA132
+     C                     PARM *BLANKS   #MSTX1132
+     C                     PARM *BLANKS   #MSTX2132
+     C                     MOVEL#MSTX1    CBRCA   8
+      *
+      **  Access data area RUNDAT for Run Date
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      *
+     C                     SETOF                     05
+      *
+      *  PLIST's, KLIST's, DEFN's etc....                             *
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LIKE     DEFN @DBALL    @DBSAV
+      *                                                                                       CFT050
+      ** Test if CFT050 is or not present                                                     CFT050
+      *                                                                                       CFT050
+     C                     MOVE 'N'       CFT050  1                                           CFT050
+     C                     MOVE *OFF      *IN75                                               CFT050
+     C                     MOVE *OFF      *IN76                                             MD023143
+     C                     CALL 'AOSARDR0'                                                    CFT050
+     C                     PARM *BLANKS   PRTCD   7                                           CFT050
+     C                     PARM '*VERIFY' @OPTN                                               CFT050
+     C                     PARM 'CFT050'  @SARD   6                                           CFT050
+      *                                                                                       CFT050
+     C           PRTCD     IFEQ *BLANKS                                                       CFT050
+     C                     MOVE 'Y'       CFT050                                              CFT050
+     C                     MOVE *ON       *IN75                                               CFT050
+     C                     MOVEL@ICRIT    LNKFLG  5                                         MD023143
+     C           LNKFLG    IFEQ '1LINK'                                                     MD023143
+     C                     MOVE *ON       *IN76                                             MD023143
+     C**********           ENDIF                                                  MD023143 MD023143A
+      ** Clear @ICRIT for safety purposes                                                   MD023143
+     C                     MOVE *BLANKS   @ICRIT                                            MD023143
+     C                     ENDIF                                                           MD023143A
+     C                     ENDIF                                                              CFT050
+      *                                                                                       CFT050
+     C           CFT050    IFNE 'Y'                                                           CFT050
+      *
+     C                     MOVE QRY,1     AA     80
+     C                     ELSE                                                               CFT050
+      *                                                                                       CFT050
+      ** Use of MEBICPJ0                                                                      CFT050
+      *                                                                                       CFT050
+     C                     MOVE QRY,7     AA     80                                           CFT050
+     C                     ENDIF                                                              CFT050
+     C*
+     C** Entry Parameters
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           @IMODE  1
+     C                     PARM           @ICRIT 35
+     C                     PARM           @OADD 175
+     C                     PARM           @OCHIP  6
+     C                     PARM           @OUTCD  2
+     C                     PARM           @RTCD   7
+      * The field (@OUTCD) is used to indicate what is returned
+      * 'A'= BIC      'B'= Branch     'C'= Clearing Code
+      * 'D'= Address
+      * The possible values are : 'A','AC','B','BC','C','D','DC'
+      *
+      * Initialise fields
+     C                     MOVE CLOCA     @LOCBR
+     C                     Z-ADD1         @SFR
+     C                     MOVE SRUNA     ##MRDT  7        Midas Run date
+      *
+     CSR                   ENDSR                           INIT  ends
+      *******************************************************************
+      *
+      ** Added parameter SRTSEQ(*LANGIDSHR) to handle lowercase in                          MD023611
+      ** open query command                                                                 MD023611
+      /EJECT
+** CPY@
+(c) Misys International Banking Systems Ltd. 2001
+** APOST
+'
+**  QRY - To set up the basic open query file command structure.
+OPNQRYF FILE((MEBICPL0 *FIRST @BICPPD) (MEBICIPD *FIRST @BICIPD)) OPTION(*INP)
+OPNQRYF FILE((MEBICPL0 *FIRST @BICPPD)) OPTION(*INP) OPNID(MEBICPPD) QRYSLT('
+OPNID(MEBICPPD) FORMAT(MEBICPL0) QRYSLT('
+') JFLD((BIKEY BSKEY)) SEQONLY(*YES 1)
+') SEQONLY(*YES 1)
+CLOF OPNID(MEBICPPD)
+OPNQRYF FILE((MEBICPJ0 *FIRST @BICPPD) (MEBICIPD *FIRST @BICIPD)) OPTION(*INP)                CFT050
+OPNQRYF FILE((MEBICPJ0 *FIRST @BICPPD)) OPTION(*INP) OPNID(MEBICPJ0) QRYSLT('                 CFT050
+OPNID(MEBICPJ0) FORMAT(MEBICPJ0) QRYSLT('                                                     CFT050
+') JFLD((B3FIL2 BSKEY)) SEQONLY(*YES 1) SRTSEQ(*LANGIDSHR)                           CFT050 MD023611
+') SEQONLY(*YES 1) SRTSEQ(*LANGIDSHR)                                                CFT050 MD023611
+CLOF OPNID(MEBICPJ0)                                                                          CFT050

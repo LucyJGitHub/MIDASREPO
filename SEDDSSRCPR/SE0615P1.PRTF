@@ -1,0 +1,493 @@
+      *****************************************************************
+/*STD *  PRTFBASE                                                     *
+/*EXS *  PR_STD60                                                     *
+/*EXI *  TEXT('Midas SE Daily transactions schedule report')
+     A*****************************************************************
+     A*                                                               *
+     A*  Midas - Securities Trading Module
+     A*                                                               *
+     A*  PRTF/SE0615P1 - DAILY SCHEDULE OF TRANSACTIONS REPORT        *
+     A*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     A*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 30Nov05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *  Prev Amend No. CSE028             Date 06Jun01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAC005             Date 23Nov98               *
+      *                 S01408             Date 16May96               *
+      *                 S01408             Date 23Feb96               *
+     A*                 074555             DATE 10AUG94               *
+     A*                 051109             DATE 25NOV93               *
+     A*                 E35515             DATE 11FEB92               *
+     A*                 E33518             DATE 23DEC91               *
+     A*                 E33520             DATE 20DEC91               *
+     A*                 E33521             DATE 19DEC91               *
+     A*                 S01117             DATE 15JAN91               *
+     A*                 E20881             DATE 18JAN90               *
+     A*                 E20086             DATE 07NOV89               *
+     A*                                                               *
+     A*---------------------------------------------------------------*
+     A*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE028 - Standing Settlement Instructions Enhancement        *
+      *  CAC005 - Profit Centre Accouting - SE Enhancement            *
+     A*  S01408 - Addition of core hook SE0615P105                    *
+     A*           Addition of core hook SE0615P104                    *
+     A*           Addition of core hook SE0615P103                    *
+     A*           Addition of core hook SE0615P102                    *
+     A*  S01408 - Addition of core hook SE0615P101                    *
+     A*  074555 - Security shortname is printed with report name,     *
+     A*           rate and maturity date.                             *
+     A*  051109 - Report changed to remove *AMD*, etc. from left hand *
+     A*           side and put fuller details on the literal on the   *
+     A*           third line, (eg. if Trade Input and Changed today). *
+     A*           Also readjusted all columns as they were not good.  *
+     A*  E35515 - Wrong branch printed out on overflow.               *
+     A*  E33518 - Don't abbreviate Countervalue or reallowance.       *
+     A*  E33520 - Should be a space between 'DATE' and the date.      *
+     A*  E33521 - Should be a space between interest and currency.    *
+     A*  S01117 - Multibranching.                                     *
+     A*  E20881 - COMMISSION AND CHARGES SHOULD LINE UP WITH          *
+     A*           REALLOWANCE AND INTEREST.                           *
+     A*  E20086 - Mortgage backed securities and current factor       *
+     A*           processing amendments.                              *
+     A*         - Report shows amended Trades as new Trades and shows *
+     A*           Changed Trades as *AMD*. Altered to show Amended    *
+     A*           Trades (entered before today) as *AMD* and Changed  *
+     A*           Trades as *CHG*.                                    *
+     A*                                                               *
+     A*****************************************************************
+     A*  C R E A T I O N     P A R A M E T E R S                      *
+     A*                                                               *
+     A*****************************************************************
+      *
+     A                                      REF(MFRFL)
+      *                                              Begin /051109/
+      ***  Headings and Detail Lines completely rewritten below.
+      *
+     A***********
+     A************************
+     A*****PAGE*HEADINGS******
+     A************************
+     A***********
+     A**********R HEADP1                    SKIPB(3)
+     A***********                           TEXT('(C) MKI +
+     A***********                           SYSTEMS INTERNATIONAL +
+     A***********                           LTD. 1988, 1991')
+     A***********                          6'REFERENCE SE0615P1'
+     A*********** TITL      R             39
+     A***********                        101'DATE'
+     A***********                                    Begin /E33520/
+     A*********** RUNA      R            105
+     A*********** RUNA      R            106
+     A***********                                    End   /E33520/
+     A***********                        119'PAGE'
+     A*********** PAGE         004S 0    125EDTCDE(Z) SPACEA(2)
+      ***********
+      ***********                                    Begin /S01117/
+     A***********                         41'SECURITIES TRADING'
+     A***********                         60'DAILY SCHEDULE OF TRANSACTIONS'
+     A***********                         93'BRANCH - '
+     A*********** TDBR      R            102
+     A*********** BRNM      R            106
+     A***********                           SPACEA(1)
+     A***********                         39'SECURITIES TRADING'
+     A***********                         58'DAILY SCHEDULE OF TRANSACTIONS'
+     A**35*81****                         92'BRANCH'
+     A***********                                    Begin /E35515/
+     A**35*81**** TDBA      R             99
+     A**35*81**** LTDBA     R             99REFFLD(TDBA)
+     A***********                                    End   /E35515/
+     A**35*81****                        102'-'
+     A***********                                    Begin /E35515/
+     A**35*81**** BRNM      R            103
+     A**35*81**** LBRNM     R            103REFFLD(BRNM)
+     A***********                                    End   /E35515/
+     A***********                         41'-------------------'
+     A***********                         39'-------------------'
+     A***********                           SPACEB(1)
+     A***********                         60'------------------------------'
+     A***********                         58'------------------------------'
+      ***********                                    End   /S01117/
+     A***********                           SPACEA(3)
+     A***********                          7'BOOK'
+     A*********** TDBK      R             12
+     A***********                         14'-'
+     A*********** BOKD      R             15
+     A***********                         50'INVESTMENT TYPE -'
+     A*********** INAM      R             68
+     A***********                           SPACEA(2)
+     A***********
+     A***********                                    Begin /E33521/
+     A***********                          5'TRADE REF  VALUE  TYP CCY'
+     A***********                         37'NOMINAL/'
+     A***********                         53'CONSIDERATION/'
+     A***********                         79'REALL./'
+     A***********                         95'INTEREST/'
+     A***********                        109'CCY'
+     A***********                          3'TRADE REF  VALUE  TYP CCY'
+     A***********                         34'NOMINAL/'
+     A***********                         50'CONSIDERATION/'
+     A***********                                    Begin /E33518/
+     A***********                         77'REALL./'
+     A***********                         73'REALLOWANCE/'
+     A***********                                    End   /E33518/
+     A***********                         93'INTEREST/'
+     A***********                        108'CCY'
+     A***********                                    End   /E33521/
+     A***********                        115'COUNTERVALUE'
+     A***********                           SPACEA(1)
+     A***********
+     A***********                                    Begin /E33521/
+     A***********                         11'CLIENT'
+     A***********                         39'PRICE'
+     A***********                         56'EXCH.RATE'
+     A***********                         78'COMMIS.'
+     A***********                         96'CHARGES'
+     A***********                          9'CLIENT'
+     A***********                         36'PRICE'
+     A***********                         53'EXCH.RATE'
+     A***********                                    Begin /E33518/
+     A***********                         76'COMMIS.'
+     A***********                         76'COMMISSION'
+     A***********                                    End   /E33518/
+     A***********                         94'CHARGES'
+     A***********                                    End   /E33521/
+     A***********                           SPACEA(1)
+     A***********
+     A***********                                    Begin /E33521/
+     A***********                         11'SECURITY'
+     A***********                          9'SECURITY'
+     A***********                                    End   /E33521/
+     A***********                           SPACEA(2)
+     A***********
+     A*****************************
+     A*****DETAIL*PART*OF*REPORT***
+     A*****************************
+     A***********
+     A**********R DETAIL
+      ***********                                    Begin /E20086/
+     A**40*******                          1'*A*'
+     A**39*******                          1'*A*'
+     A**40*******                          1'*C*'
+      ***********                                    End   /E20086/
+     A**41*******                          1'*C*'
+     A***********                                    Begin /E33521/
+     A*********** TDRF      R              6
+     A*********** STDVD          7        14
+     A*********** TDTP      R             23
+     A*********** TNMC      R             27
+     A*********** SNOML         15        31
+     A*********** STCSR         21        47
+     A*********** SRALL         21        67
+     A*********** SITRA         21        88
+     A*********** SETC      R            109
+     A*********** TDRF      R              5
+     A*********** STDVD          7        12
+     A*********** TDTP      R             21
+     A*********** TNMC      R             25
+     A*********** SNOML         15        29
+     A*********** STCSR         21        44
+     A*********** SRALL         21        65
+     A*********** SITRA         21        86
+     A*********** SETC      R            108
+     A***********                                    End   /E33521/
+     A*********** STCTR         21       112
+     A***********                           SPACEA(1)
+     A***********
+      ***********                                    Begin /E20086/
+     A**40*******                          1'*M*'
+     A**39*******                          1'*M*'
+     A**40*******                          1'*H*'
+      ***********                                    End   /E20086/
+     A**41*******                          1'*X*'
+     A***********                                    Begin /E33521/
+     A*********** CSNM      R             11
+     A*********** TCNR      R             22
+     A*********** STPDY         17        29
+     A*********** STDER         15        53
+      ***********                                    Begin /E20881/
+     A************STCOM         19        72
+     A************STCHR         19        93
+     A*********** STCOM         19        69
+     A*********** STCHR         19        90
+      ***********                                    End   /E20881/
+     A*********** CSNM      R              9
+     A*********** TCNR      R             20
+     A*********** STPDY         17        27
+     A*********** STDER         15        50
+     A*********** STCOM         19        67
+     A*********** STCHR         19        88
+     A***********                                    End   /E33521/
+     A***********                           SPACEA(1)
+     A***********
+      ***********                                    Begin /E20086/
+     A**40*******                          1'*D*'
+     A**39*******                          1'*D*'
+     A**40*******                          1'*G*'
+      ***********                                    End   /E20086/
+     A**41*******                          1'*L*'
+     A***********                                    Begin /E33521/
+     A*********** TDSS      R             11
+     A*********** TDSS      R             09
+     A***********                                    End   /E33521/
+     A***********                         59'CLEARANCE'
+     A**50*******                         69'UNSPECIFIED'
+     A**51*******                         69'EUROCLEAR'
+     A**52*******                         69'BRIDGE FROM EUROCLEAR'
+     A**53*******                         69'CEDEL'
+     A**54*******                         69'BRIDGE FROM CEDEL'
+     A**55*******                         69'SPECIFIED'
+      ***********                                    Begin /E20086/
+     A**40*******                         91'*TRADE AMENDMENT*'
+     A**39*******                         91'*TRADE AMENDMENT*'
+     A**40*******                         91'*TRADE CHANGE*'
+      ***********                                    End   /E20086/
+     A**41*******                         91'*CANCELLATION*'
+     A**42*******                        109'*INCOMPLETE*'
+     A***********                        130' '
+     A***********                           SPACEA(2)
+      *
+      *----------------------------------*
+      ***  Report Headings Record Format *
+      *----------------------------------*
+      *
+     A          R HEADP1                    SKIPB(3)
+     A                                      TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+      *
+     A                                     7'REFERENCE SE0615P1'
+     A            TITL      R             37
+     A                                   101'DATE'
+     A            RUNA      R            106
+     A                                   119'PAGE'
+     A            PAGE         004S 0    124EDTCDE(Z)
+     A                                      SPACEA(1)
+      *
+     A                                   101'TIME'
+     A                                   106TIME
+     A                                      EDTWRD('  :  :  ')
+     A                                      SPACEA(1)
+      *
+     A                                    39'SECURITIES TRADING DAILY -
+     A                                      SCHEDULE OF TRANSACTIONS'
+     A  35 81                             92'BRANCH'
+     A  35 81     LTDBA     R             99REFFLD(TDBA)
+     A  35 81                            102'-'
+     A  35 81     LBRNM     R            103REFFLD(BRNM)
+      *
+     A                                    39'--------------------------
+     A                                      ------------------------'
+     A                                      SPACEB(1)
+      *
+     A                                     7'BOOK'
+     A                                      SPACEB(3)
+     A            TDBK      R             12
+     A                                    14'-'
+     A            BOKD      R             15
+     A                                    50'INVESTMENT TYPE -'
+     A            INAM      R             68
+      *                                              Begin /CAC005/
+     A  36                                 7'PROFIT CENTRE'
+     A                                      SPACEB(1)
+     A  36        PRFC      R             22
+     A  36                                26'-'
+     A  36        PRFN      R             27
+     A                                   131' '
+      *                                              End   /CAC005/
+     A                                      SPACEA(2)
+      *
+     A                                     1'TRADE'
+     A                                     9'VALUE'
+     A                                    17'TYPE'
+     A                                    22'CCY'
+     A                                    33'NOMINAL/'
+     A                                    49'CONSIDERATION/'
+     A                                    73'REALLOWANCE/'
+     A*/COPY WNCPYSRC,SE0615P112
+     A                                    98'INTEREST/'
+     A                                   108'CCY'
+     A                                   121'COUNTERVALUE'
+     A                                      SPACEA(1)
+      *
+     A                                     6'COUNTERPARTY'
+     A*                                                     BEGIN /*S01408*/
+     A*/COPY WNCPYSRC,SE0615P102
+     A*                                                      END /*S01480*/
+     A                                    35'PRICE'
+     A*                                                     BEGIN /*S01408*/
+     A*/COPY WNCPYSRC,SE0615P103
+     A*                                                      END /*S01480*/
+     A                                    49'EXCHANGE RATE'
+     A                                    74'COMMISSION'
+     A                                    99'CHARGES'
+     A                                      SPACEA(1)
+      *
+     A*/COPY WNCPYSRC,SE0615P108
+     A                                     6'SECURITY'
+     A*                                                     BEGIN /*S01408*/
+     A*/COPY WNCPYSRC,SE0615P104
+     A*                                                      END /*S01480*/
+     A                                      SPACEA(2)
+      *
+      *-------------------------*
+      ***  Detail Record Format *
+      *-------------------------*
+      *
+     A          R DETAIL
+      *
+     A            TDRF      R              1
+     A            STDVD          7         9
+     A            TDTP      R             18
+     A            TNMC      R             22
+     A            SNOML         15        26
+     A            STCSR         21        42
+     A            SRALL         21        64
+     A            SITRA         21        86
+     A            SETC      R            108
+     A*                                                                   S01408
+     A*/COPY WNCPYSRC,SE0615P101
+     A*                                                                   S01408
+     A            STCTR         21       112
+     A                                      SPACEA(1)
+      *
+     A*/COPY WNCPYSRC,SE0615P109
+     A            CSNM      R              6
+      * Begin /CSD027/
+     A**********  TCNR      R             17                                                  CSD027
+     A            TCNR           6A       17TEXT('Counterparty Customer Number +
+                                            - TR')
+      * End /CSD027/
+     A*/COPY WNCPYSRC,SE0615P110
+     A            STPDY         17        24
+     A            STDER         15        48
+     A            STCOM         19        66
+     A            STCHR         19        88
+     A                                      SPACEA(1)
+      *
+     A*                                              Begin /074555/
+     A*********** TDSS      R              6
+     A***********                         25'CLEARANCE'
+     A**50*******                         35'UNSPECIFIED'
+     A**51*******                         35'EUROCLEAR'
+     A**52*******                         35'BRIDGE FROM EUROCLEAR'
+     A**53*******                         35'CEDEL'
+     A**54*******                         35'BRIDGE FROM CEDEL'
+     A**55*******                         35'SPECIFIED'
+      ***********
+     A**39*******                         64'*TRADE AMENDED TODAY*'
+     A**43*******                         64'*TRADE INPUT AND AMENDED TODAY*'
+     A**40*******                         64'*TRADE CHANGED TODAY*'
+     A**44*******                         64'*TRADE INPUT AND CHANGED TODAY*'
+     A**41*******                         64'*TRADE CANCELLED TODAY*'
+      ***********
+     A**42*******                        107'*INCOMPLETE*'
+      *
+     A*/COPY WNCPYSRC,SE0615P111
+     A            TDSS      R              3
+     A*                                                     BEGIN /*S01408*/
+     A*/COPY WNCPYSRC,SE0615P105
+     A*                                                      END /*S01480*/
+     A            ZRNME         41   O    14
+     A*/COPY WNCPYSRC,SE0615P106
+     A                                    56'CLEARANCE'
+     A  50                                66'UNSPECIFIED'
+     A  51                                66'EUROCLEAR'
+     A  52                                66'BRIDGE FROM EUROCLEAR'
+     A**Start of Change CSE028
+     A**53******                          66'CEDEL'                                           CSE028
+     A**54******                          66'BRIDGE FROM CEDEL'                               CSE028
+     A  53                                66'CLEARSTREAM'
+     A  54                                66'BRIDGE FR CLEARSTREAM'
+     A**End of Change CSE028
+     A  55                                66'SPECIFIED'
+      *
+     A  39                                88'*TRADE AMENDED TODAY*'
+     A  43                                88'*TRADE INPUT AND AMENDED TODAY*'
+     A  40                                88'*TRADE CHANGED TODAY*'
+     A  44                                88'*TRADE INPUT AND CHANGED TODAY*'
+     A  41                                88'*TRADE CANCELLED TODAY*'
+     A*/COPY WNCPYSRC,SE0615P107
+      *
+     A  42                               120'*INCOMPLETE*'
+      *
+      *                                              End   /074555/
+     A                                   132' '
+     A                                      SPACEA(2)
+      *                                              End   /051109/
+     A**
+     A**   *******************
+     A**   TOTAL LINE
+     A**   *******************
+     A**
+     A          R TOTAL
+     A                                      SPACEB(1)
+     A***********                                    Begin /E33518/
+     A***********                         83'TOTAL C/V FOR'
+     A                                    74'TOTAL COUNTERVALUE FOR'
+     A***********                                    End   /E33518/
+     A            LTDBK          2        98
+     A                                   100'/'
+     A            LSITP          3       101
+     A                                   104'/'
+     A            LSETC          3       105
+      *                                              Begin /CAC005/
+     A  36                               108'/'
+     A  36        LPRFC          4       109
+      *                                              End   /CAC005/
+     A            ZTOT          21       112
+     A                                      SPACEA(3)
+     A**
+     A**   *******************
+     A**   REPORT TRAILER
+     A**   *******************
+     A**
+      *                                              Begin /S01117/
+     A**********R TRAILP1
+     A***********                         56'*** END OF REPORT ***'
+     A***********                           SPACEB(1)
+     A          R TRAILP1                    SPACEB(3)
+     A  35 81                             46'***  END OF REPORT FOR BRANCH '
+     A  35 81     LTDBA          3        76
+     A  35 81                             81'***'
+     A  35N81                             56'*** END OF REPORT ***'
+     A N35                                56'*** END OF REPORT ***'
+     A**
+     A**   *******************
+     A**   REPORT DATABASE ERROR
+     A**   *******************
+     A**
+     A          R ERRORP1
+     A                                    25'**** DATABASE ERROR ****'
+     A                                      SPACEB(2)
+     A                                    11'************************'
+     A                                      SPACEB(2)
+     A                                    35'************************'
+     A                                    59'******'
+     A                                    11'*'
+     A                                      SPACEB(1)
+     A                                    64'*'
+     A                                    11'*    PROGRAM NAME '''
+     A                                      SPACEB(1)
+     A            DBPGM         10A       30
+     A                                    40''''
+     A                                    64'*'
+     A                                    11'*    AT           '''
+     A                                      SPACEB(1)
+     A            DBASE          3  0     30
+     A                                    33''''
+     A                                    64'*'
+     A                                    11'*'
+     A                                      SPACEB(1)
+     A                                    64'*'
+     A                                    11'************************'
+     A                                      SPACEB(1)
+     A                                    35'************************'
+     A                                    59'******'
+      *                                              End   /S01117/

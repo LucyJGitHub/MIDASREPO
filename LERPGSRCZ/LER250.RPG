@@ -1,0 +1,2807 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE RE & GL extr. for profitability reports')     *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Customer Lending Module                              *
+     F*                                                               *
+     F*  LER250 - Retail and General Ledger extract for Profitability *
+     F*           reporting                                           *
+     F*  Function: Audit trail reporting run controls of the extract  *
+     F*  (COB)     file                                               *
+     F*                                                               *
+     F*  Called By: CLP/LERC25                                        *
+     F*                                                               *
+     F*  Calls: RPG/LERDATEF - To convert a date to a day no. for     *
+     F*                        first day of month                     *
+     F*         RPG/LERDATEL - To convert a date to a day no. for     *
+     F*                        last day of month                      *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. AR1097376          Date 03Apr13               *
+      *  Prev Amend No. CLE075AY           Date 06Aug12               *
+      *                 CLE075AC           Date 06Aug12               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CSC042             Date 16Feb09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 BUG14933           Date 02Oct07               *
+      *                 BUG12930 (Reopen)  Date 04Jan07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 237947             Date 26May06               *
+      *                 229945             Date 19Oct04               *
+      *                 227048             Date 24Jun04               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 15May01               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CAP035             Date 07May99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 142402             Date 25Feb99               *
+      *                 130379             Date 29May98               *
+      *                 126303             Date 20Nov96               *
+      *                 CCB003             Date 05Nov96               *
+     F*                 S01408             DATE 13SEP96               *
+     F*                 088128             DATE 17JAN96               *
+     F*                 088018             DATE 17JAN96               *
+     F*                 065326             DATE 09MAR94               *
+     F*                 052808             DATE 09DEC93               *
+     F*                 BH3443             DATE 29JUL92               *
+     F*                 BH3444             DATE 29JUL92               *
+     F*                 ALIEN1             DATE 09JUL92               *
+     F*                 E32390             DATE 17DEC91               *
+     F*                 E32388             DATE 17DEC91               *
+     F*                 E32666             DATE 13MAR92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  AR1097376 - LERC25 task splits failed due to slow            *
+      *              processing of TS server.                         *
+      *  CLE075AY - COB Restructure - LE COB Optimisation Phase 1     *
+      *             Caching Update.                                   *
+      *  CLE075AC - COB Restructure - LE COB Optimisation Phase 1     *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CSC042 - COB Performance improvements.                       *
+      *           AOBRCHR* AO pgm is called 431K times for 205 records*
+      *           at RZB Sofia                                        *
+      *  BUG14933 - Error in checking switchable feature CSW207       *
+      *             (Recompile)                                       *
+      *  BUG12930 - Change the length of data area CBTASKSP to 10     *
+      *             characters. (Recompile)                           *
+      *  237947 - This will include the LCIA and CHGE in the computa- *
+      *           of margin amount in Retail account. This is applica-*
+      *           ble if the BKANWD = 2 only.                         *
+      *  229945 - For accounts with RDDRCR = 'D', consider value of   *
+      *           margin before the Z-SUB condition.                  *
+      *  227048 - Margin income is not being reported when the Margin *
+      *           negative spread rate is equal to the base rate.     *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSD006 - Use long DS with SDBSRTPD.                          *
+      *  CAP035 - Conversion of Midas inputs to modular API           *
+      *           structure - Recompiled.                             *
+      *  142402 - New field LLSTRN was added in dataarea LERSTS to    *
+      *           make sure that Last Retail Profitability date is not*
+      *           overwritten with the new LASTRN value.  Also, a     *
+      *           correction was done in computing CODT when monthend *
+      *           falls in between DNWD and RDNB (i.e. weekend).      *
+     F*  130379 - Avoid LERSTS data area lock by locking not at the   *
+     F*           start but at the time of update.                    *
+     F*  126303 - GL balances not included in profitability reports   *
+     F*           if Base Currency Transfer Frequency is blank on     *
+     F*           General Ledger ICD.  Fix is to assume a transfer    *
+     F*           frequency of 'Y' for profitability purposes.        *
+     F*  CCB003 - COB Performance Enhancements - Task Split           *
+      *  S01408 - Add new hook LER250IIP1                             *
+      *         - Add new hook LER250CCP3                             *
+      *         - Add new hook LER250CCP2                             *
+      *         - Add new hook LER250CCP1                             *
+     F*  088128 - Average balance on LER470P1 incorrect because       *
+     F*           information not extracted correctly if Accrual      *
+     F*           Profit Frequency is 'L'                             *
+     F*  088018 - Extract record even if the account officer blank    *
+     F*  065326 - DB error in CB0050 w/out any key, file and position *
+     F*           shown.                                              *
+     F*  052808 - Finish off E32666 (i.e., Do not call error          *
+     F*           subroutines anymore).                               *
+     F*  BH3443 - SR/CCYCVT messes up due to *IN40 not being kept     *
+     F*           under proper control                                *
+     F*  BH3444 - For monthly accruals, ensure go through non-wrkg    *
+     F*           days in advance.                                    *
+     F*  ALIEN1 - Increase number of A/C codes from 5 to 32.          *
+     F*  E32390 - NUMBER OF DAYS BY MONTH WAS WRONG IF ACCRUAL FOR    *
+     F*           NON-WORKING DAYS INDICATOR IS '2' (RETROSPECTIVE    *
+     F*           NON-WORKING DAY ACCRUALS).                          *
+     F*  E32388 - RETRIEVE SPREAD RATE (MARGIN RATE) FOLLOWING        *
+     F*           CLEARED BALANCE AMOUNT.                             *
+     F*  E32666 - Database error reported for deleted customer.       *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F*ACCNT***IF**E                    DISK                              CCB003
+     F************ACCNTAAF                          KIGNORE               CCB003
+     F************ACCNTACF                          KIGNORE               CCB003
+     F***ACCNT   IF  E           K        DISK                                    CLE075AC AR1097376
+     F**********  ACCNTAAF                          KIGNORE                       CLE075AC AR1097376
+     F**********  ACCNTACF                          KIGNORE                       CLE075AC AR1097376
+     FACCNTAB IF  E                    DISK                                                AR1097376
+     F                                              KINFDS INFDS                           AR1097376
+      *                                                                   CCB003
+     F***LEEXPRPDUF  E                    DISK                                       CCB003 CLE075AC
+     FLEEXPRPDUF  E           K        DISK                           UC                    CLE075AC
+     F            LEEXPRD0                          KRENAMEDRIVEF                           CLE075AC
+      *                                                                   CCB003
+     FREIAX   IF  E           K        DISK
+     FREINT   IF  E           K        DISK
+     F            REINTAF                           KIGNORE
+     F            REINTZF                           KIGNORE
+     F***SDBSRTL1IF  E                    DISK                                     CLE075AC CLE075AY
+     FLEPEGLD UF  E           K        DISK                      A
+     F                                              KCOMIT                CCB003
+     F*LEPEGLZ*UF**E                    DISK                              CCB003
+     FLEPERED UF  E           K        DISK                      A
+     F                                              KCOMIT                CCB003
+     F*LEPEREZ*UF**E                    DISK                              CCB003
+     FPEFMTC  IF  E                    DISK
+     F***SDCURRPDIF  E                    DISK                                                CSC042
+     FSDCURRPDIF  E                    DISK                           UC                      CSC042
+     F*                                                                     0078
+     F* Access to ACTN5DH removed and replaced with date on LERSTS          0078
+     F*                                                                     0078
+     F*ACTN5DH*IF**E*******             DISK                                0078
+     F*LER250AUO***E                    PRINTER      KINFDS SPOOLU        CCB003
+     FLER250AUO   E                    PRINTER      KINFDS SPOOLU     UC  CCB003
+      *****************************************************************   CCB003
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   10  - Work indicator for LOKUP operations                   *
+     F*   20  - Work indicator for LOKUP operations                   *
+     F*   30  - Work indicator for LOKUP operations                   *
+      *   38  - Chain to driver file LEEXPRD                          *                     CLE075AC
+     F*   40  - To convert amount to pennies                          *
+     F*   60  - Blank Account Officer                                 *
+     F*   70  - Zeros/blanks in Rate/Type fields                      *
+     F*   80  - Work indicator                                        *
+     F*   82  - Work indicator                                        *
+     F*   87  - Work indicator                                        *
+     F*   89  - Work indicator                                        *
+     F*                                                               *
+     F* 90-99 - Used by Standard Subroutines                          *
+     F*                                                               *
+     F* U7-U8 - Data Base Error                                       *
+     F*    U8 - File Controls out of Balance                          *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  CCYCVT - To convert aggregate balance to base currency       *
+     F*  ACOFF  - To check account officer for corporate customer     *
+     F*  FZCHK  - To check if zeros/blanks in rate/type fields        *
+     F*  GLACC  - To process accounts for GL extract                  *
+     F*  RTACC  - To process accounts for Retail extract              *
+     F*  ZDATE2 - To Convert a Day Number to Date Formats             *
+     F*  INIT   - To perform first cycle calculations                 *
+      *  UPDPTR - To update LEEXPRPD with Start Key for restart       *                     CLE075AC
+     F*  DBERR  - To perform database error processing                *
+     F*  *PSSR  - To Handle Abnormal Error Conditions                 *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+      *****************************************************************   CCB003
+      *                                                                   CCB003
+     E                    AGL        12 15 0             AGG BAL - GL
+     E                    ARE        12 15 0             AGG BAL - RE
+     E                    DRE        12  2 0             DAYS - RE
+     E                    MRE        12 15 0             MARGIN - RE
+     E                    FRE        12 15 0             FEES/CHRGS -RE
+     E********************ACD         5  4 0A            PROF.A/C CODES   ALIEN1
+     E**********          ACD        32  4 0A            PROF.A/C CODES                ALIEN1 CGL029
+     E                    ACD        32 10 0A            PROF.A/C CODES                       CGL029
+     E                    RAT        11 11 7             INTEREST RATES
+     E                    BAL        11 15 0             TIER BALANCES
+     E                    COD       150  3   CYD    15   CCY DETAILS
+     E                    CPY@    1   1 80
+     E                    PWR     1   4  4 0             POWER ARRAY
+     E                    POW     1   4  4 1             POWER ARRAY
+      *                                                                   CCB003
+     E/COPY ZSRSRC,ZDATE2Z1
+     E                    ##BR      999  3               Branch Codes                         CSC042
+     E                    ##BI      999  6               BICNs                                CSC042
+      *                                                                   CCB003
+     E**********          #BCD     2000  2 0                                       CLE075AC CLE075AY
+     E**********          #BRT     2000 14 7                                       CLE075AC CLE075AY
+     E**********          #IAC      100 15 0                                       CLE075AC CLE075AY
+     E**********          #KIA        1 15 0                                       CLE075AC CLE075AY
+     E**********          #REI      100 30 0                                       CLE075AC CLE075AY
+     E**********          #CCS      100  5 0                                       CLE075AC CLE075AY
+     E**********          #LRU      100 13 0             Least Used                CLE075AC CLE075AY
+     E**********          #LRUC     100 13 0             Sort Array                CLE075AC CLE075AY
+     E**********          #BAL      100 88                                         CLE075AC CLE075AY
+     E**********          #LR2      100 13 0                                       CLE075AC CLE075AY
+     E**********          #LRC2     100 13 0                                       CLE075AC CLE075AY
+     E                    #BCD      300  2 0                                                CLE075AY
+     E                    #LRU      300 13 0             Least Used                         CLE075AY
+     E                    #LRUC     300 13 0             Sort Array                         CLE075AY
+     E                    #INT      300 12                                                  CLE075AY
+     E                    #LR2      300 13 0                                                CLE075AY
+     E                    #LRC2     300 13 0                                                CLE075AY
+      *****************************************************************   CCB003
+     I/EJECT
+      *****************************************************************   CCB003
+     IACCNTABF
+     I              RECI                            RECIA
+     I*
+     I            DS
+     I* SPLIT RUN DATE INTO MONTH & YEAR
+     I*
+     I                                        1   7 RUNDAX
+     I                                        3   5 MMM
+     I                                        6   7 YY
+     I*
+     I            DS
+     I* SPLIT UP DATE FOR CONVERSION.
+     I*
+     I                                        1   6 DATE
+     I                                        1   2 DD
+     I                                        3   6 MY
+     I*
+     I            DS
+     I* DATA STRUCTURE TO DEFINE BAL2 FROM REINT.
+     I*
+     I                                        1  88 BAL2
+     I                                    P   1  880BAL
+     I*
+     I            DS
+     I* DATA STRUCTURE TO DEFINE KEY FOR REINT.
+     I*
+     I                                        1  12 KEYINT
+     I                                        1   1 IAC1
+     I                                        2   30ICT
+     I                                        4   80CST
+     I                                        9  11 RDACCY
+     I                                       12  12 IAC2
+     I*
+     I            DS
+     I* DEFINE CURRENCY INFORMATION
+     I*
+     I                                        1  15 CYDDS
+     I                                        1  138SPT
+     I                                       14  140CDP
+     I                                       15  15 MDI
+     I*
+     I            DS
+     I* AGGREGATE BALANCES DATA STRUCTURE - GL
+     I*
+     I                                    P   1  960AGL
+     I                                    P   1   80GDJANA
+     I                                    P   9  160GDFEBA
+     I                                    P  17  240GDMARA
+     I                                    P  25  320GDAPRA
+     I                                    P  33  400GDMAYA
+     I                                    P  41  480GDJUNA
+     I                                    P  49  560GDJULA
+     I                                    P  57  640GDAUGA
+     I                                    P  65  720GDSEPA
+     I                                    P  73  800GDOCTA
+     I                                    P  81  880GDNOVA
+     I                                    P  89  960GDDECA
+     I*
+     I            DS
+     I* AGGREGATE BALANCES DATA STRUCTURE - RE
+     I*
+     I                                    P   1  960ARE
+     I                                    P   1   80RDJANA
+     I                                    P   9  160RDFEBA
+     I                                    P  17  240RDMARA
+     I                                    P  25  320RDAPRA
+     I                                    P  33  400RDMAYA
+     I                                    P  41  480RDJUNA
+     I                                    P  49  560RDJULA
+     I                                    P  57  640RDAUGA
+     I                                    P  65  720RDSEPA
+     I                                    P  73  800RDOCTA
+     I                                    P  81  880RDNOVA
+     I                                    P  89  960RDDECA
+     I*
+     I            DS
+     I* DAYS NON-ZERO DATA STRUCTURE - RE
+     I*
+     I                                        1  240DRE
+     I                                        1   20RDJAND
+     I                                        3   40RDFEBD
+     I                                        5   60RDMARD
+     I                                        7   80RDAPRD
+     I                                        9  100RDMAYD
+     I                                       11  120RDJUND
+     I                                       13  140RDJULD
+     I                                       15  160RDAUGD
+     I                                       17  180RDSEPD
+     I                                       19  200RDOCTD
+     I                                       21  220RDNOVD
+     I                                       23  240RDDECD
+     I*
+     I            DS
+     I* MARGIN AMOUNTS DATA STRUCTURE - RE
+     I*
+     I                                    P   1  960MRE
+     I                                    P   1   80RDJANM
+     I                                    P   9  160RDFEBM
+     I                                    P  17  240RDMARM
+     I                                    P  25  320RDAPRM
+     I                                    P  33  400RDMAYM
+     I                                    P  41  480RDJUNM
+     I                                    P  49  560RDJULM
+     I                                    P  57  640RDAUGM
+     I                                    P  65  720RDSEPM
+     I                                    P  73  800RDOCTM
+     I                                    P  81  880RDNOVM
+     I                                    P  89  960RDDECM
+     I*
+     I            DS
+     I* FEES/CHARGES AMOUNTS DATA STRUCTURE - RE
+     I*
+     I                                    P   1  960FRE
+     I                                    P   1   80RDJANF
+     I                                    P   9  160RDFEBF
+     I                                    P  17  240RDMARF
+     I                                    P  25  320RDAPRF
+     I                                    P  33  400RDMAYF
+     I                                    P  41  480RDJUNF
+     I                                    P  49  560RDJULF
+     I                                    P  57  640RDAUGF
+     I                                    P  65  720RDSEPF
+     I                                    P  73  800RDOCTF
+     I                                    P  81  880RDNOVF
+     I                                    P  89  960RDDECF
+     I*
+     I            DS
+     I* PROFITABILITY A/C CODES DATA STRUCTURE
+     I*
+     I****************************************1  200ACD                   ALIEN1
+     I**********                              1 1280ACD                                ALIEN1 CGL029
+     I**********                              1   40PCACD1                                    CGL029
+     I**********                              5   80PCACD2                                    CGL029
+     I**********                              9  120PCACD3                                    CGL029
+     I**********                             13  160PCACD4                                    CGL029
+     I**********                             17  200PCACD5                                    CGL029
+     I**********                             21  240PCACD6                             ALIEN1 CGL029
+     I**********                             25  280PCACD7                             ALIEN1 CGL029
+     I**********                             29  320PCACD8                             ALIEN1 CGL029
+     I**********                             33  360PCACD9                             ALIEN1 CGL029
+     I**********                             37  400PCAC10                             ALIEN1 CGL029
+     I**********                             41  440PCAC11                             ALIEN1 CGL029
+     I**********                             45  480PCAC12                             ALIEN1 CGL029
+     I**********                             49  520PCAC13                             ALIEN1 CGL029
+     I**********                             53  560PCAC14                             ALIEN1 CGL029
+     I**********                             57  600PCAC15                             ALIEN1 CGL029
+     I**********                             61  640PCAC16                             ALIEN1 CGL029
+     I**********                             65  680PCAC17                             ALIEN1 CGL029
+     I**********                             69  720PCAC18                             ALIEN1 CGL029
+     I**********                             73  760PCAC19                             ALIEN1 CGL029
+     I**********                             77  800PCAC20                             ALIEN1 CGL029
+     I**********                             81  840PCAC21                             ALIEN1 CGL029
+     I**********                             85  880PCAC22                             ALIEN1 CGL029
+     I**********                             89  920PCAC23                             ALIEN1 CGL029
+     I**********                             93  960PCAC24                             ALIEN1 CGL029
+     I**********                             97 1000PCAC25                             ALIEN1 CGL029
+     I**********                            101 1040PCAC26                             ALIEN1 CGL029
+     I**********                            105 1080PCAC27                             ALIEN1 CGL029
+     I**********                            109 1120PCAC28                             ALIEN1 CGL029
+     I**********                            113 1160PCAC29                             ALIEN1 CGL029
+     I**********                            117 1200PCAC30                             ALIEN1 CGL029
+     I**********                            121 1240PCAC31                             ALIEN1 CGL029
+     I**********                            125 1280PCAC32                             ALIEN1 CGL029
+     I                                        1 3200ACD                                       CGL029
+     I                                        1  100PCACD1                                    CGL029
+     I                                       11  200PCACD2                                    CGL029
+     I                                       21  300PCACD3                                    CGL029
+     I                                       31  400PCACD4                                    CGL029
+     I                                       41  500PCACD5                                    CGL029
+     I                                       51  600PCACD6                                    CGL029
+     I                                       61  700PCACD7                                    CGL029
+     I                                       71  800PCACD8                                    CGL029
+     I                                       81  900PCACD9                                    CGL029
+     I                                       91 1000PCAC10                                    CGL029
+     I                                      101 1100PCAC11                                    CGL029
+     I                                      111 1200PCAC12                                    CGL029
+     I                                      121 1300PCAC13                                    CGL029
+     I                                      131 1400PCAC14                                    CGL029
+     I                                      141 1500PCAC15                                    CGL029
+     I                                      151 1600PCAC16                                    CGL029
+     I                                      161 1700PCAC17                                    CGL029
+     I                                      171 1800PCAC18                                    CGL029
+     I                                      181 1900PCAC19                                    CGL029
+     I                                      191 2000PCAC20                                    CGL029
+     I                                      201 2100PCAC21                                    CGL029
+     I                                      211 2200PCAC22                                    CGL029
+     I                                      221 2300PCAC23                                    CGL029
+     I                                      231 2400PCAC24                                    CGL029
+     I                                      241 2500PCAC25                                    CGL029
+     I                                      251 2600PCAC26                                    CGL029
+     I                                      261 2700PCAC27                                    CGL029
+     I                                      271 2800PCAC28                                    CGL029
+     I                                      281 2900PCAC29                                    CGL029
+     I                                      291 3000PCAC30                                    CGL029
+     I                                      301 3100PCAC31                                    CGL029
+     I                                      311 3200PCAC32                                    CGL029
+      *
+     ISPOOLU      DS
+     I**   FILE INFORMATION DATA STRUCTURE - AU
+     I*
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     I**********  DS                                                              CLE075AC AR1097376
+      ***End*Record*Key*Data*Structure                                            CLE075AC AR1097376
+      **********                                                                  CLE075AC AR1097376
+     I**********                              1  24 ENDKEY                        CLE075AC AR1097376
+     I**********                              1   6 ECNUM                         CLE075AC AR1097376
+     I**********                              7   9 ECCY                          CLE075AC AR1097376
+     I**********                             10  190EACOD                         CLE075AC AR1097376
+     I**********                             20  210EACSQ                         CLE075AC AR1097376
+     I**********                             22  24 EBRCA                         CLE075AC AR1097376
+     I**********  DS                                                              CLE075AC AR1097376
+      ***Next*Record*Key*Data*Structure                                           CLE075AC AR1097376
+      **********                                                                  CLE075AC AR1097376
+     I**********                              1  24 NXTKEY                        CLE075AC AR1097376
+     I**********                              1   6 CNUM                          CLE075AC AR1097376
+     I**********                              7   9 @CCY                          CLE075AC AR1097376
+     I**********                             10  190ACOD                          CLE075AC AR1097376
+     I**********                             20  210ACSQ                          CLE075AC AR1097376
+     I**********                             22  24 BRCA                          CLE075AC AR1097376
+     I**********  DS                                                              CLE075AC AR1097376
+      ***Last*Record*Key*Data*Structure                                           CLE075AC AR1097376
+      **********                                                                  CLE075AC AR1097376
+     I**********                              1  24 LSTKEY                        CLE075AC AR1097376
+     I**********                              1   6 LCNUM                         CLE075AC AR1097376
+     I**********                              7   9 LCCY                          CLE075AC AR1097376
+     I**********                             10  190LACOD                         CLE075AC AR1097376
+     I**********                             20  210LACSQ                         CLE075AC AR1097376
+     I**********                             22  24 LBRCA                         CLE075AC AR1097376
+     I***BRTDS**     DS                          14 14                             CLE075AC CLE075AY
+     I**********                              1  117#BSR                           CLE075AC CLE075AY
+     I**********                             12  14 #YCD                           CLE075AC CLE075AY
+     I***IACDS**     DS                          15 15                             CLE075AC CLE075AY
+     I**********                              1   6 #CNUM                          CLE075AC CLE075AY
+     I**********                              7   9 #CCY                           CLE075AC CLE075AY
+     I**********                             10  130#ACO                           CLE075AC CLE075AY
+     I**********                             14  150#ACS                           CLE075AC CLE075AY
+     I***KIAC***     DS                          15 15                             CLE075AC CLE075AY
+     I**********                              1   6 #CNUMK                         CLE075AC CLE075AY
+     I**********                              7   9 #CCYK                          CLE075AC CLE075AY
+     I**********                             10  130#ACOK                          CLE075AC CLE075AY
+     I**********                             14  150#ACSK                          CLE075AC CLE075AY
+     I***REIDS**     DS                          30 30                             CLE075AC CLE075AY
+     I**********                              1  130#NRCA                          CLE075AC CLE075AY
+     I**********                             14  260#RCA                           CLE075AC CLE075AY
+     I**********                             27  280#CICT                          CLE075AC CLE075AY
+     I**********                             29  300#DICT                          CLE075AC CLE075AY
+     I*
+     IPSDS       SDS
+     I** PROGRAM STATUS DATA STRUCTURE - REQUIRED FOR DUMP
+     I                                      244 253 JOB
+     I                                      254 263 USER
+     IINFDS       DS                                                                       AR1097376
+     I* DS for ACCNTAB RRN                                                                 AR1097376
+     I                                    B 397 4000DBRRN                                  AR1097376
+     I*
+     ILDA       E DSLDA
+     I* DATABASE ERROR DS
+     I*
+     IRUNDAT    E DSRUNDAT
+     I* RUNDAT DATA AREA
+     I*                                                                     0078
+     I** Addition of LERSTS dataarea to access the date of the              0078
+     I** last run of the profitability file update programs                 0078
+     I*                                                                     0078
+     ILERSTS    E DSLERSTS                                                  0078
+      ** Fees/Profitability enhancement status data area                    0078
+     I              FACHISD                         WHISST                  0078
+     I              LERC2030                        LERC20                  0078
+     I              LERC135                         LERC13                  0078
+     I              LERC315                         LERC35                  0078
+     I              LERC425                         LERC42                  0078
+     I              EOYFLAG                         EOYFLG                  0078
+     I*
+      *                                                                   CCB003
+     ICBTASK    E DSCBTASKSP                                              CCB003
+      ** Commitment control size                                          CCB003
+      *                                                                   CCB003
+     ISDBANK    E DSSDBANKPD
+     I**  EXTERNAL DS FOR BANK DETAILS
+     I              BJCYCD                          BCCY
+     I*
+     ISDGELR    E DSSDGELRPD
+      **  EXTERNAL DS FOR GENERAL LEDGER DETAILS
+     I              BKAPDT                          APDA
+     I              BKAPFQ                          APFQ
+     I*
+     ISDCUST    E DSSDCUSTPD
+     I***  EXTERNAL DS FOR CUSTOMER DETAILS
+     I*
+     ISDBRCH    E DSSDBRCHPD
+     I***  EXTERNAL DS FOR BRANCH DETAILS
+     I              A8BICN                          BICN
+     I              QQDFAC                          DFACQQ                                    CGL029
+     I*
+     I***SDBSRT*   E DSSDBSRTPD                                                             CLE075AY
+     ISDBSRT    E DSSDBSRTPD                300                                             CLE075AY
+     I**   BASE RATE
+     I**********    BACYCD                          CCY                                     CLE075AY
+     I              BACYCD                          CCYB                                    CLE075AY
+     I              BABSRC                          BRTT
+     I**********    BACBSR                          BRTE                                    CLE075AY
+     ISDREIN    E DSREINTZ                  300                                             CLE075AY
+     I              RECI                            RECIR                                   CLE075AY
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I*
+      *                                                                   S01408
+     I/COPY WNCPYSRC,LER250IIP1                                           S01408
+      *                                                                   S01408
+      *****************************************************************   CCB003
+     C/EJECT
+      *****************************************************************   CCB003
+      *                                                                   CCB003
+     C**********           MOVEACPY@      BIS@   80                                           CSC042
+      *                                                                                     CLE075AC
+     C**********           OPEN LEEXPRPD                                          CLE075AC AR1097376
+      *
+      * PERFORM INITIAL PROCESSING.
+      *
+     C           RUNONE    IFEQ ' '                                                         CLE075AC
+     C                     EXSR INIT
+     C                     MOVE 'Y'       RUNONE  1                                         CLE075AC
+     C                     ENDIF                                                            CLE075AC
+      *                                                                                     CLE075AC
+      ** Initialise work fields                                                             CLE075AC
+      *                                                                                     CLE075AC
+     C                     Z-ADD1         #COMIT                                            CLE075AC
+      *                                                                                     CLE075AC
+      ***Read*END*key*from*LEEXPRPD                                               CLE075AC AR1097376
+      **********                                                                  CLE075AC AR1097376
+     C**********           MOVE 'Z'       IXCKEY  1                               CLE075AC AR1097376
+     C********** IXCKEY    CHAINLEEXPRPD             38                           CLE075AC AR1097376
+     C********** *IN38     IFEQ '0'                                               CLE075AC AR1097376
+     C**********           MOVE CNUM      ECNUM                                   CLE075AC AR1097376
+     C**********           MOVE CCY       ECCY                                    CLE075AC AR1097376
+     C**********           MOVE ACOD      EACOD                                   CLE075AC AR1097376
+     C**********           MOVE ACSQ      EACSQ                                   CLE075AC AR1097376
+     C**********           MOVE BRCA      EBRCA                                   CLE075AC AR1097376
+     C**********           ENDIF                                                  CLE075AC AR1097376
+      **********                                                                  CLE075AC AR1097376
+      ***Read*START*key*from*LEEXPRPD                                             CLE075AC AR1097376
+      **********                                                                  CLE075AC AR1097376
+     C********** *IN38     IFEQ '0'                                               CLE075AC AR1097376
+     C**********           MOVE 'A'       IXCKEY                                  CLE075AC AR1097376
+     C********** IXCKEY    CHAINLEEXPRPD             38                           CLE075AC AR1097376
+     C**********           ENDIF                                                  CLE075AC AR1097376
+      **********                                                                  CLE075AC AR1097376
+     C********** *IN38     IFEQ '1'                                               CLE075AC AR1097376
+     C********** *LOCK     IN   LDA                                               CLE075AC AR1097376
+     C**********           MOVEL'LEEXPRPD'DBFILE                                  CLE075AC AR1097376
+     C**********           MOVELIXCKEY    DBKEY                                   CLE075AC AR1097376
+     C**********           MOVEL'LER250'  DBPGM                                   CLE075AC AR1097376
+     C**********           OUT  LDA                                               CLE075AC AR1097376
+     C**********           EXSR *PSSR                                             CLE075AC AR1097376
+     C**********           EXSR DBERR                                             CLE075AC AR1097376
+     C**********           ENDIF                                                  CLE075AC AR1097376
+      *
+      **READ*ACCOUNTS*FILE*ACCNT.                                         CCB003
+      **READ*DRIVER*FILE*LEEXPRPD.*************************************              CCB003 CLE075AC
+      ** Read Accounts File ACCNT                                                           CLE075AC
+      *   PROCESS ONLY OPEN CORPORATE ACCOUNTS:
+     C*
+     C***  OMIT ONLY RECORDS WITH BLANK ACCOUNT OFFICER CODE.
+     C*
+      *                                                                                     CLE075AC
+      ***Set*pointer*to*the*first*record.                                         CLE075AC AR1097376
+      **********                                                                  CLE075AC AR1097376
+     C**********           MOVE CCY       @CCY                                    CLE075AC AR1097376
+     C**********           MOVE '0'       *IN80                                            AR1097376
+     C********** NXTKEY    IFGT ENDKEY                                            CLE075AC AR1097376
+     C********** NXTKEY    OREQ ENDKEY                                            CLE075AC AR1097376
+     C********** PROT      ANDEQ'C'                                               CLE075AC AR1097376
+     C**********           MOVE '1'       *IN80                                   CLE075AC AR1097376
+     C**********           ENDIF                                                  CLE075AC AR1097376
+      **********                                                                  CLE075AC AR1097376
+     C********** *IN80     IFEQ '0'                                               CLE075AC AR1097376
+      **********                                                                  CLE075AC AR1097376
+     C********** PROT      IFEQ ' '                                               CLE075AC AR1097376
+     C********** KEYACT    SETLLACCNT                                             CLE075AC AR1097376
+     C**********           ELSE                                                   CLE075AC AR1097376
+     C********** KEYACT    SETGTACCNT                                             CLE075AC AR1097376
+     C**********           ENDIF                                                  CLE075AC AR1097376
+      **********                                                                    CCB003 AR1097376
+     C**********           READ LEEXPRPD                 80                          CCB003 CLE075AC
+     C**********           READ ACCNT                    80                       CLE075AC AR1097376
+      **********                                                                  CLE075AC AR1097376
+     C**********           ENDIF                                                  CLE075AC AR1097376
+      *                                                                   CCB003
+     C           STRRRN    SETLLACCNTAB                                                    AR1097376
+     C                     READ ACCNTAB                  80                                AR1097376
+      *                                                                                    AR1097376
+     C           *IN80     DOWEQ'0'
+     C           DBRRN     ANDLEFINRRN                                                     AR1097376
+      *                                                                   CCB003
+     C***********          READ ACCNT                    80               CCB003
+      *                                                                   CCB003
+     C           *IN80     IFEQ '0'
+     C           RECIA     ANDEQ'D'                                       065326
+      *******************************************************************                   CLE075AC
+      **CHECK*IF*CORPORATE*CUSTOMER*WHEN*CHANGES.************************                   CLE075AC
+      *******************************************************************                   CLE075AC
+     C********** CNUM      IFNE SCNUM                                                       CLE075AC
+     C**********           EXSR ACOFF                                                       CLE075AC
+     C**********           Z-ADDCNUM      SCNUM                                               CSD027
+     C**********           MOVE CNUM      SCNUM                                      CSD027 CLE075AC
+     C**********           END                                                              CLE075AC
+      *
+     C********** RECIA     IFEQ 'D'                                                         CLE075AC
+     C********** *IN60     ANDEQ'0'                                                         CLE075AC
+      *
+      * IF ACCOUNT TYPE IS 'R' BALANCE IS NON-ZERO, PROCESS FOR
+      * RETAIL EXTRACT.
+      *
+     C           ATYP      IFEQ 'R'
+     C           CLBL      ANDNE0
+     C                     EXSR RTACC
+     C                     ELSE
+      *
+      * IF ACCOUNT TYPE NOT 'R', CUSTOMER IS NOT BRANCH INTERNAL
+      * CUSTOMER & A/C CODE IS ON PROFITABILITY FORMAT CONTROL
+      * FILE, PROCESS FOR GENERAL LEDGER EXTRACT.
+      *
+     C                     MOVELBRCA      ##KB                                                CSC042
+     C                     EXSR ##CHKB                                                        CSC042
+      * If branch is in the array then use the details                                        CSC042
+     C           ##FIC     IFEQ 'Y'                        *** B10                            CSC042
+     C                     EXSR ##SETB                                                        CSC042
+     C                     ELSE                            *** X10                            CSC042
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM BRCA      WDSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'LER250  'DBPGM
+     C                     MOVELBRCA      DBKEY
+     C                     MOVEL'SDBRCHPD'DBFILE           ************
+     C                     Z-ADD020       DBASE            * DBERR 20 *
+     C                     OUT  LDA                        ************
+     C                     EXSR *PSSR
+     C                     ELSE                                                               CSC042
+      * Details found on the DB so add them to the array                                      CSC042
+      * if the array still has room                                                           CSC042
+     C                     EXSR ##ADDB                                                        CSC042
+     C                     END
+     C                     END                             *** E10                            CSC042
+      *
+     C**********           MOVE BICN      BICNN   60                                          CSD027
+     C                     MOVE BICN      BICNN   6                                           CSD027
+     C           CNUM      IFNE BICNN
+     C                     MOVE '0'       *IN30
+     C           ACOD      LOKUPACD                      30
+     C           *IN30     CASEQ'1'       GLACC
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+     C**********           END                                                              CLE075AC
+      *
+     C                     END
+      *
+      ** Increase number of records processed                             CCB003
+     C                     ADD  1         #COMIT                          CCB003
+     C                     Z-ADDDBRRN     DBRRN@ 100
+      *                                                                   CCB003
+      ***Delete*record*from*driving*file*******************************              CCB003 CLE075AC
+     C**********           DELETLEEXPRPD                                             CCB003 CLE075AC
+      *                                                                   CCB003
+      ** Comit if restart status = 'Y' or number of records processed     CCB003
+      ** has reached optimum defined in CBTASKSP                          CCB003
+      *                                                                                     CLE075AC
+     C**********           MOVE CCY       @CCY                                    CLE075AC AR1097376
+     C**********           MOVE NXTKEY    LSTKEY                                  CLE075AC AR1097376
+     C********** RSTART    IFEQ 'Y'                                                 CCB003 AR1097376
+     C********** #COMIT    OREQ #OPTIM                                              CCB003 AR1097376
+     C**********           EXSR UPDPTR                                            CLE075AC AR1097376
+     C           #COMIT    IFEQ #OPTIM                                                     AR1097376
+     C                     COMIT                                          CCB003
+     C                     Z-ADDDBRRN     COMRRN 100                                       AR1097376
+     C                     Z-ADD0         #COMIT                          CCB003
+     C                     ENDIF                                          CCB003
+      *                                                                   CCB003
+     C**********           READ LEEXPRPD                 80                          CCB003 CLE075AC
+     C**********           READ ACCNT                    80                       CLE075AC AR1097376
+     C                     READ ACCNTAB                  80                                AR1097376
+      *                                                                                     CLE075AC
+      ** Check if end record is read.                                                       CLE075AC
+      **********                                                                  CLE075AC AR1097376
+     C********** *IN80     IFEQ '0'                                               CLE075AC AR1097376
+     C**********           MOVE CCY       @CCY                                    CLE075AC AR1097376
+     C********** NXTKEY    IFGT ENDKEY                                            CLE075AC AR1097376
+     C**********           MOVE '1'       *IN80                                   CLE075AC AR1097376
+     C**********           ENDIF                                                  CLE075AC AR1097376
+     C**********           ENDIF                                                  CLE075AC AR1097376
+      **********                                                                  CLE075AC AR1097376
+     C********** *IN80     IFEQ '1'                                               CLE075AC AR1097376
+     C**********           MOVE LSTKEY    NXTKEY                                  CLE075AC AR1097376
+     C**********           ENDIF                                                  CLE075AC AR1097376
+      *                                                                   CCB003
+      ** Comit if no records left in driving file and number of           CCB003
+      ** records processed is not 0                                       CCB003
+     C           *IN80     IFEQ '1'                                       CCB003
+     C           #COMIT    ANDNE0                                         CCB003
+     C           DBRRN     ORGE FINRRN                                                     AR1097376
+     C           #COMIT    ANDNE0                                                          AR1097376
+     C**********           EXSR UPDPTR                                            CLE075AC AR1097376
+     C                     COMIT                                          CCB003
+     C                     Z-ADDDBRRN@    COMRRN                                           AR1097376
+     C                     ENDIF                                          CCB003
+      *                                                                   CCB003
+     C                     END
+      *
+      **END*OF*READS,*UPDATE*EXTRACT*TRAILERS                             CCB003
+      **GENERAL*LEDGER                                                    CCB003
+      ***********                                                         CCB003
+     C***********          MOVE '0'       *IN82                           CCB003
+     C***********          READ LEPEGLZ                  82               CCB003
+     C************IN82     IFEQ '1'                                       CCB003
+     C************LOCK     IN   LDA                                       CCB003
+     C***********          MOVEL'*READ'   DBKEY            ************   CCB003
+     C***********          Z-ADD4         DBASE            * DBERR 4      CCB003
+     C***********          MOVEL'LEPEGLZ' DBFILE           ************   CCB003
+     C***********          MOVEL'LER250'  DBPGM                           CCB003
+     C***********          OUT  LDA                                       CCB003
+     C***********          EXSR *PSSR                                     CCB003
+     C***********          EXSR DBERR                                     CCB003
+     C***********          END                                            CCB003
+      ***********                                                         CCB003
+     C***********          Z-ADDGZNREC    GLPREV  50                      CCB003
+     C***********          ADD  GLADD     GZNREC                          CCB003
+     C***********          UPDATLEPEGLZF                                  CCB003
+      ***********                                                         CCB003
+      **RETAIL***                                                         CCB003
+      ***********                                                         CCB003
+     C***********          MOVE '0'       *IN82                           CCB003
+     C***********          READ LEPEREZ                  82               CCB003
+     C************IN82     IFEQ '1'                                       CCB003
+     C************LOCK     IN   LDA                                       CCB003
+     C***********          MOVEL'*READ'   DBKEY            ************   CCB003
+     C***********          MOVEL'LER250'  DBPGM            * DBERR 5      CCB003
+     C***********          Z-ADD5         DBASE            ************   CCB003
+     C***********          MOVEL'LEPEREZ' DBFILE                          CCB003
+     C***********          OUT  LDA                                       CCB003
+     C***********          EXSR *PSSR                                     CCB003
+     C***********          EXSR DBERR                                     CCB003
+     C***********          END                                            CCB003
+      ***********                                                         CCB003
+     C***********          Z-ADDRZNREC    REPREV  50                      CCB003
+     C***********          ADD  READD     RZNREC                          CCB003
+     C***********          UPDATLEPEREZF                                  CCB003
+      ***********                                                         CCB003
+      **WRITE*AUDIT REPORT.                                               CCB003
+      ***********                                                         CCB003
+     C***********          WRITELER250H1                                  CCB003
+     C***********          WRITELER250T1                                  CCB003
+     C*                                                                     0078
+     C** Output the control date to the dataarea LERSTS for use next        0078
+     C** run                                                                0078
+     C*                                                                     0078
+     C           *LOCK     IN   LERSTS                                    130379
+     C                     Z-ADDCODT      LASTRN  50                        0078
+     C                     OUT  LERSTS                                      0078
+      *
+     C**********           MOVE '1'       *INLR                                             CLE075AC
+      *                                                                                     CLE075AC
+      ** Release record lock and close file.                                                CLE075AC
+      *                                                                                     CLE075AC
+     C                     UNLCKLEPEGLD                                                     CLE075AC
+     C                     UNLCKLEPERED                                                     CLE075AC
+      *                                                                                    AR1097376
+     C                     OPEN LEEXPRPD                                                   AR1097376
+     C                     READ LEEXPRPD                 38                                AR1097376
+     C                     MOVE COMRRN    LSTRRN                                           AR1097376
+     C                     MOVE FINRRN    ENDRRN                                           AR1097376
+     C           *IN38     IFEQ '0'                                                        AR1097376
+     C                     UPDATDRIVEF                                                     AR1097376
+     C                     ENDIF                                                           AR1097376
+     C                     CLOSELEEXPRPD                                                    CLE075AC
+     C                     RETRN
+      *
+      ********************************************************************                    CSC042
+      /EJECT                                                                                  CSC042
+     C********************************************************************                    CSC042
+      *                                                                                       CSC042
+      * ##CHKB - Subroutine to check the Branch in the arrays                                 CSC042
+      *                                                                                       CSC042
+     C           ##CHKB    BEGSR                                                              CSC042
+      *                                                                                       CSC042
+     C           *LIKE     DEFN A8BRCD    ##KB                                                CSC042
+      *                                                                                       CSC042
+      * Set off the branch found indicator                                                    CSC042
+     C                     MOVEL*BLANK    ##FIC   1                                           CSC042
+      *                                                                                       CSC042
+      * Save the state of indicator 30 so it can be reset at the end                          CSC042
+      * of the SR as it may be used elsewhere in the code                                     CSC042
+     C           *IN30     IFEQ *ON                                                           CSC042
+     C                     MOVEL'Y'       #IN30   1                                           CSC042
+     C                     ELSE                                                               CSC042
+     C                     MOVEL'N'       #IN30                                               CSC042
+     C                     END                                                                CSC042
+      *                                                                                       CSC042
+     C                     SETOF                         30                                   CSC042
+      *                                                                                       CSC042
+      * Restore the saved Value of B                                                          CSC042
+     C                     Z-ADD##BSV     B                                                   CSC042
+      *                                                                                       CSC042
+     C* Check whether details for Branch already in array                                     CSC042
+      *                                                                                       CSC042
+      * Is this the same as the last LOKUP, if so we can bypass                               CSC042
+      * the LOKUP                                                                             CSC042
+      * Defend against B being 0                                                              CSC042
+     C           B         IFEQ 0                                                             CSC042
+     C                     Z-ADD1         B                                                   CSC042
+     C                     END                                                                CSC042
+      *                                                                                       CSC042
+      * If the branch being checked is the same then use these                                CSC042
+      * details rather than doing a LOKUP                                                     CSC042
+     C           ##KB      IFEQ ##BR,B                                                        CSC042
+      * Found so seton 30                                                                     CSC042
+     C                     SETON                         30                                   CSC042
+     C                     ELSE                                                               CSC042
+     C                     Z-ADD1         B                                                   CSC042
+     C           ##KB      LOKUP##BR,B                   30                                   CSC042
+     C                     END                                                                CSC042
+      *                                                                                       CSC042
+      * Save the last update to B                                                             CSC042
+     C           *IN30     IFEQ *ON                                                           CSC042
+     C                     Z-ADDB         ##BSV                                               CSC042
+      * Set the indicator to show the data was found                                          CSC042
+     C                     MOVEL'Y'       ##FIC                                               CSC042
+     C                     END                                                                CSC042
+      *                                                                                       CSC042
+      * Reset the state of indicator 30.                                                      CSC042
+     C           #IN30     IFEQ 'Y'                                                           CSC042
+     C                     MOVEL*ON       *IN30                                               CSC042
+     C                     ELSE                                                               CSC042
+     C                     MOVEL*OFF      *IN30                                               CSC042
+     C                     END                                                                CSC042
+      *                                                                                       CSC042
+     C                     ENDSR                                                              CSC042
+      ********************************************************************                    CSC042
+      /EJECT                                                                                  CSC042
+      ********************************************************************                    CSC042
+      *                                                                                       CSC042
+      * ##SETB - Sets up the SDBRCHPD fields used in the code from the                        CSC042
+      * arrays                                                                                CSC042
+      *                                                                                       CSC042
+     C           ##SETB    BEGSR                                                              CSC042
+      *                                                                                       CSC042
+     C                     MOVEL##BR,B    A8BRCD                                              CSC042
+     C                     MOVEL##BI,B    BICN                                                CSC042
+      *                                                                                       CSC042
+     C                     ENDSR                                                              CSC042
+      *                                                                                       CSC042
+      ********************************************************************                    CSC042
+      /EJECT                                                                                  CSC042
+      ********************************************************************                    CSC042
+      *                                                                                       CSC042
+      * ##ADDB - Adds the SDBRCHPD fields used in the code to the                             CSC042
+      * arrays                                                                                CSC042
+      *                                                                                       CSC042
+     C           ##ADDB    BEGSR                                                              CSC042
+      *                                                                                       CSC042
+      * If there is still room in the array then add the details                              CSC042
+     C           ##BNDX    IFLT 999                                                           CSC042
+     C                     ADD  1         ##BNDX                                              CSC042
+     C                     Z-ADD##BNDX    B                                                   CSC042
+     C                     MOVELA8BRCD    ##BR,B                                              CSC042
+     C                     MOVELBICN      ##BI,B                                              CSC042
+     C                     END                                                                CSC042
+      *                                                                                       CSC042
+      * Update ##BSV  so next call to ##CHKB checks this latest adddition                     CSC042
+      * to the array firss                                                                    CSC042
+     C                     Z-ADDB         ##BSV                                               CSC042
+      *                                                                                       CSC042
+     C                     ENDSR                                                              CSC042
+      ********************************************************************                    CSC042
+      /EJECT                                                                                  CSC042
+     C*****************************************************************
+     C*
+     C***  CCYCVT SUBROUTINE TO CONVERT AGGREGATE BALANCE TO BASE CCY
+     C*
+     C***  CALLED FROM: GLACC,RTACC
+     C*
+     C***  CALLS: NOTHING
+     C*
+     C********************************************************************
+     C           CCYCVT    BEGSR
+     C*
+     C                     Z-ADD1         X
+     C           CCY       LOKUPCOD,X                    20
+     C                     MOVE CYD,X     CYDDS
+      *
+      * MULTIPLY BY FACTOR OF 10 TO KEEP 2 DECIMAL PLACES FOR CURRENCY
+      * IF THIS IS A MARGIN AMOUNT.
+      *
+     C           *IN40     IFEQ '1'
+     C           CDP       ADD  1         DP
+     C                     MULT POW,DP    WRKAGG
+     C                     END
+      *
+     C           MDI       IFEQ 'M'
+     C                     MULT SPT       WRKAGG
+     C                     ELSE
+     C                     DIV  SPT       WRKAGG    H
+     C                     END
+      *
+      * TRUNCATE DECIMAL PLACES ONLY IF NOT MARGIN AMOUNT.
+      *
+     C           *IN40     IFEQ '0'
+     C           CDP       ADD  1         DP      10
+     C                     DIV  PWR,DP    WRKAGG    H
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C*****************************************************************
+     C*
+     C***  ACOFF SUBROUTINE TO CHECK A/C OFFICER FOR CORPORATE CUSTOMER
+     C*
+     C***  CALLED FROM: MAIN PROCESSING
+     C*
+     C***  CALLS: *PSSR,DBERR
+     C*
+     C********************************************************************
+      *
+     C           ACOFF     BEGSR
+      *
+      * ACCESS CUSTOMER DETAILS FILE.
+      *
+     C                     MOVE '0'       *IN60
+     C                     MOVE CNUM      CNUMA   6
+     C                     MOVELCNUMA     CKEY
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*BLANKS' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           CKEY   10
+     C                     PARM           KEYSTS  7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C           @RTCD     IFNE *BLANKS
+     C                     SETON                     89
+     C************LOCK     IN   LDA                                       E32666
+     C************         MOVELCNUMA     DBKEY            ************   E32666
+     C************         MOVEL'LER250'  DBPGM            * DBERR 3  *   E32666
+     C************         Z-ADD3         DBASE            ************   E32666
+     C************         MOVEL'SDCUSTPD'DBFILE                          E32666
+     C************         OUT  LDA                                       E32666
+     C***********          EXSR *PSSR                                     052808
+     C***********          EXSR DBERR                                     052808
+     C                     END
+      *
+      * CHECK A/C OFFICER CODE, SET ON INDICATOR IF INVALID.
+      *
+     C***********BBACOC    IFEQ '  '                                      088018
+     C***********          MOVE '1'       *IN60                           088018
+     C***********          END                                            088018
+      *
+     C                     ENDSR
+      *
+     C*****************************************************************
+     C*
+     C***  FZCHK SUBROUTINE TO CHECK IF ZEROS/BLANKS IN RATE/TYPE FLDS
+     C*
+     C***  CALLED FROM: RTACC
+     C*
+     C***  CALLS: NOTHING
+     C*
+     C********************************************************************
+      *
+     C           FZCHK     BEGSR
+      *
+     C                     MOVE '0'       *IN70
+     C           RDDRCR    IFEQ 'C'
+      *
+     C           CRIS      IFEQ 0
+     C           CRIS      OREQ FZ11
+     C********** CRIB      OREQ 0                                                             227048
+     C                     MOVE '1'       *IN70
+     C                     Z-ADD0         MARG
+     C                     END
+      *
+     C                     ELSE
+      *
+     C           DRIS      IFEQ 0
+     C           DRIS      OREQ FZ11
+     C********** DRIB      OREQ 0                                                             227048
+     C                     MOVE '1'       *IN70
+     C                     Z-ADD0         MARG
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C*****************************************************************
+     C*
+     C***  GLACC SUBROUTINE TO PROCESS ACCOUNTS FOR GL EXTRACT
+     C*
+     C***  CALLED FROM: MAIN PROCESSING
+     C*
+     C***  CALLS: CCYCVT
+     C*
+     C********************************************************************
+      *
+     C           GLACC     BEGSR
+      *
+      * ACCESS GL EXTRACT FILE
+      *
+     C           KEYGLX    CHAINLEPEGLD              89
+      *
+      * IF NOT FOUND, SET UP NEW FIELDS
+      *
+     C           *IN89     IFEQ '1'
+      *
+     C**********           Z-ADDCNUM      GDCNUM                                              CSD027
+     C                     MOVE CNUM      GDCNUM                                              CSD027
+     C                     MOVE CCY       GDACCY
+     C                     Z-ADDACOD      GDACOD
+     C                     Z-ADDACSQ      GDACSQ
+     C                     MOVE *BLANKS   GDDEPT
+     C                     MOVE *BLANKS   GDACOF
+     C                     Z-ADD0         AGL
+      *
+     C                     END
+      *
+      * CALCULATE AGGREGATE ADJUSTMENT, CONVERT TO BASE CURRENCY
+      * AND OVERWRITE APPROPRIATE MONTHS AGGREGATE.
+      *        indicator 40 gives results as penies.
+      *
+     C                     MOVE '1'       *IN40
+     C                     Z-ADDLDBL      WRKAGG 150
+     C           WRKAGG    CASNE0         CCYCVT
+     C                     END
+     C                     MOVE '0'       *IN40
+     C* IF LEDGER CCY IS SAME AS ACCOUNTING CCY.
+     C           CCY       IFEQ BCCY
+     ** TRANSFER DAILY
+     C           BKBCTF    IFEQ 'D'
+     C                     ADD  WRKAGG    AGL,MN
+     C                     ELSE
+     ** TRANSFER MONTHLY
+     C           BKBCTF    IFEQ 'M'
+     C                     Z-ADDWRKAGG    AGL,MN
+     C                     ELSE
+     C* TRANSFER YEARLY
+     C           BKBCTF    IFEQ 'Y'
+     C           BKBCTF    OREQ ' '                                       126303
+     ** SUM PREVIOUS MONTHS BALANCES AND SUBTRACT FROM LEDGER BALANCE
+     ** TO GET THIS MONTHS BALANCE.
+     C           MN        SUB  1         Y       20
+     ** IF FIRST MONTH Z-ADD LEDGER BALANCE.
+     C           Y         IFLE 0
+     C                     Z-ADDWRKAGG    AGL,MN
+     C                     ELSE
+     C                     Z-ADD0         SUM    150
+     C           1         DO   Y         X
+     C                     ADD  AGL,X     SUM
+     C                     END
+     C*
+     C           WRKAGG    SUB  SUM       AGL,MN
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*  LEDGER CCY IS NOT SAME AS ACCOUNTING CCY...
+     C                     ELSE
+     ** ACCRUE PROFIT DAILY.
+     C           APFQ      IFEQ 'D'
+     C                     ADD  WRKAGG    AGL,MN
+     C                     ELSE
+     C* ACCRUE PROFIT MONTHLY.
+     C           APFQ      IFEQ 'M'
+     C                     Z-ADDWRKAGG    AGL,MN
+     C                     END
+     C                     END
+     C*
+     C                     END
+      *
+      * UPDATE/WRITE EXTRACT RECORD
+      *
+     C           *IN89     IFEQ '0'
+     C                     UPDATLEPEGLDF
+     C                     ELSE
+     C                     WRITELEPEGLDF
+     C***********          ADD  1         GLADD   50                      CCB003
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C*****************************************************************
+     C*
+     C* RTACC SUBROUTINE TO PROCESS ACCOUNTS FOR RETAIL EXTRACT
+     C*
+     C***  CALLED FROM: MAIN PROCESSING
+     C*
+     C***  CALLS: CCYCVT,FZCHK,ZDATE2
+     C*
+     C********************************************************************
+      *
+     C           RTACC     BEGSR
+      *
+      * SET UP DR/CR INDICATOR FOR CHAIN TO EXTRACT FILE.
+      *
+     C           CLBL      IFLT 0
+     C                     MOVE 'C'       RDDRCR
+     C                     Z-SUBCLBL      CLBL
+     C                     ELSE
+     C                     MOVE 'D'       RDDRCR
+     C                     END
+      *
+      * ACCESS RETAIL EXTRACT FILE
+      *
+     C           KEYREX    CHAINLEPERED              89
+      *
+      * IF NOT FOUND, SET UP NEW FIELDS
+      *
+     C           *IN89     IFEQ '1'
+      *
+     C**********           Z-ADDCNUM      RDCNUM                                              CSD027
+     C                     MOVE CNUM      RDCNUM                                              CSD027
+     C                     MOVE CCY       RDACCY
+     C                     Z-ADDACOD      RDACOD
+     C                     Z-ADDACSQ      RDACSQ
+     C                     Z-ADD0         RDPINT
+     C                     Z-ADD0         RDSOMI
+     C                     MOVE *BLANKS   RDDEPT
+     C                     MOVE *BLANKS   RDACOF
+     C                     Z-ADD0         ARE
+     C                     Z-ADD0         DRE
+     C                     Z-ADD0         MRE
+     C                     Z-ADD0         FRE
+      *
+     C                     END
+      *
+      * CALCULATE AGGREGATE AS NO.OF DAYS TO CONTROL DATE
+      * BY CLEARED BALANCE.
+      * CONVERT AGGREGATE & ADD IN AGGREGATE AND NO.OF DAYS TO
+      * THIS MONTHS FIGURE ON FILE.
+      *
+     C***********CODT      SUB  PELAP     WRKDAY  50                        0078
+     C           CODT      SUB  LASTR     WRKDAY  50                        0078
+     C                     Z-ADDWRKDAY    WRKDY1  50                                          227048
+     C           DACO      IFEQ CODT                                                          227048
+     C                     Z-ADD0         WRKDY1                                              227048
+     C                     ENDIF                                                              227048
+     C           WRKDAY    MULT CLBL      WRKAGG
+     C           WRKAGG    CASNE0         CCYCVT
+     C                     END
+     C                     ADD  WRKAGG    ARE,MN
+     C                     ADD  WRKDAY    DRE,MN
+      *
+      * ACCESS RETAIL INTEREST CHARGES FILE REIAC.
+      * IF RECORD FOUND:
+      *    I)  TAKE FEES/CHARGES AMOUNT FROM HERE
+      *    II) USE TYPES/SUB-TYPES TO CHAIN TO INTEREST
+      *        TYPES/SUB-TYPES FILE REINT TO GET MARGIN RATE.
+      *
+     C                     Z-ADD0         CHGE   150
+     C                     Z-ADD0         MARG   117
+     C                     Z-ADD0         IRAT   117
+     C**********           EXSR SRCHKP                                             CLE075AC CLE075AY
+     C********** ##PFIC    IFEQ 'Y'                                                CLE075AC CLE075AY
+     C**********           EXSR SRSETP                                             CLE075AC CLE075AY
+     C**********           ELSE                                                    CLE075AC CLE075AY
+     C           KEYIAC    CHAINREIAX                87
+     C**********           ENDIF                                                   CLE075AC CLE075AY
+      *
+     C           *IN87     IFEQ '0'
+      *
+     C**********           EXSR SRADDP                                             CLE075AC CLE075AY
+      *
+     C********** LCID      IFGE RUNDAY                                                        237947
+     C           BKANWD    IFEQ '2'                                                           237947
+     C           LCID      ANDGEBJRDNB                                                        237947
+     C           LCID      ANDLERUNDAY                                                        237947
+     C           LCID      ORGE RUNDAY                                                        237947
+     C           NRCA      ADD  RCA       CHGE
+     C                     END
+      *
+     C           RDDRCR    IFEQ 'C'
+     C                     Z-ADDCICT      ICT
+     C                     Z-ADDCCST      CST
+     C                     ELSE
+     C                     Z-ADDDICT      ICT
+     C                     Z-ADDDCST      CST
+     C                     END
+      *
+     C                     EXSR SRCHK2
+     C           ##PFI2    IFEQ 'Y'
+     C**********           EXSR SRSETP                                                      CLE075AY
+     C           D         OCUR SDREIN                                                      CLE075AY
+     C                     ELSE
+     C                     EXSR SRADD2                                                      CLE075AY
+     C           D         OCUR SDREIN                                                      CLE075AY
+     C           KEYINT    CHAINREINT                87
+     C                     ENDIF
+     C           *IN87     IFEQ '0'
+     C                     MOVE KEYINT    #INT,D                                            CLE075AY
+     ** MARGIN RATES ARE TIERED
+     C           RAT,1     IFEQ FZ11
+     C                     Z-ADD0         MARG
+     C                     GOTO NOMARG
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+      * IF NO REIAC FOUND OR REIAC BUT NO REINT, GET RATE TYPE & SPREAD
+      * FROM ACCOUNT.
+      *
+     C           *IN87     IFEQ '1'
+     C                     Z-ADD0         ICT
+     C                     Z-ADD0         CST
+      *
+      * CHECK IF ZEROS/BLANKS IN FIELDS, EXIT IF SO.
+      *
+     C                     EXSR FZCHK
+     C           *IN70     IFNE '1'
+      *
+     C           RDDRCR    IFEQ 'C'
+     C                     Z-ADDCRIS      MARG
+     C                     Z-ADDCRIB      BRT
+     C                     MOVE CRIC      ZICALC  10                                          227048
+     C                     ELSE
+     C                     Z-ADDDRIS      MARG
+     C                     Z-ADDDRIB      BRT
+     C                     MOVE DRIC      ZICALC                                              227048
+     C                     END
+      *
+     C                     END
+     C                     END
+      *
+      ** ACCESS BASE RATES TABLE FOR BASE RATE.
+      *
+     C           *IN70     IFNE '1'
+     C           BRT       ANDNE0                                                             227048
+     C********** MARG      ANDNE0                                                             227048
+      *
+     C**********           Z-ADD0         BRTE                                              CLE075AC
+     C**********           MOVE BRT       BRT2A   2                                         CLE075AC
+     C**********           CALL 'AOBSRTR0'                                                  CLE075AC
+     C**********           PARM '*BLANKS' @RTCD                                             CLE075AC
+     C**********           PARM '*KEY   ' @OPTN                                             CLE075AC
+     C**********           PARM CCY       BKEY1   3                                         CLE075AC
+     C**********           PARM BRT2A     BKEY2   2                                         CLE075AC
+     C********** SDBSRT    PARM SDBSRT    DSFDY                                 CSD006
+     C********** SDBSRT    PARM SDBSRT    DSSDY                                      CSD006 CLE075AC
+     C********** @RTCD     IFNE *BLANK                                                      CLE075AC
+     C**********           SETON                     98                                     CLE075AC
+     C**********           END                                                              CLE075AC
+     C********** *IN98     IFEQ '1'                                                         CLE075AC
+     C**********           Z-ADD0         MARG                                              CLE075AC
+     C**********           Z-ADD0         ICT                                               CLE075AC
+     C**********           ELSE                                                             CLE075AC
+     C********** BRTE      IFEQ 0                                                           CLE075AC
+      *                                                                                     CLE075AY
+      ** Access the cache to check if the record needed is present                          CLE075AY
+      *                                                                                     CLE075AY
+     C                     EXSR SRCHKP                                                      CLE075AY
+     C           ##PFIC    IFEQ 'Y'                                                         CLE075AY
+     C           A         OCUR SDBSRT                                                      CLE075AY
+     C                     ELSE                                                             CLE075AY
+     C                     EXSR SRADDP                                                      CLE075AY
+     C                     Z-ADD0         BACBSR                                            CLE075AY
+     C                     MOVE BRT       BRT2A   2                                         CLE075AY
+     C           A         OCUR SDBSRT                                                      CLE075AY
+     C                     CALL 'AOBSRTR0'                                                  CLE075AY
+     C                     PARM '*BLANKS' @RTCD                                             CLE075AY
+     C                     PARM '*KEY   ' @OPTN                                             CLE075AY
+     C                     PARM CCY       BKEY1   3                                         CLE075AY
+     C                     PARM BRT2A     BKEY2   2                                         CLE075AY
+     C           SDBSRT    PARM SDBSRT    DSFDY                                             CLE075AY
+     C                     SETON                     98                                     CLE075AY
+     C                     END                                                              CLE075AY
+     C           *IN98     IFEQ '1'                                                         CLE075AY
+     C                     Z-ADD0         MARG                                              CLE075AY
+     C                     Z-ADD0         ICT                                               CLE075AY
+     C                     ELSE                                                             CLE075AY
+     C           BACBSR    IFEQ 0                                                           CLE075AY
+      *******************************************************************          CLE075AC CLE075AY
+      ***Access*base*rate*on*cache***************************************          CLE075AC CLE075AY
+      *******************************************************************          CLE075AC CLE075AY
+     C**********           Z-ADD1         A                                        CLE075AC CLE075AY
+     C********** BRT       LOKUP#BCD,A                   51                        CLE075AC CLE075AY
+      **********                                                                   CLE075AC CLE075AY
+     C********** *IN51     IFEQ *ON                                                CLE075AC CLE075AY
+     C**********           MOVE #BRT,A    BRTDS                                    CLE075AC CLE075AY
+     C**********           MOVE #YCD      CCY                                      CLE075AC CLE075AY
+     C**********           MOVE #BSR      BRTE                                     CLE075AC CLE075AY
+     C**********           MOVE #BCD,A    BRTT                                     CLE075AC CLE075AY
+      *
+     C********** #BSR      IFEQ 0                                                           CLE075AY
+     C**********           Z-ADD0         MARG                                                227048
+     C                     Z-ADD0         ICT
+     C                     ELSE
+     C**********           Z-ADDBRTE      IRAT                                              CLE075AY
+     C                     Z-ADDBACBSR    IRAT                                              CLE075AY
+     C                     END
+     C**********           ELSE                                                    CLE075AC CLE075AY
+     C**********           Z-ADD0         MARG                                     CLE075AC CLE075AY
+     C**********           Z-ADD0         ICT                                      CLE075AC CLE075AY
+     C**********           END                                                     CLE075AC CLE075AY
+     C                     END
+      *                                                                                     CLE075AY
+      ** Store the base rate code to the look up array                                      CLE075AY
+      *                                                                                     CLE075AY
+     C                     MOVE BRT       #BCD,A                                            CLE075AY
+     C                     ENDIF                                                            CLE075AY
+      *
+     ** INTEREST RATE IS THRESHOLD OR TIERED, FIND WHERE BALANCE FALLS
+     C           ICT       IFGT 0
+     C                     Z-ADD1         X
+     C           X         DOUGT11
+     C           BAL,X     ORGE CLBL
+     C           BAL,X     OREQ 0
+     C           BAL,X     OREQ FZ15
+     C                     ADD  1         X
+     C                     END
+     C                     SUB  1         X
+     C*
+     ** IF THRESHOLD, RATE IS MARGIN RATE.
+     C           ICT       IFEQ 2
+     C           ICT       OREQ 4
+      *                                                                   S01408
+     C/COPY WNCPYSRC,LER250CCP2                                           S01408
+      *                                                                   S01408
+     C                     Z-ADDRAT,X     MARG
+     C*
+     C                     END
+     C                     END
+      *
+     C**********           END                                                              CLE075AC
+      *
+     C           NOMARG    TAG
+      *
+     C                     Z-ADD0         MRTADJ  32
+     C                     ADD  MARG      IRAT
+      *
+      * CALCULATE INTEREST THIS MONTH.
+      *    AS:   INT.POSTED TO INC/EXP
+      *        - SOM INT. TO INC/EXP.
+      * WHERE SOM INT HAS BEEN REDUCED BY ANY INTEREST CAPITALISED
+      * THIS MONTH
+      *
+     C           RDDRCR    IFEQ 'C'
+      *
+     C********** LCID      IFGE RUNDAY                                                        237947
+     C           BKANWD    IFEQ '2'                                                           237947
+     C           LCID      ANDGEBJRDNB                                                        237947
+     C           LCID      ANDLERUNDAY                                                        237947
+     C           LCID      ORGE RUNDAY                                                        237947
+     C                     SUB  LCIA      RDSOMI
+     C                     ADD  CHGE      RDSOMI
+     C                     END
+     C           CIIE      SUB  RDSOMI    CINT   150
+     C                     Z-ADDCINT      WKINT  150
+      *
+     C                     ELSE
+      *
+     C********** LDID      IFGE RUNDAY                                                        237947
+     C           BKANWD    IFEQ '2'                                                           237947
+     C           LDID      ANDGEBJRDNB                                                        237947
+     C           LDID      ANDLERUNDAY                                                        237947
+     C           LDID      ORGE RUNDAY                                                        237947
+     C                     SUB  LDIA      RDSOMI
+     C                     END
+     C           DIIE      SUB  RDSOMI    DINT   150
+     C                     Z-ADDDINT      WKINT  150
+      *
+     C                     END
+     ** FOR THRESHOLD OR FIXED INTEREST ACCOUNTS.....
+     C           ICT       IFEQ 0
+     C           ICT       OREQ 2
+     C           ICT       OREQ 4
+      *                                                                   S01408
+     C/COPY WNCPYSRC,LER250CCP3                                           S01408
+      *                                                                   S01408
+      *
+      *
+      **SET*MARGIN*TO*ZERO*IF*MARGIN*OR*INTEREST*RATE*ARE*ZERO.********                       227048
+      **OR*INTEREST*MARGIN*RATE*EQUALS*INTEREST*RATE.******************                       227048
+      ** Set margin to zero if margin rate is zero. Compute margin                            227048
+      ** amount if interest rate is zero but margin rate has value.                           227048
+      *
+     C           MARG      IFEQ 0
+     C           IRAT      OREQ 0
+     C********** IRAT      OREQ MARG                                                          227048
+     C                     Z-ADD0         WRKAGG
+      *                                                                                       227048
+      ** Find number of days to calculate interest according to                               227048
+      ** calculation basis.                                                                   227048
+      *                                                                                       227048
+     C           IRAT      IFEQ 0                                                             227048
+     C           MARG      ANDNE0                                                             227048
+      *                                                                                       227048
+      ** Change sign of margin rate                                                           227048
+      *                                                                                       227048
+     C           RDDRCR    IFEQ 'C'                                                           229945
+     C                     Z-SUBMARG      MARG                                                227048
+     C                     ELSE                                                               229945
+      ** If Debit                                                                             229945
+     C           MARG      IFLT 0                                                             229945
+     C                     Z-SUBMARG      MARG                                                229945
+     C                     ENDIF                                                              229945
+      *                                                                                       229945
+     C                     ENDIF                                                              229945
+      *                                                                                       227048
+     C                     Z-ADD0         ZIWRK1 155                                          227048
+      *                                                                                       227048
+     C           ARE,MN    MULT WRKDY1    WWRATE 150                                          227048
+     C                     MULT MARG      WWRATE                                              227048
+     C                     DIV  DRE,MN    WWRATE                                              227048
+      *                                                                                       227048
+     C           ZICALC    IFEQ 7                                                             227048
+     C           ZICALC    OREQ 5                                                             227048
+     C           ZICALC    OREQ 3                                                             227048
+     C           ZICALC    OREQ 2                                                             227048
+     C           WWRATE    DIV  360       ZIWRK1    H                                         227048
+     C                     END                                                                227048
+      *                                                                                       227048
+     C           ZICALC    IFEQ 4                                                             227048
+     C           ZICALC    OREQ 1                                                             227048
+     C           WWRATE    DIV  365       ZIWRK1    H                                         227048
+     C                     END                                                                227048
+      *                                                                                       227048
+     C           ZICALC    IFEQ 6                                                             227048
+     C           WWRATE    DIV  366       ZIWRK1    H                                         227048
+     C                     END                                                                227048
+      *                                                                                       227048
+     C                     Z-ADDZIWRK1    WRKAGG    H                                         227048
+      *                                                                                       227048
+     C                     ENDIF                                                              227048
+      *                                                                                       227048
+     C                     ELSE
+      *
+      * OTHERWISE:
+      * CALCULATE TODAYS MARGIN AS:
+      *           INTEREST ACCRUED TODAY  X  MARGIN RATE
+      *           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      *                       INTEREST RATE
+      *
+      *        MARGIN RATE AS ABOVE.
+      *********INTEREST*RATE*IS*CDIR/CCIR*FROM*ACCNT.                     CCB003
+      *        INTEREST RATE IS CDIR/CCIR FROM LEEXPRPD.                  CCB003
+      *
+     C           IRAT      IFEQ MARG                                                          227048
+     C           IRAT      ANDLT0                                                             227048
+     C                     Z-SUBIRAT      IRAT                                                227048
+     C                     ENDIF                                                              227048
+      *
+      **CHANGE*SIGN*OF*MARGIN*RATE*IF*NEGATIVE*************************                       227048
+      ** Change sign of margin rate                                                           227048
+      *
+     C********** MARG      IFLT 0                                                             227048
+     C           RDDRCR    IFEQ 'C'                                                           229945
+     C                     Z-SUBMARG      MARG
+     C                     ELSE                                                               229945
+      *                                                                                       229945
+     C           MARG      IFLT 0                                                             229945
+     C                     Z-SUBMARG      MARG                                                229945
+     C                     ENDIF                                                              229945
+      *                                                                                       229945
+     C                     ENDIF                                                              229945
+     C**********           END                                                                227048
+      *
+     C           RDDRCR    IFEQ 'C'
+     C           CINT      SUB  RDPINT    WRKAGG
+     C                     ELSE
+     C           DINT      SUB  RDPINT    WRKAGG
+     C                     END
+     C                     MULT MARG      WRKAGG
+     C                     DIV  IRAT      WRKAGG    H
+      *
+     C                     END
+     C                     ELSE
+     ** IF TIERED INTEREST RATE, FIND MARGIN FOR EACH TIER AND SUM.
+     **
+      *   TIER     TIER AMMOUNT*INT ACCRUED TDY*TIER MARGIN RATE
+      *  MARGIN =  ---------------------------------------------
+      *                   CLEARED BAL*TIER INTEREST RATE
+      *
+      *INTEREST ACCRUED
+     C           WKINT     SUB  RDPINT    WKINT
+     C                     Z-ADD0         SUMA
+     C                     Z-ADD0         WRKSUM
+     C                     Z-ADDX         Z       30
+     ** START WITH SECOND BALANCE AMOUNT AS FIRST IS ZERO;
+     ** IF CLBL FALLS BETWEEN FIRST AND SECOND AMOUNT (Z=1), DO LOOP
+     ** IS NOT EXECUTED.
+     **
+     C           2         DO   Z         X
+     C           X         SUB  1         Y
+     ** TIER INTEREST RATE
+     C                     Z-ADDRAT,Y     MARG
+     C                     ADD  MRTADJ    MARG
+     C********** MARG      ADD  BRTE      IRAT                                              CLE075AY
+     C           MARG      ADD  BACBSR    IRAT                                              CLE075AY
+      *                                                                                       227048
+     C           IRAT      IFEQ MARG                                                          227048
+     C           IRAT      ANDLT0                                                             227048
+     C                     Z-SUBIRAT      IRAT                                                227048
+     C                     ENDIF                                                              227048
+      *                                                                                       227048
+      **CHANGE*SIGN*IF*NEGATIVE.***************************************                       227048
+      ** Change sign if negative.                                                             227048
+     C********** MARG      IFLT 0                                                             227048
+     C           RDDRCR    IFEQ 'C'                                                           229945
+     C                     Z-SUBMARG      MARG
+     C                     ELSE                                                               229945
+      *                                                                                       229945
+     C           MARG      IFLT 0                                                             229945
+     C                     Z-SUBMARG      MARG                                                229945
+     C                     ENDIF                                                              229945
+      *                                                                                       229945
+     C                     ENDIF                                                              229945
+     C**********           END                                                                227048
+      * TIER AMOUNT
+     C           BAL,X     SUB  BAL,Y     SUMA   172
+      *                                                                                       227048
+      ** If interest rate is zero but margin rate has value, compute tier                     227048
+      ** margin amount.                                                                       227048
+      *                                                                                       227048
+     C           IRAT      IFEQ 0                                                             227048
+     C           MARG      ANDNE0                                                             227048
+      *                                                                                       227048
+     C                     Z-ADD0         ZIWRK1 155                                          227048
+     C           ARE,MN    MULT WRKDY1    WWRATE                                              227048
+     C                     MULT MARG      WWRATE                                              227048
+     C                     MULT SUMA      WWRATE                                              227048
+     C                     DIV  DRE,MN    WWRATE                                              227048
+     C                     DIV  CLBL      WWRATE                                              227048
+      *                                                                                       227048
+     C           ZICALC    IFEQ 7                                                             227048
+     C           ZICALC    OREQ 5                                                             227048
+     C           ZICALC    OREQ 3                                                             227048
+     C           ZICALC    OREQ 2                                                             227048
+     C           WWRATE    DIV  360       ZIWRK1    H                                         227048
+     C                     END                                                                227048
+      *                                                                                       227048
+     C           ZICALC    IFEQ 4                                                             227048
+     C           ZICALC    OREQ 1                                                             227048
+     C           WWRATE    DIV  365       ZIWRK1    H                                         227048
+     C                     END                                                                227048
+      *                                                                                       227048
+     C           ZICALC    IFEQ 6                                                             227048
+     C           WWRATE    DIV  366       ZIWRK1    H                                         227048
+     C                     END                                                                227048
+      *                                                                                       227048
+     C                     Z-ADDZIWRK1    SUMA                                                227048
+      *                                                                                       227048
+     C                     ELSE                                                               227048
+     ** CALCULATE TIER MARGIN AMOUNT
+     C           SUMA      MULT WKINT     SUMA
+     C                     MULT MARG      SUMA
+     C                     DIV  CLBL      SUMA
+     C                     DIV  IRAT      SUMA
+      *                                                                                       227048
+     C                     ENDIF                                                              227048
+      *                                                                                       227048
+     C                     ADD  SUMA      WRKSUM
+     C                     END
+      * FINALLY, CALCULATE FINAL TIER MARGIN FOR REMAINING BALANCE...
+      *
+     C           X         ADD  1         Y
+     ** TIER INTEREST RATE
+     C                     Z-ADDRAT,Y     MARG
+     C                     ADD  MRTADJ    MARG
+     C********** MARG      ADD  BRTE      IRAT                                              CLE075AY
+     C           MARG      ADD  BACBSR    IRAT                                              CLE075AY
+      *
+      **CHANGE*SIGN*OF*MARGIN*RATE*IF*NEGATIVE*************************                       227048
+      ** Change sign of margin rate                                                           227048
+      *
+     C********** MARG      IFLT 0                                                             227048
+     C           RDDRCR    IFEQ 'C'                                                           229945
+     C                     Z-SUBMARG      MARG
+     C                     ELSE                                                               229945
+      ** If Debit                                                                             229945
+     C           MARG      IFLT 0                                                             229945
+     C                     Z-SUBMARG      MARG                                                229945
+     C                     ENDIF                                                              229945
+      *                                                                                       229945
+     C                     ENDIF                                                              229945
+     C**********           END                                                                227048
+      * TIER AMOUNT
+     C           CLBL      SUB  BAL,X     SUMA   172
+      *                                                                                       227048
+      ** If interest rate is zero but margin rate has value, compute tier                     227048
+      ** margin amount.                                                                       227048
+      *                                                                                       227048
+     C           IRAT      IFEQ 0                                                             227048
+     C           MARG      ANDNE0                                                             227048
+      *                                                                                       227048
+     C                     Z-ADD0         ZIWRK1                                              227048
+     C           ARE,MN    MULT WRKDY1    WWRATE                                              227048
+     C                     MULT MARG      WWRATE                                              227048
+     C                     MULT SUMA      WWRATE                                              227048
+     C                     DIV  DRE,MN    WWRATE                                              227048
+     C                     DIV  CLBL      WWRATE                                              227048
+      *                                                                                       227048
+     C           ZICALC    IFEQ 7                                                             227048
+     C           ZICALC    OREQ 5                                                             227048
+     C           ZICALC    OREQ 3                                                             227048
+     C           ZICALC    OREQ 2                                                             227048
+     C           WWRATE    DIV  360       ZIWRK1    H                                         227048
+     C                     END                                                                227048
+      *                                                                                       227048
+     C           ZICALC    IFEQ 4                                                             227048
+     C           ZICALC    OREQ 1                                                             227048
+     C           WWRATE    DIV  365       ZIWRK1    H                                         227048
+     C                     END                                                                227048
+      *                                                                                       227048
+     C           ZICALC    IFEQ 6                                                             227048
+     C           WWRATE    DIV  366       ZIWRK1    H                                         227048
+     C                     END                                                                227048
+      *                                                                                       227048
+     C                     Z-ADDZIWRK1    SUMA                                                227048
+      *                                                                                       227048
+     C                     ELSE                                                               227048
+      *                                                                                       227048
+     ** CALCULATE TIER MARGIN AMOUNT
+     C                     MULT WKINT     SUMA
+     C                     MULT MARG      SUMA
+     C                     DIV  CLBL      SUMA
+     C                     DIV  IRAT      SUMA
+      *                                                                                       227048
+     C                     ENDIF                                                              227048
+      *                                                                                       227048
+     C                     ADD  SUMA      WRKSUM 172
+     C                     Z-ADDWRKSUM    WRKAGG    H
+     C*
+     C                     END
+      *
+      * CONVERT TODAYS MARGIN & ADD IN TO THIS MONTHS FIGURE ON FILE.
+      *
+     C                     MOVE '1'       *IN40
+     C           WRKAGG    CASNE0         CCYCVT
+     C                     END
+     C                     MOVE '0'       *IN40                           BH3443
+     C                     ADD  WRKAGG    MRE,MN
+      *
+      * CONVERT FEES/CHARGES & REPLACE THIS MONTHS FIGURE ON FILE.
+     C           RDDRCR    IFEQ 'C'
+     C           LCID      ANDGERUNDAY
+     C           RDDRCR    OREQ 'C'                                                           237947
+     C           BKANWD    ANDEQ'2'                                                           237947
+     C           LCID      ANDGEBJRDNB                                                        237947
+     C           LCID      ANDLERUNDAY                                                        237947
+      *
+     C                     Z-ADDCHGE      WRKAGG
+     C           WRKAGG    CASNE0         CCYCVT
+     C                     END
+     C**********           MOVE '0'       *IN40                           BH3443
+     C                     Z-ADDWRKAGG    FRE,MN
+     C                     ADD  WRKAGG    FRE,MN
+     C                     END
+      *
+      * IF TODAY IS LAST CALENDAR DAY IN MONTH, RESET PREVIOUS INTEREST
+      * ACCRUED THIS MONTH TO ZERO, ELSE RESET TO INTEREST CALCULATED
+      * THIS MONTH. IF TODAY IS LAST DAY OF MONTH, RESET START OF MONTH
+      * INTEREST TO INC/EXP TO VALUE FROM ACCOUNTS FILE.
+      *
+     C**
+     C** CHANGE THE CONDITIONING OF THE CLEARING OF THE FILES TO
+     C** LOOK AT WHETHER THE LAST CALENDAR DAY OF THE MONTH FALLS
+     C** TODAY OR BETWEEN TODAY AND THE DATE OF NEXT WORKING DAY
+     C*
+     C** FIRST CONVERT LAST CALENDAR DAY PLUS ONE AND CHECK THE DAY
+     C** NUMBER
+     C           LCAL      ADD  1         ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    LCALDT  2
+     C**
+     C** IF THE DAY NUMBER OF LAST CALENDAR DAY IN MONTH EQUALS THE
+     C** DAY NUMBER OF THE START OF YEAR AND LCAL IS EQUAL TO RUNDAY
+     C** OR GREATER THAN RUNDAY AND LESS THAN DATE OF NEXT WORKING
+     C** DAY THEN CLEAR THE FILES
+     C**
+     C           LCALDT    IFEQ SOYDDD
+     C           LCAL      ANDEQBJRDNB
+     C           LCALDT    OREQ SOYDDD
+     C           LCAL      ANDGTBJRDNB
+     C           LCAL      ANDLTBJDNWD
+      *
+     C                     Z-ADD0         RDPINT
+     C           RDDRCR    IFEQ 'C'
+     C                     Z-ADDCIIE      RDSOMI
+     C                     ELSE
+     C                     Z-ADDDIIE      RDSOMI
+     C                     END
+      *
+     C                     ELSE
+      *
+     C           RDDRCR    IFEQ 'C'
+     C                     Z-ADDCINT      RDPINT
+     C                     ELSE
+     C                     Z-ADDDINT      RDPINT
+     C                     END
+      *
+     C                     END
+      *
+      * UPDATE/WRITE EXTRACT RECORD
+      *
+     C           *IN89     IFEQ '0'
+     C                     UPDATLEPEREDF
+     C                     ELSE
+     C                     WRITELEPEREDF
+     C***********          ADD  1         READD   50                      CCB003
+     C                     END
+      *
+     C           RDDRCR    IFEQ 'D'
+     C           LCID      ANDGERUNDAY
+     C           CHGE      ANDNE0                                         BH3443
+     C           RDDRCR    OREQ 'D'                                                           237947
+     C           BKANWD    ANDEQ'2'                                                           237947
+     C           LCID      ANDGEBJRDNB                                                        237947
+     C           LCID      ANDLERUNDAY                                                        237947
+     C           CHGE      ANDNE0                                                             237947
+     C                     MOVE 'C'       RDDRCR
+     C           KEYREX    CHAINLEPERED              89
+     C                     Z-ADDCHGE      WRKAGG
+     C                     MOVE '1'       *IN40
+     C           WRKAGG    CASNE0         CCYCVT
+     C                     END
+     C                     MOVE '0'       *IN40
+     C                     ADD  WRKAGG    FRE,MN
+      *
+      * UPDATE/WRITE EXTRACT RECORD
+     C           *IN89     IFEQ '0'
+     C                     UPDATLEPEREDF
+     C                     ELSE
+     C**********           Z-ADDCNUM      RDCNUM                                       BH3443 CSD027
+     C                     MOVE CNUM      RDCNUM                                              CSD027
+     C                     MOVE CCY       RDACCY                          BH3443
+     C                     Z-ADDACOD      RDACOD                          BH3443
+     C                     Z-ADDACSQ      RDACSQ                          BH3443
+     C                     Z-ADD0         RDPINT                          BH3443
+     C                     Z-ADD0         RDSOMI                          BH3443
+     C                     MOVE *BLANKS   RDDEPT                          BH3443
+     C                     MOVE *BLANKS   RDACOF                          BH3443
+     C                     Z-ADD0         ARE                             BH3443
+     C                     Z-ADD0         DRE                             BH3443
+     C                     Z-ADD0         MRE                             BH3443
+     C                     Z-ADD0         FRE                             BH3443
+     C                     ADD  WRKAGG    FRE,MN                          BH3443
+     C                     WRITELEPEREDF
+     C***********          ADD  1         READD   50                      CCB003
+     C                     END
+     C                     MOVE 'D'       RDDRCR
+     C                     END
+      *
+      *
+      * IF TODAY IS LAST CALENDAR DAY IN MONTH, ACCESS OTHER EXTRACT
+      * RECORD (I.E. RDDRCR = 'D' IF ACCOUNT JUST PROCESSED WAS CR)
+      * TO RESET PINT AND SOMI, AS OTHERWISE NOT RESET IF ACCOUNT
+      * BALANCE HAS CHANGED SIGN IN MONTH. N.B. 'RESET' FLAG INDICATES
+      * EOM.
+      *
+     C**
+     C** CHANGE THE CONDITIONING OF THE CLEARING OF THE FILES TO
+     C** LOOK AT WHETHER THE LAST CALENDAR DAY OF THE MONTH FALLS
+     C** TODAY OR BETWEEN TODAY AND THE DATE OF NEXT WORKING DAY
+     C**
+     C** IF THE DAY NUMBER OF LAST CALENDAR DAY IN MONTH EQUALS THE
+     C** DAY NUMBER OF THE START OF YEAR AND LCAL IS EQUAL TO RUNDAY
+     C** OR GREATER THAN RUNDAY AND LESS THAN DATE OF NEXT WORKING
+     C** DAY THEN CLEAR THE FILES
+     C**
+     C           LCALDT    IFEQ SOYDDD
+     C           LCAL      ANDEQBJRDNB
+     C           LCALDT    OREQ SOYDDD
+     C           LCAL      ANDGTBJRDNB
+     C           LCAL      ANDLTBJDNWD
+      *
+     C           RDDRCR    IFEQ 'C'
+     C                     MOVE 'D'       RDDRCR
+     C                     ELSE
+     C                     MOVE 'C'       RDDRCR
+     C                     END
+     C           KEYREX    CHAINLEPERED              89
+     C           *IN89     IFEQ '0'
+     C                     Z-ADD0         RDPINT
+     C           RDDRCR    IFEQ 'C'
+     C                     Z-ADDCIIE      RDSOMI
+     C                     ELSE
+     C                     Z-ADDDIIE      RDSOMI
+     C                     END
+     C                     UPDATLEPEREDF
+     C                     END
+      *
+     C                     ELSE
+      *
+     C           RDDRCR    IFEQ 'C'
+     C           LDID      ANDGERUNDAY
+     C           BKANWD    OREQ '2'                                                           237947
+     C           RDDRCR    ANDEQ'C'                                                           237947
+     C           LDID      ANDGEBJRDNB                                                        237947
+     C           LDID      ANDLERUNDAY                                                        237947
+     C                     MOVE 'D'       RDDRCR
+     C           KEYREX    CHAINLEPERED              89
+     C           *IN89     IFEQ '0'
+     C                     SUB  LDIA      RDSOMI
+     C                     UPDATLEPEREDF
+     C                     END
+     C                     ELSE
+     C           LCID      IFGE RUNDAY
+     C           BKANWD    OREQ '2'                                                           237947
+     C           LCID      ANDGEBJRDNB                                                        237947
+     C           LCID      ANDLERUNDAY                                                        237947
+     C                     MOVE 'C'       RDDRCR
+     C           KEYREX    CHAINLEPERED              89
+     C           *IN89     IFEQ '0'
+     C                     SUB  LCIA      RDSOMI
+     C                     ADD  CHGE      RDSOMI
+     C                     UPDATLEPEREDF
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************                     CLE075AC
+      *                                                               *                     CLE075AC
+      **SRCHKP*-*Checks*if*details*from*PF/REIACXaareaalreadyiintthe****           CLE075AC CLE075AY
+      * SRCHKP - Checks if details from PF/SDBSRTPD are already in the*                     CLE075AY
+      *          array.                                               *                     CLE075AC
+      * Called By: RTACC                                              *                     CLE075AC
+      *                                                               *                     CLE075AC
+      *****************************************************************                     CLE075AC
+     C           SRCHKP    BEGSR                                                            CLE075AC
+     C                     MOVE *IN20     #IN20   1                                         CLE075AC
+     C                     ADD  1         ##LC                                              CLE075AC
+     C                     MOVEL*BLANK    ##PFIC  1                                         CLE075AC
+      *                                                                                     CLE075AC
+      ** Restore saved value of A index                                                     CLE075AC
+      *                                                                                     CLE075AC
+     C                     Z-ADD##PSAV    A                                                 CLE075AC
+      *                                                                                     CLE075AC
+      ** Defend against A == 0                                                              CLE075AC
+      *                                                                                     CLE075AC
+     C           A         IFEQ 0                                                           CLE075AC
+     C                     Z-ADD1         A                                                 CLE075AC
+     C                     ENDIF                                                            CLE075AC
+      *                                                                                     CLE075AC
+      ** Is this the same as the last LOKUP? if so, we can bypass LOKUP                     CLE075AC
+      *                                                                                     CLE075AC
+     C**********           MOVE CNUM      #CNUMK                                   CLE075AC CLE075AY
+     C**********           MOVE CCY       #CCYK                                    CLE075AC CLE075AY
+     C**********           MOVE ACOD      #ACOK                                    CLE075AC CLE075AY
+     C**********           MOVE ACSQ      #ACSK                                    CLE075AC CLE075AY
+     C**********           MOVE KIAC      #KIA,1                                   CLE075AC CLE075AY
+     C********** #KIA,1    IFEQ #IAC,A                                             CLE075AC CLE075AY
+     C           BRT       IFEQ #BCD,A                                                      CLE075AY
+     C                     SETON                         20                                 CLE075AC
+     C                     ELSE                                                             CLE075AC
+      *                                                                                     CLE075AC
+      ** Begin lookup from last saved or if full, start from 1                              CLE075AC
+      *                                                                                     CLE075AC
+     C           ##PNDX    IFEQ 0                                                           CLE075AC
+     C                     Z-ADD1         A                                                 CLE075AC
+     C                     ELSE                                                             CLE075AC
+     C                     Z-ADD##PNDX    A                                                 CLE075AC
+     C                     ENDIF                                                            CLE075AC
+      *                                                                                     CLE075AC
+     C********** #KIA,1    LOKUP#IAC,A                   20                        CLE075AC CLE075AY
+     C           BRT       LOKUP#BCD,A                   20                                 CLE075AY
+     C                     ENDIF                                                            CLE075AC
+      *                                                                                     CLE075AC
+     C           *IN20     IFEQ *ON                                                         CLE075AC
+      *                                                                                     CLE075AC
+      ** Update LRU                                                                         CLE075AC
+      *                                                                                     CLE075AC
+     C                     MOVE ##LC      #LRU,A                                            CLE075AC
+      *                                                                                     CLE075AC
+      ** Save the last update to A                                                          CLE075AC
+      *                                                                                     CLE075AC
+     C                     Z-ADDA         ##PSAV                                            CLE075AC
+      *                                                                                     CLE075AC
+      ** Turn on indicator so that program will know it is in the array                     CLE075AC
+      *                                                                                     CLE075AC
+     C                     MOVEL'Y'       ##PFIC                                            CLE075AC
+     C                     ENDIF                                                            CLE075AC
+      *                                                                                     CLE075AC
+     C                     MOVE #IN20     *IN20                                             CLE075AC
+     C                     ENDSR                                                            CLE075AC
+      *******************************************************************          CLE075AC CLE075AY
+      *******************************************************************          CLE075AC CLE075AY
+      *******************************************************************          CLE075AC CLE075AY
+      **SRSETP*-*If*a*match*in*the*cache*is*found,*transfer*the**********          CLE075AC CLE075AY
+      ***********values*from*the*cache*to*the*work*variables*of*the******          CLE075AC CLE075AY
+      ***********program.************************************************          CLE075AC CLE075AY
+      **Called*By:*RTACC*************************************************          CLE075AC CLE075AY
+      *******************************************************************          CLE075AC CLE075AY
+      *******************************************************************          CLE075AC CLE075AY
+     C********** SRSETP    BEGSR                                                   CLE075AC CLE075AY
+     C**********           MOVE #REI,A    REIDS                                    CLE075AC CLE075AY
+     C**********           MOVE #NRCA     NRCA                                     CLE075AC CLE075AY
+     C**********           MOVE #RCA      RCA                                      CLE075AC CLE075AY
+     C**********           MOVE #CICT     CICT                                     CLE075AC CLE075AY
+     C**********           MOVE #CCS,A    CCST                                     CLE075AC CLE075AY
+     C**********           MOVE #DICT     DICT                                     CLE075AC CLE075AY
+     C**********           ENDSR                                                   CLE075AC CLE075AY
+      *                                                                                     CLE075AC
+      *****************************************************************                     CLE075AC
+      *                                                               *                     CLE075AC
+      * SRCHK2 - Checks if details from PF/REINT is already in the    *                     CLE075AC
+      *          array.                                               *                     CLE075AC
+      * Called By: RTACC                                              *                     CLE075AC
+      *                                                               *                     CLE075AC
+      *****************************************************************                     CLE075AC
+     C           SRCHK2    BEGSR                                                            CLE075AC
+     C                     MOVE *IN20     #IN20   1                                         CLE075AC
+     C                     ADD  1         ##LC                                              CLE075AC
+     C                     MOVEL*BLANK    ##PFI2  1                                         CLE075AC
+      *                                                                                     CLE075AC
+      ** Restore saved value of A index                                                     CLE075AC
+      *                                                                                     CLE075AC
+     C                     Z-ADD##PSA2    D                                                 CLE075AC
+      *                                                                                     CLE075AC
+      ** Defend against A == 0                                                              CLE075AC
+      *                                                                                     CLE075AC
+     C           D         IFEQ 0                                                           CLE075AC
+     C                     Z-ADD1         D                                                 CLE075AC
+     C                     ENDIF                                                            CLE075AC
+      *                                                                                     CLE075AC
+      ** Is this the same as the last LOKUP? if so, we can bypass LOKUP                     CLE075AC
+      *                                                                                     CLE075AC
+     C********** BAL2      IFEQ #BAL,D                                             CLE075AC CLE075AY
+     C           KEYINT    IFEQ #INT,D                                                      CLE075AY
+     C           KEYINT    ANDNE*BLANK                                                      CLE075AY
+     C                     SETON                         20                                 CLE075AC
+     C                     ELSE                                                             CLE075AC
+      *                                                                                     CLE075AC
+      ** Begin lookup from last saved or if full, start from 1                              CLE075AC
+      *                                                                                     CLE075AC
+     C           ##PND2    IFEQ 0                                                           CLE075AC
+     C                     Z-ADD1         D                                                 CLE075AC
+     C                     ELSE                                                             CLE075AC
+     C                     Z-ADD##PNDX    D                                                 CLE075AC
+     C                     ENDIF                                                            CLE075AC
+      *                                                                                     CLE075AC
+     C********** BAL2      LOKUP#BAL,A                   20                        CLE075AC CLE075AY
+     C           KEYINT    IFNE *BLANK                                                      CLE075AY
+     C           KEYINT    LOKUP#INT,D                   20                                 CLE075AY
+     C                     ENDIF                                                            CLE075AY
+     C                     ENDIF                                                            CLE075AC
+      *                                                                                     CLE075AC
+     C           *IN20     IFEQ *ON                                                         CLE075AC
+      *                                                                                     CLE075AC
+      ** Update LRU                                                                         CLE075AC
+      *                                                                                     CLE075AC
+     C                     MOVE ##L2      #LR2,A                                            CLE075AC
+      *                                                                                     CLE075AC
+      ** Save the last update to D                                                          CLE075AC
+      *                                                                                     CLE075AC
+     C                     Z-ADDD         ##PSA2                                            CLE075AC
+      *                                                                                     CLE075AC
+      ** Turn on indicator so that program will know it is in the array                     CLE075AC
+      *                                                                                     CLE075AC
+     C                     MOVEL'Y'       ##PFI2                                            CLE075AC
+     C                     ENDIF                                                            CLE075AC
+      *                                                                                     CLE075AC
+     C                     MOVE #IN20     *IN20                                             CLE075AC
+     C                     ENDSR                                                            CLE075AC
+      *                                                                                     CLE075AC
+      *******************************************************************          CLE075AC CLE075AY
+      *******************************************************************          CLE075AC CLE075AY
+      **SRSET2*-*If*a*match*in*the*cache*is*found,*transfer*the**********          CLE075AC CLE075AY
+      ***********values*from*the*cache*to*the*work*variables*of*the******          CLE075AC CLE075AY
+      ***********program.************************************************          CLE075AC CLE075AY
+      **Called*By:*RTACC*************************************************          CLE075AC CLE075AY
+      *******************************************************************          CLE075AC CLE075AY
+      *******************************************************************          CLE075AC CLE075AY
+     C********** SRSET2    BEGSR                                                   CLE075AC CLE075AY
+     C**********           MOVE #BAL,D    BAL2                                     CLE075AC CLE075AY
+     C**********           ENDSR                                                   CLE075AC CLE075AY
+      *                                                                                     CLE075AC
+      *****************************************************************                     CLE075AC
+      * SRADD2 - This subroutine adds the newly chained details from  *                     CLE075AC
+      *          PF/REINT to the cache. if the cache is full, it      *                     CLE075AC
+      *          replaces the least recently used.                    *                     CLE075AC
+      *  Called By: RTACC                                             *                     CLE075AC
+      *  Calls:     None                                              *                     CLE075AC
+      *****************************************************************                     CLE075AC
+     C           SRADD2    BEGSR                                                            CLE075AC
+     C                     MOVE *IN40     #IN40   1                                         CLE075AC
+      *                                                                                     CLE075AC
+      ** Check if there is still available slot in the array.                               CLE075AC
+      *                                                                                     CLE075AC
+     C           ##PND2    IFNE 0                                                           CLE075AC
+     C                     Z-ADD##PND2    D                                                 CLE075AC
+     C**********           MOVE BAL2      #BAL,D                                   CLE075AC CLE075AY
+     C                     MOVE KEYINT    #INT,D                                            CLE075AY
+      *                                                                                     CLE075AC
+     C                     MOVE ##L2      #LR2,D                                            CLE075AC
+      *                                                                                     CLE075AC
+     C                     SUB  1         ##PND2                                            CLE075AC
+      *                                                                                     CLE075AC
+      ** Else replace the LRU                                                               CLE075AC
+      *                                                                                     CLE075AC
+     C                     ELSE                                                             CLE075AC
+     C                     Z-ADD1         D                                                 CLE075AC
+     C                     MOVEA#LR2      #LRC2                                             CLE075AC
+     C                     SORTA#LRC2                                                       CLE075AC
+     C                     Z-ADD#LRC2,1   #LEAS2                                            CLE075AC
+     C           #LEAS2    LOKUP#LR2,D                   40                                 CLE075AC
+      *                                                                                     CLE075AC
+     C**********           MOVE BAL2      #BAL,D                                   CLE075AC CLE075AY
+     C                     MOVE KEYINT    #INT,D                                            CLE075AY
+      *                                                                                     CLE075AC
+     C                     MOVE ##L2      #LR2,D                                            CLE075AC
+     C                     ENDIF                                                            CLE075AC
+      *                                                                                     CLE075AC
+      ** Update PSAVE so next call to SRCHKP checks                                         CLE075AC
+      ** this newly added element.                                                          CLE075AC
+      *                                                                                     CLE075AC
+     C                     Z-ADDD         ##PSA2                                            CLE075AC
+     C                     MOVE #IN40     *IN40                                             CLE075AC
+      *                                                                                     CLE075AC
+     C                     ENDSR                                                            CLE075AC
+      *                                                                                     CLE075AC
+      *****************************************************************                     CLE075AC
+      * SRADDP - This subroutine adds the newly chained details from  *                     CLE075AC
+      ***********PF/REIAXAtotthehcache.eifithehcachehisifull,litit*******          CLE075AC CLE075AY
+      *          PF/SDBSRTPD to the cache. if the cache is full, it   *                     CLE075AY
+      *          replaces the least recently used.                    *                     CLE075AC
+      *  Called By: RTACC                                             *                     CLE075AC
+      *  Calls:     None                                              *                     CLE075AC
+      *****************************************************************                     CLE075AC
+     C           SRADDP    BEGSR                                                            CLE075AC
+     C                     MOVE *IN40     #IN40   1                                         CLE075AC
+      *                                                                                     CLE075AC
+      ** Check if there is still available slot in the array.                               CLE075AC
+      *                                                                                     CLE075AC
+     C           ##PNDX    IFNE 0                                                           CLE075AC
+     C                     Z-ADD##PNDX    A                                                 CLE075AC
+      *                                                                                     CLE075AC
+     C**********           MOVE CNUM      #CNUM                                    CLE075AC CLE075AY
+     C**********           MOVE CCY       #CCY                                     CLE075AC CLE075AY
+     C**********           MOVE ACOD      #ACO                                     CLE075AC CLE075AY
+     C**********           MOVE ACSQ      #ACS                                     CLE075AC CLE075AY
+     C**********           MOVE IACDS     #IAC,A                                   CLE075AC CLE075AY
+      *                                                                                     CLE075AC
+     C**********           MOVE NRCA      #NRCA                                    CLE075AC CLE075AY
+     C**********           MOVE RCA       #RCA                                     CLE075AC CLE075AY
+     C**********           MOVE CICT      #CICT                                    CLE075AC CLE075AY
+     C**********           MOVE CCST      #CCS,A                                   CLE075AC CLE075AY
+     C**********           MOVE DICT      #DICT                                    CLE075AC CLE075AY
+     C**********           MOVE REIDS     #REI,A                                   CLE075AC CLE075AY
+      *                                                                                     CLE075AC
+     C                     MOVE ##LC      #LRU,A                                            CLE075AC
+      *                                                                                     CLE075AC
+     C                     SUB  1         ##PNDX                                            CLE075AC
+      *                                                                                     CLE075AC
+      ** Else replace the LRU                                                               CLE075AC
+      *                                                                                     CLE075AC
+     C                     ELSE                                                             CLE075AC
+     C                     Z-ADD1         A                                                 CLE075AC
+     C                     MOVEA#LRU      #LRUC                                             CLE075AC
+     C                     SORTA#LRUC                                                       CLE075AC
+     C                     Z-ADD#LRUC,1   #LEAST                                            CLE075AC
+     C           #LEAST    LOKUP#LRU,A                   40                                 CLE075AC
+      *                                                                                     CLE075AC
+     C**********           MOVE CNUM      #CNUM                                    CLE075AC CLE075AY
+     C**********           MOVE CCY       #CCY                                     CLE075AC CLE075AY
+     C**********           MOVE ACOD      #ACO                                     CLE075AC CLE075AY
+     C**********           MOVE ACSQ      #ACS                                     CLE075AC CLE075AY
+     C**********           MOVE IACDS     #IAC,A                                   CLE075AC CLE075AY
+      *                                                                                     CLE075AC
+     C**********           MOVE NRCA      #NRCA                                    CLE075AC CLE075AY
+     C**********           MOVE RCA       #RCA                                     CLE075AC CLE075AY
+     C**********           MOVE CICT      #CICT                                    CLE075AC CLE075AY
+     C**********           MOVE CCST      #CCS,A                                   CLE075AC CLE075AY
+     C**********           MOVE DICT      #DICT                                    CLE075AC CLE075AY
+     C**********           MOVE REIDS     #REI,A                                   CLE075AC CLE075AY
+      *                                                                                     CLE075AC
+     C                     MOVE ##LC      #LRU,A                                            CLE075AC
+     C                     ENDIF                                                            CLE075AC
+      *                                                                                     CLE075AC
+      ** Update PSAVE so next call to SRCHKP checks                                         CLE075AC
+      ** this newly added element.                                                          CLE075AC
+      *                                                                                     CLE075AC
+     C                     Z-ADDA         ##PSAV                                            CLE075AC
+     C                     MOVE #IN40     *IN40                                             CLE075AC
+      *                                                                                     CLE075AC
+     C                     ENDSR                                                            CLE075AC
+     C/EJECT                                                                                CLE075AC
+      *****************************************************************                     CLE075AC
+      *                                                               *                     CLE075AC
+      * UPDPTR - Update LEEXPRPD with Start Key for restart           *                     CLE075AC
+      *                                                               *                     CLE075AC
+      * Called By: Main Processing                                    *                     CLE075AC
+      *                                                               *                     CLE075AC
+      *****************************************************************                     CLE075AC
+     C********** UPDPTR    BEGSR                                                  CLE075AC AR1097376
+      **********                                                                  CLE075AC AR1097376
+     C**********           MOVE 'A'       IXCKEY                                  CLE075AC AR1097376
+     C**********           MOVE NXTKEY    LSTKEY                                  CLE075AC AR1097376
+     C********** IXCKEY    CHAINLEEXPRPD             38                           CLE075AC AR1097376
+     C********** *IN38     IFEQ '0'                                               CLE075AC AR1097376
+     C**********           MOVE LSTKEY    NXTKEY                                  CLE075AC AR1097376
+     C**********           MOVE @CCY      CCY                                     CLE075AC AR1097376
+     C**********           MOVE 'C'       PROT                                    CLE075AC AR1097376
+     C**********           UPDATDRIVEF                                            CLE075AC AR1097376
+     C**********           ENDIF                                                  CLE075AC AR1097376
+      **********                                                                  CLE075AC AR1097376
+     C**********           ENDSR                                                  CLE075AC AR1097376
+      *****************************************************************
+     C/EJECT
+      *****************************************************************   CCB003
+      *                                                                   CCB003
+     C/COPY ZSRSRC,ZDATE2Z2
+      *
+      *****************************************************************   CCB003
+     C/EJECT
+     C*****************************************************************
+     C*
+     C***  INIT SUBROUTINE TO PERFORM FIRST CYCLE CALCS.
+     C*
+     C***  CALLED FROM: MAIN PROCESSING
+     C*
+     C***  CALLS: ZDATE2,DBERR,*PSSR
+     C*
+     C********************************************************************
+     C           INIT      BEGSR
+     C*
+     C                     MOVEACPY@      BIS@   80                                           CSC042
+     C                     Z-ADD0         ##BNDX  40                                          CSC042
+     C           *LIKE     DEFN ##BNDX    B                                                   CSC042
+     C           *LIKE     DEFN ##BNDX    ##BSV                                               CSC042
+      *                                                                                       CSC042
+     C           *ENTRY    PLIST                                          CCB003
+     C**********           PARM           RSTART  1                                 CCB003 AR1097376
+     C                     PARM           STRRRN 100                                       AR1097376
+     C                     PARM           FINRRN 100                                       AR1097376
+      *                                                                   CCB003
+      ** Access data area CBTASKSP for commit block size                  CCB003
+     C           *NAMVAR   DEFN CBTASKSP  CBTASK                          CCB003
+     C                     IN   CBTASK                                    CCB003
+      *                                                                   CCB003
+     C**********           MOVE CMTBLK    #OPTIM  60                                 CCB003 CLE075AC
+     C                     MOVE CMTBLK    #OPTIM 100                                        CLE075AC
+      *                                                                   CCB003
+      ** Set commit counter to 0                                          CCB003
+     C                     Z-ADD1         #COMIT  60                      CCB003
+      *                                                                   CCB003
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   LDA
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *                                                                   S01408
+     C/COPY WNCPYSRC,LER250CCP1                                           S01408
+      *                                                                   S01408
+     C*                                                                     0078
+     C** Access LERSTS for the date of last run                             0078
+     C*                                                                     0078
+     C           *NAMVAR   DEFN           LERSTS                            0078
+     C*****      *LOCK     IN   LERSTS                                    130379
+     C                     IN   LERSTS                                    130379
+     C***********          Z-ADDLASTRN    LASTR   50                      142402
+     C                     Z-ADDLLSTRN    LASTR   50                      142402
+     C*
+     C***  ACCESS BANK DETAILS FOR TITLE
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL@OPTN     DBKEY            ***************
+     C                     Z-ADD1         DBASE            * DBERROR 1   *
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     MOVEL'LER250'  DBPGM
+     C                     OUT  LDA
+     C                     SETON                     89
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     EXSR DBERR
+     C                     ELSE
+     C*
+     C***  CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+     C*
+     C           AGDFF     COMP 'M'                      98MMDDYY, 98 ON
+     C*
+     C                     END
+     C*********************                                                 0078
+     C*****ACCESS*ACTION*FILE*HEADER*FOR*THE*DATE*OF*LAST*ACTIVITY*         0078
+     C*********************                                                 0078
+     C*********************READ ACTN5DH                  89                 0078
+     C************IN89*****IFEQ '1'                                         0078
+     C************LOCK*****IN   LDA                                         0078
+     C*********************MOVEL'*READ'   DBKEY            ***************  0078
+     C*********************Z-ADD6         DBASE            * DBERROR 6   *  0078
+     C*********************MOVEL'ACTN5DH 'DBFILE           ***************  0078
+     C*********************MOVEL'LER250'  DBPGM                             0078
+     C*********************OUT  LDA                                         0078
+     C*********************SETON                     89                     0078
+     C*********************SETON                     U7U8LR                 0078
+     C*********************EXSR *PSSR                                       0078
+     C*********************EXSR DBERR                                       0078
+     C*********************END                                              0078
+     C*
+     C***  ACCESS GENERAL LEDGER FILES FOR ACCRUAL PROFIT FREQUENCY,
+     C***  BASE CURRENCY TRANSFER FREQUENCY AND BASE CURRENCY FOR
+     C***  ACCOUNTING....
+     C*
+     C***  ACCESS GENERAL LEDGER DETAILS
+     C*
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS
+     C                     SETON                     89
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA
+     C                     MOVEL@OPTN     DBKEY            ***************
+     C                     Z-ADD7         DBASE            * DBERROR 7   *
+     C                     MOVEL'SDGELRPD'DBFILE           ***************
+     C                     MOVEL'LER250'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     EXSR DBERR
+     C                     END
+      *
+     C* IF BASE CCY TRANSFER FREQUENCY IS SAME AS ACCRUAL FREQUENCY,
+     ** FLAG SAME AS ACCRUAL FREQUENCY.
+     C           BKBCTF    IFEQ 'A'
+     C                     MOVE APFQ      BKBCTF
+     C                     END
+     C*
+      *
+      * CALCULATE RUN DATE IN CASE SECOND RUN OF EOM. IN THIS CASE
+      * RUN DATE MUST BE RESET TO THE FIRST OF THE NEW MONTH.
+      * ALSO DETERMINE TYPE OF RUN:
+      *   1 = NORMAL EOD.
+      *   2 = EOM FOLLOWED BY WORKING DAY.
+      *   3 = EOM FOLLOWED BY NON-WORKING DAY.
+     C*
+     C***  THIS APPEARS TO BE ALL THE OLD ROUTINE RUNCHK USED TO DO
+     C***  FOR THIS PROGRAM, SO I'VE REPLACED IT WITH THESE 4 LINES
+     C*********************                                                 0078
+     C*********************Z-ADDAPDA      ZDAYNO                            0078
+     C*********************EXSR ZDATE2                                      0078
+     C*********************MOVE ZADATE    RUNDAX                            0078
+     C*********************Z-ADDAPDA      RUNDAY  50                        0078
+     C*
+     C** The set up of this date is not conditioned on anything and is      0078
+     C** causing the amounts on the report to come out negative and of      0078
+     C** course wrong! If accruals are daily it is OK to use the            0078
+     C** accrual/profit date because except over holidays etc it will       0078
+     C** be equal to run date but with monthly accruals this is not         0078
+     C** the case                                                           0078
+     C*                                                                     0078
+     C** First calculate the date of next working day minus one             0078
+     C*                                                                     0078
+     C           BJDNWD    SUB  1         DNWD1   50                        0078
+     C*                                                                     0078
+     C** The use of accrual profit day is now conditioned on                0078
+     C** (i) accrual frequency being daily or (ii) accrual frequency        0078
+     C** monthly AND APDA falling between run date date of next             0078
+     C** working day minus 1                                                0078
+     C** or (iii) monthly and today is accrual profit day                 BH3444
+     C** or (iv) last working day in month and today is between accrual   088128
+     C**         profit date & date of next working day minus 1           088128
+     C** or (v) last working day in month & today is accrual profit date  088128
+     C*                                                                     0078
+     C* (i)                                                                 0078
+     C           APFQ      IFEQ 'D'                                         0078
+     C* (ii)                                                                0078
+     C           APFQ      OREQ 'M'                                         0078
+     C           APDA      ANDGTBJRDNB                                      0078
+     C***********APDA      ANDLTDNWD1                                  0078 0111
+     C           APDA      ANDLEDNWD1                                       0111
+     C* (iii)                                                             BH3444
+     C           APFQ      OREQ 'M'                                       BH3444
+     C           APDA      ANDEQBJRDNB                                    BH3444
+     C* (iv)                                                              088128
+     C           APFQ      OREQ 'L'                                       088128
+     C           APDA      ANDGTBJRDNB                                    088128
+     C           APDA      ANDLEDNWD1                                     088128
+     C* (v)                                                               088128
+     C           APFQ      OREQ 'L'                                       088128
+     C           APDA      ANDEQBJRDNB                                    088128
+     C*                                                                     0078
+     C                     Z-ADDAPDA      ZDAYNO
+     C                     ELSE                                             0078
+     C                     Z-ADDDNWD1     ZDAYNO                            0078
+     C                     END                                              0078
+     C*                                                                     0078
+     C** Either way put the correct day number into runday for later        0078
+     C*                                                                     0078
+     C                     Z-ADDZDAYNO    RUNDAY  50                        0078
+     C*                                                                     0078
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RUNDAX
+     C*                                                                     0078
+     C** If the first position of the alpha date is blank make it           0078
+     C** zero for the later date comparisons                                0078
+     C*                                                                     0078
+     C                     MOVELRUNDAX    TEST    1                         0078
+     C           TEST      IFEQ ' '                                         0078
+     C                     MOVEL'0'       RUNDAX                            0078
+     C                     END                                              0078
+     C*********************Z-ADDAPDA      RUNDAY  50                        0078
+     C*
+      * READ PROFITABILITY FORMAT CONTROL FILE FOR ACCOUNT CODES.
+      *
+     C                     READ PEFMTCF                  82
+     C           *IN82     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVELCNUMA     DBKEY            ************
+     C                     MOVEL'LER250'  DBPGM            * DBERR 2
+     C                     Z-ADD2         DBASE            ************
+     C                     MOVEL'PEFMTC  'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     EXSR DBERR
+     C                     END
+     C                     SORTAACD
+     C**
+     C** CALCULATE THE LAST CALENDAR DAY OF THIS MONTH:-
+     C** START BY CONVERTING PREVIOUS END OF YEAR & RUNDATE
+     C** TO DDMMYY FORMAT AND SAVING THE RESULTS
+     C**
+     C                     Z-ADDBJPEYD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    PEYDDD  2
+     C**
+     C                     Z-ADDBJPEYD    ZDAYNO
+     C                     ADD  1         ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    SOYDDD  2
+     C**
+     C                     MOVELRUNDAX    RUNDDD  2
+     C**
+     C** SET UP THE END OF MONTH FROM THE PREVIOUS END OF YEAR DATE
+     C**
+     C                     MOVELPEYDDD    DD
+     C**
+     C** CALCULATE MONTH VALUE FOR CALCULATIONS TO FOLLOW
+     C**
+     C                     Z-ADD1         MN      20
+     C           MMM       LOKUPZMNM,MN                  10
+     C                     MOVE YY        MY
+     C           PEYDDD    IFLT RUNDDD
+     C           MN        ADD  1         NX      20
+     C           NX        IFGT 12
+     C                     MOVEL'01'      MN
+     C                     MOVE YY        YYD     20
+     C                     ADD  1         YYD
+     C                     MOVE YYD       MY
+     C                     ADD  1         MN
+     C                     END
+     C                     END
+     C                     MOVELMN        MY
+     C**
+     C** MOVE YEAR CHECKED ABOVE TO THE YEAR FIELD OF DATE
+     C**
+     C                     MOVE DATE      GDATE
+     C                     CALL 'LERDATEL'DATDAY
+     C           GRTCD     IFEQ '1'
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA
+     C                     MOVELDATE      DBKEY            ***************
+     C                     Z-ADD22        DBASE            * DBERROR 22  *
+     C                     MOVEL'LERDATEL'DBFILE           ***************
+     C                     MOVEL'LER250'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C                     Z-ADDGDAYNO    LCAL    50
+      *                                                                                     CLE075AC
+      ** Convert LCAL to date format                                                        CLE075AC
+      *                                                                                     CLE075AC
+     C           LCAL      ADD  1         ZDAYNO                                            CLE075AC
+     C                     EXSR ZDATE2                                                      CLE075AC
+     C                     MOVELZDATE     LCALDT  2                                         CLE075AC
+      *
+      * CALC. EARLIER OF LAST CALENDAR DAY & (NEXT WORKING DAY - 1)
+      *
+      * CHECK ACCRUALS FOR NON-WORKING INDICATOR FOR CALC. DATE           E32390
+      *                                                                     0078
+      *                                                                   E32390
+     C***********BKANWD    IFNE '2'                                       E32390
+     C*********************                                           0078  0111
+     C***If*the*accrue*non-working day indicator is 2 accruals are    0078  0111
+     C***not*done*in*advance and so control date is always run date   0078  0111
+     C*********************                                           0078  0111
+     C***********BKANWD****IFEQ '2'                                   0078  0111
+     C*********************Z-ADDBJRDNB    CODT    50                  0078  0111
+     C*********************                                           0078  0111
+     C*********************ELSE                                       0078  0111
+     C*                                                                     0078
+     C** otherwise  the control date must be set up to calculate            0078
+     C** the amounts up to the correct date when days are to be             0078
+     C** missed                                                             0078
+     C*                                                                     0078
+     C           BJDNWD    SUB  1         CODT    50                        0078
+     C*                                                                     0078
+     C** Unless the following conditions are met control date will          0078
+     C** be date of next working day minus one                              0078
+     C*                                                                   E32390
+     C           LASTR     IFLT BJRDNB                                      0078
+     C*                                                                     0078
+     C***********BJDNWD    SUB  1         CODT    50                        0078
+     C*                                                                     0078
+     C** If days in between today and the next run need to be accrued       0078
+     C** control date must be set to the appropriate interim date           0078
+     C*                                                                     0078
+     C***********BJRDNB    IFLT LCAL                                      142402
+     C           BJRDNB    IFLE LCAL                                      142402
+     C***********LCAL******ANDLTCODT                                   0078 0111
+     C           LCAL      ANDLECODT                                   0078 0111
+     C*                                                                     0078
+     C           LCAL      ORLT BJRDNB                                      0078
+     C           LCAL      ANDGTLASTR                                       0078
+     C*                                                                     0078
+     C***********LCAL      IFLT CODT                                        0078
+     C                     Z-ADDLCAL      CODT
+     C**********           END                                       0078 BH3444
+      *                                                                   E32390
+     C                     ELSE                                           E32390
+      *                                                                   E32390
+     C***  Only do if daily accruals                                      BH3444
+     C*                                                                   BH3444
+     C           APFQ      IFEQ 'D'                                       BH3444
+     C           LCAL      OREQ BJRDNB                                    BH3444
+     C*                                                                     0078
+     C** If this is the first run for today and there is no EOM use         0078
+     C** rundate - the second run will set up the date for other days       0078
+     C*                                                                     0078
+     C                     Z-ADDBJRDNB    CODT                            E32390
+     C*                                                                   BH3444
+     C                     END                                            BH3444
+     C*                                                                   BH3444
+     C*********************                                           E323900078
+     C**CHECK*END*OF*MONTH*                                           E323900078
+     C*********************                                           E323900078
+     C***********BJRDNB****IFLT LCAL                                  E323900078
+     C***********BJDNWD****ANDGTLCAL                                  E323900078
+     C*********************Z-ADDLCAL      CODT                        E323900078
+     C*********************END                                        E323900078
+      *                                                                   E32390
+     C                     END                                            E32390
+     C*********************END                                        0078 0111
+     C                     END                                            BH3444
+      *
+      * CALCULATE FIRST CALENDAR DAY OF MONTH.
+      *
+     C                     Z-ADD1         MN
+     C           MMM       LOKUPZMNM,MN                  10
+     C                     MOVELMN        MY
+     C                     MOVE YY        MY
+     C**
+     C** IF THE DD FIELD OF RUNDAX IS GREATER THAN OR EQUAL TO THE
+     C** DAY FIELD OF START OF YEAR DATE THEN
+     C** MOVE START OF YEAR DAY NUMBER INTO THE DATE INSTEAD OF
+     C** ASSUMING FIRST DAY OF MONTH IS 01
+     C*
+     C                     MOVELRUNDAX    @RUNDD  2
+     C                     MOVELSOYDDD    @SOYDD  2
+     C*
+     C           @RUNDD    IFGE @SOYDD
+     C*
+     C                     MOVE @SOYDD    DD
+     C                     MOVE DATE      GDATE
+     C                     CALL 'LERDATEF'DATDAY
+     C           GRTCD     IFEQ '1'
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA
+     C                     MOVELDATE      DBKEY            ***************
+     C                     Z-ADD20        DBASE            * DBERROR 20  *
+     C                     MOVEL'LERDATEF'DBFILE           ***************
+     C                     MOVEL'LER250'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C                     Z-ADDGDAYNO    FCAL    50
+     C*
+     C**  OR IF THE DD FIELD OF RUNDATE IS LESS THAN THE
+     C**  DD FIELD OF THE START OF YEAR DAY THEN SUBTRACT ONE FROM THE
+     C**  MONTH OF RUNDATE...
+     C*
+     C                     ELSE
+     C*
+     C                     SUB  1         MN
+     C*
+     C**  AND CHECK THE RESULTING 'MN' FIGURE AND IF IT IS ZERO THEN
+     C**  GO BACK TO THE PREVIOUS YEAR BY CHANGING MN TO '12' AND
+     C**  SUBTRACTING 1 FROM THE YEAR FIELD
+     C*
+     C           MN        IFEQ 0
+     C                     Z-ADD12        MN
+     C                     MOVE YY        YYNUM   20
+     C                     SUB  1         YYNUM
+     C                     MOVE YYNUM     MY
+     C                     END
+     C*
+     C**  MANIPULATE THIS AND CONVERT INTO A DAY NUMBER
+     C*
+     C                     MOVE @SOYDD    DD
+     C                     MOVELMN        MY
+     C*
+     C                     MOVE DATE      GDATE
+     C                     CALL 'LERDATEF'DATDAY
+     C           GRTCD     IFEQ '1'
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA
+     C                     MOVELDATE      DBKEY            ***************
+     C                     Z-ADD21        DBASE            * DBERROR 21  *
+     C                     MOVEL'LERDATEF'DBFILE           ***************
+     C                     MOVEL'LER250'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C                     Z-ADDGDAYNO    FCAL
+     C*
+     C                     END
+     C*
+      *
+      * READ IN INFORMATION FOR CURRENCIES.
+      * STORE IN ARRAY/DATASTRUCTURE.
+      *
+     C                     MOVE *BLANK    MDI
+     C                     Z-ADD0         SPT
+     C                     Z-ADD0         CDP
+     C                     Z-ADD0         X       30
+     C                     OPEN SDCURRPD                                                      CSC042
+     C           *IN80     DOWEQ'0'
+     C                     READ SDCURRPD                 80
+     C           *IN80     IFEQ '0'
+     C                     ADD  1         X
+     C                     MOVE A6CYCD    COD,X
+     C                     MOVELA6SPRT    SPT              SPOT RATE
+     C                     MOVE A6NBDP    CDP              DEC.PLACES
+     C                     MOVE A6MDIN    MDI              MULT/DIV
+     C                     MOVE CYDDS     CYD,X
+     C                     END
+     C                     END
+     C                     CLOSESDCURRPD                                                      CSC042
+      *                                                                                     CLE075AC
+      ** Define Key list for ACCNT                                                          CLE075AC
+      *                                                                                     CLE075AC
+     C           KEYACT    KLIST                                                            CLE075AC
+     C                     KFLD           CNUM                                              CLE075AC
+     C                     KFLD           CCY                                               CLE075AC
+     C                     KFLD           ACOD                                              CLE075AC
+     C                     KFLD           ACSQ                                              CLE075AC
+     C                     KFLD           BRCA                                              CLE075AC
+      *
+      * DEFINE KEY LIST FOR LEPEGLD
+      *
+     C           KEYGLX    KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+      *
+      * DEFINE KEY LIST FOR LEPERED
+      *
+     C           KEYREX    KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C                     KFLD           RDDRCR
+      *
+      * DEFINE KEY LIST FOR REIAC
+      *
+     C           KEYIAC    KLIST
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C*
+     C***  DEFINE PARAMETER LIST FOR LERDATEF AND LERDATEL
+     C*
+     C           DATDAY    PLIST
+     C                     PARM           GDATE   60
+     C                     PARM           GDAYNO  50
+     C                     PARM           GRTCD   1
+      *
+      * DEFINE SAVED CUSTOMER NO. FIELD.
+      *
+     C**********           Z-ADD0         SCNUM   60                                          CSD027
+     C                     MOVE *BLANKS   SCNUM   6                                           CSD027
+      *
+      * DEFINE CONSTANT PARTS OF KEY TO REINT
+      *
+     C                     MOVE *BLANK    IAC1    1
+     C                     MOVE 'D'       IAC2    1
+      *
+      * SET UP PACKED BLANKS FIELDS FOR COMPARISON
+      *
+     C                     MOVEL'40404040'FZ11   117
+     C                     MOVE '404'     FZ11
+     C                     MOVEL'40404040'FZ13   130
+     C                     MOVE '40404'   FZ13
+     C                     MOVELFZ13      FZ15   150
+     C                     MOVE '04'      FZ15
+      *******************************************************************          CLE075AC CLE075AY
+      ****Read*through*the*base*rate*file*and*cache*the*base*rate********          CLE075AC CLE075AY
+      ****and*base*rate*code*********************************************          CLE075AC CLE075AY
+      *******************************************************************          CLE075AC CLE075AY
+     C**********           Z-ADD1         C       40                               CLE075AC CLE075AY
+     C**********           READ SDBSRTL1                 50                        CLE075AC CLE075AY
+      **********                                                                   CLE075AC CLE075AY
+     C********** *IN50     DOWEQ*OFF                                               CLE075AC CLE075AY
+     C**********           MOVE BRTT      #BCD,C                                   CLE075AC CLE075AY
+     C**********           MOVE CCY       #YCD                                     CLE075AC CLE075AY
+     C**********           MOVE BRTE      #BSR                                     CLE075AC CLE075AY
+     C**********           MOVE BRTDS     #BRT,C                                   CLE075AC CLE075AY
+     C**********           ADD  1         C                                        CLE075AC CLE075AY
+     C**********           READ SDBSRTL1                 50                        CLE075AC CLE075AY
+      **********                                                                   CLE075AC CLE075AY
+     C**********           ENDDO                                                   CLE075AC CLE075AY
+      *                                                                                     CLE075AC
+      ** Define variables for LRU and initializations.                                      CLE075AC
+      *                                                                                     CLE075AC
+     C                     Z-ADD0         #LEAST 130                                        CLE075AC
+     C           *LIKE     DEFN #LEAST    ##LC                                              CLE075AC
+      *                                                                                     CLE075AC
+     C                     Z-ADD0         ##PNDX  40                                        CLE075AC
+     C           *LIKE     DEFN ##PNDX    A                                                 CLE075AC
+     C           *LIKE     DEFN ##PNDX    ##PSAV                                            CLE075AC
+     C**********           Z-ADD100       ##PNDX                                   CLE075AC CLE075AY
+     C                     Z-ADD300       ##PNDX                                            CLE075AY
+     C                     Z-ADD0         ##LC                                              CLE075AC
+      *                                                                                     CLE075AC
+     C                     Z-ADD0         #LEAS2 130                                        CLE075AC
+     C           *LIKE     DEFN #LEAS2    ##L2                                              CLE075AC
+      *                                                                                     CLE075AC
+     C                     Z-ADD0         ##PND2  40                                        CLE075AC
+     C           *LIKE     DEFN ##PND2    D                                                 CLE075AC
+     C           *LIKE     DEFN ##PND2    ##PSA2                                            CLE075AC
+     C**********           Z-ADD100       ##PND2                                   CLE075AC CLE075AY
+     C                     Z-ADD300       ##PND2                                            CLE075AY
+     C                     Z-ADD0         ##L2                                              CLE075AC
+      *
+     C                     ENDSR
+      *
+     C*****************************************************************
+     C*
+     C* DBERR SUBROUTINE TO PERFORM DATABASE ERROR PROCESSING
+     C*
+     C***  CALLED FROM: MAIN PROCESSING,ACOFF,INIT
+     C*
+     C***  CALLS: NOTHING
+     C*
+     C********************************************************************
+     C*
+     C           DBERR     BEGSR
+      *
+     C                     OPEN LER250AU                                  CCB003
+     C                     WRITELER250H1
+     C                     WRITEDBFMT
+     C                     CLOSELER250AU                                  CCB003
+      *                                                                                    AR1097376
+      ** Update LSTRRN for RESTART of Component                                            AR1097376
+      *                                                                                    AR1097376
+     C                     OPEN LEEXPRPD                                                   AR1097376
+     C                     READ LEEXPRPD                 38                                AR1097376
+     C                     MOVE COMRRN    LSTRRN                                           AR1097376
+     C                     MOVE FINRRN    ENDRRN                                           AR1097376
+     C           *IN38     IFEQ '0'                                                        AR1097376
+     C                     UPDATDRIVEF                                                     AR1097376
+     C                     ENDIF                                                           AR1097376
+     C                     CLOSELEEXPRPD                                                   AR1097376
+      *                                                                                    AR1097376
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+     C********************************************************************
+     C*
+     C***  *PSSR  --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS
+     C*
+     C***  CALLED FROM: AFTER ABNORNAL OPERATION OCCURS
+     C*
+     C***  CALLS: NOTHING
+     C*
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C                     ENDSR                           ** *PSSR **
+     C********************************************************************
+     C/EJECT
+      *****************************************************************   CCB003
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**   PWR  - POWER ARRAY FOR CONVERSION OF AGGREGATES,FEES & CHARGES
+0001
+0010
+0100
+1000
+**   POW  - POWER ARRAY FOR CONVERSION OF MARGIN AMOUNTS
+1000
+0100
+0010
+0001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

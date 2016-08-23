@@ -1,0 +1,1457 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Create Postings From Account Keys')           *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Generic Posting Interface                            *
+     F*                                                               *
+     F*  GL1723 - Create Postings from Account Keys                   *
+     F*                                                               *
+     F*  (c) Misys Banking Systems Ltd. 2006                          *
+     F*                                                               *
+      *  Last Amend No. MD037802           Date 26Apr16               *
+      *  Prev Amend No. MD037421           Date 26Apr16               *
+      *                 CGL160             Date 11Nov14               *
+      *                 CRE075             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 247048             Date 13Apr07               *
+      *                 246861             Date 04Apr07               *
+     F*                 244851             Date 05Jan07               *
+     F*                 242911             Date 10Oct06               *
+     F*                 242905             Date 09Oct06               *
+     F*                 242266             Date 13Sep06               *
+     F*                 CGL047 *Create     Date 30Jun06               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD037802 - All GPI postings have blank narrative.            *
+      *  MD037421 - Move narrative code before check on AONARRR0.     *
+      *  CGL160 - Cheque Details Upload via Generic Posting Interface *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+     F*  247048 - Use System Value to determine whether to check for  *
+     F*           Blocked Accounts.                                   *
+     F*  246861 - Do not access SDNARRPD for imbalance postings.      *
+     F*  244851 - Do not refer to RETB for non-retail accounts.       *
+     F*           Correct posting narrative when accounts are blocked.*
+     F*  242911 - Do not update GEGPIZZ when writing to summary file. *
+     F*  242905 - Use AOBRCHR1 instead of AOBRCHR0 as return string   *
+     F*           is longer.                                          *
+     F*  242266 - Transaction number of projected movements is first  *
+     F*           6 hex of narrative string: should be batch no/item  *
+     F*  CGL047 - Generic Postings Interface                          *
+     F*                                                               *
+     F*****************************************************************
+     FGLGPIKL0IP  E           K        DISK
+      * Generated account keys for generic posting interface
+      *
+     FACKEYL0 IF  E           K        DISK
+      * Account Keys File
+      *
+     FGLGPICL0IF  E           K        DISK
+      **  Generic posting interface file control
+      *
+     FGLPSUMPDO   E                    DISK
+      * Summary postings file
+     F            APOSTPDF                          KRENAME@PSUMPPF
+      *
+     FGEGPIHH O   E                    DISK
+      * Generic posting interface postings header
+      *
+     FGEGPIPD O   E                    DISK
+      * Generic posting interface postings file
+      *
+     FGEGPIZZ O   E                    DISK
+      * Generic posting interface postings trailer
+      *
+      ********************************************************************
+      *
+      * ID C  F  H  L    Function of indicators
+      *
+      *    90            General Error
+      *    91            End of Dealing Account Keys
+      * U7U8LR           DB error
+      *
+      ********************************************************************
+      *
+     E                    CPY@    1   1 80               copyright
+     E                    ACD         6 10 0             Account codes
+     E                    NCD         6  2               Narrative codes
+     E                    PRF         6  1 0             Posting Refs
+     E/EJECT
+      *
+      ** Define level break processing
+     IGLGPIKD0
+     I                                              BRCA  L3
+     I                                              ECCY  L2
+     I                                              AKEY  L1
+      *
+      ** Redefine used fields
+     IACKEYALF
+     I              RECI                            AKRECI
+     I              AKEY                            AKAKEY
+      *
+     I/EJECT
+      *
+      *
+     ISDBANK    E DSSDBANKPD
+      **  Data structure for bank file
+      *
+     ISDCUST    E DSSDCUSTPD
+      **  Data structure for customer file
+      *
+     ISDBRCH    E DSSDBRCHPD
+      **  Data structure for branch file
+     I              QQDFAC                          QXDFAC
+      *
+     ISDGELR    E DSSDGELRPD
+      **  Data structure for general ledger details
+      *
+     ISDTRAD    E DSSDTRADPD
+      **  Data structure for trading details
+     I              QQACCD                          QXACCD
+      *
+     ISDACOD    E DSSDACODPD
+      **  Data structure for trading details
+     I              QQACCD                          QYACCD
+      *
+     ISDACCT    E DSACCNTAB
+      **  Data structure for Account details
+     I              BRCA                            ACBRCA
+     I              CNUM                            ACCNUM
+     I              CCY                             ACCCY
+     I              ACOD                            ACACOD
+     I              ACSQ                            ACACSQ
+      *
+     ISDNOST    E DSSDNOSTPD
+      **  Data structure for nostro details
+     I              QQACCD                          QZACCD
+      *
+     ISDCURR    E DSSDCURRPD
+      **  Data structure for currency details
+      *
+     ISDNARR    E DSSDNARRPD
+      **  Data structure for narrative details
+      *
+     ICGPNAR    E DSCGPNARPD
+      * UDC Multi Language Narrative data structure
+      *
+     I##PRM1      DS
+      **  Data Structure for Customer and Branch
+      *
+     I                                        1   6 A#CUST
+     I                                        7   9 A#BRCA
+     ISDMMOD    E DSSDMMODPD
+      **  Data structure for module ICD file
+      *
+     ISCSARD    E DSSCSARDPD
+      **  Data structure for switchable feature
+     I              LCD                             SCLCD
+      *
+     IDSFDY     E DSDSFDY
+      **  Short data structure for access programs
+      *
+     IDSSDY     E DSDSSDY
+      **  Long data structure for access programs
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      **  Local data area
+      *
+      **  Key details
+      *
+     IDACOD       DS                             60
+      * Account codes
+     I                                        1  100ACD1
+     I                                       11  200ACD2
+     I                                       21  300ACD3
+     I                                       31  400ACD4
+     I                                       41  500ACD5
+     I                                       51  600ACD6
+     I                                        1  600ACD
+     IDNARR       DS                             12
+      * Narrative codes
+     I                                        1   2 NCD1
+     I                                        3   4 NCD2
+     I                                        5   6 NCD3
+     I                                        7   8 NCD4
+     I                                        9  10 NCD5
+     I                                       11  12 NCD6
+     I                                        1  12 NCD
+     IDPRF        DS                              6
+      * Posting references
+     I                                        1   10PRF1
+     I                                        2   20PRF2
+     I                                        3   30PRF3
+     I                                        4   40PRF4
+     I                                        5   50PRF5
+     I                                        6   60PRF6
+     I                                        1   6 PRF
+      *
+      * Currency Imbalance
+     I              'Currency Imbalance'  C         ##IMB
+     I              'Interbranch Settle'  C         ##INTB
+     I              'BlockAcCheck'        C         C#BLKA                                    247048
+      *
+      /EJECT
+      *****************************************************************
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P0MODE  1
+     C                     PARM           P0PSUM  1
+      *
+      ** Set up branch code for posting
+     C                     MOVELBRCA      #1BRCA  3
+      *
+      ** If new key get key details
+     C           *INL1     IFEQ *ON
+     C                     EXSR SRNKEY
+     C                     ENDIF
+      *
+      ** If new currency get currency details
+     C           *INL2     IFEQ *ON
+     C                     EXSR SRNCCY
+     C                     ENDIF
+      *
+      ** If new branch get branch details
+     C           *INL3     IFEQ *ON
+     C                     EXSR SRNBRC
+     C                     ENDIF
+      *
+      ** Create postings from account key
+     C                     EXSR SRPOST
+      *
+      * If change of key process summary details
+     CL1                   EXSR SRLKEY
+      *
+      * If change of currency see if balanced
+     CL2                   EXSR SRLCCY
+      *
+      * If change of branch see if balanced
+     CL3                   EXSR SRLBRC
+      *
+      * Termination processingtrailer
+     CLR                   EXSR SRTERM
+      *
+     C/EJECT
+      *****************************************************************
+      *   SRNKEY - Process new key                                    *
+      *****************************************************************
+     C           SRNKEY    BEGSR
+      *
+      **  Access account key details
+     C           AKEY      CHAINACKEYALF             90
+      *
+      * If Account key not found
+     C           *IN90     IFEQ *ON
+     C           *IN90     OREQ *OFF
+     C           AKRECI    ANDNE'D'
+     C                     MOVE '020'     DBASE              * * * * * * *
+     C                     MOVELAKEY      DBKEY              * DBERR 020 *
+     C                     MOVEL'ACKEYL0 'DBFILE             * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   SRNCCY - Process new currency                               *
+      *****************************************************************
+     C           SRNCCY    BEGSR
+      *
+      **  Access currency details
+     C                     MOVELECCY      ##CYCD
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD            B:Return Cd
+     C                     PARM '*KEY'    @OPTN            I:Option
+     C                     PARM           ##CYCD           I:Currency Code
+     C           SDCURR    PARM *BLANK    DSSDY            O:Format
+      *
+      ** Record not found on SDCURRPD.
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '001'     DBASE              * * * * * * *
+     C                     MOVEL##CYCD    DBKEY              * DBERR 001 *
+     C                     MOVEL'SDCURRPD'DBFILE             * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   SRNBRC - Process New Booking Branch                         *
+      *****************************************************************
+     C           SRNBRC    BEGSR
+      *
+      **  Access Branch Details
+     C                     MOVELBRCA      ##BRCA
+     C********             CALL 'AOBRCHR0'                                                    242905
+     C                     CALL 'AOBRCHR1'                                                    242905
+     C                     PARM *BLANKS   @RTCD            B:Return Cd
+     C                     PARM '*KEY'    @OPTN            I:Option
+     C                     PARM           ##BRCA           I:Branch Code
+     C           SDBRCH    PARM *BLANK    DSSDY            O:Format
+      *
+      ** Record not found on SDBRCHPD.
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '002'     DBASE              * * * * * * *
+     C                     MOVEL##BRCA    DBKEY              * DBERR 002 *
+     C                     MOVEL'SDBRCHPD'DBFILE             * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Store booking branch internal customer & account code
+     C                     MOVE A8BICN    #1BICN
+     C                     MOVE A8DTAC    #1DTAC
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   SRPOST - Create Postings                                    *
+      *****************************************************************
+     C           SRPOST    BEGSR
+      *
+      **  Loop round account codes, narratives and posting refs
+     C           1         DO   6         #X      50
+      *
+      *
+      * Set work variables
+     C                     MOVEAACD,#X    ##ACOD
+     C                     MOVEANCD,#X    ##NARC
+     C                     MOVEAPRF,#X    ##PRF
+      *
+      **  Call generate posting only if reference stated
+     C           ##PRF     IFNE 0
+     C                     EXSR SRGENP
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   SRGENP - Generate Posting                                   *
+      *****************************************************************
+     C           SRGENP    BEGSR
+      *
+      **  Set suspense account entry to blanks
+     C                     MOVEL*BLANKS   ##SUSP  1
+      *
+      **  Set up account if posting reference is 1 or 4
+     C                     SELEC
+     C           ##PRF     WHEQ 1
+     C           ##PRF     OREQ 4
+     C                     MOVEL#1BRCA    PSBRCA
+     C                     MOVEL#1BICN    PSCNUM
+     C                     MOVELECCY      PSCCY
+     C                     Z-ADD##ACOD    PSACOD
+     C                     Z-ADD01        PSACSQ
+      *
+      **  Get settlement account details if posting reference is 2
+     C           ##PRF     WHEQ 2
+     C                     EXSR SRACC
+      *
+      **  Set up account if posting reference is 3
+     C           ##PRF     WHEQ 3
+     C                     MOVEL#1BRCA    PSBRCA
+     C                     MOVELCNUM      PSCNUM
+     C                     MOVELECCY      PSCCY
+     C                     Z-ADD##ACOD    PSACOD
+     C                     Z-ADD01        PSACSQ
+      *
+     C                     ENDSL
+      *
+      **  Check account code and account details
+     C                     EXSR SRCHKA
+      *
+      **  Check account not blocked
+      **  Only check for Blocked Accounts if System Value indicates this is required          247048
+     C                     MOVEL*OFF      *IN90
+     C                     MOVEL*BLANKS   ##RETA  1
+      *                                                                                       247048
+      **  Only check for Blocked Accounts if System Value indicates this is required          247048
+     C           WKBLKA    IFEQ 'Y'                                                           247048
+     C           BTRINO    IFNE 'Y'
+     C           A5ACTY    ANDEQ'R'                                                           244851
+     C           #X        IFLT 3
+     C                     TESTB'2'       ##RETB         90
+     C         90          MOVEL'2'       ##RETA
+     C                     ELSE
+     C                     TESTB'3'       ##RETB         90
+     C         90          MOVEL'3'       ##RETA
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF                                                              247048
+      *
+      ** Check if posting before date account opened if retail
+     C           A5ACTY    IFEQ 'R'
+     C           EDAT      ANDLT##DACO
+     C                     MOVEL*ON       *IN90
+     C                     ENDIF
+      *
+      **  If blocked or before date account opened send to suspense
+     C           *IN90     IFEQ *ON
+     C                     MOVEL'Y'       ##SUSP
+     C                     MOVEL#1BRCA    PSBRCA
+     C                     MOVEL#1BICN    PSCNUM
+     C                     MOVELECCY      PSCCY
+     C                     MOVELBKACCD    PSACOD
+     C                     Z-ADD01        PSACSQ
+     C                     EXSR SRCHKA
+     C                     ENDIF
+      *
+      **  Set up fields for APOSTPD
+     C                     Z-ADDEDAT      VALD
+     C                     Z-ADDEAMT      PSTA
+     C           #X        IFLE 3
+     C                     Z-ADD0         DRCR
+     C                     ELSE
+     C                     Z-ADD1         DRCR
+     C                     ENDIF
+      *
+      **  Set up general fields for APOSTPDF
+     C                     EXSR SRSETF
+      *
+      **  Set up posting narrative
+     C                     MOVEL'GB'      ##MGID    P
+     C                     CAT  ##NARC:0  ##MGID
+     C                     CAT  '000':0   ##MGID
+     C                     MOVEL'Y'       WKAONR  1                                           246861
+     C                     EXSR SRNARR
+      *                                                                                       CGL160
+      ** Output Cheque number from GLGPIKPD to GEGPIPD when posting                           CGL160
+      ** is debiting a retail account                                                         CGL160
+     C           DRCR      IFEQ 0                                                             CGL160
+     C           A5ACTY    ANDEQ'R'                                                           CGL160
+     C                     MOVELBTCQNB    CHQN      P                                         CGL160
+     C                     ENDIF                                                              CGL160
+      *
+      **  Create new postings
+     C           P0PSUM    IFNE 'Y'
+     C           ##PRF     ORNE 4
+     C                     WRITEAPOSTPDF
+      *                                                                                       242911
+      **  Accumulate file controls                                                            242911
+     C                     ADD  1         ##NORE  50                                          242911
+     C           PSTA      DIV  1000      ZZAMT                                               242911
+     C                     EXSR GLZADD                                                        242911
+      *                                                                                       242911
+     C                     ELSE
+     C                     WRITE@PSUMPPF
+     C                     ENDIF
+      *
+      **  Accumulate file controls
+     C********             ADD  1         ##NORE  50                                          242911
+     C********   PSTA      DIV  1000      ZZAMT                                               242911
+     C********             EXSR GLZADD                                                        242911
+      *
+      * Add to sub-totals
+     C           DRCR      IFEQ 1
+     C                     ADD  PSTA      ##TCR  180
+     C                     ADD  PSTA      ##TCRC 180
+     C                     ELSE
+     C                     ADD  PSTA      ##TDR  180
+     C                     ADD  PSTA      ##TDRC 180
+     C                     ENDIF
+      *
+      **  If interbranch settlement
+     C           PSBRCA    IFNE #1BRCA
+     C                     EXSR SRINTB
+     C                     ENDIF
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   SRACC  - Get Settlement Account Details                     *
+      *****************************************************************
+     C           SRACC     BEGSR
+      *
+      **  Get Account details depending on settlement method
+     C                     SELEC
+      *
+      **  Send to suspense
+     C           SETP      WHEQ 0
+     C                     MOVEL#1BRCA    PSBRCA
+     C                     MOVEL#1BICN    PSCNUM
+     C                     MOVELECCY      PSCCY
+     C                     MOVELBKACCD    PSACOD
+     C                     Z-ADD01        PSACSQ
+      *
+      **  Nostro Account
+     C           SETP      WHEQ 01
+     C           SETP      OREQ 08
+      *
+      * Set up Parameters for call to AONOSTR0
+     C                     MOVEL*BLANKS   ##CUST
+     C                     MOVELECCY      ##CYCD
+     C                     MOVEL*BLANKS   ##ACCD
+     C                     MOVEL*BLANKS   ##ACSN
+     C                     MOVELOSAC      ##NONB
+     C                     MOVEL*BLANKS   ##BRCD
+      *
+      *  Access Nostro Details file for the file fields
+     C                     CALL 'AONOSTR0'
+     C                     PARM *BLANKS   @RTCD            B:Return Cd
+     C                     PARM '*KEY'    @OPTN            I:Option
+     C                     PARM           ##CUST           I:Customer No.
+     C                     PARM           ##CYCD           I:Currency Code
+     C                     PARM           ##ACCD           I:Account Code
+     C                     PARM           ##ACSN           I:Account Seque
+     C                     PARM           ##NONB  2        I:Nostro Number
+     C                     PARM           ##BRCD           I:Branch Code
+     C                     PARM *BLANK    ##CSSN 10        I:Cust ShortN
+     C                     PARM *BLANK    ##PNOI  1        I:Prime Nost In
+     C           SDNOST    PARM *BLANK    DSFDY            O:Format
+      *
+      ** Record not found on SDNOSTPD.
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '007'     DBASE              * * * * * * *
+     C           ##NONB    CAT  ECCY:0    DBKEY              * DBERR 007 *
+     C                     MOVEL'SDNOSTPD'DBFILE             * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C* Assign work field to file field values.
+     C                     MOVELA7CYCD    PSCCY            Currency Code
+     C                     MOVELA7ACCD    PSACOD           Account Code
+     C                     MOVELA7CUST    PSCNUM           Customer Number
+     C                     MOVELA7ACSN    PSACSQ           Account Sequenc
+     C                     MOVELA7BRCD    PSBRCA           Branch Code
+      *
+      *
+      **  Retail Settlement
+     C           SETP      WHEQ 14
+     C                     MOVELOSAC      ##ACID
+     C                     MOVEL*BLANKS   ##CUST
+     C                     MOVEL*BLANKS   ##CYCD
+     C                     MOVEL*BLANKS   ##ACCD
+     C                     MOVEL*BLANKS   ##ACSN
+     C                     MOVEL*BLANKS   ##BRCD
+      *
+      *  Call to Access Program - AOACCTR0 Check Account Number
+     C                     CALL 'AOACCTR0'
+     C                     PARM           @RTCD            B:Return Cd
+     C                     PARM '*KEY'    @OPTN            B:Option
+     C                     PARM           ##ACID 10        I:Account Identifier
+     C                     PARM           ##CUST  6        I:Customer Number
+     C                     PARM           ##CYCD           I:Currency Code
+     C                     PARM           ##ACCD           I:Account Code Num
+     C                     PARM           ##ACSN  2        I:Account Sequence
+     C                     PARM           ##BRCD  3        I:Branch code
+     C           SDACCT    PARM *BLANK    DSSDY            O:Format
+      *
+      ** If no record is found or closed error
+     C           @RTCD     IFNE *BLANKS
+     C           @RTCD     OREQ *BLANKS
+     C           RECI      ANDNE'D'
+     C           *LOCK     IN   LDA
+     C                     MOVE '008'     DBASE              * * * * * * *
+     C                     MOVEL##ACID    DBKEY              * DBERR 008 *
+     C                     MOVEL'ACCNT   'DBFILE             * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     MOVELACBRCA    PSBRCA
+     C                     MOVELACCNUM    PSCNUM
+     C                     MOVELACCCY     PSCCY
+     C                     MOVELACACOD    PSACOD
+     C                     Z-ADDACACSQ    PSACSQ
+      *
+      **  Internal Settlement
+     C           SETP      WHEQ 05
+     C                     MOVELOSBR      PSBRCA
+     C                     MOVELOSAC      PSCNUM
+     C                     MOVELECCY      PSCCY
+     C           10        SUBSTOSAC:7    ##ACCD
+     C                     MOVEL##ACCD    PSACOD
+     C                     MOVE OSAC      PSACSQ
+      *
+      * Unrecognised settlement
+     C                     OTHER
+     C           *LOCK     IN   LDA
+     C                     MOVE '009'     DBASE              * * * * * * *
+     C                     MOVELSETP      DBKEY              * DBERR 009 *
+     C                     MOVEL'SETP    'DBFILE             * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDSL
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   SRCHKA - Check Account Details                              *
+      *****************************************************************
+     C           SRCHKA    BEGSR
+      *
+      **  Get Account code details
+     C                     MOVELPSACOD    ##ACCD
+     C                     CALL 'AOACODR0'
+     C                     PARM           @RTCD            B:Return Cd
+     C                     PARM '*KEY'    @OPTN   7        I:Option
+     C                     PARM           ##ACCD           I:Account Code
+     C           SDACOD    PARM *BLANK    DSFDY            O:Format
+      *
+      ** Record not found on SDACODPD.
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '004'     DBASE              * * * * * * *
+     C                     MOVEL##ACCD    DBKEY              * DBERR 004 *
+     C                     MOVEL'SDACODPD'DBFILE             * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  If Account is retail check that it is open
+     C           A5ACTY    IFEQ 'R'
+      *
+      * Set up Parameters for call to AOACCTR0
+     C                     MOVEL*BLANK    ##ACID
+     C                     MOVELPSCNUM    ##CUST
+     C                     MOVELPSCCY     ##CYCD
+     C                     MOVELPSACOD    ##ACCD
+     C                     MOVELPSACSQ    ##ACSN
+     C                     MOVELPSBRCA    ##BRCD
+      *
+      *  Call to Access Program - AOACCTR0 Check Account Number
+     C                     CALL 'AOACCTR0'
+     C                     PARM           @RTCD            B:Return Cd
+     C                     PARM '*KEY'    @OPTN            B:Option
+     C                     PARM           ##ACID 10        I:Account Identifier
+     C                     PARM           ##CUST  6        I:Customer Number
+     C                     PARM           ##CYCD           I:Currency Code
+     C                     PARM           ##ACCD           I:Account Code Num
+     C                     PARM           ##ACSN  2        I:Account Sequence
+     C                     PARM           ##BRCD  3        I:Branch code
+     C           SDACCT    PARM *BLANK    DSSDY            O:Format
+      *
+      ** If no record is found or closed error
+     C           @RTCD     IFNE *BLANKS
+     C           @RTCD     OREQ *BLANKS
+     C           RECI      ANDNE'D'
+     C           ECCY      ORNE ACCCY
+     C           *LOCK     IN   LDA
+     C                     MOVE '005'     DBASE              * * * * * * *
+     C                     MOVELPSCNUM    ##KEY     P
+     C                     CAT  PSCCY:0   ##KEY
+     C                     CAT  ##ACCD:0  ##KEY
+     C                     CAT  ##ACSN:0  ##KEY
+     C                     CAT  PSBRCA:0  ##KEY
+     C                     MOVEL##KEY     DBKEY              * DBERR 005 *
+     C                     MOVEL'ACCNT   'DBFILE             * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      * Save retail bits and number and date account opened
+     C                     MOVELRETB      ##RETB
+     C                     Z-ADDACNO      ##ACNO
+     C                     Z-ADDDACO      ##DACO
+     C                     Z-ADDRRNM      ##RRNM
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   SRSETF - Set Account Posting fields                         *
+      *****************************************************************
+     C           SRSETF    BEGSR
+      *
+      **  Set up fields for write to GEGPIPD
+     C                     MOVEL'P'       RECI
+     C                     MOVE PSBRCA    BRCA
+     C                     MOVE PSCNUM    CNUM
+     C                     MOVE PSCCY     CCY
+     C                     MOVE PSACOD    ACOD
+     C                     MOVE PSACSQ    ACSQ
+     C                     Z-ADDBJRDNB    PSTD
+     C           P0MODE    IFEQ 'S'
+     C                     EXSR SRPSTD
+     C                     END
+     C           PSTA      IFLT 0
+     C           DRCR      IFEQ 0
+     C                     Z-SUBPSTA      PSTA
+     C                     Z-ADD1         DRCR
+     C                     ELSE
+     C                     Z-SUBPSTA      PSTA
+     C                     Z-ADD0         DRCR
+     C                     ENDIF
+     C                     ENDIF
+     C                     Z-ADD0         ACNO
+     C                     Z-ADD0         RIND
+     C                     Z-ADD0         RRNM
+     C                     Z-ADD0         TRAT
+     C                     BITOF'01234567'PRIN
+     C                     MOVEL*BLANKS   DLREF
+     C                     MOVEL*BLANKS   IPDN
+     C                     MOVELCNUM      ASOC
+     C                     Z-ADD0         CHQN
+     C                     MOVEL' GE_GPI' SPOS
+     C                     MOVEL'Z'       GETP
+     C                     MOVEL*BLANKS   REJC
+     C                     MOVEL*BLANKS   DPMT
+     C                     MOVELA5ACTY    ATYP
+     C                     Z-ADD235959    PTIM
+     C                     Z-ADD0         VOIN
+     C                     MOVELA5ACSC    ACSC
+     C                     MOVELBTSWCR    SWCR
+     C                     MOVELBTPNAR    PNAR
+     C           SWCR      IFNE *BLANKS
+     C                     MOVE BTBINB    BINBA   3
+     C           BTBTNB    CAT  BINBA     PREF
+     C                     ENDIF
+      *                                                                                       242266
+      **  Output batch and batch item number in first six positions of OTRF                   242266
+     C                     MOVE *BLANKS   WABINB  3                                           242266
+     C                     MOVE BTBINB    WABINB                                              242266
+     C                     MOVE *BLANKS   WA6     6                                           242266
+     C           BTBTNB    CAT  WABINB    WA6                                                 242266
+     C           'GPI'     CAT  WA6       OTRF                                                242266
+      *
+      **  Set up of fields if account is a retail account
+     C           A5ACTY    IFEQ 'R'
+     C                     Z-ADD##ACNO    ACNO
+     C           BTTRAT    IFNE 0
+     C                     Z-ADDBTTRAT    TRAT
+     C                     ELSE
+     C                     Z-ADD92000     TRAT
+     C                     ENDIF
+     C                     Z-ADD1         RIND
+     C                     Z-ADD##RRNM    RRNM
+     C                     BITON'0'       PRIN
+     C                     ENDIF
+      *
+      **  Get control record for feature if new reference read
+     C           BTSARN    IFNE @@SARN
+     C           BTSARN    CHAINGLGPICL0             90
+     C           *IN90     IFEQ *OFF
+     C                     MOVE 'Y'       @@SARF  1
+     C                     ELSE
+     C                     MOVE 'N'       @@SARF
+     C                     ENDIF
+     C                     MOVE BTSARN    @@SARN  6
+     C                     ENDIF
+      *
+      **  Update posting with values specific to interface feature
+     C           @@SARF    IFEQ 'Y'
+      *
+      **  Set 'Source of Posting' field
+     C           GPSPOS    IFNE *BLANKS
+     C                     MOVE GPSPOS    SPOS
+     C                     ENDIF
+      *
+      **  Set 'Generated Entry Type' field
+     C           GPGETP    IFNE *BLANKS
+     C                     MOVE GPGETP    GETP
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   SRNARR - Set up posting narrative                           *
+      *****************************************************************
+     C           SRNARR    BEGSR
+      *
+      ** If narrative code is 99 then do not get narrative
+     C           ##NARC    IFEQ '99'
+     C                     GOTO EXPNAR
+     C                     ENDIF
+      *                                                                                       246861
+      ** Only retrieve narrative code details if appropriate                                  246861
+     C           WKAONR    IFEQ 'Y'                                                           246861
+     C                     MOVEL##NARC    ##NVCD                                            MD037421
+      *
+      **  Get Posting Narrative
+     C                     CALL 'AONARRR0'
+     C                     PARM           @RTCD            B:Return Cd
+     C                     PARM '*KEY'    @OPTN            I:Option
+     C                     PARM           ##NVCD           I:Narrative Code
+     C           SDNARR    PARM *BLANK    DSFDY            O:Format
+      *
+      ** Record is not found on SDNARRPD
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '006'     DBASE              * * * * * * *
+     C                     MOVEL##NARC    DBKEY              * DBERR 006 *
+     C                     MOVEL'SDNARRPD'DBFILE             * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Assign work field to file field values.
+     C                     MOVELALDON     PNAR             Description
+     C                     ENDIF                                                              246861
+      *
+      * If the facility is switched off or unavailable,
+      *  or UDC is not installed, exit this subroutine:
+     C********** EEPNAR    IFNE 'Y'                                                         MD037802
+     C           GLPNAR    IFNE 'Y'                                                         MD037802
+     C                     GOTO EXPNAR
+     C                     ENDIF
+      *
+     C                     CLEARCGPNAR
+     C                     CLEAR##PRM1
+     C*
+     C* Determine the customer's name:
+     C                     MOVELCNUM      ##KCST    P
+     C                     CALL 'AOCUSTR0'
+     C                     PARM           ##RTN   7
+     C                     PARM '*KEY   ' ##OPT   7
+     C                     PARM           ##KCST 10
+     C                     PARM           ##STS   7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C*
+     C           ##RTN     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCUSTPD'DBFILE             *************
+     C                     MOVEL'010'     DBASE              * DBERR 010 *
+     C                     MOVEL##KEY     DBKEY              *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *...................................................................
+     C/EJECT
+      *...................................................................
+      * Determine the value for the posting narrative using AOPNARR0:
+     C                     MOVE MODC      MNMODI
+     C                     MOVE PSBRCA    MNBRCA
+     C                     MOVE PSCNUM    MNCUST
+     C                     MOVE PSCCY     MNCYCD
+     C                     MOVE PSACOD    MNACCD
+     C                     MOVE PSACSQ    MNACSQ
+     C                     MOVE ACNO      MNRACN
+     C                     MOVE SWCR      MNTRNO
+     C                     MOVE ASOC      MNASOC
+     C                     MOVE CHQN      MNCHNB
+     C                     MOVE BOKC      MNBOKC
+     C                     MOVE BBCRNM    MNCRNM
+     C                     MOVELPNAR      MNNARR    P
+      *
+      * Format dates
+     C           VDAT      IFNE 0
+     C                     CALL 'ZDATE2'               90  Midas Conv. Day
+     C                     PARM VDAT      U#DATE  50       Runday Number
+     C                     PARM BJDFIN    U#FMT   1        Date Format fla
+     C                     PARM *ZERO     U#DYNB  60       Date (numeric f
+     C                     PARM *BLANK    U#DMY   7        Midas Run Date
+     C                     MOVELU#DMY     MNSDTE
+     C                     ENDIF
+      *
+      * Format extra dates
+     C                     MOVEL#1BRCA    A#BRCA
+     C                     MOVELASOC      A#CUST
+      *
+     C                     CALL 'AOPNARR0'
+     C                     PARM           ##RTN
+     C                     PARM           ##MGID  7
+     C                     PARM           ##PRM1
+     C           CGPNAR    PARM CGPNAR    ##PNAR
+     C                     PARM           ##NARR 50
+     C*
+     C           ##RTN     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CGPNARPD'DBFILE             *************
+     C                     MOVEL'011'     DBASE              * DBERR 011 *
+     C                     MOVELMNCUST    DBKEY              *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     MOVEL##NARR    PNAR      P
+     C*
+     C           EXPNAR    TAG                             < EXPNAR
+      *
+     C                     SELEC
+     C           ##RETA    WHEQ '2'
+     C           ##SUSP    ANDEQ'Y'
+     C********             MOVE 'Cr Blck' PNAR                                                244851
+     C                     MOVE 'Dr Blck' PNAR                                                244851
+     C           ##RETA    WHEQ '3'
+     C           ##SUSP    ANDEQ'Y'
+     C********             MOVE 'Dr Blck' PNAR                                                244851
+     C                     MOVE 'Cr Blck' PNAR                                                244851
+     C                     ENDSL
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *   SRINTB - Interbranch Settlement                             *
+      *****************************************************************
+     C           SRINTB    BEGSR
+      *
+      **  Get settlement branch information
+     C                     MOVELPSBRCA    ##BRCA
+     C                     MOVELPSBRCA    S#BRCA
+     C********             CALL 'AOBRCHR0'                                                    242905
+     C                     CALL 'AOBRCHR1'                                                    242905
+     C                     PARM *BLANKS   @RTCD            B:Return Cd
+     C                     PARM '*KEY'    @OPTN            I:Option
+     C                     PARM           ##BRCA           I:Branch Code
+     C           SDBRCH    PARM *BLANK    DSSDY            O:Format
+      *
+      ** Record not found on SDBRCHPD
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '018'     DBASE              * * * * * * *
+     C                     MOVEL##BRCA    DBKEY              * DBERR 002 *
+     C                     MOVEL'SDBRCHPD'DBFILE             * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Construct booking branch posting
+     C                     MOVEL#1BRCA    PSBRCA
+     C                     MOVELA8BICN    PSCNUM
+     C                     MOVELECCY      PSCCY
+     C           DRCR      IFEQ 1
+     C                     MOVEL#1DTAC    PSACOD
+     C                     ELSE
+     C                     MOVEL#1DTAC    PSACOD
+     C                     ENDIF
+     C                     Z-ADD01        PSACSQ
+      *
+      **  Check account code and account details
+     C                     EXSR SRCHKA
+      *
+      **  Set up fields for APOSTPD
+     C                     Z-ADDEDAT      VALD
+     C                     Z-ADDEAMT      PSTA
+     C           #X        IFLE 3
+     C                     Z-ADD0         DRCR
+     C                     ELSE
+     C                     Z-ADD1         DRCR
+     C                     ENDIF
+      *
+      **  Set up general fields for APOSTPDF
+     C                     EXSR SRSETF
+      *
+      **  Set up posting narrative
+     C                     MOVEL'GB00420' ##MGID
+     C                     MOVEL*BLANKS   ##RETA
+     C                     MOVEL##INTB    PNAR      P
+     C                     MOVEL'N'       WKAONR                                              246861
+     C                     EXSR SRNARR
+      *
+      **  Create new postings
+     C           P0PSUM    IFNE 'Y'
+     C                     WRITEAPOSTPDF
+      *                                                                                       242911
+      **  Accumulate file controls                                                            242911
+     C                     ADD  1         ##NORE  50                                          242911
+     C           PSTA      DIV  1000      ZZAMT                                               242911
+     C                     EXSR GLZADD                                                        242911
+      *                                                                                       242911
+     C                     ELSE
+     C                     WRITE@PSUMPPF
+     C                     ENDIF
+      *
+      **  Accumulate file controls
+     C********             ADD  1         ##NORE  50                                          242911
+     C********   PSTA      DIV  1000      ZZAMT                                               242911
+     C********             EXSR GLZADD                                                        242911
+      *
+      **  Construct settlement branch entry
+     C                     MOVELS#BRCA    PSBRCA
+     C                     MOVEL#1BICN    PSCNUM
+     C                     MOVELECCY      PSCCY
+     C           DRCR      IFEQ 1
+     C                     MOVEL#1DTAC    PSACOD
+     C                     ELSE
+     C                     MOVEL#1DTAC    PSACOD
+     C                     ENDIF
+     C                     Z-ADD01        PSACSQ
+      *
+      **  Check account code and account details
+     C                     EXSR SRCHKA
+      *
+      **  Set up fields for APOSTPD
+     C                     Z-ADDEDAT      VALD
+     C                     Z-ADDEAMT      PSTA
+     C           #X        IFLE 3
+     C                     Z-ADD0         DRCR
+     C                     ELSE
+     C                     Z-ADD1         DRCR
+     C                     ENDIF
+      *
+      **  Set up general fields for APOSTPDF
+     C                     EXSR SRSETF
+      *
+      **  Set up posting narrative
+     C                     MOVEL'GB00420' ##MGID
+     C                     MOVEL##INTB    PNAR      P
+     C                     MOVEL*BLANKS   ##RETA
+     C                     MOVEL'N'       WKAONR                                              246861
+     C                     EXSR SRNARR
+      *
+      **  Reverse DR/CR inidcator
+     C           DRCR      IFEQ 0
+     C                     Z-ADD1         DRCR
+     C                     ELSE
+     C                     Z-ADD0         DRCR
+     C                     ENDIF
+      *
+      **  Create new postings
+     C           P0PSUM    IFNE 'Y'
+     C                     WRITEAPOSTPDF
+      *                                                                                       242911
+      **  Accumulate file controls                                                            242911
+     C                     ADD  1         ##NORE  50                                          242911
+     C           PSTA      DIV  1000      ZZAMT                                               242911
+     C                     EXSR GLZADD                                                        242911
+      *                                                                                       242911
+     C                     ELSE
+     C                     WRITE@PSUMPPF
+     C                     ENDIF
+      *
+      **  Accumulate file controls                                                            242911
+     C********             ADD  1         ##NORE  50                                          242911
+     C********   PSTA      DIV  1000      ZZAMT                                               242911
+     C********             EXSR GLZADD
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   SRLKEY - Change of key process summary details              *
+      *****************************************************************
+     C           SRLKEY    BEGSR
+      *
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *   SRLCCY - Process change of Currency                         *
+      *****************************************************************
+     C           SRLCCY    BEGSR
+      *
+      **  Check if out of balance
+     C           ##TCRC    IFNE ##TDRC
+      *
+      **  Construct suspense account for booking branch
+     C                     MOVEL#1BRCA    PSBRCA
+     C                     MOVEL#1BICN    PSCNUM
+     C                     MOVELECCY      PSCCY
+     C                     MOVELBKACCD    PSACOD
+     C                     Z-ADD01        PSACSQ
+      *
+      **  Check account code and account details
+     C                     EXSR SRCHKA
+      *
+      **  Accumulate posting amount
+     C           ##TCRC    SUB  ##TDRC    PSTA
+      *
+      **  Set up fields for APOSTPD
+     C                     Z-ADDBJRDNB    VALD
+     C                     Z-ADD0         DRCR
+     C                     MOVEL'GL'      MODC
+      *
+      **  Set up general fields for APOSTPDF
+     C                     EXSR SRSETF
+      *
+      **  Set up posting narrative
+     C                     MOVEL'GB00010' ##MGID
+     C                     MOVEL##IMB     PNAR      P
+     C                     MOVEL*BLANKS   ##RETA
+     C                     MOVEL'N'       WKAONR                                              246861
+     C                     EXSR SRNARR
+      *
+      **  Create new postings
+     C                     WRITEAPOSTPDF
+      *
+      **  Accumulate file controls
+     C                     ADD  1         ##NORE  50
+     C           PSTA      DIV  1000      ZZAMT
+     C                     EXSR GLZADD
+      *
+     C                     ENDIF
+      *
+      **  Process change of currency
+     C                     Z-ADD0         ##TCRC
+     C                     Z-ADD0         ##TDRC
+      *
+     C                     ENDSR
+     C/EJECT
+      ********************************************************************
+      **   Find correct date for posting if forward valued
+      ********************************************************************
+     C           SRPSTD    BEGSR
+      *
+      *  If value date is less than next working day use run date
+     C           EDAT      IFLE BJDNWD
+     C                     Z-ADDBJDNWD    PSTD
+     C                     GOTO EXPSTD
+     C                     END
+      *
+      *  If value date is greater than next working day
+      *  use program SZDATE3 to determine correct date
+     C                     Z-ADDEDAT      W#NDAT  50
+     C                     Z-ADDEDAT      P#SDAT  50
+      *
+     C           W#NDAT    DOUEQW#SDAT
+     C                     Z-ADDP#SDAT    W#SDAT  50
+     C           P#SDAT    SUB  1         P#SDAT
+     C                     CALL 'SZDATE3'
+     C                     PARM P#SDAT    #DAYNO  50       I: Cvt. VDa te
+     C                     PARM BJLCCY    #CCY    3        I: Currency
+     C                     PARM *BLANKS   #LOC    3        I: Location
+     C                     PARM 1         #NRDYS  20       I: Nbr Days
+     C           W#NDAT    PARM           #DYNBR  50       O: Nbr Days
+     C                     END
+      *
+     C                     Z-ADDW#SDAT    PSTD
+      *
+     C           EXPSTD    ENDSR
+     C/EJECT
+      *****************************************************************
+      *   SRLBRC - Process Change of Branch                           *
+      *****************************************************************
+     C           SRLBRC    BEGSR
+      *
+      **  Process Change of Branch
+     C                     Z-ADD0         ##TCR
+     C                     Z-ADD0         ##TDR
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   SRTERM - Termination Processing                             *
+      *****************************************************************
+     C           SRTERM    BEGSR
+      *
+      **  Write file controls to GEGPIZZ
+     C                     ADD  1         ##NORE  50
+     C                     MOVE 'T'       RECI
+     C                     Z-ADD##NORE    NORE1
+     C                     Z-ADDZZTOTI    HRWN
+     C                     Z-ADDZZTOTD    HRDC
+     C                     WRITEAPOSTZZF
+      *
+      *
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+     C* SUBROUTINE TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL (ZZTOTI,ZZTOTD)
+     C*   IND '99' IS SET BY AN OVERFLOW ERROR
+     C*
+     CSR         GLZADD    BEGSR                           *** GLZADD ****
+     C*
+     CSR                   Z-ADDZZAMT     ZZAMT  153     91-DEFINE ZZAMT
+     CSR 91                GOTO ZZAEND                     AMT = 0.BYPASS
+     C*
+     C* SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS
+     CSR                   Z-ADDZZAMT     ZZAMTI 150       INTEGER FIELD
+     CSR                   MOVE ZZAMT     ZZAMTD  30       DECIMAL FIELD
+     C* BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW
+     C*
+     CSR                   EXSR GLZSUM
+     CSR         ZZAEND    ENDSR                           ** ZZAEND TAG *
+     C*
+     C********************************************************************
+     C* SUBROUTINE TO CARRY OUT THE ADDITION FOR SUBROUTINES -
+     C*                        GLZADD, GLZSUB, GLZCMP.
+     C*          PARAMETERS PASSED -
+     C*                     I/P ZZAMTI ZZAMTD
+     C*                     O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.
+     C*
+     CSR         GLZSUM    BEGSR                           *** GLZSUM ****
+     C*
+     CSR                   Z-ADDZZTOTI    ZZTOTI 150       DEFINE ZZTOTI
+     CSR                   Z-ADDZZTOTD    ZZTOTD  30       DEFINE ZZTOTD
+     CSR                   SETOF                     919293
+     CSR                   SETOF                     949599
+     C*
+     C*    DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG
+     CSR         ZZAMTI    COMP 0                      9293
+     CSR 93      ZZAMTD    COMP 0                      9293
+     CSR 93                GOTO ZZSEND                     ZERO BYPASS
+     C*
+     C*    DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.
+     CSR         ZZTOTI    COMP 0                      9193
+     CSR 93      ZZTOTD    COMP 0                      9193
+     C*
+     C*    IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.
+     CSR 93                Z-ADDZZAMTI    ZZTOTI
+     CSR 93                Z-ADDZZAMTD    ZZTOTD
+     CSR 93                GOTO ZZSEND                     ZERO BYPASS
+     C*    IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.
+     CSR 91N92
+     CORN91 92             GOTO ZZOFPS
+     C*
+     CSR         ZZAMTD    ADD  ZZTOTD    ZZWK2   40
+     CSR         ZZWK2     COMP 999                  93    '93' = CARRY
+     CSRN93      ZZWK2     COMP -999                   93    INTO INTEGER.
+     C*
+     CSR 93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VE
+     CSR    93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VE
+     CSR 93      ZZTOTI    ADD  ZZWK3     ZZWK3
+     CSRN93      ZZTOTI    ADD  ZZAMTI    ZZWK3
+     C*
+     C* IF THE MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED
+     CSRN92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS.
+     CSR 92      ZZWK3     COMP ZZTOTI               99     NEGATIVE
+     CSRN99                Z-ADDZZWK2     ZZTOTD
+     CSRN99                Z-ADDZZWK3     ZZTOTI
+     C*
+     C* IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT INTACT.
+     CSR 99                Z-ADD0         ZZAMT  153
+     CSR                   GOTO ZZSEND
+     C*
+     C* THE 'SIGNS' ARE DIFFERENT
+     CSR         ZZOFPS    TAG                             ** ZZOFPS TAG**
+     C* IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT
+     C*
+     CSR 92                Z-SUBZZAMTI    ZZAMTI 150
+     CSR 92                Z-SUBZZAMTD    ZZAMTD  30
+     C*
+     C* IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.
+     C*
+     CSR 91                Z-SUBZZTOTI    ZZTOTI
+     CSR 91                Z-SUBZZTOTD    ZZTOTD
+     C* BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.
+     C*
+     CSR         ZZTOTI    COMP ZZAMTI               93  95
+     CSR 95      ZZTOTD    COMP ZZAMTD               93  95
+     C*
+     C* IF ZZTOT EQ. ZZAMT RETURN ZERO.
+     CSR 95                Z-ADD0         ZZTOTI
+     CSR 95                Z-ADD0         ZZTOTD
+     CSR 95                GOTO ZZSEND
+     C*
+     C* IF ZZTOT GT. ZZAMT.
+     CSR 93      ZZAMTD    COMP ZZTOTD               94
+     CSR 93 94   ZZTOTI    SUB  1         ZZTOTI
+     CSR 93 94   ZZTOTD    ADD  1000      ZZWK2
+     CSR 93      ZZTOTI    SUB  ZZAMTI    ZZTOTI
+     CSR 93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD
+     CSR 93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD
+     C*
+     C*
+     C* IF ZZAMT GT. ZZTOT.
+     CSRN93      ZZTOTD    COMP ZZAMTD               94
+     CSRN93 94   ZZAMTI    SUB  1         ZZWK3  150
+     CSRN93 94   ZZAMTD    ADD  1000      ZZWK2
+     CSRN93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI
+     CSRN93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI
+     CSRN93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD
+     CSRN93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD
+     C*
+     C* REVERSE SIGN OF ZZTOT IF LARGER I/P FIELDS WERE NEGATIVE
+     CSR                   SETOF                     94
+     CSR 93 91
+     CORN93 92             SETON                     94
+     CSR 94                Z-SUBZZTOTI    ZZTOTI
+     CSR 94                Z-SUBZZTOTD    ZZTOTD
+     C**
+     C**   RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.
+     CSR 92                Z-SUBZZAMTI    ZZAMTI
+     CSR 92                Z-SUBZZAMTD    ZZAMTD
+     CSR         ZZSEND    TAG                             ** ZZSEND TAG *
+     C**
+     C**   IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.
+     CSR                   SETOF                     96
+     CSR         ZZTOTD    COMP 0                        91
+     CSR 91      ZZTOTI    COMP 0                      96
+     CSR 96                MOVE '.000-'   ZZNEGD  5
+     CSR                   ENDSR                             ** ENDSR **
+      *****************************************************************
+      *   *INZSR - Inital process                                     *
+      *****************************************************************
+     C           *INZSR    BEGSR
+      *
+      **  Copyright statement
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Set up LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'GL1723'  DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+      *
+      **  Access SDBANKPD for bank details
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Record not found on  SDBANKPD
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '012'     DBASE              * * * * * * *
+     C                     MOVEL'FIRST'   DBKEY              * DBERR 012 *
+     C                     MOVEL'SDBANKPD'DBFILE             * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Access SDGELRPD for General Ledger Details
+     C                     CALL 'AOGELRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDGELR    PARM SDGELR    DSFDY
+      *
+      ** Record not found on SDGELRPD
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '014'     DBASE              * * * * * * *
+     C                     MOVEL'FIRST'   DBKEY              * DBERR 014 *
+     C                     MOVEL'SDGELRPD'DBFILE             * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Access SDTRADPD for Trading Details
+     C                     CALL 'AOTRADR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDTRAD    PARM SDTRAD    DSFDY
+      *
+      ** Record not found on SDTRADPD
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '015'     DBASE              * * * * * * *
+     C                     MOVEL'FIRST'   DBKEY              * DBERR 015 *
+     C                     MOVEL'SDGELRPD'DBFILE             * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Get Computer suspense account code
+     C                     MOVELBKACCD    ##ACCD
+     C                     CALL 'AOACODR0'
+     C                     PARM           @RTCD            B:Return Cd
+     C                     PARM '*KEY'    @OPTN   7        I:Option
+     C                     PARM           ##ACCD           I:Account Code
+     C           SDACOD    PARM *BLANK    DSFDY            O:Format
+      *
+      ** Record not found on SDACODPD.
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '016'     DBASE              * * * * * * *
+     C                     MOVEL##ACCD    DBKEY              * DBERR 016 *
+     C                     MOVEL'SDACODPD'DBFILE             * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Access SDMMODPD for modules available
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDMMOD    PARM SDMMOD    DSFDY
+      *
+      ** Record not found on SDMMODPD.
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '017'     DBASE              * * * * * * *
+     C                     MOVEL'FIRST'   DBKEY              * DBERR 017 *
+     C                     MOVEL'SDMMODPD'DBFILE             * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Access SCSARDPD for multilanguage switchable feature
+     C                     CALL 'AOSARDR0'
+     C                     PARM           @RTCD
+     C                     PARM '*VERIFY' @OPTN
+     C**********           PARM 'EEPNAR'  @SARD   6                                         MD037802
+     C                     PARM 'GLPNAR'  @SARD   6                                         MD037802
+     C           SCSARD    PARM *BLANKS   DSFDY
+     C           @RTCD     IFEQ *BLANKS
+     C**********           MOVEL'Y'       EEPNAR  1                                         MD037802
+     C                     MOVEL'Y'       GLPNAR  1                                         MD037802
+     C                     ENDIF
+      *                                                                                       247048
+      ** Retrieve System Value to determine whether to check for Blocked Accounts             247048
+     C                     CALL 'AOSVALR0'                                                    247048
+     C                     PARM *BLANKS   PRTCDE  7                                           247048
+     C                     PARM C#BLKA    PSV01  20                                           247048
+     C                     PARM           PCS01 200                                           247048
+     C                     PARM           PSV02  20                                           247048
+     C                     PARM           PCS02 200                                           247048
+     C                     PARM           PSV03  20                                           247048
+     C                     PARM           PCS03 200                                           247048
+     C                     PARM           PSV04  20                                           247048
+     C                     PARM           PCS04 200                                           247048
+     C                     PARM           PSV05  20                                           247048
+     C                     PARM           PCS05 200                                           247048
+     C                     PARM           PSV06  20                                           247048
+     C                     PARM           PCS06 200                                           247048
+     C                     PARM           PSV07  20                                           247048
+     C                     PARM           PCS07 200                                           247048
+     C                     PARM           PSV08  20                                           247048
+     C                     PARM           PCS08 200                                           247048
+     C                     PARM           PSV09  20                                           247048
+     C                     PARM           PCS09 200                                           247048
+     C                     PARM           PSV10  20                                           247048
+     C                     PARM           PCS10 200                                           247048
+      *                                                                                       247048
+     C           PRTCDE    IFEQ *BLANKS                                                       247048
+     C                     MOVELPCS01     WKBLKA  1                                           247048
+     C                     ENDIF                                                              247048
+      *
+      **  Initialise file control fields
+     C                     Z-ADD0         ##NORE  50
+      *
+      **  Write header record to GEGPIHH
+     C                     ADD  1         ##NORE  50
+     C                     MOVE 'H'       RECI
+     C                     Z-ADD99999     FLSZ
+     C                     WRITEAPOSTHHF
+      *
+      **  Define work fields
+     C           *LIKE     DEFN A8BICN    #1BICN
+     C           *LIKE     DEFN A8DTAC    #1DTAC
+     C           *LIKE     DEFN BRCA      PSBRCA
+     C           *LIKE     DEFN CNUM      PSCNUM
+     C           *LIKE     DEFN CCY       PSCCY
+     C           *LIKE     DEFN ACOD      PSACOD
+     C           *LIKE     DEFN ACSQ      PSACSQ
+     C           *LIKE     DEFN ACD1      ##ACOD
+     C           *LIKE     DEFN NCD1      ##NARC
+     C           *LIKE     DEFN PRF1      ##PRF
+     C           *LIKE     DEFN BRCA      ##BRCA
+     C           *LIKE     DEFN A6CYCD    ##CYCD
+     C           *LIKE     DEFN DBKEY     ##KEY
+     C           *LIKE     DEFN RETB      ##RETB
+     C           *LIKE     DEFN ACNO      ##ACNO
+     C           *LIKE     DEFN DACO      ##DACO
+     C           *LIKE     DEFN RRNM      ##RRNM
+     C           *LIKE     DEFN ##NARC    ##NVCD
+     C           *LIKE     DEFN PNAR      #UPNAR           Description
+     C           *LIKE     DEFN CGPNAR    ##PNAR
+     C           *LIKE     DEFN PSBRCA    S#BRCA
+     C           *LIKE     DEFN BKACCD    ##ACCD
+      *
+      ** Set initialisation complete
+     C                     MOVEL'Y'       #FIRST  1
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   *PSSR - error handling                                      *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys Banking Systems Ltd. 2006

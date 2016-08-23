@@ -1,0 +1,181 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas FRS Coordinates .CSV and .GZ file creation')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - FRS Regulatory Reporting                            */
+/*                                                                   */
+/*       RNC000050 - Coordinates .CSV and .GZ file creation          */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*                                                                   */
+/*       Last Amend No. CPK030             Date 13Feb14              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CPK025             Date 06Jun06              */
+/*                      BUG9791            Date 18Jan06              */
+/*                      CRN001  *CREATE    Date 03Oct05              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CPK030 - Remove RNFTPTPD from DTALIB.                       */
+/*       CPK025 - MidasPlus 1.3 packaging.  Rename file FTPTEST to   */
+/*                RNFTPTPD.                                          */
+/*       BUG9791- Missing U7 U8 error handling.                      */
+/*                &RTNCOD should also be used for error after calling*/
+/*                AOSVALR0 because *PVAL1 can be '*NRF'.             */
+/*       CRN001 - FRS Regulatory Reporting                           */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&TESTMODE)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2005')
+             DCL        VAR(&TESTMODE) TYPE(*CHAR) LEN(1)
+/**********  DCL        VAR(&RTNCOD) TYPE(*CHAR) LEN(7) VALUE('*DBERR')                  /*BUG9791*/
+             DCL        VAR(&RTNCOD) TYPE(*CHAR) LEN(7)                                  /*BUG9791*/
+             DCL        VAR(&T__XTFIL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&XTFIL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&XTMBR) TYPE(*CHAR) LEN(10) VALUE(*ALL)
+             DCL        VAR(&OFFSET) TYPE(*UINT) LEN(4)
+             DCL        VAR(&QUOTE) TYPE(*CHAR) LEN(1) VALUE('''')                        /*CPK030*/
+             DCL        VAR(&RUNSQL) TYPE(*CHAR) LEN(5000)                                /*CPK030*/
+ 
+/* Parameters for AOSVALR0 */
+ 
+             DCL        VAR(&PVALK1) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&PVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVALK2) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&PVAL2) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVALK3) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&PVAL3) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVALK4) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&PVAL4) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVALK5) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&PVAL5) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVALK6) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&PVAL6) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVALK7) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&PVAL7) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVALK8) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&PVAL8) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVALK9) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&PVAL9) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVALK10) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&PVAL10) TYPE(*CHAR) LEN(200)
+ 
+/*/COPY RNCPYSRC,RNXTFILNAM                                          */
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('RNC000050 -') TOMSGQ(MRUNQ)
+ 
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')                                           /*BUG9791*/
+             CHGJOB     SWS(XXXXXX00)                                                    /*BUG9791*/
+ 
+/* Initialise - get system values */
+ 
+             CHGVAR     VAR(&PVALK1) VALUE('CompressFRSData')
+ 
+             CALL       PGM(AOSVALR0) PARM(&RTNCOD &PVALK1 &PVAL1 +
+                          &PVALK2 &PVAL2 &PVALK3 &PVAL3 &PVALK4 +
+                          &PVAL4 &PVALK5 &PVAL5 &PVALK6 &PVAL6 +
+                          &PVALK7 &PVAL7 &PVALK8 &PVAL8 &PVALK9 +
+                          &PVAL9 &PVALK10 &PVAL10)
+ 
+/* Check &PVAL1 */
+ 
+/**********  IF         COND(&PVAL1 *EQ ' ') THEN(DO)                                    /*BUG9791*/
+             IF         COND((&PVAL1 *EQ ' ') *OR (&RTNCOD *NE +
+                          '       ')) THEN(DO)                                           /*BUG9791*/
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Call to +
+                          AOSVALR0 not successfull - value for +
+                          CompressFRSData is missing') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Clear or create IFS export directory as specified in SDSVALPD */
+             CALL       PGM(RNCLRDIR)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))                                                 /*BUG9791*/
+ 
+/* Convert extracted files to .CSV files */
+ 
+             IF         COND(&TESTMODE = 'Y') THEN(DO)
+/**********  CHGVAR     VAR(&XTFIL) VALUE('FTPTEST')                                   */ /*CPK025*/
+                DLTF       FILE(QTEMP/RNFTPTPD)
+                MONMSG     MSGID(CPF0000)
+                CHGVAR     VAR(&RUNSQL) VALUE('create table +
+                             QTEMP/RNFTPTPD (XXXXXX) as (select cast(' +
+                             *TCAT &QUOTE *TCAT +
+                             'abcdefghijklmnopqrstuvwxyz 01234567890' +
+                             *TCAT &QUOTE *BCAT 'as char(50)) from +
+                             SYSIBM/SYSDUMMY1) with data')                                /*CPK030*/
+                RUNSQL     SQL(&RUNSQL) COMMIT(*NONE)                                     /*CPK030*/
+                CHGVAR     VAR(&XTFIL) VALUE('RNFTPTPD')                                  /*CPK025*/
+                CALL       PGM(RNCVTCSV) PARM(&XTFIL &XTMBR)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                             CMDLBL(ABNOR))                                              /*BUG9791*/
+             ENDDO
+             ELSE       CMD(DO)
+ 
+ /* Loop thru extract files in RNXTFILNAM */
+ 
+             CHGVAR     VAR(&OFFSET) VALUE(1)
+ NXT_XTFIL:
+             CHGVAR     VAR(&XTFIL) VALUE(%SST(&XTFILNAM &OFFSET 10))
+             MONMSG     MSGID(CPF0804) EXEC(GOTO CMDLBL(END_XTFIL))
+ 
+             IF         COND(&XTFIL = ' ') THEN(GOTO CMDLBL(BYPAS_XT))
+ 
+             IF         COND(%SST(&XTFIL 1 3) = 'RN_')               +
+                 THEN(CHGVAR VAR(&T__XTFIL)                          +
+                             VALUE('T__' *CAT %SST(&XTFIL 4 7)))
+             ELSE       CMD(CHGVAR VAR(&T__XTFIL) VALUE(&XTFIL))
+ 
+             CHKOBJ     OBJ(&XTFIL) OBJTYPE(*FILE) MBR(*FIRST)
+             MONMSG     MSGID(CPF9815) EXEC(GOTO CMDLBL(BYPAS_XT))
+ 
+             CALL       PGM(RNCVTCSV) PARM(&T__XTFIL)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))                                                 /*BUG9791*/
+ 
+ BYPAS_XT:
+             CHGVAR     VAR(&OFFSET) VALUE(&OFFSET + 10)
+             GOTO       CMDLBL(NXT_XTFIL)
+ 
+ END_XTFIL:
+             ENDDO
+ 
+/* Convert .CSV files to .GZ files by calling GZIP, if */
+/* data compression is on                              */
+ 
+/**********  IF         COND(&PVAL1 = 'Y') THEN(CALL PGM(RNGNUZIP))                      /*BUG9791*/
+             IF         COND(&PVAL1 = 'Y') THEN(DO)                                      /*BUG9791*/
+                        CALL       PGM(RNGNUZIP)                                         /*BUG9791*/
+                        IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))                                                 /*BUG9791*/
+             ENDDO                                                                       /*BUG9791*/
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)                                                    /*BUG9791*/
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          RNC000050 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+             RCLACTGRP  ACTGRP(*ELIGIBLE)
+             RCLRSC
+             MONMSG     MSGID(CPF0000)
+             ENDPGM

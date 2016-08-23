@@ -1,0 +1,371 @@
+/*********************************************************************/
+/*XBI    OVRDBF FILE(BEGINJRNF) TOFILE(UPOBJDTPD)                    */
+/*STD    CLPBASEBND                                                  */
+/*EXI    DBGVIEW(*LIST)                                              */
+/*EXI    TEXT('Midas SC Journal Midas system from QCMD')             */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCBEGINJRN - Journal Midas system from a command screen.    */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. AR886414           Date 05Jan12              */
+/*       Prev Amend No. CBF012             Date 04Jul11              */
+/*                      BUG28037           Date 17Aug10              */
+/*                      BUG27911           Date 20Jul10              */
+/*                      BUG27134 *REWRITE  Date 01Oct08              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CSC018             Date 31May03              */
+/* Midas Release 4.01 -----------------------------------------------*/
+/*                      CSC011             Date 07Jul02              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/*                      CPK014             Date 07Nov01              */
+/* Midas DBA 3.03 ---------------------------------------------------*/
+/*                      CCB009             DATE 01Jun00              */
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      097277             DATE 14DEC95              */
+/*                      S01408             DATE 15MAY95              */
+/*                      082565             DATE 01FEB95              */
+/*                      053514             DATE 25JAN94              */
+/*                      S01345             DATE 15JAN92              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR886414 - Creation of CBS, CBA and BF libraries in SMSETUPD*/
+/*                  not catered                                      */
+/*       CBF012 - BF Infrastructure: Upgradability                   */
+/*       BUG28037 - Journal specific library.                        */
+/*       BUG27911 - Remove hard-coded library references.            */
+/*       BUG27134- Rewrite of SCBEGINJRN because the old version     */
+/*                 a) was not efficient                              */
+/*                 b) contained errors                               */
+/*               - It now runs in 2 modes based on the second        */
+/*                 parameter based on whether the journaling is to be*/
+/*                 redone completely or merely 'topped up'.          */
+/*               - The program has been changed to ILE.              */
+/*       CSC018 - Journaling options for high availability.          */
+/*       CSC011 - 24x7 Availability:                                 */
+/*                - Journal the DZLIB.                               */
+/*       CPK014 - Release 4 packaging.  CCB009 mandatory.            */
+/*       CCB009 - Journal files throughout close of business         */
+/*       097277 - Allow this program to be run in batch by           */
+/*                removing the call to the program for journalling   */
+/*                failure processing as it is a duplicate.           */
+/*       S01408 - Addition of core hook SCBEGINJM1                   */
+/*       082565 - DTAARA/SCJRNCOUNT should be reset to zero at       */
+/*                the beginning of this program.                     */
+/*              - Add call to the journal failure screen.            */
+/*       053514 - DTALIB should be below DMLIB in the library list   */
+/*                as per standard Midas library list.                */
+/*                Library list should be changed to reflect          */
+/*                Release 10 library list.  xxXLIB should be first.  */
+/*       S01345 - Midas journalling system re-write.                 */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&SYSTEMID &ACTION)
+ 
+             DCL        VAR(&SYSTEMID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&GSYSTEMID) TYPE(*CHAR) LEN(2)                                /*CBF012*/
+             DCL        VAR(&LIBFIX) TYPE(*CHAR) LEN(4)                                   /*CBF012*/
+             DCL        VAR(&ACTION) TYPE(*CHAR) LEN(6)
+ 
+/**********  DCL        VAR(&JLIB) TYPE(*CHAR) LEN(10)                               */ /*BUG27911*/
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DVLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DZLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&AOFMT) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&RSVALRTNC) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&CSC018) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&JRNDA) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&JRNDQ) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE(N)
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&BFLIB) TYPE(*CHAR) LEN(10)                                   /*CBF012*/
+/**********  DCL        VAR(&CBSLIB) TYPE(*CHAR) LEN(10)                 */  /*CBF012*/ /*AR886414*/
+/**********  DCL        VAR(&CBALIB) TYPE(*CHAR) LEN(10)                 */  /*CBF012*/ /*AR886414*/
+ 
+             DCLF       FILE(BEGINJRNF)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2008')
+ 
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO CMDLBL(ERROR))
+ 
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
+ 
+/** Get the global prefix system values  */                                               /*CBF012*/
+             CALL       PGM(AOSVALR0) PARM(&RSVALRTNC +
+                          'BrgMidasGlobalPrefix' &SVAL1 +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ')                                /*CBF012*/
+                                                                                          /*CBF012*/
+/** If there is an error finding any system value then end abnormally  */                 /*CBF012*/
+                IF         COND(&RSVALRTNC *NE '       ') THEN(DO)                        /*CBF012*/
+                   GOTO       CMDLBL(ERROR)                                               /*CBF012*/
+                ENDDO                                                                     /*CBF012*/
+                                                                                          /*CBF012*/
+             CHGVAR     VAR(&GSYSTEMID) VALUE(%SST(&SVAL1 1 2))                           /*CBF012*/
+             CHGVAR     VAR(&LIBFIX) VALUE(&SYSTEMID *CAT &GSYSTEMID)                     /*CBF012*/
+                                                                                          /*CBF012*/
+             IF         COND(&ACTION *NE '*END') THEN(DO)
+/* Check if switchable feature CSC018 is on. */
+                CALL       PGM(AOSARDR0) PARM(&CSC018 '*VERIFY' +
+                             'CSC018' &AOFMT)
+ 
+/* If CSC018 is on then check if data areas and data queues are to be */
+/*  journaled.                                                        */
+                IF         COND(&CSC018 *EQ '       ') THEN(DO)
+                   CALL       PGM(AOSVALR0) PARM(&RSVALRTNC +
+                                'HighAvlJrnDtaaras' &SVAL1 +
+                                'HighAvlJrnDtaqueues' &SVAL2 ' ' ' ' ' ' +
+                                ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                                ' ' ' ' ')
+/* If there is an error finding any system value then end abnormally. */
+                   IF         COND(&RSVALRTNC *NE '       ') THEN(DO)
+                      GOTO       CMDLBL(ERROR)
+                   ENDDO
+ 
+/* Check whether data area or data queue journaling is required. */
+                   CHGVAR     VAR(&JRNDA) VALUE(%SST(&SVAL1 1 1))
+                   CHGVAR     VAR(&JRNDQ) VALUE(%SST(&SVAL2 1 1))
+                ENDDO
+ 
+/* Create file to be used to drive journaling process. */
+                DLTF       FILE(QTEMP/BEGINJRNF)
+                MONMSG     MSGID(CPF0000)
+                DLTF       FILE(QTEMP/JRNOBJ)
+                MONMSG     MSGID(CPF0000)
+                CRTDUPOBJ  OBJ(UPOBJDTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                             TOLIB(QTEMP) NEWOBJ(BEGINJRNF)
+             ENDDO
+ 
+/*  Set up library names. */
+/**********  CHGVAR     VAR(&JLIB) VALUE(&SYSTEMID *TCAT 'JLIB')                     */ /*BUG27911*/
+             CHGVAR     VAR(&DMLIB) VALUE(&SYSTEMID *TCAT 'DMLIB')
+             CHGVAR     VAR(&DPLIB) VALUE(&SYSTEMID *TCAT 'DPLIB')
+             CHGVAR     VAR(&DTLIB) VALUE(&SYSTEMID *TCAT 'DTALIB')
+             CHGVAR     VAR(&DZLIB) VALUE(&SYSTEMID *TCAT 'DZLIB')
+             CHGVAR     VAR(&BFLIB) VALUE(&LIBFIX *TCAT 'BFLIB')                          /*CBF012*/
+/**********  CHGVAR     VAR(&CBSLIB) VALUE(&LIBFIX *TCAT 'CBSLIB')     */    /*CBF012*/ /*AR886414*/
+/**********  CHGVAR     VAR(&CBALIB) VALUE(&LIBFIX *TCAT 'CBALIB')     */    /*CBF012*/ /*AR886414*/
+                                                                      /*S01408*/
+/*/COPY WNCPYSRC,SCBEGINJM1                                          */
+                                                                      /*S01408*/
+ 
+/* If the action is to reset or end the journaling then end all journaling. */
+             IF         COND(&ACTION *NE '*START') THEN(DO)
+/**********     ENDJRNPF   FILE(*ALL) JRN(&JLIB/ICJRN)                               */ /*BUG27911*/
+/**********     ENDJRNOBJ  OBJ(*ALL) OBJTYPE(*ALL) JRN(&JLIB/ICJRN)                  */ /*BUG27911*/
+                ENDJRNPF   FILE(*ALL) JRN(ICJRN)                                        /*BUG27911*/
+                ENDJRNOBJ  OBJ(*ALL) OBJTYPE(*ALL) JRN(ICJRN)                           /*BUG27911*/
+                                                                                          /*CBF012*/
+/** End all journaling in BFLIB, CBSLIB and CBALIB from QSQJRN       */                   /*CBF012*/
+/** If QSQJRN exists, delete journal QSQJRN and receivers QSQJRN*    */                   /*CBF012*/
+                                                                                          /*CBF012*/
+QSQ1:           CHKOBJ     OBJ(&BFLIB/QSQJRN) OBJTYPE(*JRN)                               /*CBF012*/
+/**********     MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(QSQ2))      */    /*CBF012*/ /*AR886414*/
+                MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(QSQEND))                     /*AR886414*/
+                                                                                          /*CBF012*/
+                ENDJRNPF   FILE(*ALL) JRN(&BFLIB/QSQJRN)                                  /*CBF012*/
+                ENDJRNOBJ  OBJ(*ALL) OBJTYPE(*ALL) JRN(&BFLIB/QSQJRN)                     /*CBF012*/
+                                                                                          /*CBF012*/
+                DLTJRN     JRN(&BFLIB/QSQJRN)                                             /*CBF012*/
+                DLTJRNRCV  JRNRCV(&BFLIB/QSQJRN*) DLTOPT(*IGNINQMSG)                      /*CBF012*/
+                                                                                          /*CBF012*/
+/**********QSQ2:           CHKOBJ     OBJ(&CBSLIB/QSQJRN) OBJTYPE(*JRN) */   /*CBF012*/ /*AR886414*/
+/**********     MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(QSQ3))       */   /*CBF012*/ /*AR886414*/
+/**********                                                             */   /*CBF012*/ /*AR886414*/
+/**********     ENDJRNPF   FILE(*ALL) JRN(&CBSLIB/QSQJRN)               */   /*CBF012*/ /*AR886414*/
+/**********     ENDJRNOBJ  OBJ(*ALL) OBJTYPE(*ALL) JRN(&CBSLIB/QSQJRN)  */   /*CBF012*/ /*AR886414*/
+/**********                                                             */   /*CBF012*/ /*AR886414*/
+/**********     DLTJRN     JRN(&CBSLIB/QSQJRN)                          */   /*CBF012*/ /*AR886414*/
+/**********     DLTJRNRCV  JRNRCV(&CBSLIB/QSQJRN*) DLTOPT(*IGNINQMSG)   */   /*CBF012*/ /*AR886414*/
+/**********                                                             */   /*CBF012*/ /*AR886414*/
+/**********QSQ3:           CHKOBJ     OBJ(&CBALIB/QSQJRN) OBJTYPE(*JRN) */   /*CBF012*/ /*AR886414*/
+/**********     MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(QSQEND))     */   /*CBF012*/ /*AR886414*/
+/**********                                                             */   /*CBF012*/ /*AR886414*/
+/**********     ENDJRNPF   FILE(*ALL) JRN(&CBALIB/QSQJRN)               */   /*CBF012*/ /*AR886414*/
+/**********     ENDJRNOBJ  OBJ(*ALL) OBJTYPE(*ALL) JRN(&CBALIB/QSQJRN)  */   /*CBF012*/ /*AR886414*/
+/**********                                                             */   /*CBF012*/ /*AR886414*/
+/**********     DLTJRN     JRN(&CBALIB/QSQJRN)                          */   /*CBF012*/ /*AR886414*/
+/**********     DLTJRNRCV  JRNRCV(&CBALIB/QSQJRN*) DLTOPT(*IGNINQMSG)   */   /*CBF012*/ /*AR886414*/
+/**********                                                             */   /*CBF012*/ /*AR886414*/
+             ENDDO
+QSQEND:                                                                                   /*CBF012*/
+             IF         COND(&ACTION *EQ '*END') THEN(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* Build up outfile to control the journaling process. */
+             DSPOBJD    OBJ(&DMLIB/*ALL) OBJTYPE(*FILE) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/JRNOBJ)
+             MONMSG     MSGID(CPF2123)
+             DSPOBJD    OBJ(&DPLIB/*ALL) OBJTYPE(*FILE) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/JRNOBJ) +
+                          OUTMBR(*FIRST *ADD)
+             MONMSG     MSGID(CPF2123)
+             DSPOBJD    OBJ(&DTLIB/*ALL) OBJTYPE(*FILE) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/JRNOBJ) +
+                          OUTMBR(*FIRST *ADD)
+             MONMSG     MSGID(CPF2123)
+             DSPOBJD    OBJ(&DZLIB/*ALL) OBJTYPE(*FILE) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/JRNOBJ) +
+                          OUTMBR(*FIRST *ADD)
+             MONMSG     MSGID(CPF2123)
+             DSPOBJD    OBJ(&BFLIB/*ALL) OBJTYPE(*FILE) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/JRNOBJ) +
+                          OUTMBR(*FIRST *ADD)                                             /*CBF012*/
+             MONMSG     MSGID(CPF2123)                                                    /*CBF012*/
+/**********  DSPOBJD    OBJ(&CBSLIB/*ALL) OBJTYPE(*FILE) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/JRNOBJ) +
+                          OUTMBR(*FIRST *ADD)                            */  /*CBF012*/ /*AR886414*/
+/**********  MONMSG     MSGID(CPF2123)                                   */  /*CBF012*/ /*AR886414*/
+/**********  DSPOBJD    OBJ(&CBALIB/*ALL) OBJTYPE(*FILE) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/JRNOBJ) +
+                          OUTMBR(*FIRST *ADD)                            */  /*CBF012*/ /*AR886414*/
+/**********  MONMSG     MSGID(CPF2123)                                   */  /*CBF012*/ /*AR886414*/
+/* If data area or data queue journaling selected then include these objects */
+/*  too.                                                                     */
+             IF         COND(&JRNDA *EQ 'Y') THEN(DO)
+                DSPOBJD    OBJ(&DMLIB/*ALL) OBJTYPE(*DTAARA) +
+                             OUTPUT(*OUTFILE) OUTFILE(QTEMP/JRNOBJ) +
+                             OUTMBR(*FIRST *ADD)
+                MONMSG     MSGID(CPF2123)
+                DSPOBJD    OBJ(&DPLIB/*ALL) OBJTYPE(*DTAARA) +
+                             OUTPUT(*OUTFILE) OUTFILE(QTEMP/JRNOBJ) +
+                             OUTMBR(*FIRST *ADD)
+                MONMSG     MSGID(CPF2123)
+                DSPOBJD    OBJ(&DTLIB/*ALL) OBJTYPE(*DTAARA) +
+                             OUTPUT(*OUTFILE) OUTFILE(QTEMP/JRNOBJ) +
+                             OUTMBR(*FIRST *ADD)
+                MONMSG     MSGID(CPF2123)
+                DSPOBJD    OBJ(&DZLIB/*ALL) OBJTYPE(*DTAARA) +
+                             OUTPUT(*OUTFILE) OUTFILE(QTEMP/JRNOBJ) +
+                             OUTMBR(*FIRST *ADD)
+                MONMSG     MSGID(CPF2123)
+                DSPOBJD    OBJ(&BFLIB/*ALL) OBJTYPE(*DTAARA) +
+                             OUTPUT(*OUTFILE) OUTFILE(QTEMP/JRNOBJ) +
+                             OUTMBR(*FIRST *ADD)                                          /*CBF012*/
+                MONMSG     MSGID(CPF2123)                                                 /*CBF012*/
+/**********     DSPOBJD    OBJ(&CBSLIB/*ALL) OBJTYPE(*DTAARA) +
+                             OUTPUT(*OUTFILE) OUTFILE(QTEMP/JRNOBJ) +
+                             OUTMBR(*FIRST *ADD)                         */  /*CBF012*/ /*AR886414*/
+/**********     MONMSG     MSGID(CPF2123)                                */  /*CBF012*/ /*AR886414*/
+/**********     DSPOBJD    OBJ(&CBALIB/*ALL) OBJTYPE(*DTAARA) +
+                             OUTPUT(*OUTFILE) OUTFILE(QTEMP/JRNOBJ) +
+                             OUTMBR(*FIRST *ADD)                         */  /*CBF012*/ /*AR886414*/
+/**********     MONMSG     MSGID(CPF2123)                                */  /*CBF012*/ /*AR886414*/
+             ENDDO
+             IF         COND(&JRNDQ *EQ 'Y') THEN(DO)
+                DSPOBJD    OBJ(&DMLIB/*ALL) OBJTYPE(*DTAQ) +
+                             OUTPUT(*OUTFILE) OUTFILE(QTEMP/JRNOBJ) +
+                             OUTMBR(*FIRST *ADD)
+                MONMSG     MSGID(CPF2123)
+                DSPOBJD    OBJ(&DPLIB/*ALL) OBJTYPE(*DTAQ) +
+                             OUTPUT(*OUTFILE) OUTFILE(QTEMP/JRNOBJ) +
+                             OUTMBR(*FIRST *ADD)
+                MONMSG     MSGID(CPF2123)
+                DSPOBJD    OBJ(&DTLIB/*ALL) OBJTYPE(*DTAQ) +
+                             OUTPUT(*OUTFILE) OUTFILE(QTEMP/JRNOBJ) +
+                             OUTMBR(*FIRST *ADD)
+                MONMSG     MSGID(CPF2123)
+                DSPOBJD    OBJ(&DZLIB/*ALL) OBJTYPE(*DTAQ) +
+                             OUTPUT(*OUTFILE) OUTFILE(QTEMP/JRNOBJ) +
+                             OUTMBR(*FIRST *ADD)
+                MONMSG     MSGID(CPF2123)
+                DSPOBJD    OBJ(&BFLIB/*ALL) OBJTYPE(*DTAQ) +
+                             OUTPUT(*OUTFILE) OUTFILE(QTEMP/JRNOBJ) +
+                             OUTMBR(*FIRST *ADD)                                          /*CBF012*/
+                MONMSG     MSGID(CPF2123)                                                 /*CBF012*/
+/**********     DSPOBJD    OBJ(&CBSLIB/*ALL) OBJTYPE(*DTAQ) +
+                             OUTPUT(*OUTFILE) OUTFILE(QTEMP/JRNOBJ) +
+                             OUTMBR(*FIRST *ADD)                         */  /*CBF012*/ /*AR886414*/
+/**********     MONMSG     MSGID(CPF2123)                                */  /*CBF012*/ /*AR886414*/
+/**********     DSPOBJD    OBJ(&CBALIB/*ALL) OBJTYPE(*DTAQ) +
+                             OUTPUT(*OUTFILE) OUTFILE(QTEMP/JRNOBJ) +
+                             OUTMBR(*FIRST *ADD)                         */  /*CBF012*/ /*AR886414*/
+/**********     MONMSG     MSGID(CPF2123)                                */  /*CBF012*/ /*AR886414*/
+             ENDDO
+ 
+/* Once the outfile has been completed then copy across to driving file. */
+             CHKOBJ     OBJ(QTEMP/JRNOBJ) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             CPYF       FROMFILE(QTEMP/JRNOBJ) +
+                          TOFILE(QTEMP/BEGINJRNF) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+ 
+/* Call program to remove records from the driving file that are not to be */
+/*  journaled.                                                             */
+             CALL       PGM(SC000002)
+ 
+/* Start journaling system. */
+READNEXT:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+             IF         COND(&ODOBTP *EQ '*FILE') THEN(DO)
+                IF         COND(%SST(&ODOBAT 1 2) *EQ 'PF') THEN(DO)
+/**********        STRJRNPF   FILE(&ODOBNM) JRN(&JLIB/ICJRN) IMAGES(*BOTH) +         */ /*BUG27911*/
+/**********                     OMTJRNE(*OPNCLO)                                     */ /*BUG27911*/
+/**********        STRJRNPF   FILE(&ODOBNM) JRN(ICJRN) IMAGES(*BOTH) +               */ /*BUG28037*/
+/**********                     OMTJRNE(*OPNCLO)                        */ /*BUG27911*/ /*BUG28037*/
+                   STRJRNPF   FILE(&ODLBNM/&ODOBNM) JRN(ICJRN) +
+                                IMAGES(*BOTH) OMTJRNE(*OPNCLO)                          /*BUG28037*/
+                   MONMSG     MSGID(CPF7030)
+                ENDDO
+             ENDDO
+             IF         COND(&ODOBTP *EQ '*DTAARA') THEN(DO)
+/**********     STRJRNOBJ  OBJ(&ODOBNM) OBJTYPE(*DTAARA) +                           */ /*BUG27911*/
+/**********                  JRN(&JLIB/ICJRN) IMAGES(*BOTH)                          */ /*BUG27911*/
+/**********     STRJRNOBJ  OBJ(&ODOBNM) OBJTYPE(*DTAARA) JRN(ICJRN) +                */ /*BUG28037*/
+/**********                  IMAGES(*BOTH)                              */ /*BUG27911*/ /*BUG28037*/
+                STRJRNOBJ  OBJ(&ODLBNM/&ODOBNM) OBJTYPE(*DTAARA) +
+                             JRN(ICJRN) IMAGES(*BOTH)                                   /*BUG28037*/
+                MONMSG     MSGID(CPF700A)
+             ENDDO
+             IF         COND(&ODOBTP *EQ '*DTAQ') THEN(DO)
+/**********     STRJRNOBJ  OBJ(&ODOBNM) OBJTYPE(*DTAQ) JRN(&JLIB/ICJRN)              */ /*BUG27911*/
+/**********     STRJRNOBJ  OBJ(&ODOBNM) OBJTYPE(*DTAQ) JRN(ICJRN)       */ /*BUG27911*/ /*BUG28037*/
+                STRJRNOBJ  OBJ(&ODLBNM/&ODOBNM) OBJTYPE(*DTAQ) JRN(ICJRN)               /*BUG28037*/
+                MONMSG     MSGID(CPF700A)
+             ENDDO
+ 
+             GOTO       CMDLBL(READNEXT)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             IF         COND(&RECURSIVE *EQ 'N') THEN(DO)
+                CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+RCVMSG:
+                RCVMSG     MSGTYPE(*DIAG) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                             MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                IF         COND(&MSGID *NE ' ') THEN(DO)
+                   SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                                MSGDTA(&MSGDTA) MSGTYPE(*DIAG)
+                   GOTO       CMDLBL(RCVMSG)
+                ENDDO
+                RCVMSG     MSGTYPE(*EXCP) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                             MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                             MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
+             ENDDO
+ 
+ENDPGM:
+             ENDPGM

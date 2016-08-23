@@ -1,0 +1,93 @@
+/************************************************************************************/
+/*                                                                                  */
+/*       Midas - Global Processing Module                                           */
+/*                                                                                  */
+/*       V_#MT101DD - Global MT101 Detail File                                      */
+/*                                                                                  */
+/*       (c) Misys International Banking Systems Ltd. 2003                          */
+/*                                                                                  */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*       Last Amend No. BUG5605            Date 24Jan05                             */
+/*       Prev Amend No. CGP001  *CREATE    Date 20Aug03                             */
+/*                      xxxxxx             Date ddmmmyy                             */
+/*                                                                                  */
+/*----------------------------------------------------------------------------------*/
+/*                                                                                  */
+/*       BUG5605 - Performance Enhancement                                          */
+/*       CGP001 - Global Processing                                                 */
+/*                                                                                  */
+/************************************************************************************/
+  CREATE VIEW                                                                        :
+  **********/**********                                                              :
+  AS                                                                                 :
+   SELECT                                                                            :
+    RFTID, TRNSID, FXDREF, INSCA4, INSCB4, INSCC4, INSCD4, INSCE4,                   :
+    INSA31, INSB31, TRNCCY, PAYCCY, PYBCQS, TFBCQS, XRATE, XRATEO,                   :
+    TINPTY, TOCUS1, TOCUS2, TOCUS3, TOCUS4, TOCUS5, DCUSTP, TASI35,                  :
+    TACC11, TINST1, TINST2, TINST3, TINST4, TINST5, TINSTA, TACA35,                  :
+    TACB35, TACC35, TACD35, TACE35, TACA11, TBNA35, TBNB35, TBNC35,                  :
+    TBND35, TBNE35, TRMA35, TRMB35, TRMC35, TRMD35, TRGA35, TRGB35,                  :
+    TRGC35, TOCCY, TDCHGS, RCHCCY, RCPCCY, RCTCCY, CHGACC, GOPFLG,                   :
+    TFTRNT, TFTREF, CQIN, CHQNUM, BENTTP, AWITTP, INTTTP, INUSER,                    :
+    INTIME, UPDUSR, UPDTIM, AKEYID, AKEYDD, AKEYCD, RFTMSQ,                          :
+    RFTMSG, TSEQNO, TFCOCC, FXCCCD, IMICC1, IMICC2, IMICC3, IMICC4,                  :
+    IMICC5,FXCHGC, TRCHCC, IMICH1, IMICH2, IMICH3, IMICH4, IMICH5,                   :
+    VTFCCC, VTCOCH, VIMIC1, VIMIC2, VIMIC3, VIMIC4, VIMIC5, VATAMT,                  :
+    DTNOEN, DTNOAU, CUNOFL, M1CHRT, M1CHGC, FTZONE AS CUSTZONE,                      :
+    CASE WHEN CRDVDT=0 THEN NULL ELSE DATE(CRDVDT+719892) END AS FCRDVDT,            :
+    CASE WHEN INDATE=0 THEN NULL ELSE DATE(INDATE+719892) END AS FINDATE,            :
+    CASE WHEN UPDDTE=0 THEN NULL ELSE DATE(UPDDTE+719892) END AS FUPDDTE,            :
+****DEC(TRNAMT*C1.SCALING,31,4) AS "STRNAMT",****************************************:/*BUG5605*/
+****DEC(TRNAMT*C1.SCALING*C1.RATE,31,4) AS "BSTRNAMT",*******************************:/*BUG5605*/
+****DEC(PAYAMT*C2.SCALING,31,4) AS "SPAYAMT",****************************************:/*BUG5605*/
+****DEC(PAYAMT*C2.SCALING*C2.RATE,31,4) AS "BSPAYAMT",*******************************:/*BUG5605*/
+****DEC(TOOAMT*C3.SCALING,31,4) AS "STOOAMT",****************************************:/*BUG5605*/
+****DEC(TOOAMT*C3.SCALING*C3.RATE,31,4) AS "BSTOOAMT",*******************************:/*BUG5605*/
+****DEC(RCVCHG*C4.SCALING,31,4) AS "SRCVCHG",****************************************:/*BUG5605*/
+****DEC(RCVCHG*C4.SCALING*C4.RATE,31,4) AS "BSRCVCHG",*******************************:/*BUG5605*/
+****DEC(RCPCHG*C5.SCALING,31,4) AS "SRCPCHG",****************************************:/*BUG5605*/
+****DEC(RCPCHG*C5.SCALING*C5.RATE,31,4) AS "BSRCPCHG",*******************************:/*BUG5605*/
+****DEC(RCTCHG*C6.SCALING,31,4) AS "SRCTCHG",****************************************:/*BUG5605*/
+****DEC(RCTCHG*C6.SCALING*C6.RATE,31,4) AS "BSRCTCHG"********************************:/*BUG5605*/
+   TRNAMT AS STRNAMT,                                                                :/*BUG5605*/
+   PAYAMT AS SPAYAMT,                                                                :/*BUG5605*/
+   TOOAMT AS STOOAMT,                                                                :/*BUG5605*/
+   RCVCHG AS SRCVCHG,                                                                :/*BUG5605*/
+   RCPCHG AS SRCPCHG,                                                                :/*BUG5605*/
+   RCTCHG AS SRCTCHG                                                                 :/*BUG5605*/
+***FROM GZFT101DPD*******************************************************************:/*BUG5605*/
+   FROM GZFT101DPD;                                                                  :/*BUG5605*/
+***LEFT JOIN V_GLOBRATE C1 ON C1.CCY=TRNCCY******************************************:/*BUG5605*/
+***LEFT JOIN V_GLOBRATE C2 ON C2.CCY=PAYCCY******************************************:/*BUG5605*/
+***LEFT JOIN V_GLOBRATE C3 ON C3.CCY=TOCCY*******************************************:/*BUG5605*/
+***LEFT JOIN V_GLOBRATE C4 ON C4.CCY=RCHCCY******************************************:/*BUG5605*/
+***LEFT JOIN V_GLOBRATE C5 ON C5.CCY=RCPCCY******************************************:/*BUG5605*/
+***LEFT JOIN V_GLOBRATE C6 ON C6.CCY=RCTCCY;*****************************************:/*BUG5605*/
+                                                                                     :
+ * DESCRIBESTART                                                                     :
+ * DESCRIBEFIELD FCRDVDT    AS CRDVDT     USING GZFT101DPD                           :
+ * DESCRIBEFIELD FINDATE    AS INDATE     USING GZFT101DPD                           :
+ * DESCRIBEFIELD FUPDDTE    AS UPDDTE     USING GZFT101DPD                           :
+ * DESCRIBEFIELD STRNAMT    AS TRNAMT     USING GZFT101DPD                           :
+***DESCRIBEFIELD BSTRNAMT   AS TRNAMT     USING GZFT101DPD (BASECCY)*****************:/*BUG5605*/
+ * DESCRIBEFIELD SPAYAMT    AS PAYAMT     USING GZFT101DPD                           :
+***DESCRIBEFIELD BSPAYAMT   AS PAYAMT     USING GZFT101DPD (BASECCY)*****************:/*BUG5605*/
+ * DESCRIBEFIELD STOOAMT    AS TOOAMT     USING GZFT101DPD                           :
+***DESCRIBEFIELD BSTOOAMT   AS TOOAMT     USING GZFT101DPD (BASECCY)*****************:/*BUG5605*/
+ * DESCRIBEFIELD SRCVCHG    AS RCVCHG     USING GZFT101DPD                           :
+***DESCRIBEFIELD BSRCVCHG   AS RCVCHG     USING GZFT101DPD (BASECCY)*****************:/*BUG5605*/
+ * DESCRIBEFIELD SRCPCHG    AS RCPCHG     USING GZFT101DPD                           :
+***DESCRIBEFIELD BSRCPCHG   AS RCPCHG     USING GZFT101DPD (BASECCY)*****************:/*BUG5605*/
+ * DESCRIBEFIELD SRCTCHG    AS RCTCHG     USING GZFT101DPD
+***DESCRIBEFIELD BSRCTCHG   AS RCTCHG     USING GZFT101DPD (BASECCY)*****************:/*BUG5605*/
+ * DESCRIBEFIELD CUSTZONE   AS FTZONE     USING GZFT101DPD                           :
+ * DESCRIBEEND                                                                       :
+                                                                                     :
+/************************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas GZ MT101 detail file -  GZFT101DPD          ';                     :
+                                                                                :

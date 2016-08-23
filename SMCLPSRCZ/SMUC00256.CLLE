@@ -1,0 +1,58 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Update CLOANCL ORBR field')                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Customer Lending Module                             */
+/*                                                                   */
+/*       SMUC00256 - Midas SM Update CLOANCL ORBR field              */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2014           */
+/*                                                                   */
+/*       Last Amend No. MD023442A *CREATE  Date 02Jan14              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD023442A -  Update CLOANCL->ORBR field for Facility Fees   */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE)
+ 
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2014')
+ 
+/** Global monitor message  */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             SNDPGMMSG  MSG('SMUC00256 - CLE134 Update Program +
+                          for CLOANCL File') TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(00000000)
+ 
+/** Create temporary file CLOANTMP in QTEMP */
+             DLTF       FILE(QTEMP/CLOANTMP)
+             MONMSG     MSGID(CPF2105)
+             CPYF       FROMFILE(CLOANCL) TOFILE(QTEMP/CLOANTMP) +
+                          CRTFILE(*YES) FROMRCD(1) TORCD(1)
+             CLRPFM     FILE(QTEMP/CLOANTMP)
+ 
+/** Process migration program */
+             CALL       PGM(SMU00256) PARM(&MODE)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             SNDPGMMSG  MSG('Program SMUC00256 ended abnormally +
+                          - job cancelled') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+ENDPGM:
+             ENDPGM

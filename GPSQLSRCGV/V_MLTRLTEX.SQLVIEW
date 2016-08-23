@@ -1,0 +1,82 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing Module                                      */
+/*                                                                             */
+/*       V_MLTRLTEX - Midas GP Transaction to Limit Currency                   */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2004                     */
+/*                                                                             */
+/*       Last Amend No. CLE134             Date 01Aug12                        */
+/*       Prev Amend No. CSF011             Date 12Sep11                        */
+/*                      CER059             Date 19Jul10                        */
+/*                      CER043             Date 02Jun08                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      BUG11273           Date 28Apr06                        */
+/*                      CSD027             Date 18Dec05                        */
+/*                      CSW037A            Date 02May05                        */
+/*                      CSD025             Date 11Jan05                        */
+/*                      BUG5404            Date 18Jan05                        */
+/*                      CSW037             Date 15Dec04                        */
+/*                      CSW036             Date 15Dec04                        */
+/*                      BUG4521            Date 18Nov04                        */
+/*                      BUG3860            Date 11Aug04                        */
+/*                      CLE025             Date 20Oct03                        */
+/*                      BUG2179            Date 06May04                        */
+/*                      CGP001  *CREATE    Date 05Mar04                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       CLE134 - Past Due Call Loan Processing (Recompile)                    */
+/*       CSF011 - Customer Name on Inputs (Recompile)                          */
+/*       CER059 - German Feature Upgrade to Delhi                              */
+/*       CER043 - German Features LF041-00 New Fields and Defaulting           */
+/*                (Recompile)                                                  */
+/*       BUG11273 - Attempt to write duplicate record in GPGLCUSL.             */
+/*                  Add GPGLCUSL.CGBRCD as new key(unique). (Recompile)        */
+/*       CSD027 - Conversion Of Customer Number to Alpha                       */
+/*       CSW037A- Additional Field extended to 40 chars (recompile)            */
+/*       CSD025 - Customer De-Activation                                       */
+/*       BUG5404- Local Cust Shortname added to GPGLCUSL (Recompile)           */
+/*       CSW037 - Additional Field Data on MT300/MT320                         */
+/*       CSW036 - Dual SWIFT BIC held on Client Details                        */
+/*       BUG4521 - Predeal Check Performance Enhancement (Recompiled)          */
+/*       BUG3860 - (recompile)                                                 */
+/*       CLE025 - Credit Lines (Recompile)                                     */
+/*       BUG2179- Necessary Changes                                            */
+/*       CGP001 - Global Processing                                            */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+  SELECT                                                                        :
+      LIMITCCY.CCYCODE AS LIMITCCY,                                             :
+      TEINST AS GLOBINST,                                                       :
+      TEEXPOSURE AS TRANEXP,                                                    :
+      TEEXPCCY AS EXPCCY,                                                       :
+      CURR1.SPOTRATE AS TEEXSPTRT,                                              :
+      (TEEXPOSURE * CURR1.SPOTRATE) AS  BSECCYEXP,                              :
+      (TEEXPOSURE * CURR1.SPOTRATE) / LIMITCCY.SPOTRATE AS LMTCCYEXP,           :
+      TEOFFSET AS TRANOFF,                                                      :
+      TEOFFCCY AS OFFCCY,                                                       :
+      CURR2.SPOTRATE AS TEOFSPTRT,                                              :
+      TEOFFSET * CURR2.SPOTRATE AS BSECCYOFF,                                   :
+      (TEOFFSET * CURR2.SPOTRATE) / LIMITCCY.SPOTRATE AS LMTCCYOFF,             :
+      V_MLTRNEXP.*                                                              :
+  FROM V_MLTRNEXP INNER JOIN V_MLCCYRT  LIMITCCY                                :
+  ON T_ZONE = LIMITCCY.ZONE                                                     :
+  LEFT OUTER JOIN V_MLCCYRT CURR1                                               :
+  ON TEEXPCCY=CURR1.CCYCODE                                                     :
+  AND T_ZONE=CURR1.ZONE                                                         :
+  LEFT OUTER JOIN V_MLCCYRT AS CURR2                                            :
+  ON TEOFFCCY=CURR2.CCYCODE                                                     :
+  AND T_ZONE = CURR2.ZONE;                                                      :
+                                                                                :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas GP Transaction to Limit Currency            ';                     :
+                                                                                :

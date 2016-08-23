@@ -1,0 +1,296 @@
+    A*****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas FX Confirmed nets screen')                       *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module - Foreign Exchange.                   *
+      *                                                               *
+      *  DSPF/FX0920DF - Confirmed Net Display.                       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. MD025805           Date 25Mar14               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. BUG6252            Date 08Apr05               *
+      *                 CDL025             Date 19Nov04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 127051             Date 04Dec97               *
+      *                 127084             Date 02Dec97               *
+      *                 126100             Date 23Nov97               *
+      *                 CDL002             Date 06Mar97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD025805 - Net Number is not shown in the FX Netting Detail. *
+      *           - Display the Net Number.                           *
+      *  BUG6252 - Transaction status is not shown                    *
+      *  CDL025 - FX Netting Payment Generation                       *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  127051 - Enable F12 to return to calling program             *
+      *  127084 - Enable F15 in Amend and View                        *
+      *  126100 - Display Settlements Screen Message                  *
+      *  CDL002 - PROVIDE NET TOTALS CALCULATION                      *
+      *                                                               *
+      *****************************************************************
+     A**Start of change BUG6252
+     A                                      DSPSIZ(*DS4)
+     A**End of change BUG6252
+     A                                      REF(*LIBL/MFRFL)
+     A                                      PRINT(MPRINT)
+     A                                      INDARA
+     A                                      CHGINPDFT
+     A*=========================================================================
+     A          R FX0920S1                  SFL
+     A                                      CHGINPDFT
+     A                                      TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A  36                                  SFLNXTCHG
+     A            DDSEL          1A  B  6  2TEXT('SELECT FIELD')
+     A  30                                  DSPATR(PR)
+     A N30                                  DSPATR(UL)
+     A N30N38                               DSPATR(HI)
+     A  38                                  DSPATR(RI)
+     A N30                                  DSPATR(PC)
+     A            DDCSSN        10A  O  6  4DSPATR(HI)
+     A  30                                  DSPATR(ND)
+     A            DDCCY          3A  O  6 15DSPATR(HI)
+     A  30                                  DSPATR(ND)
+     A            DCCYS1         3A  O  6 19DSPATR(HI)
+     A  30                                  DSPATR(ND)
+     A            DCCYS2         3A  O  6 23DSPATR(HI)
+     A  30                                  DSPATR(ND)
+     A            DDVALD         6Y 0O  6 27DSPATR(HI)
+     A                                      EDTCDE(Y)
+     A  30                                  DSPATR(ND)
+     A            DDNETT        21A  O  6 36DSPATR(HI)
+     A                                      TEXT('Net Total')
+     A  30                                  DSPATR(ND)
+     A            DDSETP         2   O  6 58TEXT('Settlement Type')
+     A                                      DSPATR(HI)
+     A  30                                  DSPATR(ND)
+     A**Start of change CGL029
+     A**********  DDSEAC        15   O  6 61TEXT('Our Nostro')                                CGL029
+     A            DDSEAC        21   O  6 61TEXT('Our Nostro')
+     A**End of change CGL029
+     A                                      DSPATR(HI)
+     A  30                                  DSPATR(ND)
+     A**Start of change BUG6252
+     A**********  DDSTUS         3   O  6 77TEXT('STATUS')                                   BUG6252
+     A            DDSTUS         3   O  6 84TEXT('STATUS')
+     A**End of change BUG6252
+     A N30N65                               DSPATR(HI RI)
+     A  30
+     AO 65                                  DSPATR(ND)
+     A            DDNETR        19A  H
+     A            DDCUSN         6A  H
+      *
+     A          R FX0920C1                  SFLCTL(FX0920S1)
+     A                                      TEXT('DEALS SUBFILE CONTROL')
+     A                                      CF03
+      *                                                          Start 127051
+     A                                      CF12
+      *                                                          End   127051
+     A                                      CF05
+     A                                      OVERLAY
+     A  32                                  SFLDSP
+     A  31                                  SFLDSPCTL
+     A  33                                  SFLINZ
+     A  35                                  SFLCLR
+     A  34                                  SFLEND
+     A                                      SFLRNA
+     A                                      SFLSIZ(0200)
+     A**Start of change CGL029
+     A**********                            SFLPAG(0014)                                      CGL029
+     A                                      SFLPAG(0008)
+     A**End of change CGL029
+     A            ##SFRC         4S 0H      SFLRCDNBR
+      *
+      * Standard header details:-
+     A            SUSER     R        O  1  2REFFLD(USER)
+     A                                  1 13'FX0920'
+     A                                  1 32'FX CONFIRMED NETS'
+     A                                      DSPATR(UL)
+     A                                      DSPATR(HI)
+     A                                  1 67'DATE '
+     A            SRUNA     R        O  1 73REFFLD(RUNA)
+     A            SWSID     R        O  2  2REFFLD(JOJOB)
+     A                                  2 67'TIME '
+     A                                  2 73TIME
+      *
+     A                                  4  1'(X)'
+     A                                  3  5'Group or'
+     A                                  4  6'C/Party'
+     A                                  4 15'CCY'
+     A                                  4 21'Pairs'
+     A                                  3 28'Value'
+     A                                  4 29'Date'
+     A                                  4 39'Net Total'
+     A                                  4 59'Settlement'
+      *
+     A            PDCSSN        10A  B  5  4
+     A  71                                  DSPATR(RI)
+     A  75                                  DSPATR(PC)
+     A N71                                  DSPATR(HI UL)
+     A            PDCCY          3A  B  5 15
+     A                                      DSPATR(HI UL)
+     A            PDCCY1         3A  B  5 19
+     A                                      DSPATR(HI UL)
+     A            PDCCY2         3A  B  5 23
+     A                                      DSPATR(HI UL)
+     A            PVDATE         6A  B  5 28
+     A N72                                  DSPATR(HI UL)
+     A  72                                  DSPATR(RI)
+      *
+     A          R FX0920C3                  TEXT('Confirm record.')
+     A                                      BLINK OVERLAY
+     A                                      INDTXT(86 'Condition PUTOVR.')
+     A  86                                  PUTOVR
+     A* COMMAND KEYS                                                   .........
+     A                                      VLDCMDKEY(29 'Valid CMD key.')
+     A                                      CF03(03 'Exit.')
+     A                                      CF06(06 'Confirm')
+     A N77                                  CF10(10 'Delete')
+     A                                      CF12(12 'Cancel.')
+     A                                      CF15(15 'Display Deals.')
+     ** Start CDL025
+     A                                      CF17(17 'Split Setts.')
+     ** End CDL025
+     A*.........................................................................
+      * Standard header details:-
+     A            SUSER     R        O  1  2REFFLD(USER)
+     A                                  1 13'FX0920'
+     A                                  1 32'FX NETTING DETAIL'
+     A                                      DSPATR(UL)
+     A                                      DSPATR(HI)
+     A                                  1 67'DATE '
+     A            SRUNA     R        O  1 73REFFLD(RUNA)
+      *
+     A            SWSID     R        O  2  2REFFLD(JOJOB)
+     A                                  2 67'TIME '
+     A                                  2 73TIME
+      *
+     A                                  5 16'Action:'
+     A            DDACTN         1A  O  5 24TEXT('Action Code')
+     A  10                                  DSPATR(RI)
+     A N10                                  DSPATR(HI)
+     A                                  5 28'Value Date:'
+     A            DDVDAT         6Y 0O  5 40EDTCDE(Y)
+     A                                      TEXT('Value Date')
+     A                                      DSPATR(HI)
+     A                                  5 51'Status:'
+     A N69                                  DSPATR(ND)
+     A            DDSTS          7A  O  5 59TEXT('MIDAS Deal Status')
+     A N69                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+     A  81                              7 17'Group:'
+     A  81        DDGPCD         4A  O    +1DSPATR(HI)
+     A  81                              8 11'Description:'
+     A  81        DDGPDS        30A  O    +1DSPATR(HI)
+     A N81                              7 10'Counterparty:'
+     A N81        DDCUST         6A  O    +1DSPATR(HI)
+     A                                      TEXT('Customer Number')
+     A N81                              8  4'Customer Shortname:'
+     A N81        DDC3SN    R        O    +1REFFLD(CSNM)
+     A                                      TEXT('Customer Shortname')
+     A N81                                  DSPATR(HI)
+     A N81                              7 38'Report Name:'
+     A N81        DDCRNM        20A  O    +1DSPATR(HI)
+     A N81                              8 38'Report Town:'
+     A N81        DDCRTN        10A  O    +1DSPATR(HI)
+     A                                 10  5'Netting Reference:'
+     A            DDNETR        19A  O    +1TEXT('Netting Ref')
+     A  11                                  DSPATR(RI)
+     A N11                                  DSPATR(HI)
+     A                                 10 52'Pair currencies:'
+     A            DDPIND         1A  O    +1TEXT('Pair currencies')
+     A                                      DSPATR(HI)
+     ** Start MD025805
+     A                                 11 12'Net Number:'
+     A            DDNTNO         6A  O    +1TEXT('Net Number')
+     A                                      DSPATR(HI)
+     ** End MD025805
+     A                                 12 14'Currency:'
+     A            DDNCCY    R        O    +1REFFLD(CCY)
+     A                                      TEXT('Net Currency')
+     A                                      DSPATR(HI)
+     A            DDNCCN    R        O    +1REFFLD(CCNM)
+     A                                      TEXT('Net Currency Name')
+     A                                      DSPATR(HI)
+     A  27                             11 47'Currency 1:'
+     A  27        DDPCY1    R        O    +1REFFLD(CCY)
+     A                                      TEXT('Pair Currency 1')
+     A                                      DSPATR(HI)
+     A  27        DDPC1N    R        O    +1REFFLD(CCNM)
+     A                                      TEXT('Pair Currency 1 Name')
+     A                                      DSPATR(HI)
+     A  27                             12 47'Currency 2:'
+     A  27        DDPCY2    R        O    +1REFFLD(CCY)
+     A                                      TEXT('Pair Currency 2')
+     A                                      DSPATR(HI)
+     A  27        DDPC2N    R        O    +1REFFLD(CCNM)
+     A                                      TEXT('Pair Currency 2 Name')
+     A                                      DSPATR(HI)
+     A                                 14 13'Net Total:'
+     A            DDNAMT        20A  O    +1TEXT('Net Total')
+     A                                      DSPATR(HI)
+     A  28                             15 12'Calculated:'
+     A  28        DDCAMT        20A  O    +1TEXT('Calc Total')
+     A                                      DSPATR(HI)
+     A  28                                +1' ** DIFFERENCE ** '
+     A                                      DSPATR(RI)
+      *                                                          Start 126100
+     A**77*****************************23  2'F3=Exit   F6=Confirm   F12=Cancel -
+     A*********************************        F15=View Deals'
+     A*N77*****************************23  2'F3=Exit   F12=Cancel'
+     **Start CDL025
+     A**77*****************************23  2'F3=Exit  F6=Confirm  F12=Cancel -
+     A*********************************      F15=View Deals  Enter=Extended-
+     A*********************************      Settlements'
+     A  77N26                          23  2'F3=Exit  F6=Confirm  F12=Cancel -
+     A                                       F15=View Deals  Enter=Extended-
+     A                                       Settlements'
+     A  77 26                          23  2'F3=Exit F6=Confirm F12=Cancel -
+     A                                      F15=View Deals F17=Split Setts -
+     A                                      Enter=Ext Setts'
+     A*N77****************             23  2'F3=Exit   F12=Cancel   Enter=Exten+
+     A********************                  ded Settlements'
+     A N77 26                          23  2'F3=Exit  F12=Cancel  F17=Split Set+
+     A                                      tlements  Enter=Extended Settlement+
+     A                                      s'
+     A N77N26                          23  2'F3=Exit  F12=Cancel  Enter=Extende+
+     A                                      d Settlements'
+     **End CDL025
+      *                                                          End   126100
+      *                                                          Start 127084
+     A  68                             23 54'F15=View Deals'
+      *                                                          End   127084
+     A*=========================================================================
+     A          R #CMDTXT1                  TEXT('Command keys.')
+     A                                      OVERLAY PUTOVR
+      *                                                          Start 127051
+     A***********                      23  1'A=Amend, D=Delete, E=Enquire, -
+     A***********                            P=Print Deals, V=View Deals'
+     A***********                      23 63'F3=Exit F5=Refresh'
+     A                                 23  1'A=Amend D=Delete E=Enquire-
+     A                                       P=Print V=View Deals F3=Exit-
+     A                                       F5=Refresh F12=Cancel'
+      *                                                          End   127051
+     A*=========================================================================
+     A          R #MSGRCD                   TEXT('Program messages')
+     A                                      SFL SFLMSGRCD(24)
+     A            MSGKEY                    SFLMSGKEY
+     A            ##PGM                     SFLPGMQ
+     A*=========================================================================
+     A          R #MSGCTL                   TEXT('Program messages')
+     A                                      SFLCTL(#MSGRCD)
+     A                                      SFLPAG(01) SFLSIZ(03)
+     A  86                                  OVERLAY PUTOVR
+     A                                      SFLINZ SFLDSP SFLDSPCTL
+     A  25
+     AON25                                  SFLEND
+     A            ##PGM                     SFLPGMQ
+     A*=========================================================================

@@ -1,0 +1,405 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas CG Conditions definition display.')
+     A*****************************************************************
+     A*                                                               *
+     A*   Midas - - - User-defined correspondence                 *
+     A*                                                               *
+     A*   DSPF/CG8400DF - Conditions combinations display.            *
+     A*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     A*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     A*  LAST AMEND NO. 100811             DATE 29AUG96               *
+     A*  PREV AMEND NO. 095463             DATE 06NOV95               *
+     A*                 090199             Date 12JUL95               *
+     A*                 084190             DATE 03MAR95               *
+     A*                 083839             DATE 24FEB95               *
+     A*                 S01522             DATE 10FEB95               *
+     A*                                                               *
+     A*****************************************************************
+     A*                                                               *
+     A*  100811  -  RDE Path identification                           *
+     A*  095463  -  Allow 132 characters screens                      *
+     A*  090199  -  Recompile to include new Multi-Language Suport    *
+     A*             messages IDs from 10.6 packaging into core.       *
+     A*  084190  -  Provide an enquiry mode                           *
+     A*  083839  -  Show full condition detail on entry               *
+     A*  S01522  -  User Defined Correspondence                       *
+     A*                                                               *
+     A*****************************************************************
+      * Start 095463
+     A                                      DSPSIZ(27 132 *DS4                 -
+     A                                             24 80 *DS3)
+      * End 095463
+     A                                       INDARA
+     A                                       PRINT(MPRINT)
+     A                                       CHGINPDFT
+     A*=====================================================================
+     A          R #SFLRCD1                   SFL
+     A*
+     A                                      TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A*
+     A            #1ACT          1   B  9  3 TEXT('Action box.')
+     A                                        DSPATR(UL)
+     A  31                                    DSPATR(PC)
+     A  31
+     AO 33                                    DSPATR(RI)
+     A            #1ACND         1   B  9 12 TEXT('True / false flag.')
+     A                                        DSPATR(UL)
+     A  32                                    DSPATR(PC)
+     A  32
+     AO 33                                    DSPATR(RI)
+     A            #1CID          8  0B  9 21 TEXT('Condition identifier.')
+     A                                        EDTCDE(Z)
+     A                                        DSPATR(PR)
+     A  33                                    DSPATR(RI)
+     A            #1DESC        30   B  9 31 TEXT('Description.')
+     A                                        DSPATR(PR)
+     A  33                                    DSPATR(RI)
+     A*---
+     A            #1FLAG         1   H       TEXT('True / false flag saved.')
+     A*.....................................................................
+     A          R #SFLCTL1                   TEXT('Subfile control.')
+     A*
+     A                                       BLINK OVERLAY PUTOVR
+     A* Command keys............................................................
+     A N61                                   CA03(03 'Exit.')
+     A                                       CA12(12 'Previous.')
+     A N61                                   CF06(06 'Add a condition.')
+     A  61                                   CF10(10 'Confirm deletion.')
+     A                                       VLDCMDKEY(29 'Valid command key.')
+     A*
+     A                                       SFLCTL(#SFLRCD1)
+     A                                       SFLPAG(12) SFLSIZ(13)
+     A                                       INDTXT(80 'Clear subfile.')
+     A                                       INDTXT(81 'Display control.')
+     A                                       INDTXT(82 'Display subfile.')
+     A  80                                   SFLCLR
+     A  81                                   SFLDSPCTL
+     A  82                                   SFLDSP SFLEND(*MORE)
+     A* SETOFFS.................................................................
+     A*.........................................................................
+     A            #SFRC1         4  0H       SFLRCDNBR
+     A*
+     A            ##USR         10      1  2 TEXT('*USER')
+     A                                       DSPATR(HI)
+     A            ##PGM         10   H      TEXT('*PROGRAM')
+     A                                  1 13'CG8400F1'
+     A                                       DSPATR(HI)
+     A                                  1 26'            Midas            '
+     A            ##MRDT         7      1 72 TEXT('Midas run date')
+     A                                       DSPATR(HI)
+     A*---
+     A            ##JOB         10      2  2 TEXT('*JOB')
+     A                                       DSPATR(HI)
+     A            #HEAD1        40      2 21 TEXT('Headings text')
+     A                                       DSPATR(HI)
+     A            ##TME          6  0   2 72 TEXT('*TIME')
+     A                                       EDTWRD('0 :  :  ')
+     A                                       DSPATR(HI)
+     A*---
+     A            #HEADP        20      4 12 TEXT('Literal: "Plane:".')
+     A            #1PLAN        10   O  4 33 TEXT('Plane name.')
+     A                                       DSPATR(HI)
+     A*---
+     A  50        #HEADF        20      5 12 TEXT('Literal: "Field:".')
+     A  50        #1FLDN        10   O  5 33 TEXT('Field name.')
+     A                                       DSPATR(HI)
+     A*---
+     A            #HEAD2        70      7  2 TEXT('Column headings 1')
+     A*---
+     A            #HEAD3        70      8  2 TEXT('Column headings 2')
+     A*---------------------------------------------------------------------
+     A          R #CMDTXT1                   TEXT('Command keys.')
+     A*
+     A                                       OVERLAY PUTOVR
+     A            ##CMD1        70     22  2 TEXT('Command text line 1.')
+     A                                       DSPATR(HI)
+     A*---
+     A            ##CMD2        70     23  2 TEXT('Command text line 2.')
+     A                                       DSPATR(HI)
+     A*=====================================================================
+     A          R #SFLRCD2                   SFL
+     A*
+     A                                      TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A*
+     A            #2SEQN         3  0B 10  2 TEXT('Condition grouping.')
+     A                                        EDTCDE(Z)
+     A*___________________________________________________________________084190
+     A* 084190                                                            084190
+     A*                                                                   084190
+     A***********                             DSPATR(UL)
+     A N40                                    DSPATR(UL)
+     A*                                                                   084190
+     A* 084190                                                            084190
+     A*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~084190
+     A            #2CONG         6   B 10  7 TEXT('Condition grouping.')
+     A*___________________________________________________________________084190
+     A* 084190                                                            084190
+     A*                                                                   084190
+     A***********                             DSPATR(UL)
+     A N40                                    DSPATR(UL)
+     A*                                                                   084190
+     A* 084190                                                            084190
+     A*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~084190
+     A  41                                    DSPATR(PC RI)
+     A            #2LRDE        10   B 10 17 TEXT('Left element.')
+     A                                        CHECK(LC)
+     A*___________________________________________________________________084190
+     A* 084190                                                            084190
+     A*                                                                   084190
+     A***********                             DSPATR(UL)
+     A N40                                    DSPATR(UL)
+     A*                                                                   084190
+     A* 084190                                                            084190
+     A*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~084190
+     A  42                                    DSPATR(PC RI)
+     A            #2LEXT         1   B 10 33 TEXT('Left extender.')
+     A*___________________________________________________________________084190
+     A* 084190                                                            084190
+     A*                                                                   084190
+     A***********                             DSPATR(UL)
+     A N40                                    DSPATR(UL)
+     A*                                                                   084190
+     A* 084190                                                            084190
+     A*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~084190
+     A  43                                    DSPATR(PC RI)
+     A            #2OPER        10   B 10 37 TEXT('Operator.')
+     A*___________________________________________________________________084190
+     A* 084190                                                            084190
+     A*                                                                   084190
+     A***********                             DSPATR(UL)
+     A N40                                    DSPATR(UL)
+     A*                                                                   084190
+     A* 084190                                                            084190
+     A*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~084190
+     A  44                                    DSPATR(PC RI)
+     A            #2RRDE        10   B 10 49 TEXT('Right element.')
+     A                                        CHECK(LC)
+     A*___________________________________________________________________084190
+     A* 084190                                                            084190
+     A*                                                                   084190
+     A***********                             DSPATR(UL)
+     A N40                                    DSPATR(UL)
+     A*                                                                   084190
+     A* 084190                                                            084190
+     A*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~084190
+     A  45                                    DSPATR(PC RI)
+     A            #2REXT         1   B 10 65 TEXT('Right extender.')
+     A*___________________________________________________________________084190
+     A* 084190                                                            084190
+     A*                                                                   084190
+     A***********                             DSPATR(UL)
+     A N40                                    DSPATR(UL)
+     A*                                                                   084190
+     A* 084190                                                            084190
+     A*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~084190
+     A  46                                    DSPATR(PC RI)
+     A*---
+     A* 100811 start
+     A**********  #TEXTL         9     11  7 TEXT('Literal')
+     A**********  #2LDTA        15   B 11 17 TEXT('Left data literal.')
+     A            #2LLN1        30   O 11 17 TEXT('Left PATH 1.')
+     A            #2RLN1        30   O 11 49 TEXT('Right PATH 1.')
+     A            #2LLN2        30   O 12 17 TEXT('Left PATH 2.')
+     A            #2RLN2        30   O 12 49 TEXT('Right PATH 2.')
+     A            #TEXTL         9     13  7 TEXT('Literal')
+     A            #2LDTA        15   B 13 17 TEXT('Left data literal.')
+     A* 100811 end
+     A                                        CHECK(LC)
+     A*___________________________________________________________________084190
+     A* 084190                                                            084190
+     A*                                                                   084190
+     A***********                             DSPATR(UL)
+     A N40                                    DSPATR(UL)
+     A*                                                                   084190
+     A* 084190                                                            084190
+     A*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~084190
+     A  47                                    DSPATR(PC RI)
+     A* 100811 start
+     A**********  #2RDTA        15   B 11 49 TEXT('Right data literal.')
+     A            #2RDTA        15   B 13 49 TEXT('Right data literal.')
+     A* 100811 end
+     A                                        CHECK(LC)
+     A*___________________________________________________________________084190
+     A* 084190                                                            084190
+     A*                                                                   084190
+     A***********                             DSPATR(UL)
+     A N40                                    DSPATR(UL)
+     A*                                                                   084190
+     A* 084190                                                            084190
+     A*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~084190
+     A  48                                    DSPATR(PC RI)
+     A*---
+     A* 100811 start
+     A**********  #TEXTN         9     12  7 TEXT('Number')
+     A**********  #2LNUM        20  7B 12 17 TEXT('Left data literal.')
+     A            #TEXTN         9     14  7 TEXT('Number')
+     A            #2LNUM        20  7B 14 17 TEXT('Left data literal.')
+     A* 100811 end
+     A                                        EDTCDE(O)
+     A*___________________________________________________________________084190
+     A* 084190                                                            084190
+     A*                                                                   084190
+     A***********                             DSPATR(UL)
+     A N40                                    DSPATR(UL)
+     A*                                                                   084190
+     A* 084190                                                            084190
+     A*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~084190
+     A  47                                    DSPATR(PC RI)
+     A* 100811 start
+     A**********  #2RNUM        20  7B 12 49 TEXT('Right data literal.')
+     A            #2RNUM        20  7B 14 49 TEXT('Right data literal.')
+     A* 100811 end
+     A                                        EDTCDE(O)
+     A*___________________________________________________________________084190
+     A* 084190                                                            084190
+     A*                                                                   084190
+     A***********                             DSPATR(UL)
+     A N40                                    DSPATR(UL)
+     A*                                                                   084190
+     A* 084190                                                            084190
+     A*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~084190
+     A  48                                    DSPATR(PC RI)
+     A*---
+     A* 100811 start
+     A**********  #TEXT1        30     13  7 TEXT('"Cond description:".')
+     A**********  #2CDSC        30   B 13 38 TEXT('Cond description.')
+     A            #TEXT1        30     15  7 TEXT('"Cond description:".')
+     A            #2CDSC        30   B 15 38 TEXT('Cond description.')
+     A* 100811 end
+     A                                        CHECK(LC)
+     A*___________________________________________________________________084190
+     A* 084190                                                            084190
+     A*                                                                   084190
+     A***********                             DSPATR(UL)
+     A N40                                    DSPATR(UL)
+     A*                                                                   084190
+     A* 084190                                                            084190
+     A*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~084190
+     A  49                                    DSPATR(PC RI)
+     A*---
+DJU  A****                             13  2' '
+     A*
+     A            #2CSEQ         8  0H       TEXT('Sequence number.')
+     A            #2LELT         6   H       TEXT('Left element type.')
+     A            #2RELT         6   H       TEXT('Right element type.')
+     A            #2LRPT         6   H       TEXT('Left repeating path.')
+     A            #2RRPT         6   H       TEXT('Right repeating path.')
+     A            #2LNRP         6   H       TEXT('Left non-repeating path.')
+     A            #2RNRP         6   H       TEXT('Right non-repeating path.')
+     A*.....................................................................
+     A          R #SFLCTL2                   TEXT('Subfile control.')
+     A*
+     A                                       BLINK OVERLAY PUTOVR
+     A* Command keys............................................................
+     A                                       CA03(03 'Exit.')
+     A                                       CA12(12 'Previous.')
+     A                                       CF08(08 'Add a line.')
+     A                                       ROLLUP(28 'Roll up pressed.')
+     A                                       VLDCMDKEY(29 'Valid command key.')
+     A*
+     A                                       SFLCTL(#SFLRCD2)
+     A* 100811 start
+     A*********                              SFLPAG(3) SFLSIZ(4)
+     A                                       SFLPAG(2) SFLSIZ(3)
+     A* 100811 end
+     A                                       INDTXT(85 'Clear subfile.')
+     A                                       INDTXT(86 'Display control.')
+     A                                       INDTXT(87 'Display subfile.')
+     A  85                                   SFLCLR
+     A  86                                   SFLDSPCTL
+     A  87                                   SFLDSP SFLEND
+      * Start 083839
+     A**************                         SFLDROP(CF04)
+     A                                       SFLFOLD(CF04)
+      * End-- 083839
+     A* SETOFFS.................................................................
+     A*.........................................................................
+     A            #SFRC2         4  0H       SFLRCDNBR
+     A*
+     A            ##USR         10      1  2 TEXT('*USER')
+     A                                       DSPATR(HI)
+     A            ##PGM         10   H      TEXT('*PROGRAM')
+     A                                  1 13'CG8400F2'
+     A                                       DSPATR(HI)
+     A                                  1 26'            Midas            '
+     A            ##MRDT         7      1 72 TEXT('Midas run date')
+     A                                       DSPATR(HI)
+     A*---
+     A            ##JOB         10      2  2 TEXT('*JOB')
+     A                                       DSPATR(HI)
+     A            #HEAD4        40      2 21 TEXT('Headings text')
+     A                                       DSPATR(HI)
+     A            ##TME          6  0   2 72 TEXT('*TIME')
+     A                                       EDTWRD('0 :  :  ')
+     A                                       DSPATR(HI)
+     A*---
+     A            #HEADP        20      4 12 TEXT('Literal: "Plane:".')
+     A            #1PLAN        10   O  4 33 TEXT('Plane name.')
+     A                                       DSPATR(HI)
+     A*---
+     A  50        #HEADF        20      5 12 TEXT('Literal: "Field:".')
+     A  50        #1FLDN        10   O  5 33 TEXT('Field name.')
+     A                                       DSPATR(HI)
+     A*---
+     A            #HEAD5        30      7  2 TEXT('"Group description:".')
+     A            #2GDSC        30   B  7 33 TEXT('Group description.')
+     A                                        CHECK(LC)
+     A*___________________________________________________________________084190
+     A* 084190                                                            084190
+     A*                                                                   084190
+     A***********                             DSPATR(UL)
+     A N40                                    DSPATR(UL)
+     A*                                                                   084190
+     A* 084190                                                            084190
+     A*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~084190
+     A  35                                    DSPATR(PC RI)
+     A*---
+     A            #HEAD6        70      9  2 TEXT('Column headings')
+     A*---------------------------------------------------------------------
+     A          R #CMDTXT2                   TEXT('Command keys.')
+     A*
+     A                                       OVERLAY PUTOVR
+     A*___________________________________________________________________084190
+     A* 084190                                                            084190
+     A*                                                                   084190
+     A*.Command keys......................................................084190
+     A                                       CA03(03 'Exit.')
+     A                                       CA12(12 'Previous.')
+     A*...................................................................084190
+     A  40                                   PROTECT
+     A*                                                                   084190
+     A* 084190                                                            084190
+     A*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~084190
+     A            ##CMD3        70     22  2 TEXT('Command text line 3.')
+     A                                       DSPATR(HI)
+     A*---
+     A            ##CMD4        70     23  2 TEXT('Command text line 4.')
+     A                                       DSPATR(HI)
+     A*=====================================================================
+     A          R #MSGRCD                    TEXT('Program messages.')
+     A*
+     A                                       SFL SFLMSGRCD(24)
+     A            MSGKEY                     SFLMSGKEY
+     A            ##PGM                      SFLPGMQ
+     A*.....................................................................
+     A          R #MSGCTL                    TEXT('Program messages.')
+     A*
+     A                                       SFLCTL(#MSGRCD)
+     A                                       SFLPAG(1) SFLSIZ(2)
+     A                                       SFLINZ SFLDSP SFLDSPCTL
+     A N25
+     AO 25                                   SFLEND
+     A            ##PGM                      SFLPGMQ
+     A*=====================================================================

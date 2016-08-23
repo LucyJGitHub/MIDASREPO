@@ -1,0 +1,156 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas SD Tax Self Declaration Statement Report')      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       CLP/SDC000770 - Midas SD Tax Self Declaration Statement     */
+/*                       Report                                      */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. 232543             Date 11Mar05              */
+/* Midas Release 4.04 -----------------------------------------------*/
+/*       Last Amend No. CGL032  *CREATE    Date 05Jul04              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       232543 - Fix to CGL031                                      */
+/*       CGL032 - Automatic Exchange of Information                  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RSEQ &RLEV &RENT &RPARM)
+ 
+/* Declare variables */
+ 
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RENT) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+/**********  DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                     /*232543*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7) VALUE('*FIRST ')                    /*232543*/
+             DCL        VAR(&FMT)  TYPE(*CHAR) LEN(200)
+             DCL        VAR(&W0RTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&W0CMT) TYPE(*CHAR) LEN(3) VALUE('YES')
+             DCL        VAR(&ACTION)     TYPE(*CHAR) LEN(8)
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&RPARM) TYPE(*CHAR) LEN(100)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2004')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             RTVJOBA    TYPE(&JOBTYPE)
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(XXXXXX00)
+ 
+             SNDPGMMSG  MSG('Midas SD Tax Self Declaration Statement +
+                          Report') TOPGMQ(*EXT) TOMSGQ(MRUNQ)
+ 
+/* Access PF/SDMMODPD to determine whether UDC module is on */
+ 
+             CALL       PGM(AOMMODR0) PARM(&RTCD &OPTN &FMT)
+ 
+             IF         COND(&RTCD *NE '       ') THEN(DO)
+             SNDPGMMSG  MSG('Error on access to ICD file SDMMODPD') +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ) +
+                          MSGTYPE(*INFO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
+                          CMTSCOPE(*JOB)                                                  /*232543*/
+ 
+             IF         COND(%SST(&FMT 101 1) *EQ 'Y') THEN(DO)
+ 
+/* If Correspondence manager is switched on, override files */
+ 
+             CHGVAR     VAR(&ACTION) VALUE('*PREPARE')
+             CALL       PGM(CGC3605) PARM(&ACTION)
+ 
+/**********  CALL       PGM(CG0006120) PARM(&W0RTN &W0CMT &RPARM)                         /*232543*/
+             CALL       PGM(CG006120) PARM(&W0RTN &W0CMT &RPARM)                          /*232543*/
+ 
+             RCLRSC
+ 
+             IF         COND(&W0RTN *NE '       ') THEN(DO)
+             CHGVAR     VAR(&MSG) VALUE('User Defined Correspondence +
+                          Extract failure')
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* If Correspondence manager is switched on, call custom defined extract program */
+ 
+             CALL       PGM(CGC3604)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             CHGVAR     VAR(&MSG) VALUE('Correspondence Manager +
+                        Custom-Defined Data Extract failed')
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             ENDDO
+ 
+             ENDCMTCTL                                                                    /*232543*/
+ 
+             CALL       PGM(SD000770P) PARM(&RSEQ &RLEV &RENT &RPARM)
+ 
+/* Start commitment control for batch jobs with file updates */
+ 
+             IF         COND(&JOBTYPE = '0') THEN(DO)
+                STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE))
+             ENDDO
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+ 
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                ROLLBACK
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                           TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+/* Abnormal termination - batch job */
+ 
+             IF         COND(&JOBTYPE = '0') THEN(DO)
+                SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                             SD000770P ended abnormally - see job log') +
+                             TOMSGQ(MOPERQ)
+                MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ 
+             IF         COND(%SST(&FMT 101 1) *EQ 'Y') THEN(DO)
+ 
+/* If Correspondence manager is switched on, delete overrides. */
+ 
+                CHGVAR     VAR(&ACTION) VALUE('*CLEAR  ')
+                CALL       PGM(CGC3605) PARM(&ACTION)
+                SNDPGMMSG  MSG(&MSG) TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+ 
+             ENDDO
+ 
+ END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+             ENDPGM

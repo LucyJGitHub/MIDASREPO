@@ -1,0 +1,2005 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Accruals report by branch')                   *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Dealing Module
+     F*                                                                  *
+     F*     DL0521 - ACCRUALS REPORT BY BRANCH                           *
+     F*                                                                  *
+     F*     THIS PROGRAM HAS BEEN GENERATED FROM DL0520                  *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                                  *
+      *  NOTE: Check DL5210 for changes that may apply to it if there *                       CAS005
+      *        are amendments done to this program.                   *                       CAS005
+      *                                                               *                       CAS005
+      *  Last Amend No. MD025659           Date 24Mar13               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Prev Amend No. CSC042             Date 16Feb09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG8167            Date 25May06               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL033             Date 10Feb05               *
+      *                 CSW037A            Date 02May05               *
+      *                 220738             DATE 28AUG03               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CDL021             Date 05Feb04               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CAS005             Date 16Dec02               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 167793             Date 20Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 186259             Date 05Dec00               *
+      *                 CIR006             Date 13Sep00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CDL006             Date 26Apr99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 127054             Date 06Jan98               *
+      *                 S01408             Date 02Sep96                  *
+     F*                     098321             DATE  30JUL96             *
+     F*                     S01408             DATE  22AUG95             *
+     F*                     CIR002             DATE  13JUN95             *
+     F*                     CIR001             DATE  13JUN95             *
+     F*                     076415             DATE  23SEP94             *
+     F*                     S01354             DATE  09JAN92             *
+     F*                     E28416             DATE  10SEP91             *
+     F*                     BHF779             DATE  11OCT90             *
+     F*                     LN0746             DATE  14SEP90             *
+     F*                     LN0597             DATE  06AUG90             *
+     F*                     LN0373             DATE  14JUN90             *
+     F*                     S01268             DATE  29MAY90             *
+     F*                     LN0246             DATE  23MAY90             *
+     F*                     E257               DATE  08MAR90             *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  MD025659 - Wrong computation of Interest accrual.            *
+      *  CSC042 - COB Performance fix. Only access AOBRCHR0 on change of *
+      *           branch rather than every record as input file sorted by*
+      *           branch                                                 *
+      *           Try to keep calls to AOCUST to a minimum by reusing *
+      *           data if this call is same as last call              *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG8167- Display 'ACCRUED TO DATE' & 'TO ACCRUE' for base    *
+      *           rate row. Applied fix 219486.                       *
+      *  CDL038 - Extended Deal Sub Type                              *
+      *  CDL033 - Floating Rate CDs Issued                            *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  220738 - Dump if customer is closed                          *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CDL021 - Reports by Deal Type                                *
+      *  CGL029 - Increase Account Code to 10 digits (Recompile)      *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *           (Recompile)                                         *
+      *  167793 - Amended to show the Base Rate code in the report    *
+      *           even if the base rate code is partly character.     *
+      *  186259 - Deal subtype total skip to the next page caused by  *
+      *           098321.                                             *
+      *  CIR006 - Amortisation of Caps/Collars/Floors and Individual  *
+      *           Compounding Swaps.                                  *
+      *  CDL006 - Dealing Fiduciary                                   *
+     F*    127054 - Attempt to open file that was already opened.     *
+     F*             Only WRITE if details exist (58 is on)            *
+     F*    S01408 - Addition of hooks DL0521CCP9                      *
+     F*    098321 - Overflow handling for DL0521P1. APPLY 083584.        *
+     F*    S01408 - Addition of hooks DL0521CCP1                      *
+     F*                               DL0521CCP2                      *
+     F*                               DL0521CCP3                      *
+     F*                               DL0521CCP4                      *
+     F*                               DL0521CCP5                      *
+     F*                               DL0521CCP6                      *
+     F*                               DL0521CCP7                      *
+     F*                               DL0521CCP8                      *
+     F*                               DL0521FFP1                      *
+     F*                               DL0521IIP1                      *
+     F*                               DL0521OOP1                      *
+     F*                               DL0521OOP2                      *
+     F*                               DL0521OOP3                      *
+     F*                               DL0521OOP4                      *
+     F*                               DL0521OOP5                      *
+     F*                               DL0521OOP6                      *
+     F*                               DL0521OOP7                      *
+     F*                               DL0521OOP8                      *
+     F*                               DL0521OOP9                      *
+     F*                               DL0521OP10                      *
+     F*                               DL0521OP11                      *
+     F*    CIR002 - Compounding of Interest.                             *
+     F*    CIR001 - Interest Rate Calendars.                             *
+     F*    076415 - Every output must be conditioned by 58.
+     F*    S01354 - Add internal funding deal types                      *
+     F*    E28416 - REPORT TOWN NOT ALWAYS APPEARING                     *LN0746
+     F*    BHF779 - DETAIL LINES CONDITIONED ON CHANGE OF SUBTYPE        *LN0746
+     F*    LN0746 - P1 & AU FILES CHANGED TO SAME NAME AS PROGRAM        *LN0746
+     F*             DUMMY FILES CREATED                                  *LN0746
+     F*    LN0597 - CONDITION OUTPUT ON P1 BEING OPEN                    *
+     F*    LN0373 - IF BRNCH IS NOT 'ALL', THEN PREVIOUS TOTALS ARE NOT  *LN0373
+     F*             BEING ZEROISED IN O SPECS                            *LN0373
+     F*    S01268 - ADD CUSTOMER REPORT TOWN TO REPORT
+     F*    LN0246 - DUE TO SPACING 'NO DETAILS TO REPORT' WAS PRINTED    *LN0246
+     F*             ON SECOND PAGE                                       *LN0246
+     F*                                                                  *
+     F*    E257 - PRINTER FILE SHOULD BE CHANGED TO SYSTEM REPORT        *
+     F*           PRINTER FILE                                           *
+     F*                                                                  *
+     F********************************************************************
+     FSACEXL1 IP  E           K        DISK
+     FACCEXAN IF  E                    DISK                                                   CDL021
+     F            ACCEXANF                          KRENAMEHEADER                             CDL021
+     FFDDTSTL1IF  E           K        DISK                                                   CDL038
+      ** Deal Types/Sub Types                                                                 CDL038
+      *                                                                                       CDL038
+      *                                                                   S01408
+     F/COPY WNCPYSRC,DL0521FFP1                                           S01408
+      *                                                                   S01408
+     F**DL0521P1O***F***132*****OF*****PRINTER******KINFDS*SPOOL******UC    E257
+     F**DL0521AUO***F***132*****OA*****PRINTER******KINFDS*SPOOLU*****      E257
+     F**DL0520P1O***F***132*****OF*****PRINTER******KINFDS*SPOOL******E257LN0746
+     F**DL0520AUO***F***132*****OA*****PRINTER******KINFDS*SPOOLU**** E257LN0746
+     FDL0521P1O   F     132     OF     PRINTER      KINFDS SPOOL      UC  LN0746
+     FDL0521AUO   F     132     OA     PRINTER      KINFDS SPOOLU         LN0746
+     F/COPY WNCPYSRC,DL0521F001
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F* 01            SACEXL1 DETAIL
+     F* 02            SACEXL1 TRAILER
+     F* 05            CIR001 on                                           CIR001
+     F* 06            CIR002 on                                           CIR002
+     F/COPY WNCPYSRC,DL0521F002
+     F* 09            SACEXL1 HEADER
+     F*       14      DEAL TYPE IS '14'
+     F*       15      DEAL TYPE IS '15'
+     F*       16      DEAL TYPE IS '16'
+     F*       17      DEAL TYPE IS '17'
+     F*       19      DEAL TYPE IS '20'
+     F*    20         NOTICE DAYS ZERO
+     F*    21         NOTICE DAYS NEGATIVE
+     F*    22         NOTICE DAYS POSITIVE
+     F*    23         INTEREST RATE ZERO
+     F*       30      CCY HAS 0 D.P.
+     F*       31      CCY HAS 1 D.P.
+     F*       32      CCY HAS 2 D.P.
+     F*       33      CCY HAS 3 D.P.
+     F*       34      HASH AMOUNT IS NEGATIVE
+     F*       35      LOAN/DEP. RECORD - CODE '15' OR '16'
+     F*       40      FIRST CYCLE
+     F*       43      RECID- D
+     F*       44      RECID- E
+     F*       45      RECID- F
+     F*       46      RECID- G                                            CIR001
+     F*       51      Our total unsettled interest not zero               CIR002
+     F*       52      Their total unsettled interest not zero             CIR002
+     F*       58      PRINT P1
+     F*      N59      NO DETAILS TO REPORT
+     F*       60      FRA/IRS DEAL TYPE
+     F*       61      DEAL TYPE 'FR' - FUTURE RATE AGREEMENT
+     F*       62      DEAL TYPE 'RS' - INTEREST RATE SWAP
+     F*       63      DEAL TYPE 'RX' - CROSS CURRENCY INTEREST RATE SWAP
+     F*       64      DEAL TYPE RF, RR, RA - INTEREST RATE CAP/COLLAR
+     F*       65      FRA/IRS - OUR   RATE PRESENT, RATE TO PRINT
+     F*       66      FRA/IRS - THEIR RATE PRESENT, RATE TO PRINT
+     F*       67      FRA/IRS - OUR   ACCRUAL AMOUNTS TO PRINT
+     F*       68      FRA/IRS - THEIR ACCRUAL AMOUNTS TO PRINT
+     F*       69      'RX' - OUR DETAILS RECORD           -OR-
+     F*               'RF', 'RR, 'RP' - PROVIDERS DETAILS ARE OURS
+     F*       70      'RX' - THEIR DETAILS RECORD         -OR-
+     F*               'RP', 'RF', 'RR' - PROVIDERS DETAILS ARE THEIRS
+     F*       71      'RP', 'RF', 'RR - FLOOR RATE PRESENT
+     F*       72      'G' deal type - Fee Amortised                       CIR001
+     F*       80      NO. OF RECORDS DIFFERENCE
+     F*       81      HASH TOTAL DIFFERENCE
+0046 F*       88      DEAL TYPE/SUBTPYE                                                       CDL021
+0047 F*       89      DEAL TYPE/SUBTPYE                                                       CDL021
+     F*             L1CHANGE OF DEAL SUB-TYPE
+     F*             L2CHANGE OF DEAL TYPE
+     F*             L3CHANGE OF CURRENCY
+     F*             L4CHANGE OF RECORD ID
+     F*             L5CHANGE OF BRANCH CODE
+     E                    CPY@    1   1 80
+     E                    TAB1CP  1   1  2   TAB2CP 50   DEAL TYPE/NARR.                      CDL033
+     E/COPY WNCPYSRC,DL0521E001
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     E************        TAB1    1  36  2   TAB2   50   DEAL TYPE/NARR.  S01354
+     E***********         TAB1    1  38  2   TAB2   50   DEAL TYPE S01354 CDL006
+     E                    TAB1    1  44  2   TAB2   50                    CDL006
+     E                    ##BR      999  3               Branch Codes                         CSC042
+     E                    ##BN      999 30               Branch Names                         CSC042
+     E**
+     I*
+     I/COPY WNCPYSRC,DL0521I002
+     I*
+     IACCEXANF    09
+     I*    SACEXL1 - HEADER
+     I*
+     I*
+     IACCEXAOF    01
+     I*    SORTED ACCRUALS EXTRACT FILE - DETAIL
+     I                                              BRCA  L5
+     I              RECI                            RECID L4
+     I                                              CCY   L3
+     I                                              DTYP  L2
+     I                                              DLST  L1
+     I                                              CLAS  L1                                  CDL038
+     I                                              NOTD        222120
+     I                                              INTR            23
+     I**********                                    UBRTT       24        167793
+     I                                              UBRTT       2424      167793
+     I**********                                    TBRTT       25        167793
+     I                                              TBRTT       2525      167793
+     I/COPY WNCPYSRC,DL0521I003
+     I*
+     IACCEXAPF    02
+     I*    TRAILER
+      *                                                                                       CDL021
+     IHEADER                                                                                  CDL021
+     I              CCY                             ACCY                                      CDL021
+     I              DTYP                            ADTYP                                     CDL021
+     I              DLST                            ADLST                                     CDL021
+     I              CLAS                            ACLAS                                     CDL038
+     I*
+     ISPOOL       DS
+     I** FILE INFORMATION DATA STRUCTURE
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     ISPOOLU      DS
+     I** FILE INFORMATION DATA STRUCTURE
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     I@BANK     E DSSDBANKPD
+     I** EXTERNAL DS FOR BANK DETAILS
+     I*
+     I@DLST     E DSSDDLSTPD
+     I** EXTERNAL DS FOR DEAL  SUBTYPE DETAILS
+     I*
+     I@CUST     E DSSDCUSTPD
+     I** EXTERNAL DS FOR CUSTOMER DETAILS
+     I*
+     I@CURR     E DSSDCURRPD
+     I** EXTERNAL DS FOR CURRENCY DETAILS
+     I*
+     I@BRCH     E DSSDBRCHPD
+     I** EXTERNAL DS FOR BRANCH DETAILS
+      *                                                                   S01408
+     I              QQDFAC                          QQDFA1                                    CGL029
+     I/COPY WNCPYSRC,DL0521IIP1                                           S01408
+      *                                                                   S01408
+     I@GELR     E DSSDGELRPD                                                                MD025659
+      ** EXTERNAL DS FOR GENERAL LEDGER DETAILS                                             MD025659
+     I*                                                                   CIR001
+     ISCSARD    E DSSCSARDPD                                              CIR001
+     I** DUMMY RECORD FORMAT FOR SAR DETAILS                              CIR001
+     I*
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*                                                                   S01117
+     IDSSDY     E DSDSSDY                                                 S01194
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01194
+      *                                                                   220738
+     IDSLDY     E DSDSLDY                                                 220738
+     I*  THIRD DS FOR ACCESS PROGRAMS, VERY LONG DATA STRUCTURE           220738
+     I/COPY WNCPYSRC,DL0521I001
+     I/EJECT
+     C*
+     C**
+     C           *ENTRY    PLIST
+     C                     PARM           SEQ     5
+     C                     PARM           BRNCH   3         BRANCH OR ALL
+     C                     PARM           PARMS   8                       CDL038
+     C*********************PARM           PARMS   4                CDL021 CDL038
+     C**
+     C*    CONDITION FIRST CYCLE CALCS ON SACEXL1 HEADER
+     C*
+     C           2         SUBSTPARMS:1   TYP1    2                                           CDL021
+     C           2         SUBSTPARMS:3   TYP2    2                                           CDL021
+     C           4         SUBSTPARMS:5   TYP3    4                                           CDL038
+     C           TYP1      IFNE *BLANKS                                                       CDL021
+     C           TYP1      ANDNE'**'                                                          CDL021
+     C           *IN88     ANDEQ'0'                                                           CDL021
+     C                     READ HEADER                   87                                   CDL021
+     C                     MOVE '1'       *IN09                                               CDL021
+     C                     ENDIF                                                              CDL021
+     C  N09                GOTO DETAIL
+      *                                                                                       CDL021
+     C           TYP1      IFNE *BLANKS                                                       CDL021
+     C           TYP1      ANDNE'**'                                                          CDL021
+     C                     MOVE '1'       *IN88                                               CDL021
+     C           TYP2      IFNE *BLANKS                                                       CDL021
+     C           TYP2      ANDNE'**'                                                          CDL021
+     C                     MOVE '1'       *IN89                                               CDL021
+     C                     ENDIF                                                              CDL021
+     C                     ENDIF                                                              CDL021
+     C                     SETON                     40
+     C                     MOVEACPY@      BIS@   80
+     C                     Z-ADD0         ##BNDX  40                                          CSC042
+     C           *LIKE     DEFN ##BNDX    B                                                   CSC042
+     C           *LIKE     DEFN ##BNDX    ##BSV                                               CSC042
+      *                                                                                       CSC042
+     C*
+     C** CALL ACCESS PROGRAM FOR BANK DETAILS
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG    '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           @BANK     PARM @BANK     DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'DBFILE 10         *************
+     C                     MOVEL'01'      DBASE   3         *DBERROR 001*
+     C                     MOVEL@OPTN     DBOPTN  7         *************
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     GOTO END
+     C                     END
+     C*    CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+     C           BJDFIN    COMP 'M'                      98MMDDYY, 98 ON
+      *                                                                                     MD025659
+      ** Call access program for GENERAL LEDGER details                                     MD025659
+      *                                                                                     MD025659
+     C                     CALL 'AOGELRR1'                                                  MD025659
+     C                     PARM *BLANKS   @RTCD                                             MD025659
+     C                     PARM '*FIRST ' @OPTN                                             MD025659
+     C           @GELR     PARM @GELR     DSSDY                                             MD025659
+     C           @RTCD     IFNE *BLANK                                                      MD025659
+     C                     MOVEL'SDGELRPD'DBFILE                                            MD025659
+     C                     MOVEL'013'     DBASE                                             MD025659
+     C                     MOVEL@OPTN     DBKEY                                             MD025659
+     C                     MOVE '1'       *INU7                                             MD025659
+     C                     MOVE '1'       *INU8                                             MD025659
+     C                     MOVE '1'       *INLR                                             MD025659
+     C                     EXSR *PSSR                                                       MD025659
+     C                     GOTO END                                                         MD025659
+     C                     ENDIF                                                            MD025659
+      *                                                                                     MD025659
+     C           BKAPDT    IFLT BJDNWD                                                      MD025659
+     C                     Z-ADDBKAPDT    ZDAYNO                                            MD025659
+     C                     MOVE '0'       *IN26                                             MD025659
+     C                     ELSE                                                             MD025659
+     C           BJDNWD    SUB  1         ZDAYNO                                            MD025659
+     C           BKALDI    IFEQ 'Y'                                                         MD025659
+     C                     MOVE '0'       *IN26                                             MD025659
+     C                     ELSE                                                             MD025659
+     C                     MOVE '1'       *IN26                                             MD025659
+     C                     ENDIF                                                            MD025659
+     C                     ENDIF                                                            MD025659
+     C*
+     C**********           Z-ADDTDAT      ZDAYNO                                            MD025659
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    TDATA   7
+     C*                                                                   CIR001
+     C** Check if switchable feature CIR001 is switched on                CIR001
+     C*                                                                   CIR001
+     C                     CALL 'AOSARDR0'                                CIR001
+     C                     PARM *BLANKS   @RTCD                           CIR001
+     C                     PARM '*VERIFY' @OPTN                           CIR001
+     C                     PARM 'CIR001'  @SARD   6                       CIR001
+     C           SCSARD    PARM SCSARD    DSFDY                           CIR001
+     C*                                                                   CIR001
+     C           @RTCD     IFNE *BLANK                                    CIR001
+     C           @RTCD     ANDNE'*NRF   '                                 CIR001
+     C                     MOVEL'SCSARDPD'DBFILE           ***************CIR001
+     C                     MOVEL'07'      DBASE            * DB ERROR 07 *CIR001
+     C                     MOVEL'CIR001'  DBKEY            ***************CIR001
+     C                     SETON                     U7U8LR               CIR001
+     C                     EXSR *PSSR                                     CIR001
+     C                     GOTO END                                       CIR001
+     C                     END                                            CIR001
+     C*                                                                   CIR001
+     C           @RTCD     IFEQ *BLANKS                                   CIR001
+     C                     MOVE 'Y'       CIR001  1                       CIR001
+     C                     MOVE '1'       *IN05                           CIR001
+     C                     ELSE                                           CIR001
+     C                     MOVE 'N'       CIR001                          CIR001
+     C                     MOVE '0'       *IN05                           CIR001
+     C                     END                                            CIR001
+     C/COPY WNCPYSRC,DL0521C001
+     C*                                                                   CIR002
+     C** Check if switchable feature CIR002 is switched on                CIR002
+     C*                                                                   CIR002
+     C                     CALL 'AOSARDR0'                                CIR002
+     C                     PARM *BLANKS   @RTCD                           CIR002
+     C                     PARM '*VERIFY' @OPTN                           CIR002
+     C                     PARM 'CIR002'  @SARD   6                       CIR002
+     C           SCSARD    PARM SCSARD    DSFDY                           CIR002
+     C*                                                                   CIR002
+     C           @RTCD     IFNE *BLANK                                    CIR002
+     C           @RTCD     ANDNE'*NRF   '                                 CIR002
+     C                     MOVEL'SCSARDPD'DBFILE           ***************CIR002
+     C                     MOVEL'08'      DBASE            * DB ERROR 08 *CIR002
+     C                     MOVEL'CIR002'  DBKEY            ***************CIR002
+     C                     SETON                     U7U8LR               CIR002
+     C                     EXSR *PSSR                                     CIR002
+     C                     GOTO END                                       CIR002
+     C                     END                                            CIR002
+     C*                                                                   CIR002
+     C           @RTCD     IFEQ *BLANKS                                   CIR002
+     C                     MOVE 'Y'       CIR002  1                       CIR002
+     C                     MOVE '1'       *IN06                           CIR002
+     C                     ELSE                                           CIR002
+     C                     MOVE 'N'       CIR002                          CIR002
+     C                     MOVE '0'       *IN06                           CIR002
+     C                     END                                            CIR002
+     C/COPY WNCPYSRC,DL0521CNB1
+      *                                                                   CDL006
+      ** Check if switchable feature CDL006 is switched on                CDL006
+      *                                                                   CDL006
+     C                     CALL 'AOSARDR0'                                CDL006
+     C                     PARM '       ' @RTCD                           CDL006
+     C                     PARM '*VERIFY' @OPTN                           CDL006
+     C                     PARM 'CDL006'  @SARD                           CDL006
+     C           SCSARD    PARM SCSARD    DSFDY                           CDL006
+      *                                                                   CDL006
+     C           @RTCD     IFNE *BLANKS                                   CDL006
+     C           @RTCD     ANDNE'*NRF   '                                 CDL006
+     C                     MOVEL'SCSARDPD'DBFILE           ************   CDL006
+     C                     MOVEL'CDL006'  DBKEY            * DBERR 09 *   CDL006
+     C                     MOVEL'009'     DBASE            ************   CDL006
+     C                     MOVE '1'       *INU7                           CDL006
+     C                     MOVE '1'       *INU8                           CDL006
+     C                     MOVE '1'       *INLR                           CDL006
+     C                     EXSR *PSSR                                     CDL006
+     C                     GOTO END                                       CDL006
+     C                     ELSE                                           CDL006
+     C                     MOVE 'N'       CDL006                          CDL006
+     C                     ENDIF                                          CDL006
+      *                                                                   CDL006
+     C           @RTCD     IFEQ *BLANKS                                   CDL006
+     C                     MOVE 'Y'       CDL006  1                       CDL006
+     C                     ENDIF                                          CDL006
+     C*                                                                   CIR001
+      ** Check if switchable feature CIR006 is switched on                CIR006
+      *                                                                   CIR006
+     C                     CALL 'AOSARDR0'                                CIR006
+     C                     PARM *BLANKS   @RTCD                           CIR006
+     C                     PARM '*VERIFY' @OPTN                           CIR006
+     C                     PARM 'CIR006'  @SARD   6                       CIR006
+     C           SCSARD    PARM SCSARD    DSFDY                           CIR006
+     C*                                                                   CIR006
+     C           @RTCD     IFNE *BLANK                                    CIR006
+     C           @RTCD     ANDNE'*NRF   '                                 CIR006
+     C                     MOVEL'SCSARDPD'DBFILE           ***************CIR006
+     C                     MOVEL'10'      DBASE            * DB ERROR 10 *CIR006
+     C                     MOVEL'CIR006'  DBKEY            ***************CIR006
+     C                     EXSR *PSSR                                     CIR006
+     C                     GOTO END                                       CIR006
+     C                     ENDIF                                          CIR006
+      *                                                                   CIR006
+     C           @RTCD     IFEQ *BLANKS                                   CIR006
+     C                     MOVE 'Y'       CIR006  1                       CIR006
+     C                     MOVE '1'       *IN06                           CIR006
+     C                     ELSE                                           CIR006
+     C                     MOVE 'N'       CIR006                          CIR006
+     C                     ENDIF                                          CIR006
+      *                                                                                       CDL033
+      ** Determine if Floating Rate CD Issued feature is                                      CDL033
+      ** switched on.                                                                         CDL033
+      *                                                                                       CDL033
+     C                     MOVE *BLANK    CDL033  1                                           CDL033
+     C                     CALL 'AOSARDR0'                                                    CDL033
+     C                     PARM *BLANKS   @RTCD                                               CDL033
+     C                     PARM '*VERIFY' @OPTN                                               CDL033
+     C                     PARM 'CDL033'  @SARD                                               CDL033
+     C           SCSARD    PARM SCSARD    DSFDY                                               CDL033
+      *                                                                                       CDL033
+     C           @RTCD     IFEQ *BLANKS                                                       CDL033
+     C                     MOVE 'Y'       CDL033                                              CDL033
+     C                     ELSE                                                               CDL033
+     C           @RTCD     IFNE '*NRF   '                                                     CDL033
+     C                     MOVE '11'      DBASE                                               CDL033
+     C                     MOVEL'CDL033'  DBKEY                                               CDL033
+     C                     MOVEL'SCSARDPD'DBFILE                                              CDL033
+     C                     MOVE *ON       *INU7                                               CDL033
+     C                     MOVE *ON       *INU8                                               CDL033
+     C                     MOVE *ON       *INLR                                               CDL033
+     C                     EXSR *PSSR                                                         CDL033
+     C                     GOTO END                                                           CDL033
+     C                     ENDIF                                                              CDL033
+     C                     ENDIF                                                              CDL033
+      *                                                                                       CDL033
+      *                                                                   S01408
+     C/COPY WNCPYSRC,DL0521CCP1                                           S01408
+      *                                                                   S01408
+     C           DETAIL    TAG                             ** DETAIL TAG *
+     C  N01                GOTO TRAIL
+     C   01                SETOF                     40
+     C**
+     C           *INL5     IFEQ '1'
+     C*********************CLOSEDL0521P1                                    E257
+     C*********************CLOSEDL0520P1                             E257 LN0746
+     C                     CLOSEDL0521P1                                  LN0746
+     C           BRNCH     IFEQ 'ALL'
+     C           BRNCH     OREQ BRCA
+     C                     SETON                     58    ALLOW OUTPUT
+     C*********************OPEN DL0521P1                                    E257
+     C*********************OPEN DL0520P1                             E257 LN0746
+     C                     OPEN DL0521P1                                  LN0746
+     C*
+     C* REPORT SPOOL FILE GENERATION
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM BRCA      @PARM   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'                         B3
+     C* Error during ZSFILE processing, return to calling program.
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END                              E3
+     C*
+     C                     Z-ADD0         PAGE
+     C* IF BRNCH NOT ALL, PREVIOUS TOTALS WILL NOT HAVE BEEN ZEROISED     LN0373
+     C* IN O SPECS                                                        LN0373
+     C           BRNCH     IFNE 'ALL'                                     LN0373
+     C                     Z-ADD0         PCPL1                           LN0373
+     C                     Z-ADD0         AMAD1                           LN0373
+     C                     Z-ADD0         AMTA1                           LN0373
+     C                     Z-ADD0         PCPL2                           LN0373
+     C                     Z-ADD0         AMAD2                           LN0373
+     C                     Z-ADD0         AMTA2                           LN0373
+     C                     Z-ADD0         PCPL3                           LN0373
+     C                     Z-ADD0         AMAD3                           LN0373
+     C                     Z-ADD0         AMTA3                           LN0373
+     C                     END                                            LN0373
+     C*
+     C** To get Branch Name          :
+     C** READ BRANCH DETAILS VIA ACCESS PROGRAM FOR BRANCH NAME
+     C                     MOVELBRCA      ##KB                                                CSC042
+     C                     EXSR ##CHKB                                                        CSC042
+      * If branch is in the array then use the details                                        CSC042
+     C           ##FIC     IFEQ 'Y'                        *** B10                            CSC042
+     C                     EXSR ##SETB                                                        CSC042
+     C                     ELSE                            *** X10                            CSC042
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM BRCA      @DSNB   3
+     C********** @BRCH     PARM @BRCH     DSFDY                                               CGL029
+     C           @BRCH     PARM @BRCH     DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBRCHPD'DBFILE           ************
+     C                     MOVEL'02'      DBASE            * DBERR 02 *
+     C                     MOVEL@OPTN     DBOPTN           ************
+     C                     MOVELBRCA      DBKEY  29
+     C                     EXSR *PSSR
+     C                     GOTO END
+     C                     ELSE                                                               CSC042
+      * Details found on the DB so add them to the array                                      CSC042
+      * if the array still has room                                                           CSC042
+     C                     EXSR ##ADDB                                                        CSC042
+     C                     END
+     C                     END                             *** E10                            CSC042
+     C**
+     C**   IF DETAILS TO REPORT EXIST, SET INDICATOR
+     C                     SETON                     59
+     C                     ELSE
+     C                     SETOF                     58
+     C                     END
+     C                     END
+     C**
+     C*
+      *                                                                   S01408
+     C/COPY WNCPYSRC,DL0521CCP8                                           S01408
+      *                                                                   S01408
+     C*   WHEN DEAL S/TYPE CHANGES
+     C** CALL ACCESS PROGRAM FOR DEAL SUBTYPE DETAILS
+     C           *INL1     IFEQ '1'
+     C                     CALL 'AODLSTR0'
+     C                     PARM '*MSG    '@RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM DLST      @AQCD   2
+     C           @DLST     PARM @DLST     DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDDLSTPD'DBFILE 10         *************
+     C                     MOVEL'03'      DBASE   3         *DBERROR 003*
+     C                     MOVEL@OPTN     DBOPTN  7         *************
+     C                     MOVELDLST      DBKEY  29
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     GOTO END
+     C                     END
+     C*                                                                   CDL038
+     C** WHEN DEAL TYPE/SUB-TYPE/CLASS CHANGES                            CDL038
+     C** ACCESS DEAL TYPE/SUB-TYPE NARRATIVE                              CDL038
+     C*                                                                   CDL038
+     C           DTSTK     KLIST                                          CDL038
+     C                     KFLD           DTYP                            CDL038
+     C                     KFLD           DLST                            CDL038
+     C                     KFLD           CLAS                            CDL038
+     C           DTSTK     CHAINFDDTSTL1             99                   CDL038
+     C*                                                                   CDL038
+     C           *IN99     IFEQ *OFF                                      CDL038
+     C                     MOVELNARR11    DSTCNR                          CDL038
+     C                     ELSE                                           CDL038
+     C                     MOVEL*BLANK    DSTCNR                          CDL038
+     C                     MOVELASDSTN    DSTCNR 35                       CDL038
+     C                     ENDIF                                          CDL038
+     C*
+     C                     END
+     C*
+     C*
+     C*    AT CHANGE OF DEAL TYPE, SET INDICATORS
+     C   L2                SETOF                     35
+     C   L2      RCDC      COMP 15                       15
+     C   L2      RCDC      COMP 16                       16
+     C   L2      RCDC      COMP 20                       19
+     C   L2 15
+     COR L2 16             SETON                     35
+     C**
+     C**   IF INTERNAL CONTRACT DEAL TYPE NOT REQUIRED
+     C**
+     C   L2 19             GOTO SKIPD
+     C/COPY WNCPYSRC,DL0521C007
+      *                                                                                       CDL033
+      ** Floating Rate CD processing.                                                         CDL033
+      *                                                                                       CDL033
+     C   L2      DTYP      IFEQ 'CF'                                                          CDL033
+      *                                                                                       CDL033
+     C   L2      DTYP      LOKUPTAB1CP    TAB2CP         50                                   CDL033
+     C   L2N50             SETON                     U7U8LR                                   CDL033
+     C   L2N50             MOVEL'TAB1CP  'DBFILE                                              CDL033
+     C   L2N50             MOVEL'12'      DBASE                                               CDL033
+     C   L2N50             MOVEL'*KEY'    DBOPTN                                              CDL033
+     C   L2N50             MOVELDTYP      DBKEY                                               CDL033
+     C   L2N50             EXSR *PSSR                                                         CDL033
+     C   L2N50             GOTO END                                                           CDL033
+     C   L2 50             MOVELTAB2CP    NARR   50                                           CDL033
+      *                                                                                       CDL033
+     C                     ELSE                                                               CDL033
+      *                                                                                       CDL033
+     C**   CHANGED TO PRINT DTYPE INSTEAD OF RECORD TYPE AS NARRATIVE
+     C   L2      DTYP      LOKUPTAB1      TAB2           50
+     C   L2N50             SETON                     U7U8LR
+     C   L2N50             MOVEL'TAB1    'DBFILE            *************
+     C   L2N50             MOVEL'04'      DBASE             *DBERROR 004*
+     C   L2N50             MOVEL'*KEY'    DBOPTN            *************
+     C   L2N50             MOVELDTYP      DBKEY
+     C   L2N50             GOTO END
+      *                                                                   CDL006
+     C           *INL2     IFEQ '1'                                       CDL006
+     C           *IN50     ANDEQ'1'                                       CDL006
+     C           CDL006    ANDEQ'N'                                       CDL006
+      *                                                                   CDL006
+     C           DTYP      IFEQ 'FL'                                      CDL006
+     C           DTYP      OREQ 'DP'                                      CDL006
+     C           DTYP      OREQ 'LP'                                      CDL006
+     C           DTYP      OREQ 'FT'                                      CDL006
+     C           DTYP      OREQ 'DT'                                      CDL006
+     C           DTYP      OREQ 'LT'                                      CDL006
+     C                     MOVEL'TAB1    'DBFILE                          CDL006
+     C                     MOVELDTYP      DBKEY                           CDL006
+     C                     MOVEL'010'     DBASE                           CDL006
+     C                     MOVE '1'       *INU7                           CDL006
+     C                     MOVE '1'       *INU8                           CDL006
+     C                     MOVE '1'       *INLR                           CDL006
+     C                     EXSR *PSSR                                     CDL006
+     C                     GOTO END                                       CDL006
+     C                     ENDIF                                          CDL006
+     C                     ENDIF                                          CDL006
+      *                                                                   CDL006
+     C   L2 50             MOVELTAB2      NARR   50
+     C**
+     C/COPY WNCPYSRC,DL0521C008
+      *                                                                                       CDL033
+      ** Floating Rate CD processing.                                                         CDL033
+      *                                                                                       CDL033
+     C                     ENDIF                                                              CDL033
+     C           SKIPD     TAG                             ** SKIPD TAG **
+     C*
+     C*    AT CHANGE OF CURRENCY, SET INDICATORS ACCORDING TO
+     C*    NUMBER OF DECIMAL PLACES
+     C*
+     C** CALL ACCESS PROGRAM FOR BASE CURRENCY DETAILS
+     C           *INL3     IFEQ '1'
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG    '@RTCD
+     C                     PARM '*KEY    '@OPTN
+     C                     PARM CCY       @AJCD   3
+     C           @CURR     PARM @CURR     DSSDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDCURRPD'DBFILE            *************
+     C                     MOVEL'05'      DBASE             *DBERROR 005*
+     C                     MOVEL@OPTN     DBOPTN            *************
+     C                     MOVELCCY       DBKEY  29
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     GOTO END
+     C                     END
+     C*
+     C                     END
+     C   L3      A6NBDP    COMP 1                      3031
+     C   L3      A6NBDP    COMP 2                    33  32
+     C*
+     C** AT CHANGE OF RECORD ID SET INDICATORS
+     C   L4      RECID     COMP 'D'                      43
+     C   L4      RECID     COMP 'E'                      44
+     C   L4      RECID     COMP 'F'                      45
+     C*                                                                   CIR001
+     C           CIR001    IFEQ 'Y'                                       CIR001
+     C           *INL4     ANDEQ'1'                                       CIR001
+     C           RECID     COMP 'G'                      46               CIR001
+     C                     END                                            CIR001
+      *                                                                   S01408
+     C/COPY WNCPYSRC,DL0521CCP2                                           S01408
+      *                                                                   S01408
+     C**
+     C*    ACCUMULATE NUMBER AND VALUE OF DETAIL RECORDS READ
+     C*
+     C           RECRED    ADD  1         RECRED  50
+     C           PCPL      DIV  1000      ZZAMT        34
+     C   34                Z-SUBZZAMT     ZZAMT
+     C                     EXSR GLZADD
+     C*
+     C*    ACCUMULATE PRINCIPAL AMOUNT FOR DEAL SUB-TYPE IN PCPL1
+     C*    ACCUMULATE ACCRUED TO DATE  FOR DEAL SUB-TYPE IN AMAD1
+     C*    ACCUMULATE AMOUNT TO ACCRUE FOR DEAL SUB TYPE IN AMTA1
+     C*
+     C           PCPL1     ADD  PCPL      PCPL1  130
+     C           AMAD1     ADD  AMAD      AMAD1  130
+     C           AMTA1     ADD  AMTA      AMTA1  130
+     C*
+     C*
+     C**   FRA/IRS DEAL TYPES MAY HAVE ACCRUAL AMOUNTS IN THEIR FIELDS.
+     C**   ACCUMULATE THEIR ACCRUED TO DATE  FOR DEAL SUB-TYPE IN AMAD1.
+     C**   ACCUMULATE THEIR AMOUNT TO ACCRUE FOR DEAL SUB-TYPE IN AMTA1.
+     C*
+     C                     ADD  TAMAD     AMAD1
+     C                     ADD  TAMTA     AMTA1
+      *                                                                   S01408
+     C/COPY WNCPYSRC,DL0521CCP3                                           S01408
+      *                                                                   S01408
+     C*                                                                   CIR002
+     C** Check Total Unsettled Interest field if zero.                    CIR002
+     C*                                                                   CIR002
+     C                     MOVEA'00'      *IN,51                          CIR002
+     C           CIR002    IFEQ 'Y'                                       CIR002
+     C           CIR006    OREQ 'Y'                                       CIR006
+     C/COPY WNCPYSRC,DL0521CNB2
+     C           OTUI      IFNE 0                                         CIR002
+     C                     MOVE '1'       *IN51                           CIR002
+     C                     END                                            CIR002
+     C           TTUI      IFNE 0                                         CIR002
+     C                     MOVE '1'       *IN52                           CIR002
+     C                     END                                            CIR002
+     C                     END                                            CIR002
+     C*
+     C                     MOVE CNUM      CNUMA   6
+     C*  OBTAIN CUSTOMER REPORTING TOWN
+     C*
+     C** CALL ACCESS PROGRAM FOR CUSTOMER DETAILS
+     C******               CALL 'AOCUSTR0'                                220738
+     C           *LIKE     DEFN BBCUST    ##LCUS                                              CSC042
+     C           *LIKE     DEFN BBCLST    ##LLST                                              CSC042
+     C           *LIKE     DEFN BBCRNM    ##LCNM                                              CSC042
+     C           *LIKE     DEFN BBCRTN    ##LCTN                                              CSC042
+     C           CNUMA     IFEQ ##LCUS                                                        CSC042
+     C                     MOVEL##LLST    BBCLST                                              CSC042
+     C                     MOVEL##LCNM    BBCRNM                                              CSC042
+     C                     MOVEL##LCTN    BBCRTN                                              CSC042
+     C                     ELSE                                                               CSC042
+     C                     CALL 'AOCUSTR1'                                220738
+     C                     PARM '*MSG    '@RTCD
+     C                     PARM '*KEY    '@OPTN
+     C                     PARM CNUMA     @AENB  10
+     C                     PARM *BLANKS   @KYST   7
+     C******     @CUST     PARM @CUST     DSSDY                           220738
+     C           @CUST     PARM @CUST     DSLDY                           220738
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           BBCLST    ANDNE'Y'                                       220738
+     C                     MOVEL'SDCUSTPD'DBFILE            *************
+     C                     MOVEL'06'      DBASE             *DBERROR 006*
+     C                     MOVEL@OPTN     DBOPTN            *************
+     C                     MOVELCNUMA     DBKEY
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     GOTO END
+     C                     ELSE                                                               CSC042
+     C                     MOVELBBCUST    ##LCUS                                              CSC042
+     C                     MOVELBBCLST    ##LLST                                              CSC042
+     C                     MOVELBBCRNM    ##LCNM                                              CSC042
+     C                     MOVELBBCRTN    ##LCTN                                              CSC042
+     C                     END
+     C                     END                                                                CSC042
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,DL0521CCP9                                           S01408
+     C*                                                                   S01408
+     C*
+     C*
+     C**   FRA/IRS DEAL TYPES MAY CONTAIN REPORT DATA IN THEIR FIELDS.
+     C*
+     C**   'RS' DEAL TYPE CONVERT THEIR DATES.
+     C**   'RX' DEAL TYPE, CONVERT THEIR DATES FOR REPORT.
+     C**   'RP', 'RF', 'RR' DEAL TYPE, CONVERT THEIR DATES FOR REPORT.
+     C*
+     C                     MOVE *BLANK    TACFDA  7
+     C                     MOVE *BLANK    TACTDA  7
+     C           DTYP      IFEQ 'RS'
+     C           DTYP      OREQ 'RX'
+     C           DTYP      OREQ 'RF'
+     C           DTYP      OREQ 'RR'
+     C           DTYP      OREQ 'RP'
+     C                     Z-ADDTACFD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    TACFDA
+     C/COPY WNCPYSRC,DL0521C002
+     C                     Z-ADDTACTD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    TACTDA
+     C/COPY WNCPYSRC,DL0521C003
+     C                     END
+     C*
+     C*
+     C**   SET PRINT CONTROL CONDITIONS.
+     C*
+     C**   IDENTIFY FRA/IRS DEAL RECORDS.
+     C*
+     C                     MOVEA'00000000'*IN,60           INDS. 60-67
+     C                     MOVEA'0000'    *IN,68           INDS. 68-71
+      *                                                                   S01408
+     C/COPY WNCPYSRC,DL0521CCP4                                           S01408
+      *                                                                   S01408
+     C           CIR001    IFEQ 'Y'                                       CIR001
+     C                     MOVE '0'       *IN72            INDS. 72       CIR001
+     C                     END                                            CIR001
+     C*                                                                   CIR001
+     C           CIR001    IFEQ 'Y'                                       CIR001
+     C           RECID     ANDEQ'G'                                       CIR001
+     C                     MOVE '1'       *IN72                           CIR001
+     C                     ELSE                                           CIR001
+     C*
+     C           DTYP      IFEQ 'FR'
+     C                     MOVE '1'       *IN61
+     C                     END
+     C           DTYP      IFEQ 'RS'
+     C                     MOVE '1'       *IN62
+     C                     END
+     C           DTYP      IFEQ 'RX'
+     C                     MOVE '1'       *IN63
+     C                     END
+     C*
+     C*
+     C           DTYP      IFEQ 'RF'
+     C           DTYP      OREQ 'RR'
+     C           DTYP      OREQ 'RP'
+     C                     MOVE '1'       *IN64
+     C                     END
+     C*
+     C**   IF FLOOR DEAL DO NOT OUTPUT CEILING RATE.
+     C**   OUTPUT FLOOR RATE.
+     C*
+     C                     SETOF                     11
+     C*
+     C           DTYP      IFEQ 'RF'
+     C                     SETON                     11
+     C                     END
+     C*
+     C           *IN61     IFEQ '1'
+     C           *IN62     OREQ '1'
+     C           *IN63     OREQ '1'
+     C           *IN64     OREQ '1'
+     C                     MOVE '1'       *IN60
+     C                     END
+      *                                                                   S01408
+     C/COPY WNCPYSRC,DL0521CCP5                                           S01408
+      *                                                                   S01408
+     C*                                                                   CIR001
+     C                     END                                            CIR001
+     C*
+     C           *IN60     IFEQ '1'
+     C*
+     C**   FRA/IRS DETERMINE RATE PRESENT.
+     C*
+     C           URTPI     IFEQ 'Y'                        OUR RATE
+     C                     MOVE '1'       *IN65            PRESENT
+     C                     END
+     C           TRTPI     IFEQ 'Y'                        THEIR RATE
+     C                     MOVE '1'       *IN66            PRESENT
+     C                     END
+     C*
+     C**   FR - IF BOTH RATES PRESENT FIND ACCRUAL AMOUNTS TO PRINT.
+     C*
+     C           *IN61     IFEQ '1'
+     C           *IN65     ANDEQ'1'
+     C           *IN66     ANDEQ'1'
+     C           TAMAD     IFEQ 0
+     C           TAMTA     ANDEQ0
+     C                     MOVE '1'       *IN67            PRT. OURS
+     C                     ELSE
+     C                     MOVE '1'       *IN68            PRT. THEIRS
+     C                     END
+     C                     END
+     C*
+     C**   RS/RX - IF RATE PRESENT, SET ACCRUAL AMOUNT TO PRINT.
+     C*
+     C           *IN62     IFEQ '1'
+     C           *IN63     OREQ '1'
+     C           *IN65     IFEQ '1'
+     C                     MOVE '1'       *IN67            PRT. OURS
+     C                     END
+     C           *IN66     IFEQ '1'
+     C                     MOVE '1'       *IN68            PRT. THEIRS
+     C                     END
+     C                     END
+     C*
+     C**   RX - DETERMINE IF RECORD IS FOR OUR OR THEIR DETAILS.
+     C*
+     C           *IN63     IFEQ '1'
+     C           ACFD      IFNE 0
+     C                     MOVE '1'       *IN69            OUR DETAILS
+     C                     ELSE
+     C                     MOVE '1'       *IN70            THEIR DETAILS
+     C                     END
+     C                     END
+     C*
+     C**   RP, RF, RR - DETERMINE IF PROVIDERS DETAILS OURS OR THEIRS.
+     C*
+     C           *IN64     IFEQ '1'
+     C           UBRTT     IFNE 0
+     C                     MOVE '1'       *IN69            OUR DETAILS
+     C                     ELSE
+     C                     MOVE '1'       *IN70            THEIR DETAILS
+     C                     END
+     C*
+     C**   RP, RF. RR - IF PROVIDERS RATE PRESENT, SET ACCRUAL AMOUNTS .
+     C**                TO PRINT.                                      .
+     C*
+     C           *IN69     IFEQ '1'
+     C           *IN65     ANDEQ'1'
+     C           *IN70     OREQ '1'
+     C           *IN66     ANDEQ'1'
+     C           TAMAD     IFEQ 0
+     C           TAMTA     ANDEQ0
+     C                     MOVE '1'       *IN67
+     C                     ELSE
+     C                     MOVE '1'       *IN68
+     C                     END
+     C                     END
+     C*
+     C**   RP, RF, RR - CHECK IF FLOOR RATE PRESENT.
+     C*
+     C           FLRIND    IFEQ 'Y'
+     C                     MOVE '1'       *IN71
+     C                     END
+     C*
+     C                     END
+     C*
+     C*
+     C                     END
+     C*
+     C*
+     C*
+     C*    CONVERT 'ACCRUAL FROM' AND 'PERIOD TO' DATES TO ALPHA FORMAT
+     C*
+     C                     Z-ADDACFD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    ACFDA   7
+     C/COPY WNCPYSRC,DL0521C004
+     C   35N21             GOTO TRAIL
+     C                     Z-ADDACTD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    ACTDA   7
+     C/COPY WNCPYSRC,DL0521C005
+     C           TRAIL     TAG                             ** TRAIL TAG **
+     C  N02                GOTO END
+     C           RECRED    ADD  2         RECRED
+     C/COPY WNCPYSRC,DL0521C011
+     C           NORE      COMP RECRED               8080
+     C           ZZTOTI    COMP HRWN                 8181
+     C  N81      ZZTOTD    COMP HRDC                 8181
+     C   80
+     COR 81                SETON                     U8
+     C           END       TAG                             ** END TAG **
+     C*
+     C*    INCREMENT LINE COUNT TO CONDITION OVERFLOW
+     C   OF                Z-ADD0         LINE    20
+     C   L3
+     COR OFNL3   LINE      ADD  12        LINE
+     C   L2
+     COR OFNL2   LINE      ADD  2         LINE
+     C   L1
+     COR OFNL1   LINE      ADD  2         LINE
+     C   01      LINE      ADD  1         LINE
+      *                                                                   S01408
+     C/COPY WNCPYSRC,DL0521CCP7                                           S01408
+      *                                                                   S01408
+     C**
+     C***61******                                          FR 2ND LINE    CIR001
+     C***OR*62***                                          RS 2ND LINE    CIR001
+     C*****RP,*RF,*RR*2ND*LINE********************************************CIR001
+     C***OR*64***   LINE      ADD  1         LINE                         CIR001
+      *                                                                   S01408
+     C/COPY WNCPYSRC,DL0521CCP6                                           S01408
+      *                                                                   S01408
+     C*                                                                   CIR001
+     C           *IN61     IFEQ '1'                        FR 2ND LINE    CIR001
+     C           *IN62     OREQ '1'                        RS 2ND LINE    CIR001
+     C           *IN64     OREQ '1'                        RP,RF,RR 2ND   CIR001
+     C           *IN72     OREQ '1'                                       CIR001
+     C           CIR001    ANDEQ'Y'                                       CIR001
+     C           LINE      ADD  1         LINE                            CIR001
+     C                     END                                            CIR001
+     C*                                                                   CIR002
+     C**  RS Total unsettled interest line                                CIR002
+     C*                                                                   CIR002
+     C           CIR002    IFEQ 'Y'                                       CIR002
+     C           CIR006    OREQ 'Y'                                       CIR006
+     C/COPY WNCPYSRC,DL0521CNB3
+     C*                                                                   CIR002
+     C           *IN62     IFEQ '1'                                       CIR002
+     C           *IN51     IFEQ '1'                                       CIR002
+     C                     ADD  1         LINE                            CIR002
+     C                     END                                            CIR002
+     C           *IN52     IFEQ '1'                                       CIR002
+     C                     ADD  1         LINE                            CIR002
+     C                     END                                            CIR002
+     C                     END                                            CIR002
+     C*                                                                   CIR002
+     C**  RR, RF, RP Total unsettled interest line                        CIR002
+     C*                                                                   CIR002
+     C           *IN64     IFEQ '1'                                       CIR002
+     C           *IN51     IFEQ '1'                                       CIR002
+     C           *IN52     OREQ '1'                                       CIR002
+     C                     ADD  1         LINE                            CIR002
+     C                     END                                            CIR002
+     C                     END                                            CIR002
+     C*                                                                   CIR002
+     C                     END                                            CIR002
+     C*                                                                   CIR002
+     C**   RP, RF, RR FLOOR LINE
+     C   71 64   LINE      ADD  1         LINE
+     C**
+     C**   LINE CHECK TO CONDITION OVERFLOW FOR DETAIL OUTPUT
+     C**
+     CL1NOF      LINE      COMP 52                   OF
+     CL2NOF      LINE      COMP 50                   OF
+     CL3NOF      LINE      COMP 48                   OF
+     C**
+     C**   LEVEL BREAK CALCULATIONS
+     C**
+     C*
+     C*    ADD SUB-TOTALS TO RUNNING TOTALS
+     CL1         PCPL2     ADD  PCPL1     PCPL2  130
+     CL1         AMAD2     ADD  AMAD1     AMAD2  130
+     CL1         AMTA2     ADD  AMTA1     AMTA2  130
+     CL1         LINE      ADD  3         LINE
+     CL1NOF      LINE      COMP 52                   OF
+     C*
+     CL2         PCPL3     ADD  PCPL2     PCPL3  130
+     CL2         AMAD3     ADD  AMAD2     AMAD3  130
+     CL2         AMTA3     ADD  AMTA2     AMTA3  130
+     C*
+     C*    LINE CHECK TO CONDITION OVERFLOW
+     CL2         LINE      ADD  2         LINE
+     CL2NOF      LINE      COMP 50                   OF
+     C/COPY WNCPYSRC,DL0521C009
+     CL3         LINE      ADD  1         LINE
+     CL3NOF      LINE      COMP 48                   OF
+     CL3                   Z-ADD0         LINE
+     C*                                                                   098321
+     CL1 OF 58             Z-ADD0         LINE                            186259
+     C*1*OF******          EXCPT                                    098321127054
+     CL1 OF 58             EXCPT                                          127054
+     C*
+     C** ENSURE TOTALS SPOOL FILE RECORDED BY RCF
+     CLR                   Z-ADDSFNUMU    ZSNUM   60
+     CLR                   CALL 'ZSFILE'
+     CLR                   PARM           SEQ
+     CLR                   PARM *BLANK    @PARM
+     CLR                   PARM           SFILEU
+     CLR                   PARM           ZSNUM
+     CLR                   PARM *BLANK    ZSERR   1
+     C*
+     CLR         ZSERR     IFEQ 'Y'
+     C** Error during ZSFILE processing, return to calling program
+     CLR                   SETON                     U7U8LR
+     CLR                   RETRN
+     CLR                   END
+     C/COPY WNCPYSRC,DL0521C010
+     C*
+     C********************************************************************
+      /EJECT                                                                                  CSC042
+     C********************************************************************                    CSC042
+      *                                                                                       CSC042
+      * ##CHKB - Subroutine to check the Branch in the arrays                                 CSC042
+      *                                                                                       CSC042
+     C           ##CHKB    BEGSR                                                              CSC042
+      *                                                                                       CSC042
+     C           *LIKE     DEFN A8BRCD    ##KB                                                CSC042
+      *                                                                                       CSC042
+      * Set off the branch found indicator                                                    CSC042
+     C                     MOVEL*BLANK    ##FIC   1                                           CSC042
+      *                                                                                       CSC042
+      * Save the state of indicator 30 so it can be reset at the end                          CSC042
+      * of the SR as it may be used elsewhere in the code                                     CSC042
+     C           *IN30     IFEQ *ON                                                           CSC042
+     C                     MOVEL'Y'       #IN30   1                                           CSC042
+     C                     ELSE                                                               CSC042
+     C                     MOVEL'N'       #IN30                                               CSC042
+     C                     END                                                                CSC042
+      *                                                                                       CSC042
+     C                     SETOF                         30                                   CSC042
+      *                                                                                       CSC042
+      * Restore the saved Value of B                                                          CSC042
+     C                     Z-ADD##BSV     B                                                   CSC042
+      *                                                                                       CSC042
+     C* Check whether details for Branch already in array                                     CSC042
+      *                                                                                       CSC042
+      * Is this the same as the last LOKUP, if so we can bypass                               CSC042
+      * the LOKUP                                                                             CSC042
+      * Defend against B being 0                                                              CSC042
+     C           B         IFEQ 0                                                             CSC042
+     C                     Z-ADD1         B                                                   CSC042
+     C                     END                                                                CSC042
+      *                                                                                       CSC042
+      * If the branch being checked is the same then use these                                CSC042
+      * details rather than doing a LOKUP                                                     CSC042
+     C           ##KB      IFEQ ##BR,B                                                        CSC042
+      * Found so seton 30                                                                     CSC042
+     C                     SETON                         30                                   CSC042
+     C                     ELSE                                                               CSC042
+     C                     Z-ADD1         B                                                   CSC042
+     C           ##KB      LOKUP##BR,B                   30                                   CSC042
+     C                     END                                                                CSC042
+      *                                                                                       CSC042
+      * Save the last update to B                                                             CSC042
+     C           *IN30     IFEQ *ON                                                           CSC042
+     C                     Z-ADDB         ##BSV                                               CSC042
+      * Set the indicator to show the data was found                                          CSC042
+     C                     MOVEL'Y'       ##FIC                                               CSC042
+     C                     END                                                                CSC042
+      *                                                                                       CSC042
+      * Reset the state of indicator 30.                                                      CSC042
+     C           #IN30     IFEQ 'Y'                                                           CSC042
+     C                     MOVEL*ON       *IN30                                               CSC042
+     C                     ELSE                                                               CSC042
+     C                     MOVEL*OFF      *IN30                                               CSC042
+     C                     END                                                                CSC042
+      *                                                                                       CSC042
+     C                     ENDSR                                                              CSC042
+      ********************************************************************                    CSC042
+      /EJECT                                                                                  CSC042
+      ********************************************************************                    CSC042
+      *                                                                                       CSC042
+      * ##SETB - Sets up the SDBRCHPD fields used in the code from the                        CSC042
+      * arrays                                                                                CSC042
+      *                                                                                       CSC042
+     C           ##SETB    BEGSR                                                              CSC042
+      *                                                                                       CSC042
+     C                     MOVEL##BR,B    A8BRCD                                              CSC042
+     C                     MOVEL##BN,B    A8BRNM                                              CSC042
+      *                                                                                       CSC042
+     C                     ENDSR                                                              CSC042
+      *                                                                                       CSC042
+      ********************************************************************                    CSC042
+      /EJECT                                                                                  CSC042
+      ********************************************************************                    CSC042
+      *                                                                                       CSC042
+      * ##ADDB - Adds the SDBRCHPD fields used in the code to the                             CSC042
+      * arrays                                                                                CSC042
+      *                                                                                       CSC042
+     C           ##ADDB    BEGSR                                                              CSC042
+      *                                                                                       CSC042
+      * If there is still room in the array then add the details                              CSC042
+     C           ##BNDX    IFLT 999                                                           CSC042
+     C                     ADD  1         ##BNDX                                              CSC042
+     C                     Z-ADD##BNDX    B                                                   CSC042
+     C                     MOVELA8BRCD    ##BR,B                                              CSC042
+     C                     MOVELA8BRNM    ##BN,B                                              CSC042
+     C                     END                                                                CSC042
+      *                                                                                       CSC042
+      * Update ##BSV  so next call to ##CHKB checks this latest adddition                     CSC042
+      * to the array firss                                                                    CSC042
+     C                     Z-ADDB         ##BSV                                               CSC042
+      *                                                                                       CSC042
+     C                     ENDSR                                                              CSC042
+      ********************************************************************                    CSC042
+      /EJECT                                                                                  CSC042
+     C**
+     C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+     C**
+     C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+     C**
+     C           ZDATE2    BEGSR                           *** ZDATE2 ***
+     C**
+     C**   CLEAR DATE FIELDS.
+     C                     Z-ADD0         ZDATE   60
+     C                     MOVEL'       ' ZADATE  7
+     C**
+     C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C**
+     C**   DETERMINE YEAR NUMBER.
+     C**
+     C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+     C           ZDAYNO    SUB  1         ZDAYN1  50   99
+     C   99                GOTO ZDEND2
+     C**
+     C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+     C           ZDAYN1    DIV  1461      ZLYR    20
+     C                     MVR            ZDAYN1           SAVE REMAINING
+     C**                                                   DAYS
+     C**   CALCULATE NUMBER OF REMAINING YEARS.
+     C                     Z-ADD1         ZWRK2   20
+     C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+     C           ZDAYN1    COMP ZYDY,ZWRK2             90
+     C  N90      ZWRK2     ADD  1         ZWRK2
+     C  N90                GOTO ZDTAG1
+     C           ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON
+     C**
+     C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+     C  N91      ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+     C**
+     C**   CALCULATE ACTUAL YEAR NUMBER.
+     C           ZLYR      MULT 4         ZWRK3   30
+     C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+     C                     Z-ADDZWRK3     ZYEAR   20
+     C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+     C**
+     C**   DETERMINE MONTH NUMBER.
+     C**
+     C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+     C                     SETOF                     9293
+     C   91      ZDAYN1    COMP 59                     9293
+     C   91N92   ZDAYN1    SUB  1         ZDAYN1
+     C**
+     C**   CALCULATE MONTH NUMBER.
+     C                     Z-ADD2         ZWRK2
+     C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+     C           ZDAYN1    COMP ZMDY,ZWRK2             94
+     C  N94      ZWRK2     ADD  1         ZWRK2
+     C  N94                GOTO ZDTAG2
+     C           ZWRK2     SUB  1         ZWRK2
+     C**
+     C                     Z-ADDZWRK2     ZMTH    20       MONTH
+     C**
+     C**   DETERMINE DAY OF MONTH.
+     C**
+     C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+     C           ZDAYN1    ADD  1         ZDAYN1
+     C**
+     C**   CALCULATE DAY OF MONTH.
+     C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+     C**
+     C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+     C   93      ZDAY      ADD  1         ZDAY
+     C**
+     C**   FORMAT DATE, DDMMYY OR MMDDYY.
+     C  N98                MOVELZDAY      ZWRK4   40
+     C   98                MOVE ZDAY      ZWRK4
+     C  N98                MOVE ZMTH      ZWRK4
+     C   98                MOVELZMTH      ZWRK4
+     C                     MOVELZWRK4     ZDATE
+     C                     MOVE ZYEAR     ZDATE
+     C**
+     C**   FORMAT ALPHA DATE, DDMMMYY.
+     C           ZDAY      COMP 10                     95
+     C                     MOVELZDAY      ZWRK5   5
+     C   95                MOVEL' '       ZWRK5
+     C                     MOVE ZMNM,ZMTH ZWRK5
+     C                     MOVELZWRK5     ZADATE
+     C                     MOVE ZYEAR     ZADATE
+     C**
+     C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*
+     C**
+     C********************************************************************
+     C* SUBROUTINE TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL (ZZTOTI,ZZTOTD)
+     C*   IND '99' IS SET BY AN OVERFLOW ERROR
+     C*
+     CSR         GLZADD    BEGSR                           *** GLZADD ****
+     C*
+     CSR                   Z-ADDZZAMT     ZZAMT  153     91-DEFINE ZZAMT
+     CSR 91                GOTO ZZAEND                     AMT = 0.BYPASS
+     C*
+     C* SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS
+     CSR                   Z-ADDZZAMT     ZZAMTI 150       INTEGER FIELD
+     CSR                   MOVE ZZAMT     ZZAMTD  30       DECIMAL FIELD
+     C* BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW
+     C*
+     CSR                   EXSR GLZSUM
+     CSR         ZZAEND    ENDSR                           ** ZZAEND TAG *
+     C*
+     C********************************************************************
+     C* SUBROUTINE TO CARRY OUT THE ADDITION FOR SUBROUTINES -
+     C*                        GLZADD, GLZSUB, GLZCMP.
+     C*          PARAMETERS PASSED -
+     C*                     I/P ZZAMTI ZZAMTD
+     C*                     O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.
+     C*
+     CSR         GLZSUM    BEGSR                           *** GLZSUM ****
+     C*
+     CSR                   Z-ADDZZTOTI    ZZTOTI 150       DEFINE ZZTOTI
+     CSR                   Z-ADDZZTOTD    ZZTOTD  30       DEFINE ZZTOTD
+     CSR                   SETOF                     919293
+     CSR                   SETOF                     949599
+     C*
+     C*    DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG
+     CSR         ZZAMTI    COMP 0                      9293
+     CSR 93      ZZAMTD    COMP 0                      9293
+     CSR 93                GOTO ZZSEND                     ZERO BYPASS
+     C*
+     C*    DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.
+     CSR         ZZTOTI    COMP 0                      9193
+     CSR 93      ZZTOTD    COMP 0                      9193
+     C*
+     C*    IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.
+     CSR 93                Z-ADDZZAMTI    ZZTOTI
+     CSR 93                Z-ADDZZAMTD    ZZTOTD
+     CSR 93                GOTO ZZSEND                     ZERO BYPASS
+     C*    IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.
+     CSR 91N92
+     CORN91 92             GOTO ZZOFPS
+     C*
+     CSR         ZZAMTD    ADD  ZZTOTD    ZZWK2   40
+     CSR         ZZWK2     COMP 999                  93    '93' = CARRY
+     CSRN93      ZZWK2     COMP -999                   93    INTO INTEGER.
+     C*
+     CSR 93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VE
+     CSR    93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VE
+     CSR 93      ZZTOTI    ADD  ZZWK3     ZZWK3
+     CSRN93      ZZTOTI    ADD  ZZAMTI    ZZWK3
+     C*
+     C* IF THE MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED
+     CSRN92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS.
+     CSR 92      ZZWK3     COMP ZZTOTI               99     NEGATIVE
+     CSRN99                Z-ADDZZWK2     ZZTOTD
+     CSRN99                Z-ADDZZWK3     ZZTOTI
+     C*
+     C* IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT INTACT.
+     CSR 99                Z-ADD0         ZZAMT  153
+     CSR                   GOTO ZZSEND
+     C*
+     C* THE 'SIGNS' ARE DIFFERENT
+     CSR         ZZOFPS    TAG                             ** ZZOFPS TAG**
+     C* IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT
+     C*
+     CSR 92                Z-SUBZZAMTI    ZZAMTI 150
+     CSR 92                Z-SUBZZAMTD    ZZAMTD  30
+     C*
+     C* IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.
+     C*
+     CSR 91                Z-SUBZZTOTI    ZZTOTI
+     CSR 91                Z-SUBZZTOTD    ZZTOTD
+     C* BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.
+     C*
+     CSR         ZZTOTI    COMP ZZAMTI               93  95
+     CSR 95      ZZTOTD    COMP ZZAMTD               93  95
+     C*
+     C* IF ZZTOT EQ. ZZAMT RETURN ZERO.
+     CSR 95                Z-ADD0         ZZTOTI
+     CSR 95                Z-ADD0         ZZTOTD
+     CSR 95                GOTO ZZSEND
+     C*
+     C* IF ZZTOT GT. ZZAMT.
+     CSR 93      ZZAMTD    COMP ZZTOTD               94
+     CSR 93 94   ZZTOTI    SUB  1         ZZTOTI
+     CSR 93 94   ZZTOTD    ADD  1000      ZZWK2
+     CSR 93      ZZTOTI    SUB  ZZAMTI    ZZTOTI
+     CSR 93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD
+     CSR 93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD
+     C*
+     C*
+     C* IF ZZAMT GT. ZZTOT.
+     CSRN93      ZZTOTD    COMP ZZAMTD               94
+     CSRN93 94   ZZAMTI    SUB  1         ZZWK3  150
+     CSRN93 94   ZZAMTD    ADD  1000      ZZWK2
+     CSRN93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI
+     CSRN93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI
+     CSRN93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD
+     CSRN93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD
+     C*
+     C* REVERSE SIGN OF ZZTOT IF LARGER I/P FIELDS WERE NEGATIVE
+     CSR                   SETOF                     94
+     CSR 93 91
+     CORN93 92             SETON                     94
+     CSR 94                Z-SUBZZTOTI    ZZTOTI
+     CSR 94                Z-SUBZZTOTD    ZZTOTD
+     C**
+     C**   RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.
+     CSR 92                Z-SUBZZAMTI    ZZAMTI
+     CSR 92                Z-SUBZZAMTD    ZZAMTD
+     CSR         ZZSEND    TAG                             ** ZZSEND TAG *
+     C**
+     C**   IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.
+     CSR                   SETOF                     96
+     CSR         ZZTOTD    COMP 0                        91
+     CSR 91      ZZTOTI    COMP 0                      96
+     CSR 96                MOVE '.000-'   ZZNEGD  5
+     CSR                   ENDSR                             ** ENDSR **
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/COPY WNCPYSRC,DL0521C006
+     C/EJECT
+     O**DL0521P1D**203***L3*58*********                                     E257
+     O**DL0520P1D**203***L3*58*********                             E257  LN0746
+     ODL0521P1D  203   L3 58                                              LN0746
+     O       OR        OFNL3 58
+     O                                   24 'REFERENCE DL0521P1'
+     O                         BJURPT    89
+     O                                  104 'DATE'
+     O                         BJMRDT   112
+     O                                  122 'PAGE'
+     O                         PAGE  Z  127
+     O        D  1     L3 58
+     O       OR        OFNL3 58
+     O**                                 68 'INTEREST ACCRUALS -'
+     O                       43          57 'INTEREST ACCRUALS -'
+     O                       44          46 'DISCOUNT/PREMIUM'
+     O                       44          57 'ACCRUALS -'
+     O                       45          46 'SWAP PROFIT/LOSS'
+     O                       45          57 'ACCRUALS -'
+      *                                                                   S01408
+     O/COPY WNCPYSRC,DL0521OOP1                                           S01408
+      *                                                                   S01408
+     O                    46 05          57 'FEE AMORTIZATION  -'         CIR001
+     O**********                         67 'UP TO BUT'                                     MD025659
+     O**********                         79 'EXCLUDING -'                                   MD025659
+     O                                   63 'UP TO'                                         MD025659
+     O                 26                77 '& EXCLUDING -'                                 MD025659
+     O                N26                77 '& INCLUDING -'                                 MD025659
+     O                         TDATA     87
+     O                    88             94 ' - TYPE'                                         CDL021
+     O                    88   TYP1      97                                                   CDL021
+     O                 88 89   TYP2     100                                                   CDL021
+     O                 88 89   TYP3     104                                                   CDL038
+     O        D  3     L3 58
+     O       OR        OFNL3 58
+     O                       44          38 '--------'
+     O                       45          38 '--------'
+     O                                   62 '------------------------'
+     O                                   86 '------------------------'
+     O                                   87 '-'
+     O        D  2     L3 58
+     O       OR        OFNL3 58
+     O                                   12 'BRANCH'
+     O                         BRCA      16
+     O                         A8BRNM    48
+     O        D  1     L3 58
+     O       OR        OFNL3 58
+0514 O**********                         12 'CUSTOMER'                    S01268
+0514 O                                    5 'CUST.'                       S01268
+     O                                   11 'NAME'                        S01268
+     O                                   51 'DEAL   ACCRUAL PERIOD '
+     O        D  2     L3 58
+     O       OR        OFNL3 58
+     O                                   11 'NUMBER TOWN'                 S01268
+     O                                   49 'NUMBER   FROM     TO '
+      *                                                                   S01408
+     O/COPY WNCPYSRC,DL0521OOP9                                           S01408
+      *                                                                   S01408
+     O***********************************72 'RATE     CCY'                CIR001
+0519 O                N05                72 'RATE     CCY'                CIR001
+0519 O                N46 05             72 'RATE     CCY'                CIR001
+0519 O                 46 05             72 '         CCY'                CIR001
+      *                                                                   S01408
+     O/COPY WNCPYSRC,DL0521OOP2                                           S01408
+      *                                                                   S01408
+     O                                  104 'PRINCIPAL       ACCRUED'
+     O                                  128 'TO DATE       TO ACCRUE'
+     O        D  2     L2 58
+     O       OR  2     OFNL2 58
+     O                 50N19   DTYP       3                               CDL038
+     O                 50N19   NARR      58                               CDL038
+0530 O                 19                26 'INTERNAL CONTRACTS'          CDL038
+     O*****************50N19   NARR      54                               CDL038
+0530 O*****************19                22 'INTERNAL CONTRACTS'          CDL038
+     O        D  2     L1 58
+     O       OR  2     OFNL1 58
+     O                         DLST       3
+     O*************************ASDSTN    34                               CDL038
+     O                         CLAS       7                               CDL038
+     O                         DSTCNR    43                               CDL038
+      *                                                                   S01408
+     O/COPY WNCPYSRC,DL0521OP10                                           S01408
+      *                                                                   S01408
+     O********D**1**** L1N60 58                                           BHF779
+     O********D**1     01N60 58                                    BHF779 CIR001
+0535 O        D  1     01N60 58                                           CIR001
+0535 O       AND      N05                                                 CIR001
+0535 O       OR  1     01N60 58                                           CIR001
+0535 O       AND      N72 05                                              CIR001
+      *                                                                   S01408
+     O/COPY WNCPYSRC,DL0521OOP3                                           S01408
+      *                                                                   S01408
+     O                         CNUM       6
+     O                         BBCRNM    27
+     O                         DLNO      34
+     O                         ACFDA     43
+     O                         ACTDA     51
+     O                    20 35          51 'CALL   '
+     O                    22 35          51 'NOTICE '
+     O                         INTR      68 '  0 .       -'
+     O                 23 19             68 '             '
+     O                         CCY       72
+     O                       30PCPL      91 ' ,   ,   ,   , 0 -'
+     O                       31PCPL      91 '   ,   ,   , 0 . -'
+     O                       32PCPL      91 '  ,   ,   , 0 .  -'
+     O                       33PCPL      91 ' ,   ,   , 0 .   -'
+     O                       30AMAD     112 ' ,   ,   ,   , 0 -'
+     O                       31AMAD     112 '   ,   ,   , 0 . -'
+     O                       32AMAD     112 '  ,   ,   , 0 .  -'
+     O                       33AMAD     112 ' ,   ,   , 0 .   -'
+     O                       30AMTA     131 ' ,   ,   ,   , 0 -'
+     O                       31AMTA     131 '   ,   ,   , 0 . -'
+     O                       32AMTA     131 '  ,   ,   , 0 .  -'
+     O                       33AMTA     131 ' ,   ,   , 0 .   -'
+     O                    35N21         131 '                  '
+     O*                                                                   S01268
+     O********D**1**** L1N60 58                                     S01268BHF779
+     O        D  1     01N60 58                                           BHF779
+     O                         BBCRTN    17                               S01268
+     O/COPY WNCPYSRC,DLH00181
+     O*                                                                   S01268
+     O*
+     O**   FR/RS - COMMON & OUR DETAILS.
+     O**   RX    - OUR DETAILS.
+     O*
+     O        D  1     01 61 58
+     O       OR  1     01 62 58
+     O       OR  1     01 63 69
+     O       AND       58
+     O                         CNUM       6
+     O                         BBCRNM    27
+     O                         DLNO      34
+     O                         ACFDA     43
+     O                         ACTDA     51
+     O                 24      UBRTT     54
+     O                 65      INTR      68 '  0 .       -'
+     O                         CCY       72
+     O                 30      PCPL      91 ' ,   ,   ,   , 0 -'
+     O                 31      PCPL      91 '   ,   ,   , 0 . -'
+     O                 32      PCPL      91 '  ,   ,   , 0 .  -'
+     O                 33      PCPL      91 ' ,   ,   , 0 .   -'
+     O                 30 67   AMAD     112 ' ,   ,   ,   , 0 -'
+     O                 31 67   AMAD     112 '   ,   ,   , 0 . -'
+     O                 32 67   AMAD     112 '  ,   ,   , 0 .  -'
+     O                 33 67   AMAD     112 ' ,   ,   , 0 .   -'
+     O                 30 67   AMTA     131 ' ,   ,   ,   , 0 -'
+     O                 31 67   AMTA     131 '   ,   ,   , 0 . -'
+     O                 32 67   AMTA     131 '  ,   ,   , 0 .  -'
+     O                 33 67   AMTA     131 ' ,   ,   , 0 .   -'
+     O*
+     O**   FR/RS - THEIR DETAILS.
+     O*
+      *                                                                   S01408
+     O/COPY WNCPYSRC,DL0521OP11                                           S01408
+      *                                                                   S01408
+     O********D**1     01 61 58                                           CIR002
+     O*******OR**1     01 62 58                                           CIR002
+     O        D  1     01 61 58                                           CIR002
+     O*******AND      N06                                                 CIR002             BUG8167
+     O       OR  1     01 62 58                                           CIR002
+     O*******AND      N06                                                 CIR002             BUG8167
+     O*******OR  1     01 62 58                                           CIR002             BUG8167
+     O*******AND       06N51                                              CIR002             BUG8167
+      *                                                                   S01408
+     O/COPY WNCPYSRC,DL0521OOP4                                           S01408
+      *                                                                   S01408
+     O                         BBCRTN    17                               S01268
+     O                 62      TACFDA    43
+     O                 62      TACTDA    51
+     O                 25      TBRTT     54
+     O                 66      TEINR     68 '  0 .       -'
+     O                 30 68   TAMAD    112 ' ,   ,   ,   , 0 -'
+     O                 31 68   TAMAD    112 '   ,   ,   , 0 . -'
+     O                 32 68   TAMAD    112 '  ,   ,   , 0 .  -'
+     O                 33 68   TAMAD    112 ' ,   ,   , 0 .   -'
+     O                 30 68   TAMTA    131 ' ,   ,   ,   , 0 -'
+     O                 31 68   TAMTA    131 '   ,   ,   , 0 . -'
+     O                 32 68   TAMTA    131 '  ,   ,   , 0 .  -'
+     O                 33 68   TAMTA    131 ' ,   ,   , 0 .   -'
+      *                                                                   S01408
+     O/COPY WNCPYSRC,DL0521OOP5                                           S01408
+     O*                                                                   CIR002
+     O** Our total unsettled interest not zero.                           CIR002
+     O        D  1     01 62 06                                           CIR002
+     O       AND       51 58                                              CIR002
+     O                         BBCRTN    17                               CIR002
+     O                                   61 'Total Unsettled'             CIR002
+     O                                   72 'Interest :'                  CIR002
+     O                 30      OTUI     112 '   ,   ,   ,   , 0 -'        CIR002
+     O                 31      OTUI     112 '  ,   ,   ,   , 0 . -'       CIR002
+     O                 32      OTUI     112 ' ,   ,   ,   , 0 .  -'       CIR002
+     O                 33      OTUI     112 '   ,   ,   , 0 .   -'        CIR002
+     O/COPY WNCPYSRC,DLH00182
+     O*                                                                   CIR002
+     O        D  1     01 62 06                                           CIR002
+     O       AND       51 58                                              CIR002
+     O                 62      TACFDA    43                               CIR002
+     O                 62      TACTDA    51                               CIR002
+     O                 25      TBRTT     54                               CIR002
+     O                 66      TEINR     68 '  0 .       -'               CIR002
+     O                 30 68   TAMAD    112 ' ,   ,   ,   , 0 -'          CIR002
+     O                 31 68   TAMAD    112 '   ,   ,   , 0 . -'          CIR002
+     O                 32 68   TAMAD    112 '  ,   ,   , 0 .  -'          CIR002
+     O                 33 68   TAMAD    112 ' ,   ,   , 0 .   -'          CIR002
+     O                 30 68   TAMTA    131 ' ,   ,   ,   , 0 -'          CIR002
+     O                 31 68   TAMTA    131 '   ,   ,   , 0 . -'          CIR002
+     O                 32 68   TAMTA    131 '  ,   ,   , 0 .  -'          CIR002
+     O                 33 68   TAMTA    131 ' ,   ,   , 0 .   -'          CIR002
+     O*                                                                   CIR002
+     O** Their total unsettled interest not zero.                         CIR002
+     O        D  1     01 62 06                                           CIR002
+     O       AND       52 58                                              CIR002
+     O                                   61 'Total Unsettled'             CIR002
+     O                                   72 'Interest :'                  CIR002
+     O                 30      TTUI     112 '   ,   ,   ,   , 0 -'        CIR002
+     O                 31      TTUI     112 '  ,   ,   ,   , 0 . -'       CIR002
+     O                 32      TTUI     112 ' ,   ,   ,   , 0 .  -'       CIR002
+     O                 33      TTUI     112 '   ,   ,   , 0 .   -'        CIR002
+0535 O*                                                                   S01268
+0535 O* TOWN FOR RX - OUR DETAILS                                         S01268
+0535 O*                                                                   S01268
+     O        D  1     01 63 69                                           S01268
+     O       AND       58                                                 LN0597
+     O                         BBCRTN    17                               S01268
+      *                                                                   S01408
+     O/COPY WNCPYSRC,DL0521OOP6                                           S01408
+      *                                                                   S01408
+     O                    51 06          61 'Total Unsettled'             CIR002
+     O                    51 06          72 'Interest :'                  CIR002
+     O                 30 51 06OTUI     112 '   ,   ,   ,   , 0 -'        CIR002
+     O                 31 51 06OTUI     112 '  ,   ,   ,   , 0 . -'       CIR002
+     O                 32 51 06OTUI     112 ' ,   ,   ,   , 0 .  -'       CIR002
+     O                 33 51 06OTUI     112 '   ,   ,   , 0 .   -'        CIR002
+     O/COPY WNCPYSRC,DLH00183
+     O*
+     O**   RX - THEIR DETAILS.
+     O*
+     O        D  1     01 63 70
+     O       AND       58
+     O                         CNUM       6
+     O                         BBCRNM    27
+     O                         DLNO      34
+     O                         TACFDA    43
+     O                         TACTDA    51
+     O                 25      TBRTT     54
+     O                 66      TEINR     68 '  0 .       -'
+     O                         CCY       72
+     O                 30      PCPL      91 ' ,   ,   ,   , 0 -'
+     O                 31      PCPL      91 '   ,   ,   , 0 . -'
+     O                 32      PCPL      91 '  ,   ,   , 0 .  -'
+     O                 33      PCPL      91 ' ,   ,   , 0 .   -'
+     O                 30 68   TAMAD    112 ' ,   ,   ,   , 0 -'
+     O                 31 68   TAMAD    112 '   ,   ,   , 0 . -'
+     O                 32 68   TAMAD    112 '  ,   ,   , 0 .  -'
+     O                 33 68   TAMAD    112 ' ,   ,   , 0 .   -'
+     O                 30 68   TAMTA    131 ' ,   ,   ,   , 0 -'
+     O                 31 68   TAMTA    131 '   ,   ,   , 0 . -'
+     O                 32 68   TAMTA    131 '  ,   ,   , 0 .  -'
+     O                 33 68   TAMTA    131 ' ,   ,   , 0 .   -'
+0535 O*                                                                   E28416
+0535 O* TOWN FOR RX - THEIR DETAILS                                       E28416
+0535 O*                                                                   E28416
+     O        D  1     01 63 70                                           E28416
+     O       AND       58                                                 076415
+     O                         BBCRTN    17                               E28416
+      *                                                                   S01408
+     O/COPY WNCPYSRC,DL0521OOP7                                           S01408
+     O                    52 06          61 'Total Unsettled'             CIR002
+     O                    52 06          72 'Interest :'                  CIR002
+     O                 30 52 06TTUI     112 '   ,   ,   ,   , 0 -'        CIR002
+     O                 31 52 06TTUI     112 '  ,   ,   ,   , 0 . -'       CIR002
+     O                 32 52 06TTUI     112 ' ,   ,   ,   , 0 .  -'       CIR002
+     O                 33 52 06TTUI     112 '   ,   ,   , 0 .   -'        CIR002
+     O/COPY WNCPYSRC,DLH00184
+     O*
+     O**   RP, RF, RR - COMMON DETAILS & CEILING RATE.
+     O*
+     O        D  1     01 64 58
+     O                         CNUM       6
+     O                         BBCRNM    27
+     O                         DLNO      34
+     O                         ACFDA     43
+     O                         ACTDA     51
+     O                 70      TACFDA    43
+     O                 70      TACTDA    51
+     O                N11      CLRAT     68 '  0 .       -'
+     O                 11      FLRAT     68 '  0 .       -'
+     O                         CCY       72
+     O                 30      PCPL      91 ' ,   ,   ,   , 0 -'
+     O                 31      PCPL      91 '   ,   ,   , 0 . -'
+     O                 32      PCPL      91 '  ,   ,   , 0 .  -'
+     O                 33      PCPL      91 ' ,   ,   , 0 .   -'
+     O*
+     O**   RP, RF, RR - PROVIDERS RATE & OUR OR THEIR ACCRUALS.
+     O*
+     O        D  1     01 64 58
+     O                         BBCRTN    17                               S01268
+     O                 24      UBRTT     54
+     O                 65      INTR      68 '  0 .       -'
+     O                 70 25   TBRTT     54
+     O                 70 66   TEINR     68 '  0 .       -'
+     O                 30 67   AMAD     112 ' ,   ,   ,   , 0 -'
+     O                 31 67   AMAD     112 '   ,   ,   , 0 . -'
+     O                 32 67   AMAD     112 '  ,   ,   , 0 .  -'
+     O                 33 67   AMAD     112 ' ,   ,   , 0 .   -'
+     O                 30 68   TAMAD    112 ' ,   ,   ,   , 0 -'
+     O                 31 68   TAMAD    112 '   ,   ,   , 0 . -'
+     O                 32 68   TAMAD    112 '  ,   ,   , 0 .  -'
+     O                 33 68   TAMAD    112 ' ,   ,   , 0 .   -'
+     O                 30 67   AMTA     131 ' ,   ,   ,   , 0 -'
+     O                 31 67   AMTA     131 '   ,   ,   , 0 . -'
+     O                 32 67   AMTA     131 '  ,   ,   , 0 .  -'
+     O                 33 67   AMTA     131 ' ,   ,   , 0 .   -'
+     O                 30 68   TAMTA    131 ' ,   ,   ,   , 0 -'
+     O                 31 68   TAMTA    131 '   ,   ,   , 0 . -'
+     O                 32 68   TAMTA    131 '  ,   ,   , 0 .  -'
+     O                 33 68   TAMTA    131 ' ,   ,   , 0 .   -'
+     O/COPY WNCPYSRC,DLH00185
+     O*
+     O**   RP, RR - FLOOR RATE (IF PRESENT);OUTPUT ABOVE IF RF
+     O*
+     O        D  1     01 64 71
+     O       AND      N11 58
+     O                         FLRAT     68 '  0 .       -'
+     O        E  203                                                      098321
+     O                                   24 'REFERENCE DL0521P1'          098321
+     O                         BJURPT    89                               098321
+     O                                  104 'DATE'                        098321
+     O                         BJMRDT   112                               098321
+     O                                  122 'PAGE'                        098321
+     O                         PAGE  Z  127                               098321
+     O        E  1                                                        098321
+     O                       43          57 'INTEREST ACCRUALS -'         098321
+     O                       44          46 'DISCOUNT/PREMIUM'            098321
+     O                       44          57 'ACCRUALS -'                  098321
+     O                       45          46 'SWAP PROFIT/LOSS'            098321
+     O                       45          57 'ACCRUALS -'                  098321
+     O**********                         67 'UP TO BUT'                              098321 MD025659
+     O**********                         79 'EXCLUDING -'                            098321 MD025659
+     O                                   63 'UP TO'                                         MD025659
+     O                 26                77 '& EXCLUDING -'                                 MD025659
+     O                N26                77 '& INCLUDING -'                                 MD025659
+     O                         TDATA     87                               098321
+     O                    88             94 ' - TYPE'                                         CDL021
+     O                    88   TYP1      97                                                   CDL021
+     O                 88 89   TYP2     100                                                   CDL021
+     O                 88 89   TYP3     104                                                   CDL038
+     O        E  3                                                        098321
+     O                       44          38 '--------'                    098321
+     O                       45          38 '--------'                    098321
+     O                                   62 '------------------------'    098321
+     O                                   86 '------------------------'    098321
+     O                                   87 '-'                           098321
+      *                                                                   S01408
+     O/COPY WNCPYSRC,DL0521OOP8                                           S01408
+     O*                                                                   CIR002
+     O** RR, RP, RF - Print Total unsettled interest                      CIR002
+     O        D  1     01 64 06                                           CIR002
+     O       AND       58                                                 CIR002
+     O                    67 51          61 'Total Unsettled'             CIR002
+     O                    68 52          61 'Total Unsettled'             CIR002
+     O                    67 51          72 'Interest :'                  CIR002
+     O                    68 52          72 'Interest :'                  CIR002
+     O                 30 67 51OTUI     112 '   ,   ,   ,   , 0 -'        CIR002
+     O                 31 67 51OTUI     112 '  ,   ,   ,   , 0 . -'       CIR002
+     O                 32 67 51OTUI     112 ' ,   ,   ,   , 0 .  -'       CIR002
+     O                 33 67 51OTUI     112 '   ,   ,   , 0 .   -'        CIR002
+     O                 30 68 52TTUI     112 '   ,   ,   ,   , 0 -'        CIR002
+     O                 31 68 52TTUI     112 '  ,   ,   ,   , 0 . -'       CIR002
+     O                 32 68 52TTUI     112 ' ,   ,   ,   , 0 .  -'       CIR002
+     O                 33 68 52TTUI     112 '   ,   ,   , 0 .   -'        CIR002
+     O*                                                                   CIR001
+     O**   FEE AMORTIZED DEALS.                                           CIR001
+     O*                                                                   CIR001
+     O        D  1     01 72 05                                           CIR001
+     O       AND       58                                                 CIR001
+     O                         CNUM       6                               CIR001
+     O                         BBCRNM    27                               CIR001
+     O                         DLNO      34                               CIR001
+     O                         ACFDA     43                               CIR001
+     O                         ACTDA     51                               CIR001
+     O                         CCY       72                               CIR001
+     O                 30      PCPL      91 ' ,   ,   ,   , 0 -'          CIR001
+     O                 31      PCPL      91 '   ,   ,   , 0 . -'          CIR001
+     O                 32      PCPL      91 '  ,   ,   , 0 .  -'          CIR001
+     O                 33      PCPL      91 ' ,   ,   , 0 .   -'          CIR001
+     O                 30      AMAD     112 ' ,   ,   ,   , 0 -'          CIR001
+     O                 31      AMAD     112 '   ,   ,   , 0 . -'          CIR001
+     O                 32      AMAD     112 '  ,   ,   , 0 .  -'          CIR001
+     O                 33      AMAD     112 ' ,   ,   , 0 .   -'          CIR001
+     O                 30      AMTA     131 ' ,   ,   ,   , 0 -'          CIR001
+     O                 31      AMTA     131 '   ,   ,   , 0 . -'          CIR001
+     O                 32      AMTA     131 '  ,   ,   , 0 .  -'          CIR001
+     O                 33      AMTA     131 ' ,   ,   , 0 .   -'          CIR001
+     O*                                                                   CIR001
+     O*
+     O        T 12     L1N40 58
+     O                                   65 'DEAL SUB-TYPE TOTAL'
+     O                       30PCPL1  B  91 ' ,   ,   ,   , 0 -'
+     O                       31PCPL1  B  91 '   ,   ,   , 0 . -'
+     O                       32PCPL1  B  91 '  ,   ,   , 0 .  -'
+     O                       33PCPL1  B  91 ' ,   ,   , 0 .   -'
+     O                       30AMAD1  B 112 ' ,   ,   ,   , 0 -'
+     O                       31AMAD1  B 112 '   ,   ,   , 0 . -'
+     O                       32AMAD1  B 112 '  ,   ,   , 0 .  -'
+     O                       33AMAD1  B 112 ' ,   ,   , 0 .   -'
+     O                       30AMTA1  B 131 ' ,   ,   ,   , 0 -'
+     O                       31AMTA1  B 131 '   ,   ,   , 0 . -'
+     O                       32AMTA1  B 131 '  ,   ,   , 0 .  -'
+     O                       33AMTA1  B 131 ' ,   ,   , 0 .   -'
+     O        T  2     L2N40 58
+     O                                   65 'DEAL TYPE TOTAL'
+     O                       30PCPL2  B  91 ' ,   ,   ,   , 0 -'
+     O                       31PCPL2  B  91 '   ,   ,   , 0 . -'
+     O                       32PCPL2  B  91 '  ,   ,   , 0 .  -'
+     O                       33PCPL2  B  91 ' ,   ,   , 0 .   -'
+     O                       30AMAD2  B 112 ' ,   ,   ,   , 0 -'
+     O                       31AMAD2  B 112 '   ,   ,   , 0 . -'
+     O                       32AMAD2  B 112 '  ,   ,   , 0 .  -'
+     O                       33AMAD2  B 112 ' ,   ,   , 0 .   -'
+     O                       30AMTA2  B 131 ' ,   ,   ,   , 0 -'
+     O                       31AMTA2  B 131 '   ,   ,   , 0 . -'
+     O                       32AMTA2  B 131 '  ,   ,   , 0 .  -'
+     O                       33AMTA2  B 131 ' ,   ,   , 0 .   -'
+     O        T  1     L3N40 58
+     O                                   65 'CURRENCY TOTAL'
+     O                         CCY       69
+     O                       30PCPL3  B  91 ' ,   ,   ,   , 0 -'
+     O                       31PCPL3  B  91 '   ,   ,   , 0 . -'
+     O                       32PCPL3  B  91 '  ,   ,   , 0 .  -'
+     O                       33PCPL3  B  91 ' ,   ,   , 0 .   -'
+     O                       30AMAD3  B 112 ' ,   ,   ,   , 0 -'
+     O                       31AMAD3  B 112 '   ,   ,   , 0 . -'
+     O                       32AMAD3  B 112 '  ,   ,   , 0 .  -'
+     O                       33AMAD3  B 112 ' ,   ,   , 0 .   -'
+     O                       30AMTA3  B 131 ' ,   ,   ,   , 0 -'
+     O                       31AMTA3  B 131 '   ,   ,   , 0 . -'
+     O                       32AMTA3  B 131 '  ,   ,   , 0 .  -'
+     O                       33AMTA3  B 131 ' ,   ,   , 0 .   -'
+     O        T 3      L5 58
+     O                                   66 '*** END OF REPORT FOR'
+     O                                   77 ' BRANCH ***'
+     O******                             71 '*** END OF BRANCH REPORT'
+     O******                             75 ' ***'
+     O**DL0521AUT**203***LR**************                                   E257
+     O**DL0520AUT**203***LR**************                            E257 LN0746
+     ODL0521AUT  203   LR                                                 LN0746
+     O                                   24 'REFERENCE DL0521AU'
+     O                         BJURPT    89
+     O                                  104 'DATE'
+     O                         BJMRDT   112
+     O                                  122 'PAGE'
+     O                         PAGE1 Z  127
+     O        T  1     LR
+     O                                   57 'INTEREST ACCRUALS -'
+     O**********                         67 'UP TO BUT'                                     MD025659
+     O**********                         79 'EXCLUDING -'                                   MD025659
+     O                                   63 'UP TO'                                         MD025659
+     O                 26                77 '& EXCLUDING -'                                 MD025659
+     O                N26                77 '& INCLUDING -'                                 MD025659
+     O                         TDATA     87
+     O                    88             94 ' - TYPE'                                         CDL021
+     O                    88   TYP1      97                                                   CDL021
+     O                 88 89   TYP2     100                                                   CDL021
+     O                 88 89   TYP3     104                                                   CDL038
+     O        T  3     LR
+     O                                   62 '------------------------'
+     O                                   86 '------------------------'
+     O                                   87 '-'
+     O******  T  140   LR                                                 LN0246
+     O        T  235   LR                                                 LN0246
+     O                                   31 'RUN CONTROLS'
+     O                                   59 'PROGRAM'
+     O                                   84 'EXTRACT FILE'
+     O        T  3     LR
+     O                                   31 '------------'
+     O                                   59 '-------'
+     O                                   84 '------------'
+     O        T  2     LR
+     O                                   36 'NUMBER OF RECORDS'
+     O                         RECRED3   59
+     O                         NORE  3   84
+     O                       80         102 '** DIFFERENCE **'
+     O        T  3     LR
+     O                                   29 'HASH TOTAL'
+     O                         ZZTOTIZ   56
+     O                         ZZTOTD    59
+     O                         HRWN  Z   81
+     O                         HRDC      84
+     O                       81         102 '** DIFFERENCE **'
+     O/COPY WNCPYSRC,DL0521O002
+     O        T  3     LR U7 U8
+     O                                   71 '*** PRINT TERMINATED ***'
+     O        T 2      LR U7 U8
+     O                                   57 'DATABASE ERROR'
+     O                         DBASE     61
+     O                                   67 'FILE'
+     O                         DBFILE    78
+     O        T 13     LR U7 U8
+     O                                   49 'OPTION'
+     O                         DBOPTN    57
+     O                                   66 'KEY'
+     O                         DBKEY     96
+     O******* T   22   LRNU7N59                                           LN0246
+     O        T 3      LRNU7N59                                           LN0246
+     O                                   59 '***   NO DETAILS TO '
+     O                                   71 'REPORT   ***'
+     O/COPY WNCPYSRC,DL0521O001
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**                                                                                            CDL033
+CFFLOATING RATE CD ISSUED                                                                     CDL033
+     X/COPY WNCPYSRC,DL0521X001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   TAB1/TAB2 DEAL TYPE/DEAL TYPE NARRATIVE (ADDED IN TABLES FOR SART8528
+CSCERTIFICATE OF DEPOSIT SOLD
+BSBOND SOLD
+BRBILL REDISCOUNTED
+TSTREASURY BILL SOLD
+RABANK ACCEPTANCE REDISCOUNTED
+TRTRADE ACCEPTANCE REDISCOUNTED
+C1PRIMARY CERTIFICATE OF DEPOSIT PURCHASED
+C2SECONDARY CERTIFICATE OF DEPOSIT PURCHASED
+BPBOND PURCHASED
+BDBILL DISCOUNTED
+TBTREASURY BILL PURCHASED
+DABANK ACCEPTANCE DISCOUNTED
+TATRADE ACCEPTANCE DISCOUNTED
+FPFOREIGN EXCHANGE PURCHASE
+FSFOREIGN EXCHANGE SALE
+CXCROSS DEAL
+PIPURCHASE TO COVER INTEREST COMMITMENT
+SISALE TO COVER INTEREST COMMITMENT
+OPOPTION
+OTOPTION TAKEDOWN
+SWSWAP
+ITINTERBANK TAKING
+IPINTERBANK PLACING
+TDTIME DEPOSIT
+TITIME LOAN
+CDCALL/NOTICE DEPOSIT TAKING
+CLCALL/NOTICE DEPOSIT PLACING
+CICERTIFICATE OF DEPOSIT ISSUED
+LNCOMMERCIAL LOAN
+DLDEMAND LOAN
+FRFUTURE RATE AGREEMENT
+RSSINGLE CURRENCY INTEREST RATE SWAP
+RXCROSS CURRENCY INTEREST RATE SWAP
+RPINTEREST RATE CAP
+RFINTEREST RATE FLOOR
+RRINTEREST RATE COLLAR
+ILINTERNAL LOAN                                                           S01354
+IDINTERNAL DEPOSIT                                                        S01354
+FLFIDUCIARY DEPOSITS TERM PLACING                                         CDL006
+DPFIDUCIARY DEPOSITS CALL PLACING                                         CDL006
+LPFIDUCIARY LOANS PLACING                                                 CDL006
+FTFIDUCIARY DEPOSITS TERM TAKING                                          CDL006
+DTFIDUCIARY DEPOSITS CALL TAKING                                          CDL006
+LTFIDUCIARY LOANS TAKING                                                  CDL006

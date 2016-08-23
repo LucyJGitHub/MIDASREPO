@@ -1,0 +1,1031 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE A/c bal and history bal reconciln rpt')       *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module                                        *
+     F*                                                               *
+     F*  RE3810 - ACCOUNT BALANCE AND HISTORY BALANCE                 *
+     F*           DISCREPANCY REPORT                                  *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. MD029651           Date 04Jun15               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *                 CRE083BG           Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CSC042             Date 16Feb09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 197095             Date 10Sep01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+     F*                 168964             Date 11Jan00               *
+     F*                 167673             Date 11Jan00               *
+     F*                 153113             DATE 15Nov99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 123631             DATE 26FEB98               *
+     F*                 099510             DATE 19JAN98               *
+     F*                 091615             DATE 16JAN98               *
+     F*                 CRE003             DATE 10JUN96               *
+     F*                 098818             DATE 15APR96               *
+     F*                 094431             DATE 16OCT95               *
+     F*                 085762             DATE 27APR95               *
+     F*                 076563             DATE 27SEP94               *
+     F*                 049054             DATE 26JAN94               *
+     F*                 045074             DATE 26JAN94               *
+     F*                 S01413 *CREATE     DATE 13APR93               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD029651 - REC0003810 cannot allocate FCSFNOPD.  Added delay *
+      *             and re-try up to six times before it issue error. *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CRE083BG - COB Restructure - RE COB Optimisation Phase 1     *
+      *  CSC042 - COB performance fix. Put CCY detail in array at     *
+      *           first cycle rather than calling AOCURRR0>100K times *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  197095 - Removed rest of fix 099510 which core fix 153113    *
+     F*           should have done in the first place. Without full   *
+     F*           removal of 099510 results in entries appearing on   *
+     F*           RE3810 which should not be there plus the difference*
+     F*           being double.                                       *
+     F*  168964 - RE3810P2 report not output unless LNKA field on     *
+     F*           TABTBRE (interest compensation, i.e. linked a/c's)  *
+     F*           is set to 'Y' - but setting up linked accounts is   *
+     F*           not conditioned on this field, which can lead to    *
+     F*           interest history discrepancies.  Fix is to make     *
+     F*           output of RE3810P2 report unconditional.            *
+     F*  167673 - Correct page numbering - do not use PAGE or PAGE1   *
+     F*           as these are reserved keywords which are upgated    *
+     F*           automatically by the system.                        *
+     F*  153113 - If an account has a generated CR adjustment, the    *
+     F*           difference on this report is incorrect by twice     *
+     F*           the amount of the generated adjustment - remove     *
+     F*           part of fix 099510 and reinstate 045074.
+     F*  123631 - On MSG wait I/O operation was applied to closed file*
+     F*           RE3810P2.                                           *
+     F*           File RE3810P2 not opened if LTAS = 99.              *
+     F*  099510 - Some interest adjustments incorrectly printed with  *
+     F*           a DR instead of a CR.  Print CR for a +ve credit    *
+     F*           adjustment or a -ve debit adjustment.               *
+     F*  091615 - Re-compile for update on printer file RE3810P1      *
+     F*  CRE003 - Ledger Balance Accruals                             *
+     F*  098818 - Allow for interest capital indicator on REHISPS     *
+     F*           to retain its original values of 'C' 'D' 'Y' &      *
+     F*           ' ' to be used by input cycle enquiries.            *
+     F*  094431 - Recompiled over changed REHISSL.                    *
+     F*  085762 - If no details to report, P1 report was being        *
+     F*           produced for branch 000 with no details on it.      *
+     F*           Amended pgm to not produce this report.             *
+     F*  076563  -  IF NO DETAILS TO REPORT NO BRANCH CODE IS WRITTEN.*
+     F*  049054  -  Problem with calculation of difference when       *
+     F*             credit balance.                                   *
+     F*  045074  -  Field DAIC is negative on file - so should be     *
+     F*             subtracted from GEAD.                             *
+     F*  S01413  -  Retail 3 Incorporation                            *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FTABTBRE IF  E                    DISK
+     FREHISSL IF  E           K        DISK
+     FREACCNJLIF  E           K        DISK
+     FRELINKJ2IF  E           K        DISK
+     FACCNT   IF  E           K        DISK
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+     F/COPY WNCPYSRC,RE3810F001
+     FRE3810AUO   E                    PRINTER      KINFDS SPOOLU
+     FRE3810P1O   E             01     PRINTER      KINFDS SPOOL1     UC
+     FRE3810P2O   E             02     PRINTER      KINFDS SPOOL2     UC
+     FSDCURRPDIF  E                    DISK                           UC                      CSC042
+     F/COPY WNCPYSRC,RE3810F002
+     F*
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F* 01 - Overflow for RE3810P1 printer file                       *
+     F* 02 - Overflow for RE3810P2 printer file                       *
+     F* 05 - If history balance is equal to cleared balance           *
+     F* 41 - If no details to report                                  *
+     F* 70 - 0 decimal place                                          *
+     F* 71 - 1 decimal place                                          *
+     F* 72 - 2 decimal place                                          *
+     F* 73 - 3 decimal place                                          *
+     F* 79 - Multibranching indicator                                 *
+     F* 87 - Write 'End of Branch'                                    *
+     F**88*-*Link*installed***                                        *   168964
+     F*                                                               *
+     F* 97 - Read error on REHISSL                                    *
+     F* 98 - Read error on ACCNT                                      *
+     F* 99 - General error and chaining                               *
+     F*                                                               *
+     F* U7 - Database error                                           *
+     F* U8 - Database error                                           *
+     F* LR - End of program                                           *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*   FIRST  - First cycle                                        *
+     F*   MAIN   - Main processing                                    *
+     F*   DETAIL - Detail processing                                  *
+     F*   TOTAL  - End processing                                     *
+     F*   *PSSR  - Database error handling                            *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E                    #CA       250  3                                                    CSC042
+     E                    #CB       250 37                                                    CSC042
+     E                    DELAY@  1   1 80                                                  MD029651
+     I/EJECT
+     I*
+     IFUSIONJF
+     I*
+     I              ACNO                            FACNO
+     I              LTAB                            FLTAB
+     I              LTAC                            FLTAC
+     I              LTAS                            FLTAS
+     IREHISPSF
+     I*
+     I              DRIS                            SDRIS
+     I              CRIS                            SCRIS
+     I*
+     I** KEY DATA STRUCTURE : RKEY TO MOVE IN DBKEY IF ERROR
+     I*
+     I            DS
+     I**********                              1  18 RKEY                                      CGL029
+     I                                        1  24 RKEY                                      CGL029
+     I**********                              1   60ZCUST                                     CSD027
+     I                                        1   6 ZCUST                                     CSD027
+     I                                        7   9 ZACCY
+     I**********                             10  130ZACOD                                     CGL029
+     I**********                             14  150ZASEQ                                     CGL029
+     I**********                             16  18 ZBRCA                                     CGL029
+     I                                       10  190ZACOD                                     CGL029
+     I                                       20  210ZASEQ                                     CGL029
+     I                                       22  24 ZBRCA                                     CGL029
+     I*
+     I**   FILE INFORMATION DATA STRUCTURE
+     I*
+     ISPOOL1      DS
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     ISPOOL2      DS
+     I                                       83  92 SFILE2
+     I                                    B 123 1240SFNUM2
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     IRUNDT       DS
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     I*
+     I**  Data Area RUNDAT
+     I*
+     ISDBANK    E DSSDBANKPD
+     I              BJURPT                          TITL
+     I*
+     I** Bank Details
+     I*
+     I/COPY WNCPYSRC,RE3810I001
+     ISDRETL    E DSSDRETLPD                                              CRE003
+     I*                                                                   CRE003
+     I** Data structure for retail details                                CRE003
+     I*
+     IDSFDY     E DSDSFDY
+     I*
+     I** First DS for access programs, Short data structure
+     I*
+     IDSSDY     E DSDSSDY
+     I*
+     I** Second DS for access progrmas, Long data structure
+     I*
+     ISDBRCH    E DSSDBRCHPD
+     I              A8BRNM                          BRNM
+     I*
+     I**  External DS for Branch Codes.
+     I*
+     I****SDCURR    E DSSDCURRPD                                                              CSC042
+     I**********    A6NBDP                          CDP                                       CSC042
+     I**********    A6SPRT                          SPOT                                      CSC042
+     I**********    A6MDIN                          MDIN                                      CSC042
+     I**********    A6ERLC                          ERLC                                      CSC042
+     I**********    A6TXND                          TNOT                                      CSC042
+     I**********    A6CYNM                          CCNM                                      CSC042
+     I**********    A6SPAE                          TACC                                      CSC042
+     I**********    A6SSNB                          SSNO                                      CSC042
+     I*
+     I**  External DS for Currency Codes.
+     I*
+     I            DS                                                                          CSC042
+      * Internal DS for CCY details                                                           CSC042
+     I                                        1  37 #C00                                      CSC042
+     I                                        1   10#C01                                      CSC042
+     I                                    P   2   88#C02                                      CSC042
+     I                                        9   9 #C03                                      CSC042
+     I                                    P  10  168#C04                                      CSC042
+     I                                       17  170#C05                                      CSC042
+     I                                       18  31 #C06                                      CSC042
+     I                                       32  35 #C07                                      CSC042
+     I                                       36  370#C08                                      CSC042
+     I*===================================================================
+     C/EJECT
+     C*===================================================================
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** KEY LIST
+     C*
+     C*
+     C** KEY FIELD TO READ ACCNT FILE
+     C*
+     C           KRKEY     KLIST
+     C                     KFLD           ZCUST
+     C                     KFLD           ZACCY
+     C                     KFLD           ZACOD
+     C                     KFLD           ZASEQ
+     C                     KFLD           ZBRCA
+     C*
+     C           LNKEY     KLIST
+     C                     KFLD           ZBRCA
+     C                     KFLD           ZCUST
+     C                     KFLD           ZACCY
+     C                     KFLD           ZACOD
+     C                     KFLD           ZASEQ
+     C*
+     C** WORK FIELDS DEFINITION
+     C*
+     C           *LIKE     DEFN ZHISB     WHISB
+     C*
+     C/EJECT
+     C*===================================================================
+     C** P R O G R A M     S T A R T
+     C*===================================================================
+     C*
+     C** FIRST CYCLE PROCESSING
+     C*
+     C                     EXSR FIRST
+     C*
+     C** MAIN PROCESSING
+     C*
+     C                     READ REACCJLF                 LR
+     C                     MOVE *BLANKS   BRCA#   3
+     C*
+     C           *INLR     DOWEQ'0'                        - B1
+     C                     SETOF                     41
+     C*
+     C** MULTIBRANCHING PROCESSING
+     C*
+     C           ZBRCA     IFNE BRCA#
+     C           *IN87     IFEQ '1'
+     C                     WRITEENDP1
+     C***88*******         WRITEENDP2                                     168964
+     C                     WRITEENDP2                                     168964
+     C                     SETOF                     87
+     C                     END
+     C                     MOVE ZBRCA     BRCA#
+     C                     CLOSERE3810P1
+     C***88*******         CLOSERE3810P2                                  168964
+     C                     CLOSERE3810P2                                  168964
+     C                     OPEN RE3810P1
+     C***88*******         OPEN RE3810P2                                  168964
+     C                     OPEN RE3810P2                                  168964
+     C                     SETON                     87
+     C*****                Z-ADD0         PAGE                            167673
+     C*****                Z-ADD0         PAGE1                           167673
+     C                     Z-ADD1         PAGEP1                          167673
+     C                     Z-ADD1         PAGEP2                          167673
+     C*
+     C** Ensure Report Spool File Recorded by RCF
+     C*
+     C                     Z-ADDSFNUM1    ZSNUM1  60
+     C                     CALL 'ZSFILE'
+     C                     PARM *BLANKS   @SEQ    5
+     C                     PARM ZBRCA     SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM1
+     C                     PARM *BLANKS   ZSERR1  1
+      *
+     C                     Z-ADD1         COUNT                                             MD029651
+     C           ZSERR1    DOWEQ'Y'                                                         MD029651
+     C           COUNT     ANDLT7                                                           MD029651
+     C                     Z-ADD80        CMDLEN 155                                        MD029651
+     C                     CALL 'QCMDEXC'                                                   MD029651
+     C                     PARM           DELAY@                                            MD029651
+     C                     PARM           CMDLEN                                            MD029651
+      *                                                                                     MD029651
+     C                     Z-ADDSFNUM1    ZSNUM1                                            MD029651
+     C                     CALL 'ZSFILE'                                                    MD029651
+     C                     PARM *BLANKS   @SEQ                                              MD029651
+     C                     PARM ZBRCA     SENTY                                             MD029651
+     C                     PARM           SFILE1                                            MD029651
+     C                     PARM           ZSNUM1                                            MD029651
+     C                     PARM *BLANKS   ZSERR1                                            MD029651
+      *                                                                                     MD029651
+     C                     ADD  1         COUNT                                             MD029651
+     C                     ENDDO                                                            MD029651
+      *                                                                                     MD029651
+     C*
+     C** Error During ZSFILE Processing, Return to Calling Program
+     C*
+     C           ZSERR1    IFEQ 'Y'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+     C*
+     C** Ensure Report Spool File Recorded by RCF
+     C*
+     C************IN88     IFEQ '1'                                       168964
+     C*
+     C                     Z-ADDSFNUM2    ZSNUM2  60
+     C                     CALL 'ZSFILE'
+     C                     PARM *BLANKS   @SEQ    5
+     C                     PARM ZBRCA     SENTY   3
+     C                     PARM           SFILE2
+     C                     PARM           ZSNUM2
+     C                     PARM *BLANKS   ZSERR2  1
+      *                                                                                     MD029651
+     C                     Z-ADD1         COUNT   10                                        MD029651
+     C           ZSERR2    DOWEQ'Y'                                                         MD029651
+     C           COUNT     ANDLT7                                                           MD029651
+     C                     Z-ADD80        CMDLEN 155                                        MD029651
+     C                     CALL 'QCMDEXC'                                                   MD029651
+     C                     PARM           DELAY@                                            MD029651
+     C                     PARM           CMDLEN                                            MD029651
+      *                                                                                     MD029651
+     C                     Z-ADDSFNUM2    ZSNUM2                                            MD029651
+     C                     CALL 'ZSFILE'                                                    MD029651
+     C                     PARM *BLANKS   @SEQ                                              MD029651
+     C                     PARM ZBRCA     SENTY                                             MD029651
+     C                     PARM           SFILE2                                            MD029651
+     C                     PARM           ZSNUM2                                            MD029651
+     C                     PARM *BLANKS   ZSERR2                                            MD029651
+     C                     ADD  1         COUNT                                             MD029651
+     C                     ENDDO                                                            MD029651
+      *                                                                                     MD029651
+     C*
+     C** Error During ZSFILE Processing, Return to Calling Program
+     C*
+     C           ZSERR2    IFEQ 'Y'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+     C*
+     C************         END                                            168964
+     C*
+     C** Retrieve Branch Name
+     C*
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM ZBRCA     @BRCA   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBRCHPD'DBFILE           ***************
+     C                     MOVEL@BRCA     DBKEY            * DB ERROR 2  *
+     C                     Z-ADD2         DBASE            ***************
+     C                     OUT  LDA
+     C                     WRITEERRP1
+     C***88*******         WRITEERRP2                                     168964
+     C                     WRITEERRP2                                     168964
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     WRITEHEADP1
+     C***88*******         WRITEHEADP2                                    168964
+     C                     WRITEHEADP2                                    168964
+     C                     END
+     C*
+     C                     EXSR MAIN
+     C                     READ REACCJLF                 LR
+     C                     END                             - E1
+     C*
+     C** TOTAL PROCESSING
+     C*
+     C                     EXSR TOTAL
+     C/COPY WNCPYSRC,RE3810C006
+     C*
+     C*===================================================================
+     C** P R O G R A M     E N D
+     C*===================================================================
+     C/EJECT
+     C********************************************************************
+     C**
+     C** FIRST subroutine to execute first cycle.
+     C**
+     C**     Called by       S T A R T
+     C**     Calls           *PSSR
+     C**
+     C           FIRST     BEGSR                           **FIRST BEGSR**
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+     C*
+     C                     SETON                     41
+     C*
+     C** INITIALISE LDA VARIABLES
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVE 'RE3810  'DBPGM
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     OUT  LDA
+     C*
+     C           MBIN      IFEQ 'Y'
+     C                     SETON                     79
+     C                     ELSE
+     C                     SETOF                     79
+     C                     END
+     C*                                                                   CRE003
+     C** ACCESS SDRETLPD                                                  CRE003
+     C*                                                                   CRE003
+     C                     CALL 'AORETLR0'                                CRE003
+     C                     PARM '*MSG   ' @RTCD   7                       CRE003
+     C                     PARM '*FIRST ' @OPTN   7                       CRE003
+     C           SDRETL    PARM SDRETL    DSFDY                           CRE003
+     C*                                                                   CRE003
+     C** CHECK IF ERROR                                                   CRE003
+     C*                                                                   CRE003
+     C           @RTCD     IFNE *BLANK                                    CRE003
+     C           *LOCK     IN   LDA                                       CRE003
+     C                     Z-ADD003       DBASE            ***************CRE003
+     C                     MOVE 'SDRETLPD'DBFILE           * DBERROR 003 *CRE003
+     C                     MOVEL*BLANKS   DBKEY            ***************CRE003
+     C                     OUT  LDA                                       CRE003
+     C                     EXSR *PSSR                                     CRE003
+     C                     END                                            CRE003
+     C*                                                                   CRE003
+     C                     SETOF                     69                   CRE003
+     C           BMCBAI    IFNE 'Y'                                       CRE003
+     C                     SETON                     69                   CRE003
+     C                     END                                            CRE003
+     C*
+     C** ACCESS TABTBRE TO CHECK LINK INSTALLED.
+     C*
+     C           1         CHAINTABTBRE              99
+     C***********LNKA      COMP 'Y'                      88               168964
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     MOVEL@OPTN     DBKEY            * DBERROR 001 *
+     C                     Z-ADD001       DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C/COPY WNCPYSRC,RE3810C001
+     C*
+     C** Ensure Report Spool File Recorded by RCF
+     C*
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+     C                     CALL 'ZSFILE'
+     C                     PARM *BLANKS   @SEQ    5
+     C                     PARM ZBRCA     SENTY   3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANKS   ZSERRU  1
+      *
+     C                     Z-ADD1         COUNT                                             MD029651
+     C           ZSERRU    DOWEQ'Y'                                                         MD029651
+     C           COUNT     ANDLT7                                                           MD029651
+     C                     Z-ADD80        CMDLEN 155                                        MD029651
+     C                     CALL 'QCMDEXC'                                                   MD029651
+     C                     PARM           DELAY@                                            MD029651
+     C                     PARM           CMDLEN                                            MD029651
+      *                                                                                     MD029651
+     C                     Z-ADDSFNUMU    ZSNUMU                                            MD029651
+     C                     CALL 'ZSFILE'                                                    MD029651
+     C                     PARM *BLANKS   @SEQ                                              MD029651
+     C                     PARM ZBRCA     SENTY                                             MD029651
+     C                     PARM           SFILEU                                            MD029651
+     C                     PARM           ZSNUMU                                            MD029651
+     C                     PARM *BLANKS   ZSERRU                                            MD029651
+      *                                                                                     MD029651
+     C                     ADD  1         COUNT                                             MD029651
+     C                     ENDDO                                                            MD029651
+      *                                                                                     MD029651
+     C*
+     C** Error During ZSFILE Processing, Return to Calling Program
+     C*
+     C           ZSERRU    IFEQ 'Y'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+      * Store relevant ccy details in the #CA and #CB arrays                                  CSC042
+     C           *LIKE     DEFN A6NBDP    CDP                                                 CSC042
+     C           *LIKE     DEFN A6SPRT    SPOT                                                CSC042
+     C           *LIKE     DEFN A6MDIN    MDIN                                                CSC042
+     C           *LIKE     DEFN A6ERLC    ERLC                                                CSC042
+     C           *LIKE     DEFN A6TXND    TNOT                                                CSC042
+     C           *LIKE     DEFN A6CYNM    CCNM                                                CSC042
+     C           *LIKE     DEFN A6SPAE    TACC                                                CSC042
+     C           *LIKE     DEFN A6SSNB    SSNO                                                CSC042
+     C                     Z-ADD0         Z#                                                  CSC042
+     C                     SETOF                     85                                       CSC042
+     C                     OPEN SDCURRPD                                                      CSC042
+     C                     READ SDCURRPD                 85                                   CSC042
+     C           *IN85     DOWNE*ON                                                           CSC042
+     C                     ADD  1         Z#                                                  CSC042
+     C                     MOVELA6CYCD    #CA,Z#                                              CSC042
+     C                     Z-ADDA6NBDP    #C01                                                CSC042
+     C                     Z-ADDA6SPRT    #C02                                                CSC042
+     C                     MOVELA6MDIN    #C03                                                CSC042
+     C                     Z-ADDA6ERLC    #C04                                                CSC042
+     C                     Z-ADDA6TXND    #C05                                                CSC042
+     C                     MOVELA6CYNM    #C06                                                CSC042
+     C                     MOVELA6SPAE    #C07                                                CSC042
+     C                     Z-ADDA6SSNB    #C08                                                CSC042
+     C                     MOVEL#C00      #CB,Z#                                              CSC042
+     C                     READ SDCURRPD                 85                                   CSC042
+     C                     ENDDO                                                              CSC042
+     C                     CLOSESDCURRPD                                                      CSC042
+     C*
+     C** OUTPUT AUDIT HEADER
+     C*
+     C                     WRITEHEADAU
+     C/COPY WNCPYSRC,RE3810C004
+     C*
+     C** INITIALISE ONE TIME FIELDS TO WRITE IN FILE AUDIT PRINTER
+     C*
+     C                     Z-ADD*ZEROS    NBRREC
+     C*
+     C                     ENDSR                           **FIRST ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** MAIN subroutine to execute main processing.
+     C**
+     C**     Called by       S T A R T
+     C**     Calls           DETAIL
+     C**
+     C           MAIN      BEGSR                           **MAIN BEGSR**
+     C*
+     C********** KRKEY     SETLLACCNT                    99                                 CRE083BG
+     C           KRKEY     CHAINACCNT                99                                     CRE083BG
+     C*
+     C********** *IN99     IFEQ '1'                        - B1                             CRE083BG
+     C           *IN99     IFEQ '0'                                                         CRE083BG
+     C*
+     C** ACCESS TO ACCNT BY KEY
+     C*
+     C********** KRKEY     READEACCNT                    98                                 CRE083BG
+     C*
+     C********** *IN98     DOWEQ'0'                        - B2                             CRE083BG
+     C/COPY WNCPYSRC,RE3810C005
+     C                     EXSR DETAIL
+     C*
+     C** ACCESS TO ACCNT BY KEY
+     C*
+     C********** KRKEY     READEACCNT                    98                                 CRE083BG
+     C**********           END                             - E2                             CRE083BG
+     C*
+     C                     END                             - E1
+     C*
+     C                     ENDSR                           **MAIN ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** DETAIL subroutine to execute detail processing.
+     C**
+     C**     Called by       M A I N
+     C**     Calls           -
+     C**
+     C           DETAIL    BEGSR                           *DETAIL BEGSR*
+     C*
+     C** CHECK IF CURRENCY EXIST
+     C                     SETOF                     85                                       CSC042
+     C                     Z-ADD1         Z#      30                                          CSC042
+     C           ZACCY     LOKUP#CA,Z#                   85                                   CSC042
+     C           *IN85     IFEQ *ON                                                           CSC042
+     C                     MOVEL#CB,Z#    #C00                                                CSC042
+     C                     Z-ADD#C01      CDP                                                 CSC042
+     C                     Z-ADD#C02      SPOT                                                CSC042
+     C                     MOVEL#C03      MDIN                                                CSC042
+     C                     Z-ADD#C04      ERLC                                                CSC042
+     C                     Z-ADD#C05      TNOT                                                CSC042
+     C                     MOVEL#C06      CCNM                                                CSC042
+     C                     MOVEL#C07      TACC                                                CSC042
+     C                     Z-ADD#C08      SSNO                                                CSC042
+     C                     ELSE                                                               CSC042
+     C*
+     C**********           CALL 'AOCURRR0'                                                    CSC042
+     C**********           PARM '*MSG   ' @RTCD                                               CSC042
+     C**********           PARM '*KEY   ' @OPTN                                               CSC042
+     C**********           PARM ZACCY     @CYCD   3                                           CSC042
+     C********** SDCURR    PARM SDCURR    DSSDY                                               CSC042
+     C********** @RTCD     IFNE *BLANK                                                        CSC042
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE           ***************
+     C**********           MOVEL@CYCD     DBKEY            * DB ERROR 2  *                    CSC042
+     C                     MOVELZACCY     DBKEY                                               CSC042
+     C                     Z-ADD2         DBASE            ***************
+     C                     OUT  LDA
+     C                     WRITEERRP1
+     C***88*******         WRITEERRP2                                     168964
+     C                     WRITEERRP2                                     168964
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** CALCUL OF TOTAL GENERATED BALANCE
+     C*
+     C                     EXSR SRGEAD
+     C*                                                                   CRE003
+     C** IF ACCRUAL ON CLR'D BALANCES FLAG= 'N',CLEARED BAL := LEDGER BAL CRE003
+     C*                                                                   CRE003
+     C           BMCBAI    IFNE 'Y'                                       CRE003
+     C                     Z-ADDLDBL      CLBL                            CRE003
+     C                     END                                            CRE003
+     C*
+     C** PUT THE DECIMAL POINT AT THE RIGHT PLACE
+     C*
+     C                     Z-ADDZHISB     OHISB
+     C                     Z-ADDCLBL      ZCLBL
+     C           ZCLBL     SUB  ZHISB     ZDIFF
+     C                     SUB  GEAD      ZDIFF                           CRE003
+     C                     SETOF                     707172
+     C                     SETOF                     73
+     C           CDP       IFEQ 0                          - B1
+     C*
+     C                     SETON                       70
+     C*
+     C                     ELSE                            - X1
+     C*
+     C           CDP       IFEQ 1                          - B2
+     C*
+     C           ZHISB     DIV  10        OHISB1
+     C           CLBL      DIV  10        ZCLBL1
+     C           GEAD      DIV  10        GEAD1
+     C           ZDIFF     DIV  10        ZDIFF1
+     C                     SETON                       71
+     C*
+     C                     ELSE                            - X2
+     C*
+     C           CDP       IFEQ 2                          - B3
+     C*
+     C           ZHISB     DIV  100       OHISB2
+     C           CLBL      DIV  100       ZCLBL2
+     C           GEAD      DIV  100       GEAD2
+     C           ZDIFF     DIV  100       ZDIFF2
+     C                     SETON                       72
+     C*
+     C                     ELSE                            - X3
+     C*
+     C           ZHISB     DIV  1000      OHISB3
+     C           CLBL      DIV  1000      ZCLBL3
+     C           GEAD      DIV  1000      GEAD3
+     C           ZDIFF     DIV  1000      ZDIFF3
+     C                     SETON                       73
+     C*
+     C                     END                             - E3
+     C*
+     C                     END                             - E2
+     C*
+     C                     END                             - E1
+     C*
+     C** CHECK IF END OF PAGE
+     C*
+     C           *IN01     IFEQ '1'                        - B1
+     C*
+     C                     ADD  1         PAGEP1                          167673
+     C                     WRITEHEADP1
+     C                     MOVE '0'       *IN01
+     C*****                ADD  1         PAGE                            167673
+     C*
+     C                     END                             - E1
+     C           *IN02     IFEQ '1'                        - B1
+     C*
+     C                     ADD  1         PAGEP2                          167673
+     C***88*******         WRITEHEADP2                                    168964
+     C                     WRITEHEADP2                                    168964
+     C                     MOVE '0'       *IN02
+     C*****                ADD  1         PAGE1                           167673
+     C*
+     C                     END                             - E1
+     C*
+     C** WRITING OF DETAIL LINE ON REPORT
+     C*
+     C           LTAS      IFEQ *ZERO                      - B1
+     C*
+     C********** ZHISB     ADD  GEAD      WHISB                           099510
+     C***********ZHISB     SUB  GEAD      WHISB                     099510153113
+     C           ZHISB     ADD  GEAD      WHISB                           153113
+     C           WHISB     IFNE CLBL                       - B1b
+     C*
+     C           ZHISB     IFEQ CLBL                       - B2
+     C                     MOVE '1'       *IN05
+     C                     END                             - E2
+     C*
+     C                     WRITEDETP1
+     C                     ADD  1         NBRREC
+     C*
+     C                     MOVE '0'       *IN05
+     C*
+     C                     END                               E1b
+     C*
+     C                     ELSE                            - X1
+     C           LTAS      IFEQ 99                         - B2
+      *                                                                   123631
+      ** Open spool files                                                 123631
+     C           *IN87     IFEQ '0'                                       123631
+     C                     MOVE ZBRCA     BRCA#                           123631
+     C                     OPEN RE3810P1                                  123631
+     C                     SETON                     01                   123631
+     C***88*******         OPEN RE3810P2                            123631168964
+     C***88*******         SETON                     02             123631168964
+     C                     OPEN RE3810P2                                  168964
+     C                     SETON                     02                   168964
+     C                     SETON                     87                   123631
+     C******               Z-ADD0         PAGE                      123631167673
+     C******               Z-ADD0         PAGE1                     123631167673
+     C*                                                                   123631
+     C** Ensure Report Spool File Recorded by RCF                         123631
+     C*                                                                   123631
+     C                     Z-ADDSFNUM1    ZSNUM1  60                      123631
+     C                     CALL 'ZSFILE'                                  123631
+     C                     PARM *BLANKS   @SEQ    5                       123631
+     C                     PARM ZBRCA     SENTY   3                       123631
+     C                     PARM           SFILE1                          123631
+     C                     PARM           ZSNUM1                          123631
+     C                     PARM *BLANKS   ZSERR1  1                       123631
+     C*                                                                   123631
+     C** Error During ZSFILE Processing, Return to Calling Program        123631
+     C*                                                                   123631
+     C           ZSERR1    IFEQ 'Y'                                       123631
+     C                     MOVE '1'       *INU7                           123631
+     C                     MOVE '1'       *INU8                           123631
+     C                     MOVE '1'       *INLR                           123631
+     C                     RETRN                                          123631
+     C                     END                                            123631
+     C*                                                                   123631
+     C** Ensure Report Spool File Recorded by RCF                         123631
+     C*                                                                   123631
+     C************IN88     IFEQ '1'                                 123631168964
+     C*                                                                   123631
+     C                     Z-ADDSFNUM2    ZSNUM2  60                      123631
+     C                     CALL 'ZSFILE'                                  123631
+     C                     PARM *BLANKS   @SEQ    5                       123631
+     C                     PARM ZBRCA     SENTY   3                       123631
+     C                     PARM           SFILE2                          123631
+     C                     PARM           ZSNUM2                          123631
+     C                     PARM *BLANKS   ZSERR2  1                       123631
+     C*                                                                   123631
+     C** Error During ZSFILE Processing, Return to Calling Program        123631
+     C*                                                                   123631
+     C           ZSERR2    IFEQ 'Y'                                       123631
+     C                     MOVE '1'       *INU7                           123631
+     C                     MOVE '1'       *INU8                           123631
+     C                     MOVE '1'       *INLR                           123631
+     C                     RETRN                                          123631
+     C                     END                                            123631
+     C*                                                                   123631
+     C***********          END                                      123631168964
+     C                     END                                            123631
+     C           LNKEY     SETLLRELINKJ2
+     C           LNKEY     READERELINKJ2                 99
+     C           *IN99     DOWEQ'0'                        - B3
+     C           BMCBAI    IFEQ 'Y'                                       CRE003
+     C                     ADD  GROSS     CLBL
+     C                     ELSE                                           CRE003
+     C                     ADD  GRLDBL    CLBL                            CRE003
+     C                     END                                            CRE003
+     C           LNKEY     READERELINKJ2                 99
+     C                     END                             - E3
+     C********** ZHISB     ADD  GEAD      WHISB                           099510
+     C********** ZHISB     SUB  GEAD      WHISB                     099510153113
+     C           ZHISB     ADD  GEAD      WHISB                           153113
+     C           WHISB     IFNE CLBL                       - B3
+     C*
+     C** PUT THE DECIMAL POINT AT THE RIGHT PLACE
+     C*
+     C                     Z-ADDZHISB     OHISB
+     C                     Z-ADDCLBL      ZCLBL
+     C           ZCLBL     SUB  ZHISB     ZDIFF
+     C                     SUB  GEAD      ZDIFF                           CRE003
+     C                     SETOF                     707172
+     C                     SETOF                     73
+     C           CDP       IFEQ 0                          - B4
+     C*
+     C                     SETON                       70
+     C*
+     C                     ELSE                            - X4
+     C*
+     C           CDP       IFEQ 1                          - B5
+     C*
+     C           ZHISB     DIV  10        OHISB1
+     C           CLBL      DIV  10        ZCLBL1
+     C           GEAD      DIV  10        GEAD1
+     C           ZDIFF     DIV  10        ZDIFF1
+     C                     SETON                       71
+     C*
+     C                     ELSE                            - X5
+     C*
+     C           CDP       IFEQ 2                          - B6
+     C*
+     C           ZHISB     DIV  100       OHISB2
+     C           CLBL      DIV  100       ZCLBL2
+     C           GEAD      DIV  100       GEAD2
+     C           ZDIFF     DIV  100       ZDIFF2
+     C                     SETON                       72
+     C*
+     C                     ELSE                            - X6
+     C*
+     C           ZHISB     DIV  1000      OHISB3
+     C           CLBL      DIV  1000      ZCLBL3
+     C           GEAD      DIV  1000      GEAD3
+     C           ZDIFF     DIV  1000      ZDIFF3
+     C                     SETON                       73
+     C*
+     C                     END                             - E6
+     C*
+     C                     END                             - E5
+     C*
+     C                     END                             - E4
+     C*
+     C***88*******         WRITEDETP2                                     168964
+     C***88*******         ADD  1         NBRREC                          168964
+     C                     WRITEDETP2                                     168964
+     C                     ADD  1         NBRREC                          168964
+     C                     END                             - E3
+     C*
+     C                     ELSE                            - X2
+     C/COPY WNCPYSRC,RE3810C002
+     C           ZHISB     IFNE CLBL
+     C***88*******         WRITEDETP2                                     168964
+     C***88*******         ADD  1         NBRREC                          168964
+     C                     WRITEDETP2                                     168964
+     C                     ADD  1         NBRREC                          168964
+     C                     ENDIF
+     C/COPY WNCPYSRC,RE3810C003
+     C                     END                             - E2
+     C                     END                             - E1
+     C*
+     C** CALCULATION OF NUMBER OF RECORD READ FROM REACCNJL
+     C*
+     C**                   ADD  1         NBRREC
+     C*
+     C                     ENDSR                           *DETAIL ENDSR*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** TOTAL subroutine to execute end processing.
+     C**
+     C**     Called by       S T A R T
+     C**     Calls           -
+     C**
+     C           TOTAL     BEGSR                           **TOTAL BEGSR**
+     C*
+     C** DO NOT PRODUCE REPORT FOR BRANCH 000 IF FILE EMPTY               085762
+     C***Print*'****NO*DETAILS*TO*REPORT****'*if*LF/RELINKF*is*empty***   085762
+     C************                                                        085762
+     C************IN41     IFEQ '1'                                       085762
+     C************         MOVE ZBRCA     BRCA#                     076563085762
+     C************         OPEN RE3810P1                                  085762
+     C***88*******         OPEN RE3810P2                                  085762
+     C************         WRITEHEADP1                                    085762
+     C***88*******         WRITEHEADP2                                    085762
+     C************         WRITEENDNOD1                                   085762
+     C***88*******         WRITEENDNOD2                                   085762
+     C************         CLOSERE3810P1                                  085762
+     C***88*******         CLOSERE3810P2                                  085762
+     C************         END                                            085762
+     C*
+     C**  PRINT 'END OF BRANCH' NARRATIVE AT END OF PROGRAM ALSO
+     C**
+     C           *IN87     IFEQ '1'
+     C                     WRITEENDP1
+     C***88*******         WRITEENDP2                                     168964
+     C                     WRITEENDP2                                     168964
+     C                     END
+     C*
+     C                     WRITETOTALS
+     C*
+     C                     ENDSR                           **TOTAL ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** SRGEAD subroutine to CALCULATE AJUSTEMENT
+     C**
+     C**     Called by       DETAIL
+     C**     Calls           -
+     C**
+     C           SRGEAD    BEGSR                           **SRGEADBEGSR*
+     C*
+     C** INITIALIZE TO ZERO
+     C*
+     C                     Z-ADD*ZEROS    GEAD
+     C*
+     C** ACCESS CAPITALISATION RECORDS
+     C*
+     C           LNKEY     SETLLREHISSL                  99
+     C*
+     C           *IN99     IFEQ '1'                        - B1
+     C*
+     C           LNKEY     READEREHISSL                  97
+     C           *IN97     DOWEQ'0'                        - B2
+     C*
+     C***********SDICI     IFEQ 'Y'                        - B3           098818
+     C           SDICI     IFNE *BLANKS                    - B3           098818
+     C           SDCI      ANDEQ'Y'
+     C*
+     C***********          ADD  DAIC      GEAD                            045074
+     C***********          SUB  DAIC      GEAD                      045074099510
+     C**********           ADD  DAIC      GEAD                            099510              197095
+     C                     SUB  DAIC      GEAD                                                197095
+     C                     END                             - E3
+     C*
+     C***********SCICI     IFEQ 'Y'                        - B3           098818
+     C           SCICI     IFNE *BLANKS                    - B3           098818
+     C           SCCI      ANDEQ'Y'
+     C*
+     C***********          SUB  CAIC      GEAD                            049054
+     C***********          ADD  CAIC      GEAD                      049054099510
+     C***********          SUB  CAIC      GEAD                      099510153113
+     C                     ADD  CAIC      GEAD                            153113
+     C/COPY WNCPYSRC,RE3810C007
+     C                     END                             - E3
+     C           LNKEY     READEREHISSL                  97
+     C                     END                             - E2
+     C                     END                             - E1
+     C                     ENDSR                           **TOTAL ENDSR**
+     C********************************************************************
+     C/COPY WNCPYSRC,RE3810C008
+     C/EJECT
+     C********************************************************************
+     C**
+     C** *PSSR subroutine for database error handling
+     C**
+     C**     Called by       FIRST
+     C**     Calls           -
+     C**
+     C           *PSSR     BEGSR                           **PSSR BEGSR**
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     WRITEERRAU
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR                           **PSSR ENDSR**
+     C*
+     C********************************************************************
+**  CPY@ OBJECT COPYRIGHT **
+(c) Misys International Banking Systems Ltd. 2001
+**  DELAY@                                                                                  MD029651
+DLYJOB   DLY(10)                                                                            MD029651

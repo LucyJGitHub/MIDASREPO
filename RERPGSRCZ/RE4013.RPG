@@ -1,0 +1,1041 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                    : *
+/*EXI *  TEXT('Midas RE T&N Accounts - Ntf Alloc/Unwind Rtne')        *
+      *****************************************************************
+      *                                                               *
+      *  Midas     - Retail T&N Accounts                              *
+      *                                                               *
+      *  RPG/RE4013  - Ntf Allocate/Unwind Routine                    *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *                                                               *
+      *  Last Amend No. CRE075             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Prev Amend No. BUG27582           Date 28Apr10               *
+      *                 BUG26995           Date 18Dec09               *
+      *                 230517             Date 18Dec09               *
+      *                 212730             Date 18Dec09               *
+      *                 BUG27460           Date 18Dec09               *
+      *                 CRE015 *CREATE     Date 18Dec09               *
+      *---------------------------------------------------------------*
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  BUG27582 - Charges not calculated in Acct Penalty Check      *
+      *  BUG26995 - Incorrect computation of method 'S' for a         *
+      *             percentage charge                                 *
+      *  230517 - Termination notification should always be 'BAL'.    *
+      *           which is stored on the file as *ALL '9'.            *
+      *  212730 - Penalty incorrectly applied when posting was within *
+      *           notified amount but not entered on Record Today's   *
+      *           Movements. Problem occurs when a/c is set up as 'S' *
+      *           (straight) penalty with fixed charge amount.        *
+      *           Same error prevents user from overwriting penalty   *
+      *           on Record Today's Movements and also ignores check  *
+      *           against accrued interest.  Apply fix 205497.        *
+      *  BUG27460 - Applied client fix AS0002 AS0001                  *
+      *  AS0002 - Improve penalty calculation                         *
+      *  AS0001 - Do not lock records in enquiry mode                 *
+      *  CRE015 - Retail Term and Notice Accounts                     *
+      *****************************************************************
+     FRERTMVPDUF  E           K        DISK         KCOMIT       A
+     FREPRPNPDIF  E           K        DISK
+     FRETRG   IF  E           K        DISK
+     F            RETRGAF                           KIGNORE
+     F            RETRGZF                           KIGNORE
+     FRERTMUPDUF  E           K        DISK         KCOMIT       A
+     FRENFMVPDUF  E           K        DISK         KCOMIT
+      *****************************************************************
+     E                    ARD        99  5 0
+     E                    ARU        99 30 0
+      *****************************************************************
+     IPGMDS      SDS
+      * Program data structure
+     I                                        1  10 SPGM
+     I                                      244 253 SJOB
+     I                                      254 263 SUSER
+     IP@FMT     E DSDSSDY
+      *
+      ** Parameters
+      *
+     IACFMT     E DSACCNTAB
+      *
+      ** Account details
+      *
+     IBKFMT     E DSSDBANKPD
+      *
+      ** Bank details
+      *
+     ICYFMT     E DSSDCURRPD
+      *
+      ** Ccy
+      *
+     IDSKEY       DS
+      *
+      ** Structure for transaction charge key
+      *
+     I                                        4   8 W1RTTX
+     I                                        9  11 W1CCY
+     I                                       12  12 W1DDDD
+      *****************************************************************
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PMODE   7
+     C                     PARM           PKEY1  24
+     C                     PARM           PTRR2   8
+     C                     PARM           PAJAA  150
+     C                     PARM           PDC01   1
+     C                     PARM           PPNIN  150
+     C                     PARM           PDC02   1
+     C                     PARM           PDATE   50
+      *
+      ** FREE MODE
+      *
+     C           PMODE     IFEQ '*FREE'
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+      *
+      ** Initialise
+      *
+     C                     EXSR INIT
+      *
+      ** Get recorded movement detail
+      *
+     C           PMODE     IFEQ '*ENQ  '
+     C                     EXSR GETRCM
+     C                     END
+      *
+      ** Update recorded movement detail
+      *
+     C           PMODE     IFEQ '*UPD  '
+     C                     EXSR UPDRCM
+     C                     EXSR RMVPEN
+     C                     EXSR ADDPEN
+     C                     END
+      *
+      ** Delete recorded movement detail
+      *
+     C           PMODE     IFEQ '*DLT  '
+     C                     EXSR DLTRCM
+     C                     EXSR RMVPEN
+     C                     END
+      *
+     C           ENDHRE    TAG
+      *
+     C                     SETON                     LR
+      *****************************************************************
+      *                                                               *
+      *  GETRCM: Get recorded movement detail                         *
+      *                                                               *
+      *****************************************************************
+     C           GETRCM    BEGSR
+      *
+      ** Fetch next recorded movement
+      *
+     C                     MOVELPKEY1     E4KEY1
+     C                     MOVELPTRR2     E4TRR2
+     C           KRTMV1    SETGTRERTMVPD
+     C                     READ RERTMVPD            N    82                                   AS0001
+      *
+      ** Return fields
+      *
+     C           *IN82     IFEQ '1'
+     C                     MOVEL*HIVAL    PKEY1
+     C                     ELSE
+     C                     MOVELE4KEY1    PKEY1
+     C                     MOVELE4TRR2    PTRR2
+     C                     Z-ADDE4AJAA    PAJAA
+     C                     MOVELE4DC01    PDC01
+     C                     Z-ADDE4PNIN    PPNIN
+     C                     MOVELE4DC02    PDC02
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  UPDRCM: Update recorded movement detail                      *
+      *                                                               *
+      *****************************************************************
+     C           UPDRCM    BEGSR
+      *
+      ** For insert, get next seq
+      *
+     C           PTRR2     IFEQ *BLANKS
+     C                     MOVE *ZEROS    INSREF  8
+     C                     MOVELREFPFX    INSREF
+      *
+      **   Find latest used reference
+      *
+     C                     MOVELPKEY1     E4KEY1
+     C                     MOVEL*LOVAL    E4TRR2
+     C           KRTMV1    SETLLRERTMVPD
+     C           KRTMV2    READERERTMVPD            N    72
+     C           *IN72     DOWEQ'0'
+      *
+     C           E4TRR2    IFGT INSREF
+     C                     MOVELE4TRR2    INSREF
+     C                     END
+     C           KRTMV2    READERERTMVPD            N    72
+     C                     END
+      *
+      ** Add 1 to current ref
+      *
+     C                     MOVE INSREF    WWSEQ   70
+     C                     ADD  1         WWSEQ
+     C                     MOVE WWSEQ     INSREF
+      *
+      ** Write new recorded movement
+      *
+     C                     MOVELINSREF    PTRR2
+     C                     EXSR PRMFIL
+     C                     WRITERERTMVD0
+     C                     ELSE
+      *
+      ** For amend, update old recorded movement
+      *
+     C                     MOVELPKEY1     E4KEY1
+     C                     MOVEL*LOVAL    E4TRR2
+     C           KRTMV1    SETLLRERTMVPD
+     C           KRTMV2    READERERTMVPD                 72
+     C           *IN72     DOWEQ'0'
+     C           E4TRR2    ANDNEPTRR2
+     C           KRTMV2    READERERTMVPD                 72
+     C                     END
+     C           *IN72     IFEQ '0'
+     C                     EXSR PRMFIL
+     C                     UPDATRERTMVD0
+     C                     END
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  DLTRCM: Delete recorded movement detail                      *
+      *                                                               *
+      *****************************************************************
+     C           DLTRCM    BEGSR
+      *
+      ** Delete old recorded movement
+     C                     MOVELPKEY1     E4KEY1
+     C                     MOVELPTRR2     E4TRR2
+     C           KRTMV1    CHAINRERTMVPD             72
+     C           *IN72     IFEQ '0'
+     C                     DELETRERTMVD0
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  ADDPEN: Update recorded movement detail                      *
+      *                                                               *
+      *****************************************************************
+     C           ADDPEN    BEGSR
+      *
+      ** Get P+P details for given account
+      *
+     C                     EXSR GETPP
+      *
+      ** Use notifications
+      *
+     C                     EXSR USENTF
+      *
+      ** Get penalty charge rate or amount
+      *
+     C                     EXSR GETPCH
+      *
+      ** Get true penalty calc details
+      *
+     C                     EXSR CALCPN
+     C           W1CHAM    IFEQ *ALL'9'
+     C                     Z-ADDW1TRUE    W1CHAM
+     C                     END
+      *
+      ** Place charge into database
+      *
+     C                     EXSR ENTCHG
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  GETPP: Get P+P details for given account                     *
+      *                                                               *
+      *****************************************************************
+     C           GETPP     BEGSR
+      *
+      ** Access P+P details
+      *
+     C                     Z-ADD*ALL'9'   W1MAXP 150
+     C                     MOVELPBRCA     E2BRCA
+     C                     MOVE PCNUM     E2CNUM
+     C                     MOVELPCCY      E2CCY
+     C                     MOVE PACOD     E2ACOD
+     C                     MOVE PACSQ     E2ACSQ
+     C                     MOVEL*BLANKS   E2EVNT
+     C                     Z-ADD0         E2ITEM
+     C           KPRPN1    SETLLREPRPNPD
+     C           KPRPN3    READEREPRPNPD            N    81
+      *
+      ** Get DR or CR details, depending on movement
+      *
+     C           PDC01     IFEQ 'C'
+     C                     Z-ADDPAJAA     W1AJAA 150
+     C                     Z-ADDW1AJAA    W1UNEX 150
+     C                     MOVELE2RTTC    W1RTTX  5
+     C                     MOVELE2DYBC    W1DYBX  1
+     C                     MOVELE2CRST    W1XRST  1
+     C                     MOVELPDC01     W1SIGN  1
+     C           E2DYBC    IFEQ 'S'
+     C                     Z-ADDPDATE     W1ENDP
+     C                     END
+     C           E2TPRD    IFEQ 'T'
+     C           E2DYBC    ANDNE'S'
+     C                     Z-ADDE2MDAT    W1ENDP  50
+     C                     END
+     C           E2TPRD    IFEQ 'N'
+     C           E2DYBC    ANDNE'S'
+     C           PDATE     ADD  E2NDPD    W1ENDP
+     C                     SUB  1         W1ENDP
+     C                     END
+     C           E2CRST    IFEQ 'I'
+     C           PACCR     ANDGE0
+     C                     Z-ADDPACCR     W1MAXP
+     C                     END
+     C                     END
+      *
+     C           PDC01     IFEQ 'D'
+     C                     Z-ADDPAJAA     W1AJAA
+     C                     Z-ADDW1AJAA    W1UNEX
+     C                     MOVELE2RTTD    W1RTTX
+     C                     MOVELE2DYBD    W1DYBX
+     C                     MOVELE2DRST    W1XRST
+     C                     MOVELPDC01     W1SIGN
+     C           E2DYBD    IFEQ 'S'
+     C                     Z-ADDPDATE     W1ENDP
+     C                     END
+     C           E2TPRD    IFEQ 'T'
+     C           E2DYBD    ANDNE'S'
+     C                     Z-ADDE2MDAT    W1ENDP
+     C                     END
+     C           E2TPRD    IFEQ 'N'
+     C           E2DYBD    ANDNE'S'
+     C           PDATE     ADD  E2NDPD    W1ENDP
+     C                     SUB  1         W1ENDP
+     C                     END
+     C           E2DRST    IFEQ 'I'
+     C           PACCR     ANDLE0
+     C                     Z-SUBPACCR     W1MAXP
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  USENTF: Use notifications                                    *
+      *                                                               *
+      *****************************************************************
+     C           USENTF    BEGSR
+      *
+      ** Go through notifications while there is unexhausted movement
+      *
+      ** Use up notifications
+     C                     MOVELPKEY1     E3KEY1
+     C                     Z-ADD0         E3DEFF
+     C                     MOVEL*LOVAL    E3TRR1
+     C           KNFMV1    SETLLRENFMVPD
+     C           KNFMV2    READERENFMVPD                 81
+     C           W1UNEX    DOWGT0
+     C           E3DEFF    ANDLEW1ENDP
+     C           *IN81     ANDEQ'0'
+      *
+     C                     Z-ADDE3CAVL    W2CAVL 300
+     C           E3TRR1    IFEQ TRMREF
+     C           E3CAVL    ANDNE*ALL'9'
+     C                     Z-ADD*ALL'9'   W2CAVL
+     C                     END
+      *
+      ** Only use notifications of same sign as movement
+      *
+     C           E3DC02    IFEQ W1SIGN
+     C           W2CAVL    OREQ *ALL'9'
+     C           W2CAVL    IFGT 0
+      *
+      ** Calculate notification reduction (usage)
+      *
+     C           W2CAVL    IFGE W1UNEX
+     C                     Z-ADDW1UNEX    REDUCT 150
+     C                     ELSE
+     C                     Z-ADDW2CAVL    REDUCT
+     C                     END
+      *
+      ** Reduce outstanding movement (if not unknown)
+      *
+     C           W1UNEX    IFNE *ALL'9'
+     C           W1UNEX    SUB  REDUCT    W1UNEX
+     C                     END
+     C           W2CAVL    IFNE *ALL'9'
+     C           W2CAVL    SUB  REDUCT    W2CAVL
+     C                     END
+      *
+      ** Update allocation and notification files
+      *
+     C           W2CAVL    IFNE *ALL'9'
+     C                     Z-ADDW2CAVL    E3CAVL
+     C                     END
+      *                                                                                       230517
+     C           E3TRR1    IFEQ 'N9999999'                                                    230517
+     C                     MOVE *ALL'9'   E3REAM                                              230517
+     C                     MOVE *ALL'9'   E3CAVL                                              230517
+     C                     ENDIF                                                              230517
+      *                                                                                       230517
+     C                     UPDATRENFMVD0
+      *
+     C                     MOVELE3KEY1    E5KEY1
+     C                     MOVELE3TRR1    E5TRR1
+     C                     MOVELE4TRR2    E5TRR2
+     C                     Z-ADDREDUCT    E5AJAA
+     C                     MOVELW1SIGN    E5DC01
+     C           E3DEFF    SUB  PDATE     W1EARL  50
+     C           W1EARL    IFLT 0
+     C                     Z-ADD0         E5DYNO
+     C                     ELSE
+      *
+      **  Time basis D = actual nbr of days early
+      **  Time basis M = nbr of days early rounded up to nearest multiple of 30
+      *
+     C           W1DYBX    IFEQ 'M'
+     C                     Z-ADD0         W30N0  300
+     C           W1EARL    IFGE 1
+     C           W1EARL    SUB  1         W30N0
+     C           W30N0     DIV  30        W30N0                                               AS0002
+     C                     ADD  1         W30N0
+     C                     MULT 30        W30N0
+     C                     END
+     C                     Z-ADDW30N0     W1EARL
+     C                     END
+     C                     Z-ADDW1EARL    E5DYNO
+     C                     END
+     C                     WRITERERTMUD0
+     C                     END
+     C                     END
+     C           KNFMV2    READERENFMVPD                 81
+     C                     END
+      *
+      ** Take any remaining unexhausted movement from inexhaustible termination
+      **  (early by 1 day after end of penalty period)
+      *
+     C           W1UNEX    IFNE 0
+     C                     MOVELE3KEY1    E5KEY1
+     C                     MOVELTRMREF    E5TRR1
+     C                     MOVELE4TRR2    E5TRR2
+     C                     Z-ADDW1UNEX    E5AJAA
+     C                     MOVELW1SIGN    E5DC01
+     C           W1ENDP    SUB  PDATE     WDATE   50
+     C           WDATE     ADD  1         W1EARL
+      *
+      **  Time basis M = nbr of days early rounded up to nearest multiple of 30
+      *
+     C           W1DYBX    IFEQ 'M'
+     C                     Z-ADD0         W30N0  300
+     C           W1EARL    IFGE 1
+     C           W1EARL    SUB  1         W30N0
+     C           W30N0     DIV  30        W30N0                                               AS0002
+     C                     ADD  1         W30N0
+     C                     MULT 30        W30N0
+     C                     END
+     C                     Z-ADDW30N0     W1EARL
+     C                     END
+     C                     Z-ADDW1EARL    E5DYNO
+     C                     WRITERERTMUD0                                                    BUG27582
+     C                     Z-ADD0         W1UNEX
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  GETPCH: Get penalty charge rate or amount                    *
+      *                                                               *
+      *****************************************************************
+     C           GETPCH    BEGSR
+      *
+      ** Access Penalty charge details
+      *
+     C                     Z-ADD*ALL'9'   W1CHAM 150
+     C                     Z-ADD0         W1PENA 309
+     C                     Z-ADD0         W1PENR 309
+     C                     MOVELE2CCY     W1CCY
+     C                     MOVEL'D'       W1DDDD
+     C                     MOVELDSKEY     KEY
+     C           KEY       CHAINRETRG               N81
+     C           *IN81     IFEQ '0'
+     C                     Z-ADDCHAM      W1PENA
+     C           DCAM      IFEQ 'C'
+     C                     DUMP
+     C                     Z-ADD0         W1PENA
+     C                     END
+     C           CHPC      DIV  100       W1PENR
+     C           DCPC      IFEQ 'C'
+     C                     DUMP
+     C                     Z-ADD0         W1PENR
+     C                     END
+      *
+      **  Time basis M needs rate/30, since early penalty cacld on daily excess
+      *
+     C           W1DYBX    IFEQ 'M'
+     C           W1PENR    DIV  30        W1PENR
+     C           W1PENA    DIV  30        W1PENA
+     C                     END
+     C                     END
+      *
+      ** Rate must not be 100% or more
+      *
+     C           W1PENR    IFGE 100
+     C                     DUMP
+     C                     Z-ADD0         W1PENR
+     C                     END
+      *
+      ** Override system charge with given one
+      *
+     C           PPNIN     IFNE *ALL'9'
+     C                     Z-ADDPPNIN     W1CHAM
+     C           PDC02     IFEQ 'C'
+     C                     Z-SUBW1CHAM    W1CHAM
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  CALCPN: Get true penalty calc details                        *
+      *                                                               *
+      *****************************************************************
+     C           CALCPN    BEGSR
+      *
+      ** Penalty from Rate x Cumulated Excess per Days to Go basis
+      ** or from      Rate x Cumulated Excess per Days to Go basis (30day meth)
+      ** or from      Rate x Simple Excess (effectively only 1 day)
+      *
+     C           W1DYBX    IFEQ 'D'
+     C           W1DYBX    OREQ 'M'
+     C           W1DYBX    OREQ 'S'
+      *
+      ** Known movement
+      *
+     C           W1AJAA    IFNE *ALL'9'
+      *
+      **  accumulate notification work values
+      *
+     C                     EXSR ACCUMN
+     C                     ELSE
+      *
+      ** Unknown closing movement
+      *
+     C           RECALC    DOUEQ'N'
+     C                     MOVEL'N'       RECALC  1
+      *
+      **  accumulate notification work values
+      *
+     C                     EXSR ACCUMN
+      *
+      **  try to find closing movement
+      *
+     C                     EXSR CLOSEM
+      *
+      **  check movement
+      *
+     C                     EXSR CHECKM
+     C                     END
+     C                     END
+      *
+      ** Calculate penalty using rate and work fields
+      *
+     C           W1PENR    IFNE 0
+     C           W1DYBX    IFEQ 'S'                                                         BUG26995
+     C           W1AJAA    MULT W1PENR    W1WRK3                                            BUG26995
+     C                     ELSE                                                             BUG26995
+     C           W1AJAA    MULT W1DLIM    W1WRK1
+     C           W1WRK1    SUB  W1WRK2    W1WRK3 309
+     C           W1WRK3    MULT W1PENR    W1WRK3
+     C                     ENDIF                                                            BUG26995
+     C                     ENDIF
+      *
+      ** Calculate penalty using amount and work fields
+      *
+     C           W1PENA    IFNE 0
+      *                                                                                       212730
+      ** If straight penalty use fixed amount                                                 212730
+      *                                                                                       212730
+     C           W1DYBX    IFEQ 'S'                                                           212730
+     C           W1DLIM    IFGT *ZERO                                                         212730
+     C                     Z-ADDW1PENA    W1WRK3                                              212730
+     C                     ELSE                                                               212730
+     C                     Z-ADD*ZERO     W1WRK3                                              212730
+     C                     ENDIF                                                              212730
+      *                                                                                       212730
+     C                     ELSE                                                               212730
+     C           W1PENA    MULT W1DLIM    W1WRK3
+     C                     ENDIF                                                              212730
+     C                     END
+      *
+     C           W1WRK3    IFLE W1MAXP
+     C                     Z-ADDW1WRK3    W1TRUE 150H                                         AS0002
+     C                     ELSE
+     C                     Z-ADDW1MAXP    W1TRUE
+     C                     END
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  ENTCHG: Place charge into database                           *
+      *                                                               *
+      *****************************************************************
+     C           ENTCHG    BEGSR
+      *
+      ** Update recorded movement
+      *
+     C           KRTMV1    CHAINRERTMVPD             81
+     C           *IN81     IFEQ '0'
+      *
+      ** Known movement
+      *
+     C           PAJAA     IFNE *ALL'9'
+     C                     Z-ADDE4AJAA    PAJAA
+     C                     MOVELE4DC01    PDC01
+     C                     ELSE
+      *
+      ** Unknown closing movement
+      *
+     C           PCLOB     ADD  W1CHAM    W1TMP
+     C           W1TMP     IFGT 0
+     C                     Z-ADDW1TMP     PAJAA
+     C                     MOVEL'C'       PDC01
+     C                     ELSE
+     C                     Z-SUBW1TMP     PAJAA
+     C                     MOVEL'D'       PDC01
+     C                     END
+     C                     END
+      *
+      ** Penalty
+      *
+     C           W1CHAM    IFGE 0
+     C                     Z-ADDW1CHAM    PPNIN
+     C                     MOVEL'D'       PDC02
+     C                     ELSE
+     C                     Z-SUBW1CHAM    PPNIN
+     C                     MOVEL'C'       PDC02
+     C                     END
+      *
+      ** Other details
+      *
+     C           W1TRUE    IFGE 0
+     C                     Z-ADDW1TRUE    PTRUE  150
+     C                     MOVEL'D'       PDC03   1
+     C                     ELSE
+     C                     Z-SUBW1TRUE    PTRUE
+     C                     MOVEL'C'       PDC03
+     C                     END
+      *
+      ** Update if (signif) details have changed
+      *
+     C           PAJAA     IFNE E4AJAA
+     C           PDC01     ORNE E4DC01
+     C           PPNIN     ORNE E4PNIN
+     C           PDC02     ORNE E4DC02
+     C           PTRUE     ORNE E4TRUE
+     C           PDC03     ORNE E4DC03
+     C           SUSER     ORNE E4USER
+     C                     Z-ADDPAJAA     E4AJAA
+     C                     MOVELPDC01     E4DC01
+     C                     Z-ADDPPNIN     E4PNIN
+     C                     MOVELPDC02     E4DC02
+     C                     Z-ADDPTRUE     E4TRUE
+     C                     MOVELPDC03     E4DC03
+     C                     MOVELSUSER     E4USER    P
+     C                     UPDATRERTMVD0
+     C                     END
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  ACCUMN: Accumulate notification work values                  *
+      *                                                               *
+      *****************************************************************
+     C           ACCUMN    BEGSR
+      **  formula:
+      **    tot pen
+      **    -------  =  [mvt * Dlim] - [(D1-D0)(N0) +
+      **    pen rate                    (D2-D1)(N0+N1) +
+      **                                (D3-D2)(N0+N1+N2) +
+      **                                ...                  ]
+      *
+      **                 W1WRK1--->     W1WRK2------------>
+      **                                W1DIFD> W1NATD->
+      *
+      ** where tot pen = total penalty for early movement
+      **       pen rate = charge rate
+      **       mvt = movement amount
+      **       Dlim = nbr days ahead when movement completely allocated
+      **       Dx = nbr days from today on which Nx applies (D0 means today, =0)
+      **       Nx = Notified mvt amount allocated at Dx
+     C                     Z-ADD0         W1NATD 300
+     C                     Z-ADD0         W1WRK1 300
+     C                     Z-ADD0         W1WRK2 300
+     C                     Z-ADD0         W1CUMN 300
+     C                     Z-ADD0         W1DIFD  50
+     C                     Z-ADD0         W1PVDY  50
+     C                     Z-ADD0         W1DLIM  50
+      *
+      ** Go through allocations grouped by days early
+      *
+     C                     MOVELE4KEY1    E5KEY1
+     C                     MOVELE4TRR2    E5TRR2
+     C                     Z-ADD-1        E5DYNO
+     C                     MOVEL*LOVAL    E5TRR1
+      *
+     C                     EXSR READGP
+     C           RCDGRP    DOWEQ'Y'
+     C           GRPDYN    IFGT W1DLIM
+     C                     Z-ADDGRPDYN    W1DLIM
+     C                     END
+     C           GRPDYN    IFNE W1PVDY
+     C           GRPDYN    SUB  W1PVDY    W1DIFD
+     C                     ADD  W1NATD    W1CUMN
+     C                     Z-ADD0         W1NATD
+     C           W1DIFD    MULT W1CUMN    W1TMP  300
+     C                     ADD  W1TMP     W1WRK2
+     C                     Z-ADDGRPDYN    W1PVDY
+     C                     END
+     C                     ADD  GRPAJA    W1NATD
+     C                     EXSR READGP
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  READGP: Go through allocations grouped                       *
+      *                                                               *
+      *****************************************************************
+     C           READGP    BEGSR
+      *
+      ** Read allocations (grouped by days early)
+      *
+     C                     Z-ADD0         GRPAJA 300
+     C                     Z-ADD0         GRPDYN  50
+      *
+     C           E5DYNO    IFEQ -1
+     C                     Z-ADD0         E5DYNO
+     C           KRTMU2    SETLLRERTMUPD
+     C                     ELSE
+     C           KRTMU2    SETGTRERTMUPD
+     C                     END
+      *
+     C           KRTMU3    READERERTMUPD                 81
+     C                     MOVEL*BLANKS   RCDGRP  1
+     C           *IN81     IFEQ '0'
+     C                     MOVEL'Y'       RCDGRP
+     C                     Z-ADDE5DYNO    GRPDYN
+     C                     END
+     C           *IN81     DOWEQ'0'
+     C                     ADD  E5AJAA    GRPAJA
+     C           KRTMU2    READERERTMUPD                 81
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  CLOSEM: Try to find closing movement                         *
+      *                                                               *
+      *****************************************************************
+     C           CLOSEM    BEGSR
+      *
+      ** Calculate closing movement using formula
+      *
+     C           W1PENR    IFNE 0
+      **       B + (WRK2 * pen rate)            where B = closing balance
+      ** mvt = -----------------------
+      **       (1 + (Dlim * pen rate))
+      *
+     C           W1WRK2    MULT W1PENR    W30N9A 309
+     C           W30N9A    ADD  PCLOP     W30N9A
+     C           W1DLIM    MULT W1PENR    W30N9B 309
+     C                     ADD  1         W30N9B
+     C           W30N9A    DIV  W30N9B    W1AJAA    H
+     C                     END
+      *
+     C           W1PENA    IFNE 0
+      *
+      ** mvt = B - (Dlim * pen amt)             where B = closing balance
+      *
+     C                     Z-ADDPCLOP     W30N9A
+     C           W1DLIM    MULT W1PENA    W30N9B 309
+     C           W30N9A    SUB  W30N9B    W1AJAA
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  CHECKM: Check movement                                       *
+      *                                                               *
+      *****************************************************************
+     C           CHECKM    BEGSR
+      *
+      ** Go through allocations adding usage to make sure Dlim is OK
+      **  (nb penalty must be < 100% for this recursion to work properly!)
+      *
+     C                     Z-ADD0         W1CUMN
+     C                     MOVELE4KEY1    E5KEY1
+     C                     MOVELE4TRR2    E5TRR2
+     C                     Z-ADD0         E5DYNO
+     C                     MOVEL*LOVAL    E5TRR1
+     C           KRTMU1    SETLLRERTMUPD
+     C           KRTMU3    READERERTMUPD                 81
+     C           *IN81     DOWEQ'0'
+     C           E5AJAA    IFEQ *ALL'9'
+      *
+      **  First run last usage always unknown, so use estimate
+      *
+     C           W1AJAA    SUB  W1CUMN    E5AJAA
+     C                     ADD  1         E5AJAA
+     C                     UPDATRERTMUD0
+     C                     END
+      *
+      ** Add up usages (and note key of last usage)
+      *
+     C                     ADD  E5AJAA    W1CUMN
+     C                     Z-ADDE5DYNO    SVDYNO  50
+     C                     MOVELE5TRR1    SVTRR1  8
+     C           KRTMU3    READERERTMUPD                 81
+     C                     END
+      *
+      ** If total usage greater than movement, then update last usage and recalc
+      *
+     C           W1CUMN    IFGT W1AJAA
+     C                     MOVELE4KEY1    E5KEY1
+     C                     MOVELE4TRR2    E5TRR2
+     C                     Z-ADDSVDYNO    E5DYNO
+     C                     MOVELSVTRR1    E5TRR1
+     C           KRTMU1    CHAINRERTMUPD             81
+     C           W1CUMN    SUB  W1AJAA    W1TMP
+     C                     SUB  W1TMP     E5AJAA
+     C           E5AJAA    IFGT 0
+     C                     UPDATRERTMUD0
+     C                     ELSE
+     C                     DELETRERTMUD0
+     C                     END
+     C                     MOVEL'Y'       RECALC
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  RMVPEN: Update recorded movement detail                      *
+      *                                                               *
+      *****************************************************************
+     C           RMVPEN    BEGSR
+      *
+      ** Go through allocations
+      *
+     C                     MOVELPKEY1     E5KEY1
+     C                     MOVELPTRR2     E5TRR2
+     C                     Z-ADD0         E5DYNO
+     C                     MOVEL*LOVAL    E5TRR1
+     C           KRTMU1    SETLLRERTMUPD
+     C           KRTMU3    READERERTMUPD                 81
+     C           *IN81     DOWEQ'0'
+      *
+     C           E5DC01    IFEQ 'D'
+     C                     Z-ADDE5AJAA    W1AJAA
+     C                     ELSE
+     C                     Z-SUBE5AJAA    W1AJAA
+     C                     END
+      *
+      ** Add back to notification
+      *
+     C                     MOVELE5KEY1    E3KEY1
+     C                     Z-ADD0         E3DEFF
+     C                     MOVEL*LOVAL    E3TRR1
+     C           KNFMV1    SETLLRENFMVPD
+     C           KNFMV2    READERENFMVPD                 82
+     C           *IN82     DOWEQ'0'
+      *
+     C           E3TRR1    IFEQ E5TRR1
+      *
+     C           E3DC02    IFEQ 'D'
+     C                     Z-ADDE3CAVL    W1CAVL 300
+     C                     ELSE
+     C                     Z-SUBE3CAVL    W1CAVL
+     C                     END
+      *
+     C           E3CAVL    IFNE *ALL'9'
+     C           W1CAVL    ADD  W1AJAA    W1CAVL
+     C                     END
+      *
+     C           W1CAVL    IFLT 0
+     C                     Z-SUBW1CAVL    E3CAVL
+     C                     MOVEL'C'       E3DC02
+     C                     ELSE
+     C                     Z-ADDW1CAVL    E3CAVL
+     C                     MOVEL'D'       E3DC02
+     C                     END
+      *
+     C           E3TRR1    IFEQ 'N9999999'                                                    230517
+     C                     MOVE *ALL'9'   E3REAM                                              230517
+     C                     MOVE *ALL'9'   E3CAVL                                              230517
+     C                     ENDIF                                                              230517
+      *                                                                                       230517
+     C                     UPDATRENFMVD0
+     C                     END
+      *
+     C           KNFMV2    READERENFMVPD                 82
+     C                     END
+      *
+     C                     DELETRERTMUD0
+     C           KRTMU3    READERERTMUPD                 81
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  PRMFIL: Write new recorded movement.                         *
+      *          For amend, update old recorded movement.             *
+      *                                                               *
+      *****************************************************************
+     C           PRMFIL    BEGSR
+      *
+      ** Convert passed parms to file fields
+      **  Account
+     C                     MOVELPKEY1     E4KEY1
+      *
+     C                     MOVELBRCA      PBRCA   3
+     C                     MOVE CNUM      PCNUM   6
+     C                     MOVELCCY       PCCY    3
+     C                     MOVELACOD      PACOD  10
+     C                     MOVELACSQ      PACSQ   2
+      *
+      **  First amount
+      *
+     C                     Z-ADDPAJAA     E4AJAA
+     C                     MOVELPDC01     E4DC01
+      *
+      **  Second amount
+      *
+     C                     Z-ADDPPNIN     E4PNIN
+     C                     MOVELPDC02     E4DC02
+      *
+      **  Recording ref
+      *
+     C                     MOVELPTRR2     E4TRR2
+      *
+      **  Other details
+      *
+     C                     Z-ADDPPNIN     E4TRUE
+     C                     MOVELPDC02     E4DC03
+     C                     MOVELSUSER     E4USER
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  INIT: Program Initialization                                 *
+      *                                                               *
+      *****************************************************************
+     C           INIT      BEGSR
+      **
+     C           KRTMV1    KLIST
+     C                     KFLD           E4KEY1
+     C                     KFLD           E4TRR2
+      *
+     C           KRTMV2    KLIST
+     C                     KFLD           E4KEY1
+      *
+     C           KRTMU1    KLIST
+     C                     KFLD           E5KEY1
+     C                     KFLD           E5TRR2
+     C                     KFLD           E5DYNO
+     C                     KFLD           E5TRR1
+      *
+     C           KRTMU2    KLIST
+     C                     KFLD           E5KEY1
+     C                     KFLD           E5TRR2
+     C                     KFLD           E5DYNO
+      *
+     C           KRTMU3    KLIST
+     C                     KFLD           E5KEY1
+     C                     KFLD           E5TRR2
+      *
+     C           KNFMV1    KLIST
+     C                     KFLD           E3KEY1
+     C                     KFLD           E3DEFF
+     C                     KFLD           E3TRR1
+      *
+     C           KNFMV2    KLIST
+     C                     KFLD           E3KEY1
+      *
+     C           KPRPN1    KLIST
+     C                     KFLD           E2BRCA
+     C                     KFLD           E2CNUM
+     C                     KFLD           E2CCY
+     C                     KFLD           E2ACOD
+     C                     KFLD           E2ACSQ
+     C                     KFLD           E2EVNT
+     C                     KFLD           E2ITEM
+      *
+     C           KPRPN2    KLIST
+     C                     KFLD           E2BRCA
+     C                     KFLD           E2CNUM
+     C                     KFLD           E2CCY
+     C                     KFLD           E2ACOD
+     C                     KFLD           E2ACSQ
+     C                     KFLD           E2EVNT
+      *
+     C           KPRPN3    KLIST
+     C                     KFLD           E2BRCA
+     C                     KFLD           E2CNUM
+     C                     KFLD           E2CCY
+     C                     KFLD           E2ACOD
+     C                     KFLD           E2ACSQ
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*FIRST'  P@OPTN  7
+     C           BKFMT     PARM *BLANKS   P@FMT
+      *
+     C                     MOVEL'R'       REFPFX  1
+      *
+     C           PKEY1     IFNE LLKEY1
+     C                     CALL 'AOACCTR0'
+     C                     PARM           P@RTCD  7
+     C                     PARM '*KEY'    P@OPTN  7
+     C                     PARM PKEY1     P@RETL 10
+     C                     PARM *BLANKS   P@CNUM  6
+     C                     PARM *BLANKS   P@CUCD  3
+     C                     PARM *BLANKS   P@ACCD 10
+     C                     PARM *BLANKS   P@ACSQ  2
+     C                     PARM *BLANKS   P@BRCA  3
+     C           ACFMT     PARM *BLANKS   P@FMT
+     C                     MOVELPKEY1     LLKEY1 24
+     C                     END
+      *
+     C                     MOVE *ALL'9'   TRMREF  8
+     C                     MOVEL'N'       TRMREF
+     C                     MOVE *ALL'0'   INTREF  8
+     C                     MOVEL'N'       INTREF
+     C                     CALL 'RE4014'
+     C                     PARM PKEY1     PWKEY1 24
+     C                     PARM           PSODL  150
+     C                     PARM           PPRJL  150
+     C                     PARM           PSODC  150
+     C                     PARM           PPRJC  150
+     C                     PARM           PDISP  150
+     C                     PARM           PHELD  150
+     C                     PARM           POVER  150
+     C                     PARM           PACCR  150
+     C                     PARM           PCHRG  150
+     C                     PARM           PWTAX  150
+     C                     PARM           PRTCD   7
+      *
+     C           PAJAA     IFEQ *ALL'9'
+     C           PPRJC     ADD  PACCR     PCLOB  150
+     C                     ADD  PWTAX     PCLOB
+     C                     ADD  PCHRG     PCLOB
+      *
+     C           PCLOB     IFLT 0
+      *
+      ** Movement of balance has opposite sign to that of balance
+      ** (eg CR balance requires DR movement)
+      *
+     C                     MOVEL'D'       PDC01
+     C                     Z-SUBPCLOB     PCLOP  150
+     C                     ELSE
+     C                     MOVEL'C'       PDC01
+     C                     Z-ADDPCLOB     PCLOP
+     C                     END
+     C                     END
+     C                     ENDSR

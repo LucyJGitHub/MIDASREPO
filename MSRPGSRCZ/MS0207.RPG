@@ -1,0 +1,1170 @@
+     H        1                                                           MS0207
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MS 2780 incoming message file update')           *
+      *****************************************************************
+      *                                                               *
+      *  Midas - SWIFT Direct Link Module                             *
+      *                                                               *
+      *   MS0207 - INCOMING MESSAGE FILES UPDATE (2780 PROTOCOL)      *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. AR787620           Date 10Jun11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Prev Amend No. CSW209             Date 01Apr09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 122842             Date 19Oct99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                  141572            Date 21Sep98               *
+      *                  140532            Date 11Aug98               *
+      *                  124673            DATE 04Jun98               *
+      *                  113352            DATE 13FEB97               *
+      *                  117884            DATE 17SEP97               *
+      *                  CSW095            DATE 10APR95               *
+      *                  CSW001            DATE 20MAR95               *
+      *                  S01344            DATE 14OCT91               *
+      *                  S01310            DATE 30MAY91               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  AR787620 - Hooks Incorporation                               *
+      *             WNCPYSRC,MSH00002                                 *
+      *  CSW209 - SWIFT 2009 Changes                                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *   CDL008 - Continuous Linked Settlement (Recompiled MGOREFPD) *
+      *   122842 - When the last character before EOT ends at pos 398 *
+      *            The last '}' in the incoming message is dropped    *
+      *            causing MS5060 to fail at ICT.  Applied fix 125349.*
+      *   141572 - Recompile over changes in MGOREFPD                 *
+      *   140532 - SWIFT98 fix                                        *
+      *            Crashes if incoming message contains :20C: instead *
+      *            of :20:. Format of :20C: is :20C::CCCC//TRN...     *
+      *   124673 - Add Century field to key list and use for          *
+      *            selection purposes.                                *
+      *   113352 - RECOMPILE OVER CHANGES IN MGOREFPD                 *
+      *   117884 - Prevent array index error if EOF marker is in pos. *
+      *            398 of record                                      *
+      *   CSW095 - S.W.I.F.T 1995 Message Changes.                    *
+      *            Increase arrays to handle a 10,000 character       *
+      *            message.                                           *
+      *   CSW001   SWIFT Alliance Batch Interface (switchable)        *
+      *            CHANGE PROCESSING AS NO "$" AFTER LAST MESSAGE     *
+      *            AND FILE FILLED IN WITH X'00'. (TCP/IP FTP)        *
+      *            ALSO ADD THE R3 (non-switchable) FIXES BELOW:      *
+      *          a)CHANGE PROCESSING TO REMOVE  MESSAGE DATA FOR      *
+      *            ACK/NACK AS THE SEARCH WITH CURRENT STRTXT DOES    *
+      *            NOT WORK. (E.G. IN CASE OF MT203, MTX92,...)       *
+      *          b)DISALLOW DUPLICATE WRITES (GEMS 55116 / PR0589)    *
+      *   S01344 - SWIFT RATIONALISATION PHASE 2.                     *
+      *   S01310 - SWIFT RATIONALISATION                              *
+      *                                                               *
+      *****************************************************************
+      *  C R E A T I O N     P A R A M E T E R S                      *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      * ID F  C  H  L    FUNCTION OF INDICATORS                       *
+      *                                                               *
+      *      01          FIRST CYCLE INDICATOR                        *
+      *      10          WORK INDICATOR                               *
+      *      12          WORK INDICATOR FOR LOKUP                     *
+      *      13          MESSAGE CONSTITUTES AN ACK OR NAK            *
+      *      14          LAST MESSAGE IN MS2780I HAS BEEN READ        *
+      *      30          CHAIN FAIL INDICATOR MSMSI2L3                *   CSW001
+      *      50          WORK INDICATOR                               *                       CSW209
+      *      89          CHAIN FAIL INDICATOR                         *
+      *      99          DATABASE ERROR FOUND                         *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      ****************************************************************
+     FSDBANKPDIF  E                    DISK                               S01310
+     FMSMSI2L3IF  E           K        DISK                               CSW001
+     F            MSMSI2D0                          KRENAMEMSMSI2DX       CSW001
+     F**          MSMSI2DX INCLUDED AS PART OF RELEASE 3 FIX 55116        CSW001
+     F*                                                                   CSW001
+     FMS0207AUO   F     132            PRINTER
+     F*ABTB10*IF**E********            DISK                               S01310
+     F*S0207P1O***F*****132            PRINTER
+     FMS2780I UF  E                    DISK
+     F                                              KCOMIT
+     F                                              KRECNO RECNO
+     F*SIXA***UF**E********   K        DISK                               S01310
+     FMGOREFL0UF  E           K        DISK                               S01310
+     F                                              KCOMIT
+     F/COPY WNCPYSRC,MS0207F001
+     FMSMSI2L0O   E                    DISK                      A
+     F                                              KCOMIT
+      /SPACE 3
+     E                    A398      398  1               UPDATE MS2780I
+      ** THE ARRAY A398 USES THE INDEX 'J'.
+     E                    A398A     398  1               STORE MS2780I TMP
+      ** THE ARRAY A398A USES THE INDEX 'J'.
+     E                    MSER        3  1               ERROR CODE (NEG)
+      ** THE ARRAY MSER USES ONLY CONSTANT INDICES.
+     E***********         MSI        13256               MESSAGE TO MSMSI2CSW095
+     E                    MSI        39256               MESSAGE TO MSMSI2CSW095
+      ** THE ARRAY MSI    USES THE INDEX 'Q'.
+     E                    REC       398  1               FIELD FROM MS2780I
+      ** THE ARRAY REC  USES THE INDEX 'T'.
+     E***********         MSG      3184  1               1 MSG FROM MS2780CSW095
+     E                    MSG      9999  1               1 MSG FROM MS2780CSW095
+      ** THE ARRAY MSG USES THE INDICES 'A' & 'S'
+     E***********         WRK      3184  1               WORK ARRAY       CSW095
+     E                    WRK      9999  1               WORK ARRAY       CSW095
+      ** THE ARRAY WRK USES THE INDEX 'D'.
+     E                    TRN        16  1               TRN FROM ACK/NAK
+      ** THE ARRAY TRN USES THE INDEX 'B'.
+     E                    LSTREC    398  1               TEST IF LAST REC
+     E                    CPY@    1   1 80               OBJECT COPYRIGHT
+     E                    TABMM   1  12  2   TABMON  3                    S01259
+      ** TABLE TO CONVERT MONTHS FROM MM TO MMM FORMAT                    S01259
+     E                    AR1     1  14  4   AR2     1                                        CSW209
+      ** Escape Sequence Translation Array                                                    CSW209
+      **
+     F**          MSMSI2DX INCLUDED AS PART OF RELEASE 3 FIX 55116        CSW001
+     IMSMSI2DX                                                            CSW001
+     I              MDTA                            MDTAX                 CSW001
+     I              MTPY                            MTPYX                 CSW001
+     I              MPRY                            MPRYX                 CSW001
+     I              MODE                            MODEX                 CSW001
+     I              MOTM                            MOTMX                 CSW001
+     I              MIR                             MIRX                  CSW001
+     I              MOR                             MORX                  CSW001
+     I              ACNK                            ACNKX                 CSW001
+     I              MODI                            MODIX                 CSW001
+     I              MSPF                            MSPFX                 CSW001
+     I              FTPF                            FTPFX                 CSW001
+     I              TRNO                            TRNOX                 CSW001
+      *
+     I***INCOM*******DS                           3328                    CSW095
+     I***********                             13328 MSI                   CSW095
+     IINCOM       DS                           9984                       CSW095
+     I                                        19984 MSI                   CSW095
+      ** DATASTRUCTURE TO STORE INCOMING MESSAGE AND ENABLE ITS
+      ** FORMATION TO DISK
+      *
+     I*RF*********DS*******                                               S01310
+     I*********************                   1  16 ITRN                  S01310
+     I*********************                   1   1 IMOD                  S01310
+     I*********************                   2  16 ITRF                  S01310
+      ***TRANSACTION*REFERENCE NUMBER DIVISION FOR OUTPUT TO DATABASE     S01310
+      *
+     I            DS
+     I                                        1   1 CR
+     I                                        2   2 LF
+     I                                        1   2 CRLF
+      ** DATA STRUCTURE TO SET UP CONTROL CHARACTERS
+      *
+     I/COPY WNCPYSRC,MS0207I001
+     IACKBK       DS
+     I                                        1  60 AKBK14
+     I                                        1  22 AKMIR
+     I                                       32  370IACKD
+     I                                       38  410IACKT
+     I                                       48  48 AORN
+     I                                       55  57 ERROR
+     I                                       58  60 ERTAG
+      ** DATA STRUCTURE TO SPLIT BLOCK 4 OF ACK / NAK
+      *
+     IBLOCK2      DS
+     I                                        1  50 BLK2
+     I                                        1   3 @WK3
+     I                                        4   4 IORO
+     I                                        5   7 IMTPY
+     I                                       12  39 IMIR
+     I                                       40  450IMODE
+     I                                       46  490IMOTM
+     I                                       50  50 IMPRY
+     I                                       40  50 NEWKY                 CSW001
+      ** DATA STRUCTURE TO SPLIT BLOCK 2
+      *
+     I*TXTSTR****  DS                                                     CSW001
+     I* ****                                   1   9 STRTXT               CSW001
+     I* ****                                   1   3 FLD1                 CSW001
+     I* ****                                   4   5 FLD2                 CSW001
+     I* ****                                   6   9 FLD3                 CSW001
+      ** DATA STRUCTURE TO FIND START OF BLOCK 4                          CSW001
+     ITXTSTR      DS                                                      CSW001
+     I                                        1   5 STRTXT                CSW001
+     I                                        1   3 FLD1                  CSW001
+     I                                        4   5 FLD2                  CSW001
+      ** DATA STRUCTURE TO FIND START OF BLOCK 4
+      *
+     IOUTREF      DS
+     I                                        1  28 OMOR
+     I                                        1   6 ODAT
+     I                                        7  28 DEST
+      ** DATA STRUCTURE TO DEFINE MESSAGE OUTPUT REF
+      *
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      ** DATA STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+      *
+     IDATE1       DS
+     I                                        1   6 DAT1
+     I                                        1   2 YEAR
+     I                                        3   4 MM
+     I                                        5   6 DAY
+     IDATE2       DS
+     I                                        1   7 DAT2
+     I                                        1   2 DD
+     I                                        3   5 MMM
+     I                                        6   7 YY
+      * DATA STRUCTURES FOR CONVERSION OF DATE YYMMDD TO DDMMMYY
+     I*                                                                   CSW001
+     ISCSARD    E DSSCSARDPD                                              CSW001
+     I**  SAR File Details Accessed via Access Program AOSARDR0           CSW001
+     I*                                                                   CSW001
+     IDSFDY     E DSDSFDY                                                 CSW001
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                CSW001
+      *
+     ILDA        UDS                            256
+     I                                      134 138 DBFILE
+     I                                      139 167 DBKEY
+     I                                      168 175 DBPGM
+     I                                      176 1770DBASE
+      *                                                                                       CSW209
+     IDS1         DS                           9999                                           CSW209
+     IDS2         DS                           9999                                           CSW209
+     IDS3         DS                           9999                                           CSW209
+     IDS4         DS                           9999                                           CSW209
+      ** Data Structure to hold MSG during processing                                         CSW209
+      *                                                                                       CSW209
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *   MAIN  - Main process                                        *
+      *   INIT  - Initial process                                     *
+      *   LOAD  - Load each incoming message                          *
+      *   PRCESC- To process escape sequence translation              *                       CSW209
+      *   PROCES- To process the message ready to be writen to file   *
+      *   POS   - Additional processing for positive ack's            *
+      *   NEG   - Additional processing for negative ack's            *
+      *   MSIWRT- To write the message to MSMSI2PD                    *
+      *   UPDIXA- To update MGOREFPD                                  *   S01310
+      ****UPDIXA-*To*update MSIXOPF                                   *   S01310
+      *   UPDIN - To delete records on MS2780I once processed         *
+      *   *PSSR - Error handling                                      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      **  MAIN - Main process                                         *
+      ****Calls*-**INIT,*LOAD,*PROCES**********************************                       CSW209
+      **  Calls -  INIT, LOAD, PROCES, PRCESC                         *                       CSW209
+      *                                                               *
+      *****************************************************************
+      *
+      ***MSIXA*KEY*LIST                                                   S01310
+      *
+     C***********IXAKEY****KLIST                                          S01310
+     C*********************KFLD           MIND    1                       S01310
+     C*********************KFLD           TRAN   15                       S01310
+      *
+      ** PERFORM INITIALISATION IF FIRST TIME THROUGH
+     C  N01                EXSR INIT
+     C/COPY WNCPYSRC,MS0207C018
+      *
+      ** INITIALISE LARGE ARRAY, AND BUILD UP FROM MS2780I
+     C                     MOVE ' '       MSG
+     C                     MOVE *BLANK    MSI
+      *
+      ** SAVE RECORD NUMBER OF FIRST RECORD FOR THIS MESSAGE
+     C                     Z-ADDRECNO     SRECNO 150
+      *
+      ** RESET WORK FIELDS
+     C                     Z-ADD0         X       40
+     C                     Z-ADD0         ADJUST  40
+     C                     MOVE *BLANKS   @WK1
+     C                     MOVE *BLANKS   @WK2
+     C                     MOVE *BLANKS   @WK3
+     C                     MOVE *BLANKS   @WK4
+     C                     MOVE *BLANKS   @WK6
+     C                     MOVE *BLANKS   @WK6A
+     C******************** MOVE *BLANKS   @WK9                            CSW001
+     C                     MOVE *BLANKS   @WK5                            CSW001
+     C                     MOVE *BLANKS   WRK5    5                       140532
+      *
+      ** LOAD ARRAY MSI WITH ONE INCOMING MESSAGE
+     C                     EXSR LOAD
+      *
+      ** PROCESS ARRAY MSI
+     C           MSG,1     IFNE *BLANK
+      *                                                                                       CSW209
+      ** SCAN MESSAGE FOR ESCAPE SEQUENCE TRANSLATION                                         CSW209
+     C           CSW209    IFEQ 'Y'                                                           CSW209
+     C                     EXSR PRCESC                                                        CSW209
+     C                     ENDIF                                                              CSW209
+      *                                                                                       CSW209
+     C                     EXSR PROCES
+     C                     END
+      *
+     C           *IN70     IFEQ '1'
+     C                     SETON                     LR
+     C                     END
+     C/COPY WNCPYSRC,MS0207C019
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      ** LOAD SR   : TO LOAD ARRAY MSI                                *
+      ** CALLED BY : MAIN PROCESSING                                  *
+      *                                                               *
+      *****************************************************************
+     C           LOAD      BEGSR
+      *
+      **  INITIALIZE FOR EACH NEW MESSAGE
+     C                     Z-ADD1         S
+     C                     Z-ADDRECNO     SRECNO
+     C                     MOVE ' '       FINISH
+     C                     MOVE *BLANKS   LSTREC
+      *
+     C           FINISH    DOUEQ'Y'
+      *
+      **  LOAD UNTIL END OF MSG
+      **             A BLANK CHARACTER (MAY BE END OF LAST MSG)
+      **             END OF INPUT RECORD
+      **             END OF WORK ARRAY
+      **             OR LAST MESSAGE IN FILE                              CSW001
+      **                       IE (FOLLOWED BY X'00' IF TCP/IP OR         CSW001
+      **                           FOLLOWED BY ' ' IF NOT TCP/IP)         CSW001
+     C           @WK1      DOUEQEMSG
+     C           @WK1      OREQ LMSG                                      CSW001
+     C***********@WK1      OREQ ' '                                       CSW001
+     C           T         ORGT 398
+     C           S         ORGT 9999                                      CSW095
+     C***********S         ORGT 3184                                      CSW095
+      *
+     C                     MOVEAREC,T     MSG,S
+     C                     MOVEAREC,T     @WK1    1
+     C***********          ADD  1         T       40                      CSW095
+     C***********          ADD  1         S       40                      CSW095
+     C                     ADD  1         T       50                      CSW095
+     C                     ADD  1         S       50                      CSW095
+      *
+     C                     END
+      *
+      **  SUBSTITUTE END OF MESSAGE FOR END OF TEXT
+      **           (END OF TEXT WILL BE X'OO' IF TCP/IP SWITCHED ON)      CSW001
+     C           @WK1      IFEQ EMSG
+     C           CSW001    OREQ 'Y'                                       CSW001
+     C           @WK1      ANDEQX00                                       CSW001
+     C                     SUB  1         S
+     C                     MOVEAETX       MSG,S
+     C                     ADD  1         S
+     C                     MOVEA*BLANKS   MSG,S
+     C                     MOVE 'Y'       FINISH  1
+     C                     END
+      *                                                                   117884
+      **  IF END OF INPUT RECORD READ NEXT RECORD                         117884
+     C           T         IFGT 398                                       117884
+      *                                                                   117884
+      **  SET FILE POINTER TO NEXT RECORD AFTER ERECNO OF LAST MSG        117884
+     C           ERECNO    ADD  1         NRECNO 150                      117884
+     C           NRECNO    CHAINMS2780I              70                   117884
+     C                     Z-ADD1         T                               117884
+     C                     MOVEAFIELD     REC,T                           117884
+      *                                                                   122842
+      ** If End of file and EOT hasn't been found yet                     122842
+     C           *IN70     IFEQ '1'                                       122842
+     C                     ADD  1         S                               122842
+     C                     END                                            122842
+      *                                                                   122842
+     C                     END                                            117884
+      *                                                                   117884
+      *
+      **  TEST IF BLANK IS END OF LAST MESSAGE OR MAY BE JUST PART
+      **  OF A TEXT FIELD IN MESSAGE
+      *                                                                   CSW001
+     C           *IN70     IFEQ '0'                                       117884
+     C***********@WK1      IFEQ ' '                                       CSW001
+     C           @WK1      IFEQ LMSG                                      CSW001
+      *                                                                   117884
+     C                     MOVEAREC,T     LSTREC
+     C***********LSTREC,1  IFEQ *BLANKS                                   CSW001
+     C           LSTREC,1  IFEQ LMSG                                      CSW001
+     C                     SETON                     14
+      *                                                                   117884
+     C                     END                                            117884
+     C                     END                                            117884
+     C                     ELSE                                           117884
+     C                     MOVE '1'       *IN14                           117884
+     C                     END                                            117884
+      *                                                                   117884
+     C           *IN14     IFEQ '1'                                       117884
+      *
+      **  IF END OF LAST MESSAGE REPLACE BLANK WITH END OF TEXT
+     C                     SUB  1         S
+     C                     MOVEAETX       MSG,S
+     C                     ADD  1         S
+     C                     MOVEA*BLANKS   MSG,S
+     C                     MOVE 'Y'       FINISH  1
+     C                     SETON                     70
+     C                     END
+      *
+     C***********          END                                            117884
+      ***********                                                         117884
+      ****IF*END*OF*INPUT*RECORD*READ*NEXT*RECORD                         117884
+     C***********T         IFGT 398                                       117884
+      ***********                                                         117884
+      ****SET*FILE*POINTER*TO*NEXT*RECORD*AFTER*ERECNO*OF*LAST*MSG        117884
+     C***********ERECNO    ADD  1         NRECNO 150                      117884
+     C***********NRECNO    CHAINMS2780I              70                   117884
+     C***********          Z-ADD1         T                               117884
+     C***********          MOVEAFIELD     REC,T                           117884
+     C***********          END                                            117884
+      *
+      **  IF END OF WORK ARRAY INCOMING MESSAGE HAS EXCEEDED
+      **  MAXIMUM ALLOWED LENGTH
+     C***********S         IFGT 3184                                      CSW095
+     C           S         IFGT 9999                                      CSW095
+     C           FINISH    ANDNE'Y'                                       CSW095
+     C                     MOVE '02'      DBASE            ***************
+     C                     MOVE 'MS278'   DBFILE           * DB ERROR 02 *
+     C                     MOVEL'      '  TABKEY 12        ***************
+     C                     MOVE '      '  TABKEY
+     C                     MOVELTABKEY    DBKEY
+     C                     EXSR DBERR
+     C                     END
+      *
+     C                     Z-ADDRECNO     ERECNO                          CSW001
+      **
+     C                     END
+      *
+     C***********          Z-ADDRECNO     ERECNO                          CSW001
+      **
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************                       CSW209
+      *                                                               *                       CSW209
+      ** PRCESC SR : TO PROCESS ESCAPE SEQUENCE TRANSLATION           *                       CSW209
+      ** CALLED BY : MAIN PROCESSING                                  *                       CSW209
+      ** CALLS     :                                                  *                       CSW209
+      *                                                               *                       CSW209
+      *****************************************************************                       CSW209
+     C           PRCESC    BEGSR                                                              CSW209
+      *                                                                                       CSW209
+     C                     Z-ADD0         G       40                                          CSW209
+     C                     Z-ADD0         H       40                                          CSW209
+     C                     Z-ADD0         I       40                                          CSW209
+     C                     MOVEL*BLANK    @TT1    1                                           CSW209
+      *                                                                                       CSW209
+     C                     MOVEAMSG       DS1                                                 CSW209
+      *                                                                                       CSW209
+     C                     Z-ADD1         Z       20                                          CSW209
+      *                                                                                       CSW209
+     C           Z         DOWLT15                                                            CSW209
+      *                                                                                       CSW209
+     C           AR1,Z     SCAN DS1       G              50                                   CSW209
+     C           *IN50     DOWEQ*ON                                                           CSW209
+     C                     MOVELAR2,Z     @TT1                                                CSW209
+      *                                                                                       CSW209
+     C           G         IFEQ 1                                                             CSW209
+     C           G         ADD  4         I                                                   CSW209
+     C                     SUBSTDS1:I     DS3                                                 CSW209
+     C           @TT1      CAT  DS3:0     DS4                                                 CSW209
+     C                     ELSE                                                               CSW209
+     C           G         SUB  1         H                                                   CSW209
+     C           H         SUBSTDS1       DS2                                                 CSW209
+     C           G         ADD  4         I                                                   CSW209
+     C                     SUBSTDS1:I     DS3                                                 CSW209
+     C                     MOVE *BLANKS   TEMP    1                                           CSW209
+     C                     MOVE H         POST    50                                          CSW209
+     C                     SUBSTDS1:POST  TEMP                                                CSW209
+     C                     MOVE 0         CTR     10                                          CSW209
+     C           TEMP      DOWEQ' '                                                           CSW209
+     C                     ADD  1         CTR                                                 CSW209
+     C                     SUB  1         POST                                                CSW209
+     C                     SUBSTDS1:POST  TEMP                                                CSW209
+     C                     ENDDO                                                              CSW209
+     C           DS2       CAT  @TT1:CTR  DS2                                                 CSW209
+     C           DS2       CAT  DS3:0     DS4                                                 CSW209
+     C                     ENDIF                                                              CSW209
+      *                                                                                       CSW209
+     C                     MOVELDS4       DS1                                                 CSW209
+     C                     MOVEL*BLANKS   DS2                                                 CSW209
+     C                     MOVEL*BLANKS   DS3                                                 CSW209
+     C                     MOVEL*BLANKS   DS4                                                 CSW209
+     C           AR1,Z     SCAN DS1       G              50                                   CSW209
+     C                     ENDDO                                                              CSW209
+      *                                                                                       CSW209
+     C                     ADD  1         Z                                                   CSW209
+     C                     ENDDO                                                              CSW209
+      *                                                                                       CSW209
+     C                     Z-ADD1         G                                                   CSW209
+     C                     MOVEADS1       MSG,G                                               CSW209
+      *                                                                                       CSW209
+     C                     ENDSR                                                              CSW209
+      *                                                                                       CSW209
+      *****************************************************************                       CSW209
+     C/EJECT                                                                                  CSW209
+      *****************************************************************
+      *                                                               *
+      ** PROCES SR : TO PROCESS ARRAY MSI                             *
+      ** CALLED BY : MAIN PROCESSING                                  *
+      ** CALLS     : POS, NEG, MSIWRT                                 *
+      *                                                               *
+      *****************************************************************
+     C           PROCES    BEGSR
+      *
+      ** STORE RECORD NUMBER OF FINAL RECORD READ IN ABOVE ROUTINE
+     C                     Z-ADDRECNO     ERECNO 150
+      *
+      ** DETERMINE IF IT'S AN ACK , NAK OR INCOMING MESSAGE
+     C***********          Z-ADD0         A       40                      CSW095
+     C                     Z-ADD0         A       50                      CSW095
+     C/COPY WNCPYSRC,MS0207C004
+     C           @WK3      DOUEQ'{2:'
+     C           A         ORGE 9999                                      CSW095
+     C***********A         ORGE 3184                                      CSW095
+     C                     ADD  1         A
+     C                     MOVEAMSG,A     BLK2
+     C                     END
+      *
+      ** ACK OR NAK
+     C           IORO      IFEQ 'I'
+     C                     Z-ADD0         A
+      *
+     C                     MOVE *BLANKS   ERROR
+      *
+     C           @WK6A     DOUEQ'{1:F21'
+     C           A         ORGE 9999                                      CSW095
+     C***********A         ORGE 3184                                      CSW095
+     C                     ADD  1         A
+     C                     MOVEAMSG,A     @WK6A   6
+     C           A         ADD  6         C       40
+     C                     MOVEAMSG,C     AKBK14
+      *
+     C           AORN      IFEQ '1'
+     C                     MOVE 'NAK'     LACK    3
+     C                     ELSE
+     C                     MOVE 'ACK'     LACK
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+      ** EXTRACT TRNF FROM INCOMING MSG
+     C                     Z-ADD0         A
+      *
+     C/COPY WNCPYSRC,MS0207C020
+     C           @WK4      DOUEQ':20:'
+     C           WRK5      OREQ ':20C:'                                   140532
+     C                     ADD  1         A
+     C                     MOVEAMSG,A     @WK4    4
+     C                     MOVEAMSG,A     WRK5                            140532
+     C                     END
+      *
+     C           WRK5      IFEQ ':20C:'                                   140532
+     C                     ADD  8         A                               140532
+     C                     ENDIF                                          140532
+      *                                                                   140532
+     C                     ADD  4         A
+     C                     MOVEAMSG,A     TRN
+      *
+     C                     Z-ADD1         B       20
+     C           CR        LOKUPTRN,B                    10
+      *
+     C           *IN10     IFEQ '1'
+     C                     MOVEA*BLANKS   TRN,B
+     C                     END
+      *
+     C                     MOVEATRN       ITRN   16                       S01310
+     C*********************MOVEATRN       ITRN                            S01310
+     C*********************MOVE IMOD      MIND                            S01310
+     C*********************MOVELITRF      TRAN                            S01310
+     C                     SETOF                     10
+     C/COPY WNCPYSRC,MS0207C001
+      *
+      ** IF ACK OR NAK REMOVE COPY OF MESSAGE
+     C           LACK      IFEQ 'ACK'
+     C           LACK      OREQ 'NAK'
+     C                     MOVEA*BLANKS   WRK,1
+     C                     Z-ADD1         A
+     C                     Z-ADD1         D
+     C***********          MOVEAMSG,A     @WK9    9                       CSW001
+     C***********@WK9      DOUEQSTRTXT                                    CSW001
+     C                     MOVEAMSG,A     @WK5    5                       CSW001
+     C           @WK5      DOUEQSTRTXT                                    CSW001
+     C                     MOVEAMSG,A     WRK,D
+     C                     ADD  1         A
+     C                     ADD  1         D
+     C***********          MOVEAMSG,A     @WK9                            CSW001
+     C                     MOVEAMSG,A     @WK5                            CSW001
+     C                     END
+      *
+     C                     MOVEAMSG,A     @WK2    2
+     C           @WK2      DOUEQ'-}'
+     C                     ADD  1         A
+     C                     MOVEAMSG,A     @WK2
+     C                     END
+      *
+     C                     ADD  2         A
+      *
+     C           MSG,A     IFNE EMSG
+     C                     MOVEAMSG,A     WRK,D
+     C                     ELSE
+     C                     MOVE EMSG      WRK,D
+     C                     END
+      *
+     C                     ELSE
+      *
+      ** IF INCOMING MESSAGE MOVE INTO INCOMING FILE FROM BLOCK 1
+     C                     MOVEA*BLANKS   WRK,1
+     C                     Z-ADD0         A
+     C***********          Z-ADD0         D       40                      CSW095
+     C                     Z-ADD0         D       50                      CSW095
+     C           @WK6      DOUEQ'{1:F01'
+     C                     ADD  1         A
+     C                     MOVEAMSG,A     @WK6    6
+     C                     END
+      *
+      ** FORMAT MOR
+     C                     MOVEAMSG,A     OMOR
+     C                     MOVEAMSG,A     WRK,1
+      *
+     C                     END
+     C/COPY WNCPYSRC,MS0207C005
+      *
+      ** MOVE MSG FROM WORK ARRAY 'AN' BACK TO 'MSG'
+     C                     MOVEA*BLANKS   MSG,A
+     C                     MOVEAWRK       MSG
+      *
+      ** PROCESS MESSAGE
+     C           LACK      CASEQ'ACK'     POS
+     C           LACK      CASEQ'NAK'     NEG
+     C                     CAS            MSIWRT
+     C                     END
+      *
+      ** END OF COMMITMENT CYCLE (ALL UPDATES FOR ONE MESSAGE COMPLETE)
+     C                     COMIT
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+     C/COPY WNCPYSRC,MS0207C022
+      *****************************************************************
+      *                                                               *
+      ** POS SR    : TO PROCESS POSITIVE ACKNOWLEDGEMENTS FROM SYSTEM.*
+      ** CALLED BY : MAIN PROCESSING.                                 *
+      ** CALLS     : UPDIXA, MSIWRT.                                  *
+      *                                                               *
+      *****************************************************************
+     C           POS       BEGSR
+      *
+      **  WRITE TO MSMSI2PD AND UPDATE RELEVANT FIELDS IN MGOREFPD        S01310
+      ****WRITE*TO*MSIMS*AND UPDATE RELEVANT FIELDS IN MSIXA.             S01310
+      *
+     C                     MOVE 'LACK'    @MGST   2                       S01310
+     C                     MOVE '3'       @MGSG   1                       S01310
+     C*********************MOVE 'L'       MSTSO   1                       S01310
+     C                     MOVE 'A'       ACNK
+     C                     EXSR MSIWRT
+     C*********************MOVE IMOD      MIND                            S01310
+     C*********************MOVELITRF      TRAN                            S01310
+     C                     EXSR UPDIXA
+     C/COPY WNCPYSRC,MS0207C003
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      ** NEG SR    : TO PROCESS NEGATIVE ACKNOWLEDGEMENTS FROM SYSTEM.*
+      ** CALLED BY : MAIN PROCESSING.                                 *
+      ** CALLS     : UPDIXA, MSIWRT.                                  *
+      *                                                               *
+      *****************************************************************
+     C           NEG       BEGSR
+      *
+      **  WRITE TO MSMSI2PD AND SET UP KEY FOR CHAIN TO MGOREFPD          S01310
+      ****WRITE*TO*MSIMS*AND SET UP KEY FOR CHAIN TO MSIXA.               S01310
+      *
+     C                     MOVE 'NACK'    @MGST                           S01310
+     C                     MOVE '4'       @MGSG                           S01310
+     C*********************MOVE 'N'       MSTSO                           S01310
+     C/COPY WNCPYSRC,MS0207C006
+     C                     MOVE ERROR     MSE1O   3
+     C/COPY WNCPYSRC,MS0207C007
+     C                     MOVE 'N'       ACNK
+     C                     EXSR MSIWRT
+     C*********************MOVE IMOD      MIND                            S01310
+     C*********************MOVELITRF      TRAN                            S01310
+     C                     EXSR UPDIXA
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      ** MSIWRT SR : TO WRITE MESSAGES TO THE FILE MSIMA.             *
+      ** CALLED BY : POS, NEG, PSEUDO.                                *
+      ** CALLS     : UPDIN.                                           *
+      *                                                               *
+      *****************************************************************
+     C           MSIWRT    BEGSR
+      *
+      ** DISCOVER IF MESSAGE IS AN ACKNOWLEDGEMENT.
+     C           LACK      COMP 'ACK'                    13
+     C           *IN13     IFEQ '0'
+     C           LACK      COMP 'NAK'                    13
+     C                     END
+      *
+      ** SET UP KEY FIELDS IF IT IS A MESSAGE
+     C           *IN13     IFEQ '0'
+     C                     MOVE IMIR      MIR
+     C                     MOVE IMTPY     MTPY
+     C                     MOVE IMPRY     MPRY
+     C                     MOVE *BLANKS   ACNK
+     C                     MOVE *BLANKS   MODI                            S01310
+     C*********************MOVE *BLANKS   MODA                            S01310
+     C                     Z-ADDIMODE     MODE
+     C                     Z-ADDIMOTM     MOTM
+     C                     MOVE MODE      ODAT
+     C                     MOVE OMOR      MOR
+     C                     MOVELITRN      TRNO
+      *
+      ** SET UP KEY FIELDS IF IT IS AN ACKNOWLEDGEMENT.
+     C                     ELSE
+     C                     MOVE *BLANKS   MOR
+     C/COPY WNCPYSRC,MS0207C008
+     C                     MOVE AKMIR     MIR
+     C                     MOVELIACKD     MIR
+     C                     Z-ADDIACKD     MODE
+     C                     Z-ADDIACKT     MOTM
+     C/COPY WNCPYSRC,MS0207C009
+     C                     MOVE *BLANKS   MTPY
+     C                     MOVE *BLANKS   MPRY
+     C*********************MOVE IMOD      MODA                            S01310
+     C                     MOVELITRN      MODI                            S01310
+     C                     MOVELITRN      TRNO
+     C                     END
+      *                                                                   124673
+      ** Set up century field for key list.                               124673
+     C                     MOVELMODE      CENT    2                       124673
+     C           CENT      IFLT '72'                                      124673
+     C                     MOVE '20'      MODEC                           124673
+     C                     ELSE                                           124673
+     C                     MOVE '19'      MODEC                           124673
+     C                     ENDIF                                          124673
+     C/COPY WNCPYSRC,MS0207C010
+      *                                                                   124673
+      *
+      ** RESET INPUT MESSAGE TO AFTER INITIAL CR/LF
+     C                     MOVE *BLANK    MSI
+     C                     MOVEAMSG,1     MSI,1
+      *
+      ** OUTPUT RECORDS TO MSIMA UNTIL ALL DATA HAS BEEN OUTPUT.
+     C                     Z-ADD0         Q       20
+      *
+     C***********Q         DOWNE13                                        CSW095
+     C           Q         DOWNE39                                        CSW095
+     C                     ADD  1         Q
+      *
+     C           MSI,Q     IFNE *BLANKS
+     C                     MOVEAMSI,Q     MDTA
+      *                                                                   CSW001
+      ** BEFORE WRITING CHECK THAT MESSAGE IS NOT ALREADY ON FILE         CSW001
+      ** FROM A PREVIOUS TRANSMISSION  (REF GEMS 55116)                   CSW001
+      *                                                                   CSW001
+  02 C           CHECKY    KLIST                                          CSW001
+  02 C                     KFLD           MODEC                           124673
+  02 C                     KFLD           MODE                            CSW001
+  02 C                     KFLD           MOTM                            CSW001
+  02 C                     KFLD           MOR                             CSW001
+  02 C                     MOVELOMOR      NEWKY1 39                       CSW001
+  02 C                     MOVE NEWKY     NEWKY1                          CSW001
+ B03 C           SAVKY     IFNE NEWKY1                                    CSW001
+  03 C                     MOVE NEWKY1    SAVKY  39                       CSW001
+  03 C           CHECKY    CHAINMSMSI2L3             30                   CSW001
+ E03 C                     END                                            CSW001
+ B03 C           *IN30     IFEQ '1'                                       CSW001
+     C                     WRITEMSMSI2D0
+     C/COPY WNCPYSRC,MS0207C021
+ E03 C                     END                                            CSW001
+     C                     ELSE
+     C***********          Z-ADD13        Q                               CSW095
+     C                     Z-ADD39        Q                               CSW095
+     C                     END
+      *
+     C                     END
+     C/COPY WNCPYSRC,MS0207C011
+      *
+      ** UPDATE MS2780I
+     C                     EXSR UPDIN
+     C/COPY WNCPYSRC,MS0207C023
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      ** UPDIXA SR : TO UPDATE THE FILE MGOREFPD                      *   S01310
+      ***UPDIXA*SR*:*TO*UPDATE THE FILE MSIXA                         *   S01310
+      ** CALLED BY : POS, PSEUDO, NEG.                                *
+      *                                                               *
+      *****************************************************************
+     C           UPDIXA    BEGSR
+      *
+      ** CHAIN MGOREFL0. IF SUCCESSFUL UPDATE MESSAGE STATUS AND, WHERE   S01310
+      ***CHAIN*MSIXA.*IF*SUCCESSFUL UPDATE MESSAGE STATUS AND, WHERE      S01310
+      ** RELEVANT (IE. AFTER NEGATIVE ACK.), THE ERROR FIELDS.
+      *
+     C           ITRN      CHAINMGOREFL0             89                   S01310
+     C***********IXAKEY****CHAINMSIXA                89                   S01310
+      *
+      ** IF THE ACKNOWLEDGMENT RECEIVED DOES NOT REFER TO FIRST PART
+      ** PART OF MULTIPLE MESSAGE REACCESS MGOREFL0 TO LOCK FIRST PART    S01310
+      ***PART*OF*MULTIPLE*MESSAGE REACCESS LF/MSIXA TO LOCK FIRST PART    S01310
+      ** OF MULTIPLE MESSAGE
+     C           *IN89     IFEQ '0'
+     C*********************MOVE TRNF      TRNF1  15                       S01310
+     C***********TRAN******IFNE TRNF1                                     S01310
+     C           ITRN      IFNE TRNF                                      S01310
+     C           TRNF      ANDNE*BLANKS
+     C                     MOVE TRNF      ITRN                            S01310
+     C           ITRN      CHAINMGOREFL0             89                   S01310
+     C*********************MOVE TRNF1     TRAN                            S01310
+     C***********IXAKEY****CHAINMSIXA                89                   S01310
+     C                     END
+     C                     END
+      *
+     C           *IN89     IFEQ '0'
+      *
+      ** SET UP FIELDS FOR UPDATE OF MGOREFL0                             S01310
+      ***SET*UP*FIELDS*FOR*UPDATE OF MSIXA.                               S01310
+     C*********************MOVE MSTSO     MSTS                            S01310
+     C*********************MOVE RUNAS     LADT                            S01310
+     C                     MOVE @MGST     MGST                            S01310
+     C                     MOVE @MGSG     MGSG                            S01310
+     C                     MOVE BJMRDT    LADT                            S01310
+     C                     TIME           LATM
+     C                     MOVE MSE1O     MSE1
+     C                     MOVE IMIR      MIR
+      *
+      ** LATM AND LADT ARE DATE AND TIME OF RECEIPT IF UPDATE IS DUE TO
+      ** AN ACK OR A NAK.
+     C           *IN13     IFEQ '1'
+     C/COPY WNCPYSRC,MS0207C012
+     C                     MOVELIACKT     LATM
+     C/COPY WNCPYSRC,MS0207C013
+     C                     MOVE '00'      LATM
+     C/COPY WNCPYSRC,MS0207C014
+     C                     MOVELIACKD     DAT1
+     C/COPY WNCPYSRC,MS0207C015
+     C           MM        LOKUPTABMM     TABMON         12
+     C                     MOVE TABMON    MMM
+     C                     MOVE YEAR      YY
+     C                     MOVE DAY       DD
+     C                     MOVE DAT2      LADT
+     C/COPY WNCPYSRC,MS0207C016
+     C                     MOVE AKMIR     MIR
+     C                     MOVELIACKD     MIR
+     C/COPY WNCPYSRC,MS0207C017
+     C                     END
+      *
+      **  UPDATE MGOREFPD, AND BLANK OUT THE FIELDS FOR THE NEXT UPDATE   S01310
+      ****UPDATE*MSIXA,*AND BLANK OUT THE FIELDS FOR THE NEXT UPDATE      S01310
+     C                     MOVE 'S'       NETI                            CSW001
+     C                     EXCPTIXAUPD
+     C                     END
+      *
+     C                     SETOF                     13
+     C                     MOVE *BLANKS   MSE1O
+     C                     MOVE *BLANKS   MIR
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      ** UPDIN SR  : TO UPDATE THE INCOMING MESSAGES WORK FILE.       *
+      ** CALLED BY : POS, NEG.                                        *
+      *                                                               *
+      *****************************************************************
+     C           UPDIN     BEGSR
+     C           SRECNO    CHAINMS2780I              89
+     C                     SETOF                     10
+      *
+      ** DELETE ALL RECORDS UP TO LAST FOR MESSAGE PROCESSED
+     C           RECNO     DOWLTERECNO
+     C                     DELETMS2780F
+     C                     READ MS2780F                  89
+     C                     END
+      *
+     C           *IN14     IFEQ '0'
+     C                     Z-ADD1         J       40
+     C                     MOVEAFIELD     A398A
+     C           EMSG      LOKUPA398A,J                  10
+      *
+     C                     ELSE
+      *
+      **  REMOVE ANY BLANK TRAILING RECORDS UNTIL FILE IS EMPTY
+     C           *IN88     DOWEQ'0'
+     C                     DELETMS2780F
+     C                     READ MS2780F                  88
+     C                     END
+      *
+     C                     COMIT
+      *
+     C                     END
+      *
+      ** PAD RECORD WITH '@' SYMBOLS UP TO THE CRLF POINT (START OF MSG)
+      ** FOR RECOVERY PURPOSES.
+      *
+     C           *IN10     IFEQ '1'
+     C                     MOVE '@'       A398
+     C                     MOVEAA398A,J   A398,J
+     C                     MOVEAA398      FIELD
+     C                     UPDATMS2780F
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      ** INIT SR   : TO PERFORM ALL INITIALISATION PROCESSING.        *
+      ** CALLED BY : MAIN PROCESSING.                                 *
+      ** CALLS     : DBERR                                            *
+      *                                                               *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80                       S01310
+      *                                                                   S01310
+      **  Set up LDA                                                      S01310
+     C           *NAMVAR   DEFN           LDA                             CSW001
+     C           *LOCK     IN   LDA                                       CSW001
+     C                     MOVE *BLANKS   DBFILE                          S01310
+     C                     MOVE *BLANKS   DBKEY                           S01310
+     C                     MOVEL'MS0207'  DBPGM                           S01310
+     C                     MOVE *BLANKS   DBASE                           S01310
+     C                     OUT  LDA                                       CSW001
+      *
+      ** INITIALISE CONSTANTS.
+     C                     BITOF'01234567'NULL    1
+     C                     MOVE NULL      CR
+     C                     BITON'457'     CR
+     C                     MOVE NULL      LF
+     C                     BITON'257'     LF
+     C                     MOVE NULL      ETX     1
+     C                     BITON'67'      ETX
+     C                     MOVE NULL      EMSG    1
+     C                     BITON'13467'   EMSG
+      *
+      ** SET UP STRTXT FIELD
+     C                     MOVE '{4:'     FLD1
+     C                     MOVE CRLF      FLD2
+     C******************** MOVE ':20:'    FLD3                            CSW001
+      *
+     C                     Z-ADD1         RECNO  150
+     C                     Z-ADD1         ERECNO 150                      CSW001
+     C                     SETON                     01
+      *
+      **  Access SDBANKPD for date and title                              S01310
+     C                     READ SDBANKPD                 99               S01310
+      ***ACCESS*TABTB10*FOR DATE AND TITLE.                               S01310
+     C*********************READ TABTB10F                 99               S01310
+     C**N99******RECI******COMP 'D'                  9999                 S01310
+      *
+      ** SR. DBERR AUTOMATICALLY TERMINATES THE PROGRAM AFTER A DB ERROR.
+     C           *IN99     IFEQ '1'
+     C                     MOVE '01'      DBASE            ***************
+     C*********************MOVE 'TABLE'   DBFILE           * DB ERROR 01 *S01310
+     C*********************MOVEL'10'      TABKEY 12        ***************S01310
+     C*********************MOVE '01'      TABKEY                          S01310
+     C*********************MOVELTABKEY    DBKEY                           S01310
+     C                     MOVEL'SDBANKPD'DBFILE                          S01310
+     C                     MOVEL'FIRST'   DBKEY                           S01310
+     C                     EXSR DBERR
+     C                     END
+     C/COPY WNCPYSRC,MSH00002
+     C*                                                                   CSW001
+     C**  Access SAR details file to see if CSW001 is installed           CSW001
+      *                                                                   CSW001
+     C                     MOVE 'N'       CSW001                          CSW001
+     C                     CALL 'AOSARDR0'                                CSW001
+     C                     PARM '       ' @RTCD   7                       CSW001
+     C                     PARM '*VERIFY' @OPTN   7                       CSW001
+     C                     PARM 'CSW001'  @SARD   6                       CSW001
+     C           SCSARD    PARM SCSARD    DSFDY                           CSW001
+     C*                                                                   CSW001
+     C           @RTCD     IFEQ *BLANK                                    CSW001
+     C                     MOVE 'Y'       CSW001  1                       CSW001
+     C                     ELSE                                           CSW001
+     C           @RTCD     IFNE '*NRF   '                                 CSW001
+     C           *LOCK     IN   LDA                                       CSW001
+     C                     MOVEL'SCSARDPD'DBFILE           ************   CSW001
+     C                     MOVEL'*VERIFY' DBKEY            * DBERR 03 *   CSW001
+     C                     MOVE '03'      DBASE            ************   CSW001
+     C                     OUT  LDA                                       CSW001
+     C                     EXSR DBERR                                     CSW001
+     C                     END                                            CSW001
+     C                     END                                            CSW001
+     C*                                                                   CSW001
+     C**  INITIALISE CONSTANTS FOR CSW001                                 CSW001
+     C           CSW001    IFEQ 'Y'                                       CSW001
+     C                     MOVE NULL      X00     1        X'00'          CSW001
+     C                     MOVE X00       LMSG    1                       CSW001
+     C                     ELSE                                           CSW001
+     C                     MOVE *BLANKS   LMSG                            CSW001
+     C                     ENDIF                                          CSW001
+     C/COPY WNCPYSRC,MS0207C002
+      *
+      ** Check if SWIFT2009 is installed                                                      CSW209
+      *                                                                                       CSW209
+     C                     CALL 'SWIF2009'                                                    CSW209
+     C                     PARM           @RTCD                                               CSW209
+      *                                                                                       CSW209
+     C           @RTCD     IFEQ 'CSW2009'                                                     CSW209
+     C                     MOVE 'Y'       CSW209  1                                           CSW209
+     C                     ELSE                                                               CSW209
+     C                     MOVE 'N'       CSW209                                              CSW209
+     C                     ENDIF                                                              CSW209
+      *                                                                                       CSW209
+     C*********************MOVE TITL      TITLS  53                       S01310
+     C*********************MOVE RUNA      RUNAS   7                       S01310
+     C*********************MOVE 'S'       NETI                            S01310
+      *
+     C                     READ MS2780F                  LR
+     C                     Z-ADD1         T
+     C                     MOVEAFIELD     REC,T
+      *
+      **  IF FILE IS HALF PROCESSED POSTITION TO
+      **  BEGINNING OF NEXT MESSAGE
+     C           REC,T     IFEQ '@'                                       S01344
+      *                                                                   S01344
+     C           REC,T     DOWEQ'@'
+     C                     ADD  1         T
+     C                     END
+      *                                                                   S01344
+     C           REC,T     IFEQ EMSG                                      S01344
+     C                     ADD  1         T                               S01344
+     C                     END                                            S01344
+      *
+     C                     END                                            S01344
+      *                                                                   S01344
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      ** DBERR SR  : TO PROCESS DATABASE ERRORS.                      *
+      ** CALLED BY : INIT.                                            *
+      *                                                               *
+      *****************************************************************
+     C           DBERR     BEGSR
+      *
+      ** OPEN PRINT FILE AND PRINT DB ERROR REPORT.
+     C                     EXCPTHEAD
+     C                     EXCPTDBASEO
+     C                     SETON                     U7U8LR
+     C                     DUMP                                           CSW095
+     C                     RETRN
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   *PSSR - Error handling                                      *
+      *   Called by - INIT Initial process                            *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+     O/EJECT
+     O*****************************************************************
+     OMS0207AUE   03           HEAD
+     O*S0207P1E***03*******    HEAD
+     O                                   23 'REFERENCE MS0207'
+     O                         BJURPT    89                               S01310
+     O*********************    TITLS     89                               S01310
+     O                                  104 'DATE'
+     O                         BJMRDT   112                               S01310
+     O*********************    RUNAS    112                               S01310
+     O                                  123 'PAGE'
+     O                         PAGE  Z  127
+     O        E 2              DBASEO
+     O                                   52 'MIDAS/S.W.I.F.T.'
+     O                                   74 'MESSAGES TRANSMISSION'
+     O                                   96 'DATABASE ERROR REPORT'
+     O        E 1              DBASEO
+     O                                   52 '----------------'
+     O                                   74 '----------------------'
+     O                                   96 '----------------------'
+     O        E   43           DBASEO
+     O                                   56 'DATABASE ERROR AT'
+     O                         DBASE     59
+     O                                   64 ', KEY'
+     O                         DBKEY     94
+     O        E 2              DBASEO
+     O                                   64 'FILE NAME'
+     O                         DBFILE    70
+     O        E   53           DBASEO
+     O                                   69 '*** END OF REPORT ***'
+     O*
+     O*
+     O**  UPDATE OF RELEVANT FIELDS OF FILE MGOREFL0                      S01310
+     O*****UPDATE*OF*RELEVANT FIELDS OF FILE MSIXA.                       S01310
+     O*
+     OMGOREFD0E                IXAUPD                                     S01310
+     O*SIXOPFFE************    IXAUPD                                     S01310
+     O                         MGSG                                       S01310
+     O                         MGST                                       S01310
+     O*********************    MSTS                                       S01310
+     O                         LADT
+     O                         LATM
+     O*********************    NETI                                       S01310
+     O*********************    ISQN                                       S01310
+     O                         MSE1
+     O                         MIR
+**  CPY@  ** OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**  Months
+01JAN
+02FEB
+03MAR
+04APR
+05MAY
+06JUN
+07JUL
+08AUG
+09SEP
+10OCT
+11NOV
+12DEC
+** AR1 AR2
+??4C<
+??4F!
+??50&
+??5C*
+??5E;
+??6C%
+??6D_
+??6E>
+??7B#
+??7C@
+??7E=
+??7F"
+??C0{
+??D0}

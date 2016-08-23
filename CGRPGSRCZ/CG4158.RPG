@@ -1,0 +1,1334 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG PM Valuation statement: mnty csh flw')
+/*OVRF*: OVRDBF (File in program) (file on system)                  : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                          *
+     F*                                                               *
+     F*  CG4158 - Valuation Statement - Monthly Cash Flow Section     *
+     F*                                                               *
+     F*  Function:  This program xxxxxxxxxxxxxxxxxxxxxxxxxxxx         *
+     F*  (phase(s))                                                   *
+     F*                                                               *
+     F*  Called By: mmCnnnn - (program name)                          *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 BUG9646            Date 20Dec05               *
+      *                 CSC022             Date 24Feb04               *
+      *                 222373             Date 03Nov03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 15May01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CCG009             Date 01Jun95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG9646- Changes in CGPACKE causes programs not to compile   *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+      *  222373 - Correct parameters on program calls                 *
+     F*  CSD006 - Recompiled over changed SDCURRPD.                   *
+     F*  CCG009 - Private Banking UDC                                 *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*                                                               *
+     F*  99   -    General work indicator                             *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F**   PM CASHFLOW MONTH AND YEAR END TOTALS       PREFIX - QL
+     FPMCFMYPDIF  E           K        DISK         KINFSR *PSSR
+     F/SPACE 5
+     E/COPY CGCPYSRC,CGPACKE
+     E/COPY CGCPYSRC,SRERRE
+     E**  Number Arrays
+     E                    ##W        20  1
+     E                    ##NUMA     29  1
+     E*
+     E* ##GRP = Group/RDE Number               ##RDEA = RDE + Attributes
+     E*
+     E                    ##GRP   1  41 10   ##RDEA 22
+     E*
+     E**  Array of Currencies accessed by program
+     E                    ##CY      100  3
+     E*
+     E**  Copyright array.
+     E                    ##CPY   1   1 80
+     E/COPY ZSRSRC,ZDATE2Z1
+     I*
+     I            DS
+     I                                        1  10 ##GRPX
+     I                                        1   6 ##GRPS
+     I                                        7  100##RDEN
+     I**  Look-up string for RDE definition Array
+     I*
+     I##SDS       DS
+     I**********                              15120 ##S                                      BUG9646
+     I                                        15632 ##S                                      BUG9646
+     I**  Packed data string.
+     I*
+     I            DS
+     I                                        1  20 ##W
+     I                                        1  200##WNUM
+     I**  Number Field
+     I*
+     I            DS
+     I                                        1   8 ##ITMA
+     I                                        1   80##ITEM
+     I** Used to convert item reference from character to numeric
+     I*
+     I*---------------------------------------------------------------------
+     I* Named constants
+     I*
+     I              'PB_VALS   '          C         W#PTYP
+     I              '08CASHMNTH'          C         W#PSTP
+     I*---------------------------------------------------------------------
+     I##UDCR    E DSCGUDCRPD
+      ** External DS for incomplete reference
+      *
+     ISDCURR    E DSSDCURRPD                101
+      **  External DS for currency details
+      *
+     IDSSDY     E DSDSSDY
+      **  Second DS for access programs, long data structure
+      *
+     IDSPARM    E DSPMUDCEXT
+      **  External DS for parameters based on PF/DTRIXDD
+      *
+     IW0FMT     E DSCGUDTAPD
+      **  Record format of PF/CGUDTAPD for use as a parameter
+      *
+     I##SRDT      DS                         20
+      **  DS to store subroutine specific data.
+      **  - Saved Path
+     I                                        1  70 ##SPAT
+      **  - Saved Binds
+     I                                       71  790##PBIN
+     I                                       80  880##TBIN
+     I            DS
+      **  Latest Bind Number
+      *
+     I                                        1   60#@BIND
+      *
+     I/COPY CGCPYSRC,CGPACKI
+      *
+     ICPYR        DS
+      **  Data Structure for Compilation - Copyright Insertion
+     I                                        1  80 ##CPY
+     I/COPY CGCPYSRC,SRERRI
+      *****************************************************************
+      * Process     :  MAINLINE                                       *
+      * Function    :  Mainline processing                            *
+      *                                                               *
+      * Called by   :  None                                           *
+      * Calls       :  SRINIT - Initial Processing - On First Call    *
+      *                SRINZ  - Initialise Fields on Each Invocation  *
+      *                SRMAIN - Main Processing                       *
+      *****************************************************************
+      *
+      **  Parameter list for current program invocation.
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+     C                     PARM           W0CMT   3
+     C                     PARM           ##COPD  1
+     C                     PARM           DSPARM
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *................................................................
+      *
+      **  Initial processing - Once Only
+     C           ##INIT    IFEQ *BLANK
+     C                     EXSR SRINIT
+     C                     MOVE 'Y'       ##INIT  1
+     C                     ENDIF
+      *
+      **  Initialisation processing
+     C                     EXSR SRINZ
+      *
+      **  Main processing
+     C                     EXSR SRMAIN
+      *
+      **  Commit updates
+     C           W0CMT     IFEQ 'YES'
+     C                     COMIT
+     C                     END
+      *
+      *................................................................
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      **  Terminate program
+     C                     RETRN
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRMAIN                                         *
+      * Function    :  Main processing                                *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           SRMAIN    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRMAIN'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Generate reference number by writing to PF/CGUDCRPD
+      **  If no confirmation to be produced, then bypass
+      *
+     C                     MOVE 'N'       ##COPD
+     C                     EXSR SRGENR
+     C           ##COPD    CABEQ'N'       EXMAIN
+      *
+      ** Extract Valuation Statement  - Monthly Cash Flow
+      *
+     C                     EXSR SRCFM
+      *
+      *................................................................
+      *
+     C           EXMAIN    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRCFM                                          *
+      * Function    :  Extract Valuation Statement - Monthly Cash Flow*
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           SRCFM     BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'p08CFM'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Set up Path.
+     C                     MOVEL'\p08CFM' ##PNAM  7
+     C           S#PATH    CAT  ##PNAM:0  S#PATH
+      *
+      **  Store Path & Binds
+     C           1         OCUR ##SRDT
+     C                     MOVELS#PATH    ##SPAT
+     C                     Z-ADD1         ##PBIN
+     C                     Z-ADD1         ##TBIN
+      *
+      ** Account Officer Details
+     C                     EXSR SRACOF
+      *
+      ** Customer Base Details
+     C                     EXSR P@CSTB
+      *
+      ** Portfolio Base Details
+     C                     EXSR P@PTFB
+      *
+      ** Print Request Details
+     C                     EXSR P@PRTD
+      *
+      ** Monthly Cash Flow (complex group)
+     C                     EXSR P@CFM
+      *
+      *................................................................
+      *
+     C           EXCFM@    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRACOF                                         *
+      * Function    :  Account Officer Details                        *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           SRACOF    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'ACOF  '  @STK,Q
+      *
+      *................................................................
+      *
+      **  Retrieve subroutine specific data.
+     C           1         OCUR ##SRDT
+     C                     MOVEL##SPAT    S#PATH
+      *
+      **  Set up Path.
+     C                     MOVEL'\ACOF  ' ##PNAM
+     C           S#PATH    CAT  ##PNAM:0  S#PATH
+      *
+      **  Retrieve RDE information for RDEs in group set
+      *
+     C                     MOVEL@STK,Q    ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+      *
+      ** Account Officer Code
+     C                     MOVELWWACOC    ##D,1
+      *
+      ** Account Officer Department code
+     C                     MOVELWWDPCD    ##D,2
+      *
+      ** Account Officer Name
+     C                     MOVELWWACON    ##D,3
+      *
+      ** Account Officer Telephone Number
+     C                     MOVELWWAPHN    ##D,4
+      *
+      ** Account Officer Telephone Extension Number
+     C                     MOVELWWAEXT    ##D,5
+      *
+      **  Accumulate RDE's and associated data and output to
+      **  PF/CGUDTAPD.
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      *................................................................
+      *
+     C           EXACOF    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  P@CSTB                                         *
+      * Function    :  Customer Base Details                          *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           P@CSTB    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'P_CSTB'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Retrieve subroutine specific data.
+     C           1         OCUR ##SRDT
+     C                     MOVEL##SPAT    S#PATH
+      *
+      **  Set up Path.
+     C                     MOVEL'\P_CSTB' ##PNAM
+     C           S#PATH    CAT  ##PNAM:0  S#PATH
+      *
+      **  Retrieve RDE information for RDEs in group set
+      *
+     C                     MOVEL@STK,Q    ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+      *
+      ** Customer Number
+     C                     MOVELWWCNUM    ##D,1
+      *
+      ** Customer Name
+     C                     MOVELWWCRNM    ##D,2
+      *
+      ** Customer Town
+     C                     MOVELWWCTWN    ##D,3
+      *
+      ** Customer Address Code
+     C                     MOVELWWADCD    ##D,4
+      *
+      ** Customer Address Line 1
+     C                     MOVELWWCNA1    ##D,5
+      *
+      ** Customer Address Line 2
+     C                     MOVELWWCNA2    ##D,6
+      *
+      ** Customer Address Line 3
+     C                     MOVELWWCNA3    ##D,7
+      *
+      ** Customer Address Line 4
+     C                     MOVELWWCNA4    ##D,8
+      *
+      ** Customer Base Currency
+     C                     MOVELWWCSBY    ##D,9
+      *
+      ** Customer Base Currency Description
+     C                     MOVELWWCSBY    ##CCY   3
+     C                     EXSR SRDCDT
+     C                     MOVELA6CYNM    ##D,10
+      *
+      **  Accumulate RDE's and associated data and output to
+      **  PF/CGUDTAPD.
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      *................................................................
+      *
+     C           EXCSTB    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  P@PTFB                                         *
+      * Function    :  Portfolio Base Details                         *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           P@PTFB    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'P_PTFB'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Retrieve subroutine specific data.
+     C           1         OCUR ##SRDT
+     C                     MOVEL##SPAT    S#PATH
+      *
+      **  Set up Path.
+     C                     MOVEL'\P_PTFB' ##PNAM
+     C           S#PATH    CAT  ##PNAM:0  S#PATH
+      *
+      **  Retrieve RDE information for RDEs in group set
+      *
+     C                     MOVEL@STK,Q    ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+      *
+      **  Portfolio reference
+     C                     MOVELWWPTFR    ##D,1
+      *
+      **  Portfolio Reference - On File
+     C                     MOVELWWPTFF    ##D,2
+      *
+      **  Portfolio Narrative
+     C                     MOVELWWPTFN    ##D,3
+      *
+      **  Portfolio Currency
+     C                     MOVELWWPTCY    ##D,4
+      *
+      **  Portfolio Currency Description
+     C                     MOVELWWPTCY    ##CCY
+     C                     EXSR SRDCDT
+     C                     MOVELA6CYNM    ##D,5
+      *
+      **  Accumulate RDE's and associated data and output to
+      **  PF/CGUDTAPD.
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      *................................................................
+      *
+     C           EXPTFB    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  P@PRTD                                         *
+      * Function    :  Print Request Details                          *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           P@PRTD    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'P_PRTD'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Retrieve subroutine specific data.
+     C           1         OCUR ##SRDT
+     C                     MOVEL##SPAT    S#PATH
+      *
+      **  Set up Path.
+     C                     MOVEL'\P_PRTD' ##PNAM
+     C           S#PATH    CAT  ##PNAM:0  S#PATH
+      *
+      **  Retrieve RDE information for RDEs in group set
+      *
+     C                     MOVEL@STK,Q    ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+      *
+      ** Request Number
+     C                     MOVELWWRQNO    ##D,1
+      *
+      ** Requested by User
+     C                     MOVELWWUSER    ##D,2
+      *
+      ** Regular or Extra Statement
+     C           WWXTRS    IFEQ 'Y'
+     C                     MOVEL'E'       ##D,3            * EXTRA
+     C                     ELSE
+     C                     MOVEL'R'       ##D,3            * REGULAR
+     C                     END
+      *
+      ** For the Use Of: A/C officer/Customer
+     C           WWVLNT    IFEQ 'A'
+     C                     MOVEL'A'       ##D,4
+     C                     ELSE
+     C                     MOVEL'C'       ##D,4
+     C                     END
+      *
+      ** Hold Mail Y/N
+     C           WWHLDM    IFEQ 'H'
+     C                     MOVEL'Y'       ##D,5
+     C                     ELSE
+     C                     MOVEL'N'       ##D,5
+     C                     END
+      *
+      ** Date of FX Rates
+     C                     MOVELWWFXDT    ##D,6
+      *
+      ** Date of Valuation
+     C                     MOVELWWLXDT    ##D,7
+      *
+      ** Where Printed
+     C                     MOVELWWBMSN    ##D,8
+      *
+      ** When Printed
+     C                     MOVELWWECD     ##D,9
+      *
+      **  Accumulate RDE's and associated data and output to
+      **  PF/CGUDTAPD.
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      *................................................................
+      *
+     C           EXPRTD    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  P@CFM                                          *
+      * Function    :  Monthly Cash flow                              *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           P@CFM     BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'P_CFM '  @STK,Q
+      *
+      *................................................................
+      *
+      **  Retrieve subroutine specific data
+     C           1         OCUR ##SRDT
+     C                     MOVEL##SPAT    S#PATH
+      *
+      **  Set up Path.
+     C                     MOVEL'\P_CFM ' ##PNAM
+     C           S#PATH    CAT  ##PNAM:0  S#PATH
+      *
+      **  Store Path
+     C           2         OCUR ##SRDT
+     C                     MOVELS#PATH    ##SPAT
+      *
+      **   Read all the month/currencies for the passed portfolio
+      *
+     C           PORTK     KLIST
+     C                     KFLD           WWCNUM
+     C                     KFLD           WWPTFF
+     C                     KFLD           WWMYIN
+     C           PORTK     SETLLPMCFMYPD
+     C           PORTK     READEPMCFMYPD                 99*
+      *
+      ** Do while zero cashflow
+     C           *IN99     DOWEQ'0'                        B1
+     C           QLNECS    ANDEQ*ZERO
+     C           PORTK     READEPMCFMYPD                 99*
+     C                     END                             E1
+      *
+      ** Zeroize running totals
+     C           *LIKE     DEFN QLMYNO    W@MYNO
+     C           *LIKE     DEFN QLCCY     W@CCY
+     C           *LIKE     DEFN QLMYIN    WWMYIN
+     C           *LIKE     DEFN QLCCY     WLCCY
+     C           *LIKE     DEFN QLICAS    W@ICAS
+     C           *LIKE     DEFN QLOCAS    W@OCAS
+     C           *LIKE     DEFN QLNECS    W@NECS
+     C           *LIKE     DEFN QLNEPT    W@NEPT
+     C           *LIKE     DEFN QLNEPT    W@TOTD
+     C           *LIKE     DEFN QLNEPT    W@TOTZ
+     C                     Z-SUB99999     W@MYNO
+     C                     Z-ADD*ZERO     W@TOTD
+     C                     Z-ADD*ZERO     W@TOTZ
+      *
+      ** Start/End of Date
+     C                     MOVEL'Y'       W@SDAT  1
+     C                     MOVEL*BLANK    W@EDAT  1
+      *
+      ** Do while not end of file
+     C           *IN99     DOWEQ'0'                        B1
+      *
+      ** Output only if not first record
+     C           W@MYNO    IFNE -99999                     B2
+      *
+      ** End of Date
+     C           W@MYNO    IFNE QLMYNO                     B3
+     C                     MOVEL'Y'       W@EDAT
+     C                     END                             E3
+      *
+      ** Monthly Cash Flow Base Details
+     C                     EXSR P@CFMB
+      *
+      ** On change of date
+     C           W@MYNO    IFNE QLMYNO                     B3
+      *
+      ** Monthly Cash Flow Totals
+     C                     EXSR P@CFMT
+     C                     Z-ADD*ZERO     W@TOTD
+     C                     MOVEL'Y'       W@SDAT
+     C                     END                             E3
+     C                     END                             E2
+      *
+      **  Retrieve subroutine specific data
+     C           1         OCUR ##SRDT
+     C                     Z-ADD##TBIN    S#TBIN  90
+      *
+      **  Increment & store binds
+     C           2         OCUR ##SRDT
+     C                     Z-ADDS#TBIN    ##PBIN
+     C                     ADD  1         #@BIND
+     C                     Z-ADD#@BIND    ##TBIN
+      *
+      ** Latest Details
+     C                     MOVELQLMYNO    W@MYNO
+     C                     MOVELQLCCY     W@CCY
+     C                     MOVELQLICAS    W@ICAS
+     C                     MOVELQLOCAS    W@OCAS
+     C                     MOVELQLNECS    W@NECS
+     C                     MOVELQLNEPT    W@NEPT
+      *
+      **   Read the next month/currency
+      *
+     C           PORTK     READEPMCFMYPD                 99*
+      *
+      ** Do while zero cashflow
+     C           *IN99     DOWEQ'0'                        B2
+     C           QLNECS    ANDEQ*ZERO
+     C           PORTK     READEPMCFMYPD                 99*
+     C                     END                             E2
+     C                     END                             E1
+      *
+      ** Output only if a record was read in
+     C           W@MYNO    IFNE -99999                     B1
+      *
+      ** End of Date
+     C                     MOVEL'Y'       W@EDAT
+      *
+      ** Monthly Cash Flow Base Details
+     C                     EXSR P@CFMB
+      *
+      ** Monthly Cash Flow Totals
+     C                     EXSR P@CFMT
+     C                     END                             E1
+      *
+      *................................................................
+      *
+     C           EXCFD     TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  P@CFMB                                         *
+      * Function    :  Monthly Cash Flow Base Details                 *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           P@CFMB    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'P_CFMB'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Retrieve subroutine specific data
+     C           2         OCUR ##SRDT
+     C                     MOVEL##SPAT    S#PATH
+     C                     Z-ADD##TBIN    S#TBIN
+      *
+      **  Set up Path.
+     C                     MOVEL'\P_CFMB' ##PNAM
+     C           S#PATH    CAT  ##PNAM:0  S#PATH
+      *
+      **  Retrieve RDE information for RDEs in group set
+      *
+     C                     MOVEL@STK,Q    ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+      *
+      ** Cash Flow Month
+     C                     Z-ADDW@MYNO    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZMTH      ##D,1
+      *
+      ** Cash Flow Year
+     C                     MOVELZYEAR     ##D,2
+      *
+      ** Cash Flow Currency
+     C                     MOVELW@CCY     ##D,3
+     C                     MOVELW@CCY     ##CCY   3
+     C                     EXSR SRDCDT
+      *
+      ** Currency Description
+     C                     MOVELA6CYNM    ##D,4
+      *
+      ** Cash Flow Amount - Incoming
+     C                     MOVELW@ICAS    ##D,5
+     C                     MOVE A6NBDP    ##D,5
+      *
+      ** Cash Flow Amount - Outgoing
+     C                     MOVELW@OCAS    ##D,6
+     C                     MOVE A6NBDP    ##D,6
+      *
+      ** Cash Flow Amount - Net
+     C                     MOVELW@NECS    ##D,7
+     C                     MOVE A6NBDP    ##D,7
+      *
+      ** Cash Flow Amount    (Port Ccy)
+     C                     MOVELW@NEPT    ##D,8
+     C                     MOVE WWPCDP    ##D,8
+      *
+      ** Cash Flow Start of Date
+     C                     MOVELW@SDAT    ##D,9
+     C                     MOVEL*BLANK    W@SDAT
+      *
+      ** Cash Flow End of Date
+     C                     MOVELW@EDAT    ##D,10
+     C                     MOVEL*BLANK    W@EDAT
+      *
+      ** Add to running totals
+     C                     ADD  W@NEPT    W@TOTD
+     C                     ADD  W@NEPT    W@TOTZ
+      *
+      **  Accumulate RDE's and associated data and output to
+      **  PF/CGUDTAPD.
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      *................................................................
+      *
+     C           EXCFMB    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  P@CFMT                                         *
+      * Function    :  Monthly Cash Flow Totals                       *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           P@CFMT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'P_CFMT'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Retrieve subroutine specific data.
+     C           2         OCUR ##SRDT
+     C                     MOVEL##SPAT    S#PATH
+      *
+      **  Set up Path.
+     C                     MOVEL'\P_CFMT' ##PNAM
+     C           S#PATH    CAT  ##PNAM:0  S#PATH
+      *
+      **  Retrieve RDE information for RDEs in group set
+      *
+     C                     MOVEL@STK,Q    ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+      *
+      ** Cash Flow Monthly Total (Port Ccy)
+     C                     MOVELW@TOTD    ##D,1
+     C                     MOVE WWPCDP    ##D,1
+      *
+      ** Cash Flow Accumulated Total (Port Ccy)
+     C                     MOVELW@TOTZ    ##D,2
+     C                     MOVE WWPCDP    ##D,2
+      *
+      **  Accumulate RDE's and associated data and output to
+      **  PF/CGUDTAPD.
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      *................................................................
+      *
+     C           EXCFMT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRGENR                                         *
+      * Function    :  Generate reference number                      *
+      *                by writing to PF/CGUDCRPD                      *
+      *                                                               *
+      * Called by   :  SRMAIN - Main Processing                       *
+      * Calls       :  CG9010 - Create reference record               *
+      *****************************************************************
+     C           SRGENR    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRGENR'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Generate reference number and check if further processing
+      **  required. Set up all available information in the record
+      **  format before calling.
+      *
+     C                     MOVELWWCBRC    DRBRCA
+     C                     MOVELWWCBRC    DRORBR
+     C                     MOVEL'PB'      DRMODI
+     C                     MOVELWWRQNO    DRMTRN
+     C                     MOVEL*BLANK    DRMACT
+     C                     MOVELW#PTYP    DRPTYP           * print type
+     C                     MOVELW#PSTP    DRPSTP           * print s/type
+     C                     MOVEL'N'       DRATRM
+      *
+     C                     MOVELWWCNUM    ##CUST
+      *
+     C                     CALL 'CG9010'
+     C                     PARM           ##RTCD  7
+     C                     PARM '*GEN'    ##MODE 10
+     C                     PARM W0CMT     ##CMT   3
+     C                     PARM           ##CUST  6
+     C                     PARM           ##UDCR
+     C                     PARM           ##ITMA  8
+      *
+      **  Blank return code implies generate correspondence.
+      **  CGD1270 => no error, but suppress output for this transaction.
+      *
+     C           ##RTCD    IFEQ *BLANK
+      *
+     C                     MOVE 'Y'       ##COPD
+      *
+     C                     ELSE
+      *
+     C           ##RTCD    IFNE 'CGD1270'
+     C                     MOVEL'CG9010  'W0FILE
+     C                     MOVEL##RTCD    W0KEY            ***************
+     C                     Z-ADD1         W0ERNB           * DB ERROR 01 *
+     C                     MOVEL'CGD1286' W0MSGD           ***************
+     C                     MOVEL'CGUSRMSG'W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *................................................................
+      *
+     C           EXGENR    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRRRDE                                         *
+      * Function    :  Retrieve RDE information for RDEs in group set *
+      *                                                               *
+      * Called by   :  Simple group set subroutines                   *
+      * Calls       :  -                                              *
+      *****************************************************************
+     C           SRRRDE    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRRRDE'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Reset
+     C                     MOVEL*BLANK    ##R
+     C                     MOVEL*BLANK    ##D
+     C                     MOVEL*BLANK    ##S
+      *
+      **  Get information about next 20 RDEs in group set from compile
+      **  time arrays
+     C                     Z-ADD0         #1
+     C           *IN99     DOUEQ'0'
+     C           #1        OREQ 20
+     C                     Z-ADD1         #2
+     C           ##GRPX    LOKUP##GRP,#2                 99*
+     C           *IN99     IFEQ '1'
+     C                     ADD  1         #1
+     C                     MOVEL##RDEA,#2 ##R,#1
+     C                     ADD  1         ##RDEN
+     C                     ENDIF
+     C                     ENDDO
+      *
+      *................................................................
+      *
+     C           EXRRDE    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRADTA                                         *
+      * Function    :  Accumulate RDEs and associated data for output *
+      *                                                               *
+      * Called by   :  Simple group set subroutines                   *
+      * Calls       :  CG3999 - Format and Pack Data                  *
+      *                SRERR  - Database Error                        *
+      *****************************************************************
+     C           SRADTA    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRADTA'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Reformat RDE data
+      *
+     C                     EXSR SRRFMN
+      *
+      **  Pack RDEs and associated data into data string
+     C                     CLEAR##SDS
+     C                     CALL 'CG3999'
+     C                     PARM *BLANK    ##RTCD
+     C                     PARM '*PACK   'W0ACT
+     C                     PARM           ##R
+     C                     PARM           ##D
+     C                     PARM           ##S
+     C                     PARM *BLANK    W0SPAT 70                                           222373
+     C                     PARM           ##RN                                                222373
+     C                     PARM           ##DN                                                222373
+     C                     PARM           ##FM                                                222373
+      *
+      **  Database error
+     C           ##RTCD    IFNE *BLANK
+      *
+     C                     MOVEL'CG3999  'W0FILE           ***************
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 02 *
+     C                     Z-ADD2         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      **  Initialise Write Format Parameter.
+     C                     CLEARW0FMT
+      *
+      **  Set up Control Information.
+     C                     Z-ADD##ITEM    DEITEM
+     C                     ADD  1         ##OSEQ
+     C                     Z-ADD##OSEQ    DEOSEQ
+     C                     Z-ADD##PBIN    DEPBIN
+     C                     Z-ADD##TBIN    DETBIN
+     C                     MOVE 'FR'      DEFSLI
+     C                     MOVE *BLANKS   W0PATH
+     C                     MOVELS#PATH    W0PATH
+      *
+      **  Append Data from pack routine.
+     C           W0FMT     CAT  ##SDS:0   W0FMT
+      *
+      *................................................................
+      *
+     C           EXADTA    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRRFMN                                         *
+      * Function    :  Reformat RDE data                              *
+      *                                                               *
+      * Called by   :  SRADTA                                         *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           SRRFMN    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRRFMN'  @STK,Q
+      *
+      *................................................................
+      *
+      ** Loop through RDE's and data
+      *
+     C                     Z-ADD0         #1
+     C           #1        DOUEQ20
+     C                     ADD  1         #1
+     C                     MOVEL##R,#1    R#DEFN
+     C                     MOVEL##D,#1    R#DATA
+      *
+      ** If data present and RDE is edited
+      *
+     C           R#DATA    IFNE *BLANK
+     C           ##RDEC    ANDNE*BLANK
+      *
+      * Reformat Amount
+     C                     Z-ADD1         #2
+     C           *BLANK    LOKUP##NUMA,#2                99*
+     C                     Z-ADD20        #3
+     C                     Z-ADD0         ##WNUM
+     C           #2        DOWGT1
+     C           #2        ANDLE20
+     C           #3        ANDGT1
+     C                     SUB  1         #2
+     C                     MOVEL##NUMA,#2 ##W,#3
+     C                     SUB  1         #3
+     C                     ENDDO
+      *
+      * Sign the amount
+     C           ##SIGN    IFEQ '-'
+     C                     Z-SUB##WNUM    ##NUMB
+     C                     ELSE
+     C                     Z-ADD##WNUM    ##NUMB
+     C                     END
+      *
+      * Default Edit Type
+     C           ##EDTT    IFEQ *BLANK
+     C                     MOVEL##RDET    ##EDTT
+     C                     END
+      *
+      * Default Decimal Places
+     C           ##DCPA    IFEQ *BLANK
+     C                     MOVEL##RDED    ##DCPA
+     C                     END
+      * New RDE data
+     C                     MOVELR#DATA    ##D,#1
+     C                     ENDIF
+     C                     ENDDO
+      *
+      *................................................................
+      *
+     C           EXRFMN    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRODTA                                         *
+      * Function    :  Output Accumulated data to PF/CGUDTAPD         *
+      *                                                               *
+      * Called by   :  Simple group set subroutines                   *
+      * Calls       :  CG9020 - Output Data to CGUDTAPD               *
+      *                SRERR  - Database Error                        *
+      *****************************************************************
+     C           SRODTA    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRODTA'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Output PF/CGUDTAPD Record.
+     C                     CALL 'CG9020'
+     C                     PARM *BLANK    ##RTCD
+     C                     PARM '*WRITE  'W0ACT
+     C                     PARM           W0PATH256
+     C                     PARM           W0FMT
+     C                     PARM *BLANK    W0TITL  7
+     C                     PARM *BLANK    W0ULIN  7
+     C                     PARM           W0CMT
+      *
+      **  Database error
+     C           ##RTCD    IFNE *BLANK
+      *
+     C                     MOVEL'CG9020  'W0FILE           ***************
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 03 *
+     C                     Z-ADD3         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      *................................................................
+      *
+     C           EXODTA    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRDCDT                                         *
+      * Function    :  Determine Currency Details                     *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           SRDCDT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRDCDT'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Access array of Currency Details already loaded
+     C                     Z-ADD1         C       30
+     C           ##CCY     LOKUP##CY,C                   99
+      *
+      **  If no match is found determine the next free space in the
+      **  loaded currency array.
+     C           *IN99     IFEQ *OFF
+     C                     Z-ADD1         C
+     C           *BLANK    LOKUP##CY,C                   99
+      *
+      **  If no space is left, set the Currency Data data structure to
+      **  the 101st occurrence so that when the new details are
+      **  retrieved no existing details are overwritten.
+     C           *IN99     IFEQ *OFF
+     C           101       OCUR SDCURR
+      *
+      **  If a space is found, set up the new currency into the array
+      **  and position the Currency Data data structure on the
+      **  occurrence matching the array index.
+     C                     ELSE
+     C                     MOVE ##CCY     ##CY,C
+     C           C         OCUR SDCURR
+     C                     ENDIF
+      *
+      **  Retrieve the currency details.
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   ##RTCD           B:Return Cd
+     C                     PARM '*KEY'    ##OPTN  7        I:Option
+     C                     PARM ##CCY     ##CCYP  3        I:Currency Code
+     C           SDCURR    PARM *BLANK    DSSDY            O:Format
+      *
+      **  Database Error
+     C           ##RTCD    IFNE *BLANK
+     C                     MOVEL'SDCURRPD'W0FILE
+     C                     MOVEL##CCY     W0KEY            ***************
+     C                     Z-ADD4         W0ERNB           * DB ERROR 04 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      **  If the currency has been retrieved earlier, position the
+      **  Currency Data data structure on the relevant occurrence.
+     C                     ELSE
+     C           C         OCUR SDCURR
+     C                     ENDIF
+     C*
+     C           EXDCDT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRINIT                                         *
+      * Function    :  Initial processing - First Call Only           *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *................................................................
+      *
+     C                     MOVEL'M'       WWMYIN
+     C                     MOVE '0'       *IN98
+      *................................................................
+      *
+     C           EXINIT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRINZ                                          *
+      * Function    :  Initialise Fields on Program Invocation        *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           SRINZ     BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRINZ '  @STK,Q
+      *
+      *................................................................
+      *
+      **  Initialise work fields
+     C                     Z-ADD*ZEROS    ##W050  50
+     C                     Z-ADD*ZEROS    ##W150 150
+     C                     Z-ADD*ZEROS    #1      60
+     C                     Z-ADD*ZEROS    #2      60
+     C                     Z-ADD*ZEROS    #3      60
+     C                     MOVE *BLANKS   S#PATH256
+     C                     Z-ADD1         #@BIND
+      *
+      **  Initialise output sequence (to CGUDTAPD)
+     C           *LIKE     DEFN DEOSEQ    ##OSEQ
+     C                     Z-ADD*ZEROS    ##OSEQ
+      *
+     C           EXINZ     TAG
+      *
+      *................................................................
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/SPACE 5
+     C/COPY CGCPYSRC,SRERRPSSR
+     C/SPACE 5
+     C/COPY CGCPYSRC,SRERRC
+** ##GRP/##RDE
+ACOF  0001 ACOF_CODE
+ACOF  0002 ACOF_DEPT
+ACOF  0003 ACOF_NAME
+ACOF  0004 ACOF_TELP
+ACOF  0005 ACOF_TELX
+P_CFMB0001 CSHF_MONTH
+P_CFMB0002 CSHF_YEAR
+P_CFMB0003 CSHF_CCY
+P_CFMB0004 CCY_DESC
+P_CFMB0005 CSHF_AMT_I AmountL
+P_CFMB0006 CSHF_AMT_O AmountL
+P_CFMB0007 CSHF_AMTNT AmountL
+P_CFMB0008 CSHF_AMTPC AmountL
+P_CFMB0009 CSHF_DATES
+P_CFMB0010 CSHF_DATEE
+P_CFMT0001 CSHF_TOTMN AmountL
+P_CFMT0002 CSHF_TOTZ  AmountL
+P_CSTB0001 CUSTOMER
+P_CSTB0002 CUST_NAME
+P_CSTB0003 CUST_TOWN
+P_CSTB0004 CUST_ADRCD
+P_CSTB0005 CUST_ADR1
+P_CSTB0006 CUST_ADR2
+P_CSTB0007 CUST_ADR3
+P_CSTB0008 CUST_ADR4
+P_CSTB0009 CUST_BSCCY
+P_CSTB0010 CUST_BSCDS
+P_PRTD0001 REQ_NUMBER
+P_PRTD0002 REQ_USER
+P_PRTD0003 REQ_REGEXT
+P_PRTD0004 REQ_FORUSE
+P_PRTD0005 REQ_HOLDM
+P_PRTD0006 REQ_DATEFX Date
+P_PRTD0007 REQ_DATEVL Date
+P_PRTD0008 REQ_PWHERE
+P_PRTD0009 REQ_PWHEN  Date
+P_PTFB0001 PORT_REF
+P_PTFB0002 PORT_REFF
+P_PTFB0003 PORT_NARR
+P_PTFB0004 PORT_CURR
+P_PTFB0005 PORT_CURRD
+** ##CPY  **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

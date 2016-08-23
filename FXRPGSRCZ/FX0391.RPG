@@ -1,0 +1,670 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FX Control sundry update')                       *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Foreign Exchange Module                              *
+     F*                                                               *
+     F*  FX0391 - MIDAS UPDATE CONTROL SUNDRY UPDATES                 *
+     F*                                                               *
+     F*     This program will be made redundant at DBA R4.00          *
+     F*     In the interim please check the new ILE RPG versions      *
+     F*     and apply any new fixes if they are appropriate.          *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CSW212             Date 03May12               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 07Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CAS004             Date 26Jun02               *
+      * Midas Release 4.01 -------------------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 154448             Date 13Jul98               *
+      *                 CEU003             Date 08Jan98               *
+      *                 CDL002             Date 14Apr97               *
+      *                 088674             DATE 22JUN95               *
+     F*                 088377             DATE 12JUN95               *
+     F*                 082738             DATE 01FEB95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSW212 - SWIFT 2012 Changes (Recompile)                      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CAS004 - Hedge Accounting Phase A (Recompile)                *
+      *  CDL008 - Continuous Linked Settlement (Recompiled)           *
+     F*  154448 - Correct update of online position file for swap deals
+      *  CEU003 - EMU Dealing Settlement Ccy conversion:              *
+      *           - Recompiled.                                       *
+     F*  CDL002 - Recompiled for new FX Netting fields on FXSTDDPP.   *
+     F*  088674 - As update deals file trailer is after updating      *
+     F*           deals details file, the deals details record id     *
+     F*           has already been changed from 'E'/'D' to 'R' on     *
+     F*           deleting swap deals. Make sure number of deletion   *
+     F*           on deals file trailer is updated correctly on such  *
+     F*           deletion of swap deals.  Applied fix 087219.        *
+     F*  088377 - DB Error on FXMIDBLL in FX0380 during reversal of   *
+     F*           a SWAP because record is locked.                    *
+     F*  082738 - Account Movements (NEW PROGRAM)                     *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                       *
+     F*                                                               *
+     F*       U7         DATABASE ERROR                               *
+     F*       U8         DATABASE ERROR                               *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*
+     F*  DTRIX header
+     F*
+     FSDTIX   UF  E           K        DISK         KINFSR INFSR A    UC
+     F                                              KINFDS @SDT
+     F                                              KCOMIT
+     F*
+     F*  Deals trailer
+     F*
+     FFXMIDBLLUF  E           K        DISK         KINFSR INFSR A    UC
+     F                                              KINFDS @MDEA
+     F                                              KCOMIT
+     E                    CPY@    1   1 80
+     E*
+     E**  Array for aligning integer/decimal portions of amount
+     E                    @ID        15  1
+     IZ#BSTS    E DSZ#BST
+     IZ#ASTS    E DSZ#AST
+     IZ#WSTS    E DSZ#WST
+     IZ#XSTS    E DSZ#XST                                                 154448
+     I@STDDP    E DSFXSTDDPP
+     I/COPY WNCPYSRC,FX0391I001
+     I** EXTERNALLY DEFINED DATA STRUCTURE USES FORMAT FROM PF/FXSTDDPP
+     I*
+     I**  FILE IN. DS. TO TEST IF FILE SDTIX IS OPEN.
+     I@SDT        DS
+     I                                     *STATUS  @STDT
+     I                                        9   9 @DTOPN
+     I*
+     I**  FILE IN. DS. TO TEST IF FILE FXMIDBLL IS OPEN.
+     I@MDEA       DS
+     I                                     *STATUS  @STEA
+     I                                        9   9 @MAOPN
+      *
+      **  Data Structure for aligning integer/decimal purchase amount
+     I            DS                             15
+     I                                        1  120@INT
+     I                                       13  150@DEC
+     I                                        1  15 @ID
+     I*
+     I** FIELD CONTAINING LAST UPDATE USER ID
+     IPSDS       SDS
+     I                                      201 208 @FILE
+     I                                      254 256 @USER
+     I*
+     I**  LOCAL DATA AREA FOR DATA BASE ERROR
+     I           UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* MAIN     - MAIN PROCESSING ROUTINE                            *
+     C*                                                               *
+     C* CALLS    #A       - INITIAL PROCESSING ROUTINE                *
+     C*          #B       - MAIN CONTROLLING ROUTINE                  *
+     C*          #C       - TERMINATION PROCESSING ROUTINE            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C** PERFORM INITIAL PROCESSING
+     C           @WORK     IFEQ 0                          B1
+     C                     EXSR #A
+     C                     Z-ADD99        @WORK   20
+     C                     END                             E1
+     C*
+     C** PERFORM MAINLINE PROCESSING
+     C           *INU7     IFEQ '0'                        B1
+     C           @TERM     ANDEQ' '
+     C                     EXSR #B
+     C                     END                             E1
+     C*
+     C** PERFORM TERMINATION PROCESSING
+     C                     EXSR #C
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #A       - INITIAL PROCESSING ROUTINE                         *
+     C*                                                               *
+     C* CALLS             -                                           *
+     C*                                                               *
+     C* CALLED BY  MAIN   - MAIN PROCESSING ROUTINE                   *
+     C*                                                               *
+     C*****************************************************************
+     C           #A        BEGSR
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C**  Define program work fields with reference to file fields.
+     C           *LIKE     DEFN RECI      @RECIC
+     C           *LIKE     DEFN RECI      @RECIB
+     C           *LIKE     DEFN RECI      @RELRI
+     C           *LIKE     DEFN DTYP      @RELDT
+     C*
+     C** SET UP PROGRAM NAME AND OPEN FILES
+     C                     MOVEL'FX0391'  DBPGM
+     C*
+     C           @DTOPN    IFEQ ' '                        B1
+     C                     OPEN SDTIX
+     C                     END                             E1
+     C*
+     C           @MAOPN    IFEQ ' '                        B1
+     C                     OPEN FXMIDBLL
+     C                     END                             E1
+     C*
+     C* Dummy write to ensure correct open conditions for dtrix
+     C*
+     C   71N71             WRITEDTRIXDF                71
+     C   71N71             WRITEDEALSDBF               71
+     C*
+     C** RECEIVE PARAMETERS FROM CALLING PROGRAM
+     C           *ENTRY    PLIST
+     C                     PARM           @TERM   1
+     C                     PARM           @STDDP
+     C                     PARM           @POVER  1
+     C                     PARM           Z#BSTS
+     C                     PARM           Z#ASTS
+     C                     PARM           Z#WSTS
+     C                     PARM           Z#XSTS                          154448
+     C/COPY WNCPYSRC,FX0391C001
+     C           #A9       ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #B       - MAIN CONTROLLING ROUTINE                           *
+     C*                                                               *
+     C* CALLS    - FX0380/AOOUFXU0                                    *
+     C*                                                               *
+     C* CALLED BY  MAIN   - MAIN PROCESSING ROUTINE                   *
+     C*                                                               *
+     C*****************************************************************
+     C           #B        BEGSR
+     C*
+     C**  Blank out related deal details
+     C                     MOVE *BLANK    @RECIC
+     C                     MOVE *BLANK    @RECIB
+     C                     MOVE *BLANK    @RELRI
+     C                     MOVE *BLANKS   @RELDT
+     C/COPY WNCPYSRC,FX0391C004
+     C*
+     C*  DUMMY CHAIN TO GET RECORD I.D FOR DEAL TRAILER UPDATE LATER.
+     C*
+     C           F3TYPE    IFEQ 'SW'                       B1
+     C           F3MACT    ANDEQ'R'
+     C                     MOVE F3DADN    @N6
+     C           @N6       CHAINFXMIDBLL             76
+     C                     MOVE RECI      @RECIC
+     C                     END                             E1
+     C*
+     C                     MOVE *BLANK    RECI
+     C*
+     C           F3TYPE    IFEQ 'SW'                       B1
+     C           F3MACT    ANDEQ'R'
+     C                     MOVE F3DN38    @N6     60
+     C***********@N6       CHAINFXMIDBLL             76                   088377
+     C           @N6       CHAINFXMIDBLL            N76                   088377
+     C                     MOVE RECI      @RECIB
+     C                     END                             E1
+     C*
+     C** UPDATE MIDAS DEALS FILES IF DEAL HAS BEEN AUTHORISED
+     C** @RADD will be the number of records added to DTRIXDD by FX0380
+     C*
+     C                     Z-ADD0         @RADD   10
+     C           F3DSTS    IFNE 'I'                        B1
+     C           F3DSTS    ANDNE'C'
+     c*
+     C           F3DSTS    IFNE 'R'                        B*2
+     C           F3DSTS    OREQ 'R'
+     C           F3LACT    ANDNE'A'
+     C/COPY WNCPYSRC,FX0391C002
+     C                     CALL 'FX0380'
+     C                     PARM           @TERM
+     C                     PARM           @STDDP
+     C                     PARM           @RADD
+     C                     PARM           @POVER
+     C                     END                             E*2
+     C*
+     C                     ELSE                            X1
+     C*
+     C           F3MACT    IFEQ 'R'                        B*2
+     C           F3TYPE    ANDEQ'SW'
+     C/COPY WNCPYSRC,FX0391C003
+     C                     CALL 'FX0380'
+     C                     PARM           @TERM
+     C                     PARM           @STDDP
+     C                     PARM           @RADD
+     C                     PARM           @POVER
+     C                     END                             E*2
+     C                     END                             E1
+     C*
+     C           @TERM     CABEQ'E'       #B9
+      *
+      ** If not Authorization
+      *
+     C           F3LACT    IFNE 'X'                        B1
+      *
+      ** Do On-line updates
+      *
+     C                     CALL 'AOOUFXU0'
+     C                     PARM           ##RTCD  7
+     C                     PARM           Z#BSTS
+     C                     PARM           Z#ASTS
+     C                     PARM           Z#WSTS
+     C                     PARM           Z#XSTS                          154448
+     C           ##RTCD    IFEQ '*ERROR*'
+     C                     MOVEL'E'       @TERM
+     C                     GOTO #B9
+     C                     END
+     C/COPY WNCPYSRC,FX0391C006
+     C                     END                             E1
+     C/COPY WNCPYSRC,FX0391C007
+     C*
+     C**   Update Deals file trailer
+     C*
+     C           F3DSTS    IFNE 'I'                        B1
+     C           F3DSTS    ANDNE'C'
+     C           F3MACT    OREQ 'R'
+     C           F3TYPE    ANDEQ'SW'
+     C           F3DSTS    ANDNE'C'
+     C                     EXSR #BD
+     C           *INU7     CABEQ'1'       #B9
+     C                     END                             E1
+     C*
+     C**   Update header record on deal index
+     C*
+     C                     Z-ADD*ZERO     DLNO
+     C           DLNO      CHAINSDTIX                7171
+     C           *IN71     IFEQ '1'                        B1
+     C                     MOVE '001'     DBASE            ***************
+     C                     MOVEL'SDTIX   'DBFILE           *             *
+     C                     MOVE *BLANKS   DBKEY            * DBERROR 001 *
+     C                     MOVELF3DN38    DBKEY            *             *
+     C                     MOVE '1'       *INU7            ***************
+     C                     MOVE '1'       *INU8
+     C                     GOTO #B9
+     C                     END                             E1
+     C*
+     C** @RADD is the actual number of records added to DTRIXDD
+     C*
+     C                     ADD  @RADD     NDLR
+     C*
+     C                     UPDATDTRIXHF                71
+     C           *IN71     IFEQ '1'                        B1
+     C                     MOVE '002'     DBASE            ***************
+     C                     MOVEL'SDTIX   'DBFILE           *             *
+     C                     MOVE *BLANKS   DBKEY            * DBERROR 002 *
+     C                     MOVELDLNO      DBKEY            *             *
+     C                     MOVE '1'       *INU7            ***************
+     C                     MOVE '1'       *INU8
+     C                     GOTO #B9
+     C                     END                             E1
+     C/COPY WNCPYSRC,FX0391C005
+     C*
+     C           #B9       ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #C       - TERMINATION PROCESSING ROUTINE                     *
+     C*                                                               *
+     C* CALLS             -                                           *
+     C*                                                               *
+     C* CALLED BY  MAIN   - MAIN PROCESSING ROUTINE                   *
+     C*                                                               *
+     C* FLDS USED  @TERM  - TERMINATION PARAMETER                     *
+     C*                                                               *
+     C*****************************************************************
+     C           #C        BEGSR
+     C*
+     C** IF TERMINATION PARAMETER IS 'T' OR DATABASE ERROR SET ON LR
+     C** BEFORE RETURNING CONTROL TO CALLING PROGRAM
+     C           *INU7     IFEQ '1'                        B1
+     C                     MOVE 'E'       @TERM
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C                     END                             E1
+     C*
+     C           @TERM     IFEQ 'T'                        B1
+     C                     MOVE '1'       *INLR
+     C                     END                             E1
+     C*
+     C                     RETRN
+     C*
+     C           #C9       ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #BD    - File DEALSDF                            *
+     C*                       Update deals trailer                    *
+     C*                                                               *
+     C*  FIELDS USED:                                                 *
+     C*                                                               *
+     C*                                                               *
+     C*  CALLED BY : #BA                                              *
+     C*  CALLS     :                                                  *
+     C*                                                               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #BD       BEGSR
+     C*
+     C**    Locate Static Indicator settings
+     C**       and buy/sell amounts, for related swap deal
+     C*
+     C           F3TYPE    IFEQ 'SW'                       B1
+     C           F3BROK    OREQ 'SWAP'
+     C*
+     C*  CHAIN TO RELATED DEAL RECORD FOR DEAL FILE TRAILER ALSO.
+     C                     MOVE F3DADN    @N6     60
+     C           @N6       CHAINFXMIDBLL             76
+     C                     END                             E1
+     C                     MOVE RECI      @RELRI
+     C                     Z-ADDPUAM      @RDDEC  30
+     C           PUAM      DIV  1000      @WRK   130
+     C                     Z-ADD@WRK      @RDINT 120
+     C           F3TYPE    IFEQ 'SW'                       B1
+     C                     MOVE F3TYPE    @RELDT
+     C                     ELSE                            X1
+     C                     MOVE DTYP      @RELDT
+     C                     END                             E1
+     C*
+     C*     Access the deals trailer record
+     C*
+     C                     Z-ADD999999    @N6
+     C           @N6       CHAINFXMIDBLL             7171
+     C           *IN71     IFEQ '1'                        B1
+     C                     MOVE '003'     DBASE            ***************
+     C                     MOVEL'DEALSDF 'DBFILE           *             *
+     C                     MOVE *BLANKS   DBKEY            * DBERROR 003 *
+     C                     MOVE '1'       *INU7            *             *
+     C                     MOVE '1'       *INU8            ***************
+     C                     GOTO #BD9
+     C                     END                             E1
+     C*
+     C**    Set up purchase amount in @INT/@DEC (Integer/decimal)
+     C*
+     C**   Determine whether amount 1 or 2 is purchase, and load
+     C*
+     C                     Z-ADD*ZERO     @DEC
+     C           F3DAM1    IFGT *ZERO                      B1
+     C                     MOVE F3DAM1    @X15   15
+     C                     ELSE                            X1
+     C                     MOVE F3DAM2    @X15
+     C                     END                             E1
+     C*
+     C                     MOVEA@X15      @ID,1
+     C*
+     C           @DEC      IFLT *ZERO                      B1
+     C                     Z-SUB@INT      @INT
+     C                     END                             E1
+     C*
+     C**    Update control totals for insertions
+     C*
+     C           F3MACT    IFEQ 'I'                        B1
+     C                     ADD  1         NORE
+     C                     ADD  1         NINS
+     C                     ADD  1         NLRA
+     C           F3TYPE    IFNE 'OT'                       B*2
+     C*
+     C**   Add in new amounts
+     C                     Z-ADDVRIF      @OLDIT 150
+     C                     Z-ADDVRIL      @OLDDC 150
+     C                     EXSR #BDA
+     C                     Z-ADD@NEWIT    VRIF
+     C                     Z-ADD@NEWDC    VRIL
+     C*
+     C**   Add in new amounts
+     C                     Z-ADDVLAF      @OLDIT 150
+     C                     Z-ADDVLAL      @OLDDC 150
+     C                     EXSR #BDA
+     C                     Z-ADD@NEWIT    VLAF
+     C                     Z-ADD@NEWDC    VLAL
+     C                     END                             E*2
+     C                     END                             E1
+     C*
+     C**    Update control totals for reversals  (main deal)
+     C*
+     C           F3MACT    IFEQ 'R'                        B1
+     C*
+     C           F3TYPE    IFNE 'SW'                       B*2
+     C           @RECIB    OREQ 'D'
+     C           @RECIB    OREQ 'E'                        **2            088674
+     C                     ADD  1         NDEL
+     C                     SUB  1         NLRA
+     C           F3TYPE    IFNE 'OT'                       B**3
+     C*
+     C**   Add in new amounts
+     C                     Z-ADDVRDF      @OLDIT 150
+     C                     Z-ADDVRDL      @OLDDC 150
+     C                     EXSR #BDA
+     C                     Z-ADD@NEWIT    VRDF
+     C                     Z-ADD@NEWDC    VRDL
+     C*
+     C**   Subtract new amounts (reverse signs and add)
+     C                     Z-SUB@INT      @INT
+     C                     Z-SUB@DEC      @DEC
+     C                     Z-ADDVLAF      @OLDIT 150
+     C                     Z-ADDVLAL      @OLDDC 150
+     C                     EXSR #BDA
+     C                     Z-ADD@NEWIT    VLAF
+     C                     Z-ADD@NEWDC    VLAL
+     C* correct the signs for futher use
+     C                     Z-SUB@INT      @INT
+     C                     Z-SUB@DEC      @DEC
+     C                     END                             E**3
+     C                     END                             E*2
+     C*
+     C**    Update control totals for reversals  (related deal)
+     C*
+     C           @RELDT    IFEQ 'SW'                       B*2
+     C           *IN76     ANDEQ'0'
+     C***********@RELRI    IFEQ 'D'                                       088674
+     C***********@RELRI    OREQ 'E'                                       088674
+     C           @RECIC    IFEQ 'D'                                       088674
+     C           @RECIC    OREQ 'E'                                       088674
+     C                     ADD  1         NDEL
+     C                     SUB  1         NLRA
+     C*
+     C**   Add in amounts for related deal.
+     C                     Z-ADD@RDDEC    @DEC
+     C                     Z-ADD@RDINT    @INT
+     C*
+     C**   Add in new amounts
+     C                     Z-ADDVRDF      @OLDIT 150
+     C                     Z-ADDVRDL      @OLDDC 150
+     C                     EXSR #BDA
+     C                     Z-ADD@NEWIT    VRDF
+     C                     Z-ADD@NEWDC    VRDL
+     C*
+     C**   Subtract new amounts (reverse signs and add)
+     C                     Z-SUB@INT      @INT
+     C                     Z-SUB@DEC      @DEC
+     C                     Z-ADDVLAF      @OLDIT 150
+     C                     Z-ADDVLAL      @OLDDC 150
+     C                     EXSR #BDA
+     C                     Z-ADD@NEWIT    VLAF
+     C                     Z-ADD@NEWDC    VLAL
+     C* correct the signs for futher use
+     C                     Z-SUB@INT      @INT
+     C                     Z-SUB@DEC      @DEC
+     C                     END                             E*3
+     C                     END                             E*2
+     C*
+     C                     END                             E1
+     C*
+     C*     Write the results back to disk
+     C*
+     C                     UPDATDEALSDFF               71
+     C           *IN71     IFEQ '1'                        B1
+     C                     MOVE '004'     DBASE            ***************
+     C                     MOVEL'DEALSDF 'DBFILE           *             *
+     C                     MOVE *BLANKS   DBKEY            * DBERROR 004 *
+     C                     MOVE '1'       *INU7            *             *
+     C                     MOVE '1'       *INU8            ***************
+     C                     GOTO #BD9
+     C                     END                             E1
+     C*
+     C           #BD9      ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*   Subroutine #BDA :  To add decimal and integer amounts
+     C*                      to file trailer totals
+     C*
+     C*   Uses  :   @TOTDC    Working decimal total     (4,0)
+     C*             @TOTIT    Working integer total     (15,0)
+     C*   Input :   @OLDDC    Old decimal total         (3,0)
+     C*             @OLDIT    Old integer total         (15,0)
+     C*             @DEC      Decimal value to be added (3,0)
+     C*             @INT      Integer value to be added (15,0)
+     C*   Output:   @NEWDC    New decimal total         (3,0)
+     C*             @NEWIT    New integer total         (15,0)
+     C*
+     C*****************************************************************
+     C*
+     C           #BDA      BEGSR
+     C*
+     C**  Initialise fields
+     C                     Z-ADD*ZERO     @TOTDC  40
+     C                     Z-ADD@OLDIT    @NEWIT 150
+     C*
+     C** Ensure that the decimal has the same sign as the integer
+     C** (On file the decimal already has a sign ie. @OLDDC)
+     C           @INT      IFLT *ZERO                      B1
+     C           @DEC      ANDGT*ZERO
+     C                     Z-SUB@DEC      @DEC
+     C                     END                             E1
+     C*
+     C**  Decimals
+     C**  Add the new decimals to the old total
+     C           @DEC      ADD  @OLDDC    @TOTDC
+     C*
+     C**  Monitor for overflow (eg. -15 + -990 = -1005)
+     C           @TOTDC    IFLT -999                       B1
+     C                     SUB  1         @NEWIT
+     C                     END                             E1
+     C*
+     C**  Monitor for overflow (eg. 15 + 990 = 1005)
+     C           @TOTDC    IFGT 999                        B1
+     C                     ADD  1         @NEWIT
+     C                     END                             E1
+     C*
+     C** If -ve decimals must correct to get correct amount & +/-
+     C           @OLDDC    IFGE 0                          B1
+     C           @NEWIT    ANDGT0
+     C           @TOTDC    ANDLT*ZERO
+     C                     ADD  1000      @TOTDC
+     C           @NEWIT    SUB  1         @NEWIT
+     C                     END                             E1
+     C*
+     C           @OLDDC    IFLT 0
+     C           @NEWIT    ANDLT0
+     C           @TOTDC    ANDGE0
+     C                     ADD  1         @NEWIT
+     C                     SUB  1000      @TOTDC
+     C                     END
+     C*
+     C**  Return decimals as a 3,0 field
+     C                     MOVE @TOTDC    @NEWDC  30
+     C*
+     C**  Integers
+     C**  Add the integers to the overflow corrected old total
+     C                     ADD  @INT      @NEWIT
+     C*
+     C           #BDA9     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR    - PROGRAM ERROR SUBROUTINE                           *
+     C*                                                               *
+     C* CALLS             -                                           *
+     C*                                                               *
+     C* CALLED BY         -                                           *
+     C*****************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C** SET @ERR1 TO 'Y' TO PREVENT LOOPING IF FURTHER ERRORS
+     C           @ERR1     IFNE 'Y'                        B1
+     C                     MOVE 'Y'       @ERR1   1
+     C                     MOVE '1'       *INU6
+     C*
+     C** SET UP FIELDS IN LOCAL DATA AREA
+     C                     MOVEL'FX0391'  DBPGM
+     C                     MOVEL'991'     DBASE
+     C*
+     C                     DUMP
+     C                     END                             E1
+     C*
+     C** TERMINATE THE PROGRAM
+     C                     MOVE 'E'       @TERM
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* INFSR    - FILE ERROR SUBROUTINE                              *
+     C*                                                               *
+     C* CALLS             -                                           *
+     C*                                                               *
+     C* CALLED BY         -                                           *
+     C*                                                               *
+     C*****************************************************************
+     C           INFSR     BEGSR
+     C*
+     C** SET @ERR1 TO 'Y' TO PREVENT LOOPING IF FURTHER ERRORS
+     C           @ERR2     IFNE 'Y'                        B1
+     C                     MOVE 'Y'       @ERR2   1
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C*
+     C** SET UP FIELDS IN LOCAL DATA AREA
+     C                     MOVE @FILE     DBFILE
+     C                     MOVEL'FX0391'  DBPGM
+     C                     MOVE '992'     DBASE
+     C*
+     C                     DUMP
+     C                     END                             E1
+     C*
+     C** TERMINATE THE PROGRAM
+     C                     MOVE '1'       *INLR
+     C                     MOVE 'E'       @TERM
+     C                     RETRN
+     C                     ENDSR
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

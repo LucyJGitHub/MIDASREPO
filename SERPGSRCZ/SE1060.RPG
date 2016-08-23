@@ -1,0 +1,517 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Turnover Extract - Trades')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE1060  - TURNOVER EXTRACT - TRADES                          *
+     F*                                                               *
+     F*  Function: To extract data from Trades and Clients for        *
+     F*   (COB)    production of the Client Turnover Report & Summary *
+     F*            and Security Turnover Report.                      *
+     F*            Trades extracted are those for which both of the   *
+     F*            following conditions hold:                         *
+     F*            - made complete this month                         *
+     F*            - primary and secondary market                     *
+     F*            and which have not been deleted.                   *
+     F*                                                               *
+     F*  Called by: SEC0803 - Client Turnover Report                  *
+     F*             SEC0804 - Security Turnover Report                *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027A            Date 17May06               *
+      *  Prev Amend No. CPK024             Date 13Feb06               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 099392             Date 18APR96               *
+      *                 S01496             Date 15JUL94               *
+     F*                S01502              DATE 02DEC94               *
+     F*                S01455              DATE 05NOV93               *
+     F*                052254              DATE 10JAN94               *
+     F*                E37990              DATE 16APR92               *
+     F*                E29170              DATE 01NOV91               *
+     F*                S01117              DATE 29MAY91               *
+     F*                S01269              DATE 17JUL90               *
+     F*                S01271              DATE 19JUN90               *
+     F*                E18620              DATE 24JUL89               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
+      *  CPK024 - Packaging for MPLUS 1.2.1. EUTX from data structure *
+      *           SESTAT was renamed to EUTXB                         *
+     F*  099392 - Cancelled security trades still being printed in    *
+     F*           SECURITIES TRADING SECURITY TURNOVER REPORT         *
+     F*           (SE1075P1).                                         *
+     F*  S01496 - Incorporation of JYSKE Enhancements (S10978)        *
+     F*  S01502 - BLI TELEKURS PROCESSING, RECOMPILED DUE TO CHANGE   *
+     F*           IN LENGTH OF SESTAT, 133 LONG.                      *
+     F*  S01455 - 'FF' ACCOUNT KEY ENHANCEMENTS.                      *
+     F*           Recompiled due to changes in PF/TABTB80.            *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  E37990 - Trades that had been cancelled today should not     *
+     F*           be extracted                                        *
+     F*  E29170 - Report Control Facility changes                     *
+     F*  S01117 - Multibranching                                      *
+     F*  S01269 - Trades Authorisation - Check if record is already   *
+     F*           Authorised                                          *
+     F*  S01271 - Recompiled for Pay/Receive in Input Cycle changes   *
+     F*           to TRADSD and/or DPTMVD                             *
+     F*  E18620 - Recompile to pick up new SESTAT                     *   E18620
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FTRADS   IF  E           K        DISK
+     FCLINT   IF  E           K        DISK
+     F            CLINTCAF                          KIGNORE
+     F            CLINTCCF                          KIGNORE
+     F            CLINTC1F                          KIGNORE
+     FTABICD  IF  E           K        DISK
+     F            TABLETAF                          KIGNORE
+     F*           TABTB10F                          KIGNORE
+     F            TABTB11F                          KIGNORE
+     F            TABTB35F                          KIGNORE
+     F            TABTB36F                          KIGNORE
+     F            TABTB20F                          KIGNORE
+     F            TABTB30F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTB50F                          KIGNORE
+     F            TABTB55F                          KIGNORE
+     F***         TABTB70F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     FTRADSA  IF  E                    DISK
+     FSEERALL2IF  E           K        DISK                           UC  S01496
+     FTOVRTD  O   E                    DISK         KINFDS IDDDS
+     F                                              KINFSR IDDSR
+     FTOVRTA  O   E                    DISK         KINFDS IDADS
+     F                                              KINFSR IDASR
+     FSE1060AUO   E                    PRINTER
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   10  - ERROR ON CHAIN                                        *
+     F*   57  - DIFFERENCE MSG REQUIRED                               *
+     F*   71  - SETLL equal indicator for LF/SEERALL2                 *   S01496
+     F*         (exclude transaction generated from ER)               *   S01496
+     F*   80  - END OF FILE ON TRADS                                  *
+     F*                                                               *
+     F* 90-99 - Used in Standard Subroutines.                         *
+     F*                                                               *
+     F*   U7  - DATABASE ERROR                                        *
+     F*   U8  - DATABASE ERROR                                        *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  FIRST  - FIRST TIME PROCESSING                               *
+     F*  AUDIT  - AUDIT TIME PROCESSING                               *
+     F*  *PSSR  - Error handling                                      *   S01117
+     F*                                                               *
+     F*  IDDSR  - HANDLE ERRORS IN TOVRTD                             *
+     F*  IDASR  - HANDLE ERRORS IN TOVRTA                             *
+     F*                                                               *
+     F*  ZSYSTM - ACCESS ICD RECORD                                   *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      /SPACE 3
+     I*
+     I* RENAME USED FIELD ON TRADSA - UNLIKE THAT ON TOVRTA
+     ITRADSAF
+     I              NORE                            ZRIN
+     I*
+     IIDDDS       DS                            366
+     I                                     *STATUS  STSIDD
+     IIDADS       DS                            366
+     I                                     *STATUS  STSIDA
+     I*
+     ISESTAT    E DS
+     I              EUTX                            EUTXB                                     CPK024
+     I*
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*LDA******* UDS                            256                      S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      /EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*
+     C**  ACCESS ICD INFORMATION
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANK    DBLOT                           S01117
+     C                     MOVE 'SE1060  'DBPGM
+     C                     OUT  LDA                                       S01117
+     C                     EXSR FIRST
+     C*
+     C**  CHECK FOR DATABASE ERRORS
+     C*
+     C           *IN99     CABEQ'1'       EAUDIT
+     C*
+     C**  READ EACH TRADE RECORD VIA TRADS
+     C*
+     C                     READ TRADS                    80
+     C           *IN80     DOWNE'1'
+     C*
+     C**  Maintain count of trade records input
+     C*
+     C           RECI      IFNE '*'
+     C                     ADD  1         ZINS
+     C                     END
+     C*                                                                   S01496
+     C*    Check if current transaction comes from Early Redemption       S01496
+     C*                                                                   S01496
+     C           S01496    IFEQ 'Y'                                       S01496
+     C           TDRF      SETLLSEERALL2                 71               S01496
+     C           *IN71     IFEQ '1'                        FOUND          S01496
+     C                     GOTO NXTTRD                                    S01496
+     C                     END                                            S01496
+     C                     END                                            S01496
+     C*
+     C** Check whether trade is to be extracted -
+     C*****Last*change*date*must*not*EQ*D*****
+     C*****Last*change*date*must*not*EQ*D*unless*RECI*is*R**********S01269E37790
+     C**   Last change type must not EQ D unless RECI is R                E37790
+     C**   Date made complete must be GE start of month date
+     C*****RECI*must*not*equal*L*or*P*******************************S01269E37790
+     C*****RECI*must*not*equal*L,*P*or*C***********************    E37790 099392
+     C**   Record ID (RECI) must not be equal to L, P, C, or '*'.         099392
+     C**   AND market must be P or S
+     C*
+     C           CHTP      IFNE 'D'
+     C           CHTP      OREQ 'D'                                       S01269
+     C           RECI      ANDEQ'R'                                       S01269
+     C*                                                                   S01269
+     C           RECI      IFNE 'L'                                       S01269
+     C           RECI      ANDNE'P'                                       S01269
+     C           RECI      ANDNE'C'                                       E37990
+     C           RECI      ANDNE'*'                                       099392
+     C*
+     C           TDMC      IFGE WKSM
+     C           TDMI      ANDEQ'P'
+     C           TDMC      ORGE WKSM
+     C           TDMI      ANDEQ'S'
+     C*
+     C** Trade record is to be extracted
+     C*
+     C** Set up & output extract record
+     C*
+     C** Set up record ID, branch, market
+     C*
+     C                     MOVE 'D'       RECI
+     C***********          MOVE TDBR      TOBR                            S01117
+     C                     MOVE TDBA      TOBA                            S01117
+     C                     MOVE TDMI      TOMK
+     C*
+     C** Access client file for discretionary indicator
+     C*
+     C           TCNR      CHAINCLINTSEF             10
+     C           *IN10     IFEQ '0'
+     C           RECI      IFEQ '*'
+     C                     SETON                     10
+     C                     END
+     C                     END
+     C           *IN10     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'CLINT'   DBFILE           *****************
+     C                     MOVELTCNR      DBKEY            ** DB ERROR 02 **
+     C                     Z-ADD2         DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     99U7U8
+     C                     GOTO EAUDIT
+     C                     END
+     C*
+     C** Set up market/portfolio indicator
+     C*
+     C           C1DI      IFEQ 'D'
+     C           C1DI      OREQ 'S'
+     C                     MOVE 'P'       TOPI
+     C                     ELSE
+     C                     MOVE C1DI      TOPI
+     C                     END
+     C*
+     C** Set up client,nominal ccy,book,trade ref,countervalue,
+     C** nominal,nominal d.p.,security
+     C*
+     C**********           Z-ADDTCNR      TOCT                                               CSD027A
+     C                     MOVE TCNR      TOCT                                               CSD027A
+     C                     MOVE TNMC      TONC
+     C                     MOVE TDBK      TOBK
+     C                     MOVE TDRF      TORT
+     C                     Z-ADDTCTR      TOCV
+     C                     Z-ADDNOML      TONO
+     C                     Z-ADDTNMD      TODP
+     C                     MOVE TDSS      TOSS
+     C*
+     C** Access client file for counterparty
+     C*
+     C           TCNR      CHAINCLINTCBF             10
+     C           *IN10     IFEQ '0'
+     C           RECI      IFEQ '*'
+     C                     SETON                     10
+     C                     END
+     C                     END
+     C           *IN10     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'CLINT'   DBFILE           *****************
+     C                     MOVELTCNR      DBKEY            ** DB ERROR 03 **
+     C                     Z-ADD3         DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     99U7U8
+     C                     GOTO EAUDIT
+     C                     END
+     C*
+     C** Set up customer report name & town
+     C*
+     C                     MOVE CRNM      TORN
+     C                     MOVE CTWN      TOTW
+     C*
+     C** Output record
+     C*
+     C                     WRITETOVRTDF
+     C*
+     C** Maintain count of records written
+     C*
+     C                     ADD  1         ZROUT
+     C*
+     C                     END
+     C                     END
+     C                     END                                            S01269
+     C*
+     C           NXTTRD    TAG                                            S01496
+     C*
+     C** Read next trade file record
+     C*
+     C                     READ TRADS                    80
+     C                     END
+     C*
+     C           EAUDIT    TAG                             ** EAUDIT **
+     C*
+     C**  OUTPUT RUN CONTROL REPORT
+     C*
+     C                     EXSR AUDIT
+     C*
+     C*================================================================
+     C*  P R O G R A M     E N D
+     C*================================================================
+     C*
+     C*                                                                   S01496
+     C*    Close file if feature Jyske Enhancements is on                 S01496
+     C*                                                                   S01496
+     C           S01496    IFEQ 'Y'                                       S01496
+     C                     CLOSESEERALL2                                  S01496
+     C                     END                                            S01496
+     C*                                                                   S01496
+     C                     SETON                     LR
+     C*
+     C**********************************************************************
+      /EJECT
+     C**********************************************************************
+     C*
+     C* FIRST - SUBROUTINE TO ACCESS ICD INFORMATION
+     C*
+     C**********************************************************************
+     C*
+     C           FIRST     BEGSR                           ** FIRST **
+     C*
+     C**  ACCESS ICD
+     C*
+     C                     EXSR ZSYSTM
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           *****************
+     C                     MOVEL'ICDR1'   DBKEY            ** DB ERROR 01 **
+     C                     Z-ADD1         DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END
+     C*
+     C**  Calculate start of month date in day no format -
+     C**   = end of previous month + 1
+     C*
+     C           *NAMVAR   DEFN           SESTAT
+     C                     IN   SESTAT
+     C                     MOVE EOPM      WKSM
+     C           WKSM      ADD  1         WKSM    50
+      *                                                                   S01496
+      **  Access SAR details file to see if JYSKE Enhcmts is installed.   S01496
+      *                                                                   S01496
+     C                     CALL 'AOSARDR0'                                S01496
+     C                     PARM '       ' @RTCD   7                       S01496
+     C                     PARM '*VERIFY' @OPTN   7                       S01496
+     C                     PARM 'S01496'  WSARD   6                       S01496
+      *                                                                   S01496
+     C           @RTCD     IFEQ *BLANK                                    S01496
+     C                     MOVE 'Y'       S01496  1                       S01496
+     C                     OPEN SEERALL2                                  S01496
+     C                     END                                            S01496
+     C*
+     C                     ENDSR
+     C**********************************************************************
+      /EJECT
+     C*
+     C**********************************************************************
+     C*
+     C*  AUDIT  - SR TO UPDATE AUDIT RECORD AND OUTPUT CONTROL REPORT
+     C*
+     C**********************************************************************
+     C*
+     C           AUDIT     BEGSR                           ** AUDIT **
+     C*
+     C**  ACCESS TRADSA RECORD IF NO ERRORS
+     C*
+     C           *INU8     IFEQ '0'
+     C                     READ TRADSA                   10
+     C           *IN10     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TRADS'   DBFILE           *****************
+     C                     MOVEL'AUDIT'   DBKEY            ** DB ERROR 04 **
+     C                     Z-ADD4         DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE
+     C*
+     C**  CHECK RECORD COUNTS
+     C*
+     C           ZINS      IFNE ZRIN
+     C                     SETON                     57U8
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C*
+     C**  OUTPUT CONTROL REPORT
+     C*
+     C                     WRITEHEADAU
+     C           *INU7     IFEQ '0'
+     C                     WRITECONTROL
+     C                     ELSE
+     C                     WRITEERROR
+     C                     END
+     C***********                                                         E29170
+     C***********          WRITETRAILAU                                   E29170
+     C*
+     C**  OUTPUT CONTROL RECORD TO TOVRTA
+     C*
+     C           *INU8     IFEQ '0'
+     C                     Z-ADDZROUT     NORE
+     C                     WRITETOVRTAF
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  IDDSR  - SUBROUTINE FOR ERROR HANDLING OF TOVRTD
+     C*
+     C*****************************************************************
+     C*
+     C           IDDSR     BEGSR
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TOVRTD'  DBFILE
+     C                     MOVELTDRF      DBKEY
+     C                     Z-ADD5         DBASE
+     C                     MOVE STSIDD    DBSTAT
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE '1'       *IN87
+     C                     SETON                     99U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*   IDASR  - SUBROUTINE FOR ERROR HANDLING OF TOVRTA
+     C*
+     C*****************************************************************
+     C*
+     C           IDASR     BEGSR
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TOVRTA'  DBFILE
+     C                     MOVEL'AUDIT'   DBKEY
+     C                     Z-ADD6         DBASE
+     C                     MOVE STSIDA    DBSTAT
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE '1'       *IN87
+     C                     SETON                     99U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+     C*
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+     C*****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+      /EJECT
+      ***
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

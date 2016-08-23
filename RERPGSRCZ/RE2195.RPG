@@ -1,0 +1,1203 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas BRT S352 statement Print')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Retail Module
+     F*                                                                  *
+     F*    RE2195 - BRT S352 STATEMENT PRINT                             *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CRE007             Date 01Mar01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 180467             Date 03Aug00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                          135415              DATE 30APR99        *
+     F*                          102906              DATE 02MAY96        *
+     F*                          042015              DATE 08JUL92        *
+     F*                          S01383              DATE 27APR92        *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  CRE007 - Base Rate Tax 2001 - Recompile.                        *
+     F*  180467 - If retail account numbers are used and the retail.     *
+     F*           account number is zero, use full account reference.    *
+     F*  135415 - Prevent over-write of RECI in INTPSDD.              *
+     F*       102906 - No title or date printed on audit list RE2195P3.  *
+     F*       042015 - PARAMETER IS NO LONGER PASSED FROM COMPONENT AS   *
+     F*                THIS IS A MANDATORY REPORT AND SHOULD ALWAYS      *
+     F*                PASS A BLANK FIRST PARAMETER TO ZSFILE            *
+     F*                                                                  *
+     F*       S01383 - BASIC RATE TAX INCORPORATION                      *
+     F*                NEW PROGRAM                                       *
+     F*                                                                  *
+     F********************************************************************
+     FSTMREQL1IF  E           K        DISK         KINFSR *PSSR
+     FTABLETR IF  E           K        DISK         KINFSR *PSSR
+     FCLINT   IF  E           K        DISK         KINFSR *PSSR
+     FSDCBRTL1IF  E           K        DISK         KINFSR *PSSR
+     FACCNT   IF  E           K        DISK         KINFSR *PSSR
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+     FINTPSL12UF  E           K        DISK         KINFSR *PSSR
+     F            INTPSDDF                          KRENAMEINTPS12F
+     FINTPSL13UF  E           K        DISK         KINFSR *PSSR
+     F            INTPSDDF                          KRENAMEINTPS13F
+     FINTPSL14UF  E           K        DISK         KINFSR *PSSR
+     FRE2195P1O   E                    PRINTER
+     F                                              KINFDS SPOOL1
+     FRE2195P2O   E                    PRINTER
+     F                                              KINFDS SPOOL2
+     FRE2195P3O   E                    PRINTER
+     F                                              KINFDS SPOOL3
+      /EJECT
+      *****************************************************************
+      **
+      **    F U N C T I O N   O F   I N D I C A T O R S
+      **    ~~~~~~~~~~~~~~~   ~~~   ~~~~~~~~~~~~~~~~~~~
+      **        01          END OF FILE, INTPSL14
+      **        02          END OF FILE, STMREQL1
+      **        03          RECORD NOT FOUND, INTPSL12
+      **        04          RECORD NOT FOUND, INTPSL13
+      **        05          CHAIN FAIL, CLINT
+      **        06          CHAIN FAIL, SDCBRTL1
+      **        07          CHAIN FAIL, ACCNT
+      **
+      **        20          ON = PRINT DEAL, OFF = PRINT A/C NUM
+      **        21          ON = MISSING ADDRESS
+      **        22          ON = MISSING PARTY
+      **        23          ON = PART-LIABLE
+      **        24          ON = LIABLE PARTY 1
+      **        25          ON = LIABLE PARTY 2
+      **
+      **        30          ON = PARTY 1 PRESENT
+      **        31          ON = PARTY 2 PRESENT
+      **        32          ON = PARTY 3 PRESENT
+      **        33          ON = PARTY 4 PRESENT
+      **        34          ON = PARTY 5 PRESENT
+      **
+      **        97          RECORD NOT FOUND, TABLETR
+      **        98          ON = DATE FORMAT MMDDYY, FROM ZSYSTM
+      **        99          ERROR IN ZDATE1
+      **
+      **        U7          DATABASE ERROR
+      **        U8          DATABASE ERROR
+      **        LR          END OF PROGRAM
+      **
+      *****************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZDATE1Z1
+      *
+      * RENAME FIELD ON STMREQL1
+     ISTMREQF
+     I              CNA1                            CNA1ST
+      * RENAME FIELD ON INTPSDDF                                          135415
+     IINTPSDDF                                                            135415
+     I              RECI                            CRECI                 135415
+      * RENAME FIELD ON INTPS12F                                          135415
+     IINTPS12F                                                            135415
+     I              RECI                            CRECI                 135415
+      * RENAME FIELD ON INTPS13F                                          135415
+     IINTPS13F                                                            135415
+     I              RECI                            CRECI                 135415
+      * RENAME FIELDS ON ACCNT
+     IACCNTABF
+     I              CNUM                            ACNUM
+     I              CCY                             ACCY
+     I              ACOD                            AACOD
+     I              ACSQ                            AACSQ
+     I              BRCA                            ABRCA
+      *
+     ILDA         DS                            256
+     I                                        1 256 DBLDA
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     IRUNDAT      DS
+     I                                       13  13 @MBIN
+      *
+     ITAXYR       DS                              4
+      * DATA STRUCTURE TO INCLUDE CENTURY IN YEAR NUMBER
+     I                                        1   2 CC
+     I                                        3   4 YR
+      *
+     IRUNYDS      DS                              7
+      * DATA STRUCTURE TO OBTAIN YEAR FROM RUN DATE (ALPHA)
+     I                                        6   7 YY
+      *
+     IISSDAT      DS                              7
+      * DATA STRUCTURE TO PRINT DATE OF ISSUE IN DDMMMYYY FORMAT
+     I                                        1   5 DDMMM
+     I                                        6   7 TY
+      *
+     IZDATEA      DS                              6
+      * DATA STRUCTURE TO CONVERT DATE TO MIDAS NUMBER
+     I                                        1   4 DDMM
+     I                                        5   6 ZY
+      *
+     I***PACNO**     DS                             18                                        CGL029
+     IPACNO       DS                             24                                           CGL029
+      * DATA STRUCTURE TO PRINT THE ACCOUNT NUMBER
+     I                                        1   6 PCNUM
+     I                                        7   9 PCCY
+     I**********                             10  13 PACOD                                     CGL029
+     I**********                             14  15 PACSQ                                     CGL029
+     I                                       10  19 PACOD                                     CGL029
+     I                                       20  21 PACSQ                                     CGL029
+     I                                       10  15 PDLNO
+     I**********                             16  18 PBRCA                                     CGL029
+     I                                       22  24 PBRCA                                     CGL029
+     I***ACKDS**     DS                             18                                        CGL029
+     IACKDS       DS                             24                                           CGL029
+      * DATA STRUCTURE FOR ACCNT KEY
+     I**********                              1   60WCNUM                                     CSD027
+     I                                        1   6 WCNUM                                     CSD027
+     I                                        7   9 WCCY
+     I**********                             10  130WACOD                                     CGL029
+     I**********                             14  150WACSQ                                     CGL029
+     I**********                             16  18 WBRCA                                     CGL029
+     I                                       10  190WACOD                                     CGL029
+     I                                       20  210WACSQ                                     CGL029
+     I                                       22  24 WBRCA                                     CGL029
+     I*
+     ISPOOL1      DS
+     I*
+     I**  DS FOR P1 SPOOL FILE NAME
+     I*
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I**
+     ISPOOL2      DS
+     I*
+     I**  DS FOR P2 SPOOL FILE NAME
+     I*
+     I                                       83  92 SFILE2
+     I                                    B 123 1240SFNUM2
+     I**
+     ISPOOL3      DS
+     I*
+     I**  DS FOR P3 SPOOL FILE NAME
+     I*
+     I                                       83  92 SFILE3
+     I                                    B 123 1240SFNUM3
+     ISDBANK    E DSSDBANKPD
+     I** EXTERNAL DS FOR BANK DETAILS
+     I*
+     ISDRETL    E DSSDRETLPD
+     I** EXTERNAL DS FOR GENERAL LEDGER DETAILS
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+      /EJECT
+     C***************************************************************
+      *
+      ** PERFORM INITIAL PROCESSING
+      *
+     C                     EXSR A#INIT
+      *
+      ** PERFORM DETAIL PROCESSING
+      *
+     C           *INU8     IFNE '1'                        B1
+      *
+      ** End of tax year or on request ?
+      *
+     C           EOTY      IFEQ 'Y'                        B*2
+     C                     EXSR B#EOT
+     C                     ELSE                            X*2
+     C                     EXSR B#REQ
+     C                     END                             E*2
+      *
+     C                     END                             E1
+      *
+      ** PERFORM FINAL PROCESSING
+      *
+     C                     EXSR C#END
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      /EJECT
+      **********************************************************
+      *                                                        *
+      *         I N D E X   O F   S U B R O U T I N E S        *
+      *         ~~~~~~~~~   ~~~   ~~~~~~~~~~~~~~~~~~~~~        *
+      *                                                        *
+      *          A#INIT - INITIAL PROCESSING                   *
+      *                                                        *
+      *          B#EOT  - DETAIL PROCESSING : END OF TAX YEAR  *
+      *          B#REQ  - DETAIL PROCESSING : ON REQUEST       *
+      *                                                        *
+      *          BA#CUS - CUSTOMER DETAILS                     *
+      *          BB#BRN - BRANCH DETAILS                       *
+      *          BC#SUM - ACCUMULATE INTEREST TOTALS           *
+      *          BD#PRT - SET UP S352 STATEMENT                *
+      *          BE#PTY - LIABLE PARTY PROCESSING              *
+      *                                                        *
+      *          C#END  - FINAL PROCESSING                     *
+      *                                                        *
+      *          ZSYSTM - ACCESS I.C.D. RECORD 1               *
+      *          DBER   - DEFAULT ERROR HANDLING               *
+      *          *PSSR  - STANDARD DB ERROR ROUTINE            *
+      *                                                        *
+      *          ZDATE1 - CONVERT DATE TO MIDAS NUMBER         *
+      *                                                        *
+      **********************************************************
+      /EJECT
+      **********************************************************
+      *                                                        *
+      *   A#INIT - INITIAL PROCESSING                          *
+      *                                                        *
+      *   CALLED BY :  MAIN PROCESS                            *
+      *                                                        *
+      *   CALLS     :  ZSYSTM, ZDATE1                          *
+      *                                                        *
+      *                                                        *
+      **********************************************************
+      *
+     C           A#INIT    BEGSR
+      *
+      ** SETUP FIELDS FOR LDA
+      *
+     C                     MOVEL'RE2195'  #PGM
+     C*
+     C* READ IN PARAMETER
+     C           *ENTRY    PLIST
+     C*********************PARM           PSEQ    5                       042015
+     C                     PARM           EOTY    1
+     C*
+     C* SET UP KEY LIST FOR CHAIN TO LF/ACCNT
+     C*
+     C           ACCKEY    KLIST
+     C                     KFLD           WCNUM
+     C                     KFLD           WCCY
+     C                     KFLD           WACOD
+     C                     KFLD           WACSQ
+     C                     KFLD           WBRCA
+     C*
+     C** RCF Processing for Detail Printer Files
+     C*
+     C                     EXSR RCFP1
+     C                     EXSR RCFP2
+     C                     EXSR RCFP3
+     C*
+     C* CALL ACCESS PROGRAM FOR BANK DETAILS
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'#FILE            *************
+     C                     MOVEL'001'     #BASE            * DBERR 001 *
+     C                     MOVEL'FIRST  ' #KEY             *************
+     C                     EXSR DBER
+     C                     END
+     C                     MOVE BJURPT    TITL                            102906
+     C                     MOVE BJMRDT    RUNA                            102906
+      *
+      * Set up Header Details and date format.
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     END
+      *
+     C                     MOVE BJMRDT    RUNYDS
+      *
+      ** SET UP LAST DAY OF CALENDAR YEAR AS MIDAS NUMBER
+      *
+     C                     MOVE '3112'    DDMM
+     C                     MOVE YY        ZY
+     C                     MOVE ZDATEA    ZDATE   60
+      *
+     C                     EXSR ZDATE1
+     C                     Z-ADDZDAYNO    LDCAL   60
+      *
+      ** SET UP LAST DAY OF TAX YEAR IN THIS CALENDAR YEAR AS MIDAS NO
+      *
+     C                     MOVE '0504'    DDMM
+     C                     MOVE YY        ZY
+     C                     MOVE ZDATEA    ZDATE   60
+      *
+     C                     EXSR ZDATE1
+      ** RESULT IN ZDAYNO
+      *
+      ** IF RUN DATE IS BETWEEN 1 JAN AND 5 APR THEN CALENDAR YEAR IS
+      ** ALSO TAX YEAR
+      ** BUT IF RUN DATE IS BETWEEN 6 APR AND 31 DEC THEN TAX YEAR IS
+      ** NEXT CALENDAR YEAR
+      ** SET UP LAST 2 DIGITS FOR CURRENT TAX YEAR
+      *
+     C           BJRDNB    IFGT ZDAYNO                     B1
+     C           BJRDNB    ANDLELDCAL
+     C                     MOVE YY        #YY
+     C                     ADD  1         #YY
+     C                     MOVE #YY       YY
+     C                     MOVE YY        ZY
+     C                     MOVE ZDATEA    ZDATE   60
+      *
+     C                     EXSR ZDATE1
+      ** RESULT IN ZDAYNO
+     C                     END                             E1
+     C**
+     C**  GET RUNDAT to access MULTI-BRANCHING flag.
+     C**
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*
+     C* CALL ACCESS PROGRAM FOR RETAIL DETAILS
+     C*
+     C                     CALL 'AORETLR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDRETL    PARM SDRETL    DSFDY
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDRETLPD'#FILE            *************
+     C                     MOVEL'002'     #BASE            * DBERR 002 *
+     C                     MOVEL'FIRST  ' #KEY             *************
+     C                     EXSR DBER
+     C                     END
+      *
+     C                     Z-ADD0         WDLNO   60
+     C**********           Z-ADD0         WCNUM                                               CSD027
+     C                     MOVE *BLANKS   WCNUM                                               CSD027
+     C                     MOVE *BLANKS   WCCY    3
+     C                     Z-ADD0         WACOD
+     C                     Z-ADD0         WACSQ
+     C                     MOVE *BLANKS   WBRCA
+      *
+     C                     Z-ADD0         MISADR  10
+     C                     Z-ADD0         MISPTY  10
+     C                     Z-ADD0         S352A   90
+     C                     Z-ADD0         S352B   90
+      *
+      ** INITIAL READ
+     C           EOTY      IFEQ 'Y'
+     C                     READ INTPSL14                 01
+     C                     ELSE
+     C                     READ STMREQL1                 02
+     C                     END
+      *
+     C           A#9       ENDSR
+      *
+      **********************************************************
+      /EJECT
+      **********************************************************
+      *                                                        *
+      *   B#EOT  - DETAIL PROCESSING : END OF TAX YEAR         *
+      *                                                        *
+      *   CALLED BY :  MAIN PROCESS                            *
+      *                                                        *
+      *   CALLS     : BA#CUS, BB#BRN, BC#SUM, BD#PRT, BE#PTY   *
+      *                                                        *
+      *                                                        *
+      **********************************************************
+      *
+     C           B#EOT     BEGSR
+      *
+     C           *IN01     DOWEQ'0'                        B1
+      * Obtain branch details
+     C                     EXSR BB#BRN
+      *
+     C           BRCA      DOWEQWBRCA                      B*2
+     C           *IN01     ANDNE'1'
+      * Obtain customer details
+     C                     EXSR BA#CUS
+      *
+     C           CNUM      DOWEQWCNUM                      B**3
+     C           *IN01     ANDNE'1'
+      * Initialise cumulative tax and interest fields
+      *
+     C                     Z-ADD0         BRTSUM 130
+     C                     Z-ADD0         GRISUM 130
+     C                     Z-ADD0         BRTCR  130
+      * Process deal
+      * ------------
+     C           DLNO      IFNE *ZEROS                     B***4
+     C                     SETON                     20
+     C**********           Z-ADDCNUM      WCNUM                                               CSD027
+     C                     MOVE CNUM      WCNUM                                               CSD027
+     C                     MOVE DLNO      WDLNO
+      *
+     C           DLNO      DOWEQWDLNO                      B****5
+     C           *IN01     ANDNE'1'
+      * Check S352 flag not already set and date of interest payment
+      * within current tax year
+     C           S352RI    IFEQ 'Y'                        B*****6
+     C           IPDT      ORGT ZDAYNO
+     C                     GOTO B1#1
+     C                     END                             E*****6
+      *
+     C                     EXSR BC#SUM
+      *
+      * If all details present update S352 flag
+     C           MISADR    IFEQ 0                          B*****6
+     C           MISPTY    ANDEQ0
+     C                     MOVE 'Y'       S352RI
+     C                     UPDATINTPSDDF
+     C                     END                             E*****6
+     C*
+     C                     EXSR BE#PTY
+      *
+     C           B1#1      TAG
+     C                     READ INTPSL14                 01
+     C                     END                             E****5
+      * Print S352
+     C                     EXSR BD#PRT
+     C                     MOVE *ZEROS    WDLNO
+      *
+     C                     ELSE                            X***4
+      * Process account
+      * ---------------
+     C                     SETOF                     20
+     C**********           Z-ADDCNUM      WCNUM                                               CSD027
+     C                     MOVE CNUM      WCNUM                                               CSD027
+     C                     MOVE CCY       WCCY
+     C                     Z-ADDACOD      WACOD
+     C                     Z-ADDACSQ      WACSQ
+     C                     MOVE BRCA      WBRCA
+      *
+     C           CNUM      DOWEQWCNUM                      B****5
+     C           CCY       ANDEQWCCY
+     C           ACOD      ANDEQWACOD
+     C           ACSQ      ANDEQWACSQ
+     C           BRCA      ANDEQWBRCA
+     C           *IN01     ANDNE'1'
+      * Check S352 flag not already set and date of interest payment
+      * within current tax year
+     C           S352RI    IFEQ 'Y'                        B*****6
+     C           IPDT      ORGT ZDAYNO
+     C                     GOTO B1#2
+     C                     END                             E*****6
+      *
+     C                     EXSR BC#SUM
+      *
+      * If all details present update S352 flag
+     C           MISADR    IFEQ 0                          B*****6
+     C           MISPTY    ANDEQ0
+     C                     MOVE 'Y'       S352RI
+     C                     UPDATINTPSDDF
+     C                     END                             E*****6
+      *
+     C                     EXSR BE#PTY
+      *
+     C           B1#2      TAG
+     C                     READ INTPSL14                 01
+     C                     END                             E****5
+      * Print S352
+     C                     EXSR BD#PRT
+      *
+     C**********           Z-ADD0         WCNUM                                               CSD027
+     C                     MOVE *BLANKS   WCNUM                                               CSD027
+     C                     MOVE *BLANKS   WCCY
+     C                     Z-ADD0         WACOD
+     C                     Z-ADD0         WACSQ
+     C                     MOVE *BLANK    WBRCA
+      *
+     C                     END                             E***4
+      *
+     C                     END                             E**3
+     C                     END                             E*2
+     C                     END                             E1
+      *
+     C           B1#9      ENDSR
+      /EJECT
+      **********************************************************
+      *                                                        *
+      *   B#REQ  - DETAIL PROCESSING : ON REQUEST              *
+      *                                                        *
+      *   CALLED BY :  MAIN PROCESS                            *
+      *                                                        *
+      *   CALLS     : BA#CUS, BB#BRN, BC#SUM, BD#PRT, BE#PTY   *
+      *                                                        *
+      *                                                        *
+      **********************************************************
+      *
+     C           B#REQ     BEGSR
+      *
+     C           *IN02     DOWEQ'0'                        B1
+      * Obtain customer details
+     C                     EXSR BA#CUS
+      * Initialise cumulative tax and interest fields
+      *
+     C                     Z-ADD0         BRTSUM
+     C                     Z-ADD0         GRISUM
+     C                     Z-ADD0         BRTCR
+      * Process deal
+      * ------------
+     C           DLNO      IFNE *ZEROS                     B*2
+     C                     SETON                     20
+     C**********           Z-ADDCNUM      WCNUM                                               CSD027
+     C                     MOVE CNUM      WCNUM                                               CSD027
+     C                     MOVE DLNO      WDLNO
+      *
+     C           DLKEY     KLIST
+     C                     KFLD           CNUM
+     C                     KFLD           DLNO
+      *
+     C           DLKEY     CHAININTPSL12             03
+      *
+     C           *IN03     IFEQ '0'                        B**3
+      * Obtain branch details
+     C                     EXSR BB#BRN
+     C                     END                             E**3
+      *
+     C           *IN03     DOWEQ'0'                        B**3
+     C           DLNO      ANDEQWDLNO
+      * Check S352 flag not already set
+     C           S352RI    IFEQ 'Y'                        B***4
+     C                     GOTO B2#1
+     C                     END                             E***4
+      * If date of interest payment in next tax year, print current yr
+      * S352 (if any) and then process 'future' S352
+     C           IPDT      IFGT ZDAYNO                     B***4
+     C           NEXTYR    ANDNE'1'
+      *
+     C                     EXSR BD#PRT
+     C                     Z-ADD0         BRTSUM
+     C                     Z-ADD0         GRISUM
+     C                     Z-ADD0         BRTCR
+      *
+     C                     MOVE '1'       NEXTYR  1
+     C                     END                             E***4
+      *
+     C                     EXSR BC#SUM
+      *
+      * If all details present update S352 flag
+     C           MISADR    IFEQ 0                          B***4
+     C           MISPTY    ANDEQ0
+     C                     MOVE 'Y'       S352RI
+     C                     UPDATINTPS12F
+     C                     END                             E***4
+      * Obtain liable party information
+     C                     EXSR BE#PTY
+      *
+     C           B2#1      TAG
+     C                     READ INTPSL12                 03
+     C                     END                             E**3
+      * Print S352
+     C                     EXSR BD#PRT
+      *
+     C                     MOVE *ZEROS    WDLNO
+      *
+     C                     ELSE                            X*2
+      * Process account
+      * ---------------
+     C                     SETOF                     20
+     C**********           Z-ADDCNUM      WCNUM                                               CSD027
+     C                     MOVE CNUM      WCNUM                                               CSD027
+     C                     MOVE CCY       WCCY
+     C                     Z-ADDACOD      WACOD
+     C                     Z-ADDACSQ      WACSQ
+     C                     MOVE BRCA      WBRCA
+      *
+     C           ACKEY     KLIST
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C                     KFLD           BRCA
+      *
+     C           ACKEY     CHAININTPSL13             04
+      *
+     C           *IN04     IFEQ '0'                        B**3
+      * Obtain branch details
+     C                     EXSR BB#BRN
+     C                     END                             E**3
+      *
+     C           *IN04     DOWEQ'0'                        B**3
+     C           CNUM      ANDEQWCNUM
+     C           CCY       ANDEQWCCY
+     C           ACOD      ANDEQWACOD
+     C           ACSQ      ANDEQWACSQ
+     C           BRCA      ANDEQWBRCA
+      * Check S352 flag not already set
+     C           S352RI    IFEQ 'Y'                        B***4
+     C                     GOTO B2#2
+     C                     END                             E***4
+      * If date of interest payment in next tax year, print current yr
+      * S352 (if any) and then process 'future' S352
+     C           IPDT      IFGT ZDAYNO                     B***4
+     C           NEXTYR    ANDNE'1'
+      *
+      * Obtain liable party information
+     C                     EXSR BE#PTY
+     C                     EXSR BD#PRT
+     C                     Z-ADD0         BRTSUM
+     C                     Z-ADD0         GRISUM
+     C                     Z-ADD0         BRTCR
+      *
+     C                     MOVE '1'       NEXTYR  1
+     C                     END                             E***4
+      *
+     C                     EXSR BC#SUM
+      *
+      * If all details present update S352 flag
+     C           MISADR    IFEQ 0                          B***4
+     C           MISPTY    ANDEQ0
+     C                     MOVE 'Y'       S352RI
+     C                     UPDATINTPS13F
+     C                     END                             E***4
+      *
+      * Obtain liable party information
+     C                     EXSR BE#PTY
+     C           B2#2      TAG
+     C                     READ INTPSL13                 04
+     C                     END                             E**3
+      * Print S352
+     C                     EXSR BD#PRT
+      *
+     C**********           Z-ADD0         WCNUM                                               CSD027
+     C                     MOVE *BLANKS   WCNUM                                               CSD027
+     C                     MOVE *BLANKS   WCCY
+     C                     Z-ADD0         WACOD
+     C                     Z-ADD0         WACSQ
+     C                     MOVE *BLANKS   WBRCA
+      *
+     C                     END                             E*2
+      *
+     C           B2#3      TAG
+     C                     READ STMREQL1                 02
+     C                     END                             E1
+      *
+     C           B2#9      ENDSR
+      *
+      **********************************************************
+      /EJECT
+      **********************************************************
+      *                                                        *
+      *   BA#CUS - CUSTOMER DETAILS                            *
+      *                                                        *
+      *   CALLED BY :  B#EOT, B#REQ                            *
+      *                                                        *
+      *   CALLS     :                                          *
+      *                                                        *
+      *   RETURNS A FLAG MISADR SET TO 1 IF MISSING ADDRESS    *
+      *                                                        *
+      **********************************************************
+      *
+     C           BA#CUS    BEGSR
+      *
+     C                     Z-ADD0         MISADR
+     C**********           Z-ADDCNUM      WCNUM                                               CSD027
+     C                     MOVE CNUM      WCNUM                                               CSD027
+      *
+      * Access CLINT to obtain Customer Address from record type B
+      * If no record type B found, set on missing address flag
+     C           CNUM      CHAINCLINTCCF             05
+      *
+     C           *IN05     IFEQ '0'                        B1
+     C           RECI      ANDNE'D'
+     C           RECI      ANDNE'C'
+     C                     MOVE '1'       *IN05
+     C                     END                             E1
+      *
+     C           *IN05     IFEQ '1'                        B1
+     C                     Z-ADD1         MISADR
+     C                     MOVE CNA1ST    CCNA1
+     C                     SETON                     21
+     C                     ELSE                            X1
+      * Set up customer address fields for print
+     C                     MOVE CNA1      CCNA1
+     C                     MOVE CNA2      CCNA2
+     C                     MOVE CNA3      CCNA3
+     C                     MOVE CNA4      CCNA4
+     C                     END                             E1
+      *
+      * Access SDCBRTL1 for BRT details for this customer
+     C           CNUM      CHAINSDCBRTL1             06
+      *
+     C           *IN06     IFEQ '1'                        B1
+     C                     MOVEL'SDCBRTL1'#FILE            ****************
+     C                     MOVELCNUM      #KEY             * DB ERROR 003 *
+     C                     MOVEL'003'     #BASE            ****************
+     C                     EXSR DBER
+      *
+     C                     ELSE                            X1
+      * Work out how many parties to this account
+     C                     SETOF                     303132
+     C                     SETOF                     3334
+      *
+     C           H1SEQN    IFNE 0                          B*2
+     C                     SETON                     30
+     C                     END                             E*2
+      *
+     C           H2SEQN    IFNE 0                          B*2
+     C                     SETON                     31
+     C                     END                             E*2
+      *
+     C           H3SEQN    IFNE 0                          B*2
+     C                     SETON                     32
+     C                     END                             E*2
+      *
+     C           H4SEQN    IFNE 0                          B*2
+     C                     SETON                     33
+     C                     END                             E*2
+      *
+     C           H5SEQN    IFNE 0                          B*2
+     C                     SETON                     34
+     C                     END                             E*2
+      *
+     C                     END                             E1
+      *
+     C           BA#9      ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      **********************************************************
+      *                                                        *
+      *   BB#BRN - BRANCH DETAILS                              *
+      *                                                        *
+      *   CALLED BY :  B#EOT, B#REQ                            *
+      *                                                        *
+      *   CALLS     :                                          *
+      *                                                        *
+      *                                                        *
+      **********************************************************
+      *
+     C           BB#BRN    BEGSR
+      *
+     C                     MOVE BRCA      WBRCA
+      * Save customer number
+     C**********           Z-ADDCNUM      #CNUM   60                                          CSD027
+     C                     MOVE CNUM      #CNUM   6                                           CSD027
+      *
+      ** USING MULTI-BRANCH INDICATOR, OBTAIN BANK INTERNAL CUSTOMER NUMBER
+     C           @MBIN     IFEQ 'Y'                        B1
+     C           BRCA      CHAINTABLETRF             97
+     C                     ELSE                            X1
+      * FIND A LIVE BRANCH CODES RECORD
+     C                     MOVE ' '       RECI
+     C           *LOVAL    SETLLTABLETR
+     C           RECI      DOWNE'D'                        B*2
+     C           *IN97     ANDNE'1'
+     C                     READ TABLETR                  97
+     C                     END                             E*2
+      *
+     C                     END                             E1
+      *
+     C           *IN97     IFEQ '1'                        B1
+     C                     MOVEL'BRNCH'   #FILE            ****************
+     C                     MOVELBRCA      #KEY             * DB ERROR 004 *
+     C                     MOVEL'004'     #BASE            ****************
+     C                     EXSR DBER
+      *
+     C                     ELSE                            X1
+      *
+     C                     MOVE BICN      CNUM
+      * Access CLINT to obtain Bank Address from record type B
+     C           CNUM      CHAINCLINTCCF             05
+      *
+     C           *IN05     IFEQ '1'                        B*2
+     C                     MOVEL'CLINTCC' #FILE            ****************
+     C                     MOVELBICN      #KEY             * DB ERROR 005 *
+     C                     MOVEL'005'     #BASE            ****************
+     C                     EXSR DBER
+      *
+     C                     ELSE                            X*2
+      * Set up Bank address fields for print
+     C                     MOVE CNA1      BCNA1
+     C                     MOVE CNA2      BCNA2
+     C                     MOVE CNA3      BCNA3
+     C                     MOVE CNA4      BCNA4
+     C                     END                             E*2
+     C                     END                             E1
+      *
+      * Restore customer number
+     C**********           Z-ADD#CNUM     CNUM                                                CSD027
+     C                     MOVE #CNUM     CNUM                                                CSD027
+      *
+     C           BB#9      ENDSR
+      *
+      **********************************************************
+      /EJECT
+      **********************************************************
+      *                                                        *
+      *   BC#SUM - ACCUMULATE INTEREST AND TAX TOTALS          *
+      *                                                        *
+      *   CALLED BY :  B#EOT, B#REQ                            *
+      *                                                        *
+      *   CALLS     :                                          *
+      *                                                        *
+      *                                                        *
+      **********************************************************
+      *
+     C           BC#SUM    BEGSR
+      *
+      * Accumulate gross interest
+     C           STGGRI    ADD  GRISUM    GRISUM
+      *
+      * Accumulate BRT deducted
+     C           STGBRT    IFGT 0                          B1
+     C           STGBRT    ADD  BRTSUM    BRTSUM
+     C                     END                             E1
+      *
+      * Accumulate BRT credited
+     C           CRBRTS    IFGT 0                          B1
+     C           CRBRTS    ADD  BRTCR     BRTCR
+     C                     END                             E1
+      *
+     C           BC#9      ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      **********************************************************
+      *                                                        *
+      *   BD#PRT - SET UP S352 STATEMENT                       *
+      *                                                        *
+      *   CALLED BY :  B#EOT, B#REQ                            *
+      *                                                        *
+      *   CALLS     :                                          *
+      *                                                        *
+      *                                                        *
+      **********************************************************
+      *
+     C           BD#PRT    BEGSR
+      *
+      * Calculate net interest = gross - BRT deducted + BRT credited
+     C           GRISUM    SUB  BRTSUM    NETSUM 130
+     C           BRTCR     ADD  NETSUM    NETSUM
+      *
+      * ADJUST TAX DEDUCTED FIGURE FOR PRINT
+      *
+     C           BRTSUM    SUB  BRTCR     BRTSUM
+      *
+      ** SET UP TAX YEAR USING YEAR FROM BJMRDT ON TABTB10
+      ** IF THIS IS FUTURE S352 WORK OUT NEXT TAX YEAR
+     C           NEXTYR    IFEQ '1'                        B1
+     C                     MOVE YY        #YY     20
+     C                     ADD  1         #YY
+     C                     MOVE #YY       YR
+     C                     ELSE                            X1
+     C                     MOVE YY        YR
+     C                     END                             E1
+      *
+     C           YY        IFGT '72'
+     C                     MOVE '19'      CC
+     C                     ELSE
+     C                     MOVE '20'      CC
+     C                     END
+      * Calculate date of issue
+     C           EOTY      IFEQ 'Y'                        B1
+     C                     MOVE ' 5APR'   DDMMM
+     C                     MOVE YY        TY
+     C                     ELSE                            X1
+     C                     MOVE BJMRDT    ISSDAT
+     C                     END                             E1
+     C*
+     C* Determine the Account Number to use
+     C*
+     C* If record is an account
+     C*
+     C           WACOD     IFNE 0                          B1
+     C*
+     C* Check if Retail Account Numbers are to be used
+     C*
+     C           BMRANR    IFEQ 'Y'                        B*2
+     C           ACCKEY    CHAINACCNT                07
+     C*
+     C* If no matching record found on LF/ACCNT
+     C* OR retail account number is zero                                  180467
+     C*
+     C           *IN07     IFEQ '1'                        B**3
+     C           ACNO      OREQ *ZERO                                     180467
+     C*
+     C* Use standard account number
+     C*
+     C                     MOVE *BLANKS   PACNO
+     C                     MOVE WCNUM     PCNUM
+     C                     MOVE WCCY      PCCY
+     C                     MOVE WACOD     PACOD
+     C                     MOVE WACSQ     PACSQ
+     C                     MOVE WBRCA     PBRCA
+     C                     ELSE                            X**3
+     C*
+     C* Set up Account Number  with Retail Account Number
+     C*
+     C                     MOVE *BLANKS   PACNO
+     C                     MOVELACNO      PACNO
+     C                     END                             E**3
+     C                     ELSE                            X*2
+     C*
+     C* If Retail Account Numbers not to be used, use standard account
+     C* number.
+     C*
+     C                     MOVE *BLANKS   PACNO
+     C                     MOVE WCNUM     PCNUM
+     C                     MOVE WCCY      PCCY
+     C                     MOVE WACOD     PACOD
+     C                     MOVE WACSQ     PACSQ
+     C                     MOVE WBRCA     PBRCA
+     C                     END                             E*2
+     C*
+     C* If record is a deal use Customer Number and Deal Number comb.
+     C*
+     C                     ELSE                            X1
+     C                     MOVE *BLANKS   PACNO
+     C                     MOVE WCNUM     PCNUM
+     C                     MOVE WDLNO     PDLNO
+     C                     END                             E1
+      *
+      * If all data present, print S352
+     C           MISADR    IFEQ 0                          B1
+     C           MISPTY    ANDEQ0
+     C                     WRITERE2195F1
+     C                     ADD  1         S352A
+      *
+      * else, print S352 with error messages
+     C                     ELSE                            X1
+     C                     WRITERE2195F2
+     C                     ADD  1         S352B
+     C                     END                             E1
+      *
+      * Reset print indicators for missing details
+     C                     SETOF                     2122
+     C                     MOVE '0'       NEXTYR
+      *
+     C           BD#9      ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      **********************************************************
+      *                                                        *
+      *   BE#PTY - LIABLE PARTY PROCESSING                     *
+      *                                                        *
+      *   CALLED BY :  B#EOT, B#REQ                            *
+      *                                                        *
+      *   CALLS     :                                          *
+      *                                                        *
+      *   RETURNS A FLAG MISPTY SET TO 1 IF MISSING PARTY      *
+      *                                                        *
+      **********************************************************
+      *
+     C           BE#PTY    BEGSR
+      *
+      * Set off indicators
+     C                     SETOF                     232425
+     C                     Z-ADD0         MISPTY
+      *
+      * Set on indicator 23 if this is a part-liable account
+     C           ACHLRT    IFEQ 'J'                        B1
+     C           BRTCAT    ANDEQ'P'
+     C                     SETON                     23
+      * Find liable party
+     C           H1BRTL    IFEQ 'Y'                        B*2
+     C           H2BRTL    ANDNE'Y'
+     C                     SETON                     24
+      *
+     C                     ELSE                            X*2
+     C           H1BRTL    IFNE 'Y'                        B**3
+     C           H2BRTL    ANDEQ'Y'
+     C                     SETON                     25
+      *
+     C                     ELSE                            X**3
+      * Not conclusive so check liable party numbers
+     C           H1SEQN    IFEQ LIAPTY                     B***4
+     C                     SETON                     24
+      *
+     C                     ELSE                            X***4
+     C           H2SEQN    IFEQ LIAPTY                     B****5
+     C                     SETON                     25
+      *
+     C                     ELSE                            X****5
+      * Liable party information missing
+     C                     Z-ADD1         MISPTY
+     C                     SETON                     22
+      *
+     C                     END                             E****5
+     C                     END                             E***4
+     C                     END                             E**3
+     C                     END                             E*2
+     C                     END                             E1
+      *
+     C           BE#9      ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      **********************************************************
+      *                                                        *
+      *   C#END  - FINAL PROCESSING                            *
+      *                                                        *
+      *   CALLED BY :  MAIN PROCESS                            *
+      *                                                        *
+      *   CALLS     :                                          *
+      *                                                        *
+      *                                                        *
+      **********************************************************
+      *
+     C           C#END     BEGSR
+      * Produce audit report
+     C                     WRITERE2195F3
+     C           C#9       ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      **
+      **    DEFAULT ERROR HANDLING
+      **
+      **    CALLED FROM:  anywhere
+      **    CALLS:        returns.
+      **
+     C           DBER      BEGSR                                       ***
+      **
+     C           *LIKE     DEFN DBKEY     #KEY
+     C           *LIKE     DEFN DBASE     #BASE
+     C           *LIKE     DEFN DBFILE    #FILE
+     C           *LIKE     DEFN DBPGM     #PGM
+      **
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL#PGM      DBPGM
+     C                     MOVEL#KEY      DBKEY
+     C                     MOVEL#FILE     DBFILE
+     C                     MOVEL#BASE     DBASE
+     C                     OUT  LDA
+      *
+     C                     WRITEDBERR
+     C                     EXSR *PSSR
+      **
+     C                     ENDSR
+      **
+     C********************************************************************
+      /EJECT
+      ****************************************************************
+      *                                                              *
+      * *PSSR - DATABASE ERROR PROCESSING                            *
+      *         CALLS : NO SUBROUTINES                               *
+      *                                                              *
+      ****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      * Set on U7 and LR
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+      *
+      * Produce program dump.
+     C                     DUMP
+      *
+      * Return
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF
+     C*
+     C********************************************************************
+     C*
+     C           RCFP1     BEGSR                            ** RCFP1 **
+     C*
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUM1    ZSNUM   60
+     C**
+     C                     CALL 'ZSFILE'
+     C*********************PARM           PSEQ    5                       042015
+     C                     PARM *BLANKS   PSEQ    5                       042015
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM *BLANKS   ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  RCFP2 -- SUBROUTINE TO REGISTER P2 PRINTER FILE VIA RCF
+     C*
+     C********************************************************************
+     C*
+     C           RCFP2     BEGSR                            ** RCFP2 **
+     C*
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUM2    ZSNUM   60
+     C**
+     C                     CALL 'ZSFILE'
+     C*********************PARM           PSEQ    5                       042015
+     C                     PARM *BLANKS   PSEQ    5                       042015
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE2
+     C                     PARM           ZSNUM
+     C                     PARM *BLANKS   ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  RCFP3 -- SUBROUTINE TO REGISTER P3 PRINTER FILE VIA RCF
+     C*
+     C********************************************************************
+     C*
+     C           RCFP3     BEGSR                            ** RCFP3 **
+     C*
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUM3    ZSNUM   60
+     C**
+     C                     CALL 'ZSFILE'
+     C*********************PARM           PSEQ    5                       042015
+     C                     PARM *BLANKS   PSEQ    5                       042015
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE3
+     C                     PARM           ZSNUM
+     C                     PARM *BLANKS   ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+      /COPY ZSRSRC,ZDATE1Z2
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365

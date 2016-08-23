@@ -1,0 +1,1201 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Book-profit centre matrix maintenance')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Security Module                                      *
+      *                                                               *
+      *  SE0317 - Book-Profit Centre Matrix Maintenance               *
+      *                                                               *
+      *  Function:  This maintenance screen allows the user to enter  *
+      *  (I/C)      a book and profit centre authorised to use that   *
+      *             book.  This will enable a particular book to be   *
+      *             used by different profit centres and a profit     *
+      *             centre to use different books in their business.  *
+      *             The user should define a unique 'pseudo book' for *
+      *             every book-profit centre combination.             *
+      *                                                               *
+      *  Called By: SEC0315 - Book-Profit Centre Matrix Maintenance   *
+      *             Control Program                                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *  Last Amend No. 182323             Date 07Jul00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CAC005  *Create    Date 23Nov98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  182323 - F10 confirmation of delete added and ability to     *
+      *           reinsert deleted Book/Profit Centre Pseudo book     *
+      *  CAC005 - Profit Centre Accounting - SE Enhancement           *
+      *                                                               *
+      *****************************************************************
+     FSDBKPCL1UF  E           K        DISK         KINFSR *PSSR A
+     FSDBKPCL3UF  E           K        DISK         KINFSR *PSSR          182323
+     F            SDBKPCD0                          KRENAMESDBKPCD1       182323
+     FSDFCTLL1UF  E           K        DISK         KINFSR *PSSR A
+     FSE0317DFCF  E                    WORKSTN      KINFSR *PSSR
+     F                                              KINFDS DSP1DS
+     F*                                             KINFDS DSP2DS
+     F                                        RRN   KSFILE SE0317S0
+     F                                        RN2   KSFILE SE0317S1
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  30 - Display Footer                                          *
+      *  40 - All are valid                                           *
+      *  41 - Error in Book Code                                      *
+      *  42 - Error in Profit Centre                                  *
+      *  43 - Error in Pseudo Book                                    *
+      *  44 - Error in action code                                    *
+      *  46 - Current record updated in add mode do not write new one *   182323
+      *  49 - Display indicator for Deletion                          *   182323
+      *  70 - Subfile Display                                         *
+      *  71 - Subfile Display Control                                 *
+      *  72 - Subfile End                                             *
+      *  73 - Subfile next Change                                     *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRP002 - Program Initialisation                              *
+      *  SRP003 - Process Main Screen Details                         *
+      *  SRP004 - Build Subfile                                       *
+      *  SRP005 - 'Add Mode' Processing                               *
+      *  SRP006 - Build Empty Subfile                                 *
+      *  SRP007 - Validate 'Add Mode' Fields                          *
+      *  SRP008 - Write records to Database                           *
+      *  SRP009 - Validate Action Criteria                            *
+      *  SRP010 - 'Amend Mode' Processing                             *
+      *  SRP011 - Updat Audit File                                    *
+      *  SRP012 - 'Delete Mode' Processing                            *   182323
+      *                                                               *
+      *  *PSSR  - Program exception error routine                     *
+      *  CLEAR  - Clears message files                                *
+      *  ZASNMS - Display error messages                              *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E                    INP       300  6
+      *
+      ** Array containing book-profit centre combination
+      *
+     E                    PSB       300  2
+      *
+      ** Array containing pseudo book
+      *
+      /SPACE 3
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM SPGM
+     I                                      244 253 SWSID
+     I                                      254 263 SUSER
+     IDSP1DS      DS
+      ** File Information Data Structure for SE0317DF
+      *
+     I                                    B 378 3790RRN1
+     IDSP2DS      DS
+      ** File Information Data Structure for SE0317DF
+      *
+     I                                    B 378 3790RRN2
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     ISDBOOK    E DSSDBOOKPD
+      **  Book Details
+      *
+     ISDPRFC    E DSSDPRFCPD
+      ** Profit Centre Details
+      *
+     ISDBKPC    E DSSDBKPCPD
+      ** Book-Profit Centre Matirx
+      *
+     IDSSDY     E DSDSSDY
+      ** DS for access programs, Long data structure
+      *
+     IDSFDY     E DSDSFDY
+      ** DS for access programs, Short data structure
+      *
+      /COPY ZSRSRC,ZSEDITZ2
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  P001 - Main Processing                                       *
+      *                                                               *
+      *  Called by: None                                              *
+      *                                                               *
+      *  Calls:     SRP002 - Program Initialisation                   *
+      *             SRP003 - Process Main Screen Details              *
+      *                                                               *
+      *****************************************************************
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+     C                     EXSR SRP002
+     C                     EXSR SRP003
+      *
+     C                     MOVE *ON       *INLR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP002 - Program Initialisation                              *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:     AOBANKR0 - Bank ICD Access Object                 *
+      *             SRP004   - Build Subfile                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP002    BEGSR
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SE0317'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Get Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Initialise Selection Criteria Screen Fields
+      *
+     C                     MOVE *BLANKS   SACT
+     C                     MOVE *BLANKS   SBOKC
+     C                     MOVE *BLANKS   SPRFC
+     C                     MOVE *BLANKS   SPSBK
+     C                     MOVE *BLANKS   SBC
+     C                     MOVE *BLANKS   SPC
+      *
+      ** Set-up for audit file
+      *
+     C                     Z-ADD0         WINS    50
+     C                     Z-ADD0         WDEL    50
+     C                     Z-ADD0         WAMD    50
+      *
+     C                     EXSR SRP004
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP003 - Process Main Screen Details                         *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:     SRP004 - Build Subfile                            *
+      *             SRP005 - 'Add Mode' Processing                    *
+      *             SRP009 - Validate Action Criteria                 *
+      *             SRP011 - Updat Audit File                         *
+      *             CLEAR  - Clears Message subfile                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP003    BEGSR
+      *
+     C                     MOVE BJMRDT    SRUNA
+     C                     Z-ADD1         SRRN1
+      *
+     C           *INKC     DOUEQ*ON
+      *
+      ** Display Main Screen
+      *
+     C                     MOVE *OFF      *IN31
+     C                     WRITESE0317C2
+     C                     WRITESE0317F0
+     C                     WRITESE0317F2
+     C           *IN70     IFEQ *OFF
+     C           *IN71     ANDEQ*ON
+     C                     EXFMTSE0317F3
+     C                     ELSE
+     C                     EXFMTSE0317C0
+     C                     ENDIF
+     C                     EXSR CLEAR
+      *
+      ** If F3 is not pressed
+      *
+     C           *INKC     IFEQ *OFF
+      *
+      ** If F5 is pressed
+      *
+     C           *INKE     IFEQ *ON
+      *
+      ** Initialise selection criteria screen fields to blanks
+      *
+     C                     MOVE *BLANKS   SBC
+     C                     MOVE *BLANKS   SPC
+     C                     MOVE *BLANKS   SACT
+     C                     EXSR SRP004
+     C                     Z-ADD1         SRRN1
+     C                     ELSE
+      *
+      ** If F9 is pressed
+      *
+     C           *INKI     IFEQ *ON
+     C                     EXSR SRP005
+      *
+      ** Initialise selection criteria screen fields to blanks
+      *
+     C                     MOVE *BLANKS   SBC
+     C                     MOVE *BLANKS   SPC
+     C                     MOVE *BLANKS   SACT
+     C                     MOVE *OFF      *IN31
+     C                     MOVE *OFF      *IN73
+     C                     EXSR SRP004
+     C                     ELSE
+      *
+      ** Validate Action Criteria
+      *
+     C           RRN1      IFEQ 0
+     C                     Z-ADD1         SRRN1
+     C                     ELSE
+     C                     Z-ADDRRN1      SRRN1
+     C                     ENDIF
+     C                     EXSR SRP009
+      *
+      ** If all action criteria are valid
+      *
+     C           *IN40     IFEQ *OFF
+      *
+      ** If selection criteria screen fields are different from the
+      ** selection criteria work fields or at least one action
+      ** criteria has been processed
+      *
+     C           SPSBK     IFNE WPSBK
+     C           WADD      OREQ 'Y'
+     C           WUPDAT    OREQ 'Y'
+     C                     EXSR SRP004
+     C                     Z-ADD1         SRRN1
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     EXSR SRP011
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP004 - Build Subfile                                       *
+      *                                                               *
+      *  Called by: SRP003 - Process Main Screen Details              *
+      *                                                               *
+      *  Calls:     NONE                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP004    BEGSR
+      *
+     C           KEY1      KLIST
+     C                     KFLD           KBOOK   2
+     C                     KFLD           KPRFC   4
+      *                                                                   182323
+     C           KEY2      KLIST                                          182323
+     C                     KFLD           KPSBK   2                       182323
+      *
+     C                     Z-ADD1         RRN     40
+      *
+      ** Move selection criteria screen fields to work fields
+      *
+     C                     MOVE SBC       WBC     2
+     C                     MOVE SPC       WPC     4
+     C                     MOVEA'00000000'*IN,40
+     C                     MOVEA'00'      *IN,70
+     C                     WRITESE0317C0
+      *
+      ** SET-UP KEY FIELDS
+      *
+     C                     MOVELWBC       KBOOK
+     C                     MOVELWPC       KPRFC
+      *
+      ** Set lower limit to file
+      *
+     C           KEY1      SETLLSDBKPCD0
+     C                     READ SDBKPCD0                 72
+      *
+     C           *IN72     DOWEQ*OFF
+      *
+     C           PSTYLC    IFNE 'D'
+      *
+     C                     MOVE *BLANKS   SACT
+     C                     MOVELPSBKCD    SBOKC
+     C                     MOVELPSPRFC    SPRFC
+     C                     MOVELPSPSBK    SPSBK
+     C                     WRITESE0317S0
+     C                     ADD  1         RRN
+      *
+     C                     ENDIF
+      *
+     C                     READ SDBKPCD0                 72
+     C                     ENDDO
+      *
+     C           RRN       IFEQ 1
+     C                     MOVE *OFF      *IN70
+     C                     MOVE *ON       *IN71
+     C                     MOVE *ON       *IN73
+     C                     ELSE
+     C                     MOVEA'11'      *IN,70
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP005 - 'Add Mode' Processing                               *
+      *                                                               *
+      *  Called by: SRP003 - Process Main Screen Details              *
+      *                                                               *
+      *  Calls:     SRP006 - Build Empty Subfile                      *
+      *             SRP007 - Validate 'Add Mode' Fields               *
+      *             SRP008 - Write records to database                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP005    BEGSR
+      *
+     C                     EXSR SRP006
+     C                     Z-ADD1         SRRN2
+     C                     MOVE *BLANKS   WADD
+      *
+     C           *INKC     DOUEQ*ON
+     C           *INKL     OREQ *ON
+     C           *IN40     OREQ *OFF
+      *
+     C                     MOVEA'000000'  *IN,41
+     C                     MOVE *ON       *IN31
+     C                     WRITESE0317C2
+     C                     WRITESE0317F0
+     C                     WRITESE0317F2
+     C                     EXFMTSE0317C1
+     C                     EXSR CLEAR
+      *
+     C           *INKC     IFEQ *OFF
+     C           *INKL     ANDEQ*OFF
+     C           RRN1      IFEQ 0
+     C                     Z-ADD1         SRRN2
+     C                     ELSE
+     C                     Z-ADDRRN1      SRRN2
+     C                     ENDIF
+     C                     EXSR SRP007
+      *
+      ** If all entries are valid
+      ** And it is not a update of a current record                       182323
+      *
+     C           *IN40     IFEQ *OFF
+     C           *IN46     ANDEQ*OFF                                      182323
+     C                     EXSR SRP008
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP006 - Build empty Subfile                                 *
+      *                                                               *
+      *  Called by: SRP005 - 'Add Mode' Processing                    *
+      *                                                               *
+      *  Calls:     NONE                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP006    BEGSR
+      *
+     C                     MOVEA'00'      *IN,80
+     C                     Z-ADD1         RN2     40
+     C                     WRITESE0317C1
+      *
+      ** Write 300 blank records to subfile
+      *
+     C           1         DO   300       J       30
+     C                     Z-ADDRN2       SRN1
+     C                     MOVE *BLANKS   SBOKS1
+     C                     MOVE *BLANKS   SPRCS1
+     C                     MOVE *BLANKS   SPSBS1
+     C                     WRITESE0317S1
+     C                     ADD  1         RN2
+     C                     MOVEA'11'      *IN,80
+     C                     ENDDO
+      *
+     C           RN2       IFGT 300
+     C                     MOVE *ON       *IN82
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP007 - Validate 'Add Mode' Fields                          *
+      *                                                               *
+      *  Called by: SRP005 - 'Add Mode' Processing                    *
+      *                                                               *
+      *  Calls:     AOBOOKR0 - Book Details Access Object             *
+      *             AOPRFCR0 - Profit Centre Details Access Object    *
+      *             AOBKPCR0 - Book-Profit Centre Matrix Access Obj   *
+      *             ZASNMS   - Displays error messages                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP007    BEGSR
+      *
+      ** Clear record number array
+      *
+     C                     MOVEA'000000'  *IN,40
+     C                     MOVEA*BLANKS   INP
+     C                     MOVEA*BLANKS   PSB
+     C                     Z-ADD0         I       30
+      *
+      ** Read all changed records from the subfile
+      *
+     C                     READCSE0317S1                 76
+      *
+     C           *IN76     DOWEQ*OFF
+      *
+     C                     ADD  1         I
+     C           SBOKS1    IFEQ *BLANKS
+     C           SPRCS1    ANDEQ*BLANKS
+     C           SPSBS1    ANDEQ*BLANKS
+     C                     MOVE *OFF      *IN83
+     C                     ELSE
+     C                     MOVE *ON       *IN83
+     C           SBOKS1    CAT  SPRCS1:0  WINP    6
+     C                     MOVEAWINP      INP,I
+     C                     MOVEASPSBS1    PSB,I
+     C                     UPDATSE0317S1
+     C                     ENDIF
+      *
+     C                     READCSE0317S1                 76
+      *
+     C                     ENDDO
+      *
+      ** Read all changed records from the subfile
+      *
+     C                     READCSE0317S1                 76
+      *
+     C           *IN76     DOWEQ*OFF
+      *
+     C                     Z-ADDSRN1      WSRN1   40
+      *
+      ** Validate 'Book Code'
+      *
+     C           SBOKS1    IFEQ *BLANKS
+     C                     MOVE *ON       *IN40
+     C                     MOVE *ON       *IN43
+     C                     MOVEL'PCA0009' ZAMSID
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     CALL 'AOBOOKR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY   ' POPTN   7
+     C                     PARM SBOKS1    PBOOK   3
+     C           SDBOOK    PARM SDBOOK    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE *ON       *IN43
+     C                     MOVE *ON       *IN40
+     C                     MOVEL'PCA0001' ZAMSID
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     MOVELBDBKCD    SBOKS1
+     C                     MOVE *OFF      *IN43
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Validate 'Profit Centre'
+      *
+     C           SPRCS1    IFEQ *BLANKS
+     C                     MOVE *ON       *IN40
+     C                     MOVE *ON       *IN44
+     C                     MOVEL'PCA0010' ZAMSID
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     CALL 'AOPRFCR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM SPRCS1    PPRFC   4
+     C           SDPRFC    PARM SDPRFC    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE *ON       *IN44
+     C                     MOVE *ON       *IN40
+     C                     MOVEL'PCA0002' ZAMSID
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     MOVELDSPCCD    SPRCS1
+     C                     MOVE *OFF      *IN44
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Validate 'Book'-'Profit Centre' Combination
+      *
+     C           *IN43     IFEQ *OFF
+     C           *IN44     ANDEQ*OFF
+     C                     CALL 'AOBKPCR0'
+     C**********           PARM *BLANKS   PRTCD                           182323
+     C                     PARM *BLANKS   PRTCD1  7                       182323
+     C                     PARM '*PSEUDO' POPTN
+     C                     PARM SBOKS1    PBC     2
+     C                     PARM SPRCS1    PPF     4
+     C                     PARM           PPC     2
+      *
+     C********** PRTCD     IFEQ *BLANKS                                   182323
+     C**********           MOVEA'11'      *IN,43                          182323
+     C**********           MOVE *ON       *IN,40                          182323
+     C**********           MOVEL'PCA0003' ZAMSID                          182323
+     C**********           MOVEL'SEUSRMSG'ZAMSGF                          182323
+     C**********           EXSR ZASNMS                                    182323
+     C**********           ELSE                                           182323
+      *                                                                   182323
+     C           PRTCD1    IFNE *BLANKS                                   182323
+      *
+      ** Access all records in array to check if book-profit
+      ** centre combination is the same as the other records
+      *
+     C           SBOKS1    CAT  SPRCS1:0  W1INP   6
+     C                     Z-ADD1         J       30
+     C           J         DOUEQ300
+     C           *IN43     OREQ *ON
+     C           *IN44     ANDEQ*ON
+     C           W1INP     COMP INP,J                    51
+     C           *IN51     IFEQ *ON
+     C           J         ANDNESRN1
+     C                     MOVE *ON       *IN40
+     C                     MOVEA'11'      *IN,43
+     C                     MOVEL'PCA0004' ZAMSID
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ADD  1         J
+     C                     ENDDO
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Validate 'Pseudo Book'
+      *
+     C           SPSBS1    IFEQ *BLANKS
+     C                     MOVE *ON       *IN40
+     C                     MOVE *ON       *IN45
+     C                     MOVEL'PCA0011' ZAMSID
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     CALL 'AOBKPCR0'
+     C***********          PARM *BLANKS   PRTCD                           182323
+     C                     PARM *BLANKS   PRTCD2  7                       182323
+     C                     PARM '*USER  ' POPTN
+     C                     PARM           PBC     2
+     C                     PARM           PPF     4
+     C                     PARM SPSBS1    PPC     2
+      *
+     C***********PRTCD     IFEQ *BLANKS                                   182323
+     C***********          MOVE *ON       *IN40                           182323
+     C***********          MOVE *ON       *IN45                           182323
+     C***********          MOVEL'PCA0005' ZAMSID                          182323
+     C***********          MOVEL'SEUSRMSG'ZAMSGF                          182323
+     C***********          EXSR ZASNMS                                    182323
+     C***********          ELSE                                           182323
+      *                                                                   182323
+     C           PRTCD2    IFNE *BLANKS                                   182323
+      *
+      ** Access records from array, check for duplicate input
+      *
+     C                     Z-ADD1         J
+     C           J         DOUEQ300
+     C           *IN45     OREQ *ON
+     C           SPSBS1    COMP PSB,J                    51
+     C           *IN51     IFEQ *ON
+     C           J         ANDNESRN1
+     C                     MOVE *ON       *IN40
+     C                     MOVE *ON       *IN45
+     C                     MOVEL'PCA0006' ZAMSID
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     MOVE *OFF      *IN45
+     C                     ENDIF
+     C                     ADD  1         J
+     C                     ENDDO
+     C                     ENDIF
+     C                     ENDIF
+      *                                                                  182323
+      * IF the Book-Profit centre is already defined to the system       182323
+      * Chain on SDBKPCPD                                                182323
+     C           PRTCD1    IFEQ *BLANKS                                  182323
+     C           *IN43     ANDEQ*OFF                                     182323
+     C           *IN44     ANDEQ*OFF                                     182323
+     C                     MOVE SBOKS1    KBOOK                          182323
+     C                     MOVE SPRCS1    KPRFC                          182323
+     C           KEY1      CHAINSDBKPCL1             50                  182323
+      *                                                                  182323
+      * If the record is found and has been deleted                      182323
+     C           *IN50     IFEQ *OFF                                     182323
+     C           PSTYLC    ANDEQ'D'                                      182323
+      *                                                                  182323
+      * If the Pseudo book is the same as that already on the file       182323
+     C           SPSBS1    IFEQ PSPSBK                                   182323
+      *                                                                  182323
+      * If the last change date is the same as that on the file          182323
+     C           PSLCD     IFEQ BJRDNB                                   182323
+     C                     MOVE 'A'       PSTYLC                         182323
+     C                     ADD  -1        WDEL                           182323
+     C                     ADD  1         WAMD                           182323
+     C                     ENDIF                                         182323
+      *                                                                  182323
+      * If the last change date is before that on the file               182323
+     C           PSLCD     IFLT BJRDNB                                   182323
+     C                     MOVE 'I'       PSTYLC                         182323
+     C                     MOVE BJRDNB    PSLCD                          182323
+     C                     ADD  1         WINS                           182323
+     C                     ENDIF                                         182323
+      *                                                                  182323
+      * Update file SDBKPCPD                                             182323
+     C                     UPDATSDBKPCD0                                 182323
+     C                     MOVE *ON       *IN46                          182323
+     C                     MOVE *BLANKS   SBOKS1                         182323
+     C                     MOVE *BLANKS   SPRCS1                         182323
+     C                     MOVE *BLANKS   SPSBS1                         182323
+      *                                                                  182323
+      * ELSE Pseudo book is not defined for the Book/Profit Centre       182323
+      * already.  Chain on SDBKPCPD to see if the Pseudo book exists     182323
+      * on another record and if it is and it is deleted....             182323
+     C                     ELSE                                          182323
+     C           SPSBS1    IFNE *BLANKS                                  182323
+     C                     MOVE SPSBS1    KPSBK                          182323
+     C           KEY2      CHAINSDBKPCL3             49                  182323
+     C           *IN49     IFEQ *ON                                      182323
+     C           *IN49     OREQ *OFF                                     182323
+     C           PSTYLC    ANDEQ'D'                                      182323
+      *                                                                  182323
+      * Chain on file using the Book/Profit Centre and amend that file   182323
+     C           KEY1      CHAINSDBKPCL1             49                  182323
+     C                     MOVE BJRDNB    PSLCD                          182323
+     C                     MOVE SPSBS1    PSPSBK                         182323
+      *                                                                  182323
+      * If the last change date is the same as that on the file          182323
+     C           PSLCD     IFEQ BJRDNB                                   182323
+     C                     MOVE 'A'       PSTYLC                         182323
+     C                     ADD  -1        WDEL                           182323
+     C                     ADD  1         WAMD                           182323
+     C                     ENDIF                                         182323
+      *                                                                  182323
+      * If the last change date is before that on the file               182323
+     C           PSLCD     IFLT BJRDNB                                   182323
+     C                     MOVE 'I'       PSTYLC                         182323
+     C                     MOVE BJRDNB    PSLCD                          182323
+     C                     ADD  1         WINS                           182323
+     C                     ENDIF                                         182323
+      *                                                                  182323
+      * Update file SDBKPCPD                                             182323
+     C                     UPDATSDBKPCD0                                 182323
+     C                     MOVE *ON       *IN46                          182323
+     C                     MOVE *BLANKS   SBOKS1                         182323
+     C                     MOVE *BLANKS   SPRCS1                         182323
+     C                     MOVE *BLANKS   SPSBS1                         182323
+     C                     ELSE                                          182323
+     C                     MOVE *ON       *IN40                          182323
+     C                     MOVE *ON       *IN45                          182323
+     C                     MOVEL'PCA0005' ZAMSID                         182323
+     C                     MOVEL'SEUSRMSG'ZAMSGF                         182323
+     C                     EXSR ZASNMS                                   182323
+     C                     ENDIF                                         182323
+     C                     ENDIF                                         182323
+      *                                                                  182323
+      * ENDIF for Pseudobook already on file                             182323
+     C                     ENDIF                                         182323
+      *                                                                  182323
+      * ELSE if BOOK/PRFC found and not deleted                          182323
+     C                     ELSE                                          182323
+     C                     MOVE *ON       *IN40                          182323
+     C                     MOVEA'11'      *IN,43                         182323
+     C                     MOVEL'PCA0003' ZAMSID                         182323
+     C                     MOVEL'SEUSRMSG'ZAMSGF                         182323
+     C                     EXSR ZASNMS                                   182323
+      *                                                                  182323
+      * Check the Pseudo book even thogh the Book/PRFC was invalid       182323
+      * It exists on the file - Send message if not valid                182323
+     C           PRTCD2    IFEQ *BLANKS                                  182323
+     C                     MOVE SPSBS1    KPSBK                          182323
+     C           KEY2      CHAINSDBKPCL3             49                  182323
+     C           PSTYLC    IFNE 'D'                                      182323
+     C                     MOVE *ON       *IN40                          182323
+     C                     MOVE *ON       *IN45                          182323
+     C                     MOVEL'PCA0005' ZAMSID                         182323
+     C                     MOVEL'SEUSRMSG'ZAMSGF                         182323
+     C                     EXSR ZASNMS                                   182323
+     C                     ENDIF                                         182323
+     C                     ENDIF                                         182323
+     C                     ENDIF                                         182323
+     C                     ENDIF                                         182323
+      *                                                                  182323
+      * If Book/ Profit centre valid but not found on file and           182323
+      * and no messages sent..                                           182323
+     C           PRTCD1    IFNE *BLANKS                                  182323
+     C           *IN40     ANDEQ*OFF                                     182323
+     C                     MOVE SPSBS1    KPSBK                          182323
+     C           KEY2      CHAINSDBKPCL3             49                  182323
+      *                                                                  182323
+      *If Pseudobook is found and not part of a deleted record           182323
+     C           *IN49     IFEQ *OFF                                     182323
+     C           PSTYLC    IFNE 'D'                                      182323
+     C                     MOVE *ON       *IN40                          182323
+     C                     MOVE *ON       *IN45                          182323
+     C                     MOVEL'PCA0005' ZAMSID                         182323
+     C                     MOVEL'SEUSRMSG'ZAMSGF                         182323
+     C                     EXSR ZASNMS                                   182323
+      *                                                                  182323
+      * Else change the deleted record with the new Book and Profit centr182323
+     C                     ELSE                                          182323
+     C                     MOVELSBOKS1    PSBKCD                         182323
+     C                     MOVELSPRCS1    PSPRFC                         182323
+      * If the last change date is the same as that on the file          182323
+     C           PSLCD     IFEQ BJRDNB                                   182323
+     C                     MOVE 'A'       PSTYLC                         182323
+     C                     ADD  -1        WDEL                           182323
+     C                     ADD  1         WAMD                           182323
+     C                     ENDIF                                         182323
+      *                                                                  182323
+      * If the last change date is before that on the file               182323
+     C           PSLCD     IFLT BJRDNB                                   182323
+     C                     MOVE 'I'       PSTYLC                         182323
+     C                     MOVE BJRDNB    PSLCD                          182323
+     C                     ADD  1         WINS                           182323
+     C                     ENDIF                                         182323
+      *                                                                  182323
+      * Update file SDBKPCPD                                             182323
+     C                     UPDATSDBKPCD1                                 182323
+     C                     MOVE *ON       *IN46                          182323
+     C                     MOVE *BLANKS   SBOKS1                         182323
+     C                     MOVE *BLANKS   SPRCS1                         182323
+     C                     MOVE *BLANKS   SPSBS1                         182323
+     C                     ENDIF                                         182323
+     C                     ENDIF                                         182323
+     C                     ENDIF                                         182323
+      *
+     C                     MOVE *ON       *IN83
+     C                     UPDATSE0317S1
+      *
+     C                     READCSE0317S1                 76
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP008 - Write Records to Database                           *
+      *                                                               *
+      *  Called by: SRP005 - 'Add Mode' Processing                    *
+      *                                                               *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP008    BEGSR
+      *
+     C                     READCSE0317S1                 76
+      *
+     C           *IN76     DOWEQ*OFF
+      *
+     C                     MOVELSBOKS1    PSBKCD
+     C                     MOVELSPRCS1    PSPRFC
+     C                     MOVELSPSBS1    PSPSBK
+     C                     Z-ADDBJRDNB    PSLCD
+     C                     MOVE 'I'       PSTYLC
+     C                     WRITESDBKPCD0
+     C                     MOVE 'Y'       WADD    1
+     C                     ADD  1         WINS
+      *
+     C                     READCSE0317S1                 76
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP009 - Validate Action Criteria                            *
+      *                                                               *
+      *  Called by: SRP003 - Process Main Screen Details              *
+      *                                                               *
+      *  Calls:     SRP010 - 'Amend Mode' Processing                  *
+      *             SRP012 - 'Delete Mode' Processing                 *  182323
+      *             ZASNMS - Displays Error messages                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP009    BEGSR
+      *
+     C                     MOVEA'000000'  *IN,40
+     C                     MOVE *OFF      *IN76
+     C                     READCSE0317S0                 76
+      *
+     C           *IN76     DOWEQ*OFF
+      *
+     C           SACT      IFNE 'A'
+     C           SACT      ANDNE'D'
+     C           SACT      ANDNE*BLANKS
+     C                     MOVE *ON       *IN40
+     C                     MOVE *ON       *IN42
+     C                     MOVEL'PCA0007' ZAMSID
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C           SACT      IFEQ *BLANKS
+     C                     MOVE *OFF      *IN73
+     C                     ELSE
+     C                     MOVE *ON       *IN73
+     C                     UPDATSE0317S0
+     C                     ENDIF
+      *
+      *
+     C                     READCSE0317S0                 76
+     C                     ENDDO
+      *
+      ** If all action fields are valid
+      *
+     C           *IN40     IFEQ *OFF
+      *
+     C                     READCSE0317S0                 76
+      *
+      ** For each changed records
+      *
+     C           *IN76     DOWEQ*OFF
+      *
+      ** If action criteria is 'D'
+      *
+     C           SACT      IFEQ 'D'
+     C                     EXSR SRP012                                   182323
+     C************         MOVELSBOKC     KBOOK                          182323
+     C************         MOVELSPRFC     KPRFC                          182323
+     C***********KEY1      CHAINSDBKPCL1             50                  182323
+     C************         MOVE 'D'       PSTYLC                         182323
+     C************         Z-ADDBJRDNB    PSLCD                          182323
+     C************         ADD  1         WDEL                           182323
+     C************         UPDATSDBKPCD0                                 182323
+     C                     ENDIF
+      *
+      ** If action criteria is 'A'
+      *
+     C           SACT      IFEQ 'A'
+     C                     EXSR SRP010
+      *
+      ** If F3 or F12 is pressed, exit from subroutine
+      *
+     C           *INKC     IFEQ *ON
+     C           *INKL     OREQ *ON
+     C                     MOVE *BLANKS   SACT
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     READCSE0317S0                 76
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP010 - 'Amend Mode' Processing                             *
+      *                                                               *
+      *  Called by: SRP009 - Validate Action Criteria                 *
+      *                                                               *
+      *  Calls:     CLEAR  - Clears message files                     *
+      *             ZASNMS - Diplays error messages                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP010    BEGSR
+      *
+     C                     MOVE *ON       *IN31
+     C                     MOVELSPSBK     WPSBK   2
+      *
+      ** Do until F3 or F12 is pressed or entry is valid
+      *
+     C           *INKC     DOUEQ*ON
+     C           *INKL     OREQ *ON
+     C           *IN40     ORNE *ON
+      *
+      ** Display 'Amend Mode' screen
+      *
+     C                     MOVE *OFF      *IN40
+     C                     MOVE *OFF      *IN48
+     C                     WRITESE0317C2
+     C                     WRITESE0317F0
+     C                     WRITESE0317F2
+     C                     EXFMTSE0317F1
+     C                     EXSR CLEAR
+      *
+      ** If F3 and F12 were not pressed
+      *
+     C           *INKE     IFEQ *OFF
+     C           *INKL     ANDEQ*OFF
+      *
+      ** Validate 'Pseudo Book'
+      *
+     C           SPSBK     IFEQ *BLANKS
+     C                     MOVE *ON       *IN40
+     C                     MOVE *ON       *IN48
+     C                     MOVEL'PCA0011' ZAMSID
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     CALL 'AOBKPCR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*USER  ' POPTN
+     C                     PARM           PBC
+     C                     PARM           PPF
+     C                     PARM SPSBK     PPC
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVE *ON       *IN40
+     C                     MOVE *ON       *IN43
+     C                     MOVEL'PCA0008' ZAMSID
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     MOVELSBOKC     KBOOK
+     C                     MOVELSPRFC     KPRFC
+     C           KEY1      CHAINSDBKPCL1             50
+     C                     MOVELSPSBK     PSPSBK
+     C                     Z-ADDBJRDNB    PSLCD
+     C                     MOVE 'A'       PSTYLC
+     C                     ADD  1         WAMD
+     C                     UPDATSDBKPCD0
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     MOVE 'Y'       WUPDAT  1
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP011 - Update Audit File                                   *
+      *                                                               *
+      *  Called by: SRP003 - Process Main Screen Details              *
+      *                                                               *
+      *  Calls:     None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP011    BEGSR
+      *
+     C                     MOVEL'SDBKPCPD'SDBKP  10
+      *
+     C           SDBKP     CHAIN@AHREAV              77
+      *
+     C                     ADD  WINS      AHNOIN
+     C                     ADD  WDEL      AHNODL
+     C                     ADD  WAMD      AHNOAM
+     C                     ADD  WINS      AHNORC
+     C                     SUB  WDEL      AHNORC
+      *
+     C           *IN77     IFEQ *ON
+     C                     WRITE@AHREAV
+     C                     ELSE
+     C                     UPDAT@AHREAV
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************  182323
+      /EJECT
+      *****************************************************************  182323
+      *                                                               *  182323
+      *  SRP012 - 'Delete' Mode Processing                            *  182323
+      *                                                               *  182323
+      *  Called by: SRP009 - ValidateMain Screen Details              *  182323
+      *                                                               *  182323
+      *  Calls:     None                                              *  182323
+      *                                                               *  182323
+      *****************************************************************  182323
+      *                                                                  182323
+     C           SRP012    BEGSR                                         182323
+      *                                                                  182323
+      ** Do until F3, F10 or F12 is pressed                              182323
+      *                                                                  182323
+     C           *INKC     DOUEQ*ON                                      182323
+     C           *INKL     OREQ *ON                                      182323
+     C           *INKJ     OREQ *ON                                      182323
+      *                                                                  182323
+      ** Display 'Delete Mode' screen                                    182323
+      *                                                                  182323
+     C                     MOVE *OFF      *IN40                          182323
+     C                     MOVE *OFF      *IN48                          182323
+     C                     MOVE *ON       *IN49                          182323
+     C                     MOVE *ON       *IN31                          182323
+     C                     WRITESE0317C2                                 182323
+     C                     WRITESE0317F0                                 182323
+     C                     WRITESE0317F2                                 182323
+     C                     EXFMTSE0317F4                                 182323
+     C                     EXSR CLEAR                                    182323
+      *                                                                  182323
+      ** If F10 pressed and deletion is confirmed                        182323
+      *                                                                  182323
+     C           *INKJ     IFEQ *ON                                      182323
+      *                                                                  182323
+     C                     MOVELSBOKC     KBOOK                          182323
+     C                     MOVELSPRFC     KPRFC                          182323
+     C           KEY1      CHAINSDBKPCL1             50                  182323
+     C                     MOVE 'D'       PSTYLC                         182323
+     C                     Z-ADDBJRDNB    PSLCD                          182323
+     C                     ADD  1         WDEL                           182323
+     C                     UPDATSDBKPCD0                                 182323
+     C                     ENDIF                                         182323
+      *                                                                  182323
+     C                     ENDDO                                         182323
+      *                                                                  182323
+     C                     MOVE *OFF      *IN49                          182323
+     C                     ENDSR                                         182323
+      *                                                                  182323
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *   CLEAR - Subroutine which clears the message file            *
+      *                                                               *
+      *   Called by: SRP003 - Process Main Screen Details             *
+      *              SRP007 - 'Add Mode' Processing                   *
+      *              SRP009 - Validate Action Criteria                *
+      *              SRP010 - 'Amend Mode' Processing                 *
+      *                                                               *
+      *   Calls    : Y2CLMSC - Clear message file                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CLEAR     BEGSR
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGM      ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: SRP002 - Program Initialisation                    *
+      *                                                               *
+      * Calls    : None                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     ROLBK
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     ENDIF
+      *
+      ** If *PSSR already run, then just end the program here
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                               *
+      *   ZASNMS - Subroutine which handles the display of error      *
+      *            messages                                           *
+      *                                                               *
+      *   Called by: SRP004 - Validate Screen Details                 *
+      *              SRVALC - Validate Currency                       *
+      *                                                               *
+      *   Calls    : Y2SNMGC - Send a message                         *
+      *                                                               *
+      ********************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVELSPGM      ZAPGMQ
+     C                     END
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA 30        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+     C           ZAEXIT    ENDSR
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

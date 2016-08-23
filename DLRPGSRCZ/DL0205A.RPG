@@ -1,0 +1,1773 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL List todays incmplt/cmplt deals')             *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *       DL0205A - LIST OF COMPLETE DEALS DELETED TODAY          *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CGL165             Date 17Feb15               *
+      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CDL049             Date 05Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CDL020             Date 03Feb04               *
+      *                 CDL019             Date 03Feb04               *
+      *                 CDL018             Date 03Feb04               *
+      *                 CDL017             Date 03Feb04               *
+      *                 CDL016             Date 03Feb04               *
+      *                 CGL029             Date 01Sep03               *
+      *                 222727             Date 05Nov03               *
+      *                 CDL010             Date 02Aug02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CPB001             Date 13Aug99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                      S01408             DATE 16AUG96             *
+     F*                      S01486             DATE 30SEP94             *
+     F*                      S01453             DATE 14DEC93             *
+     F*                      S01434             DATE 28JUL93             *
+     F*                      S01319             DATE 19AUG91             *
+     F*                      E23154             DATE 03AUG90             *
+     F*                      LN0956             DATE  7NOV90             *
+     F*                      LN0248             DATE 24MAY90             *
+     F*                      E15664             DATE 12APR90             *
+     F*                      E293               DATE 29MAR90             *
+     F*                      S01117             DATE 06/10/89            *
+     F*                      S01194             DATE 04/10/89            *
+     F*                      E18492             DATE 04/10/89         *  *
+     F*                      E12574             DATE 10/03/88            *
+     F*                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance Receive Settlement Instructions             *
+      *           (Recompiled)                                        *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CDL020 - Apply Base Rate at Value Date (Recompile)           *
+      *  CDL019 - Allow Base Rate Changes on Fixed Deposits/Loans     *
+      *           (Recompile)                                         *
+      *  CDL018 - Multiple Settlement Accounts on Loans/Deposits      *
+      *           (Recompile)                                         *
+      *  CDL017 - Penalty Fee & Early Maturity of Fixed Term Loan/Dep *
+      *           (Recompile)                                         *
+      *  CDL016 - Automatic rollover of Fixed Term Loans/Deposits     *
+      *           (Recompile)                                         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+      *  CDL010 - Prevent last user that actioned the trade from      *
+      *           authorising it.Recompile due to changes in FXDEALPP,*
+      *           MMDELDPP, MMDENBPP and MMDENSPP.                    *
+     F*      CPB001 - 'Private Banking' Module                        *
+     F*      S01408 - Core Hook DL0205ACP4 Added                      *
+     F*             - Core Hook DL0205ACP3 Added                      *  *
+     F*             - Core Hook DL0205ACP2 Added                      *  *
+     F*             - Core Hook DL0205ACP1 Added                      *  *
+     F*      S01486 - Portfolio Management Upgrade to release 10.     *  *
+     F*      S01453 - MARGIN AND FX POSITIONS/POINTS AND BASE CURRENCY*  *
+     F*               POSITIONS/POINTS ADDED TO FX INPUT (RECOMPILED) *  *
+     F*      S01434 - Enhanced Rollover Switches; Deposits               *
+     F*      S01319 - Remove redundant processing
+     F*      E23154 - REPORT SHOULD NOT PRINT DEALS WHICH WERE        *
+     F*               DELETED PRIOR TO TODAY.                         *
+     F*      LN0956 - THE EXISTING PROCESSING TO ENSURE THAT THE SPOOL*  *
+     F*               FILE FOR DL0205RR WAS NOT RECORDED BY RCF       *
+     F*               WHEN THERE WERE NO DETAILS TO REPORT DID NOT    *
+     F*               WORK. A SPOOL FILE WAS PRODUCED IN FIN STATE    *
+     F*               AND RECORDED BY RCF CAUSING A DATABASE ERROR    *
+     F*      LN0248 - PROCESSING FOR OLD AUDIT REPORT USING P1 FILE   *   LN0248
+     F*               NOT COMPLETELY REMOVED. NO 'END OF REPORT' FOR  *   LN0248
+     F*               P1                                              *   LN0248
+     F*      E15664 - REFERENCE TO REPORT CORRECTED.                  *   E15664
+     F*               (SUPERCEDED BY S01194)                          *   E15664
+     F*      E293   - RECEIVE SEQ. NO AND PASS TO ZSFILE TO TIE       *
+     F*               REPORT TO OTHERS CALLED BY DLC0601A             *
+     F*      S01117 - REPORT CONTROL FACILITY PROCESSING             *
+     F*      S01194 - NEW STANDING DATA                               *
+     F*      E18492 - INSERT DATABASE PROCESSING                      *   E18492
+     F*      E12574 - MMOD CHANGED TO LENGTH 256                      *  *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*
+     F* ID F  C  H  L     FUNCTION OF INDICATORS
+     F*
+     F*       07          LOAN/DEPOSIT IND                                S01434
+     F*                                                                   S01434
+     F*       30          ROLLOVER IND                                    S01434
+     F*       31          Portfolio Management is switched on.            S01486
+     F*       34          FEDERAL FUNDS
+     F*       35          FEDERAL FUNDS
+     F*
+     F*****   49          CLIENT FILE ACCESS                              S01194
+     F*****   61          FILE ACCESS ERROR,TABLE FILE,INSTALLATION FIL   S01194
+     F*       61          FILE ACCESS ERROR,INSTALLATION FILE             S01194
+     F*       63          SECOND DRS DEALS FILE ACCESS ERROR
+     F*
+     F*       66          OVERFLOW INDICATOR FOR PRTF/DL0205RR            S01136
+     F*       67          OVERFLOW INDICATOR FOR PRTF/DL205AAU            S01194
+     F*
+     F*****   69          TABLE ACCESS INDICATOR                          S01194
+     F*       59          NON DISPLAY OF COLUMN HEADINGS
+     F*
+     F*
+     F*       91,92,93,94,95,99, INDICATORS USED IN STANDARD MIDAS SUBROUTINES
+     F*
+     F*****************************************************************
+      /EJECT
+     F*FDPMNTLLIF**E*******************DISK*********KINFSR**PSSR**********S01319
+     FFDMNTHLLIF  E                    DISK         KINFSR *PSSR          S01319
+     F*FDINSTLLIF**E*******************DISK*********KINFSR**PSSRUC********S01319
+     F*TABDLI  IF  E           K        DISK         KINFSR *PSSR         S01194
+     F*CLINT   IF  E           K        DISK         KINFSR *PSSR         S01194
+     FMMICCDLLIF  E           K        DISK         KINFSR *PSSR
+     F            FXDEALP0                          KRENAMEFXDEALP1
+     F            MMDELDP0                          KRENAMEMMDELDP1
+     F            MMDENBP0                          KRENAMEMMDENBP1
+     F            MMDENSP0                          KRENAMEMMDENSP1
+     F                                              KINFDS INIDS
+     FFXICCDLLIF  E           K        DISK         KINFSR *PSSR
+     F            FXDEALP0                          KRENAMEFXDEALP2
+     F*
+     F/COPY WNCPYSRC,DL0205AF01
+     F*DL0205RRO   E             66     PRINTER                           S01117
+     FDL0205RRO   E             66     PRINTER      KINFDS SPOOL          S01117
+     FDL205AAUO   E             67     PRINTER      KINFDS SPOOLU         S01117
+     F*
+     E                    CPY@    1   1 80
+     E*
+     E*
+     E** USED BY SR. ZA0660 - MONTH SHORTNAME
+     E                    @MN        12  3
+     E*
+     E** ARRAY FOR AMOUNT INPUT
+     E                    @D         15  1
+     E*
+     E** ARRAY FOR DISPLAY AMOUNT
+     E                    @E         21  1
+     E*
+     E** WORK ARRAY
+     E                    @C         21  1
+     E*
+     E** ARRAY FOR RATE INPUT
+     E                    @A         13  1
+     E*
+     E** ARRAY FOR RATE OUTPUT
+     E                    @Z         14  1
+     I*
+     I*
+     I***RENAME*THE*MONTH*NAME*FIELDS*FROM*FILE*FDPMNTLL******************S01319
+     I** RENAME THE MONTH NAME FIELDS FROM FILE FDMNTHLL                  S01319
+     I*FDPMNTL1                                                     ME0025S01319
+     IFDMNTHP0                                                            S01319
+     I              MNNM1                           @MN,1                 ME0025
+     I              MNNM2                           @MN,2                 ME0025
+     I              MNNM3                           @MN,3                 ME0022
+     I              MNNM4                           @MN,4                 ME0025
+     I              MNNM5                           @MN,5                 ME0025
+     I              MNNM6                           @MN,6                 ME0025
+     I              MNNM7                           @MN,7                 ME0025
+     I              MNNM8                           @MN,8                 ME0025
+     I              MNNM9                           @MN,9                 ME0025
+     I              MNNM10                          @MN,10                ME0025
+     I              MNNM11                          @MN,11                ME0025
+     I              MNNM12                          @MN,12                ME0025
+     I*
+     I** DEFINE THE EXTERNAL DATA AREA MMOD
+     I**ODS       DS                             64                       E12574
+     I*MMODS******DS****************************256*****************E12574S01319
+     I***************************************13**14*MODS******************S01319
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR
+     I           UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I*****                                 155 183 DBASE                 S01194
+     I                                      181 183 DBASE                 S01194
+     I*
+     I** INFORMATION DATA STRUCTURE FOR FORMAT ACCESSED
+     I*
+     IINIDS       DS
+     I                                     *RECORD  RECIMT
+     I*
+     I***DATA STRUCTURE - KEY TO TABLE FILE                               S01194
+     I*****       DS                                                      S01194
+     I*****                                   1  12 KEYTAB                S01194
+     I*****                                   1   2 @TRT                  S01194
+     I*****                                   9  12 @TCCY                 S01194
+     I*****                                  10  120@BRCD                 S01194
+     I*****                                  11  12 @TSRT                 S01194
+     I*
+     I*
+     I** DATA STRUCTURE FOR VALUE DATE FROM DRS FILES
+     I            DS
+     I                                        1   80@VDAT
+     I                                        1   40FHVDYY
+     I                                        1   40HKVDYY
+     I                                        1   40HLVDYY
+     I                                        1   40HMVDYY
+     I                                        5   60FHVDMM
+     I                                        5   60HKVDMM
+     I                                        5   60HLVDMM
+     I                                        5   60HMVDMM
+     I                                        7   80FHVDDD
+     I                                        7   80HKVDDD
+     I                                        7   80HLVDDD
+     I                                        7   80HMVDDD
+     I*
+     I** DATA STRUCTURE FOR OPTION DATE FROM THE DRS FILES
+     I            DS
+     I                                        1   80@ODAT
+     I                                        1   40FHDOEY
+     I                                        5   60FHDOEM
+     I                                        7   80FHDOED
+     I*
+     I** DATA STRUCTURE FOR MATURITY DATE FROM THE DRS FILES
+     I            DS
+     I                                        1   80@MDAT
+     I                                        1   40HKMDYY
+     I                                        1   40HLMDYY
+     I                                        5   60HKMDMM
+     I                                        5   60HLMDMM
+     I                                        7   80HKMDDD
+     I                                        7   80HLMDDD
+     I*
+     I**  DATA STRUCTURE FOR SR. ZA0660 - DATE INPUT TO SUBROUTINE
+     I            DS
+     I                                        1   80@@DTIN
+     I                                        1   40@@YYYY
+     I                                        3   40@@YY
+     I                                        1   20@@CC
+     I                                        5   60@@MTH
+     I                                        7   80@@DAY
+     I** DATA STRUCTURE FOR DEAL TYPE/SUB-TYPE/CLASS                                          CDL038
+     I            DS                                                                          CDL038
+     I                                        1   9 RRDSTC                                    CDL038
+     I                                        1   2 RRDTYP                                    CDL038
+     I                                        3   3 RRDASH                                    CDL038
+     I                                        4   5 RRDLST                                    CDL038
+     I                                        6   9 RRCLAS                                    CDL038
+     I*
+     I*
+     I** RETRIEVE WSID FROM PROGRAM STATUS DATA STRUCTURE.
+     IPSDS       SDS
+     I*
+     I** WORKSTATION ID
+     I                                      244 246 @WID
+     I*
+     I** USER ID
+     I                                      245 246 @JOB
+     I*
+     I*
+     I** DELETE FLAG DATA STRUCTURE
+     I            DS
+     I                                        1   1 @DLTF
+     I                                        1   1 HKDDLT
+     I                                        1   1 HLDDLT
+     I                                        1   1 HMDDLT
+     I*                                                                   E23154
+     I** LAST CHANGE DATE DATA STRUCTURE                                  E23154
+     I            DS                                                      E23154
+     I                                    P   1   30@LCD                  E23154
+     I                                    P   1   30HKLCD                 E23154
+     I                                    P   1   30HLLCD                 E23154
+     I                                    P   1   30HMLCD                 E23154
+     I*
+     I** DATASTUCTURE TO CONVERT @@IAMT DECIMAL FIELD TO ALPHA FIELD
+     I*
+     I@@AMDS      DS                             15
+     I                                        1  150@@IAMT
+     I*
+     I**  DATASTRUCTURE TO CONVERT @@IRAT DECIMAL FIELD TO ALPHA FIELD
+     I@@RTDS      DS                             13
+     I                                        1  138@@IRAT
+     I*                                                                   S01194
+     ISPOOL       DS                                                      S01117
+     I**   FILE INFORMATION DATA STRUCTURE                                S01117
+     I                                       83  92 SFILE                 S01117
+     I                                    B 123 1240SFNUM                 S01117
+     I                                    B 243 2460SWRIT                 S01117
+     I**                                                                  S01117
+     I** DEFINE A BLANK BINARY FIELD FOR USE WITH SWRIT                   S01117
+     I                                    B   1   40@BKBIN                S01117
+     I*                                                                   S01117
+     ISPOOLU      DS                                                      S01117
+     I**   FILE INFORMATION DATA STRUCTURE                                S01117
+     I                                       83  92 SFILEU                S01117
+     I                                    B 123 1240SFNUMU                S01117
+     I**                                                                  S01117
+     ISDBANK    E DSSDBANKPD                                              S01194
+     I** EXTERNAL DS FOR BANK DETAILS                                     S01194
+     I*                                                                   S01194
+     ISDCURR    E DSSDCURRPD                                              S01194
+     I** EXTERNAL DS FOR CURRENCY DETAILS                                 S01194
+     I*                                                                   S01194
+     ISDCUST    E DSSDCUSTPD                                              S01194
+     I** EXTERNAL DS FOR CUSTOMER DETAILS                                 S01194
+     I*                                                                   S01319
+     ISDDEAL    E DSSDDEALPD                                              S01319
+     I** EXTERNAL DS FOR DEALING DETAILS                                  S01319
+     I*                                                                   S01194
+     ISDPORT    E DSSDPORTPD                                              S01486
+     I** External DS for Portfolio Management ICD.                        S01486
+     I*                                                                   S01486
+     ISDMMOD    E DSSDMMODPD                                              S01486
+     I** External DS for Module Details.                                  S01486
+     I*                                                                   S01486
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*                                                                   S01117
+     IDSSDY     E DSDSSDY                                                 S01194
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01194
+     I*                                                                   S01434
+     ISCSARD    E DSSCSARDPD                                              S01434
+     I** DATA STRUCTURE FOR ROLLOVER SWITCH ON FILE                       S01434
+     I*                                                                   S01434
+     C*****************************************************************
+     C/EJECT
+     C*
+     C*****      CLIKEY    KLIST                                          S01194
+     C*****                KFLD           CKEY                            S01194
+     C*****                KFLD           @RCDT                           S01194
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* MAIN     - INCOMPLET/COMPLETE DEALS DELETED TODAY REPORT      *
+     C*                                                               *
+     C* CALLS    #A       - INITIAL ROUTINE                           *
+     C*          #B       - DETAIL PROCESSING                         *
+     C*          #C       - TERMINATION PROCESSING                    *
+     C*                                                               *
+     C* CALLED BY         -                                           *
+     C*                                                               *
+     C* FLDS USED         -                                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *ENTRY    PLIST                                          E293
+     C                     PARM           SEQ     5                       E293
+     C** INITIAL PROCESSING
+     C                     EXSR #A
+     C*
+     C** DETAIL PROCESSING
+     C           *INU7     IFEQ '0'                        B1
+     C                     EXSR #B                         *1
+     C                     END                             E1
+     C*
+     C** TERMINATION PROCESSING
+     C                     EXSR #C
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C* SUBROUTINES USED                                              *
+     C*                                                               *
+     C*  01  #A       - INITIAL ROUTINE                               *
+     C*  02  #B       - DETAIL PROCESSING                             *
+     C*  03  #BB      - DETAIL PROCESSING FOR DRS DEALS               *
+     C*  04  #BBA     - FORMATTING OF DRS FX DEALS                    *
+     C*  05  #BBB     - FORMATTING OF LOANS/DEPOSIT/CD ON DRS         *
+     C*  06  #BBC     - FORMATTING OF NAB's ON DRS                    *
+     C*  07  #BBD     - FORMATTING OF NAS's ON DRS                    *
+     C*  08  #ZA      - INITIALIZATION OF PRINTER FIELDS              *
+     C***09  TABCHN   - TABLE CHAIN ROUTINE                           *   S01194
+     C*  10  ZA0750   - CONVERSION OF AMOUNT TO DISPLAY               *
+     C*  11  ZA0660   - CONVERSION OF MIDAS DAY NUMBER TO DATE FORMAT *
+     C*  12  MM1023   - CONVERSION OF A RATE TO DISPLAY               *
+     C*  13  ZA0670   - DETERMINE BUY AND SELL CCY AND AMOUNT         *
+     C*  14  #C       - TERMINATION PROCESSING                        *
+     C*  15  *PSSR    - PROGRAM ERROR DUMP                            *
+     C*                                                               *
+     C* EXTERNAL ROUTINE                                              *
+     C*                                                               *
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #A       - INITIAL ROUTINE                                    *
+     C*                                                               *
+     C* CALLS    TABCHN   - TABLE CHAIN ROUTINE                       *
+     C*                                                               *
+     C* CALLED BY  MAIN   - TODAYS DEALS REPORT                       *
+     C*                                                               *
+     C* FLDS USED: @RCDT  - RECORD FOR KEY TO LF/CLINT                *
+     C*            @BRCD  - BRANCH CODE SAVE                          *
+     C*            @TRT   - PART KEY TO TABLE FILE                    *
+     C*            @TSRT  - PART KEY TO TABLE FILE                    *
+     C*            @DATF  - DATE FORMAT NAME                          *
+     C*                                                               *
+     C*****************************************************************
+     C           #A        BEGSR
+     C*
+     C**   CHECK ROLLOVER SWITCH ON                                       S01434
+     C*                                                                   S01434
+     C                     CALL 'AOSARDR0'                                S01434
+     C                     PARM '*MSG   ' @RTCD   7                       S01434
+     C                     PARM '*KEY   ' @OPTN   7                       S01434
+     C                     PARM 'S01434'  @SARD   6                       S01434
+     C           SCSARD    PARM SCSARD    DSFDY                           S01434
+     C*                                                                   S01434
+     C           @RTCD     IFEQ *BLANKS                                   S01434
+     C                     MOVE 'Y'       S01434  1                       S01434
+     C                     SETON                     30                   S01434
+     C                     ELSE                                           S01434
+     C                     MOVE 'N'       S01434                          S01434
+     C                     SETOF                     30                   S01434
+     C                     ENDIF                                          S01434
+     C*                                                                   S01434
+     C                     MOVEACPY@      BIS@   80
+     C** SET UP PROGRAM NAME
+     C                     MOVEL'DL0205A' DBPGM
+     C*
+     C** INITIALIZE PROGRAN DEFINED FIELDS
+     C                     MOVE 'A'       @RCDT   1
+     C*****                Z-ADD*ZEROS    @BRCD                           S01194
+     C*****                MOVE *BLANKS   KEYTAB                          S01194
+     C                     MOVE '1'       *IN59
+     C*
+     C** ACCESS THE COMMA FOR FORMATTING
+     C***********IDRCID****IFEQ**BLANKS********************B1*************S01319
+     C*********************READ*FDINSTLL*****************61*1*************S01319
+     C*********************END*****************************E1*************S01319
+     C********************************************************************S01319
+     C************IN61*****IFEQ*'1'************************B1*************S01319
+     C**********           CALL 'AODEALR0'                                S01319              CGL029
+     C                     CALL 'AODEALR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7                       S01319
+     C                     PARM '*FIRST ' @OPTN   7                       S01319
+     C********** SDDEAL    PARM SDDEAL    DSFDY                           S01319              CGL029
+     C           SDDEAL    PARM SDDEAL    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS                    B1             S01319
+     C                     MOVE '001'     DBASE            *1             S01319
+     C                     MOVEL'SDDEALPD'DBFILE                          S01319
+     C                     MOVE *BLANKS   DBKEY                           S01319
+     C                     MOVE '1'       *INU7             DBERROR       S01319
+     C                     MOVE '1'       *INU8                           S01319
+     C                     EXSR *PSSR                                     S01194
+     C                     WRITEDL205AR3                                  E18492
+     C*****                WRITEDL205AR3                   *       E18492 S01117
+     C                     GOTO #A9
+     C                     END                             E1
+     C*
+     C** ACCESS THE MONTH NAME FILE
+     C***********1*********SETLLFDPMNTLL**********************************S01319
+     C*********************READ*FDPMNTLL*****************61***************S01319
+     C           1         SETLLFDMNTHLL                                  S01319
+     C                     READ FDMNTHLL                 61               S01319
+     C*
+     C           *IN61     IFEQ '1'                        B1
+     C                     MOVE '002'     DBASE            *1
+     C*********************MOVEL'FDPMNTLL'DBFILE**************************S01319
+     C                     MOVEL'FDMNTHLL'DBFILE           ************   S01319
+     C                     MOVE *BLANKS   DBKEY            *
+     C                     MOVE '1'       *INU7            *DBERROR 002
+     C                     MOVE '1'       *INU8            *
+     C                     EXSR *PSSR                                     S01194
+     C                     WRITEDL205AR3                   *              E18492
+     C*****                WRITEDL205AR3                   *       E18492 S01117
+     C                     GOTO #A9                        ************
+     C                     END                             E1
+     C*
+     C** SET UP THE KEY TO THE INSTALLATION CONTROL RECORD
+     C*****                MOVE '01'      @TRT                            S01194
+     C*****                MOVE '10'      @TSRT                           S01194
+     C*****                                                               S01194
+     C** RETRIEVE THE DATE FORMAT
+     C*****                EXSR TABCHN                                    S01194
+     C*
+     C** ACCESS BANK DETAILS                                              S01194
+     C                     CALL 'AOBANKR0'                                S01194
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*FIRST ' @OPTN   7                       S01194
+     C           SDBANK    PARM SDBANK    DSFDY                           S01194
+     C           @RTCD     IFNE *BLANK                                    S01194
+     C                     MOVEL'SDBANKPD'DBFILE           ************   S01194
+     C                     MOVEL'901'     DBASE            * DBERR 901*   S01194
+     C                     MOVEL@OPTN     DBKEY            ************   S01194
+     C                     SETON                     U7U8LR               S01194
+     C                     EXSR *PSSR                                     S01194
+     C                     WRITEDL205AR3                   *              E18492
+     C*****                WRITEDL205AR3                   *       E18492 S01117
+     C                     END                                            S01194
+     C**                                                                  S01194
+     C           *INU7     IFNE '1'                        B1
+     C*
+     C*****      DATF      IFEQ 'M'                        B*2            S01194
+     C           BJDFIN    IFEQ 'M'                        B*2            S01194
+     C                     MOVE 'M'       @DATF   1        **2
+     C                     ELSE                            X*2
+     C                     MOVE 'D'       @DATF            **2
+     C                     END                             E*2
+     C*
+     C                     END                             E1
+     C*
+      *                                                                   S01486
+      ** Access Module details                                            S01486
+     C                     CALL 'AOMMODR0'                                S01486
+     C                     PARM '*DBERR ' @RTCD   7          B:Return codeS01486
+     C                     PARM '*FIRST'  @OPTN   7          I:Option     S01486
+     C           SDMMOD    PARM SDMMOD    DSFDY              O:Rec format S01486
+     C*                                                                   S01486
+     C           @RTCD     IFNE *BLANK                                    S01486
+     C                     MOVEL'SDMMODPD'DBFILE           *************  S01486
+     C                     MOVEL'007'     DBASE            * DBERR 007 *  S01486
+     C                     MOVEL@OPTN     DBOPTN  7        *************  S01486
+     C                     SETON                     U7U8                 S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     END                                            S01486
+     C*                                                                   CPB001
+     C           BGN4ST    IFEQ 'Y'                                       CPB001
+     C                     MOVE *ON       *IN31                           CPB001
+     C                     ELSE                                           CPB001
+     C                     MOVE *OFF      *IN31                           CPB001
+     C                     ENDIF                                          CPB001
+     C*                                                                   S01486
+     C** Get non-Portfolio reference if PM is switched on.                S01486
+     C*                                                                   S01486
+     C           BGPFMG    IFEQ 'Y'                                       S01486
+      *                                                                   S01486
+     C                     MOVE *ON       *IN31                           S01486
+      *                                                                   S01486
+      ** Access PM ICD File.                                              S01486
+     C                     CALL 'AOPORTR0'                                S01486
+     C                     PARM '*DBERR ' @RTCD   7          B:Return codeS01486
+     C                     PARM '*FIRST'  @OPTN   7          I:Option     S01486
+     C           SDPORT    PARM SDPORT    DSFDY              O:Rec format S01486
+     C*                                                                   S01486
+     C           @RTCD     IFNE *BLANK                                    S01486
+     C                     MOVEL'SDPORTPD'DBFILE           *************  S01486
+     C                     MOVEL'008'     DBASE            * DBERR 008 *  S01486
+     C                     MOVEL@OPTN     DBOPTN  7        *************  S01486
+     C                     SETON                     U7U8                 S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     END                                            S01486
+     C                     END                                            S01486
+     C***RETRIEVE*THE*EXTERNAL*DATA*AREA*MMOD*****************************S01319
+     C************NAMVAR***DEFN*MMOD******MMODS***************************S01319
+     C*********************IN***MMODS*************************************S01319
+     C*
+     C/COPY WNCPYSRC,DL0205AC01
+     C           #A9       ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #B       - DETAIL PROCESSING                                  *
+     C*                                                               *
+     C* CALLS    #BB      - DETAIL PROCESSING FOR DRS DEALS           *
+     C*                                                               *
+     C* CALLED BY  MAIN   - TODAYS DEALS INCOMPLETE/COMPLETE          *
+     C*                                                               *
+     C* FLDS USED         -                                           *
+     C*                                                               *
+     C*****************************************************************
+     C           #B        BEGSR
+     C*
+     C*
+     C***CHECK*MMOD*FOR*THE*PRESENCE*OF*DRS*MODULES***********************S01319
+     C***********MODS******IFEQ*'YN'**************************************S01319
+     C***********MODS******OREQ*'YY'**************************************S01319
+     C***********MODS******OREQ*'NY'**************************************S01319
+     C                     MOVE '1'       *IN66
+     C                     MOVE '0'       *IN63
+     C                     EXSR #BB
+     C*********************END********************************************S01319
+     C*
+     C           #B9       ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #BB      - DETAIL PROCESSING FOR DRS DEALS                    *
+     C*                                                               *
+     C* CALLS    #ZA      - INITIALIZATION OF PRINTER FIELDS          *
+     C*          #BBA     - FORMATTING OF DRS FX DEALS                *
+     C*          #BBB     - FORMATTING OF LOANS/DEPOSIT/CD ON DRS     *
+     C*          #BBC     - FORMATTING OF NAB's ON DRS                *
+     C*          #BBD     - FORMATTING OF NAS's ON DRS                *
+     C*                                                               *
+     C* CALLED BY  #B     - DETAIL PROCESSING                         *
+     C*                                                               *
+     C* FLDS USED  @CT    - COUNT FOR FILE CONTROL ON DRS REPORTS     *
+     C*            @DLTF  - DELETE FLAG WORK FIELD                    *
+     C*                                                               *
+     C*****************************************************************
+     C           #BB       BEGSR
+     C*
+     C                     Z-ADD0         @CT     30
+     C                     MOVE '1'       *IN59
+     C*
+     C** SET UP THE REPORT TITLE FIELDS
+     C*****                MOVE TITL      RRTITL                          S01194
+     C                     MOVE BJURPT    RRTITL                          S01194
+     C*****                MOVE 'DLP0205A'RRREF                           S01194
+     C*****                MOVE RUNA      RRRUNA                          S01194
+     C                     MOVE BJMRDT    RRRUNA                          S01194
+     C***SET UP KEY FOR CURRENCIES TABLE FILE                             S01194
+     C*****                MOVE *BLANKS   KEYTAB                          S01194
+     C*****                MOVE '20'      @TRT                            S01194
+     C*****                MOVE '1'       @TCCY                           S01194
+     C*
+     C***********MODS******IFEQ*'YN'***********************B1*************S01319
+     C***********MODS******OREQ*'YY'***********************X1*************S01319
+     C                     READ FXICCDLL                 63*1
+     C*                                                                   S01434
+     C                     SETOF                     07                   S01434
+     C*
+     C** ACCESS THE FX FILE
+     C           *IN63     DOWEQ'0'                        B*2
+     C*
+     C           FHDDLT    IFEQ 'D'                        B**3
+     C           FHLCD     ANDEQBJRDNB                                    E23154
+     C*
+     C** IF THE DELETE FLAG IS EQUAL TO D FORMAT THE DEAL FOR OUTPUT
+     C*
+     C** CLEAR ALL THE PRINTER FILE FIELDS
+     C                     EXSR #ZA                        ***3
+     C*
+     C** FORMAT THE FX DEALS
+     C                     EXSR #BBA                       ***3
+     C*
+     C           *INU7     CABEQ'1'       #BB9             ***3
+     C*
+     C                     END                             E**3
+     C*
+     C                     READ FXICCDLL                 63**2
+     C*                                                                   S01434
+     C                     SETOF                     07                   S01434
+     C                     END                             E*2
+     C*
+     C*********************END*****************************E1*************S01319
+     C*
+     C*
+     C***********MODS******IFEQ*'NY'***********************B1*************S01319
+     C***********MODS******OREQ*'YY'***********************X1*************S01319
+     C                     READ MMICCDLL                 63*1
+     C*                                                                   S01434
+     C                     SETOF                     07                   S01434
+     C*
+     C** ACCESS THE MM FILE
+     C           *IN63     DOWEQ'0'                        B*2
+     C*
+     C           @DLTF     IFEQ 'D'                        B**3
+     C           @LCD      ANDEQBJRDNB                                    E23154
+     C*
+     C** IF THE DELETE FLAG IS EQUAL TO D FORMAT THE DEAL FOR OUTPUT
+     C*
+     C** CLEAR ALL THE PRINTER FILE FIELDS
+     C                     EXSR #ZA                        ***3
+     C*
+     C** FORMAT THE MM DEALS
+     C           RECIMT    CASEQ'MMDELDP1'#BBB             B***4
+     C*
+     C           RECIMT    CASEQ'MMDENBP1'#BBC             X***4
+     C*
+     C           RECIMT    CASEQ'MMDENSP1'#BBD             X***4
+     C*
+     C                     END                             E***4
+     C*
+     C                     END                             E**3
+     C*
+     C                     READ MMICCDLL                 63**2
+     C*                                                                   S01434
+     C                     SETOF                     07                   S01434
+     C                     END                             E*2
+     C*
+     C           *INU7     CABEQ'1'       #BB9             *1
+     C*********************END*****************************E1*************S01319
+     C*
+     C** PROCESS THE FILE CONTROL DETAILS
+     C*
+     C** FOR THE  REPORT
+     C                     MOVE @CT       RRMMNO
+     C*                                                                   LN0248
+     C*  WRITE TRAILER IF RECORDS WRITTEN                                 LN0248
+     C*                                                                   LN0248
+     C           RRMMNO    IFNE 0                                         LN0248
+     C                     WRITEDL0205R4                                  LN0248
+     C                     END                                            LN0248
+     C*                                                                   LN0248
+     C*********            MOVE '0'       *IN59                           LN0248
+     C*********            WRITEDL0205R0                                  LN0248
+     C*****                WRITEDL0205R2                                  S01177
+     C*                                                                   S01117
+     C** ENSURE SPOOL FILE RECORDED BY RCF ONCE - ONLY IF P1 IS WRITTEN   S01117
+     C** TO. SWRIT IS INCREMENTED FOR EVERY SUCCESSFUL WRITE TO THE       S01117
+     C** FILE - IF IT IS BLANK (OR 0) THEN NOTHING HAS BEEN WRITTEN TO    S01117
+     C** THE FILE. UNABLE TO COMPARE SWRIT TO *BLANKS SO USE @BKBIN -     S01117
+     C** AN UNITIALISED BINARY FIELD.                                     S01117
+     C********** SWRIT     IFNE 0                                   S01117LN0956
+     C********** SWRIT     ANDNE@BKBIN                              S01117LN0956
+     C**********           Z-ADDSFNUM     ZSNUM   60                S01117LN0956
+     C**********           CALL 'ZSFILE'                            S01117LN0956
+     C**********           PARM           SEQ                       E293  LN0956
+     C*********************PARM *BLANK    SEQ     5                 S01117E293
+     C**********           PARM *BLANK    @PARM   3                 S01117LN0956
+     C**********           PARM           SFILE                     S01117LN0956
+     C**********           PARM           ZSNUM                     S01117LN0956
+     C**********           PARM           ZSERR   1                 S01117LN0956
+     C**********           END                                      S01117LN0956
+     C*                                                                   S01117
+     C********** ZSERR     IFEQ 'Y'                                 S01117LN0956
+     C**********           SETON                     U7U8LR         S01117LN0956
+     C**********           RETRN                                    S01117LN0956
+     C**********           END                                      S01117LN0956
+     C*                                                                   S01117
+     C** FOR THE  AUDIT REPORT                                            S01117
+     C                     WRITEDL205AR0                                  S01117
+     C                     WRITEDL205AR2                                  S01117
+     C                     MOVE '1'       *IN59
+     C*
+     C** ENSURE TOTALS SPOOL FILE RECORDED BY RCF                         S01117
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C*********************PARM *BLANK    SEQ     5                 S01117E293
+     C                     PARM           SEQ                       S01117E293
+     C                     PARM *BLANK    @PARM   3                       S01117
+     C                     PARM           SFILEU                          S01117
+     C                     PARM           ZSNUMU                          S01117
+     C                     PARM           ZSERR   1                       S01117
+     C*                                                                   S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C           #BB9      ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #BBA     - FORMATTING OF DRS FX DEALS                         *
+     C*                                                               *
+     C* CALLS    ZA0660   - CONVERT YYYYMMDD TO DATE DISPLAY FORMAT   *
+     C*          ZA0670   - DETERMINE BUY AND SELL CCY AND AMOUNT     *
+     C*          TABCHN   - TABLE CHAIN ROUTINE                       *
+     C*          ZA0750   - CONVERT AN AMOUNT TO DISPLAY              *
+     C*          MM1023   - CONVERT RATE TO DISPLAY                   *
+     C*                                                               *
+     C* CALLED BY  #BB    - DETAIL PROCESSING FOR DRS DEALS           *
+     C*                                                               *
+     C* FLDS USED  @VDAT  - VALUE DATE WORK FIELD                     *
+     C*            @@DTIN - DATE INPUT TO SR.ZA0660                   *
+     C*            @@DATE - DATE OUTPUT FROM SR.ZA0660                *
+     C*            @ODAT  - OPTION TO DATE WORK FIELD                 *
+     C*            @@DBCC - BUY CURRENCY OUTPUT FROM SR.ZA0670        *
+     C*            @@CDP  - DECIMAL PLACES INPUT TO SR.ZA0750         *
+     C*            @@CRET - AMOUNT OF CHARACTERS OUTPUT FROM SR.ZA0750*
+     C*            @@DBAM - BUY AMOUNT OUTPUT FROM SR.ZA0670          *
+     C*            @@IAMT - INPUT AMOUNT TO SR.ZA0750                 *
+     C*            @@ADSP - OUTPUT AMOUNT FROM SR.ZA0750              *
+     C*            @@DSCC - SELL CURRENCY OUTPUT FROM SR.ZA0670       *
+     C*            @@DSAM - SELL AMOUNT OUTPUT FROM SR.ZA0670         *
+     C*            @@IRAT - RATE INPUT TO SR.MM1023                   *
+     C*            @@ORAT - OUTPUT RATE FROM SR.MM1023                *
+     C*            @CT    - COUNT FOR FILE CONTROL ON DRS REPORTS     *
+     C*                                                               *
+     C*****************************************************************
+     C           #BBA      BEGSR
+     C*                                                                   LN0956
+     C*                                                                   LN0956
+     C                     Z-ADDSFNUM     ZSNUM   60                      LN0956
+     C                     CALL 'ZSFILE'                                  LN0956
+     C                     PARM           SEQ                             LN0956
+     C                     PARM *BLANK    @PARM   3                       LN0956
+     C                     PARM           SFILE                           LN0956
+     C                     PARM           ZSNUM                           LN0956
+     C                     PARM           ZSERR   1                       LN0956
+     C*                                                                   LN0956
+     C           ZSERR     IFEQ 'Y'                                       LN0956
+     C                     SETON                     U7U8LR               LN0956
+     C                     RETRN                                          LN0956
+     C                     END                                            LN0956
+     C*                                                                   LN0956
+     C*
+     C** OUTPUT THE HEADER IF THIS IS THE 1ST RECORD OR FOR NEW PAGE
+     C           *IN66     IFEQ '1'
+     C                     WRITEDL0205R0
+     C                     MOVE '0'       *IN66
+     C                     END
+     C*
+     C** FORMAT ALL THE FX DEAL FIELDS FOR OUTPUT
+     C                     MOVE FHDN38    RRDLNO
+     C                     MOVELFHTYPE    RRDTYP
+     C                     MOVE '-'       RRDASH                                              CDL038
+     C                     MOVE FHSTYP    RRDLST                                              CDL038
+     C                     MOVE FHCLAS    RRCLAS                                              CDL038
+     C*********************MOVE '-  '*****RRDTYP                                              CDL038
+     C*********************MOVE FHSTYP****RRDTYP                                              CDL038
+     C                     Z-ADDFHTLUP    RRTIMU
+     C*
+     C** FORMAT THE DATES
+     C                     Z-ADD@VDAT     @@DTIN
+     C                     EXSR ZA0660
+     C                     MOVE @@DATE    RRVDAT
+     C*
+     C           FHTYPE    IFEQ 'OP'                       B1
+     C                     MOVE @ODAT     @@DTIN           *1
+     C                     EXSR ZA0660                     *1
+     C                     MOVE @@DATE    RRMDAT           *1
+     C                     END                             E1
+     C*
+     C*
+     C** DETERMINE WHICH IS BUY AND WHICH IS SELL CURRENCY
+     C                     EXSR ZA0670
+     C*
+     C*****                MOVEL@@DBCC    @TCCY
+     C*****                EXSR TABCHN
+     C                     CALL 'AOCURRR0'                                S01194
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*KEY   ' @OPTN   7                       S01194
+     C                     PARM @@DBCC    @AJCD   3                       S01194
+     C           SDCURR    PARM SDCURR    DSSDY                           S01194
+     C           @RTCD     IFNE *BLANK                                    S01194
+     C                     MOVEL'SDCURRPD'DBFILE                          S01194
+     C                     MOVEL@AJCD     DBKEY            ***************S01194
+     C                     MOVEL'902'     DBASE            * DB ERROR 902*S01194
+     C                     SETON                     U7U8LR***************S01194
+     C                     EXSR *PSSR                                     S01117
+     C                     WRITEDL205AR3                   *              E18492
+     C*****                WRITEDL205AR3                   *       E18492 S01117
+     C                     GOTO #BBA9                                     S01194
+     C                     END                                            S01194
+     C*
+     C           *INU7     CABEQ'1'       #BBA9
+     C*****                Z-ADDCDP       @@CDP   10                      S01194
+     C                     Z-ADDA6NBDP    @@CDP   10                      S01194
+     C                     Z-ADD17        @@CRET  20
+     C                     MOVE @@DBCC    RRPCCY
+     C*
+     C                     Z-ADD@@DBAM    @@IAMT
+     C                     EXSR ZA0750
+     C                     MOVE @@ADSP    RRAMT
+     C*
+     C*****                MOVEL@@DSCC    @TCCY                           S01194
+     C*****                EXSR TABCHN                                    S01194
+     C                     CALL 'AOCURRR0'                                S01194
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*KEY   ' @OPTN   7                       S01194
+     C                     PARM @@DSCC    @AJCD   3                       S01194
+     C           SDCURR    PARM SDCURR    DSSDY                           S01194
+     C           @RTCD     IFNE *BLANK                                    S01194
+     C                     MOVEL'SDCURRPD'DBFILE                          S01194
+     C                     MOVEL@AJCD     DBKEY            ***************S01194
+     C                     MOVEL'903'     DBASE            * DB ERROR 903*S01194
+     C                     SETON                     U7U8LR***************S01194
+     C                     EXSR *PSSR                                     S01117
+     C                     WRITEDL205AR3                   *              E18492
+     C*****                WRITEDL205AR3                   *       E18492 S01117
+     C                     GOTO #BBA9                                     S01194
+     C                     END                                            S01194
+     C*
+     C           *INU7     CABEQ'1'       #BBA9
+     C*****                Z-ADDCDP       @@CDP                           S01194
+     C                     Z-ADDA6NBDP    @@CDP                           S01194
+     C                     Z-ADD17        @@CRET
+     C                     MOVE @@DSCC    RRSCCY
+     C*
+     C                     Z-ADD@@DSAM    @@IAMT
+     C                     EXSR ZA0750
+     C                     MOVE @@ADSP    RRAMTA
+     C*
+     C** FORMAT THE RATE
+     C                     Z-ADDFHDXRT    @@IRAT
+     C                     EXSR MM1023
+     C                     MOVE @@ORAT    RRRATE
+     C*
+     C** FORMAT THE ACTION
+     C                     MOVE 'DELETE'  RRACTN
+     C/COPY WNCPYSRC,DL0205AC03
+     C                     MOVE FHDSTS    RRCSTS
+     C/COPY WNCPYSRC,DL0205AC04
+     C*
+     C** FORMAT THE CUSTOMER DETAIL FIELDS
+     C*****                Z-ADDFHDCNO    CKEY    60                      S01194
+     C                     MOVE FHDCNO    CKEY    6                       S01194
+     C*****                                                               S01194
+     C*****      CLIKEY    CHAINCLINT                49                   S01194
+     C*                                                                   S01194
+     C                     CALL 'AOCUSTR0'                                S01194
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*KEY   ' @OPTN   7                       S01194
+     C                     PARM CKEY      @KEY1  10                       S01194
+     C                     PARM *BLANKS   @KYST   7                       S01194
+     C           SDCUST    PARM SDCUST    DSSDY                           S01194
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,DL0205ACP1                                           S01408
+     C*                                                                   S01408
+     C*
+     C*****                MOVE CNUM      RRCNUM                          S01194
+     C*****                MOVE CRNM      RRCRNM                          S01194
+     C*****                MOVE CTWN      RRCTWN                          S01194
+     C                     MOVE BBCUST    RRCNUM                          S01194
+     C                     MOVE BBCRNM    RRCRNM                          S01194
+     C                     MOVE BBCRTN    RRCTWN                          S01194
+      *                                                                   S01486
+      ** Retrieve Portfolio Reference field                               S01486
+     C           BGPFMG    IFEQ 'Y'                                       S01486
+     C           BGN4ST    OREQ 'Y'                                       CPB001
+      *                                                                   S01486
+     C           FHPTFR    IFEQ '9997'                                    S01486
+     C           BGN4ST    ANDNE'Y'                                       CPB001
+     C                     MOVE FCR997    RRPTFR  4                       S01486
+     C                     ELSE                                           S01486
+     C                     MOVE FHPTFR    RRPTFR                          S01486
+     C                     END                                            S01486
+     C                     END                                            S01486
+     C*
+     C** OUTPUT THE DETAIL TO THE REPORT
+     C/COPY WNCPYSRC,DL0205AC05
+     C                     WRITEDL0205R1
+     C/COPY WNCPYSRC,DL0205AC06
+     C*
+     C                     ADD  1         @CT
+     C*
+     C           #BBA9     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #BBB     - FORMATTING OF LOANS/DEPOSIT/CD ON DRS              *
+     C*                                                               *
+     C* CALLS    ZA0660   - CONVERT YYYYMMDD TO DISPLAY FORMAT        *
+     C*          TABCHN   - TABLE CHAIN ROUTINE                       *
+     C*          ZA0750   - CONVERT AN AMOUNT TO DISPLAY              *
+     C*          MM1023   - CONVERT ARATE TO DISPLAY                  *
+     C*                                                               *
+     C* CALLED BY  #BB    - DETAIL PROCESSING FOR DRS DEALS           *
+     C*                                                               *
+     C* FLDS USED  @VDAT  - VALUE DATE WORK FIELD                     *
+     C*            @@DTIN - DATE INPUT TO SR.ZA0660                   *
+     C*            @@DATE - DATE OUTPUT FROM SR.ZA0660                *
+     C*            @MDAT  - MATURITY DATE WORK FIELD                  *
+     C*            @@CDP  - DECIMAL PLACES INPUT TO SR.ZA0750         *
+     C*            @@CRET - AMOUNT OF CHARACTERS OUTPUT FROM SR.ZA0750*
+     C*            @@IAMT - INPUT AMOUNT TO SR.ZA0750                 *
+     C*            @@ADSP - OUTPUT AMOUNT FROM SR.ZA0750              *
+     C*            @@IRAT - RATE INPUT TO SR.MM1023                   *
+     C*            @@ORAT - OUTPUT RATE FROM SR.MM1023                *
+     C*            @CT    - COUNT FOR FILE CONTROL ON DRS REPORTS     *
+     C*                                                               *
+     C*****************************************************************
+     C           #BBB      BEGSR
+     C*
+     C** OUTPUT THE HEADER IF THIS IS THE 1ST RECORD OR FOR NEW PAGE
+     C           *IN66     IFEQ '1'
+     C                     WRITEDL0205R0
+     C                     MOVE '0'       *IN66
+     C                     END
+     C*                                                                   S01434
+     C                     SETON                     07                   S01434
+     C*                                                                   S01434
+     C                     MOVE HKDN38    RRDLNO
+     C                     MOVELHKMTYP    RRDTYP                                              CDL038
+     C                     MOVE '-'       RRDASH                                              CDL038
+     C                     MOVE HKSTYP    RRDLST                                              CDL038
+     C                     MOVE HKCLAS    RRCLAS                                              CDL038
+     C*********************MOVELHKTYPE    RRDTYP                                              CDL038
+     C*********************MOVE '-  '*****RRDTYP                                              CDL038
+     C*********************MOVE HKSTYP****RRDTYP                                              CDL038
+     C                     Z-ADDHKTLUP    RRTIMU
+     C*
+     C** SET UP THE CUSTOMER DETAILS
+     C                     MOVE HKCNUM    CKEY
+     C*****      CLIKEY    CHAINCLINT                49                   S01194
+     C*
+     C                     CALL 'AOCUSTR0'                                S01194
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*KEY   ' @OPTN   7                       S01194
+     C                     PARM CKEY      @KEY1  10                       S01194
+     C                     PARM *BLANKS   @KYST   7                       S01194
+     C           SDCUST    PARM SDCUST    DSSDY                           S01194
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,DL0205ACP2                                           S01408
+     C*                                                                   S01408
+     C*
+     C*****                MOVE CNUM      RRCNUM                          S01194
+     C*****                MOVE CRNM      RRCRNM                          S01194
+     C*****                MOVE CTWN      RRCTWN                          S01194
+     C                     MOVE BBCUST    RRCNUM                          S01194
+     C                     MOVE BBCRNM    RRCRNM                          S01194
+     C                     MOVE BBCRTN    RRCTWN                          S01194
+     C*
+     C** SET UP ALL DATES
+     C                     Z-ADD@VDAT     @@DTIN
+     C                     EXSR ZA0660
+     C                     MOVE @@DATE    RRVDAT
+     C*
+     C           @MDAT     IFNE *ZEROS                     B1
+     C                     MOVE @MDAT     @@DTIN           *1
+     C                     EXSR ZA0660                     *1
+     C                     MOVE @@DATE    RRMDAT           *1
+     C                     ELSE                            X1
+     C           HKNTCE    IFEQ *ZEROS                     B*2
+     C                     MOVE 'CALL   ' RRMDAT           **2
+     C                     ELSE                            X*2
+     C                     MOVELHKNTCE    RRMDAT           **2
+     C                     MOVE 'DAYS'    RRMDAT           **2
+     C                     END                             E*2
+     C                     END                             E1
+     C*
+     C** FORMAT ALL AMOUNTS
+     C** FIND NO. OF D.P. OF CURRENCY AND FORMAT THE AMOUNT
+     C*****                MOVELHKCCY     @TCCY                           S01194
+     C*****                                                               S01194
+     C*****                EXSR TABCHN                                    S01194
+     C                     CALL 'AOCURRR0'                                S01194
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*KEY   ' @OPTN   7                       S01194
+     C                     PARM HKCCY     @AJCD   3                       S01194
+     C           SDCURR    PARM SDCURR    DSSDY                           S01194
+     C           @RTCD     IFNE *BLANK                                    S01194
+     C                     MOVEL'SDCURRPD'DBFILE                          S01194
+     C                     MOVEL@AJCD     DBKEY            ***************S01194
+     C                     MOVEL'904'     DBASE            * DB ERROR 904*S01194
+     C                     SETON                     U7U8LR***************S01194
+     C                     EXSR *PSSR                                     S01117
+     C                     WRITEDL205AR3                   *              E18492
+     C*****                WRITEDL205AR3                   *       E18492 S01117
+     C                     GOTO #BBB9                                     S01194
+     C                     END                                            S01194
+     C*
+     C           *INU7     CABEQ'1'       #BBB9
+     C*****                Z-ADDCDP       @@CDP                           S01194
+     C                     Z-ADDA6NBDP    @@CDP                           S01194
+     C                     Z-ADD17        @@CRET
+     C                     MOVE HKCCY     RRPCCY
+     C*
+     C                     Z-ADDHKAMNP    @@IAMT
+     C                     EXSR ZA0750
+     C                     MOVE @@ADSP    RRAMT
+     C*
+     C** SET UP INTEREST RATE/SPREAD
+     C           HKBSRC    IFNE *BLANKS                    B1
+     C                     Z-ADDHKSPRD    @@IRAT           *1
+     C                     ELSE                            X1
+     C                     Z-ADDHKINTR    @@IRAT           *1
+     C                     END                             E1
+     C*
+     C                     EXSR MM1023
+     C                     MOVE @@ORAT    RRRATE
+     C*
+     C** FORMAT THE ACTION
+     C                     MOVE 'DELETE'  RRACTN
+     C/COPY WNCPYSRC,DL0205AC07
+     C                     MOVE HKDSTS    RRCSTS
+     C/COPY WNCPYSRC,DL0205AC08
+     C*
+      ** Retrieve Portfolio Reference field                               S01486
+     C           BGPFMG    IFEQ 'Y'                                       S01486
+     C           BGN4ST    OREQ 'Y'                                       CPB001
+      *                                                                   S01486
+     C           HKPTFR    IFEQ '9997'                                    S01486
+     C           BGN4ST    ANDNE'Y'                                       CPB001
+     C                     MOVE FCR997    RRPTFR  4                       S01486
+     C                     ELSE                                           S01486
+     C                     MOVE HKPTFR    RRPTFR                          S01486
+     C                     END                                            S01486
+     C                     END                                            S01486
+     C/COPY WNCPYSRC,DL0205AC02
+      *                                                                   S01486
+     C** OUTPUT THE DETAIL TO THE REPORT
+     C                     WRITEDL0205R1
+     C/COPY WNCPYSRC,DL0205AC09
+     C*
+     C                     ADD  1         @CT
+     C*
+     C           #BBB9     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #BBC     - FORMATTING OF NAB's ON DRS                         *
+     C*                                                               *
+     C* CALLS    ZA0660   - CONVERT YYYYMMDD TO DATE DISPLAY FORMAT   *
+     C*          TABCHN   - TABLE CHAIN ROUTINE                       *
+     C*          ZA0750   - CONVERT AN AMOUNT TO DISPLAY              *
+     C*                                                               *
+     C* CALLED BY  #BB    - DETAIL PROCESSING FOR DRS DEALS           *
+     C*                                                               *
+     C* FLDS USED  @VDAT  - VALUE DATE WORK FIELD                     *
+     C*            @@DTIN - DATE INPUT TO SR.ZA0660                   *
+     C*            @@DATE - DATE OUTPUT FROM SR.ZA0660                *
+     C*            @MDAT  - MATURITY DATE WORK FIELD                  *
+     C*            @@CDP  - DECIMAL PLACES INPUT TO SR.ZA0750         *
+     C*            @@CRET - AMOUNT OF CHARACTERS OUTPUT FROM SR.ZA0750*
+     C*            @@IAMT - INPUT AMOUNT TO SR.ZA0750                 *
+     C*            @@ADSP - OUTPUT AMOUNT FROM SR.ZA0750              *
+     C*            @CT    - COUNT FOR FILE CONTROL ON DRS REPORTS     *
+     C*                                                               *
+     C*****************************************************************
+     C           #BBC      BEGSR
+     C*
+     C** OUTPUT THE HEADER IF THIS IS THE 1ST RECORD OR FOR NEW PAGE
+     C           *IN66     IFEQ '1'
+     C                     WRITEDL0205R0
+     C                     MOVE '0'       *IN66
+     C                     END
+     C*
+     C                     MOVE HLDN38    RRDLNO
+     C                     MOVELHLMTYP    RRDTYP                                              CDL038
+     C                     MOVE '-'       RRDASH                                              CDL038
+     C                     MOVE HLSTYP    RRDLST                                              CDL038
+     C                     MOVE HLCLAS    RRCLAS                                              CDL038
+     C*********************MOVELHLTYPE    RRDTYP                                              CDL038
+     C*********************MOVE '-  '*****RRDTYP                                              CDL038
+     C*********************MOVE HLSTYP****RRDTYP                                              CDL038
+     C                     Z-ADDHLTLUP    RRTIMU
+     C*
+     C** SET UP THE CUSTOMER DETAILS
+     C                     MOVE HLCNUM    CKEY
+     C*****      CLIKEY    CHAINCLINT                49                   S01194
+     C*
+     C                     CALL 'AOCUSTR0'                                S01194
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*KEY   ' @OPTN   7                       S01194
+     C                     PARM CKEY      @KEY1  10                       S01194
+     C                     PARM *BLANKS   @KYST   7                       S01194
+     C           SDCUST    PARM SDCUST    DSSDY                           S01194
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,DL0205ACP3                                           S01408
+     C*                                                                   S01408
+     C*
+     C*****                MOVE CNUM      RRCNUM                          S01194
+     C*****                MOVE CRNM      RRCRNM                          S01194
+     C*****                MOVE CTWN      RRCTWN                          S01194
+     C                     MOVE BBCUST    RRCNUM                          S01194
+     C                     MOVE BBCRNM    RRCRNM                          S01194
+     C                     MOVE BBCRTN    RRCTWN                          S01194
+     C*
+     C** SET UP ALL DATES
+     C                     Z-ADD@VDAT     @@DTIN
+     C                     EXSR ZA0660
+     C                     MOVE @@DATE    RRVDAT
+     C*
+     C                     Z-ADD@MDAT     @@DTIN
+     C                     EXSR ZA0660
+     C                     MOVE @@DATE    RRMDAT
+     C*
+     C** FIND NUMBER OF D.P. OF CURRENCY
+     C*****                MOVELHLCCY     @TCCY                           S01194
+     C*****                                                               S01194
+     C*****                EXSR TABCHN                                    S01194
+     C                     CALL 'AOCURRR0'                                S01194
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*KEY   ' @OPTN   7                       S01194
+     C                     PARM HLCCY     @AJCD   3                       S01194
+     C           SDCURR    PARM SDCURR    DSSDY                           S01194
+     C           @RTCD     IFNE *BLANK                                    S01194
+     C                     MOVEL'SDCURRPD'DBFILE                          S01194
+     C                     MOVEL@AJCD     DBKEY            ***************S01194
+     C                     MOVEL'905'     DBASE            * DB ERROR 905*S01194
+     C                     SETON                     U7U8LR***************S01194
+     C                     EXSR *PSSR                                     S01117
+     C                     WRITEDL205AR3                   *              E18492
+     C*****                WRITEDL205AR3                   *       E18492 S01117
+     C                     GOTO #BBC9                                     S01194
+     C                     END                                            S01194
+     C*
+     C           *INU7     CABEQ'1'       #BBC9
+     C*****                Z-ADDCDP       @@CDP                           S01194
+     C                     Z-ADDA6NBDP    @@CDP                           S01194
+     C                     Z-ADD17        @@CRET
+     C                     MOVE HLCCY     RRPCCY
+     C*
+     C                     Z-ADDHLAMNP    @@IAMT
+     C                     EXSR ZA0750
+     C                     MOVE @@ADSP    RRAMT
+     C*
+     C** FORMAT THE ACTION
+     C                     MOVE 'DELETE'  RRACTN
+     C/COPY WNCPYSRC,DL0205AC10
+     C                     MOVE HLDSTS    RRCSTS
+     C*
+     C** OUTPUT THE DETAIL TO THE REPORT
+     C                     WRITEDL0205R1
+     C/COPY WNCPYSRC,DL0205AC11
+     C*
+     C                     ADD  1         @CT
+     C*
+     C           #BBC9     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #BBD     - FORMATTING OF NAS's ON DRS                         *
+     C*                                                               *
+     C* CALLS    ZA0660   - CONVERT YYYYMMDD TO DATE DISPLAY FORMAT   *
+     C*          TABCHN   - TABLE CHAIN ROUTINE                       *
+     C*          ZA0750   - CONVERT AN AMOUNT TO DISPLAY              *
+     C*                                                               *
+     C* CALLED BY  #BB    - DETAIL PROCESSING FOR DRS DEALS           *
+     C*                                                               *
+     C* FLDS USED  @VDAT  - VALUE DATE WORK FIELD                     *
+     C*            @@DTIN - DATE INPUT TO SR.ZA0660                   *
+     C*            @@DATE - DATE OUTPUT FROM SR.ZA0660                *
+     C*            @MDAT  - MATURITY DATE WORK FIELD                  *
+     C*            @@CDP  - DECIMAL PLACES INPUT TO SR.ZA0750         *
+     C*            @@CRET - AMOUNT OF CHARACTERS OUTPUT FROM SR.ZA0750*
+     C*            @@IAMT - INPUT AMOUNT TO SR.ZA0750                 *
+     C*            @@ADSP - OUTPUT AMOUNT FROM SR.ZA0750              *
+     C*            @CT    - COUNT FOR FILE CONTROL ON DRS REPORTS     *
+     C*                                                               *
+     C*****************************************************************
+     C           #BBD      BEGSR
+     C*
+     C** OUTPUT THE HEADER IF THIS IS THE 1ST RECORD OR FOR NEW PAGE
+     C           *IN66     IFEQ '1'
+     C                     WRITEDL0205R0
+     C                     MOVE '0'       *IN66
+     C                     END
+     C*
+     C                     MOVE HMDN38    RRDLNO
+     C                     MOVELHMMTYP    RRDTYP                                              CDL038
+     C                     MOVE '-'       RRDASH                                              CDL038
+     C                     MOVE HMSTYP    RRDLST                                              CDL038
+     C                     MOVE HMCLAS    RRCLAS                                              CDL038
+     C*********************MOVELHMTYPE    RRDTYP                                              CDL038
+     C*********************MOVE '-  '*****RRDTYP                                              CDL038
+     C*********************MOVE HMSTYP****RRDTYP                                              CDL038
+     C                     Z-ADDHMTLUP    RRTIMU
+     C*
+     C** SET UP THE CUSTOMER DETAILS
+     C                     MOVE HMCNUM    CKEY
+     C*****      CLIKEY    CHAINCLINT                49                   S01194
+     C*
+     C                     CALL 'AOCUSTR0'                                S01194
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*KEY   ' @OPTN   7                       S01194
+     C                     PARM CKEY      @KEY1  10                       S01194
+     C                     PARM *BLANKS   @KYST   7                       S01194
+     C           SDCUST    PARM SDCUST    DSSDY                           S01194
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,DL0205ACP4                                           S01408
+     C*                                                                   S01408
+     C*
+     C*****                MOVE CNUM      RRCNUM                          S01194
+     C*****                MOVE CRNM      RRCRNM                          S01194
+     C*****                MOVE CTWN      RRCTWN                          S01194
+     C                     MOVE BBCUST    RRCNUM                          S01194
+     C                     MOVE BBCRNM    RRCRNM                          S01194
+     C                     MOVE BBCRTN    RRCTWN                          S01194
+     C*
+     C** SET UP ALL DATES
+     C                     Z-ADD@VDAT     @@DTIN
+     C                     EXSR ZA0660
+     C                     MOVE @@DATE    RRVDAT
+     C*
+     C                     Z-ADD@MDAT     @@DTIN
+     C                     EXSR ZA0660
+     C                     MOVE @@DATE    RRMDAT
+     C*
+     C** FIND NUMBER OF D.P. OF CURRENCY
+     C*****                MOVELHMCCY     @TCCY                           S01194
+     C*****                                                               S01194
+     C*****                EXSR TABCHN                                    S01194
+     C                     CALL 'AOCURRR0'                                S01194
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*KEY   ' @OPTN   7                       S01194
+     C                     PARM HMCCY     @AJCD   3                       S01194
+     C           SDCURR    PARM SDCURR    DSSDY                           S01194
+     C           @RTCD     IFNE *BLANK                                    S01194
+     C                     MOVEL'SDCURRPD'DBFILE                          S01194
+     C                     MOVEL@AJCD     DBKEY            ***************S01194
+     C                     MOVEL'906'     DBASE            * DB ERROR 906*S01194
+     C                     SETON                     U7U8LR***************S01194
+     C                     EXSR *PSSR                                     S01117
+     C                     WRITEDL205AR3                   *              E18492
+     C*****                WRITEDL205AR3                   *       E18492 S01117
+     C                     GOTO #BBD9                                     S01194
+     C                     END                                            S01194
+     C*
+     C           *INU7     CABEQ'1'       #BBD9
+     C*****                Z-ADDCDP       @@CDP                           S01194
+     C                     Z-ADDA6NBDP    @@CDP                           S01194
+     C                     Z-ADD17        @@CRET
+     C                     MOVE HLCCY     RRSCCY
+     C*
+     C                     Z-ADDHMAMNP    @@IAMT
+     C                     EXSR ZA0750
+     C                     MOVE @@ADSP    RRAMTA
+     C*
+     C** FORMAT THE ACTION AND CURRENT STATUS
+     C                     MOVE 'DELETE'  RRACTN
+     C/COPY WNCPYSRC,DL0205AC13
+     C                     MOVE HMDSTS    RRCSTS
+     C*
+     C** OUTPUT THE DETAIL TO THE REPORT
+     C                     WRITEDL0205R1
+     C/COPY WNCPYSRC,DL0205AC14
+     C*
+     C                     ADD  1         @CT
+     C*
+     C           #BBD9     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #ZA      - INITIALIZATION OF PRINTER FIELDS                   *
+     C*                                                               *
+     C* CALLS             -                                           *
+     C*                                                               *
+     C* CALLED BY  #BA    - TODAYS DEALS ON PF/DTRSD PROCESSING       *
+     C*            #BB    - DETAIL PROCESSING FOR DRS DEALS           *
+     C*                                                               *
+     C* FLDS USED         -                                           *
+     C*                                                               *
+     C*****************************************************************
+     C           #ZA       BEGSR
+     C*
+     C** INITIALIZE ALL PRINTER FILE FIELDS
+     C                     MOVE *BLANKS   RRCNUM
+     C                     MOVE *BLANKS   RRDLNO
+     C*********************MOVE *BLANKS   RRDTYP                                              CDL038
+     C                     MOVE *BLANKS   RRDSTC                                              CDL038
+     C                     MOVE *BLANKS   RRVDAT
+     C                     MOVE *BLANKS   RRMDAT
+     C                     MOVE *BLANKS   RRPCCY
+     C                     MOVE *BLANKS   RRAMT
+     C                     MOVE *BLANKS   RRRATE
+     C                     MOVE *BLANKS   RRSCCY
+     C                     MOVE *BLANKS   RRAMTA
+     C                     MOVE *BLANKS   RRACTN
+     C                     MOVE *BLANKS   RRCRNM
+     C                     MOVE *BLANKS   RRCTWN
+     C                     MOVE *BLANKS   RRCSTS
+     C                     MOVE *BLANKS   RRMMNO
+     C/COPY WNCPYSRC,DL0205AC12
+     C*
+     C           #ZA9      ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************   S01194
+     C*****                                                           *   S01194
+     C**TABCHN   - TABLE CHAIN ROUTINE                                *   S01194
+     C*****                                                           *   S01194
+     C**CALLS             -                                           *   S01194
+     C*****                                                           *   S01194
+     C**CALLED BY  #A     - INITIAL ROUTINE                           *   S01194
+     C*****        #BBA   - FORMATTING OF DRS FX DEALS                *   S01194
+     C*****        #BBB   - FORMATTING OF LOANS/DEPOSIT/CD ON DRS     *   S01194
+     C*****        #BBC   - FORMATTING OF NAB's ON DRS                *   S01194
+     C*****        #BBD   - FORMATTING OF NAS's ON DRS                *   S01194
+     C*****                                                           *   S01194
+     C**FLDS USED         -                                           *   S01194
+     C*****                                                           *   S01194
+     C*****************************************************************   S01194
+     C*****      TABCHN    BEGSR                                          S01194
+     C*****                                                               S01194
+     C*****      KEYTAB    CHAINTABDLI               61                   S01194
+     C*****                                                               S01194
+     C*****      *IN61     IFEQ '1'                        B1             S01194
+     C*****      RECI      ORNE 'D'                        *1             S01194
+     C*****                MOVE '901'     DBASE            ***************S01194
+     C*****                MOVEL'TABDLI  'DBFILE           *              S01194
+     C*****                MOVE KEYTAB    DBKEY            * DB ERROR 901 S01194
+     C*****                MOVE '1'       *INU7            *              S01194
+     C*****                MOVE '1'       *INU8            ***************S01194
+     C*****                END                             E1             S01194
+     C*****                                                               S01194
+     C*****      TAB9      ENDSR                                          S01194
+     C*****************************************************************
+      /EJECT
+     C****************************************************************
+     C*                                                              *
+     C*     MIDAS/DRS - STANDING DATA MODULE                         *
+     C*                                                              *
+     C*     ZA0750 -  CONVERT AMOUNT TO DISPLAY -38                  *
+     C*                                                              *
+     C*     AMEND NO. 000001                  DATE   04/07/86        *
+     C*                                                              *
+     C*       CALLS:                                                 *
+     C*                                                              *
+     C*       INPUT: @@IAMT 15,0 (INPUT AMOUNT)                      *
+     C*              @@CCY  3A   (INPUT CURRENCY)                    *
+     C*              @@CRET 2,0  (NUMBER OF CHARACTERS TO RETURN)    *
+     C*              @@CDP  1,0  (CURRENCY DECIMAL PLACES)           *
+     C*                                                              *
+     C*      OUTPUT: @@ADSP 21A    (AMOUNT TO DISPLAY)               *
+     C*                                                              *
+     C*        USES:                                                 *
+     C*                                                              *
+     C****************************************************************
+     C*
+     C           ZA0750    BEGSR
+     C*
+     C*          INITIALISE ARRAYS
+     C*
+     C                     MOVEA*BLANKS   @E
+     C                     MOVEA*BLANKS   @C
+     C*
+     C*          MOVE SIGN TO DISPLAY AMOUNT
+     C*
+     C           @@IAMT    IFGT 0                          B1
+     C                     MOVE '+'       @E,21            *1
+     C                     END                             E1
+     C*
+     C*          AFTER '-' SIGN PLACED IN  @E CHANGE @@IAMT TO +VE
+     C*
+     C           @@IAMT    IFLT 0                          B1
+     C                     MOVE '-'       @E,21            *1
+     C                     Z-SUB@@IAMT    @@IAMT           *1
+     C                     END                             E1
+     C*
+     C           @@IAMT    IFEQ 0                          B1
+     C                     MOVE ' '       @E,21            *1
+     C                     END                             E1
+     C*
+     C*          MOVE INPUT AMOUNT TO @D
+     C*
+     C                     MOVEA@@AMDS    @D
+     C*
+     C*          MOVE DECIMAL PORTION OF AMOUNT TO @E
+     C*
+     C                     Z-ADD15        @@C     20
+     C                     Z-ADD20        @@D     20
+     C*
+     C           20        SUB  @@CDP     @@MAX   20
+     C           @@D       DOWGT@@MAX                      B1
+     C                     MOVE @D,@@C    @E,@@D           *1
+     C                     SUB  1         @@C              *1
+     C                     SUB  1         @@D              *1
+     C                     END                             E1
+     C*
+     C*          MOVE DECIMAL SEPARATOR TO @E
+     C*
+     C           @@CDP     IFNE 0                          B1
+     C*********************MOVE*IDDCSP****@E,@@D************1*************S01319
+     C                     MOVE BNDCSP    @E,@@D           *1             S01319
+     C                     SUB  1         @@D              *1
+     C                     END                             E1
+     C*
+     C*          FIND POSITION OF LAST CHARACTER TO BE MOVED
+     C*
+     C                     Z-ADD1         @@E     20
+     C*
+     C           @@E       DOWLT15                         B1
+     C           @D,@@E    ANDEQ'0'                        *1
+     C                     ADD  1         @@E              *1
+     C                     END                             E1
+     C*
+     C*          MOVE INTEGER PORTION OF AMOUNT TO @E
+     C*
+     C                     Z-ADD0         @@CNT1  20
+     C                     Z-ADD0         @@CNT2  20
+     C*
+     C           @@C       DOWGT@@E                        B1
+     C                     MOVE @D,@@C    @E,@@D           *1
+     C                     ADD  1         @@CNT1           *1
+     C                     SUB  1         @@C              *1
+     C                     SUB  1         @@D              *1
+     C*
+     C*          INSERT THOUSAND SEPARATORS
+     C*
+     C           @@CNT1    DIV  3         @@RES   20       *1
+     C                     MVR            @@REMD  10       *1
+     C           @@REMD    IFEQ 0                          B*2
+     C           @@CNT2    ANDLT5                          **2
+     C*********************MOVE*IDTHSP****@E,@@D*************2************S01319
+     C                     MOVE BNTHSP    @E,@@D           **2            S01319
+     C                     ADD  1         @@CNT2           **2
+     C                     Z-ADD@@D       @@F     20       **2
+     C                     SUB  1         @@D              **2
+     C                     END                             E*2
+     C                     END                             E1
+     C*
+     C*          MOVE LAST CHARACTER
+     C*
+     C                     MOVE @D,@@C    @E,@@D
+     C*
+     C*          IF NUMBER OF CHARACTERS MOVED IS GREATER THAN NUMBER
+     C*        TO BE RETURNED DROP THOUSAND SEPARATORS TILL SATISFIED
+     C*
+     C           22        SUB  @@D       @@CMOV  20
+     C           @@CMOV    SUB  @@CRET    @@DIFF  20
+     C           @@DIFF    IFGT 0                          B1
+     C                     DO   @@DIFF                     B*2
+     C                     Z-ADD1         @@G     20       **2
+     C                     Z-ADD2         @@H     20       **2
+     C           @@G       DOWLE21                         B**3
+     C                     MOVE @E,@@G    @C,@@H           ***3
+     C                     ADD  1         @@G              ***3
+     C                     ADD  1         @@H              ***3
+     C           @@G       IFEQ @@F                        B***4
+     C                     ADD  1         @@G              ****4
+     C                     END                             E***4
+     C                     END                             E**3
+     C                     MOVEA@C        @E               **2
+     C                     ADD  4         @@F              **2
+     C                     END                             E*2
+     C                     END                             E1
+     C*
+     C*          MOVE @E TO DISPLAY FIELD
+     C*
+     C                     MOVEA@E        @@ADSP 21
+     C           ZA0759    ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* ZA0660 - THIS SUBROUTINE CONVERTS DATE FORMAT YYYYMMDD TO     *
+     C*          DDMMMYY FORMAT                                       *
+     C*                                                               *
+     C* CALLED BY :                                                   *
+     C*                                                               *
+     C* CALLS :                                                       *
+     C*                                                               *
+     C* INPUT  : @@DTIN DATE INPUT (YYYYMMDD)  - IN DATA STRUCTURE    *
+     C*                                                               *
+     C* OUTPUT : @@DATE DATE OUTPUT (DDMMMYY)                         *
+     C*                                                               *
+     C* USES :   @@MTH  MONTH NUMBER                                  *
+     C*          @@MNM  MONTH SHORTNAME                               *
+     C*          @@DAY  DAY NUMBER                                    *
+     C*          @@YYYY YEAR (4 CHARACTER)                            *
+     C*          @@DAT5 5A WORKFIELD                                  *
+     C*          @MN    ARRAY OF MONTH SHORTNAMES                     *
+     C*                                                               *
+     C*     LAST AMEND NO. ME1257              DATE 02/04/87          *
+     C*     When date input is zero set output date to blanks         *
+     C*                                                               *
+     C*****************************************************************
+     C           ZA0660    BEGSR
+     C*
+     C           @@DTIN    IFNE 0                          B1             ME1257
+     C                     MOVE @@YYYY    @@DATE  7        *1
+     C                     MOVE @MN,@@MTH @@DAT5  5        *1
+     C                     MOVEL@@DAY     @@DAT5           *1
+     C                     MOVEL@@DAT5    @@DATE           *1
+     C                     ELSE                            X1             ME1257
+     C                     MOVE *BLANKS   @@DATE           *1             ME1257
+     C                     END                             E1             ME1257
+     C*
+     C           ZA0669    ENDSR                              *** ZA0669 TAG ***
+     C*******************************************************************
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*                                                              *
+     C*     MIDAS/DRS - STANDING DATA MODULE                         *
+     C*                                                              *
+     C*     MM1023 -  CONVERT FX RATE TO DISPLAY -38                 *
+     C*                                                              *
+     C*     AMEND NO. 000001                  DATE   02/02/87        *
+     C*                                                              *
+     C*                                                              *
+     C*       INPUT: @@IRAT 13,8N  (INPUT RATE)                      *
+     C*                                                              *
+     C*      OUTPUT: @@ORAT 14A    (OUTPUT RATE)                     *
+     C*                                                              *
+     C* FIELDS USED: @@C - COUNT FOR DIGITS LEFT OF DECIMAL POINT    *
+     C*              @@D - COUNT FOR DIGITS RIGHT OF DECIMAL POINT   *
+     C*              @@E - COUNT FOR DIGITS RIGHT OF DECIMAL POINT   *
+     C*                                                              *
+     C*  INDICATORS: *IN81 - FLAG FOR NON-ZERO DIGITS                *
+     C*                                                              *
+     C*        USES:                                                 *
+     C*                                                              *
+     C****************************************************************
+     C           MM1023    BEGSR
+     C*
+     C**         PUT INPUT RATE INTO @A AND BLANKS INTO @Z
+     C*
+     C                     MOVEA@@RTDS    @A
+     C                     MOVEA*BLANKS   @Z
+     C*
+     C**   CHECK THE 4 LEFTMOST CHARACTERS FOR LEADING ZEROS
+     C**   MOVE CHARACTER OR BLANK IN POSITION IN @Z ACCORDINGLY
+     C*
+     C                     Z-ADD1         @@C     20
+     C*
+     C**                SET UP NON ZERO FLAG
+     C                     MOVE '0'       *IN81
+     C*
+     C**           CHECK POSITIONS FOR LEADING ZEROS
+     C           @@C       DOWLT5                          B1
+     C           *IN81     IFEQ '0'                        B*2
+     C           @A,@@C    ANDEQ'0'                        **2
+     C                     MOVE ' '       @Z,@@C           **2
+     C                     ELSE                            X*2
+     C                     MOVE @A,@@C    @Z,@@C           **2
+     C                     END                             E*2
+     C*
+     C**         SET FLAG ON IF LEFTMOST CHARACTER IS NON ZERO
+     C*
+     C           @A,@@C    IFNE '0'                        B*2
+     C                     MOVE '1'       *IN81            **2
+     C                     END                             E*2
+     C                     ADD  1         @@C              *1
+     C                     END                             E1
+     C*
+     C**         AFTER FIFTH CHARACTER IS MOVED - MOVE DECIMAL
+     C**         SEPARATOR TO @Z.
+     C*
+     C                     MOVE @A,@@C    @Z,@@C
+     C                     ADD  1         @@C
+     C*********************MOVE*IDDCSP****@Z,@@C**************************S01319
+     C                     MOVE BNDCSP    @Z,@@C                          S01319
+     C*
+     C**         MOVE REMAINING CHARACTERS STOPPING WHEN REMAINDER
+     C**         =0 OR NO.OF DEC.PLACES NORMALLY QUOTED HAS BEEN
+     C**         REACHED.
+     C*
+     C                     Z-ADD14        @@D     20
+     C                     Z-ADD13        @@E     20
+     C                     MOVE '0'       *IN81
+     C*
+     C**  CHECK CHARACTERS FROM THE RIGHT FOR ZEROS
+     C**  MOVE CHARACTER OR BLANK INTO POSITION UNTIL 1ST DECIMAL PLACE
+     C**  IS REACHED
+     C           @@D       DOWGT7                          B1
+     C*
+     C           *IN81     IFEQ '0'                        B*2
+     C           @A,@@E    ANDEQ'0'                        **2
+     C                     MOVE ' '       @Z,@@D           **2
+     C                     ELSE                            X*2
+     C                     MOVE @A,@@E    @Z,@@D           **2
+     C                     END                             E*2
+     C*
+     C           @A,@@E    IFNE '0'                        B*2
+     C                     MOVE '1'       *IN81            **2
+     C                     END                             E*2
+     C*
+     C                     SUB  1         @@D              **2
+     C                     SUB  1         @@E              **2
+     C*
+     C                     END                             E1
+     C*
+     C**  MOVE IST DECIMAL PLACE WHETHER ZERO OR NOT
+     C                     MOVE @A,@@E    @Z,@@D
+     C*
+     C**  MOVE OUTPUT ARRAY INTO OUTPUT RATE
+     C                     MOVEA@Z        @@ORAT 14
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*       SUBROUTINE ZA0670 - THIS SUBROUTINE IS USED TO FIND     *
+     C*       WHICH CCY AND WHICH AMOUNT IS BUY AND WHICH IS SELL.    *
+     C*                                                               *
+     C*       IF DEAL FIRST AMOUNT IS >0 THEN FIRST IS BUY            *
+     C*       ELSE FIRST IS SELL.                                     *
+     C*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     C*                                                               *
+     C*       CALLS:                                                  *
+     C*       INPUT: FHDAM1 - DEAL FIRST AMOUNT                       *
+     C*              FHDAM2 - DEAL SECOND AMOUNT                      *
+     C*              FHCCY1 - DEAL FIRST CURRENCY                     *
+     C*              FHCCY2 - DEAL SECOND CURRENCY                    *
+     C*      OUTPUT: @@DBAM - DEAL BUY AMOUNT                         *
+     C*              @@DSAM - DEAL SELL AMOUNT                        *
+     C*              @@DBCC - DEAL BUY CURRENCY                       *
+     C*              @@DSCC - DEAL SELL CURRENCY                      *
+     C*        USES:                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C           ZA0670    BEGSR
+     C           FHDAM1    IFGT 0
+     C                     Z-ADDFHDAM1    @@DBAM 150
+     C                     MOVE FHCCY1    @@DBCC  3
+     C                     Z-SUBFHDAM2    @@DSAM 150
+     C                     MOVE FHCCY2    @@DSCC  3
+     C                     ELSE
+     C                     Z-SUBFHDAM1    @@DSAM
+     C                     MOVE FHCCY1    @@DSCC
+     C                     Z-ADDFHDAM2    @@DBAM
+     C                     MOVE FHCCY2    @@DBCC
+     C                     END
+     C*
+     C           ZA0679    ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #C       - TERMINATION PROCESSING                             *
+     C*                                                               *
+     C* CALLS             -                                           *
+     C*                                                               *
+     C* CALLED BY  MAIN   - TODAYS DEALS REPORT                       *
+     C*                                                               *
+     C* FLDS USED         -                                           *
+     C*                                                               *
+     C*****************************************************************
+     C           #C        BEGSR
+     C*
+     C                     MOVE '1'       *INLR
+     C*
+     C** IF THERE HAS BEEN A DB ERROR ENSURE AUDIT REPORT PRODUCED        S01117
+     C           *INU7     IFEQ '1'                                       S01117
+     C                     WRITEDL205AR0                                  S01117
+     C                     WRITEDL205AR3                                  S01117
+     C                     WRITEDL205AR2                                  S01117
+     C                     MOVE '1'       *IN59                           S01117
+     C*                                                                   S01117
+     C** ENSURE TOTALS SPOOL FILE RECORDED BY RCF                         S01117
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C*********************PARM *BLANK    SEQ     5                 S01117E293
+     C                     PARM           SEQ                       S01117E293
+     C                     PARM *BLANK    @PARM   3                       S01117
+     C                     PARM           SFILEU                          S01117
+     C                     PARM           ZSNUMU                          S01117
+     C                     PARM           ZSERR   1                       S01117
+     C*                                                                   S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C           #C9       ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR    - PROGRAM ERROR DUMP                                 *
+     C*                                                               *
+     C* CALLS             -                                           *
+     C*                                                               *
+     C* CALLED BY         -                                           *
+     C*                                                               *
+     C* FLDS USED         -                                           *
+     C*                                                               *
+     C*****************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C           @DUMP     IFEQ *BLANKS                                   S01194
+     C                     MOVE 'Y'       @DUMP   1                       S01194
+     C                     DUMP
+     C                     END                                            S01194
+     C*
+     C                     ENDSR
+     C****************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

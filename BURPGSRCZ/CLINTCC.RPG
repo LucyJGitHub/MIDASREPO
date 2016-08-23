@@ -1,0 +1,275 @@
+     H            Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas BU Update CLINTCC')                              *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas  STANDING DATA MODULE
+     F*                                                                  *
+     F*     CLINTCC - BACKGROUND UPDATE OF CLINT FILE                    *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. BUG23967           Date 13May09               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                S01230              Date 07/11/89              *S01230
+     F*                                                                  *
+     F********************************************************************
+      *                                                                  *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *     BUG23967 - Add Local Industry Code Field. (Recompile)        *
+      *     CSD027 - Conversion Of Customer Number to Alpha              *
+     F*     S01230  - STANDARDISE PROGRAM                                *S01230
+     F********************************************************************S01230
+     F*                                                                  *
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                          *
+     F*                                                                  *
+     F*       30      CHAIN CLINT FAILED/ERROR                           *
+     F*       31      ERROR ON CLINT FILE                                *
+     F*       32      CHAIN CLINT FAILED/ERROR                           *
+     F*                                                                  *
+     F********************************************************************
+     FCLINT   UF  E           K        DISK                      A
+     F                                              KCOMIT
+     F            CLINTCBF                          KIGNORE
+     F            CLINTC1F                          KIGNORE
+      /EJECT
+     E* Description     : Copyright notice for inclusion in all progra    S01230
+     E*                                                                   S01230
+     E********************************************************************S01230
+     E                    CPY@    1   1 80               Copyright     arrS01230
+     E********************************************************************S01230
+      /EJECT
+     I*
+     I* RENAME RECORD ID ON HEADER FILE TO AVOID OVERWRITING
+     I*
+     ICLINTCAF
+     I              CNUM                            CNUMA
+     I              RCDT                            RCDTA
+     I*
+     I* DEFINE CUST. TELEPHONE NO., TELEX NO. & COUNTRY CODE.
+     I*
+     IZZ091       DS
+     I                                        1  12 CTEL
+     I                                       13  24 CTLX
+     I                                       25  26 CCCD
+     I*                                                                   S01230
+     I* Description     : Copyright notice for inclusion in all programs  S01230
+     I*                                                                   S01230
+     IA@CPY       DS                                                      S01230
+     I* Copyright array                                                   S01230
+     I                                        1  80 CPY@                  S01230
+     I*                                                                   S01230
+      /EJECT
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7        RETURN CODE
+     C                     PARM           WCNUM   6        CUSTOMER NO.
+     C                     PARM           WRCDT   1        RCD TYPE
+     C                     PARM           WCNA1  35        NAME & ADDRESS1
+     C                     PARM           WCNA2  35        NAME & ADDRESS2
+     C                     PARM           WCNA3  35        NAME & ADDRESS3
+     C                     PARM           WCNA4  35        NAME & ADDRESS4
+     C                     PARM           WCTWN  10        CUST. REPT TOWN
+     C                     PARM           WCTEL  12        CUST. TEL NO.
+     C                     PARM           WCTLX  12        CUST. TELEX NO.
+     C                     PARM           WCCCD   2        CUST. CNTRY CDE
+     C                     PARM           WLCD    50       LAST CHG DATE
+     C                     PARM           WCHTP   1        TYPE OF LST CHG
+     C*
+     C* DEFINE KEY TO CLINT FILE
+     C*
+     C           KEY       KLIST
+     C                     KFLD           CNUM
+     C                     KFLD           RCDT
+     C*
+     C           KEYA      KLIST
+     C                     KFLD           CNUMA
+     C                     KFLD           RCDTA
+     C*
+      /EJECT
+     C****************************************************************
+     C*
+     C*   M A I N L I N E   P R O G R A M
+     C*
+     C****************************************************************
+     C*
+     C* IF RECORD HAS BEEN INSERTED, CHAIN TO CLINT   TO CHECK THAT
+     C* RECORD DOES NOT ALREADY EXIST ON THIS FILE
+     C*
+     C           WCHTP     IFEQ 'I'
+     C                     MOVE WCNUM     CNUM
+     C                     MOVE WRCDT     RCDT
+     C           KEY       CHAINCLINT                30    CHAIN FAILED
+     C*
+     C* IF RECORD DOES NOT EXIST
+     C* THEN MOVE PARAMETERS RECIEVED INTO FILE FIELDS AND WRITE
+     C* A NEW RECORD
+     C*
+     C           *IN30     IFEQ '1'
+     C*
+     C* IF IT DOES EXIST AS DELETED(RECI *)
+     C* THEN MOVE PARAMETERS RECIEVED INTO FILE FIELDS AND UPDATE
+     C* OLD RECORD
+     C*
+     C           *IN30     OREQ '0'
+     C           RECI      ANDEQ'*'
+     C                     MOVE 'D'       RECI
+     C                     MOVE WCNUM     CNUM
+     C                     MOVE WRCDT     RCDT
+     C                     MOVE WCNA1     CNA1
+     C                     MOVE WCNA2     CNA2
+     C                     MOVE WCNA3     CNA3
+     C                     MOVE WCNA4     CNA4
+     C                     MOVE WCTWN     CTWN
+     C                     MOVE WCTEL     CTEL
+     C                     MOVE WCTLX     CTLX
+     C                     MOVE WCCCD     CCCD
+     C                     MOVE WCHTP     CHTP
+     C                     Z-ADDWLCD      LCD
+     C*
+     C* IF RECORD FOUND ON FILE AND IS NOT A DELETED RECORD SET ERROR
+     C*
+     C                     ELSE
+     C*
+     C                     SETON                     31
+     C                     END
+     C*
+     C           *IN30     IFEQ '1'
+     C                     WRITECLINTCCF               31   ERROR
+     C                     END
+     C*
+     C           *IN30     IFEQ '0'
+     C           *IN31     ANDEQ'0'
+     C                     UPDATCLINTCCF               31   ERROR
+     C                     END
+     C*
+     C           *IN31     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C* RECORD IS NOT AN INSERT
+     C*
+     C                     END
+     C*
+     C* IF RECORD HAS BEEN CHANGED, RETRIEVE RECORD FROM FILE
+     C*
+     C           WCHTP     IFEQ 'A'
+     C                     MOVE WCNUM     CNUM
+     C                     MOVE WRCDT     RCDT
+     C           KEY       CHAINCLINT                30    CHAIN FAILED
+     C*
+     C* IF RECORD FOUND, MOVE RECEIVED PARAMETERS INTO FILE FIELDS
+     C* AND UPDATE
+     C*
+     C           *IN30     IFEQ '0'
+     C                     MOVE WCNUM     CNUM
+     C                     MOVE WRCDT     RCDT
+     C                     MOVE WCNA1     CNA1
+     C                     MOVE WCNA2     CNA2
+     C                     MOVE WCNA3     CNA3
+     C                     MOVE WCNA4     CNA4
+     C                     MOVE WCTWN     CTWN
+     C                     MOVE WCTEL     CTEL
+     C                     MOVE WCTLX     CTLX
+     C                     MOVE WCCCD     CCCD
+     C                     MOVE WCHTP     CHTP
+     C                     Z-ADDWLCD      LCD
+     C                     UPDATCLINTCCF               30  ERROR
+     C                     END
+     C*
+     C* IF RECORD NOT FOUND OR ERROR OCCURRED ON UPDATE SET ERROR
+     C* PARAMETER
+     C*
+     C           *IN30     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C* RECORD IS NOT A CHANGED RECORD
+     C*
+     C                     END
+     C*
+     C* IF RECORD HAS BEEN DELETED FROM THE NEW FILE, RETRIEVE IT
+     C* FROM CLINT
+     C*
+     C           WCHTP     IFEQ 'D'
+     C                     MOVE WCNUM     CNUM
+     C                     MOVE WRCDT     RCDT
+     C           KEY       CHAINCLINT                30    CHAIN FAILED
+     C*
+     C* IF RECORD FOUND, UPDATE RELEVANT FIELDS (WE DON'T ACTUALLY
+     C* DELETE ANY RECORDS FROM THE OLD FILES)
+     C*
+     C           *IN30     IFEQ '0'
+     C                     MOVE '*'       RECI
+     C                     MOVE WCHTP     CHTP
+     C                     Z-ADDWLCD      LCD
+     C                     UPDATCLINTCCF               30  ERROR
+     C                     END
+     C*
+     C* IF RECORD NOT FOUND OR ERROR OCCURRED ON UPDATE SET ERROR
+     C* PARAMETER
+     C*
+     C           *IN30     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C                     END
+     C*
+     C* IF NO ERRORS HAVE OCCURRED ON CLINT   UPDATE
+     C*
+     C           P0RTN     IFEQ *BLANKS
+     C*
+     C* RETRIEVE OLD TRAILER FILE RECORD
+     C*
+     C**********           MOVE '0'       CNUMA                                               CSD027
+     C                     MOVE *BLANKS   CNUMA                                               CSD027
+     C                     MOVE '0'       RCDTA
+     C*
+     C           KEYA      CHAINCLINT                32    CHAIN FAILED
+     C*
+     C* IF CHAIN TO FILE SUCCESSFUL
+     C*
+     C*
+     C           *IN32     IFEQ '0'
+     C*
+     C* UPDATE AS APPROPRIATE THE NUMBER OF INSERTS,AMENDS OR DELETES
+     C* ON THE TRAILER FILE
+     C*
+     C           WCHTP     IFEQ 'I'
+     C                     ADD  1         TAIN
+     C                     END
+     C*
+     C           WCHTP     IFEQ 'A'
+     C                     ADD  1         TAAM
+     C                     END
+     C*
+     C           WCHTP     IFEQ 'D'
+     C                     ADD  1         TADL
+     C                     END
+     C*
+     C                     UPDATCLINTCAF               32    ERROR
+     C*
+     C                     END
+     C*
+     C* CHECK FOR ANY ERRORS AND SET ERROR PARAMETER FOR RETURN TO
+     C* NEW FILE MAINTENANCE PROGRAM
+     C*
+     C           *IN32     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+** CPY@     : Copyright notice for inclusion in all programs           grams
+(c) Misys International Banking Systems Ltd. 2001

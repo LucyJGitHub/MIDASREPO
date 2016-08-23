@@ -1,0 +1,78 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UP Call systems value maint. - Global Layer')   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade Module                                      */
+/*                                                                   */
+/*       UPC100001 - Call systems value maintenance - Global Layer   */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*                                                                   */
+/*       Last Amend No. BUG27785           Date 13May10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Prev Amend No. CSM010             Date 22Jun07              */
+/*                      CPK027             Date 21May07              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CUP027  *CREATE    Date 23Mar04              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BUG27785 - Override to remove renames.                      */
+/*       CSM010 - Applied by CPK027.                                 */
+/*       CPK027 - Message file spelt incorrectly.                    */
+/*       CUP027 - Global layer migration of Bridge ICD to the System */
+/*                Values file.                                       */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM                                                                     */ /*BUG27785*/
+             PGM        PARM(&MODE)                                                     /*BUG27785*/
+ 
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(4)                                   /*BUG27785*/
+ 
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2004')
+ 
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO CMDLBL(ERROR))
+ 
+/* Create data area /MIDASMSG in QTEMP */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+ 
+/* Override system value logical to Bridge logical. */
+             OVRDBF     FILE(GPSVALJ0) TOFILE(*LIBL/UPGSVALJ0) +
+                          OVRSCOPE(*JOB)
+             IF         COND(&MODE *EQ '*IMP') THEN(DO)                                 /*BUG27785*/
+                OVRDBF     FILE(GZSDBANKL1) TOFILE(*LIBL/SMBANKL0) +
+                             OVRSCOPE(*JOB)                                             /*BUG27785*/
+             ENDDO                                                                      /*BUG27785*/
+             CALL       PGM(GP009500) PARM(' ' 'M')
+             DLTOVR     FILE(GPSVALJ0) LVL(*JOB)
+             IF         COND(&MODE *EQ '*IMP') THEN(DO)                                 /*BUG27785*/
+                DLTOVR     FILE(GZSDBANKL1) LVL(*JOB)                                   /*BUG27785*/
+             ENDDO                                                                      /*BUG27785*/
+ 
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+/* Set up messages for Midas Information Screen  */
+/**********  RTVMSG     MSGID(UPM0001) MSGF(UTGMSGF) +                                 */ /*CPK027*/
+/**********               MSGDTA('UPC100001') MSG(&MESSAGE)                            */ /*CPK027*/
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('UPC100001') MSG(&MESSAGE)                               /*CPK027*/
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details')
+             MONMSG     MSGID(CPF0000)
+             CALL       PGM(SCC0010) PARM('UPC100001' 'JOBLOG' 'Y')
+             MONMSG     MSGID(CPF0000)
+ 
+ENDPGM:
+             ENDPGM

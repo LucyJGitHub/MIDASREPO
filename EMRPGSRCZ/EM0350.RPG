@@ -1,0 +1,473 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas EM Detailed Sub-Limit Display')                  *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Exposure Management Module                           *
+      *                                                               *
+      *  EM0350 - Display Sub-Limit Amounts : DETAILED                *
+      *                                                               *
+      *  Function:  This program will show via enquiry only the       *
+      *  transactions received into Midas from Trade Innovation by    *
+      *  customer and account.                                        *
+      *                                                               *
+      *  Called By: EM0340 - Display customer sub-limit exposure      *
+      *                      amounts                                  *
+      *                                                               *
+      *  Calls: ZA0250   - Clear program subfile message queue        *
+      *         AOCREPT  - Access program (General ledger)            *
+      *         EM0010   - Validate and calculate currencies          *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CTI007             Date 31Mar14               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 167618             Date 13Nov00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CTI002   *CREATE   Date 19Aug98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *  CTI007 - Trade Finance BF Midas 2.2 Exposure Management      *
+      *           (Recompile)                                         *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (recompiled)                                        *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  167618 - Incorrect exposure amount shown for transactions    *
+      *           in currencies with no decimal places.               *
+      *  CTI002 - Trade Innovation Phase II  *CREATE                  *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Use of indicators.                                           *
+      *                                                               *
+      *    30         sfldsp                                          *
+      *    31         sflclr                                          *
+      *   N31         sfldspctl                                       *
+      *    32         sflend                                          *
+      *    80-89      General Chain indicators                        *
+      *    98         DATE FORMAT                                     *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      *  *INZSR - Initial processing                                  *
+      *  CLR@SF - Clear subfile                                       *
+      *  LOADSF - Load subfile                                        *
+      *  SNDMSG - Send messages                                       *
+      *  FMTDTE - Format date                                         *
+      *  CVTCUR - Convert amounts by currency                         *
+      *  *PSSR  - Error processing                                    *
+      *                                                               *
+      *****************************************************************
+      *
+      * Display File
+     FEM0350FMCF  E                    WORKSTN
+     F                                        SFLRRNKSFILE SFL350
+      *
+      * Trade Finance Sub-Type DETAILS
+     FEMTFEXL0IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      * Customer File
+     FSDCUSTL0IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      * Accounts Code File
+     FSDACODL0IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      * Bank details
+     FSDBANKL0IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      * Exposure Management Installation Control File
+     FSDEXPML0IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      * Currency File
+     FSDCURRL1IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      * -------------------------------------------------------------------
+      *
+      * Copy array for date conversion routine
+      /COPY ZSRSRC,ZDATE2Z1
+      *
+      * Array containing Copyright statement
+     E                    CPY@    1   1 80
+     E                    POWERA  1   7  7 0             POWERS OF TEN    167618
+      * -------------------------------------------------------------------
+     IMSGDS       DS
+     I I            ' '                       1   7 MSGID
+     I I            'EMUSRMSG'                8  17 MSGF
+     I I            '*LIBL'                  18  27 MSGLIB
+     I I            ' '                      28 283 MSGDTA
+     I I            '*PRV'                  284 288 MSGREL
+      * -------------------------------------------------------------------
+      /SPACE 3
+      /COPY EMCPYSRC,EM0010I001
+     ILDA       E DS
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IIPSDS      SDS
+     I                                        1  10 #PGM
+     I                                      244 253 JOB
+     I                                      254 263 USER
+      ***  Program status data structure
+      *
+      * -------------------------------------------------------------------
+      *                         MAIN ROUTINE
+      * -------------------------------------------------------------------
+     C                     EXSR CLR@SF
+     C                     EXSR LOADSF
+      * -------------------------------------------------------------------
+      *
+      * Process Subfile
+     C           *IN03     DOWEQ*OFF
+      *
+     C/COPY WNCPYSRC,EM0350C001
+     C                     WRITEMSGCTL
+     C                     WRITETRL350
+     C                     EXFMTCTL350
+     C           *IN03     IFEQ *OFF
+      *
+     C                     CALL 'ZA0250'
+      *
+      * End *IN03
+     C                     ENDIF
+     C                     ENDDO
+     C/COPY WNCPYSRC,EM0350C002
+      * -------------------------------------------------------------------
+      *
+     C                     SETON                         LR
+     C                     RETRN
+      * -------------------------------------------------------------------
+      * Subroutine *INZSR
+      * Initialisation Subroutine
+      * -------------------------------------------------------------------
+     C           *INZSR    BEGSR
+      *
+      * Define Entry Parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P#CUST
+     C                     PARM           P#ACOD
+      *
+     C/COPY WNCPYSRC,EM0350C003
+      * Define Key Lists
+     C           KEY@EX    KLIST
+     C                     KFLD           P#CUST
+     C                     KFLD           P#ACOD
+      *
+      * Define WORK fields
+     C           *LIKE     DEFN EXCNUM    P#CUST
+     C           *LIKE     DEFN EXACNO    P#ACOD
+      *
+      * Set up copyright parameter
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           *NAMVAR   DEFN           LDA   256
+      *
+      * Initialise LDA field.
+     C                     MOVEL'EM0350'  DBPGM
+      *
+      * Get bank details
+     C           *LOVAL    SETLLSDBANKL0
+     C                     READ SDBANKL0                 89
+     C           *IN89     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           *DB ERROR 001 *
+     C                     MOVEL'CTI002'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      * If date format for Bank = MDY, seton *IN98.
+      * If date format for Bank = DMY, setof *IN98.
+     C           BJDFIN    IFEQ 'D'
+     C                     SETOF                         98
+     C                     ELSE
+     C                     SETON                         98
+     C                     ENDIF
+      *
+      * Get Exposure Management ICD Details
+     C           *LOVAL    SETLLSDEXPML0
+     C                     READ SDEXPML0                 89
+     C           *IN89     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD002       DBASE            ***************
+     C                     MOVEL'SDEXPMPD'DBFILE           *DB ERROR 002 *
+     C                     MOVEL'CTI002'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      * Get customer details
+     C           P#CUST    CHAINSDCUSTL0             89
+     C           *IN89     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD002       DBASE            ***************
+     C                     MOVEL'SDCUSTPD'DBFILE           *DB ERROR 002 *
+     C                     MOVEL'CTI002'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     MOVELP#CUST    EXCNUM
+     C                     MOVELBBCRNM    CBDESC
+     C                     ENDIF
+      *
+      * Get account details
+     C                     MOVELP#ACOD    A5ACCD
+     C           A5ACCD    CHAINSDACODL0             89
+     C           *IN89     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD002       DBASE            ***************
+     C                     MOVEL'SDACODPD'DBFILE           *DB ERROR 002 *
+     C                     MOVEL'CTI002'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     MOVELP#ACOD    EXACNO
+     C                     MOVELA5ACCN    ACDESC
+     C                     ENDIF
+      *
+      * Get currency Name
+     C           BUCYCD    CHAINSDCURRL1             89
+     C           *IN89     IFEQ *ON                        No Records
+     C           *LOCK     IN   LDA
+     C                     Z-ADD010       DBASE            ***************
+     C                     MOVEL'SDCURRPD'DBFILE           *DB ERROR 002 *
+     C                     MOVEL'CTI002'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE                                           167618
+     C                     MOVE A6NBDP    NBDPBU  10                      167618
+     C                     ENDIF
+      *
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * Subroutine CLR@SF
+      * Clear Subfile
+      * -------------------------------------------------------------------
+     C           CLR@SF    BEGSR
+      * Clear Subfile
+     C                     SETON                       3031
+     C                     WRITECTL350
+     C                     SETOF                       3031
+      *
+      * Reset SFLRRN
+     C                     Z-ADD0         SFLRRN
+      *
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * Subroutine LOADSF
+      * Load Subfile
+      * -------------------------------------------------------------------
+     C           LOADSF    BEGSR
+      *
+     C                     SETOF                         32
+     C           KEY@EX    SETLLEMTFEXL0
+      *
+      * Read Records into Subfile
+     C           KEY@EX    READEEMTFEXL0                 32
+     C           *IN32     DOWEQ'0'
+     C                     ADD  1         SFLRRN
+      *
+      * Format dates
+     C                     EXSR FMTDTE
+      *
+      * If currency in file EXTFEXL0 != SDEXPMPD, convert
+     C           BUCYCD    IFNE EXCURR
+     C                     EXSR CVTCUR
+     C                     ELSE
+      * Just add to eqivalent
+     C                     Z-ADDEXUAMT    EQUIV
+     C                     ENDIF
+      *
+      * Divide exposures by 1000
+     C           EXUAMT    IFNE 0
+     C                     DIV  1000      EXUAMT    H
+     C                     ENDIF
+      *
+     C           EQUIV     IFNE 0
+     C                     DIV  1000      EQUIV     H
+     C                     ENDIF
+      *
+      * Set Debit/Credit Flag
+     C                     MOVEL*BLANKS   #DRCR
+     C           EXDRCR    IFEQ 'D'
+     C                     MOVEL'Debit'   #DRCR
+     C                     ELSE
+     C                     MOVEL'Credit'  #DRCR
+     C                     ENDIF
+      *
+      * Write subfile record
+     C                     WRITESFL350
+     C           KEY@EX    READEEMTFEXL0                 32
+     C                     ENDDO
+      *
+      * Compare SFLRRN with 0 to see if there is anything to display
+     C           SFLRRN    IFGT 0
+     C                     MOVE *ON       *IN30
+     C                     ENDIF
+      *
+      * No records - send message
+     C           *IN30     IFEQ *OFF
+     C                     MOVEL'EMT0028' MSGID
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * Subroutine SNDMSG
+      * Send Program Message
+      * -------------------------------------------------------------------
+     C           SNDMSG    BEGSR
+      *
+      * Only write message if requested
+     C           MSGID     IFNE *BLANKS
+     C                     CALL 'AOCREPT'
+     C                     PARM           MSGID
+     C                     PARM           MSGF
+     C                     PARM           MSGLIB
+     C                     PARM           MSGDTA
+     C                     PARM '*SAME'   MSGREL
+     C                     PARM           #PGM
+     C                     PARM *BLANK    FTMSGQ 10
+     C                     PARM *BLANK    FTMSGT  7
+      *
+      * Reset message Id
+     C                     RESETMSGDS
+     C                     ENDIF
+      *
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * Subroutine FMTDTE
+      * Format Date
+      * -------------------------------------------------------------------
+     C           FMTDTE    BEGSR
+      *
+      * Posting Date
+     C                     Z-ADDEXRDTE    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     #DTER
+      *
+      * Value Date
+     C                     Z-ADDEXVDTE    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     #DTEV
+      *
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * Subroutine CVTCUR
+      * Converts amount to equivalent currency amount for EMU
+      * -------------------------------------------------------------------
+     C           CVTCUR    BEGSR
+      *
+      * CLEAR DATA STRUCTURE
+     C                     CLEARP#0010
+      *
+      * Set up parameter list
+     C                     MOVELEXCURR    P#FRCY
+      *                                                                   167618
+     C           EXCURR    CHAINSDCURRL1             89                   167618
+     C           *IN89     IFEQ *ON                        No Records     167618
+     C           *LOCK     IN   LDA                                       167618
+     C                     Z-ADD011       DBASE            ***************167618
+     C                     MOVEL'SDCURRPD'DBFILE           *DB ERROR 011 *167618
+     C                     MOVELEXCURR    DBKEY            ***************167618
+     C                     OUT  LDA                                       167618
+     C                     EXSR *PSSR                                     167618
+     C                     ELSE                                           167618
+     C           A6NBDP    ADD  1         M       10                      167618
+     C           EXUAMT    MULT POWERA,M  P#FRAM                          167618
+     C                     ENDIF                                          167618
+      *                                                                   167618
+     C***********          Z-ADDEXUAMT    P#FRAM                          167618
+      *                                                                   167618
+     C                     MOVELBUCYCD    P#TOCY
+     C                     Z-ADD0         P#TOAM
+     C                     Z-ADD0         P#RATE
+      *
+      * Call EM0010 for conversion
+     C                     CALL 'EM0010'
+     C                     PARM           P#0010
+      *
+      * Monitor return code
+     C           P#RTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD004       DBASE            ***************
+     C                     MOVEL'EM0010  'DBFILE           *DB ERROR 004 *
+     C                     MOVEL'CTI002'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C           NBDPBU    ADD  1         M                               167618
+     C           P#TOAM    DIV  POWERA,M  EQUIV                           167618
+     C***********          Z-ADDP#TOAM    EQUIV                           167618
+     C                     ENDIF
+      *
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      * -------------------------------------------------------------------
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      /COPY ZSRSRC,ZDATE2Z2
+      /COPY ZSRSRC,ZDATE2Z3
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+** POWERA - ASCENDING POWERS OF TEN                                       167618
+0000001                                                                   167618
+0000010                                                                   167618
+0000100                                                                   167618
+0001000                                                                   167618
+0010000                                                                   167618
+0100000                                                                   167618
+1000000                                                                   167618

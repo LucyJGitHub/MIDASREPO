@@ -1,0 +1,105 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas RE Projected Insufficient Funds Report')        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Retail Module                                       */
+/*                                                                   */
+/*       REC004243 - Projected Insufficient Funds Report             */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2011           */
+/*                                                                   */
+/*       Last Amend No. AR737480           Date 28Mar11              */
+/*       Prev Amend No. CAP207  *CREATE    Date 10Feb11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR737480 - REC0004243 00001 (Child: AR737476)               */
+/*       CAP207 - Account Balance Check extended to other APIs       */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2011')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+             SNDPGMMSG  MSG('REC004243 - Projected Insufficient Funds +
+                          Control') TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(XXXXXX00)
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+             RTVJOBA    TYPE(&JOBTYPE)
+ 
+/* Create work files */
+ 
+             CLRPFM     FILE(REPINFPD)
+/**********  CRTDUPOBJ  OBJ(REPINFPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +   */            /* AR737480 */
+/**********               TOLIB(QTEMP)                                  */            /* AR737480 */
+/**********  CRTDUPOBJ  OBJ(REPINFL0) FROMLIB(*LIBL) OBJTYPE(*FILE) +   */            /* AR737480 */
+/**********               TOLIB(QTEMP)                                  */            /* AR737480 */
+ 
+/**Override*necessary*files*to*be*used*in*extract*program**             */            /* AR737480 */
+ 
+/**********  OVRDBF     FILE(REPINFL0) TOFILE(QTEMP/REPINFL0)                         /* AR737480 */
+ 
+/* Call extract program */
+ 
+             CALL       PGM(RE004243)
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                ROLLBACK
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Call report program */
+ 
+             CALL       PGM(RE004244)
+ 
+/**Copy*records*for*reference**                                         */            /* AR737480 */
+ 
+/**********  CPYF       FROMFILE(QTEMP/REPINFPD) TOFILE(REPINFPD) +     */            /* AR737480 */
+/**********               MBROPT(*REPLACE)                              */            /* AR737480 */
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                ROLLBACK
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+/* Abnormal termination - batch job */
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                           REC004243 ended abnormally - see job log') +
+                           TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+/**********  DLTOVR     FILE(REPINFL0)                                  */            /* AR737480 */
+/**********  MONMSG     MSGID(CPF0000 MCH0000)                          */            /* AR737480 */
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+             ENDPGM

@@ -1,0 +1,86 @@
+/*********************************************************************/
+/*X*I****OVRDBF*FILE(UPC000310)*TOFILE(QADSPDBR)**********************/
+/*S*D****CLPBASEBND***************************************************/
+/*E*I****TEXT('Midas*UP*Delete*or*restore*views*for*UDF*tables')******/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge Upgrade Program                              */
+/*                                                                   */
+/*       UPC000311 - Delete or restore views built over UDF tables   */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2006           */
+/*                                                                   */
+/*       Last Amend No. MD034724 *REDUNDANT  Date 05Jun15            */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/*       Prev Amend No. 241378             Date 22Jun06              */
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CPK025 *CREATE     Date 22Jun06              */
+/*                                                                   */
+/*********************************************************************/
+/*       MD034724 - Replaced by new program to handle core changes.  */
+/*                                                                   */
+/*       241378 - Applied core fix CPK025 to resolve issue on        */
+/*                delete of logical views.                           */
+/*       CPK025 - MidasPlus 1.3 packaging.  Handle logicals built    */
+/*                over UDF extension tables.                         */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE &VIEWS)
+
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&VIEWS) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&NOTRST) TYPE(*DEC) LEN(1 0)
+
+             DCLF       FILE(UPC000310)
+
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2006')
+
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+ NEXTVIEW:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+
+             IF         COND(&WHREFI *NE ' ') THEN(DO)
+                IF         COND(&MODE *EQ '*DELETE ') THEN(DO)
+                   DLTF       FILE(QTEMP/&WHREFI)
+                   MONMSG     MSGID(CPF0000)
+                   CRTSAVF    FILE(QTEMP/&WHREFI) TEXT('Temporary save +
+                                file for UPC000310')
+                   SAVOBJ     OBJ(&WHREFI) LIB(&WHRELI) DEV(*SAVF) +
+                                SAVF(QTEMP/&WHREFI)
+                   DLTF       FILE(&WHRELI/&WHREFI)
+                   CHGVAR     VAR(&VIEWS) VALUE('*SOME')
+                ENDDO
+                IF         COND(&MODE *EQ '*RESTORE') THEN(DO)
+                   RSTOBJ     OBJ(&WHREFI) SAVLIB(&WHRELI) DEV(*SAVF) +
+                                SAVF(QTEMP/&WHREFI)
+                   MONMSG     MSGID(CPF3773) EXEC(DO)
+                      RCVMSG     MSGQ(*PGMQ) MSGTYPE(*EXCP) MSGDTA(&MSGDTA) +
+                                   MSGID(&MSGID)
+                      CHGVAR     VAR(&NOTRST) VALUE(%BIN(&MSGDTA 5 4))
+                      IF         COND(&NOTRST *NE 0) THEN(DO)
+                         GOTO       CMDLBL(ABNOR)
+                      ENDDO
+                   ENDDO
+                ENDDO
+             ENDDO
+
+             GOTO       CMDLBL(NEXTVIEW)
+
+             GOTO       CMDLBL(END)
+
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+
+END:
+             ENDPGM

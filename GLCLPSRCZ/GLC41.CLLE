@@ -1,0 +1,430 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/                   /*CGL120*/
+/*STD    CLPBASEBND                                                  */                   /*CGL120*/
+/*EXI    DFTACTGRP(*NO) ACTGRP(GLC41)                                */                   /*CGL120*/
+/*EXI    TEXT('Midas GL Accounts Postings merge')                    */
+/*********************************************************************/
+/*                                                                   */
+/*   Midas GENERAL LEDGER MODULE                                     */
+/*                                                                   */
+/*       GLC41 - DAILY ACCOUNTING MERGE                              */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*   WARNING - THIS PROGRAM IS RUNNING IN TASK SPLIT MODE.           */                   /*CGL120*/
+/*             DO NOT ADD ANY NEW PROGRAMS TO THIS CL IF IT IS NOT   */                   /*CGL120*/
+/*             ABLE TO RUN IN TASK SPLIT.                            */                   /*CGL120*/
+/*                                                                   */                   /*CGL120*/
+/*       Last Amend No. MD002850           Date 08Apr13              */                   /*CGL120*/
+/*       Prev Amend No. CGL120             Date 06Aug12              */
+/*                      BUG27417A          Date 19May10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*                      CAP204             Date 03Mar10              */
+/*                      CGL061             Date 10Nov08              */
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.05 ---------------------------------------------------*/
+/*                      CMX001             Date 18Apr01              */
+/*                      CPB002             Date 22Sep00             */
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      CEU024             Date 14Jul98              */
+/*                      CEU013             Date 20Apr98              */
+/*                      S01408             Date 21Feb96              */
+/*                      S01408             DATE 13DEC95              */
+/*                      E36165             DATE 02JUL92              */
+/*                      S01117             DATE 07/12/89             */
+/*                      S01194             DATE 16/03/89             */
+/*                      S03220             DATE 09/05/88             */
+/*                      S01098             DATE 24/07/86             */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD002850 - Correct the processing for restart of subtasks   */
+/*                  after failure.                                   */
+/*       CGL120 - GL COB Components Task Split                       */
+/*              - Incorporate 252196                                 */
+/*              - Incorporate CGL106                                 */
+/*       BUG27417A - Initialise merged posting files before merging. */
+/*       CAP204 - Retail Account Transfer                            */
+/*       CGL061 - Multi-streaming GL Statements - Task Split         */
+/*                Call GL0420 as specified by Dtaq ACPSTSERVE        */
+/*       CMX001  -  Meridian Export                                  */
+/*       CPB002 - Meridian DBA Middleware Replication Customisation. */
+/*       CEU024  -  EMU Retail Teller Support Enhancement            */
+/*       CEU013  -  EMU Account Postings Narrative                   */
+/*       S01408  -  Addition of core hook GLC41002                   */
+/*                  Addition of core hook GLC41003                   */
+/*       S01408  -  Addition of core hook GLC41001                   */
+/*       E36165  -  AT END OF YEAR, GE-XB ENTRIES NOT MERGED INTO    */
+/*                  EODPO FILE. REMOVE S01117 FIX FOR GLC41 TO       */
+/*                  INCLUDE ACPO3 (THE LOGICAL FILE THAT ACCESS      */
+/*                  GEXBPD) IN GL0400.                               */
+/*       S01117  -  RELEASE 10 MULTIBRANCHING - FILE NO LONGER IN    */
+/*                                              SYSTEM               */
+/*       S01194  -  NEW STANDING DATA                                */
+/*       S03220  -  FUNDS TRANSFER                                   */
+/*       S01098  -  AMENDMENT BLOCKS SELECTED LARGE FILES            */
+/*                                                                   */
+/*********************************************************************/
+/*           PGM                                                     */                   /*CGL061*/
+             PGM     PARM(&CNAM &CSEQ)                                                    /*CGL061*/
+/**/
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(50)                                   /*CGL061*/
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)                                    /*CGL061*/
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)                                    /*CGL061*/
+             DCL        VAR(&CSEQC) TYPE(*CHAR) LEN(5)                                    /*CGL061*/
+             DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)                                  /*CGL061*/
+             DCL        VAR(&DTAQLIBL) TYPE(*CHAR) LEN(10)                                /*CGL061*/
+             DCL        VAR(&MSGLENGTH) TYPE(*DEC) LEN(5 0) VALUE(50)                     /*CGL061*/
+             DCL        VAR(&MSGDATA) TYPE(*CHAR) LEN(50)                                 /*CGL061*/
+             DCL        VAR(&SNDDTAQ) TYPE(*CHAR) LEN(10)                                 /*CGL061*/
+             DCL        VAR(&RCVWAIT) TYPE(*DEC) LEN(5 0) VALUE(600)                      /*CGL061*/
+             DCL        VAR(&RESTART) TYPE(*CHAR) LEN(1)                                  /*CGL061*/
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1)                                     /*CGL061*/
+/**********  DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2001')                                   */                     /*CGL120*/
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2012')                                             /*CGL120*/
+/**********  DCL        VAR(&SWS) TYPE(*CHAR) LEN(8) VALUE('00000000')*/                  /*CGL120*/
+/*/COPY WNCPYSRC,GLC41005                                            */
+/**/
+/*           Offsets for file indicators in the GLSTAT data area     */
+/**/
+/**********  DCL        VAR(&ACPO1) TYPE(*DEC) LEN(3 0) VALUE(049) */                     /*CGL120*/
+/**********  DCL        VAR(&ACPO2) TYPE(*DEC) LEN(3 0) VALUE(050) */                     /*CGL120*/
+/*           DCL        VAR(&ACPO3) TYPE(*DEC) LEN(3 0) VALUE(051) */ /*S01117*/
+/**********  DCL        VAR(&ACPO3) TYPE(*DEC) LEN(3 0) VALUE(051) */              /*E36165 CGL120*/
+/**********  DCL        VAR(&ACPO4) TYPE(*DEC) LEN(3 0) VALUE(052) */                     /*CGL120*/
+/**********  DCL        VAR(&ACPO5) TYPE(*DEC) LEN(3 0) VALUE(053) */                     /*CGL120*/
+             DCL        VAR(&GLSTAT) TYPE(*CHAR) LEN(256)
+/**/                                                                  /*CEU024*/
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                 /*CEU024*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                 /*CEU024*/
+             DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)                  /*CEU024*/
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)             /*CEU024*/
+             DCL        VAR(&CEU024) TYPE(*CHAR) LEN(1)               /*CEU024*/
+             DCL        VAR(&MMOD) TYPE(*CHAR) LEN(128)               /*CPB002*/
+             DCL        VAR(&CMX001) TYPE(*CHAR) LEN(1)               /*CMX001*/
+             DCL        VAR(&SNDMSG) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CGL120*/
+/**/
+/* Global monitor message */                                                              /*CGL120*/
+                                                                                          /*CGL120*/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))                                                  /*CGL120*/
+                                                                                          /*CGL120*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                   /*CEU024*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                   /*CEU024*/
+             CHGVAR     VAR(&SAR) VALUE('CEU024')                     /*CEU024*/
+             CHGVAR     VAR(&CEU024) VALUE('N')                       /*CEU024*/
+/**/                                                                  /*CEU024*/
+/**  Check if Retail Teller Support Enhancement is installed */       /*CEU024*/
+/**/                                                                  /*CEU024*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)  /*CEU024*/
+             IF         COND(&RTCD *EQ '       ') +
+                 THEN(CHGVAR VAR(&CEU024) VALUE('Y'))                 /*CEU024*/
+             IF         COND(&RTCD *NE '       ' *AND +
+                  &RTCD *NE '*NRF   ') THEN(DO)                       /*CEU024*/
+/**********       GOTO       CMDLBL(ERROR)                         */              /*CEU024 CGL120*/
+                  GOTO       CMDLBL(ABNOR)                                                /*CGL120*/
+             ENDDO                                                    /*CEU024*/
+/**/                                                                  /*CPB002*/
+             CALL       PGM(AOMMODR0) PARM('*DBERR ' '*FIRST ' +
+                          &MMOD)                                      /*CPB002*/
+/**/                                                                  /*CMX001*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                   /*CMX001*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                   /*CMX001*/
+             CHGVAR     VAR(&SAR) VALUE('CMX001')                     /*CMX001*/
+             CHGVAR     VAR(&CMX001) VALUE('N')                       /*CMX001*/
+/**/                                                                  /*CMX001*/
+/**  Check if Meridian export is installed                   */       /*CMX001*/
+/**/                                                                  /*CMX001*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)  /*CMX001*/
+                                                                      /*CMX001*/
+             IF         COND(&RTCD = '       ') +
+                 THEN(CHGVAR VAR(&CMX001) VALUE('Y'))                 /*CMX001*/
+             IF         COND(&RTCD *NE '       ' *AND +
+                  &RTCD *NE '*NRF   ') THEN(DO)                       /*CMX001*/
+/**********       GOTO       CMDLBL(ERROR)                         */              /*CMX001 CGL120*/
+                  GOTO       CMDLBL(ABNOR)                                                /*CGL120*/
+             ENDDO                                                    /*CMX001*/
+                                                                      /*CMX001*/
+/**/
+             SNDPGMMSG  MSG('GLC41 - Daily Accounting Merge') TOMSGQ(MRUNQ)
+/**/
+             RTVDTAARA  DTAARA(GLSTAT) RTNVAR(&GLSTAT)
+/**/
+/**********  IF         COND(%SUBSTRING(&GLSTAT &ACPO2 1) = 'Y') +
+                        THEN(CHGVAR VAR(%SUBSTRING(&SWS 2 1)) VALUE('1'))*/               /*CGL120*/
+/*           IF         COND(%SUBSTRING(&GLSTAT &ACPO3 1) = 'Y') + */ /*S01117*/
+/*               THEN(CHGVAR VAR(%SUBSTRING(&SWS 3 1)) VALUE('1')) */ /*S01117*/
+/**********  IF         COND(%SUBSTRING(&GLSTAT &ACPO3 1) = 'Y') +
+                 THEN(CHGVAR VAR(%SUBSTRING(&SWS 3 1)) VALUE('1')) */              /*E36165 CGL120*/
+/**********  IF         COND(%SUBSTRING(&GLSTAT &ACPO4 1) = 'Y') +
+                        THEN(CHGVAR VAR(%SUBSTRING(&SWS 4 1)) VALUE('1'))*/               /*CGL120*/
+/**********  IF         COND(%SUBSTRING(&GLSTAT &ACPO5 1) = 'Y') +
+                        THEN(CHGVAR VAR(%SUBSTRING(&SWS 5 1)) VALUE('1'))*/               /*CGL120*/
+/**/
+/**********  CHGJOB     SWS(&SWS)                                  */                     /*CGL120*/
+/**/
+                                                                                          /*CGL120*/
+/* Check if normal run or restart                                  */                     /*CGL120*/
+                                                                                          /*CGL120*/
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)                               /*CGL120*/
+                                                                                          /*CGL120*/
+/* Check if any problems with COB components file                  */                     /*CGL120*/
+                                                                                          /*CGL120*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                                  /*CGL120*/
+             GOTO       CMDLBL(ABNOR)                                                     /*CGL120*/
+             ENDDO                                                                        /*CGL120*/
+                                                                                          /*CGL120*/
+             CHGVAR     VAR(&RESTART) VALUE(&STAT)                                        /*CGL120*/
+                                                                                          /*CGL120*/
+/* Set restart status to 'Y'                                       */                     /*CGL120*/
+                                                                                          /*CGL120*/
+             CHGVAR     VAR(&STAT) VALUE('Y')                                             /*CGL120*/
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)                               /*CGL120*/
+                                                                                          /*CGL120*/
+/* Set up call to QSNDDTAQ and override files to their members     */                     /*CGL120*/
+                                                                                          /*CGL120*/
+             CHGVAR     VAR(&CSEQC) VALUE(&CSEQ)                                          /*CGL120*/
+             CHGVAR     VAR(&MEMBER) VALUE('ACPST' *CAT &CSEQC)                           /*CGL120*/
+             CHGVAR     VAR(&DTAQLIBL) VALUE('*LIBL')                                     /*CGL120*/
+             CHGVAR     VAR(&SNDDTAQ) VALUE('ACPSTSERVE')                                 /*CGL120*/
+                                                                                          /*CGL120*/
+             OVRDBF     FILE(GLACPSPD) TOFILE(GLACPSPD) MBR(&MEMBER)                      /*CGL120*/
+                                                                                          /*CGL120*/
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)                                       /*CGL120*/
+                                                                                          /*CGL120*/
+/* If restart from component failed because of no respond from     */                     /*CGL120*/
+/* server, so resend message to Server and wait.                   */                     /*CGL120*/
+                                                                                          /*CGL120*/
+             IF         COND(&RESTART = 'F') THEN(DO)                                     /*CGL120*/
+             GOTO       CMDLBL(LOOP)                                                      /*CGL120*/
+             ENDDO                                                                        /*CGL120*/
+                                                                                          /*CGL120*/
+/* If restart, not caused by server do not responds,               */                     /*CGL120*/
+/* do not wait for the data queue entry                            */                     /*CGL120*/
+/* Clear any old data queue message from server but ensure that an */                     /*CGL120*/
+/* 'END' message, sent from the end proc job is not lost           */                     /*CGL120*/
+                                                                                          /*CGL120*/
+             IF         COND(&RESTART = 'Y') THEN(DO)                                     /*CGL120*/
+             CHGVAR     VAR(&RCVWAIT) VALUE(5)                                            /*CGL120*/
+             CALL       PGM(QRCVDTAQ) PARM(&MEMBER &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA &RCVWAIT)                                   /*CGL120*/
+             CHGVAR     VAR(&RCVWAIT) VALUE(600)                                          /*CGL120*/
+             CHGVAR     VAR(&MSGLENGTH) VALUE(50)                                         /*CGL120*/
+             IF         COND(%SST(&MSGDATA 1 3) = 'END') THEN(DO)                         /*CGL120*/
+             CALL       PGM(QSNDDTAQ) PARM(&MEMBER &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA)                                            /*CGL120*/
+             ENDDO                                                                        /*CGL120*/
+             GOTO       CMDLBL(RESTART)                                                   /*CGL120*/
+             ENDDO                                                                        /*CGL120*/
+                                                                                          /*CGL120*/
+LOOP:                                                                                     /*CGL120*/
+                                                                                          /*CGL120*/
+/* Request response from DTAQ whether to run job again or end      */                     /*CGL120*/
+                                                                                          /*CGL120*/
+             CHGVAR     VAR(&MSGDATA) VALUE(&MEMBER)                                      /*CGL120*/
+             CALL       PGM(QSNDDTAQ) PARM(&SNDDTAQ &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA)                                            /*CGL120*/
+/**********  CHGVAR     VAR(&STAT) VALUE('F')                      */            /*CGL120 MD002850*/
+/**********  CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)        */            /*CGL120 MD002850*/
+                                                                                          /*CGL120*/
+/* Wait on reply for 5 minutes                                     */                     /*CGL120*/
+                                                                                          /*CGL120*/
+             CALL       PGM(QRCVDTAQ) PARM(&MEMBER &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA &RCVWAIT)                                   /*CGL120*/
+                                                                                          /*CGL120*/
+/* If no reply, check if the server is still active.               */                     /*CGL120*/
+/* If Server is not active then error message and Terminate        */                     /*CGL120*/
+/* If Server is active, then resend a message to server            */                     /*CGL120*/
+/* If Server still do not respond after message send, then         */                     /*CGL120*/
+/* error message and Terminate.                                    */                     /*CGL120*/
+                                                                                          /*CGL120*/
+             IF         COND(&MSGLENGTH = 0) THEN(DO)                                     /*CGL120*/
+             ALCOBJ     OBJ((GLACPNPD *FILE *EXCL)) WAIT(0)                               /*CGL120*/
+             MONMSG     MSGID(CPF1002) EXEC(DO)                                           /*CGL120*/
+             IF         COND(&SNDMSG *EQ 'Y') THEN(DO)                                    /*CGL120*/
+             CHGVAR     VAR(&STAT) VALUE('F')                                           /*MD002850*/
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)                             /*MD002850*/
+             SNDPGMMSG  MSG('No response from server for GLC41') +
+                          TOMSGQ(MOPERQ MRUNQ)                                            /*CGL120*/
+             GOTO       CMDLBL(ABNOR)                                                     /*CGL120*/
+             ENDDO                                                                        /*CGL120*/
+             ELSE       CMD(DO)                                                           /*CGL120*/
+             CHGVAR     VAR(&SNDMSG) VALUE('Y')                                           /*CGL120*/
+             GOTO       CMDLBL(LOOP)                                                      /*CGL120*/
+             ENDDO                                                                        /*CGL120*/
+             ENDDO                                                                        /*CGL120*/
+                                                                                        /*MD002850*/
+             CHGVAR     VAR(&STAT) VALUE('F')                                           /*MD002850*/
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)                             /*MD002850*/
+             SNDPGMMSG  MSG('Server for GLC41 not active') +
+                          TOMSGQ(MOPERQ MRUNQ)                                            /*CGL120*/
+             GOTO       CMDLBL(ABNOR)                                                     /*CGL120*/
+                                                                                          /*CGL120*/
+             ENDDO                                                                        /*CGL120*/
+                                                                                          /*CGL120*/
+/* If reply = END, set restart status to 'N' and terminate         */                     /*CGL120*/
+                                                                                          /*CGL120*/
+             IF         COND(%SST(&MSGDATA 1 3) = 'END') THEN(DO)                         /*CGL120*/
+             CHGVAR     VAR(&STAT) VALUE('N')                                             /*CGL120*/
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)                               /*CGL120*/
+             GOTO       CMDLBL(END)                                                       /*CGL120*/
+             ENDDO                                                                        /*CGL120*/
+                                                                                          /*CGL120*/
+ RESTART:                                                                                 /*CGL120*/
+                                                                                          /*CGL120*/
+/* Ensure oly Primary file is proceseed and U2-U5 is off           */                     /*CGL120*/
+                                                                                          /*CGL120*/
+             CHGJOB     SWS(00000000)                                                     /*CGL120*/
+             CALL       PGM(GLC41A) PARM(&MEMBER)                                         /*CGL120*/
+                                                                                          /*CGL120*/
+/* Successful Completion                                           */                     /*CGL120*/
+                                                                                          /*CGL120*/
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)                                  /*CGL120*/
+                                                                                          /*CGL120*/
+             CHGVAR     VAR(&RESTART) VALUE('N')                                          /*CGL120*/
+                                                                                          /*CGL120*/
+             GOTO       CMDLBL(LOOP)                                                      /*CGL120*/
+                                                                                          /*CGL120*/
+             ENDDO                                                                        /*CGL120*/
+                                                                                          /*CGL120*/
+/* Unsuccessful Completion - Remove Changes                        */                     /*CGL120*/
+                                                                                          /*CGL120*/
+             ELSE       CMD(DO)                                                           /*CGL120*/
+                                                                                          /*CGL120*/
+             IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)                                  /*CGL120*/
+             SNDPGMMSG  MSG('DATABASE ERROR - GLC41') TOMSGQ(MOPERQ)                      /*CGL120*/
+                                                                                          /*CGL120*/
+             ENDDO                                                                        /*CGL120*/
+             IF         COND(%SWITCH(XXXXXX1X)) THEN(DO)                                  /*CGL120*/
+             SNDPGMMSG  MSGID(MEM0001) MSGF(REUSRMSG) MSGDTA(&ERROR) +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ)                                     /*CGL120*/
+             SNDPGMMSG  MSG('DATABASE IN ERROR - GLC41') +
+                          TOMSGQ(MOPERQ)                                                  /*CGL120*/
+             ENDDO                                                                        /*CGL120*/
+             ROLLBACK                                                                     /*CGL120*/
+                                                                                          /*CGL120*/
+             ENDDO                                                                        /*CGL120*/
+                                                                                          /*CGL120*/
+ABNOR:                                                                                    /*CGL120*/
+                                                                                          /*CGL120*/
+             SNDPGMMSG  MSG('Program GLC41 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)                                            /*CGL120*/
+             MONMSG     MSGID(CPF0000 MCH0000)                                            /*CGL120*/
+             CHGJOB     SWS(XXXXXX11)                                                     /*CGL120*/
+                                                                                          /*CGL120*/
+/**********  CLRPFM     FILE(EODPOHH)                              */                     /*CGL120*/
+/**********  CLRPFM     FILE(EODPOPD)                              */                     /*CGL120*/
+/**********  CLRPFM     FILE(EODPORA)                              */                     /*CGL120*/
+/**********  CLRPFM     FILE(EODPOZZ)                              */                     /*CGL120*/
+/**********  CLRPFM     FILE(EODPOPPD)                             */              /*CEU013 CGL120*/
+/*/COPY WNCPYSRC,GLC41006                                            */
+/*SAR 3220*/                                                          /*S03220*/
+/**********  IF         COND((%SST(&GLSTAT &ACPO1 1) = 'Y') *OR +
+                          (%SST(&GLSTAT &ACPO5 1) = 'Y'))       +
+                        THEN(DO)                                   */              /*S03220 CGL120*/
+/**********             CHGJOB SWS(XXXXX1XX)                       */              /*S03220 CGL120*/
+/**********             ENDDO                                      */              /*S03220 CGL120*/
+/**********  ELSE       CMD(DO)                                    */              /*S03220 CGL120*/
+/**********             CHGJOB SWS(XXXXX0XX)                       */              /*S03220 CGL120*/
+/**********             ENDDO                                      */              /*S03220 CGL120*/
+/**/
+/**********  CPYF       FROMFILE(MANPOAPD) TOFILE(EODPOPPD) +
+                          MBROPT(*ADD)                             */              /*CEU013 CGL120*/
+/**********  CPYF       FROMFILE(GEFP1APD) TOFILE(EODPOPPD) +
+                          MBROPT(*ADD)                             */              /*CEU013 CGL120*/
+/**/                                                                  /*CEU024*/
+/****If*CEU024*is*installed,*copy*from*file*GETTIAPD*to*EODPOPPD**/                /*CEU024 CGL120*/
+/**/                                                                  /*CEU024*/
+/**********  IF         COND(&CEU024 *EQ 'Y') +
+                        THEN(CPYF FROMFILE(GETT1APD) TOFILE(EODPOPPD) +
+                             MBROPT(*ADD) FMTOPT(*MAP))            */              /*CEU024 CGL120*/
+/*SAR 3220*/                                                          /*S03220*/
+/**/
+/*********** OVRDBF     FILE(TABLE) TOFILE(TABGL)*/                   /*S01194*/
+/**/                                                                  /*S01098*/
+/*****************BLOCK*LARGE*FILES*********************************/              /*S01098 CGL120*/
+/**/                                                                  /*S01098*/
+/**********  OVRDBF     FILE(EODPOPD) SEQONLY(*YES 100)            */              /*S01098 CGL120*/
+/**********  OVRDBF     FILE(EODPORA) SEQONLY(*YES 100)            */              /*S01098 CGL120*/
+/**/                                                                  /*S01098*/
+                                                                      /*S01408*/
+/*/COPY*WNCPYSRC,GLC41002                                          */              /*S01408 CGL120*/
+                                                                      /*S01408*/
+/***Merge*all*postings*from*ACPO1*and*GLACPOL0*to*single*file*GLACPML0**/          /*CAP204 CGL120*/
+/**********                                                        */              /*CAP204 CGL120*/
+/**********  CLRPFM     FILE(GLACPMPD)                             */            /*BUG27417 CGL120*/
+/**********  CLRPFM     FILE(GLACRMPD)                             */            /*BUG27417 CGL120*/
+/**********  CPYF       FROMFILE(ACPO1) TOFILE(GLACPMPD) +
+                          MBROPT(*REPLACE) RCDFMT(APOSTPDF)        */              /*CAP204 CGL120*/
+/**********  MONMSG    (CPF2817) CMPDTA(CPF2869)                   */              /*CAP204 CGL120*/
+/**********                                                        */              /*CAP204 CGL120*/
+/**********  CPYF       FROMFILE(GLACPOL0) TOFILE(GLACPMPD) +
+                          MBROPT(*ADD) RCDFMT(APOSTPDF)            */              /*CAP204 CGL120*/
+/**********  MONMSG    (CPF2817) CMPDTA(CPF2869)                   */              /*CAP204 CGL120*/
+/**********                                                        */              /*CAP204 CGL120*/
+/**********  CPYF       FROMFILE(ACPO1) TOFILE(GLACRMPD) +
+                          MBROPT(*REPLACE) RCDFMT(APOSTRAF)        */              /*CAP204 CGL120*/
+/**********  MONMSG    (CPF2817) CMPDTA(CPF2869)                   */              /*CAP204 CGL120*/
+/**********                                                        */              /*CAP204 CGL120*/
+/**********  CALL       PGM(GL0400)                                */                     /*CGL120*/
+                                                                      /*S01408*/
+/*/COPY*WNCPYSRC,GLC41003                                          */              /*S01408 CGL120*/
+                                                                      /*S01408*/
+/**/                                                                  /*S01098*/
+/**********  DLTOVR     FILE(EODPOPD)                              */              /*S01098 CGL120*/
+/**********  DLTOVR     FILE(EODPORA)                              */              /*S01098 CGL120*/
+/*********** DLTOVR     FILE(TABLE)*/                                 /*S01194*/
+                                                                      /*CMX001*/
+/**********  IF         COND(&CMX001 = 'Y') THEN(DO)               */              /*CMX001 CGL120*/
+/**********  CALL       PGM(MXC0491)  PARM('GLC41 ' 'XXX' 'N')     */              /*CMX001 CGL120*/
+/**********  ENDDO                                                 */              /*CMX001 CGL120*/
+                                                                      /*CMX001*/
+/**/
+/**********  IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)           */                     /*CGL120*/
+/**/
+/**********     SNDPGMMSG  MSG('FILE OUT OF BALANCE - ACPO') TOMSGQ(MOPERQ)*/             /*CGL120*/
+/**********     SNDPGMMSG  MSG('FILE OUT OF BALANCE - ACPO') TOMSGQ(MRUNQ)*/              /*CGL120*/
+/**/
+/**********  ENDDO                                                 */                     /*CGL120*/
+/**/
+/**********  ELSE       CMD(DO)                                    */                     /*CGL120*/
+/**/
+                                                                      /*S01408*/
+/*/COPY*WNCPYSRC,GLC41001                                          */              /*S01408 CGL120*/
+                                                                      /*S01408*/
+/**********     CHGVAR     VAR(%SUBSTRING(&GLSTAT &ACPO1 5)) +     */                     /*CGL120*/
+/**********                  VALUE('NNNNN')                        */                     /*CGL120*/
+/**********  CHGDTAARA  DTAARA(GLSTAT) VALUE(&GLSTAT)              */                     /*CGL120*/
+/*/COPY WNCPYSRC,GLC41004                                            */
+/**/                                                                  /*CPB002*/
+/***Extract*End*of*Day*Postings*for*all*Private*Banking*Customers***/              /*CPB002 CGL120*/
+/**/                                                                  /*CPB002*/
+/**********  IF   COND(%SUBSTRING(&MMOD 104 1) *EQ 'Y') THEN(DO)   */              /*CPB002 CGL120*/
+/**********         CALL RPC1403                                   */              /*CPB002 CGL120*/
+/**********  ENDDO                                                 */              /*CPB002 CGL120*/
+/**/
+/**********  ENDDO                                                 */                     /*CGL120*/
+                                                                      /*CEU024*/
+/**/                                                                  /*CEU024*/
+/**********  GOTO       CMDLBL(END)                                */              /*CEU024 CGL120*/
+/**/                                                                  /*CEU024*/
+/** If error is found */                                              /*CEU024*/
+/**/                                                                  /*CEU024*/
+/*ERROR:************************************************************/              /*CEU024 CGL120*/
+/**********  CHGJOB     SWS(XXXXXX11)                              */              /*CEU024 CGL120*/
+/**********  SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC41 ended abnormally - see job log') +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ)              */              /*CEU024 CGL120*/
+/**/
+END:                                                                  /*CEU024*/
+             ENDCMTCTL                                                                    /*CGL120*/
+             MONMSG     MSGID(CPF0000)                                                    /*CGL120*/
+/**********  CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')*/                    /*CGL120*/
+             ENDPGM

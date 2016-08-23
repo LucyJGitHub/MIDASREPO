@@ -1,0 +1,171 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing Module                                      */
+/*                                                                             */
+/*       V_#FCLTYAM - Global Facility Amendments                               */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2003                     */
+/*                                                                             */
+/*       Last Amend No. CLE134             Date 01Aug12                        */
+/*       Prev Amend No. CSF011             Date 12Sep11                        */
+/*                      CLE064             Date 06Dec10                        */
+/*                      CER059             Date 19Jul10                        */
+/*                      CER020             Date 19May08                        */
+/*                      CER043             Date 19May08                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      CSD031             Date 10Apr06                        */
+/*                      BUG11273           Date 28Apr06                        */
+/*                      CSD027             Date 18Dec05                        */
+/*                      CLE042             Date 06Sep05                        */
+/*                      CLE106             Date 01Aug04                        */
+/*                      CAP086             Date 08Jun05                        */
+/*                      BUG5817            Date 09Feb05                        */
+/*                      BUG5404            Date 17Jan05                        */
+/*                      CLE041             Date 15Oct04                        */
+/*                      CLE025             Date 20Oct03                        */
+/*                      BUG1912            Date 12May04                        */
+/*                      CGP001  *CREATE    Date 20Aug03                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       CLE134 - Past Due Call Loan Processing (Recompile)                    */
+/*       CSF011 - Customer Name on Inputs (Recompile)                          */
+/*       CLE064 - Enhancement of Lending Frequencies (Recompile)               */
+/*       CER059 - German Feature Upgrade to Delhi                              */
+/*       CER020 - Enhanced Rollover Window: Upgrade FGE089 to                  */
+/*                Midas Plus (Recompile)                                       */
+/*       CER043 - German Features LF041-00 New Fields and Defaulting           */
+/*                (Recompile)                                                  */
+/*       CSD031 - Enhanced Centralised Static Data (Recompile)                 */
+/*       BUG11273 - Attempt to write duplicate record in GPGLCUSL.             */
+/*                  Add GPGLCUSL.CGBRCD as new key(unique). (Recompile)        */
+/*       CSD027 - Conversion Of Customer Number to Alpha                       */
+/*       CLE042 - Extended Loan Sub Type (Recompile)                           */
+/*       CLE106 - Syndications Manager                                         */
+/*       CAP086 - Introduce Auto Authorisation to the API's                    */
+/*                without it. (Recompile)                                      */
+/*       BUG5817- Performance Enhancements                                     */
+/*       BUG5404- Local Cust Shortname added to GPGLCUSL (Recompile)           */
+/*       CLE041 - Collateralised Lending Phase 2B                              */
+/*       CLE025 - Credit Lines (Recompile)                                     */
+/*       BUG1912- SQL performance analysis required                            */
+/*       CGP001 - Global Processing                                            */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+  SELECT                                                                        :
+***RECI,*BRCA,*CNUM,*FACT,*FCNO,*SQNO,*VLDT,*FATP,*ACCY,*AAMT,******************: /*CLE106*/
+***RVCR,*ASTS,*IUSR,*AUSR,*XUSR,*CHTP,*PCRF,************************************: /*CLE106*/
+***PCOB,*GASSA,*AUTH,*SWRI,*FRNT,*AFRT,*REPA,*STMP,*****************************: /*CLE106*/
+   L.RECI, L.BRCA, L.CNUM, L.FACT, L.FCNO, SQNO, VLDT, FATP, ACCY, AAMT,        : /*CLE106*/
+   L.RVCR, ASTS, L.IUSR, L.AUSR, L.XUSR, L.CHTP, L.PCRF, F.ACOF, F.LAID,        : /*CLE106*/
+   L.PCOB, GASSA, L.AUTH, SWRI, L.FRNT, L.AFRT, L.REPA, L.STMP, L.NPRT,         : /*CLE106*/
+   F.SYIN, F.PRTR,                                                              : /*CLE106*/
+***DIGITS(CNUM)*as*PADCNUM,*****************************************************: /*CLE106*/
+***DIGITS(FACT)*as*PADFACT,*****************************************************: /*CLE106*/
+***DIGITS(FCNO)*as*PADFCNO,*****************************************************: /*CLE106*/
+***DIGITS(L.CNUM)*as*PADCNUM,                                                   : /*CLE106*/  CSD027
+          L.CNUM  as PADCNUM,                                                   : /*CLE106*/  CSD027
+   DIGITS(L.FACT) as PADFACT,                                                   : /*CLE106*/
+   DIGITS(L.FCNO) as PADFCNO,                                                   : /*CLE106*/
+   DIGITS(SQNO) as PADSQNO,                                                     :
+   CASE WHEN VLDT=0 THEN NULL ELSE DATE(VLDT+719892) END AS FVLDT,              :
+***CASE*WHEN*ORED=0*THEN*NULL*ELSE*DATE(ORED+719892)*END*AS*FORED,**************: /*CLE106*/
+   CASE WHEN L.ORED=0 THEN NULL ELSE DATE(L.ORED+719892) END AS FORED,          : /*CLE106*/
+   CASE WHEN NDEX=0 THEN NULL ELSE DATE(NDEX+719892) END AS FNDEX,              :
+   CASE WHEN TLCD=0 THEN NULL ELSE DATE(TLCD+719892) END AS FTLCD,              :
+***DEC(AAMT*C1.SCALING,31,4) AS "SAAMT",****************************************:BUG5817
+***DEC(AAMT*C1.SCALING*C1.RATE,31,4) AS "BSAAMT",*******************************:BUG5817
+   AAMT AS SAAMT,                                                               :BUG5817
+   A8ZONE AS CUSTZONE,                                                          :BUG5817
+   CGGLOB , CGCSSN , CGRNM  , CGRTN , CGICD , CGACO ,                           :BUG5817
+   CGCNCZ , CGCOLC , CGBRCD , CGCUST , CGZONE,                                  :BUG5817
+    CASE WHEN S1.SARN IS NULL THEN 'N' ELSE 'Y' END AS CLE024,                  :             CLE041
+    CASE WHEN S2.SARN IS NULL THEN 'N' ELSE 'Y' END AS CLE025                   :             CLE041
+***A8ZONE AS CUSTZONE, V_GPGLCUSL.* ********************************************:BUG5817
+**FROM GZLEFCAMPD***************************************************************: /*CLE106*/
+**LEFT*JOIN*GZSDBRCHPD*ON*BRCA*=*A8BRCD*****************************************: /*CLE106*/
+  FROM GZLEFCAMPD L                                                             : /*CLE106*/
+  LEFT JOIN GZSDBRCHPD ON L.BRCA = A8BRCD                                       : /*CLE106*/
+**LEFT*JOIN*V_GPGLCUSL*ON*A8ZONE*=*CGZONE*AND*CGCUST*=*DIGITS(CNUM)*************:BUG1912
+**LEFT*JOIN*GPGLCUSL*V_GPGLCUSL*ON*A8ZONE*=*CGZONE*AND*CGCNUM*=*CNUM************:    BUG1912 BUG5817
+**LEFT*JOIN*GPGLCUSL*ON*A8ZONE*=*CGZONE*AND*CGCNUM*=*CNUM***********************:BUG5817 /*CLE106*/
+  LEFT JOIN GPGLCUSL ON A8ZONE = CGZONE AND CGCNUM = L.CNUM                     :        /*CLE106*/
+  LEFT JOIN GZFCLTYFM F ON (F.BRCA=L.BRCA                                       : /*CLE106*/
+  AND F.CNUM=L.CNUM AND F.FACT=L.FACT                                           : /*CLE106*/
+  AND F.FCNO=L.FCNO)                                                            : /*CLE106*/
+  LEFT JOIN V_GLOBRATE C1 ON C1.CCY= L.ACCY                                     : /*CLE106*/
+**LEFT*JOIN*V_GLOBRATE*C1*ON*C1.CCY=*GZLEFCAMPD.ACCY;***************************:             CLE041
+**LEFT*JOIN*V_GLOBRATE*C1*ON*C1.CCY=*GZLEFCAMPD.ACCY****************************:     CLE041 BUG5817
+  LEFT JOIN GZSCSARDPD S1 ON A8ZONE=S1.ZONE AND S1.SARN='CLE024'                :             CLE041
+  LEFT JOIN GZSCSARDPD S2 ON A8ZONE=S2.ZONE AND S2.SARN='CLE025'                :             CLE041
+  UNION ALL                                                                     :             CLE041
+  SELECT                                                                        :             CLE041
+**RECI,*BRCA,*CNUM,*FACT,*FCNO,*SQNO,*VLDT,*FATP,*ACCY,*AAMT,*******************:CLE041 /*CLE106*/
+**RVCR,*ASTS,*IUSR,*AUSR,*XUSR,*CHTP,*PCRF,*************************************:CLE041 /*CLE106*/
+**PCOB,*GASSA,*AUTH,*SWRI,*FRNT,*AFRT,*REPA,*STMP,******************************:CLE041 /*CLE106*/
+   L.RECI, L.BRCA, L.CNUM, L.FACT, L.FCNO, SQNO, VLDT, FATP, ACCY, AAMT,        : /*CLE106*/
+   L.RVCR, ASTS, L.IUSR, L.AUSR, L.XUSR, L.CHTP, L.PCRF, F.ACOF, F.LAID,        : /*CLE106*/
+   L.PCOB, GASSA, L.AUTH, SWRI, L.FRNT, L.AFRT, L.REPA, L.STMP, L.NPRT,         : /*CLE106*/
+   F.SYIN, F.PRTR,                                                              : /*CLE106*/
+**DIGITS(CNUM)*as*PADCNUM,******************************************************:CLE041 /*CLE106*/
+**DIGITS(FACT)*as*PADFACT,******************************************************:CLE041 /*CLE106*/
+**DIGITS(FCNO)*as*PADFCNO,******************************************************:CLE041 /*CLE106*/
+***DIGITS(L.CNUM)*as*PADCNUM,***************************************************: /*CLE106*/ CSD027
+          L.CNUM  as PADCNUM,                                                   :            CSD027
+   DIGITS(L.FACT) as PADFACT,                                                   : /*CLE106*/
+   DIGITS(L.FCNO) as PADFCNO,                                                   : /*CLE106*/
+  DIGITS(SQNO) as PADSQNO,                                                      :             CLE041
+  CASE WHEN VLDT=0 THEN NULL ELSE DATE(VLDT+719892) END AS FVLDT,               :             CLE041
+**CASE*WHEN*ORED=0*THEN*NULL*ELSE*DATE(ORED+719892)*END*AS*FORED,***************:CLE041 /*CLE106*/
+   CASE WHEN L.ORED=0 THEN NULL ELSE DATE(L.ORED+719892) END AS FORED,          : /*CLE106*/
+  CASE WHEN NDEX=0 THEN NULL ELSE DATE(NDEX+719892) END AS FNDEX,               :             CLE041
+  CASE WHEN TLCD=0 THEN NULL ELSE DATE(TLCD+719892) END AS FTLCD,               :             CLE041
+***DEC(AAMT*C1.SCALING,31,4) AS "SAAMT",****************************************:CLE041      BUG5817
+***DEC(AAMT*C1.SCALING*C1.RATE,31,4) AS "BSAAMT",*******************************:CLE041      BUG5817
+   AAMT AS SAAMT,                                                               :BUG5817
+   A8ZONE AS CUSTZONE,                                                          :BUG5817
+   CGGLOB , CGCSSN , CGRNM  , CGRTN , CGICD , CGACO ,                           :BUG5817
+   CGCNCZ , CGCOLC , CGBRCD , CGCUST , CGZONE,                                  :BUG5817
+  CASE WHEN S1.SARN IS NULL THEN 'N' ELSE 'Y' END AS CLE024,                    :             CLE041
+********  CASE WHEN S2.SARN IS NULL THEN 'N' ELSE 'Y' END AS CLE025,            :  CLE041    BUG5817
+  CASE WHEN S2.SARN IS NULL THEN 'N' ELSE 'Y' END AS CLE025                     :            BUG5817
+*******A8ZONE AS CUSTZONE, V_GPGLCUSL.*                                            CLE041    BUG5817
+**FROM GZLEAGAMPD***************************************************************:CLE041 /*CLE106*/
+  FROM GZLEAGAMPD L                                                             : /*CLE106*/
+**LEFT*JOIN*GZSDBRCHPD*ON*BRCA*=*A8BRCD*****************************************:CLE041 /*CLE106*/
+  LEFT JOIN GZSDBRCHPD ON L.BRCA = A8BRCD                                       : /*CLE106*/
+*********  LEFT JOIN GPGLCUSL V_GPGLCUSL ON A8ZONE = CGZONE AND CGCNUM = CNUM   :   CLE041   BUG5817
+**LEFT*JOIN*GPGLCUSL*ON*A8ZONE*=*CGZONE*AND*CGCNUM*=*CNUM***********************:BUG5817 /*CLE106*/
+  LEFT JOIN GPGLCUSL ON A8ZONE = CGZONE AND CGCNUM = L.CNUM                     : /*CLE106*/
+***********  LEFT JOIN V_GLOBRATE C1 ON C1.CCY= GZLEAGAMPD.ACCY                 :   CLE041   BUG5817
+  LEFT JOIN GZFCLTYFM F ON (F.BRCA=L.BRCA                                       : /*CLE106*/
+  AND F.CNUM=L.CNUM AND F.FACT=L.FACT                                           : /*CLE106*/
+  AND F.FCNO=L.FCNO)                                                            : /*CLE106*/
+  LEFT JOIN GZSCSARDPD S1 ON A8ZONE=S1.ZONE AND S1.SARN='CLE024'                :             CLE041
+  LEFT JOIN GZSCSARDPD S2 ON A8ZONE=S2.ZONE AND S2.SARN='CLE025';               :             CLE041
+                                                                                :
+ * DESCRIBESTART                                                                :
+ * DESCRIBEFIELD PADCNUM    AS CNUM       USING GZLEFCAMPD                      :
+ * DESCRIBEFIELD PADFACT    AS FACT       USING GZLEFCAMPD                      :
+ * DESCRIBEFIELD PADFCNO    AS FCNO       USING GZLEFCAMPD                      :
+ * DESCRIBEFIELD PADSQNO    AS SQNO       USING GZLEFCAMPD                      :
+ * DESCRIBEFIELD FVLDT      AS VLDT       USING GZLEFCAMPD                      :
+ * DESCRIBEFIELD FORED      AS ORED       USING GZLEFCAMPD                      :
+ * DESCRIBEFIELD FNDEX      AS NDEX       USING GZLEFCAMPD                      :
+ * DESCRIBEFIELD FTLCD      AS TLCD       USING GZLEFCAMPD                      :
+ * DESCRIBEFIELD SAAMT      AS AAMT       USING GZLEFCAMPD                      :
+***DESCRIBEFIELD*BSAAMT*****AS*AAMT*******USING*GZLEFCAMPD*(BASECCY)************:            BUG5817
+ * DESCRIBEFIELD CUSTZONE   AS A8ZONE     USING GZSDBRCHPD                      :
+ * DESCRIBEEND                                                                  :
+                                                                                :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas GZ Global facility amendments - GZLEFCAMPD  ';                     :
+                                                                                :

@@ -1,0 +1,132 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    DFTACTGRP(*NO) ACTGRP(GLC007002)                            */
+/*EXI    TEXT('Midas GL Background Update of GL Files')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger                                      */
+/*                                                                   */
+/*       GLC007002 - Background Update of GL Files                   */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2014           */
+/*                                                                   */
+/*       Last Amend No. MD026169  *REWRITE Date 04Apr14              */
+/*       Prev Amend No. MD025679B          Date 26Mar14              */
+/*                      MD025679A          Date 21Mar14              */
+/*                      MD025679  *CREATE  Date 17Mar14              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD026169 - GO_ONL_OLP background job is processing          */
+/*                  full receiver chain                              */
+/*       MD025679B - API - PRONO Locking Issue                       */
+/*       MD025679A - API - OLPOSOA Locking Issue Performance Update  */
+/*       MD025679 - API - OLPOSOA Locking Issue.                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&JRCVR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JSEQA) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&JSEQN) TYPE(*DEC) LEN(10 0)
+ 
+             DCL        VAR(&CMTRTN) TYPE(*CHAR) LEN(10)
+             DCLF       FILE(GLOLJSTD)
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2014')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB SWS(00000000)
+ 
+             ALCOBJ     OBJ((GLOLJSTD *FILE *EXCLRD)) WAIT(0)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(DO)
+             SNDPGMMSG  MSG('Attempt to start background update of +
+                          GL Files mgr has failed. Probable cause: +
+                          process is active already.') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             GOTO       CMDLBL(END)
+             ENDDO
+ 
+             CALL       PGM(SCCMTCTL) PARM('S' &CMTRTN)
+ 
+             OVRDBF     FILE(GLOLJSTD) SHARE(*NO)
+ 
+             SCRTVJEVT  EVENT(NDSUJR) RECEIVER(&JRCVR) SEQ(&JSEQN)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Check if journal sequence exists. */
+/* If journal sequence does not exist, set to restart at first entry */
+ 
+             RCVF
+             MONMSG     MSGID(CPF0864)
+ 
+             IF         COND(&JRCVR *LT &OLJRCV) THEN(DO)
+                CHGVAR     VAR(&JRCVR) VALUE(&OLJRCV)
+                CHGVAR     VAR(&JSEQA) VALUE(&OLJSEQ)
+             ENDDO
+             ELSE       CMD(DO)
+                IF         COND(&JRCVR *EQ *BLANKS) THEN(DO)
+                   CHGVAR     VAR(&JRCVR) VALUE('*CURCHAIN')
+                ENDDO
+                CHGVAR     VAR(&JSEQA) VALUE('*FIRST')
+             ENDDO
+ 
+RERUN:
+             RTVJRNE    JRN(ICJRN) RCVRNG(&JRCVR) FROMENTLRG(&JSEQA) +
+                          RTNRCV(&JRCVR) RTNSEQLRG(&JSEQA)
+ 
+             MONMSG     MSGID(CPF0000) EXEC(DO)
+                CHGVAR     VAR(&JRCVR) VALUE('*CURCHAIN')
+                CHGVAR     VAR(&JSEQA) VALUE('*FIRST')
+                GOTO       CMDLBL(RERUN)
+             ENDDO
+ 
+             CALL       PGM(GL007002) PARM(&JSEQA &JRCVR 'INCREMENT')
+ 
+/* Receive journal entries*/
+ 
+             RCVJRNE    JRN(ICJRN) EXITPGM(GL007001) FILE((GLOLPSTD) +
+                          (GLPRONTD)) RCVRNG(&JRCVR) +
+                          FROMENTLRG(&JSEQA) TOENTLRG(*NONE) +
+                          JRNCDE((R) (U *IGNFILSLT) (J *IGNFILSLT)) +
+                          ENTTYP(PT PX DR OL NR) ENTFMT(*JRNENTFMT) +
+                          DELAY(*NEXTENT) BLKLEN(*NONE) +
+                          JRNENTFMT(RJNE0200) RTNPTR(*SYSMNG)
+ 
+/* Receiver has changed - get new starting details for RCVJRNE command */
+ 
+             IF COND(%SWITCH(XXXXX100)) THEN(DO)
+                CALL       PGM(GL007002) PARM(&JSEQA &JRCVR 'JRNDTL')
+                CHGJOB     SWS(00000000)
+                GOTO       CMDLBL(RERUN)
+             ENDDO
+ 
+             IF COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal termination */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC007002 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             DLTOVR     FILE(*ALL)
+ 
+             RCLACTGRP  ACTGRP(*ELIGIBLE)
+             MONMSG     MSGID(CPF0000)
+ 
+             ENDPGM

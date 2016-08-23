@@ -1,0 +1,93 @@
+/*********************************************************************/
+/*S*D****CLPBASEBND***************************************************/                 /*BUG23967*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       SDC000900 - Midas Initialization Program for CER020         */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2008           */
+/*                                                                   */
+/*       Last Amend No. CER059             Date 19Jul10              */
+/*       Prev Amend No. BUG23967           Date 14May09              */
+/*                      CER020  *CREATE    Date 19May08              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CER059 - German Feature Upgrade to Delhi                    */
+/*       BUG23967 - Add Local Industry Code Field. REDUNDANT         */
+/*       CER020 - Enhanced Rollover Window: Upgrade FGE089 to        */
+/*                Midas Plus                                         */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RTCDE &PMODE)
+/**/
+             DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RTCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PREF) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2008')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREF)
+             CHGVAR     VAR(&LIB) VALUE(&PREF *CAT 'DMLIB')
+ 
+             SNDPGMMSG  MSG('SD000900 - Midas Initialization +
+                          Program for CER020') TOMSGQ(MRUNQ)
+ 
+/** Start Commitment Control */
+ 
+             IF         COND((&PMODE *EQ '1') *OR (&PMODE *EQ '2')) +
+                        THEN(DO)
+ 
+               STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+               MONMSG     MSGID(CPF8351)
+ 
+/** Call the Take-On RPG */
+ 
+               IF         COND(&PMODE *NE '3') THEN(DO)
+                 CALL       PGM(SD000900)
+               ENDDO
+ 
+/** If error */
+ 
+               IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+ 
+                 ROLLBACK
+ 
+                 GOTO       CMDLBL(ABNOR)
+ 
+               ENDDO
+ 
+               ELSE       CMD(DO)
+ 
+                 COMMIT
+ 
+               ENDDO
+               ENDCMTCTL
+               MONMSG     MSGID(CPF8355)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGVAR     VAR(&RTCDE) VALUE(*ERROR)
+ 
+ /** Send error message */
+ 
+             SNDPGMMSG  MSG('Program SDC000900 ended abnormally') +
+                          TOMSGQ(MOPERQ)
+END:
+             MONMSG     MSGID(CPF2105)
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
+                          Banking Systems Ltd.')
+ 
+             ENDPGM

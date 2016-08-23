@@ -1,0 +1,628 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Accrual summary')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module                                        *
+     F*                                                               *
+     F*  RE3666A - ACCRUAL SUMMARY.                                   *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Last Amend No. CSC042             Date 16Feb09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL020             Date 12Dec02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CGL007             Date 26Mar99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 076908             Date 30Jul96               *
+      *                 101967             Date 10Jul96               *
+     F*                 086125             DATE 16MAR95               *
+     F*                 083906             DATE 27FEB95               *
+     F*                 S01522             DATE 25JAN95               *
+     F*                 S01413 *CREATE     DATE 13APR93               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  CSC042 - COB performance fixes.                              *
+      *           Cache the currency details. RZB sofia calls AOCURRR**
+      *           more than 317K times.                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*  CGL020 - Midas Compliance Watch - Additional A/C Postings    *
+     F*           Information (Recompile)                             *
+      *  CGL007 - Account Postings Enquiry.  Recompile.               *
+     F*  076908 - Do not output 'Associated Customer', 'Deal Loan     *
+     F*           Ref' or 'For account of' fields for Accrual         *
+     F*           Summary as these are irrelevant for Acc Summary.    *
+     F*  101967 - Foob in GL0600 (initialize trailer with 2)          *
+     F*           of 1 unit if GEIERPD0 not empty                     *
+     F*         - Foob in GL0600 if GEIERPD empty + generation of a   *
+     F*           blank record in GEIERPD                             *
+     F*  086125 - Add new parameter to AOPNARR0                       *
+     F*  083906 - Correct Message IDs for S01522                      *
+     F*  S01522 - Call to AOPNARR0 if switchable feature installed    *
+     F*           and UDC present                                     *
+     F*  S01413 - Retail 3 Incorporation.                             *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FGEIERZZ UF  E                    DISK
+     FGEIERPD O   E                    DISK
+     FGEIERPD0IP  E                    DISK
+     F            APOSTPDF                          KRENAMEGEIERPDF
+     FRE3666AAO   E                    PRINTER
+     F/COPY WNCPYSRC,RE3666AF01
+     FRE3666APO   E             11     PRINTER
+     F/COPY WNCPYSRC,RE3666AF02
+     F*****************************************************************
+     F*                                                               *
+     F*   F U N C T I O N   O F   I N D I C A T O R S                 *
+     F*                                                               *
+     F*   11   Detail line overflow indicator                         *
+     F*   L1   DRCR level break                                       *
+     F*   L2   ACOD level break                                       *
+     F*   L3   CCY level break                                        *
+     F*   L4   BRCA level break                                       *
+     F*   U7   Database Errors                                        *
+     F*   U8   Database Errors                                        *
+     F*                                                               *
+     F*****************************************************************
+     E                    RRPNAR  1   1 30
+     E**  Array for SR. ZSEDIT
+     E                    ZS1        15  1 0
+     E                    ZS2        21  1
+     E** Array for Copyright Insertion
+     E                    CPY@    1   1 80
+     E                    CURR      150  3               Currency                             CSC042
+     E                    #CDP      150  1 0             Decimal Places                       CSC042
+     IGEIERPDF
+     I                                              BRCA  L4
+     I                                              CCY   L3
+     I                                              ACOD  L2
+     I                                              DRCR  L1
+     I*
+     I**  DS for ZSEDIT subroutine
+     I            DS
+     I                                        1  150WORK15
+     I                                        1  150ZS1
+     ISDBANK    E DSSDBANKPD
+     I*                                                                   S01522
+     ISDMMOD    E DSSDMMODPD                                              S01522
+     I* Module Details Accessed via access program                        S01522
+     I*                                                                   S01522
+     ISCSARD    E DSSCSARDPD                                              S01522
+     I* SAR File details accessed via access program AOSARDR0             S01522
+     I*                                                                   S01522
+     ICGPNAR    E DSCGPNARPD                                              S01522
+     I* UDC Multi-Language Narrative Data Structure                       S01522
+     I*                                                                   S01522
+     I##PRM1      DS                                                      086125
+      **  Data Structure for Customer and Branch                          086125
+      *                                                                   086125
+     I                                        1   6 A#CUST                086125
+     I                                        7   9 A#BRCA                086125
+      *                                                                   086125
+     ISDCUST    E DSSDCUSTPD                                              S01522
+     I* Customer details                                                  S01522
+     I*                                                                   S01522
+     ILDA         DS                            256
+     I**  Local data area for data base errors.
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I**
+     ISDCURR    E DSSDCURRPD
+     I**  EXTERNAL DS FOR CURRENCY DETAILS
+     C*
+     C**********           MOVEACPY@      BIS@   80                                           CSC042
+     C*
+     C*****************************************************************
+     C*   M A I N    P R O G R A M                                    *
+     C*****************************************************************
+     C*
+     C           *IN10     IFEQ '0'
+     C                     MOVE '1'       *IN10
+     C***********          Z-ADD1         CPT                             101967
+     C                     Z-ADD2         CPT                             101967
+     C                     MOVEL'RE3666A' DBPGM
+     C                     MOVEACPY@      BIS@   80                                           CSC042
+      * Set up index used by ccy arrays                                                       CSC042
+     C                     Z-ADD0         ##QNDX                                              CSC042
+      *                                                                                       CSC042
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     MOVEL*BLANKS   DBKEY            * DBERROR 001 *
+     C                     Z-ADD001       DBASE            ***************
+     C                     EXSR #DBER
+     C                     END
+     C/COPY WNCPYSRC,RE3666AC01
+     C                     WRITEHEADP1
+     C                     WRITEHEADAU
+     C*                                                                   S01522
+     C* Call module prog. for module details.                             S01522
+     C                     CALL 'AOMMODR0'                                S01522
+     C                     PARM '*MSG   ' @RTCD                           S01522
+     C                     PARM '*FIRST ' @OPTN                           S01522
+     C           SDMMOD    PARM SDMMOD    DSFDY                           S01522
+     C*                                                                   S01522
+     C           @RTCD     IFNE *BLANK                     B1             S01522
+     C           *LOCK     IN   LDA                         1             S01522
+     C                     MOVEL'SDMMODPD'DBFILE           * * * * * * *  S01522
+     C                     Z-ADD86        DBASE            * DBERR 86  *  S01522
+     C                     MOVEL@OPTN     DBKEY            * * * * * * *  S01522
+     C                     EXSR #DBER                       1             S01522
+     C                     ELSE                            X1             S01522
+     C*                                                                   S01522
+     C* Call SAR prog. for switchable feature                             S01522
+     C                     MOVE 'N'       REPNAR  1                       S01522
+     C           BGN1ST    IFEQ 'Y'                        B2             S01522
+     C*                                                                   S01522
+     C                     CALL 'AOSARDR0'                  2             S01522
+     C                     PARM '       ' @RTCD             2             S01522
+     C                     PARM '*VERIFY' @OPTN             2             S01522
+     C                     PARM 'REPNAR'  @SARD   6         2             S01522
+     C           SCSARD    PARM SCSARD    DSFDY             2             S01522
+     C*                                                                   S01522
+     C           @RTCD     IFNE *BLANK                     B3             S01522
+     C           @RTCD     ANDNE'*NRF   '                   3             S01522
+     C           *LOCK     IN   LDA                         1             S01522
+     C                     MOVEL'SCSARDPD'DBFILE            ************* S01522
+     C                     Z-ADD87        DBASE             *DBERROR 87 * S01522
+     C                     MOVEL@SARD     DBKEY             ************* S01522
+     C                     EXSR #DBER                       3             S01522
+     C                     ENDIF                           E3             S01522
+     C*                                                                   S01522
+     C           @RTCD     IFEQ *BLANK                     B3             S01522
+     C                     MOVE 'Y'       REPNAR            3             S01522
+     C                     ENDIF                           E3             S01522
+     C                     ENDIF                           E2             S01522
+     C/COPY WNCPYSRC,RE3666AC02
+     C                     ENDIF                           E1             S01522
+     C                     GOTO DETAIL                                    S01522
+     C                     END                                            S01522
+     C/COPY WNCPYSRC,RE3666AC03
+     C*
+     C           *IN11     IFEQ '1'
+     C           *INL3     OREQ '1'
+     C                     WRITEHEADP1
+     C                     MOVE '0'       *IN11
+     C                     END
+     C**
+     C           DETAIL    TAG
+     C                     ADD  PSTA      PSTAS
+      * Are the details for this CCY already stored in the arrays                             CSC042
+     C                     MOVELCCY       ##KC                                                CSC042
+     C                     EXSR ##CHKC                                                        CSC042
+     C           ##FIC     IFEQ 'Y'                                                           CSC042
+      * Found in the arrays so use the details from there                                     CSC042
+     C                     EXSR ##SETC                                                        CSC042
+     C                     ELSE                                                               CSC042
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM CCY       @KEY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE           ***************
+     C                     MOVEL@KEY      DBKEY            * DBERROR 002 *
+     C                     Z-ADD002       DBASE            ***************
+     C                     EXSR #DBER
+     C                     ELSE                                                               CSC042
+      * Found on the DB and not in the array so add to the array                              CSC042
+     C                     EXSR ##ADDC                                                        CSC042
+     C                     END
+     C                     ENDIF                                                              CSC042
+     C           DRCR      IFEQ 0
+     C                     ADD  PSTA      TOTAC
+     C                     ELSE
+     C                     SUB  PSTA      TOTAC
+     C                     END
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE PSTA      PSTAN  130
+     C                     MOVE PSTAN     ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PSTAR
+     C                     WRITEDETLP1
+     C*                                                                   076908
+     C** ZEROISE/BLANK OUT 'ASSOCIATED CUSTOMER', 'DEAL LOAN REF' AND     076908
+     C** 'FOR ACCOUNT OF' FIELDS AS THESE ARE IRRELEVANT.                 076908
+     C*                                                                   076908
+     C**********           MOVE *ZEROS    ASOC                                         076908 CSD027
+     C                     MOVE *BLANKS   ASOC                                                CSD027
+     C                     MOVE *BLANKS   DLREF                           076908
+     C                     MOVE *BLANKS   FACO                            076908
+     C*                                                                   S01522
+     CL1                   Z-ADDPSTAS     PSTA
+     CL1                   MOVEARRPNAR    PNAR
+     C*
+     C* Get the posting narrative values:                                 S01522
+     C*                                                                   S01522
+     CL1                   EXSR SRPNAR                                    S01522
+     C*                                                                   S01522
+     C* If Primary file empty, do not output record + initialize trailer  101967
+     CL1         CPT       IFEQ 0                                         101967
+     CL1                   Z-ADD2         CPT                             101967
+     CL1                   ELSE                                           101967
+     CL1                   WRITEAPOSTPDF
+     CL1                   ADD  1         CPT     50
+     CL1                   END                                            101967
+     CL1                   Z-ADD0         PSTAS  130
+     CL2         TOTAC     IFLT 0
+     CL2                   Z-SUBTOTAC     TOTAC
+     CL2                   MOVE 'CR'      SIGN
+     CL2                   ELSE
+     CL2         TOTAC     IFEQ 0
+     CL2                   MOVE '  '      SIGN
+     CL2                   ELSE
+     CL2                   MOVE 'DR'      SIGN
+     CL2                   END
+     CL2                   END
+     CL2                   MOVE TOTAC     ZFLD15
+     CL2                   EXSR ZSEDIT
+     CL2                   MOVE ZOUT21    TOTAR
+     C/COPY WNCPYSRC,RE3666AC04
+     CL2                   WRITETOTAL
+     CL2                   Z-ADD0         TOTAC  130
+     C/COPY WNCPYSRC,RE3666AC05
+     CLRNU7NU8             WRITETRAILP1
+     C/COPY WNCPYSRC,RE3666AC06
+     CLRNU7NU8             READ APOSTZZF                 99
+     CLRNU7NU8             Z-ADDCPT       NORE1
+     CLRNU7NU8             UPDATAPOSTZZF
+     CLRNU7NU8             WRITETOTREC
+     C*****************************************************************
+     C/EJECT                                                                                  CSC042
+     C*****************************************************************                       CSC042
+     C*                                                                                       CSC042
+     C*  ##CHKC  - Check the currency details                                                 CSC042
+     C*                                                                                       CSC042
+     C********************************************************************                    CSC042
+     C           ##CHKC    BEGSR                                                              CSC042
+      *                                                                                       CSC042
+     C           *LIKE     DEFN BJCYCD    ##KC                                                CSC042
+     C           *LIKE     DEFN Q         ##QSV                                               CSC042
+      *                                                                                       CSC042
+      * Set off the currency found indicator                                                  CSC042
+     C                     MOVEL*BLANK    ##FIC   1                                           CSC042
+      *                                                                                       CSC042
+      * Save the state of indicator 87 so it can be reset at the end                          CSC042
+      * of the SR as it may be used elsewhere in the code                                     CSC042
+     C           *IN87     IFEQ *ON                                                           CSC042
+     C                     MOVEL'Y'       #IN87   1                                           CSC042
+     C                     ELSE                                                               CSC042
+     C                     MOVEL'N'       #IN87                                               CSC042
+     C                     ENDIF                                                              CSC042
+      *                                                                                       CSC042
+     C                     SETOF                         87                                   CSC042
+      *                                                                                       CSC042
+      * Restore Q from ##QSV in case Q is used elsewhere in the code                          CSC042
+     C                     Z-ADD##QSV     Q       40                                          CSC042
+      *                                                                                       CSC042
+      * Are we looking for the same details as the last time this                             CSC042
+      * subroutine was called i.e. is Q already set correctly?                                CSC042
+      * If so then use the data rather than do another LOKUP                                  CSC042
+      * First make sure that we don't reference the 0th array element                         CSC042
+     C           Q         IFEQ 0                                                             CSC042
+     C                     Z-ADD1         Q                                                   CSC042
+     C                     ENDIF                                                              CSC042
+      * Now see if this search is same as last one performed                                  CSC042
+      * If we have a match then seton 87 so the code after this                               CSC042
+      * subroutine knows it can use Q directly                                                CSC042
+     C           ##KC      IFEQ CURR,Q                                                        CSC042
+     C                     SETON                         87                                   CSC042
+     C                     ELSE                                                               CSC042
+      * Otherwise hunt in the array and seton 87 if found                                     CSC042
+     C                     Z-ADD1         Q                                                   CSC042
+     C           ##KC      LOKUPCURR,Q                   87                                   CSC042
+     C                     ENDIF                                                              CSC042
+      *                                                                                       CSC042
+      * Save Q for next time                                                                  CSC042
+     C           *IN87     IFEQ *ON                                                           CSC042
+     C                     Z-ADDQ         ##QSV                                               CSC042
+      * Set the indicator to show the data was found                                          CSC042
+     C                     MOVEL'Y'       ##FIC                                               CSC042
+     C                     ENDIF                                                              CSC042
+      *                                                                                       CSC042
+      * Reset the state of indicator 87.                                                      CSC042
+     C           #IN87     IFEQ 'Y'                                                           CSC042
+     C                     MOVEL*ON       *IN87                                               CSC042
+     C                     ELSE                                                               CSC042
+     C                     MOVEL*OFF      *IN87                                               CSC042
+     C                     ENDIF                                                              CSC042
+      *                                                                                       CSC042
+     C                     ENDSR                                                              CSC042
+      *                                                                                       CSC042
+     C********************************************************************                    CSC042
+      /EJECT                                                                                  CSC042
+     C********************************************************************                    CSC042
+     C*                                                                                       CSC042
+     C*  ##SETB  - Set up the SDCURRPD fields as expected by this program                     CSC042
+     C*            from the array fields                                                      CSC042
+     C*                                                                                       CSC042
+     C********************************************************************                    CSC042
+     C           ##SETC    BEGSR                                                              CSC042
+     C*                                                                                       CSC042
+     C                     MOVELCURR,Q    A6CYCD                                              CSC042
+     C                     Z-ADD#CDP,Q    A6NBDP                                              CSC042
+     C*                                                                                       CSC042
+     C                     ENDSR                                                              CSC042
+     C********************************************************************                    CSC042
+      /EJECT                                                                                  CSC042
+      ********************************************************************                    CSC042
+      *                                                                                       CSC042
+      * ##ADDC - Adds the SDCURRPD fields used in the code to the                             CSC042
+      * arrays                                                                                CSC042
+      *                                                                                       CSC042
+     C           ##ADDC    BEGSR                                                              CSC042
+      *                                                                                       CSC042
+     C           *LIKE     DEFN Q         ##QNDX                                              CSC042
+      * If there is still room in the array then add the details                              CSC042
+     C           ##QNDX    IFLT 150                                                           CSC042
+     C                     ADD  1         ##QNDX                                              CSC042
+     C                     Z-ADD##QNDX    Q                                                   CSC042
+     C                     MOVELA6CYCD    CURR,Q                                              CSC042
+     C                     Z-ADDA6NBDP    #CDP,Q                                              CSC042
+     C                     ENDIF                                                              CSC042
+      *                                                                                       CSC042
+      * Update ##QSV so next call to ##CHKC checks this latest adddition                      CSC042
+      * to the array firss                                                                    CSC042
+     C                     Z-ADDQ         ##QSV                                               CSC042
+      *                                                                                       CSC042
+     C                     ENDSR                                                              CSC042
+      ********************************************************************                    CSC042
+      /EJECT                                                                                  CSC042
+     C********************************************************************                    CSC042
+     C*                                                               *
+     C* #DBER    -   Data Base Error Handling.                        *
+     C*                                                               *
+     C* CALLS                                                         *
+     C*                                                               *
+     C* CALLED BY -  #A     : Initialization processing.              *
+     C*                                                               *
+     C*****************************************************************
+     C           #DBER     BEGSR
+     C*
+     C                     SETON                     U7U8LR
+     C                     WRITEERRAU
+     C                     WRITEERRAP
+     C                     OUT  LDA
+     C                     RETRN
+     C*
+     C           #DBER9    ENDSR                           **#DBER9***
+      /EJECT
+     C********************************************************************
+     CSR         ZSEDIT    BEGSR                           **  ZSEDIT   *
+     C*
+     C* Define/Clear fields
+     C*
+     C                     Z-ADDZFLD15    ZFLD15 150
+     C                     Z-ADDZDECS     ZDECS   10
+     C                     MOVE ZECODE    ZECODE  1
+     C                     MOVE *BLANKS   ZOUT21 21
+     C*
+     C*       SET UP WORK FIELDS
+     C*
+     C                     Z-ADD0         ZS1
+     C                     MOVE ' '       ZS2
+     C*
+     C                     Z-ADD15        Z1      20
+     C                     Z-ADD20        Z2      20
+     C*
+     C           15        SUB  ZDECS     ZINTS   20
+     C*
+     C* Check if numeric field is negative
+     C*
+     C           ZFLD15    IFLT *ZEROS
+     C                     MOVE '-'       ZS2,21
+     C                     Z-SUBZFLD15    ZFLD15
+     C                     END
+     C*
+     C                     Z-ADDZFLD15    WORK15
+     C*
+     C*       CHECK TO SEE IF THERE ARE ANY DECIMAL PLACES
+     C*
+     C           ZDECS     CABEQ0         ZS10
+     C*
+     C*       SET UP DECIMALS
+     C*
+     C                     Z-ADD*ZEROS    ZCNT    10
+     C           ZCNT      DOUEQZDECS
+     C                     MOVE ZS1,Z1    ZS2,Z2
+     C                     SUB  1         Z2
+     C                     ADD  1         ZCNT
+     C                     SUB  1         Z1
+     C                     END
+     C*
+     C*       PUT IN DECIMAL PLACE
+     C*
+     C                     MOVE '.'       ZS2,Z2
+     C                     SUB  1         Z2
+     C*
+     C           ZS10      TAG                             ** ZS10 TAG **
+     C*
+     C*       SET UP INTEGERS
+     C*
+     C                     Z-ADD*ZEROS    CNT3    10
+     C           Z1        DOUEQ*ZEROS
+     C                     MOVE ZS1,Z1    ZS2,Z2
+     C                     SUB  1         Z1
+     C                     SUB  1         Z2
+     C*
+     C* If edit code is 'J', insert a ',' before each group of three
+     C* digits - not if beginning of array reached.
+     C*
+     C           Z2        IFGT *ZEROS
+     C           ZECODE    ANDEQ'J'
+     C                     ADD  1         CNT3
+     C           CNT3      IFEQ 3
+     C                     MOVE ','       ZS2,Z2
+     C                     SUB  1         Z2
+     C                     Z-ADD*ZEROS    CNT3
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C*       PUT IN LEADING BLANKS
+     C*
+     C                     Z-ADD1         Z2
+     C           ZS2,Z2    DOWEQ'0'
+     C           ZS2,Z2    OREQ ' '
+     C           ZS2,Z2    OREQ ','
+     C                     MOVE ' '       ZS2,Z2
+     C                     ADD  1         Z2
+     C           Z2        CABEQ22        ZS20
+     C                     END
+     C*
+     C*       IF NO INTEGERS PUT IN LEADING ZERO
+     C*
+     C           ZS20      TAG                             ** ZS20 TAG **
+     C*
+     C           Z2        IFEQ 22
+     C                     SUB  2         Z2
+     C                     MOVE '0'       ZS2,Z2
+     C                     ELSE
+     C*
+     C           ZS2,Z2    IFEQ '.'
+     C                     SUB  1         Z2
+     C                     MOVE '0'       ZS2,Z2
+     C                     END
+     C                     END
+     C*
+     C*       SET UP OUTPUT FIELD
+     C*
+     C                     MOVEAZS2       ZOUT21
+     C*
+     CSR                   ENDSR
+     C********************************************************************
+     C/EJECT                                                              S01522
+     C********************************************************************S01522
+     C**  Subroutine SRPNAR determines the required narratives.         **S01522
+     C********************************************************************S01522
+     C           SRPNAR    BEGSR                           * S R P N A R *S01522
+     C*                                                                   S01522
+     C* Define the data structure parameter:                              S01522
+     C*                                                                   S01522
+     C           *LIKE     DEFN CGPNAR    ##PNAR                          S01522
+     C*                                                                   S01522
+     C* If the facility is switched off or unavailable,                   S01522
+     C*  or UDC is not installed, exit this subroutine:                   S01522
+     C*                                                                   S01522
+     C           REPNAR    IFNE 'Y'                                       S01522
+     C                     GOTO EXPNAR                                    S01522
+     C                     ENDIF                                          S01522
+     C*                                                                   S01522
+     C* Determine the customer's name:                                    S01522
+     C*                                                                   S01522
+     C                     MOVELCNUM      ##KEY     P                     S01522
+     C*                                                                   S01522
+      * SRPNAR can be called many times for the same customer. If the                         CSC042
+      * data being requested is the same as the previous record then use                      CSC042
+      * the data collected from the last call rather than call the                            CSC042
+      * AOCUSTR* program again and again and again                                            CSC042
+     C           *LIKE     DEFN CNUM      ##LCUS                                              CSC042
+     C           *LIKE     DEFN BBCRNM    ##LCRN                                              CSC042
+     C           CNUM      IFEQ ##LCUS                                                        CSC042
+     C                     MOVEL##LCRN    BBCRNM                                              CSC042
+     C                     ELSE                                                               CSC042
+     C                     CALL 'AOCUSTR0'                                S01522
+     C                     PARM           ##RTN   7                       S01522
+     C                     PARM '*KEY   ' ##OPT   7                       S01522
+     C                     PARM           ##KEY  10                       S01522
+     C                     PARM           ##STS   7                       S01522
+     C           SDCUST    PARM SDCUST    DSSDY                           S01522
+     C*                                                                   S01522
+     C           ##RTN     IFNE *BLANKS                                   S01522
+     C                     MOVEL'SDCUSTPD'DBFILE             *************S01522
+     C                     MOVEL'101'     DBASE              * DBERR 101 *S01522
+     C                     MOVEL##KEY     DBKEY              *************S01522
+     C                     EXSR #DBER                                     S01522
+     C                     ELSE                                                               CSC042
+     C                     MOVELCNUM      ##LCUS                                              CSC042
+     C                     MOVELBBCRNM    ##LCRN                                              CSC042
+     C                     ENDIF                                          S01522
+     C                     ENDIF                                                              CSC042
+     C*...................................................................S01522
+     C/EJECT                                                              S01522
+     C*...................................................................S01522
+     C* Determine the value for the posting narrative using AOPNARR0:     S01522
+     C*                                                                   S01522
+     C                     CLEARCGPNAR                                    S01522
+     C                     CLEAR##PRM1                                    086125
+     C*                                                                   S01522
+     C                     MOVE 'RE'      MNMODI                          S01522
+     C                     MOVE CNUM      MNCUST                          S01522
+     C                     MOVE CCY       MNCYCD                          S01522
+     C                     MOVE ACOD      MNACCD                          S01522
+     C                     MOVE ACSQ      MNACSQ                          S01522
+     C                     MOVE BRCA      MNBRCA                          S01522
+     C                     MOVE BOKC      MNBOKC                          S01522
+     C                     MOVE BBCRNM    MNCRNM                          S01522
+     C                     MOVE PNAR      MNNARR                          S01522
+     C                     MOVE ASOC      MNASOC                          S01522
+     C                     MOVE ACNO      MNRACN                          S01522
+     C*                                                                   S01522
+     C                     CALL 'AOPNARR0'                                S01522
+     C                     PARM           ##RTN                           S01522
+     C**********           PARM 'GB00770' ##MGID  7                 S01522083906
+     C                     PARM 'GB00020' ##MGID  7                       083906
+     C                     PARM           ##PRM1                          086125
+     C           CGPNAR    PARM CGPNAR    ##PNAR                          S01522
+     C                     PARM           ##NARR 50                       S01522
+     C*                                                                   S01522
+     C           ##RTN     IFNE *BLANKS                                   S01522
+     C                     MOVEL'CGPNARPD'DBFILE             *************S01522
+     C                     MOVEL'102'     DBASE              * DBERR 102 *S01522
+     C                     MOVELMNCUST    DBKEY              *************S01522
+     C                     EXSR #DBER                                     S01522
+     C                     ENDIF                                          S01522
+     C*                                                                   S01522
+     C                     MOVEL##NARR    PNAR      P                     S01522
+     C*                                                                   S01522
+     C           EXPNAR    TAG                             < EXPNAR       S01522
+     C*                                                                   S01522
+     C                     ENDSR                                          S01522
+     C********************************************************************S01522
+** RRPNAR
+ACCRUALS A/C SUMMARY
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

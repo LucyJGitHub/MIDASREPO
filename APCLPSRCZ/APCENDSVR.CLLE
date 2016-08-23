@@ -1,0 +1,179 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas AP End the server')                             */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - APIs                                                */
+/*                                                                   */
+/*       APCENDSVR - End the server                                  */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Last Amend No. 248021             Date 08Jun07              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. 240350             Date 11Jun06              */
+/*                      BUG5985 (Reopen)   Date 17Jun05              */
+/*                      BUG5985            Date 16Mar05              */
+/*                      CAP083             Date 20Feb03              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      CAP006             Date 30Apr99              */
+/*                      CAP002  *CREATE    Date 01May98              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       248021 - Applied fix 240350.                                */
+/*       240350 - APISERVFL is not ended during COB.                 */
+/*       BUG5985 (Reopen) - Fix revised to ensure that program ends  */
+/*                          normally                                 */
+/*       BUG5985 - Program ends abnormally. Restart of component is  */
+/*                 OK. Fix patterned after 225658.                   */
+/*       CAP083 - APISERVER File Adapter                             */
+/*       CAP006 - Extension of queue name to maximum length          */
+/*       CAP002 - Conversion of transaction inputs into modular      */
+/*                structure to use as APIs.                          */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&SYSTEM)
+ 
+             DCL        VAR(&SYSTEM) TYPE(*CHAR) LEN(2)
+ 
+             DCL        VAR(&QUEUE) TYPE(*CHAR) LEN(20) +
+                          VALUE(MIDASXX.TRANSACT.Q)
+             DCL        VAR(&QUEUE48) TYPE(*CHAR) LEN(48)                      /* CAP006 */
+ 
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(1102) +
+                          VALUE(SHUTDOWN)
+ 
+             DCL        VAR(&RETURNCODE) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10) +
+                          VALUE('xxDPLIB   ')
+             DCL        VAR(&CAP083) TYPE(*CHAR) LEN(1)                        /*CAP083*/
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)                        /*CAP083*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                          /*CAP083*/
+             DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)                           /*CAP083*/
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                      /*CAP083*/
+                                                                               /*CAP083*/
+             DCL        VAR(&SVALK1) TYPE(*CHAR) LEN(20)                       /*CAP083*/
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)                       /*CAP083*/
+             DCL        VAR(&SVALK2) TYPE(*CHAR) LEN(20)                       /*CAP083*/
+             DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)                       /*CAP083*/
+             DCL        VAR(&SVALK3) TYPE(*CHAR) LEN(20)                       /*CAP083*/
+             DCL        VAR(&SVAL3) TYPE(*CHAR) LEN(200)                       /*CAP083*/
+             DCL        VAR(&SVALK4) TYPE(*CHAR) LEN(20)                       /*CAP083*/
+             DCL        VAR(&SVAL4) TYPE(*CHAR) LEN(200)                       /*CAP083*/
+             DCL        VAR(&SVALK5) TYPE(*CHAR) LEN(20)                       /*CAP083*/
+             DCL        VAR(&SVAL5) TYPE(*CHAR) LEN(200)                       /*CAP083*/
+             DCL        VAR(&SVALK6) TYPE(*CHAR) LEN(20)                       /*CAP083*/
+             DCL        VAR(&SVAL6) TYPE(*CHAR) LEN(200)                       /*CAP083*/
+             DCL        VAR(&SVALK7) TYPE(*CHAR) LEN(20)                       /*CAP083*/
+             DCL        VAR(&SVAL7) TYPE(*CHAR) LEN(200)                       /*CAP083*/
+             DCL        VAR(&SVALK8) TYPE(*CHAR) LEN(20)                       /*CAP083*/
+             DCL        VAR(&SVAL8) TYPE(*CHAR) LEN(200)                       /*CAP083*/
+             DCL        VAR(&SVALK9) TYPE(*CHAR) LEN(20)                       /*CAP083*/
+             DCL        VAR(&SVAL9) TYPE(*CHAR) LEN(200)                       /*CAP083*/
+             DCL        VAR(&SVALK0) TYPE(*CHAR) LEN(20)                       /*CAP083*/
+             DCL        VAR(&SVAL10) TYPE(*CHAR) LEN(200)                      /*CAP083*/
+             DCL        VAR(&APIM) TYPE(*CHAR) LEN(4)                          /*CAP083*/
+                                                                               /*CAP083*/
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2001')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGVAR     VAR(%SST(&DPLIB 1 2)) VALUE(&SYSTEM)
+ 
+/* +
+   Allocate the locking data area to determine if the server is +
+   active.  Only stop it if it is. +
+   If the allocation was successful, deallocate the data area.  +
+*/
+             ALCOBJ     OBJ((&DPLIB/APISERVER *DTAARA *EXCL)) WAIT(0)
+             MONMSG     MSGID(CPF1002) EXEC(DO)
+                CHGVAR     VAR(%SST(&QUEUE 6 2)) VALUE(&SYSTEM)
+                                                                               /* CAP006 */
+/* Pass the queue name in a maximum length (48 bytes) field       */           /* CAP006 */
+                CHGVAR     VAR(&QUEUE48) VALUE(&QUEUE)                         /* CAP006 */
+/***************CALLPRC    PRC(ZAMSGTOFO) PARM(&RETURNCODE &QUEUE + */         /* CAP006 */
+/***************             &MESSAGE)                              */         /* CAP006 */
+             CALLPRC    PRC(ZAMSGTOFO) PARM(&RETURNCODE &QUEUE48 +
+                          &MESSAGE)                                            /* CAP006 */
+/***************GOTO       CMDLBL(END)                                         /*CAP083*/
+                GOTO       CMDLBL(APSRVFL)                                     /*CAP083*/
+             ENDDO
+ 
+             DLCOBJ     OBJ((APISERVER *DTAARA *EXCL))
+ 
+/**********  GOTO       CMDLBL(END) ***/                                                  /*240350*/
+ 
+/* Check if APISERVER File Adapter (CAP083) Enhancement is installed */        /*CAP083*/
+                                                                               /*CAP083*/
+ APSRVFL:                                                                      /*CAP083*/
+             CHGVAR     VAR(&SAR) VALUE('CAP083')                              /*CAP083*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                            /*CAP083*/
+             CHGVAR     VAR(&CAP083) VALUE('N')                                /*CAP083*/
+/*                                                                             /*CAP083*/
+             CALL       PGM(AOSARDR0) PARM(&RTNCDE &OPTN &SAR &SCSARD)         /*CAP083*/
+             IF         COND(&RTNCDE *EQ '       ') THEN(DO)                   /*CAP083*/
+                   CHGVAR     VAR(&CAP083) VALUE('Y')                          /*CAP083*/
+                                                                               /*CAP083*/
+/* Get 'APIProcessingMode' system value from file SDSVALPD  */                 /*CAP083*/
+                                                                               /*CAP083*/
+                   CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                                'APIProcessingMode' &SVAL1 &SVALK2 +
+                                &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                                &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                                &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                                &SVALK0 &SVAL10)                               /*CAP083*/
+                                                                               /*CAP083*/
+/* If the 'APIProcessingMode' system value is missing then end abnormally */   /*CAP083*/
+                                                                               /*CAP083*/
+                   IF         COND(%SST(&SVAL1 1 4) *EQ '*NRF') THEN(GOTO +
+                                CMDLBL(ABNOR))                                 /*CAP083*/
+                   ELSE
+                              CHGVAR     VAR(&APIM) VALUE(%SST(&SVAL1 1 4))    /*CAP083*/
+             ENDDO                                                             /*CAP083*/
+                                                                               /*CAP083*/
+/*  End File processing job if processing mode is FILE or BOTH */              /*CAP083*/
+                                                                               /*CAP083*/
+             IF         COND(&CAP083 *EQ 'Y') THEN(DO)                         /*CAP083*/
+             IF         COND(&APIM *EQ 'FILE' *OR &APIM *EQ 'BOTH') +
+                          THEN(DO)                                             /*CAP083*/
+                                                                               /*CAP083*/
+             ALCOBJ     OBJ((&DPLIB/APISERVFL *DTAARA *EXCL)) WAIT(0)          /*CAP083*/
+             MONMSG     MSGID(CPF1002) EXEC(DO)                                /*CAP083*/
+                                                                               /*CAP083*/
+/* Call AP0008 to write 'SHUTDOWN' record to APITRANSPD */                     /*CAP083*/
+                CALL       AP0008                                              /*CAP083*/
+                GOTO       CMDLBL(END)                                         /*CAP083*/
+             ENDDO                                                             /*CAP083*/
+                                                                               /*CAP083*/
+             DLCOBJ     OBJ((APISERVFL *DTAARA *EXCL))                         /*CAP083*/
+             ENDDO                                                             /*CAP083*/
+                                                                                         /*BUG5985*/
+/**********     ELSE    DO */                                                /*BUG5985*/ /*BUG5985*/
+/**********     GOTO    CMDLBL(END) */                                       /*BUG5985*/ /*BUG5985*/
+             ENDDO                                                                       /*BUG5985*/
+                ELSE    DO                                                               /*BUG5985*/
+                GOTO    CMDLBL(END)                                                      /*BUG5985*/
+             ENDDO                                                             /*CAP083*/
+                                                                               /*CAP083*/
+                GOTO       CMDLBL(END)                                                    /*240350*/
+ ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          ENDAPISVR ended abnormally - see job log')
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ END:
+             ENDPGM

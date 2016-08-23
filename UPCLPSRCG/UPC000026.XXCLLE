@@ -1,0 +1,152 @@
+/*********************************************************************/
+/*S*D****CLPBASEBND***************************************************/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade Module                                      */
+/*                                                                   */
+/*       UPC000026 - Create validation lists                         */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. CUP041  *REDUNDANT Date 01Aug14              */
+/*       Prev Amend No. A1076141           Date 11Jan13              */
+/*                      CBF012             Date 04Jul11              */
+/*                      AR690181           Date 11Jan11              */
+/*                      CUP003  *CREATE    Date 20Aug10              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP041 - New Bridge methodology to combine menu options     */
+/*       A1076141 - Change back to only having one type of DBU.      */
+/*       CBF012 - BF Infrastructure: Upgradability                   */
+/*       AR690181 - Should check for 'VLDL' and not '*VLDL'. (Reopen)*/
+/*                  (Child: AR690182)                                */
+/*       CUP003 - Handle validation lists.                           */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM        PARM(&PTFSRC &SBS &OWNER &AUTL &RETURN)  */                       /*CBF012*/
+/**********  PGM        PARM(&PTFSRC &SBS &OWNER &AUTL &RETURN &MODE)         */ /*CBF012 A1076141*/
+             PGM        PARM(&PTFSRC &SBS &OWNER &AUTL &RETURN)                         /*A1076141*/
+ 
+             DCL        VAR(&PTFSRC) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SBS) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&AUTL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(1)
+/**********  DCL        VAR(&MODE) TYPE(*CHAR) LEN(4)                         */ /*CBF012 A1076141*/
+ 
+             DCL        VAR(&FRLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTNLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DZLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIBTYPE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&USTS) TYPE(*CHAR) LEN(1)
+ 
+             DCLF       FILE(UPDLVCL4)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2010')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGVAR     VAR(&DMLIB) VALUE(&SBS *CAT 'DMLIB')
+             CHGVAR     VAR(&DPLIB) VALUE(&SBS *CAT 'DPLIB')
+             CHGVAR     VAR(&DTALIB) VALUE(&SBS *CAT 'DTALIB')
+             CHGVAR     VAR(&DZLIB) VALUE(&SBS *CAT 'DZLIB')
+             CHGVAR     VAR(&GMLIB) VALUE(&SBS *CAT 'GMLIB')
+             CHGVAR     VAR(&GPLIB) VALUE(&SBS *CAT 'GPLIB')
+             CHGVAR     VAR(&GTALIB) VALUE(&SBS *CAT 'GTALIB')
+ 
+             CHGVAR     VAR(&RETURN) VALUE(' ')
+             CHGVAR     VAR(&USTS) VALUE('C')
+ 
+READNEXT:
+             IF         COND(&AUMBNM *NE ' ') THEN(DO)
+/*/COPY UPCPYSRCG,C_UP0020A                                           */
+             ENDDO
+ 
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/**********  IF         COND(((&MODE *EQ '*NML') *AND +                              */ /*A1076141*/
+/**********               (%SUBSTRING(&AUSRCF 1 2) *EQ 'HI')) *OR +                  */ /*A1076141*/
+/**********               ((&MODE *EQ '*HIL') *AND +                                 */ /*A1076141*/
+/**********               (%SUBSTRING(&AUSRCF 1 2) *NE 'HI'))) THEN(DO)       */ /*CBF012 A1076141*/
+/**********     GOTO       CMDLBL(READNEXT)                                   */ /*CBF012 A1076141*/
+/**********  ENDDO                                                            */ /*CBF012 A1076141*/
+ 
+/* Only process validation lists. */
+/**********  IF         COND(&AUMBTP *NE '*VLDL') THEN(DO)                          */ /*AR690181*/
+             IF         COND(&AUMBTP *NE 'VLDL') THEN(DO)                              /*AR690181*/
+                GOTO       CMDLBL(READNEXT)
+             ENDDO
+ 
+             CHGVAR     VAR(&LIBTYPE) VALUE('   ')
+             CHGVAR     VAR(&LIBTYPE) VALUE(%SST(&AUSRCF 9 2))
+             IF         COND(&LIBTYPE *EQ 'QT') THEN(DO)
+                GOTO       CMDLBL(READNEXT)
+             ENDDO
+ 
+             IF         COND(&LIBTYPE *EQ 'DT') THEN(DO)
+                CHGVAR     VAR(&FRLIB) VALUE(&DTALIB)
+             ENDDO
+             IF         COND(&LIBTYPE *EQ 'DM') THEN(DO)
+                CHGVAR     VAR(&FRLIB) VALUE(&DMLIB)
+             ENDDO
+             IF         COND(&LIBTYPE *EQ 'DP') THEN(DO)
+                CHGVAR     VAR(&FRLIB) VALUE(&DPLIB)
+             ENDDO
+             IF         COND(&LIBTYPE *EQ 'DZ') THEN(DO)
+                CHGVAR     VAR(&FRLIB) VALUE(&DZLIB)
+             ENDDO
+             IF         COND(&LIBTYPE *EQ 'GM') THEN(DO)
+                CHGVAR     VAR(&FRLIB) VALUE(&GMLIB)
+             ENDDO
+             IF         COND(&LIBTYPE *EQ 'GP') THEN(DO)
+                CHGVAR     VAR(&FRLIB) VALUE(&GPLIB)
+             ENDDO
+             IF         COND(&LIBTYPE *EQ 'GT') THEN(DO)
+                CHGVAR     VAR(&FRLIB) VALUE(&GTALIB)
+             ENDDO
+ 
+/* If object not found then just create. */
+             RTVOBJD    OBJ(&AUMBNM) OBJTYPE(*VLDL) RTNLIB(&RTNLIB)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                GOTO       CMDLBL(CRTOBJ)
+             ENDDO
+/* If object was found then check it is in the correct library ... */
+             IF         COND(&RTNLIB *NE *FRLIB) THEN(DO)
+/* ... and if it isn't then move it to correct library. */
+                MOVOBJ     OBJ(&RTNLIB/&AUMBNM) OBJTYPE(*VLDL) +
+                             TOLIB(&FRLIB)
+                GOTO       CMDLBL(READNEXT)
+             ENDDO
+ 
+CRTOBJ:
+/**********  CRTOBJ     SRCMBR(&AUMBNM) SRCFILE(&PTFSRC/&AUSRCF) +
+                          PLIB(&FRLIB) OWNER(&OWNER) AUTL(&AUTL)                       */ /*CBF012*/
+             CRTOBJ     OBJ(&FRLIB/&AUMBNM) SRCFILE(&PTFSRC/&AUSRCF) +
+                          SRCMBR(*OBJ) OWNER(&OWNER) AUTL(&AUTL)                          /*CBF012*/
+             MONMSG     MSGID(SYS9898 SYS0011 SYS0017) EXEC(DO)
+                CHGVAR     VAR(&USTS) VALUE('F')
+                GOTO       CMDLBL(READNEXT)
+             ENDDO
+ 
+             GOTO       CMDLBL(READNEXT)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ABNOR:
+             CHGVAR     VAR(&RETURN) VALUE('F')
+ 
+ENDPGM:
+             ENDPGM

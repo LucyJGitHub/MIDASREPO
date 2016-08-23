@@ -1,0 +1,564 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE New Settlement fields Set-up (S01518)')       *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Customer Lending Module                          *
+     F*                                                               *
+     F*  LE9000 - Utility to update the new settlement details on     *
+     F*           files PF/CLOANCL, CLOANCK, MCLONCL, MCLONCK &       *
+     F*           PF/LOAMSDK                                          *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CLE141             Date 08Feb16               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CLE143             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CAS009             Date 16May05               *
+      *                 CAP075             Date 08Aug02               *
+      *                 CAP074             Date 08Aug02               *
+      *                 CAS005             Date 16Dec02               *
+      *                 CLE028             Date 27Jun02               *
+      *                 CAS004             Date 26Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 144915             Date 28Oct98               *
+      *                 S01518  *CREATE    Date 03Oct94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+      *                                                               *
+      *  CLE141 - Currency and Location Business Day Convention       *
+      *           (Recompile)                                         *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CLE143 - Original Loan Contract Date & Effective Interest    *
+      *           Rate (Recompile)                                    *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus (Recompile)                              *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CAS009 - EIR/AC Accounting (Recompile)                       *
+      *  CAP075 - Lending API enhancements - Loan Amendment.          *
+      *           (amendment in common with CAP079 - Recompile)       *
+      *  CAP074 - Lending API enhancements - Loans input. (Recompile) *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *           (Recompile)                                         *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s)              *
+      *           (Recompile)                                         *
+      *  CAS004 - Hedge Accounting Phase A                            *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  144915 - Recompiled due to changes in PF/CLOANCK.            *
+     F*  S01518 - BLI Lending Swift Enhancement.                      *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FCLOANCL UF  E           K        DISK
+     F*
+     FCLOANCK UF  E           K        DISK
+     F*
+     FMCLONCL UF  E           K        DISK
+     F            CLOANCLF                          KRENAMEMCLONCLF
+     F*
+     FMCLONCK UF  E           K        DISK
+     F            CLOANCKF                          KRENAMEMCLONCKF
+     F*
+     FLOAMSDK UF  E           K        DISK
+     F*
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   10  - End of file on PF/CLOANCL, PF/MCLONCL, PF/LOAMSDK     *
+     F*   11  - End of file on PF/CLOANCK, PF/MCLONCK                 *
+     F*   21  - Update error                                          *
+     F* U7+U8 - Database error                                        *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  *PSSR  - Program Error Processing Subroutine                 *
+     F*  #INSFS - Initialise new settlement detail fields             *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E*
+     E** Array containing Copyright statement
+     E*
+     ICLOANCKF
+     I              RCDT                            RCDTK
+     I              MRIN                            MRINK
+     I              ORED                            OREDK
+     I              LCD                             LCDK
+     I              CHTP                            CHTPK
+     I              TNLU                            TNLUK
+     IMCLONCKF
+     I              RCDT                            RCDTM
+     I              MRIN                            MRINM
+     I              ORED                            OREDM
+     I              LCD                             LCDM
+     I              CHTP                            CHTPM
+     I              TNLU                            TNLUM
+     C/TITLE Main Processing
+     C*================================================================
+     C*  P R O G R A M   S T A R T                                    *
+     C*================================================================
+     C*
+     C** Set up copyright parameter
+     C*
+     C                     MOVEACPY@      ACT@   80
+     C*
+     C**  Entry parameter
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           W0MODE  1
+     C*
+     C** Set up new settlement detail fields on PF/CLOANCL & PF/CLOANCK
+     C*
+     C                     EXSR #SETF1
+     C*
+     C** Set up new settlement detail fields on PF/MCLONCL & PF/MCLONCK
+     C*
+     C                     EXSR #SETF2
+     C*
+     C** Set up new settlement detail fields on PF/LOAMSDK
+     C*
+     C                     EXSR #SETF3
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C*================================================================
+     C*  P R O G R A M   E N D                                        *
+     C*================================================================
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #SETF1 - Initialise new settlement detail fields on          *
+     C*           PF/CLOANCL and PF/CLOANCK                           *
+     C*                                                               *
+     C*  Called By: Main Processing                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #SETF1    BEGSR                           ** #SETF1 **
+     C*
+     C** Read first record of file CLOANCL and CLOANCK
+     C*
+     C                     READ CLOANCLF                 10
+     C                     READ CLOANCKF                 11
+     C*
+     C** Do while not end of file
+     C*
+     C           *IN10     DOWNE'1'
+     C           *IN11     ANDNE'1'
+     C*
+     C** Set up settlement fields for CLOANCL
+     C*
+     C** Initialise new settlement detail fields
+     C*
+     C                     EXSR #INSFS
+     C*
+     C**  Check parameter mode
+     C*
+     C           W0MODE    IFEQ '1'
+     C           W0MODE    OREQ '2'
+     C*
+     C           PTYP      IFEQ 66
+     C           PTYP      OREQ 67
+     C                     Z-ADDSDST      RSTM
+     C                     MOVELOSDA      RONS
+     C                     MOVELTSTN      RIBN
+     C                     Z-ADDMDST      PSTM
+     C                     MOVELOMDA      PONS
+     C                     MOVELTMAN      AWBN
+     C                     MOVELFACO      BENN
+     C                     MOVELSPI1      BTB1
+     C                     MOVELSPI2      BTB2
+     C                     MOVELSPI3      BTB3
+     C                     ELSE
+     C*
+     C                     Z-ADDMDST      RSTM
+     C                     MOVELOMDA      RONS
+     C                     MOVELTMAN      RIBN
+     C                     Z-ADDSDST      PSTM
+     C                     MOVELOSDA      PONS
+     C                     MOVELTSTN      AWBN
+     C                     MOVELFACO      BENN
+     C                     MOVELSPI1      BTB1
+     C                     MOVELSPI2      BTB2
+     C                     MOVELSPI3      BTB3
+     C                     END
+     C*
+     C                     END
+     C*
+     C** Update file CLOANCL
+     C*
+     C                     UPDATCLOANCLF               21
+     C*
+     C           *IN21     IFEQ '1'
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** Set up settlement fields for CLOANCK
+     C*
+     C                     Z-ADD0         RRST
+     C                     MOVEL*BLANKS   RRON
+     C                     MOVEL*BLANKS   RRIB
+     C                     MOVEL*BLANKS   RRBA
+     C**********           Z-ADD0         RROB                                                CSD027
+     C**********           Z-ADD0         RROC                                                CSD027
+     C                     MOVE *BLANKS   RROB                                                CSD027
+     C                     MOVE *BLANKS   RROC                                                CSD027
+     C*
+     C**  Check parameter mode
+     C*
+     C           W0MODE    IFEQ '1'
+     C           W0MODE    OREQ '2'
+     C*
+     C           PTYP      IFEQ 63
+     C                     Z-ADDRDST      RRST
+     C                     MOVELORVD      RRON
+     C                     MOVELTHRN      RRIB
+     C                     END
+     C*
+     C                     END
+     C*
+     C** Update file CLOANCK
+     C*
+     C                     UPDATCLOANCKF               21
+     C*
+     C           *IN21     IFEQ '1'
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** Read next record on files CLOANCL and CLOANCK
+     C*
+     C                     READ CLOANCLF                 10
+     C                     READ CLOANCKF                 11
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #SETF2 - Initialise new settlement detail fields on          *
+     C*           PF/MCLONCL and PF/MCLONCK                           *
+     C*                                                               *
+     C*  Called By: Main Processing                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #SETF2    BEGSR                           ** #SETF2 **
+     C*
+     C** Read first record of file MCLONCL and MCLONCK
+     C*
+     C                     READ MCLONCLF                 10
+     C                     READ MCLONCKF                 11
+     C*
+     C** Do while not end of files MCLONCL/MCLONCK
+     C*
+     C           *IN10     DOWNE'1'
+     C           *IN11     ANDNE'1'
+     C*
+     C** Set up settlement fields for MCLONCL
+     C*
+     C** Initialise new settlement detail fields
+     C*
+     C                     EXSR #INSFS
+     C*
+     C**  Check parameter mode
+     C*
+     C           W0MODE    IFEQ '1'
+     C           W0MODE    OREQ '2'
+     C*
+     C           PTYP      IFEQ 66
+     C           PTYP      OREQ 67
+     C                     Z-ADDSDST      RSTM
+     C                     MOVELOSDA      RONS
+     C                     MOVELTSTN      RIBN
+     C                     Z-ADDMDST      PSTM
+     C                     MOVELOMDA      PONS
+     C                     MOVELTMAN      AWBN
+     C                     MOVELFACO      BENN
+     C                     MOVELSPI1      BTB1
+     C                     MOVELSPI2      BTB2
+     C                     MOVELSPI3      BTB3
+     C                     ELSE
+     C*
+     C                     Z-ADDMDST      RSTM
+     C                     MOVELOMDA      RONS
+     C                     MOVELTMAN      RIBN
+     C                     Z-ADDSDST      PSTM
+     C                     MOVELOSDA      PONS
+     C                     MOVELTSTN      AWBN
+     C                     MOVELFACO      BENN
+     C                     MOVELSPI1      BTB1
+     C                     MOVELSPI2      BTB2
+     C                     MOVELSPI3      BTB3
+     C                     END
+     C*
+     C                     END
+     C*
+     C** Update file MCLONCL
+     C*
+     C                     UPDATMCLONCLF               21
+     C*
+     C           *IN21     IFEQ '1'
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** Set up settlement fields for MCLONCK
+     C*
+     C                     Z-ADD0         RRST
+     C                     MOVEL*BLANKS   RRON
+     C                     MOVEL*BLANKS   RRIB
+     C                     MOVEL*BLANKS   RRBA
+     C**********           Z-ADD0         RROB                                                CSD027
+     C**********           Z-ADD0         RROC                                                CSD027
+     C                     MOVE *BLANKS   RROB                                                CSD027
+     C                     MOVE *BLANKS   RROC                                                CSD027
+     C*
+     C**  Check parameter mode
+     C*
+     C           W0MODE    IFEQ '1'
+     C           W0MODE    OREQ '2'
+     C*
+     C           PTYP      IFEQ 63
+     C                     Z-ADDRDST      RRST
+     C                     MOVELORVD      RRON
+     C                     MOVELTHRN      RRIB
+     C                     END
+     C*
+     C                     END
+     C*
+     C** Update file MCLONCK
+     C*
+     C                     UPDATMCLONCKF               21
+     C*
+     C           *IN21     IFEQ '1'
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** Read next record on files MCLONCL and MCLONCK
+     C*
+     C                     READ MCLONCLF                 10
+     C                     READ MCLONCKF                 11
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #SETF3 - Initialise new settlement detail fields on          *
+     C*           PF/LOAMSDK                                          *
+     C*                                                               *
+     C*  Called By: Main Processing                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #SETF3    BEGSR                           ** #SETF3 **
+     C*
+     C** Read first record of file PF/LOAMSDK
+     C*
+     C                     READ LOAMSDKF                 10
+     C*
+     C** Do while not end of file LOAMSDK
+     C*
+     C           *IN10     DOWNE'1'
+     C*
+     C** Initialise new settlement detail fields
+     C*
+     C                     EXSR #INSFS
+     C*
+     C**  Check parameter mode
+     C*
+     C           W0MODE    IFEQ '1'
+     C           W0MODE    OREQ '2'
+     C*
+     C           AMTP      IFEQ 'RE'
+     C*
+     C           PTYP      IFEQ 66
+     C                     Z-ADDSETP      PSTM
+     C                     MOVELOSAC      PONS
+     C                     MOVELTSEN      PIBN
+     C                     MOVELFACO      BENN
+     C                     MOVELSPI1      BTB1
+     C                     MOVELSPI2      BTB2
+     C                     MOVELSPI3      BTB3
+     C                     ELSE
+     C*
+     C                     Z-ADDSETP      RSTM
+     C                     MOVELOSAC      RONS
+     C                     MOVELTSEN      RIBN
+     C                     MOVELFACO      BENN
+     C                     MOVELSPI1      BTB1
+     C                     MOVELSPI2      BTB2
+     C                     MOVELSPI3      BTB3
+     C                     END
+     C*
+     C                     END
+     C*
+     C           AMTP      IFEQ 'MR'                                      S01518
+     C*                                                                   S01518
+     C           PTYP      IFEQ 66                                        S01518
+     C                     Z-ADDSETP      PSTM                            S01518
+     C                     MOVELOSAC      PONS                            S01518
+     C                     MOVELTSEN      PIBN                            S01518
+     C                     ELSE                                           S01518
+     C                     Z-ADDSETP      RSTM                            S01518
+     C                     MOVELOSAC      RONS                            S01518
+     C                     MOVELTSEN      RIBN                            S01518
+     C                     END                                            S01518
+     C*                                                                   S01518
+     C                     END                                            S01518
+     C*
+     C           AMTP      IFEQ 'PI'
+     C                     Z-ADDSETP      PSTM
+     C                     MOVELOSAC      PONS
+     C                     MOVELTSEN      PIBN
+     C                     MOVELFACO      BENN
+     C                     MOVELSPI1      BTB1
+     C                     MOVELSPI2      BTB2
+     C                     MOVELSPI3      BTB3
+     C                     END
+     C*
+     C           AMTP      IFEQ 'PD'
+     C*
+     C           PTYP      IFEQ 66
+     C           PTYP      OREQ 67
+     C                     Z-ADDSETP      PSTM
+     C                     MOVELOSAC      PONS
+     C                     MOVELTSEN      PIBN
+     C                     MOVELFACO      BENN
+     C                     MOVELSPI1      BTB1
+     C                     MOVELSPI2      BTB2
+     C                     MOVELSPI3      BTB3
+     C                     ELSE
+     C                     Z-ADDSETP      RSTM
+     C                     MOVELOSAC      RONS
+     C                     MOVELTSEN      RIBN
+     C                     MOVELFACO      BENN
+     C                     MOVELSPI1      BTB1
+     C                     MOVELSPI2      BTB2
+     C                     MOVELSPI3      BTB3
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** Update file LOAMSDK
+     C*
+     C                     UPDATLOAMSDKF               21
+     C*
+     C           *IN21     IFEQ '1'
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** Read next record on file LOAMSDK
+     C*
+     C                     READ LOAMSDKF                 10
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #INSFS - Initialise new settlement detail fields             *
+     C*                                                               *
+     C*  Called By: #SETF1, #SETF2, #SETF3                            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #INSFS    BEGSR                           ** #INSFS **
+     C*
+     C** Initialise settlement fields to zeros or blanks
+     C*
+     C                     Z-ADD0         RSTM
+     C                     MOVEL*BLANKS   RONS
+     C                     MOVEL*BLANKS   RIBN
+     C                     MOVEL*BLANKS   RIBA
+     C**********           Z-ADD0         ROBN                                                CSD027
+     C**********           Z-ADD0         ROCN                                                CSD027
+     C                     MOVE *BLANKS   ROBN                                                CSD027
+     C                     MOVE *BLANKS   ROCN                                                CSD027
+     C                     Z-ADD0         PSTM
+     C                     MOVEL*BLANKS   PONS
+     C                     MOVEL*BLANKS   PIBN
+     C                     MOVEL*BLANKS   PIBA
+     C**********           Z-ADD0         POBN                                                CSD027
+     C**********           Z-ADD0         POCN                                                CSD027
+     C                     MOVE *BLANKS   POBN                                                CSD027
+     C                     MOVE *BLANKS   POCN                                                CSD027
+     C                     MOVEL*BLANKS   RCRN
+     C                     MOVEL*BLANKS   RCRA
+     C                     MOVEL*BLANKS   RVNO
+     C                     MOVEL*BLANKS   AWBN
+     C                     MOVEL*BLANKS   AWBA
+     C                     MOVEL*BLANKS   BENN
+     C                     MOVEL*BLANKS   BENA
+     C                     MOVEL*BLANKS   DTP1
+     C                     MOVEL*BLANKS   DTP2
+     C                     MOVEL*BLANKS   DTP3
+     C                     MOVEL*BLANKS   DTP4
+     C                     MOVEL*BLANKS   DCHG
+     C                     MOVEL*BLANKS   BTB1
+     C                     MOVEL*BLANKS   BTB2
+     C                     MOVEL*BLANKS   BTB3
+     C                     MOVEL*BLANKS   BTB4
+     C                     MOVEL*BLANKS   CVMR
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  *PSSR  - Error control subroutine                            *
+     C*                                                               *
+     C*  Called By: Main Processing                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C*
+     C** Check to see that *PSSR has not been called yet
+     C*
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C** If *PSSR already run, then just end the program here
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+**  CPY@ - OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

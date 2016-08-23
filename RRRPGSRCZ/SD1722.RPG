@@ -1,0 +1,131 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Setup recovery areas')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Restart Recovery Module
+     F*                                                                  *
+     F*   SD1722 - Format files for apply journal change request         *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*     LAST AMEND NO. E13205             DATE 14/02/89              *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*     New Program overview                                         *
+     F*                                                                  *
+     F*     E13205 - Format the file list into the scheme below          *
+     F*                                                                  *
+     F*              '(afile6790 *ALL) (bfile67890 *ALL) '               *
+     F*                                                                  *
+     F*              The option is always *ALL and the whole             *
+     F*              input array is always processed. The array          *
+     F*              IGN contains files to be excluded from the          *
+     F*              formatting process.                                 *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+     F*     CHANGE DESCRIPTIONS                                          *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                        *
+     F*                                                                  *
+     F*                                                                  *
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*                  ******************************               *
+     F*                  *   FUNCTION OF INDICATORS   *               *
+     F*                  ******************************               *
+     F*                                                               *
+     F*       80      Initial sort of array                           *
+     F*       90      File found in IGN array                         *
+     F*                                                               *
+     F*****************************************************************
+     E*
+     E*  Declare two arrays to define input and ouput
+     E*
+     E                    AR         50  9
+     E                    FMT        50 18
+     E*
+     E*  Declare compile time table of files to be ignored
+     E*
+     E                    IGN     6   6  9
+     E                    CPY@    1   1 80
+     I*
+     I*  Data structure for formating each entry
+     I*
+     IFORMAT      DS                             18
+     I                                        1   2 OPBR1
+     I                                        2  11 FILE
+     I                                       12  12 SP1
+     I                                       13  16 OPTALL
+     I                                       17  17 CLBR1
+     I                                       18  18 SP2
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C*  Entry list AR is 450 bytes and FMT is 900 bytes
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           AR
+     C                     PARM           FMT
+     C                     PARM           OPTION  5
+     C*
+     C*  Initialise fields
+     C*
+     C                     MOVEL*BLANKS   FORMAT
+     C                     MOVEA*BLANKS   FMT
+     C                     MOVEL'('       OPBR1
+     C                     MOVEL'*ALL'    OPTALL
+     C                     MOVEL')'       CLBR1
+     C                     Z-ADD1         Y       30
+     C*
+     C*  Sort array into ascending order
+     C*
+     C           *IN80     IFEQ '0'
+     C                     SORTAIGN
+     C                     MOVEL'1'       *IN80
+     C                     END
+     C*
+     C*  Loop fifty times and format all non-blank entries
+     C*
+     C           1         DO   50        X       30
+     C           AR,X      IFNE *BLANKS
+     C*
+     C*  Look up file in array of ignored files
+     C*
+     C           AR,X      LOKUPIGN                      90
+     C           *IN90     IFEQ '0'
+     C                     MOVELAR,X      FILE
+     C                     MOVELFORMAT    FMT,Y
+     C                     ADD  1         Y
+     C                     END
+     C*
+     C*  End of AR,X IFNE *BLANKS
+     C                     END
+     C*
+     C*  End of DO loop
+     C                     END
+     C*
+     C*  Return with results and seton LR if option is to closedown
+     C*
+     C           OPTION    IFEQ '*STOP'
+     C                     MOVEL'1'       *INLR
+     C                     END
+     C*
+     C                     RETRN
+     C*
+** Array of files to be ignored in apply journal changes
+MMSTDBPP MMSTDLPP MMSTDAPP MMSTDAPP FXSTDDPP FXDWNBPP
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

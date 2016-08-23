@@ -1,0 +1,226 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Start Journal Entry Interface')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/********GLC001600 - Midas GL Start Journal Entry Interface          */                   /*CER059*/
+/*       GLC001601 - Midas GL Start Journal Entry Interface          */                   /*CER059*/
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2008           */
+/*                                                                   */
+/*       Last Amend No. CER059             Date 19Jul10              */
+/*       Prev Amend No. BUG25167           Date 29Jul09              */
+/*                      BUG23458A          Date 23Mar09              */
+/*                      BUG23458           Date 20Mar09              */
+/*                      BUG23092           Date 26Feb09              */
+/*                      CER046  *CREATE    Date 19May08              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CER059 - German Feature Upgrade to Delhi                    */
+/*       BUG25167 - SWITI Journal batch interface fails with missing */
+/*                  ZMUSER and ZMITEM error                          */
+/*       BUG23458A - Added COMMIT statement for replication process  */
+/*       BUG23458 - Batch records are not replicated in GZGLJENHPD   */
+/*                  and GZGLJENPPD                                   */
+/*       BUG23092 - A database error occurred when running MEJI      */
+/*       CER046 - German Features LF033-00 Payments & Clearing       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&TERM)
+ 
+/** Declare PGM Variables                                            */
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2008')
+ 
+             DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&TYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&USER) TYPE(*CHAR) LEN(10)
+/*Terminal code                                                      */
+             DCL        VAR(&TERM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GROUP) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&USER1) TYPE(*CHAR) LEN(25)
+             DCL        VAR(&SLEVEL) TYPE(*DEC) LEN(4)
+             DCL        VAR(&TIMEO) TYPE(*DEC) LEN(5)
+             DCL        VAR(&ERRORC) TYPE(*DEC) LEN(1)
+             DCL        VAR(&MULT) TYPE(*CHAR) LEN(2)
+ 
+             DCL        VAR(&GLU) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&XXU) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MID) TYPE(*CHAR) LEN(7)
+ 
+             DCL        VAR(&SBMMSGQL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SBMMSGQ) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&SRTCD)   TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SOPTN)   TYPE(*CHAR) LEN(7) +
+                          VALUE('*VERIFY')
+             DCL        VAR(&SSARD)   TYPE(*CHAR) LEN(6) +
+                          VALUE('CER046')
+ 
+/** Global monitor message                                           */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Retrieve job attributes (Type indicates the mode of running)     */
+             RTVJOBA    USER(&USER) TYPE(&TYPE)
+ 
+/* If in job queue, go to Create LDA                                 */
+/**Due*to*this*solution*the*actuall*call*of*the*program*GLC001600*****/                   /*CER059*/
+/* Due to this solution the actual call of the program GLC001601     */                   /*CER059*/
+/* is doing out of a submitted job, whereas the first part of this   */
+/* program is running interactivly.                                  */
+/**********  IF         COND(&TYPE *EQ '0') THEN(GOTO CMDLBL(SBM))   */                 /*BUG25167*/
+             IF         COND(&TYPE *EQ '0' *AND &TERM *EQ 'Y') +
+                          THEN(GOTO CMDLBL(SBM))                                        /*BUG25167*/
+ 
+/* Determine if CER046 is installed                                  */
+ 
+             CALL       PGM(AOSARDR0) PARM(&SRTCD &SOPTN &SSARD)
+ 
+/* If CER046 is not installed then end the processing                */
+ 
+             IF         COND(&SRTCD *NE '       ' *AND &SRTCD *NE +
+                          '*NRF   ') THEN(DO)
+             SNDPGMMSG  MSG('CER046 - Payments and Clearing is not +
+                          switched on') TOMSGQ(MOPERQ)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Create lib and copy dtaara ZMITEM for pgm ZVACTBU                 */
+             CHKOBJ     OBJ(&USER) OBJTYPE(*LIB)
+             MONMSG     MSGID(CPF9801) EXEC(CRTLIB LIB(&USER))
+ 
+/**********  CHKOBJ     OBJ(&USER/ZMITEM) OBJTYPE(*DTAARA)           */                 /*BUG25167*/
+/**********  MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(CRTZM))      */                 /*BUG25167*/
+ 
+/**********  DLTDTAARA  DTAARA(&USER/ZMITEM)                         */                 /*BUG25167*/
+ 
+/**********  CHKOBJ     OBJ(&USER/ZMUSER) OBJTYPE(*DTAARA)           */    /*BUG23092*/ /*BUG25167*/
+/**********  MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(CRTZM))      */    /*BUG23092*/ /*BUG25167*/
+                                                                                        /*BUG23092*/
+/**********  DLTDTAARA  DTAARA(&USER/ZMUSER)                         */    /*BUG23092*/ /*BUG25167*/
+                                                                                        /*BUG23092*/
+/**TZM:      CRTDUPOBJ  OBJ(ZMITEM) FROMLIB(QTEMP) OBJTYPE(*DTAARA) +
+                          TOLIB(&USER)                               */                 /*BUG25167*/
+ 
+/**********  CRTDUPOBJ  OBJ(ZMUSER) FROMLIB(QTEMP) OBJTYPE(*DTAARA) +
+                          TOLIB(&USER)                               */    /*BUG23092*/ /*BUG25167*/
+                                                                                        /*BUG23092*/
+             CHKOBJ     OBJ(QTEMP/ZMUSER) OBJTYPE(*DTAARA)                              /*BUG25167*/
+             MONMSG     MSGID(CPF9801) EXEC(CALL PGM(ZMUSER) +
+                          PARM('' &USER))                                               /*BUG25167*/
+             CRTDUPOBJ  OBJ(ZMUSER) FROMLIB(QTEMP) OBJTYPE(*DTAARA) +
+                          TOLIB(&USER)                                                  /*BUG25167*/
+                                                                                        /*BUG25167*/
+             CHKOBJ     OBJ(&USER/ZMITEM) OBJTYPE(*DTAARA)                              /*BUG25167*/
+             MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
+                          DTAARA(&USER/ZMITEM) TYPE(*CHAR) LEN(10) +
+                          VALUE('0000004308'))                                          /*BUG25167*/
+             ADDLIBLE   LIB(&USER)
+             MONMSG     MSGID(CPF2103)                                                   /*mike*/
+/**********  RTVJOBA    JOB(&TERM)                                   */                 /*BUG25167*/
+             CHGVAR     VAR(&TERM) VALUE('Y')                                           /*BUG25167*/
+ 
+/**********  SBMJOB     CMD(CALL PGM(GLC001600) PARM(&TERM)) +
+                          JOB(GLC001600) JOBD(MBATCH)                */          /*mike*/ /*CER059*/
+/*           SBMJOB     CMD(CALL PGM(GLC001600) PARM(&TERM)) +
+                          JOB(GLC001600) JOBD(MBATCH) USER(*JOBD)                    */  /*mike*/
+             SBMJOB     CMD(CALL PGM(GLC001601) PARM(&TERM)) +
+                          JOB(GLC001601) JOBD(MBATCH)                                     /*CER059*/
+                                                                                          /*CER059*/
+/* Delete temporary library                                          */
+             RMVLIBLE LIB(&USER)
+/***         SBMJOB     CMD(DLTLIB LIB(&USER))                     ***/                 /*BUG23092*/
+             SBMJOB     CMD(DLTLIB LIB(&USER)) JOBD(MBATCH)                             /*BUG23092*/
+ 
+/* Terminate the program                                             */
+             GOTO       CMDLBL(END)
+/* Create LDA in QTEMP if not present                                */
+SBM:
+             CHKOBJ     OBJ(LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
+                          DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                          VALUE(' ') TEXT('MIDAS/ABS SD AS400 +
+                          LOCAL DATA AREA EQUIVALENT'))
+ 
+/* Set-off Database Error Switches                                   */
+             CHGJOB     SWS(XXXXXX00)
+ 
+             ALCOBJ     OBJ((GLJEIHPD *FILE *EXCL *FIRST))
+             MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(MSG3))
+ 
+             ALCOBJ     OBJ((GLJEIPPD *FILE *EXCL *FIRST))
+             MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(MSG3))
+ 
+             ALCOBJ     OBJ((GLJEIXPD *FILE *EXCL *FIRST))
+             MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(MSG3))
+ 
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(*LIBL/SDFCTLPA (*FILE))
+/* Multiple language support                                         */
+             CALL       PGM(SF0410) PARM(&GROUP &USER1 &SLEVEL +
+                          &TIMEO &ERRORC &MULT)
+ 
+             IF         COND(&ERRORC = 1) THEN(GOTO CMDLBL(ABNOR))
+             IF         COND(&MULT = '  ') THEN(DO)
+                             CHGVAR     VAR(&MULT) VALUE('GB')
+                          ENDDO
+ 
+             CHGVAR     VAR(&GLU) VALUE(&MULT *CAT GLUSRMSG)
+             CHGVAR     VAR(&XXU) VALUE(&MULT *CAT XXUSRMSG)
+             CHGVAR     VAR(&MID) VALUE(&MULT *CAT MIDAS)
+ 
+             OVRMSGF    MSGF(GLUSRMSG) TOMSGF(&GLU)
+             OVRMSGF    MSGF(XXUSRMSG) TOMSGF(&XXU)
+             OVRMSGF    MSGF(MIDAS) TOMSGF(&MID)
+ 
+/**Call*GL001600*Program**********************************************/                   /*CER059*/
+/**********  CALL       PGM(GL001600)                                */                   /*CER059*/
+/* Call GL001601 Program                                             */                   /*CER059*/
+             CALL       PGM(GL001601)                                                     /*CER059*/
+ 
+             MONMSG     MSGID(CPF0001) EXEC(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* If U7/U8 on process data base error                               */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             RTVDTAARA  DTAARA(LDA *ALL) RTNVAR(&LDA)
+             CHGVAR     VAR(&MEM) VALUE(%SST(&LDA 134 50))
+             SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+                                                                                       /*BUG23458A*/
+             COMMIT                                                                    /*BUG23458A*/
+                                                                                       /*BUG23458A*/
+             GOTO       CMDLBL(END)                                                     /*BUG23458*/
+                                                                                        /*BUG23458*/
+ MSG3:       RTVJOBA    SBMMSGQ(&SBMMSGQ) SBMMSGQLIB(&SBMMSGQL)
+             SNDBRKMSG  MSG('The transfer data is currently being +
+                          processed by a different job, please try +
+                          again later.') TOMSGQ(&SBMMSGQL/&SBMMSGQ)
+ 
+ABNOR:       DLCOBJ     OBJ((GLJEIHPD *FILE *EXCL *FIRST)) /* +
+                          Posting Interface Header */
+             DLCOBJ     OBJ((GLJEIPPD *FILE *EXCL *FIRST)) /* +
+                          Posting Interface Details */
+             DLCOBJ     OBJ((GLJEIXPD *FILE *EXCL *FIRST)) /* +
+                          Posting interface Add. Narratives */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(END))
+ 
+             ROLLBACK
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(END))
+ END:
+             CHGVAR   VAR(&CPYFLD) VALUE('(c) +
+                       Misys International Banking Systems Ltd.')
+ 
+             ENDPGM

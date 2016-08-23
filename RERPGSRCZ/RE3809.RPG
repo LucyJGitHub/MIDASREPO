@@ -1,0 +1,458 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE History balance update for reconciliation')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *  RE3809 - History Balance Update for Reconciliation           *
+      *                                                               *
+      *  Function:  This program will update the History Balance      *
+      *             held on PF/REACR to include lastest generated     *
+      *             entries from interest capitalisation.             *
+      *                                                               *
+      *  Called By: REC3810 - A/C Bal. & History Bal. Reconciliation  *
+      *                       Report.                                 *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CGL007             Date 26Mar99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 121058             Date 09Feb98               *
+      *                 104489             Date 06Feb98               *
+      *                 103567             Date 23MAY96               *
+      *                 CRE003 *CREATE     Date 22APR96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CGL007 - Account Postings Enquiry.  Recompile.               *
+      *  121058 - Retail Statement Charges Fix                        *
+      *  104489 - For a closure cap. or generated interest adjustment *
+      *           the history balance has already been updated with   *
+      *           capitalised interest & charges. Only process GE-IC  *
+      *           postings with value date *GT (DNWD - 1) or accrual  *
+      *           profit date if earlier.                             *
+      *  103567 - Database error on file REACR due to using wrong     *
+      *           branch code.                                        *
+      *  CRE003 - Ledger Balance Accruals                             *
+      *                                                               *
+      *****************************************************************
+     FGEIC    IF  E           K        DISK
+      ** Gen. Ent. for Int. Capitalisation.
+      *                                                                   121058
+     FGESFPD  IF  E                    DISK                               121058
+      ** Generated Entries for Statement Fees                             121058
+     F            APOSTPDF                          KRENAMEGESFPDF        121058
+      *                                                                   121058
+     FREACR   UF  E           K        DISK
+      ** Retail Accured Interest File.
+     FRE3809AUO   E                    PRINTER                        UC
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INIT   - Program Initialisation                              *
+      *  PROCES - Detail Processing                                   *
+      *  UPDATE - Update record on LF/REACR                           *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     IDSFDY     E DSDSFDY
+      **FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     IRUNDAT      DS
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+      **  Data Area RUNDAT
+      *                                                                   104489
+     ISDGELR    E DSSDGELRPD                                              104489
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     ISDBANK    E DSSDBANKPD
+      ***  External data structures for Bank Details
+      *
+     ISDRETL    E DSSDRETLPD                                              121058
+      ***  External data structures for Retail ICD                        121058
+      *                                                                   121058
+     I              QQACCD                          QQACD1                                    CGL029
+     I#DBKEY      DS
+     I                                        1   6 CUS
+     I                                        7   9 CUR
+     I                                       10  13 CDE
+     I                                       14  15 SEQ
+     I                                       16  18 BRH
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+      *================================================================
+      *       C O N T R O L   M O D U L E                             *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+     C                     EXSR INIT
+      *                                                                   121058
+      **  Process 'GE-IC' records only if system is not on Last           121058
+      **  Day Accruals                                                    121058
+      *                                                                   121058
+     C           BMLDAI    IFNE 'Y'                                       121058
+     C                     MOVE 'GE-IC'   WSPOS   5                       121058
+     C                     EXSR PROCES
+     C                     ENDIF                                          121058
+      *                                                                   121058
+      **  Process 'GE-SF' records                                         121058
+      *                                                                   121058
+     C                     Z-ADD0         RECTOT  50                      121058
+     C                     MOVE 'GE-SF'   WSPOS                           121058
+     C                     EXSR PROCES                                    121058
+      *
+      ** Seton last record indicator and exit program.
+     C                     SETON                     LR
+     C                     RETRN
+      *****************************************************************
+      *                                                               *
+      *  PROCES - Subroutine to do Program Detail Processing.         *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+     C           PROCES    BEGSR
+      *                                                                   121058
+      **  For GEICPD postings:                                            121058
+      *                                                                   121058
+     C           WSPOS     IFEQ 'GE-IC'                                   121058
+      *                                                                   121058
+      ** Set pointer for LF/GEIC with ATYP='R' and account details set
+      ** to blanks.
+     C           KEY2      SETLLAPOSTPDF
+      *
+      ** Read file for first time.
+     C                     READ APOSTPDF                 60
+      *                                                                   121058
+      **  Else, read first record from GESFPD                             121058
+     C                     ELSE                                           121058
+     C                     READ GESFPDF                  60               121058
+     C                     ENDIF                                          121058
+      *                                                                   103567
+      ** Move Branch Code to secondary workfield to avoid corruption      103567
+      ** of data caused by same named field in update file.               103567
+     C                     MOVE BRCA      W2BRCA  3                       103567
+      *
+      ** Move Account Code to secondary workfield to avoid corruption
+      ** of data caused by same named field in update file.
+     C**********           Z-ADDACOD      W2ACOD  40                                          CGL029
+     C                     Z-ADDACOD      W2ACOD 100                                          CGL029
+      *
+      ** Main Processing Loop. Do whilst records on file and account
+      ** types are 'R'.
+     C           *IN60     DOWEQ*OFF
+     C           ATYP      IFEQ 'R'
+     C                     ADD  1         RECTOT
+      *
+      ** If first posting record processed or file values not same as
+      ** as previous.
+     C           RECTOT    IFEQ 1
+     C***********BRCA      ORNE WBRCA                                     103567
+     C           W2BRCA    ORNE WBRCA                                     103567
+     C           CNUM      ORNE WCNUM
+     C           CCY       ORNE WCCY
+     C           W2ACOD    ORNE WACOD
+     C           ACSQ      ORNE WACSQ
+      *
+      ** If not first record processed access Retail Accrued Interest
+      ** File.
+     C           RECTOT    IFGT 1
+     C           WAMNT     ANDNE*ZEROS                                    104489
+     C           KEY1      CHAINREACR                61
+      *
+      ** If record on file add workfield amount to 'History Balance'.
+     C           *IN61     IFEQ *OFF
+     C                     ADD  WAMNT     HISB
+     C                     UPDATREACRDF
+      *
+      ** If no record on file carry out database errorr processing.
+     C                     ELSE
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD002       DBASE            ***************
+     C                     MOVEL'REACR'   DBFILE           *DB ERROR 002 *
+     C                     MOVEL'RE3809'  DBPGM            ***************
+     C                     EXSR AUDIT
+     C                     MOVEL#DBKEY    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Set up work fields to those contained on file, for first
+      ** record only.
+     C***********          MOVE BRCA      WBRCA   3                       103567
+     C                     MOVE W2BRCA    WBRCA   3                       103567
+     C**********           Z-ADDCNUM      WCNUM   60                                          CSD027
+     C                     MOVE CNUM      WCNUM   6                                           CSD027
+     C                     MOVE CCY       WCCY    3
+     C**********           Z-ADDW2ACOD    WACOD   40                                          CGL029
+     C                     Z-ADDW2ACOD    WACOD  100                                          CGL029
+     C                     Z-ADDACSQ      WACSQ   20
+     C                     Z-ADD0         WAMNT  150
+     C                     ENDIF
+      *
+     C           VALD      IFGT CTLDAT                                    104489
+      *                                                                   104489
+      ** If the Debit/Credit Indicator ='0' add 'posting amount' to
+      ** work amount field.
+     C           DRCR      IFEQ 0
+     C                     ADD  PSTA      WAMNT
+     C                     ENDIF
+      *
+      ** If the Debit/Credit Indicator ='1' subtract 'Posting Amount'
+      ** from work amount field.
+     C           DRCR      IFEQ 1
+     C                     SUB  PSTA      WAMNT
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF                                          104489
+      *                                                                   104489
+     C           WSPOS     IFEQ 'GE-IC'                                   121058
+     C                     READ APOSTPDF                 60
+     C                     ELSE                                           121058
+     C                     READ GESFPDF                  60               121058
+     C                     ENDIF                                          121058
+      *                                                                   121058
+     C                     MOVE BRCA      W2BRCA  3                       103567
+     C**********           Z-ADDACOD      W2ACOD  40                                          CGL029
+     C                     Z-ADDACOD      W2ACOD                                              CGL029
+     C                     ENDDO
+      *
+     C           RECTOT    IFGE 1
+     C           KEY1      CHAINREACR                61
+      *
+      ** If record on file add workfield amount to 'History Balance'.
+     C           *IN61     IFEQ *OFF
+     C                     ADD  WAMNT     HISB
+     C                     UPDATREACRDF
+      *
+      ** If no record on file caryy out database errorr processing.
+     C                     ELSE
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD003       DBASE            ***************
+     C                     MOVEL'REACR'   DBFILE           *DB ERROR 003 *
+     C                     MOVEL'RE3809'  DBPGM            ***************
+     C                     EXSR AUDIT
+     C                     MOVEL#DBKEY    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  AUDIT  - Subroutine to write record to audit report printer  *
+      *           file                                                *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *****************************************************************
+     C           AUDIT     BEGSR
+      *
+      ** If Database error occurs write details to printer file
+     C                     OPEN RE3809AU
+      *
+      ** Database error re access to SDBANKPD
+     C           RECTOT    IFEQ 0
+     C                     MOVEL'*FIRST'  #DBKEY
+      *
+      ** Database error re access to referenced database files
+     C                     ELSE
+     C                     MOVE WCNUM     CUS
+     C                     MOVE WCCY      CUR
+     C                     MOVE WACOD     CDE
+     C                     MOVE WACSQ     SEQ
+     C                     MOVE WBRCA     BRH
+     C                     ENDIF
+      *
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     CLOSERE3809AU
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+     C           INIT      BEGSR                                       **
+      *
+      ** Set records processed counter to zero.
+     C                     Z-ADD0         RECTOT  50
+      *
+      ** Set up copyright parameter
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Call Access Program for Bank Details - Title, Run Date and
+      ** Run Day Number.
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Data base error in accessing SDBANKPD file.
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           *DB ERROR 001 *
+     C                     MOVEL'RE3809'  DBPGM            ***************
+     C                     EXSR AUDIT
+     C                     MOVEL#DBKEY    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *                                                                   121058
+      ** Call Access Program for Retail ICD Details - Last Day            121058
+      ** Accrual Indicator                                                121058
+     C                     CALL 'AORETLR0'                                121058
+     C                     PARM '*MSG   ' WRTCD   7                       121058
+     C                     PARM '*FIRST ' WOPTN   7                       121058
+     C           SDRETL    PARM SDRETL    DSFDY                           121058
+      *                                                                   121058
+      ** Database error                                                   121058
+     C           WRTCD     IFNE *BLANKS                                   121058
+     C           *LOCK     IN   LDA                                       121058
+     C                     SETON                       U7U8               121058
+     C                     Z-ADD4         DBASE            ************   121058
+     C                     MOVEL'SDRETLPD'DBFILE           * DBERR 04 *   121058
+     C                     MOVEL'RE3809'  DBPGM            ************   121058
+     C                     EXSR AUDIT                                     121058
+     C                     MOVEL#DBKEY    DBKEY                           121058
+     C                     OUT  LDA                                       121058
+     C                     EXSR *PSSR                                     121058
+     C                     ENDIF                                          121058
+      *                                                                   104489
+      ** Retrieve accrual profit date                                     104489
+     C**********           CALL 'AOGELRR0'                                             104489 CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG'    WRTCD                           104489
+     C                     PARM '*FIRST'  WOPTN                           104489
+     C********** SDGELR    PARM SDGELR    DSFDY                                        104489 CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *                                                                   104489
+      ** Set up control date for checking value date of postings          104489
+     C           *LIKE     DEFN BJDNWD    CTLDAT                          104489
+     C           BJDNWD    SUB  1         CTLDAT                          104489
+     C           BKAPDT    IFLT CTLDAT                                    104489
+     C                     Z-ADDBKAPDT    CTLDAT                          104489
+     C                     END                                            104489
+      *
+      ** Set up Key List
+     C           KEY1      KLIST
+     C                     KFLD           WCNUM
+     C                     KFLD           WCCY
+     C                     KFLD           WACOD
+     C                     KFLD           WACSQ
+     C                     KFLD           WBRCA
+      *
+     C           KEY2      KLIST
+     C                     KFLD           #ATYP
+     C                     KFLD           #BRCA
+     C                     KFLD           #CNUM
+     C                     KFLD           #CCY
+     C                     KFLD           #ACOD
+     C                     KFLD           #ACSQ
+      *
+      ** Set up key fields for KEY2 klist.
+     C                     MOVE 'R'       #ATYP   1
+     C                     MOVE *BLANK    #BRCA   3
+     C**********           Z-ADD0         #CNUM   60                                          CSD027
+     C                     MOVE *BLANKS   #CNUM   6                                           CSD027
+     C                     MOVE *BLANK    #CCY    3
+     C**********           Z-ADD0         #ACOD   40                                          CGL029
+     C                     Z-ADD0         #ACOD  100                                          CGL029
+     C                     Z-ADD0         #ACSQ   20
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

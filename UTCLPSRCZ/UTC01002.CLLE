@@ -1,0 +1,168 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas UT Error Codes/ Message Files List Creation')   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities Module                                    */
+/*                                                                   */
+/*       UTC01002 - Midas UT Error Codes/ Message Files List Creation*/
+/*                                                                   */
+/*       Function: This program will identify all error codes/msgs   */
+/*                 files in library list and write in file UTERCDPD  */
+/*                 (Input Cycle)                                     */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2011           */
+/*                                                                   */
+/*       Last Amend No. CBF011  *CREATE    Date 04Jul11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CBF011 - BF Infrastructure: Error Message Handling          */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LIBLST &SYSTEM)
+ 
+             DCL        VAR(&LIBLST) TYPE(*CHAR) LEN(2502)
+             DCL        VAR(&SYSTEM) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&NBRB) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&NBR) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&CNT) TYPE(*DEC) LEN(3 0) VALUE(0)
+             DCL        VAR(&ADDLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIBCNT) TYPE(*DEC) LEN(4 0) VALUE(3)
+             DCL        VAR(&LIBL) TYPE(*CHAR) LEN(2750) VALUE(' ')
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(11) VALUE(' ')
+             DCL        VAR(&NUM1) TYPE(*DEC) LEN(3 0) VALUE(0)
+             DCL        VAR(&NUM2) TYPE(*DEC) LEN(3 0) VALUE(0)
+             DCL        VAR(&FLG) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&STM_STR) TYPE(*CHAR) LEN(80)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2011')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Retrieve number of libraries entered to be added */
+ 
+             CHGVAR     VAR(&NBRB) VALUE(%SST(&LIBLST 1 2))
+             CHGVAR     VAR(&NBR) VALUE(%BIN(&NBRB))
+ 
+/** Set up library list from MIDASIC jobd */
+ 
+             IF         COND(&SYSTEM *NE ' ') THEN(DO)
+               CALL       PGM(UPC0014) PARM(&SYSTEM)
+               MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))
+             ENDDO
+ 
+/** Process libraries to be added to library list */
+ 
+             CHGVAR     VAR(&LIBCNT) VALUE(((&NBR - 1) * 10) + 3)
+ 
+LOOP:
+             CHGVAR     VAR(&ADDLIB) VALUE(%SST(&LIBLST &LIBCNT 10))
+             ADDLIBLE   LIB(&ADDLIB)
+             MONMSG     MSGID(CPF2103) EXEC(DO)
+               RMVLIBLE   LIB(&ADDLIB)
+               ADDLIBLE   LIB(&ADDLIB)
+             ENDDO
+ 
+             CHGVAR     VAR(&LIBCNT) VALUE(&LIBCNT - 10)
+             CHGVAR     VAR(&CNT) VALUE(&CNT + 1)
+             IF         COND(&CNT *NE &NBR) THEN(GOTO CMDLBL(LOOP))
+ 
+/** Create and rename temporary source file for RUNSQLSTM  */
+ 
+             DLTF       FILE(QTEMP/RUNSQLSTM)
+             MONMSG     MSGID(CPF0000)
+ 
+             DLTF       FILE(QTEMP/RUNSQL)
+             MONMSG     MSGID(CPF0000)
+ 
+             CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                          MBR(RUNSQLSTM) TEXT('Temporary source')
+             RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                          NEWOBJ(RUNSQL)
+ 
+/** Check if #.ZZGBMSGF exists, if found: */
+/** Build string to delete record from #.ZZGBMSGF */
+ 
+             CHKOBJ     OBJ(#.ZZGBMSGF) OBJTYPE(*MSGF)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(PNXT))
+ 
+             CHGVAR     VAR(&STM_STR) VALUE('DELETE FROM UTERCDPD +
+                          WHERE DMFILE = ''#.ZZGBMSGF'';')
+ 
+/** Call standard program to write to source file */
+ 
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
+ 
+/** Process next object to be deleted */
+/** Build string to delete record from ZZGBMSGF */
+ 
+PNXT:
+             CHGVAR     VAR(&STM_STR) VALUE('DELETE FROM UTERCDPD +
+                          WHERE DMFILE = ''ZZGBMSGF''')
+ 
+/** Call standard program to write to source file */
+ 
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+ 
+             RTVJOBA    USRLIBL(&LIBL)
+             CHGJOB     SWS(XXXXXX00)
+ 
+/** Check if File UTERCDPD exists, if not found, end abnormally */
+ 
+             CHKOBJ     OBJ(UTERCDPD) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(ABNOR))
+ 
+/** If found, clear file */
+             CLRPFM     FILE(UTERCDPD)
+ 
+LOOP1:
+             CHGVAR     VAR(&NUM1) VALUE(&NUM2 + 1)
+             CHGVAR     VAR(&NUM2) VALUE(&NUM2 + 11)
+ 
+             CHGVAR     VAR(&LIB) VALUE(%SUBSTRING(&LIBL &NUM1 &NUM2))
+ 
+             IF         COND(&LIB *NE ' ') THEN(DO)
+               DSPMSGF    MSGF(&LIB/*ALL) OUTFILE(*LIBL/UTERCDPD) +
+                            OUTMBR(*FIRST *ADD)
+ 
+               GOTO       CMDLBL(LOOP1)
+             ENDDO
+ 
+             ELSE       CMD(DO)
+ 
+/** Delete the records from ZZGBMSGF */
+ 
+               RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                            COMMIT(*NONE)
+               MONMSG     MSGID(CPF0000 CPI0000 CPA0000 SQL0000)
+               MONMSG     MSGID(CPD32CC)
+               MONMSG     MSGID(SQL0952) CMPDTA(CPA32B2)
+ 
+/** Call program UT001002 to check if an error code */
+/** is used in more than one message file */
+ 
+               CALL       PGM(UT001002)
+ 
+               GOTO       CMDLBL(END)
+             ENDDO
+ 
+/** Abnormal Termination */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+             SNDPGMMSG  MSG('Program UTC01002 ended abnormally - see +
+                          job log') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/** Updates data area UTSGSTAT whether the job ends succesfully or */
+/** not before exiting the program */
+ 
+END:
+             CHGDTAARA  DTAARA(UTSGSTAT (2 1)) VALUE('Y')
+             ENDPGM

@@ -1,0 +1,323 @@
+     H        1   Y
+     H****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER IML Reporting - SECURITIES')
+     H****************************************************************
+     H*                                                              *
+     H*          MIDAS ABS - EUROPEAN REPORTING                      *
+     H*                                                              *
+     H*  ERLU67 - IML REPORTING - TRANSACTION DETAIL PROCESSING      *
+     H*                           FOR SECURITIES                     *
+     H*                                                              *
+     H*  (c) Misys International Banking Systems Ltd. 2005           *
+     H*                                                              *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Last Amend No. 225555             Date 31Oct06              *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CER001             Date 25Apr05               *
+      *                 ULX046             Date 28Oct02               *
+      *                 ULX008             Date 24Jul00               *
+     H*                    169521             Date   19MAY00         *
+     H*                    ULX008             Date 24Feb00           *
+     H*                    ULX004             Date   18MAR97         *
+     H*                    ERL370 TLI         Date   29SEP93         *
+     H*                    ERL432 PT          DATE   30AUG94         *
+     H*                    ERL371 TLI         DATE   12NOV93         *
+     H*                    ERL336 TLI         DATE   06APR93         *
+     H*                    ERL331 AF          DATE   26MAR93         *
+     H*                    ERL328 TLI         DATE   22MAR93         *
+     H*                    ERL313 TLI         DATE   08FEB93         *
+     H*****************************************************************
+      *     225555 - Add discount/premium amount, amount to amortize  *
+      *              and 'Prix d'Acquisition'.                        *
+      *              1.15.0000 for Discount and 2.05.0000 for Premium *
+      *              (Recompiled)                                     *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+     H*     ULX046 - Circulars 2002/170-174-175 Integration           *
+     H*     ULX008 - "Commissariat aux Bourses" - Change Control C    *
+     H*           Recompiled due to changes in PF/SECTYDX6            *
+     H*     169521 - A new field has been added in SECTYDX6 in order *
+     H*              to report the voting right to ABBACUS.          *
+     H*     ULX008 - CSSF Statutory Reporting : Commissariat aux      *
+     H*              Bourses                                          *
+     H*              Recompile due to changes in PF/SECTYDX6          *
+     H*     ULX004 - Capital Adequacy                                 *
+     H*     ERL370 - Book code / Investment type development          *
+     H*     ERL432 - TO MANAGE THE DATABASE ERRORS CORRECTLY          *
+     H*     ERL371 - IML 1.4 DEVELOPMENT                              *
+     H*     ERL336 - Restore old definition for 'SECT' and            *
+     H*              create 'TOVM'                                    *
+     H*     ERL331 - Wrongh lenght of parm CORAM form 15,0 to 16,0    *
+     H*     ERL328 - IML 2.4 DEVELOPMENT                              *
+     H*     ERL313 - Written for 'Correction Amount'                  *
+     H*****************************************************************
+     F***ERBKIVL0IF**E           K        DISK                                         ERL370 CER001
+     FERBKIXL0IF  E           K        DISK                                                   CER001
+     F* BI - ER Book code / Investment type details                       ERL370
+      *
+     F***BKPHDDX4IF**E           K        DISK                                                CER001
+     FERBKPXPDIF  E           K        DISK                                                   CER001
+     F* WD - Book Positions Extended file
+      *
+     F***SDBOOKX4IF**E           K        DISK                                         ERL328 CER001
+     FSDBKX3PDIF  E           K        DISK                                                   CER001
+     F* WC - Book Codes Extended file                                     ERL328
+      *                                                                   ERL328
+     F***SDBOOKX6IF**E           K        DISK                                         ERL328 CER001
+     FSDBKX4PDIF  E           K        DISK                                                   CER001
+     F* WG - Book Codes Extended file                                     ERL328
+      *
+     F***SECTYDY6IF**E           K        DISK                                         ERL371 CER001
+     FSESDX6L0IF  E           K        DISK                                                   CER001
+     F* VV - Securities Exxended file                                     ERL371
+      *===============================================================*
+     F*
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       80         FAIL CONDITION FOR FILE ACCESS OPERATION
+     F*
+     F*       U7         DATABASE ERROR
+     F*
+     F**             *************************
+     F**             ** INDICATORS NOT USED **
+     F**             ** ------------------- **
+     F**             *************************
+     F**
+     F**      ***************************************************
+     F**      * 01   02   03   04   05   06   07   08   09   10 *
+     F**      * 11   12   13   14   15   16   17   18   19   20 *
+     F**      * 21   22   23   24   25   26   27   28   29   30 *
+     F**      * 31   32   33   34   35   36   37   38   39   40 *
+     F**      * 41   42   43   44   45   46   47   48   49   50 *
+     F**      * 51   52   53   54   55   56   57   58   59   60 *
+     F**      * 61   62   63   64   65   66   67   68   69   70 *
+     F**      * 71   72   73   74   75   76   77   78   79   .. *
+     F**      * 81   82   83   84   85   86   87   88   89   90 *
+     F**      * 91   92   93   94   95   96   97   98   99      *
+     F**      ***************************************************
+     E** ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+      *===============================================================*
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     ILDA        UDS                            256
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+     I**
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I**
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     I           SDS
+     I                                     *PROGRAM PGM
+      **=================================================================
+     C** KEY SETUP
+     C           BKKEY     KLIST
+     C                     KFLD           WWSESN
+     C                     KFLD           WWBRCD
+     C                     KFLD           WWBHBK
+     C                     KFLD           WWBHMK
+      *                                                                   ERL370
+     C           BKIVKY    KLIST                                          ERL370
+     C                     KFLD           WWBHBK                          ERL370
+     C                     KFLD           WWINVT                          ERL370
+      *----------------------------------------------------------------
+     C                     EXSR #INIT
+      *----------------------------------------------------------------
+     C*
+     C** SETUP KEY
+     C                     MOVELEXTREF    WWTREF 12
+     C                     MOVELWWTREF    WWBHBK  2
+     C                     MOVE WWTREF    WWSESN 10
+     C                     MOVE EXTREF    WWBHMK  1
+     C                     MOVE EXBRCD    WWBRCD  3
+     C                     Z-ADD0         WDREAM
+     C                     MOVELEXDECK    WWINVT  3                       ERL370
+      *                                                                   ERL370
+     C********** BKIVKY    CHAINERBKIVL0             80                                ERL370 CER001
+     C           BKIVKY    CHAINERBKIXL0             80                                       CER001
+     C           *IN80     IFEQ '0'                        - B1           ERL370
+     C                     MOVE BITIFA    EXTRIN                          ERL370
+     C                     Z-ADDBIEVAM    EXEVMT                          ERL370
+     C                     END                             - E1           ERL370
+      *
+     C********** BKKEY     CHAINBKPHDDX4             80                                       CER001
+     C           BKKEY     CHAINERBKPXPD             80                                       CER001
+      *
+     C           WDREAM    IFLT 0                          - B1
+     C                     Z-SUBWDREAM    CORAM
+     C                     END                             - E1
+      *
+      ** IML 2.4 DEVELOPMENT                                              ERL328
+      *                                                                   ERL328
+     C                     Z-ADD1         EXCORT                          ERL328
+     C                     Z-ADD0         EXVOTR                          ERL328
+      *                                                                   ERL328
+     C           EXTRIN    IFEQ *BLANKS                    - B0           ERL370
+      *                                                                   ERL370
+     C********** WWBHBK    CHAINSDBOOKX4             88                                ERL328 CER001
+     C           WWBHBK    CHAINSDBKX3PD             88                                ERL328 CER001
+     C           *IN88     IFEQ '1'                        - B1           ERL328
+     C           *LOCK     IN   LDA                                       ERL328
+     C                     MOVEL'672'     DBASE                           ERL328
+     C**********           MOVEL'SDBOOKX4'DBFILE                                       ERL328 CER001
+     C                     MOVEL'SDBKX3PD'DBFILE                                              CER001
+     C                     MOVELWWBHBK    DBKEY                           ERL328
+     C                     EXSR #DBERR                                    ERL328
+     C                     END                             - E1           ERL328
+      *                                                                   ERL328
+     C           WCTRIN    IFEQ 'T'                        - B1           ERL328
+     C                     MOVE '2'       EXTRIN                          ERL328
+     C                     END                             - E1           ERL328
+     C           WCTRIN    IFEQ 'I'                        - B1           ERL328
+     C                     MOVE '3'       EXTRIN                          ERL328
+     C                     END                             - E1           ERL328
+     C           WCTRIN    IFEQ 'F'                        - B1           ERL328
+     C                     MOVE '1'       EXTRIN                          ERL328
+     C                     END                             - E1           ERL328
+      *                                                                   ERL370
+     C                     ELSE                            - X0           ERL370
+      *                                                                   ERL370
+     C           EXTRIN    IFEQ 'T'                        - B1           ERL370
+     C                     MOVE '2'       EXTRIN                          ERL370
+     C                     ELSE                            - X1           ERL370
+     C           EXTRIN    IFEQ 'I'                        - B2           ERL370
+     C                     MOVE '3'       EXTRIN                          ERL370
+     C                     ELSE                            - X2           ERL370
+     C           EXTRIN    IFEQ 'F'                        - B3           ERL370
+     C                     MOVE '1'       EXTRIN                          ERL370
+     C                     ELSE                            - X3           ERL370
+     C                     MOVE *BLANKS   EXTRIN                          ERL370
+     C                     END                             - E3           ERL370
+     C                     END                             - E2           ERL370
+     C                     END                             - E1           ERL370
+      *                                                                   ERL370
+     C                     END                             - E0           ERL370
+      *                                                                   ERL328
+     C********** WWBHBK    CHAINSDBOOKX6             88                                ERL328 CER001
+     C           WWBHBK    CHAINSDBKX4PD             88                                       CER001
+     C           *IN88     IFEQ '1'                        - B1           ERL328
+     C           *LOCK     IN   LDA                                       ERL328
+     C                     MOVEL'673'     DBASE                           ERL328
+     C**********           MOVEL'SDBOOKX6'DBFILE                                       ERL328 CER001
+     C                     MOVEL'SDBKX4PD'DBFILE                                              CER001
+     C                     MOVELWWBHBK    DBKEY                           ERL328
+     C                     EXSR #DBERR                                    ERL328
+     C                     END                             - E1           ERL328
+      *                                                                   ERL328
+     C           WGEVMT    IFEQ 5                                         ERL328
+     C                     Z-ADD1         EXSWLK                          ERL328
+     C           EXEVMT    IFEQ *ZEROS                                    ERL370
+     C                     Z-ADD1         EXEVMT                          ERL328
+     C                     END                                            ERL370
+      *                                                                   ERL370
+     C                     ELSE                                           ERL328
+     C                     Z-ADD0         EXSWLK                          ERL328
+      *                                                                   ERL370
+     C           EXEVMT    IFEQ *ZEROS                                    ERL370
+     C                     Z-ADDWGEVMT    EXEVMT                          ERL328
+     C                     END                                            ERL370
+      *                                                                   ERL370
+     C                     END                                            ERL328
+      *
+     C*********************Z-ADDWGOPTP    EXSECT                   ERL328 ERL336
+     C                     Z-ADDWGOPTP    EXTOVM                          ERL336
+      *                                                                   ERL371
+     C********** WWSESN    CHAINSECTYDY6             88                                ERL371 CER001
+     C           WWSESN    CHAINSESDX6L0             88                                       CER001
+     C           *IN88     IFEQ '1'                        - B1           ERL371
+     C           *LOCK     IN   LDA                                       ERL371
+     C                     MOVEL'674'     DBASE                           ERL371
+     C**********           MOVEL'SECTYDY6'DBFILE                                       ERL371 CER001
+     C                     MOVEL'SESDX6L0'DBFILE                                              CER001
+     C                     MOVELWWSESN    DBKEY                           ERL371
+     C                     EXSR #DBERR                                    ERL371
+      *                                                                   ERL371
+     C                     ELSE                                           ERL371
+      *                                                                   ERL371
+     C                     Z-ADDVVIM93    EXIM93                          ERL371
+     C                     Z-ADDVVCLAT    EXCLAT                          ERL371
+     C                     MOVE VVSUBR    EXSUBR                          ERL371
+     C           EXLAMT    MULT VVLURA    EXLSAM                          ERL371
+     C           EXLSAM    DIV  10000     EXLSAM                          ERL371
+     C                     MOVELVVRATC    EXRNKG                          ULX004
+     C                     Z-ADDVVVOTR    EXVOTR                          169521
+     C           VVQUOT    IFEQ 'Y'                        Quoted ind.    ULX046
+     C                     Z-ADD1         EXQUOT           Quoted ind.    ULX046
+     C                     ELSE                                           ULX046
+     C                     Z-ADD2         EXQUOT           Quoted ind.    ULX046
+     C                     ENDIF                                          ULX046
+      *                                                                   ERL371
+     C                     END                             - E1           ERL371
+      *
+      **=================================================================
+     C                     RETRN
+      **=================================================================
+      **
+      **  #INIT       Program initialisation sub-routine
+      **
+      *----------------------------------------------------------------
+     C           #INIT     BEGSR
+      *----------------------------------------------------------------
+      *                                                                *****
+     C           *NAMVAR   DEFN           LDA
+     C                     UNLCKLDA
+      *
+     C           *ENTRY    PLIST
+      *  Input Parameters
+     C                     PARM           EXBRCD  3
+     C**********           PARM           EXTREF 15                                           CER001
+     C                     PARM           EXTREF 21                                           CER001
+     C**********           PARM           EXDECK  8                                    ERL370 CER001
+     C                     PARM           EXDECK 14                                           CER001
+     C                     PARM           EXLAMT 160                      ERL371
+      *  Output Parameters
+     C*********************PARM           CORAM  150               ERL313 ERL331
+     C                     PARM           CORAM  160                      ERL331
+     C                     PARM           EXCORT  10                      ERL328
+     C                     PARM           EXVOTR  52                      ERL328
+     C                     PARM           EXTRIN  1                       ERL328
+     C                     PARM           EXEVMT  10                      ERL328
+     C                     PARM           EXSWLK  10                      ERL328
+     C*********************PARM           EXSECT  30               ERL328 ERL336
+     C                     PARM           EXTOVM  30                      ERL336
+     C                     PARM           EXIM93  10                      ERL371
+     C                     PARM           EXCLAT  10                      ERL371
+     C                     PARM           EXSUBR  1                       ERL371
+     C                     PARM           EXLSAM 160                      ERL371
+     C                     PARM           EXRNKG 15                       ULX004
+     C                     PARM           EXQUOT  10       Quoted ind.    ULX046
+     C                     PARM           ERROR   1                       ERL432
+      *
+      **                                                               *****
+     C                     MOVE '0'       *INU7
+      *
+     C                     ENDSR
+      **=================================================================
+      **
+      **  #DBERR      Program-detected exception OR monitored error     STANDING
+      **              sub-routine.
+      **
+     C*================================================================
+     C           #DBERR    BEGSR
+      **
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     MOVE 'Y'       ERROR                           ERL432
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C                     RETRN
+     C**
+     C                     ENDSR
+     C********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2005

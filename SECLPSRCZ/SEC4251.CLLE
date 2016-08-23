@@ -1,0 +1,81 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas SE Send MT549 to Meridian Link')                */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - Securities Trading Module                        */
+/*                                                                   */
+/*       SEC4251  - Midas SE Send MT549 to Meridian Link             */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. CSE040  *CREATE    Date 18Feb03              */
+/*       Prev Amend No. Xnnnnn             Date ddmmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSE040 - Securities Statement Production                    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RETURNCODE &CALLERIN)
+ 
+             DCL        VAR(&RETURNCODE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CALLERIN)   TYPE(*CHAR) LEN(10)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2003')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGVAR     VAR(&RETURNCODE) VALUE('*ERROR*')
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Check if the Midas Export files is not used */
+             ALCOBJ     OBJ((MXMQDLL1 *FILE *EXCL IBULK)) WAIT(15)
+             MONMSG     MSGID(CPF1002) EXEC(DO)
+               CALL       PGM(Y2SNMGC) PARM(&CALLERIN '*SAME' +
+                          'ST00050' 'SEUSRMSG' ' ' ' ')
+               GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Extract Midas information */
+             CALL       PGM(MXC0710) PARM('RQ_SEST ' 'C' '*NONE     ')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               CALL       PGM(Y2SNMGC) PARM(&CALLERIN '*SAME' +
+                          'ST00051' 'SEUSRMSG' ' ' ' ')
+               GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Send information to DTAQ or MQ Series */
+             CALL       PGM(MXC0720) PARM('RQ_SEST ' 'C' '*NONE     ')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               CALL       PGM(Y2SNMGC) PARM(&CALLERIN '*SAME' +
+                          'ST00052' 'SEUSRMSG' ' ' ' ')
+               GOTO       CMDLBL(END)
+             ENDDO
+ 
+             CHGVAR     VAR(&RETURNCODE) VALUE('          ')
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGVAR     VAR(&RETURNCODE) VALUE('*ERROR*')
+ 
+END:
+             DLCOBJ     OBJ((MXMQDLL1 *FILE *EXCL IBULK))
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CLRPFM     FILE(QTEMP/MGRQSTPD)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CLRPFM     FILE(QTEMP/MGRSTRPD)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+             ENDPGM

@@ -1,0 +1,308 @@
+     H        1
+      *****************************************************************
+/*OVR *  CRTSRCPF FILE(QTEMP/SRCFILE) RCDLEN(112) MBR(*FILE)          *
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas UT Produce list of hooks and context')
+      *****************************************************************
+      *                                                               *
+      *  Midas - UT Module                                            *
+      *                                                               *
+      *  UT0061 - Produce list of hooks and/or /COPYs in src. member  *
+      *                                                               *
+      *  Called By: UTC0060                                           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Last Amend No. CPK001             Date 13Feb97               *
+      *  Prev Amend No. 116010             Date 25Mar96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CPK001 - DBA R2 packaging:                                   *
+      *           - Changes for source being 112 long (recompile).    *
+      *  116010 - Correct variable used so that HOOKS only *PLACE     *
+      *           report for DDS is produced.                         *
+      *                                                               *
+      *****************************************************************
+      *
+      * Use of indicators
+      * 30 - /COPY or hook found
+      * 31 - At least one hook or /COPY found
+      * 32 - BOF reached or req'd number of lines before /COPY reached
+      * 33 - No details to report
+      * 34 - Print /COPY line (offset)
+      * 35 - Bold print for /COPY line
+      * 36 - EOF reached or req'd number of lines after /COPY reached.
+      *        This for lines after /COPY processing only
+      * 37 - Overflow
+      * 40 - Error in file handling
+      * 45 - Loop control for reading file
+      * 46 - BOF reached when going back to /COPY line.  This should
+      *        never be set on.
+      * 52 - Bold print for 'beginning of source' line
+      * 56 - Bold print for 'end of source' line
+      * 61 - Hooks only requested
+      * 81 - BOF reached and pointer reset; therefore read not required
+      *****************************************************************
+     FSRCFILE IF  E                    DISK                           UC
+     F            SRCFILE                           KRENAMESRCFILEF
+     FUT0060P1O   E             37     PRINTER      KINFDS SPOOL      UC
+      /EJECT
+      * Array containing Copyright statement
+     E                    CPY@    1   1 80
+      *
+      /SPACE 3
+      * File information data structure for P1 file; used for page end
+      *   handling
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 188 1890OFLLN
+     I                                    B 367 3680PRTLN
+     ISRCDTA      DS
+     I                                        3   7 CLCPY
+     I                                        9  13 CLSRC
+     I                                        7  11 RPGCPY
+     I                                       13  17 RPGSRC
+     I                                        8  12 DDSCPY
+     I                                       14  18 DDSSRC
+     ISQ          DS
+     I                                        1   62SQN
+     I                                        1   4 SQ1
+     I                                        5   6 SQ2
+      *
+      ** Set up copyright parameter
+     C                     MOVEACPY@      CPY2@  80
+      * Parameters passed to program
+     C           *ENTRY    PLIST
+     C                     PARM           NOL     20       No of lines
+     C                     PARM           HDRTXT 34        Header text
+     C                     PARM           CPYTYP  6        Hooks or all /COPY
+     C                     PARM           ERR     1        Error return
+      * Set up numbers for processing depending on no. of lines requested
+      * If HOOKS only set on indicator
+     C           CPYTYP    IFEQ '*HOOKS'                   B01
+     C                     SETON                     61
+     C                     ENDIF                           E01
+      * Set up text for header
+     C                     MOVELHDRTXT    SOURCE 34
+      * Calculate print range required
+     C           NOL       MULT 2         PRTRG   20
+     C                     ADD  1         PRTRG
+      * Set on overflow to force first header and open spool file
+     C                     SETON                     37
+     C                     OPEN SRCFILE
+     C                     OPEN UT0060P1
+      *****************************************************************
+      * Read until end of file
+     C           *IN45     DOUEQ*ON                        D01
+     C                     SETOF                     3132
+      *
+     C           *IN37     IFEQ *ON                        B01
+     C                     WRITEHEADER                 40
+     C                     WRITEHEADP                  40
+      * If error end program
+     C           *IN40     IFEQ *ON                        B02
+     C                     MOVE '1'       ERR
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDIF                           E02
+      *
+     C                     SETOF                     37
+     C                     ENDIF                           E01
+      *
+     C                     READ SRCFILEF               4045
+      * If error end program
+     C           *IN40     IFEQ *ON                        B02
+     C                     MOVE '1'       ERR
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDIF                           E02
+      *
+     C           *IN45     IFNE *ON                        B01
+      *
+      * If /COPY statement found set on indicator to continue process
+      * and to indicate at least one record found
+     C           CLCPY     IFEQ '/COPY'                    B02
+     C           RPGCPY    OREQ '/COPY'
+     C           DDSCPY    OREQ '/COPY'
+     C                     SETON                     3031
+     C                     Z-ADD0         COUNT   20
+      * Check if all /COPYs or Hooks only required
+     C           *IN61     IFEQ *ON                        B03
+     C           CLSRC     IFNE 'WNCPY'                    B04
+     C           RPGSRC    ANDNE'WNCPY'
+     C********** DDSCPY    ANDNE'WNCPY'                                   116010
+     C           DDSSRC    ANDNE'WNCPY'                                   116010
+     C                     SETOF                     3130
+     C                     ENDIF                           E04
+     C                     ENDIF                           E03
+      *
+     C                     ENDIF                           E02
+      *
+      * If /COPY or hook found
+     C           *IN31     IFEQ *ON                        B02
+      * Begin 'lines before /COPY processing'; go back to specified
+      *     number of lines
+     C           *IN32     DOUEQ*ON                        D02
+     C                     READPSRCFILEF                 32
+      * IF BOF reached before number of lines then reset count
+     C           *IN32     IFEQ *ON                        B03
+      * Put out 'Beginning of source' line in bold
+     C                     WRITEDTLP2
+     C                     SETON                     52
+     C                     WRITEDTLP2
+      * Re-set file pointer to first record
+     C                     SETON                     81
+     C           1         SETLLSRCFILEF
+     C                     ELSE                            X03
+      *
+     C                     ADD  1         COUNT
+      * If READPs reaches number of req'd lines then set on indicator
+      *    to end loop
+     C           COUNT     IFEQ NOL                        B04
+     C                     SETON                     32
+     C                     ENDIF                           E04
+     C                     ENDIF                           E03
+      *
+     C                     ENDDO                           ED02
+      *
+     C                     SETOF                     3252
+      * Write records until /COPY line reached.  If pointer reset
+      *     at BOF then first read not required
+     C   81                READ SRCFILEF               4045
+      * If error end program
+     C           *IN40     IFEQ *ON                        B03
+     C                     MOVE '1'       ERR
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDIF                           E03
+      *
+     C                     SETOF                     81
+      * Format sequence number for report and write first line
+     C                     Z-ADDSRCSEQ    SQN
+     C                     MOVELSQ1       SQ3     5
+     C                     MOVE '.'       SQ3
+     C                     MOVELSQ3       LINENO
+     C                     MOVE SQ2       LINENO
+     C                     WRITEDTLP1
+     C                     SUB  1         COUNT
+      * Write required lines  until /COPY line reached
+     C                     DO   COUNT                      D02
+     C                     READ SRCFILEF               4045
+      * Format sequence number for report
+     C                     Z-ADDSRCSEQ    SQN
+     C                     MOVELSQ1       SQ3
+     C                     MOVE '.'       SQ3
+     C                     MOVELSQ3       LINENO
+     C                     MOVE SQ2       LINENO
+     C                     WRITEDTLP1                  40
+      * If error end program
+     C           *IN40     IFEQ *ON                        B03
+     C                     MOVE '1'       ERR
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDIF                           E03
+      *
+     C                     ENDDO                           ED02
+      * Read and write /COPY line
+     C                     READ SRCFILEF               4045
+      * Format sequence number for report
+     C                     Z-ADDSRCSEQ    SQN
+     C                     MOVELSQ1       SQ3
+     C                     MOVE '.'       SQ3
+     C                     MOVELSQ3       LINENO
+     C                     MOVE SQ2       LINENO
+      * Write /COPY line offset and bold
+     C                     SETON                     34
+     C                     WRITEDTLP2                  40
+     C                     SETON                     35
+     C                     WRITEDTLP2                  40
+     C                     SETOF                     3435
+      * If error end program
+     C           *IN40     IFEQ *ON                        B03
+     C                     MOVE '1'       ERR
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDIF                           E03
+      *
+      * Read and write required no. of lines after /COPY line
+     C                     Z-ADD0         COUNT
+     C                     SETOF                     46
+     C           *IN46     DOUEQ*ON                        D02
+     C                     READ SRCFILEF               4046
+      * If EOF reached before number of lines write 'End of Source'
+     C           *IN46     IFEQ *ON                        B03
+     C           COUNT     ANDNENOL
+     C                     SETON                     36
+     C                     WRITEDTLP2                  40
+     C                     SETON                     56
+     C                     WRITEDTLP2                  40
+     C                     SETOF                     3656
+      * If error end program
+     C           *IN40     IFEQ *ON                        B04
+     C                     MOVE '1'       ERR
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDIF                           E04
+     C                     ENDIF                           E03
+      * If req'd no. of lines reached the set on ind. to end loop
+     C           COUNT     IFEQ NOL                        B03
+     C                     SETON                     46
+     C                     ENDIF                           E03
+      *
+     C           *IN46     IFNE *ON                        B03
+      * Format sequence number for report
+     C                     Z-ADDSRCSEQ    SQN
+     C                     MOVELSQ1       SQ3
+     C                     MOVE '.'       SQ3
+     C                     MOVELSQ3       LINENO
+     C                     MOVE SQ2       LINENO
+     C                     WRITEDTLP1                  40
+      * If error end program
+     C           *IN40     IFEQ *ON                        B04
+     C                     MOVE '1'       ERR
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDIF                           E04
+      *
+     C                     ADD  1         COUNT
+     C                     ENDIF                           E03
+      *
+     C                     ENDDO                           ED02
+      * Write blank line
+     C                     WRITEDTLP3
+      * Return file pointer to original /COPY record
+     C                     ADD  1         COUNT
+     C                     DO   COUNT                      D02
+     C                     READPSRCFILEF                 46
+     C                     ENDDO                           ED02
+      * Check there is enough space to print whole excerpt on page
+     C           OFLLN     SUB  PRTLN     RMLN    20
+     C           PRTRG     IFGE RMLN                       B03
+     C                     SETON                     37
+     C                     ENDIF                           E03
+      *
+     C                     ENDIF                           E02
+      *
+     C                     ENDIF                           E01
+      *
+     C                     ENDDO                           ED01
+      * If EOF and no /COPY found then output 'No details ...'
+     C           *IN45     IFEQ *ON                        B01
+     C           *IN30     ANDNE*ON
+     C                     SETON                     33
+     C                     WRITEDTLP2
+     C                     ENDIF                           E01
+      *
+     C                     WRITETRAILP
+     C                     CLOSESRCFILE
+     C                     RETRN
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

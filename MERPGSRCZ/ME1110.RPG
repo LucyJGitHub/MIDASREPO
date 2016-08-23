@@ -1,0 +1,352 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME Purge I.M.M transactions - phase 1/3')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management Module                            *
+      *                                                               *
+      *  ME1110 - Purge I.M.M. Transactions - Phase 1 of 3            *
+      *                                                               *
+      *  Function:  This program checks if an Incoming Message has    *
+      *  passed it's retention period. If it has, the message details *
+      *  are added to the Purge file.                                 *
+      *                                                               *
+      *  Called By: MEC1210 - I.M.M. Purge Phase I of 3               *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. BUG15107           Date 23Oct07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CFT032             Date 11Sep06               *
+      *                 CDL049             Date 07Jul06               *
+      *                 CSD027             Date 05Apr06               *
+      *                 221534             Date 05Apr04               *
+      *                 CSC022             Date 24Feb04               *
+      *                 219242             Date 01Jul03               *
+      *                 219241             Date 01Jul03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CFT009             Date 01Jun00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CAP136             Date 15Nov99               *
+      *                 175479             DATE 08FEB00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 145199             DATE 16OCT98               *
+      *                 069250             DATE 03MAY94
+      *                 S01435             DATE 23JUL93               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  BUG15107 - Consistency to add the 5th line (Recompile)       *
+      *  CFT032 - Account line in field 50k in MT103 (recompile)      *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Change Customer Number to alpha.                    *
+      *  221534 - Not possible to enquire MT101s in VFTM.             *
+      *           Recompile due to changed MEINFTJ1.                  *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+      *  219242 - Not possible to create MT103+ payment msg from      *
+      *           non-FT transaction (Recompile)                      *
+      *  219241 - Defaulting of "Details of Charges" assign a         *
+      *           system value (Recompile)                            *
+      *  CFT009 - FT Fees and Charge Development-Recompiled           *
+      *  CAP136 - Conversion of FT Incoming Payment inputs into       *
+      *           modular structure to use as APIs.                   *
+      *           Recompiled over changed PF/INPAYDD.                 *
+      *  175479 - Recompiled over changes in INPAYDD                  *
+      *  145199 - Recompile for changes to MEINCRPD and MEINMPPD made *
+      *           in Year 2000 fix 124673.                            *
+      *  069250 - Remove dummy OVRDBF command from creation parms.    *
+      *  S01435 - Incoming Message Management                         *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Indicator usage                                              *
+      *  ~~~~~~~~~~~~~~~                                              *
+      *                                                               *
+      *  50    First cycle                                            *
+      *  90    Chain fail                                             *
+      *  99    EOF on Read                                            *
+      *                                                               *
+      *  U7/U8 Error Ocurred                                          *
+      *  LR    End program                                            *
+      *                                                               *
+      *****************************************************************
+     FMEINCRL1IP  E           K        DISK         KINFSR SRFILE
+      *
+      *  Incoming Message Control File
+      *
+     FMEINFTJ1IF  E           K        DISK         KINFSR SRFILE     UC
+      *
+      *  Incoming Message FT Status File - joined with INPAYDD, OTPAYDD
+      *
+     FMEINRMPDO   E           K        DISK         KINFSR SRFILEA    UC
+      *
+      *  Incoming Message Purge file
+      *
+     F/COPY WNCPYSRC,ME1110DFPG
+      *
+      *  /Copy point for File Definition
+      *
+     F/EJECT
+     E                    CPY@    1   1 80
+      *
+      *  Copyright table
+      *
+     E/COPY WNCPYSRC,ME1100DEPG
+      *
+      *  /Copy point for Arrays
+      *
+     E/COPY MECPYSRC,SRERRE
+      *
+      *  End of Copysource for error processing
+      *
+     E/EJECT
+      *
+     I/COPY WNCPYSRC,ME1110DIPG
+      *
+      *  /Copy point for Input specifications
+      *
+      *
+     I/COPY MECPYSRC,SRERRI
+      *
+      *  End of Program Error Processing copysource member
+      *
+      *
+     IRUNDTA    E DSRUNDAT
+      *
+      *  Define rundat data area
+      *
+     ISDMGME    E DSSDMGMEPD
+      *
+      * Message Management I.C.D data structure parameter
+      *
+     IDSFDY     E DSDSFDY
+      *
+      *   Access object Data Structure
+      *
+     ICPYR@#      DS
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     I/EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+      *
+      * Initialise program
+      *
+     C           *IN50     IFEQ '0'
+     C                     EXSR SRINIT
+     C                     END
+      *
+      *  Determine if message may be purged
+      *
+     C                     EXSR SRPURG
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPURG   : Check If Message May Be Purged                    *
+      *                                                               *
+      *  CALLED BY: Main processing section                           *
+      *                                                               *
+      *  CALLS    :         -                                         *
+      *                                                               *
+      *****************************************************************
+     CSR         SRPURG    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRPURG'  @STK,Q
+      *
+      *  /Copy point for Analysis of Purge
+      *
+     C/COPY WNCPYSRC,ME1110DPRG
+      *
+      *  Record may be purged if the Insertion date plus the message
+      *  management no. of Retention days is less than the run date.
+      *
+      *  Access the FT Transaction Status joined file to check if the
+      *  associated FT Incoming/Outgoing payment references are still
+      *  active. If active, may not purge the Incoming Message record.
+      *
+     C           CRRDNB    ADD  ENDSMN    WKDATE  50        Purge Date
+      *
+     C           WKDATE    IFLE WURDNB
+      *
+      *  Set limits with the message reference in a partial key to get
+      *  all associated FT transactions.
+      *
+     C           KYINFT    KLIST
+     C                     KFLD           CRMSGR
+      *
+     C           KYINFT    SETLLMEINFTJ1
+     C           KYINFT    READEMEINFTJ1                 90
+      *
+      *  Read while equal to the message reference
+      *
+     C           *IN90     DOWEQ'0'
+     C                     MOVEL*BLANKS   WKPURG  1        Purge Flag
+      *
+      *  If the RECIDs are blank for the Incoming or Outgoing payment
+      *  fields then the payments no longer exist in the system. If
+      *  not blank then leave the Do loop and do not purge record.
+      *
+     C           INRECI    IFNE *BLANKS
+     C           OPRECI    ORNE *BLANKS
+     C                     MOVEL'N'       WKPURG  1        Purge Flag
+     C                     LEAVE
+     C                     END
+      *
+      *  Read next record
+      *
+     C           KYINFT    READEMEINFTJ1                 90
+      *
+     C                     ENDDO
+      *
+      *  If Incoming Message may be purged, output to purge file.
+      *
+     C           WKPURG    IFNE 'N'
+      *
+      *  Set up purge file fields
+      *
+     C                     Z-ADDCRMSGR    RMMSGR           Msg Ref.
+     C                     MOVEL##JOB     RMAJOB           Job Name
+     C                     MOVEL##USR     RMAUSR           User Name
+     C                     TIME           RMATIM           Action Time
+     C                     MOVELAGMRDT    RMARDT           Action Date
+     C                     MOVEL'I'       RMAACT           Action Type
+     C                     Z-ADDAGRDNB    RMRDNB           Run Day No.
+      *
+     C                     WRITE@INRMPD
+      *
+     C                     ENDIF
+      *
+     C                     MOVEL*BLANKS   WKPURG  1        Purge Flag
+      *
+     C                     ENDIF
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXPURG    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR  - Error Processing                         *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *  Define fields
+      *
+      *
+      *  Open Files
+      *
+     C                     OPEN MEINRMPD
+     C                     OPEN MEINFTJ1
+      *
+      *  Get Rundate information
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      *
+      *  Get Retention Days for Message Management Module
+      *
+     C*
+     C                     CALL 'AOMGMER0'             90
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDMGME    PARM SDMGME    DSFDY
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           @RTCD     OREQ '*ERROR*'
+     C                     MOVEL'AOMGMER0'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD1         W0ERNB           * DB ERROR 04 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  If purge period is 0 set to 1.
+      *
+     C           ENDSMN    IFLE 0
+     C                     Z-ADD1         ENDSMN
+     C                     END
+      *
+      *  Indicate that set up is complete
+      *
+     C                     SETON                     50
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+     C/COPY WNCPYSRC,ME1110DCPG
+      *
+      *  /Copy point for Calculations
+      *
+     C/EJECT
+      *
+      *  File and Program Error Processing
+      *
+     C/COPY MECPYSRC,SRERRC
+     C/EJECT
+     C/COPY WNCPYSRC,ME1110DOPG
+      *
+      *  /Copy point for Outputs
+      *
+**  CPY@ table
+(c) Misys International Banking Systems Ltd. 2001

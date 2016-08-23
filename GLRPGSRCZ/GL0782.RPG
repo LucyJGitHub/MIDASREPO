@@ -1,0 +1,837 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Account details request (extract)')           *
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL0782 - ACCOUNT MASTER DETAILS EXTRACT                      *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CRE073             Date 06Dec10               *
+      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CSF002             Date 11Aug03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CAP035             Date 11Nov99               *
+      *                 CFT004             Date 19Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU013             DATE 16APR98               *
+      *                 079767             DATE 14JAN98               *
+      *                 CTI001             DATE 11DEC97               *
+      *                 S01413             DATE 13APR93               *
+      *                 S01383                  27APR92               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSF002 - Global layer.                                       *
+      *           - Remove unused ZMITEM layout.                      *
+      *  CAP035 - Account maintenance API; recompiled over changed    *
+      *           ACCBR.                                              *
+      *  CFT004 - Straight Through Processing Phase 2  - Recompiled   *
+      *           International Bank Account Numbers (IBAN)           *
+      *  CEU013 - EMU Account Postings Narrative - Recompile          *
+      *  079767 - Account Master Details report in I/C cannot be run  *
+      *           using retail account numbers. Fix is to check for   *
+      *           Retail installed in the system.                     *
+      *         - Amend COD so picks up Retail No. correctly - change *
+      *           element 3 from 14 to 11.                            *
+      *  CTI001 - Midas / Trade Innovation Interface Phase 1          *
+      *           (recompiled over amended ACDETAB)                   *
+      *  S01413 - Retail 3 Incorporation                              *
+      *  S01383 - Basic Rate Tax Incorporation                        *
+      *                                                               *
+      *****************************************************************
+     FGL0781EXIF  E           K        DISK
+     F*CNUM***IF**E           K        DISK                           U1  079767
+     FACNUM   IF  E           K        DISK                               079767
+     F            ACCNTABF                          KRENAMEACNMB1
+     FACCBR   IF  E           K        DISK
+     F            ACCNTABF                          KRENAMEACBRB1
+     FACCNT   IF  E           K        DISK
+     F            ACCNTABF                          KRENAMEACNTB1
+     FACDETAA O   E                    DISK                      A
+     F            ACCNTAAF                          KRENAMEAAOUT
+     FACDETAB O   E                    DISK                      A
+     F            ACCNTABF                          KRENAMEABOUT
+     FACDETAC O   E                    DISK                      A
+     F            ACCNTACF                          KRENAMEACOUT
+     F/COPY WNCPYSRC,GL0782F001
+     F*
+     F****************************************************************
+     F*    Function of Indicators :
+     F*
+     F*   01  -  End of Program
+     F*   24  -  'ALL'  entered  in field  (blank defaults to ALL)
+     F*   30  -  Work indicator for array lokup.
+     F*   31  -  Work indicator for array lokup.
+     F*   41  -  Full key -- all 18 chars input.
+     F*   42  -  Partial key -- 15 chars input.
+     F*   43  -  Partial key -- 13 chars input.
+     F*   44  -  Partial key --  9 chars input.
+     F*   45  -  Partial key --  6 chars input.
+     F*   70  -  End of  output LOOP.   (SR-ACNTSR,ACNMSR,ACBRSR)
+     F*   73  -  Chain to Account Master fails.   (ACNUM/ACCBR)
+     F*   79  -  End-of-file reached (ACNUM/ACCBR/ACCNT)
+     F*   98  -  Date format  -- ON  =  MMDDYY
+     F*   U1  -  ACNUM exists   (Retail Module?)
+     F*   U7  -  Data base error -  Instl. Ctl rec not found
+     F*   U8  -  Data base error.
+     F*   LR  -  End program.
+     F*
+     F****************************************************************
+     F**   S U B R O U T I N E   I N D E X
+     F**
+     F**   SETKEY  -  Sets key number from input values.
+     F**   INIT    -  Initialises all work /key fields.
+     F**   ACNTSR  -  Extracts records from ACCNT file.
+     F**   ACBRSR  -  Extracts records from ACCBR file.
+     F**   ACNMSR  -  Extracts records from ACNUM file.
+     F**   DOJOB   -  Calls appropriate SR. for extraction.
+     F**
+     F*****************************************************
+     E                    CPY@    1   1 80               COPYRIGHT STATEMENT
+     E                    ARR        15  1               WORK ARRAY
+     E                    COD     5   5  2 0             PART KEY SIZE
+     E****************************************************************
+     I*ACNTB1                                                             S01413
+     I***********   ZZ004                           ZZ004A                S01413
+     I*ACBRB1                                                             S01413
+     I***********   ZZ004                           ZZ004B                S01413
+     I*****************************************************
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*    DATA  AREA FOR  DBASE ERROR MESSAGE.
+     I*    LOCAL DATA AREA
+     I*
+     ILDA        UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I**   RETRIEVE WSID FROM PROGRAM STATUS DATA STRUCTURE
+     IPSDS       SDS
+     I                                      244 246 WSID
+     I                                      245 246 WSID2
+     I                                      254 263 USRID
+     IZBRU       UDS
+     I                                        1   1 ZCH
+     I                                        2   4 ZIN
+     I                                        5 154 ZBR1
+     I                                      155 304 ZBR2
+     I**   DATA STRUCTURE  FOR  THE SUBFILE  DETAILS.
+     ISFDET       DS
+     I                                        1  15 FR
+     I                                       17  31 TU
+     I                                       33  35 BR
+     I**   DS FOR RANGE COMPARISION OF  ACCBR
+     IACBRTO      DS
+     I                                        1   3 BR1TO
+     I                                        4   9 CU1TO
+     I                                       10  12 CY1TO
+     I**********                             13  16 AC1TO                                     CGL029
+     I**********                             17  18 SE1TO                                     CGL029
+     I                                       13  22 AC1TO                                     CGL029
+     I                                       23  24 SE1TO                                     CGL029
+     I**   DS FOR RANGE COMPARISION OF  ACCNT
+     IACNTTO      DS
+     I                                        1   6 CU2TO
+     I                                        7   9 CY2TO
+     I**********                             10  13 AC2TO                                     CGL029
+     I**********                             14  15 SE2TO                                     CGL029
+     I**********                             16  18 BR2TO                                     CGL029
+     I                                       10  19 AC2TO                                     CGL029
+     I                                       20  21 SE2TO                                     CGL029
+     I                                       22  24 BR2TO                                     CGL029
+     I**   DS FOR  ACCOUNT  DETAILS :: PART OF KEY.
+     IPARTK       DS
+     I**********                              1   60CUSN                                      CSD027
+     I                                        1   6 CUSN                                      CSD027
+     I                                        7   9 CURN
+     I**********                             10  130ACCU                                      CGL029
+     I**********                             14  150SEQN                                      CGL029
+     I                                       10  190ACCU                                      CGL029
+     I                                       20  210SEQN                                      CGL029
+     I***EXTERNAL*DATA*AREA*OF*MENU*ITEM*REQUESTED******************************              CSF002
+     I*ZMITEM***  UDS                                                                         CSF002
+     I**********                              2   50ZMGRP                                     CSF002
+     I**********                              6   9 ZICDE                                     CSF002
+0276 I*
+     I* DATA STRUCTURES FOR USE WITH ACCESS OBJECTS
+     I*
+     ISDBANK    E DSSDBANKPD
+     I              BJRDNB                          RUND
+     I              BJSUC                           DATF
+     I              BJMRDT                          RUNA
+     I*
+     ISDMMOD    E DSSDMMODPD
+     I              BGMBIN                          MBIN
+     I/COPY WNCPYSRC,GL0782I001
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           SEQNO   5
+     C*****************************************************
+     C**
+     C**   PARTIAL KEY SETUP FOR FILE ACCBR :::
+     C**
+     C**   |BRC|CUSTNO|CUR|ACOD|SE|   (ACBRF1/ACBRT1= #1)
+     C**   |BRC|CUSTNO|CUR|ACOD|      (ACBRF2/ACBRT2= #2)
+     C**   |BRC|CUSTNO|CUR|           (ACBRF3/ACBRT3= #3)
+     C**   |BRC|CUSTNO|               (ACBRF4/ACBRT4= #4)
+     C**   |BRC|                      (ACBRF5/ACBRT5= #5)
+     C**
+     C**   KFLD  DESCRIPTIONS FILE  ACCBR  *** FROM ***
+     C*****************************************************
+     C           ACBRF1    KLIST
+     C                     KFLD           BR1F    3
+     C**********           KFLD           CU1F    60                                          CSD027
+     C                     KFLD           CU1F    6                                           CSD027
+     C                     KFLD           CY1F    3
+     C**********           KFLD           AC1F    40                                          CGL029
+     C                     KFLD           AC1F   100                                          CGL029
+     C                     KFLD           SE1F    20
+     C           ACBRF2    KLIST
+     C                     KFLD           BR1F    3
+     C**********           KFLD           CU1F    60                                          CSD027
+     C                     KFLD           CU1F    6                                           CSD027
+     C                     KFLD           CY1F    3
+     C**********           KFLD           AC1F    40                                          CGL029
+     C                     KFLD           AC1F                                                CGL029
+     C           ACBRF3    KLIST
+     C                     KFLD           BR1F    3
+     C**********           KFLD           CU1F    60                                          CSD027
+     C                     KFLD           CU1F    6                                           CSD027
+     C                     KFLD           CY1F    3
+     C           ACBRF4    KLIST
+     C                     KFLD           BR1F    3
+     C**********           KFLD           CU1F    60                                          CSD027
+     C                     KFLD           CU1F    6                                           CSD027
+     C           ACBRF5    KLIST
+     C                     KFLD           BR1F    3
+     C**
+     C**   KFLD  DESCRIPTION  FILE  ACCBR  *** TO   ***
+     C           ACBRT1    KLIST
+     C                     KFLD           BR1T    3
+     C**********           KFLD           CU1T    60                                          CSD027
+     C                     KFLD           CU1T    6                                           CSD027
+     C                     KFLD           CY1T    3
+     C**********           KFLD           AC1T    40                                          CGL029
+     C                     KFLD           AC1T   100                                          CGL029
+     C                     KFLD           SE1T    20
+     C           ACBRT2    KLIST
+     C                     KFLD           BR1T    3
+     C**********           KFLD           CU1T    60                                          CSD027
+     C                     KFLD           CU1T    6                                           CSD027
+     C                     KFLD           CY1T    3
+     C**********           KFLD           AC1T    40                                          CGL029
+     C                     KFLD           AC1T                                                CGL029
+     C           ACBRT3    KLIST
+     C                     KFLD           BR1T    3
+     C**********           KFLD           CU1T    60                                          CSD027
+     C                     KFLD           CU1T    6                                           CSD027
+     C                     KFLD           CY1T    3
+     C           ACBRT4    KLIST
+     C                     KFLD           BR1T    3
+     C**********           KFLD           CU1T    60                                          CSD027
+     C                     KFLD           CU1T    6                                           CSD027
+     C           ACBRT5    KLIST
+     C                     KFLD           BR1T    3
+     C*****************************************************
+     C**
+     C**   PARTIAL KEY SETUP FOR FILE ACCNT :::
+     C**   |CUSTNO|CUR|ACOD|SE|BRC|   (ACNTF1/ACNTT1= #1)
+     C**   |CUSTNO|CUR|ACOD|SE|       (ACNTF2/ACNTT2= #2)
+     C**   |CUSTNO|CUR|ACOD|          (ACNTF3/ACNTT3= #3)
+     C**   |CUSTNO|CUR|               (ACNTF4/ACNTT4= #4)
+     C**   |CUSTNO|                   (ACNTF5/ACNTT5= #5)
+     C**
+     C**   KFLD  DESCRIPTIONS FILE  ACCNT  *** FROM ***
+     C           ACNTF1    KLIST
+     C**********           KFLD           CU1F    60                                          CSD027
+     C                     KFLD           CU1F    6                                           CSD027
+     C                     KFLD           CY1F    3
+     C**********           KFLD           AC1F    40                                          CGL029
+     C                     KFLD           AC1F                                                CGL029
+     C                     KFLD           SE1F    20
+     C                     KFLD           BR1F    3
+     C           ACNTF2    KLIST
+     C**********           KFLD           CU1F    60                                          CSD027
+     C                     KFLD           CU1F    6                                           CSD027
+     C                     KFLD           CY1F    3
+     C**********           KFLD           AC1F    40                                          CGL029
+     C                     KFLD           AC1F                                                CGL029
+     C                     KFLD           SE1F    20
+     C           ACNTF3    KLIST
+     C**********           KFLD           CU1F    60                                          CSD027
+     C                     KFLD           CU1F    6                                           CSD027
+     C                     KFLD           CY1F    3
+     C**********           KFLD           AC1F    40                                          CGL029
+     C                     KFLD           AC1F                                                CGL029
+     C           ACNTF4    KLIST
+     C**********           KFLD           CU1F    60                                          CSD027
+     C                     KFLD           CU1F    6                                           CSD027
+     C                     KFLD           CY1F    3
+     C           ACNTF5    KLIST
+     C**********           KFLD           CU1F    60                                          CSD027
+     C                     KFLD           CU1F    6                                           CSD027
+     C**
+     C**   KFLD  DESCRIPTION  FILE  ACCNT  *** TO   ***
+     C           ACNTT1    KLIST
+     C**********           KFLD           CU1T    60                                          CSD027
+     C                     KFLD           CU1T    6                                           CSD027
+     C                     KFLD           CY1T    3
+     C**********           KFLD           AC1T    40                                          CGL029
+     C                     KFLD           AC1T                                                CGL029
+     C                     KFLD           SE1T    20
+     C                     KFLD           BR1T    3
+     C           ACNTT2    KLIST
+     C**********           KFLD           CU1T    60                                          CSD027
+     C                     KFLD           CU1T    6                                           CSD027
+     C                     KFLD           CY1T    3
+     C**********           KFLD           AC1T    40                                          CGL029
+     C                     KFLD           AC1T                                                CGL029
+     C                     KFLD           SE1T    20
+     C           ACNTT3    KLIST
+     C**********           KFLD           CU1T    60                                          CSD027
+     C                     KFLD           CU1T    6                                           CSD027
+     C                     KFLD           CY1T    3
+     C**********           KFLD           AC1T    40                                          CGL029
+     C                     KFLD           AC1T                                                CGL029
+     C           ACNTT4    KLIST
+     C**********           KFLD           CU1T    60                                          CSD027
+     C                     KFLD           CU1T    6                                           CSD027
+     C                     KFLD           CY1T    3
+     C           ACNTT5    KLIST
+     C**********           KFLD           CU1T    60                                          CSD027
+     C                     KFLD           CU1T    6                                           CSD027
+     C**
+     C**   KFLD  FOR FILE  ACNUM  *** FROM / TO ***
+     C           ACNMF     KLIST
+     C                     KFLD           ACN2F  100
+     C           ACNMT     KLIST
+     C                     KFLD           ACN2T  100
+     C/COPY WNCPYSRC,GL0782C001
+     C*****************************************************
+     C**
+     C**    * PROGRAM (MAIN RTN.)  BEGINS :::
+     C**
+     C**      I.   GET INSTALLATION CTL REC. IF NOT FOUND,
+     C**           DATA BASE ERR. SETON  U7 & U8. SETON LR.
+     C**           ACCESS SDBANKPD/ICD TO OBTAIN RUNDATE.
+     C**
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANK    @RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     SETON                     99
+     C                     END
+     C*
+     C   99                DO
+     C   99                SETON                     U7U8
+     C                     MOVE '01'      DBASE                         **
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     GOTO JOBEND
+     C                     END
+     C*
+     C**           ACCESS SDMMODPD/ICD TO OBTAIN MBIN
+     C*
+     C                     CALL 'AOMMODR0'
+     C                     PARM *BLANK    @RTCD
+     C                     PARM '*FIRST  '@OPTN
+     C           SDMMOD    PARM SDMMOD    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     SETON                     99
+     C                     END
+     C*
+     C   99                DO
+     C   99                SETON                     U7U8
+     C                     MOVE '01'      DBASE                         **
+     C                     MOVE 'SDMMODPD'DBFILE
+     C                     GOTO JOBEND
+     C                     END
+     C           BGRTBN    IFEQ 'Y'                                       079767
+     C           BGIOAC    OREQ 'Y'                                       079767
+     C                     MOVE '1'       *INU1                           079767
+     C                     END                                            079767
+     C**
+     C**   SYSTEM DATE FORMAT : *IN98 = 1 IF MMDDYY.
+     C           DATF      COMP 'M'                      98
+     C/COPY WNCPYSRC,GL0782C002
+     C**
+     C**     II.   INITIALIZE WORK/KEY FLDS
+     C**           WRITE OUT HEADER RECORD TO ACDETAA.
+     C                     EXSR INIT
+     C                     MOVE 'H'       RECI
+     C                     WRITEAAOUT
+     C                     Z-ADD1         WREC
+     C**
+     C**    III.   DO LOOP TILL UNTIL THE END OF FILE REACHED
+     C**
+     C           SEQNO     SETLLGL0781E1
+     C           *IN01     DOWEQ'0'
+     C**
+     C**      1.  DISPLAY/ACCEPT INPUT FIELDS.
+     C           SEQNO     READEGL0781E1                 01
+     C           *IN01     IFEQ '0'
+     C**
+     C**      2.  SETUP KEY FIELDS
+     C**
+     C           BRCDFM    IFNE 'ALL'
+     C                     MOVE '0'       *IN24
+     C                     MOVELBRCDFM    BR1F
+     C                     MOVELBRCDFM    BR1T
+     C                     MOVELBRCDFM    BR1TO
+     C                     MOVELBRCDFM    BR2TO
+     C                     ELSE
+     C                     MOVE '1'       *IN24
+     C*************        MOVE *BLANKS   BR1F                            079767
+     C*************        MOVE *BLANKS   BR1T                            079767
+     C*************        MOVE *BLANKS   BR1TO                           079767
+     C*************        MOVE *BLANKS   BR2TO                           079767
+     C                     MOVE ABRCA     BR1F                            079767
+     C                     MOVE ZBRCA     BR1T                            079767
+     C                     MOVE ZBRCA     BR1TO                           079767
+     C                     MOVE ZBRCA     BR2TO                           079767
+     C                     END
+     C**
+     C**        3. MOVE RANGA FIELD TO KEY FIELDS.
+     C**
+     C                     MOVELRANGA     PARTK
+     C                     MOVE CUSN      CU1F
+     C                     MOVE CURN      CY1F
+     C                     MOVE ACCU      AC1F
+     C                     MOVE SEQN      SE1F
+     C**
+     C**        4. MOVE RANGZ FIELD TO KEY FIELDS IF PRESENT,OTHERWISE
+     C**           USE RANGA AGAIN FOR TO VALUES
+     C**
+     C           RANGZ     IFNE *BLANKS
+     C                     MOVELRANGZ     PARTK
+     C                     END
+     C                     MOVE CUSN      CU1T
+     C                     MOVE CURN      CY1T
+     C                     MOVE ACCU      AC1T
+     C                     MOVE SEQN      SE1T
+     C                     MOVE CUSN      CU1TO
+     C                     MOVE CUSN      CU2TO
+     C                     MOVE CURN      CY1TO
+     C                     MOVE CURN      CY2TO
+     C                     MOVE ACCU      AC1TO
+     C                     MOVE ACCU      AC2TO
+     C                     MOVE SEQN      SE1TO
+     C                     MOVE SEQN      SE2TO
+     C                     EXSR DOJOB
+     C                     MOVE *BLANKS   FRFLD
+     C                     MOVE *BLANKS   TOFLD
+     C                     END
+     C                     END
+     C**
+     C**     IV.   OUTPUT TRAILER RECORD TO FILE.
+     C**
+     C                     ADD  1         WREC
+     C                     MOVE 'T'       RECI
+     C                     Z-ADDWREC      NORE
+     C**********           Z-ADD0         CNUM                                                CSD027
+     C                     MOVE *BLANKS   CNUM                                                CSD027
+     C                     MOVE *BLANKS   CCY
+     C                     Z-ADD0         ACOD
+     C                     Z-ADD0         ACSQ
+     C                     WRITEACOUT
+     C**
+     C**     V.    END PROGRAM.
+     C**
+     C           JOBEND    TAG                             *** JOBEND ***
+     C                     SETON                     LR
+     C**
+     C**    *****   PROGRAM (MAIN RTN.)  ENDS.
+     C**
+     C*****************************************************
+     C**      SUBROUTINE (01) ::: SETKEY
+     C**          VALIDATES INPUT FIELDS FOR PARTIAL KEY
+     C**          ENTRY, AND SETS KEY NUMBER & FILE NUMBER:
+     C**          1= ACCNT,  2= ACCBR.
+     C**
+     C**   INPUT  VALUE TAKEN  FROM ARRAY ARR.
+     C**
+     C**  FLD ID.        KEY NUMBER WILL BE :::
+     C**   1. CUST #     1 - ALL FLDS, INCL BRCD      *IN41
+     C**   2. CURNCY     2 - ALL 4 FIELDS ENTERED.    *IN42
+     C**   3. A/C #      3 - FIRST 3 FIELDS ENTERED.  *IN43
+     C**   4. A/C SQ     4 - FIRST 2 FIELDS ENTERED.  *IN44
+     C**                 5 - 1ST FIELD ONLY ENTERED.  *IN45
+     C**
+     C**   IF BRANCH CODE HAS ALSO BEEN ENTERED, KEY NUMBER
+     C**   WILL BE DECREMENTED BY ONE. (REFER KLIST SETUP)
+     C**
+     C**---------------------------------------------------
+     C           SETKEY    BEGSR
+     C**   INITIALISE WORK FIELDS & INDICATORS.
+     C                     SETOF                     414243
+     C                     SETOF                     4445
+     C                     Z-ADD1         FILNUM  10
+     C                     Z-ADD0         KEYNUM  10
+     C**
+     C**   IF OPTION IS 5, SET KEYNUM TO 5 & FILNUM TO 2
+     C           OPTION    IFEQ '5'
+     C                     Z-ADD5         KEYNUM
+     C                     Z-ADD2         FILNUM
+     C                     SETON                     45
+     C                     ELSE
+     C**
+     C**   ELSE, IF FULL KEY IS  INPUT, SET  KEYNUM TO 2
+     C           ARR,15    IFNE ' '
+     C                     Z-ADD2         KEYNUM  10
+     C                     ELSE
+     C**
+     C**   IF INPUT IS A PARTIAL KEY, DETERMINE POSITION
+     C**   OF FIRST BLANK CHARACTER.
+     C                     Z-ADD1         Z       20
+     C           ' '       LOKUPARR,Z                    30
+     C**
+     C**   CHECK IF THE POSITION OF THE BLANK CHARACTER
+     C**   IS VALID FROM COD TABLE. IF NOT, KEYNUM == 0.
+     C                     Z-ADD1         ZZ      10
+     C           Z         LOKUPCOD,ZZ                   31
+     C           *IN31     IFEQ '0'
+     C                     Z-ADD0         KEYNUM
+     C                     ELSE
+     C**
+     C**   IF PARTIAL KEY INPUT IS VALID, KEYNUM WILL BE
+     C**   THE INDEX OF THE ARRAY COD.
+     C                     Z-ADDZZ        KEYNUM
+     C                     END
+     C                     END
+     C**
+     C**   IF BRANCH CODE IS INPUT, RESET KEYNUM FOR ACCBR
+     C**   FILE.
+     C**
+     C           *IN24     IFEQ '0'
+     C           KEYNUM    ANDNE3                                         079767
+     C                     SUB  1         KEYNUM
+     C                     Z-ADD2         FILNUM
+     C                     END
+     C           BRCDFM    IFEQ 'ALL'                                     079767
+     C           ARR,15    ANDNE' '                                       079767
+     C                     Z-ADD1         KEYNUM                          079767
+     C                     Z-ADD2         FILNUM                          079767
+     C                     END                                            079767
+     C**
+     C**   SETON INDICATOR (41 TO 45) ACCORDING TO THE
+     C**   VALUE OF KEYNUM.
+     C**
+     C           KEYNUM    ADD  40        Z       20
+     C                     MOVE '1'       *IN,Z
+     C**
+     C                     END
+     C*                                                                  079767
+     C           KEYNUM    IFEQ 3                                        079767
+     C                     Z-ADD3         FILNUM                         079767
+     C                     END                                           079767
+     C*                                                                  079767
+     C                     ENDSR
+     C**
+     C*****************************************************
+     C**    SUBROUTINE (2) :::  INIT
+     C**        TO  INIT ALL KEY/  WORK  FIELDS.
+     C**
+     C**---------------------------------------------------
+     C           INIT      BEGSR
+     C**         COMP FLD FOR ACCNT **  *IN42 / 43 / 44
+     C                     MOVE *BLANKS   ACNTC2 15
+     C                     MOVE *BLANKS   ACNTC3 13
+     C                     MOVE *BLANKS   ACNTC4  9
+     C**         COMP FLD FOR  ACCBR **  *IN42 / 43 / 44
+     C                     MOVE *BLANKS   ACBRC2 16
+     C                     MOVE *BLANKS   ACBRC3 12
+     C                     MOVE *BLANKS   ACBRC4  9
+     C**
+     C**********           MOVEL'00000000'BLK15F 15                                           CGL029
+     C**********           MOVE '00000000'BLK15F                                              CGL029
+     C**********           MOVEL'00000000'BLK15T 15                                           CGL029
+     C**********           MOVE '00000000'BLK15T                                              CGL029
+     C                     MOVEL*ZEROS    BLK15F 21                                           CGL029
+     C                     MOVEL*ZEROS    BLK15T 21                                           CGL029
+     C***********          MOVE *BLANKS   ZZ004                           S01413
+     C                     MOVE *BLANKS   SFDET
+     C                     MOVE *BLANKS   ACBRTO
+     C                     MOVE *BLANKS   ACNTTO
+     C                     MOVE *BLANKS   CURN
+     C                     MOVE *BLANKS   CY1F
+     C                     MOVE *BLANKS   CY1T
+     C                     MOVE *BLANKS   TOFLD
+     C**
+     C                     MOVE *BLANKS   BRCNUM  3
+     C**********           MOVE *ZEROS    CUSN                                                CSD027
+     C                     MOVE *BLANKS   CUSN                                                CSD027
+     C                     MOVE *ZEROS    ACCU
+     C                     MOVE *ZEROS    SEQN
+     C                     MOVE *BLANKS   BR1F
+     C**********           MOVE *ZEROS    CU1F                                                CSD027
+     C                     MOVE *BLANKS   CU1F                                                CSD027
+     C                     MOVE *ZEROS    AC1F
+     C                     MOVE *ZEROS    SE1F
+     C                     MOVE *ZEROS    ACN2F
+     C                     MOVE *ZEROS    ACN2T
+     C                     MOVE *BLANKS   BR1T
+     C**********           MOVE *ZEROS    CU1T                                                CSD027
+     C                     MOVE *BLANKS   CU1T                                                CSD027
+     C                     MOVE *ZEROS    AC1T
+     C                     MOVE *ZEROS    SE1T
+     C                     ENDSR
+     C**
+     C*****************************************************
+     C**    SUBROUTINE (3) :::  ACNTSR
+     C**        TO EXTRACT RECORDS FROM ACCNT FILE
+     C**
+     C**---------------------------------------------------
+     C           ACNTSR    BEGSR
+     C**
+     C**         A.   SETLL POINTER WITH THE FROM KEY FIELD
+     C**
+     C           ACNTF1    SETLLACNTB1
+     C                     MOVELACNTTO    TOFLD
+     C           BRCDFM    IFEQ 'ALL'                                     079767
+     C                     MOVE *BLANKS   TOFLDX 18                       079767
+     C                     MOVELACNTTO    T15AC  15                       079767
+     C                     MOVE T15AC     TOFLDX                          079767
+     C                     MOVELZBRCA     TOFLDX                          079767
+     C                     MOVE TOFLDX    TOFLD                           079767
+     C                     END                                            079767
+     C                     SETOF                     70
+     C**
+     C**         B.   READ FILE UNTIL :::
+     C**              END OF FILE,    OR   OUT OF RANGE
+     C**              (DETERMINED BY *IN70 == '1')
+     C**
+     C           *IN70     DOUEQ'1'
+     C                     READ ACNTB1                   79
+     C           *IN79     CABEQ'1'       ACNTE          70
+     C**
+     C**         C.   BYPASS, IF RECORD NOT ACTIVE.
+     C**
+     C           RECI      CABNE'D'       ACNTE
+     C**
+     C**
+     C**         D.   MOVE KEY FIELDS FROM RECORD TO KLIST
+     C**              FIELDS FOR RANGE COMPARE.
+     C**
+     C                     MOVE BRCA      BR2TO
+     C                     MOVE ACOD      AC2TO
+     C                     MOVE ACSQ      SE2TO
+     C                     MOVE CCY       CY2TO
+     C                     MOVE CNUM      CU2TO
+     C                     MOVE *BLANKS   FRFLD
+     C   41                MOVELACNTTO    FRFLD
+     C   42                MOVELACNTTO    ACNTC2
+     C   42                MOVELACNTC2    FRFLD
+     C   43                MOVELACNTTO    ACNTC3
+     C   43                MOVELACNTC3    FRFLD
+     C   44                MOVELACNTTO    ACNTC4
+     C   44                MOVELACNTC4    FRFLD
+     C   45                MOVELCU2TO     FRFLD
+     C           BRCDFM    IFEQ 'ALL'                                     079767
+     C                     MOVE *BLANKS   FRFLDX 18                       079676
+     C                     MOVE *BLANKS   F15AC  15                       079767
+     C                     MOVELFRFLD     F15AC                           079767
+     C                     MOVE F15AC     FRFLDX                          079767
+     C                     MOVELBRCA      FRFLDX                          079767
+     C                     MOVE FRFLDX    FRFLD                           079767
+     C                     END                                            079767
+     C**
+     C**         E.   IF RECORD IS WITHIN RANGE, WRITE TO
+     C**              OUTPUT FILE; ELSE, SETON *IN70.
+     C**
+     C           FRFLD     IFLE TOFLD
+     C                     WRITEABOUT
+     C                     ADD  1         WREC    60
+     C/COPY WNCPYSRC,GL0782C003
+     C                     ELSE
+     C                     SETON                     70
+     C                     END
+     C           ACNTE     TAG                             *** ACNTE ***
+     C                     END
+     C                     ENDSR
+     C**
+     C*****************************************************
+     C**    SUBROUTINE (4) :::  ACBRSR
+     C**        TO EXTRACT RECORDS FROM ACCBR FILE
+     C**
+     C**---------------------------------------------------
+     C           ACBRSR    BEGSR
+     C**
+     C**         A.   SETLL POINTER WITH THE FROM KEY FIELD
+     C**
+     C           ACBRF1    SETLLACCBR
+     C                     MOVELACBRTO    TOFLD  18
+     C                     SETOF                     70
+     C**
+     C**         B.   READ FILE UNTIL :::
+     C**              END OF FILE,    OR   OUT OF RANGE
+     C**              (DETERMINED BY *IN70 == '1')
+     C**
+     C           *IN70     DOUEQ'1'
+     C                     READ ACCBR                    79
+     C           *IN79     CABEQ'1'       ACBRE          70
+     C**
+     C**         C.   BYPASS, IF RECORD NOT ACTIVE.
+     C**
+     C           RECI      CABNE'D'       ACBRE
+     C**
+     C**
+     C**         D.   MOVE KEY FIELDS FROM RECORD TO KLIST
+     C**              FIELDS FOR RANGE COMPARE.
+     C**
+     C                     MOVE BRCA      BR1TO
+     C                     MOVE ACOD      AC1TO
+     C                     MOVE ACSQ      SE1TO
+     C                     MOVE CCY       CY1TO
+     C                     MOVE CNUM      CU1TO
+     C                     MOVE *BLANKS   FRFLD
+     C   41                MOVELACBRTO    FRFLD
+     C   42                MOVELACBRTO    ACBRC2
+     C   42                MOVELACBRC2    FRFLD
+     C   43                MOVELACBRTO    ACBRC3
+     C   43                MOVELACBRC3    FRFLD
+     C   44                MOVELACBRTO    ACBRC4
+     C   44                MOVELACBRC4    FRFLD
+     C   45                MOVELBR1TO     FRFLD
+     C**
+     C**         E.   IF RECORD IS WITHIN RANGE, WRITE TO
+     C**              OUTPUT FILE; ELSE, SETON *IN70.
+     C**
+     C           FRFLD     IFLE TOFLD
+     C                     WRITEABOUT
+     C                     ADD  1         WREC    60
+     C/COPY WNCPYSRC,GL0782C004
+     C                     ELSE
+     C                     SETON                     70
+     C                     END
+     C           ACBRE     TAG                             *** ACBRE ***
+     C                     END
+     C                     ENDSR
+     C*****************************************************
+     C**
+     C**    SUBROUTINE (5) :::  ACNMSR
+     C**        TO EXTRACT RECORDS FROM ACNUM FILE
+     C**
+     C**---------------------------------------------------
+     C           ACNMSR    BEGSR
+     C**
+     C**         A.   SETLL POINTER WITH THE FROM KEY FIELD
+     C**
+     C                     MOVELRANGA     ACN2F                           079767
+     C                     MOVELRANGZ     ACN2T                           079767
+     C           ACN2F     SETLLACNUM
+     C                     SETOF                     70
+     C**
+     C**         B.   READ FILE UNTIL :::
+     C**              END OF FILE,    OR   OUT OF RANGE
+     C**              (DETERMINED BY *IN70 == '1')
+     C**
+     C           *IN70     DOUEQ'1'
+     C                     READ ACNUM                    79
+     C           *IN79     CABEQ'1'       ACNME          70
+     C**
+     C**         C.   BYPASS, IF RECORD NOT ACTIVE.
+     C**
+     C           RECI      CABNE'D'       ACNME
+     C**
+     C           *IN24     IFEQ '0'
+     C***********BRCA      CABNEBRCNUM    ACNME                           079767
+     C           BRCA      CABNEBRCDFM    ACNME                           079767
+     C                     END
+     C**
+     C**         D.   MOVE KEY FIELDS FROM RECORD TO KLIST
+     C**              FIELDS FOR RANGE COMPARE. IF WITHIN
+     C**              RANGE, BUILD KEY TO FETCH RECORD FROM
+     C**              ACCBR FILE; ELSE, SETON *IN70.
+     C**
+     C                     MOVE ACNO      ACN2F
+     C           ACN2F     IFLE ACN2T
+     C                     MOVE BRCA      BR1F
+     C                     MOVE ACOD      AC1F
+     C                     MOVE ACSQ      SE1F
+     C                     MOVE CCY       CY1F
+     C                     MOVE CNUM      CU1F
+     C**
+     C**         E.   ACCESS RECORD FROM ACCBR FILE AND
+     C**              WRITE TO OUTPUT FILE.
+     C**
+     C           ACBRF1    CHAINACBRB1               73
+     C           *IN73     IFEQ '0'
+     C           RECI      ANDEQ'D'
+     C                     WRITEABOUT
+     C                     ADD  1         WREC    60
+     C/COPY WNCPYSRC,GL0782C005
+     C                     END
+     C                     ELSE
+     C                     SETON                     70
+     C                     END
+     C           ACNME     TAG                             *** ACNME ***
+     C                     END
+     C                     ENDSR
+     C**
+     C*****************************************************
+     C**    SUBROUTINE (6) :::  DOJOB
+     C**        TO EXTRACT RECORDS ACCORDING TO OPTION
+     C**      FILE  TO  USE :::
+     C**      FILNUM == 3  ACNUM    RETAIL A/C NO. ENTERED.
+     C**      FILNUM == 2  ACCBR    PART KEY & BRCD OR ALL.
+     C**      FILNUM == 1  ACCNT    FULL KEY & BRCD OR
+     C**                            A/C NUMBER ONLY.
+     C**
+     C**---------------------------------------------------
+     C           DOJOB     BEGSR
+     C                     MOVE *BLANKS   TOFLD  18
+     C                     MOVE *BLANKS   FRFLD  18
+     C                     MOVEARANGA     ARR
+     C                     EXSR SETKEY
+     C**
+     C           FILNUM    IFEQ 3
+     C                     EXSR ACNMSR
+     C                     ELSE
+     C           FILNUM    IFEQ 1
+     C                     EXSR ACNTSR
+     C                     ELSE
+     C                     EXSR ACBRSR
+     C                     END
+     C                     END
+     C**
+     C                     ENDSR
+     C**
+     C/COPY WNCPYSRC,GL0782C006
+     C*****************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+** COD
+1916111007

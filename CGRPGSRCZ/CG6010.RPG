@@ -1,0 +1,802 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Lending principal increase conf - driver')    *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                          *
+     F*                                                               *
+     F*  CG6010 - Lending Principal Increase Confirmations - Driver   *
+     F*                                                               *
+     F*  Function:  Lending Principal Increase Confirmations driver   *
+     F*  (COB)      will read through file CONFS and process only the *
+     F*             records with an amendment type of 'PI' and a      *
+     F*             confirmation indicator of 'Y'.  The UDC data      *
+     F*             extracted will be for group set l02PI.  An audit  *
+     F*             report will be produced.                          *
+     F*                                                               *
+     F*  Called By: CGC6002 - COB Confirmation Processing.            *
+     F*                                                               *
+     F*  Calls:     CG6015  - Loan Principal Increase Confirmations   *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CLE134             Date 01Aug12               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *                 CCB020             Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CSC022             Date 24Feb04               *
+      *                 CAP075             Date 08Aug03               *
+      *                 CLE031             Date 03Feb03               *
+      *                 CAS005             Date 16Dec02               *
+      *                 CLE028             Date 27Jun02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 185653             Date 21Dec01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 142773             Date 05Oct99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU014             Date 23Jun98               *
+     F*                 136778             Date 12Jun98               *
+     F*                 CLE004             Date 28APR97               *
+     F*                 CCG008 *CREATE     Date 30OCT95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CCB020 - COB Restructure - Seconday COB Infrastracture       *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+      *  CAP075 - Lending API enhancements - Loan Amendment.          *
+      *           (amendment in common with CAP079)                   *
+      *  CLE031 - Lending Enhancements.                               *
+      *           (Recompile)                                         *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *           (Recompile)                                         *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s)              *
+      *           (Recompile)                                         *
+      *  185653 - During COB, the program does not have access to     *
+      *           PF/LOAMSDK it only uses PF/CONFSDK. Thus, during    *
+      *           COB the call to CG6015 should be conditioned with   *
+      *           ASTS and not with LAASTS.                           *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+     F*  142773 - CGC2050 falls over due to record not found in       *
+     F*           LOAMSDK.  Apply 142924.                             *
+     F*           Core fix #136778 already in  .                      *
+     F*  CEU014 - EMU User Defined Correspondence Enhancement.        *
+     F*  136778 - CLE004 not switchable and conditioning for          *
+     F*           confirmation when consolidated confirmation feature *
+     F*           off is incorrect                                    *
+     F*  CLE004 - Syndications & Authorisations                       *
+     F*  CCG008 - User Defined Correspondence - Lending               *
+     F*                                                               *
+     F*****************************************************************
+     FCLOAN   IF  E           K        DISK         KINFSR SRFILE         CLE004
+     F            CLOANHHF                          KIGNORE               CLE004
+     F            CLOANCKF                          KIGNORE               CLE004
+     F            CLOANZ1F                          KIGNORE               CLE004
+     FLOAMS   IF  E           K        DISK         KINFSR SRFILE         CLE004
+     F            LOAMSDKF                          KRENAMELOAMDKF2       CLE004
+     F            LOAMSDHF                          KIGNORE               CLE004
+     F            LOAMSZ1F                          KIGNORE               CLE004
+     FCONFS   UF  E           K        DISK
+     F                                              KINFSR SRFILE
+     F                                              KCOMIT
+     F            LOAMSDHF                          KIGNORE
+     F            LOAMSZ1F                          KIGNORE
+     FLENXTAA UF  E                    DISK                      A
+     F                                              KINFSR SRFILE
+     F                                              KCOMIT
+     FLENXTAB O   E                    DISK                      A
+     F                                              KINFSR SRFILE
+     F                                              KCOMIT
+     FLENXTAC UF  E                    DISK                      A
+     F                                              KINFSR SRFILE
+     F                                              KCOMIT
+     F/COPY WNCPYSRC,CG6010F001
+      /TITLE FUNCTION OF INDICATORS
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N  C T I O N    O F    I N D I C A T O R S               *
+     F*                                                               *
+     F*  50   -    EOF indicator for CONFS                            *
+     F*  60   -    EOF indicator for LENXTAA, LENXTAC                 *
+     F*  90   -    General work indicator                             *
+     F*                                                               *
+     F*****************************************************************
+      /TITLE SUBROUTINE INDEX
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E    I N D E X                             *
+     F*                                                               *
+     F*  Main routine                                                 *
+     F*  SRINIT  -  Initial Processing                                *
+     F*  SRINZF  -  Initialise Fields on Program Invocation           *
+     F*  SRMAIN  -  Main Processing                                   *
+     F*  SRWLEN  -  Write to LENXTAA, LENXTAB, LENXTAC                *
+     F*  SRAUDT  -  Audit Report Processing                           *
+     F*  *PSSR   -  Error Subroutine                                  *
+     F*  AOCLNDR0 - Retrieve Customer Lending ICD                     *   CLE004
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E*****************************************************************
+     E*
+     E**  Copyright array.
+     E                    CPY@    1   1 80
+     E/COPY CGCPYSRC,SRERRE
+     I/EJECT
+     I*                                                                   CLE004
+     ICLOANCLF                                                            CLE004
+     I** Rename fields on CLOAN                                           CLE004
+     I              RECI                            LORECI                CLE004
+     I              LNRF                            LOLNRF                CLE004
+     I              VDAT                            LOVDAT                CLE004
+     I              MRIN                            LOMRIN                CLE004
+     I              LTYP                            LOLTYP                CLE004
+     I              SUTP                            LOSUTP                CLE004
+     I              PTYP                            LOPTYP                CLE004
+     I              BRTT                            LOBRTT                CLE004
+     I              RTSP                            LORTSP                CLE004
+     I              CCY                             LOCCY                 CLE004
+     I              BRCA                            LOBRCA                CLE004
+     I              CNUM                            LOCNUM                CLE004
+     I              REPT                            LOREPT                CLE004
+     I              AUTO                            LOAUTO                CLE004
+     I              FACO                            LOFACO                CLE004
+     I              BRTE                            LOBRTE                CLE004
+     I              SPIN                            LOSPIN                CLE004
+     I              WTIN                            LOWTIN                CLE004
+     I              FCUS                            LOFCUS                CLE004
+     I              FTYP                            LOFTYP                CLE004
+     I              FSEQ                            LOFSEQ                CLE004
+     I              INTC                            LOINTC                CLE004
+     I              NACD                            LONACD                CLE004
+     I              FCLB                            LOFCLB                CLE004
+     I              ORED                            LOORED                CLE004
+     I              LCD                             LOLCD                 CLE004
+     I              CHTP                            LOCHTP                CLE004
+     I              TNLU                            LOTNLU                CLE004
+     I              RSTM                            LORSTM                CLE004
+     I              RONS                            LORONS                CLE004
+     I              RIBN                            LORIBN                CLE004
+     I              RIBA                            LORIBA                CLE004
+     I              ROBN                            LOROBN                CLE004
+     I              ROCN                            LOROCN                CLE004
+     I              PSTM                            LOPSTM                CLE004
+     I              PONS                            LOPONS                CLE004
+     I              PIBN                            LOPIBN                CLE004
+     I              PIBA                            LOPIBA                CLE004
+     I              POBN                            LOPOBN                CLE004
+     I              POCN                            LOPOCN                CLE004
+     I              RCRN                            LORCRN                CLE004
+     I              RCRA                            LORCRA                CLE004
+     I              RVNO                            LORVNO                CLE004
+     I              AWBN                            LOAWBN                CLE004
+     I              AWBA                            LOAWBA                CLE004
+     I              BENN                            LOBENN                CLE004
+     I              BENA                            LOBENA                CLE004
+     I              DTP1                            LODTP1                CLE004
+     I              DTP2                            LODTP2                CLE004
+     I              DTP3                            LODTP3                CLE004
+     I              DTP4                            LODTP4                CLE004
+     I              DCHG                            LODCHG                CLE004
+     I              BTB1                            LOBTB1                CLE004
+     I              BTB2                            LOBTB2                CLE004
+     I              BTB3                            LOBTB3                CLE004
+     I              BTB4                            LOBTB4                CLE004
+     I              BTB5                            LOBTB5                CLE004
+     I              BTB6                            LOBTB6                CLE004
+     I              CVMR                            LOCVMR                CLE004
+     I              FSRP                            LOFSRP                CLE004
+     I              FSGN                            LOFSGN                CLE004
+     I              FPRC                            LOFPRC                CLE004
+     I              DFTP                            LODFTP                CLE004
+     I              DFST                            LODFST                CLE004
+     I              MNSG                            LOMNSG                CLE004
+     I              GASS                            LOGASS                CLE004
+     I              GPRT                            LOGPRT                CLE004
+     I              IUSR                            LOIUSR                CLE004
+     I              AUSR                            LOAUSR                CLE004
+     I              XUSR                            LOXUSR                CLE004
+     I              PCRF                            LOPCRF                CLE004
+     I              PCOB                            LOPCOB                CLE004
+     I              SCCY                            LOSCCY                CEU014
+     I*                                                                   CLE004
+     ILOAMDKF2                                                            CLE004
+     I** Rename fields on LOAMS                                           CLE004
+     I              RECI                            LARECI                CLE004
+     I              LNRF                            LALNRF                CLE004
+     I              VDAT                            LAVDAT                CLE004
+     I              LASN                            LALASN                CLE004
+     I              MRIN                            LAMRIN                CLE004
+     I              LTYP                            LALTYP                CLE004
+     I              SUTP                            LASUTP                CLE004
+     I              PTYP                            LAPTYP                CLE004
+     I              AMTP                            LAAMTP                CLE004
+     I              PRSQ                            LAPRSQ                CLE004
+     I              BRTT                            LABRTT                CLE004
+     I              RTSP                            LARTSP                CLE004
+     I              CCY                             LACCY                 CLE004
+     I              PRAM                            LAPRAM                CLE004
+     I              INTA                            LAINTA                CLE004
+     I              WTXA                            LAWTXA                CLE004
+     I              FEAM                            LAFEAM                CLE004
+     I              TAMT                            LATAMT                CLE004
+     I              BRCA                            LABRCA                CLE004
+     I              CNUM                            LACNUM                CLE004
+     I              REPT                            LAREPT                CLE004
+     I              AUTO                            LAAUTO                CLE004
+     I              STAI                            LASTAI                CLE004
+     I              SETP                            LASETP                CLE004
+     I              OSAC                            LAOSAC                CLE004
+     I              TSEN                            LATSEN                CLE004
+     I              FACO                            LAFACO                CLE004
+     I              SPI1                            LASPI1                CLE004
+     I              SPI2                            LASPI2                CLE004
+     I              SPI3                            LASPI3                CLE004
+     I              LAIN                            LALAIN                CLE004
+     I              BRTE                            LABRTE                CLE004
+     I              SPIN                            LASPIN                CLE004
+     I              CALC                            LACALC                CLE004
+     I              WTIN                            LAWTIN                CLE004
+     I              LLAG                            LALLAG                CLE004
+     I              LWOI                            LALWOI                CLE004
+     I              XAVD                            LAXAVD                CLE004
+     I              XASQ                            LAXASQ                CLE004
+     I              FCUS                            LAFCUS                CLE004
+     I              FTYP                            LAFTYP                CLE004
+     I              FSEQ                            LAFSEQ                CLE004
+     I              RLON                            LARLON                CLE004
+     I              FECD                            LAFECD                CLE004
+     I              PONI                            LAPONI                CLE004
+     I              ACTI                            LAACTI                CLE004
+     I              CNFY                            LACNFY                CLE004
+     I              TLXY                            LATLXY                CLE004
+     I              CBLY                            LACBLY                CLE004
+     I              INTC                            LAINTC                CLE004
+     I              NACD                            LANACD                CLE004
+     I              ACBI                            LAACBI                CLE004
+     I              ZZ001                           LAZZ01                CLE004
+     I              LSWCC                           LALSWC                CLE004
+     I              LSWSC                           LALSWS                CLE004
+     I              OSBR                            LAOSBR                CLE004
+     I              FCLB                            LAFCLB                CLE004
+     I              LSMD                            LALSMD                CLE004
+     I              REBT                            LAREBT                CLE004
+     I              ZZ034                           LAZZ03                CLE004
+     I              ORED                            LAORED                CLE004
+     I              LCD                             LALCD                 CLE004
+     I              CHTP                            LACHTP                CLE004
+     I              TNLU                            LATNLU                CLE004
+     I              RSTM                            LARSTM                CLE004
+     I              RONS                            LARONS                CLE004
+     I              RIBN                            LARIBN                CLE004
+     I              RIBA                            LARIBA                CLE004
+     I              ROBN                            LAROBN                CLE004
+     I              ROCN                            LAROCN                CLE004
+     I              PSTM                            LAPSTM                CLE004
+     I              PONS                            LAPONS                CLE004
+     I              PIBN                            LAPIBN                CLE004
+     I              PIBA                            LAPIBA                CLE004
+     I              POBN                            LAPOBN                CLE004
+     I              POCN                            LAPOCN                CLE004
+     I              RCRN                            LARCRN                CLE004
+     I              RCRA                            LARCRA                CLE004
+     I              RVNO                            LARVNO                CLE004
+     I              AWBN                            LAAWBN                CLE004
+     I              AWBA                            LAAWBA                CLE004
+     I              BENN                            LABENN                CLE004
+     I              BENA                            LABENA                CLE004
+     I              DTP1                            LADTP1                CLE004
+     I              DTP2                            LADTP2                CLE004
+     I              DTP3                            LADTP3                CLE004
+     I              DTP4                            LADTP4                CLE004
+     I              DCHG                            LADCHG                CLE004
+     I              BTB1                            LABTB1                CLE004
+     I              BTB2                            LABTB2                CLE004
+     I              BTB3                            LABTB3                CLE004
+     I              BTB4                            LABTB4                CLE004
+     I              BTB5                            LABTB5                CLE004
+     I              BTB6                            LABTB6                CLE004
+     I              CVMR                            LACVMR                CLE004
+     I              FSRP                            LAFSRP                CLE004
+     I              FSGN                            LAFSGN                CLE004
+     I              FPRC                            LAFPRC                CLE004
+     I              COFA                            LACOFA                CLE004
+     I              IRCF                            LAIRCF                CLE004
+     I              FRCF                            LAFRCF                CLE004
+     I              DFTP                            LADFTP                CLE004
+     I              DFST                            LADFST                CLE004
+     I              MNSG                            LAMNSG                CLE004
+     I              GASS                            LAGASS                CLE004
+     I              GPRT                            LAGPRT                CLE004
+     I              NRLI                            LANRLI                CLE004
+     I              ROLN                            LAROLN                CLE004
+     I              ROSN                            LAROSN                CLE004
+     I              ROBR                            LAROBR                CLE004
+     I              RORC                            LARORC                CLE004
+     I              PDGN                            LAPDGN                CLE004
+     I              GRIN                            LAGRIN                CLE004
+     I              RLCY                            LARLCY                CLE004
+     I              PNAM                            LAPNAM                CLE004
+     I              PAST                            LAPAST                CLE004
+     I              ASTS                            LAASTS                CLE004
+     I              IUSR                            LAIUSR                CLE004
+     I              AUSR                            LAAUSR                CLE004
+     I              XUSR                            LAXUSR                CLE004
+     I              PCRF                            LAPCRF                CLE004
+     I              PCOB                            LAPCOB                CLE004
+     I              SCCY                            LASCCY                CEU014
+     I*                                                                   CLE004
+     IDSPARM    E DSCONFSDK
+     I**  External DS for parameter passed to CG6015
+     I*
+     ISDCLND    E DSSDCLNDPD                                              CLE004
+     I**  External DS for Customer Lending ICD                            CLE004
+     I*MDTA***** E DSMPHAS                                                             142773 CCB020
+     I* Midas Phase Data area                                             142773
+     I*                                                                   CLE004
+     IDSFDY     E DSDSFDY                                                 CLE004
+     I**  First DS for access programs, short data structure              CLE004
+     I*                                                                   CLE004
+     IDSSDY     E DSDSSDY                                                                     CLE134
+      ** Second DS for access programs, long data structure                                   CLE134
+      *                                                                                       CLE134
+     IW0FMT     E DSCGUDTAPD
+     I**  Record format of PF/CGUDTAPD for use as a parameter
+     I/COPY CGCPYSRC,CGAUDTI
+     I/COPY CGCPYSRC,SRERRI
+     I/COPY WNCPYSRC,CG6010I001
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Process     :  MAINLINE                                      *
+     C*  Function    :  Mainline processing.                          *
+     C*                                                               *
+     C*  Called by   :  None                                          *
+     C*  Calls       :  SRINIT - Initial Processing - On First Call   *
+     C*                 SRINZF - Initialise Fields on Each Invocation *
+     C*                 SRMAIN - Main Processing                      *
+     C*                 SRAUDT - Audit Report Processing              *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C**  Parameter list for current program invocation.
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN
+     C                     PARM           W0CMT   3
+     C*
+     C**  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+     C*
+     C**  Initial processing - Once Only
+     C*
+     C           ##INIT    IFEQ *BLANK
+     C                     EXSR SRINIT
+     C                     MOVE 'Y'       ##INIT  1
+     C                     ENDIF
+     C*
+     C**  Initialisation processing
+     C                     EXSR SRINZF
+     C*
+     C**  Main processing
+     C                     EXSR SRMAIN
+     C*
+     C**  Audit Processing
+     C                     EXSR SRAUDT
+     C*
+     C**  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C**  Terminate program
+     C                     RETRN
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Process     :  SRMAIN                                         *
+     C*  Function    :  Main Processing                               *
+     C*                                                               *
+     C*  Called by   :  Mainline                                      *
+     C*  Calls       :  CG6015 - Loan Principal Increase Details.     *
+     C*                 SRWLEN - Write to LENXTAA, LENXTAB, LENXTAC   *
+     C*                                                               *
+     C*****************************************************************
+     C           SRMAIN    BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRMAIN'  @STK,Q
+     C*
+     C** Read through CONFS file.
+     C*
+     C           *LOVAL    SETLLLOAMSDKF
+     C                     READ CONFS                    50
+     C*
+     C** Read until End of File
+     C*
+     C           *IN50     DOWEQ'0'
+     C*
+     C** If Confirmation indicator = 'Y' and amendment type = 'PI'
+     C*
+     C           AMTP      IFEQ 'PI'
+     C           CNFY      ANDEQ'Y'
+     C/COPY WNCPYSRC,CG6010C004
+     C*
+     C**  Increment the count of CONFS records read.
+     C                     ADD  1         ##DREC  50
+     C/COPY WNCPYSRC,CG6010C001
+     C           CLE004    IFEQ 'Y'                                       142773
+     C********** MDTA      IFEQ 'A'                                                    142773 CCB020
+     C*
+     C*  Access LOAMS for the Loan Amendment Status Indicator             CLE004
+     C*                                                                   CLE004
+     C           KLOAMS    KLIST                                          CLE004
+     C                     KFLD           LNRF                            CLE004
+     C                     KFLD           VDAT                            CLE004
+     C                     KFLD           LASN                            CLE004
+     C*                                                                   CLE004
+     C           KLOAMS    CHAINLOAMS                88                   CLE004
+     C           *IN88     IFEQ '1'                                       CLE004
+     C                     EXSR SRAUDT                                    CLE004
+     C                     MOVEL'LOAMS   'W0FILE           ************   CLE004
+     C                     MOVELLNRF      W0KEY            * DBERR 01 *   CLE004
+     C                     Z-ADD1         W0ERNB           ************   CLE004
+     C                     MOVEL'MEM5004' W0MSGD                          CLE004
+     C                     MOVEL'MIDAS  ' W0MSGF                          CLE004
+     C                     EXSR SRERR                                     CLE004
+     C                     ENDIF                                          CLE004
+     C**********           ENDIF                                                       142773 CCB020
+     C*                                                                   CLE004
+     C*  Access CLOAN for the Linked to Syndicate field                   CLE004
+     C*                                                                   CLE004
+     C           KCLOAN    KLIST                                          CLE004
+     C                     KFLD           LNRF                            CLE004
+     C                     KFLD           RCDT                            CLE004
+     C*                                                                   CLE004
+     C                     MOVEL'A'       RCDT                            CLE004
+     C           KCLOAN    CHAINCLOAN                88                   CLE004
+     C           *IN88     IFEQ '1'                                       CLE004
+     C                     EXSR SRAUDT                                    CLE004
+     C                     MOVEL'LOANS   'W0FILE           ************   CLE004
+     C                     MOVELLNRF      W0KEY            * DBERR 02 *   CLE004
+     C                     Z-ADD2         W0ERNB           ************   CLE004
+     C                     MOVEL'MEM5004' W0MSGD                          CLE004
+     C                     MOVEL'MIDAS  ' W0MSGF                          CLE004
+     C                     EXSR SRERR                                     CLE004
+     C                     ENDIF                                          CLE004
+     C                     ENDIF                                          142773
+     C*                                                                   CLE004
+     C*  If Loan is authorised and Loan is not 'Linked to Syndicate'      CLE004
+     C*                                                                   CLE004
+     C********** LAASTS    IFEQ 'A'                                 CLE004136778
+     C           CLE004    IFEQ 'Y'                                       136778
+     C********** MDTA      ANDEQ'A'                                                    185653 CCB020
+     C           LAASTS    ANDEQ'A'                                       136778
+     C           LNKS      ANDNE'Y'                                       CLE004
+     C           CLE004    OREQ 'Y'                                                           185653
+     C********** MDTA      ANDNE'A'                                                    185653 CCB020
+     C           ASTS      ANDEQ'A'                                                           185653
+     C           LNKS      ANDNE'Y'                                                           185653
+     C           CLE004    OREQ 'N'                                       136778
+     C*                                                                   CLE004
+     C* If Consolidated Confirmations is 'Y' call CG6015                  CLE004
+     C*                                                                   CLE004
+     C********** BPCONR    IFEQ 'Y'                                 CLE004136778
+     C           BPCONR    IFNE 'Y'                                       136778
+     C*                                                                   CLE004
+     C** Produce Confirmation
+     C*
+     C                     CALL 'CG6015'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM W0CMT     ##CMT   3
+     C                     PARM *BLANK    ##COPD  1
+     C                     PARM *BLANK    ##AUTO  1
+     C                     PARM           DSPARM
+     C*
+     C**  Error in called program.
+     C           ##RTCD    IFNE *BLANK
+     C*
+     C                     EXSR SRAUDT
+     C*
+     C** Database error
+     C                     MOVEL'CG6015  'W0FILE           ***************
+     C*********************MOVEL##RTCD    W0KEY            * DBERR 01     CLE004
+     C*********************Z-ADD01        W0ERNB           ***************CLE004
+     C                     MOVEL##RTCD    W0KEY            * DBERR 03     CLE004
+     C                     Z-ADD03        W0ERNB           ***************CLE004
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+     C*                                                                   CLE004
+     C                     ELSE                                           CLE004
+     C                     MOVE 'Y'       ##COPD                          CLE004
+     C                     ENDIF                                          CLE004
+     C*
+     C/COPY WNCPYSRC,CG6010C002
+     C** Confirmation Produced?
+     C*
+     C           ##COPD    IFEQ 'Y'
+     C*
+     C** Update Confirmation indicator on CONFS
+     C*
+     C                     MOVEL'N'       CNFY
+     C                     UPDATLOAMSDKF
+     C*
+     C** Write to LENXTAA, LENXTAB, LENXTAC if auto-transmission of confirmation
+     C*
+     C           ##AUTO    IFEQ 'Y'
+     C                     EXSR SRWLEN
+     C                     END
+     C*
+     C                     END                             * ##COPD= 'Y'
+     C*
+     C                     END                             * ASTS, LNKS   CLE004
+     C*                                                                   CLE004
+     C                     END                             * CNFY='Y'/AMTP='PI'
+     C*
+     C** Commit
+     C                     COMIT
+     C*
+     C** Read next record from CONFS
+     C*
+     C                     READ CONFS                    50
+     C                     END                             * *IN50 DOWEQ '0'
+     C*
+     C           EXMAIN    TAG
+     C*
+     C**  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Process    :  SRWLEN                                         *
+     C*  Function   :  Write to LENXTAA, LENXTAB, LENXTAC             *
+     C*                                                               *
+     C*  Called by   :  SRMAIN - Main processing.                     *
+     C*  Calls       :                                                *
+     C*                                                               *
+     C*****************************************************************
+     C           SRWLEN    BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRWLEN'  @STK,Q
+     C*
+     C** Write to detail file - LENXTAB
+     C*
+     C                     Z-ADDVDAT      VDATS
+     C                     Z-ADDLASN      LASNS
+     C                     MOVE LWOI      LWDI
+     C                     Z-ADDFTYP      FTYPS
+     C                     MOVE PONI      PONIA
+     C                     MOVE *BLANKS   CSID
+     C                     Z-ADDTNLU      ORED
+      *
+     C                     WRITELENXTABF
+     C*
+     C** Write to header file - LENXTAA
+     C*
+     C           1         CHAINLENXTAA              60
+     C           *IN60     IFEQ '1'
+     C                     MOVEL'H'       RECI
+     C                     WRITELENXTAAF
+     C                     END
+     C*
+     C** Write to trailer file - LENXTAC
+     C*
+     C           1         CHAINLENXTAC              60
+     C           *IN60     IFEQ '1'
+     C                     MOVEL'T'       RECI
+     C                     Z-ADD1         NORES
+     C                     WRITELENXTACF
+     C                     ELSE
+     C                     ADD  1         NORES
+     C                     UPDATLENXTACF
+     C                     END
+     C*
+     C           EXWLEN    TAG
+     C*
+     C**  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Process     :  SRINZF                                        *
+     C*  Function    :  Initialise Fields on Program Invocation       *
+     C*                                                               *
+     C*  Called by   :  Mainline                                      *
+     C*  Calls       :  CGZAUDIT - Audit Processing                   *
+     C*                                                               *
+     C*****************************************************************
+     C           SRINZF    BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRINZF'  @STK,Q
+     C*
+     C**  Open the Audit Print File.
+     C                     CLEARI#DTA
+     C                     MOVEL'CG6010AU'I#SPLN
+     C                     MOVEL'CG6010  'I#REF
+     C                     MOVE 'CGD2527' I#TITL
+     C                     MOVE 'CGD2528' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM *BLANKS   W0RTN   7
+     C                     PARM '*OPEN   'W0ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W0RSQN  5
+     C*
+     C           EXINZF    TAG
+     C*
+     C**  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Process     :  SRINIT                                        *
+     C*  Function    :  Initial Processing - First Call Only          *
+     C*                                                               *
+     C*  Called by   :  Mainline                                      *
+     C***Calls*******:**None                                          *   CLE004
+     C*  Calls       :  AOCLNDPD - Retrieve Customer Lending ICD      *   CLE004
+     C*                                                               *
+     C*****************************************************************
+     C           SRINIT    BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRINIT'  @STK,Q
+     C*
+     C**  Initialise work fields
+     C                     Z-ADD*ZEROS    ##DREC
+     C*
+     C**  Get Customer Lending ICD                                        CLE004
+     C*                                                                   CLE004
+     C                     CALL 'AOCLNDR0'                                CLE004
+     C                     PARM *BLANKS   ##RTCD                          CLE004
+     C                     PARM '*FIRST ' ##OPTN  7                       CLE004
+     C********** SDCLND    PARM SDCLND    DSFDY                                        CLE004 CLE134
+     C           SDCLND    PARM SDCLND    DSSDY                                               CLE134
+     C*                                                                   CLE004
+      ** Access switchable features file to check for CLE004              136778
+     C                     CALL 'AOSARDR0'                                136778
+     C                     PARM *BLANKS   W@RTCD  7                       136778
+     C                     PARM '*VERIFY' W@OPTN  7                       136778
+     C                     PARM 'CLE004'  W@SARD  6                       136778
+      *                                                                   136778
+     C           W@RTCD    IFEQ *BLANK                                    136778
+     C                     MOVE 'Y'       CLE004  1                       136778
+     C                     ELSE                                           136778
+     C                     MOVE 'N'       CLE004                          136778
+     C                     ENDIF                                          136778
+      *                                                                   136778
+     C**  Copyright
+     C                     MOVEACPY@      ACT@   80
+      ***Get*the midas phase data area                                                 142773 CCB020
+     C********** *NAMVAR   DEFN MPHAS     MDTA                                         142773 CCB020
+     C**********           IN   MDTA                                                   142773 CCB020
+     C/COPY WNCPYSRC,CG6010C003
+     C*
+     C           EXINIT    TAG
+     C*
+     C**  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Process    :  SRAUDT                                         *
+     C*  Function   :  Audit Report Processing                        *
+     C*                                                               *
+     C*  Called by   :  Mainline                                      *
+     C*  Calls       :  CGZAUDIT - Audit Processing                   *
+     C*                 CG9020   - Write Data to UDC Data Files-Audit *
+     C*                                                               *
+     C*****************************************************************
+     C           SRAUDT    BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRAUDT'  @STK,Q
+     C*
+     C**  Output the Count of records read
+     C                     CLEARI#DTA
+     C                     MOVEL'CG6010  'I#REF
+     C                     MOVE 'CGD2527' I#TITL
+     C                     MOVE 'CGD2528' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C                     MOVE '*LINE   'W1ACT
+     C                     MOVE *BLANKS   I#SUB
+     C                     MOVEL'CONFS   'I#SUB
+     C                     MOVEL'CAD1021' I#TEXT
+     C                     Z-ADD##DREC    I#QTY
+     C                     Z-ADD*ZERO     I#DECS
+     C                     MOVE '1'       I#EDIT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN   7
+     C                     PARM           W1ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W1RSQN  5
+     C*
+     C**  Skip a line.
+     C                     MOVE '*SKIP   'W1ACT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN   7
+     C                     PARM           W1ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W1RSQN  5
+     C*
+     C**  Produce the Audit Report.
+     C                     CALL 'CG9020'
+     C                     PARM *BLANK    ##RTCD
+     C                     PARM '*AUDIT  'W0ACT
+     C                     PARM *BLANKS   W0PATH256
+     C                     PARM           W0FMT
+     C                     PARM 'CGD2527' W0TITL  7
+     C                     PARM 'CGD2528' W0ULIN  7
+     C                     PARM           W0CMT
+     C*
+     C**  Close the Audit Print File.
+     C                     CLEARI#DTA
+     C                     MOVEL'CG6010  'I#REF
+     C                     MOVE 'CGD2527' I#TITL
+     C                     MOVE 'CGD2528' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM *BLANKS   ##RTCD
+     C                     PARM '*CLOSE  'W0ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W0RSQN  5
+     C*
+     C           EXAUDT    TAG
+     C*
+     C**  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C/COPY CGCPYSRC,SRERRPSSR
+     C/EJECT
+     C/COPY CGCPYSRC,SRERRC
+     C/EJECT
+** CPY@  **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

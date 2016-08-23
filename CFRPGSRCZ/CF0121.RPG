@@ -1,0 +1,711 @@
+     H        1
+     F/COPY WNCPYSRC,CF0121F001
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CF Extract outgoing dealing msgs Concord')       *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - CONFIRMATION MATCHING                            *
+     F*                                                               *
+     F*  CF0121 - Extract Outgoing Dealing Messages for Concord       *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CGL165             Date 17Feb15               *
+      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CDL049             Date 05Jul06               *
+      *                 CDL038             Date 10May05               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 141572             Date 19Mar99               *
+     F*                 113352             DATE 13FEB97               *
+     F*                 CCF001             DATE 10APR95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance Receive Settlement Instructions             *
+      *           (Recompiled)                                        *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CDL008 - Continuous Linked Settlement (recompile MGOREFPD)   *
+     F*  141572 - Recompile over changes in MGOREFPD                  *
+     F*  113352 - RE-COMPILE OVER CHANGES IN MGOREFPD                 *
+     F*  CCF001 - Created for Concord Interface                       *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FMGOREFC1UF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FCFBRCHL0IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FMGOMSGPDIF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FDEALS   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FCFCONCPDUF  E                    DISK                      A
+     F                                              KINFSR *PSSR
+     FCF0121AUO   E                    PRINTER                        UC
+     F                                              KINFSR *PSSR
+     F*
+     F*****************************************************************
+     F*                                                               *
+     F* FUNCTION OF INDICATORS                                        *
+     F*                                                               *
+     F*    10            EOF CFCONCPD                                 *
+     F*    11            EOF CFBRCHL0                                 *
+     F*    12            EOF MGOREFC1                                 *
+     F*    13            EOF MGOMSGPD                                 *
+     F*    87            EOF DEALS                                    *
+     F*                                                               *
+     F*****************************************************************
+      /TITLE SUBROUTINE INDEX
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*                                                               *
+     F*  INIT   - Program Initialisation                              *
+     F*  MAIN   - Main Processing Loop                                *
+     F*  FINAL  - Final Processing                                    *
+     F*                                                               *
+     F*  FORM   -  Format Sender, Destination and TRAM Brokerage      *
+     F*  WRIT   -  Output Record                                      *
+     F*  REPT   -  Process Error Report                               *
+     F*                                                               *
+     F*  *PSSR  - Error Processing Subroutine - DUMPs and ends Program*
+     F*           (This is called automatically if an unexpected      *
+     F*            Error occurs, or specifically for DB Error.)       *
+     F*                                                               *
+     F*****************************************************************
+     E*
+     E*
+     E                    CPY@    1   1 80
+     E*** Copyright statement
+     E                    @STK      100 10
+     E*** Subroutine Stack
+     E                    ARY        50  1               incoming msg
+     E                    OMSG     4000  1               compressed msg
+     E                    TMSG     4000  1
+     E*
+     E*****************************************************************
+     I*
+     ILDA       E DSLDA
+     I*** Local data area for database error details
+     I*
+     IPSDS       SDS
+     I*** Program Status Data Structure
+     I                                     *PROGRAM ##PGM
+     I*
+     I            DS
+     I                                       32  51 NWDS
+     I                                       40  43 @WK4
+     I                                       41  43 @WK3
+     I                                       40  42 @WL3
+     I                                       43  43 @WK1
+     I*** Destination address data structure
+     I*
+     I            DS
+     I                                        1  49 @SW2
+     I                                        1   7 TXT1
+     I                                        8  19 @SND2
+     I                                       15  15 @TNG
+     I                                       20  34 TXT2
+     I                                       35  37 MTPY
+     I                                       38  49 @DST2
+     I                                       50  50 MPRY
+     I**  SWIFT II message header
+     I*
+     I            DS
+     I                                        1   5 MTAG
+     I                                        5   5 @WL1
+     I**  Field tag data structure
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** Bank Details Data Structure.
+     I*
+     ISDCUST    E DSSDCUSTPD
+     I** Customer Details Data Structure.
+     I*
+     ISDBROK    E DSSDBROKPD
+     I** Broker Codes Data Structure.
+     I*
+     IDSFDY     E DSDSFDY
+     I*** Short Data Structure for access programs
+     I*
+     IDSSDY     E DSDSSDY
+     I*** Long Data Structure for access programs
+     I*
+     C*****************************************************************
+     C*
+     C           *ENTRY    PLIST
+     C           WTRID     PARM           P@TRID  3
+     C           WMSOF     PARM           P@MSOF  1
+     C*
+     C           *LIKE     DEFN P@TRID    WTRID
+     C           *LIKE     DEFN P@MSOF    WMSOF
+     C*
+     C*****************************************************************
+     C*
+     C*
+     C                     EXSR INIT
+     C*
+     C                     EXSR MAIN
+     C*
+     C                     EXSR FINAL
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* INIT   -  Initial processing                                  *
+     C*                                                               *
+     C* Called by:                                                    *
+     C*                                                               *
+     C* Calls: AOBANKR0(pgm).                                         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           INIT      BEGSR                           ** INIT SR **
+     C*
+     C*** Setup subroutine name in stack
+     C                     ADD  1         Q       30
+     C                     MOVEL'INIT'    @STK,Q
+     C*
+     C*----------------------------------------------------------------
+     C*
+     C*
+     C*** Setup Copyright Statement
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C*** Set up LDA
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C*** Initialise 'CR' and 'LF' fields
+     C                     MOVE *LOVAL    CR      1
+     C                     BITON'457'     CR
+     C                     MOVE *LOVAL    LF      1
+     C                     BITON'257'     LF
+     C                     MOVELCR        CRLF    2
+     C                     MOVE LF        CRLF
+     C                     MOVE *LOVAL    SOH     1
+     C                     BITON'7'       SOH
+     C                     MOVE *LOVAL    ETX     1
+     C                     BITON'67'      ETX
+     C*
+     C*** Initialise text fields
+     C                     MOVELSOH       TXT1
+     C                     MOVE '{1:F01'  TXT1
+     C                     MOVEL'99999999'TXT2
+     C                     MOVE '99}{2:I' TXT2
+     C                     MOVEL'}{4:'    TXT3
+     C                     MOVE CRLF      TXT3    6
+     C*
+     C*
+     C*** Read in Installation Data
+     C                     CALL 'AOBANKR0'
+     C                     PARM           WRTCD   7
+     C                     PARM '*FIRST'  WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'SDBANKL1'DBFILE           *DB ERR. 001  *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     MOVE ##PGM     DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C/COPY WNCPYSRC,CF0121C001
+     C*
+     C*** If messages already on output file...
+     C           WMSOF     IFEQ 'Y'
+     C           *HIVAL    SETGTCFCONCPD
+     C                     READPCFCONCPD                 10
+     C*
+     C           *IN10     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVEL'CFCONCPD'DBFILE           *DB ERR. 002  *
+     C                     MOVEL'LAST'    DBKEY            ***************
+     C                     MOVE ##PGM     DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     MOVEAODTA      OMSG,1
+     C                     Z-ADD1000      O       40
+     C*
+     C***   Determine last non-blank byte
+     C           O         DOWGT0
+     C           OMSG,O    ANDEQ' '
+     C                     SUB  1         O
+     C                     ENDDO
+     C*
+     C***   Otherwise...
+     C                     ELSE
+     C                     Z-ADD0         O
+     C                     ENDIF
+     C*
+     C                     ADD  1         O
+     C*
+     C*
+     C*----------------------------------------------------------------
+     C*
+     C*** Remove subroutine name in stack
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* MAIN   -  Main processing                                     *
+     C*                                                               *
+     C* Called by:                                                    *
+     C*                                                               *
+     C* Calls: FORM, WRIT, REPT.                                      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           MAIN      BEGSR                           ** MAIN SR **
+     C*
+     C*** Setup subroutine name in stack
+     C                     ADD  1         Q       30
+     C                     MOVEL'MAIN'    @STK,Q
+     C*
+     C*----------------------------------------------------------------
+     C*
+     C*
+     C*** Begin processing after TRAM Id received
+     C           WTRID     SETLLCFBRCHL0
+     C                     READ CFBRCHL0                 11
+     C*
+     C*** Process messages for one TRAM Id
+     C           *IN11     DOWEQ*OFF
+     C*
+     C*** Process messages for all branches within TRAM Id
+     C           IMBR      CHAINMGOREFC1             12
+     C*
+     C           *IN12     DOWEQ*OFF
+     C*
+     C*
+     C*** Format sender, destination & TRAM brokerage
+     C                     EXSR FORM
+     C*
+     C*** Process message
+     C           TRNO      SETLLMGOMSGPD
+     C           PTDL      DOUNE'D'
+     C           *IN13     OREQ *ON
+     C           TRNO      READEMGOMSGPD                 13
+     C                     ENDDO
+     C*
+     C           *IN13     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE            ***************
+     C                     MOVEL'MGOMSGPD'DBFILE           *DB ERR. 003  *
+     C                     MOVELTRNO      DBKEY            ***************
+     C                     MOVE ##PGM     DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C*** Write SWIFT II header to message array
+     C                     MOVELNWSN      @SND2
+     C                     MOVEA@SW2      OMSG,O
+     C                     ADD  50        O
+     C*
+     C*** Write delivery notification to message array if not blank
+     C           DELC      IFNE *BLANKS
+     C                     MOVE DELC      OMSG,O
+     C                     ADD  1         O
+     C                     ENDIF
+     C                     MOVEATXT3      OMSG,O
+     C                     ADD  6         O
+     C*
+     C*** Process rest
+     C           *IN13     DOWEQ*OFF
+     C*
+     C*** Write field tag to message array if not blank
+     C           MTAG      IFNE *BLANKS
+     C                     MOVEAMTAG      OMSG,O
+     C           @WL1      IFEQ *BLANKS
+     C                     ADD  4         O
+     C                     ELSE
+     C                     ADD  5         O
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C           MTAG      IFEQ ':72:'
+     C           @BRK      ANDEQ'Y'
+     C/COPY WNCPYSRC,CF0121C002
+     C                     MOVEA@ARY      OMSG,O
+     C                     ADD  @A        O
+     C                     ENDIF
+     C*
+     C*
+     C*** Write all non blank characters in field to message array
+     C                     MOVE *BLANKS   ARY
+     C                     MOVEAMFLD      ARY
+     C                     Z-ADD50        A       20
+     C           ARY,A     DOWEQ' '
+     C                     SUB  1         A
+     C                     ENDDO
+     C*
+     C                     Z-ADDA         S       40
+     C                     Z-ADD1         A
+     C           S         DOWGEA
+     C                     MOVE ARY,A     OMSG,O
+     C                     ADD  1         A
+     C                     ADD  1         O
+     C                     ENDDO
+     C*
+     C*** Write CRLF to message array if not blank
+     C           CTRC      IFNE *BLANKS
+     C                     MOVEACTRC      OMSG,O
+     C                     ADD  2         O
+     C                     ENDIF
+     C*
+     C*** Read outgoing messages file but ignore deleted parts.
+     C           PTDL      DOUNE'D'
+     C           *IN13     OREQ *ON
+     C           TRNO      READEMGOMSGPD                 13
+     C                     ENDDO
+     C                     ENDDO
+     C*
+     C*
+     C*** Write end of text block
+     C                     MOVEA'-}'      OMSG,O
+     C                     ADD  2         O
+     C                     MOVEAETX       OMSG,O
+     C                     ADD  1         O
+     C*
+     C*** If ready output records
+     C           O         IFGT 1000
+     C                     EXSR WRIT
+     C                     ENDIF
+     C*
+     C*** If compressed msg is greater than 2000 bytes output report
+     C           O         IFGT 2000
+     C                     EXSR REPT
+     C                     ENDIF
+     C*
+     C*
+     C                     MOVE 'TRAN'    MGST
+     C*
+     C                     UPDATMGOREFD0               12
+     C           *IN12     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD4         DBASE            ***************
+     C                     MOVEL'MGOREFC1'DBFILE           *DB ERR. 004  *
+     C                     MOVELIMBR      DBKEY            ***************
+     C                     MOVE ##PGM     DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C           IMBR      READEMGOREFC1                 12
+     C                     ENDDO
+     C*
+     C           WTRID     READECFBRCHL0                 11
+     C                     ENDDO
+     C*
+     C*** Output remainder of last record
+     C           O         IFGT 1
+     C                     EXSR WRIT
+     C                     ENDIF
+     C*
+     C*
+     C*----------------------------------------------------------------
+     C*
+     C*** Remove subroutine name in stack
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* FINAL  -  Final processing                                    *
+     C*                                                               *
+     C* Called by:                                                    *
+     C*                                                               *
+     C* Calls: None.                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           FINAL     BEGSR                           ** FINAL SR **
+     C*
+     C*** Setup subroutine name in stack
+     C                     ADD  1         Q       30
+     C                     MOVEL'FINAL'   @STK,Q
+     C*
+     C*----------------------------------------------------------------
+     C*
+     C*
+     C*
+     C*
+     C*----------------------------------------------------------------
+     C*
+     C*** Remove subroutine name in stack
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* FORM   -  Format Sender, Destination and TRAM Brokerage       *
+     C*                                                               *
+     C* Called by: MAIN                                               *
+     C*                                                               *
+     C* Calls: AOCUSTR0(pgm), AOBROKR0(pgm), ZM0040(pgm).             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           FORM      BEGSR                           ** FORM SR **
+     C*
+     C*** Setup subroutine name in stack
+     C                     ADD  1         Q       30
+     C                     MOVEL'FORM'    @STK,Q
+     C*
+     C*----------------------------------------------------------------
+     C*
+     C*
+     C*** Expand destination address to 12 characters with Xs
+     C*
+     C                     SELEC
+     C           @WK4      WHEQ '    '
+     C                     MOVELNWDS      @DST2
+     C                     MOVE 'XXXX'    @DST2
+     C*
+     C           @WK3      WHEQ '   '
+     C                     MOVELNWDS      @DST2
+     C                     MOVE 'XXX'     @DST2
+     C*
+     C           @WK1      WHEQ ' '
+     C                     MOVEL'X'       @WL4    4
+     C                     MOVE @WL3      @WL4
+     C                     MOVELNWDS      @DST2
+     C                     MOVE @WL4      @DST2
+     C*
+     C                     OTHER
+     C                     MOVELNWDS      @DST2
+     C                     ENDSL
+     C*
+     C*** Replace MIDAS brokerage on field 72 with TRAM brokerage
+     C*** '/BROKER/', broker code, currency, amount & 'N' if negative
+     C                     MOVE *BLANKS   ARY
+     C                     MOVE 'N'       @BRK    1
+     C*
+     C                     MOVELMTRN      @6      60
+     C           @6        CHAINDEALS                87
+     C*
+     C           *IN87     IFEQ *OFF
+     C           BRKC      ANDNE'MAIL'
+     C           BRKC      ANDNE'PHON'
+     C           BRKC      ANDNE'TELX'
+     C           BRKC      ANDNE'SWAP'
+     C*** Get Customer Details
+     C                     CALL 'AOBROKR0'
+     C                     PARM *BLANKS   W@RTCD  7                    e
+     C                     PARM '*KEY'    W@OPTN  7
+     C                     PARM BRKC      W@BROK  4                       S01230
+     C           SDBROK    PARM SDBROK    DSFDY
+     C           W@RTCD    IFEQ *BLANKS
+     C*
+     C                     MOVEA'/BROKER/'ARY,1
+     C           A9ACBC    IFEQ ' '
+     C                     MOVE '000'     A9ACBC
+     C                     ENDIF
+     C                     MOVEAA9ACBC    ARY,9
+     C                     MOVEAA9BRCY    ARY,12
+     C*
+     C           BAGE      IFGE 0
+     C                     Z-ADDBAGE      ZAMNT
+     C                     ELSE
+     C                     Z-SUBBAGE      ZAMNT
+     C                     ENDIF
+     C                     CALL 'ZM0040'
+     C                     PARM           ZAMNT  130
+     C                     PARM A9BRCY    ZCCY    3
+     C                     PARM           ZSAMNT 17
+     C                     PARM           ZSCCY   3
+     C                     PARM *BLANKS   ZERR    1
+     C*
+     C           ZERR      IFEQ *BLANKS
+     C                     MOVEAZSAMNT    ARY,15
+     C                     Z-ADD50        A       20
+     C           ARY,A     DOWEQ' '
+     C                     SUB  1         A
+     C                     ENDDO
+     C                     ADD  1         A
+     C*
+     C           BAGE      IFLT 0
+     C                     MOVE 'N'       ARY,A
+     C                     ADD  1         A
+     C                     ENDIF
+     C                     MOVEACRLF      ARY,A
+     C*
+     C                     MOVEAARY       @ARY   50
+     C           A         ADD  1         @A      20
+     C                     MOVE 'Y'       @BRK
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C                     ENDIF
+     C/COPY WNCPYSRC,CF0121C003
+     C*
+     C*
+     C*----------------------------------------------------------------
+     C*
+     C*** Remove subroutine name in stack
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* WRIT   -  Output Record                                       *
+     C*                                                               *
+     C* Called by: MAIN                                               *
+     C*                                                               *
+     C* Calls: None.                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           WRIT      BEGSR                           ** WRIT SR **
+     C*
+     C*** Setup subroutine name in stack
+     C                     ADD  1         Q       30
+     C                     MOVEL'WRIT'    @STK,Q
+     C*
+     C*----------------------------------------------------------------
+     C*
+     C*
+     C*** If messages already on output file update last record
+     C                     MOVEAOMSG,1    ODTA
+     C           WMSOF     IFEQ 'Y'
+     C                     UPDATCFCONCD0
+     C                     MOVE 'N'       WMSOF
+     C                     ELSE
+     C                     WRITECFCONCD0
+     C                     END
+     C*
+     C*** Move remaining data forward in output array
+     C                     MOVEAOMSG,1001 TMSG
+     C                     MOVEA*BLANKS   OMSG
+     C                     MOVEATMSG      OMSG,1
+     C                     SUB  1000      O
+     C*
+     C*
+     C*----------------------------------------------------------------
+     C*
+     C*** Remove subroutine name in stack
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* REPT   -  Process Error Report                                *
+     C*                                                               *
+     C* Called by: MAIN                                               *
+     C*                                                               *
+     C* Calls: None.                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           REPT      BEGSR                           ** REPT SR **
+     C*
+     C*** Setup subroutine name in stack
+     C                     ADD  1         Q       30
+     C                     MOVEL'REPT'    @STK,Q
+     C*
+     C*----------------------------------------------------------------
+     C*
+     C*
+     C* Output error report
+     C                     OPEN CF0121AU
+     C                     WRITEHEADER
+     C                     WRITEMSGERROR
+     C                     CLOSECF0121AU
+     C*
+     C*
+     C*----------------------------------------------------------------
+     C*
+     C*** Remove subroutine name in stack
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR  - Program exception error routine                      *
+     C*          Called automatically if a program error occurs,      *
+     C*          or directly by the program code using EXSR.          *
+     C*          This subroutine DUMPs the program just once.         *
+     C*                                                               *
+     C* Called by: INIT                                               *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+     C*
+     C***  Check if *PSSR has already been called.
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C*
+     C                     OPEN CF0121AU
+     C                     WRITEHEADER
+     C                     WRITEDBERROR
+     C*
+     C                     DUMP
+     C*
+     C*
+     C                     ENDIF
+     C*
+     C***  If *PSSR already run, just end the program here.
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

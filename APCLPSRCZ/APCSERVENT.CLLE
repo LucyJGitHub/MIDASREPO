@@ -1,0 +1,124 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas AP APISERVER entry point module')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - APIs module                                      */
+/*                                                                   */
+/*       APCSERVENT - Entry point module for APISERVER.              */
+/*                                                                   */
+/*       Function   - This module performs preparatory tasks         */
+/*                    required for handling incoming messages, such  */
+/*                    as applying file overrides.                    */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. CCB020             Date 06Aug12              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Prev Amend No. 261166             Date 17Jul09              */
+/*                      259935B            Date 14May09              */
+/*                      260509             Date 29May09              */
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      BUG7376            Date 01Jun05              */
+/*                      CAP084             Date 26Feb04              */
+/*                      CSE045             Date 26Jun03              */
+/* Midas Release 4.01 -----------------------------------------------*/
+/*                      CSC011             Date 18Jun02              */
+/*                      201429             Date 14Jan02              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      CAP002  *CREATE    Date 11Feb98              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CCB020 - COB Restructure - Secondary COB Infrastructure     */
+/*       261166 - Change logging and enable back ENDAPISVR           */
+/*                and make sure APISERVER runs right after COB       */
+/*                if there are any extra SHUTDOWN message sent.      */
+/*       259935B- APISERVER occasionally failed. Amend pgm to        */
+/*                run APISERVER all the time during input cycle.     */
+/*       260509 - Increase allocation time.                          */
+/*       BUG7376- Prevent CPF message with file TRADSDY2             */
+/*       CAP084 - API wrapper project - prevent APISERVER jobs       */
+/*                being submitted when already active.               */
+/*       CSE045 - API for Extended Settlement for Trade Input and    */
+/*                Depot Movement                                     */
+/*       CSC011 - Create the correct overrides for the Lending API's */
+/*       201429 - New validation needed for ISO15022 in extended     */
+/*                settlement screen.  Override neccessary files.     */
+/*       CAP002 - Conversion of input functionss to APIs.            */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2001')
+/**********  DCL        VAR(&MPHAS) TYPE(*CHAR)  LEN(1)                           /*259935B CCB020*/
+/**********  DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)              */           /*259935B CCB020*/
+/*/COPY WNCPYSRC,APH00042                                            */
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     LOG(4 00 *SECLVL) LOGCLPGM(*YES)                                  /*261166*/
+/** +
+    Allocate a data area to show that the server is active.    +
+**/
+/************ALCOBJ     OBJ((APISERVER *DTAARA *EXCL))                                    /*CAP084*/
+/**********  ALCOBJ     OBJ((APISERVER *DTAARA *EXCL)) WAIT(0)       */            /*CAP084 260509*/
+             ALCOBJ     OBJ((APISERVER *DTAARA *EXCL)) WAIT(5)                            /*260509*/
+             MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(END))                             /*CAP084*/
+ 
+/** +
+    Apply an override to prevent shared opens of MMDEALL0, as these +
+    can cause problems further down the stack. +
+**/
+/*/COPY WNCPYSRC,APH00070                                            */
+             OVRDBF     FILE(MMDEALL0) SHARE(*NO)
+             OVRDBF     FILE(DPTMVDZ3) TOFILE(DPTMVDY2) SHARE(*NO)                        /*201429*/
+             OVRDBF     FILE(TRADSDY2) SHARE(*NO)                                        /*BUG7376*/
+             OVRDBF     FILE(TRADSDZ3) TOFILE(TRADSDY2) SHARE(*NO)                        /*201429*/
+             OVRDBF     FILE(DPTMVDY1) SHARE(*NO)                                         /*CSE045*/
+             OVRDBF     FILE(DPTMVDY2) SHARE(*NO)                                         /*CSE045*/
+             OVRDBF     FILE(LEFCAMSQ) TOFILE(LEFCAML2) +
+                          OVRSCOPE(*CALLLVL) SHARE(*NO)                                   /*CSC011*/
+             OVRDBF     FILE(LOAMD) TOFILE(LOAMS) OVRSCOPE(*CALLLVL) +
+                          SHARE(*NO)                                                      /*CSC011*/
+             OVRDBF     FILE(LOAMS) OVRSCOPE(*CALLLVL) SHARE(*NO)                         /*CSC011*/
+/*/COPY WNCPYSRC,APH00043                                            */
+ 
+/** +
+    Pass control to the incoming message handler. +
+**/
+             CALLPRC    PRC(APINCOMMSG)
+ 
+/** +
+    Deallocate the data area to show that the server is no longer     +
+    active.                                                           +
+**/
+             DLCOBJ     OBJ((APISERVER *DTAARA *EXCL))
+             DLTOVR     *ALL                                                              /*201429*/
+                                                                                         /*259935B*/
+/***while*still*at*input*cycle*keep*submitting*the*APISERVER**/                   /*259935B 261166*/
+/***Start*the*APISERVER*after*Close*of*Business*run***********/                    /*261166 CCB020*/
+                                                                                         /*259935B*/
+/**********  RTVDTAARA  DTAARA(MPHAS) RTNVAR(&MPHAS)                 */           /*259935B CCB020*/
+/**********  RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREFIX)         */           /*259935B CCB020*/
+/**********  IF         COND(&MPHAS *EQ 'A') THEN(DO) */                          /*259935B 261166*/
+/**********  IF         COND(&MPHAS *EQ 'F') THEN(DO)                */            /*261166 CCB020*/
+/**********  CALL       PGM(APCSTRSVR) PARM(&PREFIX)                 */           /*259935B CCB020*/
+/**********  ENDDO                                                   */           /*259935B CCB020*/
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Module +
+                          APSERVENT ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ END:
+             ENDPGM

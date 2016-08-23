@@ -1,0 +1,56 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SM Populate SESECSQD file from SDCUSTPD')       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC00027 - Populate SESECSQD file from SDCUSTPD            */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Last Amend No. BG26993            Date 26Jan10              */
+/*       Prev Amend No. 201762 *CREATE     Date 28Feb02              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BG26993  - Delivery of upgrade programs to core.            */
+/*                  Renamed S016570C01.                              */
+/*       BUG16570 - Could not find record where SECUSN=Customer      */
+/*                  number is a primary key                          */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2005')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Copy SESECSQD to template file. */
+             CPYF       FROMFILE(SESECSQD) TOFILE(SMU003PD) +
+                          MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             MONMSG     MSGID(CPF2817 CPF2909) EXEC(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             CALL       PGM(SMU00065)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* If program succssful then copy version of CLOANCL back. */
+             CPYF       FROMFILE(SMU003PD) TOFILE(SESECSQD) +
+                          MBROPT(*REPLACE)
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+END:
+             ENDPGM

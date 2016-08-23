@@ -1,0 +1,115 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP Copy adoption programs')                     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC000031 - Shell for copy of adoption programs             */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*                                                                   */
+/*       Last Amend No. MD034189           Date 21Apr15              */
+/*       Prev Amend No. CUP041   *REWRITE  Date 27May14              */
+/*                      CSC043             Date 18Jun10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*                      BUG27240           Date 12Mar10              */
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      CUP033             Date 18Sep06              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CSM005             Date 21Sep05              */
+/*                      CUP031             Date 09Mar05              */
+/*                      CUP025  *CREATE    Date 28Nov03              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD034189 - Wrong authorisation list used.                   */
+/*       CUP041 - New Bridge methodology to combine menu options     */
+/*       CSC043 - MidasPlus IASP Enablement                          */
+/*       BUG27240- Applied CPK029 file locking fix                   */
+/*       CPK029 - Stop lock on file.                                 */
+/*       CUP033 - Removal of System Value /COPYs                     */
+/*       CSM005 - Changes to /COPYs.  Recompile.                     */
+/*       CUP031 - Remove prompt for library name.                    */
+/*       CUP025 - MidasPlus Bridge changes.                          */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LAYER &PFX &IASP &RTNFLAG)
+
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&IASP) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTNFLAG) TYPE(*CHAR) LEN(1)
+
+             DCL        VAR(&XPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTNLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&AUTL) TYPE(*CHAR) LEN(10)
+
+             DCLF       FILE(UPADPJW0)
+
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2003')
+
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+             CHGVAR     VAR(&OWNER) VALUE(&PFX *TCAT 'OWNER')
+/**********  CHGVAR     VAR(&AUTL) VALUE(&PFX *TCAT 'DATABASE')                      */ /*MD034189*/
+             CHGVAR     VAR(&AUTL) VALUE(&PFX *TCAT 'ADOPT')                            /*MD034189*/
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+                CHGVAR     VAR(&XPLIB) VALUE(&PFX *TCAT 'XPLIB')
+             ENDDO
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+                CHGVAR     VAR(&XPLIB) VALUE(&PFX *TCAT 'GXPLIB')
+             ENDDO
+
+READNEXT:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(ENDPGM))
+
+/* Skip if the layer does not match. */
+             IF         COND(&AALAYR *NE &LAYER) THEN(DO)
+                GOTO       CMDLBL(READNEXT)
+             ENDDO
+/* Skip if the record is logically deleted. */
+             IF         COND(&AADEL *EQ 'Y') THEN(DO)
+                GOTO       CMDLBL(READNEXT)
+             ENDDO
+
+             DLTPGM     PGM(&XPLIB/&AAPGM)
+             MONMSG     MSGID(CPF2105)
+/* Find latest version in library list ... */
+             RTVOBJD    OBJ(&AAPGM) OBJTYPE(*PGM) RTNLIB(&RTNLIB)
+             MONMSG     MSGID(CPF9811) EXEC(DO)
+                GOTO       CMDLBL(READNEXT)
+             ENDDO
+/* ...create copy of program in library specified ... */
+             CRTDUPOBJ  OBJ(&AAPGM) FROMLIB(&RTNLIB) OBJTYPE(*PGM) +
+                          TOLIB(&XPLIB)
+/* Set authority according to library ownership ... */
+             IF         COND(&IASP *EQ ' ') THEN(DO)
+                CHGOWNAUT  OBJ(&XPLIB/&AAPGM) OBJTYPE(*PGM) +
+                             NEWOWN(&OWNER) PUBAUT(*AUTL) AUTL(&AUTL) +
+                             CHGLIB(N)
+             ENDDO
+             ELSE       CMD(DO)
+                CHGOWNAUT  OBJ(&XPLIB/&AAPGM) OBJTYPE(*PGM) +
+                             NEWOWN(&OWNER) PUBAUT(*AUTL) AUTL(&AUTL) +
+                             CHGLIB(N) ASP(*ASPDEV) ASPDEV(&IASP)
+             ENDDO
+/* ... and change adoption parameters according to file. */
+             CHGPGM     PGM(&XPLIB/&AAPGM) USRPRF(&AAUSER) +
+                          USEADPAUT(&AAUSEA)
+
+             GOTO       CMDLBL(READNEXT)
+
+             GOTO       CMDLBL(ENDPGM)
+
+ERROR:
+             CHGVAR     VAR(&RTNFLAG) VALUE('E')
+
+ENDPGM:
+             ENDPGM

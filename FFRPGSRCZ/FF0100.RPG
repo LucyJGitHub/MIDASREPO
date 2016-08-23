@@ -1,0 +1,1194 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Market Centre Date Input')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas  -  Futures and Options Module
+     F*                                                                  *
+     F*  FF0100  -  MARKET CENTER DATE INPUT                             *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  LAST AMEND NO. 046303             DATE 13JAN94               *
+     F*  PREV AMEND NO. S01456             DATE 22NOV93                  *
+     F*                 E38323             DATE 30JUL92                  *
+     F*                 E21165             DATE 02MAY90                  *
+     F*                  S01199             DATE 27FEB90                 *
+     F*                  S01195             DATE 11JAN90                 *
+     F*                  S01117             DATE 11JAN90                 *
+     F*                  E18120             DATE 21AUG89                 *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+     F*  046303 - /COPY source subr. ZFWDT amended to prevent array   *
+     F*           error if no holiday record found - fixed by S01434. *
+     F*           Program recompiled.                                 *
+     F*  S01456  -  Monthly P&L Enhancements.                            *
+     F*  E38323  -  Recompilation of the program done due to a           *
+     F*             change in copy source ZFWDT subroutine               *
+     F*   E21165  -  W1 - BUSINESS DATE CAN EQUAL RUNDATE IF AUTO EOC    *
+     F*              IS 'B' (W07)                                        *
+     F*   S01199  -  HELP SYSTEM                                     *
+     F*   S01195  -  HOLIDAY AMENDMENT                                   *
+     F*   S01117  -  MULTIBRANCHING                                      *
+     F*   E18120  -  ADDS ERROR IF MKT CNTRE DATE IS INPUT DURING SETUP  *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                        *
+     F*                                                                  *
+     F*     IGNDECERR(*NO)                                               *
+     F*                                                                  *
+     F********************************************************************
+     F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FFF0100DFCF  E                    WORKSTN
+     F*ABLETJ*IF* E           K        DISK                               S01195
+     F*ABFF***IF* E           K        DISK                               S01117
+     F**ICD*1**** TABTB10F                          KIGNORE               S01117
+     F**ICD*2**** TABTB11F                    KIGNORE(HOLIDAY INFORMATION)S01195
+     F*********** TABTB20F                          KIGNORE               S01117
+     F*********** TABTB40F                          KIGNORE               S01117
+     F*********** TABTB80F                          KIGNORE               S01117
+     F*********** TABTE10F                          KIGNORE               S01117
+     F*********** TABTG10F                          KIGNORE               S01117
+     F*********** TABLETHF                          KIGNORE               S01117
+     F*********** TABLETLF                          KIGNORE               S01117
+     F*********** TABLET2F                          KIGNORE               S01117
+     F*********** TABLETRF                          KIGNORE               S01117
+     FMARKT   IF  E           K        DISK
+     FMKCTL   UF  E           K        DISK
+     F************        FUNCTIONS OF INDICATORS        *************
+     F********01************COMMAND*KEY*1*PRESSED*********************    S01117
+     F*       01            F3 PRESSED                                    S01117
+     F********03************HELP KEY PRESSED**************************    S01199
+     F********05************COMMAND*KEY*5*PRESSED*********************    S01117
+     F*       05            F12 PRESSED                                   S01117
+     F*       20            ERR ON INPUT SCREEN FIELDS (ERR & WARNING)
+     F*       21            ERR ON INPUT SCREEN FIELDS (ERR & WARNING)NBDTS01456
+     F*       22            ERR ON INPUT SCREEN FIELDS(ERR & WARNING)NXBDTS01456
+     F*       23            FEATURE S01456 IS ON.                         S01456
+     F*       30            ERR ON INPUT - INPUT INVALID (ERR ONLY)
+     F*       31            USED FOR UNDERLINE CONDITION ON
+     F*                     DISPLAY FILE INPUT FIELDS
+     F*       40            NO RECORD FOUND ON TABTB10 FILE
+     F*       41            NO RECORD FOUND ON LF/MARKT
+     F*       42            NO RECORD FOUND ON LF/MKCTL
+     F*       43            NO RECORD FOUND ON TABTB11
+     F*       45            USED FOR READ OF SCREEN FILE
+     F*
+     F*       50            USED FOR SCREEN DATE NOT NUMERIC
+     F*
+     F*       80-89         USED IN MODULE STANDARD SUBROUTIN
+     F*       90-95         USED IN Z-SUBROUTINES
+     F*       98            DATE FORMAT IS MMMDDYY
+     F*       U7 U8         DATABASE ERROR
+     F*
+     F*       LR            SETON IN PROGRAM END
+     F*
+     F*****************************************************************
+     F/EJECT
+     E                    CPY@    1   1 80
+     E*****************************************************************
+     E*
+     E                    ARR        19  4               ERROR CODES
+     E*
+     E/COPY ZSRSRC,ZDATE2Z1
+     E** SR.ARRAY FOR BOTH ZDATE1 AND ZDATE2
+     E*
+     E*COPY*ZSRSRC,ZDATE5Z1********************************************   S01195
+     E***SR.ARRAY*FOR*ZDATE5*******************************************   S01195
+     E/COPY ZSRSRC,ZHOLE                                                  S01195
+     E** SR.ARRAY FOR ZACCH, ZCHKH AND ZFWDT                              S01195
+     E*
+     E*****************************************************************
+     E/EJECT
+     I*****************************************************************
+     I/COPY ZSRSRC,ZHOLI                                                  S01195
+     I** SR. DS   FOR ZACCH, ZCHKH AND ZFWDT                              S01195
+     I*                                                                   S01195
+     I/EJECT                                                              S01195
+     I/COPY ZSRSRC,ZHOLDS                                                 S01195
+     I** SR. DS   FOR ZACCH, ZCHKH AND ZFWDT                              S01195
+     I*                                                                   S01195
+     I/EJECT                                                              S01195
+     I*
+     I/COPY ZSRSRC,ZTNLU1Z1
+     I**   DATA STRUCTURE TO UPDATE LAST TRANSACTION NUMBER DTAARA
+     I*
+     I*DA********UDS                            256                       S01117
+     ILDA         DS                            256                       S01117
+     I*
+     I**   DATA STRUCTURE TO LOCAL DS WITH DB ERROR INFORMATION
+     I** *LOCK IN LDA immediately before and OUT LDA immediately          S01117
+     I** after each database error handling.                              S01117
+     I*
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 177 DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I**                                                                  S01117
+     IRUNDT       DS                                                      S01117
+     I** DATA AREA RUNDAT                                                 S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     ISDBANK    E DSSDBANKPD                                              S01195
+     I** BANK DETAILS                                                     S01195
+     I              BJLCCY                          LOCY                  S01195
+     I              BJSLCD                          SYSL                  S01195
+     I@DSFDY    E DSDSFDY                                                 S01117
+     I*  FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE               S01117
+     I*                                                                   S01117
+     I*
+     ITBKY        DS
+     I*
+     I**   DATA STRUCTURE TABFF KEY
+     I*
+     I                                        1  12 KEY
+     I                                        1   2 KYST
+     I                                       11  12 KYED
+     I*
+     IARRDS       DS
+     I*
+     I**   DATA STRUCTURE FOR RENAMING ERROR ARRAY TO ONE FIELD
+     I*
+     I                                        1  78 SERCD
+     I                                        1  76 ARR
+     I*
+     IPSDS       SDS
+     I*
+     I**   DATA STRUCTURE WORKSTATION ID
+     I*
+     I                                      244 246 WSID
+     I                                      254 263 USRID
+     I*
+     I*****************************************************************
+     I/EJECT
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C*****************************************************************
+     C*
+     C*    MAIN BODY OF PROGRAM
+     C*
+     C*****************************************************************
+     C                     EXSR FIRST
+     C                     EXSR MIDDLE
+     C                     EXSR END
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*    INDEX OF SUB-ROUTINES
+     C*
+     C*****************************************************************
+     C*                    1. FIRST  -  INITIALISATION
+     C*                    2. MIDDLE -  PROCESSING FOR SCREEN ONE
+     C*                    3. VALID1 -  VALIDATION OF SCREEN ONE INPUT
+     C*                    4. SCRN2  -  PROCESSING FOR SCREEN TWO
+     C*                    5. VALID2 -  VALIDATION OF SCREEN TWO INPUT
+     C*                    6. VALSAR -  VALID' OF SCR.2 IF S01456 PRESENT.S01456
+     C*                    7. SERR   -  SCREEN WARNING ERROR HANDLING
+     C*                    8. SERR2  -  SCREEN ERROR HANDLING
+     C*                    9. UPDATE -  UPDATES LF/MKCTL
+     C*                   10. ZTNLU1 -  GET NEXT TRANSACTION NO.
+     C*                   11. ZDATE1 -  CONVERT TO MIDAS DAY
+     C*                   12. ZDATE2 -  CONVERT TO DATE FORMAT
+     C*                   13. ZACCH  -  SET UP HOLIDAY RECORD             S01195
+     C*                   14. ZFWDT  -  CALCULATE NEXT WORKING DAY        S01195
+     C*                   15. ZCHKH  -  DETERMINE IF A DATE IS HOLIDAY    S01195
+     C*                   16. ERR    -  DATABASE ERROR HANDLING SUBROUTINE
+     C*                   17. HELP   -  PROCESSES AND DISPLAYS HELP SCREEN
+     C*                   18. END    -  EXIT PROGRAM
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C**   SUB-ROUTINE FIRST - INITIALISATION
+     C**                        CALLED BY - MAIN BODY
+     C*
+     C*****************************************************************
+     C           FIRST     BEGSR
+     C*
+     C*    BLANK OUT DBKEY IN CASE OF DATABASE ERROR
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANKS   DBKEY
+     C                     OUT  LDA                                       S01117
+     C***********                                                         S01117
+     C*****ACCESS*TABTB10*FOR*TITLE*AND*OTHER*ICD*************************S01117
+     C***********                                                         S01117
+     C***********          READ TABTB10F                 40               S01117
+     C***********                                                         S01117
+     C*****CHECK*THAT*INSTALLATION*CONTROL*DATA*PRESENT*******************S01117
+     C*****IF*NOT*THEN*DATABASE*ERROR*************************************S01117
+     C***********                                                         S01117
+     C**N40******RECI      COMP 'D'                  4040                 S01117
+     C************IN40     IFEQ '1'                                       S01117
+     C***********                                                         S01117
+     C********SET UP DATABASE ERROR                                       S01117
+     C***********                                                         S01117
+     C***********          MOVE 'TABFF'   DBFILE                          S01117
+     C***********          MOVE '01'      KYST                            S01117
+     C***********          MOVE '10'      KYED                            S01117
+     C***********          MOVE '01'      DBASE           *** DBERR 01 ***S01117
+     C***********          MOVELKEY       DBKEY                           S01117
+     C***********          EXSR ERR                                       S01117
+     C***********          END                                            S01117
+     C*                                                                   S01117
+     C**   IN THE DATAAREA RUNDAT                                         S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C*
+     C**   MOVE RUND TO RRUND
+     C*
+     C                     Z-ADDRUND      RRUND   50
+     C*
+     C**   COMPARE DATE FORMAT REQUIRED  --  DATE FORMAT MMDDYY
+     C**                                     WHEN 98 ON
+     C*
+     C           DATF      COMP 'M'                      98
+     C**                                                                  S01195
+     C**   ACCESS BANK DETAILS                                            S01195
+     C**                                                                  S01195
+     C                     CALL 'AOBANKR0'                                S01195
+     C                     PARM '*DBERR ' @RTCD   7                       S01195
+     C                     PARM '*FIRST ' @OPTN   7                       S01195
+     C           SDBANK    PARM SDBANK    @DSFDY                          S01195
+     C           @RTCD     IFNE *BLANKS                                   S01195
+     C           *LOCK     IN   LDA                                       S01195
+     C                     MOVEL'SDBANKPD'DBFILE           ************   S01195
+     C                     Z-ADD6         DBASE            * DBASE 06 *   S01195
+     C                     MOVEL@OPTN     DBOPTN  7        ************   S01195
+     C                     MOVEL@OPTN     DBKEY                           S01195
+     C                     OUT  LDA                                       S01195
+     C                     EXSR ERR                                       S01195
+     C                     END                                            S01195
+      *                                                                   S01456
+      *** Check the switchable features file to see if S01456 is on.      S01456
+      *                                                                   S01456
+     C                     MOVE 'N'       S01456  1                       S01456
+     C                     CALL 'AOSARDR0'                                S01456
+     C                     PARM '       ' @RTCD   7                       S01456
+     C                     PARM '*VERIFY' @OPTN   7                       S01456
+     C                     PARM 'S01456 ' @SARD   6                       S01456
+      *                                                                   S01456
+     C           @RTCD     IFEQ *BLANKS                                   S01456
+     C                     MOVE 'Y'       S01456                          S01456
+     C                     ENDIF                                          S01456
+      *                                                                   S01456
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C**   SUB-ROUTINE MIDDLE - PROCESSING FOR SCREEN ONE
+     C**                        CALLED BY - MAIN BODY
+     C**                        CALLS S/R`S - VALID1, HELP, SCRN2
+     C*
+     C*****************************************************************
+     C           MIDDLE    BEGSR
+     C*
+     C**   PUT OUT FIRST SCREEN
+     C*
+     C                     EXFMTFF0100D1
+     C*
+     C*****DOW*COMMAND*KEY*1*IS*NOT*PRESSED*******************************S01117
+     C**   DOW F3 IS NOT PRESSED                                          S01117
+     C*
+     C           *IN01     DOWNE'1'
+     C****************************************************************    S01199
+     C*****DOW*HELP*KEY*PRESSED***************************************    S01199
+     C****************************************************************    S01199
+     C********** *IN03     DOWEQ'1'                                       S01199
+     C**********           EXSR HELP                                      S01199
+     C**********           READ FF0100DF                 45               S01199
+     C**********           END                                            S01199
+     C*
+     C**   SET OFF INVALID INDICATOR
+     C*
+     C**********           SETOF                     20                   S01456
+     C                     SETOF                     202122               S01456
+     C                     SETOF                     23                   S01456
+     C           S01456    IFEQ 'Y'                                       S01456
+     C                     SETON                     23                   S01456
+     C                     ENDIF                                          S01456
+     C**
+     C**   RESET ERROR MESSAGE ARRAYS
+     C**
+     C                     Z-ADD0         X       20
+     C                     MOVE *BLANK    ARR
+     C*
+     C**   CHECK FOR F3
+     C*
+     C           *IN01     IFNE '1'
+     C*
+     C**   IF NOT F3
+     C*
+     C**   CHECK FOR INVALID INPUT
+     C*
+     C                     EXSR VALID1
+     C*
+     C**   IF INPUT IS INVALID PUTOUT SCREEN 1 WITH ERROR MESSAGES
+     C*
+     C           *IN20     IFEQ '1'
+     C                     EXFMTFF0100D1
+     C*
+     C                     ELSE
+     C*
+     C                     SETON                     31
+     C*
+     C**   UPDATE SCREEN 1
+     C*
+     C                     WRITEFF0100D1
+     C                     SETOF                     31
+     C*
+     C**   IF VALID INPUT, EXECUTE SCREEN 2 SUB-ROUTINE
+     C*
+     C                     EXSR SCRN2
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C*****END*DOW*COMMAND*KEY*1*NOT*PRESSED**************************    S01117
+     C**   END DOW F3 NOT PRESSED                                         S01117
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C**   SUB-ROUTINE VALID1 :- VALIDATE INPUT FROM SCREEN ONE
+     C**                        CALLED BY - MIDDLE
+     C**                        CALLS S/R`S - ERR
+     C*
+     C*****************************************************************
+     C*
+     C           VALID1    BEGSR
+     C*
+     C**   ACCESS LF/MARKT
+     C*
+     C           SMRKT     CHAINMARKT                41
+     C*
+     C**   HAS A VALID RECORD BEEN FOUND
+     C*
+     C  N41      RECI      COMP 'D'                  4141
+     C*
+     C**   IF NOT VALID RECORD THEN SETON INDICATOR AND PUTOUT
+     C**      LF/MARKT ERROR MESSAGE
+     C*
+     C           *IN41     IFEQ '1'
+     C                     SETON                     20
+     C           X         ADD  1         X
+     C                     MOVE '001'     ARR,X
+     C*
+     C                     ELSE
+     C*
+     C**   ACCESS LF/MKCTL FOR BUSINESS DATES
+     C*
+     C           MRKT      CHAINMKCTL                42
+     C*
+     C**   HAS A VALID RECORD FROM MKCTL BEEN FOUND
+     C*
+     C  N42      RECI      COMP 'D'                  4242
+     C*
+     C           *IN42     IFEQ '1'
+     C*
+     C*       SET UP DATABASE ERROR
+     C*
+     C           *LOCK     IN   LDA                        ************   S01117
+     C                     Z-ADD2         DBASE            * DBASE 02 *   S01117
+     C                     MOVE 'MKCTL'   DBFILE           ************
+     C                     MOVELMRKT      DBKEY
+     C***********          MOVE '02'      DBASE           *** DBERR 02 ***S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR ERR
+     C*
+     C                     END
+     C                     Z-ADDTNLU      RTNLU   50
+     C*
+     C**   CHECK IF MARKET-CLOSED-IND ON LF/MKCTL EQUAL TO 'Y'
+     C**      IF NOT INVALID RECORD SETON INDICATOR
+     C*
+     C           MKCI      IFNE 'C'
+     C                     SETON                     20
+     C           X         ADD  1         X
+     C*
+     C           MKCI      IFEQ 'S'                                       E18120
+     C                     MOVE '003'     ARR,X                           E18120
+     C                     ELSE                                           E18120
+     C*
+     C                     MOVE '002'     ARR,X
+     C*
+     C                     END                                            E18120
+     C                     END
+     C*
+     C**   END IF/ELSE FOR LF/MKCTL CHAIN
+     C*
+     C                     END
+     C*
+     C**   END SUB-ROUTINE VALID1
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C**   SUB-ROUTINE SCRN2 :- CONTROLS PROCESSING ON SCREEN2
+     C**
+     C**                        CALLS S/R`S - ZDATE2, VALID2, UPDATE,
+     C**                                      SERR, HELP.
+     C*
+     C*****************************************************************
+     C*
+     C           SCRN2     BEGSR
+     C*
+     C**   CHANGE MARKET CENTRE DATE TO DD/MM/YY FORMAT
+     C*
+     C                     Z-ADDBUSD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SBUSD
+     C*                                                                   S01456
+     C**   PROPOSE NEW BUSINESS DATE TO DD/MM/YY FORMAT                   S01456
+     C*                                                                   S01456
+     C           S01456    IFEQ 'Y'                                       S01456
+     C           MKLC      IFNE *BLANKS                                   S01456
+     C                     Z-ADD0         ZNRDYS                          S01456
+     C                     Z-ADDBUSD      ZDAYNO                          S01456
+     C                     ADD  1         ZDAYNO                          S01456
+     C                     MOVE MKLC      ZCCY                            S01456
+     C                     MOVE MLOC      ZLOC                            S01456
+     C                     EXSR ZFWDT                                     S01456
+     C                     Z-ADDZDYNBR    ZDAYNO                          S01456
+     C                     EXSR ZDATE2                                    S01456
+     C                     MOVE ZDATE     SNBDT                           S01456
+     C*                                                                   S01456
+     C**   PROPOSE NEXT BUSINESS DATE TO DD/MM/YY FORMAT                  S01456
+     C*                                                                   S01456
+     C                     Z-ADD0         ZNRDYS                          S01456
+     C                     Z-ADDZDYNBR    ZDAYNO                          S01456
+     C                     ADD  1         ZDAYNO                          S01456
+     C                     MOVE MKLC      ZCCY                            S01456
+     C                     MOVE MLOC      ZLOC                            S01456
+     C                     EXSR ZFWDT                                     S01456
+     C                     Z-ADDZDYNBR    ZDAYNO                          S01456
+     C                     EXSR ZDATE2                                    S01456
+     C                     MOVE ZDATE     SNXBDT                          S01456
+     C                     END                                            S01456
+     C                     ENDIF                                          S01456
+     C*                                                                   S01456
+     C*
+     C**   EXECUTE SCREEN2
+     C*
+     C                     EXFMTFF0100D2
+     C*
+     C**   INITIALIZATION OF FIELD FOR WARNING ERROR FIELD CHANGE
+     C*
+     C           S01456    IFEQ 'Y'                                       S01456
+     C                     MOVEL*BLANKS   RNXBDT                          S01456
+     C                     ENDIF                                          S01456
+     C                     MOVEL*BLANK    RNBDT
+     C*
+     C*****DOW*COMMAND*KEYS*1*&*5*ARE*NOT*PRESSED*********************    S01117
+     C**   DOW F3 & F12 ARE NOT PRESSED                                   S01117
+     C*
+     C           *IN01     DOWNE'1'
+     C           *IN05     ANDNE'1'
+     C****************************************************************    S01199
+     C*****DOW*HELP*KEY*PRESSED***************************************    S01199
+     C****************************************************************    S01199
+     C********** *IN03     DOWEQ'1'                                       S01199
+     C**********           EXSR HELP                                      S01199
+     C**********           READ FF0100DF                 45               S01199
+     C**********           END                                            S01199
+     C*
+     C**   SET OFF INVALID INDICATOR
+     C*
+     C                     SETOF                     2030
+     C**
+     C**   RESET ERROR MESSAGE ARRAYS
+     C**
+     C                     Z-ADD0         X       20
+     C                     MOVE *BLANK    ARR
+     C*
+     C**   IF F3 HAS BEEN PRESSED, EXIT PROGRAM
+     C**   IF F12 HAS BEEN PRESSED EXECUTE FIRST SCREEN
+     C*
+     C           *IN01     IFNE '1'
+     C           *IN05     ANDNE'1'
+     C*
+     C*****EXECUTE SUB-ROUTINE TO VALIDATE INPUT FROM SCREEN2*************S01456
+     C*
+     C*                                                                   S01456
+     C**   EXECUTE SUB-ROUTINE TO VALIDATE NEW BUSINESS DATE SCREEN2      S01456
+     C**   IF THE SWITCHABLE FEARTURE IS ON.                              S01456
+     C*                                                                   S01456
+     C           S01456    IFEQ 'Y'                                       S01456
+     C                     MOVE *BLANKS   WORK1   6                       S01456
+     C                     Z-ADD0         WORK2   50                      S01456
+     C                     Z-ADDRUND      WORK3   50                      S01456
+     C                     MOVE SNBDT     WORK1                           S01456
+     C                     Z-ADDBUSD      WORK2                           S01456
+     C                     EXSR VALSAR                                    S01456
+     C           *IN20     COMP '1'                      21               S01456
+     C                     Z-ADDNBDYNO    BUSDW   50                      S01456
+     C*                                                                   S01456
+     C                     MOVE *BLANKS   WORK1                           S01456
+     C                     Z-ADD0         WORK2                           S01456
+     C                     Z-ADDBJDNWD    WORK3                           S01456
+     C                     MOVE SNXBDT    WORK1                           S01456
+     C                     Z-ADDNBDYNO    WORK2                           S01456
+     C                     EXSR VALSAR                                    S01456
+     C           *IN20     COMP '1'                      22               S01456
+     C                     Z-ADDNBDYNO    NXBDTW  50                      S01456
+     C                     ELSE                                           S01456
+     C*                                                                   S01456
+     C                     EXSR VALID2
+      *                                                                   S01456
+     C                     ENDIF                                          S01456
+     C*
+     C**   CHECK TO SEE IF INVALID INDICATOR ON
+     C*
+     C           *IN20     IFNE '1'
+     C*
+     C**   IF INDICATOR OFF :- EXECUTE SUB-ROUTINE UPDATE
+     C*
+     C                     EXSR UPDATE
+     C*
+     C                     ELSE
+     C*
+     C**   IF INDICATOR ON EXECUTE SUB-ROUTINE SCREEN ERRROR
+     C*
+     C                     EXSR SERR
+     C*
+     C**   END IF/ELSE
+     C*
+     C                     END
+     C*
+     C**   END IF F3 AND F12
+     C*
+     C                     END
+     C*
+     C**   END DOW NOT F3 & F12
+     C*
+     C                     END
+     C*
+     C**   SET MARKET CENTRE CODE TO BLANK
+     C**   &  NEW BUSINESS DATE
+     C*
+     C                     MOVE *BLANKS   SMRKT
+     C                     MOVE *BLANKS   SNBDT
+      *                                                                   S01456
+     C           S01456    IFEQ 'Y'                                       S01456
+     C                     MOVE *BLANKS   SNXBDT                          S01456
+     C                     ENDIF                                          S01456
+     C*
+     C**   SET OFF INVALID INDICATOR
+     C*
+     C                     SETOF                     20
+     C*
+     C**   RESET ERROR MESSAGE ARRAYS
+     C*
+     C                     Z-ADD0         X       20
+     C                     MOVE *BLANK    ARR
+     C*
+     C**   IF NOT F3
+     C*
+     C           *IN01     IFNE '1'
+     C*
+     C           *INKL     IFEQ '1'
+     C*
+     C                     EXCPTDUMMY
+     C*
+     C                     END
+     C*
+     C                     EXFMTFF0100D1
+     C*
+     C                     END
+     C*
+     C*    END SUB-ROUTINE SCRN2
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C**   SUB-ROUTINE VALID2 :- VALIDATE SCREEN2 INPUT
+     C**                        CALLED BY - SCRN2
+     C**************************CALLS*S/R`S*-*ERR,*ZDATE1,*ZDATE5.*****   S01195
+     C**                        CALLS S/R`S - ERR, ZDATE1, ZCHKH, ZFWDT   S01195
+     C*
+     C*****************************************************************
+     C*
+     C           VALID2    BEGSR
+     C***********                                                         S01195
+     C*****SET*UP*KEY*FOR*TABTB11F*************************************   S01195
+     C***********                                                         S01195
+     C***********          MOVE *BLANKS   KEY                             S01195
+     C***********          MOVE '01'      KYST                            S01195
+     C***********          MOVE '11'      KYED                            S01195
+     C***********                                                         S01195
+     C*****CHAIN*TO*TABTB11*TO*FIND*NEXT-WORKING-DATE*FOR**************   S01195
+     C********LOCAL*CURRENCY*******************************************   S01195
+     C***********                                                         S01195
+     C***********KEY       CHAINTABTB11F             43                   S01195
+     C***********                                                         S01195
+     C*****HAS*A*VALID RECORD FROM TABTB11F BEEN FOUND                    S01195
+     C***********                                                         S01195
+     C**N43******RECI      COMP 'D'                  4343                 S01195
+     C***********                                                         S01195
+     C************IN43     IFEQ '1'                                       S01195
+     C***********                                                         S01195
+     C********SET UP DATABASE ERROR                                       S01195
+     C***********                                                         S01195
+     C***********          MOVE '03'      DBASE           *** DBERR 03 ***S01195
+     C***********          MOVE 'TABFF'   DBFILE                          S01195
+     C***********          MOVELKEY       DBKEY                           S01195
+     C***********          EXSR ERR                                       S01195
+     C***********                                                         S01195
+     C***********          END                                            S01195
+     C*
+     C**   CHECK THAT NEW-BUSINESS-DATE IS VALID
+     C*
+     C                     MOVELSNBDT     WRK7A   7
+     C                     MOVE '0'       WRK7A
+     C                     TESTN          WRK7A      50
+     C*
+     C**   IF NOT NUMERIC SETON ERROR INDICATOR
+     C*
+     C           *IN50     IFEQ '0'
+     C*
+     C                     SETON                     99
+     C*
+     C                     ELSE
+     C*
+     C                     MOVE SNBDT     ZDATE
+     C*
+     C**   EXECUTE SUB-ROUTINE ZDATE1 TO CHECK THAT NEW-BUSINESS
+     C**      -DATE IS VALID AND TO CONVERT TO MIDAS DAY NUMBER
+     C*
+     C                     EXSR ZDATE1
+     C*
+     C                     Z-ADDZDAYNO    NBDYNO  50
+     C*
+     C**   END IF/ELSE NOT NUMERIC
+     C*
+     C                     END
+     C*
+     C**   IF 99 ON INVALID NEW-BUSINESS-DATE
+     C**      IF 99 ON SETON INVALID INDICATOR
+     C*
+     C           *IN99     IFEQ '1'
+     C                     SETON                     2030
+     C           X         ADD  1         X
+     C                     MOVE '004'     ARR,X
+     C*
+     C                     ELSE
+     C*
+     C**   IF 99 OFF (VALID NEW-BUSINESS-DATE)
+     C**      IF NEW-BUSINESS-DATE <= OLD-BUSINESS-DATE
+     C**         SETON INVALID INDICATOR
+     C*
+     C           NBDYNO    IFLE BUSD
+     C                     SETON                     2030
+     C           X         ADD  1         X
+     C                     MOVE '005'     ARR,X
+     C*
+     C                     END
+     C*
+     C**      IF NEW-BUSINESS-DATE IS A HOLIDAY FOR MARKET CURRENCY
+     C**         SETON INVALID INDICATOR
+     C*
+     C                     Z-ADDNBDYNO    ZDAYNO
+     C                     MOVE MKLC      ZCCY
+     C                     MOVE MLOC      ZLOC                            S01195
+     C*
+     C*****EXECUTE*SUB-ROUTINE*ZDATE5*TO*CHECK*FOR*HOLIDAY*************   S01195
+     C**   EXECUTE SUB-ROUTINE ZCHKH  TO CHECK FOR HOLIDAY                S01195
+     C*
+     C***********          EXSR ZDATE5                                    S01195
+     C                     EXSR ZCHKH                                     S01195
+     C*
+     C**      IF 99 ON THEN HOLIDAY :- SETON INVALID INDICATOR
+     C*
+     C************IN99     IFEQ '1'
+     C           ZIND      IFEQ 'H'
+     C                     SETON                     20
+     C           X         ADD  1         X
+     C                     MOVE ' W06'    ARR,X
+     C*
+     C                     SETOF                     99
+     C                     END
+     C*
+     C**      IF AUTO-EOC-IND EQUALS 'B'
+     C***********IF*NEW-BUSINESS-DATE*<=*RUND*:-*SETON*INDICATOR          E21165
+     C**         IF NEW-BUSINESS-DATE < RUND :- SETON INDICATOR           E21165
+     C*
+     C           AEOC      IFEQ 'B'
+     C***********NBDYNO    ANDLERRUND                                     E21165
+     C           NBDYNO    ANDLTRRUND                                     E21165
+     C                     SETON                     20
+     C           X         ADD  1         X
+     C                     MOVE ' W07'    ARR,X
+     C*
+     C                     END
+     C*
+     C**      IF AUTO-EOC-IND EQUALS 'A' & ' '
+     C**         IF NEW-BUSINESS-DATE <> RUND FROM TABTB10
+     C**            :- SETON INVALID INDICATOR
+     C*
+     C           AEOC      IFEQ 'A'
+     C           NBDYNO    ANDNERRUND
+     C           AEOC      OREQ ' '
+     C           NBDYNO    ANDNERRUND
+     C                     SETON                     20
+     C           X         ADD  1         X
+     C                     MOVE ' W08'    ARR,X
+     C*
+     C                     END
+     C*
+     C********FIND*NEXT*WORKING*DAY*FOR*LOCAL*CURRENCY*FROM*TABTB11****   S01195
+     C**      FIND NEXT WORKING DAY FOR LOCAL CURRENCY                    S01195
+     C*
+     C***********          MOVE 'Y'       ZOPT                            S01195
+     C                     Z-ADD0         ZNRDYS                          S01195
+     C                     Z-ADD1         ZDAYNO
+     C                     ADD  BUSD      ZDAYNO
+     C                     MOVE LOCY      ZCCY
+     C                     MOVE SYSL      ZLOC                            S01195
+     C*
+     C***********          EXSR ZDATE5                                    S01195
+     C                     EXSR ZFWDT                                     S01195
+     C*
+     C**      IF AUTO-EOC-IND EQUALS 'A' & ' '
+     C**         IF NEW-BUSINESS-DATE <> NEXT-WORK-DAY FOR LOCAL CURRENCY
+     C**            :- SETON INVALID INDICATOR
+     C*
+     C           AEOC      IFEQ 'A'
+     C           NBDYNO    ANDNEZDYNBR
+     C           AEOC      OREQ ' '
+     C           NBDYNO    ANDNEZDYNBR
+     C*
+     C                     SETON                     20
+     C           X         ADD  1         X
+     C                     MOVE 'W09'     ARR,X
+     C*
+     C                     END
+     C*
+     C**   END IF/ELSE
+     C*
+     C                     END
+     C*
+     C**   END SUB-ROUTINE VALID2
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                                   S01456
+     C**   SUB-ROUTINE VALSAR :- VALIDATE SCREEN2 INPUT                   S01456
+     C**                        CALLED BY - SCRN2                         S01456
+     C*                        *ONLY IF THE FEATUIRE S01456 IS ON.*       S01456
+     C*****************************************************************   S01456
+     C*                                                                   S01456
+     C           VALSAR    BEGSR                                          S01456
+     C*                                                                   S01456
+     C**   CHECK THAT NEW OR NEXT-BUSINESS-DATE IS VALID                  S01456
+     C*                                                                   S01456
+     C                     MOVELWORK1     WRK7A   7                       S01456
+     C                     MOVE '0'       WRK7A                           S01456
+     C                     TESTN          WRK7A      50                   S01456
+     C*                                                                   S01456
+     C**   IF NOT NUMERIC SETON ERROR INDICATOR                           S01456
+     C*                                                                   S01456
+     C           *IN50     IFEQ '0'                                       S01456
+     C*                                                                   S01456
+     C                     SETON                     99                   S01456
+     C*                                                                   S01456
+     C                     ELSE                                           S01456
+     C*                                                                   S01456
+     C                     MOVE WORK1     ZDATE                           S01456
+     C*                                                                   S01456
+     C**   EXECUTE SUB-ROUTINE ZDATE1 TO CHECK THAT NEW OR NEXT-BUSINESS  S01456
+     C**      -DATE IS VALID AND TO CONVERT TO MIDAS DAY NUMBER           S01456
+     C*                                                                   S01456
+     C                     EXSR ZDATE1                                    S01456
+     C*                                                                   S01456
+     C                     Z-ADDZDAYNO    NBDYNO  50                      S01456
+     C*                                                                   S01456
+     C**   END IF/ELSE NOT NUMERIC                                        S01456
+     C*                                                                   S01456
+     C                     END                                            S01456
+     C*                                                                   S01456
+     C**   IF 99 ON INVALID NEW-BUSINESS-DATE                             S01456
+     C**      IF 99 ON SETON INVALID INDICATOR                            S01456
+     C*                                                                   S01456
+     C           *IN99     IFEQ '1'                                       S01456
+     C                     SETON                     2030                 S01456
+     C           ' 004'    LOKUPARR                      60               S01456
+     C           *IN60     IFNE '1'                                       S01456
+     C           X         ADD  1         X                               S01456
+     C                     MOVE '004'     ARR,X                           S01456
+     C                     ENDIF                                          S01456
+     C*                                                                   S01456
+     C                     ELSE                                           S01456
+     C*                                                                   S01456
+     C**   IF 99 OFF (VALID NEW-BUSINESS-DATE)                            S01456
+     C**      IF NEW-BUSINESS-DATE <= OLD-BUSINESS-DATE                   S01456
+     C**        OR NEXT BUS. DATE <= NEW BUS. DATE.                       S01456
+     C**         SETON INVALID INDICATOR                                  S01456
+     C*                                                                   S01456
+     C           NBDYNO    IFLE WORK2                                     S01456
+     C                     SETON                     2030                 S01456
+     C           ' 005'    LOKUPARR                      60               S01456
+     C           *IN60     IFNE '1'                                       S01456
+     C           X         ADD  1         X                               S01456
+     C                     MOVE '005'     ARR,X                           S01456
+     C                     ENDIF                                          S01456
+     C*                                                                   S01456
+     C                     ENDIF                                          S01456
+     C*                                                                   S01456
+     C**      IF NEW OR NEXT BUSINESS-DATE IS A HOLIDAY FOR MARKET        S01456
+     C**        CURRENCY SETON INVALID INDICATOR                          S01456
+     C*                                                                   S01456
+     C                     Z-ADDNBDYNO    ZDAYNO                          S01456
+     C                     MOVE MKLC      ZCCY                            S01456
+     C                     MOVE MLOC      ZLOC                            S01456
+     C*                                                                   S01456
+     C**   EXECUTE SUB-ROUTINE ZCHKH  TO CHECK FOR HOLIDAY                S01456
+     C*                                                                   S01456
+     C                     EXSR ZCHKH                                     S01456
+     C*                                                                   S01456
+     C**      IF 99 ON THEN HOLIDAY :- SETON INVALID INDICATOR            S01456
+     C*                                                                   S01456
+     C           ZIND      IFEQ 'H'                                       S01456
+     C                     SETON                     20                   S01456
+     C           ' W06'    LOKUPARR                      60               S01456
+     C           *IN60     IFNE '1'                                       S01456
+     C           X         ADD  1         X                               S01456
+     C                     MOVE ' W06'    ARR,X                           S01456
+     C                     ENDIF                                          S01456
+     C*                                                                   S01456
+     C                     SETOF                     99                   S01456
+     C                     END                                            S01456
+     C*                                                                   S01456
+     C**      IF AUTO-EOC-IND EQUALS 'B'                                  S01456
+     C**         IF NEW-BUSINESS-DATE < RUND :- SETON INDICATOR           S01456
+     C**      OR IF NEW-BUSINESS-DATE <  NWD :- SETON INDICATOR           S01456
+     C*                                                                   S01456
+     C           AEOC      IFEQ 'B'                                       S01456
+     C           NBDYNO    ANDLTWORK3                                     S01456
+     C                     SETON                     20                   S01456
+     C           ' W07'    LOKUPARR                      60               S01456
+     C           *IN60     IFNE '1'                                       S01456
+     C           X         ADD  1         X                               S01456
+     C                     MOVE ' W07'    ARR,X                           S01456
+     C                     ENDIF                                          S01456
+     C*                                                                   S01456
+     C                     ENDIF                                          S01456
+     C*                                                                   S01456
+     C**      IF AUTO-EOC-IND EQUALS 'A' & ' '                            S01456
+     C**         IF NEW-BUSINESS-DATE <> RUND FROM TABTB10                S01456
+     C**            :- SETON INVALID INDICATOR                            S01456
+     C*                                                                   S01456
+     C           AEOC      IFEQ 'A'                                       S01456
+     C           NBDYNO    ANDNEWORK3                                     S01456
+     C           AEOC      OREQ ' '                                       S01456
+     C           NBDYNO    ANDNEWORK3                                     S01456
+     C                     SETON                     20                   S01456
+     C           ' W08'    LOKUPARR                      60               S01456
+     C           *IN60     IFNE '1'                                       S01456
+     C           X         ADD  1         X                               S01456
+     C                     MOVE ' W08'    ARR,X                           S01456
+     C                     ENDIF                                          S01456
+     C*                                                                   S01456
+     C                     ENDIF                                          S01456
+     C*                                                                   S01456
+     C**      FIND NEXT WORKING DAY FOR LOCAL CURRENCY                    S01456
+     C*                                                                   S01456
+     C                     Z-ADD0         ZNRDYS                          S01456
+     C                     Z-ADD1         ZDAYNO                          S01456
+     C                     ADD  WORK2     ZDAYNO                          S01456
+     C                     MOVE LOCY      ZCCY                            S01456
+     C                     MOVE MLOC      ZLOC                            S01456
+     C*                                                                   S01456
+     C                     EXSR ZFWDT                                     S01456
+     C*                                                                   S01456
+     C**      IF AUTO-EOC-IND EQUALS 'A' & ' '                            S01456
+     C**         IF NEW-BUSINESS-DATE <> NEXT-WORK-DAY FOR LOCAL CURRENCY S01456
+     C**      OR IF NEXT-BUSINESS-DATE <> NWD +1 FOR LOCAL CURRENCY       S01456
+     C**            :- SETON INVALID INDICATOR                            S01456
+     C*                                                                   S01456
+     C           AEOC      IFEQ 'A'                                       S01456
+     C           NBDYNO    ANDNEZDYNBR                                    S01456
+     C           AEOC      OREQ ' '                                       S01456
+     C           NBDYNO    ANDNEZDYNBR                                    S01456
+     C*                                                                   S01456
+     C                     SETON                     20                   S01456
+     C           ' W09'    LOKUPARR                      60               S01456
+     C           *IN60     IFNE '1'                                       S01456
+     C           X         ADD  1         X                               S01456
+     C                     MOVE 'W09'     ARR,X                           S01456
+     C                     ENDIF                                          S01456
+     C*                                                                   S01456
+     C                     ENDIF                                          S01456
+     C*                                                                   S01456
+     C**   END IF/ELSE                                                    S01456
+     C*                                                                   S01456
+     C                     ENDIF                                          S01456
+     C*                                                                   S01456
+     C**   END SUB-ROUTINE VALSAR                                         S01456
+     C*                                                                   S01456
+     C                     ENDSR                                          S01456
+     C*                                                                   S01456
+     C*                                                                   S01456
+     C*****************************************************************   S01456
+     C/EJECT                                                              S01456
+     C*****************************************************************   S01456
+     C*
+     C**   SUB-ROUTINE SERR - SCREEN ERROR & WARNING HANDLING
+     C**                        CALLED BY - SCRN2
+     C**                        CALLS S/R`S - SERR2, UPDATE.
+     C*
+     C*****************************************************************
+     C*
+     C           SERR      BEGSR
+     C*
+     C**   CHECK TO ERROR HAS OCCURRED - INDICATOR 30 ON
+     C*
+     C           *IN30     IFEQ '1'
+     C*
+     C                     EXSR SERR2
+     C*
+     C                     ELSE
+     C*
+     C**   CHECK TO SEE INPUT IS SAME
+     C*
+     C********** RNBDT     IFEQ SNBDT                                     S01456
+     C*
+      *                                                                   S01456
+      *** If the feature is on then initialise the screen fields with     S01456
+      *** the next business date field.-If it is not then initialise      S01456
+      *** field for the new business date.                                S01456
+      *                                                                   S01456
+     C           S01456    IFEQ 'Y'                                       S01456
+     C           RNBDT     ANDEQSNBDT                                     S01456
+     C           RNXBDT    ANDEQSNXBDT                                    S01456
+     C           S01456    OREQ 'N'                                       S01456
+     C           RNBDT     ANDEQSNBDT                                     S01456
+      *                                                                   S01456
+     C                     EXSR UPDATE
+     C*
+     C**   SET OFF INVALID INDICATOR
+     C*
+     C                     SETOF                     20
+     C**
+     C**   RESET ERROR MESSAGE ARRAYS
+     C**
+     C                     Z-ADD0         X       20
+     C                     MOVE *BLANK    ARR
+     C*
+     C                     ELSE
+     C*
+     C                     EXSR SERR2
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C**   END SUB-ROUTINE SERR
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C**   SUB-ROUTINE SERR2 - SCREEN ERROR HANDLING
+     C**                        CALLED BY - SERR
+     C*
+     C*****************************************************************
+     C*
+     C           SERR2     BEGSR
+     C*
+     C**   IF ERROR OR WARNING - SET UP WARNING KEY
+     C**                       - EXECUTE SCREEN2 PLUS ERROR MESSAGES
+     C*
+     C                     MOVE SNBDT     RNBDT   6
+     C*                                                                   S01456
+      *** If the feature is on then move the screen value into the        S01456
+      *** the error value.                                                S01456
+      *                                                                   S01456
+     C           S01456    IFEQ 'Y'                                       S01456
+     C                     MOVE SNXBDT    RNXBDT  6                       S01456
+     C                     ENDIF                                          S01456
+     C*
+     C                     EXFMTFF0100D2
+     C*
+     C**   END SUB-ROUTINE SERR2
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C**   SUB-ROUTINE UPDATE - UPDATES LF/MKCTL
+     C**                        CALLED BY - SERR, SCRN2.
+     C**                        CALLS S/R`S - ERR, ZTNLU1.
+     C*
+     C*****************************************************************
+     C*
+     C           UPDATE    BEGSR
+     C*
+     C**   UPDATE THE RECORD
+     C*
+     C                     MOVE 'I'       MKCI
+     C                     MOVE 'A'       CHTP
+     C*                                                                   S01456
+      *                                                                   S01456
+      ***  If the feature is off then initialise the fields for update.   S01456
+      *                                                                   S01456
+     C           S01456    IFEQ 'N'                                       S01456
+     C                     Z-ADDNBDYNO    BUSD                            S01456
+     C                     Z-ADDRRUND     LCD                             S01456
+     C                     ELSE                                           S01456
+      *                                                                   S01456
+      ***  If the feature is on then initialise the fields for update.    S01456
+      *                                                                   S01456
+     C                     Z-ADDNXBDTW    NXBDT                           S01456
+     C                     Z-ADDBUSDW     BUSD                            S01456
+     C                     Z-ADDRUND      LCD                             S01456
+     C                     ENDIF                                          S01456
+     C                     EXSR ZTNLU1
+     C                     Z-ADDNATN      TNLU
+     C                     UPDATMKCTLDF
+     C                     SETON                     05
+     C*
+     C**   END SUB-ROUTINE UPDATE
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C** ZTNLU1 SUBROUTINE
+     C/COPY ZSRSRC,ZTNLU1Z2
+     C*
+     C/EJECT
+     C** ZDATE1 SUBROUTINE
+     C/COPY ZSRSRC,ZDATE1Z2
+     C*
+     C/EJECT
+     C** ZDATE2 SUBROUTINE
+     C/COPY ZSRSRC,ZDATE2Z2
+     C*                                                                   S01195
+     C/EJECT                                                              S01195
+     C** ZACCH  SUBROUTINE                                                S01195
+     C/COPY ZSRSRC,ZACCH                                                  S01195
+     C*
+     C/EJECT
+     C***ZDATE5*SUBROUTINE*********************************************   S01195
+     C*COPY*ZSRSRC,ZDATE5Z2********************************************   S01195
+     C** ZFWDT  SUBROUTINE                                                S01195
+     C/COPY ZSRSRC,ZFWDT                                                  S01195
+     C*                                                                   S01195
+     C/EJECT                                                              S01195
+     C** ZCHKH  SUBROUTINE                                                S01195
+     C/COPY ZSRSRC,ZCHKH                                                  S01195
+     C*                                                                   S01195
+     C/EJECT
+     C*****************************************************************
+     C*
+     C**   SUB-ROUTINE ERR - DATABASE ERROR SUBROUTINE
+     C**                        CALLED BY - FIRST, VALID1, VALID2,
+     C**                                    UPDATE.
+     C*
+     C*****************************************************************
+     C*
+     C           ERR       BEGSR
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE ' FF0100 'DBPGM
+     C                     OUT  LDA                                       S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C                     RETRN
+     C                     ENDSR
+     C*
+     C*****************************************************************   S01199
+     C*EJECT***********************************************************   S01199
+     C*****************************************************************   S01199
+     C*****************************************************************   S01199
+     C*****SUB-ROUTINE*HELP*-*PROCESSES*+*DSPLAYS*HELP*SCREENS*********   S01199
+     C**************************CALLED*BY*-*MIDDLE,*SCRN2.*************   S01199
+     C*****************************************************************   S01199
+     C*****************************************************************   S01199
+     C********** HELP      BEGSR                                          S01199
+     C**********                                                          S01199
+     C**********           MOVEL'FF0100'  HBPGM   6                       S01199
+     C**********           MOVEAARR       HERCD 160                       S01199
+     C**********           CALL 'MHELP'                                   S01199
+     C**********           PARM           HBPGM                           S01199
+     C**********           PARM           HERCD                           S01199
+     C**********           ENDSR                                          S01199
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*    SUB-ROUTINE END
+     C**                        CALLED BY - MAIN BODY
+     C*
+     C*****************************************************************
+     C           END       BEGSR
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDSR
+     C**
+     C*****************************************************************
+     C/EJECT
+     O*****************************************************************
+     O*
+     O**    DUMMY WRITE TO RELEASE RECORD ON F12
+     O*
+     OMKCTLDF E                DUMMY
+     O*
+     O*****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

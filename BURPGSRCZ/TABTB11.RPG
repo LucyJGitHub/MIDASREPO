@@ -1,0 +1,231 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas BU GL ICD BackGnd Upd')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas STANDING DATA MODULE
+     F*                                                                  *
+     F*     TABTB11 - BACKGROUND UPDATE OF TABTB11 FILE                  *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01117             Date 12Feb90               *
+      *                 S01230             Date 07Nov89               *
+     F*                    S01229             DATE 20OCT89               *
+     F*                    S01216             DATE 08OCT89               *
+     F*                    E17596             DATE 20MAR89               *
+     F*                                                                  *
+     F********************************************************************
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*     S01117  - RELEASE 10 CHANGES.                                *
+     F*     S01230  - STANDARDISE PROGRAM                                *S01230
+     F*     S01229  - SYNON FIELD NAME CHANGES                           *
+     F*     S01216  - RECOMPILED FOR SYNON RELEASE 1 ENHANCEMENTS        *
+     F*     E17596  - RECOMPILED FOR NEW VERSION OF TABLETXL             *
+     F********************************************************************
+     F*                                                                  *
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                          *
+     F*                                                                  *
+     F*       30      CHAIN TABTB11 FAILED/ERROR                         *
+     F*       31      ERROR ON TABTB11 FILE                              *
+     F*       32      CHAIN TABLETX FAILED/ERROR                         *
+     F*                                                                  *
+     F********************************************************************
+     F*
+     FTABTB11 UF  E           K        DISK
+     F                                              KCOMIT
+     FTABTB20 UF  E           K        DISK
+     F                                              KCOMIT
+     FTABTB30 UF  E           K        DISK
+     F                                              KCOMIT
+     FTABTB40 UF  E           K        DISK                               S01117
+     F                                              KCOMIT                S01117
+     FTABLETA UF  E           K        DISK
+     F                                              KCOMIT
+     FTABLETXLUF  E           K        DISK
+     F                                              KCOMIT
+      /EJECT
+     E* Description     : Copyright notice for inclusion in all progra    S01230
+     E*                                                                   S01230
+     E********************************************************************S01230
+     E                    CPY@    1   1 80               Copyright     arrS01230
+     E********************************************************************S01230
+      /EJECT
+     I*
+     I* RENAME RECORD ID ON HEADER FILE TO AVOID OVERWRITING
+     I*
+     ITABLETAF
+     I              RECT                            RECTA
+     I*                                                                   S01230
+     I* Description     : Copyright notice for inclusion in all programs  S01230
+     I*                                                                   S01230
+     IA@CPY       DS                                                      S01230
+     I* Copyright array                                                   S01230
+     I                                        1  80 CPY@                  S01230
+     I*                                                                   S01230
+      /EJECT
+     C*
+     C           *ENTRY    PLIST
+      *
+     C**********           PARM           WCOMS   4        SUSPENSE A/C CODE                  CGL029
+     C**********           PARM           WPLAC   4        P&L A/C CODE                       CGL029
+     C                     PARM           WCOMS  10                                           CGL029
+     C                     PARM           WPLAC  10                                           CGL029
+     C                     PARM           WLSAC   6        STAT RETURNS CUST
+     C                     PARM           WLCD    50       LAST CHANGE DATE
+     C*********************PARM           WCHTP   1        LAST CHANGE TYPS01229
+     C                     PARM           WTYLC   1        LAST CHANGE TYPS01229
+     C*********************PARM           WBCXF   1        BASE CCY XFER FS01229
+     C                     PARM           WBCTF   1        BASE CCY XFER FS01229
+     C                     PARM           WAKSI   1        ACCRUAL KEY SUMM
+     C*********************PARM           WAPDA   50       ACCRUAL DATE   S01229
+     C                     PARM           WAPDT   50       ACCRUAL DATE   S01229
+     C                     PARM           WAPFQ   1        ACCRUAL FREQ
+     C                     PARM           WFDAY   20       FREQ DAY NO.
+     C                     PARM           WACLD   1        ACCRUE LAST DAY
+     C                     PARM           WHIST   20       RETENTION
+     C*********************PARM           WANWI   1        ACCRUE NON WD  S01229
+     C                     PARM           WANWD   1        ACCRUE NON WD  S01229
+     C                     PARM           WPRCU   1        PROFIT CTR USEDS01117
+     C                     PARM           WPRCA   1        PFT CTR AMEND  S01117
+     C                     PARM           WPCDU   1        PFT CTR DEFAULTS01117
+     C                     PARM           WOBRU   1        ORIG BRCH USED S01117
+     C                     PARM           WOBUV   1        ORIG BR/USR VALS01117
+     C                     PARM           WMABR   3        MAIN BRANCH    S01117
+     C                     PARM           WIEMB   1        INT-BRCH VIA MNS01117
+     C                     PARM           P0RTN   7        RETURN CODE
+     C*
+      /EJECT
+     C****************************************************************
+     C*
+     C*   M A I N L I N E   P R O G R A M
+     C*
+     C****************************************************************
+     C*
+     C* IF RECORD HAS BEEN CHANGED, RETRIEVE RECORD FROM FILE
+     C*
+     C***********WCHTP     IFEQ 'A'                                       S01229
+     C           WTYLC     IFEQ 'A'                                       S01229
+     C                     READ TABTB11F                 30NO RECORDS
+     C  N30                READ TABTB20F                 30NO RECORDS
+     C  N30                READ TABTB30F                 30NO RECORDS
+     C  N30                READ TABTB40F                 30NO RECORDS     S01117
+     C*
+     C* IF RECORD FOUND, MOVE RECEIVED PARAMETERS INTO FILE FIELDS
+     C* AND UPDATE
+     C*
+     C           *IN30     IFEQ '0'
+     C                     Z-ADD1         RECT
+     C                     Z-ADD11        RCDE
+     C                     MOVE WCOMS     COMS
+     C                     MOVE WPLAC     PLAC
+     C                     MOVE WLSAC     LSAC
+     C*********************MOVE WBCXF     BCXF                            S01229
+     C                     MOVE WBCTF     BCXF                            S01229
+     C                     MOVE WAKSI     AKSI
+     C*********************MOVE WAPDA     APDA                            S01229
+     C                     MOVE WAPDT     APDA                            S01229
+     C                     MOVE WAPFQ     APFQ                            S01229
+     C                     MOVE WFDAY     FDAY
+     C                     MOVE WACLD     ACLD
+     C*********************MOVE WANWI     ANWI                            S01229
+     C                     MOVE WANWD     ANWI                            S01229
+     C*********************MOVE WCHTP     CHTP                            S01229
+     C                     MOVE WTYLC     CHTP                            S01229
+     C                     MOVE WPRCU     PFUS                            S01117
+     C                     MOVE WPRCA     PFCH                            S01117
+     C                     MOVE WPCDU     PCDU                            S01117
+     C                     MOVE WOBRU     OBIN                            S01117
+     C                     MOVE WOBUV     OBUV                            S01117
+     C                     MOVE WMABR     MABR                            S01117
+     C                     MOVE WIEMB     GENB                            S01117
+     C                     Z-ADDWLCD      LCD
+     C                     UPDATTABTB11F               30  ERROR
+     C  N30                Z-ADD20        RCDE
+     C  N30                UPDATTABTB20F               30  ERROR
+     C  N30                Z-ADD30        RCDE
+     C  N30                UPDATTABTB30F               30  ERROR
+     C  N30                Z-ADD40        RCDE                            S01117
+     C  N30                UPDATTABTB40F               30  ERROR          S01117
+     C                     END
+     C*
+     C* IF RECORD NOT FOUND OR ERROR OCCURRED ON UPDATE SET ERROR
+     C* PARAMETER
+     C*
+     C           *IN30     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C* RECORD IS NOT A CHANGED RECORD
+     C*
+     C                     END
+     C*
+     C* IF NO ERRORS HAVE OCCURRED ON TABTB11 UPDATE
+     C*
+     C           P0RTN     IFEQ *BLANKS
+     C*
+     C* RETRIEVE OLD TRAILER FILE RECORD
+     C*
+     C           '01'      CHAINTABLETXF             32    CHAIN FAILED
+     C*
+     C* IF CHAIN TO FILE SUCCESSFUL
+     C*
+     C           *IN32     IFEQ '0'
+     C*
+     C* IF FIRST ACCESS TO THE FILE THEN GET HEADER RECORD
+     C*
+     C           NINS      ANDEQ0
+     C           NAMD      ANDEQ0
+     C           NDEL      ANDEQ0
+     C*
+     C                     READ TABLETAF                 32  EOF
+     C*
+     C* IF HEADER RECORD FOUND THEN SET PRINT INDICATOR AND UPDATE
+     C*
+     C           *IN32     IFEQ '0'
+     C                     ADD  1         INSC
+     C                     UPDATTABLETAF               32    ERROR
+     C                     END
+     C*
+     C                     END
+     C*
+     C* IF NO ERRORS
+     C*
+     C           *IN32     IFEQ '0'
+     C*
+     C* UPDATE AS APPROPRIATE THE NUMBER OF INSERTS,AMENDS OR DELETES
+     C* ON THE TRAILER FILE
+     C*
+     C***********WCHTP     IFEQ 'A'                                       S01229
+     C           WTYLC     IFEQ 'A'                                       S01229
+     C*********************ADD  3         NAMD                            S01117
+     C                     ADD  4         NAMD                            S01117
+     C                     END
+     C*
+     C                     UPDATTABLETXF               32    ERROR
+     C*
+     C                     END
+     C*
+     C* CHECK FOR ANY ERRORS AND SET ERROR PARAMETER FOR RETURN TO
+     C* NEW FILE MAINTENANCE PROGRAM
+     C*
+     C           *IN32     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+** CPY@     : Copyright notice for inclusion in all programs           grams
+(c) Misys International Banking Systems Ltd. 2001

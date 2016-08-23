@@ -1,0 +1,1137 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Request Rollover Confirmations')                 *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas  Customer Lending Module
+     F*                                                                  *
+     F*         LE0425 - REQUEST ROLLOVER CONFIRMATIONS                  *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                                  *
+      *  Last Amend No. CLE141             Date 08Feb16               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CLE143             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE036             Date 22Sep03               *
+      *                 CAS009             Date 16May05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CAP074             Date 08Aug02               *
+      *                 CAS005             Date 16Dec02               *
+      *                 CLE028             Date 27Jun02               *
+      *                 CAS004             Date 26Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAC001             Date 01Feb96               *
+      *                 S01392             Date 14Sep92               *
+     F*                                                                  *
+     F********************************************************************
+      *                                                                  *
+      *  CLE141 - Currency and Location Business Day Convention       *
+      *           (Recompile)                                         *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CRE073 - Interest Rate Rounding (Recompile)                     *
+      *  CLE143 - Original Loan Contract Date & Effective Interest       *
+      *           Rate (Recompile)                                       *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus (Recompile)                              *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CLE036 - LE Enh for Nordea Phase 1 Pty 2- Specific Base Rate *
+      *           (Recompile)                                         *
+      *  CAS009 - EIR/AC Accounting (Recompile)                       *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CAP074 - Lending API enhancements - Loans input.             *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *           (Recompile)                                         *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s)              *
+      *           (Recompile)                                         *
+      *  CAS004 - Hedge Accounting Phase A (Recompile)                *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+     F*  CAC001 - Profit Centre Accounting Development:               *
+     F*           Prevent the selection of a loan which has been set  *
+     F*           up to rollover only funding information.            *
+     F*     S01392  -  JAPANESE SUB MODULE ENHANCEMENTS                  *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                                  *
+     F*  C R E A T I O N     P A R A M E T E R S                         *
+     F*                                                                  *
+     F*                                                                  *
+     F********************************************************************
+     F*
+     F** COMBINED I/O DISPLAY FILE
+     F*
+     FLE0425FMCF  E                    WORKSTN
+     F                                        RECNO KSFILE SFRCD425
+     F*
+     F** UPDATE FILE
+     F*
+     FCLOAN   UF  E           K        DISK
+     F            CLOANHHF                          KIGNORE
+     F            CLOANCKF                          KIGNORE
+     F            CLOANZ1F                          KIGNORE
+     F                                              KCOMIT
+     F*
+     F/EJECT
+     F*******************************************************************
+     F*________________________________________________________________ *
+     F*¦ID¦F ¦C ¦H ¦L ¦    FUNCTION OF INDICATORS                      ¦*
+     F*¦~~¦~~¦~~¦~~¦~~¦~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~¦*
+     F*¦  ¦  ¦KC¦  ¦  ¦  F3 COMMAND KEY INDICATOR                      ¦*
+     F*¦  ¦  ¦KF¦  ¦  ¦  F6 COMMAND KEY INDICATOR                      ¦*
+     F*¦  ¦  ¦KL¦  ¦  ¦  F12 COMMAND KEY INDICATOR                     ¦*
+     F*¦  ¦  ¦11¦  ¦  ¦  REVERSE IMAGE AND POSITION CURSOR LOAN FIELD  ¦*
+     F*¦  ¦  ¦12¦  ¦  ¦  REVERSE IMAGE AND POSITION CURSOR DUP FIELD   ¦*
+     F*¦  ¦  ¦13¦  ¦  ¦  ENABLES SFLDSP KEYWORD                        ¦*
+     F*¦  ¦  ¦14¦  ¦  ¦  ENABLES SFLDSPCTL KEYWORD                     ¦*
+     F*¦  ¦  ¦15¦  ¦  ¦  DUPLICATE REQUEST BEING PROCESSED             ¦*
+     F*¦  ¦  ¦50¦  ¦  ¦  ENABLES SFLNXTCHG KEYWORD FOR SUBFILE         ¦*
+     F*¦  ¦  ¦60¦  ¦  ¦  PROTECT LOAN FIELD                            ¦*
+     F*¦  ¦  ¦61¦  ¦  ¦  PROTECT DUP FIELD                             ¦*
+     F*¦  ¦  ¦62¦  ¦  ¦  ENABLE F6 AND F12 COMMAND KEYS IN 'VALIDATION ¦*
+     F*¦  ¦  ¦  ¦  ¦  ¦  COMPLETE' SCREEN ONLY!                        ¦*
+     F*¦  ¦  ¦70¦  ¦  ¦  WORK INDICATOR                                ¦*
+     F*¦  ¦  ¦75¦  ¦  ¦  TESTN INDICATOR (IF = '1' LOAN VALUE IS       ¦*
+     F*¦  ¦  ¦  ¦  ¦  ¦  NUMERIC)                                      ¦*
+     F*¦  ¦  ¦80¦  ¦  ¦  CHAIN FAIL TO SUBFILE RECORD                  ¦*
+     F*¦  ¦  ¦88¦  ¦  ¦  CHAIN FAIL TO LF/CLOAN                        ¦*
+     F*¦  ¦  ¦90¦  ¦  ¦  TESTB INDICATOR (IF = '1' CONFIRMATION ALREADY¦*
+     F*¦  ¦  ¦  ¦  ¦  ¦  PRINTED)                                      ¦*
+     F*¦  ¦  ¦99¦  ¦  ¦  LOAN INPUT ERROR (LOAN FAILS VALIDATION)      ¦*
+     F*¦  ¦  ¦  ¦U7&U8¦  DATABASE ERROR                                ¦*
+     F*¦  ¦  ¦  ¦  ¦LR¦  END PROGRAM                                   ¦*
+     F*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ *
+     F*******************************************************************
+      /EJECT
+     E*******************************************************************
+     E*   D E F I N I T I O N    O F    A R R A Y S
+     E*   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     E**  MSG ARRAY HOLDS RELEVANT DIAGNOSTIC MESSAGES FOR OUTPUT
+     E*
+     E********************MSG     1  11 53                                  0085
+     E********************MSG     1  12 53                          0085  S01392
+     E********************MSG     1  13 53                         S01392 CAC001
+     E**********          MSG     1  14 53                                             CAC001 CLE148
+     E                    MSG     1  15 53                                                    CLE148
+     E*
+     E**  CPY@ ARRAY HOLDS COPYRIGHT STATEMENT FOR OBJECT
+     E*
+     E                    CPY@    1   1 80
+     E                    SVALTX  1   1 20                                                    CLE148
+     E*
+     E**  ARR ARRAY HOLDS THE LOAN NUMBERS ENTERED FOR CHECKING
+     E**  MULTIPLE ENTRIES
+     E*
+     E                    ARR        10  6
+     E*
+     E********************************************************************
+      *                                                                   CAC001
+     ISDMMOD    E DSSDMMODPD                                              CAC001
+      ** MIDAS Module details                                             CAC001
+     I*
+     I** DATA AREA FOR DATABASE ERROR HANDLING
+     I*
+     ILDA        UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I**  STATUS DATA AREA FOR WORKSTATION & USER IDENTIFICATION
+     I*
+     IPSDS       SDS
+     I                                      244 246 WSID
+     I                                      254 263 USRID
+     I*
+     I**  EXTERNAL DATA AREA OF RUN DATE (RUNDAT), DATE & DAY NUMBER
+     I*
+     IRUNDT       DS                             13
+     I                                        1   7 RUNA
+     I************                            8  110RDNB                    0085
+     I                                    P   8  100RDNB                    0085
+     I*
+     I**  /COPY DATA STRUCTURE FOR OBTAINING NEXT AVAILABLE TRANS.NO.
+     I*
+     I/COPY ZSRSRC,ZTNLU1Z1
+     I*
+     I**  DATA STRUCTURE USED IN COMMITMENT
+     I*
+     ICMTTXT      DS                            110
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  25 ACTNX
+     I                                       26  35 USRIDX
+     I                                       51  56 LOAN
+     I                                       57 109 NARR
+     I                                      110 110 DUP
+     I*
+     I**  FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSFDY     E DSDSFDY
+     I*
+     I**  SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I*
+     I**  EXTERNAL DATA STRUCTURE FOR CUSTOMER DETAILS
+     I*
+     ISDCUST    E DSSDCUSTPD
+      ** External data structure for SAR details                                              CLE148
+     ISCSARD    E DSSCSARDPD                                                                  CLE148
+     I*
+     I********************************************************************
+     C*
+     C**   M A I N   P R O C E S S I N G
+     C*
+     C************ENTRY    PLIST                                            0085
+     C***********          PARM           REQS    1                         0085
+     C*
+     C** PERFORM INITIAL PROCESSING ONCE ONLY
+     C*
+     C                     EXSR INITSR
+     C*
+     C** DO UNTIL F3 IS ENTERED
+     C*
+     C           *INKC     DOWEQ'0'
+     C*
+     C** RESET THE F6 COMMAND KEY
+     C*
+     C                     MOVE '0'       *INKF
+     C*
+     C** OUTPUT THE EMPTY SCREEN AND ACCEPT AND VALIDATE INPUT
+     C*
+     C                     EXSR INPUT
+     C*
+     C** UPDATE LF/CLOAN CONFIRMATION BIT SETTINGS
+     C** ONLY IF F6 IS PRESSED AND F3 AND F12 HAVE NOT BEEN
+     C** ALSO UPDATE THE 'REQUESTS MADE' PARAMETER TO 'Y'..
+     C*
+     C           *INKF     IFEQ '1'
+     C           *INKC     ANDEQ'0'
+     C           *INKL     ANDEQ'0'
+     C                     EXSR UPDTSR
+     C***********          MOVE 'Y'       REQS                              0085
+     C                     END
+     C*
+     C** END OF DO WHILE F3 NOT PRESSED LOOP
+     C*
+     C                     END
+     C*
+     C** END PROGRAM
+     C*
+     C                     MOVE '1'       *INLR
+     C*
+     C********************************************************************
+     C/SPACE 4
+     C********************************************************************
+     C*
+     C*  I N D E X   T O   S U B R O U T I N E S
+     C*  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     C*  SUBROUTINE               PURPOSE
+     C*
+     C*  1.  INITSR       TO PERFORM INITIALISATION
+     C*  2.  INPUT        TO OUTPUT SCREEN ACCORDING TO VALIDATION
+     C*  3.  VALSR        TO VALIDATE SCREEN ENTRY
+     C*  4.  *PSSR        TO HANDLE ABNORMAL ERROR CONDITIONS
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*     I  N  I  T  S  R   -   S  U  B  R  O  U  T  I  N  E          *
+     C*     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~          *
+     C*     TO PERFORM INITIALISATION OF PARAMETER LISTS AND OBTAIN      *
+     C*     DETAILS FROM DATA AREAS                                      *
+     C*                                                                  *
+     C*     CALLED FROM    :    MAIN PROCESSING                          *
+     C*     CALLS          :    NONE                                     *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           INITSR    BEGSR                           *** INITSR ***
+     C*
+     C*
+     C** SET UP COPYRIGHT
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** PARAMETER LIST FOR PROGRAM 'AOCUSTR0'
+     C*
+     C           PLIST1    PLIST
+     C                     PARM '*BLANKS' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           CKEY   10
+     C                     PARM           KEYSTS  7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C*
+     C** DEFINE THE VARIABLE  L.D.A.,  LOCK IT IN AND SET UP PGM NAME
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'LE0425'  DBPGM
+     C                     OUT  LDA
+     C*
+     C** GET MIDAS RUN DATE AND DAY FORMAT
+     C*
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+      *                                                                   CAC001
+      **  Access MIDAS Modules file                                       CAC001
+      *                                                                   CAC001
+     C                     CALL 'AOMMODR0'                                CAC001
+     C                     PARM '*DBERR'  @RTCD   7                       CAC001
+     C                     PARM '*FIRST'  @OPTN   7                       CAC001
+     C           SDMMOD    PARM SDMMOD    DSFDY                           CAC001
+      *                                                                   CAC001
+     C           @RTCD     IFNE *BLANKS                                   CAC001
+     C                     MOVEL'LE0425 ' DBPGM                           CAC001
+     C                     MOVEL'SDMMODPD'DBFILE           ************   CAC001
+     C                     MOVEL'*FIRST ' DBKEY            * DBERR 02 *   CAC001
+     C                     Z-ADD02        DBASE            ************   CAC001
+     C                     EXSR *PSSR                                     CAC001
+     C                     SETON                     U7U8LR               CAC001
+     C                     RETRN                                          CAC001
+     C                     ENDIF                                          CAC001
+      *                                                                                       CLE148
+     C                     CALL 'AOSARDR0'                                                    CLE148
+     C                     PARM *BLANKS   PRTCD   7                                           CLE148
+     C                     PARM '*VERIFY' POPTN   7                                           CLE148
+     C                     PARM 'CSD031'  PSARD   6                                           CLE148
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE148
+      *                                                                                       CLE148
+     C                     SELEC                                                              CLE148
+     C           PRTCD     WHEQ *BLANKS                                                       CLE148
+     C                     MOVE 'Y'       CSD031  1                                           CLE148
+     C           PRTCD     WHNE '*NRF   '                                                     CLE148
+     C                     MOVEL'LE0425 ' DBPGM                                               CLE148
+     C                     MOVEL'SCSARDPD'DBFILE                                              CLE148
+     C                     MOVEL'CSD031 ' DBKEY                                               CLE148
+     C                     Z-ADD03        DBASE                                               CLE148
+     C                     EXSR *PSSR                                                         CLE148
+     C                     SETON                     U7U8LR                                   CLE148
+     C                     RETRN                                                              CLE148
+     C                     OTHER                                                              CLE148
+     C                     MOVE 'N'       CSD031                                              CLE148
+     C                     ENDSL                                                              CLE148
+      *                                                                                       CLE148
+     C           PSVAL     PLIST                                                              CLE148
+     C                     PARM *BLANKS   PRTCD                                               CLE148
+     C                     PARM           SVALK1 20                                           CLE148
+     C                     PARM *BLANKS   SVAL1 200                                           CLE148
+     C                     PARM           SVALK2 20                                           CLE148
+     C                     PARM *BLANKS   SVAL2 200                                           CLE148
+     C                     PARM           SVALK3 20                                           CLE148
+     C                     PARM *BLANKS   SVAL3 200                                           CLE148
+     C                     PARM           SVALK4 20                                           CLE148
+     C                     PARM *BLANKS   SVAL4 200                                           CLE148
+     C                     PARM           SVALK5 20                                           CLE148
+     C                     PARM *BLANKS   SVAL5 200                                           CLE148
+     C                     PARM           SVALK6 20                                           CLE148
+     C                     PARM *BLANKS   SVAL6 200                                           CLE148
+     C                     PARM           SVALK7 20                                           CLE148
+     C                     PARM *BLANKS   SVAL7 200                                           CLE148
+     C                     PARM           SVALK8 20                                           CLE148
+     C                     PARM *BLANKS   SVAL8 200                                           CLE148
+     C                     PARM           SVALK9 20                                           CLE148
+     C                     PARM *BLANKS   SVAL9 200                                           CLE148
+     C                     PARM           SVALK0 20                                           CLE148
+     C                     PARM *BLANKS   SVAL10200                                           CLE148
+      *                                                                                       CLE148
+     C                     MOVELSVALTX,1  SVALK1                                              CLE148
+      *                                                                                       CLE148
+     C                     CALL 'AOSVALR0'PSVAL                                               CLE148
+      *                                                                                       CLE148
+     C           PRTCD     IFNE *BLANKS                                                       CLE148
+     C                     MOVEL'LE0425 ' DBPGM                                               CLE148
+     C                     MOVEL'SDSVALPD'DBFILE                                              CLE148
+     C                     MOVELSVALK1    DBKEY                                               CLE148
+     C                     Z-ADD04        DBASE                                               CLE148
+     C                     EXSR *PSSR                                                         CLE148
+     C                     SETON                     U7U8LR                                   CLE148
+     C                     RETRN                                                              CLE148
+     C                     ENDIF                                                              CLE148
+      *                                                                                       CLE148
+     C                     MOVELSVAL1     WALLOW  1                                           CLE148
+     C*
+     C** END OF INITSR SUBROUTINE
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*     I  N  P  U  T   -   S  U  B  R  O  U  T  I  N  E             *
+     C*     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~             *
+     C*     TO DISPLAY SUBFILE FOR INPUT UNTIL ALL RECORDS ARE VALID     *
+     C*     OR REQUIRE AMENDMENTS AFTER VALIDATION
+     C*                                                                  *
+     C*     CALLED FROM    :    MAIN PROCESSING                          *
+     C*     CALLS          :    VALSR                                    *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           INPUT     BEGSR                           *** INPUT ***
+     C*
+     C** INITIALISE THE RECORD COUNT
+     C*
+     C                     Z-ADD1         RECNO
+     C*
+     C** INITIALISE THE SUBFILE
+     C*
+     C                     MOVEA'00'      *IN,13
+     C*
+     C** WRITE THE HEADER FORMAT
+     C*
+     C                     WRITELE0425F1
+     C*
+     C** IF F12 HASN'T BEEN PRESSED THEN OUTPUT THE SUBFILE CONTROL
+     C** RECORD WITH ALL THE FIELDS BLANK FOR INITIAL INPUT
+     C*
+     C           *INKL     IFEQ '0'
+     C                     WRITESFCTL425
+     C                     END
+     C*
+     C** WRITE THE COMMAND KEY DEFINITION LINE ('F3 TO TERMINATE')
+     C*
+     C                     WRITELE0425F3
+     C*
+     C** SET ON INDICATOR 13 & 14 READY TO ACCEPT INPUT
+     C*
+     C                     MOVEA'11'      *IN,13
+     C*
+     C** WHILE F3 IS NOT PRESSED SET UP THE LOOP TO RE-DISPLAY THE
+     C** SCREEN AND VALIDATE/UPDATE CONSTANTLY
+     C*
+     C           *IN70     DOUEQ'0'
+     C           *INKF     ANDEQ'1'
+     C           *INKC     OREQ '1'
+     C           *INKL     OREQ '1'
+     C                     MOVE '0'       *IN70
+     C*
+     C** OUTPUT ALL FORMATS TO THE SCREEN
+     C*
+     C                     EXFMTSFCTL425
+     C*
+     C** IF F3(EXIT) ISNT PRESSED
+     C*
+     C           *INKC     IFEQ '0'
+     C*
+     C** AND IF F12(RE-AMEND) ISNT PRESSED
+     C*
+     C           *INKL     IFEQ '0'
+     C*
+     C** EXECUTE THE VALIDATION SUBROUTINE
+     C*
+     C                     EXSR VALSR
+     C*
+     C                     END
+     C*
+     C** IF NO ERRORS HAVE OCCURRED DURING VALIDATION
+     C*
+     C           *IN70     IFEQ '0'
+     C           *IN99     ANDEQ'0'
+     C*
+     C** CHAIN TO THE SUBFILE RECORD AND PROCESS EACH RECORD THUS
+     C** 1. INITIALISE THE COUNTER
+     C*
+     C                     Z-ADD1         COUNT   20
+     C*
+     C** 2. USING THE COUNTER CHAIN TO THE SUBFILE RECORD (1-10)
+     C*
+     C           COUNT     CHAINSFRCD425             80
+     C*
+     C** 3. PERFORM PROCESSING FOR EACH INPUT FIELD (UNTIL THE COUNTER
+     C**    REACHES 10)
+     C*
+     C           COUNT     DOWLE10
+     C*
+     C** DURING THE VALIDATION SUBROUTINE THE NUMBER OF BLANK LOAN
+     C** INPUT FIELDS OR THOSE WITH '*' ENTERED INTO THEM ARE
+     C** COUNTED AND STORED IN WORK FIELD 'NUMBLK'
+     C*
+     C** IF F12 HAS NOT BEEN PRESSED AND THE NUMBER OF BLANK RECORDS
+     C** IS NOT TEN THEN LOAN NUMBERS HAVE BEEN ENTERED AND VALIDATED
+     C** SO PROTECT ALL FIELDS READY FOR OUTPUT OF THE VALIDATION
+     C** COMPLETE FORMAT
+     C*
+     C           *INKL     IFEQ '0'
+     C           NUMBLK    ANDNE10
+     C*
+     C** SET ON *IN60 TO LEAVE THE LOAN INPUT FIELDS PROTECTED
+     C*
+     C                     MOVE '1'       *IN60
+     C*
+     C** OTHERWISE ENSURE ALL FIELDS ARE LEFT INPUT CAPABLE
+     C** BY SETTING OFF *IN60
+     C*
+     C                     ELSE
+     C*
+     C                     MOVE *BLANK    DUP
+     C                     MOVE '0'       *IN60
+     C                     END
+     C*
+     C** UPDATE THE SUBFILE RECORD ACCORDINGLY AND ADD ONE TO THE
+     C** COUNTER...
+     C*
+     C                     UPDATSFRCD425
+     C                     ADD  1         COUNT
+     C*
+     C** CHAIN TO THE NEXT SUBFILE RECORD WHILE RECORDS ARE LEFT
+     C*
+     C           COUNT     IFLE 10
+     C           COUNT     CHAINSFRCD425             80
+     C                     END
+     C*
+     C** END OF THE 'COUNT - DO WHILE LESS THAN OR EQUAL TO TEN' LOOP
+     C*
+     C                     END
+     C*
+     C** IF F12 HAS NOT BEEN PRESSED AND ONE OR MORE LOAN NUMBERS
+     C** HAVE BEEN ENTERED AND SUCCESSFULLY VALIDATED, THEN WRITE
+     C** THE VALIDATION COMPLETE FORMAT AND COMMAND KEY DESCRIPTION -
+     C** ( * VALIDATION COMPLETE * , F12 TO RE-AMEND DETAILS , F6
+     C**  TO REQUEST CONFIRMATIONS ETC...)
+     C*
+     C** INITIALISE *IN62 PRIOR TO THE CHECK FOR THE VALIDATION
+     C** COMPLETE FORMAT TO '0' TO ENSURE THAT F6 AND F12 ARE
+     C** ONLY ENABLED DURING THE PROTECTED 'VALIDATION COMPLETE'
+     C** SCREEN, AND IN NO OTHER SCREEN...
+     C*
+     C                     MOVE '0'       *IN62
+     C           *INKL     IFEQ '0'
+     C           NUMBLK    ANDNE10
+     C                     MOVE '1'       *IN62
+     C                     WRITELE0425F2
+     C                     END
+     C*
+     C** END OF LOOPS
+     C*
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C** END OF INPUT SUBROUTINE
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*     V  A  L  S  R   -   S  U  B  R  O  U  T  I  N  E             *
+     C*     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~             *
+     C*     TO VALIDATE LOAN NUMBERS ENTERED                             *
+     C*                                                                  *
+     C*     CALLED FROM    :    MAIN PROCESSING                          *
+     C*     CALLS          :    AOCUSTR0                                 *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           VALSR     BEGSR                           *** VALSR ***
+     C*
+     C** INITIALISE THE RECORD COUNT
+     C*
+     C                     Z-ADD1         RECNO
+     C*
+     C** INITIALISE COUNTERS 'X', 'Y', 'Z', 'COUNT' AND 'NUMBLK' READY
+     C** FOR THE VALIDATION LOOP
+     C*
+     C                     Z-ADD1         X       20
+     C                     Z-ADD1         Y       20
+     C                     Z-ADD1         Z       20
+     C                     Z-ADD1         COUNT
+     C                     Z-ADD0         NUMBLK  20
+     C*
+     C** CHAIN TO THE FIRST SUBFILE RECORD WHERE THE COUNTER = '1'
+     C*
+     C           COUNT     CHAINSFRCD425             80
+     C*
+     C** LOOP TO PROCESS ALL SUBFILE RECORDS
+     C** (UNTIL COUNT = 10)...
+     C*
+     C           COUNT     DOWLE10
+     C*
+     C** PROVIDING THE CHAIN HAS NOT FAILED...
+     C*
+     C           *IN80     IFEQ '0'
+     C*
+     C**  VALIDATE ALL LOANS ENTERED, IGNORE BLANK OR '*' ENTRIES
+     C*
+     C           LOAN      IFNE '*'
+     C           LOAN      ANDNE*BLANKS
+     C*
+     C** INITIALISE WORK INDICATOR *IN75 AND TEST THE INPUT FIELD
+     C** FOR ALL NUMERIC ENTRY
+     C*
+     C                     MOVE '0'       *IN75
+     C                     TESTN          LOAN       75
+      *                                                                                       CLE148
+     C           WALLOW    IFEQ 'Y'                                                           CLE148
+     C                     MOVEL'LELOAN'  WCHR10 10                                           CLE148
+     C                     MOVE 'ISO '    WCHR10                                              CLE148
+     C                     CALL WCHR10                                                        CLE148
+     C                     PARM LOAN      PLNRF   6                                           CLE148
+     C                     PARM *BLANKS   PVALID  6                                           CLE148
+     C                     PARM *BLANKS   PCHKD   1                                           CLE148
+     C                     PARM *BLANKS   PDATA   2                                           CLE148
+     C                     ENDIF                                                              CLE148
+     C*
+     C** IF THE ENTRY IS NOT ALL NUMERIC THEN SET UP THE NARRATIVE
+     C** 'VALUE FOR LOAN MUST BE NUMERIC' AND SET ON THE ERROR IND'TOR
+     C*
+     C           *IN75     IFEQ '0'
+     C           WALLOW    ANDEQ'N'                                                           CLE148
+     C           PVALID    ORNE *BLANKS                                                       CLE148
+     C           WALLOW    ANDEQ'Y'                                                           CLE148
+      *                                                                                       CLE148
+     C           WALLOW    IFEQ 'N'                                                           CLE148
+     C                     MOVELMSG,6     NARR
+     C                     ELSE                                                               CLE148
+     C                     MOVELMSG,15    NARR                                                CLE148
+     C                     ENDIF                                                              CLE148
+     C                     MOVE '1'       *IN99
+     C*
+     C** OTHERWISE IF THE ENTRY IS NUMERIC....
+     C*
+     C                     ELSE
+     C*
+     C** MOVE THE LOAN NUMBER INTO AN ARRAY TO CHECK WHETHER THE LOAN
+     C** NUMBER HAS ALREADY BEEN PROCESSED......
+     C*
+     C                     MOVE LOAN      ARR,X
+     C                     Z-ADDX         Y
+     C                     ADD  1         X
+     C                     Z-ADD1         Z
+     C*
+     C** USING THE LOAN NUMBER ENTERED LOOK UP THE NEXT OCCURENCE
+     C** WITHIN THE EXECUTION TIME TABLE 'ARR'
+     C*
+     C           LOAN      LOKUPARR,Z                    20
+     C*
+     C** IF THE INPUT LOAN NUMBER IS FOUND MORE THAN ONCE IN THE
+     C** ANY OCCURENCE OF THE ARRAY ARR THEN SET UP THE
+     C** NARRATIVE 'LOAN NUMBER ENTERED MORE THAN ONCE' FOR OUTPUT
+     C*
+     C           Y         IFNE Z
+     C                     MOVE '1'       *IN99
+     C                     MOVELMSG,7     NARR
+     C                     END
+     C*
+     C** IF NO ERRORS HAVE OCCURRED (*IN99 = '0')
+     C*
+     C           *IN99     IFEQ '0'
+     C*
+     C** ADD THE ALPHANUMERIC LOAN NUMBER ENTERED TO THE NUMERIC
+     C** FIELD LOANN(6,0) IN ORDER TO CHAIN TO LF/CLOAN
+     C*
+     C**********           Z-ADD0         LOANN   60                                          CLE148
+     C                     MOVEL*BLANKS   LOANN   6                                           CLE148
+     C                     MOVE LOAN      LOANN
+     C           LOANN     CHAINCLOAN                99
+     C*
+     C** IF THE LOAN IS NOT FOUND SET UP THE MESSAGE 'LOAN DOES NOT
+     C** EXIST' FOR OUTPUT
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVELMSG,1     NARR
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C*
+     C** OTHERWISE, IF LOAN IS FOUND, ENSURE THAT IT IS NOT MATURED.
+     C** IF IT IS SET UP 'LOAN ALREADY MATURED' MESSAGE FOR OUTPUT
+     C*
+     C           *IN99     IFEQ '0'
+     C           RECI      ANDEQ'M'
+     C                     MOVELMSG,2     NARR
+     C                     MOVE '1'       *IN99
+     C                     END
+     C*
+     C** IF LOAN EXISTS, AND IS NOT MATURED CHECK TO SEE THAT IT IS
+     C** NOT REVERSED. IF IT IS SET UP THE 'THIS IS A REVERSED LOAN'
+     C** MESSAGE FOR OUTPUT
+     C*
+     C           *IN99     IFEQ '0'
+     C           RECI      ANDEQ'R'
+     C                     MOVELMSG,3     NARR
+     C                     MOVE '1'       *IN99
+     C                     END
+     C*
+     C** IF FOUND, NOT MATURED OR REVERSED ENSURE THAT THE ROLLOVER
+     C** DATE IS NOT BLANK, AGAIN IF IT IS, SET UP THE APPROPRIATE
+     C** MESSAGE; 'ROLLOVER DATE IS BLANK' FOR OUTPUT
+     C*
+     C           *IN99     IFEQ '0'
+     C           RLDT      ANDEQ*ZEROS
+     C                     MOVELMSG,4     NARR
+     C                     MOVE '1'       *IN99
+     C                     END
+     C*                                                                     0085
+     C** Also test that the rollover date is not today as the               0085
+     C** confirmation will be produced automatically in the COB             0085
+     C*                                                                     0085
+     C           *IN99     IFEQ '0'                                         0085
+     C           RLDT      ANDEQRDNB                                        0085
+     C                     MOVELMSG,12    NARR                              0085
+     C                     MOVE '1'       *IN99                             0085
+     C                     END                                              0085
+      *                                                                   S01392
+      * Disallow confirmation request for Discounted Loan                 S01392
+     C           *IN99     IFEQ '0'                                       S01392
+     C           PTYP      ANDEQ63                                        S01392
+     C                     MOVELMSG,13    NARR                            S01392
+     C                     MOVE '1'       *IN99                           S01392
+     C                     END                                            S01392
+      *                                                                   CAC001
+      **  If Analytical Accounting is on, prevent selection of loan if    CAC001
+      **  the following fields are empty...                               CAC001
+      *                                                                   CAC001
+     C           BGN0ST    IFEQ 'Y'                                       CAC001
+     C           *IN99     ANDEQ*OFF                                      CAC001
+     C           NBRA      ANDEQ*ZEROS                                    CAC001
+     C           NSIN      ANDEQ*BLANKS                                   CAC001
+     C           NRTS      ANDEQ*ZEROS                                    CAC001
+     C           NCAS      ANDEQ*ZEROS                                    CAC001
+     C           NCHI      ANDEQ*BLANKS                                   CAC001
+      *                                                                   CAC001
+      **  ...and at least one of the fields below is not empty,           CAC001
+      *                                                                   CAC001
+     C           NFRS      IFNE *ZEROS                                    CAC001
+     C           NFSN      ORNE *BLANKS                                   CAC001
+     C                     MOVELMSG,14    NARR                            CAC001
+     C                     MOVE '1'       *IN99                           CAC001
+     C                     ENDIF                                          CAC001
+     C                     ENDIF                                          CAC001
+     C*
+     C** IF ALL THE ABOVE CHECKS ARE OK THEN TEST BIT SETTING 7(SEVEN)
+     C** OF THE CONFIRMATIONS INDICATOR FIELD (CNFI) TO SEE IF THE
+     C** CONFIRMATION HAS ALREADY BEEN PRINTED. BIT 7(SEVEN) IS ON
+     C** IF THE REQUEST HAS ALREADY BEEN PRINTED. IF IT IS ON THEN THE
+     C** USER MAY REQUEST A DUPLICATE SO SET UP THE MESSAGE 'ALREADY
+     C** PRINTED - DUPLICATE? Y/N' FOR OUTPUT
+     C*
+     C           *IN99     IFEQ '0'
+     C                     TESTB'7'       CNFI           90
+     C*
+     C** OUTPUT THE MESSAGE 'ALREADY PRINTED! DUPLICATE?'
+     C*
+     C           *IN90     IFEQ '1'
+     C                     MOVELMSG,8     NARR
+     C*
+     C** SET ON THE INDICATOR TO DISPLAY THE DUP FIELD (*IN15)
+     C** AND TURN OFF THE PROTECTION ON THE FIELD (*IN61)
+     C*
+     C                     MOVE '1'       *IN15
+     C                     MOVE '0'       *IN61
+     C*
+     C** IF THE 'DUP' FIELD HAS HAD A REPLY ENTERED....
+     C** VALIDATE THE REPLY GIVEN BY THE USER TO THE DUPLICATE?
+     C** QUESTION THIS MUST BE 'Y' OR 'N' (UPPER OR LOWER CASE)
+     C*
+     C           DUP       IFNE *BLANKS
+     C           DUP       IFNE 'Y'
+     C           DUP       ANDNE'y'
+     C           DUP       ANDNE'N'
+     C           DUP       ANDNE'n'
+     C*
+     C** IF THE REPLY IS NOT ANY OF THESE, OUTPUT THE ERROR MESSAGE
+     C** 'INVALID ENTRY - MUST BE 'Y' OR 'N'' AND HIGHLIGHT THE INPUT
+     C** DUP FIELD (*IN12 = '1')
+     C*
+     C                     MOVE '1'       *IN12
+     C                     MOVELMSG,5     NARR
+     C*
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C** ELSE IF THE LOAN INPUT FIELD IS BLANK OR '*' INITIALISE THE
+     C** ERROR INDICATORS AND NARRATIVE AND ADD 1 TO THE NUMBER OF
+     C** BLANK OR '*' ENTRIES
+     C*
+     C                     ELSE
+     C                     MOVE *BLANKS   NARR
+     C                     MOVEA'00'      *IN,11
+     C                     ADD  1         NUMBLK
+     C*
+     C** END EQUATED TO LOAN IFNE '*' ANDNE *BLANKS STATEMENT
+     C*
+     C                     END
+     C*
+     C** IF THERE ARE NO ERRORS AND A LOAN IS ENTERED SET UP A MESSAGE
+     C** WITH THE CUSTOMER SHORT NAME TO THE LEFT AND '* ACCEPTED *'
+     C** TO THE RIGHT OF THE NARRATIVE FIELD
+     C*
+     C           *IN99     IFEQ '0'
+     C           LOAN      ANDNE'*'
+     C           LOAN      ANDNE*BLANKS
+     C*
+     C** IF THE DUP FIELD IS 'N' IE NO DUPLICATE REQUIRED USE MESSAGE
+     C** 'CONFIRMATION WILL NOT BE GENERATED' OTHERWISE USE THE MESSAGE
+     C** '* ACCEPTED *'
+     C*
+     C           DUP       IFEQ 'N'
+     C           DUP       OREQ 'n'
+     C                     MOVE MSG,9     NARR
+     C*
+     C                     ELSE
+     C*
+     C           DUP       IFEQ 'Y'
+     C           DUP       OREQ 'y'
+     C           DUP       OREQ *BLANKS
+     C           *IN15     ANDEQ'0'
+     C                     MOVE MSG,10    NARR
+     C*
+     C** OR IF A DUPLICATE HAS BEEN REQUESTED THEN MOVE THE MESSAGE
+     C** 'DUPLICATE REQUEST ACCEPTED' READY FOR OUTPUT
+     C*
+     C           DUP       IFEQ 'Y'
+     C           DUP       OREQ 'y'
+     C                     MOVE MSG,11    NARR
+     C                     END
+     C*
+     C** ACCESS CUSTOMER DETAILS FOR THE CUSTOMER SHORTNAME USING
+     C** ACCESS OBJECT PROGRAM
+     C*
+     C                     MOVEL*BLANKS   CKEY
+     C                     MOVELCNUM      CKEY
+     C                     CALL 'AOCUSTR0'PLIST1
+     C*
+     C** WHERE THE RETURN CODE FROM THE ACCESS OBJECT PGM IS NOT BLANK
+     C** AN ERROR HAS OCCURRED SO OUTPUT DETAILS TO THE LOCAL DATA AREA
+     C** DUMP PROGRAM VARIABLES AND RETURN
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C*
+     C           *LOCK     IN   LDA                        ************
+     C                     Z-ADD1         DBASE            * DBASE 01 *
+     C*                                                    ************
+     C*
+     C** USE THE WORKFIELD 'KEYSET' TO SET UP THE DBKEY FIELD IN THE
+     C** LOCAL DATA AREA WITH THE CUSTOMER NUMBER USED AND THE RETURN
+     C** CODE FROM THE AO PROGRAM FOR EASY REFERENCE
+     C*
+     C                     MOVELCNUM      KEYSET 15
+     C                     MOVE @RTCD     KEYSET
+     C                     MOVELKEYSET    DBKEY
+     C*
+     C                     MOVEL'SDCUSTPD'DBFILE
+     C                     OUT  LDA
+     C                     SETON                     U7U8
+     C                     EXSR *PSSR
+     C                     RETRN
+     C*
+     C                     END
+     C*
+     C** PROVIDING A RECORD IS FOUND ON THE PF/SDCUSTPD
+     C** MOVE THE CUSTOMER SHORTNAME TO THE LEFT SIDE OF THE NARR FIELD
+     C*
+     C                     MOVELBBCSSN    NARR
+     C*
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C** IF AN ERROR OCCURS DURING VALIDATION...
+     C*
+     C           *IN99     IFEQ '1'
+     C*
+     C** OR A DUPLICATE ENQUIRY HAS BEEN PROCESSED AND THE 'DUP' FIELD
+     C** LEFT BLANK
+     C*
+     C           *IN15     OREQ '1'
+     C           DUP       ANDEQ*BLANKS
+     C*
+     C** OR IF THE ENTRY IN THE 'DUP' FIELD IS INVALID(*IN12 = '1')
+     C*
+     C           *IN12     OREQ '1'
+     C*
+     C** OR THE LOAN NUMBER HAS BEEN BLANKED OUT WITH MESSAGES STILL
+     C** PENDING...
+     C*
+     C           LOAN      OREQ *BLANKS
+     C           NARR      ANDNE*BLANKS
+     C*
+     C** ENABLE THE SFLNXTCHG KEYWORD FOR THE SUBFILE
+     C*
+     C                     MOVE '1'       *IN50
+     C*
+     C** AND IF..
+     C** AN ERROR HAS OCCURRED AND A DUPLICATE ENQUIRY HAS NOT BEEN
+     C** PROCESSED...
+     C*
+     C           *IN99     IFEQ '1'
+     C           *IN15     ANDEQ'0'
+     C*
+     C** OR A DUPLICATE ENQUIRY HAS BEEN PROCESSED BUT THE REPLY TO THE
+     C** 'Y/N' QUESTION WAS INVALID..
+     C*
+     C           *IN15     OREQ '1'
+     C           *IN12     ANDEQ'1'
+     C*
+     C** REVERSE IMAGE THE INPUT FIELD (LOAN NUMBER)
+     C*
+     C                     MOVE '1'       *IN11
+     C                     END
+     C*
+     C** AND SET ON THE ERROR CONTROL INDICATOR
+     C*
+     C           *IN70     IFEQ '0'
+     C                     MOVE '1'       *IN70
+     C                     END
+     C*
+     C                     END
+     C*
+     C** UPDATE THE SUBFILE RECORD WITH THE DETERMINED INDICATOR
+     C** SETTINGS....
+     C*
+     C                     UPDATSFRCD425
+     C*
+     C** RESET THE SFLNXTCHG KEYWORD INDICATOR
+     C*
+     C                     MOVE '0'       *IN50
+     C*
+     C** END OF *IN80 IFEQ '0'
+     C*
+     C                     END
+     C*
+     C** ADD 1 TO THE COUNT AND USING THIS CHAIN TO THE NEXT RECORD
+     C*
+     C                     ADD  1         COUNT
+     C           COUNT     IFLE 10
+     C           COUNT     CHAINSFRCD425             80
+     C                     END
+     C*
+     C** AS LONG AS THERE IS ANOTHER RECORD READ RE-INITIALISE THE
+     C** INDICATORS FOR OUTPUT
+     C*
+     C           *IN80     IFEQ '0'
+     C*
+     C** INITIALISE THE REVERSE IMAGE CONDITIONING INDICATORS
+     C*
+     C                     MOVEA'00'      *IN,11
+     C*
+     C** INITIALISE THE ERROR INDICATOR
+     C*
+     C                     MOVE '0'       *IN99
+     C*
+     C** INITIALISE THE SFLNXTCHG KEYWORD INDICATOR
+     C*
+     C                     MOVE '0'       *IN50
+     C*
+     C** INITIALISE THE PROTECT INDICATOR AFTER VALIDATION COMPLETE
+     C*
+     C                     MOVE '0'       *IN60
+     C*
+     C** INITIALISE THE DUP FIELD INDICATOR
+     C*
+     C                     MOVE '0'       *IN15
+     C*
+     C** INITIALISE THE NARRATIVE FIELD
+     C*
+     C                     MOVE *BLANKS   NARR
+     C*
+     C                     END
+     C*
+     C** END OF THE 'READ CHANGED RECORDS AND VALIDATE' LOOP
+     C*
+     C                     END
+     C*
+     C** END OF VALSR SUBROUTINE
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C/COPY ZSRSRC,ZTNLU1Z2
+     C********************************************************************
+     C*                                                                  *
+     C*     U  P  D  T  S  R   -   S  U  B  R  O  U  T  I  N  E          *
+     C*     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~          *
+     C*     TO UPDATE THE RELEVANT RECORD FROM CLOAN (CL) WITH THE       *
+     C*     CORRECT CONFIRMATION BIT SETTING IN THE CNFI FIELD           *
+     C*     SETTINGS ARE AS FOLLOWS :                                    *
+     C*                                                                  *
+     C*     STANDARD REQUEST :                                           *
+     C*     BIT 4 (FOUR) SET ON    = REQUEST TO PRINT DURING I/CYCLE     *
+     C*     DUPLICATE REQUEST :                                          *
+     C*     BIT 4 (FOUR) SET ON & BIT 6 (SIX) SET ON                     *
+     C*                            = DUPLICATE COPY REQUIRED             *
+     C*                           BIT 6 (SIX) SET OFF
+     C*                            = DUPLICATE NOT REQUIRED
+     C*                                                                  *
+     C*     CALLED FROM    :    MAIN PROCESSING                          *
+     C*     CALLS          :    NONE                                     *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           UPDTSR    BEGSR                           *** UPDTSR ***
+     C*
+     C** IF F6 IS PRESSED ON THE VALIDATION COMPLETE SCREEN THEN UPDATE
+     C** LF/CLOAN WITH THE CORRECT BIT SETTING AS FOLLOWS :
+     C*
+     C** INITIALISE THE WORK COUNTER
+     C*
+     C                     Z-ADD1         COUNT   20
+     C*
+     C** AND UPDATE LF/CLOAN UP TO TEN TIMES DEPENDING ON THE NUMBER
+     C** OF LOANS ENTERED
+     C*
+     C           COUNT     DOUEQ10
+     C*
+     C** CHAIN TO THE RELEVANT SUBFILE RECORD
+     C*
+     C           COUNT     CHAINSFRCD425             80
+     C*
+     C** PROVIDING THE LOAN FIELD ISN'T BLANK
+     C*
+     C           LOAN      IFNE *BLANKS
+     C*
+     C** OR IT ISN'T AN ASTERISK (SKIP THIS ENTRY)
+     C*
+     C           LOAN      ANDNE'*'
+     C*
+     C** CHAIN TO LF/CLOAN TO OBTAIN THE RELEVANT LOAN RECORD TO UPDATE
+     C*
+     C**********           Z-ADD0         LOANN                                               CLE148
+     C                     MOVEL*BLANKS   LOANN                                               CLE148
+     C                     MOVE LOAN      LOANN
+     C           LOANN     CHAINCLOAN                88
+     C*
+     C** UPDATE BIT 6 OF CNFI ON LF/CLOAN IF A DUPLICATE COPY OF THE
+     C** CONFIRMATION HAS BEEN REQUESTED AND RESET BIT 7...
+     C*
+     C           DUP       IFEQ 'Y'
+     C           DUP       OREQ 'y'
+     C                     BITON'6'       CNFI
+     C                     BITOF'7'       CNFI                              0085
+     C*
+     C** OTHERWISE SET IT OFF
+     C*
+     C                     ELSE
+     C*
+     C                     BITOF'6'       CNFI
+     C                     END
+     C*
+     C** FOR ALL VALID LOAN NUMBERS ENTERED UPDATE THE
+     C** ASSOCIATED CONFIRMATION BIT SETTING NO.4 OF CNFI
+     C*
+     C           DUP       IFEQ ' '
+     C           DUP       OREQ 'Y'
+     C           DUP       OREQ 'y'
+     C***********          BITON'4'       CNFI                              0085
+     C                     BITON'5'       CNFI                              0085
+     C                     END
+     C*
+     C** OBTAIN THE NEXT TRANSACTION NUMBER AND SET UP TEXT FOR COMIT
+     C*
+     C                     EXSR ZTNLU1
+     C*
+     C                     MOVE 'LE'      MDID
+     C                     MOVEL'LE0425'  PGMN
+     C                     MOVE WSID      WSIDX
+     C                     TIME           MTIME
+     C                     MOVE 'A'       ACTNX
+     C                     MOVE USRID     USRIDX
+     C*
+     C** UPDATE THE LF/CLOAN RECORD AND COMIT THE AMENDMENT
+     C*
+     C                     Z-ADDNATN      TNLU
+     C                     Z-ADDRDNB      LCD
+     C                     MOVE 'A'       CHTP
+     C                     UPDATCLOANCLF
+     C           CMTTXT    COMIT
+     C*
+     C                     END
+     C*
+     C** ADD 1 TO THE COUNTER
+     C*
+     C                     ADD  1         COUNT
+     C*
+     C** END OF DO WHILE LOOP
+     C*
+     C                     END
+     C*
+     C*
+     C** END OF UPDATE SUBROUTINE
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*    * P S S R -  T O   H A N D L E   A B N O R M A L I T I E S *
+     C*    ~~~~~~~~~    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ *
+     C*    CALLED FROM     :   ALL ABNORMAL CONDITIONS / ERRORS       *
+     C*    CALLS           :   NONE                                   *
+     C*                                                               *
+     C*    THIS PROGRAM HANDLES ABNORMAL CONDITIONS SUCH AS READ FAIL *
+     C*    CHAIN FAIL ETC, AND PRODUCES A FORMATTED RPG DUMP          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C           PSSR9     ENDSR
+     C*
+     C*****************************************************************
+     C*
+     C*  ARRAY TABLES - MSG,CPY@(COMPILE TIME) & ARR(EXECUTION TIME)
+     C*
+** MSG    **      ERROR MESSAGES
+* ERR001  -  LOAN DOES NOT EXIST *                       MSG,1
+* ERR002  -  LOAN ALREADY MATURED *                      MSG,2
+* ERR003  -  THIS IS A REVERSED LOAN *                   MSG,3
+* ERR004  -  ROLLOVER DATE IS BLANK *                    MSG,4
+* ERR005  -  VALUE FOR DUPLICATE MUST BE 'Y' OR 'N' *    MSG,5
+* ERR006  -  VALUE FOR LOAN NUMBER MUST BE NUMERIC *     MSG,6
+* ERR007  -  LOAN NUMBER ENTERED MORE THAN ONCE *        MSG,7
+* CONFIRMATION ALREADY PRINTED    DUPLICATE ? (Y/N) *    MSG,8
+* DUPLICATE CONFIRMATION WILL NOT BE GENERATED *         MSG,9
+                                         * ACCEPTED *    MSG,10
+                       * DUPLICATE REQUEST ACCEPTED *    MSG,11
+* ROLLOVER DAY-CONFIRMATION GENERATED AUTOMATICALLY *    MSG,12
+* ERR008  -  REQUEST NOT ALLOWED FOR A DISCOUNT LOAN*    MSG,13           S01392
+* ERR013  -  ROLLOVER OF FUNDING INFORMATION ONLY *      MSG,14           CAC001
+LOAN REFERENCE DOES NOT MATCH THE ALLOWED VALUES
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+** SVALTX - SYSTEM VALUE KEY TEXT                                                             CLE148
+LoanAlphaAllow                                                                                CLE148

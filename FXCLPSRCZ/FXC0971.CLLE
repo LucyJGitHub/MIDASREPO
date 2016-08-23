@@ -1,0 +1,132 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas FX Release Netted Payments - Screen Prompt')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Dealing Module                                      */
+/*                                                                   */
+/*       FXC0971 - Midas FX Release Netted Payments                  */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*                                                                   */
+/*       Last Amend No. AR1093280          Date 19Aug14              */
+/*       Prev Amend No. 262076A            Date 23Jul13              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      BUG6192            Date 24Feb05              */
+/*                      CDL025  *CREATE    Date 22Nov04              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR1093280 - Change the jobq of this background job as it    */
+/*                   prevents other IC programs from running because */
+/*                   the maximum active job defined in MICJOBQ is 1. */
+/*                 - Applied for MD025996                            */
+/*       262076A - FXC0970 looping as dtaara FX0970DTA missing       */
+/*               - Applied for MD021355                              */
+/*       BUG6192- Time error                                         */
+/*       CDL025 - FX Netting Payment Generation                      */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&ALPHA) TYPE(*CHAR) LEN(16)
+             DCL        VAR(&NUMB) TYPE(*DEC) LEN(15 0) VALUE(0)
+             DCL        VAR(&NUMA) TYPE(*CHAR) LEN(15)
+             DCL        VAR(&IDP) TYPE(*DEC) LEN(3 0) VALUE(0)
+             DCL        VAR(&IINT) TYPE(*DEC) LEN(3 0) VALUE(4)
+             DCL        VAR(&ERCD) TYPE(*DEC) LEN(1 0) VALUE(0)
+             DCL        VAR(&RTCDE) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&JNBR) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&HRS) TYPE(*DEC) LEN(2 0) VALUE(0)
+             DCL        VAR(&MINS) TYPE(*DEC) LEN(2 0) VALUE(0)
+ 
+             DCLF       FXC0971DF RCDFMT(FXC0971F1)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2005')
+ 
+/* Retrieve Screen Information */
+             RTVDTAARA  DTAARA(RUNDAT (1 7)) RTNVAR(&DATE)
+             RTVJOBA    JOB(&JOB) CURUSER(&USER)
+ 
+/* Check for existing active job */
+             RTVDTAARA  DTAARA(FXNETRLS (21 6)) RTNVAR(&JNBR)
+             MONMSG     MSGID(CPF1015) EXEC(GOTO CMDLBL(DISPLAY))
+             IF         COND(&JNBR *NE ' ') THEN(DO)
+             SNDPGMMSG  MSG('This job is already active. Please end +
+                          existing job and try again.')
+             RETURN
+             ENDDO
+ 
+/* Wait for requested Start time */
+ DISPLAY:    SNDRCVF    RCDFMT(FXC0971F1)
+ 
+/* F3-Exit? */
+             IF         COND(&IN03 *EQ '1') THEN(RETURN)
+ 
+/* Validate Time Entered */
+             IF         COND(&TIME *EQ '    ') THEN(DO)
+             GOTO       CMDLBL(DISPLAY)
+             ENDDO
+ 
+             CHGVAR     VAR(&ALPHA) VALUE(&TIME)
+ 
+             CALLPRC    PRC(ZA0840) PARM((&RTCDE) (&ALPHA) (&IDP) +
+                          (&IINT) ('N') (&ERCD) (&NUMB) (' '))
+ 
+             IF         COND(&ERCD *NE 0) THEN(DO)
+             CHGVAR     VAR(&ERMSG) VALUE('Invalid Entry - Time must +
+                          be numeric with no decimal places.')
+             CHGVAR     VAR(&IN10) VALUE('1')
+             GOTO       CMDLBL(DISPLAY)
+             ENDDO
+ 
+             CHGVAR     VAR(&NUMA) VALUE(&NUMB)
+ 
+/* Validate Hours */
+             CHGVAR     VAR(&HRS) VALUE(%SUBSTRING(&NUMA 12 2))
+             IF         COND(&HRS *GT 24) THEN(DO)
+             CHGVAR     VAR(&ERMSG) VALUE('Invalid Entry - Time must +
+                          be between 00:00 and 24:00.')
+             CHGVAR     VAR(&IN10) VALUE('1')
+             GOTO       CMDLBL(DISPLAY)
+             ENDDO
+ 
+/* Validate Mins */
+             CHGVAR     VAR(&MINS) VALUE(%SUBSTRING(&NUMA 14 2))
+             IF         COND(&MINS *GT 59) THEN(DO)
+             CHGVAR     VAR(&ERMSG) VALUE('Invalid Entry - Time must +
+                          be between 00:00 and 24:00.')
+             CHGVAR     VAR(&IN10) VALUE('1')
+             GOTO       CMDLBL(DISPLAY)
+             ENDDO
+ 
+             IF         COND((&HRS *EQ 24) *AND (&MINS *GT 0)) THEN(DO)
+             CHGVAR     VAR(&ERMSG) VALUE('Invalid Entry - Time must +
+                          be between 00:00 and 24:00.')
+             CHGVAR     VAR(&IN10) VALUE('1')
+             GOTO       CMDLBL(DISPLAY)
+             ENDDO
+ 
+/* No Errors Submit Job */
+/*********** CHGVAR     VAR(&TIME) VALUE(%SUBSTRING(&ALPHA 13 4))  */                    /*BUG6192*/
+             CHGVAR     VAR(&TIME) VALUE(%SUBSTRING(&NUMA 12 4))                         /*BUG6192*/
+ 
+/**********  SBMJOB     CMD(CALL PGM(FXC0970) PARM(&TIME)) +         */                  /*262076A*/
+/**********               JOB(FXC0970) JOBD(MBATCH) OUTQ(*JOBD) +    */                  /*262076A*/
+/**********               USER(*CURRENT) RTGDTA(*JOBD) +             */                  /*262076A*/
+/**********               INLLIBL(*JOBD) MSGQ(MOPERQ)                */                  /*262076A*/
+/**********  SBMJOB     CMD(CALL PGM(FXC0970) PARM(&TIME)) +       */                  /*AR1093280*/
+/**********               JOB(FXC0970) JOBD(MBATCH) OUTQ(*JOBD) +  */                  /*AR1093280*/
+/**********               USER(*JOBD) RTGDTA(*JOBD) +              */                  /*AR1093280*/
+/**********               INLLIBL(*JOBD) MSGQ(MOPERQ)              */          /*262076A AR1093280*/
+             SBMJOB     CMD(CALL PGM(FXC0970) PARM(&TIME)) +
+                          JOB(FXC0970) JOBD(EDJOBD) OUTQ(*JOBD) +
+                          USER(*JOBD) RTGDTA(*JOBD) +
+                          INLLIBL(*JOBD) MSGQ(MOPERQ)                                  /*AR1093280*/
+ 
+             ENDPGM

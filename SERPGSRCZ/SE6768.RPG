@@ -1,0 +1,1069 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE ER Drop of blocked positions')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module                        *
+     F*                                                               *
+     F*  SE6768 - SE Drop of Blocked Positions                        *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CSE071             Date 19Jul05               *
+      *                 CGL014             Date 20Oct03               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 196493             Date 21Aug01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CPB001             Date 26Aug99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU017             Date 03Apr98               *
+     F*                 CSE007             Date 17Dec97               *
+     F*                 S01496             Date 04Oct94               *
+     F*                 S10978             Date 19May93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CGL014 - Collaterals Processing (Recompile)                  *
+      *  196493 - Do not produce a data-base error if record not      *
+      *           found. Instead, bypass the processing of the        *
+      *           Blocked Position record and move on to deletion.    *
+     F*  CPB001 - 'Private Banking' Module                            *
+     F*  CEU017 - Securities Redenomination Euro Changes              *
+     F*  CSE007 - Corporate Actions                                   *
+     F*  S01496 - Incorporation of JYSKE Enhancements (S10978)        *
+     F*  S10978 - JYSZRH: EARLY REDEMPTIONS                           *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*
+     F*****BJ*-*Bank*Details*-*Rtv*Idx*********************************   S01496
+     F***SDBANKL1IF**E           K        DISK                            S01496
+     F***********                                   KINFSR *PSSR          S01496
+     F*
+     F*****BV*-*SE*ICD*******-*Rtv*Idx*********************************   S01496
+     F***SDSTRDL1IF**E           K        DISK                            S01496
+     F***********                                   KINFSR *PSSR          S01496
+     F*
+     F**   Securities Details
+     FSECTY   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F*
+     F**   VD - SE ER Block Positions
+     FSEBLKPL0UF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F*
+     F*****Portfolio*Management*ICD*-*Rtv*Idx**************************   S01496
+     F***SDPORTL1IF  E           K        DISK                            S01496
+     F***********                                   KINFSR *PSSR          S01496
+     F*
+     F*****Modules*Details*-*Rtv*Idx***********************************   S01496
+     F***SDMMODL1IF**E           K        DISK                            S01496
+     F***********                                   KINFSR *PSSR          S01496
+      *                                                                   CSE007
+      ***  Midas SE Corporate Actions Blocked Positions file - Prefix MU  CSE007
+      ***  Update Index.                                                  CSE007
+     FSECOBKL0UF  E           K        DISK         KINFSR *PSSR          CSE007
+     F*
+     F**   Printer file - SE Drop Blocked Positions List/Audit
+     F***SE6768P1O***E             70     PRINTER                         S01496
+     FSE6768P1O   E             70     PRINTER      KINFDS SPOOL      UC  S01496
+     F                                              KINFSR *PSSR
+     FSE6768AUO   E                    PRINTER      KINFDS SPOOLU         S01496
+     F                                              KINFSR *PSSR          S01496
+     *********************************************************************
+      /EJECT
+     *********************************************************************
+      *
+      * ID F  C  H  L    Function of indicators
+      * ---------------------------------------
+      *
+      *   50 - 0 Decimal Place
+      *   51 - 1 Decimal Place
+      *   52 - 2 Decimal Places
+      *   53 - 3 Decimal Places
+      *   54 - 4 Decimal Places
+      *                                                                   CSE007
+      *   55 - Process Drop of Blocked Positions:                         CSE007
+      *              *OFF = for Early Redemptions                         CSE007
+      *              *ON  = for Corporate Actions.                        CSE007
+      *
+      *   60 - Blocked Nominal equal to zero
+      *
+      *   64 - Blocked Nominal equal to *Hival and Block Type equal to 'P'
+      *   65 - Block End Date  equal to *Hival
+      *   66 - Blocked Nominal equal to *Hival and Block Type equal to 'S'
+      *
+      *   70 - Page Overflow
+      *
+      *   88 - Work Indicator
+      *
+      *   89 - Record not Found
+      *
+      *   LR :    Last record
+      *   U7/U8 : Database error
+      *
+      *   90-99 : Used by Standard Subroutines
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *
+      * Name of the Subroutines
+      * -----------------------
+      *
+      *       P001  - Initial processing
+      *       P002  - Main processing
+      *       P002A - Process Corporate Actions Blocked Positions.        CSE007
+      *       P003  - Termination processing
+      *
+      *       R001  - Output Details to Printer File
+      *       R001A - Output Details to Printer File for Corporate        CSE007
+      *               Actions.                                            CSE007
+      *
+      *      *PSSR  - Standard Database error processing
+      *
+      * Name of the Standard Subroutines
+      * --------------------------------
+      *
+      *       ZDATE2 - Dates Validation and Conversion
+      *
+     *********************************************************************
+      /EJECT
+     *********************************************************************
+     E*
+     E**   FOR COMPILATION - COPYRIGHT INSERTION
+     E*
+     E                    CPY@    1   1 80
+     E*
+     E/COPY ZSRSRC,ZDATE2Z1
+     *********************************************************************
+      /EJECT
+     *********************************************************************
+     I*
+     I**   DATA STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*                                                                   S01496
+     ISPOOLU      DS                                                      S01496
+     I** File Information Data Structure (Audit Report)                   S01496
+     I*                                                                   S01496
+     I                                       83  92 SFILEU                S01496
+     I                                    B 123 1240SFNUMU                S01496
+     ISPOOL       DS                                                      S01496
+     I** File Information Data Structure (Detail Report)                  S01496
+     I*                                                                   S01496
+     I                                       83  92 SFILE                 S01496
+     I                                    B 123 1240SFNUM                 S01496
+     I*
+     I**   DATA STRUCTURE FOR DATABASE ERROR
+     I*
+     ILDA         DS                            256
+     I                                      132 183 WWLOT
+     I                                      132 141 WWFILE
+     I                                      142 170 WWKEY
+     I                                      171 180 WWPGM
+     I                                      181 1830WWASE
+     I*                                                                   S01496
+     I@BANK     E DSSDBANKPD                                              S01496
+     I** Dummy record format for access to Bank Details                   S01496
+     I*                                                                   S01496
+     I@STRD     E DSSDSTRDPD                                              S01496
+     I** Dummy record format for access to Securities Trading Data        S01496
+     I*                                                                   S01496
+     I@MMOD     E DSSDMMODPD                                              S01496
+     I** Dummy record format for access to Modules File                   S01496
+     I*                                                                   S01496
+     I@PORT     E DSSDPORTPD                                              S01496
+     I** Dummy record format for access to Portfolio Management ICD       S01496
+     I*                                                                   S01496
+     IDSFDY     E DSDSFDY                                                 S01496
+     I** First DS for access programs, short data structure               S01496
+     I*                                                                   S01496
+     IDSSDY     E DSDSSDY                                                 S01496
+     I** Second DS for access programs, long data structure               S01496
+     I*                                                                   S01496
+     *********************************************************************
+      /EJECT
+     C********************************************************************
+     C**    P R O G R A M   S T A R T
+     C********************************************************************
+     C*
+     C**   INITIAL PROCESSING
+     C*
+     C                     EXSR P001
+     C*
+     C**   MAIN PROCESSING
+     C*
+     C                     EXSR P002
+      *                                                                   CSE007
+      ***  If feature CSE007 is switched ON.                              CSE007
+      ***  or feature CEU017 is switched ON.                              CEU017
+      *                                                                   CSE007
+     C           CSE007    IFEQ 'Y'                                       CSE007
+     C           CEU017    OREQ 'Y'                                       CEU017
+     C                     EXSR P002A                                     CSE007
+     C                     ENDIF                                          CSE007
+     C*
+     C**   TERMINATION PROCESSING
+     C*
+     C                     EXSR P003
+     C*
+     C********************************************************************
+     C**    P R O G R A M     E N D
+     C********************************************************************
+      /EJECT
+     *********************************************************************
+     C**  P001 - INITIAL PROCESSING
+     *********************************************************************
+     C           P001      BEGSR
+     C*                                                                   S01496
+     C**  Copyright statement                                             S01496
+     C*                                                                   S01496
+     C                     MOVEACPY@      ACT@   80                       S01496
+     C*
+     C** Initialise DB error fields and store program name
+     C*
+     C                     MOVE *BLANKS   WWLOT
+     C                     MOVEL'SE6768'  DBPGM  10
+     C*
+     C** Initialise key and work fields
+     C*
+     C***********          MOVE *BLANKS   WWBRCD  30                      S01496
+     C                     MOVE *BLANKS   WWBRCD  3                       S01496
+     C                     MOVEL*BLANKS   WWSESN 10        Svd Secty
+     C                     Z-ADD0         WWNBLD  50       Nbr BL dr
+     C*
+     C***Access*to*'Bank*Details'*LF/SDBANKL1*to*retrieve*the*MIDAS****   S01496
+     C** Access to SDBANKPD to retrieve the MIDAS                         S01496
+     C** Run Date and User Report Title
+     C*
+     C************LOVAL    SETLLSDBANKL1                                  S01496
+     C***********          READ SDBANKL1                 89               S01496
+     C*                                                                   S01496
+     C                     CALL 'AOBANKR0'                                S01496
+     C                     PARM '*MSG    '@RTCD   7                       S01496
+     C                     PARM '*FIRST  '@OPTN   7                       S01496
+     C           @BANK     PARM @BANK     DSFDY                           S01496
+     C*
+     C** If record not found
+     C*
+     C************IN89     IFEQ '1'                                       S01496
+     C           @RTCD     IFNE *BLANK                                    S01496
+     C           BJTYLC    OREQ 'D'
+     C                     Z-ADD1         DBASE   30
+     C                     MOVEL*BLANKS   DBFILE 10        *****************
+     C***********          MOVEL'SDBANKL1'DBFILE           ** DB ERROR 01 S01496
+     C                     MOVE 'SDBANKPD'DBFILE                          S01496
+     C                     MOVEL*BLANKS   DBKEY  29        *****************
+     C***********          WRITEHEADER                                    S01496
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** Determine Date Format
+     C*
+     C           BJDFIN    IFEQ 'M'                        *B1
+     C                     MOVE '1'       *IN98
+     C                     END                             *E1
+     C*
+     C***Access*to*ICD*LF/SDSTRDL1*to*retrieve*Retention*Period********   S01496
+     C** Access to SDSTRDPD to retrieve Retention Period.                 S01496
+     C*
+     C************LOVAL    SETLLSDSTRDL1                                  S01496
+     C***********          READ SDSTRDL1                 89               S01496
+     C*                                                                   S01496
+     C                     CALL 'AOSTRDR0'                                S01496
+     C                     PARM '*MSG    '@RTCD   7                       S01496
+     C                     PARM '*FIRST  '@OPTN   7                       S01496
+     C           @STRD     PARM @STRD     DSSDY                           S01496
+     C*
+     C** If record not found
+     C*
+     C************IN89     IFEQ '1'                                       S01496
+     C           @RTCD     IFNE *BLANK                                    S01496
+     C                     Z-ADD2         DBASE
+     C                     MOVEL*BLANKS   DBFILE           *****************
+     C***********          MOVEL'SDSTRDL1'DBFILE           ** DB ERROR 02 S01496
+     C                     MOVE 'SDSTRDPD'DBFILE                          S01496
+     C                     MOVEL*BLANKS   DBKEY            *****************
+     C***********          WRITEHEADER                                    S01496
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** Calculate Retention Date
+     C*
+     C           31        MULT BVROST    WWFLD1  50
+     C           BJRDNB    SUB  WWFLD1    RTNTDT  50
+     C*
+     C**   Access to Modules Details File to retrieve the 'Portfolio
+     C**   Management Indicator'
+     C*
+     C************LOVAL    SETLLSDMMODL1                                  S01496
+     C***********          READ SDMMODL1                 89               S01496
+     C*                                                                   S01496
+     C                     CALL 'AOMMODR0'                                S01496
+     C                     PARM '*MSG    '@RTCD   7                       S01496
+     C                     PARM '*FIRST  '@OPTN   7                       S01496
+     C           @MMOD     PARM @MMOD     DSFDY                           S01496
+     C*
+     C**   If Record not found
+     C*
+     C************IN89     IFEQ '1'                        B*1            S01496
+     C           @RTCD     IFNE *BLANK                                    S01496
+     C                     Z-ADD3         DBASE            *****************
+     C***********          MOVEL'SDMMODL1'DBFILE           ** DB ERROR 03 S01496
+     C                     MOVE 'SDMMODPD'DBFILE                          S01496
+     C                     MOVEL*BLANKS   DBKEY            *****************
+     C***********          WRITEHEADER                                    S01496
+     C                     EXSR *PSSR
+     C                     END                             E*1
+     C*                                                                   S01496
+     C** Check multibranching indicator.                                  S01496
+     C*                                                                   S01496
+     C           BGMBIN    IFEQ 'Y'                                       S01496
+     C                     MOVE '1'       *IN39                           S01496
+     C                     END                                            S01496
+     C*
+     C**   If 'Portfolio Management' present
+     C*
+     C           BGPFMG    IFEQ 'Y'                        B*1
+     C           BGN4ST    OREQ 'Y'                                       CPB001
+     C*
+     C**   Access to Portfolio Management File to retrieve the 'Reference
+     C**   attached to "9997"'
+     C*
+     C************LOVAL    SETLLSDPORTL1                                  S01496
+     C***********          READ SDPORTL1                 89               S01496
+     C*                                                                   S01496
+     C           BGPFMG    IFEQ 'Y'                                       CPB001
+     C                     CALL 'AOPORTR0'                                S01496
+     C                     PARM '*MSG    '@RTCD   7                       S01496
+     C                     PARM '*FIRST  '@OPTN   7                       S01496
+     C           @PORT     PARM @PORT     DSFDY                           S01496
+     C*
+     C**   If Record not found
+     C*
+     C************IN89     IFEQ '1'                        B*2            S01496
+     C           @RTCD     IFNE *BLANK                                    S01496
+     C                     Z-ADD4         DBASE            *****************
+     C***********          MOVEL'SDPORTL1'DBFILE           ** DB ERROR 04 S01496
+     C                     MOVE 'SDPORTPD'DBFILE                          S01496
+     C                     MOVEL*BLANKS   DBKEY            *****************
+     C***********          WRITEHEADER                                    S01496
+     C                     EXSR *PSSR
+     C                     END                             E*2
+     C                     ENDIF                                          CPB001
+     C*                                                                   S01496
+     C                     MOVE '1'       *IN40                           S01496
+     C                     END                             E*1
+      *                                                                   CSE007
+      ***  Call access program to access Switchable Features Details.     CSE007
+      *                                                                   CSE007
+     C                     MOVE 'N'       CSE007  1                       CSE007
+     C                     CALL 'AOSARDR0'                                CSE007
+     C                     PARM '       ' @RTCD   7                       CSE007
+     C                     PARM '*VERIFY' @OPTN   7                       CSE007
+     C                     PARM 'CSE007'  @SARD   6                       CSE007
+      *                                                                   CSE007
+      ***  If feature CSE007 is switched ON.                              CSE007
+      *                                                                   CSE007
+     C           @RTCD     IFEQ *BLANKS                                   CSE007
+     C                     MOVE 'Y'       CSE007                          CSE007
+     C                     ENDIF                                          CSE007
+      *                                                                   CEU017
+      ***  Call access program to access Switchable Features Details.     CEU017
+      *                                                                   CEU017
+     C                     MOVE 'N'       CEU017  1                       CEU017
+     C                     CALL 'AOSARDR0'                                CEU017
+     C                     PARM '       ' @RTCD   7                       CEU017
+     C                     PARM '*VERIFY' @OPTN   7                       CEU017
+     C                     PARM 'CEU017'  @SARD   6                       CEU017
+      *                                                                   CEU017
+      ***  If feature CEU017 is switched ON.                              CEU017
+      *                                                                   CEU017
+     C           @RTCD     IFEQ *BLANKS                                   CEU017
+     C                     MOVE 'Y'       CEU017                          CEU017
+     C                     ENDIF                                          CEU017
+     C*                                                                   S01496
+     C                     EXSR RCFAU                                     S01496
+     C*
+     C                     ENDSR
+     *********************************************************************
+      /EJECT
+     *********************************************************************
+     C**  P002 - MAIN PROCESSING
+     *********************************************************************
+     C           P002      BEGSR
+     C*
+     C** Read first record in LF/SEBLKPL0
+     C*
+     C           *LOVAL    SETLLSEBLKPL0
+     C                     READ SEBLKPL0                 88
+     C*
+     C** Do while end of file is not reached
+     C*
+     C           *IN88     DOWEQ'0'                        *B1
+     C*
+     C** If Branch code is not equal to Saved branch code
+     C** output title to report and save branch code
+     C*
+     C           VDBRCD    IFNE WWBRCD                     *B2
+     C                     MOVE VDBRCD    BRCDP1
+     C           *IN41     IFEQ '1'                                       S01496
+     C                     WRITEHEADER
+     C                     END                                            S01496
+     C***********          Z-ADDVDBRCD    WWBRCD                          S01496
+     C                     MOVE VDBRCD    WWBRCD                          S01496
+     C                     END                             *E2
+     C*
+     C** If End Date is lower than or equal to Retention Date
+     C*
+     C           VDBEDT    IFLE RTNTDT                     *B2
+     C*
+     C** If Security Shortname is not equal to Saved Security
+     C*
+     C           VDSESN    IFNE WWSESN                     *B3
+     C*
+     C                     MOVE '0'       *IN50
+     C                     MOVE '0'       *IN51
+     C                     MOVE '0'       *IN52
+     C                     MOVE '0'       *IN53
+     C                     MOVE '0'       *IN54
+     C*
+     C                     MOVE VDSESN    WWSESN
+     C*
+     C           VDSESN    IFNE *BLANKS                    *B4
+     C*
+     C**    access to Security Details LF/SECTY to retrieve
+     C**    Nominal Decimal Places
+     C*
+     C           VDSESN    CHAINSECTY                89
+     C*
+     C** If record not found
+     C*
+     C********** *IN89     IFEQ '1'                                                           196493
+     C**********           Z-ADD5         DBASE                                               196493
+     C**********           MOVEL*BLANKS   DBFILE           *****************                  196493
+     C***********          MOVEL'SECTY   'DBFILE           ** DB ERROR 05 S01496
+     C**********           MOVE 'SECTY   'DBFILE                                       S01496 196493
+     C**********           MOVELVDSESN    DBKEY            *****************                  196493
+     C**********           EXSR *PSSR                                                         196493
+     C**********           END                                                                196493
+     C*
+     C** Seton correct indicator following the number of decimal places
+     C*
+     C           NMDP      IFEQ 0                          *B5
+     C                     MOVE '1'       *IN50
+     C                     ELSE                            *X5
+     C           NMDP      IFEQ 1                          *B6
+     C                     MOVE '1'       *IN51
+     C                     ELSE                            *X6
+     C           NMDP      IFEQ 2                          *B7
+     C                     MOVE '1'       *IN52
+     C                     ELSE                            *X7
+     C           NMDP      IFEQ 3                          *B8
+     C                     MOVE '1'       *IN53
+     C                     ELSE                            *X8
+     C                     MOVE '1'       *IN54
+     C                     END                             *E8
+     C                     END                             *E7
+     C                     END                             *E6
+     C                     END                             *E5
+     C                     END                             *E4
+     C                     END                             *E3
+     C*                                                                   S01496
+     C**  Open SE6764P1.                                                  S01496
+     C*                                                                   S01496
+      ** Process only records with securities that are not yet dropped.                       196493
+      *                                                                                       196493
+     C           *IN89     IFEQ '0'                                                           196493
+      *                                                                                       196493
+     C           *IN41     IFEQ '0'                                       S01496
+     C                     OPEN SE6768P1                                  S01496
+     C                     EXSR RCFP1                                     S01496
+     C                     WRITEHEADER                                    S01496
+     C                     MOVE '1'       *IN41                           S01496
+     C                     END                                            S01496
+     C*
+     C** If the OVERFLOW INDICATOR is set ON output title to report
+     C*
+     C           *IN70     IFEQ '1'                        *B3
+     C                     WRITEHEADER
+     C                     MOVE '0'       *IN70
+     C                     ENDIF                           *E3
+     C*
+     C** Output a detail line
+     C*
+     C                     EXSR R001
+      *                                                                                       196493
+     C                     ENDIF                                                              196493
+     C*
+     C** Delete the Block record in LF/SEBLKPL0
+     C*
+     C                     DELETSEBLKPD0
+     C*
+     C                     ADD  1         WWNBLD
+     C*
+     C                     ENDIF                           *E2
+     C*
+     C** Read next record in LF/SEBLKPL0
+     C*
+     C                     READ SEBLKPL0                 88
+     C*
+     C                     ENDDO                           *E1
+     C*
+     C                     ENDSR
+     *********************************************************************
+      /EJECT                                                              CSE007
+      *****************************************************************   CSE007
+      *                                                               *   CSE007
+      * P002A  - Process Corporate Actions Blocked Positions.         *   CSE007
+      *                                                               *   CSE007
+      * Called by: Main Processing.                                   *   CSE007
+      *                                                               *   CSE007
+      * Calls: R001   - Output Details to printer file for Corporate  *   CSE007
+      *                 Actions.                                      *   CSE007
+      *        *PSSR  - Standard Data Base Error Processing.          *   CSE007
+      *        RCFP1  - Subroutine to register P1 report via RCF      *   CSE007
+      *                                                               *   CSE007
+      *****************************************************************   CSE007
+      *                                                                   CSE007
+     C           P002A     BEGSR                           ** P002A SR ** CSE007
+      *                                                                   CSE007
+      ***  Initialise work fields and set ON indicator 55, process for    CSE007
+      ***  Corporate Actions.                                             CSE007
+      *                                                                   CSE007
+     C                     MOVE *BLANKS   WWBRCD  3                       CSE007
+     C                     MOVEL*BLANKS   WWSESN 10                       CSE007
+     C                     MOVE '1'       *IN55                           CSE007
+      *                                                                   CSE007
+      ***  Read first record in LF/SECOBKL0.                              CSE007
+      *                                                                   CSE007
+     C           *LOVAL    SETLLSECOBKL0                                  CSE007
+     C                     READ SECOBKL0                 88               CSE007
+      *                                                                   CSE007
+      ***  Do while end of file is not reached.                           CSE007
+      *                                                                   CSE007
+     C           *IN88     DOWEQ'0'                        *B1            CSE007
+      *                                                                   CSE007
+      ***  If Branch Code is not equal to Saved Branch Code               CSE007
+      ***  output title to report and save Branch Code.                   CSE007
+      *                                                                   CSE007
+     C           MUBRCD    IFNE WWBRCD                     *B2            CSE007
+     C                     MOVE MUBRCD    BRCDP1                          CSE007
+     C           *IN41     IFEQ '1'                                       CSE007
+     C                     WRITEHEADER                                    CSE007
+     C                     ENDIF                                          CSE007
+     C                     MOVE MUBRCD    WWBRCD                          CSE007
+     C                     ENDIF                           *E2            CSE007
+      *                                                                   CSE007
+      ***  If End Date is lower than or equal to Retention Date.          CSE007
+      *                                                                   CSE007
+     C           MUBEDT    IFLE RTNTDT                     *B2            CSE007
+      *                                                                   CSE007
+      ***  If Security Shortname is not equal to Saved Security.          CSE007
+      *                                                                   CSE007
+     C           MUSESN    IFNE WWSESN                     *B3            CSE007
+      *                                                                   CSE007
+     C                     MOVE '0'       *IN50                           CSE007
+     C                     MOVE '0'       *IN51                           CSE007
+     C                     MOVE '0'       *IN52                           CSE007
+     C                     MOVE '0'       *IN53                           CSE007
+     C                     MOVE '0'       *IN54                           CSE007
+      *                                                                   CSE007
+     C                     MOVE MUSESN    WWSESN                          CSE007
+      *                                                                   CSE007
+     C           MUSESN    IFNE *BLANKS                    *B4            CSE007
+      *                                                                   CSE007
+      ***  Access to Security Details LF/SECTY to retrieve Nominal        CSE007
+      ***  Decimal Places.                                                CSE007
+      *                                                                   CSE007
+     C           MUSESN    CHAINSECTY                89                   CSE007
+      *                                                                   CSE007
+      ***  If record not found, Data Base Error.                          CSE007
+      *                                                                   CSE007
+     C           *IN89     IFEQ '1'                                       CSE007
+     C                     Z-ADD6         DBASE                           CSE007
+     C                     MOVEL*BLANKS   DBFILE           ***************CSE007
+     C                     MOVE 'SECTY   'DBFILE           * DB ERROR 06 *CSE007
+     C                     MOVELMUSESN    DBKEY            ***************CSE007
+     C                     EXSR *PSSR                                     CSE007
+     C                     ENDIF                                          CSE007
+      *                                                                   CSE007
+      ***  Seton correct indicator following the number of decimal places.CSE007
+      *                                                                   CSE007
+     C           NMDP      IFEQ 0                          *B5            CSE007
+     C                     MOVE '1'       *IN50                           CSE007
+     C                     ELSE                            *X5            CSE007
+     C           NMDP      IFEQ 1                          *B6            CSE007
+     C                     MOVE '1'       *IN51                           CSE007
+     C                     ELSE                            *X6            CSE007
+     C           NMDP      IFEQ 2                          *B7            CSE007
+     C                     MOVE '1'       *IN52                           CSE007
+     C                     ELSE                            *X7            CSE007
+     C           NMDP      IFEQ 3                          *B8            CSE007
+     C                     MOVE '1'       *IN53                           CSE007
+     C                     ELSE                            *X8            CSE007
+     C                     MOVE '1'       *IN54                           CSE007
+     C                     ENDIF                           *E8            CSE007
+     C                     ENDIF                           *E7            CSE007
+     C                     ENDIF                           *E6            CSE007
+     C                     ENDIF                           *E5            CSE007
+     C                     ENDIF                           *E4            CSE007
+     C                     ENDIF                           *E3            CSE007
+      *                                                                   CSE007
+      *                                                                   CSE007
+      ***  Open SE6768P1.                                                 CSE007
+      *                                                                   CSE007
+     C           *IN41     IFEQ '0'                        *B3            CSE007
+     C                     OPEN SE6768P1                                  CSE007
+     C                     EXSR RCFP1                                     CSE007
+     C                     WRITEHEADER                                    CSE007
+     C                     MOVE '1'       *IN41                           CSE007
+     C                     ENDIF                           *E3            CSE007
+      *                                                                   CSE007
+      ***  If the OVERFLOW Indicator is set ON output title to report.    CSE007
+      *                                                                   CSE007
+     C           *IN70     IFEQ '1'                        *B3            CSE007
+     C                     WRITEHEADER                                    CSE007
+     C                     MOVE '0'       *IN70                           CSE007
+     C                     ENDIF                           *E3            CSE007
+      *                                                                   CSE007
+      ***  Output a detail line.                                          CSE007
+      *                                                                   CSE007
+     C                     EXSR R001A                                     CSE007
+      *                                                                   CSE007
+      ***  Delete the Block record in LF/SECOBKL0.                        CSE007
+      *                                                                   CSE007
+     C                     DELETSECOBKD0                                  CSE007
+      *                                                                   CSE007
+     C                     ADD  1         WWNBLD                          CSE007
+      *                                                                   CSE007
+     C                     ENDIF                           *E2            CSE007
+      *                                                                   CSE007
+      ***  Read next record in LF/SECOBKL0.                               CSE007
+      *                                                                   CSE007
+     C                     READ SECOBKL0                 88               CSE007
+      *                                                                   CSE007
+     C                     ENDDO                           *E1            CSE007
+      *                                                                   CSE007
+     C                     ENDSR                                          CSE007
+      *                                                                   CSE007
+     ******************************************************************   CSE007
+      /EJECT
+     *********************************************************************
+     C**  P003 - TERMINATION PROCESSING
+     *********************************************************************
+     C           P003      BEGSR
+     C*                                                                   S01496
+     C**  Produce Audit List.                                             S01496
+     C*                                                                   S01496
+     C                     WRITEHEADAU                                    S01496
+     C                     Z-ADDWWNBLD    PPNBLD                          S01496
+     C                     WRITEDETAILAU                                  S01496
+     C*
+     C** If no detail record was printed during detail processing
+     C** write empty record
+     C*
+     C           WWNBLD    IFEQ *ZERO
+     C***********          WRITENODATA                                    S01496
+     C                     WRITENODTLS                                    S01496
+     C                     ENDIF
+     C*
+     C** Write end of report
+     C*
+     C           *IN41     IFEQ '1'                                       S01496
+     C***********          Z-ADDWWNBLD    PPNBLD                          S01496
+     C                     WRITEENDRP
+     C                     CLOSESE6768P1                                  S01496
+     C                     END                                            S01496
+     C*
+     C** End of program
+     C*
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     *********************************************************************
+      /EJECT
+     *********************************************************************
+     C**  R001 - OUTPUT DETAILS TO PRINTER FILE
+     *********************************************************************
+     C           R001      BEGSR
+     C*
+     C********** VDCNUM    IFNE *ZEROS                     *B1                                CSD027
+     C           VDCNUM    IFNE *BLANKS                    *B1                                CSD027
+     C                     MOVE VDCNUM    CNUMP1
+     C                     ELSE                            *X1
+     C                     MOVE *BLANKS   CNUMP1
+     C                     END                             *E1
+     C*
+     C           VDPTFR    IFEQ '9997'                     *B1
+     C           BGN4ST    ANDNE'Y'                                       CPB001
+     C***********          MOVE P9R997    PTFRP1                          S01496
+     C                     MOVE FCR997    PTFRP1                          S01496
+     C                     ELSE                            *X1
+     C                     MOVE VDPTFR    PTFRP1
+     C                     END                             *E1
+     C*
+     C                     MOVE VDBLTY    BLTYP1
+     C*
+     C                     MOVE VDSESN    SESNP1
+     C*
+     C                     MOVE '0'       *IN60
+     C*
+     C**   IF BLOCKED NOMINAL IS EQUAL TO 99999 (*HIVAL)
+     C*
+     C           VDNOMB    IFEQ *HIVAL                     *B1
+     C*
+     C**   IF BLOCK TYPE IS 'P', DISPLAY '+++'
+     C*
+     C           VDBLTY    IFEQ 'P'                        *B2
+     C                     MOVE '1'       *IN64
+     C                     MOVE '0'       *IN66
+     C*
+     C**   IF BLOCK TYPE IS 'S', DISPLAY '---'
+     C*
+     C                     ELSE                            *X2
+     C                     MOVE '0'       *IN64
+     C                     MOVE '1'       *IN66
+     C                     END                             *E2
+     C*
+     C**   IF BLOCKED NOMINAL IS NOT EQUAL TO *HIVAL
+     C*
+     C                     ELSE                            *X1
+     C                     MOVE '0'       *IN64
+     C                     MOVE '0'       *IN66
+     C*
+     C**    IF BLOCKED NOMINAL IS EQUAL TO ZERO
+     C*
+     C           VDNOMB    IFEQ *ZEROS                     *B2
+     C                     MOVE '1'       *IN60
+     C*
+     C**    IF BLOCKED NOMINAL NOT EQUAL TO ZERO
+     C**    AND IF 0 DECIMAL PLACE
+     C*
+     C                     ELSE                            *X2
+     C           *IN50     IFEQ '1'                        *B3
+     C                     MOVE VDNOMB    BLNMP0
+     C*
+     C**    AND IF 1 DECIMAL PLACE
+     C*
+     C                     ELSE                            *X3
+     C           *IN51     IFEQ '1'                        *B4
+     C                     MOVE VDNOMB    BLNMP1
+     C*
+     C**    AND IF 2 DECIMAL PLACES
+     C*
+     C                     ELSE                            *X4
+     C           *IN52     IFEQ '1'                        *B5
+     C                     MOVE VDNOMB    BLNMP2
+     C*
+     C**    AND IF 3 DECIMAL PLACES
+     C*
+     C                     ELSE                            *X5
+     C           *IN53     IFEQ '1'                        *B6
+     C                     MOVE VDNOMB    BLNMP3
+     C*
+     C**    AND IF 4 DECIMAL PLACES
+     C*
+     C                     ELSE                            *X6
+     C           *IN54     IFEQ '1'                        *B7
+     C                     MOVE VDNOMB    BLNMP4
+     C                     END                             *E7
+     C                     END                             *E6
+     C                     END                             *E5
+     C                     END                             *E4
+     C                     END                             *E3
+     C                     END                             *E2
+     C                     END                             *E1
+     C*
+     C**   IF END DATE IS EQUAL TO 99999 (*HIVAL)
+     C*
+     C           VDBEDT    IFEQ *HIVAL                     *B1
+     C                     MOVE '1'       *IN65
+     C                     ELSE                            *X1
+     C                     MOVE '0'       *IN65
+     C                     Z-ADDVDBEDT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    ENDDP1
+     C                     END                             *E1
+      *                                                                   CSE007
+      ***  Format Block from Date.                                        CSE007
+      *                                                                   CSE007
+     C           VDBSTT    IFEQ *ZEROS                     *B1            CSE007
+     C                     MOVE *BLANKS   RBSTT                           CSE007
+     C                     ELSE                            *X1            CSE007
+     C                     Z-ADDVDBSTT    ZDAYNO                          CSE007
+     C                     EXSR ZDATE2                                    CSE007
+     C                     MOVE ZADATE    RBSTT                           CSE007
+     C                     ENDIF                           *E1            CSE007
+      *                                                                   CSE007
+      ***  Format Block Error/Warning Indicator.                          CSE007
+      *                                                                   CSE007
+     C                     MOVE VDEWIN    RBEWI                           CSE007
+     C*
+     C                     MOVE VDBNAR    NARRP1
+     C*
+     C**   OUTPUT DETAIL
+     C*
+     C                     WRITEDETAIL
+     C*
+     C                     ENDSR
+     *********************************************************************
+      /EJECT                                                              CSE007
+      *****************************************************************   CSE007
+      *                                                               *   CSE007
+      * R001A  - Output Details to printer file for Corporate Actions *   CSE007
+      *                                                               *   CSE007
+      * Called by: P002A  - Process Corporate Actions Blocked         *   CSE007
+      *                                                               *   CSE007
+      * Calls: ZDATE2 - Dates Validation and Conversion               *   CSE007
+      *                                                               *   CSE007
+      *****************************************************************   CSE007
+      *                                                                   CSE007
+     C           R001A     BEGSR                           ** R001A SR ** CSE007
+      *                                                                   CSE007
+      ***  Format Customer.                                               CSE007
+      *                                                                   CSE007
+     C********** MUCNUM    IFNE *ZEROS                     *B1                         CSE007 CSD027
+     C           MUCNUM    IFNE *BLANKS                    *B1                                CSD027
+     C                     MOVE MUCNUM    CNUMP1                          CSE007
+     C                     ELSE                            *X1            CSE007
+     C                     MOVE *BLANKS   CNUMP1                          CSE007
+     C                     ENDIF                           *E1            CSE007
+      *                                                                   CSE007
+      ***  Format Portfolio Reference.                                    CSE007
+      *                                                                   CSE007
+     C           MUPTFR    IFEQ '9997'                     *B1            CSE007
+     C           BGN4ST    ANDNE'Y'                                       CPB001
+     C                     MOVE FCR997    PTFRP1                          CSE007
+     C                     ELSE                            *X1            CSE007
+     C                     MOVE MUPTFR    PTFRP1                          CSE007
+     C                     ENDIF                           *E1            CSE007
+      *                                                                   CSE007
+     C                     MOVE MUBLTY    BLTYP1           Block Type.    CSE007
+      *                                                                   CSE007
+     C                     MOVE MUSESN    SESNP1           Security Short.CSE007
+      *                                                                   CSE007
+     C                     MOVE '0'       *IN60                           CSE007
+      *                                                                   CSE007
+      ***  If Blocked Nominal is equal to 99999 (*HIVAL).                 CSE007
+      *                                                                   CSE007
+     C           MUNOMB    IFEQ *HIVAL                     *B1            CSE007
+      *                                                                   CSE007
+      ***  If Block Type is 'P', display '+++'.                           CSE007
+      *                                                                   CSE007
+     C           MUBLTY    IFEQ 'P'                        *B2            CSE007
+     C                     MOVE '1'       *IN64                           CSE007
+     C                     MOVE '0'       *IN66                           CSE007
+      *                                                                   CSE007
+      ***  If Block Type is 'S', display '---'.                           CSE007
+      *                                                                   CSE007
+     C                     ELSE                            *X2            CSE007
+     C                     MOVE '0'       *IN64                           CSE007
+     C                     MOVE '1'       *IN66                           CSE007
+     C                     ENDIF                           *E2            CSE007
+      *                                                                   CSE007
+      ***  If Blocked Nominal is not equal to *HIVAL.                     CSE007
+      *                                                                   CSE007
+     C                     ELSE                            *X1            CSE007
+     C                     MOVE '0'       *IN64                           CSE007
+     C                     MOVE '0'       *IN66                           CSE007
+      *                                                                   CSE007
+      ***  If Blocked Nominal is Equal to ZERO.                           CSE007
+      *                                                                   CSE007
+     C           MUNOMB    IFEQ *ZEROS                     *B2            CSE007
+     C                     MOVE '1'       *IN60                           CSE007
+      *                                                                   CSE007
+      ***  If Blocked Nominal not equal to ZERO.                          CSE007
+      *                                                                   CSE007
+     C                     ELSE                            *X2            CSE007
+      *                                                                   CSE007
+      ***  If 0 decimal place.                                            CSE007
+      *                                                                   CSE007
+     C           *IN50     IFEQ '1'                        *B3            CSE007
+     C                     MOVE MUNOMB    BLNMP0                          CSE007
+      *                                                                   CSE007
+      ***  If 1 decimal place.                                            CSE007
+      *                                                                   CSE007
+     C                     ELSE                            *X3            CSE007
+     C           *IN51     IFEQ '1'                        *B4            CSE007
+     C                     MOVE MUNOMB    BLNMP1                          CSE007
+      *                                                                   CSE007
+      ***  If 2 decimal places.                                           CSE007
+      *                                                                   CSE007
+     C                     ELSE                            *X4            CSE007
+     C           *IN52     IFEQ '1'                        *B5            CSE007
+     C                     MOVE MUNOMB    BLNMP2                          CSE007
+      *                                                                   CSE007
+      ***  If 3 decimal places.                                           CSE007
+      *                                                                   CSE007
+     C                     ELSE                            *X5            CSE007
+     C           *IN53     IFEQ '1'                        *B6            CSE007
+     C                     MOVE MUNOMB    BLNMP3                          CSE007
+      *                                                                   CSE007
+      ***  If 4 decimal places.                                           CSE007
+      *                                                                   CSE007
+     C                     ELSE                            *X6            CSE007
+     C           *IN54     IFEQ '1'                        *B7            CSE007
+     C                     MOVE MUNOMB    BLNMP4                          CSE007
+     C                     ENDIF                           *E7            CSE007
+     C                     ENDIF                           *E6            CSE007
+     C                     ENDIF                           *E5            CSE007
+     C                     ENDIF                           *E4            CSE007
+     C                     ENDIF                           *E3            CSE007
+     C                     ENDIF                           *E2            CSE007
+     C                     ENDIF                           *E1            CSE007
+      *                                                                   CSE007
+      ***  If End Date is equal to 99999 (*HIVAL).                        CSE007
+      *                                                                   CSE007
+     C           MUBEDT    IFEQ *HIVAL                     *B1            CSE007
+     C                     MOVE '1'       *IN65                           CSE007
+     C                     ELSE                            *X1            CSE007
+     C                     MOVE '0'       *IN65                           CSE007
+     C                     Z-ADDMUBEDT    ZDAYNO                          CSE007
+     C                     EXSR ZDATE2                                    CSE007
+     C                     MOVE ZADATE    ENDDP1                          CSE007
+     C                     ENDIF                           *E1            CSE007
+      *                                                                   CSE007
+      ***  Format Block from Date.                                        CSE007
+      *                                                                   CSE007
+     C           MUBSTT    IFEQ *ZEROS                     *B1            CSE007
+     C                     MOVE *BLANKS   RBSTT                           CSE007
+     C                     ELSE                            *X1            CSE007
+     C                     Z-ADDMUBSTT    ZDAYNO                          CSE007
+     C                     EXSR ZDATE2                                    CSE007
+     C                     MOVE ZADATE    RBSTT                           CSE007
+     C                     ENDIF                           *E1            CSE007
+      *                                                                   CSE007
+      ***  Format Block Error/Warning Indicator.                          CSE007
+      *                                                                   CSE007
+     C                     MOVE MUBEWI    RBEWI                           CSE007
+      *                                                                   CSE007
+     C                     MOVE MUBNAR    NARRP1           Narrative.     CSE007
+      *                                                                   CSE007
+      ***  Output Detail.                                                 CSE007
+      *                                                                   CSE007
+     C                     WRITEDETAIL                                    CSE007
+      *                                                                   CSE007
+     C                     ENDSR                                          CSE007
+      *                                                                   CSE007
+      *****************************************************************   CSE007
+      /EJECT
+     *********************************************************************
+     C**  *PSSR  - STANDARD DATA BASE ERROR PROCESSING (P004)
+     *********************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C** UPDATE LDA WITH ERROR INFORMATION
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVELDBFILE    WWFILE
+     C                     MOVELDBKEY     WWKEY
+     C                     MOVELDBPGM     WWPGM
+     C                     MOVELDBASE     WWASE
+     C                     OUT  LDA
+     C*
+     C                     WRITEHEADAU                                    S01496
+     C***********          WRITEERROR                                     S01496
+     C                     WRITEERRORAU                                   S01496
+     C*                                                                   S01496
+     C           *IN41     IFEQ '1'                                       S01496
+     C                     WRITEDBERROR                                   S01496
+     C                     END                                            S01496
+     C*
+     C                     DUMP
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR
+     *********************************************************************
+      /EJECT
+     C*****************************************************************   S01496
+     C*                                                                   S01496
+     C*  RCFP1 -- Subroutine to register P1 report via RCF                S01496
+     C*                                                                   S01496
+     C*****************************************************************   S01496
+     C*                                                                   S01496
+     C           RCFP1     BEGSR                            ** RCFP1 **   S01496
+     C*                                                                   S01496
+     C**  Ensure report spool file is recorded by RCF.                    S01496
+     C*                                                                   S01496
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01496
+     C                     CALL 'ZSFILE'                                  S01496
+     C                     PARM           SEQ     5                       S01496
+     C                     PARM *BLANKS   @PARM   3                       S01496
+     C                     PARM           SFILE                           S01496
+     C                     PARM           ZSNUM                           S01496
+     C                     PARM           ZSERR   1                       S01496
+     C*                                                                   S01496
+     C**  Error during ZSFILE processing, return to calling program.      S01496
+     C*                                                                   S01496
+     C           ZSERR     IFEQ 'Y'                                       S01496
+     C                     SETON                     U7U8LR               S01496
+     C                     RETRN                                          S01496
+     C                     END                                            S01496
+     C*                                                                   S01496
+     C                     ENDSR                                          S01496
+     C*                                                                   S01496
+     C*****************************************************************   S01496
+     C/EJECT                                                              S01496
+     C*****************************************************************   S01496
+     C*                                                                   S01496
+     C*  RCFAU -- Subroutine to register AU report via RCF                S01496
+     C*                                                                   S01496
+     C*****************************************************************   S01496
+     C*                                                                   S01496
+     C           RCFAU     BEGSR                            ** RCFAU **   S01496
+     C*                                                                   S01496
+     C**   Ensure audit spool file is recorded by RCF.                    S01496
+     C*                                                                   S01496
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      S01496
+     C                     CALL 'ZSFILE'                                  S01496
+     C                     PARM           SEQ                             S01496
+     C                     PARM *BLANKS   @PARM                           S01496
+     C                     PARM           SFILEU                          S01496
+     C                     PARM           ZSNUMU                          S01496
+     C                     PARM           ZSERR                           S01496
+     C*                                                                   S01496
+     C**  Error during ZSFILE processing, return to calling program.      S01496
+     C*                                                                   S01496
+     C           ZSERR     IFEQ 'Y'                                       S01496
+     C                     SETON                     U7U8LR               S01496
+     C                     RETRN                                          S01496
+     C                     END                                            S01496
+     C*                                                                   S01496
+     C                     ENDSR                                          S01496
+     C*                                                                   S01496
+     C*****************************************************************   S01496
+     C/EJECT                                                              S01496
+     C********************************************************************
+     C/COPY ZSRSRC,ZDATE2Z2
+**   CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

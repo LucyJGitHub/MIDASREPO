@@ -1,0 +1,403 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Create pay/receive extract files')
+     F*
+     F*                                                                  *
+     F*  Midas - Dealing Module
+     F*                                                                  *
+     F*       DL1700  -  PAY/RECEIVE EXTRACT- FOR SWIFT DIRECT LINK      *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *  Prev Amend No. 170234             Date 24May00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 E25688             Date 27JUN91               *
+     F*                      BHF915           DATE   06NOV90             *
+     F*                      BHF872           DATE   24OCT90             *
+     F*                      E23269           DATE   13AUG90             *
+     F*                      S01117           DATE   04/09/89            *
+     F*                      S01194           DATE   04/09/89            *
+     F*                      E15B22           DATE   11/11/88            *
+     F*                      E11580           DATE   30/06/88            *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*       170234 - Pay/Receives are not generating due to RRLC in
+     F*                DTRIXHH is not being updated correctly.  Applied
+     F*                fixes 065780, 072198, 108341 to remove dependency
+     F*                of Pay/Rec generation on DTRIXHH.
+     F*       E25688 -   RRLC not output if processing NX/DEAMS
+     F*       BHF915 -   SAFEGUARD TO FIX IN DL0110 WHICH CAUSED ALL
+     F*                  PAY/REC MESSAGES TO BE RE-CREATED IF RRLC OF
+     F*                  DTRIXHH WAS SET TO ZERO.
+     F*       BHF872 -   REMOVE FIX E11580 (CAUSED PAY/RECEIVES NOT TO   *S01117
+     F*                  BE PRODUCED. NDLR+NDAR<RRLC BECAUSE OF DELETED
+     F*                  RECORDS (Superseded by E23269)
+     F*       S01117 -   R10 - MULTIBRANCHING                            *S01117
+     F*       S01194 -   NEW STANDING DATA                               *S01194
+     F*       E23269 -   IT IS POSSIBLE TO PRODUCE PAY/RECEIVES ON       *E23269
+     F*                  DEALS THAT HAVE NOT HAD CONFS PRODUCED          *E23269
+     F*       E15822 -   ROLLBACK ON DEALS INPUT CAN CAUSE A RECORD      *E15822
+     F*                  TO BE MISSING FROM DTRIXDD, CHAIN OF DTRIXDD    *E15822
+     F*                  MAY FALL OVER, THEREFORE USE READ               *E15822
+     F*       E11580 -   PAY/RECEIVE IS NOT PRODUCED FOR A DEAL          *E11580
+     F*                  AMENDMENT WHEN IT IS THE LAST INPUT ON DTRIX.   *E11580
+     F*                                                                  *
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 3
+     F***TABLE   IP  F      96 12AI     2 DISK                            S01194
+     FDTRIXHH UF  F      40            DISK
+     F***DTRIXDD IF  F      40            DISK                            170234
+     F***                                           KRECNO RRN     E15822 170234
+     FDTRIXL6 UF  F      40  3AI     3 DISK                               170234
+     FDTRIEHH O   F      40            DISK
+     FDTRIEPH O   F      40            DISK
+     FDTRIEZZ O   F      40            DISK
+     FDL1700AUO   F     132            PRINTER
+     F/COPY WNCPYSRC,DL1700F001
+     F/SPACE 3
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F**01*****       INSTALLATION CONTROL DATA REC. 1                    S01194
+     F* 03            S/DTRIX - HEADER
+     F* 04                    - DETAIL
+     F********40      1ST CYCLE IND.                                      S01117
+     F*       41      CHAIN FAILURE
+     F********42      HEADER RECORD ON TABLE FILE                         S01194
+     F*       43      LOOP CONTROL
+     F*       50      END OF FILE FOUND ON READ OF DTRIXDD                E15822
+     F/EJECT
+     E                    CPY@    1   1 80
+     I*****                                                               S01194
+     I*****TABLE FILE - INSTALLATION CONTROL DATA RECORD 1.               S01194
+     I*****                                                               S01194
+     I****TABLE   NS  01   1 CD   2 C0   3 C1                             S01194
+     I*****  AND      12 C1  13 C0                                        S01194
+     I*****                                   1   1 RECIT                 S01194
+     I*****                                   2   30RECT                  S01194
+     I*****                                  12  130RCDE                  S01194
+     I*****                                  14  66 TITL                  S01194
+     I*****                                  67  67 DATF                  S01194
+     I***********                            68  700DFBR           S01117 S01194
+     I*****                                  68  70 DFBM           S01117 S01194
+     I*****                                  74  74 MODI1                 S01194
+     I*****                                  75  75 MODI2                 S01194
+     I*****                                  76  76 MODI3                 S01194
+     I*****                               P  77  790RUND                  S01194
+     I*****                                  80  86 RUNA                  S01194
+     I*****                                  87  870SFLG                  S01194
+     I*****                               P  90  920LCD                   S01194
+     I*****                                  93  93 CHTP                  S01194
+     I*****                               P  94  960TNLU                  S01194
+     I*****                                                               S01194
+     I**CATCHALL                                                          S01194
+     I*****   NS                                                          S01194
+     I*****                                   1   1 RECIT                 S01194
+     I*****                                   2   30RECT                  S01194
+     I*****                                  12  130RCDE                  S01194
+     I*****                                                               S01194
+     I*****                                                               S01194
+     I*
+     IDTRIXHH NS  03   1 CH
+     I*    DEAL TRANSACTIONS INDEX FILE - HEADER RECORD.
+     I                                        1   1 RECI
+     I                                        2   2 RCDT
+     I                                        3   80DLNO
+     I                                    P   9  110NORE
+     I                                    P  12  140FLSZ
+     I                                    P  15  170RRLC
+     I                                    P  18  200RRNA
+     I                                    P  21  230RRLX
+     I                                    P  24  260RRXP
+     I                                    P  27  290NDLR
+     I                                    P  30  320NDAR
+     I                                       33  330STPI
+     I                                    P  35  370RRNT
+     I                                    P  38  400TNLU
+     I*
+     I* CATCHALL
+     I        NS
+      *                                                                   170234
+     IDTRIXL6 NS  04   1 CD   2 CD                                        170234
+     I       OR        1 CD   2 CA                                        170234
+      *                                                                   170234
+      **  Deal Transactions Detail File                                   170234
+      *                                                                   170234
+     I                                        1   1 RECI                  170234
+     I                                        2   2 RCDT                  170234
+     I                                        3   80DLNO                  170234
+     I                                        9  130VDAT                  170234
+     I                                        9  130VDATDL                170234
+     I                                       14  160DASN                  170234
+     I                                       14  160DASNDL                170234
+     I                                       17  17 CHTP                  170234
+     I                                       18  18 CNRQ                  170234
+     I                                       19  19 CNPR                  170234
+     I                                       20  20 REPR                  170234
+     I                                       21  250RRLA                  170234
+     I                                       26  26 DADI                  170234
+     I                                       27  270PRI1                  170234
+     I                                       28  280PRI2                  170234
+     I                                       29  290PRI3                  170234
+     I                                    P  38  400TNLU                  170234
+     I                                        1  40 LOT                   170234
+     I                                        1  40 LOT1                  170234
+      *                                                                   170234
+     I        NS                                                          170234
+     I                                        1  40 LOT                   170234
+     I*
+     I***DTRIXDD NS  04   1 CD                                            170234
+     I***DETAIL REC.                                                      170234
+     I****************************************1  40 LOT                   170234
+     I***************************************18  18 CNRQ           E23269 170234
+     I***************************************19  19 CNPR           E23269 170234
+     I/COPY WNCPYSRC,DL1700I001
+     I***                                                                 170234
+     I***CATCHALL                                                         170234
+     I***     NS                                                          170234
+     I*
+     I***DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION            S01117
+     I***CPYR@#      DS                                                   S01117
+     I*****                                   1  80 CPY@                  S01117
+     I*****                                   1  20 CPY@##                S01117
+     I**                                                                  S01117
+     I*
+     I@BANK     E DSSDBANKPD                                              S01194
+     I** EXTERNAL DS FOR BANK DETAILS                                     S01194
+     I*
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*                                                                   S01194
+     IPRIDS       DS                                                      170234
+      *                                                                   170234
+      ** DS for update of DTRIXL6                                         170234
+      *                                                                   170234
+     I                                        1  40 LOT1                  170234
+     I                                       27  270PRI1                  170234
+     I                                       28  280PRI2                  170234
+     I                                       29  290PRI3                  170234
+     I*                                                                   170234
+     I/EJECT
+     C**1*S*T***C*Y*C*L*E***P*R*O*C*E*S*S*I*N*G*****                      S01117
+     C***40**              GOTO START                                     S01117
+     C*****                SETON                     40                   S01117
+     C                     Z-ADD1         RECIN
+     C                     Z-ADD2         RECOUT
+     C                     Z-ADD1         RRN     50
+     C           RRN       CHAINDTRIXHH              41
+     C**N03*               SETON                     LRU7                 S01194
+     C******               GOTO END                                       S01194
+     C  N03                SETON                     LRU7U8               S01194
+     C  N03                MOVEL'DTRIXHH' DBFILE 10        ************   S01194
+     C  N03                MOVEL'02'      DBASE   3        * DBERR 02 *   S01194
+     C  N03                MOVEL'*FIRST  'DBOPTN           ***********    S01194
+     C  N03                EXSR *PSSR                                     S01194
+     C  N03                GOTO END
+      *                                                                   170234
+      ** Must release lock on record in DTRIXHH                           170234
+      *                                                                   170234
+     C                     EXCPTBLANK                                     170234
+     C/SPACE 3
+     C**I*S***T*A*B*/*I*1***M*I*S*S*I*N*G***********                      S01194
+     C*****      START     TAG                             ** START TAG **S01194
+     C*****                SETOF                     42                   S01194
+     C***01                GOTO MAIN                                      S01194
+     C*****      RECIT     COMP 'H'                      42               S01194
+     C***42                GOTO END                                       S01194
+     C**N01                SETON                     LRU7                 S01194
+     C***LR U7             GOTO END                                       S01194
+     C*                                                                   S01194
+     C                     MOVEACPY@      BIS@   80                       S01194
+     C** READ BANK DETAILS VIA ACCESS PROGRAM                             S01194
+     C                     CALL 'AOBANKR0'                                S01194
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*FIRST ' @OPTN   7                       S01194
+     C           @BANK     PARM @BANK     DSFDY                           S01194
+     C           @RTCD     IFNE *BLANK                                    S01194
+     C                     MOVEL'SDBANKPD'DBFILE 10        ************   S01194
+     C                     MOVEL'01'      DBASE   3        * DBERR 01 *   S01194
+     C                     MOVEL@OPTN     DBOPTN  7        ************   S01194
+     C                     SETON                     U7U8LR               S01194
+     C                     EXSR *PSSR                                     S01194
+     C                     GOTO END                                       S01194
+     C                     END                                            S01194
+     C*
+     C/SPACE 3
+     C* E X T R A C T   S / D T R I X   R E C O R D S
+     C           MAIN      TAG                             ** MAIN TAG **
+     C**
+     C** IF RRN OF LAST TELEX IS LESS THAN RRN OF LAST CONF.
+     C**  THEN PRODUCE EXTRACT RECORDS FOR TELEX RUN
+     C**
+     C***INITIALISE*RRN*WORK*FIELD                                        170234
+     C***********RRLX      ADD  1         RRN                             170234
+     C/COPY WNCPYSRC,DL1700C001
+     C*
+     C*                                                                   E11580
+     C***IF*DEAL*AMENDMENT*PRESENT*AFTER*RRN*OF*LAST*CONFIRMATION*ONE11580E23269
+     C***DTRIX*TO*INCLUDE*IT*IN*THIS*PAY/RECEIVE*RUN.***************E11580E23269
+     C***********NDLR      ADD  NDAR      TNO     50                E11580E23269
+     C***********          Z-ADDTNO       RRLC                      E11580E23269
+     C*                                                                   E15822
+     C***USE*SET*LOWER*LIMITS*AND*READ*INSTEAD*OF*CHAIN            E15822 170234
+     C***********                                                  E15822 170234
+     C***********RRN       SETLLDTRIXDD                            E15822 170234
+     C***********          READ DTRIXDD                  50        E15822 170234
+     C/COPY WNCPYSRC,DL1700C003
+     C***********                                                         170234
+     C***********RRN       DOWLERRLC                                      170234
+     C************IN50     ANDEQ'0'                                E15822 170234
+     C                     READ DTRIXL6                  50               170234
+     C           *IN50     DOWEQ'0'                                       170234
+     C/COPY WNCPYSRC,DL1700C002
+     C**  PRODUCE RECORDS UNTIL RRN OF LAST CONFIRMATION REACHED
+     C           RECIN     ADD  1         RECIN   50        *
+     C***********          SETOF                     04     *             E15822
+     C***********RRN       CHAINDTRIXDD              41     *             E15822
+     C***41******          SETON                     LRU7   *             E15822
+     C***41******          GOTO END                         *             E15822
+     C   04      RECOUT    ADD  1         RECOUT  50        *
+     C   04                EXCPT                            *
+     C           PRI1      IFEQ 1                                         170234
+     C   04                Z-ADD9         PRI1                            170234
+     C                     END                                            170234
+     C           PRI2      IFEQ 1                                         170234
+     C   04                Z-ADD9         PRI2                            170234
+     C                     END                                            170234
+     C           PRI3      IFEQ 1                                         170234
+     C   04                Z-ADD9         PRI3                            170234
+     C                     END                                            170234
+     C   04                UPDATDTRIXL6   PRIDS                           170234
+     C***********RRN       ADD  1         RRN               *             E15822
+     C**N43*               GOTO LOOP                       **ENDLOOP
+     C***********          READ DTRIXDD                  50        E15822 170234
+     C                     READ DTRIXL6                  50               170234
+     C                     END
+     C*                                                                   E23269
+     C***READ*ON*FOR*DEAL*AMENDMENT/NOSTRO*TRANSFER*RECORDS        E23269 170234
+     C***WANT*TO*EXTRACT*RECORDS*FOR*DEALS*THAT*DO*NOT*PRODUCE*CONFE23269 170234
+     C***********                                                  E23269 170234
+     C***********NDLR      ADD  NDAR      NTOTDL  50               E23269 170234
+     C***********NTOTDL    IFGT RRLC                               E23269 170234
+     C***********RRLC      ADD  1         RRN2    50               E23269 170234
+     C***********RRN2      SETLLDTRIXDD                            E23269 170234
+     C***********          READ DTRIXDD                  50        E23269 170234
+     C************IN50     DOWEQ'0'                                E23269 170234
+     C***********RECIN     ADD  1         RECIN                    E23269 170234
+     C***********CNRQ      IFEQ 'Y'                                E23269 170234
+     C***********CNPR      ANDEQ'N'                                E23269 170234
+     C***********          SETON                     50            E23269 170234
+     C***********          ELSE                                    E23269 170234
+     C***04******RECOUT    ADD  1         RECOUT                   E23269 170234
+     C***04******RRLC      ADD  1         RRLC                     E23269 170234
+     C***04******          EXCPT                                   E23269 170234
+     C***********          READ DTRIXDD                  50        E23269 170234
+     C***********          END                                     E23269 170234
+     C***********          END                                     E23269 170234
+     C***********          END                                     E23269 170234
+     C*                                                                   E23269
+     C**  LAST P/R PRODUCED WITH RRN EQUAL TO RRN OF LAST CONF.
+     C                     Z-ADDRRLC      RRNST   50
+     C                     SETON                     LR
+     C           END       TAG                             **  END TAG  **
+     C/SPACE 3
+     C* L A S T   R E C O R D
+     C*                                                                   BHF915
+     C* IF RRNST = 0 OUTPUT RRXP INTO RRNST                               BHF915
+     C*                                                                   BHF915
+     C           *INLR     IFEQ '1'                                       BHF915
+     C           RRNST     ANDEQ0                                         BHF915
+     C                     Z-ADDRRXP      RRNST                           BHF915
+     C                     END                                            BHF915
+     CLR                   Z-ADD1         RRN
+     CLRNU7      RRN       CHAINDTRIXHH              41
+     CLR 03NU7             EXCPT
+     C*
+     C/EJECT
+0506 C********************************************************************
+     C*                                                                   S01194
+     C           *PSSR     BEGSR                                          S01194
+     C*                                                                   S01194
+     C           @RUN      IFEQ *BLANK                                    S01194
+     C                     MOVE 'Y'       @RUN    1                       S01194
+     C                     DUMP                                           S01194
+     C                     END                                            S01194
+     C*                                                                   S01194
+     C                     ENDSR                                          S01194
+0273 C********************************************************************S01194
+     ODL1700AUT  203   LR
+     O*****                              22 'REFERENCE DL1700'
+     O                                   22 'REFERENCE DL1700AU'          S01117
+     O*****                    TITL      89                               S01194
+     O                         BJURPT    89                               S01194
+     O                                  122 'DATE              PAGE'
+     O*****                    RUNA     112                               S01194
+     O                         BJMRDT   112                               S01194
+     O                         PAGE  Z  127
+     O        T  1     LR
+     O                                   62 'DEAL TRANSACTIONS INDEX'
+     O                                   86 'EXTRACT - FILE CONTROLS'
+     O        T  3     LR
+     O                                   63 '------------------------'
+     O                                   86 '-----------------------'
+     O        T  1     LR
+     O                                   28 'S/DTRIX - RUN CONTROLS'
+     O                                   59 'NUMBER'
+     O        T  2     LR
+     O                                   28 '----------------------'
+     O                                   59 'OF RECORDS'
+     O        T  3     LR
+     O                                   21 'RECORDS INPUT'
+     O                         RECIN 3   59
+     O        T  1     LR
+     O                                   28 'S/DTRIE - RUN CONTROLS'
+     O        T  2     LR
+     O                                   28 '----------------------'
+     O        T  3     LR
+     O                                   28 'TOTAL RECORDS OUTPUT'
+     O                         RECOUT3   59
+     O*****   T 33     LR U7                                              S01194
+     O*****                              71 '*** DATABASE ERROR ***'      S01194
+0569 O        T 3      LR U7 U8                                           S01194
+     O                                   71 '*** PRINT TERMINATED ***'    S01194
+     O        T 2      LR U7 U8                                           S01194
+     O                                   57 'DATABASE ERROR'              S01194
+     O                         DBASE     61                               S01194
+     O                                   67 'FILE'                        S01194
+     O                         DBFILE    78                               S01194
+     O        T 13     LR U7 U8                                           S01194
+     O                                   49 'OPTION'                      S01194
+     O                         DBOPTN    57                               S01194
+     O        T 00     LR
+     O*****                              73 '*** END OF REPORT ***'       S01117
+     O/SPACE 3
+     ODTRIEHH H        1P
+     O                                    1 'H'
+     ODTRIEPH E        04
+     O                         LOT       40
+     ODTRIEZZ T        LR
+     O                                    1 'T'
+     O                         RECOUT     6
+     O/SPACE 3
+     ODTRIXHH E        LR 03
+     O                         RRNST     17P                              E25688
+     O                         RRNST     26P
+      *                                                                   170234
+     ODTRIXHH E                BLANK                                      170234
+      *                                                                   170234
+     O/COPY WNCPYSRC,DL1700O001
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

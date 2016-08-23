@@ -1,0 +1,1581 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AK SE A/c key gen. - parameter input')           *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Account Key Generator
+     F*                                                               *
+     F*  AK0060 - SE A/c Key Generation - Screen Control              *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. AR1071025          Date 16Jan13               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL031             Date 05Jul04               *
+      *                 BUG3644            Date 12Jul04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU017             Date 07Apr98               *
+      *                 CSE007             Date 24Mar98               *
+     F*                 100986             Date 17APR96               *
+     F*                 081884             Date 17JAN95               *
+     F*                 S01447             Date 18NOV93               *
+     F*                 056357             DATE 12MAY92               *
+     F*                 E40664             Date 12MAY92               *
+     F*                 S01315             DATE 12DEC90               *
+     F*                 E22116             DATE 30MAY90               *
+     F*                 E21451             DATE 19MAR90               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  AR1071025 - Erroneous field will only highlight after the    *
+      *              second enter (Recompile)                         *
+      *  CRE026 - Consumer Banking (Recompile)                        *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL031 - Taxation of Savings Income                          *
+      *  BUG3644 - Serious Error in Collateralised Lending (Recompile)*
+     F*  CEU017 - Securities Redenomination Euro Changes              *
+     F*  CSE007 - Corporate Actions.                                  *
+     F*  100986 - Add Book field for Template access.                 *
+     F*  081884 - NARRATIVE CODE IS NOW ALPHA - RECOMPILE             *
+     F*  S01447 - Withholding tax. Add Withholding Tax countries.     *
+     F*  056357 - Pointer not set for location referenced Error       *
+     F*  E40664 - Add template investment type for BHF.               *   S01315
+     F*  S01315 - Change to follow SD standards                       *   S01315
+     F*           Program name changed from SE4000 to AK0060.         *
+     F*  E22116 - HELP SYSTEM.                                   *
+     F*  E21451 - Variable names ITYP,SECD,ETYP,ATYP changed as these *   E21451
+     F*           fields are already defined in reference file MFRFL  *   E21451
+     F*           with attributes different from those required.      *   E21451
+     F*           New field names ITYPA,SECDA,ETYPA,and ATYPA.        *   E21451
+     F*                                                               *
+     F*****************************************************************
+     F*SE4000DFCF**E******              WORKSTN                           S01315
+     FAK0060DFCF  E                    WORKSTN                            S01315
+     FINVTP   IF  E           K        DISK
+     F*TABSE   IF  E           K        DISK                              S01315
+     F*BOOKD   IF  E           K        DISK                              S01315
+     FSDBOOKL1IF  E           K        DISK                               S01315
+     FSDDLSTL1IF  E           K        DISK                               S01315
+     F**LINKD   O   E                    DISK                      A      S01315
+     FLINKD   O   E                    DISK                      A    UC  S01315
+     FLINKDX1 O   E                    DISK                      A    UC  100986
+      *                                                                                       CGL031
+      ** Midas SD Country of Tax Codes by Country of Residence                                CGL031
+     FSDCTTXL2IF  E           K        DISK                                                   CGL031
+     F                                              KINFSR *PSSR                              CGL031
+      *
+      *   INDICATOR USAGE
+      *   ---------------
+      *
+      *   01      CMD/3 End of job
+      *   02      Process screen while set off
+      *   03      CGL031 Indicator                                                            CGL031
+      *   04      Working Indicator                                                           CGL031
+      *   05      CMD/12 Initial screen
+      ****06******HELP requested                                          E22116
+      *   06      F5 to refresh pressed                                   E22116
+      *   07      Values entered correctly - generate keys/report etc     S01315
+      *   08      Protect withholding tax fields (S01447 = OFF)           S01447
+      *   09      Error on Investment Type
+      *   10      Error on Currency
+      *   11-20   Error on Book Codes
+      *   21-25   Error on Trade Subtypes
+      *   31      Error on Grey Market flag
+      *   32      Error on Primary Market flag
+      *   33      Error on Secondary Market flag
+      *   34      Error on Safe Custody/Discretionary usage indicator
+      *   41-50   Error on Tax Country Codes                              S01447
+      *   51-55   Error on Corporate Action Trade Subtypes                CSE007
+      *   56-65   Error on EU Withholding Tax Countries                                       CGL031
+      *   90      Chain fail
+      *   91      Subtypes not required - suppress display & protect
+      ****92******Call SE4010*********                                    S01315
+      *   92      Call AK0061                                             S01315
+      *   93      Corp Act Subtypes not required - suppress dsply & prtct CSE007
+      *   99      General error
+      *
+      *   SUBROUTINE DEFINITIONS
+      *   ----------------------
+      *
+      *   INIT    Initial routine
+      *   MAIN    Controlling routine
+      *   CLOS    Closing routine
+      *   CLEAN   Resets error indicators, blanks input fields
+      *   VALID   Performs validation on input
+      *   VALCTY  Validates country codes array                           S01447
+      *   PROCTY  Checks for other occurences of country in array         S01447
+      *   VALCTY  Checks country code is on file                          S01447
+      *   SRVTAX  Validates input for EU Withholding Tax accounting                           CGL031
+      *   SRSTAX  Saves a/c codes for EU Withholding Tax accounting                           CGL031
+      *   OUTPUT  Sets up output record for LINKD
+      ****ERRORS  Sets up error code arrays                               S01315
+      ****ZICDSE  Access ICD record 36                                    S01315
+      *   ZASNMS  Send message to program messge queue                    S01315
+      *   *PSSR   Program Exception Subroutine                                                CGL031
+      *
+     E********************ER1        19  4               ERROR MSGS.      S01315
+     E********************ER2        19  4               ERROR MSGS.      S01315
+     E********************ERR        40  4               ERR MSGS FOR HELPS01315
+     E                    CPY@    1   1 80               COPYRIGHT ARRAY  S01315
+     E                    CTY        10  2  D            CTRY CODES ARRAY S01447
+     E                    INDS       10  1               ERROR IND  ARRAY S01447
+      *                                                                                       CGL031
+     E                    WTCA       10  2                                                    CGL031
+      ** Withholding Tax Countries Array                                                      CGL031
+      *                                                                                       CGL031
+     E                    WTAA       10  4                                                    CGL031
+      ** Withholding Tax Account Codes Array                                                  CGL031
+      *                                                                                       CGL031
+     E                    WCCA       10  2                                                    CGL031
+      ** Withholding Tax Country Codes Array                                                  CGL031
+     E*                                                                   S01315
+     ISCREEN      DS
+     I                                        1   3 SINVT
+     I                                        4   6 SCURR
+     I                                        7  26 BOOKS
+     I                                        7   8 SBK1
+     I                                        9  10 SBK2
+     I                                       11  12 SBK3
+     I                                       13  14 SBK4
+     I                                       15  16 SBK5
+     I                                       17  18 SBK6
+     I                                       19  20 SBK7
+     I                                       21  22 SBK8
+     I                                       23  24 SBK9
+     I                                       25  26 SBK10
+     I                                       27  36 TYPES
+     I                                       27  28 STP1
+     I                                       29  30 STP2
+     I                                       31  32 STP3
+     I                                       33  34 STP4
+     I                                       35  36 STP5
+     I                                       37  37 SGREY
+     I                                       38  38 SPRIM
+     I                                       39  39 SSECD
+     I                                       37  39 FLAGS
+     I                                       40  40 SSFDSC
+     I                                       41  43 STEMP                 E40664
+     I                                       44  45 SCNCD1                S01447
+     I                                       46  47 SCNCD2                S01447
+     I                                       48  49 SCNCD3                S01447
+     I                                       50  51 SCNCD4                S01447
+     I                                       52  53 SCNCD5                S01447
+     I                                       54  55 SCNCD6                S01447
+     I                                       56  57 SCNCD7                S01447
+     I                                       58  59 SCNCD8                S01447
+     I                                       60  61 SCNCD9                S01447
+     I                                       62  63 SCNCD0                S01447
+     I                                       64  73 CTYPES                CSE007
+     I                                       64  65 STPC1                 CSE007
+     I                                       66  67 STPC2                 CSE007
+     I                                       68  69 STPC3                 CSE007
+     I                                       70  71 STPC4                 CSE007
+     I                                       72  73 STPC5                 CSE007
+      *
+      *  DS for screen fields
+      *
+     I*LDA        UDS                            256
+     I***********                           134 177 DBLOT                 S01315
+     I***********                           134 138 DBFILE                S01315
+     I***********                           139 167 DBKEY                 S01315
+     I***********                           168 175 DBPGM                 S01315
+     I***********                           176 177 DBASE                 S01315
+     ILDA         DS                            256                       S01315
+     I                                      134 183 DBLOT                 S01315
+     I                                      134 141 DBFILE                S01315
+     I                                      142 170 DBKEY                 S01315
+     I                                      171 180 DBPGM                 S01315
+     I                                      181 1830DBASE                 S01315
+     I*  LDA for error details                                            S01315
+     I*                                                                   S01315
+     ICPYR@#      DS                                                      S01315
+     I                                        1  80 CPY@                  S01315
+     I                                        1  20 CPY@##                S01315
+     I** Data Structure for Compilation  - Copyright Insertion            S01315
+     I*                                                                   S01315
+     IPSDS       SDS                                                      S01315
+     I                                      244 253 WSID                  S01315
+     I                                      254 263 USRID                 S01315
+     I** Data Structure to retrieve User and Workstation ID.              S01315
+     I*                                                                   S01315
+     IRUNDAT      DS                             13                       S01315
+     I                                        1   7 RUNA                  S01315
+     I                                    P   8  100RUND                  S01315
+     I                                       11  11 SSF                   S01315
+     I                                       12  12 DATF                  S01315
+     I                                       13  13 @MBIN                 S01315
+     I** Rundate Data Area                                                S01315
+     I*                                                                   S01315
+     ISEWTC       DS                                                                          CGL031
+     I                                        1   2 SEWTC1                                    CGL031
+     I                                        3   4 SEWTC2                                    CGL031
+     I                                        5   6 SEWTC3                                    CGL031
+     I                                        7   8 SEWTC4                                    CGL031
+     I                                        9  10 SEWTC5                                    CGL031
+     I                                       11  12 SEWTC6                                    CGL031
+     I                                       13  14 SEWTC7                                    CGL031
+     I                                       15  16 SEWTC8                                    CGL031
+     I                                       17  18 SEWTC9                                    CGL031
+     I                                       19  20 SEWTC0                                    CGL031
+      ** EU Withholding Tax Countries Data Structure (Screen)                                 CGL031
+      *                                                                                       CGL031
+     IEWTA        DS                                                                          CGL031
+     I                                        1   4 EWTA1                                     CGL031
+     I                                        5   8 EWTA2                                     CGL031
+     I                                        9  12 EWTA3                                     CGL031
+     I                                       13  16 EWTA4                                     CGL031
+     I                                       17  20 EWTA5                                     CGL031
+     I                                       21  24 EWTA6                                     CGL031
+     I                                       25  28 EWTA7                                     CGL031
+     I                                       29  32 EWTA8                                     CGL031
+     I                                       33  36 EWTA9                                     CGL031
+     I                                       37  40 EWTA10                                    CGL031
+      ** EU Withholding Tax Account Codes Data Structure                                      CGL031
+      *                                                                                       CGL031
+     IEWTC        DS                                                                          CGL031
+     I                                        1   2 EWTC1                                     CGL031
+     I                                        3   4 EWTC2                                     CGL031
+     I                                        5   6 EWTC3                                     CGL031
+     I                                        7   8 EWTC4                                     CGL031
+     I                                        9  10 EWTC5                                     CGL031
+     I                                       11  12 EWTC6                                     CGL031
+     I                                       13  14 EWTC7                                     CGL031
+     I                                       15  16 EWTC8                                     CGL031
+     I                                       17  18 EWTC9                                     CGL031
+     I                                       19  20 EWTC10                                    CGL031
+      ** EU Withholding Tax Country Codes Data Structure                                      CGL031
+      *                                                                                       CGL031
+     ISDSTRD    E DSSDSTRDPD                                              S01315
+     I** Securities Trading Data                                          S01315
+     I*                                                                   S01447
+     ISDCTRY    E DSSDCTRYPD                                              S01447
+     I** Country Codes table data                                         S01447
+     I*                                                                   S01315
+     ISCSARD    E DSSCSARDPD                                                                  CGL031
+      ** Switchable Features Data Structure                                                   CGL031
+      *                                                                                       CGL031
+     I***DSFDY*****E*DSDSFDY                                       S01315 056357
+     IDSFDY     E DSDSFDY                                                 S01447
+     I** First DS for Access Programs, Short Data Structure               S01315
+     IDSSDY     E DSDSSDY                                                 056357
+     I** First DS for Access Programs, Long Data Structure                056357
+      *****************************************************************   S01315
+     C           *ENTRY    PLIST                           Entry parameterS01315
+     C                     PARM           FKEY2   1        Rtrn code(F3)  S01315
+      *****************************************************************   S01315
+      *
+      *  Initial routine
+      *
+     C                     EXSR INIT
+      *
+      *  Main processing
+      *
+     C                     EXSR MAIN
+      *
+      *  Closing routine
+      *
+     C                     EXSR CLOS
+      *
+      *****************************************************************
+      *                                                               *
+      *  I N I T I A L    P R O C E S S I N G                         *
+      *                                                               *
+      * Calls:                                                        *
+      * AOSTRDR0 - SDSTRDPD Access Program (external)                 *
+      **ZICDSE*- Get ICD record 36                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      * Prepare LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA                                       S01315
+     C                     MOVE *BLANKS   DBLOT
+     C***********          MOVEL'SE4000'  DBPGM                           S01315
+     C                     MOVEL'AK0060'  DBPGM                           S01315
+     C                     OUT  LDA                                       S01315
+      *
+      * Define key list for file INVTPD
+      *
+     C           IKEY      KLIST
+     C                     KFLD           SCURR
+     C                     KFLD           SINVT
+     C*                                                                   S01315
+     C** Define Rundat Data Area                                          S01315
+     C*                                                                   S01315
+     C           *NAMVAR   DEFN           RUNDAT                          S01315
+     C                     IN   RUNDAT                                    S01315
+     C*                                                                   S01315
+     C** Clear all fields to send messages to message queue.              S01315
+     C*                                                                   S01315
+     C                     MOVEL*BLANK    ZAPGM            Program queue  S01315
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue      S01315
+     C                     MOVEL*BLANK    ZAMSID           Message Id.    S01315
+     C                     MOVEL*BLANK    ZAMSGF           Message file.  S01315
+     C                     MOVEL*BLANK    ZAMSDA           Message data.  S01315
+     C                     MOVEL*BLANK    ZAMSTP           Message type.  S01315
+     C                     MOVE *BLANKS   SPGMQ            Program queue  S01315
+     C                     MOVEL'AK0060'  SPGMQ            Program queue  S01315
+     C*                                                                   S01315
+      **Get*Installation Control Data record 36                           S01315
+      ***********                                                         S01315
+     C***********          EXSR ZICDSE                                    S01315
+      ***********                                                         S01315
+      **If*error*in ZICDSE, abort program                                 S01315
+      ***********                                                         S01315
+     C************IN90     IFEQ '1'                                       S01315
+     C***********          MOVE '01'      DBASE             ************  S01315
+     C***********          MOVEL'TABLE'   DBFILE            * DATABASE *  S01315
+     C***********          MOVELZTABKY    DBKEY             * ERROR 01 *  S01315
+     C***********          SETON                     U7U801 ************  S01315
+     C***********          END                                            S01315
+     C*                                                                   S01315
+     C** Use access program AOSTRDR0 to retrieve SDSTRDPD Details         S01315
+     C*                                                                   S01315
+     C                     CALL 'AOSTRDR0'                                S01315
+     C                     PARM '*DBERR ' @RTCD   7                       S01315
+     C                     PARM '*FIRST ' @OPTN   7                       S01315
+     C***********SDSTRD    PARM SDSTRD    DSFDY                    S01315 056357
+     C           SDSTRD    PARM SDSTRD    DSSDY                           056357
+      *                                                                   S01447
+      **  Access SAR details file to see if S01447 SAR is installed.      S01447
+      *                                                                   S01447
+     C                     CALL 'AOSARDR0'                                S01447
+     C                     PARM *BLANKS   @RTCD                           S01447
+     C                     PARM '*VERIFY' @OPTN                           S01447
+     C                     PARM 'S01447'  @SARD   6                       S01447
+      *                                                                   S01447
+     C           @RTCD     IFEQ *BLANK                                    S01447
+     C                     MOVE 'Y'       S01447  1                       S01447
+     C                     ELSE                                           S01447
+     C                     MOVE 'N'       S01447                          S01447
+     C                     MOVE '1'       *IN08            PROTECT FLDS   S01447
+     C                     END                                            S01447
+      *                                                                   S01447
+      **  Access SAR details file to see if CSE007 SAR is installed.      CSE007
+      *                                                                   CSE007
+     C                     CALL 'AOSARDR0'                                CSE007
+     C                     PARM *BLANKS   @RTCD                           CSE007
+     C                     PARM '*VERIFY' @OPTN                           CSE007
+     C                     PARM 'CSE007'  @SARD   6                       CSE007
+      *                                                                   CSE007
+     C           @RTCD     IFEQ *BLANK                                    CSE007
+     C                     MOVE 'Y'       CSE007  1                       CSE007
+     C                     ELSE                                           CSE007
+     C                     MOVE 'N'       CSE007                          CSE007
+     C                     END                                            CSE007
+      *                                                                   CEU017
+      **  Access SAR details file to see if CEU017 SAR is installed.      CEU017
+      *                                                                   CEU017
+     C                     CALL 'AOSARDR0'                                CEU017
+     C                     PARM *BLANKS   @RTCD                           CEU017
+     C                     PARM '*VERIFY' @OPTN                           CEU017
+     C                     PARM 'CEU017'  @SARD   6                       CEU017
+      *                                                                   CEU017
+     C           @RTCD     IFEQ *BLANK                                    CEU017
+     C                     MOVE 'Y'       CEU017  1                       CEU017
+     C                     ELSE                                           CEU017
+     C                     MOVE 'N'       CEU017                          CEU017
+     C                     END                                            CEU017
+      *                                                                                       CGL031
+      ** Check if CGL031 is enabled.                                                          CGL031
+      *                                                                                       CGL031
+     C                     CALL 'AOSARDR0'                                                    CGL031
+     C                     PARM *BLANKS   PRTCD   7                                           CGL031
+     C                     PARM '*VERIFY' POPTN   7                                           CGL031
+     C                     PARM 'CGL031'  PSARD   6                                           CGL031
+     C           SCSARD    PARM SCSARD    DSFDY                                               CGL031
+      *                                                                                       CGL031
+     C                     MOVE 'N'       CGL031  1                                           CGL031
+     C                     MOVE *OFF      *IN03                                               CGL031
+      *                                                                                       CGL031
+     C           PRTCD     IFEQ *BLANKS                                                       CGL031
+     C                     MOVE 'Y'       CGL031                                              CGL031
+     C                     MOVE *ON       *IN03                                               CGL031
+     C                     ELSE                                                               CGL031
+      *                                                                                       CGL031
+     C           PRTCD     IFNE '*NRF   '                                                     CGL031
+     C           *LOCK     IN   LDA                                                           CGL031
+     C                     MOVEL'SCSARDPD'DBFILE                                              CGL031
+     C                     MOVEL'CGL031'  DBKEY                                               CGL031
+     C                     Z-ADD101       DBASE                                               CGL031
+     C                     OUT  LDA                                                           CGL031
+     C                     EXSR *PSSR                                                         CGL031
+     C                     ENDIF                                                              CGL031
+      *                                                                                       CGL031
+     C                     ENDIF                                                              CGL031
+     C*                                                                   S01315
+     C                     MOVE *BLANKS   FKEY2                           S01315
+     C                     SETOF                     010205               S01315
+     C                     SETOF                     060709               S01315
+     C                     SETOF                     101112               S01315
+     C                     SETOF                     131415               S01315
+     C                     SETOF                     161718               S01315
+     C                     SETOF                     192021               S01315
+     C                     SETOF                     222324               S01315
+     C                     SETOF                     253132               S01315
+     C                     SETOF                     333490               S01315
+     C                     SETOF                     919299               S01315
+     C                     SETOF                     515253               CSE007
+     C                     SETOF                     545593               CSE007
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  M A I N    P R O C E S S I N G                               *
+      *                                                               *
+      *  Calls:                                                       *
+      *                                                               *
+      *  CLEAN  - Reset error indicators                              *
+      *  VALID  - Validate input                                      *
+      *  OUTPUT - Sets up output record to LINKD                      *
+      *  Y2CLMSC- Clear program message queue (external)              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           MAIN      BEGSR
+      *
+      ** Check Securities Trading ICD for Trade Subtypes required?
+      *
+     C***********TSAK      COMP 'Y'                      91               S01315
+     C           BVTSAK    COMP 'Y'                      91               S01315
+      *                                                                   CSE007
+     C           CSE007    IFEQ 'Y'                                       CSE007
+     C           CEU017    OREQ 'Y'                                       CEU017
+      *                                                                   CSE007
+      ** Check Sec. Trading ICD for Corp Act Trade Subtypes required?     CSE007
+      *                                                                   CSE007
+     C           BVCOTA    COMP 'Y'                      93               CSE007
+     C                     ENDIF                                          CSE007
+      *                                                                   CSE007
+     C/COPY WNCPYSRC,AK0060C001
+      *
+      *  Perform main processing until F3 or F12 pressed, or criteria     S01315
+      *  entered correctly                                                S01315
+      *
+     C           *IN01     DOWEQ'0'
+     C           *IN05     ANDEQ'0'                                       S01315
+     C           *IN07     ANDEQ'0'                                       S01315
+      *
+      *  Process screen format
+      *
+     C*********************MOVEAER1       ERROR1                          S01315
+     C*********************MOVEAER2       ERROR2                          S01315
+     C                     EXFMTSCREENF
+     C*                                                                   S01315
+     C** Clear messages from program message queue.                       S01315
+     C*                                                                   S01315
+     C                     CALL 'Y2CLMSC'                                 S01315
+     C                     PARM SPGMQ     ZAPGM  10                       S01315
+     C                     PARM '*SAME'   ZAPGRL  5                       S01315
+      *                                                                   S01447
+      *** Make sure empty msg queue is written to screen msg sfl          S01447
+     C                     WRITE#MSGCTL                                   S01447
+      *                                                                   S01447
+     C** If F3 or F12 has not pressed, then process screen response       S01315
+      *                                                                   S01315
+     C           *IN01     IFEQ '0'                                       S01315
+     C           *IN05     ANDEQ'0'                                       S01315
+      *
+      ***If HELP then call help program
+      **********
+     C********** *IN06     IFEQ '1'                                       E22116
+     C**********           MOVEAER1       ERR,1                           E22116
+     C**********           MOVEAER2       ERR,20                          E22116
+     C**********           CALL 'MHELP'                                   E22116
+     C**********           PARM           DBPGM                           E22116
+     C**********           PARM           ERR                             E22116
+      **********
+     C**********           ELSE                                           E22116
+      *
+      *  Clear screen & redisplay if Cmd 5 pressed                        S01315
+      *
+     C************IN05     IFEQ '1'                                       S01315
+     C           *IN06     IFEQ '1'                                       S01315
+     C                     MOVE *BLANKS   SCREEN
+     C                     EXSR CLEAN
+      *
+      *  Validate data if Cmd 3, Cmd 5 or HELP not pressed                S01315
+      *
+     C                     ELSE
+      *
+     C                     EXSR VALID
+      *
+      *  If no errors, output to LINKD.
+      *
+     C***********C1        IFEQ 0                                         S01315
+     C***********C2        ANDEQ0                                         S01315
+     C           *IN99     IFEQ '0'                                       S01315
+     C                     EXSR OUTPUT
+     C**********           SETON                     9201                 S01315
+     C                     SETON                     9207                 S01315
+     C                     END
+      *
+     C                     END
+     C**********           END                                            E22116
+      *
+     C                     ELSE                            F3 OR F12 PRESSS01315
+     C                     SETOF                     92
+      *                                                                   S01315
+      * If F3 pressed, set FKEY2 (return code) to 1                       S01315
+      *                                                                   S01315
+     C           *IN01     IFEQ '1'                                       S01315
+     C                     MOVE '1'       FKEY2                           S01315
+     C                     END                                            S01315
+      *
+     C                     END                             F3 PRESSED     S01315
+      *                                                                   S01315
+     C                     END                             F3 OR F12      S01315
+      *                                                                   S01315
+      ** If F3 pressed, set FKEY2 (Return Code) to 1                      S01315
+      *                                                                   S01315
+     C           *IN01     IFEQ '1'                                       S01315
+     C                     MOVE '1'       FKEY2                           S01315
+     C                     END                                            S01315
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      *                                                                  *
+      *    C L O S I N G   R O U T I N E                                 *
+      *                                                                  *
+      * Calls:                                                           *
+      *                                                                  *
+      **SE4010*-*Report*of*Generated*Keys*(external)*******              *S01315
+      * AK0061 - Report of Generated Keys (external)                     *S01315
+      *                                                                  *
+      ********************************************************************
+      *
+     C           CLOS      BEGSR
+      *
+      *  If a valid set of data.........
+      ***Redisplay*screen*and*call*SE4010*******                          S01315
+      *  Redisplay screen and call AK0061                                 S01315
+      *
+     C           *IN92     IFEQ '1'
+      *
+     C***********          UNLCKLDA                                       S01315
+     C***********          CALL 'SE4010'                                  S01315
+     C                     CALL 'AK0061'                                  S01315
+      *
+     C                     END
+      *
+     C                     SETON                     LR                   S01315
+     C                     RETRN                                          S01315
+      *
+     C                     ENDSR
+      *
+      ****************************************************************
+      *                                                              *
+      *  CLEAN - Moves blanks to error code fields and sets off all  *
+      *          error indicators.                                   *
+      *                                                              *
+      *  Called by : MAIN - Main processing                          *
+      *                                                              *
+      *  Calls : None                                                *
+      *                                                              *
+      ****************************************************************
+      *
+     C           CLEAN     BEGSR
+      *
+      *    Reset indicators
+      *
+     C*********************MOVE *BLANKS   ER1                             S01315
+     C*********************MOVE *BLANKS   ER2                             S01315
+     C*********************Z-ADD0         C1      20                      S01315
+     C*********************Z-ADD0         C2      20                      S01315
+     C                     MOVEA'00000000'*IN,09
+     C                     MOVEA'00000000'*IN,17
+     C                     MOVEA'00000000'*IN,25
+     C                     SETOF                     333499
+     C                     MOVEA'00000'   *IN,41                          S01447
+     C                     MOVEA'00000'   *IN,46                          S01447
+     C                     MOVEA'00000'   *IN,56                                              CGL031
+     C                     MOVEA'00000'   *IN,61                                              CGL031
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * VALID - Validate screen entry details                           *
+      *                                                                 *
+      * Called by : MAIN - Main processing                              *
+      *                                                                 *
+      * Calls: ZASNMS - Send message to program message queue           *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           VALID     BEGSR
+      *
+      *    Reset indicators
+      *
+     C*********************MOVE *BLANKS   ER1                             S01315
+     C*********************MOVE *BLANKS   ER2                             S01315
+     C*********************Z-ADD0         C1      20                      S01315
+     C*********************Z-ADD0         C2      20                      S01315
+     C                     MOVEA'00000000'*IN,09
+     C                     MOVEA'00000000'*IN,17
+     C                     MOVEA'00000000'*IN,25
+     C                     SETOF                     333499
+     C                     MOVEA'00000'   *IN,41                          S01447
+     C                     MOVEA'00000'   *IN,46                          S01447
+     C                     MOVEA'00000'   *IN,56                                              CGL031
+     C                     MOVEA'00000'   *IN,61                                              CGL031
+      *
+      * Investment type/currency combination
+      *
+     C           SINVT     IFEQ *BLANKS
+     C                     MOVEL'USR4206' ZAMSID           Message id.    S01315
+     C                     EXSR ZASNMS                     Send message   S01315
+     C                     WRITE#MSGCTL                                   S01315
+     C*********************MOVE ' 001'    WERR    4                       S01315
+     C*********************EXSR ERRORS                                    S01315
+     C                     SETON                     0999
+     C                     END
+      *
+     C           SCURR     IFEQ *BLANKS
+     C*********************MOVE ' 001'    WERR                            S01315
+     C*********************EXSR ERRORS                                    S01315
+     C                     MOVEL'USR4207' ZAMSID           Message id.    S01315
+     C                     EXSR ZASNMS                     Send message   S01315
+     C                     WRITE#MSGCTL                                   S01315
+     C                     SETON                     1099
+     C                     END
+      *
+     C           SINVT     IFNE *BLANKS
+     C           SCURR     ANDNE*BLANKS
+      *
+     C           IKEY      CHAININVTPDF              90
+     C           *IN90     IFEQ '1'
+     C           *IN90     OREQ '0'
+     C           RECI      ANDEQ'*'
+      *
+     C*********************MOVE ' 002'    WERR    4                       S01315
+     C                     MOVEL'USR4208' ZAMSID           Message id.    S01315
+     C                     EXSR ZASNMS                     Send message   S01315
+     C                     WRITE#MSGCTL                                   S01315
+     C*********************EXSR ERRORS                                    S01315
+     C                     SETON                     091099
+      *
+     C                     END
+     C                     END
+      *
+      * Book Codes - at least one must be input & must be valid codes
+      *              from SDBOOKPD
+      *
+     C           BOOKS     IFEQ *BLANKS
+     C                     MOVEL'USR4209' ZAMSID           Message id.    S01315
+     C                     EXSR ZASNMS                     Send message   S01315
+     C                     WRITE#MSGCTL                                   S01315
+     C*********************MOVE ' 003'    WERR                            S01315
+     C*********************EXSR ERRORS                                    S01315
+     C                     MOVEA'11111111'*IN,11
+     C                     MOVEA'11'      *IN,19
+     C                     SETON                     99
+      *
+     C                     ELSE
+      *
+     C           SBK1      IFNE *BLANKS
+     C***********SBK1      CHAINBOOKDDF              90                   S01315
+     C           SBK1      CHAINSDBOOKL1             90                   S01315
+     C           *IN90     IFEQ '1'
+     C************IN90     OREQ '0'                                       S01315
+     C***********RECI      ANDNE'D'                                       S01315
+     C                     MOVEL'USR4210' ZAMSID           Message id.    S01315
+     C                     EXSR ZASNMS                     Send message   S01315
+     C                     WRITE#MSGCTL                                   S01315
+     C*********************MOVE ' 004'    WERR                            S01315
+     C*********************EXSR ERRORS                                    S01315
+     C                     SETON                     1199
+     C                     END
+     C                     END
+      *
+     C           SBK2      IFNE *BLANKS
+     C***********SBK2      CHAINBOOKDDF              90                   S01315
+     C           SBK2      CHAINSDBOOKL1             90                   S01315
+     C           *IN90     IFEQ '1'
+     C************IN90     OREQ '0'                                       S01315
+     C***********RECI      ANDNE'D'                                       S01315
+     C                     MOVEL'USR4210' ZAMSID           Message id.    S01315
+     C                     EXSR ZASNMS                     Send message   S01315
+     C                     WRITE#MSGCTL                                   S01315
+     C*********************MOVE ' 004'    WERR                            S01315
+     C*********************EXSR ERRORS                                    S01315
+     C                     SETON                     1299
+     C                     END
+     C                     END
+      *
+     C           SBK3      IFNE *BLANKS
+     C***********SBK3      CHAINBOOKDDF              90                   S01315
+     C           SBK3      CHAINSDBOOKL1             90                   S01315
+     C           *IN90     IFEQ '1'
+     C************IN90     OREQ '0'                                       S01315
+     C***********RECI      ANDNE'D'                                       S01315
+     C                     MOVEL'USR4210' ZAMSID           Message id.    S01315
+     C                     EXSR ZASNMS                     Send message   S01315
+     C                     WRITE#MSGCTL                                   S01315
+     C*********************MOVE ' 004'    WERR                            S01315
+     C*********************EXSR ERRORS                                    S01315
+     C                     SETON                     1399
+     C                     END
+     C                     END
+      *
+     C           SBK4      IFNE *BLANKS
+     C***********SBK4      CHAINBOOKDDF              90                   S01315
+     C           SBK4      CHAINSDBOOKL1             90                   S01315
+     C           *IN90     IFEQ '1'
+     C************IN90     OREQ '0'                                       S01315
+     C***********RECI      ANDNE'D'                                       S01315
+     C*********************MOVE ' 004'    WERR                            S01315
+     C*********************EXSR ERRORS                                    S01315
+     C                     MOVEL'USR4210' ZAMSID           Message id.    S01315
+     C                     EXSR ZASNMS                     Send message   S01315
+     C                     WRITE#MSGCTL                                   S01315
+     C                     SETON                     1499
+     C                     END
+     C                     END
+      *
+     C           SBK5      IFNE *BLANKS
+     C***********SBK5      CHAINBOOKDDF              90                   S01315
+     C           SBK5      CHAINSDBOOKL1             90                   S01315
+     C           *IN90     IFEQ '1'
+     C************IN90     OREQ '1'                                       S01315
+     C***********RECI      ANDNE'D'                                       S01315
+     C*********************MOVE ' 004'    WERR                            S01315
+     C*********************EXSR ERRORS                                    S01315
+     C                     MOVEL'USR4210' ZAMSID           Message id.    S01315
+     C                     EXSR ZASNMS                     Send message   S01315
+     C                     WRITE#MSGCTL                                   S01315
+     C                     SETON                     1599
+     C                     END
+     C                     END
+      *
+     C           SBK6      IFNE *BLANKS
+     C***********SBK6      CHAINBOOKDDF              90                   S01315
+     C           SBK6      CHAINSDBOOKL1             90                   S01315
+     C           *IN90     IFEQ '1'
+     C************IN90     OREQ '0'                                       S01315
+     C***********RECI      ANDNE'D'                                       S01315
+     C*********************MOVE ' 004'    WERR                            S01315
+     C*********************EXSR ERRORS                                    S01315
+     C                     MOVEL'USR4210' ZAMSID           Message id.    S01315
+     C                     EXSR ZASNMS                     Send message   S01315
+     C                     WRITE#MSGCTL                                   S01315
+     C                     SETON                     1699
+     C                     END
+     C                     END
+      *
+     C           SBK7      IFNE *BLANKS
+     C***********SBK7      CHAINBOOKDDF              90                   S01315
+     C           SBK7      CHAINSDBOOKL1             90                   S01315
+     C           *IN90     IFEQ '1'
+     C************IN90     OREQ '0'                                       S01315
+     C***********RECI      ANDNE'D'                                       S01315
+     C*********************MOVE ' 004'    WERR                            S01315
+     C*********************EXSR ERRORS                                    S01315
+     C                     MOVEL'USR4210' ZAMSID           Message id.    S01315
+     C                     EXSR ZASNMS                     Send message   S01315
+     C                     WRITE#MSGCTL                                   S01315
+     C                     SETON                     1799
+     C                     END
+     C                     END
+      *
+     C           SBK8      IFNE *BLANKS
+     C***********SBK8      CHAINBOOKDDF              90                   S01315
+     C           SBK8      CHAINSDBOOKL1             90                   S01315
+     C           *IN90     IFEQ '1'
+     C************IN90     OREQ '0'                                       S01315
+     C***********RECI      ANDNE'D'                                       S01315
+     C*********************MOVE ' 004'    WERR                            S01315
+     C*********************EXSR ERRORS                                    S01315
+     C                     MOVEL'USR4210' ZAMSID           Message id.    S01315
+     C                     EXSR ZASNMS                     Send message   S01315
+     C                     WRITE#MSGCTL                                   S01315
+     C                     SETON                     1899
+     C                     END
+     C                     END
+      *
+     C           SBK9      IFNE *BLANKS
+     C***********SBK9      CHAINBOOKDDF              90                   S01315
+     C           SBK9      CHAINSDBOOKL1             90                   S01315
+     C           *IN90     IFEQ '1'
+     C************IN90     OREQ '0'                                       S01315
+     C***********RECI      ANDNE'D'                                       S01315
+     C*********************MOVE ' 004'    WERR                            S01315
+     C*********************EXSR ERRORS                                    S01315
+     C                     MOVEL'USR4210' ZAMSID           Message id.    S01315
+     C                     EXSR ZASNMS                     Send message   S01315
+     C                     WRITE#MSGCTL                                   S01315
+     C                     SETON                     1999
+     C                     END
+     C                     END
+      *
+     C           SBK10     IFNE *BLANKS
+     C***********SBK10     CHAINBOOKDDF              90                   S01315
+     C           SBK10     CHAINSDBOOKL1             90                   S01315
+     C           *IN90     IFEQ '1'
+     C************IN90     OREQ '0'                                       S01315
+     C***********RECI      ANDNE'D'                                       S01315
+     C*********************MOVE ' 004'    WERR                            S01315
+     C*********************EXSR ERRORS                                    S01315
+     C                     MOVEL'USR4210' ZAMSID           Message id.    S01315
+     C                     EXSR ZASNMS                     Send message   S01315
+     C                     WRITE#MSGCTL                                   S01315
+     C                     SETON                     2099
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+      * Trade Subtypes - If Trade Subtypes are required (TSAK from ICD
+      * = Y) then at least one must be entered and must be valid codes
+      * from SDDLSTPD
+      *
+     C***********TSAK      IFEQ 'Y'                                       S01315
+     C           BVTSAK    IFEQ 'Y'                                       S01315
+      *
+     C           TYPES     IFEQ *BLANKS
+     C*********************MOVE ' 005'    WERR                            S01315
+     C*********************EXSR ERRORS                                    S01315
+     C                     MOVEL'USR4211' ZAMSID           Message id.    S01315
+     C                     EXSR ZASNMS                     Send message   S01315
+     C                     WRITE#MSGCTL                                   S01315
+     C                     MOVEA'11111'   *IN,21
+     C                     SETON                     99
+      *
+     C                     ELSE
+      *
+     C           STP1      IFNE *BLANKS
+     C***********          MOVE *BLANKS   KEY12  12                       S01315
+     C***********          MOVEL'42'      KEY12                           S01315
+     C***********          MOVE STP1      KEY12                           S01315
+     C***********KEY12     CHAINTABLET5F             90                   S01315
+     C           STP1      CHAINSDDLSTL1             90                   S01315
+     C           *IN90     IFEQ '1'
+     C************IN90     OREQ '0'                                       S01315
+     C***********RECI      ANDEQ'*'                                       S01315
+     C*********************MOVE ' 006'    WERR                            S01315
+     C*********************EXSR ERRORS                                    S01315
+     C                     MOVEL'USR4212' ZAMSID           Message id.    S01315
+     C                     EXSR ZASNMS                     Send message   S01315
+     C                     WRITE#MSGCTL                                   S01315
+     C                     SETON                     2199
+     C                     END
+     C                     END
+      *
+     C           STP2      IFNE *BLANKS
+     C***********          MOVE *BLANKS   KEY12                           S01315
+     C***********          MOVEL'42'      KEY12                           S01315
+     C***********          MOVE STP2      KEY12                           S01315
+     C***********KEY12     CHAINTABLET5F             90                   S01315
+     C           STP2      CHAINSDDLSTL1             90                   S01315
+     C           *IN90     IFEQ '1'
+     C************IN90     OREQ '0'                                       S01315
+     C***********RECI      ANDEQ'*'                                       S01315
+     C*********************MOVE ' 006'    WERR                            S01315
+     C*********************EXSR ERRORS                                    S01315
+     C                     MOVEL'USR4212' ZAMSID           Message id.    S01315
+     C                     EXSR ZASNMS                     Send message   S01315
+     C                     WRITE#MSGCTL                                   S01315
+     C                     SETON                     2299
+     C                     END
+     C                     END
+      *
+     C           STP3      IFNE *BLANKS
+     C***********          MOVE *BLANKS   KEY12                           S01315
+     C***********          MOVEL'42'      KEY12                           S01315
+     C***********          MOVE STP3      KEY12                           S01315
+     C***********KEY12     CHAINTABLET5F             90                   S01315
+     C           STP3      CHAINSDDLSTL1             90                   S01315
+     C           *IN90     IFEQ '1'
+     C************IN90     OREQ '0'                                       S01315
+     C***********RECI      ANDEQ'*'                                       S01315
+     C*********************MOVE ' 006'    WERR                            S01315
+     C*********************EXSR ERRORS                                    S01315
+     C                     MOVEL'USR4212' ZAMSID           Message id.    S01315
+     C                     EXSR ZASNMS                     Send message   S01315
+     C                     WRITE#MSGCTL                                   S01315
+     C                     SETON                     2399
+     C                     END
+     C                     END
+      *
+     C           STP4      IFNE *BLANKS
+     C***********          MOVE *BLANKS   KEY12                           S01315
+     C***********          MOVEL'42'      KEY12                           S01315
+     C***********          MOVE STP4      KEY12                           S01315
+     C***********KEY12     CHAINTABLET5F             90                   S01315
+     C           STP4      CHAINSDDLSTL1             90                   S01315
+     C           *IN90     IFEQ '1'
+     C************IN90     OREQ '0'                                       S01315
+     C***********RECI      ANDEQ'*'                                       S01315
+     C*********************MOVE ' 006'    WERR                            S01315
+     C*********************EXSR ERRORS                                    S01315
+     C                     MOVEL'USR4212' ZAMSID           Message id.    S01315
+     C                     EXSR ZASNMS                     Send message   S01315
+     C                     WRITE#MSGCTL                                   S01315
+     C                     SETON                     2499
+     C                     END
+     C                     END
+      *
+     C           STP5      IFNE *BLANKS
+     C***********          MOVE *BLANKS   KEY12                           S01315
+     C***********          MOVEL'42'      KEY12                           S01315
+     C***********          MOVE STP5      KEY12                           S01315
+     C***********KEY12     CHAINTABLET5F             90                   S01315
+     C           STP5      CHAINSDDLSTL1             90                   S01315
+     C           *IN90     IFEQ '1'
+     C************IN90     OREQ '0'                                       S01315
+     C***********RECI      ANDEQ'*'                                       S01315
+     C*********************MOVE ' 006'    WERR                            S01315
+     C*********************EXSR ERRORS                                    S01315
+     C                     MOVEL'USR4212' ZAMSID           Message id.    S01315
+     C                     EXSR ZASNMS                     Send message   S01315
+     C                     WRITE#MSGCTL                                   S01315
+     C                     SETON                     2599
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *                                                                   CSE007
+      * Corp Act Trade Subtypes - If Corp Act Trade Subtypes are required CSE007
+      * then at least one must be entered and must be valid codes         CSE007
+      * from SDDLSTPD                                                     CSE007
+      *                                                                   CSE007
+     C           BVCOTA    IFEQ 'Y'                                       CSE007
+     C           CSE007    ANDEQ'Y'                                       CSE007
+     C           BVCOTA    OREQ 'Y'                                       CEU017
+     C           CEU017    ANDEQ'Y'                                       CEU017
+     C                     MOVEA'00000'   *IN,51                          CSE007
+      *                                                                   CSE007
+     C           CTYPES    IFEQ *BLANKS                                   CSE007
+     C                     MOVEL'USR4211' ZAMSID           Message id.    CSE007
+     C                     EXSR ZASNMS                     Send message   CSE007
+     C                     WRITE#MSGCTL                                   CSE007
+     C                     MOVEA'11111'   *IN,51                          CSE007
+     C                     SETON                     99                   CSE007
+      *                                                                   CSE007
+     C                     ELSE                                           CSE007
+      *                                                                   CSE007
+     C           STPC1     IFNE *BLANKS                                   CSE007
+     C           STPC1     CHAINSDDLSTL1             90                   CSE007
+     C           *IN90     IFEQ '1'                                       CSE007
+     C                     MOVEL'USR4212' ZAMSID           Message id.    CSE007
+     C                     EXSR ZASNMS                     Send message   CSE007
+     C                     WRITE#MSGCTL                                   CSE007
+     C                     SETON                     5199                 CSE007
+     C                     END                                            CSE007
+     C                     END                                            CSE007
+      *                                                                   CSE007
+     C           STPC2     IFNE *BLANKS                                   CSE007
+     C           STPC2     CHAINSDDLSTL1             90                   CSE007
+     C           *IN90     IFEQ '1'                                       CSE007
+     C                     MOVEL'USR4212' ZAMSID           Message id.    CSE007
+     C                     EXSR ZASNMS                     Send message   CSE007
+     C                     WRITE#MSGCTL                                   CSE007
+     C                     SETON                     5299                 CSE007
+     C                     END                                            CSE007
+     C                     END                                            CSE007
+      *                                                                   CSE007
+     C           STPC3     IFNE *BLANKS                                   CSE007
+     C           STPC3     CHAINSDDLSTL1             90                   CSE007
+     C           *IN90     IFEQ '1'                                       CSE007
+     C                     MOVEL'USR4212' ZAMSID           Message id.    CSE007
+     C                     EXSR ZASNMS                     Send message   CSE007
+     C                     WRITE#MSGCTL                                   CSE007
+     C                     SETON                     5399                 CSE007
+     C                     END                                            CSE007
+     C                     END                                            CSE007
+      *                                                                   CSE007
+     C           STPC4     IFNE *BLANKS                                   CSE007
+     C           STPC4     CHAINSDDLSTL1             90                   CSE007
+     C           *IN90     IFEQ '1'                                       CSE007
+     C                     MOVEL'USR4212' ZAMSID           Message id.    CSE007
+     C                     EXSR ZASNMS                     Send message   CSE007
+     C                     WRITE#MSGCTL                                   CSE007
+     C                     SETON                     5499                 CSE007
+     C                     END                                            CSE007
+     C                     END                                            CSE007
+      *                                                                   CSE007
+     C           STPC5     IFNE *BLANKS                                   CSE007
+     C           STPC5     CHAINSDDLSTL1             90                   CSE007
+     C           *IN90     IFEQ '1'                                       CSE007
+     C                     MOVEL'USR4212' ZAMSID           Message id.    CSE007
+     C                     EXSR ZASNMS                     Send message   CSE007
+     C                     WRITE#MSGCTL                                   CSE007
+     C                     SETON                     5599                 CSE007
+     C                     END                                            CSE007
+     C                     END                                            CSE007
+      *                                                                   CSE007
+     C                     END                                            CSE007
+      *                                                                   CSE007
+     C                     END                                            CSE007
+      *
+      * Market flags - must not all be blank, and each one must be
+      *                'Y' or blank
+      *
+     C           FLAGS     IFEQ *BLANKS
+     C*********************MOVE ' 007'    WERR                            S01315
+     C*********************EXSR ERRORS                                    S01315
+     C                     MOVEL'USR4213' ZAMSID           Message id.    S01315
+     C                     EXSR ZASNMS                     Send message   S01315
+     C                     WRITE#MSGCTL                                   S01315
+     C                     SETON                     313233
+     C                     SETON                     99
+      *
+     C                     ELSE
+      *
+     C           SGREY     IFNE 'Y'
+     C           SGREY     ANDNE' '
+     C*********************MOVE ' 008'    WERR                            S01315
+     C*********************EXSR ERRORS                                    S01315
+     C                     MOVEL'USR4214' ZAMSID           Message id.    S01315
+     C                     EXSR ZASNMS                     Send message   S01315
+     C                     WRITE#MSGCTL                                   S01315
+     C                     SETON                     3199
+     C                     END
+      *
+     C           SPRIM     IFNE 'Y'
+     C           SPRIM     ANDNE' '
+     C*********************MOVE ' 008'    WERR                            S01315
+     C*********************EXSR ERRORS                                    S01315
+     C                     MOVEL'USR4214' ZAMSID           Message id.    S01315
+     C                     EXSR ZASNMS                     Send message   S01315
+     C                     WRITE#MSGCTL                                   S01315
+     C                     SETON                     3299
+     C                     END
+      *
+     C           SSECD     IFNE 'Y'
+     C           SSECD     ANDNE' '
+     C*********************MOVE ' 008'    WERR                            S01315
+     C*********************EXSR ERRORS                                    S01315
+     C                     MOVEL'USR4214' ZAMSID           Message id.    S01315
+     C                     EXSR ZASNMS                     Send message   S01315
+     C                     WRITE#MSGCTL                                   S01315
+     C                     SETON                     3399
+     C                     END
+      *
+     C                     END
+      *
+      * Safe Custody/Discretionary usage indicator - must be entered
+      *        and valid values are S/D/B/N
+      *
+     C           SSFDSC    IFEQ *BLANKS
+     C*********************MOVE ' 009'    WERR                            S01315
+     C*********************EXSR ERRORS                                    S01315
+     C                     MOVEL'USR4215' ZAMSID           Message id.    S01315
+     C                     EXSR ZASNMS                     Send message   S01315
+     C                     WRITE#MSGCTL                                   S01315
+     C                     SETON                     3499
+      *
+     C                     ELSE
+      *
+     C           SSFDSC    IFNE 'S'
+     C           SSFDSC    ANDNE'D'
+     C           SSFDSC    ANDNE'B'
+     C           SSFDSC    ANDNE'N'
+     C*********************MOVE ' 010'    WERR                            S01315
+     C*********************EXSR ERRORS                                    S01315
+     C                     MOVEL'USR4216' ZAMSID           Message id.    S01315
+     C                     EXSR ZASNMS                     Send message   S01315
+     C                     WRITE#MSGCTL                                   S01315
+     C                     SETON                     3499
+      *
+     C                     END
+      *
+     C                     END
+      *
+      * Validate Tax Country codes array                                  S01447
+      *                                                                   S01447
+     C           S01447    IFEQ 'Y'                                       S01447
+     C                     EXSR VALCTY                                    S01447
+     C                     END                                            S01447
+      *                                                                   S01447
+      ** Validate relevant fields if CGL031 is enabled.                                       CGL031
+      *                                                                                       CGL031
+     C           CGL031    IFEQ 'Y'                                                           CGL031
+     C                     EXSR SRVTAX                                                        CGL031
+     C                     ENDIF                                                              CGL031
+      *                                                                                       CGL031
+     C                     ENDSR
+      *
+      ******************************************************************* S01447
+      *                                                                 * S01447
+      *  VALCTY - Validates screen country codes for withholding tax    * S01447
+      *                                                                 * S01447
+      * Called by : VALID                                               * S01447
+      *                                                                 * S01447
+      * Calls : PROCTY - Validates each element of country code array   * S01447
+      *                                                                 * S01447
+      ******************************************************************* S01447
+      *                                                                   S01447
+     C           VALCTY    BEGSR                                          S01447
+      *                                                                   S01447
+      *** Initialize working variables                                    S01447
+      *                                                                   S01447
+     C                     MOVEA*ALL'0'   INDS                            S01447
+      *                                                                   S01447
+     C                     MOVE 'N'       WERR67  1                       S01447
+     C                     MOVE 'N'       WERR68  1                       S01447
+      *                                                                   S01447
+      *** Move screen country to array for validation                     S01447
+      *                                                                   S01447
+     C                     MOVE SCNCD1    CTY,1                           S01447
+     C                     MOVE SCNCD2    CTY,2                           S01447
+     C                     MOVE SCNCD3    CTY,3                           S01447
+     C                     MOVE SCNCD4    CTY,4                           S01447
+     C                     MOVE SCNCD5    CTY,5                           S01447
+     C                     MOVE SCNCD6    CTY,6                           S01447
+     C                     MOVE SCNCD7    CTY,7                           S01447
+     C                     MOVE SCNCD8    CTY,8                           S01447
+     C                     MOVE SCNCD9    CTY,9                           S01447
+     C                     MOVE SCNCD0    CTY,10                          S01447
+      *                                                                   S01447
+      *** Validate 1st - 10th country codes                               S01447
+      *                                                                   S01447
+     C                     DO   10        A       20       Current elementS01447
+      *                                                                   S01447
+      *** If country code not blank, validate it                          S01447
+     C           CTY,A     IFNE *BLANKS                                   S01447
+     C                     EXSR PROCTY                                    S01447
+     C                     END                                            S01447
+      *                                                                   S01447
+     C                     ENDDO                                          S01447
+      *                                                                   S01447
+     C                     ENDSR                                          S01447
+      *****************************************************************                       CGL031
+      /EJECT                                                                                  CGL031
+      *****************************************************************                       CGL031
+      *                                                               *                       CGL031
+      *  SRVTAX - Validates input for EU Withholding Tax accounting.  *                       CGL031
+      *                                                               *                       CGL031
+      *****************************************************************                       CGL031
+     C           SRVTAX    BEGSR                                                              CGL031
+      *                                                                                       CGL031
+     C                     MOVE *ALL'0'   WOFFS  10                                           CGL031
+     C                     MOVEAWOFFS     *IN,56                                              CGL031
+     C                     MOVE 'N'       WFLGA   1                                           CGL031
+     C                     MOVE 'N'       WFLGB   1                                           CGL031
+      *                                                                                       CGL031
+      ** Handle EU Withholding Tax Countries.                                                 CGL031
+      *                                                                                       CGL031
+     C                     CLEARWTCA                                                          CGL031
+     C                     MOVEASEWTC     WTCA                                                CGL031
+      *                                                                                       CGL031
+      ** Validate EU Withholding Tax Countries.                                               CGL031
+      *                                                                                       CGL031
+     C                     DO   10        I       20                                          CGL031
+      *                                                                                       CGL031
+     C           WTCA,I    IFNE *BLANKS                                                       CGL031
+      *                                                                                       CGL031
+     C                     MOVE WTCA,I    KCNCD   2                                           CGL031
+     C           KCNCD     CHAINSDCTTXL2             04                                       CGL031
+      *                                                                                       CGL031
+     C           *IN04     IFEQ *ON                                                           CGL031
+     C                     MOVE 'Y'       WFLGA                                               CGL031
+     C                     ENDIF                                                              CGL031
+      *                                                                                       CGL031
+      ** Check for repeated inputs.                                                           CGL031
+      *                                                                                       CGL031
+     C                     DO   10        J       20                                          CGL031
+     C           WTCA,I    IFEQ WTCA,J                                                        CGL031
+     C           I         ANDNEJ                                                             CGL031
+     C                     MOVE *ON       *IN04                                               CGL031
+     C                     MOVE 'Y'       WFLGA                                               CGL031
+     C                     ENDIF                                                              CGL031
+     C                     ENDDO                                                              CGL031
+      *                                                                                       CGL031
+      ** Check with the Safe Custody/Discretionary Usage flag.                                CGL031
+      *                                                                                       CGL031
+     C           SSFDSC    IFNE 'S'                                                           CGL031
+     C           SSFDSC    ANDNE'D'                                                           CGL031
+     C           SSFDSC    ANDNE'B'                                                           CGL031
+     C                     MOVE *ON       *IN04                                               CGL031
+     C                     MOVE 'Y'       WFLGB                                               CGL031
+     C                     ENDIF                                                              CGL031
+      *                                                                                       CGL031
+     C                     Z-ADD55        X       20                                          CGL031
+     C                     ADD  I         X                                                   CGL031
+     C                     MOVE *IN04     *IN,X                                               CGL031
+      *                                                                                       CGL031
+     C                     ENDIF                                                              CGL031
+      *                                                                                       CGL031
+     C                     ENDDO                                                              CGL031
+      *                                                                                       CGL031
+      ** EU Withholding Tax Countries must be unique and valid Country Codes.                 CGL031
+      *                                                                                       CGL031
+     C           WFLGA     IFEQ 'Y'                                                           CGL031
+     C                     MOVE *ON       *IN99                                               CGL031
+     C                     MOVEL'USR4712' ZAMSID                                              CGL031
+     C                     EXSR ZASNMS                                                        CGL031
+     C                     WRITE#MSGCTL                                                       CGL031
+     C                     ENDIF                                                              CGL031
+      *                                                                                       CGL031
+      ** EU Withholding Tax Countries are allowed only if the Safe Custody/                   CGL031
+      ** Discretionary Usage flag is 'S', 'D', or 'B'.                                        CGL031
+      *                                                                                       CGL031
+     C           WFLGB     IFEQ 'Y'                                                           CGL031
+     C                     MOVE *ON       *IN99                                               CGL031
+     C                     MOVEL'USR4715' ZAMSID                                              CGL031
+     C                     EXSR ZASNMS                                                        CGL031
+     C                     WRITE#MSGCTL                                                       CGL031
+     C                     ENDIF                                                              CGL031
+      *                                                                                       CGL031
+      ** At least one EU Withholding Tax Country must be input if Safe Custody/               CGL031
+      ** Discretionary Usage flag is 'S', 'D', or 'B'.                                        CGL031
+      *                                                                                       CGL031
+     C           SEWTC     IFEQ *BLANKS                                                       CGL031
+     C           SSFDSC    IFEQ 'S'                                                           CGL031
+     C           SSFDSC    OREQ 'D'                                                           CGL031
+     C           SSFDSC    OREQ 'B'                                                           CGL031
+     C                     MOVE *ALL'1'   WONS   10                                           CGL031
+     C                     MOVEAWONS      *IN,56                                              CGL031
+     C                     MOVE *ON       *IN99                                               CGL031
+     C                     MOVEL'USR4716' ZAMSID                                              CGL031
+     C                     EXSR ZASNMS                                                        CGL031
+     C                     WRITE#MSGCTL                                                       CGL031
+     C                     ENDIF                                                              CGL031
+     C                     ENDIF                                                              CGL031
+      *                                                                                       CGL031
+     C                     ENDSR                                                              CGL031
+      *****************************************************************                       CGL031
+      /EJECT                                                                                  CGL031
+      *****************************************************************                       CGL031
+      *                                                               *                       CGL031
+      *  SRSTAX - Saves countries & account codes for EU Withholding  *                       CGL031
+      *           Tax accounting.                                     *                       CGL031
+      *                                                               *                       CGL031
+      *****************************************************************                       CGL031
+     C           SRSTAX    BEGSR                                                              CGL031
+      *                                                                                       CGL031
+      ** Handle EU Withholding Tax Countries & A/c Codes.                                     CGL031
+      *                                                                                       CGL031
+     C                     CLEARWTCA                                                          CGL031
+     C                     CLEARWTAA                                                          CGL031
+     C                     CLEARWCCA                                                          CGL031
+     C                     MOVEASEWTC     WTCA                                                CGL031
+     C                     Z-ADD*ZERO     I       20                                          CGL031
+     C                     Z-ADD*ZERO     J       20                                          CGL031
+      *                                                                                       CGL031
+     C                     DO   10        I                                                   CGL031
+      *                                                                                       CGL031
+     C           WTCA,I    IFNE *BLANKS                                                       CGL031
+      *                                                                                       CGL031
+     C                     MOVE WTCA,I    KCTRT   2                                           CGL031
+     C           KCTRT     CHAINSDCTTXL2             04                                       CGL031
+      *                                                                                       CGL031
+     C           *IN04     IFEQ *OFF                                                          CGL031
+      *                                                                                       CGL031
+      ** Save countries & account codes.                                                      CGL031
+      *                                                                                       CGL031
+     C                     ADD  1         J                                                   CGL031
+     C                     MOVE EWCTRR    WCCA,J                                              CGL031
+     C                     MOVE EWWTAC    WTAA,J                                              CGL031
+      *                                                                                       CGL031
+     C                     ENDIF                                                              CGL031
+      *                                                                                       CGL031
+     C                     ENDIF                                                              CGL031
+      *                                                                                       CGL031
+     C                     ENDDO                                                              CGL031
+      *                                                                                       CGL031
+     C                     ENDSR                                                              CGL031
+      *****************************************************************                       CGL031
+      /EJECT                                                                                  CGL031
+      ******************************************************************* S01447
+      *                                                                 * S01447
+      * PROCTY :    If element (country code) has already been input    * S01447
+      *             earlier or element is not a valid country code,     * S01447
+      *             then error.                                         * S01447
+      *                                                                 * S01447
+      * Called by : VALCTY                                              * S01447
+      *                                                                 * S01447
+      * Calls :     NONE                                                * S01447
+      *                                                                 * S01447
+      ******************************************************************* S01447
+      *                                                                   S01447
+     C           PROCTY    BEGSR                                          S01447
+      *                                                                   S01447
+      *** If country code has been repeated - error                       S01447
+      *                                                                   S01447
+     C           A         IFGT 1                          No test 1st e  S01447
+      *                                                                   S01447
+     C           A         SUB  1         NOCOMP  20                   re S01447
+     C                     DO   NOCOMP    B       20       Element Before S01447
+     C           CTY,A     IFEQ CTY,B                      Dup Ctry Code  S01447
+     C           WERR68    IFEQ 'N'                        No test 1st e  S01447
+     C                     MOVEL'USR0068' ZAMSID                          S01447
+     C                     EXSR ZASNMS                     Send message   S01447
+     C                     WRITE#MSGCTL                                   S01447
+     C                     SETON                     99    gen.err ind    S01447
+     C                     MOVE 'Y'       WERR68           disp err once  S01447
+     C                     END                                            S01447
+     C                     MOVE '1'       INDS,A           Set approp ind S01447
+     C                     MOVEAINDS      *IN,41                          S01447
+     C                     END                                            S01447
+     C                     ENDDO                                          S01447
+     C                     END                                            S01447
+      *                                                                   S01447
+      *** If no duplication error, go on to validate country code         S01447
+      *** against table of country codes                                  S01447
+      *                                                                   S01447
+     C           INDS,A    IFEQ '0'                                       S01447
+     C                     MOVE CTY,A     SCNCD   2                       S01447
+     C                     EXSR CHKCTY                     validate ctry  S01447
+     C                     END                                            S01447
+      *                                                                   S01447
+     C                     ENDSR                                          S01447
+      ******************************************************************* S01447
+      *                                                                 * S01447
+      *  CHKCTY :   Lookup country code via access program              * S01447
+      *                                                                 * S01447
+      * Called by : VALCTY                                              * S01447
+      *                                                                 * S01447
+      * Calls :     AOCTRYR0 - Access Country Codes Table               * S01447
+      *                                                                 * S01447
+      ******************************************************************* S01447
+      *                                                                   S01447
+     C           CHKCTY    BEGSR                                          S01447
+      *                                                                   S01447
+     C                     CALL 'AOCTRYR0'                                S01447
+     C                     PARM *BLANKS   @RTCD                           S01447
+     C                     PARM '*VERIFY' @OPTN                           S01447
+     C                     PARM SCNCD     @CNCD   2                       S01447
+     C           SDCTRY    PARM SDCTRY    DSFDY                           S01447
+     C*                                                                   S01447
+     C           @RTCD     IFNE *BLANKS                    *B2            S01447
+     C           WERR67    IFEQ 'N'                        No test 1st e  S01447
+     C                     MOVEL'USR0067' ZAMSID           Message id.    S01447
+     C                     EXSR ZASNMS                     Send message   S01447
+     C                     WRITE#MSGCTL                                   S01447
+     C                     SETON                     99    gen.err ind    S01447
+     C                     MOVE 'Y'       WERR67           disp err once  S01447
+     C                     END                                            S01447
+     C                     MOVE '1'       INDS,A           Set approp ind S01447
+     C                     MOVEAINDS      *IN,41                          S01447
+     C                     END                                            S01447
+      *                                                                   S01447
+     C                     ENDSR                                          S01447
+      ******************************************************************* S01447
+      *                                                                 *
+      *  OUTPUT - Set up output record for LINKD.                       *
+      *                                                                 *
+      * Called by : MAIN - Main processing                              *
+      *                                                                 *
+      * Calls : None                                                    *
+      *                                                                 *
+      *******************************************************************
+      *                                                                 *
+     C           OUTPUT    BEGSR
+      *                                                                 *
+     C                     MOVE SINVT     ITYPA
+     C                     MOVE SCURR     CURR
+      *
+     C                     MOVE SBK1      BK1
+     C                     MOVE SBK2      BK2
+     C                     MOVE SBK3      BK3
+     C                     MOVE SBK4      BK4
+     C                     MOVE SBK5      BK5
+     C                     MOVE SBK6      BK6
+     C                     MOVE SBK7      BK7
+     C                     MOVE SBK8      BK8
+     C                     MOVE SBK9      BK9
+     C                     MOVE SBK10     BK10
+      *
+     C                     MOVE STP1      TP1
+     C                     MOVE STP2      TP2
+     C                     MOVE STP3      TP3
+     C                     MOVE STP4      TP4
+     C                     MOVE STP5      TP5
+      *                                                                   CSE007
+     C           BVCOTA    IFEQ 'Y'                                       CSE007
+     C           CSE007    ANDEQ'Y'                                       CSE007
+     C           BVCOTA    OREQ 'Y'                                       CEU017
+     C           CEU017    ANDEQ'Y'                                       CEU017
+     C                     MOVE STPC1     TPCO1                           CSE007
+     C                     MOVE STPC2     TPCO2                           CSE007
+     C                     MOVE STPC3     TPCO3                           CSE007
+     C                     MOVE STPC4     TPCO4                           CSE007
+     C                     MOVE STPC5     TPCO5                           CSE007
+     C                     ELSE                                           CSE007
+     C                     MOVE *BLANKS   TPCO1                           CSE007
+     C                     MOVE *BLANKS   TPCO2                           CSE007
+     C                     MOVE *BLANKS   TPCO3                           CSE007
+     C                     MOVE *BLANKS   TPCO4                           CSE007
+     C                     MOVE *BLANKS   TPCO5                           CSE007
+     C                     ENDIF                                          CSE007
+      *
+     C                     MOVE SGREY     GREY
+     C                     MOVE SPRIM     PRIM
+     C                     MOVE SSECD     SECDA
+      *
+     C                     MOVE SSFDSC    SFDSC
+     C                     MOVE STEMP     TEMP                            E40664
+      *
+      *** If S01447 is installed,                                         S01447
+      *** Move validated screen tax country codes into an array to        S01447
+      *** sort them in descending sequence and hence remove the           S01447
+      *** blank entries before writing them to LINKD                      S01447
+      *** Otherwise initialise to blanks.                                 S01447
+      *                                                                   S01447
+     C           S01447    IFEQ 'Y'                                       S01447
+      *                                                                   S01447
+     C                     SORTACTY                                       S01447
+      *                                                                   S01447
+     C                     MOVE CTY,1     CTX1                            S01447
+     C                     MOVE CTY,2     CTX2                            S01447
+     C                     MOVE CTY,3     CTX3                            S01447
+     C                     MOVE CTY,4     CTX4                            S01447
+     C                     MOVE CTY,5     CTX5                            S01447
+     C                     MOVE CTY,6     CTX6                            S01447
+     C                     MOVE CTY,7     CTX7                            S01447
+     C                     MOVE CTY,8     CTX8                            S01447
+     C                     MOVE CTY,9     CTX9                            S01447
+     C                     MOVE CTY,10    CTX10                           S01447
+     C                     ELSE                                           S01447
+     C                     CLEARCTX1                                      S01447
+     C                     CLEARCTX2                                      S01447
+     C                     CLEARCTX3                                      S01447
+     C                     CLEARCTX4                                      S01447
+     C                     CLEARCTX5                                      S01447
+     C                     CLEARCTX6                                      S01447
+     C                     CLEARCTX7                                      S01447
+     C                     CLEARCTX8                                      S01447
+     C                     CLEARCTX9                                      S01447
+     C                     CLEARCTX10                                     S01447
+     C                     END                                            S01447
+      *                                                                   S01447
+      ** Move relevant screen fields to file fields if CGL031 is enabled.                     CGL031
+      *                                                                                       CGL031
+     C           CGL031    IFEQ 'Y'                                                           CGL031
+     C                     EXSR SRSTAX                                                        CGL031
+     C                     MOVEAWTAA      EWTA                                                CGL031
+     C                     MOVEAWCCA      EWTC                                                CGL031
+     C                     ELSE                                                               CGL031
+     C                     MOVE *BLANKS   EWTA                                                CGL031
+     C                     MOVE *BLANKS   EWTC                                                CGL031
+     C                     ENDIF                                                              CGL031
+      *                                                                                       CGL031
+     C                     OPEN LINKD                                     S01315
+     C                     WRITELINKDF
+     C                     CLOSELINKD                                     S01315
+     C*                                                                   100986
+     C                     MOVE SBOOK     TEMPB                           100986
+     C                     OPEN LINKDX1                                   100986
+     C                     WRITELINKDXF                                   100986
+     C                     CLOSELINKDX1                                   100986
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      ***********                                                       *
+      ***ERRORS**Subroutine add error codes to the error arrays         *
+      ***********                                                       *
+      *******************************************************************
+      ***********
+     C***********ERRORS    BEGSR                                          S01315
+      ***********
+     C***********C1        IFLT 19                                        S01315
+      ***********
+      ***If*array 1 not full add error code
+      ***********
+     C*********************ADD  1         C1                              S01315
+     C*********************MOVEAWERR      ER1,C1                          S01315
+      ***********
+      ***If*array 1 full check array 2
+      ***********
+     C*********************ELSE                                           S01315
+     C***********C2        IFLT 19                                        S01315
+      ***********
+      ***If*array 2 not full add error code
+      ***********
+     C*********************ADD  1         C2                              S01315
+     C*********************MOVEAWERR      ER2,C2                          S01315
+      ***********
+     C*********************END                                            S01315
+     C*********************END                                            S01315
+      ***********
+     C*********************ENDSR                                          S01315
+      *****************************************************************
+      *****SUBROUTINE- ZICDSE                                             S01315
+      *****ACCESS ICD RECORD FROM TABTB36 FOR SECURITIES TRADING          S01315
+      ***********                                                         S01315
+      ***1.TABTB36 MUST BE DECLARED IN THE PROGRAM                        S01315
+      ***2.ON*RETURN FROM THIS S/R THE PROGRAM MUST CHECK *IN99 -         S01315
+      *****AND*IF ON MUST EXECUTE DATABASE ERROR PROCESSING               S01315
+      ***********                                                         S01315
+      ********************************************************************S01315
+      ***********                                                         S01315
+     C***********ZICDSE    BEGSR                           *** ZICDSE *** S01315
+      ***********                                                         S01315
+     C***********          MOVEL'01      'ZTABKY 12                       S01315
+     C***********          MOVE '  36'    ZTABKY                          S01315
+      ***********                                                         S01315
+     C***********ZTABKY    CHAINTABTB36F             90                   S01315
+      **ERROR*IF*NO RECORD FOUND OR IF IT IS DELETED                      S01315
+     C************IN90     IFNE '1'                                       S01315
+     C***********RECI      IFNE 'D'                                       S01315
+     C***********          SETON                     90                   S01315
+     C***********          END                                            S01315
+     C***********          END                                            S01315
+     C***********          ENDSR                                          S01315
+      ***********                                                         S01315
+      ********************************************************************S01315
+     C*                                                                   S01315
+     C*  ZASNMS - Send message to program message queue                   S01315
+     C*                                                                   S01315
+     C*  Called By : VALID - Validate screen                              S01315
+     C*                                                                   S01315
+     C*  Calls: Y2SNMGC - Send message to program message queue           S01315
+     C*                   queue (external)                                S01315
+     C*                                                                   S01315
+      ********************************************************************S01315
+     C           ZASNMS    BEGSR                                          S01315
+     C*                                                                   S01315
+     C** Declare message file name                                        S01315
+     C*                                                                   S01315
+     C                     MOVEL'SDUSRMSG'ZAMSGF                          S01315
+     C*                                                                   S01315
+     C                     CALL 'Y2SNMGC'                                 S01315
+     C                     PARM SPGMQ     ZAPGM  10        Program queue  S01315
+     C                     PARM           ZAPGRL  5        Rel queue      S01315
+     C                     PARM           ZAMSID  7        Message Id.    S01315
+     C                     PARM           ZAMSGF 10        Message file.  S01315
+     C                     PARM           ZAMSDA132        Message data.  S01315
+     C                     PARM           ZAMSTP  7        Message type.  S01315
+     C*                                                                   S01315
+     C                     ENDSR                                          S01315
+      *****************************************************************                       CGL031
+      /EJECT                                                                                  CGL031
+      *****************************************************************                       CGL031
+      *                                                               *                       CGL031
+      *  *PSSR - Program Exception Subroutine                         *                       CGL031
+      *                                                               *                       CGL031
+      *****************************************************************                       CGL031
+     C           *PSSR     BEGSR                                                              CGL031
+      *                                                                                       CGL031
+     C                     MOVE *ON       *INU7                                               CGL031
+     C                     MOVE *ON       *INU8                                               CGL031
+     C                     MOVE *ON       *INLR                                               CGL031
+      *                                                                                       CGL031
+     C                     DUMP                                                               CGL031
+      *                                                                                       CGL031
+     C                     RETRN                                                              CGL031
+      *                                                                                       CGL031
+     C                     ENDSR                                                              CGL031
+      *****************************************************************                       CGL031
+      /EJECT                                                                                  CGL031
+     C*                                                                   S01315
+     C********************************************************************S01315
+**  CPY@                                                                  S01315
+(c) Misys International Banking Systems Ltd. 2001

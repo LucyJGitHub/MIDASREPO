@@ -1,0 +1,62 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas RE Send ABC message to CREABCQ - Validation')   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Retail Module                                       */
+/*                                                                   */
+/*       REC001513 - Validity checker for SNDABCDTA                  */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. AR1089591 *CREATE  Date 05Apr13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR1089591 - ABC Data Queue Recovery Process                 */
+/*                   (Child:AR1089593)                               */
+/*                 - Applied for MD019899                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE &MIDASSYSID &JOBDTL &DTAQD)
+ 
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MIDASSYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&JOBDTL) TYPE(*CHAR) LEN(28)
+             DCL        VAR(&DTAQD) TYPE(*CHAR) LEN(4021)
+ 
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&EOF) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1) VALUE('Y')
+             DCLF       FILE(GPZONEPD)
+ 
+/** Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(CHGVAR VAR(&EOF) +
+                          VALUE('1'))
+             DOWHILE    COND(&EOF *NE '1')
+             IF         COND(&MIDASSYSID *EQ &ZOMSYS) THEN(CHGVAR +
+                          VAR(&ERROR) VALUE('N'))
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(CHGVAR VAR(&EOF) +
+                          VALUE('1'))
+             ENDDO
+ 
+             IF         COND(&ERROR *EQ 'N') THEN(DO)
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+             GOTO CMDLBL(ENDPGM)
+             ENDDO
+ 
+ERROR:
+             CHGVAR     VAR(&MSG) VALUE('0000Zone prefix entered is not +
+                          valid.')
+             SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA(&MSG) +
+                          TOPGMQ(*PRV (* *NONE *NONE)) MSGTYPE(*DIAG)
+             SNDPGMMSG  MSGID(CPF0002) MSGF(QCPFMSG) MSGTYPE(*ESCAPE)
+ 
+ENDPGM:
+             ENDPGM

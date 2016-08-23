@@ -1,0 +1,77 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member                                         *
+      *                                                               *
+      *  ZFEB29 - Determine whether period has a 29th February,       *
+      *           only used for calculation method 9.                 *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CIR013  *CREATE    Date 08Apr05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CIR013 - Additional Calculation Method for FRA/IRS/CCF       *
+      *                                                               *
+      *****************************************************************
+      **
+      **   CALCULATION METHOD:
+      **   9  Actual/365, 366 for Feb 29 period
+      **
+      *****************************************************************
+     CSR         #FEB29    BEGSR
+      *
+      * Check for the existence of any February 29th within the dates
+      * ZZDATA (start date) and ZZDATB (end date) are in YYYYMMDD format
+      *
+      * #29FEB - Flag to represent the existence of a 29th Feb. between
+      *          the start and end dates
+     C                     MOVE 'N'       #29FEB  1
+      *
+      * ZZYY1 - start year
+      * #29WKY = incremental year initially at start year
+     C                     Z-ADDZZYY1     #29WKY  40
+      *
+      * Move to subfields of @@VDT - data structure from ZDATE9Z2 - 8,0
+     C                     Z-ADDZZYY1     @@YR
+     C                     Z-ADD2         @@Z71M
+     C                     Z-ADD29        @@Z71D
+      * #29YA - 29/02/start year (fixed workfield)
+     C                     Z-ADD@@VDT     #29YA   80
+      * ZZYY2 - end year
+     C                     Z-ADDZZYY2     @@YR
+      * #29YB - 29/02/end year (fixed workfield)
+     C                     Z-ADD@@VDT     #29YB   80
+      *
+      * Loop round incrementing the year from start to end
+     C           #29WKY    DOUGTZZYY2
+      * Check to see whether 29/02/xx is a valid date by checking
+      * to see whether any of the years falling between the two dates
+      * are leap years.
+     C           ZZDATA    IFLE #29YA
+     C           #29WKY    ANDEQZZYY1
+     C           ZZDATB    ANDGE#29YA
+     C           #29WKY    ORGT ZZYY1
+     C           #29WKY    ANDLTZZYY2
+     C           ZZDATB    ORGE #29YB
+     C           #29WKY    ANDEQZZYY2
+     C           ZZDATA    ANDLE#29YB
+      *
+     C           #29WKY    DIV  4         ZLYR30  30
+     C                     MVR            ZLY     10
+      * Leap year
+     C           ZLY       IFEQ 0
+     C                     MOVE 'Y'       #29FEB
+     C                     LEAVE
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ADD  1         #29WKY
+     C                     ENDDO
+      *
+     CSR                   ENDSR
+      *****************************************************************
+      * End of /COPY ZFEB29                                           *
+      *****************************************************************

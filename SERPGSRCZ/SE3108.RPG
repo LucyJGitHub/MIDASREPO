@@ -1,0 +1,855 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE EXTEL Interface Control Maint.')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE3108  -  Interface Control Maintenance                     *
+     F*                                                               *
+     F*  Function: The program defines the mode of receipt of data    *
+     F*   (I/C)    from EXTEL and the types of processing which are   *
+     F*            to be performed when the EXTEL transmission has    *
+     F*            been successfully completed.                       *
+     F*            The information which is currently maintained is   *
+     F*            displayed before any amendment                     *
+     F*                                                               *
+     F*  Called by: SEC3108 - Extel Interface Control Maintenance     *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 052254             Date 11JAN94               *
+     F*                 S01117             Date 11JUN91               *
+     F*                 S01199             DATE 03AUG89               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S01117 - Multi-branching                                     *
+     F*  S01199 -  HELP SYSTEM.                                    *   S01199
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FSE3108DFCF  E                    WORKSTN
+     FTABTB10 IF  E                    DISK
+     FEXTELA  O   E                    DISK
+     F*
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   01 - F3 KEY PRESSED                                         *
+     F*   05 - F12 KEY PRESSED                                        *
+     F****25*-*HELP*KEY*PRESSED**************                         *   S01199
+     F*   30 - AT LEAST ONE INVALID FIELD ON INPUT                    *
+     F*   31 - INVALID TAPE OR WIRE IND                               *
+     F*   32 - INVALID TAPE DEVICE IND                                *
+     F*   33 - INVALID PRICES UPDATE IND                              *
+     F*   34 - INVALID DIV & CAP CHANGES IND                          *
+     F*   35 - INVALID CAP CHANGE TRAN GEN IND                        *
+     F*   36 - INVALID DIVIDENDS DUE IND                              *
+     F*   37 - INVALID VALUATIONS REPORT IND                          *
+     F*   38 - INVALID DATE OF EXTEL RECEIPT                          *
+     F*   39 - INVALID SEQ NO OF EXTEL RECEIPT                        *
+     F*   40 - AT LEAST ONE INVALID FIELD (NON WARNING)               *
+     F*   41 - PROTECT FIELDS WHEN VALIDATION COMPLETE                *
+     F*   89 - FILE ERROR                                             *
+     F*90-99 - SUBROUTINES                                            *
+     F*U7-U8 - DATABASE ERROR                                         *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  I N D E X   T O   S U B R O U T I N E S                      *
+     F*                                                               *
+     F*   ICDR1        Access TABTB10 for ICD 1                       *
+     F*   MVFLD        Set up screen fields from EXSTAT               *
+     F*   STFLD        Store fields from EXSTAT                       *
+     F*   REPST        Replace screen fields with original            *
+     F****HELP*********Help*key*pressed*******                        *   S01199
+     F*   SFVAL        Screen field validation                        *
+     F*   ZDATE1       Date validation                                *
+     F*   ERCOD        Error code output                              *   CHG10
+     F*   VLCMP        Validation complete screen output              *   CHG10
+     F*   EXTLA        Write to PF/EXTELA                             *   CHG10
+     F*   UPDAT        Update EXSTAT with valid screen fields         *
+     F*   *PSSR        Default Error Handling                         *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E                    ERR        19  4
+     E                    MSG     1   1 76
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+     E**
+      /EJECT
+     I*LDA******* UDS                            256                      S01117
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 177 DBASE                 S01117
+     IEXSTTD    E DSEXSTAT
+     I**
+     I**       Data Area  EXSTAT
+     I**
+     IPSDS       SDS
+     I**
+     I**      DATA AREA FOR PROGRAM STATUS DISK AREA
+     I**
+     I                                     *PROGRAM #PGM
+     I                                      201 208 #FILE
+     I                                      244 253 WID
+     I                                      254 263 USRID
+     I*
+     ICPYR@#      DS
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C/EJECT
+     C*===============================================================
+     C*
+     C**      Set Up LDA
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL#PGM      DBPGM
+     C                     OUT  LDA                                       S01117
+     C*
+     C**     Set up fields to position cursor
+     C*
+     C                     Z-ADD1         LINE    30
+     C                     Z-ADD1         POSN    30
+     C**
+     C**     Set up field to zeroise screen error indicators
+     C**
+     C                     MOVE *ZERO     ZERO11 11
+     C**
+     C**     ACCESS DATA AREA EXSTAT
+     C**
+     C           *NAMVAR   DEFN EXSTAT    EXSTTD
+     C           *LOCK     IN   EXSTTD                 99
+     C**
+     C**     DB Error if no record found.
+     C**
+     C           *IN99     IFEQ '1'
+     C***********          MOVE '01'      #BASE            *************  S01117
+     C                     Z-ADD1         #BASE            *************  S01117
+     C                     MOVEL'DTARA'   #FILE            * DBERR  01 *
+     C                     MOVEL'EXSTAT'  #KEY             *************
+     C**
+     C                     EXSR *PSSR
+     C**
+     C                     END
+     C**
+     C**     GET INSTALLATION CONTROL DATA RECORD 1
+     C**
+     C                     EXSR ICDR1
+     C**
+     C**     DB Error if no record found.
+     C**
+     C           *IN99     IFEQ '1'
+     C***********          MOVE '02'      #BASE            *************  S01117
+     C                     Z-ADD2         #BASE            *************  S01117
+     C                     MOVEL'TABLE'   #FILE            * DBERR  02 *
+     C                     MOVEL'TABTB10' #KEY             *************
+     C**
+     C                     EXSR *PSSR
+     C**
+     C                     END
+     C**
+     C**     MOVE FIELDS TO SCREEN FIELDS FOR OUTPUT
+     C**
+     C                     EXSR MVFLD
+     C**
+     C**     STORE FIELDS FROM EXSTAT
+     C**
+     C                     EXSR STFLD
+     C**
+     C**     EXECUTE RECORD FORMAT    -   LOOP UNTIL END OF PROGRAM
+     C**
+     C                     WRITESE3108F1               99
+     C**
+     C           *IN01     DOUEQ'1'                        B1
+     C**
+     C**     IF F12 PRESSED REPLACE FIELDS WITH THOSE STORED
+     C**
+     C           *IN05     IFEQ '1'                        B*2
+     C                     MOVEAZERO11    *IN,30           **2
+     C                     EXSR REPST                      **2
+     C**
+     C                     WRITESE3108F3               99  **2
+     C**
+     C           *IN99     IFEQ '1'                        B**3
+     C***********          MOVE '03'      #BASE            *************  S01117
+     C                     Z-ADD3         #BASE            *************  S01117
+     C                     MOVEL'PRTF/'   #FILE            * DBERR  03 *
+     C                     MOVEL'SE3108DF'#KEY             *************
+     C                     EXSR *PSSR
+     C                     END                             E**3
+     C**
+     C                     END                             E*2
+     C**
+     C                     EXFMTSE3108F2               99  *1
+     C**
+     C*******IF*HELP*PRESSED*CALL*MHELP*****                              S01199
+     C**********
+     C********** *IN25     DOWEQ'1'                        B*2            S01199
+     C**********           EXSR HELP                       **2            S01199
+     C**********           READ SE3108F2               8989**2            S01199
+     C**********           END                             E*2            S01199
+     C**
+     C**     Error handling.
+     C**
+     C           *IN89     IFEQ '1'
+     C***********          MOVE '04'      #BASE            *************  S01117
+     C                     Z-ADD4         #BASE            *************  S01117
+     C                     MOVEL'PRTF/'   #FILE            * DBERR  04 *
+     C                     MOVEL'SE3108DF'#KEY             *************
+     C**
+     C                     EXSR *PSSR
+     C**
+     C                     END
+     C**
+     C**    DROP TO END IF F3 OR 12 TAKEN
+     C**
+     C           *IN01     IFNE '1'                        B*2
+     C           *IN05     ANDNE'1'                        B*2
+     C**
+     C**    VALIDATE SCREEN FIELDS
+     C**    WARNING ERROR PROCESS DONE WITHIN SR/SFVAL
+     C**
+     C                     EXSR SFVAL                      **2
+     C**
+     C           *IN30     IFEQ '1'                        B**3
+     C                     EXSR ERCOD                      ***3           CHG10
+     C                     ELSE                            X**3
+     C                     EXSR VLCMP                      ***3           CHG10
+     C                     END                             E**3
+     C**
+     C                     END                             E*2
+     C**
+     C                     END                             E1
+     C**
+     C**  END PROGRAM
+     C**
+     C                     OUT  EXSTTD
+     C                     SETON                     LR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**    ICDR1 - SR TO ACCESS TABTB10                              *
+     C**                                                              *
+     C**    CALLED FROM:  MAIN                                        *
+     C**    CALLS:        returns.                                    *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           ICDR1     BEGSR                                       ***
+     C**
+     C                     READ TABTB10                  89
+     C           *IN89     IFEQ '0'                        B1
+     C           RECI      ANDEQ'D'                        B1
+     C**
+     C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+     C**
+     C           DATF      IFEQ 'M'                        B*2
+     C                     MOVE '1'       *IN98            **2
+     C                     END                             E*2
+     C**
+     C                     ELSE                            X1
+     C                     MOVE '1'       *IN89            *1
+     C                     END                             E1
+     C**
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**    MVFLD - SET UP SCREEN FIELDS FROM EXSTAT                  *
+     C**                                                              *
+     C**    CALLED FROM:  MAIN                                        *
+     C**    CALLS:        returns.                                    *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           MVFLD     BEGSR                                       ***
+     C**
+     C                     MOVE WID       IWID   10
+     C                     MOVE RUNA      IRUNA   7
+     C                     MOVE TWIN      ITWIN   1
+     C                     MOVE TDEV      ITDEV  10
+     C                     MOVE APIN      IAPIN   1
+     C                     MOVE CDIN      ICDIN   1
+     C                     MOVE CCIN      ICCIN   1
+     C                     MOVE DVDI      IDVDI   1
+     C                     MOVE VPRN      IVPRN   1
+     C                     MOVE DREC      IDREC   6
+     C                     MOVE SQNR      ISQNR   3
+     C**
+     C                     ENDSR
+     C*****************************************************************
+      /SPACE 3
+     C*****************************************************************
+     C**                                                              *
+     C**    STFLD - STORE FIELDS FROM EXSTAT                          *
+     C**                                                              *
+     C**    CALLED FROM:  MAIN                                        *
+     C**    CALLS:        returns.                                    *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           STFLD     BEGSR                                       ***
+     C**
+     C                     MOVE TWIN      STWIN   1
+     C                     MOVE TDEV      STDEV  10
+     C                     MOVE APIN      SAPIN   1
+     C                     MOVE CDIN      SCDIN   1
+     C                     MOVE CCIN      SCCIN   1
+     C                     MOVE DVDI      SDVDI   1
+     C                     MOVE VPRN      SVPRN   1
+     C                     MOVE DREC      SDREC   6
+     C                     MOVE SQNR      SSQNR   3
+     C**
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /SPACE 3
+     C*****************************************************************
+     C**                                                              *
+     C**    REPST - REPLACE SCREEN FIELDS WITH ORIGINAL FROM EXSTAT   *
+     C**                                                              *
+     C**    CALLED FROM:  MAIN                                        *
+     C**    CALLS:        returns.                                    *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           REPST     BEGSR                                       ***
+     C**
+     C                     MOVE STWIN     ITWIN
+     C                     MOVE STDEV     ITDEV
+     C                     MOVE SAPIN     IAPIN
+     C                     MOVE SCDIN     ICDIN
+     C                     MOVE SCCIN     ICCIN
+     C                     MOVE SDVDI     IDVDI
+     C                     MOVE SVPRN     IVPRN
+     C                     MOVE SDREC     IDREC
+     C                     MOVE SSQNR     ISQNR
+     C**
+     C                     ENDSR
+     C**
+     C*****************************************************************
+      /SPACE 3
+     C*****************************************************************
+     C***                                                             *   S01199
+     C******DISPLAY*HELP*SCREEN******************                     *   S01199
+     C***                                                             *   S01199
+     C******CALLED*FROM:**MAIN***********                             *   S01199
+     C******CALLS:********MHELP**********                             *   S01199
+     C***                                                             *   S01199
+     C*****************************************************************
+     C***                                                                 S01199
+     C********** HELP      BEGSR                           ***  HELP   ***S01199
+     C**********
+     C**********           MOVE *BLANKS   HBPGM   8                       S01199
+     C**********           MOVE *BLANKS   HERCD 160                       S01199
+     C**********           MOVEL#PGM      HBPGM                           S01199
+     C**********           MOVEAERR       HERCD                           S01199
+     C**
+     C******CALL*HELP*SCREEN*PROGRAM********                              S01199
+     C**
+     C**********           CALL 'MHELP'                                   S01199
+     C**********           PARM           HBPGM                           S01199
+     C**********           PARM           HERCD                           S01199
+     C**********
+     C**********          ENDSR                                           S01199
+     C**
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**    SFVAL - SCREEN FIELD VALIDATION                           *
+     C**                                                              *
+     C**    CALLED FROM:  MAIN                                        *
+     C**    CALLS:        ZDATE1, returns.                            *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           SFVAL     BEGSR                                       ***
+     C**
+     C                     MOVEA*BLANKS   ERR
+     C                     Z-ADD1         X       30
+     C                     MOVE '0'       TDVIND  1
+     C                     MOVEAZERO11    *IN,30
+     C                     MOVE '0'       *IN99
+     C**
+     C**    TAPE / WIRE INDICATOR MUST BE EITHER T OR W
+     C**
+     C           ITWIN     IFNE 'T'                        B1
+     C           ITWIN     ANDNE'W'                        *1
+     C                     MOVE ' 101'    ERR,X            *1
+     C                     ADD  1         X                *1
+     C                     MOVE '1'       *IN31            *1
+     C                     END                             E1
+     C**
+     C**    TAPE DEVICE MUST BE ENTERED IF TAPE/WIRE DEV IS T
+     C**
+     C           ITWIN     IFEQ 'T'                        B1
+     C           ITDEV     ANDEQ*BLANKS                    *1
+     C                     MOVE ' 102'    ERR,X            *1
+     C                     ADD  1         X                *1
+     C                     MOVE '1'       *IN32            *1
+     C                     END                             E1
+     C**
+     C**    TAPE DEVICE MUST NOT BE ENTERED IF TAPE/WIRE DEV IS W
+     C**
+     C           ITWIN     IFEQ 'W'                        B1
+     C           ITDEV     ANDNE*BLANKS                    *1
+     C                     MOVE ' 112'    ERR,X            *1
+     C                     ADD  1         X                *1
+     C                     MOVE '1'       *IN32            *1
+     C                     END                             E1
+     C**
+     C**    CHECK IF TAPE DEVICE IS VALID
+     C**
+     C           ITDEV     IFNE *BLANKS                    B1
+     C                     CALL 'SEC3112A'                 *1
+     C                     PARM           ITDEV            *1
+     C                     PARM           TDVIND           *1
+     C**
+     C**    TAPE DEVICE IS NOT VALID
+     C**
+     C           TDVIND    IFEQ '2'                        B*2
+     C                     MOVE ' 103'    ERR,X            **2
+     C                     ADD  1         X                **2            S5426
+     C                     MOVE '1'       *IN32            **2            S5426
+     C                     END                             E*2
+     C**
+     C                     END                             E1
+     C**
+     C**    PRICE UPDATE IND MUST BE Y OR N
+     C**
+     C           IAPIN     IFNE 'Y'                        B1
+     C           IAPIN     ANDNE'N'                        *1
+     C                     MOVE ' 104'    ERR,X            *1
+     C                     ADD  1         X                *1
+     C                     MOVE '1'       *IN33            *1
+     C                     END                             E1
+     C**
+     C**    DIVIDEND CAPITAL CHANGE UPDATE IND MUST BE Y OR N
+     C**
+     C           ICDIN     IFNE 'Y'                        B1
+     C           ICDIN     ANDNE'N'                        *1
+     C                     MOVE ' 105'    ERR,X            *1
+     C                     ADD  1         X                *1
+     C                     MOVE '1'       *IN34            *1
+     C                     END                             E1
+     C**
+     C**    CAPITAL CHANGE TRANS GENERATION MUST BE Y OR N
+     C**
+     C           ICCIN     IFNE 'Y'                        B1
+     C           ICCIN     ANDNE'N'                        *1
+     C                     MOVE ' 106'    ERR,X            *1
+     C                     ADD  1         X                *1
+     C                     MOVE '1'       *IN35            *1
+     C                     END                             E1
+     C**
+     C**    DIVIDENDS DUE IND MUST BE Y OR N
+     C**
+     C           IDVDI     IFNE 'Y'                        B1
+     C           IDVDI     ANDNE'N'                        *1
+     C                     MOVE ' 107'    ERR,X            *1
+     C                     ADD  1         X                *1
+     C                     MOVE '1'       *IN36            *1
+     C                     END                             E1
+     C**
+     C**    VALUATION REPORT IND MUST BE Y OR N
+     C**
+     C           IVPRN     IFNE 'Y'                        B1
+     C           IVPRN     ANDNE'N'                        *1
+     C                     MOVE ' 108'    ERR,X            *1
+     C                     ADD  1         X                *1
+     C                     MOVE '1'       *IN37            *1
+     C                     END                             E1
+     C**
+     C**    DATE OF EXTEL TRANSMISSION/RECEIPT MUST HAVE VALID FORMAT
+     C**
+     C                     MOVELIDREC     ZDATE
+     C                     EXSR ZDATE1
+     C           *IN99     IFEQ '1'                        B1
+     C                     MOVE ' 109'    ERR,X            *1
+     C                     ADD  1         X                *1
+     C                     MOVE '1'       *IN38            *1
+     C                     END                             E1
+     C**
+     C**    SEQUENCE NO. OF EXTEL TRANSMISSION/RECEIPT MUST BE NUMERIC
+     C**
+     C                     MOVELISQNR     WSQNRN  40
+     C                     MOVELWSQNRN    WSQNRA  3
+     C           ISQNR     IFNE WSQNRA                     B1
+     C                     MOVE ' 111'    ERR,X            *1
+     C                     ADD  1         X                *1
+     C                     MOVE '1'       *IN39            *1
+     C                     END                             E1
+     C**
+     C**    IF ANY INVALID FIELD SETON 40 (NON WARNING ERROR)
+     C**
+     C           X         IFGT 1                          B1
+     C                     MOVE '1'       *IN40            *1
+     C                     END                             E1
+     C**
+     C**    W A R N I N G  E R R O R S
+     C**
+     C**    IF FIELD ERROR ENSURE WARNING ERROR OUTPUT IF APPLICABLE
+     C**
+     C           *IN40     IFEQ '1'                        B1
+     C                     MOVE *BLANKS   WTDV   10        *1
+     C                     MOVE *BLANKS   WRNDRC  6        *1
+     C                     MOVE *BLANKS   WRNSQN  3        *1
+     C                     END                             E1
+     C**
+     C**    DATE OF EXTEL TRANSMISSION/RECEIPT
+     C**    IS NOT EQUAL OR GREATER THAN CURRENT DATE
+     C**    *IN99 & ZDAYNO FROM ZDATE1
+     C**
+     C           *IN99     IFEQ '0'                        B1
+     C           ZDAYNO    ANDLTRUND                       B1
+     C           WRNDRC    ANDNEIDREC                      B1
+     C                     MOVE IDREC     WRNDRC           *1
+     C                     MOVE ' W01'    ERR,X            *1
+     C                     ADD  1         X                *1
+     C                     MOVE '1'       *IN38            *1
+     C                     END                             E1
+     C**
+     C**    SEQUENCE NO. OF EXTEL TRANSMISSION/RECEIPT
+     C**    IS NOT EQUAL OR GREATER THAN CURRENT NUMBER
+     C**
+     C           *IN39     IFNE '1'                        B1
+     C           WRNSQN    ANDNEISQNR                      B1
+     C                     MOVE ISQNR     WSQNR   30       *1
+     C           WSQNR     IFLT SQNR                       B*2
+     C                     MOVE ISQNR     WRNSQN           **2
+     C                     MOVE ' W02'    ERR,X            **2
+     C                     ADD  1         X                **2
+     C                     MOVE '1'       *IN39            **2
+     C                     END                             E*2
+     C                     END                             E1
+     C**
+     C**    TAPE DEVICE IS NOT READY.
+     C**
+     C           TDVIND    IFEQ '1'                        B1
+     C           WTDV      ANDNEITDEV                      B1
+     C                     MOVE ITDEV     WTDV             B1
+     C                     MOVE ' W03'    ERR,X            *1
+     C                     ADD  1         X                *1             S5426
+     C                     MOVE '1'       *IN32            *1             S5426
+     C                     END                             E1
+     C**
+     C**    IF FIELD ERROR THIS TIME ROUND
+     C**    ENSURE WARNING ERROR OUTPUT IF APPLICABLE NEXT TIME
+     C**
+     C           *IN40     IFEQ '1'                        B1
+     C                     MOVE *BLANKS   WTDV             *1
+     C                     MOVE *BLANKS   WRNDRC  6        *1
+     C                     MOVE *BLANKS   WRNSQN  3        *1
+     C                     END                             E1
+     C**
+     C**    IF ANY INVALID FIELD SETON 30
+     C**
+     C           X         IFGT 1                          B1
+     C                     MOVE '1'       *IN30            *1
+     C                     END                             E1
+     C**
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**    ZDATE1 -  TO VALIDATE DATES SUBMITTED AND                 *
+     C**              CONVERT TO A NUMBER OF DAYS.                    *
+     C**                                                              *
+     C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.     *
+     C**                                                              *
+     C**    CALLED FROM:  SFVAL                                       *
+     C**    CALLS:        returns.                                    *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           ZDATE1    BEGSR                           *** ZDATE1 ***
+     C**
+     C**   CLEAR DAY NUMBER.
+     C**
+     C                     Z-ADD0         ZDAYNO  50
+     C**
+     C**   CALCULATION TO DEFINE INPUT DATE FIELD.
+     C**
+     C                     Z-ADDZDATE     ZDATE   60
+     C**
+     C**   GET INDIVIDUAL DAY, MONTH AND YEAR FIELDS.
+     C**
+     C                     MOVE ZDATE     ZYEAR   20
+     C  N98                MOVELZDATE     ZDAY    20
+     C   98                MOVELZDATE     ZMTH    20
+     C                     MOVE ZDATE     ZWRK4   40
+     C  N98                MOVELZWRK4     ZMTH
+     C   98                MOVELZWRK4     ZDAY
+     C**
+     C**   ENSURE MONTH IS VALID.
+     C**
+     C           ZMTH      COMP 0                      9999
+     C  N99      ZMTH      COMP 12                   99
+     C   99                GOTO ZDEND1                     BYPASS IF ERROR
+     C**
+     C**   CHECK FOR 30 DAY MONTHS.
+     C**
+     C           ZMTH      COMP 4                        90IF 90 ON, 30
+     C  N90      ZMTH      COMP 6                        90DAY MONTH.
+     C  N90      ZMTH      COMP 9                        90
+     C  N90      ZMTH      COMP 11                       90
+     C**
+     C**   ENSURE DAY IS VALID.
+     C**
+     C           ZDAY      COMP 0                      9999
+     C   90N99   ZDAY      COMP 30                   99
+     C  N90N99   ZDAY      COMP 31                   99
+     C   99                GOTO ZDEND1                     BYPASS IF ERROR
+     C**
+     C**   CHECK FOR LEAP YEAR AND FEBRUARY.
+     C**
+     C           ZYEAR     ADD  28        ZYEAR
+     C           ZYEAR     DIV  4         ZLYR    20
+     C                     MVR            ZLY     10     91LEAP YR, 91 ON
+     C           ZMTH      COMP 2                    93  92FEB., 92 ON
+     C**                                                   PAST FEB, 93 ON
+     C**   IF FEBUARY FURTHER VALIDATE DAY.
+     C**                                                   PAST FEB, 93 ON
+     C  N91 92   ZDAY      COMP 28                   99
+     C   91 92   ZDAY      COMP 29                   99
+     C   99                GOTO ZDEND1                     BYPASS IF ERROR
+     C**
+     C**   DETERMINE NUMBER OF DAYS FROM 31/12/1971.     NO.OF 4 YR. SPANS
+     C**
+     C           ZLYR      MULT 1461      ZDAYNO           X DAYS IN SPAN.
+     C  N91      ZDAYNO    ADD  ZYDY,ZLY  ZDAYNO           SINCE LAST L.YR
+     C   91 93   ZDAYNO    ADD  1         ZDAYNO           L.YR.,PAST FEB.
+     C           ZDAYNO    ADD  ZMDY,ZMTH ZDAYNO           DAYS THIS YEAR
+     C           ZDAYNO    ADD  ZDAY      ZDAYNO           DAYS THIS MONTH
+     C**
+     C           ZDEND1    ENDSR                           * ZDEND1 ENDSR*
+     C**
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**    ERCOD - ERROR CODE OUTPUT                                 *
+     C**                                                              *
+     C**    CALLED FROM:  MAIN                                        *
+     C**    CALLS:        returns.                                    *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           ERCOD     BEGSR                                          CHG10
+     C**
+     C                     MOVEAERR       ERRCDE 76
+     C                     WRITESE3108F3               99
+     C**
+     C           *IN99     IFEQ '1'
+     C***********          MOVE '05'      #BASE            *************  S01117
+     C                     Z-ADD5         #BASE            *************  S01117
+     C                     MOVEL'PRTF/'   #FILE            * DBERR  05 *
+     C                     MOVEL'SE3108DF'#KEY             *************
+     C                     EXSR *PSSR
+     C                     END
+     C**
+     C**
+     C                     ENDSR
+     C**
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**    VLCMP - VALIDATION COMPLETE SCREEN OUTPUT                 *
+     C**                                                              *
+     C**    CALLED FROM:  MAIN                                        *
+     C**    CALLS:        UPDAT, returns.                             *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           VLCMP     BEGSR                                          CHG10
+     C**
+     C**    SET OUTPUT FIELDS
+     C**
+     C                     MOVEAZERO11    *IN,30
+     C                     MOVE '1'       *IN41
+     C                     WRITESE3108F2               99
+     C                     MOVE '0'       *IN41
+     C**
+     C**     Error handling.
+     C**
+     C           *IN99     IFEQ '1'
+     C***********          MOVE '06'      #BASE            *************  S01117
+     C                     Z-ADD6         #BASE            *************  S01117
+     C                     MOVEL'PRTF/'   #FILE            * DBERR  06 *
+     C                     MOVEL'SE3108DF'#KEY             *************
+     C                     EXSR *PSSR
+     C                     END
+     C**
+     C**    DISPLAY VALIDATION COMPLETE MESSAGE
+     C**
+     C                     MOVE MSG,1     ERRCDE
+     C                     EXFMTSE3108F3               99
+     C**
+     C**     Error handling.
+     C**
+     C           *IN99     IFEQ '1'
+     C***********          MOVE '07'      #BASE            *************  S01117
+     C                     Z-ADD7         #BASE            *************  S01117
+     C                     MOVEL'PRTF/'   #FILE            * DBERR  07 *
+     C                     MOVEL'SE3108DF'#KEY             *************
+     C                     EXSR *PSSR
+     C                     END
+     C**
+     C**     IF F3 OR F12 NOT TAKEN UPDATE PF/EXTELA AND
+     C**     DATA AREA EXSTAT
+     C**
+B1   C           *IN01     IFNE '1'
+B1   C           *IN05     ANDNE'1'
+     C**
+*1   C                     EXSR EXTLA
+*1   C                     EXSR UPDAT
+*1   C                     MOVE '1'       *IN01
+E1   C                     END
+     C**
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**    EXTLA - WRITE TO PF/EXTELA                                *
+     C**                                                              *
+     C**    CALLED FROM:  VLCMP                                       *
+     C**    CALLS:        returns.                                    *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           EXTLA     BEGSR                                       ***
+     C**
+     C                     MOVE IDREC     DRECN   60
+     C                     MOVE ISQNR     SQNRN   30
+     C**
+     C           DRECN     IFNE DREC
+     C                     MOVE IDREC     DREC
+     C                     END
+     C**
+     C           SQNRN     IFNE SQNR
+     C                     MOVE ISQNR     SQNR
+     C                     END
+     C**
+     C                     WRITEEXTELAF                89
+     C**
+     C**     Error handling.
+     C**
+     C           *IN89     IFEQ '1'
+     C***********          MOVE '08'      #BASE            *************  S01117
+     C                     Z-ADD8         #BASE            *************  S01117
+     C                     MOVEL'EXTEL'   #FILE            * DBERR  08 *
+     C                     MOVEL'A'       #KEY             *************
+     C                     EXSR *PSSR
+     C                     END
+     C**
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**    UPDAT - UPDATE EXSTAT WITH VALID SCREEN FIELDS            *
+     C**                                                              *
+     C**    CALLED FROM:  VLCMP                                       *
+     C**    CALLS:        returns.                                    *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           UPDAT     BEGSR                                       ***
+     C**
+     C                     MOVE ITWIN     TWIN
+     C                     MOVE ITDEV     TDEV
+     C                     MOVE IAPIN     APIN
+     C                     MOVE ICDIN     CDIN
+     C                     MOVE ICCIN     CCIN
+     C                     MOVE IDVDI     DVDI
+     C                     MOVE IVPRN     VPRN
+     C                     MOVE IDREC     DREC
+     C                     MOVE ISQNR     SQNR
+     C**
+     C                     ENDSR
+     C**
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**    *PSSR - DEFAULT ERROR HANDLING                            *
+     C**                                                              *
+     C**    CALLED FROM:  anywhere                                    *
+     C**    CALLS:        returns.                                    *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           *PSSR     BEGSR                                       ***
+     C**
+     C           WERROR    IFNE 'Y'
+     C                     MOVE 'Y'       WERROR  1
+     C                     DUMP
+     C        NU8          SETON                       U7U8
+     C**
+     C           *NAMVAR   DEFN           LDA
+     C           *LIKE     DEFN DBKEY     #KEY
+     C           *LIKE     DEFN DBASE     #BASE
+     C**
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL#PGM      DBPGM
+     C                     MOVEL#KEY      DBKEY
+     C                     MOVEL#FILE     DBFILE
+     C                     MOVEL#BASE     DBASE
+     C                     OUT  LDA                                       S01117
+     C**
+     C                     END
+     C**
+     C                     OUT  EXSTTD
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C**
+     C                     ENDSR
+     C**
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   MSG  - VALIDATION COMPLETE MESSAGE
+         Validation complete, press ENTER to continue
+**   ZYDY - YEARS IN DAYS CUMULATIVE IN FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365

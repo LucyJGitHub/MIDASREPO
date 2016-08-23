@@ -1,0 +1,154 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM BankFusion Pre-Tape Set-up 2')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC002102 - Midas SM BankFusion Pre-Tape Set-up 2           */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2011           */
+/*                                                                   */
+/*       Last Amend No. AR886414*CREATE    Date 05Jan12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR886414 - Creation of CBS, CBA and BF libraries in SMSETUPD*/
+/*                  not catered                                      */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&SBSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ZBFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GBFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GCBSLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GCBALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OWNR) TYPE(*CHAR) LEN(10) +
+                          VALUE('MIDASOWNER')
+ 
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2011')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+             RTVJOBA    TYPE(&JOBTYPE)
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Get system ID. */
+ 
+             RTVDTAARA  DTAARA(QTEMP/SYSID) RTNVAR(&SBSID)
+ 
+/* Attach prefix */
+ 
+             CHGVAR     VAR(&ZBFLIB) VALUE(&SBSID *CAT &SBSID *CAT 'BFLIB')
+             CHGVAR     VAR(&GBFLIB) VALUE(&SBSID *CAT 'BFLIB')
+             CHGVAR     VAR(&GCBSLIB) VALUE(&SBSID *CAT 'CBSLIB')
+             CHGVAR     VAR(&GCBALIB) VALUE(&SBSID *CAT 'CBALIB')
+ 
+/* Build up outfile to control the deleting & journaling process. */
+ 
+             DLTF       FILE(QTEMP/BFZOBJLST)
+             MONMSG     MSGID(CPF0000)
+             CRTDUPOBJ  OBJ(UPOBJDTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(BFZOBJLST)
+ 
+             DSPOBJD    OBJ(&ZBFLIB/*ALL) OBJTYPE(*ALL) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/BFZOBJLST) +
+                          OUTMBR(*FIRST *ADD)
+ 
+             DLTF       FILE(QTEMP/BFGOBJLST)
+             MONMSG     MSGID(CPF0000)
+             CRTDUPOBJ  OBJ(UPOBJDTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(BFGOBJLST)
+ 
+             DSPOBJD    OBJ(&GBFLIB/*ALL) OBJTYPE(*ALL) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/BFGOBJLST) +
+                          OUTMBR(*FIRST *ADD)
+             DSPOBJD    OBJ(&GCBSLIB/*ALL) OBJTYPE(*ALL) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/BFGOBJLST) +
+                          OUTMBR(*FIRST *ADD)
+             DSPOBJD    OBJ(&GCBALIB/*ALL) OBJTYPE(*ALL) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/BFGOBJLST) +
+                          OUTMBR(*FIRST *ADD)
+ 
+             DLTF       FILE(QTEMP/BFAOBJLST)
+             MONMSG     MSGID(CPF0000)
+             CRTDUPOBJ  OBJ(UPOBJDTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(BFAOBJLST)
+ 
+             CPYF       FROMFILE(QTEMP/BFGOBJLST) +
+                          TOFILE(QTEMP/BFAOBJLST) MBROPT(*ADD)
+             CPYF       FROMFILE(QTEMP/BFZOBJLST) +
+                          TOFILE(QTEMP/BFAOBJLST) MBROPT(*ADD)
+ 
+/* End and Delete Journals within BankFusion Libraries */
+ 
+             CALL       PGM(SMC002103)
+ 
+/* Delete Journal Recievers and SYS* views within BankFusion Libraries */
+ 
+             CALL       PGM(SMC002104)
+ 
+/* Change object ownership & auts of Objects within BankFusion Libraries */
+ 
+             CHGOWNAUT  OBJ(&ZBFLIB/*ALL) OBJTYPE(*ALL) +
+                          NEWOWN(&OWNR) PUBAUT(*USE) +
+                          AUTL(*REVOKE) CHGLIB(N)
+             CHGOWNAUT  OBJ(&GBFLIB/*ALL) OBJTYPE(*ALL) +
+                          NEWOWN(&OWNR) PUBAUT(*USE) +
+                          AUTL(*REVOKE) CHGLIB(N)
+             CHGOWNAUT  OBJ(&GCBSLIB/*ALL) OBJTYPE(*ALL) +
+                          NEWOWN(&OWNR) PUBAUT(*USE) +
+                          AUTL(*REVOKE) CHGLIB(N)
+             CHGOWNAUT  OBJ(&GCBALIB/*ALL) OBJTYPE(*ALL) +
+                          NEWOWN(&OWNR) PUBAUT(*USE) +
+                          AUTL(*REVOKE) CHGLIB(N)
+ 
+/* Journal all files within Zonal BankFusion Libraries */
+ 
+             CALL       PGM(SMC002105)
+ 
+/* Journal all files within Global BankFusion Libraries */
+ 
+             CALL       PGM(SMC002106)
+ 
+/* Delete temporary files */
+ 
+             DLTF       FILE(QTEMP/BFAOBJLST)
+             DLTF       FILE(QTEMP/BFGOBJLST)
+             DLTF       FILE(QTEMP/BFZOBJLST)
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+/* Abnormal termination - batch job */
+ 
+             IF         COND(&JOBTYPE = '0') THEN(DO)
+               SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                            SMC002101 ended abnormally - see job log') +
+                            TOMSGQ(MOPERQ)
+               MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ 
+/* Abnormal termination - interactive job */
+ 
+             IF         COND(&JOBTYPE = '1') THEN(DO)
+ 
+             SNDUSRMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SMC002101 ended abnormally - see job +
+                          log')
+ 
+             ENDDO
+ 
+END:
+ 
+             ENDPGM

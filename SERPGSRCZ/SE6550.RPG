@@ -1,0 +1,1023 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Positions collateral released excep rpt')     *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE6550 - Security Positions Collateral Released Exceptions   *
+      *           Report                                              *
+      *                                                               *
+      *  Function:  This program will produce a list of all           *
+      *  (COB)      Customer security positions that are blocked      *
+      *             for collateral purposes but where the position    *
+      *             has been reduced either by a trade sale or        *
+      *             walk-out depot movement and the new nominal of    *
+      *             the security held by the customer is now less     *
+      *             than the collateral amount held against the       *
+      *             position.                                         *
+      *                                                               *
+      *  Called By: SEC6550 - Security Positions Collateral Released  *
+      *                       Exceptions Report                       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CGL014             Date 20Oct03               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CGL011  *CREATE    Date 20Sep99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CGL014 - Collaterals Processing                              *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CGL011 - Collateral Processing for Midas                     *
+      *                                                               *
+      *****************************************************************
+     FSEBLKPL6IF  E           K        DISK
+     FCPOSNL1 IF  E           K        DISK
+     FGLCOLLLCIF  E           K        DISK
+     FGLCOLAL1IF  E           K        DISK
+     FFOCLT   IF  E           K        DISK
+     FSECTY   IF  E           K        DISK
+     FSE6550AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU
+     FSE6550P1O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL1
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   70  - Page overflow                                         *
+      *   80  - End of File for LF/SEBLKPL6                           *
+      *   81  - End of File for LF/CPOSNL1                            *
+      *   82  - End of File for LF/GLCOLAL1                           *
+      *   83  - No matching record found in LF/GLCOLLLC               *
+      *   84  - Chain fail on LF/FOCLT.                               *
+      *   85  - Chain fail on LF/SECTY.                               *
+      * 90-99 - Used by Standard Subroutines                          *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRAUDT - Produce Audit Report Routine                        *
+      *  SRCFAU - Register SE6550AU via RCF Routine                   *
+      *  SRCFP1 - Register SE6550P1 via RCF Routine                   *
+      *  SRCOLA - Allocation Detail Printing Routine                  *
+      *  SRCOLL - Collateral Detail Printing Routine                  *
+      *  SRDEAL - Deal Detail Printing Routine                        *
+      *  SRINIT - Initialisation Routine                              *
+      *  SROVFL - Check For Overflow Routine                          *
+      *  SRWP1H - Write Report Header Routine                         *
+      *  SRWP1E - Write End of Report Routine                         *
+      *  *PSSR  - Program Error Processing Routine                    *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E/COPY ZSRSRC,ZFRPEDZ1
+      ** Array for ZFRPED standard subroutine
+      *
+      /SPACE 3
+     ILDA         DS                            256
+      ** Local data area for database error details
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      142 144 DBCSBA
+     I                                      146 151 DBCSCN
+     I                                      153 156 DBPTFR
+     I                                      158 158 DBBLTY
+     I                                      160 169 DBCSSC
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      254 263 USER
+      *
+     ISPOOL1      DS
+      ** File Information Data Structure for SE6550P1
+      *
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+      *
+     ISPOOLU      DS
+      ** File Information Data Structure for SE6550AU.
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     ISDBANK    E DSSDBANKPD
+      ** External data structure for Bank Details
+      *
+     ISDCUST    E DSSDCUSTPD
+      ** External data structure for Customer Details
+      *
+     ISDCLLM    E DSSDCLLMPD
+      ** External data structure for Client Limits
+      *
+     IDSFDY     E DSDSFDY
+      ** Short data structure for Access Objects
+      *
+     IDSLDY     E DSDSLDY
+      ** Extended data structure for Access Objects
+      *
+      *
+      ** Constant text narratives
+      *
+     I              'NO FX LIMIT DEFINED' C         CNOFX
+     I              'FX LIMIT - '         C         CFXLM
+     I              'NO MM LIMIT DEFINED' C         CNOMM
+     I              'MM LIMIT - '         C         CMMLM
+     I              'NO FO CUST DEFINED'  C         CNOFO
+     I              'FO Cust - '          C         CFOCU
+     I              'LOAN - '             C         CLOAN
+     I              'FCLTY - '            C         CFACI
+     I              'CM REF - '           C         CCMRF
+     I              'A/C-'                C         CACCT
+      *
+     I/COPY ZSRSRC,ZFRPEDZ2
+      ** Data structures for ZFRPED standard subroutine
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ** Define Entry Parameters.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQ    5
+     C                     PARM           PLEV    1
+     C                     PARM           PENT    3
+      *
+      ** Perform Initialisation.
+      *
+     C                     OPEN SE6550P1
+     C                     EXSR SRINIT
+     C                     MOVE 'Y'       WHEADR
+      *
+      ** Read Prime Input File.
+      *
+     C                     READ SEBLKPL6                 80
+      *
+     C           *IN80     DOWEQ*OFF
+      *
+     C           KCPON     KLIST
+     C                     KFLD           VDBRCD
+     C                     KFLD           VDSESN
+     C                     KFLD           VDCNUM
+      *
+     C           KCPON     CHAINCPOSNL1              81
+      *
+     C           *IN81     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CPOSNL1 'DBFILE           ***************
+     C                     Z-ADD010       DBASE            * DB ERROR 10 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR *PSSR
+     C                     ELSE
+     C           VDCOLA    IFGT CSNT
+     C                     ADD  1         RCOUNT
+     C                     MOVE 'Y'       WFIRST
+     C                     EXSR SRDEAL
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     READ SEBLKPL6                 80
+     C                     ENDDO
+      *
+      ** Output Audit Report
+      *
+     C           RCOUNT    IFNE 0
+     C                     EXSR SRWP1E
+     C                     ENDIF
+      *
+     C                     EXSR SRAUDT
+      *
+      ** End the program.
+      *
+     C                     MOVE *ON       *INLR
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Initialisation Routine.                             *
+      *                                                               *
+      *  Called By : Main Processing                                  *
+      *  Calls     : SRCFAU, SRCFP1, *PSSR, AOBANKR0                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Initialise LDA field.
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SE6550'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Initialise work fields.
+      *
+     C                     Z-ADD0         WLNCTR  20
+     C                     Z-ADD58        WOVERF  20
+     C                     Z-ADD0         RCOUNT
+     C                     MOVE *BLANKS   WHEADR  1
+     C                     MOVE *BLANKS   WFIRST  1
+     C                     MOVE *BLANKS   WSECND  1
+     C                     MOVE *BLANKS   WPTFR   4
+     C                     MOVE 'P'       WBLTY   1
+     C                     MOVE *BLANKS   WCNUM   6
+     C                     MOVE *BLANKS   WLEVL   1
+     C                     MOVE *BLANKS   WENTY   3
+     C                     MOVE 'Y'       WNULL   1
+      *
+      ** Access Bank ICD details.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD001       DBASE            * DB ERROR 01 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Register Audit and Report spool files via RCF.
+      *
+     C                     EXSR SRCFAU
+     C                     EXSR SRCFP1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRDEAL
+      *****************************************************************
+      *                                                               *
+      *  SRDEAL - Deal Detail Printing Routine.                       *
+      *                                                               *
+      *  Called By : Main Processing                                  *
+      *  Calls     : SROVFL, SRCOLL, SRCOLA, ZFRPED, SRWP1H, *PSSR,   *
+      *              AOCUSTR1                                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDEAL    BEGSR
+      *
+      ** Retrieve Customer Shortname for Position Held.
+      *
+     C                     MOVE *BLANKS   WCUST
+     C                     MOVELCSCN      WCUST
+      *
+     C                     CALL 'AOCUSTR1'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY    'WOPTN
+     C                     PARM           WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSLDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCUSTPD'DBFILE           ***************
+     C                     Z-ADD004       DBASE            * DB ERROR 04 *
+     C                     MOVELCSCN      DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Format Position held.
+      *
+     C                     MOVE *BLANKS   RPOSN
+     C           CSBA      CAT  '-':0     RPOSN
+     C           RPOSN     CAT  CSSC:0    RPOSN
+     C           RPOSN     CAT  '-':0     RPOSN
+     C           RPOSN     CAT  BBCSSN:0  RPOSN
+      *
+      ** Format Nominal Position.
+      *
+     C                     Z-ADDCSNT      ZFLD15
+     C                     MOVE 'J'       ZECODE
+      *
+     C           CSSC      CHAINSECTY                85
+     C           *IN85     IFEQ *OFF
+     C                     Z-ADDNMDP      ZDECS
+     C                     ELSE
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SECTYD  'DBFILE           ***************
+     C                     Z-ADD005       DBASE            * DB ERROR 05 *
+     C                     MOVELCSSC      DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     EXSR ZFRPED
+     C                     MOVELZOUT25    RNOMP
+      *
+      ** Collateral Amount.
+      *
+     C                     Z-ADDVDCOLA    ZFLD15
+     C                     Z-ADDNMDP      ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVELZOUT25    RCOLA
+      *
+      ** Find matching record in Collateral Details file.
+      *
+     C           KCOLL     KLIST
+     C                     KFLD           CSBA
+     C                     KFLD           CSSC
+     C                     KFLD           CSCN
+      *
+     C           KCOLL     SETLLGLCOLLLC                 83
+      *
+      ** If no matching record is found, blank out Collateral and
+      ** Allocation Details before printing Format 1.
+      *
+     C           *IN83     IFEQ *OFF
+     C                     MOVE *BLANKS   RCOLR
+     C                     MOVE *BLANKS   RCOLC
+     C                     MOVE *BLANKS   RMSEC
+     C                     MOVE *BLANKS   RTRAN
+     C                     MOVE *BLANKS   RALLC
+      *
+     C           WHEADR    IFEQ 'Y'
+     C                     EXSR SRWP1H
+     C                     ENDIF
+      *
+     C                     WRITEDETAIL1
+     C                     ADD  2         WLNCTR
+     C                     EXSR SROVFL
+      *
+      ** Otherwise, if a matching record exists, fill Collateral and
+      ** Allocation Details.
+      *
+     C                     ELSE
+     C           KCOLL     READEGLCOLLLC                 83
+     C           *IN83     DOWEQ*OFF
+      *
+      ** Format Collateral Reference.
+      *
+     C                     MOVE CDCREF    RCOLR
+      *
+      ** Format Collateral Customer.
+      *
+     C                     MOVE *BLANKS   WCUST
+     C                     MOVELCDCNUM    WCUST
+      *
+     C                     CALL 'AOCUSTR1'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY    'WOPTN
+     C                     PARM           WCUST
+     C                     PARM *BLANKS   WKYST
+     C           SDCUST    PARM SDCUST    DSLDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE BBCSSN    RCOLC
+     C                     ELSE
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCUSTPD'DBFILE           ***************
+     C                     Z-ADD007       DBASE            * DB ERROR 07 *
+     C                     MOVELCDCREF    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** If General/Specific Indicator = 'G', fill Allocation Details.
+      *
+     C           CDGNSP    IFEQ 'G'
+     C                     MOVE 'Y'       WSECND
+     C                     EXSR SRCOLA
+      *
+      ** Otherwise, fill Collateral Details.
+      *
+     C                     ELSE
+     C                     EXSR SRCOLL
+     C                     ENDIF
+      *
+     C           KCOLL     READEGLCOLLLC                 83
+      *
+     C                     ENDDO
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRCOLL
+      *****************************************************************
+      *                                                               *
+      *  SRCOLL - Collateral Detail Printing Routine.                 *
+      *                                                               *
+      *  Called By : SRDEAL, SRCOLA                                   *
+      *  Calls     : SROVFL, SRCLLM, SRWP1H, *PSSR                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCOLL    BEGSR
+      *
+      ** Format Module Secured.
+      *
+     C                     MOVE CDMODS    RMSEC
+      *
+     C                     MOVE *BLANKS   RTRAN
+      *
+      ** If Module is FX or MM, retrieve Client Limits.
+      *
+     C           CDMODS    IFEQ 'FX'
+     C           CDMODS    OREQ 'MM'
+      *
+     C                     MOVE CDCNUM    WCNUM
+      *
+     C           CDENTY    IFEQ 'K'
+     C                     MOVE 'S'       WLEVL
+     C                     ELSE
+     C                     MOVE CDENTY    WLEVL
+     C                     ENDIF
+      *
+     C                     SELEC
+     C           CDENTY    WHEQ 'K'
+     C                     MOVE 'SYS'     WENTY
+     C           CDENTY    WHEQ 'B'
+     C                     MOVE CDBRCA    WENTY
+     C           CDENTY    WHEQ 'C'
+     C                     MOVE CDCMPY    WENTY
+     C                     ENDSL
+      *
+     C                     EXSR SRCLLM
+      *
+      ** Format Transaction Reference for FX Module.
+      *
+     C           CDMODS    IFEQ 'FX'
+     C           DZFLAM    IFLE 0
+     C                     MOVELCNOFX     RTRAN
+     C                     ELSE
+     C           CFXLM     CAT  WCNUM     RTRAN
+     C           RTRAN     CAT  WLEVL:0   RTRAN
+     C           RTRAN     CAT  WENTY:0   RTRAN
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Format Transaction Reference for MM Module.
+      *
+     C           CDMODS    IFEQ 'MM'
+     C           DZMMAM    IFLE 0
+     C                     MOVELCNOMM     RTRAN
+     C                     ELSE
+     C           CMMLM     CAT  WCNUM     RTRAN
+     C           RTRAN     CAT  WLEVL:0   RTRAN
+     C           RTRAN     CAT  WENTY:0   RTRAN
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If Module is FO, retrieve Futures & Options Clients File
+      ** and format Transaction Reference.
+      *
+     C           CDMODS    IFEQ 'FO'
+     C           CDCNUM    CHAINFOCLT                84
+     C           *IN84     IFEQ *OFF
+     C           CFOCU     CAT  RCOLC     RTRAN
+     C                     ELSE
+     C                     MOVELCNOFO     RTRAN
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Format Transaction Reference for LE Module.
+      *
+     C           CDMODS    IFEQ 'LE'
+     C********** CDLNLM    IFEQ *ZEROS                                                        CLE148
+     C           CDLNLM    IFEQ *BLANKS                                                       CLE148
+     C                     MOVE CDFCUS    WFCUS   6
+     C                     MOVE CDFTYP    WFTYP   3
+     C                     MOVE CDFSEQ    WFSEQ   2
+     C           CFACI     CAT  WFCUS     RTRAN
+     C           RTRAN     CAT  WFTYP:0   RTRAN
+     C           RTRAN     CAT  WFSEQ:0   RTRAN
+     C                     ELSE
+     C                     MOVELCDLNLM    RTRAN
+     C           CLOAN     CAT  RTRAN     RTRAN
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Format Transaction Reference for CM Module.
+      *
+     C           CDMODS    IFEQ 'CM'
+     C                     MOVELCDLNLM    RTRAN
+     C           CCMRF     CAT  RTRAN     RTRAN
+     C                     ENDIF
+      *
+      ** Format Transaction Reference for RE Module.
+      *
+     C           CDMODS    IFEQ 'RE'
+     C                     MOVE CDSCNM    WSCNM   6
+     C**********           MOVE CDSACD    WSACD   4                                           CGL029
+     C                     MOVE CDSACD    WSACD  10                                           CGL029
+     C                     MOVE CDSSEQ    WSSEQ   2
+     C           CACCT     CAT  CDSBRC    RTRAN
+     C           RTRAN     CAT  WSCNM:0   RTRAN
+     C           RTRAN     CAT  CDSCCY:0  RTRAN
+     C           RTRAN     CAT  WSACD:0   RTRAN
+     C           RTRAN     CAT  WSSEQ:0   RTRAN
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   RALLC
+      *
+      ** Check if report header should be printed.
+      *
+     C           WHEADR    IFEQ 'Y'
+     C                     EXSR SRWP1H
+     C                     ENDIF
+      *
+      ** If First = 'Y', print the first record format.
+      *
+     C           WFIRST    IFEQ 'Y'
+     C                     WRITEDETAIL1
+     C                     MOVE 'N'       WFIRST
+     C                     ADD  2         WLNCTR
+     C                     EXSR SROVFL
+      *
+      ** Otherwise, print the second record format.
+      *
+     C                     ELSE
+     C                     WRITEDETAIL2
+     C                     ADD  1         WLNCTR
+     C                     EXSR SROVFL
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRCOLA
+      *****************************************************************
+      *                                                               *
+      *  SRCOLA - Allocation Detail Printing Routine.                 *
+      *                                                               *
+      *  Called By : SRDEAL                                           *
+      *  Calls     : SROVFL, SRCOLL, SRCLLM, SRWP1H, *PSSR, AOCUSTR1  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCOLA    BEGSR
+      *
+      ** Find matching record in LF/GLCOLAL1.
+      *
+     C           CDCREF    SETLLGLCOLAL1
+     C           CDCREF    READEGLCOLAL1                 82
+      *
+      * If no matching recod is found, fill Collateral Details.
+      *
+     C           *IN82     IFEQ *ON
+     C                     EXSR SRCOLL
+      *
+      ** Otherwise, if matching record is found, fill Allocation
+      ** Details.
+      *
+     C                     ELSE
+     C           *IN82     DOWEQ*OFF
+      *
+     C                     MOVE *BLANKS   RTRAN
+     C                     MOVE CAMODS    RMSEC
+      *
+      ** If Module is FX or MM, retrieve Client Limits.
+      *
+     C           CAMODS    IFEQ 'FX'
+     C           CAMODS    OREQ 'MM'
+      *
+     C                     MOVE CACNUM    WCNUM
+      *
+     C           CABRCA    IFEQ *BLANKS
+     C                     MOVE 'S'       WLEVL
+     C                     MOVE 'SYS'     WENTY
+     C                     ELSE
+     C                     MOVE 'B'       WLEVL
+     C                     MOVE CABRCA    WENTY
+     C                     ENDIF
+      *
+     C                     EXSR SRCLLM
+      *
+      ** Format Transaction Reference for FX Module.
+      *
+     C           CAMODS    IFEQ 'FX'
+     C           DZFLAM    IFLE 0
+     C                     MOVELCNOFX     RTRAN
+     C                     ELSE
+     C           CFXLM     CAT  WCNUM     RTRAN
+     C           RTRAN     CAT  WLEVL:0   RTRAN
+     C           RTRAN     CAT  WENTY:0   RTRAN
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Format Transaction Reference for MM Module.
+      *
+     C           CAMODS    IFEQ 'MM'
+     C           DZMMAM    IFLE 0
+     C                     MOVELCNOMM     RTRAN
+     C                     ELSE
+     C           CMMLM     CAT  WCNUM     RTRAN
+     C           RTRAN     CAT  WLEVL:0   RTRAN
+     C           RTRAN     CAT  WENTY:0   RTRAN
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If Module is FO, retrieve Futures & Options Clients File
+      ** and format Transaction Reference.
+      *
+     C           CAMODS    IFEQ 'FO'
+     C           CACNUM    CHAINFOCLT                84
+     C           *IN84     IFEQ *OFF
+     C           CFOCU     CAT  RCOLC     RTRAN
+     C                     ELSE
+     C                     MOVELCNOFO     RTRAN
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Format Transaction Reference for LE Module.
+      *
+     C           CAMODS    IFEQ 'LE'
+     C********** CALNLM    IFEQ *ZEROS                                                        CLE148
+     C           CALNLM    IFEQ *BLANKS                                                       CLE148
+     C                     MOVE CAFCUS    WFCUS
+     C                     MOVE CAFTYP    WFTYP
+     C                     MOVE CAFSEQ    WFSEQ
+     C           CFACI     CAT  WFCUS     RTRAN
+     C           RTRAN     CAT  WFTYP:0   RTRAN
+     C           RTRAN     CAT  WFSEQ:0   RTRAN
+     C                     ELSE
+     C                     MOVELCALNLM    RTRAN
+     C           CLOAN     CAT  RTRAN     RTRAN
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Format Transaction Reference for CM Module.
+      *
+     C           CAMODS    IFEQ 'CM'
+     C                     MOVELCALNLM    RTRAN
+     C           CCMRF     CAT  RTRAN     RTRAN
+     C                     ENDIF
+      *
+      ** Format Transaction Reference for RE Module.
+      *
+     C           CAMODS    IFEQ 'RE'
+     C                     MOVE CASCNM    WSCNM
+     C                     MOVE CASACD    WSACD
+     C                     MOVE CASSEQ    WSSEQ
+     C           CACCT     CAT  CASBRC    RTRAN
+     C           RTRAN     CAT  WSCNM:0   RTRAN
+     C           RTRAN     CAT  CASCCY:0  RTRAN
+     C           RTRAN     CAT  WSACD:0   RTRAN
+     C           RTRAN     CAT  WSSEQ:0   RTRAN
+     C                     ENDIF
+      *
+      ** Format Allocation Customer.
+      *
+     C                     MOVE *BLANKS   WCUST
+     C                     MOVELCACNUM    WCUST
+      *
+     C                     CALL 'AOCUSTR1'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY    'WOPTN
+     C                     PARM           WCUST
+     C                     PARM *BLANKS   WKYST
+     C           SDCUST    PARM SDCUST    DSLDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE BBCSSN    RALLC
+     C                     ELSE
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCUSTPD'DBFILE           ***************
+     C                     Z-ADD009       DBASE            * DB ERROR 09 *
+     C                     MOVELCACNUM    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           WHEADR    IFEQ 'Y'
+     C                     EXSR SRWP1H
+     C                     ENDIF
+      *
+      ** Check if first record format should be printed.
+      *
+     C           WFIRST    IFEQ 'Y'
+     C                     WRITEDETAIL1
+     C                     MOVE 'N'       WFIRST
+     C                     MOVE 'N'       WSECND
+     C                     ADD  2         WLNCTR
+     C                     EXSR SROVFL
+      *
+      ** Otherwise, check if second record format should be printed.
+      *
+     C                     ELSE
+     C           WSECND    IFEQ 'Y'
+     C                     WRITEDETAIL2
+     C                     MOVE 'N'       WSECND
+     C                     ADD  1         WLNCTR
+     C                     EXSR SROVFL
+      *
+      ** Otherwise, print third record format.
+      *
+     C                     ELSE
+     C                     WRITEDETAIL3
+     C                     ADD  1         WLNCTR
+     C                     EXSR SROVFL
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           CDCREF    READEGLCOLAL1                 82
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRCLLM
+      *****************************************************************
+      *                                                               *
+      *  SRCLLM - Subroutine to retrieve Client Limits File via       *
+      *           Access object                                       *
+      *                                                               *
+      *  Called By: SRCOLL, SRCOLA                                    *
+      *  Calls    : AOCLLMR0                                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCLLM    BEGSR
+      *
+     C                     CALL 'AOCLLMR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM           WCNUM
+     C                     PARM           WLEVL
+     C                     PARM           WENTY
+     C           SDCLLM    PARM SDCLLM    DSFDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCLLMPD'DBFILE           ***************
+     C                     Z-ADD008       DBASE            * DB ERROR 08 *
+     C           WCNUM     CAT  WLEVL:1   DBKEY            ***************
+     C           DBKEY     CAT  WENTY:1   DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SROVFL
+      *****************************************************************
+      *                                                               *
+      *  SROVFL - Check For Overflow Routine.                         *
+      *                                                               *
+      *  Called By : SRDEAL, SRCOLL, SRCOLA                           *
+      *  Calls     : None                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SROVFL    BEGSR
+      *
+     C           WLNCTR    IFGT WOVERF
+     C                     MOVE 'Y'       WHEADR
+     C                     MOVE *ON       *IN70
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRWP1H
+      *****************************************************************
+      *                                                               *
+      *  SRWP1H - Write Report Header Routine.                        *
+      *                                                               *
+      *  Called By : SRDEAL, SRCOLL, SRCOLA                           *
+      *  Calls     : None                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRWP1H    BEGSR
+      *
+     C                     WRITEHEADP1
+     C                     MOVE *OFF      *IN70
+     C                     Z-ADD13        WLNCTR
+     C                     MOVE 'N'       WHEADR
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRWP1E
+      *****************************************************************
+      *                                                               *
+      *  SRWP1E - Write End of Report Routine.                        *
+      *                                                               *
+      *  Called By : Main Processing                                  *
+      *  Calls     : None                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRWP1E    BEGSR
+      *
+     C                     ADD  3         WLNCTR
+      *
+     C           WLNCTR    IFGT WOVERF
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+     C                     WRITETRAILP1
+     C                     CLOSESE6550P1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRAUDT
+      *****************************************************************
+      *                                                               *
+      *  SRAUDT - Produce Audit Report Routine.                       *
+      *                                                               *
+      *  Called By : Main Processing, SRCFAU, SRCFP1, *PSSR           *
+      *  Calls     : None                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR
+      *
+     C                     WRITEHEADAU
+      *
+      ** If a database error has occurred, output DB Error box.
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+      *
+      ** Otherwise, if CPOSNL1 has no records do null reporting.
+      *
+     C                     ELSE
+     C           RCOUNT    IFEQ 0
+     C                     WRITENODTLS
+     C                     ELSE
+     C                     WRITECONTROL
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRCFAU
+      *****************************************************************
+      *                                                               *
+      *  SRCFAU - Register SE6550AU via RCF Routine.                  *
+      *                                                               *
+      *  Called By : SRINIT                                           *
+      *  Calls     : SRAUDT, ZSFILE                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCFAU    BEGSR
+      *
+      ** Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR   1
+      *
+      ** If Error occurs during ZSFILE, return to calling program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'ZSFILE'  DBFILE           ***************
+     C                     Z-ADD002       DBASE            * DB ERROR 02 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     OUT  LDA
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     EXSR SRAUDT
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRCFP1
+      *****************************************************************
+      *                                                               *
+      *  SRCFP1 - Register SE6550P1 via RCF Routine.                  *
+      *                                                               *
+      *  Called By : SRINIT                                           *
+      *  Calls     : SRAUDT, ZSFILE                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCFP1    BEGSR
+      *
+      ** Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM1    ZSNUM1  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM1
+     C                     PARM *BLANKS   ZSERR
+      *
+      ** If error occurs during ZSFILE, return to calling program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'ZSFILE'  DBFILE           ***************
+     C                     Z-ADD003       DBASE            * DB ERROR 03 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     OUT  LDA
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     EXSR SRAUDT
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program Error Processing Routine.                   *
+      *                                                               *
+      *  Called By : SRDEAL, SRCOLL, SRCOLA, SRINIT                   *
+      *  Calls     : SRAUDT                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     EXSR SRAUDT
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+     C/COPY ZSRSRC,ZFRPEDZ3
+      *
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

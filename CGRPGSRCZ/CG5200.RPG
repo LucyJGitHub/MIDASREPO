@@ -1,0 +1,1211 @@
+     H        1
+      *****************************************************************
+/*S*D****RPGBASE*******************************************************                       CSD053
+/*STD *  RPGBNOCVT                                                    *                       CSD053
+/*EXS *  RPGCVTOPT1                                                   *                       CSD053
+/*EXI *  TEXT('Midas CG UDC print process driver')
+      *****************************************************************
+      *                                                               *
+      *  Midas - User Defined Correspondence                          *
+      *                                                               *
+      *  CG5200 - Print Process Driver                                *
+      *                                                               *
+      *  Function:  This program reads all correspondence items to    *
+      *             be printed, which are contained in a specific     *
+      *             member in the Print Process Driver file. For each *
+      *             item the Print Generator is called.               *
+      *                                                               *
+      *  Called By: CGC5200 - Print Process Driver Control            *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD053             Date 07Jul06               *
+      *  Prev Amend No. CSC022             Date 24Feb04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CCG015             Date 04Jul01               *
+      *                 190022             Date 21Jan99               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 158161             Date 15Jun99
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 107019             DATE 04NOV96               *
+      *                 CCG010             DATE 09AUG95               *
+      *                 CCG009             DATE 09AUG95               *
+      *                 089272             DATE 19JUN95               *
+      *                 CCG007             DATE 19JUN95               *
+      *                 088511             DATE 26MAY95               *
+      *                 087029             DATE 03MAY95               *
+      *                 086135             DATE 17MAR95               *
+      *                 083789             DATE 15FEB95               *
+      *                 083790             DATE 15FEB95               *
+      *                 S01522             DATE 07DEC94               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD053 - Correspondence Manager Multilanguage Upgrade.       *
+      *         - Recompile due to SDCORMPD.                          *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CCG015 - Correspondence Manager Phase 1                      *
+      *  190022 - Amended due to increased size of OVRPRTF string in  *
+      *           PF/CGPRTPPD and PF/CGPGENPD files - rename new      *
+      *           fields.                                             *
+      *  158161 - SET #0RSEQ TO *BLANKS.
+      *  107019 - Correct name of spool file on call to FC1010        *
+      *  CCG010 - Close/open printer file on change of group          *
+      *           transaction reference.                              *
+      *  CCG009 - Private Banking UDC                                 *
+      *  089272 - Incorrect conditioning for unlocking layout.        *
+      *  CCG007 - Keep the printer file open on                       *
+      *           change of correspondent and change of layout        *
+      *           but close/open it on change of printer profile.     *
+      *           NB. The Bank should be warned of the consequences of*
+      *               this change if layouts using the same printer   *
+      *               profile specify different page lengths... so    *
+      *               if you're fixing this, they were warned.        *
+      *  088511 - SR/SRLOCK doesn't clear down its subroutine stack   *
+      *           entries, leading to array index error.              *
+      *  087029 - Only lock if layouts may be amended                 *
+      *  086135 - Recompile over new CGPGENL2 file                    *
+      *  083789 - Lock Layout before printing                         *
+      *  083790 - Z-ADD spool number before calling FC1010            *
+      *  S01552 - User Defined Correspondence                         *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Indicator usage                                              *
+      *  ~~~~~~~~~~~~~~~                                              *
+      *                                                               *
+      *  50   -    No Record found on LF/CGPGENL2 or L3               *
+      *  70   -    No Record found on LF/CGPRTPL1                     *
+      *  75   -    Error on call to FC1000, FC1010                    *
+      *  90   -    ROLBK indicator                                    *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+     FCGPGENL2IF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+     FCGPGENL3IF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+     FCGPRTPL1IF  E           K        DISK
+     F                                              KINFSR SRFILE
+     F/COPY WNCPYSRC,CG5200F001
+      *
+     FCG5200P1O   E             65     PRINTER
+      *
+      /EJECT
+      *
+      **  Copyright array.
+     E                    ##CPY   1   1 80
+      **                                                                                      CSC022
+      ** Array to hold commitment jobs name                                                   CSC022
+      **                                                                                      CSC022
+     E                    WCMT       10 10                                                    CSC022
+      **                                                                                      CSC022
+      /COPY CGCPYSRC,SRERRE
+      /EJECT
+      *
+     I##PGEN    E DSCGPGENPD
+      **  External DS for parameters based on PF/CGPGENPD
+      *
+     IP#PGEN    E DSCGPGENPD
+      **  External DS for parameters based on PF/CGPGENPD
+     I              B2ITEM                          ##ITEM
+     I              B2DCOR                          ##DCOR
+     I              B2PCOR                          ##PCOR
+     I              B2BRCA                          ##BRCA
+     I              B2ORBR                          ##ORBR
+     I              B2OVBR                          ##OVBR
+     I              B2MODI                          ##MODI
+     I              B2MTRN                          ##MTRN
+     I              B2MACT                          ##MACT
+     I              B2ISTS                          ##ISTS
+     I              B2PTYP                          ##PTYP
+     I              B2PSTP                          ##PSTP
+     I              B2ATRM                          ##ATRM
+     I              B2PRTD                          ##PRTD
+     I              B2DDAT                          ##DDAT
+     I              B2LGID                          ##LGID
+     I              B2CTYP                          ##CTYP
+     I              B2LAYO                          ##LAYO
+     I              B2PRTF                          ##PRTF
+     I              B2PRTN                          ##PRTN
+     I              B2APF                           ##APF
+     I              B2APFS                          ##APFS
+     I              B2OVRP                          ##OVRP
+     I              B2OVR2                          ##OVR2                190022
+     I              B2OVR3                          ##OVR3                190022
+     I              B2OVR4                          ##OVR4                190022
+     I              B2SPLF                          ##SPLF
+     I              B2GPTR                          ##GPTR                CCG009
+     I              B2GPSQ                          ##GPSQ                CCG009
+     I              QQMACT                          QQMAC1                                    CGL029
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      * Bank details Structure *
+      *
+     ISCSARD    E DSSCSARDPD                                              CCG007
+      **  Sar Text details                                                CCG007
+      *                                                                   CCG007
+     ISDCORM    E DSSDCORMPD                                              CCG015
+      **  Correspondence Manager ICD                                      CCG015
+      *                                                                   CCG015
+     IDSFDY     E DSDSFDY
+      *
+      * Data Structures used by Access Programs
+      *
+     IDSSDY     E DSDSSDY                                                 CCG015
+      *                                                                   CCG015
+      * Data Structure (long) used by Access Programs                     CCG015
+      *                                                                   CCG015
+     ICGLDA     E DSCGLDA
+      **  Print Process Communication Data Area
+      *
+     ICGDTA     E DSCGDTA                                                 087029
+      *                                                                   087029
+      *  Definition of CGDTA                                              087029
+      *                                                                   087029
+     ICPYR        DS
+      **  Data Structure for Compilation - Copyright Insertion
+     I                                        1  80 ##CPY
+      *
+      *  Define fields for message transalation
+      *
+     I                                        1 132 #MSDTA
+     I                                      133 264 #MSTX1
+     I#MSTX2      DS
+     I                                        1 256 #MSTXA
+     I                                      257 512 #MSTXB
+      *
+     ID#AUTO      DS
+     I I            'Definition created'      1  18 DHAUT1
+     I I            ' by print generator'    19  37 DHAUT2
+      ** Narrative for new spool file attribute information record
+      *
+     IRUNDTA    E DSRUNDAT
+      *
+      * Get Rundate - Rundate  *
+      *
+      *                                                                   083789
+      *  Define allocate and deallocate as constants                      083789
+      *                                                                   083789
+     I              'Allocate  '          C         ##ALOC                083789
+     I              'Deallocate'          C         ##DEAL                083789
+      *                                                                   083789
+     IP@INFO      DS                            100                       083789
+     I                                        1  10 P@LAYO                083789
+     I                                       20  45 P@JOB                 083789
+      **                                                                                      CSC022
+     ISCCMT       DS                            256                                           CSC022
+     I                                        1   30WCMTNO                                    CSC022
+     I                                        4 103 WCJOBS                                    CSC022
+      ** Commitment Control dataarea                                                          CSC022
+      **                                                                                      CSC022
+      /COPY CGCPYSRC,SRERRI
+      *
+      *****************************************************************
+      *                                                               *
+      *   Index to subroutines                                        *
+      *   --------------------                                        *
+      *                                                               *
+      *   SRMAIN - Main processing                                    *
+      *   SROPCL - Determine Spool File Open/Close Requirements       *
+      *   SRINIT - Initial processing - On First Call                 *
+      *   SRLOGR - Log report request                                 *
+      *   SRLOGI - Log spool file information                         *
+      *   SRPCUS - Writes new header and defines fields               *
+      *   SREND  - End processing                                     *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Process     :  MAINLINE                                       *
+      * Function    :  Mainline processing                            *
+      *                                                               *
+      * Called by   :  None                                           *
+      * Calls       :  SRINIT - Initial Processing - On First Call    *
+      *                SRMAIN - Main Processing                       *
+      *                SREND  - End Processing                        *
+      *****************************************************************
+      *
+      **  Parameter list for current program invocation.
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+     C                     PARM           P#MBRN 10
+     C                     PARM           P#ACCP 10
+     C                     PARM           P#RSEQ  5
+     C                     PARM           P#RLVL  1
+     C                     PARM           P#RBCH  3
+     C                     PARM           P#ARCH  1
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *................................................................
+      *
+      **  Initial processing - Once Only
+     C           ##INIT    IFEQ *BLANK
+     C                     EXSR SRINIT
+     C                     MOVE 'Y'       ##INIT  1
+     C                     ENDIF
+      *
+      **  Detail process
+     C                     EXSR SRMAIN
+      *
+     C           CCG015    IFEQ 'N'                                       CCG015
+     C                     EXSR SREND
+     C                     ENDIF                                          CCG015
+      *
+      *................................................................
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      **  Terminate program
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRMAIN                                         *
+      * Function    :  Main processing                                *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  CG3000 - Print Generator Driver                *
+      *                SRLOGR - Log report request                    *
+      *                SROPCL - Determine Spool File Open/Close Req.  *
+      *                SRPCUS - To write new header                   *
+      *                SRLOGI - Log spool file information            *
+      *****************************************************************
+     C           SRMAIN    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRMAIN'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Trigger first open of print file.
+     C                     MOVE 'Y'       ##OPEN  1
+      *
+      **  Initialise CG3000 report sequence
+     C                     CLEAR#0RSEQ
+      *                                                                   CCG015
+     C                     Z-ADD0         NUMEXP  50                      CCG015
+      *
+      **  Read the Print Process Driver file.
+     C           P#ACCP    IFEQ 'CGPGENL2'
+     C                     READ CGPGENL2                 50
+     C                     ELSE
+     C/COPY WNCPYSRC,CG5200C002
+     C                     READ CGPGENL3                 50
+     C/COPY WNCPYSRC,CG5200C003
+     C                     ENDIF
+      *
+      **  For each record found ...
+     C           *IN50     DOWEQ*OFF
+      *                                                                   CCG015
+      ** Count number of records read                                     CCG015
+      *                                                                   CCG015
+     C                     ADD  1         NUMEXP                          CCG015
+      *
+      ** Log report request
+     C           CCG015    IFEQ 'N'                                       CCG015
+     C                     EXSR SRLOGR
+     C                     ENDIF                                          CCG015
+      *
+      **  Output Report Details
+     C           #FIRST    IFNE 'Y'
+     C                     MOVEL'Y'       #FIRST  1
+     C                     WRITEHEADER
+     C                     ENDIF
+      *
+     C                     EXSR SRPCUS
+      *                                                                   083789
+      * Lock Layout if necessary                                          083789
+      *                                                                   083789
+     C           CCG015    IFEQ 'N'                                       CCG015
+     C           B2LAYO    IFNE ##LAYO                                    083789
+     C           DAGRPC    ANDEQ'Y'                                       087029
+     C                     EXSR SRUNLK                                    083789
+     C                     EXSR SRLOCK                                    083789
+     C                     ENDIF                                          083789
+     C                     ENDIF                                          CCG015
+      *
+      **  Save the record read.
+     C                     MOVE ##PGEN    P#PGEN
+      *
+      **  Look ahead to the next record.
+     C           P#ACCP    IFEQ 'CGPGENL2'
+     C                     READ CGPGENL2                 50
+     C                     ELSE
+     C/COPY WNCPYSRC,CG5200C011
+     C                     READ CGPGENL3                 50
+     C/COPY WNCPYSRC,CG5200C012
+     C                     ENDIF
+      *
+      **  Determine Spooled File Open/Close requirements
+     C           CCG015    IFEQ 'N'                                       CCG015
+     C                     EXSR SROPCL
+     C                     ENDIF                                          CCG015
+      *
+      **  Retrieve the CGLDA.
+     C                     IN   CGLDA
+      *
+      **  Set up the CGLDA communication fields.
+     C                     MOVE ##SPLC    #@SPLC
+     C                     CLEAR#@ITNO
+     C                     CLEAR#@RPPS
+      *
+     C                     MOVE P#ARCH    #@ARCH
+      *
+      **  Output the CGLDA.
+     C                     OUT  CGLDA
+      *                                                                   CCG015
+     C           CCG015    IFEQ 'N'                                       CCG015
+      *
+      **  Call the Print Generator Driver
+     C                     CALL 'CG3000'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM '*PRINT  'P#ACT   8
+     C                     PARM           P#PGEN
+      *
+      **  Terminal error in called program.
+     C           ##RTCD    IFEQ '*ERROR*'
+     C                     MOVEL##RTCD    W0KEY
+      *                                                    ***************
+     C                     MOVEL'CG3000  'W0FILE           * DB ERROR 01 *
+     C                     Z-ADD1         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+      *
+      **  Commit changes
+     C                     ELSE
+      **                                                                                      CSC022
+      ** Execute commit if SAR CSC022 is not enrolled or                                      CSC022
+      **   job is not currently running in batch mode                                         CSC022
+      **                                                                                      CSC022
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C           CSC022    OREQ 'Y'                                                           CSC022
+     C           WCRSKP    ANDEQ'N'                                                           CSC022
+     C                     COMIT
+     C                     ENDIF                                                              CSC022
+      *
+      ** Log spool file information
+     C                     EXSR SRLOGI
+      *
+     C                     ENDIF
+      *                                                                   CCG015
+      ** If correspondence manager is switched on, call stream file       CCG015
+      ** generator in *WRITE mode                                         CCG015
+      *                                                                   CCG015
+     C                     ELSE                                           CCG015
+      *                                                                   CCG015
+     C                     CALL 'CG3625'                                  CCG015
+     C                     PARM *BLANKS   ##RTCD                          CCG015
+     C                     PARM '*WRITE  'P#ACT                           CCG015
+     C                     PARM           P#PGEN                          CCG015
+      *                                                                   CCG015
+      **  Terminal error in called program.                               CCG015
+     C           ##RTCD    IFEQ '*ERROR*'                                 CCG015
+     C                     MOVEL##RTCD    W0KEY                           CCG015
+      *                                                    ***************CCG015
+     C                     MOVEL'CG3625  'W0FILE           * DB ERROR 13 *CCG015
+     C                     Z-ADD13        W0ERNB           ***************CCG015
+     C                     MOVEL'MEM5003' W0MSGD                          CCG015
+     C                     MOVEL'MIDAS  ' W0MSGF                          CCG015
+     C                     EXSR SRERR                                     CCG015
+     C                     ELSE                                           CCG015
+      **                                                                                      CSC022
+      ** Execute commit if SAR CSC022 is not enrolled or                                      CSC022
+      **   job is not currently running in batch mode                                         CSC022
+      **                                                                                      CSC022
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C           CSC022    OREQ 'Y'                                                           CSC022
+     C           WCRSKP    ANDEQ'N'                                                           CSC022
+     C                     COMIT                                          CCG015
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                          CCG015
+      *                                                                   CCG015
+      ** Call stream file generator in *CLOSE mode either at the end      CCG015
+      ** of process or when the number of generated prints has reached    CCG015
+      ** the ICD export file size                                         CCG015
+      *                                                                   CCG015
+      *                                                                   CCG015
+     C           NUMEXP    IFGE NMEXSZ                                    CCG015
+     C           *IN50     OREQ *ON                                       CCG015
+      *                                                                   CCG015
+     C                     CALL 'CG3625'                                  CCG015
+     C                     PARM *BLANKS   ##RTCD                          CCG015
+     C                     PARM '*CLOSE  'P#ACT                           CCG015
+     C                     PARM           P#PGEN                          CCG015
+      *                                                                   CCG015
+      **  Terminal error in called program.                               CCG015
+     C           ##RTCD    IFEQ '*ERROR*'                                 CCG015
+     C                     MOVEL##RTCD    W0KEY                           CCG015
+      *                                                    ***************CCG015
+     C                     MOVEL'CG3625  'W0FILE           * DB ERROR 14 *CCG015
+     C                     Z-ADD14        W0ERNB           ***************CCG015
+     C                     MOVEL'MEM5003' W0MSGD                          CCG015
+     C                     MOVEL'MIDAS  ' W0MSGF                          CCG015
+     C                     EXSR SRERR                                     CCG015
+     C                     ENDIF                                          CCG015
+      *                                                                   CCG015
+     C           NUMEXP    IFEQ NMEXSZ                                    CCG015
+     C                     Z-ADD0         NUMEXP                          CCG015
+     C                     ENDIF                                          CCG015
+      *                                                                   CCG015
+     C                     ENDIF                                          CCG015
+     C                     ENDIF                                          CCG015
+     C/COPY WNCPYSRC,CG5200C001
+      *
+     C                     ENDDO
+      *                                                                   083789
+      * Unlock Layout on exit                                             083789
+      *                                                                   083789
+     C***********DAGRPC    IFNE 'Y'                                 087029089272
+     C           DAGRPC    IFEQ 'Y'                                       089272
+     C                     EXSR SRUNLK                                    083789
+     C                     ENDIF                                          087029
+      *
+      *................................................................
+      *
+     C           EXMAIN    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SREND                                          *
+      * Function    :  Sets on last record and prints no details      *
+      *                to report or new header as necessary           *
+      * Called by   :  Mainline Processing                            *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SREND     BEGSR
+      *
+      * If new page print header
+      *
+     C           *IN65     IFEQ *ON
+     C           #FIRST    ORNE 'Y'                        No records
+     C                     WRITEHEADER
+     C                     SETOF                         65
+     C                     ENDIF
+      *
+      *  Write 'No details to report'
+      *
+     C           #FIRST    IFNE 'Y'
+     C                     WRITEF5DTL1
+     C                     ENDIF
+      *
+      * To terminate program
+      *
+     C                     WRITEF0TRL1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SROPCL                                         *
+      * Function    :  Determine Spool File Open/Close Requirements   *
+      *                                                               *
+      * Called by   :  SRMAIN - Mainline Processing                   *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SROPCL    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SROPCL'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Set Open/Close flag for Spooled file
+      **  ... If End of File, set the flag to 'Close'
+     C           *IN50     IFEQ *ON
+     C                     MOVE 'Y'       ##CLOS  1
+     C                     ELSE
+      *
+      **  Determine whether file break has occurred
+      **  ... Layout
+     C           B2LAYO    IFNE ##LAYO
+     C           P#ACCP    ANDNE'CGPGENL2'                                CCG007
+     C/COPY WNCPYSRC,CG5200C004
+     C           CCG010    ANDNE'CCG010'                                  CCG010
+     C           B2LAYO    ORNE ##LAYO                                    CCG007
+     C           P#ACCP    ANDEQ'CGPGENL2'                                CCG007
+     C           CCG007    ANDNE'CCG007'                                  CCG007
+     C/COPY WNCPYSRC,CG5200C013
+     C                     MOVE 'Y'       ##CLOS
+     C                     MOVE 'Y'       ##NOPN  1
+     C                     ENDIF
+      **  ... Printer Profile
+     C           B2PRTF    IFNE ##PRTF
+     C                     MOVE 'Y'       ##CLOS
+     C                     MOVE 'Y'       ##NOPN
+     C                     ENDIF
+      **  ... Branch
+     C           P#RBCH    IFEQ 'ALL'
+     C           B2BRCA    ANDNE##BRCA
+     C                     MOVE 'Y'       ##CLOS
+     C                     MOVE 'Y'       ##NOPN
+     C                     ENDIF
+      **  ... Correspondent
+     C           P#ACCP    IFEQ 'CGPGENL2'
+     C           B2DCOR    ANDNE##DCOR
+     C           CCG007    ANDNE'CCG007'                                  CCG007
+     C                     MOVE 'Y'       ##CLOS
+     C                     MOVE 'Y'       ##NOPN
+     C                     ENDIF
+     C/COPY WNCPYSRC,CG5200C005
+      **  ... Group Transaction Reference                                 CCG010
+     C           P#ACCP    IFNE 'CGPGENL2'                                CCG010
+     C           CCG010    ANDEQ'CCG010'                                  CCG010
+     C           B2GPTR    IFNE ##GPTR                                    CCG010
+     C           B2LAYO    ORNE ##LAYO                                    CCG010
+     C           B2GPTR    ANDEQ*BLANK                                    CCG010
+     C                     MOVE 'Y'       ##CLOS                          CCG010
+     C                     MOVE 'Y'       ##NOPN                          CCG010
+     C                     ENDIF                                          CCG010
+     C                     ENDIF                                          CCG010
+     C/COPY WNCPYSRC,CG5200C006
+     C                     ENDIF
+     C/COPY WNCPYSRC,CG5200C007
+      *
+      **  Set Open/Close flag.
+     C                     MOVE *BLANK    ##SPLC
+      **  ... OPEN
+     C           ##OPEN    IFEQ 'Y'
+     C           ##CLOS    ANDEQ'N'
+     C                     MOVE 'O'       ##SPLC
+     C                     ENDIF
+      **  ... CLOSE
+     C           ##OPEN    IFEQ 'N'
+     C           ##CLOS    ANDEQ'Y'
+     C                     MOVE 'C'       ##SPLC
+     C                     ENDIF
+      **  ... BOTH
+     C           ##OPEN    IFEQ 'Y'
+     C           ##CLOS    ANDEQ'Y'
+     C                     MOVE 'B'       ##SPLC
+     C                     ENDIF
+      *
+      **  Set flags for next cycle.
+     C                     MOVE ##NOPN    ##OPEN
+     C                     MOVE 'N'       ##CLOS
+     C                     MOVE 'N'       ##NOPN
+      *
+      *................................................................
+      *
+     C           EXOPCL    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRPCUS                                         *
+      * Function    :  To write new header as necessary               *
+      *                                                               *
+      * Called by   :  SRMAIN                                         *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRPCUS    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRPCUS'  @STK,Q
+      *
+      ** If count equals 4 write new page
+      *
+     C           #COUNT    IFEQ 4
+     C                     WRITEHEADER
+     C                     Z-ADD1         #COUNT
+     C                     ENDIF
+      *
+     C                     MOVE B2ITEM    D1ITEM
+     C                     MOVE B2DCOR    D1DCOR
+     C                     MOVE B2PCOR    D1PCOR
+     C                     MOVE B2BRCA    D1BRCA
+     C                     MOVE B2ORBR    D1ORBR
+     C                     MOVE B2OVBR    D1OVBR
+     C                     MOVE B2MODI    D1MODI
+     C                     MOVE B2MTRN    D1MTRN
+     C                     MOVE B2MACT    D1MACT
+     C                     MOVE B2ISTS    D1ISTS
+     C                     MOVE B2PTYP    D1PTYP
+     C                     MOVE B2PSTP    D1PSTP
+     C                     MOVE B2ATRM    D1ATRM
+     C           B2PRTD    IFGT 0
+     C                     CALL 'ZDATE2'               90
+     C                     PARM           B2PRTD  50       Day No.
+     C                     PARM WUDFF     W2DTFM  1        Date Format
+     C                     PARM *ZEROS    W2DATE  60       Date
+     C                     PARM *BLANKS   D1PRTD  7        DDMMMYY
+     C                     ELSE
+     C                     MOVE 'NO DATE' D1PRTD
+     C                     ENDIF
+     C                     MOVE B2LGID    D1LGID
+     C                     MOVE B2CTYP    D1CTYP
+     C           CCG015    IFEQ 'N'                                       CCG015
+     C                     MOVE B2LAYO    D1LAYO
+     C                     MOVE B2PRTF    D1PRTF
+     C                     MOVE B2PRTN    D1PRTN
+     C                     MOVE B2APF     D1APF
+     C                     MOVE B2APFS    D1APFS
+     C                     MOVE B2OVRP    D1OVRP
+     C                     ENDIF                                          CCG015
+      *
+      ** Write details and record one to counter
+      *
+     C                     WRITEDETAIL
+     C                     ADD  1         #COUNT  10
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRLOGR                                         *
+      * Function    :  Log report request                             *
+      *                                                               *
+      * Called by   :  SRMAIN                                         *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRLOGR    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRLOGR'  @STK,Q
+      *
+      ** If report sequence is blank or change of layout or printer
+      ** profile...
+     C           #0RSEQ    IFEQ *BLANKS
+     C           B2LAYO    ORNE ##LAYO
+     C           B2PRTF    ORNE ##PRTF
+      *
+      ** Get printer profile from file
+     C           B2PRTF    CHAINCGPRTPL1             70
+      *
+      ** Database error if profile not found
+     C           *IN70     IFEQ '1'
+     C                     MOVEL'CGRPTPL1'W0FILE
+     C                     MOVELB2PRTF    W0KEY            ***************
+     C                     Z-ADD2         W0ERNB           * DB ERROR 02 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      ** Call FC1000 to log report request
+     C                     CALL 'FC1000'                 75
+     C                     PARM *BLANKS   #0RTN   7
+     C                     PARM *BLANKS   #0RSEQ  5
+     C                     PARM 'CG3000'  #0RNAM 10
+     C                     PARM 'CGC3000' #0CNAM 10
+     C                     PARM '00001'   #0CSEQ  5
+     C                     PARM P#RLVL    #0LEVL  1
+     C                     PARM P#RBCH    #0ENTY  3
+     C                     PARM FPORCF    #0OPIN 10
+      *
+      ** Database error if program fails, or error on call
+     C           *IN75     IFEQ '1'
+     C           *INLR     OREQ '1'
+     C           #0RTN     ORNE *BLANKS
+     C                     MOVEL'FC1000'  W0FILE
+     C                     MOVEL'*ERROR*' W0KEY            ***************
+     C                     Z-ADD3         W0ERNB           * DB ERROR 03 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C           EXLOGR    TAG
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRLOGI                                         *
+      * Function    :  Log spool file information                     *
+      *                                                               *
+      * Called by   :  SRMAIN                                         *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRLOGI    BEGSR
+      *
+      ** Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRLOGI'  @STK,Q
+      *
+      ** If spool file control indication is 'C' (close) or 'B'
+      ** (both)...
+     C           ##SPLC    IFEQ 'C'
+     C           ##SPLC    OREQ 'B'
+      *
+      ** Set up entity, based on level indication
+     C                     CLEAR#1BRCA
+     C           P#RLVL    IFEQ 'B'
+     C                     MOVEL##BRCA    #1BRCA
+     C                     ENDIF
+      *                                                                   083790
+      **  Retrieve the Spool file number                                  083790
+     C                     IN   CGLDA                                     083790
+     C                     Z-ADD#@SPNO    #1SPNM                          083790
+     C                     OUT  CGLDA                                     083790
+      *
+      ** Call FC1010 to log spool file
+     C                     CALL 'FC1010'                 75
+     C                     PARM *BLANKS   #1RTCD  7
+     C                     PARM #0RSEQ    #1RSEQ  5
+     C***********          PARM B2SPLF    #1SPNA 10                       107019
+     C                     PARM ##SPLF    #1SPNA 10                       107019
+     C***********          PARM #@SPNO    #1SPNM  60                      083790
+     C                     PARM           #1SPNM  60                      083790
+     C                     PARM           #1BRCA  3
+     C                     PARM 'Y'       #1CSPL  1
+     C                     PARM 'CG3000'  #1RTMP 10
+     C                     PARM 'CG3000P1'#1STMP 10
+     C                     PARM D#AUTO    #1SPLI 50
+     C                     PARM 'Y'       #1EXID  1
+      *
+      ** Database error if error on call, or return code non-blank
+      ** and not 'duplicate found'
+     C           *IN75     IFEQ '1'
+     C           #1RTCD    ORNE *BLANKS
+     C           #1RTCD    ANDNE'CGD1776'
+     C                     MOVEL'FC1010'  W0FILE
+     C                     MOVEL'*ERROR*' W0KEY            ***************
+     C                     Z-ADD4         W0ERNB           * DB ERROR 04 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      ** If return code indicates duplicate found, log report request
+     C           #1RTCD    IFEQ 'CGD1776'
+      *
+     C                     CALL 'FC1000'                 75
+     C                     PARM *BLANKS   #0RTN   7
+     C                     PARM *BLANKS   #0RSEQ  5
+     C                     PARM 'CG3000'  #0RNAM 10
+     C                     PARM 'CGC3000' #0CNAM 10
+     C                     PARM '00001'   #0CSEQ  5
+     C                     PARM P#RLVL    #0LEVL  1
+     C                     PARM P#RBCH    #0ENTY  3
+     C                     PARM FPORCF    #0OPIN 10
+      *
+      ** Database error if program fails, or error on call
+     C           *IN75     IFEQ '1'
+     C           *INLR     OREQ '1'
+     C           #0RTN     ORNE *BLANKS
+     C                     MOVEL'FC1000'  W0FILE
+     C                     MOVEL'*ERROR*' W0KEY            ***************
+     C                     Z-ADD5         W0ERNB           * DB ERROR 05 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C                     ELSE                                           158161
+      *  Return code *NE 'CDG1776'.... Printer file has                   158161
+      *  been closed or open/closed.   Clear sequence #0RSEQ              158161
+      *  so that SR:SRLOGR invokes FC1000 in order to get the next        158161
+      *  available sequence number and writes a rcd. to FCRREQPD.         158161
+      *  which is used by RCF Monitor FC0100.                             158161
+     C                     CLEAR#0RSEQ                                    158161
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C           EXLOGI    TAG
+     C                     ENDSR
+      /EJECT                                                              083789
+      *****************************************************************   083789
+      * Subroutine  :  SRUNLK                                         *   083789
+      * Function    :  Unlock layout after print                      *   083789
+      *                                                               *   083789
+      * Called by   :  Mainline                                       *   083789
+      * Calls       :  None                                           *   083789
+      *****************************************************************   083789
+     C           SRUNLK    BEGSR                                          083789
+      *                                                                   083789
+      **  Set up subroutine stack name                                    083789
+     C                     ADD  1         Q                               083789
+     C                     MOVEL'SRUNLK'  @STK,Q                          083789
+      *                                                                   083789
+      *................................................................   083789
+      *                                                                   083789
+      * Deallocate                                                        083789
+      *                                                                   083789
+     C                     CLEARP@INFO                                    083789
+     C                     MOVEL##DEAL    P@ACTC                          083789
+      * Deallocate                                                        083789
+      *                                                                   083789
+     C                     CALL 'CGC8100'              9090               083789
+     C                     PARM *BLANKS   P@RTCD                          083789
+     C                     PARM           P@ACTC 10                       083789
+     C                     PARM           P@INFO                          083789
+      *                                                                   083789
+      * End Program if return code not blank or *IN90 on                  083789
+      *                                                                   083789
+     C           *IN90     IFEQ '1'                                       083789
+     C           P@RTCD    ORNE *BLANKS                                   083789
+     C                     MOVEL'CGC8100' W0FILE                          083789
+     C                     MOVEL'*UNLOCK' W0KEY            ***************083789
+     C                     Z-ADD8         W0ERNB           * DB ERROR 08 *083789
+     C                     MOVEL'MEM5003' W0MSGD           ***************083789
+     C                     MOVEL'MIDAS  ' W0MSGF                          083789
+     C                     EXSR SRERR                                     083789
+     C                     ENDIF                                          083789
+      *                                                                   083789
+      ** Unwind subroutine stack name                                     083789
+     C                     MOVEA*BLANKS   @STK,Q                          083789
+     C                     SUB  1         Q                               083789
+      *                                                                   083789
+     C           EXUNLK    TAG                                            083789
+     C                     ENDSR                                          083789
+      /EJECT                                                              083789
+      *****************************************************************   083789
+      * Subroutine  :  SRLOCK                                         *   083789
+      * Function    :  Lock layout before printing                    *   083789
+      *                                                               *   083789
+      * Called by   :  Mainline                                       *   083789
+      * Calls       :  None                                           *   083789
+      *****************************************************************   083789
+     C           SRLOCK    BEGSR                                          083789
+      *                                                                   083789
+      **  Set up subroutine stack name                                    083789
+     C                     ADD  1         Q                               083789
+     C                     MOVEL'SRLOCK'  @STK,Q                          083789
+      *                                                                   083789
+      *................................................................   083789
+      *                                                                   083789
+     C                     CLEARP@INFO                                    083789
+     C                     MOVEL##ALOC    P@ACTC                          083789
+     C                     MOVELB2LAYO    P@LAYO                          083789
+      * Allocate                                                          083789
+     C                     CALL 'CGC8100'              9090               083789
+     C                     PARM *BLANKS   P@RTCD  7                       083789
+     C                     PARM           P@ACTC 10                       083789
+     C                     PARM           P@INFO                          083789
+      *                                                                   083789
+      * End Program if return code not blank or *IN90 on                  083789
+      *                                                                   083789
+     C           *IN90     IFEQ '1'                                       083789
+     C           P@RTCD    ORNE *BLANKS                                   083789
+     C                     MOVEL'CGC8100' W0FILE                          083789
+     C                     MOVEL'*LOCK'   W0KEY            ***************083789
+     C                     Z-ADD7         W0ERNB           * DB ERROR 07 *083789
+     C                     MOVEL'MEM5003' W0MSGD           ***************083789
+     C                     MOVEL'MIDAS  ' W0MSGF                          083789
+     C                     EXSR SRERR                                     083789
+     C                     ENDIF                                          083789
+      *                                                                   088511
+      ** Unwind subroutine stack name                                     088511
+     C                     MOVEA*BLANKS   @STK,Q                          088511
+     C                     SUB  1         Q                               088511
+      *                                                                   083789
+     C           EXLOCK    TAG                                            083789
+     C                     ENDSR                                          083789
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRINIT                                         *
+      * Function    :  Initial processing - First Call Only           *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *................................................................
+      *
+      *
+      **  Retrieve and Clear the CGLDA.
+     C                     IN   CGLDA
+     C                     CLEARCGLDA
+     C                     OUT  CGLDA
+      *
+      *  Extract bank details
+      *
+     C                     CALL 'AOBANKR0'             9090
+     C                     PARM *BLANKS   P@RTCD  7        B:Return code
+     C                     PARM '*FIRST ' P@OPTN  7        I:Option
+     C           SDBANK    PARM *BLANKS   DSFDY
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           P@RTCD    OREQ '*ERROR*'
+     C                     MOVEL'AOBANKR0'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD6         W0ERNB           * DB ERROR 06 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      **  Key lists ...
+      *
+      **  Initialise work fields .....
+     C                     MOVE 'N'       ##CLOS
+     C                     MOVE 'N'       ##NOPN
+     C                     Z-ADD1         #COUNT
+      *
+      ** Report ref.
+     C                     MOVEL##PGM     H1REFN
+      *
+      **  Define fields
+     C           *LIKE     DEFN #@SPLC    ##SPLC
+     C           *NAMVAR   DEFN *LDA      CGLDA
+     C/COPY WNCPYSRC,CG5200C014
+      *
+      **  Open the relevant Access Path
+     C           P#ACCP    IFEQ 'CGPGENL2'
+     C                     OPEN CGPGENL2
+     C                     ELSE
+     C/COPY WNCPYSRC,CG5200C008
+     C                     OPEN CGPGENL3
+     C                     ENDIF
+     C/COPY WNCPYSRC,CG5200C009
+      *
+      *  Retrieve title for report.
+      *
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1680' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    H2TITL 60
+      *
+      * Get Rundate - Rundate  *
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    ##MRDT  7        Midas Run date
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      *
+      *  Retrieve title underline
+      *
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1681' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    H2TUL  60
+      *
+      **  Copyright
+     C                     MOVEA##CPY     ##BIS  80
+      *                                                                   087029
+      * Get CGDTA set up                                                  087029
+      *                                                                   087029
+     C           *NAMVAR   DEFN           CGDTA                           087029
+     C                     IN   CGDTA                                     087029
+      *                                                                   CCG007
+      **  Determine which SARs are in effect ...                          CCG007
+      **  ... CCG007 - Suppress open/close in correspondent mode          CCG007
+      **               except when branch or printer profile changes      CCG007
+     C                     CALL 'AOSARDR0'             91                 CCG007
+     C                     PARM '       ' ##RTCD  7                       CCG007
+     C                     PARM '*VERIFY' ##OPTN  7                       CCG007
+     C                     PARM 'CCG007'  ##SARD  6                       CCG007
+     C           SCSARD    PARM *BLANKS   DSFDY                           CCG007
+      *                                                                   CCG007
+      **  If the Access Object returns an error code, process a           CCG007
+      **  database error.                                                 CCG007
+     C           ##RTCD    IFNE *BLANK                                    CCG007
+     C           ##RTCD    ANDNE'*NRF   '                                 CCG007
+     C           *IN91     OREQ *ON                                       CCG007
+     C                     MOVEL'AOSARDR0'W0FILE           ***************CCG007
+     C                     MOVEL'CCG007'  W0KEY            * DB ERROR 09 *CCG007
+     C                     Z-ADD09        W0ERNB           ***************CCG007
+     C                     MOVEL'MEM5003' W0MSGD                          CCG007
+     C                     MOVEL'MIDAS  ' W0MSGF                          CCG007
+     C                     EXSR SRERR                                     CCG007
+     C                     END                                            CCG007
+      *                                                                   CCG007
+     C           ##RTCD    IFEQ *BLANK                                    CCG007
+     C                     MOVEL'CCG007'  CCG007  7                       CCG007
+     C                     END                                            CCG007
+      *                                                                   CCG010
+      **  ... CCG010 - Suppress open/close in layout mode                 CCG010
+      **               except when branch or print intem type change      CCG010
+     C                     CALL 'AOSARDR0'             91                 CCG010
+     C                     PARM '       ' ##RTCD  7                       CCG010
+     C                     PARM '*VERIFY' ##OPTN  7                       CCG010
+     C                     PARM 'CCG010'  ##SARD  6                       CCG010
+     C           SCSARD    PARM *BLANKS   DSFDY                           CCG010
+      *                                                                   CCG010
+      **  If the Access Object returns an error code, process a           CCG010
+      **  database error.                                                 CCG010
+     C           ##RTCD    IFNE *BLANK                                    CCG010
+     C           ##RTCD    ANDNE'*NRF   '                                 CCG010
+     C           *IN91     OREQ *ON                                       CCG010
+     C                     MOVEL'AOSARDR0'W0FILE           ***************CCG010
+     C                     MOVEL'CCG010'  W0KEY            * DB ERROR 10 *CCG010
+     C                     Z-ADD10        W0ERNB           ***************CCG010
+     C                     MOVEL'MEM5003' W0MSGD                          CCG010
+     C                     MOVEL'MIDAS  ' W0MSGF                          CCG010
+     C                     EXSR SRERR                                     CCG010
+     C                     END                                            CCG010
+      *                                                                   CCG010
+     C           ##RTCD    IFEQ *BLANK                                    CCG010
+     C                     MOVEL'CCG010'  CCG010  7                       CCG010
+     C                     END                                            CCG010
+      *                                                                   CCG015
+      **  Check if Correspondence Manager is switched on                  CCG015
+      *                                                                   CCG015
+     C                     CALL 'AOSARDR0'             91                 CCG015
+     C                     PARM '       ' ##RTCD                          CCG015
+     C                     PARM '*VERIFY' ##OPTN                          CCG015
+     C                     PARM 'CCG015'  ##SARD                          CCG015
+     C           SCSARD    PARM *BLANKS   DSFDY                           CCG015
+      *                                                                   CCG015
+      **  If the Access Object returns an error code, process a           CCG015
+      **  database error.                                                 CCG015
+      *                                                                   CCG015
+     C           ##RTCD    IFNE *BLANK                                    CCG015
+     C           ##RTCD    ANDNE'*NRF   '                                 CCG015
+     C           *IN91     OREQ *ON                                       CCG015
+     C                     MOVEL'AOSARDR0'W0FILE           ***************CCG015
+     C                     MOVEL'CCG015'  W0KEY            * DB ERROR 11 *CCG015
+     C                     Z-ADD11        W0ERNB           ***************CCG015
+     C                     MOVEL'MEM5003' W0MSGD                          CCG015
+     C                     MOVEL'MIDAS  ' W0MSGF                          CCG015
+     C                     EXSR SRERR                                     CCG015
+     C                     ENDIF                                          CCG015
+      *                                                                   CCG015
+     C           ##RTCD    IFEQ *BLANK                                    CCG015
+     C                     MOVEL'Y'       CCG015  1                       CCG015
+     C                     ELSE                                           CCG015
+     C                     MOVEL'N'       CCG015                          CCG015
+     C                     ENDIF                                          CCG015
+      *                                                                   CCG015
+      **  If Correspondence Manager is switched on, retrieve              CCG015
+      **  Correspondence Manager ICD                                      CCG015
+      *                                                                   CCG015
+     C           CCG015    IFEQ 'Y'                                       CCG015
+      *                                                                   CCG015
+     C                     CALL 'AOCORMR0'             90                 CCG015
+     C                     PARM *BLANKS   P@RTCD                          CCG015
+     C                     PARM '*FIRST ' P@OPTN                          CCG015
+     C           SDCORM    PARM *BLANKS   DSSDY                           CCG015
+      *                                                                   CCG015
+      *  If return with an error then database error                      CCG015
+      *                                                                   CCG015
+     C           *IN90     IFEQ *ON                                       CCG015
+     C           P@RTCD    ORNE *BLANK                                    CCG015
+     C                     MOVEL'AOCORMR0'W0FILE                          CCG015
+     C                     MOVEL'*CALL'   W0KEY            ***************CCG015
+     C                     Z-ADD12        W0ERNB           * DB ERROR 12 *CCG015
+     C                     MOVEL'MEM5003' W0MSGD           ***************CCG015
+     C                     MOVEL'MIDAS  ' W0MSGF                          CCG015
+     C                     EXSR SRERR                                     CCG015
+     C                     ENDIF                                          CCG015
+      *                                                                   CCG015
+     C                     MOVE CMEXSZ    NMEXSZ  50                      CCG015
+      *                                                                   CCG015
+     C                     ENDIF                                          CCG015
+      **                                                                                      CSC022
+      ** Initialize CSC022 and Skip Commit/Rollback flags                                     CSC022
+     C                     MOVE 'N'       CSC022  1                                           CSC022
+     C                     MOVE 'N'       WCRSKP  1                                           CSC022
+      **                                                                                      CSC022
+      ** Access SAR details file to determine if CSC022 switchable feature                    CSC022
+      ** is switched on                                                                       CSC022
+      **                                                                                      CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   P@RTCD  7                                           CSC022
+     C                     PARM '*VERIFY' P@OPTN  7                                           CSC022
+     C                     PARM 'CSC022'  P@SARD  6                                           CSC022
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSC022
+      **                                                                                      CSC022
+     C           P@RTCD    IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022                                              CSC022
+      **                                                                                      CSC022
+      ** Get Jobs currently running i batch mode using SCCMTJOB dataarea                      CSC022
+      **                                                                                      CSC022
+     C           *NAMVAR   DEFN SCCMTJOB  SCCMT                                               CSC022
+     C                     IN   SCCMT                                                         CSC022
+      **                                                                                      CSC022
+     C           WCMTNO    IFGT 0                                                             CSC022
+      ** Move committed jobs to arrary for checking                                           CSC022
+     C                     MOVEAWCJOBS    WCMT                                                CSC022
+      ** Verify if job running exists in array                                                CSC022
+     C           ##JOB     LOKUPWCMT                     50                                   CSC022
+     C           *IN50     IFEQ *ON                                                           CSC022
+     C                     MOVE 'Y'       WCRSKP                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+      **                                                                                      CSC022
+     C                     ELSE                                                               CSC022
+      ** Execute *PSSR if CSC022 is not found or Database error                               CSC022
+     C           P@RTCD    IFNE '*NRF'                                                        CSC022
+     C                     MOVEL'CSC022'  W0KEY                                               CSC022
+     C                     MOVEL'SCSARDPD'W0FILE                                              CSC022
+     C                     Z-ADD15        W0ERNB                                              CSC022
+     C                     EXSR SRERR                                                         CSC022
+     C                     ENDIF                                                              CSC022
+      **                                                                                      CSC022
+     C                     ENDIF                                                              CSC022
+      ** For copysource SRERRC                                                                CSC022
+     C                     MOVE WCRSKP    WCMTSK  1                                           CSC022
+      **                                                                                      CSC022
+     C/COPY WNCPYSRC,CG5200C010
+      *
+      *................................................................
+      *
+     C           EXINIT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      /COPY CGCPYSRC,SRERRPSSR
+      /EJECT
+      /COPY CGCPYSRC,SRERRC
+** ##CPY  **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

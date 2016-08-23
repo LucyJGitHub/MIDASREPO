@@ -1,0 +1,2040 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Securities selection')
+/*OVRF*: OVRDBF FILE(SECTYZ1) TOFILE(SECTY) SHARE(*NO)              : *
+/*OVRF*: OVRDBF FILE(SECTYZ2) TOFILE(SECTY) SHARE(*NO)              : *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE0043 - Securities Selection                                *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CAAA03             Date 25Mar04               *
+      *                 222373             Date 23Oct03               *
+      *                 208241             Date 17Jan03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 127566             Date 09May01               *
+      *                 CSE016             Date 10Jan01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 16May01               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 176443             Date 18Apr00               *
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CSE010 *Create     Date 21Jun99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CAAA03 - Webfacing changes.  Re-compiled due to changed DSPF *
+      *           SE0043DF.                                           *
+      *  222373 - Parameter Mismatches                                *
+      *  208241 - Recompiled over changed /CPY ZSDESCZ3.              *
+      *  127566 - Recompiled over changed ZSDESCZ3                    *
+      *  CSE016 - Extended Security Descriptions                      *
+      *  CSD006 - Use DSSDY to call AOCURRR0.                         *
+      *  176443 - Avoid MCH3601 to be sent.                           *
+      *           Pass correct parameter to AOCUSTR0.                 *
+      *  CSE010 - SE Transaction Enhancement                          *
+      *                                                               *
+      *****************************************************************
+      *
+     FSE0043DFCF  E                    WORKSTN
+     F                                        WWRRN KSFILE SE0043F1
+     F                                        WWRRN KSFILE SE0043F3
+     F                                              KINFDS INFDS
+     FSECTYZ1 IF  E           K        DISK
+     F            SECTYDF                           KRENAMESECTYFZ1
+     F                                              KINFSR *PSSR
+     FSECTYZ2 IF  E           K        DISK
+     F            SECTYDF                           KRENAMESECTYFZ2
+     F                                              KINFSR *PSSR
+     FSECTR   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F            SECTYDF                           KRENAMESECTRF
+     FSECTYL1 IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FSECTYL2 IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FSECTYL0 IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FINVTP   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *   F U N C T I O N   O F   I N D I C A T O R S                 *
+      *                                                               *
+      *  01 - Clear subfile                                           *
+      *  07 - Rollup requested                                        *
+      *  15 - Action code entered                                     *
+      *  16 - Scan the Security Shortname                             *
+      *  21 - Processing Type entered is a number                     *
+      *  40 - Message sended to Subfile                               *
+      *  51 - User authorised to Action Code 'A'                      *
+      *  52 - User authorised to Action Code 'D'                      *
+      *  53 - User authorised to Action Code 'E'                      *
+      *  54 - User authorised to Action Code 'I'                      *
+      *  55 - Program called with parameters                          *
+      *  60 - Error on Security Shortname                             *
+      *  61 - Error on Security Reportname                            *
+      *  62 - Error on Nominal Currency                               *
+      *  63 - Error on Investment Type                                *
+      *  64 - Error on Issuer                                         *
+      *  65 - Error on Processing Type                                *
+      *  66 - Error on ISIN Number                                    *
+      *  68 - Error on Telekurs                                       *
+      *  69 - Error on Cusip Number                                   *
+      *  70 - Indicator for SFLEND for Message subfile                *
+      *  71 - Indicator for SFLCLR for Message subfile                *
+      *  75 - New Security is inserted and reload the subfile         *
+      *  76 - Record selected with action code = '1'                  *
+      *  80,81 - Validation error encountered                         *
+      *  85 - User not authorised to the action code                  *
+      *  86 - First cycle                                             *
+      *  87,88 - Work Indicator                                       *
+      *  89 - Error on field selection                                *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  FIRST  - Subroutine for Initial Processing                   *
+      *  MAIN   - Subroutine for MAIN Screen Details                  *
+      *  P001   - Subroutine to select record to write to subfile     *
+      *  P002   - Subroutine for select records with Security         *
+      *           Shortname to write to subfile from LF/SECTYZ1       *
+      *  P003   - Subroutine for select records with Security         *
+      *           Reportname to write to sbufile from LF/SECTR        *
+      *  P004   - Subroutine for select records with ISIN Number      *
+      *           to write to subfile from LF/SECTYL1                 *
+      *  P005   - Subroutine for select records with Telekurs         *
+      *           to write to subfile from LF/SECTYL2                 *
+      *  P006   - Subroutine for select records with CUSIP Number     *
+      *           to write to subfile from LF/SECTYL0                 *
+      *  P007   - Subroutine for scan records with Security Shortname *
+      *           or Reportname or ISIN Number or Telekurs            *
+      *           or Cusip Number                                     *
+      *           to write to subfile from LF/SECTYZ1                 *
+      *  V001   - Subroutine to validate action code entered          *
+      *  V002   - Subroutine to validate fields entered and key       *
+      *  WRTSBF - Subroutine to write record to subfile               *
+      *  U001   - Subroutine to update subfile record fields          *
+      *  SRAUTH - Check if the user is authorised to the action code  *
+      *  SRBCAC - Check user's authorise                              *
+      *  AOCUST - Call access object - customers details              *
+      *  SRSMSG - SR to send messages to message subfile              *
+      *  ZA0340 - Send a message to the program message queue         *
+      *  ZA0250 - Clear program message queue                         *
+      *  *PSSR  - ERROR HANDLING                                      *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+      *
+     E                    ERR        20  4               ERROR CODES
+      *
+     E/COPY ZSRSRC,ZSDESCZ1
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+      *
+     E/COPY ZSRSRC,ZPOWERZ1
+      /EJECT
+      *
+     IOTHINF      DS                            156                                           222373
+     I                                        1  20 WSRPN                                     222373
+     I                                       21  50 WSFN1                                     222373
+     I                                       51  80 WSFN2                                     222373
+     I                                       81  92 WT2RF                                     222373
+     I                                       93 104 WISNO                                     222373
+     I                                      105 113 WCSPN                                     222373
+     I                                      114 120 WSREF                                     222373
+     I                                      121 132 WSRE1                                     222373
+     I                                      133 144 WSRE2                                     222373
+     I                                      145 156 WSRE3                                     222373
+     IPGMDS     ESDSY2PGDSP
+      ** Program Data Structure
+      *
+     IZMUSER      DS                             17
+      *
+      ** Data area ZMUSER
+      *
+     I                                       11  13 USRBCH
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IINFDS     E DSY2I#DSP
+      ** Data structure for Screen management @#SFRC : Subfile Record
+      *
+     ISDSECS    E DSSDSECSPD
+      ** Security Customer details
+      *
+     ISDCUST    E DSSDCUSTPD
+      **  DATA STRUCTURE FOR CUSTONER DETAILS
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Currency Details
+      *
+     ISDBANK    E DSSDBANKPD
+      ** External DS for Bank Details
+      *
+     ISDSTRD    E DSSDSTRDPD
+      ** Security Trading Details
+      *
+     IDSFDY     E DSDSFDY
+      ** Short Data Structure
+      *
+     IDSSDY     E DSDSSDY
+      ** Long Data Structure
+      *
+      /COPY ZSRSRC,ZSDESCZ2
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  START - Main Processing                                      *
+      *                                                               *
+      *  Called by: None                                              *
+      *                                                               *
+      *  Calls  :   FIRST - Program Initialisation                    *
+      *             MAIN  - Main Screen Details                       *
+      *                                                               *
+      *****************************************************************
+     C                     EXSR FIRST
+      *
+     C                     EXSR MAIN
+      *
+     C                     MOVE *ON       *INLR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  FIRST - Program Initialisation                               *
+      *                                                               *
+      *  Called by: START - Main Processing                           *
+      *                                                               *
+      *  Calls  :   AOBANKR0 - Bank Details Access Object             *
+      *             AOSTRDR0 - Security Tradings ICD Access Object    *
+      *                                                               *
+      *****************************************************************
+     C           FIRST     BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   ZMUSER
+      *
+     C                     SETOF                     506780
+     C                     SETOF                     054099
+     C                     SETOF                     274551
+     C                     SETOF                     525354
+     C                     SETOF                     5255
+     C                     SETON                     2786
+     C                     SETOF                     76
+      *
+      **  Get Bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' #RTCD   7
+     C                     PARM '*FIRST ' #OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           #RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVEL'SE0043'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+      *
+     C                     ELSE
+     C                     MOVE BJMRDT    ##MRDT
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+     C                     END
+      *
+      ** Access security trading details
+      ** for redemption in security full for subroutine ZSDESC
+      *
+     C                     CALL 'AOSTRDR0'
+     C                     PARM '*DBERR ' #RTCD
+     C                     PARM '*FIRST ' #OPTN
+     C           SDSTRD    PARM SDSTRD    DSSDY
+      *
+     C           #RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE
+     C                     MOVEL'SDSTRDPD'DBFILE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVEL'SE0043'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     MOVE BVRIDF    ZRSFD
+     C                     END
+      *
+      ** Initialize working fields and key
+      *
+     C                     Z-ADD0         WWRRN   40
+     C                     Z-ADD0         WWRRNS  40
+     C                     MOVE *BLANKS   LSESN  10
+     C                     MOVE *BLANKS   LSRPN  20
+     C                     MOVE *BLANKS   LNMCY   3
+     C                     MOVE *BLANKS   LSITP   3
+     C                     MOVE *BLANKS   LISSR  10
+     C                     MOVE *BLANKS   WISSR   6
+     C                     MOVE *BLANKS   LPROT   1
+     C                     MOVE *BLANKS   LISIN  12
+     C                     MOVE *BLANKS   LT2RF  12
+     C                     MOVE *BLANKS   LCSPN   9
+      *
+     C           KEYINV    KLIST
+     C                     KFLD           NMCY
+     C                     KFLD           SITP
+      *
+      ** Check the parameter entry
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ACTCDE  1
+     C                     PARM           SESNRF 10
+      *
+     C                     MOVELSESNRF    #QRY    1
+      *
+     C           #QRY      IFEQ '?'
+     C                     SETON                     55
+     C                     END
+      *
+     C                     MOVE '1'       WWK11   1
+      *
+     C           ACTCDE    IFEQ 'E'                                       CSE016
+     C           ACTCDE    OREQ ' '                                       CSE016
+     C                     MOVE *ON       *IN58                           CSE016
+     C                     ENDIF                                          CSE016
+      *                                                                   CSE016
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  MAIN - Main Screen Details                                   *
+      *                                                               *
+      *  Called by: START - Main Processing                           *
+      *                                                               *
+      *  Calls  :   P001   - SR to select record to write to subfile  *
+      *             SE0040 - Security Details Maintenance             *
+      *             SRBCAC - Check user's authority                   *
+      *             SRSMSG - SR to send messages to message subfile   *
+      *             V001   - SR to validate action code entered       *
+      *             V002   - SR to validate fields entered and key    *
+      *             ZA0250 - Clear Program message queue              *
+      *                                                               *
+      *****************************************************************
+     C           MAIN      BEGSR
+      *
+      **  Write Screen Header
+      *
+     C                     WRITESE0043F0
+      *
+      ** Rewrite whole processing to cater for new subfile structure
+      ** and processing
+      *
+     C           *IN03     DOWEQ'0'
+     C           *IN12     ANDEQ'0'
+      *
+     C                     SETOF                     808160
+     C                     SETOF                     616263
+     C                     SETOF                     646566
+     C                     SETOF                     686989
+     C                     SETOF                     7585
+      *
+      ** Clear program message queue
+      *
+     C           *IN40     IFEQ '1'
+     C                     CALL 'ZA0250'
+     C                     SETON                     71
+     C                     WRITESE0043F6
+     C                     SETOF                     4071
+     C                     END
+      *
+      ** If F11 key is pressed, set an indicator to display other
+      ** subfile
+      *
+     C           *IN11     IFEQ '1'
+      *
+     C           @#SFRC    IFNE 0
+     C                     Z-ADD@#SFRC    DSPREC
+     C                     END
+      *
+     C           WWK11     IFEQ '1'
+     C                     MOVE '0'       WWK11   1
+     C                     ELSE
+     C                     MOVE '1'       WWK11
+     C                     END
+      *
+     C                     END
+      *
+      ** F9 key is pressed for insert a new Security
+      *
+     C           *IN09     IFEQ '1'
+      *
+      ** Check if user is authorised to the action code
+      *
+     C                     MOVE 'I'       ZACTN   1
+     C                     EXSR SRBCAC
+      *
+      ** If the user is not authorize to the branch code or action code
+      ** than send an error message
+      *
+     C           #ERR      IFNE *ZEROS
+     C                     MOVEL'SEM1019' ZAMSID
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     EXSR SRSMSG
+     C                     SETON                     85
+      *
+     C                     ELSE
+      *
+     C           *IN55     IFEQ '0'
+     C           ACTCDE    ANDEQ*BLANKS
+     C           ACTCDE    OREQ 'I'
+      *
+      ** Program is called without parameters or parameter is 'I'
+      ** Call SE0040 with the action code 'I'
+      *
+     C                     MOVE *BLANKS   #SESN
+     C                     CALL 'SE0040'
+     C                     PARM           #RTRN   7
+     C                     PARM 'I'       #ACTC   1
+     C                     PARM           #SESN  10
+     C                     PARM           OLDSEC 10
+     C                     PARM *BLANKS   OTHINF156                                           222373
+      *
+      ** Check if no error on SE0040
+      *
+     C           *INU7     IFEQ '1'
+     C           *INU8     ANDEQ'1'
+     C                     SETON                     03
+     C                     ELSE
+      *
+      ** If no error into SE0040, reset the selection fields
+      *
+     C                     SETON                     75
+     C                     END
+      *
+     C                     ELSE
+     C                     MOVEL'SEM1057' ZAMSID
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     EXSR SRSMSG
+     C                     SETON                     102081
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+      ** If F5 key is pressed, clear the input fields
+      *
+     C           *IN05     IFEQ '1'
+     C                     MOVE *BLANKS   CSESN
+     C                     MOVE *BLANKS   CSRPN
+     C                     MOVE *BLANKS   CNMCY
+     C                     MOVE *BLANKS   CSITP
+     C                     MOVE *BLANKS   CISSR
+     C                     MOVE *BLANKS   CPROT
+     C                     MOVE *BLANKS   CISIN
+     C                     MOVE *BLANKS   CT2RF
+     C                     MOVE *BLANKS   CCSPN
+     C                     END
+      *
+      ** Validate the input fields and the key entered
+      *
+     C           *IN03     IFEQ '0'
+     C           *IN11     ANDEQ'0'
+     C           *IN75     ANDEQ'0'
+     C           *IN86     ANDEQ'0'
+     C           *IN05     ANDEQ'0'
+     C                     EXSR V002
+     C                     END
+      *
+     C                     SETOF                     86
+      *
+      ** If there are no errors, select subroutine to write records to
+      ** subfile
+      *
+     C           *IN03     IFEQ '0'
+     C           *IN80     ANDEQ'0'
+     C           *IN89     ANDEQ'0'
+     C           *IN11     ANDEQ'0'
+      *
+      ** Display messages and display screen
+      *
+     C                     WRITESE0043F6
+     C                     EXSR P001
+     C                     END
+      *
+      ** Save the input fields
+      *
+     C           *IN11     IFEQ '0'
+     C                     MOVE CSESN     LSESN
+     C                     MOVE CSRPN     LSRPN
+     C                     MOVE CNMCY     LNMCY
+     C                     MOVE CSITP     LSITP
+     C                     MOVE CISSR     LISSR
+     C                     MOVE CPROT     LPROT
+     C                     MOVE CISIN     LISIN
+     C                     MOVE CT2RF     LT2RF
+     C                     END
+      *
+     C                     TIME           ##TME   60
+      *
+      ** If subfile is empty, display no record display file
+      *
+     C           WWRRN     IFEQ 0
+      *
+      ** Display : 'No data to display'
+      *
+     C                     MOVEL'SEW3008' ZAMSID
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     EXSR SRSMSG
+     C                     WRITESE0043F6
+      *
+     C                     WRITETRAIL
+      *
+     C           WWK11     IFEQ '1'
+     C                     WRITENORECS1
+     C                     READ NORECS1                  77
+     C                     ELSE
+     C                     WRITENORECS2
+     C                     READ NORECS2                  77
+     C                     END
+      *
+     C                     ELSE
+      *
+      ** If no error in selection fields and roll-up key is not pressed,
+      ** check for changed select field and validate
+      *
+     C           *IN07     IFEQ '0'
+     C           *IN03     ANDEQ'0'
+     C           *IN81     ANDEQ'0'
+     C           *IN89     ANDEQ'0'
+      *
+     C           WWK11     IFEQ '1'
+     C                     READCSE0043F1                 15
+     C                     ELSE
+     C                     READCSE0043F3                 15
+     C                     END
+      *
+      ** Do while changed records are found
+      *
+     C           *IN15     DOWEQ'0'
+      *
+      ** Validate input and call SE0040
+      *
+     C                     EXSR V001
+      *
+     C           WWK11     IFEQ '1'
+     C  N81                READCSE0043F1                 15
+     C                     ELSE
+     C  N81                READCSE0043F3                 15
+     C                     END
+      *
+     C   81                SETON                         15
+     C                     END
+      *
+     C                     END
+      *
+      ** Display the subfile and read the input from the user
+      *
+     C           *IN03     IFEQ '0'
+     C                     WRITETRAIL
+      *
+     C           WWK11     IFEQ '1'
+     C                     EXFMTSFLCTLF2
+     C                     ELSE
+     C                     EXFMTSFLCTLF4
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDDO
+      *
+     C           *IN76     IFEQ '0'
+     C                     MOVE *BLANKS   SESNRF
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  P001 - SR to select subroutine to select record to write     *
+      *         to subfile                                            *
+      *                                                               *
+      * Called by: MAIN - Main Screen Details                         *
+      *                                                               *
+      * Calls    : P002 - SR to select record with security shortname *
+      *                   to write to subfile from LF/SECTYZ1         *
+      *            P003 - SR to select record with security           *
+      *                   reportname to write to subfile from LF/SECTR*
+      *            P004 - SR to select record with ISIN Number to     *
+      *                   write to sufile form LF/SECTYL1             *
+      *            P005 - SR to select record with Telekurs to write  *
+      *                   to subfule from LF/SECTYL2                  *
+      *            P006 - SR to select record with CUSIP Number to    *
+      *                   write to subfile from LF/SECTYL0            *
+      *            P007 - SR to scan records with Security Shortname  *
+      *                   or Reportname or ISIN Number ot Telekurs or *
+      *                   Cusip Number to write to subfile from       *
+      *                   LF/SECTYZ1                                  *
+      *                                                               *
+      *****************************************************************
+     C           P001      BEGSR
+      *
+      ** If Roll-up key is not pressed, clear the subfile
+      *
+     C           *IN07     IFEQ '0'
+     C                     SETON                     0127
+     C                     MOVE *BLANKS   SELF
+     C                     WRITESFLCTLF2
+     C                     WRITESFLCTLF4
+     C                     SETOF                     0167
+     C                     MOVE *ZEROS    WWRRN
+     C                     ELSE
+     C                     Z-ADDWWRRNS    WWRRN
+     C                     END
+      *
+     C                     SELEC
+      *
+      ** Security Shortname entered and F16 key pressed
+      *
+     C           CSESN     WHNE *BLANKS
+     C           WWK26     ANDEQ'1'
+      *
+     C                     MOVE 10        WLEN    20
+     C                     MOVE *BLANKS   WMASK  30
+     C                     MOVE 'SESN'    WDATA   4
+     C                     MOVELCSESN     WMASK
+     C                     EXSR P007
+      *
+      ** Security Reportname entered and F16 key pressed
+      *
+     C           CSRPN     WHNE *BLANKS
+     C           WWK26     ANDEQ'1'
+      *
+     C                     MOVE 20        WLEN    20
+     C                     MOVE *BLANKS   WMASK  30
+     C                     MOVE 'SRPN'    WDATA
+     C                     MOVELCSRPN     WMASK
+     C                     EXSR P007
+      *
+      ** ISIN Number entered and F16 key pressed
+      *
+     C           CISIN     WHNE *BLANKS
+     C           WWK26     ANDEQ'1'
+      *
+     C                     MOVE 12        WLEN    20
+     C                     MOVE *BLANKS   WMASK  30
+     C                     MOVE 'ISIN'    WDATA
+     C                     MOVELCISIN     WMASK
+     C                     EXSR P007
+      *
+      ** Telekurs entered and F16 key pressed
+      *
+     C           CT2RF     WHNE *BLANKS
+     C           WWK26     ANDEQ'1'
+      *
+     C                     MOVE 12        WLEN    20
+     C                     MOVE *BLANKS   WMASK  30
+     C                     MOVE 'T2RF'    WDATA
+     C                     MOVELCT2RF     WMASK
+     C                     EXSR P007
+      *
+      ** Cusip Number entered and F16 key pressed
+      *
+     C           CCSPN     WHNE *BLANKS
+     C           WWK26     ANDEQ'1'
+      *
+     C                     MOVE 9         WLEN    20
+     C                     MOVE *BLANKS   WMASK  30
+     C                     MOVE 'CSPN'    WDATA
+     C                     MOVELCCSPN     WMASK
+     C                     EXSR P007
+      *
+      ** Security Reportname entered
+      ** Security file LF/SECTR sorted by Security Reportname
+      *
+     C           CSRPN     WHNE *BLANKS
+     C                     EXSR P003
+      *
+      ** ISIN Number entered
+      ** Security file LF/SECTYL1  sorted by Security Reportname
+      *
+     C           CISIN     WHNE *BLANKS
+     C                     EXSR P004
+      *
+      ** Telekurs entered
+      ** Security file LF/SECTYL2  sorted by Security Reportname
+      *
+     C           CT2RF     WHNE *BLANKS
+     C                     EXSR P005
+      *
+      ** Cusip Number entered
+      ** Security file LF/SECTYL0  sorted by Security Reportname
+      *
+     C           CCSPN     WHNE *BLANKS
+     C                     EXSR P006
+      *
+     C                     OTHER
+     C                     EXSR P002
+     C                     ENDSL
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  P002 - SR to select records to write to subfile              *
+      *         from LF/SECTYZ1                                       *
+      *                                                               *
+      * Called by: P001   - SR to select record to write to subfile   *
+      *                                                               *
+      * Calls    : WRTSBF - SR tp wrote record to subfile             *
+      *                                                               *
+      *****************************************************************
+     C           P002      BEGSR
+      *
+      ** If Roll-up key is not pressed
+      *
+     C           *IN07     IFEQ '0'
+      *
+      ** Position first security equal to the Security Shortname
+      ** entered
+      *
+     C           CSESN     SETLLSECTYZ1              87
+     C                     END
+      *
+      ** Read the next security in the Security file
+      *
+     C                     READ SECTYZ1                  87
+     C                     Z-ADD0         WCTR    20
+      *
+     C           *IN87     DOWEQ'0'
+     C           WCTR      ANDLT12
+      *
+      ** Nominal currency, Security investment type and issuer are
+      ** entered
+      *
+     C           CNMCY     IFEQ *BLANKS
+     C           CSITP     ANDEQ*BLANKS
+     C           CISSR     ANDEQ*BLANKS
+      *
+     C           CNMCY     OREQ *BLANKS
+     C           CSITP     ANDEQSITP
+     C           CISSR     ANDEQ*BLANKS
+      *
+     C           CNMCY     OREQ *BLANKS
+     C           CSITP     ANDEQ*BLANKS
+     C           NISSR     ANDEQISSR
+      *
+     C           CNMCY     OREQ *BLANKS
+     C           CSITP     ANDEQSITP
+     C           NISSR     ANDEQISSR
+      *
+     C           CNMCY     OREQ NMCY
+     C           CSITP     ANDEQ*BLANKS
+     C           CISSR     ANDEQ*BLANKS
+      *
+     C           CNMCY     OREQ NMCY
+     C           CSITP     ANDEQSITP
+     C           CISSR     ANDEQ*BLANKS
+      *
+     C           CNMCY     OREQ NMCY
+     C           CSITP     ANDEQ*BLANKS
+     C           NISSR     ANDEQISSR
+      *
+     C           CNMCY     OREQ NMCY
+     C           CSITP     ANDEQSITP
+     C           NISSR     ANDEQISSR
+      *
+      ** Access to Investment type details to check the processing type
+      *
+     C           KEYINV    CHAININVTP                88
+      *
+     C           CPROT     IFEQ PROT
+     C           CPROT     OREQ *BLANKS
+      *
+      ** Write record to subfile
+      *
+     C                     EXSR WRTSBF
+     C                     END
+      *
+     C                     END
+      *
+      ** If subfile not full than read the next security
+      *
+     C           WCTR      IFLT 12
+     C                     READ SECTYZ1                  87
+     C                     END
+      *
+     C                     END
+      *
+      ** If EOF is reached set subfile to end
+      *
+     C           *IN87     IFEQ '1'
+     C                     SETON                         67
+     C                     SETOF                         27
+      *
+      ** If not, check if last record from SECTYZ1 was already read
+      *
+     C                     ELSE
+     C                     READ SECTYZ1                  87
+      *
+     C           *IN87     IFEQ '1'
+     C                     SETON                         67
+     C                     SETOF                         27
+     C                     ELSE
+     C                     READPSECTYZ1                  77
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  P003 - SR to select records to write to subfile              *
+      *         from LF/SECTR                                         *
+      *                                                               *
+      * Called by: P001   - SR to select record to write to subfile   *
+      *                                                               *
+      * Calls    : WRTSBF - SR to write record to subfile             *
+      *                                                               *
+      *****************************************************************
+     C           P003      BEGSR
+      *
+      ** If Roll-up key is not pressed
+      *
+     C           *IN07     IFEQ '0'
+      *
+      ** Position first security equal to the Security Reportname entered
+      *
+     C           CSRPN     SETLLSECTR                87
+     C                     END
+      *
+      ** Read the next security in the Security file
+      *
+     C                     READ SECTR                    87
+     C                     Z-ADD0         WCTR    20
+      *
+     C           *IN87     DOWEQ'0'
+     C           WCTR      ANDLT12
+      *
+      ** Nominal currency, Security investment type and issuer are entered
+      *
+     C           CNMCY     IFEQ *BLANKS
+     C           CSITP     ANDEQ*BLANKS
+     C           CISSR     ANDEQ*BLANKS
+      *
+     C           CNMCY     OREQ *BLANKS
+     C           CSITP     ANDEQSITP
+     C           CISSR     ANDEQ*BLANKS
+      *
+     C           CNMCY     OREQ *BLANKS
+     C           CSITP     ANDEQ*BLANKS
+     C           NISSR     ANDEQISSR
+      *
+     C           CNMCY     OREQ *BLANKS
+     C           CSITP     ANDEQSITP
+     C           NISSR     ANDEQISSR
+      *
+     C           CNMCY     OREQ NMCY
+     C           CSITP     ANDEQ*BLANKS
+     C           CISSR     ANDEQ*BLANKS
+      *
+     C           CNMCY     OREQ NMCY
+     C           CSITP     ANDEQSITP
+     C           CISSR     ANDEQ*BLANKS
+      *
+     C           CNMCY     OREQ NMCY
+     C           CSITP     ANDEQ*BLANKS
+     C           NISSR     ANDEQISSR
+      *
+     C           CNMCY     OREQ NMCY
+     C           CSITP     ANDEQSITP
+     C           NISSR     ANDEQISSR
+      *
+      ** Access to Investment type details to check the processing type
+      *
+     C           KEYINV    CHAININVTP                88
+      *
+     C           CPROT     IFEQ PROT
+     C           CPROT     OREQ *BLANKS
+      *
+      ** Write record to subfile
+      *
+     C                     EXSR WRTSBF
+     C                     END
+      *
+     C                     END
+      *
+      ** If subfile not full than read the next security
+      *
+     C           WCTR      IFLT 12
+     C                     READ SECTR                    87
+     C                     END
+      *
+     C                     END
+      *
+      ** If EOF is reached set subfile to end
+      *
+     C           *IN87     IFEQ '1'
+     C                     SETON                         67
+     C                     SETOF                         27
+      *
+      ** If not, check if last record from SECTR was already read
+      *
+     C                     ELSE
+     C                     READ SECTR                    87
+      *
+     C           *IN87     IFEQ '1'
+     C                     SETON                         67
+     C                     SETOF                         27
+     C                     ELSE
+     C                     READPSECTR                    77
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  P004 - SR to select records to write to subfile              *
+      *         from LF/SECTYL1                                       *
+      *                                                               *
+      * Called by: P001   - SR to select record to write to subfile   *
+      *                                                               *
+      * Calls    : WRTSBF - SR to write record to subfile             *
+      *                                                               *
+      *****************************************************************
+     C           P004      BEGSR
+      *
+      ** If Roll-up key is not pressed
+      *
+     C           *IN07     IFEQ '0'
+      *
+      ** Position first security equal to the ISIN Number entered
+      *
+     C           CISIN     SETLLSECTYL1              87
+     C                     END
+      *
+      ** Read the next security in the Security file
+      *
+     C                     READ SECTYL1                  87
+     C                     Z-ADD0         WCTR    20
+      *
+     C           *IN87     DOWEQ'0'
+     C           WCTR      ANDLT12
+      *
+      ** Nominal currency, Security investment type and issuer are
+      ** entered
+      *
+     C           CNMCY     IFEQ *BLANKS
+     C           CSITP     ANDEQ*BLANKS
+     C           CISSR     ANDEQ*BLANKS
+      *
+     C           CNMCY     OREQ *BLANKS
+     C           CSITP     ANDEQSITP
+     C           CISSR     ANDEQ*BLANKS
+      *
+     C           CNMCY     OREQ *BLANKS
+     C           CSITP     ANDEQ*BLANKS
+     C           NISSR     ANDEQISSR
+      *
+     C           CNMCY     OREQ *BLANKS
+     C           CSITP     ANDEQSITP
+     C           NISSR     ANDEQISSR
+      *
+     C           CNMCY     OREQ NMCY
+     C           CSITP     ANDEQ*BLANKS
+     C           CISSR     ANDEQ*BLANKS
+      *
+     C           CNMCY     OREQ NMCY
+     C           CSITP     ANDEQSITP
+     C           CISSR     ANDEQ*BLANKS
+      *
+     C           CNMCY     OREQ NMCY
+     C           CSITP     ANDEQ*BLANKS
+     C           NISSR     ANDEQISSR
+      *
+     C           CNMCY     OREQ NMCY
+     C           CSITP     ANDEQSITP
+     C           NISSR     ANDEQISSR
+      *
+      ** Access to Investment type details to check the processing type
+      *
+     C           KEYINV    CHAININVTP                88
+      *
+     C           CPROT     IFEQ PROT
+     C           CPROT     OREQ *BLANKS
+      *
+      ** Write record to subfile
+      *
+     C                     EXSR WRTSBF
+     C                     END
+      *
+     C                     END
+      *
+      ** If subfile not full than read the next security
+      *
+     C           WCTR      IFLT 12
+     C                     READ SECTYL1                  87
+     C                     END
+      *
+     C                     END
+      *
+      ** If EOF is reached set subfile to end
+      *
+     C           *IN87     IFEQ '1'
+     C                     SETON                         67
+     C                     SETOF                         27
+      *
+      ** If not, check if last record from SECTYL1  was already read
+      *
+     C                     ELSE
+     C                     READ SECTYL1                  87
+      *
+     C           *IN87     IFEQ '1'
+     C                     SETON                         67
+     C                     SETOF                         27
+     C                     ELSE
+     C                     READPSECTYL1                  77
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  P005 - SR to select records to write to subfile              *
+      *         from LF/SECTYL2                                       *
+      *                                                               *
+      * Called by: P001   - SR to select record to write to subfile   *
+      *                                                               *
+      * Calls    : WRTSBF - SR to write record to subfile             *
+      *                                                               *
+      *****************************************************************
+     C           P005      BEGSR
+      *
+      ** If Roll-up key is not pressed
+      *
+     C           *IN07     IFEQ '0'
+      *
+      ** Position first security equal to the Telekurs entered
+      *
+     C           CT2RF     SETLLSECTYL2              87
+     C                     END
+      *
+      ** Read the next security in the Security file
+      *
+     C                     READ SECTYL2                  87
+     C                     Z-ADD0         WCTR    20
+      *
+     C           *IN87     DOWEQ'0'
+     C           WCTR      ANDLT12
+      *
+      ** Nominal currency, Security investment type and issuer are
+      ** entered
+      *
+     C           CNMCY     IFEQ *BLANKS
+     C           CSITP     ANDEQ*BLANKS
+     C           CISSR     ANDEQ*BLANKS
+      *
+     C           CNMCY     OREQ *BLANKS
+     C           CSITP     ANDEQSITP
+     C           CISSR     ANDEQ*BLANKS
+      *
+     C           CNMCY     OREQ *BLANKS
+     C           CSITP     ANDEQ*BLANKS
+     C           NISSR     ANDEQISSR
+      *
+     C           CNMCY     OREQ *BLANKS
+     C           CSITP     ANDEQSITP
+     C           NISSR     ANDEQISSR
+      *
+     C           CNMCY     OREQ NMCY
+     C           CSITP     ANDEQ*BLANKS
+     C           CISSR     ANDEQ*BLANKS
+      *
+     C           CNMCY     OREQ NMCY
+     C           CSITP     ANDEQSITP
+     C           CISSR     ANDEQ*BLANKS
+      *
+     C           CNMCY     OREQ NMCY
+     C           CSITP     ANDEQ*BLANKS
+     C           NISSR     ANDEQISSR
+      *
+     C           CNMCY     OREQ NMCY
+     C           CSITP     ANDEQSITP
+     C           NISSR     ANDEQISSR
+      *
+      ** Access to Investment type details to check the processing type
+      *
+     C           KEYINV    CHAININVTP                88
+      *
+     C           CPROT     IFEQ PROT
+     C           CPROT     OREQ *BLANKS
+      *
+      ** Write record to subfile
+      *
+     C                     EXSR WRTSBF
+     C                     END
+      *
+     C                     END
+      *
+      ** If subfile not full than read the next security
+      *
+     C           WCTR      IFLT 12
+     C                     READ SECTYL2                  87
+     C                     END
+      *
+     C                     END
+      *
+      ** If EOF is reached set subfile to end
+      *
+     C           *IN87     IFEQ '1'
+     C                     SETON                         67
+     C                     SETOF                         27
+      *
+      ** If not, check if last record from SECTYL2  was already read
+      *
+     C                     ELSE
+     C                     READ SECTYL2                  87
+      *
+     C           *IN87     IFEQ '1'
+     C                     SETON                         67
+     C                     SETOF                         27
+     C                     ELSE
+     C                     READPSECTYL2                  77
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  P006 - SR to select records to write to subfile              *
+      *         from LF/SECTYL0                                       *
+      *                                                               *
+      * Called by: P001   - SR to select record to write to subfile   *
+      *                                                               *
+      * Calls    : WRTSBF - SR to write record to subfile             *
+      *                                                               *
+      *****************************************************************
+     C           P006      BEGSR
+      *
+      ** If Roll-up key is not pressed
+      *
+     C           *IN07     IFEQ '0'
+      *
+      ** Position first security equal to the Cusip Number entered
+      *
+     C           CCSPN     SETLLSECTYL0              87
+     C                     END
+      *
+      ** Read the next security in the Security file
+      *
+     C                     READ SECTYL0                  87
+     C                     Z-ADD0         WCTR    20
+      *
+     C           *IN87     DOWEQ'0'
+     C           WCTR      ANDLT12
+      *
+      ** Nominal currency, Security investment type and issuer are
+      ** entered
+      *
+     C           CNMCY     IFEQ *BLANKS
+     C           CSITP     ANDEQ*BLANKS
+     C           CISSR     ANDEQ*BLANKS
+      *
+     C           CNMCY     OREQ *BLANKS
+     C           CSITP     ANDEQSITP
+     C           CISSR     ANDEQ*BLANKS
+      *
+     C           CNMCY     OREQ *BLANKS
+     C           CSITP     ANDEQ*BLANKS
+     C           NISSR     ANDEQISSR
+      *
+     C           CNMCY     OREQ *BLANKS
+     C           CSITP     ANDEQSITP
+     C           NISSR     ANDEQISSR
+      *
+     C           CNMCY     OREQ NMCY
+     C           CSITP     ANDEQ*BLANKS
+     C           CISSR     ANDEQ*BLANKS
+      *
+     C           CNMCY     OREQ NMCY
+     C           CSITP     ANDEQSITP
+     C           CISSR     ANDEQ*BLANKS
+      *
+     C           CNMCY     OREQ NMCY
+     C           CSITP     ANDEQ*BLANKS
+     C           NISSR     ANDEQISSR
+      *
+     C           CNMCY     OREQ NMCY
+     C           CSITP     ANDEQSITP
+     C           NISSR     ANDEQISSR
+      *
+      ** Access to Investment type details to check the processing type
+      *
+     C           KEYINV    CHAININVTP                88
+      *
+     C           CPROT     IFEQ PROT
+     C           CPROT     OREQ *BLANKS
+      *
+      ** Write record to subfile
+      *
+     C                     EXSR WRTSBF
+     C                     END
+      *
+     C                     END
+      *
+      ** If subfile not full than read the next security
+      *
+     C           WCTR      IFLT 12
+     C                     READ SECTYL0                  87
+     C                     END
+      *
+     C                     END
+      *
+      ** If EOF is reached set subfile to end
+      *
+     C           *IN87     IFEQ '1'
+     C                     SETON                         67
+     C                     SETOF                         27
+      *
+      ** If not, check if last record from SECTYL0  was already read
+      *
+     C                     ELSE
+     C                     READ SECTYL0                  87
+      *
+     C           *IN87     IFEQ '1'
+     C                     SETON                         67
+     C                     SETOF                         27
+     C                     ELSE
+     C                     READPSECTYL0                  77
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  P007 - SR to scan records with Security Shortname            *
+      *         or Reportname or ISIN Number or Telekurs              *
+      *         or Cusip Number to write to subfile from LF/SECTYZ1   *
+      *                                                               *
+      * Called by: P001    - SR to select record to write to subfile  *
+      *                                                               *
+      * Calls    : WRTSBF  - SR to write record to subfile            *
+      *                                                               *
+      *****************************************************************
+     C           P007      BEGSR
+      *
+      ** If Roll-up key is not pressed
+      *
+     C           *IN07     IFEQ '0'
+      *
+      ** Position first security
+      *
+     C           *LOVAL    SETLLSECTYZ1              87
+     C                     END
+      *
+      ** Read the next security in the Security file
+      *
+     C                     READ SECTYZ1                  87
+     C                     Z-ADD0         WCTR    20
+      *
+     C           *IN87     DOWEQ'0'
+     C           WCTR      ANDLT12
+      *
+     C                     SELEC
+      *
+     C           WDATA     WHEQ 'SESN'
+     C                     MOVELSESN      WWORK  30
+      *
+     C           WDATA     WHEQ 'SRPN'
+     C                     MOVELSRPN      WWORK  30
+      *
+     C           WDATA     WHEQ 'ISIN'
+     C                     MOVELISIN      WWORK  30
+      *
+     C           WDATA     WHEQ 'T2RF'
+     C                     MOVELT2RF      WWORK  30
+      *
+     C           WDATA     WHEQ 'CSPN'
+     C                     MOVELCSPN      WWORK  30
+      *
+     C                     END
+      *
+      ** Scan with the field selection
+      *
+     C                     CALL 'QCLSCAN'
+     C                     PARM           WWORK
+     C                     PARM WLEN      WQA3N   30       Length
+     C                     PARM 1         WQB3N   30       Start
+     C                     PARM           WMASK            Mask
+     C                     PARM WLEN      WQC3N   30       Length
+     C                     PARM '1'       WQD1    1        Translate
+     C                     PARM '1'       WQE1    1        Trim
+     C                     PARM '?'       WQF1    1        Wild
+     C                     PARM           WQG3N   30       Result
+      *
+     C           WQG3N     IFGE 1
+      *
+      ** Nominal currency, Security investment type and issuer are
+      ** entered
+      *
+     C           CNMCY     IFEQ *BLANKS
+     C           CSITP     ANDEQ*BLANKS
+     C           CISSR     ANDEQ*BLANKS
+      *
+     C           CNMCY     OREQ *BLANKS
+     C           CSITP     ANDEQSITP
+     C           CISSR     ANDEQ*BLANKS
+      *
+     C           CNMCY     OREQ *BLANKS
+     C           CSITP     ANDEQ*BLANKS
+     C           NISSR     ANDEQISSR
+      *
+     C           CNMCY     OREQ *BLANKS
+     C           CSITP     ANDEQSITP
+     C           NISSR     ANDEQISSR
+      *
+     C           CNMCY     OREQ NMCY
+     C           CSITP     ANDEQ*BLANKS
+     C           CISSR     ANDEQ*BLANKS
+      *
+     C           CNMCY     OREQ NMCY
+     C           CSITP     ANDEQSITP
+     C           CISSR     ANDEQ*BLANKS
+      *
+     C           CNMCY     OREQ NMCY
+     C           CSITP     ANDEQ*BLANKS
+     C           NISSR     ANDEQISSR
+      *
+     C           CNMCY     OREQ NMCY
+     C           CSITP     ANDEQSITP
+     C           NISSR     ANDEQISSR
+      *
+      ** Access to Investment type details to check the processing type
+      *
+     C           KEYINV    CHAININVTP                88
+      *
+     C           CPROT     IFEQ PROT
+     C           CPROT     OREQ *BLANKS
+      *
+      ** Write record to subfile
+      *
+     C                     EXSR WRTSBF
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+      ** If subfile not full than read the next security
+      *
+     C           WCTR      IFLT 12
+     C                     READ SECTYZ1                  87
+     C                     END
+      *
+     C                     END
+      *
+      ** If EOF is reached set subfile to end
+      *
+     C           *IN87     IFEQ '1'
+     C                     SETON                         67
+     C                     SETOF                         27
+      *
+      ** If not, check if last record from SECTYZ1 was already read
+      *
+     C                     ELSE
+     C                     READ SECTYZ1                  87
+      *
+     C           *IN87     IFEQ '1'
+     C                     SETON                         67
+     C                     SETOF                         27
+     C                     ELSE
+     C                     READPSECTYZ1                  77
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  WRTSBF - SR to write record to subfile                       *
+      *                                                               *
+      *  Called by: P002 - SR to select records with Security         *
+      *                    Shortname to write to subfile from         *
+      *                    LF/SECTYZ1                                 *
+      *             P003 - SR to select records with Security         *
+      *                    Reportname to write to subfile from        *
+      *                    LF/SECTR                                   *
+      *             P004 - SR to select records with ISIN Number      *
+      *                    to write to subfile from LF/SECTYL1        *
+      *             P005 - SR to select records with Telekurs to      *
+      *                    write to subfile from LF/SECTYL2           *
+      *             P006 - SR to select records with CUSIP number     *
+      *                    to write to subfile from LF/SECTYL0        *
+      *             P007 - SR To scan records with Security Shortname *
+      *                    or Reportname or ISIN Number or Telekurs   *
+      *                    or Cusip Number to write to subfile from   *
+      *                    LF/SECTYZ1                                 *
+      *                                                               *
+      *  Calls:     ZSDESC                                            *
+      *                                                               *
+      *****************************************************************
+     C           WRTSBF    BEGSR
+      *
+      ** Initialize the Security record fields in first subfile record
+      ** fields
+      *
+     C                     MOVE *BLANKS   SELF
+     C                     MOVELSESN      DSESN
+     C                     MOVELSRPN      DSRPN
+     C                     MOVELNMCY      DNMCY
+     C                     MOVELSITP      DSITP
+     C                     MOVE *BLANKS   DISSR
+      *
+     C           CISSR     IFEQ *BLANKS
+     C                     MOVELISSR      DISSR
+     C                     ELSE
+     C                     MOVELCISSR     DISSR
+     C                     END
+      *
+     C                     MOVELINCS      DINCS
+     C                     MOVELPROT      DPROT
+      *
+      ** Format security report description
+      *
+     C                     MOVE SRPN      ZSRPN
+     C                     EXSR ZSDESC
+     C                     MOVELZRNME     DSRNM
+      *
+      ** Initialize the Security record fields in second subfile record fields
+      *
+     C                     MOVELISIN      DISIN
+     C                     MOVELT2RF      DT2RF
+     C                     MOVELCSPN      DCSPN
+      *
+     C                     ADD  1         WWRRN
+     C                     ADD  1         WCTR
+     C                     Z-ADDWWRRN     DSPREC
+     C                     Z-ADDWWRRN     WWRRNS
+      *
+      ** Write record to subfile
+      *
+     C                     WRITESE0043F1
+     C                     WRITESE0043F3
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  V001 - SR to validate selection entered and key pressed      *
+      *                                                               *
+      *  Called by: MAIN   - Main Processing                          *
+      *                                                               *
+      *  Calls    : SRBCAC - Check user's authority                   *
+      *             SE0040 - Security Detail Maintenance              *
+      *             SRSMSG - SR to send messages to message subfile   *
+      *             U001   - SR to update subfile record fieldswk     *
+      *                                                               *
+      *****************************************************************
+     C           V001      BEGSR
+      *
+     C           SELF      IFNE ' '
+      *
+      ** Check that action is valid
+      ** Action code must be equal to A,D,E
+      *
+     C           SELF      IFEQ 'A'
+     C           SELF      OREQ 'D'
+     C           SELF      OREQ 'E'
+      *
+      ** Check if user is authorised to the action code
+      *
+     C                     MOVE SELF      ZACTN   1
+     C                     EXSR SRBCAC
+      *
+      ** The user is authorize to the action code or branch code
+      *
+     C           #ERR      IFEQ *ZEROS
+      *
+     C           *IN55     IFEQ '0'
+     C           ACTCDE    ANDEQ*BLANKS
+     C           ACTCDE    OREQ SELF
+      *
+      ** Call SE0040
+      *
+     C                     CALL 'SE0040'
+     C                     PARM           #RTRN   7
+     C                     PARM SELF      #ACTC   1
+     C                     PARM DSESN     #SESN  10
+     C                     PARM           OLDSEC 10
+     C                     PARM *BLANKS   OTHINF156                                           222373
+      *
+      ** Check if no error in SE0040
+      *
+     C           *INU7     IFEQ '1'
+     C           *INU8     ANDEQ'1'
+     C                     SETON                     0381
+     C                     END
+      *
+      ** Check if F3 key is pressed in SE0040
+      *
+     C           #RTRN     IFEQ 'Y2U9999'
+     C                     SETON                     81
+     C                     END
+      *
+     C                     MOVE ' '       SELF
+      *
+     C                     ELSE
+     C                     MOVEL'SEM1057' ZAMSID
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     EXSR SRSMSG
+     C                     SETON                     102081
+     C                     END
+      *
+     C                     ELSE
+      *
+     C           *IN55     IFEQ '0'
+     C           ACTCDE    ANDEQ*BLANKS
+     C           ACTCDE    OREQ SELF
+      *
+      ** Program called without parameters and not authorise to
+      ** action code
+      *
+     C                     MOVEL'SEM1019' ZAMSID
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     EXSR SRSMSG
+     C                     SETON                     102081
+     C                     ELSE
+      *
+      ** Program called with parameters and invalid action code
+      *
+     C                     MOVEL'SEM1057' ZAMSID
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     EXSR SRSMSG
+     C                     SETON                     102081
+     C                     END
+      *
+     C                     END
+      *
+     C                     ELSE
+      *
+     C                     SELEC
+      *
+      ** Parameter entry is '?' and Action code '1'
+      *
+     C           *IN55     WHEQ '1'
+     C           SELF      ANDEQ'1'
+      *
+     C                     MOVELDSESN     SESNRF
+     C                     SETON                     038176
+      *
+      ** Action code entered is not valid then send an error message
+      *
+     C                     OTHER
+     C                     MOVEL'SEM1057' ZAMSID
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     EXSR SRSMSG
+     C                     SETON                     102081
+     C                     ENDSL
+      *
+     C                     END
+      *
+     C                     Z-ADDWWRRN     DSPREC
+     C                     END
+      *
+     C                     EXSR U001
+      *
+     C           WWK11     IFEQ '1'
+     C                     UPDATSE0043F1
+     C                     ELSE
+     C                     UPDATSE0043F3
+     C                     END
+      *
+     C                     SETOF                     1020
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  V002 - SR to validate selection entered and key pressed      *
+      *                                                               *
+      *  Called by: MAIN - Main Screen Details                        *
+      *                                                               *
+      *  Calls    : SRSMSG   - SR to send message to message subfile  *
+      *             AOCURRR0 - Currency Details Access Object         *
+      *             AOCUSTR0 - Customer Details Access Object         *
+      *                                                               *
+      *****************************************************************
+     C           V002      BEGSR
+      *
+      ** F16 key pressed
+      *
+     C           *IN16     IFEQ '1'
+     C                     MOVE '1'       WWK26   1
+     C                     END
+      *
+      ** Check if more than one selection are entered
+      *
+     C           CSESN     IFNE *BLANKS
+     C           CSRPN     ANDNE*BLANKS
+      *
+     C           CSESN     ORNE *BLANKS
+     C           CISIN     ANDNE*BLANKS
+      *
+     C           CSESN     ORNE *BLANKS
+     C           CT2RF     ANDNE*BLANKS
+      *
+     C           CSESN     ORNE *BLANKS
+     C           CCSPN     ANDNE*BLANKS
+      *
+     C           CISIN     ORNE *BLANKS
+     C           CT2RF     ANDNE*BLANKS
+      *
+     C           CISIN     ORNE *BLANKS
+     C           CCSPN     ANDNE*BLANKS
+      *
+     C           CT2RF     ORNE *BLANKS
+     C           CCSPN     ANDNE*BLANKS
+      *
+     C           CSESN     ORNE *BLANKS
+     C           CSRPN     ANDNE*BLANKS
+      *
+     C           CISIN     ORNE *BLANKS
+     C           CSRPN     ANDNE*BLANKS
+      *
+     C           CT2RF     ORNE *BLANKS
+     C           CSRPN     ANDNE*BLANKS
+      *
+     C           CT2RF     ORNE *BLANKS
+     C           CCSPN     ANDNE*BLANKS
+      *
+     C           CSESN     IFNE *BLANKS
+     C                     SETON                     60
+     C                     END
+      *
+     C           CSRPN     IFNE *BLANKS
+     C                     SETON                     61
+     C                     END
+      *
+     C           CISIN     IFNE *BLANKS
+     C                     SETON                     66
+     C                     END
+      *
+     C           CT2RF     IFNE *BLANKS
+     C                     SETON                     68
+     C                     END
+      *
+     C           CCSPN     IFNE *BLANKS
+     C                     SETON                     69
+     C                     END
+      *
+     C                     MOVEL'SEW1000' ZAMSID
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     EXSR SRSMSG
+     C                     SETON                     89
+     C                     END
+      *
+      ** Check the Nominal Currency
+      *
+     C           CNMCY     IFNE *BLANKS
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   #RTCD
+     C                     PARM '*KEY   ' #OPTN
+     C                     PARM CNMCY     #CKEY   3
+     C***********SDCURR    PARM SDCURR    DSFDY                           CSD006
+     C           SDCURR    PARM SDCURR    DSSDY                           CSD006
+      *
+     C                     SELEC
+      *
+     C           #RTCD     WHEQ *BLANKS
+     C                     MOVE A6CYCD    CNMCY
+      *
+      ** Check the investment type
+      *
+     C           CSITP     IFNE *BLANKS
+      *
+     C                     MOVE CSITP     SITP
+     C                     MOVE CNMCY     NMCY
+     C           KEYINV    CHAININVTP                88
+      *
+      ** Invalid Investment type
+      *
+     C           *IN88     IFEQ '1'
+     C                     SETON                     6389
+     C                     ELSE
+      *
+      ** Check the processing type
+      *
+     C           CPROT     IFNE *BLANKS
+     C           CPROT     ANDNEPROT
+     C           *IN65     ANDEQ'0'
+     C                     SETON                     6589
+     C                     MOVEL'SEM1059' ZAMSID
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     EXSR SRSMSG
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+      ** No record selected on currency details
+      *
+     C           #RTCD     WHEQ '*NOSEL'
+     C                     MOVE *BLANKS   CNMCY
+      *
+     C                     OTHER
+     C                     SETON                     6289
+     C                     MOVEL'SEM1058' ZAMSID
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     EXSR SRSMSG
+     C                     ENDSL
+      *
+     C                     END
+      *
+      ** Check if the Issuer is a number
+      *
+     C           CISSR     IFNE *BLANKS
+     C                     MOVE *BLANKS   WCSNM  10
+     C                     MOVELCISSR     WCSNM
+     C                     MOVE *BLANKS   BBCUST
+     C                     MOVE *BLANKS   BBCSSN
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM           #RTCD   7
+     C                     PARM '*KEY   ' #OPTN   7
+     C                     PARM WCSNM     #KEY1  10
+     C                     PARM           #KYST   7
+     C***********SDCUST    PARM SDCUST    DSFDY                           176443
+     C           SDCUST    PARM SDCUST    DSSDY                           176443
+      *
+     C                     SELEC
+      *
+      ** The Selection was '?' and no Issuer selected
+      *
+     C           #RTCD     WHEQ '*NOSEL'
+     C                     MOVE *BLANKS   CISSR
+      *
+      ** Invalid Issuer
+      *
+     C           #RTCD     WHEQ '*NRF'
+     C                     SETON                     6489
+     C                     MOVEL'SEM1060' ZAMSID
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     EXSR SRSMSG
+      *
+      ** No error with Issuer
+      *
+     C           #RTCD     WHEQ *BLANKS
+     C                     Z-ADD6         LENGTH  20
+     C                     MOVELCISSR     ZISSR  10
+     C**********           Z-ADD0         NISSR   60                                          CSD027
+     C                     MOVE *BLANKS   NISSR   6                                           CSD027
+     C           LENGTH    SUBSTZISSR:1   WISSR
+     C                     TESTN          WISSR      21
+     C                     MOVELBBCUST    NISSR
+     C                     MOVE *BLANKS   CISSR
+      *
+      ** If Issuer entered is not a number
+      *
+     C           *IN21     IFEQ '0'
+     C                     MOVELBBCSSN    CISSR
+     C                     ELSE
+     C                     MOVELBBCUST    CISSR
+     C                     END
+      *
+     C                     OTHER
+     C                     SETON                     6489
+     C                     ENDSL
+      *
+     C                     END
+      *
+      ** Check if the processing type is numeric
+      *
+     C           CPROT     IFNE *BLANKS
+     C                     TESTN          CPROT      21
+     C                     MOVE CPROT     WTEST   1
+     C                     TESTZ          WTEST          22
+      *
+      ** If Selection is not a number
+      *
+     C           *IN21     IFEQ '0'
+     C           *IN22     OREQ '0'
+     C           CPROT     OREQ '0'
+     C                     SETON                     6589
+     C                     MOVEL'SEM1059' ZAMSID
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     EXSR SRSMSG
+     C                     END
+      *
+     C                     END
+      *
+      ** A new Selection is entered
+      *
+     C           CSESN     IFNE LSESN
+     C           CSRPN     ORNE LSRPN
+     C           CNMCY     ORNE LNMCY
+     C           CSITP     ORNE LSITP
+     C           CISSR     ORNE LISSR
+     C           CPROT     ORNE LPROT
+     C           CISIN     ORNE LISIN
+     C           CT2RF     ORNE LT2RF
+     C           CCSPN     ORNE LCSPN
+      *
+     C           *IN07     IFEQ '1'
+      *
+      ** Roll-up not allowed if new selection entered
+      *
+     C                     SETOF                     07
+     C                     SETON                     80
+     C                     MOVE '0'       WWK26
+     C                     END
+      *
+     C           *IN16     IFEQ '0'
+     C           WWK26     ANDEQ'1'
+     C                     MOVE '0'       WWK26
+     C                     SETOF                     80
+     C                     END
+      *
+     C                     END
+      *
+      ** No new selection entered than show the first screen display
+      ** file without clearing the subfile
+      *
+     C           CSESN     IFEQ LSESN
+     C           CSRPN     ANDEQLSRPN
+     C           CNMCY     ANDEQLNMCY
+     C           CSITP     ANDEQLSITP
+     C           CISSR     ANDEQLISSR
+     C           CPROT     ANDEQLPROT
+     C           CISIN     ANDEQLISIN
+     C           CT2RF     ANDEQLT2RF
+     C           CCSPN     ANDEQLCSPN
+     C           *IN07     ANDEQ'0'
+     C           *IN16     ANDEQ'0'
+     C                     SETON                     80
+     C                     Z-ADD1         DSPREC
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  U001 - SR TO UPDATE SUBFILE RECORD FIELDS                    *
+      *                                                               *
+      *  Called by: V001   - Subroutine to validate action code       *
+      *                      entered                                  *
+      *                                                               *
+      *  Calls    : ZSDESC                                            *
+      *                                                               *
+      *****************************************************************
+     C           U001      BEGSR
+      *
+      ** Read the security within the Security Shortname is equal to
+      ** the Security Shortname in the subfile in the Security file
+      *
+     C           DSESN     SETLLSECTYZ2
+     C           DSESN     READESECTYZ2                  77
+      *
+      ** Initialize the Security record fields in first subfile record
+      ** fields
+      *
+     C                     MOVELSESN      DSESN
+     C                     MOVELSRPN      DSRPN
+     C                     MOVELNMCY      DNMCY
+     C                     MOVELSITP      DSITP
+     C                     MOVE *BLANKS   DISSR
+      *
+     C           CISSR     IFEQ *BLANKS
+     C                     MOVELISSR      DISSR
+     C                     ELSE
+     C                     MOVELCISSR     DISSR
+     C                     END
+      *
+     C                     MOVELINCS      DINCS
+     C                     MOVELPROT      DPROT
+      *
+      ** Format security report description
+      *
+     C                     MOVE SRPN      ZSRPN
+     C                     EXSR ZSDESC
+     C                     MOVELZRNME     DSRNM
+      *
+      ** Initialize the Security record fields in second subfile record
+      ** fields
+      *
+     C                     MOVELISIN      DISIN
+     C                     MOVELT2RF      DT2RF
+     C                     MOVELCSPN      DCSPN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRBCAC - Check user's authorise                              *
+      *    IN : - Action code                                         *
+      *                                                               *
+      *  Called by: MAIN    - Main Processing                         *
+      *             V001    - SR to validate action code entered      *
+      *                                                               *
+      *  Calls    : ZVACTU  - Validate action code for User/Pgm       *
+      *             ZVACTBU - Validate action code for User/Pgm/Brch  *
+      *                                                               *
+      *****************************************************************
+     C           SRBCAC    BEGSR
+      *
+     C           BJSBRC    IFNE *BLANKS
+     C                     CALL 'ZVACTU'
+     C                     PARM ZACTN     #ZACTN  1
+     C                     PARM           #ERR    10
+      *
+     C                     ELSE
+     C                     CALL 'ZVACTBU'
+     C                     PARM ZACTN     #ZACTN
+     C                     PARM USRBCH    #ZBR    3
+     C                     PARM           #ERR
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSMSG - Routine to send messages to message subfile.        *
+      *    IN : - Message ID                                          *
+      *                                                               *
+      *  Called by:                                                   *
+      *                                                               *
+      *  Calls    : ZA0340 - Send a message to the program msg queue  *
+      *                                                               *
+      *****************************************************************
+     C           SRSMSG    BEGSR
+      *
+      ** Send specified message from specified message file to program
+      ** message queue; then clear message id and message file
+      *
+     C                     CALL 'ZA0340'
+     C                     PARM           ZAMSGF 10
+     C                     PARM           ZAMSID 10
+      *
+     C                     CLEARZAMSID
+     C                     SETOF                     71
+     C                     SETON                     40
+     C                     WRITESE0043F6
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           #RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       #RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZCONVZ1
+      *
+     C/COPY ZSRSRC,ZDATE2Z2
+      *
+     C/COPY ZSRSRC,ZSDESCZ3
+      *
+      /EJECT
+      *
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000

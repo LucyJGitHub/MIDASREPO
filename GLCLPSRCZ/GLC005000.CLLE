@@ -1,0 +1,242 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Submit calculation managers')                */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC005000 - Submit Calculation Managers                     */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*                                                                   */
+/*       Last Amend No. AR1060743          Date 26Nov12              */
+/*       Prev Amend No. CCB020             Date 06Aug12              */
+/*                      CSC043             Date 18Jun10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*                      BUG22338           Date 25Feb09              */
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      BG3942             Date 05Aug04              */
+/*                      BG1726 (Reopen)    Date 29Jul04              */
+/*                      BG3656             Date 17May04              */
+/*                      BG1726             Date 17May04              */
+/*                      CLE024             Date 17May04              */
+/*                      CGL014  *CREATE    Date 17May04              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR1060743 - All HATS input initial screen appears a         */
+/*                   confirmation of NWDC processing                 */
+/*       CCB020 - COB Restructure - Seconday COB Infrastracture      */
+/*       CSC043 - Correction to submitted job.                       */
+/*       BUG22338 - Clear DTAQs before calculators are started.      */
+/*       BG3942 - LTV calculator not being started.                  */
+/*       BG1726 - Allow individual calculators to be started (reopen)*/
+/*       BG3656 - Run management limits jobs in global subsystem     */
+/*       BG1726 - Addition of Management Limits processing.          */
+/*       CLE024 - Addition of CALCMGR processing for CLE024.         */
+/*       CGL014 - New program to submit the calculation manager.     */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM  */                                                                      /*BG1726*/
+             PGM        PARM(&STRMGR)                                                     /*BG1726*/
+ 
+             DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&JOBNAME) TYPE(*CHAR) LEN(10)
+/**********  DCL        VAR(&PHASEOFDAY) TYPE(*CHAR) LEN(1)                    /*CLE024*/ /*CBB020*/
+             DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(4)                                    /*CBB020*/
+             DCL        VAR(&SBMUSER) TYPE(*CHAR) LEN(10)                                 /*BG3656*/
+             DCL        VAR(&STRMGR) TYPE(*CHAR) LEN(10)                                  /*BG1726*/
+             DCL        VAR(&DTAQLIB) TYPE(*CHAR) LEN(10)                               /*BUG22338*/
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2004')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Calculation Manager processing */
+/* Get zone system prefix */                                                              /*BG3942*/
+                                                                                          /*BG3942*/
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREFIX)                              /*BG3942*/
+/* Build user profile under which to submit the job */                                    /*BG3942*/
+                                                                                          /*BG3942*/
+             CHGVAR     VAR(&SBMUSER) VALUE(&PREFIX *TCAT 'WEBUSER')                      /*BG3942*/
+                                                                                          /*BG3942*/
+ 
+/* Collateralised Lending Calculation Manager */
+/* Check if the CALCMGR_xx job is running */                                              /*CLE024*/
+                                                                                          /*CLE024*/
+             IF         COND((&STRMGR *EQ 'calc      ') +
+                          *OR (&STRMGR *EQ 'ALL')) THEN(DO)                               /*BG1726*/
+/**********  ALCOBJ     OBJ((GLCALCMLCK *DTAARA *EXCL)) WAIT(0)   */           /*CLE024*/ /*BG1726*/
+             ALCOBJ     OBJ((GLCLCALLCK *DTAARA *EXCL)) WAIT(0)                           /*BG1726*/
+             MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(LTVMNTR))                         /*CLE024*/
+                                                                                          /*CLE024*/
+/**********  DLCOBJ     OBJ((GLCALCMLCK *DTAARA *EXCL))           */           /*CLE024*/ /*BG1726*/
+             DLCOBJ     OBJ((GLCLCALLCK *DTAARA *EXCL))                                   /*BG1726*/
+                                                                                          /*CLE024*/
+/* Get zone system prefix */
+ 
+/**********  RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREFIX) */                           /*BG3942*/
+ 
+/* Build user profile under which to submit the job */                                    /*BG3656*/
+/**********/                                                                   /*BG3656*/ /*BG3942*/
+/**********  CHGVAR     VAR(&SBMUSER) VALUE(&PREFIX *TCAT 'WEBUSER')   */      /*BG3656*/ /*BG3942*/
+/**********/                                                                   /*BG3656*/ /*BG3942*/
+/* Build submitted job name */
+ 
+             CHGVAR     VAR(&JOBNAME) VALUE('CALCMGR_' *CAT &PREFIX)                      /*CLE024*/
+                                                                                          /*CLE024*/
+/* Submit calculation manager job (input cycle only) */                                   /*CLE024*/
+                                                                                          /*CLE024*/
+/**********  RTVDTAARA  DTAARA(MPHAS (1 1)) RTNVAR(&PHASEOFDAY)                /*CLE024*/ /*CCB020*/
+/**********  CALL PGM(CBC000001) PARM(&MPHAS)                                  /*CCB020  AR1060743*/
+             CALL PGM(CBC001001) PARM(&MPHAS)                                          /*AR1060743*/
+                                                                               /*CLE024*/ /*CCB020*/
+/* Clear DTAQs before starting the calculation manager job on when called */            /*BUG22338*/
+/* during COB                                                             */            /*BUG22338*/
+                                                                                        /*BUG22338*/
+/**********  IF COND(&PHASEOFDAY *NE 'A') THEN(DO)                           /*BUG22338*/ /*CCB020*/
+             IF         COND(&MPHAS *EQ '*YES') THEN(DO)                                  /*CCB020*/
+             CHGVAR     VAR(&DTAQLIB) VALUE(&PREFIX *CAT 'DPLIB')                       /*BUG22338*/
+             CALL       PGM(QCLRDTAQ) PARM('CLECALCMGR' &DTAQLIB)                       /*BUG22338*/
+             CALL       PGM(QCLRDTAQ) PARM('CLELTVMNTR' &DTAQLIB)                       /*BUG22338*/
+             ENDDO                                                                      /*BUG22338*/
+                                                                                        /*BUG22338*/
+/* If input cycle the submit the CALCMGR_xx job */                                        /*CLE024*/
+                                                                                          /*CLE024*/
+/**********  IF         COND(&PHASEOFDAY *EQ 'A') THEN(DO)                     /*CLE024*/ /*CCB020*/
+             IF         COND(&MPHAS *EQ '*NO') THEN(DO)                                   /*CCB020*/
+/**********     SBMJOB     CMD(CALL PGM(GLC005001) PARM(&PREFIX +           */            /*BG1726*/
+/**********                  'calc')) JOB(&JOBNAME) JOBD(*LIBL/MBATCH) +    */            /*BG1726*/
+/**********                  JOBQ(INTERFACE) OUTQ(*JOBD) USER(*JOBD) +      */            /*BG1726*/
+/**********                  LANGID(ENU) CNTRYID(US) CCSID(37)              */ /*CLE024*/ /*BG1726*/
+/**********     SBMJOB     CMD(CALL PGM(GLC005001) PARM(&PREFIX +           */            /*BG3656*/
+/**********                  'calccl')) JOB(&JOBNAME) JOBD(*LIBL/MBATCH) +  */            /*BG3656*/
+/**********                  JOBQ(INTERFACE) OUTQ(*JOBD) USER(*JOBD) +      */            /*BG3656*/
+/**********                  LANGID(ENU) CNTRYID(US) CCSID(37)              */ /*BG1726*/ /*BG3656*/
+/**********  SBMJOB     CMD(CALL PGM(GLC005001) PARM(&PREFIX +                         */ /*CSC043*/
+/**********               'calccl')) JOB(&JOBNAME) +                                   */ /*CSC043*/
+/**********               JOBD(*LIBL/MBATCH) JOBQ(INTERFACE) +                         */ /*CSC043*/
+/**********               OUTQ(*JOBD) USER(&SBMUSER) LANGID(ENU) +                     */ /*CSC043*/
+/**********               CNTRYID(US) CCSID(37)                             */ /*BG3656*/ /*CSC043*/
+             SBMJOB     CMD(CALL PGM(GLC005001) PARM(&PREFIX +
+                          'calccl')) JOB(&JOBNAME) +
+                          JOBD(*LIBL/MBATCH) JOBQ(INTERFACE) +
+                          OUTQ(*JOBD) USER(&SBMUSER) INLLIBL(*JOBD)                       /*CSC043*/
+             ENDDO
+          ENDDO                                                                           /*BG1726*/
+ 
+ LTVMNTR:                                                                                 /*CLE024*/
+/* LTV Monitor processing */
+ 
+/* Check if the LTVMNTR_xx job is running (input cycle and COB) */
+ 
+             IF         COND((&STRMGR *EQ 'ltv       ') +
+                          *OR (&STRMGR *EQ 'ALL')) THEN(DO)                               /*BG1726*/
+             ALCOBJ     OBJ((GLLTVMNLCK *DTAARA *EXCL)) WAIT(0)
+ /*********  MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(END))             */              /*BG1726*/
+ /*********  MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(CALCMANML))       */       /*BG1726 BG3656*/
+             MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(END))                             /*BG3656*/
+ 
+             DLCOBJ     OBJ((GLLTVMNLCK *DTAARA *EXCL))
+ 
+/* Get zone system prefix */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREFIX)
+ 
+/* Build submitted job name */
+ 
+             CHGVAR     VAR(&JOBNAME) VALUE('LTVMNTR_' *CAT &PREFIX)
+ 
+/* Submit LTV monitor job */
+ 
+/**********  SBMJOB     CMD(CALL PGM(GLC005001) PARM(&PREFIX +           */               /*BG3656*/
+/**********               'ltv ')) JOB(&JOBNAME) JOBD(*LIBL/MBATCH) +    */               /*BG3656*/
+/**********               JOBQ(INTERFACE) OUTQ(*JOBD) USER(*JOBD) +      */               /*BG3656*/
+/**********               LANGID(ENU) CNTRYID(US) CCSID(37)              */               /*BG3656*/
+             SBMJOB     CMD(CALL PGM(GLC005001) PARM(&PREFIX +
+                          'ltv ')) JOB(&JOBNAME) JOBD(*LIBL/MBATCH) +
+                          JOBQ(INTERFACE) OUTQ(*JOBD) +
+                          USER(&SBMUSER) LANGID(ENU) CNTRYID(US) +
+                          CCSID(37)                                                       /*BG3656*/
+          ENDDO                                                                           /*BG1726*/
+ 
+/********** CALCMANML:                                                             /*BG1726 BG3656*/
+/**Calculation*Manager*processing */                                               /*BG1726 BG3656*/
+/**********                                                              */        /*BG1726 BG3656*/
+/**Management*Limits Calculation Manager */                                        /*BG1726 BG3656*/
+/**Check*if*the*CALMANML job is running */                                         /*BG1726 BG3656*/
+/**********                                                              */        /*BG1726 BG3656*/
+/**********  ALCOBJ     OBJ((GLMLCALLCK *DTAARA *EXCL)) WAIT(0)          */        /*BG1726 BG3656*/
+/**********  MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(EODMON))         */        /*BG1726 BG3656*/
+/**********                                                              */        /*BG1726 BG3656*/
+/**********  DLCOBJ     OBJ((GLMLCALLCK *DTAARA *EXCL))                  */        /*BG1726 BG3656*/
+/**********                                                              */        /*BG1726 BG3656*/
+/**Build*submitted*job*name */                                                     /*BG1726 BG3656*/
+/**********                                                              */        /*BG1726 BG3656*/
+/**********  CHGVAR     VAR(&JOBNAME) VALUE('CALMANML')                  */        /*BG1726 BG3656*/
+/**********                                                              */        /*BG1726 BG3656*/
+/************SBMJOB     CMD(CALL PGM(GLC005001) PARM(&PREFIX +
+                          'calcml')) JOB(&JOBNAME) +
+                          JOBD(*LIBL/MBATCH) JOBQ(INTERFACE) +
+                          OUTQ(*JOBD) USER(*JOBD) LANGID(ENU) +
+                          CNTRYID(US) CCSID(37)                     *********/     /*BG1726 BG3656*/
+                                                                                   /*BG1726 BG3656*/
+/**********EODMON:                                                          */     /*BG1726 BG3656*/
+/**End*of*Day Monitor processing                                            */     /*BG1726 BG3656*/
+/**********                                                                 */     /*BG1726 BG3656*/
+/**Check*if*the*MLEODMON*job is running                                     */     /*BG1726 BG3656*/
+/**********                                                                 */     /*BG1726 BG3656*/
+/**********  ALCOBJ     OBJ((GLEODMNLCK *DTAARA *EXCL)) WAIT(0)             */     /*BG1726 BG3656*/
+/**********  MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(EMAILER))           */     /*BG1726 BG3656*/
+/**********                                                                 */     /*BG1726 BG3656*/
+/**********  DLCOBJ     OBJ((GLEODMNLCK *DTAARA *EXCL))                     */     /*BG1726 BG3656*/
+/**********                                                                 */     /*BG1726 BG3656*/
+/**Build*submitted*job name                                                 */     /*BG1726 BG3656*/
+/**********                                                                 */     /*BG1726 BG3656*/
+/**********  CHGVAR     VAR(&JOBNAME) VALUE('MLEODMON')                     */     /*BG1726 BG3656*/
+/**********                                                                 */     /*BG1726 BG3656*/
+/**********  SBMJOB     CMD(CALL PGM(GLC005001) PARM(&PREFIX +
+                          'eodmon')) JOB(&JOBNAME) +
+                          JOBD(*LIBL/MBATCH) JOBQ(INTERFACE) +
+                          OUTQ(*JOBD) USER(*JOBD) LANGID(ENU) +
+                          CNTRYID(US) CCSID(37)                     **********/    /*BG1726 BG3656*/
+                                                                                   /*BG1726 BG3656*/
+/**********EMAILER:                                                          */    /*BG1726 BG3656*/
+/**E-Mailer*processing */                                                          /*BG1726 BG3656*/
+/**********                                                                  */    /*BG1726 BG3656*/
+/**Check*if*the*MLEMAILER job is running */                                        /*BG1726 BG3656*/
+/**********                                                                  */    /*BG1726 BG3656*/
+/**********  ALCOBJ     OBJ((GLEMAILLCK *DTAARA *EXCL)) WAIT(0)              */    /*BG1726 BG3656*/
+/**********  MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(END))                */    /*BG1726 BG3656*/
+/**********                                                                  */    /*BG1726 BG3656*/
+/**********  DLCOBJ     OBJ((GLEMAILLCK *DTAARA *EXCL))                      */    /*BG1726 BG3656*/
+/**********                                                                  */    /*BG1726 BG3656*/
+/**Build*submitted job name */                                                     /*BG1726 BG3656*/
+/**********                                                                  */    /*BG1726 BG3656*/
+/**********  CHGVAR     VAR(&JOBNAME) VALUE('MLEMAILER')                     */    /*BG1726 BG3656*/
+                                                                                          /*BG1726*/
+/**********  SBMJOB     CMD(CALL PGM(GLC005001) PARM(&PREFIX +
+                          'email ')) JOB(&JOBNAME) +
+                          JOBD(*LIBL/MBATCH) JOBQ(INTERFACE) +
+                          OUTQ(*JOBD) USER(*JOBD) LANGID(ENU) +
+                          CNTRYID(US) CCSID(37)                            */      /*BG1726 BG3656*/
+                                                                                          /*BG1726*/
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC005000 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+ 
+             ENDPGM

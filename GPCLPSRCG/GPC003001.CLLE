@@ -1,0 +1,62 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GP Set Global journal caching on or off')       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Global Processing Module                            */
+/*                                                                   */
+/*       GPC003001 - Midas GP Set Global journal caching on or off   */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. MD023896 *CREATE   Date 06Dec13              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD023896 - Switching on of Journal Cache for global layer   */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE &PRFX)
+ 
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&PRFX) TYPE(*CHAR) LEN(2)
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2013')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+             IF         COND(&MODE *EQ '*YES' *OR +
+                             &MODE *EQ '*NO ') THEN(DO)
+                CALL       PGM(GP003001) PARM(&MODE &PRFX)
+ 
+                   IF         COND(&MODE *NE '*YES' *AND +
+                                   &MODE *NE '*NO ' *AND +
+                                   &MODE *NE '*IGN') THEN(DO)
+                      GOTO       CMDLBL(ABNOR)
+                   ENDDO
+ 
+/* Set Global journal caching */
+                IF         COND(&MODE *EQ '*YES' *OR +
+                                &MODE *EQ '*NO ') THEN(DO)
+                   CHGJRN     JRN(GPJRN) JRNCACHE(&MODE)
+                ENDDO
+ 
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000)
+             SNDPGMMSG  MSG('Program GPC003001 ended abnormally') +
+                          TOMSGQ(GPOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             ENDPGM

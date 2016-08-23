@@ -1,0 +1,997 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Format Type Translation program')
+      *****************************************************************
+      *                                                               *
+      *  Midas - User Defined Correspondence                          *
+      *                                                               *
+      *  CGZ1700 - Translation of Format Types into Descriptions      *
+      *                                                               *
+      *  Function:  This program returns descriptions from CGFOPTPD   *
+      *             and CGFLNGPD to the calling program. GGFLNGPD is  *
+      *             accessed first by using the language code from    *
+      *             the LDA as part of the key. If no joy, CGFOPTPD   *
+      *             is accessed. If successful a description is       *
+      *             returned in a 256 char parameter accompanied by   *
+      *             the number of meaningful bytes. Since access to   *
+      *             a description maybe required more than once the   *
+      *             number of I/Os to CGFOPTPD and CGFLNGPD shall be  *
+      *             reduced significantly by storing the key info in  *
+      *             an array. The number of accesses requested for    *
+      *             a particular set of key info shall also be stored *
+      *             so that if the cache is full the info with the    *
+      *             least occurrences will be dropped from the array  *
+      *             and replaced by the new info.                     *
+      *                                                               *
+      *  Called By: CG0001  - (program name)                          *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. BUG2330            Date 29Apr04               *
+      *  Prev Amend No. CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 088618             Date 30May95               *
+      *                 086232             Date 06Apr95               *
+      *                 086233             DATE 06APR95               *
+      *                 086234             DATE 06APR95               *
+      *                 086235             DATE 06APR95               *
+      *                 086236             DATE 06APR95               *
+      *                 086237             DATE 27MAR95               *
+      *                 086239             DATE 17MAR95               *
+      *                 086240             DATE 17MAR95               *
+      *                 084698             DATE 14MAR95               *
+      *                 083772             DATE 17FEB95               *
+      *                 S01522             DATE 30NOV94               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+     F*  BUG2330- CG programs looking at wrong dataarea for CSC022    *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *  088618 - Include test for blank program                      *
+      *  086232 - Rewrite alignment to use SUBST etc.                 *
+      *  086233 - Format time if found in date                        *
+      *  086234 - Correct load of table when no option found          *
+      *  086235 - Replace all spaces with fill character              *
+      *  086236 - Return length never greater then input length       *
+      *  086237 - Allow for R1 to R9 and L1 to L9                     *
+      *  086239 - Do not fill if no option found                      *
+      *  086240 - Add extra check for blank program                   *
+      *           Also set up language correctly                      *
+      *  084698 - Distinguish between FF prices and regular amounts.  *
+      *  083772 - Check if numeric                                    *
+      *  S01522 - User Defined Correspondence                         *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Indicator usage                                              *
+      *  ~~~~~~~~~~~~~~~                                              *
+      *                                                               *
+      *  90   -    ROLBK indicator                                    *
+      *                                                               *
+      *  99   -    General work indicator                             *
+      *                                                               *
+      *****************************************************************
+     FCGFOPTL1IF  E           K        DISK         KINFSR SRFILE
+     FCGFLNGL1IF  E           K        DISK         KINFSR SRFILE
+      *
+      **  Copyright array.
+      *
+     E                    CPY@    1   1 80
+     E                    AL1       256  1
+     E                    AL2       256  1
+      *                                                                                       CSC022
+      ** Array to hold commitment jobs name                                                   CSC022
+      *                                                                                       CSC022
+     E                    WCMT       10 10                                                    CSC022
+      /COPY CGCPYSRC,SRERRE
+      /COPY CGCPYSRC,SRFTTE
+     I/SPACE 5
+      *
+     I@FOPTL1
+     I              FOFPGM                          BYFPGM                S01117
+     I              FODESC                          BYDESC                S01117
+     I              FONAR1                          BYNAR1                S01117
+     I              FONAR2                          BYNAR2                S01117
+     I              FONAR3                          BYNAR3                S01117
+     I              FONAR4                          BYNAR4                S01117
+      *                                                                   086234
+     IDFLNG     E DSCGFLNGPD                                              086234
+     I                                       69 324 BYNAR                 086234
+      *                                                                   086234
+      * Include Language file for clear of fields                         086234
+      *                                                                   086234
+      *
+     ICGLDA     E DSCGLDA                                                 S01194
+      *
+     ICPYR        DS
+      **  Data Structure for Compilation - Copyright Insertion
+     I                                        1  80 CPY@
+      *
+      ************  Defined above                                         086234
+     I************DS                                                      086234
+     I************                            1  64 BYNAR1                086234
+     I************                           65 128 BYNAR2                086234
+     I************                          129 192 BYNAR3                086234
+     I************                          193 256 BYNAR4                086234
+     I************                            1 256 BYNAR                 086234
+      *
+      *  Datastructure for LOKUP
+      *
+     I##CKY       DS
+     I                                        1  27 ##CKEY
+     I                                        1  10 ##COPT
+     I                                       11  25 ##CTYP
+     I                                       26  27 ##CLNG
+      *
+      *  Datastructure for finding least popular element in cache
+      *
+     I##ACPY      DS
+     I                                        1   30##CCCR
+     I                                        4  30 ##CCPY
+      *
+     I            DS
+     I                                        1   80##DAT8
+      *
+     IDSFDY     E DSDSFDY                                                                     CSC022
+     IWDSJOB    E DSSCCMTJOB                                                                  CSC022
+     I              COMITNUM                        WCMTNO                                    CSC022
+     I              COMITJOB1                       WJOB01                                    CSC022
+     I              COMITJOB2                       WJOB02                                    CSC022
+     I              COMITJOB3                       WJOB03                                    CSC022
+     I              COMITJOB4                       WJOB04                                    CSC022
+     I              COMITJOB5                       WJOB05                                    CSC022
+     I              COMITJOB6                       WJOB06                                    CSC022
+     I              COMITJOB7                       WJOB07                                    CSC022
+     I              COMITJOB8                       WJOB08                                    CSC022
+     I              COMITJOB9                       WJOB09                                    CSC022
+     I              COMITJOB10                      WJOB10                                    CSC022
+     I                                        4 103 WCJOBS                                    CSC022
+      ** Commitment Control dataarea                                                          CSC022
+      *                                                                                       CSC022
+     I              '*NONE     '          C         ##NONE
+     I              'Character '          C         ##OPTN
+     I              'BRACKETS       '     C         ##TYPE
+     I              '*NARR          '     C         ##NARR
+     I              '*BLANK'              C         ##BLAN
+      * Number without space                                              086237
+     I              '1234567890.,'        C         NUMBER                086237
+      * Number with space                                                 086237
+     I              '1234567890., '       C         NUMBSP                086237
+      *
+     I/COPY CGCPYSRC,SRFTTI
+     I/COPY CGCPYSRC,SRERRI
+     I/COPY CGCPYSRC,SRPGN
+     ISCSARD    E DSSCSARDPD                                                                  CSC022
+      *
+     C/SPACE 5
+      *****************************************************************
+      *                                                               *
+      *   Index to subroutines                                        *
+      *   --------------------                                        *
+      *                                                               *
+      *   *PSSR  - Exception/Error Handling                           *
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Process     :  MAINLINE                                       *
+      * Function    :  Mainline processing                            *
+      *                                                               *
+      * Called by   :  None                                           *
+      *****************************************************************
+      *
+      ** Set up subroutine stack name
+      *
+     C                     Z-ADD1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+     C           *ENTRY    PLIST
+     C                     PARM W@RTCD    P@RTCD  7
+     C                     PARM           #DATAI256
+     C                     PARM           #DATAO256
+     C           #WATAL    PARM           #DATAL  30
+     C                     PARM           #DAOPT 10
+     C                     PARM           #DATYP 15
+     C                     PARM           #DAOP2 10
+     C                     PARM           #DATY2 15
+     C                     PARM           #DAOP3 10
+     C                     PARM           #DATY3 15
+     C                     PARM           #RALGN  3
+     C                     PARM           #DELYP  6
+     C                     PARM           #DFOPT 10
+      *
+     C           ##INIT    IFEQ ' '                        B1
+     C                     EXSR SRINIT                      1
+     C                     MOVE 'Y'       ##INIT  1         1
+     C                     ENDIF                           E1
+      *
+      *  Fetch language code
+      *
+     C                     IN   CGLDA
+     C                     MOVE 'N'       ##ALFG  1
+     C                     MOVEL#@UNT     ##CLNG                          086240
+     C                     MOVEL*BLANKS   W@RTCD                          086240
+      *
+     C           #DATAI    IFEQ *LOVAL                     B1
+     C                     MOVE *BLANKS   #DATAI            1
+     C                     ENDIF                           E1
+      *................................................................
+      *
+      *  Check If Numeric pre formatting required
+      *
+     C           #DELYP    IFEQ '*DEC  '
+      *
+     C                     MOVEL#DATAI    TESTB   1
+      *  Use absence of leading blank as indicating full format
+     C           TESTB     IFEQ *BLANKS
+      *
+     C                     SUBST#DATAI:2  #DATAI    P
+      *
+     C                     ELSE
+      *
+     C                     CLEARNUMDS
+     C                     MOVEL#DATAI    NUMDS
+     C           NUMDCA    IFNE *BLANKS                                   083772
+     C                     CLEAR#DATAI
+      *
+     C           NUMEDT    IFEQ '@'
+      * Date re-format
+     C                     Z-ADDNUMVAL    ##DAT8
+     C                     MOVEL##DAT8    #DATAI    P
+      *                                                                   086233
+      * Format time if found                                              086233
+      *                                                                   086233
+     C                     Z-ADDNUMVAL    ##TIM6  66                      086233
+     C           ##TIM6    IFNE *ZERO                                     086233
+     C                     MOVEL##TIM6    ##TIMA  6                       086233
+     C           #DATAI    CAT  '.':0     #DATAI    P                     086233
+     C           #DATAI    CAT  ##TIMA:0  #DATAI    P                     086233
+     C                     ENDIF                                          086233
+      *                                                                   086233
+      *
+     C                     ELSE
+      * Or Numeric
+      *                                                                ...
+     C                     DO   NUMDEC
+     C                     MULT 10        NUMVAL
+     C                     END
+      *                                                                ...
+     C                     Z-ADDNUMVAL    ZFLD15
+     C                     Z-ADDNUMDEC    ZDECS
+     C           NUMEDT    IFEQ 'T'                                       084698
+     C                     MOVEL'L'       ZECODE                          084698
+     C                     ELSE                                           084698
+     C                     MOVE NUMEDT    ZECODE
+     C                     ENDIF                                          084698
+      *                                                                ...
+      **  Amount Processing
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15 150
+     C                     PARM           ZDECS   10
+     C                     PARM           ZECODE  1
+     C                     PARM           ZOUT21 21
+      *
+      **  If amount is in ticks, translate decimal point to 'T'           084698
+      **   - a formatting option should be used to convert the 'T'        084698
+      **     to a '-' in the final output, if the RDE is type 'Price'     084698
+     C           NUMEDT    IFEQ 'T'                                       084698
+     C           '.':'T'   XLATEZOUT21    #WK21  21                       084698
+     C                     MOVEL#WK21     ZOUT21                          084698
+     C                     ENDIF                                          084698
+      *
+     C                     MOVELZOUT21    #DATAI    P
+      *
+     C                     END
+     C                     ENDIF                                          083772
+      *
+     C                     END
+      *
+     C                     END
+      *
+      *................................................................
+      *
+      *  Check If information held in array
+      *
+     C                     DO   3         L0               B1
+      *
+     C           L0        IFEQ 1                          B2
+     C                     MOVE #DAOPT    ##COPT            2
+     C                     MOVE #DATYP    ##CTYP            2
+     C                     ENDIF                           E2
+      *
+     C           L0        IFEQ 2                          B2
+     C                     MOVE #DAOP2    ##COPT            2
+     C                     MOVE #DATY2    ##CTYP            2
+      *
+     C           #DATYP    IFNE *BLANKS                    B3
+      ***********#DATY2    ANDEQ*BLANKS                     3
+     C           #DATY2    ANDEQ##NARR                      3
+     C                     MOVEL#DATAO    ##CTYP            3
+     C                     ENDIF                           E3
+      *
+     C           #DATYP    IFEQ *BLANKS                    B3
+      ***********#DATY2    ANDEQ*BLANKS                     3
+     C           #DATY2    ANDEQ##NARR                      3
+     C                     MOVEL#DATAI    ##CTYP            3
+     C                     ENDIF                           E3
+     C                     ENDIF                           E2
+      *
+     C           L0        IFEQ 3                          B2
+     C                     MOVE #DAOP3    ##COPT            2
+     C                     MOVE #DATY3    ##CTYP            2
+     C                     ENDIF                           E2
+      *
+     C           ##COPT    IFNE *BLANKS                    B2
+     C           ##CTYP    ORNE *BLANKS                     2
+     C                     Z-ADD1         L1                2
+     C           ##CKEY    LOKUP##C,L1                   70 2
+     C           *IN70     IFEQ *ON                        B3
+     C           L1        OCUR ##CDS                       3
+     C                     ADD  1         ##OCCR            3
+      *
+     C           L0        IFEQ 2                          B4
+     C           ##FPGM    ANDEQ##NONE                      4
+     C           L0        OREQ 2                          B4             088618
+     C           ##FPGM    ANDEQ*BLANKS                     4             088618
+     C                     MOVE ##CDES    #DATAO            4
+     C                     ENDIF                           E4
+      *
+     C           ##FPGM    IFNE ##NONE                     B4
+     C           ##FPGM    ANDNE*BLANKS                     4
+      *
+     C           ##COPT    IFEQ ##OPTN                     B5
+     C           ##CTYP    ANDEQ##TYPE                      5
+     C                     MOVE #DATAI    #DATAO            5
+     C                     EXSR SRALGN                      5
+     C                     MOVE #DATAO    #DATAI            5
+     C                     ENDIF                           E5
+      *
+     C                     CALL ##FPGM    PLFOPT       9090 4
+     C           *IN90     IFEQ *ON                        B5
+     C                     MOVEL##FPGM    W0FILE            5
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD801       W0ERNB           * DB ERROR 801*
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF            5
+     C                     EXSR SRERR                       5
+     C                     ENDIF                           E5
+      *
+     C           P@RTCD    IFNE *BLANKS                    B5
+     C                     MOVE #DATAI    #DATAO            5
+     C                     MOVE P@RTCD    W@RTCD            5
+     C                     ENDIF                           E5
+      *
+     C                     ENDIF                           E4
+      *
+     C                     ENDIF                           E3
+      *
+      *  If not held in arrays access files
+      *
+     C           *IN70     IFEQ *OFF                       B3
+     C                     EXSR SRFILA                      3
+     C           ##FPGM    IFNE ##NONE                     B4
+     C           ##FPGM    ANDNE*BLANKS                     4
+      *
+     C           ##COPT    IFEQ ##OPTN                     B5
+     C           ##CTYP    ANDEQ##TYPE                      5
+     C                     MOVE #DATAI    #DATAO            5
+     C                     EXSR SRALGN                      5
+     C                     MOVE #DATAO    #DATAI            5
+     C                     ENDIF                           E5
+      *
+     C                     CALL ##FPGM    PLFOPT       9090 4
+     C           *IN90     IFEQ *ON                        B5
+     C                     MOVEL##FPGM    W0FILE            5
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD802       W0ERNB           * DB ERROR 802*
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF            5
+     C                     EXSR SRERR                       5
+     C                     ENDIF                           E5
+      *
+     C           P@RTCD    IFNE *BLANKS                    B5
+     C                     MOVE #DATAI    #DATAO            5
+     C                     MOVE P@RTCD    W@RTCD            5
+     C                     ENDIF                           E5
+      *
+     C                     ENDIF                           E4
+      *
+     C                     ENDIF                           E3
+      *
+     C           #DATAO    IFNE *BLANKS                    B3
+     C                     MOVEL#DATAO    #DATAI            3
+     C                     ENDIF                           E3
+      *
+     C                     ENDIF                           E2
+      *
+     C           L0        IFEQ 3                          B2
+      * Blanks are a possible code resultant value
+     C                     SELEC
+     C           #DATAO    WHEQ ##BLAN                     B3
+     C                     CLEAR#DATAO                      3
+     C           #DATAO    WHEQ *BLANKS                    B3
+     C                     MOVEL#DATAI    #DATAO            3
+     C                     ENDSL                           E3
+      *
+     C           #DATAO    IFNE *BLANKS                    B3
+     C           ' '       CHEKR#DATAO    #DATAL            3
+      *                                                                   086236
+      *  Return length never greater than input length                    086236
+      *                                                                   086236
+     C           #DATAL    IFGT #WATAL                                    086236
+     C           #WATAL    ANDGT*ZERO                                     086236
+     C                     Z-ADD#WATAL    #DATAL                          086236
+     C                     ENDIF                                          086236
+      *                                                                   086236
+     C           ##ALFG    IFNE 'Y'                        B4
+     C                     EXSR SRALGN                      4
+     C                     ENDIF                           E4
+     C                     ENDIF                           E3
+     C                     ENDIF                           E2
+      *
+     C                     ENDDO                           E1
+      *
+      *................................................................
+      *
+      **  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     RETRN
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRALGN                                         *
+      * Function    :  To Left align or centre data                   *
+      *                                                               *
+      * Called by   :  MAIN                                           *
+      *                SRERR  - Database Error                        *
+      *****************************************************************
+     C           SRALGN    BEGSR
+      *
+      **  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRALGN'  @STK,Q
+      ***********                                                         086232
+      *********** Remove old coding                                       086232
+      ***********                                                         086232
+      ***********                                                   086237086232
+      **Initialise variables                                        086237086232
+      ***********                                                   086237086232
+     C***********          Z-ADD0         B4                        086237086232
+     C***********          Z-ADD0         B5                        086237086232
+     C***********          Z-ADD0         B6                        086237086232
+     C***********' '       CHECK#DATAO    B5                        086237086232
+     C***********' '       CHEKR#DATAO    B4                              086232
+      ***********                                                   086237086232
+      **Set*up*Right, Left and Centre                               086237086232
+      ***********                                                   086237086232
+     C***********          MOVEL#RALGN    ##ALGN  1                 086237086232
+      ***********                                                   086237086232
+     C***********##ALGN    IFEQ 'L'                        B1       086237086232
+     C***********##ALGN    OREQ 'C'                         1       086237086232
+     C***********##ALGN    OREQ 'R'                         1       086237086232
+      ***********                                                   086237086232
+      **Get*first non-blank                                         086237086232
+      ***********                                                   086237086232
+     C***********' '       CHECK#DATAO    B3                1       086237086232
+     C***********B3        SUB  1         B2                1       086237086232
+      ***********                                                   086237086232
+      **Get*first numeric and last numeric if offset specified      086237086232
+      ***********                                                   086237086232
+     C***********1         SUBST#RALGN:2  ##INDT  1                 086237086232
+      ***********                                                   086237086232
+     C***********          Z-ADD0         ##INDN  10                086237086232
+     C***********##INDT    IFGE '1'                                 086237086232
+     C***********##INDT    ANDLE'9'                                 086237086232
+     C***********          MOVEL##INDT    ##INDN                    086237086232
+     C************LIKE     DEFN B1        B5                        086237086232
+     C************LIKE     DEFN B1        B6                        086237086232
+      ***********                                                   086237086232
+     C***********NUMBSP    CHECK#DATAO:1  B5             91         086237086232
+      ***********                                                   086237086232
+      **If*no*invalids then set first character to B3               086237086232
+      ***********                                                   086237086232
+     C***********B5        IFGT B3                                  086237086232
+     C************IN91     OREQ *OFF                                086237086232
+     C***********          Z-ADDB3        B5                        086237086232
+     C***********          ENDIF                                    086237086232
+      ***********                                                   086237086232
+     C***********NUMBER    CHECK#DATAO:B5 B6                        086237086232
+     C***********          SUB  1         B6                        086237086232
+      ***********                                                   086237086232
+     C***********          ELSE                                     086237086232
+     C***********          Z-ADDB4        B6                        086237086232
+     C***********          ENDIF                                    086237086232
+      ***********                                                   086237086232
+      **If*Left*then set first element to fill as 0                 086237086232
+      ***********                                                   086237086232
+     C***********##ALGN    IFEQ 'L'                        B2       086237086232
+     C***********          Z-ADD0         B1                2       086237086232
+      ***********                                                   086237086232
+      **If*numeric indent required then calculate                   086237086232
+      ***********                                                   086237086232
+     C***********##INDN    IFGT 0                          B3       086237086232
+     C***********##INDN    SUB  B5        B1                3       086237086232
+     C***********          ADD  B3        B1                3       086237086232
+      ***********                                                   086237086232
+      **Zero*if*adjustment negative                                 086237086232
+      ***********                                                   086237086232
+     C***********B1        IFLT 0                          B4       086237086232
+     C***********          Z-ADD0         B1                4       086237086232
+     C***********          ENDIF                           E4       086237086232
+     C***********          ENDIF                           E3       086237086232
+     C***********          ENDIF                           E2       086237086232
+      ***********                                                   086237086232
+      **If*Center then calculate centre and then adjust             086237086232
+      ***********                                                   086237086232
+     C***********##ALGN    IFEQ 'C'                        B2       086237086232
+     C***********#WATAL    SUB  B4        B1                2       086237086232
+     C***********          ADD  B2        B1                2       086237086232
+     C***********          DIV  2         B1                2       086237086232
+     C***********          ENDIF                           E2       086237086232
+      ***********                                                   086237086232
+      **If*Right*calculate number of blanks before                  086237086232
+      ***********                                                   086237086232
+     C***********##ALGN    IFEQ 'R'                        B2       086237086232
+     C***********#WATAL    SUB  B4        B1                2       086237086232
+     C***********          Z-ADD1         B3                2       086237086232
+      ***********                                                   086237086232
+      **If*numeric indent required then calculate                   086237086232
+      ***********                                                   086237086232
+     C***********##INDN    IFGT 0                          B3       086237086232
+     C***********##INDN    SUB  B4        ##005N  50        3       086237086232
+     C***********          ADD  B6        ##005N            3       086237086232
+     C***********B1        SUB  ##005N    ##005N            3       086237086232
+      ***********                                                   086237086232
+      **Zero*if*adjustment is not negative use                      086237086232
+      ***********                                                   086237086232
+     C***********##005N    IFGT 0                          B4       086237086232
+     C***********          Z-ADD##005N    B1                4       086237086232
+     C***********          ENDIF                           E4       086237086232
+     C***********          ENDIF                           E3       086237086232
+     C***********          ENDIF                           E2       086237086232
+      ***********                                                         086232
+      *                                                                   086237
+     C***********#RALGN    IFEQ 'L  '                      B1             086237
+     C***********#RALGN    OREQ 'C  '                       1             086237
+     C***********#RALGN    OREQ 'R  '                       1             086237
+     C***********' '       CHECK#DATAO    B3                1             086237
+     C***********B3        SUB  1         B2                1             086237
+     C***********#RALGN    IFEQ 'L  '                      B2             086237
+     C***********          Z-ADD0         B1                2             086237
+     C***********          ENDIF                           E2             086237
+     C***********#RALGN    IFEQ 'C  '                      B2             086237
+     C***********#WATAL    SUB  B4        B1                2             086237
+     C***********          ADD  B2        B1                2             086237
+     C***********          DIV  2         B1                2             086237
+     C***********          ENDIF                           E2             086237
+     C***********#RALGN    IFEQ 'R  '                      B2             086237
+     C***********#WATAL    SUB  B4        B1                2             086237
+     C***********          Z-ADD1         B3                2             086237
+     C***********          ENDIF                           E2             086237
+      ***********                                                         086232
+      *********** Remove old alignment code                               086232
+      ***********                                                         086232
+     C***********          MOVEA#DATAO    AL1               1             086232
+     C***********          MOVEA*BLANKS   AL2               1             086232
+     C***********          DO   #WATAL    B0               B2             086232
+     C***********B1        IFGT 0                          B3             086232
+     C***********          MOVE ' '       AL2,B0            3             086232
+     C***********          SUB  1         B1                3             086232
+     C***********          ELSE                            X3             086232
+     C***********          MOVE AL1,B3    AL2,B0            3             086232
+     C***********          ADD  1         B3                3             086232
+     C***********          ENDIF                           E3             086232
+     C***********          ENDDO                           E2             086232
+     C***********          MOVEAAL2       #DATAO            1             086232
+      *                                                                   086232
+      * New Aligment Code                                                 086232
+      *                                                                   086232
+     C                     Z-ADD0         B1                              086232
+     C                     Z-ADD0         B2                              086232
+     C                     Z-ADD0         B3                              086232
+     C                     Z-ADD0         B4                              086232
+     C                     Z-ADD0         B5      50                      086232
+     C                     Z-ADD0         B6      50                      086232
+     C                     Z-ADD0         B7      50                      086232
+     C                     Z-ADD0         B8      50                      086232
+      *                                                                   086232
+      * Get first (B1)and last (B2) character                             086232
+      *                                                                   086232
+     C           ' '       CHECK#DATAO    B1                              086232
+     C           ' '       CHEKR#DATAO    B2                              086232
+      *                                                                   086232
+      * Calculate total length (B3 & B4)                                  086232
+      *                                                                   086232
+     C           B2        SUB  B1        B3                              086232
+     C                     ADD  1         B3                              086232
+     C                     Z-ADDB3        B4                              086232
+     C           B3        IFGT #WATAL                                    086232
+     C                     Z-ADD#WATAL    B3                              086232
+     C                     ENDIF                                          086232
+      *                                                                   086232
+      * Extract Alignment Type                                            086232
+      *                                                                   086232
+     C                     MOVEL#RALGN    ##ALGN  1                       086232
+      *                                                                   086232
+      * Format depending on alignment                                     086232
+      *                                                                   086232
+     C                     SELEC                                          086232
+      *                                                                   086232
+      * Align Left                                                        086232
+      *                                                                   086232
+     C           ##ALGN    WHEQ 'L'                                       086232
+     C           B3        SUBST#DATAO:B1 #DATAO    P                     086232
+      *                                                                   086232
+      * Align Right                                                       086232
+      *                                                                   086232
+     C           ##ALGN    WHEQ 'R'                                       086232
+      *                                                                   086232
+      * If more text than can fit take the last set of characters         086232
+      *                                                                   086232
+     C           B4        IFGT #WATAL                                    086232
+     C           B4        SUB  #WATAL    B5                              086232
+     C                     ADD  1         B5                              086232
+     C           #WATAL    SUBST#DATAO:B5 #DATAO    P                     086232
+     C                     ENDIF                                          086232
+      *                                                                   086232
+      * If less text than can fit move over to the rignt                  086232
+      *                                                                   086232
+      * Left align then move to the right                                 086232
+      *                                                                   086232
+     C           B4        IFLT #WATAL                                    086232
+     C           B3        SUBST#DATAO:B1 #DATAO    P                     086232
+     C                     MOVEA*BLANKS   AL1                             086232
+     C           #WATAL    SUB  B4        B5                              086232
+     C                     ADD  1         B5                              086232
+     C                     MOVEA#DATAO    AL1,B5                          086232
+     C                     MOVEAAL1       #DATAO    P                     086232
+     C                     ENDIF                                          086232
+      *                                                                   086232
+      * Centre Text                                                       086232
+      *                                                                   086232
+      *  Calculate offset, left align and then move right                 086232
+      *                                                                   086232
+     C           ##ALGN    WHEQ 'C'                                       086232
+      * Offset                                                            086232
+     C           B4        DIV  2         B5                              086232
+     C           #WATAL    DIV  2         B6                              086232
+     C                     MVR            B8                              086232
+     C           B6        SUB  B5        B7                              086232
+     C                     ADD  1         B7                              086232
+     C                     SELEC                                          086232
+      * Greater than zero then move right                                 086232
+     C           B7        WHGT 0                                         086232
+     C           B3        SUBST#DATAO:B1 #DATAO    P                     086232
+     C                     MOVEA*BLANKS   AL1                             086232
+     C                     MOVEA#DATAO    AL1,B7                          086232
+     C                     MOVEAAL1       #DATAO    P                     086232
+      * Less than zero then substring                                     086232
+     C           B7        WHLT 0                                         086232
+     C                     Z-SUBB7        B7                              086232
+     C           #WATAL    SUBST#DATAO:B7 #DATAO    P                     086232
+      * Extract length                                                    086232
+     C                     OTHER                                          086232
+     C           B3        SUBST#DATAO:B1 #DATAO    P                     086232
+     C                     ENDSL                                          086232
+     C                     ENDSL                                          086232
+      *                                                                   086232
+      * Check if Indenting required, only for left an right               086232
+      *                                                                   086232
+     C           ##ALGN    IFEQ 'R'                                       086232
+     C           ##ALGN    OREQ 'L'                                       086232
+     C           1         SUBST#RALGN:2  ##INDT  1                       086232
+      *                                                                   086232
+     C                     Z-ADD0         ##INDN  10                      086232
+     C           ##INDT    IFGE '1'                                       086232
+     C           ##INDT    ANDLE'9'                                       086232
+     C                     MOVEL##INDT    ##INDN                          086232
+     C                     ENDIF                                          086232
+      *                                                                   086232
+      * Process indent for Right justify                                  086232
+      *                                                                   086232
+     C                     SELEC                                          086232
+     C           ##ALGN    WHEQ 'R'                                       086232
+     C           NUMBSP    CHECK#DATAO:1  B5             91               086232
+      *                                                                   086232
+      * If no invalids set to indent plus 1 else calculate                086232
+      *                                                                   086232
+     C           *IN91     IFEQ *OFF                                      086232
+     C           ##INDN    ADD  1         B6                              086232
+     C                     ELSE                                           086232
+     C           #WATAL    SUB  B5        B5                              086232
+     C                     ADD  1         B5                              086232
+     C           ##INDN    SUB  B5        B6                              086232
+     C                     ADD  1         B6                              086232
+     C                     ENDIF                                          086232
+      *                                                                   086232
+      * If number to move greater than 1 move                             086232
+      *                                                                   086232
+     C           B6        IFGT 1                                         086232
+     C           #WATAL    SUBST#DATAO:B6 #DATAO    P                     086232
+     C                     ENDIF                                          086232
+      *                                                                   086232
+      * Align Left                                                        086232
+      *                                                                   086232
+     C           ##ALGN    WHEQ 'L'                                       086232
+     C           NUMBSP    CHEKR#DATAO:1  B5             91               086232
+      *                                                                   086232
+      * If no invalids set to indent plus 1 else calculate                086232
+      *                                                                   086232
+     C           *IN91     IFEQ *OFF                                      086232
+     C           ##INDN    ADD  1         B6                              086232
+     C                     ELSE                                           086232
+     C           ##INDN    SUB  B5        B6                              086232
+     C                     ADD  1         B6                              086232
+     C                     ENDIF                                          086232
+      *                                                                   086232
+      * If number to move greater than 1 move                             086232
+      *                                                                   086232
+     C           B6        IFGT 1                                         086232
+     C                     MOVEA*BLANKS   AL1                             086232
+     C                     MOVEA#DATAO    AL1,B6                          086232
+     C                     MOVEAAL1       #DATAO    P                     086232
+     C                     ENDIF                                          086232
+     C                     ENDSL                                          086232
+     C                     ENDIF                                          086232
+      *                                                                   086232
+      * Find final length                                                 086232
+      *                                                                   086232
+     C           ' '       CHEKR#DATAO    #DATAL            1
+      *                                                                   086236
+      *  Return length never greater than input length                    086236
+      *                                                                   086236
+     C           #DATAL    IFGT #WATAL                                    086236
+     C           #WATAL    ANDGT*ZERO                                     086236
+     C                     Z-ADD#WATAL    #DATAL                          086236
+     C                     ENDIF                                          086236
+      *                                                                   086236
+     C***********          ENDIF                           E1             086232
+      *                                                                   086235
+      * Check if fill character specified                                 086235
+      *                                                                   086235
+     C                     MOVE #RALGN    ##FILC  1                       086235
+     C           ##FILC    IFNE *BLANKS                                   086235
+     C           ' ':##FILCXLATE#DATAO    #DATAO                          086235
+     C           #WATAL    ADD  1         X       50                      086235
+     C           X         SUBST#DATAO:1  #DATAO    P                     086235
+     C                     ENDIF                                          086235
+      *
+     C                     MOVE 'Y'       ##ALFG
+      *
+      *................................................................
+      *
+     C           EXALGN    TAG
+      *
+      **  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRFILA                                         *
+      * Function    :  First Check for multilanguage. If not          *
+      *                successful go for default.                     *
+      *                                                               *
+      * Called by   :  MAIN                                           *
+      *                SRERR  - Database Error                        *
+      *****************************************************************
+     C           SRFILA    BEGSR
+      *
+      **  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRFILA'  @STK,Q
+      *
+      *................................................................
+      *
+     C           CGFLNG    CHAINCGFLNGL1             70
+     C           *IN70     IFEQ *ON                        B1
+     C           CGFOPT    CHAINCGFOPTL1             70     1
+     C                     ENDIF                           E1
+      *                                                                   086239
+      * If no option found set formatting to *NONE                        086239
+      *                                                                   086239
+     C           *IN70     IFEQ '1'                        B1             086239
+     C***********          MOVEL'*NONE'   ##FPGM    P       1       086239086239
+     C***********          CLEAR@FOPTL1                     1       086239086234
+      *                                                                   086234
+      * Clear CGFLNG as no information                                    086234
+      *                                                                   086234
+     C                     CLEARDFLNG                                     086234
+      *                                                                   086234
+     C                     ENDIF                           E1             086239
+      *
+     C           L2        IFEQ ##ASIZ                     B1
+     C           ##FULL    OREQ 'Y'                         1
+     C                     MOVE 'Y'       ##FULL  1         1
+      *
+      *   If cache full get rid of the least popular element
+      *
+     C                     DO   ##ASIZ    L1               B2
+     C           L1        OCUR ##CDS                       2
+     C                     MOVE ##C,L1    ##CCPY            2
+     C                     Z-ADD##OCCR    ##CCCR            2
+     C                     MOVE ##ACPY    ##X,L1            2
+     C                     ENDDO                           E2
+     C                     SORTA##X                         1
+      *
+      *   drop least popular
+      *
+     C                     MOVEL##X,1     ##ACPY            1
+     C                     Z-ADD1         L1                1
+     C           ##CCPY    LOKUP##C,L1                   71 1
+     C                     MOVE ##CKEY    ##C,L1            1
+     C                     Z-ADDL1        L2                1
+     C                     MOVEL##X,##ASIZ##ACPY            1
+     C                     ELSE                            X1
+     C                     ADD  1         L2                1
+     C                     MOVE ##CKEY    ##C,L2            1
+     C                     Z-ADD0         ##CCCR            1
+     C                     ENDIF                           E1
+      *
+     C           L2        OCUR ##CDS
+     C           ##CCCR    ADD  1         ##OCCR
+      *
+      *   If no record on option or language file
+      *
+     C           *IN70     IFEQ *ON                        B1
+     C                     MOVE *BLANKS   ##FPGM            1
+     C                     ELSE                            X1
+     C                     MOVE BYFPGM    ##FPGM            1
+     C                     ENDIF                           E1
+      *
+      *   If code and no program to be called
+      *
+     C           L0        IFEQ 2                          B1
+     C           ##FPGM    ANDEQ##NONE                      1
+     C           L0        OREQ 2                          B1             086240
+     C           ##FPGM    ANDEQ*BLANKS                     1             086240
+DJU  C*                    MOVELBYDESC    ##CDES            1
+DJU  C                     MOVELBYNAR     ##CDES    P       1
+     C                     MOVEL##CDES    #DATAO            1
+     C                     ENDIF                           E1
+      *
+      *................................................................
+      *
+     C           EXFILA    TAG
+      *
+      **  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRINIT                                         *
+      * Function    :  Initial processing -                           *
+      *                                                               *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      **  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Define Fields and Key Lists
+      *
+     C           PLFOPT    PLIST
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM           #DATAI256
+     C                     PARM           #DATAO256
+     C                     PARM #WATAL    #DATAL  30
+     C                     PARM ##COPT    #DAOPT 10
+     C                     PARM ##CTYP    #DATYP 15
+      *
+      *   Key list to access CGFLNGL1
+      *
+     C           CGFLNG    KLIST
+     C                     KFLD           ##COPT
+     C                     KFLD           ##CTYP
+     C                     KFLD           #@UNT
+      *
+      *   Key list to access CGFOPTL1
+      *
+     C           CGFOPT    KLIST
+     C                     KFLD           ##COPT
+     C                     KFLD           ##CTYP
+      *
+     C           *NAMVAR   DEFN *LDA      CGLDA
+      *
+     C           *LIKE     DEFN ##ASIZ    L0
+     C           *LIKE     DEFN ##ASIZ    L1
+     C           *LIKE     DEFN ##ASIZ    L2
+     C           *LIKE     DEFN P@RTCD    W@RTCD
+     C           *LIKE     DEFN #DATAL    #WATAL
+     C           *LIKE     DEFN #DATAL    B0
+     C           *LIKE     DEFN #DATAL    B1
+     C           *LIKE     DEFN #DATAL    B2
+     C           *LIKE     DEFN #DATAL    B3
+     C           *LIKE     DEFN #DATAL    B4
+     C                     MOVE *HIVAL    ##X
+     C                     DO   ##ASIZ    L1               B1
+     C           L1        OCUR ##CDS                       1
+     C                     MOVE *BLANKS   ##FPGM            1
+     C                     MOVE *BLANKS   ##CDES            1
+     C                     Z-ADD0         ##OCCR            1
+     C                     ENDDO                           E1
+     C                     Z-ADD0         L1
+      *
+      **  Copyright
+      *
+     C                     MOVEACPY@      ACT@   80
+      *
+      *................................................................
+      *
+     C           EXINIT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *                                                                                       CSC022
+      ** Access SAR details file to determine if CSC022 switchable feature                    CSC022
+      ** is switched on                                                                       CSC022
+      *                                                                                       CSC022
+     C                     MOVE 'N'       CSC022  1                                           CSC022
+     C                     MOVE 'N'       WCMTSK  1                                           CSC022
+      *                                                                                       CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   PRTCD   7                                           CSC022
+     C                     PARM '*VERIFY' POPTN   7                                           CSC022
+     C                     PARM 'CSC022'  PSARD   6                                           CSC022
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSC022
+      *                                                                                       CSC022
+     C           PRTCD     IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022                                              CSC022
+     C                     MOVE 'N'       WCMTSK                                              CSC022
+      *                                                                                       CSC022
+     C                     IN   WDSJOB                                                        CSC022
+      *                                                                                       CSC022
+     C           WCMTNO    IFGT 0                                                             CSC022
+     C                     MOVEAWCJOBS    WCMT                                                CSC022
+     C                     Z-ADD1         I       20                                          CSC022
+      *                                                                                       CSC022
+     C           ##JOB     LOKUPWCMT,I                   51                                   CSC022
+     C           *IN51     IFEQ *ON                                                           CSC022
+     C                     MOVE 'Y'       WCMTSK                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+      *                                                                                       CSC022
+     C                     ELSE                                                               CSC022
+     C           PRTCD     IFNE '*NRF'                                                        CSC022
+     C                     MOVEL'CSC022'  W0KEY                                               CSC022
+     C                     MOVEL'SCSARDPD'W0FILE                                              CSC022
+     C                     Z-ADD21        W0ERNB                                              CSC022
+     C                     EXSR SRERR                                                         CSC022
+     C                     ENDIF                                                              CSC022
+      *                                                                                       CSC022
+     C************NAMVAR   DEFN           WDSJOB                                       CSC022BUG2330
+     C           *NAMVAR   DEFN SCCMTJOB  WDSJOB                                             BUG2330
+      *                                                                                       CSC022
+     C                     ENDIF                                                              CSC022
+      *                                                                                       CSC022
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+     C/COPY CGCPYSRC,SRERRPSSR
+     C/SPACE 5
+     C/COPY CGCPYSRC,SRERRC
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

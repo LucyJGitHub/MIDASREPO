@@ -1,0 +1,349 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas BU Limit Types BackGnd Upd')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas  STANDING DATA MODULE
+     F*                                                                  *
+     F*     TABLETS - BACKGROUND UPDATE OF TABLETS FILE                  *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*     LAST AMEND NO. S01230             DATE 07/11/89              *S01230
+     F*     PREV AMEND NO. S01229             DATE 20/10/89              *S01230
+     F*                    E17596             DATE 20/03/89              *
+     F*                                                                  *
+     F********************************************************************
+     F*     S01230  - STANDARDISE PROGRAMS                               *S01230
+     F*     S01229  - SYNON FIELD NAME CHANGES                           *S01229
+     F*     E17596  - RECOMPILED FOR NEW VERSION OF TABLETXL             *
+     F********************************************************************S01230
+     F*                                                                  *
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                          *
+     F*                                                                  *
+     F*       30      CHAIN TABLETS FAILED/ERROR                         *
+     F*       31      ERROR ON TABLETS FILE                              *
+     F*       32      CHAIN TABLETX FAILED/ERROR                         *
+     F*                                                                  *
+     F********************************************************************
+     FTABLETS UF  E           K        DISK                      A
+     F                                              KCOMIT
+     FTABLETA UF  E           K        DISK
+     F                                              KCOMIT
+     FTABLETXLUF  E           K        DISK
+     F                                              KCOMIT
+      /EJECT                                                              S01230
+     E* Description     : Copyright notice for inclusion in all progra    S01230
+     E*                                                                   S01230
+     E********************************************************************S01230
+     E                    CPY@    1   1 80               Copyright     arrS01230
+     E********************************************************************S01230
+      /EJECT
+     I*
+     I* RENAME RECORD ID ON HEADER FILE TO AVOID OVERWRITING
+     I*
+     ITABLETAF
+     I              RECT                            RECTA
+     I* DATA STRUCTURES
+     I            DS
+      ** RE-DEFINE ZONED VERSION OF ENDS OF PERIOD
+     I                                        1   30LEP2Z
+     I                                        4   60LEP3Z
+     I                                        7   90LEP4Z
+     I                                       10  120LEP5Z
+     I                                       13  150LEP6Z
+     I*                                                                   S01230
+     I* Description     : Copyright notice for inclusion in all programs  S01230
+     I*                                                                   S01230
+     IA@CPY       DS                                                      S01230
+     I* Copyright array                                                   S01230
+     I                                        1  80 CPY@                  S01230
+     I*                                                                   S01230
+      /EJECT
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7        RETURN CODE
+     C*********************PARM           WLMTP   3        LIMIT TYPE     S01229
+     C                     PARM           WLMTY   3        LIMIT TYPE     S01229
+     C*********************PARM           WLEP1   3        END OF FIRST LPS01229
+     C                     PARM           WE1LP   3        END OF FIRST LPS01229
+     C*********************PARM           WLEP2   30       END OF SECOND  S01229
+     C                     PARM           WE2LP   30       END OF SECOND  S01229
+     C*********************PARM           WLEP3   30       END OF THIRD LPS01229
+     C                     PARM           WE3LP   30       END OF THIRD LPS01229
+     C*********************PARM           WLEP4   30       END OF FOURTH  S01229
+     C                     PARM           WE4LP   30       END OF FOURTH  S01229
+     C*********************PARM           WLEP5   30       END OF FIFTH LPS01229
+     C                     PARM           WE5LP   30       END OF FIFTH LPS01229
+     C*********************PARM           WLEP6   30       END OF SIXTH LPS01229
+     C                     PARM           WE6LP   30       END OF SIXTH LPS01229
+     C*********************PARM           WLPC1   30       % FOR FIRST PERS01229
+     C                     PARM           WPL1P   30       % FOR FIRST PERS01229
+     C*********************PARM           WLPC2   30       % FOR SECOND   S01229
+     C                     PARM           WPL2P   30       % FOR SECOND   S01229
+     C*********************PARM           WLPC3   30       % FOR THIRD PERS01229
+     C                     PARM           WPL3P   30       % FOR THIRD PERS01229
+     C*********************PARM           WLPC4   30       % FOR FOURTH   S01229
+     C                     PARM           WPL4P   30       % FOR FOURTH   S01229
+     C*********************PARM           WLPC5   30       % FOR FIFTH PERS01229
+     C                     PARM           WPL5P   30       % FOR FIFTH PERS01229
+     C*********************PARM           WLPC6   30       % FOR SIXTH PERS01229
+     C                     PARM           WPL6P   30       % FOR SIXTH PERS01229
+     C*********************PARM           WCHTP   1        LAST CHANGE TYPS01229
+     C                     PARM           WTYLC   1        LAST CHANGE TYPS01229
+     C                     PARM           WLCD    50       LAST CHANGE DATE
+     C           *LIKE     DEFN LMTP      KLMTP            KEY TO FILE
+     C*
+      /EJECT
+     C****************************************************************
+     C*
+     C*   M A I N L I N E   P R O G R A M
+     C*
+     C****************************************************************
+     C*
+     C* IF RECORD HAS BEEN INSERTED, CHAIN TO TABLETS TO CHECK THAT
+     C* RECORD DOES NOT ALREADY EXIST ON THIS FILE
+     C*
+     C***********WCHTP     IFEQ 'I'                                       S01229
+     C           WTYLC     IFEQ 'I'                                       S01229
+     C*********************MOVE WLMTP     KLMTP                           S01229
+     C                     MOVE WLMTY     KLMTP                           S01229
+     C           KLMTP     CHAINTABLETS              30    CHAIN FAILED
+     C*
+     C* IF RECORD DOES NOT EXIST
+     C* THEN MOVE PARAMETERS RECEIVED INTO FILE FIELDS AND WRITE
+     C* A NEW RECORD
+     C*
+     C           *IN30     IFEQ '1'
+     C*
+     C* IF IT DOES EXIST AS DELETED(RECI *)
+     C* THEN MOVE PARAMETERS RECEIVED INTO FILE FIELDS AND UPDATE
+     C* OLD RECORD
+     C*
+     C           *IN30     OREQ '0'
+     C           RECI      ANDEQ'*'
+     C                     MOVE 'D'       RECI
+     C                     Z-ADD45        RECT
+     C*********************MOVE WLMTP     LMTP                            S01229
+     C                     MOVE WLMTY     LMTP                            S01229
+     C*********************MOVE WLEP1     LEP1                            S01229
+     C                     MOVE WE1LP     LEP1                            S01229
+     C*********************Z-ADDWLEP2     LEP2Z                           S01229
+     C                     Z-ADDWE2LP     LEP2Z                           S01229
+     C                     MOVE LEP2Z     LEP2
+     C*********************Z-ADDWLEP3     LEP3Z                           S01229
+     C                     Z-ADDWE3LP     LEP3Z                           S01229
+     C                     MOVE LEP3Z     LEP3
+     C*********************Z-ADDWLEP4     LEP4Z                           S01229
+     C                     Z-ADDWE4LP     LEP4Z                           S01229
+     C                     MOVE LEP4Z     LEP4
+     C*********************Z-ADDWLEP5     LEP5Z                           S01229
+     C                     Z-ADDWE5LP     LEP5Z                           S01229
+     C                     MOVE LEP5Z     LEP5
+     C*********************Z-ADDWLEP6     LEP6Z                           S01229
+     C                     Z-ADDWE6LP     LEP6Z                           S01229
+     C                     MOVE LEP6Z     LEP6
+     C*********************MOVE WLPC1     LPC1                            S01229
+     C                     MOVE WPL1P     LPC1                            S01229
+     C*********************MOVE WLPC2     LPC2                            S01229
+     C                     MOVE WPL2P     LPC2                            S01229
+     C*********************MOVE WLPC3     LPC3                            S01229
+     C                     MOVE WPL3P     LPC3                            S01229
+     C*********************MOVE WLPC4     LPC4                            S01229
+     C                     MOVE WPL4P     LPC4                            S01229
+     C*********************MOVE WLPC5     LPC5                            S01229
+     C                     MOVE WPL5P     LPC5                            S01229
+     C*********************MOVE WLPC6     LPC6                            S01229
+     C                     MOVE WPL6P     LPC6                            S01229
+     C*********************MOVE WCHTP     CHTP                            S01229
+     C                     MOVE WTYLC     CHTP                            S01229
+     C                     Z-ADDWLCD      LCD
+     C*
+     C* IF RECORD FOUND ON FILE AND IS NOT A DELETED RECORD SET ERROR
+     C*
+     C                     ELSE
+     C*
+     C                     SETON                     31
+     C                     END
+     C*
+     C           *IN30     IFEQ '1'
+     C                     WRITETABLETSF               31   ERROR
+     C                     END
+     C*
+     C           *IN30     IFEQ '0'
+     C           *IN31     ANDEQ'0'
+     C                     UPDATTABLETSF               31   ERROR
+     C                     END
+     C*
+     C           *IN31     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C* RECORD IS NOT AN INSERT
+     C*
+     C                     END
+     C*
+     C* IF RECORD HAS BEEN CHANGED, RETRIEVE RECORD FROM FILE
+     C*
+     C***********WCHTP     IFEQ 'A'                                       S01229
+     C           WTYLC     IFEQ 'A'                                       S01229
+     C*********************MOVE WLMTP     KLMTP                           S01229
+     C                     MOVE WLMTY     KLMTP                           S01229
+     C           KLMTP     CHAINTABLETSF             30    CHAIN FAILED
+     C*
+     C* IF RECORD FOUND, MOVE RECEIVED PARAMETERS INTO FILE FIELDS
+     C* AND UPDATE
+     C*
+     C           *IN30     IFEQ '0'
+     C*********************MOVE WLMTP     LMTP                            S01229
+     C                     MOVE WLMTY     LMTP                            S01229
+     C*********************MOVE WLEP1     LEP1                            S01229
+     C                     MOVE WE1LP     LEP1                            S01229
+     C*********************Z-ADDWLEP2     LEP2Z                           S01229
+     C                     Z-ADDWE2LP     LEP2Z                           S01229
+     C                     MOVE LEP2Z     LEP2
+     C*********************Z-ADDWLEP3     LEP3Z                           S01229
+     C                     Z-ADDWE3LP     LEP3Z                           S01229
+     C                     MOVE LEP3Z     LEP3
+     C*********************Z-ADDWLEP4     LEP4Z                           S01229
+     C                     Z-ADDWE4LP     LEP4Z                           S01229
+     C                     MOVE LEP4Z     LEP4
+     C*********************Z-ADDWLEP5     LEP5Z                           S01229
+     C                     Z-ADDWE5LP     LEP5Z                           S01229
+     C                     MOVE LEP5Z     LEP5
+     C*********************Z-ADDWLEP6     LEP6Z                           S01229
+     C                     Z-ADDWE6LP     LEP6Z                           S01229
+     C                     MOVE LEP6Z     LEP6
+     C*********************MOVE WLPC1     LPC1                            S01229
+     C                     MOVE WPL1P     LPC1                            S01229
+     C*********************MOVE WLPC2     LPC2                            S01229
+     C                     MOVE WPL2P     LPC2                            S01229
+     C*********************MOVE WLPC3     LPC3                            S01229
+     C                     MOVE WPL3P     LPC3                            S01229
+     C*********************MOVE WLPC4     LPC4                            S01229
+     C                     MOVE WPL4P     LPC4                            S01229
+     C*********************MOVE WLPC5     LPC5                            S01229
+     C                     MOVE WPL5P     LPC5                            S01229
+     C*********************MOVE WLPC6     LPC6                            S01229
+     C                     MOVE WPL6P     LPC6                            S01229
+     C*********************MOVE WCHTP     CHTP                            S01229
+     C                     MOVE WTYLC     CHTP                            S01229
+     C                     Z-ADDWLCD      LCD
+     C                     UPDATTABLETSF               30  ERROR
+     C                     END
+     C*
+     C* IF RECORD NOT FOUND OR ERROR OCCURRED ON UPDATE SET ERROR
+     C* PARAMETER
+     C*
+     C           *IN30     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C* RECORD IS NOT A CHANGED RECORD
+     C*
+     C                     END
+     C*
+     C* IF RECORD HAS BEEN DELETED FROM THE NEW FILE, RETRIEVE IT
+     C* FROM TABLETS
+     C*
+     C***********WCHTP     IFEQ 'D'                                       S01229
+     C           WTYLC     IFEQ 'D'                                       S01229
+     C*********************MOVE WLMTP     KLMTP                           S01229
+     C                     MOVE WLMTY     KLMTP                           S01229
+     C           KLMTP     CHAINTABLETSF             30    CHAIN FAILED
+     C*
+     C* IF RECORD FOUND, UPDATE RELEVANT FIELDS (WE DON'T ACTUALLY
+     C* DELETE ANY RECORDS FROM THE OLD FILES)
+     C*
+     C           *IN30     IFEQ '0'
+     C                     MOVE '*'       RECI
+     C*********************MOVE WCHTP     CHTP                            S01229
+     C                     MOVE WTYLC     CHTP                            S01229
+     C                     Z-ADDWLCD      LCD
+     C                     UPDATTABLETSF               30  ERROR
+     C                     END
+     C*
+     C* IF RECORD NOT FOUND OR ERROR OCCURRED ON UPDATE SET ERROR
+     C* PARAMETER
+     C*
+     C           *IN30     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C                     END
+     C*
+     C* IF NO ERRORS HAVE OCCURRED ON TABLETS UPDATE
+     C*
+     C           P0RTN     IFEQ *BLANKS
+     C*
+     C* RETRIEVE OLD TRAILER FILE RECORD
+     C*
+     C           '45'      CHAINTABLETXF             32    CHAIN FAILED
+     C*
+     C* IF CHAIN TO FILE SUCCESSFUL
+     C*
+     C           *IN32     IFEQ '0'
+     C*
+     C* IF FIRST ACCESS TO THE FILE THEN GET HEADER RECORD
+     C*
+     C           NINS      ANDEQ0
+     C           NAMD      ANDEQ0
+     C           NDEL      ANDEQ0
+     C*
+     C                     READ TABLETAF                 32  EOF
+     C*
+     C* IF HEADER RECORD FOUND THEN SET PRINT INDICATOR AND UPDATE
+     C*
+     C           *IN32     IFEQ '0'
+     C                     ADD  1         ILMT
+     C                     UPDATTABLETAF               32    ERROR
+     C                     END
+     C*
+     C                     END
+     C*
+     C* IF NO ERRORS
+     C*
+     C           *IN32     IFEQ '0'
+     C*
+     C* UPDATE AS APPROPRIATE THE NUMBER OF INSERTS,AMENDS OR DELETES
+     C* ON THE TRAILER FILE
+     C*
+     C***********WCHTP     IFEQ 'I'                                       S01229
+     C           WTYLC     IFEQ 'I'                                       S01229
+     C                     ADD  1         NINS
+     C                     END
+     C*
+     C***********WCHTP     IFEQ 'A'                                       S01229
+     C           WTYLC     IFEQ 'A'                                       S01229
+     C                     ADD  1         NAMD
+     C                     END
+     C*
+     C***********WCHTP     IFEQ 'D'                                       S01229
+     C           WTYLC     IFEQ 'D'                                       S01229
+     C                     ADD  1         NDEL
+     C                     END
+     C*
+     C                     UPDATTABLETXF               32    ERROR
+     C*
+     C                     END
+     C*
+     C* CHECK FOR ANY ERRORS AND SET ERROR PARAMETER FOR RETURN TO
+     C* NEW FILE MAINTENANCE PROGRAM
+     C*
+     C           *IN32     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+** CPY@     : Copyright notice for inclusion in all programs           grams
+(c) Misys International Banking Systems Ltd. 2001

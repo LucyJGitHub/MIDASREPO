@@ -1,0 +1,633 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RP PB Build Prices/Base Rate/Ccy Spot Hist')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Private Banking Module                               *
+      *                                                               *
+      *  RP1483 - Building Historic for ToF                           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 06Jun01               *
+      *                 CPB002  *CREATE    Date 19Dec00               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSD006 - AOCURRR0 should use DSSDY not DSFDY                 *
+      *  CPB002 - Meridian DBA Middleware Replication Customization.  *
+      *                                                               *
+      *****************************************************************
+     F**
+     F**      FILE DEFINITIONS
+     F**      ----------------
+     F*
+     F**   SCREEN FORMAT
+     FRP1483DFCF  E                    WORKSTN      KINFSR *PSSR
+     F**   SECURITY DETAILS
+     FSECTY   IF  E           K        DISK         KINFSR *PSSR
+     F*
+     F*
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F**                                                              *
+     F** ID F  C  H  L    FUNCTION OF INDICATORS                      *
+     F**                  ----------------------                      *
+     F**       20         ACCESS TO BANK DETAILS FILE - SDBANKPD      *
+     F**       40         SCREEN VALIDATION FAILED                    *
+     F**       41         VALID VALUE NOT YET ENTERED                 *
+     F**       42         VALID RECORD SELECTED                       *
+     F**       50         READ INDICATOR ON RP1483DF                  *
+     F**       51         (RI PC) ON FROM-DATE                        *
+     F**       52         (RI PC) ON TO-DATE                          *
+     F**       53         HISTORIC FOR CURRENCY SPOT                  *
+     F**       54         HISTORIC FOR BASE RATE                      *
+     F**       55         HISTORIC FOR SE PRICES                      *
+     F**       56         (RI PC) ON ALL CURRENCIES                   *
+     F**       57         (RI PC) ON CURRENCY                         *
+     F**       58         (RI PC) ON ALL SECURITIES                   *
+     F**       59         (RI PC) ON SECURITY                         *
+     F**       60         SFLEND                                      *
+     F**       99         INVALID DATE ON ZDATE1                      *
+     F**                                                              *
+     F*****************************************************************
+     E/EJECT
+     E*****************************************************************
+     E*
+     E** ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+     E*****************************************************************
+     E/EJECT
+     E*****************************************************************
+     E/COPY ZSRSRC,ZDATE2Z1
+     E*****************************************************************
+     I/EJECT
+     I*****************************************************************
+     I*
+     ISDBANK    E DSSDBANKPD
+      **  Data structure for bank file
+     ISDCURR    E DSSDCURRPD
+      **  Data structure for currency file
+      *
+     IDSFDY     E DSDSFDY
+      **  Short data structure for access programs
+      *
+     IDSSDY     E DSDSSDY                                                                     CSD006
+      **  Long data structure for access programs                                             CSD006
+      *                                                                                       CSD006
+     I** DATA STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+     ICPYR@$      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@$$
+     I*
+     I**   PROGRAM STATUS DATA STRUCTURE
+     IPSDS       SDS
+     I                                      244 253 SWSID
+     I                                      254 263 SUSER
+      *
+      **   Store date values for RCF parameter.
+     I            DS
+     I                                        1 100 @RPRM
+     I                                        1   50WWFDN
+     I                                        6  100WWTDN
+     I*
+     I**   LOCAL DATA AREA
+     ILDA         DS                            256
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I*****************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C**   PARAMETER LIST DECLARATIONS
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           PHIST   1
+     C*
+     C********************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C**            START MAINLINE
+     C**           ----------------
+     C*
+     C*
+     C**   INITIAL PROCESSING
+     C*
+     C                     EXSR #A
+     C*
+     C**   MAIN PROCESSING
+     C*
+     C                     EXSR #B
+     C*
+     C**   END PROGRAM
+     C*
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C*****************************************************************
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #A        - INITIAL PROCESSING                             *
+     C**                                                              *
+     C**   CALLED BY - MAINLINE                                       *
+     C**                                                              *
+     C**   CALLS     - NONE                                           *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #A        BEGSR
+     C*
+     C** DEFINE LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C*
+     C                     MOVE '1'       *IN51
+     C                     MOVEL'RP1483'  DBPGM
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD*ZEROS    DBASE
+     C                     OUT  LDA
+     C*
+     C** FILL IN FIELDS FOR SUBROUTINE ZASNMS
+     C*
+     C                     MOVEL*BLANK    ZAPGM  10        Message queue
+     C                     MOVE *BLANKS   ZAMSGF
+     C                     MOVEL'PBUSRMSG'ZAMSGF 10        Message file
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.
+     C*
+     C**   ACCESS SDBANKPD TP GET RUN DATE
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ****************
+     C                     MOVE *BLANKS   DBFILE           *              *
+     C                     MOVE 'SDBANKPD'DBFILE           * DB ERROR 01  *
+     C                     MOVE *BLANKS   DBKEY            *              *
+     C                     MOVE '1'       *INU7            ****************
+     C                     OUT  LDA
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+     C*
+     C**  RUNDATE IN DDMMMYY FORMAT
+     C*
+     C                     MOVE BJMRDT    SRUNA
+     C*
+     C**   SET UP DATE FORMAT INDICATOR
+     C*
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ELSE
+     C                     MOVE '0'       *IN98
+     C                     END
+     C*
+     C**   INITIALISE INDICATORS
+     C*
+     C                     MOVEA'010'     *IN,40           OFF 40,42 ON 41
+     C                     MOVEA'00'      *IN,51           ON 51-52
+     C                     MOVEA'0000'    *IN,56           ON 56-59
+     C                     MOVE '1'       *IN60
+     C                     MOVE '0'       *IN99
+     C*
+     C**   WHICH HISTORIC ?
+     C*
+     C           PHIST     IFEQ '1'
+     C                     MOVE '1'       *IN53
+     C                     ELSE
+     C           PHIST     IFEQ '2'
+     C                     MOVE '1'       *IN54
+     C                     ELSE
+     C                     MOVE '1'       *IN55
+     C                     END
+     C                     END
+     C*
+     C**   CLEAR SCREEN FIELD
+     C*
+     C                     MOVE *BLANKS   DDFDAT
+     C                     MOVE *BLANKS   DDTDAT
+     C                     MOVE *BLANKS   DDALLC
+     C                     MOVE *BLANKS   DDCCY
+     C*
+     C**   INITIALISE VARIABLES
+     C*
+     C                     Z-ADD*ZEROS    WWFDN   50
+     C                     Z-ADD*ZEROS    WWTDN   50
+     C*
+     C**   INITIALISE MESSAGE HANDLING INDICATORS
+     C*
+     C                     MOVE *BLANKS   WWTPGQ
+     C                     MOVEL'*'       WWTPGQ
+     C                     MOVE *BLANKS   WWPGQR
+     C                     MOVEL'*PRV'    WWPGQR
+     C*
+     C**   INITIALISE SCREEN MESSAGE QUEUE
+     C*
+     C                     MOVEL'*'       DDPGMQ
+     C*
+     C           #A0       ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #B        - MAIN PROCESSING                                *
+     C**                                                              *
+     C**   CALLS     - #BA                                            *
+     C**                                                              *
+     C**   CALLED BY - MAIN CONTROL                                   *
+     C**                                                              *
+     C*****************************************************************
+     C           #B        BEGSR
+     C*
+     C**   DOWHILE NOT CMD-3 AND SCREEN NOT VALID
+     C*
+     C           *INKC     DOWEQ'0'
+     C           *IN41     ANDEQ'1'
+     C*
+     C**   DISPLAY SELECTION SCREEN
+     C*
+     C                     WRITERP1483F1
+     C*
+     C**   IF ERROR - WRITE MESSAGE SUBFILE
+     C*
+     C           *IN40     IFEQ '1'
+     C                     WRITERP1483C2
+     C                     END
+     C*
+     C**   READ SELECTION SCREEN
+     C*
+     C                     READ RP1483F1                 50
+     C*
+     C**   IF NOT CMD-3
+     C*
+     C           *INKC     IFEQ '0'
+     C*
+     C**   PERFORM VALIDATION
+     C*
+     C                     EXSR #BA
+     C*
+     C**   IF VALID
+     C*
+     C           *IN40     IFEQ '0'
+     C*
+     C                     MOVEA'01'      *IN,41           OFF 41 ON 42
+     C*
+     C                     MOVE WWFDN     WPFDN   5
+     C                     MOVE WWTDN     WPTDN   5
+     C*
+     C           PHIST     IFEQ '1'
+     C                     CALL 'RP1482'
+     C                     PARM           WPFDN
+     C                     PARM           WPTDN
+     C                     PARM           DDALLC
+     C                     PARM           DDCCY
+     C                     ELSE
+     C           PHIST     IFEQ '2'
+     C                     CALL 'RP1481'
+     C                     PARM           WPFDN
+     C                     PARM           WPTDN
+     C                     PARM           DDALLC
+     C                     PARM           DDCCY
+     C                     ELSE
+     C                     CALL 'RP1480'
+     C                     PARM           WPFDN
+     C                     PARM           WPTDN
+     C                     PARM           DDALLS
+     C                     PARM           DDSECU
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C           #B0       ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #BA       - SCREEN VALIDATION                              *
+     C**                                                              *
+     C**   CALLED BY - #B                                             *
+     C**                                                              *
+     C**   CALLS     - NONE                                           *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #BA       BEGSR
+     C*
+     C**   CLEAR SCREEN MESSAGE QUEUE
+     C*
+     C                     MOVE *BLANKS   WWTPGQ
+     C                     MOVEL'*'       WWTPGQ
+     C                     MOVE *BLANKS   WWPGQR
+     C                     MOVEL'*PRV'    WWPGQR
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ 10
+     C                     PARM           WWPGQR  5
+     C*
+     C**   SET OFF INDICATORS
+     C*
+     C                     MOVE '0'       *IN40
+     C                     MOVEA'00'      *IN,51           OFF 51-52
+     C                     MOVEA'0000'    *IN,56           ON 56-59
+     C*
+     C**   INITIALISE WORK FIELDS
+     C*
+     C                     Z-ADD*ZEROS    WWFDN
+     C                     Z-ADD*ZEROS    WWTDN
+     C*
+     C**   VALIDATE FROM-DATE
+     C*
+     C**   CHECK FROM-DATE IS NUMERIC
+     C*
+     C                     MOVE DDFDAT    WWNUM7  70
+     C                     MOVE WWNUM7    WWALF6  6
+     C*
+     C           DDFDAT    IFEQ WWALF6
+     C*
+     C**   CONVERT FROM-DATE FROM INPUT FORMAT TO MIDAS DAY NUMBER
+     C*
+     C                     MOVE DDFDAT    ZDATE
+     C                     EXSR ZDATE1
+     C                     Z-ADDZDAYNO    WWFDN
+     C*
+     C                     ELSE
+     C                     MOVE '1'       *IN99
+     C                     END
+     C*
+     C**   IF NOT VALID FROM-DATE
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN51
+     C                     END
+     C*
+     C**   VALIDATE TO-DATE
+     C*
+     C           DDTDAT    IFEQ *BLANKS
+     C                     Z-ADDBJRDNB    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     DDTDAT
+     C                     END
+     C*
+     C**   CHECK TO-DATE IS NUMERIC
+     C*
+     C                     MOVE DDTDAT    WWNUM7  70
+     C                     MOVE WWNUM7    WWALF6  6
+     C*
+     C           DDTDAT    IFEQ WWALF6
+     C*
+     C**   CONVERT TO-DATE FROM INPUT FORMAT TO MIDAS DAY NUMBER
+     C*
+     C                     MOVE DDTDAT    ZDATE
+     C                     EXSR ZDATE1
+     C                     Z-ADDZDAYNO    WWTDN
+     C*
+     C                     ELSE
+     C*
+     C                     MOVE '1'       *IN99
+     C*
+     C                     END
+     C*
+     C**   IF NOT VALID TO-DATE
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN52
+     C                     END
+     C*
+     C           WWFDN     IFGT BJRDNB
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN51
+     C                     END
+     C*
+     C           WWTDN     IFGT BJRDNB
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN52
+     C                     END
+     C*
+     C**   IF NO ERRORS YET
+     C*
+     C           *IN40     IFEQ '0'
+     C*
+     C**   FROM-DATE MUST BE <= TO-DATE
+     C*
+     C           WWFDN     IFGT WWTDN
+     C                     MOVE '1'       *IN40
+     C                     MOVEA'11'      *IN,51           *IN51 *IN52
+     C                     END
+     C*
+     C                     END
+     C*
+     C**   IF ERROR - LOAD MESSAGE TO MESSAGE SUBFILE
+     C*
+     C           *IN40     IFEQ '1'
+     C*
+     C                     MOVEL'RP00030' ZAMSID
+     C                     EXSR ZASNMS
+     C*
+     C                     END
+     C*
+     C           *IN55     IFEQ '0'
+     C*
+     C**   VALIDATE ALL CURRENCIES
+     C*
+     C           DDALLC    IFEQ *BLANKS
+     C           DDCCY     ANDEQ*BLANKS
+     C                     MOVE 'Y'       DDALLC
+     C                     ELSE
+     C           DDALLC    IFEQ *BLANKS
+     C           DDCCY     ANDNE*BLANKS
+     C                     MOVE 'N'       DDALLC
+     C                     END
+     C                     END
+     C*
+     C           DDALLC    IFNE 'Y'
+     C           DDALLC    ANDNE'N'
+     C           DDALLC    ANDNE' '
+     C                     MOVEL'RP00031' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN56
+     C                     END
+     C*
+     C           DDCCY     IFNE *BLANKS
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM DDCCY     @AJCD   3
+     C********** SDCURR    PARM SDCURR    DSFDY                                               CSD006
+     C           SDCURR    PARM SDCURR    DSSDY                                               CSD006
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'RP00032' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN57
+     C                     ELSE
+     C                     MOVE A6CYCD    DDCCY
+     C                     END
+     C                     ELSE
+     C           DDALLC    IFNE 'Y'
+     C                     MOVEL'RP00032' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN57
+     C                     END
+     C                     END
+     C*
+     C           DDALLC    IFNE *BLANKS
+     C           DDALLC    ANDNE'N'
+     C           DDCCY     ANDNE*BLANKS
+     C           *IN56     ANDEQ'0'
+     C                     MOVEL'RP00033' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN57
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C**   VALIDATE ALL SECURITIES
+     C*
+     C           DDALLS    IFEQ *BLANKS
+     C           DDSECU    ANDEQ*BLANKS
+     C                     MOVE 'Y'       DDALLS
+     C                     ELSE
+     C           DDALLS    IFEQ *BLANKS
+     C           DDSECU    ANDNE*BLANKS
+     C                     MOVE 'N'       DDALLS
+     C                     END
+     C                     END
+     C*
+     C           DDALLS    IFNE 'Y'
+     C           DDALLS    ANDNE'N'
+     C           DDALLS    ANDNE' '
+     C                     MOVEL'RP00034' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN58
+     C                     END
+     C*
+     C                     MOVELDDSECU    WSECU   1
+     C           WSECU     IFEQ '?'
+     C                     MOVE DDSECU    DDSESN
+     C                     CALL 'SE0043'
+     C                     PARM 'E'       DDACTN  1
+     C                     PARM           DDSESN 10
+     C                     MOVE DDSESN    DDSECU
+     C                     ELSE
+     C           DDSECU    IFNE *BLANKS
+     C           DDSECU    CHAINSECTY                59
+     C           *IN59     IFEQ '1'
+     C           *IN59     OREQ '0'
+     C           RECI      ANDNE'D'
+     C                     MOVEL'RP00035' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN59
+     C                     END
+     C                     ELSE
+     C           DDALLS    IFNE 'Y'
+     C                     MOVEL'RP00035' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN59
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C           DDALLS    IFNE *BLANKS
+     C           DDALLS    ANDNE'N'
+     C           DDSECU    ANDNE*BLANKS
+     C           *IN58     ANDEQ'0'
+     C                     MOVEL'RP00036' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN59
+     C                     END
+     C                     END
+     C*
+     C           #BA0      ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   ZASNMS    - SEND MESSAGE TO PROGRAM'S MESSAGE QUEUE        *
+     C**                                                              *
+     C**   CALLED BY - MAINLINE                                       *
+     C**                                                              *
+     C**   CALLS     - Y2SNMGC                                        *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           ZASNMS    BEGSR
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10
+     C                     PARM           ZAPGRL  5
+     C                     PARM           ZAMSID  7
+     C                     PARM           ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTP  7
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   *PSSR     - PROGRAM ERROR HANDLING ROUTINE                 *
+     C**                                                              *
+     C**   CALLS     -                                                *
+     C**                                                              *
+     C**   CALLED BY -                                                *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C                     DUMP
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+** CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

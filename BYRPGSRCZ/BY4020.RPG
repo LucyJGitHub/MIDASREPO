@@ -1,0 +1,440 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas BoE Update Maximum DR/CR Positions')             *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bank of England                                      *
+      *                                                               *
+      *  BY4020 - Update Maximum DR/CR Positions                      *
+      *                                                               *
+      *  Function:  This program reads PF/ACCNTAB and updates         *
+      *             corresponding accounts in PF/BYACNTPP with the    *
+      *             current balance in the Max. DR/CR fields,         *
+      *             converting these values to Sterling and setting   *
+      *             the last change date to the Midas run date.  If   *
+      *             the account does not exist on PF/BYACNTPP, the    *
+      *             account details are added to the database.        *
+      *             This is a close of business program.              *
+      *                                                               *
+      *  Called By: BYC4020 - Update Maximum DR/CR Positions.         *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 1997            *
+      *                                                               *
+      *  Last Amend No. CSD027             Date 21Jan09               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Prev Amend No. LLN022             Date 24Jan05               *
+      *                 Xnnnnn             Date ddmmmyy               *
+      *                                    Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD027 - Conversion of Customer Number to Alpha              *
+      *  LLN022 - BOE Upgrade to MidasPlus                            *
+      *  nnnnnn - (fix details)                                       *
+      *                                                               *
+      *****************************************************************
+      *
+      * File description for files defined
+     FBYRPDTPPIF  E                    DISK         KINFSR *PSSR
+     FBYACNTPPUF  E           K        DISK         KINFSR *PSSR A
+     FACCNTAB IF  E                    DISK         KINFSR *PSSR
+      /EJECT
+      *
+      *  Array containing Copyright statement
+     E                    @CPY    1   1 80
+      *
+      /SPACE 3
+      ** Local data area for database error details
+     ILDA       E DSLDA                         256
+      *
+      ** Data Structure using Bank file format
+     ISDBANK    E DSSDBANKPD
+      *
+     ISDCURR    E DSSDCURRPD                199
+      *
+      ** Trading Data ICD
+     ISDTRAD    E DSSDTRADPD
+     I              QQACCD                          QQACOD                                    LLN022
+      *
+     ISDDEAL    E DSSDDEALPD
+      *
+      ** Program Status Data Structure
+     IPSDS       SDS
+     I                                     *PROGRAM DSPGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     IDSFDY     E DSDSFDY
+      *
+      * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     IDSSDY     E DSDSSDY
+      *
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * Main Processing                                               *
+      *                                                               *
+      * Calls: SR/#LDETL - Detail Processing                          *
+      *        SR/#LTERM - Termination Processing                     *
+      *                                                               *
+      *****************************************************************
+      *
+      *
+      *  Detail Processing
+     C                     EXSR #LDETL
+      *
+      *  Termination Processing
+     C                     EXSR #LTERM
+      *
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LDETL - Detail Processing                                    *
+      *                                                               *
+      * Called by:  Main Processing                                   *
+      *                                                               *
+      * Calls:  SR/#LCRDT                                             *
+      *         SR/#LDEBT                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LDETL    BEGSR                                       **
+      *
+      ** Access PF/ACCNTAB for each open (Field ACST not C) A/C
+     C                     READ ACCNTAB                  90
+      *
+     C           *IN90     DOWEQ*OFF
+     C           ACST      IFNE 'C'
+      *
+      ** Get fields for update/write to PF/BYACNTPP
+     C                     MOVE RECI      ULRECI  1 P
+     C**********           Z-ADDCNUM      ULCNUM  60                                          CSD027
+     C                     MOVE CNUM      ULCNUM  6                                           CSD027
+     C                     MOVE CCY       ULICCY  3 P
+     C**********           Z-ADDACOD      ULACOD  40                                          LLN022
+     C                     Z-ADDACOD      ULACOD 100                                          LLN022
+     C                     Z-ADDACSQ      ULACSQ  20
+     C                     MOVE BRCA      ULBRCA  3 P
+     C                     Z-ADDLDBL      ULIAMT 150
+      *
+      ** If account exists on PF/BYACNTPP update fields
+      ** otherwise write as new record
+     C           K1LIST    CHAINBYACNTPP             89
+      *
+     C           *IN89     IFEQ *OFF
+      *
+      ** Record exists - balance < max credit in period
+      **                 or balance > maxdebit in period?
+     C           ULIAMT    IFLT L7MKCC
+     C                     EXSR #LCRDT
+     C                     UPDATBYACNTD0
+      *
+     C                     ELSE
+      *
+     C           ULIAMT    IFGT L7MKDC
+     C                     EXSR #LDEBT
+     C                     UPDATBYACNTD0
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Record does not exist (IN89 is on) - balance <> 0?
+     C                     ELSE
+      *
+     C           ULIAMT    IFLT 0
+     C                     EXSR #LCRDT
+     C                     ELSE
+     C                     EXSR #LDEBT
+     C                     ENDIF
+      *
+     C**********           Z-ADDULCNUM    L7CNUM
+     C                     MOVE ULCNUM    L7CNUM                                              CSD027
+     C                     MOVE ULICCY    L7CCY     P
+     C                     Z-ADDULACOD    L7ACOD
+     C                     Z-ADDULACSQ    L7ACSQ
+     C                     MOVE ULBRCA    L7BRCA    P
+     C                     WRITEBYACNTD0
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Reset updated fields & read next record
+     C                     Z-ADD0         L7MKDC
+     C                     Z-ADD0         L7SMXD
+     C                     Z-ADD0         L7MXDD
+     C                     Z-ADD0         L7MKCC
+     C                     Z-ADD0         L7SMXC
+     C                     Z-ADD0         L7MXCD
+     C                     READ ACCNTAB                  90
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LTERM - Termination Processing                               *
+      *                                                               *
+      * Called by:  Main Processing                                   *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LTERM    BEGSR                                       **
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LDEFN - Field Definition Routine                             *
+      *                                                               *
+      * Called by:  None - Contains definitions only                  *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LDEFN    BEGSR                                       **
+      *
+      ** Define external data areas
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Define and initialise work fields
+     C                     MOVE *BLANK    ULRTCD  1
+     C                     MOVE *BLANK    ULERRI  1                    dicator
+     C                     MOVE *BLANK    P@RTCD  7
+     C                     MOVE *BLANK    P@OPTN  7
+      *
+      ** Parameter List Definitions
+      *
+      *    P1LIST - Parameter list for calling 'program name'
+     C           P1LIST    PLIST
+     C                     PARM           ULIAMT 150
+     C                     PARM           ULICCY  3
+     C                     PARM           ULOAMT 150
+     C                     PARM           ULOCCY  3
+     C                     PARM *BLANKS   ULRC1   1
+      *
+      ** Key List Definitions
+      *
+      *    K1LIST - Key list for PF/BYACNTPP
+     C           K1LIST    KLIST
+     C                     KFLD           ULBRCA
+     C                     KFLD           ULCNUM
+     C                     KFLD           ULICCY
+     C                     KFLD           ULACOD
+     C                     KFLD           ULACSQ
+      *
+      ** Field Defintions for key lists fields
+     C           *LIKE     DEFN BJCUST    P1BCUS
+     C           *LIKE     DEFN BJRDNB    PERSEQ
+     C           *LIKE     DEFN BJRDNB    Z1RSEQ
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                                       **
+      *
+      *  Check if error has previously been reported
+     C           ULERRI    IFEQ *BLANK
+     C                     MOVE 'Y'       ULERRI
+     C                     MOVE 'Y'       ULRTCD
+     C                     DUMP
+     C                     ENDIF
+      *
+      *  Set on external indicators
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+      *
+      *  Terminate program
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Program Initialisation Routine                       *
+      *                                                               *
+      * Called by:  At program initialisation                         *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR                                       **
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ULRTCD
+      *
+      ** Copyright Statement
+     C                     MOVEA@CPY      ULCPY   8
+      *
+      *  Get Bank Details
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANK    P@RTCD  7
+     C                     PARM '*FIRST ' P@OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Check Return Code
+     C           P@RTCD    IFNE *BLANKS
+     C           BJTYLC    OREQ 'D'                        ON-DELETED
+     C           *LOCK     IN   LDA
+     C                     MOVELDSPGM     DBPGM            ************
+     C                     MOVEL'*NONE'   DBKEY            * DBERR 01 *
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     Z-ADD1         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      *  Get Trading Data ICD Record For GBP Currency Code (BLCYCD)
+     C                     CALL 'AOTRADR0'
+     C                     PARM *BLANK    P@RTCD
+     C                     PARM '*FIRST ' P@OPTN
+     C                     PARM           SDTRAD
+     C           P@RTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVELDSPGM     DBPGM            ************
+     C                     MOVEL'*FIRST'  DBKEY            * DBERR 02 *
+     C                     MOVEL'SDTRADPD'DBFILE           ************
+     C                     Z-ADD2         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ELSE
+     C                     MOVE *OFF      *IN98
+     C                     END
+      *
+      ** Set up Sterling currency code
+     C                     MOVE BLCYCD    ULOCCY  3
+      *
+      ** Initial value for RCF Report Sequence from input parameter
+     C                     MOVE PERSEQ    Z1RSEQ
+      *
+      ** Move Head Office Customer No. to input parameter for BECUST
+     C                     MOVE BJCUST    P1BCUS
+      *
+      ** Obtain Reporting Date from PF/BYRPDTPP
+     C           1         CHAINBYRPDTPP             90
+      *
+      ** If chain failed or no active record, database error
+     C           *IN90     IFEQ '1'
+     C           L0RECI    ORNE 'D'
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'1'       DBKEY
+     C                     MOVEL'BYRPDTPP'DBFILE           ************
+     C                     Z-ADD3         DBASE            * DBERR 003*
+     C                     EXSR *PSSR                      ************
+     C                     ENDIF
+      ** Obtain the following from PF/SDDEALPD using Access Object/Pgm
+      ** BNNAIA (1A) Negotiable Accrual Indicator
+     C                     CALL 'AODEALR0'
+     C                     PARM *BLANK    P@RTCD
+     C                     PARM '*FIRST ' P@OPTN
+     C           SDDEAL    PARM SDDEAL    DSFDY
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C                     MOVEL'*FIRST'  DBKEY
+     C                     MOVEL'SDDEALPD'DBFILE           ************
+     C                     Z-ADD4         DBASE            * DBERR 004*
+     C                     EXSR *PSSR                      ************
+     C                     ENDIF
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * #LCRDT - Subroutine called in order to move data into fields  *
+      *        on PF/BYACNTPP, if Ledger balance less than 0 or       *
+      *        Max Cr position in period.                             *
+      *                                                               *
+      * Called by:  #LDETL                                            *
+      *                                                               *
+      * Calls: SR/#LCOMN                                              *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LCRDT    BEGSR
+      *
+     C                     Z-ADDULIAMT    L7MKCC
+     C                     EXSR #LCOMN
+     C                     Z-ADDULOAMT    L7SMXC
+     C                     Z-ADDBJRDNB    L7MXCD
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * #LDEBT - Subroutine called in order to move data into fields  *
+      *        on PF/BYACNTPP, if Ledger balance greater than 0 or    *
+      *        Max Dr position in period.                             *
+      *                                                               *
+      * Called by:  #LDETL                                            *
+      *                                                               *
+      * Calls: SR/#LCOMN                                              *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LDEBT    BEGSR
+      *
+     C                     Z-ADDULIAMT    L7MKDC
+     C                     EXSR #LCOMN
+     C                     Z-ADDULOAMT    L7SMXD
+     C                     Z-ADDBJRDNB    L7MXDD
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * #LCOMN - Subroutine called in order to move common data into  *
+      *        fields on PF/BYACNTPP                                  *
+      *                                                               *
+      * Called by:  #LCRDT                                            *
+      *             #LDEBT                                            *
+      *                                                               *
+      * Calls: RPG/BY9070 - Convert amount to sterling                *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LCOMN    BEGSR
+      *
+     C                     MOVE ULRECI    L7RECI    P
+     C                     CALL 'BY9070'  P1LIST
+      *
+      ** Terminate program if BY9070 ended abnormally
+     C           ULRC1     IFNE *BLANKS
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+**  @CPY
+(c) Misys International Banking Systems Ltd. 1997

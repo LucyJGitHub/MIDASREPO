@@ -1,0 +1,188 @@
+     H        1
+     H*****************************************************************
+/*OVRH*  CRTPF FILE(QTEMP/SPOOLS) RCDLEN(211) MBR(*NONE)              *
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas UT Add change type and identifier to spool')
+     H*****************************************************************
+     H*                                                               *
+     H*  Midas - Utilities module                                     *
+     H*                                                               *
+     H*  UT0260 - Add change type and identifier to spool files       *
+     H*           outfile.                                            *
+     H*                                                               *
+     H*  Function:  This program updates the control record (written  *
+     H*             by the CPYFRMOUTQ processing) in a member of      *
+     H*             a spool files output file.  The calling CL has    *
+     H*             already selected the record to be updated, so     *
+     H*             this only reads it and writes it.                 *
+     H*                                                               *
+     H*  Called By: UTC0260 - ADDCHGTYP CPP.                          *
+     H*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     H*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     H*  Last Amend No. CAA002 *CREATE     Date 31OCT95               *
+     H*                                                               *
+     H*---------------------------------------------------------------*
+     H*                                                               *
+     H*  CAA002 - Development of utility to save, edit and restore    *
+     H*           spooled files.                                      *
+     H*                                                               *
+     H*****************************************************************
+     F*
+     FSPOOLS  UF  E                    DISK         KINFSR *PSSR
+     F*
+     F** The above is a dummy file name; the real name has been
+     F** defined in the calling CL.
+     F** Rename the format to avoid clashing with the file or field
+     F** name.
+     F            SPOOLS                            KRENAMESPOOLSF
+     F/EJECT
+     E                    CPY@    1   1 80
+     E*
+     E** Array containing Copyright statement
+     E*
+     I/SPACE 3
+     I*
+     ISPOOLSF
+     I*
+     I** Rename the external field name to avoid clashing with the
+     I** file or format names.
+     I              SPOOLS                          SPOOL
+     I*
+     I/COPY UTCPYSRC,UTSPLREC
+     I*
+     IPSDS       SDS
+     I*
+     I** Program Status Data Structure
+     I*
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     I*
+     C*
+     C** Set up copyright parameter
+     C                     MOVEACPY@      ACT@   80
+     C*
+     C** Read the file; only one record should be available, having
+     C** been selected by OPNQRYF in the calling program.  If it is not
+     C** the control record, end in error.
+     C                     READ SPOOLSF                  99
+     C*
+     C** If there has been a read error, set the return code to force
+     C** an exit below.
+     C           *IN99     IFEQ *ON
+     C                     MOVEL'ERROR'   RETCDE
+     C                     ELSE
+     C*
+     C** Check that the control record has been read in one of two
+     C** ways, depending on whether REPLACE(*YES) or REPLACE(*NO) was
+     C** specified on the ADDCHGTYP command.
+     C                     SELEC
+     C           REPL      WHEQ '*YES'
+     C*
+     C** Chop up the input string for comparison; positions 23 - 44
+     C** should contain the 'TYPE. . .' string:
+     C           22        SUBSTSPOOL:23  #TYPE  22
+     C*
+     C** and postitions 56 - 73 should contain the 'CHANGE ID. . .' string:
+     C           18        SUBSTSPOOL:56  #CHID  18
+     C*
+     C** If positions 23 - 44 or 56 - 73 of the record do not match the
+     C** corresponding positions in the SPLREC data structure (externally
+     C** defined in UTSPLREC member), then the control record has not
+     C** been read.
+     C           TTYPE     IFNE #TYPE
+     C           TCHID     ORNE #CHID
+     C                     MOVEL'ERROR'   RETCDE
+     C                     ENDIF
+     C*
+     C                     OTHER
+     C** (If REPLACE(*NO) was specified on ADDCHGTYP).
+     C*
+     C** Remove the first character for comparison.
+     C                     SUBSTSPOOL:2   SUBSPL210
+     C*
+     C** If positions 2 - 211 of the record do not match the corresponding
+     C** positions in the SPLREC data structure (externally defined in
+     C** UTSPLREC member), then the control record has not been read.
+     C           SUBSPL    IFNE REST
+     C                     MOVEL'ERROR'   RETCDE
+     C                     ENDIF
+     C*
+     C                     ENDSL
+     C                     ENDIF
+     C*
+     C           RETCDE    IFEQ 'ERROR'
+     C                     DUMP
+     C                     ELSE
+     C*
+     C** If the correct record has been read, update the record with
+     C** the values received from the calling program.
+     C                     MOVELSPOOL     SPLREC
+     C                     MOVELCHGTYP    TYPE
+     C                     MOVELCHGID     CHID
+     C                     MOVELSPLREC    SPOOL
+     C                     UPDATSPOOLSF
+     C*
+     C                     ENDIF
+     C*
+     C** Normal end.
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C*
+     C/EJECT
+     C*****************************************************************
+     C           INIT      BEGSR
+     C           *ENTRY    PLIST
+     C*                                   Return code
+     C                     PARM           RETCDE 10
+     C*                                   Change type
+     C                     PARM           CHGTYP  6
+     C*                                   Change identifier
+     C                     PARM           CHGID   6
+     C*                                   Whether or not to replace
+     C                     PARM           REPL    4
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR  - Program exception error routine                      *
+     C*          Called automatically if a program error occurs,      *
+     C*          or directly by the program code using EXSR.          *
+     C*          This subroutine DUMPs the program just once.         *
+     C*                                                               *
+     C* Called by: (**calling routines**)                             *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C************ CALL DBERRCTL IF INTERACTIVE PROGRAM ***************
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C*
+     C********************************************************************
+     C                     END
+     C*
+     C************ END PROGRAM IF DBERRCTL NOT CALLED ********************
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C********************************************************************
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

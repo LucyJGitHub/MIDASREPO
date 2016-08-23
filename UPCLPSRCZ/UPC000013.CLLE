@@ -1,0 +1,187 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP CPP for RNMZON')                             */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC000013 - CPP for RNMZON                                  */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. CUP002  *CREATE    Date 12Aug10              */
+/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP002 - New utility.                                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&ZONEPFX &NZONEDTA)
+ 
+             DCL        VAR(&ZONEPFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&NZONEDTA) TYPE(*CHAR) LEN(66)
+ 
+             DCL        VAR(&NZONE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NZONECODE) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&NZONEDESC) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&OZONEDTA) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&OZONE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OZONECODE) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTNLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&AUTL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GPFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DTAQ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GEN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&COUNTN) TYPE(*DEC) LEN(1 0) VALUE(0)
+             DCL        VAR(&COUNTA) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&SYSVAL) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SYSVAL1) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SYSVAL2) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SYSVALVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SYSVALVAL2) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&IASP_YN) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ASPGRP) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&STM_STR) TYPE(*CHAR) LEN(80)
+             DCL        VAR(&QUOTE) TYPE(*CHAR) LEN(1) VALUE('''')
+ 
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE(N)
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2010')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(00000000)
+ 
+/* Create and rename temporary source file for RUNSQLSTM. */
+             DLTF       FILE(QTEMP/RUNSQLSTM)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/RUNSQL)
+             MONMSG     MSGID(CPF0000)
+             CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                          MBR(RUNSQLSTM) TEXT('Temporary source +
+                          file for RNMZON')
+             RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                          NEWOBJ(RUNSQL)
+ 
+/* Retrieve IASP data. */
+             CHGVAR     VAR(&SYSVAL1) VALUE('IASPinstallation')
+             CHGVAR     VAR(&SYSVAL2) VALUE('IASPgroup')
+             CALL       PGM(GPAOSVALR0) PARM(&RTNCODE &SYSVAL1 +
+                          &SYSVALVAL1 &SYSVAL2 &SYSVALVAL2 ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ')
+             IF         COND(&RTNCODE *NE '       ') THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             CHGVAR     VAR(&IASP_YN) VALUE(&SYSVALVAL1)
+             CHGVAR     VAR(&ASPGRP) VALUE(&SYSVALVAL2)
+ 
+/* Break down of new zone parameter. */
+             CHGVAR     VAR(&NZONE) VALUE(%SST(&NZONEDTA 3 10))
+             CHGVAR     VAR(&NZONECODE) VALUE(%SST(&NZONEDTA 13 4))
+             CHGVAR     VAR(&NZONEDESC) VALUE(%SST(&NZONEDTA 17 50))
+ 
+/* Retrieve current information about zone. */
+             CALL       PGM(GPAOZONER1) PARM(&RTNCODE '*KEY' +
+                          &ZONEPFX &OZONEDTA)
+             IF         COND(&RTNCODE *NE ' ') THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             CALL       PGM(GPAOZONER1) PARM(&RTNCODE '*FREE' ' ' ' ')
+             CHGVAR     VAR(&OZONE) VALUE(%SST(&OZONEDTA 1 10))
+             CHGVAR     VAR(&OZONECODE) VALUE(%SST(&OZONEDTA 11 14))
+ 
+/* Delete data queues. */
+             CHGVAR     VAR(&GEN) VALUE('GPUTU' *TCAT &OZONECODE +
+                          *TCAT '*')
+             DLTDTAQ    DTAQ(&GEN)
+             MONMSG     MSGID(CPF2125)
+ 
+/* Create new data queues. */
+             RTVOBJD    OBJ(GPUTUXXXXN) OBJTYPE(*DTAQ) RTNLIB(&RTNLIB)
+ CRTDTAQ:
+             CHGVAR     VAR(&COUNTN) VALUE(&COUNTN + 1)
+             CHGVAR     VAR(&COUNTA) VALUE(&COUNTN)
+             CHGVAR     VAR(&DTAQ) VALUE('GPUTU' *TCAT &NZONECODE *TCAT +
+                          &COUNTA)
+             CPYDTAQ    FMDTAQ(&RTNLIB/GPUTUXXXXN) +
+                          TODTAQ(&RTNLIB/&DTAQ) CRTDTAQ(*YES)
+             IF         COND(&COUNTN *LT 9) THEN(DO)
+                GOTO       CMDLBL(CRTDTAQ)
+             ENDDO
+/* Change ownership and authorities of data queues. */
+             CHGVAR     VAR(&GPFX) VALUE(%SST(&RTNLIB 1 2))
+             CHGVAR     VAR(&OWNER) VALUE(&GPFX *TCAT 'OWNER')
+             CHGVAR     VAR(&AUTL) VALUE(&GPFX *TCAT 'DATABASE')
+             CHGVAR     VAR(&GEN) VALUE('GPUTU' *TCAT &NZONECODE +
+                          *TCAT '*')
+ 
+             IF         COND(&IASP_YN *EQ 'N') THEN(DO)
+                CHGOWNAUT  OBJ(&RTNLIB/&DTAQ) OBJTYPE(*DTAQ) +
+                             NEWOWN(&OWNER) PUBAUT(*AUTL) AUTL(&AUTL) +
+                             CHGLIB(N)
+             ENDDO
+             ELSE       CMD(DO)
+                CHGOWNAUT  OBJ(&RTNLIB/&DTAQ) OBJTYPE(*DTAQ) +
+                             NEWOWN(&OWNER) PUBAUT(*AUTL) AUTL(&AUTL) +
+                             CHGLIB(N) ASP(*ASPDEV) ASPDEV(&ASPGRP)
+             ENDDO
+ 
+/* Update GPZONEPD. */
+             CHGVAR     VAR(&STM_STR) VALUE(' ')
+             CHGVAR     VAR(&STM_STR) VALUE('update GPZONEPD set +
+                          ZOZONE =' *BCAT &QUOTE *TCAT &NZONE *TCAT +
+                          &QUOTE *BCAT 'where ZOZONE =' *BCAT +
+                          &QUOTE *TCAT &OZONE *TCAT &QUOTE *TCAT ';')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
+             CHGVAR     VAR(&STM_STR) VALUE('update GPZONEPD set +
+                          ZOSHTC =' *BCAT &QUOTE *TCAT &NZONECODE +
+                          *TCAT &QUOTE *BCAT 'where ZOSHTC =' *BCAT +
+                          &QUOTE *TCAT &OZONECODE *TCAT &QUOTE *TCAT ';')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+             CHGVAR     VAR(&STM_STR) VALUE('update GPZONEPD set +
+                          ZODESC =' *BCAT &QUOTE *TCAT &NZONEDESC +
+                          *TCAT &QUOTE *BCAT 'where ZOZONE =' *BCAT +
+                          &QUOTE *TCAT &NZONE *TCAT &QUOTE *TCAT ';')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+             MONMSG     MSGID(SQL9010)
+ 
+/* Update system value. */
+             CHGVAR     VAR(&SYSVAL) VALUE(&NZONE)
+             CALL       PGM(SD009510) PARM('ZoneSystemName' &SYSVAL +
+                          ' ')
+ 
+/* Call program to rename zone records in global layer. */
+             CALL       PGM(UPC000014) PARM(&OZONE &NZONE)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+             IF         COND(&RECURSIVE *EQ 'N') THEN(DO)
+                CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+RCVMSG:
+                RCVMSG     MSGTYPE(*DIAG) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                             MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                IF         COND(&MSGID *NE ' ') THEN(DO)
+                   SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                                MSGDTA(&MSGDTA) MSGTYPE(*DIAG)
+                   GOTO       CMDLBL(RCVMSG)
+                ENDDO
+                RCVMSG     MSGTYPE(*EXCP) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                             MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                             MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
+             ENDDO
+ENDPGM:
+             ENDPGM

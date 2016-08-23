@@ -1,0 +1,1095 @@
+     H        1   D
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Money at call list by system report')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Dealing Module                                   *
+     F*                                                               *
+     F*  DL7059 - MONEY AT CALL REPORT.                               *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CDL038             Date 10May05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CDL006             Date 26Apr99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 067533             Date 09Mar94               *
+      *                 051147             Date 17Dec93               *
+     F*                 048551             DATE 17DEC92               *
+     F*                 AUS028             DATE 29JUN92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type                              *
+      *  CDL006 - Dealing Fiduciary.                                  *
+     F*  067533 - Line specifications not required as page length and *
+     F*           overflow line set up correctly in DDS.              *
+     F*  051147 - Add totals summary for consolidated report.         *
+     F*  048551 - Cosmetics: Corrected spelling, 'REFERNCE' to        *
+     F*          'REFERENCE'; fixed title; changed edit codes, Z to J.*
+     F*  AUS028 - AUSTRALIAN PRODUCT - MONEY AT CALL LISTS            *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 3
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*            L4 Change in Branch Code.
+     F*            L3 Change in Deposit/Loan Indicator.
+     F*            L2 Change in Customer Short Name.
+     F*            L1 Change in the Term of Deals.
+     F*
+     F*       02      No Record Found for Branch Code.
+     F*       10      Print Customer No. & Short Name.
+     F*       11      First Cycle Indicator.
+     F*     90-99     Standard Subroutine Indicators.
+     F*     U7-U8     DATABASE ERROR
+     F*
+     F/EJECT
+     F*     Files used.
+     FDL7059AUO   F     132            PRINTER      KINFDS SPOOLU
+     F***DL7059P2O** F     132     OB    LPRINTER      KINFDS SPOOL2      067533
+     F***DL7059P1O** F     132     OA    LPRINTER      KINFDS SPOOL1      067533
+     FDL7059P2O   F     132     OB     PRINTER      KINFDS SPOOL2         067533
+     FDL7059P1O   F     132     OA     PRINTER      KINFDS SPOOL1         067533
+     FDL7059P3O   F     132     OC     PRINTER      KINFDS SPOOL3     UC  CDL006
+     FDL7059P4O   F     132     OD     PRINTER      KINFDS SPOOL4     UC  CDL006
+     FCALLML0 IP  E           K        DISK
+     F*     Arrays Used.
+     F/EJECT
+     E*
+     E/COPY ZSRSRC,ZDATE2Z1
+     E                    CPY@    1   1 80
+     E*
+     E/SPACE 3
+     L*
+     L***DL7059P1 66FL 60OL                                               067533
+     L***DL7059P2 66FL 60OL                                               067533
+     L*
+     L/EJECT
+     I*
+     ICALLMAAR
+     I                                              DLNI  L3
+     I                                              CRNM  L2
+     I                                              TRMI  L1
+     I*
+     ISDBANK    E DSSDBANKPD
+     I* Bank Details Accesses Via Access Program
+     I*
+     ISCSARD    E DSSCSARDPD                                              CDL006
+      ** External DS for SAR details                                      CDL006
+      *                                                                   CDL006
+     IDSFDY     E DSDSFDY
+     I* First DS For Access Programs, Short Data Structure
+     ILDA         DS                            256
+     I*
+     I** Local Data Area To Identify Database Errors
+     I*
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     ISPOOL1      DS
+     I**    SPOOL FILE INFORMATION DATA STRUCTURE
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I*
+     ISPOOL2      DS
+     I**    SPOOL FILE INFORMATION DATA STRUCTURE
+     I                                       83  92 SFILE2
+     I                                    B 123 1240SFNUM2
+     I*
+     ISPOOLU      DS
+     I**    SPOOL FILE INFORMATION DATA STRUCTURE
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *                                                                   CDL006
+     ISPOOL3      DS                                                      CDL006
+      ** File Information Data Structure for DL7059P3                     CDL006
+      *                                                                   CDL006
+     I                                       83  92 SFILE3                CDL006
+     I                                    B 123 1240SFNUM3                CDL006
+     I                                    B 188 1890OFLLN3                CDL006
+     I                                    B 367 3680PRTLN3                CDL006
+      *                                                                   CDL006
+     ISPOOL4      DS                                                      CDL006
+      ** File Information Data Structure for DL7059P4                     CDL006
+      *                                                                   CDL006
+     I                                       83  92 SFILE4                CDL006
+     I                                    B 123 1240SFNUM4                CDL006
+     I                                    B 188 1890OFLLN4                CDL006
+     I                                    B 367 3680PRTLN4                CDL006
+     I*
+     I*                                                                   S01390
+     IRUNDT       DS                                                      S01390
+     I                                       13  13 MBIN                  S01390
+     C/EJECT
+     C***********************************************
+     C*                                             *
+     C*            MAIN-LINE PROCESSING.            *
+     C*                                             *
+     C***********************************************
+     C*
+     C*   Perform Initialisation.
+     C*
+     C           *IN11     IFEQ '0'
+     C                     EXSR SR0000
+     C                     END
+     C*
+     C*   Change of Deposit Indicator.
+     C*
+     C   L3                EXSR SRL3D
+     C*
+     C*   Change of Customer Short Name.
+     C*
+     C   L2                EXSR SRL2D
+     C*
+     C*   Change of Term Indicator.
+     C*
+     C   L1                EXSR SRL1D
+     C*
+     C*   Perform Detail Time Processing.
+     C*
+     C                     EXSR SR6000
+     C*
+     C           FINN      TAG
+     C*
+     C*   TOTAL TIME PROCESSING.
+     C*
+     C*   Perform Term Indicator Change.
+     C*
+     CL1 11                EXSR SRL1T
+     C*
+     C*   Perform Deposit Loan Indicator Change.
+     C*
+     CL3 11                EXSR SRL3T
+     C*
+     C*   Perform LR Processing.
+     C*
+     CLR                   EXSR SR9999
+     C*
+     C*****************************************************
+     C/EJECT
+     C*****************************************************
+     C*                                                   *
+     C*          SR0000 - Initialisation.                 *
+     C*                                                   *
+     C*****************************************************
+     C*
+     C           SR0000    BEGSR
+     C*
+     C*   Initialise ALL Indicators.
+     C*
+     C                     MOVE '1'       *IN11
+     C                     Z-ADD0         OUTA
+     C                     Z-ADD0         OUTB
+     C                     MOVE 'N'       FLAGA
+     C                     MOVE 'N'       FLAGB
+     C                     MOVEACPY@      BIS@   80
+     C           *ENTRY    PLIST
+     C                     PARM           SEQ     5
+     C*
+     C** READ BANK DETAILS VIA ACCESS PROGRAM
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' RTCD    7
+     C                     PARM '*FIRST ' OPTN    7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C*    - Set date format indicator.
+     C*
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     END
+     C*
+     C*   Set Report Header Date at Next Working Day.
+     C*
+     C                     Z-ADDBJDNWD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    STDPRT  7
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01390
+     C                     IN   RUNDT                                     S01390
+     C           MBIN      IFEQ 'Y'                                       S01390
+     C                     MOVE '1'       *IN88                           S01390
+     C                     END                                            S01390
+      *                                                                   CDL006
+      ** Check if Dealing Fiduciary is switched ON                        CDL006
+      *                                                                   CDL006
+     C                     CALL 'AOSARDR0'                                CDL006
+     C                     PARM *BLANKS   WRTCD   7                       CDL006
+     C                     PARM '*VERIFY' WOPTN   7                       CDL006
+     C                     PARM 'CDL006'  WSARD   6                       CDL006
+     C           SCSARD    PARM SCSARD    DSFDY                           CDL006
+     C           WRTCD     IFEQ *BLANKS                                   CDL006
+     C                     MOVE 'Y'       CDL006  1                       CDL006
+     C                     ELSE                                           CDL006
+     C           WRTCD     IFNE '*NRF   '                                 CDL006
+     C                     MOVEL'SCSARDPD'DBFILE           ************   CDL006
+     C                     Z-ADD1         DBASE            * DBERR 01 *   CDL006
+     C                     MOVEL'CDL006'  DBKEY            ************   CDL006
+     C                     EXSR *PSSR                                     CDL006
+     C                     ENDIF                                          CDL006
+     C                     MOVE 'N'       CDL006                          CDL006
+     C                     ENDIF                                          CDL006
+      *                                                                   CDL006
+     C           CDL006    IFEQ 'Y'                                       CDL006
+     C                     MOVE 'N'       FLAGC   1                       CDL006
+     C                     MOVE 'N'       FLAGD   1                       CDL006
+     C                     Z-ADD0         OUTD    50                      CDL006
+     C                     Z-ADD0         OUTE    50                      CDL006
+     C                     OPEN DL7059P3                                  CDL006
+     C                     OPEN DL7059P4                                  CDL006
+     C                     ENDIF                                          CDL006
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*****************************************************
+     C*                                                   *
+     C*     SRL3D - Deposit Loan Indicator Change.(Detail)*
+     C*                                                   *
+     C*****************************************************
+     C*
+     C           SRL3D     BEGSR
+     C*
+     C*   Deals Record so Open DL7059P1
+     C*
+     C           DLNI      IFEQ 'D'
+     C                     MOVE 'Y'       FLAGA   1
+     C                     EXCPTHDG1A
+     C                     EXCPTHDG1B
+     C                     EXCPTHDG1C
+     C                     EXCPTHDG1D
+     C                     EXCPTHDG1E
+     C                     ELSE
+     C*
+     C*   Loans Record so Open DL7059P2
+     C*
+     C           DLNI      IFEQ 'L'
+     C                     MOVE 'Y'       FLAGB   1
+     C                     EXCPTHDG2A
+     C                     EXCPTHDG2B
+     C                     EXCPTHDG2C
+     C                     EXCPTHDG2D
+     C                     EXCPTHDG2E
+     C                     END
+     C                     END
+      *                                                                   CDL006
+     C           CDL006    IFEQ 'Y'                                       CDL006
+      *                                                                   CDL006
+     C           DLNI      IFEQ 'T'                                       CDL006
+     C                     MOVE 'Y'       FLAGC                           CDL006
+     C                     EXCPTHDGP3A                                    CDL006
+     C                     EXCPTHDGP3B                                    CDL006
+     C                     EXCPTHDGP3C                                    CDL006
+     C                     EXCPTHDGP3D                                    CDL006
+     C                     EXCPTHDGP3E                                    CDL006
+     C                     ENDIF                                          CDL006
+     C           DLNI      IFEQ 'P'                                       CDL006
+     C                     MOVE 'Y'       FLAGD                           CDL006
+     C                     EXCPTHDGP4A                                    CDL006
+     C                     EXCPTHDGP4B                                    CDL006
+     C                     EXCPTHDGP4C                                    CDL006
+     C                     EXCPTHDGP4D                                    CDL006
+     C                     EXCPTHDGP4E                                    CDL006
+     C                     ENDIF                                          CDL006
+      *                                                                   CDL006
+     C                     ENDIF                                          CDL006
+     C*                                                                   051147
+     C**  Initialise the Total Output Fields.                             051147
+     C*                                                                   051147
+     C                     Z-ADD*ZEROS    TOT11E 130                      051147
+     C                     Z-ADD*ZEROS    TOTTRE 130                      051147
+     C                     Z-ADD*ZEROS    TOTGRE 130                      051147
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*****************************************************
+     C*                                                   *
+     C*        SRL2D - Customer Short Name Change.(Detail)*
+     C*                                                   *
+     C*****************************************************
+     C*
+     C           SRL2D     BEGSR
+     C*
+     C*   Initilize Term Totals.
+     C*
+     C                     Z-ADD*ZEROS    TOT11  130
+     C                     Z-ADD*ZEROS    TOTTR  130
+     C*
+     C*   Set Print Indicator for Customer No. & Short Name.
+     C*
+     C                     SETON                     10
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*****************************************************
+     C*                                                   *
+     C*            SRL1D  - Term Indicator Change.(Detail)*
+     C*                                                   *
+     C*****************************************************
+     C*
+     C           SRL1D     BEGSR
+     C*
+     C*   Initilize Output Fields.
+     C*
+     C                     Z-ADD0         TI
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*****************************************************
+     C*                                                   *
+     C*          SR6000 - Detail Time Processing.         *
+     C*                                                   *
+     C*****************************************************
+     C*
+     C           SR6000    BEGSR
+     C*
+     C*   Calculate Output Fields for 11am deals.
+     C*
+     C                     MOVE *BLANKS   PTERM   7
+     C           TRMI      IFEQ 0
+     C                     ADD  PCPL      TOT11
+     C                     MOVE '11 AM'   PTERM
+     C                     ELSE
+     C*
+     C*   Calculate Output Fields for term deals.
+     C*
+     C                     ADD  PCPL      TOTTR
+     C                     MOVE MDAT      ZDAYNO  50
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    PTERM
+     C                     END
+     C*
+     C*   Overflow.
+     C*
+     C                     EXSR SR9000
+     C*
+     C*   Output Detail line for DEAL.
+     C*
+     C           FLAGA     IFEQ 'Y'
+     C                     EXCPTDET1A
+     C                     ELSE
+     C*
+     C*   Output Detail line for LOAN.
+     C*
+     C           FLAGB     IFEQ 'Y'
+     C                     EXCPTDET2A
+     C                     END
+     C                     END
+      *                                                                   CDL006
+     C           CDL006    IFEQ 'Y'                                       CDL006
+      *                                                                   CDL006
+     C           FLAGC     IFEQ 'Y'                                       CDL006
+     C                     EXCPTDET3A                                     CDL006
+     C                     ENDIF                                          CDL006
+     C           FLAGD     IFEQ 'Y'                                       CDL006
+     C                     EXCPTDET4A                                     CDL006
+     C                     ENDIF                                          CDL006
+      *                                                                   CDL006
+     C                     ENDIF                                          CDL006
+     C*
+     C                     SETOF                     10
+     C                     ADD  1         TI      20
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*****************************************************
+     C*                                                   *
+     C*            SRL1T  - Term Indicator Change.        *
+     C*                                                   *
+     C*****************************************************
+     C*
+     C           SRL1T     BEGSR
+     C*                                                                   051147
+     C** Term Totals.                                                     051147
+     C*                                                                   051147
+     C           TRMI      IFEQ 0                                         051147
+     C                     ADD  TOT11     TOT11E                          051147
+     C                     ADD  TOT11     TOTGRE                          051147
+     C                     ELSE                                           051147
+     C                     ADD  TOTTR     TOTTRE                          051147
+     C                     ADD  TOTTR     TOTGRE                          051147
+     C                     END                                            051147
+     C*
+     C*   Overflow.
+     C*
+     C                     EXSR SR9000
+     C*
+     C*   Output Totals for Term Change, DEAL.
+     C*
+     C           FLAGA     IFEQ 'Y'
+     C                     ADD  TI        OUTA    50
+     C           TI        IFLE 1
+     C                     EXCPTBLANK1
+     C                     ELSE
+     C           TRMI      IFEQ 0
+     C                     EXCPTTOT11A
+     C                     ELSE
+     C                     EXCPTTOTERA
+     C                     END
+     C                     END
+     C                     ELSE
+     C*
+     C*   Output Totals for Term Change, LOAN.
+     C*
+     C           FLAGB     IFEQ 'Y'
+     C                     ADD  TI        OUTB    50
+     C           TI        IFLE 1
+     C                     EXCPTBLANK2
+     C                     ELSE
+     C           TRMI      IFEQ 0
+     C                     EXCPTTOT11B
+     C                     ELSE
+     C                     EXCPTTOTERB
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *                                                                   CDL006
+     C           CDL006    IFEQ 'Y'                                       CDL006
+      *                                                                   CDL006
+     C           FLAGC     IFEQ 'Y'                                       CDL006
+     C                     ADD  TI        OUTD                            CDL006
+     C           TI        IFLE 1                                         CDL006
+     C                     EXCPTBLANK3                                    CDL006
+     C                     ELSE                                           CDL006
+     C           TRMI      IFEQ 0                                         CDL006
+     C                     EXCPTTOT11C                                    CDL006
+     C                     ELSE                                           CDL006
+     C                     EXCPTTOTERC                                    CDL006
+     C                     ENDIF                                          CDL006
+     C                     ENDIF                                          CDL006
+     C                     ENDIF                                          CDL006
+      *                                                                   CDL006
+     C           FLAGD     IFEQ 'Y'                                       CDL006
+     C                     ADD  TI        OUTE                            CDL006
+     C           TI        IFLE 1                                         CDL006
+     C                     EXCPTBLANK4                                    CDL006
+     C                     ELSE                                           CDL006
+     C           TRMI      IFEQ 0                                         CDL006
+     C                     EXCPTTOT11D                                    CDL006
+     C                     ELSE                                           CDL006
+     C                     EXCPTTOTERD                                    CDL006
+     C                     ENDIF                                          CDL006
+     C                     ENDIF                                          CDL006
+     C                     ENDIF                                          CDL006
+      *                                                                   CDL006
+     C                     ENDIF                                          CDL006
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*****************************************************
+     C*                                                   *
+     C*       SRL3T  - Deposit Loan Indicator Change.     *
+     C*                                                   *
+     C*****************************************************
+     C*
+     C           SRL3T     BEGSR
+     C*                                                                   051147
+     C** Overflow.                                                        051147
+     C*                                                                   051147
+     C                     EXSR SR9000                                    051147
+     C*                                                                   051147
+     C** Deposit Type is DEAL.                                            051147
+     C*                                                                   051147
+     C           FLAGA     IFEQ 'Y'                                       051147
+     C                     EXCPTTOT1EX                                    051147
+     C                     EXCPTTOTREX                                    051147
+     C                     EXCPTTOTGRX                                    051147
+     C                     ELSE                                           051147
+     C*                                                                   051147
+     C** Deposit Type is LOAN.                                            051147
+     C*                                                                   051147
+     C           FLAGB     IFEQ 'Y'                                       051147
+     C                     EXCPTTOT2EX                                    051147
+     C                     EXCPTTOTRX2                                    051147
+     C                     EXCPTTOTGR2                                    051147
+     C                     END                                            051147
+     C                     END                                            051147
+      *                                                                   CDL006
+     C           CDL006    IFEQ 'Y'                                       CDL006
+      *                                                                   CDL006
+     C           FLAGC     IFEQ 'Y'                                       CDL006
+     C                     EXCPTTOT3EX                                    CDL006
+     C                     EXCPTTOTRX3                                    CDL006
+     C                     EXCPTTOTGR3                                    CDL006
+     C                     ENDIF                                          CDL006
+      *                                                                   CDL006
+     C           FLAGD     IFEQ 'Y'                                       CDL006
+     C                     EXCPTTOT4EX                                    CDL006
+     C                     EXCPTTOTRX4                                    CDL006
+     C                     EXCPTTOTGR4                                    CDL006
+     C                     ENDIF                                          CDL006
+      *                                                                   CDL006
+     C                     ENDIF                                          CDL006
+     C*
+     C*   Close Appropriate Printer File.
+     C*
+     C           FLAGA     IFEQ 'Y'
+     C                     MOVE 'N'       FLAGA
+     C                     ELSE
+     C           FLAGB     IFEQ 'Y'
+     C                     MOVE 'N'       FLAGB
+     C                     END
+     C                     END
+      *                                                                   CDL006
+     C           CDL006    IFEQ 'Y'                                       CDL006
+      *                                                                   CDL006
+     C           FLAGC     IFEQ 'Y'                                       CDL006
+     C                     MOVE 'N'       FLAGC                           CDL006
+     C                     ENDIF                                          CDL006
+     C           FLAGD     IFEQ 'Y'                                       CDL006
+     C                     MOVE 'N'       FLAGD                           CDL006
+     C                     ENDIF                                          CDL006
+      *                                                                   CDL006
+     C                     ENDIF                                          CDL006
+      *                                                                   CDL006
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*
+     C*****************************************************
+     C*                                                   *
+     C*            SR9000 - Overflow Check.               *
+     C*                                                   *
+     C*****************************************************
+     C*
+     C           SR9000    BEGSR
+     C*
+     C*   Active Printer File is DL7060P1.
+     C*
+     C           FLAGA     IFEQ 'Y'
+     C*
+     C*   Force New Page if Required.
+     C*
+     C           *INOA     IFEQ '1'
+     C                     EXCPTHDG1A
+     C                     EXCPTHDG1B
+     C                     EXCPTHDG1C
+     C                     EXCPTHDG1D
+     C                     EXCPTHDG1E
+     C                     END
+     C                     ELSE
+     C*
+     C*   Active Printer File is DL7060P2.
+     C*
+     C           FLAGB     IFEQ 'Y'
+     C*
+     C*   Force New Page if Required.
+     C*
+     C           *INOB     IFEQ '1'
+     C                     EXCPTHDG2A
+     C                     EXCPTHDG2B
+     C                     EXCPTHDG2C
+     C                     EXCPTHDG2D
+     C                     EXCPTHDG2E
+     C                     END
+     C                     END
+     C                     END
+      *                                                                   CDL006
+     C           CDL006    IFEQ 'Y'                                       CDL006
+      *                                                                   CDL006
+     C           FLAGC     IFEQ 'Y'                                       CDL006
+     C           *INOC     ANDEQ'1'                                       CDL006
+     C                     EXCPTHDGP3A                                    CDL006
+     C                     EXCPTHDGP3B                                    CDL006
+     C                     EXCPTHDGP3C                                    CDL006
+     C                     EXCPTHDGP3D                                    CDL006
+     C                     EXCPTHDGP3E                                    CDL006
+     C                     ENDIF                                          CDL006
+      *                                                                   CDL006
+     C           FLAGD     IFEQ 'Y'                                       CDL006
+     C           *INOD     ANDEQ'1'                                       CDL006
+     C                     EXCPTHDGP4A                                    CDL006
+     C                     EXCPTHDGP4B                                    CDL006
+     C                     EXCPTHDGP4C                                    CDL006
+     C                     EXCPTHDGP4D                                    CDL006
+     C                     EXCPTHDGP4E                                    CDL006
+     C                     ENDIF                                          CDL006
+      *                                                                   CDL006
+     C                     ENDIF                                          CDL006
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*************************************************************
+     C*     SR9999 - LR PROCESSING                                *
+     C*************************************************************
+     C*
+     C           SR9999    BEGSR
+     C*
+     C*   If no records on CALLM file get initial details.
+     C*
+     C           *IN11     IFEQ '0'
+     C                     EXSR SR0000
+     C                     END
+     C*
+     C*   If no details reported on deposits report then ouput headings.
+     C*
+     C           OUTA      IFEQ 0
+     C                     EXCPTHDG1A
+EA001C                     EXCPTHDG1B
+EA001C                     EXCPTHDG1C
+     C                     EXCPTNDTRA
+     C                     END
+     C           *INU7     IFEQ '1'
+     C                     EXCPTDBERRA
+     C                     END
+     C*
+     C*   End of deposits report.
+     C*
+     C                     EXCPTEORA
+     C*
+     C*   If no details reported on loans report then ouput headings.
+     C*
+     C           OUTB      IFEQ 0
+     C                     EXCPTHDG2A
+EA001C                     EXCPTHDG2B
+EA001C                     EXCPTHDG2C
+     C                     EXCPTNDTRB
+     C                     END
+     C           *INU7     IFEQ '1'
+     C                     EXCPTDBERRB
+     C                     END
+     C*
+     C*   End of loans report.
+     C*
+     C                     EXCPTEORB
+      *                                                                   CDL006
+     C           CDL006    IFEQ 'Y'                                       CDL006
+      *                                                                   CDL006
+     C           OUTD      IFEQ 0                                         CDL006
+     C                     EXCPTHDGP3A                                    CDL006
+     C                     EXCPTHDGP3B                                    CDL006
+     C                     EXCPTHDGP3C                                    CDL006
+     C                     EXCPTNDTRC                                     CDL006
+     C                     ENDIF                                          CDL006
+     C           *INU7     IFEQ '1'                                       CDL006
+     C                     EXCPTDBERP3                                    CDL006
+     C                     ENDIF                                          CDL006
+     C                     EXCPTEORC                                      CDL006
+      *                                                                   CDL006
+     C           OUTE      IFEQ 0                                         CDL006
+     C                     EXCPTHDGP4A                                    CDL006
+     C                     EXCPTHDGP4B                                    CDL006
+     C                     EXCPTHDGP4C                                    CDL006
+     C                     EXCPTNDTRD                                     CDL006
+     C                     ENDIF                                          CDL006
+     C           *INU7     IFEQ '1'                                       CDL006
+     C                     EXCPTDBERP4                                    CDL006
+     C                     ENDIF                                          CDL006
+     C                     EXCPTEORD                                      CDL006
+      *                                                                   CDL006
+     C                     ENDIF                                          CDL006
+     C*
+     C*    Calculate Total Records Output.
+     C*
+     C           OUTA      ADD  OUTB      OUTC    50
+      *                                                                   CDL006
+     C           CDL006    IFEQ 'Y'                                       CDL006
+     C                     ADD  OUTD      OUTC                            CDL006
+     C                     ADD  OUTE      OUTC                            CDL006
+     C                     ENDIF                                          CDL006
+     C*
+     C*    Output Control Report
+     C*
+     C*
+     C** Report printer file to RCF via ZSFILE
+     C*
+     C                     Z-ADDSFNUMU    ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANKS   @ENT    3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM
+     C                     PARM *BLANKS   ZSERR   1
+     C*
+     C** Error during ZSFILE processing, return to calling program
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     GOTO FINN
+     C                     END
+     C                     Z-ADD0         PAGE2
+     C*
+     C                     EXCPTHDG3A
+     C                     EXCPTHDG3B
+     C                     EXCPTHDG3C
+     C*
+     C           *INU7     IFEQ '0'
+     C                     EXCPTDDG3A
+     C                     EXCPTDDG3B
+     C                     EXCPTDDG3C
+     C                     ELSE
+     C                     EXCPTDBERRC
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C*
+     C*  ERROR DUMP SUB-ROUTINE
+     C           *PSSR     BEGSR                           *** *PSSR  ***
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     OUT  LDA
+     C                     END
+     C                     ENDSR                           * *PSSR  ENDSR*
+     C*
+     C********************************************************************
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/EJECT
+     O********************************************************************
+     ODL7059P1E  202           HDG1A
+     O***********************************21 'REFERNCE DL7059P1'           048551
+     O                                   21 'REFERENCE DL7059P1'          048551
+     O                         BJURPT    90
+     O                                  105 'START OF DAY'
+     O                         STDPRT   113
+     O                                  121 'PAGE'
+     O                         PAGE     125
+     O        E  1             HDG1B
+     O                       88          18 'CONSOLIDATED'                S01390
+     O                                   60 'MATURING DEPOSITS AND'
+     O                                   83 'DEPOSIT MONEY ON 11 AM'
+     O                                  102 'CALL FOR AUD DEALS'
+     O        E  1             HDG1C
+     O                                   60 '---------------------'
+     O                                   83 '-----------------------'
+     O**********************************102 '------------------'          048551
+     O                                  102 '-------------------'         048551
+     O        E  1             HDG1D
+     O                                   10 'CUSTOMER'
+     O                                   28 'CUSTOMER'
+     O                                   43 'DEAL'
+     O                                   54 'DEAL'
+     O                                   64 'DEAL'
+     O                                   86 'PRINCIPAL'
+     O                                  101 'RATE'
+     O                                  119 'TERM'
+     O        E  2             HDG1E
+     O                                    9 'NUMBER'
+     O                                   26 'NAME'
+     O                                   44 'NUMBER'
+     O                                   54 'TYPE'
+     O                                   66 'SUB-TYPE'
+     O                                   84 'AMOUNT'
+     O        E  1             DET1A
+     O                       10CNUM       9
+     O                       10CRNM      33
+     O                         DLNO      44
+     O                         DTYP      53
+     O*************************DLST      63                               CDL038
+     O                         DLST      62                               CDL038
+     O                         CLAS      66                               CDL038
+     O                         PCPL      87 '  ,   ,   , 0 .  '
+     O                         INTR     107 '   0.       '
+     O                         PTERM    119
+     O        E  1             BLANK1
+     O        E  1             TOTERA
+     O                                   87 '-----------------'
+     O        E  2             TOTERA
+     O                         TOTTR     87 '  ,   ,   , 0 .  '
+     O                                  119 'TERM TOTAL'
+     O        E  1             TOT11A
+     O                                   87 '-----------------'
+     O        E  2             TOT11A
+     O                         TOT11     87 '  ,   ,   , 0 .  '
+     O                                  119 '11 AM TOTAL'
+     O        E  1             TOT1EX                                     051147
+     O                                   50 'CONSOLIDATED 11 AM TOTAL'    051147
+     O                         TOT11E    87 '  ,   ,   , 0 .  '           051147
+     O        E  1             TOTREX                                     051147
+     O                                   50 'CONSOLIDATED TERM TOTAL'     051147
+     O                         TOTTRE    87 '  ,   ,   , 0 .  '           051147
+     O        E  1             TOTGRX                                     051147
+     O                                   50 'CONSOLIDATED GRAND TOTAL'    051147
+     O                         TOTGRE    87 '  ,   ,   , 0 .  '           051147
+EA001O        E 22             NDTRA
+     O                                   76 'NO DETAILS TO REPORT'
+     O        E 22             DBERRA
+     O                                   76 '*** DATABASE ERROR ***'
+     O********E**2*************EORA******                                 051147
+     O        E 32             EORA                                       051147
+     O                                   76 '*** END OF REPORT ***'
+     ODL7059P2E  202           HDG2A
+     O***********************************21 'REFERNCE DL7059P2'           048551
+     O                                   21 'REFERENCE DL7059P2'          048551
+     O                         BJURPT    90
+     O                                  105 'START OF DAY'
+     O                         STDPRT   113
+     O                                  121 'PAGE'
+     O                         PAGE1    125
+     O        E  1             HDG2B
+     O                       88          18 'CONSOLIDATED'                S01390
+     O                                   60 'MATURING LOANS AND'
+     O                                   85 'LOAN MONEY ON 11 AM CALL'
+     O                                   99 'FOR AUD DEALS'
+     O        E  1             HDG2C
+     O                                   61 '-------------------'
+     O                                   85 '------------------------'
+     O                                   99 '--------------'
+     O        E  1             HDG2D
+     O                                   10 'CUSTOMER'
+     O                                   28 'CUSTOMER'
+     O                                   43 'DEAL'
+     O                                   54 'DEAL'
+     O                                   64 'DEAL'
+     O                                   86 'PRINCIPAL'
+     O                                  101 'RATE'
+     O                                  119 'TERM'
+     O        E  2             HDG2E
+     O                                    9 'NUMBER'
+     O                                   26 'NAME'
+     O                                   44 'NUMBER'
+     O                                   54 'TYPE'
+     O                                   66 'SUB-TYPE'
+     O                                   84 'AMOUNT'
+     O        E  1             DET2A
+     O                       10CNUM       9
+     O                       10CRNM      33
+     O                         DLNO      44
+     O                         DTYP      53
+     O*************************DLST      63                               CDL038
+     O                         DLST      62                               CDL038
+     O                         CLAS      66                               CDL038
+     O                         PCPL      87 '  ,   ,   , 0 .  '
+     O                         INTR     107 '   0.       '
+     O                         PTERM    119
+     O        E  1             BLANK2
+     O        E  1             TOTERB                                     051147
+     O                                   87 '-----------------'           051147
+     O        E  2             TOTERB
+     O                         TOTTR     87 '  ,   ,   , 0 .  '
+     O                                  119 'TERM TOTAL'
+     O        E  1             TOT11B                                     051147
+     O                                   87 '-----------------'           051147
+     O        E  2             TOT11B
+     O                         TOT11     87 '  ,   ,   , 0 .  '
+     O                                  119 '11 AM TOTAL'
+     O        E  1             TOT2EX                                     051147
+     O                                   50 'CONSOLIDATED 11 AM TOTAL'    051147
+     O                         TOT11E    87 '  ,   ,   , 0 .  '           051147
+     O        E  1             TOTRX2                                     051147
+     O                                   50 'CONSOLIDATED TERM TOTAL'     051147
+     O                         TOTTRE    87 '  ,   ,   , 0 .  '           051147
+     O        E  1             TOTGR2                                     051147
+     O                                   50 'CONSOLIDATED GRAND TOTAL'    051147
+     O                         TOTGRE    87 '  ,   ,   , 0 .  '           051147
+     O        E 22             NDTRB
+     O                                   76 'NO DETAILS TO REPORT'
+     O        E 22             DBERRB
+     O                                   76 '*** DATABASE ERROR ***'
+     O********E**2*************EORB******                                 051147
+     O        E 32             EORB                                       051147
+     O                                   76 '*** END OF REPORT ***'
+     ODL7059P3E  202           HDGP3A                                     CDL006
+     O                                   21 'REFERENCE DL7059P3'          CDL006
+     O                         BJURPT    90                               CDL006
+     O                                  105 'START OF DAY'                CDL006
+     O                         STDPRT   113                               CDL006
+     O                                  121 'PAGE'                        CDL006
+     O                         PAGE3    125                               CDL006
+     O        E  1             HDGP3B                                     CDL006
+     O                       88          18 'CONSOLIDATED'                CDL006
+     O                                   48 'FIDUCIARY DETAILS FOR '      CDL006
+     O                                   70 'MATURING DEPOSITS AND '      CDL006
+     O                                   93 'DEPOSIT MONEY ON 11 AM '     CDL006
+     O                                  111 'CALL FOR AUD DEALS'          CDL006
+     O        E  1             HDGP3C                                     CDL006
+     O                                   48 '----------------------'      CDL006
+     O                                   70 '----------------------'      CDL006
+     O                                   93 '-----------------------'     CDL006
+     O                                  111 '------------------'          CDL006
+     O        E  1             HDGP3D                                     CDL006
+     O                                   10 'CUSTOMER'                    CDL006
+     O                                   28 'CUSTOMER'                    CDL006
+     O                                   43 'DEAL'                        CDL006
+     O                                   54 'DEAL'                        CDL006
+     O                                   64 'DEAL'                        CDL006
+     O                                   86 'PRINCIPAL'                   CDL006
+     O                                  101 'RATE'                        CDL006
+     O                                  119 'TERM'                        CDL006
+     O        E  2             HDGP3E                                     CDL006
+     O                                    9 'NUMBER'                      CDL006
+     O                                   26 'NAME'                        CDL006
+     O                                   44 'NUMBER'                      CDL006
+     O                                   54 'TYPE'                        CDL006
+     O                                   66 'SUB-TYPE'                    CDL006
+     O                                   84 'AMOUNT'                      CDL006
+     O        E  1             DET3A                                      CDL006
+     O                       10CNUM       9                               CDL006
+     O                       10CRNM      33                               CDL006
+     O                         DLNO      44                               CDL006
+     O                         DTYP      53                               CDL006
+     O*************************DLST      63                        CDL006 CDL038
+     O                         DLST      62                               CDL038
+     O                         CLAS      66                               CDL038
+     O                         PCPL      87 '  ,   ,   , 0 .  '           CDL006
+     O                         INTR     107 '   0.       '                CDL006
+     O                         PTERM    119                               CDL006
+     O        E  1             BLANK3                                     CDL006
+     O        E  1             TOTERC                                     CDL006
+     O                                   87 '-----------------'           CDL006
+     O        E  2             TOTERC                                     CDL006
+     O                         TOTTR     87 '  ,   ,   , 0 .  '           CDL006
+     O                                  119 'TERM TOTAL'                  CDL006
+     O        E  1             TOT11C                                     CDL006
+     O                                   87 '-----------------'           CDL006
+     O        E  2             TOT11C                                     CDL006
+     O                         TOT11     87 '  ,   ,   , 0 .  '           CDL006
+     O                                  119 '11 AM TOTAL'                 CDL006
+     O        E  1             TOT3EX                                     CDL006
+     O                                   50 'CONSOLIDATED 11 AM TOTAL'    CDL006
+     O                         TOT11E    87 '  ,   ,   , 0 .  '           CDL006
+     O        E  1             TOTRX3                                     CDL006
+     O                                   50 'CONSOLIDATED TERM TOTAL'     CDL006
+     O                         TOTTRE    87 '  ,   ,   , 0 .  '           CDL006
+     O        E  1             TOTGR3                                     CDL006
+     O                                   50 'CONSOLIDATED GRAND TOTAL'    CDL006
+     O                         TOTGRE    87 '  ,   ,   , 0 .  '           CDL006
+     O        E 22             NDTRC                                      CDL006
+     O                                   76 'NO DETAILS TO REPORT'        CDL006
+     O        E 22             DBERP3                                     CDL006
+     O                                   76 '*** DATABASE ERROR ***'      CDL006
+     O        E 32             EORC                                       CDL006
+     O                                   76 '*** END OF REPORT ***'       CDL006
+     ODL7059P4E  202           HDGP4A                                     CDL006
+     O                                   21 'REFERENCE DL7059P4'          CDL006
+     O                         BJURPT    90                               CDL006
+     O                                  105 'START OF DAY'                CDL006
+     O                         STDPRT   113                               CDL006
+     O                                  121 'PAGE'                        CDL006
+     O                         PAGE4    125                               CDL006
+     O        E  1             HDGP4B                                     CDL006
+     O                       88          18 'CONSOLIDATED'                CDL006
+     O                                   48 'FIDUCIARY DETAILS '          CDL006
+     O                                   71 'FOR MATURING LOANS AND '     CDL006
+     O                                   91 'LOAN MONEY ON 11 AM '        CDL006
+     O                                  108 'CALL FOR AUD DEALS'          CDL006
+     O        E  1             HDGP4C                                     CDL006
+     O                                   48 '------------------'          CDL006
+     O                                   71 '-----------------------'     CDL006
+     O                                   91 '--------------------'        CDL006
+     O                                  108 '------------------'          CDL006
+     O        E  1             HDGP4D                                     CDL006
+     O                                   10 'CUSTOMER'                    CDL006
+     O                                   28 'CUSTOMER'                    CDL006
+     O                                   43 'DEAL'                        CDL006
+     O                                   54 'DEAL'                        CDL006
+     O                                   64 'DEAL'                        CDL006
+     O                                   86 'PRINCIPAL'                   CDL006
+     O                                  101 'RATE'                        CDL006
+     O                                  119 'TERM'                        CDL006
+     O        E  2             HDGP4E                                     CDL006
+     O                                    9 'NUMBER'                      CDL006
+     O                                   26 'NAME'                        CDL006
+     O                                   44 'NUMBER'                      CDL006
+     O                                   54 'TYPE'                        CDL006
+     O                                   66 'SUB-TYPE'                    CDL006
+     O                                   84 'AMOUNT'                      CDL006
+     O        E  1             DET4A                                      CDL006
+     O                       10CNUM       9                               CDL006
+     O                       10CRNM      33                               CDL006
+     O                         DLNO      44                               CDL006
+     O                         DTYP      53                               CDL006
+     O*************************DLST      63                        CDL006 CDL038
+     O                         DLST      62                               CDL038
+     O                         CLAS      66                               CDL038
+     O                         PCPL      87 '  ,   ,   , 0 .  '           CDL006
+     O                         INTR     107 '   0.       '                CDL006
+     O                         PTERM    119                               CDL006
+     O        E  1             BLANK4                                     CDL006
+     O        E  1             TOTERD                                     CDL006
+     O                                   87 '-----------------'           CDL006
+     O        E  2             TOTERD                                     CDL006
+     O                         TOTTR     87 '  ,   ,   , 0 .  '           CDL006
+     O                                  119 'TERM TOTAL'                  CDL006
+     O        E  1             TOT11D                                     CDL006
+     O                                   87 '-----------------'           CDL006
+     O        E  2             TOT11D                                     CDL006
+     O                         TOT11     87 '  ,   ,   , 0 .  '           CDL006
+     O                                  119 '11 AM TOTAL'                 CDL006
+     O        E  1             TOT4EX                                     CDL006
+     O                                   50 'CONSOLIDATED 11 AM TOTAL'    CDL006
+     O                         TOT11E    87 '  ,   ,   , 0 .  '           CDL006
+     O        E  1             TOTRX4                                     CDL006
+     O                                   50 'CONSOLIDATED TERM TOTAL'     CDL006
+     O                         TOTTRE    87 '  ,   ,   , 0 .  '           CDL006
+     O        E  1             TOTGR4                                     CDL006
+     O                                   50 'CONSOLIDATED GRAND TOTAL'    CDL006
+     O                         TOTGRE    87 '  ,   ,   , 0 .  '           CDL006
+     O        E 22             NDTRD                                      CDL006
+     O                                   76 'NO DETAILS TO REPORT'        CDL006
+     O        E 22             DBERP4                                     CDL006
+     O                                   76 '*** DATABASE ERROR ***'      CDL006
+     O        E 32             EORD                                       CDL006
+     O                                   76 '*** END OF REPORT ***'       CDL006
+     ODL7059AUE  202           HDG3A
+     O***********************************21 'REFERNCE DL7059AU'           048551
+     O                                   21 'REFERENCE DL7059AU'          048551
+     O                         BJURPT    90
+     O                                  105 'START OF DAY'
+     O                         STDPRT   113
+     O                                  121 'PAGE'
+     O                         PAGE2    125
+     O        E  1             HDG3B
+     O                                   59 'MATURING DEALS AND DEALS'
+     O                                   73 'ON 11 AM CALL'
+     O                                   90 '- CONTROL REPORT'
+     O        E  2             HDG3C
+     O                                   59 '------------------------'
+     O                                   73 '--------------'
+     O                                   90 '-----------------'
+     O        E  2             DDG3A
+     O                                   50 'TOTAL RECORDS OUTPUT TO'
+     O                                   66 'DEPOSITS REPORT'
+     O***********              OUTA  Z   75                               048551
+     O                         OUTA  J   75                               048551
+     O        E  2             DDG3B
+     O                                   50 'TOTAL RECORDS OUTPUT TO'
+     O                                   63 'LOANS REPORT'
+     O***********              OUTB  Z   75                               048551
+     O                         OUTB  J   75                               048551
+     O        E  2             DDG3C
+     O                                   47 'TOTAL RECORDS OUTPUT'
+     O***********              OUTC  Z   75                               048551
+     O                         OUTC  J   75                               048551
+     O        E  2     LR U7 U8DBERRC
+     O                                   57 'DATABASE ERROR'
+     O                         DBASE     61
+     O                                   67 'FILE'
+     O                         DBFILE    76
+     O        E 13     LR U7 U8DBERRC
+     O                                   46 'KEY'
+     O                         DBKEY     76
+**   ZYDY - YEARS IN DAYS CUMULATIVE IN FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

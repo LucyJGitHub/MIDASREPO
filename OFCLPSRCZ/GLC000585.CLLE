@@ -1,0 +1,163 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas OF Accounting Rules Posting Generation')        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC000585 - Midas OF Accounting Rules Posting Generation    */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. MD029739           Date 15Aug14              */
+/*       Prev Amend No. MD023825           Date 27Nov13              */
+/*                      MD023746           Date 22Nov13              */
+/*                      MD023710           Date 21Nov13              */
+/*                      MD023628           Date 18Nov13              */
+/*                      CGL135B  *Create   Date 10Jul13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD029739 - File renaming for integration layer.             */
+/*       MD023825 - Missing reports called during Accounting Rules   */
+/*                  process                                          */
+/*       MD023746 - Invalid parameter                                */
+/*       MD023710 - The name of data area exceeds 10 characters      */
+/*       MD023628 - Accounting Rules Processing                      */
+/*       CGL135B - Accounting Rules Processing                       */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM        PARM(&BTID &ARST &ZONE)    */                                   /*MD023746*/
+             PGM        PARM(&PARM1)                                                    /*MD023746*/
+ 
+             DCL        VAR(&PARM1) TYPE(*CHAR) LEN(100)                                /*MD023746*/
+             DCL        VAR(&BTID) TYPE(*CHAR) LEN(60)
+             DCL        VAR(&ARST) TYPE(*CHAR) LEN(30)
+             DCL        VAR(&ZONE) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&POPTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PSARD) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)
+ 
+             DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)          /*MD023628*/
+             DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)          /*MD023628*/
+             DCL        VAR(&RENT) TYPE(*CHAR) LEN(3)          /*MD023628*/
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)          /*MD023628*/
+ 
+             DCL        VAR(&DAY) TYPE(*CHAR) LEN(2)                                    /*MD023710*/
+             DCL        VAR(&A) TYPE(*CHAR) LEN(1)                                      /*MD023710*/
+             DCL        VAR(&BTSQ) TYPE(*CHAR) LEN(7)                                   /*MD023710*/
+             DCL        VAR(&DTAR) TYPE(*CHAR) LEN(10)                                  /*MD023710*/
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7)                                  /*MD023710*/
+             DCL        VAR(&PREF) TYPE(*CHAR) LEN(2)                                   /*MD023710*/
+                                                                                        /*MD023710*/
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2013')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                          VALUE(' ')
+             MONMSG     MSGID(CPF0000)
+             CHGJOB SWS(00000000)
+ 
+/* Check if CGL135 is installed */
+ 
+             CHGVAR     VAR(&PRTCD) VALUE('       ')
+             CHGVAR     VAR(&POPTN) VALUE('*VERIFY')
+             CHGVAR     VAR(&PSARD) VALUE('CGL135')
+ 
+             CALL       PGM(AOSARDR0) PARM(&PRTCD &POPTN &PSARD &SCSARD)
+ 
+             IF         COND(&PRTCD *NE '       ') THEN(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+             CHGVAR     VAR(&BTID) VALUE(&PARM1)                                        /*MD023746*/
+                                                                                        /*MD023746*/
+/* Check for DTAARA exists for Batch ID */                                  /*MD023628*/
+/**********  CHKOBJ     OBJ(&BTID) OBJTYPE(*DTAARA)                   */       /*MD023628 MD023710*/
+/**********  MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA DTAARA(&BTID) +
+                          TYPE(*CHAR) LEN(1) VALUE(' ') TEXT('Midas +
+                          OF Accounting Rules Batch ID') AUT(*USE))   */       /*MD023628 MD023710*/
+ 
+/**********  ALCOBJ     OBJ((&BTID *DTAARA *EXCLRD))                  */       /*MD023628 MD023710*/
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREF)                              /*MD023710*/
+             CHGVAR     VAR(&DPLIB) VALUE(&PREF *CAT 'DPLIB')                           /*MD023710*/
+             CHGVAR     VAR(&A) VALUE('A')                                              /*MD023710*/
+             CHGVAR     VAR(&DAY) VALUE(%SUBSTRING(&BTID 7 2))                          /*MD023710*/
+             CHGVAR     VAR(&BTSQ) VALUE(%SUBSTRING(&BTID 9 15))                        /*MD023710*/
+             CHGVAR     VAR(&DTAR) VALUE(&A *CAT &DAY *CAT &BTSQ)                       /*MD023710*/
+                                                                                        /*MD023710*/
+             CHKOBJ     OBJ(&DTAR) OBJTYPE(*DTAARA)                                     /*MD023710*/
+             MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
+                          DTAARA(&DPLIB/&DTAR) TYPE(*CHAR) LEN(1) +
+                          VALUE(' ') TEXT('Midas OF Accounting +
+                          Rules Batch ID') AUT(*USE))                                   /*MD023710*/
+                                                                                        /*MD023710*/
+             ALCOBJ     OBJ((&DTAR *DTAARA *EXCLRD))                                    /*MD023710*/
+             MONMSG     MSGID(CPF1002) EXEC(DO)                             /*MD023628*/
+             SNDPGMMSG  MSG('GLC000585 - Batch Id already being processed') +
+                           TOPGMQ(*EXT)                                     /*MD023628*/
+             GOTO       CMDLBL(END)                                         /*MD023628*/
+             ENDDO                                                          /*MD023628*/
+ 
+/* Call the program that will process each step of the Posting Generation */
+ 
+/**********  CALL       PGM(GL000585) PARM(&BTID &ARST &ZONE)        */                 /*MD029739*/
+             CALL       PGM(DI000585) PARM(&BTID &ARST &ZONE)                           /*MD029739*/
+ 
+             IF COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO CMDLBL(ABNOR)
+             ENDDO
+ 
+ 
+/**********  DLCOBJ OBJ((&BTID *DTAARA *EXCLRD))                      */       /*MD023628 MD023710*/
+             DLCOBJ OBJ((&DTAR *DTAARA *EXCLRD))                                        /*MD023710*/
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                      /*MD023628*/
+/* Call the program that will process the reports  */                       /*MD023628*/
+                                                                            /*MD023628*/
+             CHGVAR     VAR(&MODE) VALUE('A')                                           /*MD023825*/
+             CHGVAR     VAR(&RSEQ) VALUE('     ')                                       /*MD023825*/
+             CHGVAR     VAR(&RLEV) VALUE('B')                                           /*MD023825*/
+             CHGVAR     VAR(&RENT) VALUE('ALL')                                         /*MD023825*/
+             CALL       PGM(GLC000583) PARM(&MODE &RSEQ &RLEV &RENT)        /*MD023628*/
+                                                                            /*MD023628*/
+             IF COND(%SWITCH(XXXXXX11)) THEN(DO)                            /*MD023628*/
+                GOTO CMDLBL(ABNOR)                                          /*MD023628*/
+             ENDDO                                                          /*MD023628*/
+ 
+             CHGVAR     VAR(&MODE) VALUE('A')                                           /*MD023825*/
+             CHGVAR     VAR(&RSEQ) VALUE('     ')                                       /*MD023825*/
+             CHGVAR     VAR(&RLEV) VALUE('B')                                           /*MD023825*/
+             CHGVAR     VAR(&RENT) VALUE('ALL')                                         /*MD023825*/
+             CALL       PGM(GLC000584) PARM(&MODE &RSEQ &RLEV &RENT)        /*MD023628*/
+                                                                            /*MD023628*/
+             IF COND(%SWITCH(XXXXXX11)) THEN(DO)                            /*MD023628*/
+                GOTO CMDLBL(ABNOR)                                          /*MD023628*/
+             ENDDO                                                          /*MD023628*/
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal termination */
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC000585 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:         RCLRSC
+             MONMSG     MSGID(CPF0000 MCH0000)
+             RCLRSC     LVL(*CALLER)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             RCLACTGRP  ACTGRP(*ELIGIBLE)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             ENDPGM

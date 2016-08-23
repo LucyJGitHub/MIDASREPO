@@ -1,0 +1,327 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Outward Clearing Trans.Types Report')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Banking                                       *
+      *                                                               *
+      *  RE2006 - Outward Clearing Transaction Types Report           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      *  Last Amend No. MD035554           Date 25May16               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CRE023  *CREATE    Date 29Jul05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD035554 - 2o'clock/ABC compatibility (Recompile)            *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CRE023 - 2 O'clock Flag Upgrade to MidasPlus                 *
+      *                                                               *
+      *****************************************************************
+     FRETTYPL0IF  E           K        DISK
+     FSDRETRL1IF  E           K        DISK
+     FRE2006P1O   E                    PRINTER      KINFDS SPOOL
+     FRE2006AUO   E                    PRINTER      KINFDS SPOOLU     UC
+      *****************************************************************
+      * F U N C T I O N  O F  I N D I C A T O R S                     *
+      *                                                               *
+      *  21      ZSFILE ended in error                                *
+      *                                                               *
+      *****************************************************************
+      /COPY ZSRSRC,ZDATE2Z1
+     IPGMDS      SDS
+     I                                        1  10 ##PGM
+     ISPOOL       DS
+      *
+      ** P1 printer file information data structure
+      *
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 152 1530SFPLE
+     I                                    B 188 1890SFOVR
+     I                                    B 367 3680SFCUR
+      *
+     ISPOOLU      DS
+      *
+      ** AU printer file information data structure
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Bank Details
+     IDSFDY     E DSDSFDY
+      *
+      ** First DS for Access Programs, Short Data Structure
+     ILDA         DS                            256
+      *
+      ** Local Data Area
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *****************************************************************
+      *                                                               *
+      *  ENTRY PARAMETERS                                             *
+      *                                                               *
+      *****************************************************************
+     C           *ENTRY    PLIST
+     C                     PARM           SEQNO   5
+     C                     PARM           PARM2   1
+      *****************************************************************
+      * START PROCESSING
+      *****************************************************************
+     C                     EXSR ZZINIT
+     C                     EXSR REASR
+     C           *IN99     IFEQ '0'
+     C                     EXSR WRTH10
+     C                     ENDIF
+     C           *IN99     DOWEQ'0'
+     C                     EXSR WRTD10
+     C                     EXSR REASR
+     C   99                EXSR WRTF10
+     C                     ENDDO
+     C                     EXSR AUDSR
+     C                     SETON                     LR
+     C                     RETRN
+      *****************************************************************
+      *                                                               *
+      *  REASR - Read RETTYPL0                                        *
+      *                                                               *
+      *****************************************************************
+     C           REASR     BEGSR
+     C           PARM2     IFEQ 'A'
+     C           *IN99     DOUEQ'1'
+     C                     READ RETTYPL0                 99
+     C           GLCD      IFEQ MDNBR
+     C           GRECI     IFEQ 'D'
+     C           GRECI     OREQ '*'
+     C                     LEAVE
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDDO
+     C                     ELSE
+     C           *IN99     DOUEQ'1'
+     C                     READ RETTYPL0                 99
+     C           GRECI     IFEQ 'D'
+     C                     LEAVE
+     C                     ENDIF
+     C                     ENDDO
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  WRTD10 - Write detail line                                   *
+      *                                                               *
+      *****************************************************************
+     C           WRTD10    BEGSR
+     C                     Z-ADDSFCUR     CURLIN  30
+     C           CURLIN    IFGE MAXLIN
+     C                     EXSR WRTH10
+     C                     ENDIF
+     C                     EXSR ACCNAM
+     C                     MOVELGTTYP     PTTYP
+     C                     MOVELGOCLR     POCLR
+     C                     MOVELGRCLT     PRCLT
+     C                     MOVELGRCLP     PRCLP
+     C                     MOVELGLCD      ZDAYNO  50
+     C                     MOVE '0'       *IN98
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     PLCD
+     C                     SELEC
+     C           GLTYP     WHEQ 'D'
+     C                     MOVEL'DELETE'  PLTYP
+     C           GLTYP     WHEQ 'C'
+     C                     MOVEL'AMEND '  PLTYP
+     C           GLTYP     WHEQ 'I'
+     C                     MOVEL'INSERT'  PLTYP
+     C                     OTHER
+     C                     MOVEL'XXXXXX'  PLTYP
+     C                     ENDSL
+     C                     WRITEP1DET1
+     C                     ADD  1         PNOREC
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  ACCNAM - Access SDRETRL1 file to get transaction name        *
+      *                                                               *
+      *****************************************************************
+     C           ACCNAM    BEGSR
+     C           GTTYP     CHAINSDRETRL1             99
+     C           *IN99     IFEQ '0'
+     C                     MOVELA1RTNM    PTNAM
+     C                     ELSE
+     C                     MOVEL'SDRETRL1'AUDBS
+     C                     MOVELGTTYP     AUDBK
+     C                     Z-ADD002       AUDBL
+     C                     MOVEL'RE2006 ' AUDBP
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  WRTH10 - Write header                                        *
+      *                                                               *
+      *****************************************************************
+     C           WRTH10    BEGSR
+     C                     WRITEP1HDR1
+     C                     WRITEP1CHD1
+     C                     Z-ADDSFOVR     MAXLIN  30
+     C           MAXLIN    SUB  3         MAXLIN
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  WRTF10 - Write footer                                        *
+      *                                                               *
+      *****************************************************************
+     C           WRTF10    BEGSR
+     C                     WRITEP1FTR1
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  AUDSR - Write audit file                                     *
+      *                                                               *
+      *****************************************************************
+     C           AUDSR     BEGSR
+      *
+     C                     OPEN RE2006AU
+      *
+      ** Call RCF
+      *
+     C                     Z-ADDSFNUMU    ZSNUM
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQNO
+     C                     PARM *BLANKS   ENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR
+      *
+      ** Write audit file
+      *
+     C                     WRITEAUHDR1
+     C                     WRITEAUDET1
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  ZZINIT - Initialise                                          *
+      *                                                               *
+      *****************************************************************
+     C           ZZINIT    BEGSR
+      *
+      ** Set up work field
+      *
+     C                     MOVE 'Y'       RUN1    1
+      *
+      ** Use access program AOBANKR0 to retrieve header details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** If error in access program, exit via *PSSR subroutine
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL##PGM     AUDBP  10
+     C                     MOVE *BLANKS   AUDBK   5
+     C                     MOVEL'SDBANKPD'AUDBS  10
+     C                     Z-ADD001       AUDBL   30
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** User report title, MIDAS run date
+      *
+     C                     MOVE BJURPT    ##URPT
+     C                     MOVE BJMRDT    ##MRDT
+     C                     Z-ADDBJRDNB    MDNBR   50
+     C                     Z-ADD0         PNOREC
+     C           PARM2     IFEQ 'A'
+     C                     MOVEL'AUDIT'   REPTYP
+     C                     ENDIF
+     C           PARM2     IFEQ 'L'
+     C                     MOVEL' FULL'   REPTYP
+     C                     ENDIF
+      *
+      ** Ensure totals spool file recorded by RCF
+      *
+     C                     Z-ADDSFNUM     ZSNUM   60
+      *
+      ** Call ZSFILE for RE2006P1
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQNO
+     C                     PARM *BLANKS   ENTY    3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ** If error in ZSFILE, exit via *PSSR subroutine
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     21
+     C                     EXSR *PSSR
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR - Error processing                                     *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+      ** Check that this is the first time through the routine
+      ** to prevent recursive calling which would loop the progam.
+     C           RUN1      IFEQ 'Y'
+     C                     MOVE 'N'       RUN1
+      *
+      ** Check if any of the calls to ZSFILE ended in error.  ZSFILE
+      ** has its own error handling so most of this routine can be
+      ** skipped.
+     C           *IN21     IFEQ '0'
+     C                     DUMP
+      *
+      ** Database error handling.
+      *
+     C           *NAMVAR   DEFN           LDA
+     C                     UNLCKLDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL##PGM     DBPGM
+     C                     MOVELAUDBK     DBKEY
+     C                     MOVELAUDBS     DBFILE
+     C                     Z-ADDAUDBL     DBASE
+     C                     OUT  LDA
+     C                     UNLCKLDA
+      *
+      ** Open audit file and perform ZSFILE processing.
+      *
+     C                     OPEN RE2006AU
+      *
+      ** Ensure totals spool file recorded by RCF
+      *
+     C                     Z-ADDSFNUMU    ZSNUM
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQNO
+     C                     PARM *BLANKS   ENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR
+      *
+      ** Write audit report.
+      *
+     C                     WRITEAUHDR1
+     C                     WRITEAUDET1
+     C                     WRITEAUDET2
+     C                     END
+     C                     END
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDSR
+      /COPY ZSRSRC,ZDATE2Z2
+      /COPY ZSRSRC,ZDATE2Z3

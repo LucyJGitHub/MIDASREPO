@@ -1,0 +1,2426 @@
+0001 H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas EM Region Limits/Exps/Avail Rep')                *
+0002 F*****************************************************************
+0004 F*                                                               *
+     F*  Midas Exposure Management Module
+0004 F*                                                               *
+0005 F*  EM0630 - Region Limits/Exposure/Availability Report          *
+0009 F*                                                               *
+     F*  Function: This program produces a report showing up to date  *
+     F*    (COB    limits, exposure and availability details for      *
+     F*   ONREQ)   those regions for whom limits have been specified. *
+     F*                                                               *
+     F*            The report can be requested as a 'full' report     *
+     F*            which shows all regions for whom limits have been  *
+     F*            defined or as an 'exception' report which shows    *
+     F*            only those regions who have exceeded one or more   *
+     F*            of 1their limits.                                  *
+     F*                                                               *
+     F*            If a 'full' report is selected, a total for those  *
+     F*            regions without limits is printed at the end of    *
+     F*            the report.                                        *
+     F*                                                               *
+     F*            The Exposure Management COB file by Region, EMDE2, *
+     F*            is read, accumulating the exposure and off-setting *
+     F*            balances for each of the business areas for each   *
+     F*            region.                                            *
+     F*                                                               *
+     F*            The Exposure Management Limits file, EMLIM, is     *
+     F*            accessed to obtain the limits for each country.    *
+     F*                                                               *
+     F*            When all the records for a region have been read,  *
+     F*            the availability for each business area and        *
+     F*            overall totals are calculated and the details      *
+     F*            printed.                                           *
+     F*                                                               *
+     F*  Called By: EMC0805                                           *
+     F*                                                               *
+     F*  Calls: None                                                  *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*      1990.                                                    *
+0008 F*                                                               *
+      *  Last Amend No. MD030956           Date 09Oct14               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CAAA03             Date 27Apr04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CTI002             Date 07Oct98               *
+      *                 090475             Date 19Oct95               *
+     F*                 042675            DATE 26OCT93                *
+     F*                 S01332            DATE 03MAY91                *
+     F*                 S01196            DATE 18NOV89                *
+     F*                 S01117            DATE 25/10/89               *
+     F*                 E14725            DATE 07/03/89               *
+     F*                 S01129            DATE 23/11/87               *
+     F*                 S01128            DATE 20/02/87               *
+0009 F*                                                               *
+0011 F*****************************************************************
+     F*                                                               *
+      *  MD030956 - Additional changes to BFM-TI enhancement          *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus                                          *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CAAA03 - Webfacing Changes. (recompile)                      *
+     F*  CTI002 - Exposure Management Trade Finanace interface.       *
+     F*  090475 - REPORT EMPTY                                        *
+     F*  042675 - Program loops because no check for End Of File      *
+     F*           this will happen if no records on LF/TABEM with     *
+     F*           key greater than '51'.                              *
+     F*  S01332 - Release 10 EM changes                               *
+0009 F*  S01196 - DROP LETTERS OF CREDIT MODULE                       *
+     F*  S01117 - RELEASE 10 MULTIBRANCHING                           *
+     F*  E14725 - AMOUNT FIELDS ON REPORT TO BE EDITED AS SIGNED.     *E14725
+0010 F*  S01128 - CHANGE 'TOTAL' TO 'OVERALL'                         *
+     F*  S01128 - OUTPUT FX OFFSETTING BALANCE FIGURE                 *S01128
+     F*  S01129 - REPORT SEQUENCE TO BE DETERMINED BY TABTB95         *S01129
+0009 F*                                                               *
+0011 F*****************************************************************
+     F**** EMDE2   IF  F     128  2AI    13 DISK                          S01128
+     F**** EMDE2   IF  F     152  2AI    13 DISK                          S01128
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F***EMDE2***IF**F     178  2AI    13 DISK                     S01129 S01332
+     F***EMDE2***IF**F     226  2AI    13 DISK                     S01332 CTI002
+     F***EMDE2** IF  F     250  2AI    13 DISK                                         CTI002 CER020
+     FEMDE2   IF  F     253  2AI    13 DISK                                                   CER020
+0013 F**** EMLIM   IF  F     128  7AI     2 DISK                          S01129
+     F***EMLIM***IF**F     143  7AI     2 DISK                     S01129 S01332
+     F***EMLIM***IF**F     165  7AI     2 DISK                     S01332 CTI002
+     FEMLIM   IF  F     175  7AI     2 DISK                               CTI002
+0014 F**** TABLE   IF  F      96 12AI     2 DISK                          S01129
+     F***TABEM** IF  F      96 12AI     2 DISK                                         S01129 CER020
+     FTABEM   IF  F      99 12AI     2 DISK                                                   CER020
+0015 F*M0630P1O***F     132     OF     PRINTER                     S01124 S01117
+0015 FEM0630P1O   F     132     OF     PRINTER      KINFDS SPOOL      UC  S01117
+0015 FEM0630AUO   F     132            PRINTER      KINFDS SPOOLU     UC  S01117
+     FEMEXSCL1IF  E           K        DISK                               S01332
+0016 F*
+0017 F* ID F  C  H  L    FUNCTION OF INDICATORS
+0018 F**
+0019 F* 01            EMDE2 - EMDEX DETAIL RECORD.
+0020 F* 02            EMLIM - DETAIL RECORD UNDELETED
+0021 F* 03                  - DETAIL RECORD DELETED
+0022 F* 05            TABLE - INSTALATION CONTROL RECORD 1.
+0023 F* 06                  - INSTALATION CONTROL RECORD 2.
+0024 F* 07                  - CURRENCIES RECORD 1.
+0025 F* 08                  - REGION RECORD.
+0026 F* 09                  - REGION RECORD CATCHALL.
+0027 F**
+0028 F*       40             IF ON - NEGATIVE AVAILABILITY
+0029 F*       41             IF ON - NO NEGATIVE AVAILABILITY
+0029 F*       42             NO DETAILS TO REPORT                         S01117
+0030 F*       50             IF ON - LAST REGION ON TABLE
+0031 F*       52             IF ON - ALL EMDEX RECORDS READ FOR REGION
+0032 F*       60             IF ON - EMLIM CHAIN FAILED
+0033 F*       61             IF ON - TABLE CHAIN FAILED WHEN SETTING LL
+0074 F*       71             WORK INDICATOR                               S01332
+0077 F*       74             CHAINING INDICATOR (LF/EMEXSCL1)             S01332
+0077 F*       77             PRINT EXCLUDED BUSINESS AREAS                S01332
+0034 F*       78             ** READ TABLE INDICATOR
+0035 F*       79             ** READ EMDEX INDICATOR
+     F*       84             ARRAY LOOKUP SUCCESSFUL                      S01332
+     F*       85             ERROR ON ACCESS OBJECT CALL                  S01332
+0036 F**
+0037 F*       90-97   USED BY Z - SUBROUTINES.
+0038 F*       98      DATE FORMAT MMDDYY IF ON.
+0039 F*       99      Z -SUBROUTINES, ERROR FOUND.
+0040 F*                     (DATABASE ERROR)
+0041 F**
+0042 F*          LR   IF ON - PROCESS TOTALS AND TERMINATE PROG
+0043 F*
+0044 F**
+0045 F*               EXTERNAL INDICATOR MEANINGS ON OUTPUT-
+0046 F*          U1   IF ON - EXEPTION REPORT
+0047 F*          U1   IF OFF- FULL REPORT
+0049 F*          U8   DATABASE ERROR, REQUIRED RECORDS NOT FOUND.
+0050 F*               N.B. U7 & U8 END THE PROGRAM AND CONDITION
+0051 F*                    FOLLOWING CL EXECUTION.
+0052 F**
+     E                    CPY@    1   1 80               COPYRIGHT STATEMENT
+0053 E***                 LIM         7 11 0             LIMITS ARRAY(NUM)S01129
+0054 E***                 EXP         7 15 0             EXPOSURE ARRAY   S01129
+0055 E***                 AVA         7 15 0             AVAILABILITY ARR S01129
+0056 E***                 OSB         7 15 0             OFF-SET BAL ARR  S01129
+0057 E***                 NLE         7 15 0             NO LIMIT EXP ARR S01129
+0058 E***                 NLA         7 15 0             NO LIMIT AVA ARR S01129
+0059 E***                 NLO         7 15 0             NO LIMIT OSB ARR S01129
+0060 E***                 TTL         7 15 0             TOTAL LIMITS     S01129
+0061 E***                 TTE         7 15 0             TOTAL EXPOSURE   S01129
+0062 E***                 TTA         7 15 0             TOTAL AVAIL      S01129
+0063 E***                 TTO         7 15 0             TOTAL OFF-SET BALS01129
+0064 E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAYS01129
+0065 E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAYS01129
+0066 E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY S01129
+     E**********          LIM         9 11 0             LIMITS ARRS01129 S01332
+     E**********          EXP         9 15 0             EXPOSURE AS01129 S01332
+     E**********          AVA         9 15 0             AVAILABILIS01129 S01332
+     E**********          OSB         9 15 0             OFF-SET BAS01129 S01332
+     E**********          NLE         9 15 0             NO LIMIT ES01129 S01332
+     E**********          NLA         9 15 0             NO LIMIT AS01129 S01332
+     E**********          NLO         9 15 0             NO LIMIT OS01129 S01332
+     E**********          TTL         9 15 0             TOTAL LIMIS01129 S01332
+     E**********          TTE         9 15 0             TOTAL EXPOS01129 S01332
+     E**********          TTA         9 15 0             TOTAL AVAIS01129 S01332
+     E**********          TTO         9 15 0             TOTAL OFF-S01129 S01332
+     E**********          ATY     9   9  2               SEQUENCE TS01129 S01332
+     E**********          ASQ         9  2 0             SEQUENCE NS01129 S01332
+     E**********          WTY         9  2               TYPES IN SS01129 S01332
+     E**********          LIM        11 11 0                       S01332 CTI002
+     E**********          EXP        11 15 0                       S01332 CTI002
+     E**********          AVA        11 15 0                       S01332 CTI002
+     E**********          OSB        11 15 0                       S01332 CTI002
+     E**********          NLE        11 15 0                       S01332 CTI002
+     E**********          NLA        11 15 0                       S01332 CTI002
+     E**********          NLO        11 15 0                       S01332 CTI002
+     E**********          TTL        11 15 0                       S01332 CTI002
+     E**********          TTE        11 15 0                       S01332 CTI002
+     E**********          TTA        11 15 0                       S01332 CTI002
+     E**********          TTO        11 15 0                       S01332 CTI002
+     E**********          ATY    11  11  2                         S01332 CTI002
+     E**********          ASQ        11  2 0                       S01332 CTI002
+     E**********          WTY        11  2                         S01332 CTI002
+     E                    LIM        12 11 0             LIMITS ARRAY(NUM)CTI002
+     E                    EXP        12 15 0             EXPOSURE ARRAY   CTI002
+     E                    AVA        12 15 0             AVAILABILITY ARR CTI002
+     E                    OSB        12 15 0             OFF-SET BAL ARR  CTI002
+     E                    NLE        12 15 0             NO LIMIT EXP ARR CTI002
+     E                    NLA        12 15 0             NO LIMIT AVA ARR CTI002
+     E                    NLO        12 15 0             NO LIMIT OSB ARR CTI002
+     E                    TTL        12 15 0             TOTAL LIMITS     CTI002
+     E                    TTE        12 15 0             TOTAL EXPOSURE   CTI002
+     E                    TTA        12 15 0             TOTAL AVAIL      CTI002
+     E                    TTO        12 15 0             TOTAL OFF-SET BALCTI002
+     E                    ATY    12  12  2               SEQUENCE TYPE    CTI002
+     E                    ASQ        12  2 0             SEQUENCE NUMBER  CTI002
+     E                    WTY        12  2               TYPES IN SEQUENCECTI002
+      *                                                                   S01332
+      * Excluded business areas array for output                          S01332
+     E                    EXC        65  1                                S01332
+      * Compile time table of excluded areas text                         S01332
+     E**********          XCL     1  10  8                         S01332 CTI002
+     E                    XCL     1  11 13                                CTI002
+      * Business areas with no specified print sequence                   S01332
+     E**********          @SQ        11  2                         S01332 CTI002
+     E                    @SQ        12  2                                CTI002
+0067 E**
+0068 I*
+0069 I*
+0070 I*  EXPOSURE MANAGEMENT    EOD EXPOSURE FILE - DETAIL RECORD
+0071 I*
+0072 IEMDE2   NS  01   1 CD
+0073 I                                        1   1 RECI
+0074 I                                        2   3 MACO
+0075 I**********                              4   90MCUN                                      CSD027
+0075 I                                        4   9 MCUN                                      CSD027
+0076 I                                       10  120EMIND
+0077 I                                       13  14 MRGC
+0078 I                                       15  16 MCNC
+0079 I                                    P  17  240MFXE
+0080 I                                    P  25  320MFXB
+0081 I                                    P  33  400MMME
+0082 I                                    P  41  480MMMB
+     I                                    P  49  560MLEG                  S01128
+     I                                    P  57  640MLEE                  S01128
+     I                                    P  65  720MLEB                  S01128
+     I                                    P  73  800MLAE                  S01128
+     I                                    P  81  880MLAB                  S01128
+     I                                    P  89  960MREG                  S01128
+     I                                    P  97 1040MREE                  S01128
+     I                                    P 105 1120MREB                  S01128
+     I                                    P 113 1200MFRE                  S01332
+     I                                    P 121 1280MFRO                  S01332
+     I                                    P 153 1600MSIE                  S01129
+     I                                    P 161 1680MSCE                  S01129
+     I                                    P 169 1760MSPO                  S01129
+     I                                    P 179 1860MIRE                  S01332
+     I                                    P 187 1940MIRO                  S01332
+     I                                    P 195 2020MFUE                  S01332
+     I                                    P 203 2100MFUO                  S01332
+     I                                    P 211 2180MOPE                  S01332
+     I                                    P 219 2260MOPO                  S01332
+     I                                    P 227 2340TFEX                  CTI002
+     I                                    P 235 2420TFGR                  CTI002
+     I                                    P 243 2500TFOF                  CTI002
+     I****                                P  49  560MLEE                  S01128
+     I****                                P  57  640MLEB                  S01128
+     I****                                P  65  720MREE                  S01128
+     I****                                P  73  800MREB                  S01128
+     I                                      251 253 EMLOIC                                    CER020
+0087 I*
+0088 I** CATCHALL
+0089 I        NS
+0090 I*
+0091 I*
+0092 I*     EXPOSURE MANAGEMENT LIMITS FILE - DETAIL RECORD
+0093 I*
+0094 IEMLIM   NS  02   1 CD
+0095 I       OR   03   1 C*
+0096 I                                        1   1 RCID
+0097 I                                        2   20RETP
+0098 I                                        3   8 MLC
+0099 I                                    P   9  110MXPD
+0100 I                                       12  12 MPI
+0101 I                                    P  13  180MOAL
+0102 I                                    P  19  240MFXL
+0103 I                                    P  25  300MMML
+0104 I                                    P  31  360MLEL
+0105 I                                    P  37  420MREL
+0106 I*************                       P  43  480MBCL                  S01196
+0107 I                                    P  49  540MSTL
+0108 I**********                          P  55  600MFFL                  S01332
+0109 I                                    P  61  644MFXP
+0110 I                                    P  65  684MMMP
+0111 I                                    P  69  724MLEP
+0112 I                                    P  73  764MREP
+0113 I*************                       P  77  804MLOP                  S01196
+     I                                    P  81  860MSLI                  S01129
+     I                                    P  87  904MSPI                  S01129
+     I                                    P  91  960MSCL                  S01129
+     I                                    P  97 1004MSPC                  S01129
+     I                                    P 101 1044MFFP                  S01129
+0257 I                                    P 105 1100MFRL                  S01332
+0257 I                                    P 111 1160MIRL                  S01332
+0257 I                                    P 117 1220MFUL                  S01332
+0257 I                                    P 123 1280MOPL                  S01332
+     I                                    P 134 1360ORED                  S01129
+     I                                    P 137 1390LCD                   S01129
+     I                                      140 140 CHTP                  S01129
+     I                                    P 141 1430TNLU                  S01129
+     I                                    P 166 1710TFLI                  CTI002
+     I                                    P 172 1750TFPC                  CTI002
+0114 I***                                 P  81  844MSEP                  S01129
+0115 I***                                 P  85  884MFFP                  S01129
+0116 I***                                 P 119 1210ORED                  S01129
+0117 I***                                 P 122 1240LCD                   S01129
+0118 I***                                   125 125 CHTP                  S01129
+0119 I***                                 P 126 1280TNLU                  S01129
+0120 I*
+0121 I*
+0122 I*
+0123 I** CATCHALL
+0124 I        NS
+0125 I**
+0126 I**   TABLE FILE - INSTALLATION CONTROL DATA RECORD 1.
+0127 I**
+0128 I****TABLE   NS  05   1 CD   2 C0   3 C1                             S01129
+0128 ITABEM   NS  05   1 CD   2 C0   3 C1                                 S01129
+0129 I       AND      12 C1  13 C0
+0130 I                                        1   1 RECI
+0131 I                                       14  66 TITL
+0132 I                                       67  67 DATF
+0133 I                                    P  77  790RUND
+0134 I                                       80  86 RUNA
+0135 I**********                                                          S01332
+0136 I*****TABLE*FILE*-*INSTALLATION*CONTROL*DATA*RECORD*2.****           S01332
+0137 I**********                                                          S01332
+0138 I********NS  06   1 CD   2 C0   3 C1                                 S01332
+0139 I***    AND      12 C1  13 C1                                        S01129
+     I*******AND      12 C9  13 C5                                 S01129 S01332
+0140 I***                                     1   1 RECI                  S01129
+0141 I***                                    69  71 LCCY                  S01129
+     I**********                              1   1 RECI           S01129 S01332
+     I**********                             14  16 LCCY           S01129 S01332
+     I**********                             23  240MSFX           S01129 S01332
+     I**********                             25  260MSMM           S01129 S01332
+     I**********                             27  280MSIF           S01129 S01332
+     I**********                             29  300MSLN           S01129 S01332
+     I**********                             31  320MSRE           S01129 S01332
+     I**********                             33  340MSLC           S01129 S01332
+     I**********                             35  360MSSC           S01129 S01332
+     I**********                             37  380MSSI           S01129 S01332
+     I**********                             39  400MSSP           S01129 S01332
+     I**********                             41  420MSFI           S01129 S01332
+0142 I**
+0143 I**   TABLE FILE - CURRENCIES RECORD 1.
+0144 I**
+0145 I        NS  07   1 CD   2 C2   3 C0
+0146 I       AND      13 C1
+0147 I                                        1   1 RECI
+0148 I                                        2  13 ZTABKY
+0149 I                                       10  12 CCY
+0150 I                                       14  27 CCNM
+0151 I*
+0152 I*    TABLE FILE - REGION CODES RECORD.
+0153 I*
+0154 I****TABLE   NS  08   1 CD   2 C5   3 C1                             S01129
+0154 ITABEM   NS  08   1 CD   2 C5   3 C1                                 S01129
+0155 I**
+0156 I**   CATCHALL
+0157 I       OR   09
+0158 I                                        1   1 RECI
+0159 I                                        2   30RECT
+0160 I                                       12  13 REGC
+0161 I                                       14  43 REGN
+0162 I                                       44  460DEPT
+0163 I                                    P  47  490DEPX
+0164 I                                    P  50  540DEPA
+0165 I                                       55  55 DEPF
+0166 I                                    P  56  580DEPR
+0167 I                                       59  600DLRD
+0168 I                                       61  630FRXT
+0169 I                                    P  64  660FRXX
+0170 I                                    P  67  710FRXA
+0171 I                                       72  72 FRXF
+0172 I                                    P  73  750FRXR
+0173 I                                       76  770FLRD
+0174 I                                    P  90  920LCD
+0175 I                                       93  93 CHTP
+0176 I                                    P  94  960TNLU
+     I                                       97  99 LOIC                                      CER020
+0177 I*
+0178 I**
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *                                                                   CTI002
+     ISCSARD    E DSSCSARDPD                                              CTI002
+      *                                                                   CTI002
+     I**   FILE INFORMATION DATA STRUCTURE                                S01117
+     I**                                                                  S01117
+     ISPOOLU      DS                                                      S01117
+     I                                       83  90 SFILEU                S01117
+     I                                    B 123 1240SFNUMU                S01117
+     ISPOOL       DS                                                      S01117
+     I                                       83  90 SFILE                 S01117
+     I                                    B 123 1240SFNUM                 S01117
+     I                                    B 188 1890OFLOW                 S01332
+     I                                    B 367 3680CURLIN                S01332
+     I**                                                                  S01117
+0179 I**   DATA STRUCTURE FOR TABLE KEY - ZTABKY
+0180 I**
+0181 I            DS
+0182 I                                        1  12 ZTABKY
+0183 I                                        9  11 CCY
+0184 I                                       11  12 REGC
+0185 I**
+0186 I**   DATA STRUCTURE FOR EMLIM KEY - LIMKEY
+0187 I**
+0188 I            DS
+0189 I                                        1   7 LIMKEY
+0190 I                                        2   3 RGCD
+0191 I**
+0192 I**   DATA STRUCTURE FOR LIMIT ARRAY (LIM)
+0193 I**
+0194 I            DS
+0195 I***                                     1  77 LIM                   S01129
+0225 I**********                              1  99 LIM            S01129 S01332
+0225 I**********                              1 121 LIM            S01332 CTI002
+0225 I                                        1 132 LIM                   CTI002
+0196 I                                        1  110MFXL
+0197 I                                       12  220MMML
+0198 I                                       23  330MLEL
+0199 I                                       34  440MREL
+0200 I*************                          45  550MBCL                  S01196
+0456 I                                       45  550MFRL                  S01332
+     I                                       56  660MSCL                  S01129
+     I                                       67  770MSLI                  S01129
+     I**********                             89  990MFFL           S01129 S01332
+0456 I                                       89  990MIRL                  S01332
+0456 I                                      100 1100MFUL                  S01332
+0456 I                                      111 1210MOPL                  S01332
+     I                                      122 1320TFLI                  CTI002
+0201 I**                                     56  660MSTL                  S01129
+0202 I**                                     67  770MFFL                  S01129
+0203 I**  LOCAL DATA AREA FOR DATABASE RECORD
+0204 ILDA        UDS                            256
+0205 I**********                            134 138 DBFILE                S01117
+0206 I**********                            139 167 DBKEY                 S01117
+0207 I**********                            168 175 DBPGM                 S01117
+0208 I**********                            176 1770DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     ISDMMOD    E DSSDMMODPD                                              S01332
+     I* External DS for Module Details                                    S01332
+     ISDEXPM    E DSSDEXPMPD                                              S01332
+     I* External DS for Exposure Management details                       S01332
+     IDSFDY     E DSDSFDY                                                 S01332
+     I* DS used by Access Objects (short records)                         S01332
+0209 I**
+0210 C/EJECT
+0211 C********************************************************************
+     C                     MOVEACPY@      BIS@   80
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C**                                                                  S01117
+     C           *ENTRY    PLIST                                          S01117
+     C                     PARM           SEQ     5         SEQUENCE NUM. S01117
+     C                     PARM           SENTY   3         BRANCH OR ALL S01117
+     C*                                                                   S01117
+0212 C**
+0213 C**   FIRST CYCLE PROCESSING
+0214 C**
+0215 C                     Z-ADD0         RECCNT  30       EXE REP REC CNT
+     C                     Z-ADD*ZEROS    LIM                             S01129
+0216 C*    ACCESS ICR1
+0217 C                     EXSR ZSYSTM
+0218 C   99                MOVE 'TABLE'   DBFILE
+0219 C   99                MOVE ZTABKY    DBKEY
+0220 C   99                MOVE 'EM0630'  DBPGM
+0221 C   99                Z-ADD01        DBASE            DATABASE 01
+     C   99                OPEN EM0630AU                                  S01117
+     C***99******          EXCPTHEADER                                    S01117
+     C   99                EXCPTDTERR                                     S01117
+0222 C   99                SETON                     LRU7U8
+0223 C   99                GOTO TERM
+0224 C*    ACCESS RUN DATE AND TITLE
+0225 C                     MOVE RUNA      RUNDAT  7
+0226 C                     MOVE RUND      RUNDAY  50
+0227 C                     MOVE TITL      TITLE  53
+0228 C*****ACCESS*EM*CURRENCY*ON*ICR2****                                 S01332
+0229 C**********                                                          S01332
+0230 C*****SET*UP*KEY*FOR*INSTALLATION*CONTROL*RECORD*2*.***              S01332
+0231 C**********           MOVEL'01      'ZTABKY 12                       S01332
+0232 C**********           MOVE '  11'    ZTABKY                          S01332
+     C**********           MOVE '  95'    ZTABKY                   S01129 S01332
+0233 C**********                                                          S01332
+0234 C***        ZTABKY    CHAINTABLE                99    ON NOT THERE   S01129
+0234 C********** ZTABKY    CHAINTABEM                99    ON NOT TS01129 S01332
+0235 C**
+0236 C**N99***** RECI      COMP 'D'                  9999  ON - DELETED   S01332
+0237 C***99*****           MOVE 'TABLE'   DBFILE                          S01332
+0238 C***99*****           MOVE ZTABKY    DBKEY                           S01332
+0239 C***99*****           MOVE 'EM0630'  DBPGM                           S01332
+0240 C***99*****           Z-ADD02        DBASE            DATABASE 02    S01332
+     C***99*****           OPEN EM0630AU                           S01117 S01332
+     C***99******          EXCPTHEADER                                    S01117
+     C***99*****           EXCPTDTERR                              S01117 S01332
+0241 C***99*****           SETON                     LRU7U8               S01332
+0242 C***99*****           GOTO TERM                                      S01332
+      *                                                                   S01332
+      * Call Access Object to get Exposure Management details             S01332
+     C                     CALL 'AOEXPMR0'             85                 S01332
+     C                     PARM *BLANKS   @RTCD   7                       S01332
+     C                     PARM '*FIRST ' @OPTN   7                       S01332
+     C           SDEXPM    PARM SDEXPM    DSFDY                           S01332
+      *                                                                   S01332
+     C           @RTCD     IFNE *BLANKS                                   S01332
+     C           *IN85     OREQ '1'                        ***************S01332
+     C                     MOVE 'SDEXPMPD'DBFILE           *   DB ERROR  *S01332
+     C                     MOVE '*FIRST'  DBKEY            *     02      *S01332
+     C                     MOVE 'EM0630'  DBPGM            ***************S01332
+     C                     Z-ADD02        DBASE                           S01332
+     C                     OPEN EM0630AU                                  S01332
+     C                     EXCPTDTERR                                     S01332
+     C                     SETON                     LRU7U8               S01332
+     C                     SETON                     99                   S01332
+     C                     GOTO TERM                                      S01332
+     C                     END                                            S01332
+      *                                                                   S01332
+      * Get module information via access object                          S01332
+     C                     CALL 'AOMMODR0'             85                 S01332
+     C                     PARM *BLANKS   @RTCD   7                       S01332
+     C                     PARM '*FIRST ' @OPTN   7                       S01332
+     C           SDMMOD    PARM SDMMOD    DSFDY                           S01332
+      *                                                                   S01332
+     C           @RTCD     IFNE *BLANKS                                   S01332
+     C           *IN85     OREQ '1'                        ***************S01332
+     C                     MOVE 'SDMMODPD'DBFILE           *   DB ERROR  *S01332
+     C                     MOVE '*FIRST'  DBKEY            *     04      *S01332
+     C                     MOVE 'EM0630'  DBPGM            ***************S01332
+     C                     Z-ADD04        DBASE                           S01332
+     C                     OPEN EM0630AU                                  S01332
+     C                     EXCPTDTERR                                     S01332
+     C                     SETON                     LRU7U8               S01332
+     C                     SETON                     99                   S01332
+     C                     GOTO TERM                                      S01332
+     C                     END                                            S01332
+      *                                                                   CTI002
+      ** Access SAR details file to determine if CTI002 is switched ON    CTI002
+      *                                                                   CTI002
+     C                     MOVE *BLANKS   CTI002  1                       CTI002
+      *                                                                   CTI002
+     C                     CALL 'AOSARDR0'                                CTI002
+     C                     PARM *BLANKS   @RTCD   7                       CTI002
+     C                     PARM '*VERIFY' @OPTN   7                       CTI002
+     C                     PARM 'CTI002'  @SARD   6                       CTI002
+     C           SCSARD    PARM SCSARD    DSFDY                           CTI002
+      *                                                                   CTI002
+      ** If core feature is switched ON, set a variable field to          CTI002
+      ** condition the rest of the processing                             CTI002
+      *                                                                   CTI002
+     C           @RTCD     IFEQ *BLANKS                                   CTI002
+     C                     MOVE 'Y'       CTI002                          CTI002
+     C                     ELSE                                           CTI002
+      *                                                                   CTI002
+      ** else, database error (return code other than *NRF)               CTI002
+      *                                                                   CTI002
+     C           @RTCD     IFNE '*NRF   '                                 CTI002
+     C                     MOVE 'SCSARDPD'DBFILE           ***************CTI002
+     C                     MOVE '*VERIFY' DBKEY            *   DB ERROR  *CTI002
+     C                     MOVE 'EM0620'  DBPGM            *     05      *CTI002
+     C                     Z-ADD5         DBASE            ***************CTI002
+     C                     OPEN EM0630AU                                  CTI002
+     C                     EXCPTDTERR                                     CTI002
+     C                     SETON                     LRU7U8               CTI002
+     C                     SETON                     99                   CTI002
+     C                     GOTO TERM                                      CTI002
+     C                     ENDIF                                          CTI002
+      *                                                                   CTI002
+     C                     ENDIF                                          CTI002
+      *                                                                   CTI002
+      ** Check if CTI007 BFM-TI Exposure Management is enabled                              MD030956
+      *                                                                                     MD030956
+     C                     MOVE *BLANKS   CTI007  1                                         MD030956
+      *                                                                                     MD030956
+     C                     CALL 'AOSARDR0'                                                  MD030956
+     C                     PARM *BLANKS   @RTCD                                             MD030956
+     C                     PARM '*VERIFY' @OPTN                                             MD030956
+     C                     PARM 'CTI007'  @SARD                                             MD030956
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD030956
+      *                                                                                     MD030956
+     C           @RTCD     IFEQ *BLANKS                                                     MD030956
+     C                     MOVE 'Y'       CTI007                                            MD030956
+     C                     ELSE                                                             MD030956
+     C           @RTCD     IFNE '*NRF   '                                                   MD030956
+     C                     MOVE 'SCSARDPD'DBFILE                                            MD030956
+     C                     MOVE '*VERIFY' DBKEY                                             MD030956
+     C                     MOVE 'EM0630'  DBPGM                                             MD030956
+     C                     Z-ADD06        DBASE                                             MD030956
+     C                     OPEN EM0630AU                                                    MD030956
+     C                     EXCPTDTERR                                                       MD030956
+     C                     SETON                     LRU7U8                                 MD030956
+     C                     SETON                     99                                     MD030956
+     C                     GOTO TERM                                                        MD030956
+     C                     ENDIF                                                            MD030956
+     C                     ENDIF                                                            MD030956
+     C*                                                                   S01129
+      * Set up array of print sequence reqd.                              S01332
+      * ALSO                                                              S01332
+      * Set up work total of detail lines for each set of details         S01332
+      * (used to ensure correct page breaking) by checking which          S01332
+      * modules are switched on                                           S01332
+     C                     Z-ADD0         @DETL   20                      S01332
+     C*                                                                   S01129
+     C                     Z-ADD*ZEROS    ASQ                             S01129
+     C**********           Z-ADDMSFX      ASQ,1                    S01129 S01332
+     C**********           Z-ADDMSMM      ASQ,2                    S01129 S01332
+     C**********           Z-ADDMSLN      ASQ,3                    S01129 S01332
+     C**********           Z-ADDMSRE      ASQ,4                    S01129 S01332
+     C**********           Z-ADDMSLC      ASQ,5                    S01129 S01332
+     C**********           Z-ADDMSSC      ASQ,6                    S01129 S01332
+     C**********           Z-ADDMSSI      ASQ,7                    S01129 S01332
+     C**********           Z-ADDMSSP      ASQ,8                    S01129 S01332
+     C**********           Z-ADDMSFI      ASQ,9                    S01129 S01332
+      *                                                                   S01332
+      * A business area cannot be printed if the module is off            S01332
+      * If print sequence is zero but module is on, write to              S01332
+      * seperate array @SQ - these will be tagged on to the end           S01332
+      * of ASQ i.e. output last                                           S01332
+     C           BGDLFX    IFEQ 'Y'                        BEG FX         S01332
+     C           BUMSFX    IFNE *ZEROS                                    S01332
+     C                     Z-ADDBUMSFX    ASQ,1                           S01332
+     C                     ELSE                                           S01332
+     C                     MOVE 'FX'      @SQ,1                           S01332
+     C                     END                                            S01332
+     C                     ADD  1         @DETL                           S01332
+     C                     END                             END FX         S01332
+     C*                                                                   S01332
+     C           BGDLMM    IFEQ 'Y'                        BEG MM         S01332
+     C           BUMSMM    IFNE *ZEROS                                    S01332
+     C                     Z-ADDBUMSMM    ASQ,2                           S01332
+     C                     ELSE                                           S01332
+     C                     MOVE 'MM'      @SQ,2                           S01332
+     C                     END                                            S01332
+     C                     ADD  1         @DETL                           S01332
+     C                     END                             END MM         S01332
+     C*                                                                   S01332
+     C           BGCSLN    IFEQ 'Y'                        BEG LE         S01332
+     C           BUMSLN    IFNE *ZEROS                                    S01332
+     C                     Z-ADDBUMSLN    ASQ,3                           S01332
+     C                     ELSE                                           S01332
+     C                     MOVE 'LN'      @SQ,3                           S01332
+     C                     END                                            S01332
+     C                     ADD  1         @DETL                           S01332
+     C                     END                             END LE         S01332
+     C*                                                                   S01332
+     C           BGRTBN    IFEQ 'Y'                        BEG RE         S01332
+     C           BUMSRT    IFNE *ZEROS                                    S01332
+     C                     Z-ADDBUMSRT    ASQ,4                           S01332
+     C                     ELSE                                           S01332
+     C                     MOVE 'RE'      @SQ,4                           S01332
+     C                     END                                            S01332
+     C                     ADD  1         @DETL                           S01332
+     C                     END                             END RE         S01332
+     C*                                                                   S01332
+     C           BGFIIN    IFEQ 'Y'                        BEG FRA/IRS    S01332
+     C           BUMSFR    IFNE *ZEROS                                    S01332
+     C                     Z-ADDBUMSFR    ASQ,5                           S01332
+     C                     ELSE                                           S01332
+     C                     MOVE 'FR'      @SQ,5                           S01332
+     C                     END                                            S01332
+     C           BUMSIR    IFNE *ZEROS                                    S01332
+     C                     Z-ADDBUMSIR    ASQ,11                          S01332
+     C                     ELSE                                           S01332
+     C                     MOVE 'IR'      @SQ,11                          S01332
+     C                     END                                            S01332
+     C                     ADD  2         @DETL                           S01332
+     C                     END                             END FRA/IRS    S01332
+     C*                                                                   S01332
+     C           BGSECS    IFEQ 'Y'                        BEG SECS       S01332
+     C           BUMSSC    IFNE *ZEROS                                    S01332
+     C                     Z-ADDBUMSSC    ASQ,6                           S01332
+     C                     ELSE                                           S01332
+     C                     MOVE 'SC'      @SQ,6                           S01332
+     C                     END                                            S01332
+     C           BUMSSI    IFNE *ZEROS                                    S01332
+     C                     Z-ADDBUMSSI    ASQ,7                           S01332
+     C                     ELSE                                           S01332
+     C                     MOVE 'SI'      @SQ,7                           S01332
+     C                     END                                            S01332
+     C           BUMSSP    IFNE *ZEROS                                    S01332
+     C                     Z-ADDBUMSSP    ASQ,8                           S01332
+     C                     ELSE                                           S01332
+     C                     MOVE 'SP'      @SQ,8                           S01332
+     C                     END                                            S01332
+     C                     ADD  3         @DETL                           S01332
+     C                     END                             END SECS       S01332
+     C*                                                                   S01332
+     C           BGFUOP    IFEQ 'Y'                        BEG FUT/OPT    S01332
+     C           BUMSFU    IFNE *ZEROS                                    S01332
+     C                     Z-ADDBUMSFU    ASQ,9                           S01332
+     C                     ELSE                                           S01332
+     C                     MOVE 'FU'      @SQ,9                           S01332
+     C                     END                                            S01332
+     C           BUMSOP    IFNE *ZEROS                                    S01332
+     C                     Z-ADDBUMSOP    ASQ,10                          S01332
+     C                     ELSE                                           S01332
+     C                     MOVE 'OP'      @SQ,10                          S01332
+     C                     END                                            S01332
+     C                     ADD  2         @DETL                           S01332
+     C                     END                             END FUT/OPT    S01332
+      *                                                                   CTI002
+     C           CTI002    IFEQ 'Y'                        BEG TF         CTI002
+     C           CTI007    OREQ 'Y'                                                         MD030956
+     C           BUMSTF    IFNE *ZEROS                                    CTI002
+     C                     Z-ADDBUMSTF    ASQ,12                          CTI002
+     C                     ELSE                                           CTI002
+     C                     MOVE 'TF'      @SQ,12                          CTI002
+     C                     END                                            CTI002
+     C                     ADD  1         @DETL                           CTI002
+     C                     ENDIF                           END TF         CTI002
+     C*                                                                   S01129
+     C**********           Z-ADD*ZEROS    Z       20               S01129 S01332
+     C                     Z-ADD1         X       20                      S01332
+     C**********           XFOOTASQ       TOTASQ  30               S01129 S01332
+     C*                                                                   S01129
+     C*   ARRANGE TYPES INTO CORRECT SEQUENCE                             S01129
+      *                                                                   S01332
+     C                     Z-ADD0         CT      20                      S01332
+     C********** X         DOWLT12                             B1  S01332 CTI002
+     C           X         DOWLT13                             B1         CTI002
+     C                     Z-ADD1         Y       20                      S01332
+      *                                                                   S01332
+      * Look for value of X in type order array                           S01332
+     C           X         LOKUPASQ,Y                    84               S01332
+      *                                                                   S01332
+      * If lookup successful, move module ID from table into sequenced    S01332
+      * array                                                             S01332
+     C           *IN84     IFEQ '1'                            B2         S01332
+     C                     ADD  1         CT                              S01332
+     C                     MOVE ATY,Y     WTY,CT                          S01332
+     C                     END                                 E2         S01332
+      *                                                                   S01332
+     C                     ADD  1         X                               S01332
+     C                     END                                 E1         S01332
+      *                                                                   S01332
+      * After sequenced array has been set up add non-sequenced           S01332
+      * business areas to end of this array                               S01332
+     C                     Z-ADD1         X                               S01332
+     C********** X         DOWLT12                                 S01332 CTI002
+     C           X         DOWLT13                                        CTI002
+     C           @SQ,X     IFNE *BLANKS                                   S01332
+     C                     ADD  1         CT                              S01332
+     C                     MOVE @SQ,X     WTY,CT                          S01332
+     C                     END                                            S01332
+     C                     ADD  1         X                               S01332
+     C                     END                                            S01332
+      *                                                                   S01332
+     C********** TOTASQ    DOWGT*ZEROS                             S01129 S01332
+     C**********                                                   S01129 S01332
+     C**********           ADD  1         Z                        S01129 S01332
+     C**********           Z-ADD*ZEROS    X       20               S01129 S01332
+     C**********           Z-ADD*HIVAL    WSQ                      S01129 S01332
+     C**********                                                   S01129 S01332
+     C********** X         DOWLT9                                  S01129 S01332
+     C**********           ADD  1         X                        S01129 S01332
+     C**********                                                   S01129 S01332
+     C********** ASQ,X     IFLT WSQ                                S01129 S01332
+     C********** ASQ,X     ANDNE*ZEROS                             S01129 S01332
+     C**********                                                   S01129 S01332
+     C**********           MOVE ATY,X     WTY,Z                    S01129 S01332
+     C**********           Z-ADDASQ,X     WSQ     20               S01129 S01332
+     C**********           Z-ADDX         W       20               S01129 S01332
+     C**********                                                   S01129 S01332
+     C**********           END                                     S01129 S01332
+     C**********                                                   S01129 S01332
+     C**********           END                                     S01129 S01332
+     C**********                                                   S01129 S01332
+     C**********           Z-ADD*ZEROS    ASQ,W                    S01129 S01332
+     C**********           ADD  1         WTYCNT  20               S01129 S01332
+     C**********           XFOOTASQ       TOTASQ                   S01129 S01332
+     C**********                                                   S01129 S01332
+     C**********           END                                     S01129 S01332
+     C**********                                                   S01129 S01332
+     C********** WTYCNT    IFLE 4                                  S01129 S01332
+     C**********           Z-ADD4         WBLNO   10               S01129 S01332
+     C**********           ELSE                                    S01129 S01332
+     C**********           Z-ADD3         WBLNO                    S01129 S01332
+     C**********           END                                     S01129 S01332
+     C*                                                                   S01129
+0243 C**   SET UP KEY FOR INSTALLATION CONTROL RECORD(CURRENCY REC 1)
+0244 C**********           MOVE LCCY      CCY                             S01332
+0244 C                     MOVE BUCYCD    CCY                             S01332
+0245 C                     MOVEL'20      'ZTABKY 12
+0246 C                     MOVE '1'       ZTABKY
+0247 C**
+0248 C***        ZTABKY    CHAINTABLE                99    ON NOT THERE   S01129
+     C           ZTABKY    CHAINTABEM                99    ON NOT THERE   S01129
+0249 C  N99      RECI      COMP 'D'                  9999  ON - DELETED
+0250 C   99                MOVE 'TABLE'   DBFILE
+0251 C   99                MOVE ZTABKY    DBKEY
+0252 C   99                MOVE 'EM0630'  DBPGM
+0253 C   99                Z-ADD03        DBASE            DATABASE 03
+     C   99                OPEN EM0630AU                                  S01117
+     C***99******          EXCPTHEADER                                    S01117
+     C   99                EXCPTDTERR                                     S01117
+0254 C   99                SETON                     LRU7U8
+0255 C   99                GOTO TERM
+0256 C                     MOVE CCNM      CURRNM 14
+0257 C                     MOVE *BLANKS   ZTABKY
+      *                                                                   S01332
+      * Access the Exposure Management scaling file to determine          S01332
+      * which business areas to include in report totals                  S01332
+      * Set up excluded areas array for report output                     S01332
+      * (No need to check modules which are not on system, avoids         S01332
+      * unnecessary chains)                                               S01332
+     C                     MOVE '0'       *IN74                           S01332
+     C                     Z-ADD1         X                               S01332
+     C                     Z-ADD0         NEXC    20                      S01332
+      * FX                                                                S01332
+     C           BGDLFX    IFEQ 'Y'                                       S01332
+     C           'FX'      CHAINEMEXSCL1             74                   S01332
+     C           *IN74     IFNE '1'                                       S01332
+     C           EKINTO    ANDNE'Y'                                       S01332
+     C                     MOVEAXCL,1     EXC,X                           S01332
+     C                     ADD  3         X                 EXCLUDE       S01332
+     C                     MOVE *BLANKS   EXC,X                           S01332
+     C                     ADD  1         X                               S01332
+     C                     ADD  1         NEXC                            S01332
+     C                     MOVE 'N'       @FX     1                       S01332
+     C                     ELSE                                           S01332
+     C                     MOVE 'Y'       @FX               INCLUDE       S01332
+     C                     MOVE '0'       *IN74                           S01332
+     C                     END                                            S01332
+     C                     END                                            S01332
+      * MM                                                                S01332
+     C           BGDLMM    IFEQ 'Y'                                       S01332
+     C           'MM'      CHAINEMEXSCL1             74                   S01332
+     C           *IN74     IFNE '1'                                       S01332
+     C           EKINTO    ANDNE'Y'                                       S01332
+     C                     MOVEAXCL,2     EXC,X                           S01332
+     C                     ADD  3         X                 EXCLUDE       S01332
+     C                     MOVE *BLANKS   EXC,X                           S01332
+     C                     ADD  1         X                               S01332
+     C                     ADD  1         NEXC                            S01332
+     C                     MOVE 'N'       @MM     1                       S01332
+     C                     ELSE                                           S01332
+     C                     MOVE 'Y'       @MM               INCLUDE       S01332
+     C                     MOVE '0'       *IN74                           S01332
+     C                     END                                            S01332
+     C                     END                                            S01332
+      * LE                                                                S01332
+     C           BGCSLN    IFEQ 'Y'                                       S01332
+     C           'LE'      CHAINEMEXSCL1             74                   S01332
+     C           *IN74     IFNE '1'                                       S01332
+     C           EKINTO    ANDNE'Y'                                       S01332
+     C                     MOVEAXCL,3     EXC,X                           S01332
+     C                     ADD  6         X                 EXCLUDE       S01332
+     C                     MOVE *BLANKS   EXC,X                           S01332
+     C                     ADD  1         X                               S01332
+     C                     ADD  1         NEXC                            S01332
+     C                     MOVE 'N'       @LE     1                       S01332
+     C                     ELSE                                           S01332
+     C                     MOVE 'Y'       @LE               INCLUDE       S01332
+     C                     MOVE '0'       *IN74                           S01332
+     C                     END                                            S01332
+     C                     END                                            S01332
+      * FRA/IRS                                                           S01332
+     C           BGFIIN    IFEQ 'Y'                                       S01332
+      *                                                                   S01332
+     C           'FR'      CHAINEMEXSCL1             74                   S01332
+     C           *IN74     IFNE '1'                                       S01332
+     C           EKINTO    ANDNE'Y'                                       S01332
+     C                     MOVEAXCL,4     EXC,X                           S01332
+     C                     ADD  4         X                 EXCLUDE       S01332
+     C                     MOVE *BLANKS   EXC,X                           S01332
+     C                     ADD  1         X                               S01332
+     C                     ADD  1         NEXC                            S01332
+     C                     MOVE 'N'       @FR     1                       S01332
+     C                     ELSE                                           S01332
+     C                     MOVE 'Y'       @FR               INCLUDE       S01332
+     C                     MOVE '0'       *IN74                           S01332
+     C                     END                                            S01332
+      *                                                                   S01332
+     C           'IR'      CHAINEMEXSCL1             74                   S01332
+     C           *IN74     IFNE '1'                                       S01332
+     C           EKINTO    ANDNE'Y'                                       S01332
+     C                     MOVEAXCL,5     EXC,X                           S01332
+     C                     ADD  4         X                 EXCLUDE       S01332
+     C                     MOVE *BLANKS   EXC,X                           S01332
+     C                     ADD  1         X                               S01332
+     C                     ADD  1         NEXC                            S01332
+     C                     MOVE 'N'       @IR     1                       S01332
+     C                     ELSE                                           S01332
+     C                     MOVE 'Y'       @IR               INCLUDE       S01332
+     C                     MOVE '0'       *IN74                           S01332
+     C                     END                                            S01332
+      *                                                                   S01332
+     C                     END                                            S01332
+      * FUTURES+OPTIONS                                                   S01332
+     C           BGFUOP    IFEQ 'Y'                                       S01332
+      *                                                                   S01332
+     C           'FU'      CHAINEMEXSCL1             74                   S01332
+     C           *IN74     IFNE '1'                                       S01332
+     C           EKINTO    ANDNE'Y'                                       S01332
+     C                     MOVEAXCL,6     EXC,X                           S01332
+     C                     ADD  8         X                 EXCLUDE       S01332
+     C                     MOVE *BLANKS   EXC,X                           S01332
+     C                     ADD  1         X                               S01332
+     C                     ADD  1         NEXC                            S01332
+     C                     MOVE 'N'       @FU     1                       S01332
+     C                     ELSE                                           S01332
+     C                     MOVE 'Y'       @FU               INCLUDE       S01332
+     C                     MOVE '0'       *IN74                           S01332
+     C                     END                                            S01332
+      *                                                                   S01332
+     C           'OP'      CHAINEMEXSCL1             74                   S01332
+     C           *IN74     IFNE '1'                                       S01332
+     C           EKINTO    ANDNE'Y'                                       S01332
+     C                     MOVEAXCL,7     EXC,X                           S01332
+     C                     ADD  8         X                 EXCLUDE       S01332
+     C                     MOVE *BLANKS   EXC,X                           S01332
+     C                     ADD  1         X                               S01332
+     C                     ADD  1         NEXC                            S01332
+     C                     MOVE 'N'       @OP     1                       S01332
+     C                     ELSE                                           S01332
+     C                     MOVE 'Y'       @OP               INCLUDE       S01332
+     C                     MOVE '0'       *IN74                           S01332
+     C                     END                                            S01332
+      *                                                                   S01332
+     C                     END                                            S01332
+      * SECURITIES                                                        S01332
+     C           BGSECS    IFEQ 'Y'                                       S01332
+      * SE C/PARTY                                                        S01332
+     C           'CP'      CHAINEMEXSCL1             74                   S01332
+     C           *IN74     IFNE '1'                                       S01332
+     C           EKINTO    ANDNE'Y'                                       S01332
+     C                     MOVEAXCL,8     EXC,X                           S01332
+     C                     ADD  7         X                 EXCLUDE       S01332
+     C                     MOVE *BLANKS   EXC,X                           S01332
+     C                     ADD  1         X                               S01332
+     C                     ADD  1         NEXC                            S01332
+     C                     MOVE 'N'       @CP     1                       S01332
+     C                     ELSE                                           S01332
+     C                     MOVE 'Y'       @CP               INCLUDE       S01332
+     C                     MOVE '0'       *IN74                           S01332
+     C                     END                                            S01332
+      * SE ISSUER                                                         S01332
+     C           'IS'      CHAINEMEXSCL1             74                   S01332
+     C           *IN74     IFNE '1'                                       S01332
+     C           EKINTO    ANDNE'Y'                                       S01332
+     C                     MOVEAXCL,9     EXC,X                           S01332
+     C                     ADD  7         X                 EXCLUDE       S01332
+     C                     MOVE *BLANKS   EXC,X                           S01332
+     C                     ADD  1         X                               S01332
+     C                     ADD  1         NEXC                            S01332
+     C                     MOVE 'N'       @IS     1                       S01332
+     C                     ELSE                                           S01332
+     C                     MOVE 'Y'       @IS               INCLUDE       S01332
+     C                     MOVE '0'       *IN74                           S01332
+     C                     END                                            S01332
+      *                                                                   S01332
+     C                     END                                            S01332
+      * RETAIL                                                            S01332
+     C           BGRTBN    IFEQ 'Y'                                       S01332
+     C           'RE'      CHAINEMEXSCL1             74                   S01332
+     C           *IN74     IFNE '1'                                       S01332
+     C           EKINTO    ANDNE'Y'                                       S01332
+     C                     MOVEAXCL,10    EXC,X                           S01332
+     C                     ADD  8         X                               S01332
+     C                     ADD  1         NEXC                            S01332
+     C                     MOVE 'N'       @RE     1         EXCLUDE       S01332
+     C                     ELSE                                           S01332
+     C                     MOVE 'Y'       @RE               INCLUDE       S01332
+     C                     MOVE '0'       *IN74                           S01332
+     C                     END                                            S01332
+     C                     END                                            S01332
+      * TRADE FINANCE                                                     CTI002
+     C           CTI002    IFEQ 'Y'                                       CTI002
+     C           CTI007    OREQ 'Y'                                                         MD030956
+     C           'TF'      CHAINEMEXSCL1             74                   CTI002
+     C           *IN74     IFNE '1'                                       CTI002
+     C           EKINTO    ANDNE'Y'                                       CTI002
+     C                     MOVEAXCL,11    EXC,X                           CTI002
+     C                     ADD  9         X                               CTI002
+     C                     ADD  1         NEXC                            CTI002
+     C                     MOVE 'N'       @TF     1         EXCLUDE       CTI002
+     C                     ELSE                                           CTI002
+     C                     MOVE 'Y'       @TF               INCLUDE       CTI002
+     C                     MOVE '0'       *IN74                           CTI002
+     C                     ENDIF                                          CTI002
+     C                     ENDIF                                          CTI002
+      *                                                                   S01332
+      * If entry in array but not full, delete last comma and             S01332
+      * ensure rest of array is blanks                                    S01332
+     C           NEXC      IFGE 1                                         S01332
+     C           NEXC      ANDLT10                                        S01332
+     C                     SUB  2         X                               S01332
+     C                     MOVEA*BLANKS   EXC,X                           S01332
+     C                     END                                            S01332
+      *                                                                   S01332
+      * If there are business areas to exclude set on output indicator    S01332
+      * Add correct no. of lines to @DETL so the correct detail lines     S01332
+      * per record is allowed for in page breaking                        S01332
+     C           NEXC      IFGE 1                                         S01332
+     C                     MOVE '1'       *IN77                           S01332
+     C                     ADD  7         @DETL                           S01332
+     C                     ELSE                                           S01332
+     C                     ADD  5         @DETL                           S01332
+     C                     END                                            S01332
+0258 C**
+0259 C**   END OF FIRST CYCLE PROCESSING
+0260 C**
+0261 C           ENDFC     TAG                             ** ENDFC TAG
+0263 C/EJECT
+0264 C********************************************************************
+0265 C**   START OF MAIN CYCLE TO PROCESS EXPOSURES BY REGION            E
+0266 C**
+0267 C**   PRINT HEADING OF REPORT
+     C                     OPEN EM0630P1                                  S01117
+0268 C                     EXCPTHEADER
+0269 C**
+0270 C**   TO SET LOWER LIMIT ON TABLE
+0271 C**
+0272 C**********           Z-ADD0         LINEC                           S01332
+0273 C                     MOVE *BLANKS   ZTABKY
+0274 C                     MOVEL'51      'ZTABKY
+0275 C***        ZTABKY    SETLLTABLE                61                   S01129
+0275 C           ZTABKY    SETLLTABEM                61                   S01129
+0276 C           NXREGN    TAG                             ** TAG NXREGN
+0277 C***                  READ TABLE                    78               S01129
+0277 C                     READ TABEM                    78               S01129
+     C*                                                                   042675
+     C** If end of Region Codes or End Of File skip out of loop           042675
+     C*                                                                   042675
+     C   78                SETON                       50     EOF         042675
+0278 C***********51        COMP RECT                   50  50 ON NOT REGON042675
+     C           *IN50     IFEQ '0'                                       042675
+     C***********51        ANDGERECT                                042675090475
+     C           51        ANDLTRECT                                      090475
+     C                     SETON                     50                   042675
+     C                     END                                            042675
+0279 C   50                SETON                     LR
+     C*                                                                   042675
+0280 C  NU1N50 08          EXSR FULREP                      FULL REPORT
+0281 C   U1N50 08          EXSR EXEREP                      EXEPT REPORT
+0282 C  N50                GOTO NXREGN
+0388 C           RECCNT    IFEQ 0                                         S01117
+     C                     SETON                     42                   S01117
+     C                     END                                            S01117
+0283 C           TERM      TAG                             ** TAG TERM
+0262 C********************************************************************
+     C                     Z-ADDSFNUM     SFNUM1  60                      S01117
+     C                     OUT  LDA                                       S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ                             S01117
+     C                     PARM           SENTY   3                       S01117
+     C                     PARM           SFILE                           S01117
+     C                     PARM           SFNUM1                          S01117
+     C                     PARM *BLANKS   ZSERR   1                       S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C*                                                                   S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+     C*                                                                   S01117
+     C* ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAMME       S01117
+     C*                                                                   S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C           *IN99     IFEQ '1'                                       S01117
+     C           *INU7     ANDEQ'1'                                       S01117
+     C           *INU8     ANDEQ'1'                                       S01117
+     C                     Z-ADDSFNUMU    SFNMU   60                      S01117
+     C                     OUT  LDA                                       S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ                             S01117
+     C                     PARM           SENTY   3                       S01117
+     C                     PARM           SFILEU                          S01117
+     C                     PARM           SFNMU                           S01117
+     C                     PARM *BLANKS   ZSERR   1                       S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C*                                                                   S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+     C*                                                                   S01117
+     C* ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAMME       S01117
+     C*                                                                   S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+0262 C********************************************************************
+0284 C*R U1                EXSR EXETOT                      EXEPT TOTAL
+0285 C***LRNU1N99**           EXSR LNCNT                                  S01332
+0286 CLRNU1N99             EXSR TOTNOL                      NO LIMIT TOT
+0287 CLRNU1N99             EXSR GRDTOT                      COMPLETE TOT
+     CLRNU1N99             EXSR CNOLIM                                    S01129
+     CLRNU1N99             EXSR TOTS                                      S01129
+0288 C********************************************************************
+0289 C/EJECT
+0290 C********************************************************************
+0291 C**
+0292 C**   SUBROUTINES
+0293 C**
+0294 C********************************************************************
+0295 C********************************************************************
+0296 C**
+0297 C**   FULREP SR. - FULL REPORT PROCESSING, CALLED FROM MAIN LINE
+0298 C**
+0299 C           FULREP    BEGSR
+0300 C**********           Z-ADD1         X       20                      S01332
+0301 C**
+0302 C**   CHAIN TO EMLIM, 60 IS ON IF CHAIN FAILS
+0303 C**
+0304 C                     EXSR CHAINS
+0305 C  N60                MOVE MXPD      ZDAYNO
+0306 C  N60                EXSR ZDATE2                      CONVERT DATE
+0307 C                     Z-ADD0         EXP
+0308 C                     Z-ADD0         OSB
+0309 C                     Z-ADD0         AVA
+0310 C                     Z-ADD0         EXPTOT
+0311 C                     Z-ADD0         OSBTOT
+0312 C                     Z-ADD0         AVATOT
+0313 C**
+0314 C**   EXPRD READS ALL EMDE2(EMDEX) RECORDS FOR A REGION
+0315 C**
+0316 C                     EXSR EXPRD
+0317 C   60                EXSR NOLIM                       REG W/O LIM
+0318 C  N60                EXSR LIMIT                       REG WITH LIM
+0319 C  N60                EXSR LNCNT
+0320 C**
+0321 C**   PRINT DETAIL REPORT FOR REGION WITH LIMITS
+0322 C**
+0323 C**N60                EXCPTEXPREP                                    S01129
+     C  N60                EXSR DETAIL                                    S01129
+0341 C  N60                ADD  1         RECCNT                          S01332
+0324 C                     ENDSR
+0325 C********************************************************************
+0326 C/EJECT
+0327 C********************************************************************
+0328 C**
+0329 C**   EXEREP SR. - EXEPTION REPORTING IE. THOSE REGIONS WHO HAVE
+0330 C**                EXCEEDED ONE OR MORE OF THEIR LIMITS
+0331 C**                CALLED FROM MAIN LINE
+0332 C**
+0333 C           EXEREP    BEGSR
+0334 C**********           Z-ADD1         X       20                      S01332
+0335 C**
+0336 C**   CHAIN TO EMLIM, 60 IS ON IF CHAIN FAILS
+0337 C**
+0338 C                     EXSR CHAINS
+0339 C  N60                MOVE MXPD      ZDAYNO
+0340 C  N60                EXSR ZDATE2                      CONVERT DATE
+0341 C                     Z-ADD0         EXP
+0342 C                     Z-ADD0         OSB
+0343 C                     Z-ADD0         AVA
+0344 C                     Z-ADD0         EXPTOT
+0345 C                     Z-ADD0         OSBTOT
+0346 C                     Z-ADD0         AVATOT
+0347 C   60                GOTO ENDEXE
+0348 C**
+0349 C**   EXPRD READS ALL EMDE2(EMDEX) RECORDS FOR A REGION
+0350 C**
+0351 C                     EXSR EXPRD                       READ EMDE2
+0352 C  N60                EXSR LIMIT                       REG WITH LIM
+0353 C                     EXSR NEGCHK                      CHK NEG AVA
+0354 C  N40      AVATOT    COMP 0                      40
+0355 C**
+0356 C**N40  DON'T PRINT DETAILS, 40 ON = NEGATIVE AVAILABILITY
+0357 C**
+0358 C   40                ADD  1         RECCNT
+0359 C   40                EXSR LNCNT
+0360 C**
+0361 C**   PRINT DETAIL REPORT FOR REGION WITH LIMITS
+0362 C**
+0363 C***40                EXCPTEXPREP                                    S01129
+     C   40                EXSR DETAIL                                    S01129
+0364 C           ENDEXE    ENDSR
+0365 C********************************************************************
+0366 C/EJECT
+0367 C********************************************************************
+0368 C**
+0369 C**   CHAINS SR. - CHAINS TO EMLIM
+0370 C**                    (CALLED FROM FULL & EXEPTION RTN'S)
+0371 C           CHAINS    BEGSR                           ** BEGSR CHAINS
+0372 C                     MOVEL'3'       LIMKEY           SET LIMKEY TO
+0373 C                     MOVE REGC      RGCD
+0374 C           LIMKEY    CHAINEMLIM                60
+0375 C  N60N02             SETON                     60
+0376 C           ENDCHA    ENDSR                           ** TAG ENDCHA
+0377 C********************************************************************
+0378 C********************************************************************
+0379 C**
+0380 C**   EXPRD SR. - READS EMDE2 (EMDEX)RECS
+0381 C**               ACCESS ALL CUSTOMERS FOR A REGION BY CUSTOMER NO.
+0382 C**                    (CALLED FROM FULL & EXEPTION RTN'S)
+0383 C**
+0384 C           EXPRD     BEGSR
+0385 C           REGC      SETLLEMDE2                      SET LL EMDEX
+0386 C           START     TAG                             ** TAG START
+0387 C                     SETOF                     5201
+0388 C                     READ EMDE2                    79
+0389 C   01N79   REGC      COMP MRGC                     52
+0390 C   52                EXSR ACCARR                      ACCUMULATE
+0391 C   52                GOTO START                       EXP & OSB
+0392 C                     ENDSR
+0393 C********************************************************************
+0394 C********************************************************************
+0395 C**
+0396 C**   ACCARR SR. - ACCUMULATES ARRAYS OF EXPOSURE AND
+0397 C**                OFF-SETTING BALANCE FROM EMDEX(EMDE2)
+0398 C**               (CALLED FROM EXPRD)
+0399 C**
+0400 C           ACCARR    BEGSR
+     C*                                                                   S01129
+     C********** MSFX      IFNE *ZEROS                             S01129 S01332
+     C           BGDLFX    IFEQ 'Y'                                       S01332
+0401 C                     ADD  MFXE      EXP,1
+0402 C                     ADD  MFXB      OSB,1
+     C                     END                                            S01129
+     C*                                                                   S01129
+     C********** MSMM      IFNE *ZEROS                             S01129 S01332
+     C           BGDLMM    IFEQ 'Y'                                       S01332
+0403 C                     ADD  MMME      EXP,2
+0404 C                     ADD  MMMB      OSB,2
+     C                     END                                            S01129
+     C*                                                                   S01129
+     C********** MSLN      IFNE *ZEROS                             S01129 S01332
+     C           BGCSLN    IFEQ 'Y'                                       S01332
+0405 C                     ADD  MLEE      EXP,3
+0406 C                     ADD  MLEB      OSB,3
+     C                     ADD  MLAE      EXP,3                           S01128
+     C                     ADD  MLAB      OSB,3                           S01128
+     C                     END                                            S01129
+     C*                                                                   S01129
+     C********** MSRE      IFNE *ZEROS                             S01129 S01332
+     C           BGRTBN    IFEQ 'Y'                                       S01332
+0407 C                     ADD  MREE      EXP,4
+0408 C                     ADD  MREB      OSB,4
+     C                     END                                            S01129
+     C*                                                                   S01129
+     C********** MSSC      IFNE *ZEROS                             S01129 S01332
+     C           BGSECS    IFEQ 'Y'                                       S01332
+     C                     ADD  MSCE      EXP,6                           S01129
+     C                     ADD  MSIE      EXP,7                           S01332
+     C                     ADD  MSPO      OSB,8                           S01332
+     C                     END                                            S01129
+     C**********                                                   S01129 S01332
+     C********** MSSI      IFNE *ZEROS                             S01129 S01332
+     C**********           ADD  MSIE      EXP,7                    S01129 S01332
+     C**********           END                                     S01129 S01332
+     C**********                                                   S01129 S01332
+     C********** MSSP      IFNE *ZEROS                             S01129 S01332
+     C**********           ADD  MSPO      OSB,8                    S01129 S01332
+     C**********           END                                     S01129 S01332
+      *                                                                   S01332
+     C           BGFIIN    IFEQ 'Y'                                       S01332
+     C                     ADD  MFRE      EXP,5                           S01332
+     C                     ADD  MFRO      OSB,5                           S01332
+     C                     ADD  MIRE      EXP,9                           S01332
+     C                     ADD  MIRO      OSB,9                           S01332
+     C                     END                                            S01332
+     C*                                                                   S01332
+     C           BGFUOP    IFEQ 'Y'                                       S01332
+     C                     ADD  MFUE      EXP,10                          S01332
+     C                     ADD  MFUO      OSB,10                          S01332
+     C                     ADD  MOPE      EXP,11                          S01332
+     C                     ADD  MOPO      OSB,11                          S01332
+     C                     END                                            S01332
+      *                                                                   CTI002
+     C           CTI002    IFEQ 'Y'                                       CTI002
+     C           CTI007    OREQ 'Y'                                                         MD030956
+     C                     ADD  TFEX      EXP,12                          CTI002
+     C                     ADD  TFOF      OSB,12                          CTI002
+     C                     ENDIF                                          CTI002
+     C*                                                                   S01129
+0409 C                     ENDSR
+0410 C********************************************************************
+0411 C********************************************************************
+0412 C**
+0413 C**   NEGCHK SR. - SEARCHES FOR NEGATIVE AVAILABILITY IN AVA ARRAY
+0414 C**                   (SEARCHES FIRST FOUR ELEMENTS ONLY)
+0415 C**                   (CALLED EXEPTION RTN)
+0416 C**
+0417 C**
+0418 C           NEGCHK    BEGSR
+0419 C**********           Z-ADD1         Y       10                      S01332
+0419 C                     Z-ADD1         Y                               S01332
+0420 C           SRCHLP    TAG                             ** TAG SRCHLP
+0421 C***        Y         COMP 5                        41               S01129
+     C********** Y         COMP 9                        41        S01129 S01332
+     C           Y         COMP 12                       41               S01332
+0422 C   41                GOTO ENDCHK
+     C*                                                                   S01129
+     C********** Y         IFNE 5                                  S01129 S01332
+      * Don't check SE Portfolio since no availability                    S01332
+     C           Y         IFNE 8                                         S01332
+0423 C           0         COMP AVA,Y                40
+     C                     END                                            S01129
+     C*                                                                   S01129
+0424 C                     ADD  1         Y
+0425 C  N40                GOTO SRCHLP
+0426 C           ENDCHK    ENDSR                           ** TAG ENDCHK
+0427 C********************************************************************
+0428 C/EJECT
+0429 C********************************************************************
+0430 C**
+0431 C**   NOLIM SR. - NO LIMIT PROCESSING, ACCUMULATE TOTALS FOR
+0432 C**               REGIONS WITH NO LIMITS
+0433 C**                    (CALLED FROM FULL RTN ONLY)
+0434 C**
+0435 C           NOLIM     BEGSR
+0436 C**
+0437 C**   THE FOLLOWING DIVISIONS ARE TO CONVERT UNITS TO 1000'S OF CURR
+0438 C**
+0439 C                     DIV  1000      EXP       H
+0440 C                     DIV  1000      OSB       H
+0441 C                     Z-SUBEXP       AVA              CALC AVAILBLTY
+0442 C           EXP       ADD  NLE       NLE
+0443 C           AVA       ADD  NLA       NLA
+0444 C           OSB       ADD  NLO       NLO
+0445 C                     ENDSR
+0446 C********************************************************************
+0447 C********************************************************************
+0448 C**
+0449 C**   LIMIT SR. - LIMITS PROCESSING, CALC TOTALS AND GRAND TOTALS
+0450 C**               FOR REGIONS WITH LIMITS
+0451 C**                    (CALLED FROM FULL & EXEPTION RTN'S)
+0452 C**
+0453 C           LIMIT     BEGSR
+0454 C**
+0455 C**   THE FOLLOWING DIVISIONS ARE TO CONVERT UNITS TO 1000'S OF CURR
+0456 C**
+0457 C                     DIV  1000      EXP       H
+0458 C                     DIV  1000      OSB       H
+0459 C           LIM       SUB  EXP       AVA              CALC AVAILBLTY
+0460 C                     ADD  MOAL      GRDTTL 150       CALC TOT FOR
+0461 C                     XFOOTEXP       EXPTOT 150       A REGION
+0467 C                     XFOOTOSB       OSBTOT 150                      S01332
+      *                                                                   S01332
+      * For exposure and offset balance calculation, only add in          S01332
+      * the business areas specified on EM scaling file                   S01332
+      * FX                                                                S01332
+     C           @FX       IFNE 'Y'                                       S01332
+     C                     SUB  EXP,1     EXPTOT                          S01332
+     C                     SUB  OSB,1     OSBTOT                          S01332
+     C                     END                                            S01332
+      * MM                                                                S01332
+     C           @MM       IFNE 'Y'                                       S01332
+     C                     SUB  EXP,2     EXPTOT                          S01332
+     C                     SUB  OSB,2     OSBTOT                          S01332
+     C                     END                                            S01332
+      * LE                                                                S01332
+     C           @LE       IFNE 'Y'                                       S01332
+     C                     SUB  EXP,3     EXPTOT                          S01332
+     C                     SUB  OSB,3     OSBTOT                          S01332
+     C                     END                                            S01332
+      * RE                                                                S01332
+     C           @RE       IFNE 'Y'                                       S01332
+     C                     SUB  EXP,4     EXPTOT                          S01332
+     C                     SUB  OSB,4     OSBTOT                          S01332
+     C                     END                                            S01332
+      * FRA                                                               S01332
+     C           @FR       IFNE 'Y'                                       S01332
+     C                     SUB  EXP,5     EXPTOT                          S01332
+     C                     SUB  OSB,5     OSBTOT                          S01332
+     C                     END                                            S01332
+      * SE C/PARTY                                                        S01332
+     C           @CP       IFNE 'Y'                                       S01332
+     C                     SUB  EXP,6     EXPTOT                          S01332
+     C                     END                                            S01332
+      * SE ISSUER                                                         S01332
+     C           @IS       IFNE 'Y'                                       S01332
+     C                     SUB  EXP,7     EXPTOT                          S01332
+     C                     END                                            S01332
+      * IRS                                                               S01332
+     C           @IR       IFNE 'Y'                                       S01332
+     C                     SUB  EXP,9     EXPTOT                          S01332
+     C                     SUB  OSB,9     OSBTOT                          S01332
+     C                     END                                            S01332
+      * FUTURES                                                           S01332
+     C           @FU       IFNE 'Y'                                       S01332
+     C                     SUB  EXP,10    EXPTOT                          S01332
+     C                     SUB  OSB,10    OSBTOT                          S01332
+     C                     END                                            S01332
+      * OPTIONS                                                           S01332
+     C           @OP       IFNE 'Y'                                       S01332
+     C                     SUB  EXP,11    EXPTOT                          S01332
+     C                     SUB  OSB,11    OSBTOT                          S01332
+     C                     END                                            S01332
+      * TRADE FINANCE                                                     CTI002
+     C           @TF       IFNE 'Y'                                       CTI002
+     C                     SUB  EXP,12    EXPTOT                          CTI002
+     C                     SUB  OSB,12    OSBTOT                          CTI002
+     C                     ENDIF                                          CTI002
+0462 C**********                                                          S01332
+0463 C*****FX*IS*NOT*INCLUDED*IN*OVERALL*TOTALS***                        S01332
+0464 C**********                                                          S01332
+0465 C**********           SUB  EXP,1     EXPTOT                          S01332
+     C**********           SUB  EXP,6     EXPTOT                   S01129 S01332
+0466 C           MOAL      SUB  EXPTOT    AVATOT 150
+0467 C**********           XFOOTOSB       OSBTOT 150                      S01332
+     C**********           SUB  OSB,1     OSBTOT                   S01128 S01332
+0468 C           LIM       ADD  TTL       TTL              CALC GRAND
+0469 C           EXP       ADD  TTE       TTE              TOTALS
+0470 C           AVA       ADD  TTA       TTA
+0471 C           OSB       ADD  TTO       TTO
+0472 C                     ENDSR
+0473 C********************************************************************
+0474 C********************************************************************
+0475 C**
+0476 C**   LNCNT   SR. - TO MAINTAIN COUNT OF DETAILS PRINTED AND
+0477 C**                 TO PRINT NEW HEADINGS ON PAGE OVERFLOW
+0478 C**           THIS SR. IS CALLED FROM FULL AND EXEPTION RTN'S
+0479 C**
+0480 C           LNCNT     BEGSR                           ** BEGSR LNCNT
+0481 C**********           ADD  1         LINEC   10                      S01332
+0482 C***LRNU1N99*         ADD  1         LINEC                           S01332
+0483 C***        4         COMP LINEC                  71                 S01129
+     C********** WBLNO     COMP LINEC                  71          S01129 S01332
+      *                                                                   S01332
+      * Determine whether a page break is needed. To do this, the         S01332
+      * current print line and overflow line no. are extracted from       S01332
+      * the printer file INFDS. The difference between these is           S01332
+      * then compared to @DETL i.e. no. of lines per detail record        S01332
+      * If not enough lines then force a new page                         S01332
+     C           OFLOW     SUB  CURLIN    REM     20                      S01332
+     C           REM       IFLT @DETL                                     S01332
+     C                     MOVE '1'       *IN71                           S01332
+     C                     END                                            S01332
+0484 C**
+0485 C**   PRINT HEADINGS ON OVERFLOW
+0486 C**
+0487 C   71                EXCPTHEADER
+0488 C***71*****           Z-ADD1         LINEC                           S01332
+0489 C   71                SETOF                     71
+0490 C                     ENDSR                           ** ENDSR LNCNT
+0491 C********************************************************************
+0492 C/EJECT
+0493 C********************************************************************
+0494 C**
+0495 C**   TOTNOL SR. - TOTAL OF REGIONS WITHOUT LIMITS
+0496 C**               CALLED FROM MAINLINE
+0497 C**
+0498 C           TOTNOL    BEGSR
+0499 C                     XFOOTNLE       EXPTOT
+0505 C                     XFOOTNLO       OSBTOT                          S01332
+      *                                                                   S01332
+      * Only include specified areas in totals                            S01332
+      * FX                                                                S01332
+     C           @FX       IFNE 'Y'                                       S01332
+     C                     SUB  NLE,1     EXPTOT                          S01332
+     C                     SUB  NLO,1     OSBTOT                          S01332
+     C                     END                                            S01332
+      * MM                                                                S01332
+     C           @MM       IFNE 'Y'                                       S01332
+     C                     SUB  NLE,2     EXPTOT                          S01332
+     C                     SUB  NLO,2     OSBTOT                          S01332
+     C                     END                                            S01332
+      * LE                                                                S01332
+     C           @LE       IFNE 'Y'                                       S01332
+     C                     SUB  NLE,3     EXPTOT                          S01332
+     C                     SUB  NLO,3     OSBTOT                          S01332
+     C                     END                                            S01332
+      * RE                                                                S01332
+     C           @RE       IFNE 'Y'                                       S01332
+     C                     SUB  NLE,4     EXPTOT                          S01332
+     C                     SUB  NLO,4     OSBTOT                          S01332
+     C                     END                                            S01332
+      * FRA                                                               S01332
+     C           @FR       IFNE 'Y'                                       S01332
+     C                     SUB  NLE,5     EXPTOT                          S01332
+     C                     SUB  NLO,5     OSBTOT                          S01332
+     C                     END                                            S01332
+      * SE C/PARTY                                                        S01332
+     C           @CP       IFNE 'Y'                                       S01332
+     C                     SUB  NLE,6     EXPTOT                          S01332
+     C                     END                                            S01332
+      * SE ISSUER                                                         S01332
+     C           @IS       IFNE 'Y'                                       S01332
+     C                     SUB  NLE,7     EXPTOT                          S01332
+     C                     END                                            S01332
+      * IRS                                                               S01332
+     C           @IR       IFNE 'Y'                                       S01332
+     C                     SUB  NLE,9     EXPTOT                          S01332
+     C                     SUB  NLO,9     OSBTOT                          S01332
+     C                     END                                            S01332
+      * FUTURES                                                           S01332
+     C           @FU       IFNE 'Y'                                       S01332
+     C                     SUB  NLE,10    EXPTOT                          S01332
+     C                     SUB  NLO,10    OSBTOT                          S01332
+     C                     END                                            S01332
+      * OPTIONS                                                           S01332
+     C           @OP       IFNE 'Y'                                       S01332
+     C                     SUB  NLE,11    EXPTOT                          S01332
+     C                     SUB  NLO,11    OSBTOT                          S01332
+     C                     END                                            S01332
+      * TRADE FINANCE                                                     CTI002
+     C           @TF       IFNE 'Y'                                       CTI002
+     C                     SUB  NLE,12    EXPTOT                          CTI002
+     C                     SUB  NLO,12    OSBTOT                          CTI002
+     C                     ENDIF                                          CTI002
+      *                                                                   S01332
+0500 C**********                                                          S01332
+0501 C*****FX*IS*NOT*INCLUDED*IN*OVERALL*TOTALS***                        S01332
+0502 C**********                                                          S01332
+0503 C**********           SUB  NLE,1     EXPTOT                          S01332
+0503 C***                  SUB  NLE,6     EXPTOT                          S01129
+0504 C                     Z-SUBEXPTOT    AVATOT
+0505 C**********           XFOOTNLO       OSBTOT                          S01332
+     C**********           SUB  NLO,1     OSBTOT                   S01128 S01332
+0506 C                     ENDSR
+0507 C********************************************************************
+0508 C********************************************************************
+0509 C**
+0510 C**   GRDTOT SR. - GRAND TOTAL RTN
+0511 C**               CALLED FROM MAINLINE
+0512 C**
+0513 C           GRDTOT    BEGSR
+0514 C           NLE       ADD  TTE       TTE              ADD PARENTS
+0515 C           NLA       ADD  TTA       TTA              WITH LIMITS TO
+0516 C           NLO       ADD  TTO       TTO              PARENTS W/O LIM
+0517 C                     XFOOTTTE       GRDTTE 150
+0523 C                     XFOOTTTO       GRDTTO 150                      S01332
+      *                                                                   S01332
+      * Only include specified areas in totals                            S01332
+      * FX                                                                S01332
+     C           @FX       IFNE 'Y'                                       S01332
+     C                     SUB  TTE,1     GRDTTE                          S01332
+     C                     SUB  TTO,1     GRDTTO                          S01332
+     C                     END                                            S01332
+      * MM                                                                S01332
+     C           @MM       IFNE 'Y'                                       S01332
+     C                     SUB  TTE,2     GRDTTE                          S01332
+     C                     SUB  TTO,2     GRDTTO                          S01332
+     C                     END                                            S01332
+      * LE                                                                S01332
+     C           @LE       IFNE 'Y'                                       S01332
+     C                     SUB  TTE,3     GRDTTE                          S01332
+     C                     SUB  TTO,3     GRDTTO                          S01332
+     C                     END                                            S01332
+      * RE                                                                S01332
+     C           @RE       IFNE 'Y'                                       S01332
+     C                     SUB  TTE,4     GRDTTE                          S01332
+     C                     SUB  TTO,4     GRDTTO                          S01332
+     C                     END                                            S01332
+      * FRA                                                               S01332
+     C           @FR       IFNE 'Y'                                       S01332
+     C                     SUB  TTE,5     GRDTTE                          S01332
+     C                     SUB  TTO,5     GRDTTO                          S01332
+     C                     END                                            S01332
+      * SE C/PARTY                                                        S01332
+     C           @CP       IFNE 'Y'                                       S01332
+     C                     SUB  TTE,6     GRDTTE                          S01332
+     C                     END                                            S01332
+      * SE ISSUER                                                         S01332
+     C           @IS       IFNE 'Y'                                       S01332
+     C                     SUB  TTE,7     GRDTTE                          S01332
+     C                     END                                            S01332
+      * IRS                                                               S01332
+     C           @IR       IFNE 'Y'                                       S01332
+     C                     SUB  TTE,9     GRDTTE                          S01332
+     C                     SUB  TTO,9     GRDTTO                          S01332
+     C                     END                                            S01332
+      * FUTURES                                                           S01332
+     C           @FU       IFNE 'Y'                                       S01332
+     C                     SUB  TTE,10    GRDTTE                          S01332
+     C                     SUB  TTO,10    GRDTTO                          S01332
+     C                     END                                            S01332
+      * OPTIONS                                                           S01332
+     C           @OP       IFNE 'Y'                                       S01332
+     C                     SUB  TTE,11    GRDTTE                          S01332
+     C                     SUB  TTO,11    GRDTTO                          S01332
+     C                     END                                            S01332
+      * TRADE FINANCE                                                     CTI002
+     C           @TF       IFNE 'Y'                                       CTI002
+     C                     SUB  TTE,12    GRDTTE                          CTI002
+     C                     SUB  TTO,12    GRDTTO                          CTI002
+     C                     ENDIF                                          CTI002
+0518 C**********                                                          S01332
+0519 C*****FX*IS*NOT*INCLUDED*IN*OVERALL*TOTALS****                       S01332
+0520 C**********                                                          S01332
+0521 C**********           SUB  TTE,1     GRDTTE                          S01332
+     C**********           SUB  TTE,6     GRDTTE                    S01129S01332
+0522 C           GRDTTL    SUB  GRDTTE    GRDTTA 150
+0523 C**********           XFOOTTTO       GRDTTO 150                      S01332
+     C**********           SUB  TTO,1     GRDTTO                   S01128 S01332
+0524 C                     ENDSR
+0525 C********************************************************************
+0526 C/EJECT
+0527 C********************************************************************
+0528 C**
+0529 C**   ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.
+0530 C**
+0531 C           ZSYSTM    BEGSR                           *** ZSYSTM ***
+0532 C**
+0533 C**   SET UP KEY FOR INSTALLATION CONTROL RECORD.
+0534 C                     MOVEL'01      'ZTABKY 12
+0535 C                     MOVE '  10'    ZTABKY
+0536 C**
+0537 C***        ZTABKY    CHAINTABLE                99    ON NOT THERE   S01129
+0537 C           ZTABKY    CHAINTABEM                99    ON NOT THERE   S01129
+0538 C  N99      RECI      COMP 'D'                  9999  ON, IS DELETED
+0539 C**
+0540 C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+0541 C           DATF      COMP 'M'                      98MMDDYY, 98 ON
+0542 C**
+0543 C                     ENDSR
+0544 C**
+0545 C**
+0546 C********************************************************************
+0547 C/EJECT
+0548 C********************************************************************
+0549 C**
+0550 C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+0551 C**
+0552 C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+0553 C**
+0554 C           ZDATE2    BEGSR                           *** ZDATE2 ***
+0555 C**
+0556 C**   CLEAR DATE FIELDS.
+0557 C                     Z-ADD0         ZDATE   60
+0558 C                     MOVEL'       ' ZADATE  7
+0559 C**
+0560 C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+0561 C                     Z-ADDZDAYNO    ZDAYNO  50
+0562 C**
+0563 C**   DETERMINE YEAR NUMBER.
+0564 C**
+0565 C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+0566 C           ZDAYNO    SUB  1         ZDAYN1  50   99
+0567 C   99                GOTO ZDEND2
+0568 C**
+0569 C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+0570 C           ZDAYN1    DIV  1461      ZLYR    20
+0571 C                     MVR            ZDAYN1           SAVE REMAINING
+0572 C**                                                   DAYS
+0573 C**   CALCULATE NUMBER OF REMAINING YEARS.
+0574 C                     Z-ADD1         ZWRK2   20
+0575 C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+0576 C           ZDAYN1    COMP ZYDY,ZWRK2             90
+0577 C  N90      ZWRK2     ADD  1         ZWRK2
+0578 C  N90                GOTO ZDTAG1
+0579 C           ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON
+0580 C**
+0581 C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+0582 C  N91      ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+0583 C**
+0584 C**   CALCULATE ACTUAL YEAR NUMBER.
+0585 C           ZLYR      MULT 4         ZWRK3   30
+0586 C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+0587 C                     Z-ADDZWRK3     ZYEAR   20
+0588 C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+0589 C**
+0590 C**   DETERMINE MONTH NUMBER.
+0591 C**
+0592 C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+0593 C                     SETOF                     9293
+0594 C   91      ZDAYN1    COMP 59                     9293
+0595 C   91N92   ZDAYN1    SUB  1         ZDAYN1
+0596 C**
+0597 C**   CALCULATE MONTH NUMBER.
+0598 C                     Z-ADD2         ZWRK2
+0599 C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+0600 C           ZDAYN1    COMP ZMDY,ZWRK2             94
+0601 C  N94      ZWRK2     ADD  1         ZWRK2
+0602 C  N94                GOTO ZDTAG2
+0603 C           ZWRK2     SUB  1         ZWRK2
+0604 C**
+0605 C                     Z-ADDZWRK2     ZMTH    20       MONTH
+0606 C**
+0607 C**   DETERMINE DAY OF MONTH.
+0608 C**
+0609 C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+0610 C           ZDAYN1    ADD  1         ZDAYN1
+0611 C**
+0612 C**   CALCULATE DAY OF MONTH.
+0613 C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+0614 C**
+0615 C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+0616 C   93      ZDAY      ADD  1         ZDAY
+0617 C**
+0618 C**   FORMAT DATE, DDMMYY OR MMDDYY.
+0619 C  N98                MOVELZDAY      ZWRK4   40
+0620 C   98                MOVE ZDAY      ZWRK4
+0621 C  N98                MOVE ZMTH      ZWRK4
+0622 C   98                MOVELZMTH      ZWRK4
+0623 C                     MOVELZWRK4     ZDATE
+0624 C                     MOVE ZYEAR     ZDATE
+0625 C**
+0626 C**   FORMAT ALPHA DATE, DDMMMYY.
+0627 C           ZDAY      COMP 10                     95
+0628 C                     MOVELZDAY      ZWRK5   5
+0629 C   95                MOVEL' '       ZWRK5
+0630 C                     MOVE ZMNM,ZMTH ZWRK5
+0631 C                     MOVELZWRK5     ZADATE
+0632 C                     MOVE ZYEAR     ZADATE
+0633 C**
+0634 C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*
+0635 C**
+0636 C**
+     C/EJECT                                                              S01129
+     C********************************************************************S01129
+     C**                                                                  S01129
+     C**   PRINT DETAIL LINES                                             S01129
+     C**                                                                  S01129
+     C           DETAIL    BEGSR                                          S01129
+     C*                                                                   S01129
+     C                     EXCPTDET1                                      S01129
+     C*                                                                   S01129
+     C                     Z-ADD*ZEROS    X                               S01129
+     C*                                                                   S01129
+     C********** X         DOWLT9                                  S01129 S01332
+     C********** X         DOWLT11                                 S01332 CTI002
+     C           X         DOWLT12                                        CTI002
+     C*                                                                   S01129
+     C                     ADD  1         X                               S01129
+     C*                                                                   S01129
+     C           WTY,X     IFEQ *BLANKS                                   S01129
+     C**********           Z-ADD10        X                        S01129 S01332
+     C                     Z-ADD12        X                               S01332
+     C*                                                                   S01129
+     C                     ELSE                                           S01129
+     C*                                                                   S01129
+     C           WTY,X     IFEQ 'FX'                                      S01129
+     C                     EXCPTDETFX                                     S01129
+     C                     END                                            S01129
+     C           WTY,X     IFEQ 'MM'                                      S01129
+     C                     EXCPTDETMM                                     S01129
+     C                     END                                            S01129
+     C           WTY,X     IFEQ 'LN'                                      S01129
+     C                     EXCPTDETLN                                     S01129
+     C                     END                                            S01129
+     C           WTY,X     IFEQ 'RE'                                      S01129
+     C                     EXCPTDETRE                                     S01129
+     C                     END                                            S01129
+     C********** WTY,X     IFEQ 'LC'                               S01129 S01196
+     C**********           EXCPTDETLC                              S01129 S01196
+     C**********           END                                     S01129 S01196
+     C           WTY,X     IFEQ 'SC'                                      S01129
+     C                     EXCPTDETSC                                     S01129
+     C                     END                                            S01129
+     C           WTY,X     IFEQ 'SI'                                      S01129
+     C                     EXCPTDETSI                                     S01129
+     C                     END                                            S01129
+     C           WTY,X     IFEQ 'SP'                                      S01129
+     C                     EXCPTDETSP                                     S01129
+     C                     END                                            S01129
+     C********** WTY,X     IFEQ 'FI'                               S01129 S01332
+     C**********           EXCPTDETFI                              S01129 S01332
+     C**********           END                                     S01129 S01332
+     C           WTY,X     IFEQ 'FR'                                      S01332
+     C                     EXCPTDETFR                                     S01332
+     C                     END                                            S01332
+     C           WTY,X     IFEQ 'IR'                                      S01332
+     C                     EXCPTDETIR                                     S01332
+     C                     END                                            S01332
+     C           WTY,X     IFEQ 'FU'                                      S01332
+     C                     EXCPTDETFU                                     S01332
+     C                     END                                            S01332
+     C           WTY,X     IFEQ 'OP'                                      S01332
+     C                     EXCPTDETOP                                     S01332
+     C                     END                                            S01332
+     C           WTY,X     IFEQ 'TF'                                      CTI002
+     C                     EXCPTDETTF                                     CTI002
+     C                     ENDIF                                          CTI002
+     C*                                                                   S01129
+     C                     END                                            S01129
+     C*                                                                   S01129
+     C                     END                                            S01129
+     C*                                                                   S01129
+     C                     EXCPTDET2                                      S01129
+     C*                                                                   S01129
+     C                     ENDSR                                          S01129
+     C********************************************************************S01129
+     C/EJECT                                                              S01129
+     C********************************************************************S01129
+     C**                                                                  S01129
+     C**   PRINT COUNTRIES WITH NO LIMITS                                 S01129
+     C**                                                                  S01129
+     C           CNOLIM    BEGSR                                          S01129
+      *                                                                   S01332
+      * For no limits print, one less line is needed than for detail      S01332
+     C                     SUB  1         @DETL                           S01332
+     C                     EXSR LNCNT                                     S01332
+     C                     ADD  1         @DETL                           S01332
+     C*                                                                   S01129
+     C                     EXCPTCNOLM1                                    S01129
+     C*                                                                   S01129
+     C                     Z-ADD*ZEROS    X                               S01129
+     C*                                                                   S01129
+     C********** X         DOWLT9                                  S01129 S01332
+     C********** X         DOWLT11                                 S01332 CTI002
+     C           X         DOWLT12                                        CTI002
+     C*                                                                   S01129
+     C                     ADD  1         X                               S01129
+     C*                                                                   S01129
+     C           WTY,X     IFEQ *BLANKS                                   S01129
+     C**********           Z-ADD10        X                        S01129 S01332
+     C                     Z-ADD12        X                               S01332
+     C*                                                                   S01129
+     C                     ELSE                                           S01129
+     C*                                                                   S01129
+     C           WTY,X     IFEQ 'FX'                                      S01129
+     C                     EXCPTCNLFX                                     S01129
+     C                     END                                            S01129
+     C           WTY,X     IFEQ 'MM'                                      S01129
+     C                     EXCPTCNLMM                                     S01129
+     C                     END                                            S01129
+     C           WTY,X     IFEQ 'LN'                                      S01129
+     C                     EXCPTCNLLN                                     S01129
+     C                     END                                            S01129
+     C           WTY,X     IFEQ 'RE'                                      S01129
+     C                     EXCPTCNLRE                                     S01129
+     C                     END                                            S01129
+     C********** WTY,X     IFEQ 'LC'                               S01129 S01196
+     C**********           EXCPTCNLLC                              S01129 S01196
+     C**********           END                                     S01129 S01196
+     C           WTY,X     IFEQ 'SC'                                      S01129
+     C                     EXCPTCNLSC                                     S01129
+     C                     END                                            S01129
+     C           WTY,X     IFEQ 'SI'                                      S01129
+     C                     EXCPTCNLSI                                     S01129
+     C                     END                                            S01129
+     C           WTY,X     IFEQ 'SP'                                      S01129
+     C                     EXCPTCNLSP                                     S01129
+     C                     END                                            S01129
+     C********** WTY,X     IFEQ 'FI'                               S01129 S01332
+     C**********           EXCPTCNLFI                              S01129 S01332
+     C**********           END                                     S01129 S01332
+     C           WTY,X     IFEQ 'FR'                                      S01332
+     C                     EXCPTCNLFR                                     S01332
+     C                     END                                            S01332
+     C           WTY,X     IFEQ 'IR'                                      S01332
+     C                     EXCPTCNLIR                                     S01332
+     C                     END                                            S01332
+     C           WTY,X     IFEQ 'FU'                                      S01332
+     C                     EXCPTCNLFU                                     S01332
+     C                     END                                            S01332
+     C           WTY,X     IFEQ 'OP'                                      S01332
+     C                     EXCPTCNLOP                                     S01332
+     C                     END                                            S01332
+     C           WTY,X     IFEQ 'TF'                                      CTI002
+     C                     EXCPTCNLTF                                     CTI002
+     C                     ENDIF                                          CTI002
+     C*                                                                   S01129
+     C                     END                                            S01129
+     C*                                                                   S01129
+     C                     END                                            S01129
+     C*                                                                   S01129
+     C                     EXCPTCNOLM2                                    S01129
+     C*                                                                   S01129
+     C                     ENDSR                                          S01129
+     C********************************************************************S01129
+     C/EJECT                                                              S01129
+     C********************************************************************S01129
+     C**                                                                  S01129
+     C**   PRINT TOTALS FOR REPORT GROUPING                               S01129
+     C**                                                                  S01129
+     C           TOTS      BEGSR                                          S01129
+      *                                                                   S01332
+      * For totals print, one less line is needed than for detail         S01332
+     C                     SUB  1         @DETL                           S01332
+     C                     EXSR LNCNT                                     S01332
+     C                     ADD  1         @DETL                           S01332
+     C*                                                                   S01129
+     C                     EXCPTTOTS1                                     S01129
+     C*                                                                   S01129
+     C                     Z-ADD*ZEROS    X                               S01129
+     C*                                                                   S01129
+     C********** X         DOWLT9                                  S01129 S01332
+     C********** X         DOWLT11                                 S01332 CTI002
+     C           X         DOWLT12                                        CTI002
+     C*                                                                   S01129
+     C                     ADD  1         X                               S01129
+     C*                                                                   S01129
+     C           WTY,X     IFEQ *BLANKS                                   S01129
+     C**********           Z-ADD10        X                        S01129 S01332
+     C                     Z-ADD12        X                               S01332
+     C*                                                                   S01129
+     C                     ELSE                                           S01129
+     C*                                                                   S01129
+     C           WTY,X     IFEQ 'FX'                                      S01129
+     C                     EXCPTTOTFX                                     S01129
+     C                     END                                            S01129
+     C           WTY,X     IFEQ 'MM'                                      S01129
+     C                     EXCPTTOTMM                                     S01129
+     C                     END                                            S01129
+     C           WTY,X     IFEQ 'LN'                                      S01129
+     C                     EXCPTTOTLN                                     S01129
+     C                     END                                            S01129
+     C           WTY,X     IFEQ 'RE'                                      S01129
+     C                     EXCPTTOTRE                                     S01129
+     C                     END                                            S01129
+     C********** WTY,X     IFEQ 'LC'                               S01129 S01196
+     C**********           EXCPTTOTLC                              S01129 S01196
+     C**********           END                                     S01129 S01196
+     C           WTY,X     IFEQ 'SC'                                      S01129
+     C                     EXCPTTOTSC                                     S01129
+     C                     END                                            S01129
+     C           WTY,X     IFEQ 'SI'                                      S01129
+     C                     EXCPTTOTSI                                     S01129
+     C                     END                                            S01129
+     C           WTY,X     IFEQ 'SP'                                      S01129
+     C                     EXCPTTOTSP                                     S01129
+     C                     END                                            S01129
+     C********** WTY,X     IFEQ 'FI'                               S01129 S01332
+     C**********           EXCPTTOTFI                              S01129 S01332
+     C**********           END                                     S01129 S01332
+     C           WTY,X     IFEQ 'FR'                                      S01332
+     C                     EXCPTTOTFR                                     S01332
+     C                     END                                            S01332
+     C           WTY,X     IFEQ 'IR'                                      S01332
+     C                     EXCPTTOTIR                                     S01332
+     C                     END                                            S01332
+     C           WTY,X     IFEQ 'FU'                                      S01332
+     C                     EXCPTTOTFU                                     S01332
+     C                     END                                            S01332
+     C           WTY,X     IFEQ 'OP'                                      S01332
+     C                     EXCPTTOTOP                                     S01332
+     C                     END                                            S01332
+     C           WTY,X     IFEQ 'TF'                                      CTI002
+     C                     EXCPTTOTTF                                     CTI002
+     C                     ENDIF                                          CTI002
+     C*                                                                   S01129
+     C                     END                                            S01129
+     C*                                                                   S01129
+     C                     END                                            S01129
+     C*                                                                   S01129
+     C                     EXCPTTOTS2                                     S01129
+     C*                                                                   S01129
+     C                     ENDSR                                          S01129
+0637 C********************************************************************
+0638 C/EJECT
+0639 O********************************************************************
+0640 O*
+0641 O*   REPORT TITLES
+0642 O*
+0643 OEM0630P1E  203           HEADER                                     S01124
+0644 O**********                         22 'REFERENCE EM0630'            S01117
+0644 O                                   22 'REFERENCE EM0630P1'          S01117
+0645 O                         TITLE     81
+0646 O                                  104 'DATE'
+0647 O                         RUNDAT   112
+0648 O                                  122 'PAGE'
+0649 O                         PAGE     127
+0650 O*
+0651 O        E  1             HEADER
+0652 O                                   60 'LIMIT/EXPOSURE/AVAILABIL'
+0653 O                                   80 'ITY REPORT BY REGION'
+0654 O                                   95 'IN 000''S OF'
+0655 O                         CURRNM   110
+0656 O                 U1               132 '* EXCEPTION REPORT *'
+0657 O*
+0658 O        E  1             HEADER
+0659 O*
+0660 O                                   60 '------------------------'
+0661 O                                   80 '--------------------'
+0662 O*
+0663 O        E  1             HEADER
+0664 O                                  128 'OFF-SETTING'
+0665 O*
+0666 O        E  2             HEADER
+0667 O                                   20 ' REGION'
+0668 O                                   50 'TYPE'
+0669 O                                   70 'LIMIT'
+0670 O                                   90 'EXPOSURE'
+0671 O                                  109 'AVAILABILITY'
+0672 O                                  126 'BALANCE'
+0673 O*
+0674 O**   DETAIL EXEPTION SPEC'S
+0675 O**
+0676 O***     E  2             EXPREP                                     S01129
+     O        E 12             DET1                                       S01129
+0677 O                         REGC       6
+0678 O                         REGN      40
+0679 O*
+     O********E**0             DET1                                S01129 S01332
+     O        E  1             DET1                                       S01332
+     O                                   25 'EXPIRY DATE'                 S01129
+     O                         ZADATE    33                               S01129
+     O        E  1             DETFX                                      S01129
+0680 O                                   50 'FX'
+0681 O                         LIM,1 1   70
+0682 O                         EXP,1 1   90
+0683 O                         AVA,1 J  110
+     O                         OSB,1 1  130                               S01128
+0684 O***     E  1             EXPREP                                     S01129
+0747 O        E  1             DETMM                                      S01129
+0685 O                                   50 'MM'
+0686 O                         LIM,2 1   70
+0687 O                         EXP,2 1   90
+0688 O                         AVA,2 J  110
+0689 O                         OSB,2 1  130
+0690 O***     E  1             EXPREP                                     S01129
+     O        E  1             DETLN                                      S01129
+0691 O***                                25 'EXPIRY DATE'                 S01129
+0692 O***                      ZADATE    33                               S01129
+0693 O                                   50 'LOANS'
+0694 O                         LIM,3 1   70
+0695 O                         EXP,3 1   90
+0696 O                         AVA,3 J  110
+0697 O                         OSB,3 1  130
+0698 O***     E  1             EXPREP                                     S01129
+     O        E  1             DETRE                                      S01129
+0699 O**********                         50 'RE'                          S01332
+     O/COPY WNCPYSRC,EM0630O001
+0699 O                                   50 'RETAIL'                      S01332
+     O/COPY WNCPYSRC,EM0630O002
+0700 O                         LIM,4 1   70
+0701 O                         EXP,4 1   90
+0702 O                         AVA,4 J  110
+0703 O                         OSB,4 1  130
+0704 O***     E  1             EXPREP                                     S01129
+     O********E**1             DETLC                              S01129  S01196
+0705 O***********                        50 'L/C'                         S01196
+0706 O***********              LIM,5 1   70                               S01196
+0707 O*                        EXP,5 1   90
+0708 O*                        AVA,5 J  110
+0709 O*
+     O        E  1             DETSC                                      S01129
+     O                                   50 'ST-C/P'                      S01129
+     O                         LIM,6 1   70                               S01129
+     O                         EXP,6 1   90                               S01129
+     O                         EXP,6 1   90                               S01129
+     O                         AVA,6 J  110                               S01129
+     O        E  1             DETSI                                      S01129
+     O                                   50 'ST-ISS'                      S01129
+     O                         LIM,7 1   70                               S01129
+     O                         EXP,7 1   90                               S01129
+     O                         AVA,7 J  110                               S01129
+     O        E  1             DETSP                                      S01129
+     O                                   50 'ST-P/F'                      S01129
+     O                         OSB,8 J  131                               E14725
+     O********                 OSB,8 1  130                         S01129E14725
+0710 O***     E  1             EXPREP                                     S01129
+0711 O***                                50 'SEC TR'                      S01129
+0712 O***                      LIM,6 1   70                               S01129
+0713 O*                        EXP,6 1   90
+0714 O*                        AVA,6 J  110
+0715 O*
+0716 O***     E  2             EXPREP                                     S01129
+0794 O********E* 1             DETFI                               S01129 S01332
+0717 O**********                         50 'FIN FUT'                     S01332
+0718 O**********               LIM,7 1   70                               S01332
+0719 O*                        EXP,7 1   90
+0720 O*                        AVA,7 J  110
+0767 O        E  1             DETFR                                      S01332
+0771 O                                   50 'FRA'                         S01332
+0772 O                         LIM,5 1   70                               S01332
+0773 O                         EXP,5 1   90                               S01332
+0774 O                         AVA,5 J  110                               S01332
+0775 O                         OSB,5 1  130                               S01332
+0767 O        E  1             DETIR                                      S01332
+0771 O                                   50 'IRS'                         S01332
+0772 O                         LIM,9 1   70                               S01332
+0773 O                         EXP,9 1   90                               S01332
+0774 O                         AVA,9 J  110                               S01332
+0775 O                         OSB,9 1  130                               S01332
+0767 O        E  1             DETFU                                      S01332
+0771 O                                   50 'FUTURES'                     S01332
+0772 O                         LIM,101   70                               S01332
+0773 O                         EXP,101   90                               S01332
+0774 O                         AVA,10J  110                               S01332
+0775 O                         OSB,101  130                               S01332
+0767 O        E  1             DETOP                                      S01332
+0771 O                                   50 'OPTIONS'                     S01332
+0772 O                         LIM,111   70                               S01332
+0773 O                         EXP,111   90                               S01332
+0774 O                         AVA,11J  110                               S01332
+0775 O                         OSB,111  130                               S01332
+0722  *                                                                   CTI002
+0767 O        E  1             DETTF                                      CTI002
+0771 O                                   50 'TRADE FINANCE'               CTI002
+0772 O                         LIM,121   70                               CTI002
+0773 O                         EXP,121   90                               CTI002
+0774 O                         AVA,12J  110                               CTI002
+0775 O                         OSB,121  130                               CTI002
+0722  *                                                                   CTI002
+0721 O*
+0722 O***     E  3             EXPREP                                     S01129
+0803 O********E*13             DET2                                S01129 S01332
+0803 O        E 11             DET2                                       S01332
+0723 O****                                   50 'TOTAL'                   S01128
+0723 O                                   50 'OVERALL'                     S01128
+0724 O                         MOAL  1   70
+0725 O                         EXPTOT1   90
+0726 O                         AVATOTJ  110
+0727 O                         OSBTOTJ  131                               E14725
+0727 O********                 OSBTOT1  130                               E14725
+     O        E 11     77      DET2                                       S01332
+1596 O                                   50 'EXCLUDES:'                   S01332
+     O                         EXC      116                               S01332
+0728 O/EJECT
+0729 O********************************************************************
+0730 O**
+0731 O**   DATABASE ERROR OUTPUT
+0732 O**
+0733 O**      D 3      99                                                 S01117
+0734 O**                                 48 '**** DATABASE ERROR ****'    S01117
+0735 O**      D 3      99                                                 S01117
+0736 O**                                 34 '************************'    S01117
+0737 O**                                 58 '************************'    S01117
+0738 O**                                 64 '******'                      S01117
+0739 O**      D 1      99                                                 S01117
+0740 O**                                 11 '*'                           S01117
+0741 O**                                 64 '*'                           S01117
+0742 O**      D 1      99                                                 S01117
+0743 O**                                 29 '*    FILE NAME    '''        S01117
+0744 O**                       DBFILE    34                               S01117
+0745 O**                                 35 ''''                          S01117
+0746 O**                                 64 '*'                           S01117
+0747 O**      D 1      99                                                 S01117
+0748 O**                                 29 '*    KEY          '''        S01117
+0749 O**                       DBKEY     58                               S01117
+0750 O**                                 64 '''    *'                     S01117
+0751 O**      D 1      99                                                 S01117
+0752 O**                                 29 '*    PROGRAM NAME '''        S01117
+0753 O**                       DBPGM     37                               S01117
+0754 O**                                 38 ''''                          S01117
+0755 O**                                 64 '*'                           S01117
+0756 O**      D 1      99                                                 S01117
+0757 O**                                 29 '*    AT           '''        S01117
+0758 O**                       DBASE     31                               S01117
+0759 O**                                 32 ''''                          S01117
+0760 O**                                 64 '*'                           S01117
+0761 O**      D 1      99                                                 S01117
+0762 O**                                 11 '*'                           S01117
+0763 O**                                 64 '*'                           S01117
+0764 O**      D 1      99                                                 S01117
+0765 O**                                 34 '************************'    S01117
+0766 O**                                 58 '************************'    S01117
+0767 O**                                 64 '******'                      S01117
+0768 O********************************************************************
+0769 O*
+0770 O**       CUSTOMERS WITH NO LIMITS TOTALS
+0771 O*
+0772 O***     T  2     LRNU1N99                                           S01129
+     O        E 12             CNOLM1                                     S01129
+0773 O                                   23 'REGIONS WITH NO LIMITS'
+0774 O*
+     O        E  1             CNLFX                                      S01129
+0775 O                                   50 'FX'
+0776 O                         NLE,1 1   90
+0777 O                         NLA,1 J  110
+     O                         NLO,1 1  130                               S01128
+     O***     T  1     LRNU1N99                                           S01129
+0822 O        E  1             CNLMM                                      S01129
+0779 O                                   50 'MM'
+0780 O                         NLE,2 1   90
+0781 O                         NLA,2 J  110
+0782 O                         NLO,2 1  130
+0783 O***     T  1     LRNU1N99                                           S01129
+     O        E  1             CNLLN                                      S01129
+0784 O                                   50 'LOANS'
+0785 O                         NLE,3 1   90
+0786 O                         NLA,3 J  110
+0787 O                         NLO,3 1  130
+0788 O***     T  1     LRNU1N99                                           S01129
+     O        E  1             CNLRE                                      S01129
+0789 O**********                         50 'RE'                          S01332
+     O/COPY WNCPYSRC,EM0630O003
+0789 O                                   50 'RETAIL'                      S01332
+     O/COPY WNCPYSRC,EM0630O004
+0790 O                         NLE,4 1   90
+0791 O                         NLA,4 J  110
+0792 O                         NLO,4 1  130
+0793 O***     T  1     LRNU1N99                                           S01129
+0822 O********E**1             CNLLC                               S01129 S01196
+0794 O***********                        50 'L/C'                         S01196
+0795 O*                        NLE,5 1   90
+0796 O*                        NLA,5 J  110
+0797 O*
+0798 O***     T  1     LRNU1N99                                           S01129
+0799 O***                                50 'SEC TR'                      S01129
+0800 O*                        NLE,6 1   90
+0801 O*                        NLA,6 J  110
+0802 O*
+     O        E  1             CNLSC                                      S01129
+     O                                   50 'ST-C/P'                      S01129
+     O                         NLE,6 1   90                               S01129
+     O                         NLA,6 J  110                               S01129
+     O        E  1             CNLSI                                      S01129
+     O                                   50 'ST-ISS'                      S01129
+     O                         NLE,7 1   90                               S01129
+     O                         NLA,7 J  110                               S01129
+     O        E  1             CNLSP                                      S01129
+     O                                   50 'ST-P/F'                      S01129
+     O                         NLO,8 1  130                               S01129
+0803 O***     T  2     LRNU1N99                                           S01129
+0822 O********E**1             CNLFI                               S01129 S01332
+0804 O**********                         50 'FIN FUT'                     S01332
+0805 O*                        NLE,7 1   90
+0806 O*                        NLA,7 J  110
+0822 O        E  1             CNLFR                                      S01332
+0819 O                                   50 'FRA'                         S01332
+0820 O                         NLE,5 1   90                               S01332
+0821 O                         NLA,5 J  110                               S01332
+     O                         NLO,5 1  130                               S01332
+0822 O        E  1             CNLIR                                      S01332
+0819 O                                   50 'IRS'                         S01332
+0820 O                         NLE,9 1   90                               S01332
+0821 O                         NLA,9 J  110                               S01332
+     O                         NLO,9 1  130                               S01332
+0822 O        E  1             CNLFU                                      S01332
+0819 O                                   50 'FUTURES'                     S01332
+0820 O                         NLE,101   90                               S01332
+0821 O                         NLA,10J  110                               S01332
+     O                         NLO,101  130                               S01332
+0822 O        E  1             CNLOP                                      S01332
+0819 O                                   50 'OPTIONS'                     S01332
+0820 O                         NLE,111   90                               S01332
+0821 O                         NLA,11J  110                               S01332
+     O                         NLO,111  130                               S01332
+      *                                                                   CTI002
+0822 O        E  1             CNLTF                                      CTI002
+0819 O                                   50 'TRADE FINANCE'               CTI002
+0820 O                         NLE,121   90                               CTI002
+0821 O                         NLA,12J  110                               CTI002
+     O                         NLO,121  130                               CTI002
+0807 O*
+0808 O***     T  3     LRNU1N99                                           S01129
+0809 O******                                   50 'TOTAL'                 S01128
+     O********E*13             CNOLM2                              S01129 S01332
+     O        E 11             CNOLM2                                     S01332
+0809 O                                   50 'OVERALL'                     S01128
+0810 O                         EXPTOT1   90
+0811 O                         AVATOTJ  110
+0812 O                         OSBTOT1  130
+     O        E 11     77      CNOLM2                                     S01332
+1596 O                                   50 'EXCLUDES:'                   S01332
+     O                         EXC      116                               S01332
+0813 O/EJECT
+0814 O*
+0815 O* GRAND TOTALS FOR FULL REPORT
+0816 O*
+0817 O***     T  2     LRNU1N99                                           S01129
+     O        E 12             TOTS1                                      S01129
+0818 O                                   25 '*** TOTAL FOR ALL REGION'
+0819 O                                   30 'S ***'
+0820 O*
+0821 O*
+     O        E  1             TOTFX                                      S01129
+0822 O                                   50 'FX'
+0823 O                         TTL,1 1   70
+0824 O                         TTE,1 1   90
+0825 O                         TTA,1 J  110
+     O                         TTO,1 1  130                               S01128
+0826 O***     T  1     LRNU1N99                                           S01129
+     O        E  1             TOTMM                                      S01129
+0827 O                                   50 'MM'
+0828 O                         TTL,2 1   70
+0829 O                         TTE,2 1   90
+0830 O                         TTA,2 J  110
+0831 O                         TTO,2 1  130
+0832 O***     T  1     LRNU1N99                                           S01129
+     O        E  1             TOTLN                                      S01129
+0833 O                                   50 'LOANS'
+0834 O                         TTL,3 1   70
+0835 O                         TTE,3 1   90
+0836 O                         TTA,3 J  110
+0837 O                         TTO,3 1  130
+0838 O***     T  1     LRNU1N99                                           S01129
+     O        E  1             TOTRE                                      S01129
+0839 O**********                         50 'RE'                          S01332
+     O/COPY WNCPYSRC,EM0630O005
+0839 O                                   50 'RETAIL'                      S01332
+     O/COPY WNCPYSRC,EM0630O006
+0840 O                         TTL,4 1   70
+0841 O                         TTE,4 1   90
+0842 O                         TTA,4 J  110
+0843 O                         TTO,4 1  130
+0844 O***     T  1     LRNU1N99                                           S01129
+     O********E* 1             TOTLC                               S01129 S01196
+0845 O**********                         50 'L/C'                         S01196
+0846 O**********               TTL,5 1   70                               S01196
+0847 O*                        TTE,5 1   90
+0848 O*                        TTA,5 J  110
+0849 O*
+0850 O***     T  1     LRNU1N99                                           S01129
+0851 O***                                50 'SEC TR'                      S01129
+0852 O***                      TTL,6 1   70                               S01129
+0853 O*                        TTE,6 1   90
+0854 O*                        TTA,6 J  110
+0855 O*
+     O        E  1             TOTSC                                      S01129
+     O                                   50 'ST-C/P'                      S01129
+     O                         TTL,6 1   70                               S01129
+     O                         TTE,6 1   90                               S01129
+     O                         TTA,6 J  110                               S01129
+     O        E  1             TOTSI                                      S01129
+     O                                   50 'ST-ISS'                      S01129
+     O                         TTL,7 1   70                               S01129
+     O                         TTE,7 1   90                               S01129
+     O                         TTA,7 J  110                               S01129
+     O        E  1             TOTSP                                      S01129
+     O                                   50 'ST-P/F'                      S01129
+     O                         TTO,8 1  130                               S01129
+0856 O***     T  2     LRNU1N99                                           S01129
+0861 O********E**1             TOTFI                               S01129 S01332
+0857 O**********                         50 'FIN FUT'                     S01332
+0858 O***                      TTL,7 1   70                               S01129
+     O**********               TTL,9 1   70                        S01129 S01332
+0859 O*                        TTE,7 1   90
+0860 O*                        TTA,7 J  110
+0861 O        E  1             TOTFR                                      S01332
+0883 O                                   50 'FRA'                         S01332
+0884 O                         TTL,5 1   70                               S01332
+0885 O                         TTE,5 1   90                               S01332
+0886 O                         TTA,5 J  110                               S01332
+0887 O                         TTO,5 1  130                               S01332
+0861 O        E  1             TOTIR                                      S01332
+0883 O                                   50 'IRS'                         S01332
+0884 O                         TTL,9 1   70                               S01332
+0885 O                         TTE,9 1   90                               S01332
+0886 O                         TTA,9 J  110                               S01332
+0887 O                         TTO,9 1  130                               S01332
+0861 O        E  1             TOTFU                                      S01332
+0883 O                                   50 'FUTURES'                     S01332
+0884 O                         TTL,101   70                               S01332
+0885 O                         TTE,101   90                               S01332
+0886 O                         TTA,10J  110                               S01332
+0887 O                         TTO,101  130                               S01332
+0861 O        E  1             TOTOP                                      S01332
+0883 O                                   50 'OPTIONS'                     S01332
+0884 O                         TTL,111   70                               S01332
+0885 O                         TTE,111   90                               S01332
+0886 O                         TTA,11J  110                               S01332
+0887 O                         TTO,111  130                               S01332
+      *                                                                   CTI002
+0861 O        E  1             TOTTF                                      CTI002
+0883 O                                   50 'TRADE FINANCE'               CTI002
+0884 O                         TTL,121   70                               CTI002
+0885 O                         TTE,121   90                               CTI002
+0886 O                         TTA,12J  110                               CTI002
+0887 O                         TTO,121  130                               CTI002
+0861 O*
+0862 O***     T  3     LRNU1N99                                           S01129
+     O********E*13             TOTS2                               S01129 S01332
+     O        E 11             TOTS2                                      S01332
+0863 O*******                                   50 'TOTAL'                S01128
+0863 O                                   50 'OVERALL'                     S01128
+0864 O                         GRDTTL1   70
+0865 O                         GRDTTE1   90
+0866 O                         GRDTTAJ  110
+0867 O                         GRDTTO1  130
+     O        E 11     77      TOTS2                                      S01332
+1596 O                                   50 'EXCLUDES:'                   S01332
+     O                         EXC      116                               S01332
+     O*                                                                   S01117
+     O        T 22     LR 42NU7                                           S01117
+     O       AND      NU8                                                 S01117
+0914 O**********                  85 '* NO DEATILS TO REPORT *'    S01117 S01332
+0914 O                                   85 '* NO DETAILS TO REPORT *'    S01332
+0868 O*
+     O********T 2      LR                                                 S01117
+     O        T 2      LRNU7NU8                                           S01117
+0870 O                                   80 '*** END OF REPORT ***'
+     O*****************************************************************   S01117
+0643 OEM0630AUE  203           DTERR                                      S01117
+0644 O                                   22 'REFERENCE EM0630AU'          S01117
+0645 O                         TITLE     81                               S01117
+0646 O                                  104 'DATE'                        S01117
+0647 O                         RUNDAT   112                               S01117
+0648 O                                  122 'PAGE'                        S01117
+0649 O                         PAGE1    127                               S01117
+0728 O/EJECT
+0650 O**                                                                  S01117
+0731 O**   DATABASE ERROR OUTPUT                                          S01117
+0732 O**                                                                  S01117
+0733 O        E 3              DTERR                                      S01117
+0734 O                                   51 '**** DATABASE ERROR ****'    S01117
+0735 O        E 3              DTERR                                      S01117
+0736 O                                   34 '************************'    S01117
+0737 O                                   58 '************************'    S01117
+0738 O                                   70 '*************'               S01117
+0739 O        E 1              DTERR                                      S01117
+0740 O                                   11 '*'                           S01117
+0741 O                                   70 '*'                           S01117
+0742 O        E 1              DTERR                                      S01117
+0743 O                                   29 '*    FILE NAME    '''        S01117
+0744 O                         DBFILE    40                               S01117
+0745 O                                   41 ''''                          S01117
+0746 O                                   70 '*'                           S01117
+0747 O        E 1              DTERR                                      S01117
+0748 O                                   29 '*    KEY          '''        S01117
+0749 O                         DBKEY     64                               S01117
+0750 O                                   70 '''    *'                     S01117
+0751 O        E 1              DTERR                                      S01117
+0752 O                                   29 '*    PROGRAM NAME '''        S01117
+0753 O                         DBPGM     43                               S01117
+0754 O                                   44 ''''                          S01117
+0755 O                                   70 '*'                           S01117
+0756 O        E 1              DTERR                                      S01117
+0757 O                                   29 '*    AT           '''        S01117
+0758 O                         DBASE     37                               S01117
+0759 O                                   38 ''''                          S01117
+0760 O                                   70 '*'                           S01117
+0761 O        E 1              DTERR                                      S01117
+0762 O                                   11 '*'                           S01117
+0763 O                                   70 '*'                           S01117
+0764 O        E 1              DTERR                                      S01117
+0765 O                                   34 '************************'    S01117
+0766 O                                   58 '************************'    S01117
+0767 O                                   70 '*************'               S01117
+0869 O        E 2              DTERR                                      S01117
+0870 O                                   83 '*** END OF REPORT ***'       S01117
+     O*****************************************************************   S01117
+      **  S01332 - CHANGE REPORT SEQUENCE ARRAY - REMOVE LETTERS OF       S01332
+      **           CREDIT & FINANCIAL FUTURES AND ADD FRA, IRS,           S01332
+      **           FUTURES & OPTIONS                                      S01332
+      **                                                                  S01332
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  REPORT SEQUENCE                                                       S01129
+FXMMLNREFRSCSISPFUOPIRTF                                      S01129S01332CTI002
+**  XCL - EXCLUDED AREAS TEXT                                             S01332
+FX,                                                                       S01332
+MM,                                                                       S01332
+Loans,                                                                    S01332
+FRA,                                                                      S01332
+IRS,                                                                      S01332
+Futures,                                                                  S01332
+Options,                                                                  S01332
+SE-C/p,                                                                   S01332
+SE-Iss,                                                                   S01332
+Retail,                                                            S01332 CTI002
+Trade Finance                                                             CTI002

@@ -1,0 +1,683 @@
+/*********************************************************************/
+/*XBI    OVRDBF FILE(UTC000300F) TOFILE(UPFDBATPD)                   */
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UT Create all objects from a source library')   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities                                           */
+/*                                                                   */
+/*       UTC000300 - Create all objects from a source library        */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2007           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Last Amend No. CUT011  *REWRITE   Date 18Oct07              */
+/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUT011 - Rewrite of command.  Make it more flexible and     */
+/*                easier to maintain.                                */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&SRCLIB &QUALJOBQ &MSGFLIB &GLOBAL &ZONE)
+ 
+             DCL        VAR(&SRCLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&QUALJOBQ) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GLOBAL) TYPE(*CHAR) LEN(131)
+             DCL        VAR(&ZONE) TYPE(*CHAR) LEN(135)
+ 
+             DCL        VAR(&JOBQ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JOBQLIB) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&GLOBPFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&GLOBDBTYPE) TYPE(*CHAR) LEN(16)
+             DCL        VAR(&GLOBDBLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GLOBDBOWN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GLOBDBPUB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GLOBNDTYPE) TYPE(*CHAR) LEN(35)
+             DCL        VAR(&GLOBNDLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GLOBNDOWN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GLOBNDPUB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ZONEPFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ZONEDBTYPE) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&ZONEDBLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ZONEDBOWN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ZONEDBPUB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ZONENDTYPE) TYPE(*CHAR) LEN(35)
+             DCL        VAR(&ZONENDLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ZONENDOWN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ZONENDPUB) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&GDB) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&GND) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ZDB) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ZND) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&BINNO) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&NOGDB) TYPE(*INT)
+             DCL        VAR(&NOGND) TYPE(*INT)
+             DCL        VAR(&NOZDB) TYPE(*INT)
+             DCL        VAR(&NOZND) TYPE(*INT)
+             DCL        VAR(&DBPOS) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&EPOS) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&EVAL) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&DBESTART) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&POS) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&COUNT) TYPE(*INT)
+             DCL        VAR(&DBTYPE) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&NDTYPE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&GM) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&GP) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&GT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&GV) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&GDEV) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&GCMD) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&GOAM) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&GSVP) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&GPGM) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DM) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DP) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DV) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DZ) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ZDEV) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ZCMD) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ZOAM) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ZSVP) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ZPGM) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&GDBTGTLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GNDTGTLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ZDBTGTLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ZNDTGTLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GVLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DVLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DZLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DATETIME) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ERRORMSG) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&REPORT) TYPE(*CHAR) LEN(1) VALUE('N')
+ 
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE(N)
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
+ 
+             DCLF       FILE(UTC000300F)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2007')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(00000000)
+ 
+/* Create temporary file to hold messages for CRTALLOBJ. */
+             DLTF       FILE(QTEMP/UPERRMQT)
+             MONMSG     MSGID(CPF2105)
+             CRTPF      FILE(QTEMP/UPERRMQT) RCDLEN(100) TEXT('Temp. +
+                          file for holding msgs from CRTALLOBJ')
+ 
+/* Create output queue in the source library to hold reports and failures. */
+             CHKOBJ     OBJ(&SRCLIB/CRTALLOBJ) OBJTYPE(*OUTQ)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CRTOUTQ    OUTQ(&SRCLIB/CRTALLOBJ) TEXT('Temporary +
+                             output queue for CRTALLOBJ')
+             ENDDO
+ 
+/* Break down general parameters. */
+             CHGVAR     VAR(&JOBQ) VALUE(%SST(&QUALJOBQ 1 10))
+             CHGVAR     VAR(&JOBQLIB) VALUE(%SST(&QUALJOBQ 11 10))
+ 
+/* Find out data about the global element.  As the element contains lists the */
+/*  positions of values can vary.                                             */
+/* Work out the start of the database element; this is actually stored after */
+/*  the non-database data and its position may vary according to the values  */
+/*  in the non-database section.                                             */
+             CHGVAR     VAR(&BINNO) VALUE(%SST(&GLOBAL 3 2))
+             CHGVAR     VAR(&EPOS) VALUE(%BIN(&BINNO))
+             CHGVAR     VAR(&DBESTART) VALUE(&EPOS + 1)
+/* Work out number in database list. */
+             CHGVAR     VAR(&EPOS) VALUE(&DBESTART + 4)
+             CHGVAR     VAR(&BINNO) VALUE(%SST(&GLOBAL &EPOS 2))
+             CHGVAR     VAR(&EVAL) VALUE(%BIN(&BINNO))
+             CHGVAR     VAR(&DBPOS) VALUE(&DBESTART + &EVAL)
+             CHGVAR     VAR(&BINNO) VALUE(%SST(&GLOBAL &DBPOS 2))
+             CHGVAR     VAR(&NOGDB) VALUE(%BIN(&BINNO))
+/* Set flag depending on whether global database requests are found or not. */
+             IF         COND(&NOGDB *EQ 0) THEN(DO)
+                CHGVAR     VAR(&GDB) VALUE('N')
+             ENDDO
+             ELSE       CMD(DO)
+                CHGVAR     VAR(&GDB) VALUE('Y')
+             ENDDO
+ 
+/* The start of the non-database element is a constant (7) so it is easier */
+/*  to work out the number of non-database requests.                       */
+             CHGVAR     VAR(&BINNO) VALUE(%SST(&GLOBAL 41 2))
+             CHGVAR     VAR(&NOGND) VALUE(%BIN(&BINNO))
+/* Set flag depending on whether global non-database requests are found or not. */
+             IF         COND(&NOGND *EQ 0) THEN(DO)
+                CHGVAR     VAR(&GND) VALUE('N')
+             ENDDO
+             ELSE       CMD(DO)
+                CHGVAR     VAR(&GND) VALUE('Y')
+             ENDDO
+ 
+/* Fill in individual parameters for database, if any entered. */
+             IF         COND(&GDB *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&EPOS) VALUE(&DBESTART + 2)
+                CHGVAR     VAR(&GLOBPFX) VALUE(%SST(&GLOBAL &EPOS 2))
+                CHGVAR     VAR(&EPOS) VALUE(&DBESTART + 6)
+                CHGVAR     VAR(&GLOBDBLIB) VALUE(%SST(&GLOBAL &EPOS 10))
+                CHGVAR     VAR(&EPOS) VALUE(&DBESTART + 16)
+                CHGVAR     VAR(&GLOBDBOWN) VALUE(%SST(&GLOBAL &EPOS 10))
+                CHGVAR     VAR(&EPOS) VALUE(&DBESTART + 26)
+                CHGVAR     VAR(&GLOBDBPUB) VALUE(%SST(&GLOBAL &EPOS 10))
+                CHGVAR     VAR(&EPOS) VALUE(&DBPOS + 2)
+                CHGVAR     VAR(&EVAL) VALUE(&NOGDB * 4)
+                CHGVAR     VAR(&GLOBDBTYPE) VALUE(%SST(&GLOBAL &EPOS +
+                             &EVAL))
+/* Set on flags for type of compiles requested. */
+                CHGVAR     VAR(&POS) VALUE(1)
+                DOFOR      VAR(&COUNT) FROM(1) TO(&NOGDB)
+                   CHGVAR     VAR(&DBTYPE) VALUE(%SST(&GLOBDBTYPE &POS 4))
+                   IF         COND(&DBTYPE *EQ '*GM ') THEN(DO)
+                      CHGVAR     VAR(&GM) VALUE('Y')
+                   ENDDO
+                   IF         COND(&DBTYPE *EQ '*GP ') THEN(DO)
+                      CHGVAR     VAR(&GP) VALUE('Y')
+                   ENDDO
+                   IF         COND(&DBTYPE *EQ '*GTA') THEN(DO)
+                      CHGVAR     VAR(&GT) VALUE('Y')
+                   ENDDO
+                   IF         COND(&DBTYPE *EQ '*GV ') THEN(DO)
+                      CHGVAR     VAR(&GV) VALUE('Y')
+                   ENDDO
+                   CHGVAR     VAR(&POS) VALUE(&POS + 4)
+                ENDDO
+             ENDDO
+ 
+/* Fill in individual parameters for non-database, if any entered. */
+             IF         COND(&GND *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&GLOBNDLIB) VALUE(%SST(&GLOBAL 11 10))
+                CHGVAR     VAR(&GLOBNDOWN) VALUE(%SST(&GLOBAL 21 10))
+                CHGVAR     VAR(&GLOBNDPUB) VALUE(%SST(&GLOBAL 31 10))
+                CHGVAR     VAR(&EVAL) VALUE(&NOGND * 7)
+                CHGVAR     VAR(&GLOBNDTYPE) VALUE(%SST(&GLOBAL 43 &EVAL))
+/* Set on flags for type of compiles requested. */
+                CHGVAR     VAR(&POS) VALUE(1)
+                DOFOR      VAR(&COUNT) FROM(1) TO(&NOGND)
+                   CHGVAR     VAR(&NDTYPE) VALUE(%SST(&GLOBNDTYPE &POS 7))
+                   IF         COND(&NDTYPE *EQ '*DEV   ') THEN(DO)
+                      CHGVAR     VAR(&GDEV) VALUE('Y')
+                   ENDDO
+                   IF         COND(&NDTYPE *EQ '*CMD   ') THEN(DO)
+                      CHGVAR     VAR(&GCMD) VALUE('Y')
+                   ENDDO
+                   IF         COND(&NDTYPE *EQ '*OPMMOD') THEN(DO)
+                      CHGVAR     VAR(&GOAM) VALUE('Y')
+                   ENDDO
+                   IF         COND(&NDTYPE *EQ '*SRVPGM') THEN(DO)
+                      CHGVAR     VAR(&GSVP) VALUE('Y')
+                   ENDDO
+                   IF         COND(&NDTYPE *EQ '*PGM   ') THEN(DO)
+                      CHGVAR     VAR(&GPGM) VALUE('Y')
+                   ENDDO
+                   CHGVAR     VAR(&POS) VALUE(&POS + 7)
+                ENDDO
+/* If no database options were selected then retrieve prefix and database */
+/*  library to see if library list set up can be attempted.               */
+                IF         COND(&GDB *EQ 'N') THEN(DO)
+                   CHGVAR     VAR(&BINNO) VALUE(%SST(&GLOBAL 3 2))
+                   CHGVAR     VAR(&EPOS) VALUE(%BIN(&BINNO))
+                   CHGVAR     VAR(&EPOS) VALUE(&EPOS + 3)
+                   CHGVAR     VAR(&GLOBPFX) VALUE(%SST(&GLOBAL &EPOS 2))
+                   CHGVAR     VAR(&EPOS) VALUE(&EPOS + 4)
+                   CHGVAR     VAR(&GLOBDBLIB) VALUE(%SST(&GLOBAL &EPOS 10))
+                ENDDO
+             ENDDO
+ 
+/* Find out data about the zone element.  As the element contains lists the */
+/*  positions of values can vary.                                           */
+/* Work out the start of the database element; this is actually stored after */
+/*  the non-database data and its position may vary according to the values  */
+/*  in the non-database section.                                             */
+             CHGVAR     VAR(&BINNO) VALUE(%SST(&ZONE 3 2))
+             CHGVAR     VAR(&EPOS) VALUE(%BIN(&BINNO))
+             CHGVAR     VAR(&DBESTART) VALUE(&EPOS + 1)
+/* Work out number in database list. */
+             CHGVAR     VAR(&EPOS) VALUE(&DBESTART + 4)
+             CHGVAR     VAR(&BINNO) VALUE(%SST(&ZONE &EPOS 2))
+             CHGVAR     VAR(&EVAL) VALUE(%BIN(&BINNO))
+             CHGVAR     VAR(&DBPOS) VALUE(&DBESTART + &EVAL)
+             CHGVAR     VAR(&BINNO) VALUE(%SST(&ZONE &DBPOS 2))
+             CHGVAR     VAR(&NOZDB) VALUE(%BIN(&BINNO))
+/* Set flag depending on whether zone database requests are found or not. */
+             IF         COND(&NOZDB *EQ 0) THEN(DO)
+                CHGVAR     VAR(&ZDB) VALUE('N')
+             ENDDO
+             ELSE       CMD(DO)
+                CHGVAR     VAR(&ZDB) VALUE('Y')
+             ENDDO
+ 
+/* The start of the non-database element is a constant (7) so it is easier */
+/*  to work out the number of non-database requests.                       */
+             CHGVAR     VAR(&BINNO) VALUE(%SST(&ZONE 41 2))
+             CHGVAR     VAR(&NOZND) VALUE(%BIN(&BINNO))
+/* Set flag depending on whether zone non-database requests are found or not. */
+             IF         COND(&NOZND *EQ 0) THEN(DO)
+                CHGVAR     VAR(&ZND) VALUE('N')
+             ENDDO
+             ELSE       CMD(DO)
+                CHGVAR     VAR(&ZND) VALUE('Y')
+             ENDDO
+ 
+/* Fill in individual parameters for database, if any entered. */
+             IF         COND(&ZDB *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&EPOS) VALUE(&DBESTART + 2)
+                CHGVAR     VAR(&ZONEPFX) VALUE(%SST(&ZONE &EPOS 2))
+                CHGVAR     VAR(&EPOS) VALUE(&DBESTART + 6)
+                CHGVAR     VAR(&ZONEDBLIB) VALUE(%SST(&ZONE &EPOS 10))
+                CHGVAR     VAR(&EPOS) VALUE(&DBESTART + 16)
+                CHGVAR     VAR(&ZONEDBOWN) VALUE(%SST(&ZONE &EPOS 10))
+                CHGVAR     VAR(&EPOS) VALUE(&DBESTART + 26)
+                CHGVAR     VAR(&ZONEDBPUB) VALUE(%SST(&ZONE &EPOS 10))
+                CHGVAR     VAR(&EPOS) VALUE(&DBPOS + 2)
+                CHGVAR     VAR(&EVAL) VALUE(&NOZDB * 4)
+                CHGVAR     VAR(&ZONEDBTYPE) VALUE(%SST(&ZONE &EPOS +
+                             &EVAL))
+/* Set on flags for type of compiles requested. */
+                CHGVAR     VAR(&POS) VALUE(1)
+                DOFOR      VAR(&COUNT) FROM(1) TO(&NOZDB)
+                   CHGVAR     VAR(&DBTYPE) VALUE(%SST(&ZONEDBTYPE &POS 4))
+                   IF         COND(&DBTYPE *EQ '*DM ') THEN(DO)
+                      CHGVAR     VAR(&DM) VALUE('Y')
+                   ENDDO
+                   IF         COND(&DBTYPE *EQ '*DP ') THEN(DO)
+                      CHGVAR     VAR(&DP) VALUE('Y')
+                   ENDDO
+                   IF         COND(&DBTYPE *EQ '*DTA') THEN(DO)
+                      CHGVAR     VAR(&DT) VALUE('Y')
+                   ENDDO
+                   IF         COND(&DBTYPE *EQ '*DV ') THEN(DO)
+                      CHGVAR     VAR(&DV) VALUE('Y')
+                   ENDDO
+                   IF         COND(&DBTYPE *EQ '*DZ ') THEN(DO)
+                      CHGVAR     VAR(&DZ) VALUE('Y')
+                   ENDDO
+                   CHGVAR     VAR(&POS) VALUE(&POS + 4)
+                ENDDO
+             ENDDO
+ 
+/* Fill in individual parameters for non-database, if any entered. */
+             IF         COND(&ZND *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&ZONENDLIB) VALUE(%SST(&ZONE 11 10))
+                CHGVAR     VAR(&ZONENDOWN) VALUE(%SST(&ZONE 21 10))
+                CHGVAR     VAR(&ZONENDPUB) VALUE(%SST(&ZONE 31 10))
+                CHGVAR     VAR(&EVAL) VALUE(&NOZND * 7)
+                CHGVAR     VAR(&ZONENDTYPE) VALUE(%SST(&ZONE 43 &EVAL))
+/* Set on flags for type of compiles requested. */
+                CHGVAR     VAR(&POS) VALUE(1)
+                DOFOR      VAR(&COUNT) FROM(1) TO(&NOZND)
+                   CHGVAR     VAR(&NDTYPE) VALUE(%SST(&ZONENDTYPE &POS 7))
+                   IF         COND(&NDTYPE *EQ '*DEV   ') THEN(DO)
+                      CHGVAR     VAR(&ZDEV) VALUE('Y')
+                   ENDDO
+                   IF         COND(&NDTYPE *EQ '*CMD   ') THEN(DO)
+                      CHGVAR     VAR(&ZCMD) VALUE('Y')
+                   ENDDO
+                   IF         COND(&NDTYPE *EQ '*OPMMOD') THEN(DO)
+                      CHGVAR     VAR(&ZOAM) VALUE('Y')
+                   ENDDO
+                   IF         COND(&NDTYPE *EQ '*SRVPGM') THEN(DO)
+                      CHGVAR     VAR(&ZSVP) VALUE('Y')
+                   ENDDO
+                   IF         COND(&NDTYPE *EQ '*PGM   ') THEN(DO)
+                      CHGVAR     VAR(&ZPGM) VALUE('Y')
+                   ENDDO
+                   CHGVAR     VAR(&POS) VALUE(&POS + 7)
+                ENDDO
+/* If no database options were selected then retrieve prefix and database */
+/*  library to see if library list set up can be attempted.               */
+                IF         COND(&ZDB *EQ 'N') THEN(DO)
+                   CHGVAR     VAR(&BINNO) VALUE(%SST(&ZONE 3 2))
+                   CHGVAR     VAR(&EPOS) VALUE(%BIN(&BINNO))
+                   CHGVAR     VAR(&EPOS) VALUE(&EPOS + 3)
+                   CHGVAR     VAR(&ZONEPFX) VALUE(%SST(&ZONE &EPOS 2))
+                   CHGVAR     VAR(&EPOS) VALUE(&EPOS + 4)
+                   CHGVAR     VAR(&ZONEDBLIB) VALUE(%SST(&ZONE &EPOS 10))
+                ENDDO
+             ENDDO
+ 
+/* Attempt to manage library list depending upon requested compiles. */
+ 
+/* Global database. */
+             IF         COND(&GDB *EQ 'Y') THEN(DO)
+                IF         COND(&GLOBDBLIB *NE '*PFX' *AND &GLOBDBLIB +
+                             *NE ' ') THEN(DO)
+                   CHGVAR     VAR(&GDBTGTLIB) VALUE(&GLOBDBLIB)
+                   RMVLIBLE   LIB(&GLOBDBLIB)
+                   MONMSG     MSGID(CPF0000)
+                   ADDLIBLE   LIB(&GLOBDBLIB)
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&GDBTGTLIB) VALUE('*PFX' *TCAT &GLOBPFX)
+                   CHGVAR     VAR(&GMLIB) VALUE(&GLOBPFX *TCAT 'GMLIB')
+                   CHGVAR     VAR(&GPLIB) VALUE(&GLOBPFX *TCAT 'GPLIB')
+                   CHGVAR     VAR(&GTALIB) VALUE(&GLOBPFX *TCAT 'GTALIB')
+                   CHGVAR     VAR(&GVLIB) VALUE(&GLOBPFX *TCAT 'GVLIB')
+                   RMVLIBLE   LIB(&GTALIB)
+                   MONMSG     MSGID(CPF0000)
+                   ADDLIBLE   LIB(&GTALIB)
+                   RMVLIBLE   LIB(&GPLIB)
+                   MONMSG     MSGID(CPF0000)
+                   ADDLIBLE   LIB(&GPLIB)
+                   RMVLIBLE   LIB(&GMLIB)
+                   MONMSG     MSGID(CPF0000)
+                   ADDLIBLE   LIB(&GMLIB)
+                   RMVLIBLE   LIB(&GVLIB)
+                   MONMSG     MSGID(CPF0000)
+                   ADDLIBLE   LIB(&GVLIB)
+                ENDDO
+             ENDDO
+             ELSE       CMD(DO)
+                CHGVAR     VAR(&GDBTGTLIB) VALUE(' ')
+             ENDDO
+ 
+/* Global non-database. */
+             IF         COND(&GND *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&GNDTGTLIB) VALUE(&GLOBNDLIB)
+/* Add the non-database object library. */
+                RMVLIBLE   LIB(&GLOBNDLIB)
+                MONMSG     MSGID(CPF0000)
+                ADDLIBLE   LIB(&GLOBNDLIB)
+/* If there is an entry for the database and it has not already been entered */
+/*  then attempt to add the database.                                        */
+                IF         COND(&GLOBDBLIB *NE '*PFX' *AND &GLOBDBLIB +
+                             *NE ' ') THEN(DO)
+                   RMVLIBLE   LIB(&GLOBDBLIB)
+                   MONMSG     MSGID(CPF0000)
+                   ADDLIBLE   LIB(&GLOBDBLIB)
+                ENDDO
+                ELSE       CMD(DO)
+                   IF         COND(&GLOBPFX *NE ' ') THEN(DO)
+                      CHGVAR     VAR(&GMLIB) VALUE(&GLOBPFX *TCAT 'GMLIB')
+                      CHGVAR     VAR(&GPLIB) VALUE(&GLOBPFX *TCAT 'GPLIB')
+                      CHGVAR     VAR(&GTALIB) VALUE(&GLOBPFX *TCAT 'GTALIB')
+                      CHGVAR     VAR(&GVLIB) VALUE(&GLOBPFX *TCAT 'GVLIB')
+                      MONMSG     MSGID(CPF0000)
+                      RMVLIBLE   LIB(&GTALIB)
+                      MONMSG     MSGID(CPF0000)
+                      ADDLIBLE   LIB(&GTALIB)
+                      MONMSG     MSGID(CPF0000)
+                      RMVLIBLE   LIB(&GPLIB)
+                      MONMSG     MSGID(CPF0000)
+                      ADDLIBLE   LIB(&GPLIB)
+                      MONMSG     MSGID(CPF0000)
+                      RMVLIBLE   LIB(&GMLIB)
+                      MONMSG     MSGID(CPF0000)
+                      ADDLIBLE   LIB(&GMLIB)
+                      MONMSG     MSGID(CPF0000)
+                      RMVLIBLE   LIB(&GVLIB)
+                      MONMSG     MSGID(CPF0000)
+                      ADDLIBLE   LIB(&GVLIB)
+                   ENDDO
+                ENDDO
+             ENDDO
+             ELSE       CMD(DO)
+                CHGVAR     VAR(&GNDTGTLIB) VALUE(' ')
+             ENDDO
+ 
+/* Zone database. */
+             IF         COND(&ZDB *EQ 'Y') THEN(DO)
+                IF         COND(&ZONEDBLIB *NE '*PFX' *AND &ZONEDBLIB +
+                             *NE ' ') THEN(DO)
+                   CHGVAR     VAR(&ZDBTGTLIB) VALUE(&ZONEDBLIB)
+                   RMVLIBLE   LIB(&ZONEDBLIB)
+                   MONMSG     MSGID(CPF0000)
+                   ADDLIBLE   LIB(&ZONEDBLIB)
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&ZDBTGTLIB) VALUE('*PFX' *TCAT &ZONEPFX)
+                   CHGVAR     VAR(&DMLIB) VALUE(&ZONEPFX *TCAT 'DMLIB')
+                   CHGVAR     VAR(&DPLIB) VALUE(&ZONEPFX *TCAT 'DPLIB')
+                   CHGVAR     VAR(&DTALIB) VALUE(&ZONEPFX *TCAT 'DTALIB')
+                   CHGVAR     VAR(&DVLIB) VALUE(&ZONEPFX *TCAT 'DVLIB')
+                   CHGVAR     VAR(&DZLIB) VALUE(&ZONEPFX *TCAT 'DZLIB')
+                   RMVLIBLE   LIB(&DZLIB)
+                   MONMSG     MSGID(CPF0000)
+                   ADDLIBLE   LIB(&DZLIB)
+                   RMVLIBLE   LIB(&DTALIB)
+                   MONMSG     MSGID(CPF0000)
+                   ADDLIBLE   LIB(&DTALIB)
+                   RMVLIBLE   LIB(&DPLIB)
+                   MONMSG     MSGID(CPF0000)
+                   ADDLIBLE   LIB(&DPLIB)
+                   RMVLIBLE   LIB(&DMLIB)
+                   MONMSG     MSGID(CPF0000)
+                   ADDLIBLE   LIB(&DMLIB)
+                   RMVLIBLE   LIB(&DVLIB)
+                   MONMSG     MSGID(CPF0000)
+                   ADDLIBLE   LIB(&DVLIB)
+                ENDDO
+             ENDDO
+             ELSE       CMD(DO)
+                CHGVAR     VAR(&ZDBTGTLIB) VALUE(' ')
+             ENDDO
+ 
+/* Zone non-database. */
+             IF         COND(&ZND *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&ZNDTGTLIB) VALUE(&ZONENDLIB)
+/* Add the non-database object library. */
+                RMVLIBLE   LIB(&ZONENDLIB)
+                MONMSG     MSGID(CPF0000)
+                ADDLIBLE   LIB(&ZONENDLIB)
+/* If there is an entry for the database and it has not already been entered */
+/*  then attempt to add the database.                                        */
+                IF         COND(&ZONEDBLIB *NE '*PFX' *AND &ZONEDBLIB +
+                             *NE ' ') THEN(DO)
+                   RMVLIBLE   LIB(&ZONEDBLIB)
+                   MONMSG     MSGID(CPF0000)
+                   ADDLIBLE   LIB(&ZONEDBLIB)
+                ENDDO
+                ELSE       CMD(DO)
+                   IF         COND(&ZONEPFX *NE ' ') THEN(DO)
+                      CHGVAR     VAR(&DMLIB) VALUE(&ZONEPFX *TCAT 'DMLIB')
+                      CHGVAR     VAR(&DPLIB) VALUE(&ZONEPFX *TCAT 'DPLIB')
+                      CHGVAR     VAR(&DTALIB) VALUE(&ZONEPFX *TCAT 'DTALIB')
+                      CHGVAR     VAR(&DVLIB) VALUE(&ZONEPFX *TCAT 'DVLIB')
+                      CHGVAR     VAR(&DZLIB) VALUE(&ZONEPFX *TCAT 'DZLIB')
+                      RMVLIBLE   LIB(&DZLIB)
+                      MONMSG     MSGID(CPF0000)
+                      ADDLIBLE   LIB(&DZLIB)
+                      MONMSG     MSGID(CPF0000)
+                      MONMSG     MSGID(CPF0000)
+                      RMVLIBLE   LIB(&DTALIB)
+                      MONMSG     MSGID(CPF0000)
+                      ADDLIBLE   LIB(&DTALIB)
+                      MONMSG     MSGID(CPF0000)
+                      RMVLIBLE   LIB(&DPLIB)
+                      MONMSG     MSGID(CPF0000)
+                      ADDLIBLE   LIB(&DPLIB)
+                      MONMSG     MSGID(CPF0000)
+                      RMVLIBLE   LIB(&DMLIB)
+                      MONMSG     MSGID(CPF0000)
+                      ADDLIBLE   LIB(&DMLIB)
+                      MONMSG     MSGID(CPF0000)
+                      RMVLIBLE   LIB(&DVLIB)
+                      MONMSG     MSGID(CPF0000)
+                      ADDLIBLE   LIB(&DVLIB)
+                   ENDDO
+                ENDDO
+             ENDDO
+             ELSE       CMD(DO)
+                CHGVAR     VAR(&ZNDTGTLIB) VALUE(' ')
+             ENDDO
+ 
+/* Edit library list. */
+             EDTLIBL
+ 
+/* Display list of source files. */
+             DLTF       FILE(QTEMP/UTC000300F)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/SRCFILES)
+             MONMSG     MSGID(CPF0000)
+             CRTDUPOBJ  OBJ(UPFDBATPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(UTC000300F)
+             DSPFD      FILE(&SRCLIB/*ALL) TYPE(*BASATR) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/SRCFILES)
+             MONMSG     MSGID(CPF3012) EXEC(DO)
+                CHGVAR     VAR(&ERRORMSG) VALUE('There are no source +
+                             files to compile.')
+                CALL       PGM(UP008010) PARM('*WRITE' 'UTC000300' +
+                             &ERRORMSG)
+                CHGVAR     VAR(&REPORT) VALUE('Y')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             CPYF       FROMFILE(QTEMP/SRCFILES) +
+                          TOFILE(QTEMP/UTC000300F) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+ 
+/* Create unique member name based on date and time. */
+             RTVJOBA    DATETIME(&DATETIME)
+             CHGVAR     VAR(&MEMBER) VALUE('M' *TCAT %SST(&DATETIME +
+                          6 9))
+             RMVM       FILE(UTSRCCPD) MBR(&MEMBER)
+             MONMSG     MSGID(CPF0000)
+             ADDPFM     FILE(UTSRCCPD) MBR(&MEMBER) TEXT('Temporary +
+                          member for' *BCAT &SRCLIB)
+             OVRDBF     FILE(UTSRCCPD) MBR(&MEMBER)
+ 
+READFILE:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(CREATE)
+             ENDDO
+ 
+             CHGVAR     VAR(&RTNCODE) VALUE('N')
+             IF         COND(&ATDTAT *NE 'S') THEN(DO)
+                CHGVAR     VAR(&ERRORMSG) VALUE(&ATFILE *BCAT 'is not a +
+                             source file.')
+                CALL       PGM(UP008010) PARM('*WRITE' 'UTC000300' +
+                             &ERRORMSG)
+                CHGVAR     VAR(&REPORT) VALUE('Y')
+                GOTO       CMDLBL(READFILE)
+             ENDDO
+ 
+/* Ignore certain source files - /COPYs, skeletons, etc. */
+             IF         COND(&ATFILE *EQ 'STDCRTPARM') THEN(DO)
+                GOTO       CMDLBL(READFILE)
+             ENDDO
+             IF         COND(&ATFILE *EQ 'ZSRSRC') THEN(DO)
+                GOTO       CMDLBL(READFILE)
+             ENDDO
+             IF         COND(&ATFILE *EQ 'GPZSRSRCG') THEN(DO)
+                GOTO       CMDLBL(READFILE)
+             ENDDO
+             IF         COND(&ATFILE *EQ 'H') THEN(DO)
+                GOTO       CMDLBL(READFILE)
+             ENDDO
+             IF         COND(%SST(&ATFILE 1 2) *EQ 'SK') THEN(DO)
+                GOTO       CMDLBL(READFILE)
+             ENDDO
+             IF         COND(%SST(&ATFILE 3 3) *EQ 'CPY') THEN(DO)
+                GOTO       CMDLBL(READFILE)
+             ENDDO
+             IF         COND(%SST(&ATFILE 1 8) *EQ 'QWINDSRC') THEN(DO)
+                GOTO       CMDLBL(READFILE)
+             ENDDO
+             IF         COND(%SST(&ATFILE 9 2) *EQ 'QT') THEN(DO)
+                GOTO       CMDLBL(READFILE)
+             ENDDO
+             IF         COND(%SST(&ATFILE 6 3) *EQ 'EXT') THEN(DO)
+                GOTO       CMDLBL(READFILE)
+             ENDDO
+             IF         COND(%SST(&ATFILE 6 3) *EQ 'COL') THEN(DO)
+                GOTO       CMDLBL(READFILE)
+             ENDDO
+ 
+/* Call program to see if this source file is to be compiled. */
+             CALL       PGM(UT000300) PARM(&ATFILE &GM &GP &GT &GV +
+                          &GDEV &GCMD &GOAM &GSVP &GPGM &DM &DP &DT +
+                          &DV &DZ &ZDEV &ZCMD &ZOAM &ZSVP &ZPGM +
+                          &GDBTGTLIB &GNDTGTLIB &ZDBTGTLIB +
+                          &ZNDTGTLIB &GLOBDBOWN &GLOBNDOWN +
+                          &ZONEDBOWN &ZONENDOWN &GLOBDBPUB +
+                          &GLOBNDPUB &ZONEDBPUB &ZONENDPUB &RTNCODE)
+             IF         COND(&RTNCODE *EQ 'E') THEN(DO)
+                CHGVAR     VAR(&ERRORMSG) VALUE('Error in calling +
+                             UT000300 for' *BCAT &ATFILE *TCAT '.')
+                CALL       PGM(UP008010) PARM('*WRITE' 'UTC000300' +
+                             &ERRORMSG)
+                CHGVAR     VAR(&REPORT) VALUE('Y')
+                GOTO       CMDLBL(READFILE)
+             ENDDO
+             IF         COND(&RTNCODE *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&ERRORMSG) VALUE(&ATFILE *BCAT 'is not +
+                             recognised by UT000300 as a valid source +
+                             file.')
+                CALL       PGM(UP008010) PARM('*WRITE' 'UTC000300' +
+                             &ERRORMSG)
+                CHGVAR     VAR(&REPORT) VALUE('Y')
+                GOTO       CMDLBL(READFILE)
+             ENDDO
+ 
+             GOTO       CMDLBL(READFILE)
+ 
+CREATE:
+             DLTOVR     FILE(UTSRCCPD)
+/* Call program to create objects. */
+             CHGVAR     VAR(&RTNCODE) VALUE('N')
+             CALL       PGM(UTC000301) PARM(&SRCLIB &MSGFLIB &JOBQ +
+                          &JOBQLIB &MEMBER &RTNCODE)
+             IF         COND(&RTNCODE *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&ERRORMSG) VALUE('Error in attempting to +
+                             compile' *BCAT &ATFILE *TCAT '.')
+                CALL       PGM(UP008010) PARM('*WRITE' 'UTC000300' +
+                             &ERRORMSG)
+                CHGVAR     VAR(&REPORT) VALUE('Y')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             IF         COND(&RECURSIVE *EQ 'N') THEN(DO)
+                CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+RCVMSG:
+                RCVMSG     MSGTYPE(*DIAG) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                             MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                IF         COND(&MSGID *NE ' ') THEN(DO)
+                   SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                                MSGDTA(&MSGDTA) MSGTYPE(*DIAG)
+                   GOTO       CMDLBL(RCVMSG)
+                ENDDO
+                RCVMSG     MSGTYPE(*EXCP) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                             MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                             MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
+             ENDDO
+ 
+ENDPGM:
+             IF         COND(&REPORT *EQ 'Y') THEN(DO)
+                CALL       PGM(UP008010) PARM('*REPORT' 'UTC000300' ' ')
+                MONMSG     MSGID(CPF0000 RPG0000)
+                CHGSPLFA   FILE(UP008010P1) SPLNBR(*LAST) +
+                             OUTQ(&SRCLIB/CRTALLOBJ) USRDTA(CRTALLOBJ)
+                MONMSG     MSGID(CPF0000 RPG0000)
+             ENDDO
+ 
+             ENDPGM

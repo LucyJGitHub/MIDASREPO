@@ -1,0 +1,123 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  XXXXXXX - (/COPY Name)                                       *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      *  Last Amend No. nnnnnn  *CREATE    Date ddmmmyy               *
+      *  Prev Amend No. nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  nnnnnn - (change description)                                *
+      *                                                               *
+      *****************************************************************
+  STANDARD SUBROUTINE - ZDATE2
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 
+  Purpose:
+  ~~~~~~~~
+  To convert a five-figure day number (a number of days from 31DEC71)
+  into date format. Two formats are produced:
+   (1). DDMMMYY with an alphabetic abreviation for month,
+   (2). either DDMMYY or MMDDYY, with numeric month, depending on the
+        format of the system date as shown by on the installation
+        control data record.
+ 
+  Notes for when including in RPG pgm for compiling:
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   /COPY ZSRSRC,ZDATE2Z1 should be included in the 'E' specifications
+   /COPY ZSRSRC,ZDATE2Z2 should be included in the subroutine section
+   ZDATE2Z3 needs to be copied into the pgm source at the appropriate
+    point in the compile time array data section.
+ 
+   Notes: (1)- Sequence of array details & data needs to be consistent.
+          (2)- If ZDATE1 is required in same pgm use ZDATE2Z1 instead
+               of ZDATE1Z1, as ZDATE1 uses a subset of the arrays in
+               ZDATE2. Remember to use correponding array data.
+ 
+   Requirements:
+   ~~~~~~~~~~~~
+ 
+   The program using ZDATE2 must have the following fields/arrays
+   defined at the appropriate place in the source statements:-
+ 
+   ZYDY - a compile-time array of four four-digit elements
+          containing the cumulative number of days in a four year
+          period, the first element/year being the leap year.  The
+          source statements to define the array and the array data
+          are contained in the source library member ZDATE2.
+ 
+   ZMDY - a compile time array of thirteen three-digit elements
+          containing the cumulative number of days in a year, by
+          month.  Note that the first element is a zero entry to
+          facilitate use of the array.  The source statements to
+          define the array, and the array/date are contained in the
+          source library member ZDATE2.
+ 
+   ZMNM - a compile-time array of twelve three-character elements
+          containing the short names of each month.  The source
+          statement to define the array, and the array date are
+          contained in the source library member ZDATE2.
+ 
+   Input:
+   ~~~~~
+ 
+   ZDAYNO - a five digit numeric field containing the day number, as
+            number of days from 31DEC71, to be converted to date
+            format.
+ 
+   98     - indicator is on if the date format of the system is MMDDYY,
+            off if date format DDMMYY.  This indicator is set in
+            subroutine ZSYSTM.  If the ZSYSTM subroutine is not used
+            indicator 98 must be set by comparing the field DATF (on
+            the installation control data record, code 10) to a
+            constant of M, if equal 98 will be set on.
+ 
+   Procedure:
+   ~~~~~~~~~
+ 
+   1. - ZDAYNO is validated i.e. must be a positive number.
+ 
+   2. - The year is found from the number of year spans in days that
+        will divide into ZDAYNO.  Note: that at the beginning of the
+        subroutine, 1 is subtracted from ZDAYNO, to be added back to
+        the date at the end.  This operation ensures that day numbers
+        which are wholly divisible by a year-span of days (i.e. those
+        which represent the 31st Dec). are not output as a zero date.
+ 
+   3. - The month is found by comparing the number of days remaining
+        after division by year against the array of cumulative day-
+        numbers per month.  The day number is adjusted to include
+        29th Feb in leap years.
+ 
+   4. - The day of the month is the number of days remaining after
+        subtracting the number of days in the previous months.
+ 
+   5. - Indicator 98, having been set on or off according to the
+        contents of DATF on the Installation Control Data Record,
+        determines whether the 6-digit result field ZDATE contains
+        the date if DDMMYY or MMDDYY format.
+ 
+   6. - The alphabetic abbreviation for the month is obtained from
+        the array ZMNM and the 7-character result field ZADATE
+        contains the date in DDMMMYY format, with alpha month.
+ 
+   Output:
+   ~~~~~~
+ 
+   ZDATE  - a six-digit numeric field containing the date as either
+            DDMMYY or MMDDYY, with numeric month, the format depending
+            on the contents of DATF.
+ 
+   ZADATE - a seven character alphameric field containing the date as
+            DDMMMYY, with alpha month.
+ 
+   Indicator 98 - if a zero or negative number was presented to the
+                  subroutine indicator 99 will be set on, and the
+                  above output fields will be blank/zero.

@@ -1,0 +1,546 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM F&O transaction details enquiry')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas Treasury Management Module
+     F*                                                               *
+     F*  TM3380 - Interest Rate Futures Transaction Details Enquiry   *
+     F*           (Formerly DL3380)                                   *
+     F*                                                               *
+     F*  Function: This enquiry shows details of Interest Rate        *
+     F*  (I/C)     Futures transactions. It is accessed via MM        *
+     F*            linked enquiries from the daily deals screen.      *
+     F*                                                               *
+     F*  Called by: TM3200 - Daily Deals Enquiry.                     *
+     F*                                                               *
+     F*  Calls    : None                                              *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CFF004             Date 02Oct96               *
+      *                 S01411             Date 05Jul93               *
+     F*                 E49800             DATE  22JAN93              *
+     F*                 S01194             DATE  18DEC90              *
+     F*                 S01117             DATE  18DEC90              *
+     F*                                                               *
+     F*  This was created for S01280 - Include Interest Rate Futures  *
+     F*  into MM forward book. It is a close copy of PM2090. 4DEC90   *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*  CFF004 - Increase in size of Price Fields,(Recompiled Only)  *
+     F*  S01411 - Recompiled as field 'ORIGINAL ENTRY DATE' added to  *
+     F*           PF/TRANSD.                                          *
+     F*  E49800 - If the customer number is zero do not access        *
+     F*           the customer file via AOCUSTR0.                     *
+     F*                                                               *
+     F*  S01117 - New Copyright statement                             *
+     F*           Dealing programs used only in Treasury Mgmt.        *
+     F*           Module now prefixed with 'TM'                       *
+     F*                                                               *
+     F*  S01194 - New Standing Data processing                        *
+     F*                                                               *
+     F*****************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                       *
+     F*                                                               *
+     F*       01         CHAIN fail on TRANS2                         *
+     F*       02         CHAIN fail on INTYP                          *
+     F********03*********CHAIN*fail*on*SDCURRL0************************   S01194
+     F*       04         CHAIN fail on TRSET1                         *
+     F********05*********CHAIN*fail*on*CLINT***************************   S01194
+     F*       15         LOKUP result indicator                       *
+     F*       U7         Database error (job switch).                 *
+     F*       U8         Database error (job switch).                 *
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F***DL3380DDCF**E***                 WORKSTN                         S01117
+     FTM3380DDCF  E                    WORKSTN                            S01117
+     FTRANS2  IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FTRSET1  IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FINTYP   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F***SDCURRL0IF**E***        K        DISK                            S01194
+     F**********                                    KINFSR *PSSR          S01194
+     F***CLINT***IF**E***        K        DISK                            S01194
+     F**********                                    KINFSR *PSSR          S01194
+     E*********************************************************************
+     E*  TABLES AND ARRAYS
+     E*    ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+     E*
+      /COPY ZSRSRC,ZDATE2Z1
+      /COPY ZSRSRC,ZSEDITZ1
+     E                    MNMN   12  12  2 0             MONTH NUMBER
+     E*
+      /COPY ZSRSRC,FFPRCSZ2
+     E*
+     E/EJECT
+     I*
+     IPSDS       SDS
+     I*    PROGRAM STATUS DATA STRUCTURE FOR WS/USER ID'S
+     I                                      244 253 WSID
+     I*
+     I            DS
+     I** DATA STRUCTURE FOR SUBROUTINE ZSEDIT
+     I                                        1  150ZFLD15
+     I                                        1  15 ZFLDA
+      /COPY ZSRSRC,ZSEDITZ2
+      /COPY ZSRSRC,FFSRDSZ1
+      /COPY ZSRSRC,FFPRCSZ3
+     I*
+     I           UDS                            256
+     I*    L.D.A. DATA AREA TO HOLD INFORMATION ON DATABASE ERROR.
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+     ISDCURR    E DSSDCURRPD                                              S01194
+     I* External DS for Currency Details                                  S01194
+     ISDCUST    E DSSDCUSTPD                                              S01194
+     I* External DS for Customer Details                                  S01194
+     IDSSDY     E DSDSSDY                                                 S01194
+     I* DS used by Access Objects (long records)                          S01194
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* DS used by Access Objects (short records)                         S01194
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * MAIN     - MAIN PROCESSING                                       *
+      * ACCESS   - ACCESS F&O TRANSACTION DETAILS                        *
+      * #INIT    - INITIAL PROCESS                                       *
+      * ZDATE2   - CONVERSION SUBROUTINE (DAY NUMBER TO DATE)            *
+      * ZSEDIT   - EDITION SUBROUTINE FOR NUMERIC FIELDS                 *
+      * *PSSR    - PROCESS DATABASE ERROR                                *
+      *                                                                  *
+      ********************************************************************
+     C/EJECT
+     C*   Initial processing.
+     C                     EXSR #INIT
+     C*
+     C*   Details access processing
+     C                     EXSR ACCESS
+     C*
+     C*   Termination processing
+     C* F3 - EXIT                                                         S01166
+     C           *INKC     IFEQ '1'                                       S01166
+     C                     MOVE 'Q'       @TERM                           S01166
+     C                     SETON                     LR                   S01166
+     C                     END
+     C*
+     C** F12 - SUMMARY
+     C           *INKL     IFEQ '1'                                       S01166
+     C                     MOVE 'U'       @TERM                           S01166
+     C                     RETRN
+     C                     END
+     C*
+     C*****************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * ACCESS   - ACCESS F&O TRANSACTION TYPES                          *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - PROCESS DATABASE ERROR                                *
+      * ZDATE2   - CONVERSION SUBROUTINE (DAY NUMBER TO DATE)            *
+      * ZSEDIT   - EDITION SUBROUTINE FOR NUMERIC FIELDS                 *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      ********************************************************************
+     C           ACCESS    BEGSR
+     C*
+     C*   ACCESS TRANSACTION FILE
+     C           @TNBR     CHAINTRANS2               01
+     C           *IN01     IFEQ '1'
+     C                     MOVE '1'       DBASE
+     C                     MOVEL'TRANS2'  DBFILE
+     C                     MOVEL@TNBR     DBKEY
+     C                     EXSR *PSSR
+     C                     END
+     C                     MOVELISTT      WWISTT  5
+     C*
+     C*   ACCESS INSTRUMENT TYPES
+     C           WWISTT    CHAININTYP                02
+     C           *IN02     IFEQ '1'
+     C                     MOVE '2'       DBASE
+     C                     MOVEL'INTYP'   DBFILE
+     C                     MOVELWWISTT    DBKEY
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C*   ACCESS CURRENCY CODES FILE
+     C*   VIA ACCESS OBJECT                                               S01194
+     C********** ISCY      CHAINSDCURRL0             03                   S01194
+     C********** *IN03     IFEQ '1'                                       S01194
+     C**********           MOVE '3'       DBASE                           S01194
+     C**********           MOVEL'SDCURR'  DBFILE                          S01194
+     C**********           MOVELISCY      DBKEY                           S01194
+     C**********           EXSR *PSSR                                     S01194
+     C**********           END                                            S01194
+     C*                                                                   S01194
+     C                     CALL 'AOCURRR0'                                S01194
+     C                     PARM '*DBERR ' @RTCD   7                       S01194
+     C                     PARM '*KEY   ' @OPTN   7                       S01194
+     C                     PARM ISCY      @CCY    3                       S01194
+     C           SDCURR    PARM SDCURR    DSSDY                           S01194
+     C*
+     C*   ACCESS TRANSACTION SETTLEMENTS FILE
+     C           @TNBR     CHAINTRSET1               04
+     C           *IN04     IFEQ '1'
+     C                     MOVE '4'       DBASE
+     C                     MOVEL'TRSET1'  DBFILE
+     C                     MOVEL@TNBR     DBKEY
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C*    INITIALISE DISPLAY ZONES COMMON FOR OTC AND MARKET INSTRUMENT
+     C*    DETAILS
+     C                     MOVELCUSC      DDCNUM           CUSTOMER NUMBER
+     C*                                                                   S01136
+     C           MTHN      IFNE 0
+     C                     MOVELISTT      DDMARK           MARKET
+     C                     MOVE ISTT      DDINST           INTRUMENT
+     C                     ELSE
+     C                     MOVELWWISTT    DDOTCT           OTC TYPE
+     C                     END
+     C                     MOVEL*BLANKS   DDSTAT           STATUS NARR
+     C           RECI      IFEQ '*'
+     C                     MOVEL'DELETED' DDSTAT
+     C                     END
+     C                     MOVEL@TNBR     DDTNBR           TRANSACTION NUMBER
+     C                     MOVELTRTY      DDTRTY           TRANSACTION TYPE
+     C           NOCO      IFNE 0
+     C                     MOVE NUCO      ZFLD15           NUMBER OF CONTRACTS
+     C                     Z-ADD0         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDNUCO
+     C                     ELSE
+     C                     MOVE *BLANKS   DDNUCO
+     C                     END
+     C           COPR      IFNE 0
+     C                     Z-ADDCOPR      FFPRIC           CONTRACT PRICE
+     C                     Z-ADDTKDM      FFTKDM           TICKS DENOMINATOR
+     C                     Z-ADDMNPF      FFMNPF           MINIMUM PRICE FLUCT.
+     C                     EXSR FFPRCS
+     C                     MOVE FFSPRC    DDCOPR
+     C                     ELSE
+     C                     MOVE *BLANKS   DDCOPR
+     C                     END
+     C           TRSD      IFNE 0
+     C                     Z-ADDTRSD      ZDAYNO           TRANSACTION DATE
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    DDTRSD
+     C                     ELSE
+     C                     MOVEL*BLANKS   DDTRSD
+     C                     END
+     C                     MOVELBOKC      DDBOKC           BOOK CODE
+     C*****                MOVELBRCD      DDBRCD           BRANCH CODE    S01117
+     C                     MOVELBRCA      DDBRCD           BRANCH CODE    S01117
+     C                     MOVELTNAR      DDTNAR           TRANSACTION NARRATIVE
+     C                     MOVELTBLO      DDTBLO           TO BE LEFT OPEN IND
+     C           LNKR      IFNE 0
+     C                     MOVE LNKR      DDLNKR           LINK REFERENCE
+     C                     ELSE
+     C                     MOVE *BLANKS   DDLNKR
+     C                     END
+     C*                                                                   S01136
+     C***SET*UP*KEY*FOR*CLINT*FILE***                              S01136 S01194
+     C**********           MOVE 'A'       @TYPE   1                S01136 S01194
+     C**********                                                   S01136 S01194
+     C********** @KCUST    CHAINCLINT                05                   S01194
+     C********** @KCUST    KLIST                                          S01194
+     C**********           KFLD           CUSC                            S01194
+     C**********           KFLD           @TYPE                           S01194
+     C********** *IN05     IFEQ '1'                                       S01194
+     C**********           MOVE '5'       DBASE                           S01194
+     C**********           MOVEL'CLINT'   DBFILE                          S01194
+     C**********           MOVELCUSC      DBKEY                           S01194
+     C**********           MOVE @TYPE     DBKEY                           S01194
+     C**********           EXSR *PSSR                                     S01194
+     C**********           END                                            S01194
+     C*                                                                   E49800
+     C** If customer number is zero or blank do not access Customer       E49800
+     C** file.                                                            E49800
+     C*                                                                   E49800
+     C********** CUSC      IFNE *ZERO                                                  E49800 CSD027
+     C           CUSC      IFNE *BLANK                                                        CSD027
+     C*                                                                   E49800
+      * Move customer no. into 10A field for call to access object        S01194
+     C                     MOVELCUSC      @CUKEY                          S01194
+      *                                                                   S01194
+      * Get customer shortname via access object                          S01194
+     C                     CALL 'AOCUSTR0'                                S01194
+     C                     PARM '*DBERR ' @RTCD   7                       S01194
+     C                     PARM '*KEY   ' @OPTN   7                       S01194
+     C                     PARM           @CUKEY 10                       S01194
+     C                     PARM *BLANKS   @KYST   7                       S01194
+     C           SDCUST    PARM SDCUST    DSSDY                           S01194
+      *                                                                   S01194
+     C**********           MOVELCRNM      DDCRNM           CUSTOMER NAME  S01194
+     C                     MOVELBBDRCS    DDCRNM           CUSTOMER NAME
+     C                     MOVE BBLCCD    DDCRNM
+     C*
+     C                     END                                            E49800
+     C*
+     C*    FURTHER INFORMATION FOR MARKET INSTRUMENT DETAILS
+     C*
+     C           MTHN      IFNE 0
+     C           MTHN      LOKUPMNMN,X                   15MONTH NARR
+     C           *IN15     IFEQ '1'
+     C                     MOVEAZMNM,X    DDMTHN
+     C                     ELSE
+     C                     MOVE *BLANK    DDMTHN
+     C                     END
+     C                     MOVE YRNO      DDYRNO           YEAR NUMBER
+     C                     END
+     C*
+     C********** BOCO      IFNE 0                                                             CSD027
+     C           BOCO      IFNE *BLANKS                                                       CSD027
+     C*
+     C                     MOVE BOCO      DDBOCO           BROKER CODE
+     C           BCMC      IFNE 0
+     C                     MOVELBCMC      DDBCMC           BROKER COMMN CODE
+     C                     ELSE
+     C                     MOVEL*BLANKS   DDBCMC
+     C                     END
+     C           BCMS      IFNE 0
+     C                     MOVELBCMS      DDBCMS           BROKER COMMN-SAME DAY
+     C                     ELSE
+     C                     MOVEL*BLANKS   DDBCMS
+     C                     END
+     C           BCMA      IFNE 0
+     C                     MOVE BCMA      ZFLD15           BROKER COMMN AMOUNT
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDBCMA
+     C                     ELSE
+     C                     MOVE *BLANKS   DDBCMA
+     C                     END
+     C           BCHC      IFNE 0
+     C                     MOVELBCHC      DDBCHC           BROKER CHRG CODE
+     C                     ELSE
+     C                     MOVEL*BLANKS   DDBCHC
+     C                     END
+     C           BCHA      IFNE 0
+     C                     MOVE BCHA      ZFLD15           BROKER CHARGES AMOUNT
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDBCHA
+     C                     ELSE
+     C                     MOVE *BLANKS   DDBCHA
+     C                     END
+     C           BMAR      IFNE 0
+     C                     MOVE BMAR      ZFLD15           BROKER MARGIN
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDBMAR
+     C                     ELSE
+     C                     MOVE *BLANKS   DDBMAR
+     C                     END
+     C                     MOVELBSLT      DDBSLT           BROKER SETTLEMENT TYP
+     C                     MOVELBSLA      DDBSLA           BROKER SETTLEMANT A/C
+     C                     MOVELBFAO      DDBFAO           BROKER FOR A/C OF
+     C                     MOVELBCPN      DDBCPN           BROKER CNTRPTY NOSTRO
+     C*
+     C                     ELSE                            BORKER CODE BLANK
+     C                     MOVE *BLANKS   DDBOCO
+     C                     MOVE *BLANKS   DDBCMC
+     C                     MOVE *BLANKS   DDBCMS
+     C                     MOVE *BLANKS   DDBCMA
+     C                     MOVE *BLANKS   DDBCHC
+     C                     MOVE *BLANKS   DDBCHA
+     C                     MOVE *BLANKS   DDBMAR
+     C                     MOVE *BLANKS   DDBSLT
+     C                     MOVE *BLANKS   DDBSLA
+     C                     MOVE *BLANKS   DDBFAO
+     C                     MOVE *BLANKS   DDBCPN
+     C*
+     C                     END                             BROKER CODE NOT BLANK
+     C*
+     C*    FURTHER INFORMATION FOR BOTH MARKET AND OTC DETAILS
+     C*
+     C********** CUSC      IFNE 0                                                             CSD027
+     C           CUSC      IFNE *BLANKS                                                       CSD027
+     C*
+     C           CCMC      IFNE 0
+     C                     MOVELCCMC      DDCCMC           CUSTOMER COMMN CODE
+     C                     ELSE
+     C                     MOVEL*BLANKS   DDCCMC
+     C                     END
+     C           CCMS      IFNE 0
+     C                     MOVELCCMS      DDCCMS           CUSTOM COMMN-SAME DAY
+     C                     ELSE
+     C                     MOVEL*BLANKS   DDCCMS
+     C                     END
+     C           CCMA      IFNE 0
+     C                     MOVE CCMA      ZFLD15           CUSTOMER COMMN AMOUNT
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDCCMA
+     C                     ELSE
+     C                     MOVE *BLANKS   DDCCMA
+     C                     END
+     C           CCHC      IFNE 0
+     C                     MOVELCCHC      DDCCHC           CUSTOMER CHRG CODE
+     C                     ELSE
+     C                     MOVEL*BLANKS   DDCCHC
+     C                     END
+     C           CCHA      IFNE 0
+     C                     MOVE CCHA      ZFLD15           CUSTOM CHARGES AMOUNT
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDCCHA
+     C                     ELSE
+     C                     MOVE *BLANKS   DDCCHA
+     C                     END
+     C           CMAR      IFNE 0
+     C                     MOVE CMAR      ZFLD15           CUSTOMER MARGIN
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDCMAR
+     C                     ELSE
+     C                     MOVE *BLANKS   DDCMAR
+     C                     END
+     C                     MOVELCSLT      DDCSLT           CUSTOM SETTLEMENT TYP
+     C                     MOVELCSLA      DDCSLA           CUSTOM SETTLEMANT A/C
+     C                     MOVELCFAO      DDCFAO           CUSTOMER FOR A/C OF
+     C                     MOVELCCPN      DDCCPN           CUSTOM CNTRPTY NOSTRO
+     C*
+     C                     ELSE                            CUSTOMER CODE BLANK
+     C                     MOVE *BLANKS   DDCCMC
+     C                     MOVE *BLANKS   DDCCMS
+     C                     MOVE *BLANKS   DDCCMA
+     C                     MOVE *BLANKS   DDCCHC
+     C                     MOVE *BLANKS   DDCCHA
+     C                     MOVE *BLANKS   DDCMAR
+     C                     MOVE *BLANKS   DDCSLT
+     C                     MOVE *BLANKS   DDCSLA
+     C                     MOVE *BLANKS   DDCFAO
+     C                     MOVE *BLANKS   DDCCPN
+     C*
+     C                     END                             CUSTOM CODE NOT BLANK
+     C*
+     C*   LOOP UNTIL QUIT REQUESTED
+     C           *INKC     DOUEQ'1'
+     C           *INKL     OREQ '1'
+     C*
+     C*   DISPLAY CORRECT SCREEN
+     C           MTHN      IFNE 0
+     C**********           EXFMTDL3380F1                                  S01117
+     C                     EXFMTTM3380F1                                  S01117
+     C                     ELSE
+     C**********           EXFMTDL3380F2                                  S01117
+     C                     EXFMTTM3380F2                                  S01117
+     C                     END
+     C*
+     C                     END                             ENDDOU
+     C*
+     C                     ENDSR
+     C*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #INIT    - INITIAL PROCESS                                       *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #INIT     BEGSR
+     C*
+      *
+      ** Must use copyright array in order to include in object
+     C                     MOVEACPY@      BIS@   80        *1
+     C           *ENTRY    PLIST
+     C                     PARM           @DLNO   60
+     C                     PARM           @TERM   1
+     C*
+     C                     MOVE @DLNO     @TNBR   60
+     C                     MOVEA'0'       *IN
+     C                     MOVE '0'       *INKC
+     C                     MOVE '0'       *INKL
+     C                     Z-ADD1         X       20
+     C*
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+      /COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+      /COPY ZSRSRC,FFPRCSZ4
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - PROCESS DATABASE ERROR                                *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * ACCESS   - ACCESS F&O INSTRUMENT DETAILS                         *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR
+      *
+      ** Set @ERR1 to 'Y' to prevent looping if further errors
+     C           @ERR1     IFNE 'Y'                        B1
+     C                     MOVE 'Y'       @ERR1   1        *1
+     C                     MOVE 'E'       @TERM            *1
+     C                     SETON                       U6LR*1
+      *
+      ** Set up fields in local data area, *LDA
+     C**********           MOVEL'DL3380'  DBPGM            *1             S01117
+     C                     MOVEL'TM3380'  DBPGM            *1             S01117
+      *
+     C                     DUMP                            *1
+     C                     END                             E1
+      *
+      ** Terminate the program
+     C                     RETRN
+      *
+     C           PSSR9     ENDSR
+     C**
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**  ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**  ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  MNMN - MONTHS NUMBER
+010203040506070809101112

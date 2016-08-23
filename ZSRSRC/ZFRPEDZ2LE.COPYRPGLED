@@ -1,0 +1,175 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  ZFRPEDZ2LE - Midas ZS Edit amnt                              *
+      *                                                               *
+      *  Last Amend No. AR1055539 *CREATE  Date 15Nov12               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  AR1055539 - Various errors encountered in COB during         *
+      *              Link Test                                        *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  ZFRPED subroutine to insert a decimal point and sign into a  *
+      *  numeric field and to blank out leading zeros (optionaly      *
+      *  inserting commas).                                           *
+      *      Input fields:   ZFLD15 15/0                              *
+      *                      ZDECS  1/0                               *
+      *                      ZECODE 1/  ('A','C','J','L' or blank)    *
+      *                                 ( Default is 'J')             *
+      *      Arrays:         ZS1    15/1/0                            *
+      *                      ZS2    22/1/                             *
+      *                                                               *
+      *      Output fields:  ZOUT22 22                                *
+      *      Output fields:  ZOUT25 25  (ALIGNED BY DECIMAL POINT)    *
+      *      (The last 2 characters will be '  ','CR','DR',or '- ')   *
+      *****************************************************************
+     C     ZFRPED        BEGSR
+      *
+      ** Define/Clear fields
+      *
+     C                   Z-ADD     ZFLD15        ZFLD15           15 0
+     C                   Z-ADD     ZDECS         ZDECS             1 0
+     C                   MOVE      ZECODE        ZECODE            1
+     C                   MOVE      *BLANKS       ZOUT22           22
+     C                   MOVE      *BLANKS       ZOUT25           25
+     C     ZECODE        IFEQ      *BLANKS
+     C                   MOVE      'J'           ZECODE
+     C                   ENDIF
+      *
+      * SET UP WORK FIELDS
+      *
+     C                   Z-ADD     0             ZS1
+     C                   MOVE      ' '           ZS2
+      *
+     C                   Z-ADD     15            Z1                2 0
+     C                   Z-ADD     20            Z2                2 0
+      *
+     C     15            SUB       ZDECS         ZINTS             2 0
+      ** Initialise to DR if ZFLD15 is not zero
+     C     ZFLD15        IFNE      *ZEROS
+     C                   MOVEA     'DR'          ZS2(21)
+     C                   ENDIF
+      *
+      ** Check if numeric field is negative
+      *
+     C     ZFLD15        IFLT      *ZEROS
+     C     ZECODE        IFEQ      'A'
+     C     ZECODE        OREQ      'C'
+     C                   MOVEA     'CR'          ZS2(21)
+     C                   ELSE
+     C                   MOVE      '-'           ZS2(21)
+     C                   ENDIF
+     C                   Z-SUB     ZFLD15        ZFLD15
+     C                   ENDIF
+      *
+     C                   Z-ADD     ZFLD15        ZWRK15
+      *
+      ** CHECK TO SEE IF THERE ARE ANY DECIMAL PLACES
+      *
+     C     ZDECS         CABEQ     0             ZS10
+      *
+      ** SET UP DECIMALS
+      *
+     C                   Z-ADD     *ZEROS        ZCNT              1 0
+     C     ZCNT          DOUEQ     ZDECS
+     C                   MOVE      ZS1(Z1)       ZS2(Z2)
+     C                   SUB       1             Z2
+     C                   ADD       1             ZCNT
+     C                   SUB       1             Z1
+     C                   ENDDO
+      *
+      ** PUT IN DECIMAL PLACE
+      *
+     C                   MOVE      '.'           ZS2(Z2)
+     C                   SUB       1             Z2
+      *
+     C     ZS10          TAG
+      *
+      ** SET UP INTEGERS
+     C
+     C                   Z-ADD     *ZEROS        CNT3              1 0
+     C     Z1            DOUEQ     *ZEROS
+     C                   MOVE      ZS1(Z1)       ZS2(Z2)
+     C                   SUB       1             Z1
+     C                   SUB       1             Z2
+      *
+      ** If edit code is 'J', insert a ',' before each group of three
+      ** digits - not if beginning of array reached.
+      *
+     C     Z2            IFGT      *ZEROS
+     C     ZECODE        ANDEQ     'J'
+     C     Z2            ORGT      *ZEROS
+     C     ZECODE        ANDEQ     'A'
+     C                   ADD       1             CNT3
+     C     CNT3          IFEQ      3
+     C                   MOVE      ','           ZS2(Z2)
+     C                   SUB       1             Z2
+     C                   Z-ADD     *ZEROS        CNT3
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   ENDDO
+      *
+      ** PUT IN LEADING BLANKS
+      *
+     C                   Z-ADD     1             Z2
+     C     ZS2(Z2)       DOWEQ     '0'
+     C     ZS2(Z2)       OREQ      ' '
+     C     ZS2(Z2)       OREQ      ','
+     C                   MOVE      ' '           ZS2(Z2)
+     C                   ADD       1             Z2
+     C     Z2            CABEQ     23            ZS20
+     C                   ENDDO
+      *
+      ** IF NO INTEGERS PUT IN LEADING ZERO
+      *
+     C     ZS20          TAG
+      *
+     C     Z2            IFEQ      23
+     C     ZFLD15        IFEQ      0
+     C     ZDECS         ANDEQ     0
+     C                   SUB       3             Z2
+     C                   ELSE
+     C                   SUB       2             Z2
+     C                   ENDIF
+     C                   MOVE      '0'           ZS2(Z2)
+     C                   ELSE
+      *
+     C     ZS2(Z2)       IFEQ      '.'
+     C                   SUB       1             Z2
+     C                   MOVE      '0'           ZS2(Z2)
+     C                   ENDIF
+     C                   END
+      *
+      ** SET UP OUTPUT FIELD
+      *
+     C                   MOVEA     ZS2           ZOUT22
+      *
+     C     ZDECS         IFEQ      0
+     C                   MOVE      ZOUT22        ZOUT0
+     C                   ELSE
+      *
+     C     ZDECS         IFEQ      1
+     C                   MOVE      ZOUT22        ZOUT1
+     C                   ELSE
+      *
+     C     ZDECS         IFEQ      2
+     C                   MOVE      ZOUT22        ZOUT2
+     C                   ELSE
+      *
+     C                   MOVE      ZOUT22        ZOUT3
+     C                   ENDIF
+      *
+     C                   ENDIF
+      *
+     C                   ENDIF
+      *
+     C                   ENDSR
+     C*
+      *****************************************************************
+      * End of /COPY ZFRPEDZ2LE                                       *
+     C*****************************************************************

@@ -1,0 +1,579 @@
+      *****************************************************************
+/*STD *  PRTFBASE                                                     *
+/*EXS *  PR_STD60                                                     *
+/*EXI *  TEXT('Midas PM Portfolio Details Report')
+     A*****************************************************************
+     A*                                                               *
+     A*  Midas - Portfolio Management Module                      *
+     A*                                                               *
+     A*  PRTF/PM0290P1 - PRINT A PORTFOLIO DETAILS REPORT             *
+     A*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     A*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 30Nov05               *
+      *  Prev Amend No. CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAC003             Date 25Feb97               *
+      *                 CPM005             Date 03Jul96               *
+     A*                 S71062             Date 27Nov95               *
+     A*                 S01486             DATE 20Oct94               *
+     A*                 47152              DATE 16NOV92               *
+     A*                 S01313             DATE 07MAY92               *
+     A*                 B9986  DT          DATE 30SEP91               *
+     A*                 R01155             DATE 12JAN90               *
+     A*                 R00824             DATE 12DEC90               *
+     A*                 S01307             DATE 08OCT90               *
+     A*                 PMC150             DATE 17/05/90              *
+     A*                 PMC139             DATE 11/05/90              *
+     A*                                                               *
+     A*---------------------------------------------------------------*
+     A*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  CAC003 - Profit Centre Accounting Development Phase 3.       *
+     A*  CPM005 - Private Banking Phase II                            *
+     A*           Focus Group Changes Upgraded to DBA                 *
+     A*           PBFG/5 - INSTRUMENT ASSET/LIABILITY SPLIT           *
+     A*           PBFG/7 - NET COMMITMENT BY CURRENCY                 *
+     A*           PBFG/8 - DISPLAY POSITIONS SPLIT BY CURRENCY        *
+     A*  S71062 - FF/PM Portfolio Definition Maintenance              *
+     A*           add new field 'FF Margin A/c seq.'                  *
+     A*  S01486 - Portfolio Management Upgrade to R10                 *
+     A*  47152  - OUTPUT BLANK CHARGE DAY                             *
+     A*  S01313 - OUTPUT ADDITIONAL FIELDS                            *
+     A*  B9986  - RRTYPE FIELD IS TRUNCATED TO LEFT                   *
+     A*  R01155 - IF BOTH MIN AND MAX RANGE 0 ONLY OUTPUT MAX RANGE   *
+     A*  R00824 - IF MINIMUM RANGE 100% OUTPUT BLANK MAXIMUM RANGE    *
+     A*  S01307 - CUSTODY FEES ENHANCEMENT                            *
+     A*  PMC150 - UNDERLINE INCORRECT                                 *
+     A*                                                               *
+     A*****************************************************************
+     A*  C R E A T I O N     P A R A M E T E R S                      *
+     A*                                                               *
+     A*****************************************************************
+     A*
+     A**---------------------------------------------------------------
+     A**   FORMAT FOR REPORT HEADER - FIRST & SECOND PAGE
+     A**---------------------------------------------------------------
+     A*
+     A          R HEADRE
+     A*                                              Begin /S01486/
+     A                                      TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A*                                              End   /S01486/
+     A                                      SKIPB(3)
+     A                                     7'REFERENCE'
+     A                                    17'PM0290P1'
+     A            BJURPT        53        37
+     A                                   101'DATE'
+     A            BJMRDT         7       106
+     A                                   119'PAGE'
+     A                                   124PAGNBR
+     A                                      EDTCDE(Z)
+     A***PMC150*****************************SPACEA(2)
+     A                                    41'PORTFOLIO MANAGEMENT PORTFOLIO '
+     A                                       SPACEB(2)
+     A                                    72'DETAILS - '
+     A  41                                82'AUDIT'
+     A***PMC150*****************************SPACEA(1)
+     A  42                                82'REPORT'
+     A***PMC150*****************************SPACEA(1)
+     A                                    41'-------------------------------'
+PMC15A                                      SPACEB(1)
+     A                                    72'-------'
+     A*                                              Begin /S01486/
+     A***********                           SPACEA(2)
+     A                                      SPACEA(1)
+     A************                         2'ACCOUNT OFFICER'
+     A************                          HIGHLIGHT
+     A************AZACOC         2        19HIGHLIGHT
+     A************AZACON        30        22HIGHLIGHT
+     A************                          SPACEA(2)
+     A  27                                89'CONSOLIDATED'
+     A                                      SPACEA(2)
+     A  28                                89'DEPARTMENT -'
+     A  28        AZDPCD         3       102
+     A  28        AEDPNM        30       106
+     A                                      SPACEA(2)
+     A  29                                89'ACCOUNT OFFICER -'
+     A  29        AZACOC         2       107
+     A  29        AZACON        30       110
+     A                                      SPACEA(2)
+     A*                                              End   /S01486/
+     A N40                                 3'CUSTOMER NUMBER'
+     A*                                              Begin /S01486/
+     A***********                           HIGHLIGHT
+     A*N40******* BBCUST         6  0     20HIGHLIGHT
+     A*N40******* BBCRNM        20        27HIGHLIGHT
+      * Begin /CSD027/
+     A*N40******  BBCUST         6  0     20                                                  CSD027
+     A N40        BBCUST         6A       20
+      * End /CSD027/
+     A N40        BBCRNM        20        27
+     A*                                              End   /S01486/
+     A                                      SPACEA(2)
+     A N40                                 6'PORTFOLIO REFERENCE'
+     A*                                              Begin /S01486/
+     A***********                           HIGHLIGHT
+     A*N40******* RRPTFR         4        27HIGHLIGHT
+     A*N40******* RRPTFN        20        32HIGHLIGHT
+     A N40        RRPTFR         4        27
+     A N40        RRPTFN        20        32
+     A*                                              End   /S01486/
+     A*                                              Begin /CAC003/
+     A*N40*39****                         74'*** PORTFOLIO CLOSED ***'
+     A N40 39                             56'*** PORTFOLIO CLOSED ***'
+     A  26                                89'PROFIT CENTRE'
+     A  26                               105'-'
+     A  26        RRPRFC         4A      107
+     A*                                              End   /CAC003/
+     A*                                              Begin /S01486/
+     A***********                           HIGHLIGHT
+     A*                                              End   /S01486/
+     A*
+     A**---------------------------------------------------------------
+     A**   FORMAT FOR REPORT DETAILS - FIRST PAGE
+     A**---------------------------------------------------------------
+     A*
+     A          R DETFP
+     A                                      SPACEB(2)
+     A***********                                    Begin /S71062/
+     A***********                          6'PORTFOLIO'
+     A***********                         19'DATE'
+     A***********                         29'DATE'
+     A                                     6'PORTF.'
+     A                                    15'DATE'
+     A                                    23'DATE'
+     A  20                                30'FF MARG.'
+     A***********                                    End   /S71062/
+     A************************** S01307 BEGIN
+     A*********************               37'PORTFOLIO'
+     A*********************               50'MANAGED'
+     A***********                                    Begin /S71062/
+     A***********                         37'PORTF.'
+     A***********                         47'MNGD'
+     A                                    39'PORTF.'
+     A                                    48'MNGD'
+     A***********                                    End   /S71062/
+     A                                    55'FEE'
+     A************************** S01307 END
+     A                                    61'<--- VALUATION --->'
+     A*********************  PMC139
+     A                                    83'<--- CASHFLOW ---->'
+     A*********************  PMC139
+     A                                   105'L A S T  A C T I V I T Y'
+     A                                      SPACEA(1)
+     A***********                                    Begin /S71062/
+     A*********************                6'CURRENCY'
+     A*********************               18'OPENED'
+     A*********************               28'CLOSED'
+     A                                     7'CCY'
+     A                                    14'OPENED'
+     A                                    22'CLOSED'
+     A  20                                30'A/C SEQ.'
+     A***********                                    End   /S71062/
+     A************************** S01307 BEGIN
+     A*********************               40'TYPE'
+     A*********************               49'INDICATOR'
+     A***********                                    Begin /S71062/
+     A***********                         38'TYPE'
+     A***********                         46'INDIC.'
+     A                                    40'TYPE'
+     A                                    47'INDIC.'
+     A***********                                    End   /S71062/
+     A                                    55'GRP'
+     A************************** S01307 END
+     A                                    61'FREQ.'
+     A                                    67'DAY'
+     A                                    71'NEXT DATE'
+     A*********************  PMC139
+     A                                    83'FREQ.'
+     A                                    89'DAY'
+     A                                    93'NEXT DATE'
+     A*********************  PMC139
+     A                                   105'ACTION    DATE    TIME'
+     A                                      SPACEA(1)
+     A***********                                    Begin /S71062/
+     A***********                          6'---------'
+     A***********                         18'------'
+     A***********                         28'------'
+     A                                     6'------'
+     A                                    14'------'
+     A                                    22'------'
+     A  20                                30'--------'
+     A***********                                    End   /S71062/
+     A************************** S01307 BEGIN
+     A**************************          37'---------'
+     A**************************          49'---------'
+     A***********                                    Begin /S71062/
+     A***********                         37'------'
+     A***********                         46'------'
+     A                                    39'------'
+     A                                    47'------'
+     A***********                                    End   /S71062/
+     A                                    55'---'
+     A************************** S01307 END
+     A                                    61'-----'
+     A                                    67'---'
+     A                                    71'---------'
+     A*********************  PMC139
+     A                                    83'-----'
+     A                                    89'---'
+     A                                    93'---------'
+     A*********************  PMC139
+     A                                   105'------------------------'
+     A                                      SPACEA(1)
+     A*
+     A**---------------------------------------------------------------
+     A**   FORMAT FOR PORTFOLIO DETAILS
+     A**---------------------------------------------------------------
+     A*
+     A          R DETAIL
+     A***********                                    Begin /S71062/
+     A************RRPTCY         3        09
+     A************RRDPOP         7        18
+     A************RRDPCL         7        28
+     A            RRPTCY         3        07
+     A            RRDPOP         7        14
+     A            RRDPCL         7        22
+     A  20        RRACSQ         2        32
+     A***********                                    End   /S71062/
+     A************************** S01307 BEGIN
+     A*********** RRPTFT ******* 2        41
+     A*********** RRMNGI ******* 1        53
+     A***********                                    Begin /S71062/
+     A************RRPTFT         2        39
+     A************RRMNGI         1        48
+     A            RRPTFT         2        41
+     A            RRMNGI         1        49
+     A***********                                    End   /S71062/
+     A            RRCFGC         2        55
+     A************************** S01307 END
+     A************************** PMC139
+     A            RRVLFQ         1        63
+     A            RRVLDM         2        67
+     A            RRVLND         7        72
+     A            RRCASF         1        85
+     A            RRCASD         2        89
+     A            RRCASN         7        94
+     A************************** PMC139
+     A            R1CHTP         6       105
+     A            R1DLUP         2  0    113
+     A            R1MLUP         3       115
+     A            R1YLUP         2  0    118
+     A            R1TLUP         6  0    121EDTWRD('  :  :  ')
+     A                                      SPACEA(2)
+     A***START S01313***
+     A****                                14'VALUATION STATEMENT ALTERNATIVE '
+     A****                                46'ADDRESS CODES:'
+     A****        RRAAD1         1        61
+     A****        RRAAD2         1        63
+     A****        RRAAD3         1        65
+     A****        RRAAD4         1        67
+     A****        RRAAD5         1        69
+     A****                                  SPACEA(2)
+     A****                                14'SECTIONS OF VALUATION REQUIRED:'
+     A****                                46'SECTOR BREAKDOWN'
+     A****        RRS2VR         1        78
+     A****                                  SPACEA(1)
+     A****                                46'DAILY CASHFLOWS'
+     A****        RRS3VR         1        78
+     A****                                  SPACEA(1)
+     A****                                46'MONTHLY CASHFLOWS'
+     A****        RRS4VR         1        78
+     A****                                  SPACEA(1)
+     A****                                46'YEARLY CASHFLOWS'
+     A****        RRS5VR         1        78
+     A****START R10007 ***
+     A**********                            SPACEA(2)
+     A****                                  SPACEA(1)
+     A****END R10007 ***
+     A****                                46'INSTRUMENTS BY VALUATION GROUP'
+     A****        RRS6VR         1        78
+     A                                    14'SECTIONS OF VALUATION REQUIRED:'
+      *                                              Begin /CPM005/
+     A                                    46'INSTRUMENT SUMMARY'
+     A            RRS9VR         1        78
+     A                                      SPACEA(1)
+     A                                    46'CURRENCY SUMMARY'
+     A            RRS0VR         1        78
+     A                                      SPACEA(1)
+      *                                              End   /CPM005/
+     A                                    46'POSITION DETAILS'
+     A            RRS1VR         1        78
+     A                                      SPACEA(1)
+     A                                    46'SECTOR BREAKDOWN'
+     A            RRS2VR         1        78
+     A                                      SPACEA(1)
+     A                                    46'PAST YEAR PERFORMANCE'
+     A            RRS3VR         1        78
+     A                                      SPACEA(1)
+     A                                    46'TAX YEAR PERFORMANCE'
+     A            RRS4VR         1        78
+     A                                      SPACEA(1)
+     A                                    46'ADDITIONAL PERFORMANCE'
+     A            RRS5VR         1        78
+     A                                      SPACEA(1)
+     A                                    46'DAILY CASHFLOWS'
+     A            RRS6VR         1        78
+     A                                      SPACEA(1)
+     A                                    46'MONTHLY CASHFLOWS'
+     A            RRS7VR         1        78
+     A                                      SPACEA(1)
+     A                                    46'YEARLY CASHFLOWS'
+     A            RRS8VR         1        78
+     A                                      SPACEA(2)
+     A                                    16'PERFORMANCE PERIODS REQUIRED:'
+     A                                    46'REPORT PAST YEAR'
+     A            RRRPYP         1        78SPACEA(1)
+     A                                    46'TAX YEAR START MONTH'
+     A            RRTYSM         2        78SPACEA(1)
+     A                                    46'ADDITIONAL PERFORMANCE PERIOD'
+     A            RRADPP         1        78SPACEA(2)
+     A                                    16'PERFORMANCE NET/GROSS OF TAX'
+     A            RRPMNG         1        46
+     A                                    50'PERFORMANCE EXTRACTED FROM'
+     A            RRPSDT         7        78SPACEA(2)
+     A***END S01313***
+     A                                    14'PLEDGED - '
+     A  43                                24'YES'
+     A N43                                24'NO'
+     A N43                                  SPACEA(2)
+     A  43                                31'START :'
+     A  43        RRPDGS         7        39
+     A  43                                49'END :'
+     A N89 43     RRPDGF         7        55
+     A  43                                  SPACEA(2)
+     A  89 43                             55'NO FINISH DATE DEFINED'
+     A  43                                  SPACEA(2)
+     A*
+     A**---------------------------------------------------------------
+     A**   FORMAT FOR CHARGES HEADER
+     A**---------------------------------------------------------------
+     A*
+     A          R HEADCH
+     A*                                              Begin /S01486/
+     A************                        14'<---------------------------- '
+     A************                        44'C  H  A  R  G  E  S '
+     A************                        63' ---------------------------->'
+     A************                          SPACEA(1)
+     A************                        36'EFFECT'
+     A************                        49'C A L C U L A T I O N'
+     A************                        79'S E T T L E M E N T'
+     A************                          SPACEA(1)
+     A************                        14'CODE'
+     A************                        23'ADJUSTMENT'
+     A************                        38'C/N'
+     A************                        44'FREQ.'
+     A************                        51'DAY'
+     A************                        56'NEXT DATE'
+     A************                        68'STOPPED?'
+     A************                        78'FREQ.'
+     A************                        85'DAY'
+     A************                        90'NEXT DATE'
+     A************                          SPACEA(1)
+     A************                        14'----'
+     A************                        23'----------'
+     A************                        36'------'
+     A************                        44'-----'
+     A************                        51'---'
+     A************                        56'---------'
+     A************                        68'--------'
+     A************                        78'----'
+     A************                        85'---'
+     A************                        90'---------'
+     A                                    07'<---------------------------- '
+     A                                    37'C  H  A  R  G  E  S '
+     A                                    56' ---------------------------->'
+     A                                      SPACEA(1)
+     A                                    29'EFFECT'
+     A                                    42'C A L C U L A T I O N'
+     A                                    72'S E T T L E M E N T'
+     A                                      SPACEA(1)
+     A                                    07'CODE'
+     A                                    16'ADJUSTMENT'
+     A                                    31'C/N'
+     A                                    37'FREQ.'
+     A                                    44'DAY'
+     A                                    49'NEXT DATE'
+     A                                    61'STOPPED?'
+     A                                    71'FREQ.'
+     A                                    78'DAY'
+     A                                    83'NEXT DATE'
+     A                                    94'PR. CENTRE'
+     A                                      SPACEA(1)
+     A                                    07'----'
+     A                                    16'----------'
+     A                                    29'------'
+     A                                    37'-----'
+     A                                    44'---'
+     A                                    49'---------'
+     A                                    61'--------'
+     A                                    71'----'
+     A                                    78'---'
+     A                                    83'---------'
+     A                                    94'----------'
+     A*                                              End   /S01486/
+     A                                      SPACEA(1)
+     A*
+     A**---------------------------------------------------------------
+     A**   FORMAT FOR CHARGES DETAILS
+     A**---------------------------------------------------------------
+     A*
+     A          R CHARGE
+     A************RRCGCO         2        15
+     A************RRCGSP        15        18
+     A************RRCGAS         1        34
+     A************RRCGEI         1        39
+     A************RRCGFQ         1        46
+     A***START 47152***
+     A****        RRCGDY         2  0     51
+     A************RRCGDY         2        51
+     A***END 47152***
+     A************RRCGND         7        58
+     A************RRCGST         1        71
+     A************RRCSFQ         1        80
+     A************RRCSDY         2  0     86
+     A************RRCSND         7        91
+     A            RRCGCO         2        08
+     A            RRCGSP        15        11
+     A            RRCGAS         1        27
+     A            RRCGEI         1        32
+     A            RRCGFQ         1        39
+     A            RRCGDY         2        44
+     A            RRCGND         7        51
+     A            RRCGST         1        64
+     A            RRCSFQ         1        73
+     A            RRCSDY         2  0     79
+     A            RRCSND         7        84
+     A            RRPFRC         4        97
+     A*                                              END   /S01486/
+     A  56                               105'INSERT'
+     A  57                               105'AMEND '
+     A N56N57                            105'DELETE'
+     A            R2DLUP         2  0    113
+     A            R2MLUP         3       115
+     A            R2YLUP         2  0    118
+     A            R2TLUP         6  0    121EDTWRD('  :  :  ')
+     A                                      SPACEA(1)
+     A*
+     A**---------------------------------------------------------------
+     A**   FORMAT FOR FURTHER INFORMATIONS
+     A**---------------------------------------------------------------
+     A*
+     A          R INFO
+     A                                      SPACEB(1)
+     A  66                                14'BANK CHARGING CURRENCY'
+     A  66        RRBCGY         3        37
+     A  66                                43'SETTLEMENT CURRENCY'
+     A  66        RRCSCY         3        63
+     A  66                                69'SETTLEMENT ACCOUNT'
+     A**Start of change CGL029
+     A**66******  RRCUSA        12        88                                                  CGL029
+     A  66        RRCUSA        18        88
+     A**End of change CGL029
+     A  66                                  SPACEA(2)
+     A  44                                14'BANK INVESTMENT POLICY CODE'
+     A  44        RRPOLC         2        43
+     A  44                                50'BANK INVESTMENT POLICY NARRATIVE'
+     A  44        RRPOLN        20        84
+     A  67                                14'PARTS OF INDIVIDUAL INVESTMENT'
+     A  67                                  SPACEB(1)
+     A  67                                45'POLICY:'
+     A  67                                53'INSTRUMENT POLICY'
+     A  67        RRIPIN         1        80
+     A  67                                  SPACEA(1)
+     A  67                                53'CURRENCY POLICY'
+     A  67        RRCYIN         1        80
+     A  67                                  SPACEA(1)
+     A  67                                53'COUNTRY OF RISK POLICY'
+     A  67        RRYPIN         1        80
+     A  67                                  SPACEA(1)
+     A  67                                53'INDUSTRY POLICY'
+     A  67        RRNPIN         1        80
+     A*
+     A**---------------------------------------------------------------
+     A**   FORMAT FOR REPORT DETAILS - SECOND PAGE
+     A**---------------------------------------------------------------
+     A*
+     A          R DETSP
+     A                                      SPACEB(1)
+     A                                    83'PERCENTAGE'
+     A                                      SPACEA(1)
+     A                                    12'POLICY TYPE'
+     A                                    44'CODE   TITLE / NARRATIVE'
+     A                                    83'MIN     MAX'
+     A                                      SPACEA(1)
+     A                                    12'-----------'
+     A                                    44'----   -----------------'
+     A                                    83'---     ---'
+     A                                      SPACEA(1)
+     A  53                                 7'(BANK POLICY - '
+     A  53        RRPOLC         2        22
+     A  53        RRPOLN        20        26
+     A  53                                46')'
+     A  53                                  SPACEA(1)
+     A*
+     A**---------------------------------------------------------------
+     A**   FORMAT FOR INSTRUMENT POLICY - TITLE
+     A**---------------------------------------------------------------
+     A*
+     A          R INVPOL
+     A  55        RRPOLT        18         8SPACEB(2)
+     A N55        RRPOL1        18         8SPACEB(1)
+     A* B9986     RRTYPE        11        32
+     A            RRTYPE        12        32
+     A* B9986
+     A            RRGPCO         3        45
+     A            RRGPNR        30        51
+     A*** START R01155 ***
+     A  37        RRMINR         3  0     82EDTCDE(3)
+     A  37                                85'%'
+     A*** END R01155 ***
+     A*** START R0824 ***
+     A************RRMAXR******   3  0     89EDTCDE(3)
+     A************************            92'%'
+     A  38        RRMAXR         3  0     89EDTCDE(3)
+     A  38                                92'%'
+     A*** END R0824 ***
+     A  58                               105'INSERT'
+     A  59                               105'AMEND '
+     A N58N59                            105'DELETE'
+     A            RRDLUP         2  0    113
+     A            RRMLUP         3       115
+     A            RRYLUP         2  0    118
+     A            RRTLUP         6  0    121EDTWRD('  :  :  ')
+     A*/COPY WNCPYSRC,PM0290P101
+     A*
+     A**---------------------------------------------------------------
+     A**   FORMAT FOR END OF REPORT
+     A**---------------------------------------------------------------
+     A*
+     A          R ENDRE                     SPACEB(3)
+     A*                                              Begin /S01486/
+     A**********                          56'** END OF REPORT **'
+     A  27                                51'*** END OF REPORT ***'
+     A  28                                46'*** END OF REPORT FOR DEPT ***'
+     A  29                                46'*** END OF REPORT FOR AC/OF ***'
+     A**********R*NODET                     SPACEB(3)
+     A************                        53'** NO DETAILS TO REPORT **'
+     A*                                              End   /S01486/
+     A          R NOCHR                     SPACEB(1)
+     A*                                              Begin /S01486/
+     A***********                           HIGHLIGHT
+     A*                                              End   /S01486/
+     A                                    52'** NO CHARGES DEFINED **'
+     A                                      SPACEA(1)
+     A*                                              Begin /S01486/
+     A**********R NOPOL                     HIGHLIGHT
+     A          R NOPOL
+     A*                                              End   /S01486/
+     A                                      SPACEB(1)
+     A                                    47'** NO INVESTMENT POLICIES DEFINED +
+     A                                       **'

@@ -1,0 +1,87 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas RE Initialization Program for CER048')          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - Money Market Module                              */
+/*                                                                   */
+/*       REC000101 - Midas RE Initialisation program for CER048      */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2008           */
+/*                                                                   */
+/*       Last Amend No. CER059             Date 19Jul10              */
+/*       Prev Amend No. BUG22611A          Date 10Feb09              */
+/*                      BUG22611           Date 09Feb09              */
+/*                      CER048  *CREATE    Date 19May08              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CER059 - German Feature Upgrade to Delhi                    */
+/*       BUG22611A - CER048 init pgm error                           */
+/*       BUG22611 - German Features initialization pgm error         */
+/*       CER048 - German Features - Taxes                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RTCDE &PMODE)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2008')
+ 
+             DCL        VAR(&RTCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PREF) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+ 
+/** Create LDA */                                                                      /*BUG22611A*/
+                                                                                       /*BUG22611A*/
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)                         /*BUG22611A*/
+             MONMSG     MSGID(CPF1023)                                                 /*BUG22611A*/
+                                                                                       /*BUG22611A*/
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREF)
+             CHGJOB     SWS(XXXXXX00)
+             CHGVAR     VAR(&LIB) VALUE(&PREF *CAT 'DMLIB')
+ 
+ 
+/** Call the Take-On RPG */
+ 
+             IF         COND(&PMODE *NE '3') THEN(DO)
+ 
+/***Start*commitment*control*for*batch*jobs*with*file*updates**/                        /*BUG22611*/
+ 
+/**********     STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE))                           /*BUG22611*/
+/**********  MONMSG     MSGID(CPF8351)                                                  /*BUG22611*/
+             CALL       PGM(RE000101)
+             ENDDO
+ 
+/** If Error */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+/**********  ROLLBACK                  */                                               /*BUG22611*/
+             CHGVAR     VAR(&RTCDE) VALUE('*ERROR')                                    /*BUG22611A*/
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/**********  ELSE       CMD(DO)        */                                               /*BUG22611*/
+/**********  COMMIT                    */                                               /*BUG22611*/
+/**********  ENDDO                     */                                               /*BUG22611*/
+ 
+/**********  ENDCMTCTL                 */                                               /*BUG22611*/
+             GOTO       CMDLBL(END)
+ 
+/** Send error message */
+ 
+ ABNOR:      SNDPGMMSG  MSG('Program REC000101 ended abnormally') +
+                          TOMSGQ(MOPERQ)
+ 
+ END:        MONMSG     MSGID(CPF2105)
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
+                          Banking Systems Ltd.')
+ 
+             ENDPGM

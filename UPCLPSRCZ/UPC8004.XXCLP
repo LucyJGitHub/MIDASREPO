@@ -1,0 +1,220 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/                   /*CUP021*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC8004 - Reset files for Action File utilities             */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*                                                                   */
+/*       Last Amend No. CUP021  *REDUNDANT Date 07Feb11              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Prev Amend No. BUG27240           Date 12Mar10              */
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      CUP033             Date 18Sep06              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CSM005             Date 21Sep05              */
+/*                      CUP022             Date 23Apr04              */
+/*                      CUP024             Date 13Jun03              */
+/*                      CUP020  *CREATE    Date 03Jan03              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP021 - Rewrite of Action File processing.                 */
+/*       BUG27240- Applied CPK029 file locking fix                   */
+/*       CPK029 - Stop lock on file.                                 */
+/*       CUP033 - Removal of System Value /COPYs                     */
+/*       CSM005 - Changes to /COPYs.  Recompile.                     */
+/*       CUP022 - Retrieve file names need to be reset instead of    */
+/*                hard coding the names.                             */
+/*                Perform validity check before action file cmd is   */
+/*                called.                                            */
+/*                When error, output to error message file and       */
+/*                generate error report at the end of this program.  */
+/*       CUP024 - Migration of Bridge ICD to the System Values file. */
+/*       CUP020 - Additional changes for Action Files                */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM                                                                       */ /*CUP033*/
+             PGM        PARM(&PFXSVAL)                                                    /*CUP033*/
+ 
+             DCL        VAR(&PFXSVAL) TYPE(*CHAR) LEN(20)                                 /*CUP033*/
+/**COPY*UPCPYSRC,UPSVALDCL*                                          */ /*  */ /*CUP024*/ /*CUP033*/
+             DCL        VAR(&SBSID) TYPE(*CHAR) LEN(2)                                    /*CUP033*/
+             DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1) VALUE('N')                     /*CUP033*/
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+/* Parameters to call UPC000799 */                                                        /*CUP022*/
+             DCL        VAR(&BUILD)    TYPE(*CHAR) LEN(4) VALUE('*NO')                    /*CUP022*/
+             DCL        VAR(&REVIEW)   TYPE(*CHAR) LEN(4) VALUE('*NO')                    /*CUP022*/
+             DCL        VAR(&CONFLICT) TYPE(*CHAR) LEN(4) VALUE('*NO')                    /*CUP022*/
+             DCL        VAR(&PROCESS)  TYPE(*CHAR) LEN(4) VALUE('*NO')                    /*CUP022*/
+             DCL        VAR(&RESET)    TYPE(*CHAR) LEN(4) VALUE('*YES')                   /*CUP022*/
+             DCL        VAR(&OLDLIB)   TYPE(*CHAR) LEN(10) VALUE(' ')                     /*CUP022*/
+             DCL        VAR(&NEWLIB)   TYPE(*CHAR) LEN(10) VALUE(' ')                     /*CUP022*/
+             DCL        VAR(&REVTYP)   TYPE(*CHAR) LEN(7) VALUE('*ALL')                   /*CUP022*/
+/* Parameters for calling UPC008009 */                                                    /*CUP022*/
+             DCL        VAR(&MODE)     TYPE(*CHAR) LEN(10) VALUE('*RESET')                /*CUP022*/
+             DCL        VAR(&ERROR)    TYPE(*CHAR) LEN(1)                                 /*CUP022*/
+/* Parameters passed to UP008010 */                                                       /*CUP022*/
+             DCL        VAR(&GENPGM)   TYPE(*CHAR) LEN(10)  VALUE(UPC8004)                /*CUP022*/
+             DCL        VAR(&ERRORMSG) TYPE(*CHAR) LEN(100)                               /*CUP022*/
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2003')
+ 
+/************DCLF       FILE(UPUICDPD)                                                 */ /*CUP024*/
+/**********  DCLF       FILE(UPACTFPD)                                      */ /*CUP022*/ /*CUP033*/
+             DCLF       FILE(UPACTFPD) OPNID(A)                                           /*CUP033*/
+             DCLF       FILE(UPSVALJ0) OPNID(B)                                           /*CUP033*/
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
+             CHGJOB     SWS(XXXXXX00)
+ 
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+ 
+/* Create temporary file to hold error messages. */                                       /*CUP022*/
+             DLTF       FILE(QTEMP/UPERRMQT)                                              /*CUP022*/
+             MONMSG     MSGID(CPF2105)                                                    /*CUP022*/
+             CRTPF      FILE(QTEMP/UPERRMQT) RCDLEN(100) +
+                          TEXT('Temporary file for holding error +
+                          messages')                                                      /*CUP022*/
+ 
+/************RCVF                                                                      */ /*CUP024*/
+/**COPY*UPCPYSRC,UPSVALCAL1*                                         */ /*  */ /*CUP024*/ /*CUP033*/
+/**********  IF         COND(&SBSID *EQ ' ') THEN(DO)                                  */ /*CUP033*/
+ 
+VALIDATE:                                                                                 /*CUP033*/
+             RCVF       OPNID(B)                                                          /*CUP033*/
+             MONMSG     MSGID(CPF0864) EXEC(DO)                                           /*CUP033*/
+                GOTO       CMDLBL(CHECK)                                                  /*CUP033*/
+             ENDDO                                                                        /*CUP033*/
+ 
+             IF         COND(&B_GISVAL *EQ &PFXSVAL) THEN(DO)                             /*CUP033*/
+                IF         COND(&B_GIVAL *EQ ' ') THEN(DO)                                /*CUP033*/
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+                ELSE       CMD(DO)                                                        /*CUP033*/
+                   CHGVAR     VAR(&SBSID) VALUE(&B_GIVAL)                                 /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+/**********     GOTO       CMDLBL(CHECK)                                    */ /*CUP033*/ /*CPK029*/
+             ENDDO                                                                        /*CUP033*/
+ 
+             GOTO       CMDLBL(VALIDATE)                                                  /*CUP033*/
+ 
+ CHECK:                                                                                   /*CUP033*/
+             IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)                                 /*CUP033*/
+                RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                RTVMSG     MSGID(UPM0004) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (151 50)) VALUE(&MESSAGE)
+                CALL       PGM(SCC0010) PARM('UPC8004' 'ENTER' ' ')
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+             CALL       PGM(UPC0014) PARM(&SBSID)
+ 
+/*****       CBDPRLPD   RESET(*YES)                                                       /*CUP022*/
+ 
+/*****       CBMEXCPD   RESET(*YES)                                                       /*CUP022*/
+ 
+/*****       CBMDCNPD   RESET(*YES)                                                       /*CUP022*/
+ 
+READNEXT:                                                                                 /*CUP022*/
+/**********  RCVF                                                           */ /*CUP022*/ /*CUP033*/
+             RCVF       OPNID(A)                                                          /*CUP033*/
+/* If end of file, go to end program */                                                   /*CUP022*/
+             MONMSG     MSGID(CPF0864) EXEC(DO)                                           /*CUP022*/
+                GOTO       CMDLBL(END)                                                    /*CUP022*/
+             ENDDO                                                                        /*CUP022*/
+                                                                                          /*CUP022*/
+/* Ignore record if there is no reset program. */                                         /*CUP022*/
+/**********  IF         COND(&AARSTP *EQ '*NONE') THEN(DO)                  */ /*CUP022*/ /*CUP033*/
+             IF         COND(&A_AARSTP *EQ '*NONE') THEN(DO)                              /*CUP033*/
+                GOTO       CMDLBL(READNEXT)                                               /*CUP022*/
+             ENDDO                                                                        /*CUP022*/
+ 
+/* Perform validity check of the file &AABONF. */                                         /*CUP022*/
+/**********  CALL       PGM(UPC008009) PARM(&AABONF &MODE    +                         */ /*CUP033*/
+/**********                &OLDLIB &NEWLIB &AAFRMF &AAAFLF +                           */ /*CUP033*/
+/**********                &AAPROG &AAUPLF &ERROR)                          */ /*CUP022*/ /*CUP033*/
+             CALL       PGM(UPC008009) PARM(&A_AABONF &MODE &OLDLIB +
+                          &NEWLIB &A_AAFRMF &A_AAAFLF &A_AAPROG +
+                          &A_AAUPLF &ERROR)                                               /*CUP033*/
+ 
+/* If an error then end program. */                                                       /*CUP022*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ABNOR)                          /*CUP022*/
+ 
+/* If &ERROR = 'Y', */                                                                    /*CUP022*/
+             IF         COND(&ERROR *EQ 'Y') THEN(DO)                                     /*CUP022*/
+/*    send out error line */                                                              /*CUP022*/
+/**********     CHGVAR     VAR(&ERRORMSG) VALUE('Error in validity check for' +        */ /*CUP033*/
+/**********        *BCAT &AABONF )                                          */ /*CUP022*/ /*CUP033*/
+                CHGVAR     VAR(&ERRORMSG) VALUE('Error in validity +
+                             check for' *BCAT &A_AABONF)                                  /*CUP033*/
+                CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)                   /*CUP022*/
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                               /*CUP022*/
+                   GOTO       CMDLBL(ABNOR)                                               /*CUP022*/
+                ENDDO                                                                     /*CUP022*/
+                GOTO       CMDLBL(READNEXT)                                               /*CUP022*/
+             ENDDO                                                                        /*CUP022*/
+ 
+/* Call Action File command program */                                                    /*CUP022*/
+/**********  CALL       PGM(UPC000799) PARM(&AABONF &BUILD &REVIEW +                   */ /*CUP033*/
+/**********               &CONFLICT &PROCESS &RESET &OLDLIB &NEWLIB +                  */ /*CUP033*/
+/**********               &REVTYP)                                          */ /*CUP022*/ /*CUP033*/
+             CALL       PGM(UPC000799) PARM(&A_AABONF &BUILD &REVIEW +
+                          &CONFLICT &PROCESS &RESET &OLDLIB &NEWLIB +
+                          &REVTYP)                                                        /*CUP033*/
+             MONMSG     MSGID(CPF0000)                                                    /*CUP022*/
+ 
+/* If an error, send error line and read next rec.     */                                 /*CUP022*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                                  /*CUP022*/
+                CHGJOB     SWS(XXXXXX00)                                                  /*CUP022*/
+/**********     CHGVAR     VAR(&ERRORMSG) VALUE('Error when running +                  */ /*CUP033*/
+/**********                  UPC000799 for' *BCAT &AABONF)                  */ /*CUP022*/ /*CUP033*/
+                CHGVAR     VAR(&ERRORMSG) VALUE('Error when running +
+                             UPC000799 for' *BCAT &A_AABONF)                              /*CUP033*/
+                CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)                   /*CUP022*/
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                               /*CUP022*/
+                   GOTO       CMDLBL(ABNOR)                                               /*CUP022*/
+                ENDDO                                                                     /*CUP022*/
+             ENDDO                                                                        /*CUP022*/
+ 
+             GOTO       CMDLBL(READNEXT)                                                  /*CUP022*/
+/*****       GOTO       CMDLBL(END)                                                       /*CUP022*/
+ 
+ABNOR:
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('UPC8004') MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details')
+             MONMSG     MSGID(CPF0000)
+             CALL       PGM(SCC0010) PARM('UPC8004' 'JOBLOG' 'Y')
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             GOTO       CMDLBL(ABNOREND)                                               /*CUP022*/
+ 
+END:
+             CALL       PGM(UP008010)  PARM(*REPORT &GENPGM ' ')                       /*CUP022*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                               /*CUP022*/
+                GOTO       CMDLBL(ABNOR)                                               /*CUP022*/
+             ENDDO                                                                     /*CUP022*/
+             CHGSPLFA   FILE(UP008010P1) SPLNBR(*LAST) USRDTA(&GENPGM)                 /*CUP022*/
+ 
+ABNOREND:                                                                              /*CUP022*/
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+             ENDPGM

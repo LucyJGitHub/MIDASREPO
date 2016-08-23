@@ -1,0 +1,675 @@
+     H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Customer/Instrument Fee Codes List')
+     F*****************************************************************
+     F**                                                              *
+     F**  Midas PORTFOLIO MANAGEMENT                              *
+     F**                                                              *
+     F**  SE6220 - CUSTOMER/INSTRUMENT FEE CODES LIST                 *
+     F**                                                              *
+     F**      FUNCTION:  This Program produces a report, for audit    *
+     F**      (COB)      purposes, of all customer/instrument fee     *
+     F**      (I/C)      codes defined to the system. The report runs *
+     F**                 on request in I/C and COB and shows a full   *
+     F**                 list, or automatically in COB and audits     *
+     F**                 changes made today.                          *
+     F**                                                              *
+     F**      CALLED BY: SEC6220 - Customer/Instrument Fee Codes      *
+     F**                           Audit Report                       *
+     F**                                                              *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F**                                                              *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01464             Date 04APR94               *
+     F**                                                              *
+     F**--------------------------------------------------------------*
+     F**                                                              *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F**      S01464 - Safe Custody Fees                              *
+     F**                                                              *
+     F*****************************************************************
+     F** C R E A T I O N     P A R A M E T E R S                      *
+     F**                                                              *
+     F**                                                              *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F**
+     F**      FILE DEFINITIONS
+     F**     ------------------
+     F*
+     F**   BANK DETAILS FILE                        - PrefiX BJ
+     FSDBANKPDIF  E                    DISK         KINFSR *PSSR
+     F*
+     F**   CUSTOMER/INSTRUMENT CUSTODY FEE CODES   - PREFIX SC
+     F***SCCICFPDIF**E        K        DISK         KINFSR *PSSR          S01464
+     FSECICFPDIF  E           K        DISK         KINFSR *PSSR          S01464
+     F*
+     F**   CUST/INST CUSTODY FEE CODES TRAILER      - PREFIX SC
+     F***SCCICFZZIF**E        K        DISK         KINFSR *PSSR          S01464
+     FSECICFPAIF  E           K        DISK         KINFSR *PSSR          S01464
+     F*
+     F**   CUST/INST CUSTODY FEE CODES - RUN CONTROLS
+     FSE6220AUO   E             21     PRINTER      KINFDS ERF1DS
+     F                                              KINFSR *PSSR
+     F*
+     F**   CUST/INST CUSTODY FEE CODES LIST
+     F***SE6220P1O***E          22     PRINTER      KINFDS ERF2DS         S01464
+     FSE6220P1O   E             22     PRINTER      KINFDS ERF2DS     UC  S01464
+     F                                              KINFSR *PSSR
+     F*
+     F/EJECT
+     F*****************************************************************
+     F**                                                              *
+     F** ID F  C  H  L    FUNCTION OF INDICATORS                      *
+     F**                 ------------------------                     *
+     F**                                                              *
+     F**    21         - OVERFLOW INDICATOR ON TA0360AU               *
+     F**    22         - OVERFLOW INDICATOR ON TA0360P1               *
+     F**                                                              *
+     F**       10      - PRINT *** DIFFERENCE ***                     *
+     F**       55      - PRINT AUDIT OR FULL REPORT                   *
+     F**       70      - FILE ERROR                                   *
+     F**                                                              *
+     F*****************************************************************
+     F/EJECT
+     E********************************************************************
+     E*
+     E**   ARRAY FOR COPYRIGHT
+     E*
+     E                    CPY@    1   1 80
+     E********************************************************************
+     E/EJECT
+     E*****************************************************************
+     I*
+     I**   DATA STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+     ICPYR@$      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@$$
+     I*
+     I**   PROGRAM STATUS DATA STRUCTURE
+     IPSDS       SDS
+     I                                      244 253 JOB
+     I                                      254 263 USER
+     I*
+     I**   FILE INFORMATION DATA STRUCTURE
+     IERF1DS      DS
+     I                                       83  92 SFILEU                S01464
+     I                                    B 123 1240SFNUMU                S01464
+     I*
+     I**   FOR OVERFLOW - RUN CONTROL
+     I                                    B 367 3680LINE
+     I*
+     IERF2DS      DS
+     I                                       83  92 SFILE                 S01464
+     I                                    B 123 1240SFNUM                 S01464
+     I*
+     I**   FOR OVERFLOW - PRINT
+     I                                    B 367 3680LINE1
+     I*
+     I**   LOCAL DATA AREA
+     ILDA        UDS                            256
+     I**************************************132 141 DBFILE                S01464
+     I                                      134 141 DBFILE                S01464
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I**   DATE FORMATTING DATA STRUCTURE
+     IUPDATE      DS
+     I                                        1   2 SCDAY
+     I                                        3   5 SCMTH
+     I                                        6   7 SCYER
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C**              START MAINLINE
+     C**             ----------------
+     C*
+     C**   INPUT PARAMETER LIST
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           MODE    1
+     C                     PARM           @RSEQ   5                       S01464
+     C*
+     C**   INITIAL PROCESSING
+     C*
+     C                     EXSR #A
+     C*
+     C**   MAIN PROCESSING
+     C*
+     C                     EXSR #B
+     C*                                                                   S01464
+     C           WWOPEN    IFEQ 'Y'                                       S01464
+     C*                                                                   S01464
+     C** Call ZSFILE for P1 file                                          S01464
+     C*                                                                   S01464
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01464
+     C                     CALL 'ZSFILE'                                  S01464
+     C                     PARM           @RSEQ                           S01464
+     C                     PARM *BLANKS   @PARM   3                       S01464
+     C                     PARM           SFILE                           S01464
+     C                     PARM           ZSNUM                           S01464
+     C                     PARM           ZSERR   1                       S01464
+     C*                                                                   S01464
+     C           ZSERR     IFEQ 'Y'                                       S01464
+     C                     MOVE '1'       *INU7                           S01464
+     C                     MOVE '1'       *INU8                           S01464
+     C                     MOVE '1'       *INLR                           S01464
+     C                     RETRN                                          S01464
+     C                     END                                            S01464
+     C*                                                                   S01464
+     C                     CLOSESE6220P1                                  S01464
+     C                     END                                            S01464
+     C*                                                                   S01464
+     C** Call ZSFILE for AU file                                          S01464
+     C*                                                                   S01464
+     C                     Z-ADDSFNUMU    ZSNUM   60                      S01464
+     C                     CALL 'ZSFILE'                                  S01464
+     C                     PARM           @RSEQ                           S01464
+     C                     PARM *BLANKS   @PARM   3                       S01464
+     C                     PARM           SFILEU                          S01464
+     C                     PARM           ZSNUM                           S01464
+     C                     PARM           ZSERR   1                       S01464
+     C*                                                                   S01464
+     C           ZSERR     IFEQ 'Y'                                       S01464
+     C                     MOVE '1'       *INU7                           S01464
+     C                     MOVE '1'       *INU8                           S01464
+     C                     MOVE '1'       *INLR                           S01464
+     C                     RETRN                                          S01464
+     C                     END                                            S01464
+     C*
+     C**   END PROGRAM
+     C*
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**    INDEX TO SUBROUTINES                                      *
+     C**   ----------------------                                     *
+     C**                                                              *
+     C**                                                              *
+     C**   #A      - INITIAL PROCESSING                               *
+     C**   #B      - MAIN PROCESSING                                  *
+     C**   #BA     - FULL CUST/INST CUSTODY FEE CODES LIST            *
+     C**   #BB     - FULL LIST RUN CONTROLS                           *
+     C**   #BC     - AUDIT CUST/INST CUSTODY FEE CODES LIST           *
+     C**   #BD     - AUDIT LIST RUN CONTROLS                          *
+     C**   #ZA     - DATABASE ERRORS                                  *
+     C**   #ZB     - SETUP OUTPUT FIELDS FOR CUST/INST CUSTODY FEE    *
+     C**              CODES REPORT                                    *
+     C**   *PSSR   - PROGRAM ERROR HANDLING SUBROUINE                 *
+     C**                                                              *
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #B        - This subroutine performs Main processing       *
+     C**                                                              *
+     C**   CALLS     - #BA #BB #BC #BD #ZA                            *
+     C**                                                              *
+     C**   CALLED BY - MAINLINE                                       *
+     C**                                                              *
+     C*****************************************************************
+     C           #B        BEGSR
+     C*
+     C** CHECK INPUT PARAMETER
+     C*
+     C           MODE      IFEQ '2'
+     C*
+     C** SET INDICATOR TO GIVE LIST TITLE
+     C*
+     C                     MOVE '1'       *IN55
+     C*
+     C** FULL LIST
+     C*
+     C                     EXSR #BA
+     C*
+     C** FULL LIST RUN CONTROLS PROCESSING
+     C*
+     C                     EXSR #BB
+     C                     ELSE
+     C           MODE      IFEQ '1'
+     C*
+     C** SET INDICATOR TO GIVE AUDIT TITLE
+     C*
+     C                     MOVE '0'       *IN55
+     C*
+     C** AUDIT LIST
+     C*
+     C                     EXSR #BC
+     C*                                                                   S01464
+     C** Check if not a null report before processing.                    S01464
+     C*                                                                   S01464
+     C           WWEMTF    IFNE '1'                                       S01464
+     C*
+     C** AUDIT LIST RUN CONTROLS PROCESSING
+     C*
+     C                     EXSR #BD
+     C*                                                                   S01464
+     C                     END                                            S01464
+     C*                                                                   S01464
+     C                     ELSE
+     C*
+     C** STANDARD DATABASE ERROR HANDLING
+     C*
+     C           *LOCK     IN   LDA                                       S01464
+     C                     Z-ADD2         DBASE
+     C                     MOVEL'MODE'    DBFILE           ***************
+     C                     MOVELMODE      DBKEY            * DBERROR 002 *
+     C                     OUT  LDA                        ***************S01464
+     C                     EXSR #ZA                        ***************
+     C                     END
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #A        - This subroutine performs initiaL PROCESSING    *
+     C**                                                              *
+     C**   CALLS     - #ZA                                            *
+     C**                                                              *
+     C**   CALLED BY - MAINLINE                                       *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #A        BEGSR
+     C*
+     C                     SETOF                     10
+     C                     Z-ADD*ZEROS    LINE
+     C                     Z-ADD*ZEROS    LINE1
+     C*
+     C** Initialise DB error fields annd store program name for DB
+     C** error field
+     C** Prepare LDA                                                      S01464
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01464
+     C           *LOCK     IN   LDA                                       S01464
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVEL'SE6220'  DBPGM
+     C                     OUT  LDA                                       S01464
+     C*
+     C** Access Bank details file to get run date & title
+     C*
+     C           1         SETLLSDBANKPD
+     C                     READ SDBANKPD                 70
+     C*
+     C** If record not found or last change type = 'D' (DELETED)
+     C*
+     C           *IN70     IFEQ '1'
+     C           BJTYLC    OREQ 'D'
+     C           *LOCK     IN   LDA                                       S01464
+     C                     Z-ADD1         DBASE            ****************
+     C                     MOVEL'SDBANKPD'DBFILE           * DBERROR  001 *
+     C                     MOVE *BLANKS   DBKEY            ****************
+     C                     OUT  LDA                                       S01464
+     C                     EXSR #ZA
+     C                     END
+     C*
+     C** INITIALISE WORK FIELDS
+     C                     MOVE '1'       WWFTT   1
+     C*
+     C** Initialise run controls work fields
+     C                     Z-ADD*ZEROS    RRPROG
+     C                     Z-ADD*ZEROS    RRFILE
+     C                     Z-ADD*ZEROS    RRINST
+     C                     Z-ADD*ZEROS    RRAMDS
+     C                     Z-ADD*ZEROS    RRDELS
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #BA       - FULL CUST/INST SAFE CUSTODY FEE CODES LIST     *
+     C**                                                              *
+     C**   CALLS     - #ZB                                            *
+     C**                                                              *
+     C**   CALLED BY - #B                                             *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #BA       BEGSR
+     C*
+     C***********          READ SCCICFPD                 70               S01464
+     C                     READ SECICFP0                 70               S01464
+     C           *IN70     IFEQ '1'
+     C*
+     C** SETON FLAG TO INDICATE NULL REPORT
+     C*
+     C                     MOVE '1'       WWEMTF  1
+     C***********          WRITEHEADER1                                   S01464
+     C***********          WRITEHEADER2                                   S01464
+     C                     WRITEHEADER                                    S01464
+     C                     WRITENULL1
+     C***********          END                                            S01464
+     C                     ELSE                                           S01464
+     C                     OPEN SE6220P1                                  S01464
+     C                     MOVE '1'       *IN23                           S01464
+     C                     MOVE 'Y'       WWOPEN  1                       S01464
+     C*
+     C** WHILE RECORDS ON FILE
+     C*
+     C           *IN70     DOWEQ'0'
+     C           SCRECI    IFEQ 'D'
+     C*
+     C** ADD 1 TO NUMBER OF RECORDS READ
+     C*
+     C                     ADD  1         RRPROG
+     C*
+     C** SET UP OUTPUT FIELDS FOR CUST/INST CUSTODY FEE CODES LIST
+     C*
+     C                     EXSR #ZB
+     C                     END
+     C***********          READ SCCICFPD                 70               S01464
+     C                     READ SECICFP0                 70               S01464
+     C                     END
+     C*****************************************************************   S01464
+     C***NO*LIVE*RECORDS*FOUND*ON*SCCICFPD*****************************   S01464
+     C*****************************************************************   S01464
+     C*                                                                   S01464
+     C** No live records found on SECICFPD                                S01464
+     C*                                                                   S01464
+     C           RRPROG    IFEQ 0
+     C           WWEMTF    ANDNE'1'
+     C***********          WRITEHEADER1                                   S01464
+     C                     WRITEHEADER                                    S01464
+     C                     WRITENULL1
+     C                     END
+     C*
+     C           LINE1     IFGT 55
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     END
+     C                     WRITEFOOTING1
+     C*
+     C                     END                                            S01464
+     C*                                                                   S01464
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #BC       - AUDIT CUST/INST CUSTODY FEE CODES LIST         *
+     C**                                                              *
+     C**   CALLS     - #ZB                                            *
+     C**                                                              *
+     C**   CALLED BY - #B                                             *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #BC       BEGSR
+     C*
+     C***********          READ SCCICFPD                 70               S01464
+     C                     READ SECICFP0                 70               S01464
+     C           *IN70     IFEQ '1'
+     C                     MOVE '1'       WWEMTF
+     C***********          WRITEHEADER1                                   S01464
+     C                     WRITEHEADER                                    S01464
+     C                     WRITENULL1
+     C***********          END                                            S01464
+     C                     ELSE                                           S01464
+     C                     OPEN SE6220P1                                  S01464
+     C                     MOVE '1'       *IN23                           S01464
+     C                     MOVE 'Y'       WWOPEN                          S01464
+     C*                                                                   S01464
+     C           *IN70     DOWEQ'0'
+     C*
+     C** ADD 1 TO NUMBER OF INSERT RECORDS READ
+     C*
+     C           SCCHTP    IFEQ 'I'
+     C                     ADD  1         RRINST
+     C                     END
+     C*
+     C** ADD 1 TO NUMBER OF AMENDMENT RECORDS READ
+     C*
+     C           SCCHTP    IFEQ 'A'
+     C                     ADD  1         RRAMDS
+     C                     END
+     C*
+     C** ADD 1 TO NUMBER OF DELETE RECORDS READ
+     C*
+     C           SCCHTP    IFEQ 'D'
+     C                     ADD  1         RRDELS
+     C                     END
+     C*
+     C** SET UP OUTPUT FIELDS FOR CUST/INST CUSTODY FEE CODES LIST
+     C*
+     C                     EXSR #ZB
+     C***********          READ SCCICFPD                 70               S01464
+     C                     READ SECICFP0                 70               S01464
+     C                     END
+     C*****************************************************************   S01464
+     C***NO*LIVE*RECORDS*FOUND*ON*SCCICFPD*****************************   S01464
+     C*****************************************************************   S01464
+     C*                                                                   S01464
+     C** No live records found on SECICFPD                                S01464
+     C*                                                                   S01464
+     C           RRINST    IFEQ 0
+     C           RRAMDS    ANDEQ0
+     C           RRDELS    ANDEQ0
+     C           WWEMTF    ANDNE'1'
+     C***********          WRITEHEADER1                                   S01464
+     C                     WRITEHEADER                                    S01464
+     C                     WRITENULL1
+     C                     END
+     C*
+     C           LINE1     IFGT 55
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     END
+     C                     WRITEFOOTING1
+     C*
+     C                     END                                            S01464
+     C*                                                                   S01464
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #ZA       - Process Database Errors                        *
+     C**                                                              *
+     C**   CALLS     - None                                           *
+     C**                                                              *
+     C**   CALLED BY - #A #B #BB #BD                                  *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #ZA       BEGSR
+     C*
+     C                     WRITEHEADER
+     C                     WRITEDBERROR
+     C***********          WRITEFOOTING                                   S01464
+     C*                                                                   S01464
+     C** Call ZSFILE for AU file                                          S01464
+     C*                                                                   S01464
+     C                     Z-ADDSFNUMU    ZSNUM   60                      S01464
+     C                     CALL 'ZSFILE'                                  S01464
+     C                     PARM           @RSEQ                           S01464
+     C                     PARM *BLANKS   @PARM   3                       S01464
+     C                     PARM           SFILEU                          S01464
+     C                     PARM           ZSNUM                           S01464
+     C                     PARM           ZSERR   1                       S01464
+     C*                                                                   S01464
+     C           ZSERR     IFEQ 'Y'                                       S01464
+     C                     MOVE '1'       *INU7                           S01464
+     C                     MOVE '1'       *INU8                           S01464
+     C                     MOVE '1'       *INLR                           S01464
+     C                     RETRN                                          S01464
+     C                     END                                            S01464
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #ZB       - SETUP OUTPUT FIELDS FOR TABLE LIST             *
+     C**                                                              *
+     C**   CALLS     - NONE                                           *
+     C**                                                              *
+     C**   CALLED BY - #BA #BC                                        *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #ZB       BEGSR
+     C*
+     C********** SCCNUM    IFNE 0                                                             CSD027
+     C           SCCNUM    IFNE *BLANKS                                                       CSD027
+     C                     MOVE SCCNUM    RRCUST
+     C                     ELSE
+     C                     MOVE *BLANKS   RRCUST
+     C                     END
+     C*
+     C                     MOVE SCCFGC    RRFEEG
+     C                     MOVE SCSESN    RRSSNM
+     C                     MOVE SCCCY     RRCCY
+     C                     MOVE SCSITP    RRIVTP
+     C                     MOVE SCCGCO    RRFEEC
+     C*
+     C           SCCHTP    IFEQ 'I'
+     C                     MOVE 'INSERT'  RRACTN
+     C                     END
+     C*
+     C           SCCHTP    IFEQ 'A'
+     C                     MOVE 'AMEND '  RRACTN
+     C                     END
+     C*
+     C           SCCHTP    IFEQ 'D'
+     C                     MOVE 'DELETE'  RRACTN
+     C                     END
+     C*
+     C** SET UP LAST ACTIVITY DATE FOR OUTPUT
+     C*
+     C                     MOVE SCDLUP    SCDAY
+     C                     MOVE SCMLUP    SCMTH
+     C                     MOVE SCYLUP    SCYER
+     C                     MOVE UPDATE    RRDATE
+     C*
+     C** SET UP LAST ACTIVITY TIME FOR OUTPUT
+     C*
+     C                     MOVE SCTLUP    RRTIME
+     C*
+     C           LINE1     IFGT 55
+     C           WWFTT     OREQ '1'
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     MOVE '0'       WWFTT
+     C                     END
+     C                     WRITEDETAIL1
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #BB       - PROCESS FULL LIST RUN CONTROLS                 *
+     C**                                                              *
+     C**   CALLS     - #ZA                                            *
+     C**                                                              *
+     C**   CALLED BY - #B                                             *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #BB       BEGSR
+     C*
+     C***********          READ SCCICFZZ                 70               S01464
+     C                     READ SECICFZ0                 70               S01464
+     C           *IN70     IFEQ '1'
+     C           SCRECI    ORNE 'Z'
+     C*
+     C** TRAILER RECORD NOT FOUND - DATABASE ERROR
+     C*
+     C           *LOCK     IN   LDA                                       S01464
+     C                     Z-ADD3         DBASE
+     C***********          MOVEL'SCCICFZZ'DBFILE           ***************S01464
+     C                     MOVEL'SECICFPA'DBFILE           ***************S01464
+     C                     MOVEL*BLANKS   DBKEY            * DBERROR 003 *
+     C                     OUT  LDA                        ***************S01464
+     C                     EXSR #ZA                        ***************
+     C                     ELSE
+     C           RRPROG    IFNE SCNORE
+     C*
+     C** RECORDS READ <> RECORDS ON FILE
+     C*
+     C                     MOVE '1'       *IN10
+     C                     MOVE '1'       *INU8
+     C                     END
+     C                     Z-ADDSCNORE    RRFILE
+     C*
+     C** OUTPUT RUN CONTROLS REPORT
+     C*
+     C                     WRITEHEADER
+     C                     WRITEDETAILA
+     C***********          WRITEFOOTING                                   S01464
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #BD       - PROCESS AUDIT LIST RUN CONTROLS                *
+     C**                                                              *
+     C**   CALLS     - #ZA                                            *
+     C**                                                              *
+     C**   CALLED BY - #B                                             *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #BD       BEGSR
+     C*
+     C***********          READ SCCICFZZ                 70               S01464
+     C                     READ SECICFZ0                 70               S01464
+     C           *IN70     IFEQ '1'
+     C           SCRECI    ORNE 'Z'
+     C*
+     C** TRAILER RECORD NOT FOUND - DATABASE ERROR
+     C*
+     C           *LOCK     IN   LDA                                       S01464
+     C                     Z-ADD3         DBASE
+     C***********          MOVEL'SCCICFZZ'DBFILE           ***************S01464
+     C                     MOVEL'SECICFPA'DBFILE           ***************S01464
+     C                     MOVEL*BLANKS   DBKEY            * DBERROR 003 *
+     C                     OUT  LDA                        ***************S01464
+     C                     EXSR #ZA                        ***************
+     C                     ELSE
+     C*
+     C** OUTPUT RUN CONTROLS REPORT
+     C*
+     C                     WRITEHEADER
+     C                     WRITEDETAILB
+     C***********          WRITEFOOTING                                   S01464
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   *PSSR     - Program error handling routine                 *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C                     DUMP
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

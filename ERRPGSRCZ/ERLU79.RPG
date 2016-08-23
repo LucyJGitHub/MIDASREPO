@@ -1,0 +1,653 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('FF Security and Issuer Retrieval')                     *
+      *****************************************************************
+      *                                                               *
+      *  Midas     - European Reporting                               *
+      *                                                               *
+      *  RPG/ERLU79 - FF Security and Issuer Retrieval                *
+      *                                                               *
+      *  Function: This program runs to update the secured by         *
+      *            reference, last change date and type of last       *
+      *            change on the guarantee masters file.              *
+      *                                                               *
+      *  Called By: CLP/ERLUCA                                        *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      *  Last Amend No. CLE064             Date 06Dec10               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 BUG24746           Date 02Jul09               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027A            Date 06May06               *
+      *                 UPG402             Date 04Oct04               *
+      *                 187689             Date 21Dec00               *
+      *                 ULX008             Date 25Feb00               *
+      *                 ULX012             Date 09Feb00               *
+      *                 CAD007             Date 23Jul98               *
+      *                 ULX004     DMC     Date 26FEB97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG24746 - Missing Source for German Features (Recompile)    *
+      *  CSD027A - Conversion Of Customer Number to Alpha (Recompile) *
+      *  UPG402 - Recompile due to R4.02 upgrade                      *
+      *  187689 - GRD currency in EMU                                 *
+      *           Recompiled due to changes in PF/SDCUSTX6            *
+      *  ULX008 - CSSF Statuatory Reporting : Commissariat aux Bourses*
+      *           Recompiled due to changes in PF/SDCUSTX6            *
+      *  ULX012 - Pledges and Multiple Guarantors Management          *
+      *           Recompile only due to changes in PF/SDCUSTX6        *
+      *  CAD007 - CAD adaptation to data dictionary version 1.6       *
+      *  ULX004 - European Reporting Capital Adequacy                 *
+      *           IML Circular 97/138                                 *
+      *                                                               *
+      *****************************************************************
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   89  - End of File                                           *
+      *                                                               *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      *   U7  - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  *INZSR - Program Initialisation                              *
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     F***SECTY***IF**E           K        DISK                                                CER001
+     FSESEDXL0IF  E           K        DISK                                                   CER001
+      * Securities file
+     F***INVTP***IF**E           K        DISK                                                CER001
+     FSEINVXL0IF  E           K        DISK                                                   CER001
+      * Investment types file
+     F***SDCUSTX6IF**E           K        DISK                                                CER001
+     FSDCUX4PDIF  E           K        DISK                                                   CER001
+      * Customer details extension file
+     F***ERCTRYL1IF**E           K        DISK                                                CER001
+     FERCTYXL0IF  E           K        DISK                                                   CER001
+      * Country codes file
+     F***ERBANKPDIF**E                    DISK                                                CER001
+     FERBNKXPDIF  E                    DISK                                                   CER001
+      * ER Bank details
+     E/EJECT
+      *
+      /COPY ZSRSRC,ZDATE9Z1
+      /COPY ZSRSRC,ZDATE2Z1
+      /COPY ZSRSRC,ZFRQAZ1
+      /COPY ZSRSRC,ZHOLE
+      /COPY ZSRSRC,ZNCDZ1
+      *
+      ***  Array for copyright, fields validations
+     E                    CPY@    1   1 80               Copyright
+      *
+      *----------------------------------------------------------------------
+      *
+      /COPY ZSRSRC,ZNCDZ2
+      /COPY ZSRSRC,ZDATE9Z2
+      *
+      ***  Local data area for database error details
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      ***  DS for access programs, short data structure
+     IDSFDY     E DSDSFDY
+      *
+      ***  DS for access programs, long data structure
+     IDSSDY     E DSDSSDY
+      *
+      /COPY ZSRSRC,ZAOZ2
+      /COPY ZSRSRC,ZHOLI
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * *PSSR    - SR DATA BASE ERROR PROCESSING                         *
+      * *INZSR   - SR INITIAL PROCESSING                                 *
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      *                                                                  *
+      ********************************************************************
+      *
+     C           *ENTRY    PLIST
+      *  Input Parameters
+     C                     PARM           EXSESN 10
+     C                     PARM           EXREPD  50
+      *  Output Parameters
+     C                     PARM           EXISSR  6
+     C                     PARM           EXISSN 32
+     C                     PARM           EXISEC  40
+     C                     PARM           EXNSEC  40                      ULX004
+     C                     PARM           EXLISS  2
+     C                     PARM           EXCPNR  52
+     C                     PARM           EXDATA  80
+     C                     PARM           EXNIFD  80                      CAD007
+     C                     PARM           ERROR   1
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C********** EXSESN    CHAINSECTY                39                                       CER001
+     C           EXSESN    CHAINSESEDXL0             39                                       CER001
+     C           *IN39     IFEQ *ON
+      *
+      ** Data base error in file (file)
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVELPGM       DBPGM
+     C                     Z-ADD792       DBASE            ***************
+     C**********           MOVEL'SECTY   'DBFILE           *DB ERROR 792 *                    CER001
+     C                     MOVEL'SESEDXL0'DBFILE                                              CER001
+     C                     MOVELEXSESN    DBKEY            ***************
+     C                     OUT  LDA
+     C                     MOVE 'Y'       ERROR
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE ISSR      EXISSR
+      *
+     C                     Z-ADDCPNR      EXCPNR    H
+      *
+     C                     MOVELNMCY      WINVTP
+     C                     MOVE SITP      WINVTP  6
+     C********** KINVTP    CHAININVTP                39                                       CER001
+     C           KINVTP    CHAINSEINVXL0             39                                       CER001
+     C           *IN39     IFEQ *ON
+      *
+      ** Data base error in file (file)
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVELPGM       DBPGM
+     C                     Z-ADD793       DBASE            ***************
+     C**********           MOVEL'INVTP   'DBFILE           *DB ERROR 793 *                    CER001
+     C                     MOVEL'SEINVXL0'DBFILE                                              CER001
+     C                     MOVELWINVTP    DBKEY            ***************
+     C                     OUT  LDA
+     C                     MOVE 'Y'       ERROR
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  First next rate date change
+      *
+     C                     Z-ADDMATY      @@DAYN  50
+     C                     EXSR ZDATE9
+     C                     Z-ADD@@VDT     EXDATA
+      *
+     C           PROT      IFEQ '3'
+     C***********PROT      OREQ '5'                                       CAD007
+     C***********PROT      OREQ '8'                                       CAD007
+     C                     EXSR P006
+     C                     ENDIF
+      *
+     C********** EXISSR    CHAINSDCUSTX6             39                                       CER001
+     C           EXISSR    CHAINSDCUX4PD             39                                       CER001
+     C           *IN39     IFEQ *ON
+      *
+      ** Data base error in file (file)
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVELPGM       DBPGM
+     C                     Z-ADD794       DBASE            ***************
+     C**********           MOVEL'SDCUSTX6'DBFILE           *DB ERROR 794 *                    CER001
+     C                     MOVEL'SDCUX4PD'DBFILE                                              CER001
+     C                     MOVELEXISSR    DBKEY            ***************
+     C                     OUT  LDA
+     C                     MOVE 'Y'       ERROR
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELVFCRNM    EXISSN
+     C                     Z-ADDVFECOS    EXISEC
+     C                     Z-ADDVFNCOS    EXNSEC                          ULX004
+      *
+     C********** VFCOLC    CHAINERCTRYL1             39                                       CER001
+     C           VFCOLC    CHAINERCTYXL0             39                                       CER001
+     C           *IN39     IFEQ *ON
+      *
+      ** Data base error in file (file)
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVELPGM       DBPGM
+     C                     Z-ADD795       DBASE            ***************
+     C**********           MOVEL'ERCTRYL1'DBFILE           *DB ERROR 795 *                    CER001
+     C                     MOVEL'ERCTYXL0'DBFILE                                              CER001
+     C                     MOVELVFCOLC    DBKEY            ***************
+     C                     OUT  LDA
+     C                     MOVE 'Y'       ERROR
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE VQISOC    EXLISS
+      *
+     C                     RETRN
+      *
+      /EJECT
+     C**************************************************************************
+      * P006 - Subroutine to process FRNs, Yen bonds and mortgage              *
+      *        backed securities                                               *
+      **************************************************************************
+      *
+     C           P006      BEGSR
+      *
+     C                     EXSR ZNRC
+     C                     Z-ADDNCD       DATE1   50
+      *
+     C           RCFQ      IFEQ *BLANKS                    B1
+      *
+     C                     Z-ADDMATY      DATE2   50
+      *
+      ***  If next change date > reporting date store maturity date
+      *
+     C                     ELSE                            X1
+      *
+     C                     SELEC
+     C           NCHD      WHGT EXREPD                     B2
+     C                     Z-ADDNCHD      DATE2
+      *
+      ***  If rate change freq is daily store next working day
+      *
+     C           RCFQ      WHEQ 'D'                        B2
+     C                     Z-ADDBJDNWD    DATE2
+      *
+      ***  If rate change freq is weekly
+      *
+     C           RCFQ      WHEQ 'W'                        B2
+     C           EXREPD    SUB  NCHD      DATE2
+     C           DATE2     DIV  7         DATE2
+     C                     ADD  1         DATE2
+     C                     MULT 7         DATE2
+     C                     ADD  NCHD      DATE2
+      *
+      ***  If rate change freq is fortnightly
+      *
+     C           RCFQ      WHEQ 'F'                        B2
+     C           EXREPD    SUB  NCHD      DATE2
+     C           DATE2     DIV  14        DATE2
+     C                     ADD  1         DATE2
+     C                     MULT 14        DATE2
+     C                     ADD  NCHD      DATE2
+      *
+      ***  If rate change freq is monthly
+      *
+     C           RCFQ      WHEQ 'M'                        B2
+     C                     Z-ADDNCHD      @@DAYN
+     C                     EXSR ZDATE9
+     C                     Z-ADDNCHD      ZDAYNO
+     C                     Z-ADD@@Z71D    ZMDAY
+     C                     MOVE 'M'       ZFREQ
+     C                     MOVE NMCY      ZCCY
+     C           ZDAYNO    DOUGTEXREPD                     B3
+     C                     EXSR ZFRQA
+     C                     ENDDO                           E3
+      *
+     C           ZDAYNO    IFGT MATY                       B3
+     C                     Z-ADDMATY      DATE2
+     C                     ELSE                            X3
+     C                     Z-ADDZDAYNO    DATE2
+     C                     ENDIF                           E3
+     C                     ENDSL                           E2
+      *
+     C                     ENDIF                           E1
+      *
+     C           DATE1     IFLE DATE2                      B1
+     C                     Z-ADDDATE1     DATE2
+     C                     ENDIF                           E1
+      *
+     C                     Z-ADDDATE2     @@DAYN
+     C                     EXSR ZDATE9
+     C*********************Z-ADD@@VDT     EXDATA                          CAD007
+     C                     Z-ADD@@VDT     EXNIFD                          CAD007
+      *
+     C                     ENDSR
+      *
+      /EJECT
+     C********************************************************************
+      *    SUBROUTINE- ZNRC
+      *    DETERMINE NEXT RATE CHANGE
+      *
+      *
+      *   INPUT - CD ARRAY - COUPON DATES - SECTYD SECURITY FILE
+      *           CR ARRAY - RATE/PAYT INDICS - SECTYD SECURITY FILE
+      *           FCPN - FIRST COUPON DATE - SECTYD SECURITY FILE
+      *           MATY - MATURITY DATE - SECTYD SECURITY FILE
+      *           ECD - EVENT CONTROL DTAE - ZEVCD PROCESS
+      *           *IN98 - DATE FORMAT - FROM RUNDAT VIA PROGRAM
+      *
+      *   OUTPUT - NCD (5,0) - NEXT COUPON DATE
+      *
+      *   CALLS  - ZDATE1
+      *            ZDATE2
+      ********************************************************************
+      *
+     C           ZNRC      BEGSR                           *** ZNRC   ***
+      *
+      * CALL ZDATE2 TO OBTAIN MMDD FOR EVENT CONTROL DATE
+      *    Use the greater of ECD and ITLD as basis for the calculation
+      *
+     C           ECD       IFGE ITLD                       B1
+     C                     Z-ADDECD       ZDAYNO
+     C                     ELSE                            X1
+     C                     Z-ADDITLD      ZDAYNO
+     C                     ENDIF                           E1
+      *
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     ZZECD4  40
+     C           *IN98     IFEQ '0'                        B1
+     C                     MOVELZZECD4    ZZWRKD
+     C                     MOVE ZZECD4    ZZWRKM
+     C                     Z-ADDZZWRKD    ZZECD4
+     C                     MOVELZZWRKM    ZZECD4
+     C                     ENDIF                           E1
+      *
+      * IF DATE FORMAT IS DDMMYY TURN ROUND ARRAY OF COUPON DATES TO MMDD
+      *
+     C           *IN98     IFEQ '0'                        B1
+     C                     DO   12        X       20       B2
+     C                     MOVE CD,X      ZZWRKM  20
+     C                     MOVELCD,X      ZZWRKD  20
+     C                     Z-ADDZZWRKD    CD,X
+     C                     MOVELZZWRKM    CD,X
+     C                     ENDDO                           E2
+     C                     ENDIF                           E1
+      * GET YEAR FOR ECD
+     C                     MOVE ZDATE     ZECDYR  20
+      *
+      * FIND NEXT COUPON DATE FROM ARRAYS -
+      *  IF RATE/PAYT INDS ALL BLANK NCD = MATURITY DATE
+      *
+     C                     Z-ADDMATY      NCD     50
+     C           CRDS      IFNE *BLANKS                    B1
+      *
+      *  IF RATE/PAYT INDS NOT ALL BLANK -
+      *    SEARCH FOR NEXT HIGHEST COUPON
+      *
+     C                     MOVE '0'       ZFOUND  1
+     C                     Z-ADD0         TX      20
+     C                     DO   12        X                B2
+     C           CR,X      IFEQ 'R'                        B3
+     C           CR,X      OREQ 'C'
+      *
+      ** If 29Feb is used in the coupon array, then there is a need to
+      ** check if the current year is a leap year. If it is not,
+      ** the coupon date is changed to 28. But there is a need to store
+      ** the date so that it can be restored back after the check.
+      *
+     C                     MOVE CD,X      ZZWRKD
+     C                     MOVELCD,X      ZZWRKM
+     C           ZZWRKM    IFEQ 2                          B4
+     C           ZZWRKD    ANDEQ29
+     C                     Z-ADDZECDYR    ZZYR    20
+     C           ZZYR      ADD  28        ZZYR
+     C           ZZYR      DIV  4         ZZYR
+     C                     MVR            ZMVR    10
+     C           ZMVR      IFGT 0                          B5
+     C                     Z-ADDX         TX
+     C                     MOVE '28'      CD,X
+     C                     ENDIF                           E5
+     C                     ENDIF                           E4
+      *
+     C           ZZECD4    IFLT CD,X                       B4
+     C                     MOVE '1'       ZFOUND
+     C                     GOTO ZNRC00
+     C                     ELSE                            X4
+     C           ZZECD4    IFEQ CD,X                       B5
+     C                     Z-ADDZECDYR    ZDATE
+     C                     MOVELCD,X      ZDATE
+     C           *IN98     IFEQ '0'                        B6
+     C                     MOVELZDATE     ZZWRK   40
+     C                     MOVE ZZWRK     ZZWRKM
+     C                     MOVELZZWRK     ZZWRKD
+     C                     Z-ADDZZWRKD    ZZWRK
+     C                     MOVELZZWRKM    ZZWRK
+     C                     MOVELZZWRK     ZDATE
+     C                     ENDIF                           E6
+     C                     EXSR ZDATE1
+     C                     Z-ADDZDAYNO    NCD
+     C           NCD       IFGT FCPN                       B6
+     C           NCD       SUB  FCPN      @DDIF   50
+     C           @DDIF     IFGT 10                         B7
+     C                     MOVE '1'       ZFOUND
+     C                     GOTO ZNRC00
+     C                     ENDIF                           E7
+     C                     ENDIF                           E6
+     C                     ENDIF                           E5
+     C                     ENDIF                           E4
+     C                     ENDIF                           E3
+     C                     ENDDO                           E2
+      *
+      *      FOUND - ADD ECD'S YY TO FORM DATE
+     C           ZNRC00    TAG                             ZNRC00 TAG
+     C           ZFOUND    IFEQ '1'                        B2
+     C                     Z-ADDZECDYR    ZDATE
+     C                     MOVELCD,X      ZDATE
+      *      NOT FOUND - USE FIRST COUPON
+      *                  ADD NEXT YEAR'S YY TO FORM DATE
+     C                     ELSE                            X2
+     C                     DO   12        X                B3
+     C           CR,X      IFEQ 'R'                        B4
+     C           CR,X      OREQ 'C'
+      *
+      *  If 29Feb is used in the coupon array, then there is a need to
+      *  check if the current year is a leap year. If it is not,
+      *  the coupon date is changed to 28. But there is a need to store
+      *  the date so that it can be restored back after the check.
+      *
+     C           TX        IFNE 0                          B5
+     C                     MOVE '29'      CD,TX
+     C                     Z-ADD0         TX
+     C                     ENDIF                           E5
+      *
+     C                     MOVE CD,X      ZZWRKD
+     C                     MOVELCD,X      ZZWRKM
+     C           ZZWRKM    IFEQ 2                          B5
+     C           ZZWRKD    ANDEQ29
+     C           ZECDYR    ADD  1         ZZYR
+     C           ZZYR      ADD  28        ZZYR
+     C           ZZYR      DIV  4         ZZYR
+     C                     MVR            ZMVR    10
+     C           ZMVR      IFGT 0                          B6
+     C                     Z-ADDX         TX
+     C                     MOVE '28'      CD,X
+     C                     ENDIF                           E6
+     C                     ENDIF                           E5
+      *
+     C                     Z-ADDZECDYR    ZDATE
+     C                     ADD  1         ZDATE
+     C                     MOVELCD,X      ZDATE
+     C                     MOVE '1'       ZFOUND
+     C                     GOTO ZNRC01
+     C                     ENDIF                           E4
+     C                     ENDDO                           E3
+     C                     ENDIF                           E2
+      *
+     C           ZNRC01    TAG                             ZNRC01 TAG
+      *
+      * CONVERT DATE TO DAY NO USING ZDATE1
+      * (NOT DONE IF NO RATE/PAYT IND IS P OR C)
+      * IF DDMMYY FORMAT TURN ROUND TO MMDDYY
+     C           ZFOUND    IFEQ '1'                        B2
+     C           *IN98     IFEQ '0'                        B3
+     C                     MOVELZDATE     ZZWRK   40
+     C                     MOVE ZZWRK     ZZWRKM
+     C                     MOVELZZWRK     ZZWRKD
+     C                     Z-ADDZZWRKD    ZZWRK
+     C                     MOVELZZWRKM    ZZWRK
+     C                     MOVELZZWRK     ZDATE
+     C                     ENDIF                           E3
+     C                     EXSR ZDATE1
+     C                     Z-ADDZDAYNO    NCD
+     C                     ENDIF                           E2
+      *
+      * IF NCD > MATURITY DATE , RESET NCD = MATURITY DATE
+     C           NCD       IFGT MATY                       B2
+     C                     Z-ADDMATY      NCD
+     C                     ENDIF                           E2
+     C                     ENDIF                           E1
+      *
+      * If the First Coupon Date is not zero, then
+      * IF NCD < 1ST COUPON DATE , RESET NCD = 1ST COUPON DATE
+      *
+     C           FCPN      IFNE *ZEROS                     B1
+     C           NCD       IFLE FCPN                       B2
+     C           ECD       ORLE FCPN
+     C                     Z-ADDFCPN      NCD
+     C                     ENDIF                           E2
+     C                     ENDIF                           E1
+      *
+      ** Restore 29Feb to the array if it is changed.
+      *
+     C           TX        IFNE 0                          B1
+     C                     MOVE '29'      CD,TX
+     C                     ENDIF                           E1
+      *
+      ** If the First Coupon date is not zero, and is equal to the
+      ** Event Control Date, set the Next Coupon date to this date.
+      *
+     C           FCPN      IFNE *ZEROS                     B1
+     C           FCPN      ANDEQECD
+     C                     Z-ADDFCPN      NCD
+     C                     ENDIF                           E1
+      *
+      * IF DATE FORMAT IS DDMMYY TURN BACK ARRAY OF COUPON DATES TO DD/MM
+     C           *IN98     IFEQ '0'                        B1
+     C                     DO   12        X       20       B2
+     C                     MOVELCD,X      ZZWRKM  20
+     C                     MOVE CD,X      ZZWRKD  20
+     C                     Z-ADDZZWRKM    CD,X
+     C                     MOVELZZWRKD    CD,X
+     C                     ENDDO                           E2
+     C                     ENDIF                           E1
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - SR DATA BASE ERROR PROCESSING                         *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * *INZSR   - SR INITIAL PROCESSING                                 *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * DBFILE   - WORK FIELD DATABASE ERROR                             *
+      * DBKEY    - WORK FIELD DATABASE ERROR                             *
+      * DBASE    - WORK FIELD DATABASE ERROR                             *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7  LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *INZSR   - SR INITIAL PROCESSING                                 *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - SR DATA BASE ERROR PROCESSING                         *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           *INZSR    BEGSR
+      *
+      ***  Klist for INVTP
+      *
+     C           KINVTP    KLIST
+     C                     KFLD           NMCY
+     C                     KFLD           SITP
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+     C********** 1         CHAINERBANKPD             39                                       CER001
+     C           1         CHAINERBNKXPD             39                                       CER001
+      *
+     C           *IN39     IFEQ *ON                        B1
+      *
+      ** Data base error in file (file)
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVELPGM       DBPGM
+     C                     Z-ADD791       DBASE            ***************
+     C**********           MOVEL'ERBANKPD'DBFILE           *DB ERROR 791 *                    CER001
+     C                     MOVEL'ERBNKXPD'DBFILE                                              CER001
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     MOVE 'Y'       ERROR
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDBJRDNB    ECD     50
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ********************************************************************
+      /COPY ZSRSRC,ZFRQAZ2
+      /COPY ZSRSRC,ZCHKH
+      /COPY ZSRSRC,ZACCH
+      /COPY ZSRSRC,ZDATE1Z2
+      /COPY ZSRSRC,ZDATE2Z2
+      /COPY ZSRSRC,ZDATE9Z3
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   ZFMD  -  NUMBER OF DAYS IN THE MONTH
+312831303130313130313031
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2005

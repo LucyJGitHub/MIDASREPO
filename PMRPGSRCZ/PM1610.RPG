@@ -1,0 +1,516 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Determine Performance Periods')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module                      *
+     F*                                                               *
+     F*  PM1610 - Determine Performance Periods                       *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 105352             Date 03JUL96               *
+     F*                 CPM005             Date 11JUL96               *
+     F*                 73300              DATE 25NOV94               *
+     F*                 53103              DATE 25NOV94               *
+     F*                 S01486             DATE 11AUG94               *
+     F*                 057176             DATE 24JUN93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  105352 - IF CONTROL DATE IS 1/JUL THEN TAKE ADDITIONAL       *
+     F*           PERIOD AS FROM 1/JAN - EXTRACT DATE IS 30/JUN       *
+     F*           ELSE PERIOD IS 0 OR -1.                             *
+     F*  CPM005 - Private Banking Phase 2                             *
+     F*           Focus Group Changes upgraded to DBA                 *
+     F*           PBFG/2 - CALCULATE & REPORT PERF. FOR ALL CUST.PORT *
+     F*  73300  - DO NOT LOCK DTAARA/PMSTAT                           *
+     F*  53103  - Fill new fields QRPTCY,QRPCDP,QRPRRE in PMPFMRPD    *
+     F*  S01486 - Portfolio Management Upgrade to Release 10.         *
+     F*  057176 - START DATE FOR SHORT PRFORMANCE PERIOD INCORRECTLY  *
+     F*           CALCULATED. ALSO DO NOT CALCULATE PERFORMANCE IF    *
+     F*           PERFORMANCE START DATE BEFORE RUN DATE.             *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F** C R E A T I O N     P A R A M E T E R S                      *
+     F**                                                              *
+     F**                                                              *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F**
+     F**      FILE DEFINITIONS
+     F**     ------------------
+     F*
+     F*****BANK*DETAILS*FILE************************-*Prefix*BJ********   S01486
+     F***SDBANKL1IF**E           K        DISK         KINFSR *PSSR       S01486
+     F*
+     F**   PORTFOLIO DEFINITION DETAILS             - Prefix PN
+     F***PMPORTPPIF**E           K        DISK         KINFSR *PSSR       S01486
+     FPMPORTPDIF  E           K        DISK         KINFSR *PSSR          S01486
+     F**   PORTFOLIO CONSOLIDATED DETAILS           - Prefix PN           CPM005
+     FPMCNSDLLIF  E           K        DISK         KINFSR *PSSR          CPM005
+     F*
+     F**   FIRST PERFORMANCE POSITION EXTRACT       - Prefix QP
+     F***PMFPPSPPO***E           K        DISK         KINFSR *PSSR A     S01486
+     FPMFPPSQ0O   E           K        DISK         KINFSR *PSSR A        S01486
+     F*
+     F*****PORTFOLIOS*DUE*VALUATION*STATEMENTS******-*Prefix*QN********   S01486
+     F***PMUNQVPPIF**E           K        DISK         KINFSR *PSSR       S01486
+     F**   PORTFOLIOS DUE VALUATION STATEMENTS      - Prefix GH           S01486
+     FPMUNQVPDIF  E           K        DISK         KINFSR *PSSR          S01486
+     F*
+     F**   PORTFOLIOS REQUIRING PERFORMANCE         - Prefix QR
+     F***PMPFMRPPO***E           K        DISK         KINFSR *PSSR A     S01486
+     FPMPFMRPDO   E           K        DISK         KINFSR *PSSR A        S01486
+     F*
+     F**   AUDIT REPORT
+     FPM1610AUO   E                    PRINTER      KINFSR *PSSR
+     F*
+     F/EJECT
+     E*****************************************************************
+     E*
+     E**   ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+      /COPY ZSRSRC,ZDATE2Z1
+     E*****************************************************************
+     E/EJECT
+     E*****************************************************************
+     I*
+     I**   DATA STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+     ICPYR@$      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@$$
+     I*
+     I**   LOCAL DATA AREA
+     I***LDA********UDS***********************     256                    S01486
+     ILDA         DS                            256                       S01486
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I**   LOCAL DATA AREA
+     I*PMSTAT*****UDS                            256                      73300
+     IPMSTAT    E DS                                                      73300
+     I****                                    1   5 DAECD                 73300
+     I****                                   29  33 DALXTR                73300
+     I*
+     I**   DATA STRUCTURE
+     I            DS
+     I                                        1   20WWDD
+     I                                        3   40WWMM
+     I                                        5   60WWYY
+     I                                        1   60WWDAT
+     I*                                                                   S01486
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I**  Data structure for Bank details                                 S01486
+     I*                                                                   S01486
+     IDSFDY     E DSDSFDY                                                 S01486
+     I**  Short data structure for access objects                         S01486
+     I*                                                                   S01486
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C**              START MAINLINE
+     C**             ----------------
+     C*
+     C**   INITIAL PROCESSING
+     C                     EXSR #A
+     C*
+     C**   PRODUCE ALL PERFORMANCE PERIODS REQUIRED
+     C***********          READ PMUNQVPP                 90               S01486
+     C                     READ PMUNQVPD                 90               S01486
+     C*
+     C           *IN90     DOWEQ*OFF                       B1
+     C*
+     C                     Z-ADD*HIVAL    QPELSD
+     C*
+     C***********          MOVELQNPRTL    QRPRTL                          S01486
+     C***********          MOVELQNDPCD    QRDPCD                          S01486
+     C***********          MOVELQNACOC    QRACOC                          S01486
+     C***********          MOVELQNCNUM    QRCNUM                          S01486
+     C***********          MOVELQNPTFR    QRPTFR                          S01486
+     C***********          MOVELQNPMNG    QRPMNG                          S01486
+     C*
+     C***********          MOVELQNCNUM    QPCNUM                          S01486
+     C***********          MOVELQNPTFR    QPPTFR                          S01486
+     C                     MOVELGHPRTL    QRPRTL                          S01486
+     C                     MOVELGHDPCD    QRDPCD                          S01486
+     C                     MOVELGHACOC    QRACOC                          S01486
+     C                     MOVELGHCNUM    QRCNUM                          S01486
+     C                     MOVELGHPTFR    QRPTFR                          S01486
+     C                     MOVELGHPMNG    QRPMNG                          S01486
+     C*                                                                   S01486
+     C                     MOVELGHCNUM    QPCNUM                          S01486
+     C                     MOVELGHPTFR    QPPTFR                          S01486
+     C*
+     C***key*for*PMPORTPP**********************************************   S01486
+     C** key for PMPORTPD                                                 S01486
+     C           WWPPKY    KLIST
+     C                     KFLD           QRCNUM
+     C                     KFLD           QRPTFR
+     C*
+     C           QRPTFR    IFEQ '9997'                     B10            CPM005
+     C           QRPTFR    OREQ '9998'                                    CPM005
+     C           QRPTFR    OREQ '9999'                                    CPM005
+     C*                                                                   CPM005
+     C           WWPPKY    CHAINPMCNSDLL             76                   CPM005
+     C           *IN76     IFEQ '1'                        B2             CPM005
+     C                     Z-ADD*HIVAL    PNPSDT                          CPM005
+     C                     END                             E2             CPM005
+     C*                                                                   CPM005
+     C                     ELSE                            *X10           CPM005
+     C***********WWPPKY    CHAINPMPORTPP             76                   S01486
+     C           WWPPKY    CHAINPMPORTPD             76                   S01486
+     C           *IN76     IFEQ '1'                        B2
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD2         DBASE            ****************
+     C***********          MOVEL'PMPORTPP'DBFILE           ** DBERROR 02 *S01486
+     C                     MOVE 'PMPORTPD'DBFILE           ** DBERROR 02 *S01486
+     C                     MOVELQRCNUM    DBKEY            ****************
+     C                     MOVE QRPTFR    DBKEY
+     C                     OUT  LDA                                       S01486
+     C                     EXSR #ZA
+     C                     END                             E2
+     C                     END                             E10            CPM005
+     C*
+     C**  Format the Performance Start Month.
+     C           PNPSDT    IFNE 99999                      B2
+     C***********PNPSDT    ANDLTBJRDNB                              057176CPM005
+     C           PNPSDT    ANDLEBJRDNB                                    CPM005
+     C                     Z-ADDPNPSDT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZMTH      PNSM    2
+     C                     ENDIF                           E2
+     C*                                                                   53103
+     C                     MOVE PNPTCY    QRPTCY                          53103
+     C                     Z-ADDPNPCDP    QRPCDP                          53103
+     C*
+     C***********QNS3VR    IFEQ 'Y'                        B2             S01486
+     C           GHS3VR    IFEQ 'Y'                        B2             S01486
+     C***********PNPSDT    ANDLTBJRDNB                              057176CPM005
+     C           PNPSDT    ANDLEBJRDNB                                    CPM005
+     C                     MOVEL'1'       QRPFMP
+     C*
+     C           ZISM      IFGT 11                         B3
+     C           ZISM      SUB  11        WWMM
+     C                     Z-ADDZISY      WWYY
+     C                     ELSE                            X3
+     C           ZISM      ADD  1         WWMM
+     C           ZISY      SUB  1         WWYY
+     C                     ENDIF                           E3
+     C*
+     C                     Z-ADDWWDAT     ZDATE
+     C                     EXSR ZDATE1
+     C           PNPSDT    IFGT ZDAYNO                     B3
+     C                     Z-ADDPNPSDT    QRPMSD
+     C                     MOVELPNSM      QRPMSM
+     C                     ELSE                            X3
+     C                     Z-ADDZDAYNO    QRPMSD
+     C                     MOVELWWMM      QRPMSM
+     C                     ENDIF                           E3
+     C           QRPMED    SUB  QRPMSD    QRDYPP
+     C           QRDYPP    ADD  1         QRDYPP
+     C*
+     C           QRPMSD    IFLT QPELSD                     B3
+     C                     Z-ADDQRPMSD    QPELSD
+     C                     ENDIF                           E3
+     C*
+     C                     WRITEPMPFMRP0
+     C****                 ADD  1         RRCT1   60                      057176
+     C                     ADD  1         RRCT1                           057176
+     C*
+     C                     ENDIF                           E2
+     C*
+     C***********QNS4VR    IFEQ 'Y'                        B2             S01486
+     C           GHS4VR    IFEQ 'Y'                        B2             S01486
+     C***********PNPSDT    ANDLTBJRDNB                              057176CPM005
+     C           PNPSDT    ANDLEBJRDNB                                    CPM005
+     C                     MOVEL'2'       QRPFMP
+     C           ZISM      IFGE PNTYSM                     B3
+     C                     Z-ADDPNTYSM    WWMM
+     C                     Z-ADDZISY      WWYY
+     C                     ELSE
+     C                     Z-ADDPNTYSM    WWMM
+     C           ZISY      SUB  1         WWYY
+     C                     ENDIF                           E3
+     C*
+     C                     Z-ADDWWDAT     ZDATE
+     C                     EXSR ZDATE1
+     C           PNPSDT    IFGT ZDAYNO                     B3
+     C                     Z-ADDPNPSDT    QRPMSD
+     C                     MOVELPNSM      QRPMSM
+     C                     ELSE
+     C                     Z-ADDZDAYNO    QRPMSD
+     C                     MOVELWWMM      QRPMSM
+     C                     ENDIF                           E3
+     C           QRPMED    SUB  QRPMSD    QRDYPP
+     C           QRDYPP    ADD  1         QRDYPP
+     C           QRPMSD    IFLT QPELSD                     B3
+     C                     Z-ADDQRPMSD    QPELSD
+     C                     ENDIF                           E3
+     C*
+     C                     WRITEPMPFMRP0
+     C                     ADD  1         RRCT1
+     C*
+     C                     ENDIF                           E2
+     C*
+     C***********QNS5VR    IFEQ 'Y'                        B2             S01486
+     C           GHS5VR    IFEQ 'Y'                        B2             S01486
+     C***********PNPSDT    ANDLTBJRDNB                              057176CPM005
+     C           PNPSDT    ANDLEBJRDNB                                    CPM005
+     C                     MOVEL'3'       QRPFMP
+     C*
+     C***********QNADPP    IFEQ 'H'                        B3             S01486
+     C           GHADPP    IFEQ 'H'                        B3             S01486
+     C*
+     C****       ZISM      IFGT 5                                         057176
+     C****       ZISM      SUB  5         WWMM                            057176
+     C****                 Z-ADDZISY      WWYY                            057176
+     C****                 ELSE                                           057176
+     C****       ZISM      ADD  7         WWMM                            057176
+     C****       ZISY      SUB  1         WWYY                            057176
+     C****                 END                                            057176
+     C*
+     C** SET START OF HALF YEAR TO 1/1 OR 1/7
+     C           ZISM      IFLE 6                          B4             057176
+     C                     Z-ADD1         WWMM                            057176
+     C                     Z-ADDZISY      WWYY                            057176
+     C                     ELSE                                           057176
+     C           ZISM      IFEQ 7                                         105352
+     C           ZISD      ANDEQ1                                         105352
+     C                     Z-ADD1         WWMM                            105352
+     C                     Z-ADDZISY      WWYY                            105352
+     C                     ELSE                                           105352
+     C                     Z-ADD7         WWMM                            057176
+     C                     Z-ADDZISY      WWYY                            057176
+     C                     END                                            105352
+     C                     END                             E4             057176
+     C                     END                             E3
+     C*
+     C***********QNADPP    IFEQ 'Q'                        B3             S01486
+     C           GHADPP    IFEQ 'Q'                        B3             S01486
+     C*
+     C****       ZISM      IFGT 2                                         057176
+     C****       ZISM      SUB  2         WWMM                            057176
+     C****                 Z-ADDZISY      WWYY                            057176
+     C****                 ELSE                                           057176
+     C****       ZISM      ADD  10        WWMM                            057176
+     C****       ZISY      SUB  1         WWYY                            057176
+     C****                 END                                            057176
+     C*                                                                   057176
+     C** SET START OF QUARTER TO 1/1, 1/4, 1/7 OR 1/10                    057176
+     C                     Z-ADDZISY      WWYY                            057176
+     C           ZISM      IFLE 3                          B4             057176
+     C                     Z-ADD1         WWMM                            057176
+     C                     END                             E4             057176
+     C*                                                                   057176
+     C           ZISM      IFLE 6                          B4             057176
+     C           ZISM      ANDGE4                                         057176
+     C           ZISM      IFEQ 4                                         105352
+     C           ZISD      ANDEQ1                                         105352
+     C                     Z-ADD1         WWMM                            105352
+     C                     ELSE                                           105352
+     C                     Z-ADD4         WWMM                            057176
+     C                     END                                            105352
+     C                     END                             E4             057176
+     C*                                                                   057176
+     C           ZISM      IFLE 9                          B4             057176
+     C           ZISM      ANDGE7                                         057176
+     C           ZISM      IFEQ 7                                         105352
+     C           ZISD      ANDEQ1                                         105352
+     C                     Z-ADD4         WWMM                            105352
+     C                     ELSE                                           105352
+     C                     Z-ADD7         WWMM                            057176
+     C                     END                                            105352
+     C                     END                             E4             057176
+     C*                                                                   057176
+     C           ZISM      IFGE 10                         B4             057176
+     C           ZISM      IFEQ 10                                        105352
+     C           ZISD      ANDEQ1                                         105352
+     C                     Z-ADD7         WWMM                            105352
+     C                     ELSE                                           105352
+     C                     Z-ADD10        WWMM                            057176
+     C                     END                                            105352
+     C                     END                             E4             057176
+     C*                                                                   057176
+     C                     END                             E3
+     C*
+     C                     Z-ADDWWDAT     ZDATE
+     C                     EXSR ZDATE1
+     C           PNPSDT    IFGT ZDAYNO                     E3
+     C                     Z-ADDPNPSDT    QRPMSD
+     C                     MOVELPNSM      QRPMSM
+     C                     ELSE
+     C                     Z-ADDZDAYNO    QRPMSD
+     C                     MOVELWWMM      QRPMSM
+     C                     ENDIF                           E3
+     C*
+     C           QRPMED    SUB  QRPMSD    QRDYPP
+     C           QRDYPP    ADD  1         QRDYPP
+     C*
+     C           QRPMSD    IFLT QPELSD                     E3
+     C                     Z-ADDQRPMSD    QPELSD
+     C                     ENDIF                           E3
+     C*
+     C                     WRITEPMPFMRP0
+     C                     ADD  1         RRCT1
+     C*
+     C                     ENDIF                           E2
+     C*
+     C** OUTPUT DETAILS OF FIRST PERFORMANCE DATE IF PERFORMANCE REQUIRED
+     C***********PNPSDT    IFLT BJRDNB                     B2       057176CPM005
+     C           PNPSDT    IFLE BJRDNB                                    CPM005
+     C                     WRITEPMFPPSP0
+     C                     ENDIF                           E2             057176
+     C*
+     C***********          READ PMUNQVPP                 90               S01486
+     C                     READ PMUNQVPD                 90               S01486
+     C                     ENDDO
+     C*
+     C**   END PROGRAM
+     C                     WRITEHEADER
+     C                     WRITECONTROL                                   S01486
+     C*                                                                   S01486
+     C** Check if no details to report                                    S01486
+     C*                                                                   S01486
+     C           RRCT1     IFEQ *ZERO                                     S01486
+     C                     WRITENODTLS                                    S01486
+     C                     END                                            S01486
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C********************************************************************
+     C**                                                              *
+     C**   #A        - INITIAL PROCESSING                             *
+     C**                                                              *
+     C**   CALLS     - #ZA                                            *
+     C**                                                              *
+     C**   CALLED BY - MAINLINE                                       *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #A        BEGSR
+     C*                                                                   S01486
+     C**  Copyright statement                                             S01486
+     C*                                                                   S01486
+     C                     MOVEACPY@      ACT@   80                       S01486
+     C*                                                                   73300
+     C** ACCESS DATA AREA PMSTAT                                          73300
+     C           *NAMVAR   DEFN           PMSTAT                          73300
+     C                     IN   PMSTAT                                    73300
+     C*
+     C** INITIALISE DB ERROR FIELDS AND STORE PROGRAM NAME FOR DB
+     C** ERROR FIELD
+     C*                                                                   S01486
+     C           *NAMVAR   DEFN           LDA                             S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVEL'PM1610'  DBPGM
+     C                     OUT  LDA                                       S01486
+     C***********                                                         S01486
+     C***ACCESS*LF/SDBANKL1*TO*OBTAIN*BANK*DETAILS*********************   S01486
+     C***********          READ SDBANKL1                 70               S01486
+     C***********                                                         S01486
+     C***IF*RECORD*NOT*FOUND*OR*LAST*CHANGE*TYPE*=*'D'*THEN*DB*ERROR***   S01486
+     C************IN70     IFEQ '1'                                       S01486
+     C*                                                                   S01486
+     C** Get bank details using access object                             S01486
+     C*                                                                   S01486
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD  7                       S01486
+     C                     PARM '*FIRST ' P@OPTN  7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+     C*                                                                   S01486
+     C** Check if an error occurred                                       S01486
+     C*                                                                   S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD1         DBASE            ****************
+     C***********          MOVEL'SDBANKL1'DBFILE           * DBERROR  001 S01486
+     C                     MOVE 'SDBANKPD'DBFILE           * DBERROR  001 S01486
+     C                     MOVE *BLANKS   DBKEY            ****************
+     C                     OUT  LDA                                       S01486
+     C                     EXSR #ZA
+     C                     END
+     C*
+     C**  DATF = 'D' CONVERT TO DDMMYY FORMAT
+     C           BJDFIN    IFEQ 'D'
+     C                     MOVE *OFF      *IN98
+     C                     END
+     C*
+     C                     Z-ADD01        WWDD
+     C*
+     C                     MOVELDALXTR    DALX    50
+     C                     Z-ADDDALX      QRPMED
+     C*
+     C**  Format the event control date.
+     C           DAECD     IFNE *BLANKS
+     C                     MOVELDAECD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDAY      ZISD    20                      105352
+     C                     Z-ADDZMTH      ZISM    20
+     C                     Z-ADDZYEAR     ZISY    20
+     C                     ENDIF
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C**                                                              *
+     C**   #ZA       - PROCESS DATABASE ERRORS                        *
+     C**                                                              *
+     C**   CALLS     - NONE                                           *
+     C**                                                              *
+     C**   CALLED BY - #A                                             *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #ZA       BEGSR
+     C*                                                                   S01486
+     C                     WRITEHEADER                                    S01486
+     C                     WRITEDBERROR                                   S01486
+     C*
+     C                     DUMP
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   *PSSR     - Program error handling routine                 *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C                     DUMP
+     C*
+     C                     ENDSR
+      /COPY ZSRSRC,ZDATE1Z2
+      /COPY ZSRSRC,ZDATE2Z2
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE IN FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

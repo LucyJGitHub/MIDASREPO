@@ -1,0 +1,1367 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FD Number Range Maintenance Program')
+     F****************************************************************
+     F*                                                              *
+     F*  Midas - Standing Data Module
+     F*                                                              *
+     F*     FD0340 - DEAL NUMBER RANGE MAINTENANCE                   *
+     F*                                                              *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                              *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *  Prev Amend No. 127451             Date 21May01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 S01319             Date 25SEP91               *
+     F*                                                              *
+     F****************************************************************
+     F*                                                              *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*     127451 - Next available deal number not adjusted.                  *
+     F*     S01319 - Remove redundant processing, bring program up to*
+     F*              R10 standards.                                  *
+     F****************************************************************
+     F*
+     F**  INDICATOR FUNCTION SUMMARY
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     F*       10       SUBFILE END CONDITIONING INDICATOR
+     F*
+     F*       11       SCREEN BUILD 1 - INITIAL SCREEN.
+     F*       12       SCREEN BUILD 2 - ENQUIRE SCREEN.
+     F*       13       SCREEN BUILD 3 - AMEND SCREEN.
+     F*       14       SCREEN BUILD 4 - CONFIRM AMENDMENT SCREEN.
+     F*       15       SCREEN BUILD 5 - AMEND WARNING NUMBER SCREEN.
+     F*
+     F*       20       INPUT ERROR ON SCREEN BUILD 1 - ACTION CODE.
+     F*       21       INPUT ERROR ON SCREEN BUILD 3 - RESERVE DEAL NO.
+     F*       22       INPUT ERROR ON SCREEN BUILD 5 - WARNING DEAL NO.
+     F*
+     F*       60       EOF/BEGINNING OF FILE ON READ COMMAND.
+     F*
+     F*       KC       CA03 INDICATOR
+     F*       KL       CA12 INDICATOR
+     F*       KN       CA14 INDICATOR
+     F*
+     F*             66 OVERFLOW LINE OF PRINTER FILE PASSED
+     F*
+     F*       70       FILE PF/FDDLNMPP IS EMPTY.
+     F*       71       RECORD FDDLNMP0 IS LOCKED EXTERNAL TO PROGRAM
+     F*
+     F*       80
+     F*       |        USED IN STANDARD SUBROUTINES
+     F*       89
+     F*
+     F*          U7    SET ON WITH U8 IF A DATABASE ERROR OCCURS.
+     F*          U8    FILE OUT OF BALANCE IF ON ON ITS OWN.
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*FDICDRLLIF**E          K        DISK         KINFSR *PSSR          S01319
+     F************TABTB11F                          KIGNORE               S01319
+     F************TABTB20F                          KIGNORE               S01319
+     F*FD0340RRO***E*************66*****PRINTER******KINFSR**PSSR*********S01319
+     FFD0340AUO   E             66     PRINTER      KINFSR *PSSR          S01319
+     FFDDLNML1IF  E                    DISK         KINFSR *PSSR
+     F            FDDLNMP0                          KRENAMEFDDLNM
+     FFDDLNMLLUF  E                    DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     FFD0340DDCF  E                    WORKSTN      KINFSR *PSSR
+     FCADLFAPPIF  E                    DISK                                                   127451
+      /EJECT
+     E                    CPY@    1   1 80
+     E**  ARRAY TO HOLD COPYRIGHT STATEMENT
+      *
+      /EJECT
+     I*
+     I**
+     IPSDS       SDS
+     I**  PROGRAM STATUS DATA STRUCTURE
+     I**  FIELD CONTAINING WORKSTATION ID
+     I                                      244 253 @JOB
+     I**  FIELD CONTAINING USER ID
+     I                                      254 263 @USER
+     I**  FIELDS USED IN COMMITTMENT CONTROL.
+     I                                      244 246 WSID
+     I                                      245 246 WSID2
+     I                                      254 263 USRID
+     I*
+     I**
+     IDNATN       DS                              5
+     I**  DATA STRUCTURE TO UPDATE LAST TRANSACTION NUMBER DTARA.
+     I                                        1   50FNATN
+     I*
+     I**
+     ICMTTXT      DS                             81
+     I**  DATA STRUCTURE TO PROVIDE TEXT ON COMIT ENTRY IN JOURNAL.
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  25 ACTCDX
+     I                                       26  35 USRIDX
+     I                                       51  81 SCRNX
+     I**  FIELDS COMPRISING SCRNX.
+     I**  FIELD CONTAINING ACTION CODE.
+     I                                       51  51 DDACTN
+     I**  FIELD CONTAINING NEXT DEAL NO.
+     I                                       52  570DDNDLN
+     I**  FIELD CONTAINING RESERVE DEAL NO. ON FILE.
+     I                                       58  630DDRDLN
+     I**  FIELD CONTAINING WARNING DEAL NO. ON FILE.
+     I                                       64  690DDWDLN
+     I**  FIELD CONTAINING AMENDED RESERVE DEAL NO.
+     I                                       70  750DDARDN
+     I**  FIELD CONTAINING AMENDED WARNING DEAL NO.
+     I                                       76  810DDAWDN
+     I*
+     I**
+     I           UDS
+     I**  LOCAL DATA AREA FOR DATA BASE ERRORS
+     I**  FIELD CONTAINING NAME OF DATABASE FILE IN ERROR
+     I                                      134 141 DBFILE
+     I**  FIELD CONTAINING KEY VALUE CAUSING DATABASE ERROR
+     I                                      142 170 DBKEY
+     I**  FIELD CONTAINING NAME OF PROGRAM CAUSING DATABASE ERROR
+     I                                      171 180 DBPGM
+     I**  FIELD CONTAINING NUMBER OF DATABASE ERROR
+     I                                      181 183 DBASE
+     I*
+     I**
+     I*
+     I@DATER      DS                              7
+     I*
+     I** DATA AREA TO HOLD THE DATE OF UPDATE FROM RUNA IN DDMMMYY FORMAT
+     I                                        1   7 RUNA
+     I                                        1   20@DD
+     I                                        3   5 @MMM
+     I                                        6   70@YY
+     I**
+     I@TIDS       DS
+     I**  DATA STRUCTURE TO SET UP LAST CHANGE FIELDS FOR FILE UPDATE.
+     I**  FIELD CONTAINING CURRENT TIME.
+     I                                        1   60NOTLUP
+     I**
+     ISDBANK    E DSSDBANKPD                                              S01319
+     I** BANK DETAILS ACCESSED VIA ACCESS PROGRAM                         S01319
+     I*                                                                   S01319
+     IDSFDY     E DSDSFDY                                                 S01319
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01319
+     I*                                                                   S01319
+     IDSSDY     E DSDSSDY                                                 S01319
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01319
+      *                                                                   S01319
+     IRUNDAT      DS                                                      S01319
+     I** DATA STRUCTURE FOR MULTIBRANCH INDICATOR USING RUNDAT.           S01319
+     I                                       13  13 @MBIN                 S01319
+     I*                                                                   S01319
+     IZMUSER      DS                             17                       S01319
+     I                                       11  13 DBRN                  S01319
+      /EJECT
+     C*
+     C**  INITIAL PROCESSING
+     C                     EXSR #A
+     C*
+     C**  MAIN PROCESSING
+     C                     EXSR #B
+     C*
+     C**  TERMINATION PROCESSING
+     C                     EXSR #C
+     C*
+     C           ENDPGM    TAG                             **ENDPGM**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  INDEX TO SUBROUTINES - ORDER OF LISTING DUE TO FREQUENCY OF  *
+     C*                         OF USAGE.                             *
+     C*                                                               *
+     C*   1. #B     - MAIN PROCESSING - OUTPUT AND AMENDMENT OF DATA. *
+     C*   2. #BB    - PROCESS ENQUIRE - ENQUIRY ON DATA.              *
+     C*   3. #BC    - HANDLE ERRORS ON INITIAL SCREEN.                *
+     C*   4. #BA    - PROCESS AMEND - AMENDMENT OF DATA.              *
+     C*   5. #BAA   - CONFIRM NEW RESERVE DEAL NO.                    *
+     C*   6. #BAB   - OUTPUT ERROR FOR PROCESS AMEND SCREEN.          *
+     C*   7. #BAAA  - INPUT NEW WARNING DEAL NO.                      *
+     C*   8. #ZA    - CHAIN TO DEAL NO.RANGE MAINTENANCE FILE.        *
+     C*   9. #ZAA   - CHAIN TO DEAL NO. RANGE MAINTENANCE FILE.       *
+     C*  10. #ZAB   - READ  DEAL NO. RANGE MAINTENANCE FILE.          *
+     C*  11. #ZB    - OUTPUT HEADERS FOR PRINT FILE IF REQUIRED.      *
+     C*  12. #ZC    - UPDATE DEAL NO. RANGE MAINTENANCE FILE.         *
+     C*  13. #A     - INITIAL PROCESSING.                             *
+     C*  14. #AA    - INITIALISATION.                                 *
+     C*  15. #AB    - RETRIEVE INSTALLATION CONTROL DATA.             *
+     C***16.*ZA0150*-*CHAIN TO INSTALLATION CONTROL DATA FILE.        *   S01319
+     C*  17. #C     - TERMINATION PROCESSING.                         *
+     C*  18. *PSSR  - ERROR HANDLING SUBROUTINE.                      *
+     C*                                                               *
+     C*  PROGRAMS AND EXTERNAL SUBROUTINES CALLED.                    *
+     C*                                                               *
+     C*      ZA0240 - SENDS ERROR MSG TO PGMMSGQ  - CL PROGRAM        *
+     C*      ZA0250 - CLEARS PGMMSGQ              - CL PROGRAM        *
+     C*                                                               *
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #B     - MAIN PROCESSING; OUTPUT OF SCREENS AND  *
+     C*                       AMENDMENT OF DEAL NO. RANGE MAINTENANCE *
+     C*                       FILE.                                   *
+     C*                                                               *
+     C*  FIELDS DEFINED:      @RET  (1 BYTE ALPHA) IF = Y THEN RETURN *
+     C*                             THE INITIAL SCREEN IS REQUIRED.   *
+     C*                       @EPRM (10 BYTE ALPHA) ERROR MESSAGE ID  *
+     C*                             PASSED TO EXT CL PGM ZA0240.      *
+     C*                       @RLS  EXCEPTION NAME. USED TO RELEASE   *
+     C*                             INTERNALLY LOCKED UPDATE FILE.    *
+     C*                       @LOCK (1 BYTE ALPHA) 'Y' IF RECORD      *
+     C*                             FDDLNMP0 LOCKED BY PROGRAM.       *
+     C*                                                               *
+     C*  CALLED BY : MAIN PROGRAM                                     *
+     C*  CALLS     : #BA #BB #BC ZA0250                               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #B        BEGSR
+     C*
+     C**  MAIN PROCESSING IS CARRIED OUT WHILST CMD3 IS NOT PRESSED
+     C**  AND WHILST NO DATA BASE ERROR HAS OCCURRED
+     C           *INKC     DOWEQ'0'                        B1
+     C           *INU7     ANDEQ'0'                        X1
+     C*
+     C*
+     C**  RETRIEVE CURRENT TIME, AND PLACE IN SCREEN FIELD
+     C                     TIME           DDTIME           *1
+     C*
+     C**  IF NO ERROR ON ACTION CODE, BLANK OUT SCREEN FIELD.
+     C           *IN20     IFEQ '0'                        B*2
+     C*
+     C                     MOVE *BLANK    DDACTN           **2
+     C*
+     C                     END                             E*2
+     C*
+     C**  WRITE AND READ FIRST SCREEN
+     C                     MOVE '1'       *IN11            *1
+     C                     WRITEFD0340D1                   *1
+     C                     WRITEFD0340D2                   *1
+     C                     READ FD0340D1                 60*1
+     C*
+     C**  VALIDATE SCREEN INPUT
+     C*
+     C**  IF CMD3 PRESSED GO TO END OF ROUTINE
+     C           *INKC     CABEQ'1'       #B9              B*2
+     C*
+     C**  IF CMD12 PRESSED GO TO END OF ROUTINE
+     C           *INKL     CABEQ'1'       #B9              B*2
+     C*
+     C**  RESET SCREEN INDICATOR  AND CALL EXTERNAL CL PGM ZA0250
+     C**  TO CLEAR PROGRAM MESSAGE QUEUE.
+     C                     MOVE '0'       *IN11            *1
+     C                     MOVE '0'       *IN20            *1
+     C                     CALL 'ZA0250'                   *1
+     C*
+     C**  IF CMD3 OR CMD12 NOT PRESSED, CHECK ACTION CODE ENTRY. IF NOT
+     C**  'A' OR 'E', OUTPUT ERROR MESSAGE.
+     C*
+     C**  IF ACTION CODE IS TYPE 'A', EXECUTE #BA, PROCESS AMEND
+     C           DDACTN    CASEQ'A'       #BA              B*2
+     C*
+     C**  IF ACTION CODE IS TYPE 'E', EXECUTE #BB, PROCESS ENQUIRE
+     C           DDACTN    CASEQ'E'       #BB              X*2
+     C**  IF ANY OTHER INPUT, EXECUTE #BC
+     C                     CAS            #BC              X*2
+     C*
+     C                     END                             E*2
+     C*
+     C*
+     C**  SET OFF LOGICAL FLAG @RET, WHICH CAUSES RETURN TO INITIAL
+     C**  SCREEN FROM FILE UPDATE.
+     C                     MOVE 'N'       @RET             *1
+     C*
+     C                     END                             E1
+     C*
+     C           #B9       ENDSR                           **#B9**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #BB    - PROCESS ENQUIRE; DISPLAYS CURRENT       *
+     C*                       STATUS OF DEAL NUMBER RANGE MAINTENANCE *
+     C*                       FILE.                                   *
+     C*                                                               *
+     C*  FIELDS DEFINED:                                              *
+     C*                                                               *
+     C*  CALLED BY : #B                                               *
+     C*  CALLS     : #ZA                                              *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #BB       BEGSR
+     C*                                                                   S01319
+      ** If multibranching, -                                             S01319
+     C           @MBIN     IFEQ 'Y'                        B1             S01319
+      **                                                                  S01319
+      ** - check the action and default branch security                   S01319
+      **                                                                  S01319
+     C                     CALL 'ZVACTBU'                                 S01319
+     C                     PARM           DDACTN                          S01319
+     C                     PARM           DBRN                            S01319
+     C                     PARM           @ERR                            S01319
+      **                                                                  S01319
+     C           @ERR      IFNE 0                          B*2            S01319
+      ** Set code and message if ZVACTBU ended in error.                  S01319
+     C                     MOVE '1'       *IN20                           S01319
+     C                     MOVEL'FXM0290' @MSGID                          S01319
+     C                     CALL 'ZA0240'                                  S01319
+     C                     PARM           @MSGID                          S01319
+     C                     GOTO #BB9                                      S01319
+     C                     END                             E*2            S01319
+      **                                                                  S01319
+     C                     ELSE                            X1             S01319
+      **                                                                  S01319
+      ** If not multibranching check the user's action code               S01319
+     C                     CALL 'ZVACTU'                   *1             S01319
+     C                     PARM           DDACTN           *1             S01319
+     C                     PARM           @ERR    10       *1             S01319
+      **                                                                  S01319
+     C           @ERR      IFNE 0                          B*2            S01319
+     C                     MOVE '1'       *IN20                           S01319
+     C                     MOVEL'FXM0292' @MSGID           **2            S01319
+     C                     CALL 'ZA0240'                   **2            S01319
+     C                     PARM           @MSGID           **2            S01319
+     C                     GOTO #BB9                       **2            S01319
+     C                     END                             E*2            S01319
+      **                                                                  S01319
+     C                     END                             E1             S01319
+     C*
+     C**  READ ENQUIRY LOGICAL VIEW OF DEAL NO. FILE, LF/FDDLNML1
+     C                     EXSR #ZA
+     C*
+     C**  IF *INU7 IS ON, GO TO END OF SUBROUTINE
+     C           *INU7     CABEQ'1'       #BB9             B1
+     C*
+     C**  SET UP SCREEN FIELDS FOR OUTPUT TO SCREEN
+     C                     MOVE 'E'       DDACTN
+     C***********          Z-ADDNONDLN    DDNDLN                                              127451
+     C           *IN80     IFEQ *OFF                                                          127451
+     C                     Z-ADDFKDN38    DDNDLN                                              127451
+     C                     ELSE                                                               127451
+     C                     Z-ADDNONDLN    DDNDLN                                              127451
+     C                     END                                                                127451
+     C                     Z-ADDNORDLN    DDRDLN
+     C                     Z-ADDNOWDLN    DDWDLN
+     C*
+     C**  RETRIEVE CURRENT TIME, AND PLACE IN SCREEN FIELD
+     C                     TIME           DDTIME
+     C*
+     C**  WRITE AND READ ENQUIRE SCREEN
+     C                     MOVE '1'       *IN12
+     C                     WRITEFD0340D1
+     C                     READ FD0340D1                 60
+     C*
+     C**  RESET SCREEN INDICATOR
+     C                     MOVE '0'       *IN12
+     C*
+     C**  IF CMD12 PRESSED ON SUBSEQUENT SCREEN, NO EXIT IS REQUIRED
+     C**  THEREFORE SET OFF *INKL.
+     C                     MOVE '0'       *INKL
+     C*
+     C           #BB9      ENDSR                           **#BB9**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #BC    - ROUTINE TO HANDLE ERROR ON INPUT TO     *
+     C*                       INITIAL SCREEN.                         *
+     C*                                                               *
+     C*                                                               *
+     C*  FIELDS DEFINED:      @EPRM (10 BYTE ALPHA) ERROR MESSAGE ID  *
+     C*                             PASSED TO EXT CL PGM ZA0240.      *
+     C*                                                               *
+     C*  CALLED BY : #B                                               *
+     C*  CALLS     : ZA0240                                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #BC       BEGSR
+     C*
+     C*
+     C**  THE ACTION CODE HAS BEEN INCORRECTLY ENTERED; INDICATOR
+     C**  *IN20 IS SET ON AND THE ERROR ID IS MOVED INTO THE PARAMETER
+     C**  OF ZA0240, THE EXTERNAL PROGRAM WHICH  FILLS THE MESSAGE
+     C**  SUBFILE.
+     C                     MOVE '1'       *IN20
+     C                     MOVEL'FDM0101' @EPRM  10
+     C                     CALL 'ZA0240'
+     C                     PARM           @EPRM
+     C*
+     C           #BC9      ENDSR                           **#BC9**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #BA    - PROCESS AMEND; ALLOWS CHANGE OF RESERVE *
+     C*                       DEAL NO., AND, IF REQUIRED, WARNING DEAL*
+     C*                       NO.                                     *
+     C*                                                               *
+     C*  FIELDS DEFINED:      @RET  (1 BYTE ALPHA) IF = Y THEN RETURN *
+     C*                             THE INITIAL SCREEN IS REQUIRED.   *
+     C*                       @EPRM (10 BYTE ALPHA) ERROR MESSAGE ID  *
+     C*                             PASSED TO EXT CL PGM ZA0240.      *
+     C*                       @RLS  EXCEPTION NAME. USED TO RELEASE   *
+     C*                             INTERNALLY LOCKED UPDATE FILE.    *
+     C*                     @LOCK  - (1 BYTE ALPHA) 'Y' IF RECORD     *
+     C*                              FDDLNMP0 LOCKED BY PROGRAM.      *
+     C*                                                               *
+     C*  CALLED BY : #B                                               *
+     C*  CALLS     : #BAA #BAB #ZA #ZC ZA0250                         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #BA       BEGSR
+     C*                                                                   S01319
+      ** If multibranching, -                                             S01319
+     C           @MBIN     IFEQ 'Y'                        B1             S01319
+      **                                                                  S01319
+      ** - check the action and default branch security                   S01319
+      **                                                                  S01319
+     C                     CALL 'ZVACTBU'                                 S01319
+     C                     PARM           DDACTN                          S01319
+     C                     PARM           DBRN                            S01319
+     C                     PARM           @ERR                            S01319
+      **                                                                  S01319
+     C           @ERR      IFNE 0                          B*2            S01319
+      ** Set code and message if ZVACTBU ended in error.                  S01319
+     C                     MOVE '1'       *IN20                           S01319
+     C                     MOVEL'FXM0290' @MSGID                          S01319
+     C                     CALL 'ZA0240'                                  S01319
+     C                     PARM           @MSGID                          S01319
+     C                     GOTO #BA9                                      S01319
+     C                     END                             E*2            S01319
+      **                                                                  S01319
+     C                     ELSE                            X1             S01319
+      **                                                                  S01319
+      ** If not multibranching check the user's action code               S01319
+     C                     CALL 'ZVACTU'                   *1             S01319
+     C                     PARM           DDACTN           *1             S01319
+     C                     PARM           @ERR    10       *1             S01319
+      **                                                                  S01319
+     C           @ERR      IFNE 0                          B*2            S01319
+     C                     MOVE '1'       *IN20                           S01319
+     C                     MOVEL'FXM0292' @MSGID           **2            S01319
+     C                     CALL 'ZA0240'                   **2            S01319
+     C                     PARM           @MSGID           **2            S01319
+     C                     GOTO #BA9                       **2            S01319
+     C                     END                             E*2            S01319
+      **                                                                  S01319
+     C                     END                             E1             S01319
+     C*
+     C**  AMEND PROCESSING IS CARRIED OUT WHILST CMD3 IS NOT PRESSED
+     C**  AND WHILST NO DATA BASE ERROR HAS OCCURRED
+     C           *INKC     DOWEQ'0'                        B1
+     C           *INKL     ANDEQ'0'                        X1
+     C           *INU7     ANDEQ'0'                        X1
+     C*
+     C**  IF RECORD NOT ALREADY CHAINED TO, CHAIN TO DEAL NO. FILE.
+     C           @LOCK     IFEQ 'N'                        B*2
+     C*
+     C                     EXSR #ZA                        **2
+     C*
+     C**  IF *INU7 IS ON, GO TO END OF SUBROUTINE
+     C           *INU7     CABEQ'1'       #BA9             B**3
+     C*
+     C**  IF *IN71 IS ON, THEN THE RECORD IS LOCKED EXTERNALLY.
+     C           *IN71     IFEQ '1'                        B**3
+     C*
+     C*
+     C**  CALL EXTERNAL CL PGM ZA0250
+     C**  TO CLEAR PROGRAM MESSAGE QUEUE.
+     C                     MOVE '0'       *IN21            ***3
+     C                     CALL 'ZA0250'                   ***3
+     C                     MOVEL'FDM0120' @EPRM            ***3
+     C*
+     C**  OUTPUT MESSAGE TO SCREEN TO INDICATE RECORD LOCKED EXTERNALLY
+     C                     CALL 'ZA0240'                   ***3
+     C                     PARM           @EPRM            ***3
+     C*
+     C                     GOTO #BA9                       ***3
+     C*
+     C                     END                             E**3
+     C*
+     C                     END                             E*2
+     C*
+     C**  SET UP SCREEN FIELDS FOR OUTPUT TO SCREEN
+     C                     MOVE 'A'       DDACTN           *1
+     C***********          Z-ADDNONDLN    DDNDLN           *1                                 127451
+     C           *IN80     IFEQ *OFF                                                          127451
+     C                     Z-ADDFKDN38    DDNDLN           *1                                 127451
+     C                     ELSE                                                               127451
+     C                     Z-ADDNONDLN    DDNDLN                                              127451
+     C                     END                                                                127451
+     C                     Z-ADDNORDLN    DDRDLN           *1
+     C                     Z-ADDNOWDLN    DDWDLN           *1
+     C*
+     C**  RETRIEVE CURRENT TIME, AND PLACE IN SCREEN FIELD
+     C                     TIME           DDTIME           *1
+     C*
+     C**  IF RESERVE DEAL NO. NOT INCORRECT, BLANK OUT SCREEN FIELD.
+     C           *IN21     IFEQ '0'                        B*2
+     C*
+     C                     Z-ADD*ZEROS    DDARDN           **2
+     C*
+     C                     END                             E*2
+     C*
+     C**  WRITE AND READ AMEND SCREEN
+     C                     MOVE '1'       *IN13            *1
+     C                     WRITEFD0340D1                   *1
+     C                     WRITEFD0340D2                   *1
+     C                     READ FD0340D1                 60*1
+     C*
+     C**  VALIDATE SCREEN INPUT
+     C*
+     C**  IF CMD3 PRESSED GO TO END OF ROUTINE
+     C           *INKC     CABEQ'1'       #BA9             *1
+     C*
+     C**  CALL EXTERNAL CL PGM ZA0250
+     C**  TO CLEAR PROGRAM MESSAGE QUEUE.
+     C                     MOVE '0'       *IN21            *1
+     C                     CALL 'ZA0250'                   *1
+     C*
+     C**  IF EXIT TO PREVIOUS SCREEN REQUIRED UPDATE OPERATION IS ENDED
+     C**  - RELEASE UPDATE FILE LF/FDDLNMLL
+     C           *INKL     IFEQ '1'                        B*2
+     C*
+     C**  RESET SCREEN INDICATOR
+     C                     MOVE '0'       *IN13            **2
+     C*
+     C                     EXCPT@RLS                       **2
+     C*
+     C**  SET FLAG @LOCK TO 'N' TO SHOW RECORD NOT LOCKED.
+     C                     MOVE 'N'       @LOCK            **2
+     C*
+     C                     END                             E*2
+     C*
+     C**  IF CMD12 PRESSED GO TO END OF ROUTINE
+     C           *INKL     CABEQ'1'       #BA9             *1
+     C*
+     C**  DEPENDING ON THE INPUT VALUE FOR THE AMENDED RESERVE DEAL
+     C**  NO., CALL THE RELEVANT SUBROUTINE.
+     C*
+     C**  IF THE NEW RESERVE DEAL NO. IS GREATER THAN THE WARNING NO.
+     C**  THEN THE FILE MAY BE UPDATED DIRECTLY.
+     C           DDARDN    CASGTNOWDLN    #ZC              B*2
+     C*
+     C**  IF THE NEW RESERVE DEAL NO. IS GREATER THAN THE NEXT DEAL NO.
+     C**  THEN THE INPUT MUST BE CONFIRMED.
+     C           DDARDN    CASGTNONDLN    #BAA             **2
+     C*
+     C**  IF THE NEW RESERVE DEAL NO. IS EQUAL TO OR LESS THAN THE NEXT
+     C**  DEAL NO. OR ANY INPUT IS GIVEN NOT HANDLED ABOVE THEN AN
+     C**  ERROR MESSAGE IS OUTPUT.
+     C                     CAS            #BAB             **2
+     C*
+     C                     END                             E*2
+     C*
+     C**  RESET SCREEN INDICATOR
+     C                     MOVE '0'       *IN13            *1
+     C*
+     C**  IF CMD12 PRESSED ON SUBSEQUENT SCREEN, NO EXIT IS REQUIRED
+     C**  UNLESS LOGICAL FLAG @RET = 'Y'
+     C           @RET      IFEQ 'N'                        B*2
+     C*
+     C                     MOVE '0'       *INKL            **2
+     C*
+     C                     END                             E*2
+     C*
+     C                     END                             E1
+     C*
+     C           #BA9      ENDSR                           **#BA9**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #BAA   - CONFIRM NEW RESERVE DEAL NO.; IF CMD14  *
+     C*                       IS PRESSED NEW RESRVE DEAL NO. IS       *
+     C*                       CONFIRMED, OTHERWISE PREVIOUS SCREEN IS *
+     C*                       REDISPLAYED.                            *
+     C*                                                               *
+     C*  FIELDS DEFINED:      @RET (1 BYTE ALPHA) IF = Y THEN RETURN  *
+     C*                       THE INITIAL SCREEN IS REQUIRED.         *
+     C*                                                               *
+     C*  CALLED BY : #BA                                              *
+     C*  CALLS     : #BAAA                                            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #BAA      BEGSR
+     C*
+     C**  RESET INDICATOR THAT DISPLAYS SCREEN BUILD 3
+     C                     MOVE '0'       *IN13
+     C*
+     C**  CARRY OUT PROCESSING AT THIS SCREEN WHILST CMD3 OR CMD12 HAVE
+     C**  NOT BEEN PRESSED AND WHILE NO DATA BASE ERROR HAS OCCURRED.
+     C           *INKC     DOWEQ'0'                        B1
+     C           *INKL     ANDEQ'0'                        X1
+     C           *INU7     ANDEQ'0'                        X1
+     C*
+     C**  RETRIEVE CURRENT TIME, AND PLACE IN SCREEN FIELD
+     C                     TIME           DDTIME           *1
+     C*
+     C**  WRITE AND READ SCREEN BUILD 4 - NOTE FIELDS ARE IDENTICAL
+     C**  TO THOSE IN SCREEN 3.
+     C                     MOVE '1'       *IN14            *1
+     C                     WRITEFD0340D1                   *1
+     C                     WRITEFD0340D2                   *1
+     C                     READ FD0340D1                 60*1
+     C*
+     C**  VALIDATE SCREEN INPUT
+     C*
+     C**  IF CMD3 PRESSED GO TO END OF ROUTINE
+     C           *INKC     CABEQ'1'       #BAA9            B*2
+     C*
+     C**  RESET SCREEN INDICATOR
+     C                     MOVE '0'       *IN14            **2
+     C*
+     C**  IF CMD12 PRESSED GO TO END OF ROUTINE
+     C           *INKL     CABEQ'1'       #BAA9            B*2
+     C*
+     C**  IF CMD14 PRESSED, NEW RESERVE NO. IS CONFIRMED AND A NEW
+     C**  WARNING NO. CAN BE ENTERED.
+     C           *INKN     IFEQ '1'                        B*2
+     C*
+     C                     EXSR #BAAA                      **2
+     C*
+     C**  RESET SCREEN INDICATOR FOR SUBSEQUENT SCREEN
+     C                     MOVE '0'       *IN15            **2
+     C*
+     C**  IF CMD12 PRESSED ON SUBSEQUENT SCREEN, NO EXIT IS REQUIRED
+     C**  UNLESS LOGICAL FLAG @RET = 'Y'
+     C           @RET      IFEQ 'N'                        B**3
+     C*
+     C                     MOVE '0'       *INKL            ***3
+     C*
+     C                     END                             E**3
+     C*
+     C                     ELSE                            X*2
+     C*
+     C**  IF CMD14 HAS NOT BEEN ENTERED, RETURN TO PREVIOUS SCREEN,
+     C**  REDISPLAYING INPUT VALUE FOR NEW RESERVE DEAL NO.
+     C                     MOVE '1'       *INKL            **2
+     C                     MOVE '1'       *IN21            **2
+     C*
+     C                     END                             E*2
+     C*
+     C                     END                             E1
+     C*
+     C           #BAA9     ENDSR                           **#BAA9**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #BAB   - OUTPUT ERROR MESSAGE IF INVALID DATA    *
+     C*                       ENTERED ON AMEND SCREEN.                *
+     C*                                                               *
+     C*                                                               *
+     C*  FIELDS DEFINED:      @EPRM (10 BYTE ALPHA) ERROR MESSAGE ID  *
+     C*                             PASSED TO EXT CL PGM ZA0240.      *
+     C*                                                               *
+     C*  CALLED BY : #BA                                              *
+     C*  CALLS     : ZA0240                                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #BAB      BEGSR
+     C*
+     C**  SET UP PARAMETER FOR ERROR MESSAGE AND CALL CL PGM ZA0240
+     C                     MOVE '1'       *IN21
+     C                     MOVEL'FDM0069' @EPRM
+     C                     CALL 'ZA0240'
+     C                     PARM           @EPRM
+     C*
+     C           #BAB9     ENDSR                           **#BAB9**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #BAAA  - INPUT NEW WARNING DEAL NO.; IF VALID,   *
+     C*                       FILE IS UPDATED WITH BOTH NEW VALUES    *
+     C*                       AND AN AUDIT REPORT OUTPUT.             *
+     C*                                                               *
+     C*  FIELDS DEFINED:      @EPRM (10 BYTE ALPHA) ERROR MESSAGE ID  *
+     C*                             PASSED TO EXT CL PGM ZA0240.      *
+     C*  CALLED BY : #BAA                                             *
+     C*  CALLS     : #ZC ZA0240 ZA0250                                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #BAAA     BEGSR
+     C*
+     C**  MAIN PROCESSING IS CARRIED OUT WHILST CMD3 IS NOT PRESSED
+     C**  AND WHILST NO DATA BASE ERROR HAS OCCURRED
+     C           *INKC     DOWEQ'0'                        B1
+     C           *INKL     ANDEQ'0'                        X1
+     C           *INU7     ANDEQ'0'                        X1
+     C*
+     C*
+     C**  RETRIEVE CURRENT TIME, AND PLACE IN SCREEN FIELD
+     C                     TIME           DDTIME           *1
+     C*
+     C**  IF NO ERROR ON WARNING NO. BLANK OUT SCREEN FIELD.
+     C           *IN22     IFEQ '0'                        B*2
+     C*
+     C                     MOVE *BLANK    DDAWDN           **2
+     C*
+     C                     END                             E*2
+     C*
+     C**  WRITE AND READ AMEND WARNING NO. SCREEN
+     C                     MOVE '1'       *IN15            *1
+     C                     WRITEFD0340D1                   *1
+     C                     WRITEFD0340D2                   *1
+     C                     READ FD0340D1                 60*1
+     C*
+     C**  VALIDATE SCREEN INPUT
+     C*
+     C**  IF CMD3 PRESSED GO TO END OF ROUTINE
+     C           *INKC     CABEQ'1'       #BAAA9           B*2
+     C*
+     C**  CALL EXTERNAL CL PGM ZA0250
+     C**  TO CLEAR PROGRAM MESSAGE QUEUE.
+     C                     MOVE '0'       *IN22            *1
+     C                     CALL 'ZA0250'                   *1
+     C*
+     C**  IF CMD12 PRESSED GO TO END OF ROUTINE
+     C           *INKL     CABEQ'1'       #BAAA9           *1
+     C*
+     C**  IF THE NEW WARNING DEAL NO. IS LESS THAN OR EQUAL TO THE NEXT
+     C**  DEAL NO., OR GREATER THAN OR EQUAL TO THE RESERVE DEAL NO.,
+     C**  THEN OUTPUT A MESSAGE AND REDISPLAY THE SCREEN.
+     C*
+     C           DDAWDN    IFLE NONDLN                     B*2
+     C           DDAWDN    ORGE DDARDN                     X*2
+     C*
+     C                     MOVE '1'       *IN22            **2
+     C*
+     C           DDAWDN    IFLE NONDLN                     B**3
+     C*
+     C                     MOVEL'FDM0083' @EPRM            ***3
+     C*
+     C                     END                             E**3
+     C*
+     C           DDAWDN    IFGE DDARDN                     B**3
+     C*
+     C                     MOVEL'FDM0082' @EPRM            ***3
+     C*
+     C                     END                             E**3
+     C*
+     C                     CALL 'ZA0240'                   **2
+     C                     PARM           @EPRM            **2
+     C*
+     C**  RESET SCREEN INDICATOR
+     C                     MOVE '0'       *IN15            **2
+     C*
+     C                     ELSE                            X*2
+     C*
+     C**  BOTH NEW RESERVE DEAL NO. AND NEW WARNING DEAL NO. ARE VALID
+     C**  AND SO THE FILE IS UPDATED.  CONTROL IS RETURNED TO THE
+     C**  INITIAL SCREEN.
+     C                     EXSR #ZC                        **2
+     C*
+     C**  RESET SCREEN INDICATOR
+     C                     MOVE '0'       *IN15            **2
+     C*
+     C                     END                             E*2
+     C*
+     C                     END                             E1
+     C*
+     C           #BAAA9    ENDSR                           **#BAAA9**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #ZA    - ACCESS DEAL NO. RANGE MAINTENANCE FILE  *
+     C*                                              LF/FDDLNMLL      *
+     C*                                                               *
+     C*                                                               *
+     C*  FIELDS DEFINED:                                              *
+     C*                                                               *
+     C*  CALLED BY : #BA #BB                                          *
+     C*  CALLS     : #ZAA #ZAB #ZB                                    *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #ZA       BEGSR
+     C*
+     C**  CALL SUBROUTINE TO READ FILE
+     C*
+     C**  IF ACTION CODE IS 'A', ACCESS LF/FDDLNMLL.
+     C           DDACTN    CASEQ'A'       #ZAA             B1
+     C*
+     C**  IF ACTION CODE IS 'E', ACCESS LF/FDDLNML1.
+     C           DDACTN    CASEQ'E'       #ZAB             X1
+     C*
+     C                     END                             E1
+     C*
+     C**  IF INDICATOR 70 IS ON, THEN FILE IS EMPTY
+     C**  - SET ON *INU7 *INU8 AND SET @FLG TO 'N'
+     C**  - PRINT HEADERS FOR "NO DETAILS TO REPORT" OUTPUT
+     C           *IN70     IFEQ '1'                        B1
+     C*
+     C                     MOVE '1'       *INU7            *1
+     C                     MOVE '1'       *INU8            *1
+     C*
+     C                     MOVE 'N'       @FLG    1        *1
+     C*
+     C                     MOVE '1'       *IN66            *1
+     C                     EXSR #ZB                        *1
+     C*
+     C                     END                             E1
+     C*
+     C           #ZA9      ENDSR                           **#ZA9**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #ZAA - CHAIN TO DEAL NO. RANGE MAINTENANCE FILE  *
+     C*                                              LF/FDDLNMLL      *
+     C*                                                               *
+     C*  FIELDS DEFINED:                                              *
+     C*                     @KEY   - (1 BYTE NUMERIC) KEY USED TO     *
+     C*                              ACCESS LF/FDDLNMLL               *
+     C*                     @LOCK  - (1 BYTE ALPHA) 'Y' IF RECORD     *
+     C*                              FDDLNMP0 LOCKED BY PROGRAM.      *
+     C*                                                               *
+     C*  CALLED BY : #ZA                                              *
+     C*  CALLS     :                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #ZAA      BEGSR
+     C*
+     C**  READ FIRST RECORD ON FILE LF/FDDLNMLL
+     C                     Z-ADD1         @KEY    10
+     C           @KEY      CHAINFDDLNMLL             7071
+     C*
+     C**  CHECK LOGICAL DELETE FLAG BLANK
+     C           NODLTF    IFNE ' '                        B1
+     C                     MOVE '1'       *IN70            *1
+     C                     END                             E1
+     C*
+     C** DEAL WITH DATA BASE ERROR
+     C           *IN70     IFEQ '1'                        ***************
+     C                     MOVEL'FDDLNMLL'DBFILE           *             *
+     C                     MOVE *BLANKS   DBKEY            * DBERROR 910 *
+     C                     MOVEL'910'     DBASE            *             *
+     C                     END                             ***************
+     C*
+     C**  IF *IN71 IS '0' THE RECORD HAS BEEN CHAINED TO AND LOCKED BY
+     C**  THE PROGRAM.
+     C           *IN71     IFEQ '0'                        B1
+     C*
+     C                     MOVE 'Y'       @LOCK            *1
+     C*
+     C                     END                             E1
+     C*
+     C           #ZAA9     ENDSR                           **#ZAA9**
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #ZAB - READ DEAL NO. RANGE MAINTENANCE FILE      *
+     C*                                              LF/FDDLNML1      *
+     C*                                                               *
+     C*  FIELDS DEFINED:                                              *
+     C*                     @KEY   - (1 BYTE NUMERIC) KEY USED TO     *
+     C*                              ACCESS LF/FDDLNML1               *
+     C*                                                               *
+     C*  CALLED BY : #ZA                                              *
+     C*  CALLS     :                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #ZAB      BEGSR
+     C*
+     C**  READ FIRST RECORD ON FILE LF/FDDLNML1
+     C**  NOTE THAT RECORD NAME USED IS FDDLNM DUE TO RENAME OPERATION
+     C**  IN FILE SPECS.
+     C                     Z-ADD1         @KEY
+     C           @KEY      CHAINFDDLNML1             70
+     C*
+     C**  CHECK LOGICAL DELETE FLAG BLANK
+     C           NODLTF    IFNE ' '                        B1
+     C                     MOVE '1'       *IN70            *1
+     C                     END                             E1
+     C*
+     C** DEAL WITH DATA BASE ERROR
+     C           *IN70     IFEQ '1'                        ***************
+     C                     MOVEL'FDDLNML1'DBFILE           *             *
+     C                     MOVE *BLANKS   DBKEY            * DBERROR 910 *
+     C                     MOVEL'910'     DBASE            *             *
+     C                     END                             ***************
+     C*
+     C           #ZAB9     ENDSR                           **#ZAB9**
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #ZB    - OUTPUT HEADERS; PRINTS PAGE HEADERS IF  *
+     C*                       REQUIRED.                               *
+     C*                                                               *
+     C*                                                               *
+     C*  FIELDS DEFINED:      @PRT   - (1 BYTE ALPHA) IF = 'Y', THEN  *
+     C*                                HEADERS HAVE BEEN OUTPUT.      *
+     C*                       @CNT  (1 BYTE NUMERIC) FIELD TO COUNT   *
+     C*                             NUMBER OF DETAIL FORMATS OUTPUT.  *
+     C*                                                               *
+     C*  CALLED BY : #ZA #ZC                                          *
+     C*  CALLS     :                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #ZB       BEGSR
+     C*
+     C**  OUTPUT HEADINGS IF OVERFLOW LINE REACHED OR 3 DETAIL FORMATS
+     C**  HAVE BEEN OUTPUT.
+     C           *IN66     IFEQ '1'                        B1
+     C           @CNT      OREQ 3                          X1
+     C*
+     C                     WRITEFD0340R0                   *1
+     C*
+     C**  RESET OVERFLOW INDICATOR AND @CNT
+     C                     MOVE '0'       *IN66            *1
+     C                     Z-ADD0         @CNT             *1
+     C*
+     C**  SET LOGICAL FLAG, @PRT TO 'Y' TO SHOW HEADERS HAVE BEEN
+     C**  OUTPUT.
+     C                     MOVE 'Y'       @PRT    1
+     C*
+     C                     END                             E1
+     C*
+     C           #ZB9      ENDSR                           **#ZB9**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #ZC    - UPDATE DEAL NO. FILE; UPDATES DEAL NO.  *
+     C*                       RANGE FILE, PRINTS DETAIL OF AUDIT      *
+     C*                       REPORT AND CHAINS TO FILE AGAIN IN CASE *
+     C*                       FURTHER PROCESSING IS REQUIRED.         *
+     C*                                                               *
+     C*  FIELDS DEFINED:      @TIDA (6 BYTE NUMERIC) HOLDS RETRIEVED *
+     C*                             SYSTEM TIME                       *
+     C*                       @RET  (1 BYTE ALPHA) IF = Y THEN RETURN *
+     C*                             TO THE INITIAL SCREEN IS REQUIRED.*
+     C*                       @CNT  (1 BYTE NUMERIC) FIELD TO COUNT   *
+     C*                             NUMBER OF DETAIL FORMATS OUTPUT.  *
+     C*                       @LOCK (1 BYTE ALPHA) 'Y' IF RECORD      *
+     C*                             FDDLNMP0 LOCKED BY PROGRAM.       *
+     C*                                                               *
+     C*  CALLED BY : #B #BAAA                                         *
+     C*  CALLS     : #ZB        ZTNLU1                                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #ZC       BEGSR
+     C*
+     C**  RETRIEVE SYSTEM TIME AND DATE FOR 'LAST UPDATE' DETAILS,
+     C**  AND PLACE IN DS @TIDA.
+     C                     TIME           NOTLUP
+     C*
+     C**  OUTPUT AUDIT REPORT - CLEAR FIELDS
+     C                     Z-ADD*ZEROS    RRRDLN
+     C                     Z-ADD*ZEROS    RRWDLN
+     C                     Z-ADD*ZEROS    RRTOC
+     C                     MOVE *BLANKS   RRWID
+     C                     MOVE *BLANKS   RRUID
+     C*
+     C**  IF ONLY RESERVE DEAL NO. HAS BEEN AMENDED ONLY SET UP THAT
+     C**  FIELD.
+     C           *IN13     IFEQ '1'                        B1
+     C*
+     C                     Z-ADDDDARDN    RRARDN           *1
+     C*
+     C                     END                             E1
+     C*
+     C**  IF BOTH RESERVE AND WARNING DEAL NO. HAVE BEEN AMENDED, SET
+     C**  BOTH FIELDS.
+     C           *IN15     IFEQ '1'                        B1
+     C*
+     C                     Z-ADDDDARDN    RRARDN           *1
+     C                     Z-ADDDDAWDN    RRAWDN           *1
+     C*
+     C                     END                             E1
+     C*
+     C**  SET UP OTHER FIELDS
+     C                     Z-ADDNORDLN    RRRDLN
+     C                     Z-ADDNOWDLN    RRWDLN
+     C                     MOVELNOTLUP    RRTOC
+     C                     MOVEL@JOB      RRWID
+     C                     MOVEL@USER     RRUID
+     C*
+     C**  UPDATE DEAL NO. RANGE MAINTENANCE FILE - CLEAR FIELDS
+     C                     Z-ADD*ZEROS    NOLCD
+     C                     MOVE *BLANKS   NOCHTP
+     C                     MOVE *BLANKS   NOUID
+     C*
+     C**  IF ONLY RESERVE DEAL NO. HAS BEEN AMENDED ONLY SET UP THAT
+     C**  FIELD.
+     C           *IN13     IFEQ '1'                        B1
+     C*
+     C                     Z-ADDDDARDN    NORDLN           *1
+     C*
+     C                     END                             E1
+     C*
+     C**  IF BOTH RESERVE AND WARNING DEAL NO. HAVE BEEN AMENDED, SET
+     C**  UP BOTH FIELDS.
+     C           *IN15     IFEQ '1'                        B1
+     C*
+     C                     Z-ADDDDARDN    NORDLN           *1
+     C                     Z-ADDDDAWDN    NOWDLN           *1
+     C*
+     C                     END                             E1
+     C*
+     C*  LOAD DATE FIELDS.
+     C                     Z-ADD@DD       NODLUP
+     C                     MOVE @MMM      NOMLUP
+     C                     Z-ADD@YY       NOYLUP
+     C***********          Z-ADDRUND      NOLCD                           S01319
+     C                     Z-ADDBJRDNB    NOLCD                           S01319
+     C*
+     C**  IF *INU7 IS ON, GO TO END OF SUBROUTINE
+     C           *INU7     CABEQ'1'       #ZC9             B1
+     C*
+     C** SET UP REMAINING FIELDS
+     C                     MOVEL@USER     NOUID
+     C                     MOVE DDACTN    NOCHTP
+     C*
+     C**  IF NO PROBLEMS IN SETTING UP FOR UPDATE, OUTPUT AUDIT REPORT
+     C**  AND UPDATE FILE.
+     C*
+     C**  OUTPUT HEADERS, IF REQUIRED.
+     C                     EXSR #ZB
+     C*
+     C*  OUTPUT DETAILS
+     C                     WRITEFD0340R1
+     C*
+     C**  ADD 1 TO DETAIL OUTPUT COUNT FIELD
+     C                     ADD  1         @CNT    10
+     C*
+     C**  OBTAIN LAST TRANSACTION NUMBER AND PREPARE STANDARD
+     C**  INFORMATION FOR CMTTXT DATA STRUCTURE.
+     C                     EXSR ZTNLU1
+     C                     MOVE 'FD'      MDID
+     C                     MOVEL'FD0340'  PGMN
+     C                     MOVE WSID      WSIDX
+     C                     TIME           MTIME   60
+     C                     MOVE DDACTN    ACTCDX
+     C                     MOVE USRID     USRIDX
+     C*
+     C**  UPDATE FILE
+     C                     UPDATFDDLNMP0
+     C                     MOVEL'FDM0904' @MSGID 10
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID
+     C*
+     C**  END OF COMMITTMENT CYCLE
+     C           CMTTXT    COMIT
+     C*
+     C**  SET FLAG @LOCK TO 'N' TO INDICATE THAT RECORD HAS BEEN RELEASED
+     C                     MOVE 'N'       @LOCK
+     C*
+     C**  SETON CMD12 INDICATOR TO RETURN CONTROL TO THE INITIAL SCREEN
+     C**  ALSO SET ON LOGICAL FLAG TO ALLOW RETURN THROUGH ALL LEVELS
+     C**  OF PROCESSING.
+     C                     MOVE 'Y'       @RET    1
+     C                     MOVE '1'       *INKL
+     C*
+     C           #ZC9      ENDSR                           **#ZC9**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE:  #A  - INITIAL PROCESSING; INITIALISATION AND    *
+     C*                     RETRIEVAL OF ICD AND USER DATA.           *
+     C*                                                               *
+     C*  FIELDS DEFINED:                                              *
+     C*                                                               *
+     C*                                                               *
+     C*                                                               *
+     C*  CALLED BY :  MAIN PROGRAM                                    *
+     C*  CALLS     :  #AA #AB                                         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #A        BEGSR
+     C*
+     C                     MOVEACPY@      BIS@   80
+      *
+     C**  MOVE PROGRAM NAME INTO LDA IN CASE OF DATABASE ERROR
+     C                     MOVEL'FD0340'  DBPGM
+     C*
+     C**  INITIALISE PROGRAM VARIABLES AND INDICATORS
+     C                     EXSR #AA
+     C*
+     C**  RETRIEVE INSTALLATION CONTROL DATA
+     C                     EXSR #AB
+     C*
+     C**  IF *INU7 IS ON, GO TO END OF SUBROUTINE
+     C           *INU7     CABEQ'1'       #A9              B1
+     C*
+     C**  RETRIEVE USER INFORMATION
+     C**  - MOVE USER AND WORKSTATION ID INTO SCREEN AND PRINTER FIELDS
+     C                     MOVEL@JOB      DDWID
+     C                     MOVEL@JOB      RRWID
+     C                     MOVEL@USER     RRUID
+     C*
+     C** READ DATA AREA - RUNDAT                                          S01319
+     C           *NAMVAR   DEFN           RUNDAT                          S01319
+     C                     IN   RUNDAT                                    S01319
+     C**  GET ZMUSER to access default branch.                            S01319
+     C**                                                                  S01319
+     C           *NAMVAR   DEFN           ZMUSER                          S01319
+     C                     IN   ZMUSER                                    S01319
+     C                     UNLCKZMUSER                                    S01319
+     C*                                                                                       127451
+     C**  READ FIRST RECORD ON FILE PF/CADLFPP                                                127451
+     C                     READ CADLFAPP                 80                                   127451
+     C*
+     C           #A9       ENDSR                           **#A9**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #AA  - INITIALISATION; PROGRAM VARIABLES AND     *
+     C*                     INDICATORS INITIALISED.                   *
+     C*                                                               *
+     C*                                                               *
+     C*  FIELDS DEFINED:      @FLG   -(1 BYTE ALPHA) IF= 'N' NO RECORD*
+     C*                                EXISTS ON LF/FDDLNMLL.         *
+     C*                       @RET   (1 BYTE ALPHA) IF = Y THEN RETURN*
+     C*                              THE INITIAL SCREEN IS REQUIRED.  *
+     C*                       @LOCK (1 BYTE ALPHA) 'Y' IF RECORD      *
+     C*                             FDDLNMP0 LOCKED BY PROGRAM.       *
+     C*                       @NOTLUP(6 BYTE NUMERIC) HOLDS RETRIEVED *
+     C*                             SYSTEM TIME                       *
+     C*                                                               *
+     C*  CALLED BY : #A                                               *
+     C*  CALLS     :                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #AA       BEGSR
+     C*
+     C**  SETON INDICATOR FOR SFLEND FOR MESSAGE SUBFILE
+     C                     MOVE '1'       *IN10
+     C*
+     C**  SETUP PROGRAM MESSAGE QUEUE FIELD FOR MESSAGE SUBFILE
+     C                     MOVEL'*'       PGMQ
+     C*
+     C**  INITIALISE NUMERIC FIELDS IN DATA STRUCTURES TO PREVENT
+     C**  DECIMAL DATA ERRORS.
+     C                     Z-ADD0         NATN
+     C                     Z-ADD0         MTIME
+     C                     Z-ADD0         DDNDLN
+     C                     Z-ADD0         DDRDLN
+     C                     Z-ADD0         DDWDLN
+     C                     Z-ADD0         DDARDN
+     C                     Z-ADD0         DDAWDN
+     C                     Z-ADD0         NODLUP
+     C                     Z-ADD0         NOYLUP
+     C                     Z-ADD0         NOTLUP
+     C*
+     C**  SETON INDICATOR TO PRINT FIRST PAGE HEADINGS
+     C                     MOVE '1'       *IN66
+     C*
+     C**  INITIALISE LOGICAL FLAG FOR RECORDS PRESENT ON FILE
+     C**  AND RETURN TO INITIAL SCREEN REQUIRED.
+     C                     MOVE 'Y'       @FLG
+     C                     MOVE 'N'       @RET
+     C*
+     C**  INITIALISE FLAG INDICATING WHETHER RECORD FDDLNMP0 LOCKED.
+     C                     MOVE 'N'       @LOCK   1
+     C*
+     C           #AA9      ENDSR                            **#AA9**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #AB  - RETRIEVE INSTALLATION CONTROL DATA; READ  *
+     C**********************LF/FDICDRLL.                              *   S01319
+     C*                     PF/SDBANKPD.                              *   S01319
+     C*                                                               *
+     C*                                                               *
+     C*  FIELDS DEFINED:                                              *
+     C*                                                               *
+     C*                                                               *
+     C*  CALLED BY : #A                                               *
+     C***CALLS*****: ZA0150 (STANDARD SUBROUTINE)                     *   S01319
+     C*  CALLS     : NONE                                             *   S01319
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #AB       BEGSR
+     C*
+     C****CALL*STANDARD*SUBROUTINE ZA0150 TO READ LF/FDICDRLL
+     C*********************EXSR ZA0150
+     C*
+     C*   Call AOBANKR0 to access installation control data.              S01319
+     C                     CALL 'AOBANKR0'                                S01194
+     C                     PARM '*DBERR ' @RTCD   7                       S01194
+     C                     PARM '*FIRST ' @OPTN   7                       S01194
+     C           SDBANK    PARM SDBANK    DSFDY                           S01194
+     C*                                                                   S01194
+     C****IF*INDICATOR*80*IS ON, THEN FILE LF/FDICDRLL IS EMPTY           S01319
+     C****-*SET*ON**INU7**INU8                                            S01319
+     C****-*PRINT*HEADERS*FOR DATABASE ERROR OUTPUT                       S01319
+     C************IN80     IFEQ '1'                        B1             S01319
+     C*
+     C************         MOVE '1'       *INU7            *1             S01319
+     C************         MOVE '1'       *INU8            *1             S01319
+     C*
+     C************         MOVE '1'       *IN66            *1             S01319
+     C************         EXSR #ZB                        *1             S01319
+     C*
+     C************         END                             E1             S01319
+     C*
+     C****IF**INU7*IS ON, GO TO END OF SUBROUTINE                         S01319
+     C************INU7     CABEQ'1'       #AB9             B1             S01319
+     C*
+     C**  MOVE RUNDATE AND TITLE INTO PRINTER FILE FIELDS
+     C************         MOVE RUNA      RRRUNA                          S01319
+     C************         MOVE TITL      RRTITL                          S01319
+     C                     MOVE BJMRDT    RRRUNA                          S01319
+     C                     MOVE BJURPT    RRTITL                          S01319
+     C*
+     C           #AB9      ENDSR                           **#AB9**
+      /EJECT
+     C*****************************************************************   S01319
+     C***********                                                     *   S01319
+     C********SUBROUTINE ZA0150 - THIS SUBROUTINE CHAINS TO FILE LF/  *   S01319
+     C********FDICDRLL TO GET THE INSTALLATION CONTROL DETAILS RECORD *   S01319
+     C********1*(HELD ON PF/TABTB10)                                  *   S01319
+     C********INDICATOR 80 IS SET ON IF THE CHAIN FAILS OR THE RECORD *   S01319
+     C********IS*FLAGGED FOR DELETION.                                *   S01319
+     C********IF*INDICATOR 80 IS SET ON DETAILS OF THE ATTEMPTED      *   S01319
+     C********ACCESS ARE PLACED IN THE LDA.                           *   S01319
+     C***********                                                     *   S01319
+     C********FIELDS USED : SS0150 - KEY USED TO ACCESS FDICDRLL      *   S01319
+     C***********                                                     *   S01319
+     C*****************************************************************   S01319
+     C***********                                                         S01319
+     C***********ZA0150    BEGSR                                          S01319
+     C***********                                                         S01319
+     C***SET*UP*KEY TO OBTAIN FORMAT TABTB10F '01        10'              S01319
+     C***********          MOVEL'01'      SS0150 12                       S01319
+     C***********          MOVE '10'      SS0150                          S01319
+     C***********                                                         S01319
+     C***CHAIN*TO FILE FDICDRLL                                           S01319
+     C***********SS0150    CHAINFDICDRLL             80                   S01319
+     C***********RECI      IFNE 'D'                        B1             S01319
+     C***********          MOVE '1'       *IN80            *1             S01319
+     C***********          END                             E1             S01319
+     C***********                                                         S01319
+     C***DEAL*WITH DATA BASE ERROR                                        S01319
+     C************IN80     IFEQ '1'                        ***************S01319
+     C***********          MOVEL'FDICDRLL'DBFILE           *             *S01319
+     C***********          MOVEL'900'     DBASE            * DBERROR 900 *S01319
+     C***********          MOVELSS0150    DBKEY            *             *S01319
+     C***********          END                             ***************S01319
+     C***********                                                         S01319
+     C***********ZA0159    ENDSR                                          S01319
+     C*****************************************************************   S01319
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #C     - TERMINATION PROCESSING;  OUTPUTS DATA   *
+     C*                       BASE ERROR IF APPROPRIATE AND PRINTS    *
+     C*                       FINAL AUDIT REPORT FORMAT.              *
+     C*                                                               *
+     C*  FIELDS DEFINED:      @FLG  - (1 BYTE ALPHA) IF= 'N' NO RECORD*
+     C*                               EXISTS ON LF/FDDLNMLL.          *
+     C*                       @PRT   - (1 BYTE ALPHA) IF = 'Y', THEN  *
+     C*                                HEADERS HAVE BEEN OUTPUT.      *
+     C*  CALLED BY : MAIN PROGRAM                                     *
+     C*  CALLS     :                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #C        BEGSR
+     C*
+     C**  IF *INU7 IS ON, A DATA BASE ERROR HAS OCCURRED.  THE ERROR
+     C**  INFORMATION FIELDS ARE SET UP AND PRINTED ON THE AUDIT REPORT
+     C           *INU7     IFEQ '1'                        B1
+     C*
+     C                     MOVE DBASE     RRDBSE           *1
+     C                     MOVE DBPGM     RRDPGM           *1
+     C                     MOVE DBFILE    RRDBFL           *1
+     C                     MOVELDBKEY     RRDKEY           *1
+     C*
+     C                     WRITEFD0340R4                   *1
+     C*
+     C                     END                             E1
+     C*
+     C**  IF THE LOGICAL FLAG @FLG = 'N', THERE IS NO VALID RECORD ON
+     C**  THE DEAL NO. RANGE MAINTENANCE FILE.  IN THIS CASE, THE "NO
+     C**  DETAILS TO REPORT" FORMAT IS OUTPUT.  OTHERWISE THE "END OF
+     C**  REPORT FORMAT IS OUTPUT.
+     C           @FLG      IFEQ 'N'                        B1
+     C*
+     C                     WRITEFD0340R2                   *1
+     C*
+     C                     ELSE                            X1
+     C*
+     C****THE*"END*OF*REPORT"*FORMAT*IS*ONLY*OUTPUT*IF*A*REPORT*IS********S01319
+     C****REQUIRED,*I.E.*IF*THE*HEADERS*HAVE*BEEN*PRINTED.****************S01319
+     C***********@PRT******IFEQ*'Y'************************B*2************S01319
+     C********************************************************************S01319
+     C*********************WRITEFD0340R3*********************2************S01319
+     C********************************************************************S01319
+     C*********************END*****************************E*2************S01319
+     C*
+     C                     END                             E1
+     C*
+     C**  SET ON *INLR TO TERMINATE THE PROGRAM.
+     C                     MOVE '1'       *INLR
+     C*
+     C           #C9       ENDSR                           **#C9**
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: *PSSR - ERROR HANDLING SUBROUTINE                *
+     C*                                                               *
+     C*  FIELDS DEFINED:                                              *
+     C*                                                               *
+     C*  CALLED BY : THIS ROUTINE IS CALLED IF THERE ARE ANY PROGRAM  *
+     C*              OR FILE ERRORS                                   *
+     C*  CALLS :                                                      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C                     DUMP
+     C*
+     C           #PSSR9    ENDSR                            ***PSSR9**
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: ZTNLU1 - SR TO LOCK, UPDATE AND RELEASE THE     *
+     C*                       TRANSACTION NUMBER DATA AREA.           *
+     C*                                                               *
+     C*  FIELDS DEFINED:                                              *
+     C*                                                               *
+     C*  CALLED BY : #ZC                                              *
+     C*  CALLS :                                                      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           ZTNLU1    BEGSR
+     C*
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     MOVE FNATN     NATN    50
+     C                     MOVE FNATN     ZZWK05  50
+     C                     ADD  1         ZZWK05
+     C                     MOVE ZZWK05    FNATN
+     C                     OUT  DNATN
+     C*
+     C           ZTNLU9    ENDSR                            **ZTNLU9**
+      /EJECT
+     OFDDLNMP0E                @RLS
+** CPY@
+(c) Misys International Banking Systems Ltd. 2001

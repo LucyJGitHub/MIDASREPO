@@ -1,0 +1,85 @@
+/*********************************************************************/
+/*XBI    OVRDBF  FILE(UTC000052F) TOFILE(UPFDATTPD)                  */
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UT FNDUPDSRC update multiple sources')          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities Module                                    */
+/*                                                                   */
+/*       UTC000052 - Update multiple sources                         */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. CUT015  *CREATE    Date 20Apr12              */
+/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUT015 - New utility to replace UPDSRC.                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&WRKLIB)
+ 
+             DCL        VAR(&WRKLIB) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&STR) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&CASE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&STRLEN) TYPE(*CHAR) LEN(3)
+ 
+             DCLF       FILE(UTC000052F)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2012')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Build list of source files from work library. */
+             DLTF       FILE(QTEMP/DSPFDATR)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/UTC000052F)
+             MONMSG     MSGID(CPF0000)
+             CRTDUPOBJ  OBJ(UPFDATTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(UTC000052F)
+             DSPFD      FILE(&WRKLIB/*ALL) TYPE(*ATR) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/DSPFDATR)
+             CPYF       FROMFILE(QTEMP/DSPFDATR) +
+                          TOFILE(QTEMP/UTC000052F) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+ 
+             OVRDBF     FILE(UTSTMTPD) TOFILE(&WRKLIB/UTSTMTPD)
+ 
+/* Retrieve data about original scan from first record of UTSTMTPD. */
+             CALL       PGM(UT000053) PARM(&STR &CASE &STRLEN)
+             IF         COND(%SWITCH(XXXX1XXX)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+READNEXT:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             IF         COND(&PHDTAT *EQ 'S') THEN(DO)
+                OVRDBF     FILE(SEARCHSRC) TOFILE(&WRKLIB/&PHFILE) +
+                             MBR(*ALL) SEQONLY(*YES 347)
+                CALL       PGM(UT000052) PARM(&STR &CASE &STRLEN)
+                IF         COND(%SWITCH(XXXX1XXX)) THEN(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+                DLTOVR     FILE(SEARCHSRC)
+             ENDDO
+ 
+             GOTO       CMDLBL(READNEXT)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+             CHGJOB     SWS(XX1XXXXX)
+ 
+ENDPGM:
+             DLTOVR     FILE(UTSTMTPD)
+             MONMSG     MSGID(CPF0000)
+ 
+             ENDPGM

@@ -1,0 +1,527 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Display Customer Sub-Limit Exposure Amounts')          *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Exposure Management Module                           *
+      *                                                               *
+      *  EM0340 - Display Sub-Limit Amounts                           *
+      *                                                               *
+      *  Function:  This enquiry will detail the Trade Finance        *
+      *  exposure for a customer at sub-limit level.                  *
+      *                                                               *
+      *  Called By: EM0301 - Limits/Exposure available by customer    *
+      *                                                               *
+      *  Calls: ZA0250   - Clear program subfile message queue        *
+      *         EM0350   - Select current record                      *
+      *         AOCREPT  - Access program (General ledger)            *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CTI002  *CREATE    Date 19Aug98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (recompiled)                                        *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CTI002 - Trade Innovation Phase II  *CREATE                  *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Use of indicators.                                           *
+      *                                                               *
+      *    30         sfldsp                                          *
+      *    31         sflclr                                          *
+      *   N31         sfldspctl                                       *
+      *    32         sflend                                          *
+      *    40         sfldsp                                          *
+      *    41         sflclr                                          *
+      *   N41         sfldspctl                                       *
+      *    79         LOKUP array LN                                  *
+      *    80-89      General Chain indicators                        *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      *  *INZSR - Initial processing                                  *
+      *  CLR@SF - Clear subfile                                       *
+      *  LOADSF - Load subfile                                        *
+      *  PRC@SF - Process subfile requests                            *
+      *  SNDMSG - send messages                                       *
+      *  DIVTSD - Divide amounts by 1000                              *
+      *  *PSSR  - Error processing                                    *
+      *  OVRFLW - Test overflow %                                     *
+      *                                                               *
+      *****************************************************************
+      *
+      * Display File
+     FEM0340FMCF  E                    WORKSTN
+     F                                        SFLRRNKSFILE SFL340
+     F                                        SFLL  KSFILE SFL340L
+      *
+      * Trade Finance Sub-Type file
+     FEMTFCBL0IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      * Accounts File
+     FSDACODL0IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      * Customer File
+     FSDCUSTL0IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      * Currency File
+     FSDCURRL1IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      * Bank File
+     FSDBANKL0IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      * Exposure Management Sub-Line File
+     FEMTFSLL0IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      * Exposure Management Sub-Line Account File
+     FEMTFSAL1IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      * Exposure Management Control File
+     FSDEXPML1IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+     F*  Exposure management scaling file LF/EMEXSCL1
+     F/COPY ZSRSRC,ZEXPSCLZ2
+      * -------------------------------------------------------------------
+     E*
+      *
+      * Array containing Sub-Lines
+     E                    LN         26  1   LNA    15 0
+     E                    LM         26 15 0
+      *
+     E**  Exposure management scaling arrays.
+     E/COPY ZSRSRC,ZEXPSCLZ3
+      *
+      * Array containing Copyright statement
+     E                    CPY@    1   1 80
+      *
+      *
+     E                    FTXT    1   1 80
+      * -------------------------------------------------------------------
+     IMSGDS       DS
+     I I            ' '                       1   7 MSGID
+     I I            'EMUSRMSG'                8  17 MSGF
+     I I            '*LIBL'                  18  27 MSGLIB
+     I I            ' '                      28 283 MSGDTA
+     I I            '*PRV'                  284 288 MSGREL
+      * -------------------------------------------------------------------
+      /SPACE 3
+     ILDA       E DS
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IIPSDS      SDS
+     I                                        1  10 #PGM
+     I                                      244 253 JOB
+     I                                      254 263 USER
+      ***  Program status data structure
+      *
+      * -------------------------------------------------------------------
+      *                         MAIN ROUTINE
+      * -------------------------------------------------------------------
+     C                     EXSR CLR@SF
+     C                     EXSR LOADSF
+      * -------------------------------------------------------------------
+      * Load array elements into subfile
+     C                     Z-ADD1         X
+     C           X         DOWLELI
+     C                     MOVEALN,X      SLTYPE
+      *
+     C           SLTYPE    CHAINEMTFSLL0             89
+     C           *IN89     IFEQ *ON                        No Records
+     C           *LOCK     IN   LDA
+     C                     Z-ADD006       DBASE            ***************
+     C                     MOVEL'EMTFSAPD'DBFILE           *DB ERROR 001 *
+     C                     MOVEL'CTI002'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDLM,X      SLLIM
+     C                     Z-ADDLNA,X     SLEXP
+     C                     Z-ADDX         SFLL
+     C                     WRITESFL340L
+     C                     ADD  1         X
+     C                     ENDDO
+      *
+      * Compare SFLRRN with 0 to see if there is anything to display
+     C           SFLRRN    IFGT 0
+     C                     MOVE *ON       *IN40
+     C                     ENDIF
+      *
+     C           *IN03     DOWEQ*OFF
+     C           *IN06     ANDEQ*OFF
+     C                     WRITEMSGCTL
+     C                     MOVEAFTXT      TXT1
+     C                     WRITETRL340
+     C                     EXFMTCTL340L
+     C                     ENDDO
+      *
+      * -------------------------------------------------------------------
+      * Process Subfile
+     C           *IN03     DOWEQ*OFF
+      *
+     C                     MOVE *BLANKS   TXT1
+      *
+     C                     WRITEMSGCTL
+     C                     WRITETRL340
+     C                     EXFMTCTL340
+     C           *IN03     IFEQ *OFF
+      *
+     C                     CALL 'ZA0250'
+      *
+     C           *IN30     IFEQ '1'
+     C                     EXSR PRC@SF
+     C                     ENDIF
+      *
+      * End *IN03
+     C                     ENDIF
+     C                     ENDDO
+      * -------------------------------------------------------------------
+      *
+     C                     SETON                         LR
+     C                     RETRN
+      * -------------------------------------------------------------------
+      * Subroutine *INZSR
+      * Initialisation Subroutine
+      * -------------------------------------------------------------------
+     C           *INZSR    BEGSR
+      *
+      * Set up copyright parameter
+     C                     MOVEACPY@      CPY2@  80
+      *
+      * Define WORK fields
+     C           *LIKE     DEFN CBCUST    P#CUST
+     C                     MOVEL*BLANKS   @DELTP  2
+     C                     Z-ADD*ZEROS    @TDATE  50
+     C                     Z-ADD*ZEROS    @SCAMT 130
+     C                     Z-ADD*ZEROS    X       30
+     C                     Z-ADD*ZEROS    LI      30
+      *
+     C           *NAMVAR   DEFN           LDA   256
+      *
+      * Initialise LDA field.
+     C                     MOVEL'EM0340'  DBPGM
+      *
+      * Define Entry Parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P#CUST
+      * Get bank details
+     C                     READ SDBANKL0                 89
+     C           *IN89     IFEQ *ON                        No Records
+     C           *LOCK     IN   LDA
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           *DB ERROR 001 *
+     C                     MOVEL'CTI002'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      * Get customer details
+     C           P#CUST    CHAINSDCUSTL0             89
+     C           *IN89     IFEQ *ON                        No Records
+     C           *LOCK     IN   LDA
+     C                     Z-ADD002       DBASE            ***************
+     C                     MOVEL'SDCUSTPD'DBFILE           *DB ERROR 002 *
+     C                     MOVEL'CTI002'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     MOVELBBCRNM    CBDESC
+     C                     ENDIF
+      *
+      * Get default currency
+     C           *LOVAL    SETLLSDEXPML1
+     C                     READ SDEXPML1                 89
+     C           *IN89     IFEQ *ON                        No Records
+     C           *LOCK     IN   LDA
+     C                     Z-ADD004       DBASE            ***************
+     C                     MOVEL'SDEXPMPD'DBFILE           *DB ERROR 002 *
+     C                     MOVEL'CTI002'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      * Get currency Name
+     C           BUCYCD    CHAINSDCURRL1             89
+     C           *IN89     IFEQ *ON                        No Records
+     C           *LOCK     IN   LDA
+     C                     Z-ADD005       DBASE            ***************
+     C                     MOVEL'SDCURRPD'DBFILE           *DB ERROR 002 *
+     C                     MOVEL'CTI002'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * Subroutine CLR@SF
+      * Clear Subfile
+      * -------------------------------------------------------------------
+     C           CLR@SF    BEGSR
+      * Clear Subfile
+     C                     SETON                       3031
+     C                     WRITECTL340
+     C                     SETOF                       3031
+      *
+      *
+     C                     SETON                       4041
+     C                     WRITECTL340L
+     C                     SETOF                       4041
+      *
+      * Reset SFLRRN
+     C                     Z-ADD0         SFLL
+     C                     Z-ADD0         SFLRRN
+      *
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * Subroutine LOADSF
+      * Load Subfile
+      * -------------------------------------------------------------------
+     C           LOADSF    BEGSR
+      *
+     C                     SETOF                         32
+     C           P#CUST    SETLLEMTFCBL0
+      *
+      * Read Records into Subfile
+     C           P#CUST    READEEMTFCBL0                 32
+     C           *IN32     DOWEQ'0'
+     C                     ADD  1         SFLRRN
+      * Divide by 1000
+     C                     EXSR DIVTSD
+      *
+      * Get account description
+     C                     MOVELCBACNO    A5ACCD
+     C           A5ACCD    CHAINSDACODL0             89
+     C           *IN89     IFEQ *OFF
+     C                     MOVELA5ACCN    #DESC
+     C                     ELSE
+     C                     MOVE *BLANKS   #DESC
+     C                     ENDIF
+      *
+      * Calculate utilisation percentage (EXPOSURE / LIMIT) * 100
+     C           CBLIM     IFGT 0
+     C           CBEXP     DIV  CBLIM     TEMP   155
+     C           TEMP      MULT 100       TEMP2
+     C                     EXSR OVRFLW
+     C                     Z-ADDTEMP2     #PCT
+     C                     ELSE
+     C                     Z-ADD0         #PCT
+     C                     ENDIF
+      *
+      * Calculate scaled exposure
+     C           CBSCL     IFEQ *BLANKS
+     C*                    Z-ADDCBEXP     SSCLA
+     C                     ELSE
+     C                     MOVELCBSCL     @DELTP
+     C                     Z-ADDBJRDNB    @TDATE
+     C                     Z-ADDCBEXP     @SCAMT
+     C                     EXSR SCALE
+      * If Scaling type is blank then set scaled Exposure to
+      * Actual Exposure
+     C           EKSCTY    IFEQ *BLANK
+     C           CBSCL     ANDNE*BLANKS
+     C                     Z-ADDCBEXP     SSCLA
+     C                     ELSE
+     C                     Z-ADD@SCAMT    SSCLA
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      * Write to array
+     C           CBACNO    CHAINEMTFSAL1             89
+     C           *IN89     IFEQ *ON                        No Records
+     C           *LOCK     IN   LDA
+     C                     Z-ADD003       DBASE            ***************
+     C                     MOVEL'EMTFSAPD'DBFILE           *DB ERROR 002 *
+     C                     MOVEL'CTI002'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADD1         X
+     C           SATYPE    LOKUPLN,X                     79
+     C           *IN79     IFEQ *OFF                       Not found
+     C                     ADD  1         LI
+     C                     MOVEASATYPE    LN,LI
+     C                     ADD  CBEXP     LNA,LI
+     C                     ADD  CBLIM     LM,LI
+     C                     ELSE
+     C                     ADD  CBEXP     LNA,X
+     C                     ADD  CBLIM     LM,X
+     C                     ENDIF
+      *
+     C                     WRITESFL340
+     C           P#CUST    READEEMTFCBL0                 32
+     C                     ENDDO
+      *
+      * Compare SFLRRN with 0 to see if there is anything to display
+     C           SFLRRN    IFGT 0
+     C                     MOVE *ON       *IN30
+     C                     ENDIF
+      *
+      * No records - send message
+     C           *IN30     IFEQ *OFF
+     C                     MOVEL'EMT0028' MSGID
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * Subroutine PRC@SF
+      * Process Subfile Requests
+      * -------------------------------------------------------------------
+     C           PRC@SF    BEGSR
+      *
+      * Read subfile for any subfile select records
+     C                     SETOF                         33
+     C                     READCSFL340                   33
+     C           *IN33     DOWEQ*OFF
+      *
+     C                     SELEC
+      * Select current record
+     C           SFLSEL    WHEQ '1'
+     C                     CALL 'EM0350'
+     C                     PARM           CBCUST
+     C                     PARM           CBACNO
+      *
+      * Update subfile
+     C           SFLRRN    CHAINSFL340               89
+     C                     MOVE *BLANK    SFLSEL
+     C                     UPDATSFL340
+      *
+      * If subfile select != 1 then Error Message
+     C                     OTHER
+     C           SFLSEL    IFNE *BLANK
+     C                     MOVELSFLSEL    MSGDTA
+     C                     MOVEL'EMT0004' MSGID
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+     C                     READCSFL340                   33
+     C                     ENDDO
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * Subroutine SNDMSG
+      * Send Program Message
+      * -------------------------------------------------------------------
+     C           SNDMSG    BEGSR
+      *
+      * Only write message if requested
+     C           MSGID     IFNE *BLANKS
+     C                     CALL 'AOCREPT'
+     C                     PARM           MSGID
+     C                     PARM           MSGF
+     C                     PARM           MSGLIB
+     C                     PARM           MSGDTA
+     C                     PARM '*SAME'   MSGREL
+     C                     PARM           #PGM
+     C                     PARM *BLANK    FTMSGQ 10
+     C                     PARM *BLANK    FTMSGT  7
+      *
+      * Reset message Id
+     C                     RESETMSGDS
+     C                     ENDIF
+      *
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * Subroutine DIVTSD
+      * Divides amounts by 1000
+      * -------------------------------------------------------------------
+     C           DIVTSD    BEGSR
+      *
+     C           CBEXP     IFNE 0
+     C                     DIV  1000      CBEXP     H
+     C                     Z-ADDCBEXP     SEXP
+     C                     ELSE
+     C                     Z-ADD0         SEXP
+     C                     ENDIF
+      *
+      * Do not divide limits by 1000 as they are input as 000's
+      *
+      *
+     C           SSCLA     IFGT 0
+     C                     DIV  1000      SSCLA     H
+     C                     ENDIF
+      *
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      * -------------------------------------------------------------------
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * Subroutine OVRFLW
+      * Test overflow
+      * -------------------------------------------------------------------
+     C           OVRFLW    BEGSR
+     C           *LIKE     DEFN TEMP      TEMP2
+     C           TEMP2     IFGT 999.99
+     C                     Z-ADD999.99    TEMP2
+     C                     ENDIF
+     C                     ENDSR
+      * -------------------------------------------------------------------
+     C/COPY ZSRSRC,ZEXPSCLZ1
+      * -------------------------------------------------------------------
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  footer text
+F6=Account Details

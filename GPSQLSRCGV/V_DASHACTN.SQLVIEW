@@ -1,0 +1,56 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing Module                                      */
+/*                                                                             */
+/*       V_DASHACTN - Dashboard Action Items                                   */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2005                     */
+/*                                                                             */
+/*       Last Amend No. MD020661A          Date 19Jun13                        */
+/*       Prev Amend No. MD020661           Date 28May13                        */
+/*                      CCB023             Date 06Aug12                        */
+/*                      AR1042967          Date 16Oct12                        */
+/*                      BUG28109           Date 06Sep10                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      CGP002  *CREATE    Date 07Apr05                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       MD020661 - DCUATH field should be Y or N                              */
+/*       CCB023 - COB Restructure - Input Cycle Termination Restructuring      */
+/*       AR1042967 - Corrective batch waiting authorisation not                */
+/*                   accessible from dashboard (Child:AR1042968)               */
+/*       BUG28109 - Unauthorised repaired items not shown in dashboard         */
+/*       CGP002 - MidasPlus Dashboard                                          */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+  SELECT                                                                        :
+      DLMSID,                                                                   :
+      DLKEYD,                                                                   :
+      CAST(DLVAL AS NUMERIC(5,0)) AS DLVAL,                                     :
+/*****DLMPRM*******************************************************************/:             CCB023
+      DLMPRM,                                                                                 CCB023
+      DLUATH                                                                                  CCB023
+  FROM GPDWNLPD                                                                 :
+  WHERE DLVAL <>''                                                              :
+  AND DLUATH = 'Y'                                                              :           MD020661
+  OR DLVAL <>''                                                                 :          MD020661A
+  AND DLUATH = 'W'                                                              :          MD020661A
+/*--Filter for Unauthorised Items and Batches Not accepted.*********************/
+/*AND*(DLKEYD*LIKE*'Unauth%'*OR*DLKEYD =*'BatchesNotAccepted'*)*****************/           BUG28109
+/*AND*(DLKEYD*LIKE*'Unauth%'*OR*DLKEYD*=*'BatchesNotAccepted'******************/:  BUG28109 MD020661
+/*OR*DLKEYD*LIKE*'Unrep%')******************************************************/ BUG28109 AR1042967
+/*OR*DLKEYD*LIKE*'Unrep%'*OR*DLKEYD*=*'CorectBatchNotAceptd')******************/:   AR1042967 CCB023
+/*OR*DLKEYD*LIKE*'Unrep%'*OR DLKEYD*=*'CorectBatchNotAceptd'********************/    CCB023 MD020661
+/*OR*DLKEYD*LIKE*'Wait%')******************************************************/:    CCB023 MD020661
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas GP Dashboard Actions                        ';                     :
+                                                                                :

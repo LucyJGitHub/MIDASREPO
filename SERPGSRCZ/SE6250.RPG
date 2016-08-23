@@ -1,0 +1,1226 @@
+     H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SEfe Custody Settlements Audit Rpt')             *
+     F*****************************************************************
+     F**                                                              *
+     F**  Midas SECURITIES TRADING                                *
+     F**                                                              *
+     F**  SE6250 - SAFE CUSTODY FEE SETTLEMENTS AUDIT REPORT          *
+     F**                                                              *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F**                                                              *
+     F**  FUNCTION:  This Program produces a report, for audit purpo- *
+     F**  (COB)      ses, of all settlements inserted, amended or de- *
+     F**             leted today.                                     *
+     F**                                                              *
+     F**  CALLED BY: SEC6250 - Safe Custody Fees Settlements Audit    *
+     F**                       Report                                 *
+     F**                                                              *
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 181332             Date 04Feb02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 091522             Date 14Aug95               *
+      *                 S01464             Date 04Apr94               *
+     F*                 SESCS              DATE 00MMM00               *
+     F**                                                              *
+     F**--------------------------------------------------------------*
+     F*                                                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  181332 - Wrong number of decimal places used in Total Amt    *
+      *           Accrued and Actual Amount after amending Settlmnt   *
+      *           CCY. Fix uses Bank Charging CCY from SDSCFEPD.      *
+     F*  091522 - Safe Custody Fees - Private Banking (CSE001)        *
+     F**    S01464 - SAFE CUSTODY FEES                                *
+     F**    WRITTEN FOR SAFE CUSTODY FEES                             *
+     F*****************************************************************
+     F** C R E A T I O N     P A R A M E T E R S                      *
+     F**                                                              *
+     F**                                                              *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F**
+     F**      FILE DEFINITIONS
+     F**     ------------------
+     F*
+     F**   SAFE CUSTODY FEE CUSTOMERS FILE
+     F***SCOCFSQ1IF**E********************DISK*********KINFSR**PSSR       S01464
+     FSEOCFSQ1IF  E                    DISK         KINFSR *PSSR          S01464
+     F*
+     F**   BANK DETAILS FILE                        - Prefix BJ
+     FSDBANKPDIF  E                    DISK         KINFSR *PSSR
+     F*
+     F*****SAFE*CUSTODY*ICD*FILE                    - Prefix SA           S01464
+     F***SCICDPPDIF**E********************DISK*********KINFSR**PSSR       S01464
+     F*
+     F*****PM*ICD*FILE                              - Prefix P9           S01464
+     F***SDPORTPDIF**E********************DISK*********KINFSR**PSSR       S01464
+     F*                                                                   S01464
+     F**   CURRENCY FILE                            - Prefix A6           S01464
+     FSDCURRL0IF  E           K        DISK         KINFSR *PSSR          S01464
+     F*
+     F**   CUSTODY FEE SETTLEMENTS AUDIT REPORT RUN CONTROLS
+     FSE6250AUO   E             21     PRINTER      KINFDS ERF1DS
+     F                                              KINFSR *PSSR
+     F*
+     F**   CUSTODY FEE SETTLEMENTS AUDIT REPORT
+     FSE6250P1O   E             22     PRINTER      KINFDS ERF2DS     UC
+     F                                              KINFSR *PSSR
+     F*
+     F/EJECT
+     F*****************************************************************
+     F**                                                              *
+     F** ID F  C  H  L    FUNCTION OF INDICATORS                      *
+     F**                 ------------------------                     *
+     F**                                                              *
+     F**    21         - OVERFLOW ON PRINTER FILE SE6250AU.           *
+     F**    22         - OVERFLOW ON PRINTER FILE SE6250P1.           *
+     F**       50      - FLAG TO OUTPUT PORTFOLIO REFERENCE LITERALS. *
+     F**       51      - FLAG TO OUTPUT CUSTOMER NUMBER ON SE6250P1.  *
+     F**       70      - EOF ON READ OF FILE SDBANKPD.                *
+     F*********71******- EOF ON READ OF FILE SDPORTPD.                *   S01464
+     F*********72******- EOF ON READ OF FILE SCICDPPD.                *   S01464
+     F*********73******- EOF ON READ OF FILE SCOCFSQ1.                *   S01464
+     F**       73      - EOF ON READ OF FILE SEOCFSQ1.                *   S01464
+     F**       80      - FAILED CHAIN TO LF/SDCURRL0                  *   S01464
+     F**       88      - MULTI-BRANCHING INDICATOR.                   *   S01464
+     F**       98      - INPUT INDICATOR FOR SR ZDATE2.               *
+     F**                                                              *
+     F*****************************************************************
+     F/EJECT
+     E*****************************************************************
+     E***********                                                         S01464
+     E*****QCMDEXC*ARRAY                                                  S01464
+     E***********         CMD     1   1 39                                S01464
+     E*
+     E**   ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+     E*
+     E**   ARRAYS USED IN CONVERSION OF DECIMAL AMOUNTS TO CHARACTER
+     E                    ZS1        15  1 0
+     E                    ZS2        21  1
+     E*
+     E**   ARRAYS USED IN CONVERSION OF DATES TO DDMMMYY FORMAT
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     E*
+     E*****************************************************************
+     E/EJECT
+     E*****************************************************************
+     I*
+     I**   DATA STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+     ICPYR@$      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@$$
+     I*
+     I**   PROGRAM STATUS DATA STRUCTURE
+     IPSDS       SDS
+     I                                      244 253 JOB
+     I                                      254 263 USER
+     I*
+     I**   FILE INFORMATION DATA STRUCTURE
+     IERF1DS      DS
+     I                                       83  92 SFILEU                S01464
+     I                                    B 123 1240SFNUMU                S01464
+     I*
+     I**   FOR OVERFLOW - RUN CONTROL
+     I                                    B 367 3680LINE
+     I*
+     IERF2DS      DS
+     I                                       83  92 SFILE                 S01464
+     I                                    B 123 1240SFNUM                 S01464
+     I*
+     I**   FOR OVERFLOW - PRINT
+     I                                    B 367 3680LINE1
+     I*
+     I**   LOCAL DATA AREA
+     I***LDA********UDS****************************256                    S01464
+     ILDA         DS                            256                       S01464
+     I**************************************132 141 DBFILE                S01464
+     I                                      134 141 DBFILE                S01464
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     IRUNDT       DS                             13                       S01464
+     I** Rundate data area                                                S01464
+     I                                       13  13 MBIN                  S01464
+     I*
+     I**   DATE FORMATTING DATA STRUCTURE
+     IUPDATE      DS
+     I                                        1   2 SDDAY
+     I                                        3   5 SDMTH
+     I                                        6   7 SDYER
+     I*
+     I**   DATA STRUCTURE FOR ZSEDIT SUBROUTINE
+     I            DS
+     I                                        1  150WORK15
+     I                                        1  150ZS1
+     I*
+     I**   DATA STRUCTURE FOR FORMATTING ACCOUNT CODE
+     I            DS
+     I**********                              1  12 WWACCT                                    CGL029
+     I                                        1  18 WWACCT                                    CGL029
+     I***********                             1   60W1CNUM                                    CSD027
+     I                                        1   6 W1CNUM                                    CSD027
+     I**********                              7  100W1ACOD                                    CGL029
+     I**********                             11  120W1ACSQ                                    CGL029
+     I                                        7  160W1ACOD                                    CGL029
+     I                                       17  180W1ACSQ                                    CGL029
+     I*
+     I**   DATA STRUCTURE FOR FORMATTING ACCOUNT CODE
+     I            DS
+     I**********                              1  14 WWACT1                                    CGL029
+     I                                        1  20 WWACT1                                    CGL029
+     I************                            1   60W2CNUM                                    CSD027
+     I                                        1   6 W2CNUM                                    CSD027
+     I                                        7   7 W1DASH
+     I**********                              8  110W2ACOD                                    CGL029
+     I**********                             12  12 W1DAS1                                    CGL029
+     I**********                             13  140W2ACSQ                                    CGL029
+     I                                        8  170W2ACOD                                    CGL029
+     I                                       18  18 W1DAS1                                    CGL029
+     I                                       19  200W2ACSQ                                    CGL029
+     I*                                                                   S01464
+     I** Securities Trading ICD                                           S01464
+     ISDSCFE    E DSSDSCFEPD                                              S01464
+     I*                                                                   S01464
+     ISDMMOD    E DSSDMMODPD                                              091522
+     I** Midas Modules File                                               091522
+     I*                                                                   091522
+     ISDPORT    E DSSDPORTPD                                              091522
+     I** Portfolio Management ICD                                         091522
+     I*                                                                   091522
+     I** Short DS for access programs                                     091522
+     IDSFDY     E DSDSFDY                                                 091522
+     I*                                                                   091522
+     I** Long DS for access programs                                      S01464
+     IDSSDY     E DSDSSDY                                                 S01464
+     I*                                                                   S01464
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C**              START MAINLINE
+     C**             ----------------
+     C*
+     C**   INITIAL PROCESSING
+     C                     EXSR #A
+     C*
+     C**   MAIN PROCESSING
+     C                     EXSR #B
+     C*
+     C**   PRODUCE RUN CONTROLS REPORT
+     C                     EXSR #C
+     C*                                                                   S01464
+     C** ENSURE TOTAL SPOOL FILE RECORDED BY RCF                          S01464
+     C*                                                                   S01464
+     C                     Z-ADDSFNUMU    SFNUM2  60                      S01464
+     C*                                                                   S01464
+     C                     CALL 'ZSFILE'                                  S01464
+     C                     PARM           @RSEQ   5                       S01464
+     C                     PARM *BLANK    SENTY   3                       S01464
+     C                     PARM           SFILEU                          S01464
+     C                     PARM           SFNUM2                          S01464
+     C                     PARM           ZSERR   1                       S01464
+     C*                                                                   S01464
+     C           ZSERR     IFEQ 'Y'                                       S01464
+     C                     MOVE '1'       *INU7                           S01464
+     C                     MOVE '1'       *INU8                           S01464
+     C                     MOVE '1'       *INLR                           S01464
+     C                     RETRN                                          S01464
+     C                     END                                            S01464
+     C*                                                                   S01464
+     C*
+     C**   END PROGRAM
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**    INDEX TO SUBROUTINES                                      *
+     C**   ----------------------                                     *
+     C**                                                              *
+     C**   #A      - INITIAL PROCESSING                               *
+     C**   #B      - MAIN PROCESSING                                  *
+     C**   #C      - PRODUCE RUN CONTROL REPORTS                      *
+     C**   #BA     - PORTFOLIO POSITION PROCESSING                    *
+     C**   #BB     - CUSTOMER POSITION PROCESSING                     *
+     C**   #ZA     - DATABASE ERRORS                                  *
+     C**   #ZB     - FORMAT DETAIL RECORD FOR SE6250P1                *
+     C**   #ZC     - TABULATE NUMBER OF AUTHORISATIONS,               *
+     C**             INSERTS, AMENDS, DELETES AND POSTED              *
+     C**   ZSEDIT  - FORMAT NUMERIC VALUES                            *
+     C**   ZDATE2  - FORMAT DATE VALUES                               *
+     C**   *PSSR   - PROGRAM ERROR HANDLING SUBROUINE                 *
+     C**                                                              *
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #A        - INITIAL PROCESSING                             *
+     C**                                                              *
+     C**   CALLS     - #ZA                                            *
+     C**                                                              *
+     C**   CALLED BY - MAINLINE                                       *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #A        BEGSR
+     C*
+     C                     SETOF                     505170
+     C                     SETOF                     717273
+     C                     SETOF                     98
+     C                     Z-ADD*ZEROS    LINE
+     C                     Z-ADD*ZEROS    LINE1
+     C*
+     C** INITIALISE DB ERROR FIELDS AND STORE PROGRAM NAME FOR DB
+     C** ERROR FIELD
+     C*                                                                   S01464
+     C** PREPARE LDA                                                      S01464
+     C*                                                                   S01464
+     C           *NAMVAR   DEFN           LDA                             S01464
+     C           *LOCK     IN   LDA                                       S01464
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVE *BLANKS   DBPGM                           091522
+     C                     MOVEL'SE6250'  DBPGM
+     C                     OUT  LDA                                       S01464
+     C*                                                                   S01464
+     C** In the data area RUNDAT                                          S01464
+     C*                                                                   S01464
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01464
+     C                     IN   RUNDT                                     S01464
+     C*
+     C***BUILD*COMMAND*EXPRESSION*FOR*QCMDEXC                             S01464
+     C***********          MOVELCMD,1     WWCMDP 43                       S01464
+     C***********          MOVE ')'       WWPRTL  4                       S01464
+     C*
+     C** SET UP FIELDS TO BE USED IN FORMATTING ACCOUNT CODE
+     C                     MOVE '-'       W1DASH  1
+     C                     MOVE '-'       W1DAS1  1
+     C*
+     C** ACCESS BANK DETAILS FILE TO GET RUN DATE AND TITLE
+     C           1         SETLLSDBANKPD
+     C                     READ SDBANKPD                 70
+     C*
+     C** IF RECORD NOT FOUND OR LAST CHANGE TYPE = 'D' THEN DB ERROR
+     C           *IN70     IFEQ '1'
+     C           BJTYLC    OREQ 'D'
+     C*
+     C           *LOCK     IN   LDA                                       S01464
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           * DBERROR 001 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     OUT  LDA                                       S01464
+     C                     EXSR #ZA
+     C                     END
+     C*
+     C***ACCESS*PM*ICD*FILE                                               S01464
+     C***********1         SETLLSDPORTPD                                  S01464
+     C***********          READ SDPORTPD                 71               S01464
+     C***********                                                         S01464
+     C***IF*RECORD*NOT*FOUND*OR*LAST*CHANGE*TYPE*=*'D'*THEN*DB*ERROR      S01464
+     C************IN71     IFEQ '1'                                       S01464
+     C***********P9TYLC    OREQ 'D'
+     C***********P9ADST    OREQ 'D'                                       S01464
+     C***********                                                         S01464
+     C***********          Z-ADD2         DBASE            ***************S01464
+     C***********          MOVEL'SDPORTPD'DBFILE           * DBERROR 002 *S01464
+     C***********          MOVE *BLANKS   DBKEY            ***************S01464
+     C***********          EXSR #ZA                                       S01464
+     C***********          END                                            S01464
+     C*                                                                   091522
+     C** Check if Portfolio Management is ON using access object.         091522
+     C*                                                                   091522
+     C                     CALL 'AOMMODR0'                                091522
+     C                     PARM *BLANKS   @RTCD                           091522
+     C                     PARM '*FIRST ' @OPTN                           091522
+     C           SDMMOD    PARM SDMMOD    DSFDY                           091522
+     C*                                                                   091522
+     C** Database error if no record found.                               091522
+     C*                                                                   091522
+     C           @RTCD     IFNE *BLANKS                                   091522
+     C           *LOCK     IN   LDA                                       091522
+     C                     Z-ADD5         DBASE            ***************091522
+     C                     MOVEL'SDMMODPD'DBFILE           * DBERROR 005 *091522
+     C                     MOVE *BLANKS   DBKEY            ***************091522
+     C                     OUT  LDA                                       091522
+     C                     EXSR #ZA                                       091522
+     C                     END                                            091522
+     C*                                                                   091522
+     C** If Portfolio Management is ON, access Portfolio Management       091522
+     C** ICD.                                                             091522
+     C*                                                                   091522
+     C           BGPFMG    IFEQ 'Y'                                       091522
+     C*                                                                   091522
+     C                     CALL 'AOPORTR0'                                091522
+     C                     PARM *BLANKS   @RTCD                           091522
+     C                     PARM '*FIRST ' @OPTN                           091522
+     C           SDPORT    PARM SDPORT    DSFDY                           091522
+     C*                                                                   091522
+     C** Database error if no record found.                               091522
+     C*                                                                   091522
+     C           @RTCD     IFNE *BLANKS                                   091522
+     C           *LOCK     IN   LDA                                       091522
+     C                     Z-ADD2         DBASE            ***************091522
+     C                     MOVEL'SDPORTPD'DBFILE           * DBERROR 002 *091522
+     C                     MOVE *BLANKS   DBKEY            ***************091522
+     C                     OUT  LDA                                       091522
+     C                     EXSR #ZA                                       091522
+     C                     END                                            091522
+     C*                                                                   091522
+     C                     END                                            091522
+     C*
+     C** ACCESS SAFE CUSTODY ICD FILE
+     C***********1         SETLLSCICDPPD                                  S01464
+     C***********          READ SCICDPPD                 72               S01464
+     C                     CALL 'AOSCFER0'                                S01464
+     C                     PARM           @RTCD   7                       S01464
+     C                     PARM '*FIRST ' @OPTN   7                       S01464
+     C           SDSCFE    PARM SDSCFE    DSSDY                           S01464
+     C*
+     C** IF RECORD NOT FOUND OR LAST CHANGE TYPE = 'D' THEN DB ERROR
+     C************IN72     IFEQ '1'                                       S01464
+     C           @RTCD     IFNE *BLANKS                                   S01464
+     C***********SACHTP    OREQ 'D'                                       S01464
+     C           FBTYLC    OREQ 'D'                                       S01464
+     C*
+     C           *LOCK     IN   LDA                                       S01464
+     C                     Z-ADD3         DBASE            ***************
+     C***********          MOVEL'SCICDPPD'DBFILE           * DBERROR 003 *S01464
+     C                     MOVEL'SDSCFEPD'DBFILE           ***************S01464
+     C                     MOVE *BLANKS   DBKEY
+     C                     OUT  LDA                                       S01464
+     C                     EXSR #ZA
+     C                     END
+     C*
+     C** SET ON FLAG TO OUTPUT PORTFOLIO REFERENCE LITERALS ON REPORT
+     C** IF FEE PER CUSTOMER POSITIONS INDICATOR IS 'P'
+     C***********SACFCP    IFEQ 'P'                                       S01464
+     C           FBCFCP    IFEQ 'P'                                       S01464
+     C                     MOVE '1'       *IN50
+     C                     END
+     C*
+     C** SET OFF FLAG TO OUTPUT PORTFOLIO REFERENCE LITERALS ON REPORT
+     C** IF FEE PER CUSTOMER POSITIONS INDICATOR IS 'C'
+     C***********SACFCP    IFEQ 'C'                                       S01464
+     C           FBCFCP    IFEQ 'C'                                       S01464
+     C                     MOVE '0'       *IN50
+     C                     END
+     C*                                                                   S01464
+     C** Test for multibranching                                          S01464
+     C*                                                                   S01464
+     C           MBIN      IFEQ 'Y'                                       S01464
+     C                     MOVE '1'       *IN88                           S01464
+     C                     ELSE                                           S01464
+     C                     MOVE '0'       *IN88                           S01464
+     C                     END                                            S01464
+     C*
+     C** INITIALISE DETAIL RECORD FIELDS IN SE6250AU
+     C                     Z-ADD0         RRAUTS
+     C                     Z-ADD0         RRINTS
+     C                     Z-ADD0         RRAMDS
+     C                     Z-ADD0         RRDELS
+     C                     Z-ADD0         RRPOST
+     C*
+     C** INITIALISE DETAIL RECORD FIELDS IN SE6250P1
+     C***********          MOVE *BLANKS   RRPLOC                          S01464
+     C                     MOVE *BLANKS   RRBRCD                          S01464
+     C                     MOVE *BLANKS   RRACOC
+     C                     MOVE *BLANKS   RRACON
+     C                     MOVE *BLANKS   RRCCY1
+     C                     MOVE *BLANKS   RRCCY2
+     C                     MOVE *BLANKS   RRCUST
+     C                     MOVE *BLANKS   RRPREF
+     C                     MOVE *BLANKS   RRTAMA
+     C                     MOVE *BLANKS   RRACAM
+     C                     MOVE *BLANKS   RRSCCY
+     C                     MOVE *BLANKS   RRACCT
+     C                     MOVE *BLANKS   RRSDAT
+     C                     MOVE *BLANKS   RRAUTH
+     C                     MOVE *BLANKS   RRACT
+     C                     MOVE *BLANKS   RRDATE
+     C                     MOVE *BLANKS   RRCUSB                          S01464
+     C                     Z-ADD0         RRTIME
+     C*
+     C** INITIALISE WORK FIELDS
+     C                     Z-ADD0         WWAUTS  50
+     C                     Z-ADD0         WWINTS  50
+     C                     Z-ADD0         WWAMDS  50
+     C                     Z-ADD0         WWDELS  50
+     C                     Z-ADD0         WWPOST  50
+     C                     MOVE *BLANKS   WWACOC  2
+     C***********          MOVE *BLANKS   WWPLOC  3                       S01464
+     C                     MOVE *BLANKS   WWBRCD  3                       S01464
+     C                     MOVE *BLANKS   WWPREF  4
+     C***********          MOVE *BLANKS   WWCUST  6                       S01464
+     C**********           Z-ADD0         WWCUST  60                                   S01464 CSD027
+     C                     MOVE *BLANKS   WWCUST  6                                           CSD027
+     C                     MOVE *BLANKS   WWCSCY  3                       S01464
+     C*
+     C** WORK FIELD FOR SR ZSEDIT
+     C                     MOVE *BLANKS   WWFL18 18
+     C*
+     C** INITIALISE ZSEDIT PARAMETERS
+     C***********          Z-ADDSABCGD    ZDECS                           S01464
+     C                     MOVE 'L'       ZECODE
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #B        - MAIN PROCESSING                                *
+     C**                                                              *
+     C**   CALLS     - #BA,#BB                                        *
+     C**                                                              *
+     C**   CALLED BY - MAINLINE                                       *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #B        BEGSR
+     C*
+     C***********          READ SCOCFSQ1                 73               S01464
+     C                     READ SEOCFSQ1                 73               S01464
+     C*
+     C** IF NO DETAILS PRESENT
+     C           *IN73     IFEQ '1'
+     C*
+     C***OPEN*PRINTER*FILE*SE6250P1                                       S01464
+     C***********          OPEN SE6250P1                                  S01464
+     C***********          MOVE '0'       *IN60                           S01464
+     C***********          WRITEHEADER1                                   S01464
+     C***********          MOVE SABCGC    RRCCY1                          S01464
+     C***********          MOVE SABCGC    RRCCY2                          S01464
+     C***********          WRITEHEADER2                                   S01464
+     C***********          WRITENULL1                                     S01464
+     C                     MOVE 'Y'       NULL    1                       S01464
+     C*
+     C                     ELSE
+     C*
+     C***FORMAT*CORRECT*PRINTER*LOCATION*FOR*REPORT                       S01464
+     C***********          MOVE '1'       *IN60                           S01464
+     C***********          MOVELAZPRTL    WWPRTL                          S01464
+     C***********          MOVE WWPRTL    WWCMDP                          S01464
+     C***********          CALL 'QCMDEXC'                                 S01464
+     C***********          PARM WWCMDP    QCAA   43                       S01464
+     C***********          PARM 43        QCAN   155                      S01464
+     C***********          OPEN SE6250P1                                  S01464
+     C***********          MOVE AZPRTL    RRPLOC                          S01464
+     C***********          MOVE AZACOC    RRACOC                          S01464
+     C***********          MOVE AZACON    RRACON                          S01464
+     C***********          MOVE SABCGC    RRCCY1                          S01464
+     C***********          MOVE SABCGC    RRCCY2                          S01464
+     C***********          WRITEHEADER1                                   S01464
+     C***********          WRITEHEADER2                                   S01464
+     C***********          MOVE AZACOC    WWACOC                          S01464
+     C***********          MOVE AZPRTL    WWPLOC                          S01464
+     C           *IN73     DOWEQ'0'
+     C*                                                                   S01464
+     C           SEBRCA    IFNE WWBRCD                                    S01464
+     C*                                                                   S01464
+     C           WWOPEN    IFEQ 'Y'                                       S01464
+     C                     WRITEFOOTING1                                  S01464
+     C                     CLOSESE6250P1                                  S01464
+     C                     END                                            S01464
+     C*                                                                   S01464
+     C                     OPEN SE6250P1                                  S01464
+     C                     Z-ADD*ZERO     PAGE                            S01464
+     C                     MOVE 'Y'       WWOPEN  1                       S01464
+     C*                                                                   S01464
+     C** WRITE THE HEADINGS OF THE REPORT                                 S01464
+     C*                                                                   S01464
+     C                     MOVE '1'       *IN60                           S01464
+     C                     MOVE SEBRCA    RRBRCD                          S01464
+     C                     MOVE AZACOC    RRACOC                          S01464
+     C                     MOVE AZACON    RRACON                          S01464
+     C                     MOVE FBBCGC    RRCCY1                          S01464
+     C                     MOVE FBBCGC    RRCCY2                          S01464
+     C                     WRITEHEADER1                                   S01464
+     C                     WRITEHEADER2                                   S01464
+     C*                                                                   S01464
+     C** ENSURE REPORT SPOOL FILE RECORDED BY RCF                         S01464
+     C*                                                                   S01464
+     C                     Z-ADDSFNUM     SFNUM1  60                      S01464
+     C*                                                                   S01464
+     C                     CALL 'ZSFILE'                                  S01464
+     C                     PARM           @RSEQ                           S01464
+     C                     PARM SEBRCA    SENTY   3                       S01464
+     C                     PARM           SFILE                           S01464
+     C                     PARM           SFNUM1                          S01464
+     C                     PARM           ZSERR   1                       S01464
+     C*                                                                   S01464
+     C           ZSERR     IFEQ 'Y'                                       S01464
+     C                     MOVE '1'       *INU7                           S01464
+     C                     MOVE '1'       *INU8                           S01464
+     C                     MOVE '1'       *INLR                           S01464
+     C                     RETRN                                          S01464
+     C                     END                                            S01464
+     C                     MOVE SEBRCA    WWBRCD                          S01464
+     C                     MOVE AZACOC    WWACOC                          S01464
+     C                     END                                            S01464
+     C*                                                                   S01464
+     C** CURRENCY HAS CHANGED                                             S01464
+     C*                                                                   S01464
+     C           SECSCY    IFNE WWCSCY                                    S01464
+     C*                                                                   S01464
+     C** SET UP CURRENCY DECIMAL PLACES FROM BANK CHARGING CCY            S01464
+     C*                                                                   S01464
+     C********** SECSCY    CHAINSDCURRL0             80            S01464 181332
+     C           FBBCGC    CHAINSDCURRL0             80                   181332
+     C*                                                                   S01464
+     C           *IN80     IFEQ '1'                                       S01464
+     C           *LOCK     IN   LDA                                       S01464
+     C                     Z-ADD4         DBASE            ***************S01464
+     C                     MOVEL'SDCURRL0'DBFILE           * DBERROR 004 *S01464
+     C                     MOVELFBBCGC    DBKEY            ***************S01464
+     C                     OUT  LDA                                       S01464
+     C                     EXSR #ZA                                       S01464
+     C                     END                                            S01464
+     C*                                                                   S01464
+     C                     MOVE SECSCY    WWCSCY                          S01464
+     C                     Z-ADDA6NBDP    ZDECS                           S01464
+     C                     END                                            S01464
+     C*
+     C** IF ACCOUNT OFFICER CODE HAS CHANGED
+     C           WWACOC    IFNE AZACOC
+     C*
+     C                     MOVE '1'       *IN51
+     C***********          MOVE AZPRTL    RRPLOC                          S01464
+     C                     MOVE AZACOC    RRACOC
+     C                     MOVE AZACON    RRACON
+     C***********          MOVE SABCGC    RRCCY1                          S01464
+     C                     MOVE FBBCGC    RRCCY1                          S01464
+     C***********          MOVE SABCGC    RRCCY2                          S01464
+     C                     MOVE FBBCGC    RRCCY2                          S01464
+     C*
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     MOVE AZACOC    WWACOC
+     C                     END
+     C*
+     C** SET ON FLAG TO PRINT CUSTOMER NUMBER ONLY ON
+     C** CHANGE OF CUSTOMER
+     C           WWCUST    IFNE BBCUST
+     C                     MOVE '1'       *IN51
+     C                     MOVE BBCUST    WWCUST
+     C                     END
+     C*
+     C** IF FEE PER CUSTOMER POSITIONS INDICATOR IS 'P'
+     C***********SACFCP    IFEQ 'P'                                       S01464
+     C           FBCFCP    IFEQ 'P'                                       S01464
+     C                     EXSR #BA
+     C                     END
+     C*
+     C** IF FEE PER CUSTOMER POSITIONS INDICATOR IS 'C'
+     C***********SACFCP    IFEQ 'C'                                       S01464
+     C           FBCFCP    IFEQ 'C'                                       S01464
+     C                     EXSR #BB
+     C                     END
+     C*
+     C***********          READ SCOCFSQ1                 73               S01464
+     C                     READ SEOCFSQ1                 73               S01464
+     C*
+     C***IF*PRINTER*LOCATION*CODE*HAS*CHANGED                             S01464
+     C***********WWPLOC    IFNE AZPRTL                                    S01464
+     C***********          WRITEFOOTING1                                  S01464
+     C***********          CLOSESE6250P1                                  S01464
+     C***********          MOVELAZPRTL    WWPRTL                          S01464
+     C***********          MOVE WWPRTL    WWCMDP                          S01464
+     C***********          CALL 'QCMDEXC'                                 S01464
+     C***********          PARM WWCMDP    QCAA   43                       S01464
+     C***********          PARM 43        QCAN   155                      S01464
+     C***********          OPEN SE6250P1                                  S01464
+     C***********          Z-ADD*ZERO     PAGE                            S01464
+     C***********                                                         S01464
+     C***********          MOVE AZPRTL    WWPLOC                          S01464
+     C***********          MOVE '1'       *IN51                           S01464
+     C***********          END                                            S01464
+     C                     END
+     C*
+     C***********          END                                            S01464
+     C*
+     C** WRITE HEADINGS ON OVERFLOW
+     C           LINE1     IFGT 55
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     END
+     C*
+     C                     WRITEFOOTING1
+     C*
+     C** CLOSE PRINTER FILE
+     C                     CLOSESE6250P1
+     C                     END                                            S01464
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #C        - PRODUCE RUN CONTROLS REPORT                    *
+     C**                                                              *
+     C**   CALLS     - NONE                                           *
+     C**                                                              *
+     C**   CALLED BY - MAINLINE                                       *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #C        BEGSR
+     C                     WRITEHEADA
+     C*
+     C** FORMAT DETAILS RECORD
+     C                     Z-ADDWWAUTS    RRAUTS
+     C                     Z-ADDWWINTS    RRINTS
+     C                     Z-ADDWWAMDS    RRAMDS
+     C                     Z-ADDWWDELS    RRDELS
+     C                     Z-ADDWWPOST    RRPOST
+     C*
+     C** WRITE DETAILS RECORD
+     C                     WRITEDETAILA
+     C*                                                                   S01464
+     C** WRITE NO DETAILS TO REPORT                                       S01464
+     C           NULL      IFEQ 'Y'                                       S01464
+     C                     WRITENULL1                                     S01464
+     C                     END                                            S01464
+     C*
+     C***WRITE*END*RECORD                                                 S01464
+     C***********          WRITEFOOTING                                   S01464
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #BA       - PORTFOLIO POSITION PROCESSING                  *
+     C**                                                              *
+     C**   CALLS     - #ZB,#ZC                                        *
+     C**                                                              *
+     C**   CALLED BY - #B                                             *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #BA       BEGSR
+     C*
+     C** CHECK PORTFOLIO REFERENCE
+     C           SEPTFR    IFEQ '9997'
+     C           SEPTFR    OREQ '9999'
+     C*
+     C** IF PORTFOLIO REFERENCE IS 9997 SET REPORT PORTFOLIO
+     C** REFERENCE TO 9997 VALUE FROM SDPORTPD
+     C           SEPTFR    IFEQ '9997'
+     C***********          MOVE P9R997    WWPREF                          S01464
+     C                     MOVE FCR997    WWPREF                          091522
+     C                     END
+     C*
+     C** IF PORTFOLIO REFERENCE IS 9999 SET REPORT PORTFOLIO
+     C** REFERENCE TO 9999 VALUE FROM SDPORTPD
+     C           SEPTFR    IFEQ '9999'
+     C***********          MOVE P9R999    WWPREF                          S01464
+     C                     MOVE FCR999    WWPREF                          091522
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C** SET REPORT PORTFOLIO REFERENCE TO SEPTFR FROM SEOCFSQ1
+     C                     MOVE SEPTFR    WWPREF
+     C                     END
+     C*
+     C** FORMAT CUSTOMER DETAIL RECORD
+     C                     EXSR #ZB
+     C*
+     C** TABULATE RUN CONTROL COUNTERS
+     C                     EXSR #ZC
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #BB       - CUSTOMER POSITION PROCESSING                   *
+     C**                                                              *
+     C**   CALLS     - #ZB,#ZC                                        *
+     C**                                                              *
+     C**   CALLED BY - #B                                             *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #BB       BEGSR
+     C*
+     C** FORMAT CUSTOMER DETAIL RECORD
+     C                     EXSR #ZB
+     C*
+     C** TABULATE RUN CONTROL COUNTERS
+     C                     EXSR #ZC
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #ZA       - PROCESS DATABASE ERRORS                        *
+     C**                                                              *
+     C**   CALLS     - NONE                                           *
+     C**                                                              *
+     C**   CALLED BY - #A                                             *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #ZA       BEGSR
+     C*
+     C                     WRITEHEADA
+     C                     WRITEDBERROR
+     C***********          WRITEFOOTING                                   S01464
+     C*
+     C*                                                                   S01464
+     C** ENSURE TOTAL SPOOL FILE RECORDED BY RCF                          S01464
+     C*                                                                   S01464
+     C                     Z-ADDSFNUMU    SFNUM2  60                      S01464
+     C*                                                                   S01464
+     C                     CALL 'ZSFILE'                                  S01464
+     C                     PARM           @RSEQ   5                       S01464
+     C                     PARM *BLANK    SENTY   3                       S01464
+     C                     PARM           SFILEU                          S01464
+     C                     PARM           SFNUM2                          S01464
+     C                     PARM           ZSERR   1                       S01464
+     C*                                                                   S01464
+     C           ZSERR     IFEQ 'Y'                                       S01464
+     C                     MOVE '1'       *INU7                           S01464
+     C                     MOVE '1'       *INU8                           S01464
+     C                     MOVE '1'       *INLR                           S01464
+     C                     RETRN                                          S01464
+     C                     END                                            S01464
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #ZB       - SETUP OUTPUT FIELDS FOR TABLE LIST             *
+     C**                                                              *
+     C**   CALLS     - NONE                                           *
+     C**                                                              *
+     C**   CALLED BY - #BA,#BB                                        *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #ZB       BEGSR
+     C                     MOVE BBCUST    RRCUST
+     C                     MOVE WWPREF    RRPREF
+     C*
+     C** FORMAT TOTAL AMOUNT ACCRUED USING SR ZSEDIT
+     C                     Z-ADDSECFAC    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWFL18
+     C                     MOVELWWFL18    RRTAMA
+     C                     MOVE *BLANKS   WWFL18
+     C*
+     C** FORMAT ACTUAL AMOUNT USING SR ZSEDIT
+     C                     Z-ADDSEAFTS    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWFL18
+     C                     MOVELWWFL18    RRACAM
+     C                     MOVE *BLANKS   WWFL18
+     C*
+     C                     MOVE SECSCY    RRSCCY
+     C*                                                                   S01464
+     C           *IN88     IFEQ '1'                                       S01464
+     C                     MOVE SECUSB    RRCUSB                          S01464
+     C                     END                                            S01464
+     C*
+     C                     MOVE SECUSA    WWCHK2  2
+     C           WWCHK2    IFNE *BLANKS
+     C                     MOVE SECUSA    WWACCT
+     C***********          Z-ADDW1CNUM    W2CNUM                                              CSD027
+     C                     MOVE W1CNUM    W2CNUM                                              CSD027
+     C                     Z-ADDW1ACOD    W2ACOD
+     C                     Z-ADDW1ACSQ    W2ACSQ
+     C                     MOVE WWACT1    RRACCT
+     C                     ELSE
+     C**********           MOVELSECUSA    WWRK12 12                                           CGL029
+     C**********           MOVE WWRK12    RRACCT                                              CGL029
+     C                     MOVELSECUSA    WCUSA  18                                           CGL029
+     C                     MOVE WCUSA     RRACCT                                              CGL029
+     C                     END
+     C*
+     C** FORMAT SETTLE DATE USING SR ZDATE2
+     C                     MOVE SESEVD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRSDAT
+     C*
+     C                     MOVE SEAUIN    RRAUTH
+     C*
+     C** FORMAT LAST ACTION TYPE
+     C           SECHTP    IFEQ 'X'
+     C                     MOVEL'AUTHOR'  RRACT
+     C                     MOVE 'ISE'     RRACT
+     C                     END
+     C*
+     C           SECHTP    IFEQ 'I'
+     C                     MOVEL'INSERT'  RRACT
+     C                     END
+     C*
+     C           SECHTP    IFEQ 'A'
+     C                     MOVEL'AMEND'   RRACT
+     C                     END
+     C*
+     C           SECHTP    IFEQ 'D'
+     C                     MOVEL'DELETE'  RRACT
+     C                     END
+     C*
+     C           SECHTP    IFEQ 'P'
+     C                     MOVEL'POSTED'  RRACT
+     C                     END
+     C*
+     C** FORMAT LAST ACTION DATE
+     C                     MOVE SEDLUP    SDDAY
+     C                     MOVE SEMLUP    SDMTH
+     C                     MOVE SEYLUP    SDYER
+     C                     MOVE UPDATE    RRDATE
+     C*
+     C** FORMAT LAST ACTION TIME
+     C                     MOVE SETLUP    RRTIME
+     C*
+     C** WRITE HEADINGS ON OVERFLOW
+     C           LINE1     IFGT 55
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     MOVE '1'       *IN51
+     C                     END
+     C*
+     C** WRITE DETAIL RECORD
+     C                     WRITEDETAIL1
+     C*
+     C** SET OFF FLAG TO PRINT CUSTOMER NUMBER
+     C                     MOVE '0'       *IN51
+     C*
+     C** INITIALISE DETAIL RECORD FIELDS
+     C                     MOVE *BLANKS   RRCUST
+     C                     MOVE *BLANKS   RRPREF
+     C                     MOVE *BLANKS   RRTAMA
+     C                     MOVE *BLANKS   RRACAM
+     C                     MOVE *BLANKS   RRSCCY
+     C                     MOVE *BLANKS   RRACCT
+     C                     MOVE *BLANKS   RRSDAT
+     C                     MOVE *BLANKS   RRAUTH
+     C                     MOVE *BLANKS   RRACT
+     C                     MOVE *BLANKS   RRDATE
+     C                     MOVE *BLANKS   RRCUSB                          S01464
+     C                     Z-ADD0         RRTIME
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #ZC       - TABULATE RUN CONTROL COUNTERS                  *
+     C**                                                              *
+     C**   CALLS     - NONE                                           *
+     C**                                                              *
+     C**   CALLED BY - #BA,#BB                                        *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #ZC       BEGSR
+     C*
+     C** TOTAL THE NUMBER OF AUTHORISATIONS
+     C           SECHTP    IFEQ 'X'
+     C                     ADD  1         WWAUTS
+     C                     END
+     C*
+     C** TOTAL THE NUMBER OF INSERTIONS
+     C           SECHTP    IFEQ 'I'
+     C                     ADD  1         WWINTS
+     C                     END
+     C*
+     C** TOTAL THE NUMBER OF AMENDMENTS
+     C           SECHTP    IFEQ 'A'
+     C                     ADD  1         WWAMDS
+     C                     END
+     C*
+     C** TOTAL THE NUMBER OF DELETIONS
+     C           SECHTP    IFEQ 'D'
+     C                     ADD  1         WWDELS
+     C                     END
+     C*
+     C** TOTAL THE NUMBER OF POSTED
+     C           SECHTP    IFEQ 'P'
+     C                     ADD  1         WWPOST
+     C                     END
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** ZSEDIT subroutine to insert a decimal point and sign into a     *
+     C** numeric field and to blank out leading zeros (optionaly         *
+     C** inserting commas).                                              *
+     C**     Input fields:   ZFLD15 15/0                                 *
+     C**                     ZDECS  1/0                                  *
+     C**                     ZECODE 1/  ('J', 'L' or blank)              *
+     C**                                                                 *
+     C**     Arrays:         ZS1    15/1/0                               *
+     C**                     ZS2    21/1/                                *
+     C**                                                                 *
+     C**     Output fields:  ZOUT21 21                                   *
+     C**                                                                 *
+     CSR         ZSEDIT    BEGSR                           **  ZSEDIT   *
+     C*
+     C* Define/Clear fields
+     C*
+     C                     Z-ADDZFLD15    ZFLD15 150
+     C                     Z-ADDZDECS     ZDECS   10
+     C                     MOVE ZECODE    ZECODE  1
+     C                     MOVE *BLANKS   ZOUT21 21
+     C*
+     C*       SET UP WORK FIELDS
+     C*
+     C                     Z-ADD0         ZS1
+     C                     MOVE ' '       ZS2
+     C*
+     C                     Z-ADD15        Z1      20
+     C                     Z-ADD20        Z2      20
+     C*
+     C           15        SUB  ZDECS     ZINTS   20
+     C*
+     C* Check if numeric field is negative
+     C*
+     C           ZFLD15    IFLT *ZEROS
+     C                     MOVE '-'       ZS2,21
+     C                     Z-SUBZFLD15    ZFLD15
+     C                     END
+     C*
+     C                     Z-ADDZFLD15    WORK15
+     C*
+     C*       CHECK TO SEE IF THERE ARE ANY DECIMAL PLACES
+     C*
+     C           ZDECS     CABEQ0         ZS10
+     C*
+     C*       SET UP DECIMALS
+     C*
+     C                     Z-ADD*ZEROS    ZCNT    10
+     C           ZCNT      DOUEQZDECS
+     C                     MOVE ZS1,Z1    ZS2,Z2
+     C                     SUB  1         Z2
+     C                     ADD  1         ZCNT
+     C                     SUB  1         Z1
+     C                     END
+     C*
+     C*       PUT IN DECIMAL PLACE
+     C*
+     C                     MOVE '.'       ZS2,Z2
+     C                     SUB  1         Z2
+     C*
+     C           ZS10      TAG                             ** ZS10 TAG **
+     C*
+     C*       SET UP INTEGERS
+     C*
+     C                     Z-ADD*ZEROS    CNT3    10
+     C           Z1        DOUEQ*ZEROS
+     C                     MOVE ZS1,Z1    ZS2,Z2
+     C                     SUB  1         Z1
+     C                     SUB  1         Z2
+     C*
+     C* If edit code is 'J', insert a ',' before each group of three
+     C* digits - not if beginning of array reached.
+     C*
+     C           Z2        IFGT *ZEROS
+     C           ZECODE    ANDEQ'J'
+     C                     ADD  1         CNT3
+     C           CNT3      IFEQ 3
+     C                     MOVE ','       ZS2,Z2
+     C                     SUB  1         Z2
+     C                     Z-ADD*ZEROS    CNT3
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C*       PUT IN LEADING BLANKS
+     C*
+     C                     Z-ADD1         Z2
+     C           ZS2,Z2    DOWEQ'0'
+     C           ZS2,Z2    OREQ ' '
+     C           ZS2,Z2    OREQ ','
+     C                     MOVE ' '       ZS2,Z2
+     C                     ADD  1         Z2
+     C           Z2        CABEQ22        ZS20
+     C                     END
+     C*
+     C*       IF NO INTEGERS PUT IN LEADING ZERO
+     C*
+     C           ZS20      TAG                             ** ZS20 TAG **
+     C*
+     C           Z2        IFEQ 22
+     C                     SUB  2         Z2
+     C                     MOVE '0'       ZS2,Z2
+     C                     ELSE
+     C*
+     C           ZS2,Z2    IFEQ '.'
+     C                     SUB  1         Z2
+     C                     MOVE '0'       ZS2,Z2
+     C                     END
+     C                     END
+     C*
+     C*       SET UP OUTPUT FIELD
+     C*
+     C                     MOVEAZS2       ZOUT21
+     C*
+     CSR                   ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+     C**
+     C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+     C**
+     C           ZDATE2    BEGSR                           *** ZDATE2 ***
+     C**
+     C**   CLEAR LEAP YEAR WORK FIELD.
+     C                     MOVE 'N'       ZLEAP   1
+     C**
+     C**   CLEAR DATE FIELDS.
+     C                     Z-ADD0         ZDATE   60
+     C                     MOVEL'       ' ZADATE  7
+     C**
+     C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C**
+     C**   DETERMINE YEAR NUMBER.
+     C**
+     C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+     C           ZDAYNO    SUB  1         ZDAYN1  50
+     C           ZDAYN1    IFLT 0
+     C                     GOTO ZDEND2
+     C                     END
+     C**
+     C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+     C           ZDAYN1    DIV  1461      ZLYR    20
+     C                     MVR            ZDAYN1           SAVE REMAINING
+     C**                                                   DAYS
+     C**   CALCULATE NUMBER OF REMAINING YEARS.
+     C                     Z-ADD1         ZWRK2   20
+     C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+     C           ZDAYN1    IFGE ZYDY,ZWRK2
+     C           ZWRK2     ADD  1         ZWRK2
+     C                     GOTO ZDTAG1
+     C                     END
+     C*
+     C           ZWRK2     SUB  1         ZWRK2
+     C**
+     C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+     C           ZWRK2     IFNE 0
+     C           ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+     C                     END
+     C**
+     C**   CALCULATE ACTUAL YEAR NUMBER.
+     C           ZLYR      MULT 4         ZWRK3   30
+     C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+     C                     Z-ADDZWRK3     ZYEAR   20
+     C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+     C**
+     C**   DETERMINE MONTH NUMBER.
+     C**
+     C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+     C           ZWRK2     IFEQ 0
+     C           ZDAYN1    IFEQ 59
+     C                     MOVE 'Y'       ZLEAP
+     C                     END
+     C           ZDAYN1    IFGE 59
+     C           ZDAYN1    SUB  1         ZDAYN1
+     C                     END
+     C                     END
+     C**
+     C**   CALCULATE MONTH NUMBER.
+     C                     Z-ADD2         ZWRK2
+     C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+     C           ZDAYN1    IFGE ZMDY,ZWRK2
+     C           ZWRK2     ADD  1         ZWRK2
+     C                     GOTO ZDTAG2
+     C                     END
+     C*
+     C           ZWRK2     SUB  1         ZWRK2
+     C**
+     C                     Z-ADDZWRK2     ZMTH    20       MONTH
+     C**
+     C**   DETERMINE DAY OF MONTH.
+     C**
+     C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+     C           ZDAYN1    ADD  1         ZDAYN1
+     C**
+     C**   CALCULATE DAY OF MONTH.
+     C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+     C**
+     C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+     C           ZLEAP     IFEQ 'Y'
+     C           ZDAY      ADD  1         ZDAY
+     C                     END
+     C**
+     C**   FORMAT DATE, DDMMYY OR MMDDYY.
+     C  N98                MOVELZDAY      ZWRK4   40
+     C   98                MOVE ZDAY      ZWRK4
+     C  N98                MOVE ZMTH      ZWRK4
+     C   98                MOVELZMTH      ZWRK4
+     C                     MOVELZWRK4     ZDATE
+     C                     MOVE ZYEAR     ZDATE
+     C**
+     C**   FORMAT ALPHA DATE, DDMMMYY.
+     C                     MOVELZDAY      ZWRK5   5
+     C           ZDAY      IFLT 10
+     C                     MOVEL' '       ZWRK5
+     C                     END
+     C                     MOVE ZMNM,ZMTH ZWRK5
+     C                     MOVELZWRK5     ZADATE
+     C                     MOVE ZYEAR     ZADATE
+     C**
+     C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*
+     C**
+     C**
+     C********************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   *PSSR     - Program error handling routine                 *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C                     DUMP
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

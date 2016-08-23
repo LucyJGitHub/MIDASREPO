@@ -1,0 +1,312 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Netting prune pay/receive extract')           *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL0351 - Netting prune of Pay/Receive Netting extract        *
+      *                                                               *
+      *  Function:  This program will process Pay/Receive extract     *
+      *  file for records which are flagged to be Netted, remove      *
+      *  from file and update file controls accordingly.              *
+      *  (phase(s))                                                   *
+      *                                                               *
+      *  Called By: DLC0211 - MIDAS Input/Cycle Pay/Receives          *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CGL165             Date 17Feb15               *
+      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 05Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CDL025             Date 27Jan05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CDL002             Date 15Apr97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance Receive Settlement Instructions             *
+      *           (Recompiled)                                        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CDL025 - FX Netting Payment Generation (Recompile)           *
+      *  CDL002 - FX Netting                                          *
+      *                                                               *
+      *****************************************************************
+      *
+      *  Basic Logic:
+      *
+      *    The pay receive extracts file (PREXPH) is checked to identify
+      *   records which will be included in the netting pay/receive run;
+      *   i.e. have their netting indicator set to Y.
+      *   The trailer PREXZZ is amended to reflect the deleted records.
+      *
+      *****************************************************************
+     FPRSXM   UF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *  Deals File by deal number
+     FDEALS   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *  FX Deals file by deal number
+     FDL0351AUO   E                    PRINTER
+      *  Audit trail
+      *
+      * ID C  F  H  L    Function of indicators
+      *    25            Error processing
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     IPREXPHF
+     I              RCDT                            RCDTPH
+      *
+     I            DS
+     I                                        1  150HRWN
+     I                                       16  180HRDC
+     I                                        1  180DSHASH
+     I@BANK     E DSSDBANKPD
+      * DATA STRUCTURE FOR BANK DETAILS
+      *
+     IDSFDY     E DSDSFDY
+      * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+      *
+     ILCLDTA     UDS
+      **  Local data area for PGM-TO-PGM info
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      *   initial processing
+     C                     EXSR SRINIT
+      *
+      *
+      *   M A I N   P R O C E S S I N G
+      *-------------------------------------------------------------------
+      *
+      **  Read pay/receive file
+      *
+     C                     READ PRSXM                    LR
+     C           *INLR     DOWEQ'0'
+     C           RECI      ANDEQ'D'
+      *
+      **  if deal has changed access net info from DEALS file
+      *
+     C           DLNO      IFNE SVDLNO
+     C           *LIKE     DEFN DLNO      SVDLNO
+     C                     MOVE DLNO      SVDLNO
+     C                     EXSR SRRDDL
+     C                     ENDIF
+      *
+      **  delete PREXPH record if it corresponds to a net
+      *
+     C           RCDT      IFEQ 'B'
+      *
+     C           PYRC      IFEQ 'R'
+     C           NETBY     ANDEQ'Y'
+     C           PYRC      OREQ 'P'
+     C           NETSL     ANDEQ'Y'
+     C           PYRC      OREQ 'C'
+     C           NETSL     ANDEQ'Y'
+     C                     EXSR SRUPDP
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     READ PRSXM                    LR
+     C                     ENDDO
+      *
+     C                     EXSR SRTERM
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRUPDP     Delete PREXPH record, and maintain hash totals     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRUPDP    BEGSR
+      *
+      **  delete record from extract file
+      *
+     C                     DELETPREXPHF                25
+      *
+     C           *IN25     IFEQ '1'                        ************
+     C                     MOVE '002'     DBASE            * DBERR 002*
+     C                     MOVEL'PREXPH  'DBFILE           ************
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVELDLNO      DBKEY
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  maintain hash totals of deleted records
+      *
+     C                     ADD  EAMT      WFDAMT 180
+     C                     ADD  1         WFDREC  50
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRRDDL     Read deals                                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRRDDL    BEGSR
+      *
+     C           DLNO      CHAINDEALS                25
+      *
+     C           *IN25     IFEQ '1'                        ************
+     C                     MOVE '003'     DBASE            * DBERR 003*
+     C                     MOVEL'DEALS   'DBFILE           ************
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVELDLNO      DBKEY
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRTERM     Termination processing                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRTERM    BEGSR
+      *
+      **  move trailer detils to printer fields
+      *
+     C                     MOVE NORE      AUNORE
+     C                     MOVE HRWN      AUHRWN
+     C                     MOVE HRDC      AUHRDC
+      *
+      **  update trailer record
+      *
+     C           NORE      SUB  WFDREC    NORE
+     C           DSHASH    SUB  WFDAMT    DSHASH
+     C           WFDREC    IFGT 0
+     C                     UPDATPREXZZF                25
+     C                     ENDIF
+      *
+     C           *IN25     IFEQ '1'                        ************
+     C                     MOVE '005'     DBASE            * DBERR 005*
+     C                     MOVEL'PREXZZ  'DBFILE           ************
+     C                     MOVE *BLANKS   DBKEY
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  produce audit report
+      *
+     C                     WRITEDL0351AH
+     C                     WRITEDL0351AD
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRINIT     initial processing                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      **  Access bank details for run date, next working day
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG    '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           @BANK     PARM @BANK     DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'DBFILE           *************
+     C                     MOVEL'900'     DBASE            * DBERR 900 *
+     C                     MOVEL@OPTN     DBOPTN  7        *************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SUBROUTINE: *PSSR - Error handling subroutine.               *
+      *                                                               *
+      *  FIELDS USED:                                                 *
+      *                                                               *
+      *  CALLED BY : This routine is called if there are any program  *
+      *              or file errors.                                  *
+      *  CALLS :                                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      **  Set @ERR1 to 'Y' to prevent looping if further errors
+      *
+     C           @ERR1     IFNE 'Y'                        B1
+     C                     MOVE 'Y'       @ERR1   1        *1
+      *
+     C                     MOVEL'DL0351'  DBPGM            *1
+     C                     MOVE '1'       *INU6            *1
+     C           DBASE     IFEQ *BLANKS
+     C                     MOVE '991'     DBASE            *1
+     C                     END
+      *
+      ** output details to report
+      *
+     C                     WRITEDL0351AH
+     C                     WRITEDL0351AD
+     C                     WRITEDL0351DB
+      *
+     C                     DUMP                            *1
+     C                     END                             E1
+      *
+     C                     MOVE '1'       *INU7            *1
+     C                     MOVE '1'       *INU8            *1
+     C                     MOVE '1'       *INLR
+      *
+     C                     RETRN
+      *
+     C           #PSSR9    ENDSR                                     *
+      *
+      *****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

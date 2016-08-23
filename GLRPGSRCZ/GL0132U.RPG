@@ -1,0 +1,307 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Convert Char.to 15,F numeric')
+     T* Utility Calls: Convert Character to Numeric
+      *
+     H*  SYSTEM  : UTILITY OBJECTS
+     H* ANALYST     : J L Blenkinsop
+     H* DATE        : June 1988
+     H* DESCRIPTION : Convert Character value to Numeric
+      *
+     M* MAINTENANCE : *NONE
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas  GENERAL LEDGER MODULE
+     F*                                                                  *
+     F*     GL0132U  -                                                   *S01251
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*     LAST AMEND NO.  S01408            DATE 22AUG94               *
+     F*     PREV AMEND NO.  S01199            DATE 02MAY90               *
+     F*                     S01251            DATE 09FEB90               *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                                  *
+     F*     S01408 - Hook GL0132UIPG added.                              *
+     F*              Hook GL0132UCPG added.                              *
+     F*     S01199 - RECOMPILED FOR CURSOR SENSITIVE HELP                *
+     F*     S01251 - PROGRAM AND FIELD NAME CHANGES                      *
+     F*                                                                  *
+     F********************************************************************
+     F*  P R O G R A M     C R E A T I O N     P A R A M E T E R S    *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     P* PARAMETERS  : Call with the following code :
+     P*
+     P*                    CALL '@UCVCHN0'             90  <CVT.TO NUM>
+     P*                    PARM *BLANK    P@RTCD  7        B:Return code
+     P*                    PARM (Alpha)   P@DATA 23        I:Alpha.data
+     P*                    PARM (Decimals)P@DECP  10       I:Dec.places
+     P*          (Value)   PARM           P@VALU 150       O:Value
+     P*
+     P*          *IN90     IFEQ '1'                        IF CALL ERROR
+     P*          (Perform error reporting if required)
+     P*                    END                             FI
+     P*
+     P*          P@RTCD    IFNE *BLANK                     IF DATE ERROR
+     P*          (Perform error reporting if required)
+     P*                    END                             FI
+     P*
+     P*    NOTE: Decimal places must be in range 0-9
+     P*
+     P*          Value is returned in 15,0 form, aligned on the decimal
+     P*          place given, eg:
+     P*
+     P*             "1,502.03"   Decimal places = 3
+     P*                                          / \
+     P*             is returned as:  000000001502030
+     P*
+     P*          Return code returns *BLANK if no error occurred
+     P*          Otherwise, returns:
+     P*
+     P*             '*ERROR '   - Any error in conversion
+      *
+      *================================================================
+      /EJECT
+     N*NOTES
+     N*================================================================
+     N*
+     N* 1. Input is a 23-character string containing a number to be
+     N*    translated from alphameric format. The string may contain
+     N*    digits, commas, one decimal point, a plus or minus or field
+     N*    minus character or 'CR', M (millions) or T (thousands).
+     N*
+     N* 2. Output is a 15-digit signed integer numeric value, in packed
+     N*    format.
+     N*
+     N* 3. The integer portion of the input number (all digits left of
+     N*    an included decimal point) is tested and shifted into a work
+     N*    array. Two special conditions are catered for:
+     N*
+     N*             M  - Millions,  eg. '25M' = 25,000,000
+     N*             T  - Thousands, eg. '15T' = 15,000
+     N*
+     N*    An error ocurrs if any digit, decimal point, M or T follows
+     N*    a special condition character.
+     N*
+     N*             eg. '25M.5' or '15TT' or '6M50' or '10T M'
+     N*
+     N* 4. Commas, if entered, are NOT CHECKED for correct position. Only
+     N*    the decimal point, M or T, if present, is checked and used for
+     N*    decimal alignment.
+     N*
+     N*================================================================
+      /EJECT
+     E*ESTART
+      ***************************************************
+     E                    @IN        23  1               Input data
+     E                    @WI        15  1               Integer work
+     E                    @OP        15  1               Output data
+     E                    CPY@    1   1 80               COPYRIGHT STATEMENT
+      ***************************************************
+      /SPACE 3
+     I*ISTART
+      *****************************************************************
+     I*                                                                   S01408
+     I** Core hook for externalisation.                                   S01408
+     I/COPY WNCPYSRC,GL0132UIPG                                           S01408
+     I*                                                                   S01408
+     IP@DATA      DS
+      * Input data structure
+     I                                        1  23 @IN
+      *
+     IA@WI        DS
+      * Integer work data structure
+     I                                        1  15 @WI
+      *
+     IA@OP        DS
+      * Output data structure
+     I                                        1  15 @OP
+     I                                        1  150W@VALU
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      *****************************************************************
+      /EJECT
+     C*CSTART
+      *****************************************************
+     C                     MOVEACPY@      BIS@   80
+     C           *ENTRY    PLIST
+     C                     PARM           P@RTCD  7        B:Return code
+     C                     PARM           P@DATA 23        I:Alpha.data
+     C                     PARM           P@DECP  10       I:Dec. places
+     C                     PARM W@VALU    P@VALU 150       O:Value
+      *****************************************************
+      * Initialise :
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,GL0132UCPG                                           S01408
+     C*                                                                   S01408
+      *
+     C                     MOVE *ZERO     A@OP             Output
+     C                     MOVE *ZERO     A@WI             Integer work
+     C                     MOVE '*ERROR ' P@RTCD           Set error
+     C                     SETOF                     010203 ¦ Reset
+     C                     SETOF                     0405   ¦ indicators
+     C           15        SUB  P@DECP    W@LMIT  30       Integer limit
+      *
+      * Put integer part into WORK array :
+      *
+     C                     Z-ADD1         P1      30       Set pointer 1
+     C                     Z-ADD1         P2      30       Set pointer 2
+      *
+     C           P1        DOWLT24                         DO 1 LOOP TILL
+     C/COPY WNCPYSRC,GL0132UC01
+     C           @IN,P1    ANDNE'.'                         AND DECIMAL
+     C/COPY WNCPYSRC,GL0132UC02
+      *                    |
+     C                     MOVE @IN,P1    W@CHAR  1          Keep element
+      *                    |
+     C           W@CHAR    IFEQ *BLANK                     IF 1 BLANK
+     C         04          SETON                       03    Trail.blank
+     C                     ELSE                            EL 1
+     C           W@CHAR    IFEQ 'C'                        IF 2 CR NEG.
+     C           *IN01     CABEQ'1'       TAGEND             Error: Return
+     C           *IN02     CABEQ'1'       TAGEND             Error: Return
+     C                     ADD  1         P1                 Incr.pointer
+     C           @IN,P1    COMP 'R'                      01  Check 'CR'
+     C           *IN01     CABEQ'0'       TAGEND             Error: Return
+     C                     ELSE                            EL 2
+     C           W@CHAR    IFEQ '-'                        IF 3 NEGATIVE
+     C           W@CHAR    OREQ '}'                         OR  FLD.MINUS
+     C           *IN01     CABEQ'1'       TAGEND             Error: Return
+     C           *IN02     CABEQ'1'       TAGEND             Error: Return
+     C                     SETON                       01    Set flag
+     C                     ELSE                            EL 3
+     C           W@CHAR    IFEQ '+'                        IF 4 POSITIVE
+     C           *IN01     CABEQ'1'       TAGEND             Error: Return
+     C           *IN02     CABEQ'1'       TAGEND             Error: Return
+     C                     SETON                       02    Set flag
+     C                     ELSE                            EL 4
+     C           W@CHAR    IFEQ 'M'                        IF 5 MILLIONS
+     C           *IN04     CABEQ'0'       TAGEND             Error: Return
+     C           *IN03     CABEQ'1'       TAGEND             Error: Return
+     C           *IN05     CABEQ'1'       TAGEND             Error: Return
+     C                     MOVEA'000000'  @WI,P2             Millions
+     C                     ADD  6         P2                 Incr.pointer
+     C/COPY WNCPYSRC,GL0132UC03
+     C                     SETON                         05  Set flag
+     C                     ELSE                            EL 5
+     C           W@CHAR    IFEQ 'T'                        IF 6 THOUSANDS
+     C           *IN04     CABEQ'0'       TAGEND             Error: Return
+     C           *IN03     CABEQ'1'       TAGEND             Error: Return
+     C           *IN05     CABEQ'1'       TAGEND             Error: Return
+     C                     MOVEA'000'     @WI,P2             Thousands
+     C                     ADD  3         P2                 Incr.pointer
+     C/COPY WNCPYSRC,GL0132UC04
+     C                     SETON                         05  Set flag
+     C                     ELSE                            EL 6
+     C           W@CHAR    IFGE '0'                        IF 7 NUMERIC
+     C           *IN03     CABEQ'1'       TAGEND             Error: Return
+     C           *IN05     CABEQ'1'       TAGEND             Error: Return
+     C           P2        CABGTW@LMIT    TAGEND             Excess integ.
+     C                     MOVE W@CHAR    @WI,P2             Digit
+     C                     ADD  1         P2                 Incr.pointer
+     C                     SETON                         04  Set flag
+     C                     ELSE                            EL 7
+     C/COPY WNCPYSRC,GL0132UC05
+     C           W@CHAR    CABNE','       TAGEND             Error: Return
+     C/COPY WNCPYSRC,GL0132UC06
+     C                     END                             FI 7
+     C                     END                             FI 6
+     C                     END                             FI 5
+     C                     END                             FI 4
+     C                     END                             FI 3
+     C                     END                             FI 2
+     C                     END                             FI 1
+      *                    |
+     C                     ADD  1         P1                 Incr.pointer
+      *                    |
+     C                     END                             OD 1
+      *
+      * Move integer to output :
+      *
+     C           15        SUB  P@DECP    P3      30       Offset pointer
+     C                     SUB  1         P2               Decr.pointer
+      *
+     C           P2        DOWGT*ZERO                      DO 2 WRK->O'PUT
+     C                     MOVE @WI,P2    @OP,P3             To output
+     C                     SUB  1         P3                 Decr.pointer
+     C                     SUB  1         P2                 Decr.pointer
+     C                     END                             OD 2
+      *
+      * Move decimals to output :
+      *
+     C           15        SUB  P@DECP    P2               Offset pointer
+     C                     ADD  1         P1               Skip dec.point
+     C                     SETOF                     0304  Set flags
+      *
+     C           P1        DOWLT24                         DO 2 WRK->O'PUT
+      *                    |
+     C                     MOVE @IN,P1    W@CHAR  1          Keep element
+      *                    |
+     C           W@CHAR    IFEQ *BLANK                     IF 9 BLANK
+     C         04          SETON                       03    Trail.blank
+     C                     ELSE                            EL 9
+     C           W@CHAR    IFEQ 'C'                        IF 10 CR NEGATIVE
+     C           *IN01     CABEQ'1'       TAGEND             Error: Return
+     C           *IN02     CABEQ'1'       TAGEND             Error: Return
+     C                     ADD  1         P1                 Incr.pointer
+     C           @IN,P1    COMP 'R'                      01  Check for 'CR'
+     C           *IN01     CABEQ'0'       TAGEND             Error: Return
+     C                     ELSE                            EL 10
+     C           W@CHAR    IFEQ '-'                        IF 11 NEGATIVE
+     C           W@CHAR    OREQ '}'                         OR  FIELD MINUS
+     C           *IN01     CABEQ'1'       TAGEND             Error: Return
+     C           *IN02     CABEQ'1'       TAGEND             Error: Return
+     C                     SETON                       01    Set flag
+     C                     ELSE                            EL 11
+     C           W@CHAR    IFEQ '+'                        IF 12 POSITIVE
+     C           *IN01     CABEQ'1'       TAGEND             Error: Return
+     C           *IN02     CABEQ'1'       TAGEND             Error: Return
+     C                     SETON                       02    Set flag
+     C                     ELSE                            EL 12
+     C           W@CHAR    CABLT'0'       TAGEND             Error: Return
+     C           *IN03     CABEQ'1'       TAGEND             Error: Return
+     C                     ADD  1         P2                 Incr.pointer
+     C           P2        CABGT15        TAGEND             Excess dec.
+     C                     MOVE W@CHAR    @OP,P2             To output
+     C                     SETON                       04    Set flag
+     C                     END                             FI 12
+     C                     END                             FI 11
+     C                     END                             FI 10
+     C                     END                             FI 9
+      *                    |
+     C                     ADD  1         P1                 Incr.pointer
+      *                    |
+     C                     END                             OD 2
+      *
+      * Sign result, if required :
+      *
+     C           *IN01     IFEQ '1'                        IF 13 NEGATIVE
+     C                     MLLZO'N'       W@VALU             Make neg.
+     C                     END                             FI 13
+      *
+      * Return to caller; leave this program active in pool :
+      *
+     C                     MOVE *BLANK    P@RTCD           No errors
+      *          _____________
+     C           TAGEND    TAG                             ** TAG **
+      *          ~~~~~~~~~~~~~
+     C                     RETRN                           Return
+      *
+      *****************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

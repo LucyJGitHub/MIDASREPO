@@ -1,0 +1,226 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Utility to patch account keys')                        *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  UTB23884 - Update Narrative Codes of Deal Types 'TD' 'CD'    *
+      *             'FT' 'DT and 'LT' for EU Witholding tax and       *
+      *             Secondary tax to '37' and '38' repectively        *
+      *                                                               *
+      *  Called By:                                                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *                                                               *
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. BUG23884 *CREATE   Date 10Jun09               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *   BUG23884 - Tax deduction on MM Deals shows customer name    *
+      *              as narrative                                     *
+      *                                                               *
+      *****************************************************************
+     F/EJECT
+     FACKEY   UF  E           K        DISK
+     F            ACKEYAKF                          KIGNORE
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+     FACKEYAK UF  E                    DISK
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+     FSDBANKL1IF  E           K        DISK
+     FUTNARRP1O   E             50     PRINTER
+      *
+      *****************************************************************
+      *
+     IAKEY        DS
+     I                                        1   2 DEALTP
+     I                                        3   3 EVENT
+     I                                        4   5 DEALST
+     I                                        6   8 EVENT2
+     I                                        9  10 KEYTYP
+     I                                       11  14 CLASD
+      *
+      *****************************************************************
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           MODE    1
+      *
+     C           MODE      IFEQ 'U'
+     C           MODE      OREQ 'u'
+     C                     MOVE *ON       *IN26
+     C                     ENDIF
+      *
+     C                     Z-ADD1         COUNTR  20
+     C                     Z-ADD*ZEROS    AMENDS  50
+     C                     MOVE '000'     *IN50
+      *
+     C                     READ SDBANKL1                 52
+     C                     WRITEHEADER
+      *
+     C           *LOVAL    SETLLACKEY
+     C                     READ ACKEY                    LR
+      *
+     C           *INLR     DOWEQ*OFF
+      *
+     C           DEALTP    IFEQ 'TD'
+     C           DEALTP    OREQ 'CD'
+     C           DEALTP    OREQ 'FT'
+     C           DEALTP    OREQ 'DT'
+     C           DEALTP    OREQ 'LT'
+      *
+     C           EVENT     IFEQ 'I'
+     C           EVENT     OREQ 'M'
+      *
+     C                     SETOF                     27
+      *
+      ** current narrative codes
+      *
+     C                     MOVE NCD1      NCD11
+     C                     MOVE NCD2      NCD22
+     C                     MOVE NCD3      NCD33
+     C                     MOVE NCD4      NCD44
+     C                     MOVE NCD5      NCD55
+     C                     MOVE NCD6      NCD66
+      *
+      ** Main Tax Account Keys
+      *
+     C           KEYTYP    IFEQ 'US'
+     C           EVENT2    IFEQ *BLANKS
+     C                     MOVE '37'      NCD1
+     C                     SETON                     27
+     C                     ELSE
+     C                     MOVE '37'      NCD4
+     C                     SETON                     27
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           KEYTYP    IFEQ 'UA'
+     C           EVENT2    ANDEQ*BLANKS
+     C           NCD1      ANDNE*BLANKS
+     C                     MOVE '37'      NCD1
+     C                     SETON                     27
+     C                     ENDIF
+      *
+     C           KEYTYP    IFEQ 'UD'
+     C           EVENT2    ANDEQ*BLANKS
+     C                     MOVE '37'      NCD4
+     C                     SETON                     27
+     C                     ENDIF
+      *
+     C           KEYTYP    IFEQ 'UF'
+     C           EVENT2    ANDNE*BLANKS
+     C                     MOVE '37'      NCD1
+     C                     SETON                     27
+     C                     ENDIF
+      *
+     C           KEYTYP    IFEQ 'UG'
+     C           EVENT2    ANDNE*BLANKS
+     C                     MOVE '37'      NCD4
+     C                     SETON                     27
+     C                     ENDIF
+      *
+     C           KEYTYP    IFEQ 'UR'
+     C           EVENT2    ANDNE*BLANKS
+     C                     MOVE '37'      NCD1
+     C                     SETON                     27
+     C                     ENDIF
+      *
+      ** Secondary Tax Account Keys
+      *
+     C           KEYTYP    IFEQ 'SS'
+     C           EVENT2    IFEQ *BLANKS
+     C                     MOVE '38'      NCD1
+     C                     SETON                     27
+     C                     ELSE
+     C                     MOVE '38'      NCD4
+     C                     SETON                     27
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           KEYTYP    IFEQ 'SA'
+     C           EVENT2    ANDEQ*BLANKS
+     C           NCD1      ANDNE*BLANKS
+     C                     MOVE '38'      NCD1
+     C                     SETON                     27
+     C                     ENDIF
+      *
+     C           KEYTYP    IFEQ 'SD'
+     C           EVENT2    ANDEQ*BLANKS
+     C                     MOVE '38'      NCD4
+     C                     SETON                     27
+     C                     ENDIF
+      *
+     C           KEYTYP    IFEQ 'SF'
+     C           EVENT2    ANDNE*BLANKS
+     C                     MOVE '38'      NCD1
+     C                     SETON                     27
+     C                     ENDIF
+      *
+     C           KEYTYP    IFEQ 'SG'
+     C           EVENT2    ANDNE*BLANKS
+     C                     MOVE '38'      NCD4
+     C                     SETON                     27
+     C                     ENDIF
+      *
+     C           KEYTYP    IFEQ 'SR'
+     C           EVENT2    ANDNE*BLANKS
+     C                     MOVE '38'      NCD1
+     C                     SETON                     27
+     C                     ENDIF
+      *
+     C           *IN26     IFEQ *ON
+     C           *IN27     ANDEQ*ON
+     C                     UPDATACKEYALF               50
+     C                     ENDIF
+      *
+     C           *IN27     IFEQ *ON
+      *
+     C                     ADD  1         AMENDS
+      *
+     C                     WRITEDETAIL
+     C                     ADD  1         COUNTR
+      *
+     C           COUNTR    IFGE 50
+     C                     WRITEHEADER
+     C                     Z-ADD1         COUNTR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     READ ACKEY                    LR
+     C                     ENDDO
+      *
+     C           *IN26     IFEQ *ON
+     C                     READ ACKEYAK                  51
+     C           *IN51     IFEQ *OFF
+     C                     ADD  AMENDS    NAMD
+     C                     UPDATACKEYAKF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     WRITETRAILER
+      *
+     C                     RETRN
+      *
+     C           *PSSR     BEGSR
+      *
+      **  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************

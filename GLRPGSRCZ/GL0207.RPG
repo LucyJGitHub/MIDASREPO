@@ -1,0 +1,284 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Account Keys installation utility')                    *
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL0207 - Account Keys Installation Utility                   *
+      *                                                               *
+      *  Function - In modes 1 & 2 copy existing WHT A/C Keys and     *
+      *             create duplicate set, with 'C' in pos. 6 for      *
+      *             corporate custs. Print report creted for addition *
+      *             A/C Keys created, with debit and credit A/C codes *
+      *             narrative codes and posting references.           *
+      *             No processing for mode 3.                         *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *                                                               *
+      *  Last Amend No. CER049             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CDL013  *CREATE    Date 08Jun06               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CER049 - Stamp Tax (Recompile)                               *
+      *  CDL013 - Tiered Withholding Tax                              *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Function of Indicators                                       *
+      *  ----------------------                                       *
+      *                                                               *
+      *     65 - PRINT REPORT OVERFLOW INDICATOR                      *
+      *     66 - PRINT REPORT OVERFLOW INDICATOR                      *
+      *                                                               *
+      *     80 - NO RECORD FOUND ON ACKEY                             *
+      *     81 - ARRAY SEARCH FAILED                                  *
+      *     82 - NO RECORD FOUND ON ACKEYAK                           *
+      *     83 - PRINT REPORT HEADER IF OFF                           *
+      *                                                               *
+      *     LR - LAST RECORD INDICATOR                                *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     FACKEY   UF  E           K        DISK                      A
+      * Account keys file
+      *
+     FACKEYAK UF  E           K        DISK
+     F            ACKEYAKF                          KRENAMEACKEYAKK         "
+      * Account keys header
+      *
+     FGL0207P1O   E             65     PRINTER                            S01117
+      * New account keys created                                            "
+      *                                                                     "
+     FGL0207AUO   E             66     PRINTER                            S01117
+      * New account keys - Audit                                            "
+      *                                                                     "
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E                    ARB     7  16 10                                ay
+      ** Array containing WHT Account Key formats
+      *
+     E                    CPY@    1   1 80                             array
+      ** Array containing Copyright statement
+      *
+     E                    ARA        10  1                                ay
+      ** Array containing Account Key re. search processing
+      *
+     E                    ARC        10  1                                ay
+      ** Array containing Account Key re. write processing
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     I*                                                                   S01319
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*                                                                   S01117
+     I              'Run Date & User Repo-C         BANK
+     I              'rt Title'
+      ** Database Error Reference descriptive text for AOBANK failure
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  #EENIT - Perform initial processing.                         *
+      *  #EEMAN - Perform main processing via mode 1, 2 or 3.         *
+      *  #EEUPD - Write new record to LF/ACKEY                        *
+      *  #EEND  - Commit files and exit program.                      *
+      *                                                               *
+      *****************************************************************
+      *          C O N T R O L      M O D U L E                       *
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           MODE    1
+      *
+     C                     EXSR #EEINT
+     C                     EXSR #EEMAN
+     C                     EXSR #EEEND
+      *
+      *****************************************************************
+      * #EEMAN - Main Subroutine                                      *
+      * Called by: - Control.                                         *
+      *****************************************************************
+     C           #EEMAN    BEGSR
+      *
+      ** If Tiered Withhilding Tax Feature is switched ON.
+     C           MODE      IFEQ '1'
+     C           MODE      OREQ '2'
+      *
+      ** Access first record on LF/ACKEY
+     C                     READ ACKEY                    80
+      *
+      ** Do while records on file.
+     C           *IN80     DOWEQ*OFF
+      *
+      ** Account key validation.
+     C                     MOVEAAKEY      ARA
+     C                     MOVEAAKEY      ARC
+     C                     MOVEAARA,4     XXCHK   2
+     C           XXCHK     IFNE *BLANK
+     C                     MOVEA'XX'      ARA,4
+     C                     ENDIF
+     C                     MOVEAARA       XXARA  10
+     C           XXARA     LOKUPARB                      81
+      *
+      ** If Account Key is an WHT A/C Key format write duplicate rec.
+     C           *IN81     IFEQ *ON
+     C                     EXSR #EEUPD
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   XXCHK
+     C                     MOVEA*BLANKS   ARA
+     C                     MOVEA*BLANKS   ARC
+     C                     MOVE *BLANKS   XXARA
+     C                     READ ACKEY                    80
+     C                     ENDDO
+     C                     ENDIF
+      *
+      ** If Tiered Withhilding Tax Feature is switched OFF exit program
+     C           MODE      IFEQ '3'
+     C                     EXSR #EEEND
+     C                     ENDIF
+      *
+      ** If total new records is greater than zero update LF/ACKEY
+     C           UTOTAL    IFGT 0
+     C                     READ ACKEYAK                  82
+     C                     ADD  UTOTAL    NINS
+     C                     ADD  UTOTAL    NREC1
+     C                     UPDATACKEYAKK
+      *
+      ** Print report footer
+     C                     WRITEFOOTER
+      *
+      ** If no duplicate records generated
+     C                     ELSE
+     C                     WRITEDBHEAD
+     C                     WRITENOREC
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * #EEUPD - Write record to LF/ACKEY                             *
+      * Called by: - #EEMAN.                                          *
+      *****************************************************************
+     C           #EEUPD    BEGSR
+      *
+      ** If account key is valid print heading for first time
+     C           *IN83     IFEQ *OFF
+     C                     WRITEHEADER
+     C                     MOVE *ON       *IN83
+     C                     ENDIF
+      *
+      ** Write duplicate record to LF/ACKEY with following amendments
+     C                     MOVEA'C'       ARC,6
+     C                     MOVEAARC       AKEY
+      *
+      ** If Account Codes & Posting References are zero print as blanks
+     C                     SELEC
+     C           ACD1      WHEQ *ZERO
+     C                     MOVE *BLANKS   ACD1
+     C           ACD2      WHEQ *ZERO
+     C                     MOVE *BLANKS   ACD2
+     C           ACD3      WHEQ *ZERO
+     C                     MOVE *BLANKS   ACD3
+     C           ACD4      WHEQ *ZERO
+     C                     MOVE *BLANKS   ACD4
+     C           ACD5      WHEQ *ZERO
+     C                     MOVE *BLANKS   ACD5
+     C           ACD6      WHEQ *ZERO
+     C                     MOVE *BLANKS   ACD6
+     C                     ENDSL
+     C                     SELEC
+     C           PRF1      WHEQ *ZERO
+     C                     MOVE *BLANKS   PRF1
+     C           PRF2      WHEQ *ZERO
+     C                     MOVE *BLANKS   PRF2
+     C           PRF3      WHEQ *ZERO
+     C                     MOVE *BLANKS   PRF3
+     C           PRF4      WHEQ *ZERO
+     C                     MOVE *BLANKS   PRF4
+     C           PRF5      WHEQ *ZERO
+     C                     MOVE *BLANKS   PRF5
+     C           PRF6      WHEQ *ZERO
+     C                     MOVE *BLANKS   PRF6
+     C                     ENDSL
+     C                     MOVE *BLANK    ZZ002
+     C                     MOVE *BLANK    ZZ034
+     C                     MOVE BJRDNB    LCD
+     C                     MOVE 'I'       CHTP
+     C                     Z-ADD0         TNLU
+      *
+     C           AKEY      CHAINACKEY                50
+     C           *IN50     IFEQ *ON
+     C                     WRITEACKEYALF
+     C                     ADD  1         UTOTAL
+     C                     WRITEDETAIL
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * #EEEND - Exit program                                         *
+      * Called by: - Control.                                         *
+      *****************************************************************
+     C           #EEEND    BEGSR
+      *
+      ** Exit program
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDSR
+      *****************************************************************
+      * #EEINT - Initial processing                                   *
+      * Called by: - Control Module.                                  *
+      *****************************************************************
+     C           #EEINT    BEGSR
+      *
+      ** Set up copyright parameter
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Retrieve Run Date & User Report Title via AOBANKR0
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** If error occured, terminate the program
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVELBANK      DBKEY
+     C                     Z-ADD01        DBASE
+     C                     MOVEL'GL0207'  DBPGM
+     C                     WRITEDBHEAD
+     C                     WRITEDBERR
+     C                     EXSR #EEEND
+     C                     END
+      *
+      ** Set no. of new records created to zero
+     C                     Z-ADD0         UTOTAL  40
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+** ARB
+CDIXX   TICDIXX    NCDIXX    TCDIXX    CCDMXX   TICDMXX    TTDIXX   TI
+TDIXX    TTDIXX    NTDMXX   TITDMXX    TITIXX   TIITIXX    TITIXX    N
+ITMXX   TIITMXX    T
+** CPY@ - Object copyright
+(c) Misys International Banking Systems Ltd. 2006

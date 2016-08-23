@@ -1,0 +1,431 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UT CRTOBJ validity checker')                    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities Module                                    */
+/*                                                                   */
+/*       UTC0002 - Validity checker for CRTOBJ command               */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. CUT008  *REWRITE   Date 15Nov10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Prev Amend No. BG18886            Date 22May08              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CPK018  *MOVED     Date 26Apr04              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.03 ---------------------------------------------------*/
+/*                      CUP007             Date 16Mar00              */
+/* Midas DBA 3.02 ---------------------------------------------------*/
+/*                      174739             DATE 07Feb00              */
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      CAP006             DATE 07Dec98              */
+/*                      CUT004             Date 28SEP98              */
+/*                      122700             Date 08SEP97              */
+/*                      CAA017             Date 29JUL97              */
+/*                      CAA015             Date 14JUL97              */
+/*                      CAA009             Date 19AUG96              */
+/*                      CAAA01             DATE 27OCT95              */
+/*                      078080             DATE 28OCT94              */
+/*                      074291             DATE 08AUG94              */
+/*                      S01516             DATE 18JUL94              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUT008  - CRTOBJ rewrite                                    */
+/*       BG18886 - Amendment of non-standard codes                   */
+/*       CPK018 - MidasPlus packaging.  Moved to global layer.       */
+/*       CUP007 - Check that job queue exists before creating.       */
+/*       174739 - Allow *LIBCRTAUT authority to be specified         */
+/*       CAP006 - APIs enhancement to use service programs.          */
+/*                OPTION keyword added.  For full header-box         */
+/*                text, see the CRTOBJ command source.               */
+/*       CUT004 - Allow Core and Non-Core mode of compilation for    */
+/*                Multilanguage                                      */
+/*       122700 - Change Data Migration validation so that it does   */
+/*                not check for the file in the 'From' DM library    */
+/*       CAA017 - Create new version of CRTOBJDM that shares the     */
+/*                programs used by CRTOBJ                            */
+/*       CAA009 - Make two level RPG compilation switchable; this    */
+/*                will be helpful when using interactive debug.      */
+/*       CAAA01 - Allow expanded source to be retained for Midas GUI */
+/*                Collector to run and make bold printing optional   */
+/*                for EXPSRC                                         */
+/*       078080 - Add OWNER to command                               */
+/*       074291 - Add AUTL to command                                */
+/*       S01516 - Incorporation of enhanced CRTOBJ into core         */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&OBJECT &SOURCE &SRCMBR &OWNER &AUTL +
+                          &NOCRT &KEEP &MLSYS &RVKAUT &KEEPSRC +
+                          &REPLACE &OUTPUT &BOLD &MLLIB &MLCORE +
+                          &DEBUG &RPG2LVL &OPTIONS)
+ 
+             DCL        VAR(&OBJECT) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SOURCE) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SRCMBR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&AUTL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NOCRT) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&KEEP) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&MLSYS) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&RVKAUT) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&KEEPSRC) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&REPLACE) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&OUTPUT) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&BOLD) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&MLLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MLCORE) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&RPG2LVL) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&DEBUG) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&OPTIONS) TYPE(*CHAR) LEN(242)
+ 
+             DCL        VAR(&OBJ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OBJLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OBJTYPE) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&SRCFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRCFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRCTYPE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&KEEPSRCF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&KEEPSRCLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&WRTNLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRCTYPE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&UTC0021RTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MLMSGF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&UT000025RC) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&CHKCRTPRM) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ML) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&SQL) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&OPTION) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RPL) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&BNDDIR) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&SRC) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DBG) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MSGTXT) TYPE(*CHAR) LEN(132)
+             DCL        VAR(&MSGSUB) TYPE(*CHAR) LEN(30)
+ 
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2010')
+ 
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO CMDLBL(ERROR))
+ 
+/* Build object and source combinations. */
+             CHGVAR     VAR(&OBJ) VALUE(%SST(&OBJECT 1 10))
+             CHGVAR     VAR(&OBJLIB) VALUE(%SST(&OBJECT 11 10))
+             CHGVAR     VAR(&SRCFILE) VALUE(%SST(&SOURCE 1 10))
+             CHGVAR     VAR(&SRCFLIB) VALUE(%SST(&SOURCE 11 10))
+             IF         COND(&SRCMBR *EQ '*OBJ') THEN(DO)
+                CHGVAR     VAR(&SRCMBR) VALUE(&OBJ)
+             ENDDO
+ 
+/* Check that source exists and that the user has authority. */
+             CHKOBJ     OBJ(&SRCFLIB/&SRCFILE) OBJTYPE(*FILE) +
+                          MBR(&SRCMBR) AUT(*USE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CHGVAR     VAR(&MSGSUB) VALUE(&SRCFILE *CAT &SRCFLIB)
+                RTVMSG     MSGID(CPF9801) MSGF(QCPFMSG) MSGDTA(&MSGSUB) +
+                             MSG(&MSGTXT)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             MONMSG     MSGID(CPF9802) EXEC(DO)
+                CHGVAR     VAR(&MSGSUB) VALUE(&SRCFILE *CAT &SRCFLIB)
+                RTVMSG     MSGID(CPF9802) MSGF(QCPFMSG) MSGDTA(&MSGSUB) +
+                             MSG(&MSGTXT)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             MONMSG     MSGID(CPF9810) EXEC(DO)
+                CHGVAR     VAR(&MSGSUB) VALUE(&SRCFLIB)
+                RTVMSG     MSGID(CPF9810) MSGF(QCPFMSG) MSGDTA(&MSGSUB) +
+                             MSG(&MSGTXT)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             MONMSG     MSGID(CPF9815) EXEC(DO)
+                CHGVAR     VAR(&MSGSUB) VALUE(&SRCFILE *CAT &SRCFLIB +
+                             *CAT &SRCMBR)
+                RTVMSG     MSGID(CPF9815) MSGF(QCPFMSG) MSGDTA(&MSGSUB) +
+                             MSG(&MSGTXT)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             MONMSG     MSGID(CPF9820) EXEC(DO)
+                CHGVAR     VAR(&MSGSUB) VALUE(&SRCFLIB)
+                RTVMSG     MSGID(CPF9815) MSGF(QCPFMSG) MSGDTA(&MSGSUB) +
+                             MSG(&MSGTXT)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* If object is to be created then check the following: */
+/*  - is the member type compilable?                    */
+/*  - are there creation parameters?                    */
+/*  - does object library exist?                        */
+/*  - does user have authority to library?              */
+/*  - if object already exists does user have the right */
+/*    to replace it?                                    */
+/*  - if object is a certain type then do not allow     */
+/*    automatic replacement.                            */
+ 
+             IF         COND(&NOCRT *EQ '*NO ') THEN(DO)
+ 
+/* Call program to determine member type, object type and other settings */
+/*  relevant to the member type.                                         */
+                RTVMBRD    FILE(&SRCFLIB/&SRCFILE) MBR(&SRCMBR) +
+                             SRCTYPE(&SRCTYPE)
+ 
+/* Attempt to copy creation parameters to temporary file here so that it   */
+/*  can be used to determine if object is *MODULE or *PGM.                 */
+                CPYF       FROMFILE(&SRCFLIB/&SRCFILE) +
+                             TOFILE(QTEMP/CHKCRTPRM) FROMMBR(&SRCMBR) +
+                             TOMBR(*FROMMBR) MBROPT(*REPLACE) +
+                             CRTFILE(*YES) INCCHAR(*RCD 13 *EQ '/*STD')
+ 
+                OVRDBF     FILE(INPSRC) TOFILE(QTEMP/CHKCRTPRM) +
+                             MBR(&SRCMBR)
+                CALL       PGM(UT000025) PARM(&SRCTYPE &UT000025RC +
+                             &OBJTYPE &CHKCRTPRM &ML &SQL &OPTION +
+                             &RPL &BNDDIR &SRC &DBG)
+                DLTOVR     FILE(INPSRC)
+ 
+                IF         COND(&UT000025RC *EQ 'N') THEN(DO)
+                   CHGVAR     VAR(&MSGTXT) VALUE('Unable to create member +
+                                type' *BCAT &SRCTYPE *TCAT '.')
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+                IF         COND(&UT000025RC *EQ 'I') THEN(DO)
+                   CHGVAR     VAR(&MSGTXT) VALUE('Unable to determine +
+                                object type.')
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+ 
+/* Call program to find standard creation parameters.  If the standard */
+/*  parameter is not found then report.                                */
+                IF         COND((&CHKCRTPRM *EQ 'N') *AND (&SQL *NE +
+                             'Y')) THEN(DO)
+                   GOTO       CMDLBL(CHKOBJLIB)
+                ENDDO
+ 
+                CALL       PGM(UTC0021) PARM(&SRCMBR &SRCFILE &SRCFLIB +
+                             &SRCTYPE &SQL &UTC0021RTN)
+                IF         COND(&UTC0021RTN *EQ '*NOTFND') THEN(DO)
+                   CHGVAR     VAR(&MSGTXT) VALUE('Standard creation +
+                                parameter is not found.')
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+/* Check for creation parameters - /*STD or /*CRT but only for certain member */
+/*  types.                                                                    */
+                IF         COND(&CHKCRTPRM *NE 'N') THEN(DO)
+                   IF         COND(&UTC0021RTN *EQ '*NOCRTP') THEN(DO)
+                      CHGVAR     VAR(&MSGTXT) VALUE('There are no creation +
+                                   parameters.')
+                         CHGVAR     VAR(&ERROR) VALUE('Y')
+                         GOTO       CMDLBL(ERROR)
+                   ENDDO
+                ENDDO
+ 
+CHKOBJLIB:
+/* Does object library exist and does user have authority? */
+                CHKOBJ     OBJ(&OBJLIB) OBJTYPE(*LIB) AUT(*CHANGE)
+                MONMSG     MSGID(CPF9801) EXEC(DO)
+                   CHGVAR     VAR(&MSGTXT) VALUE('Object library does not +
+                                exist.')
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+                MONMSG     MSGID(CPF9802) EXEC(DO)
+                   CHGVAR     VAR(&MSGTXT) VALUE('User does not have +
+                                authority to object library.')
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+ 
+/* Check if object already exists.  If it does can it be automatically */
+/*  replaced and, if it can, does the user have authority?             */
+                CHKOBJ     OBJ(&OBJLIB/&OBJ) OBJTYPE(&OBJTYPE) +
+                             AUT(*OBJEXIST)
+/* If object doesn't exist then continue ... */
+                MONMSG     MSGID(CPF9801) EXEC(DO)
+                   GOTO       CMDLBL(NEXT01)
+                ENDDO
+/* ... or check the authority ... */
+                MONMSG     MSGID(CPF9802) EXEC(DO)
+                   CHGVAR     VAR(&MSGTXT) VALUE('Object already exists +
+                                and the user does not have the authority +
+                                to replace it.')
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+/* ... or check that the object type can be automatically replaced. */
+                IF         COND(&RPL *EQ 'N') THEN(DO)
+                   CHGVAR     VAR(&MSGTXT) VALUE('Object already exists +
+                                and this object type can not be +
+                                overwritten.')
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+ 
+/* Check that specified profile exists and that user has authority to it. */
+NEXT01:
+                IF         COND(&OWNER *NE '*USER') THEN(DO)
+                   CHKOBJ     OBJ(&OWNER) OBJTYPE(*USRPRF) AUT(*ADD)
+                   MONMSG     MSGID(CPF9801 CPF9802) EXEC(DO)
+                      CHGVAR     VAR(&MSGTXT) VALUE('Owning profile' *BCAT +
+                                   &OWNER *TCAT ' is not found or user has +
+                                    insufficient authority.')
+                      CHGVAR     VAR(&ERROR) VALUE('Y')
+                      GOTO       CMDLBL(ERROR)
+                   ENDDO
+                ENDDO
+ 
+/* Check that specified authorisation list exists and user has authority to */
+/*  it.                                                                     */
+                IF         COND(%SST(&AUTL 1 1) *NE '*') THEN(DO)
+                   CHKOBJ     OBJ(&AUTL) OBJTYPE(*AUTL) AUT(*USE)
+                   MONMSG     MSGID(CPF9801 CPF9802) EXEC(DO)
+                      CHGVAR     VAR(&MSGTXT) VALUE('Authorisation list' +
+                                   *BCAT &AUTL *TCAT ' is not found or user +
+                                   has insufficient authority.')
+                      CHGVAR     VAR(&ERROR) VALUE('Y')
+                      GOTO       CMDLBL(ERROR)
+                   ENDDO
+                ENDDO
+ 
+             ENDDO
+ 
+/* If expanded source is to be kept then check that the target library exists */
+/*  and the user is authorised to the library and source file.                */
+             IF         COND(&KEEP *EQ '*YES') THEN(DO)
+                CHGVAR     VAR(&KEEPSRCF) VALUE(%SST(&KEEPSRC 1 10))
+                CHGVAR     VAR(&KEEPSRCLIB) VALUE(%SST(&KEEPSRC 11 10))
+/* Check if target source file should be entered. */
+                IF         COND(&KEEPSRCF *EQ '  ') THEN(DO)
+                   CHGVAR     VAR(&MSGTXT) VALUE('Target file for extanded +
+                                source should be entered.')
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+/* Target file should exist in the library list if *LIBL specified. */
+                IF         COND(&KEEPSRCLIB *EQ '*LIBL') THEN(DO)
+                   RTVOBJD    OBJ(&KEEPSRCF) OBJTYPE(*FILE) +
+                              RTNLIB(&WRTNLIB)
+                   MONMSG     MSGID(CPF9812 CPF9822) EXEC(DO)
+                      CHGVAR     VAR(&MSGTXT) VALUE('Target file does not +
+                                   exist in *LIBL or user has insufficient +
+                                   authority.')
+                      CHGVAR     VAR(&ERROR) VALUE('Y')
+                      GOTO       CMDLBL(ERROR)
+                   ENDDO
+                   CHGVAR     VAR(&KEEPSRCLIB) VALUE(&WRTNLIB)
+                ENDDO
+/* If not replacing an existing target source member then don't check */
+/*  authority if it already exists.                                   */
+                IF         COND(&REPLACE *EQ '*NO') THEN(DO)
+                   CHKOBJ     OBJ(&KEEPSRCLIB/&KEEPSRCF) OBJTYPE(*FILE) +
+                                MBR(&SRCMBR)
+                   MONMSG     MSGID(CPF9801 CPF9810 CPF9815 CPF9820) EXEC(DO)
+                      GOTO       CMDLBL(CHKKSRCAUT)
+                   ENDDO
+                   GOTO       CMDLBL(KEEPEND)
+                ENDDO
+CHKKSRCAUT:
+/* Check if user is authorised to target source library. */
+                CHKOBJ     OBJ(&KEEPSRCLIB) OBJTYPE(*LIB) AUT(*CHANGE)
+                MONMSG     MSGID(CPF9801 CPF9820 CPF9802) EXEC(DO)
+                   CHGVAR     VAR(&MSGTXT) VALUE('Library for expanded +
+                                source is not found or user has +
+                                insufficient authority.')
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+ 
+/* Check if user is authorised to the target source file. */
+                CHKOBJ     OBJ(&KEEPSRCLIB/&KEEPSRCF) OBJTYPE(*FILE) +
+                             AUT(*OBJOPR *OBJMGT *OBJEXIST)
+                MONMSG     MSGID(CPF9810 CPF9801)
+                MONMSG     MSGID(CPF9802) EXEC(DO)
+                   CHGVAR     VAR(&MSGTXT) VALUE('User not authorised to +
+                                update target source file')
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+KEEPEND:
+             ENDDO
+ 
+/* If multi-language is requested and the member type is appropriate then */
+/*  check that the multi-language library exists and that the user has    */
+/*  authority to it.                                                      */
+             IF         COND(&MLSYS *EQ '*YES') THEN(DO)
+                IF         COND(&ML *EQ 'Y') THEN(DO)
+                   CHKOBJ     OBJ(&MLLIB) OBJTYPE(*LIB) AUT(*USE)
+                   MONMSG     MSGID(CPF9801 CPF9802) EXEC(DO)
+                      CHGVAR     VAR(&MSGTXT) VALUE('Multi-language library +
+                                   is not found or user has insufficient +
+                                   authority.')
+                      CHGVAR     VAR(&ERROR) VALUE('Y')
+                      GOTO       CMDLBL(ERROR)
+                   ENDDO
+/* Also check that user has authority to update message files. */
+                   IF         COND(&MLCORE *EQ '*YES') THEN(DO)
+                      CHGVAR     VAR(&MLMSGF) VALUE('ZZGBMSGF')
+                   ENDDO
+                   ELSE       CMD(DO)
+                      CHGVAR     VAR(&MLMSGF) VALUE('ZZGBXXMSGF')
+                   ENDDO
+                   CHKOBJ     OBJ(&MLLIB/&MLMSGF) OBJTYPE(*MSGF) AUT(*USE)
+                   MONMSG     MSGID(CPF9801 CPF9802) EXEC(DO)
+                      CHGVAR     VAR(&MSGTXT) VALUE('Either the +
+                                   multi-language message file is not found +
+                                   in the library or the user does not have +
+                                   authority to it.')
+                      CHGVAR     VAR(&ERROR) VALUE('Y')
+                      GOTO       CMDLBL(ERROR)
+                   ENDDO
+                ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+/* If validity error then send message back to command . . . */
+             IF         COND(&ERROR *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&MSGTXT) VALUE('0000' *TCAT &MSGTXT)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA(&MSGTXT) +
+                             MSGTYPE(*DIAG)
+                SNDPGMMSG  MSGID(CPF0002) MSGF(QCPFMSG) MSGTYPE(*ESCAPE)
+             ENDDO
+/* . . .  else send generic message. */
+             ELSE       CMD(DO)
+                IF         COND(&RECURSIVE *EQ 'N') THEN(DO)
+                   CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+RCVMSG:
+                   RCVMSG     MSGTYPE(*DIAG) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                                MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                   IF         COND(&MSGID *NE ' ') THEN(DO)
+                      SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                                   MSGDTA(&MSGDTA) MSGTYPE(*DIAG)
+                      GOTO       CMDLBL(RCVMSG)
+                   ENDDO
+                   RCVMSG     MSGTYPE(*EXCP) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                                MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                   SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                                MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
+                ENDDO
+             ENDDO
+ 
+ENDPGM:
+             ENDPGM

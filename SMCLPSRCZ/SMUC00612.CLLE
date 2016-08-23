@@ -1,0 +1,138 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Updates Invalid Data in FDDTSTPD File for AR796905')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Dealing Module                                      */
+/*                                                                   */
+/*       SMUC00612  - CL program to call utility SMU00612            */
+/*                                                                   */
+/*       (C) Copyright Misys Int'l Banking Systems Ltd. 2012         */
+/*                                                                   */
+/*       Last Amend No. AR796904 *CREATE   Date 20Dec12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR796904 - Utility to update the invalid value populated    */
+/*                  in FDDTSTPD Deal Type/SubType file.              */
+/*                  (Child: AR796905)                                */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE)
+ 
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&DSFDY) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7) VALUE('  DMLIB')
+             DCL        VAR(&PREF) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(C) +
+                          Copyright Misys Int''l Banking System +
+                          2012')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('SMUC00612 - Deal Type/SubType Update') +
+                          TOMSGQ(MRUNQ MOPERQ)
+ 
+/** Check switchable feature is on **/
+ 
+             CHGVAR     VAR(&RTCD) VALUE('       ')
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
+             CHGVAR     VAR(&SARD) VALUE('CSD039')
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &DSFDY)
+ 
+             IF         COND(&RTCD *EQ '       ') THEN(DO)
+             SNDPGMMSG  MSG('UTILITY SMUC00612 IS NOT ALLOWED TO RUN +
+                        WHEN CSD039 IS ON.') TOPGMQ(*EXT) +
+                        TOMSGQ(MOPERQ MRUNQ)
+             GOTO       CMDLBL(END)
+             ENDDO
+ 
+/** Create LDA if it doesn't exist */
+ 
+             CHKOBJ     OBJ(QTEMP/LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9815 CPF9801) EXEC(DO)
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             ENDDO
+ 
+/** Passed parameter is invalid */
+ 
+             IF         COND((&MODE *NE 'U') *AND (&MODE *NE 'u') +
+                          *AND (&MODE *NE 'A') *AND (&MODE *NE +
+                          'a')) THEN(DO)
+ 
+             SNDPGMMSG  MSG('SMUC00612 - Invalid parameter passed') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                          MSGDTA('SMUC00612 Invalid parameter +
+                          passed. Should be ''U, u, A or a''') +
+                          MSGTYPE(*ESCAPE)
+             GOTO       CMDLBL(END)
+             ENDDO
+ 
+/** Get system prefix */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREF)
+             CHGVAR     VAR(%SUBSTRING(&DMLIB 1 2)) VALUE(&PREF)
+ 
+/** Back-up processing */
+/** Back-up file FDDTSTPD */
+ 
+             CPYF       FROMFILE(FDDTSTPD) TOFILE(&DMLIB/XFDDTSTPD) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                SNDUSRMSG  MSG('Error in copying file. Process is +
+                             terminated.') MSGTYPE(*INFO)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/** Call PGM/SMUC00612 Update Program */
+ 
+             CHGJOB     SWS(XXXXXX00)
+             CALL       PGM(SMU00612) PARM(&MODE)
+ 
+/** Error occurred in program */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(NORMAL)
+ 
+/** Abnormal Termination of the program */
+ 
+ ABNOR:
+             CPYF       FROMFILE(&DMLIB/XFDDTSTPD) TOFILE(FDDTSTPD) +
+                          MBROPT(*REPLACE) FMTOPT(*NONE)
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                SNDUSRMSG  MSG('Error in restoring file.  Process is +
+                             terminated.') MSGTYPE(*INFO)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+             DLTF       FILE(&DMLIB/XFDDTSTPD)
+             MONMSG     MSGID(CPF0000)
+             GOTO       CMDLBL(END)
+ 
+ /** Normal Processing */
+ 
+ NORMAL:
+             DLTF       FILE(&DMLIB/XFDDTSTPD)
+             MONMSG     MSGID(CPF0000)
+             SNDPGMMSG  MSG('SMUC00612 COMPLETED NORMALLY.') +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)
+ 
+             GOTO       CMDLBL(END)
+ 
+ 
+ /** End program */
+ 
+ END:        CHGVAR     VAR(&CPYFLD) VALUE('(C) Copyright +
+                          Misys Int''l Banking Systems Ltd. 2012')
+             SNDPGMMSG  MSG('End of SMUC00612') TOMSGQ(MRUNQ MOPERQ)
+             ENDPGM

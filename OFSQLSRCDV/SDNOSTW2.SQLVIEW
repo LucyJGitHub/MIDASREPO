@@ -1,0 +1,127 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - General Ledger Module                                         */
+/*                                                                             */
+/*       SDNOSTW2 - Bank Position Management Enquiry View                      */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2014                     */
+/*                                                                             */
+/*       Last Amend No. MD034975           Date 23Oct15                        */
+/*       Prev Amend No. CGL159   *CREATE   Date 18Aug14                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       MD034975 - Bank position report not reflecting future or today mvmts  */
+/*                  for transit accounts.                                      */
+/*       CGL159 - Optimisation of Cash Positions                               */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+    SELECT ''                             AS NOSRPOOL,                          :
+           ''                             AS P1PCCY,                            :
+           ''                             AS P1PDSC,                            :
+           ''                             AS POOLCOUNT,                         :
+           NOSR.A7CYCD                    AS NOSRCCRY,                          :
+           NOSR.A7NONB                    AS NOSRNO,                            :
+           NOSR.A7CYCD CONCAT NOSR.A7NONB AS NOSRCODE,                          :
+           ACCNT.CLBL                     AS CLEARED_BAL,                       :
+           IFNULL(ACCNT2.CLBL, '0')       AS UNREC_BAL,                         :
+           ACCNT.ANAM                     AS NPLDSC,                            :
+           SDEXRTTD.EREXRT                AS EREXRT,                            :
+           SDEXRTTD.ERMDIN                AS ERMDIN,                            :
+           SDEXRTTD.ERDATE                AS ERDATE,                            :
+           SDEXRTTD1.EREXRT               AS EREXRT1,                           :
+           SDEXRTTD1.ERMDIN               AS ERMDIN1,                           :
+           SDEXRTTD1.ERDATE               AS ERDATE1,                           :
+           ''                             AS EREXRT2,                           :
+           ''                             AS ERMDIN2,                           :
+           ''                             AS ERDATE2,                           :
+           ''                             AS EREXRT3,                           :
+           ''                             AS ERMDIN3,                           :
+           ''                             AS ERDATE3,                           :
+           ''                             AS POOLRATE,                          :
+           ''                             AS POOLMDIN,                          :
+           ''                             AS POOLRATEDATE,                      :
+           IFNULL(GLTNOSTD.NCAMT0, '0')   AS NCAMT0,                            :
+           IFNULL(GLTNOSTD.NCAMT1, '0')   AS NCAMT1,                            :
+           IFNULL(GLTNOSTD.NCAMT2, '0')   AS NCAMT2,                            :
+           IFNULL(GLTNOSTD.NCAMT3, '0')   AS NCAMT3,                            :
+           IFNULL(GLTNOSTD.NCAMT4, '0')   AS NCAMT4,                            :
+           IFNULL(GLTNOSTD.NCAMT5, '0')   AS NCAMT5,                            :
+           IFNULL(GLTNOSTD.NCAMT6, '0')   AS NCAMT6,                            :
+           IFNULL(GLTNOSTD.NCAMT7, '0')   AS NCAMT7,                            :
+           IFNULL(GLTNOSTD.NCAMT8, '0')   AS NCAMT8,                            :
+           IFNULL(GLTNOSTD.NCAMT9, '0')   AS NCAMT9,                            :
+           IFNULL(GLPRONOW0.PNB0, '0')    AS PNB0,                              :
+           IFNULL(GLPRONOW0.PNB1, '0')    AS PNB1,                              :
+           IFNULL(GLPRONOW0.PNB2, '0')    AS PNB2,                              :
+           IFNULL(GLPRONOW0.PNB3, '0')    AS PNB3,                              :
+           IFNULL(GLPRONOW0.PNB4, '0')    AS PNB4,                              :
+           IFNULL(GLPRONOW0.PND0, '0')    AS PND0,                              :
+           IFNULL(GLPRONOW0.PND1, '0')    AS PND1,                              :
+           IFNULL(GLPRONOW0.PND2, '0')    AS PND2,                              :
+           IFNULL(GLPRONOW0.PND3, '0')    AS PND3,                              :
+           IFNULL(GLPRONOW0.PND4, '0')    AS PND4,                              :
+           ACCNT.BRCA,                                                          :
+           ACCNT.CNUM,                                                          :
+           ACCNT.CCY,                                                           :
+           ACCNT.ACOD,                                                          :
+           ACCNT.ACSQ,                                                          :
+           ACCNT.ATYP,                                                          :
+           ACCNT.ACNO                                                           :
+           ,IFNULL(NOSTW5.MEBAL0, '0') as UNREC_B0                              :           MD034975
+           ,IFNULL(NOSTW5.MEBAL1, '0') as UNREC_B1                              :           MD034975
+           ,IFNULL(NOSTW5.MEBAL2, '0') as UNREC_B2                              :           MD034975
+           ,IFNULL(NOSTW5.MEBAL3, '0') as UNREC_B3                              :           MD034975
+           ,IFNULL(NOSTW5.MEBAL4, '0') as UNREC_B4                              :           MD034975
+           ,IFNULL(NOSTW5.MEBAL5, '0') as UNREC_B5                              :           MD034975
+           ,IFNULL(NOSTW5.MEBAL6, '0') as UNREC_B6                              :           MD034975
+           ,IFNULL(ACCNT2.ATYP, '') AS UNREC_TYP                                :           MD034975
+  FROM   SDNOSTPD NOSR                                                          :
+           LEFT OUTER JOIN ACCNTAB ACCNT                                        :
+                        ON ( NOSR.A7BRCD = ACCNT.BRCA                           :
+                             AND NOSR.A7CUST = ACCNT.CNUM                       :
+                             AND NOSR.A7CYCD = ACCNT.CCY                        :
+                             AND NOSR.A7ACCD = ACCNT.ACOD                       :
+                             AND NOSR.A7ACSN = ACCNT.ACSQ )                     :
+           LEFT OUTER JOIN SDNOST2D NOSREX2                                     :
+                        ON ( NOSR.A7CYCD = NOSREX2.ERCYCD                       :
+                             AND NOSR.A7NONB = NOSREX2.ERNONB )                 :
+           LEFT OUTER JOIN ACCNTAB ACCNT2                                       :
+                        ON ( NOSREX2.ERBRCA = ACCNT2.BRCA                       :
+                             AND NOSR.A7CUST = ACCNT2.CNUM                      :
+                             AND NOSR.A7CYCD = ACCNT2.CCY                       :
+                             AND NOSREX2.ERACCD = ACCNT2.ACOD                   :
+                             AND NOSREX2.ERACSN = ACCNT2.ACSQ )                 :
+           LEFT OUTER JOIN (SELECT ' ' AS TEMP,                                 :
+                                   BJCYCD                                       :
+                            FROM   SDBANKPD) AS BANK                            :
+                        ON ( BANK.TEMP = ' ' )                                  :
+           LEFT OUTER JOIN SDEXRTTD SDEXRTTD                                    :
+                        ON (( NOSR.A7CYCD = SDEXRTTD.ERCCY                      :
+                              AND BANK.BJCYCD = SDEXRTTD.ERTCCY                 :
+                              AND NOSR.A7NONB = SDEXRTTD.ERNOSC ))              :
+           LEFT OUTER JOIN SDEXRTTD SDEXRTTD1                                   :
+                        ON (( NOSR.A7CYCD = SDEXRTTD1.ERCCY                     :
+                              AND BANK.BJCYCD = SDEXRTTD1.ERTCCY                :
+                              AND NOSR.A7CUST = SDEXRTTD1.ERCUST ))             :
+           LEFT OUTER JOIN GLTNOSTD GLTNOSTD                                    :
+                        ON ( NOSR.A7CYCD = GLTNOSTD.NCCYCD                      :
+                             AND NOSR.A7NONB = GLTNOSTD.NCNONB )                :
+           LEFT OUTER JOIN GLPRONOW0 GLPRONOW0                                  :
+                        ON ( NOSR.A7CYCD = GLPRONOW0.CCY                        :
+                             AND NOSR.A7NONB = GLPRONOW0.NOSN )                 :
+                                                                                :           MD034975
+           LEFT OUTER JOIN SDNOSTW5 NOSTW5                                      :           MD034975
+                        ON (NOSREX2.ERBRCA = NOSTW5.MEBRCA                      :           MD034975
+                            AND NOSR.A7CUST = NOSTW5.MECNUM                     :           MD034975
+                            AND NOSR.A7CYCD = NOSTW5.MECCY                      :           MD034975
+                            AND NOSREX2.ERACCD = NOSTW5.MEACOD                  :           MD034975
+                            AND NOSREX2.ERACSN = NOSTW5.MEACSQ)                 :           MD034975
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas OF Bank Position Management Enquiry View    ';                     :
+                                                                                :

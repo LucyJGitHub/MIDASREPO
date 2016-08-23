@@ -1,0 +1,191 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas RE Cash Management Retail Capital Entry Updt')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Retail module                                       */
+/*                                                                   */
+/*       REC103664 - Cash Management Retail Capitalizn Entry Update  */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*                                                                   */
+/*       Last Amend No. 260134               Date 01May09            */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CRE008 *CREATE       Date 19Feb02            */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       260134 - Upgrade recovery to Midas Plus standard            */
+/*       CRE008 - Cash Management                                    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ &MODE)
+ 
+             DCL        VAR(&CNAM)   TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ)   TYPE(*DEC)  LEN(5 0)
+             DCL        VAR(&MODE)   TYPE(*CHAR) LEN(3)
+ 
+             DCL        VAR(&MEM)    TYPE(*CHAR) LEN(70)
+             DCL        VAR(&JRNID) TYPE(*CHAR) LEN(10) +
+                          VALUE('JREC103664')
+             DCL        VAR(&FILE01) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FILE02) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FILE03) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FILE04) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FILE05) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FILE06) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FILE07) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FILE08) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FILE09) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FILE10) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ERROR)  TYPE(*CHAR) LEN(1)
+             DCL        VAR(&STAT)   TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ZSSQ)   TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GASQ)   TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQA) TYPE(*CHAR) LEN(5)                                    /*260134*/
+             DCL        VAR(&STEXT) TYPE(*CHAR) LEN(50)                                   /*260134*/
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2002')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(00000000)
+ 
+             SNDPGMMSG  MSG('REC103664 - Cash Management Retail +
+                          Capitalization Entry Update') TOMSGQ(MRUNQ)
+/*                                                                                        /*260134*/
+/* Write current journal sequence number to file SCJSEQPD, using command SCWRTJREG.       /*260134*/
+/*                                                                                        /*260134*/
+             CHGVAR     VAR(&CSEQA) VALUE(&CSEQ)                                          /*260134*/
+             CHGVAR     VAR(&STEXT) VALUE('Start of ' *CAT &CNAM +
+                          *CAT &CSEQA)                                                    /*260134*/
+             SCWRTJREG  COMP(&CNAM) CMPSEQ(&CSEQ) FLAG('S') +
+                          TEXT(&STEXT)                                                    /*260134*/
+ 
+/* Files updated */
+             CHGVAR     VAR(&FILE01) VALUE('GEICPD  ')
+             CHGVAR     VAR(&FILE02) VALUE('GEICZZ  ')
+             CHGVAR     VAR(&FILE03) VALUE('GEIC2PD ')
+             CHGVAR     VAR(&FILE04) VALUE('GEIC2ZZ ')
+ 
+/* If restart */
+/* Component Journalling End */
+             CHGVAR     VAR(&STAT) VALUE(' ')
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
+             IF         COND(&STAT *EQ 'Y') THEN(DO)
+/**********     CALL       PGM(REC100999) PARM(&JRNID 'Y' 'P' &FILE01 +
+                             &FILE02 &FILE03 &FILE04 &FILE05 &FILE06 +
+                             &FILE07 &FILE08 &FILE09 &FILE10 &ERROR)   */                 /*260134*/
+             CALL       PGM(REC100999) PARM(&JRNID 'Y' 'P' &FILE01 +
+                          &FILE02 &FILE03 &FILE04 &FILE05 &FILE06 +
+                          &FILE07 &FILE08 &FILE09 &FILE10 &ERROR +
+                          &CNAM &CSEQ)                                                    /*260134*/
+             IF         COND(&ERROR = 'Y') THEN(GOTO CMDLBL(ABNOR))
+             ENDDO
+ 
+/* Component Journalling Start */
+             CALL       PGM(REC100998) PARM(&JRNID &FILE01 &FILE02 +
+                          &FILE03 &FILE04 &FILE05 &FILE06 &FILE07 +
+                          &FILE08 &FILE09 &FILE10 &ERROR)
+             IF         COND(&ERROR = 'Y') THEN(GOTO CMDLBL(ABNOR))
+ 
+/* Flag as run */
+             CHGVAR     VAR(&STAT) VALUE('Y')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+ 
+/* Overrides */
+             IF         COND(&MODE *EQ 'ONE') THEN(DO)
+                OVRDBF     FILE(GEICL0) TOFILE(GEICL0)
+                OVRDBF     FILE(GEICZZ) TOFILE(GEICZZ)
+             ENDDO
+             IF         COND(&MODE *EQ 'TWO') THEN(DO)
+                OVRDBF     FILE(GEICL0) TOFILE(GEIC2L0)
+                OVRDBF     FILE(GEICZZ) TOFILE(GEIC2ZZ)
+             ENDDO
+ 
+ 
+/* Cash Management Retail Entries Update */
+/* ===================================== */
+ 
+             CALL       PGM(RE100717)
+ 
+/* Normal ending: */
+/*================*/
+ 
+NORMAL:
+/* Component Journalling End */
+/**********  CALL       PGM(REC100999) PARM(&JRNID 'N' ' ' &FILE01 +
+                          &FILE02 &FILE03 &FILE04 &FILE05 &FILE06 +
+                          &FILE07 &FILE08 &FILE09 &FILE10 &ERROR)      */                 /*260134*/
+             CALL       PGM(REC100999) PARM(&JRNID 'N' ' ' &FILE01 +
+                          &FILE02 &FILE03 &FILE04 &FILE05 &FILE06 +
+                          &FILE07 &FILE08 &FILE09 &FILE10 &ERROR +
+                          &CNAM &CSEQ)                                                    /*260134*/
+             IF         COND(&ERROR = 'Y') THEN(GOTO CMDLBL(ABNOR))
+ 
+/* Flag as completed */
+             CHGVAR     VAR(&STAT) VALUE('N')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+/*                                                                                        /*260134*/
+/* Write current journal sequence number to file SCJSEQPD, using command SCWRTJREG.       /*260134*/
+/*                                                                                        /*260134*/
+             CHGVAR     VAR(&STEXT) VALUE(' ')                                            /*260134*/
+             CHGVAR     VAR(&STEXT) VALUE('End of ' *CAT &CNAM +
+                          *CAT &CSEQA)                                                    /*260134*/
+             SCWRTJREG  COMP(&CNAM) CMPSEQ(&CSEQ) FLAG('E') +
+                          TEXT(&STEXT)                                                    /*260134*/
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/* Abnormal ending: */
+/*==================*/
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+             RCLACTGRP  ACTGRP(*ELIGIBLE)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+/* Component Journalling End */
+ 
+/**********  CALL       PGM(REC100999) PARM(&JRNID 'Y' 'C' &FILE01 +
+                          &FILE02 &FILE03 &FILE04 &FILE05 &FILE06 +
+                          &FILE07 &FILE08 &FILE09 &FILE10 &ERROR)      */                 /*260134*/
+             CALL       PGM(REC100999) PARM(&JRNID 'Y' 'C' &FILE01 +
+                          &FILE02 &FILE03 &FILE04 &FILE05 &FILE06 +
+                          &FILE07 &FILE08 &FILE09 &FILE10 &ERROR +
+                          &CNAM &CSEQ)                                                    /*260134*/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+             IF         COND(&ERROR *NE 'Y') THEN(DO)                                     /*260134*/
+/* Flag as completed                                                                      /*260134*/
+             CHGVAR     VAR(&STAT) VALUE('N')                                             /*260134*/
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)                               /*260134*/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)                                    /*260134*/
+                                                                                          /*260134*/
+/*                                                                                        /*260134*/
+/* Write current journal sequence number to file SCJSEQPD, using command SCWRTJREG.       /*260134*/
+/*                                                                                        /*260134*/
+             CHGVAR     VAR(&STEXT) VALUE(' ')                                            /*260134*/
+             CHGVAR     VAR(&STEXT) VALUE('End of ' *CAT &CNAM +
+                          *CAT &CSEQA)                                                    /*260134*/
+             SCWRTJREG  COMP(&CNAM) CMPSEQ(&CSEQ) FLAG('E') +
+                          TEXT(&STEXT)                                                    /*260134*/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)                                    /*260134*/
+             ENDDO                                                                        /*260134*/
+ 
+/* Report an error */
+ 
+             CHGVAR     VAR(&MEM) VALUE('REC103664 - Cash Management +
+                          Retail Capitalization Entry Update FAILED')
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+             SNDPGMMSG  MSGID(MEM5052) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+ ENDPGM:     ENDPGM

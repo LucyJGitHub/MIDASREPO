@@ -1,0 +1,1013 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Consolidated confirmations')                  *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LE1180 - Consolidated Confirmation                           *
+      *                                                               *
+      *  Function:  This is a new program that will produce a         *
+      *             Consolidated Confirmation for Customer Lending.   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CLE141             Date 08Feb16               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CLE143             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER020             Date 19May08               *
+      *                 CLE042             Date 06Sep05               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE036             Date 22Sep03               *
+      *                 CAS009             Date 16May05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CAP074             Date 08Aug02               *
+      *                 CAS005             Date 16Dec02               *
+      *                 CLE028             Date 27Jun02               *
+      *                 CAS004             Date 26Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 144915             Date 28Oct98               *
+      *                 CLE004  *CREATE    Date 02Dec96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE141 - Currency and Location Business Day Convention       *
+      *           (Recompile)                                         *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CLE143 - Original Loan Contract Date & Effective Interest    *
+      *           Rate (Recompile)                                    *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus (Recompile)                              *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CLE036 - LE Enh for Nordea Phase 1 Pty 2- Specific Base Rate *
+      *           (Recompile)                                         *
+      *  CAS009 - EIR/AC Accounting (Recompile)                       *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits (Recompile)      *
+      *  CAP074 - Lending API enhancements - Loans input.             *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *           (Recompile)                                         *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s)              *
+      *           (Recompile)                                         *
+      *  CAS004 - Hedge Accounting Phase A (Recompile)                *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  144915 - Recompiled due to changes in LF/CLOAN.              *
+      *  CLE004 - Customer Lending Enhancements - Syndications        *
+      *                                                               *
+      *****************************************************************
+     FLELOANL4IF  E           K        DISK
+     FCLOAN   UF  E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     F            CLOANHHF                          KIGNORE
+     F            CLOANZ1F                          KIGNORE
+     FLOAMS   IF  E           K        DISK
+     F            LOAMSDHF                          KIGNORE
+     F            LOAMSZ1F                          KIGNORE
+     F/COPY WNCPYSRC,LE1180F001
+     FLE1180P1O   E             09     PRINTER      KINFDS SPOOL1     UC
+     FLE1180AUO   E                    PRINTER      KINFDS SPOOLU
+      *
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *    F U N C T I O N   O F   I N D I C A T O R S                *
+      *                                                               *
+      *    09           Overflow Indicator                            *
+      *    10           Print Branch Report Name                      *
+      *    11           Period or date to be printed                  *
+      *    19           EOF read on file LELOANL4                     *
+      *    20           Work indicator                                *
+      *    23           Continuation text to be printed               *
+      *    24           Multibranching indicator = Y                  *
+      *    25           Confirmation record printed for a branch      *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E                    ACT     1  10 15
+     E                    LNF       100 14
+     E/COPY ZSRSRC,ZEDITZ1
+     E/COPY ZSRSRC,ZFRPEDZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+      /EJECT
+      *
+     ILELOAND0
+      ** Rename fields for LELOANL4
+     I              VDAT                            VDATX
+     I              CHTP                            CHTPX
+     ICLOANCLF
+      ** Rename fields for loans file - A
+     I              RCDT                            RCDTL
+      *
+     ISPOOL1      DS
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+      *
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     IRUNDAT      DS
+     I                                       13  13 MBIN
+      *
+     ILDA         DS                            256
+      ** Local data area for database error details
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     I            DS
+     I                                        1 100 WPARM
+     I                                        1   1 WRUN
+     I                                        2   7 WCUS
+     I**********                              8  130WFLN                                      CLE148
+     I**********                             14  190WTLN                                      CLE148
+     I                                        8  13 WFLN                                      CLE148
+     I                                       14  19 WTLN                                      CLE148
+      *
+     I            DS
+     I                                        1  14 WLAKEY
+     I**********                              1   60WLNRF                                     CLE148
+     I                                        1   6 WLNRF                                     CLE148
+     I                                        7  110WVDAT
+     I                                       12  140WLASN
+      *
+     I            DS
+     I                                        1  15 WPRD
+     I                                        1   7 WDAT1
+     I I            '-'                       8   8 WHYP
+     I                                        9  15 WDAT2
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ** Branch Details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Currency Details
+      *
+     ISDCUST    E DSSDCUSTPD
+     I              QQDFAC                          Q1FAC1                                    CGL029
+      ** Customer Details
+      *
+     ISDTRAD    E DSSDTRADPD
+      **  External DS for trading details
+     I              BLBNOC                          BRNC
+     I/COPY WNCPYSRC,LE1180I001
+      *
+     IDSFDY     E DSDSFDY
+      ** Short data structure for access objects
+      *
+     IDSSDY     E DSDSSDY
+      ** Long data structure for access objects
+      *
+     I/COPY ZSRSRC,ZFRPEDZ2
+      /EJECT
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *  Main routine                                                 *
+      *  SRINIT  -  Initial processing                                *
+      *  SRMAIN  -  Main Processing                                   *
+      *  SRDETL  -  Detail Processing                                 *
+      *  *PSSR   -  Error handling subroutine                         *
+      *****************************************************************
+      *
+      ** Perform initial processing
+      *
+     C                     EXSR SRINIT
+      *
+      ** Main Processing
+      *
+     C                     EXSR SRMAIN
+      *
+      ** Terminate the Program
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      /EJECT
+      *****************************************************************
+      * SRMAIN  -  Main Processing                                    *
+      * Called by: Main routine                                       *
+      * Calls    : SRDETL                                             *
+      *****************************************************************
+     C           SRMAIN    BEGSR
+      *
+      ** Retrieve records from file
+      *
+     C           MBIN      IFEQ 'Y'
+     C           PRENT     ANDNE'ALL'
+     C           PRENT     SETLLLELOANL4
+     C           PRENT     READELELOANL4                 19
+     C                     ELSE
+     C           *LOVAL    SETLLLELOANL4
+     C                     READ LELOANL4                 19
+     C                     ENDIF
+      *
+     C           *IN19     DOWEQ'0'
+     C/COPY WNCPYSRC,LE1180C001
+      *
+      ** Check if customer is the same as the customer seleted and
+      ** loan is within the range
+      *
+     C**********           MOVE WCUS      WCUSN   60                                          CSD027
+     C                     MOVE WCUS      WCUSN   6                                           CSD027
+     C           WCUS      IFEQ *BLANK
+     C           WCUSN     OREQ CNUM
+     C           LNRF      ANDGEWFLN
+     C           LNRF      ANDLEWTLN
+      *
+      ** If multibranching is 'Y'
+      *
+     C           MBIN      IFEQ 'Y'
+     C           BRCA      IFNE BRCAT
+      *
+      ** Write End of Report text
+      *
+     C           *IN25     IFEQ '1'
+     C                     WRITELE1180D3
+     C                     ENDIF
+      *
+      ** Retrieve Branch Report Name
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM BRCA      PBRCA   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBRCHPD'DBFILE           ************
+     C                     Z-ADD1         DBASE            * DBERR 01 *
+     C                     MOVELBRCA      DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C**********           Z-ADD0         LNRFT                                               CLE148
+     C                     MOVEL*BLANKS   LNRFT                                               CLE148
+     C**********           Z-ADD0         CNUMT                                               CSD027
+     C                     MOVE *BLANKS   CNUMT                                               CSD027
+     C                     MOVE '0'       *IN25
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ** If multibranching is 'N', open Printer file
+      *
+     C           WFIRST    IFNE 'Y'
+      *
+      ** Retrieve Branch Report Name
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM BRCA      PBRCA   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBRCHPD'DBFILE           ************
+     C                     Z-ADD2         DBASE            * DBERR 02 *
+     C                     MOVELBRCA      DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     EXSR SRDETL
+     C                     ENDIF
+     C/COPY WNCPYSRC,LE1180C002
+      *
+     C           MBIN      IFEQ 'Y'
+     C           PRENT     ANDNE'ALL'
+     C           PRENT     READELELOANL4                 19
+     C                     ELSE
+     C                     READ LELOANL4                 19
+     C                     ENDIF
+     C                     ENDDO
+      *
+      ** Write End of Report text
+      *
+     C           *IN25     IFEQ '1'
+     C                     MOVE BRCA      BRCAT
+     C                     WRITELE1180D3
+     C                     ENDIF
+      *
+      ** Print Audit Report
+      *
+     C                     Z-ADDSFNUMU    ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           PRSEQ   5
+     C                     PARM *BLANK    SENTY   3
+     C                     PARM           SFILEU 10
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      **   Error during ZSFILE processing, end pgm.
+      *
+     C           ZSERR     IFNE ' '
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     WRITELE1180AH
+      *
+      ** Print total no. of advices printed
+      *
+     C           RNOAV     IFNE 0
+     C                     WRITELE1180A1
+     C                     ELSE
+      *
+      ** No details to report
+      *
+     C                     WRITELE1180A2
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRDETL  -  Detail Processing                                  *
+      * Called by: SRMAIN                                             *
+      * Calls    : SRCNCF                                             *
+      *****************************************************************
+     C           SRDETL    BEGSR
+      *
+     C**********           Z-ADDLNRF      WLNRF                                               CLE148
+     C                     MOVELLNRF      WLNRF                                               CLE148
+     C                     MOVE 'A'       WRCDT
+      *
+     C           KLKEY     CHAINCLOAN               N20
+     C           *IN20     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CLOAN   'DBFILE           ************
+     C                     Z-ADD3         DBASE            * DBERR 03 *
+     C                     MOVELLNRF      DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Skip the whole processing if Consolidated Conf. is 'Y'
+      *
+     C           CNCF      DOWEQ'N'
+      *
+      ** Retrieve Customer name and address
+      *
+     C           CNUM      IFNE CNUMT
+     C                     MOVELCNUM      PCUST
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM           PCUST  10
+     C                     PARM *BLANKS   PKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCUSTPD'DBFILE           ************
+     C                     Z-ADD4         DBASE            * DBERR 04 *
+     C                     MOVELCNUM      DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADD0         PAGE
+     C**********           Z-ADD0         LNRFT                                               CLE148
+     C                     MOVEL*BLANKS   LNRFT                                               CLE148
+     C                     MOVE 'Y'       WCHGC   1
+     C                     ENDIF
+      *
+      ** Retrieve no. of decimal places
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*BLANK  'PRTCD
+     C                     PARM '*KEY    'POPTN
+     C                     PARM CCY       PCURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE           ************
+     C                     Z-ADD5         DBASE            * DBERR 05 *
+     C                     MOVELCCY       DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Retrieve Current Principal amount if new loan number is read
+      *
+     C           LNRF      IFNE LNRFT
+     C                     Z-ADDCPAM      WBALN  130
+     C                     Z-ADDCPAM      ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVELZOUT22    WOUT20 20
+     C                     MOVE WOUT20    RBALC
+     C                     MOVE *BLANK    WDUPL   1
+     C                     MOVE *BLANK    WDUPR   1
+     C                     MOVE *BLANK    LNF
+     C                     Z-ADD0         X       30
+     C                     ENDIF
+      *
+      ** Retrieve details of transaction from LOAMS
+      *
+     C           RCDT      IFEQ 'A'
+      *
+     C**********           Z-ADDLNRF      WLNRF                                               CLE148
+     C                     MOVELLNRF      WLNRF                                               CLE148
+     C                     Z-ADDVDATX     WVDAT
+     C                     Z-ADDLASN      WLASN
+      *
+      ** Check if records from LOAMSDK already printed
+      *
+     C                     Z-ADD1         Y       30
+     C                     MOVE WLAKEY    WLAKEA 14
+     C           WLAKEA    LOKUPLNF,Y                    20
+     C           *IN20     IFEQ '1'
+     C           CHTPX     ANDNE'R'
+     C                     EXSR SRCNCF
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C           KLAKEY    CHAINLOAMS                20
+     C           *IN20     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'LOAMS   'DBFILE           ************
+     C                     Z-ADD6         DBASE            * DBERR 06 *
+     C                     MOVELWLAKEY    DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Do not print confirmation for deleted Repayment
+      *
+     C           AMTP      IFEQ 'RE'
+     C           RECI      ANDNE'D'
+     C                     EXSR SRCNCF
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C                     ADD  1         X
+     C                     MOVE WLAKEY    LNF,X
+      *
+     C                     ENDIF
+      *
+      ** Format fields for output
+      *
+     C                     MOVE LNRF      RLNRF
+     C                     MOVE CCY       RCURR
+     C                     MOVE *BLANK    ZFLD15
+      *
+      ** Loans input
+      *
+     C           RCDT      IFEQ 'L'
+     C           VDATX     ANDNE0
+      *
+      ** No confirmation print should be produced for reauthorised loans,
+      ** as this has been printed earlier
+      *
+     C           WDUPL     IFNE *BLANK
+     C           CHTPX     ANDNE'R'
+     C                     EXSR SRCNCF
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C           CHTPX     IFNE 'R'
+     C                     MOVEAACT,1     RACTN
+     C                     MOVE CPAM      ZFLD15
+     C                     ELSE
+     C                     MOVEAACT,7     RACTN
+     C                     MOVE *BLANK    RBALC
+     C                     ENDIF
+     C                     MOVE INTR      ZFIELD
+     C                     Z-ADD7         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RRATE
+     C                     MOVE '0'       *IN11
+     C                     Z-ADDVDAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    WDAT1
+     C           RLDT      IFNE 0
+     C                     Z-ADDRLDT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    WDAT2
+     C                     ELSE
+     C                     Z-ADDMDAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    WDAT2
+     C                     ENDIF
+     C                     MOVE WPRD      RPERD
+     C                     MOVE 'Y'       WDUPL   1
+     C                     ENDIF
+      *
+      ** Loans Amendments, Principal Transfers, and Repayments
+      *
+     C           RCDT      IFEQ 'A'
+     C           CHTPX     IFNE 'R'
+     C           AMTP      IFEQ 'PF'
+     C                     MOVEAACT,3     RACTN
+     C                     MOVE PRAM      ZFLD15
+     C                     ENDIF
+     C           AMTP      IFEQ 'PT'
+     C                     MOVEAACT,4     RACTN
+     C                     MOVE PRAM      ZFLD15
+     C                     ENDIF
+     C           AMTP      IFEQ 'RE'
+     C                     MOVEAACT,5     RACTN
+     C           REPT      IFEQ 1
+     C                     MOVE PRAM      ZFLD15
+     C                     ENDIF
+     C           REPT      IFEQ 3
+     C           REPT      OREQ 2
+     C                     MOVE TAMT      ZFLD15
+     C                     ENDIF
+     C                     ENDIF
+     C           AMTP      IFEQ 'PI'
+     C                     MOVEAACT,6     RACTN
+     C                     MOVE PRAM      ZFLD15
+     C                     ENDIF
+     C                     ELSE
+      *
+      ** Reverse Loan Amendment records
+      *
+     C           AMTP      IFEQ 'PF'
+     C                     MOVEAACT,10    RACTN
+     C                     MOVE PRAM      ZFLD15
+     C                     ENDIF
+     C           AMTP      IFEQ 'PT'
+     C                     MOVEAACT,9     RACTN
+     C                     MOVE PRAM      ZFLD15
+     C                     ENDIF
+     C           AMTP      IFEQ 'PI'
+     C                     MOVEAACT,8     RACTN
+     C                     MOVE PRAM      ZFLD15
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE '1'       *IN11
+     C                     Z-ADDVDAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RDATE
+     C                     MOVE *BLANK    RRATE
+     C                     ENDIF
+      *
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVELZOUT22    WOUT20
+     C                     MOVE WOUT20    RAMNT
+      *
+     C           RCDT      IFEQ 'L'
+     C           CHTPX     ANDEQ'R'
+     C                     MOVE *BLANK    RAMNT
+     C                     ENDIF
+      *
+      ** Rollover
+      *
+     C           RCDT      IFEQ 'L'
+     C           VDATX     ANDEQ0
+      *
+      ** No confirmation print should be produced for reauthorised rollovers,
+      ** as this has been printed earlier
+      *
+     C           WDUPR     IFNE *BLANK
+     C                     EXSR SRCNCF
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C                     MOVEAACT,2     RACTN
+     C                     MOVE INTR      ZFIELD
+     C                     Z-ADD7         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RRATE
+     C                     MOVE '0'       *IN11
+     C                     Z-ADDVDAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    WDAT1
+     C           NROD      IFNE 0
+     C                     Z-ADDNROD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    WDAT2
+     C                     ELSE
+     C                     Z-ADDMDAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    WDAT2
+     C                     ENDIF
+     C                     MOVE WPRD      RPERD
+      *
+      ** Print new principal if there is on rollover
+      *
+      *
+     C**********           Z-ADDLNRF      WLNRF                                               CLE148
+     C                     MOVELLNRF      WLNRF                                               CLE148
+     C                     MOVE 'B'       WRCDT
+      *
+     C           KLKEY     CHAINCLOAN               N20
+     C           *IN20     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CLOAN   'DBFILE           ************
+     C                     Z-ADD10        DBASE            * DBERR 10 *
+     C                     MOVELLNRF      DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           NPRAM     IFNE 0
+     C                     Z-ADDNPRAM     ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVELZOUT22    WOUT20 20
+     C                     MOVE WOUT20    RAMNT
+     C                     MOVE WOUT20    RBALC
+     C                     MOVE WOUT20    WBALN
+     C                     ELSE
+     C                     MOVE *BLANK    RAMNT
+     C                     MOVE *BLANK    RBALC
+     C                     ENDIF
+      *
+     C                     MOVE 'Y'       WDUPR
+     C                     ENDIF
+      *
+      ** Calculate Balance as the running total of loan transactions
+      *
+     C           RCDT      IFEQ 'A'
+     C           CHTPX     IFNE 'R'
+     C           AMTP      IFEQ 'PF'
+     C                     SUB  PRAM      WBALN
+     C                     ENDIF
+      *
+     C           AMTP      IFEQ 'PT'
+     C           AMTP      OREQ 'PI'
+     C                     ADD  PRAM      WBALN
+     C                     ENDIF
+      *
+     C           AMTP      IFEQ 'RE'
+     C           REPT      IFEQ 1
+     C                     SUB  PRAM      WBALN
+     C                     ELSE
+     C                     SUB  TAMT      WBALN
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ** Computation for reverse loan amendment record
+      *
+     C           AMTP      IFEQ 'PF'
+     C                     ADD  PRAM      WBALN
+     C                     ENDIF
+      *
+     C           AMTP      IFEQ 'PT'
+     C           AMTP      OREQ 'PI'
+     C                     SUB  PRAM      WBALN
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     MOVE WBALN     ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVELZOUT22    WOUT20
+     C                     MOVE WOUT20    RBALC
+     C                     ENDIF
+      *
+      ** Open/Close Printer file
+      *
+     C           MBIN      IFEQ 'Y'
+     C           BRCA      IFNE BRCAT
+      *
+     C                     CLOSELE1180P1
+     C                     OPEN LE1180P1
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           PRSEQ   5
+     C                     PARM BRCA      SENTY   3
+     C                     PARM           SFILE1 10
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      **   Error during ZSFILE processing, end pgm.
+      *
+     C           ZSERR     IFNE ' '
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+     C                     MOVE BRCA      BRCAT
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C           WFIRST    IFNE 'Y'
+     C                     OPEN LE1180P1
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           PRSEQ   5
+     C                     PARM BRCA      SENTY   3
+     C                     PARM           SFILE1 10
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      **   Error during ZSFILE processing, end pgm.
+      *
+     C           ZSERR     IFNE ' '
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+     C                     MOVE 'Y'       WFIRST
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Write Confirmation Header if customer changed or overflow
+      *
+     C           *IN09     IFEQ '1'
+     C           CNUM      ORNE CNUMT
+     C                     MOVE A8BRNM    RBRNM
+     C                     MOVELBBCRNM    RCRNM
+     C                     MOVELBBCNA1    RCNA1
+     C                     MOVELBBCNA2    RCNA2
+     C                     MOVELBBCNA3    RCNA3
+     C                     MOVELBBCNA4    RCNA4
+     C                     WRITELE1180D1
+     C                     MOVE '0'       *IN09
+     C                     ENDIF
+      *
+      ** Write Confirmation Detail
+      *
+     C                     WRITELE1180D2
+      *
+     C           WCHGC     IFEQ 'Y'
+     C                     ADD  1         RNOAV
+     C                     MOVE 'N'       WCHGC
+     C                     ENDIF
+      *
+     C                     MOVE '1'       *IN25
+     C**********           Z-ADDCNUM      CNUMT                                               CSD027
+     C                     MOVE CNUM      CNUMT                                               CSD027
+     C**********           Z-ADDLNRF      LNRFT                                               CLE148
+     C                     MOVELLNRF      LNRFT                                               CLE148
+      *
+      ** Update Consolidated Confirmation indicator
+      *
+     C                     EXSR SRCNCF
+      *
+     C                     MOVE 'Y'       CNCF
+     C                     ENDDO
+      *
+     C           EXDETL    ENDSR
+      /EJECT
+      *****************************************************************
+      * SRCNCF  -  Update Consolidated Confirmation                   *
+      * Called by: SRDETL                                             *
+      * Calls    :                                                    *
+      *****************************************************************
+     C           SRCNCF    BEGSR
+      *
+      ** Retrieve next record and check if Loan no. have changed
+      *
+     C**********           Z-ADDLNRF      WLNPR                                               CLE148
+     C                     MOVELLNRF      WLNPR                                               CLE148
+      *
+     C           MBIN      IFEQ 'Y'
+     C           PRENT     ANDNE'ALL'
+     C           PRENT     READELELOANL4                 19
+     C                     ELSE
+     C                     READ LELOANL4                 19
+     C                     ENDIF
+      *
+      ** Update Consolidated Conf. indicator to 'Y' if
+      ** loan no. changed
+      *
+     C           *IN19     IFEQ '1'
+     C           LNRF      ORNE WLNPR
+      *
+     C**********           Z-ADDWLNPR     WLNRF                                               CLE148
+     C                     MOVELWLNPR     WLNRF                                               CLE148
+     C                     MOVE 'A'       WRCDT
+      *
+     C           KLKEY     CHAINCLOAN                20
+     C           *IN20     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CLOAN   'DBFILE           ************
+     C                     Z-ADD7         DBASE            * DBERR 07 *
+     C                     MOVELWLNPR     DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE 'Y'       CNCF
+     C                     UPDATCLOANCLF
+     C                     ENDIF
+      *
+      ** Read previous record prior to updating Cons. Conf. indicator
+      *
+     C           MBIN      IFEQ 'Y'
+     C           PRENT     ANDNE'ALL'
+     C           PRENT     REDPELELOANL4                 19
+     C                     ELSE
+     C                     READPLELOANL4                 19
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRINIT  -  Initial Processing                                 *
+      * Called by: Main routine                                       *
+      * Calls    :                                                    *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Receive entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PRSEQ   5
+     C                     PARM           PRENT   3
+     C                     PARM           PRPAR 100
+      *
+     C                     MOVELPRPAR     WPARM
+     C           WRUN      IFEQ 'B'
+     C                     MOVEL'ALL'     PRENT
+     C                     MOVE *BLANK    WCUS
+     C**********           Z-ADD0         WFLN                                                CLE148
+     C**********           Z-ADD999999    WTLN                                                CLE148
+     C                     MOVEL*BLANK    WFLN                                                CLE148
+     C                     MOVEL'999999'  WTLN                                                CLE148
+     C                     ENDIF
+      *
+      ** Define dataara LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Read in RUNDAT datarea
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      ** Initialise LDA
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'LE1180'  DBPGM
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD*ZEROS    DBASE
+     C                     OUT  LDA
+      *
+      ** Retrieve bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     Z-ADD8         DBASE            * DBERR 08 *
+     C                     MOVEL'*FIRST'  DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE BJMRDT    RRUNA
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98          98MMDDYY, 98 ON
+     C                     ENDIF
+      *
+     C           MBIN      IFEQ 'Y'
+     C                     MOVE '1'       *IN24
+     C                     ELSE
+     C                     MOVE '0'       *IN24
+     C                     ENDIF
+     C/COPY WNCPYSRC,LE1180C003
+      *
+      ** Read trading details file to check whether the confirmation
+      ** should include the branch name:-BLBNOC set to 'Y' if it should
+      *
+     C                     CALL 'AOTRADR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C           SDTRAD    PARM SDTRAD    DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDTRADPD'DBFILE           ************
+     C                     Z-ADD9         DBASE            * DBERR 09 *
+     C                     MOVEL'*FIRST'  DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           BRNC      IFEQ 'Y'
+     C                     MOVE '1'       *IN10
+     C                     ENDIF
+      *
+      ** Setup key fields
+      *
+     C           KLKEY     KLIST
+     C**********           KFLD           WLNRF   60                                          CLE148
+     C                     KFLD           WLNRF   6                                           CLE148
+     C                     KFLD           WRCDT   1
+      *
+     C           KLAKEY    KLIST
+     C**********           KFLD           WLNRF   60                                          CLE148
+     C                     KFLD           WLNRF   6                                           CLE148
+     C                     KFLD           WVDAT   50
+     C                     KFLD           WLASN   30
+      *
+      ** Initialise fields
+      *
+     C                     MOVE *BLANK    BRCAT   3
+     C**********           Z-ADD0         LNRFT   60                                          CLE148
+     C                     MOVEL*BLANKS   LNRFT   6                                           CLE148
+     C**********           Z-ADD0         CNUMT   60                                          CSD027
+     C                     MOVE *BLANKS   CNUMT   6                                           CSD027
+     C**********           Z-ADD0         WLNPR   60                                          CLE148
+     C                     MOVEL*BLANKS   WLNPR   6                                           CLE148
+     C                     Z-ADD0         RNOAV
+     C                     MOVE *BLANK    WFIRST  1
+     C                     MOVE '0'       *IN25
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *****************************************************************
+     C           *PSSR     BEGSR                                       **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+     C                     WRITELE1180AH
+     C                     WRITEDBERRAU
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+     C/COPY ZSRSRC,ZEDITZ2
+     C/COPY ZSRSRC,ZFRPEDZ3
+     C/COPY ZSRSRC,ZDATE2Z2
+** CPY@
+(c) Misys International Banking Systems Ltd. 2001
+** ACT ** Action Text
+Start of Loan
+Rollover
+Prin. Trans. Fr
+Prin. Trans. To
+Repayment Sched
+Prin. Increase
+Reverse Loan
+Reverse P Inc.
+Reverse PT To.
+Reverse PT Fr.
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

@@ -1,0 +1,367 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas SC Data replication background job')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC000606 - Data Replication Background Job (DRMONITOR)     */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4.01 -----------------------------------------------*/
+/*       Last Amend No. CSC011  *CREATE    Date 18Sep01              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSC011 - 24x7 Midas Availability                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&DABCH0) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DABCH1) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DABCH2) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DABCH3) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DABCH4) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DABCH5) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DABCH6) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DABCH7) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DABCH8) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DABCH9) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DASTA0) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DASTA1) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DASTA2) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DASTA3) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DASTA4) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DASTA5) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DASTA6) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DASTA7) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DASTA8) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DASTA9) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&OBJNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OBJTYP) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ALC) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&EG) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MAINSYS) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&MAINXLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&S1SOVR) TYPE(*CHAR) LEN(1)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2002')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+             CHGJOB     SWS(00000000)
+ 
+/** Build Main system XLIB name */
+ 
+             RTVDTAARA  DTAARA(SC24X7 (1 2)) RTNVAR(&MAINSYS)
+ 
+             CHGVAR     VAR(&MAINXLIB) VALUE(&MAINSYS *CAT 'XLIB')
+ 
+/** If dtaara is locked, program is already active */
+ 
+             ALCOBJ     OBJ((SCC000606 *DTAARA *EXCL)) WAIT(0)
+             MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(END2))
+             SNDPGMMSG  MSG('SCC000606 - Replication background +
+                          audit started') TOMSGQ(MOPERQ +
+                          &MAINXLIB/SC24X7Q)
+ 
+/** Retrieve fields from data area */
+ 
+             RTVDTAARA  DTAARA(SCDRSTAT (5 1)) RTNVAR(&DABCH0)
+             RTVDTAARA  DTAARA(SCDRSTAT (6 1)) RTNVAR(&DABCH1)
+             RTVDTAARA  DTAARA(SCDRSTAT (7 1)) RTNVAR(&DABCH2)
+             RTVDTAARA  DTAARA(SCDRSTAT (8 1)) RTNVAR(&DABCH3)
+             RTVDTAARA  DTAARA(SCDRSTAT (9 1)) RTNVAR(&DABCH4)
+             RTVDTAARA  DTAARA(SCDRSTAT (10 1)) RTNVAR(&DABCH5)
+             RTVDTAARA  DTAARA(SCDRSTAT (11 1)) RTNVAR(&DABCH6)
+             RTVDTAARA  DTAARA(SCDRSTAT (12 1)) RTNVAR(&DABCH7)
+             RTVDTAARA  DTAARA(SCDRSTAT (13 1)) RTNVAR(&DABCH8)
+             RTVDTAARA  DTAARA(SCDRSTAT (14 1)) RTNVAR(&DABCH9)
+ 
+             CHGVAR     VAR(&OBJTYP) VALUE('*FILE')
+ 
+ LOOP:       RTVDTAARA  DTAARA(SC24X7 (10 1)) RTNVAR(&S1SOVR)
+ 
+             RTVDTAARA  DTAARA(SCDRSTAT (15 1)) RTNVAR(&DASTA0)
+             RTVDTAARA  DTAARA(SCDRSTAT (16 1)) RTNVAR(&DASTA1)
+             RTVDTAARA  DTAARA(SCDRSTAT (17 1)) RTNVAR(&DASTA2)
+             RTVDTAARA  DTAARA(SCDRSTAT (18 1)) RTNVAR(&DASTA3)
+             RTVDTAARA  DTAARA(SCDRSTAT (19 1)) RTNVAR(&DASTA4)
+             RTVDTAARA  DTAARA(SCDRSTAT (20 1)) RTNVAR(&DASTA5)
+             RTVDTAARA  DTAARA(SCDRSTAT (21 1)) RTNVAR(&DASTA6)
+             RTVDTAARA  DTAARA(SCDRSTAT (22 1)) RTNVAR(&DASTA7)
+             RTVDTAARA  DTAARA(SCDRSTAT (23 1)) RTNVAR(&DASTA8)
+             RTVDTAARA  DTAARA(SCDRSTAT (24 1)) RTNVAR(&DASTA9)
+ 
+/** If journal entry 'EG' has been processed by all batches, */
+/** then end the program                                     */
+ 
+             CHGVAR     VAR(&EG) VALUE('Y')
+ 
+             IF         COND(&DABCH0 *EQ 'Y') THEN(DO)
+                IF         COND(&DASTA0 *NE 'E') THEN(CHGVAR VAR(&EG) +
+                             VALUE('N'))
+             ENDDO
+             IF         COND(&DABCH1 *EQ 'Y') THEN(DO)
+                IF         COND(&DASTA1 *NE 'E') THEN(CHGVAR VAR(&EG) +
+                             VALUE('N'))
+             ENDDO
+             IF         COND(&DABCH2 *EQ 'Y') THEN(DO)
+                IF         COND(&DASTA2 *NE 'E') THEN(CHGVAR VAR(&EG) +
+                             VALUE('N'))
+             ENDDO
+             IF         COND(&DABCH3 *EQ 'Y') THEN(DO)
+                IF         COND(&DASTA3 *NE 'E') THEN(CHGVAR VAR(&EG) +
+                             VALUE('N'))
+             ENDDO
+             IF         COND(&DABCH4 *EQ 'Y') THEN(DO)
+                IF         COND(&DASTA4 *NE 'E') THEN(CHGVAR VAR(&EG) +
+                             VALUE('N'))
+             ENDDO
+             IF         COND(&DABCH5 *EQ 'Y') THEN(DO)
+                IF         COND(&DASTA5 *NE 'E') THEN(CHGVAR VAR(&EG) +
+                             VALUE('N'))
+             ENDDO
+             IF         COND(&DABCH6 *EQ 'Y') THEN(DO)
+                IF         COND(&DASTA6 *NE 'E') THEN(CHGVAR VAR(&EG) +
+                             VALUE('N'))
+             ENDDO
+             IF         COND(&DABCH7 *EQ 'Y') THEN(DO)
+                IF         COND(&DASTA7 *NE 'E') THEN(CHGVAR VAR(&EG) +
+                             VALUE('N'))
+             ENDDO
+             IF         COND(&DABCH8 *EQ 'Y') THEN(DO)
+                IF         COND(&DASTA8 *NE 'E') THEN(CHGVAR VAR(&EG) +
+                             VALUE('N'))
+             ENDDO
+             IF         COND(&DABCH9 *EQ 'Y') THEN(DO)
+                IF         COND(&DASTA9 *NE 'E') THEN(CHGVAR VAR(&EG) +
+                             VALUE('N'))
+             ENDDO
+ 
+             IF         COND(&EG *EQ 'Y') THEN(GOTO CMDLBL(END))
+ 
+/**  Check if the batch is used, the file is allocated, and */
+/**  status is blank, in order to determine if the batch    */
+/**  should have been running                               */
+ 
+/** Batch 0 */
+ 
+             IF         COND((&DABCH0 *EQ 'Y') *AND (&DASTA0 *NE +
+                          'E')) THEN(DO)
+                CHGVAR     VAR(&OBJNAM) VALUE('SCJSN0PD')
+                CALL       PGM(ZACCHKALC) PARM(&OBJNAM &OBJTYP &ALC)
+                IF         COND(&ALC *EQ 'N') THEN(DO)
+                   IF         COND(&DASTA0 *EQ ' ' *OR (&S1SOVR *EQ 'S' +
+                                *AND (&DASTA0 *EQ 'T' *OR &DASTA0 *EQ 'F'))) +
+                                THEN(DO)
+                      SNDPGMMSG  MSG('SCC000606 - Replication batch no. 0 +
+                                   status unreconciled. Restarting the +
+                                   job.') TOMSGQ(MOPERQ &MAINXLIB/SC24X7Q)
+                      CHGDTAARA  DTAARA(SCDRSTAT (15 1)) VALUE(' ')
+                      CALL       PGM(SCC000605) PARM('0')
+                   ENDDO
+                ENDDO
+             ENDDO
+ 
+/** Batch 1 */
+ 
+             IF         COND((&DABCH1 *EQ 'Y') *AND (&DASTA1 *NE +
+                          'E')) THEN(DO)
+                CHGVAR     VAR(&OBJNAM) VALUE('SCJSN1PD')
+                CALL       PGM(ZACCHKALC) PARM(&OBJNAM &OBJTYP &ALC)
+                IF         COND(&ALC *EQ 'N') THEN(DO)
+                   IF         COND(&DASTA1 *EQ ' ' *OR (&S1SOVR *EQ 'S' +
+                                *AND (&DASTA1 *EQ 'T' *OR &DASTA1 *EQ 'F'))) +
+                                THEN(DO)
+                      SNDPGMMSG  MSG('SCC000606 - Replication batch no. 1 +
+                                 status unreconciled. Restarting the +
+                                 job.') TOMSGQ(MOPERQ &MAINXLIB/SC24X7Q)
+                      CHGDTAARA  DTAARA(SCDRSTAT (16 1)) VALUE(' ')
+                      CALL       PGM(SCC000605) PARM('1')
+                   ENDDO
+                ENDDO
+             ENDDO
+ 
+/** Batch 2 */
+ 
+             IF         COND((&DABCH2 *EQ 'Y') *AND (&DASTA2 *NE +
+                          'E')) THEN(DO)
+                CHGVAR     VAR(&OBJNAM) VALUE('SCJSN2PD')
+                CALL       PGM(ZACCHKALC) PARM(&OBJNAM &OBJTYP &ALC)
+                IF         COND(&ALC *EQ 'N') THEN(DO)
+                   IF         COND(&DASTA2 *EQ ' ' *OR (&S1SOVR *EQ 'S' +
+                                *AND (&DASTA2 *EQ 'T' *OR &DASTA2 *EQ 'F'))) +
+                                THEN(DO)
+                      SNDPGMMSG  MSG('SCC000606 - Replication batch no. 2 +
+                                 status unreconciled. Restarting the +
+                                 job.') TOMSGQ(MOPERQ &MAINXLIB/SC24X7Q)
+                      CHGDTAARA  DTAARA(SCDRSTAT (17 1)) VALUE(' ')
+                      CALL       PGM(SCC000605) PARM('2')
+                   ENDDO
+                ENDDO
+             ENDDO
+ 
+/** Batch 3 */
+ 
+             IF         COND((&DABCH3 *EQ 'Y') *AND (&DASTA3 *NE +
+                          'E')) THEN(DO)
+                CHGVAR     VAR(&OBJNAM) VALUE('SCJSN3PD')
+                CALL       PGM(ZACCHKALC) PARM(&OBJNAM &OBJTYP &ALC)
+                IF         COND(&ALC *EQ 'N') THEN(DO)
+                   IF         COND(&DASTA3 *EQ ' ' *OR (&S1SOVR *EQ 'S' +
+                                *AND (&DASTA3 *EQ 'T' *OR &DASTA3 *EQ 'F'))) +
+                                THEN(DO)
+                      SNDPGMMSG  MSG('SCC000606 -Replication batch no. 3 +
+                                 status unreconciled. Restarting the +
+                                 job.') TOMSGQ(MOPERQ &MAINXLIB/SC24X7Q)
+                      CHGDTAARA  DTAARA(SCDRSTAT (18 1)) VALUE(' ')
+                      CALL       PGM(SCC000605) PARM('3')
+                   ENDDO
+                ENDDO
+             ENDDO
+ 
+/** Batch 4 */
+ 
+             IF         COND((&DABCH4 *EQ 'Y') *AND (&DASTA4 *NE +
+                          'E')) THEN(DO)
+                CHGVAR     VAR(&OBJNAM) VALUE('SCJSN4PD')
+                CALL       PGM(ZACCHKALC) PARM(&OBJNAM &OBJTYP &ALC)
+                IF         COND(&ALC *EQ 'N') THEN(DO)
+                   IF         COND(&DASTA4 *EQ ' ' *OR (&S1SOVR *EQ 'S' +
+                                *AND (&DASTA4 *EQ 'T' *OR &DASTA4 *EQ 'F'))) +
+                                THEN(DO)
+                      SNDPGMMSG  MSG('SCC000606 - Replication batch no. 4 +
+                                 status unreconciled. Restarting the +
+                                 job.') TOMSGQ(MOPERQ &MAINXLIB/SC24X7Q)
+                      CHGDTAARA  DTAARA(SCDRSTAT (19 1)) VALUE(' ')
+                      CALL       PGM(SCC000605) PARM('4')
+                   ENDDO
+                ENDDO
+             ENDDO
+ 
+/** Batch 5 */
+ 
+             IF         COND((&DABCH5 *EQ 'Y') *AND (&DASTA5 *NE +
+                          'E')) THEN(DO)
+                CHGVAR     VAR(&OBJNAM) VALUE('SCJSN5PD')
+                CALL       PGM(ZACCHKALC) PARM(&OBJNAM &OBJTYP &ALC)
+                IF         COND(&ALC *EQ 'N') THEN(DO)
+                   IF         COND(&DASTA5 *EQ ' ' *OR (&S1SOVR *EQ 'S' +
+                                *AND (&DASTA5 *EQ 'T' *OR &DASTA5 *EQ 'F'))) +
+                                THEN(DO)
+                      SNDPGMMSG  MSG('SCC000606 - Replication batch no. 5 +
+                                 status unreconciled. Restarting the +
+                                 job.') TOMSGQ(MOPERQ &MAINXLIB/SC24X7Q)
+                      CHGDTAARA  DTAARA(SCDRSTAT (20 1)) VALUE(' ')
+                      CALL       PGM(SCC000605) PARM('5')
+                   ENDDO
+                ENDDO
+             ENDDO
+ 
+/** Batch 6 */
+ 
+             IF         COND((&DABCH6 *EQ 'Y') *AND (&DASTA6 *NE +
+                          'E')) THEN(DO)
+                CHGVAR     VAR(&OBJNAM) VALUE('SCJSN6PD')
+                CALL       PGM(ZACCHKALC) PARM(&OBJNAM &OBJTYP &ALC)
+                IF         COND(&ALC *EQ 'N') THEN(DO)
+                   IF         COND(&DASTA6 *EQ ' ' *OR (&S1SOVR *EQ 'S' +
+                                *AND (&DASTA6 *EQ 'T' *OR &DASTA6 *EQ 'F'))) +
+                                THEN(DO)
+                      SNDPGMMSG  MSG('SCC000606 - Replication batch no. 6 +
+                                 status unreconciled. Restarting the +
+                                 job.') TOMSGQ(MOPERQ &MAINXLIB/SC24X7Q)
+                      CHGDTAARA  DTAARA(SCDRSTAT (21 1)) VALUE(' ')
+                      CALL       PGM(SCC000605) PARM('6')
+                   ENDDO
+                ENDDO
+             ENDDO
+ 
+/** Batch 7 */
+ 
+             IF         COND((&DABCH7 *EQ 'Y') *AND (&DASTA7 *NE +
+                          'E')) THEN(DO)
+                CHGVAR     VAR(&OBJNAM) VALUE('SCJSN7PD')
+                CALL       PGM(ZACCHKALC) PARM(&OBJNAM &OBJTYP &ALC)
+                IF         COND(&ALC *EQ 'N') THEN(DO)
+                   IF         COND(&DASTA7 *EQ ' ' *OR (&S1SOVR *EQ 'S' +
+                                *AND (&DASTA7 *EQ 'T' *OR &DASTA7 *EQ 'F'))) +
+                                THEN(DO)
+                      SNDPGMMSG  MSG('SCC000606 - Replication batch no. 7 +
+                                 status unreconciled. Restarting the +
+                                 job.') TOMSGQ(MOPERQ &MAINXLIB/SC24X7Q)
+                      CHGDTAARA  DTAARA(SCDRSTAT (22 1)) VALUE(' ')
+                      CALL       PGM(SCC000605) PARM('7')
+                   ENDDO
+                ENDDO
+             ENDDO
+ 
+/** Batch 8 */
+ 
+             IF         COND((&DABCH8 *EQ 'Y') *AND (&DASTA8 *NE +
+                          'E')) THEN(DO)
+                CHGVAR     VAR(&OBJNAM) VALUE('SCJSN8PD')
+                CALL       PGM(ZACCHKALC) PARM(&OBJNAM &OBJTYP &ALC)
+                IF         COND(&ALC *EQ 'N') THEN(DO)
+                   IF         COND(&DASTA8 *EQ ' ' *OR (&S1SOVR *EQ 'S' +
+                                *AND (&DASTA8 *EQ 'T' *OR &DASTA8 *EQ 'F'))) +
+                                THEN(DO)
+                      SNDPGMMSG  MSG('SCC000606 - Replication batch no. 8 +
+                                 status unreconciled. Restarting the +
+                                 job.') TOMSGQ(MOPERQ &MAINXLIB/SC24X7Q)
+                      CHGDTAARA  DTAARA(SCDRSTAT (23 1)) VALUE(' ')
+                      CALL       PGM(SCC000605) PARM('8')
+                   ENDDO
+                ENDDO
+             ENDDO
+ 
+/** Batch 9 */
+ 
+             IF         COND((&DABCH9 *EQ 'Y') *AND (&DASTA9 *NE +
+                          'E')) THEN(DO)
+                CHGVAR     VAR(&OBJNAM) VALUE('SCJSN9PD')
+                CALL       PGM(ZACCHKALC) PARM(&OBJNAM &OBJTYP &ALC)
+                IF         COND(&ALC *EQ 'N') THEN(DO)
+                   IF         COND(&DASTA9 *EQ ' ' *OR (&S1SOVR *EQ 'S' +
+                                *AND (&DASTA9 *EQ 'T' *OR &DASTA9 *EQ 'F'))) +
+                                THEN(DO)
+                      SNDPGMMSG  MSG('SCC000606 - Replication batch no. 9 +
+                                 status unreconciled. Restarting the +
+                                 job.') TOMSGQ(MOPERQ &MAINXLIB/SC24X7Q)
+                      CHGDTAARA  DTAARA(SCDRSTAT (24 1)) VALUE(' ')
+                      CALL       PGM(SCC000605) PARM('9')
+                   ENDDO
+                ENDDO
+             ENDDO
+ 
+/** Delay for 1 minute then restart */
+ 
+             DLYJOB     DLY(60)
+             GOTO       CMDLBL(LOOP)
+ 
+/** Abnormal termination */
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SCC000606 ended abnormally - see joblog') +
+                          TOMSGQ(MOPERQ &MAINXLIB/SC24X7Q)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/** End program */
+ 
+ END:        DLCOBJ     OBJ((SCC000606 *DTAARA *EXCL))
+             SNDPGMMSG  MSG('SCC000606 - Journal entry ''EG'' +
+                          received for all batches, background +
+                          audit ends.') TOMSGQ(MOPERQ &MAINXLIB/SC24X7Q)
+ 
+ END2:       ENDPGM

@@ -1,0 +1,358 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2007')
+      *****************************************************************
+/*STD *  RPGBASEMOD                                                   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Module name   ILE Module                             *
+      *                                                               *
+      *  SKFfffR   - SK Transaction type retrieve a record            *
+      *                                                               *
+      *  Function:  This module retrieves a record from the file      *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2007            *
+      *                                                               *
+      *  Last Amend No. CAP0nn  *CREATE    Date ddMmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CAP0nn - description                                         *
+      *                                                               *
+      *****************************************************************
+ 
+      ** +--------------------------------------+
+      ** ¦ F-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+ 
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ Automatically included D-specs       ¦
+      ** ¦ ==============================       ¦
+      ** +--------------------------------------+
+      **
+      **-----------------------------------------------------------------------
+      ** The following /COPY line includes (among others) the LDA layout
+      ** and the copyright array definition:
+     D/COPY ZACPYSRC,STD_D_SPEC
+      **-----------------------------------------------------------------------
+ 
+      **-----------------------------------------------------------------------
+      ** The following /COPY includes the standard API declares:
+     D/COPY ZACPYSRC,STDDECLARE
+      **-----------------------------------------------------------------------
+ 
+      **-----------------------------------------------------------------------
+      ** The following /COPY line includes all the defined fields in the
+      ** Program Status Data Structures.  They have meaningful
+      ** names, prefixed by 'PS'.
+     D/COPY ZACPYSRC,PSDS
+      **-----------------------------------------------------------------------
+ 
+      **-----------------------------------------------------------------------
+     D/COPY ZACPYSRC,ERR_ARRAYS
+      **-----------------------------------------------------------------------
+ 
+      ** +--------------------------------------+
+      ** ¦ End of automatically included D-specs¦
+      ** ¦ =====================================¦
+      ** +--------------------------------------+
+ 
+      **-----------------------------------------------------------------------
+      ** Screen formats
+      **-----------------------------------------------------------------------
+ 
+     D FfffScnFmt    E DS                  EXTNAME(SKFFFFPD)
+      * Deal in screen format
+ 
+     D ##RECS        E DS                  EXTNAME(SDESSRPD)
+      * Receive settlement instructions in screen format
+ 
+     D ##PAYS        E DS                  EXTNAME(SDESSPPD)
+      * Pay settlement instructions in screen format
+ 
+     D ##FRIS        E DS                  EXTNAME(SDESSFPD)
+      * FRA/IRS settlement instructions in screen format
+ 
+      ##### Include additional screen information e.g. extra data
+ 
+      **-----------------------------------------------------------------------
+      ** File formats
+      **-----------------------------------------------------------------------
+ 
+     D FfffFilFmt    E DS                  EXTNAME(SKFfffPD)
+      ** Deal in file format
+ 
+     D ##RECF        E DS                  EXTNAME(SDESFRPD)
+     D  FLREC                  1     69
+      * Receive settlement instructions in file format
+ 
+     D ##PAYF        E DS                  EXTNAME(SDESFPPD)
+     D  FLPAY                  1    559
+      * Pay settlement instructions in file format
+ 
+     D ##FRIF        E DS                  EXTNAME(SDESFFPD)
+      * FRA/IRS settlement instructions in file format
+ 
+      ##### Include additional screen information e.g. extra data
+ 
+      ** Key fields data structure
+     D DDLNO_In        DS
+     D  Dfld1Sel               1     10
+     D  Dfld2Sel              11     16
+      **-----------------------------------------------------------------------
+ 
+      ** Index for arrays of of error message ids etc
+     D Idx             S              3P 0
+ 
+      ** Index for arrays of warning message ids etc
+     D WIdx            S              3P 0
+ 
+      **-----------------------------------------------------------------------
+      ** +--- Start of main processing -----------------------------------+
+ 
+     C     *ENTRY        PLIST
+     C                   PARM                    AuthComp          1
+     C                   PARM                    FwdBck            1
+      * This should be a string containing all the keys fields required to identify your record
+     C                   PARM                    DDDLNO_In         6
+     C                   PARM                    Buffer         6000
+     C                   PARM                    FldNameArr
+     C                   PARM                    MsgIDArr
+     C                   PARM                    MsgDtaArr
+     C                   PARM                    MsgFArray
+     C                   PARM                    APIRetc           1
+ 
+      * Set up the name of the primary and secondary message files from
+      * which the message handler will get the messages
+     C                   EVAL      MsgFArray(1) = 'SkUSRMSG'
+     C                   EVAL      MsgFArray(2) = 'DRSMM'
+ 
+      *  Hook to enable non-core message files to be included
+     C/COPY WNCPYSRC,SKFfffM02
+ 
+      * If the action code is blank, enquire unless authorising
+     C                   CLEAR                   FfffFilFmt
+     C     DDACTN        IFEQ      *BLANK
+     C     AuthComp      IFEQ      'X'
+     C                   MOVEL     'X'           DDACTN
+     C                   ELSE
+     C                   MOVEL     'E'           DDACTN
+     C                   ENDIF
+     C                   ENDIF
+ 
+     C     FwdBck        IFEQ      'F'
+     C                   MOVEL     'Y'           @RDFWD
+     C                   MOVEL     'N'           @RDBCK
+     C                   ELSE
+     C     FwdBck        IFEQ      'B'
+     C                   MOVEL     'N'           @RDFWD
+     C                   MOVEL     'Y'           @RDBCK
+     C                   ELSE
+     C                   MOVEL     'N'           @RDFWD
+     C                   MOVEL     'N'           @RDBCK
+     C                   ENDIF
+     C                   ENDIF
+ 
+     C     @RDFWD        IFEQ      'Y'
+     C     @RDBCK        OREQ      'Y'
+     C                   EXSR      SKFfffRED
+     C                   ELSE
+      ** MOVE ALL THE KEY FIELDS REQUIRED HERE TO THE @XXXX FORMAT
+     C                   MOVEL     DDDLNO_In     @DLRED
+     C                   MOVEL     *BLANK        @ERRMS
+     C                   ENDIF
+      *
+      * If deal read and no error message returned
+     C                   IF        ReturnCode = *BLANK and
+     C                             @DLRED <> *Blank
+      *
+      * Retrieve deal details (all key fields required for call to rtv module)
+     C                   MOVEL     @DLRED        DDDLNO
+     C                   MOVEL     @FTRED        APFOTranID
+     C                   EXSR      SKFfffRTV
+      *
+      * Convert to screeen format
+     C     Idx           IFEQ      0
+     C                   EXSR      SKFfffCVT
+     C                   EXSR      ZASETINCVT
+     C                   ENDIF
+ 
+     C                   ENDIF
+ 
+     C                   IF        ReturnCode <> *BLANK
+     C                   MOVEL     '0'           APIRetc
+     C                   MOVEL     'DDDLNO'      FldNameArr(1)
+     C                   MOVEL     @ERRMS        MsgIDArr(1)
+     C                   ENDIF
+ 
+      * Build buffer with required output
+     C                   EVAL                    Buffer = FfffScnFmt
+     C                                           + ##RECS  + ##PAYS
+ 
+     C                   SETON                                        LR
+     C                   RETURN
+      **********************************************************************
+     C     SKFFFFRED     BEGSR
+      *
+     C                   RESET                   RetCodeOut
+      *
+     C                   CALLB     'SKFFFFRED'
+      * INPUT PARAMETERS
+      *
+      * RETURN CODE
+     C                   PARM      *BLANK        RetCodeOut
+      *
+      * Mode = '*FRONT' (FRONT OFFICE TRANSACTION INTERFACE)
+      * MODE = '      ' (NOT FRONT OFFICE TRANSACTION INTERFACE)
+      *
+     C                   PARM      '      '      @@MODE            6
+      *
+      * ACTION CODE
+     C                   PARM                    DDACTN            1
+      *
+      * DEAL NUMBER POINTER
+     C                   PARM      DDDLNO_In     DDDLNO            6
+      *
+      * Front Office ID
+     C                   PARM                    DDFRTN           20
+      *
+      * READ FORWARDS
+     C                   PARM                    @RDFWD            1
+      *
+      * READ BACKWARDS
+     C                   PARM                    @RDBCK            1
+      *
+      * OUTPUT PARAMETERS
+      *
+      * ERROR MESSAGE
+     C                   PARM      *BLANK        @ERRMS            7
+      *
+      * DEAL NUMBER READ
+     C                   PARM      *BLANK        @DLRED            6
+      *
+      * Front Office ID READ
+     C                   PARM      *BLANK        @FTRED           20
+      ****** Include any additional parameters specifically required
+      *
+ 
+     C                   ENDSR
+      **********************************************************************
+     C     SKFfffRTV     BEGSR
+ 
+     C                   RESET                   RetCodeOut
+      *
+     C                   CALLB     'SKFfffRTV'
+ 
+      * INPUTS
+ 
+      * Return code
+     C                   PARM                    ReturnCode
+ 
+      * Mode = '*FRONT' (FRONT OFFICE TRANSACTION INTERFACE)
+      * Mode = '      ' (NOT FRONT OFFICE TRANSACTION INTERFACE)
+     C                   PARM                    ModeofOp          6
+      *
+      * Response mode
+     C                   PARM      'S'           APRESPMODE        1
+ 
+      * Action Code
+     C                   PARM                    DDACTN            1
+ 
+      * Parm all Key fields required e.g.
+     C                   PARM                    DDDLNO
+ 
+      * OUTPUTS
+ 
+      * (Current) deal in file format
+     C                   PARM                    FfffFilFmt
+ 
+      * OK - Action code
+     C                   PARM                    DDActnOK          1
+ 
+      * OK - Deal Number
+     C                   PARM                    DDDlnoOK          1
+ 
+      * Error fields/message IDs/message data (arrays) from/to caller
+     C                   PARM                    FldNameArr
+     C                   PARM                    MsgIDArr
+     C                   PARM                    MsgDtaArr
+ 
+      * Array index (3P0) from/to caller
+     C                   PARM                    Idx
+ 
+ 
+     C                   ENDSR
+      **********************************************************************
+     C     SKFfffCVT     BEGSR
+ 
+     C                   RESET                   RetCodeOut
+      *
+     C                   CALLB     'SKFfffCVT'
+      * Match parameter list.... obviously
+ 
+      * INPUTS
+      * Return Code
+     C                   PARM                    ReturnCode
+      * (Current) Deal in file format
+     C                   PARM                    FfffFilFmt
+ 
+      * OUTPUTS
+      * (Current) Deal in screen format
+     C                   PARM                    FfffScnfmt
+      * Deal Status
+     C                   PARM                    DDSTS            24
+ 
+      ** AMEND CHECKING
+     C                   RESET                   ReturnCode
+ 
+     C                   ENDSR
+      **********************************************************************
+      /EJECT
+      **********************************************************************
+     C     ZASETINCVT    BEGSR
+      *
+      * Set up payment instructions from deal
+     C                   MOVEL     FHPAY         FLPAY
+     C                   MOVEL     FHPOBR        FLPOBR
+     C                   MOVEL     FHCVMR        FLCVMR
+     C                   MOVEL     FHPSCY        FLPSCY
+     C                   MOVEL     FHIC72        FLIC72
+      *
+      * Set up receive instructions from deal
+     C                   MOVEL     FHREC         FLREC
+     C                   MOVEL     FHROBR        FLROBR
+     C                   MOVEL     FHRSCY        FLRSCY
+      *
+     C                   CALLB     'ZASETINCVT'
+      *
+      ** Inputs
+      ** File payment settlement instruction
+     C                   PARM                    ##PAYF
+      *
+      ** File receipt settlement instruction
+     C                   PARM                    ##RECF
+      *
+      ** File FRA/IRS settlement instruction
+     C                   PARM      *BLANK        ##FRIF
+      *
+      ** Outputs
+      ** Screen payment settlement instruction
+     C                   PARM      *BLANK        ##PAYS
+      *
+      ** Screen receipt settlement instruction
+     C                   PARM      *BLANK        ##RECS
+      *
+      ** Screen FRA/IRS settlement instruction
+     C                   PARM      *BLANK        ##FRIS
+      *
+     C                   ENDSR
+      **********************************************************************
+      ** The following /COPY contains the standard program status
+      ** subroutine, excluding a bound call to the DBERRCTL module.
+      *********************************************************************
+     C/COPY ZACPYSRC,PSSR_ILENE
+     C                   RETURN
+      *
+     C                   ENDSR
+      *****************************************************************

@@ -1,0 +1,1935 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas EU EMU BCA conversion program')                  *
+      *****************************************************************
+      *                                                               *
+      *  Midas - EMU Module                                           *
+      *                                                               *
+      *  EU0020 - Midas EMU BCA Equivalents Conversion                *
+      *                                                               *
+      *  Function:  This program will convert the base currency for   *
+      *  (COB)      accounting equivalent amounts and rates to base   *
+      *             currency held on all Midas unmatured transanc -   *
+      *             tions into the new base currency (ie. euro)       *
+      *             amounts and rates.                                *
+      *                                                               *
+      *                                                               *
+      *  Called By: EUC0020 - EMU Base Currency Conversion - Part I   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CLE141             Date 08Feb16               *
+      *  Prev Amend No. CAP212             Date 15Sep14               *
+      *                 CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CFT120             Date 28Sep12               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CSW212             Date 03May12               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CLE143             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER054             Date 07Apr09               *
+      *                 CER048             Date 19May08               *
+      *                 CER020             Date 19May08               *
+      *                 CER030             Date 19May08               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 06Jul06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CDL038             Date 10May05               *
+      *                 237063             Date 20Nov05               *
+      *                 CAS009             Date 16May05               *
+      *                 BUG7411            Date 01Jun05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 229544             Date 15Sep04               *
+      *                 CAS008             Date 16Jun04               *
+      *                 CGL014             Date 20Oct03               *
+      *                 CDL020             Date 03Feb04               *
+      *                 CDL019             Date 03Feb04               *
+      *                 CDL018             Date 03Feb04               *
+      *                 CDL017             Date 03Feb04               *
+      *                 CDL016             Date 03Feb04               *
+      *                 222727             Date 05Nov03               *
+      *                 CAP074             Date 08Aug03               *
+      *                 CAS006             Date 21Jan03               *
+      *                 CAS005             Date 16Dec02               *
+      *                 CLE028             Date 27Jun02               *
+      *                 CDL010             Date 02Aug02               *
+      *                 CAS004             Date 26Jun02               *
+      *                 217684             Date 12May03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAP056             Date 13Mar02               *
+      *                 CIR008             Date 13Mar02               *
+      *                 186962             Date 24Jan02               *
+      *                 199402             Date 30Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CFT009             Date 30May00               *
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSE023             Date 12Jul00               *
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CAP136             Date 15Nov99               *
+      *                 175479             Date 07Feb00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 143561             Date 07Oct98               *
+      *                 140528             Date 12Aug98               *
+      *                 140225             Date 10Aug98               *
+      *                 136662             Date 18JUN98               *
+      *                 CEU001 *CREATE     Date 08Sep97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE141 - Currency and Location Business Day Convention       *
+      *           (Recompile)                                         *
+      *  CAP212 - FT Nostro Transfer API (Recompile)                  *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
+      *           (Recompile)                                         *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CSW212 - SWIFT 2012 Changes (Recompile)                      *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CLE143 - Original Loan Contract Date & Effective Interest    *
+      *           Rate (Recompile)                                    *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER054 - German Features - Church Tax (Recompile)            *
+      *  CER048 - German Features - Taxes (Recompile)                 *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus (Recompile)                              *
+      *  CER030 - Multicash German Feature (Recompile)                *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  237063 - EU Tax fixes upgrade to MP build 103 (Recompile).   *
+      *  CAS009 - EIR/AC Accounting (Recompile)                       *
+      *  BUG7411- CDL028 fields missing from DLGHISPD (Recompile)     *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  229544 - Recompiled due to inserted fields in DLCHISPD.      *
+      *  CAS008 - IAS 39 Enhancements (Recompile)                     *
+      *  CGL014 - Collaterals Processing (Recompile)                  *
+      *  CDL020 - Apply Base Rate at Value Date (Recompile)           *
+      *  CDL019 - Allow Base Rate Changes on Fixed Deposits/Loans     *
+      *           (Recompile)                                         *
+      *  CDL018 - Multiple Settlement Accounts on Loans/Deposits      *
+      *           (Recompile)                                         *
+      *  CDL017 - Penalty Fee & Early Maturity of Fixed Term Loan/Dep *
+      *           (Recompile)                                         *
+      *  CDL016 - Automatic rollover of Fixed Term Loans/Deposits     *
+      *           (Recompile)                                         *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+      *  CAP074 - Lending API enhancements - Loans input.             *
+      *  CAS006 - Hedge Accounting Phase B                            *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *           (Recompile)                                         *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s)              *
+      *           (Recompile)                                         *
+      *  CDL010 - Prevent last user that actioned the trade from      *
+      *           authorising it.Recompile due to changes in FXDEALPP.*
+      *           , MMDELDPP, MMDENBPP AND MMDENSPP .                 *
+      *  CAS004 - Hedge Accounting Phase A (Recompile)                *
+      *  217684 - Authorisation User Malfunction (Recompile)          *
+      *  CAP056 - Automatic Authorisation of Interface deals          *
+      *           (Recompile)                                         *
+      *  CIR008 - FRA/IRS Deals Authorisation (Recompile)             *
+      *  186962 - Remove database errors 4, 5, 6, 7, 8 & 9 Program    *
+      *           should continue even if record not found on deal    *
+      *           history files. Error caused by different drop       *
+      *           processing between FXDEALPP, MMDELDPP and MMDENSPP  *
+      *           and the main Midas dealing files and history files. *
+      *  199402 - EMU Base Currency Equivalent wrong on FT EURO       *
+      *           transactions after conversion.                      *
+      *  CFT009 - Addition of fields for FT fees and charges          *
+      *           Recompile                                           *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  CSE023 - Treaty Withholding Tax                              *
+      *  CDL008 - Continuous Linked Settlement (Recompiled)           *
+      *  CAP136 - Conversion of FT Incoming Payment inputs into       *
+      *           modular structure to use as APIs.                   *
+      *  175479 - Incorporate Fontis : dealer's reference             *
+      *  143561 - EMU wrong base currency equivalent rate shown on    *
+      *           EU0030P1.                                           *
+      *  140528 - When Base currency conversion running at end of     *
+      *           month, CHAIN in historic files to prevent DBERROR.  *
+      *  140225 - Base currency Equiv. wrong on EURO transactions     *
+      *           after convesion.                                    *
+      *  136662 - EMU Base currency wrong on MM EURO transactions     *
+      *           after convesion.                                    *
+      *  CEU001 - EMU Base Currency for Accounting Conversion.        *
+      *                                                               *
+      *****************************************************************
+     FEUBCACPDIF  E           K        DISK         KINFSR *PSSR
+     FEUBCATPDUF  E           K        DISK         KINFSR *PSSR A    UC
+     F                                              KCOMIT
+     FABDEALLLUF  E           K        DISK         KINFSR *PSSR      UC
+     F                                              KCOMIT
+     FFXDEALLLUF  E           K        DISK         KINFSR *PSSR      UC
+     F                                              KCOMIT
+     FMMDEALLLUF  E           K        DISK         KINFSR *PSSR      UC
+     F                                              KCOMIT
+     FDEALS   UF  E           K        DISK         KINFSR *PSSR      UC
+     F                                              KCOMIT
+     FCLOAN   UF  E           K        DISK         KINFSR *PSSR      UC
+     F                                              KCOMIT
+     FOTPAY   UF  E           K        DISK         KINFSR *PSSR      UC
+     F                                              KCOMIT
+     FINPAY   UF  E           K        DISK         KINFSR *PSSR      UC
+     F                                              KCOMIT
+     FNTRAN   UF  E           K        DISK         KINFSR *PSSR      UC
+     F                                              KCOMIT
+     FCQCOD   UF  E           K        DISK         KINFSR *PSSR      UC
+     F                                              KCOMIT
+     FCQPAC   UF  E           K        DISK         KINFSR *PSSR      UC
+     F                                              KCOMIT
+     FTRADS   UF  E           K        DISK         KINFSR *PSSR      UC
+     F                                              KCOMIT
+     FPOSET   UF  E           K        DISK         KINFSR *PSSR      UC
+     F                                              KCOMIT
+     FDEALSH  IF  E           K        DISK         KINFSR *PSSR          140528
+     F            DEALSDBF                          KIGNORE               140528
+     F            DEALSDCF                          KIGNORE               140528
+     F            DEALSDDF                          KIGNORE               140528
+     F            DEALSDEF                          KIGNORE               140528
+     F            DEALSDGF                          KIGNORE               140528
+      /SPACE 3
+      ****************************************************************
+      *  S U B R O U T I N E    I N D E X                            *
+      *                                                              *
+      *  SRINIT - program initialization                             *
+      *  SRINDL - process internal deals                             *
+      *  SRFXDL - process foreign exchange deals                     *
+      *  SRMMDL - process money market (Loans/Deposits)              *
+      *  SRNASP - process money market (Negotiable Asset Purchased)  *
+      *  SRNASS - process money market (Negotiable Asset Sold)       *
+      *  SRFRAS - process FRA-IRS deals                              *
+      *  SRCLON - process customer loans                             *
+      *  SROPAY - process outgoing payments                          *
+      *  SRIPAY - process incoming payments                          *
+      *  SRNTRF - process FF nostro transfer                         *
+      *  SRCQCL - process cheques for collection                     *
+      *  SRCQPD - process cheques to be paid                         *
+      *  SRTRAD - process SE trades                                  *
+      *  SRSEPS - process SE position settlement                     *
+      *  *PSSR  - handles database errors                            *
+      *                                                              *
+      ****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZPOWERZ1
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+      *                                                                                       CAS006
+      * Rename TRADS field                                                                    CAS006
+     ITRADSDF                                                                                 CAS006
+     I              CRSK                            ASCRSK                                    CAS006
+      *
+      * Rename CLOAN fields to prevent overwrite
+     ICLOANCKF
+     I              NLRA                            @NLRA
+      *                                                                   CSE023
+      * Rename Duplicate fields                                           CSE023
+     IPOSETDF                                                             CSE023
+     I              PREF                            POPREF                CSE023
+      *
+     ISDMMOD    E DSSDMMODPD
+     ISDCURR    E DSSDCURRPD
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     I@TRID       DS                             20
+     I                                        1   6 @DEAL1
+     I                                        7   7 @SLSH1
+     I                                        8  13 @DEAL2
+     I                                        1  10 @PSSH
+     I                                       11  11 @SLSH2
+     I                                       12  17 @DATE
+     I                                       18  18 @SLSH3
+     I                                       19  20 @EVT
+     I                                        1  15 @PREF
+     I                                       16  16 @SLSH4
+     I                                       17  18 @CQSQ
+     IDSFDY     E DSDSFDY
+      *
+      ** First DS for Access Programs, Short Data Structure
+      *
+     IDSSDY     E DSDSSDY
+      *
+      ** Second DS for Access Programs, Long Data Structure
+      *
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+     C                     EXSR SRINIT
+     C           BGDLFX    IFEQ 'Y'
+     C           BGDLMM    OREQ 'Y'
+     C           BGFIIN    OREQ 'Y'
+     C           BGINCN    OREQ 'Y'
+     C                     OPEN ABDEALLL
+     C                     OPEN FXDEALLL
+     C                     OPEN MMDEALLL
+     C                     OPEN DEALS
+     C                     EXSR SRINDL
+     C                     EXSR SRFXDL
+     C                     EXSR SRMMDL
+     C                     EXSR SRNASP
+     C                     EXSR SRNASS
+     C                     EXSR SRFRAS
+     C                     ENDIF
+      *
+     C           BGCSLN    IFEQ 'Y'
+     C                     OPEN CLOAN
+     C                     EXSR SRCLON
+     C                     ENDIF
+      *
+     C           BGFDTR    IFEQ 'Y'
+     C                     OPEN OTPAY
+     C                     OPEN INPAY
+     C                     OPEN NTRAN
+     C                     OPEN CQCOD
+     C                     OPEN CQPAC
+     C                     EXSR SROPAY
+     C                     EXSR SRIPAY
+     C                     EXSR SRNTRF
+     C                     EXSR SRCQCL
+     C                     EXSR SRCQPD
+     C                     ENDIF
+      *
+     C           BGSECS    IFEQ 'Y'
+     C                     OPEN TRADS
+     C                     OPEN POSET
+     C                     EXSR SRTRAD
+     C                     EXSR SRSEPS
+     C                     ENDIF
+      *
+     C                     COMIT
+     C                     SETON                     LR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Program Initialisation.                             *
+      *                                                               *
+      *  Called by: Main Processing Routine                           *
+      *                                                               *
+      *  Calls: RPG/AOCURR0  - Access SDCURRPD.                       *
+      *         RPG/AOMMODR0 - Access SDMMODPD.                       *
+      *                                                               *
+      *****************************************************************
+     C           SRINIT    BEGSR
+     C                     OPEN EUBCATPD
+     C                     READ EUBCACPD                 10
+     C           *IN10     IFEQ '0'
+     C           BCRUNC    ANDNE'Y'
+     C           *IN10     OREQ '1'
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDIF
+      *
+      **  Access currency details for the old base currency.
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           BCOBCY
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Data base error in file (file)
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'SDCURRPD'DBFILE           *DB ERROR 001 *
+     C                     MOVELBCOBCY    DBKEY            ***************
+     C                     MOVEL'EU0020  'DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C                     Z-ADDA6EUER    ZEXCH
+     C                     MOVELA6EUMD    ZMD
+     C                     Z-ADDA6NBDP    ZCDPI
+     C                     MOVELA6MDIN    WMDIN   1
+     C                     ENDIF
+      *
+      **  Access currency details for the new base currency.
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           BCNBCY
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Data base error in file (file)
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVEL'SDCURRPD'DBFILE           *DB ERROR 002 *
+     C                     MOVELBCNBCY    DBKEY            ***************
+     C                     MOVEL'EU0020  'DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C                     Z-ADDA6NBDP    ZCDPO
+     C                     ENDIF
+      *
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDMMOD    PARM SDMMOD    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD3         DBASE            ***************
+     C                     MOVEL'SDMMODPD'DBFILE           *DB ERROR 003 *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     MOVEL'EU0020  'DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C           @KEY1     KLIST
+     C                     KFLD           @BRCA   3
+     C                     KFLD           @MODL   2
+     C                     KFLD           @TRID
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINDL - Process Internal deals.                             *
+      *                                                               *
+      *  Called by: Main Processing Routine                           *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           SRINDL    BEGSR
+     C           *LOVAL    SETLLABDEALP0
+     C                     READ ABDEALP0                 11
+     C           *IN11     DOWEQ'0'
+     C                     MOVEL*BLANKS   @TRID
+     C                     MOVEL*BLANKS   @TRID2 20
+     C                     MOVELJPSD38    @DEAL1
+     C                     MOVEL'/'       @SLSH1
+     C                     MOVELJPFD38    @DEAL2
+     C                     MOVEL@TRID     @TRID2
+      *
+     C                     MOVEL*BLANKS   @TRID
+     C                     MOVELJPMBCA    @BRCA
+     C                     MOVEL'DL'      @MODL
+     C                     MOVELJPFD38    @DEAL1
+     C                     MOVEL'/'       @SLSH1
+     C                     MOVELJPSD38    @DEAL2
+      *
+      **  Check if transaction is not yet processed.
+      *
+     C           @KEY1     CHAINEUBCATPD             12
+     C           *IN12     IFEQ '1'
+     C                     Z-ADDJPFD38    @DLNO1  60
+     C                     Z-ADDJPSD38    @DLNO2  60
+     C                     Z-ADDJPNBCA    ZAMTCI
+     C                     EXSR ZCONV
+     C                     Z-ADDZAMTCO    JPNBCA
+     C                     Z-ADDJPFBCA    ZAMTCI
+     C                     EXSR ZCONV
+     C                     Z-ADDZAMTCO    JPFBCA
+     C                     UPDATABDEALP0
+      *
+      **  Get 1st leg from secondary file.
+      *
+     C           @DLNO1    CHAINDEALSDBF             13
+     C           *IN13     IFEQ '1'
+      *
+      **  If not found, check in Deals History file                       140528
+     C           @DLNO1    CHAINDEALSH               13                   140528
+     C********** *IN13     IFEQ '1'                                140528 186962
+     C********** *LOCK     IN   LDA                                       186962
+     C**********           SETON                       U7U8               186962
+     C**********           Z-ADD4         DBASE            ***************186962
+     C**********           MOVEL'DEALSDBF'DBFILE           *DB ERROR 004 *186962
+     C**********           MOVEL@DLNO1    DBKEY            ***************186962
+     C**********           MOVEL'EU0020  'DBPGM                           186962
+     C**********           OUT  LDA                                       186962
+     C**********           EXSR *PSSR                                     186962
+     C**********           ELSE                                    140528 186962
+     C                     GOTO TAG1                                      140528
+     C**********           ENDIF                                   140528 186962
+     C                     ENDIF
+     C                     MOVELBRCA      BABRCA
+     C                     MOVEL'DL'      BAMODL
+     C                     MOVEL@TRID     BATRID
+     C**********           Z-ADDCNUM      BACUST                                              CSD027
+     C                     MOVE CNUM      BACUST                                              CSD027
+     C                     Z-ADDPUAM      BAAMT1
+     C                     MOVELPUCY      BACCY1
+     C                     Z-ADDSLAM      BAAMT2
+     C                     MOVELSLCY      BACCY2
+     C                     Z-ADDVDAT      BAVDAT
+     C                     Z-ADD*ZERO     BAMDAT
+     C                     Z-ADD*ZERO     BAOBCR
+     C                     Z-ADD*ZERO     BANBCR
+     C                     Z-ADDBCEQ      BAOBCE
+     C*
+     C** If New Base Currency involved in the transaction, take New Base  140225
+     C** Currency amount as Base Currency Equivalent.                     140225
+     C           PUCY      IFEQ BCNBCY                                    140225
+     C                     Z-ADDPUAM      BCEQ                            140225
+     C                     Z-ADDPUAM      BANBCE                          140225
+     C                     ELSE                                           140225
+     C           SLCY      IFEQ BCNBCY                                    140225
+     C                     Z-ADDSLAM      BCEQ                            140225
+     C                     Z-ADDSLAM      BANBCE                          140225
+     C                     ELSE                                           140225
+     C                     Z-ADDBCEQ      ZAMTCI
+     C                     EXSR ZCONV
+     C                     Z-ADDZAMTCO    BCEQ
+     C                     Z-ADDZAMTCO    BANBCE
+     C                     ENDIF                                          140225
+     C                     ENDIF                                          140225
+     C*
+     C                     Z-ADDOBCE      ZAMTCI
+     C                     EXSR ZCONV
+     C                     Z-ADDZAMTCO    OBCE
+     C                     UPDATDEALSDBF
+     C                     WRITEEUBCATD0
+      *
+     C           TAG1      TAG                                            140528
+      *
+      **  Get 2nd leg from secondary file.
+      *
+      *
+     C           @DLNO2    CHAINDEALSDBF             14
+     C           *IN14     IFEQ '1'
+      *
+      **  If not found, check in Deals History file                       140528
+     C           @DLNO2    CHAINDEALSH               14                   140528
+     C********** *IN14     IFEQ '1'                                140528 186962
+     C********** *LOCK     IN   LDA                                       186962
+     C**********           SETON                       U7U8               186962
+     C**********           Z-ADD5         DBASE            ***************186962
+     C**********           MOVEL'DEALSDBF'DBFILE           *DB ERROR 005 *186962
+     C**********           MOVEL@DLNO2    DBKEY            ***************186962
+     C**********           MOVEL'EU0020  'DBPGM                           186962
+     C**********           OUT  LDA                                       186962
+     C**********           EXSR *PSSR                                     186962
+     C**********           ELSE                                    140528 186962
+     C                     GOTO TAG2                                      140528
+     C**********           ENDIF                                   140528 186962
+     C                     ENDIF
+     C                     MOVELBRCA      BABRCA
+     C                     MOVEL'DL'      BAMODL
+     C                     MOVEL@TRID2    BATRID
+     C**********           Z-ADDCNUM      BACUST                                              CSD027
+     C                     MOVE CNUM      BACUST                                              CSD027
+     C                     Z-ADDPUAM      BAAMT1
+     C                     MOVELPUCY      BACCY1
+     C                     Z-ADDSLAM      BAAMT2
+     C                     MOVELSLCY      BACCY2
+     C                     Z-ADDVDAT      BAVDAT
+     C                     Z-ADD*ZERO     BAMDAT
+     C                     Z-ADD*ZERO     BAOBCR
+     C                     Z-ADD*ZERO     BANBCR
+     C                     Z-ADDBCEQ      BAOBCE
+     C*
+     C** If New Base Currency involved in the transaction, take New Base  140225
+     C** Currency amount as Base Currency Equivalent.                     140225
+     C           PUCY      IFEQ BCNBCY                                    140225
+     C                     Z-ADDPUAM      BCEQ                            140225
+     C                     Z-ADDPUAM      BANBCE                          140225
+     C                     ELSE                                           140225
+     C           SLCY      IFEQ BCNBCY                                    140225
+     C                     Z-ADDSLAM      BCEQ                            140225
+     C                     Z-ADDSLAM      BANBCE                          140225
+     C                     ELSE                                           140225
+     C                     Z-ADDBCEQ      ZAMTCI
+     C                     EXSR ZCONV
+     C                     Z-ADDZAMTCO    BCEQ
+     C                     Z-ADDZAMTCO    BANBCE
+     C                     ENDIF                                          140225
+     C                     ENDIF                                          140225
+     C                     Z-ADDOBCE      ZAMTCI
+     C                     EXSR ZCONV
+     C                     Z-ADDZAMTCO    OBCE
+     C                     UPDATDEALSDBF
+     C                     WRITEEUBCATD0
+      *
+     C           TAG2      TAG                                            140528
+      *
+     C                     ENDIF
+     C                     READ ABDEALP0                 11
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFXDL - Process Foreign Exchange Deals.                     *
+      *                                                               *
+      *  Called by: Main Processing Routine                           *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           SRFXDL    BEGSR
+     C           *LOVAL    SETLLFXDEALP0
+     C                     READ FXDEALP0                 11
+     C           *IN11     DOWEQ'0'
+     C                     MOVEL*BLANKS   @TRID
+     C                     MOVELFHMBCA    @BRCA
+     C                     MOVEL'DL'      @MODL
+     C                     MOVELFHDN38    @DEAL1
+      *
+      **  Check if transaction is not yet processed.
+      *
+     C           @KEY1     CHAINEUBCATPD             12
+     C           *IN12     IFEQ '1'
+     C                     Z-ADDFHDN38    @DLNO1
+     C*
+     C** If New Base Currency involved in the transaction, take New Base  140225
+     C** Currency amount as Base Currency Equivalent.                     140225
+     C           FHCCY1    IFEQ BCNBCY                                    140225
+     C                     Z-ADDFHDAM1    FHBCAE                          140225
+     C                     ELSE                                           140225
+     C           FHCCY2    IFEQ BCNBCY                                    140225
+     C                     Z-ADDFHDAM2    FHBCAE                          140225
+     C                     ELSE                                           140225
+     C                     Z-ADDFHBCAE    ZAMTCI
+     C                     EXSR ZCONV
+     C                     Z-ADDZAMTCO    FHBCAE
+     C                     ENDIF                                          140225
+     C                     ENDIF                                          140225
+     C                     UPDATFXDEALP0
+      *
+      **  Get details from secondary file.
+      *
+     C           @DLNO1    CHAINDEALSDBF             13
+     C           *IN13     IFEQ '1'
+      *
+      **  If not found, check in Deals History file                       140528
+     C           @DLNO1    CHAINDEALSH               13                   140528
+     C********** *IN13     IFEQ '1'                                140528 186962
+     C********** *LOCK     IN   LDA                                       186962
+     C**********           SETON                       U7U8               186962
+     C**********           Z-ADD6         DBASE            ***************186962
+     C**********           MOVEL'DEALSDBF'DBFILE           *DB ERROR 006 *186962
+     C**********           MOVEL@DLNO1    DBKEY            ***************186962
+     C**********           MOVEL'EU0020  'DBPGM                           186962
+     C**********           OUT  LDA                                       186962
+     C**********           EXSR *PSSR                                     186962
+     C**********           ELSE                                    140528 186962
+     C                     GOTO TAG3                                      140528
+     C**********           ENDIF                                   140528 186962
+     C                     ENDIF
+     C                     MOVELBRCA      BABRCA
+     C                     MOVEL'DL'      BAMODL
+     C                     MOVEL@TRID     BATRID
+     C**********           Z-ADDCNUM      BACUST                                              CSD027
+     C                     MOVE CNUM      BACUST                                              CSD027
+     C                     Z-ADDPUAM      BAAMT1
+     C                     MOVELPUCY      BACCY1
+     C                     Z-ADDSLAM      BAAMT2
+     C                     MOVELSLCY      BACCY2
+     C                     Z-ADDVDAT      BAVDAT
+     C                     Z-ADD*ZERO     BAMDAT
+     C                     Z-ADD*ZERO     BAOBCR
+     C                     Z-ADD*ZERO     BANBCR
+     C                     Z-ADDBCEQ      BAOBCE
+     C*
+     C** If New Base Currency involved in the transaction, take New Base  140225
+     C** Currency amount as Base Currency Equivalent.                     140225
+     C           PUCY      IFEQ BCNBCY                                    140225
+     C                     Z-ADDPUAM      BCEQ                            140225
+     C                     Z-ADDPUAM      BANBCE                          140225
+     C                     ELSE                                           140225
+     C           SLCY      IFEQ BCNBCY                                    140225
+     C                     Z-ADDSLAM      BCEQ                            140225
+     C                     Z-ADDSLAM      BANBCE                          140225
+     C                     ELSE                                           140225
+     C                     Z-ADDBCEQ      ZAMTCI
+     C                     EXSR ZCONV
+     C                     Z-ADDZAMTCO    BCEQ
+     C                     Z-ADDZAMTCO    BANBCE
+     C                     ENDIF                                          140225
+     C                     ENDIF                                          140225
+     C                     Z-ADDOBCE      ZAMTCI
+     C                     EXSR ZCONV
+     C                     Z-ADDZAMTCO    OBCE
+     C                     UPDATDEALSDBF
+     C                     WRITEEUBCATD0
+      *
+     C           TAG3      TAG                                            140528
+      *
+     C                     ENDIF
+     C                     READ FXDEALP0                 11
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRMMDL - Process Money Market (Loans/Deposits)               *
+      *                                                               *
+      *  Called by: Main Processing Routine                           *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           SRMMDL    BEGSR
+     C           *LOVAL    SETLLMMDELDP0
+     C                     READ MMDELDP0                 11
+     C           *IN11     DOWEQ'0'
+     C                     MOVEL*BLANKS   @TRID
+     C                     MOVELHKBRCA    @BRCA
+     C                     MOVEL'DL'      @MODL
+     C                     MOVELHKDN38    @DEAL1
+      *
+      **  Check if transaction is not yet processed.
+      *
+     C           @KEY1     CHAINEUBCATPD             12
+     C           *IN12     IFEQ '1'
+     C                     Z-ADDHKDN38    @DLNO1
+     C*                                                                   136662
+     C* If transacation currency equal to New base currency. Base         136662
+     C* currency conversion must equal 1.0 else calculate Base            136662
+     C* currency rate.                                                    136662
+     C*                                                                   136662
+     C           HKCCY     IFEQ BCNBCY                                    136662
+     C                     Z-ADD1         HKBRAT                          136662
+     C                     ELSE                                           136662
+     C*                                                                   136662
+     C** Access currency details for the transaction currency             143561
+     C*                                                                   143561
+     C                     MOVE HKCCY     W1TXCY                          143561
+     C                     EXSR SRCURR                                    143561
+      *                                                                   143561
+     C***********WMDIN     IFEQ 'M'                                       143561
+     C***********ZMD       ANDEQ'M'                                       143561
+     C***********WMDIN     OREQ 'D'                                       143561
+     C***********ZMD       ANDEQ'D'                                       143561
+     C           W1MDIN    IFEQ ZMD                                       143561
+     C           ZEXCH     MULT HKBRAT    HKBRAT
+     C           W1EUMD    IFNE ' '                        B1             143561
+     C           W1EUMD    ANDNEW1MDIN                                    143561
+     C           1         DIV  HKBRAT    HKBRAT                          143561
+     C                     ENDIF                           E1             143561
+     C                     ELSE
+     C           W1EUMD    IFNE ' '                        B2             143561
+     C           W1EUMD    ANDEQZMD                                       143561
+     C           ZEXCH     DIV  HKBRAT    HKBRAT
+     C                     ELSE                                           143561
+     C           HKBRAT    DIV  ZEXCH     HKBRAT                          143561
+     C                     ENDIF                           E2             143561
+     C                     ENDIF
+     C                     ENDIF                                          136662
+     C                     UPDATMMDELDP0
+      *
+      **  Get details from secondary file.
+      *
+     C           @DLNO1    CHAINDEALSDCF             13
+     C           *IN13     IFEQ '1'
+      *
+      **  If not found, check in Deals History file                       140528
+     C           @DLNO1    CHAINDEALSH               13                   140528
+     C********** *IN13     IFEQ '1'                                140528 186962
+     C********** *LOCK     IN   LDA                                       186962
+     C**********           SETON                       U7U8               186962
+     C**********           Z-ADD7         DBASE            ***************186962
+     C**********           MOVEL'DEALSDCF'DBFILE           *DB ERROR 007 *186962
+     C**********           MOVEL@DLNO1    DBKEY            ***************186962
+     C**********           MOVEL'EU0020  'DBPGM                           186962
+     C**********           OUT  LDA                                       186962
+     C**********           EXSR *PSSR                                     186962
+     C**********           ELSE                                    140528 186962
+     C                     GOTO TAG4                                      140528
+     C**********           ENDIF                                   140528 186962
+     C                     ENDIF
+     C                     MOVELBRCA      BABRCA
+     C                     MOVEL'DL'      BAMODL
+     C                     MOVEL@TRID     BATRID
+     C**********           Z-ADDCNUM      BACUST                                              CSD027
+     C                     MOVE CNUM      BACUST                                              CSD027
+     C                     Z-ADDPCPL      BAAMT1
+     C                     MOVELCCY       BACCY1
+     C                     Z-ADD*ZERO     BAAMT2
+     C                     MOVEL*BLANKS   BACCY2
+     C                     Z-ADDVDAT      BAVDAT
+     C                     Z-ADDMDAT      BAMDAT
+     C                     Z-ADD*ZERO     BAOBCE
+     C                     Z-ADD*ZERO     BANBCE
+     C                     Z-ADDBCXR      BAOBCR
+     C*                                                                   136662
+     C* If transacation currency equal to New base currency. Base         136662
+     C* currency conversion must equal 1.0 else calculate Base            136662
+     C* currency rate.                                                    136662
+     C*                                                                   136662
+     C           CCY       IFEQ BCNBCY                                    136662
+     C                     Z-ADD1         BCXR                            136662
+     C                     ELSE                                           136662
+     C*                                                                   136662
+     C** Access currency details for the transaction currency             143561
+     C*                                                                   143561
+     C                     MOVE CCY       W1TXCY                          143561
+     C                     EXSR SRCURR                                    143561
+      *                                                                   143561
+     C***********WMDIN     IFEQ 'M'                                       143561
+     C***********ZMD       ANDEQ'M'                                       143561
+     C***********WMDIN     OREQ 'D'                                       143561
+     C***********ZMD       ANDEQ'D'                                       143561
+     C           W1MDIN    IFEQ ZMD                                       143561
+     C           ZEXCH     MULT BCXR      BCXR
+     C           W1EUMD    IFNE ' '                        B1             143561
+     C           W1EUMD    ANDNEW1MDIN                                    143561
+     C           1         DIV  BCXR      BCXR                            143561
+     C                     ENDIF                           E1             143561
+     C                     ELSE
+     C           W1EUMD    IFNE ' '                        B2             143561
+     C           W1EUMD    ANDEQZMD                                       143561
+     C           ZEXCH     DIV  BCXR      BCXR
+     C                     ELSE                                           143561
+     C           BCXR      DIV  ZEXCH     BCXR                            143561
+     C                     ENDIF                           E2             143561
+     C                     ENDIF
+     C                     ENDIF                                          136662
+     C                     Z-ADDBCXR      BANBCR
+     C                     UPDATDEALSDCF
+     C                     WRITEEUBCATD0
+      *
+     C           TAG4      TAG                                            140528
+      *
+     C                     ENDIF
+     C                     READ MMDELDP0                 11
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRNASP - Process Money Market (Negotiable Asset Purchased)   *
+      *                                                               *
+      *  Called by: Main Processing Routine                           *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           SRNASP    BEGSR
+     C           *LOVAL    SETLLMMDENBP0
+     C                     READ MMDENBP0                 11
+     C           *IN11     DOWEQ'0'
+     C                     MOVEL*BLANKS   @TRID
+     C                     MOVELHLBRCA    @BRCA
+     C                     MOVEL'DL'      @MODL
+     C                     MOVELHLDN38    @DEAL1
+      *
+      **  Check if transaction is not yet processed.
+      *
+     C           @KEY1     CHAINEUBCATPD             12
+     C           *IN12     IFEQ '1'
+     C                     Z-ADDHLDN38    @DLNO1
+     C*                                                                   136662
+     C* If transacation currency equal to New base currency. Base         136662
+     C* currency conversion must equal 1.0 else calculate Base            136662
+     C* currency rate.                                                    136662
+     C*                                                                   136662
+     C           HLCCY     IFEQ BCNBCY                                    136662
+     C                     Z-ADD1         HLBRAT                          136662
+     C                     ELSE                                           136662
+     C*                                                                   136662
+     C** Access currency details for the transaction currency             143561
+     C*                                                                   143561
+     C                     MOVE HLCCY     W1TXCY                          143561
+     C                     EXSR SRCURR                                    143561
+      *                                                                   143561
+     C***********WMDIN     IFEQ 'M'                                       143561
+     C***********ZMD       ANDEQ'M'                                       143561
+     C***********WMDIN     OREQ 'D'                                       143561
+     C***********ZMD       ANDEQ'D'                                       143561
+     C           W1MDIN    IFEQ ZMD                                       143561
+     C           ZEXCH     MULT HLBRAT    HLBRAT
+     C           W1EUMD    IFNE ' '                        B1             143561
+     C           W1EUMD    ANDNEW1MDIN                                    143561
+     C           1         DIV  HLBRAT    HLBRAT                          143561
+     C                     ENDIF                           E1             143561
+     C                     ELSE
+     C           W1EUMD    IFNE ' '                        B2             143561
+     C           W1EUMD    ANDEQZMD                                       143561
+     C           ZEXCH     DIV  HLBRAT    HLBRAT
+     C                     ELSE                                           143561
+     C           HLBRAT    DIV  ZEXCH     HLBRAT                          143561
+     C                     ENDIF                           E2             143561
+     C                     ENDIF
+     C                     ENDIF                                          136662
+     C                     UPDATMMDENBP0
+      *
+      **  Get details from secondary file.
+      *
+     C           @DLNO1    CHAINDEALSDDF             13
+     C           *IN13     IFEQ '1'
+      *
+      **  If not found, check in Deals History file                       140528
+     C           @DLNO1    CHAINDEALSH               13                   140528
+     C********** *IN13     IFEQ '1'                                140528 186962
+     C********** *LOCK     IN   LDA                                       186962
+     C**********           SETON                       U7U8               186962
+     C**********           Z-ADD8         DBASE            ***************186962
+     C**********           MOVEL'DEALSDDF'DBFILE           *DB ERROR 008 *186962
+     C**********           MOVEL@DLNO1    DBKEY            ***************186962
+     C**********           MOVEL'EU0020  'DBPGM                           186962
+     C**********           OUT  LDA                                       186962
+     C**********           EXSR *PSSR                                     186962
+     C**********           ELSE                                    140528 186962
+     C                     GOTO TAG5                                      140528
+     C**********           ENDIF                                   140528 186962
+     C                     ENDIF
+     C                     MOVELBRCA      BABRCA
+     C                     MOVEL'DL'      BAMODL
+     C                     MOVEL@TRID     BATRID
+     C**********           Z-ADDCNUM      BACUST                                              CSD027
+     C                     MOVE CNUM      BACUST                                              CSD027
+     C                     Z-ADDPUPR      BAAMT1
+     C                     MOVELCCY       BACCY1
+     C                     Z-ADD*ZERO     BAAMT2
+     C                     MOVEL*BLANKS   BACCY2
+     C                     Z-ADDVDAT      BAVDAT
+     C                     Z-ADDMDAT      BAMDAT
+     C                     Z-ADD*ZERO     BAOBCE
+     C                     Z-ADD*ZERO     BANBCE
+     C                     Z-ADDBCXR      BAOBCR
+     C*                                                                   136662
+     C* If transacation currency equal to New base currency. Base         136662
+     C* currency conversion must equal 1.0 else calculate Base            136662
+     C* currency rate.                                                    136662
+     C*                                                                   136662
+     C           CCY       IFEQ BCNBCY                                    136662
+     C                     Z-ADD1         BCXR                            136662
+     C                     ELSE                                           136662
+     C*                                                                   136662
+     C** Access currency details for the transaction currency             143561
+     C*                                                                   143561
+     C                     MOVE CCY       W1TXCY                          143561
+     C                     EXSR SRCURR                                    143561
+      *                                                                   143561
+     C***********WMDIN     IFEQ 'M'                                       143561
+     C***********ZMD       ANDEQ'M'                                       143561
+     C***********WMDIN     OREQ 'D'                                       143561
+     C***********ZMD       ANDEQ'D'                                       143561
+     C           W1MDIN    IFEQ ZMD                                       143561
+     C           ZEXCH     MULT BCXR      BCXR
+     C           W1EUMD    IFNE ' '                        B1             143561
+     C           W1EUMD    ANDNEW1MDIN                                    143561
+     C           1         DIV  BCXR      BCXR                            143561
+     C                     ENDIF                           E1             143561
+     C                     ELSE
+     C           W1EUMD    IFNE ' '                        B2             143561
+     C           W1EUMD    ANDEQZMD                                       143561
+     C           ZEXCH     DIV  BCXR      BCXR
+     C                     ELSE                                           143561
+     C           BCXR      DIV  ZEXCH     BCXR                            143561
+     C                     ENDIF                           E2             143561
+     C                     ENDIF
+     C                     ENDIF                                          136662
+     C                     Z-ADDBCXR      BANBCR
+     C                     UPDATDEALSDDF
+     C                     WRITEEUBCATD0
+      *
+     C           TAG5      TAG                                            140528
+      *
+     C                     ENDIF
+     C                     READ MMDENBP0                 11
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRNASS - Process Money Market (Negotiable Asset Sold)        *
+      *                                                               *
+      *  Called by: Main Processing Routine                           *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           SRNASS    BEGSR
+     C           *LOVAL    SETLLMMDENSP0
+     C                     READ MMDENSP0                 11
+     C           *IN11     DOWEQ'0'
+     C                     MOVEL*BLANKS   @TRID
+     C                     MOVELHMBRCA    @BRCA
+     C                     MOVEL'DL'      @MODL
+     C                     MOVELHMDN38    @DEAL1
+      *
+      **  Check if transaction is not yet processed.
+      *
+     C           @KEY1     CHAINEUBCATPD             12
+     C           *IN12     IFEQ '1'
+     C                     Z-ADDHMDN38    @DLNO1
+     C*                                                                   136662
+     C* If transacation currency equal to New base currency. Base         136662
+     C* currency conversion must equal 1.0 else calculate Base            136662
+     C* currency rate.                                                    136662
+     C*                                                                   136662
+     C           HMCCY     IFEQ BCNBCY                                    136662
+     C                     Z-ADD1         HMBRAT                          136662
+     C                     ELSE                                           136662
+     C*                                                                   136662
+     C** Access currency details for the transaction currency             143561
+     C*                                                                   143561
+     C                     MOVE HMCCY     W1TXCY                          143561
+     C                     EXSR SRCURR                                    143561
+      *                                                                   143561
+     C***********WMDIN     IFEQ 'M'                                       143561
+     C***********ZMD       ANDEQ'M'                                       143561
+     C***********WMDIN     OREQ 'D'                                       143561
+     C***********ZMD       ANDEQ'D'                                       143561
+     C           W1MDIN    IFEQ ZMD                                       143561
+     C           ZEXCH     MULT HMBRAT    HMBRAT
+     C           W1EUMD    IFNE ' '                        B1             143561
+     C           W1EUMD    ANDNEW1MDIN                                    143561
+     C           1         DIV  HMBRAT    HMBRAT                          143561
+     C                     ENDIF                           E1             143561
+     C                     ELSE
+     C           W1EUMD    IFNE ' '                        B2             143561
+     C           W1EUMD    ANDEQZMD                                       143561
+     C           ZEXCH     DIV  HMBRAT    HMBRAT
+     C                     ELSE                                           143561
+     C           HMBRAT    DIV  ZEXCH     HMBRAT                          143561
+     C                     ENDIF                           E2             143561
+     C                     ENDIF
+     C                     ENDIF                                          136662
+     C                     UPDATMMDENSP0
+      *
+      **  Get details from secondary file.
+      *
+     C           @DLNO1    CHAINDEALSDEF             13
+     C           *IN13     IFEQ '1'
+      *
+      **  If not found, check in Deals History file                       140528
+     C           @DLNO1    CHAINDEALSH               13                   140528
+     C********** *IN13     IFEQ '1'                                140528 186962
+     C********** *LOCK     IN   LDA                                       186962
+     C**********           SETON                       U7U8               186962
+     C**********           Z-ADD9         DBASE            ***************186962
+     C**********           MOVEL'DEALSDEF'DBFILE           *DB ERROR 009 *186962
+     C**********           MOVEL@DLNO1    DBKEY            ***************186962
+     C**********           MOVEL'EU0020  'DBPGM                           186962
+     C**********           OUT  LDA                                       186962
+     C**********           EXSR *PSSR                                     186962
+     C**********           ELSE                                    140528 186962
+     C                     GOTO TAG6                                      140528
+     C**********           ENDIF                                   140528 186962
+     C                     ENDIF
+     C                     MOVELBRCA      BABRCA
+     C                     MOVEL'DL'      BAMODL
+     C                     MOVEL@TRID     BATRID
+     C**********           Z-ADDSCUS      BACUST                                              CSD027
+     C                     MOVE SCUS      BACUST                                              CSD027
+     C                     Z-ADDSAPR      BAAMT1
+     C                     MOVELCCY       BACCY1
+     C                     Z-ADD*ZERO     BAAMT2
+     C                     MOVEL*BLANKS   BACCY2
+     C                     Z-ADDVDAT      BAVDAT
+     C                     Z-ADD*ZERO     BAMDAT
+     C                     Z-ADD*ZERO     BAOBCE
+     C                     Z-ADD*ZERO     BANBCE
+     C                     Z-ADDBCXR      BAOBCR
+     C*                                                                   136662
+     C* If transacation currency equal to New base currency. Base         136662
+     C* currency conversion must equal 1.0 else calculate Base            136662
+     C* currency rate.                                                    136662
+     C*                                                                   136662
+     C           CCY       IFEQ BCNBCY                                    136662
+     C                     Z-ADD1         BCXR                            136662
+     C                     ELSE                                           136662
+     C*                                                                   136662
+     C** Access currency details for the transaction currency             143561
+     C*                                                                   143561
+     C                     MOVE CCY       W1TXCY                          143561
+     C                     EXSR SRCURR                                    143561
+      *                                                                   143561
+     C***********WMDIN     IFEQ 'M'                                       143561
+     C***********ZMD       ANDEQ'M'                                       143561
+     C***********WMDIN     OREQ 'D'                                       143561
+     C***********ZMD       ANDEQ'D'                                       143561
+     C           W1MDIN    IFEQ ZMD                                       143561
+     C           ZEXCH     MULT BCXR      BCXR
+     C           W1EUMD    IFNE ' '                        B1             143561
+     C           W1EUMD    ANDNEW1MDIN                                    143561
+     C           1         DIV  BCXR      BCXR                            143561
+     C                     ENDIF                           E1             143561
+     C                     ELSE
+     C           W1EUMD    IFNE ' '                        B2             143561
+     C           W1EUMD    ANDEQZMD                                       143561
+     C           ZEXCH     DIV  BCXR      BCXR
+     C                     ELSE                                           143561
+     C           BCXR      DIV  ZEXCH     BCXR                            143561
+     C                     ENDIF                           E2             143561
+     C                     ENDIF
+     C                     ENDIF                                          136662
+     C                     Z-ADDBCXR      BANBCR
+     C                     UPDATDEALSDEF
+     C                     WRITEEUBCATD0
+      *
+     C           TAG6      TAG                                            140528
+      *
+     C                     ENDIF
+     C                     READ MMDENSP0                 11
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFRAS - Process Forward Rate Agreement - Interest Rate Swap *
+      *                                                               *
+      *  Called by: Main Processing Routine                           *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           SRFRAS    BEGSR
+     C           *LOVAL    SETLLDEALSDGF
+     C                     READ DEALSDGF                 11
+     C           *IN11     DOWEQ'0'
+     C                     MOVEL*BLANKS   @TRID
+     C                     MOVELBRCA      @BRCA
+     C                     MOVEL'DL'      @MODL
+     C                     MOVELDLNO      @DEAL1
+      *
+      **  Check if transaction is not yet processed.
+      *
+     C           @KEY1     CHAINEUBCATPD             12
+     C           *IN12     IFEQ '1'
+     C                     MOVELBRCA      BABRCA
+     C                     MOVEL'DL'      BAMODL
+     C                     MOVEL@TRID     BATRID
+     C**********           Z-ADDCNUM      BACUST                                              CSD027
+     C                     MOVE CNUM      BACUST                                              CSD027
+     C                     Z-ADDUPAMT     BAAMT1
+     C                     MOVELUCUCY     BACCY1
+     C                     Z-ADDTPAMT     BAAMT2
+     C                     MOVELTCUCY     BACCY2
+     C                     Z-ADDVDAT      BAVDAT
+     C                     Z-ADDMDAT      BAMDAT
+     C                     Z-ADD*ZERO     BAOBCE
+     C                     Z-ADD*ZERO     BANBCE
+     C                     Z-ADDUBCXR     BAOBCR
+     C*                                                                   136662
+     C* If transaction currency equal to New base currency. Base          136662
+     C* currency conversion must equal 1.0 else calculate Base            136662
+     C* currency rate and their base currency rate.                       136662
+     C*                                                                   136662
+     C           UCUCY     IFEQ BCNBCY                                    136662
+     C                     Z-ADD1         UBCXR                           136662
+     C                     Z-ADD1         TBCXR                           136662
+     C                     ELSE                                           136662
+     C*                                                                   136662
+     C** Access currency details for the transaction currency             143561
+     C*                                                                   143561
+     C                     MOVE UCUCY     W1TXCY                          143561
+     C                     EXSR SRCURR                                    143561
+      *                                                                   143561
+     C***********WMDIN     IFEQ 'M'                                       143561
+     C***********ZMD       ANDEQ'M'                                       143561
+     C***********WMDIN     OREQ 'D'                                       143561
+     C***********ZMD       ANDEQ'D'                                       143561
+     C           W1MDIN    IFEQ ZMD                                       143561
+     C           ZEXCH     MULT UBCXR     UBCXR
+     C           ZEXCH     MULT TBCXR     TBCXR
+     C           W1EUMD    IFNE ' '                        B1             143561
+     C           W1EUMD    ANDNEW1MDIN                                    143561
+     C           1         DIV  UBCXR     UBCXR                           143561
+     C           1         DIV  TBCXR     TBCXR                           143561
+     C                     ENDIF                           E1             143561
+     C                     ELSE
+     C           W1EUMD    IFNE ' '                        B2             143561
+     C           W1EUMD    ANDEQZMD                                       143561
+     C           ZEXCH     DIV  UBCXR     UBCXR
+     C           ZEXCH     DIV  TBCXR     TBCXR
+     C                     ELSE                                           143561
+     C           UBCXR     DIV  ZEXCH     UBCXR                           143561
+     C           TBCXR     DIV  ZEXCH     TBCXR                           143561
+     C                     ENDIF                           E2             143561
+     C                     ENDIF
+     C                     ENDIF                                          136662
+     C                     Z-ADDUBCXR     BANBCR
+     C                     UPDATDEALSDGF
+     C                     WRITEEUBCATD0
+      *
+     C                     ENDIF
+     C                     READ DEALSDGF                 11
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCLON - Process Customer Loans                              *
+      *                                                               *
+      *  Called by: Main Processing Routine                           *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           SRCLON    BEGSR
+     C           *LOVAL    SETLLCLOANCLF
+     C                     READ CLOANCLF                 11
+     C           *IN11     DOWEQ'0'
+     C                     MOVEL*BLANKS   @TRID
+     C                     MOVELBRCA      @BRCA
+     C                     MOVEL'LE'      @MODL
+     C                     MOVELLNRF      @DEAL1
+      *
+      **  Check if transaction is not yet processed.
+      *
+     C           @KEY1     CHAINEUBCATPD             12
+     C           *IN12     IFEQ '1'
+     C                     MOVELBRCA      BABRCA
+     C                     MOVEL'LE'      BAMODL
+     C                     MOVEL@TRID     BATRID
+     C**********           Z-ADDCNUM      BACUST                                              CSD027
+     C                     MOVE CNUM      BACUST                                              CSD027
+     C                     Z-ADDCPAM      BAAMT1
+     C                     MOVELCCY       BACCY1
+     C                     Z-ADD*ZERO     BAAMT2
+     C                     MOVEL*BLANKS   BACCY2
+     C                     Z-ADDVDAT      BAVDAT
+     C                     Z-ADDMDAT      BAMDAT
+     C                     Z-ADD*ZERO     BAOBCE
+     C                     Z-ADD*ZERO     BANBCE
+     C                     Z-ADDBCXR      BAOBCR
+     C*                                                                   136662
+     C* If transaction currency equal to New base currency. Base          136662
+     C* currency conversion must equal 1.0 else calculate Base            136662
+     C* currency rate.                                                    136662
+     C*                                                                   136662
+     C           CCY       IFEQ BCNBCY                                    136662
+     C                     Z-ADD1         BCXR                            136662
+     C                     ELSE                                           136662
+     C*                                                                   136662
+     C** Access currency details for the transaction currency             143561
+     C*                                                                   143561
+     C                     MOVE CCY       W1TXCY                          143561
+     C                     EXSR SRCURR                                    143561
+      *                                                                   143561
+     C***********WMDIN     IFEQ 'M'                                       143561
+     C***********ZMD       ANDEQ'M'                                       143561
+     C***********WMDIN     OREQ 'D'                                       143561
+     C***********ZMD       ANDEQ'D'                                       143561
+     C           W1MDIN    IFEQ ZMD                                       143561
+     C           ZEXCH     MULT BCXR      BCXR
+     C           W1EUMD    IFNE ' '                        B1             143561
+     C           W1EUMD    ANDNEW1MDIN                                    143561
+     C           1         DIV  BCXR      BCXR                            143561
+     C                     ENDIF                           E1             143561
+     C                     ELSE
+     C           W1EUMD    IFNE ' '                        B2             143561
+     C           W1EUMD    ANDEQZMD                                       143561
+     C           ZEXCH     DIV  BCXR      BCXR
+     C                     ELSE                                           143561
+     C           BCXR      DIV  ZEXCH     BCXR                            143561
+     C                     ENDIF                           E2             143561
+     C                     ENDIF
+     C                     ENDIF                                          136662
+     C                     Z-ADDBCXR      BANBCR
+     C                     UPDATCLOANCLF
+     C                     WRITEEUBCATD0
+      *
+     C                     ENDIF
+     C                     READ CLOANCLF                 11
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SROPAY - Process Outgoing Payments                           *
+      *                                                               *
+      *  Called by: Main Processing Routine                           *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           SROPAY    BEGSR
+     C           *LOVAL    SETLLOTPAYDDF
+     C                     READ OTPAYDDF                 11
+     C           *IN11     DOWEQ'0'
+     C                     MOVEL*BLANKS   @TRID
+     C                     MOVELBRCA      @BRCA
+     C                     MOVEL'FT'      @MODL
+     C                     MOVELPREF      @TRID
+      *
+      **  Check if transaction is not yet processed.
+      *
+     C           @KEY1     CHAINEUBCATPD             12
+     C           *IN12     IFEQ '1'
+     C                     MOVELBRCA      BABRCA
+     C                     MOVEL'FT'      BAMODL
+     C                     MOVEL@TRID     BATRID
+     C**********           Z-ADD*ZERO     BACUST                                              CSD027
+     C                     MOVE *BLANKS   BACUST                                              CSD027
+     C                     Z-ADDSMAM      BAAMT1
+     C                     MOVELSMCY      BACCY1
+     C                     Z-ADDPYAM      BAAMT2
+     C                     MOVELPCCY      BACCY2
+     C                     Z-ADDSLDT      BAVDAT
+     C                     Z-ADD*ZERO     BAMDAT
+     C                     Z-ADD*ZERO     BAOBCR
+     C                     Z-ADD*ZERO     BANBCR
+     C                     Z-ADDSBCQ      BAOBCE
+     C*
+     C** If New Base Currency involved in the transaction, take New Base  140225
+     C** Currency amount as Base Currency Equivalent.                     140225
+     C           SMCY      IFEQ BCNBCY                                    140225
+     C                     Z-ADDSMAM      SBCQ                            140225
+     C                     Z-ADDSMAM      BANBCE                          140225
+     C                     ELSE                                           140225
+     C                     Z-ADDSBCQ      ZAMTCI
+     C                     EXSR ZCONV
+     C                     Z-ADDZAMTCO    SBCQ
+     C                     Z-ADDZAMTCO    BANBCE
+     C                     ENDIF                                          140225
+     C*                                                                   140225
+     C** If New Base Currency involved in the transaction, take New Base  140225
+     C** Currency amount as Base Currency Equivalent.                     140225
+     C           PCCY      IFEQ BCNBCY                                    140225
+     C                     Z-ADDPYAM      PBCQ                            140225
+     C                     Z-ADDPYAM      BANBCE                                              199402
+     C                     ELSE                                           140225
+     C                     Z-ADDPBCQ      ZAMTCI
+     C                     EXSR ZCONV
+     C                     Z-ADDZAMTCO    PBCQ
+     C                     ENDIF                                          140225
+     C*
+     C                     UPDATOTPAYDDF
+     C                     WRITEEUBCATD0
+      *
+     C                     ENDIF
+     C                     READ OTPAYDDF                 11
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRIPAY - Process Incoming Payments                           *
+      *                                                               *
+      *  Called by: Main Processing Routine                           *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           SRIPAY    BEGSR
+     C           *LOVAL    SETLLINPAYDDF
+     C                     READ INPAYDDF                 11
+     C           *IN11     DOWEQ'0'
+     C                     MOVEL*BLANKS   @TRID
+     C                     MOVELBRCA      @BRCA
+     C                     MOVEL'FT'      @MODL
+     C                     MOVELPREF      @TRID
+      *
+      **  Check if transaction is not yet processed.
+      *
+     C           @KEY1     CHAINEUBCATPD             12
+     C           *IN12     IFEQ '1'
+     C                     MOVELBRCA      BABRCA
+     C                     MOVEL'FT'      BAMODL
+     C                     MOVEL@TRID     BATRID
+     C**********           Z-ADD*ZERO     BACUST                                              CSD027
+     C                     MOVE *BLANKS   BACUST                                              CSD027
+     C                     Z-ADDSMAM      BAAMT1
+     C                     MOVELSMCY      BACCY1
+     C                     Z-ADDPYAM      BAAMT2
+     C                     MOVELPCCY      BACCY2
+     C                     Z-ADDSLDT      BAVDAT
+     C                     Z-ADD*ZERO     BAMDAT
+     C                     Z-ADD*ZERO     BAOBCR
+     C                     Z-ADD*ZERO     BANBCR
+     C                     Z-ADDSBCQ      BAOBCE
+     C*
+     C** If New Base Currency involved in the transaction, take New Base  140225
+     C** Currency amount as Base Currency Equivalent.                     140225
+     C           SMCY      IFEQ BCNBCY                                    140225
+     C                     Z-ADDSMAM      SBCQ                            140225
+     C                     Z-ADDSMAM      BANBCE                          140225
+     C                     ELSE                                           140225
+     C                     Z-ADDSBCQ      ZAMTCI
+     C                     EXSR ZCONV
+     C                     Z-ADDZAMTCO    SBCQ
+     C                     Z-ADDZAMTCO    BANBCE
+     C                     ENDIF                                          140225
+     C*                                                                   140225
+     C** If New Base Currency involved in the transaction, take New Base  140225
+     C** Currency amount as Base Currency Equivalent.                     140225
+     C           PCCY      IFEQ BCNBCY                                    140225
+     C                     Z-ADDPYAM      PBCQ                            140225
+     C                     Z-ADDPYAM      BANBCE                                              199402
+     C                     ELSE                                           140225
+     C                     Z-ADDPBCQ      ZAMTCI
+     C                     EXSR ZCONV
+     C                     Z-ADDZAMTCO    PBCQ
+     C                     ENDIF                                          140225
+     C*
+     C                     UPDATINPAYDDF
+     C                     WRITEEUBCATD0
+      *
+     C                     ENDIF
+     C                     READ INPAYDDF                 11
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRNTRF - Process FF Nostro Transfer                          *
+      *                                                               *
+      *  Called by: Main Processing Routine                           *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           SRNTRF    BEGSR
+     C           *LOVAL    SETLLNTRANDDF
+     C                     READ NTRANDDF                 11
+     C           *IN11     DOWEQ'0'
+     C                     MOVEL*BLANKS   @TRID
+     C                     MOVELBRCA      @BRCA
+     C                     MOVEL'FT'      @MODL
+     C                     MOVELTFRF      @TRID
+      *
+      **  Check if transaction is not yet processed.
+      *
+     C           @KEY1     CHAINEUBCATPD             12
+     C           *IN12     IFEQ '1'
+     C                     MOVELBRCA      BABRCA
+     C                     MOVEL'FT'      BAMODL
+     C                     MOVEL@TRID     BATRID
+     C**********           Z-ADD*ZERO     BACUST                                              CSD027
+     C                     MOVE *BLANKS   BACUST                                              CSD027
+     C                     Z-ADDAMNT      BAAMT1
+     C                     MOVELCCY       BACCY1
+     C                     Z-ADD*ZERO     BAAMT2
+     C                     MOVEL*BLANKS   BACCY2
+     C                     Z-ADDVDAT      BAVDAT
+     C                     Z-ADD*ZERO     BAMDAT
+     C                     Z-ADD*ZERO     BAOBCR
+     C                     Z-ADD*ZERO     BANBCR
+     C                     Z-ADDSBCQ      BAOBCE
+     C*
+     C** If New Base Currency involved in the transaction, take New Base  140225
+     C** Currency amount as Base Currency Equivalent.                     140225
+     C           CCY       IFEQ BCNBCY                                    140225
+     C                     Z-ADDAMNT      SBCQ                            140225
+     C                     Z-ADDAMNT      BANBCE                          140225
+     C                     ELSE                                           140225
+     C                     Z-ADDSBCQ      ZAMTCI
+     C                     EXSR ZCONV
+     C                     Z-ADDZAMTCO    SBCQ
+     C                     Z-ADDZAMTCO    BANBCE
+     C                     ENDIF                                          140225
+     C*
+     C                     UPDATNTRANDDF
+     C                     WRITEEUBCATD0
+      *
+     C                     ENDIF
+     C                     READ NTRANDDF                 11
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCQCL - Process Cheques for Collection                      *
+      *                                                               *
+      *  Called by: Main Processing Routine                           *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           SRCQCL    BEGSR
+     C           *LOVAL    SETLLCQCOD
+     C                     READ CQCOD                    11
+     C           *IN11     DOWEQ'0'
+     C                     MOVEL*BLANKS   @TRID
+     C                     MOVELBRCA      @BRCA
+     C                     MOVEL'FT'      @MODL
+     C                     MOVELPREF      @PREF
+     C                     MOVEL'/'       @SLSH4
+     C                     MOVELCQSQ      @CQSQ
+      *
+      **  Check if transaction is not yet processed.
+      *
+     C           @KEY1     CHAINEUBCATPD             12
+     C           *IN12     IFEQ '1'
+     C                     MOVELBRCA      BABRCA
+     C                     MOVEL'FT'      BAMODL
+     C                     MOVEL@TRID     BATRID
+     C**********           Z-ADD*ZERO     BACUST                                              CSD027
+     C                     MOVE *BLANKS   BACUST                                              CSD027
+     C                     Z-ADD*ZERO     BAAMT2
+     C                     MOVEL*BLANKS   BACCY2
+     C                     Z-ADD*ZERO     BAMDAT
+     C                     Z-ADD*ZERO     BAOBCR
+     C                     Z-ADD*ZERO     BANBCR
+     C           CQSQ      IFEQ *ZERO
+     C                     Z-ADDTOCL      BAAMT1
+     C                     MOVELSMCY      BACCY1
+     C                     Z-ADDSLDT      BAVDAT
+     C                     Z-ADDSBCQ      BAOBCE
+     C*
+     C** If New Base Currency involved in the transaction, take New Base  140225
+     C** Currency amount as Base Currency Equivalent.                     140225
+     C           SMCY      IFEQ BCNBCY                                    140225
+     C                     Z-ADDTOCL      SBCQ                            140225
+     C                     Z-ADDTOCL      BANBCE                          140225
+     C                     ELSE                                           140225
+     C                     Z-ADDSBCQ      ZAMTCI
+     C                     EXSR ZCONV
+     C                     Z-ADDZAMTCO    SBCQ
+     C                     Z-ADDZAMTCO    BANBCE
+     C                     ENDIF                                          140225
+     C                     UPDATCQCODDDF
+     C                     ELSE
+     C                     Z-ADDCQAM      BAAMT1
+     C                     MOVELCRCY      BACCY1
+     C                     Z-ADDCRVD      BAVDAT
+     C                     Z-ADDPBCQ      BAOBCE
+     C*
+     C** If New Base Currency involved in the transaction, take New Base  140225
+     C** Currency amount as Base Currency Equivalent.                     140225
+     C           CRCY      IFEQ BCNBCY                                    140225
+     C                     Z-ADDCQAM      PBCQ                            140225
+     C                     Z-ADDCQAM      BANBCE                          140225
+     C                     ELSE                                           140225
+     C                     Z-ADDPBCQ      ZAMTCI
+     C                     EXSR ZCONV
+     C                     Z-ADDZAMTCO    PBCQ
+     C                     Z-ADDZAMTCO    BANBCE
+     C                     ENDIF                                          140225
+     C                     UPDATCQCOCDDF
+     C                     ENDIF
+      *
+     C                     WRITEEUBCATD0
+      *
+     C                     ENDIF
+     C                     READ CQCOD                    11
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCQPD - Process Cheques to be paid                          *
+      *                                                               *
+      *  Called by: Main Processing Routine                           *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           SRCQPD    BEGSR
+     C           *LOVAL    SETLLCQPAC
+     C                     READ CQPAC                    11
+     C           *IN11     DOWEQ'0'
+     C                     MOVEL*BLANKS   @TRID
+     C                     MOVELBRCA      @BRCA
+     C                     MOVEL'FT'      @MODL
+     C                     MOVELPREF      @PREF
+     C                     MOVEL'/'       @SLSH4
+     C                     MOVELCQSQ      @CQSQ
+      *
+      **  Check if transaction is not yet processed.
+      *
+     C           @KEY1     CHAINEUBCATPD             12
+     C           *IN12     IFEQ '1'
+     C                     MOVELBRCA      BABRCA
+     C                     MOVEL'FT'      BAMODL
+     C                     MOVEL@TRID     BATRID
+     C**********           Z-ADD*ZERO     BACUST                                              CSD027
+     C                     MOVE *BLANKS   BACUST                                              CSD027
+     C                     Z-ADD*ZERO     BAAMT2
+     C                     MOVEL*BLANKS   BACCY2
+     C                     Z-ADD*ZERO     BAMDAT
+     C                     Z-ADD*ZERO     BAOBCR
+     C                     Z-ADD*ZERO     BANBCR
+     C           CQSQ      IFEQ *ZERO
+     C                     Z-ADDTOTR      BAAMT1
+     C                     MOVELPCCY      BACCY1
+     C                     Z-ADDPVDT      BAVDAT
+     C                     Z-ADDPBCQ      BAOBCE
+     C*
+     C** If New Base Currency involved in the transaction, take New Base  140225
+     C** Currency amount as Base Currency Equivalent.                     140225
+     C           PCCY      IFEQ BCNBCY                                    140225
+     C                     Z-ADDTOTR      PBCQ                            140225
+     C                     Z-ADDTOTR      BANBCE                          140225
+     C                     ELSE                                           140225
+     C                     Z-ADDPBCQ      ZAMTCI
+     C                     EXSR ZCONV
+     C                     Z-ADDZAMTCO    PBCQ
+     C                     Z-ADDZAMTCO    BANBCE
+     C                     ENDIF                                          140225
+     C                     UPDATCQPACDDF
+     C                     ELSE
+     C                     Z-ADDCQAM      BAAMT1
+     C                     MOVELDRCY      BACCY1
+     C                     Z-ADDDRVD      BAVDAT
+     C                     Z-ADDSBCQ      BAOBCE
+     C*
+     C** If New Base Currency involved in the transaction, take New Base  140225
+     C** Currency amount as Base Currency Equivalent.                     140225
+     C           DRCY      IFEQ BCNBCY                                    140225
+     C                     Z-ADDCQAM      SBCQ                            140225
+     C                     Z-ADDCQAM      BANBCE                          140225
+     C                     ELSE                                           140225
+     C                     Z-ADDSBCQ      ZAMTCI
+     C                     EXSR ZCONV
+     C                     Z-ADDZAMTCO    SBCQ
+     C                     Z-ADDZAMTCO    BANBCE
+     C                     ENDIF                                          140225
+     C                     UPDATCQPADDDF
+     C                     ENDIF
+      *
+     C                     WRITEEUBCATD0
+      *
+     C                     ENDIF
+     C                     READ CQPAC                    11
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRTRAD - Process SE Trades.                                  *
+      *                                                               *
+      *  Called by: Main Processing Routine                           *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           SRTRAD    BEGSR
+     C           *LOVAL    SETLLTRADSDF
+     C                     READ TRADSDF                  11
+     C           *IN11     DOWEQ'0'
+     C                     MOVEL*BLANKS   @TRID
+     C                     MOVELTDBA      @BRCA
+     C                     MOVEL'SE'      @MODL
+     C                     MOVELTDRF      @DEAL1
+      *
+      **  Check if transaction is not yet processed.
+      *
+     C           @KEY1     CHAINEUBCATPD             12
+     C           *IN12     IFEQ '1'
+     C                     MOVELTDBA      BABRCA
+     C                     MOVEL'SE'      BAMODL
+     C                     MOVEL@TRID     BATRID
+     C**********           Z-ADDTCNR      BACUST                                              CSD027
+     C                     MOVE TCNR      BACUST                                              CSD027
+     C                     Z-ADDTCTR      BAAMT1
+     C                     MOVELTNMC      BACCY1
+     C                     Z-ADD*ZERO     BAAMT2
+     C                     MOVEL*BLANKS   BACCY2
+     C                     Z-ADDTDVD      BAVDAT
+     C                     Z-ADD*ZERO     BAMDAT
+     C                     Z-ADD*ZERO     BAOBCE
+     C                     Z-ADD*ZERO     BANBCE
+     C                     Z-ADDTBCR      BAOBCR
+     C* If transaction currency equal to New base currency. Base          136662
+     C* currency conversion must equal 1.0 else calculate their           136662
+     C* base currency rate.                                               136662
+     C*                                                                   136662
+     C           TNMC      IFEQ BCNBCY                                    136662
+     C                     Z-ADD1         TBCR                            136662
+     C                     ELSE                                           136662
+     C*                                                                   136662
+     C** Access currency details for the transaction currency             143561
+     C*                                                                   143561
+     C                     MOVE TNMC      W1TXCY                          143561
+     C                     EXSR SRCURR                                    143561
+      *                                                                   143561
+     C***********WMDIN     IFEQ 'M'                                       143561
+     C***********ZMD       ANDEQ'M'                                       143561
+     C***********WMDIN     OREQ 'D'                                       143561
+     C***********ZMD       ANDEQ'D'                                       143561
+     C           W1MDIN    IFEQ ZMD                                       143561
+     C           ZEXCH     MULT TBCR      TBCR
+     C           W1EUMD    IFNE ' '                        B1             143561
+     C           W1EUMD    ANDNEW1MDIN                                    143561
+     C           1         DIV  TBCR      TBCR                            143561
+     C                     ENDIF                           E1             143561
+     C                     ELSE
+     C           W1EUMD    IFNE ' '                        B2             143561
+     C           W1EUMD    ANDEQZMD                                       143561
+     C           ZEXCH     DIV  TBCR      TBCR
+     C                     ELSE                                           143561
+     C           TBCR      DIV  ZEXCH     TBCR                            143561
+     C                     ENDIF                           E2             143561
+     C                     ENDIF
+     C                     ENDIF                                          136662
+     C                     Z-ADDTBCR      BANBCR
+     C                     UPDATTRADSDF
+     C                     WRITEEUBCATD0
+      *
+     C                     ENDIF
+     C                     READ TRADSDF                  11
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSEPS - Process SE Position Settlement.                     *
+      *                                                               *
+      *  Called by: Main Processing Routine                           *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           SRSEPS    BEGSR
+     C           *LOVAL    SETLLPOSET
+     C                     READ POSET                    11
+     C           *IN11     DOWEQ'0'
+     C                     MOVEL*BLANKS   @TRID
+     C                     Z-ADDPDUD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELPBCA      @BRCA
+     C                     MOVEL'SE'      @MODL
+     C                     MOVELPSSH      @PSSH
+     C                     MOVEL'/'       @SLSH2
+     C                     MOVELZDATE     @DATE
+     C                     MOVEL'/'       @SLSH3
+     C                     MOVELPEVT      @EVT
+      *
+      **  Check if transaction is not yet processed.
+      *
+     C                     MOVE 'N'       WFOUND  1
+     C           @KEY1     CHAINEUBCATPD             12
+     C*
+     C           *IN12     DOWEQ'0'
+     C*
+     C           BACUST    IFEQ PCPY
+     C                     MOVE 'Y'       WFOUND
+     C                     LEAVE
+     C                     ENDIF
+     C*
+     C           @KEY1     READEEUBCATPD                 12
+     C*
+     C                     ENDDO
+     C*
+     C           WFOUND    IFEQ 'N'
+     C                     MOVELPBCA      BABRCA
+     C                     MOVEL'SE'      BAMODL
+     C                     MOVEL@TRID     BATRID
+     C**********           Z-ADDPCPY      BACUST                                              CSD027
+     C                     MOVE PCPY      BACUST                                              CSD027
+     C                     Z-ADDPAMD      BAAMT1
+     C                     MOVELPNCY      BACCY1
+     C                     Z-ADDPSAT      BAAMT2
+     C                     MOVELPSCU      BACCY2
+     C                     Z-ADDPDUD      BAVDAT
+     C                     Z-ADD*ZERO     BAMDAT
+     C                     Z-ADDPBRX      BAOBCR
+     C* If transcation currency equal to New base currency. Base          136662
+     C* currency conversion must equal 1.0 else calculate Base            136662
+     C* currency exchange rate.                                           136662
+     C*                                                                   136662
+     C           PNCY      IFEQ BCNBCY                                    136662
+     C                     Z-ADD1         PBRX                            136662
+     C                     ELSE                                           136662
+     C*                                                                   136662
+     C** Access currency details for the transaction currency             143561
+     C*                                                                   143561
+     C                     MOVE PNCY      W1TXCY                          143561
+     C                     EXSR SRCURR                                    143561
+      *                                                                   143561
+     C***********WMDIN     IFEQ 'M'                                       143561
+     C***********ZMD       ANDEQ'M'                                       143561
+     C***********WMDIN     OREQ 'D'                                       143561
+     C***********ZMD       ANDEQ'D'                                       143561
+     C           W1MDIN    IFEQ ZMD                                       143561
+     C           ZEXCH     MULT PBRX      PBRX
+     C           W1EUMD    IFNE ' '                        B1             143561
+     C           W1EUMD    ANDNEW1MDIN                                    143561
+     C           1         DIV  PBRX      PBRX                            143561
+     C                     ENDIF                           E1             143561
+     C                     ELSE
+     C           W1EUMD    IFNE ' '                        B2             143561
+     C           W1EUMD    ANDEQZMD                                       143561
+     C           ZEXCH     DIV  PBRX      PBRX
+     C                     ELSE                                           143561
+     C           PBRX      DIV  ZEXCH     PBRX                            143561
+     C                     ENDIF                           E2             143561
+     C                     ENDIF
+     C                     ENDIF                                          136662
+     C                     Z-ADDPBRX      BANBCR
+     C                     Z-ADDSABC      BAOBCE
+     C                     Z-ADDSABC      ZAMTCI
+     C                     EXSR ZCONV
+     C                     Z-ADDZAMTCO    SABC
+     C                     Z-ADDZAMTCO    BANBCE
+     C                     Z-ADDBAUS      ZAMTCI
+     C                     EXSR ZCONV
+     C                     Z-ADDZAMTCO    BAUS
+     C                     UPDATPOSETDF
+     C                     WRITEEUBCATD0
+      *
+     C                     ENDIF
+     C                     READ POSETDF                  11
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************   143561
+      *                                                               *   143561
+      *  SRCURR - Call access object AOCURRR0.                        *   143561
+      *                                                               *   143561
+      *  Called by: SR* Processing Routine                            *   143561
+      *                                                               *   143561
+      *  Calls: None                                                  *   143561
+      *                                                               *   143561
+      *****************************************************************   143561
+     C           SRCURR    BEGSR                                          143561
+      *                                                                   143561
+     C                     CALL 'AOCURRR0'                                143561
+     C                     PARM '*MSG   ' @RTCD   7                       143561
+     C                     PARM '*KEY   ' @OPTN   7                       143561
+     C                     PARM           W1TXCY  3                       143561
+     C           SDCURR    PARM SDCURR    DSSDY                           143561
+      *                                                                   143561
+      ** Data base error in file (file)                                   143561
+      *                                                                   143561
+     C           @RTCD     IFNE *BLANKS                                   143561
+     C           *LOCK     IN   LDA                                       143561
+     C                     SETON                       U7U8               143561
+     C                     Z-ADD10        DBASE            ***************143561
+     C                     MOVEL'SDCURRPD'DBFILE           *DB ERROR 010 *143561
+     C                     MOVELW1TXCY    DBKEY            ***************143561
+     C                     MOVEL'EU0020  'DBPGM                           143561
+     C                     OUT  LDA                                       143561
+     C                     EXSR *PSSR                                     143561
+     C                     ENDIF                                          143561
+      *                                                                   143561
+     C           @RTCD     IFEQ *BLANKS                                   143561
+     C                     MOVELA6EUMD    W1EUMD  1                       143561
+     C                     MOVELA6MDIN    W1MDIN  1                       143561
+     C                     ENDIF                                          143561
+      *                                                                   143561
+     C                     ENDSR                                          143561
+      /EJECT                                                              143561
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C                     ROLBK
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/EJECT
+     C/COPY ZSRSRC,ZCONVZ1
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000

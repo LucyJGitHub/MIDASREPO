@@ -1,0 +1,131 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Customer Lending Module                                       */
+/*                                                                             */
+/*       V_LENPRTPD - Non Pro-Rata Facility Event                              */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2005                     */
+/*                                                                             */
+/*       Last Amend No. CLE064             Date 06Dec10                        */
+/*       Prev Amend No. CER059             Date 19Jul10                        */
+/*                      CER020             Date 19May08                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/*                      BUG16206           Date 26Feb08                        */
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      CSD031             Date 10Apr06                        */
+/*                      CLE042             Date 06Sep05                        */
+/*                      CLE106   *CREATE   Date 01Aug04                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       CLE064 - Enhancement of Lending Frequencies (Recompile)               */
+/*       CER059 - German Feature Upgrade to Delhi                              */
+/*       CER020 - Enhanced Rollover Window: Upgrade FGE089 to                  */
+/*                Midas Plus (Recompile)                                       */
+/*       BUG16206 - System hangs up on acct code movement                      */
+/*       CSD031 - Enhanced Centralised Static Data (Recompile)                 */
+/*       CLE042 - Extended Loan Sub Type (Recompile)                           */
+/*       CLE106 - Syndications Manager                                         */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  (                                                                             :
+  BBCSSN,                                                                       :
+  PADCNUM,                                                                      :
+  PADFACT,                                                                      :
+  PADFCNO,                                                                      :
+  PRTR   ,                                                                      :
+  FCCY   ,                                                                      :
+  SHPC   ,                                                                      :
+  BRCA   ,                                                                      :
+  JDTE   ,                                                                      :
+  COAG   ,                                                                      :
+  FCAG   ,                                                                      :
+  PHAG   ,                                                                      :
+  SCAG   ,                                                                      :
+  PADPMFC,                                                                      :
+  PADPMFT,                                                                      :
+  PADPMFN,                                                                      :
+  PRNT   ,                                                                      :
+  NSHT   ,                                                                      :
+  NSHA   ,                                                                      :
+  NSHP)                                                                         :
+  AS                                                                            :
+  (SELECT CUST.BBCSSN,                                                          :
+**DIGITS(NPRT.CNUM)*AS*PADCNUM,*************************************************:           BUG16206
+  NPRT.CNUM AS PADCNUM,                                                         :           BUG16206
+  DIGITS(NPRT.FACT) AS PADFACT,                                                 :
+  DIGITS(NPRT.FCNO) AS PADFCNO,                                                 :
+  CASE WHEN NPRT.PRTR = 'I' THEN 'Internal'                                     :
+  WHEN NPRT.PRTR = 'P' THEN 'Funding'                                           :
+  WHEN NPRT.PRTR = 'R' THEN 'Risk'                                              :
+  WHEN NPRT.PRTR = 'S' THEN 'Sub-Participant'                                   :
+  ELSE '' END AS PRTR,                                                          :
+  FM.FCCY,                                                                      :
+  DEC((FM.SHPC/1000000000000), 31, 12) AS SHPC,                                 :
+  NPRT.BRCA, FM.JDTE, FM.COAG,                                                  :
+  FM.FCAG, FM.PHAG, FM.SCAG,                                                    :
+**DIGITS(NPRT.PMFC)*AS*PADPMFC,*************************************************:           BUG16206
+  NPRT.PMFC AS PADPMFC,                                                         :           BUG16206
+  DIGITS(NPRT.PMFT) AS PADPMFT,                                                 :
+  DIGITS(NPRT.PMFN) AS PADPMFN,                                                 :
+  NPRT.PRNT, NPRT.NSHT, NPRT.NSHA, NPRT.NSHP                                    :
+  FROM LEFNPRPD NPRT                                                            :
+  LEFT JOIN FCLTYFM FM                                                          :
+  ON FM.CNUM = NPRT.CNUM AND FM.FACT = NPRT.FACT AND FM.FCNO = NPRT.FCNO        :
+  INNER JOIN SDCUSTPD CUST ON FM.CNUM = CUST.BBCUST                             :
+  ) ;                                                                           :
+  LABEL ON COLUMN                                                               :
+  **********/**********                                                         :
+  (                                                                             :
+  BBCSSN  IS 'Customer shortname'         ,                                     :
+  PADCNUM IS 'Customer number'            ,                                     :
+  PADFACT IS 'Facility type'              ,                                     :
+  PADFCNO IS 'Facility number'            ,                                     :
+  PRTR    IS 'Participant Type'           ,                                     :
+  FCCY    IS 'Facility currency'          ,                                     :
+  SHPC    IS 'Pro-Rata Share Percentage'  ,                                     :
+  BRCA    IS 'Branch Code - Alpha'        ,                                     :
+  JDTE    IS 'Joining Date'               ,                                     :
+  COAG    IS 'Co-Agent'                   ,                                     :
+  FCAG    IS 'Facility Agent'             ,                                     :
+  PHAG    IS 'Paying / Handling Agent'    ,                                     :
+  SCAG    IS 'Security Agent'             ,                                     :
+  PADPMFC IS 'Primary Facility Customer number',                                :
+  PADPMFT IS 'Primary Facility Type'      ,                                     :
+  PADPMFN IS 'Primary Facility Number'    ,                                     :
+  PRNT    IS 'Parent PC Reference'        ,                                     :
+  NSHT    IS 'Non Pro-Rata Share Type'    ,                                     :
+  NSHA    IS 'Non Pro-Rata Share Amount'  ,                                     :
+  NSHP    IS 'Non Pro-Rata Share Percentage');                                  :
+  LABEL ON COLUMN                                                               :
+  **********/**********                                                         :
+  (                                                                             :
+  BBCSSN  IS 'Customer shortname'         ,                                     :
+  PADCNUM IS 'Customer number'            ,                                     :
+  PADFACT IS 'Facility type'              ,                                     :
+  PADFCNO IS 'Facility number'            ,                                     :
+  PRTR    IS 'Participant Type'           ,                                     :
+  FCCY    IS 'Facility currency'          ,                                     :
+  SHPC    IS 'Pro-Rata Share Percentage'  ,                                     :
+  BRCA    IS 'Branch Code - Alpha'        ,                                     :
+  JDTE    IS 'Joining Date'               ,                                     :
+  COAG    IS 'Co-Agent'                   ,                                     :
+  FCAG    IS 'Facility Agent'             ,                                     :
+  PHAG    IS 'Paying / Handling Agent'    ,                                     :
+  SCAG    IS 'Security Agent'             ,                                     :
+  PADPMFC IS 'Primary Facility Customer number',                                :
+  PADPMFT IS 'Primary Facility Type'      ,                                     :
+  PADPMFN IS 'Primary Facility Number'    ,                                     :
+  PRNT    IS 'Parent PC Reference'        ,                                     :
+  NSHT    IS 'Non Pro-Rata Share Type'    ,                                     :
+  NSHA    IS 'Non Pro-Rata Share Amount'  ,                                     :
+  NSHP    IS 'Non Pro-Rata Share Percentage');                                  :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas LE Non Pro-Rata                             ';                     :
+                                                                                :

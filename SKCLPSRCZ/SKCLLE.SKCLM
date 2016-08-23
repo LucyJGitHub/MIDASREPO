@@ -1,0 +1,92 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - (Midas module name)                              */
+/*                                                                   */
+/*       mmCnnnnM - (Program Name)                                   */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2007           */
+/*                                                                   */
+/*       Last Amend No. xxxxxx  *CREATE    Date ddMmmyy              */
+/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       xxxxxx - (fix description)                                  */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+/*/COPY WNCPYSRC,mmCnnnnINT                                          */
+ 
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2007')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             RTVJOBA    TYPE(&JOBTYPE)
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(XXXXXX00)
+ 
+/*/COPY WNCPYSRC,mmCnnnnMPS                                          */
+ 
+/* Start commitment control for batch jobs with file updates */
+ 
+             IF         COND(&JOBTYPE = '0') THEN(DO)
+                STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE))
+             ENDDO
+ 
+/* (For COB file updates add necessary code for security backups */
+/* and recovery processing)                                      */
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                ROLLBACK
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/*/COPY WNCPYSRC,mmCnnnnMPE                                          */
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+/*/COPY WNCPYSRC,mmCnnnnERR                                          */
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+/* Abnormal termination - batch job */
+ 
+             IF         COND(&JOBTYPE = '0') THEN(DO)
+               SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                            mmCnnnnM ended abnormally - see job log') +
+                            TOMSGQ(MOPERQ)
+               MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ 
+/* Abnormal termination - interactive job */
+ 
+             IF         COND(&JOBTYPE = '1') THEN(DO)
+ 
+/* (Set up messages for Midas information screen and call */
+/* appropriate module program to display screen)          */
+ 
+             ENDDO
+ 
+END:
+ 
+/*/COPY WNCPYSRC,mmCnnnnEND                                          */
+ 
+/* (Add any specific end processing here) */
+ 
+             ENDPGM

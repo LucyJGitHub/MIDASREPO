@@ -1,0 +1,136 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - General Ledger                                                */
+/*                                                                             */
+/*       V_ZACCNTAB - Accounts View                                            */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2003                     */
+/*                                                                             */
+/*       Last Amend No. CGL165             Date 17Feb15                        */
+/*       Prev Amend No. AR871055           Date 15Mar12                        */
+/*                      CSF011             Date 12Sep11                        */
+/*                      CER049             Date 06Dec10                        */
+/*                      CRE073             Date 06Dec10                        */
+/*                      CER055             Date 06Dec10                        */
+/*                      CRE075             Date 06Dec10                        */
+/*                      CER059             Date 19Jul10                        */
+/*                      CER047             Date 19May08                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/*                      CAP204             Date 03Feb10                        */
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      BUG12866           Date 15Dec06                        */
+/*                      BUG443             Date 01Dec05                        */
+/*                      CSD027             Date 08Dec05                        */
+/*                      CAP086             Date 08Jun05                        */
+/*                      CLE025             Date 20Oct03                        */
+/*                      BUG625             Date 16Apr04                        */
+/*                      BUG1753            Date 07Apr04                        */
+/*                      BUG507             Date 23Mar04                        */
+/*                      BUG1271            Date 12MAR04                        */
+/*                      CAP084  *CREATE    Date 21Oct03                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       CGL165 - Dual Withholding Tax (Recompile)                             */
+/*       AR871055 - WIP active accounts information is incomplete. Customer    */
+/*                  name, shortname and report town are blank                  */
+/*                  Applied for AR971360 (Child:AR971361)                      */
+/*       CSF011 - Customer Name on Inputs                                      */
+/*       CER049 - Stamp Tax (Recompile)                                        */
+/*       CRE073 - Interest Rate Rounding (Recompile)                           */
+/*       CER055 - Penalty Interest on Exceeding Overdraft Limit                */
+/*                (Recompile)                                                  */
+/*       CRE075 - Effective Date for Retail Accounts (Recompile)               */
+/*       CER059 - German Feature Upgrade to Delhi                              */
+/*       CER047 - German Features LF037-00 Reporting §24c KWG                  */
+/*                (Recompile)                                                  */
+/*       CAP204   - Retail Account Transfer                                    */
+/*       BUG12866 - Midasplus error on Full GL tab                             */
+/*       BUG443 - Added a new a/c field with branch at the end                 */
+/*       CSD027 - Conversion Of Customer Number to Alpha                       */
+/*       CAP086 - Introduce Auto Authorisation to the API's                    */
+/*                without it. (Recompile)                                      */
+/*       CLE025 - Credit Lines (Recompile)                                     */
+/*       BUG625 - Enhancements to screen controls                              */
+/*       BUG1753 - Redeliver as object containing bug507 got lost              */
+/*       BUG507 - Create New field for partial account with branch at start    */
+/*       BUG1271 - CREATE NEW FIELD FOR FULL ACCOUNT 15A LONG                  */
+/*                 CNUM,CCY,ACNUM,SEQ.                                         */
+/*       CAP084 - MidasPlus wrapper project                                    */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+  SELECT                                                                        :
+    M.*,                                                                        :
+    B.ATCRST,B.ATSUBO,B.ATITAX,B.ATSTCI,B.ATCHIN,B.ATCHAM,B.ATAODR,             :
+    B.ATITRD,B.ATORTC,B.ATOLVD,B.ATPOLC,B.ATPOLE,B.ATFRNT,B.ATAFRT,             :
+    B.ATACNO,B.ATOVRD,B.ATOVRC,B.ATDRMG,B.ATCRMG,B.ATDRMD,B.ATCRMD,             :
+    R.DICT,R.DCST,R.DACP,R.DICP,R.CICT,R.CCST,R.CACP,R.CICP,R.CHGT,             :
+    R.CHST,R.CHAC,R.PTRA,R.PRCH,R.NRCA,R.RCA,R.MCLB,R.NOALT,R.TCHO,             :
+    R.DRBR,R.CRBR,R.CHBR,R.PBKU,R.REPI as RREPI,                                :
+    C.FXDC,C.ACCEA,C.ACCC,C.GVDPE,C.GVDPC,C.ACCRA,C.MMACC,C.CACCC,              :
+    C.CDIE,C.CDICA,C.CDRR,C.MMCDI,C.CCDIC,C.IACE,C.IACCC,C.CIACC,               :
+    C.CMBE,C.CMBC,C.ACCB,C.CCMBC,C.CHDBE,C.CHDBC,C.HDRB,C.CHDBR,                :
+    C.MMCHDB,C.CCHDBC,C.CACDC,C.CCINST,C.TEGRT,C.VATAM,C.CEXA,C.CEXB,           :
+    C.CEXC,C.CEXD,C.CEXE,C.CEXF,C.CEXG,C.NOIS,C.NOCC,C.PESP,C.NOIP,P.PSWD,      :
+****DIGITS(M.CNUM)*AS*PADCNUM,**************************************************:             CSD027
+           M.CNUM  AS PADCNUM,                                                  :             CSD027
+    DIGITS(M.ACOD) AS PADACOD,                                                  :
+    DIGITS(M.ACSQ) AS PADACSQ,                                                  :
+    CASE                                                                        :
+     WHEN M.ACNO = 0 THEN ' '  ELSE DIGITS(ACNO) END AS PADACNO,                :
+    CASE                                                                        :
+     WHEN M.FACT = 0 THEN ' ' ELSE DIGITS(M.FACT) END AS PADFACT,               :
+    CASE                                                                        :
+     WHEN M.FCNO = 0 THEN ' ' ELSE DIGITS(M.FCNO) END AS PADFCNO,               :
+    CASE                                                                        :
+    WHEN M.EFAC = 0 THEN ' ' ELSE DIGITS(M.EFAC) END AS PADEFAC,                :
+****((DIGITS(M.CNUM))*CONCAT*(M.CCY))*CONCAT*(DIGITS(M.ACOD)*CONCAT*************:     BUG1271 CSD027
+    (        M.CNUM   CONCAT (M.CCY)) CONCAT (DIGITS(M.ACOD) CONCAT             :             CSD027
+           (DIGITS(M.ACSQ))) AS FULLACNO,                                       :            BUG1271
+****M.BRCA*CONCAT*(((DIGITS(M.CNUM))*CONCAT*(M.CCY))*CONCAT*(DIGITS(M.ACOD)*****:      BUG625 CSD027
+    M.BRCA CONCAT ((        M.CNUM   CONCAT (M.CCY)) CONCAT (DIGITS(M.ACOD)     :             CSD027
+    CONCAT (DIGITS(M.ACSQ)))) AS BRFACNO,                                       :            BUG625
+****CONCAT((DIGITS(M.CNUM)),(CONCAT((DIGITS(M.ACOD)),***************************:             CSD027
+    CONCAT(        M.CNUM  ,(CONCAT((DIGITS(M.ACOD)),                           :             CSD027
+           (CONCAT((DIGITS(M.ACSQ)),M.BRCA))))) AS BRCHACNO,                    :
+****CONCAT((DIGITS(M.CNUM)),(CONCAT((DIGITS(M.ACOD)),(DIGITS(M.ACSQ)))))********:             CSD027
+    CONCAT(        M.CNUM  ,(CONCAT((DIGITS(M.ACOD)),(DIGITS(M.ACSQ)))))        :             CSD027
+  /*********AS PARACNO                                                        */:             BUG507
+    AS PARACNO,                                                                 :             BUG507
+****CONCAT(M.BRCA,CONCAT((DIGITS(M.CNUM)),(CONCAT((DIGITS(M.ACOD)),*************:      BUG507 CSD027
+    CONCAT(M.BRCA,CONCAT(        M.CNUM  ,(CONCAT((DIGITS(M.ACOD)),             :             CSD027
+  /*******(DIGITS(M.ACSQ)))))) AS BRPACNO                                     */:      BUG507 BUG443
+          (DIGITS(M.ACSQ)))))) AS BRPACNO,                                      :             BUG443
+****((DIGITS(M.CNUM))*CONCAT*(M.CCY))*CONCAT*(DIGITS(M.ACOD)*CONCAT*************:    BUG443 BUG12866
+    ((M.CNUM) CONCAT (M.CCY)) CONCAT (DIGITS(M.ACOD) CONCAT                     :           BUG12866
+***********(DIGITS(M.ACSQ))*CONCAT*(M.BRCA))*AS*FACNOBR*************************:      BUG443 CAP204
+***********(DIGITS(M.ACSQ))*CONCAT*(M.BRCA))*AS*FACNOBR,*S.BBCRNM,*S.BBCRTN*****:      CAP204 CSF011
+           (DIGITS(M.ACSQ)) CONCAT (M.BRCA)) AS FACNOBR, S.BBCSSN, S.BBCRNM,    :             CSF011
+           S.BBCRTN, S.BBCSID                                                   :             CSF011
+    FROM ACCNTAB AS M                                                           :
+   LEFT JOIN ACCNTBXC AS B                                                      :
+    ON B.ATCNUM=M.CNUM AND B.ATCCY=M.CCY AND B.ATACOD=M.ACOD                    :
+    AND B.ATACSQ=M.ACSQ AND B.ATBRCA=M.BRCA                                     :
+   LEFT JOIN REIACD AS R                                                        :
+    ON R.CNUM=M.CNUM AND R.CCY=M.CCY AND R.ACOD=M.ACOD                          :
+    AND R.ACSQ=M.ACSQ AND R.BRCA=M.BRCA                                         :
+   LEFT JOIN RECOMD AS C                                                        :
+    ON C.CNUM=M.CNUM AND C.CCY=M.CCY AND C.ACOD=M.ACOD                          :
+    AND C.ACSQ=M.ACSQ AND C.BRCA=M.BRCA                                         :
+   LEFT JOIN REAPWDPD AS P                                                      :
+    ON P.CNUM=M.CNUM AND P.CCY=M.CCY AND P.ACOD=M.ACOD                          :
+    AND P.ACSQ=M.ACSQ AND P.BRCA=M.BRCA                                         :
+   LEFT JOIN SDCUSTPD AS S                                                      :             CAP204
+    ON S.BBCUST = M.CNUM                                                        :             CAP204
+****AND*S.BBBRCD*=*M.BRCA*******************************************************:    CSF011 AR871055
+   WHERE M.RECI IN ('D','C')                                                    :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas Accounts view                               ';                     :
+                                                                                :

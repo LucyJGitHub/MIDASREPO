@@ -1,0 +1,239 @@
+/*********************************************************************/
+/*XBI    OVRDBF FILE(UTC000302F) TOFILE(UPMBRLTPD)                   */
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UT Compile contents of source file')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities                                           */
+/*                                                                   */
+/*       UTC000302 - Compile contents of a source file               */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2007           */
+/*                                                                   */
+/*       Last Amend No. CUT008              Date 09Feb11             */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Prev Amend No. CUT011  *REWRITE   Date 19Nov07              */
+/*                                                                   */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUT008  - CRTOBJ rewrite.                                   */
+/*                 Change of CRTOBJ parameters.                      */
+/*       CUT011 - Rewrite of command.  Make it more flexible and     */
+/*                easier to maintain.                                */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&SRCF &SRCLIB &TGTLIB &MSGFLIB &OWNER +
+                          &PUBAUT &OBJTYPE)
+ 
+             DCL        VAR(&SRCF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRCLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TGTLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PUBAUT) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OBJTYPE) TYPE(*CHAR) LEN(8)
+ 
+/**********  DCL        VAR(&MULTIL) TYPE(*CHAR) LEN(1) VALUE('N')                     */ /*CUT008*/
+             DCL        VAR(&MULTIL) TYPE(*CHAR) LEN(4) VALUE('*NO ')                     /*CUT008*/
+             DCL        VAR(&MULTILLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&WRONGTYPE) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&EXCEPTION) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&CREATE) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&ERRORMSG) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&REPORT) TYPE(*CHAR) LEN(1) VALUE('N')
+ 
+             DCLF       FILE(UTC000302F)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2007')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Create temporary file to hold messages for CRTALLOBJ. */
+             DLTF       FILE(QTEMP/UPERRMQT)
+             MONMSG     MSGID(CPF2105)
+             CRTPF      FILE(QTEMP/UPERRMQT) RCDLEN(100) TEXT('Temp. +
+                          file for holding msgs from CRTALLOBJ')
+ 
+/* Create list of source file members. */
+             DLTF       FILE(QTEMP/UTC000302F)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/MEMBERS)
+             MONMSG     MSGID(CPF0000)
+             CRTDUPOBJ  OBJ(UPMBRLTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(UTC000302F)
+             DSPFD      FILE(&SRCLIB/&SRCF) TYPE(*MBRLIST) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/MEMBERS)
+             CPYF       FROMFILE(QTEMP/MEMBERS) +
+                          TOFILE(QTEMP/UTC000302F) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+ 
+/* Set up some of the CRTOBJ parameters. */
+             IF         COND(&MSGFLIB *EQ '*NONE') THEN(DO)
+/**********     CHGVAR     VAR(&MULTIL) VALUE('N')                                     */ /*CUT008*/
+                CHGVAR     VAR(&MULTIL) VALUE('*NO ')                                     /*CUT008*/
+                CHGVAR     VAR(&MULTILLIB) VALUE('QTEMP')
+             ENDDO
+             ELSE       CMD(DO)
+/**********     CHGVAR     VAR(&MULTIL) VALUE('Y')                                     */ /*CUT008*/
+                CHGVAR     VAR(&MULTIL) VALUE('*YES')                                     /*CUT008*/
+                CHGVAR     VAR(&MULTILLIB) VALUE(&MSGFLIB)
+             ENDDO
+ 
+READFILE:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* Check for certain member types that will not be able to compile. */
+             IF         COND(&MLSEU2 *EQ 'MOVED') THEN(DO)
+                CHGVAR     VAR(&WRONGTYPE) VALUE('Y')
+             ENDDO
+             IF         COND(&MLSEU2 *EQ 'REDUNDANT') THEN(DO)
+                CHGVAR     VAR(&WRONGTYPE) VALUE('Y')
+             ENDDO
+             IF         COND(&MLSEU2 *EQ 'RENAMED') THEN(DO)
+                CHGVAR     VAR(&WRONGTYPE) VALUE('Y')
+             ENDDO
+             IF         COND(&WRONGTYPE *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&WRONGTYPE) VALUE('N')
+                CHGVAR     VAR(&ERRORMSG) VALUE('Source member' *BCAT +
+                             &MLNAME *BCAT 'has an invalid member type.')
+                CALL       PGM(UP008010) PARM('*WRITE' 'UTC000302' +
+                             &ERRORMSG)
+                CHGVAR     VAR(&REPORT) VALUE('Y')
+                GOTO       CMDLBL(READFILE)
+             ENDDO
+ 
+/* Check if the object already exists.  First, we need to work out what the */
+/*  object type is.                                                         */
+/* There are some objects in Midas with the same name which are both an OPM */
+/*  program and and ILE module.  Check for these specifically.              */
+ZALIGN:
+             IF         COND(&MLNAME *EQ 'ZALIGN') THEN(DO)
+                CHGVAR     VAR(&EXCEPTION) VALUE('Y')
+                IF         COND(&MLSEU2 *EQ 'RPG') THEN(DO)
+                   CHGVAR     VAR(&OBJTYPE) VALUE('*PGM')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&OBJTYPE) VALUE('*MODULE')
+                ENDDO
+             ENDDO
+ZDATE1:
+             IF         COND(&MLNAME *EQ 'ZDATE1') THEN(DO)
+                CHGVAR     VAR(&EXCEPTION) VALUE('Y')
+                IF         COND(&MLSEU2 *EQ 'RPG') THEN(DO)
+                   CHGVAR     VAR(&OBJTYPE) VALUE('*PGM')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&OBJTYPE) VALUE('*MODULE')
+                ENDDO
+             ENDDO
+ZBKDT:
+             IF         COND(&MLNAME *EQ 'ZBKDT') THEN(DO)
+                CHGVAR     VAR(&EXCEPTION) VALUE('Y')
+                IF         COND(&MLSEU2 *EQ 'RPG') THEN(DO)
+                   CHGVAR     VAR(&OBJTYPE) VALUE('*PGM')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&OBJTYPE) VALUE('*MODULE')
+                ENDDO
+             ENDDO
+ZEDIT:
+             IF         COND(&MLNAME *EQ 'ZEDIT') THEN(DO)
+                CHGVAR     VAR(&EXCEPTION) VALUE('Y')
+                IF         COND(&MLSEU2 *EQ 'RPG') THEN(DO)
+                   CHGVAR     VAR(&OBJTYPE) VALUE('*PGM')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&OBJTYPE) VALUE('*MODULE')
+                ENDDO
+             ENDDO
+ 
+             IF         COND(&EXCEPTION *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&EXCEPTION) VALUE('N')
+                CHKOBJ     OBJ(&TGTLIB/&MLNAME) OBJTYPE(&OBJTYPE)
+                MONMSG     MSGID(CPF9801) EXEC(DO)
+                   CHGVAR     VAR(&CREATE) VALUE('Y')
+                ENDDO
+                GOTO       CMDLBL(COMPILE)
+             ENDDO
+ 
+             IF         COND(&OBJTYPE *EQ '*OPMMOD') THEN(DO)
+                CHGVAR     VAR(&OBJTYPE) VALUE('*PGM')
+                CHKOBJ     OBJ(&TGTLIB/&MLNAME) OBJTYPE(&OBJTYPE)
+                MONMSG     MSGID(CPF9801) EXEC(DO)
+                   CHGVAR     VAR(&OBJTYPE) VALUE('*MODULE')
+                   CHKOBJ     OBJ(&TGTLIB/&MLNAME) OBJTYPE(&OBJTYPE)
+                   MONMSG     MSGID(CPF9801) EXEC(DO)
+                      CHGVAR     VAR(&CREATE) VALUE('Y')
+                   ENDDO
+                ENDDO
+             ENDDO
+             ELSE       CMD(DO)
+                IF         COND(&OBJTYPE *EQ '*SRVPGM') THEN(DO)
+                   CHGVAR     VAR(&CREATE) VALUE('Y')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHKOBJ     OBJ(&TGTLIB/&MLNAME) OBJTYPE(&OBJTYPE)
+                   MONMSG     MSGID(CPF9801) EXEC(DO)
+                      CHGVAR     VAR(&CREATE) VALUE('Y')
+                   ENDDO
+                ENDDO
+             ENDDO
+ 
+/* Perform the compilation. */
+COMPILE:
+             IF         COND(&CREATE *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&CREATE) VALUE('N')
+/**********     CRTOBJ     SRCMBR(&MLNAME) SRCFILE(&SRCLIB/&SRCF) +                    */ /*CUT008*/
+/**********                  PLIB(&TGTLIB) OWNER(&OWNER) AUTL(&PUBAUT) +               */ /*CUT008*/
+/**********                  MLSYS(&MULTIL) MSGFLIB(&MULTILLIB)                        */ /*CUT008*/
+                CRTOBJ     OBJ(&TGTLIB/&MLNAME) SRCFILE(&SRCLIB/&SRCF) +
+                             SRCMBR(*OBJ) OWNER(&OWNER) AUTL(&PUBAUT) +
+                             MLSYS(&MULTIL) MSGFLIB(&MULTILLIB)                           /*CUT008*/
+                MONMSG     MSGID(CPF0000 MCH0000 SYS0000 SQL0000) EXEC(DO)
+                   CHGVAR     VAR(&ERRORMSG) VALUE('Error in compiling' +
+                                *BCAT &MLNAME *TCAT '.')
+                   CALL       PGM(UP008010) PARM('*WRITE' 'UTC000302' +
+                                &ERRORMSG)
+                   CHGVAR     VAR(&REPORT) VALUE('Y')
+/* If spool file is available then move it to special output queue. */
+                   CHGSPLFA   FILE(&MLNAME) SPLNBR(*LAST) +
+                                OUTQ(&SRCLIB/CRTALLOBJ) USRDTA(&SRCF)
+                   MONMSG     MSGID(CPF0000)
+                ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(READFILE)
+ 
+ERROR:
+             CHGVAR     VAR(&ERRORMSG) VALUE('General error when +
+                          compiling' *BCAT &SRCF *TCAT '.  Check +
+                          job' *BCAT &SRCF *BCAT 'joblog.')
+             CALL       PGM(UP008010) PARM('*WRITE' 'UTC000302' +
+                          &ERRORMSG)
+             MONMSG     MSGID(CPF0000 RPG0000)
+             CHGVAR     VAR(&REPORT) VALUE('Y')
+ 
+ENDPGM:
+             IF         COND(&REPORT *EQ 'Y') THEN(DO)
+                CALL       PGM(UP008010) PARM('*REPORT' 'UTC000302' ' ')
+                MONMSG     MSGID(CPF0000 RPG0000)
+                CHGSPLFA   FILE(UP008010P1) SPLNBR(*LAST) +
+                             OUTQ(&SRCLIB/CRTALLOBJ) USRDTA(&SRCF)
+                MONMSG     MSGID(CPF0000 RPG0000)
+                CHGJOB     OUTQ(&SRCLIB/CRTALLOBJ)
+                MONMSG     MSGID(CPF0000 RPG0000)
+             ENDDO
+             ELSE       CMD(DO)
+                CHGJOB     LOG(*SAME *SAME *NOLIST)
+             ENDDO
+ 
+             ENDPGM

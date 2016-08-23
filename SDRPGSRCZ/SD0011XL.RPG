@@ -1,0 +1,284 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IBLC 2002 Set Up Customer Extension File')
+      *****************************************************************
+      *                                                               *
+      *  Midas - IBLC 2002 Module                                     *
+      *                                                               *
+      *  RPG/SD0011XL  - SET UP IBLC CUSTOMER EXTENTION FILE          *
+      *                                                               *
+      *  Function:  This program set up IBLC Customer Extension       *
+      *             file with default values.                         *
+      *                                                               *
+      *  (phase(s)) Installation                                      *
+      *                                                               *
+      *  Called By: ILC0000 - IBLC MODULE INSTALLATION                *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027A            Date 03May06               *
+      *  Prev Amend No. CER001             Date 25Apr05               *
+      *                 UPG042             Date 04Oct04               *
+      *                 ULX043             Date 06Jul01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD027A - Conversion of customer number to alpha (post       *
+      *            build 103). Recompiled.                            *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  UPG402 - Recompile due to R4.02 upgrade                      *
+      *  ULX043 - IBLC 2002 Reporting                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     FSDCUSTL5IF  E           K        DISK
+      ***  Client details                                  Prefix BB
+      *
+     FSDBANKPDIF  E                    DISK
+      ***  Bank details                Master file         Prefix BJ
+      *
+     F***SDCUSTXLUF  E           K        DISK                      A                         CER001
+     FSDCUX1PDUF  E           K        DISK                      A                            CER001
+      ***  Extended Customer Details                       Prefix CU
+      *
+     F***SDBRCHYLIF  E           K        DISK                                                CER001
+     FSDBRX1L0IF  E           K        DISK                                                   CER001
+      ***  Extended Branch code details                    Prefix BR.
+     F***SDCUSTX6IF  E           K        DISK                                                CER001
+     FSDCUX2PDIF  E           K        DISK                                                   CER001
+      ***  Extended Customer details                       Prefix VF.
+      *
+      /EJECT
+      *-------------------------------------------------------------------------
+     E                    CPY@    1   1 80               COPYRIGHT  ARRAY
+      /EJECT
+      *-------------------------------------------------------------------------
+     IDLDA        DS                            256
+      * Data structure for data-base error processing
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *  Redefine CUTYPE
+     I            DS
+     I                                        2   2 RESIDE
+     I                                        1   2 CUTYPE
+      /EJECT
+      *-------------------------------------------------------------------------
+      * Main processing
+      *-------------------------------------------------------------------------
+      *
+      ***  Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      *** Read Bank details
+      *
+     C           1         CHAINSDBANKPD             89
+      *
+      ***  First read
+      *
+     C                     READ @CUSTFT                  LR
+      *
+      ***  Process until LR indicator not on
+      *
+     C           *INLR     DOWEQ*OFF
+      *
+      ***  Check if record exists in the extension file
+      *
+     C           BBCUST    CHAINSDCUSTDL             89
+      *
+      ***  If record not in the extension file : FIELDS SET UP & WRITE
+      *
+     C           *IN89     IFEQ '1'
+     C                     MOVE BBCUST    CUCNUM
+      *
+      ***  Access branch extended informations
+      *
+     C********** BBBRCD    CHAINSDBRCHYL             87                                       CER001
+     C           BBBRCD    CHAINSDBRX1L0             87                                       CER001
+     C           *IN87     IFEQ *ON
+     C**********           MOVEL'SDBRCHYL'DBFILE           ***************                    CER001
+     C                     MOVEL'SDBRX1L0'DBFILE           ***************                    CER001
+     C                     MOVELBBBRCD    DBKEY            * DBERROR 002 *
+     C                     Z-ADD2         DBASE            ***************
+     C                     EXSR SRDBER
+     C                     ELSE
+      *
+      ***  Is customer a bank ?
+      *
+     C           BBBNBI    IFEQ 'Y'
+     C                     SELEC
+     C           BBCOLC    WHEQ 'LU'
+     C                     MOVE 'BR'      CUTYPE
+     C                     OTHER
+     C                     MOVE 'BO'      CUTYPE
+     C                     ENDSL
+     C                     ELSE
+      *
+      *****use*Economic*code*VFNCOS*from*SDCUSTX6*to*determinate*organism                     CER001
+      ** use Economic code VFNCOS from SDCUX2PD to determinate organism                       CER001
+      *
+     C********** BBCUST    CHAINSDCUSTX6             88                                       CER001
+     C           BBCUST    CHAINSDCUX2PD             88                                       CER001
+     C           *IN88     IFEQ *ON
+     C**********           MOVEL'SDCUSTX6'DBFILE           ***************                    CER001
+     C                     MOVEL'SDCUX2PD'DBFILE           ***************                    CER001
+     C                     MOVELBBCUST    DBKEY            * DBERROR 004 *
+     C                     Z-ADD4         DBASE            ***************
+     C                     EXSR SRDBER
+     C                     ELSE
+      *
+     C                     SELEC
+      *
+      ***  OPCVM
+      *
+     C           VFNCOS    WHEQ 6101
+     C           VFNCOS    OREQ 6121
+     C                     SELEC
+     C           BBCOLC    WHEQ 'LU'
+     C                     MOVE 'OR'      CUTYPE
+     C                     OTHER
+     C                     MOVE 'OO'      CUTYPE
+     C                     ENDSL
+      *
+      ***  ADM. PUBL.
+      *
+     C           VFNCOS    WHEQ 2001
+     C           VFNCOS    OREQ 2002
+     C           VFNCOS    OREQ 2003
+     C           VFNCOS    OREQ 2004
+     C           VFNCOS    OREQ 2005
+     C           VFNCOS    OREQ 2006
+     C           VFNCOS    OREQ 2007
+     C           VFNCOS    OREQ 2008
+     C           VFNCOS    OREQ 2101
+     C           VFNCOS    OREQ 2102
+     C           VFNCOS    OREQ 2150
+     C           VFNCOS    OREQ 2151
+     C           VFNCOS    OREQ 2201
+     C           VFNCOS    OREQ 2202
+     C           VFNCOS    OREQ 2300
+     C           VFNCOS    OREQ 2400
+      *
+     C                     SELEC
+     C           BBCOLC    WHEQ 'LU'
+     C                     MOVE 'AR'      CUTYPE
+     C                     OTHER
+     C                     MOVE 'AO'      CUTYPE
+     C                     ENDSL
+      *
+      ***  OTHER
+      *
+     C                     OTHER
+     C                     SELEC
+     C           BBCOLC    WHEQ 'LU'
+     C                     MOVE ' R'      CUTYPE
+     C                     OTHER
+     C                     MOVE ' O'      CUTYPE
+     C                     ENDSL
+      *
+     C                     ENDSL
+      *
+     C                     ENDIF                           SDCUSTX6
+      *
+     C                     ENDIF                           BBBNBI
+      *
+     C                     ENDIF                           SDBRCHYL
+      *
+     C           RESIDE    IFEQ 'R'
+     C                     MOVE '00'      CUIDCO
+     C                     MOVE *ALL'0'   CUIDEN
+     C                     ELSE
+     C                     MOVE *BLANKS   CUIDCO
+     C                     MOVE *BLANKS   CUIDEN
+     C                     ENDIF
+      *
+     C           CUTYPE    IFEQ 'BR'
+     C                     MOVE '00'      CUIMCO
+     C                     MOVE *ALL'0'   CUIMNB
+     C                     ELSE
+     C                     MOVE *BLANKS   CUIMCO
+     C                     MOVE *BLANKS   CUIMNB
+     C                     ENDIF
+      *
+     C                     WRITESDCUSTDL
+      *
+     C                     ELSE
+      *
+      *****UPDATE*SDCUSTXL*********************************************                       CER001
+      ** UPDATE SDCUX1PD                                                                      CER001
+      *
+     C           RESIDE    IFEQ 'R'
+     C           CUIDCO    IFEQ *BLANK
+     C                     MOVE '00'      CUIDCO
+     C                     ENDIF
+     C           CUIDEN    IFEQ *BLANK
+     C                     MOVE *ALL'0'   CUIDEN
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVE *BLANKS   CUIDCO
+     C                     MOVE *BLANKS   CUIDEN
+     C                     ENDIF
+      *
+     C           CUTYPE    IFEQ 'BR'
+     C           CUIMCO    IFEQ *BLANK
+     C                     MOVE '00'      CUIMCO
+     C                     ENDIF
+     C           CUIMNB    IFEQ *BLANK
+     C                     MOVE *ALL'0'   CUIMNB
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVE *BLANKS   CUIMCO
+     C                     MOVE *BLANKS   CUIMNB
+     C                     ENDIF
+      *
+     C                     UPDATSDCUSTDL
+     C                     ENDIF
+      *
+      ***  Main file read
+      *
+     C                     READ @CUSTFT                  LR
+      *
+     C                     ENDDO
+      *-------------------------------------------------------------------------
+      * End of processing
+      *-------------------------------------------------------------------------
+     C                     RETRN
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRDBER - Routine to handle database errors
+      *-------------------------------------------------------------------------
+      *
+     C           SRDBER    BEGSR
+      *
+      ***  Update data area LDA
+      *
+     C           *NAMVAR   DEFN LDA       DLDA
+     C           *LOCK     IN   DLDA
+     C                     MOVEL'SD0011XL'DBPGM
+     C                     OUT  DLDA
+      *
+      ***  Set on data-base error indicators
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *IN69
+      *
+      ***  Dump program
+      *
+     C                     DUMP
+      *
+      ***  Call standard DB error handler
+      *
+     C                     CALL 'DBERRCTL'             81
+      *
+     C                     ENDSR
+      /EJECT
+** CPY@  COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2005

@@ -1,0 +1,694 @@
+     H        1
+     F*****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME Reserved network messages validation')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Message Management Module
+     F*                                                               *
+     F*  ME1080 - Reserved Network Messages Validation                *
+     F*                                                               *
+     F*  Function:  This program checks if a network may be reserved  *
+     F*  for use by the current job.                                  *
+     F*                                                               *
+     F*  Called By: FT0040  - Outgoing Payments Maintenance           *
+     F*             FT0050  - Incomimg Payments Maintenance           *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Last Amend No. 257673             Date 14Nov08               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 145199             Date 16Oct98               *
+      *                 097263             Date 10Apr97               *
+     F*                 073185             DATE 20MAY96
+     F*                 069250             DATE 03MAY94               *
+     F*                 S01435             DATE 23JUL93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  257673 - Remove checking of action code 'X' for the user who *
+      *           routes an incoming message.                         *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+     F*  145199 - Recompile for changes to MEINCRPD and MEINMPPD made *
+     F*           in Year 2000 fix 124673.                            *
+     F*  097263 - Message for manually input SWIFT reference cannot   *
+     F*           be retrieved successfully. Error message 'MESSAGE   *
+     F*           MAY NOT BE PROCESSED BY FUNDS TRANSFER' was         *
+     F*           displayed on the screen.                            *
+     F*  073185 - Selection fails even though message is available.   *
+     F*           Correct call to ME1030 with CR fields               *
+     F*  069250 - Remove dummy OVRDBF command from creation parms.    *
+     F*  S01435 - Incoming Message Management                         *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*                                                               *
+     F*  50    First cycle                                            *
+     F*  51    Key field holds Message Reference not just a '?'       *
+     F*  90    General Work Indicator                                 *
+     F*  99    EOF on Read                                            *
+     F*                                                               *
+     F*  U7/U8 Error Ocurred                                          *
+     F*  LR    End program                                            *
+     F*                                                               *
+     F*****************************************************************
+     FMEINCRL2IF  E           K        DISK         KINFSR SRFILE     UC
+      *
+      *  Incoming Message Control - retrieval by MIR                   JNO
+      *
+     FMEINCRL3IF  E           K        DISK         KINFSR SRFILE     UC
+      *
+      *  Incoming Message Control - retrieval by MOR                   JNO
+      *
+     FMEINMPJ1IF  E           K        DISK         KINFSR SRFILE     UC
+      *
+      *  Join of MEINCRPD/MEINMPPD/MEINFTPD/MEINMRPD - MSG REF/PART
+      *
+     FMEINMRL2IF  E           K        DISK         KINFSR SRFILE     UC
+      *
+      *  Reserved Incoming Electronic Messages - Retrieval by JOB/USER/JNO
+      *
+     F/COPY WNCPYSRC,ME1080DFPG
+      *
+      *  /Copy point for File Definition
+      *
+     F/EJECT
+     E                    CPY@    1   1 80
+      *
+      *  Copyright table
+      *
+     E/COPY WNCPYSRC,ME1080DEPG
+      *
+      *  /Copy point for Arrays
+      *
+     E/COPY MECPYSRC,SRERRE
+      *
+      *  end of Copysource for error processing
+      *
+      ** Array of Commitment Job Names                                                        CSC022
+     E                    CMTJOB     10 10                                                    CSC022
+     E/EJECT
+     I/COPY WNCPYSRC,ME1080DIPG
+      *
+      *  /Copy point for Input specifications
+      *
+     I/COPY MECPYSRC,SRERRI
+      *
+      *  End of Program Error Processing copysource member
+      *
+      *
+     IRUNDTA    E DSRUNDAT
+      *
+      *  Define rundat data area
+      *
+     IINMC      E DSMEINMCPD
+      *
+      *  Data Structure for Verify Network Message
+      *
+     ICPYR@#      DS
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     IDBKMJ1      DS
+      *
+      *  Data structure to define MEINMPJ1 key for error reporting
+      *
+     I                                        1   80W#MSGR
+     I                                        9  110W#KPRT
+      *
+     IW2DATA      DS                            256
+      *
+      *  Define data structure used to pass parameters
+      *
+     I                                        1   3 B#BRCA
+     I                                        4   4 O#ACTD
+     I                                        5  14 O#CPGM
+     I/COPY WNCPYSRC,ME1080I001
+     ISCCMT       DS                            256                                           CSC022
+     I                                        1   30CMTNUM                                    CSC022
+     I                                        4 103 CMTARR                                    CSC022
+     I/EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0ACT   7
+     C                     PARM           W0MSGR
+     C                     PARM           W0KPRT
+     C                     PARM           W0MOR
+     C                     PARM           W0MIR
+     C                     PARM           W0RTN   7
+      *
+      *  Set up primary reference
+      *
+     C                     MOVELW0MSGR    W0PREF
+      *
+      *  Initialise program
+      *
+     C           *IN50     IFEQ '0'
+     C                     EXSR SRINIT
+     C                     END
+      *
+      *  Determine the mode of processing and execute subroutine :-
+      *
+      *  ACTION CODE : *KEY
+      *  ------------------
+      *
+      *  Called from Incomimg Payments Maintenance to check if a
+      *  valid Message Reference or a '?' has been entered.
+      *
+      *
+      *  ACTION CODE : *NEXT
+      *  -------------------
+      *
+      *  Called from Incoming Payments Maintenance to check if any
+      *  more Message References need to be processed from those
+      *  selected
+      *
+      *
+      *  Action Code : INVALID
+      *  ---------------------
+      *
+      *  If invalid Action Code passed then report as an error.
+      *
+      *
+     C           W0ACT     CASEQ'*KEY   ' SRKEY
+     C           W0ACT     CASEQ'*NEXT  ' SRNEXT
+     C                     CAS            SRACT
+      *
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *  Return to calling program
+      *
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRKEY    : Validate contents of Message Reference field      *
+      *                                                               *
+      *  CALLED BY: Main processing section                           *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRKEY     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRKEY '  @STK,Q
+      *
+      *  /Copy point for Reservation on Key
+      *
+     C/COPY WNCPYSRC,ME1080DKEY
+      *
+      *  N.B. This access object is called ONLY if the Message
+      *       Reference is not blank.
+      *
+      *  Determine if a Msg Reference is in the key field or a '?'
+      *
+      *  IND 51 is set on if a character other than a ' ' or a '?' is
+      *  in the field.
+      *
+     C           ' ?'      CHECKW0MIR                    51
+      *
+      *  If '?' entered in msg reference field call selection pgm
+      *
+     C           *IN51     IFEQ '0'
+     C                     CALL 'ME1000'               90
+     C                     PARM *BLANKS   W1RTN   7
+     C                     PARM 'S'       W1ACT   1
+     C                     PARM *BLANKS   W1BRC   3
+     C                     PARM 'FT'      W1FTF   2
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           W1RTN     OREQ '*ERROR*'
+     C                     MOVEL'ME1000  'W0FILE
+     C                     MOVEL'*CALL'   W0KEY
+     C                     Z-ADD1         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD           * DB ERROR 01 *
+     C                     MOVEL'MIDAS  ' W0MSGF           ***************
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  If return with is F3 or F12 pressed then exit with this
+      *  return code
+      *
+     C           W1RTN     IFEQ 'USR0790'
+     C           W1RTN     OREQ 'Y2U9999'
+     C                     MOVELW1RTN     W0RTN
+     C                     RETRN
+     C                     END
+      *
+      *  If a successful return from the Message selection process
+      *  then check if a message has been reserved.
+      *  The return code is set in the subroutine SRNEXT.
+      *
+     C                     EXSR SRNEXT
+      *
+     C                     ELSE
+      *
+      *  If Message Reference entered check that it exists on the
+      *  Incoming Message Control file. The user may have entered the
+      *  MIR or the MOR.
+      *
+      *  First access the Incoming Control file via the MIR key path.
+      *  If a record is not found try using the MOR key path. This then
+      *  gives the Unique Message Reference for the transaction which
+      *  is used for the message reservation process.
+      *
+     C           *LIKE     DEFN CRMIR     KYINCR
+     C                     MOVELW0MIR     KYINCR
+      *
+     C           KYINCR    CHAINMEINCRL2             90    MIR access
+     C*                                                                   097263
+     C           *IN90     IFEQ '0'                                       097263
+     C                     MOVELCRMSGR    MPMSGR                          097263
+     C                     MOVELCRMTPY    MPMTPY                          097263
+     C                     MOVELCRMIR     MPMIR                           097263
+     C                     MOVELCRNWRK    MPNWRK                          097263
+     C                     MOVELCRMOR     MPMOR                           097263
+     C                     MOVELCRBRCA    MPBRCA                          097263
+     C                     MOVELCRSNDR    MPSNDR                          097263
+     C/COPY WNCPYSRC,ME1080C001
+     C                     END                                            097263
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVELW0MOR     KYINCR
+     C           KYINCR    CHAINMEINCRL3             90    MOR access
+     C*                                                                   097263
+     C           *IN90     IFEQ '0'                                       097263
+     C                     MOVELCRMSGR    MPMSGR                          097263
+     C                     MOVELCRMTPY    MPMTPY                          097263
+     C                     MOVELCRMIR     MPMIR                           097263
+     C                     MOVELCRNWRK    MPNWRK                          097263
+     C                     MOVELCRMOR     MPMOR                           097263
+     C                     MOVELCRBRCA    MPBRCA                          097263
+     C                     MOVELCRSNDR    MPSNDR                          097263
+     C/COPY WNCPYSRC,ME1080C002
+     C                     END                                            097263
+     C*                                                                   097263
+     C                     END
+      *
+      *  If Message Reference not found on file then
+      *  Set Return Code - Message Reference Not Found or Invalid
+      *
+     C           *IN90     IFEQ '1'
+     C           *IN90     OREQ '0'
+     C           CRDUPF    ANDEQ'DUP'
+     C                     MOVEL'MIN0101' W0RTN
+     C                     GOTO EXKEY
+     C                     END
+      *
+      *  Check is valid for FT
+      *
+      * Move passed parameter data to relevant data structure
+      * and on to called program's data structure
+      *
+     C                     CLEARINMC
+      *
+     C*********************Z-ADDMPMSGR    MCMSGR                          073185
+     C*********************MOVELMPMTPY    MCMTPY                          073185
+     C*********************MOVELMPMIR     MCMIR                           073185
+     C*********************MOVELMPNWRK    MCNWRK                          073185
+     C*********************MOVELMPMOR     MCMOR                           073185
+     C*********************MOVELMPBRCA    MCBRCA                          073185
+     C*********************MOVELMPSNDR    MCSNDR                          073185
+     C                     Z-ADDCRMSGR    MCMSGR                          073185
+     C                     MOVELCRMTPY    MCMTPY                          073185
+     C                     MOVELCRMIR     MCMIR                           073185
+     C                     MOVELCRNWRK    MCNWRK                          073185
+     C                     MOVELCRMOR     MCMOR                           073185
+     C                     MOVELCRBRCA    MCBRCA                          073185
+     C                     MOVELCRSNDR    MCSNDR                          073185
+     C                     MOVEL'*FT    ' MCACPT
+     C                     MOVEL##PGM     MCCPGM
+      *
+     C                     MOVELINMC      W3DATA
+     C           *LIKE     DEFN INMC      W3DATA
+      *
+     C                     CALL 'ME1030'               9090
+     C                     PARM '*FT_ENT 'W3ACT   8
+     C                     PARM           W3DATA
+     C                     PARM *BLANKS   W3RTN   7
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           W3RTN     OREQ '*ERROR*'
+     C                     MOVEL'ME1030  'W0FILE           ***************
+     C                     MOVEL'*CALL'   W0KEY            * DB ERROR 01 *
+     C                     Z-ADD2         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      * Message not valid for FT processing
+      *
+     C                     MOVELW3DATA    INMC
+      *
+     C           W3RTN     IFEQ 'MIN0091'
+     C           MCPMFG    ORNE 'P'
+     C                     MOVEL'MIN0197' W0RTN
+     C                     GOTO EXKEY
+     C                     END
+      *
+      *  If message reference is found, set parameters to be returned.
+      *
+     C                     MOVELCRMIR     W0MIR
+     C                     MOVELCRMOR     W0MOR
+     C                     Z-ADDCRMSGR    W0MSGR
+      *
+      *  Access joined file to validate message reference
+      *
+     C                     Z-ADDCRMSGR    KFMSGR
+     C                     Z-ADDW0KPRT    KFKPRT
+      *
+     C           KYMPJ1    CHAINMEINMPJ1             90
+      *
+      *  If a record is not found then means that either :
+      *  - the requested message part does not exist
+      *  - the message part has already been processed by FT
+      *
+      *  Set retn code - Message Reference Not Available For Processing
+      *
+     C                     SELEC
+     C           *IN90     WHEQ '1'
+     C                     MOVEL'MIN0100' W0RTN
+      *
+      *  Check if message already reserved, if not
+      *  Set Return Code - Valid Message Reference - Not Yet Reserved
+      *
+     C           MPJOB     WHEQ *BLANKS
+      *
+     C                     MOVEL'MIN0112' W0RTN
+      *
+      *  Check user has access to branch for selection
+      *
+     C                     CLEARW2DATA
+     C                     MOVELMPBRCA    B#BRCA
+     C                     MOVEL'X'       O#ACTD
+     C                     MOVEL##PGM     O#CPGM
+      *
+      * Check all valid actions
+      *
+     C                     CALL 'ME1190'               9090
+     C                     PARM *BLANKS   W2RTN   7
+     C                     PARM '*ACTCODE'W2ACT   8
+     C                     PARM           W2DATA
+      *
+      * Option ended in error
+      *
+     C           *IN90     IFEQ '1'                        *IF
+     C                     MOVEL'*CALL   'W0FILE
+     C                     MOVEL'ME1190  'W0KEY
+     C                     Z-ADD3         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD           * DB ERROR 02 *
+     C                     MOVEL'MIDAS  ' W0MSGF           ***************
+     C                     EXSR SRERR
+     C                     END                             *FI
+      *
+      * Invalid action - cannot be processed by FT
+      *
+     C           W2RTN     IFNE *BLANKS                    *IF
+     C           W2RTN     ANDNE'MIN0148'                                                     257673
+     C                     MOVEL'MIN0197' W0RTN
+     C                     END                             *FI
+      *
+      *  If is already allocated then check if it is for this job
+      *  Set Return Code - Message Reference Already Reserved For Job
+      *
+     C           MPJOB     WHEQ ##JOB
+     C           MPUSR     ANDEQ##USR
+     C           MPJNO     ANDEQ##JNO
+     C                     MOVEL'MIN0103' W0RTN
+     C                     OTHER
+      *
+      *  If record is NOT for this job then
+      *  Set Return Code - Message Reference Reserved For Another Job
+      *
+     C                     MOVEL'MIN0104' W0RTN
+     C                     ENDSL
+      *
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXKEY     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRNEXT   : Access next reserved message                      *
+      *                                                               *
+      *  CALLED BY: Main processing section                           *
+      *                                                               *
+      *  CALLS    :                                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRNEXT    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRNEXT'  @STK,Q
+      *
+      *  /Copy point for Next Reservation
+      *
+     C/COPY WNCPYSRC,ME1080DNXT
+      *
+      *  Read the next message held on the Reserved Messages file
+      *  for the current job and set approproate return code.
+      *
+     C           KYMRL2    SETLLMEINMRL2
+      *
+     C           KYMRL2    READEMEINMRL2                 99
+      *
+      *  If a reserved record is found for the current job then set
+      *  Return Code - Reserved Message Found.
+      *
+      *  Access Join file for message MIR and MOR
+      *
+     C           *IN99     IFEQ '0'
+     C                     MOVEL'MIN0105' W0RTN
+      *
+     C                     Z-ADDMRMSGR    KFMSGR
+     C                     Z-ADDMRKPRT    KFKPRT
+     C           KYMPJ1    CHAINMEINMPJ1             90
+      *
+      *  If record not found process for database error.
+      *
+     C                     Z-ADDMRMSGR    W#MSGR
+     C                     Z-ADDMRKPRT    W#KPRT
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'MEINMPJ1'W0FILE
+     C                     MOVELDBKMJ1    W0KEY
+     C                     Z-ADD4         W0ERNB           ***************
+     C                     MOVEL'MEM5004' W0MSGD           * DB ERROR 02 *
+     C                     MOVEL'MIDAS  ' W0MSGF           ***************
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Set parameters with reference values
+      *
+     C                     Z-ADDMPMSGR    W0MSGR
+     C                     Z-ADDMPKPRT    W0KPRT
+     C                     MOVELMPMOR     W0MOR
+     C                     MOVELMPMIR     W0MIR
+      *
+      *  If there are no more reserved records for the current job
+      *  Set Return Code - No Reserved Messages To Process
+      *
+     C                     ELSE
+     C                     MOVEL'MIN0106' W0RTN
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXNEXT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRACT    : Undefined action - error                          *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRACT     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRACT '  @STK,Q
+      *
+      *  Database error undefined action
+      *
+     C                     MOVEL'*ACTION 'W0FILE
+     C                     MOVELW0ACT     W0KEY
+     C                     Z-ADD5         W0ERNB           ***************
+     C                     MOVEL'MEM5006' W0MSGD           * DB ERROR 04 *
+     C                     MOVEL'MIDAS  ' W0MSGF           ***************
+     C                     EXSR SRERR
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXACT     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    :                                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *                                                                                       CSC022
+      ** Check if CSC022 is switched *ON.                                                     CSC022
+      *                                                                                       CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   @RTCD   7                                           CSC022
+     C                     PARM '*VERIFY' @OPTN   7                                           CSC022
+     C                     PARM 'CSC022'  @SARD   6                                           CSC022
+      *                                                                                       CSC022
+     C           @RTCD     IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022  1                                           CSC022
+     C           *NAMVAR   DEFN SCCMTJOB  SCCMT                                               CSC022
+     C                     IN   SCCMT                                                         CSC022
+     C                     Z-ADD1         C       30                                          CSC022
+     C                     MOVEL*BLANKS   WCMTSK  1                                           CSC022
+     C                     MOVEACMTARR    CMTJOB                                              CSC022
+     C           CMTNUM    IFGT 0                                                             CSC022
+     C           C         DOWLECMTNUM                                                        CSC022
+     C           ##JOB     IFEQ CMTJOB,C                                                      CSC022
+     C                     MOVEL'Y'       WCMTSK                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ADD  1         C                                                   CSC022
+     C                     ENDDO                                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ELSE                                                               CSC022
+     C                     MOVE 'N'       CSC022                                              CSC022
+     C                     ENDIF                                                              CSC022
+      *
+      *  Define fields
+      *
+     C           *LIKE     DEFN CRMSGR    W0MSGR
+     C           *LIKE     DEFN MPKPRT    W0KPRT
+     C           *LIKE     DEFN CRMIR     W0MIR
+     C           *LIKE     DEFN CRMOR     W0MOR
+      *
+     C           *LIKE     DEFN CRMSGR    KFMSGR
+     C           *LIKE     DEFN MPKPRT    KFKPRT
+      *
+      * Define key list for MEINMPJ1
+      *
+     C           KYMPJ1    KLIST
+     C                     KFLD           KFMSGR
+     C                     KFLD           KFKPRT
+      *
+      * Define key list for MEINMRL2
+      *
+     C           KYMRL2    KLIST
+     C                     KFLD           ##JOB
+     C                     KFLD           ##USR
+     C                     KFLD           ##JNO
+      *
+      * Open Files
+      *
+     C                     OPEN MEINCRL2
+     C                     OPEN MEINCRL3
+     C                     OPEN MEINMPJ1
+     C                     OPEN MEINMRL2
+      *
+      *  Get Rundate information
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+     C/COPY WNCPYSRC,ME1080C003
+      *
+      *  Indicate that set up is complete
+      *
+     C                     SETON                     50
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+     C/COPY WNCPYSRC,ME1080DCPG
+      *
+      *  /Copy point for Calculations
+      *
+     C/EJECT
+      *
+      *  File and Program Error Processing
+      *
+     C/COPY MECPYSRC,SRERRC
+     C/EJECT
+     C/COPY WNCPYSRC,ME1080DOPG
+      *
+      *  /Copy point for Outputs
+      *
+**  CPY@ table
+(c) Misys International Banking Systems Ltd. 2001

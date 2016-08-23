@@ -1,0 +1,320 @@
+      /EJECT
+     C*****************************************************************
+     C           ZF2C      BEGSR                                      *
+     C*                                                               *
+     C*  This standard sub-routine will calculate up to 99 working    *
+     C*  days forward from a given date for any two currencies and    *
+     C*  such that it is a working day for both currencies.           *
+     C*  NB: A day is a working day only if it is a working day for   *
+     C*      both currencies.                                         *
+     C*  If required no. of days forward is zero and input date is a  *
+     C*  holiday in either currency, then the result is the next      *
+     C*  working day for both currencies, otherwise it is the input   *
+     C*  date.  This is equivalent to going one working day forward   *
+     C*  for two currencies.                                          *
+     C*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     C*  LAST AMEND NO. 096087             DATE 17JAN96               *
+     C*  PREV AMEND NO. 060712             DATE 24JUN94               *
+     C*                 068225             DATE 16MAR94               *
+     C*                                                               *
+     C*---------------------------------------------------------------*
+     C*                                                               *
+     C*  096087 - Fields DGJDNB/DGDDNB not reset if both ccy found in *
+     C*           holidays file.                                      *
+     C*  060712 - Fields DGJDNB/DGDDNB don't contain the correct      *
+     C*           values if the first currency is not found on the    *
+     C*           holidays file.                                      *
+     C*  068225 - If the no. of days goes beyond end of year, the     *
+     C*           index is reset only if either or both holiday       *
+     C*           records are found for the next year. If a holiday   *
+     C*           record is not found, the program should not do the  *
+     C*           processing to check the next index as it will be    *
+     C*           367 which is longer than the array - check that     *
+     C*           ZNRDY is 0 will do this.                            *
+     C*****************************************************************
+     C*
+     C*
+     C** Define input parameters
+     C*
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C                     MOVE ZCCY1     ZCCY1   3
+     C                     MOVE ZLOC1     ZLOC1   3
+     C                     MOVE ZCCY2     ZCCY2   3
+     C                     MOVE ZLOC2     ZLOC2   3
+     C                     Z-ADDZNRDYS    ZNRDYS  20
+     C*
+     C** Define Output parameters
+     C*
+     C                     Z-ADD0         ZDYNBR  50
+     C*
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C                     MOVE ZCCY1     ZCCY    3
+     C                     MOVE ZLOC1     ZLOC    3
+     C                     MOVE ZCCY2     ZCCY    3
+     C                     MOVE ZLOC2     ZLOC    3
+     C                     Z-ADDZNRDYS    ZNRDYS  20
+     C** Move input date to output date
+     C*
+     C                     Z-ADDZDAYNO    ZDYNBR
+     C*
+     C** If input parms for first ccy. equals first stored value (ie ccy
+     C** and loc match and date is between 1st Jan & 31st Dec), then
+     C** continue processing
+     C*
+     C           @ZFSTI    IFEQ @ZCLS1                     IF 1
+     C           ZSJAN1    ANDLEZDAYNO                      AND
+     C           ZDAYNO    ANDLEZSDEC1                      AND
+     C*
+     C** If input parms for sec. ccy. not equal to sec. stored value
+     C** (ie. ccy/loc do not match or date is not between 1st Jan &
+     C** 31st Dec), then need to get holiday record.
+     C*
+     C           @ZSECI    IFNE @ZCLS2                      IF 2
+     C           ZDAYNO    ORLT ZSJAN2                       OR
+     C           ZDAYNO    ORGT ZSDEC2                       OR
+     C*
+     C** Set up parms, get record and move result to second stored value
+     C*
+     C                     MOVE '*SETGT ' ZOPTN
+     C*
+     C                     MOVE @ZSECI    @ZWRKI
+     C                     EXSR ZACCH
+     C                     MOVE @ZWRKO    @ZSECS
+     C                     MOVE ZHL       ZHLB
+     C*
+     C                     END                              FI 2
+     C*
+     C** At this point both sets of stored values are correct. No more
+     C** processing will be done.
+     C*
+     C                     ELSE                            ELSE 1
+     C*
+     C** First input value not equal to first stored value, but may be
+     C** equal to second stored value
+     C*
+     C           @ZFSTI    IFEQ @ZCLS2                      IF 2
+     C           ZSJAN2    ANDLEZDAYNO                       AND
+     C           ZDAYNO    ANDLEZSDEC2                       AND
+     C*
+     C** Second input value may not be equal to first stored value
+     C*
+     C           @ZSECI    IFNE @ZCLS1                       IF 3
+     C           ZDAYNO    ORLT ZSJAN1                        OR
+     C           ZDAYNO    ORGT ZSDEC1                        OR
+     C*
+     C** Need to access holiday record, so set up parms, get record and
+     C** move results to first stored value
+     C*
+     C                     MOVE '*SETGT ' ZOPTN
+     C*
+     C                     MOVE @ZSECI    @ZWRKI
+     C                     EXSR ZACCH
+     C                     MOVE @ZWRKO    @ZFSTS
+     C                     MOVE ZHL       ZHLA
+     C*
+     C                     END                               FI 3
+     C*
+     C** At this point both sets of stored values are correct. No more
+     C** processing will be done.
+     C*
+     C                     ELSE                             ELSE 2
+     C*
+     C** Here, we can only say that first input value does not equal
+     C** either stored value, but second input value may equal one of
+     C** them. If it equals second, then set up parms, with first stored
+     C** values, get record and move result to first stored value.
+     C*
+     C           @ZSECI    IFEQ @ZCLS2                       IF 3
+     C           ZSJAN2    ANDLEZDAYNO                        AND
+     C           ZDAYNO    ANDLEZSDEC2                        AND
+     C*
+     C                     MOVE '*SETGT ' ZOPTN
+     C*
+     C                     MOVE @ZFSTI    @ZWRKI
+     C                     EXSR ZACCH
+     C                     MOVE @ZWRKO    @ZFSTS
+     C                     MOVE ZHL       ZHLA
+     C*
+     C** At this point both sets of stored values are correct. No more
+     C** processing will be done.
+     C*
+     C                     ELSE                              ELSE 3
+     C*
+     C** Second input does not equal second stored, but may equal first
+     C*
+     C           @ZSECI    IFEQ @ZCLS1                        IF 4
+     C           ZSJAN1    ANDLEZDAYNO                         AND
+     C           ZDAYNO    ANDLEZSDEC1                         AND
+     C*
+     C** Set up parms. for first input, get record and move result to
+     C** second stored value (since second input equals first stored).
+     C*
+     C                     MOVE '*SETGT ' ZOPTN
+     C*
+     C                     MOVE @ZFSTI    @ZWRKI
+     C                     EXSR ZACCH
+     C                     MOVE @ZWRKO    @ZSECS
+     C                     MOVE ZHL       ZHLB
+     C*
+     C** At this point both sets of stored values are correct. No more
+     C** processing will be done.
+     C*
+     C                     ELSE                               ELSE 4
+     C*
+     C** Otherwise, neither input value equals either of the stored
+     C** values, so get records for both input values.
+     C*
+     C                     MOVE '*SETGT ' ZOPTN
+     C*
+     C                     MOVE @ZFSTI    @ZWRKI
+     C                     EXSR ZACCH
+     C                     MOVE @ZWRKO    @ZFSTS
+     C                     MOVE ZHL       ZHLA
+     C*
+     C                     MOVE @ZSECI    @ZWRKI
+     C                     EXSR ZACCH
+     C                     MOVE @ZWRKO    @ZSECS
+     C                     MOVE ZHL       ZHLB
+     C*
+     C                     END                                FI 4
+     C*
+     C                     END                               FI 3
+     C*
+     C                     END                              FI 2
+     C*
+     C                     END                             FI 1
+     C*
+     C** Holiday arrays have been set up correctly and so can now find
+     C** the working day required.
+     C*
+     C** If both currencies returned no record found, then just add
+     C** required no. of days forward to input date to give output date.
+     C*
+     C           RTNCD1    IFEQ '*NRF   '                  IF 1
+     C           RTNCD2    ANDEQ'*NRF   '                   AND
+     C*
+     C           ZDAYNO    ADD  ZNRDYS    ZDYNBR
+     C*
+     C                     ELSE                            ELSE 1
+     C*
+     C** Otherwise, need to step through year counting working days
+     C*
+     C** First, check that we have 1st Jan & 31st Dec dates; if not,
+     C** then move values from first record in.
+     C*
+     C           RTNCD2    IFEQ '*NRF   '                   IF 2
+     C                     Z-ADDZSJAN1    DGJDNB
+     C                     Z-ADDZSDEC1    DGDDNB
+     C                     END                              FI 2
+     C*                                                                   060712
+     C           RTNCD1    IFEQ '*NRF   '                   IF 2          060712
+     C                     Z-ADDZSJAN2    DGJDNB                          060712
+     C                     Z-ADDZSDEC2    DGDDNB                          060712
+     C                     END                              FI 2          060712
+      *                                                                   096087
+     C           RTNCD1    IFEQ *BLANKS                     IF 2          096087
+     C           RTNCD2    ANDEQ*BLANKS                                   096087
+     C                     Z-ADDZSJAN1    DGJDNB                          096087
+     C                     Z-ADDZSDEC1    DGDDNB                          096087
+     C                     END                              FI 2          096087
+     C*
+     C** Subtract 1st. Jan date from input date and add 1 to give day in
+     C** year index.
+     C*
+     C           ZDAYNO    SUB  DGJDNB    ZINDX
+     C                     ADD  1         ZINDX
+     C*
+     C** If no. of days required is zero and date is a holiday in either
+     C** currency, then make required no. of days equal to one.
+     C*
+     C           ZNRDYS    IFEQ 0                           IF 2
+     C           ZHLA,ZINDXANDEQ'X'                          AND
+     C           ZNRDYS    OREQ 0                            OR
+     C           ZHLB,ZINDXANDEQ'X'                          AND
+     C                     ADD  1         ZNRDYS
+     C                     END                              FI 2
+     C*
+     C** While we still have days to find, continue processing
+     C*
+     C           ZNRDYS    DOWGT0                           DOW 1
+     C*
+     C** Add one to index and to output date
+     C*
+     C                     ADD  1         ZINDX
+     C                     ADD  1         ZDYNBR
+     C*
+     C** If output date is beyond 31st. Dec date, then need to get
+     C** next holiday record for both currencies.
+     C*
+     C           ZDYNBR    IFGT DGDDNB                       IF 1
+     C*
+     C** Current output date is new input date
+     C*
+     C                     Z-ADDZDYNBR    ZDAYNO
+     C*
+     C                     MOVE '*SETGT ' ZOPTN
+     C*
+     C                     MOVE @ZFSTI    @ZWRKI
+     C                     EXSR ZACCH
+     C                     MOVE @ZWRKO    @ZFSTS
+     C                     MOVE ZHL       ZHLA
+     C*
+     C                     MOVE @ZSECI    @ZWRKI
+     C                     EXSR ZACCH
+     C                     MOVE @ZWRKO    @ZSECS
+     C                     MOVE ZHL       ZHLB
+     C*
+     C** If no record was found for both currencies then add no. of days
+     C** left to find to output date and subtract one to give required
+     C** result and change no. left to find to zero to terminate loop.
+     C*
+     C           RTNCD1    IFEQ '*NRF   '                     IF 2
+     C           RTNCD2    ANDEQ'*NRF   '                      AND
+     C*
+     C                     ADD  ZNRDYS    ZDYNBR
+     C                     SUB  1         ZDYNBR
+     C                     Z-ADD0         ZNRDYS
+     C*
+     C                     ELSE                               ELSE 2
+     C*
+     C** Check that we have 1st Jan & 31st Dec dates; if not, then move
+     C** values from first record in.
+     C*
+     C           RTNCD2    IFEQ '*NRF   '                      IF 3
+     C                     Z-ADDZSJAN1    DGJDNB
+     C                     Z-ADDZSDEC1    DGDDNB
+     C                     END                                 FI 3
+     C*
+     C** Reset day in year value to one.
+     C*
+     C                     Z-ADD1         ZINDX
+     C*
+     C                     END                                FI 2
+     C*
+     C                     END                               FI 1
+     C*
+     C** If day is a working day in BOTH currencies, then no. left to
+     C** find is one less.
+     C*
+     C** Do this only if No. of days required is not zero.                068225
+     C*                                                                   068225
+     C           ZNRDYS    IFNE 0                            IF 1         068225
+     C           ZHLA,ZINDXIFEQ ' '                          IF 1
+     C           ZHLB,ZINDXANDEQ' '                           AND
+     C                     SUB  1         ZNRDYS
+     C                     END                               FI 1
+     C                     END                               FI 1         068225
+     C*
+     C                     END                              ENW 1
+     C*
+     C                     END                             FI 1
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT

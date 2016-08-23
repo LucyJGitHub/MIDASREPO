@@ -1,0 +1,1110 @@
+0001 H        1                                                           S01194
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Balances Extract')                            *
+0001 H***********                                                         S01194
+0002 F********************************************************************
+0004 F*                                                                  *
+     F*  Midas - General Ledger Module
+0004 F*                                                                  *
+0005 F*        GL0710 - GENERAL LEDGER BALANCE EXTRACT                   *
+0006 F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+0010 F*                                                                  *
+      *  Last Amend No. CGL127AO           Date 06Aug12               *
+      *  Prev Amend No. 262907             Date 01Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CSC042             DATE 16Feb09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 BUG17927           Date 23Apr08               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG3826            Date 24Jul04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01408             Date 07Mar96               *
+     F*                 S01408             Date 24JAN96                   *
+     F*                      S01117       DATE 07/03/89                  *
+     F*                      S01194       DATE 07/03/89                  *
+     F*                                                                  *
+0011 F********************************************************************
+     F*                                                                  *
+      *  CGL127AO - COB Restructure - GL COB Optimisation Phase 1     *
+      *  262907 - FOOB GLC0730 and GLC0750 due to truncated balance   *
+      *         - Increase the length of the LDBL from 15,0 to 18,0 to*
+      *           make sure that balance will not be truncated.       *
+     F*       CSC042 - COB performance fix. ACCNT is sorted by BRANCH &  *
+      *                customer so only read branch details on change of *
+      *                branch and only read customer on change of cust   *
+      *                For RZB Sofia AOBRCHRO was called 2.6Million times*
+      *                and is now only called 216 times                  *
+      *                AOCUSTR0 was also called 2.6 Million times and    *
+      *                is now only called 700K times                     *
+      *  BUG17927 - Display 'CUSTOMER RECORD IS CLOSED' if AOCUSTR0   *
+      *             returns '*CUSCLS'                                 *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG3826 - General Ledger bals report produces 5,000 spool files *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*       S01408 -  Addition of Core Hook GL0710OOP1                 *
+     F*              -  Addition of Core Hook GL0710OOP2                 *
+     F*       S01408 -  Addition of Core Hook GL0710CCP1                 *
+     F*              -  Addition of Core Hook GL0710IIP1                 *
+     F*       S01117 -  MULTIBRANCHING                                   *
+     F*       S01194 -  NEW STANDING DATA                                *
+0011 F*                                                                  *
+0011 F********************************************************************
+0012 F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+0013 F*CCNT   IP  F     400 15AI     2 DISK                               S01117
+0013 F***ACCNT** IP  F     400 18AI     2 DISK                                         S01117 CGL029
+     FACCNT   IP  F     573 24AI     2 DISK                                                   CGL029
+0014 F***EXDAEA* IF  F      64  4AI     2 DISK                                                CGL029
+     FEXDAEA  IF  F      84 10AI     2 DISK                                                   CGL029
+     F/COPY WNCPYSRC,GL0710F001
+0015 F*ABLE***IF* F      96 12AI     2 DISK                               S01194
+0016 F*LINT***IF* F     256  7AI     2 DISK                               S01194
+0017 FGLEXHH  O   F     128            DISK
+0017 F***GLEXGC* O   F     128            DISK                                                CGL029
+     F***GLEXGC  O   F     148            DISK                                         CGL029 262907
+     FGLEXGC  O   F     150            DISK                                                   262907
+0017 FGLEXZY  O   F     128            DISK
+0018 F*L0710P1O** F     132     OF     PRINTER                     S01124 S01117
+0018 FGL0710AUO   F     132     OF     PRINTER                            S01117
+0019 F*
+      /EJECT                                                                                CGL127AO
+      *****************************************************************                     CGL127AO
+      *                                                               *                     CGL127AO
+      * INDICATOR     Function                                        *                     CGL127AO
+0020 F* 01             ACCOUNT MASTER HEADER RECORD
+0021 F* 02             ACCOUNT MASTER DETAIL RECORD
+0023 F* 03             GENERAL LEDGER EXTRACT DETAIL RECORD
+0024 F* 04             BRANCH CODES RECORD
+0025 F* 05             CUSTOMER DETAIL RECORD ON CLIENT FILE
+     F* 06             CUSTOMER DETAIL RECORD IS CLOSED                                     BUG17927
+0022 F* 07             ACCOUNT MASTER TRAILER RECORD
+0026 F*    40          ACCOUNT OPEN
+0027 F*       41       RETAIL ACCOUNT
+      * 42            Cache hit for Account Code array                                      CGL127AO
+0028 F********42*      CHAIN FAIL ON TABLES FILE                          S01194
+0029 F********43*      CHAIN FAIL ON CLIENT FILE                          S01194
+0030 F*       44       CHAIN FAIL ON EXDA FILE
+0031 F*    45          LEDGER BALANCE IS DEBIT
+0032 F*          47   RECORDS READ TOTAL OUT-OF-BALANCE.
+0033 F*          48   DEBIT TOTAL OUT OF BALANCE.
+0034 F*          49   CREDIT TOTAL OUT OF BALANCE.
+0035 F*          50   FIRST CYCLE PROCESSING DONE.
+0036 F*       90-99    USED IN Z-SUBROUTINE
+0037 F*          U8    CONTROL TOTALS DISAGREE
+0037 F*       U7 U8    DATABASE ERROR                                     S01194
+     E                    CPY@    1   1 80
+     E                    ##BR      999  3               Branch Codes                         CSC042
+     E                    ##BN      999 30               Branch Name                          CSC042
+      *                                                                                     CGL127AO
+      ** Account Code (Key for Cache)                                                       CGL127AO
+      *                                                                                     CGL127AO
+     E                    CDAC      300 10 0                                                CGL127AO
+      *                                                                                     CGL127AO
+      ** Least recently used array and sorted LRU array                                     CGL127AO
+      *                                                                                     CGL127AO
+     E                    LRUA      300 13 0                                                CGL127AO
+     E                    LRUS      300 13 0                                                CGL127AO
+     E/EJECT                                                                                CGL127AO
+0038 I**
+0039 I*    ACCOUNTS MASTER FILE HEADER
+0040 I**
+0041 IACCNT   NS  01   1 CH
+0042 I**
+0043 I*    ACCOUNT MASTER DETAIL RECORD
+0044 I        NS  02   1 CD
+0045 I**********                              2   70CNUM                                      CSD027
+0045 I                                        2   7 CNUM                                      CSD027
+0046 I                                        8  10 CCY
+     I                                        2  10 WKFLD1                                    CGL029
+0047 I**********                             11  140ACOD                                      CGL029
+     I                                       11  140ACODQQ                                    CGL029
+0048 I                                       15  160ACSQ
+0049 I**********                              2  16 KEY                                       CGL029
+0050 I***********                            23  250BRCD                  S01117
+0050 I                                       23  25 BRCA                  S01117
+0051 I                                       26  26 ATYP
+0052 I                                       29  29 ACST            40
+     I                                      554 5630ACOD                                      CGL029
+      *                                                                   S01408
+     I/COPY WNCPYSRC,GL0710IIP1                                           S01408
+      *                                                                   S01408
+0053 I                                    P  56  633LDBL        45  46
+0054 I**
+0055 I*    ACCOUNT MASTER TRAILER RECORD
+0056 I**
+0057 I        NS  07   1 CT
+0058 I                                    P  23  250NORE
+0059 I                                    P  32  340NINU
+0060 I                                    P  38  400NOCL
+0061 I                                    P  44  460NINP
+0062 I                                    P  47  490NORD
+0063 I                                    P  50  520NOCF
+0064 I                                    P  59  660HWND
+0065 I                                    P  67  680HDCD
+0066 I                                    P  69  760HWNC
+0067 I                                    P  77  780HDCC
+0068 I        NS  08   1 CC
+0080 I*    CATCH ALL
+0081 I**
+0082 I        NS
+0083 I*
+     I*
+     I*    GENERAL LEDGER EXTRACT DETAIL RECORD
+     IEXDAEA  NS  03
+     I                                        1   1 RECI
+     I**********                              2   50ACOD                                      CGL029
+     I**********                              2   50ACODQQ                            CGL029 BUG3826
+     I**********                              6  30 ACKN                                     BUG3826
+     I**********                             31  310ACSN                                      CGL029
+     I**********                             32  350TACD                                      CGL029
+     I**********                             36  60 TANM                                      CGL029
+     I**********                             31  320ACSN                              CGL029 BUG3826
+     I**********                             33  360TACDQQ                            CGL029 BUG3826
+     I**********                             37  61 TANM                              CGL029 BUG3826
+     I**********                             65  740ACOD                              CGL029 BUG3826
+     I**********                             75  840TACD                              CGL029 BUG3826
+     I                                        2  110ACOD                                     BUG3826
+     I                                       12  36 ACKN                                     BUG3826
+     I                                       38  380ACSN                                     BUG3826
+     I                                       39  480TACD                                     BUG3826
+     I                                       49  73 TANM                                     BUG3826
+      *                                                                                     CGL127AO
+      ** Data structure for Account Code details                                            CGL127AO
+      *                                                                                     CGL127AO
+     ISDEXDA      DS                        300                                             CGL127AO
+     I                                        1   1 RECI                                    CGL127AO
+     I                                        2  110WACD                                    CGL127AO
+     I                                       12  36 ACKN                                    CGL127AO
+     I                                       38  380ACSN                                    CGL127AO
+     I                                       39  480TACD                                    CGL127AO
+     I                                       49  73 TANM                                    CGL127AO
+     I**
+0084 I*    INSTALLATION CONTROL RECORD 1
+0085 I*ABLE***NS*      1 CD   2 C0   3 C1                                 S01194
+0086 I*******AND*     12 C1  13 C0                                        S01194
+0087 I***********                             1   1 RECI                  S01194
+0088 I***********                            14  66 TITL                  S01194
+0089 I***********                            80  86 RUNA                  S01194
+0090 I*
+0091 I*****BRANCH*CODES                                                   S01194
+0092 I********NS* 04   1 CD   2 C1   3 C0                                 S01194
+0093 I***********                            52  53 CMPY                  S01194
+0094 I*
+0095 I*****CATCH*ALL                                                      S01194
+0096 I********NS*                                                         S01194
+0097 I*
+0098 I*****CUSTOMER*DETAIL*RECORD                                         S01194
+0099 I*LINT***NS* 05   1 CD   8 CA                                        S01194
+0100 I*******OR** 05   1 CC   8 CA                                        S01194
+0101 I***********                             9  28 CRNM                  S01194
+0102 I***********                            29  38 CTWN                  S01194
+0103 I*
+0104 I*****CATCH*ALL                                                      S01194
+0105 I********NS*                                                         S01194
+     I*                                                                   S01194
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     ILDA        UDS                            256                       S01194
+     I                                      134 141 DBFILE                S01194
+     I                                      142 170 DBKEY                 S01194
+     I                                      171 180 DBPGM                 S01194
+     I                                      181 1830DBASE                 S01194
+     IRUNDT       DS                                                      S01194
+     I** DATA AREA RUNDAT                                                 S01194
+     I                                        1   7 RUNA                  S01194
+     I                                    P   8  100RUND                  S01194
+     I                                       11  11 SSF                   S01194
+     I                                       12  12 DATF                  S01194
+     I                                       13  13 MBIN                  S01194
+0106 I*
+     ISDBRCH    E DSSDBRCHPD                                              S01194
+     I**   BRANCH DETAILS                                                 S01194
+     I*                                                                   S01194
+     ISDBANK    E DSSDBANKPD                                              S01194
+     I**   BANK DETAILS                                                   S01194
+     I*                                                                   S01194
+     ISDCUST    E DSSDCUSTPD                                              S01194
+     I              QQDFAC                          QQDFA1                                    CGL029
+     I                                        1 250 ##N01                                     CSC042
+     I                                      251 500 ##N02                                     CSC042
+     I                                      501 750 ##N03                                     CSC042
+     I                                      7511000 ##N04                                     CSC042
+     I                                     10011250 ##N05                                     CSC042
+     I**   CLINT DETAILS                                                  S01194
+     I*
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*                                                                   S01117
+     IDSSDY     E DSDSSDY                                                 S01194
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01194
+     I*                                                                   S01194
+0338 I/EJECT                                                              S01194
+0107 C*
+      *                                                                                       CGL029
+      ** Create new KEY field to accomodate the new                                           CGL029
+      ** Account Code of length 10                                                            CGL029
+      *                                                                                       CGL029
+     C                     MOVELACOD      WKFLD3 12                                           CGL029
+     C                     MOVE ACSQ      WKFLD3                                              CGL029
+     C           WKFLD1    CAT  WKFLD3    KEY    21                                           CGL029
+      *                                                                                       CGL029
+0108 C   50                GOTO FIRST
+     C                     MOVEACPY@      BIS@   80
+0109 C*    FIRST CYCLE PROCESSING
+0110 C***********          EXSR ZSYSTM                                    S01194
+     C                     MOVEL'GL0710'  DBPGM  10                       S01194
+     C*                                                                   S01194
+     C** OBTAIN RUN DATE FROM RUNDAT                                      S01194
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01194
+     C                     IN   RUNDT                                     S01194
+     C                     CALL 'AOBANKR0'                                S01194
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*FIRST ' @OPTN   7                       S01194
+     C           SDBANK    PARM SDBANK    DSFDY                           S01194
+     C           @RTCD     IFNE *BLANKS                                   S01194
+     C                     MOVEL'SDBANKPD'DBFILE             *************S01194
+     C                     MOVEL'001'     DBASE              * DBERR 001 *S01194
+     C                     MOVEL@OPTN     DBOPTN  7          *************S01194
+     C                     MOVEL@OPTN     DBKEY  29                       S01194
+     C                     EXSR *PSSR                                     S01194
+     C                     SETON                     U7U8LR               S01194
+     C                     GOTO END                                       S01194
+     C                     END                                            S01194
+     C/COPY WNCPYSRC,GL0710C001
+0111 C***********          MOVEL'10'      TABKEY 12                       S01194
+0112 C***********          MOVE 'A'       CLIKEY  7                       S01194
+0113 C                     Z-ADD0         COUNTG  50     50
+      *
+     C                     Z-ADD0         ##BNDX  40                                          CSC042
+     C           *LIKE     DEFN ##BNDX    B                                                   CSC042
+     C           *LIKE     DEFN ##BNDX    ##BSV                                               CSC042
+     C                     EXSR SRINIT                                                      CGL127AO
+      *                                                                                       CSC042
+0114 C           FIRST     TAG                             ** FIRST TAG **
+     C**********           MOVELKEY       KEY1   18                                    S01117 CGL029
+     C                     MOVELKEY       KEY1   24                                           CGL029
+     C                     MOVE BRCA      KEY1                            S01117
+0116 C*
+0117 C*    DO NOT PROCESS IF INVALID DETAIL RECORD OR CLOSED ACCOUNT
+0118 C  N02
+0119 CORN40                GOTO END
+0120 C*
+0121 C*    ACCUMULATE DEBIT AND CREDIT HASH TOTALS.
+     C                     Z-ADDLDBL      TLDBL  183                                          262907
+0122 C                     Z-ADDLDBL      ZZAMT
+0123 C  N45                Z-SUBZZAMT     ZZAMT
+0124 C  N45                Z-ADDHASHCW    ZZTOTI
+0125 C  N45                Z-ADDHASHCD    ZZTOTD
+0126 C   45                Z-ADDHASHDD    ZZTOTD
+0127 C   45                Z-ADDHASHDW    ZZTOTI
+0128 C                     EXSR GLZADD
+0129 C   45                Z-ADDZZTOTI    HASHDW 150
+0130 C   45                Z-ADDZZTOTD    HASHDD  30
+0131 C  N45                Z-ADDZZTOTD    HASHCD  30
+0132 C  N45                Z-ADDZZTOTI    HASHCW 150
+0133 C*
+0134 C*    KEEP COUNT OF EXTRACT RECORDS WRITTEN.
+0135 C  N46      COUNTG    ADD  1         COUNTG
+0136 C*
+0137 C*    DETERMINE IF RETAIL ACCOUNT
+0138 C           ATYP      COMP 'R'                      41
+0139 C*
+0140 C*****CHAIN*TO*TABLE*FILE*TO*OBTAIN*COMPANY*CODE                     S01194
+0141 C***********          MOVE BRCD      TABKEY                          S01194
+0142 C***********TABKEY    CHAINTABLE                42                   S01194
+     C*                                                                   S01194
+     C** OBTAIN COMPANY CODE VIA BRANCH DETAILS                           S01194
+     C* Input file is sorted by branch so it makes no sense to access                         CSC042
+     C* branch code every record. If branch is same as last branch code                       CSC042
+     C* accessed then use details from last call                                              CSC042
+     C                     MOVELBRCA      ##KB                                                CSC042
+     C                     EXSR ##CHKB                                                        CSC042
+      * If branch is in the array then use the details                                        CSC042
+     C           ##FIC     IFEQ 'Y'                        *** B10                            CSC042
+     C                     EXSR ##SETB                                                        CSC042
+     C                     ELSE                            *** X10                            CSC042
+     C**********           CALL 'AOBRCHR0'                                             S01194 CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD   7                       S01194
+     C                     PARM '*KEY   ' @OPTN   7                       S01194
+     C                     PARM BRCA      @DSNB   3                       S01194
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                        S01194 CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS                                   S01194
+     C                     SETOF                     04                   S01194
+     C                     ELSE                                           S01194
+     C                     SETON                     04                   S01194
+      * Details found on the DB so add them to the array                                      CSC042
+      * if the array still has room                                                           CSC042
+     C                     EXSR ##ADDB                                                        CSC042
+     C                     END                                            S01194
+     C                     END                             E01                                CSC042
+     C*                                                                   S01194
+0143 C*
+0144 C*****CHAIN*TO*CLINT*FILE*TO*OBTAIN*CUSTOMER REPORT NAME & TOWN      S01194
+0145 C***********          MOVELCNUM      CLIKEY                          S01194
+0146 C***********CLIKEY    CHAINCLINT                43                   S01194
+     C*                                                                   S01194
+     C** OBTAIN CUSTOMER REPORT NAME & TOWN VIA CLINT DETAILS             S01194
+     C                     MOVE *BLANKS   @PKEY1 10                       S01194
+     C                     MOVELCNUM      @PKEY1                          S01194
+     C* Input file is sorted by cust so it makes no sense to access                           CSC042
+     C* cust code every record. If cust is same as last cust code                             CSC042
+     C* accessed then use details from last call                                              CSC042
+     C           CNUM      IFNE ##OCU                      B01                                CSC042
+     C                     CALL 'AOCUSTR0'                                S01194
+     C                     PARM *BLANKS   @RTCD   7                       S01194
+     C                     PARM '*KEY   ' @OPTN   7                       S01194
+     C                     PARM           @PKEY1 10                       S01194
+     C                     PARM           @KYST   7                       S01194
+     C           SDCUST    PARM SDCUST    DSSDY                           S01194
+     C*                                                                   S01194
+     C********** @RTCD     IFNE *BLANKS                                              S01194 BUG17927
+     C           @RTCD     IFEQ '*NRF   '                                                   BUG17927
+     C                     SETOF                     05                   S01194
+     C                     ELSE                                           S01194
+     C                     SETON                     05                   S01194
+     C                     MOVELCNUM      ##OCU                                               CSC042
+     C                     MOVEL##N01     ##O01                                               CSC042
+     C                     MOVEL##N02     ##O02                                               CSC042
+     C                     MOVEL##N03     ##O03                                               CSC042
+     C                     MOVEL##N04     ##O04                                               CSC042
+     C                     MOVEL##N05     ##O05                                               CSC042
+     C                     END                                            S01194
+     C*                                                                                     BUG17927
+     C           @RTCD     IFEQ '*CUSCLS'                                                   BUG17927
+     C                     SETOF                     06                                     BUG17927
+     C                     ELSE                                                             BUG17927
+     C                     SETON                     06                                     BUG17927
+     C                     ENDIF                                                            BUG17927
+      *
+     C                     ELSE                            X01                                CSC042
+     C                     SETON                     05                                       CSC042
+     C           *LIKE     DEFN CNUM      ##OCU                                               CSC042
+     C           *LIKE     DEFN ##N01     ##O01                                               CSC042
+     C           *LIKE     DEFN ##N02     ##O02                                               CSC042
+     C           *LIKE     DEFN ##N03     ##O03                                               CSC042
+     C           *LIKE     DEFN ##N04     ##O04                                               CSC042
+     C           *LIKE     DEFN ##N05     ##O05                                               CSC042
+     C                     MOVEL##O01     ##N01                                               CSC042
+     C                     MOVEL##O02     ##N02                                               CSC042
+     C                     MOVEL##O03     ##N03                                               CSC042
+     C                     MOVEL##O04     ##N04                                               CSC042
+     C                     MOVEL##O05     ##N05                                               CSC042
+     C                     END                             E01                                CSC042
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,GL0710CCP1                                           S01408
+     C*                                                                   S01408
+0147 C*
+0148 C*    CHAIN TO GENERAL LEDGER DATA EXTRACT FILE TO OBTAIN
+0149 C*    ACCOUNT CODE NAME ACCOUNT SECTION,TITLE ACCOUNT
+0150 C*    CODE AND TITLE ACCOUNT NAME
+      *                                                                                     CGL127AO
+      ** Begin LRU cache processing for Account Code                                        CGL127AO
+      *                                                                                     CGL127AO
+     C                     ADD  1         RCSQ                                              CGL127AO
+     C                     MOVELACOD      KEYACD                                            CGL127AO
+     C                     SETOF                     03                                     CGL127AO
+     C                     EXSR CHKACD                                                      CGL127AO
+      *                                                                                     CGL127AO
+      ** Use details from array if ACOD is found, otherwise,                                CGL127AO
+      ** retrieve details from program call                                                 CGL127AO
+      *                                                                                     CGL127AO
+     C           ACFIC     IFEQ 'Y'                                                         CGL127AO
+      *                                                                                     CGL127AO
+      ** Set occurence to index found from CDAC array                                       CGL127AO
+      *                                                                                     CGL127AO
+     C           C         OCUR SDEXDA                                                      CGL127AO
+     C                     SETON                     03                                     CGL127AO
+     C                     ELSE                                                             CGL127AO
+      *                                                                                     CGL127AO
+     C           TIDX      IFNE 0                                                           CGL127AO
+     C                     Z-ADDTIDX      C                                                 CGL127AO
+     C                     ELSE                                                             CGL127AO
+     C                     Z-ADD1         C                                                 CGL127AO
+     C                     MOVEALRUA      LRUS                                              CGL127AO
+     C                     SORTALRUS                                                        CGL127AO
+     C                     Z-ADDLRUS,1    LEASTE                                            CGL127AO
+     C           LEASTE    LOKUPLRUA,C                   42                                 CGL127AO
+     C                     ENDIF                                                            CGL127AO
+      *                                                                                     CGL127AO
+     C           C         OCUR SDEXDA                                                      CGL127AO
+0151 C           ACOD      CHAINEXDAEA               44
+      *                                                                                     CGL127AO
+      ** Add to Account Code Cache if found                                                 CGL127AO
+      *                                                                                     CGL127AO
+     C           *IN44     IFEQ *OFF                                                        CGL127AO
+     C                     EXSR ADDACD                                                      CGL127AO
+     C                     ENDIF                                                            CGL127AO
+      *                                                                                     CGL127AO
+     C                     ENDIF                                                            CGL127AO
+     C/COPY WNCPYSRC,GL0710C002
+     C           END       TAG                             ** END TAG **
+     C**   KEEP TOTAL OF ACCOUNTS RECORDS READ.
+     C   08
+     COR 02      COUNTA    ADD  1         COUNTA  50
+      *                                                                   S01117
+     CLR         *INU8     IFEQ '0'                                       S01117
+     CLR         *INU7     ANDEQ'0'                                       S01117
+     C/COPY WNCPYSRC,GL0710C005
+     CLR                   EXSR TRAIL
+     C/COPY WNCPYSRC,GL0710C006
+     CLR                   END                                            S01117
+0153 C*
+0154 C*
+0155 C*    C O N T R O L   T O T A L S
+     C********************************************************************
+     C**  TRAIL SUBROUTINE DOES FILE CONTROL CHECK IN TOTAL TIME
+     C           TRAIL     BEGSR
+0157 C*
+0158 C*    COMPARE COUNT & HASH TOTALS                     **SEQ
+0159 C*
+0160 C* WORK OUT NO. OF A/C'S
+0161 C           NINU      ADD  NINP      ACCREC  50        *
+0162 C           ACCREC    ADD  NORE      ACCREC            *
+0163 C           ACCREC    SUB  2         ACCREC
+0164 C*                                                    **ENDSEQ
+0165 C*
+0166 C           COUNTA    COMP ACCREC               4747
+0167 C                     Z-ADDHASHDW    ZZINT
+0168 C                     Z-ADDHASHDD    ZZDEC
+0169 C                     Z-ADDHWND      ZZTOTI
+0170 C                     Z-ADDHDCD      ZZTOTD
+0171 C                     EXSR GLZCMP
+0172 C           ZZDIFI    COMP 0                    4848
+0173 C  N48      ZZDIFD    COMP 0                    4848
+0174 C                     Z-ADDHASHCW    ZZINT
+0175 C                     Z-ADDHASHCD    ZZDEC
+0176 C                     Z-ADDHWNC      ZZTOTI
+0177 C                     Z-ADDHDCC      ZZTOTD
+0178 C                     EXSR GLZCMP
+0179 C           ZZDIFI    COMP 0                    4949
+0180 C  N49      ZZDIFD    COMP 0                    4949
+0181 C*
+0182 C*    FILE CONTROLS OUT OF BALANCE.
+0183 C   47
+0184 COR 48
+0185 COR 49                SETON                     U8
+0186 C*
+0187 C*    ADD HEADER AND TRAILER INTO COUNT OF RECS
+0188 C*    FOR EXTRACT FILE TRAILER.
+0189 C           COUNTG    ADD  2         COUNTT  50
+     C                     ENDSR
+     C********************************************************************
+0196 C********************************************************************
+0197 C* SUBROUTINE TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL (ZZTOTI,ZZTOTD)
+0198 C*   IND '99' IS SET BY AN OVERFLOW ERROR
+0199 C*
+0200 C           GLZADD    BEGSR                           *** GLZADD ****
+0201 C*
+0202 C                     Z-ADDZZAMT     ZZAMT  153     91-DEFINE ZZAMT
+0203 C   91                GOTO ZZAEND                     AMT = 0.BYPASS
+0204 C*
+0205 C* SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS
+0206 C                     Z-ADDZZAMT     ZZAMTI 150       INTEGER FIELD
+0207 C                     Z-ADDZZAMT     ZZWK1   33
+0208 C                     MOVE ZZWK1     ZZAMTD  30       DECIMAL FIELD
+0209 C* BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW
+0210 C*
+0211 C                     EXSR GLZSUM
+0212 C           ZZAEND    ENDSR                           ** ZZAEND TAG *
+0213 C*
+0214 C********************************************************************
+0215 C* SUBROUTINE TO CARRY OUT THE ADDITION FOR SUBROUTINES -
+0216 C*                        GLZADD, GLZSUB, GLZCMP.
+0217 C*          PARAMETERS PASSED -
+0218 C*                     I/P ZZAMTI ZZAMTD
+0219 C*                     O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.
+0220 C*
+0221 C           GLZSUM    BEGSR                           *** GLZSUM ****
+0222 C*
+0223 C                     Z-ADDZZTOTI    ZZTOTI 150       DEFINE ZZTOTI
+0224 C                     Z-ADDZZTOTD    ZZTOTD  30       DEFINE ZZTOTD
+0225 C                     SETOF                     919293
+0226 C                     SETOF                     949599
+0227 C*
+0228 C*    DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG
+0229 C           ZZAMTI    COMP 0                      9293
+0230 C   93      ZZAMTD    COMP 0                      9293
+0231 C   93                GOTO ZZSEND                     ZERO BYPASS
+0232 C*
+0233 C*    DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.
+0234 C           ZZTOTI    COMP 0                      9193
+0235 C   93      ZZTOTD    COMP 0                      9193
+0236 C*
+0237 C*    IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.
+0238 C   93                Z-ADDZZAMTI    ZZTOTI
+0239 C   93                Z-ADDZZAMTD    ZZTOTD
+0240 C   93                GOTO ZZSEND                     ZERO BYPASS
+0241 C*    IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.
+0242 C   91N92
+0243 CORN91 92             GOTO ZZOFPS
+0244 C*
+0245 C           ZZAMTD    ADD  ZZTOTD    ZZWK2   40
+0246 C           ZZWK2     COMP 999                  93    '93' = CARRY
+0247 C  N93      ZZWK2     COMP -999                   93    INTO INTEGER.
+0248 C*
+0249 C   93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VE
+0250 C      93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VE
+0251 C   93      ZZTOTI    ADD  ZZWK3     ZZWK3
+0252 C  N93      ZZTOTI    ADD  ZZAMTI    ZZWK3
+0253 C*
+0254 C* IF THE MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED
+0255 C  N92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS.
+0256 C   92      ZZWK3     COMP ZZTOTI               99     NEGATIVE
+0257 C  N99                Z-ADDZZWK2     ZZTOTD
+0258 C  N99                Z-ADDZZWK3     ZZTOTI
+0259 C*
+0260 C* IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT INTACT.
+0261 C   99                Z-ADD0         ZZAMT  153
+0262 C                     GOTO ZZSEND
+0263 C*
+0264 C* THE 'SIGNS' ARE DIFFERENT
+0265 C           ZZOFPS    TAG                             ** ZZOFPS TAG**
+0266 C* IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT
+0267 C*
+0268 C   92                Z-SUBZZAMTI    ZZAMTI 150
+0269 C   92                Z-SUBZZAMTD    ZZAMTD  30
+0270 C*
+0271 C* IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.
+0272 C*
+0273 C   91                Z-SUBZZTOTI    ZZTOTI
+0274 C   91                Z-SUBZZTOTD    ZZTOTD
+0275 C* BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.
+0276 C*
+0277 C           ZZTOTI    COMP ZZAMTI               93  95
+0278 C   95      ZZTOTD    COMP ZZAMTD               93  95
+0279 C*
+0280 C* IF ZZTOT EQ. ZZAMT RETURN ZERO.
+0281 C   95                Z-ADD0         ZZTOTI
+0282 C   95                Z-ADD0         ZZTOTD
+0283 C   95                GOTO ZZSEND
+0284 C*
+0285 C* IF ZZTOT GT. ZZAMT.
+0286 C   93      ZZAMTD    COMP ZZTOTD               94
+0287 C   93 94   ZZTOTI    SUB  1         ZZTOTI
+0288 C   93 94   ZZTOTD    ADD  1000      ZZWK2
+0289 C   93      ZZTOTI    SUB  ZZAMTI    ZZTOTI
+0290 C   93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD
+0291 C   93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD
+0292 C*
+0293 C*
+0294 C* IF ZZAMT GT. ZZTOT.
+0295 C  N93      ZZTOTD    COMP ZZAMTD               94
+0296 C  N93 94   ZZAMTI    SUB  1         ZZWK3  150
+0297 C  N93 94   ZZAMTD    ADD  1000      ZZWK2
+0298 C  N93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI
+0299 C  N93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI
+0300 C  N93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD
+0301 C  N93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD
+0302 C*
+0303 C* REVERSE SIGN OF ZZTOT IF LARGER I/P FIELDS WERE NEGATIVE
+0304 C                     SETOF                     94
+0305 C   93 91
+0306 CORN93 92             SETON                     94
+0307 C   94                Z-SUBZZTOTI    ZZTOTI
+0308 C   94                Z-SUBZZTOTD    ZZTOTD
+0309 C**
+0310 C**   RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.
+0311 C   92                Z-SUBZZAMTI    ZZAMTI
+0312 C   92                Z-SUBZZAMTD    ZZAMTD
+0313 C           ZZSEND    TAG                             ** ZZSEND TAG *
+0314 C**
+0315 C**   IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.
+0316 C                     SETOF                     96
+0317 C           ZZTOTD    COMP 0                        91
+0318 C   91      ZZTOTI    COMP 0                      96
+0319 C   96                MOVE '.000-'   ZZNEGD  5
+0320 C                     ENDSR                             ** ENDSR **
+0321 C********************************************************************
+0322 C* SUBROUTINE TO COMPARE AN AMOUNT TO THE TOTAL.
+0323 C*      PARAMETERS. I/P - ZZINT - THE INTEGER PORTION OF THE NUMBER.
+0324 C*                  I/P - ZZDEC - THE DECIMAL PORTION OF THE NUMBER.
+0325 C*                  O/P - ZZDIFI - IS THE INTEGER DIFFERENCE.
+0326 C*                  O/P - ZZDIFD - IS THE DECIMAL DIFFERENCE.
+0327 C*                  O/P - ZZNEGD - FOR IMMEDIATE PRINTING ONLY.
+0328 C*                  O/P - 96 IS SET IF DIFFERENCE IS NEGATIVE.
+0329 C*
+0330 C*    IF AN ERROR HAS OCCURED ZZDIFI AND ZZDIFD WILL BE ZERO.
+0331 C*        '99' - OVERFLOW ERROR
+0332 C*        '97' - THE 'SIGN' ZONES OF ZZINT AND ZZDEC ARE DIFFERENT
+0333 C*
+0334 C           GLZCMP    BEGSR                           *** GLZCMP ****
+0335 C                     SETOF                     9799
+0336 C                     Z-ADDZZDEC     ZZDEC   30 919293DEFINE ZZDEC
+0337 C                     Z-ADDZZINT     ZZINT  150 949596DEFINE ZZINT
+0338 C* IF SIGN ZONES DIFFER, SET 97, & RETURN ZERO.
+0339 C   91 95
+0340 COR 92 94             SETON                     97    ERROR -MIXED
+0341 C*                                                           STATUS
+0342 C   97                GOTO ZZQUIT                     BRANCH TO ADMIT
+0343 C*
+0344 C*  SPECIAL CASES DEALT WITH FIRST
+0345 C*      EITHER AMOUNTS EQ '0' OR BOTH AMOUNTS 'EQ'
+0346 C                     SETOF                     9192
+0347 C                     SETOF                     9495
+0348 C   93 96             SETON                     91    * IF I/P FIELD
+0349 C   91                Z-ADDZZTOTI    ZZDIFI 150       *    ZERO
+0350 C   91                Z-ADDZZTOTD    ZZDIFD  30       *
+0351 C   91                GOTO ZZSIGN
+0352 C*
+0353 C           ZZTOTI    COMP ZZINT                    91* IF FIELDS EQ
+0354 C   91      ZZTOTD    COMP ZZDEC                    91*
+0355 C   91                Z-ADD0         ZZDIFI           *
+0356 C   91                Z-ADD0         ZZDIFD           *
+0357 C   91                GOTO ZZCEND
+0358 C*
+0359 C           ZZTOTI    COMP 0                        91* IF TOTAL
+0360 C   91      ZZTOTD    COMP 0                        91*    ZERO
+0361 C   91                Z-SUBZZINT     ZZDIFI           *
+0362 C   91                Z-SUBZZDEC     ZZDIFD           *
+0363 C**
+0364 C           ZZSIGN    TAG                             *** ZZSIGN ****
+0365 C*
+0366 C**   IF ZZDIFD IS ZERO, AND ZZDIFI IS NEG. SET UP ZZNEGD.
+0367 C                     SETOF                     96
+0368 C   91      ZZDIFD    COMP 0                        94
+0369 C   94      ZZDIFI    COMP 0                      96
+0370 C   96                MOVE '.000-'   ZZNEGD  5
+0371 C   91                GOTO ZZCEND
+0372 C*      END OF SPECIAL CASES
+0373 C*
+0374 C* IF ZZTOTALS EQ 'B' AND ZZINT,ZZDEC EQ 'A'   THEN -
+0375 C*  TO COMPARE 'A' WITH 'B'
+0376 C*     1. STORE ORIGINAL VALUE OF 'B'.
+0377 C*     2. NEGATE 'A'.
+0378 C*     3. ADD 'A' TO 'B'.
+0379 C*     4. 'B' IS NOW THE DIFFERENCE. STORE 'B' IN FIELD 'C'.
+0380 C*     5. RESTORE 'B'.
+0381 C*            N.B. 'A' EQ ZZINT AND ZZDEC
+0382 C*                 'B' EQ ZZTOTI AND ZZTOTD
+0383 C*                 'C' EQ ZZDIFI AND ZZDIFD
+0384 C*
+0385 C*    STEP #1
+0386 C                     Z-ADDZZTOTI    ZZSTRI 150
+0387 C                     Z-ADDZZTOTD    ZZSTRD  30
+0388 C*    STEP #2
+0389 C                     Z-SUBZZINT     ZZAMTI 150
+0390 C                     Z-SUBZZDEC     ZZAMTD  30
+0391 C*    STEP #3
+0392 C                     EXSR GLZSUM
+0393 C   99                GOTO ZZQUIT
+0394 C*    STEP #4
+0395 C                     Z-ADDZZTOTI    ZZDIFI
+0396 C                     MOVE ZZTOTD    ZZDIFD
+0397 C*    STEP #5
+0398 C                     Z-ADDZZSTRI    ZZTOTI 150
+0399 C                     Z-ADDZZSTRD    ZZTOTD  30
+0400 C                     GOTO ZZCEND                     BYPASS ADMIT
+0401 C           ZZQUIT    TAG                             ** ZZQUIT TAG**
+0402 C                     Z-ADD0         ZZDIFI
+0403 C                     Z-ADD0         ZZDIFD
+0404 C           ZZCEND    ENDSR                           ** ZZCEND TAG**
+0405 C*
+0406 C********************************************************************
+0407 C**
+0408 C*****ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.   S01194
+0409 C**
+0410 C***********ZSYSTM    BEGSR                           *** ZSYSTM *** S01194
+0411 C**
+0412 C*****SET*UP KEY FOR INSTALLATION CONTROL RECORD.                    S01194
+0413 C***********          MOVEL'01      'ZTABKY 12                       S01194
+0414 C***********          MOVE '  10'    ZTABKY                          S01194
+0415 C**
+0416 C***********ZTABKY    CHAINTABLE                99    ON NOT THERE   S01194
+0417 C**N99******RECI      COMP 'D'                  9999  ON, IS DELETED S01194
+0418 C**
+0419 C***********          ENDSR                                          S01194
+0420 C**
+0169 C********************************************************************S01194
+     C**                                                                  S01194
+     C**   *PSSR  SR TO DUMP PROGRAM WHEN DATABASE ERROR OCCURS           S01194
+     C**                                                                  S01194
+     C           *PSSR     BEGSR                                          S01194
+     C           @RUN      IFEQ *BLANKS                                   S01194
+     C                     MOVE 'Y'       @RUN    1                       S01194
+     C                     DUMP                                           S01194
+     C                     END                                            S01194
+     C                     ENDSR                                          S01194
+     C**                                                                  S01194
+0421 C**
+0422 C********************************************************************
+      /EJECT
+      *****************************************************************                     CGL127AO
+      *                                                               *                     CGL127AO
+      * SRINIT - Initial Subroutine                                   *                     CGL127AO
+      *                                                               *                     CGL127AO
+      *****************************************************************                     CGL127AO
+     C           SRINIT    BEGSR                                                            CGL127AO
+      *                                                                                     CGL127AO
+      ** Array Size used by multi-occurence data structure and                              CGL127AO
+      ** LRU arrays                                                                         CGL127AO
+      *                                                                                     CGL127AO
+     C                     Z-ADD300       ARRSZ   30                                        CGL127AO
+      *                                                                                     CGL127AO
+      ** LRU element key and record arrival sequence                                        CGL127AO
+      *                                                                                     CGL127AO
+     C                     Z-ADD0         LEASTE 130                                        CGL127AO
+     C           *LIKE     DEFN LEASTE    RCSQ                                              CGL127AO
+      *                                                                                     CGL127AO
+      ** Set start index to upper limit of account code arrays                              CGL127AO
+      ** Define current index and previous index as same with TIDX                          CGL127AO
+      ** Define KEYACD to be the same with ACOD                                             CGL127AO
+      *                                                                                     CGL127AO
+     C                     Z-ADDARRSZ     TIDX    40                                        CGL127AO
+     C           *LIKE     DEFN TIDX      PIDX                                              CGL127AO
+     C           *LIKE     DEFN TIDX      C                                                 CGL127AO
+     C           *LIKE     DEFN ACOD      KEYACD                                            CGL127AO
+      *                                                                                     CGL127AO
+      ** Initialize work fields of account code arrays routines                             CGL127AO
+      *                                                                                     CGL127AO
+     C                     MOVE *BLANK    ACFIC   1                                         CGL127AO
+     C                     MOVE *BLANKS   KEYACD                                            CGL127AO
+     C                     Z-ADDARRSZ     PIDX                                              CGL127AO
+     C                     Z-ADDARRSZ     C                                                 CGL127AO
+      *                                                                                     CGL127AO
+     C                     ENDSR                                                            CGL127AO
+      *****************************************************************                     CGL127AO
+      *                                                               *                     CGL127AO
+      *  CHKACD - Check Account Code details in array                 *                     CGL127AO
+      *                                                               *                     CGL127AO
+      *****************************************************************                     CGL127AO
+     C           CHKACD    BEGSR                                                            CGL127AO
+      *                                                                                     CGL127AO
+      ** Reinitialize work fields                                                           CGL127AO
+      *                                                                                     CGL127AO
+     C                     MOVEL*BLANK    ACFIC                                             CGL127AO
+     C                     SETOF                         42                                 CGL127AO
+      *                                                                                     CGL127AO
+      ** Only check cache if not empty and account code valid                               CGL127AO
+      *                                                                                     CGL127AO
+     C           TIDX      IFNE ARRSZ                                                       CGL127AO
+     C           KEYACD    ANDGE0                                                           CGL127AO
+      *                                                                                     CGL127AO
+      ** Check previous account code details if                                             CGL127AO
+      ** same with current details                                                          CGL127AO
+      *                                                                                     CGL127AO
+     C                     Z-ADDPIDX      C                                                 CGL127AO
+      *                                                                                     CGL127AO
+      ** Defend against index being 0                                                       CGL127AO
+      ** Set current index to starting index                                                CGL127AO
+      *                                                                                     CGL127AO
+     C           C         IFEQ 0                                                           CGL127AO
+     C                     Z-ADDTIDX      C                                                 CGL127AO
+     C                     ENDIF                                                            CGL127AO
+      *                                                                                     CGL127AO
+      ** If the ACOD being checked is the same then use the index                           CGL127AO
+      ** of the current detail rather than doing a LOKUP                                    CGL127AO
+      *                                                                                     CGL127AO
+     C           KEYACD    IFEQ CDAC,C                                                      CGL127AO
+     C                     SETON                         42                                 CGL127AO
+     C                     ELSE                                                             CGL127AO
+      *                                                                                     CGL127AO
+     C           TIDX      IFEQ 0                                                           CGL127AO
+     C                     Z-ADD1         C                                                 CGL127AO
+     C                     ELSE                                                             CGL127AO
+     C                     Z-ADDTIDX      C                                                 CGL127AO
+     C                     ENDIF                                                            CGL127AO
+      *                                                                                     CGL127AO
+     C           KEYACD    LOKUPCDAC,C                   42                                 CGL127AO
+     C                     ENDIF                                                            CGL127AO
+      *                                                                                     CGL127AO
+      ** Save the last accessed detail to PIDX                                              CGL127AO
+      ** Set the indicator to show the data was found                                       CGL127AO
+      *                                                                                     CGL127AO
+     C           *IN42     IFEQ *ON                                                         CGL127AO
+     C                     MOVE RCSQ      LRUA,C                                            CGL127AO
+     C                     Z-ADDC         PIDX                                              CGL127AO
+     C                     MOVEL'Y'       ACFIC                                             CGL127AO
+     C                     ENDIF                                                            CGL127AO
+      *                                                                                     CGL127AO
+     C                     ENDIF                                                            CGL127AO
+     C                     ENDSR                                                            CGL127AO
+      *****************************************************************                     CGL127AO
+      *                                                               *                     CGL127AO
+      *  ADDACD - Add Account Code details to array                   *                     CGL127AO
+      *                                                               *                     CGL127AO
+      *****************************************************************                     CGL127AO
+     C           ADDACD    BEGSR                                                            CGL127AO
+      *                                                                                     CGL127AO
+      ** If there is still room in the array then add the details                           CGL127AO
+      *                                                                                     CGL127AO
+     C           TIDX      IFNE 0                                                           CGL127AO
+     C                     SUB  1         TIDX                                              CGL127AO
+     C                     ENDIF                                                            CGL127AO
+      *                                                                                     CGL127AO
+     C                     MOVELACOD      CDAC,C                                            CGL127AO
+     C                     MOVELACOD      WACD                                              CGL127AO
+     C                     MOVE RCSQ      LRUA,C                                            CGL127AO
+      *                                                                                     CGL127AO
+      ** Set last accessed detail to PIDX so that CHKACD checks this                        CGL127AO
+      ** latest detail first                                                                CGL127AO
+      *                                                                                     CGL127AO
+     C                     Z-ADDC         PIDX                                              CGL127AO
+      *                                                                                     CGL127AO
+     C                     ENDSR                                                            CGL127AO
+     C********************************************************************                    CSC042
+      *                                                                                       CSC042
+      * ##CHKB - Subroutine to check the Branch in the arrays                                 CSC042
+      *                                                                                       CSC042
+     C           ##CHKB    BEGSR                                                              CSC042
+      *                                                                                       CSC042
+     C           *LIKE     DEFN A8BRCD    ##KB                                                CSC042
+      *                                                                                       CSC042
+      * Set off the branch found indicator                                                    CSC042
+     C                     MOVEL*BLANK    ##FIC   1                                           CSC042
+      *                                                                                       CSC042
+      * Save the state of indicator 30 so it can be reset at the end                          CSC042
+      * of the SR as it may be used elsewhere in the code                                     CSC042
+     C           *IN30     IFEQ *ON                                                           CSC042
+     C                     MOVEL'Y'       #IN30   1                                           CSC042
+     C                     ELSE                                                               CSC042
+     C                     MOVEL'N'       #IN30                                               CSC042
+     C                     END                                                                CSC042
+      *                                                                                       CSC042
+     C                     SETOF                         30                                   CSC042
+      *                                                                                       CSC042
+      * Restore the saved Value of B                                                          CSC042
+     C                     Z-ADD##BSV     B                                                   CSC042
+      *                                                                                       CSC042
+     C* Check whether details for Branch already in array                                     CSC042
+      *                                                                                       CSC042
+      * Is this the same as the last LOKUP, if so we can bypass                               CSC042
+      * the LOKUP                                                                             CSC042
+      * Defend against B being 0                                                              CSC042
+     C           B         IFEQ 0                                                             CSC042
+     C                     Z-ADD1         B                                                   CSC042
+     C                     END                                                                CSC042
+      *                                                                                       CSC042
+      * If the branch being checked is the same then use these                                CSC042
+      * details rather than doing a LOKUP                                                     CSC042
+     C           ##KB      IFEQ ##BR,B                                                        CSC042
+      * Found so seton 30                                                                     CSC042
+     C                     SETON                         30                                   CSC042
+     C                     ELSE                                                               CSC042
+     C                     Z-ADD1         B                                                   CSC042
+     C           ##KB      LOKUP##BR,B                   30                                   CSC042
+     C                     END                                                                CSC042
+      *                                                                                       CSC042
+      * Save the last update to B                                                             CSC042
+     C           *IN30     IFEQ *ON                                                           CSC042
+     C                     Z-ADDB         ##BSV                                               CSC042
+      * Set the indicator to show the data was found                                          CSC042
+     C                     MOVEL'Y'       ##FIC                                               CSC042
+     C                     END                                                                CSC042
+      *                                                                                       CSC042
+      * Reset the state of indicator 30.                                                      CSC042
+     C           #IN30     IFEQ 'Y'                                                           CSC042
+     C                     MOVEL*ON       *IN30                                               CSC042
+     C                     ELSE                                                               CSC042
+     C                     MOVEL*OFF      *IN30                                               CSC042
+     C                     END                                                                CSC042
+      *                                                                                       CSC042
+     C                     ENDSR                                                              CSC042
+      ********************************************************************                    CSC042
+      /EJECT                                                                                  CSC042
+      ********************************************************************                    CSC042
+      *                                                                                       CSC042
+      * ##SETB - Sets up the SDBRCHPD fields used in the code from the                        CSC042
+      * arrays                                                                                CSC042
+      *                                                                                       CSC042
+     C           ##SETB    BEGSR                                                              CSC042
+      *                                                                                       CSC042
+     C                     MOVEL##BR,B    A8BRCD                                              CSC042
+     C                     MOVEL##BN,B    A8BRNM                                              CSC042
+      *                                                                                       CSC042
+     C                     ENDSR                                                              CSC042
+      *                                                                                       CSC042
+      ********************************************************************                    CSC042
+      /EJECT                                                                                  CSC042
+      ********************************************************************                    CSC042
+      *                                                                                       CSC042
+      * ##ADDB - Adds the SDBRCHPD fields used in the code to the                             CSC042
+      * arrays                                                                                CSC042
+      *                                                                                       CSC042
+     C           ##ADDB    BEGSR                                                              CSC042
+      *                                                                                       CSC042
+      * If there is still room in the array then add the details                              CSC042
+     C           ##BNDX    IFLT 999                                                           CSC042
+     C                     ADD  1         ##BNDX                                              CSC042
+     C                     Z-ADD##BNDX    B                                                   CSC042
+     C                     MOVELA8BRCD    ##BR,B                                              CSC042
+     C                     MOVELA8BRNM    ##BN,B                                              CSC042
+     C                     END                                                                CSC042
+      *                                                                                       CSC042
+      * Update ##BSV  so next call to ##CHKB checks this latest adddition                     CSC042
+      * to the array firss                                                                    CSC042
+     C                     Z-ADDB         ##BSV                                               CSC042
+      *                                                                                       CSC042
+     C                     ENDSR                                                              CSC042
+      ********************************************************************                    CSC042
+      /EJECT                                                                                  CSC042
+      ********************************************************************                    CSC042
+0423 OGLEXHH  D        01
+0424 O                                    1 'H'
+0425 O                         COUNTT     4P
+0423 OGLEXGC  D        02 40N46
+0427 O                                    1 'D'
+0428 O                         CNUM       7
+0429 O                         CCY       10
+     O/COPY WNCPYSRC,GL0710O003
+0430 O**********               ACOD      14                                                   CGL029
+     O**********               ACODQQ    14                                           CGL029 BUG3826
+     O/COPY WNCPYSRC,GL0710O004
+0431 O                         ACSQ      16
+0432 O                                   17 '0'
+0433 O                 41                17 '1'
+0434 O***********              BRCD      20                               S01117
+0435 O***********      04      CMPY      22                               S01117
+0436 O***********      05      CRNM      42                               S01117
+0437 O***********      05      CTWN      52                               S01117
+0438 O***********      03      ACKN      77                               S01117
+0439 O***********      03      ACSN      78                               S01117
+0440 O***********      03      TACD      82                               S01117
+0441 O***********      03      TANM     107                               S01117
+0442 O***********              LDBL     115P                              S01117
+0434 O                         BRCA      20                               S01117
+0435 O                 04      A8CMCD    23                               S01117
+     O*                                                                   S01408
+     O/COPY WNCPYSRC,GL0710OOP1                                           S01408
+     O*                                                                   S01408
+0436 O**********       05      BBCRNM    43                                          S01117 BUG17927
+0436 O                 05 06   BBCRNM    43                                                 BUG17927
+     O*                                                                   S01408
+     O/COPY WNCPYSRC,GL0710OOP2                                           S01408
+     O*                                                                   S01408
+0437 O**********       05      BBCRTN    53                                          S01117 BUG17927
+0437 O                 05 06   BBCRTN    53                                                 BUG17927
+0438 O                 03      ACKN      78                               S01117
+     O/COPY WNCPYSRC,GL0710O001
+0439 O                 03      ACSN      79                               S01117
+     O/COPY WNCPYSRC,GL0710O002
+0440 O**********       03      TACD      83                                            S01117 CGL029
+     O**********       03      TACDQQ    83                                           CGL029 BUG3826
+0441 O                 03      TANM     108                               S01117
+0442 O**********               LDBL     116P                                           S01117 262907
+     O**********       45               128 'D'                                               262907
+     O**********               ACOD     138                                            CGL029 262709
+     O**********       03      TACD     148                                            CGL029 262709
+     O                         TLDBL    118P                                                  262907
+     O                 45               130 'D'                                               262907
+     O                         ACOD     140                                                   262907
+     O                 03      TACD     150                                                   262907
+     OGLEXZY  T        LR
+0444 O                                    1 'T'
+0445 O                         COUNTT     4P
+0446 O                         HASHDW    12P
+0447 O                         HASHDD    14P
+0448 O                         HASHCW    22P
+0449 O                         HASHCD    24P
+0450 O*    FILE CONTROL TOTALS REPORT
+0451 O*L0710P1D**203   01                                          S01124 S01117
+0451 OGL0710AUD  203   01                                                 S01117
+0452 O       OR        OF
+0453 O****                               22 'REFERENCE GL0710'            S01117
+0453 O                                   24 'REFERENCE GL0710AU'          S01117
+0454 O***********              TITL      89                               S01194
+0454 O                         BJURPT    89                               S01194
+0455 O                                  104 'DATE'
+0456 O                         RUNA     113
+0457 O                                  122 'PAGE'
+0458 O                         PAGE  Z  127
+0459 O        D  1     01
+0460 O       OR        OF
+0461 O                                   60 'GENERAL LEDGER BALANCE'
+0462 O                                   68 'EXTRACT'
+0463 O***********                        88 'FILE CONTROL REPORT'         S01117
+     O                                   84 'RUN CONTROLS'                S01117
+0464 O        D  3     01
+0465 O       OR        OF
+0466 O                                   60 '----------------------'
+0467 O***********                        69 '---------'                   S01117
+0467 O                                   68 '--------'                    S01117
+0468 O***********                        88 '-------------------'         S01117
+0469 O        D  2     02 40N04
+0470 O*****                    KEY       24                               S01117
+0470 O                         KEY1      24                               S01117
+0471 O***********                        49 'RECORD NOT ON TABLES'        S01194
+0472 O***********                        54 'FILE'                        S01194
+0471 O                                   51 'RECORD NOT ON SDBRCHPD'      S01194
+0472 O                                   56 'FILE'                        S01194
+0473 O        D  2     02 40N05
+0470 O*****                    KEY       24                               S01117
+0470 O                         KEY1      24                               S01117
+0475 O***********                        53 'RECORD NOT ON CLINT FILE'    S01194
+0475 O                                   51 'RECORD NOT ON SDCUSTPD'      S01194
+0472 O                                   56 'FILE'                        S01194
+     O        D  2     02 40N06                                                             BUG17927
+     O                         KEY1      24                                                 BUG17927
+     O                                   51 'CUSTOMER RECORD CLOSED'                        BUG17927
+0476 O        D  2     02 40N03
+0470 O*****                    KEY       24                               S01117
+0470 O                         KEY1      24                               S01117
+0478 O                                   52 'RECORD NOT ON EXDA FILE'
+     O        T 22     LR
+0480 O                                   35 'CONTROL TOTALS'
+     O        T  2     LR
+0482 O                                   66 'INPUT'
+0483 O                                   90 'CALCULATED'
+     O        T  2     LR
+0485 O                                   26 'NUMBER OF ACCOUNT'
+0486 O                                   39 'RECORDS READ'
+0487 O                         ACCREC1   66
+0488 O                         COUNTA1   90
+0489 O                       47         115 '*** OUT OF BALANCE ***'
+     O        T  2     LR
+0491 O                                   28 'TOTAL VALUE - DEBIT'
+0492 O                         HWND  4   63
+0493 O                         HDCD      66
+0494 O                         HASHDW4   87
+0495 O                         HASHDD    90
+0496 O                       48         115 '*** OUT OF BALANCE ***'
+     O        T  1     LR
+0498 O                                   29 'TOTAL VALUE - CREDIT'
+0499 O                         HWNC  4   63
+0500 O                         HDCC      66
+0501 O                         HASHCW4   87
+0502 O                         HASHCD    90
+0503 O                       49         115 '*** OUT OF BALANCE ***'
+     O        T  1     LR
+0505 O                                   26 'NUMBER OF EXTRACT'
+0506 O                                   42 'RECORDS WRITTEN'
+0507 O                         COUNTT1   90
+0677 O        T 3      LR U7 U8                                           S01194
+0376 O                                   42 '*** REFERENCE'               S01194
+0377 O                         DBPGM     53                               S01194
+0378 O                                   71 '-DATABASE ERROR AT'          S01194
+0379 O                         DBASE     75                               S01194
+0682 O        T 1      LR U7 U8                                           S01194
+0381 O                                   37 'FILE NAME'                   S01194
+0382 O                         DBFILE    48                               S01194
+0383 O                                   52 'KEY'                         S01194
+0384 O                         DBKEY     82                               S01194
+     O********T*3      LR                                                 S01117
+0509 O***********                        76 '*** END OF REPORT ***'       S01117
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

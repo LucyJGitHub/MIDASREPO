@@ -1,0 +1,1587 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Associated groups list and path update')
+/*OVRF*: OVRDBF (File in program) (file on system)                  : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                          *
+     F*                                                               *
+     F*  CG1070 - Get Associated Groups and Update Path List          *
+     F*                                                               *
+     F*  Function:  This program xxxxxxxxxxxxxxxxxxxxxxxxxxxx         *
+     F*  (phase(s))                                                   *
+     F*                                                               *
+     F*  Called By: mmCnnnn - (program name)                          *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 192258             Date 20Apr01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 089189             Date 16Jun95               *
+     F*                 083679             DATE 15MAR95               *
+     F*                 084084             DATE 29FEB95               *
+     F*                 083679             DATE 22FEB95               *
+     F*                 S01522             DATE 15MAR95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+     F*  192258 - Array index error in CG1070. Double the size of     *
+     F*           the array so that d11IRS can have more Groups Sets  *
+     F*           under it.                                           *
+     F*  089189 - Miscellaneous changes.                              *
+     F*  083679 - Add absolute sequence to CGWPRDE2                   *
+     F*  084084 - Allow for redirection in repeaters                  *
+     F*  083679 - SRRDE2 files accesses out of date cf. CGWPRDE2      *
+     F*  S01522 - User Defined Correspondence                         *
+     F*                                                               *
+     F*****************************************************************
+     F*Cpysrc Templates Initialise Program F-spec
+     F/COPY WNCPYSRC,CG1000DFPG
+     FCGGSASL2IF  E           K        DISK
+     F                                              KINFSR SRFILE
+      *
+      * RSQ : Group Set Association     From/Seq/To Group Set
+      *
+     F*CGRASCL1IF**E           K        DISK                              083679
+     FCGRASCL2IF  E           K        DISK                               083679
+     F                                              KINFSR SRFILE
+     FCGGSASL1IF  E           K        DISK
+     F                                              KINFSR SRFILE
+     FCGPDECL2IF  E           K        DISK
+     F                                              KINFSR SRFILE
+     FCGPATHL2IF  E           K        DISK
+     F                                              KINFSR SRFILE
+      *
+      * RSQ : Path                      By Group sets
+      *
+     FCGPATHL0IF  E           K        DISK                      A
+     F                                              KINFSR SRFILE
+      *
+      * UPD : Path                      Update Index
+      *
+     FCGGSETL1IF  E           K        DISK
+     F                                              KINFSR SRFILE
+      *
+      * RTV : Group Set Definition      Retrieval index
+      *
+     FCGRDTAL1IF  E           K        DISK
+     F                                              KINFSR SRFILE
+      *
+     FCGWPRDE1IF  E           K        DISK                      A    UC
+     F                                              KINFSR SRFILE
+      *
+     FCGWPRDE2IF  E           K        DISK                      A    UC
+     F                                              KINFSR SRFILE
+      *
+     FCGW1LAYOIF  E           K        DISK                      A    UC
+     F                                              KINFSR SRFILE
+      *                                                                   084084
+     FCGWPLAYOIF  E           K        DISK                           UC  084084
+     F                                              KINFSR SRFILE         084084
+      *
+      * QTEMP files
+      *
+     FCGPASCPDO   E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+     F                                              KCOMIT
+      *
+     FCGPDECPDO   E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+     F                                              KCOMIT
+      *
+      * Layout data files (TOOL member used)
+      *
+     E/EJECT
+     E                    CPY@    1   1 80
+     E*
+     E*  Array containing Copyright statement
+     E***************** FIRST COMPILE TIME ARRAY *********************
+     E/COPY WNCPYSRC,CG1070E003
+     E**********          AG         20  6                                192258
+     E                    AG         40  6                                192258
+     E/COPY WNCPYSRC,CG1070E004
+      *
+      * Array of Associated Groups
+      *
+     E/COPY CGCPYSRC,SRERRE
+     E*
+     E*  Copysource for error processing
+     E*
+     E*EDTRCD: Cpysrc Templates Initialise Program E-spec
+     E/COPY WNCPYSRC,CG1000DEPG
+      /EJECT
+     I/COPY CGCPYSRC,SRERRI
+     I*
+     I*  End of Program Error Processing copysource
+     I*
+     I*
+     I*EDTRCD: Cpysrc Templates Initialise Program I-spec
+     I/COPY WNCPYSRC,CG1000DIPG
+      /EJECT
+     IRUNDTA    E DSRUNDAT
+     I*
+     I* Get Rundate - Rundate  *
+     I*
+     IMMODDS    E DSSDMMODPD
+     I*
+     I* Modules Data Structure *
+     I*
+     IDSFDY     E DSDSFDY                                                 S01194
+     I*                                                                   S01194
+     I* Data Structures used by Access Programs                           S01194
+     I*                                                                   S01194
+     IDSSDY     E DSDSSDY                                                 S01194
+     I*                                                                   S01194
+     I* Data Structures used by Access Programs                           S01194
+     I*                                                                   S01194
+     ICGDTA     E DSCGDTA
+     ICGLDA     E DSCGLDA                                                 S01194
+      *
+      *  User Defined Correspondence Data Area
+      *
+      /EJECT
+      * Parameter declarations
+     IO#TGDS      DS
+      * O : To Groups
+     I/COPY WNCPYSRC,CG1070I003
+     I                                        1 120 O#TGRP
+     I/COPY WNCPYSRC,CG1070I004
+     II#PTDS      DS
+      * I : Current Path
+     I                                        1 240 I#PATH
+      *
+     IPATHDS      DS
+     I                                        1 256 I#P1
+     I                                      257 376 I#P2
+      *
+     IDSMTR       DS
+      *
+      *  Define fields for message transalation
+      *
+     I                                        1 132 #MSDTA
+     I                                      133 264 #MSTX1
+     I#MSTX2      DS
+     I                                        1 256 #MSTXA
+     I                                      257 512 #MSTXB
+      *
+     I            DS
+     I                                        1   3 L@SEQA
+     I                                        1   30#SEQAN
+      *                                                                   084084
+     IREDIDS      DS                                                      084084
+     I                                        1   3 @REDIR                084084
+     I I            1                         1   30#REDIR                084084
+      *
+     I***********   'DATA'                C         LDATA                 084084
+     I              'D'                   C         LDATA                 084084
+     I              'R'                   C         LREPE                 084084
+      *
+      /EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           W0ACT   8        Action Code
+     C                     PARM           I#FGRP  6
+     C                     PARM           O#ENTY  50
+     C                     PARM           O#TGDS
+     C                     PARM           I#PTDS
+      *
+      *  Set up primary reference
+      *
+     C                     MOVELI#FGRP    W0PREF
+      *
+     C           PL8020    PLIST
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*LAYDATA'P@ACTN  8
+     C                     PARM LPPLAN    #PPLAN
+     C                     PARM *BLANKS   PATHDS
+      *
+     C           *LIKE     DEFN LPPLAN    #PPLAN
+      *
+     C           *NAMVAR   DEFN *LDA      CGLDA
+     C                     IN   CGLDA
+      *
+      * Initialise program
+      *
+     C           *IN50     IFEQ '0'
+     C                     EXSR SRINIT
+     C                     END
+      *
+      *  Reset return code
+      *
+     C                     MOVEL*BLANKS   P0RTN
+      *
+      *  Open files in QTEMP
+      *
+     C           W0ACT     CASEQ'*RDEDATA'SROPE1
+     C           W0ACT     CASEQ'*DISPLAY'SROPE2
+     C                     END
+      *
+      *  Validate depending on action code
+      *
+     C           W0ACT     CASEQ'*LIST   'SRLIST
+     C           W0ACT     CASEQ'*PATH   'SRPATH
+     C           W0ACT     CASEQ'*RDEDATA'SRPATH
+     C           W0ACT     CASEQ'*DISPLAY'SRPATH
+     C                     CAS            SRACT
+     C                     END
+      *
+     C***********          EXSR SRCLOS                              089189089189
+     C                     EXSR SRCLOS                                    089189
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *  Return to calling program
+      *
+     C                     RETRN
+     C/EJECT
+     CSR         *INZSR    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'*INZSR'  @STK,Q
+      *  Set plane defaults
+     C                     Z-ADD1         LPSROW
+     C                     Z-ADD1         LPSCOL
+     C                     Z-ADD66        LPEROW
+     C                     Z-ADD132       LPECOL
+     C                     Z-ADDLPSROW    LPFROW
+     C                     Z-ADDLPSCOL    LPFCOL
+     C                     Z-ADDLPEROW    LPOROW
+     C                     Z-ADDLPECOL    LPOCOL
+      *
+     C                     Z-ADDLPSROW    #PSROW
+     C                     Z-ADDLPSCOL    #PSCOL
+     C                     Z-ADDLPEROW    #PEROW
+     C                     Z-ADDLPECOL    #PECOL
+     C                     Z-ADDLPFROW    #PFROW
+     C                     Z-ADDLPFCOL    #PFCOL
+     C                     Z-ADDLPOROW    #POROW
+     C                     Z-ADDLPOCOL    #POCOL
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRLIST   : Get List of Associated Groups                     *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRLIST    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRLIST'  @STK,Q
+      *
+      *  /COPY for subroutine
+      *
+     C/COPY WNCPYSRC,CG1070LIST
+      *
+      *  Set number of entries to zero amd initialise array
+      *
+     C                     Z-ADD0         O#ENTY
+     C           *LIKE     DEFN O#ENTY    X
+     C                     Z-ADD0         X
+     C                     MOVEL*BLANKS   AG
+      *
+      *  Set pointer to from group
+      *
+     C           KPOS      KLIST
+     C                     KFLD           GAFGST           From Linked Gro
+      * Setup key
+     C                     MOVELI#FGRP    GAFGST           From Linked Gro
+      *
+     C           KPOS      SETLL@GSASL2
+     C           KPOS      READE@GSASL2                  90
+      *
+      *  Set up list of groups
+      *
+     C           *IN90     DOWEQ'0'
+     C           X         ANDLE40                                        192258
+      *
+      *  Add 1 to group and place in array
+      *
+     C                     ADD  1         O#ENTY
+     C                     ADD  1         X
+     C                     MOVELGALGST    AG,X
+      *
+     C           KPOS      READE@GSASL2                  90
+     C                     ENDDO
+      *
+      *  If number of entries is zero set return code to show this
+      *
+     C           O#ENTY    IFEQ 0
+     C                     MOVEL'CGD1085' P0RTN
+     C                     ENDIF
+      *
+      *  Set To Groups to those found
+      *
+     C                     MOVEAAG        O#TGRP
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXLIST    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPATH   : Look for Path and if not found create             *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRPATH    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRPATH'  @STK,Q
+      *
+      *  /COPY for subroutine
+      *
+     C/COPY WNCPYSRC,CG1070PATH
+      *
+      *  Define key list for path
+      *
+     C           KPGRPS    KLIST
+     C                     KFLD           EPLEV1
+     C                     KFLD           EPLEV2
+     C                     KFLD           EPLEV3
+     C                     KFLD           EPLEV4
+     C                     KFLD           EPLEV5
+     C                     KFLD           EPLEV6
+     C                     KFLD           EPLEV7
+     C                     KFLD           EPLEV8
+     C                     KFLD           EPLEV9
+     C                     KFLD           EPLEV0
+      *
+      *  Reset Path group set fields
+      *
+     C                     MOVEL*BLANKS   EPLEV1
+     C                     MOVEL*BLANKS   EPLEV2
+     C                     MOVEL*BLANKS   EPLEV3
+     C                     MOVEL*BLANKS   EPLEV4
+     C                     MOVEL*BLANKS   EPLEV5
+     C                     MOVEL*BLANKS   EPLEV6
+     C                     MOVEL*BLANKS   EPLEV7
+     C                     MOVEL*BLANKS   EPLEV8
+     C                     MOVEL*BLANKS   EPLEV9
+     C                     MOVEL*BLANKS   EPLEV0
+      *
+      *  Find Repeating Path/Top Group Set
+      *
+     C                     Z-ADD2         Y#      70
+     C                     Z-ADD0         X#      70
+     C                     Z-ADD0         C#      50
+     C                     MOVEL'N'       ##NONR  1
+      *
+     C           W0RTN     DOUEQ'CGD1087'
+     C                     EXSR SRNGRP
+      *
+      *  Check if group set is top or repeating
+      *
+     C           ##GSET    CHAIN@GSETL1              90
+      *
+      *  If not found error
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'CGGSETL1'W0FILE
+     C                     MOVEL##GSET    W0KEY            ***************
+     C                     Z-ADD1         W0ERNB           * DB ERROR 01 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Record is a repeating group
+      *
+     C           GSMREC    IFNE 'N'
+     C           ##NONR    ANDEQ'Y'
+     C                     MOVEL'CGGSETL1'W0FILE
+     C                     MOVEL##GSET    W0KEY            ***************
+     C                     Z-ADD2         W0ERNB           * DB ERROR 02 *
+     C                     MOVEL'CGD1088' W0MSGD           ***************
+     C                     MOVEL'CGUSRMSG'W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C           GSMREC    IFEQ 'N'
+     C           GSCSET    ANDNE'T'
+     C           ##NONR    ANDNE'Y'
+      *
+      *  Read path
+      *
+     C           KPGRPS    CHAIN@PATHL2              90
+      *
+     C                     SELEC
+     C           W0ACT     WHEQ '*PATH   '
+      *
+      *  If path not found add to database
+      *
+     C           *IN90     IFEQ '1'
+     C                     EXSR SRADDP
+     C                     END
+      *
+     C           W0ACT     WHEQ '*RDEDATA'
+      *
+      *  Failure to locate path here is terminal error
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'CGPATHL2'W0FILE
+     C                     MOVEL##GSET    W0KEY            ***************
+     C                     Z-ADD10        W0ERNB           * DB ERROR 01 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C                     MOVE EPPATH    #RRPTH
+      *
+     C                     SELEC
+     C           C#        WHEQ 1
+     C                     MOVELEPLEV1    #RGRPS
+     C           C#        WHEQ 2
+     C                     MOVELEPLEV2    #RGRPS
+     C           C#        WHEQ 3
+     C                     MOVELEPLEV3    #RGRPS
+     C           C#        WHEQ 4
+     C                     MOVELEPLEV4    #RGRPS
+     C           C#        WHEQ 5
+     C                     MOVELEPLEV5    #RGRPS
+     C           C#        WHEQ 6
+     C                     MOVELEPLEV6    #RGRPS
+     C           C#        WHEQ 7
+     C                     MOVELEPLEV7    #RGRPS
+     C           C#        WHEQ 8
+     C                     MOVELEPLEV8    #RGRPS
+     C           C#        WHEQ 9
+     C                     MOVELEPLEV9    #RGRPS
+     C           C#        WHEQ 10
+     C                     MOVELEPLEV0    #RGRPS
+     C                     ENDSL
+      *
+     C                     EXSR SRRDE1
+      *
+     C           W0ACT     WHEQ '*DISPLAY'
+      *
+      *  Failure to locate path here is terminal error
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'CGPATHL2'W0FILE
+     C                     MOVEL##GSET    W0KEY            ***************
+     C                     Z-ADD20        W0ERNB           * DB ERROR 01 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C                     MOVE EPPATH    L#RPTH
+      *
+     C                     EXSR SRDISP
+      *
+     C                     ENDSL
+      *
+      *  Reset Path group set fields
+      *
+     C                     MOVEL*BLANKS   EPLEV1
+     C                     MOVEL*BLANKS   EPLEV2
+     C                     MOVEL*BLANKS   EPLEV3
+     C                     MOVEL*BLANKS   EPLEV4
+     C                     MOVEL*BLANKS   EPLEV5
+     C                     MOVEL*BLANKS   EPLEV6
+     C                     MOVEL*BLANKS   EPLEV7
+     C                     MOVEL*BLANKS   EPLEV8
+     C                     MOVEL*BLANKS   EPLEV9
+     C                     MOVEL*BLANKS   EPLEV0
+      *
+      *  Now find non-repeating path
+      *
+     C                     Z-ADD0         C#
+     C                     MOVEL'Y'       ##NONR  1
+     C                     END
+      *
+      *  Step on level
+      *
+     C                     ADD  1         C#
+      *
+      * Set up key to path file by group set
+      *
+     C                     SELEC
+     C           C#        WHEQ 1
+     C                     MOVEL##GSET    EPLEV1
+     C           C#        WHEQ 2
+     C                     MOVEL##GSET    EPLEV2
+     C           C#        WHEQ 3
+     C                     MOVEL##GSET    EPLEV3
+     C           C#        WHEQ 4
+     C                     MOVEL##GSET    EPLEV4
+     C           C#        WHEQ 5
+     C                     MOVEL##GSET    EPLEV5
+     C           C#        WHEQ 6
+     C                     MOVEL##GSET    EPLEV6
+     C           C#        WHEQ 7
+     C                     MOVEL##GSET    EPLEV7
+     C           C#        WHEQ 8
+     C                     MOVEL##GSET    EPLEV8
+     C           C#        WHEQ 9
+     C                     MOVEL##GSET    EPLEV9
+     C           C#        WHEQ 10
+     C                     MOVEL##GSET    EPLEV0
+     C                     ENDSL
+     C                     ENDDO
+      *
+      *  Read path for Non-Repeating Group
+      *
+     C           KPGRPS    CHAIN@PATHL2              90
+      *
+     C                     SELEC
+     C           W0ACT     WHEQ '*PATH   '
+      *
+      *  If path not found add to database
+      *
+     C           *IN90     IFEQ '1'
+     C                     EXSR SRADDP
+     C                     END
+      *
+     C           W0ACT     WHEQ '*RDEDATA'
+      *
+      *  Failure to locate path here is terminal error
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'CGPATHL2'W0FILE
+     C                     MOVEL##GSET    W0KEY            ***************
+     C                     Z-ADD11        W0ERNB           * DB ERROR 01 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C           *LIKE     DEFN EPPATH    @RNPTH
+     C                     MOVE EPPATH    @RNPTH
+      *
+     C                     EXSR SRRDE2
+      *
+     C                     ENDSL
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXPATH    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRRDE1   : Write to CGRDE1WP                                 *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRRDE1    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRRDE1'  @STK,Q
+      *
+      *  /COPY for subroutine
+      *
+     C/COPY WNCPYSRC,CG1070RDE1
+      *
+      *  Define key list for QTEMP files
+      *
+     C           KPRDE1    KLIST
+     C                     KFLD           #LPATH
+      *
+     C           KPRDE0    KLIST
+     C                     KFLD           #AFGST
+     C                     KFLD           #ALGST
+      *
+     C           *LIKE     DEFN C#        C@
+     C                     Z-ADDC#        C@
+      *
+     C           C@        DOWGT1
+      *
+     C                     CLEAR@RD1FMT
+      *
+     C           KPGRPS    CHAIN@PATHL2              90
+      *
+      *  Failure to locate path here is terminal error
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'CGPATHL2'W0FILE
+     C                     MOVEL##GSET    W0KEY            ***************
+     C                     Z-ADD12        W0ERNB           * DB ERROR 01 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C                     MOVE EPPATH    #LPATH
+      *
+     C                     SELEC
+     C           C@        WHEQ 1
+     C                     MOVELEPLEV1    #ALGST
+     C                     CLEAREPLEV1
+     C           C@        WHEQ 2
+     C                     MOVELEPLEV2    #ALGST
+     C                     CLEAREPLEV2
+     C           C@        WHEQ 3
+     C                     MOVELEPLEV3    #ALGST
+     C                     CLEAREPLEV3
+     C           C@        WHEQ 4
+     C                     MOVELEPLEV4    #ALGST
+     C                     CLEAREPLEV4
+     C           C@        WHEQ 5
+     C                     MOVELEPLEV5    #ALGST
+     C                     CLEAREPLEV5
+     C           C@        WHEQ 6
+     C                     MOVELEPLEV6    #ALGST
+     C                     CLEAREPLEV6
+     C           C@        WHEQ 7
+     C                     MOVELEPLEV7    #ALGST
+     C                     CLEAREPLEV7
+     C           C@        WHEQ 8
+     C                     MOVELEPLEV8    #ALGST
+     C                     CLEAREPLEV8
+     C           C@        WHEQ 9
+     C                     MOVELEPLEV9    #ALGST
+     C                     CLEAREPLEV9
+     C           C@        WHEQ 10
+     C                     MOVELEPLEV0    #ALGST
+     C                     CLEAREPLEV0
+     C                     ENDSL
+      *
+     C           KPRDE1    SETLL@RD1FMT                  91
+     C                     SUB  1         C@
+      *
+     C           KPGRPS    CHAIN@PATHL2              90
+      *
+      *  Failure to locate path here is terminal error
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'CGPATHL2'W0FILE
+     C                     MOVEL##GSET    W0KEY            ***************
+     C                     Z-ADD13        W0ERNB           * DB ERROR 01 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C                     MOVE EPPATH    #FPATH
+      *
+     C                     SELEC
+     C           C@        WHEQ 1
+     C                     MOVELEPLEV1    #AFGST
+     C           C@        WHEQ 2
+     C                     MOVELEPLEV2    #AFGST
+     C           C@        WHEQ 3
+     C                     MOVELEPLEV3    #AFGST
+     C           C@        WHEQ 4
+     C                     MOVELEPLEV4    #AFGST
+     C           C@        WHEQ 5
+     C                     MOVELEPLEV5    #AFGST
+     C           C@        WHEQ 6
+     C                     MOVELEPLEV6    #AFGST
+     C           C@        WHEQ 7
+     C                     MOVELEPLEV7    #AFGST
+     C           C@        WHEQ 8
+     C                     MOVELEPLEV8    #AFGST
+     C           C@        WHEQ 9
+     C                     MOVELEPLEV9    #AFGST
+     C           C@        WHEQ 10
+     C                     MOVELEPLEV0    #AFGST
+     C                     ENDSL
+      *
+     C           *IN91     IFEQ *OFF
+     C           #ALGST    CHAIN@GSETL1              90
+     C  N90                MOVELGSDESC    #GSDES
+     C           KPRDE0    CHAIN@GSASL1              90
+     C  N90                MOVELGADESC    #GADES
+     C                     WRITE@RD1FMT
+     C                     END
+      *
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRRDE2   : Write to CGRDE2WP                                 *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRRDE2    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRRDE2'  @STK,Q
+      *
+      *  /COPY for subroutine
+      *
+     C/COPY WNCPYSRC,CG1070RDE2
+      *
+      *  Define key list for QTEMP files
+      *
+     C           KPRDE2    KLIST
+     C                     KFLD           #RRPTH
+     C                     KFLD           @RNPTH                          083679
+     C***********          KFLD           #RGRPS                          083679
+     C***********          KFLD           #AGRPS                          083679
+      *
+     C           KPRDE3    KLIST
+     C***********          KFLD           #RGRPS                          083679
+     C                     KFLD           #FGRPS                          083679
+     C                     KFLD           #TGRPS                          083679
+      *
+     C           *LIKE     DEFN #RGRPS    #FGRPS
+     C           *LIKE     DEFN #AGRPS    #TGRPS                          083679
+      *
+     C           KPRDE4    KLIST
+     C                     KFLD           #TGRPS
+      *
+     C                     SELEC
+     C           C#        WHEQ 1
+     C                     MOVEL#RGRPS    #FGRPS                          083679
+     C                     MOVELEPLEV1    #TGRPS
+     C           C#        WHEQ 2
+     C                     MOVELEPLEV1    #FGRPS
+     C                     MOVELEPLEV2    #TGRPS
+     C           C#        WHEQ 3
+     C                     MOVELEPLEV2    #FGRPS                          083679
+     C                     MOVELEPLEV3    #TGRPS
+     C           C#        WHEQ 4
+     C                     MOVELEPLEV3    #FGRPS                          083679
+     C                     MOVELEPLEV4    #TGRPS
+     C           C#        WHEQ 5
+     C                     MOVELEPLEV4    #FGRPS                          083679
+     C                     MOVELEPLEV5    #TGRPS
+     C           C#        WHEQ 6
+     C                     MOVELEPLEV5    #FGRPS                          083679
+     C                     MOVELEPLEV6    #TGRPS
+     C           C#        WHEQ 7
+     C                     MOVELEPLEV6    #FGRPS                          083679
+     C                     MOVELEPLEV7    #TGRPS
+     C           C#        WHEQ 8
+     C                     MOVELEPLEV7    #FGRPS                          083679
+     C                     MOVELEPLEV8    #TGRPS
+     C           C#        WHEQ 9
+     C                     MOVELEPLEV8    #FGRPS                          083679
+     C                     MOVELEPLEV9    #TGRPS
+     C           C#        WHEQ 10
+     C                     MOVELEPLEV9    #FGRPS                          083679
+     C                     MOVELEPLEV0    #TGRPS
+     C                     ENDSL
+      *
+     C           KPRDE2    CHAIN@RD2FMT              90
+      *
+     C           *IN90     IFEQ *ON
+      *
+     C           KPRDE3    CHAIN@GSASL1              91
+     C           KPRDE4    CHAIN@GSETL1              92
+      *
+     C***********#TGRPS    CHAIN@RASCL1              90                   083679
+     C           #TGRPS    CHAIN@RASCL2              90                   083679
+     C           *IN90     DOWEQ*OFF
+      *
+     C           *NOKEY    CLEAR@RD2FMT
+      *
+     C  N91                MOVE GADESC    ##ADES
+     C  N91                MOVE GASEQA    ##SEQA
+     C  N92                MOVE GSDESC    ##SDES
+      *
+     C                     MOVE @RNPTH    #RNPTH
+     C                     MOVELRADESC    #RADES
+     C                     MOVE RASEQA    #ASEQA
+     C                     MOVE #TGRPS    #AGRPS
+     C                     MOVE RARDE     #ARDE
+     C           *LIKE     DEFN #DOSEQ    W#OSEQ                          083679
+     C           W#OSEQ    ADD  1         W#OSEQ                          083679
+     C                     Z-ADDW#OSEQ    #DOSEQ                          083679
+      *
+     C           #ARDE     CHAIN@RDTAL1              90
+     C           *IN90     IFEQ *OFF
+     C                     MOVELRDDESC    #RDDES
+     C                     MOVELRDFOPT    #RFOPT
+     C                     MOVE RDELYP    #DELYP
+     C                     MOVE RDETXT    #DETXT
+     C                     Z-ADDRDMAXL    #DMAXL
+     C                     END
+      *
+     C                     WRITE@RD2FMT
+      *
+     C***********#TGRPS    READE@RASCL1                  90               083679
+     C           #TGRPS    READE@RASCL2                  90               083679
+     C                     END
+      *
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDISP   : Generate Display Data                             *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRDISP    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRDISP'  @STK,Q
+      *
+      *  /COPY for subroutine
+      *
+     C/COPY WNCPYSRC,CG1070DISP
+      *
+     C           KPDEC2    KLIST
+     C                     KFLD           #@LAYO
+     C                     KFLD           L#RPTH
+      *
+     C           KPLAY1    KLIST
+     C                     KFLD           L#RPTH
+      *
+     C           *NOKEY    RESET@LAYFW1
+      *
+     C           KPDEC2    CHAIN@PDECL2              90
+      *
+      *  Check if existing or new layout
+      *
+     C           C#        IFEQ 1
+     C           OLDLAY    ANDEQ*BLANKS
+      *
+     C   90                MOVE 'N'       OLDLAY
+     C  N90                MOVE 'Y'       OLDLAY
+     C                     OUT  CGLDA
+      *                                                                   084084
+      *  Initialise redirection index                                     084084
+      *                                                                   084084
+     C                     RESETREDIDS                                    084084
+      *
+      *  Need to traverse layout structure to initialise with layout
+      *
+     C                     SELEC
+     C           OLDLAY    WHEQ 'Y'
+     C***********          EXSR SRCLOS                              089189089189
+     C                     EXSR SRCLOS                                    089189
+     C                     CALL 'CGC8020' PL8020       9090
+      *
+     C           *IN90     IFEQ '1'
+     C           P@RTCD    OREQ '*ERROR*'
+     C                     MOVEL'CGC8020' W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD5         W0ERNB           * DB ERROR 05 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C***********          EXSR SROPE2                              089189089189
+     C                     EXSR SROPE2                                    089189
+      *
+     C           OLDLAY    WHEQ 'N'
+     C                     Z-ADDC#        L#DCOL
+     C                     Z-ADD0         #SEQAN
+     C                     MOVE L@SEQA    L#SEQA
+      *                                                                   084084
+     C                     MOVELEPLEV1    ##PLAN                          084084
+     C                     MOVE 'R'       #NAMEI                          084084
+     C                     EXSR SRNRED                                    084084
+     C                     MOVE ##PLAN    L#PLAN                          084084
+      *                                                                   084084
+     C                     WRITE@LAYFW1
+     C                     EXSR SR@LAY
+      *  Add associated plane
+     C                     ADD  1         #SEQAN
+     C                     MOVE L@SEQA    L#SEQA
+     C                     MOVELL#PLAN    L#PPLA
+      *                                                                   084084
+     C                     MOVELL#PLAN    ##PLAN                          084084
+     C                     MOVE 'D'       #NAMEI                          084084
+     C                     EXSR SRNRED                                    084084
+     C                     MOVE ##PLAN    L#PLAN                          084084
+      *                                                                   084084
+     C                     ADD  1         L#DCOL
+     C                     MOVE L#RPTH    L#LRPT
+     C                     CLEARL#RPTH
+     C                     WRITE@LAYFW1
+      *
+     C                     EXSR SR@LAY
+     C                     ENDSL
+      *
+     C                     END
+      *
+     C           C#        IFGT 1
+      *  Determine plane names
+     C                     SELEC
+     C           C#        WHEQ 2
+     C                     MOVELEPLEV1    L#PPLA
+     C                     MOVELEPLEV2    L#PLAN
+     C           C#        WHEQ 3
+     C                     MOVELEPLEV2    L#PPLA
+     C                     MOVELEPLEV3    L#PLAN
+     C           C#        WHEQ 4
+     C                     MOVELEPLEV3    L#PPLA
+     C                     MOVELEPLEV4    L#PLAN
+     C           C#        WHEQ 5
+     C                     MOVELEPLEV4    L#PPLA
+     C                     MOVELEPLEV5    L#PLAN
+     C           C#        WHEQ 6
+     C                     MOVELEPLEV5    L#PPLA
+     C                     MOVELEPLEV6    L#PLAN
+     C           C#        WHEQ 7
+     C                     MOVELEPLEV6    L#PPLA
+     C                     MOVELEPLEV7    L#PLAN
+     C           C#        WHEQ 8
+     C                     MOVELEPLEV7    L#PPLA
+     C                     MOVELEPLEV8    L#PLAN
+     C           C#        WHEQ 9
+     C                     MOVELEPLEV8    L#PPLA
+     C                     MOVELEPLEV9    L#PLAN
+     C           C#        WHEQ 10
+     C                     MOVELEPLEV9    L#PPLA
+     C                     MOVELEPLEV0    L#PLAN
+     C                     ENDSL
+      *                                                                   084084
+     C                     MOVELL#PLAN    ##PLAN                          084084
+     C                     MOVE 'R'       #NAMEI                          084084
+     C                     EXSR SRNRED                                    084084
+     C                     MOVE ##PLAN    L#PLAN                          084084
+      *                                                                   084084
+     C                     MOVELL#PPLA    ##PLAN                          084084
+     C                     MOVE 'R'       #NAMEI                          084084
+     C                     EXSR SRNRED                                    084084
+     C                     MOVE ##PLAN    L#PPLA                          084084
+      *                                                                   084084
+      *  Previous must connect                                            084084
+      *                                                                   084084
+     C           *LIKE     DEFN #REDIR    @@EDIR                          084084
+     C                     Z-ADD#REDIR    @@EDIR                          084084
+      *                                                                   084084
+     C                     DO   @@EDIR                                    084084
+      *                                                                   084084
+     C                     MOVELL#PPLA    ##PLAN                          084084
+     C                     MOVE 'R'       #NAMEI                          084084
+     C                     EXSR SRNRED                                    084084
+     C                     MOVE ##PLAN    L@PPLA                          084084
+     C           *LIKE     DEFN L#PLAN    L@PPLA                          084084
+      *                                                                   084084
+     C           L@PPLA    SETLL@LAYFMT                  30               084084
+      *                                                                   084084
+     C           *IN30     IFEQ *ON                                       084084
+     C                     MOVE L@PPLA    L#PPLA                          084084
+     C                     LEAVE                                          084084
+     C                     END                                            084084
+      *                                                                   084084
+     C                     SUB  1         #REDIR                          084084
+      *                                                                   084084
+     C                     END                                            084084
+      *                                                                   084084
+     C                     Z-ADD@@EDIR    #REDIR                          084084
+      *
+     C                     SELEC
+     C           OLDLAY    WHEQ 'Y'
+      *
+      *  Not in list: add to unconnected list
+      *
+     C           *IN90     IFEQ *ON
+      *
+     C                     Z-ADDC#        L#DCOL
+     C                     MOVEL'*LOOSE'  L#LRPT
+     C                     WRITE@LAYFW1
+      *  Add associated plane
+     C                     MOVELL#PLAN    L#PPLA
+     C                     MOVE 'NEW'     L#SEQA
+      *
+     C                     MOVELL#PLAN    ##PLAN                          084084
+     C                     MOVE 'D'       #NAMEI                          084084
+     C                     EXSR SRNRED                                    084084
+     C                     MOVE ##PLAN    L#PLAN                          084084
+      *
+     C                     ADD  1         L#DCOL
+     C                     MOVE L#RPTH    L#LRPT
+     C                     CLEARL#RPTH
+     C                     WRITE@LAYFW1
+      *
+      *  Otherwise traverse layout from this point
+      *
+     C                     ELSE
+      *
+     C           LPPLAN    SETLL@LAYFMT                  30089189   084084089189
+     C***********          EXSR SRCLOS                              089189089189
+     C                     EXSR SRCLOS                                    089189
+      *
+     C           *IN30     IFEQ *OFF                       089189         089189
+      *
+     C                     CALL 'CGC8020' PL8020       9090
+      *
+     C           *IN90     IFEQ '1'
+     C           P@RTCD    OREQ '*ERROR*'
+     C                     MOVEL'CGC8020' W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD6         W0ERNB           * DB ERROR 05 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C                     END                             089189         089189
+      *
+     C***********          EXSR SROPE2                              089189089189
+     C                     EXSR SROPE2                                    089189
+      *
+     C                     END
+      *
+     C           OLDLAY    WHEQ 'N'
+      *
+      *  Check if repeater in list first
+      *
+     C           KPLAY1    CHAIN@LAYFW1              90
+      *
+     C           *IN90     IFEQ *ON
+      *  If not add plane
+     C                     Z-ADDC#        L#DCOL
+     C                     ADD  1         #SEQAN
+     C                     MOVE L@SEQA    L#SEQA
+      *                                                                   084084
+     C           L#PLAN    SETLL@LAYFMT                  30               084084
+      *  If duplicate increment redirection count                         084084
+     C           *IN30     IFEQ *ON                                       084084
+      *
+     C                     ADD  1         #REDIR                          084084
+      *
+     C                     MOVELL#PLAN    ##PLAN                          084084
+     C                     MOVE 'R'       #NAMEI                          084084
+     C                     EXSR SRNRED                                    084084
+     C                     MOVE ##PLAN    L#PLAN                          084084
+     C                     END                                            084084
+      *                                                                   084084
+     C                     WRITE@LAYFW1
+      *
+     C                     EXSR SR@LAY
+      *  Add associated plane
+     C                     ADD  1         #SEQAN
+     C                     MOVE L@SEQA    L#SEQA
+     C                     MOVELL#PLAN    L#PPLA
+      *
+     C                     MOVELL#PLAN    ##PLAN                          084084
+     C                     MOVE 'D'       #NAMEI                          084084
+     C                     EXSR SRNRED                                    084084
+     C                     MOVE ##PLAN    L#PLAN                          084084
+      *
+     C                     ADD  1         L#DCOL
+     C                     MOVE L#RPTH    L#LRPT
+     C                     CLEARL#RPTH
+     C                     WRITE@LAYFW1
+      *
+     C                     EXSR SR@LAY
+      *
+     C                     END
+      *
+     C                     ENDSL
+      *
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRNRED   : Add re-direction index to name                    *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRNRED    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRNRED'  @STK,Q
+      *
+      *  /COPY for subroutine
+      *
+     C/COPY WNCPYSRC,CG1070NRED
+      *
+     C           6         SUBST##PLAN    ##PLAN    P                     084084
+      *
+     C                     SELEC                                          084084
+     C           #NAMEI    WHEQ 'D'
+     C           ##PLAN    CAT  LDATA:0   ##PLAN    P                     084084
+     C           #NAMEI    WHEQ 'R'
+     C           ##PLAN    CAT  LREPE:0   ##PLAN    P                     084084
+     C                     ENDSL                                          084084
+      *
+     C           ##PLAN    CAT  @REDIR:0  ##PLAN    P                     084084
+      *
+     C           *LIKE     DEFN L#PLAN    ##PLAN
+     C                     MOVE *BLANKS   #NAMEI  1
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SR@LAY   : Add QTEMP record & add to layout data             *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SR@LAY    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SR@LAY'  @STK,Q
+      *
+      *  /COPY for subroutine
+      *
+     C/COPY WNCPYSRC,CG1070@LAY
+      *
+     C                     RESET@PDECPD
+     C                     CLEAR@PASCPD
+      *
+     C           L#DCOL    IFNE 1
+     C                     MOVE #@LAYO    BALAYO
+     C                     MOVE L#PPLA    BAPLAN
+     C                     MOVE L#PLAN    BATPLN
+     C                     MOVE L@SEQA    BASEQA
+     C                     MOVE 'D'       BARECI
+     C                     WRITE@PASCPD
+     C                     ELSE
+     C                     MOVE 'Y'       LPTOPP
+     C                     END
+      *
+     C                     MOVE #@LAYO    LPLAYO
+     C                     MOVE L#PLAN    LPPLAN
+     C                     MOVE L#RPTH    LPRPTH
+     C                     MOVE 'D'       LPRECI
+     C                     WRITE@PDECPD
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SROPE1   : Open files in QTEMP                               *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SROPE1    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SROPE1'  @STK,Q
+      *
+      *  /COPY for subroutine
+      *
+     C/COPY WNCPYSRC,CG1070OPE1
+      *
+      *  Open files in this mode only
+      *
+     C***********#OPEN1    IFEQ *BLANKS                                   089189
+     C                     OPEN CGWPRDE1
+     C                     OPEN CGWPRDE2
+     C**********           MOVE 'Y'       #OPEN1  1                       089189
+     C**********           END                                            089189
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SROPE2   : Open files in QTEMP                               *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SROPE2    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SROPE2'  @STK,Q
+      *
+      *  /COPY for subroutine
+      *
+     C/COPY WNCPYSRC,CG1070OPE2
+      *
+      *  Open files in this mode only
+      *
+     C***********#OPEN2    IFEQ *BLANKS                                   089189
+     C                     OPEN CGWPLAYO                                  084084
+     C                     OPEN CGW1LAYO
+     C                     OPEN CGPDECPD
+     C                     OPEN CGPASCPD
+     C**********           MOVE 'Y'       #OPEN2  1                       089189
+     C**********           END                                            089189
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCLOS   : Close all work files                              *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRCLOS    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRCLOS'  @STK,Q
+      *
+      *  /COPY for subroutine
+      *
+     C/COPY WNCPYSRC,CG1070CLOS
+      *
+      *  Open files in this mode only
+      *
+     C                     CLOSECGWPRDE1
+     C                     CLOSECGWPRDE2
+     C                     CLOSECGWPLAYO
+     C                     CLOSECGW1LAYO
+     C                     CLOSECGPDECPD
+     C                     CLOSECGPASCPD
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRNGRP   : Find Next Group                                   *
+      *                                                               *
+      *  CALLED BY: SRPATH - Process Path                             *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRNGRP    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRNGRP'  @STK,Q
+      *
+      *  /COPY for subroutine
+      *
+     C/COPY WNCPYSRC,CG1070NGRP
+      *
+      *  Initialise control code
+      *
+     C                     MOVEL*BLANKS   W0RTN
+     C           *LIKE     DEFN EPLEV1    ##GSET
+      *
+      *  Find First delimter
+      *
+     C           '\'       SCAN I#PATH:Y# X#             90
+      *
+      *  If found find length
+      *
+     C           *IN90     IFEQ '1'
+      *
+     C           X#        SUB  Y#        Z#      50
+     C           Z#        SUBSTI#PATH:Y# ##GSET    P
+      *
+      *  Set Y# to next free space
+      *
+     C           X#        ADD  1         Y#
+     C                     ELSE
+      *
+      *  Substring fixed length of six
+      *
+     C           6         SUBSTI#PATH:Y# ##GSET
+     C                     MOVEL'CGD1087' W0RTN   7
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXNGRP    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRADDP   : Add Path                                          *
+      *                                                               *
+      *  CALLED BY: SRPATH - Process Path                             *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRADDP    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRADDP'  @STK,Q
+      *
+      *  /COPY for subroutine
+      *
+     C/COPY WNCPYSRC,CG1070ADDP
+      *
+      * If standard Group Set use name
+      *
+     C           ##GSET    IFEQ 'SYSTEM'
+     C                     MOVEL##GSET    EPPATH
+     C                     ELSE
+      *
+      * Get Path name
+      *
+     C           *NAMVAR   DEFN           CGDTA
+     C           *LOCK     IN   CGDTA
+     C                     MOVELDAPATH    ##PATH  60
+     C                     ADD  1         ##PATH
+     C                     MOVEL##PATH    EPPATH
+     C                     MOVEL##PATH    DAPATH
+     C                     OUT  CGDTA
+      *
+     C                     END
+      *
+      *  Format extra fields and write record
+      *
+     C                     MOVEL'D'       EPRECI           Record Identifi
+     C                     MOVEL##JOB     EPAJOB           Job name
+     C                     MOVEL##USR     EPAUSR           User name
+     C                     TIME           EPATIM           Action Time
+     C                     MOVELWUMRDT    EPARDT           Action Date
+     C                     MOVEL'I'       EPAACT           Action Type
+     C                     Z-ADDWURDNB    EPRDNB           Run day number
+      *
+      * If record exists DB Error
+      *
+      *
+      * Check for duplicate primary key
+      *
+     C           EPPATH    SETLL@PATHL0                  90*
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'CGPATHL0'W0FILE
+     C                     MOVELI#PATH    W0KEY            ***************
+     C                     Z-ADD3         W0ERNB           * DB ERROR 03 *
+     C                     MOVEL'CGD1089' W0MSGD           ***************
+     C                     MOVEL'CGUSRMSG'W0MSGF
+     C                     EXSR SRERR
+     C                     ELSE
+     C                     WRITE@PATHL0
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXADDP    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRACT    : Undefined action - error                          *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRACT     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRACT '  @STK,Q
+      *
+      *  Database error undefined action
+      *
+     C                     MOVEL'*ACTION 'W0FILE           ***************
+     C                     MOVELW0ACT     W0KEY            * DB ERROR 04 *
+     C                     Z-ADD4         W0ERNB           ***************
+     C                     MOVEL'MEM5006' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXACT     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      ACT@   80
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *  /COPY for subroutine
+      *
+     C/COPY WNCPYSRC,CG1070INIT
+      *
+      *  Indicate that set up is complete
+      *
+     C                     SETON                     50
+      *
+      *  Get Rundate information
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+     C*
+     C* Get modules information
+     C*
+     C                     CALL 'AOMMODR0'             9090
+     C                     PARM *BLANKS   P@RTCD  7        B:Return code
+     C                     PARM '*FIRST ' P@OPTN  7        I:Option
+     C           MMODDS    PARM *BLANKS   DSFDY            O:Module Flg
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           P@RTCD    OREQ '*ERROR*'
+     C                     MOVEL'AOMMODR0'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD5         W0ERNB           * DB ERROR 05 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *
+      * Cpysrc Templates Initialise Program C-spec
+      *
+     C/COPY WNCPYSRC,CG1000DCPG
+     C/EJECT
+      *
+      * File and Program Error Processing
+      *
+     C/COPY CGCPYSRC,SRERRC
+     C/EJECT
+      *
+      * Cpysrc Templates Initialise Program O-spec
+      *
+     O/COPY WNCPYSRC,CG1000DOPG
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

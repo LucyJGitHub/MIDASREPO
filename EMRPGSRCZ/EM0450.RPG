@@ -1,0 +1,2298 @@
+0001 H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas EM Create End of Day Exposure File')             *
+0002 F********************************************************************EM0450
+     F*  Midas EXPOSURE MANAGEMENT MODULE                             EM0450
+0004 F*                                                                  *EM0450
+0005 F*    EM0450 - END OF DAY EXPOSURE FILE CREATE                      *EM0450
+0008 F*                                                                  *EM0450
+     F*  Function: This program creates a file (EMDEXX5), from the
+     F*  (COB)     master file extracts, that will contain the exposure
+     F*            as at the close of business for each unique customer
+     F*            country, region, industry and account officer
+0008 F*            combination. The exposure is split across the main    *EM0450
+0008 F*            business areas of FX, MM, RE, FRA, IRS, SE and LE.    *EM0450
+0008 F*                                                                  *EM0450
+0008 F*            A record is output to the 'End of Day Exposure' file  *EM0450
+0008 F*            (EMDEXX5) on change of :                              *EM0450
+0008 F*            Account Officer within                                *EM0450
+0008 F*            Customer number within                                *EM0450
+0008 F*            Industry Code within                                  *EM0450
+0008 F*            Region within                                         *EM0450
+0008 F*            Country of Risk,                                      *EM0450
+     F*            if the deal/loan has reached value date but not
+0008 F*            maturity date.                                        *EM0450
+0008 F*                                                                  *EM0450
+0008 F*            Depending on the type of record read i.e. from which  *EM0450
+0008 F*            module it comes, a subroutine will be executed which  *EM0450
+0008 F*            will output the amounts etc. to the correct fields    *EM0450
+0008 F*            on EMDEXX5.                                           *EM0450
+0008 F*                                                                  *EM0450
+0008 F*            If the Retail module is present, ACCNT is read and    *EM0450
+0008 F*            the ledger balance for that account obtained from     *EM0450
+0008 F*            the file MEMOS. If the ledger balance is positive     *EM0450
+0008 F*            it is added to the retail exposure, otherwise it is   *EM0450
+0008 F*            subtracted from the retail offset.                    *EM0450
+0008 F*                                                                  *EM0450
+0008 F*            If the account has a facility or an overdraft line    *EM0450
+0008 F*            these are added to the Retail Granted.                *EM0450
+0008 F*                                                                  *EM0450
+0008 F*            All amounts are converted to the exposure currency    *EM0450
+0008 F*            and divided by 1000 before output.                    *EM0450
+0008 F*                                                                  *EM0450
+     F*  Called By: EMC06
+     F*
+     F*  Calls: EM0451
+0006 F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CLE141             Date 08Feb16               *
+      *  Prev Amend No. AR1083699          Date 24Aug14               *
+      *                 MD020182           Date 24Aug14               *
+      *                 MD020256           Date 24Aug14               *
+      *                 MD020198           Date 24Aug14               *
+      *                 MD029610           Date 07Aug14               *
+      *                 MD020363           Date 08May13               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CUP004             Date 02Nov10               *
+      *                 CER059             Date 19Jul10               *
+      *                 BUG23967           Date 13May09               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CCB016             Date 17Oct07               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 146139             Date 01Dec06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG9784            Date 06Jan06               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 BUG2591            Date 14May04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSD007             Date 28Aug00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 146766             Date 20Oct99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                   146993             Date 04May99                *EM0450
+      *                   CTI002             Date 12Oct98     *
+     F*                   125617             Date 20Oct98                *
+     F*                   136029             Date 13Oct98                *
+     F*                   CDL002             Date 22Sep97                *
+     F*                   093013             DATE 27JUN96                *
+     F*                   090080             DATE 22JAN96                *
+     F*                   S01408             DATE 07DEC95                *
+     F*                   095620             DATE 08NOV95                *
+     F*                   090793             DATE 27JUL95                *
+     F*                   076093             DATE 04NOV94                *
+     F*                   E30577 (BH1065)    DATE 26MAR91                *
+     F*                   E26179             DATE 23MAY91                *
+     F*                   S01339             DATE 21MAY91                *
+     F*                   S01332             DATE 19APR91                *
+     F*                   E20641             DATE 22DEC89                *
+0007 F*                   RT0086             DATE 13MAY91                *
+     F*                   E16463             DATE 22DEC89                *
+     F*                   S01117             DATE 25/10/89               *
+     F*                   E17677             DATE 06/06/89               *
+     F*                   E12846             DATE 20/04/89               *E12846
+     F*                   E11848             DATE 26/01/88               *E10841
+     F*                   S01129             DATE 05/11/87               *S01129
+     F*                   E10841             DATE 04/07/87               *E10841
+0007 F*                   E10836             DATE 20/05/87               *E10836
+0007 F*                   S01128             DATE 24/04/87               *S01128
+0009 F*                                                                  *EM0450
+0011 F********************************************************************EM0450
+     F*                                                                  *
+      *  CLE141 - Currency and Location Business Day Convention       *
+      *           (Recompile)                                         *
+      *  AR1083699 - Correct the position of MDIN to match the        *
+      *              TABEM file. (Child: AR1083894)                   *
+      *            - Applied for MD029792.                            *
+      *  MD020182 - Use Country of Citizenship in positions 84-85     *
+      *             instead of Country of Location in positions 86-87.*
+      *             Reversed CUP004.                                  *
+      *           - Applied for MD029792.                             *
+      *  MD020256 - EM0450 fails when reading record from ACCNTAC.    *
+      *           - Amend program to prevent EMC06 from crashing.     *
+      *           - Applied for MD029792.                             *
+      *  MD020198 - Errors in accessing and checking of account code  *
+      *             mean all RE accounts are ignored.                 *
+      *           - Applied for MD029792.                             *
+      *  MD029610 - COB Failure in EMC06 00002 component due to blank *
+      *             Local Institution Code                            *
+      *  MD020363 - Include MM deal exposure from the VALUE DATE      *
+      *             rather than DEAL DATE. Reverse fix 146139         *
+      *           - Applied for MD027409.                             *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CUP004 - Internal definition of CLINTCB does not match file. *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG23967 - Add Local Industry Code Field.                    *
+     F*  CCB016 - CoB performance enhancement                         *
+     F*           Optimize access to EMDEX and EMEXSCL1 files.        *
+     F*  146139 - Include MM deals which have not yet reached Value   *
+     F*           Date.                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG9784 - Incorrect field positions in file EMXT2D2.         *
+      *            (Recompile)                                        *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  BUG2591- Ignore closed accounts                              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *  CSD007 - Customer Closing                                    *
+     F*    146766 - Duplication of scaling for securities issued.        *
+     F*    146993 - applied fix 144578                                   *
+     F*    CTI002 - EM / TI INTERFACE                                    *
+     F*    125617 - Granted Limits for Loans doubled for some custmrs.   *
+     F*             Ensure only correct record is updated.               *
+     F*    136029 - Set on U7, U8 and LR for all DB errors.              *
+     F*    CDL002 - FX Netting. Include netting deals.                   *
+     F*    093013 - COB halted in component EMC06 program EM0450 due to  *
+     F*             an update or delete in EMDEX without prior read or   *
+     F*             chain.  *IN16 which is a RII (record identifying     *
+     F*             indicator) of EMDEX, is never set off in program.    *
+     F*             Since EMDEX is a fully procedural file, *IN16 must   *
+     F*             be explicitly set off.                               *
+     F*    090080 - Correct DB error processing                          *
+     F*    S01408 - Addition of core hooks EM0450CCP1                    *
+     F*                                    EM0450CCP2                    *
+     F*    095620 - Correct DB error processing                          *
+     F*    090793 - LOAN PAST DUE SHOULD NOT RELEASE THE EXPOSURE,       *
+     F*             FIX BH1065 TRY TO DO SO BUT FAILED.                  *
+     F*             COMMENT OUT BH1065 AND APPLY 088509 (= 028222).      *
+     F*    076093 - Data base error 13 if the country of risk of the     *
+     F*             customer is not the country of risk of the loan.     *
+     F*             Create an exposure for the customer in the country   *
+     F*             of risk of the loan.                                 *
+     F*    BH1065 - IF A LOAN IS PAST DUE, THE BANK STILL HAS EXPOSURE   *
+     F*    E26179 - REINTRODUCE DBASE ERROR 15 - SEE E11848.             *
+     F*    S01339 - REMOVAL OF SYNDICATED LOANS/SYNDICATED LOAN          *
+     F*             FACILITIES.                                          *
+     F*    S01332 - EXPOSURE MANAGEMENT RELEASE 10 ENHANCEMENTS.         *
+     F*    RT0086 - REMOVE 'END OF REPORT' FROM AU REPORT.               *
+     F*    E20641 - Certain fields are not written to the file EMDEXX5   *E20641
+     F*             as zeros when writting a new record.                 *E20641
+     F*    E16463 - Exposure figures not created for DL because the SE   *E16463
+     F*             Indicator 67 is not set off correctly.               *E16463
+     F*    S01117 - RELEASE 10 MULTIBRANCHING                            *
+     F*    E17677 - RPG UPDATED FROM II TO III BECAUSE THERE IS A        *E17677
+     F*             POSSIBILITY THAT THE EXISTING CODE IS NOT CORRECTLY  *E17677
+     F*             COMPILED CAUSING ERRORS IN THE CALCULATION OF FX     *E17677
+     F*             EXPOSURE                                             *E17677
+     F*    E12846 - THE CUSTOMER ACCOUNT OFFICER SHOULD BE HELD ON THE
+     F*             EXPOSURE RECORD.
+     F*    E11848 - FIX E10841 CAUSED RPG ERROR WITH MATCH FIELDS OUT     E11848
+     F*             OF SEQUENCE. E10841 REMOVED UNTIL IT CAN BE           E11848
+     F*             APPLIED CORRECTLY AFTER RELEASE 22                    E11848
+     F*    S01129 - SECURITIES TRADING RELEASE 2                       X5*S01129
+     F*    E10841 - ADD EXTRA FIELD (CUSTOMER A/C OFFICER) TO P/F EMDEXX5*E10841
+     F*    E10836 - PARTS. SOLD WITHOUT RECOURSE FOR PARTS. PURCHASED    *E10836
+     F*             ORIGINALLY WITHOUT RECOURSE SHOULD EFFECT THE        *E10836
+     F*             EXPOSURE/OFFSET OF THE ORIGINAL BORROWER AND NOT     *E10836
+     F*             THE PARTS. PURCHASED FROM CUSTOMER.                  *E10836
+0010 F*    S01128 - ALLOWS FOR FURTHER TYPES OF INPUT FROM MASTER        *EM0450
+0010 F*             FILE EXTRACTS                                        *EM0450
+0010 F*           - 'FACT' = 0 => RETAIL EXP & OFFSETTING BALANCE        *EM0450
+0010 F*             'FACT' .NE. 0 => LOANS EXP & OFFSETTING BALANCE      *EM0450
+0010 F*                                                                  *EM0450
+0011 F********************************************************************EM0450
+     F/COPY WNCPYSRC,EM0450F002
+0012 F***EMXTS** IS  F     128  6AI     2 DISK                                       EM0450 BUG23967
+0012 FEMXTS   IS  F     131  6AI     2 DISK                                                 BUG23967
+0013 F***TABLE** IF  F      96 12AI     2 DISK                                      EM0450 AR1083699
+     FTABLE   IF  F     116 12AI     2 DISK                                                AR1083699
+     F/COPY WNCPYSRC,EM0450F003
+0014 F***CLINT** IP  F     256  7AI     2 DISK                                       EM0450 BUG23967
+     FCLINT   IP  F     264  7AI     2 DISK                                                 BUG23967
+     F*LINTC  IF  F     256  7AI     2 DISK                         E10841E11848
+0015 F*CLOAN***IF**F     400  7AI     2 DISK                       EM0450 CLE011
+0015 F***CLOAN** IF  F    1310  7AI     2 DISK                                       CLE011 BUG23967
+     FCLOAN   IF  F    1782  7AI     2 DISK                                                 BUG23967
+0016 F*CCNT   IF  F     400 15AI     2 DISK                               S01117
+0016 F***ACCNT** IF  F     400 18AI     2 DISK                                         S01117 CGL029
+     FACCNT   IF  F     573 18AI     2 DISK                                                   CGL029
+0017 F*MDEX   UF  F     128 15AI     2 DISK                               S01128
+0017 F*MDEXX5 O   F     128            DISK                      A  S01128E10841
+0017 F*MDEX***UF  F     152 15AI     2 DISK                         S01128S01129
+0017 F*MDEX   UF  F     178 15AI     2 DISK                         S01129S01332
+0017 F*EMDEX   UF  F     226 15AI     2 DISK                        S01332CTI002
+     F***EMDEX** UF  F     250 15AI     2 DISK                                       CTI002 BUG23967
+     FEMDEX   UF  F     253 15AI     2 DISK                                                 BUG23967
+0017 FEMDEXX4 O   F     128            DISK                      A        EM0450
+0017 F****XX5 O   F     152            DISK                      A  E10841E11848
+0017 F*MDEXX5*O***F     154            DISK                      A  E11848S01129
+0017 F*MDEXX5 O   F     178            DISK                      A  S01129S01332
+0017 F*EMDEXX5 O   F     226            DISK                      A S01332CTI002
+0017 F***EMDEXX5 O   F     250            DISK                      A                CTI002 MD029610
+0017 FEMDEXX5 O   F     253            DISK                      A        CTI002            MD029610
+0017 FEMDEXX6 O   F     128            DISK                      A        EM0450
+0018 F*M0450P1O***F     132     OF     PRINTER                      S01124S01117
+0018 FEM0450AUO   F     132     OF     PRINTER                            S01117
+     F/COPY WNCPYSRC,EM0450F001
+     F**  Exposure management scaling file LF/EMEXSCL1                    S01332
+     F/COPY ZSRSRC,ZEXPSCLZ2                                              S01332
+0020 F*                                                                   EM0450
+0021 F* ID F  C  H  L    FUNCTION OF INDICATORS                           EM0450
+0022 F**                                                                  EM0450
+0023 F* 01            EMTXS - CUSTOMER LENDING TXN                        EM0450
+0024 F* 02            EMTXS - DEALING TXN                                 EM0450
+0025 F**03************EMYXS*-*SYNDICATED*LOANS*TXN                        S01339
+0026 F* 04            EMTXS - TRAILER RECORD                              EM0450
+0027 F* 05            CLINT - LIVE DETAIL RECORD                          EM0450
+0028 F* 06            CLINT - NON-PROCESSING RECORD TYPES                 EM0450
+0029 F* 07            EMTXS - CATCH ALL                                   EM0450
+0030 F* 08            EMTXS - LENDING RECORD TYPE 66/67 NO RECOURSE       EM0450
+0031 F* 09            CLINT - NON PROCESSING TYPE                         EM0450
+0032 F* 10            TABLE - ACCOUNT CODE (RETAL TYPE)                   EM0450
+0033 F* 11                                                                EM0450
+0034 F* 12            CLOAN - LIVE DETAIL RECORD                          EM0450
+     F* 13            EMXTS - LENDING FACILITIES RECORD                   S01128
+     F**14************EMXTS*-*SYNDICATED*LOANS*FACILITIES*RECORD    S01128S01339
+0035 F* 16            EMDEX - LIVE DETAIL RECORD                          EM0450
+0036 F* 17            EMDEX - TRAILER RECORD                              EM0450
+0036 F* 18            EMDEX - SECURITIES TRADING RECORD                   S01129
+0037 F**                                                                  EM0450
+0038 F*    20                DIVIDE INDICATOR = 0                         EM0450
+0039 F**                                                                  EM0450
+0038 F*    25                CHAIN FAIL ON EMEXSCL1                       S01332
+     F*       38-39          WORK INDICATORS                              S01128
+0040 F*       40             FIRST CYCLE INDICATOR                        EM0450
+0041 F*       41             IF ON - RETAIL MODULE PRESENT                EM0450
+0042 F*       42             IF ON - LCCY IS DIVIDE TYPE                  EM0450
+0043 F*       45                                                          EM0450
+0044 F*       46                                                          EM0450
+0045 F*       47                                                          EM0450
+0046 F*       48                                                          EM0450
+0047 F*       49                                                          EM0450
+0048 F*       50-54          WORK INDICATORS FOR SUB-ROUTINES             EM0450
+0049 F*       50-52          ** ALSO USED FOR OUTPUT ON LR **             EM0450
+0049 F*       53             ** ALSO USED FOR OUTPUT ON LR **             S01129
+0050 F*       55                                                          EM0450
+0051 F*       56                                                          EM0450
+     F*       57             COMMITMENT RECORD                            S01128
+0052 F*       59             NEW EMDEX RECORD ADDED                       EM0450
+0053 F*       60             IF ON - DO FX UPDATE                         EM0450
+0054 F*       61             IF ON - DO MM UPDATE                         EM0450
+0055 F*       62             IF ON - DO LOANS UPDATE                      EM0450
+0056 F*       63             IF ON - DEFAULT KEY FOR S/LOANS OVERWRITTEN  EM0450
+0057 F*       64             IF ON - DO LENDING UPDATE                    EM0450
+0058 F*       65             IF ON - DEFAULT KEY FOR CUST/LEND OVERWRITTENEM0450
+0059 F*       66             IF ON - CHECK RECOURSE FOR LENDING UPDATE    EM0450
+0058 F*       67             IF ON - DEFAULT KEY FOR SEC TRAD  OVERWRITTENS01129
+0058 F*       86             IF ON - DO FRA UPDATE                        S01332
+0058 F*       87             IF ON - DO IRS UPDATE                        S01332
+0060 F*       68             FIRST 08 RECORD PROCESSED                    EM0450
+0061 F*       69             RECORD REJECTED BY SELECTION ROUTINES        EM0450
+0062 F*                                                                   EM0450
+0063 F*                                                                   EM0450
+0064 F*                                                                   EM0450
+0065 F*                                                                   EM0450
+0066 F*       70-72          DEAL TYPE SELECTION INDICATORS               EM0450
+0067 F*       73-76          CUSTOMER LENDING SELECTION INDICATORS        EM0450
+0068 F*       77             IF ON - OUTPUT NEW RECORD TO EMDEX           EM0450
+0069 F*       79             RETAIL EXPOSURE EOF OR CUSNUM CHANGE ON ACCNTEM0450
+0070 F*       80             TRAILER CONTROL INDIACATOR                   EM0450
+0071 F*       81             FIRST CYCLE OUTPUT INDIACATOR                EM0450
+0067 F*       82-85          SECURITIES TRADING PROC TYPE INDS            S01129
+0072 F**                                                                  EM0450
+0073 F*       90-97   USED BY Z - SUBROUTINES.                            EM0450
+0074 F*       98      DATE FORMAT MMDDYY IF ON.                           EM0450
+0075 F*       99      Z -SUBROUTINES, ERROR FOUND.                        EM0450
+0076 F*                     (DATABASE ERROR)                              EM0450
+0077 F**                                                                  EM0450
+0078 F*          L1   IF ON - CHANGE IN CUSTOMER NUMBER                   EM0450
+0079 F*                                                                   EM0450
+0080 F**                                                                  EM0450
+0081 F*               EXTERNAL INDICATOR MEANINGS ON OUTPUT-              EM0450
+0082 F*          U1   RETAIL MODULE PRESENT                               EM0450
+0083 F*          U2   CUSTOMER LENDING MODULE PRESENT                     EM0450
+0084 F*          U7+U8DATABASE ERROR                                      EM0450
+0085 F*          U8   FILE CONTROLS DO NOT BALANCE                        EM0450
+0086 F**                                                                  EM0450
+0087 F*            LR PRINT END OF REPORT                                 EM0450
+0088 F**                                                                  EM0450
+     E                    CPY@    1   1 80               COPYRIGHT STATEMENT
+0089 E********************TABA    8   8  2               FX SELECTI EM0450CDL002
+0089 E                    TABA   10  10  2               FX SELECTIONS    CDL002
+0090 E                    TABB   20  20  2               MM/LOAN SELECTIONEM0450
+0091 E***********         TABC    3   3  2               LOANS SELECTION  S01339
+0092 E                    TABD    6   6  2 0             LENDING SELECTIONEM0450
+0093 E                    TABE    2   2  2 0             LENDING SELECTIONEM0450
+     E****                TABF    6   6  2               LOANS/MM         S01128
+     E                    TABF    5   5  2               LOANS/MM         S01128
+     E****                TABG    2   2  2               LOANS/MM         S01128
+     E                    TABG    3   3  2               LOANS/MM         S01128
+0096 E                    TABH    7   7  2               LOANS/MM         EM0450
+0097 E                    POWER   1   7  7 0             POWERS OF 10     EM0450
+     E**  Exposure management scaling arrays.                             S01332
+     E/COPY ZSRSRC,ZEXPSCLZ3                                              S01332
+0098 E**                                                                  EM0450
+0099 I*                                                                   EM0450
+0100 I*                                                                   EM0450
+0101 I**                                                                  EM0450
+0102 I** MASTER FILE EXTRACT------CUSTOMER LENDING                        EM0450
+0103 I**                                                                  EM0450
+     I/COPY WNCPYSRC,EM0450I004
+0104 IEMXTS   NS  01   1 CL                                               EM0450
+     I/COPY WNCPYSRC,EM0450I005
+0105 I**********                              2   70MCUN  L1M1            EM0450              CSD027
+0105 I                                        2   7 MCUN  L1M1            EM0450              CSD027
+0106 I**********                              8  130LNRF                               EM0450 CLE148
+0106 I                                        8  13 LNRF                                      CLE148
+0107 I                                       14  150MPTY                  EM0450
+0108 I                                    P  16  220MCPR                  EM0450
+0109 I                                       23  25 MLCC                  EM0450
+0110 I                                       26  280EMIND                 EM0450
+0111 I                                       29  30 MCNC                  EM0450
+0112 I                                       31  32 MACO                  EM0450
+0113 I                                       33  33 MLER                  EM0450
+0114 I**********                             34  390MLOR                               EM0450 CLE148
+0114 I                                       34  39 MLOR                                      CLE148
+0115 I                                    P  40  420MLSD                  EM0450
+0116 I                                    P  43  450MMD                   EM0450
+0117 I                                       46  47 MRGC                  EM0450
+     I                                      129 131 EMLOIC                                  BUG23967
+0118 I**********                              1 128 ALLL                             EM0450 BUG23967
+     I                                        1 131 ALLL                                    BUG23967
+0119 I**                                                                  EM0450
+0120 I** MASTER FILE EXTRACT------DEALING                                 EM0450
+0121 I**                                                                  EM0450
+0122 I        NS  02   1 CD                                               EM0450
+     I**********                              2   70MCUN  L1M1            EM0450              CSD027
+     I                                        2   7 MCUN  L1M1            EM0450              CSD027
+0124 I                                        8   9 MDTP                  EM0450
+0125 I                                    P  10  120MVD                   EM0450
+0126 I                                    P  13  150MOMD                  EM0450
+0127 I                                       16  18 MCYC                  EM0450
+0128 I                                    P  19  250MCYA                  EM0450
+0129 I                                    P  26  320MFV                   EM0450
+0130 I                                       34  360MFTP                  EM0450
+0131 I                                       37  380MFN                   EM0450
+0132 I                                       39  400MSMT                  EM0450
+     I/COPY WNCPYSRC,EM0450I006
+0133 I***********                                                         S01339
+0134 I***MASTER*FILE EXTRACT-------SYNDICATED LOANS                       S01339
+0135 I***********                                                         S01339
+     I****    NS  03   1 CS                                               S01128
+     I********NS* 03   1 CC                                         S01128S01339
+0137 I***********                             2   70MCUN  L1M1            S01339
+0138 I***********                             8  130MLRF                  S01339
+0139 I***********                            14  14 MLRT                  S01339
+0140 I***********                            15  16 MLTP                  S01339
+0141 I***********                         P  17  190MSD                   S01339
+     I****                                P  20  220MMD             S01128S01339
+     I***********                         P  20  220MMDS            S01128S01339
+0143 I***********                            23  24 MCNR                  S01339
+0144 I***********                            25  27 MDCY                  S01339
+0145 I***********                         P  28  340MOAD                  S01339
+0146 I***********                            35  35 MCDI                  S01339
+0147 I***********                            36  37 MST                   S01339
+0148 I***********                         P  38  440MOAV                  S01339
+     I**                                                                  S01128
+     I** MASTER FILE EXTRACT------ LENDING FACILITIES                     S01128
+     I**                                                                  S01228
+     I        NS  13   1 CF                                               S01128
+     I**********                              2   70MCUN  L1M1                         S01128 CSD027
+     I                                        2   7 MCUN  L1M1                                CSD027
+     I                                        8  100MFTP                  S01128
+     I                                       11  120MFN                   S01128
+     I                                    P  13  150MFAD                  S01128
+     I                                    P  16  180MFED                  S01128
+     I                                       19  21 MCYC                  S01128
+     I                                    P  22  280MCYA                  S01128
+     I***********                                                   S01128S01339
+     I***MASTER*FILE EXTRACT------ SYNDICATED LOANS FACILITIES      S01128S01339
+     I***********                                                   S01228S01339
+     I********NS* 14   1 CG                                         S01128S01339
+     I***********                             2   70MCUN  L1M1      S01128S01339
+     I***********                             8  100MFTP            S01128S01339
+     I***********                            11  120MFN             S01128S01339
+     I***********                         P  13  150MFAD            S01128S01339
+     I***********                         P  16  180MFED            S01128S01339
+     I***********                            19  21 MCYC            S01128S01339
+     I***********                         P  22  280MCYA            S01128S01339
+0149 I**                                                                  EM0450
+0150 I** MASTER FILE EXTRACT------CUSTOMER LENDING TYPE 66/67 NO RECOURSE EM0450
+0151 I**                                                                  EM0450
+     I/COPY WNCPYSRC,EM0450I007
+0152 IEMXTS   NS  08   1 CR                                               EM0450
+     I/COPY WNCPYSRC,EM0450I008
+0153 I**********                              2   70MCUN                  EM0450              CSD027
+0153 I                                        2   7 MCUN                  EM0450              CSD027
+0154 I**********                              8  130LNRF                               EM0450 CLE148
+0154 I                                        8  13 LNRF                                      CLE148
+0155 I                                       14  150MPTY                  EM0450
+0156 I                                    P  16  220MCPR                  EM0450
+0157 I                                       23  25 MLCC                  EM0450
+0158 I                                       26  280EMIND                 EM0450
+0159 I                                       29  30 MCNC                  EM0450
+0160 I                                       31  32 MACO                  EM0450
+0161 I                                       33  33 MLER                  EM0450
+0162 I**********                             34  390MLOR                               EM0450 CLE148
+0162 I                                       34  39 MLOR                                      CLE148
+0163 I                                    P  40  420MLSD                  EM0450
+0164 I                                    P  43  450MMD                   EM0450
+0165 I                                       46  47 MRGC                  EM0450
+     I                                      129 131 EMLOIC                                  BUG23967
+0166 I**********                              1 128 ALLR                             EM0450 BUG23967
+     I                                        1 131 ALLR                                    BUG23967
+     I**                                                                  S01129
+     I** MASTER FILE EXTRACT------ SECURITIES TRADING                     S01129
+     I**                                                                  S01229
+     I        NS  18   1 CS                                               S01129
+     I**********                              2   70MCUN  L1M1                         S01129 CSD027
+     I                                        2   7 MCUN  L1M1                                CSD027
+     I                                        8   8 SETP                  S01129
+     I                                    P   9  150EXPA                  S01129
+     I                                       16  17 MCNC                  S01129
+     I                                       18  200EMIND                 S01129
+     I                                       21  23 EMLOIC                                  BUG23967
+0167 I**                                                                  EM0450
+0168 I** MASTER FILE EXTRACT TRAILER                                      EM0450
+0169 I**                                                                  EM0450
+0170 I        NS  04   1 CT                                               EM0450
+0171 I                                        8   8 TRID                  EM0450
+0172 I                                    P   9  110NREC                  EM0450
+0173 I                                        1 128 ALLT                  EM0450
+0174 I*                                                                   EM0450
+0175 I** CATCH ALL                                                        EM0450
+0176 I        NS  07                                                      EM0450
+0177 I**                                                                  EM0450
+0178 I**   TABLE FILE - INSTALLATION CONTROL DATA RECORD 1.               EM0450
+0179 I**                                                                  EM0450
+0180 ITABLE   NS       1 CD   2 C0   3 C1                                 EM0450
+0181 I       AND      12 C1  13 C0                                        EM0450
+0182 I                                        1   1 RECI                  EM0450
+0183 I                                       14  66 TITL                  EM0450
+0184 I                                       67  67 DATF                  EM0450
+0185 I                                       74  74 MODI                  EM0450
+0186 I                                    P  77  790RUND                  EM0450
+0187 I                                       80  86 RUNA                  EM0450
+0188 I**                                                                  EM0450
+0189 I**   TABLE FILE - INSTALLATION CONTROL DATA RECORD 2.               EM0450
+0190 I**                                                                  EM0450
+0191 I        NS       1 CD   2 C0   3 C1                                 EM0450
+0192 I       AND      12 C1  13 C1                                        EM0450
+0193 I                                        1   1 RECI                  EM0450
+0194 I                                    P  41  430DNWD                  EM0450
+0195 I****                                   69  71 LCCY                  S01129
+0188 I**                                                                  S01129
+0189 I**   TABLE FILE - INSTALLATION CONTROL DATA RECORD EM               S01129
+0190 I**                                                                  S01129
+0191 I********NS       1 CD   2 C0   3 C1                           S01129S01332
+0192 I*******AND      12 C9  13 C5                                  S01129S01332
+0193 I**********                              1   1 RECI            S01129S01332
+0195 I**********                             14  16 LCCY            S01129S01332
+0196 I**                                                                  EM0450
+0197 I**  TABLE FILE - ACCOUNT CODE ONLY USED IN TEST FOR RETAIL EXPOSURE EM0450
+0198 I**                                                                  EM0450
+0199 I        NS  10   1 CD   2 C3   3 C0                                 EM0450
+0200 I       AND      13 C1  39 CR                                        EM0450
+0201 I**                                                                  EM0450
+0202 I**   TABLE FILE - CURRENCIES RECORD 1.                              EM0450
+0203 I**                                                                  EM0450
+0204 I        NS       1 CD   2 C2   3 C0                                 EM0450
+0205 I       AND      13 C1                                               EM0450
+0206 I                                        1   1 RECI                  EM0450
+0207 I                                        2  13 ZTABKY                EM0450
+0208 I                                       10  12 CCY                   EM0450
+0209 I                                       14  27 CCNM                  EM0450
+0210 I                                    P  28  348SPOT                  EM0450
+0211 I                                       38  380CDP                   EM0450
+0212 I**********                             86  860MDIN            20              EM0450 AR1083699
+     I                                      116 1160MDIN            20                     AR1083699
+0213 I**                                                                  EM0450
+0214 I**     TABLE FILE - REGION RECORD                                   EM0450
+0215 I**                                                                  EM0450
+0216 I        NS       1 CD   2 C5   3 C0                                 EM0450
+0217 I                                        1   1 RECI                  EM0450
+0218 I                                       44  45 REGC                  EM0450
+0219 I**                                                                  EM0450
+0220 I**   CATCHALL.                                                      EM0450
+0221 I        NS                                                          EM0450
+0222 I**                                                                  EM0450
+0223 I**   CLIENT MASTER RECORD 1.                                        EM0450
+0224 I**                                                                  EM0450
+0225 ICLINT   NS  05   1 CD   8 CA                                        EM0450
+0226 I                                        1   1 RECI                  EM0450
+0227 I**********                              2   70CNUM  L1M1            EM0450              CSD027
+0227 I                                        2   7 CNUM  L1M1            EM0450              CSD027
+0228 I                                        9  28 CRNM                  EM0450
+0226 I                                       81  82 ACOC                  EM0450
+0229 I**********                             84  85 CLOC                  EM0450              CUP004
+0229 I**********                             86  87 CLOC                             CUP004 MD020182
+     I                                       84  85 CLOC                                    MD020182
+0230 I**********                             88  930CPAR                  EM0450              CSD027
+0230 I                                       88  93 CPAR                  EM0450              CSD027
+0231 I                                       99 1010LIND                  EM0450
+0232 I                                      111 111 CMIN                  EM0450
+     I                                      262 264 LOIC                                    BUG23967
+0233 I**                                                                  EM0450
+0234 I**   CLINT B RECORDS                                                EM0450
+0235 I***     NS  06   1 CD   8NCA                                        S01129
+0235 I        NS  06   1 CD   8 CB                                        S01129
+0236 I**********                              2   70CNUM  L1M1            EM0450              CSD027
+0236 I                                        2   7 CNUM  L1M1            EM0450              CSD027
+0237 I**                                                                  EM0450
+0238 I** CATCHALL                                                         EM0450
+0239 I**                                                                  EM0450
+0240 I        NS  09                                                      EM0450
+     I**   CLINTC A RECORD                                          E10841E11848
+0225 I*LINTC  NS       1 CD   8 CA                                  E10841E11848
+0227 I**                                      2   70CNUMC           E10841E11848
+0226 I**                                     81  82 ACOCC           E10841E11848
+0238 I** CATCHALL                                                   E10841E11848
+0239 I**                                                            E10841E11848
+0240 I**      NS                                                    E10841E11848
+0241 I**                                                                  EM0450
+0242 I** CLOAN - CUSTOMER LENDING LOANS FILE                              EM0450
+0243 I**                                                                  EM0450
+0244 ICLOAN   NS  12   1 CD                                               EM0450
+     I                                       10  110PTYP                  E10836
+0245 I**********                             12  170CNUML                 EM0450              CSD027
+0245 I                                       12  17 CNUML                 EM0450              CSD027
+0246 I                                      108 1100LINDL                 EM0450
+0247 I                                      111 112 CRSKL                 EM0450
+0248 I                                      113 114 ACOFL                 EM0450
+0248 I***********                           117 117 AUTO            BH1065090793
+     I**********                            290 2950OLNOC                              E10836 CSD027
+     I                                      290 295 OLNOC                                     CSD027
+     I                                      296 296 RCSIC                 E10836
+     I                                     17801782 LOICL                                   BUG23967
+0249 I**  CATCH ALL                                                       EM0450
+0250 I        NS                                                          EM0450
+0251 I**                                                                  EM0450
+0252 I**  ACCOUNT MASTER FILE - USED FOR CALC RETAIL EXPOSURE             EM0450
+0253 I**                                                                  EM0450
+0254 IACCNT   NS                                                          EM0450
+     I                                        1   1 ACRECI                                   BUG2591
+0255 I**********                              2   70CNUMA                 EM0450              CSD027
+0255 I                                        2   7 CNUMA                 EM0450              CSD027
+0256 I                                        8  10 CCYA                  EM0450
+     I/COPY WNCPYSRC,EM0450I001
+0257 I**********                             11  14 ACOD                               EM0450 CGL029
+     I                                       11  14 ACODQQ                                    CGL029
+     I/COPY WNCPYSRC,EM0450I002
+0258 I                                    P  64  710CLBL                  EM0450
+     I                                    P 202 2070ODLN                  S01128
+     I                                      213 2150FACT                  S01128
+     I                                      554 563 ACOD                                      CGL029
+0259 I*                                                                   EM0450
+0260 I*                                                                   EM0450
+0261 I*  EXPOSURE MANAGEMENT    EOD EXPOSURE FILE - DETAIL RECORD         EM0450
+0262 I*                                                                   EM0450
+0263 IEMDEX   NS  16   1 CD                                               EM0450
+0264 I                                        1   1 RECI                  EM0450
+0265 I                                        2   3 MACO                  EM0450
+0266 I**********                              4   90MCUN                  EM0450              CSD027
+0266 I                                        4   9 MCUN                  EM0450              CSD027
+0267 I                                       10  120EMIND                 EM0450
+0268 I                                       13  14 MRGC                  EM0450
+0269 I                                       15  16 MCNC                  EM0450
+0270 I                                    P  17  240MFXE                  EM0450
+0271 I                                    P  25  320MFXB                  EM0450
+0272 I                                    P  33  400MMME                  EM0450
+0273 I                                    P  41  480MMMB                  EM0450
+     I*
+0274 I*****                                    P  49  560MLEE             S01128
+0275 I*****                                    P  57  640MLEB             S01128
+0276 I*****                                    P  65  720MREE             S01128
+0277 I*****                                    P  73  800MREB             S01128
+     I*
+0274 I                                    P  49  560MLEG                  S01128
+0275 I                                    P  57  640MLEE                  S01128
+0276 I                                    P  65  720MLEB                  S01128
+0277 I                                    P  73  800MLAE                  S01128
+0277 I                                    P  81  880MLAB                  S01128
+0277 I                                    P  89  960MREG                  S01128
+0277 I                                    P  97 1040MREE                  S01128
+0277 I                                    P 105 1120MREB                  S01128
+0277 I                                    P 113 1200MFRE                  S01332
+0277 I                                    P 121 1280MFRO                  S01332
+0277 I                                    P 153 1600MSIE                  S01129
+0277 I                                    P 161 1680MSCE                  S01129
+0277 I                                    P 169 1760MSPO                  S01129
+0277 I                                    P 179 1860MIRE                  S01332
+0277 I                                    P 187 1940MIRO                  S01332
+0277 I                                    P 195 2020MFUE                  S01332
+0277 I                                    P 203 2100MFUO                  S01332
+0277 I                                    P 211 2180MOPE                  S01332
+0277 I                                    P 219 2260MOPO                  S01332
+0277 I                                    P 227 2340TFEX                  CTI002
+0277 I                                    P 235 2420TFGR                  CTI002
+0277 I                                    P 243 2500TFOF                  CTI002
+     I                                      251 253 EMLOIC                                  BUG23967
+0278 I*                                                                   EM0450
+0279 I*  EXPOSURE MANAGEMENT    EOD EXPOSURE - TRAILER RECORD             EM0450
+0280 I*                                                                   EM0450
+0281 IEMDEX   NS  17   1 CT                                               EM0450
+0282 I                                        1   1 RECI                  EM0450
+0283 I                                    P  17  190MNDR                  EM0450
+0284 I**                                                                  EM0450
+0285 I** CATCHALL                                                         EM0450
+0286 I        NS                                                          EM0450
+0287 I**                                                                  EM0450
+0288 I**   DATA STRUCTURE FOR TABLE KEY - ZTABKY                          EM0450
+0289 I**                                                                  EM0450
+0290 I            DS                                                      EM0450
+0291 I                                        1  12 ZTABKY                EM0450
+0292 I                                        9  11 CCY                   EM0450
+0293 I**********                              8  11 ACODA                              EM0450 CGL029
+0294 I                                       11  12 CCOD                  EM0450
+0295 I**                                                                  EM0450
+0296 I** DATA STRUCTURE FOR DEFAULT KEY FOR OUTPUT TO EMDEX               EM0450
+0297 I**                                                                  EM0450
+0298 I            DS                                                      EM0450
+0299 I                                        1  15 SDFKEY                EM0450
+0300 I                                        1   2 SACOC                 EM0450
+0301 I**********                              3   80SCNUM                 EM0450              CSD027
+0301 I                                        3   8 SCNUM                 EM0450              CSD027
+0302 I**********                              9  110SLIND                            EM0450 BUG23967
+     I                                        9  11 SLOIC                                   BUG23967
+0303 I                                       12  13 SREGC                 EM0450
+0304 I                                       14  15 SCLOC                 EM0450
+0305 I**                                                                  EM0450
+0306 I** EXTRA DS FOR DEFAULT KEY                                         EM0450
+0307 I**                                                                  EM0450
+0308 I            DS                                                      EM0450
+0309 I                                       16  30 DFKEY                 EM0450
+0310 I                                       16  17 ACOC                  EM0450
+     I                                       16  17 MACO
+0312 I**********                             18  230CNUMB                 EM0450              CSD027
+0312 I                                       18  23 CNUMB                 EM0450              CSD027
+0313 I**********                             24  260LIND                             EM0450 BUG23967
+0314 I**********                             24  260EMIND                            EM0450 BUG23967
+     I                                       24  26 LOIC                                    BUG23967
+     I                                       24  26 EMLOIC                                  BUG23967
+0314 I                                       24  260EMIND                 EM0450
+0315 I                                       27  28 REGC                  EM0450
+0316 I                                       29  30 MCNC                  EM0450
+0317 I                                       29  30 CLOC                  EM0450
+0318 I                                       29  30 MCNR                  EM0450
+0319 I**                                                                  EM0450
+0320 I**  DATA STRUCTURE FOR ACCNT - USED IN RETAIL EXPOSURE CALCULATIONS EM0450
+0321 I**                                                                  EM0450
+0322 I            DS                                                      EM0450
+0323 I**********                              1  15 ACCKEY                S01117
+0323 I                                        1  18 ACCKEY                S01117
+0324 I**********                              1   60SCNUMA                EM0450              CSD027
+0324 I                                        1   6 SCNUMA                EM0450              CSD027
+     I*                                                                   S01332
+     ISDEXPM    E DSSDEXPMPD                                              S01332
+     I*                                                                   S01332
+     I* MODULE DETAILS ACCESSED VIA ACCESS PROGRAM                        S01332
+     ISDMMOD    E DSSDMMODPD                                              S01332
+0325 I**  LOCAL DATA AREA FOR DATABASE RECORD                             EM0450
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01332
+     IDSFDY     E DSDSFDY                                                 S01332
+     I*                                                                   S01332
+0326 I*LDA       UDS                            256                       S01332
+0326 ILDA         DS                            256                       S01332
+0327 I**********                            134 138 DBFILE                S01117
+0328 I**********                            139 167 DBKEY                 S01117
+0329 I**********                            168 175 DBPGM                 S01117
+0330 I**********                            176 1770DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*                                                                   E26179
+     ISDACOD    E DSSDACODPD                                                                  CGL029
+      ** Account Code Details                                                                 CGL029
+      *                                                                                       CGL029
+     ISCSARD    E DSSCSARDPD                                              CSD007
+      ** External Data Structure for Switchable Features                  CSD007
+      *                                                                   CSD007
+     I@CUST     E DSSDCUSTPD                                              E26179
+     I** DUMMY RECORD FORMATS FOR ACCESS TO CUSTOMER DETAILS              E26179
+     I*                                                                   E26179
+     IDSSDY     E DSDSSDY                                                 E26179
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                E26179
+     I*                                                                   E26179
+     IDSLDY     E DSDSLDY                                                 CSD007
+      ** Third DS for access programs, very long data structure           CSD007
+      *                                                                   CSD007
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+0331 I**                                                                  EM0450
+     I/COPY WNCPYSRC,EM0450I003
+0332 C/EJECT                                                              EM0450
+0333 C********************************************************************EM0450
+     C                     MOVEACPY@      BIS@   80
+0334 C**                                                                  EM0450
+0335 C**   FIRST CYCLE PROCESSING                                         EM0450
+0336 C**                                                                  EM0450
+0337 C   40                SETOF                     81                   EM0450
+0338 C  N40                SETON                     81                   EM0450
+0339 C  N40                EXSR FIRST                                     EM0450
+     C   LRN40             GOTO ETAG                                      S01129
+0340 C                     SETON                     40                   EM0450
+0341 C   81                GOTO END                                       EM0450
+0342 C**                                                                  EM0450
+0343 C**   END OF FIRST CYCLE PROCESSING                                  EM0450
+0344 C**                                                                  EM0450
+0345 C********************************************************************EM0450
+0346 C/EJECT                                                              EM0450
+0347 C********************************************************************EM0450
+0348 C** CONTROL SECTION FOR DETAIL CYCLE PROCESSING **                   EM0450
+0349 C********************************************************************EM0450
+0350 C                     EXSR SETOFF                                    EM0450
+      *                                                                   S01332
+      * Test whether 'Our' details for the IRS has been processed.        S01332
+      * If so, do not process 'Their' details.                            S01332
+      *                                                                   S01332
+     C           IRFLAG    IFEQ 'Y'                                       S01332
+     C                     MOVE 'N'       IRFLAG                          S01332
+     C                     ADD  1         COUNT2                          S01332
+     C                     GOTO END                                       S01332
+     C                     END                                            S01332
+0352 C   09                                                               EM0450
+0353 COR 07                                                               EM0450
+0354 COR 06                GOTO END                                       EM0450
+0355 C   04                EXSR TRAIL                      PROC. TRAILERS EM0450
+0356 C   04                GOTO END                                       EM0450
+0357 C   08                                                               EM0450
+0358 COR L1N81 05          EXSR SETDEF                     SET UP DFKEY   EM0450
+0360 C   99                                                               EM0450
+0361 COR 05                GOTO END                                       EM0450
+0362 C   08                                                               EM0450
+0363 COR 01                EXSR SELEC1                     CUST. LEND     EM0450
+0364 C   02                EXSR SELEC2                     DEALING        EM0450
+0365 C***03******          EXSR SELEC3                     SYND LOANS     S01339
+0365 C   18                EXSR SELEC4                     SEC TRAD       S01129
+     C   13      COUNT5    ADD  1         COUNT5           LE FAC.COUNT   S01128
+     C***14******COUNT6    ADD  1         COUNT6      SL FAC.COUNT  S01128S01339
+     C   18      COUNT7    ADD  1         COUNT7           SE TRA.COUNT   S01129
+0367 C   99                                                               EM0450
+0368 COR 69                GOTO END                        NO-PROCESS TYPEEM0450
+     C/COPY WNCPYSRC,EM0450C010
+0369 C                     EXSR SETUP                      BLDKEY FOR CONVEM0450
+0371 C   99                GOTO END                                       EM0450
+0372 C                     EXSR CONVRT                     CONV TO LIMCCY EM0450
+     C/COPY WNCPYSRC,EM0450C011
+     C   76                EXSR CLOANS                     C/L RECOURSE SREM0450
+0374 C   99                GOTO END                                       EM0450
+     C   65
+     COR 67                                                               S01129
+0375 COR 63                EXSR UDCHK1                     O/P IF DFK DIFFEM0450
+     C   65
+     COR 67                                                               S01129
+0376 COR 63                GOTO END                                       EM0450
+377  C                     EXSR UDCHK2                     DFKEY OUTPUT   EM0450
+0378 C           END       TAG                             *** END TAG ***EM0450
+0380 C                     MOVE 'EM0450'  DBPGM                           EM0450
+0381 C   99                SETON                     U7U8LR** DATABASE ** EM0450
+0381 C   99                GOTO ETAG                                      S01129
+0382 C******************************************                          EM0450
+0383 C/EJECT                                                              EM0450
+0384 C******************************************                          EM0450
+0385 C** TOTAL TIME CALCULATIONS                                          EM0450
+0387 CL0 08N68             SETON                     L1                   EM0450
+0388 CL1 41                EXSR RETAIL                                    EM0450
+0389 C******L1             EXSR OUTEXP                     SET UP O/P     S01129
+0389 CL1N99                EXSR OUTEXP                     SET UP O/P     S01129
+     C***IF*CHAIN TO THE CLIENT FILE TO PICK                        E10841E11848
+     C***THE*CUSTOMER A/C OFFICER CODE FAILED,                      E10841E11848
+     C***AND*OUTPUT DATA BASE ERROR MESSAGE                         E10841E11848
+     C*1 99                SETON                     U7U8LR         E10841E11848
+     C*1 99                GOTO ETAG                                E10841E11848
+0390 CL0 08N68             SETON                     68                   EM0450
+0391 CLR                   EXSR REPORT                     SET UP REPORT  EM0450
+     C*****      ETAG      TAG                                      E10841E11848
+     C           ETAG      TAG                                            S01129
+0392 C******************************************                          EM0450
+0393 C/EJECT                                                              EM0450
+0394 C******************************************                          EM0450
+0395 C******************************************                          EM0450
+0396 C**                                                                  EM0450
+0397 C** FIRST CYCLE PROCESSING ROUTINE                                   EM0450
+0398 C**                                                                  EM0450
+0399 C           FIRST     BEGSR                                          EM0450
+      *                                                                   S01332
+     C           *NAMVAR   DEFN           LDA                             S01332
+     C           *LOCK     IN   LDA                                       S01332
+     C                     MOVEL'EM0450'  DBPGM                           S01332
+     C                     OUT  LDA                                       S01332
+0400 C*    ACCESS ICR1                                                    EM0450
+0401 C                     EXSR ZSYSTM                     ** EXSR ZSYSTM EM0450
+     C   99      *LOCK     IN   LDA                                       S01332
+0402 C   99                MOVE 'TABLE'   DBFILE                          EM0450
+0403 C   99                MOVE ZTABKY    DBKEY                           EM0450
+0404 C   99                MOVE 'EM0450'  DBPGM                           EM0450
+0405 C   99                Z-ADD01        DBASE            DATABASE 01    EM0450
+     C   99                DUMP                                           090080
+     C   99                OUT  LDA                                       S01332
+0406 C   99                SETON                     LRU7U8               EM0450
+0407 C   99                GOTO ENDFC                      ** GOTO END    EM0450
+0408 C*    ACCESS RUN DATE AND TITLE                                      EM0450
+0409 C                     MOVE RUNA      RUNDAT  7                       EM0450
+0410 C                     MOVE RUND      RUNDAY  50                      EM0450
+0411 C                     MOVE TITL      TITLE  53                       EM0450
+0412 C**                                                                  EM0450
+0413 C** CHECK MODULE INDICATOR FOR RETAIL                                EM0450
+0414 C**                                                                  EM0450
+0415 C                     TESTB'2'       MODI           41               EM0450
+0416 C******CCESS EM CURRENCY ON ICR2                                     S01129
+0416 C*    ACCESS DNWD   ON ICR2                                          S01129
+0417 C**                                                                  EM0450
+0418 C**   SET UP KEY FOR INSTALLATION CONTROL RECORD 2 .                 EM0450
+0419 C                     MOVEL'01      'ZTABKY 12                       EM0450
+0420 C                     MOVE '  11'    ZTABKY                          EM0450
+0421 C**                                                                  EM0450
+0422 C           ZTABKY    CHAINTABLE                99    ON NOT THERE   EM0450
+0423 C**                                                                  EM0450
+0424 C  N99      RECI      COMP 'D'                  9999  ON - DELETED   EM0450
+     C   99      *LOCK     IN   LDA                                       S01332
+0425 C   99                MOVE 'TABLE'   DBFILE                          EM0450
+0426 C   99                MOVE ZTABKY    DBKEY                           EM0450
+0427 C   99                MOVE 'EM0450'  DBPGM                           EM0450
+0428 C   99                Z-ADD02        DBASE            DATABASE 02    EM0450
+     C   99                DUMP                                           090080
+     C   99                OUT  LDA                                       S01332
+0429 C   99                SETON                     LRU7U8               EM0450
+0430 C   99                GOTO ENDFC                      ** GOTO END    EM0450
+0416 C*                                                                   S01129
+0416 C*****ACCESS EM CURRENCY ON TABTB95                            S01129S01332
+0417 C***********                                                   S01129S01332
+0418 C*****SET*UP KEY FOR INSTALLATION CONTROL RECORD EM.           S01129S01332
+0419 C***********          MOVEL'01      'ZTABKY                    S01129S01332
+0420 C***********          MOVE '  95'    ZTABKY                    S01129S01332
+0421 C***********                                                   S01129S01332
+0422 C***********ZTABKY    CHAINTABLE                99    ON NOT THS01129S01332
+0423 C***********                                                   S01129S01332
+0424 C**N99******RECI      COMP 'D'                  9999  ON - DELES01129S01332
+0425 C***99******          MOVE 'TABLE'   DBFILE                    S01129S01332
+0426 C***99******          MOVE ZTABKY    DBKEY                     S01129S01332
+0427 C***99******          MOVE 'EM0450'  DBPGM                     S01129S01332
+0428 C***99******          Z-ADD16        DBASE            DATABASE S01129S01332
+0429 C***99******          SETON                     LRU7U8         S01129S01332
+0430 C***99******          GOTO ENDFC                      ** GOTO ES01129S01332
+     C** Call Exposure management access object for ccy + BUCCSO.         S01332
+     C                     CALL 'AOEXPMR0'                                S01332
+     C                     PARM '*BLANKS' @RTCD   7                       S01332
+     C                     PARM '*KEY   ' @OPTN   7                       S01332
+     C           SDEXPM    PARM SDEXPM    DSFDY                           S01332
+      *                                                                   S01332
+     C           @RTCD     IFNE *BLANKS                    B**3           S01332
+     C           *LOCK     IN   LDA                                       S01332
+     C                     MOVEL'AOEXP'   DBFILE                          S01332
+     C                     MOVE 'MR0'     DBFILE                          S01332
+0427 C                     MOVE 'EM0450'  DBPGM                           S01332
+0428 C                     Z-ADD16        DBASE            DATABASE 16    S01332
+     C                     DUMP                                           090080
+     C                     OUT  LDA                                       S01332
+0429 C                     SETON                     LRU7U8               S01332
+0430 C                     GOTO ENDFC                      ** GOTO END    S01332
+     C                     END                             E**3           S01332
+     C** Access MIDAS Modules details via access program                  S01332
+     C                     CALL 'AOMMODR0'                                S01332
+     C                     PARM '*BLANKS' @RTCD                           S01332
+     C                     PARM '*FIRST ' @OPTN                           S01332
+     C           SDMMOD    PARM SDMMOD    DSFDY                           S01332
+      *                                                                   S01332
+     C**  Check for data base error.                                      S01332
+     C           @RTCD     IFNE *BLANK                                    S01332
+     C           *LOCK     IN   LDA                                       S01332
+     C                     MOVEL'AOMMODR0'DBFILE           * DBERROR 015 *S01332
+     C                     MOVEL'*FIRST ' DBBKEY 29                       S01332
+     C                     MOVE '015'     DBASE                           S01332
+     C                     DUMP                                           090080
+     C                     OUT  LDA                                       S01332
+0429 C                     SETON                     LRU7U8               S01332
+0430 C                     GOTO ENDFC                      ** GOTO END    S01332
+     C                     END                                            S01332
+      *                                                                   CSD007
+      ** Access Switchable Features file and check if CSD007              CSD007
+      ** is switched on or not.                                           CSD007
+      *                                                                   CSD007
+     C                     CALL 'AOSARDR0'                                CSD007
+     C                     PARM *BLANKS   @RTCD   7                       CSD007
+     C                     PARM '*VERIFY' @OPTN   7                       CSD007
+     C                     PARM 'CSD007'  @SARD   6                       CSD007
+     C           SCSARD    PARM SCSARD    DSFDY                           CSD007
+      *                                                                   CSD007
+     C           @RTCD     IFEQ *BLANKS                                   CSD007
+     C                     MOVE 'Y'       CSD007  1                       CSD007
+     C                     ELSE                                           CSD007
+     C                     MOVE 'N'       CSD007                          CSD007
+      *                                                                   CSD007
+      ** Database Error, if Return Code is not blanks or *NRF             CSD007
+      *                                                                   CSD007
+     C           @RTCD     IFNE '*NRF   '                                 CSD007
+     C           *LOCK     IN   LDA                                       CSD007
+     C                     MOVEL'SCSARDPD'DBFILE                          CSD007
+     C                     Z-ADD18        DBASE                           CSD007
+     C                     MOVEL'CSD007  'DBKEY                           CSD007
+     C                     DUMP                                           CSD007
+     C                     OUT  LDA                                       CSD007
+     C                     MOVE *ON       *INU7                           CSD007
+     C                     MOVE *ON       *INU8                           CSD007
+     C                     MOVE *ON       *INLR                           CSD007
+     C                     GOTO ENDFC                                     CSD007
+     C                     ENDIF                                          CSD007
+     C                     ENDIF                                          CSD007
+0431 C**                                                                  EM0450
+0432 C** CALCULATE EVENT CONTROL DATE                                     EM0450
+0433 C**                                                                  EM0450
+0434 C           DNWD      SUB  1         EVCDTE  50                      EM0450
+0435 C**   SET UP KEY FOR INSTALLATION CONTROL RECORD(CURRENCY REC 1)     EM0450
+0436 C***********          MOVE LCCY      CCY                             S01332
+0436 C                     MOVE BUCYCD    CCY                             S01332
+0437 C                     MOVEL'20      'ZTABKY 12                       EM0450
+0438 C                     MOVE '1'       ZTABKY                          EM0450
+0439 C**                                                                  EM0450
+0440 C           ZTABKY    CHAINTABLE                99    ON NOT THERE   EM0450
+0441 C  N99      RECI      COMP 'D'                  9999  ON - DELETED   EM0450
+     C   99      *LOCK     IN   LDA                                       S01332
+0442 C   99                MOVE 'TABLE'   DBFILE                          EM0450
+0443 C   99                MOVE ZTABKY    DBKEY                           EM0450
+0444 C   99                MOVE 'EM0450'  DBPGM                           EM0450
+0445 C   99                Z-ADD03        DBASE            DATABASE 03    EM0450
+     C   99                DUMP                                           090080
+     C   99                OUT  LDA                                       S01332
+0446 C   99                SETON                     LRU7U8               EM0450
+0447 C   99                GOTO ENDFC                      ** GOTO TERM   EM0450
+0448 C                     MOVE SPOT      LSPOT  138                      EM0450
+0449 C   20                SETON                     42                   EM0450
+0450 C   42      1         DIV  LSPOT     LSPOT                           EM0450
+0451 C                     Z-ADDCDP       LCDP    10                      EM0450
+0452 C                     MOVE *BLANKS   ZTABKY                          EM0450
+      *                                                                   S01332
+      ** If scaling record exists for Retail obtain scaling factor.       S01332
+      *                                                                   S01332
+     C           'RE'      CHAINEMEXSCL1             25                   S01332
+      *                                                                   S01332
+     C           *IN25     IFEQ '1'                        B1             S01332
+     C                     MOVE 'N'       @RESCL  1                       S01332
+     C                     ELSE                            X1             S01332
+     C                     MOVE 'Y'       @RESCL                          S01332
+     C                     Z-ADDEKPR1P    @PERCT  30                      S01332
+     C                     END                             E1             S01332
+      *                                                                   S01332
+      * Retrieve highest key value for EMEXSCL1                                               CCB016
+     C           *HIVAL    SETGTEMEXSCL1                                                      CCB016
+     C                     READPEMEXSCL1                 25                                   CCB016
+     C           *IN25     IFEQ '1'                        Empty file                         CCB016
+     C                     MOVE '  '      MXLMCA  2                                           CCB016
+     C                     ELSE                                                               CCB016
+     C                     MOVE EKLMCA    MXLMCA                                              CCB016
+     C                     END                                                                CCB016
+0453 C**                                                                  EM0450
+0454 C** SET UP COUNT FIELDS FOR DIFF REC TYPES                           EM0450
+0455 C**                                                                  EM0450
+0456 C                     Z-ADD0         COUNT1  50                      EM0450
+0457 C                     Z-ADD0         COUNT2  50                      EM0450
+0458 C***********          Z-ADD0         COUNT3  50                      S01339
+0459 C                     Z-ADD0         COUNT4  50                      EM0450
+     C                     Z-ADD0         COUNT5  50                      S01128
+     C***********          Z-ADD0         COUNT6  50                S01128S01339
+     C                     Z-ADD0         COUNT7  50                      S01129
+0460 C                     Z-ADD0         TOTEXP  50                      EM0450
+0461 C                     MOVE *BLANKS   ACCKEY                          EM0450
+     C/COPY WNCPYSRC,EM0450C005
+0462 C           ENDFC     ENDSR                                          EM0450
+0463 C********************************************************************EM0450
+0464 C********************************************************************EM0450
+0465 C/EJECT                                                              EM0450
+0466 C********************************************************************EM0450
+0467 C********************************************************************EM0450
+0468 C** THIS SUBROUTINE SETS OFF ALL INDICATORS                          EM0450
+0469 C**                                                                  EM0450
+0470 C           SETOFF    BEGSR                                          EM0450
+0471 C                     SETOF                     505152               EM0450
+0472 C                     SETOF                     535460               EM0450
+     C                     SETOF                     57                   S01128
+0473 C                     SETOF                     616263               EM0450
+0474 C                     SETOF                     646566               EM0450
+     C                     SETOF                     67                   E16463
+0475 C                     SETOF                     697071               EM0450
+0476 C                     SETOF                     727374               EM0450
+0477 C                     SETOF                     757677               EM0450
+0478 C                     SETOF                     7879                 EM0450
+0478 C                     SETOF                     8687                 S01332
+0479 C                     ENDSR                                          EM0450
+0480 C********************************************************************EM0450
+     C/COPY WNCPYSRC,EM0450C012
+0481 C********************************************************************EM0450
+0482 C**   SET UP DEFAULT KEY AND SAVE IT                                 EM0450
+0483 C**                                                                  EM0450
+0484 C           SETDEF    BEGSR                                          EM0450
+0485 C   08                GOTO ZERO                                      EM0450
+0486 C                     MOVE CNUM      CNUMB                           EM0450
+0487 C                     MOVE *BLANK    ZTABKY                          EM0450
+0488 C                     MOVEL'50'      ZTABKY                          EM0450
+0489 C                     MOVE CLOC      CCOD                            EM0450
+0490 C           ZTABKY    CHAINTABLE                99                   EM0450
+     C   99      *LOCK     IN   LDA                                       S01332
+0491 C   99                Z-ADD05        DBASE            ***DB 5*****   EM0450
+0492 C   99                MOVE ZTABKY    DBKEY                           EM0450
+0493 C   99                MOVE 'TABLE'   DBFILE                          EM0450
+     C   99                SETON                     LRU7U8               136029
+     C   99                DUMP                                           090080
+     C   99                OUT  LDA                                       S01332
+0494 C   99                GOTO ENDSET                                    EM0450
+0495 C                     MOVE DFKEY     SDFKEY           SAVE KEY       EM0450
+0496 C           ZERO      TAG                             *** ZERO TAG **EM0450
+0497 C**                                                                  EM0450
+0498 C** SET UP FIELDS FOR ACC. TOTALS                                    EM0450
+0499 C**                                                                  EM0450
+0500 C                     Z-ADD0         FOAMTE 150                      EM0450
+     C                     Z-ADD0         FOAMTB 150                      S01128
+0501 C                     Z-ADD0         MOAMTE 150                      EM0450
+0502 C                     Z-ADD0         MOAMTB 150                      EM0450
+     C                     Z-ADD0         LOAMTG 150                      S01128
+0503 C                     Z-ADD0         LOAMTE 150                      EM0450
+0504 C                     Z-ADD0         LOAMTB 150                      EM0450
+     C                     Z-ADD0         LAAMTE 150                      S01128
+     C                     Z-ADD0         LAAMTB 150                      S01128
+     C                     Z-ADD0         ROAMTG 150                      S01128
+0505 C                     Z-ADD0         ROAMTE 150                      EM0450
+0506 C                     Z-ADD0         ROAMTB 150                      EM0450
+     C                     Z-ADD0         SEIAMT 150                      S01129
+0505 C                     Z-ADD0         SECAMT 150                      S01129
+0506 C                     Z-ADD0         SEPAMT 150                      S01129
+0506 C                     Z-ADD0         FRAMTE 150                      S01332
+0506 C                     Z-ADD0         FRAMTB 150                      S01332
+0506 C                     Z-ADD0         IRAMTE 150                      S01332
+0506 C                     Z-ADD0         IRAMTB 150                      S01332
+0506 C                     Z-ADD0         FUAMTE 150                      S01332
+0506 C                     Z-ADD0         FUAMTB 150                      S01332
+0506 C                     Z-ADD0         OPAMTE 150                      S01332
+0506 C                     Z-ADD0         OPAMTB 150                      S01332
+0507 C           ENDSET    ENDSR                           ***TAG ENDSET**EM0450
+0508 C********************************************************************EM0450
+0509 C/EJECT                                                              EM0450
+0510 C********************************************************************EM0450
+0511 C           SELEC1    BEGSR                                          EM0450
+0512 C*                    *** CUST/LENDING ***                           EM0450
+0513 C* THIS SUBROUTINE CHECKS TO SEE WHETHER ANY EXPOSURE IS TO BE       EM0450
+0514 C* CALCUATED AND CHECKS IF TRANSACTION KEY OVERWRITES DEFAULT        EM0450
+0515 C* KEY. IND 63 TURNS ON IF KEY HAS CHANGED                           EM0450
+0516 C*                                                                   EM0450
+0517 C           COUNT1    ADD  1         COUNT1                          EM0450
+0518 C   01      COUNT4    ADD  1         COUNT4                          EM0450
+0519 C**                                                                  EM0450
+0520 C                     SETOF                     505152               EM0450
+0521 C                     SETOF                     535469               EM0450
+0522 C                     SETOF                     646563               EM0450
+0523 C           MPTY      LOKUPTABD                     50               EM0450
+0524 C  N50      MPTY      LOKUPTABE                     51               EM0450
+0525 C   51                SETON                     66                   EM0450
+0526 C  N50N51             SETON                     69                   EM0450
+     C/COPY WNCPYSRC,EM0450C001
+0527 C  N69      EVCDTE    COMP MLSD                 536953               EM0450
+     C/COPY WNCPYSRC,EM0450C002
+0528 C   53      MMD       COMP 0                        64               EM0450
+     C**************************************************************BH1065090793
+     C************IN69     IFEQ '1'                                 BH1065090793
+     C***********EVCDTE    ANDLEEVCDTE                              BH1065090793
+     C***********MCPR      ANDNE0                                   BH1065090793
+     C***********          SETON                     64             BH1065090793
+     C***********          SETOF                     69             BH1065090793
+     C***********          END                                      BH1065090793
+     C**************************************************************BH1065090793
+0529 C   53N64   EVCDTE    COMP MMD                  696469               EM0450
+     C*                                                                   090793
+     C** RECORDS WITH MATURITY DATE LESS THAN OR EQUAL TO THE EVENT       090793
+     C** CONTROL DATE AND WITH CURRENT PRINCIPAL AMOUNT NOT EQUAL TO      090793
+     C** ZERO WILL BE PAST DUE AND SO SHOULD INCLUDE IN EXPOSURE          090793
+     C*                                                                   090793
+     C           *IN53     IFEQ '1'                                       090793
+     C           *IN64     ANDEQ'0'                                       090793
+     C           *IN69     ANDEQ'1'                                       090793
+     C           MCPR      COMP 0                    646469               090793
+     C                     END                                            090793
+0530 C   64      DFKEY     COMP SDFKEY               6565                 EM0450
+0531 C                     MOVE *BLANK    ZTABKY                          EM0450
+0532 C                     MOVEL'50'      ZTABKY                          EM0450
+0533 C   65      SCLOC     COMP MCNC                 6363                 EM0450
+0534 C   63                MOVE MCNC      CCOD                            EM0450
+     C   65                MOVE SACOC     DACOC   2                       E12846
+0535 C   63      ZTABKY    CHAINTABLE                99                   EM0450
+     C   99      *LOCK     IN   LDA                                       S01332
+0536 C   99                Z-ADD06        DBASE            ***DB 6*****   EM0450
+0537 C   99                MOVE ZTABKY    DBKEY                           EM0450
+0538 C   99                MOVE 'TABLE'   DBFILE                          EM0450
+     C   99                SETON                     LRU7U8               136029
+     C   99                DUMP                                           090080
+     C   99                OUT  LDA                                       S01332
+      *                                                                   S01332
+      ** Set up scaling parameters for customer lending if no error.      S01332
+     C           *IN69     IFEQ '0'                        B*1            S01332
+     C           *IN99     ANDEQ'0'                        **1            S01332
+     C           MMD       SUB  RUND      @TDATE                          S01332
+     C                     MOVE 'LE'      @DELTP                          S01332
+     C                     END                             E*2            S01332
+0539 C                     ENDSR                                          EM0450
+0540 C********************************************************************EM0450
+0541 C********************************************************************EM0450
+0542 C           SELEC2    BEGSR                                          EM0450
+0543 C*                    *** DEALING ***                                EM0450
+0544 C* THIS SUBROUTINE CHECKS TO SEE WHETHER ANY EXPOSURE IS TO BE       EM0450
+0545 C* CALCUATED                                                         EM0450
+0546 C*                                                                   EM0450
+0547 C           COUNT2    ADD  1         COUNT2                          EM0450
+0548 C                     SETOF                     505152               EM0450
+0549 C                     SETOF                     535469               EM0450
+0550 C                     SETOF                     606162               EM0450
+0550 C                     SETOF                     8687                 S01332
+      *                                                                   S01332
+      ** If FRA/IRS.                                                      S01332
+     C           MDTP      IFEQ 'RS'                       B1             S01332
+     C           MDTP      OREQ 'RX'                       *1             S01332
+     C           MDTP      OREQ 'RF'                       *1             S01332
+     C           MDTP      OREQ 'RR'                       *1             S01332
+     C           MDTP      OREQ 'RP'                       *1             S01332
+     C           MDTP      OREQ 'FR'                       *1             S01332
+      *                                                                   S01332
+      ** For FRA for the exposure to be included the event control date   S01332
+      ** must be less than or equal to the value date.For IRS the event   S01332
+      ** control date must be less than or equal to the value date.       S01332
+     C           MDTP      IFEQ 'FR'                       B*2            S01332
+      *                                                                   S01332
+     C           EVCDTE    IFLT MVD                        B**3           S01332
+     C           MVD       SUB  RUND      @TDATE  50                      S01332
+     C                     MOVE 'FR'      @DELTP  2                       S01332
+     C                     SETON                     86                   S01332
+     C                     ELSE                            X**3           S01332
+     C                     SETON                     69                   S01332
+     C                     END                             E**3           S01332
+      *                                                                   S01332
+     C                     ELSE                            X*2            S01332
+      * If IRS.                                                           S01332
+     C           EVCDTE    IFLT MOMD                       B**3           S01332
+     C           MOMD      SUB  RUND      @TDATE                          S01332
+      *                                                                   S01332
+      * if cap/collar/floor, check whether to be scaled as IRS or         S01332
+      * Option                                                            S01332
+     C           MDTP      IFEQ 'RP'                                      S01332
+     C           MDTP      OREQ 'RR'                                      S01332
+     C           MDTP      OREQ 'RF'                                      S01332
+      *                                                                   S01332
+     C           BUCCSO    IFEQ 'O'                                       S01332
+     C                     MOVE 'OP'      @DELTP                          S01332
+     C                     ELSE                                           S01332
+     C                     MOVE 'IR'      @DELTP                          S01332
+     C                     END                                            S01332
+      *                                                                   S01332
+     C                     ELSE                                           S01332
+     C                     MOVE 'IR'      @DELTP                          S01332
+     C                     END                                            S01332
+     C                     SETON                     87                   S01332
+     C                     ELSE                            X**3           S01332
+     C                     SETON                     69                   S01332
+     C                     END                             E**3           S01332
+      *                                                                   001332
+     C                     END                             E*2            S01332
+      *                                                                   001332
+     C                     ELSE                            X1             S01332
+0551 C           MDTP      LOKUPTABA                     50               EM0450
+0552 C  N50      MDTP      LOKUPTABB                     51               EM0450
+0553 C  N50N51             SETON                     69                   EM0450
+     C/COPY WNCPYSRC,EM0450C013
+0554 C   50      MDTP      COMP 'OP'                     52               EM0450
+0555 C   50N52   EVCDTE    COMP MVD                  696069               EM0450
+0556 C   50 52   EVCDTE    COMP MOMD                 696069               EM0450
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,EM0450CCP1                                           S01408
+     C*                                                                   S01408
+0557 C***51***** EVCDTE    COMP MVD                  536953        EM0450 146139
+     C   51      EVCDTE    COMP MVD                  536953                                 MD020363
+      *****************************************************************              146139 MD020363
+      ***Include*MM*deal*regardless*of*Value*Date**********************              146139 MD020363
+      *****************************************************************              146139 MD020363
+     C***51*****           SETON                     53                              146139 MD020363
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,EM0450CCP2                                           S01408
+     C*                                                                   S01408
+0558 C   51 53   MOMD      COMP 0                        54               EM0450
+0559 C   51 53N54EVCDTE    COMP MOMD                 695469               EM0450
+0560 C   54      MFTP      COMP 0                    626261               EM0450
+      *                                                                   S01332
+     C                     END                             E1             S01332
+      *                                                                   S01332
+      ** Set up scaling parameters for FX if no error.                    S01332
+     C           *IN50     IFEQ '1'                        B1             S01332
+     C           *IN69     ANDEQ'0'                                       S01332
+     C           MVD       SUB  RUND      @TDATE                          S01332
+     C                     MOVE 'FX'      @DELTP                          S01332
+     C                     END                             E1             S01332
+      *                                                                   S01332
+      ** Set up scaling parameters for MM if no error.                    S01332
+     C           *IN51     IFEQ '1'                        B1             S01332
+     C           *IN69     ANDEQ'0'                                       S01332
+     C           MOMD      SUB  RUND      @TDATE                          S01332
+     C                     MOVE 'MM'      @DELTP                          S01332
+     C                     END                             E1             S01332
+      *                                                                   S01332
+     C/COPY WNCPYSRC,EM0450C014
+0561 C                     ENDSR                                          EM0450
+0562 C********************************************************************EM0450
+0563 C********************************************************************EM0450
+0564 C***********SELEC3    BEGSR                                          S01339
+0565 C***********          *** SYND/LOANS ***                             S01339
+0566 C**THIS*SUBROUTINE CHECKS TO SEE WHETHER ANY EXPOSURE IS TO BE       S01339
+0567 C**CALCUATED AND CHECKS IF TRANSACTION KEY OVERWRITES DEFAULT        S01339
+0568 C**KEY.*IND*63 TURNS ON IF KEY HAS CHANGED                           S01339
+0569 C***********                                                         S01339
+0570 C***********COUNT3    ADD  1         COUNT3                          S01339
+0571 C***********                                                         S01339
+0572 C***********          SETOF                     505152               S01339
+0573 C***********          SETOF                     535469               S01339
+0574 C***********          SETOF                     6263                 S01339
+     C***********          SETOF                     57             S01128S01339
+0575 C***********MLTP      LOKUPTABC                     50               S01339
+0576 C**N50******          SETON                     69                   S01339
+0577 C***50******EVCDTE    COMP MSD                  536953               S01339
+     C***50*53***EVCDTE    COMP MMD                  695469         S01128S01339
+     C***50*53***EVCDTE    COMP MMDS                 695469         S01128S01339
+0579 C***54******MLRT      COMP 'G'                      51               S01339
+     C***54N51   MLRT      COMP 'N'                  696962         S01128S01339
+     C***54N51***MLRT      COMP 'N'                      62         S01128S01339
+     C***54N51N62MLRT      COMP 'D'                  696957         S01128S01339
+0581 C***51******MCDI      COMP ' '                  696962               S01339
+0582 C***********          MOVE *BLANK    ZTABKY                          S01339
+0583 C***********          MOVEL'50'      ZTABKY                          S01339
+0584 C***62******MCNR      COMP SCLOC                6363                 S01339
+0585 C***63******          MOVE MCNR      CCOD                            S01339
+0586 C***63****************MOVE MCNR******CLOC*************************   EM0450
+0587 C***63******ZTABKY    CHAINTABLE                99                   S01339
+0588 C***99******          Z-ADD07        DBASE            ***DB 7*****   S01339
+     C***99*******LOCK     IN   LDA                                 S01332S01339
+0589 C***99******          MOVE ZTABKY    DBKEY                           S01339
+0590 C***99******          MOVE 'TABLE'   DBFILE                          S01339
+     C***99******          OUT  LDA                                 S01332S01339
+      ***********                                                   S01332S01339
+      ***Set*up*scaling parameters for Syndicated loans if no erro  S01332S01339
+     C************IN69     IFEQ '0'                        B*1      S01332S01339
+     C************IN99     ANDEQ'0'                        **1      S01332S01339
+     C***********MMD       SUB  RUND      @TDATE                    S01332S01339
+     C***********          MOVE 'LE'      @DELTP                    S01332S01339
+     C***********          END                             E*       S01332S01339
+0591 C***********          ENDSR                                          S01339
+     C********************************************************************S01128
+0563 C********************************************************************S01129
+0564 C           SELEC4    BEGSR                                          S01129
+0565 C*                    *** SEC TRADING **                             S01129
+0567 C* THIS SUBROUT. CHECKS IF TRANSACTION KEY OVERWRITES DEFAULT        S01129
+0568 C* KEY. IND 67 TURNS ON IF KEY HAS CHANGED                           S01129
+0569 C*                                                                   S01129
+      **                                                                  S01332
+      ** SEC TRAD scaling is undertaken in EM0660.                        S01332
+      **                                                                  S01332
+     C                     SETOF                     828384               S01129
+     C                     SETOF                     8567                 S01129
+     C           SETP      COMP 'C'                      82               S01129
+     C           SETP      COMP 'I'                      83               S01129
+     C           SETP      COMP 'P'                      84               S01129
+     C           SETP      COMP 'D'                      85               S01129
+0569 C*                                                                   S01129
+0584 C           MCNC      COMP SCLOC                6767                 S01129
+0584 C           MCNC      IFEQ *BLANK                                    S01129
+0582 C                     MOVE *BLANK    MRGC                            S01129
+0590 C                     ELSE                                           S01129
+0582 C                     MOVE *BLANK    ZTABKY                          S01129
+0583 C                     MOVEL'50'      ZTABKY                          S01129
+0584 C           *IN67     IFEQ '1'                                       S01129
+0585 C                     MOVE MCNC      CCOD                            S01129
+0587 C           ZTABKY    CHAINTABLE                99                   S01129
+     C   99      *LOCK     IN   LDA                                       S01332
+0588 C   99                Z-ADD17        DBASE            ***DB17*****   S01129
+0589 C   99                MOVE ZTABKY    DBKEY                           S01129
+0590 C   99                MOVE 'TABLE'   DBFILE                          S01129
+     C   99                SETON                     LRU7U8               136029
+     C   99                DUMP                                           090080
+     C   99                OUT  LDA                                       S01332
+0590 C                     END                                            S01129
+0590 C                     END                                            S01129
+0584 C**N67***** EMIND     COMP SLIND                6767                            S01129 BUG23967
+     C  N67      EMLOIC    COMP SLOIC                6767                                   BUG23967
+0591 C                     ENDSR                                          S01129
+     C********************************************************************S01128
+0592 C********************************************************************EM0450
+0593 C/EJECT                                                              EM0450
+0594 C********************************************************************EM0450
+0595 C** THIS SUBROUTINE SETS UP THE CURRENCY DETAILS                     EM0450
+0596 C**  AND THE AMOUNT FOR CONVERSION TO LIMIT CURRENCY                 EM0450
+0597 C**                                                                  EM0450
+0598 C           SETUP     BEGSR                                          EM0450
+0599 C*                                                                   EM0450
+0600 C** SET UP BASIC DETAILS FOR CURRENCY KEY                            EM0450
+0601 C**                                                                  EM0450
+0602 C                     MOVE *BLANK    ZTABKY                          EM0450
+0603 C                     MOVEL'20'      ZTABKY                          EM0450
+0604 C                     MOVE '1'       ZTABKY                          EM0450
+0605 C************************                                            S01332
+0606 C** FRA's AND IRS'S                                                  S01332
+0607 C************************                                            S01332
+     C           *IN02     IFEQ '1'                        B1             S01332
+     C           *IN86     ANDEQ'1'                        *1             S01332
+     C           *IN02     OREQ '1'                        *1             S01332
+     C           *IN87     ANDEQ'1'                        *1             S01332
+0631 C                     Z-ADDMCYA      TAMT                            S01332
+0617 C                     MOVE MCYC      CCY                             S01332
+     C                     END                             E1             S01332
+0605 C************************                                            EM0450
+0606 C** CUSTOMER LENDING                                                 EM0450
+0607 C************************                                            EM0450
+0608 C   64                MOVE MLCC      CCY                             EM0450
+0609 C   64                Z-ADDMCPR      TAMT                            EM0450
+0610 C   64N66   MCPR      COMP 0                    737473OFFSET OR EXP? EM0450
+0611 C   64 66   MLER      COMP 'Y'                  767675RECOURSE ?     EM0450
+0612 C************************                                            EM0450
+0613 C** DEALING                                                          EM0450
+0614 C************************                                            EM0450
+0615 C   60                                                               EM0450
+0616 COR 61 02                                                            EM0450
+0617 COR 62 02             MOVE MCYC      CCY                             EM0450
+0618 C**                                                                  EM0450
+0619 C** CHECK DEAL TYPES  WHERE DOES AMOUNT GO?                          EM0450
+0620 C**                                                                  EM0450
+0621 C   61 02                                                            EM0450
+0622 COR 62 02   MDTP      LOKUPTABF                     70               EM0450
+0623 C   61 02N70                                                         EM0450
+0624 COR 62 02N70MDTP      LOKUPTABG                     71               EM0450
+0625 C   61 02N70                                                         EM0450
+0626 CANN71                                                               EM0450
+0627 COR 62 02N70                                                         EM0450
+0628 CANN71      MDTP      LOKUPTABH                     72               EM0450
+0629 C   70                                                               EM0450
+0630 COR 71                                                               EM0450
+0631 COR 60                Z-ADDMCYA      TAMT   130                      EM0450
+0632 C   72                Z-ADDMFV       TAMT                            EM0450
+0633 C************************                                            EM0450
+0634 C***SYNDICATED LOANS                                                 S01339
+0635 C************************                                            EM0450
+0636 C***62*03***          MOVE MDCY      CCY                             S01339
+     C***57*03***          MOVE MDCY      CCY                       S01128S01339
+0637 C***********                                                         S01339
+0638 C***CHECK*DEAL TYPE                                                  S01339
+0639 C***********                                                         S01339
+0640 C***62*03***MLTP      COMP 'DS'                     50               S01339
+0641 C***62*03*50          Z-ADDMOAV      TAMT                            S01339
+0642 C***62*03N50          Z-ADDMOAD      TAMT                            S01339
+     C***57*03***          Z-ADDMOAD      TAMT                      S01128S01339
+0633 C************************                                            S01128
+0634 C** LE FACILITIES                                                    S01128
+0635 C************************                                            S01128
+     C   13                MOVE MCYC      CCY                             S01339
+     C***13******                                                   S01128S01339
+     C*OR*14*****          MOVE MCYC      CCY                       S01128S01339
+     C***14******          Z-ADDMCYA      TAMT                      S01128S01339
+     C***14******          MULT 1000      TAMT                      S01128S01339
+     C   13                Z-ADDMCYA      TAMT                            S01128
+      *                                                                   S01332
+      ** Set up scaling parameters for LE facilities.                     S01332
+      *                                                                   S01332
+     C           *IN13     IFEQ '1'                        B1             S01332
+     C************IN14     OREQ '1'                                 S01332S01339
+     C           MFED      SUB  RUND      @TDATE                          S01332
+     C                     MOVE 'LE'      @DELTP                          S01332
+     C                     END                             E1             S01332
+0643 C**                                                                  S01129
+0633 C************************                                            S01129
+0634 C** SECURITIES TRADING                                               S01129
+0635 C************************                                            S01129
+     C***18******          MOVE LCCY      CCY                       S01129S01332
+     C   18                MOVE BUCYCD    CCY                             S01332
+     C   18                Z-ADDEXPA      TAMT                            S01129
+0643 C**                                                                  S01129
+0644 C** ACCESS CURRENCY FOR FULL DETAILS FOR CONVERSION                  EM0450
+0645 C**                                                                  EM0450
+0646 C           ZTABKY    CHAINTABLE                99                   EM0450
+     C   99      *LOCK     IN   LDA                                       S01332
+0647 C   99                Z-ADD08        DBASE            ***DB 8*****   EM0450
+0648 C   99                MOVE ZTABKY    DBKEY                           EM0450
+0649 C   99                MOVE 'TABLE'   DBFILE                          EM0450
+     C   99                SETON                     LRU7U8               136029
+     C   99                DUMP                                           090080
+     C   99                OUT  LDA                                       S01332
+0650 C**                                                                  EM0450
+0651 C                     ENDSR                                          EM0450
+0652 C********************************************************************EM0450
+0653 C/EJECT                                                              EM0450
+0654 C********************************************************************EM0450
+0655 C           CONVRT    BEGSR                                          EM0450
+0656 C**                                                                  EM0450
+0657 C**THIS SUBROUTINE CALCULATES EXPOSURE/OSB                           EM0450
+0658 C**FOR OUTPUT TO EXPOSURE FILE                                       EM0450
+0659 C**                                                                  EM0450
+0660 C                     SETOF                     50                   EM0450
+0661 C**                                                                  EM0450
+0662 C** CALCULATE X RATE                                                 EM0450
+0663 C**                                                                  EM0450
+0664 C   20      1         DIV  SPOT      SPOT                            EM0450
+0665 C           SPOT      DIV  LSPOT     XSPOT  138                      EM0450
+0666 C**                                                                  EM0450
+0667 C** SET UP ARRAY INDEX FOR 'POWER' TO CORRECT DECIMAL PLACES         EM0450
+0668 C**                                                                  EM0450
+0669 C           CDP       ADD  1         N       10                      EM0450
+0670 C           LCDP      ADD  1         Y       10                      EM0450
+0671 C           1         DIV  POWER,N   DECP   138H                     EM0450
+0672 C** CALCULATE AMOUNT TO BE OUTPUT/ACCUM.                             EM0450
+0673 C**                                                                  EM0450
+  XX C****       TAMT      MULT DECP      TAMT                            S01128
+  XX C**N14      TAMT      MULT DECP      TAMT                      S01128S01129
+  XX C**N14      TAMT      MULT DECP      TAMT      H               S01129S01339
+  XX C           TAMT      MULT DECP      TAMT      H                     S01339
+0675 C           TAMT      MULT XSPOT     OAMT   150H                     EM0450
+0676 C**                                                                  EM0450
+0677 C** DO NOT MULTIPLY BY POWER ARRAY FOR WHOLE UNITS                   EM0450
+0678 C*          TAMT      MULT POWER,Y   OAMT   150                      EM0450
+0679 C                     ENDSR                                          EM0450
+0680 C********************************************************************EM0450
+0681 C********************************************************************EM0450
+0682 C           CLOANS    BEGSR                                          EM0450
+0683 C**                                                                  EM0450
+0684 C** THIS SUBROUTINE CHECKS THE C LOAN FILE                           EM0450
+0685 C** FOR ANY CHANGE TO DEFAULT KEY FOR O/P                            EM0450
+0686 C** TO EMDEX                                                         EM0450
+0687 C**                                                                  EM0450
+     C                     MOVELMLOR      CLNKEY  7                       EM0450
+0689 C                     MOVE 'A'       CLNKEY                          EM0450
+0690 C           CLNKEY    CHAINCLOAN                99                   EM0450
+0691 C***IF*NOT*LIVE*DETAIL*RECORD...ERROR!!                       EM0450 090793
+     C** In the case of a past due part sold the original loan,           090793
+     C** although matured, will not be dropped from CLOANCL until         090793
+     C** the part sold is no longer past due. In this case it is          090793
+     C** not a DB error if record is not live.                            090793
+     C*                                                                   090793
+0692 C**N12                SETON                     99            EM0450 090793
+     C   99      *LOCK     IN   LDA                                       S01332
+0693 C   99                Z-ADD11        DBASE            ***DB 11****   EM0450
+0694 C   99                MOVE CLNKEY    DBKEY                           EM0450
+0695 C   99                MOVE 'CLOAN'   DBFILE                          EM0450
+     C   99                SETON                     LRU7U8               136029
+     C   99                DUMP                                           095620
+     C   99                OUT  LDA                                       S01332
+0696 C   99                GOTO ENDCLN                                    EM0450
+     C****                 MOVE CNUML     CNUMB                           E10836
+     C           PTYP      IFEQ 64                                        E10836
+     C           PTYP      OREQ 65                                        E10836
+     C           RCSIC     IFEQ 'Y'                                       E10836
+     C                     MOVE CNUML     CNUMB                           E10836
+     C                     ELSE                                           E10836
+     C                     MOVE OLNOC     CNUMB                           E10836
+     C                     END                                            E10836
+     C                     ELSE                                           E10836
+     C                     MOVE CNUML     CNUMB                           E10836
+     C                     END                                            E10836
+0698 C**********           MOVE LINDL     LIND                                       EM0450 BUG23967
+     C                     MOVE LOICL     LOIC                                              BUG23967
+0699 C                     MOVE ACOFL     ACOC                            EM0450
+0700 C                     MOVE CRSKL     CLOC                            EM0450
+0701 C**                                                                  EM0450
+0702 C** SET UP KEY FOR ACCESING NEW REGION                               EM0450
+0703 C**                                                                  EM0450
+0704 C                     MOVE *BLANKS   ZTABKY                          EM0450
+0705 C                     MOVEL'50'      ZTABKY                          EM0450
+0706 C                     MOVE CRSKL     ZTABKY                          EM0450
+0707 C           ZTABKY    CHAINTABLE                99                   EM0450
+     C   99      *LOCK     IN   LDA                                       S01332
+0708 C   99                Z-ADD12        DBASE            ***DB 12****   EM0450
+0709 C   99                MOVE ZTABKY    DBKEY                           EM0450
+0710 C   99                MOVE 'TABLE'   DBFILE                          EM0450
+     C   99                SETON                     LRU7U8               136029
+     C   99                DUMP                                           090080
+     C   99                OUT  LDA                                       S01332
+0711 C   99                GOTO ENDCLN                                    EM0450
+0712 C**                                                                  EM0450
+0713 C** COMPARE UPDATED KEY TO SAVED KEY                                 EM0450
+0714 C** AN EXCEPTION RECORD WILL BE OUTPUT IF                            EM0450
+0715 C** THEY DIFFER                                                      EM0450
+0716 C**                                                                  EM0450
+0717 C           SDFKEY    COMP DFKEY                6363                 EM0450
+0718 C           ENDCLN    ENDSR                                          EM0450
+0719 C********************************************************************EM0450
+0720 C********************************************************************EM0450
+0721 C           UDCHK1    BEGSR                                          EM0450
+0722 C**                                                                  EM0450
+0723 C**  THIS SUBROUTINE DETERMINES WHETHER A NON-DEFAULT KEY IS TO      EM0450
+0724 C** BE OUTPUT AS A NEW RECORD OR ADDED TO AN EXSITING RECORD         EM0450
+0725 C** IT ALSO EXCPTS THE APPROPRATE DETAILS TO EMDEX                   EM0450
+     C*                                                                   093013
+     C** Set off *IN16 before chain to EMDEX                              093013
+     C                     SETOF                     16                   093013
+0726 C**                                                                  EM0450
+0727 C** CHECK TO SEE IF RECORD ON EMDEX                                  EM0450
+0728 C***********DFKEY     CHAINEMDEX                77                                EM0450 CCB016
+     C           DFKEY     SETLLEMDEX                77  78                                   CCB016
+     C           *IN77     IFNE '1'                                                           CCB016
+     C           *IN78     IFEQ '1'                                                           CCB016
+     C           DFKEY     READEEMDEX                    77                                   CCB016
+     C                     ELSE                                                               CCB016
+     C                     SETON                     77                                       CCB016
+     C                     END                                                                CCB016
+     C                     END                                                                CCB016
+0729 C**                                                                  EM0450
+0730 C** IF NOT ON EMDEX AND IS REC TYPE R (08)                           EM0450
+0731 C** DATABASE ERROR                                                   EM0450
+0732 C**                                                                  EM0450
+0733 C***08*77***          SETON                     99                   076093
+0733 C   08 77N63          SETON                     99                   076093
+     C   99      *LOCK     IN   LDA                                       S01332
+0734 C   99                MOVE DFKEY     DBKEY                           EM0450
+0735 C   99                MOVE '13'      DBASE            *** DB 13 ***  EM0450
+0736 C   99                MOVE 'EMDEX'   DBFILE                          EM0450
+     C   99                SETON                     LRU7U8               136029
+     C   99                DUMP                                           090080
+     C   99                OUT  LDA                                       S01332
+0737 C   99                GOTO CK1END                                    EM0450
+      *                                                                   S01332
+      ** Scale amount                                                     S01332
+      ** SCALING FOR SECURITIES ISSUER/COUNTERPARTY ALREADY DONE IN       146766
+      ** EM0660.  BY HAVING IT DONE AGAIN IN THIS PROGRAM, IT DEFAULTS    146766
+      ** THE @DELTP FIELD TO THE LAST RECORD READ...WHICH MEANS IT USES   146766
+      ** THE WRONG SCALING FACTOR.  SO IT IS NOW CONDTIONED TO ONLY SCALE 146766
+      ** AMOUNT IF IT IS NOT A SECURITIES ISSUER/COUNTERPARTY.            146766
+     C           *IN18     IFNE '1'                                       146766
+     C           @DELTP    ANDLEMXLMCA                                                        CCB016
+     C                     MOVE 'Y'       @SCALE                          S01332
+     C                     Z-ADDOAMT      @SCAMT                          S01332
+     C                     EXSR SCALE                                     S01332
+     C                     Z-ADD@SCAMT    OAMT                            S01332
+     C                     END                                            146766
+      *                                                                   S01332
+0738 C**                                                                  EM0450
+0739 C** IF NOT TYPE 08 AND NOT ON EMDEX ADD                              EM0450
+0740 C** NEW RECORD                                                       EM0450
+0741 C**                                                                  EM0450
+0742 C   77                GOTO NEWREC                                    EM0450
+0746 C**                                                                  EM0450
+0747 C** ADD TO EXPOSURE OR OSB                                           EM0450
+0748 C**                                                                  EM0450
+0749 C   64N66 73MLEE      ADD  OAMT      MLEE                            EM0450
+0750 C   64N66 74                                                         EM0450
+0751 COR 64 66 75MLEB      ADD  OAMT      MLEB                            EM0450
+0752 C   64 66 76MLEE      SUB  OAMT      MLEE                            EM0450
+0753 C   62      MLEE      ADD  OAMT      MLEE                            EM0450
+     C   57      MLEG      ADD  OAMT      MLEG                            S01128
+     C***13******                                                   S01128S01339
+     C*OR*14*****MLEG      ADD  OAMT      MLEG                      S01128S01339
+     C   13      MLEG      ADD  OAMT      MLEG                            S01339
+0781 C   18 82   MSCE      ADD  OAMT      MSCE                            S01129
+0781 C   18 83   MSIE      ADD  OAMT      MSIE                            S01129
+0781 C   18 84   MSPO      ADD  OAMT      MSPO                            S01129
+0781 C   18 85   MMMB      ADD  OAMT      MMMB                            S01129
+0754 C           NEWREC    TAG                             ** TAG NEWREC  EM0450
+0755 C**                                                                  EM0450
+0756 C** SET UP DETAILS IF NEW RECORD                                     EM0450
+0757 C**                                                                  EM0450
+0758 C   77                Z-ADD0         PACK8  150                      EM0450
+0759 C   77      TOTEXP    ADD  1         TOTEXP                          EM0450
+0760 C   77 64 66                                                         EM0450
+0761 CAN 76                Z-SUBOAMT      OAMTS  150                      EM0450
+     C***IF*NEW EMDEXX5 RECORD TO BE OUTPUT CHAIN TO CLINT          E10841E11848
+     C***FILE*TO PICK UP CUSTOMER A/C OFFICER CODE                  E10841E11848
+     C**                   MOVE 'A'       CLKEY   7                 E10841E11848
+     C**                   MOVELCNUMB     CLKEY                     E10841E11848
+0728 C** 77      CLKEY     CHAINCLINTC               99             E10841E11848
+0734 C** 99                MOVE CLKEY     DBKEY                     E10841E11848
+0735 C** 99                Z-ADD14        DBASE            *** DB 14E10841E11848
+0736 C** 99                MOVE 'CLINT'   DBFILE                    E10841E11848
+0737 C** 99                GOTO CK1END                              E10841E11848
+     C** 77                MOVE ACOCC     DACOC   2                 E10841E11848
+0762 C** OUTPUT/UPDATE RECORD ON EMDEX                                    EM0450
+0763 C                     EXCPT                                          EM0450
+0767 C           CK1END    ENDSR                                          EM0450
+0768 C******************************************************************* EM0450
+0769 C**                                                                  EM0450
+0770 C** THIS SUBR ACCUMULATES TOTALS FOR O/P                             EM0450
+0771 C** TO DEFAULT KEY                                                   EM0450
+0772 C**                                                                  EM0450
+0773 C           UDCHK2    BEGSR                                          EM0450
+     C/COPY WNCPYSRC,EM0450C015
+      *                                                                   S01332
+      ** Scale amount                                                     S01332
+      ** do not scale FX Off-setting Balance                              S01332
+      *                                                                   S01332
+     C           *IN60     IFEQ '1'                                       S01332
+     C           OAMT      ANDLT0                                         S01332
+     C                     GOTO NOSCLE                                    S01332
+     C                     END                                            S01332
+      ** SCALING FOR SECURITIES ISSUER/COUNTERPARTY ALREADY DONE IN       146766
+      ** EM0660.  BY HAVING IT DONE AGAIN IN THIS PROGRAM, IT DEFAULTS    146766
+      ** THE @DELTP FIELD TO THE LAST RECORD READ...WHICH MEANS IT USES   146766
+      ** THE WRONG SCALING FACTOR.  SO IT IS NOW CONDTIONED TO ONLY SCALE 146766
+      ** AMOUNT IF IT IS NOT A SECURITIES ISSUER/COUNTERPARTY.            146766
+     C           *IN18     IFNE '1'                                       146766
+     C           @DELTP    ANDLEMXLMCA                                                        CCB016
+      *                                                                   S01332
+     C                     MOVE 'Y'       @SCALE  1                       S01332
+     C                     Z-ADDOAMT      @SCAMT 130                      S01332
+     C                     EXSR SCALE                                     S01332
+     C                     Z-ADD@SCAMT    OAMT                            S01332
+     C                     END                                            146766
+      *                                                                   S01332
+     C           NOSCLE    TAG                                            S01332
+      *                                                                   S01332
+     C***60      FOAMTE    ADD  OAMT      FOAMTE                          S01128
+     C***60******OAMT      IFGE 0                                S01128   E17677
+     C           *IN60     IFEQ '1'                                       E17677
+     C           OAMT      IFGE 0                                         E17677
+     C           FOAMTE    ADD  OAMT      FOAMTE                          S01128
+     C/COPY WNCPYSRC,EM0450C017
+     C                     ELSE                                           S01128
+     C           FOAMTB    SUB  OAMT      FOAMTB                          S01128
+     C                     END                                            S01128
+     C                     END                                            E17677
+      *                                                                   S01332
+      ** FRA/IRS Accumulation.                                            S01332
+     C           *IN86     IFEQ '1'                        B1             S01332
+     C           *IN87     OREQ '1'                        *1             S01332
+      *                                                                   S01332
+     C           MDTP      IFEQ 'RF'                       B*2            S01332
+     C           MDTP      OREQ 'RR'                       **2            S01332
+     C           MDTP      OREQ 'RP'                       **2            S01332
+      *                                                                   S01332
+      ** If 'Caps/collars/floor' = 0 add the amount into options exposure.S01332
+     C           BUCCSO    IFEQ 'O'                        B**3           S01332
+0780 C           OPAMTE    ADD  OAMT      OPAMTE                          S01332
+     C                     ELSE                            X**3           S01332
+0780 C           IRAMTE    ADD  OAMT      IRAMTE                          S01332
+     C                     END                             E**3           S01332
+      *                                                                   S01332
+     C                     END                             E*2            S01332
+      *                                                                   S01332
+     C           MDTP      IFEQ 'RX'                       B*2            S01332
+     C           MDTP      OREQ 'RS'                       **2            S01332
+     C           IRAMTE    ADD  OAMT      IRAMTE                          S01332
+     C                     END                             E*2            S01332
+      *                                                                   S01332
+     C           MDTP      IFEQ 'RX'                       B*2            S01332
+     C                     MOVE 'Y'       IRFLAG  1                       S01332
+     C                     END                             E*2            S01332
+      * If FRA.                                                           S01332
+     C           MDTP      IFEQ 'FR'                       B*2            S01332
+     C           FRAMTE    ADD  OAMT      FRAMTE                          S01332
+     C                     END                             E*2            S01332
+      *                                                                   S01332
+     C                     END                             E1             S01332
+0778 C   61 70                                                            EM0450
+0779 COR 61 72   MOAMTE    ADD  OAMT      MOAMTE                          EM0450
+     C/COPY WNCPYSRC,EM0450C018
+0780 C   61 71   MOAMTB    ADD  OAMT      MOAMTB                          EM0450
+     C   57                                                               S01128
+     C*OR*13*****                                                   S01128S01339
+     C*OR*14*****LOAMTG    ADD  OAMT      LOAMTG                    S01128S01339
+     COR 13      LOAMTG    ADD  OAMT      LOAMTG                          S01339
+0781 C   62      LOAMTE    ADD  OAMT      LOAMTE                          EM0450
+0782 C   64 66 76LOAMTE    SUB  OAMT      LOAMTE                          EM0450
+0783 C   64N66 73LOAMTE    ADD  OAMT      LOAMTE                          EM0450
+0784 C   64N66 74                                                         EM0450
+0785 COR 64 66 75LOAMTB    ADD  OAMT      LOAMTB                          EM0450
+0781 C   18 82   SECAMT    ADD  OAMT      SECAMT                          S01129
+0781 C   18 83   SEIAMT    ADD  OAMT      SEIAMT                          S01129
+0781 C   18 84   SEPAMT    ADD  OAMT      SEPAMT                          S01129
+0781 C   18 85   MOAMTB    ADD  OAMT      MOAMTB                          S01129
+0789 C                     ENDSR                                          EM0450
+0790 C********************************************************************EM0450
+0791 C********************************************************************EM0450
+0792 C           RETAIL    BEGSR                                          EM0450
+0793 C** THIS SUBROUTINE CALCULATES RETAIL EXP.                           EM0450
+0794 C**                                                                  EM0450
+0795 C                     SETOF                     505179               EM0450
+0796 C**                                                                  EM0450
+0797 C**SET LIMITS ON ACCNT FOR CUSTOMER                                  EM0450
+0798 C**                                                                  EM0450
+0799 C                     MOVE SCNUM     SCNUMA                          EM0450
+0800 C           ACCKEY    SETLLACCNT                                     EM0450
+0801 C           MORACC    TAG                             ** TAG MORACC  EM0450
+0802 C                     READ ACCNT                    79               EM0450
+0803 C** ** HAS CUSTOMER CHANGED ??                                       EM0450
+0804 C**                                                                  EM0450
+0805 C  N79      CNUMA     COMP SCNUMA               7979                 EM0450
+0806 C   79                GOTO ENDRTL                                    EM0450
+     C*
+     C** BYPASS PROCESSING IF FORMAT ACCNTAC READ                         146993
+     C           ACOD      IFEQ *BLANKS                                   146993
+     C           ACRECI    ORNE 'D'                                                         MD020256
+     C           ACRECI    ANDNE'C'                                                         MD020256
+     C                     GOTO ENDRTL                                    146993
+     C                     ENDIF                                          146993
+      * IGNORE CLOSED ACCOUNTS                                                               BUG2591
+     C           ACRECI    CABEQ'C'       MORACC                                             BUG2591
+      *                                                                                       CGL029
+     C                     MOVE ACOD      PACCD                                               CGL029
+      *                                                                                       CGL029
+     C                     CALL 'AOACODR0'                                                    CGL029
+     C                     PARM *BLANKS   PRTCD   7                                           CGL029
+     C**********           PARM '*VERIFY' POPTN   7                                  CGL029 MD020198
+     C                     PARM '*KEY   ' POPTN   7                                         MD020198
+     C                     PARM           PACCD  10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+      *                                                                                       CGL029
+     C           PRTCD     IFNE *BLANKS                                                       CGL029
+     C           *LOCK     IN   LDA                                                           CGL029
+     C                     MOVE 'SDACODPD'DBFILE                                              CGL029
+     C                     MOVE PACCD     DBKEY                                               CGL029
+     C                     Z-ADD9         DBASE                                               CGL029
+     C                     OUT  LDA                                                           CGL029
+     C                     MOVE *ON       *INU7                                               CGL029
+     C                     MOVE *ON       *INU8                                               CGL029
+     C                     MOVE *ON       *INLR                                               CGL029
+     C                     DUMP                                                               CGL029
+     C                     GOTO ENDRTL                                                        CGL029
+     C                     ENDIF                                                              CGL029
+      *                                                                                       CGL029
+0807 C**********           MOVE *BLANK    ZTABKY                                       EM0450 CGL029
+0808 C**********           MOVE ACOD      ACODA                                        EM0450 CGL029
+0809 C**********           MOVEL'30'      ZTABKY                                       EM0450 CGL029
+0810 C**********           MOVE '1'       ZTABKY                                       EM0450 CGL029
+0811 C                     SETOF                     10                   EM0450
+     C/COPY WNCPYSRC,EM0450C003
+0812 C********** ZTABKY    CHAINTABLE                99                                EM0450 CGL029
+     C***99***** *LOCK     IN   LDA                                                    S01332 CGL029
+0813 C***99*****           Z-ADD09        DBASE            ***DB 9*****                EM0450 CGL029
+0814 C***99*****           MOVE ZTABKY    DBKEY                                        EM0450 CGL029
+0815 C***99*****           MOVE 'TABLE'   DBFILE                                       EM0450 CGL029
+     C***99*****           SETON                     LRU7U8                            136029 CGL029
+     C***99*****           DUMP                                                        090080 CGL029
+     C***99*****           OUT  LDA                                                    S01332 CGL029
+0816 C** IF VALID CARRY ON TO SET UP CONV. DETALIS                        EM0450
+0817 C***99*****           GOTO ENDRTL                                                 EM0450 CGL029
+     C           A5ACTY    COMP 'R'                      10                                 MD020198
+0818 C  N10                GOTO MORACC                                    EM0450
+0819 C                     MOVE *BLANK    ZTABKY                          EM0450
+0820 C                     MOVE CCYA      CCY                             EM0450
+0821 C                     MOVEL'20'      ZTABKY                          EM0450
+0822 C                     MOVE '1'       ZTABKY                          EM0450
+0823 C           ZTABKY    CHAINTABLE                99                   EM0450
+     C   99      *LOCK     IN   LDA                                       S01332
+0824 C   99                Z-ADD10        DBASE            ***DB 10****   EM0450
+0825 C   99                MOVE ZTABKY    DBKEY                           EM0450
+0826 C   99                MOVE 'TABLE'   DBFILE                          EM0450
+     C   99                SETON                     LRU7U8               136029
+     C   99                DUMP                                           090080
+     C   99                OUT  LDA                                       S01332
+0827 C   99                GOTO ENDRTL                                    EM0450
+0828 C                     Z-ADDCLBL      TAMT                            EM0450
+     C/COPY WNCPYSRC,EM0450C004
+0829 C                     EXSR CONVRT                                    EM0450
+0830 C           OAMT      COMP 0                    505150               EM0450
+0831 C**                                                                  EM0450
+0832 C** ADD/SUB TO EXP OR OSB                                            EM0450
+0833 C**                                                                  EM0450
+     C           FACT      IFEQ 0                                         S01128
+     C*                                                                   S01332
+     C*  If Retail Exposure Scaling required, scale amount                S01332
+     C           @RESCL    IFEQ 'Y'                                       S01332
+     C           OAMT      ANDNE*ZERO                                     S01332
+     C           OAMT      MULT @PERCT    OAMT                            S01332
+     C/COPY WNCPYSRC,EM0450C006
+     C           OAMT      DIV  100       OAMT                            S01332
+     C/COPY WNCPYSRC,EM0450C007
+     C                     END                                            S01332
+     C*                                                                   S01332
+0834 C   51      ROAMTB    SUB  OAMT      ROAMTB                          EM0450
+0835 C   50      ROAMTE    ADD  OAMT      ROAMTE                          EM0450
+     C                     ELSE                                           S01128
+     C   51      LAAMTB    SUB  OAMT      LAAMTB                          S01128
+     C   50      LAAMTE    ADD  OAMT      LAAMTE                          S01128
+     C                     END                                            S01128
+     C           ODLN      IFGT 0                                         S01128
+     C           FACT      ANDEQ0                                         S01128
+     C                     Z-ADDODLN      TAMT                            S01128
+     C                     EXSR CONVRT                                    S01128
+  XX C           OAMT      DIV  DECP      OAMT                            S01128
+     C*                                                                   S01332
+     C*  If Retail Exposure Scaling required, scale amount                S01332
+     C           @RESCL    IFEQ 'Y'                                       S01332
+     C           OAMT      ANDNE*ZERO                                     S01332
+     C           OAMT      MULT @PERCT    OAMT                            S01332
+     C/COPY WNCPYSRC,EM0450C008
+     C           OAMT      DIV  100       OAMT                            S01332
+     C/COPY WNCPYSRC,EM0450C009
+     C                     END                                            S01332
+     C*                                                                   S01332
+     C           OAMT      ADD  ROAMTG    ROAMTG                          S01128
+     C                     END                                            S01128
+0836 C                     GOTO MORACC                                    EM0450
+0837 C           ENDRTL    TAG                             ** TAG ENDRTL  EM0450
+0838 C                     ENDSR                                          EM0450
+0839 C********************************************************************EM0450
+0840 C           OUTEXP    BEGSR                                          EM0450
+0841 C** THIS SUBROUTINE CALCULATES O/P DETAILS                           EM0450
+0842 C**                                                                  EM0450
+0843 C** CHECK IF RECORD HAS EXPOSURE OR LIMIT                            EM0450
+0844 C**                                                                  EM0450
+     C*                                                                   093013
+     C** Set off *IN16 before chain to EMDEX                              093013
+     C                     SETOF                     16                   093013
+0846 C**                                                                  EM0450
+0847 C** DOES RECORD ALREADY EXIST ON EMDEX                               EM0450
+0848 C***********SDFKEY    CHAINEMDEX                59                                EM0450 CCB016
+     C           SDFKEY    SETLLEMDEX                59  78                                   CCB016
+     C           *IN59     IFNE '1'                                                           CCB016
+     C           *IN78     IFEQ '1'                                                           CCB016
+     C           SDFKEY    READEEMDEX                    59                                   CCB016
+     C                     ELSE                                                               CCB016
+     C                     SETON                     59                                       CCB016
+     C                     END                                                                CCB016
+     C                     END                                                                CCB016
+0849 C   59      TOTEXP    ADD  1         TOTEXP                          EM0450
+     C***IF*NEW RECORD TO BE OUTPUT TO EMDEXX5 CHAIN TO             E10841E11848
+     C***CLIENT FILE TO PICK UP CUSTOMERS A/C OFFICER CODE          E10841E11848
+     C**                   MOVE 'A'       CLKEY                     E10841E11848
+     C**                   MOVELSCNUM     CLKEY                     E10841E11848
+     C** 59      CLKEY     CHAINCLINTC               99             E10841E11848
+     C** 99                MOVE CLKEY     DBKEY                     E10841E11848
+     C** 99                Z-ADD15        DBASE            *DB 15** E10841E11848
+     C** 99                MOVE 'CLINT'   DBFILE                    E10841E11848
+     C** 99                GOTO NEWEXP                              E10841E11848
+     C** 59                MOVE ACOCC     SACOC   2                 E10841E11848
+     C** CALL ACCESS PROGRAM TO SEE IF CUSTOMER EXISTS.                   E26179
+      *                                                                   E26179
+     C           *IN59     IFEQ '1'                        B1             E26179
+      *                                                                   E26179
+     C                     MOVE *BLANKS   @CNUM  10                       E26179
+     C                     MOVELSCNUM     @CNUM                           E26179
+      *                                                                   E26179
+     C***********          CALL 'AOCUSTR0'                                CSD007
+     C                     CALL 'AOCUSTR2'                                CSD007
+     C                     PARM '*BLANKS' @RTCD                           E26179
+     C                     PARM '*KEY   ' @OPTN                           E26179
+     C                     PARM @CNUM     @AENB  10                       E26179
+     C                     PARM *BLANKS   @KYST   7                       E26179
+     C***********@CUST     PARM @CUST     DSSDY                           CSD007
+     C           @CUST     PARM @CUST     DSLDY                           CSD007
+      *                                                                   CSD007
+      ** If CSD007 is on, allow processing of a closed record (return     CSD007
+      ** code '*NRF' and date deleted equal to zero).                     CSD007
+      *                                                                   CSD007
+     C           CSD007    IFEQ 'Y'                                       CSD007
+     C           @RTCD     ANDEQ'*NRF'                                    CSD007
+     C           BBDTDL    ANDEQ*ZERO                                     CSD007
+      *                                                                   CSD007
+     C                     ELSE                                           CSD007
+      *                                                                   E26179
+     C           @RTCD     IFNE *BLANK                     B*2            E26179
+     C           *LOCK     IN   LDA                                       E26179
+     C                     MOVE SCNUM     DBKEY                           E26179
+     C                     Z-ADD15        DBASE            *DB 15**       E26179
+     C                     MOVEL'AOCUSTR0'DBFILE                          E26179
+     C                     SETON                     LRU7U8               136029
+     C                     DUMP                                           090080
+     C                     OUT  LDA                                       E26179
+     C                     SETON                     99                   E26179
+     C                     GOTO NEWEXP                                    E26179
+     C                     END                             E*2            E26179
+      *                                                                   CSD007
+     C                     ENDIF                                          CSD007
+      *                                                                   E26179
+     C                     END                             E1             E26179
+     C   59                MOVE BBACOC    SACOC                           E26179
+0850 C   59                GOTO NEWEXP                                    EM0450
+0851 C**                                                                  EM0450
+0852 C** ADD MTS TO THOSE ON FILE                                         EM0450
+0853 C**                                                                  EM0450
+0854 C           MFXE      ADD  FOAMTE    MFXE                            EM0450
+     C           MFXB      ADD  FOAMTB    MFXB                            S01128
+0855 C           MMME      ADD  MOAMTE    MMME                            EM0450
+0856 C           MMMB      ADD  MOAMTB    MMMB                            EM0450
+     C           MLEG      ADD  LOAMTG    MLEG                            S01128
+0857 C           MLEE      ADD  LOAMTE    MLEE                            EM0450
+0858 C           MLEB      ADD  LOAMTB    MLEB                            EM0450
+     C           MLAE      ADD  LAAMTE    MLAE                            S01128
+     C           MLAB      ADD  LAAMTB    MLAB                            S01128
+     C           MREG      ADD  ROAMTG    MREG                            S01128
+0859 C           MREE      ADD  ROAMTE    MREE                            EM0450
+0860 C           MREB      ADD  ROAMTB    MREB                            EM0450
+0860 C           MSIE      ADD  SEIAMT    MSIE                            S01129
+0860 C           MSCE      ADD  SECAMT    MSCE                            S01129
+0860 C           MSPO      ADD  SEPAMT    MSPO                            S01129
+0860 C           MFRE      ADD  FRAMTE    MFRE                            S01332
+0860 C           MFRO      ADD  FRAMTB    MFRO                            S01332
+0860 C           MIRE      ADD  IRAMTE    MIRE                            S01332
+0860 C           MIRO      ADD  IRAMTB    MIRO                            S01332
+0763 C                     EXCPT                                          S01129
+0861 C           NEWEXP    ENDSR                           ** TAG NEWEXP  EM0450
+0862 C********************************************************************EM0450
+0863 C********************************************************************EM0450
+0864 C** THIS SUBROUTINE HANDLES MULTIPLE TRAILER RECORDS                 EM0450
+0865 C** ON EMXTS                                                         EM0450
+0866 C**                                                                  EM0450
+0867 C           TRAIL     BEGSR                                          EM0450
+0868 C           TRID      COMP 'D'                      80               EM0450
+0869 C   80                Z-ADDNREC      NDLR    50                      EM0450
+0870 C           TRID      COMP 'L'                      80               EM0450
+0871 C   80                Z-ADDNREC      NLER    50                      EM0450
+0872 C***********TRID      COMP 'C'                      80               S01339
+0873 C***80******          Z-ADDNREC      NCLR    50                      S01339
+     C           TRID      COMP 'F'                      80               S01128
+     C   80                Z-ADDNREC      NLFR    50                      S01128
+     C***********TRID      COMP 'G'                      80         S01128S01339
+     C***80******          Z-ADDNREC      NSFR    50                S01128S01339
+     C           TRID      COMP 'S'                      80               S01129
+     C   80                Z-ADDNREC      NSER    50                      S01129
+0874 C                     ENDSR                                          EM0450
+0875 C********************************************************************EM0450
+0876 C********************************************************************EM0450
+0877 C**   THIS SUBR CHECKS TOTALS FOR O/P TO                             EM0450
+0878 C**   REPORT AND ALSO CHECKS FILE CONTROL                            EM0450
+0879 C** FIGURES                                                          EM0450
+      **   THIS SUBROUTINE ALSO CALLS EM0451 FOR FUTURES AND OPTIONS      S01332
+      **   PROCESSING.                                                    S01332
+0880 C**                                                                  EM0450
+0881 C           REPORT    BEGSR                                          EM0450
+0882 C**                                                                  EM0450
+0883 C                     SETOF                     505152               EM0450
+     C******               SETOF                     3839                 S01129
+     C                     SETOF                     383953               S01129
+      *                                                                   S01332
+      ** If futures and options installed call EM0451.                    S01332
+     C           BGFUOP    IFEQ 'Y'                                       S01332
+     C                     CALL 'EM0451'                                  S01332
+     C                     PARM '*BLANKS' @RTCD1  7                       S01332
+     C           TOTEXP    PARM TOTEXP    @COUNT  50                      S01332
+     C                     END                                            S01332
+0884 C** CHECK TOTALS                                                     EM0450
+0885 C**                                                                  EM0450
+0886 C           COUNT1    COMP NLER                 5050                 EM0450
+0887 C           COUNT2    COMP NDLR                 5151                 EM0450
+0888 C***********COUNT3    COMP NCLR                 5252                 S01339
+     C           COUNT5    COMP NLFR                 3838                 S01128
+     C***********COUNT6    COMP NSFR                 3939           S01128S01339
+     C           COUNT7    COMP NSER                 5353                 S01129
+0889 C** IF ANY TOTALS DIFFER....ERROR                                    EM0450
+0890 C**                                                                  EM0450
+0891 C   50                                                               EM0450
+0892 COR 51                                                               EM0450
+     COR 38                                                               S01128
+     COR 39                                                               S01128
+     COR 53                                                               S01129
+0893 COR 52                SETON                     U8                   EM0450
+     C/COPY WNCPYSRC,EM0450C016
+0894 C                     ENDSR                                          EM0450
+0895 C********************************************************************EM0450
+      ** Exposure management scaling subroutine                           S01332
+     C/COPY ZSRSRC,ZEXPSCLZ1                                              S01332
+0896 C********************************************************************EM0450
+0897 C**                                                                  EM0450
+0898 C**   ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.   EM0450
+0899 C**                                                                  EM0450
+0900 C           ZSYSTM    BEGSR                           *** ZSYSTM *** EM0450
+0901 C**                                                                  EM0450
+0902 C**   SET UP KEY FOR INSTALLATION CONTROL RECORD.                    EM0450
+0903 C                     MOVEL'01      'ZTABKY 12                       EM0450
+0904 C                     MOVE '  10'    ZTABKY                          EM0450
+0905 C**                                                                  EM0450
+0906 C           ZTABKY    CHAINTABLE                99    ON NOT THERE   EM0450
+0907 C  N99      RECI      COMP 'D'                  9999  ON, IS DELETED EM0450
+0908 C**                                                                  EM0450
+0909 C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.                    EM0450
+0910 C           DATF      COMP 'M'                      98MMDDYY, 98 ON  EM0450
+0911 C**                                                                  EM0450
+0912 C                     ENDSR                                          EM0450
+0913 C**                                                                  EM0450
+0914 C**                                                                  EM0450
+0915 C********************************************************************EM0450
+0916 C/EJECT                                                              EM0450
+0917 O*********************************                                   EM0450
+0918 O** OUTPUT HEADER TO EMDEX                                           EM0450
+0919 OEMDEXX4 DADD     81                                                 EM0450
+0920 O                                   16 'H               '            EM0450
+0921 O                         RUNDAY    19P                              EM0450
+0922 O*************************************                               EM0450
+0923 O** ADD NEW RECORD TO EMDEX                                          EM0450
+0924 O**                                                                  EM0450
+0925 OEMDEXX5 EADD     77                                                 EM0450
+0926 O                                    1 'D'                           EM0450
+     O/COPY WNCPYSRC,EM0450O001
+0927 O                         DFKEY     16                               EM0450
+0928 O                         PACK8     24P                              EM0450
+0929 O                         PACK8     32P                              EM0450
+0930 O                         PACK8     40P                              EM0450
+0931 O                         PACK8     48P                              EM0450
+0932 O                         PACK8     56P                              EM0450
+0933 O                         PACK8     64P                              EM0450
+0934 O                         PACK8     72P                              EM0450
+0935 O                         PACK8     80P                              EM0450
+     O                         PACK8     88P                              S01128
+     O                         PACK8     96P                              S01128
+     O                         PACK8    104P                              S01128
+     O                         PACK8    112P                              S01128
+     O                         PACK8    120P                              E20641
+     O                         PACK8    128P                              E20641
+     O                         PACK8    136P                              E20641
+     O                         PACK8    144P                              E20641
+     O                         PACK8    152P                              E20641
+     O                         PACK8    160P                              S01129
+     O                         PACK8    168P                              S01129
+     O                         PACK8    176P                              S01129
+     O******                   DACOC    154                         E10841E11848
+     O                         DACOC    178                               E12846
+     O                         PACK8    186P                              S01332
+     O                         PACK8    194P                              S01332
+     O                         PACK8    202P                              S01332
+     O                         PACK8    210P                              S01332
+     O                         PACK8    218P                              S01332
+     O                         PACK8    226P                              S01332
+     O                         PACK8    234P                              CTI002
+     O                         PACK8    242P                              CTI002
+     O                         PACK8    250P                              CTI002
+0936 O**                                                                  EM0450
+0937 O**                                                                  EM0450
+     O                 18 85   OAMT      48P                              S01129
+     O                 57      OAMT      56P                              S01128
+     O                 13      OAMT      56P                              S01128
+     O***********      14      OAMT      56P                        S01128S01339
+     O****             64N66 73OAMT      56P                              S01128
+     O                 64N66 73OAMT      64P                              S01128
+     O****             64 66 76OAMTS     56P                              S01128
+     O                 64 66 76OAMTS     64P                              S01128
+     O****             62      OAMT      56P                              S01128
+     O                 62      OAMT      64P                              S01128
+     O****            N66 74 64OAMT      64P                              S01128
+     O                N66 74 64OAMT      72P                              S01128
+     O****             66 75 64OAMT      64P                              S01128
+     O                 66 75 64OAMT      72P                              S01128
+     O                 18 83   OAMT     160P                              S01129
+     O                 18 82   OAMT     168P                              S01129
+     O                 18 84   OAMT     176P                              S01129
+0943 O**                                                                  EM0450
+0944 O** UPDATE EXISTING EMDEX RECORD                                     EM0450
+0945 O**                                                                  EM0450
+0946 O*EMDEX***E********16                                                125617
+     OEMDEX   E        16N77                                              125617
+     O****                     MLEE      56P                              S01128
+     O****                     MLEB      64P                              S01128
+     O                         MMMB      48P                              S01129
+     O                         MLEG      56P                              S01128
+     O                         MLEE      64P                              S01128
+     O                         MLEB      72P                              S01128
+     O                         MSIE     160P                              S01129
+     O                         MSCE     168P                              S01129
+     O                         MSPO     176P                              S01129
+     O                         PACK8    234P                              CTI002
+     O                         PACK8    242P                              CTI002
+     O                         PACK8    250P                              CTI002
+0949 O*********************************                                   EM0450
+0950 O** ADD NEW DEFAULT EXPOSURE REC.                                    EM0450
+0951 OEMDEXX5 TADD     L1 59                                              EM0450
+0952 O                                    1 'D'                           EM0450
+0953 O                         SDFKEY    16                               EM0450
+0954 O                         FOAMTE    24P                              EM0450
+     O****                     PACK8     32P                              S01128
+     O                         FOAMTB    32P                              S01128
+0956 O                         MOAMTE    40P
+0957 O                         MOAMTB    48P
+     O                         LOAMTG    56P                              S01128
+     O****                     LOAMTE    56P                              S01128
+     O****                     LOAMTB    64P                              S01128
+     O                         LOAMTE    64P                              S01128
+     O                         LOAMTB    72P                              S01128
+     O                         LAAMTE    80P                              S01128
+     O                         LAAMTB    88P                              S01128
+     O                         ROAMTG    96P                              S01128
+     O****                     ROAMTE    72P                              S01128
+     O****                     ROAMTB    80P                              S01128
+     O                         ROAMTE   104P                              S01128
+     O                         FRAMTE   120P                              S01332
+     O                         FRAMTB   128P                              S01332
+     O                         ROAMTB   112P                              S01128
+     O                         PACK8    144P                              CTI002
+     O                         PACK8    152P                              CTI002
+     O                         SEIAMT   160P                              S01129
+     O                         SECAMT   168P                              S01129
+     O                         SEPAMT   176P                              S01129
+     O******                   SACOC    154                   E10841E11848S01129
+     O                         SACOC    178                               S01129
+     O                         IRAMTE   186P                              S01332
+     O                         IRAMTB   194P                              S01332
+     O                         FUAMTE   202P                              S01332
+     O                         FUAMTB   210P                              S01332
+     O                         OPAMTE   218P                              S01332
+     O                         OPAMTB   226P                              S01332
+     O                         TFEX     234P                              CTI002
+     O                         TFGR     242P                              CTI002
+     O                         TFOF     250P                              CTI002
+     O                         LOIC     253                                                 MD029610
+0962 O*********************************                                   EM0450
+0963 O*********************************                                   EM0450
+0964 O** OUTPUT TRAILER RECORD                                            EM0450
+0965 O**                                                                  EM0450
+0966 OEMDEXX6 TADD     LR                                                 EM0450
+0967 O                                   16 'T999999999999999'            EM0450
+0968 O                         TOTEXP    19P                              EM0450
+0969 O*********************************                                   EM0450
+1012 O********************************************************************EM0450
+1013 O************                                                        EM0450
+1014 O*M0450P1T***02   LR                                          S01124 S01117
+1014 OEM0450AUT   02   LR                                                 S01117
+1015 O**********                         22 'REFERENCE EM0450'            S01117
+1015 O                                   22 'REFERENCE EM0450AU'          S01117
+1016 O                         TITLE     81                               EM0450
+1017 O                                  103 'DATE'                        EM0450
+1018 O                         RUNDAT   112                               EM0450
+1019 O                                  122 'PAGE'                        EM0450
+1020 O                         PAGE  Z  127                               EM0450
+1021 O        T 2      LR                                                 EM0450
+1022 O                                   72 'END OF DAY EXPOSURE- '       EM0450
+1023 O                                   85 'FILE CONTROLS'               EM0450
+1024 O        T 13     LRN99                                              EM0450
+1025 O                                   72 '---------------------'       EM0450
+1026 O                                   85 '--------------'              EM0450
+1027 O        T 3      LRN99                                              EM0450
+1028 O                                   20 'S/EMXTS'                     EM0450
+1029 O                                   52 '** EXTRACT FILE TOTALS *'    EM0450
+1030 O                                   53 '*'                           EM0450
+1031 O        T 1      LRN99                                              EM0450
+1032 O                                   20 '-------'                     EM0450
+1033 O        T   15   LRN99                                              EM0450
+1034 O                                   59 'CALCULATED'                  EM0450
+1035 O                                   74 'ON FILE'                     EM0450
+1036 O        T 22     LRN99                                              EM0450
+1037 O                                   33 'NUMBER OF CUSTOMER LENDI'    EM0450
+     O****                               43 'NG RECORDS'                  S01128
+     O                                   48 'NG LOAN RECORDS'             S01128
+1039 O                         COUNT11   58                               S01128
+1040 O                         NLER  1   74                               S01128
+1041 O                 50               109 '*** DIFFERENCE ***'          EM0450
+1042 O        T  2     LRN99                                              EM0450
+1043 O                                   33 'NUMBER OF DEALING RECORD'    EM0450
+1044 O                                   34 'S'                           EM0450
+1045 O                         COUNT21   58                               S01128
+1046 O                         NDLR  1   74                               S01128
+1047 O                 51               109 '*** DIFFERENCE ***'          EM0450
+1048 O********T**2     LRN99                                              S01339
+1049 O***********                        33 'NUMBER OF SYNDICATED LOA'    S01339
+     O****                               42 'N RECORDS'                   S01128
+     O***********                        48 'NS LOAN RECORDS'       S01128S01339
+1051 O***********              COUNT31   58                         S01128S01339
+1052 O***********              NCLR  1   74                         S01128S01339
+1053 O***********      52               109 '*** DIFFERENCE ***'          S01339
+     O        T  2     LRN99                                              S01128
+     O                                   33 'NUMBER OF CUSTOMER LENDI'    S01128
+     O                                   52 'NG FACILITY RECORDS'         S01128
+     O                         COUNT51   58                               S01128
+     O                         NLFR  1   74                               S01128
+     O                 38               109 '*** DIFFERENCE ***'          S01128
+     O********T**2     LRN99                                        S01128S01339
+     O***********                        33 'NUMBER OF SYNDICATED LOS01128S01339
+     O***********                        52 'NS FACILITY RECORDS'   S01128S01339
+     O***********              COUNT61   58                         S01128S01339
+     O***********              NSFR  1   74                         S01128S01339
+     O***********      39               109 '*** DIFFERENCE ***'    S01128S01339
+     O        T  2     LRN99                                              S01129
+     O                                   33 'NUMBER OF SECURITIES TRA'    S01129
+     O                                   45 'DING RECORDS'                S01129
+     O                         COUNT71   58                               S01129
+     O                         NSER  1   74                               S01129
+     O                 53               109 '*** DIFFERENCE ***'          S01129
+1054 O        T   40   LRN99                                              EM0450
+1055 O                                   20 'S/EMDEX'                     EM0450
+1056 O                                   35 'TOTAL N'                     EM0450
+1057 O                                   59 'UMBER OF DETAIL RECORDS '    EM0450
+1058 O                                   78 'ON EXPOSURE FILE = '         EM0450
+1059 O                         TOTEXP1   90                               EM0450
+1060 O        T 11     LRN99                                              EM0450
+1061 O                                   20 '-------'                     EM0450
+1062 O        T 2      LRN99 U2                                           EM0450
+1063 O                                   20 'S/EMXTL'                     EM0450
+1064 O                                   35 'TOTAL N'                     EM0450
+1065 O                                   59 'UMBER OF DETAIL RECORDS '    EM0450
+1066 O                                   78 'WRITTEN TO FILE  = '         EM0450
+1067 O                         COUNT41   90                               EM0450
+1068 O        T 11     LRN99 U2                                           EM0450
+1069 O                                   20 '-------'                     EM0450
+1070 O*****   T 3      LR                                          EM0450 RT0086
+1071 O*****                              76 '*** END OF REPORT ***'EM0450 RT0086
+1072 O/EJECT                                                              EM0450
+0969 O*********************************                                   EM0450
+0970 O** PRINT REPORT                                                     EM0450
+0971 O**   DATABASE ERROR OUTPUT                                          EM0450
+0972 O**                                                                  EM0450
+0973 O********************************************************************EM0450
+0974 O**                                                                  EM0450
+0975 O**                                                                  EM0450
+0976 O*M0450P1D*3******99                                          S01124 S01117
+0976 OEM0450AUD 3      99                                                 S01117
+0977 O                                   48 '**** DATABASE ERROR ****'    EM0450
+0978 O        D 3      99                                                 EM0450
+0979 O                                   34 '************************'    EM0450
+0980 O                                   58 '************************'    EM0450
+0981 O                                   64 '******'                      EM0450
+0982 O        D 1      99                                                 EM0450
+0983 O                                   11 '*'                           EM0450
+0984 O                                   64 '*'                           EM0450
+0985 O        D 1      99                                                 EM0450
+0986 O                                   29 '*    FILE NAME    '''        EM0450
+0987 O                         DBFILE    34                               EM0450
+0988 O                                   35 ''''                          EM0450
+0989 O                                   64 '*'                           EM0450
+0990 O        D 1      99                                                 EM0450
+0991 O                                   29 '*    KEY          '''        EM0450
+0992 O                         DBKEY     58                               EM0450
+0993 O                                   64 '''    *'                     EM0450
+0994 O        D 1      99                                                 EM0450
+0995 O                                   29 '*    PROGRAM NAME '''        EM0450
+0996 O                         DBPGM     37                               EM0450
+0997 O                                   38 ''''                          EM0450
+0998 O                                   64 '*'                           EM0450
+0999 O        D 1      99                                                 EM0450
+1000 O                                   29 '*    AT           '''        EM0450
+1001 O                         DBASE     31                               EM0450
+1002 O                                   32 ''''                          EM0450
+1003 O                                   64 '*'                           EM0450
+1004 O        D 1      99                                                 EM0450
+1005 O                                   11 '*'                           EM0450
+1006 O                                   64 '*'                           EM0450
+1007 O        D 1      99                                                 EM0450
+1008 O                                   34 '************************'    EM0450
+1009 O                                   58 '************************'    EM0450
+1010 O                                   64 '******'                      EM0450
+1083 O********************************************************************EM0450
+1084 O/EJECT                                                              EM0450
+1085 O*************************************                               EM0450
+1086 O********TABLES***********                                           EM0450
+     O****                                                                S01128
+     O****  S01128 - TYPE 'CD' REMOVED FROM TABF & INSERTED IN TABG       S01128
+     O****                                                                S01128
+     O** LOAN DEAL TYPES      TABC     REMOVED S01339                     S01339
+     O*TERCDS                          REMOVED S01339                     S01339
+     O****                                                                CDL002
+     O****  CDL002 - NP, NS FX Netting Deal Types added                   CDL002
+     O****                                                                CDL002
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+** FX DEAL TYPES      TABA
+FPFSCXSWOPOTPISINPNS
+** MM DEAL TYPES        TABB
+IPITTILNCLDLTDCDC1C2BDTBBPDATACSBRTSRATR
+** LENDING PROCESSING TYPES       TABD
+616263646570
+** LENDING PROCESSING TYPES (TAKING ACCOUNT OF RECOURSE)   TABE
+6667
+** LOANS/MM DEAL TYPES       TABF
+IPTICLDLLN
+** LOANS/MM DEAL TYPES       TABG
+ITTDCD
+** LOANS/MM DEAL TYPES       TABH
+BDTBC1C2TABPDA
+**   POWER - ARRAY OF POWERS OF 10 FOR CURRENCY CONVERSIONS
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000

@@ -1,0 +1,344 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+      *****************************************************************
+/*STD *  RPGBASEMOD                                                   *
+/*EXI *  TEXT('Midas Bank of England Extra Securities Data Update')   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bank of England                                      *
+      *                                                               *
+      *  BYSECSW0UP - Window update module                            *
+      *                                                               *
+      *  Function:  This module updates the data to the required      *
+      *             extension file.                                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Last Amend No. LLN020             Date 15Jul02               *
+      *  Prev Amend No. 202717             Date 07Feb02               *
+      *                 LLN018  *CREATE    Date 17Apr01               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  LLN020 - Upgrade BOE to Midas Release 4.                     *
+      *           Rename fields to avoid conflict with CARS.          *
+      *  202717 - Security shortname not being passed to file field.  *
+      *           Insert/Amend processing wrong
+      *  LLN018 - Upgrade BoE to APIs and addition of 2 new fields    *
+      *           on ICD.
+      *                                                               *
+      *****************************************************************
+      /TITLE    S U B R O U T I N E   I N D E X .                     *
+      *                                                               *
+      *     Subroutine Index                                          *
+      *     ================                                          *
+      *                                                               *
+      *     1. UPDAT   -   Update Processing                          *
+      *     2. #EMOVO  -   Move screen fields back                    *
+      *     3. *PSSR   -   Database Error Handling                    *
+      *     4. END     -   Leave program                              *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      * ID F  C  H  L    FUNCTION OF INDICATORS                       *
+      *                                                               *
+      *       12      F12 PRESSED GOTO PREVIOUS SCREEN                *
+      *       20      FIELDS TO BE PRETECTED DURING ENQUIRY           *
+      *       28      REDISPLAY THE SCREEN                            *
+      *       29      AT LEAST ONE FIELD ENTRY IN ERROR               *
+      *---------------------------------------------------------------*
+      *       89      CHAIN TO BYCUSTY0 FAILED                        *
+      *---------------------------------------------------------------*
+      *****************************************************************
+      ** Input Files
+      *
+     FBYSECTY1  UF A E           K DISK
+     F                                     COMMIT
+      ** BY Extension file (Update)
+      *
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *
+ 
+      **
+      ** The following /COPY line includes the LDA layout,
+      ** the copyright array definition,
+      ** and the following named constants:
+      **    True       logical = *on (for indcator processing)
+      **    False      logical = *off (for indcator processing)
+      **    DBErrCtl   10A     = 'DBERRCTL' (the name of the database error
+      **                                    handler)
+      ** and the following variables:
+      **    RunBefore  1A (for the PSSR)
+     D/COPY ZACPYSRC,STD_D_SPEC
+ 
+      ** Include the MM standard declares
+     D/COPY ZACPYSRC,STDDECLARE
+ 
+      ** The following /COPY line includes all the defined fields in the
+      ** PSDS.  They have meaningful names, prefixed by 'PS'.
+     D/COPY ZACPYSRC,PSDS
+ 
+      ** The following /COPY line includes the definitions for error and
+      ** warning message arrays.
+ COPYD/COPY ZACPYSRC,ERR_ARRAYS
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+ 
+      ** +--------------------------------------+
+      ** ¦ Manually included D-specs            ¦
+      ** ¦ =========================            ¦
+      ** +--------------------------------------+
+ 
+      **
+      **   Named constants
+      **   ===============
+      **
+ 
+      **
+      **   Arrays and Data Structures
+      **   ==========================
+      **
+      *
+      ** Local data area for database error details
+      *
+      *** Datastructure to define input parameter DATA
+      /COPY QWINDSRC,SESECSDTA
+ 
+      * Valid Bank of England Details layout
+     D ValidBoE      E DS                  EXTNAME(SEVSECSX0)
+ 
+      ** Bank of England details file
+     D NWRCD         E DS                  EXTNAME(BYSECTY1)
+ 
+      ** Bank of England Details File
+     D SVRCD         E DS                  EXTNAME(BYSECTX0)
+     D                                     PREFIX(SV)
+ 
+ 
+      **   Declared variables
+      **   ==================
+      **
+ 
+     D ACTN            S              1
+     D W0RTN           S              7
+     D WLEN            S              3S 0
+     D WWID            S              3S 0
+     D WFIRST          S              1
+     D WWERR           S              1
+     D WFIND           S              1
+     D TITLE           S              7
+ 
+      ** Define *entry parameters
+ 
+     D Idx             S              3P 0                                      Index error array
+     D WIdx            S              3P 0                                      Index warning array
+ 
+     D @RETURN         S              6
+     D @TYPE           S              1
+ 
+      *****************************************************************
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *
+      *                M A I N  P R O C E S S I N G
+      *
+      *****************************************************************
+      *
+      **   Parameter list
+      *
+     C     *ENTRY        PLIST
+     C                   PARM                    ACTN
+     C                   PARM                    DATA
+     C                   PARM                    @RTCD
+     C                   PARM                    WFIND
+     C                   PARM                    ValidBoE
+     C                   PARM                    SVRCD
+      *
+      ** Determine whether program is running interactively or in batch
+      **  ( 0 = batch   1 = interactive)
+      *
+     C                   CALLB     'ZARTVJOBA'
+     C                   PARM                    @RETURN
+     C                   PARM                    @TYPE
+      *
+ 
+     C                   EXSR      UPDAT
+      *
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * UPDATE THE EXTENSION FILE
+      *****************************************************************
+      *                                                               *
+      *  SR/UPDAT                                                     *
+      *                                                               *
+      *  Called by: MAIN LOOP                                         *
+      *                                                               *
+      *  Calls: *PSSR                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C     UPDAT         BEGSR
+      *
+      *
+      ** Access extended file
+      *
+     C***  ULSESN        CHAIN     BYSECTY1                           8991          LLN020
+     C     BYSESN        CHAIN     BYSECTY1                           8991          LLN020
+      *
+      *  If interactive mode
+      *
+     C     @TYPE         IFEQ      '1'
+      *
+      ** If record locked, display screen again, with information message.
+      *
+     C     *IN91         IFEQ      *ON
+     C                   MOVEL     '*RECLCK'     @RTCD
+     C                   EXSR      END
+     C                   ENDIF
+      *
+      ** In Amend Mode
+      ** Check record exists before update
+      *
+     C     ACTN          IFEQ      'A'
+      *
+      ** If the record does not exist, or has been modified by another user
+      *
+     C     *IN89         IFEQ      *ON
+     C******IN89         OREQ      *OFF                                                       202717
+     C                   MOVE      'I'           ACTN                                         202717
+     C*****NWRCD         ANDNE     SVRCD                                                      202717
+     C*****              MOVEL     '*RECUPD'     @RTCD                                        202717
+     C*****              EXSR      END                                                        202717
+     C                   ENDIF
+     C                   ENDIF
+      *
+      *
+      ** IN INSERT MODE
+      *
+     C     ACTN          IFEQ      'I'
+      *
+      *
+      ** If the record exists
+      *
+     C     *IN89         IFEQ      *OFF
+     C                   MOVE      'A'           ACTN                                         202717
+     C*******************MOVEL     '*RECUPD'     @RTCD                                        202717
+     C*******************EXSR      END                                                        202717
+     C                   ENDIF
+     C                   ENDIF
+     C                   ENDIF
+      *
+      *
+      ** Write, delete or Update extended file
+      *
+     C     ACTN          IFEQ      'D'
+      *
+      ** Delete record
+      *
+     C     *IN89         IFEQ      *OFF
+     C                   DELETE    BYSECTY1
+     C                   ENDIF
+      *
+     C                   ELSE
+      *
+     C                   MOVEL     ValidBoE      NWRCD
+      *
+      ** Write or update extended record
+      *
+     C     *IN89         IFEQ      *OFF
+     C                   EXSR      #EMOVO
+     C                   UPDATE    BYSECTD0
+     C                   ELSE
+     C                   EXSR      #EMOVO
+     C                   WRITE     BYSECTD0
+     C                   ENDIF
+      *
+     C                   ENDIF
+      *
+     C                   EXSR      END
+      *
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * MOVE FIELDS OUT OF SCREEN FIELDS
+      *****************************************************************
+      *                                                               *
+      *  SR/#EMOVO                                                    *
+      *                                                               *
+      *  Called by: UPDAT                                             *
+      *                                                               *
+      *  Calls: -                                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C     #EMOVO        BEGSR
+      *
+     C     ACTN          IFEQ      'A'
+     C     ACTN          OREQ      'I'
+      *
+     C***                MOVE      ULSESN        LSESN                                 202717 LLN020
+     C                   MOVE      BYSESN        LSESN                              LLN020
+     C                   MOVE      LVGTEE        LGTEE
+     C                   MOVE      LVQUAL        LQUAL
+      *
+     C                   ENDIF
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *PSSR         BEGSR                                                  ** *PSSR SR **
+      *
+     C     @RUN          IFEQ      *BLANKS
+     C                   MOVE      'Y'           @RUN              1
+     C                   SETON                                        U7U8LR
+     C                   DUMP
+      *
+     C                   CALL      'DBERRCTL'
+      *
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  END   - End Program, no errors                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C     END           BEGSR                                                              **
+      *
+     C                   RETURN
+      *
+     C                   ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      *****************************************************************
+**CTDATA CPY@
+(c) Misys International Banking Systems Ltd. 2001

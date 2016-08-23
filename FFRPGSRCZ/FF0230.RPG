@@ -1,0 +1,457 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Spot Prices Market - Prompt')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas  -  Futures and Options Module
+     F*                                                                  *
+     F*   FF0230  -  SPOT PRICES MARKET-PROMPT                           *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+     F*  Last Amend No. CAAA03             Date 11Mar04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  Prev Amend No. S01456             Date 08Nov93               *
+     F*                  S01199            Date 27Feb90               *
+     F*                  E21147             DATE  20FEB90                *
+     F*                  S01117             DATE  19JAN90                *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *   CAAA03 - Webfacing Changes (Recompile)                      *
+     F*   S01456  -  'FF' MONTHLY P&L ENHANCEMENTS.                      *
+     F*              Recompiled due to change to PF/MKCTLD.              *
+     F*   S01199  -  HELP SYSTEM                                     *
+     F*   E21147  -  REPLACE QCAEXEC CALL WITH QCMDEXC FOR AS400         *
+     F*   S01117  -  MULTIBRANCHING                                      *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                        *
+     F*                                                                  *
+     F*     IGNDECERR(*NO)                                               *
+     F*                                                                  *
+     F********************************************************************
+     F**    THIS PROGRAM WAS BASED ON  FF1265      23/06/87              *
+     F********************************************************************
+     F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F****************************************************************
+     F*ABTB10*IF* E           K        DISK                               S01117
+     FMKCTL   IF  E           K        DISK
+     FMARKT   IF  E           K        DISK
+     FFF0230DFCF  E                    WORKSTN
+     F*
+     F**************************************************************** ***
+     F*
+     F*                   FUNCTIONS OF INDICATORS
+     F*
+     F****03*****HELP REQUESTED***************************************    S01199
+     F*   20     INVALID ENTRY ON SCREEN
+     F*   30     CHAIN TO LF/MKCTL FAILED
+     F****71*****PROGRAM*'QCAEXEC'*FAILED*TO*EXECUTE*COMMAND**********    E21147
+     F*   71     PROGRAM 'QCMDEXC' FAILED TO EXECUTE COMMAND              E21147
+     F****99*****READ*OF*TABTB10*FAILED******************************* ***S01117
+     F*   U7+U8  DB ERROR
+     F*
+     F**************************************************************** ***
+     F/SPACE 3
+     E                    CPY@    1   1 80
+     E**************************************************************** ***
+     E                    MSG     1   2 45
+     E*       SCREEN MESSAGES
+     E                    CMD     1   1 39
+     E********QCAEXEC*COMMAND                                             E21147
+     E*       QCMDEXC COMMAND                                             E21147
+     E********************************************************************
+     E/SPACE 3
+     I********************************************************************
+     I*
+     ILDA         DS                            256
+     I*  LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*                                                                   S01117
+     I** DATA AREA RUNDAT                                                 S01117
+     IRUNDT       DS                                                      S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     I*
+     I*****QCAEXEC*Command                                                E21147
+     I**   QCMDEXC Command                                                E21147
+     ICOMMD       DS
+     I                                        1  39 WCMD
+     I                                        1   1 WAORD
+     I                                       13  14 WMRKT
+     I                                       32  39 WWAIT
+     I*
+     IPSDS       SDS
+     I                                      244 253 JOB
+     I                                      254 263 USER
+     I*
+     I********************************************************************
+     I/EJECT
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C********************************************************************
+     C*
+     C**  M A I N   P R O C E S S I N G
+     C*
+     C*
+     C**   PARAMETERS TO BE OUTPUT FOR MARKET CENTRE :
+     C**     CODE, NAME , BUSINESS-DATE.
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           PMRKT
+     C                     PARM           PMKTN
+     C                     PARM           PBUSD
+     C*
+     C           *LIKE     DEFN MRKT      PMRKT
+     C           *LIKE     DEFN MKTN      PMKTN
+     C           *LIKE     DEFN BUSD      PBUSD
+     C*
+     C**   PUT PROGRAM-NAME INTO DATA-AREA FOR REPORTING D'BASE-ERRORS.
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANK    DBFILE
+     C                     MOVE *BLANK    DBPGM
+     C                     MOVEL'FF0230  'DBPGM
+     C                     MOVE *ZERO     DBASE
+     C                     MOVE *BLANK    DBKEY
+     C                     OUT  LDA
+     C*                                                                   S01117
+     C** IN THE DATAAREA RUNDAT                                           S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C*
+     C*******ACCESS*ICD*RECORD*1*FROM*TABTB10*****************************S01117
+     C***********                                                         S01117
+     C***********          READ TABTB10                  99               S01117
+     C***********                                                         S01117
+     C*****IF*RECORD*NOT*FOUND,*DB*ERROR**********************************S01117
+     C***********                                                         S01117
+     C************IN99     IFEQ '1'                                     ? S01117
+     C***********RECI      ORNE 'D'                                     ? S01117
+     C***********          SETON                     U7U8LR               S01117
+     C************LOCK     IN   LDA                                       S01117
+     C***********          Z-ADD1         DBASE                           S01117
+     C***********          MOVE 'TABFF'   DBFILE           ***************S01117
+     C***********          MOVEL'01    '  TABKY  12        * DB ERROR 01 *S01117
+     C***********          MOVE '    10'  TABKY            ***************S01117
+     C***********          MOVELTABKY     DBKEY                           S01117
+     C***********          OUT  LDA                                       S01117
+     C***********          RETRN                                          S01117
+     C***********          END                                            S01117
+     C*
+     C**   MOVE SKELETON COMMAND INTO DATA-STRUCTURE.
+     C*
+     C                     MOVE CMD,1     WCMD                          ?
+     C*
+     C**   IF RECORD FOUND, OUTPUT THE SCREEN
+     C*
+     C                     MOVE RUNA      SRUNA
+     C                     MOVELJOB       SWSID
+     C                     EXFMTFF0230F1
+     C*
+     C                     EXSR SCREEN
+     C*
+     C**   IF F3 IS TAKEN, RETURN PARAMETERS BLANK/ZERO;
+     C**     OTHERWISE,       RETURN MARKET-CENTRE DATA.
+     C*
+     C                     MOVE *BLANKS   PMRKT
+     C                     MOVE *BLANKS   PMKTN
+     C                     MOVE *ZERO     PBUSD
+     C           *INKC     IFEQ '0'
+     C                     MOVE SMRKT     PMRKT
+     C                     MOVE MKTN      PMKTN
+     C                     Z-ADDBUSD      PBUSD
+     C                     END
+     C*
+     C                     SETON                     LR
+     C*
+     C                     RETRN
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*                INDEX OF SUBROUTINES
+     C*                --------------------
+     C*
+     C*    1. SCREEN SR.  TO PROCESS THE SCREEN FF0230F1
+     C*    2. VALID SR.   TO VALIDATE THE ENTRY MADE
+     C*    3. OPEN SR.    TO CHECK IF THE MARKET CENTRE ENTERED IS OPEN
+     C*    4. QCAEX SR.   TO EXECUTE A CONTROL-LANGUAGE COMMAND
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*   SCREEN SR.  TO PROCESS THE SCREEN FF0230F1
+     C*
+     C*  CALLED FROM - MAIN PROCESSING
+     C*
+     C*  CALLS       - VALID
+     C*
+     C********************************************************************
+     C*
+     C           SCREEN    BEGSR
+     C*
+     C**  CONTINUE PROCESSING UNTIL F3 IS TAKEN OR VALID ENTRY
+     C*
+     C                     SETON                     20
+     C           *INKC     DOWEQ'0'
+     C           *IN20     ANDEQ'1'
+     C****************************************************************    S01199
+     C*****DOW*HELP*KEY*PRESSED***************************************    S01199
+     C****************************************************************    S01199
+     C************IN03     DOWEQ'1'                                       S01199
+     C***********          EXSR HELP                                      S01199
+     C***********          READ FF0230DF                 45               S01199
+     C***********          END                                            S01199
+     C*
+     C                     EXSR VALID
+     C*
+     C**  IF ENTRY IS INVALID, REDISPLAY SCREEN
+     C*
+     C           *IN20     IFEQ '1'
+     C                     EXFMTFF0230F1
+     C                     END
+     C*
+     C                     END
+     C*
+     C*****IF*-*COMMAND*ONE*TAKEN*****************************************S01117
+     C**   IF - F3 TAKEN                                                  S01117
+     C*
+     C           *INKC     IFEQ '1'
+     C*
+     C                     SETON                     U8
+     C*
+     C*****END*IF*-*COMMAND*ONE*TAKEN*************************************S01117
+     C**   END IF - F3 TAKEN                                              S01117
+     C*
+     C                     END
+     C**
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C*    VALID SR.- VALIDATE SCREEN ENTRY
+     C*
+     C*    CALLED FROM - SCREEN
+     C*
+     C*    CALLS       - OPEN
+     C*                - QCAEX
+     C*
+     C********************************************************************
+     C*
+     C           VALID     BEGSR
+     C*
+     C**  RESET INVALID INDICATOR
+     C*
+     C                     SETOF                     20
+     C*
+     C**  CHAIN LF/MARKT TO SEE IF MARKET CENTRE EXISTS.
+     C*
+     C           SMRKT     CHAINMARKT                20
+     C  N20      RECI      COMP 'D'                  2020
+     C*
+     C**  IF - ERROR OCCURS SET UP ERROR MESSAGE FOR SCREEN
+     C*
+     C           *IN20     IFEQ '1'
+     C                     MOVELMSG,1     SEMSG
+     C*
+     C**  ELSE - MARKET CENTRE IS VALID
+     C*
+     C                     ELSE
+     C*
+     C****ALLOCATE*DATA-AREA VIA QCAEXEC                                  E21147
+     C**  ALLOCATE DATA-AREA VIA QCMDEXC                                  E21147
+     C*
+     C                     MOVE 'A'       WAORD
+     C                     MOVE 'WAIT(5)' WWAIT
+     C*
+     C                     EXSR QCAEX
+     C*
+     C****IF*-*QCAEXEC*DID NOT FAIL                                       E21147
+     C**  IF - QCMDEXC DID NOT FAIL                                       E21147
+     C*
+     C           *IN71     IFNE '1'
+     C*
+     C**   VALIDATE THE MARKET CENTRE
+     C*
+     C                     EXSR OPEN
+     C*
+     C*****ELSE*-*QCAEXEC*FAILED                                          E21147
+     C**   ELSE - QCMDEXC FAILED                                          E21147
+     C*
+     C                     ELSE
+     C*
+     C                     SETON                     20
+     C                     MOVELMSG,2     SEMSG
+     C*
+     C*****END*IF/ELSE*-*QCAEXEC DID NOT FAIL                             E21147
+     C**   END IF/ELSE - QCMDEXC DID NOT FAIL                             E21147
+     C*
+     C                     END
+     C*
+     C**   END IF/ELSE - ERRORS OCCURRED ON INPUT
+     C*
+     C                     END
+     C**
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*    OPEN SR. - TEST WHETHER MARKET CENTRE IS OPEN
+     C*
+     C*    CALLED FROM - VALID
+     C*
+     C*    CALLS       - QCAEX
+     C*
+     C********************************************************************
+     C*
+     C           OPEN      BEGSR
+     C*
+     C**  CHAIN LF/MKCTL TO DISCOVER IF MARKET CENTRE IS OPEN
+     C*
+     C           SMRKT     CHAINMKCTL                30
+     C*
+     C**  IF - VALID RECORD NOT FOUND
+     C*
+     C           *IN30     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C*
+     C****DEALLOCATE*DATA-AREA*VIA QCAEXEC                                E21147
+     C**  DEALLOCATE DATA-AREA VIA QCMDEXC                                E21147
+     C*
+     C                     MOVE 'D'       WAORD
+     C                     MOVE *BLANKS   WWAIT
+     C*
+     C                     EXSR QCAEX
+     C*
+     C**  DATABASE ERROR HANDLING
+     C*
+     C                     SETON                     U7U8LR
+     C*
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVE 'MKCTL'   DBFILE           * DB ERROR 02 *
+     C                     MOVELSMRKT     DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR                                     S01117
+     C                     RETRN
+     C*
+     C**  END IF - DATABASE ERROR IN LF/MKCTL
+     C*
+     C                     END
+     C*
+     C**  IF - MARKET IS CLOSED
+     C*
+     C           MKCI      IFNE 'I'
+     C*
+     C****DEALLOCATE*DATA-AREA*VIA QCAEXEC                                E21147
+     C**  DEALLOCATE DATA-AREA VIA QCMDEXC                                E21147
+     C*
+     C                     MOVE 'D'       WAORD
+     C                     MOVE *BLANKS   WWAIT
+     C*
+     C                     EXSR QCAEX
+     C*
+     C                     SETON                     20
+     C                     MOVELMSG,2     SEMSG
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C**   QCAEX SR. - To call/execute CL commands                       *
+     C**   ~~~~~~~~~                                                     *
+     C**      Called From                                                *
+     C**       SR. VALID                                                 *
+     C**       SR. OPEN                                                  *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           QCAEX     BEGSR
+     C*
+     C                     MOVE SMRKT     WMRKT
+     C*************        CALL 'QCAEXEC'              71                 E21147
+     C                     CALL 'QCMDEXC'              71                 E21147
+     C                     PARM           WCMD   39
+     C                     PARM 39        WLEN   155
+     C*
+     C                     ENDSR
+     C*
+     C****************************************************************    S01199
+     C*EJECT**********************************************************    S01199
+     C****************************************************************    S01199
+     C****************************************************************    S01199
+     C*****SUB-ROUTINE*HELP*-*CALLS*HELP*TEXT*************************    S01199
+     C**************************CALLED*BY*-*SR.SCREEN*****************    S01199
+     C**************************CALLS*PGM*MHELP.**********************    S01199
+     C**************************INTRODUCTION*TEXT*ONLY*AVAILABLE******    S01199
+     C****************************************************************    S01199
+     C*****************************************************************
+     C***********HELP      BEGSR
+     C***********
+     C***********          MOVEL'FF0230'  HBPGM   6
+     C***********          MOVE *BLANKS   HERCD 160
+     C***********          CALL 'MHELP'
+     C***********          PARM           HBPGM
+     C***********          PARM           HERCD
+     C***********          ENDSR
+     C*****************************************************************
+     C/SPACE 3                                                            S01117
+     C********************************************************************S01117
+      **                                                                  S01117
+      ** *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS         S01117
+      ** CALLED FROM: AFTER ABNORMAL OPERATION OCCURS                     S01117
+      ** CALLS: NOTHING                                                   S01117
+      **                                                                  S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C                     ENDSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+** MSG - ERROR MESSAGES FOR SCREEN
+MARKET CENTRE ENTERED DOES NOT EXIST ON FILE
+MARKET CENTRE ENTERED IS NOT OPEN AT PRESENT
+** CMD -**QCAEXEC** - QCMDEXC COMMAND                                     E21147
+XLCOBJ OBJ((XX *DTAARA *SHRRD)) WAIT(5)

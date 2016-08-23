@@ -1,0 +1,245 @@
+     H        1
+      *****************************************************************
+/*S*D****RPGBASE*******************************************************                       CUP021
+      *****************************************************************
+      *                                                               *
+      *  Midas - Upgrade module                                       *
+      *                                                               *
+      *  UP0817 - Process CoB Component changes                       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CUP021  *REDUNDANT Date 11Feb11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CUP099             Date 19May05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 140586             Date 24Aug98               *
+      *                 CUP004 *CREATE     Date 07Apr98               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CUP021 - Rewrite of Action File processing                   *
+      *  CUP099 - Make handling of 'unique no.' easier.               *
+      *  140586  -  Problems with passed parameters                   *
+      *  CUP004  -  Make upgrade of DTALIB files easier               *
+      *                                                               *
+      *****************************************************************
+      * ID F  C  H  L    FUNCTION OF INDICATORS
+      *
+      *       20      End of file
+      *       30      Chain - record not found
+      *       69      Read, write, update or delete fail
+      *
+     FUPMDCNL0IF  E           K        DISK         KINFSR *PSSR
+     FCBMDCNL1UF  E           K        DISK         KINFSR *PSSR A
+     F            @DJREGN                           KRENAMEMDCNF
+      *
+      /EJECT
+      * Array containing Copyright statement
+     E                    CPY@    1   1 80
+      *
+      * Fields with the same name will need to be renamed.
+     IMDCNF
+     I              DJCOTT                          COTT
+     I              DJCSEQ                          CSEQ
+     I              DJMCUN                          MCUN                                      CUP099
+     I              DJMD01                          MD01
+     I              DJMP01                          MP01
+     I              DJMD02                          MD02
+     I              DJMP02                          MP02
+     I              DJMD03                          MD03
+     I              DJMP03                          MP03
+     I              DJMD04                          MD04
+     I              DJMP04                          MP04
+     I              DJMD05                          MD05
+     I              DJMP05                          MP05
+     I              DJMD06                          MD06
+     I              DJMP06                          MP06
+     I              DJMD07                          MD07
+     I              DJMP07                          MP07
+     I              DJMD08                          MD08
+     I              DJMP08                          MP08
+     I              DJMD09                          MD09
+     I              DJMP09                          MP09
+     I              DJMD10                          MD10
+     I              DJMP10                          MP10
+      *
+     I            DS                                                                          CUP099
+     I                                        1   2 WUNQA                                     CUP099
+     I                                        1   20WUNQN                                     CUP099
+      *
+     C************ENTRY    PLIST
+     C***********          PARM           AMEND   4                       140586
+      *                                                                   140586
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           COMP      KLIST
+     C                     KFLD           DJCOTT
+     C                     KFLD           DJCSEQ
+      *
+      * Initialise unique number to maximum.                                                  CUP099
+     C                     MOVE '99'      WUNQA                                               CUP099
+      *
+     C           *LOVAL    SETLLUPMDCNL0
+      *
+     C                     READ UPMDCNL0               6920
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+     C           *IN20     DOWEQ'0'
+      *
+     C           DJACTC    IFEQ 'I'
+     C                     EXSR SETVAL
+     C                     WRITEMDCNF                  69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           DJACTC    IFEQ 'D'
+     C           COMP      CHAINCBMDCNL1             3069
+     C           *IN69     IFEQ *ON
+     C           *IN30     OREQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+      *
+     C                     ELSE
+     C                     EXSR SETVAL
+     C                     DELETMDCNF                  69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      * If Action code = AMEND then read next record
+     C           DJACTC    IFEQ 'A'
+     C                     MOVELDJCOTT    COTTX  10
+     C                     MOVELDJCSEQ    CSEQX   5
+     C                     READ UPMDCNL0               6920
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+      * If Component and sequence number do not match exit
+      *  - or if EOF indicator is on
+     C           DJCOTT    IFNE COTTX
+     C           DJCSEQ    ANDNECSEQX
+     C           *IN20     OREQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+      **Only*process*amended records if requested                         140586
+     C***********AMEND     IFEQ '*YES'                                    140586
+     C           COMP      CHAINCBMDCNL1             3069
+     C           *IN69     IFEQ *ON
+     C           *IN30     OREQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+      *
+     C                     ELSE
+      *
+     C                     EXSR SETVAL
+     C                     UPDATMDCNF                  69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     ENDIF
+     C***********          ENDIF                                          140586
+      *
+     C                     ENDIF
+      *
+     C                     READ UPMDCNL0               6920
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      * After Action File has been processed then call program to reset unique number.        CUP099
+     C                     CALL 'UP0819'                                                      CUP099
+      *
+     C           ENDPGM    TAG
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *****************************************************************
+      *
+      * SETVAL subroutine - set values for deletes/writes/updates
+      *
+      *****************************************************************
+     C           SETVAL    BEGSR
+      * Set values to update record
+     C                     MOVELDJCOTT    COTT
+     C                     MOVELDJCSEQ    CSEQ
+     C                     MOVELWUNQA     MCUN                                                CUP099
+     C                     MOVELDJMD01    MD01
+     C                     MOVELDJMP01    MP01
+     C                     MOVELDJMD02    MD02
+     C                     MOVELDJMP02    MP02
+     C                     MOVELDJMD03    MD03
+     C                     MOVELDJMP03    MP03
+     C                     MOVELDJMD04    MD04
+     C                     MOVELDJMP04    MP04
+     C                     MOVELDJMD05    MD05
+     C                     MOVELDJMP05    MP05
+     C                     MOVELDJMD06    MD06
+     C                     MOVELDJMP06    MP06
+     C                     MOVELDJMD07    MD07
+     C                     MOVELDJMP07    MP07
+     C                     MOVELDJMD08    MD08
+     C                     MOVELDJMP08    MP08
+     C                     MOVELDJMD09    MD09
+     C                     MOVELDJMP09    MP09
+     C                     MOVELDJMD10    MD10
+     C                     MOVELDJMP10    MP10
+      *
+      * Set unique number.                                                                    CUP099
+     C                     SUB  1         WUNQN                                               CUP099
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: None                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      ********************************************************************
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,130 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas MX Generate Meridian sub-message - CPP')        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Meridian Export Module                              */
+/*                                                                   */
+/*       MXGENMDNC1 - Generate Meridian sub-message - CPP            */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. BUG2617            Data 20May04              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.05 ---------------------------------------------------*/
+/*       Prev Amend No. CMX001  *CREATE    Data 01Jan00              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BUG2617- Conversion of MXGENMDN to comply with webfacing.   */
+/*       CMX001 - Meridian Export                                    */
+/*                                                                   */
+/*********************************************************************/
+/*********   PGM        PARM(&FORMAT &TGTNAME &TOSTRMFILE &PFX +     ********/           /*BUG2167*/
+/*********                &GENTYPE &MODE &TYPEMATCH)                 ********/           /*BUG2167*/
+             PGM        PARM(&FORMAT &TGTNAME &TOSTRMFILE &PFX +
+                          &GENTYPE &MODE &TYPEMATCH &RETURNMSG)                          /*BUG2167*/
+ 
+             DCL        VAR(&FORMAT) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TGTNAME) TYPE(*CHAR) LEN(32)
+             DCL        VAR(&TOSTRMFILE) TYPE(*CHAR) LEN(5000)
+             DCL        VAR(&PFX) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GENTYPE) TYPE(*CHAR) LEN(11)
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TYPEMATCH) TYPE(*CHAR) LEN(1)
+ 
+             DCL        VAR(&RETURNCODE) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&TXT) TYPE(*CHAR) LEN(100)
+ 
+             DCL        VAR(&RETURNMSG) TYPE(*CHAR) LEN(75)                              /*BUG2167*/
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2001')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Create the target file.  It is created as OUTFILE and renamed +
+   to FILEOUT.  This is to prevent format-name problems in the RPG;  +
+   RPG complains if the file name and format name are the same.   */
+ 
+             DLTF       FILE(QTEMP/OUTFILE)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/FILEOUT)
+             MONMSG     MSGID(CPF0000)
+ 
+             CRTPF      FILE(QTEMP/OUTFILE) RCDLEN(80) SIZE(*NOMAX)
+             RNMOBJ     OBJ(QTEMP/OUTFILE) OBJTYPE(*FILE) +
+                          NEWOBJ(FILEOUT)
+ 
+             OVRDBF     FILE(FILEOUT) TOFILE(QTEMP/FILEOUT) LVLCHK(*NO)
+ 
+ 
+/* If the target (sub)message name is to be calculated, then do that */
+             IF         COND(&TGTNAME = '*CALC') THEN(DO)
+                   CHGVAR     VAR(&TGTNAME) VALUE(&FORMAT)
+             ENDDO
+ 
+/* If the to-file name is to be calculated, then do that            */
+             IF         COND(&TOSTRMFILE = '*CALC') THEN(DO)
+                   CHGVAR     VAR(&TOSTRMFILE) VALUE(&TGTNAME *TCAT '.REP')
+             ENDDO
+ 
+/* Delete the to-file if it exists */
+             DEL        OBJLNK(&TOSTRMFILE)
+             MONMSG     MSGID(CPFA0A9)
+ 
+/* Processing for a single format being processed                    */
+                CALLPRC    PRC(MXGENMDNR1) PARM(&FORMAT &TGTNAME &PFX +
+                             &GENTYPE &TYPEMATCH &RETURNCODE)
+ 
+                IF         COND(&RETURNCODE = 'FileError') THEN(DO)
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+ 
+                IF         COND(&RETURNCODE = 'NoRecord') THEN(DO)
+                   IF         COND(&MODE = 'COMMAND') THEN(DO)
+                      CHGVAR     VAR(&TXT) VALUE('Missing data during +
+                                   generation of Meridian message for +
+                                   format ' *CAT &FORMAT)
+/********             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA(&TXT) + ********/   /*BUG2167*/
+/********                          TOPGMQ(*PRV)                              ********/   /*BUG2167*/
+                      CHGVAR     VAR(&RETURNMSG) VALUE(&TXT)                             /*BUG2167*/
+                   ENDDO
+                   RETURN
+                ENDDO
+ 
+/* Generation of data was successful, copy the data to the IFS     */
+                CPYTOSTMF  +
+                             FROMMBR('/qsys.lib/qtemp.lib/fileout.file/+
+                             outfile.mbr') TOSTMF(&TOSTRMFILE) +
+                             STMFCODPAG(437)
+ 
+ 
+             GOTO       CMDLBL(END)
+ ABNOR:
+             IF         COND(&MODE = 'COMMAND') THEN(DO)
+                CHGVAR     VAR(&TXT) VALUE('Generation of Meridian +
+                             message for format ' *CAT &FORMAT *TCAT +
+                             ' ' *CAT 'terminated abnormally')
+/*********      MONMSG     MSGID(CPF0000)                              ********/         /*BUG2167*/
+/*********      SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA(&TXT) + ********/         /*BUG2167*/
+/*********                   TOPGMQ(*PRV)                              ********/         /*BUG2167*/
+/*********      MONMSG     MSGID(CPF0000)                              ********/         /*BUG2167*/
+                CHGVAR     VAR(&RETURNMSG) VALUE(&TXT)                                   /*BUG2167*/
+             ENDDO
+ END:
+ 
+             DLTOVR     FILE(FILEOUT)
+             MONMSG     MSGID(CPF0000)
+             RCLRSC
+             MONMSG     MSGID(CPF0000)
+ 
+             ENDPGM

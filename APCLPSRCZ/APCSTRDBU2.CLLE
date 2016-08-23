@@ -1,0 +1,100 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas AP Start a single database updater')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - APIs                                                */
+/*                                                                   */
+/*       APCSTRDBU2 - Start a specific database updater              */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. CSC023             Date 28Jan04              */
+/* Midas Release 4.01 -----------------------------------------------*/
+/*       Prev Amend No. 201589             Date 03Jan02              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/*                      CPK014             Date 14Nov01              */
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      CAP002  *CREATE    Date 01May98              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSC023 - MidasPlus additional packaging.  SBMJOB change.    */
+/*                OUTQ must always be *JOBD.                         */
+/*       201589 - Remove duplicate check for existing DBU_ job as    */
+/*                the batch job now also checks at runtime. This     */
+/*                should also help to speed up the signon time.      */
+/*       CPK014 - Submit jobs with user *JOBD                        */
+/*       CAP002 - Conversion of transaction inputs into modular      */
+/*                structure to use as APIs.                          */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&XLIB &DPLIB &FUNCTION &DTAARA &JOBNAME)
+ 
+             DCL        VAR(&XLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FUNCTION) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&DTAARA) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JOBNAME) TYPE(*CHAR) LEN(10)
+ 
+/**********  DCL        VAR(&RUNBEFORE) TYPE(*CHAR) LEN(1) VALUE('N')                     /*201589*/
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2001')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* +
+   For the database updater requested:  +
+     Allocate the locking data area to determine if it is  +
+     already active.  Only start it if it is not. +
+   If the initial allocation was successful: +
+     - deallocate the data area +
+     - delay for 5 seconds and retry the allocation +
+     - only perform, the submit if the second allocation works, +
+       in case the job is already submitted but not yet active. +
+*/
+/**LOOP:***                                                                               /*201589*/
+             ALCOBJ     OBJ((&DPLIB/&DTAARA *DTAARA *EXCL)) WAIT(0)
+             MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(END))
+ 
+             DLCOBJ     OBJ((&DPLIB/&DTAARA *DTAARA *EXCL))
+ 
+/**********  IF         COND(&RUNBEFORE *EQ 'N') THEN(DO) */                              /*201589*/
+/**********     CHGVAR     VAR(&RUNBEFORE) VALUE('Y')     */                              /*201589*/
+/**********     DLYJOB     DLY(5)                         */                              /*201589*/
+/**********     GOTO       CMDLBL(LOOP)                   */                              /*201589*/
+/**********  ENDDO                                        */                              /*201589*/
+ 
+/************SBMJOB     CMD(CALL PGM(APDBUDPGM) PARM(&FUNCTION)) +                        /*CPK014*/
+/************             JOB(&JOBNAME) JOBD(&XLIB/MIDASIC) +                             /*CPK014*/
+/************             JOBQ(&XLIB/INTERFACE) RTGDTA(MULTILANGUAGE) +                   /*CPK014*/
+/************             INLLIBL(*JOBD)                                                  /*CPK014*/
+/************SBMJOB     CMD(CALL PGM(APDBUDPGM) PARM(&FUNCTION)) +                        /*CSC023*/
+/************             JOB(&JOBNAME) JOBD(&XLIB/MIDASIC) +                             /*CSC023*/
+/************             JOBQ(&XLIB/INTERFACE) USER(*JOBD) +                             /*CSC023*/
+/************             RTGDTA(MULTILANGUAGE) INLLIBL(*JOBD)                            /*CSC023*/
+             SBMJOB     CMD(CALL PGM(APDBUDPGM) PARM(&FUNCTION)) +
+                          JOB(&JOBNAME) JOBD(&XLIB/MIDASIC) +
+                          JOBQ(&XLIB/INTERFACE) USER(*JOBD) +
+                          RTGDTA(MULTILANGUAGE) INLLIBL(*JOBD) OUTQ(*JOBD)                /*CSC023*/
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          STRAPIDBU2 ended abnormally - see job log')
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ END:
+             ENDPGM

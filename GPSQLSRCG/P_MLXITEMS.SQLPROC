@@ -1,0 +1,132 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing Module                                      */
+/*                                                                             */
+/*       P_MLXITEMS - Midas GP Expire/Delete Limits, MLU's and TLC's           */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2004                     */
+/*                                                                             */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/*       Last Amend No. 243492             Date 03Nov06                        */
+/*       Prev Amend No. 242679             Date 28Sep06                        */
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      242243             Date 14Sep06                        */
+/*                      BUG4627            Date 02Feb05                        */
+/*                      BUG4180            Date 22Sep04                        */
+/*                      BUG3580            Date 22Jul04                        */
+/*                      CGP001  *CREATE    Date 30Mar04                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       243492 - Remove expired Limits                                        */
+/*       242679 - Corrected when MLU\TLC should be expired                     */
+/*       242243 - Check that LIEXPBRCH is neither blank nor null               */
+/*       BUG4627- Replaced incorrect property name for retention period        */
+/*       BUG4180- Seperate T_MLLIMIT updates                                   */
+/*       BUG3580- No EOD report                                                */
+/*       CGP001 - Global Processing                                            */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE PROCEDURE                                                              :
+  **********/**********                                                         :
+  (IN INZONE VARCHAR(20) )                                                      :
+  LANGUAGE SQL                                                                  :
+  SPECIFIC P_MLXITEMS NOT DETERMINISTIC                                         :
+  MODIFIES SQL DATA CALLED ON NULL INPUT                                        :
+  BEGIN                                                                         :
+     DECLARE zoneRunDate DATE ;                                                 :
+     DECLARE retentionPeriod INTEGER DEFAULT 30 ;                               :
+                                                                                :
+/* Get the zones rundate */                                                     :
+     DECLARE C1 CURSOR FOR                                                      :
+         SELECT RUNDATE FROM V_MLBRRNDT WHERE ZONE = inzone ;                   :
+                                                                                :
+/* Find out what the retention period is */                                     :
+     DECLARE C2 CURSOR FOR                                                      :
+         SELECT CAST ( CDVALUE AS INTEGER ) AS DAYS                             :
+         FROM T_MLGBLCD                                                         :
+*********WHERE*CDGROUP*=*'Global'*AND*CDPROPERTY='RetentionPeriod'*;************:Bug4627
+         WHERE CDGROUP = 'Global' AND                                           :Bug4627
+               CDPROPERTY='ExpiredLimitsRetentionPeriod' ;                      :Bug4627
+                                                                                :
+     OPEN C1 ; FETCH C1 INTO zoneRunDate ; CLOSE C1 ;                           :
+     OPEN C2 ; FETCH C2 INTO retentionPeriod ; CLOSE C2 ;                       :
+                                                                                :
+/* Expire Limits.  All Limits whose expiry date                                */
+/* is same or before the zone rundate                                          */
+                                                                                :
+     UPDATE T_MLLIMIT SET LISTATUS ='E'                                         :
+     WHERE LILIMITID IN (                                                       :
+                                                                                :
+/* Get Limits that belong to the zone and are due to expire                     :
+                                                                                :
+     SELECT LILIMITID FROM T_MLLIMIT                                            :
+     INNER JOIN V_MLBRRNDT ON ZONE = inzone AND BRANCH = LIEXPBRCH              :
+/****WHERE*LISTATUS*NOT*IN*(*'E',*'D'*)*AND*LIEXPDATE*<=*zoneRunDate*)**********/ /*BUG4180*/
+/****WHERE*LISTATUS*NOT*IN*(*'E',*'D'*)*AND*LIEXPDATE*<=*zoneRunDate );*********/ /*242679*/
+     WHERE LISTATUS NOT IN ( 'E', 'D' ) AND LIEXPDATE < zoneRunDate );          : /*242679*/
+/*******OR LILIMITID*IN*(*******************************************************/ /*BUG4180*/
+                                                                                :
+/* Get 'Global' Limits that are due to expire                                  */
+                                                                                :
+     UPDATE T_MLLIMIT SET LISTATUS ='E'                                         : /*BUG4180*/
+     WHERE LILIMITID IN (                                                       : /*BUG4180*/
+           SELECT LILIMITID FROM T_MLLIMIT                                      :
+/**********WHERE*LIEXPBRCH*IS*NULL**********************************************/ /*242243*/
+           WHERE ( LIEXPBRCH IS NULL OR LIEXPBRCH = '' )                        : /*242243*/
+           AND LISTATUS NOT IN ( 'E','D')                                       :
+/**********AND LIEXPDATE <= zoneRunDate********************************         : /*242679*/
+           AND LIEXPDATE < zoneRunDate                                          : /*242679*/
+           AND inzone IN (                                                      :
+               SELECT CDVALUE FROM T_MLGBLCD                                    :
+               WHERE CDGROUP='Global' AND CDPROPERTY='GlobalZone' ) ) ;         :
+                                                                                :
+/* Expire those MLUs that either their expiry date                             */
+/* elaspsed or associated limit has expired                                    */
+                                                                                :
+     UPDATE T_MLMLU SET MLSTATUS='E'                                            :
+/****WHERE MLSTATUS IN ('A', 'I') AND MLEXPDT <= zoneRunDate AND*******         : /*242679*/
+     WHERE (MLSTATUS IN ('A', 'I') AND MLEXPDT < zoneRunDate)                   : /*242679*/
+/**********MLSTATUS NOT IN ( 'E', 'I') OR MLLIMITID IN (***************         : /*242679*/
+           OR MLLIMITID IN (                                                    : /*242679*/
+                 SELECT LILIMITID FROM T_MLLIMIT WHERE LISTATUS ='E' );         :
+                                                                                :
+/* Expire those TLCs that either their expiry date                             */
+/* elaspsed or associated limit has expired                                    */
+                                                                                :
+     UPDATE T_MLTLC SET TLSTATUS='E'                                            :
+/****WHERE TLSTATUS IN ('A', 'I') AND TLEXPDT <= zoneRunDate AND*******         : /*242679*/
+     WHERE (TLSTATUS IN ('A', 'I') AND TLEXPDT < zoneRunDate)                   : /*242679*/
+/**********TLSTATUS NOT IN ( 'E', 'I' ) OR TLLIMITID IN (**************         : /*242679*/
+           OR TLLIMITID IN (                                                    : /*242679*/
+                 SELECT LILIMITID FROM T_MLLIMIT WHERE LISTATUS ='E' );         :
+                                                                                :
+/* Delete those Limits that have expired long enough                           */
+                                                                                :
+     UPDATE T_MLLIMIT SET LISTATUS = 'D'                                        :
+/***WHERE LISTATUS ='E' AND DAYS(LIEXPDATE) - DAYS(zoneRunDate)****************:/ /*243492*/
+     WHERE LISTATUS ='E' AND DAYS(zoneRunDate) - DAYS(LIEXPDATE)                : /*243492*/
+                 > retentionPeriod ;                                            :
+                                                                                :
+/* Delete associated MLUs                                                      */
+                                                                                :
+     UPDATE T_MLMLU SET MLSTATUS = 'D'                                          :
+     WHERE MLSTATUS = 'E' AND MLLIMITID IN (                                    :
+/****************SELECT LILIMITID FROM T_MLLLIMIT WHERE LISTATUS = 'D' ) ;     */            BUG3580
+                 SELECT LILIMITID FROM T_MLLIMIT WHERE LISTATUS = 'D'  ) ;      :            BUG3580
+                                                                                :
+/* Delete associated TLCs                                                      */
+                                                                                :
+     UPDATE T_MLTLC SET TLSTATUS = 'D'                                          :
+     WHERE TLSTATUS = 'E' AND TLLIMITID IN (                                    :
+/****************SELECT LILIMITID FROM T_MLLLIMIT WHERE LISTATUS = 'D' ) ;     */            BUG3580
+                 SELECT LILIMITID FROM T_MLLIMIT WHERE LISTATUS = 'D'  ) ;      :            BUG3580
+  END ;                                                                         :
+                                                                                :
+/*******************************************************************************/
+ ;                                                                              :
+  label on procedure **********/**********                                      :
+   is 'Midas GP Expire/Delete Limits, MLUs and TLCs    ';                       :
+                                                                                :

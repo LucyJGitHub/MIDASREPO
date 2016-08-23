@@ -1,0 +1,68 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas AS Hedging of SE Effectiveness report')         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - Accounting Standards Module                      */
+/*                                                                   */
+/*       ASC001004  - Midas AS Hedging of SE Positions Effectiveness */
+/*                    Report Control                                 */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. CAS006  *CREATE    Date 21Jan03              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CAS006 - Hedge Accounting Phase B                           */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2003')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('ASC001004 - Hedging of SE Effectiveness Report') +
+                          TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(00000000)
+ 
+/** Call Midas AS Hedging of SE Effectiveness Report */
+ 
+             CALL       PGM(AS001004)
+ 
+/** Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA) RTNVAR(&LDA)
+                CHGVAR     VAR(&MEM) VALUE(%SST(&LDA 134 50))
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ MRUNQ)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+/** Abnormal termination - batch job */
+ 
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSG('ASC001004 Midas AS Hedging of Effectiveness +
+                          SE Report - ENDED ABNORMALLY') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+ END:
+ 
+             ENDPGM

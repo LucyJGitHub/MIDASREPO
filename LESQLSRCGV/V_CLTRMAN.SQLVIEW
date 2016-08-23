@@ -1,0 +1,205 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Customer Lending Module                                       */
+/*                                                                             */
+/*       V_CLTRMAN - Manual Facility Utilisations linked to a facility         */
+/*                   and SD used to identify DF trigger recalculation          */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2004                     */
+/*                                                                             */
+/*       Last Amend No. CGL165             Date 23Feb15                        */
+/*       Prev Amend No. CLE134             Date 01Aug12                        */
+/*                      CLE064             Date 06Dec10                        */
+/*                      CER059             Date 19Jul10                        */
+/*                      CER048             Date 19May08                        */
+/*                      CER020             Date 19May08                        */
+/*                      CER043             Date 19May08                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/*                      BUG17953           Date 10Apr08                        */
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      SC137339           Date 01Aug06                        */
+/*                      CSD031             Date 10Apr06                        */
+/*                      CSD027             Date 10Dec05                        */
+/*                      CLE042             Date 06Sep05                        */
+/*                      CLE106             Date 01Aug04                        */
+/*                      CAP086             Date 08Jun05                        */
+/*                      BUG5408            Date 26Jan05                        */
+/*                      BUG3644 *CREATE    Date 12Jul04                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       CGL165 - Dual Withholding Tax (Recompile)                             */
+/*       CLE134 - Past Due Call Loan Processing (Recompile)                    */
+/*       CLE064 - Enhancement of Lending Frequencies (Recompile)               */
+/*       CER059 - German Feature Upgrade to Delhi                              */
+/*       CER048 - German Features - Taxes (Recompile)                          */
+/*       CER020 - Enhanced Rollover Window: Upgrade FGE089 to                  */
+/*                Midas Plus (Recompile)                                       */
+/*       CER043 - German Features LF041-00 New Fields and Defaulting           */
+/*                (Recompile)                                                  */
+/*       BUG17953 - CCSID of tables cannot be changed (Recompile)              */
+/*       SC137339 - Include a status column in the Facility Transactions       */
+/*                  Enquiry screen                                             */
+/*       CSD031 - Enhanced Centralised Static Data (Recompile)                 */
+/*       CSD027 - Conversion Of Customer Number to Alpha                       */
+/*       CLE042 - Extended Loan Sub Type (Recompile)                           */
+/*       CLE106 - Syndications Manager. (Recompile)                            */
+/*       CAP086 - Introduce Auto Authorisation to the API's                    */
+/*                without it. (Recompile)                                      */
+/*       BUG5408 - Error in the CL Transaction Calculator view                 */
+/*       BUG3644 - Serious Error in Collateralised Lending                     */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  (                                                                             :
+  T_ZONE ,                                                                      :
+  T_ID ,                                                                        :
+  T_MOD ,                                                                       :
+  T_SMOD ,                                                                      :
+  T_SNAM ,                                                                      :
+  RCCY ,                                                                        :
+  T_RCCY ,                                                                      :
+  T_NBDP ,                                                                      :
+  T_SPRT ,                                                                      :
+  T_MDIN ,                                                                      :
+  T_TDAT ,                                                                      :
+  T_SDAT ,                                                                      :
+  T_EDAT ,                                                                      :
+  T_TRTP ,                                                                      :
+  T_TRST ,                                                                      :
+  RECI ,                                                                        :           SC137339
+  MTID ,                                                                        :
+  MTFACEXRT ,                                                                   :
+  MTFACMDI ,                                                                    :
+  MTUSEFXRT ,                                                                   :
+  BRCA ,                                                                        :
+  CNUM ,                                                                        :
+  FACT ,                                                                        :
+  FCNO ,                                                                        :
+  FCCY ,                                                                        :
+  FCNBDP ,                                                                      :
+  FCSPRT ,                                                                      :
+  FCMDIN ,                                                                      :
+  MTREMARK )                                                                    :
+  AS                                                                            :
+  SELECT                                                                        :
+  T_ZONE                                                                        :
+  ,T_ID                                                                         :
+  ,T_MOD                                                                        :
+  ,T_SMOD                                                                       :
+  ,T_SNAM                                                                       :
+  ,T_RCCY AS RCCY                                                               :
+  ,CASE WHEN T_VCCY = TRIM('') THEN T_RCCY                                      :
+  ELSE T_VCCY END AS T_RCCY                                                     :
+  ,CASE WHEN T_VCCY = TRIM('') THEN RCCY.A6NBDP                                 :
+  ELSE VCCY.A6NBDP END AS T_NBDP                                                :
+  ,CASE WHEN T_VCCY = TRIM('') THEN RCCY.A6SPRT                                 :
+  ELSE VCCY.A6SPRT END AS T_SPRT                                                :
+  ,CASE WHEN T_VCCY = TRIM('') THEN RCCY.A6MDIN                                 :
+  ELSE VCCY.A6MDIN END AS T_MDIN                                                :
+  ,T_TDAT                                                                       :
+  ,T_SDAT                                                                       :
+  ,T_EDAT                                                                       :
+  ,T_TRTP                                                                       :
+  ,T_TRST                                                                       :
+  ,CASE WHEN ML.MTDELETED = 'Y' THEN 'R'                                        :           SC137339
+  ELSE 'D' END AS RECI                                                          :           SC137339
+  ,ML.MTID                                                                      :
+  ,CL.MTFACEXRT                                                                 :
+  ,CL.MTFACMDI                                                                  :
+  ,CL.MTUSEFXRT                                                                 :
+  ,FCLTY.BRCA                                                                   :
+  ,FCLTY.CNUM                                                                   :
+  ,FCLTY.FACT                                                                   :
+  ,FCLTY.FCNO                                                                   :
+  ,FCLTY.FCCY                                                                   :
+  ,FCCY.A6NBDP AS FCNBDP                                                        :
+  ,FCCY.A6SPRT AS FCSPRT                                                        :
+  ,FCCY.A6MDIN AS FCMDIN                                                        :
+  ,ML.MTREMARK                                                                  :
+  FROM                                                                          :
+  GPTRAPPD                                                                      :
+  LEFT OUTER JOIN                                                               :
+  GZSDCURRPD VCCY                                                               :
+  ON                                                                            :
+  T_VCCY = VCCY.A6CYCD                                                          :
+  AND T_ZONE = VCCY.A6ZONE                                                      :
+  ,T_MLMTRAN ML                                                                 :
+  ,T_CLMTRAN CL                                                                 :
+  ,GZFCLTYFM FCLTY                                                              :
+  ,GZSDCURRPD RCCY                                                              :
+  ,GZSDCURRPD FCCY                                                              :
+  WHERE                                                                         :
+  T_MOD = 'MT'                                                                  :
+  AND T_TREF = CAST(ML.MTID AS CHAR(20))                                        :
+  AND ML.MTID = CL.MTID                                                         :
+  AND ML.MTFACBRCD = FCLTY.BRCA                                                 :
+**AND*ML.MTFACCUST*=*DIGITS(FCLTY.CNUM)*****************************************:     BUG5408 CSD027
+  AND ML.MTFACCUST =        FCLTY.CNUM                                          :             CSD027
+/*AND*CAST(ML.MTFACCUST AS NUMERIC(6))*=*FCLTY.CNUM*****************************:            BUG5408
+  AND ML.MTFACTYPE = DIGITS(FCLTY.FACT)                                         :            BUG5408
+/*AND*CAST(ML.MTFACTYPE AS NUMERIC(3))*=*FCLTY.FACT*****************************:            BUG5408
+  AND ML.MTFACSEQ = DIGITS(FCLTY.FCNO)                                          :            BUG5408
+/*AND*CAST(ML.MTFACSEQ AS NUMERIC(2))*=*FCLTY.FCNO******************************:            BUG5408
+  AND T_RCCY = RCCY.A6CYCD                                                      :
+  AND T_ZONE = RCCY.A6ZONE                                                      :
+  AND FCLTY.FCCY = FCCY.A6CYCD                                                  :
+  AND T_ZONE = FCCY.A6ZONE ;                                                    :
+                                                                                :
+  LABEL ON COLUMN                                                               :
+  **********/**********                                                         :
+  ( T_ZONE IS 'Zone' ,                                                          :
+  T_ID IS 'Identifier' ,                                                        :
+  T_MOD IS 'Module' ,                                                           :
+  T_SMOD IS 'Sub-Module' ,                                                      :
+  T_SNAM IS 'Shortname' ,                                                       :
+  T_TDAT IS 'Transaction Date' ,                                                :
+  T_SDAT IS 'Start Date' ,                                                      :
+  T_EDAT IS 'End Date' ,                                                        :
+  T_TRTP IS 'Transaction         Type' ,                                        :
+  T_TRST IS 'Transaction         Sub Type' ,                                    :
+  MTID IS 'Transaction Id' ,                                                    :
+  MTFACEXRT IS 'Facility Currency Exchange Rate' ,                              :
+  MTFACMDI IS 'Facility Currency Multiply/Divide Indicator' ,                   :
+  MTUSEFXRT IS 'Used Fix Rates' ,                                               :
+  BRCA IS 'Brch                Code' ,                                          :
+  CNUM IS 'Customer            Number' ,                                        :
+  FACT IS 'Facil               Type' ,                                          :
+  FCNO IS 'Fac                 No' ,                                            :
+  FCCY IS 'Facil               Curr' ,                                          :
+  MTREMARK IS 'Narrative' ) ;                                                   :
+                                                                                :
+  LABEL ON COLUMN                                                               :
+  **********/**********                                                         :
+  ( T_ZONE TEXT IS 'Zone' ,                                                     :
+  T_ID TEXT IS 'Identifier' ,                                                   :
+  T_MOD TEXT IS 'Module' ,                                                      :
+  T_SMOD TEXT IS 'Sub-Module' ,                                                 :
+  T_SNAM TEXT IS 'Shortname' ,                                                  :
+  RCCY TEXT IS 'Risk Currency' ,                                                :
+  T_TDAT TEXT IS 'Transaction Date' ,                                           :
+  T_SDAT TEXT IS 'Start Date' ,                                                 :
+  T_EDAT TEXT IS 'End Date' ,                                                   :
+  T_TRTP TEXT IS 'Transaction Type' ,                                           :
+  T_TRST TEXT IS 'Transaction Sub Type' ,                                       :
+  MTID TEXT IS 'Transaction Id' ,                                               :
+  MTFACEXRT TEXT IS 'Facility Currency Exchange Rate' ,                         :
+  MTFACMDI TEXT IS 'Facility Currency Multiply/Divide Indicator' ,              :
+  MTUSEFXRT TEXT IS 'Used Fix Rates' ,                                          :
+  BRCA TEXT IS 'Branch Code - Alpha' ,                                          :
+  CNUM TEXT IS 'Customer number' ,                                              :
+  FACT TEXT IS 'Facility type' ,                                                :
+  FCNO TEXT IS 'Facility number' ,                                              :
+  FCCY TEXT IS 'Facility currency' ,                                            :
+  FCNBDP TEXT IS 'Number of Decimal Places' ,                                   :
+  FCSPRT TEXT IS 'Spot Rate' ,                                                  :
+  FCMDIN TEXT IS 'Multiply/Divide Indicator' ,                                  :
+  MTREMARK TEXT IS 'Narrative' ) ;                                              :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'MIDAS LE Manual Transactions                      ';                     :
+                                                                                :

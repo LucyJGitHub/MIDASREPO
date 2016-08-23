@@ -1,0 +1,227 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+      *****************************************************************
+/*S*D ***RPGBASEMOD****************************************************                       CCB023
+      *****************************************************************
+      *                                                               *
+      *  Midas - Global Processing Module                             *
+      *                                                               *
+      *  GO000011 - Extract industry management limit exposure from   *
+      *             Equation                                          *
+      *                                                               *
+      *  Function:  This program updates industry management limit    *
+      *             exposure Source & Audit table                     *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *                                                               *
+      *  Last Amend No. CCB023 *REDUNDANT Date 06Aug12                *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. CRE026  *CREATE    Date 24May06               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CCB023 - COB Restructure - Input Cycle Termination           *
+      *           Restructuring                                       *
+      *  CRE026 - Consumer Banking                                    *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Use of indicators.                                           *
+      *                                                               *
+      *    U7+U8 -  Database Error                                    *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      *  *PSSR      -  Program exception error routine                *
+      *  *INZSR     -  Initialisation Subroutine                      *
+      *  AU_POP - Populate industry Management limit exposure         *
+      *  Audit table                                                  *
+      *                                                               *
+      *  The *INZSR subroutine will only get called automatically     *
+      *  on entry to the module the first time it is run              *
+      *  (unless you end the program with LR on).  Similarly          *
+      *  D-spec initialisation only happens the first time.           *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ F-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+      * Equation industry Management Limits exposure table
+     FACBPF     IF   E             DISK    INFSR(*PSSR)
+ 
+      * Midas industry Management Limits exposure table
+     FT_MLEQIE  O    E             DISK    INFSR(*PSSR)
+     F                                     RENAME(T_MLEQIE : MLEQIE)
+ 
+      * Midas industry Management Limits exposure table Audit Trail
+     FT_MLEQIEAUO    E             DISK    INFSR(*PSSR)
+     F                                     RENAME(T_MLEQIEAU : MLEQIEAU)
+      ** +--------------------------------------+
+      ** ¦ Automatically included D-specs       ¦
+      ** ¦ ==============================       ¦
+      ** +--------------------------------------+
+      ** The following /COPY line includes (among others) the LDA layout
+      ** and the copyright array definition:
+     D/COPY ZACPYSRC,STD_D_SPEC
+ 
+      ** The following /COPY line includes all the defined fields in the
+      ** PSDS.  They have meaningful names, prefixed by 'PS'.
+     D/COPY ZACPYSRC,PSDS
+      ** +--------------------------------------+
+      ** ¦ Arrays and Data Structures           ¦
+      ** ¦ ==========================           ¦
+      ** +--------------------------------------+
+      * Equation industry Exposure data
+     D EQIEXP        E DS                  EXTNAME(ACBPF)
+ 
+      * Midas Plus industry Exposure data
+     D MIIEXP        E DS                  EXTNAME(T_MLEQIE)
+ 
+      * Midas Plus industry Exposure Audit Table Data
+     D MIIEXPAU      E DS                  EXTNAME(T_MLEQIEAU)
+ 
+      * 200 byte DS for incoming data from Access Program
+     D DSFDY         E DS                  EXTNAME(DSFDY)
+ 
+      * DS for Bank data
+     D SDBANK        E DS                  EXTNAME(SDBANKPD)
+ 
+      ** +--------------------------------------+
+      ** ¦ Declared variables                   ¦
+      ** ¦ ==================                   ¦
+      ** +--------------------------------------+
+      *
+     D @RUN            S              1
+      * Field passed as parm to ZDATE2
+     D W_CONST         S              1
+ 
+     D PDATE           S              6  0
+     D PADATE          S              7A
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * MAIN PROCEDURE                                                *
+      *****************************************************************
+      * Read each record on Equation exposure file ACBPF
+     C                   READ      ACBPF
+     C                   DOW       NOT %EOF(ACBPF)
+ 
+      * Clear Source table DS & Audit table record format
+     C                   CLEAR                   MIIEXP
+     C                   CLEAR                   MIIEXPAU
+ 
+      * Call Mapping program to map EQ to Midas
+     C                   CALL      'GOEQIESET'
+      * Input
+     C                   PARM                    EQIEXP
+      * Output
+     C                   PARM                    MIIEXP
+ 
+      * write record to Midas industry Management limit exposure Source table
+     C                   WRITE     MLEQIE
+ 
+      * Populate Midas industry Management limit exposure Audit table
+     C                   EXSR      AU_POP
+ 
+      * write record to Midas industry Management limit exposure Audit table
+     C                   WRITE     MLEQIEAU
+ 
+     C                   READ      ACBPF
+     C                   ENDDO
+ 
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+      ****************************************************************
+      /EJECT
+      ****************************************************************
+      *  *INZSR - Initial Subroutine                                 *
+      *                                                              *
+      *  Called by: Implicitly on program activation                 *
+      *                                                              *
+      *  Calls: *PSSR                                                *
+      *                                                              *
+      ****************************************************************
+     C     *INZSR        BEGSR
+ 
+      ** Access bank info for Midas Run Date
+     C                   CALL      'AOBANKR0'
+     C                   PARM      *BLANK        @RTCD
+     C                   PARM      '*FIRST '     @OPTN
+     C     SDBANK        PARM      SDBANK        DSFDY
+      ** ERROR
+      *
+     C     @RTCD         IFNE      *BLANKS
+     C                   MOVEL     'GO000011'    DBPGM
+     C                   MOVEL     'SDBANKPD'    DBFILE
+     C                   MOVEL     '009'         DBASE
+     C                   MOVEL     @OPTN         DBKEY
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program exception error routine                     *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *  Called by: (**calling routines**)                            *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C     *PSSR         BEGSR
+      *
+     C     @RUN          IFEQ      *BLANK
+     C                   MOVE      'Y'           @RUN
+     C                   DUMP
+     C                   ENDIF
+      *
+     C                   SETON                                        U7U8LR
+     C                   RETURN
+      *
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  AU_POP - Populate industry Management limit exposure         *
+      *  Audit table                                                  *
+      *                                                               *
+      *  Called by: main processing                                   *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C     AU_POP        BEGSR
+ 
+     C                   EVAL       W_CONST = 'D'
+      * call ZDATE2 to get Midas Run date in DDMMYY format
+     C                   CALLB     'ZDATE2'
+     C                   PARM                    BJRDNB
+     C                   PARM                    W_CONST
+     C                   PARM      *ZERO         PDATE
+     C                   PARM      *BLANKS       PADATE
+ 
+     C                   EVAL      INAUDATE   = %DATE(PDATE:*DMY)
+     C                   EVAL      INAUCODE   = INCODE
+     C                   EVAL      INAUBRCH   = INBRCH
+     C                   EVAL      INAUCCY    = INCCY
+     C                   EVAL      INAUINCODE = ININCODE
+     C                   EVAL      INAUFDATE  = INFDATE
+     C                   EVAL      INAUTDATE  = INTDATE
+     C                   EVAL      INAUEXPOS  = INEXPOSURE
+     C                   EVAL      INAUOFFSET = INOFFSET
+     C                   EVAL      INAUZONE   = INZONE
+      *
+     C                   ENDSR
+      *****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2006

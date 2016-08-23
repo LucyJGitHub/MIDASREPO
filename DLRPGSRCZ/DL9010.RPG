@@ -1,0 +1,631 @@
+     H        1                                                           S01390
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Statement history extract')                   *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Dealing Module
+     F*                                                               *
+     F*  DL9010 - STATEMENT HISTORY EXTRACT                           *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CDL088             Date 07Jul15               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER054             Date 07Apr09               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 206538             Date 19Sep06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CDL049             Date 05Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CDL038             Date 10May05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 213144             DATE 11Dec02               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01408             Date 28Aug96               *
+      *                 043092             Date 04Feb94               *
+     F*                 048524             DATE 19MAR93               *
+     F*                 E47422             DATE 01FEB93               *
+     F*                 S01390             DATE 05AUG92               *
+     F*                 AUS006             DATE 18DEC90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+      *                                                               *
+      *  CDL088 - Allow Spread Change for Negotiable Assets           *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER054 - German Features - Church Tax (Recompile)            *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  206538 - Blank record written to statements file due to deal *
+      *           already historic.                                   *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CDL038 - Extended Deal Sub Type                              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  213144 - When the opening balance (RTYP = 'OB') is generated,*
+      *           set the REPI flag to blanks                         *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*  S01408 - Insertion of hook  DL9010CCP1                       *
+     F*         - Insertion of hook  DL9010CCP2                       *
+     F*         - Insertion of hook  DL9010CCP3                       *
+     F*         - Insertion of hook  DL9010CCP4                       *
+     F*         - Insertion of hook  DL9010CCP5                       *
+     F*         - Insertion of hook  DL9010FFP1                       *
+     F*  043092 - Interest History Report shows wrong Opening         *
+     F*           Balance.  PCPLT field is not 'backing out'          *
+     F*           correctly - PCPLT being overwritten per PD/PI.      *
+     F*  048524 - Field CASK not being updated to STHSTAA - and       *
+     F*           therefore DL9016 which uses this field as a         *
+     F*           level break was incorrect.  On investigation        *
+     F*           it was found that CASK is an optional field         *
+     F*           so processing is changed to base on Customer        *
+     F*           Short Name instead (CSNM).                          *
+     F*  E47422 - If HIST3 record is first in file it was not         *
+     F*           terminating the loop correctly                      *
+     F*  S01390 - Release 10 Changes for Australianisation            *
+     F*  AUS006 - AUSTRALIAN PRODUCT - INTEREST HISTORY               *
+     F*                                                               *
+     F*****************************************************************
+     F***DL9010P1O***E                    PRINTER                         S01390
+     FDL9010AUO   E                    PRINTER                            S01390
+     FHISTSAA O   E                    DISK                      A
+     FSTHSTAA O   E                    DISK                      A
+     F* INPUT FILES
+     FHIST3   IF  E           K        DISK
+     F            HISTSAAF                          KRENAMEHIST3F
+     F***TABTB10*IF**E                    DISK                            S01390
+     F***TABTB11*IF**E                    DISK                            S01390
+     F***CLINT***IF**E           K        DISK                            S01390
+     F*********** CLINTCAF                          KIGNORE               S01390
+     F*********** CLINTCCF                          KIGNORE               S01390
+     F*********** CLINTC1F                          KIGNORE               S01390
+     F***DEALALL IF  E           K        DISK                            206538
+     FDEALSALLIF  E           K        DISK                               206538
+     F************DEALSDAF                          KIGNORE               206538
+     F            DEALSDBF                          KIGNORE
+     F**********  DEALSDDF                          KIGNORE                                   CDL088
+     F            DEALSDEF                          KIGNORE
+     F************DEALSDFF                          KIGNORE               206538
+     F            DEALSDGF                          KIGNORE               206538
+     F            MMDELDP0                          KIGNORE               206538
+     F            MMDENBP0                          KIGNORE               206538
+     F            MMDENSP0                          KIGNORE               206538
+     F            FXDEALP0                          KIGNORE               206538
+     F            DLBHISD0                          KIGNORE               206538
+     F            DLDHISD0                          KIGNORE               206538
+     F            DLEHISD0                          KIGNORE               206538
+     F            DLGHISD0                          KIGNORE               206538
+     F*
+     F* UPDATE FILES
+     FHIST2   UP  E           K        DISK
+     F            HISTSAAF                          KRENAMEHIST2F
+     F/COPY WNCPYSRC,DL9010FFP1                                           S01408
+     F*
+     F/EJECT
+     E                    CPY@    1   1 80                                S01390
+     IDEALSDCF
+     I              RECI                            DRECI
+     I              NOTD                            DNOTD
+     I              PCPL                            DPCPL
+     I              INTR                            DINTR
+     I***********   BRCD                            DBRCD                 S01390
+     I              BRCA                            DBRCA                 S01390
+     I              DTYP                            DDTYP
+     I              DLST                            DDLST
+     I              MDAT                            DMDAT
+     I              CCY                             DCCY
+     I              INTC                            DINTC
+     I              CNUM                            DCNUM
+     I              ICBS                            DICBS
+     I              CLAS                            DCLAS                                     CDL038
+      *                                                                   206538
+     IDEALSDDF                                                                                CDL088
+     I              RECI                            DRECI                                     CDL088
+     I              PUPR                            DPCPL                                     CDL088
+     I              INTR                            DINTR                                     CDL088
+     I              BRCA                            DBRCA                                     CDL088
+     I              DTYP                            DDTYP                                     CDL088
+     I              DLST                            DDLST                                     CDL088
+     I              MDAT                            DMDAT                                     CDL088
+     I              CCY                             DCCY                                      CDL088
+     I              CNUM                            DCNUM                                     CDL088
+     I              ICBS                            DICBS                                     CDL088
+     I              CLAS                            DCLAS                                     CDL088
+     IDLCHISD0                                                            206538
+     I              RECI                            DRECI                 206538
+     I              NOTD                            DNOTD                 206538
+     I              PCPL                            DPCPL                 206538
+     I              INTR                            DINTR                 206538
+     I              BRCA                            DBRCA                 206538
+     I              DTYP                            DDTYP                 206538
+     I              DLST                            DDLST                 206538
+     I              MDAT                            DMDAT                 206538
+     I              CCY                             DCCY                  206538
+     I              INTC                            DINTC                 206538
+     I              CNUM                            DCNUM                 206538
+     I              ICBS                            DICBS                 206538
+     I              CLAS                            DCLAS                 206538
+     IHIST2F
+     I              RTYP                            H2RTYP
+     I              CNUM                            H2CNUM
+     I              EDAT                            H2EDAT
+     I              PCPL                            H2PCPL
+     I              NRAT                            H2NRAT
+     I              ORAT                            H2ORAT
+     I              TERM                            H2TERM
+     I              DTYP                            H2DTYP
+     I              DLST                            H2DLST
+     I***********   BRCD                            H2BRCD                S01390
+     I              BRCA                            H2BRCA                S01390
+     I              SQNO                            H2SQNO
+     I              MDAT                            H2MDAT
+     I              CCY                             H2CCY
+     I              INTC                            H2INTC
+     I              EAMT                            H2EAMT
+     I              CHQI                            H2CHQI
+     I              REPI                            H2REPI                213144
+     I              CLAS                            H2CLAS                                    CDL038
+     IHIST3F
+     I              RTYP                            H3RTYP
+     I              CNUM                            H3CNUM
+     I              EDAT                            H3EDAT
+     I              PCPL                            H3PCPL
+     I              NRAT                            H3NRAT
+     I              ORAT                            H3ORAT
+     I              TERM                            H3TERM
+     I              DTYP                            H3DTYP
+     I              DLST                            H3DLST
+     I***********   BRCD                            H3BRCD                S01390
+     I              BRCA                            H3BRCA                S01390
+     I              SQNO                            H3SQNO
+     I              MDAT                            H3MDAT
+     I              CCY                             H3CCY
+     I              INTC                            H3INTC
+     I              EAMT                            H3EAMT
+     I              REPI                            H3REPI                213144
+     I              CLAS                            H3CLAS                                    CDL038
+     I***CLINTCBF***                                                      S01390
+     I***********   BRCD                            CBRCD                 S01390
+     I            DS
+     I                                        1   1 DUMMY
+     I*                                                                   S01390
+     ISDBANK    E DSSDBANKPD                                              S01390
+     I* Bank Details Accesses Via Access Program                          S01390
+     I*                                                                   S01390
+     ISDCUST    E DSSDCUSTPD                                              S01390
+     I* Customer Details Accesses Via Access Program                      S01390
+     I*                                                                   S01390
+     IDSFDY     E DSDSFDY                                                 S01390
+     I* First DS For Access Programs, Short Data Structure                S01390
+     I*                                                                   S01390
+     IDSSDY     E DSDSSDY                                                 S01390
+     I* Second DS For Access Programs, Long Data Structure                S01390
+     I*                                                                   S01390
+     I/EJECT
+     C*****************************************************************
+     C*
+     C*                INITIAL PROCESSING
+     C*                ------------------
+     C           *IN01     IFEQ '0'
+     C                     EXSR FIRST
+     C                     END
+     C*
+     C*
+     C*                  MAIN PROCESSING
+     C*                  ---------------
+     C*
+     C*  IF NEW CUSTOMER ACCESSS NEW CUSTOMER INFORMATION.
+     C*
+     C           H2CNUM    IFNE OCNUM
+     C***********CUSKEY    CHAINCLINTCBF             9999                 S01390
+     C                     MOVELH2CNUM    KYCN                            S01390
+     C                     CALL 'AOCUSTR0'                                S01390
+     C                     PARM *BLANKS   RTCD                            S01390
+     C                     PARM '*KEY   ' OPTN                            S01390
+     C                     PARM           KYCN   10                       S01390
+     C                     PARM *BLANKS   KYST    7                       S01390
+     C           SDCUST    PARM SDCUST    DSSDY                           S01390
+     C**********           Z-ADDH2CNUM    OCNUM                                               CSD027
+     C                     MOVE H2CNUM    OCNUM                                               CSD027
+     C***********          Z-ADDCBRCD     BRCC                            S01390
+     C                     MOVELBBBRCD    BRCC                            S01390
+     C                     MOVELBBCSSN    CSNM                            048524
+     C                     ADD  1         NRECS   50
+     C                     END
+     C*
+     C*  IF NEW DEAL ACCESSS NEW DEAL AND SET UP NEW DEAL INFORMATION.
+     C*    (ONLY PROCESS IP RECORDS OR RO RECORDS WHICH DO NOT FOLLOW
+     C*     AN IP RECORD FOR THE SAME DEAL.)
+     C*
+     C           PDLNO     IFNE DLNO
+     C                     Z-ADDDLNO      PDLNO
+     C***********DLNO      CHAINDEALSDCF             9999                 206538
+     C           DLNO      CHAINDEALSALL             9999                 206538
+     C/COPY WNCPYSRC,DL9010CCP1                                           S01408
+     C                     MOVE '0'       *IN77
+     C           DRECI     IFEQ 'M'
+     C           DRECI     OREQ 'N'
+     C                     MOVE '1'       *IN77            MATURED DEAL
+     C                     END
+     C                     MOVE '1'       *IN60            NEW DEAL IND
+     C                     Z-ADDDPCPL     PCPLT  130       SAVE PCPL
+     C                     Z-ADDDINTR     INTRT  117       SAVE RATE
+     C                     MOVE H2CHQI    CHQIT   1        STMT IND.
+     C*
+     C*  READ THE HISTORY IN DEAL NO., VALUE DATE, SEQ NO. ORDER.
+     C*    (NB VALUE DATE & SEQ NO. ARE DECENDING.)
+     C*
+     C***********          Z-ADDDNWD      KEDAT                           S01390
+     C                     Z-ADDBJDNWD    KEDAT                           S01390
+     C                     Z-ADD99        KSQNO
+     C*
+     C           HISKEY    SETGTHIST3
+     C                     MOVE '0'       *IN20
+     C                     Z-ADDDLNO      ODLNO
+     C*
+     C*  READ THE HISTORY FILE AND OUTPUT EVENTS TO THE STATEMENT FILE
+     C*    CREATE THE FOLLOWING RECORDS IN THE FOLLOWING SITUATIONS;
+     C*
+     C*     1/ OB (OPENING BALANCE RECORDS ON HISTORY FILE)
+     C*        1.1/ FOR EACH IP (INTEREST PAYMENT) RECORD WHERE
+     C*               THE DEAL HAS NOT MATURED.
+     C*
+     C*     2/ CB (CLOSING BALANCE RECORDS ON STATEMENT FILE)
+     C*        2.1/ FOR THE FIRST IP RECORD ENCOUNTERED OR
+     C*        2.2/ FOR A RO (ROLLOVER) RECORD NOT PRECEDED BY
+     C*               AN IP RECORD.
+     C*
+     C*     3/ IB (INTERIM BALANCE RECORDS ON STATEMENT FILE)
+     C*        3.1/ FOR ALL SUBSEQUENT IP RECORD ENCOUNTERED
+     C*               AFTER A CB (SEE POINT 2) HAS BEEN CREATED.
+     C*
+     C           *IN20     DOUEQ'1'
+     C***********          READPHIST3                  9999               E47422
+     C                     READPHIST3                  9920               E47422
+     C           *IN20     IFEQ '0'                                       E47422
+     C           DLNO      IFEQ ODLNO
+     C*
+     C*  IF PROCESSING AN IP RECORD EITHER A CB OR A IB REC NEEDS TO BE
+     C*    CREATED ON STATEMENT FILE AND AN OB REC FOR THE HISTORY FILE
+     C*
+     C           H3RTYP    IFEQ 'IP'
+     C*
+     C           DRECI     IFEQ 'D'
+     C                     EXSR OUTOB
+     C                     END
+     C*
+     C*  PRODUCE CB RECORD FOR FIRST IP REC OR IB REC FOR OTHER IP RECS
+     C*
+     C           *IN60     IFEQ '1'                        1ST IP REC?
+     C                     EXSR OUTCB
+     C                     MOVE '0'       *IN60
+     C                     ELSE
+     C                     EXSR OUTIB
+     C                     END
+     C                     ELSE                            NOT IP REC
+     C*
+     C*  PRODUCE CB REC FOR ROLLOVER.
+     C*
+     C           H3RTYP    IFEQ 'RO'
+     C           *IN60     ANDEQ'1'                        1ST IP REC?
+     C                     EXSR OUTCB
+     C                     MOVE '0'       *IN60
+     C                     END
+     C                     END
+     C*
+     C*  PRODUCE HISTORY RECORDS.
+     C*
+     C           *IN60     IFEQ '1'                        IP REC READ
+     C                     EXSR BCKOUT
+     C                     ELSE                            NOT IP REC
+     C                     EXSR OUTREC
+     C                     EXSR BCKOUT
+     C                     END
+     C*
+     C*  DO NOT CONTINUE AFTER THE OPENING BALANCE IS PROCESSED.
+     C*
+     C           H3RTYP    IFEQ 'OB'
+     C                     MOVE '1'       *IN20
+     C                     END
+     C                     ELSE
+     C*
+     C                     MOVE '1'       *IN20
+     C                     END
+     C                     END
+     C                     END                                            E47422
+     C*
+     C                     END
+     C*
+     C*  RESET STATEMENT TYPE INDICATOR.
+     C*
+     C                     MOVE 'N'       H2CHQI
+     C                     EXCPT
+     C*
+     C***LRN01******          READ TABTB10                9999            S01390
+     CLRN01                CALL 'AOBANKR0'                                S01390
+     CLR                   PARM '*DBERR ' RTCD    7                       S01390
+     CLR                   PARM '*FIRST ' OPTN    7                       S01390
+     CLR         SDBANK    PARM SDBANK    DSFDY                           S01390
+     CLR                   WRITEAUDIT
+     C/EJECT
+     C*****************************************************************
+     C*
+     C           FIRST     BEGSR
+     C*
+     C*                INITIAL PROCESSING
+     C*                ------------------
+     C***********          MOVE 'A'       CODE    1                       S01390
+     C                     MOVE *BLANK    SECI
+     C                     MOVEACPY@      BIS@   80                       S01390
+     C***********          READ TABTB10                9999               S01390
+     C***********          READ TABTB11                9999               S01390
+     C                     CALL 'AOBANKR0'                                S01390
+     C                     PARM '*DBERR ' RTCD    7                       S01390
+     C                     PARM '*FIRST ' OPTN    7                       S01390
+     C           SDBANK    PARM SDBANK    DSFDY                           S01390
+     C                     MOVE '1'       *IN01
+     C/COPY WNCPYSRC,DL9010C007
+     C*
+     C                     MOVE 'N'       CDL088  1                                           CDL088
+     C                     CALL 'AOSARDR0'                                                    CDL088
+     C                     PARM *BLANKS   PRTCD   7                                           CDL088
+     C                     PARM '*VERIFY' POPTN   7                                           CDL088
+     C                     PARM 'CDL088'  SARD    6                                           CDL088
+      *                                                                                       CDL088
+     C           PRTCD     IFEQ *BLANKS                                                       CDL088
+     C                     MOVE 'Y'       CDL088                                              CDL088
+     C                     ENDIF                                                              CDL088
+      *                                                                                       CDL088
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*  OUTPUT HISTORY RECORD TO STATEMENT FILE.
+     C*
+     C           OUTREC    BEGSR
+     C*
+     C/COPY WNCPYSRC,DL9010C001
+     C**********           Z-ADDH3CNUM    CNUM                                                CSD027
+     C                     MOVE H3CNUM    CNUM                                                CSD027
+     C                     MOVE H3RTYP    RTYP
+     C***********          Z-ADDH3BRCD    BRCD                            S01390
+     C                     MOVELH3BRCA    BRCA                            S01390
+     C                     Z-ADDH3NRAT    NRAT
+     C                     Z-ADDH3ORAT    ORAT
+     C                     MOVE H3TERM    TERM
+     C                     MOVE H3DTYP    DTYP
+     C                     MOVE H3DLST    DLST
+     C                     MOVE H3INTC    INTC
+     C                     Z-ADDH3SQNO    SQNO
+     C                     Z-ADDH3EAMT    EAMT
+     C                     Z-ADDH3PCPL    PCPL
+     C                     Z-ADDH3MDAT    MDAT
+     C                     Z-ADDH3EDAT    EDAT
+     C                     MOVE CHQIT     CHQI
+     C                     MOVE H3CCY     CCY
+     C                     MOVE DICBS     ICBS
+     C                     MOVE H3CLAS    CLAS                                                CDL038
+     C                     WRITESTHSTAAF
+     C/COPY WNCPYSRC,DL9010C002
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*  OUTPUT OB RECORD TO HISTORY FILE.
+     C*
+     C           OUTOB     BEGSR
+     C*
+     C                     MOVE 'OB'      RTYP
+     C                     Z-ADDINTRT     NRAT
+     C                     Z-ADDINTRT     ORAT
+     C                     MOVE DNOTD     TERM
+      *                                                                                       CDL088
+     C           CDL088    IFEQ 'Y'                                                           CDL088
+     C           RCDT      ANDEQ'D'                                                           CDL088
+     C                     MOVE *BLANKS   TERM                                                CDL088
+     C                     ENDIF                                                              CDL088
+      *                                                                                       CDL088
+     C/COPY WNCPYSRC,DL9010CCP2                                           S01408
+     C                     Z-ADD0         SQNO
+     C/COPY WNCPYSRC,DL9010CCP3                                           S01408
+     C                     Z-ADDODLNO     DLNO
+     C                     Z-ADDPCPLT     EAMT
+     C***********          Z-ADDDBRCD     BRCD                            S01390
+     C                     MOVELDBRCA     BRCA                            S01390
+     C                     MOVE DDTYP     DTYP
+     C                     MOVE DDLST     DLST
+     C                     MOVE DINTC     INTC
+      *                                                                                       CDL088
+     C           CDL088    IFEQ 'Y'                                                           CDL088
+     C           RCDT      ANDEQ'D'                                                           CDL088
+     C                     MOVE *BLANKS   INTC                                                CDL088
+     C                     ENDIF                                                              CDL088
+      *                                                                                       CDL088
+     C                     Z-ADDPCPLT     PCPL
+     C                     Z-ADDDMDAT     MDAT
+     C**********           Z-ADDDCNUM     CNUM                                                CSD027
+     C                     MOVE DCNUM     CNUM                                                CSD027
+     C                     Z-ADDH2EDAT    EDAT
+     C/COPY WNCPYSRC,DL9010CCP5                                           S01408
+     C                     ADD  1         EDAT
+     C/COPY WNCPYSRC,DL9010CCP4                                           S01408
+     C                     MOVE 'N'       CHQI
+     C                     MOVE DCCY      CCY
+     C                     MOVE DICBS     ICBS
+     C                     MOVE ' '       REPI                            213144
+     C                     MOVE DCLAS     CLAS                                                CDL038
+     C                     WRITEHISTSAAF
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*  OUTPUT CB RECORD TO STATEMENT FILE.
+     C*
+     C           OUTCB     BEGSR
+     C*
+     C/COPY WNCPYSRC,DL9010C003
+     C                     MOVE 'CB'      RTYP
+     C**********           Z-ADDDCNUM     CNUM                                                CSD027
+     C                     MOVE DCNUM     CNUM                                                CSD027
+     C***********          Z-ADDDBRCD     BRCD                            S01390
+     C                     MOVELDBRCA     BRCA                            S01390
+     C                     MOVE DNOTD     TERM
+      *                                                                                       CDL088
+     C           CDL088    IFEQ 'Y'                                                           CDL088
+     C           RCDT      ANDEQ'D'                                                           CDL088
+     C                     MOVE *BLANKS   TERM                                                CDL088
+     C                     ENDIF                                                              CDL088
+      *                                                                                       CDL088
+     C                     MOVE DDTYP     DTYP
+     C                     MOVE DDLST     DLST
+     C                     MOVE DINTC     INTC
+      *                                                                                       CDL088
+     C           CDL088    IFEQ 'Y'                                                           CDL088
+     C           RCDT      ANDEQ'D'                                                           CDL088
+     C                     MOVE *BLANKS   INTC                                                CDL088
+     C                     ENDIF                                                              CDL088
+      *                                                                                       CDL088
+     C                     MOVE DCCY      CCY
+     C                     Z-ADD99        SQNO
+     C           *IN77     IFEQ '0'
+     C                     Z-ADDPCPLT     EAMT
+     C                     Z-ADDPCPLT     PCPL
+     C                     Z-ADDINTRT     NRAT
+     C                     Z-ADDINTRT     ORAT
+     C                     ELSE
+     C                     Z-ADD0         PCPL
+     C                     Z-ADD0         EAMT
+     C                     Z-ADD0         NRAT
+     C                     Z-ADD0         ORAT
+     C                     END
+     C                     Z-ADDDMDAT     MDAT
+     C                     MOVE DICBS     ICBS
+     C                     Z-ADDH2EDAT    EDAT
+     C                     MOVE CHQIT     CHQI
+     C                     MOVE DCLAS     CLAS                                                CDL038
+     C                     WRITESTHSTAAF
+     C/COPY WNCPYSRC,DL9010C004
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*  OUTPUT IB RECORD TO STATEMENT FILE.
+     C*
+     C           OUTIB     BEGSR
+     C*
+     C/COPY WNCPYSRC,DL9010C005
+     C                     MOVE 'IB'      RTYP
+     C**********           Z-ADDDCNUM     CNUM                                                CSD027
+     C                     MOVE DCNUM     CNUM                                                CSD027
+     C***********          Z-ADDDBRCD     BRCD                            S01390
+     C                     MOVELDBRCA     BRCA                            S01390
+     C                     MOVE DNOTD     TERM
+      *                                                                                       CDL088
+     C           CDL088    IFEQ 'Y'                                                           CDL088
+     C           RCDT      ANDEQ'D'                                                           CDL088
+     C                     MOVE *BLANKS   TERM                                                CDL088
+     C                     ENDIF                                                              CDL088
+      *                                                                                       CDL088
+     C                     MOVE DDTYP     DTYP
+     C                     MOVE DDLST     DLST
+     C                     MOVE DINTC     INTC
+      *                                                                                       CDL088
+     C           CDL088    IFEQ 'Y'                                                           CDL088
+     C           RCDT      ANDEQ'D'                                                           CDL088
+     C                     MOVE *BLANKS   INTC                                                CDL088
+     C                     ENDIF                                                              CDL088
+      *                                                                                       CDL088
+     C                     MOVE DCCY      CCY
+     C                     Z-ADD0         SQNO
+     C                     Z-ADDPCPLT     EAMT
+     C                     Z-ADDPCPLT     PCPL
+     C                     Z-ADDINTRT     NRAT
+     C                     Z-ADDINTRT     ORAT
+     C                     Z-ADDDMDAT     MDAT
+     C                     MOVE DICBS     ICBS
+     C           H3EDAT    ADD  1         EDAT
+     C                     MOVE CHQIT     CHQI
+     C                     MOVE DCLAS     CLAS                                                CDL038
+     C                     WRITESTHSTAAF
+     C/COPY WNCPYSRC,DL9010C006
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*
+     C           BCKOUT    BEGSR
+     C*
+     C*  PRINCIPLE INCREASE
+     C*
+     C           H3RTYP    IFEQ 'PI'
+     C***********H3PCPL    SUB  H3EAMT    PCPLT                           043092
+     C                     SUB  H3EAMT    PCPLT                           043092
+     C                     ELSE
+     C*
+     C*  PRINCIPLE DECREASE
+     C*
+     C           H3RTYP    IFEQ 'PD'
+     C***********H3PCPL    ADD  H3EAMT    PCPLT                           043092
+     C                     ADD  H3EAMT    PCPLT                           043092
+     C                     ELSE
+     C*
+     C*  RATE CHANGE.
+     C*
+     C           H3RTYP    IFEQ 'SC'
+     C                     Z-ADDH3ORAT    INTRT
+     C                     END
+     C                     END
+     C                     END
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*
+     C           #DEFN     BEGSR
+     C           HISKEY    KLIST
+     C                     KFLD           DLNO
+     C                     KFLD           KEDAT
+     C                     KFLD           KSQNO
+     C***********                                                         S01390
+     C***********CUSKEY    KLIST                                          S01390
+     C***********          KFLD           H2CNUM                          S01390
+     C***********          KFLD           CODE                            S01390
+     C*
+     C           *LIKE     DEFN H2EDAT    KEDAT
+     C           *LIKE     DEFN H2SQNO    KSQNO
+     C           *LIKE     DEFN CNUM      OCNUM
+     C           *LIKE     DEFN DLNO      ODLNO
+     C           *LIKE     DEFN DLNO      PDLNO
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     O/EJECT
+     OHIST2F  E
+     O                         H2CHQI
+** CPY@   **      OBJECT COPYRIGHT                                        S01390
+(c) Misys International Banking Systems Ltd. 2001

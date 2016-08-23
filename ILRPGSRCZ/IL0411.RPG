@@ -1,0 +1,270 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IBLC 2002 Identification validation')
+      *****************************************************************
+      *                                                               *
+      *  Midas - IBLC 2002 Module                                     *
+      *                                                               *
+      *  RPG/IL0411    - IBLC IDENTIFICATION VALIDATION               *
+      *                                                               *
+      *  Function:  This program valide IBLC Identification code and  *
+      *             Identification number and return message(s) Id &  *
+      *             message(s) data if error(s) occured.              *
+      *                                                               *
+      *  (phase(s)) All                                               *
+      *                                                               *
+      *  Called By: SD0011WL - Customer Details window controller     *
+      *             GL0100W7 - Journal Entry Postings wind. controller*
+      *             IL0262   - IBLC daily manual adjustment           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CER001             Date 25Apr05               *
+      *  Prev Amend No. ULX043             Date 14Aug01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  ULX043 - IBLC 2002 Reporting                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     FIL0411AUO   E                    PRINTER      KINFSR *PSSR      UC
+      ***  Audit report
+      *
+      /EJECT
+      *-------------------------------------------------------------------------
+     E                    OPCVM   6  12  9 0
+      ***  OPCMV Codes
+      *
+     E                    CPY@    1   1 80               COPYRIGHT  ARRAY
+      /EJECT
+      *-------------------------------------------------------------------------
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      * Long constants
+      *
+     IDSIDEN      DS
+      *** data structure to valide Identification number
+     I                                        1   60PART1
+     I                                        7   90PART2
+     I                                        1   50PART3
+     I                                        6   90PART4
+     I                                        1   1 PART5
+     I                                        2   70PART6
+     I                                        8   90PART7
+      *-------------------------------------------------------------------------
+      /EJECT
+      *-------------------------------------------------------------------------
+      * Main processing
+      *-------------------------------------------------------------------------
+      *
+      ***  Validate Identification Code
+      *
+      ***  If code is zero - no validation is required
+      *
+     C           PIDCO     IFNE *ZEROS
+     C                     EXSR SRIDCO
+     C                     ENDIF
+      *
+      ***  Validate Identification Number
+      *
+      ***  Because validation of Identification Number depends of Identification
+      ***  Code, validate Identification Number only if Identification code is
+      ***  correct
+      *
+     C           PERR1     IFNE '1'
+     C                     EXSR SRIDEN
+     C                     ENDIF
+      *
+      *-------------------------------------------------------------------------
+      * End processing
+      *-------------------------------------------------------------------------
+      *
+      ***  Return to calling program
+      *
+     C                     MOVEL*ON       *INLR
+     C                     RETRN
+      *
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRIDCO - Validate PIDCO
+      *-------------------------------------------------------------------------
+      *
+     C           SRIDCO    BEGSR
+      *
+      ***   Available Codes
+      *
+     C           PIDCO     IFNE 00
+     C           PIDCO     ANDNE23
+     C           PIDCO     ANDNE25
+     C           PIDCO     ANDNE26
+     C           PIDCO     ANDNE28
+     C                     MOVE '1'       PERR1
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRIDEN - Validate PIDEN
+      *-------------------------------------------------------------------------
+      *
+     C           SRIDEN    BEGSR
+      *
+     C                     SELEC
+      *
+      ***  If ID code is zero, identification should be zero
+      *
+     C           PIDCO     WHEQ *ZEROS                     Unknown Identification
+     C           PIDEN     IFNE *ZEROS                     00 000000000
+     C                     MOVE '1'       PERR2
+     C                     ENDIF
+      *
+      *** 23 --> BCL Identification (Bank Resident)
+      *** ===> Last 3 digits must not be 000 ===> Valid 23 000000xxx
+      *
+     C           PIDCO     WHEQ 23
+      *
+     C                     MOVE PIDEN     DSIDEN
+     C           PART1     IFNE *ZEROS
+     C           PART2     OREQ *ZEROS
+     C                     MOVE '1'       PERR2
+     C                     ENDIF
+      *
+      ***  Must be an OPCVM code
+      *
+     C           PIDCO     WHEQ 25
+      *
+     C                     Z-ADD1         X       30
+     C           PIDEN     LOKUPOPCVM,X                  99
+     C           *IN99     IFEQ *OFF                       Not found
+     C                     MOVE '1'       PERR2
+     C                     ENDIF
+      *
+      ***  26 - Immatriculation of OPC XXXXXYYYY, where XXXXX and YYYY aren't zero
+      *
+     C           PIDCO     WHEQ 26
+      *
+     C                     MOVE PIDEN     DSIDEN
+      *
+     C           PIDEN     IFEQ *ZERO                      NOT 000000000
+     C                     MOVE '1'       PERR2
+     C                     ENDIF
+      *
+     C           PART3     IFEQ *ZEROS                     XXXXX <> 00000
+     C           PART4     OREQ *ZEROS                     YYYY <> 0000
+     C                     MOVE '1'       PERR2
+     C                     ENDIF
+      *
+      ***  28 OXXXXXXYY where YY is module 89 of XXXXXX
+      *
+     C           PIDCO     WHEQ 28
+      *
+     C           PIDEN     IFEQ *ZERO                      Not 000000000
+     C                     MOVE '1'       PERR2
+     C                     ENDIF
+      *
+     C           PIDEN     IFNE *ZERO
+     C                     MOVE PIDEN     DSIDEN
+      *
+     C           PART5     IFNE '0'
+     C                     MOVE '1'       PERR2
+     C                     ELSE
+      *
+      ***  XXXXXX YY (modulo 89)
+      *
+     C           PART6     SUB  PART7     RESULT  80
+     C           RESULT    DIV  89        RESULT
+     C                     MVR            MODULO  20
+      *
+     C           MODULO    IFNE 0
+     C                     MOVE '1'       PERR2
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDSL
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRDBER - Database error suboutine
+      *-------------------------------------------------------------------------
+      *
+     C           SRDBER    BEGSR
+      *
+      ***  Audit list
+      *
+     C                     OPEN IL0411AU
+     C                     MOVELPCPGM     DBCPGM 10
+     C                     MOVEL'1'       PDBID
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     WRITEBOTTOM
+     C                     CLOSEIL0411AU
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * *PSSR - Program exception error routine
+      *-------------------------------------------------------------------------
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * *INZSR - Initial subroutine
+      *-------------------------------------------------------------------------
+      *
+     C           *INZSR    BEGSR
+      *
+      ***  Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ***  Define parameters list
+      *
+     C           *ENTRY    PLIST
+      * Input parameters
+     C                     PARM           PIDCO   20       Identification code
+     C                     PARM           PIDEN   90       Identification number
+     C                     PARM           PCPGM  10        Calling program
+      * Output parameters
+     C                     PARM           PDBID   1        Database error Id
+     C                     PARM           PERR1   1        Error first field
+     C                     PARM           PERR2   1        Error second field
+      *
+      ***  Define LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ***  Prepare LDA
+      *
+     C                     MOVEL'IL0411'  DBPGM     P
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+**  OPCVM
+000001112000002222000003332000004442000005552000006612
+000006622000006632000006662000008812000008822000008832
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2005

@@ -1,0 +1,315 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Bureau de Change Rate Defaults Ctrl')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module                                    *
+     F*                                                               *
+     F*  RE4251    - Bureau de Change Rate Defaults Control Table List*
+     F*                                                               *
+     F*  Function:   This program generates a list of default control *
+     F*  (I/C O/R)   codes.                                           *
+     F*  (COB O/R)                                                    *
+     F*                                                               *
+     F*  Called By: REC4251 - Bureau de Change Rate Deflts Ctl Table  *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CRT001  *CREATE    Date 28FEB95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  CRT001 - Retail Teller System.                               *
+     F*                                                               *
+     F*****************************************************************
+     FRE4251P1O   E                    PRINTER      KINFSR *PSSR      UC
+     F                                              KINFDS SPOOL
+      *
+     FRE4251AUO   E                    PRINTER      KINFSR *PSSR      UC
+     F                                              KINFDS SPOOLU
+      *
+      * Control table
+     FREBDCCPDIF  E           K        DISK
+     F                                              KINFSR *PSSR
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*  21 - Chain fail                                              *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  DBERR  - Database Error Processing.                          *
+     F*  PLNTAB - Assign appropriate currency.                        *
+     F*  *PSSR  - Program Error.                                      *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+      *----------------------------------------------------------------
+     E                    CPY@    1   1 80
+      *
+      * Program Status Data Structure
+     IDSSYS      SDS
+     I                                        1  10 S#PGM
+     I                                      244 253 S#JOB
+     I*
+     I** FILE INFORMATION DATA STRUCTURE
+     I*
+     ISPOOL       DS
+     I                                        9   9 OPEN
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 367 3680LINE
+     I*
+     ISPOOLU      DS
+     I                                        9   9 OPENU
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I                                    B 367 3680LINE1
+     I**  Bank Details
+     ILDA         DS                            256
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      172 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     ISDBANK    E DSSDBANKPD
+     I**  Bank Details
+     I*
+     IDSFDY     E DSDSFDY
+      *First DS for Access Programs, short data structure
+     I*
+      *----------------------------------------------------------------
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           @SEQ    5
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C**   Reset LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBLOT
+     C                     MOVEL'RE4251'  DBPGM
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD0         DBASE
+     C                     OUT  LDA
+     C*
+     C** Get Midas run-date and title
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*BLANKS' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C** If record not found?
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA                        ***************
+     C                     Z-ADD7         DBASE            ** DB ERR 07 *
+     C                     MOVE 'SDBANKPD'DBFILE           ***************
+     C                     MOVE @OPTN     DBKEY
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C                     OPEN RE4251P1
+     C*
+     C** Ensure Report Spool File Recorded by RCF for P1 report
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           @SEQ
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM *BLANKS   ZSERR   1
+     C*
+     C** Error During ZSFILE Processing, Return to Calling Program
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+      *
+     C                     MOVE 'Y'       OPEN
+     C                     TIME           STIME   60
+     C                     MOVELSTIME     TIME
+     C                     WRITE#HEAD
+     C*
+      *
+     C                     EXSR PLNTAB
+      *
+     C                     WRITE#TABLE
+     C                     WRITEENDOFR
+     C                     CLOSERE4251P1
+      *
+     C                     MOVE *ON       *INLR
+      /EJECT
+      *----------------------------------------------------------------
+      *
+      * Subroutine PLNTAB: Naåte obsah Tabulky z REBDCCPD
+      *
+      * in  : REBDCCD0, funkåní kódy
+      * out : NAC, ACC kódy pro jednotlivé funkce
+      *
+      *----------------------------------------------------------------
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  PLNTAB - Assigns appropriate currencies.                     *
+     C*                                                               *
+     C*  CALLS      DBERR  - Database Error Handling                  *
+     C*                                                               *
+     C*  CALLED BY  MAIN   - Control Processing                       *
+     C*                                                               *
+     C*  FLDS USED         -                                          *
+     C*                                                               *
+     C*****************************************************************
+     C           PLNTAB    BEGSR
+      *
+     C                     MOVEL'REBDCCPD'DBFILE
+     C           '0JI'     CHAINREBDCCD0             21
+     C           *IN21     IFEQ *ON
+     C                     MOVEL'0JI'     DBKEY
+     C                     Z-ADD1         DBASE
+     C                     EXSR DBERR
+     C                     ENDIF
+     C                     MOVELNAC       D#0JIN
+     C                     MOVELACC       D#0JIA
+      *
+     C           '0JK'     CHAINREBDCCD0             21
+     C           *IN21     IFEQ *ON
+     C                     Z-ADD2         DBASE
+     C                     MOVEL'0JK'     DBKEY
+     C                     EXSR DBERR
+     C                     ENDIF
+     C                     MOVELNAC       D#0JKN
+     C                     MOVELACC       D#0JKA
+      *
+     C           '0JL'     CHAINREBDCCD0             21
+     C           *IN21     IFEQ *ON
+     C                     Z-ADD3         DBASE
+     C                     MOVEL'0JL'     DBKEY
+     C                     EXSR DBERR
+     C                     ENDIF
+     C                     MOVELNAC       D#0JLN
+     C                     MOVELACC       D#0JLA
+      *
+     C           '0JN'     CHAINREBDCCD0             21
+     C           *IN21     IFEQ *ON
+     C                     Z-ADD4         DBASE
+     C                     MOVEL'0JN'     DBKEY
+     C                     EXSR DBERR
+     C                     ENDIF
+     C                     MOVELNAC       D#0JNN
+     C                     MOVELACC       D#0JNA
+      *
+     C           '0JO'     CHAINREBDCCD0             21
+     C           *IN21     IFEQ *ON
+     C                     Z-ADD5         DBASE
+     C                     MOVEL'0JO'     DBKEY
+     C                     EXSR DBERR
+     C                     ENDIF
+     C                     MOVELNAC       D#0JON
+     C                     MOVELACC       D#0JOA
+      *
+     C           '0JQ'     CHAINREBDCCD0             21
+     C           *IN21     IFEQ *ON
+     C                     Z-ADD6         DBASE
+     C                     MOVEL'0JQ'     DBKEY
+     C                     EXSR DBERR
+     C                     ENDIF
+     C                     MOVELNAC       D#0JQN
+     C                     MOVELACC       D#0JQA
+      *
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  DBERR - Database Error Processing.                           *
+     C*                                                               *
+     C*  CALLS :                                                      *
+     C*                                                               *
+     C*  CALLED BY : PLNTAB - Assign appropriate currency.            *
+     C*                                                               *
+     C*  FLDS USED :                                                  *
+     C*****************************************************************
+      *
+     C           DBERR     BEGSR
+      *
+     C                     OPEN RE4251AU
+     C*
+     C*
+     C** Ensure Audit Spool File recorded by RCF
+     C*
+     C                     Z-ADDSFNUMU    ZSNUM2  60
+     C                     CALL 'ZSFILE'
+     C                     PARM           @SEQ
+     C                     PARM *BLANK    SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM2
+     C                     PARM           ZSERR
+     C*
+     C** If an error occurred during ZSFILE processing,
+     C** return to the calling program.
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+     C                     MOVEL'RE4251'  DBPGM
+     C                     WRITEAUHDNG
+     C                     WRITEDBERROR
+     C                     CLOSERE4251AU
+      *
+     C           OPEN      IFEQ 'Y'
+     C                     WRITEERRLINE
+     C                     END
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     OUT  LDA
+     C                     DUMP
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  *PSSR - Program Error.                                       *
+     C*                                                               *
+     C*  CALLS :                                                      *
+     C*                                                               *
+     C*  CALLED BY : DBERR  - Database Error Processing.              *
+     C*                                                               *
+     C*  FLDS USED :                                                  *
+     C*****************************************************************
+      *
+     C           *PSSR     BEGSR
+     C                     DUMP
+     C                     SETON                     LRU7U8
+     C                     RETRN
+     C                     ENDSR
+     C*****************************************************************
+**   CPY@  **        OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

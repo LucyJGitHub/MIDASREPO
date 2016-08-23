@@ -1,0 +1,1459 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME IMM print audit report')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Message Management Module
+     F*                                                               *
+     F*  ME1170 - Print I.M.M. Audit Log Report                       *
+     F*                                                               *
+     F*  Function:  This program prints the IMM Log file transactions.*
+     F*                                                               *
+     F*  Called By: MEC1170 - Control for Print Log Transactions      *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  LAST AMEND NO. 145199             DATE 16OCT98               *
+     F*  PREV AMEND NO. 069250             DATE 03MAY94               *
+     F*                 S01435             DATE 20AUG93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+     F*  145199 - Recompile for changes to MEINCRPD and MEINMPPD made *
+     F*           in Year 2000 fix 124673.                            *
+     F*  069250 - Remove dummy OVRDBF command from creation parms.    *
+     F*  S01435 - Incoming Message Management                         *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+/******:*OVRDBF*(File*in*program)*(file*on*system)******************:**   069250
+     F*****************************************************************
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*                                                               *
+     F*  50   -    First Cycle processing                             *
+     F*  60   -    LOKUP Indicator                                    *
+     F*  70   -    Multi-branched indicator - Off = multibranched     *
+     F*  90   -    General work indicator                             *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FMEINLFJ2IF  E           K        DISK         KINFSR SRFILE     UC
+      *
+      * Incoming Message Log File - Date/Msg Ref./Part No.
+      *
+     FSDBANKL1IF  E           K        DISK         KINFSR SRFILE     UC
+     F            @BJREEF                           KRENAME@BANKL1
+      *
+      * Define SDBANKL1 for single branch
+      *
+     FME1170P1O   E             03     PRINTER      KINFSR SRFILE     UC
+     F                                              KINFDS PRTINF
+      *
+      * Transaction Report
+      *
+     F/COPY WNCPYSRC,ME1170DFPG
+      *
+      *  /Copy point for File Definition
+      *
+     F/EJECT
+     E                    CPY@    1   1 80
+      *
+      *  Copyright table
+      *
+     E/COPY MECPYSRC,SRERRE
+      *
+      *  End of Copysource for error processing
+      *
+     E                    CMD@    1   2 80
+      *
+      *  Array of QCMDEXC commands
+      *
+     E                    EDT        80  1
+      *
+      *  Array of QCMDEXC command to edit
+      *
+     E                    FLA        17  1
+      *
+      *  Array for formatting payment amount
+      *
+     E                    ALN       115  1               Text Line
+      *
+      *  Array for formatting extended text
+      *
+     F/COPY WNCPYSRC,ME1170DEPG
+      *
+      *  /Copy point for Arrays
+      *
+     E/EJECT
+     C/COPY WNCPYSRC,ME1170DIPG
+      *
+      *  /Copy point for Input specifications
+      *
+      *
+     ICPYR@#      DS
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     I/COPY MECPYSRC,SRERRI
+      *
+      *  End of Program Error Processing copysource member
+      *
+     IRUNDTA    E DSRUNDAT
+      *
+      *  Define rundat data area
+      *
+     IPRTINF      DS
+      *
+      * Printer file information data structure.
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     II#DTA       DS                            256
+      *
+      *  Input parameters data structure
+      *
+      *           Spool file name (if blank, name unchanged).
+      *                 N.B. To change name I#SPLR must be Y
+      *                 Unless first call of program
+      *
+     I                                        1  10 I#SPLN
+      *
+      *           Repeat open and close of spool file
+      *                 If Y create new spool file
+      *
+     I                                       11  11 I#SPLR
+      *
+      *           Report Reference if Access checking is off
+      *
+     I                                       12  21 I#REFN
+      *
+      *           Report Title/Underline (uses msg ID on MEMSG)
+      *
+     I                                       22  28 I#TITL
+     I                                       29  35 I#TUL
+      *
+      *           Branch
+      *
+     I                                       36  38 I#BRCA
+      *
+      *           Report selection dates - From/To
+      *
+     I                                       39  430I#FDAT
+     I                                       44  480I#TDAT
+      *
+     ISDMTPY    E DSSDMTPYPD
+      *
+      * Message Type record format Data Structure
+      *
+     I/COPY WNCPYSRC,ME1170I001
+     IW2FMT     E DSDSFDY
+      *
+      *   Access object Data Structure
+      *
+     IDSDATE      DS
+      *
+      *  Format dates
+      *
+     I                                        1   6 WKDATE
+     I                                        1   2 WKYY
+     I                                        3   4 WKMM
+     I                                        5   6 WKDD
+      *
+     IDSMTR       DS
+      *
+      *  Define fields for message transalation
+      *
+     I                                        1 132 #MSDTA
+     I                                      133 264 #MSTX1
+      *
+     I#MSTX2      DS                            512
+      *
+      *  Define fields for extended message
+      *
+     I                                        1 256 #MSTXA
+     I                                      257 512 #MSTXB
+      *
+     I/EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+     C                     PARM           W0ACT   8
+     C                     PARM           I#DTA            Input Data Str.
+     C                     PARM           I#RSQN  5
+      *
+      *  Set up primary reference
+      *
+     C                     MOVELI#DTA     W0PREF
+      *
+      * Initialise program
+      *
+     C           *IN50     IFEQ '0'
+     C                     EXSR SRINIT
+     C                     END
+      *
+      *  Reset primary transaction reference
+      *
+     C                     MOVEL*BLANKS   W0PREF
+      *
+      *  If action is *CLOSE then call SROPT and close down program
+      *
+     C           W0ACT     IFEQ '*CLOSE'
+     C                     EXSR SROPRT
+     C                     MOVEL'1'       *INLR
+     C                     RETRN
+     C                     END
+      *
+      *  Check action code
+      *
+     C                     EXSR SRCHCK
+      *
+      *  Call subroutine depending on action code
+      *
+     C           W0ACT     CASEQ'*PRINT ' SRPROC
+     C           W0ACT     CASEQ'*CLOSESP'SROPRT
+     C                     CAS            SRACT
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      * Return to calling program
+      *
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCHCK   : Check true action code                            *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRCHCK    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRCHCK'  @STK,Q
+      *
+      *  Check that it is a valid action code
+      *
+     C           W0ACT     IFEQ '*CLOSESP'                 Close spool fil
+     C                     GOTO EXCHCK
+     C                     END
+      *
+      *  If branch is blank then assume single branch
+      *
+     C           WUMBIN    IFNE 'Y'
+     C           I#BRCA    IFNE *BLANKS
+     C                     MOVELI#BRCA    H3BRCA
+     C                     ELSE
+     C                     MOVELBJSBRC    H3BRCA
+     C                     END
+     C                     ELSE
+     C                     MOVEL'ALL'     H3BRCA
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXCHCK    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPROC   : Process printing requirements                     *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SROPRT - Open Printer File                        *
+      *             SRHDR1 - Print Header of Report                   *
+      *             SRHDR2 - Print Title of Report                    *
+      *             SRCONT - Print IMM Control Information            *
+      *             SRPART - Print IMM Message Part Information       *
+      *             SRLOG  - Print IMM Log Files                      *
+      *                                                               *
+      *****************************************************************
+     CSR         SRPROC    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRPROC'  @STK,Q
+      *
+      *  Open printer file etc
+      *
+     C                     EXSR SROPRT
+      *
+      *  Print header of report
+      *
+     C                     EXSR SRHDR1
+      *
+      *  Retrieve Title of report and print
+      *
+     C                     EXSR SRHDR2
+      *
+      *  Set limits to read all records from the log file
+      *
+     C                     Z-ADDI#FDAT    KFDATE
+     C                     Z-ADD0         KFMSGR
+     C                     Z-ADD0         KFPART
+     C           KYINLF    SETLLMEINLFJ2
+      *
+     C                     READ MEINLFJ2                 90
+      *
+      * Check if end of range has been reached
+      *
+     C           *IN90     DOWEQ'0'
+      *
+      *  Print header of report if not first print
+      *
+      *  And Msg reference has changed
+      *
+     C           ##MSGR    IFNE -1
+     C           ##MSGR    ANDNELFMSGR
+     C                     EXSR SRHDR1
+      *
+      *  Retrieve Title of report and print
+      *
+     C                     EXSR SRHDR2
+     C                     END
+      *
+     C           LFRDNB    IFGT I#TDAT
+     C                     LEAVE
+     C                     END
+      *
+      *  For each record read, print the details in Header, Part No.,
+      *  Log sequence.
+      *
+      *  If the message reference is 0 this means that a log file
+      *  record was generated because the Incoming Message was not
+      *  valid for adding to the ME database. In this case only the
+      *  Log record will be printed.
+      *
+      *  If message reference is greater than 0, print all formats.
+      *
+     C           LFMSGR    IFGT 0
+     C           ##MSGR    ANDNELFMSGR
+      *
+      *  Print Header Control format
+      *
+     C                     EXSR SRCONT
+      *
+     C                     END
+      *
+      *  Print Message Part format only if part No. is > 0
+      *
+     C           LFMSGR    IFGT 0
+     C           LFKPRT    ANDGT0
+     C           ##PART    ANDNELFKPRT
+     C                     EXSR SRPART
+     C                     END
+      *
+      *  Print Log file format
+      *
+     C                     EXSR SRLOG
+      *
+      *  Set 'Details have printed' flag  and save Msg reference
+      *
+     C                     MOVEL'Y'       WKPFLG  1
+     C                     Z-ADDLFMSGR    ##MSGR
+     C                     Z-ADDLFKPRT    ##PART
+      *
+      *  Get next record
+      *
+     C                     READ MEINLFJ2                 90
+      *
+     C                     ENDDO
+      *
+      *  Determine if details have printed - if not print report line
+      *
+     C           WKPFLG    IFEQ *BLANKS
+      *
+      *  /Copy point for No details to report
+      *
+     C/COPY WNCPYSRC,ME1170DNRP
+      *
+     C                     WRITEF0NODT
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXPROC    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCONT   : Print IMM Header Control Information              *
+      *                                                               *
+      *  CALLED BY: SRPROC - Process Printing Requirements            *
+      *                                                               *
+      *  CALLS    : SR     -                                          *
+      *             SR     -                                          *
+      *                                                               *
+      *****************************************************************
+     CSR         SRCONT    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRCONT'  @STK,Q
+      *
+      *  Move Incoming Message Control file fields to output
+      *
+     C                     MOVELLFSNDR    D1SNDR
+     C                     MOVELLFDUPF    D1DUPF
+     C                     MOVELLFMPRY    D1MPRY
+     C                     MOVELLFNWRK    D1NWRK
+     C                     MOVELLFMIR     D1MIR
+     C                     Z-ADDLFMOTM    D1MOTM
+     C                     MOVELLFMOR     D1MOR
+     C                     MOVELLFBRCA    D1BRCA
+     C                     Z-ADDLFSNTT    D1SNTT
+     C                     MOVELLFCYCD    D1CCY
+     C                     Z-ADDLFNPRT    D1NPRT
+     C                     MOVELLFCJOB    D1AJOB
+     C                     MOVELLFCUSR    D1AUSR
+     C                     Z-ADDLFCTIM    D1ATIM
+     C                     MOVELLFCRDT    D1ARDT
+      *
+      *  Get Message Type Description
+      *
+     C                     MOVELLFMTPY    D1MTPY
+      *
+     C                     CALL 'AOMTPYR0'             9090
+     C                     PARM *BLANKS   W2RTN   7
+     C                     PARM '*KEY    'W2OPTN  8
+     C                     PARM LFMTPY    W2MTPY  3
+     C           SDMTPY    PARM SDMTPY    W2FMT
+      *
+      *  Option ended in error - use default for Description field
+      *  else use Type Description
+      *
+     C           *IN90     IFEQ '1'
+     C           W2RTN     ORNE *BLANKS
+     C                     MOVEL##NODN    D1MTPD
+     C                     ELSE
+     C                     MOVELEEMTPD    D1MTPD
+     C                     END
+      *
+      *  Present dates in relevant format - DDMMYY or MMDDYY
+      *
+     C                     MOVELLFMODE    WKDATE           Received Date
+     C                     EXSR SRFDAT
+     C                     MOVELFMDATE    D1MODE
+      *
+     C                     MOVELLFSNTD    WKDATE           Sent Date
+     C                     EXSR SRFDAT
+     C                     MOVELFMDATE    D1SNTD
+      *
+     C                     MOVELLFSVDT    WKDATE           Value Date
+     C                     EXSR SRFDAT
+     C                     MOVELFMDATE    D1SVDT
+      *
+      *  Format Amount Field - replace the ',' with a '.'
+      *
+     C                     MOVEALFAMTS    FLA
+     C                     EXSR SRFAMT
+     C                     MOVEAFLA       D1AMTS
+      *
+      *  /Copy point for Details
+      *
+     C/COPY WNCPYSRC,ME1170DPDR
+      *
+      *
+      *  Print format and check for overflow
+      *
+     C                     WRITEF1DTL1
+      *
+     C                     EXSR SROVER
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXCONT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPART   : Print Message Part Information                    *
+      *                                                               *
+      *  CALLED BY: SRPROC - Process printing requirements            *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         SRPART    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRPART'  @STK,Q
+      *
+      *  Move in fields
+      *
+     C                     Z-ADDLFKPRT    D2KPRT
+     C                     MOVELLFTRNO    D2TRNO
+     C                     MOVELLFINBK    D2INBK
+     C                     MOVELLFACIN    D2ACIN
+     C                     MOVELLFBENF    D2BENF
+     C                     MOVELLFPCCY    D2CCY
+      *
+      *  Present dates in relevant format - DDMMYY or MMDDYY
+      *
+     C                     MOVELLFPVDT    WKDATE           Value Date
+     C                     EXSR SRFDAT
+     C                     MOVELFMDATE    D2SVDT
+      *
+      *  Format Amount Field - replace the ',' with a '.'
+      *
+     C                     MOVEALFPAMT    FLA
+     C                     EXSR SRFAMT
+     C                     MOVEAFLA       D2AMTS
+      *
+      *  /Copy point for Details 1
+      *
+     C/COPY WNCPYSRC,ME1170DPD1
+      *
+      *
+      *  Print format and check for overflow
+      *
+     C                     WRITEF2DTL1
+      *
+     C                     EXSR SROVER
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXPART    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRLOG    : Print Log File information                        *
+      *                                                               *
+      *  CALLED BY: SRPROC - Process Printing Requirements            *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         SRLOG     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRLOG '  @STK,Q
+      *
+      *  Move in fields
+      *
+     C                     MOVELLFAJOB    D3AJOB
+     C                     MOVELLFAUSR    D3AUSR
+     C                     Z-ADDLFATIM    D3ATIM
+     C                     MOVELLFARDT    D3ARDT
+      *
+      *  Set indicator to print heading 'Log :' first time only
+      *
+     C                     MOVEL'1'       *IN60
+      *
+      *  Retrieve Action Message Id details
+      *
+     C                     MOVELLFMSID    #MSGID
+     C                     MOVELLFMSDT    #MSDTA
+     C                     MOVEL#ACT      D3SUBH
+     C                     EXSR SRTEXT
+      *
+      *  Retrieve Result message I.D details
+      *
+     C           LFARSM    IFNE *BLANKS
+     C                     MOVELLFARSM    #MSGID
+     C                     MOVELLFARSD    #MSDTA
+     C                     MOVEL#RSLT     D3SUBH
+     C                     EXSR SRTEXT
+     C                     END
+      *
+      *  /Copy point for Details 2
+      *
+     C/COPY WNCPYSRC,ME1170DPD2
+      *
+      *
+      *  Print job details and headings if overflow
+      *
+     C                     WRITEF3DTL3
+     C                     EXSR SROVER
+      *
+      *  If message reference is 0 then print line to state that no
+      *  further information is available
+      *
+     C           LFMSGR    IFEQ 0
+      *
+      *  /Copy point for Details 3
+      *
+     C/COPY WNCPYSRC,ME1170DPD3
+      *
+     C                     WRITEF3DTL4
+     C                     EXSR SROVER
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXLOG     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRTEXT   : Print Text for Log File Actio/Result Details      *
+      *                                                               *
+      *  CALLED BY: SRLOG  - Print Log File Details                   *
+      *                                                               *
+      *  CALLS    : SREXTX - Print Extended Text Details              *
+      *                                                               *
+      *****************************************************************
+     CSR         SRTEXT    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRTEXT'  @STK,Q
+      *
+      *  If no message file assume MEMSG
+      *
+     C                     MOVEL*BLANKS   #MSGF
+     C           LFMSGF    IFEQ *BLANKS
+     C                     MOVEL'MEMSG'   #MSGF
+     C                     ELSE
+     C                     MOVELLFMSGF    #MSGF
+     C                     END
+      *
+      *  Retrieve Message Id Action/Result details
+      *
+     C                     MOVEL*BLANKS   D3TXT1
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM           #MSGID
+     C                     PARM           #MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+      *  To prevent a word being split across two lines,
+      *  determine ocurrence of first blank from the end of the line
+      *  and print only up to that position
+      *
+      *  Move 115 characters into line array
+      *
+     C                     Z-ADD1         S
+     C           115       SUBST#MSTX1:S  WKALN 115 P
+      *
+     C           WKALN     IFNE *BLANKS
+     C                     MOVEAWKALN     ALN
+     C                     Z-ADD115       X       30
+      *
+     C           X         DOWGT0
+      *
+     C           ALN,X     IFNE *BLANKS
+     C                     SUB  1         X
+     C                     ELSE
+     C                     LEAVE
+     C                     END
+      *
+     C                     ENDDO
+      *
+      *  Move line of data into print field for the calculated length
+      *
+      *  Determine start of next line
+      *
+     C                     SUB  1         X
+     C           X         SUBST#MSTX1:S  WKALN     P
+      *
+     C           X         ADD  2         S
+      *
+      *  Print record and headings if overflow
+      *
+     C                     MOVELWKALN     D3TXT1
+      *
+      *  /Copy point for Details 4
+      *
+     C/COPY WNCPYSRC,ME1170DPD4
+      *
+     C                     WRITEF3DTL1
+     C                     MOVEL'0'       *IN60
+     C                     EXSR SROVER
+      *
+      *  If no data in line determine start of substring for next line
+      *
+     C                     ELSE
+     C                     ADD  115       S
+     C                     END
+      *
+      *  Print next line if it exists
+      *
+     C           132       SUB  S         L       40
+     C                     ADD  1         L
+     C           L         SUBST#MSTX1:S  D3TXT2    P
+      *
+     C           D3TXT2    IFNE *BLANKS
+      *
+      *  /Copy point for Details 5
+      *
+     C/COPY WNCPYSRC,ME1170DPD5
+      *
+     C                     WRITEF3DTL2
+     C                     MOVEL'0'       *IN60
+     C                     EXSR SROVER
+     C                     END
+      *
+      *  Print extended text line if it exists
+      *
+     C           #MSTX2    IFNE *BLANKS
+     C                     EXSR SREXTX
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXTEXT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SREXTX   : Print Extended Text for Log Action/Result         *
+      *                                                               *
+      *  CALLED BY: SRTEXT - Print Log File Action/Result Details     *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         SREXTX    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SREXTX'  @STK,Q
+      *
+      *  Move message text into array
+      *
+      *  Print multiple lines of text, allowing a maximum of 115 chars
+      *  per line and up to 5 lines (575 characters)
+      *
+     C                     Z-ADD1         C       30       Count Character
+     C                     Z-ADD1         S       30       Start string
+      *
+     C           C         DOWLT576
+      *
+      *  Move a maximum of 115 characters into line array.
+      *
+     C           512       SUB  S         L
+     C                     ADD  1         L
+      *
+     C           L         IFGT 115
+     C                     Z-ADD115       L
+     C                     END
+      *
+     C           L         SUBST#MSTX2:S  WKALN 115 P
+      *
+      *  To prevent a word being split across two lines,
+      *  determine ocurrence of first blank from the end of the line
+      *  and print only up to that position
+      *
+     C           WKALN     IFNE *BLANKS
+     C                     MOVEAWKALN     ALN
+     C                     Z-ADD115       X       30
+      *
+     C           X         DOWGT0
+      *
+     C           ALN,X     IFNE *BLANKS
+     C                     SUB  1         X
+     C                     ELSE
+     C                     LEAVE
+     C                     END
+      *
+     C                     ENDDO
+      *
+      *  Determine start of next line
+      *
+     C                     SUB  1         X
+      *
+      *  The length of the substring plus the start position may not be
+      *  greater than the overall length of the field from which the
+      *  substring is being taken.
+      *
+      *  Check for this and if it is only substring the valid length
+      *
+     C           512       SUB  S         L
+     C                     ADD  1         L
+      *
+     C           L         IFGT X
+     C                     Z-ADDX         L
+     C                     END
+      *
+      *  Move line of data into print field for the calculated length
+      *
+     C           L         SUBST#MSTX2:S  WKALN     P
+      *
+     C                     ADD  L         S
+     C                     ADD  1         S
+      *
+      *  Print record and headings if overflow
+      *
+     C                     MOVELWKALN     D3TXT2
+      *
+      *  /Copy point for Details 6
+      *
+     C/COPY WNCPYSRC,ME1170DPD6
+      *
+     C                     WRITEF3DTL2
+     C                     EXSR SROVER
+      *
+      * If no data in line determine start of substring for next line
+      *
+     C                     ELSE
+     C                     ADD  115       S
+     C                     END
+      *
+      * Accumulate count of characters
+      *
+     C                     ADD  115       C
+      *
+     C                     ENDDO
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXEXTX    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFDAT   : Format Date for printing                          *
+      *                                                               *
+      *  CALLED BY: SRCONT - Print Control Heading Details            *
+      *             SRPART - Print Message Part Details               *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         SRFDAT    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRFDAT'  @STK,Q
+      *
+      *  Move around DD/MM/YY
+      *
+     C           WUDFF     IFEQ 'M'
+     C                     MOVELWKMM      WKDM    4
+     C                     MOVE WKDD      WKDM
+     C                     ELSE
+     C                     MOVELWKDD      WKDM
+     C                     MOVE WKMM      WKDM
+     C                     END
+      *
+     C                     MOVELWKDM      FMDATE  60
+     C                     MOVE WKYY      FMDATE
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXFDAT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFAMT   : Format Amount Field                               *
+      *                                                               *
+      *  CALLED BY: SRCONT - Print Control Heading Details            *
+      *             SRPART - Print Message Part Details               *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         SRFAMT    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRFAMT'  @STK,Q
+      *
+      *  Replace the ',' with an '.'
+      *
+     C                     Z-ADD1         A       30
+     C           ','       LOKUPFLA,A                    60
+      *
+     C           *IN60     IFEQ '1'
+     C                     MOVEL'.'       FLA,A
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXFACT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRHDR1   : Print Page Header                                 *
+      *                                                               *
+      *  CALLED BY: SRPROC - Control Processing For Report            *
+      *             SROVER - Check For Overflow                       *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         SRHDR1    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRHDR1'  @STK,Q
+      *
+      *  /Copy point for Print Header Record
+      *
+     C/COPY WNCPYSRC,ME1170DPHR
+      *
+      *
+      *  Write page header and switch off overflow indicator
+      *
+     C                     WRITEF0HDR1
+     C                     MOVEL'0'       *IN03
+      *
+      *  /Copy point for Print Header Line 1
+      *
+     C/COPY WNCPYSRC,ME1170DPH1
+      *
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXHDR1    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRHDR2   : Print Report Title                                *
+      *                                                               *
+      *  CALLED BY: SRPROC - Control Processing For Report            *
+      *             SROVER - Check Overflow for Report                *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         SRHDR2    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRHDR2'  @STK,Q
+      *
+      *  /Copy point for Print Header Line 2
+      *
+     C/COPY WNCPYSRC,ME1170DPH2
+      *
+      *
+      *  Write title
+      *
+     C                     WRITEF0HDR2
+      *
+      *  Write Branch heading
+      *
+     C           WUMBIN    IFEQ 'Y'                        Multi Branched ?
+      *
+      *  /Copy point for Print Header Line 3
+      *
+     C/COPY WNCPYSRC,ME1170DPH3
+      *
+     C                     WRITEF0HDR3
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXHDR2    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SROVER   : Check For Overflow on Report                      *
+      *                                                               *
+      *  CALLED BY: SRCONT - Print Control Header Details             *
+      *             SRPART - Print Message Part Details               *
+      *             SRLOG  - Print Log File Details                   *
+      *             SRTEXT - Print Log Action/Result Details          *
+      *             SREXTX - Print Log Action/Result Extended Text    *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         SROVER    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SROVER'  @STK,Q
+      *
+      *  Print headings if overflow
+      *
+     C           *IN03     IFEQ '1'
+     C                     EXSR SRHDR1
+     C                     EXSR SRHDR2
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXOVER    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SROPRT   : Control open and close of spool file ME1170P1     *
+      *                                                               *
+      *  CALLED BY: SRSUMM - Process Summary Transaction Report       *
+      *             SRPART - Process Partial Transaction Report       *
+      *             SRDETL - Process Detail  Transaction Report       *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SROPRT    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SROPRT'  @STK,Q
+      *
+      *  If first open or I#SPLR is 'Y', open and close file
+      *  or close action specified
+      *
+     C           ##OPRT    IFEQ *BLANKS
+     C           I#SPLR    OREQ 'Y'
+     C           W0ACT     OREQ '*CLOSE'
+     C           W0ACT     OREQ '*CLOSESP'
+      *
+      *  If open and spool repeat is yes close the file
+      *  or if close specified and file open
+      *
+     C           ##OPRT    IFNE *BLANKS
+     C           I#SPLR    ANDEQ'Y'
+     C           ##OPRT    ORNE *BLANKS
+     C           W0ACT     ANDEQ'*CLOSE'
+     C           ##OPRT    ORNE *BLANKS
+     C           W0ACT     ANDEQ'*CLOSESP'
+      *
+      *  /Copy point for Print Trailer
+      *
+     C/COPY WNCPYSRC,ME1170DPER
+      *
+      *
+      *  Print end of report before processing close of file
+      *
+     C                     WRITEF0TRL1
+      *
+      *  Close file
+      *
+     C                     CLOSEME1170P1
+     C                     MOVEL*BLANKS   ##OPRT
+     C                     Z-ADD0         PAGE1
+      *
+      *  If *CLOSE exit section as no more processing
+      *
+     C           W0ACT     IFEQ '*CLOSE'
+     C           W0ACT     OREQ '*CLOSESP'
+     C                     Z-ADD-1        ##MSGR
+     C                     Z-ADD0         ##PART
+     C                     GOTO EXOPRT
+     C                     END
+     C                     END
+      *
+      *  If spool file name is requested change override
+      *
+     C           ##OPRT    IFEQ *BLANKS
+     C           I#SPLN    ANDNE*BLANKS
+      *
+      *  Override file ME1170P1 share(*NO) and spool file name
+      *
+     C                     MOVEACMD@,1    EDT
+     C                     MOVEAI#SPLN    EDT,49
+     C                     MOVEAEDT       OVRDBF 80
+     C                     Z-ADD80        CMDLEN 155
+     C                     CALL 'QCMDEXC'                9090
+     C                     PARM           OVRDBF
+     C                     PARM           CMDLEN
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'*CALL  ' W0FILE
+     C                     MOVEL'QCMDEXC' W0KEY
+     C                     Z-ADD1         W0ERNB
+     C                     EXSR SRERR
+     C                     END
+      *
+     C                     END
+      *
+      *  Open ME1170P1 for output
+      *
+     C                     OPEN ME1170P1               90
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'ME1170P1'W0FILE           ***************
+     C                     MOVEL'*OPEN'   W0KEY            * DB ERROR 04 *
+     C                     Z-ADD2         W0ERNB           ***************
+     C                     MOVEL'MEM5005' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      * If I#SPLN is not blank then this is the name for RCF
+      *
+     C           I#SPLN    IFNE *BLANKS
+     C                     MOVELI#SPLN    UUSFNM
+     C                     ELSE
+     C                     MOVELSFILEU    UUSFNM
+     C                     END
+      *
+      * If branch is 'ALL' then call ZSFILE with spaces
+      *
+     C           H3BRCA    IFEQ 'ALL'
+     C                     MOVEL*BLANKS   UUENTY
+     C                     ELSE
+     C                     MOVELH3BRCA    UUENTY
+     C                     END
+      *
+      * ZSFILE - Log Spool File
+      *
+      * Set up spool file number
+      *
+     C                     Z-ADDSFNUMU    WUSFNB  60
+     C                     MOVE *BLANKS   UUSRSQ  5
+     C           *LIKE     DEFN UUZSER    WUZSER
+      *
+      * ZSFILE - write report rqs
+      *
+     C                     CALL 'ZSFILE'               90
+     C           UUSRSQ    PARM I#RSQN    UURSQN  5
+     C                     PARM           UUENTY  3
+     C                     PARM           UUSFNM 10
+     C                     PARM WUSFNB    UUSFNB  60
+     C           WUZSER    PARM *BLANK    UUZSER  1
+      *
+      * Report error on call to ZSFILE
+      *
+     C           *IN90     IFEQ '1'
+     C           WUZSER    OREQ 'Y'
+     C                     MOVEL'*CALL   'W0FILE           ***************
+     C                     MOVEL'ZSFILE'  W0KEY            * DB ERROR 05 *
+     C                     Z-ADD3         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C                     MOVEL'Y'       ##OPRT  1
+      *
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXOPRT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRACT    : Undefined action - error                          *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRACT     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRACT '  @STK,Q
+      *
+      *  Database error undefined action
+      *
+     C                     MOVEL'*ACTION 'W0FILE           ***************
+     C                     MOVELW0ACT     W0KEY            * DB ERROR 06 *
+     C                     Z-ADD4         W0ERNB           ***************
+     C                     MOVEL'MEM5006' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXACT     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Define fields
+      *
+     C           *LIKE     DEFN LFRDNB    KFDATE
+     C           *LIKE     DEFN LFMSGR    KFMSGR
+     C           *LIKE     DEFN LFKPRT    KFPART
+     C           *LIKE     DEFN LFMSGR    ##MSGR
+     C           *LIKE     DEFN LFKPRT    ##PART
+     C                     Z-ADD-1        ##MSGR
+     C                     Z-ADD0         ##PART
+      *
+      *  Key List for MEINLFJ2
+      *
+     C           KYINLF    KLIST
+     C                     KFLD           KFDATE
+     C                     KFLD           KFMSGR
+     C                     KFLD           KFPART
+      *
+      *  Open Files
+      *
+     C                     OPEN MEINLFJ2
+      *
+      *  Get Rundate - Rundate
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    ##MRDT  7        Midas Run date
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      *
+      * Set multi-branch indicator
+      *
+     C           WUMBIN    IFNE 'Y'                        Multi Branched ?
+     C                     MOVEL'1'       *IN70
+     C                     END
+      *
+      *  Open SDBANKL1 file for branch
+      *
+     C                     OPEN SDBANKL1
+      *
+     C                     MOVEL'BANK'    BJBANK
+     C           BJBANK    CHAIN@BANKL1              9090
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'SDBANKL1'W0FILE           ***************
+     C                     MOVEL'*ONLY'   W0KEY            * DB ERROR 07 *
+     C                     Z-ADD5         W0ERNB           ***************
+     C                     MOVEL'MEM5004' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C                     CLOSESDBANKL1
+     C/COPY WNCPYSRC,ME1170C001
+      *
+      *  Retrieve title for report dependant on type of report
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM I#TITL    #MSGID
+     C                     PARM 'MEMSG'   #MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    H2TITL 60
+      *
+      *  Retrieve title underline
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM I#TUL     #MSGID
+     C                     PARM 'MEMSG'   #MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    H2TUL  60
+      *
+      *  Retreive <No description Found> text
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'MIN0053' #MSGID
+     C                     PARM 'MEMSG'   #MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    ##NODN 35
+      *
+      *  Retreive <No Further Information> text
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'MIN0133' #MSGID
+     C                     PARM 'MEMSG'   #MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    D3NOIN 90
+      *
+      *  Retrieve 'Action' from message
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'MIN0141' #MSGID
+     C                     PARM 'MEMSG'   #MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C           *LIKE     DEFN D3SUBH    #ACT
+     C                     MOVEL#MSTX1    #ACT
+      *
+      *  Retrieve 'Result' from message
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'MIN0142' #MSGID
+     C                     PARM 'MEMSG'   #MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C           *LIKE     DEFN D3SUBH    #RSLT
+     C                     MOVEL#MSTX1    #RSLT
+      *
+      *  Convert dates to ddmmmyy for display
+      *
+      *
+      *  Convert Midas Day no. to system date
+      *
+     C                     CALL 'ZDATE2'               90
+     C                     PARM I#FDAT    W2DAYN  50       Day No.
+     C                     PARM WUDFF     W2DTFM  1        Date Format
+     C                     PARM *ZEROS    W2DATE  60       Date
+     C                     PARM *BLANKS   O#FDAT  7        DDMMMYY
+      *
+      *  Convert Midas Day no. to system date
+      *
+     C                     CALL 'ZDATE2'               90
+     C                     PARM I#TDAT    W2DAYN  50       Day No.
+     C                     PARM WUDFF     W2DTFM  1        Date Format
+     C                     PARM *ZEROS    W2DATE  60       Date
+     C                     PARM *BLANKS   O#TDAT  7        DDMMMYY
+      *
+      *  Retrieve description of range
+      *
+     C                     MOVEL*BLANKS   H2RNG
+     C                     MOVEL*BLANKS   O#DATE 14
+     C                     MOVELO#FDAT    O#DATE
+     C                     MOVE O#TDAT    O#DATE
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'MIN0156' #MSGID
+     C                     PARM 'MEMSG'   #MSGF
+     C                     PARM O#DATE    #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    H2RNG
+      *
+      *  Indicate that set up is complete
+      *
+     C                     SETON                     50
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+     C/COPY WNCPYSRC,ME1170DCPG
+      *
+      *  /Copy point for Calculations
+      *
+     C/EJECT
+      *
+      *  File and Program Error Processing
+      *
+     C/COPY MECPYSRC,RPTSRERRC
+     C/EJECT
+     C/COPY WNCPYSRC,ME1170DOPG
+      *
+      *  /Copy point for Outputs
+      *
+**  CPY@ table
+(c) Misys International Banking Systems Ltd. 2001
+** Command Array
+OVRPRTF    FILE(ME1170P1  ) SHARE(*NO) SPLFNAME(XXXXXXXXXX) SECURE(*YES)
+OVRDBF     FILE(XXXXXXXXXX) SHARE(*NO) SECURE(*YES)

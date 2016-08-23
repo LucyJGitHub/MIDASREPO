@@ -1,0 +1,683 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas OF Convert Multicash MT100s to SWIFT MT103s')    *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management Module                            *
+      *                                                               *
+      *  ME0008 - Midas OF Convert Multicash MT100s to SWIFT MT103s   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *                                                               *
+      *  Last Amend No. MD020010           Date 18Apr13               *
+      *  Prev Amend No. AR1056792          Date 20Feb13               *
+      *                 CFT135  *CREATE    Date 20Feb13               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD020010 - MTCDTATD not updated.                             *
+      *  AR1056792 - CFT135 - ME0008 fails on update without read     *
+      *              CHAIN before updating the file - MTCDTATD.       *
+      *              (Child: AR1056795)                               *
+      *  CFT135 - MT100 MultiCash Interface                           *
+      *                                                               *
+      *****************************************************************
+      *
+      ** SWIFT File
+      *
+     FMSMSI2L9IF  E           K        DISK         KINFSR *PSSR
+     F            MSMSI2D0                          KRENAMEMSMS9
+      *
+      ** Multicash MT100s
+      *
+     FMCI100TDUF  E                    DISK         KCOMIT
+     F                                              KINFSR *PSSR
+      *
+      ** MTCASH Last Rundate and Reference Sequence No.
+      *
+     F***MTCDTATDUF  E                    DISK         KCOMIT                               MD020010
+     FMTCDTATDUF  E                    DISK         KCOMIT       A                          MD020010
+     F                                              KINFSR *PSSR
+      *
+      ** SWIFT Message file
+      *
+     FMSMSI2PDO   E                    DISK         KCOMIT
+     F                                              KINFSR *PSSR
+      *
+      ** Bank file
+      *
+     FSDBANKPDIF  E                    DISK         KINFSR *PSSR
+      *
+      ** User file
+      *
+     FMUSER   IF  E           K        DISK         KINFSR *PSSR
+      *
+      ** Printer file
+      *
+     FME0008P1O   E                    PRINTER      KINFDS SPOOL
+      *****************************************************************
+      * Arrays                                                        *
+      *****************************************************************
+      *
+     E                    LIN       256  1
+     E                    LI2       256  1
+     E                    DTA       256  1
+     E                    RST       256  1
+     E                    MSG       256256
+     E                    BL4       256256
+      *
+      ** Array containing Copyright statement.
+      *
+     E                    CPY@    1   1 80
+      *
+      *****************************************************************
+      * Data Structures                                               *
+      *****************************************************************
+      *
+      **  File Information Data Structure
+      *
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I            DS
+     I                                        1  29 BLCK1
+     I                                        1   6 B1
+     I                                        7  12 MTC
+     I                                       13  18 MTD
+     I                                       19  22 SN
+     I                                       23  28 SEQ
+     I                                       29  29 LST1
+     I            DS
+     I                                        1  51 BLCK2
+     I                                        1   7 B2
+     I                                        8  11 TIM
+     I                                       12  39 MIR
+     I                                       40  45 DAT2
+     I                                       46  49 TIM2
+     I                                       50  50 PR
+     I                                       51  51 LST2
+     I            DS
+     I                                        1   5 BLCK4
+     I                                        1   3 B4
+     I                                        4   4 B4CR
+     I                                        5   5 B4LF
+      *
+     I            DS
+     I                                        1 256 MCDATA
+     I                                        1   3 BLOCK3
+     I                                        1   4 BLOCK
+     I                                        1   5 BLOCKB
+     I                                        5  15 SWIFTS
+     I                                        6  17 SWIFTR
+     I                                        6  11 VDAT
+     I                                        5  20 REFR
+     I                                        5  31 NM
+     I                                        1  27 NM2
+     I                                       12  31 AMNT
+      *
+     I            DS
+     I                                        1  28 MOR
+     I                                        1   6 DAT
+     I                                        7  14 SS1
+     I                                       15  15 SS2
+     I                                       16  18 SS3
+     I                                       19  24 USRRF
+     I                                       25  280SEQN
+      *
+     IPSDS       SDS
+      *
+      **  Program Status Data Structure
+      *
+     I                                      254 263 @USER
+      *
+      **  Field Containing User ID
+      *
+     ILDA       E DSLDA                         256
+     I              SPARE                           W24
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+      *****************************************************************
+      * Constants                                                     *
+      *****************************************************************
+      *
+      ** System value
+      *
+     I              'MultiCash100or103'   C         MTCASH
+      *
+      *****************************************************************
+      * Mainline Program                                              *
+      *****************************************************************
+      *
+      ** Entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           OK      5
+     C                     PARM           NOK     5
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Define Local Data Area for error handling
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+     C                     Z-ADD0         BITS    20
+     C                     Z-ADD0         SEQN
+      *
+      ** Keeps a count of errors/sucesses
+      *
+     C                     Z-ADD0         OKN     50
+     C                     Z-ADD0         NOKN    50
+      *
+      ** Get Run Date
+      *
+     C           1         CHAINSDBANKPD             99
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL'ME0008  'DBPGM
+     C                     MOVEL'001'     DBKEY            ************
+     C                     Z-ADD1         DBASE            * DBASE 01 *
+     C                     OUT  LDA                        ************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Access file for last rundate and last sequence number
+      *
+     C                     READ MTCDTATD                 69
+     C           *IN69     IFEQ *OFF
+      *
+      ** If system rundate is past the last rundate MCLRDN in MTCDTATD,
+      ** update MCLRDN with current rundate and reset MCLSEQ
+      *
+     C           BJRDNB    IFGT MCLRDN
+     C                     Z-ADDBJRDNB    MCLRDN
+     C                     Z-ADD0         MCLSEQ
+     C                     ENDIF
+     C                     ADD  MCLSEQ    SEQN
+     C                     UPDATMTCDTAT0
+     C                     ENDIF
+      *
+      ** Reset pointers
+      *
+     C                     Z-ADD1         P       30
+     C                     Z-ADD1         M       30
+     C                     Z-ADD1         M2      30
+      *
+      ** Set up constants
+      *
+     C                     BITOF'01234567'NULL    1
+     C                     MOVE NULL      CR      1
+     C                     BITON'457'     CR
+     C                     MOVE NULL      LF      1
+     C                     BITON'257'     LF
+     C                     MOVEL'{1:F01'  B1
+     C                     MOVEL'{2:O100' B2
+     C                     MOVEL'{4:'     B4
+     C                     MOVE CR        B4CR
+     C                     MOVE LF        B4LF
+     C                     MOVEL'-}{5:{MC'B5     12
+     C                     MOVE 'H:}}'    B5
+     C                     MOVEL'0001'    SN
+     C                     MOVEL'000001'  SEQ
+     C                     MOVEL'}'       LST1
+     C                     MOVEL'N'       PR
+     C                     MOVEL'}'       LST2
+     C                     MOVE 'MTCASH'  MTC
+     C                     MOVE 'A'       SS2
+      *
+     C                     MOVE ' '       NX1     1
+     C                     MOVE ' '       NX2     1
+      *
+      ** Retrieve MultiCash100or103 system value
+      *
+     C                     CALL 'AOSVALR0'
+     C                     PARM *BLANKS   W0RTCD  7
+     C                     PARM MTCASH    P@OP01 20
+     C                     PARM *BLANKS   P@VL01200
+     C                     PARM *BLANKS   P@OP02 20
+     C                     PARM *BLANKS   P@VL02200
+     C                     PARM *BLANKS   P@OP03 20
+     C                     PARM *BLANKS   P@VL03200
+     C                     PARM *BLANKS   P@OP04 20
+     C                     PARM *BLANKS   P@VL04200
+     C                     PARM *BLANKS   P@OP05 20
+     C                     PARM *BLANKS   P@VL05200
+     C                     PARM *BLANKS   P@OP06 20
+     C                     PARM *BLANKS   P@VL06200
+     C                     PARM *BLANKS   P@OP07 20
+     C                     PARM *BLANKS   P@VL07200
+     C                     PARM *BLANKS   P@OP08 20
+     C                     PARM *BLANKS   P@VL08200
+     C                     PARM *BLANKS   P@OP09 20
+     C                     PARM *BLANKS   P@VL09200
+     C                     PARM *BLANKS   P@OP10 20
+     C                     PARM *BLANKS   P@VL10200
+      *
+     C           W0RTCD    IFNE *BLANKS
+      *
+      ** If error encountered while retrieving system value, set error message.
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDSVALPD'DBFILE
+     C                     MOVEL'ME0008  'DBPGM
+     C                     MOVEL'002'     DBKEY            ************
+     C                     Z-ADD1         DBASE            * DBASE 02 *
+     C                     OUT  LDA                        ************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           P@VL01    IFEQ '100'
+     C                     MOVE '100'     MTPY             message type
+     C                     ENDIF
+      *
+     C           P@VL01    IFEQ '103'
+     C                     MOVE '103'     MTPY             message type
+     C                     ENDIF
+      *
+     C                     MOVE 'N'       MPRY             priority
+     C                     MOVE *BLANKS   ACNK             pos/neg ack
+     C                     MOVE *BLANKS   MODI             module id
+     C                     MOVE ' '       MSPF             mess.proc.
+     C                     MOVE *BLANKS   MTD              FT mess.proc
+     C                     MOVE *BLANKS   FTPF             FT mess.proc
+     C                     MOVE *BLANKS   FTPF1            FT mess.proc
+     C                     MOVE *BLANKS   FTPF2            FT mess.proc
+     C                     MOVE *BLANKS   FTPF3            FT mess.proc
+     C                     MOVE *BLANKS   FTPF4            FT mess.proc
+     C                     MOVE *BLANKS   FTPF5            FT mess.proc
+     C                     MOVE *BLANKS   FTPF6            FT mess.proc
+     C                     MOVE *BLANKS   FTPF7            FT mess.proc
+     C                     MOVE *BLANKS   FTPF8            FT mess.proc
+     C                     MOVE *BLANKS   FTPF9            FT mess.proc
+     C                     MOVE *BLANKS   FTPF10           FT mess.proc
+      *
+      ** Obtain user's branch
+      *
+     C           @USER     CHAINMUSER                89
+     C           *IN89     IFEQ *OFF
+     C                     MOVE DBRN      BRCB    3
+     C                     ELSE
+     C                     MOVE '000'     BRCB
+     C                     END
+      *
+      ** Ensure report spool file recorded by RCF
+      *
+     C                     Z-ADDSFNUM     ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQQ    5
+     C                     PARM BRCB      SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ** Write Header
+      *
+     C                     WRITEME0008F1
+      *
+      ** Point to start of file
+      *
+     C           1         SETLLMCI100TD
+      *
+      ** Get first record
+      *
+     C                     READ MCI100TD                 90
+      *
+     C                     MOVE ' '       DON7
+      *
+      ** Do until file end
+      *
+     C           *IN90     DOWEQ*OFF
+      *
+      ** Get rid of records
+      *
+     C                     DELETMCI100T0
+      *
+      ** Ignore '{1:' record
+      *
+     C           BLOCK3    IFNE '{1:'
+      *
+      ** Get Swift Address of sender for SWIFT Block 1
+      *
+     C           BLOCK     IFEQ ':04:'
+     C                     ADD  1         BITS
+     C                     MOVELSWIFTS    SS1              SWIFT Sender
+     C                     MOVE SWIFTS    SS3              SWIFT Sender
+     C                     MOVE *BLANKS   DTA              for printing
+     C                     MOVE 'N'       WANT    1
+     C                     ENDIF
+      *
+      ** Sender name
+      *
+     C           BLOCK     IFEQ ':05:'
+     C                     MOVELNM        NAME             for printing
+     C                     ADD  1         BITS
+     C                     ENDIF
+      *
+     C           NX2       IFEQ 'Y'
+     C                     MOVELNM2       NAM2             for printing
+     C                     MOVE ' '       NX2
+     C                     ENDIF
+      *
+      ** Beneficiary name
+      *
+     C           BLOCK     IFEQ ':59:'
+     C                     ADD  1         BITS
+     C                     MOVE 'Y'       NX2
+     C                     ENDIF
+      *
+      ** Start of detail record
+      *
+     C           BLOCK     IFEQ ':20:'
+     C           DON7      IFEQ 'Y'
+     C                     MOVE *BLANKS   DTA
+     C                     MOVEAB5        DTA
+     C                     EXSR ADDDT2
+     C                     EXSR FILS                       write prev.
+     C                     MOVE *BLANKS   NAME
+     C                     MOVE *BLANKS   NAM2
+     C                     ELSE
+     C                     MOVE 'Y'       DON7    1
+     C                     ENDIF
+     C                     MOVELREFR      TRNO
+     C                     ENDIF
+      *
+      ** Get Multicash reference
+      *
+     C           BLOCK     IFEQ ':01:'
+     C           DON7      IFEQ 'Y'                        not 1st file
+     C                     MOVE *BLANKS   DTA
+     C                     MOVEAB5        DTA
+     C                     EXSR ADDDT2
+     C                     EXSR FILS                       write prev.
+     C                     MOVE *BLANKS   NAME
+     C                     MOVE *BLANKS   NAM2
+     C                     MOVE ' '       DON7             save next 1
+     C                     ENDIF
+     C                     ADD  1         BITS
+     C                     MOVELREFR      USRRF            Reference
+     C                     ENDIF
+      *
+      ** Get Swift Address of receiver for SWIFT Block 2
+      *
+     C           BLOCKB    IFEQ ':57A:'
+     C           BLOCKB    OREQ ':57B:'
+     C           BLOCKB    OREQ ':57D:'
+     C                     MOVELSWIFTR    BENF             for printing
+     C                     MOVE *BLANKS   DTA
+     C                     ADD  1         BITS
+     C                     ENDIF
+      *
+      ** Store rest of message
+      *
+     C           DON7      IFEQ 'Y'
+     C           BLOCK     ANDNE*BLANKS
+     C                     MOVEAMCDATA    DTA
+     C                     EXSR ADDDT2
+     C                     ENDIF
+      *
+      ** This should signify value date
+      *
+     C           BLOCKB    IFEQ ':32A:'
+     C                     ADD  1         BITS
+     C                     MOVE VDAT      MODE
+     C                     MOVE VDAT      DAT
+     C                     MOVE VDAT      DAT2
+     C                     MOVELAMNT      AMT              for printing
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Get next record
+      *
+     C                     READ MCI100TD                 90
+     C                     ENDDO
+      *
+      ** Store record
+      *
+     C                     MOVE *BLANKS   DTA
+     C                     MOVEAB5        DTA
+     C                     EXSR ADDDT2
+      *
+     C           BITS      IFNE 0
+     C                     EXSR FILS                       write last
+     C                     END
+      *
+     C                     MOVELOKN       OK
+     C                     MOVELNOKN      NOK
+      *
+     C                     MOVE *ON       *INLR
+     C                     WRITEME0008F1               OA  audit page/
+     C                     WRITEENDAU                  OA  end of file
+      *
+      *****************************************************************
+      * S U B R O U T I N E S                                         *
+      *****************************************************************
+      *
+      *****************************************************************
+      * ADDDTA                                                        *
+      * Subroutine to package up incoming data into 256 character     *
+      * blocks                                                        *
+      *****************************************************************
+      *
+     C           ADDDTA    BEGSR
+      *
+     C                     Z-ADD1         L       30
+      *
+     C                     DO   256
+      *
+      ** Build up REST of field to see if at end of data
+      *
+     C                     Z-ADDL         Q       30
+     C                     Z-ADD1         R       30
+      *
+     C                     MOVE *BLANKS   RST
+     C           Q         DOUEQ256
+     C                     MOVE DTA,Q     RST,R
+     C                     ADD  1         Q
+     C                     ADD  1         R
+     C                     ENDDO
+      *
+     C                     MOVEARST       TST   256
+      *
+     C           TST       IFEQ *BLANKS
+     C           WANT      IFEQ 'Y'
+     C                     MOVE CR        LIN,P
+     C                     ADD  1         P
+      *
+      ** Amend for error writing record to MIMSI2PD if rec. length > 256
+      *
+     C           P         IFGT 256
+     C                     MOVEALIN       MSG,M
+     C                     MOVEA*BLANKS   LIN
+     C                     ADD  1         M
+     C                     Z-ADD1         P
+     C                     ENDIF
+      *
+     C                     MOVE LF        LIN,P
+     C                     ADD  1         P
+     C                     ENDIF
+     C                     GOTO ESC
+     C                     ENDIF
+      *
+     C           P         IFGT 256
+     C                     MOVEALIN       MSG,M
+     C                     MOVEA*BLANKS   LIN
+     C                     ADD  1         M
+     C                     Z-ADD1         P
+     C                     ENDIF
+      *
+     C                     MOVE DTA,L     LIN,P
+     C                     ADD  1         P
+     C                     ADD  1         L
+      *
+     C           P         IFGT 256
+     C                     MOVEALIN       MSG,M
+     C                     MOVEA*BLANKS   LIN
+     C                     ADD  1         M
+     C                     Z-ADD1         P
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C           ESC       TAG
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      * FILS                                                          *
+      * Set up file fields and write records to SWIFT file            *
+      *****************************************************************
+      *
+     C           FILS      BEGSR
+      *
+     C                     MOVE *OFF      *IN12
+     C                     MOVE *OFF      *IN11
+      *
+     C                     TIME           TTT     60
+     C                     MOVELTTT       TT      4
+     C                     MOVE TT        MOTM
+     C                     MOVE TT        TIM
+     C                     MOVE TT        TIM2
+     C                     ADD  1         SEQN
+      *
+      ** Update MTCASH Last sequence no. in MTCDTATD table
+      *
+     C           1         CHAINMTCDTATD             69                                    AR1056792
+     C           *IN69     IFEQ *OFF
+     C                     Z-ADDSEQN      MCLSEQ
+     C                     UPDATMTCDTAT0
+     C                     ELSE                                                             MD020010
+     C                     Z-ADDBJRDNB    MCLRDN                                            MD020010
+     C                     Z-ADDSEQN      MCLSEQ                                            MD020010
+     C                     WRITEMTCDTAT0                                                    MD020010
+     C                     ENDIF
+      *
+     C                     MOVE MOR       MIR
+      *
+     C                     MOVE 'N'       WANT    1
+     C                     MOVEABLCK1     DTA
+     C                     EXSR ADDDTA
+     C                     MOVEABLCK2     DTA
+     C                     EXSR ADDDTA
+     C                     MOVE *BLANKS   DTA
+     C                     MOVEABLCK4     DTA
+     C                     EXSR ADDDTA
+      *
+     C                     Z-ADD1         X       30
+      *
+     C                     MOVE 'Y'       WANT    1
+      *
+     C                     DO   M2
+     C           BL4,X     IFNE *BLANKS
+     C                     MOVEABL4,X     DTA
+     C                     EXSR ADDDTA
+     C                     MOVE *BLANKS   DTA
+     C                     ENDIF
+     C                     ADD  1         X
+     C                     ENDDO
+      *
+     C                     MOVEALIN       MSG,M
+     C                     Z-ADD1         P
+      *
+      ** Check to see if message complete
+      *
+     C           BITS      IFLT 6
+     C                     MOVE *ON       *IN12
+     C                     ENDIF
+      *
+     C                     Z-ADD1         X
+      *
+      ** Check to see if message already processed
+      *
+     C           MIR       CHAINMSMSI2L9             11
+     C           *IN11     IFEQ *ON
+      *
+     C                     DO   M
+      *
+     C                     MOVELMSG,X     MDTA
+     C                     MOVE BRCB      BRCA
+     C                     WRITEMSMSI2D0
+     C                     ADD  1         X
+      *                                                               *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+     C                     MOVELSS1       SENDR            for printing
+      *
+      ** Write report line
+      *
+     C                     WRITEME0008F2               OA
+     C           *INOA     IFEQ *ON
+     C                     WRITEME0008F1
+     C                     ENDIF
+      *
+     C           *IN11     IFEQ *ON
+     C           *IN12     ANDEQ*OFF
+     C                     ADD  1         OKN
+     C                     ENDIF
+     C           *IN11     IFEQ *OFF
+     C                     WRITEERR                    OA
+     C           *INOA     IFEQ *ON
+     C                     WRITEME0008F1
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           *IN12     IFEQ *ON
+     C                     WRITEERR2                   OA
+     C           *INOA     IFEQ *ON
+     C                     WRITEME0008F1
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ADD  1         NOKN
+     C                     COMIT
+      *
+     C                     MOVE *BLANKS   MSG
+     C                     MOVE *BLANKS   BL4
+     C                     Z-ADD1         M
+     C                     Z-ADD1         M2
+     C                     Z-ADD1         P
+     C                     Z-ADD3         BITS
+      *
+     C                     ENDSR
+      *****************************************************************
+      * ADDDT2                                                        *
+      * Subroutine to package the 256 character block into a series   *
+      * of blocks making the complete message                         *
+      *****************************************************************
+      *
+     C           ADDDT2    BEGSR
+      *
+     C                     MOVEADTA       BL4,M2
+     C                     ADD  1         M2
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      * ENDPGM                                                        *
+      * Subroutine to handle error termination                        *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+     C                     DUMP
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     ROLBK
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     ENDSR
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2013.

@@ -1,0 +1,251 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas BoE PL Download Request Screen')                 *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bank of England                                      *
+      *                                                               *
+      *  BY7020 - PL Download Request Screen                          *
+      *                                                               *
+      *  Function:  This program gives the user the option to start   *
+      *  the PL File Download Process.                                *
+      *                                                               *
+      *  Called By: (Menu Option)                                     *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 1997            *
+      *                                                               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Last Amend No. LLN021             Date 03OCT97               *
+      *  Prev Amend No. xxxxxx             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LLN021 - BoE Profit and Loss return                          *
+      *                                                               *
+      *****************************************************************
+      *  Indicators Used:                                             *
+      *                                                               *
+      *  03 - F3,  exit program                                       *
+      *  90 - General work indicator                                  *
+      *****************************************************************
+      * File description for files defined
+     FBY7020DFCF  E                    WORKSTN      KINFSR *PSSR
+     F                                              KINFDS INFDS#
+      *
+      /EJECT
+      *
+      *  Array containing Copyright statement
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZALIGNZ1                                               LLN021
+      *
+      /SPACE 3
+      *
+      *  Constant name for message file
+     I              'GBBYUSRMSG'          C         ULMGFN
+      *
+      ** Local data area for database error details
+     ILDA       E DSLDA                         256
+      *
+      ** Data Structure using Bank file format
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Program Status Data Structure
+     IPSDS       SDS
+     I                                     *PROGRAM ULPGM
+     I                                      244 253 ULWSID
+     I                                      254 263 ULUSER
+      *
+      * File information data structure (for database files only)
+     IINFDS1    E DSY2I1DSP
+      *
+      * Display file information data structure  (for display files only)
+     IINFDS#    E DSY2I#DSP
+      *
+      * First DS for access programs, short data structure
+     IDSFDY     E DSDSFDY
+      *
+      * Second DS for access programs, long data structure
+     IDSSDY     E DSDSSDY
+      *
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * Main Processing                                               *
+      *                                                               *
+      * Calls: SR/#LMAIN - Detail Processing                          *
+      *        SR/#LTERM - Termination Processing                     *
+      *                                                               *
+      *****************************************************************
+      *
+      *
+      *  Main Processing
+     C                     EXSR #LMAIN
+      *
+      *
+      *  Termination Processing
+     C                     EXSR #LTERM
+      *
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LMAIN - Main Detail Processing                               *
+      *                                                               *
+      * Called by:  Main Processing                                   *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LMAIN    BEGSR                           ** SR/#LDETL**
+      *
+      *  Process initial screen until CF03 is pressed
+     C           *IN03     DOWEQ*OFF
+      *
+      *   Display screen
+     C                     WRITE#MSGCTL
+     C                     EXFMTBY7020F1
+      *
+      *   Clear message subfile
+     C                     EXSR #LCLMG
+      *
+      *   CF03 - Exit program
+     C           *IN03     IFEQ *ON
+     C                     EXSR #LTERM
+     C                     ENDIF
+      *
+      *    Detail screen valid
+     C                     SELEC
+     C           L#OPT     WHEQ 'Y'
+     C                     CALL 'BYC7020'
+     C                     MOVE *ON       *IN03
+     C           L#OPT     WHEQ 'N'
+     C                     MOVE *ON       *IN03
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LTERM - Termination Processing                               *
+      *                                                               *
+      * Called by:  Main Processing                                   *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LTERM    BEGSR                           ** SR/#LTERM**
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      **************************************************************************
+      *
+      * #LSNMG - Send Message to Program Message Queue                *
+      *                                                               *
+      * Called by:                                                    *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      **************************************************************************
+      *
+     C           #LSNMG    BEGSR
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ULPGNM
+     C                     PARM '*SAME'   ULPGRL
+     C                     PARM           ULMSID
+     C                     PARM           ULMSGF
+     C                     PARM           ULMSDA
+     C                     PARM           ULMSTP
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      **************************************************************************
+      *                                                               *
+      * #LCLMG - Clear Program Message Queue                          *
+      *                                                               *
+      * Called by:                                                    *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      **************************************************************************
+     C           #LCLMG    BEGSR
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           ULPGNM
+     C                     PARM '*SAME'   ULPGRL
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Program Initialisation Routine                       *
+      *                                                               *
+      * Called by:  At program initialisation                         *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR                           ** *INZSR SR**
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Define and initialise work fields
+     C                     MOVE *BLANKS   ULRTCD  1        Return code
+     C                     MOVE 'N'       L#OPT            Option
+     C                     MOVEACPY@      ULCPY@ 80        Copyright
+     C                     MOVE ULMGFN    ULMSGF 10        Message File
+     C                     MOVE *BLANKS   ULMSID  7        Message Id
+     C                     MOVELULPGM     ULPGNM 10        PGM Q Name
+     C                     MOVE *BLANKS   ULMSDA132        Message Data
+     C                     MOVE *BLANKS   ULMSTP  7        Message Type
+     C                     MOVE *BLANKS   ULPGRL  5
+      *
+      ** Initial fields for display file
+     C                     MOVELULPGM     L#PGMQ 10
+     C                     MOVELULPGM     L#PGM
+     C                     MOVELULWSID    L#WSID
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+      *  Set on external indicators
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+      *
+      *  Terminate program
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/COPY ZSRSRC,ZALIGNZ2L                                              LLN021
+**  CPY@
+(c) Misys International Banking Systems Ltd. 1997

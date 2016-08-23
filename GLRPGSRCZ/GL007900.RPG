@@ -1,0 +1,628 @@
+     H        1
+      *================================================================
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Account Transfer Update OTPAYDD')             *
+      *================================================================
+      *                                                               *
+      *  Midas   -  General Ledger Module                             *
+      *                                                               *
+      *  GL007900 - Midas GL Account Transfer Update OTPAYDD          *
+      *                                                               *
+      *  Function:  This program updates the Midas FT Outgoing        *
+      *             Payments Dtls File, OTPAYDD with the new          *
+      *             account detail from the A/c Transfer Selected     *
+      *             Accounts File, GLSLACPD.                          *
+      *             It will also write an audit trail record for each *
+      *             update of OTPAYDD.                                *
+      *                                                               *
+      *  Called by: GL003600                                          *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *                                                               *
+      *  Last Amend No. CFT120             Date 28Sep12               *
+      *  Prev Amend No. BUG27769           Date 09Jun10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CGL114  *CREATE    Date 04Jan10               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
+      *           (Recompile)                                         *
+      *  BUG27769 - Incorrect error code                              *
+      *  CGL114 - Account Transfer Utility                            *
+      *                                                               *
+      *================================================================
+      *  Function of Indicators                                       *
+      *                                                               *
+      *  01 - 19      Input Control.                                  *
+      *  20 - 29      I/O Conditioning (ie. CHAIN, LOKUP etc...)      *
+      *   20          Record Not Found                                *
+      *   21          File Error Occurred                             *
+      *   22          Start/End Of File Reached                       *
+      *   25          Lookup/Scan.                                    *
+      *  30 - 39      Program Work Indicators                         *
+      *  40 - 49      Output Control.                                 *
+      *  50 - 89      Output Conditioning (ie. Cursor Positioning)    *
+      *  90 - 99      Error Control.                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     FOTPAYL5 UF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+     FOTPAYL8 UF  E           K        DISK         KINFSR *PSSR A
+     F            OTPAYDDF                          KRENAMEOTPAYF8
+     F                                              KCOMIT
+     FOTPAYL6 UF  E           K        DISK         KINFSR *PSSR A
+     F            OTPAYDDF                          KRENAMEOTPAYF6
+     F                                              KCOMIT
+     FOTPAYL7 UF  E           K        DISK         KINFSR *PSSR A
+     F            OTPAYDDF                          KRENAMEOTPAYF7
+     F                                              KCOMIT
+     FGLAUTFPDO   E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** Definition: First DS for Access Programs, Short Data Structure
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Definition: Bank Details Accessed Via Access Program.
+      *
+     IDSFRAC      DS
+     I                                        1   6 DSFCNU
+     I                                        7   9 DSFCCY
+     I                                       10  19 DSFACO
+     I                                       20  21 DSFACS
+     I                                       22  24 DSFBRC
+     IDSTOAC      DS
+     I                                        1   6 DSTCNU
+     I                                        7   9 DSTCCY
+     I                                       10  19 DSTACO
+     I                                       20  21 DSTACS
+     I                                       22  24 DSTBRC
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P@PRCD  4
+     C                     PARM           P@RFNO 10
+     C           DSFRAC    PARM           P@FRAC 24
+     C           DSTOAC    PARM           P@TOAC 24
+     C                     PARM           P@BCCY  3
+     C                     PARM           P@RTCD  1
+      *
+     C                     EXSR SRINIT
+      *
+     C           P@PRCD    IFEQ '*LR '
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     EXSR XSIV01
+     C                     EXSR XMOTP0
+     C                     EXSR XMOTP1
+     C                     EXSR XMOTP2
+      *
+     C           P@BCCY    IFEQ DSFCCY
+     C                     EXSR XMOTP3
+     C                     ENDIF
+      *
+     C                     RETRN
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  XMOTP0 - Maintain Midas FT Outgoing Payments Dtls, L0        *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           XMOTP0    BEGSR
+      *
+     C           KOTP0     SETLLOTPAYL5
+     C           KOTP0     READEOTPAYL5                2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'002'     DBASE
+     C                     MOVEL'OTPAYL5 'DBFILE
+     C                     MOVELKDST1     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Delete and Write Records until End of File for Selected Account.
+      *
+     C           *IN22     DOWEQ*OFF
+     C                     DELETOTPAYDDF               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'003'     DBASE
+     C                     MOVEL'DEALPPL0'DBFILE
+     C                     MOVELKDST1     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     CLEARDST1
+     C                     MOVELWKDST1    DST1
+     C                     WRITEOTPAYDDF               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'004'     DBASE
+     C                     MOVEL'OTPAYL5 'DBFILE
+     C                     MOVELKDST1     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     CLEARGLAUTFD0
+     C                     MOVEL'OTPAYL5 'AULFIL
+     C                     EXSR XSAUDT
+      *
+     C           KOTP0     READEOTPAYL5                2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'005'     DBASE
+     C                     MOVEL'OTPAYL5 'DBFILE
+     C                     MOVELKDST1     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDDO
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  XMOTP1 - Maintain Midas FT Outgoing Payments Dtls, L1        *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: XSAUDT                                                *
+      *                                                               *
+      *****************************************************************
+     C           XMOTP1    BEGSR
+      *
+     C           KOTP1     SETLLOTPAYL8
+     C           KOTP1     READEOTPAYL8                2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'006'     DBASE
+     C                     MOVEL'OTPAYL8 'DBFILE
+     C                     MOVELKORC1     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Delete and Write Records until End of File for Selected Account.
+      *
+     C           *IN22     DOWEQ*OFF
+     C                     DELETOTPAYF8                21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'007'     DBASE
+     C                     MOVEL'OTPAYL8 'DBFILE
+     C                     MOVELKORC1     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     CLEARORC1
+     C                     CLEARPCCY
+     C                     MOVELWKORC1    ORC1
+     C                     MOVELDSTCCY    PCCY
+     C                     WRITEOTPAYF8                21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'008'     DBASE
+     C                     MOVEL'OTPAYL8 'DBFILE
+     C                     MOVELKORC1     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     CLEARGLAUTFD0
+     C                     MOVEL'OTPAYL8 'AULFIL
+     C                     EXSR XSAUDT
+      *
+     C           KOTP1     READEOTPAYL8                2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'009'     DBASE
+     C                     MOVEL'OTPAYL8 'DBFILE
+     C                     MOVELKORC1     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDDO
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  XMOTP2 - Maintain Midas FT Outgoing Payments Dtls, L2        *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: XSAUDT                                                *
+      *                                                               *
+      *****************************************************************
+     C           XMOTP2    BEGSR
+      *
+     C           KOTP2     SETLLOTPAYL6
+     C           KOTP2     READEOTPAYL6                2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'010'     DBASE
+     C                     MOVEL'OTPAYL6 'DBFILE
+     C                     MOVELKORBK     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Delete and Write Records until End of File for Selected Account.
+      *
+     C           *IN22     DOWEQ*OFF
+     C                     DELETOTPAYF6                21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'011'     DBASE
+     C                     MOVEL'OTPAYL6 'DBFILE
+     C                     MOVELKORBK     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     CLEARORBK
+     C                     CLEARPCCY
+     C                     CLEARORBB
+     C                     MOVELWKORBK    ORBK
+     C                     MOVELDSTCCY    PCCY
+     C                     MOVELDSTBRC    ORBB
+     C                     WRITEOTPAYF6                21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'012'     DBASE
+     C                     MOVEL'OTPAYL6 'DBFILE
+     C                     MOVELKORBK     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     CLEARGLAUTFD0
+     C                     MOVEL'OTPAYL6 'AULFIL
+     C                     EXSR XSAUDT
+      *
+     C           KOTP2     READEOTPAYL6                2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'013'     DBASE
+     C                     MOVEL'OTPAYL6 'DBFILE
+     C                     MOVELKORBK     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDDO
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  XMOTP3- Maintain Midas FT Outgoing Payments Dtls, L3         *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: XSAUDT                                                *
+      *                                                               *
+      *****************************************************************
+     C           XMOTP3    BEGSR
+      *
+     C           KOTP3     SETLLOTPAYL7
+     C           KOTP3     READEOTPAYL7                2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'014'     DBASE
+     C                     MOVEL'OTPAYL7 'DBFILE
+     C                     MOVELKCDRO     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Delete and Write Records until End of File for Selected Account.
+      *
+     C           *IN22     DOWEQ*OFF
+     C                     DELETOTPAYF7                21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'015'     DBASE
+     C                     MOVEL'OTPAYL7 'DBFILE
+     C                     MOVELKCDRO     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     CLEARCDRO
+     C                     CLEARCDBR
+     C                     MOVELWKCDRO    CDRO
+     C                     MOVELDSTBRC    CDBR
+     C                     WRITEOTPAYF7                21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'016'     DBASE
+     C                     MOVEL'OTPAYL7 'DBFILE
+     C                     MOVELKCDRO     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     CLEARGLAUTFD0
+     C                     MOVEL'OTPAYL7 'AULFIL
+     C                     EXSR XSAUDT
+      *
+     C           KOTP3     READEOTPAYL7                2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'017'     DBASE
+     C                     MOVEL'OTPAYL7 'DBFILE
+     C                     MOVELKCDRO     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDDO
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  XSAUDT -  Set Audit records.                                 *
+      *                                                               *
+      *  Called By: XMOTP0, XMOTP1, XMOTP2, XMOTP3                    *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           XSAUDT    BEGSR
+      *
+      ** Set fields for audit file and write a audit record.
+      *                                                   x
+     C                     MOVELP@RFNO    AURFNO
+     C                     MOVEL'OTPAYDD 'AUFILE
+     C                     MOVELDSFBRC    AUFBRC
+     C                     MOVELDSFCNU    AUFCNU
+     C                     MOVELDSFACO    AUFACO
+     C                     MOVELDSFACS    AUFACS
+     C                     MOVELDSTBRC    AUTBRC
+     C                     MOVELDSTCNU    AUTCNU
+     C                     MOVELDSTACO    AUTACO
+     C                     MOVELDSTACS    AUTACS
+     C                     MOVELPREF      WKPREF 15
+     C                     MOVELSMAM      WKSMAM 13
+     C                     MOVELPYAM      WKPYAM 13
+     C                     MOVELPVDT      WKPVDT 13
+     C           WKPREF    CAT  WKSMAM:1  AUTEXT
+     C                     CAT  WKPYAM:1  AUTEXT
+     C                     CAT  WKPVDT:1  AUTEXT 50 P
+     C                     MOVELWKDFMT    AUCRTD
+     C                     WRITEGLAUTFD0               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'001'     DBASE
+     C                     MOVEL'GLAUTFPD'DBFILE
+     C                     MOVELAURFNO    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  XSIV01 -  Set Up Initial Values.                             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           XSIV01    BEGSR
+      *
+      ** Set up key for INPAYV1
+      *
+     C                     MOVEL*BLANKS   KDST1  35
+     C           DSFCNU    CAT  DSFCCY:0  KDST1
+     C                     CAT  DSFACO:0  KDST1
+     C                     CAT  DSFACS:0  KDST1
+     C                     CAT  DSFBRC:0  KDST1
+      *
+      ** Set up key for OTPAYL8
+      *
+     C                     MOVEL*BLANKS   KORC1  35
+     C           DSFCNU    CAT  DSFACO:0  KORC1
+     C                     CAT  DSFACS:0  KORC1
+     C                     CAT  DSFBRC:0  KORC1
+     C                     MOVELDSFCCY    KPCCY   3
+      *
+      ** Set up key for OTPAYL6
+      *
+     C           DSFCNU    CAT  DSFACO:0  WKORBK 18
+     C                     CAT  DSFACS:0  WKORBK
+     C                     MOVELWKORBK    KORBK  18
+     C                     MOVELDSFCCY    KPCCY2  3
+     C                     MOVELDSFBRC    KORBB   3
+      *
+      ** Set up key for OTPAYL7
+      *
+     C           DSFCNU    CAT  DSFACO:0  WKKCDR 18
+     C                     CAT  DSFACS:0  WKKCDR
+     C                     MOVELWKKCDR    KCDRO  18
+     C                     MOVELDSFBRC    KCDBR   3
+      *
+      ** Set up 'To' values (OTPAYL5)
+      *
+     C                     MOVEL*BLANKS   WKDST1 35
+     C           DSTCNU    CAT  DSTCCY:0  WKDST1
+     C                     CAT  DSTACO:0  WKDST1
+     C                     CAT  DSTACS:0  WKDST1
+     C                     CAT  DSTBRC:0  WKDST1
+      *
+      ** Set up 'To' values (OTPAYL8)
+      *
+     C                     MOVEL*BLANKS   WKORC1 35
+     C           DSTCNU    CAT  DSTACO:0  WKORC1
+     C                     CAT  DSTACS:0  WKORC1
+     C                     CAT  DSTBRC:0  WKORC1
+     C                     MOVELDSTCCY    WKPCCY  3
+      *
+      ** Set up 'To' values (OTPAYL6)
+      *
+     C           DSTCNU    CAT  DSTACO:0  WKORBK 18
+     C                     CAT  DSTACS:0  WKORBK
+     C                     MOVELDSFCCY    WKPCY2  3
+     C                     MOVELDSTBRC    WKORBB  3
+      *
+      ** Set up 'To' values (OTPAYL7)
+      *
+     C           DSTCNU    CAT  DSTACO:0  WKCDRO 18
+     C                     CAT  DSTACS:0  WKCDRO
+     C                     MOVELDSTBRC    WKCDBR  3
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT -  Initialise and define fields                       *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      ** Initialise parameters, work fields, etc.
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Retrieve Run Date.
+      *
+     C                     CALL 'AOBANKR0'             9090
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** If return with an error (LR seton in called program) then
+      ** process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C********** @RTCD     OREQ '*ERROR*'                                                   BUG27769
+     C           @RTCD     ORNE *BLANKS                                                     BUG27769
+     C           *LOCK     IN   LDA
+     C                     MOVEL'AOBANKR0'DBFILE
+     C                     MOVEL'*FIRST'  DBKEY
+     C                     Z-ADD018       DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELBJMRDT    WKDFMT  9
+     C                     MOVE BJMRDT    WKYEAR  20
+      *
+     C           WKYEAR    IFLT 72
+     C           WKYEAR    ADD  2000      WKCCYY  40
+     C                     ELSE
+     C           WKYEAR    ADD  1900      WKCCYY
+     C                     ENDIF
+      *
+     C                     MOVE WKCCYY    WKDFMT
+     C                     MOVE *BLANKS   WKORBK
+     C                     MOVE *BLANKS   WKKCDR
+     C                     MOVE *BLANKS   WKCDRO
+      *
+     C           KOTP0     KLIST
+     C                     KFLD           KDST1
+      *
+     C           KOTP1     KLIST
+     C                     KFLD           KORC1
+     C                     KFLD           KPCCY
+      *
+     C           KOTP2     KLIST
+     C                     KFLD           KORBK
+     C                     KFLD           KPCCY2
+     C                     KFLD           KORBB
+      *
+     C           KOTP3     KLIST
+     C                     KFLD           KCDRO
+     C                     KFLD           KCDBR
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *  Called By: (**calling routines**)                            *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+      ** Check to see that *PSSR has not been called yet
+      *
+     C                     MOVE 'F'       P@RTCD
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDSR
+      *****************************************************************
+** CPY@
+(c) Misys International Banking Systems Ltd. 2010

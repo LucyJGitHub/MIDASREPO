@@ -1,0 +1,100 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas OF Accounting Rules SBMJOB Restrat process')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC000597 - Midas OF Accounting Rules Process for           */
+/*                   Restart Processing from Monitor                 */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. MD023629 *CREATE   Date 22Nov13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD023629 - Accounting Rules Processing                      */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RTCD &PARM1)
+ 
+             DCL        VAR(&PARM1) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+ 
+             DCL        VAR(&DTAR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DAY) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&A) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&BTSQ) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&DTAR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PREF) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&PCMD) TYPE(*CHAR) LEN(1500)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2013')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                          VALUE(' ')
+             MONMSG     MSGID(CPF0000)
+             CHGJOB SWS(00000000)
+ 
+             CHGVAR     VAR(&RTCD) VALUE('       ')
+ 
+/* Check for DTAARA exists for Batch ID */
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREF)
+             CHGVAR     VAR(&DPLIB) VALUE(&PREF *CAT 'DPLIB')
+             CHGVAR     VAR(&A) VALUE('A')
+             CHGVAR     VAR(&DAY) VALUE(%SUBSTRING(&PARM1 7 2))
+             CHGVAR     VAR(&BTSQ) VALUE(%SUBSTRING(&PARM1 9 7))
+             CHGVAR     VAR(&DTAR) VALUE(&A *CAT &DAY *CAT &BTSQ)
+             CHKOBJ     OBJ(&DTAR) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(RESTART))
+ 
+             ALCOBJ     OBJ((&DTAR *DTAARA *EXCLRD)) WAIT(0)
+             MONMSG     MSGID(CPF1002) EXEC(DO)
+             CHGVAR     VAR(&RTCD) VALUE('PROCESS')
+             GOTO       CMDLBL(END)
+             ENDDO
+             DLCOBJ     OBJ((&DTAR *DTAARA *EXCLRD))
+             MONMSG     MSGID(CPF0000)
+ 
+/* Call the program */
+ 
+RESTART:
+             CHGVAR     VAR(&PCMD) VALUE('CALL GLC000585 PARM(''' +
+                          *TCAT &PARM1 *CAT ''')')
+ 
+             SBMJOB     JOB(GLC000585) JOBD(MBATCH) USER(*JOBD) +
+                          RTGDTA(*JOBD) RQSDTA(&PCMD) +
+                          INLLIBL(*JOBD) MSGQ(MOPERQ)
+ 
+             IF COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal termination */
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC000597 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:         RCLRSC
+             MONMSG     MSGID(CPF0000 MCH0000)
+             RCLRSC     LVL(*CALLER)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             RCLACTGRP  ACTGRP(*ELIGIBLE)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             ENDPGM

@@ -1,0 +1,1089 @@
+     H        1                                                           S01486
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Performance Reporting Extract')               *
+     H***********                                                         S01486
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module                          *
+     F*                                                               *
+     F*  PM1620 - Select Positions Requiring Performance Calculations *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CLE148             Date 23Jul12               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 168874             Date 05Feb02               *
+      *                 182961             Date 21Apr01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 097158             Date 28Dec95               *
+      *                 091999             Date 23Aug95               *
+     F*                 CPM005             DATE 11JUL96               *
+     F*                 CFF004             DATE 11SEP96               *
+     F*                 CPM003             DATE 02MAY96               *
+     F*                 078956             DATE 20DEC95               *
+     F*                 075998             DATE 20DEC95               *
+     F*                 085862             DATE 16MAR95               *
+     F*                 081347             DATE 11JAN95               *
+     F*                 72605   JSV        DATE 15SEP94               *
+     F*                 72242   JSV        DATE 15SEP94               *
+     F*                 53103   JSV        DATE 15SEP94               *
+     F*                 S01486             DATE 11AUG94               *
+     F*                 057020             DATE 16JUN93               *
+     F*                 056460             DATE 11JUN93               *
+     F*                 48665              DATE 27NOV92               *
+     F*                 47868              DATE 27NOV92               *
+     F*                 S01313             DATE 06NOV92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus (Recompile)                              *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  168874 - Database error in PM1620 due PF/PMPMIMPD updated    *
+      *           with record not found. Insert condition that        *
+      *           chained record should exist before updating file.   *
+      *  182961 - Database error occurred due to a blank key field    *
+      *           (Instrument Type).  The default Instrument type in  *
+      *           PF/SDPORTPD is taken if a blank instrument type is  *
+      *           encountered.                                        *
+     F*  097158 - If QFVDAT different than 0, field used for forward  *
+     F*           value date event (not processed for performance     *
+     F*           reconciliation reports if QFVDAT greater than ecd.  *
+     F*           See also PM1140, PM1640, PM6430.                    *
+     F*  091999 - PBFG/3 SHOULD ONLY APPLY TO VALUE DATE ACCOUNTING.  *
+     F*  CPM005 - Private Banking Phase 2                             *
+     F*           Focus Group Changes upgraded to DBA                 *
+     F*           PBFG/3 - DISPLAY OF UNREAL. P&L ON FORWARD SE TRADES*
+     F*  CFF004 - Increase in size of Price Fields,(Recompiled Only)  *
+     F*  CPM003 - FF/PM Interface upgrade to Release 10               *
+     F*  078956 - IGNORE INSERTED 'XT' EVENTS                         *
+     F*  075998 - Portfolio/Future & Options performance              *
+     F*  085862 - RECOMPILED DUE TO CHANGE TO PF/PMPCAAPD             *
+     F*  081347 - PRIVATE BANKING UPGRADE MISSING                     *
+     F*  72605  - FOR AN 'XT' RECORD NOT LINKED TO A DEAL GENERATE A  *
+     F*           'GENERAL CASHFLOW' RECORD                           *
+     F*  72242  - WRITE RECORDS FOR DELETED TRANSACTIONS ON PMPMIMPD  *
+     F*           - OUPUT ADDITIONAL FIELDS NMDP & SPBS TO PMPMIMPD   *
+     F*  53103  - Additional field Reference/Shortname on PMPMIMPD    *
+     F*            + Additional program parameter 'Run Type'          *
+     F*            + New processing for Run mode 'M'                  *
+     F*  S01486 - Portfolio Management Upgrade to Release 10.         *
+     F*  057020 - RECOMPILED FOR NEW VERSION OF FILES                 *
+     F*  056460 - ONLY OUPUT SE & FF EVENTS FOR POOL PORTFOLIOS       *
+     F*  48665  - CORRECT FIX 47868                                   *
+     F*  47868  - PROCESS FLAT POSITIONS IF EVENTS EXIST FOR POSITION *
+     F*  S01313 - REWRITTEN FOR PORTFOLIO PERFORMANCE                 *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F** C R E A T I O N     P A R A M E T E R S                      *
+     F**                                                              *
+     F**                                                              *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F**
+     F**      FILE DEFINITIONS
+     F**     ------------------
+     F*
+     F*****BANK*DETAILS*FILE************************-*Prefix*BJ********   S01486
+     F***SDBANKL1IF**E           K        DISK         KINFSR *PSSR       S01486
+     F*
+     F**   FIRST PERFORMANCE POSITION EXTRACT       - Prefix QP
+     F***PMFPPSPPIF**E           K        DISK         KINFSR *PSSR       S01486
+     FPMFPPSQ0IF  E           K        DISK         KINFSR *PSSR          S01486
+     F*
+     F**   PORTFOLIO HOLDINGS BY VALUATION GROUP    - Prefix QU           47868
+     FPMPTRAL3IF  E           K        DISK         KINFSR *PSSR          47868
+     F*
+     F**   PORTFOLIO HOLDINGS BY VALUATION GROUP    - Prefix QF
+     FPMHDVNLLIF  E           K        DISK         KINFSR *PSSR
+     F*
+     F*****PERFORMANCE*MID*MONTH*POSITIONS*WORKFILE*-*Prefix*QF********   S01486
+     F***PMPMIMPPO***E           K        DISK         KINFSR *PSSR A     S01486
+     F**   PERFORMANCE MID MONTH POSITIONS WORKFILE - Prefix GE           S01486
+     F**PMPMIMPDO   E           K        DISK         KINFSR *PSSR AS0148653103
+     FPMPMIMPDUF  E           K        DISK         KINFSR *PSSR A        53103
+     FPMCPIMQ0UF  E           K        DISK         KINFSR *PSSR A        078956
+     F            PMPMIMP0                          KRENAMEPMPMIMP1       078956
+     F*                                                                   056460
+     F**   POOL PORTFOLIO DETAILS                   - Prefix QP           056460
+     FPMPPTDPDIF  E           K        DISK         KINFSR *PSSR          056460
+     F*                                                                   53103
+     F**** PM I.C.D.                                - Prefix P9     53103 081347
+     F** SDPORTPDIF  E           K        DISK         KINFSR *PSSR 53103 081347
+     F*                                                                   72242
+     F*****CURRENCY*DETAILS                         - Prefix P9     72242 081347
+     F***SDCURRL0IF  E           K        DISK         KINFSR *PSSR 72242 081347
+     F**   PORTFOLIO DEFINITION                     - Prefix PN           075998
+     FPMPORTPDIF  E           K        DISK         KINFSR *PSSR          075998
+     F*                                                                   075998
+     F**   PERFORMANCE CASH ANALYSIS                - Prefix QS           53103
+     FPMPCAAL1IF  E           K        DISK         KINFSR *PSSR          53103
+     F*                                                                   53103
+     F**   CASH EVENTS DUE TO FX DEALS              - Prefix QS           53103
+     FPMPCAAL4IF  E           K        DISK         KINFSR *PSSR          53103
+     F            PMPCAAP0                          KRENAMEPMPCAAP4       53103
+     F*                                                                   53103
+     F**   SECURITY DETAILS                                               53103
+     FSECTY   IF  E           K        DISK         KINFSR *PSSR          53103
+     F*                                                                   53103
+     F*****INSTRUMENT TYPES                         - Prefix PD      53103081347
+     F***SDPLINPDIF  E           K        DISK         KINFSR *PSSR  53103081347
+     F*                                                                   53103
+     F*                                                                   53103
+     F**   EVENTS BY POSITIONS AND DATE (DESCENDING)    - Prefix QU       53103
+     FPMPTRAL5IF  E           K        DISK         KINFSR *PSSR          53103
+     F            PMPTRAP0                          KRENAMEPMPTRAP5       53103
+     F*                                                                   075998
+     F**   FUTURE / OPTION PERFORMANCE EVENTS           - Prefix QU       075998
+     FPMPTRAL8IF  E           K        DISK         KINFSR *PSSR          075998
+     F            PMPTRAP0                          KRENAMEPMPTRAP8       075998
+     FSDPORTPDIF  E                    DISK         KINFSR *PSSR          182961
+     F*
+     F**   AUDIT REPORT
+     FPM1620AUO   E                    PRINTER      KINFSR *PSSR
+     F*
+     F/EJECT
+     E*****************************************************************
+     E*
+     E**   ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+     E** ARRAY FOR ZDATE SUBROUTINE                                       CPM005
+      /COPY ZSRSRC,ZDATE2Z1                                               CPM005
+     E*****************************************************************
+     E/EJECT
+     E*****************************************************************
+     IPMPMIMP0    03                                                      081347
+     I              GERECI                          QFRECI                081347
+     I              GECNUM                          QFCNUM                081347
+     I              GEPTFR                          QFPTFR                081347
+     I              GEINNR                          QFINNR                081347
+     I              GEVALG                          QFVALG                081347
+     I              GECCY1                          QFCCY1                081347
+     I              GECDP1                          QFCDP1                081347
+     I              GECNTR                          QFCNTR                081347
+     I              GELIND                          QFLIND                081347
+     I              GETDSS                          QFTDSS                081347
+     I              GEAMT1                          QFAMT1                081347
+     I              GEACIS                          QFACIS                081347
+     I              GEPLFX                          QFPLFX                081347
+     I              GEMFXR                          QFMFXR                081347
+     I              GEMFMD                          QFMFMD                081347
+     I              GEMPRC                          QFMPRC                081347
+     I              GETRNB                          QFTRNB                081347
+     I              GEMODI                          QFMODI                081347
+     I              GEBYSF                          QFBYSF                081347
+     I              GEFOIS                          QFFOIS                081347
+     I              GETXT2                          QFTXT2                081347
+     I              GEDXTR                          QFDXTR                081347
+     I              GEMFXD                          QFMFXD                081347
+     I              GERESH                          QFRESH                081347
+     I              GENMDP                          QFNMDP                081347
+     I              GESPBS                          QFSPBS                081347
+     I              GETKDM                          QFTKDM                075998
+     I              GEMNPF                          QFMNPF                075998
+     I              GETKVL                          QFTKVL                075998
+     I              GEVDAT                          Q0VDAT                097158
+     I*
+     IPMPMIMP1                                                            078956
+     I              GERECI                          QFRECI                078956
+     I              GECNUM                          QFCNUM                078956
+     I              GEPTFR                          QFPTFR                078956
+     I              GEINNR                          QFINNR                078956
+     I              GEVALG                          QFVALG                078956
+     I              GECCY1                          QFCCY1                078956
+     I              GECDP1                          QFCDP1                078956
+     I              GECNTR                          QFCNTR                078956
+     I              GELIND                          QFLIND                078956
+     I              GETDSS                          QFTDSS                078956
+     I              GEAMT1                          QFAMT1                078956
+     I              GEACIS                          QFACIS                078956
+     I              GEPLFX                          QFPLFX                078956
+     I              GEMFXR                          QFMFXR                078956
+     I              GEMFMD                          QFMFMD                078956
+     I              GEMPRC                          QFMPRC                078956
+     I              GETRNB                          QFTRNB                078956
+     I              GEMODI                          QFMODI                078956
+     I              GEBYSF                          QFBYSF                078956
+     I              GEFOIS                          QFFOIS                078956
+     I              GETXT2                          QFTXT2                078956
+     I              GEDXTR                          QFDXTR                078956
+     I              GEMFXD                          QFMFXD                078956
+     I              GERESH                          QFRESH                078956
+     I              GENMDP                          QFNMDP                078956
+     I              GESPBS                          QFSPBS                078956
+     I              GETKDM                          QFTKDM                075998
+     I              GEMNPF                          QFMNPF                075998
+     I              GETKVL                          QFTKVL                075998
+     I              GEVDAT                          Q1VDAT                097158
+     I*
+     I**   LOCAL DATA AREA
+     I***LDA********UDS***********************     256                    S01486
+     ILDA         DS                            256                       S01486
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I**   DATA STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+     ICPYR@$      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@$$
+     I*                                                                   S01486
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I**  Data structure for Bank details                                 S01486
+     I*                                                                   S01486
+     ISDPORT    E DSSDPORTPD                                              081347
+      ** PM MODULE ACCESSED VIA ACCESS PROGRAM                            081347
+     I*                                                                   081347
+     ISDPLIN    E DSSDPLINPD                                              081347
+     I** EXTERNAL DS FOR INSTRUMENT DETAILS                               081347
+     I*                                                                   081347
+     ISDCURR    E DSSDCURRPD                                              081347
+     I* DS FOR CURRENCIES DETAILS                                         081347
+     ISDMMOD    E DSSDMMODPD                                              075998
+     I**  Data structure for Modules details                              075998
+     I*                                                                   081347
+     IDSFDY     E DSDSFDY                                                 S01486
+     I**  Short data structure for access objects                         S01486
+     I*                                                                   S01486
+     IDSSDY     E DSDSSDY                                                 081347
+     I* Second DS For Access Programs, Long Data Structure                081347
+     I*                                                                   081347
+     I* Constants                                                         53103
+     I              '00000010000000000000-C         C#15                  53103
+     I              '0000000000'                                          53103
+     I              'GENERAL CASHFLOW    'C         C#GNCF                53103
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                                   47868
+     C** KEY LIST USED IN ACCESSING LF/PMPTRAL3                           47868
+     C           PTRAKY    KLIST                                          47868
+     C**********           KFLD           WKCNUM  60                                    47868 CSD027
+     C                     KFLD           WKCNUM  6                                           CSD027
+     C                     KFLD           WKPTFR  4                       47868
+     C                     KFLD           WKMODI  2                       47868
+     C                     KFLD           WKTDSS 10                       47868
+     C                     KFLD           WKPDAT  50                      47868
+     C*                                                                   47868
+     C           PTRAK1    KLIST                                          47868
+     C**********           KFLD           WKCNUM  60                                    47868 CSD027
+     C                     KFLD           WKCNUM  6                                           CSD027
+     C                     KFLD           WKPTFR  4                       47868
+     C                     KFLD           WKMODI  2                       47868
+     C                     KFLD           WKTDSS 10                       47868
+     C*                                                                   53103
+     C** KEY LIST USED IN ACCESSING LF/PMPTRAL5                           53103
+     C           PTRAK5    KLIST                                          53103
+     C                     KFLD           QUCNUM                          53103
+     C                     KFLD           QUPTFR                          53103
+     C****                 KFLD           QUINNR                    53103 72242
+     C                     KFLD           QUTDSS                          53103
+     C                     KFLD           QUTRNB                          53103
+     C                     KFLD           QUMODI                          53103
+     C****                 KFLD           WNPDAT  50                53103 078956
+     C*                                                                   056460
+     C           PPTDKY    KLIST                                          056460
+     C                     KFLD           QPCNUM                          056460
+     C                     KFLD           QPPTFR                          056460
+     C*                                                                   075998
+     C           PPTDK1    KLIST                                          075998
+     C                     KFLD           QPCNUM                          075998
+     C                     KFLD           QPPTFR                          075998
+     C                     KFLD           WWPDAT  50                      075998
+     C                     Z-ADD99999     WWPDAT                          075998
+     C*                                                                   075998
+     C           PPTDK2    KLIST                                          075998
+     C                     KFLD           QPCNUM                          075998
+     C                     KFLD           QPPTFR                          075998
+     C*                                                                   53103
+     C           KPMIM     KLIST                                          53103
+     C                     KFLD           QSCNUM                          53103
+     C                     KFLD           QSPTFR                          53103
+     C                     KFLD           QSINNR                          53103
+     C                     KFLD           WWRESH 20                       53103
+     C                     KFLD           WWMODI  2                       53103
+     C*                                                                   075998
+     C           KPMIM1    KLIST                                          075998
+     C                     KFLD           QUCNUM                          075998
+     C                     KFLD           QUPTFR                          075998
+     C                     KFLD           QUINNR                          075998
+     C                     KFLD           QUFPSI                          075998
+     C                     KFLD           QUMODI                          075998
+     C*                                                                   078956
+     C           KCPIM     KLIST                                          078956
+     C                     KFLD           QUCNUM                          078956
+     C                     KFLD           QUPTFR                          078956
+     C                     KFLD           WWRESH 20                       078956
+     C                     KFLD           QUMODI                          078956
+     C*                                                                   078956
+     C           KPMIMK    KLIST                                          078956
+     C                     KFLD           QFCNUM                          078956
+     C                     KFLD           QFPTFR                          078956
+     C                     KFLD           QFINNR                          078956
+     C                     KFLD           QFRESH                          078956
+     C                     KFLD           QFMODI                          078956
+     C                     KFLD           QFCCY1                          078956
+     C                     KFLD           QFCNTR                          078956
+     C                     KFLD           QFLIND                          078956
+     C*                                                                   056460
+     C           *ENTRY    PLIST                                          056460
+     C                     PARM           WWPOOL                          056460
+     C                     PARM           WWRTYP  1                       53103
+     C*                                                                   S01486
+     C**  Copyright statement                                             S01486
+     C*                                                                   S01486
+     C                     MOVEACPY@      ACT@   80                       S01486
+     C*                                                                   S01486
+     C           *NAMVAR   DEFN           LDA                             S01486
+     C           *LOCK     IN   LDA                                       075998
+     C                     MOVEL'PM1620'  DBPGM                           075998
+     C                     OUT  LDA                                       075998
+     C*
+     C**              START MAINLINE
+     C**             ----------------
+     C***********                                                         S01486
+     C***ACCESS*LF/SDBANKL1*TO*OBTAIN*BANK*DETAILS*********************   S01486
+     C***********          READ SDBANKL1                 70               S01486
+     C***********                                                         S01486
+     C***IF*RECORD*NOT*FOUND*OR*LAST*CHANGE*TYPE*=*'D'*THEN*DB*ERROR***   S01486
+     C************IN70     IFEQ '1'                                       S01486
+     C*                                                                   S01486
+     C** Get bank details using access object                             S01486
+     C*                                                                   S01486
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD  7                       S01486
+     C                     PARM '*FIRST ' P@OPTN  7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+     C*                                                                   S01486
+     C** Check if an error occurred                                       S01486
+     C*                                                                   S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD1         DBASE            ****************
+     C***********          MOVEL'SDBANKL1'DBFILE           * DBERROR  001 S01486
+     C                     MOVE 'SDBANKPD'DBFILE           * DBERROR  001 S01486
+     C                     MOVE *BLANKS   DBKEY            ****************
+     C                     MOVEL'PM1620  'DBPGM
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END
+     C*                                                                   075998
+     C** OBTAIN DETAILS OF MODULES PRESENT                                075998
+     C                     CALL 'AOMMODR0'                                075998
+     C                     PARM *BLANKS   P@RTCD  7                       075998
+     C                     PARM '*FIRST ' P@OPTN  7                       075998
+     C           SDMMOD    PARM SDMMOD    DSFDY                           075998
+     C*                                                                   075998
+     C** IF RECORD NOT FOUND THEN DB ERROR                                075998
+     C           P@RTCD    IFNE *BLANKS                    B1             075998
+     C           *LOCK     IN   LDA                                       075998
+     C                     Z-ADD3         DBASE            ***************075998
+     C                     MOVE 'SDMMODPD'DBFILE           * DBERROR  003 075998
+     C                     MOVE *BLANKS   DBKEY            ***************075998
+     C                     OUT  LDA                                       075998
+     C                     EXSR *PSSR                                     075998
+     C                     END                             E1             075998
+     C*                                                                   53103
+     C** ACCESS PF/SDPORTPD TO OBTAIN PM I.C.D.                     53103 081347
+     C******************** READ SDPORTPD                 70         53103 081347
+     C*                                                             53103 081347
+     C** IF RECORD NOT FOUND THEN DB ERROR                          53103 081347
+     C********** *IN70     IFEQ '1'                        B1       53103 081347
+     C                     CALL 'AOPORTR0'                                081347
+     C                     PARM *BLANKS   @RTCD   7                       081347
+     C                     PARM '*FIRST ' @OPTN   7                       081347
+     C           SDPORT    PARM SDPORT    DSFDY                           081347
+     C           @RTCD     IFNE *BLANKS                                   081347
+     C           *LOCK     IN   LDA                                       075998
+     C                     Z-ADD2         DBASE            ***************53103
+     C                     MOVEL'SDPORTPD'DBFILE           * DBERROR  002 53103
+     C                     MOVE *BLANKS   DBKEY            ***************53103
+     C                     OUT  LDA                                       075998
+     C***********          MOVEL'PM1620  'DBPGM                    53103  075998
+     C                     EXSR *PSSR                                     53103
+     C                     END                             E1             53103
+     C*                                                                   CPM005
+     C           BJDFIN    IFEQ 'M'                                       CPM005
+     C                     MOVE '1'       *IN98                           CPM005
+     C                     END                                            CPM005
+     C*
+     C** key for PMPORTPP
+     C           WWPPKY    KLIST
+     C                     KFLD           QPCNUM
+     C                     KFLD           QPPTFR
+     C*
+     C                     MOVE 'N'       WWPOOL  1
+     C*
+     C**   PRODUCE ALL PERFORMANCE PERIODS REQUIRED
+     C***********          READ PMFPPSPP                 90               S01486
+     C                     READ PMFPPSQ0                 90               S01486
+     C*
+     C           *IN90     DOWEQ*OFF
+     C*                                                                   056460
+     C** CHECK WHETHER PORTFOLIO IS POOL PORTFOLIO AND SET UP INDICATOR   056460
+     C                     MOVE 'N'       WWPOO1  1                       056460
+     C           PPTDKY    CHAINPMPPTDPD             61                   056460
+     C           *IN61     IFEQ '0'                                       056460
+     C                     MOVE 'Y'       WWPOOL                          056460
+     C                     MOVE 'Y'       WWPOO1                          056460
+     C                     END                                            056460
+     C*
+     C           WWPPKY    SETLLPMHDVNLL
+     C           WWPPKY    READEPMHDVNLL                 76
+     C*
+     C           *IN76     DOWEQ*OFF
+     C*                                                                   CPM005
+     C           WWPOO1    IFEQ 'Y'                                       CPM005
+     C           QFMODI    ANDEQ'RE'                                      CPM005
+     C                     MOVELQFTXT1    QFTXT2                          CPM005
+     C                     END                                            CPM005
+     C*                                                                   078956
+     C** ON FIRST DAY IN PERIOD LIVE POSITIONS EXTRACTED IN PREVIOUS COB  078956
+     C** HAVE START DATE BEFORE FIRST DAY IN PERIOD AND ARE THUS NOT      078956
+     C** EXTRACTED. ALTER TO HAVE TODAY'S DATE                            078956
+     C           WWRTYP    IFNE 'M'                                       078956
+     C                     Z-ADDBJRDNB    QFDXTR                          078956
+     C                     END                                            078956
+     C*                                                                   53103
+     C*  SET 'REFERENCE/SHORTNAME'                                        53103
+     C                     MOVE *BLANKS   QFRESH                          53103
+     C                     SELEC                           B3             53103
+     C           QFMODI    WHEQ 'SE'                       B4             53103
+     C                     MOVELQFTDSS    QFRESH    P                     53103
+     C*                                                                   CPM005
+     C           FCTVPS    IFEQ 'V'                        B4.5           091999
+     C           QFPOST    IFNE 'C '                       B5             CPM005
+     C           QFVDAT    IFNE 0                          B5.5           097158
+     C           QFAMT1    IFLT 0                          B6             CPM005
+     C                     MOVE 'S'       WWORK9  9                       CPM005
+     C                     ELSE                            X6             CPM005
+     C                     MOVE 'B'       WWORK9                          CPM005
+     C                     END                             E6             CPM005
+     C*                                                                   CPM005
+     C                     Z-ADDQFVDAT    ZDAYNO                          CPM005
+     C                     EXSR ZDATE2                                    CPM005
+     C                     MOVELZDATE     WWORK9                          CPM005
+     C*                                                                   CPM005
+     C                     MOVE WWORK9    QFRESH                          CPM005
+     C                     END                             E5.5           097158
+     C                     END                             E5             CPM005
+     C                     END                             E4.5           091999
+     C*                                                                   CPM005
+     C           QFMODI    WHEQ 'RE'                       B4             53103
+     C                     MOVELQFTXT2    QFRESH                          53103
+     C                     OTHER                           X4             53103
+     C                     MOVELQFTRNB    QFRESH    P                     53103
+     C                     ENDSL                           E3             53103
+     C*                                                                   53103
+     C** SELECT RECORDS TO BE COPIED                                      53103
+     C           QFHLDV    IFEQ 'Y'
+     C           QFDXTR    ANDGEQPELSD
+     C           WWPOO1    ANDNE'Y'                                       056460
+     C           QFMODI    ANDNE'FF'                                      075998
+     C           QFMODI    OREQ 'RE'
+     C           QFDXTR    ANDGEQPELSD
+     C           QFMODI    OREQ 'SE'
+     C           QFDXTR    ANDGEQPELSD
+     C           QFRECI    ANDNE'F'                                       48665
+     C****       QFMODI    OREQ 'FF'                                56460 075998
+     C****       QFDXTR    ANDGEQPELSD                              56460 075998
+     C****       WWPOO1    ANDEQ'Y'                                 56460 075998
+     C*
+     C**********           EXSR #LMOVE                             S01486 081347
+     C                     Z-ADDQFVDAT    Q0VDAT                          097158
+     C                     Z-ADDQFVDAT    Q1VDAT                          097158
+     C                     WRITEPMPMIMP0
+     C                     WRITEPMPMIMP1                                  078956
+     C                     ADD  1         RRPERW
+     C*
+     C                     ELSE                                           47868
+     C*                                                                   47868
+     C** FOR FLAT MATURITY POSITIONS CHECK FOR EXISTENCE OF EVENTS ATFER  47868
+     C** POSITION BECAME FLAT                                             47868
+     C           QFMODI    IFEQ 'SE'                                      47868
+     C****       QFRECI    ANDEQ'F'                                 48665 47868
+     C*                                                                   47868
+     C**********           Z-ADDQFCNUM    WKCNUM                                        47868 CSD027
+     C                     MOVE QFCNUM    WKCNUM                                              CSD027
+     C                     MOVE QFPTFR    WKPTFR                          47868
+     C                     MOVE QFMODI    WKMODI                          47868
+     C                     MOVE QFTDSS    WKTDSS                          47868
+     C                     Z-ADD*HIVAL    WKPDAT                          47868
+     C           PTRAKY    SETGTPMPTRAL3                                  47868
+     C           PTRAK1    REDPEPMPTRAL3                 77               47868
+     C*                                                                   47868
+     C           *IN77     IFEQ '0'                                       47868
+     C           QUPDAT    ANDGTQPELSD                                    47868
+     C**********           EXSR #LMOVE                             S01486 081347
+     C                     Z-ADDQUPDAT    QFDXTR                          47868
+     C                     Z-ADDQFVDAT    Q0VDAT                          097158
+     C                     Z-ADDQFVDAT    Q1VDAT                          097158
+     C                     WRITEPMPMIMP0                                  47868
+     C                     WRITEPMPMIMP1                                  078956
+     C                     ADD  1         RRPERW                          47868
+     C                     ENDIF                                          47868
+     C*                                                                   47868
+     C                     ENDIF                                          47868
+     C                     ENDIF
+     C*
+     C           WWPPKY    READEPMHDVNLL                 76
+     C                     ENDDO
+     C*                                                                   53103
+     C***FOR*RUN*TYPE*'M'*WRITE*DETAILS*TO*PMPMIMPP*OF*FX*DEALS     53103 081347
+     C*  FOR RUN TYPE 'M' WRITE DETAILS TO PMPMIMPD OF FX DEALS           081347
+     C*  EXISTING IN ANOTHER PORTFOLIO BUT SETTLED IN CURRENT PORTF.      53103
+     C           WWRTYP    IFEQ 'M'                        B2             53103
+     C*                                                                   53103
+     C           PPTDKY    CHAINPMPCAAL4             62                   53103
+     C*                                                                   53103
+     C           *IN62     DOWEQ*OFF                       B3             53103
+     C*                                                                   53103
+     C           QSCSHD    IFGE QPELSD                     B4             53103
+     C           QSCHTP    ANDEQ*BLANKS                                   078956
+     C*                                                                   53103
+     C           PPTDKY    CHAINPMPPTDPD             64                   53103
+     C           *IN64     IFEQ *ON                        B5             53103
+     C           QSDLNO    IFNE 0                          B6             72605
+     C                     MOVELQSDLNO    WWRESH    P                     53103
+     C                     MOVE 'FX'      WWMODI                          53103
+     C********** KPMIM     CHAINPMPMIMPP             65             53103 081347
+     C           KPMIM     CHAINPMPMIMPD             65                   081347
+     C           *IN65     IFEQ *ON                        B7             53103
+     C                     MOVE 'M'       QFRECI                          53103
+     C                     MOVE QSCNUM    QFCNUM                          53103
+     C                     MOVE QSPTFR    QFPTFR                          53103
+     C                     MOVE QSINNR    QFINNR                          53103
+      *                                                                   182961
+      ** Instrument type is defaulted from PF/SDPORTPD if a blank         182961
+      ** instrument type is found.                                        182961
+      ** Indicator 35 was used as the operation's resulting indicator.    182961
+      *                                                                   182961
+     C           QFINNR    IFEQ *BLANKS                                   182961
+     C           1         SETLLSDPORTPD                                  182961
+     C                     READ SDPORTPD                 35               182961
+     C                     MOVE FCDINR    QFINNR                          182961
+     C                     ENDIF                                          182961
+     C*                                                                   53103
+     C********** QFINNR    CHAINSDPLINPD             66             53103 081347
+     C********** *IN66     IFEQ *ON                        B8       53103 081347
+     C                     CALL 'AOPLINR0'                                081347
+     C                     PARM *BLANKS   WWRTCD  7                       081347
+     C                     PARM '*KEY    'WWOPTN  7                       081347
+     C                     PARM QFINNR    WWKEY   3                       081347
+     C           SDPLIN    PARM SDPLIN    DSFDY                           081347
+     C**                                                                  081347
+     C           WWRTCD    IFNE *BLANKS                                   081347
+     C                     Z-ADD3         DBASE            ***************53103
+     C                     MOVEL'SDPLINPD'DBFILE           * DBERROR  003 53103
+     C                     MOVELQFINNR    DBKEY            ***************53103
+     C                     EXSR *PSSR                                     53103
+     C                     END                             E8             53103
+     C*                                                                   53103
+     C                     MOVE PDVALG    QFVALG                          53103
+     C                     MOVE QSCCY     QFCCY1                          53103
+     C**********           MOVE P9CNCD    QFCNTR                   53103  081347
+     C**********           MOVE P9LICD    QFLIND                   53103  081347
+     C                     MOVE FCCNCD    QFCNTR                          081347
+     C                     MOVE FCLICD    QFLIND                          081347
+     C                     MOVE *BLANKS   QFTDSS                          53103
+     C                     Z-ADD0         QFAMT1                          53103
+     C                     Z-ADD0         QFACIS                          53103
+     C                     Z-ADDQSCSHA    QFPLFX                          53103
+     C                     Z-ADD1         QFMFXR                          53103
+     C                     MOVE 'M'       QFMFMD                          53103
+     C                     Z-ADD0         QFMPRC                          53103
+     C**********           Z-ADDQSDLNO    QFTRNB                                        53103 CLE148
+     C                     MOVELQSDLNO    QFTRNB                                              CLE148
+     C                     MOVE 'FX'      QFMODI                          53103
+     C                     MOVE 'B'       QFBYSF                          53103
+     C                     MOVE *BLANKS   QFFOIS                          53103
+     C                     MOVE *BLANKS   QFTXT2                          53103
+     C                     Z-ADDQSCSHD    QFDXTR                          53103
+     C                     MOVE C#15      QFMFXD                          53103
+     C                     MOVE WWRESH    QFRESH                          53103
+     C                     Z-ADD0         QFNMDP                          72242
+     C                     MOVE 'U'       QFSPBS                          72242
+     C*                                                                   53103
+     C                     WRITEPMPMIMP0                                  53103
+     C                     WRITEPMPMIMP1                                  078956
+     C                     ENDIF                           E7             53103
+     C*                                                                   72605
+     C** OTHERWISE WRITE A GENERAL CASHFLOW RECORD                        72605
+     C                     ELSE                            X6             72605
+     C                     MOVE C#GNCF    WWRESH                          72605
+     C                     MOVE 'RE'      WWMODI                          72605
+     C                     MOVE QSCCY     QSINNR                          72605
+     C********** KPMIM     CHAINPMPMIMPP             65             72605 081347
+     C           KPMIM     CHAINPMPMIMPD             65                   081347
+     C           *IN65     IFEQ *ON                        B7             72605
+     C                     MOVE 'D'       QFRECI                          72605
+     C                     MOVE QSCNUM    QFCNUM                          72605
+     C                     MOVE QSPTFR    QFPTFR                          72605
+     C                     MOVE QSINNR    QFINNR                          72605
+     C                     MOVE *BLANKS   QFVALG                          72605
+     C                     MOVE QSCCY     QFCCY1                          72605
+     C**********           MOVE P9CNCD    QFCNTR                    72605 081347
+     C**********           MOVE P9LICD    QFLIND                    72605 081347
+     C                     MOVE FCCNCD    QFCNTR                          081347
+     C                     MOVE FCLICD    QFLIND                          081347
+     C                     MOVE *BLANKS   QFTDSS                          72605
+     C                     Z-ADD0         QFAMT1                          72605
+     C                     Z-ADD0         QFACIS                          72605
+     C                     Z-ADD0         QFPLFX                          72605
+     C                     Z-ADD0         QFMFXR                          72605
+     C                     MOVE ' '       QFMFMD                          72605
+     C                     Z-ADD0         QFMPRC                          72605
+     C**********           Z-ADD0         QFTRNB                                        72605 CLE148
+     C                     MOVEL*BLANKS   QFTRNB                                              CLE148
+     C                     MOVE 'RE'      QFMODI                          72605
+     C                     MOVE ' '       QFBYSF                          72605
+     C                     MOVE *BLANKS   QFFOIS                          72605
+     C                     MOVE *BLANKS   QFTXT2                          72605
+     C                     Z-ADDBJRDNB    QFDXTR                          72605
+     C                     Z-ADD0         QFMFXD                          72605
+     C                     MOVE WWRESH    QFRESH                          72605
+     C                     Z-ADD0         QFNMDP                          72605
+     C                     MOVE 'U'       QFSPBS                          72605
+     C*                                                                   72605
+     C                     WRITEPMPMIMP0                                  72605
+     C                     WRITEPMPMIMP1                                  078956
+     C                     ENDIF                           E7             72605
+     C                     ENDIF                           E6             53103
+     C                     ENDIF                           E5             53103
+     C                     ENDIF                           E4             53103
+     C*                                                                   53103
+     C           PPTDKY    READEPMPCAAL4                 62               53103
+     C                     ENDDO                           E3             53103
+     C*                                                                   53103
+     C           PPTDKY    CHAINPMPCAAL1             63                   53103
+     C*                                                                   53103
+     C           *IN63     DOWEQ*OFF                       B3             53103
+     C*                                                                   53103
+     C           QSCSHD    IFGE QPELSD                     B4             53103
+     C*                                                                   53103
+     C                     MOVE C#GNCF    WWRESH                          53103
+     C                     MOVE 'RE'      WWMODI                          53103
+     C                     MOVE QSCCY     QSINNR                          53103
+     C********** KPMIM     CHAINPMPMIMPP             65             53103 081347
+     C           KPMIM     CHAINPMPMIMPD             65                   081347
+     C           *IN65     IFEQ *ON                        B5             53103
+     C                     MOVE 'D'       QFRECI                          53103
+     C                     MOVE QSCNUM    QFCNUM                          53103
+     C                     MOVE QSPTFR    QFPTFR                          53103
+     C                     MOVE QSINNR    QFINNR                          53103
+     C                     MOVE *BLANKS   QFVALG                          53103
+     C                     MOVE QSCCY     QFCCY1                          53103
+     C**********           MOVE P9CNCD    QFCNTR                    53103 081347
+     C**********           MOVE P9LICD    QFLIND                    53103 081347
+     C                     MOVE FCCNCD    QFCNTR                          081347
+     C                     MOVE FCLICD    QFLIND                          081347
+     C                     MOVE *BLANKS   QFTDSS                          53103
+     C                     Z-ADD0         QFAMT1                          53103
+     C                     Z-ADD0         QFACIS                          53103
+     C                     Z-ADD0         QFPLFX                          53103
+     C                     Z-ADD0         QFMFXR                          53103
+     C                     MOVE ' '       QFMFMD                          53103
+     C                     Z-ADD0         QFMPRC                          53103
+     C**********           Z-ADD0         QFTRNB                                        53103 CLE148
+     C                     MOVEL*BLANKS   QFTRNB                                              CLE148
+     C                     MOVE 'RE'      QFMODI                          53103
+     C                     MOVE ' '       QFBYSF                          53103
+     C                     MOVE *BLANKS   QFFOIS                          53103
+     C                     MOVE *BLANKS   QFTXT2                          53103
+     C                     Z-ADDBJRDNB    QFDXTR                          53103
+     C                     Z-ADD0         QFMFXD                          53103
+     C                     MOVE WWRESH    QFRESH                          53103
+     C                     Z-ADD0         QFNMDP                          72242
+     C                     MOVE 'U'       QFSPBS                          72242
+     C*                                                                   53103
+     C                     WRITEPMPMIMP0                                  53103
+     C                     WRITEPMPMIMP1                                  078956
+     C                     ENDIF                           E5             53103
+     C*                                                                   53103
+     C                     ENDIF                           E4             53103
+     C*                                                                   53103
+     C           PPTDKY    READEPMPCAAL1                 63               53103
+     C                     ENDDO                           E3             53103
+     C*                                                                   53103
+     C** READ THROUGH PERFORMANCE EVENTS ON PMPTRAPP AND IF EVENT         53103
+     C***FOUND*FOR*WHICH*NO*RECORD*EXISTS*ON*PF/PMPMIMPP*(BECAUSE   53103 081347
+     C** FOUND FOR WHICH NO RECORD EXISTS ON PF/PMPMIMPD (BECAUSE         081347
+     C** SECURITY POSITION SUBSEQUENTLY DELETED) WRITE TO PF/PMPMIMPP     53103
+     C           PPTDKY    SETLLPMPTRAL5                                  53103
+     C           PPTDKY    READEPMPTRAL5                 63               53103
+     C*                                                                   53103
+     C           *IN63     DOWEQ'0'                        B3             53103
+     C*                                                                   53103
+     C***SET*UP*PARAMETERS*FOR*ACCESSING*PF/PMPMIMPP                53103 081347
+     C** SET UP PARAMETERS FOR ACCESSING PF/PMPMIMPD                      081347
+     C**********           Z-ADDQUCNUM    QSCNUM                                        53103 CSD027
+     C                     MOVE QUCNUM    QSCNUM                                              CSD027
+     C                     MOVE QUPTFR    QSPTFR                          53103
+     C                     MOVE QUINNR    QSINNR                          53103
+     C                     MOVE QUMODI    WWMODI                          53103
+     C*                                                                   53103
+     C                     MOVE *BLANKS   WWRESH                          078956
+     C           QUMODI    IFEQ 'SE'                       B4             53103
+     C                     MOVELQUTDSS    WWRESH    P                     53103
+     C*                                                                   097158
+     C           FCTVPS    IFEQ 'V'                        B4.5           097158
+     C***        QFPOST    IFNE 'C '                       B5             097158
+     C           QFVDAT    IFNE 0                          B5             097158
+     C           QFAMT1    IFLT 0                          B6             097158
+     C                     MOVE 'S'       WWORK9  9                       097158
+     C                     ELSE                            X6             097158
+     C                     MOVE 'B'       WWORK9                          097158
+     C                     END                             E6             097158
+     C*                                                                   097158
+     C                     Z-ADDQFVDAT    ZDAYNO                          097158
+     C                     EXSR ZDATE2                                    097158
+     C                     MOVELZDATE     WWORK9                          097158
+     C*                                                                   097158
+     C                     MOVE WWORK9    QFRESH                          097158
+     C                     END                             E5             097158
+     C                     END                             E4.5           097158
+     C                     ELSE                            X4             53103
+     C                     MOVELQUTRNB    WWRESH    P                     53103
+     C                     END                             E4             53103
+     C*                                                                   53103
+     C***CHECK*FOR*EXISTENCE*OF*POSITION*DETAILS*ON*PF/PMPMIMPP    53103  081347
+     C** CHECK FOR EXISTENCE OF POSITION DETAILS ON PF/PMPMIMPD           081347
+     C********** KPMIM     CHAINPMPMIMPP             59            53103  081347
+     C           KPMIM     CHAINPMPMIMPD             59                   081347
+     C*                                                                   078956
+     C** IF NOT FOUND ON PMPMIMPD CHECK WHETHER EXISTS ON PF/PMCPIMQ0     078956
+     C** BUT WITH A DIFFERENT INSTRUMENT                                  078956
+     C           *IN59     IFEQ '1'                        B4             078956
+     C*                                                                   078956
+     C           KCPIM     CHAINPMCPIMQ0             67                   078956
+     C*                                                                   53103
+     C** IF RECORD NOT FOUND CHECK WHETHER SECURITY STILL EXISTS          53103
+     C****       *IN59     IFEQ '1'                        B5       53103 078956
+     C           *IN67     IFEQ '1'                        B5             078956
+     C*                                                                   53103
+     C           QUMODI    IFEQ 'SE'                       B5             72242
+     C*                                                                   72242
+     C           QUTDSS    CHAINSECTY                58                   53103
+     C*                                                                   53103
+     C           *IN58     IFEQ '1'                        B6             53103
+     C                     MOVE 'F'       QFRECI                          53103
+     C                     ELSE                            X7             078956
+     C                     MOVE 'M'       QFRECI                          078956
+     C                     END                             E7             078956
+     C                     MOVE QUCNUM    QFCNUM                          53103
+     C                     MOVE QUPTFR    QFPTFR                          53103
+     C                     MOVE QUINNR    QFINNR                          53103
+     C                     MOVE *BLANKS   QFVALG                          53103
+     C                     MOVE QUCCY     QFCCY1                          53103
+     C                     Z-ADDQUNMDP    QFCDP1                          53103
+     C**********           MOVE P9CNCD    QFCNTR                    53103 081347
+     C**********           MOVE P9LICD    QFLIND                    53103 081347
+     C                     MOVE FCCNCD    QFCNTR                          081347
+     C                     MOVE FCLICD    QFLIND                          081347
+     C                     MOVE QUTDSS    QFTDSS                          53103
+     C                     Z-ADD0         QFAMT1                          53103
+     C                     Z-ADD0         QFACIS                          53103
+     C                     Z-ADD0         QFPLFX                          53103
+     C                     Z-ADD0         QFMFXR                          53103
+     C                     MOVE ' '       QFMFMD                          53103
+     C                     Z-ADD0         QFMPRC                          53103
+     C**********           Z-ADDQUTRNB    QFTRNB                                        53103 CLE148
+     C                     MOVELQUTRNB    QFTRNB                                              CLE148
+     C                     MOVE QUMODI    QFMODI                          53103
+     C                     MOVE ' '       QFBYSF                          53103
+     C                     MOVE *BLANKS   QFFOIS                          53103
+     C                     MOVE *BLANKS   QFTXT2                          53103
+     C                     Z-ADDQUPDAT    QFDXTR                          53103
+     C                     Z-ADD0         QFMFXD                          53103
+     C                     MOVE WWRESH    QFRESH                          53103
+     C                     Z-ADDQUNMDP    QFNMDP                          72242
+     C                     MOVE QUSPBS    QFSPBS                          72242
+     C                     Z-ADDQFVDAT    Q0VDAT                          097158
+     C                     Z-ADDQFVDAT    Q1VDAT                          097158
+     C                     WRITEPMPMIMP0                                  53103
+     C                     WRITEPMPMIMP1                                  078956
+     C****                 END                             E6       72242 078956
+     C                     ELSE                            X6             72242
+     C****                 MOVE 'M'       QFRECI                    72242 078956
+     C                     MOVE 'R'       QFRECI                          078956
+     C                     MOVE QUCNUM    QFCNUM                          72242
+     C                     MOVE QUPTFR    QFPTFR                          72242
+     C                     MOVE QUINNR    QFINNR                          72242
+     C                     MOVE *BLANKS   QFVALG                          72242
+     C                     MOVE QUCCY     QFCCY1                          72242
+     C*                                                                   72242
+     C** ACCESS CURRENCY DETAILS FOR DECIMAL PLACES                       72242
+     C********** QUCCY     CHAINSDCURRL0             70            72242  081347
+     C*                                                                   72242
+     C** IF RECORD NOT FOUND THEN DB ERROR                                72242
+     C********** *IN70     IFEQ '1'                        B1      72242  081347
+     C                     MOVELQUCCY     @AJCD                           081347
+     C                     CALL 'AOCURRR0'                                081347
+     C                     PARM *BLANKS   @RTCD   7                       081347
+     C                     PARM '*KEY   ' @OPTN   7                       081347
+     C                     PARM           @AJCD   3                       081347
+     C           SDCURR    PARM SDCURR    DSSDY                           081347
+     C           @RTCD     IFNE *BLANKS                                   081347
+     C                     Z-ADD3         DBASE            ***************72242
+     C                     MOVEL'SDCURRL0'DBFILE           * DBERROR  003 72242
+     C                     MOVE *BLANKS   DBKEY            ***************72242
+     C                     MOVEL'PM1620  'DBPGM                           72242
+     C                     EXSR *PSSR                                     72242
+     C                     END                             E1             72242
+     C*                                                                   72242
+     C                     Z-ADDA6NBDP    QFCDP1                          72242
+     C**********           MOVE P9CNCD    QFCNTR                    72242 081347
+     C**********           MOVE P9LICD    QFLIND                    72242 081347
+     C                     MOVE FCCNCD    QFCNTR                          081347
+     C                     MOVE FCLICD    QFLIND                          081347
+     C                     MOVE QUTDSS    QFTDSS                          72242
+     C                     Z-ADD0         QFAMT1                          72242
+     C                     Z-ADD0         QFACIS                          72242
+     C                     Z-ADD0         QFPLFX                          72242
+     C                     Z-ADD0         QFMFXR                          72242
+     C                     MOVE ' '       QFMFMD                          72242
+     C                     Z-ADD0         QFMPRC                          72242
+     C**********           Z-ADDQUTRNB    QFTRNB                                        72242 CLE148
+     C                     MOVELQUTRNB    QFTRNB                                              CLE148
+     C                     MOVE QUMODI    QFMODI                          72242
+     C                     MOVE ' '       QFBYSF                          72242
+     C                     MOVE *BLANKS   QFFOIS                          72242
+     C                     MOVE *BLANKS   QFTXT2                          72242
+     C                     Z-ADD0         QFMFXD                          72242
+     C                     MOVE WWRESH    QFRESH                          72242
+     C                     Z-ADDQUNMDP    QFNMDP                          72242
+     C                     MOVE QUSPBS    QFSPBS                          72242
+     C*                                                                   72242
+     C** DATE EXTRACTED SHOULD BE DATE OF LAST ACTION ON PMPTRAPP         72242
+     C****                 Z-ADD0         WNPDAT                    72242 078956
+     C****       PTRAK5    SETGTPMPTRAL5                            72242 078956
+     C****                 READPPMPTRAL5                 63         72242 078956
+     C           PTRAK5    SETLLPMPTRAL5                                  078956
+     C                     READ PMPTRAL5                 63               078956
+     C                     Z-ADDQUPDAT    QFDXTR                          72242
+     C*                                                                   72242
+     C                     WRITEPMPMIMP0                                  72242
+     C                     WRITEPMPMIMP1                                  078956
+     C                     END                             E6             72242
+     C*                                                                   72242
+     C                     ELSE                            X5             72242
+     C*                                                                   078956
+     C** IF RECORD FOUND ON PMCPIMQ0 ACCESS PMPMIMPD BEFORE DOING UPDATE  078956
+     C** OF DATE EXTRACTED                                                078956
+     C           KPMIMK    CHAINPMPMIMPD             58                   078956
+     C                     END                             E5             078956
+     C                     END                             E4             53103
+     C*                                                                   078956
+     C           QUPDAT    IFGT QFDXTR                     B4             72242
+     C           *IN59     ANDEQ'0'                                       168874
+     C                     Z-ADDQUPDAT    QFDXTR                          72242
+     C                     UPDATPMPMIMP0                                  72242
+     C                     END                             E4             53103
+     C*                                                                   53103
+     C****                 Z-ADD0         WNPDAT                    53103 078956
+     C           PTRAK5    SETGTPMPTRAL5                                  53103
+     C           PPTDKY    READEPMPTRAL5                 63               53103
+     C                     END                             E3             53103
+     C** IF MODULE FF PRESENT CALL PGM/PM1830 TO SETUP FUTURE & OPTION    075998
+     C** POSITION DETAILS                                                 075998
+     C** If Bank Portfolios are supported, treat as if FF off             CPM003
+     C           BGFUOP    IFEQ 'Y'                        B3             075998
+     C           FCPORS    ANDNE'B'                                       CPM003
+     C*                                                                   075998
+     C** ACCESS PF/PMPORTPD TO OBTAIN PORTFOLIO CURRENCY                  075998
+     C           PPTDKY    CHAINPMPORTPD             70                   075998
+     C*                                                                   075998
+     C** IF RECORD NOT FOUND THEN DB ERROR                                075998
+     C           *IN70     IFEQ '1'                        B4             075998
+     C           *LOCK     IN   LDA                                       075998
+     C                     Z-ADD4         DBASE            ***************075998
+     C                     MOVE 'PMPORTPD'DBFILE           * DBERROR  004 075998
+     C                     MOVE *BLANKS   DBKEY            ***************075998
+     C                     OUT  LDA                                       075998
+     C                     EXSR *PSSR                                     075998
+     C                     END                             E4             075998
+     C*                                                                   075998
+     C                     CALL 'PM1830'                                  075998
+     C                     PARM           QPCNUM                          075998
+     C                     PARM           QPPTFR                          075998
+     C                     PARM           PNPTCY                          075998
+     C                     PARM           WWSTMN  2                       075998
+     C                     PARM 'M'       WWMODE  1                       075998
+     C*                                                                   075998
+     C** READ THROUGH FP / FO RECORDS ON PMPTRAPD. FOR EACH RECORD CHECK  075998
+     C** THAT CLOSING POSITION EXISTS ON PF/PMPMIMPD                      075998
+     C           PPTDK1    SETGTPMPTRAL8                                  075998
+     C           PPTDK2    REDPEPMPTRAL8                 70               075998
+     C           *IN70     DOWEQ'0'                        B4             075998
+     C*                                                                   075998
+     C** CHECK WHETHER ENDING POSITION DETAILS EXIST ON PF/PMPMIMPD       075998
+     C** FOR FUTURE / OPTION POSITION                                     075998
+     C           QUPDAT    IFGT QPELSD                     B5             075998
+     C*                                                                   075998
+     C           KPMIM1    CHAINPMPMIMPD             71                   075998
+     C           *IN71     IFEQ '1'                        B6             075998
+     C****                 MOVE 'D'       QFRECI                   075998 078956
+     C                     MOVE 'F'       QFRECI                          078956
+     C**********           Z-ADDQUCNUM    QFCNUM                                       075998 CSD027
+     C                     MOVE QUCNUM    QFCNUM                                              CSD027
+     C                     MOVE QUPTFR    QFPTFR                          075998
+     C                     MOVE QUINNR    QFINNR                          075998
+     C                     MOVE *BLANKS   QFVALG                          075998
+     C                     MOVE QUCCY     QFCCY1                          075998
+     C*                                                                   075998
+     C** ACCESS CURRENCY DETAILS FOR DECIMAL PLACES                       075998
+     C                     MOVELQUCCY     @AJCD                           075998
+     C                     CALL 'AOCURRR0'                                075998
+     C                     PARM *BLANKS   @RTCD   7                       075998
+     C                     PARM '*KEY   ' @OPTN   7                       075998
+     C                     PARM           @AJCD   3                       075998
+     C           SDCURR    PARM SDCURR    DSSDY                           075998
+     C*                                                                   075998
+     C** IF RECORD NOT FOUND THEN DB ERROR                                075998
+     C           @RTCD     IFNE *BLANKS                    B7             075998
+     C           *LOCK     IN   LDA                                       075998
+     C                     Z-ADD23        DBASE            ***************075998
+     C                     MOVE 'SDCURRPD'DBFILE           * DBERROR  023 075998
+     C                     MOVE *BLANKS   DBKEY            ***************075998
+     C                     OUT  LDA                                       075998
+     C                     EXSR *PSSR                                     075998
+     C                     END                             E7             075998
+     C*                                                                   075998
+     C                     Z-ADDA6NBDP    QFCDP1                          075998
+     C                     MOVE FCCNCD    QFCNTR                          075998
+     C                     MOVE FCLICD    QFLIND                          075998
+     C                     MOVE *BLANKS   QFTDSS                          075998
+     C                     Z-ADD0         QFAMT1                          075998
+     C                     Z-ADD0         QFACIS                          075998
+     C                     Z-ADD0         QFPLFX                          075998
+     C                     Z-ADD0         QFMFXR                          075998
+     C                     MOVE *BLANKS   QFMFMD                          075998
+     C                     Z-ADD0         QFMPRC                          075998
+     C**********           Z-ADD0         QFTRNB                                       075998 CLE148
+     C                     MOVEL*BLANKS   QFTRNB                                              CLE148
+     C                     MOVE QUMODI    QFMODI                          075998
+     C                     MOVE 'Y'       QFBYSF                          075998
+     C                     MOVE *BLANKS   QFFOIS                          075998
+     C                     MOVE *BLANKS   QFTXT2                          075998
+     C                     Z-ADDQUPDAT    QFDXTR                          075998
+     C                     Z-ADD0         QFMFXD                          075998
+     C                     MOVE QUFPSI    QFRESH                          075998
+     C                     Z-ADDQUNMDP    QFNMDP                          075998
+     C                     MOVE QUSPBS    QFSPBS                          075998
+     C                     WRITEPMPMIMP0                                  075998
+     C                     WRITEPMPMIMP1                                  078956
+     C                     END                             E6             075998
+     C*                                                                   075998
+     C                     END                             E5             075998
+     C*                                                                   075998
+     C** IF POSITION DETAILS NOT FOUND OUTPUT RECORD FOR ZERO POSITION    075998
+     C           PPTDK2    REDPEPMPTRAL8                 70               075998
+     C                     END                             E4             075998
+     C*                                                                   075998
+     C                     END                             E3             075998
+     C*                                                                   53103
+     C                     ENDIF                           E2             53103
+     C*
+     C***********          READ PMFPPSPP                 90               S01486
+     C                     READ PMFPPSQ0                 90               S01486
+     C                     ENDDO
+     C*
+     C** WRITE PERFORMANCE AUDIT REPORT
+     C                     WRITEFORMTAU
+     C                     WRITECONTROL                                   S01486
+     C*                                                                   S01486
+     C** Check if no details to report                                    S01486
+     C*                                                                   S01486
+     C           RRPERW    IFEQ *ZERO                                     S01486
+     C                     WRITENODTLS                                    S01486
+     C                     END                                            S01486
+     C*
+     C**   END PROGRAM
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C/EJECT                                                              S01486
+     C**********************************************************   S01486 081347
+     C**********                                                   S01486 081347
+     C**#LMOVE - Move values to PMPMIMPD                           S01486 081347
+     C**********                                                   S01486 081347
+     C**Called from: Main                                          S01486 081347
+     C**********                                                   S01486 081347
+     C************************************************************ S01486 081347
+     C**********                                                   S01486 081347
+     C********** #LMOVE    BEGSR                       * #LMOVE ** S01486 081347
+     C**********                                                   S01486 081347
+     C**********           Z-ADDQFCNUM    GECNUM                   S01486 081347
+     C**********           Z-ADDQFLIND    GELIND                   S01486 081347
+     C**********           Z-ADDQFAMT1    GEAMT1                   S01486 081347
+     C**********           Z-ADDQFACIS    GEACIS                   S01486 081347
+     C**********           Z-ADDQFPLFX    GEPLFX                   S01486 081347
+     C**********           Z-ADDQFMFXR    GEMFXR                   S01486 081347
+     C**********           Z-ADDQFMPRC    GEMPRC                   S01486 081347
+     C**********           Z-ADDQFTRNB    GETRNB                   S01486 081347
+     C**********           Z-ADDQFDXTR    GEDXTR                   S01486 081347
+     C**********           Z-ADDQFMFXD    GEMFXD                   S01486 081347
+     C**********           MOVELQFRECI    GERECI                   S01486 081347
+     C**********           MOVELQFPTFR    GEPTFR                   S01486 081347
+     C**********           MOVELQFINNR    GEINNR                   S01486 081347
+     C**********           MOVELQFVALG    GEVALG                   S01486 081347
+     C**********           MOVELQFCCY1    GECCY1                   S01486 081347
+     C**********           MOVELQFCNTR    GECNTR                   S01486 081347
+     C**********           MOVELQFTDSS    GETDSS                   S01486 081347
+     C**********           MOVELQFMFMD    GEMFMD                   S01486 081347
+     C**********           MOVELQFMODI    GEMODI                   S01486 081347
+     C**********           MOVELQFBYSF    GEBYSF                   S01486 081347
+     C**********           MOVELQFFOIS    GEFOIS                   S01486 081347
+     C**********           MOVELQFTXT2    GETXT2                   S01486 081347
+     C**********                                                   S01486 081347
+     C**********           ENDSR                                   S01486 081347
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   *PSSR     - Program error handling routine                 *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*                                                                   S01486
+     C                     WRITEFORMTAU                                   S01486
+     C                     WRITEDBERROR                                   S01486
+     C                     DUMP
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C/EJECT                                                              CPM005
+      /COPY ZSRSRC,ZDATE2Z2                                               CPM005
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN                      CPM005
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR                        CPM005
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES                                            CPM005
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

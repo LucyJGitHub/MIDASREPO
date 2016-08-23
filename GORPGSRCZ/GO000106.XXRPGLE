@@ -1,0 +1,474 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+      *****************************************************************
+/*S*D****RPGBASEBND****************************************************                       CCB023
+      *****************************************************************
+      *                                                               *
+      *  Midas - Global Processing                                    *
+      *                                                               *
+      *  GO000106 - Global Processing data dowload, MM deals          *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *                                                               *
+      *  Last Amend No. CCB023  *REDUNDANT Date 06Aug12               *
+      *  Prev Amend No. AR990939           Date 23Nov12               *
+      *                 263978             Date 13Aug12               *
+      *                 261904             Date 13Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 07Jul06               *
+      *                 BUG9512            Date 05Dec05               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CUP030             Date 18Nov04               *
+      *                 BUG4017            Date 24Aug04               *
+      *                 CDL022             Date 03Feb04               *
+      *                 CDL020             Date 03Feb04               *
+      *                 CDL019             Date 03Feb04               *
+      *                 CDL018             Date 03Feb04               *
+      *                 CDL017             Date 03Feb04               *
+      *                 CDL016             Date 03Feb04               *
+      *                 222727             Date 05Nov03               *
+      *                 CGP002  *CREATE    Date 02Jul03               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CCB023 - COB Restructure - Input Cycle Termination           *
+      *           Restructuring                                       *
+      *  AR990939 - Deal in complete status is not reflected in Midas *
+      *             Dashboard if sent via API. Fix is to revert to the*
+      *             old process of checking the main dealing files but*
+      *             keep 261904 WIP checking for reversed deal        *
+      *             awaiting authorization. This is done via new LF   *
+      *             GPDLWIPA. (Child: AR990940)                       *
+      *  263978 - DL: unauthorised Deal amendment is not shown in the *
+      *           Dashboard. Recompiled due to changes in GPDLWIPL    *
+      *  261904 - COB: MidasPlus Dashboard does not show unauthorised *
+      *           transaction in DL. Use T_MSWIP in unauthorised      *
+      *           deals computation                                   *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  BUG9512 - Signal errors to calling program in U7U8.          *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CUP030 - Does not check for logically deleted records.       *
+      * BUG4017 - Recompile due to MIDASSTS                           *
+      *  CDL022 - Deal Amendment Changes (Recompile)                  *
+      *  CDL020 - Apply Base Rate at Value Date (Recompile)           *
+      *  CDL019 - Allow Base Rate Changes on Fixed Deposits/Loans     *
+      *           (Recompile)                                         *
+      *  CDL018 - Multiple Settlement Accounts on Loans/Deposits      *
+      *           (Recompile)                                         *
+      *  CDL017 - Penalty Fee & Early Maturity of Fixed Term Loan/Dep *
+      *           (Recompile)                                         *
+      *  CDL016 - Automatic rollover of Fixed Term Loans/Deposits     *
+      *           (Recompile)                                         *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+      *  CGP002 - Global Processing data download                     *
+      *                                                               *
+      *****************************************************************
+      **
+      ** +--------------------------------------+
+      ** ¦ Files                                ¦
+      ** ¦ =====                                ¦
+      ** +--------------------------------------+
+      *
+     F***MMDELDPP  IF   E             DISK    INFSR(*PSSR)                                    261904
+     F***                                     USROPN                                          261904
+     FMMDELDPP  IF   E             DISK    INFSR(*PSSR)                                     AR990939
+     F                                     USROPN                                           AR990939
+     F***MMDENBPP  IF   E             DISK    INFSR(*PSSR)                                    261904
+     F***                                     USROPN                                          261904
+     FMMDENBPP  IF   E             DISK    INFSR(*PSSR)                                     AR990939
+     F                                     USROPN                                           AR990939
+     F***MMDENSPP  IF   E             DISK    INFSR(*PSSR)                                    261904
+     F***                                     USROPN                                          261904
+     FMMDENSPP  IF   E             DISK    INFSR(*PSSR)                                     AR990939
+     F                                     USROPN                                           AR990939
+     F***MMDEAMPP  IF   E             DISK    INFSR(*PSSR)                                    261904
+     F***                                     USROPN                                          261904
+     FMMDEAMPP  IF   E             DISK    INFSR(*PSSR)                                     AR990939
+     F                                     USROPN                                           AR990939
+     F***GPDLWIPL  IF   E           K DISK    INFSR(*PSSR)                           261904 AR990939
+     FGPDLWIPA  IF   E           K DISK    INFSR(*PSSR)                                     AR990939
+     F                                     USROPN                                             261904
+     FGPDWNLL0  UF A E           K DISK    INFSR(*PSSR)
+     F                                     USROPN                                            BUG9512
+      **
+      ** +--------------------------------------+
+      ** ¦ Arrays and Data Structures           ¦
+      ** ¦ ==========================           ¦
+      ** +--------------------------------------+
+     D                 DS
+     D  CountN                 1      5  0
+     D  CountA                 1      5
+      *
+      * Program Status Data Structure
+     D/COPY ZACPYSRC,PSDS
+      *
+      * Midas Local Data Area for database error reporting
+     D LDA           E DS           256    EXTNAME(LDA) DTAARA(LDA)
+      * The following fields are defined in the external file:
+      *                                     134 141 DBFile
+      *                                     142 170 DBKey
+      *                                     171 180 DBPgm
+      *                                     181 1830DBase
+      *                                     184 193 DBMod
+      *                                     194 203 DBProc
+      ** +--------------------------------------+
+      ** ¦ Declared variables                   ¦
+      ** ¦ ==================                   ¦
+      ** +--------------------------------------+
+      *
+     D @RUN            S              1
+     D Value           S             50
+     D APIType         S              4                                                       261904
+     D Atype           S              4                                                       261904
+      *
+      ** +--------------------------------------+
+      ** ¦ End of D-specs                       ¦
+      ** ¦ ==============                       ¦
+      ** +--------------------------------------+
+      *
+      ** +--- Start of Main processing -----------------------------------+
+      ** ¦                                                                ¦
+      ** +----------------------------------------------------------------+
+      *
+     C/COPY GOCPYSRC,GOUPD_PARM
+      *                                                                                       261904
+      ** Get Zone                                                                             261904
+      *                                                                                       261904
+     C                   EXSR      SRGPGZ                                                     261904
+      *
+      * Unauthorised Money Market Loan/deposits/CD issued
+     C                   IF        Key_Desc = 'UnauthMMLoanDepCDIss'
+     C                   EVAL      APIType = 'LDNI'                                           261904
+      *
+      * If the Midas phase is not Input Cycle then set data to blank.
+     C                   IF        MidasPhase <> 'A'
+     C                   EVAL      Value = *blanks
+     C                   ELSE
+      *
+     C                   EVAL      CountN = 0
+      *
+      ** Check MM Loan/deposit/CD deals file                                                AR990939
+      *                                                                                     AR990939
+     C                   OPEN      MMDELDPP                                                 AR990939
+     C     1             SETLL     MMDELDPP                                                 AR990939
+     C                   READ      MMDELDPP                               01                AR990939
+     C                   DOW       *IN01 = *OFF                                             AR990939
+     C                   IF        HKDSTS = 'C' or                                          AR990939
+     C                             HKDSTS = 'I' or                                          AR990939
+     C                             HKDSTS = 'R'                                             AR990939
+     C                   IF        HKDDLT = *blank                                          AR990939
+     C                   EVAL      CountN = CountN + 1                                      AR990939
+     C                   ENDIF                                                              AR990939
+     C                   ENDIF                                                              AR990939
+     C                   READ      MMDELDPP                               01                AR990939
+     C                   ENDDO                                                              AR990939
+     C                   CLOSE     MMDELDPP                                                 AR990939
+      *                                                                                     AR990939
+      ** In case of reversed deal awaiting authorization,                                   AR990939
+      ** further check in T_MSWIP                                                           AR990939
+      *                                                                                     AR990939
+     C**********         OPEN      MMDELDPP                                                   261904
+     C*****1****         SETLL     MMDELDPP                                                   261904
+     C**********         READ      MMDELDPP                               01                  261904
+     C**********         OPEN      GPDLWIPL                                          261904 AR990939
+     C******LOVAL        SETLL     GPDLWIPL                                          261904 AR990939
+     C**********         READ      GPDLWIPL                               01         261904 AR990939
+     C                   OPEN      GPDLWIPA                                                 AR990939
+     C     *LOVAL        SETLL     GPDLWIPA                                                 AR990939
+     C                   READ      GPDLWIPA                               01                AR990939
+      *
+     C                   DOW       *IN01 = *OFF
+     C**********         IF        HKDSTS = 'C' or                                            261904
+     C**********                   HKDSTS = 'I' or                                            261904
+     C**********                   HKDSTS = 'R'                                               261904
+     C**********         IF        HKDDLT = *blank                                     CUP030 261904
+     C                   EVAL      Atype = %TRIM(MSWAPI)                                      261904
+     C                   IF        MSWZONE = PZZONE and                                       261904
+     C                             Atype = APIType                                            261904
+     C                   EVAL      CountN = CountN + 1
+     C**********         ENDIF                                                         CUP030 261904
+     C                   ENDIF
+     C**********         READ      MMDELDPP                               01                  261904
+     C**********         READ      GPDLWIPL                               01         261904 AR990939
+     C                   READ      GPDLWIPA                               01                AR990939
+     C                   ENDDO
+      *
+     C**********         CLOSE     MMDELDPP                                                   261904
+     C**********         CLOSE     GPDLWIPL                                          261904 AR990939
+     C                   CLOSE     GPDLWIPA                                                 AR990939
+     C                   EVAL      Value = CountA
+      *
+     C                   ENDIF
+      *
+     C                   ENDIF
+      *
+      * Unauthorised Money Market NAs bought
+     C                   IF        Key_Desc = 'UnauthMMNAsBought'
+     C                   EVAL      APIType = 'NASP'                                           261904
+      *
+      * If the Midas phase is not Input Cycle then set data to blank.
+     C                   IF        MidasPhase <> 'A'
+     C                   EVAL      Value = *blanks
+     C                   ELSE
+      *
+     C                   EVAL      CountN = 0
+      *                                                                                     AR990939
+      ** Check MM NAS bought deals file                                                     AR990939
+      *                                                                                     AR990939
+     C                   OPEN      MMDENBPP                                                 AR990939
+     C     1             SETLL     MMDENBPP                                                 AR990939
+     C                   READ      MMDENBPP                               01                AR990939
+     C                   DOW       *IN01 = *OFF                                             AR990939
+     C                   IF        HLDSTS = 'C' or                                          AR990939
+     C                             HLDSTS = 'I' or                                          AR990939
+     C                             HLDSTS = 'R'                                             AR990939
+     C                   IF        HLDDLT = *blank                                          AR990939
+     C                   EVAL      CountN = CountN + 1                                      AR990939
+     C                   ENDIF                                                              AR990939
+     C                   ENDIF                                                              AR990939
+     C                   READ      MMDENBPP                               01                AR990939
+     C                   ENDDO                                                              AR990939
+     C                   CLOSE     MMDENBPP                                                 AR990939
+      *                                                                                     AR990939
+      ** In case of reversed deal awaiting authorization,                                   AR990939
+      ** further check in T_MSWIP                                                           AR990939
+      *
+     C**********         OPEN      MMDENBPP                                                   261904
+     C*****1****         SETLL     MMDENBPP                                                   261904
+     C**********         READ      MMDENBPP                               01                  261904
+     C**********         OPEN      GPDLWIPL                                          261904 AR990939
+     C******LOVAL        SETLL     GPDLWIPL                                          261904 AR990939
+     C**********         READ      GPDLWIPL                               01         261904 AR990939
+     C                   OPEN      GPDLWIPA                                                 AR990939
+     C     *LOVAL        SETLL     GPDLWIPA                                                 AR990939
+     C                   READ      GPDLWIPA                               01                AR990939
+      *
+     C                   DOW       *IN01 = *OFF
+     C**********         IF        HLDSTS = 'C' or                                            261904
+     C**********                   HLDSTS = 'I' or                                            261904
+     C**********                   HLDSTS = 'R'                                               261904
+     c**********         IF        HLDDLT = *blank                                     CUP030 261904
+     C                   EVAL      Atype = %TRIM(MSWAPI)                                      261904
+     C                   IF        MSWZONE = PZZONE and                                       261904
+     C                             Atype = APIType                                            261904
+     C                   EVAL      CountN = CountN + 1
+     c**********         ENDIF                                                         CUP030 261904
+     C                   ENDIF
+     C**********         READ      MMDENBPP                               01                  261904
+     C**********         READ      GPDLWIPL                               01         261904 AR990939
+     C                   READ      GPDLWIPA                               01                AR990939
+     C                   ENDDO
+      *
+     C**********         CLOSE     MMDENBPP                                                   261904
+     C**********         CLOSE     GPDLWIPL                                          261904 AR990939
+     C                   CLOSE     GPDLWIPA                                                 AR990939
+     C                   EVAL      Value = CountA
+      *
+     C                   ENDIF
+      *
+     C                   ENDIF
+      *
+      * Unauthorised Money Market NAs sold
+     C                   IF        Key_Desc = 'UnauthMMNAsSold'
+     C                   EVAL      APIType = 'NASS'                                           261904
+      *
+      * If the Midas phase is not Input Cycle then set data to blank.
+     C                   IF        MidasPhase <> 'A'
+     C                   EVAL      Value = *blanks
+     C                   ELSE
+      *
+     C                   EVAL      CountN = 0
+      *
+      ** Check MM NAS sold deals file                                                       AR990939
+      *                                                                                     AR990939
+     C                   OPEN      MMDENSPP                                                 AR990939
+     C     1             SETLL     MMDENSPP                                                 AR990939
+     C                   READ      MMDENSPP                               01                AR990939
+     C                   DOW       *IN01 = *OFF                                             AR990939
+     C                   IF        HMDSTS = 'C' or                                          AR990939
+     C                             HMDSTS = 'I' or                                          AR990939
+     C                             HMDSTS = 'R'                                             AR990939
+     C                   IF        HMDDLT = *blank                                          AR990939
+     C                   EVAL      CountN = CountN + 1                                      AR990939
+     C                   ENDIF                                                              AR990939
+     C                   ENDIF                                                              AR990939
+     C                   READ      MMDENSPP                               01                AR990939
+     C                   ENDDO                                                              AR990939
+     C                   CLOSE     MMDENSPP                                                 AR990939
+      *                                                                                     AR990939
+      ** In case of reversed deal awaiting authorization,                                   AR990939
+      ** further check in T_MSWIP                                                           AR990939
+      *                                                                                     AR990939
+     C**********         OPEN      MMDENSPP                                                   261904
+     C*****1****         SETLL     MMDENSPP                                                   261904
+     C**********         READ      MMDENSPP                               01                  261904
+     C**********         OPEN      GPDLWIPL                                          261904 AR990939
+     C******LOVAL        SETLL     GPDLWIPL                                          261904 AR990939
+     C**********         READ      GPDLWIPL                               01         261904 AR990939
+     C                   OPEN      GPDLWIPA                                                 AR990939
+     C     *LOVAL        SETLL     GPDLWIPA                                                 AR990939
+     C                   READ      GPDLWIPA                               01                AR990939
+      *
+     C                   DOW       *IN01 = *OFF
+     C**********         IF        HMDSTS = 'C' or                                            261904
+     C**********                   HMDSTS = 'I' or                                            261904
+     C**********                   HMDSTS = 'R'                                               261904
+     c**********         IF        HMDDLT = *blank                                     CUP030 261904
+     C                   EVAL      Atype = %TRIM(MSWAPI)                                      261904
+     C                   IF        MSWZONE = PZZONE and                                       261904
+     C                             Atype = APIType                                            261904
+     C                   EVAL      CountN = CountN + 1
+     c**********         ENDIF                                                         CUP030 261904
+     C                   ENDIF
+     C**********         READ      MMDENSPP                               01                  261904
+     C**********         READ      GPDLWIPL                               01         261904 AR990939
+     C                   READ      GPDLWIPA                               01                AR990939
+     C                   ENDDO
+      *
+     C**********         CLOSE     MMDENSPP                                                   261904
+     C**********         CLOSE     GPDLWIPL                                          261904 AR990939
+     C                   CLOSE     GPDLWIPA                                                 AR990939
+     C                   EVAL      Value = CountA
+      *
+     C                   ENDIF
+      *
+     C                   ENDIF
+      *
+      * Unauthorised Money Market deal amendments
+     C                   IF        Key_Desc = 'UnauthMMDealAmnds'
+     C                   EVAL      APIType = 'DEAM'                                           261904
+      *
+      * If the Midas phase is not Input Cycle then set data to blank.
+     C                   IF        MidasPhase <> 'A'
+     C                   EVAL      Value = *blanks
+     C                   ELSE
+      *
+     C                   EVAL      CountN = 0
+      *
+      ** Check MM Deal amendment deals file                                                 AR990939
+      *                                                                                     AR990939
+     C                   OPEN      MMDEAMPP                                                 AR990939
+     C     1             SETLL     MMDEAMPP                                                 AR990939
+     C                   READ      MMDEAMPP                               01                AR990939
+     C                   DOW       *IN01 = *OFF                                             AR990939
+     C                   IF        HNDSTS = 'C' or                                          AR990939
+     C                             HNDSTS = 'I' or                                          AR990939
+     C                             HNDSTS = 'R'                                             AR990939
+     C                   IF        HNDDLT = *blank                                          AR990939
+     C                   EVAL      CountN = CountN + 1                                      AR990939
+     C                   ENDIF                                                              AR990939
+     C                   ENDIF                                                              AR990939
+     C                   READ      MMDEAMPP                               01                AR990939
+     C                   ENDDO                                                              AR990939
+     C                   CLOSE     MMDEAMPP                                                 AR990939
+      *                                                                                     AR990939
+      ** In case of reversed deal awaiting authorization,                                   AR990939
+      ** further check in T_MSWIP                                                           AR990939
+      *                                                                                     AR990939
+     C**********         OPEN      MMDEAMPP                                                   261904
+     C*****1****         SETLL     MMDEAMPP                                                   261904
+     C**********         READ      MMDEAMPP                               01                  261904
+     C**********         OPEN      GPDLWIPL                                          261904 AR990939
+     C******LOVAL        SETLL     GPDLWIPL                                          261904 AR990939
+     C**********         READ      GPDLWIPL                               01         261904 AR990939
+     C                   OPEN      GPDLWIPA                                                 AR990939
+     C     *LOVAL        SETLL     GPDLWIPA                                                 AR990939
+     C                   READ      GPDLWIPA                               01                AR990939
+      *
+     C                   DOW       *IN01 = *OFF
+     C**********         IF        HNDSTS = 'C' or                                            261904
+     C**********                   HNDSTS = 'I' or                                            261904
+     C**********                   HNDSTS = 'R'                                               261904
+     c**********         IF        HNDDLT = *blank                                     CUP030 261904
+     C                   EVAL      Atype = %TRIM(MSWAPI)                                      261904
+     C                   IF        MSWZONE = PZZONE and                                       261904
+     C                             Atype = APIType                                            261904
+     C                   EVAL      CountN = CountN + 1
+     c**********         ENDIF                                                         CUP030 261904
+     C                   ENDIF
+     C**********         READ      MMDEAMPP                               01                  261904
+     C**********         READ      GPDLWIPL                               01         261904 AR990939
+     C                   READ      GPDLWIPA                               01                AR990939
+     C                   ENDDO
+      *
+     C**********         CLOSE     MMDEAMPP                                                   261904
+     C**********         CLOSE     GPDLWIPL                                          261904 AR990939
+     C                   CLOSE     GPDLWIPA                                                 AR990939
+     C                   EVAL      Value = CountA
+      *
+     C                   ENDIF
+      *
+     C                   ENDIF
+      *
+     C/COPY GOCPYSRC,GOUPD_DWNL
+      *
+     C     ENDPGM        TAG
+     C                   SETON                                        LR
+     C                   RETURN
+      /EJECT                                                                                  261904
+      *****************************************************************                       261904
+      *                                                               *                       261904
+      * SRGPGZ - Gets the Zone.                                       *                       261904
+      *                                                               *                       261904
+      * Called by: (At the beginning)                                 *                       261904
+      *                                                               *                       261904
+      * Calls: GOGETZONE                                              *                       261904
+      *                                                               *                       261904
+      *****************************************************************                       261904
+     C     SRGPGZ        BEGSR                                                                261904
+      *                                                                                       261904
+     C                   CALL      'GOGETZONE'                                                261904
+     C                   PARM      *BLANKS       PZRTCD            7                          261904
+     C                   PARM      *BLANKS       PZERMS           50                          261904
+     C                   PARM      'N'           PZFCHK            1                          261904
+     C                   PARM      *BLANKS       PZZONE           10                          261904
+     C                   PARM      *BLANKS       PZSHTC            4                          261904
+     C                   PARM      *ZERO         PZRDNB            5 0                        261904
+     C                   PARM      *ZERO         PZDNWD            5 0                        261904
+     C                   PARM      *BLANKS       PZBCCY            3                          261904
+     C                   PARM      *ZERO         PZNJOB            1 0                        261904
+      *                                                                                       261904
+     C     PZRTCD        IFEQ      *BLANKS                                                    261904
+     C                   MOVE      PZZONE        WZONE            10                          261904
+     C                   ELSE                                                                 261904
+      *                                                                                       261904
+     C     PZRTCD        IFEQ      '*ERROR'                                                   261904
+     C                   EXSR      *PSSR                                                      261904
+     C                   ENDIF                                                                261904
+     C                   ENDIF                                                                261904
+      *                                                                                       261904
+     C                   ENDSR                                                                261904
+      *****************************************************************                       261904
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *PSSR         BEGSR
+      *
+     C                   IF        @RUN = *BLANK
+     C                   EVAL      @RUN = 'Y'
+     C                   DUMP
+     C                   ENDIF
+      *
+     C                   EVAL      *INLR = *ON
+     C                   SetOn                                        U7U8                   BUG9512
+     C                   RETURN
+      *
+     C                   ENDSR
+      *
+      *****************************************************************

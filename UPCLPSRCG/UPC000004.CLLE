@@ -1,0 +1,79 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP Reset ID columns for tables')                */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC000004 - Reset ID columns for tables                     */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2009           */
+/*                                                                   */
+/*       Last Amend No. CUP041   *REWRITE  Date 04Jun14              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Prev Amend No. CUP035A            Date 12Mar09              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP041 - New Bridge methodology to combine menu options     */
+/*       CUP035A- Automate handling of ID colums (auto-generated     */
+/*                fields).                                           */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&OPTION &LAYER &RTNFLAG)
+ 
+             DCL        VAR(&OPTION) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&RTNFLAG) TYPE(*CHAR) LEN(1)
+ 
+             DCL        VAR(&RSTOPT) TYPE(*CHAR) LEN(7)
+ 
+             DCLF       FILE(UPAGFJW0)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2006')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+READNEXT:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+             IF         COND(&LAYER *NE &IDLAYR *AND &LAYER *NE +
+                          '*ALL') THEN(DO)
+                GOTO       CMDLBL(READNEXT)
+             ENDDO
+             IF         COND(&IDDEL *EQ 'Y') THEN(DO)
+                GOTO       CMDLBL(READNEXT)
+             ENDDO
+ 
+             IF         COND(&OPTION *EQ '*PCK') THEN(DO)
+                CHGVAR     VAR(&RSTOPT) VALUE(&IDPACK)
+             ENDDO
+             IF         COND(&OPTION *EQ '*MIG') THEN(DO)
+                CHGVAR     VAR(&RSTOPT) VALUE(&IDMIG)
+             ENDDO
+             IF         COND(&OPTION *EQ '*UPG') THEN(DO)
+                CHGVAR     VAR(&RSTOPT) VALUE(&IDUPG)
+             ENDDO
+ 
+             CHKOBJ     OBJ(&IDTBL) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                GOTO       CMDLBL(READNEXT)
+             ENDDO
+ 
+             RESETMAXID FILE(&IDTBL) RSTOPT(&RSTOPT)
+ 
+             GOTO       CMDLBL(READNEXT)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+             CHGVAR     VAR(&RTNFLAG) VALUE('E')
+ 
+ENDPGM:
+             ENDPGM

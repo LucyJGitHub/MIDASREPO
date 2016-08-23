@@ -1,0 +1,786 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Data feed request item list (MDF)')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing data module                                 *
+      *                                                               *
+      *  SD1452 - Data Feed Request Item List (MDF)                   *
+      *                                                               *
+      *  Function:  This program is used to display a list of items   *
+      *  tied to a given request. It allows user to select one or     *
+      *  several in different modes                                   *
+      *                                                               *
+      *  Called By: SD1451 - Data Feed Request                        *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. 213560             Date 29May03               *
+      *  Prev Amend No. 213559             Date 29May03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006  *CREATE    Date 28Sep00               *
+      *                                                               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  213560 - Can enquire on data request but still add a currency*
+      *  213559 - Add SPF processing                                  *
+      *  CSD006 - Market Data Feed                                    *
+      *                                                               *
+      *****************************************************************
+      * INDICATORS                                                    *
+      * 30 - Handle screen field error                                *
+      * 82 - SFLDSP                                                   *
+      * 83 - SFLDSPCTL                                                *
+      * 84 - SFLNXTCHG                                                *
+      * 86 - SFLEND                                                   *
+      * 87 - SFLCLR                                                   *
+      * 88 - ROLLUP                                                   *
+      * 90 - Work indicator                                           *
+      *****************************************************************
+     FSD1452DFCF  E                    WORKSTN
+     F                                        LINE  KSFILE SD1452S0
+     F                                              KINFSR *PSSR
+      *
+      ** Request items
+     FSDMDFIL0IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     ISDY       E DSDSSDY
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     IZMUSER      DS                             17                                           213559
+     I                                       11  13 BRC                                       213559
+     I                                       14  16 DEPT                                      213559
+     ISDBANK    E DSSDBANKPD                                                                  213559
+      **  Bank details                                                                        213559
+     IDSFDY     E DSDSFDY                                                                     213559
+      ** Short Data Structure                                                                 213559
+      *
+      ** For S/R RTVMTX
+      /COPY SDCPYSRC,SD1453I001
+      *****************************************************************
+      ** Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P@RTN   7
+      ** Request Id
+     C                     PARM           P@REQI
+      ** Mapping Code
+     C                     PARM           P@MAPC 32
+      ** Data source
+     C                     PARM           P@DTSC 32
+      ** Key Pressed
+     C                     PARM           P@KEYP  2
+      ** is feed active                                                                       213560
+     C                     PARM           P@ACTF  1                                           213560
+      *
+     C           *LIKE     DEFN MIREQI    P@REQI
+     C                     MOVELP@KEYP    ACTN    1                                           213560
+     C                     MOVELP@ACTF    ACTF    1                                           213560
+     C           ACTN      IFEQ 'D'                                                           213560
+     C                     MOVEL'E'       ACTN                                                213560
+     C                     ENDIF                                                              213560
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+     C                     EXSR INZPGM
+     C           P@RTN     IFEQ *BLANK
+     C                     EXSR MAIN
+     C                     ENDIF
+      *
+     C                     SETON                     LR
+      *
+      *****************************************************************
+      * INZPGM - Initialize program                                   *
+      *****************************************************************
+     C           INZPGM    BEGSR
+     C                     MOVEL*BLANK    P@RTN
+     C                     MOVEL'N'       WEND    1
+      ** Initialize msg sub file pgmq
+     C                     MOVELPGM       ##PGM
+      ** Screen variables
+     C                     MOVELAGMRDT    SRUNA
+     C                     MOVELWSID      SWSID
+     C                     MOVELUSER      SUSER
+      *
+      ** Enable Fields
+     C                     EXSR ENAFLD
+      *
+      ** Enable Function Keys
+     C                     EXSR ENAKEY
+      *
+     C**                                                                                      213559
+     C**  GET ZMUSER to access default branch.                                                213559
+     C**                                                                                      213559
+     C           *NAMVAR   DEFN           ZMUSER                                              213559
+     C                     IN   ZMUSER                                                        213559
+     C                     UNLCKZMUSER                                                        213559
+     C                     CALL 'AOBANKR0'                                                    213559
+     C                     PARM *BLANKS   @RTCD   7                                           213559
+     C                     PARM '*FIRST ' @OPTN   7                                           213559
+     C           SDBANK    PARM SDBANK    DSFDY                                               213559
+      *                                                                                       213559
+     C           @RTCD     IFNE *BLANKS                    B2                                 213559
+     C           *LOCK     IN   LDA                                                           213559
+     C                     Z-ADD001       DBASE            ***************                    213559
+     C                     MOVEL'SDBANKPD'DBFILE           *DB ERROR 001 *                    213559
+     C                     MOVEL'*FIRST'  DBKEY            ***************                    213559
+     C                     OUT  LDA                                                           213559
+     C                     EXSR *PSSR                                                         213559
+     C                     ENDIF                                                              213559
+     C                     ENDSR
+      *****************************************************************
+      * MAIN - Main                                                   *
+      *****************************************************************
+     C           MAIN      BEGSR
+      *
+     C           WEND      DOUEQ'Y'
+      ** List
+     C                     EXSR LIST
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      * LIST - List                                                   *
+      *****************************************************************
+     C           LIST      BEGSR
+      ** Clear subfile
+     C                     EXSR INISF
+     C                     EXSR STLLSF
+      ** Fill subfile
+     C           *IN86     DOWNE'1'
+     C           *IN88     ANDEQ'1'
+      *
+     C                     DO   12
+     C                     EXSR READSF
+     C           *IN86     IFEQ '1'
+     C                     LEAVE
+     C                     ENDIF
+     C                     EXSR WRITSF
+     C                     ENDDO
+      *
+      ** Stay in the loop until
+      ** F3 = Exit, F12=Previous
+      ** Rollup
+      ** Initialisation is requested.
+      ** End Transaction
+     C           *INKL     DOUEQ'1'
+     C           *INKC     OREQ '1'
+     C           *IN88     OREQ '1'
+     C           WINISF    OREQ 'Y'
+     C           WEND      OREQ 'Y'
+     C                     EXSR DSPLST
+     C           *INKL     IFNE '1'
+     C           *INKC     ANDNE'1'
+     C           *IN88     ANDNE'1'
+      ** Determine whether we need to initialize the Sub File
+     C                     EXSR INIREQ
+     C           WINISF    IFEQ 'Y'
+     C                     EXSR INISF
+     C                     EXSR STLLSF
+     C                     ELSE
+      ** Validate list ?
+     C           P@KEYP    IFEQ *BLANK
+     C           LINWRT    ANDNE0
+     C                     EXSR VALLST
+     C                     ENDIF
+      ** Go to another transaction ?
+     C           P@MSGI    IFEQ *BLANK
+     C                     EXSR OTHPGM
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     ENDDO
+     C                     ENDSR
+      *****************************************************************
+      * INIREQ - Init Sub File Requested ?                            *
+      *****************************************************************
+     C           INIREQ    BEGSR
+     C                     MOVEL'N'       WINISF  1
+      ** Criteria have changed ?
+     C           SPDITM    IFNE WPDITM
+     C           SSTOLX    ORNE WSTOLX
+     C           *LIKE     DEFN SPDITM    WPDITM
+     C           *LIKE     DEFN SSTOLX    WSTOLX
+     C                     MOVELSPDITM    WPDITM
+     C                     MOVELSSTOLX    WSTOLX
+     C                     MOVEL'Y'       WINISF
+     C                     ENDIF
+      ** F5 pressed (refresh) ?
+     C           *INKE     IFEQ '1'
+     C                     MOVEL'Y'       WINISF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * INISF - Init the sub file                                     *
+      *****************************************************************
+     C           INISF     BEGSR
+      *
+     C                     Z-ADD0         LINWRT  50
+      ** Clear Sub File
+     C                     SETON                     87
+     C                     SETOF                     8283
+     C                     WRITESD1452C0
+     C                     SETOF                     87
+     C                     SETON                     8283
+      *
+      ** Force entry into the main loop in S/R LIST
+     C                     SETON                     88
+     C                     SETOF                     86
+     C                     ENDSR
+      *****************************************************************
+      * WRITSF - Write sub file line                                  *
+      *****************************************************************
+     C           WRITSF    BEGSR
+     C           *LIKE     DEFN LINWRT    LINE
+     C                     ADD  1         LINWRT
+      ** Overwrite LINE as it can be changed by a READC
+     C                     Z-ADDLINWRT    LINE
+      ** Page to be displayed
+     C                     Z-ADDLINWRT    RECNS0
+      ** Reset all error indicators associated with Sub file fields
+     C                     SETOF                     30
+      ** Map information related to sub file field
+     C                     MOVEL*BLANK    SOPTN
+     C                     MOVELMIDITM    SDITM
+     C                     MOVELMITOLX    STOLX
+      *
+     C                     WRITESD1452S0
+      *
+     C                     ENDSR
+      *****************************************************************
+      * STLLSF - Setll a record from a file                           *
+      *****************************************************************
+     C           STLLSF    BEGSR
+      ** This subroutine is used to position the reading pointer
+      ** on a particular record, according to the screen criteria Sxxxx
+      ** entered.
+     C           KMDFI0    KLIST
+     C                     KFLD           P@REQI
+     C                     KFLD           SPDITM
+     C           KMDFI1    KLIST
+     C                     KFLD           P@REQI
+      *
+     C                     SELEC
+      ** Position and no Selection
+     C           SPDITM    WHNE *BLANK
+     C           SSTOLX    ANDEQ*BLANK
+     C           KMDFI0    SETLLSDMDFIL0
+      ** Selection and (Position or No Position)
+     C           SSTOLX    WHNE *BLANK
+     C           SPDITM    IFNE *BLANK
+     C           KMDFI0    SETLLSDMDFIL0
+     C                     ELSE
+     C           KMDFI1    SETLLSDMDFIL0
+     C                     ENDIF
+      ** Default : No Position and No Selection
+     C                     OTHER
+     C           KMDFI1    SETLLSDMDFIL0
+     C                     ENDSL
+      *
+     C                     ENDSR
+      *****************************************************************
+      * READSF - Read a record from the file                          *
+      *****************************************************************
+     C           READSF    BEGSR
+      *
+      ** Selection and (Position or No Position)
+     C                     SELEC
+      ** Position and no Selection
+     C           SPDITM    WHNE *BLANK
+     C           SSTOLX    ANDEQ*BLANK
+     C           KMDFI1    READESDMDFIL0                 86
+      ** Selection
+     C           SSTOLX    WHNE *BLANK
+     C           KMDFI1    READESDMDFIL0                 86
+     C           MITOLX    DOWNESSTOLX
+     C           *IN86     ANDNE'1'
+     C           KMDFI1    READESDMDFIL0                 86
+     C                     ENDDO
+     C                     OTHER
+      ** Default : No Position and No Selection
+     C           KMDFI1    READESDMDFIL0                 86
+     C                     ENDSL
+      *
+     C                     ENDSR
+      *****************************************************************
+      * DSPLST - Display list                                         *
+      *****************************************************************
+     C           DSPLST    BEGSR
+      *
+      ** Default screen values
+     C                     EXSR DFTSCR
+      *
+      ** Display the screen
+     C           LINWRT    IFNE 0
+     C                     SETON                     82
+     C                     ELSE
+     C                     SETOF                     82
+     C                     ENDIF
+     C                     WRITESD1452F1
+     C                     WRITESD1452F0
+     C                     WRITE#MSGCTL
+     C                     EXFMTSD1452C0
+      *
+      ** Clear Message Q and highligthed fields
+     C                     CALL 'ZA0250'
+      ** Used as a flag to determine whether validation error occured
+     C                     MOVEL*BLANK    P@MSGI
+      *
+      ** Determine which key has been pressed
+     C                     SELEC
+      ** F3 pressed
+     C           *INKC     WHEQ '1'
+     C                     MOVEL'Y'       WEND
+     C                     MOVEL'03'      P@KEYP
+      ** F5 pressed
+     C           *INKE     WHEQ '1'
+     C                     MOVEL'05'      P@KEYP
+      ** F9 pressed
+     C           *INKI     WHEQ '1'
+     C                     MOVEL'09'      P@KEYP
+     C                     MOVEL'A'       SOPTN                                               213559
+      * Check SPF authority of user to action code                                            213559
+     C           BJSBRC    IFNE *BLANKS                                                       213559
+     C                     EXSR ACSSES                                                        213559
+     C                     ELSE                                                               213559
+     C                     EXSR ACSSEM                                                        213559
+     C                     ENDIF                                                              213559
+     C           P@MSGI    IFEQ *BLANKS                                                       213560
+     C           ACTF      IFEQ 'Y'                                                           213560
+     C           SOPTN     ANDEQ'A'                                                           213560
+     C           ACTF      OREQ 'Y'                                                           213560
+     C           SOPTN     ANDEQ'D'                                                           213560
+     C                     MOVEL'SDM0093' P@MSGI                                              213560
+     C                     EXSR SNDMSG                                                        213560
+     C           P@MSGD    CAT  'E':0     P@MSGD                                              213560
+     C                     MOVEL'SDM0048' P@MSGI                                              213560
+     C                     EXSR SNDMSG                                                        213560
+     C                     SETON                     30                                       213560
+     C                     ENDIF                                                              213560
+     C                     ENDIF                                                              213560
+     C                     MOVEL*BLANKS   SOPTN                                               213559
+      * If SPF authority check successful, check if F9 makes sense in context of              213560
+      * original aciton code entered on the main screen                                       213560
+     C           P@MSGI    IFEQ *BLANKS                                                       213560
+     C           ACTN      IFEQ 'E'                                                           213560
+     C           ACTN      OREQ 'D'                                                           213560
+     C           P@MSGD    CAT  'E':0     P@MSGD                                              213560
+     C                     MOVEL'SDM0048' P@MSGI                                              213560
+     C                     EXSR SNDMSG                                                        213560
+     C                     SETON                     30                                       213560
+     C                     ENDIF                                                              213560
+     C                     ENDIF                                                              213560
+      ** F12 pressed
+     C           *INKL     WHEQ '1'
+     C                     MOVEL'Y'       WEND
+     C                     MOVEL'12'      P@KEYP
+      ** Enter pressed
+     C                     OTHER
+     C                     MOVEL*BLANK    P@KEYP
+      *
+     C                     ENDSL
+      *
+     C                     ENDSR
+      *****************************************************************
+      * DFTSCR - Default screen values                                *
+      *****************************************************************
+     C           DFTSCR    BEGSR
+     C                     MOVELP@REQI    SREQI
+      ** No data to display
+     C           LINWRT    IFNE 0
+     C                     MOVEL*BLANK    SBOTX
+     C                     ELSE
+      ** No data to display
+     C                     MOVEL'YYG0012' P@RTMI
+     C                     MOVEL'Y2USRMSG'P@RTMF
+     C                     EXSR RTVMTX
+     C                     MOVELP@RTT1    SBOTX
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      * VALLST - Validate list                                        *
+      *****************************************************************
+     C           VALLST    BEGSR
+      ** Last line WLASTL is used by OTHPGM
+     C           *LIKE     DEFN LINE      WLASTL
+     C                     Z-ADD0         WLASTL
+     C                     Z-ADD*LOVAL    RECNS0
+      ** Help requested
+     C                     EXSR HLPREQ
+      *
+     C                     READCSD1452S0                 90
+     C           *IN90     DOWEQ'0'
+     C                     Z-ADDLINE      WLASTL
+     C                     SETOF                     84
+     C                     SETOF                     30
+      * If feed is active, and amend or delete selected throw error                           213560
+     C           ACTF      IFEQ 'Y'                                                           213560
+     C           SOPTN     ANDEQ'A'                                                           213560
+     C           ACTF      OREQ 'Y'                                                           213560
+     C           SOPTN     ANDEQ'D'                                                           213560
+     C                     MOVEL'SDM0093' P@MSGI                                              213560
+     C                     EXSR SNDMSG                                                        213560
+     C           P@MSGD    CAT  'E':0     P@MSGD                                              213560
+     C                     MOVEL'SDM0048' P@MSGI                                              213560
+     C                     EXSR SNDMSG                                                        213560
+     C                     SETON                     30                                       213560
+     C                     ENDIF                                                              213560
+      *
+      * If Delete or Enquire taken from main screen, doesn't make sense to allow              213560
+      * inserts and amends                                                                    213560
+      *                                                                                       213560
+     C           SOPTN     IFNE *BLANK
+     C           ACTN      IFEQ 'E'                                                           213560
+     C           SOPTN     ANDNE'E'                                                           213560
+     C           P@MSGD    CAT  'E':0     P@MSGD                                              213560
+     C                     MOVEL'SDM0048' P@MSGI                                              213560
+     C                     EXSR SNDMSG                                                        213560
+     C                     SETON                     30                                       213560
+     C                     ELSE                                                               213560
+     C           ACTN      IFEQ 'D'                                                           213560
+     C           SOPTN     ANDNE'D'                                                           213560
+     C           P@MSGD    CAT  'E':0     P@MSGD                                              213560
+     C                     MOVEL'SDM0048' P@MSGI                                              213560
+     C                     EXSR SNDMSG                                                        213560
+     C                     SETON                     30                                       213560
+     C                     ELSE                                                               213560
+     C           SOPTN     IFNE 'A'
+     C           SOPTN     ANDNE'D'
+     C           SOPTN     ANDNE'E'
+     C           P@MSGD    CAT  'A':0     P@MSGD
+     C           P@MSGD    CAT  'D':0     P@MSGD
+     C           P@MSGD    CAT  'E':0     P@MSGD
+     C                     MOVEL'SDM0048' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     30
+     C                     ENDIF
+     C                     ENDIF                                                              213560
+     C                     ENDIF                                                              213560
+      ** Mark the record as changed
+     C                     SETON                     84
+     C                     ENDIF
+     C           BJSBRC    IFNE *BLANKS                                                       213559
+     C                     EXSR ACSSES                                                        213559
+     C                     ELSE                                                               213559
+     C                     EXSR ACSSEM                                                        213559
+     C                     ENDIF                                                              213559
+      *
+      ** Here test all the PC RI indicators
+     C           *IN30     IFEQ '1'
+      ** Display the page where the first error occured
+     C           RECNS0    IFEQ *LOVAL
+     C                     Z-ADDLINE      RECNS0
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     UPDATSD1452S0
+     C                     READCSD1452S0                 90
+     C                     ENDDO
+      ** No error found, display page 1
+     C           RECNS0    IFEQ *LOVAL
+     C                     Z-ADD1         RECNS0
+     C                     ENDIF
+      *
+     C           EXVSCR    ENDSR
+      *****************************************************************                      213559
+      * ACSSES - ACCESS SECURITY CHECKING - SINGLE BRANCHING                                 213559
+      *****************************************************************                      213559
+     C           ACSSES    BEGSR                                                             213559
+      *                                                                                      213559
+      ** validate action codes for user                                                      213559
+      *                                                                                      213559
+     C           P@MSGI    IFNE 'SDM0048'                                                    213559
+     C           SOPTN     IFEQ 'L'                                                          213559
+     C                     MOVEL'E'       ZACTN                                              213559
+     C                     ELSE                                                              213559
+     C                     MOVELSOPTN     ZACTN                                              213559
+     C                     ENDIF                                                             213559
+     C                     CALL 'ZVACTU'                                                     213559
+     C                     PARM           ZACTN   1                                          213559
+     C                     PARM           ERR     10                                         213559
+      *                                                                                      213559
+      * This action code invalid for user                                                    213559
+      *                                                                                      213559
+     C           ERR       IFEQ 1                                                            213559
+     C                     MOVEL'USR8636' P@MSGI                                             213559
+     C                     EXSR SNDMSG                                                       213559
+     C                     ENDIF                                                             213559
+     C                     ENDIF                                                             213559
+      *                                                                                      213559
+     C                     ENDSR                                                             213559
+      *****************************************************************                      213559
+      * ACSSEM - ACCESS SECURITY CHECKING - MULTI-BRANCHING                                  213559
+      *****************************************************************                      213559
+      *                                                                                      213559
+     C           ACSSEM    BEGSR                                                             213559
+      **  Check user's authority for the action & Booking Branch.                            213559
+      *                                                                                      213559
+     C           P@MSGI    IFNE 'SDM0048'                                                    213559
+     C           SOPTN     IFEQ 'L'                                                          213559
+     C                     MOVEL'E'       ZACTN                                              213559
+     C                     ELSE                                                              213559
+     C                     MOVELSOPTN     ZACTN                                              213559
+     C                     ENDIF                                                             213559
+     C                     CALL 'ZVACTBU'                                                    213559
+     C                     PARM           ZACTN   1                                          213559
+     C                     PARM BRC       ZBR     3                                          213559
+     C                     PARM           ERR     10                                         213559
+      *                                                                                      213559
+      **   If action invalid for user                                                        213559
+      *                                                                                      213559
+     C           ERR       IFEQ 1                                                            213559
+     C           ERR       OREQ 2                                                            213559
+     C                     MOVEL'USR8636' P@MSGI                                             213559
+     C                     EXSR SNDMSG                                                       213559
+     C                     ENDIF                                                             213559
+     C                     ENDIF                                                             213559
+      *                                                                                      213559
+     C                     ENDSR                                                             213559
+      *****************************************************************
+      * OTHPGM - Other Programs need to be called                     *
+      *****************************************************************
+     C           OTHPGM    BEGSR
+     C           *LIKE     DEFN WLASTL    WVOPTN
+     C           *LIKE     DEFN WLASTL    L
+      ** Number of valid options entered
+      ** to detect if enter has been pressed without any action
+      ** on S/F records
+     C                     Z-ADD0         WVOPTN
+      *
+      ** F9 pressed => Insert an Item
+     C           *INKI     IFEQ '1'
+     C                     MOVEL'I'       P2ANCD
+     C                     EXSR ITMDTL
+     C           P2KEYP    IFEQ '03'
+     C                     MOVELP2KEYP    P@KEYP
+     C                     MOVEL'Y'       WEND
+     C                     ELSE
+      ** Display page 1
+     C                     Z-ADD1         RECNS0
+     C                     ENDIF
+      ** Read list
+     C                     ELSE
+      *
+     C           WLASTL    IFNE 0
+     C                     Z-ADD*LOVAL    RECNS0
+     C                     MOVEL*BLANK    P2KEYP
+     C                     MOVEL*BLANK    P2RTN
+     C                     DO   WLASTL    L
+     C                     SETOF                     30
+     C           L         CHAINSD1452S0             90
+      *
+     C           SOPTN     IFNE *BLANK
+     C                     ADD  1         WVOPTN
+     C                     MOVELSOPTN     P2ANCD
+     C                     MOVELSDITM     P2DITM
+     C                     EXSR ITMDTL
+      *
+     C           P2KEYP    IFEQ '12'
+     C                     SETON                     30
+     C                     UPDATSD1452S0
+      ** Display the page where the first F12 has been pressed
+     C           RECNS0    IFEQ *LOVAL
+     C                     Z-ADDL         RECNS0
+     C                     ENDIF
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C           P2KEYP    IFEQ '03'
+     C                     MOVELP2KEYP    P@KEYP
+     C                     MOVEL'Y'       WEND
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C           P2RTN     IFNE *BLANK
+     C                     SETON                     30
+     C                     MOVELP2RTN     P@MSGI
+     C                     EXSR SNDMSG
+     C                     UPDATSD1452S0
+      ** Display the page where the first error has ocuured
+     C           RECNS0    IFEQ *LOVAL
+     C                     Z-ADDL         RECNS0
+     C                     ENDIF
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C                     MOVEL*BLANK    SOPTN
+     C                     UPDATSD1452S0
+     C                     ENDIF
+      *
+     C                     ENDDO
+      ** Display page 1
+     C           RECNS0    IFEQ *LOVAL
+     C                     Z-ADD1         RECNS0
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Enter pressed and no option entered leave the transaction
+     C           P2KEYP    IFEQ *BLANK
+     C           WVOPTN    ANDEQ0
+     C                     MOVEL*BLANK    P@KEYP
+     C                     MOVEL'Y'       WEND
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      * ITMDTL - Item details transaction                             *
+      *****************************************************************
+     C           ITMDTL    BEGSR
+     C           *LIKE     DEFN P@RTN     P2RTN
+     C           *LIKE     DEFN P@REQI    P2REQI
+     C           *LIKE     DEFN MIDITM    P2DITM
+     C           *LIKE     DEFN P@MAPC    P2MAPC
+     C           *LIKE     DEFN P@DTSC    P2DTSC
+     C           *LIKE     DEFN P@KEYP    P2KEYP
+      *
+     C                     MOVEL*BLANK    P2RTN
+     C                     MOVEL*BLANK    P2KEYP
+      ** Default input parameters if not filled before EXSR DTLTIM
+     C           P2REQI    IFEQ *BLANK
+     C                     MOVELP@REQI    P2REQI
+     C                     ENDIF
+     C           P2MAPC    IFEQ *BLANK
+     C                     MOVELP@MAPC    P2MAPC
+     C                     ENDIF
+     C           P2DTSC    IFEQ *BLANK
+     C                     MOVELP@DTSC    P2DTSC
+     C                     ENDIF
+      *
+     C                     CALL 'SD1453'
+     C                     PARM           P2RTN
+     C                     PARM           P2REQI
+     C                     PARM           P2DITM
+     C                     PARM           P2MAPC
+     C                     PARM           P2DTSC
+     C                     PARM           P2ANCD
+     C                     PARM           P2KEYP
+      *
+     C                     MOVEL*BLANK    P2REQI
+     C                     MOVEL*BLANK    P2DITM
+     C                     MOVEL*BLANK    P2MAPC
+     C                     MOVEL*BLANK    P2DTSC
+     C                     MOVEL*BLANK    P2ANCD  1
+      *
+     C                     ENDSR
+      *****************************************************************
+      * ENAKEY - Enable Function Keys                                 *
+      *****************************************************************
+     C           ENAKEY    BEGSR
+      ** No function keys need to be enabled
+     C                     ENDSR
+      *****************************************************************
+      * ENAFLD - Enable Fields                                        *
+      *****************************************************************
+     C           ENAFLD    BEGSR
+      ** No fields need to be enabled
+     C                     ENDSR
+      *****************************************************************
+      * HLPREQ - Help Requested                                       *
+      *****************************************************************
+     C           HLPREQ    BEGSR
+      ** XXXXXX serve as an example
+     C                     MOVEL*BLANK    XXXXXX 10
+      ** Flag set to Y if '?' entered somewhere on the screen
+     C                     MOVEL'0'       WQUERY  1
+     C           '?'       SCAN XXXXXX    WIQM    30
+     C           WIQM      IFNE 0
+     C                     MOVEL'1'       WQUERY
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      ************ CALL DBERRCTL IF INTERACTIVE PROGRAM ***************
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+      ************ CALL DBERRCTL IF INTERACTIVE PROGRAM ******************
+      *
+     C                     CALL 'DBERRCTL'
+      *
+      ********************************************************************
+     C                     END
+      *
+      ************ END PROGRAM IF DBERRCTL NOT CALLED ********************
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      ********************************************************************
+      *
+     C                     ENDSR
+      ********************************************************************
+      **  Retrieve a message text RTVMTX
+      /COPY SDCPYSRC,SD1453C001
+      ** Send a message SNDMSG
+      /COPY SDCPYSRC,SD1453C003
+      *
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

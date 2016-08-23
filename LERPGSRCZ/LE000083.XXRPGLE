@@ -1,0 +1,724 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+      *****************************************************************
+/*S*D****RPGBASEBNC****************************************************                       CLE164
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LE000083 - Pre-Check Auto Settlements report                 *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *                                                               *
+      *  Last Amend No. CLE164  *REDUNDANT Date 18Aug14               *
+      *  Prev Amend No. CLE134  *CREATE    Date 01Aug12               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *                                                               *
+      *****************************************************************
+ 
+     FLEPSXTPD  IF   E           K DISK    INFSR(*PSSR)
+ 
+     FLE000083P1O    E             PRINTER INFSR(*PSSR)
+     F                                     INFDS(SPOOL1)
+     F                                     USROPN
+     F                                     OFLIND(P1OvrFlw)
+ 
+     D/EJECT
+      *****************************************************************
+     D/COPY ZACPYSRC,STD_D_SPEC
+     D/COPY ZACPYSRC,PSDS
+ 
+     D SPOOL1          DS
+     D   SFILE1               83     92
+     D   SFNUM1              123    124B 0
+ 
+     D SDBANK        E DS                  EXTNAME(SDBANKPD)
+     D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
+     D SDCURR        E DS                  EXTNAME(SDCURRPD)
+     D GLACNT        E DS                  EXTNAME(ACCNTAB)
+     D MEMREC        E DS                  EXTNAME(MEMOS)
+     D                                     PREFIX(M_)
+ 
+     D DSFDY         E DS
+     D DSSDY         E DS
+ 
+     D DSCURR          S                   INZ DIM(500) LIKE(SDCURR)
+     D DSCYCD          S                   INZ DIM(500) LIKE(A6CYCD)
+ 
+     D DSXTREC         DS
+     D   DSACNT
+     D     XTBRCA                          OVERLAY(DSACNT)
+     D     XTCNUM                          OVERLAY(DSACNT: *NEXT)
+     D     XTACCY                          OVERLAY(DSACNT: *NEXT)
+     D     XTACOD                          OVERLAY(DSACNT: *NEXT)
+     D     XTACSQ                          OVERLAY(DSACNT: *NEXT)
+     D   XTVUDT
+ 
+     D DSXTPRV         DS                  LIKEDS(DSXTREC)
+ 
+     D DSBALAFT        S                   LIKE(CLBL)
+     D DSXTMVAM        S                   LIKE(XTMVAM)
+ 
+     D                 DS
+     D XTLTYP
+     D  DSXTLTYP1                     1    OVERLAY(XTLTYP)
+ 
+     D PTR             S               *   INZ(%ADDR(*IN))
+ 
+     D                 DS                  BASED(PTR)
+     D DSPRTNONLE             30     30N
+ 
+     D DSPRTDT                         N
+ 
+     D #C              S              9S 0 INZ
+ 
+      ** Additional Field Definitions
+     D @NUMB           S             15  0
+     D @DECS           S              1  0
+     D @EDTC           S              1
+     D @CHAR           S             21
+     D @DATIN          S              5  0
+     D @DATFM          S              1
+     D @DATE6          S              6  0
+     D @DATE7          S              7
+     D @BRCD           S              3
+     D @ACID           S             10
+     D @CYCD           S              3
+     D @ACOD           S             10
+     D @ACSQ           S              2
+     D @TYPE           S              7
+     D @NOSN           S              2
+     D @RETL           S             10  0
+     D @CNUM           S              6
+     D @ACOD0          S             10  0
+     D @ACSQ0          S              2  0
+     D @CURR           S              3
+     D ZSSEQ           S              5
+     D ZSENTITY        S              3
+     D ZSFILE          S             10
+     D ZSNUM           S              6  0
+     D ZSERR           S              1
+     D P@SEQ           S              5
+     D P@LEVEL         S              1
+     D P@ENTITY        S              3
+ 
+     C/EJECT
+ 
+      ** +--- Start of Main processing -----------------------------------+
+      ** Ê                                                                Ê
+      ** Ê Initial processing is performed automatically: the *INZSR is   Ê
+      ** Ê executed at program activation.                                Ê
+      ** Ê                                                                Ê
+      ** +----------------------------------------------------------------+
+ 
+      ** Process the extract file
+      ** (Read all records or only those for a given branch)
+ 
+     C                   IF        P@LEVEL = 'B'
+     C                             AND P@ENTITY <> 'ALL'
+     C     P@ENTITY      SETLL     LEPSXTPD
+     C     P@ENTITY      READE     LEPSXTPD
+ 
+     C                   ELSE
+     C                   READ      LEPSXTPD
+     C                   ENDIF
+ 
+     C                   DOW       NOT %EOF(LEPSXTPD)
+     C                   EXSR      XPPSXT
+ 
+     C                   IF        P@LEVEL = 'B' AND
+     C                             P@ENTITY <> 'ALL'
+     C     P@ENTITY      READE     LEPSXTPD
+ 
+     C                   ELSE
+     C                   READ      LEPSXTPD
+     C                   ENDIF
+     C                   ENDDO
+ 
+      ** Process Last Record
+ 
+     C                   EXSR      XPLR
+ 
+      ** Exit Program
+ 
+     C                   EVAL      *INLR = *ON
+ 
+     C                   RETURN
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  XPPSXT - Process Extract Record                              *
+      *****************************************************************
+     C     XPPSXT        BEGSR
+ 
+      ** Change of key data
+ 
+     C                   IF        DSXTREC <> DSXTPRV
+ 
+     C                   IF        DSXTPRV.XTBRCA <> XTBRCA
+     C                   EXSR      XPCHGBRA
+     C                   EXSR      XPCHGACC
+     C                   EXSR      XPCHGVDT
+ 
+     C                   ELSEIF    DSXTPRV.DSACNT <> DSACNT
+     C                   EXSR      XPCHGACC
+     C                   EXSR      XPCHGVDT
+ 
+     C                   ELSEIF    DSXTPRV.XTVUDT <> XTVUDT
+     C                   EXSR      XPCHGVDT
+     C                   ENDIF
+     C                   ENDIF
+ 
+      ** Print a line for either Non-Lending Consolidated
+      ** or an individual movement
+ 
+     C                   CLEAR                   P1D002
+     C                   EVAL      DSPRTNONLE = *OFF
+ 
+     C                   IF        XTXRFI = *BLANKS
+     C                   EVAL      DSPRTNONLE = *ON
+     C                   EXSR      XENONLEAMT
+ 
+     C                   ELSE
+     C                   IF        XTDORC = 1
+     C                   EVAL      DSXTMVAM = 0 - XTMVAM
+ 
+     C                   ELSE
+     C                   EVAL      DSXTMVAM = XTMVAM
+     C                   ENDIF
+ 
+     C                   EVAL      P1PCKO = %EDITC(XTPCKO: '3')
+ 
+     C                   IF        XTXRFI = 'FEE'
+     C                             AND XTFCTY <> 0
+     C                   EVAL      P1CUST = XTFCNU
+ 
+     C                   ELSE
+     C                   EVAL      P1CUST = XTLCNU
+     C                   ENDIF
+ 
+     C                   IF        XTFCTY <> 0
+     C                   EVAL      P1FACLTY = %EDITC(XTFCTY: 'X')
+     C                                      + '/'
+     C                                      + %EDITC(XTFCSQ: 'X')
+     C                   ENDIF
+ 
+     C                   IF        XTLNRF <> *BLANKS
+     C                   EVAL      P1LOAN = XTLNRF
+     C                   ENDIF
+ 
+     C                   IF        XTFSEQ <> 0
+     C                   EVAL      P1FEESEQ = %EDITC(XTFSEQ: 'X')
+     C                   ENDIF
+ 
+     C                   EVAL      P1TYPSTP = XTLTYP
+     C                                      + ' '
+     C                                      + XTSUTP
+ 
+     C                   IF        DSXTLTYP1 = 'X'
+     C                   EVAL      P1MOVDSC = 'Past Due Principal'
+ 
+     C                   ELSEIF    DSXTLTYP1 = 'Y'
+     C                   EVAL      P1MOVDSC = 'Past Due Interest'
+ 
+     C                   ELSEIF    DSXTLTYP1 = 'Z'
+     C                   EVAL      P1MOVDSC = 'Past Due Fee'
+ 
+     C                   ELSEIF    XTXRFI = 'FEE' AND
+     C                             XTFCTY <> 0
+     C                   EVAL      P1MOVDSC = 'Facility Fee'
+ 
+     C                   ELSEIF    XTXRFI = 'FEE' AND
+     C                             XTLNRF <> *BLANKS
+     C                   EVAL      P1MOVDSC = 'Loan Fee'
+ 
+     C                   ELSEIF    XTXRFI = 'FEE'
+     C                   EVAL      P1MOVDSC = 'Fee'
+ 
+     C                   ELSEIF    XTXRFI = 'CLI'
+     C                   EVAL      P1MOVDSC = 'Loan'
+     C                   ENDIF
+     C                   ENDIF
+ 
+      ** For non-zero Movement, output a line
+ 
+     C                   IF        DSXTMVAM <> 0
+     C                   EVAL      DSBALAFT -= DSXTMVAM
+ 
+     C                   CALL      'ZSEDIT'
+     C                   PARM      DSXTMVAM      @NUMB
+     C                   PARM      A6NBDP        @DECS
+     C                   PARM      'J'           @EDTC
+     C     P1AMOUNT      PARM                    @CHAR
+ 
+     C                   CALL      'ZSEDIT'
+     C                   PARM      DSBALAFT      @NUMB
+     C                   PARM      A6NBDP        @DECS
+     C                   PARM      'J'           @EDTC
+     C     P1BALAFT      PARM                    @CHAR
+ 
+     C                   EXSR      XWP1H
+ 
+     C                   IF        DSPRTDT
+     C                   WRITE     P1D001
+ 
+     C                   EVAL      DSPRTDT = *OFF
+     C                   ENDIF
+ 
+     C                   WRITE     P1D002
+     C                   ENDIF
+ 
+     C                   EVAL      DSXTPRV = DSXTREC
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *   XPLR - Process Last Record                                  *
+      *****************************************************************
+     C     XPLR          BEGSR
+ 
+      ** Open Print File
+ 
+     C                   IF        NOT %OPEN(LE000083P1) AND
+     C                             P@ENTITY <> 'ALL'
+     C                   EXSR      XOP1
+ 
+     C                   EVAL      @BRCD = P@ENTITY
+     C                   EXSR      XRBRCH
+ 
+     C                   EVAL      H#BRCA = P@ENTITY
+     C                   EVAL      H#BRNM = A8BRNM
+     C                   ENDIF
+ 
+      ** Print Footers on Last Page
+ 
+     C                   IF        %OPEN(LE000083P1)
+     C                   EXSR      XWP1H
+ 
+     C                   IF        P@LEVEL = 'B'
+     C                   WRITE     P1T001
+ 
+     C                   ELSE
+     C                   WRITE     P1T002
+     C                   ENDIF
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  XPCHGBRA - Process Change of Branch                          *
+      *****************************************************************
+     C     XPCHGBRA      BEGSR
+ 
+      ** If Branch level, Open Spool File, Otherwise Start New Page
+ 
+     C                   IF        P@LEVEL = 'B'
+     C                   EXSR      XOP1
+ 
+     C                   ELSE
+     C                   EVAL      P1OVRFLW = *ON
+     C                   ENDIF
+ 
+      ** Retrieve Branch Details
+ 
+     C                   EVAL      @BRCD = XTBRCA
+     C                   EXSR      XRBRCH
+ 
+     C                   EVAL      H#BRCA = XTBRCA
+     C                   EVAL      H#BRNM = A8BRNM
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  XPCHGACC - Process Change of Account                         *
+      *****************************************************************
+     C     XPCHGACC      BEGSR
+ 
+      ** Retrieve Account Details
+ 
+     C                   EVAL      @ACID = XTCNUM
+     C                   EVAL      @CYCD = XTACCY
+     C                   EVAL      @ACOD = %EDITC(XTACOD: 'X')
+     C                   EVAL      @ACSQ = %EDITC(XTACSQ: 'X')
+     C                   EVAL      @ACOD0 = XTACOD
+     C                   EVAL      @ACSQ0 = XTACSQ
+     C                   EVAL      @BRCD = XTBRCA
+     C                   EXSR      XRACCT
+ 
+     C                   EVAL      P1ACCNT = XTCNUM
+     C                                       + '-'
+     C                                       + XTACCY
+     C                                       + '-'
+     C                                       + %EDITC(XTACOD: 'X')
+     C                                       + '-'
+     C                                       + %EDITC(XTACSQ: 'X')
+ 
+     C                   EVAL      P1ANAM = ANAM
+     C                   EVAL      DSBALAFT = 0 - CLBL
+ 
+      ** If Currency Change, Retrieve Currency Details
+ 
+     C                   IF        DSXTPRV.XTACCY <> XTACCY
+     C                   EVAL      @CURR = XTACCY
+     C                   EXSR      XRCURR
+     C                   ENDIF
+ 
+      ** Edit Opening Balance
+ 
+     C                   EVAL      @NUMB = 0 - CLBL
+ 
+     C                   CALL      'ZSEDIT'
+     C                   PARM                    @NUMB
+     C                   PARM      A6NBDP        @DECS
+     C                   PARM      'J'           @EDTC
+     C     P1OPNBAL      PARM                    @CHAR
+ 
+      ** Retrieve Projected Balance Details
+ 
+     C                   EVAL      @CNUM = XTCNUM
+     C                   EVAL      @CYCD = XTACCY
+     C                   EVAL      @ACOD = %EDITC(XTACOD: 'X')
+     C                   EVAL      @ACSQ = %EDITC(XTACSQ: 'X')
+     C                   EVAL      @ACOD0 = XTACOD
+     C                   EVAL      @ACSQ0 = XTACSQ
+     C                   EVAL      @BRCD = XTBRCA
+     C                   EXSR      XRMEMS
+ 
+     C                   EVAL      @NUMB = 0 - M_CLBLN
+ 
+      ** Edit Projected Balance
+ 
+     C                   CALL      'ZSEDIT'
+     C                   PARM                    @NUMB
+     C                   PARM      A6NBDP        @DECS
+     C                   PARM      'J'           @EDTC
+     C     P1PRJBAL      PARM                    @CHAR
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  XPCHGVDT - Process Change of Value Date                      *
+      *****************************************************************
+     C     XPCHGVDT      BEGSR
+ 
+     C                   EVAL      DSPRTDT = *ON
+ 
+     C                   IF        XTVUDT > 0
+     C                   CALL      'ZDATE2'
+     C                   PARM      XTVUDT        @DATIN
+     C                   PARM                    @DATFM
+     C                   PARM                    @DATE6
+     C     P1VDDMMM      PARM      *BLANKS       @DATE7
+ 
+     C                   ELSE
+     C                   EVAL      P1VDDMMM = *BLANKS
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  XENONLEAMT - Evaluate Non-leanding Amount                    *
+      *****************************************************************
+     C     XENONLEAMT    BEGSR
+ 
+      ** Initialisation
+ 
+     C                   EVAL      DSXTMVAM = 0
+ 
+      ** Accumulate Non-leanding Amount
+ 
+     C                   DOU       %EOF(LEPSXTPD) OR
+     C                             XTXRFI <> *BLANKS
+ 
+     C                   IF        XTDORC = 1
+     C                   EVAL      DSXTMVAM -= XTMVAM
+ 
+     C                   ELSE
+     C                   EVAL      DSXTMVAM += XTMVAM
+     C                   ENDIF
+ 
+     C     LEPSXTK       READE     LEPSXTPD
+     C                   ENDDO
+ 
+      ** Adjust file cursor so as not to interupt main read loop
+ 
+     C                   IF        %EOF(LEPSXTPD)
+     C     LEPSXTK       SETGT     LEPSXTPD
+ 
+     C                   ELSE
+     C                   READP     LEPSXTPD
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  XRBRCH - Retrieve Branch Details                             *
+      *****************************************************************
+     C     XRBRCH        BEGSR
+ 
+      ** Retrieve Record
+ 
+     C                   CALL      'AOBRCHR0'
+     C                   PARM      *BLANKS       @RTCD
+     C                   PARM      '*KEY'        @OPTN
+     C                   PARM                    @BRCD
+     C     SDBRCH        PARM      SDBRCH        DSFDY
+ 
+     C                   IF        @RTCD <> *BLANKS
+     C                   EVAL      A8BRNM = *BLANKS
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  XRACCT - Retrieve Account Details                            *
+      *****************************************************************
+     C     XRACCT        BEGSR
+ 
+      ** Retrieve Record
+ 
+     C                   CALL      'AOACCTV0'
+     C                   PARM      *BLANKS       @RTCD
+     C                   PARM                    @ACID
+     C                   PARM                    @CYCD
+     C                   PARM                    @ACOD
+     C                   PARM                    @ACSQ
+     C                   PARM                    @BRCD
+     C                   PARM                    @TYPE
+     C                   PARM                    @NOSN
+     C     GLACNT        PARM      GLACNT        DSSDY
+ 
+     C                   IF        @RTCD <> *BLANKS
+     C                   EVAL      ANAM = *BLANKS
+     C                   EVAL      CLBL = 0
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  XRMEMS -  Retrieve Projected Balance Details                 *
+      *****************************************************************
+     C     XRMEMS        BEGSR
+ 
+      ** Retrieve Record
+ 
+     C                   CALL      'AOMEMSR0'
+     C                   PARM      *BLANKS       @RTCD
+     C                   PARM                    @OPTN
+     C                   PARM      0             @RETL
+     C                   PARM                    @CNUM
+     C                   PARM                    @CYCD
+     C                   PARM                    @ACOD0
+     C                   PARM                    @ACSQ0
+     C                   PARM                    @BRCD
+     C     MEMREC        PARM      MEMREC        DSFDY
+ 
+     C                   IF        @RTCD <> *BLANKS
+     C                   EVAL      M_CLBLN = 0
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  XRCURR - Retreive Currency Details                           *
+      *****************************************************************
+     C     XRCURR        BEGSR
+ 
+      ** Check Array for Currency
+ 
+     C                   EVAL      #C = %LOOKUP(@CURR:DSCYCD)
+ 
+     C                   IF        #C > 0
+     C                   EVAL      SDCURR = DSCURR(#C)
+ 
+      ** Otherwise, Retrieve Record
+ 
+     C                   ELSE
+     C                   CALL      'AOCURRR0'
+     C                   PARM      *BLANKS       @RTCD
+     C                   PARM      '*KEY'        @OPTN
+     C                   PARM                    @CURR
+     C     SDCURR        PARM      SDCURR        DSSDY
+ 
+     C                   IF        @RTCD <> *BLANKS
+     C                   EVAL      DBFILE = 'SDCURRPD'
+     C                   EVAL      DBKEY = @CURR
+     C                   EVAL      DBASE = 3
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+     C                   EVAL      #C = %LOOKUP(' ':DSCYCD)
+ 
+     C                   IF        #C = 0
+     C                   EVAL      DBFILE = 'SDCURRPD'
+     C                   EVAL      DBKEY = @CURR
+     C                   EVAL      DBASE = 30
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+     C                   EVAL      DSCYCD(#C) = @CURR
+     C                   EVAL      DSCURR(#C) = SDCURR
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  XOP1 - Open Print File                                       *
+      *****************************************************************
+     C     XOP1          BEGSR
+ 
+      ** If Print File Already Open, Write Footer and Close
+ 
+     C                   IF        %OPEN(LE000083P1)
+     C                   WRITE     P1T001
+     C                   CLOSE     LE000083P1
+     C                   ENDIF
+ 
+      ** Open Print File
+ 
+     C                   OPEN      LE000083P1
+ 
+      ** Record spooled file details in RCF
+ 
+     C                   IF        P@LEVEL = 'B' AND
+     C                             P@ENTITY <> 'ALL'
+     C                   EVAL      ZSENTITY = P@ENTITY
+ 
+     C                   ELSEIF    P@LEVEL = 'B'
+     C                   EVAL      ZSENTITY = XTBRCA
+ 
+     C                   ELSE
+     C                   EVAL      ZSENTITY = *BLANKS
+     C                   ENDIF
+ 
+     C                   CALL      'ZSFILE'
+     C                   PARM      P@SEQ         ZSSEQ
+     C                   PARM                    ZSENTITY
+     C                   PARM      SFILE1        ZSFILE
+     C                   PARM      SFNUM1        ZSNUM
+     C                   PARM      *BLANK        ZSERR
+ 
+     C                   IF        ZSERR = 'Y'
+     C                   EVAL      DBFILE = 'ZSFILE'
+     C                   EVAL      DBASE = 4
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+     C                   EVAL      P1OVRFLW = *ON
+ 
+     C                   ENDSR
+ 
+      /EJECT
+      *****************************************************************
+      *  XWP1H - Write Printer Headings                               *
+      *****************************************************************
+     C     XWP1H         BEGSR
+ 
+      ** If Overflow, Print Headings
+ 
+     C                   IF        P1OVRFLW = *ON
+     C                   EVAL      P1OVRFLW = *OFF
+     C                   WRITE     P1H001
+     C                   WRITE     P1H002
+     C                   WRITE     P1H003
+ 
+     C                   ELSE
+     C                   IF        DSXTPRV.DSACNT <> DSACNT
+     C                   WRITE     P1H002
+     C                   WRITE     P1H003
+     C                   ENDIF
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  *INZSR - Initialisation Rountine                             *
+      *****************************************************************
+     C     *INZSR        BEGSR
+ 
+      ** Retrieve Bank Details
+ 
+     C                   CALL      'AOBANKR0'
+     C                   PARM      *BLANKS       @RTCD
+     C                   PARM      '*FIRST '     @OPTN
+     C     SDBANK        PARM      SDBANK        DSFDY
+ 
+     C                   IF        @RTCD <> *BLANKS
+     C                   EVAL      DBFILE = 'SDBANKPD'
+     C                   EVAL      DBKEY = @OPTN
+     C                   EVAL      DBASE = 1
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+     C                   IF        P@LEVEL <> 'B'
+     C                   EXSR      XOP1
+     C                   ENDIF
+ 
+     C                   CLEAR                   DSXTPRV
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  @DEFN - Definition Rountine                                  *
+      *****************************************************************
+     C     @DEFN         BEGSR
+ 
+      ** Entry List
+ 
+     C     *ENTRY        PLIST
+     C                   PARM                    P@SEQ
+     C                   PARM                    P@LEVEL
+     C                   PARM                    P@ENTITY
+ 
+      ** Key List
+ 
+     C     LEPSXTK       KLIST
+     C                   KFLD                    XTBRCA
+     C                   KFLD                    XTCNUM
+     C                   KFLD                    XTACCY
+     C                   KFLD                    XTACOD
+     C                   KFLD                    XTACSQ
+     C                   KFLD                    XTVUDT
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  *PSSR - Terminate Program Abnormally & Produce Dump          *
+      *****************************************************************
+     C     *PSSR         BEGSR
+ 
+      ** If First Time Through, Produce Dump
+ 
+     C                   IF        RUNBEFORE = *BLANK
+     C                   EVAL      RUNBEFORE = 'Y'
+     C                   DUMP
+     C                   ENDIF
+ 
+      ** Exit Program Abnormally
+ 
+     C                   EVAL      *INU7 = *ON
+     C                   EVAL      *INU8 = *ON
+     C                   EVAL      *INLR = *ON
+ 
+     C                   RETURN
+ 
+     C                   ENDSR
+      *****************************************************************

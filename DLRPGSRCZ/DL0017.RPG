@@ -1,0 +1,732 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Initialization Program for CAS005')           *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL0017 - Initialization Program for CAS005                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *                                                               *
+      *  Last Amend No. CGL165             Date 17Feb15               *
+      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER054             Date 07Apr09               *
+      *                 CER048             Date 19May08               *
+      *                 CER020             Date 19May08               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 05Jul06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CAS009             Date 16May05               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CAS008             Date 16Jun04               *
+      *                 226009             Date 24Mar04               *
+      *                 CGL014             Date 20Oct03               *
+      *                 CAS005  *CREATE    Date 16Dec02               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance Receive Settlement Instructions             *
+      *           (Recompiled)                                        *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER054 - German Features - Church Tax (Recompile)            *
+      *  CER048 - German Features - Taxes (Recompile)                 *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus (Recompile)                              *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CAS009 - EIR/AC Accounting (Recompile)                       *
+      *  CDL038 - Extended Deal Sub Type                              *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CAS008 - IAS 39 Enhancements (Recompile)                     *
+      *  226009 - Forward yield curve is not setup on initialisation  *
+      *  CGL014 - Collaterals Processing (Recompile)                  *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *                                                               *
+      *****************************************************************
+     FDEALS   UF  E           K        DISK
+     F            DEALSDAF                          KIGNORE
+     F            DEALSDBF                          KIGNORE
+     F            DEALSDEF                          KIGNORE
+     F            DEALSDFF                          KIGNORE
+     FFDDTSTL1IF  E           K        DISK         KINFSR *PSSR                              226009
+     FDL0017P1O   E             30     PRINTER
+     FDL0017AUO   E                    PRINTER
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+      *
+     I*RDTYP******DS******************************5                                           CDL038
+     IRDTYP       DS                             10                                           CDL038
+     I                                        1   2 DTYP
+     I                                        3   3 DASH
+     I                                        4   5 DLST
+     I                                        6   6 DASH2                                     CDL038
+     I                                        7  10 CLAS                                      CDL038
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *
+     ISDBANK    E DSSDBANKPD
+      ** External data structures for Bank Details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** External Data Structures for Currency Details
+      *
+     IDSSDY     E DSDSSDY
+      ** Long Data Structure for Access Objects
+      *
+      *****************************************************************
+      *                                                               *
+      *  Main Processing                                              *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Access Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+      ** Database Error Processing
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     MOVELPOPTN     DBKEY
+     C                     Z-ADD1         DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Read through DEALS File
+      *
+     C           *LOVAL    SETLLDEALS
+     C                     READ DEALS                    31
+     C                     MOVE *ON       *IN30
+      *
+     C           *IN31     DOWEQ*OFF
+      *
+     C           RCDT      IFEQ 'C'
+     C           RCDT      OREQ 'D'
+      *
+      ** Update file fields
+      *
+     C                     EXSR SRUPD1
+      *
+     C                     ELSE
+      *
+     C           RCDT      IFEQ 'G'
+     C           DTYP      ANDEQ'RS'
+     C           RCDT      OREQ 'G'
+     C           DTYP      ANDEQ'RX'
+      *                                                                                       226009
+      ** Setup forward yield curve                                                            226009
+      *                                                                                       226009
+     C                     EXSR SRFWD                                                         226009
+      *
+      ** Set up Interest Rates
+      *
+     C                     EXSR SRINTR
+      *
+      ** Calculate for the fields
+      *
+     C                     EXSR SRCALC
+      *
+      ** Write to report
+      *
+     C                     EXSR SRREPT
+      *
+      ** Update file fields
+      *
+     C                     EXSR SRUPDT
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     READ DEALS                    31
+     C                     ENDDO
+      *
+     C                     WRITETRAILP1
+     C                     MOVE *ON       *INLR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINTR - Subroutine to calculate for the Interest Rate       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINTR    BEGSR
+      *
+     C                     Z-ADDUEINR     WUINTR
+      *
+     C           USPIN     IFEQ 'S'
+     C           UEINR     ADD  URTSP     WUINTR 117
+     C                     ENDIF
+      *
+     C           USPIN     IFEQ 'A'
+     C           URTSP     ANDLTUEINR
+     C           USPIN     OREQ *BLANKS
+     C           UBRTT     ANDNE0
+     C           URTSP     ANDLTUEINR
+     C           UEINR     SUB  URTSP     WUINTR
+     C                     ENDIF
+      *
+     C                     Z-ADDWUINTR    FSUEFR
+      *
+     C                     Z-ADDTEINR     WTINTR
+      *
+     C           TSPIN     IFEQ 'S'
+     C           TEINR     ADD  TRTSP     WTINTR 117
+     C                     ENDIF
+      *
+     C           TSPIN     IFEQ 'A'
+     C           TRTSP     ANDLTTEINR
+     C           TSPIN     OREQ *BLANKS
+     C           TBRTT     ANDNE0
+     C           TRTSP     ANDLTTEINR
+     C           TEINR     SUB  TRTSP     WTINTR
+     C                     ENDIF
+      *
+     C                     Z-ADDWTINTR    FSTEFR
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRUPDT - Subroutine to Update DEALSDG                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRUPDT    BEGSR
+      *
+     C                     Z-ADDUPAMT     FSUPAM
+     C                     Z-ADDTPAMT     FSTPAM
+     C                     Z-ADDUNSAM     FSUSAB
+     C                     Z-ADDTNSAM     FSTSAB
+     C                     UPDATDEALSDGF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCALC - Calculate for the New Fields                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCALC    BEGSR
+      *
+     C           UEINR     IFNE *ZERO
+      *
+      ** Accrued Interest Posted
+      *
+     C           WUINTR    DIV  UEINR     WKINT  117H
+     C           UAIPD     MULT WKINT     FSUIPB
+      *
+     C           UAIAP     MULT WKINT     FSUIAB
+     C           UAIAN     MULT WKINT     FSUINB
+      *
+      ** Interest Paid/Received to Date
+      *
+     C           UIPRD     MULT WKINT     FSUPRB
+      *
+      ** Interest Accrued Last Interest Change Date
+      *
+     C           UIALC     MULT WKINT     FSUALB
+      *
+      ** Accrued Interest to Control Date
+      *
+     C           UAITC     MULT WKINT     FSUITB
+      *
+      ** Interest Paid/Received this Month
+      *
+     C           UIPRM     MULT WKINT     FSUPMB
+      *
+     C                     ELSE
+     C                     Z-ADDUAIAP     FSUIAB
+     C                     Z-ADDUAIAN     FSUINB
+     C                     Z-ADDUAIPD     FSUIPB
+     C                     Z-ADDUIPRD     FSUPRB
+     C                     Z-ADDUIALC     FSUALB
+     C                     Z-ADDUAITC     FSUITB
+     C                     Z-ADDUIPRM     FSUPMB
+     C                     ENDIF
+      *
+     C           TEINR     IFNE *ZERO
+      *
+      ** Accrued Interest Posted
+      *
+     C           WTINTR    DIV  TEINR     WKINT     H
+     C           TAIPD     MULT WKINT     FSTIPB
+      *
+     C           TAIAP     MULT WKINT     FSTIAB
+     C           TAIAN     MULT WKINT     FSTINB
+      *
+      ** Interest Paid/Received to Date
+      *
+     C           TIPRD     MULT WKINT     FSTPRB
+      *
+      ** Interest Accrued Last Interest Change Date
+      *
+     C           TIALC     MULT WKINT     FSTALB
+      *
+      ** Accrued Interest to Control Date
+      *
+     C           TAITC     MULT WKINT     FSTITB
+      *
+      ** Interest Paid/Received this Month
+      *
+     C           TIPRM     MULT WKINT     FSTPMB
+      *
+     C                     ELSE
+     C                     Z-ADDTAIAP     FSTIAB
+     C                     Z-ADDTAIAN     FSTINB
+     C                     Z-ADDTAIPD     FSTIPB
+     C                     Z-ADDTIPRD     FSTPRB
+     C                     Z-ADDTIALC     FSTALB
+     C                     Z-ADDTAITC     FSTITB
+     C                     Z-ADDTIPRM     FSTPMB
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRUPD1 - Subroutine to Update DEALSDC/DEALSDD                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRUPD1    BEGSR
+      *
+     C                     Z-ADD*ZEROS    FSAIPN
+     C                     Z-ADD*ZEROS    FSIPRN
+     C                     Z-ADD*ZEROS    FSAIAN
+     C                     Z-ADD*ZEROS    FSAITN
+     C                     Z-ADD*ZEROS    FSAINN
+     C                     Z-ADD*ZEROS    FSIPMN
+     C                     Z-ADD*ZEROS    FSICTN
+     C                     Z-ADD*ZEROS    FSTOTN
+     C                     Z-ADD*ZEROS    FSPAMT
+     C                     Z-ADD*ZEROS    FSPINN
+      *
+     C           PCPL      IFNE *ZEROS
+     C                     Z-ADDPCPL      FSPAMT
+     C                     ENDIF
+      *
+     C           FSLQPR    IFEQ 0
+      *
+     C           AIPD      IFNE *ZEROS
+     C                     Z-ADDAIPD      FSAIPN
+     C                     ENDIF
+      *
+     C           IPRD      IFNE *ZEROS
+     C                     Z-ADDIPRD      FSIPRN
+     C                     ENDIF
+      *
+     C           AIAP      IFNE *ZEROS
+     C                     Z-ADDAIAP      FSAIAN
+     C                     ENDIF
+      *
+     C           AIAN      IFNE *ZEROS
+     C                     Z-ADDAIAN      FSAINN
+     C                     ENDIF
+      *
+     C           AITC      IFNE *ZEROS
+     C                     Z-ADDAITC      FSAITN
+     C                     ENDIF
+      *
+     C           IPRM      IFNE *ZEROS
+     C                     Z-ADDIPRM      FSIPMN
+     C                     ENDIF
+      *
+     C           ICTD      IFNE *ZEROS
+     C                     Z-ADDICTD      FSICTN
+     C                     ENDIF
+      *
+     C           TOTI      IFNE *ZEROS
+     C                     Z-ADDTOTI      FSTOTN
+     C                     ENDIF
+      *
+     C           PCPL      IFNE *ZEROS
+     C                     Z-ADDPCPL      FSPAMT
+     C                     ENDIF
+      *
+     C           PINT1     IFNE *ZEROS
+     C                     Z-ADDPINT1     FSPINN
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C           FSLQPS    IFEQ '-'
+     C           INTR      SUB  FSLQPR    WINTR  117
+     C                     ELSE
+     C           INTR      ADD  FSLQPR    WINTR
+     C                     ENDIF
+      *
+     C           WINTR     IFGT *ZEROS
+      *
+     C           AIPD      IFNE *ZEROS
+     C           AIPD      MULT WINTR     FSAIPN    H
+     C                     DIV  INTR      FSAIPN    H
+     C                     ENDIF
+      *
+     C           IPRD      IFNE *ZEROS
+     C           IPRD      MULT WINTR     FSIPRN    H
+     C                     DIV  INTR      FSIPRN    H
+     C                     ENDIF
+      *
+     C           AIAP      IFNE *ZEROS
+     C           AIAP      MULT WINTR     FSAIAN    H
+     C                     DIV  INTR      FSAIAN    H
+     C                     ENDIF
+      *
+     C           AIAN      IFNE *ZEROS
+     C           AIAN      MULT WINTR     FSAINN    H
+     C                     DIV  INTR      FSAINN    H
+     C                     ENDIF
+      *
+     C           AITC      IFNE *ZEROS
+     C           AITC      MULT WINTR     FSAITN    H
+     C                     DIV  INTR      FSAITN    H
+     C                     ENDIF
+      *
+     C           IPRM      IFNE *ZEROS
+     C           IPRM      MULT WINTR     FSIPMN    H
+     C                     DIV  INTR      FSIPMN    H
+     C                     ENDIF
+      *
+     C           ICTD      IFNE *ZEROS
+     C           ICTD      MULT WINTR     FSICTN    H
+     C                     DIV  INTR      FSICTN    H
+     C                     ENDIF
+      *
+     C           TOTI      IFNE *ZEROS
+     C           TOTI      MULT WINTR     FSTOTN    H
+     C                     DIV  INTR      FSTOTN    H
+     C                     ENDIF
+      *
+     C           PINT1     IFNE *ZEROS
+     C           PINT1     MULT WINTR     FSPINN    H
+     C                     DIV  INTR      FSPINN    H
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           RCDT      IFEQ 'C'
+     C                     UPDATDEALSDCF
+     C                     ELSE
+     C                     UPDATDEALSDDF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRREPT - Write to Report File                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRREPT    BEGSR
+      *
+     C                     MOVE DLNO      RDLNO
+     C                     MOVE '-'       DASH
+     C           CLAS      IFNE *BLANK                                                        CDL038
+     C                     MOVE '-'       DASH2                                               CDL038
+     C                     ELSE                                                               CDL038
+     C                     MOVE ' '       DASH2                                               CDL038
+     C                     ENDIF                                                              CDL038
+      *
+      ** Currency
+      *
+     C                     MOVE UCUCY     RUCUCY
+     C                     MOVE TCUCY     RTCUCY
+      *
+      ** Principal Amount
+      *
+     C                     MOVE UCUCY     PCCY
+     C                     EXSR SRDEC
+      *
+     C                     Z-ADDUPAMT     ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15 150
+     C                     PARM           ZDECS   10
+     C                     PARM 'J'       ZECODE  1
+     C                     PARM *BLANKS   ZOUT21 21
+     C                     MOVE ZOUT21    RUPAMT
+     C                     MOVE UCUCY     PCCY
+     C                     EXSR SRDEC
+      *
+     C                     Z-ADDTPAMT     ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15
+     C                     PARM           ZDECS
+     C                     PARM 'J'       ZECODE
+     C                     PARM *BLANKS   ZOUT21
+     C                     MOVE ZOUT21    RTPAMT
+      *
+      ** Effective Rate
+      *
+     C                     MOVE UEINR     RUEINR
+     C                     MOVE TEINR     RTEINR
+      *
+      ** Rate/Spread
+      *
+     C                     MOVE URTSP     RURTSP
+     C                     MOVE TRTSP     RTRTSP
+      *
+      ** Spread Indicator
+      *
+     C                     MOVE USPIN     RUSPIN
+     C                     MOVE TSPIN     RTSPIN
+      *
+      ** Accrued Interest Posted to Date
+      *
+     C                     Z-ADDUAIPD     ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15
+     C                     PARM           ZDECS
+     C                     PARM 'J'       ZECODE
+     C                     PARM *BLANKS   ZOUT21
+     C                     MOVE ZOUT21    RUAIPD
+      *
+     C                     Z-ADDTAIPD     ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15
+     C                     PARM           ZDECS
+     C                     PARM 'J'       ZECODE
+     C                     PARM *BLANKS   ZOUT21
+     C                     MOVE ZOUT21    RTAIPD
+      *
+     C                     Z-ADDFSUIPB    ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15
+     C                     PARM           ZDECS
+     C                     PARM 'J'       ZECODE
+     C                     PARM *BLANKS   ZOUT21
+     C                     MOVE ZOUT21    RUAIPB
+      *
+     C                     Z-ADDFSTIPB    ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15
+     C                     PARM           ZDECS
+     C                     PARM 'J'       ZECODE
+     C                     PARM *BLANKS   ZOUT21
+     C                     MOVE ZOUT21    RTAIPB
+      *
+      ** Accrued Interest to Control Date
+      *
+     C                     Z-ADDUAITC     ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15
+     C                     PARM           ZDECS
+     C                     PARM 'J'       ZECODE
+     C                     PARM *BLANKS   ZOUT21
+     C                     MOVE ZOUT21    RUAITC
+      *
+     C                     Z-ADDTAITC     ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15
+     C                     PARM           ZDECS
+     C                     PARM 'J'       ZECODE
+     C                     PARM *BLANKS   ZOUT21
+     C                     MOVE ZOUT21    RTAITC
+      *
+     C                     Z-ADDFSUITB    ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15
+     C                     PARM           ZDECS
+     C                     PARM 'J'       ZECODE
+     C                     PARM *BLANKS   ZOUT21
+     C                     MOVE ZOUT21    RUAITB
+      *
+     C                     Z-ADDFSTITB    ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15
+     C                     PARM           ZDECS
+     C                     PARM 'J'       ZECODE
+     C                     PARM *BLANKS   ZOUT21
+     C                     MOVE ZOUT21    RTAITB
+      *
+      ** Interest Paid/Received to Date
+      *
+     C                     Z-ADDUIPRD     ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15
+     C                     PARM           ZDECS
+     C                     PARM 'J'       ZECODE
+     C                     PARM *BLANKS   ZOUT21
+     C                     MOVE ZOUT21    RUIPRD
+      *
+     C                     Z-ADDTIPRD     ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15
+     C                     PARM           ZDECS
+     C                     PARM 'J'       ZECODE
+     C                     PARM *BLANKS   ZOUT21
+     C                     MOVE ZOUT21    RTIPRD
+      *
+     C                     Z-ADDFSUPRB    ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15
+     C                     PARM           ZDECS
+     C                     PARM 'J'       ZECODE
+     C                     PARM *BLANKS   ZOUT21
+     C                     MOVE ZOUT21    RUIPRB
+      *
+     C                     Z-ADDFSTPRB    ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15
+     C                     PARM           ZDECS
+     C                     PARM 'J'       ZECODE
+     C                     PARM *BLANKS   ZOUT21
+     C                     MOVE ZOUT21    RTIPRB
+      *
+     C           *IN30     IFEQ *ON
+     C                     WRITEHEADP1
+     C                     MOVE *OFF      *IN30
+     C                     ENDIF
+      *
+     C                     WRITEDETAIL
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDEC  - Determine the Number of Decimal Places              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDEC     BEGSR
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY   ' POPTN   7
+     C                     PARM           PCCY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE 'SDCURRPD'DBFILE
+     C                     MOVELPCCY      DBKEY
+     C                     Z-ADD2         DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT                                                                                  226009
+      *****************************************************************                       226009
+      *                                                               *                       226009
+      *  SRFWD  - Default forward yield curve                         *                       226009
+      *                                                               *                       226009
+      *****************************************************************                       226009
+      *                                                                                       226009
+     C           SRFWD     BEGSR                                                              226009
+      *                                                                                       226009
+     C           KDTST     KLIST                                                              226009
+     C                     KFLD           DTYP                                                226009
+     C                     KFLD           DLST                                                226009
+     C                     KFLD           CLAS                                                CDL038
+      *                                                                                       226009
+     C                     MOVEL*BLANKS   FSOFYC                                              226009
+     C                     MOVEL*BLANKS   FSTFYC                                              226009
+      *                                                                                       226009
+     C           KDTST     CHAINFDDTSTL1             01                                       226009
+      *                                                                                       226009
+     C           *IN01     IFEQ '0'                                                           226009
+     C           UBRTT     IFNE 0                                                             226009
+     C           FSOYLC    ANDNE*BLANKS                                                       226009
+     C                     MOVELFSORFY    FSOFYC                                              226009
+     C                     ENDIF                                                              226009
+      *                                                                                       226009
+     C           TBRTT     IFNE 0                                                             226009
+     C           FSTYLC    ANDNE*BLANKS                                                       226009
+     C                     MOVELFSTHFY    FSTFYC                                              226009
+     C                     ENDIF                                                              226009
+     C                     ENDIF                                                              226009
+      *                                                                                       226009
+     C                     ENDSR                                                              226009
+      *****************************************************************                       226009
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program Exception Error Routine                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+      *
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+      *
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2002

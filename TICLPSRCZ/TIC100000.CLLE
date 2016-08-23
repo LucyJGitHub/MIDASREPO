@@ -1,0 +1,424 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas TI Static Data Driver File Take-On')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Trade Innovation Module                             */
+/*                                                                   */
+/*       TIC100000 - Midas TI Static Data Driver File Take-On        */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2014           */
+/*                                                                   */
+/*       Last Amend No. MD031150           Date 29Oct14              */
+/*       Prev Amend No. CTI006  *CREATE    Date 31Mar14              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD031150 - Changes to Export of Base Rates                  */
+/*                - Corrected Currency and Account Branch Change     */
+/*                  execution position                               */
+/*                - Use TIExportBaseRates system for base rate export*/
+/*       CTI006 - Trade Finance BF Midas 2.2 Interface               */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FORMAT)
+ 
+             DCL        VAR(&FORMAT) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTNCDE)    TYPE(*CHAR) LEN(7)                              /*MD031150*/
+             DCL        VAR(&EXBSRT) TYPE(*CHAR) LEN(200)        +
+                          VALUE(' ')                                                    /*MD031150*/
+             DCL        VAR(&SVALK2)    TYPE(*CHAR) LEN(20)                             /*MD031150*/
+             DCL        VAR(&SVAL2)     TYPE(*CHAR) LEN(200)                            /*MD031150*/
+             DCL        VAR(&SVALK3)    TYPE(*CHAR) LEN(20)                             /*MD031150*/
+             DCL        VAR(&SVAL3)     TYPE(*CHAR) LEN(200)                            /*MD031150*/
+             DCL        VAR(&SVALK4)    TYPE(*CHAR) LEN(20)                             /*MD031150*/
+             DCL        VAR(&SVAL4)     TYPE(*CHAR) LEN(200)                            /*MD031150*/
+             DCL        VAR(&SVALK5)    TYPE(*CHAR) LEN(20)                             /*MD031150*/
+             DCL        VAR(&SVAL5)     TYPE(*CHAR) LEN(200)                            /*MD031150*/
+             DCL        VAR(&SVALK6)    TYPE(*CHAR) LEN(20)                             /*MD031150*/
+             DCL        VAR(&SVAL6)     TYPE(*CHAR) LEN(200)                            /*MD031150*/
+             DCL        VAR(&SVALK7)    TYPE(*CHAR) LEN(20)                             /*MD031150*/
+             DCL        VAR(&SVAL7)     TYPE(*CHAR) LEN(200)                            /*MD031150*/
+             DCL        VAR(&SVALK8)    TYPE(*CHAR) LEN(20)                             /*MD031150*/
+             DCL        VAR(&SVAL8)     TYPE(*CHAR) LEN(200)                            /*MD031150*/
+             DCL        VAR(&SVALK9)    TYPE(*CHAR) LEN(20)                             /*MD031150*/
+             DCL        VAR(&SVAL9)     TYPE(*CHAR) LEN(200)                            /*MD031150*/
+             DCL        VAR(&SVALK0)    TYPE(*CHAR) LEN(20)                             /*MD031150*/
+             DCL        VAR(&SVAL10)    TYPE(*CHAR) LEN(200)                            /*MD031150*/
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2014')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('TIC100000 - Midas TI Static Data File +
+                          Driver Take-on') TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+             CHKOBJ     OBJ(LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
+                          DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256))
+ 
+/**TI.AccountBranchChange*********************************************/                 /*MD031150*/
+ 
+ 
+/**********  IF         COND(&FORMAT *EQ 'TIACCTBC' *OR &FORMAT *EQ ' ') THEN(DO)*/     /*MD031150*/
+ 
+/**********  CLRPFM     FILE(TISLACPD)                                 */               /*MD031150*/
+/**********  MONMSG     MSGID(CPF3142 CPF3156) EXEC(GOTO CMDLBL(ABNOR))*/               /*MD031150*/
+/**********  CALL       TI100003                                       */               /*MD031150*/
+ 
+/**********  CALL       PGM(MXC0710) PARM('TIABRC  ' 'C' 'TIACCTBC')   */               /*MD031150*/
+/**********  IF         COND(%SWITCH(XXXXXX11)) THEN(DO)               */               /*MD031150*/
+/**********     GOTO       CMDLBL(ABNOR)                               */               /*MD031150*/
+/**********  ENDDO                                                     */               /*MD031150*/
+ 
+/**********  CALL       PGM(MXC0720) PARM('TIABRC  ' 'C' 'TIACCTBC')   */               /*MD031150*/
+/**********  IF         COND(%SWITCH(XXXXXX11)) THEN(DO)               */               /*MD031150*/
+/**********     GOTO       CMDLBL(ABNOR)                               */               /*MD031150*/
+/**********  ENDDO                                                     */               /*MD031150*/
+/**********  ENDDO                                                     */               /*MD031150*/
+ 
+/* TI.AccountOfficers */
+ 
+             IF         COND(&FORMAT *EQ 'TISDACOF' *OR &FORMAT *EQ ' ') THEN(DO)
+ 
+             CALL       PGM(MXC0710) PARM('*NONE   ' '' 'TISDACOF')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             CALL       PGM(MXC0720) PARM('*NONE   ' '' 'TISDACOF')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+             ENDDO
+ 
+/* TI.AccountType */
+ 
+             IF         COND(&FORMAT *EQ 'TISDACOD' *OR &FORMAT *EQ ' ') THEN(DO)
+ 
+             CALL       PGM(MXC0710) PARM('*NONE   ' '' 'TISDACOD')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             CALL       PGM(MXC0720) PARM('*NONE   ' '' 'TISDACOD')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+             ENDDO
+ 
+/* TI.AnalysisCode */
+ 
+             IF         COND(&FORMAT *EQ 'TISDTICS' *OR &FORMAT *EQ ' ') THEN(DO)
+ 
+             CLRPFM     FILE(TIANCDPD)
+             MONMSG     MSGID(CPF3142 CPF3156) EXEC(GOTO CMDLBL(ABNOR))
+ 
+   /* Database error processing */
+ 
+             CALL       TI100001
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             CALL       PGM(MXC0710) PARM('*NONE   ' '' 'TISDTICS')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             CALL       PGM(MXC0720) PARM('*NONE   ' '' 'TISDTICS')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+             ENDDO
+                                                                                        /*MD031150*/
+/* TI.Currency */                                                                       /*MD031150*/
+                                                                                        /*MD031150*/
+             IF         COND(&FORMAT *EQ 'TISDCURR' *OR &FORMAT *EQ ' ') THEN(DO)       /*MD031150*/
+                                                                                        /*MD031150*/
+             CALL       PGM(MXC0710) PARM('*NONE   ' '' 'TISDCURR')                     /*MD031150*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                                /*MD031150*/
+                GOTO       CMDLBL(ABNOR)                                                /*MD031150*/
+             ENDDO                                                                      /*MD031150*/
+                                                                                        /*MD031150*/
+             CALL       PGM(MXC0720) PARM('*NONE   ' '' 'TISDCURR')                     /*MD031150*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                                /*MD031150*/
+                GOTO       CMDLBL(ABNOR)                                                /*MD031150*/
+             ENDDO                                                                      /*MD031150*/
+             ENDDO                                                                      /*MD031150*/
+ 
+/* TI.BaseRate */
+ 
+/**********  IF         COND(&FORMAT *EQ 'TISDBSRT' *OR &FORMAT *EQ ' ') THEN(DO) */    /*MD031150*/
+             IF         COND(&FORMAT *EQ 'TISDBSHS' *OR &FORMAT *EQ ' ') THEN(DO)       /*MD031150*/
+ 
+/* Only export when TIExportBaseRates zonal system value is set to 'Y'                  /*MD031150*/
+                                                                                        /*MD031150*/
+             CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                          'TIExportBaseRates' &EXBSRT &SVALK2 +
+                          &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                          &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                          &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                          &SVALK0 &SVAL10)                                              /*MD031150*/
+             IF         COND(&EXBSRT *EQ 'Y') THEN(DO)                                  /*MD031150*/
+                                                                                        /*MD031150*/
+             CLRPFM     FILE(TIBSHSPD)                                                  /*MD031150*/
+             MONMSG     MSGID(CPF3142 CPF3156) EXEC(GOTO CMDLBL(ABNOR))                 /*MD031150*/
+             CALL       TI100005                                                        /*MD031150*/
+                                                                                        /*MD031150*/
+/**********  CALL       PGM(MXC0710) PARM('*NONE   ' '' 'TISDBSRT')  */                 /*MD031150*/
+             CALL       PGM(MXC0710) PARM('*NONE   ' '' 'TISDBSHS')                     /*MD031150*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/**********  CALL       PGM(MXC0720) PARM('*NONE   ' '' 'TISDBSRT')  */                 /*MD031150*/
+             CALL       PGM(MXC0720) PARM('*NONE   ' '' 'TISDBSHS')                     /*MD031150*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+             ENDDO
+                                                                                        /*MD031150*/
+             ENDDO                                                                      /*MD031150*/
+ 
+/* TI.BaseRateCode */
+ 
+             IF         COND(&FORMAT *EQ 'TISDBSCD' *OR &FORMAT *EQ ' ') THEN(DO)
+ 
+             CALL       PGM(MXC0710) PARM('*NONE   ' '' 'TISDBSCD')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             CALL       PGM(MXC0720) PARM('*NONE   ' '' 'TISDBSCD')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+             ENDDO
+ 
+/* TI.Branch */
+ 
+             IF         COND(&FORMAT *EQ 'TIBRCH' *OR &FORMAT *EQ ' ') THEN(DO)
+ 
+             CALL       PGM(MXC0710) PARM('TIBRCH  ' 'C' 'TISDBRCH')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             CALL       PGM(MXC0720) PARM('TIBRCH  ' 'C' 'TISDBRCH')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+             ENDDO
+ 
+/* TI.BranchCalendar */
+ 
+             IF         COND(&FORMAT *EQ 'TIBRCCAL' *OR &FORMAT *EQ ' ') THEN(DO)
+ 
+ 
+             CALL       PGM(MXC0710) PARM('TIBCAL  ' 'C' 'TICOBRC')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             CALL       PGM(MXC0720) PARM('TIBCAL  ' 'C' 'TICOBRC')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+             ENDDO
+ 
+/* TI.Country */
+ 
+             IF         COND(&FORMAT *EQ 'TISDCTRY' *OR &FORMAT *EQ ' ') THEN(DO)
+ 
+             CALL       PGM(MXC0710) PARM('*NONE   ' '' 'TISDCTRY')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             CALL       PGM(MXC0720) PARM('*NONE   ' '' 'TISDCTRY')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+             ENDDO
+ 
+/* TI.CountryCalendar */
+ 
+             IF         COND(&FORMAT *EQ 'TICOCTRY' *OR &FORMAT *EQ ' ') THEN(DO)
+ 
+ 
+             CALL       PGM(MXC0710) PARM('TICCAL  ' 'C' 'TICOCTRY')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             CALL       PGM(MXC0720) PARM('TICCAL  ' 'C' 'TICOCTRY')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+             ENDDO
+ 
+/**TI.Currency********************************************************/                 /*MD031150*/
+ 
+/**********  IF         COND(&FORMAT *EQ 'TISDCURR' *OR &FORMAT *EQ ' ') THEN(DO)*/     /*MD031150*/
+ 
+/**********  CALL       PGM(MXC0710) PARM('*NONE   ' '' 'TISDCURR')  */                 /*MD031150*/
+/**********  IF         COND(%SWITCH(XXXXXX11)) THEN(DO)             */                 /*MD031150*/
+/**********     GOTO       CMDLBL(ABNOR)                             */                 /*MD031150*/
+/**********  ENDDO                                                                      /*MD031150*/
+ 
+/**********  CALL       PGM(MXC0720) PARM('*NONE   ' '' 'TISDCURR')  */                 /*MD031150*/
+/**********  IF         COND(%SWITCH(XXXXXX11)) THEN(DO)             */                 /*MD031150*/
+/**********     GOTO       CMDLBL(ABNOR)                             */                 /*MD031150*/
+/**********  ENDDO                                                   */                 /*MD031150*/
+/**********  ENDDO                                                   */                 /*MD031150*/
+ 
+/* TI.CurrencyCalendar */
+ 
+             IF         COND(&FORMAT *EQ 'TICURHOL' *OR &FORMAT *EQ ' ') THEN(DO)
+ 
+             CALL       PGM(MXC0710) PARM('TICCYCAL' 'C' 'TICURHOL')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             CALL       PGM(MXC0720) PARM('TICCYCAL' 'C' 'TICURHOL')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+             ENDDO
+ 
+/* TI.CurrencySpotRate */
+ 
+             IF         COND(&FORMAT *EQ 'TISDSPOT' *OR &FORMAT *EQ ' ') THEN(DO)
+ 
+             CALL       PGM(MXC0710) PARM('*NONE   ' '' 'TISDSPOT')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             CALL       PGM(MXC0720) PARM('*NONE   ' '' 'TISDSPOT')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+             ENDDO
+ 
+/* TI.CustomerType */
+ 
+             IF         COND(&FORMAT *EQ 'TISDINST' *OR &FORMAT *EQ ' ') THEN(DO)
+ 
+             CALL       PGM(MXC0710) PARM('*NONE   ' '' 'TISDINST')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             CALL       PGM(MXC0720) PARM('*NONE   ' '' 'TISDINST')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+             ENDDO
+ 
+/* TI.DefaultNostro */
+ 
+             IF         COND(&FORMAT *EQ 'TISDDFNO' *OR &FORMAT *EQ ' ') THEN(DO)
+ 
+             CALL       PGM(MXC0710) PARM('TIDFNO  ' 'C' 'TISDDFNO')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             CALL       PGM(MXC0720) PARM('TIDFNO  ' 'C' 'TISDDFNO')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+             ENDDO
+ 
+/* TI.FXRate */
+ 
+             IF         COND(&FORMAT *EQ 'TISDFXRT' *OR &FORMAT *EQ ' ') THEN(DO)
+ 
+             CALL       PGM(MXC0710) PARM('*NONE   ' '' 'TISDFXRT')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             CALL       PGM(MXC0720) PARM('*NONE   ' '' 'TISDFXRT')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+             ENDDO
+ 
+/* TI.Group */
+ 
+             IF         COND(&FORMAT *EQ 'TIGROUP' *OR &FORMAT *EQ ' ') THEN(DO)
+ 
+             CALL       PGM(MXC0710) PARM('*NONE   ' '' 'TIGROUP')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             CALL       PGM(MXC0720) PARM('*NONE   ' '' 'TIGROUP')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+             ENDDO
+ 
+/* TI.Nostro */
+ 
+             IF         COND(&FORMAT *EQ 'TISDNOST' *OR &FORMAT *EQ ' ') THEN(DO)
+ 
+             CALL       PGM(MXC0710) PARM('*NONE   ' '' 'TISDNOST')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             CALL       PGM(MXC0720) PARM('*NONE   ' '' 'TISDNOST')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+             ENDDO
+ 
+/* TI.AccountBranchChange */                                                            /*MD031150*/
+                                                                                        /*MD031150*/
+                                                                                        /*MD031150*/
+             IF         COND(&FORMAT *EQ 'TIACCTBC' *OR &FORMAT *EQ ' ') THEN(DO)       /*MD031150*/
+                                                                                        /*MD031150*/
+             CLRPFM     FILE(TISLACPD)                                                  /*MD031150*/
+             MONMSG     MSGID(CPF3142 CPF3156) EXEC(GOTO CMDLBL(ABNOR))                 /*MD031150*/
+             CALL       TI100003                                                        /*MD031150*/
+                                                                                        /*MD031150*/
+             CALL       PGM(MXC0710) PARM('TIABRC  ' 'C' 'TIACCTBC')                    /*MD031150*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                                /*MD031150*/
+                GOTO       CMDLBL(ABNOR)                                                /*MD031150*/
+             ENDDO                                                                      /*MD031150*/
+                                                                                        /*MD031150*/
+             CALL       PGM(MXC0720) PARM('TIABRC  ' 'C' 'TIACCTBC')                    /*MD031150*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                                /*MD031150*/
+                GOTO       CMDLBL(ABNOR)                                                /*MD031150*/
+             ENDDO                                                                      /*MD031150*/
+             ENDDO                                                                      /*MD031150*/
+                                                                                        /*MD031150*/
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal terminations */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          TIC100000 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
+                          Banking Systems Ltd. 2014')
+ 
+             ENDPGM
+/*********************************************************************/

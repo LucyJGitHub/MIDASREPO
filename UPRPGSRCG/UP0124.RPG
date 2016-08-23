@@ -1,0 +1,139 @@
+     H        1
+      *****************************************************************
+/*XBI *  CRTPF FILE(QTEMP/UPSBSD) RCDLEN(132)                         *
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas UP Change subsystem jobq entries - libs.')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Upgrade Module                                       *
+      *                                                               *
+      *  UP0124 - Change subsystem job queue entries - libraries      *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CPK018             Date 22Apr04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *  Prev Amend No. CPK014             Date 16Nov01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CUP013 *CREATE     Date 01Feb01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CPK018 - MidasPlus packaging.  Handle global layer.          *
+      *  CPK014 - Release 4 packaging.  Fix upgrade error.            *
+      *  CUP013 - Allow user to change the libraries referenced by    *
+      *            a Midas subsystem's job queues.                    *
+      *                                                               *
+      *****************************************************************
+     FUPSBSD  IF  E                    DISK
+     F            UPSBSD                            KRENAMERTGE
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      /SPACE 3
+      *
+     IRTGE
+      * Renamed input format fields
+     I              UPSBSD                          SBSDTA
+      *
+     IINPUT       DS                            132
+     I                                        4   6 SEQ
+     I                                       39  44 DISP
+     I                                       13  22 JOBQI
+     I                                       35  44 OLDLIB
+     I                                       33  38 JOBQUE
+     I                                       49  54 MAXA
+     I                                       61  66 MAX1
+     I                                       69  74 MAX2
+     I                                       77  82 MAX3
+     I                                       85  90 MAX4
+     I                                       93  98 MAX5
+     I                                      101 106 MAX6
+     I                                      109 114 MAX7
+     I                                      117 122 MAX8
+     I                                      125 130 MAX9
+      * Breakdown of field input from UPSBSD
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           *ENTRY    PLIST
+     C***********          PARM           SBSID   2                                           CPK018
+     C                     PARM           XLIB   10                                           CPK018
+     C                     PARM           SBS    10                                           CPK018
+     C                     PARM           ERROR   1
+      *
+      * Read file until Job Queue Entry section found
+     C                     READ UPSBSD                 6970
+     C           *IN69     IFEQ *ON                        I01
+     C                     MOVE 'Y'       ERROR
+     C                     ELSE                            X01
+      *
+     C                     MOVELSBSDTA    INPUT
+     C           *IN70     DOUEQ*ON                        DO01
+     C           JOBQUE    IFEQ 'Job Qu'                   I02
+     C                     SETON                     89
+     C                     ENDIF                           E02
+      *
+     C                     READ UPSBSD                 6970
+     C           *IN69     IFEQ *ON                        I02
+     C                     MOVE 'Y'       ERROR
+     C                     ELSE                            X02
+      *
+     C                     MOVELSBSDTA    INPUT
+     C           *IN89     IFEQ *ON                        I03
+      *
+      * Ignore heading lines in file
+     C           JOBQI     IFNE 'Job     '                 I04
+     C           JOBQI     ANDNE'Queue   '
+      *
+      * If 'Display' this should indicate end of job queue entries.
+     C           DISP      IFNE 'Displa'                   I05
+     C           JOBQI     ANDNE*BLANKS                                                       CPK014
+      *
+      * Call program to remove and add job queue entry
+     C                     CALL 'UPC0125'
+     C                     PARM           OLDLIB
+     C**********           PARM           SBSID                                               CPK018
+     C                     PARM           XLIB                                                CPK018
+     C                     PARM           SBS                                                 CPK018
+     C                     PARM           JOBQI
+     C                     PARM           SEQ
+     C                     PARM           MAXA
+     C                     PARM           MAX1
+     C                     PARM           MAX2
+     C                     PARM           MAX3
+     C                     PARM           MAX4
+     C                     PARM           MAX5
+     C                     PARM           MAX6
+     C                     PARM           MAX7
+     C                     PARM           MAX8
+     C                     PARM           MAX9
+     C                     PARM           ERROR
+     C           ERROR     IFEQ 'Y'
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+     C                     ELSE                            X05
+      * If 'Display' then finish processing
+     C                     SETOF                     89
+     C                     SETON                     70
+     C                     ENDIF                           E05
+     C                     ENDIF                           E04
+     C                     ENDIF                           E03
+     C                     ENDIF                           E02
+      *
+     C                     ENDDO                           ED01
+     C                     ENDIF                           E01
+      *
+     C           ENDPGM    TAG
+     C                     SETON                     LR
+     C                     RETRN
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

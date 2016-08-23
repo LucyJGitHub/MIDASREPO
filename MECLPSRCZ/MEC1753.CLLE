@@ -1,0 +1,74 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas ME SWIFTRef Activate Directory entries')        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Message Management Module                           */
+/*                                                                   */
+/*       MEC1753 - Midas ME SWIFTRef Activate Directory entries      */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2015           */
+/*                                                                   */
+/*       Last Amend No. CFT051  *CREATE    Date 02Jun15              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CFT051 - SWIFTRef Directories 2014                          */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2015')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('MEC1753 - SWIFTRef Activate Directory +
+                          entries') TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(00000000)
+ 
+             CALL       PGM(AOSARDR0) PARM(&PRTCD '*VERIFY' 'CFT051')
+             IF         COND(&PRTCD *NE ' ') THEN(DO)
+             GOTO       CMDLBL(END)
+             ENDDO
+ 
+ 
+/* Create data area LDA */
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+ 
+             CALL       PGM(ME1753)
+ 
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                           TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+             DMPCLPGM
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                            MEC1753 ended abnormally - see job log') +
+                            TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             ENDPGM

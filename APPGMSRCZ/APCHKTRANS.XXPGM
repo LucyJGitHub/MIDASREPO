@@ -1,0 +1,220 @@
+      *****************************************************************
+/*S*D****PGMBASE*******************************************************                      CCB023A
+/*E*I ***MODULE(APCHKTRANS)*ACTGRP(*CALLER)****************************               CPK016 CCB023A
+/*E*I ***MODULE(APCHKTRANS)********************************************                       CPK016
+/*E*I ***BNDSRVPGM(*NONE)*BNDDIR(MIDAS)*ACTGRP(*CALLER)****************                       CPK016
+      *****************************************************************
+      *                                                               *
+      *  Midas  - APIs module                                         *
+      *                                                               *
+      *     APCHKTRNS - Check API transactions on valid/invalid files *
+      *                                                               *
+      *  Function:  This module checks whether transactions exist on  *
+      *             the valid/invalid API transaction files.          *
+      *             Depending on the value of ICD flags the close of  *
+      *             business is then halted if transactions exist on  *
+      *             either or both of these sets of files.            *
+      *                                                               *
+      *  Called By:                                                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CCB023A *REDUNDANT Date 06Aug12               *
+      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *                 CFT039             Date 28Sep12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CLE064             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER045             Date 20Jul09               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 249071             Date 31Jul07               *
+      *                 247695             Date 09May07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 241919             Date 22Dec06               *
+      *                 243070             Date 10Jul06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 04Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 BUG9691            Date 22Dec05               *
+      *                 233708             Date 02Jun05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 BUG8205            Date 27Aug05               *
+      *                 BUG8233            Date 23Aug05               *
+      *                 CDL038             Date 10May05               *
+      *                 BUG7166            Date 12May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CGL014             Date 20Oct03               *
+      *                 CLE025             Date 20Oct03               *
+      *                 BUG2254            Date 06May04               *
+      *                 TDA011             Date 31Mar04               *
+      *                 TDA023             Date 22Mar04               *
+      *                 222727             Date 05Nov03               *
+      *                 CAP079             Date 19Aug02               *
+      *                 CAP078             Date 31Oct02               *
+      *                 CAP077             Date 19Aug02               *
+      *                 CAP076             Date 26Mar02               *
+      *                 CAP075             Date 12Aug02               *
+      *                 CAP074             Date 26Mar02               *
+      *                 CAP073             Date 18May02               *
+      *                 CPK016             Date 29Jul03               *
+      *                 CSE040             Date 01Apr03               *
+      *                 CAP182             Date 18Mar03               *
+      *                 CSE039             Date 07Mar03               *
+      *                 CDL010             Date 02Aug02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAP055             Date 13Mar02               *
+      *                 CAP072             Date 28Mar02               *
+      *                 CAP071             Date 22Mar02               *
+      *                 CAP068             Date 22Mar02               *
+      *                 CPK015             Date 14May02               *
+      *                 CAP069             Date 22Mar02               *
+      *                 CAP070             Date 11Mar02               *
+      *                 201988             Date 06Mar02               *
+      *                 CSE031             Date 15Nov01               *
+      *                 CAS001             Date 23Nov01               *
+      *                 CAP166             Date 15Oct01               *
+      *                 CAP067             Date 24Sep01               *
+      *                 CSW024             Date 31Aug01               *
+      *                 196570             Date 20Jul01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CAP060             Date 02May01               *
+      *                 CAP057             Date 02May01               *
+      *                 CAP038             Date 02May01               *
+      *                 CAP058             Date 02May01               *
+      *                 CAP059             Date 02May01               *
+      *                 CAP042             Date 08Jan01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CFT014             Date 25May00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CAP039             Date 14JUL00               *
+      *                 CAP137             Date 07Feb00               *
+      *                 CAP136             Date 15Nov99               *
+      *                 CIR005             Date 21Jan00               *
+      *                 175479             Date 23May00               *
+      *                 167486             Date 25Apr00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CAP032             Date 26Apr99               *
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CDL006             Date 26Apr99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAP006  *CREATE    Date 15Jan99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CCB023A - COB Restructure - Input Cycle Termination          *
+      *            Restructuring (Redundant)                          *
+      *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
+      *           (Recompile)                                         *
+      *  CFT039 - SWIFT Mapping of Field Ordering Bank (Recompile)    *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER045 - German Features - Reporting Bundesbank (Recompile)  *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  249071 - CSE097 problems in BYSL(Recompile)                  *
+      *  247695 - Add CDL010, CAS005, CGL014, CDL016, CDL017, CDL019, *
+      *           CDL018, CDL033 AND CAP086 fields.                   *
+      *  241919 - Recompiled due to recompiled APCHKTRANS module.     *
+      *  243070 - Recompile over changed PF/SDVSECDPD.                *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  BUG9691- Include CAS011 changes in GZCLOANCL to align valids *
+      *           file format.(Recompile)                             *
+      *  233708 - Recompile over changes for CGL032 EU Saving Tax     *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  BUG8205 - Recompiled due to changes in file SDVSPTRPD        *
+      *            Applied fix 209061                                 *
+      *  BUG8233- Error in Forward Rates upload via File Adapter API  *
+      *           (Recompile)                                         *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  BUG7166- Recompiled due to change in APCHKTRANS module       *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CGL014 - Collaterals Processing                              *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  BUG2254 - Recompile over changed PF/SDISECDPD                *
+      *  TDA011 - Rate Fix Ccy writes to the wrong field (Recompile)  *
+      *  TDA023 - Increase Maturity Date Account to 18 Digits         *
+      *           (Recompile)                                         *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+      *  CAP079 - Lending API enhancements - Repayments schedule      *
+      *  CAP078 - Lending API enhancements - Fee input                *
+      *  CAP077 - Lending API enhancements - Manual payments          *
+      *  CAP076 - Lending API enhancements - Rollover Instructions    *
+      *  CAP075 - Lending API enhancements - Loan amendments          *
+      *  CAP074 - Lending API enhancements - Loans input.             *
+      *  CAP073 - Conversion of MN inputs into modular structure to   *
+      *      use as APIs. Facility input Transaction Details          *
+      *  CPK016 - Release 5 packaging.  Standardise parameters.       *
+      *  CSE040 - Securities Statement Processing                     *
+      *  CAP182 - Automatic Settlement of Trades                      *
+      *         - Conversion of SE Trade Settlement Input maintence   *
+      *           function to modular structure to use as APIs.       *
+      *         - Recompiled                                          *
+      *  CSE039 - Automatic Settlement of Trades                      *
+      *  CDL010 - Prevent last user that actioned the trade from      *
+      *           authorising it.                                     *
+      *           Recompile due to changes to module APCHKTRANS.      *
+      *  CAP055 - APIs for FRA/IRS Caps/Collars/Floors                *
+      *  CAP072 - Conversion of LE inputs into modular structure to   *
+      *           use as APIs. Fee Settlement and Adjustment input    *
+      *  CAP071 - Conversion of LE inputs into modular structure to   *
+      *           use as APIs. Facility Amendment.                    *
+      *  CAP068 - Conversion of LE inputs into modular structure to   *
+      *           use as APIs. Funding Participants.                  *
+      *  CPK015 - New logical members required as max no of formats   *
+      *           reached (32).                                       *
+      *  CAP069 - Conversion of LE inputs into modular structure to   *
+      *           use as APIs. Risk Participants.                     *
+      *  CAP070 - Conversion of LE inputs into modular structure to   *
+      *           use as APIs.                                        *
+      *  201988 - CAP060 & CAP038 code inadvertently commented out    *
+      *           in APITRANL0/APVTRANL0. Recompile                   *
+      *  CSE031 - Coupon Fixing for Floating Rate Notes               *
+      *         - Recompiled due to changes in SEISECSPD.             *
+      *         - Fields renamed to avoid conflicts                   *
+      *  CAS001 - Net Present Value (NPV) Accounting. Recompile       *
+      *  CAP166 - API for Non-Currency OTC. Recompile                 *
+      *  CAP067 - Repurchase Agreements API. Recompile                *
+      *         - Fields renamed to avoid conflicts                   *
+      *  CSW024 - S.W.I.F.T. MT3xx Field 82/83/87. (Recompiled)       *
+      *  196570 - Patch for Market Data Feed (recompile)              *
+      *  CAP060 - Security Prices Full API                            *
+      *  CAP057 - Spot Rates Full API                                 *
+      *  CAP038 - Base Rates Full API                                 *
+      *  CAP058 - Money Market Interest Rates API                     *
+      *  CAP059 - Forward Rates API                                   *
+      *  CAP042 - Conversion of Internal Funding Deal inputs into     *
+      *           modular structure to use as APIs. (Recompile)       *
+      *  CFT014 - Straight-through Processing Phase 2 MT103           *
+      *           Messages Generation for FT. Recompile only.         *
+      *  CAP039 - Addition of SECD format to APITRANL0 (recompile)    *
+      *  CAP137 - Conversion of SE Security inputs into modular       *
+      *           structure to use as APIs to APITRANL0 (recompile)   *
+      *  CAP136 - Conversion of FT Incoming Payment inputs into       *
+      *           modular structure to use as APIs. (Recompile)       *
+      *  CIR005 - FRA/IRS Business Day Conventions. (Recompile)       *
+      *  175479 - Recompile over changes in outgoing payment file     *
+      *  167486 - Repurchase Agreements (REPOS) enhancement (CSE006). *
+      *           Missing fields added (Patterned from DPTMVD).       *
+      *           Recompiled over changes in SEVDPMVPD (APVTRANL0)    *
+      *  CAP032 - Conversion of Journal Batch Entry inputs into       *
+      *           modular structure to use as APIs. Recompiled        *
+      *           due to changes in physical file SDAPIPD.            *
+      *  CDL006 - Dealing Fiduciary (recompiled for changed APVTRANL0)*
+      *  CAP006 - Conversion of Midas inputs to modular API structure *
+      *                                                               *
+      *****************************************************************

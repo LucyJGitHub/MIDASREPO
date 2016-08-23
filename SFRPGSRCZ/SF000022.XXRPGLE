@@ -1,0 +1,420 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+      *****************************************************************
+/*S*D****RPGBASEBND****************************************************
+      *****************************************************************
+      *                                                               *
+      *  Midas - Security Profile Facility                            *
+      *                                                               *
+      *  SF000022 - Midas Users Maintenance - Originating Branches    *
+      *                                                               *
+      *  Function:This program updates the Valid Originating Branches *
+      *  I/C      file, by inserting, amending or deleting records.   *
+      *           The file may also be enquired upon.                 *
+      *                                                               *
+      *  Called By: SF000020                                          *
+      *             SF000200                                          *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *                                                               *
+      *  Last Amend No. AR904191*REDUNDANT Date 03Feb12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 BUG10744A (Reopen) Date 23May06               *
+      *                 CSF002 *RENAME     Date 11Aug03               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 197434             Date 09Oct01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 LN1187             Date 07Mar91               *
+      *                 S01199             Date 18Sep89               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  AR904191 - Replaced as per BF requirement (CBF005)           *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG10744A - Files for update should be for commitment to     *
+      *              avoid locking in User Maintenance. (Reopen)      *
+      *  CSF002 - Global Processing                                   *
+      *           SF0022 has been converted to ILE and renamed.       *
+      *           Commented out program codes have been stripped out  *
+      *           for clarity.                                        *
+      *  197434 - Array index error on SF0021. Increase maximum       *
+      *           number of branches from 100 to 900.                 *
+      *  LN1187 - WHEN REINSERTING USERS, RESTORE PREVIOUS DETAILS    *
+      *  S01199 -  HELP SYSTEM.                                       *
+      *                                                               *
+      *****************************************************************
+     FSF000022DFCF   E             WORKSTN
+     F                                     SFILE(SF000022F1:RRN)
+     FSDBRCHL1  IF   E           K DISK
+     F***MBROS**   UF A E           K DISK                                                 BUG10744A
+     FMBROS     UF A E           K DISK    COMMIT                                          BUG10744A
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *    XX         Function of Indicator                           *
+      *    01         HELP KEY                                        *
+      *                                                               *
+      *    10         SUBFILE DISPLAY                                 *
+      *    11         SUBFILE END                                     *
+      *    12         SFLNXTCHG                                       *
+      *                                                               *
+      *    20         DISPLAY SCREEN                                  *
+      *                                                               *
+      *    21         INSERT                                          *
+      *    22         AMEND                                           *
+      *    23         ENQUIRE                                         *
+      *    24         DELETE                                          *
+      *                                                               *
+      *    26         ENQUIRY ON A DELETED RECORD                     *
+      *                                                               *
+      *    30         GENERAL ERROR INDICATOR                         *
+      *    31         SELECT IN ERROR - NOT 'Y' OR BLANK              *
+      *                                                               *
+      *    40         MBROS - CHAIN FAIL                              *
+      *    41         MBROS - RECORD NOT LIVE (IE. RECIBO NOT 'D')    *
+      *                                                               *
+      *    50         SDBRCHL1/BRANCH CODES - END OF FILE             *
+      *    52         BR. CODE IS ON USER'S BR. CODES ARRAY           *
+      *                                                               *
+      *    60         NO MORE 'READ CHANGED' RECORDS ON SUBFILE       *
+      *                                                               *
+      *****************************************************************
+     D BRU             S              3    DIM(900)
+      *
+      ** HOLDS DISPLAY SCREEN ERROR CODES
+      *
+     D ARRDS           DS
+     D  SERCD                  1     78
+     D  ARR                    1     76
+     D                                     DIM(19)
+      ** HOLDS WORKSTATION ID
+      *
+     D PSDS           SDS
+     D  SWSID                244    253
+     D  USRID                254    263
+     I/SPACE 2
+     IMBROSDDF
+      ** USER'S ORIGINATING BRANCHES
+      *
+     I              RECI                        RECIBO
+     I/EJECT
+      *
+      ** RECEIVE USER PROFILE, ACTION CODE, RETURN CODE, UPDATE
+      ** AND  RUN-DATE(2)  PARAMETERS FROM CALLING PROGRAM (SF000020).
+      *
+     C     *ENTRY        PLIST
+     C                   PARM                    USRPRF           10
+     C                   PARM                    ACTCDE            1
+     C                   PARM                    RTCDE             1 0
+     C                   PARM                    UPDATE            1
+     C                   PARM                    SRUNA             7
+     C                   PARM                    RUNDD             5 0
+     C                   PARM                    SZONE            10
+      /SPACE 2
+      *********************************************************************
+      * MAIN PROCEDURE                                                    *
+      *********************************************************************
+      *
+      ** DETERMINE ACTION CODE
+      *
+     C     ACTCDE        COMP      'I'                                    21
+     C     ACTCDE        COMP      'A'                                    22
+     C     ACTCDE        COMP      'E'                                    23
+     C     ACTCDE        COMP      'D'                                    24
+      *
+      ** SETUP USER PROFILE'S ARRAY OF VALID BRANCH CODES
+      *
+     C     USRPRF        CHAIN     MBROS                              40
+     C  N40RECIBO        COMP      'D'                                4141
+      *
+     C     *IN40         IFEQ      '0'
+     C     *IN41         ANDEQ     '0'
+     C                   MOVEA     VBRX          BRU
+     C                   END
+      *
+      ** ENQUIRY ON A DELETED RECORD
+      *
+     C     *IN23         IFEQ      '1'
+     C     RECIBO        ANDEQ     'C'
+     C                   SETON                                        26
+     C                   MOVEA     VBRX          BRU
+     C                   END
+     C/SPACE 2
+      *
+      ** SETUP SUBFILE CONTROL AND HEADING FIELDS
+      *
+     C                   Z-ADD     0             RRN               3 0
+     C                   Z-ADD     1             SDREC
+     C                   MOVE      USRPRF        SUSER
+     C                   MOVE      ACTCDE        SACTN
+      *
+      ** SET ON SUBFILE AND DISPLAY SCREEN INDICATORS
+      *
+     C                   SETON                                        1011
+     C                   SETON                                        20
+      *
+      ** LOAD SUBFILE
+      *
+     C                   EXSR      LODSBF
+     C/EJECT
+      *
+      ** DISPLAY SCREEN :-
+      *
+     C     *IN20         DOWEQ     '1'
+      *
+      ** - HEADINGS
+      *
+     C                   WRITE     SF000022F3
+      *
+      ** - SUBFILE
+      *
+     C                   EXFMT     SF000022F2
+     C                   SETOFF                                       2030
+      *
+      ** CHECK CMD/KEY PRESSED + ACTION CODE ON EXITING DISPLAY
+      *
+     C     *INKC         CASEQ     '1'           EXIT
+     C     *INKL         CASEQ     '1'           INITSC
+     C     *IN10         CASEQ     '0'           ENDPGM
+      *
+     C     ACTCDE        CASEQ     'I'           INSAMD
+     C     ACTCDE        CASEQ     'A'           INSAMD
+     C     ACTCDE        CASEQ     'D'           DELETE
+     C                   END
+      *
+     C                   END
+     C/SPACE 2
+      *
+      ** END PROGRAM
+      *
+     C                   EXSR      ENDPGM
+      **********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * LODSBF - LOAD SUBFILE WITH BRANCH CODE RECORDS.               *
+      *                                                               *
+      *****************************************************************
+     C     LODSBF        BEGSR
+      *
+     C                   MOVE      *BLANK        BRKEY             3
+     C     BRKEY         SETLL     SDBRCHL1
+      *
+     C                   READ      SDBRCHL1                               50
+      *
+     C     *IN50         DOWEQ     '0'
+      *
+     C                   ADD       1             RRN
+      *
+     C                   MOVE      A8BRCD        SBRCA
+     C                   MOVE      A8BRNM        SBRNM
+      *
+     C     A8BRCD        LOOKUP    BRU                                    52
+      *
+     C     *IN52         IFEQ      '1'
+     C                   SETON                                        12
+     C                   MOVE      'Y'           SSLCT
+     C                   ELSE
+     C                   MOVE      ' '           SSLCT
+     C                   END
+      *
+     C                   WRITE     SF000022F1
+      *
+     C                   SETOFF                                       12
+      *
+     C                   READ      SDBRCHL1                               50
+      *
+     C                   END
+      *
+      ** NO RECORDS IN SUBFILE
+      *
+     C     RRN           IFEQ      0
+     C                   SETOFF                                       10
+     C                   END
+      *
+     C                   ENDSR
+      **********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * INSAMD - TO HANDLE INSERTS + AMENDMENTS                       *
+      *                                                               *
+      *****************************************************************
+     C     INSAMD        BEGSR
+      *
+      ** RESET ARRAYS AND SUBFILE CONTROL FIELDS
+      *
+     C                   Z-ADD     0             X                 2 0
+     C                   MOVE      *BLANK        ARR
+     C                   Z-ADD     0             N                 3 0
+     C                   MOVE      *BLANK        BRU
+      *
+     C                   Z-ADD     0             RRN
+     C                   Z-ADD     1             SDREC
+      *
+      ** VALIDATE SELECTION ENTRIES :-
+      *
+     C     *IN60         DOUEQ     '1'
+      *
+     C                   SETOFF                                       31
+     C                   SETON                                        12
+      *
+     C                   READC     SF000022F1                             60
+      *
+     C     *IN60         IFEQ      '0'
+      *
+      ** - INVALID ENTRY
+      *
+     C     SSLCT         IFNE      ' '
+     C     SSLCT         ANDNE     'Y'
+      *
+     C                   SETON                                        31
+      *
+     C     *IN30         IFEQ      '0'
+     C     X             ADD       1             X
+     C                   MOVE      '040'         ARR(X)
+      *
+     C                   Z-ADD     RRN           SDREC
+     C                   SETON                                        30
+     C                   END
+      *
+     C                   ELSE
+      *
+      ** - VALID ENTRY
+      *
+     C     SSLCT         IFEQ      'Y'
+     C                   ADD       1             N
+     C                   MOVE      SBRCA         BRU(N)
+     C                   ELSE
+     C                   SETOFF                                       12
+     C                   END
+      *
+     C                   END
+      *
+     C                   UPDATE    SF000022F1
+      *
+     C                   END
+      *
+     C                   END
+      *
+      ** IF ANY ERRORS, SET ON SCREEN INDICATOR
+      *
+     C     *IN30         IFEQ      '1'
+      *
+     C                   SETON                                        20
+      *
+     C                   ELSE
+      *
+      ** IF VALID, UPDATE FILES :-
+      *
+     C                   SORTA     BRU
+     C                   MOVEA     BRU           VBRX
+     C                   MOVE      N             NOBR
+     C                   Z-ADD     RUNDD         LCD
+     C                   MOVE      ACTCDE        CHTP
+     C                   TIME                    TIMEP             6 0
+     C                   Z-ADD     TIMEP         LCT
+      *
+      ** UPDATE MBROS (USER'S VALID BRANCHES)
+      *
+     C     *IN40         IFEQ      '1'
+      *
+     C     NOBR          IFNE      0
+      *
+      ** - INSERT (NEW)
+      *
+     C                   MOVE      'D'           RECIBO
+     C                   MOVE      USRPRF        USRP
+     C                   WRITE     MBROSDDF
+     C                   MOVE      'Y'           UPDATE
+     C                   END
+      *
+     C                   ELSE
+      *
+     C                   UPDATE    MBROSDDF
+     C                   MOVE      'Y'           UPDATE
+     C                   END
+      *
+     C                   END
+      *
+     C                   ENDSR
+      **********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * DELETE - TO HANDLE DELETIONS                                  *
+      *                                                               *
+      *****************************************************************
+     C     DELETE        BEGSR
+      *
+      ** CMD/10 PRESSED - UPDATE MBROS RECORD TO 'NON-LIVE'
+      *
+     C     *INKJ         IFEQ      '1'
+      *
+     C     *IN40         IFEQ      '0'
+     C     *IN41         ANDEQ     '0'
+     C                   DELETE    MBROSDDF
+     C                   MOVE      'Y'           UPDATE
+     C                   END
+      *
+     C                   ELSE
+      *
+      ** 'ENTER' PRESSED - REDISPLAY SCREEN
+      *
+     C                   SETON                                        20
+      *
+     C                   END
+      *
+     C                   ENDSR
+      **********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * EXIT   - CMD/3 TAKEN TO EXIT  "MIDAS USER'S MAINTENACE"       *
+      *                                                               *
+      *****************************************************************
+     C     EXIT          BEGSR
+      *
+     C                   Z-ADD     1             RTCDE
+     C                   SETON                                        LR
+     C                   RETURN
+      *
+     C                   ENDSR
+      **********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * INITSC - CMD/3 TAKEN TO EXIT  "MIDAS USER'S MAINTENACE"       *
+      *                                                               *
+      *****************************************************************
+     C     INITSC        BEGSR
+      *
+     C                   Z-ADD     5             RTCDE
+     C                   SETON                                        LR
+     C                   RETURN
+      *
+     C                   ENDSR
+      **********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * ENDPGM - RETURNS TO CALLING PROGRAM                           *
+      *                                                               *
+      *****************************************************************
+     C     ENDPGM        BEGSR
+      *
+     C                   Z-ADD     0             RTCDE
+     C                   SETON                                        LR
+     C                   RETURN
+      *
+     C                   ENDSR
+      *

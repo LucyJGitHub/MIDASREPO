@@ -1,0 +1,509 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Cashier Branch TCP/IP address maintenance')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *  RE4600 - Cashier Branch TCP/IP address maintenance           *
+      *                                                               *
+      *  Function:  Program allows user to add or amend Cashier Branch*
+      *             IP addresses contained in file RECITCPD           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4.01 -------------------------------------------*
+      *  Prev Amend No. CRT007  *CREATE    Date 14Jan02               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CRT007 - Cashier Branch Status Check, RECITCPD Maintenance   *
+      *                                                               *
+      *****************************************************************
+     FRECITCPDUF  E                    DISK                      A
+      ** Branch IP Addresses
+      *
+     FSDBRCHPDIF  E                    DISK
+      ** Branch Details
+      *
+     FRE4600DFCF  E                    WORKSTN
+     F            RE4600F0                          KRENAMEHEADER
+     F            RE4600F1                          KRENAMESCREEN1
+     F            RE4600F2                          KRENAMESCREEN2
+     F            RE4600F3                          KRENAMEFOOTER
+      ** Maintenance Screens
+      *
+      *****************************************************************
+      *                                                               *
+      *                  FUNCTION OF INDICATORS                       *
+      *                  ----------------------                       *
+      *                                                               *
+      *       70         Fail on read to SDBRCHPD                     *
+      *       71         TCP/IP details screen has been shown         *
+      *       72         Update on RECITCPD                           *
+      *       73         Validation error on IP address               *
+      *       74         Numeric validation error on IP address       *
+      *       75         Validation error on 1st part of IP address   *
+      *       76         Validation error on 2nd part of IP address   *
+      *       77         Validation error on 3rd part of IP address   *
+      *       78         Validation error on 4th part of IP address   *
+      *       79         Show validation error message on display file*
+      *       80         TCP/IP details for branch are not on RECITCPD*
+      *       81         TCP/IP details for branch are on RECITCPD    *
+      *       82         Branch is not a TCP/IP branch                *
+      *       83         IP Address was incorrect, do not blank out   *
+      *       84         New Record needed on RECITCPD                *
+      *       85         Numeric Validation                           *
+      *       86         Numeric Validation                           *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  Control Subroutines                                          *
+      *                                                               *
+      *  SRINIT - A/C closure enquiry                                 *
+      *  MAIN   - Main Processing                                     *
+      *  VALDIP - Validate the Branch IP address                      *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     I            DS                              3
+      ** Data structure to left justify TCP fields
+     I                                        1   3 TCP
+     I                                        1   1 T1
+     I                                        2   2 T2
+     I                                        3   3 T3
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     C*****************************************************************
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ** Perform Initialisation.
+     C                     EXSR SRINIT
+      *
+      ** Perform Main Subroutine
+     C                     EXSR MAIN
+      *
+     C                     MOVE *ON       *INLR
+     C*****************************************************************
+      /TITLE SR/SRINIT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Initial Processing.                                 *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+     C                     ENDSR
+     C*****************************************************************
+      /TITLE SR/MAIN
+      *****************************************************************
+      *                                                               *
+      *  MAIN   - Main Processing.                                    *
+      *                                                               *
+      *  Called By:                                                   *
+      *                                                               *
+      *  Calls: VALDIP                                                *
+      *                                                               *
+      *****************************************************************
+     C           MAIN      BEGSR
+      *
+     C           *INKC     DOWEQ*OFF
+      *
+      ** Reset Indicators and fields
+      *
+     C                     MOVE *BLANKS   SBRCA   3
+     C                     MOVE *OFF      *INKL
+     C                     MOVE *OFF      *IN71
+      *
+      ** Display initial screens
+      *
+     C                     WRITEHEADER
+     C                     WRITEFOOTER
+     C                     EXFMTSCREEN1
+      *
+      ** Reset Indicators
+      *
+     C                     MOVE *OFF      *IN70
+     C                     MOVE *OFF      *IN72
+     C                     MOVE *OFF      *IN75
+     C                     MOVE *OFF      *IN76
+     C                     MOVE *OFF      *IN77
+     C                     MOVE *OFF      *IN78
+     C                     MOVE *OFF      *IN79
+     C                     MOVE *OFF      *IN81
+     C                     MOVE *OFF      *IN82
+     C                     MOVE *OFF      *IN83
+     C                     MOVE *OFF      *IN84
+      *
+      ** User selects '?' to browse the available branch codes (calls SD0061S)
+      *
+     C           SBRCA     IFEQ '?  '
+     C                     CALL 'SD0061S'              98
+     C                     PARM *BLANK    P@RTC2  7
+     C                     PARM *BLANK    P@BRCD  3
+      *
+     C           P@RTC2    COMP *BLANK               97      No selection
+     C                     MOVE P@BRCD    SBRCA
+     C                     ENDIF
+      *
+      ** Position to beginning of files
+      *
+     C           1         SETLLSDBRCHPD
+     C           1         SETLLRECITCPD
+      *
+     C           *IN70     DOWEQ*OFF
+     C           *IN71     ANDEQ*OFF
+     C           *IN72     ANDEQ*OFF
+     C           *INKC     ANDEQ*OFF
+     C           *INKL     ANDEQ*OFF
+     C           *IN82     ANDEQ*OFF
+      *
+      ** Get details of branch from SDBRCHPD
+      *
+     C           *IN79     IFEQ *OFF
+     C                     READ SDBRCHPD                 70
+     C                     ENDIF
+      *
+     C           SBRCA     IFEQ A8BRCD
+     C                     MOVE *OFF      *IN80
+     C                     MOVE *OFF      *IN81
+      *
+      ** Look for branch on RECITCPD if no previous errors exist
+      *
+     C           *IN81     DOWEQ*OFF
+     C           *IN80     ANDEQ*OFF
+     C           *IN79     IFEQ *OFF
+     C                     READ RECITCPD                 80
+     C                     ELSE
+     C                     MOVE *ON       *IN81
+     C                     ENDIF
+      *
+      ** If branch already exists on RECITCPD, set on indicator 81
+      *
+     C           A8BRCD    IFEQ TCBRCH
+     C                     MOVE *ON       *IN81
+     C                     ENDIF
+     C                     ENDDO
+      *
+      ** If record not found on RECITCPD, initialise TCP/IP address fields
+      *
+     C           *IN80     IFEQ *ON
+     C           *IN83     ANDEQ*OFF
+     C                     MOVE *BLANKS   TCIP1
+     C                     MOVE *BLANKS   TCIP2
+     C                     MOVE *BLANKS   TCIP3
+     C                     MOVE *BLANKS   TCIP4
+     C                     MOVE *ON       *IN84
+     C                     ENDIF
+      *
+      ** If branch is not a TCP/IP branch, set on indicator 82
+      *
+     C           A8TCPP    IFEQ 0
+     C                     MOVE *ON       *IN82
+     C                     ELSE
+     C                     MOVE *OFF      *IN82
+     C                     ENDIF
+      *
+      ** Show TCP/IP details for the branch
+      *
+     C                     MOVE *ON       *IN71
+     C                     WRITEFOOTER
+     C                     EXFMTSCREEN2
+      *
+      ** If the branch is a TCP/IP branch then validate the IP address
+      *
+     C           *IN82     IFEQ *OFF
+      *
+      ** Validate and left adjust all four parts of the IP address,
+      ** Where necessary setting on indicators, 75,76,77,78 to highlight
+      ** which part of the address has failed the validation
+      *
+     C                     MOVE TCIP1     TCP
+     C                     EXSR VALDIP
+     C                     MOVE TCP       TCIP1
+      *
+     C           *IN73     IFEQ *ON
+     C                     MOVE *ON       *IN75
+     C                     ELSE
+     C                     MOVE *OFF      *IN75
+     C                     ENDIF
+      *
+     C                     MOVE TCIP2     TCP
+     C                     EXSR VALDIP
+     C                     MOVE TCP       TCIP2
+      *
+     C           *IN73     IFEQ *ON
+     C                     MOVE *ON       *IN76
+     C                     ELSE
+     C                     MOVE *OFF      *IN76
+     C                     ENDIF
+      *
+     C                     MOVE TCIP3     TCP
+     C                     EXSR VALDIP
+     C                     MOVE TCP       TCIP3
+      *
+     C           *IN73     IFEQ *ON
+     C                     MOVE *ON       *IN77
+     C                     ELSE
+     C                     MOVE *OFF      *IN77
+     C                     ENDIF
+      *
+     C                     MOVE TCIP4     TCP
+     C                     EXSR VALDIP
+     C                     MOVE TCP       TCIP4
+      *
+     C           *IN73     IFEQ *ON
+     C                     MOVE *ON       *IN78
+     C                     ELSE
+     C                     MOVE *OFF      *IN78
+     C                     ENDIF
+      *
+      * If the IP address is valid
+      *
+     C           *IN75     IFEQ *OFF
+     C           *IN76     ANDEQ*OFF
+     C           *IN77     ANDEQ*OFF
+     C           *IN78     ANDEQ*OFF
+     C           *IN82     ANDEQ*OFF
+      *
+      * Write a new record for the branch in RECITCPD
+      *
+     C           *IN80     IFEQ *ON
+     C           *IN84     OREQ *ON
+     C                     MOVE A8BRCD    TCBRCH
+     C                     MOVE A8TCPP    TCPORT
+     C                     WRITERECITCD0
+     C                     MOVE *OFF      *IN80
+     C                     MOVE *OFF      *IN83
+     C                     MOVE *OFF      *IN84
+      *
+     C                     ELSE
+      *
+      * Or update an existing record for the branch in RECITCPD
+      *
+     C                     UPDATRECITCD0
+     C                     MOVE *OFF      *IN81
+     C                     MOVE *ON       *IN72
+     C                     MOVE *OFF      *IN83
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C                     MOVE *OFF      *IN71
+     C                     MOVE *ON       *IN79
+     C                     MOVE *ON       *IN83
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDDO
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /TITLE SR/VALDIP
+      *****************************************************************
+      *                                                               *
+      *  VALDIP - Subroutine to validate the IP address               *
+      *                                                               *
+      *  Called By: MAIN                                              *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+     C           VALDIP    BEGSR                           ** *VALDIP SR**
+      *
+     C                     MOVE *OFF      *IN73
+      *
+      ** Left Adjust the seperate parts of the IP address and check not blanks
+      *
+     C           TCP       IFEQ *BLANKS
+     C                     MOVE *ON       *IN73
+     C                     ELSE
+      *
+     C           T1        IFEQ *BLANKS
+      *
+     C           T2        IFEQ *BLANKS
+      *
+     C                     MOVE T3        T1
+     C                     MOVE *BLANKS   T3
+      *
+     C                     ELSE
+      *
+     C                     MOVE T2        T1
+     C                     MOVE T3        T2
+     C                     MOVE *BLANKS   T3
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C           T2        IFEQ *BLANKS
+     C           T3        ANDNE*BLANKS
+     C                     MOVE *ON       *IN73
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Check if IP address is numeric
+      *
+     C           *IN73     IFEQ *OFF
+      *
+      ** Add a zero to the end of TCP to perfrom TESTN and temporarily
+      ** make the trailing blanks equal to zero.
+      *
+     C                     MOVE '0'       NMTST
+     C                     MOVE *OFF      *IN85
+     C                     MOVE *OFF      *IN86
+     C           T3        IFEQ ' '
+     C                     MOVE '0'       T3
+     C                     MOVE *ON       *IN85
+     C           T2        IFEQ ' '
+     C                     MOVE '0'       T2
+     C                     MOVE *ON       *IN86
+     C                     ENDIF
+     C                     ENDIF
+     C                     MOVELTCP       NMTST   4
+      *
+     C                     TESTN          NMTST      7374
+      *
+      ** Change TCP field back
+      *
+     C           *IN85     IFEQ *ON
+     C                     MOVE ' '       T3
+     C           *IN86     IFEQ *ON
+     C                     MOVE ' '       T2
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           *IN73     IFEQ *ON
+     C           *IN74     OREQ *ON
+     C                     MOVE *OFF      *IN73
+     C                     ELSE
+     C                     MOVE *ON       *IN73
+     C                     ENDIF
+      *
+     C                     MOVE *OFF      *IN74
+     C                     ENDIF
+      *
+      ** Do not allow to be zero
+      *
+     C           T1        IFEQ '0'
+      *
+     C           T2        IFEQ '0'
+      *
+     C           T3        IFEQ '0'
+     C           T3        OREQ ' '
+     C                     MOVE *ON       *IN73
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           T2        IFEQ ' '
+     C                     MOVE *ON       *IN73
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+     ******************************************************************
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      ********************************************************************
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

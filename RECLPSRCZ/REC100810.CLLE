@@ -1,0 +1,91 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas RE Cash Management Hierarchy Links & Unlinks')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Retail module                                       */
+/*                                                                   */
+/*       REC100810 - Cash management hierarchy links & unlinks       */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. 212904               Date 14Jan03            */
+/*       Prev Amend No. CRE008 *CREATE       Date 19Feb02            */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       212904 - Balance purge errors                               */
+/*       CRE008 - Cash Management                                    */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&MEM)    TYPE(*CHAR) LEN(70)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2002')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(00000000)
+ 
+             SNDPGMMSG  MSG('REC100810 - Cash Management Hierarchy +
+                          Links & Unlinks') TOMSGQ(MRUNQ)
+ 
+/* Clear link changes file */
+ 
+             CLRPFM     FILE(RECMLCPD)
+ 
+/* Overrides */
+ 
+             OVRDBF     FILE(RELCMHDLU) TOFILE(RELCMHDL0) SHARE(*NO)
+             OVRDBF     FILE(RECMLCPD) SEQONLY(*YES 100)
+ 
+/* Cash management hierarchy links & unlinks  */
+ 
+             CALL       PGM(RE100711)
+ 
+/* Abnormal ending: */
+ 
+             IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             RCLACTGRP  ACTGRP(*ELIGIBLE)
+                                                             /*212904*/
+             CPYF       FROMFILE(RECMLCPD) TOFILE(RECMLCHPD) +
+                          MBROPT(*ADD)                       /*212904*/
+ 
+/* Normal ending: */
+/*================*/
+ 
+NORMAL:
+             GOTO       CMDLBL(ENDPGM)
+ 
+/* Abnormal ending: */
+/*==================*/
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+             RCLACTGRP  ACTGRP(*ELIGIBLE)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+/* Report an error */
+ 
+             CHGVAR     VAR(&MEM) VALUE('REC100810 - Cash Management +
+                          Hierarchy Links & Unlinks FAILED')
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+             SNDPGMMSG  MSGID(MEM5052) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+ENDPGM:
+             ENDPGM

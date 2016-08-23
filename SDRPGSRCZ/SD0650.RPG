@@ -1,0 +1,444 @@
+0001 H*********                                                           157823
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Flag cust master recs for deletn')            *
+/*OVRF*: OVRDBF TABLE TABSDU                                        : *
+0002 F*****************************************************************
+0003 F*                                                               *
+0004 F*       Midas STANDING DATA MODULE                              *
+0005 F*                                                               *
+0006 F*       SD0650 - FLAG OUTDATED CLIENT RECORDS FOR DELETION      *
+0007 F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+0009 F*                                                               *
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. BUG23967           Date 13May09               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL018             Date 30Sep02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSW024             Date 31Aug01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSD009             Date 10Oct00               *
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+     F*                      157823            DATE 21Oct99           *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                      S01408            DATE 10APR96           *
+0011 F*                      E28847            DATE 26SEP91              *
+0011 F*                      S01267            DATE 18/09/90             *
+0011 F*                      S01168            DATE 22/07/88             *S01168
+0011 F*                      E11049            DATE 21/07/87             *
+0011 F*                      E10310            DATE 23/03/87             *
+0012 F*------------------------------------------------------------------*
+0011 F*                                                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG23967 - Add Local Industry Code Field.                    *
+      *  CRE026 - Consumer Banking (Recompile)                        *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL018 - Risk Weighted Assets                                *
+      *  CSW024 - S.W.I.F.T. MT3xx Field 82/83/87. (Recompiled)       *
+      *  CSD009 - Profit Centre Accounting Default Matrix Enhancement *
+      *  CDL008 - Continuous Linked Settlement (recompile SDCUSTPD)   *
+     F*      157823  -   Applied existing fix SC#154494:              *
+     F*                  Program should not try to delete a SDALTNL0  *
+     F*                  record for the first ('B') record from       *
+     F*                  CLINTCC, but only for the subsequent records *
+     F*                  ('C' and above), if there are any. Also, the *
+     F*                  program should have proper database error    *
+     F*                  handling.                                    *
+     F*       S01408  -  Addition of core hook SD0650FFP1             *
+     F*                  Addition of core hook SD0650IIP1             *
+     F*                  Addition of core hook SD0650CCP1             *
+     F*                  Addition of core hook SD0650CCP2             *
+0011 F*       E28847  -  PROGRAM SOURCE/OBJECT WAS MISSING FROM R10.     *
+0011 F*                                                                  *
+     F*       S01267  -  RECOMPILED FOR MIS RELEASE 2.2 CHANGES.         *
+0011 F*                                                                  *
+     F*       S01168  -  Include SD SYNON files.                         *S01168
+     F*                                                                  *S01168
+0011 F*       E11049  -  ONLY THE FIRST CUSTOMER NAME AND ADDRESS        *E11049
+0011 F*                  RECORD BEING FLAGGED FOR DELETION, AS           *E11049
+0011 F*                  RECORD SELECTION FOR CLINTCC RECORDS SELECTED   *E11049
+0011 F*                  ONLY RECORDS WITH B IN POSITION 8.              *E11049
+0011 F*                                                                  *E11049
+0011 F*       E10310  -  CLOSED CLINTC1 RECORD NOT REMOVED COMPLETELY    *E10310
+0011 F*                  FROM SYSTEM AFTER 1 YEAR HAS ELAPSED FROM       *E10310
+0011 F*                  DATE OF CLOSING.                                *E10310
+0011 F*                                                                  *
+0012 F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+0013 F/SPACE 3                                                           *
+0014 F* ID F  C  M  L    FUNCTION OF INDICATORS                          *
+0015 F* 01              CLINT FILE - HEADER                              *
+0016 F* 02                         - STANDING DATA                       *
+0017 F* 03                         - NAME & ADDRESS                      *
+0018 F* 04                         - SECURITIES TRADING                  *
+0018 F* 05                         - CATCHALL                            *
+0024 F* 10              TABLE FILE - INSTALLATION CONTROL RECORD         *
+0025 F* 11                         - CATCHALL                            *
+     F*       30        DELET on SYNON client detail file fails.         *S01168
+     F*       31        DELET on SYNON client altrn nms and adrs fails.  *S01168
+0026 F*       40        FIRST CYCLE PROCESSING DONE                      *
+0027 F*       51        CUSTOMER CLOSED LESS THAN 365 DAYS               *
+0030 F*       72        EXCEPTION - FLAG CLINT FOR DELETION              *
+0031 F*       76        CLINT NAME & ADDRESS RECORD TO BE FLAGGED        *
+0030 F*       77        RISK WEIGHTED ASSETS CODES FILE                  *CGL018
+0030 F*       78        ERROR FLAG-RISK WEIGHTED ASSETS CODES FILE       *CGL018
+0036 F*       98      USED IN ZSYSTM
+0037 F*       99      USED IN ZSYSTM
+0038 F*          U8   DATABASE IN ERROR
+0039 F*
+0040 F***CLINT** UP  F     256  7AI     2 DISK                                              BUG23967
+0040 FCLINT   UP  F     264  7AI     2 DISK                                                 BUG23967
+0043 FTABLE   IF  F      96 12AI     2 DISK
+     FSDCUSTL0UF  E           K        DISK                               S01168
+      * UPDATE - SD SYNON customer detail file.                           S01168
+      *...................................................................S01168
+     FSDALTNL0UF  E           K        DISK                               S01168
+      * UPDATE - SD SYNON customer alternate names and address file.      S01168
+      *...................................................................S01168
+      *                                                                   CGL018
+      **  SD Customer Risk Weighted Asset Master File LF                  CGL018
+      *                                                                   CGL018
+0040 FSDCRWAL0UF  E           K        DISK                               CGL018
+     F*                                                                   CGL018
+     F*                                                                   S01408
+     F*                                                                   S01408
+     F/COPY WNCPYSRC,SD0650FFP1                                           S01408
+     F*                                                                   S01408
+     E                    CPY@    1   1 80                                E28847
+0044 I**   CLIENT FILE - HEADER RECORD
+0045 I**
+0046 ICLINT   NS  01   1 CH
+0047 I*
+0048 I**   CLIENT FILE - CUSTOMER STANDING DATA RECORD
+0049 I*
+0050 I        NS  02   1 CC   8 CA
+0051 I                                        1   1 RECI
+0052 I**********                              2   70CNUM                                      CSD027
+0052 I                                        2   7 CNUM                                      CSD027
+0053 I                                        8   8 RECTD
+0054 I                                        9  28 CRNM
+0055 I                                       29  38 CTWN
+0056 I                                       39  48 CSNM
+0057 I                                       49  56 CASK
+0058 I                                       57  68 TELX
+0059 I                                       69  80 CSID
+0060 I                                       81  82 ACOC
+0061 I                                       83  83 CBSI
+0062 I                                       84  85 CCTZ
+0063 I                                       86  87 CLOC
+0064 I**********                             88  930CPAR                                      CSD027
+0064 I                                       88  93 CPAR                                      CSD027
+0065 I                                       94  960BRCD
+0066 I                                       97  98 LINS
+0067 I                                       99 101 LIND
+0068 I                                    P 102 1040DASUS
+0069 I                                    P 105 1070CDIC
+0070 I                                    P 108 1100DADE
+0071 I                                      111 111 CBNI
+0072 I                                      112 112 CTYP
+0073 I                                      113 124 TELF
+0074 I                                    P 250 2520LCD
+0075 I                                      253 253 CHTP
+0076 I                                    P 254 2560TNLU
+     I                                      262 264 LOIC                                    BUG23967
+0077 I**********                              1 256 LOTC                                    BUG23967
+0077 I                                        1 264 LOTC                                    BUG23967
+0078 I**
+0079 I***  CLIENT FILE - NAME & ADDRESS RECORD
+0080 I**
+0081 I********NS**03***1 CC   8 CB                                        E11049
+0081 I        NS  03   1 CC   8NCA                                        E11049
+     I       AND       1 CC   8NC1                                        E11049
+     I                                        8   8 ADRS                  S01168
+0078 I**                                                                  E10310
+0079 I***  CLIENT FILE - SECURITIES TRADING RECORD                        E10310
+0080 I**                                                                  E10310
+0081 I        NS  04   1 CC   8 C1                                        E10310
+0082 I**
+0083 I**   CATCHALL FOR DELETED RECORDS
+0084 I********NS**04*****                                                 E10310
+0084 I        NS  05                                                      E10310
+0125 I**
+0126 I**   TABLE FILE - INSTALLATION CONTROL RECORD 1
+0127 I**
+0128 ITABLE   NS  10   1 CD   2 C0   3 C1
+0129 I       AND      12 C1  13 C0
+0130 I                                        1   1 RECI
+0131 I                                        2   30RECT
+0132 I                                       12  13 RCDE
+0133 I                                       14  66 TITL
+0134 I                                       67  67 DATF
+0135 I                                       68  730DFBR
+0136 I                                       74  74 MODI1
+0137 I                                       75  75 MODI2
+0138 I                                       76  76 MODI3
+0139 I                                    P  77  790RUND
+0140 I                                       80  86 RUNA
+0141 I                                       87  870SFLG
+0142 I                                    P  90  920LCD
+0143 I                                       93  93 CHTP
+0144 I                                    P  94  960TNLU
+0145 I                                        1  96 LOT
+0146 I**
+0147 I**   CATCHALL FOR DELETED RECORDS
+0148 I**
+0149 I        NS  11
+0150 I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION            E28847
+     ICPYR@#      DS                                                      E28847
+     I                                        1  80 CPY@                  E28847
+     I                                        1  20 CPY@##                E28847
+     I*                                                                   157823
+     I** DATA AREA LDA - USED IN THE EVENT OF DATABASE ERRORS             157823
+     I*                                                                   157823
+     IDLDA        DS                            256                       157823
+     I                                      134 141 DBFILE                157823
+     I                                      142 170 DBKEY                 157823
+     I                                      171 180 DBPGM                 157823
+     I                                      181 1830DBASE                 157823
+     I*                                                                   S01408
+     I*                                                                   S01408
+     IDSFDY     E DSDSFDY                                                 CGL018
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                CGL018
+     I*                                                                   CGL018
+     ISCSARD    E DSSCSARDPD                                              CGL018
+     I* SAR FILE DETAILS ACCESSED VIA ACCESS PROGRAM  AOSARDR0            CGL018
+     I*                                                                   CGL018
+     I/COPY WNCPYSRC,SD0650IIP1                                           S01408
+     I*                                                                   S01408
+0152 C**
+     C           *NAMVAR   DEFN LDA       DLDA                            157823
+0153 C***01*******                                                        E10310
+0154 C*R*04*******         GOTO END                                       E10310
+0153 C   01                                                               E10310
+0154 COR 05                GOTO END                                       E10310
+0155 C*
+0156 C***03*******         GOTO DELSEC                                    E10310
+0153 C   03                                                               E10310
+0156 COR 04                GOTO DELSEC                                    E10310
+0157 C*
+0158 C   40                GOTO START
+0159 C*
+0160 C***  FIRST CYCLE PROCESSING
+0161 C*
+0162 C                     SETON                     40
+      *                                                                   S01168
+      ** Set up key list to access SD SYNON client files.                 S01168
+      *                                                                   S01168
+     C           CLKEY     KLIST                                          S01168
+     C                     KFLD           KCNUM   6                       S01168
+     C                     KFLD           KADRS   1                       S01168
+0163 C*
+0164 C                     EXSR ZSYSTM
+     C           *IN99     IFEQ '1'                                       157823
+     C           *LOCK     IN   DLDA                                      157823
+     C                     MOVEL'SD0650  'DBPGM                           157823
+     C                     MOVE *BLANK    DBKEY                           157823
+     C                     MOVELZTABKY    DBKEY            ***************157823
+     C                     MOVE 'TABLE'   DBFILE           * DB ERROR 01 *157823
+     C                     Z-ADD1         DBASE            ***************157823
+     C                     OUT  DLDA                                      157823
+     C                     END                                            157823
+0165 C   99                SETON                     U8LR
+     C   99                DUMP                                           157823
+0166 C   99                GOTO END
+0167 C*
+     C/COPY WNCPYSRC,SD0650C001
+0168 C           RUND      SUB  365       WRKD    50
+     C/COPY WNCPYSRC,SD0650C002
+0169 C*
+0173 C*
+0174 C                     MOVE '  '      BLNK10 10
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SD0650CCP1                                           S01408
+     C*                                                                   S01408
+0175 C*
+      *                                                                   CGL018
+      ***  Determine if switchable feature CGL018 is activated            CGL018
+      *                                                                   CGL018
+     C                     CALL 'AOSARDR0'                                CGL018
+     C                     PARM *BLANKS   @RTCD   7                       CGL018
+     C                     PARM '*VERIFY' @OPTN   7                       CGL018
+     C                     PARM 'CGL018'  @SARD   6                       CGL018
+     C           SCSARD    PARM SCSARD    DSFDY                           CGL018
+      *                                                                   CGL018
+     C           @RTCD     IFEQ *BLANK                                    CGL018
+     C                     MOVE 'Y'       CGL018  1                       CGL018
+     C                     ELSE                                           CGL018
+     C                     MOVE 'N'       CGL018                          CGL018
+     C                     ENDIF                                          CGL018
+      *                                                                   CGL018
+0176 C           START     TAG
+0177 C*
+0178 C                     SETOF                     717276
+     C/COPY WNCPYSRC,SD0650C004
+0179 C*
+0180 C           WRKD      COMP DADE                   51
+     C/COPY WNCPYSRC,SD0650C005
+0181 C*
+0182 C   51                GOTO END
+0183 C*
+0185 C***
+0192 C                     SETON                     7276
+0193 C                     EXCPT
+      *                                                                   S01168
+      ** Delete SD SYNON client detail record.                            S01168
+      *                                                                   S01168
+     C                     MOVE CNUM      KCNUM                           S01168
+     C           KCNUM     DELETSDCUSTL0             30                   S01168
+      *                                                                   S01168
+      ** If record not found, database error.                             S01168
+      *                                                                   S01168
+     C           *IN30     IFEQ '1'                                       S01168
+     C           *LOCK     IN   DLDA                                      157823
+     C                     MOVEL'SD0650  'DBPGM                           157823
+     C                     MOVE *BLANK    DBKEY                           157823
+     C                     MOVELKCNUM     DBKEY            ***************157823
+     C                     MOVE 'SDCUS'   DBFILE           * DB ERROR 02 *157823
+     C                     Z-ADD2         DBASE            ***************157823
+     C                     OUT  DLDA                                      157823
+     C                     MOVE '1'       *INU8                           S01168
+     C                     MOVE '1'       *INLR                           S01168
+     C                     DUMP                                           157823
+     C                     RETRN                                          S01168
+     C                     END                                            S01168
+      *                                                                   S01168
+      ** If feature CGL018 is present,                                    CGL018
+      ** delete any record from file SDCRWAPD                             CGL018
+      *                                                                   CGL018
+     C           CGL018    IFEQ 'Y'                                       CGL018
+     C                     EXSR RWA                                       CGL018
+     C                     END                                            CGL018
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SD0650CCP2                                           S01408
+     C*                                                                   S01408
+0194 C                     SETOF                     7172
+0195 C*
+0196 C                     GOTO END
+0197 C*
+0198 C***  SETON-72 TO FLAG SECOND OR THIRD CLINT RECORD
+0199 C*
+0200 C           DELSEC    TAG
+0201 C*
+0202 C   03 76             SETON                     72
+0202 C   04 76             SETON                     72                   E10310
+0203 C*********************SETOF                     76                   E10310
+0204 C*
+0205 C   72                EXCPT
+      *                                                                   S01168
+      ** Delete SD SYNON client alternate names and address record.       S01168
+      *                                                                   S01168
+     C           *IN72     IFEQ '1'                                       S01168
+     C           ADRS      ANDNE'B'                                       157823
+      *                                                                   S01168
+     C                     MOVE ADRS      KADRS                           S01168
+     C           CLKEY     DELETSDALTNL0             31                   S01168
+      *                                                                   S01168
+      ** If record not found, database error.                             S01168
+      *                                                                   S01168
+     C           *IN31     IFEQ '1'                                       S01168
+     C           *LOCK     IN   DLDA                                      157823
+     C                     MOVEL'SD0650  'DBPGM                           157823
+     C                     MOVE *BLANK    DBKEY                           157823
+     C                     MOVELKCNUM     ALP7    7                       157823
+     C                     MOVE KADRS     ALP7                            157823
+     C                     MOVELALP7      DBKEY            ***************157823
+     C                     MOVE 'SDALT'   DBFILE           * DB ERROR 03 *157823
+     C                     Z-ADD3         DBASE            ***************157823
+     C                     OUT  DLDA                                      157823
+     C                     MOVE '1'       *INU8                           S01168
+     C                     MOVE '1'       *INLR                           S01168
+     C                     DUMP                                           157823
+     C                     RETRN                                          S01168
+     C                     END                                            S01168
+      *                                                                   S01168
+     C                     END                                            S01168
+      *                                                                   S01168
+0206 C                     SETOF                     72
+0207 C*
+0208 C           END       TAG
+0209 C*
+     C**
+0219 C********************************************************************
+0220 C**
+0221 C**   ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.
+0222 C**
+0223 C           ZSYSTM    BEGSR                           *** ZSYSTEM ***
+0224 C**
+0225 C**   SET UP KEY FOR INSTALLATION CONTROL RECORD.
+0226 C                     MOVEL'01      'ZTABKY 12
+0227 C                     MOVE '  10'    ZTABKY
+0228 C**
+0229 C           ZTABKY    CHAINTABLE                99    ON NOT THERE
+0230 C  N99      RECI      COMP 'D'                  9999  ON, IS DELETED
+0231 C**
+0232 C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+0233 C           DATF      COMP 'M'                      98MMDDYY, 98 ON
+0234 C**
+     C/COPY WNCPYSRC,SD0650C003
+0235 C                     ENDSR
+0236 C**
+     ******************************************************************** CGL018
+      * RWA       : Delete any records from SDCRWAPD                    * CGL018
+      * ---                                                             * CGL018
+      * Called By : Main                                                * CGL018
+      * Calls     : None                                                * CGL018
+      ******************************************************************* CGL018
+     C           RWA       BEGSR                                          CGL018
+     C           KCNUM     SETLLSDCRWAD0                                  CGL018
+     C           KCNUM     READESDCRWAD0                 77               CGL018
+     C           *IN77     DOWEQ'0'                                       CGL018
+     C                     DELETSDCRWAD0               78                 CGL018
+     C           *IN78     IFEQ '1'                                       CGL018
+      *                                                                   CGL018
+      ** If delete not OK, database error.                                CGL018
+      *                                                                   CGL018
+     C           *LOCK     IN   DLDA                                      CGL018
+     C                     MOVEL'SD0650  'DBPGM                           CGL018
+     C                     MOVE *BLANK    DBKEY                           CGL018
+     C                     MOVELKCNUM     DBKEY            ***************CGL018
+     C                     MOVE 'SDCRWAPD'DBFILE           * DB ERROR 04 *CGL018
+     C                     Z-ADD4         DBASE            ***************CGL018
+     C                     OUT  DLDA                                      CGL018
+     C                     MOVE '1'       *INU8                           CGL018
+     C                     MOVE '1'       *INLR                           CGL018
+     C                     DUMP                                           CGL018
+     C                     RETRN                                          CGL018
+     C                     ELSE                                           CGL018
+     C           KCNUM     READESDCRWAD0                 77               CGL018
+     C                     ENDIF                                          CGL018
+     C                     ENDDO                                          CGL018
+     C                     ENDSR                                          CGL018
+0237 C**
+0238 C********************************************************************
+     C/COPY WNCPYSRC,SD0650C006
+0239 O*    FLAG CLIENT FOR DELETION
+0240 OCLINT   E        72
+0241 O                                    1 '*'
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

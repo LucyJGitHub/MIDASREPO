@@ -1,0 +1,1291 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Extract Mature/Flat pool positions')          *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module                          *
+     F*                                                               *
+     F*  PM1155 - Extract Mature/Flat Pool Portfolio Positions        *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CLE148             Date 23Jul11               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSD007             Date 28Aug00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPM005             Date 03Jul96               *
+      *                 CFF004             Date 02Oct96               *
+     F*                 S71062             DATE 07DEC95               *
+     F*                 CPM004             DATE 04MAR96               *
+     F*                 CCG009             DATE 01JUN95               *
+     F*                 072242             DATE 24NOV94               *
+     F*                 S01486             DATE 10AUG94               *
+     F*                 056460             DATE 07JUN93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus                                          *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSD007 - Customer Closing                                    *
+     F*  CPM005 - Private Banking Phase 2                             *
+     F*           Focus Group Changes upgraded to DBA                 *
+     F*           PBFG/5 - INSTRUMENT ASSET/LIABILITY SPLIT           *
+     F*  CFF004 - Increase in size of Price Fields,(Recompiled Only)  *
+     F*  S71062 - PM/FF Interface changes                             *
+     F*  CPM004 - Bank Portfolios                                     *
+     F*  CCG009 - Private Banking UDC                                 *
+     F*  072242 - Recompiled over PMHOLDPD changes                    *
+     F*  S01486 - Portfolio Management Upgrade to Release 10.         *
+     F*  056460 - SAVE DETAILS OF MATURE / FLAT POSITIONS             *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FPM1155AUO   E                    PRINTER
+     F****PREFIX*OF SDBANKL0 IS 'BJ'                                      S01486
+     F***SDBANKL0IF**E           K        DISK                            S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F****PREFIX*OF SDBANKL0 IS 'BJ'                                      S01486
+     F***SDPORTPDIF**E           K        DISK                            S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F****PREFIX*OF SDPLCSL0 IS 'BB'                                      S01486
+     F***SDPLCSL0IF**E           K        DISK                            S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F**  PREFIX OF PMPLHLX0 IS 'QF'
+     FPMMFHLL2UF  E           K        DISK                      A
+     F                                              KINFSR *PSSR
+     F**  PREFIX OF PMPLHLX0 IS 'OR'
+     FPMPPTDPDIF  E                    DISK
+     F                                              KINFSR *PSSR
+     F**  PREFIX OF PMPLHLX0 IS 'QF'
+     FPMHDVNLLIF  E           K        DISK
+     F            PMHOLDP0                          KRENAMEPMHOLDPF
+     F                                              KINFSR *PSSR
+     F**  PREFIX OF PMPPTHQ1 IS 'QF'
+     FPMPPTHQ1IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     E*****************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F**             *************************
+     F**             ** INDICATORS NOT USED **
+     F**             ** ------------------- **
+     F**             *************************
+     F**
+     F**      69: INDICATOR FOR READ
+     F**      70: INDICATOR FOR CHAIN
+     F**      71: INDICATOR FOR READ
+     F********72: INDICATOR FOR CHAIN                                     S01486
+     F**
+     F**      ***************************************************
+     F**      * 01   02   03   04   05   06   07   08   09   10 *
+     F**      * 11   12   13   14   15   16   17   18   19   20 *
+     F**      * 21   22   23   24   25   26   27   28   29   30 *
+     F**      * 31   32   33   34   35   36   37   38   39   40 *
+     F**      * 41   42   43   44   45   46   47   48   49   50 *
+     F**      * 51   52   53   54   55   56   57   58   59   60 *
+     F**      * 61   62   63   64   65   66   67   68   ..   .. *
+     F**      * ..   ..   73   74   75   76   77   78   79   80 *
+     F**      * 81   82   83   84   85   86   87   88   89   90 *
+     F**      * 91   92   93   94   95   96   97   98   99      *
+     E*****************************************************************
+     E*
+     E                    RETA    1   1 20
+     E*
+     E                    CPY@    1   1 80
+     I*****************************************************************
+     IPMPPTHQ0
+     I              QFRECI                          RNRECI
+     I              QFACOC                          RNACOC
+     I              QFCNUM                          RNCNUM
+     I              QFPTFR                          RNPTFR
+     I              QFTVDA                          RNTVDA
+     I              QFMODI                          RNMODI
+     I              QFDSPS                          RNDSPS
+     I              QFDSPG                          RNDSPG
+     I              QFITDS                          RNITDS
+     I              QFINNR                          RNINNR
+     I              QFVLIS                          RNVLIS
+     I              QFVALG                          RNVALG
+     I              QFVLGS                          RNVLGS
+     I              QFTRNB                          RNTRNB
+     I              QFTDSS                          RNTDSS
+     I              QFDTYP                          RNDTYP
+     I              QFFOIS                          RNFOIS
+     I              QFTXT1                          RNTXT1
+     I              QFTXT2                          RNTXT2
+     I              QFAMT1                          RNAMT1
+     I              QFAMT2                          RNAMT2
+     I              QFCCY1                          RNCCY1
+     I              QFCCY2                          RNCCY2
+     I              QFCDP1                          RNCDP1
+     I              QFCDP2                          RNCDP2
+     I              QFMPRC                          RNMPRC
+     I              QFBOPR                          RNBOPR
+     I              QFMFXR                          RNMFXR
+     I              QFBFXR                          RNBFXR
+     I              QFMVAL                          RNMVAL
+     I              QFPUIT                          RNPUIT
+     I              QFACIS                          RNACIS
+     I              QFNIDT                          RNNIDT
+     I              QFSLID                          RNSLID
+     I              QFNODA                          RNNODA
+     I              QFPLMK                          RNPLMK
+     I              QFPLFX                          RNPLFX
+     I              QFBKYD                          RNBKYD
+     I              QFMKYD                          RNMKYD
+     I              QFDRYD                          RNDRYD
+     I              QFCNTR                          RNCNTR
+     I              QFLIND                          RNLIND
+     I              QFSPLD                          RNSPLD
+     I              QFBYSF                          RNBYSF
+     I              QFOPCL                          RNOPCL
+     I              QFMFMD                          RNMFMD
+     I              QFFPLC                          RNFPLC
+     I              QFDLSQ                          RNDLSQ
+     I              QFRLDN                          RNRLDN
+     I              QFOAMT                          RNOAMT
+     I              QFMVPC                          RNMVPC
+     I              QFAIPC                          RNAIPC
+     I              QFINTC                          RNINTC
+     I              QFDXTR                          RNDXTR
+     I              QFHLDV                          RNHLDV
+     I              QFPFMR                          RNPFMR
+     I              QFDLAM                          RNDLAM
+     I              QFPLWH                          RNPLWH
+     I              QFVDAT                          RNVDAT
+     I              QFMFXD                          RNMFXD                72242
+     I              QFNMDP                          RNNMDP                72242
+     I              QFSPBS                          RNSPBS                72242
+     I              QFPOST                          RNPOST                CPM005
+     I              QFASLI                          RNASLI                CPM005
+     I              QFPOSQ                          RNPOSQ                CPM005
+     I              QFNOPO                          RNNOPO                CPM005
+     I              QFAEIN                          RNAEIN                S71062
+     I              QFCLON                          RNCLON                S71062
+     I              QFSETD                          RNSETD                S71062
+     I              OSPCNU                          RNPCNU
+     I              OSPPTF                          RNPPTF
+     I              QFLOIC                          RNLOIC                                    CER020
+     I*
+     I**   HOLDINGS DATA STRUCTURE (PF/PMHOLDPP)
+     I            DS
+     I                                        1   1 WWRECI
+     I                                        2   3 WWACOC
+     I**********                              4   90WWCNUM                                    CSD027
+     I                                        4   9 WWCNUM                                    CSD027
+     I                                       10  13 WWPTFR
+     I                                       14  14 WWTVDA
+     I                                       15  16 WWMODI
+     I                                       17  180WWDSPS
+     I                                       19  21 WWDSPG
+     I                                       22  230WWITDS
+     I                                       24  26 WWINNR
+     I                                       27  280WWVLIS
+     I                                       29  31 WWVALG
+     I                                       32  330WWVLGS
+     I**********                             34  390WWTRNB                                    CLE148
+     I                                       34  39 WWTRNB                                    CLE148
+     I                                       40  49 WWTDSS
+     I                                       50  51 WWDTYP
+     I                                       52  56 WWFOIS
+     I                                       57  76 WWTXT1
+     I**********                             77  96 WWTXT2                                    CGL029
+     I                                    P  97 1040WWAMT1
+     I                                    P 105 1120WWAMT2
+     I                                      113 115 WWCCY1
+     I                                      116 118 WWCCY2
+     I                                      119 1190WWCDP1
+     I                                      120 1200WWCDP2
+     I                                    P 121 1288WWMPRC
+     I                                    P 129 1368WWBOPR
+     I                                    P 137 1438WWMFXR
+     I                                    P 144 1508WWBFXR
+     I                                    P 151 1580WWMVAL
+     I                                    P 159 1660WWPUIT
+     I                                    P 167 1740WWACIS
+     I                                    P 175 1770WWNIDT
+     I                                    P 178 1800WWSLID
+     I                                      181 1830WWNODA
+     I                                    P 184 1910WWPLMK
+     I                                    P 192 1990WWPLFX
+     I                                    P 200 2057WWBKYD
+     I                                    P 206 2117WWMKYD
+     I                                    P 212 2177WWDRYD
+     I                                      218 219 WWCNTR
+     I                                      220 2220WWLIND
+     I                                      223 223 WWSPLD
+     I                                      224 224 WWBYSF
+     I                                      225 225 WWOPCL
+     I                                      226 226 WWMFMD
+     I                                      227 229 WWFPLC
+     I                                    P 230 2310WWDLSQ
+     I                                      232 2370WWRLDN
+     I*************                       P 244 2490WWOAMT                S71062
+     I*************                       P 250 2570WWMVPC                S71062
+     I*************                       P 258 2650WWAIPC                S71062
+     I*************                         266 266 WWINTC                S71062
+     I*************                       P 267 2690WWDXTR                S71062
+     I*************                         270 270 WWHLDV                S71062
+     I*************                         271 271 WWPFMR                S71062
+     I*************                         272 272 WWDLAM                S71062
+     I*************                         273 2780WWPLWH                S71062
+     I*************                       P 279 2810WWVDAT                S71062
+     I                                    P 238 2430WWOAMT                S71062
+     I                                    P 244 2510WWMVPC                S71062
+     I                                    P 252 2590WWAIPC                S71062
+     I                                      260 260 WWINTC                S71062
+     I                                    P 261 2630WWDXTR                S71062
+     I                                      264 264 WWHLDV                S71062
+     I                                      265 265 WWPFMR                S71062
+     I                                      266 266 WWDLAM                S71062
+     I**********                            267 2720WWPLWH                             S71062 CSD027
+     I                                      267 272 WWPLWH                                    CSD027
+     I                                    P 273 2750WWVDAT                S71062
+     I                                    P 276 2817WWSTRP                S71062
+     I                                    P 282 2978WWMFXD                72242
+     I                                    P 298 2980WWNMDP                72242
+     I                                      299 299 WWSPBS                72242
+     I                                      300 300 WWAEIN                S71062
+     I                                      301 3060WWCLON                S71062
+     I***********                           307 3110WWSETD         S71062 CPM005
+     I                                    P 307 3090WWSETD                CPM005
+     I                                      310 311 WWPOST                CPM005
+     I                                      312 312 WWASLI                CPM005
+     I                                      313 323 WWPOSQ                CPM005
+     I                                      324 324 WWNOPO                CPM005
+     I                                      327 352 WWTXT2                                    CGL029
+     I                                      353 355 WWLOIC                                    CER020
+     I*
+     IDSKEY       DS                          1  10
+     I                                        1   60W2PCNU
+     I                                        7  10 W2PPTF
+     I*
+     I*****LOCAL*DATA AREA FOR DATABASE ERROR DETAILS                     S01486
+     I*LDA********UDS                            256                      S01486
+     ILDA         DS                            256                       S01486
+      ** Local data area for database error details                       S01486
+     I                                      132 183 DBLOT
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     IPMSTAT    E DS
+     I                                        1   50WWECD
+     I                                        1 256 WWSTAT
+     I*
+     I/COPY WNCPYSRC,PM1155I001
+     IDSFDY     E DSDSFDY                                                 S01486
+     I*  First DS for access programs, short data structure               S01486
+     I*
+     IDSSDY     E DSDSSDY
+     I*  Second DS for access programs, long data structure
+      *                                                                   CSD007
+     IDSLDY     E DSDSLDY                                                 CSD007
+      ** Third DS for access programs, very long data structure           CSD007
+     I*                                                                   S01486
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I**  Bank Details                                                    S01486
+     I*                                                                   S01486
+     ISDCUST    E DSSDCUSTPD                                              S01486
+     I**  Custoomer Details                                               S01486
+     I*
+     ISDPORT    E DSSDPORTPD                                              S01486
+     I**  Portfolio Management Details                                    S01486
+     I*                                                                   S01486
+     ISDPLCS    E DSSDPLCSPD                                              S01486
+     I**  Special Customer Details                                        S01486
+      *                                                                   CSD007
+     ISCSARD    E DSSCSARDPD                                              CSD007
+      ** External Data Structure for Switchable Features                  CSD007
+     I*
+     I********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C* INDEX OF SUBROUTINES                                             *
+     C* MAIN     - MAIN PROCESSING                                       *
+     C* INIT     - INITIAL PROCESSING                                    *
+     C* P01      - ACCESS POOL CUSTOMER DETAILS                          *
+     C* P02      - ACCESS POOL PORTOFOLIO DETAILS                        *
+     C* P03      - PROCESS EACH MEMBER PORTOFOLIO HOLDING READ           *
+     C* P04      - CALCULATE POOL PORTOFOLIO POSITIONS                   *
+     C* W01      - WRITE POOL POSITION DETAILS TO PMHOLDPP               *
+     C* W02      - WRITE TO PORTFOLIO HOLDINGS AUDIT PM1150AU            *
+     C* ZSAVE    - SAVE KEY FIELDS OF QRYF/PMPPTHQ1                      *
+     C* *PSSR    - ERROR SUBROUTINE                                      *
+     C*                                                                  *
+     C* EXTERNAL ROUTINES CALLED                                         *
+     C*                                                                  *
+     C********************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C                     MOVEACPY@      CPY2@  80
+     C*
+     C           K2KEY     KLIST
+     C                     KFLD           W2PCNU  60
+     C                     KFLD           W2PPTF  4
+     C*
+     C           K3KEY     KLIST
+     C                     KFLD           ORPCNU
+     C                     KFLD           ORPPTF
+     C*
+     C           HOLDKY    KLIST
+     C                     KFLD           WWCNUM
+     C                     KFLD           WWPTFR
+     C*********************KFLD           WWDSPS                          CCG009
+     C*********************KFLD           WWDSPG                          CCG009
+     C                     KFLD           WWVLGS                          CCG009
+     C                     KFLD           WWVALG                          CCG009
+     C                     KFLD           WWITDS
+     C                     KFLD           WWINNR
+     C***********          KFLD           WWDLSQ                          CPM005
+     C***********          KFLD           WWCCY1                          CPM005
+     C                     KFLD           WWPOSQ                          CPM005
+     C                     KFLD           WWTDSS
+     C                     KFLD           WWTRNB
+     C                     KFLD           WWTXT2
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C** MAIN PROCESSING
+     C*****************************************************************
+     C*
+     C** PERFORM INITIAL PROCESSING
+     C                     EXSR INIT
+     C*
+     C** READ ALL POSITIONS FOR POOL PORTFOLIO CUSTOMERS
+     C                     READ PMPPTHQ1                 71
+     C*
+     C           *IN71     DOWEQ'0'                        B1
+     C*
+     C** ACCESS NEW CUSTOMER DETAILS
+     C           RNPCNU    CASNEK1PCNU    P01              B*2
+     C                     END                             E*2
+     C*
+     C** CALCULATE POSITION TOTALS
+     C                     EXSR P03
+     C*
+     C                     MOVE 'Y'       WW1ST   1
+     C*
+     C                     EXSR ZSAVE
+     C*
+     C                     READ PMPPTHQ1                 71
+     C*
+     C                     END                             E1
+     C*
+     C** PROCESS LAST SET OF DETAILS READ
+     C********** K1PCNU    IFNE *ZEROS                     B1                                 CSD027
+     C           K1PCNU    IFNE *BLANKS                    B1                                 CSD027
+     C                     EXSR W01
+     C                     END                             E1
+     C*
+     C** OUTPUT AUDIT REPORT
+     C                     EXSR W02
+     C*
+     C                     MOVE '1'       *INLR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C* ZSAVE    - MOVE KEY FIELDS OF QRYF/PMPPTHQ1                      *
+     C*                                                                  *
+     C* SUBROUTINE CALLS:                                                *
+     C*                                                                  *
+     C* SUBROUTINE CALLED FROM:                                          *
+     C* MAIN     - MAIN PROCESSING                                       *
+     C*                                                                  *
+     C* ROUTINE USES VARIABLES:                                          *
+     C*                                                                  *
+     C********************************************************************
+     C           ZSAVE     BEGSR
+     C*
+     C**********           Z-ADDRNPCNU    K1PCNU                                              CSD027
+     C                     MOVE RNPCNU    K1PCNU                                              CSD027
+     C                     MOVELRNPPTF    K1PPTF
+     C                     MOVELRNRECI    K1RECI
+     C                     MOVELRNTVDA    K1TVDA
+     C                     MOVELRNMODI    K1MODI
+     C                     MOVELRNBYSF    K1BYSF
+     C                     MOVELRNTDSS    K1TDSS
+     C                     MOVELRNFOIS    K1FOIS
+     C                     MOVELRNCCY1    K1CCY1
+     C                     MOVELRNCCY2    K1CCY2
+     C                     MOVELRNINNR    K1INNR
+     C                     MOVELRNTXT1    K1TXT1
+     C                     MOVELRNTXT2    K1TXT2
+     C                     Z-ADDRNBFXR    K1BFXR
+     C                     MOVELRNOPCL    K1OPCL
+     C                     MOVELRNMFMD    K1MFMD
+     C*
+     C                     ENDSR
+     C**************************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C* P01      - ACCESS POOL CUSTOMER DETAILS                          *
+     C*                                                                  *
+     C* SUBROUTINE CALLS:                                                *
+     C* *PSSR    - ERROR SUBROUTINE                                      *
+     C*                                                                  *
+     C* SUBROUTINE CALLED FROM:                                          *
+     C*                                                                  *
+     C* ROUTINE USES VARIABLES:                                          *
+     C*                                                                  *
+     C********************************************************************
+     C           P01       BEGSR                           ** P01   BSR **
+     C*
+     C**   ACCESS CUSTOMER DETAILS FROM LF/SDPLCSL0 USING A KEY OF THE
+     C**   CUSTOMER NUMBER PASSED TO THIS PROCESS
+     C*
+     C                     MOVE RNPCNU    W1PCNU  6
+     C*
+     C***********W1PCNU    CHAINSDPLCSL0             72                   S01486
+     C***********                                                         S01486
+     C************IN72     IFEQ '1'                        B1             S01486
+     C***********          Z-ADD3         DBASE            **DB ERROR 03**S01486
+     C***********          MOVEL'SDPLCSL0'DBFILE           ***************S01486
+     C***********          MOVELK1PCNU    DBKEY                           S01486
+     C***********          EXSR *PSSR                                     S01486
+     C***********          END                             E1             S01486
+     C*                                                                   S01486
+     C                     MOVELW1PCNU    @KEYC                           S01486
+     C***********          CALL 'AOCUSTR0'                         S01486 CSD007
+     C                     CALL 'AOCUSTR2'                                CSD007
+     C                     PARM '       ' @RTCD   7                       S01486
+     C                     PARM '*KEY   ' @OPTN   7                       S01486
+     C                     PARM           @KEYC  10                       S01486
+     C                     PARM *BLANKS   @KYST   7                       S01486
+     C***********SDCUST    PARM SDCUST    DSSDY                    S01486 CSD007
+     C           SDCUST    PARM SDCUST    DSLDY                           CSD007
+      *                                                                   CSD007
+      ** If CSD007 is on, allow processing of a closed record (return     CSD007
+      ** code '*NRF' and date deleted equal to zero).                     CSD007
+      *                                                                   CSD007
+     C           CSD007    IFEQ 'Y'                                       CSD007
+     C           @RTCD     ANDEQ'*NRF'                                    CSD007
+     C           BBDTDL    ANDEQ*ZERO                                     CSD007
+      *                                                                   CSD007
+     C                     ELSE                                           CSD007
+      *                                                                   CSD007
+     C           @RTCD     IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVE 'SDCUSTPD'DBFILE           ************   S01486
+     C                     MOVEL@KEYC     DBKEY            DB ERROR 003   S01486
+     C                     Z-ADD3         DBASE            ************   S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     END                                            S01486
+      *                                                                   CSD007
+     C                     ENDIF                                          CSD007
+     C*                                                                   S01486
+     C                     CALL 'AOPLCSR0'                                S01486
+     C                     PARM '       ' @RTCD   7                       S01486
+     C                     PARM '*KEY   ' @OPTN   7                       S01486
+     C                     PARM           @KEYC  10                       S01486
+     C           SDPLCS    PARM SDPLCS    DSFDY                           S01486
+     C           @RTCD     IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVE 'SDPLCSPD'DBFILE           ************   S01486
+     C                     MOVEL@KEYC     DBKEY            DB ERROR 004   S01486
+     C                     Z-ADD4         DBASE            ************   S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     END                                            S01486
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C* P03      - PROCESS EACH MEMBER POSITION READ                     *
+     C*                                                                  *
+     C* SUBROUTINE CALLS:                                                *
+     C* *PSSR    - ERROR SUBROUTINE                                      *
+     C*                                                                  *
+     C* SUBROUTINE CALLED FROM:                                          *
+     C*                                                                  *
+     C* ROUTINE USES VARIABLES:                                          *
+     C*                                                                  *
+     C********************************************************************
+     C           P03       BEGSR                           *** P03    ***
+     C*
+     C** IF ANY OF KEY FIELDS HAVE CHANGED AND IF NOT PROCESSING FIRST
+     C** RECORD OUTPUT A RECORD TO PMMFHLPP AS PER W01 AND THEN CLEAR
+     C** ALL WORKFILES
+     C           WW1ST     IFEQ 'Y'                        B1
+     C*
+     C           RNMODI    IFNE K1MODI                     B2
+     C           RNPCNU    ORNE K1PCNU
+     C           RNPPTF    ORNE K1PPTF
+     C*
+     C           RNMODI    OREQ 'SE'
+     C           RNTVDA    ANDNEK1TVDA
+     C           RNMODI    OREQ 'SE'
+     C           RNTDSS    ANDNEK1TDSS
+     C*
+     C           RNMODI    OREQ 'FF'
+     C           RNFOIS    ANDNEK1FOIS
+     C           RNMODI    OREQ 'FF'
+     C           RNCCY1    ANDNEK1CCY1
+     C           RNMODI    OREQ 'FF'
+     C           RNTXT1    ANDNEK1TXT1
+     C           RNMODI    OREQ 'FF'
+     C           RNTXT2    ANDNEK1TXT2
+     C*
+     C           RNMODI    OREQ 'ML'
+     C           RNTVDA    ANDNEK1TVDA
+     C           RNMODI    OREQ 'ML'
+     C           RNCCY1    ANDNEK1CCY1
+     C           RNMODI    OREQ 'ML'
+     C           RNINNR    ANDNEK1INNR
+     C           RNMODI    OREQ 'ML'
+     C           RNTXT1    ANDNEK1TXT1
+     C           RNMODI    OREQ 'ML'
+     C           RNTXT2    ANDNEK1TXT2
+     C*
+     C           RNMODI    OREQ 'MD'
+     C           RNTVDA    ANDNEK1TVDA
+     C           RNMODI    OREQ 'MD'
+     C           RNCCY1    ANDNEK1CCY1
+     C           RNMODI    OREQ 'MD'
+     C           RNINNR    ANDNEK1INNR
+     C           RNMODI    OREQ 'MD'
+     C           RNTXT1    ANDNEK1TXT1
+     C           RNMODI    OREQ 'MD'
+     C           RNTXT2    ANDNEK1TXT2
+     C*
+     C           RNMODI    OREQ 'FX'
+     C           RNBYSF    ANDNEK1BYSF
+     C           RNMODI    OREQ 'FX'
+     C           RNCCY1    ANDNEK1CCY1
+     C           RNMODI    OREQ 'FX'
+     C           RNCCY2    ANDNEK1CCY2
+     C           RNMODI    OREQ 'FX'
+     C           RNINNR    ANDNEK1INNR
+     C           RNMODI    OREQ 'FX'
+     C           RNTXT1    ANDNEK1TXT1
+     C           RNMODI    OREQ 'FX'
+     C           RNTXT2    ANDNEK1TXT2
+     C           RNMODI    OREQ 'FX'
+     C           RNBFXR    ANDNEK1BFXR
+     C           RNMODI    OREQ 'FX'
+     C           RNOPCL    ANDNEK1OPCL
+     C           RNMODI    OREQ 'FX'
+     C           RNMFMD    ANDNEK1MFMD
+     C*
+     C           RNMODI    OREQ 'LE'
+     C           RNTVDA    ANDNEK1TVDA
+     C           RNMODI    OREQ 'LE'
+     C           RNCCY1    ANDNEK1CCY1
+     C           RNMODI    OREQ 'LE'
+     C           RNINNR    ANDNEK1INNR
+     C           RNMODI    OREQ 'LE'
+     C           RNTXT1    ANDNEK1TXT1
+     C           RNMODI    OREQ 'LE'
+     C           RNTXT2    ANDNEK1TXT2
+     C*
+     C           RNMODI    OREQ 'RE'
+     C           RNRECI    ANDNEK1RECI
+     C           RNMODI    OREQ 'RE'
+     C           RNTVDA    ANDNEK1TVDA
+     C           RNMODI    OREQ 'RE'
+     C           RNCCY1    ANDNEK1CCY1
+     C           RNMODI    OREQ 'RE'
+     C           RNINNR    ANDNEK1INNR
+     C*
+     C                     EXSR W01
+     C*
+     C**   RESET ALL WORK FIELDS TO BLANK OR ZERO
+     C                     MOVE *BLANKS   WWRECI
+     C                     MOVE *BLANKS   WWACOC
+     C**********           Z-ADD*ZEROS    WWCNUM                                              CSD027
+     C                     MOVE *BLANKS   WWCNUM                                              CSD027
+     C                     MOVE *BLANKS   WWPTFR
+     C                     MOVE *BLANKS   WWTVDA
+     C                     MOVE *BLANKS   WWMODI
+     C                     Z-ADD*ZEROS    WWDSPS
+     C                     MOVE *BLANKS   WWDSPG
+     C                     Z-ADD*ZEROS    WWITDS
+     C                     MOVE *BLANKS   WWINNR
+     C                     Z-ADD*ZEROS    WWVLIS
+     C                     MOVE *BLANKS   WWVALG
+     C                     Z-ADD*ZEROS    WWVLGS
+     C**********           Z-ADD*ZEROS    WWTRNB                                              CLE148
+     C                     MOVEL*BLANKS   WWTRNB                                              CLE148
+     C                     MOVE *BLANKS   WWTDSS
+     C                     MOVE *BLANKS   WWDTYP
+     C                     MOVE *BLANKS   WWFOIS
+     C                     MOVE *BLANKS   WWTXT1
+     C                     MOVE *BLANKS   WWTXT2
+     C                     Z-ADD*ZEROS    WWAMT1
+     C                     Z-ADD*ZEROS    WWAMT2
+     C                     MOVE *BLANKS   WWCCY1
+     C                     MOVE *BLANKS   WWCCY2
+     C                     Z-ADD*ZEROS    WWCDP1
+     C                     Z-ADD*ZEROS    WWCDP2
+     C                     Z-ADD*ZEROS    WWMPRC
+     C                     Z-ADD*ZEROS    WWBOPR
+     C                     Z-ADD*ZEROS    WWMFXR
+     C                     Z-ADD*ZEROS    WWBFXR
+     C                     Z-ADD*ZEROS    WWMVAL
+     C                     Z-ADD*ZEROS    WWPUIT
+     C                     Z-ADD*ZEROS    WWACIS
+     C                     Z-ADD*ZEROS    WWNIDT
+     C                     Z-ADD*ZEROS    WWSLID
+     C                     Z-ADD*ZEROS    WWNODA
+     C                     Z-ADD*ZEROS    WWPLMK
+     C                     Z-ADD*ZEROS    WWPLFX
+     C                     Z-ADD*ZEROS    WWBKYD
+     C                     Z-ADD*ZEROS    WWMKYD
+     C                     Z-ADD*ZEROS    WWDRYD
+     C                     MOVE *BLANKS   WWCNTR
+     C**********           Z-ADD*ZEROS    WWLIND                                              CER020
+     C                     MOVE *BLANKS   WWLOIC                                              CER020
+     C                     MOVE *BLANKS   WWSPLD
+     C                     MOVE *BLANKS   WWBYSF
+     C                     MOVE *BLANKS   WWOPCL
+     C                     MOVE *BLANKS   WWMFMD
+     C                     MOVE *BLANKS   WWFPLC
+     C                     Z-ADD*ZEROS    WWDLSQ
+     C                     Z-ADD*ZEROS    WWRLDN
+     C                     Z-ADD*ZEROS    WWOAMT
+     C                     Z-ADD*ZEROS    WWMVPC
+     C                     Z-ADD*ZEROS    WWAIPC
+     C                     MOVE *BLANKS   WWINTC
+     C                     Z-ADD*ZEROS    WWDXTR
+     C                     MOVE *BLANKS   WWHLDV
+     C                     MOVE *BLANKS   WWPFMR
+     C                     MOVE *BLANKS   WWDLAM
+     C**********           Z-ADD*ZEROS    WWPLWH                                              CSD027
+     C                     MOVE *BLANKS   WWPLWH                                              CSD027
+     C                     Z-ADD*ZEROS    WWVDAT
+     C                     Z-ADD*ZEROS    WWMFXD                          72242
+     C                     MOVE *BLANKS   WWAEIN                          S71062
+     C                     Z-ADD*ZEROS    WWCLON                          S71062
+     C                     Z-ADD*ZEROS    WWSETD                          S71062
+     C                     Z-ADD*ZEROS    WWNMDP                          72242
+     C                     MOVE *BLANKS   WWSPBS                          72242
+     C                     MOVE *BLANKS   WWPOST                          CPM005
+     C                     MOVE *BLANKS   WWASLI                          CPM005
+     C                     MOVE *BLANKS   WWPOSQ                          CPM005
+     C                     MOVE *BLANKS   WWNOPO                          CPM005
+     C                     Z-ADD*ZEROS    W1BOPR
+     C                     Z-ADD*ZEROS    W1BFXR
+     C                     END                             E2
+     C*
+     C                     END                             E1
+     C*
+     C                     EXSR P04
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C* P04      - CALCULATE POOL PORTOFOLIO POSITIONS                   *
+     C*                                                                  *
+     C* SUBROUTINE CALLS:                                                *
+     C*                                                                  *
+     C* SUBROUTINE CALLED FROM:                                          *
+     C* P03                                                              *
+     C*                                                                  *
+     C* ROUTINE USES VARIABLES:                                          *
+     C* WWRECI   - RECORD ID.                                            *
+     C* WWACOC   - ACCOUNT OFFICER CODE                                  *
+     C* WWCNUM   - CUSTOMER NUMBER                                       *
+     C* WWPTFR   - PORTOFOLIO REFERENCE                                  *
+     C* WWTVDA   - TRADE/VALUE DATE ACTION                               *
+     C* WWMODI   - MODULE ID.                                            *
+     C* WWDSPS   - DISPLAY GROUP SEQUENCE                                *
+     C* WWDSPG   - DISPLAY GROUP CODE                                    *
+     C* WWITDS   - INSTRUMENT DISPLAY SEQUENCE                           *
+     C* WWINNR   - INSTRUMENT TYPE                                       *
+     C* WWVLIS   - VALUATION GROUP INSTRUMENT                            *
+     C* WWVALG   - VALUATION GROUP CODE                                  *
+     C* WWVLGS   - VALUATION GROUP SEQUENCE                              *
+     C* WWTRNB   - TRANSACTION NUMBER                                    *
+     C* WWTDSS   - SECURITY SHORTNAME                                    *
+     C* WWDTYP   - DEAL TYPE                                             *
+     C* WWFOIS   - F&O INSTRUMENT                                        *
+     C* WWTXT1   - NARRATIVE LINE 1                                      *
+     C* WWTXT2   - NARRATIVE LINE 2                                      *
+     C* WWAMT1   - AMOUNT 1                                              *
+     C* WWAMT2   - AMOUNT 2                                              *
+     C* WWCCY1   - CURRENCY 1                                            *
+     C* WWCCY2   - CURRENCY 2                                            *
+     C* WWCDP1   - NUMBER OF D.P. FOR CCY                                *
+     C* WWCDP2   - NUMBER OF D.P. FOR CCY                                *
+     C* WWMPRC   - MARKET PRICE                                          *
+     C* WWBOPR   - BOOK PRICE                                            *
+     C* WWMFXR   - MARKET FX RATE                                        *
+     C* WWBFXR   - BOOK FX RATE                                          *
+     C* WWMVAL   - MARKET PRICE                                          *
+     C* WWPUIT   - PURCHASED INTEREST                                    *
+     C* WWACIS   - ACCRUED INTEREST                                      *
+     C* WWNIDT   - NEXT INTEREST PAYMENT DATE                            *
+     C* WWSLID   - START DATE OR LAST INTEREST DATE                      *
+     C* WWNODA   - NO. OF DAF FILES                                      *
+     C* WWPLMK   - PROFIT/LOSS MARKET                                    *
+     C* WWPLFX   - PROFIT/LOSS FX                                        *
+     C* WWBKYD   - BOOK YIELD                                            *
+     C* WWMKYD   - MARKET YIELD                                          *
+     C* WWDRYD   - DIRECT YIELD                                          *
+     C* WWCNTR   - COUNTRY OF RISK                                       *
+     C* WWLIND   - LOCAL INDUSTRY CODE                                   *
+     C* WWSPLD   - SECURITY POSITION PLEDGED                             *
+     C* WWBYSF   - CCY1 IS BUY/SELL CURRENCY                             *
+     C* WWOPCL   - OPEN/CLOSED MARKET INDICATOR                          *
+     C* WWMFMD   - MARKET FX RATE MULT/DIV IND.                          *
+     C* WWFPLC   - FX PROFIT/LOSS CURRENCY                               *
+     C* WWDLSQ   - SEQ FX DEALS FOR ENQUIRIES                            *
+     C* WWRLDN   - RELATED DEAL NUMBER                                   *
+     C* WWOAMT   - OTHER NOMINAL AMOUNT                                  *
+     C*                                                                  *
+     C********************************************************************
+     C           P04       BEGSR                           *** P04    ***
+     C*
+     C                     MOVELRNRECI    WWRECI
+     C                     MOVELBBACOC    WWACOC
+     C**********           Z-ADDRNPCNU    WWCNUM                                              CSD027
+     C                     MOVE RNPCNU    WWCNUM                                              CSD027
+     C                     MOVELRNPPTF    WWPTFR
+     C                     MOVELRNTVDA    WWTVDA
+     C                     MOVELRNMODI    WWMODI
+     C                     Z-ADDRNDSPS    WWDSPS
+     C                     MOVELRNDSPG    WWDSPG
+     C                     Z-ADDRNITDS    WWITDS
+     C                     MOVELRNINNR    WWINNR
+     C                     Z-ADDRNVLIS    WWVLIS
+     C                     MOVELRNVALG    WWVALG
+     C                     Z-ADDRNVLGS    WWVLGS
+     C**********           Z-ADD*ZEROS    WWTRNB                                              CLE148
+     C                     MOVEL*BLANKS   WWTRNB                                              CLE148
+     C                     MOVELRNTDSS    WWTDSS
+     C                     MOVELRNDTYP    WWDTYP
+     C                     MOVELRNFOIS    WWFOIS
+     C*
+     C           RNMODI    IFEQ 'RE'                       B1
+     C                     MOVE *BLANK    WWTXT1
+     C                     MOVELRNCCY1    WWTXT1
+     C                     MOVE RETA,1    WWTXT1
+     C                     ELSE                            X1
+     C                     MOVELRNTXT1    WWTXT1
+     C                     END                             E1
+     C*
+     C           RNMODI    IFEQ 'RE'                       B1
+     C                     MOVE *BLANKS   WWTXT2
+     C                     ELSE                            X1
+     C                     MOVELRNTXT2    WWTXT2
+     C                     END                             E1
+     C*
+     C           WWAMT1    ADD  RNAMT1    WWAMT1
+     C           WWAMT2    ADD  RNAMT2    WWAMT2
+     C                     MOVELRNCCY1    WWCCY1
+     C                     MOVELRNCCY2    WWCCY2
+     C                     Z-ADDRNCDP1    WWCDP1
+     C                     Z-ADDRNCDP2    WWCDP2
+     C*
+     C***********RNBOPR    MULT RNAMT1    ZZBOPR 188                      CPM004
+     C           RNBOPR    MULT RNAMT1    ZZBOPR 258                      CPM004
+     C           W1BOPR    ADD  ZZBOPR    W1BOPR 258
+     C*
+     C***********RNBFXR    MULT RNAMT1    ZZBFXR 188                      CPM004
+     C           RNBFXR    MULT RNAMT1    ZZBFXR 258                      CPM004
+     C           W1BFXR    ADD  ZZBFXR    W1BFXR 258
+     C*
+     C           WWMVAL    ADD  RNMVAL    WWMVAL
+     C           WWPUIT    ADD  RNPUIT    WWPUIT
+     C           WWACIS    ADD  RNACIS    WWACIS
+     C           WWPLMK    ADD  RNPLMK    WWPLMK
+     C           WWPLFX    ADD  RNPLFX    WWPLFX
+     C*
+     C                     Z-ADDRNDRYD    WWDRYD
+     C                     MOVELRNCNTR    WWCNTR
+     C**********           Z-ADDRNLIND    WWLIND                                              CER020
+     C                     MOVE RNLOIC    WWLOIC                                              CER020
+     C                     MOVE 'N'       WWSPLD
+     C                     MOVELRNBYSF    WWBYSF
+     C                     MOVELRNOPCL    WWOPCL
+     C                     MOVELRNMFMD    WWMFMD
+     C                     MOVELRNFPLC    WWFPLC
+     C                     Z-ADDRNDLSQ    WWDLSQ
+     C                     Z-ADD*ZEROS    WWRLDN
+     C*
+     C           RNMODI    IFEQ 'SE'                       B1
+     C           RNMODI    OREQ 'RE'
+     C           WWOAMT    ADD  RNOAMT    WWOAMT
+     C                     ELSE                            X1
+     C                     Z-ADD*HIVAL    WWOAMT
+     C                     END                             E1
+     C*
+     C           WWMVPC    ADD  RNMVPC    WWMVPC
+     C           WWAIPC    ADD  RNAIPC    WWAIPC
+     C                     MOVE RNINTC    WWINTC
+     C*
+     C** SAVE PRICE AND YIELD INFORMATION FROM LAST RECORD EXTRACTED
+     C           RNDXTR    IFGT WWDXTR
+     C                     Z-ADDRNMPRC    WWMPRC
+     C                     Z-ADDRNMKYD    WWMKYD
+     C                     Z-ADDRNDXTR    WWDXTR
+     C                     Z-ADDRNMFXR    WWMFXR
+     C                     END
+     C*
+     C                     MOVE 'Y'       WWHLDV
+     C                     MOVE 'Y'       WWPFMR
+     C                     MOVE RNDLAM    WWDLAM
+     C**********           Z-ADDRNPLWH    WWPLWH                                              CSD027
+     C                     MOVE RNPLWH    WWPLWH                                              CSD027
+     C                     Z-ADDRNVDAT    WWVDAT
+     C                     Z-ADDRNMFXD    WWMFXD                          72242
+     C                     MOVE RNAEIN    WWAEIN                          S71062
+     C                     Z-ADDRNCLON    WWCLON                          S71062
+     C                     Z-ADDRNSETD    WWSETD                          S71062
+     C                     Z-ADDRNNMDP    WWNMDP                          72242
+     C                     MOVE RNSPBS    WWSPBS                          72242
+     C                     MOVE RNPOST    WWPOST                          CPM005
+     C                     MOVE RNASLI    WWASLI                          CPM005
+     C                     MOVELRNPOSQ    WWPOSQ                          CPM005
+     C                     MOVE RNNOPO    WWNOPO                          CPM005
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C* W01      - WRITE TO PORTFOLIO HOLDINGS                           *
+     C*                                                                  *
+     C* SUBROUTINE CALLS:                                                *
+     C*                                                                  *
+     C* SUBROUTINE CALLED FROM:                                          *
+     C*                                                                  *
+     C* ROUTINE USES VARIABLES:                                          *
+     C*                                                                  *
+     C********************************************************************
+     C           W01       BEGSR                           *** W01    ***
+     C*
+     C** IF OPEN POSITION ALREADY EXISTS ON PF/PMHOLDPP DO NOT WRITE
+     C** MATURE FLAT POSITION DETAILS
+     C           HOLDKY    CHAINPMHDVNLL             69
+     C           *IN69     IFNE '0'
+     C                     MOVELWWRECI    QFRECI
+     C                     MOVELWWACOC    QFACOC
+     C**********           Z-ADDWWCNUM    QFCNUM                                              CSD027
+     C                     MOVE WWCNUM    QFCNUM                                              CSD027
+     C                     MOVELWWPTFR    QFPTFR
+     C                     MOVELWWTVDA    QFTVDA
+     C                     MOVELWWMODI    QFMODI
+     C                     Z-ADDWWDSPS    QFDSPS
+     C                     MOVELWWDSPG    QFDSPG
+     C                     Z-ADDWWITDS    QFITDS
+     C                     MOVELWWINNR    QFINNR
+     C                     Z-ADDWWVLIS    QFVLIS
+     C                     MOVELWWVALG    QFVALG
+     C                     Z-ADDWWVLGS    QFVLGS
+     C**********           Z-ADDWWTRNB    QFTRNB                                              CLE148
+     C                     MOVELWWTRNB    QFTRNB                                              CLE148
+     C                     MOVELWWTDSS    QFTDSS
+     C                     MOVELWWDTYP    QFDTYP
+     C                     MOVELWWFOIS    QFFOIS
+     C                     MOVELWWTXT1    QFTXT1
+     C                     MOVELWWTXT2    QFTXT2
+     C                     Z-ADDWWAMT1    QFAMT1
+     C                     Z-ADDWWAMT2    QFAMT2
+     C                     MOVELWWCCY1    QFCCY1
+     C                     MOVELWWCCY2    QFCCY2
+     C                     Z-ADDWWCDP1    QFCDP1
+     C                     Z-ADDWWCDP2    QFCDP2
+     C                     Z-ADDWWMPRC    QFMPRC
+     C                     Z-ADDWWBKYD    QFBKYD
+     C*
+     C           WWAMT1    IFNE 0
+     C           W1BOPR    DIV  WWAMT1    QFBOPR    H
+     C           W1BFXR    DIV  WWAMT1    QFBFXR    H
+     C                     ELSE
+     C                     Z-ADD0         QFBOPR
+     C                     Z-ADD0         QFBFXR
+     C                     END
+     C*
+     C                     Z-ADDWWMFXR    QFMFXR
+     C                     Z-ADDWWMVAL    QFMVAL
+     C                     Z-ADDWWPUIT    QFPUIT
+     C                     Z-ADDWWACIS    QFACIS
+     C                     Z-ADDWWNIDT    QFNIDT
+     C                     Z-ADDWWSLID    QFSLID
+     C                     Z-ADDWWNODA    QFNODA
+     C                     Z-ADDWWPLMK    QFPLMK
+     C                     Z-ADDWWPLFX    QFPLFX
+     C*
+     C                     Z-ADDWWMKYD    QFMKYD
+     C                     Z-ADDWWDRYD    QFDRYD
+     C                     MOVELWWCNTR    QFCNTR
+     C**********           Z-ADDWWLIND    QFLIND                                              CER020
+     C                     MOVE WWLOIC    QFLOIC                                              CER020
+     C                     MOVELWWSPLD    QFSPLD
+     C                     MOVELWWBYSF    QFBYSF
+     C                     MOVELWWOPCL    QFOPCL
+     C                     MOVELWWMFMD    QFMFMD
+     C                     MOVELWWFPLC    QFFPLC
+     C                     Z-ADDWWDLSQ    QFDLSQ
+     C                     Z-ADDWWRLDN    QFRLDN
+     C                     Z-ADDWWOAMT    QFOAMT
+     C                     Z-ADDWWMVPC    QFMVPC
+     C                     Z-ADDWWAIPC    QFAIPC
+     C                     MOVE WWINTC    QFINTC
+     C                     Z-ADDWWDXTR    QFDXTR
+     C                     MOVE WWHLDV    QFHLDV
+     C                     MOVE WWPFMR    QFPFMR
+     C                     MOVE WWDLAM    QFDLAM
+     C**********           Z-ADDWWPLWH    QFPLWH                                              CSD027
+     C                     MOVE WWPLWH    QFPLWH                                              CSD027
+     C                     Z-ADDWWVDAT    QFVDAT
+     C                     Z-ADDWWMFXD    QFMFXD                          72242
+     C                     MOVE WWAEIN    QFAEIN                          S71062
+     C                     Z-ADDWWCLON    QFCLON                          S71062
+     C                     Z-ADDWWSETD    QFSETD                          S71062
+     C                     Z-ADDWWNMDP    QFNMDP                          72242
+     C                     MOVE WWSPBS    QFSPBS                          72242
+     C                     MOVE WWPOST    QFPOST                          CPM005
+     C                     MOVE WWASLI    QFASLI                          CPM005
+     C                     MOVELWWPOSQ    QFPOSQ                          CPM005
+     C                     MOVE WWNOPO    QFNOPO                          CPM005
+     C*
+     C***WRITE*A*RECORD*IN*FILE*PMHOLDPP*******************************   CPM005
+      **  Write a record in file PMHOLDPD                                 CPM005
+     C*
+     C/COPY WNCPYSRC,PM1155C001
+     C                     WRITEPMHOLDP0
+     C/COPY WNCPYSRC,PM1155C002
+     C                     ADD  1         P0HCRE  50
+     C                     END
+     C*
+     C                     ENDSR                           *** EW01   ***
+     C*****************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C* INIT     - INITIAL PROCESSING                                    *
+     C*                                                                  *
+     C* SUBROUTINE CALLS:                                                *
+     C* *PSSR    - ERROR SUBROUTINE                                      *
+     C*                                                                  *
+     C* SUBROUTINE CALLED FROM:                                          *
+     C* MAIN     - MAIN PROCESSING                                       *
+     C*                                                                  *
+     C* ROUTINE USES VARIABLES:                                          *
+     C*                                                                  *
+     C********************************************************************
+     C           INIT      BEGSR                           ** INIT  BSR **
+     C*
+     C           *LIKE     DEFN RNPCNU    K1PCNU
+     C           *LIKE     DEFN RNPPTF    K1PPTF
+     C           *LIKE     DEFN RNRECI    K1RECI
+     C           *LIKE     DEFN RNTVDA    K1TVDA
+     C           *LIKE     DEFN RNMODI    K1MODI
+     C           *LIKE     DEFN RNBYSF    K1BYSF
+     C           *LIKE     DEFN RNTDSS    K1TDSS
+     C           *LIKE     DEFN RNFOIS    K1FOIS
+     C           *LIKE     DEFN RNCCY1    K1CCY1
+     C           *LIKE     DEFN RNCCY2    K1CCY2
+     C           *LIKE     DEFN RNINNR    K1INNR
+     C           *LIKE     DEFN RNTXT1    K1TXT1
+     C           *LIKE     DEFN RNTXT2    K1TXT2
+     C           *LIKE     DEFN RNBFXR    K1BFXR
+     C           *LIKE     DEFN RNOPCL    K1OPCL
+     C           *LIKE     DEFN RNMFMD    K1MFMD
+     C*
+     C                     MOVEACPY@      ACT@   80                       S01486
+     C*
+     C** PREPARE LDA
+     C           *NAMVAR   DEFN           LDA                             S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVEL*BLANK    DBLOT
+     C***********          MOVEL'PM1150'  DBPGM                           S01486
+     C                     MOVEL'PM1155'  DBPGM                           S01486
+     C                     OUT  LDA                                       S01486
+     C*
+     C***GET*INSTALLATION CONTROL DATA RECORD 1                           S01486
+     C***********          READ SDBANKL0                 71               S01486
+     C***ERROR***                                                         S01486
+     C************IN71     IFEQ '1'                        B1             S01486
+     C***********          Z-ADD2         DBASE            **DB ERROR 02**S01486
+     C***********          MOVEL'SDBANKL0'DBFILE           ***************S01486
+     C***********          MOVEL*BLANKS   DBKEY             1             S01486
+     C***********          EXSR *PSSR                       1             S01486
+     C***********          END                             E1             S01486
+     C*                                                                   S01486
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM '       ' @RTCD   7                       S01486
+     C                     PARM '*FIRST ' @OPTN   7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+     C*                                                                   S01486
+     C           @RTCD     IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD1         DBASE            ************   S01486
+     C                     MOVE 'SDBANKPD'DBFILE           DB ERROR 001   S01486
+     C                     MOVE *BLANKS   DBKEY            ************   S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     END                                            S01486
+     C/COPY WNCPYSRC,PM1155C003
+     C*
+     C** GET PM INSTALLATION CONTROL DATA RECORD
+     C***********          READ SDPORTPD                 71               S01486
+     C***ERROR***                                                         S01486
+     C************IN71     IFEQ '1'                        B1             S01486
+     C***********          Z-ADD3         DBASE            **DB ERROR 03**S01486
+     C***********          MOVEL'SDPORTPD'DBFILE           ***************S01486
+     C***********          MOVEL*BLANKS   DBKEY             1             S01486
+     C***********          EXSR *PSSR                       1             S01486
+     C***********          END                             E1             S01486
+     C*                                                                   S01486
+     C                     CALL 'AOPORTR0'                                S01486
+     C                     PARM '       ' @RTCD   7                       S01486
+     C                     PARM '*FIRST ' @OPTN   7                       S01486
+     C           SDPORT    PARM SDPORT    DSFDY                           S01486
+     C*                                                                   S01486
+     C           @RTCD     IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD2         DBASE            ************   S01486
+     C                     MOVE 'SDPORTPD'DBFILE           DB ERROR 002   S01486
+     C                     MOVE *BLANKS   DBKEY            ************   S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     END                                            S01486
+      *                                                                   CSD007
+      ** Access Switchable Features file and check if CSD007              CSD007
+      ** is switched on or not.                                           CSD007
+      *                                                                   CSD007
+     C                     CALL 'AOSARDR0'                                CSD007
+     C                     PARM *BLANKS   PRTCD   7                       CSD007
+     C                     PARM '*VERIFY' POPTN   7                       CSD007
+     C                     PARM 'CSD007'  PSARD   6                       CSD007
+     C           SCSARD    PARM SCSARD    DSFDY                           CSD007
+      *                                                                   CSD007
+     C           PRTCD     IFEQ *BLANKS                                   CSD007
+     C                     MOVE 'Y'       CSD007  1                       CSD007
+     C                     ELSE                                           CSD007
+     C                     MOVE 'N'       CSD007                          CSD007
+      *                                                                   CSD007
+      ** Database Error, if Return Code is not blanks or *NRF             CSD007
+      *                                                                   CSD007
+     C           PRTCD     IFNE '*NRF   '                                 CSD007
+     C           *LOCK     IN   LDA                                       CSD007
+     C                     MOVEL'SCSARDPD'DBFILE                          CSD007
+     C                     MOVEL'007'     DBASE                           CSD007
+     C                     MOVEL'CSD007  'DBKEY                           CSD007
+     C                     EXSR *PSSR                                     CSD007
+     C                     OUT  LDA                                       CSD007
+     C                     ENDIF                                          CSD007
+     C                     ENDIF                                          CSD007
+     C*
+     C**   RESET ALL WORK FIELDS TO BLANK OR ZERO
+     C                     MOVE *BLANKS   WWRECI
+     C                     MOVE *BLANKS   WWACOC
+     C**********           Z-ADD*ZEROS    WWCNUM                                              CSD027
+     C                     MOVE *BLANKS   WWCNUM                                              CSD027
+     C                     MOVE *BLANKS   WWPTFR
+     C                     MOVE *BLANKS   WWTVDA
+     C                     MOVE *BLANKS   WWMODI
+     C                     Z-ADD*ZEROS    WWDSPS
+     C                     MOVE *BLANKS   WWDSPG
+     C                     Z-ADD*ZEROS    WWITDS
+     C                     MOVE *BLANKS   WWINNR
+     C                     Z-ADD*ZEROS    WWVLIS
+     C                     MOVE *BLANKS   WWVALG
+     C                     Z-ADD*ZEROS    WWVLGS
+     C**********           Z-ADD*ZEROS    WWTRNB                                              CLE148
+     C                     MOVEL*BLANKS   WWTRNB                                              CLE148
+     C                     MOVE *BLANKS   WWTDSS
+     C                     MOVE *BLANKS   WWDTYP
+     C                     MOVE *BLANKS   WWFOIS
+     C                     MOVE *BLANKS   WWTXT1
+     C                     MOVE *BLANKS   WWTXT2
+     C                     Z-ADD*ZEROS    WWAMT1
+     C                     Z-ADD*ZEROS    WWAMT2
+     C                     MOVE *BLANKS   WWCCY1
+     C                     MOVE *BLANKS   WWCCY2
+     C                     Z-ADD*ZEROS    WWCDP1
+     C                     Z-ADD*ZEROS    WWCDP2
+     C                     Z-ADD*ZEROS    WWMPRC
+     C                     Z-ADD*ZEROS    WWBOPR
+     C                     Z-ADD*ZEROS    WWMFXR
+     C                     Z-ADD*ZEROS    WWBFXR
+     C                     Z-ADD*ZEROS    WWMVAL
+     C                     Z-ADD*ZEROS    WWPUIT
+     C                     Z-ADD*ZEROS    WWACIS
+     C                     Z-ADD*ZEROS    WWNIDT
+     C                     Z-ADD*ZEROS    WWSLID
+     C                     Z-ADD*ZEROS    WWNODA
+     C                     Z-ADD*ZEROS    WWPLMK
+     C                     Z-ADD*ZEROS    WWPLFX
+     C                     Z-ADD*ZEROS    WWBKYD
+     C                     Z-ADD*ZEROS    WWMKYD
+     C                     Z-ADD*ZEROS    WWDRYD
+     C                     MOVE *BLANKS   WWCNTR
+     C**********           Z-ADD*ZEROS    WWLIND                                              CER020
+     C                     MOVE *BLANKS   WWLOIC                                              CER020
+     C                     MOVE *BLANKS   WWSPLD
+     C                     MOVE *BLANKS   WWBYSF
+     C                     MOVE *BLANKS   WWOPCL
+     C                     MOVE *BLANKS   WWMFMD
+     C                     MOVE *BLANKS   WWFPLC
+     C                     Z-ADD*ZEROS    WWDLSQ
+     C                     Z-ADD*ZEROS    WWRLDN
+     C                     Z-ADD*ZEROS    WWOAMT
+     C                     Z-ADD*ZEROS    WWMVPC
+     C                     Z-ADD*ZEROS    WWAIPC
+     C                     MOVE *BLANKS   WWINTC
+     C                     Z-ADD*ZEROS    WWDXTR
+     C                     MOVE *BLANKS   WWHLDV
+     C                     MOVE *BLANKS   WWPFMR
+     C                     MOVE *BLANKS   WWDLAM
+     C**********           Z-ADD*ZEROS    WWPLWH                                              CSD027
+     C                     MOVE *BLANKS   WWPLWH                                              CSD027
+     C                     Z-ADD*ZEROS    WWVDAT
+     C                     Z-ADD*ZEROS    WWMFXD                          72242
+     C                     MOVE *BLANKS   WWAEIN                          S71062
+     C                     Z-ADD*ZEROS    WWCLON                          S71062
+     C                     Z-ADD*ZEROS    WWSETD                          S71062
+     C                     Z-ADD*ZEROS    WWNMDP                          72242
+     C                     MOVE *BLANKS   WWSPBS                          72242
+     C                     MOVE *BLANKS   WWPOST                          CPM005
+     C                     MOVE *BLANKS   WWASLI                          CPM005
+     C                     MOVE *BLANKS   WWPOSQ                          CPM005
+     C                     MOVE *BLANKS   WWNOPO                          CPM005
+     C*
+     C** DEFINE DATA AREA PMSTAT
+     C           *NAMVAR   DEFN           PMSTAT
+     C                     IN   PMSTAT
+     C*
+     C** DELETE ALL CURRENT MATURE/FLAT POOL PORTFOLIO POSITIONS
+     C                     READ PMPPTDPD                 69
+     C           *IN69     DOWEQ'0'
+     C*
+     C** DELETE ALL MATURE / FLAT POSITIONS FOR POOL PORTFOLIO
+     C           K3KEY     SETLLPMMFHLL2
+     C           K3KEY     READEPMMFHLL2                 70
+     C*
+     C           *IN70     DOWEQ'0'
+     C                     DELETPMMFHLL2
+     C           K3KEY     READEPMMFHLL2                 70
+     C                     END
+     C*
+     C                     READ PMPPTDPD                 69
+     C                     END
+     C*
+     C           EINIT     ENDSR                           ** END INIT  **
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C* W02      - AUDIT PROCESSING                                      *
+     C*                                                                  *
+     C* SUBROUTINE CALLS:                                                *
+     C*                                                                  *
+     C* SUBROUTINE CALLED FROM:                                          *
+     C* MAIN     - MAIN PROCESSING                                       *
+     C*                                                                  *
+     C* ROUTINE USES VARIABLES:                                          *
+     C*                                                                  *
+     C********************************************************************
+     C           W02       BEGSR                           *** W02    ***
+     C*
+     C** PRODUCE POOL PORTFOLIO HOLDINGS REPORT
+     C*
+     C/COPY WNCPYSRC,PM1155C004
+     C                     WRITEPM1155PP
+     C/COPY WNCPYSRC,PM1155C005
+     C*                                                                   S01486
+     C           P0HCRE    IFEQ 0                                         S01486
+     C                     WRITENODTLS                                    S01486
+     C                     END                                            S01486
+     C*
+     C                     ENDSR                           *** EW02   ***
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C* *PSSR    - ERROR SUBROUTINE                                      *
+     C*                                                                  *
+     C* SUBROUTINE CALLS:                                                *
+     C*                                                                  *
+     C* SUBROUTINE CALLED FROM:                                          *
+     C* INIT     - INITIAL PROCESSING                                    *
+     C* P01      - ACCESS ACCOUNT CODE DETAILS                           *
+     C* P02      - ACCESS CUSTOMER DETAILS                               *
+     C* P03      - ACCESS CURRENCY DETAILS                               *
+     C* P04      - FORMAT & OUTPUT DETAILS TO THE PORTF.HOLDINGS FILE    *
+     C*                                                                  *
+     C* ROUTINE USES VARIABLES:                                          *
+     C*                                                                  *
+     C********************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C           WWERRO    IFEQ ' '                        B1
+     C                     MOVE 'Y'       WWERRO  1
+     C*
+     C           DBASE     IFNE 0                          B*2
+     C*
+     C**  PRINT ERROR MESSAGE:
+     C                     WRITEERRORAU
+     C                     ELSE                            X*2
+     C                     Z-ADD999       DBASE
+     C                     END                             E*2
+     C*
+     C                     DUMP
+     C                     END                             E1
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+**  ZRETAC
+    ACCOUNTS                                                              CPM004
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

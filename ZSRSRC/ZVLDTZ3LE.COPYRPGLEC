@@ -1,0 +1,113 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standard Subroutines                                 *
+      *                                                               *
+      *  ZVLDTZ3LE - Cvt MMMDDYY/DDMMMYY to Midas nbr                 *
+      *                                                               *
+      * CALLS      ZA0270    - CONVERT FROM DDMMMYY/MMMDDYY TO MIDAS  *
+      *                        DAY NUMBER                             *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Last Amend No. CAAA02             Date 06Sep03                *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CAA002 - WebFacing.                                          *
+      *  S01314  -  CHANGES FOR PTF INCORPORATION (ALLOW DAY NUMBER   *
+      *             TO HAVE A BLANK AS THE FIRST CHARACTER).          *
+      *                                                               *
+      *****************************************************************
+      * CALLED BY                                                     *
+      *                                                               *
+      * FLDS INPUT @@VLDT     - INPUT FIELD OF DDMMMYY OR MMMDDYY     *
+      *            @@DFMT     - DATE FORMAT TYPE - D OR M             *
+      *                                                               *
+      * FLDS       @@RTN      - ERROR ON VALIDATION                   *
+      * OUTPUT     @@DAYN     - MIDAS DAY NUMBERLING                  *
+      *                                                               *
+      * OTHER      @@YY       - YEAR                                  *
+      * FLDS USED  @@MM       - MONTH (2N)                            *
+      *            @@MMM      - MONTH (3A)                            *
+      *            @@DD       - DAY                                   *
+      *            @@WRK1     - WORK FIELD - 1                        *
+      *            @@WRK2     - WORK FIELD - 2                        *
+      *            @MT        - ARRAY OF MONTH SHORTNAMES             *
+      *            @@MTS      - DATA STRUCTURE OF MONTH SHORTNAMES    *
+      *            @@DATE     - DATE DDMMYY/MMDDYY SENT TO ZA0270     *
+      *                                                               *
+      *****************************************************************
+      *
+     C     ZVLDT         BEGSR
+      *
+      ** DEFINE THE INPUT FIELD
+      *
+     C                   MOVE      @@VLDT        @@VLDT            7
+      *
+      ** MOVE THE DATE INTO ITS VARIOUS COMPONENTS - DD, MMM AND YY
+      *
+     C                   MOVE      @@VLDT        @@YY              2
+     C                   MOVEL     @@VLDT        @@WRK1            5
+     C     @@DFMT        IFEQ      'M'                                          B1
+     C                   MOVE      @@WRK1        @@DD              2            *1
+     C                   MOVEL     @@WRK1        @@MMM             3            *1
+     C                   ELSE                                                   X1
+     C                   MOVE      @@WRK1        @@MMM                          *1
+     C                   MOVEL     @@WRK1        @@DD                           *1
+     C                   END                                                    E1
+      *
+      ** LOOK UP MONTH IN MONTH SHORTNAMES ARRAY - IF NOT THERE SET
+      ** ON ERROR CODE AND RETURN ELSE STORE MONTH NUMBER IN @@MM
+      *
+     C                   Z-ADD     1             @@MM              2 0
+     C     @@MMM         LOOKUP    @MT(@@MM)                              90
+      *
+      ** IF LOOK UP FAILS THEN SET ON ERROR CODE AND RETURN
+      *
+     C     *IN90         IFEQ      '0'                                          B1
+     C                   MOVE      '1'           @@RTN             1            *1
+     C                   GOTO      ZVLDT9                                       *1
+     C                   END                                                    E1
+      *
+      ** IF DAYS AND YEAR ARE NOT WITHIN RANGE THEN SET ON ERROR CODE
+      ** AND RETURN
+      *
+     C     @@DD          IFLE      ' 0'                                         B1
+     C     @@DD          ORGT      ' 9'
+     C     @@DD          ANDLE     '00'
+     C     @@DD          ORGT      '31'                                         *1
+     C     @@YY          ORLT      '00'                                         *1
+     C     @@YY          ORGT      '99'                                         *1
+     C                   MOVE      '1'           @@RTN                          *1
+     C                   GOTO      ZVLDT9                                       *1
+     C                   END                                                    E1
+      *
+      ** SET UP PARAMETERS FOR ZA0270 TO VALIDATE THE REST OF DATE AND
+      ** CALL IT
+      *
+     C     @@DFMT        IFEQ      'M'                                          B1
+     C                   MOVE      @@DD          @@WRK2            4            *1
+     C                   MOVEL     @@MM          @@WRK2                         *1
+     C                   ELSE                                                   X1
+     C                   MOVEL     @@DD          @@WRK2                         *1
+     C                   MOVE      @@MM          @@WRK2                         *1
+     C                   END                                                    E1
+     C                   MOVEL     @@WRK2        @@DATE            6 0
+     C                   MOVE      @@YY          @@DATE
+      *
+     C                   MOVE      '0'           @@RTN
+      *
+     C                   Z-ADD     0             @@DAYN            5 0
+      *
+     C                   CALL      'ZA0270'
+     C                   PARM                    @@DATE
+     C                   PARM                    @@DFMT            1
+     C                   PARM                    @@RTN
+     C                   PARM                    @@DAYN
+      *
+     C     ZVLDT9        ENDSR
+      *****************************************************************
+      * End of /COPY ZVLDTZ3LE                                        *
+      *****************************************************************

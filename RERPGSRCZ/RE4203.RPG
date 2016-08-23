@@ -1,0 +1,600 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Daily teller trans files creatn')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module                                    *
+     F*                                                               *
+     F*  RE4203 - Daily Teller Transaction Files Creation.            *
+     F*                                                               *
+     F*  Function:  This program re-creates the daily teller totals.  *
+     F*   (COB)     The process is performed for one of two reasons:  *
+     F*             either during Input Cycle Initiation when the     *
+     F*             teller control/totals will be dropped and the     *
+     F*             teller transaction file members will be initia-   *
+     F*             lised; or, during teller identification mainte-   *
+     F*             nance/batch input (Clearing/Payroll) when the     *
+     F*             related teller transaction file member will be    *
+     F*             initialised as the new teller id/batch number     *
+     F*             is entered to the system.                         *
+     F*                                                               *
+     F*  Called By: REC4203 - RTS Daily Teller Transaction Files      *
+     F*                       Creation                                *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+     F*  Last Amend No. CRT012             Date 26NOV02               *
+      * Midas Release 4.01.02 ----------------------------------------*
+     F*  Last Amend No. 183657             Date 28Feb02               *
+      * Midas Release 4.01 -------------------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  Prev Amend No. 098181             Date 05May98               *
+     F*                 CRT002             Date  1Dec95               *
+     F*                 CRT001  *CREATE    Date 28FEB95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CRT012 - Recompile over changed TTRANPD                      *
+     F*  183657 - Condition call to AOTLEDR0 on TBRI not equal to 'B' *
+     F*           This is a preventative fix to avoid a database error*
+     F*           in COB when running SCC0411.                        *
+     F*  098181 - Update teller/batch control rec. with teller branch.*
+     F*  CRT002 - Retail Branch Access.                               *
+     F*           Recompile due to change in PF/TTRANPD.              *
+     F*  CRT001 - Retail Teller System.                               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FTTRNT   IP  E           K        DISK
+     F**  RTS Teller Controls/Totals
+     F*
+     FTTRANPT UF  E                    DISK
+     F**  RTS Teller Transaction Trailer
+     F*
+     FCHQDPPH UF  E           K        DISK                      A
+     F**  RTS Cheque Deposits Header
+     F*
+     F**SDBANKL1IF  E         K        DISK
+     F*
+     FNEWTTM1 O   E                    DISK
+     F**  RTS Teller/Controls Header
+     F            TTRNTM1F                          KRENAMENEWTTM1F
+     F*
+     FNEWTTM2 O   E                    DISK
+     F**  RTS Teller Controls
+     F            TTRNTM2F                          KRENAMENEWTTM2F
+     F*
+     FNEWTTM3 O   E                    DISK
+     F**  RTS Teller Totals
+     F            TTRNTM3F                          KRENAMENEWTTM3F
+     F*
+     FNEWTTM4 O   E                    DISK
+     F**  RTS Journal Record
+     F            TTRNTM4F                          KRENAMENEWTTM4F
+     F/COPY WNCPYSRC,RE4203F001
+     F*
+     FRE4203AUO   E                    PRINTER                        UC
+     F**  Daily Teller Transaction Files Creation Audit report file
+     F*
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   01      PF/TTRNTM1F - Header record.                        *
+     F*   02      PF/TTRNTM2F - Control record.                       *
+     F*   03      PF/TTRNTM3F - Totals record.                        *
+     F*   04      PF/TTRNTM4F - Journal record.                       *
+     F*   05      Catchall for 'BATCH' and Unknown records.           *
+     F*                                                               *
+     F*   20      First cycle indicator.                              *
+     F*   30      Work indicator.                                     *
+     F*                                                               *
+     F*   70      No record found.                                    *
+     F*                                                               *
+     F*  U7-U8    Database error.                                     *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  Main routine                                                 *
+     F*  *PSSR   -  Error handling subroutine                         *
+     F*                                                               *
+     F*****************************************************************
+      **
+     E                    CPY@    1   1 80
+      **
+      **   TELLER CURRENCIES ARRAY AND RESET CURRENCIES ARRAY.
+      **
+     E                    CY         24  3               CURRENCIES
+     E                    NWCY       24  3
+      **
+      **   VALUE OF CASH ARRAY AND RESET CASH ARRAY.
+      **
+     E                    VCA        24 13 0             VALUE OF CASH
+     E                    NWCA       24 13 0
+      **
+      **   ARRAYS USED TO SETUP ZERO VALUES ON S/NEWTT FILE.
+      **
+     E                    Z5ARR       8  5 0
+     E                    Z13ARR      8 13 0
+      *
+     I*****************************************************************
+     I/SPACE 3
+     I*
+     I**   LF/TTRNT - TELLER TRANSACTIONS FILE.
+     I*
+     ITTRNTM1F    01
+     ITTRNTM2F    02
+     ITTRNTM3F    03
+     ITTRNTM4F    04
+     I/COPY WNCPYSRC,RE4203I001
+     I*
+     I**   Initialised data structure for PF/TTRNT & PF/NEWTT arrays
+     I*
+     I/COPY ZSRSRC,RTTOTSI1
+     I**  Array data structures for M3 record
+     I/COPY WNCPYSRC,RE4203I002
+     I*
+     ILDA         DS                            256
+     I**  Local data area for data base errors.
+     I*
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      **
+     ISDBANK    E DSSDBANKPD
+     I**  Midas Bank details
+     I*
+     ISDTELD    E DSSDTELDPD                                              098181
+     I**  Midas Teller ID details                                         098181
+     I*
+     IDSFDY     E DSDSFDY
+     I**  Short data structure for access programs (200 long)
+     I*
+     I*
+     I*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C                     MOVEACPY@      BIS@   80
+      **
+      **   First cycle only calculations
+      **
+     C   20                GOTO ENDFC
+     C                     SETON                     20
+      *
+      ** Input parameter(s) :
+     C           *ENTRY    PLIST                           Entry parameter list
+     C                     PARM           PTBRI   1
+     C                     PARM           PTLID   3
+      *
+      ** Prepare LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBLOT
+     C                     OUT  LDA
+      *
+     C                     Z-ADD0         Z5ARR
+     C                     Z-ADD0         Z13ARR
+     C                     Z-ADD0         ZERO05  50
+     C                     MOVE *BLANK    BLK120120
+     C*
+     C**  Access bank details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST'  @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'RE4203'  DBPGM
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           *DB ERROR 001 *
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C   01                MOVE RECI      RECI1   1
+     C   01                MOVE TBRI      TBRI1   1
+     C   01                MOVE TBID      TBID1   3
+     C   01                MOVE RCTP      RCTP1   1
+      *
+      ** Set up fields before creating PF/CHQDPPH
+     C                     MOVE 'H'       RECI
+     C                     MOVE *BLANKS   ZZ011
+     C                     Z-ADD0         LETM
+     C                     Z-ADD0         LPTM
+     C*
+     C           ZZ011     CHAINCHQDPPHF             70
+     C           *IN70     IFEQ '0'
+     C                     UPDATCHQDPPHF
+     C                     ELSE
+     C                     WRITECHQDPPHF
+     C                     ENDIF
+     C*
+     C                     GOTO ENDD
+      *
+     C           ENDFC     TAG                             ** ENDFC TAG **
+      *
+     C           *INU1     IFEQ '1'
+      *
+     C   02                MOVE RECI      RECI2   1
+     C   02                MOVE TBRI      TBRI2   1
+     C   02                MOVE TBID      TBID2   3
+     C   02                MOVE RCTP      RCTP2   1
+      *                                                                   098181
+      * Update teller branch on teller/batch control record.              098181
+     C           *IN02     IFEQ '1'                                       098181
+     C           RECI      ANDEQ'D'                                       098181
+     C           TBRI      ANDNE'B'                                       183657
+     C                     CALL 'AOTELDR0'                                098181
+     C                     PARM *BLANKS   @RTCD                           098181
+     C                     PARM '*KEY   ' @OPTN                           098181
+     C                     PARM TBID      @TELD   3                       098181
+     C           SDTELD    PARM SDTELD    DSFDY                           098181
+      *                                                                   098181
+      * If record not found, database error.                              098181
+     C           @RTCD     IFNE *BLANKS                                   098181
+     C           *LOCK     IN   LDA                                       098181
+     C                     MOVEL'RE4203'  DBPGM                           098181
+     C                     Z-ADD2         DBASE            ***************098181
+     C                     MOVEL'SDTELDPD'DBFILE           *DB ERROR 002 *098181
+     C                     MOVELTBID      DBKEY            ***************098181
+     C                     OUT  LDA                                       098181
+     C                     EXSR *PSSR                                     098181
+     C                     END                                            098181
+     C                     MOVE FRTLBC    TLBC2   3                       098181
+     C                     END                                            098181
+      *                                                                   098181
+      *
+     C   03                MOVE RECI      RECI3   1
+     C   03                MOVE TBRI      TBRI3   1
+     C   03                MOVE TBID      TBID3   3
+     C   03                MOVE RCTP      RCTP3   1
+      *
+     C   04                MOVE RECI      RECI4   1
+     C   04                MOVE TBRI      TBRI4   1
+     C   04                MOVE TBID      TBID4   3
+     C   04                MOVE RCTP      RCTP4   1
+     C/COPY WNCPYSRC,RE4203C001
+     C                     SETOF                     05
+     C           RECI      COMP 'D'                      05
+     C   04      TBRI      COMP 'T'                      04
+     C   04      RCTP      COMP '3'                      04
+      *
+      ** Bypass if unwanted record
+     C  N05                GOTO ENDD
+      *
+      ** Accumulate count of records read
+     C           COUNT     ADD  1         COUNT   50
+      *
+      ** Bypass if not journal record
+     C  N04                GOTO ENDD
+      *
+      ** S/TTRNT is read sequentially. For each teller
+      ** related record read a record is output to S/NEWTT.
+      ** All clearings/payroll (Batch) records are dropped.
+      **
+      ** The M3 totals record and the M4 journal record
+      ** contain six arrays as follows :-
+      ** Number of credits, Value of credits, Number of debits,
+      ** Value of debits, Value of cash & Value of clearings,
+      ***Each*has*eight*elements*corresponding*to*currencies***********   CRT003
+      ** Each has twenty four elements corresponding to currencies
+      ** Held on the M2 control record.
+      ** All arrays, except value of cash, are zeroed.
+      **
+      **   The value of cash array is checked to drop any zero                 3
+      **   value elemetns. The related currency is also dropped.
+      **   The arrays are reset to maintain contiguous entries.
+      **
+     C                     Z-ADD1         A       20
+     C                     Z-ADD1         B       20
+      *
+     C                     MOVEA*BLANK    NWCY
+     C                     Z-ADD@VS1      VCA,1
+     C                     Z-ADD@VS2      VCA,2
+     C                     Z-ADD@VS3      VCA,3
+     C                     Z-ADD@VS4      VCA,4
+     C                     Z-ADD@VS5      VCA,5
+     C                     Z-ADD@VS6      VCA,6
+     C                     Z-ADD@VS7      VCA,7
+     C                     Z-ADD@VS8      VCA,8
+     C                     Z-ADD@VS9      VCA,9
+     C                     Z-ADD@VS10     VCA,10
+     C                     Z-ADD@VS11     VCA,11
+     C                     Z-ADD@VS12     VCA,12
+     C                     Z-ADD@VS13     VCA,13
+     C                     Z-ADD@VS14     VCA,14
+     C                     Z-ADD@VS15     VCA,15
+     C                     Z-ADD@VS16     VCA,16
+     C                     Z-ADD@VS17     VCA,17
+     C                     Z-ADD@VS18     VCA,18
+     C                     Z-ADD@VS19     VCA,19
+     C                     Z-ADD@VS20     VCA,20
+     C                     Z-ADD@VS21     VCA,21
+     C                     Z-ADD@VS22     VCA,22
+     C                     Z-ADD@VS23     VCA,23
+     C                     Z-ADD@VS24     VCA,24
+     C                     MOVEACCYR1     CY
+     C                     Z-ADD0         NWCA
+     C           LOOP      TAG                             ** LOOP TAG **
+      *
+     C           VCA,A     COMP 0                    3030
+     C   30      CY,A      COMP '   '                3030
+     C   30                Z-ADDVCA,A     NWCA,B
+     C   30                MOVE CY,A      NWCY,B
+      *
+     C           A         ADD  1         A
+     C   30      B         ADD  1         B
+      *
+     C           A         COMP 24                     3030
+     C   30                GOTO LOOP
+      *
+     C                     Z-ADD1         SFTN
+     C                     Z-ADD1         NATN
+     C                     MOVE RECI2     RECI
+     C                     MOVE TBRI2     TBRI
+     C                     MOVE TBID2     TBID
+     C                     MOVE RCTP2     RCTP
+     C                     MOVE TLBC2     TLBC                            098181
+     C                     MOVEANWCY      CCYR1
+     C                     WRITENEWTTM2F
+     C                     MOVE RECI3     RECI
+     C                     MOVE TBRI3     TBRI
+     C                     MOVE TBID3     TBID
+     C                     MOVE RCTP3     RCTP
+      **
+      **  Initialise data structures (arrays of PF/NEWTT)
+      **
+     C                     Z-ADD0         @NC1
+     C                     Z-ADD0         @NC2
+     C                     Z-ADD0         @NC3
+     C                     Z-ADD0         @NC4
+     C                     Z-ADD0         @NC5
+     C                     Z-ADD0         @NC6
+     C                     Z-ADD0         @NC7
+     C                     Z-ADD0         @NC8
+     C                     Z-ADD0         @NC9
+     C                     Z-ADD0         @NC10
+     C                     Z-ADD0         @NC11
+     C                     Z-ADD0         @NC12
+     C                     Z-ADD0         @NC13
+     C                     Z-ADD0         @NC14
+     C                     Z-ADD0         @NC15
+     C                     Z-ADD0         @NC16
+     C                     Z-ADD0         @NC17
+     C                     Z-ADD0         @NC18
+     C                     Z-ADD0         @NC19
+     C                     Z-ADD0         @NC20
+     C                     Z-ADD0         @NC21
+     C                     Z-ADD0         @NC22
+     C                     Z-ADD0         @NC23
+     C                     Z-ADD0         @NC24
+      *
+     C                     Z-ADD0         @VC1
+     C                     Z-ADD0         @VC2
+     C                     Z-ADD0         @VC3
+     C                     Z-ADD0         @VC4
+     C                     Z-ADD0         @VC5
+     C                     Z-ADD0         @VC6
+     C                     Z-ADD0         @VC7
+     C                     Z-ADD0         @VC8
+     C                     Z-ADD0         @VC9
+     C                     Z-ADD0         @VC10
+     C                     Z-ADD0         @VC11
+     C                     Z-ADD0         @VC12
+     C                     Z-ADD0         @VC13
+     C                     Z-ADD0         @VC14
+     C                     Z-ADD0         @VC15
+     C                     Z-ADD0         @VC16
+     C                     Z-ADD0         @VC17
+     C                     Z-ADD0         @VC18
+     C                     Z-ADD0         @VC19
+     C                     Z-ADD0         @VC20
+     C                     Z-ADD0         @VC21
+     C                     Z-ADD0         @VC22
+     C                     Z-ADD0         @VC23
+     C                     Z-ADD0         @VC24
+      *
+     C                     Z-ADD0         @ND1
+     C                     Z-ADD0         @ND2
+     C                     Z-ADD0         @ND3
+     C                     Z-ADD0         @ND4
+     C                     Z-ADD0         @ND5
+     C                     Z-ADD0         @ND6
+     C                     Z-ADD0         @ND7
+     C                     Z-ADD0         @ND8
+     C                     Z-ADD0         @ND9
+     C                     Z-ADD0         @ND10
+     C                     Z-ADD0         @ND11
+     C                     Z-ADD0         @ND12
+     C                     Z-ADD0         @ND13
+     C                     Z-ADD0         @ND14
+     C                     Z-ADD0         @ND15
+     C                     Z-ADD0         @ND16
+     C                     Z-ADD0         @ND17
+     C                     Z-ADD0         @ND18
+     C                     Z-ADD0         @ND19
+     C                     Z-ADD0         @ND20
+     C                     Z-ADD0         @ND21
+     C                     Z-ADD0         @ND22
+     C                     Z-ADD0         @ND23
+     C                     Z-ADD0         @ND24
+      *
+     C                     Z-ADD0         @VD1
+     C                     Z-ADD0         @VD2
+     C                     Z-ADD0         @VD3
+     C                     Z-ADD0         @VD4
+     C                     Z-ADD0         @VD5
+     C                     Z-ADD0         @VD6
+     C                     Z-ADD0         @VD7
+     C                     Z-ADD0         @VD8
+     C                     Z-ADD0         @VD9
+     C                     Z-ADD0         @VD10
+     C                     Z-ADD0         @VD11
+     C                     Z-ADD0         @VD12
+     C                     Z-ADD0         @VD13
+     C                     Z-ADD0         @VD14
+     C                     Z-ADD0         @VD15
+     C                     Z-ADD0         @VD16
+     C                     Z-ADD0         @VD17
+     C                     Z-ADD0         @VD18
+     C                     Z-ADD0         @VD19
+     C                     Z-ADD0         @VD20
+     C                     Z-ADD0         @VD21
+     C                     Z-ADD0         @VD22
+     C                     Z-ADD0         @VD23
+     C                     Z-ADD0         @VD24
+      *
+     C                     Z-ADDNWCA,1    @VS1
+     C                     Z-ADDNWCA,2    @VS2
+     C                     Z-ADDNWCA,3    @VS3
+     C                     Z-ADDNWCA,4    @VS4
+     C                     Z-ADDNWCA,5    @VS5
+     C                     Z-ADDNWCA,6    @VS6
+     C                     Z-ADDNWCA,7    @VS7
+     C                     Z-ADDNWCA,8    @VS8
+     C                     Z-ADDNWCA,9    @VS9
+     C                     Z-ADDNWCA,10   @VS10
+     C                     Z-ADDNWCA,11   @VS11
+     C                     Z-ADDNWCA,12   @VS12
+     C                     Z-ADDNWCA,13   @VS13
+     C                     Z-ADDNWCA,14   @VS14
+     C                     Z-ADDNWCA,15   @VS15
+     C                     Z-ADDNWCA,16   @VS16
+     C                     Z-ADDNWCA,17   @VS17
+     C                     Z-ADDNWCA,18   @VS18
+     C                     Z-ADDNWCA,19   @VS19
+     C                     Z-ADDNWCA,20   @VS20
+     C                     Z-ADDNWCA,21   @VS21
+     C                     Z-ADDNWCA,22   @VS22
+     C                     Z-ADDNWCA,23   @VS23
+     C                     Z-ADDNWCA,24   @VS24
+      *
+     C                     Z-ADD0         @VQ1
+     C                     Z-ADD0         @VQ2
+     C                     Z-ADD0         @VQ3
+     C                     Z-ADD0         @VQ4
+     C                     Z-ADD0         @VQ5
+     C                     Z-ADD0         @VQ6
+     C                     Z-ADD0         @VQ7
+     C                     Z-ADD0         @VQ8
+     C                     Z-ADD0         @VQ9
+     C                     Z-ADD0         @VQ10
+     C                     Z-ADD0         @VQ11
+     C                     Z-ADD0         @VQ12
+     C                     Z-ADD0         @VQ13
+     C                     Z-ADD0         @VQ14
+     C                     Z-ADD0         @VQ15
+     C                     Z-ADD0         @VQ16
+     C                     Z-ADD0         @VQ17
+     C                     Z-ADD0         @VQ18
+     C                     Z-ADD0         @VQ19
+     C                     Z-ADD0         @VQ20
+     C                     Z-ADD0         @VQ21
+     C                     Z-ADD0         @VQ22
+     C                     Z-ADD0         @VQ23
+     C                     Z-ADD0         @VQ24
+      *
+     C                     WRITENEWTTM3F
+      *
+     C                     MOVE RECI4     RECI
+     C                     MOVE TBRI4     TBRI
+     C                     MOVE TBID4     TBID
+     C                     MOVE RCTP4     RCTP
+      *
+     C                     MOVE NCRA1     JNCA1
+     C                     MOVE VCRA1     JVCA1
+     C                     MOVE NDRA1     JNDA1
+     C                     MOVE VDRA1     JVDA1
+     C                     MOVE VCKA1     JCKA1
+     C                     MOVE VCAA1     JCAA1
+      *
+     C                     Z-ADD0         JUTN
+      *
+     C                     WRITENEWTTM4F
+     C/COPY WNCPYSRC,RE4203C002
+      *
+     C                     ENDIF
+      *
+     C           ENDD      TAG                             ** ENDD TAG **
+      *
+      ** Access S/TTRAN empty header records
+     CLR         1         SETLLTTRANPTF
+      *
+     C           RDTTRN    TAG                             **  RDTTRN  **
+      *
+     CLR                   READ TTRANPTF                 30
+      *
+     CLRN30 U2             MOVE 'T'       RECI
+     CLRN30 U2             MOVE PTBRI     TBRI
+     CLRN30 U2             MOVE PTLID     TBID
+     CLRN30 U2             Z-ADD99999     TBTN
+     CLRN30                Z-ADD0         NORE
+     CLRN30                UPDATTTRANPTF
+     CLRN30                GOTO RDTTRN
+      *
+     CLR                   MOVE 'H'       RECI
+     CLR                   Z-ADDCOUNT     NORE
+     CLR                   MOVE *BLANKS   TBRI
+     CLR                   MOVE *BLANKS   TBID
+     CLR                   MOVE *BLANKS   RCTP
+     CLR                   WRITENEWTTM1F
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR  - Program exception error routine                      *
+     C* Called by: Main routine                                       *
+     C* Calls    : none                                               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+     C*
+     C**  Audit file reporting
+     C*
+     C                     OPEN RE4203AU
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     CLOSERE4203AU
+     C*
+     C**  Produce program dump
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+     C*
+     C**  Return to the calling program
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+      ********************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

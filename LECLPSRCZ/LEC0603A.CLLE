@@ -1,0 +1,692 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/                /*AR1097467*/
+/*STD    CLPBASEBND                                                  */                /*AR1097467*/
+/*EXI    TEXT('Midas LE Daily file maintenance - 1    S2659')        */
+/********************************************************************/
+/*                                                                  */
+/*        Midas     - Customer Lending Module                   */
+/*                                                                  */
+/*     LEC0603A - DAILY FILE MAINTENANCE  -  1                      */
+/*                                                                  */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                  */
+/*       Last Amend No. AR1097467          Date 02Apr13              */
+/*       Prev Amend No. AR1096932          Date 21Mar13              */
+/*                      CLE075BI           Date 06Aug12              */
+/*                      CLE134             Date 01Aug12              */
+/*                      251331             Date 22Nov07              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      CAS016             Date 28Feb06              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CAS009             Date 04May04              */
+/* Midas Release 4.01 -----------------------------------------------*/
+/*                      185526             Date 17Oct01              */
+/*                      180044             Date 17Jul00              */
+/* Midas DBA 3.05 ---------------------------------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      134725             Date 14Jun99              */
+/*                      156766             Date  16Mar99             */
+/*                      132095            Date  17Jun98             */
+/*                      123223            Date  07Jan98             */
+/*                      127731             Date 04Dec97              */
+/*                      115635             Date  25Mar97             */
+/*                      CLE003             Date  08Jan97             */
+/*                      S01408            DATE  30APR96             */
+/*                      S01427            DATE  14JUL93             */
+/*                      S2659             DATE  13JUN90             */
+/*                      S01194            DATE  08FEB90             */
+/*                                                                  */
+/********************************************************************/
+/*                                                                   */
+/*       AR1097467 - Expected 15% COB run optimization not met       */
+/*       AR1096932 - Recovery process incorrect for LER Components   */
+/*       CLE075BI - COB Restructure - LE COB Optimisation Phase 1    */
+/*       CLE134 - Past Due Call Loan Processing                      */
+/*       251331 - Ensure CLOAN* files are correctly rolled back if   */
+/*                component fails.                                   */
+/*       CAS016 - IAS18 EIR Recalculation (Fee Amortisation Over     */
+/*                Whole Period)                                      */
+/*       CAS009 - Effective Interest Rate/Amortised Cost Accounting  */
+/*       185526 - Part Sold Amount not rolled over. Also call LE0389 */
+/*                when CEU020 is switched on, for 'EMU' rollovers.   */
+/*       180044 - Clear output physical file REVPDDP.                */
+/*       134725 - Call LE0389 before LE0390 if CLE004 is installed  */
+/*       156766 - Do not clear RVLNSRV as records as used in        */
+/*                LERC22.                                           */
+/*       132095 - Partial application of this fix for core. Part    */
+/*                already in place as 123223. Monitor for 'from'    */
+/*                file being empty and clear 'to' file if it is.    */
+/*       123223 - Monitor for From file being empty and clear To  y */
+/*                file if it is.                                    */
+/*       127731 - Reactivate Matured Loans                          */
+/*       115635 - Add key field VDAT to query file LOAMSDK, as      */
+/*                LE0369 needs to process the recs in date order.   */
+/*       CLE003 - LENDING ENHANCEMENTS                              */
+/*       S01408 - Addition of core hook LEC0603A04                  */
+/*                Addition of core hook LEC0603A03                  */
+/*                Addition of core hook LEC0603A02                  */
+/*                Addition of core hook LEC0603A01                  */
+/*       076722 - FOOB LE0480 RVLNS AFTER RESTART.                  */
+/*                CLRPFM RVLNSRV (FILE UPDATED ONLY IN LE0390)      */
+/*       S01427 - R10 CHIPS INCORPORATIONS                          */
+/*                ALREADY INCORPORATED IN CORE UNDER S2659          */
+/*                SLIGHT CHANGE TO MAKE IT MORE SENSIBLE            */
+/*       S2659  - MIDAS/CHIPS DISKETTE                              */
+/*       S01194 - NEW STANDING DATA                                 */
+/********************************************************************/
+/************PGM                                                ****/ /*CLE003*/
+/**********  PGM        PARM(&CONAM &COSEQ) */                                     /*CLE003 CLE134*/
+             PGM        PARM(&CONAM &COSEQ &RERUN)                                        /*CLE134*/
+/**********  DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +*/                /*AR1097467*/
+/**********               Misys International Banking Systems Ltd. + */                /*AR1097467*/
+/**********               2001')                                     */                /*AR1097467*/
+/**/
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(132) +
+                        VALUE('CUSTOMER LENDING FILE UPDATE +
+                        PHASE ONE ')
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(44)               /* S2659 */
+/************DCL        VAR(&MCLE) TYPE(*DEC) LEN(2) VALUE(43)*S2659* S01427 */
+             DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)              /* S2659 */
+             DCL        VAR(&MMOD) TYPE(*CHAR) LEN(256)              /*S2659 */
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                 /*CLE003*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                 /*CLE003*/
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                 /*CLE003*/
+             DCL        VAR(&CLE003) TYPE(*CHAR) LEN(1)               /*CLE003*/
+             DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)                /*127731*/
+             DCL        VAR(&CLE005) TYPE(*CHAR) LEN(1)               /*127731*/
+             DCL        VAR(&CLE004) TYPE(*CHAR) LEN(1)               /*134725*/
+             DCL        VAR(&CONAM) TYPE(*CHAR) LEN(10)               /*CLE003*/
+             DCL        VAR(&COSEQ) TYPE(*DEC) LEN(5 0)               /*CLE003*/
+/**********  DCL        VAR(&STUS) TYPE(*CHAR) LEN(1)                */         /*CLE003 AR1097467*/
+             DCL        VAR(&CEU020) TYPE(*CHAR) LEN(1)               /*185526*/
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                                 /*CAS009*/
+             DCL        VAR(&CAS009) TYPE(*CHAR) LEN(1)                                   /*CAS009*/
+             DCL        VAR(&CAS016) TYPE(*CHAR) LEN(1)                                   /*CAS016*/
+             DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)                                   /*CAS016*/
+             DCL        VAR(&PRE)  TYPE(*CHAR) LEN(2)                                     /*CAS016*/
+             DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)                                 /*CAS016*/
+             DCL        VAR(&RERUN) TYPE(*CHAR) LEN(10)                                   /*CLE134*/
+             DCL        VAR(&LEPDCL) TYPE(*CHAR) LEN(256)                                 /*CLE134*/
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)                                   /*CLE134*/
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)                                   /*CLE134*/
+             DCL        VAR(&DILIB) TYPE(*CHAR) LEN(10)                                   /*CLE134*/
+             DCL        VAR(&SAVDM) TYPE(*CHAR) LEN(10) +
+                           VALUE('LEC07001DM')                                            /*CLE134*/
+                                                                                          /*CAS009*/
+/* Journalling variables */                                                            /*AR1097467*/
+             DCL        VAR(&CSEQA) TYPE(*CHAR) LEN(5)                                 /*AR1097467*/
+             DCL        VAR(&JRNPF) TYPE(*CHAR) LEN(150)                               /*AR1097467*/
+             DCL        VAR(&STEXT) TYPE(*CHAR) LEN(25)                                /*AR1097467*/
+             DCL        VAR(&SEVENT) TYPE(*CHAR) LEN(15)                               /*AR1097467*/
+             DCL        VAR(&JOB) TYPE(*CHAR) LEN(10)                                  /*AR1097467*/
+             DCL        VAR(&USR) TYPE(*CHAR) LEN(10)                                  /*AR1097467*/
+             DCL        VAR(&NBR) TYPE(*CHAR) LEN(6)                                   /*AR1097467*/
+             DCL        VAR(&START) TYPE(*DEC) LEN(10 0)                               /*AR1097467*/
+             DCL        VAR(&FINISH) TYPE(*DEC) LEN(10 0)                              /*AR1097467*/
+             DCL        VAR(&SJRNRCVR) TYPE(*CHAR) LEN(10)                             /*AR1097467*/
+             DCL        VAR(&FJRNRCVR) TYPE(*CHAR) LEN(10)                             /*AR1097467*/
+                                                                                       /*AR1097467*/
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2012')                                          /*AR1097467*/
+                                                                                       /*AR1097467*/
+/* Global monitor message. */                                                          /*AR1097467*/
+                                                                                       /*AR1097467*/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))                                               /*AR1097467*/
+                                                                                       /*AR1097467*/
+/*/COPY WNCPYSRC,LEC0603A05                                          */
+/**/
+             SNDPGMMSG  MSG(&MSG) TOMSGQ(MRUNQ)
+                                                                                          /*CLE134*/
+             IF         COND(&RERUN *EQ 'NEWCOB') THEN(DO)                                /*CLE134*/
+             RTVDTAARA  DTAARA(LEPDCL) RTNVAR(&LEPDCL)                                    /*CLE134*/
+                 IF         COND(%SUBSTRING(&LEPDCL 1 1) *EQ 'N') +
+                               THEN(GOTO CMDLBL(ENDPGM))                                  /*CLE134*/
+                                                                                          /*CLE134*/
+             RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)                                    /*CLE134*/
+             CHGVAR     VAR(&PRE) VALUE(%SST(&SDSTAT 6 2))                                /*CLE134*/
+             CHGVAR     VAR(&DMLIB) VALUE(&PRE *TCAT 'DMLIB')                             /*CLE134*/
+             CHGVAR     VAR(&DPLIB) VALUE(&PRE *TCAT 'DPLIB')                             /*CLE134*/
+             CHGVAR     VAR(&DILIB) VALUE(&PRE *TCAT 'DILIB')                             /*CLE134*/
+             RSTOBJ     OBJ(LOAMSZ1 CLOANZ1 LOAMSDK) +
+                           SAVLIB(&DMLIB) DEV(*SAVF) +
+                           SAVF(&DILIB/&SAVDM) RSTLIB(QTEMP)                              /*CLE134*/
+             ENDJRNPF   FILE(QTEMP/LOAMSDK)                                               /*CLE134*/
+             MONMSG     MSGID(CPF7032)                                                    /*CLE134*/
+             ENDJRNPF   FILE(QTEMP/LOAMSZ1)                                               /*CLE134*/
+             MONMSG     MSGID(CPF7032)                                                    /*CLE134*/
+             ENDJRNPF   FILE(QTEMP/CLOANZ1)                                               /*CLE134*/
+             MONMSG     MSGID(CPF7032)                                                    /*CLE134*/
+             ENDDO                                                                        /*CLE134*/
+/*/COPY WNCPYSRC,LEC0603A06                                          */
+/*                                                   */               /*CLE003*/
+/*   Access Switchable SAR details                   */               /*CLE003*/
+/*                                                   */               /*CLE003*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                   /*CLE003*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                   /*CLE003*/
+             CHGVAR     VAR(&SARD) VALUE('CLE003')                    /*CLE003*/
+/*                                                   */               /*CLE003*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD)         /*CLE003*/
+/*                                                        */          /*CLE003*/
+/*       Feature found if return code is blank            */          /*CLE003*/
+/*                                                        */          /*CLE003*/
+             IF COND((&RTCD) *EQ '       ') THEN(DO)                  /*CLE003*/
+             CHGVAR     VAR(&CLE003) VALUE('Y')                       /*CLE003*/
+             ENDDO                                                    /*CLE003*/
+/**/                                                                                      /*CAS016*/
+/* Check if CAS016 is enabled. */                                                         /*CAS016*/
+/**/                                                                                      /*CAS016*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CAS016*/
+             CHGVAR     VAR(&SARD) VALUE('CAS016')                                        /*CAS016*/
+                                                                                          /*CAS016*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &SCSARD)                     /*CAS016*/
+                                                                                          /*CAS016*/
+             CHGVAR     VAR(&CAS016) VALUE('N')                                           /*CAS016*/
+             IF         COND(&RTCD *EQ '       ') +
+                          THEN(CHGVAR VAR(&CAS016) VALUE('Y'))                            /*CAS016*/
+                                                                                          /*CAS016*/
+             RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)                                    /*CAS016*/
+                                                                                          /*CAS016*/
+             CHGVAR     VAR(&PRE) VALUE(%SST(&SDSTAT 6 2))                                /*CAS016*/
+             CHGVAR     VAR(&TOLIB) VALUE(&PRE *TCAT 'DPLIB')                             /*CAS016*/
+                                                                                          /*CAS016*/
+/**/                                                                                      /*CAS009*/
+/* Check if CAS009 is enabled. */                                                         /*CAS009*/
+/**/                                                                                      /*CAS009*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CAS009*/
+             CHGVAR     VAR(&SARD) VALUE('CAS009')                                        /*CAS009*/
+                                                                                          /*CAS009*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &SCSARD)                     /*CAS009*/
+                                                                                          /*CAS009*/
+             CHGVAR     VAR(&CAS009) VALUE('N')                                           /*CAS009*/
+             IF         COND(&RTCD *EQ '       ') +
+                          THEN(CHGVAR VAR(&CAS009) VALUE('Y'))                            /*CAS009*/
+                                                                                       /*AR1097467*/
+/* Start Journalling */                                                                /*AR1097467*/
+                                                                                       /*AR1097467*/
+             IF         COND(&CLE003 *EQ 'Y' *AND &RERUN *EQ ' ' +
+                          *OR &CAS009 *EQ 'Y' *OR &CAS016 *EQ 'Y') +
+                          THEN(DO)                                                     /*AR1097467*/
+                CHGVAR     VAR(&CSEQA) VALUE(&COSEQ)                                   /*AR1097467*/
+                CHGVAR     VAR(&STEXT) VALUE('Start of ' *CAT &CONAM +
+                             *CAT &CSEQA)                                              /*AR1097467*/
+                CHGVAR     VAR(&SEVENT) VALUE(&CONAM *TCAT &CSEQA)                     /*AR1097467*/
+                SCWRTJREG  EVENT(&SEVENT) COMP(&CONAM) CMPSEQ(&COSEQ) +
+                             FLAG('S') TEXT(&STEXT)                                    /*AR1097467*/
+             ENDDO                                                                     /*AR1097467*/
+/*********************************************************************/         /*CAS009 AR1097467*/
+/**********  CHGVAR     VAR(&STUS) VALUE(' ')                        */         /*CAS009 AR1097467*/
+/**********  CALL       PGM(CB0160) PARM(&CONAM &COSEQ &STUS)        */         /*CAS009 AR1097467*/
+/*********************************************************************/         /*CAS009 AR1097467*/
+/**********  IF COND((&STUS) *EQ 'Y') THEN(DO)                       */         /*CAS009 AR1097467*/
+/*********************************************************************/         /*CAS009 AR1097467*/
+/**********  IF COND((&CLE003) *EQ 'Y') THEN(DO)                                   /*CLE003 CLE134*/
+/**********  IF         COND(&CLE003 *EQ 'Y' *AND &RERUN *EQ +       */                /*AR1097467*/
+/**********               '      ') THEN(DO)                         */         /*CLE134 AR1097467*/
+/*********************************************************************/         /*CLE003 AR1097467*/
+/**********  CALL       PGM(CB0160) PARM(&CONAM &COSEQ &STUS)       **/            /*CLE003 CAS009*/
+/**********  IF COND((&STUS) *EQ 'Y') THEN(DO)                      **/            /*CLE003 CAS009*/
+/*********************************************************************/         /*251331 AR1097467*/
+/**Putback*original*CLOAN**files*if*component*failed******************/         /*251331 AR1097467*/
+/*********************************************************************/         /*251331 AR1097467*/
+/**********  CPYF       FROMFILE(NCLONHH) TOFILE(CLOANHH) +          */                /*AR1097467*/
+/**********               MBROPT(*REPLACE)                           */         /*251331 AR1097467*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM + */                /*AR1097467*/
+/**********               FILE(CLOANHH))                             */         /*251331 AR1097467*/
+/**********  CPYF       FROMFILE(NCLONCL) TOFILE(CLOANCL) +          */                /*AR1097467*/
+/**********               MBROPT(*REPLACE)                           */         /*251331 AR1097467*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM + */                /*AR1097467*/
+/**********               FILE(CLOANCL))                             */         /*251331 AR1097467*/
+/**********  CPYF       FROMFILE(NCLONCK) TOFILE(CLOANCK) +          */                /*AR1097467*/
+/**********               MBROPT(*REPLACE)                           */         /*251331 AR1097467*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM + */                /*AR1097467*/
+/**********               FILE(CLOANCK))                             */         /*251331 AR1097467*/
+/**********  CPYF       FROMFILE(NCLONZ1) TOFILE(CLOANZ1) +          */                /*AR1097467*/
+/**********               MBROPT(*REPLACE)                           */         /*251331 AR1097467*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM + */                /*AR1097467*/
+/**********               FILE(CLOANZ1))                             */         /*251331 AR1097467*/
+/*********************************************************************/         /*251331 AR1097467*/
+/**********  CPYF       FROMFILE(HIUPDHH) TOFILE(HISTSHH) +          */                /*AR1097467*/
+/**********               MBROPT(*REPLACE)                           */         /*CLE003 AR1097467*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM + */                /*AR1097467*/
+/**********               FILE(HISTSHH))                             */         /*132095 AR1097467*/
+/**********  CPYF       FROMFILE(HIUPDHM) TOFILE(HISTSHM) +          */                /*AR1097467*/
+/**********               MBROPT(*REPLACE)                           */         /*CLE003 AR1097467*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM + */                /*AR1097467*/
+/**********               FILE(HISTSHM))                             */         /*132095 AR1097467*/
+/**********  CPYF       FROMFILE(HIUPDHN) TOFILE(HISTSHN) +          */                /*AR1097467*/
+/**********               MBROPT(*REPLACE)                           */         /*CLE003 AR1097467*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM + */                /*AR1097467*/
+/**********               FILE(HISTSHN))                             */         /*132095 AR1097467*/
+/**********  CPYF       FROMFILE(HIUPDHP) TOFILE(HISTSHP) +          */                /*AR1097467*/
+/**********               MBROPT(*REPLACE)                           */         /*CLE003 AR1097467*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM + */                /*AR1097467*/
+/**********               FILE(HISTSHP))                             */         /*132095 AR1097467*/
+/**********  CPYF       FROMFILE(HIUPDHQ) TOFILE(HISTSHQ) +          */                /*AR1097467*/
+/**********               MBROPT(*REPLACE)                           */         /*CLE003 AR1097467*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM + */                /*AR1097467*/
+/**********               FILE(HISTSHQ))                             */         /*132095 AR1097467*/
+/**********  CPYF       FROMFILE(HIUPDZX) TOFILE(HISTSZX) +          */                /*AR1097467*/
+/**********               MBROPT(*REPLACE)                           */         /*CLE003 AR1097467*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM + */                /*AR1097467*/
+/**********               FILE(HISTSZX))                             */         /*132095 AR1097467*/
+/**********  ENDDO                                                   */         /*CLE003 AR1097467*/
+/*********************************************************************/         /*CAS009 AR1097467*/
+/**********  IF COND((&CAS009) *EQ 'Y') THEN(DO)                     */         /*CAS009 AR1097467*/
+/**********    CPYF       FROMFILE(XLEEIRDPD) TOFILE(LEEIRDPD) +     */                /*AR1097467*/
+/**********               MBROPT(*REPLACE)                           */         /*CAS009 AR1097467*/
+/**********    MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM + */              /*AR1097467*/
+/**********                 FILE(LEEIRDPD))                          */         /*CAS009 AR1097467*/
+/**********  ENDDO                                                   */         /*CAS009 AR1097467*/
+/*********************************************************************/         /*CAS016 AR1097467*/
+/**********  IF COND((&CAS016) *EQ 'Y') THEN(DO)                     */         /*CAS016 AR1097467*/
+/**********    CPYF       FROMFILE(XLEERAPPD) TOFILE(LEERAPPD) +     */                /*AR1097467*/
+/**********               MBROPT(*REPLACE)                           */         /*CAS016 AR1097467*/
+/**********    MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM + */              /*AR1097467*/
+/**********                 FILE(LEERAPPD))                          */         /*CAS016 AR1097467*/
+/**********    CPYF       FROMFILE(XLECFLSPD) TOFILE(LECFLSPD) +     */                /*AR1097467*/
+/**********               MBROPT(*REPLACE)                           */         /*CAS016 AR1097467*/
+/**********    MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM + */              /*AR1097467*/
+/**********                 FILE(LECFLSPD))                          */         /*CAS016 AR1097467*/
+/**********  ENDDO                                                   */         /*CAS016 AR1097467*/
+/*********************************************************************/         /*CAS009 AR1097467*/
+/**********  ENDDO                                                   */         /*CAS009 AR1097467*/
+/*********************************************************************/         /*CAS009 AR1097467*/
+/**********  ELSE       CMD(DO)                                      */         /*CAS009 AR1097467*/
+/**********                                                          */         /*CLE003 AR1097467*/
+/**********  IF COND((&CLE003) *EQ 'Y') THEN(DO)                                   /*CAS009 CLE134*/
+/**********  IF         COND(&CLE003 *EQ 'Y' *AND &RERUN *EQ '      +*/                /*AR1097467*/
+/**********               ') THEN(DO)                                */         /*CLE134 AR1097467*/
+/*********************************************************************/         /*251331 AR1097467*/
+/**Back*up*original*CLOAN**files**************************************/         /*251331 AR1097467*/
+/*********************************************************************/         /*251331 AR1097467*/
+/**********  CPYF       FROMFILE(CLOANHH) TOFILE(NCLONHH) +          */                /*AR1097467*/
+/**********               MBROPT(*REPLACE)                           */         /*251331 AR1097467*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM + */                /*AR1097467*/
+/**********               FILE(NCLONHH))                             */         /*251331 AR1097467*/
+/**********  CPYF       FROMFILE(CLOANCL) TOFILE(NCLONCL) +          */                /*AR1097467*/
+/**********               MBROPT(*REPLACE)                           */         /*251331 AR1097467*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM + */                /*AR1097467*/
+/**********               FILE(NCLONCL))                             */         /*251331 AR1097467*/
+/**********  CPYF       FROMFILE(CLOANCK) TOFILE(NCLONCK) +          */                /*AR1097467*/
+/**********               MBROPT(*REPLACE)                           */         /*251331 AR1097467*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM + */                /*AR1097467*/
+/**********               FILE(NCLONCK))                             */         /*251331 AR1097467*/
+/**********  CPYF       FROMFILE(CLOANZ1) TOFILE(NCLONZ1) +          */                /*AR1097467*/
+/**********               MBROPT(*REPLACE)                           */         /*251331 AR1097467*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM + */                /*AR1097467*/
+/**********               FILE(NCLONZ1))                             */         /*251331 AR1097467*/
+/**********  CPYF       FROMFILE(HISTSHH) TOFILE(HIUPDHH) +          */                /*AR1097467*/
+/**********               MBROPT(*REPLACE)                           */         /*CLE003 AR1097467*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM + */                /*AR1097467*/
+/**********               FILE(HIUPDHH))                             */         /*123223 AR1097467*/
+/**********  CPYF       FROMFILE(HISTSHM) TOFILE(HIUPDHM) +          */                /*AR1097467*/
+/**********               MBROPT(*REPLACE)                           */         /*CLE003 AR1097467*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM + */                /*AR1097467*/
+/**********               FILE(HIUPDHM))                             */         /*123223 AR1097467*/
+ /********   MONMSG     MSGID(CPF2817)                                /*123223*/
+/**********  CPYF       FROMFILE(HISTSHN) TOFILE(HIUPDHN) +          */                /*AR1097467*/
+/**********               MBROPT(*REPLACE)                           */         /*CLE003 AR1097467*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM + */                /*AR1097467*/
+/**********               FILE(HIUPDHN))                             */         /*123223 AR1097467*/
+ /********   MONMSG     MSGID(CPF2817)                                /*123223*/
+/**********  CPYF       FROMFILE(HISTSHP) TOFILE(HIUPDHP) +          */                /*AR1097467*/
+/**********               MBROPT(*REPLACE)                           */         /*CLE003 AR1097467*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM + */                /*AR1097467*/
+/**********               FILE(HIUPDHP))                             */         /*123223 AR1097467*/
+ /********   MONMSG     MSGID(CPF2817)                                /*123223*/
+/**********  CPYF       FROMFILE(HISTSHQ) TOFILE(HIUPDHQ) +          */                /*AR1097467*/
+/**********               MBROPT(*REPLACE)                           */         /*CLE003 AR1097467*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM + */                /*AR1097467*/
+/**********               FILE(HIUPDHQ))                             */         /*123223 AR1097467*/
+ /********   MONMSG     MSGID(CPF2817)                                /*123223*/
+/**********  CPYF       FROMFILE(HISTSZX) TOFILE(HIUPDZX) +          */                /*AR1097467*/
+/**********               MBROPT(*REPLACE)                           */         /*CLE003 AR1097467*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM + */                /*AR1097467*/
+/**********               FILE(HIUPDZX))                             */         /*123223 AR1097467*/
+/**********  ENDDO                                                   */         /*CAS009 AR1097467*/
+/*********************************************************************/         /*CAS009 AR1097467*/
+/**********  IF COND((&CAS009) *EQ 'Y') THEN(DO)                     */         /*CAS009 AR1097467*/
+/**********    CPYF       FROMFILE(LEEIRDPD) TOFILE(XLEEIRDPD) +     */                /*AR1097467*/
+/**********               MBROPT(*REPLACE)                           */         /*CAS009 AR1097467*/
+/**********    MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM + */              /*AR1097467*/
+/**********                 FILE(XLEEIRDPD))                         */         /*CAS009 AR1097467*/
+/**********  ENDDO                                                   */         /*CAS009 AR1097467*/
+/*********************************************************************/         /*CAS009 AR1097467*/
+/**********  IF COND((&CAS016) *EQ 'Y') THEN(DO)                     */         /*CAS016 AR1097467*/
+/**********                                                          */         /*CAS016 AR1097467*/
+/**********    DLTF       FILE(XLEERAPPD)                            */         /*CAS016 AR1097467*/
+/**********    MONMSG     MSGID(CPF0000)                             */         /*CAS016 AR1097467*/
+/*********************************************************************/         /*CAS016 AR1097467*/
+/**********    CPYF       FROMFILE(LEERAPPD) TOFILE(&TOLIB/XLEERAPPD) + */             /*AR1097467*/
+/**********               CRTFILE(*YES)                              */         /*CAS016 AR1097467*/
+/**********    MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)             */         /*CAS016 AR1097467*/
+/**********                                                          */         /*CAS016 AR1097467*/
+/**********    CPYF       FROMFILE(LECFLSPD) TOFILE(XLECFLSPD) +     */                /*AR1097467*/
+/**********               MBROPT(*REPLACE)                           */         /*CAS016 AR1097467*/
+/**********    MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM + */              /*AR1097467*/
+/**********                 FILE(XLECFLSPD))                         */         /*CAS016 AR1097467*/
+/**********  ENDDO                                                   */         /*CAS016 AR1097467*/
+/*********************************************************************/         /*CAS016 AR1097467*/
+/**********  CHGVAR     VAR(&STUS) VALUE('Y')                        */         /*CLE003 AR1097467*/
+/*********************************************************************/         /*CLE003 AR1097467*/
+/**********  CALL       PGM(CB0150) PARM(&CONAM &COSEQ &STUS)        */         /*CLE003 AR1097467*/
+/**********  ENDDO                                                   */         /*CLE003 AR1097467*/
+/**/
+/* CLEAR FILES FOR LE0370 */
+/**********  CLRPFM     FILE(LAUPDDH)                               */                  /*CLE075BI*/
+/**********  CLRPFM     FILE(LAUPDDK)                               */                  /*CLE075BI*/
+/**********  CLRPFM     FILE(LAUPDZ1)                               */                  /*CLE075BI*/
+/**********  CLRPFM     FILE(ACTN1DH)                               */                  /*CLE075BI*/
+/**********  CLRPFM     FILE(ACTN1DK)                               */                  /*CLE075BI*/
+/**********  CLRPFM     FILE(ACTN1DN)                               */                  /*CLE075BI*/
+/**********  CLRPFM     FILE(ACTN1ZX)                               */                  /*CLE075BI*/
+/**********  CLRPFM     FILE(REVPDDP)                               */           /*180044 CLE075BI*/
+             CLRPFM     FILE(LAUPDDH)                                                  /*AR1096932*/
+             CLRPFM     FILE(LAUPDDK)                                                  /*AR1096932*/
+             CLRPFM     FILE(LAUPDZ1)                                                  /*AR1096932*/
+             CLRPFM     FILE(ACTN1DH)                                                  /*AR1096932*/
+             CLRPFM     FILE(ACTN1DK)                                                  /*AR1096932*/
+             CLRPFM     FILE(ACTN1DN)                                                  /*AR1096932*/
+             CLRPFM     FILE(ACTN1ZX)                                                  /*AR1096932*/
+             CLRPFM     FILE(REVPDDP)                                                  /*AR1096932*/
+/**/
+/* CLEAR FILES FOR LE0390 */
+/**********  CLRPFM     FILE(LOUPDHH)                               */                  /*CLE075BI*/
+/**********  CLRPFM     FILE(LOUPDCL)                               */                  /*CLE075BI*/
+/**********  CLRPFM     FILE(LOUPDCK)                               */                  /*CLE075BI*/
+/**********  CLRPFM     FILE(LOUPDZ1)                               */                  /*CLE075BI*/
+/**********  CLRPFM     FILE(RATESHH)                               */                  /*CLE075BI*/
+/**********  CLRPFM     FILE(RATESRT)                               */                  /*CLE075BI*/
+/**********  CLRPFM     FILE(RATESZX)                               */                  /*CLE075BI*/
+/**********  CLRPFM     FILE(ACTN3DH)                               */                  /*CLE075BI*/
+/**********  CLRPFM     FILE(ACTN3DK)                               */                  /*CLE075BI*/
+/**********  CLRPFM     FILE(ACTN3DN)                               */                  /*CLE075BI*/
+/**********  CLRPFM     FILE(ACTN3ZX)                               */                  /*CLE075BI*/
+/**********  CLRPFM     FILE(RVLNSHH)                               */                  /*CLE075BI*/
+             CLRPFM     FILE(LOUPDHH)                                                  /*AR1096932*/
+             CLRPFM     FILE(LOUPDCL)                                                  /*AR1096932*/
+             CLRPFM     FILE(LOUPDCK)                                                  /*AR1096932*/
+             CLRPFM     FILE(LOUPDZ1)                                                  /*AR1096932*/
+             CLRPFM     FILE(RATESHH)                                                  /*AR1096932*/
+             CLRPFM     FILE(RATESRT)                                                  /*AR1096932*/
+             CLRPFM     FILE(RATESZX)                                                  /*AR1096932*/
+             CLRPFM     FILE(ACTN3DH)                                                  /*AR1096932*/
+             CLRPFM     FILE(ACTN3DK)                                                  /*AR1096932*/
+             CLRPFM     FILE(ACTN3DN)                                                  /*AR1096932*/
+             CLRPFM     FILE(ACTN3ZX)                                                  /*AR1096932*/
+             CLRPFM     FILE(RVLNSHH)                                                  /*AR1096932*/
+                                                                                          /*CLE134*/
+             IF         COND(&RERUN *EQ 'NEWCOB') THEN(DO)                                /*CLE134*/
+ /** copy LOAMSDK (saved by LEC0608A) to LAUPDDK */                                       /*CLE134*/
+              CPYF       FROMFILE(QTEMP/LOAMSDK) +
+                            TOFILE(LAUPDDK) MBROPT(*REPLACE)                              /*CLE134*/
+             ENDDO                                                                        /*CLE134*/
+ /* CLEAR THE NEW FILE FOR S01270 - ROLRECS WHICH KEEPS THE ROLLOVER   *S01270*/
+ /* RECORDS FOR ROLLOVERS OCCURRING TODAY FOR CONF GENERATION          *S01270*/
+/**********  CLRPFM     FILE(ROLRECS)                               */           /*S01270 CLE075BI*/
+             CLRPFM     FILE(ROLRECS)                                                  /*AR1096932*/
+     /* MOF60 CHANGE FOR PROFITABILITY EXTRACT - DO NOT       MOF60 */
+     /* CLEAR REVERSED LOANS DETAIL AT THIS POINT                   */
+/*           CLRPFM     FILE(RVLNSRV)                         MOF60 */
+/**********  CLRPFM     FILE(RVLNSRV)                               */           /*076722 CLE075BI*/
+             CLRPFM     FILE(RVLNSRV)                                                  /*AR1096932*/
+/**/
+/**********  CLRPFM     FILE(RVLNST2)                               */                  /*CLE075BI*/
+             CLRPFM     FILE(RVLNST2)                                                  /*AR1096932*/
+/*                                                           */
+/*/COPY WNCPYSRC,LEC0603A01                                  */       /*S01408*/
+/*                                                           */
+/**/
+/*********** OVRDBF     FILE(TABLE) TOFILE(TABLEEI)                  * *S01194*/
+/*********** OVRDBF     FILE(TABLED) TOFILE(TABLEEI) SHARE(*NO)      * *S01194*/
+/**/                                                                /* S2659 */
+/*  MIDAS/CHIPS LENDING                                          */ /* S2659 */
+             RTVDTAARA  DTAARA(*LIBL/MMOD) RTNVAR(&MMOD)             /* S2659 */
+/************IF         COND(%SST(&MMOD &MCLE 1) *EQ 'Y') THEN(DO)S2659 S10427*/
+/**********  IF         COND(%SST(&MMOD 43 1) *EQ 'Y') THEN(DO)                    /*S10427 CLE134*/
+             IF         COND(%SST(&MMOD 43 1) *EQ 'Y' *AND &RERUN +
+                          *EQ '     ') THEN(DO)                                           /*CLE134*/
+             CLRPFM     FILE(*LIBL/MCRXCTT)                         /*  S2659 */
+             CALL       PGM(*LIBL/MC0060)                         /*    S2659 */
+             ENDDO                                                  /* S2659 */
+/**/                                                                  /*127731*/
+/* Check if CLE005 is installed */                                    /*127731*/
+/**/                                                                  /*127731*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                   /*127731*/
+             CHGVAR     VAR(&SARD) VALUE('CLE005')                    /*127731*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &FMT)    /*127731*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                          VAR(&CLE005) VALUE('Y'))                    /*127731*/
+                                                                                          /*CLE134*/
+             IF         COND(&RERUN *EQ '      ') THEN(DO)                                /*CLE134*/
+/**/
+/* Prior to running the loan amendments update program LE0370       */
+/* Call LE0369 to update all future loan amendments with the correct*/
+/* loan type sub-type combination */
+ 
+     OVRDBF FILE(LOAMSDK) SHARE(*YES)
+ 
+/****OPNQRYF FILE((LOAMSDK)) QRYSLT('RECI *EQ "D" *AND AMTP *EQ -
+"LS"') KEYFLD((BRCA) (LNRF)) OPNID(LE0369SEL)                      */ /*115635*/
+ 
+             OPNQRYF    FILE((LOAMSDK))                             +
+                        QRYSLT('RECI *EQ "D" *AND AMTP *EQ "LS"')   +
+                        KEYFLD((BRCA) (LNRF) (VDAT))                +
+                        OPNID(LE0369SEL)                              /*115635*/
+ 
+             CALL PGM(LE0369)
+ 
+     CLOF OPNID(LE0369SEL)
+     DLTOVR FILE(*ALL)
+                     ENDDO                                                                /*CLE134*/
+ 
+/**/                                                                /* S2659 */
+          IF         COND(%SWITCH(XXXXXXX0)) THEN(DO)               /* S2659 */
+/**********  IF         COND(&CLE005 *EQ 'Y') THEN(DO) */                          /*127731 CLE134*/
+             IF         COND(&CLE005 *EQ 'Y' *AND &RERUN *EQ +
+                          '      ') THEN(DO)                                              /*CLE134*/
+             CALL       PGM(LE0373)                                   /*127731*/
+             ENDDO                                                    /*127731*/
+/**/
+/* LOAN AMENDMENTS UPDATE PHASE ONE                                 */
+             IF         COND(%SWITCH(XXXXXXX0)) THEN(DO)              /*127731*/
+             IF         COND(&RERUN *EQ 'NEWCOB') THEN(DO)                                /*CLE134*/
+             OVRDBF     FILE(LOAMSL1 ) TOFILE(LELOMKL4) +
+                           SHARE(*YES)                                                    /*CLE134*/
+             OVRDBF     FILE(LOAMSZ1) TOFILE(QTEMP/LOAMSZ1)                               /*CLE134*/
+             ENDDO                                                                        /*CLE134*/
+/**********  IF         COND((&CAS016) *EQ 'Y') THEN(DO)                           /*CAS016 CLE134*/
+             IF         COND(&CAS016 *EQ 'Y' *AND &RERUN *EQ '      +
+                          ') THEN(DO)                                                     /*CLE134*/
+                  CLRPFM     FILE(LEAMDTPD)                                               /*CAS016*/
+                  MONMSG     MSGID(CPF0000)                                               /*CAS016*/
+             ENDDO                                                                        /*CAS016*/
+/**********  CALL PGM(LE0370) */                                                          /*CLE134*/
+/*/COPY WNCPYSRC,LEH01434                                            */
+             CALL       PGM(LE0370) PARM(&RERUN)                                          /*CLE134*/
+             IF         COND(&RERUN *EQ 'NEWCOB') THEN(DO)                                /*CLE134*/
+             DLTOVR     FILE(*ALL)                                                        /*CLE134*/
+             ENDDO                                                                        /*CLE134*/
+             ENDDO                                                    /*127731*/
+/*                                                                    /*134725*/
+             IF      COND(%SWITCH(XXXXXXX0)) THEN(DO)                 /*134725*/
+                CHGVAR     VAR(&RTCD) VALUE('       ')                /*134725*/
+                CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                /*134725*/
+                CHGVAR     VAR(&SARD) VALUE('CLE004')                 /*134725*/
+                CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &FMT) /*134725*/
+                IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                          VAR(&CLE004) VALUE('Y'))                    /*134725*/
+                CHGVAR     VAR(&RTCD) VALUE('       ')                /*185526*/
+                CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                /*185526*/
+                CHGVAR     VAR(&SARD) VALUE('CEU020')                 /*185526*/
+                CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &FMT) /*185526*/
+                IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                          VAR(&CEU020) VALUE('Y'))                    /*185526*/
+/********** IF      COND(&CLE004 *EQ 'Y') THEN(DO)             /*134725 185526*/
+             IF         COND(&CLE004 *EQ 'Y' *OR &CEU020 *EQ 'Y') +
+                          THEN(DO)                                    /*185526*/
+/**********        CALL PGM(LE0389)                                                /*134725 CLE134*/
+                CALL PGM(LE0389) PARM(&RERUN)                                             /*CLE134*/
+                ENDDO                                                 /*134725*/
+             ENDDO                                                    /*134725*/
+/**/
+/*********** DLTOVR     FILE(TABLED)                                 * *S01194*/
+/**/
+             IF         COND(%SWITCH(XXXXXXX0)) THEN(DO)
+/**/
+/* CUSTOMER LOANS UPDATE PHASE ONE                                  */
+             IF         COND(&RERUN *EQ 'NEWCOB') THEN(DO)                                /*CLE134*/
+             OVRDBF     FILE(CLOANZ1) TOFILE(QTEMP/CLOANZ1)                               /*CLE134*/
+             ENDDO                                                                        /*CLE134*/
+/**********     CALL PGM(LE0390)                                                          /*CLE134*/
+             CALL       PGM(LE0390) PARM(&RERUN)                                          /*CLE134*/
+             IF         COND(&RERUN *EQ 'NEWCOB') THEN(DO)                                /*CLE134*/
+             DLTOVR     FILE(*ALL)                                                        /*CLE134*/
+             ENDDO                                                                        /*CLE134*/
+/**/
+                IF         COND(%SWITCH(XXXXXXX0)) THEN(DO)
+             IF COND((&CLE003) *EQ 'Y') THEN(DO)                      /*CLE003*/
+             IF         COND(&RERUN *EQ 'NEWCOB') THEN(DO)                                /*CLE134*/
+             OVRDBF     FILE(LELOAML2) TOFILE(LELOMKL2)                                   /*CLE134*/
+             ENDDO                                                                        /*CLE134*/
+/**/                                                                  /*CLE003*/
+/**********        CALL PGM(LE0371)                                                /*CLE003 CLE134*/
+               CALL PGM(LE0371) PARM(&RERUN)                                              /*CLE134*/
+             IF         COND(&RERUN *EQ 'NEWCOB') THEN(DO)                                /*CLE134*/
+             DLTOVR     FILE(*ALL)                                                        /*CLE134*/
+             ENDDO                                                                        /*CLE134*/
+             ENDDO                                                    /*CLE003*/
+             ENDDO                                                    /*CLE003*/
+/**/
+/* REVERSED LOANS HISTORY REPORT                                    */
+/*                                                           */
+/*/COPY WNCPYSRC,LEC0603A02                                  */       /*S01408*/
+/*                                                           */
+/**********     IF         COND(%SWITCH(XXXXXX00)) THEN(DO)                        /*CLE003 CLE134*/
+             IF         COND(%SWITCH(XXXXXX00) *AND &RERUN = +
+                          '      ') THEN(DO)                                              /*CLE134*/
+                   CALL PGM(LE0380)
+             ENDDO                                                    /*CLE003*/
+/*                                                           */
+/*/COPY WNCPYSRC,LEC0603A03                                  */       /*S01408*/
+/*                                                           */
+/**/
+/* CLEAR FILES NO LONGER REQUIRED, IF JOB TERMINATED SUCCESSFULLY   */
+                   IF         COND(%SWITCH(XXXXXXX0)) THEN(DO)
+             IF         COND(&RERUN *EQ '      ') THEN(DO)                                /*CLE134*/
+/**PF/RVLNS&&*FILES*ARE*OUTPUT*FROM*LE0390*AND*USED*IN*LE0380*******/ /*156766*/
+/*********************CLRPFM     FILE(RVLNSHH)    ******************/ /*156766*/
+/*********************CLRPFM     FILE(RVLNSRV)    ******************/ /*156766*/
+/*********************CLRPFM     FILE(RVLNST2)    ******************/ /*156766*/
+/* PF/ACTN1&& FILES ARE OUTPUT FROM LE0370 AND USED IN LE0390       */
+/*                                                               */   /*CLE003*/
+/*   Save file data to assist with future support of product     */   /*CLE003*/
+/*                                                                    /*CLE003*/
+/*                    CLRPFM     FILE(ACTN1DH)       */               /*CLE003*/
+/*                    CLRPFM     FILE(ACTN1DK)       */               /*CLE003*/
+/*                    CLRPFM     FILE(ACTN1DN)       */               /*CLE003*/
+/*                    CLRPFM     FILE(ACTN1ZX)       */               /*CLE003*/
+/*                                                           */
+/*/COPY WNCPYSRC,LEC0603A04                                  */       /*S01408*/
+/*                                                           */
+/**/
+/* CREATE NEW MIDAS/CHIPS RECORD FILE WITH NEW TRAILER FROM MC0060 */ /* +
+S2659*/
+/***************IF COND(%SST(&MMOD &MCLE 1) *EQ 'Y') THEN(DO)*/ /*S2659 S01427*/
+                     IF COND(%SST(&MMOD 43 1) *EQ 'Y') THEN(DO)       /*S01427*/
+CLRPFM     FILE(*LIBL/MCRECDD)                                         /*S2659*/
+CLRPFM     FILE(*LIBL/MCRECTT)                                         /*S2659*/
+CPYF       FROMFILE(*LIBL/MCRXCTT) TOFILE(*LIBL/MCRECTT) MBROPT(*ADD) +
+             FMTOPT(*NOCHK)                                            /*S2659*/
+                     ENDDO                                            /*S2659*/
+            ENDDO                                                                         /*CLE134*/
+/**********  IF COND((&CLE003) *EQ 'Y') THEN(DO)                     */         /*CLE003 AR1097467*/
+/**********  CHGVAR     VAR(&STUS) VALUE('N')                        */         /*CLE003 AR1097467*/
+/*********************************************************************/         /*CLE003 AR1097467*/
+/**********  CALL       PGM(CB0150) PARM(&CONAM &COSEQ &STUS)        */         /*CLE003 AR1097467*/
+/*********************************************************************/          /*S2659 AR1097467*/
+/**********        ENDDO                                             */                /*AR1097467*/
+/**/
+                ENDDO
+/**/
+             ENDDO
+/**/                                                                  /*S2659*/
+          ENDDO                                                       /*S2659*/
+/**/
+/*********** DLTOVR     FILE(TABLE)                                  * *S01194*/
+/**/
+/**/                                                                  /*S2659*/
+/*   E R R O R   M E S S A G E S                                */    /*S2659*/
+/**/                                                                  /*S2659*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)              /*S2659*/
+                   RTVDTAARA  DTAARA(*LIBL/LDA) RTNVAR(&LDA)           /*S2659*/
+                   CHGVAR     VAR(&MEM) VALUE(%SUBSTRING(&LDA 134 44)) /*S2659*/
+SNDPGMMSG  MSGID(MEM0001) MSGF(*LIBL/MIDAS) MSGDTA(&MEM) TOMSGQ(*LIBL/MOPERQ +
+             *LIBL/MRUNQ)                                              /*S2659*/
+/**********        GOTO       CMDLBL(ENDPGM)                         */          /*S2659 AR1097467*/
+                GOTO       CMDLBL(ERROR)                                               /*AR1097467*/
+             ENDDO                                                    /*S2659*/
+/**/                                                                  /*S2659*/
+             IF         COND(%SWITCH(XXXXXX01)) THEN(DO)              /*S2659*/
+SNDPGMMSG  MSGID(MEM0002) MSGF(*LIBL/MIDAS) MSGDTA(&MEM) TOMSGQ(*LIBL/MOPERQ +
+             *LIBL/MRUNQ)                                              /*S2659*/
+                GOTO       CMDLBL(ERROR)                                               /*AR1097467*/
+             ENDDO                                                    /*S2659*/
+                                                                                       /*AR1097467*/
+             GOTO       CMDLBL(ENDPGM)                                                 /*AR1097467*/
+                                                                                       /*AR1097467*/
+ERROR:                                                                                 /*AR1097467*/
+             IF         COND(&CLE003 *EQ 'Y' *AND &RERUN *EQ ' ' *OR +
+                          &CAS009 *EQ 'Y' *OR &CAS016 *EQ 'Y') +
+                          THEN(DO)                                                     /*AR1097467*/
+                CALLSUBR   SUBR(JRNRECOVR)                                             /*AR1097467*/
+             ENDDO                                                                     /*AR1097467*/
+                                                                                       /*AR1097467*/
+/*********************************************************************/                /*AR1097467*/
+/*                                                                   */                /*AR1097467*/
+/*       JRNRECOVR - Removes changes to LENQ using journal           */                /*AR1097467*/
+/*                                                                   */                /*AR1097467*/
+/*********************************************************************/                /*AR1097467*/
+             SUBR       SUBR(JRNRECOVR)                                                /*AR1097467*/
+/* Begin recovery from error */                                                        /*AR1097467*/
+/* Retrieve attributes of current job */                                               /*AR1097467*/
+                                                                                       /*AR1097467*/
+             RTVJOBA    JOB(&JOB) USER(&USR) NBR(&NBR)                                 /*AR1097467*/
+                                                                                       /*AR1097467*/
+/* Retrieve the most recent journal entry sequence number for the */                   /*AR1097467*/
+/* specific job. */                                                                    /*AR1097467*/
+                                                                                       /*AR1097467*/
+             RTVJRNE    JRN(ICJRN) RCVRNG(*CURCHAIN) +
+                          SEARCH(*DESCEND) JOB(&NBR/&USR/&JOB) +
+                          FROMENT(*LAST) TOENT(*FIRST) +
+                          RTNRCV(&SJRNRCVR) RTNSEQNBR(&START)                          /*AR1097467*/
+                                                                                       /*AR1097467*/
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(DO)                                /*AR1097467*/
+                CHGVAR     VAR(&START) VALUE(0)                                        /*AR1097467*/
+             ENDDO                                                                     /*AR1097467*/
+                                                                                       /*AR1097467*/
+/* Determine starting journal sequence number of current job. */                       /*AR1097467*/
+             SCRTVJEVT  EVENT(&SEVENT) FLAG('S') RECEIVER(&FJRNRCVR) +
+                          SEQ(&FINISH)                                                 /*AR1097467*/
+                                                                                       /*AR1097467*/
+/* Remove journal changes. */                                                          /*AR1097467*/
+             IF         COND((&START *NE 0) *AND (&FINISH *NE 0)) +
+                          THEN(DO)                                                     /*AR1097467*/
+                RMVJRNCHG  JRN(ICJRN) FILE((CLOANHH) (CLOANCL) +
+                             (CLOANCK) (CLOANZ1) (HISTSHH) (HISTSHM) +
+                             (HISTSHN) (HISTSHP) (HISTSHQ) (HISTSZX) +
+                             (LEEIRDPD) (LEERAPPD) (LECFLSPD)) +
+                             RCVRNG(&SJRNRCVR &FJRNRCVR) +
+                             FROMENT(&START) TOENT(&FINISH)                            /*AR1097467*/
+                MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041)                      /*AR1097467*/
+             ENDDO                                                                     /*AR1097467*/
+                                                                                       /*AR1097467*/
+             ENDSUBR                                                                   /*AR1097467*/
+/*********************************************************************/                /*AR1097467*/
+/**********  CHGVAR     VAR(&CPYFLD) VALUE('(c) +                    */                /*AR1097467*/
+/**********               Misys International Banking Systems Ltd.') */                /*AR1097467*/
+ENDPGM:      ENDPGM                                                   /*S2659*/
+/************ENDPGM    */                            /*S2659*/

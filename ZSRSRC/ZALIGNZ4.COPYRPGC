@@ -1,0 +1,198 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  ZALIGNZ4 - To validate and right align numeric fields        *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *                                                               *
+      *  Any changes made to this /COPY member may also need to be    *
+      *  incorporated in ZALIGNZ4LE.                                  *
+      *                                                               *
+      *  Last Amend No. 245692  *CREATE    Date 10Dec13               *
+      *  Prev Amend No.                    Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  245692 - Incorrect validation of rates when the decimal se-  *
+      *           parator in the Dealing ICD was defined as "," ins-  *
+      *           tead of ".".                                        *
+      *         - Applied for MD23981.                                *
+      *                                                               *
+      *****************************************************************
+      *
+      ** ZALIGN SR. to validate and right-align numeric field.
+      *
+     C           ZALIGN    BEGSR
+      *
+     C                     SETOF                     929399
+      *
+      ** Save input fielf in array, ZA1.
+      *
+     C                     MOVEAZFIELD    ZA1
+      *
+      ** Calculation to define number structure control fields.
+      *
+     C                     Z-ADDZADIG     ZADIG   20
+     C                     Z-ADDZADEC     ZADEC   10
+      *
+      ** Calculations to define/clear fields.
+      *
+     C                     MOVE ' '       ZA2
+     C                     MOVEAZA2       ZFIELD 16
+     C                     Z-ADD0         ZX      20
+     C                     Z-ADD0         ZY      20
+      *
+      ** Ensure required structure of field is valid.
+      *
+     C           ZADIG     ADD  ZADEC     ZZ      20
+     C           ZZ        COMP 15                   99
+     C   99                GOTO ZAEND
+      *
+      ** Loop to find decimal point, blanks and characters.
+      *
+     C           ZATAG1    TAG
+     C           ZX        ADD  1         ZX
+      *
+      ** Check for decimal point.  Error if second decimal point.
+      *
+     C           ZA1,ZX    COMP BNDCSP                   90
+     C   90 93             SETON                     99
+     C   99                GOTO ZAEND
+      *
+      ** Check for 'M' constant.  Error if not last character entered
+      *
+     C           ZA1,ZX    COMP 'M'                      96
+     C   96                DO
+     C           ZX        COMP 15                   99  99
+     C   99                GOTO ZAEND
+     C           ZX        ADD  1         ZX
+     C           ZA1,ZX    COMP ' '                  9999
+     C   99                GOTO ZAEND
+     C           ZX        SUB  1         ZX
+     C           ZX        COMP 9                    99
+     C   99                GOTO ZAEND
+     C                     END
+      *
+      ** Check for 'T' constant. Error if not last character entered
+      *
+     C           ZA1,ZX    COMP 'T'                      97
+     C   97                DO
+     C           ZX        COMP 15                   99  99
+     C   99                GOTO ZAEND
+     C           ZX        ADD  1         ZX
+     C           ZA1,ZX    COMP ' '                  9999
+     C   99                GOTO ZAEND
+     C           ZX        SUB  1         ZX
+     C           ZX        COMP 12                   99
+     C   99                GOTO ZAEND
+     C                     END
+      *
+      ** Clear alphameric constant from ZA1
+      *
+     C   96
+     COR 97                MOVE ' '       ZA1,ZX
+      *
+      ** Check for blanks. Bypass for first blank after a digit.
+      *
+     C           ZA1,ZX    COMP ' '                      91
+     C   91 92             GOTO ZATAG2
+      *
+      **   CHECK FOR NUMERIC, IF NOT '.' OR ' '.
+      *
+     C  N90N91   ZA1,ZX    COMP '0'                    99
+     C  N90N91N99ZA1,ZX    COMP '9'                  99
+     C   99                GOTO ZAEND
+      *
+      ** Store digits in array and how many.
+      ** ZY, total of digits in the input field.
+      ** ZZ, total of digits to the left of decimal point.
+      *
+     C  N90N91   ZY        ADD  1         ZY         92
+     C  N90N91             MOVE ZA1,ZX    ZA2,ZY
+     C   90                Z-ADDZY        ZZ         93  93
+      *
+     C           ZX        COMP 16                     94
+     C   94                GOTO ZATAG1
+      *
+     C           ZATAG2    TAG
+      *
+      ** If 'M' specified, multiply ZA1 by 1 million
+      *
+     C   96      ZZ        ADD  6         ZZ
+      *
+      ** If 'T' specified, multiply ZA1 by 1 thousand
+      *
+     C   97      ZZ        ADD  3         ZZ
+      *
+      ** Fill in zeros in any blanks left of decimal point
+      *
+     C   96 93
+     COR 97 93   ZZ        DOWGTZY
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C                     END
+      *
+      ** If constant specified with no decimal point zeroise blanks
+      *
+     C   96N93             DO   6
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C                     END
+      *
+     C   97N93             DO   3
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C                     END
+      *
+      ** If no decimal point found, set total field ZZ.
+      *
+     C  N93                Z-ADDZY        ZZ
+      *
+      ** Check for embedded blanks.
+      *
+     C   91 92             MOVEAZA1,ZX    ZFIELD
+     C   91 92   ZFIELD    COMP ' '                  9999
+     C   99                GOTO ZAEND
+      *
+      ** Ensure that number of digits entered either side
+      ** of decimal point are not more than allowed.
+      *
+     C           ZZ        COMP ZADIG                99
+     C           ZY        SUB  ZZ        ZX
+     C  N99      ZADEC     SUB  ZX        ZX           9995
+     C   99                GOTO ZAEND
+     C   95                GOTO ZATAG4
+      *
+      ** Fill the trailing blanks with zeros.
+      *
+     C           ZY        ADD  ZX        ZZ
+     C           ZATAG3    TAG
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C           ZY        COMP ZZ                     94
+     C   94                GOTO ZATAG3
+      *
+      ** Right-align the value by moving back to array, ZA1.
+      *
+     C           ZATAG4    TAG
+     C                     MOVE '0'       ZA1
+     C                     Z-ADD16        ZX
+     C           ZATAG5    TAG
+     C           ZY        COMP 0                        94
+     C   94                GOTO ZATAG6
+     C                     MOVE ZA2,ZY    ZA1,ZX
+     C           ZY        SUB  1         ZY
+     C           ZX        SUB  1         ZX
+     C                     GOTO ZATAG5
+     C           ZATAG6    TAG
+      *
+      ** Move validated and right-aligned number back into ZFIELD.
+      *
+     C                     MOVEAZA1       ZFIELD
+      *
+     C                     SETOF                     9697
+      *
+     C           ZAEND     ENDSR
+      *
+      ********************************************************************

@@ -1,0 +1,115 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('TAKE-ON - Initialise New Fields')                     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas -  Customer Lending Module                            */
+/*                                                                   */
+/*       SDCLE134C1 - Initialise New Fields (Take-on only)           */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2011           */
+/*                                                                   */
+/*       Last Amend No. CLE134  *CREATE    Date 01Aug12              */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       CLE134 - Past Due Call Loan Processing                      */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM        PARM(&RTCDE &PMODE)
+ 
+             DCL        VAR(&PMODE)   TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RTCDE)   TYPE(*CHAR) LEN(7)
+             DCL        VAR(&CPYFLD)  TYPE(*CHAR) LEN(64) VALUE('(c) +
+                           Misys International Banking Systems Ltd. +
+                           2012')
+ 
+/** Initialisation */
+ 
+             CHGJOB     SWS(00000000)
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+/** Main Processing Control */
+ 
+             IF         COND(&PMODE *NE '1') THEN(GOTO ENDPGM)
+ 
+             SNDPGMMSG  MSG('CLE134 New Field Initialisation') +
+                          TOMSGQ(MRUNQ)
+ 
+/** Initialise New Fields on CLOANCL and LEFEED */
+ 
+TAG0010:
+             CALL       PGM(SDCLE13401)
+             MONMSG     MSGID(CPF0000) EXEC(GOTO ERR_PGM)
+ 
+             IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO ERR_DIE)
+ 
+/** Initialise New Fields on SDACUSPD */
+ 
+             OVRDBF     FILE(GZSDACUSL1) SHARE(*NO)
+             OVRDBF     FILE(SDACUSL1) SHARE(*NO)
+ 
+             CALL       PGM(SDCLE13402)
+             MONMSG     MSGID(CPF0000) EXEC(GOTO ERR_PGM)
+ 
+             IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO ERR_DIE)
+ 
+/** Initialise New Fields on SDLOANPD */
+ 
+             CALL       PGM(SDCLE13403)
+             MONMSG     MSGID(CPF0000) EXEC(GOTO ERR_PGM)
+ 
+             IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO ERR_DIE)
+ 
+/** Initialise New Fields on SDFEEPD */
+ 
+             CALL       PGM(SDCLE13404)
+             MONMSG     MSGID(CPF0000) EXEC(GOTO ERR_PGM)
+ 
+             IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO ERR_DIE)
+ 
+/** Initialise New Fields on SDCLNDPD */
+ 
+             CALL       PGM(SDCLE13405)
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ERR_PGM))
+ 
+             IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO ERR_DIE)
+ 
+/** Program Completed Successfully */
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/** Process Errors */
+ 
+ERR_DIE:
+             SNDPGMMSG  MSG('Job terminated, database in error.') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             CHGVAR     VAR(&RTCDE) VALUE('*ERROR')
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERR_OOB:
+             SNDPGMMSG  MSG('Job terminated, file out of balance.') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             CHGVAR     VAR(&RTCDE) VALUE('*ERROR')
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERR_PGM:
+             SNDPGMMSG  MSG('Job terminated due to program error.') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             CHGVAR     VAR(&RTCDE) VALUE('*ERROR')
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/** Termination Process */
+ 
+ENDPGM:
+             DLTOVR     FILE(*ALL)
+             MONMSG     MSGID(CPF0000)
+ 
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+             ENDPGM

@@ -1,0 +1,390 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SC Input Cycle Database Save - SWA')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       SCC001711 - Midas SC Input Cycle Database Save - SWA        */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. MD035839           Date 14Sep15              */
+/*       Prev Amend No. AR1096483          Date 18Mar13              */
+/*                      AR1096052          Date 14Mar13              */
+/*                      CSC057   *CREATE   Date 06Aug12              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD035839  - Included DDLIB for zonal and GDLIB for global   */
+/*       AR1096483 - Included DILIB name for global libraries.       */
+/*       AR1096052 - Change back DHCEMI to 'S' if a component failed.*/
+/*       CSC057 - COB Save Enhancement - Using SWA 1.0               */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE &LIB &LOOP)
+
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&LOOP) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&MODLIB) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&ZONEID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DILIB) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&SAVF) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&JRNE) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&JNSTAT) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&RTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&OPN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&SFMT) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&ACPTH) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&SAVFTEXT) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&RUNDAT) TYPE(*CHAR) LEN(13)
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7) VALUE(' ')
+             DCL        VAR(&GLOBAL) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&GLOBID) TYPE(*CHAR) LEN(2)
+/*/COPY SDCPYSRC,SDSVALDCL                                           */
+             DCL        VAR(&DTACPR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PRFK) TYPE(*CHAR) LEN(3) VALUE(' ')
+             DCL        VAR(&NORE) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&LIB1) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&COUNT) TYPE(*DEC) LEN(2 0) VALUE(0)
+
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2012')
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO ABNOR)
+
+             SNDPGMMSG  MSG('Midas SC Input Cycle Database Save ' +
+                          *CAT &LIB *TCAT ' - SWA') TOMSGQ(MOPERQ)
+
+             IF         COND(&MODE *EQ '*MONITOR') THEN(DO)
+
+               RTVDTAARA  DTAARA(JNSTAT) RTNVAR(&JNSTAT)
+               CHGVAR     VAR(&GLOBAL) VALUE(%SST(&JNSTAT 172 1))
+
+/* Check number of records on CBCOMSPD where */
+/* DHCOTT = 'SCC001711' and DHCEMI = 'S' */
+
+NEXT:
+               CPYF       FROMFILE(CBCOMSPD) TOFILE(QTEMP/CBCOMSSC) +
+                            CRTFILE(*YES) INCREL((*IF DHCOTT *EQ +
+                            'SCC001711') (*AND DHCEMI *EQ 'S'))
+               RTVMBRD    FILE(QTEMP/CBCOMSSC) NBRCURRCD(&NORE)
+               DLTF       FILE(QTEMP/CBCOMSSC)
+
+/* Subtract counts only for *MONITOR and BF Save components */
+
+               IF         COND(&GLOBAL *EQ 'Y') THEN(DO)
+                 CHGVAR     VAR(&NORE) VALUE(&NORE - 2)
+               ENDDO
+
+/* Subtract also counts for GM and GTA Save components */
+
+               ELSE       DO
+                 CHGVAR     VAR(&NORE) VALUE(&NORE - 4)
+               ENDDO
+
+               IF         COND(&NORE *GT 0) THEN(DO)
+WAIT:
+                 RCVMSG     MSGQ(CBSWAMMQ) MSGTYPE(*LAST) WAIT(60) +
+                              RMV(*YES) MSGDTA(&MSGDTA) MSGID(&MSGID)
+
+                 IF         COND(&MSGDTA *EQ *BLANKS) THEN(DO)
+                   CHGVAR     VAR(&COUNT) VALUE(&COUNT +1)
+                   IF         COND(&COUNT *GT &LOOP) THEN(DO)
+                     SNDPGMMSG  MSGID(CBM0315) MSGF(GBCBUSRMSG)
+                     GOTO       ABNOR
+                   ENDDO
+                   ELSE       DO
+                     GOTO       WAIT
+                   ENDDO
+                 ENDDO
+
+                 CHGVAR     VAR(&COUNT) VALUE(0)
+
+                 IF         COND(&MSGID *EQ 'CPI3710') THEN(DO)
+
+                   CHGVAR     VAR(&LIB1) VALUE(%SST(&MSGDTA 3 2))
+                   IF         COND(&LIB1 *EQ 'DM') THEN(DO)
+                   SCRUNSQL   SQL('update CBCOMSPD set DHCEMI = ''N'' +
+                          where DHCOTT = ''SCC001711'' and DHCSEQ = +
+                          ''00002''')
+                   ENDDO
+                   IF         COND(&LIB1 *EQ 'DT') THEN(DO)
+                   SCRUNSQL   SQL('update CBCOMSPD set DHCEMI = ''N'' +
+                          where DHCOTT = ''SCC001711'' and DHCSEQ = +
+                          ''00003''')
+                   ENDDO
+                   IF         COND(&LIB1 *EQ 'GM') THEN(DO)
+                   SCRUNSQL   SQL('update CBCOMSPD set DHCEMI = ''N'' +
+                          where DHCOTT = ''SCC001711'' and DHCSEQ = +
+                          ''00005''')
+                   ENDDO
+                   IF         COND(&LIB1 *EQ 'GT') THEN(DO)
+                   SCRUNSQL   SQL('update CBCOMSPD set DHCEMI = ''N'' +
+                          where DHCOTT = ''SCC001711'' and DHCSEQ = +
+                          ''00006''')
+                   ENDDO
+                   IF         COND(&LIB1 *EQ 'DD') THEN(DO)                         /*MD035839*/
+                   SCRUNSQL   SQL('update CBCOMSPD set DHCEMI = ''N'' +
+                          where DHCOTT = ''SCC001711'' and DHCSEQ = +
+                          ''00007''')                                               /*MD035839*/
+                   ENDDO                                                            /*MD035839*/
+                   IF         COND(&LIB1 *EQ 'GD') THEN(DO)                         /*MD035839*/
+                   SCRUNSQL   SQL('update CBCOMSPD set DHCEMI = ''N'' +
+                          where DHCOTT = ''SCC001711'' and DHCSEQ = +
+                          ''00008''')                                               /*MD035839*/
+                   ENDDO                                                            /*MD035839*/
+
+                   GOTO       NEXT
+
+                 ENDDO
+                 ELSE       DO
+
+                   IF         COND(&MSGID *EQ 'CPI3711') THEN(DO)
+
+                   CHGVAR     VAR(&LIB1) VALUE(%SST(&MSGDTA 3 2))
+                   IF         COND(&LIB1 *EQ 'DM') THEN(DO)
+                   SCRUNSQL   SQL('update CBCOMSPD set DHCEMI = ''F'' +
+                          where DHCOTT = ''SCC001711'' and DHCSEQ = +
+                          ''00002''')
+                   ENDDO
+                   IF         COND(&LIB1 *EQ 'DT') THEN(DO)
+                   SCRUNSQL   SQL('update CBCOMSPD set DHCEMI = ''F'' +
+                          where DHCOTT = ''SCC001711'' and DHCSEQ = +
+                          ''00003''')
+                   ENDDO
+                   IF         COND(&LIB1 *EQ 'GM') THEN(DO)
+                   SCRUNSQL   SQL('update CBCOMSPD set DHCEMI = ''F'' +
+                          where DHCOTT = ''SCC001711'' and DHCSEQ = +
+                          ''00005''')
+                   ENDDO
+                   IF         COND(&LIB1 *EQ 'GT') THEN(DO)
+                   SCRUNSQL   SQL('update CBCOMSPD set DHCEMI = ''F'' +
+                          where DHCOTT = ''SCC001711'' and DHCSEQ = +
+                          ''00006''')
+                   ENDDO
+                   IF         COND(&LIB1 *EQ 'DD') THEN(DO)                         /*MD035839*/
+                   SCRUNSQL   SQL('update CBCOMSPD set DHCEMI = ''F'' +
+                          where DHCOTT = ''SCC001711'' and DHCSEQ = +
+                          ''00007''')                                               /*MD035839*/
+                   ENDDO                                                            /*MD035839*/
+                   IF         COND(&LIB1 *EQ 'GD') THEN(DO)                         /*MD035839*/
+                   SCRUNSQL   SQL('update CBCOMSPD set DHCEMI = ''F'' +
+                          where DHCOTT = ''SCC001711'' and DHCSEQ = +
+                          ''00008''')                                               /*MD035839*/
+                   ENDDO                                                            /*MD035839*/
+
+                   GOTO       NEXT
+
+                   ENDDO
+
+                 ENDDO
+
+               ENDDO
+               ELSE       DO
+
+                 CPYF       FROMFILE(CBCOMSPD) TOFILE(QTEMP/CBCOMSSCF) +
+                              CRTFILE(*YES) INCREL((*IF DHCOTT *EQ +
+                              'SCC001711') (*AND DHCEMI *EQ 'F'))
+                 RTVMBRD    FILE(QTEMP/CBCOMSSCF) NBRCURRCD(&NORE)
+                 DLTF       FILE(QTEMP/CBCOMSSCF)
+
+/**********      IF         COND(&NORE *GT 0) THEN(GOTO ABNOR)     */                  /*AR1096052*/
+                 IF         COND(&NORE *GT 0) THEN(DO)                                 /*AR1096052*/
+                                                                                       /*AR1096052*/
+                   SCRUNSQL   SQL('update CBCOMSPD set DHCEMI = ''S'' +
+                                where DHCOTT = ''SCC001711'' and +
+                                DHCEMI = ''F''')                                       /*AR1096052*/
+                                                                                       /*AR1096052*/
+/* Call CBC0035 to request immediate halt of CoB */                                    /*AR1096052*/
+                                                                                       /*AR1096052*/
+                   CALL       CBC0035                                                  /*AR1096052*/
+                                                                                       /*AR1096052*/
+                   GOTO       ABNOR                                                    /*AR1096052*/
+                                                                                       /*AR1096052*/
+                 ENDDO                                                                 /*AR1096052*/
+
+                 CLRMSGQ    MSGQ(CBSWAMMQ)
+                 GOTO       ENDPGM
+
+               ENDDO
+
+             ENDDO
+             ELSE       DO
+
+/* Check if access paths are to be saved */
+
+             CHGVAR     VAR(&RTN) VALUE('       ')
+             CHGVAR     VAR(&OPN) VALUE('*VERIFY')
+             CHGVAR     VAR(&SARD) VALUE('CSC003')
+             CALL       PGM(AOSARDR0) PARM(&RTN &OPN &SARD &SFMT)
+             IF         COND(&RTN *EQ '       ') THEN(DO)
+               CHGVAR     VAR(&ACPTH) VALUE('*YES')
+             ENDDO
+             ELSE       DO
+               CHGVAR     VAR(&ACPTH) VALUE('*NO')
+             ENDDO
+
+/* Get System Value for Data Compression parameter */
+/* in save commands */
+
+             CALL       PGM(AOSVALR0) PARM(&RSVALRTNC +
+                        'SavDataCompression' &SVAL1 +
+                        ' ' &SVAL2 +
+                        ' ' &SVAL3 +
+                        ' ' &SVAL4 +
+                        ' ' &SVAL5 +
+                        ' ' &SVAL6 +
+                        ' ' &SVAL7 +
+                        ' ' &SVAL8 +
+                        ' ' &SVAL9 +
+                        ' ' &SVAL10)
+
+             IF         COND(&RSVALRTNC *NE '       ') THEN(GOTO +
+                             CMDLBL(ABNOR))
+             CHGVAR     VAR(&DTACPR) VALUE(&SVAL1)
+
+/* Determine whether global libraries should be saved. */
+
+             RTVDTAARA  DTAARA(JNSTAT) RTNVAR(&JNSTAT)
+             CHGVAR     VAR(&GLOBAL) VALUE(%SST(&JNSTAT 172 1))
+
+             IF         COND(&LIB *EQ 'BF') THEN(DO)
+
+/* Save zonal schemas/libraries */
+
+               IF         COND(&ACPTH *EQ '*YES') THEN(DO)
+                 CHGVAR     VAR(&PRFK) VALUE('005')
+               ENDDO
+               ELSE       CMD(DO)
+                 CHGVAR     VAR(&PRFK) VALUE('006')
+               ENDDO
+
+               CALL       PGM(SCC000303) PARM(&PRTCD &PRFK)
+
+               IF         COND(&PRTCD *NE ' ') THEN(DO)
+                 CHGJOB   SWS(XXXXXX11)
+                 GOTO     CMDLBL(ENDPGM)
+               ENDDO
+
+               IF         COND(&GLOBAL *EQ 'Y') THEN(DO)
+
+/* Save global schemas/libraries */
+
+                 IF         COND(&ACPTH *EQ '*YES') THEN(DO)
+                   CHGVAR       VAR(&PRFK) VALUE('007')
+                 ENDDO
+                 ELSE       DO
+                   CHGVAR       VAR(&PRFK) VALUE('008')
+                 ENDDO
+
+                 CALL       PGM(SCC000303) PARM(&PRTCD &PRFK)
+
+                 IF         COND(&PRTCD *NE ' ') THEN(DO)
+                   CHGJOB   SWS(XXXXXX11)
+                   GOTO     CMDLBL(ENDPGM)
+                 ENDDO
+
+               ENDDO
+
+               GOTO       ENDPGM
+
+             ENDDO
+
+/*           IF         COND((&LIB *EQ 'DM') *OR (&LIB *EQ 'DTA')) +   */           /*MD035839*/
+/*                        THEN(DO)                                     */           /*MD035839*/
+             IF         COND((&LIB *EQ 'DM') *OR (&LIB *EQ 'DTA') *OR +
+                          (&LIB *EQ 'DD')) THEN(DO)                                 /*MD035839*/
+
+/* Retrieve data area SDSTAT for zone prefix */
+
+               RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)
+               CHGVAR     VAR(&ZONEID) VALUE(%SUBSTRING(&SDSTAT 6 2))
+               CHGVAR     VAR(&MODLIB) VALUE(&ZONEID *CAT &LIB +
+                            *TCAT 'LIB')
+               CHGVAR     VAR(&DILIB) VALUE(&ZONEID *CAT 'DILIB ')
+
+             ENDDO
+
+/*           IF         COND((&LIB *EQ 'GM') *OR (&LIB *EQ 'GTA')) + */             /*MD035839*/
+/*                        THEN(DO)                                   */             /*MD035839*/
+             IF         COND((&LIB *EQ 'GM') *OR (&LIB *EQ 'GTA') *OR +
+                          (&LIB *EQ 'GD')) THEN(DO)                                 /*MD035839*/
+
+               IF         COND(&GLOBAL *EQ 'Y') THEN(DO)
+
+/* Determine global system ID. */
+
+               CALL       PGM(AOSVALR0) PARM(&PRTCD 'BrgMidasGlobalPrefix' +
+                            &SVAL1 &SVALK2 &SVAL2 &SVALK3 &SVAL3 +
+                            &SVALK4 &SVAL4 &SVALK5 &SVAL5 &SVALK6 +
+                            &SVAL6 &SVALK7 &SVAL7 &SVALK8 &SVAL8 +
+                            &SVALK9 &SVAL9 &SVALK10 &SVAL10)
+
+/* If there is an error finding system values, */
+/* then end abnormally.  */
+
+               IF         COND(&PRTCD *NE '       ') THEN(GOTO +
+                            CMDLBL(ABNOR))
+
+               CHGVAR     VAR(&GLOBID) VALUE(&SVAL1)
+               CHGVAR     VAR(&MODLIB) VALUE(&GLOBID *CAT &LIB +
+                            *TCAT 'LIB')
+               RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)                               /*AR1096483*/
+               CHGVAR     VAR(&ZONEID) VALUE(%SUBSTRING(&SDSTAT 6 2))                  /*AR1096483*/
+               CHGVAR     VAR(&DILIB) VALUE(&ZONEID *CAT 'DILIB ')                     /*AR1096483*/
+
+               ENDDO
+               ELSE       DO
+
+                 GOTO       ENDPGM
+
+               ENDDO
+
+             ENDDO
+
+/* Determine savefile name */
+
+             CHGVAR   VAR(&SAVF) VALUE('DBIC' *CAT &LIB)
+
+             SAVLIB     LIB(&MODLIB) DEV(*SAVF) SAVF(&DILIB/&SAVF) +
+                          USEOPTBLK(*NO) CLEAR(*ALL) PRECHK(*YES) +
+                          SAVACT(*LIB) SAVACTMSGQ(CBSWAMMQ) +
+                          ACCPTH(&ACPTH) DTACPR(&DTACPR) OUTPUT(*PRINT)
+
+             RTVDTAARA  DTAARA(RUNDAT) RTNVAR(&RUNDAT)
+
+             CHGVAR     VAR(&SAVFTEXT) VALUE(%SST(&RUNDAT 1 7) +
+                         *CAT  ' - Midas I/C termination ' +
+                         *CAT &LIB *TCAT 'LIB save')
+             CHGSAVF    FILE(&DILIB/&SAVF) TEXT(&SAVFTEXT)
+
+             CHGVAR     VAR(%SUBSTRING(&JRNE 1 5)) VALUE('DISK ')
+             CHGVAR     VAR(%SUBSTRING(&JRNE 6 8)) VALUE(&MODLIB)
+             CHGVAR     VAR(%SUBSTRING(&JRNE 16 8)) VALUE(&DILIB)
+             CHGVAR     VAR(%SUBSTRING(&JRNE 26 4)) VALUE('DISK')
+             SNDJRNE    JRN(ICJRN) TYPE('SV') ENTDTA(&JRNE) +
+                          FORCE(*YES)
+
+             GOTO       ENDPGM
+
+             ENDDO
+
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSG('Midas SC Input Cycle Database Save ' +
+                          *CAT &LIB *TCAT ' - SWA Ended Abnormally') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+
+/**Call*CBC0035*to*request*immediate*halt*of*CoB**/                                    /*AR1096052*/
+
+/**********  CALL       CBC0035                                                     */ /*AR1096052*/
+
+ENDPGM:
+             ENDPGM

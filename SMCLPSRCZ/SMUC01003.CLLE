@@ -1,0 +1,125 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Update JRNCache System Value')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation Module                               */
+/*                                                                   */
+/*       SMUC001003 - Midas SM Update JRNCache System Value          */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. CSC048A            Date 06Aug12              */
+/*       Prev Amend No. CSC048   *CREATE   Date 06Aug12              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       CSC048A - Journal Caching                                   */
+/*       CSC048 - Journal Caching                                    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE)
+ 
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&RTCD)  TYPE(*CHAR) LEN(7) VALUE(' ')
+             DCL        VAR(&DSFDY) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SYSVAL) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&NEWSYSVAL) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+/**********  DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)                */                  /*CSC048A*/
+/**********  DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)                 */                  /*CSC048A*/
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2013')
+ 
+/* Global monitor message.  */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Processing when mode is Upgrade */
+ 
+             IF         COND(&MODE *EQ '*UPG') THEN(DO)
+                CALL       PGM(AOSARDR0) PARM(&RTCD '*VERIFY' 'CSC048' +
+                             &DSFDY)
+                IF         COND(&RTCD *EQ ' ') THEN(DO)
+ 
+/* If CSC048 is installed, set System Value UseIBMJournalCache? to Y */
+ 
+                CHGVAR     VAR(&SYSVAL) VALUE('UseIBMJournalCache?')
+                CHGVAR     VAR(&NEWSYSVAL) VALUE('Y')
+                CALL       PGM(SD009510) PARM(&SYSVAL &NEWSYSVAL ' ')
+                                                                                         /*CSC048A*/
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                              /*CSC048A*/
+                GOTO       CMDLBL(ABNOR)                                                 /*CSC048A*/
+                ENDDO                                                                    /*CSC048A*/
+ 
+/* Drop records for Switchable Features file */
+ 
+                SCRUNSQL   SQL('delete from SCSARSPD where AXSARN = +
+                             ''CSC048''')
+                MONMSG     MSGID(SQL0100)
+                SCRUNSQL   SQL('delete from SCPASSPD where P@SARN = +
+                             ''CSC048''')
+                MONMSG     MSGID(SQL0100)
+                SCRUNSQL   SQL('delete from GPCSECPD where P@SARN = +
+                           ''CSC048''')
+                MONMSG     MSGID(SQL0100)
+                SCRUNSQL   SQL('delete from SCSARDPD where SARN = +
+                             ''CSC048''')
+                MONMSG     MSGID(SQL0100)
+                SCRUNSQL   SQL('delete from SCSARZPD where AXSARN = +
+                             ''CSC048''')
+                MONMSG     MSGID(SQL0100)
+                SCRUNSQL   SQL('delete from SCSAREPD where SARN = +
+                             ''CSC048''')
+                MONMSG     MSGID(SQL0100)
+                ENDDO
+             ENDDO
+ 
+/* Move Processing for Migration to PGM/SMC000086 */                                     /*CSC048A*/
+/**Processing*when*mode*is*Migration**/                                                  /*CSC048A*/
+/**********/                                                                             /*CSC048A*/
+/**********  IF         COND(&MODE *EQ '*MIG') THEN(DO)              */                  /*CSC048A*/
+/**********/                                                                             /*CSC048A*/
+/**Retrieve*library*prefix**/                                                            /*CSC048A*/
+/**********/                                                                             /*CSC048A*/
+/**********     CALL       PGM(AOSVALR0) PARM(&RTNCDE +              */                  /*CSC048A*/
+/**********                  'BrgOldZonePrefix' &SVAL1 ' ' ' ' ' ' ' ' +                 /*CSC048A*/
+/**********                  ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +                 /*CSC048A*/
+/**********                  ' ' ' ' ' ' ')                          */                  /*CSC048A*/
+/**********     IF         COND((%SST(&SVAL1 1 4) *EQ '*NRF') *OR +  */                  /*CSC048A*/
+/**********                  (&RTNCDE *NE ' ') *OR (&SVAL1 *EQ ' ')) +                   /*CSC048A*/
+/**********                  THEN(DO)                                */                  /*CSC048A*/
+/**********        GOTO       CMDLBL(ABNOR)                          */                  /*CSC048A*/
+/**********     ENDDO                                                */                  /*CSC048A*/
+/**********     CHGVAR     VAR(&PFX) VALUE(%SST(&SVAL1 1 2))         */                  /*CSC048A*/
+/**********     CHGVAR     VAR(&LIB) VALUE(&PFX *TCAT 'DVLIB')       */                  /*CSC048A*/
+/**********/                                                                             /*CSC048A*/
+/**If*CSC048*is*installed*in*the*'from'*System,**/                                       /*CSC048A*/
+/**set*System*Value*UseIBMJournalCache?*to*Y**/                                          /*CSC048A*/
+/**********/                                                                             /*CSC048A*/
+/**********     OVRDBF     FILE(SCSARDL1) TOFILE(&LIB/SCSARDL1)      */                  /*CSC048A*/
+/**********     CHGVAR     VAR(&RTCD) VALUE(' ')                     */                  /*CSC048A*/
+/**********     CALL       PGM(AOSARDR0) PARM(&RTCD '*VERIFY' 'CSC048' +                 /*CSC048A*/
+/**********                  &DSFDY)                                 */                  /*CSC048A*/
+/**********     IF         COND(&RTCD *EQ ' ') THEN(DO)              */                  /*CSC048A*/
+/**********        CHGVAR     VAR(&SYSVAL) VALUE(' ')                */                  /*CSC048A*/
+/**********        CHGVAR     VAR(&NEWSYSVAL) VALUE(' ')             */                  /*CSC048A*/
+/**********        CHGVAR     VAR(&SYSVAL) VALUE('UseIBMJournalCache?')                  /*CSC048A*/
+/**********        CHGVAR     VAR(&NEWSYSVAL) VALUE('Y')             */                  /*CSC048A*/
+/**********        CALL       PGM(SD009510) PARM(&SYSVAL &NEWSYSVAL ' ')                 /*CSC048A*/
+/**********     ENDDO                                                */                  /*CSC048A*/
+/**********  ENDDO                                                   */                  /*CSC048A*/
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000)
+ 
+ENDPGM:
+             ENDPGM

@@ -1,0 +1,1852 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME Control access to IMM FT data')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management Module                            *
+      *                                                               *
+      *  ME1200 - IMM Check FT Action                                 *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. BUG15107           Date 23Oct07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CFT032             Date 11Sep06               *
+      *                 CDL049             Date 07Jul06               *
+      *                 CSD027             Date 05Apr06               *
+      *                 221534             Date 05Apr04               *
+      *                 221761             Date 01Apr04               *
+      *                 CSC022             Date 24Feb04               *
+      * Midas Release 4.01.03 ----------------------------------------*
+      *                 210733             Date 28Nov02               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      * Midas Release 4.01 -------------------------------------------*
+      *                 197420             Date 23Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CFT009             Date 01Jun00               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 185107             Date 17Oct00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CAP136             Date 15Nov99               *
+      *                 178195             Date 25Apr00               *
+      *                 CFT006             Date 22Nov99               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CAP031             Date 24Jan00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CFT002             Date 16Nov98               *
+      *                 145199             Date 16Oct98               *
+      *                 069250             DATE 03MAY94               *
+      *                 S01435             DATE 23JUL93               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  BUG15107 - Consistency to add the 5th line (Recompile)       *
+      *  CFT032 - Account line in field 50k in MT103 (recompile)      *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Change Customer Number to alpha.                    *
+      *  221534 - Not possible to enquire MT101s and MT102s in VFTM.  *
+      *  221761 - Incorrect program called during authorisation of    *
+      *           RFT/CCT transaction.                                *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *  210733 - Transaction reference not displayed if SWIFT        *
+      *           payments are routed to incoming payments or         *
+      *           outgoing payments.                                  *
+      *           Get inserted reference and the 'I' return code to   *
+      *           display the transaction reference via ME1060        *
+      *           program.  Apply fix 197712.                         *
+      *  197420 - Deallocate data area for FT transaction             *
+      *  CFT009 - FT Fees and Charge Development                      *
+      *  185107 - Mapping of details from swift message               *
+      *  CAP136 - Conversion of FT Incoming Payment inputs into       *
+      *           modular structure to use as APIs.                   *
+      *  178195 - Incoming MT102 not routed correctly                 *
+      *  CFT006 - Funds Transfer addition of MT101 and MT102 messages *
+      *  CAP031 - Conversion of FT inputs into modular structure to   *
+      *           use as APIs.                                        *
+      *  CFT002 - Straight Through Processing Phase 1                 *
+      *  145199 - Recompile for changes to MEINCRPD and MEINMPPD made *
+      *           in Year 2000 fix 124673.                            *
+      *  069250 - Remove dummy OVRDBF command from creation parms.    *
+      *  S01435 - Incoming Message Management                         *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Indicator usage                                              *
+      *  ~~~~~~~~~~~~~~~                                              *
+      *                                                               *
+      *  50    First cycle                                            *
+      *  90    General work indicator                                 *
+      *  91    General work indicator                                 *
+      *                                                               *
+      *  U7/U8 Error Ocurred                                          *
+      *  LR    End program                                            *
+      *                                                               *
+      *****************************************************************
+     FMEINMPJ1IF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+      *
+      * RSQ : Incoming Message Parts
+      *
+     FMEINFTJ1IF  E           K        DISK         KINFSR SRFILE     UC
+      *
+      *  Incoming Message FT Status File - joined with INPAYDD, OTPAYDD
+      *
+     F/COPY WNCPYSRC,ME1200DFPG
+      *
+      *  /Copy point for File Definition
+      *
+     F/EJECT
+     E                    CPY@    1   1 80
+      *
+      *  Copyright table
+      *
+      **                                                                                      CSC022
+      ** Array to hold commitment jobs name                                                   CSC022
+      **                                                                                      CSC022
+     E                    WCMT       10 10                                                    CSC022
+     E/COPY WNCPYSRC,ME1200DEPG
+      *
+      *  /Copy point for Arrays
+      *
+     E/COPY MECPYSRC,SRERRE
+      *
+      *  end of Copysource for error processing
+      *
+     E/EJECT
+     I/COPY WNCPYSRC,ME1200DIPG
+      *
+      *  /Copy point for Input specifications
+      *
+      *
+     ICPYR@#      DS
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     I/COPY MECPYSRC,SRERRI
+      *
+      *  End of Program Error Processing copysource member
+      *
+     IRUNDTA    E DSRUNDAT
+      *
+      *  Define rundat data area
+      *
+     IINFT      E DSMEINFTPD
+      *
+      *  Update FT information file
+      *
+     IINMC      E DSMEINMCPD
+      *
+      *  Data Structure for Verify Network Message
+      *
+     IDSFDY     E DSDSFDY
+     I*
+     I* Data Structures used by Access Programs
+     I*
+     IDSSDY     E DSDSSDY
+     I*
+     I* Data Structures used by Access Programs
+     I*
+     ISCSARD    E DSSCSARDPD                                              CAP031
+      ** Switcable Features file                                          CAP031
+     I*                                                                   CAP031
+      **                                                                                      CSC022
+     ISCCMT       DS                            256                                           CSC022
+     I                                        1   30WCMTNO                                    CSC022
+     I                                        4 103 WCJOBS                                    CSC022
+      ** Commitment Control dataarea                                                          CSC022
+      **                                                                                      CSC022
+     IW0DATA      DS                            256
+      *
+      *  Define data structure used to pass parameters
+      *
+     I                                        1   3 B#BRCA
+     I                                        4   4 I#ACTD
+     I                                        5  14 I#CPGM
+     I                                       15  220I#MSGR
+     I                                       23  250I#KPRT
+     I                                       26  40 C#PREF
+     I                                       41  42 I#INOP
+     I                                       43  57 O#IPRF
+     I                                       58  72 O#OPRF
+      *
+      *  Define data structure used to pass parameters to FTC0040/50
+      *
+     IW1PREF      DS                             15
+     I                                        1   80C#MSGR
+     I                                        9  110C#KPRT
+      *
+     IW4DATA      DS                            256
+      *
+      *  Define data structure used to pass parameters
+      *
+     I                                        1   3 B#BRC2
+     I                                        4   4 O#ACTD
+     I                                        5  14 O#CPGM
+     I*                                                                   CAP031
+     I* Rename API PGM as name is too long to be called from ILE prog.    CAP031
+     I              'FTOPAY1SN'           C         FTOPAY                CAP031
+     I*                                                                   CAP031
+      *                                                                   CFT006
+     I              'FTM101SIN'           C         HSIN                  CFT006
+      *                                                                   CFT006
+     I              'FTM102SIN'           C         HSIN2                 CFT006
+     I/EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+     C                     PARM           W0ACT   8
+     C                     PARM           W0DATA
+      *
+      *  Set up primary reference
+      *
+     C                     MOVELW0DATA    W0PREF
+      *
+      * Initialise program
+      *
+     C           *IN50     IFEQ '0'
+     C                     EXSR SRINIT
+     C                     END
+      *
+      *  Validate depending on action code
+      *
+     C           W0ACT     CASEQ'*MVERIFY'SRMVRY
+     C           W0ACT     CASEQ'*MGO    'SRMGO
+     C           W0ACT     CASEQ'*VERIFY 'SRVRFY
+     C           W0ACT     CASEQ'*GO     'SRGO
+     C                     CAS            SRACT
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *  Return to calling program
+      *
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRMVRY   : Multiple Msg verify action is allowed             *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRMVRY    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRMVRY'  @STK,Q
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXMVRY    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRMGO    : Multiple Msg go                                   *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRMGO     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRMGO '  @STK,Q
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXMGO     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFTBR   : Check that user authorised to FT Branch           *
+      *                                                               *
+      *  CALLED BY: SRGO - Perform Action                             *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRFTBR    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRFTBR'  @STK,Q
+      *
+      *  If not multi-branched do not check as already done
+      *
+     C           WUMBIN    IFNE 'Y'                        *IF
+     C                     GOTO EXFTBR
+     C                     END                             *FI
+      *
+      * If selection is '1' use X as the lookup
+      *
+     C                     CLEARW4DATA
+     C                     MOVELFTBRCA    B#BRC2
+     C                     MOVELI#ACTD    O#ACTD
+     C                     MOVELI#CPGM    O#CPGM
+      *
+     C           I#ACTD    IFEQ '1'                        *IF
+     C                     MOVEL'X'       O#ACTD
+     C                     END                             *FI
+      *                                                                   CFT002
+      * If drop then and Route then check action code T for trash         CFT002
+      *                                                                   CFT002
+     C                     SELEC                           *SL            CFT002
+     C           I#ACTD    WHEQ 'R'                        *WH            CFT002
+     C           I#INOP    ANDEQ'DR'                                      CFT002
+     C                     MOVEL'T'       O#ACTD                          CFT002
+      *                                                                   CFT002
+     C           I#ACTD    WHEQ 'R'                        *WH            CFT002
+     C           I#INOP    ANDNE'DR'                                      CFT002
+     C                     GOTO EXFTBR                                    CFT002
+     C                     ENDSL                           *SL            CFT002
+      *
+      * Check all valid actions
+      *
+     C                     CALL 'ME1190'               9090
+     C                     PARM *BLANKS   W4RTN   7
+     C                     PARM '*ACTCODE'W4ACT   8
+     C                     PARM           W4DATA
+      *
+      * Option ended in error
+      *
+     C           *IN90     IFEQ '1'                        *IF
+     C                     MOVEL'ME1190  'W0FILE           ***************
+     C                     MOVEL'*CALL'   W0KEY            * DB ERROR 01 *
+     C                     Z-ADD1         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END                             *FI
+      *
+      * Invalid action for branch
+      *
+     C           W4RTN     IFNE *BLANKS                    *IF
+     C                     MOVELW4RTN     W0RTN
+     C                     END                             *FI
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXFTBR    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRVRFY   : Verify action is allowed                          *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRVRFY    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRVRFY'  @STK,Q
+      *
+      *  Check depending on action code
+      *
+      *
+      *  Route
+      *
+     C           I#ACTD    CASEQ'R'       SRROUT
+      *
+      *  Enquire
+      *
+     C           I#ACTD    CASEQ'E'       SRENQY
+      *
+      *  Amend
+      *
+     C           I#ACTD    CASEQ'A'       SRAMND
+      *
+      *  Delete
+      *
+     C           I#ACTD    CASEQ'D'       SRDLT
+      *
+      *  Authorise
+      *
+     C           I#ACTD    CASEQ'X'       SRAUT
+      *
+     I/COPY WNCPYSRC,ME1200DACT
+      *
+      *  /Copy point for NEW Action code
+      *
+     C                     ENDCS
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXVRFY    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRGO     : If action is allowed then process call            *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRGO      BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRGO  '  @STK,Q
+      *
+      *  Make sure action is allowed
+      *
+     C                     EXSR SRVRFY
+      *
+      *  If return code not blank then exit
+      *
+     C           W0RTN     IFNE *BLANKS
+     C                     GOTO EXGO
+     C                     END
+      *
+      *  Check that user is allowed to access branch on FT entry
+      *  if action code not R(oute)
+      *
+     C*********  I#ACTD    IFNE 'R'                                        CFT002
+     C                     EXSR SRFTBR
+      *
+      *  If return code not blank then exit
+      *
+     C           W0RTN     IFNE *BLANKS
+     C                     GOTO EXGO
+     C                     END
+     C************         END                                             CFT002
+      *
+      *  Try to allocate message or FT record for processing
+      *
+     C           I#ACTD    IFEQ 'R'
+      *
+      *  The swift reference must be written to the reserved messages
+      *  file to prevent other workstations accessing it for update
+      *
+     C                     CALL 'ME1070'               9090
+     C                     PARM '*RESERV' @ACT    7
+     C                     PARM I#MSGR    @MSGR   80
+     C                     PARM I#KPRT    @PART   30
+     C                     PARM MPMOR     @MOR   28
+     C                     PARM MPMIR     @MIR   28
+     C                     PARM *BLANKS   @RTN    7
+      *
+      *  If call to program resulted in an error then end program.
+      *
+     C           @RTN      IFEQ '*ERROR*'
+     C           *IN90     OREQ '1'
+     C                     MOVEL'*CALL  ' W0FILE
+     C                     MOVEL'ME1070 ' W0KEY
+     C                     Z-ADD2         W0ERNB
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      * If any errors are detected an error indicator is set on,
+      * and the subfile is displayed.
+      *
+      * If MIN0107 - Message previously reserved for this job
+      * Not an eror in this function.
+      *
+     C           @RTN      IFEQ 'MIN0107'
+     C                     MOVEL*BLANKS   W0RTN
+     C                     MOVEL'MIN0107' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * If MIM0108 - Message Already reserved for another job
+      *
+     C           @RTN      IFEQ 'MIN0108'
+     C                     MOVEL'MIN0108' W0RTN
+     C                     MOVEL'MIN0108' ZAMSID
+     C                     MOVELI#CPGM    ZAPGMQ
+     C                     EXSR ZASNMS
+     C                     GOTO EXGO
+     C                     END
+      *
+      * If the swift reference is valid and available for use then
+      * a reservation on the Reserved Messages file was made.
+      *
+      * If MIN0109 - Message is now reserved for this job
+      *
+     C           @RTN      IFEQ 'MIN0109'
+     C                     MOVEL*BLANKS   W0RTN
+     C                     MOVEL'MIN0108' ZAMSID
+     C                     EXSR ZASNMS
+      *
+      * Comit changes
+      *
+      **                                                                                      CSC022
+      ** Execute commit if SAR CSC022 is not enrolled or                                      CSC022
+      **   job is not currently running in batch mode                                         CSC022
+      **                                                                                      CSC022
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C           CSC022    OREQ 'Y'                                                           CSC022
+     C           WCRSKP    ANDEQ'N'                                                           CSC022
+     C                     COMIT
+     C                     ENDIF                                                              CSC022
+     C                     END
+     C                     ELSE
+      *
+      * Allocate FT reference
+      *
+     C           I#ACTD    IFNE 'E'
+     C                     CALL 'AOC8000'
+     C                     PARM *BLANKS   @RTN
+     C                     PARM 'FT'      @MODLE  2
+     C                     PARM C#PREF    @TREF  15
+     C                     PARM *BLANKS   @RTINF 80
+      *
+      *  If 'IN USE' then send message
+      *
+     C           @RTN      IFEQ '*IN USE'
+     C           C#PREF    CAT  @RTINF    ZAMSDA
+     C                     MOVEL'MIN0176' W0RTN
+     C                     MOVEL'MIN0176' ZAMSID
+     C                     MOVELI#CPGM    ZAPGMQ
+     C                     EXSR ZASNMS
+     C                     GOTO EXGO
+     C                     END                                            042167
+     C                     END                                            042167
+      *                                                                   042167
+     C                     END
+      *
+      *  Exexcute option
+      *
+     C                     SELEC
+      *
+      *  Route
+      *
+     C           I#ACTD    WHEQ 'R'
+     C                     SELEC
+      *
+      *  Ignore
+      *
+     C           I#INOP    WHEQ 'DR'
+     C                     EXSR SRDROP
+      *
+      *  Incoming
+      *
+     C           I#INOP    WHEQ 'IN'
+      *
+     C                     MOVEL*BLANKS   W1PREF
+     C                     MOVELI#MSGR    C#MSGR
+     C                     MOVELI#KPRT    C#KPRT
+      *
+     C           CAP136    IFNE 'Y'                                       CAP136
+     C                     CALL 'FTC0050'
+     C                     PARM 'I'       W1ACT   1
+     C                     PARM           W1PREF
+     C                     PARM *BLANKS   W1RTN   1
+     C                     PARM 'Y'       W1LINK  1
+     C                     ELSE                                           CAP136
+     C                     CALL 'FTC0051'                                 CAP136
+     C                     PARM           PPGM                            CAP136
+     C                     PARM 'I'       W1ACT                           CAP136
+     C                     PARM           W1PREF                          CAP136
+     C                     PARM *BLANKS   W1RTN                           CAP136
+     C                     PARM 'Y'       W1LINK                          CAP136
+     C                     PARM '1'       PLEVEL  1                       CAP136
+     C                     ENDIF                                          CAP136
+      *
+      *  Outgoing
+      *
+     C           I#INOP    WHEQ 'OP'
+      *
+     C                     MOVEL*BLANKS   W1PREF
+     C                     MOVELI#MSGR    C#MSGR
+     C                     MOVELI#KPRT    C#KPRT
+      * Call API PGM if new maintenance function active, else call FT0040 CAP031
+      *                                                                   CAP031
+     C/COPY WNCPYSRC,ME1200C001
+     C           CAP131    IFEQ 'Y'                                       CAP031
+      *                                                                   CAP031
+     C                     CALL FTOPAY                                    CAP031
+     C                     PARM 'I'       W1ACT                           CAP031
+     C                     PARM           W1PREF                          CAP031
+     C                     PARM *BLANKS   W1RTN                           CAP031
+      *                                                                   197420
+      ** Deallocate data area created by FTOPAYUPD.                       197420
+      *                                                                   197420
+     C                     CALL 'AOC8000'                                 197420
+     C                     PARM *BLANK    C#RTCD  7                       197420
+     C                     PARM 'FT'      @MODLE  2                       197420
+     C                     PARM *BLANK    @TREF  15                       197420
+     C                     PARM *BLANK    @RTINF 80                       197420
+      *                                                                   CAP031
+     C                     ELSE                                           CAP031
+      *                                                                   CAP031
+      *
+     C                     CALL 'FTC0040'
+     C                     PARM 'I'       W1ACT
+     C                     PARM           W1PREF
+     C                     PARM *BLANKS   W1RTN
+     C                     END                                            CAP031
+     C/COPY WNCPYSRC,ME1200C002
+      *                                                                   CAP031
+      *                                                                   CFT006
+      ** Incoming RFT                                                     CFT006
+      *                                                                   CFT006
+     C           I#INOP    WHEQ 'RI'                                      CFT006
+      *                                                                   CFT006
+     C                     MOVELI#MSGR    MSGREF  8                       CFT006
+     C                     MOVEL'Y'       ME1200  1                       CFT006
+     C                     MOVELI#KPRT    MSGSEQ  3                       185107
+      *                                                                   CFT006
+     C                     CALL HSIN                                      CFT006
+     C                     PARM           ME1200                          CFT006
+     C                     PARM           MSGREF                          CFT006
+     C                     PARM           MSGSEQ                          185107
+     C                     PARM *BLANKS   RFTID  15                       CFT009
+     C                     PARM *BLANKS   ACTCOD  1                       CFT009
+      *                                                                   CFT006
+     C                     MOVELME1200    W1RTN                           CFT006
+     C                     MOVELRFTID     W1PREF                                              221761
+      *                                                                   CFT006
+      ** Incoming CCT                                                     CFT006
+      *                                                                   CFT006
+     C           I#INOP    WHEQ 'BI'                                      CFT006
+      *                                                                   CFT006
+     C                     MOVELI#MSGR    MSGREF                          CFT006
+     C                     MOVEL'Y'       ME1200                          CFT006
+     C                     MOVELI#KPRT    MSGSEQ  3                       185107
+      *                                                                   CFT006
+     C                     CALL HSIN2                                     CFT006
+     C*********            PARM *BLANKS   ME1200                    CFT006178195
+     C*********            PARM *BLANKS   MSGREF                    CFT006178195
+     C                     PARM           ME1200                          178195
+     C                     PARM           MSGREF                          178195
+     C                     PARM           MSGSEQ                          185107
+     C                     PARM *BLANKS   RFTID  15                       CFT009
+     C                     PARM *BLANKS   ACTCOD  1                       CFT009
+      *                                                                   CFT006
+     C                     MOVELME1200    W1RTN                           CFT006
+     C                     MOVELRFTID     W1PREF                                              221761
+      *
+     C                     ENDSL
+      *
+      *  Amend or Delete or View
+      *
+     C           I#ACTD    WHEQ 'A'
+     C           I#ACTD    OREQ 'E'
+     C           I#ACTD    OREQ 'D'
+      *
+     C                     SELEC
+      *
+      *  Incoming
+      *
+     C           I#INOP    WHEQ 'IN'
+      *
+     C           CAP136    IFNE 'Y'                                       CAP136
+     C                     CALL 'FTC0050'
+     C                     PARM I#ACTD    W1ACT
+     C                     PARM C#PREF    W1PREF
+     C                     PARM *BLANKS   W1RTN
+     C                     PARM 'Y'       W1LINK
+     C                     ELSE                                           CAP136
+     C                     CALL 'FTC0051'                                 CAP136
+     C                     PARM           PPGM                            CAP136
+     C                     PARM I#ACTD    W1ACT                           CAP136
+     C                     PARM C#PREF    W1PREF                          CAP136
+     C                     PARM *BLANKS   W1RTN                           CAP136
+     C                     PARM 'Y'       W1LINK                          CAP136
+     C                     PARM '1'       PLEVEL                          CAP136
+     C                     ENDIF                                          CAP136
+      *
+      *  Outgoing
+      *
+     C           I#INOP    WHEQ 'OP'
+      *
+      * Call API PGM if new maintenance function active, else call FT0040 CAP031
+      *                                                                   CAP031
+     C/COPY WNCPYSRC,ME1200C003
+     C           CAP131    IFEQ 'Y'                                       CAP031
+      *                                                                   CAP031
+     C                     CALL FTOPAY                                    CAP031
+     C                     PARM I#ACTD    W1ACT                           CAP031
+     C                     PARM C#PREF    W1PREF                          CAP031
+     C                     PARM *BLANKS   W1RTN                           CAP031
+      *                                                                   CAP031
+     C                     ELSE                                           CAP031
+      *                                                                   CAP031
+     C                     CALL 'FTC0040'
+     C                     PARM I#ACTD    W1ACT
+     C                     PARM C#PREF    W1PREF
+     C                     PARM *BLANKS   W1RTN
+     C                     END                                            CAP031
+     C/COPY WNCPYSRC,ME1200C004
+      *                                                                   CAP031
+      ** Incoming RFT                                                                         221534
+      *                                                                                       221534
+     C           I#INOP    WHEQ 'RI'                                                          221534
+      *                                                                                       221534
+     C                     MOVELI#MSGR    MSGREF  8                                           221534
+     C                     MOVEL'Y'       ME1200  1                                           221534
+     C                     MOVELI#KPRT    MSGSEQ  3                                           221534
+      *                                                                                       221534
+     C                     CALL HSIN                                                          221534
+     C                     PARM I#ACTD    ACTCOD  1                                           221534
+     C                     PARM C#PREF    RFTID  15                                           221534
+     C                     PARM           MSGSEQ                                              221534
+     C                     PARM           MSGREF                                              221534
+     C                     PARM           ME1200                                              221534
+      *                                                                                       221534
+     C                     MOVELME1200    W1RTN                                               221534
+      *                                                                                       221534
+      ** Incoming CCT                                                                         221534
+      *                                                                                       221534
+     C           I#INOP    WHEQ 'BI'                                                          221534
+      *                                                                                       221534
+     C                     MOVELI#MSGR    MSGREF                                              221534
+     C                     MOVEL'Y'       ME1200                                              221534
+     C                     MOVELI#KPRT    MSGSEQ  3                                           221534
+      *                                                                                       221534
+     C                     CALL HSIN2                                                         221534
+     C                     PARM I#ACTD    ACTCOD  1                                           221534
+     C                     PARM C#PREF    RFTID  15                                           221534
+     C                     PARM           MSGSEQ                                              221534
+     C                     PARM           MSGREF                                              221534
+     C                     PARM           ME1200                                              221534
+      *                                                                                       221534
+     C                     MOVELME1200    W1RTN                                               221534
+      *
+     C                     ENDSL
+      *
+      *  Authorise
+      *
+     C           I#ACTD    WHEQ 'X'
+     C                     SELEC                                                              221761
+      *                                                                                       221761
+      ** Incoming RFT                                                                         221761
+      *                                                                                       221761
+     C           I#INOP    WHEQ 'RI'                                                          221761
+      *                                                                                       221761
+     C                     MOVELI#MSGR    MSGREF  8                                           221761
+     C                     MOVEL'Y'       ME1200  1                                           221761
+     C                     MOVELI#KPRT    MSGSEQ  3                                           221761
+      *                                                                                       221761
+     C                     CALL HSIN                                                          221761
+     C                     PARM I#ACTD    ACTCOD  1                                           221761
+     C                     PARM C#PREF    RFTID  15                                           221761
+     C                     PARM           MSGSEQ                                              221761
+     C                     PARM           MSGREF                                              221761
+     C                     PARM           ME1200                                              221761
+      *                                                                                       221761
+     C                     MOVELME1200    W1RTN                                               221761
+      *                                                                                       221761
+      ** Incoming CCT                                                                         221761
+      *                                                                                       221761
+     C           I#INOP    WHEQ 'BI'                                                          221761
+      *                                                                                       221761
+     C                     MOVELI#MSGR    MSGREF                                              221761
+     C                     MOVEL'Y'       ME1200                                              221761
+     C                     MOVELI#KPRT    MSGSEQ  3                                           221761
+      *                                                                                       221761
+     C                     CALL HSIN2                                                         221761
+     C                     PARM I#ACTD    ACTCOD  1                                           221761
+     C                     PARM C#PREF    RFTID  15                                           221761
+     C                     PARM           MSGSEQ                                              221761
+     C                     PARM           MSGREF                                              221761
+     C                     PARM           ME1200                                              221761
+      *                                                                                       221761
+     C                     MOVELME1200    W1RTN                                               221761
+      *
+     C           I#INOP    WHNE 'RI'                                                          221761
+     C           I#INOP    ANDNE'BI'                                                          221761
+     C                     CALL 'FTC0060'
+     C                     PARM C#PREF    W1PREF
+     C                     PARM *BLANKS   W1RTN
+      *
+     C                     ENDSL                                                              221761
+     C                     ENDSL
+      *
+      *  If route and Outgoing remove reference
+      *
+     C           I#ACTD    IFEQ 'R'
+     C           I#INOP    ANDEQ'OP'
+      *
+     C                     CALL 'ME1070'               9090
+     C                     PARM '*END   ' @ACT    7
+     C                     PARM 0         @MSGR   80
+     C                     PARM 0         @PART   30
+     C                     PARM *BLANKS   @MOR   28
+     C                     PARM *BLANKS   @MIR   28
+     C                     PARM *BLANKS   @RTN    7
+      *
+      *  If call to program resulted in an error then end program.
+      *
+     C           @RTN      IFEQ '*ERROR*'
+     C           *IN90     OREQ '1'
+     C                     MOVEL'*CALL  ' W0FILE
+     C                     MOVEL'ME1070 ' W0KEY
+     C                     Z-ADD3         W0ERNB
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Send @RTN message and commit changes
+      *
+     C           @RTN      IFNE *BLANKS                    *IF
+     C                     MOVEL*BLANKS   W0RTN            *Return code
+     C                     MOVEL@RTN      ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      **                                                                                      CSC022
+      ** Execute commit if SAR CSC022 is not enrolled or                                      CSC022
+      **   job is not currently running in batch mode                                         CSC022
+      **                                                                                      CSC022
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C           CSC022    OREQ 'Y'                                                           CSC022
+     C           WCRSKP    ANDEQ'N'                                                           CSC022
+     C                     COMIT
+     C                     ENDIF                                                              CSC022
+      *
+     C                     END
+      *
+      *  Check return code
+      *
+     C                     SELEC
+      *
+      * F3 pressed
+      *
+     C           W1RTN     WHEQ '1'
+     C                     MOVEL'Y2U9999' W0RTN            *Return code
+     C                     RETRN
+      *
+      * F12 pressed
+      *
+     C           W1RTN     WHEQ '5'                        *IF
+     C                     MOVEL'USR0790' W0RTN            *Return code
+      *
+      * F7 pressed next payment
+      *
+     C           W1RTN     WHEQ '7'                        *IF
+     C                     MOVEL'MIN0180' W0RTN            *Return code
+      *
+      * Payment authorised
+      *
+     C           W1RTN     WHEQ 'Y'                        *IF
+     C                     MOVEL'MIN0181' W0RTN            *Return code
+     C                     MOVEL'MIN0181' ZAMSID
+     C                     MOVELC#PREF    ZAMSDA
+     C                     MOVELI#CPGM    ZAPGMQ
+     C                     EXSR ZASNMS
+      *                                                                                       210733
+      ** Fund transaction successfully inserted.                                              210733
+      *                                                                                       210733
+     C           W1RTN     WHEQ 'I'                                                           210733
+     C                     MOVEL'MIN0252' W0RTN                                               210733
+     C                     MOVEL'MIN0252' ZAMSID                                              210733
+     C                     MOVELW1PREF    ZAMSDA                                              210733
+     C                     MOVELI#CPGM    ZAPGMQ                                              210733
+     C                     EXSR ZASNMS                                                        210733
+      *
+      * Option ended in error
+      *
+     C           W1RTN     WHNE *BLANKS                    *IF
+     C                     MOVEL'MIN0019' W0RTN            *Return code
+     C                     MOVEL'MIN0019' ZAMSID
+     C                     MOVELC#PREF    ZAMSDA
+     C                     MOVELI#CPGM    ZAPGMQ
+     C                     EXSR ZASNMS
+      *
+     C                     ENDSL
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXGO      TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+      *****************************************************************
+      *                                                               *
+      *  SRDROP   : Ignore message                                    *
+      *                                                               *
+      *  CALLED BY: SRGO - Perform action                             *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRDROP    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRINFT'  @STK,Q
+      *
+      *  Fill record format data structure with available data
+      *
+     C                     CLEARINFT
+      *
+     C                     Z-ADDI#MSGR    FTMSGR           Unique Ref.
+     C                     Z-ADDI#KPRT    FTKPRT           Part No.
+     C                     MOVEL'MIN0182' FTINFG           Incoming Flag
+      *
+      *  N.B. Audit Stamp details are determined in called program
+      *
+      *
+      *  Set up data to be passed using the rcd format data structure
+      *
+     C                     CALL 'ME1050'               90
+     C                     PARM '*FT INC 'W2ACT   8
+     C                     PARM ##PGM     W2CPGM 10
+     C                     PARM *BLANKS   W2NWRK  6
+     C                     PARM 'MIN0182' W2LMSG  7
+     C                     PARM           INFT
+     C                     PARM *BLANKS   W2RTN   7
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           W2RTN     OREQ '*ERROR*'
+     C                     MOVEL'*CALL  ' W0FILE
+     C                     MOVEL'ME1050 ' W0KEY
+     C                     Z-ADD4         W0ERNB
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Commit changes
+      *
+      **                                                                                      CSC022
+      ** Execute commit if SAR CSC022 is not enrolled or                                      CSC022
+      **   job is not currently running in batch mode                                         CSC022
+      **                                                                                      CSC022
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C           CSC022    OREQ 'Y'                                                           CSC022
+     C           WCRSKP    ANDEQ'N'                                                           CSC022
+     C                     COMIT
+     C                     ENDIF                                                              CSC022
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXDROP    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRROUT   : Action is Route                                   *
+      *                                                               *
+      *  CALLED BY: SRVRFY - Verify Action                            *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRROUT    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRROUT'  @STK,Q
+      *
+      *  Open file MEINMPJ1 if not already open
+      *
+     C           FIL001    IFEQ *BLANKS
+     C                     OPEN MEINMPJ1
+     C                     MOVEL'Y'       FIL001  1
+     C                     END
+      *
+      *  Chain to FT details to make sure there are none
+      *
+     C           KPOSA     KLIST
+     C                     KFLD           MPMSGR           Message Ref.
+     C                     KFLD           MPKPRT           Part number
+      *
+     C                     Z-ADDI#MSGR    MPMSGR           Message Ref.
+     C                     Z-ADDI#KPRT    MPKPRT           Part number
+      *
+     C           KPOSA     CHAIN@INMPJ1              90
+      *
+      *  Before checking if found check valid for FT
+      *
+      * Move passed parameter data to relevant data structure
+      * and on to called program's data structure
+      *
+     C                     CLEARINMC
+      *
+     C                     Z-ADDMPMSGR    MCMSGR
+     C                     MOVELMPMTPY    MCMTPY
+     C                     MOVELMPMIR     MCMIR
+     C                     MOVELMPNWRK    MCNWRK
+     C                     MOVELMPMOR     MCMOR
+     C                     MOVELMPBRCA    MCBRCA
+     C                     MOVELMPSNDR    MCSNDR
+     C                     MOVEL'*FT    ' MCACPT
+     C                     MOVEL##PGM     MCCPGM
+      *
+     C                     MOVELINMC      W3DATA
+     C           *LIKE     DEFN INMC      W3DATA
+      *
+     C                     CALL 'ME1030'               9191
+     C                     PARM '*FT_ENT 'W3ACT   8
+     C                     PARM           W3DATA
+     C                     PARM *BLANKS   W3RTN   7
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN91     IFEQ '1'
+     C           W3RTN     OREQ '*ERROR*'
+     C                     MOVEL'ME1030  'W0FILE           ***************
+     C                     MOVEL'*CALL'   W0KEY            * DB ERROR 05 *
+     C                     Z-ADD5         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      * Message not valid for FT processing
+      *
+     C                     MOVELW3DATA    INMC
+      *
+     C           W3RTN     IFEQ 'MIN0091'
+     C           MCPMFG    ANDNE'P'
+     C                     MOVEL'MIN0197' W0RTN
+     C                     MOVEL'MIN0197' ZAMSID
+     C                     MOVELI#CPGM    ZAPGMQ
+     C                     EXSR ZASNMS
+     C                     GOTO EXROUT
+     C                     END
+      *
+      *  If not found then no routing allowed
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'MIN0162' W0RTN
+     C                     MOVEL'MIN0162' ZAMSID
+     C                     MOVELI#CPGM    ZAPGMQ
+     C                     EXSR ZASNMS
+     C                     GOTO EXROUT
+     C                     END
+      *
+      * If pay message but no routing allow ignore
+      *
+     C           W3RTN     IFEQ 'MIN0091'
+     C           MCPMFG    ANDEQ'P'
+     C                     MOVEL'DR'      I#INOP
+     C                     GOTO EXROUT
+     C                     END
+      *
+      *  If INOP is blank default to IN
+      *
+     C           I#INOP    IFEQ '  '
+     C                     MOVEL'IN'      I#INOP
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXROUT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRENQY   : Action is view payment                            *
+      *                                                               *
+      *  CALLED BY: SRVRFY - Verify action                            *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRENQY    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRENQY'  @STK,Q
+      *
+      *  Open file MEINFTJ1 if not already open
+      *
+     C           FIL002    IFEQ *BLANKS
+     C                     OPEN MEINFTJ1
+     C                     MOVEL'Y'       FIL002  1
+     C                     END
+      *
+      *  Check FT transaction status
+      *
+     C           KPOSB     KLIST
+     C                     KFLD           FTMSGR
+     C                     KFLD           FTKPRT
+      *
+     C                     Z-ADDI#MSGR    FTMSGR           Message Ref.
+     C                     Z-ADDI#KPRT    FTKPRT           Part number
+      *
+     C           KPOSB     CHAIN@INFTJ1              90
+      *
+      *  If not found then no data to be viewed
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'MIN0163' W0RTN
+     C                     MOVEL'MIN0163' ZAMSID
+     C                     MOVELI#CPGM    ZAPGMQ
+     C                     EXSR ZASNMS
+     C                     GOTO EXENQY
+     C                     END
+      *
+      *  If INOP is IN and no INPAY information state this
+      *
+     C           INRECI    IFEQ *BLANKS
+     C           I#INOP    ANDEQ'IN'
+     C                     MOVEL'MIN0164' W0RTN
+     C                     MOVEL'MIN0164' ZAMSID
+     C                     MOVELI#CPGM    ZAPGMQ
+     C                     EXSR ZASNMS
+     C                     GOTO EXENQY
+     C                     END
+      *
+      *  If INOP is OP and no OTPAY information state this
+      *
+     C           OPRECI    IFEQ *BLANKS
+     C           I#INOP    ANDEQ'OP'
+     C                     MOVEL'MIN0165' W0RTN
+     C                     MOVEL'MIN0165' ZAMSID
+     C                     MOVELI#CPGM    ZAPGMQ
+     C                     EXSR ZASNMS
+     C                     GOTO EXENQY
+     C                     END
+      *
+      *  If INOP is '  ' and no INPAY or OTPAY information state this
+      *
+     C           OPRECI    IFEQ *BLANKS
+     C           INRECI    ANDEQ*BLANKS
+     C           I#INOP    ANDEQ'  '
+     C                     MOVEL'MIN0168' W0RTN
+     C                     MOVEL'MIN0168' ZAMSID
+     C                     MOVELI#CPGM    ZAPGMQ
+     C                     EXSR ZASNMS
+     C                     GOTO EXENQY
+     C                     END
+      *
+      *  If INOP then move FTIPRF to C#PREF
+      *
+     C           I#INOP    IFEQ 'IN'
+     C                     MOVELFTIPRF    C#PREF
+     C                     MOVELFTIPRF    O#IPRF
+     C                     END
+      *
+     C           I#INOP    IFEQ 'OP'
+     C                     MOVELFTOPRF    C#PREF
+     C                     MOVELFTOPRF    O#OPRF
+     C                     END
+      *
+     C           I#INOP    IFEQ '  '
+     C           INRECI    IFNE *BLANKS
+     C                     MOVELFTIPRF    C#PREF
+     C                     MOVELFTIPRF    O#IPRF
+     C                     MOVEL'IN'      I#INOP
+     C                     END
+     C           OPRECI    IFNE *BLANKS
+     C                     MOVELFTOPRF    C#PREF
+     C                     MOVELFTOPRF    O#OPRF
+     C                     MOVEL'OP'      I#INOP
+     C                     END
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXENQY    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRAMND   : Action is amend                                   *
+      *                                                               *
+      *  CALLED BY: SRVRFY - Verify action                            *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRAMND    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRAMND'  @STK,Q
+      *
+      *  Open file MEINFTJ1 if not already open
+      *
+     C           FIL002    IFEQ *BLANKS
+     C                     OPEN MEINFTJ1
+     C                     MOVEL'Y'       FIL002
+     C                     END
+      *
+      *  Check FT transaction status
+      *
+     C                     Z-ADDI#MSGR    FTMSGR           Message Ref.
+     C                     Z-ADDI#KPRT    FTKPRT           Part number
+      *
+     C           KPOSB     CHAIN@INFTJ1              90
+      *
+      *  If not found then no data to be amended
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'MIN0163' W0RTN
+     C                     MOVEL'MIN0163' ZAMSID
+     C                     MOVELI#CPGM    ZAPGMQ
+     C                     EXSR ZASNMS
+     C                     GOTO EXAMND
+     C                     END
+      *
+      *  If INOP is IN and INPAY is not live
+      *
+     C           INRECI    IFNE 'D'
+     C           I#INOP    ANDEQ'IN'
+     C           INAUIN    OREQ 'Y'
+     C           I#INOP    ANDEQ'IN'
+     C                     MOVEL'MIN0166' W0RTN
+     C                     MOVEL'MIN0166' ZAMSID
+     C                     MOVELI#CPGM    ZAPGMQ
+     C                     EXSR ZASNMS
+     C                     GOTO EXAMND
+     C                     END
+      *
+      *  If INOP is IN and INPAY is not live
+      *
+     C           OPRECI    IFNE 'D'
+     C           I#INOP    ANDEQ'OP'
+     C           OPAUIN    OREQ 'Y'
+     C           I#INOP    ANDEQ'OP'
+     C                     MOVEL'MIN0167' W0RTN
+     C                     MOVEL'MIN0167' ZAMSID
+     C                     MOVELI#CPGM    ZAPGMQ
+     C                     EXSR ZASNMS
+     C                     GOTO EXAMND
+     C                     END
+      *
+      *  If INOP is '  ' and no INPAY or OTPAY information state this
+      *
+     C           I#INOP    IFEQ '  '
+     C           OPRECI    IFEQ 'D'
+     C           OPAUIN    ANDNE'Y'
+     C           INRECI    OREQ 'D'
+     C           INAUIN    ANDNE'Y'
+     C                     ELSE
+     C                     MOVEL'MIN0169' W0RTN
+     C                     MOVEL'MIN0169' ZAMSID
+     C                     MOVELI#CPGM    ZAPGMQ
+     C                     EXSR ZASNMS
+     C                     GOTO EXAMND
+     C                     END
+     C                     END
+      *                                                                                       221534
+      ** INOP is 'RI' and transaction if authorised.                                          221534
+      *                                                                                       221534
+     C           RIAUIN    IFEQ 'Y'                                                           221534
+     C           I#INOP    ANDEQ'RI'                                                          221534
+     C                     MOVEL'MIN0606' W0RTN                                               221534
+     C                     MOVEL'MIN0606' ZAMSID                                              221534
+     C                     MOVELI#CPGM    ZAPGMQ                                              221534
+     C                     EXSR ZASNMS                                                        221534
+     C                     GOTO EXAMND                                                        221534
+     C                     ENDIF                                                              221534
+      *                                                                                       221534
+      ** INOP is 'BI' and transaction if authorised.                                          221534
+      *                                                                                       221534
+     C           BIAUIN    IFEQ 'Y'                                                           221534
+     C           I#INOP    ANDEQ'BI'                                                          221534
+     C                     MOVEL'MIN0607' W0RTN                                               221534
+     C                     MOVEL'MIN0607' ZAMSID                                              221534
+     C                     MOVELI#CPGM    ZAPGMQ                                              221534
+     C                     EXSR ZASNMS                                                        221534
+     C                     GOTO EXAMND                                                        221534
+     C                     ENDIF                                                              221534
+      *
+      *  If INOP then move FTIPRF to C#PREF
+      *
+     C           I#INOP    IFEQ 'IN'
+     C                     MOVELFTIPRF    C#PREF
+     C                     MOVELFTIPRF    O#IPRF
+     C                     END
+      *
+     C           I#INOP    IFEQ 'OP'
+     C                     MOVELFTOPRF    C#PREF
+     C                     MOVELFTOPRF    O#OPRF
+     C                     END
+      *
+     C           I#INOP    IFEQ '  '
+     C           INRECI    IFEQ 'D'
+     C           INAUIN    ANDNE'Y'
+     C                     MOVELFTIPRF    C#PREF
+     C                     MOVELFTIPRF    O#IPRF
+     C                     MOVEL'IN'      I#INOP
+     C                     END
+     C           OPRECI    IFEQ 'D'
+     C           OPAUIN    ANDNE'Y'
+     C                     MOVELFTOPRF    C#PREF
+     C                     MOVELFTOPRF    O#OPRF
+     C                     MOVEL'OP'      I#INOP
+     C                     END
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXAMND    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDLT    : Action is delete                                  *
+      *                                                               *
+      *  CALLED BY: SRVRFY - Verify action                            *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRDLT     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRDLT '  @STK,Q
+      *
+      *  Open file MEINFTJ1 if not already open
+      *
+     C           FIL002    IFEQ *BLANKS
+     C                     OPEN MEINFTJ1
+     C                     MOVEL'Y'       FIL002
+     C                     END
+      *
+      *  Check FT transaction status
+      *
+     C                     Z-ADDI#MSGR    FTMSGR           Message Ref.
+     C                     Z-ADDI#KPRT    FTKPRT           Part number
+      *
+     C           KPOSB     CHAIN@INFTJ1              90
+      *
+      *  If not found then no data to be deleted
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'MIN0163' W0RTN
+     C                     MOVEL'MIN0163' ZAMSID
+     C                     MOVELI#CPGM    ZAPGMQ
+     C                     EXSR ZASNMS
+     C                     GOTO EXDLT
+     C                     END
+      *
+      *  If INOP is IN and INPAY is not live
+      *
+     C           INRECI    IFNE 'D'
+     C           I#INOP    ANDEQ'IN'
+     C           INAUIN    OREQ 'Y'
+     C           I#INOP    ANDEQ'IN'
+     C                     MOVEL'MIN0170' W0RTN
+     C                     MOVEL'MIN0170' ZAMSID
+     C                     MOVELI#CPGM    ZAPGMQ
+     C                     EXSR ZASNMS
+     C                     GOTO EXDLT
+     C                     END
+      *
+      *  If INOP is IN and INPAY is not live
+      *
+     C           OPRECI    IFNE 'D'
+     C           I#INOP    ANDEQ'OP'
+     C           OPAUIN    OREQ 'Y'
+     C           I#INOP    ANDEQ'OP'
+     C                     MOVEL'MIN0171' W0RTN
+     C                     MOVEL'MIN0171' ZAMSID
+     C                     MOVELI#CPGM    ZAPGMQ
+     C                     EXSR ZASNMS
+     C                     GOTO EXDLT
+     C                     END
+      *
+      *  If INOP is '  ' and no INPAY or OTPAY information state this
+      *
+     C           I#INOP    IFEQ '  '
+     C           OPRECI    IFEQ 'D'
+     C           OPAUIN    ANDNE'Y'
+     C           INRECI    OREQ 'D'
+     C           INAUIN    ANDNE'Y'
+     C                     ELSE
+     C                     MOVEL'MIN0172' W0RTN
+     C                     MOVEL'MIN0172' ZAMSID
+     C                     MOVELI#CPGM    ZAPGMQ
+     C                     EXSR ZASNMS
+     C                     GOTO EXDLT
+     C                     END
+     C                     END
+      *                                                                                       221534
+      ** INOP is 'RI' and transaction if authorised.                                          221534
+      *                                                                                       221534
+     C           RIAUIN    IFEQ 'Y'                                                           221534
+     C           I#INOP    ANDEQ'RI'                                                          221534
+     C                     MOVEL'MIN0608' W0RTN                                               221534
+     C                     MOVEL'MIN0608' ZAMSID                                              221534
+     C                     MOVELI#CPGM    ZAPGMQ                                              221534
+     C                     EXSR ZASNMS                                                        221534
+     C                     GOTO EXDLT                                                         221534
+     C                     ENDIF                                                              221534
+      *                                                                                       221534
+      ** INOP is 'BI' and transaction if authorised.                                          221534
+      *                                                                                       221534
+     C           BIAUIN    IFEQ 'Y'                                                           221534
+     C           I#INOP    ANDEQ'BI'                                                          221534
+     C                     MOVEL'MIN0609' W0RTN                                               221534
+     C                     MOVEL'MIN0609' ZAMSID                                              221534
+     C                     MOVELI#CPGM    ZAPGMQ                                              221534
+     C                     EXSR ZASNMS                                                        221534
+     C                     GOTO EXDLT                                                         221534
+     C                     ENDIF                                                              221534
+      *
+      *  If INOP then move FTIPRF to C#PREF
+      *
+     C           I#INOP    IFEQ 'IN'
+     C                     MOVELFTIPRF    C#PREF
+     C                     MOVELFTIPRF    O#IPRF
+     C                     END
+      *
+     C           I#INOP    IFEQ 'OP'
+     C                     MOVELFTOPRF    C#PREF
+     C                     MOVELFTOPRF    O#OPRF
+     C                     END
+      *
+     C           I#INOP    IFEQ '  '
+     C           INRECI    IFEQ 'D'
+     C           INAUIN    ANDNE'Y'
+     C                     MOVELFTIPRF    C#PREF
+     C                     MOVELFTIPRF    O#IPRF
+     C                     MOVEL'IN'      I#INOP
+     C                     END
+     C           OPRECI    IFEQ 'D'
+     C           OPAUIN    ANDNE'Y'
+     C                     MOVELFTOPRF    C#PREF
+     C                     MOVELFTOPRF    O#OPRF
+     C                     MOVEL'OP'      I#INOP
+     C                     END
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXDLT     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRAUT    : Action is authorise                               *
+      *                                                               *
+      *  CALLED BY: SRVRFY - Verify action                            *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRAUT     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRAUT '  @STK,Q
+      *
+      *  Open file MEINFTJ1 if not already open
+      *
+     C           FIL002    IFEQ *BLANKS
+     C                     OPEN MEINFTJ1
+     C                     MOVEL'Y'       FIL002
+     C                     END
+      *
+      *  Check FT transaction status
+      *
+     C                     Z-ADDI#MSGR    FTMSGR           Message Ref.
+     C                     Z-ADDI#KPRT    FTKPRT           Part number
+      *
+     C           KPOSB     CHAIN@INFTJ1              90
+      *
+      *  If not found then no data to be amended
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'MIN0163' W0RTN
+     C                     MOVEL'MIN0163' ZAMSID
+     C                     MOVELI#CPGM    ZAPGMQ
+     C                     EXSR ZASNMS
+     C                     GOTO EXAUT
+     C                     END
+      *
+      *  If INOP is IN and INPAY is not live
+      *
+     C           INRECI    IFNE 'D'
+     C           I#INOP    ANDEQ'IN'
+     C           INAUIN    OREQ 'Y'
+     C           I#INOP    ANDEQ'IN'
+     C           INLVL1    ORNE 'Y'
+     C           I#INOP    ANDEQ'IN'
+     C           INLVL2    ORNE 'Y'
+     C           I#INOP    ANDEQ'IN'
+     C                     MOVEL'MIN0173' W0RTN
+     C                     MOVEL'MIN0173' ZAMSID
+     C                     MOVELI#CPGM    ZAPGMQ
+     C                     EXSR ZASNMS
+     C                     GOTO EXAUT
+     C                     END
+      *
+      *  If INOP is IN and INPAY is not live
+      *
+     C           OPRECI    IFNE 'D'
+     C           I#INOP    ANDEQ'OP'
+     C           OPAUIN    OREQ 'Y'
+     C           I#INOP    ANDEQ'OP'
+     C           OPLVL1    ORNE 'Y'
+     C           I#INOP    ANDEQ'OP'
+     C           OPLVL2    ORNE 'Y'
+     C           I#INOP    ANDEQ'OP'
+     C                     MOVEL'MIN0174' W0RTN
+     C                     MOVEL'MIN0174' ZAMSID
+     C                     MOVELI#CPGM    ZAPGMQ
+     C                     EXSR ZASNMS
+     C                     GOTO EXAUT
+     C                     END
+      *
+      *  If INOP is '  ' and no INPAY or OTPAY information state this
+      *
+     C           I#INOP    IFEQ '  '
+     C           OPRECI    IFEQ 'D'
+     C           OPLVL1    ANDEQ'Y'
+     C           OPLVL2    ANDEQ'Y'
+     C           OPAUIN    ANDNE'Y'
+     C           INRECI    OREQ 'D'
+     C           INLVL1    ANDEQ'Y'
+     C           INLVL2    ANDEQ'Y'
+     C           INAUIN    ANDNE'Y'
+     C                     ELSE
+     C                     MOVEL'MIN0175' W0RTN
+     C                     MOVEL'MIN0175' ZAMSID
+     C                     MOVELI#CPGM    ZAPGMQ
+     C                     EXSR ZASNMS
+     C                     GOTO EXAUT
+     C                     END
+     C                     END
+      *
+      *  If INOP then move FTIPRF to C#PREF
+      *
+     C           I#INOP    IFEQ 'IN'
+     C                     MOVELFTIPRF    C#PREF
+     C                     MOVELFTIPRF    O#IPRF
+     C                     END
+      *
+     C           I#INOP    IFEQ 'OP'
+     C                     MOVELFTOPRF    C#PREF
+     C                     MOVELFTOPRF    O#OPRF
+     C                     END
+      *
+     C           I#INOP    IFEQ '  '
+     C           INRECI    IFEQ 'D'
+     C           INLVL1    ANDEQ'Y'
+     C           INLVL2    ANDEQ'Y'
+     C           INAUIN    ANDNE'Y'
+     C                     MOVELFTIPRF    C#PREF
+     C                     MOVELFTIPRF    O#IPRF
+     C                     MOVEL'IN'      I#INOP
+     C                     END
+     C           OPRECI    IFEQ 'D'
+     C           OPLVL1    ANDEQ'Y'
+     C           OPLVL2    ANDEQ'Y'
+     C           OPAUIN    ANDNE'Y'
+     C                     MOVELFTOPRF    C#PREF
+     C                     MOVELFTOPRF    O#OPRF
+     C                     MOVEL'OP'      I#INOP
+     C                     END
+     C                     END
+      *                                                                                       221534
+      ** INOP is 'RI' and transaction if authorised.                                          221534
+      *                                                                                       221534
+     C           RIAUIN    IFEQ 'Y'                                                           221534
+     C           I#INOP    ANDEQ'RI'                                                          221534
+     C                     MOVEL'MIN0610' W0RTN                                               221534
+     C                     MOVEL'MIN0610' ZAMSID                                              221534
+     C                     MOVELI#CPGM    ZAPGMQ                                              221534
+     C                     EXSR ZASNMS                                                        221534
+     C                     GOTO EXAUT                                                         221534
+     C                     ENDIF                                                              221534
+      *                                                                                       221534
+      ** INOP is 'BI' and transaction if authorised.                                          221534
+      *                                                                                       221534
+     C           BIAUIN    IFEQ 'Y'                                                           221534
+     C           I#INOP    ANDEQ'BI'                                                          221534
+     C                     MOVEL'MIN0611' W0RTN                                               221534
+     C                     MOVEL'MIN0611' ZAMSID                                              221534
+     C                     MOVELI#CPGM    ZAPGMQ                                              221534
+     C                     EXSR ZASNMS                                                        221534
+     C                     GOTO EXAUT                                                         221534
+     C                     ENDIF                                                              221534
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXAUT     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRACT    : Undefined action - error                          *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRACT     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRACT '  @STK,Q
+      *
+      *  Database error undefined action
+      *
+     C                     MOVEL'*ACTION 'W0FILE           ***************
+     C                     MOVELW0ACT     W0KEY            * DB ERROR 06 *
+     C                     Z-ADD6         W0ERNB           ***************
+     C                     MOVEL'MEM5006' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXACT     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+      *
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVEL'MEMSG'   ZAMSGF
+     C                     END
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      *
+      * Clear all fields for default mechanism next time
+      *
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *                                                                   CAP136
+      ** Access SAR file to determine if CAP136 (New Maint.               CAP136
+      ** Funct - Incoming Payments) is installed.                         CAP136
+      *                                                                   CAP136
+     C                     CALL 'AOSARDR0'                                CAP136
+     C                     PARM *BLANKS   @RTCD                           CAP136
+     C                     PARM '*VERIFY' @OPTN                           CAP136
+     C                     PARM 'CAP136'  PSARD                           CAP136
+     C           SCSARD    PARM SCSARD    DSFDY                           CAP136
+      *                                                                   CAP136
+      ** An NRF (No Record Found) return code is valid.                   CAP136
+      ** Issue database error only for error return codes.                CAP136
+      *                                                                   CAP136
+     C           @RTCD     IFNE *BLANKS                                   CAP136
+     C           @RTCD     ANDNE'*NRF   '                                 CAP136
+     C                     MOVEL'CALL'    W0KEY            ***************CAP136
+     C                     MOVEL'AOSARDR0'W0FILE           * DB ERROR 07 *CAP136
+     C                     Z-ADD7         W0ERNB           ***************CAP136
+     C*                    MOVEL'MEM5003' W0MSGD                          CAP136
+     C*                    MOVEL'MIDAS  ' W0MSGF                          CAP136
+     C                     EXSR SRERR                                     CAP136
+     C                     ENDIF                                          CAP136
+      *                                                                   CAP136
+     C           @RTCD     IFEQ *BLANK                                    CAP136
+     C                     MOVEL'Y'       CAP136  1                       CAP136
+     C                     MOVEL'FTIPAY'  PPGM   10                       CAP136
+     C                     MOVE 'SIN '    PPGM                            CAP136
+     C                     ELSE                                           CAP136
+     C                     MOVEL'N'       CAP136                          CAP136
+     C                     MOVE *BLANKS   PPGM                            CAP136
+     C                     ENDIF                                          CAP136
+      *
+      *  Indicate that set up is complete
+      *
+     C                     SETON                     50
+      *
+      *  Get Rundate information
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+     C** Access SAR details file to determine if CAP131 is switched ON    CAP031
+     C*                                                                   CAP031
+     C                     CALL 'AOSARDR0'                                CAP031
+     C                     PARM *BLANKS   @RTCD   7                       CAP031
+     C                     PARM '*VERIFY' @OPTN   7                       CAP031
+     C                     PARM 'CAP131'  PSARD   6                       CAP031
+     C                     MOVE 'N'       CAP131  1                       CAP031
+     C*                                                                   CAP031
+     C** If core feature is switched ON, set on indicator that will       CAP031
+     C** condition the rest of the processing                             CAP031
+     C*                                                                   CAP031
+     C           @RTCD     IFEQ *BLANKS                                   CAP031
+     C                     MOVE 'Y'       CAP131                          CAP031
+     C                     ENDIF                                          CAP031
+      *                                                                   CAP031
+      **                                                                                      CSC022
+      ** Initialize CSC022 and Skip Commit/Rollback flags                                     CSC022
+      **                                                                                      CSC022
+     C                     MOVE 'N'       CSC022  1                                           CSC022
+     C                     MOVE 'N'       WCRSKP  1                                           CSC022
+      **                                                                                      CSC022
+      ** Access SAR details file to determine if CSC022 switchable feature                    CSC022
+      ** is switched on                                                                       CSC022
+      **                                                                                      CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   @RTCD                                               CSC022
+     C                     PARM '*VERIFY' @OPTN                                               CSC022
+     C                     PARM 'CSC022'  PSARD                                               CSC022
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSC022
+      **                                                                                      CSC022
+     C           @RTCD     IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022                                              CSC022
+      **                                                                                      CSC022
+      ** Get Jobs currently running i batch mode using SCCMRJOB dataarea                      CSC022
+      **                                                                                      CSC022
+     C           *NAMVAR   DEFN SCCMTJOB  SCCMT                                               CSC022
+     C                     IN   SCCMT                                                         CSC022
+      **                                                                                      CSC022
+     C           WCMTNO    IFGT 0                                                             CSC022
+      ** Move committed jobs to arrary for checking                                           CSC022
+     C                     MOVEAWCJOBS    WCMT                                                CSC022
+      ** Verify if job running exists in array                                                CSC022
+     C           ##JOB     LOKUPWCMT                     50                                   CSC022
+     C           *IN50     IFEQ *ON                                                           CSC022
+     C                     MOVE 'Y'       WCRSKP                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+      **                                                                                      CSC022
+     C                     ELSE                                                               CSC022
+      ** Execute *PSSR if CSC022 is not found or Database error                               CSC022
+     C           @RTCD     IFNE '*NRF'                                                        CSC022
+     C                     MOVEL'CSC022'  W0KEY                                               CSC022
+     C                     MOVEL'SCSARDPD'W0FILE                                              CSC022
+     C                     Z-ADD8         W0ERNB                                              CSC022
+     C                     EXSR SRERR                                                         CSC022
+     C                     ENDIF                                                              CSC022
+      **                                                                                      CSC022
+     C                     ENDIF                                                              CSC022
+      ** For copysource SRERRC                                                                CSC022
+     C                     MOVE WCRSKP    WCMTSK  1                                           CSC022
+      **                                                                                      CSC022
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+     C/COPY WNCPYSRC,ME1200DCPG
+      *
+      *  /Copy point for Calculations
+      *
+     C/EJECT
+      *
+      *  File and Program Error Processing
+      *
+     C/COPY MECPYSRC,SRERRC
+     C/EJECT
+     C/COPY WNCPYSRC,ME1200DOPG
+      *
+      *  /Copy point for Outputs
+      *
+**  CPY@ table
+(c) Misys International Banking Systems Ltd. 2001

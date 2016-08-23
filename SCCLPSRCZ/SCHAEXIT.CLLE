@@ -1,0 +1,312 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas SC Zone processing for HA switchover')          */
+/*********************************************************************/
+/*                                                                   */
+/*       MidasPlus - System Control Module                           */
+/*                                                                   */
+/*       SCHAEXIT - Zone processing for High Availability Switchover */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*                                                                   */
+/*       Last Amend No. AR762171           Date 26May11              */
+/*       Prev Amend No. CUP039             Date 14Dec10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      242235             Date 28Mar07              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CSC025 *CREATE     Date 03May05              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR762171 - Meridian Replication jobs fails with MSGW after  */
+/*                  COB. Change to name of Meridian Replication data */
+/*                  area. (Child: AR762172)                          */
+/*  CUP039 - Line from testing left in code.                         */
+/*  242235 - NBRENT parameter increased from 30 to 200               */
+/*           to determine where the NDSU was set                     */
+/*  CSC025 - Exit program for MidasPlus high availability switchover */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&ZOMSYS)
+             DCL        VAR(&ZOMSYS) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&XLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MMOD) TYPE(*CHAR) LEN(128)
+             DCL        VAR(&CURZRCV) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CURZSEQ) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&CURZSEQA) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TILIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JSEQRCV) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JSEQSEQ) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&RUND) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&CRT003) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&CRP006) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&CRE008) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&CLE010) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&CGP004) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&RPBASELIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RPDTASEQ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) VALUE('       ')
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7) VALUE('*VERIFY')
+             DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(70)
+/**/
+/* Global monitor message.                                                                        */
+/**/
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(eENDER))
+/**/
+/* Check whether zone actually exists.                                                            */
+/**/
+             CHGVAR     VAR(&XLIB) VALUE(&ZOMSYS *CAT 'XLIB    ')
+             CHKOBJ     OBJ(QSYS/&XLIB) OBJTYPE(*LIB)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(eABNOR))
+/**/
+/* Set up the zone library list.                                                                  */
+/**/
+             CALL       PGM(UPC0014) PARM(&ZOMSYS)
+/**********  ADDLIBLE   LIB(CSC025)                                                    */ /*CUP039*/
+/**********  MONMSG     MSGID(CPF0000)                                                 */ /*CUP039*/
+/**/
+/* Determine the most recent journal sequence number and currently attached receiver.             */
+/**/
+             RTVJRNE    JRN(ICJRN) FROMENT(*LAST) +
+                          RTNSEQNBR(&CURZSEQ) RTNRCV(&CURZRCV)
+/**/
+/* Update JNSTAT with the name of the currently attached receiver.                                */
+/**/
+             CHGDTAARA  DTAARA(JNSTAT (1 10)) VALUE(&CURZRCV)
+             CHGDTAARA  DTAARA(JNSTAT (11 10)) VALUE(&CURZRCV)
+/**/
+/* Convert the most recent journal sequence number to alpha field.                                */
+/**/
+             CHGVAR     VAR(&CURZSEQA) VALUE(&CURZSEQ)
+/**/
+/* Determine which modules are present in this zone.                                              */
+/**/
+             CALL       PGM(AOMMODR0) PARM('*DBERR' '*FIRST' &MMOD)
+/**/
+/* If Trade Innovation interace is present,                                                       */
+/**/
+             IF         COND(%SST(&MMOD 103 1) *EQ 'Y') THEN(DO)
+/**/
+/* Calculate name of TI library.                                                                  */
+/**/
+             CHGVAR     VAR(&TILIB) VALUE(&ZOMSYS *CAT 'TILIB   ')
+/**/
+/* Update the TI data area with the most recent zone sequence number                              */
+/**/
+             CHGDTAARA  DTAARA(&TILIB/KCMJRNSEQ) VALUE(&CURZSEQA)
+/**/
+/* Update the TI data area KCMJRNOSC  with zeros.                                                 */
+/**/
+             CHGDTAARA  DTAARA(&TILIB/KCMJRNOSC) VALUE('0000000000')
+/**/
+             ENDDO
+/**/
+/* If Exposure Management module is present,                                                      */
+/**/
+             IF         COND(%SST(&MMOD 25 1) *EQ 'Y') THEN(DO)
+/**/
+/* Call SCUPEMCE to update the EM file EMCEXX1.                                                   */
+/**/
+             CALL       PGM(SCUPEMCE) PARM(&CURZRCV &CURZSEQ)
+/**/
+             ENDDO
+/**/
+/* Call SCUPGOOS to update the file GOOSJSPD.                                                     */
+/**/
+             CALL       PGM(SCUPGOOS) PARM(&CURZRCV &CURZSEQ)
+/**/
+/* Check whether Cashier Interface (CRT003) is present.                                           */
+/**/
+             CHGVAR     VAR(&SAR) VALUE('CRT003')
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)
+/**/
+/* If the Cashier Interface is present,                                                           */
+/**/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)
+             CHGVAR     VAR(&CRT003) VALUE('Y')
+/**/
+/* call RE4407 to update the file RECITHPD.                                                       */
+/**/
+             CALL       PGM(RE4407) PARM(&CURZRCV &CURZSEQ)
+/**/
+             IF         COND(&RTCD *NE '*NRF    ' *AND &RTCD *NE +
+                          '       ') THEN(DO)
+             CHGVAR     VAR(&MSG) VALUE('Cashier Interface check +
+                          failed')
+             GOTO       CMDLBL(eABNOR)
+/**/
+             ENDDO
+/**/
+             ENDDO
+/**/
+/* Check whether Cash Management (CRE008) is present.                                             */
+/**/
+             CHGVAR     VAR(&SAR) VALUE('CRE008')
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)
+/**/
+/* If Cash Management is present,                                                                 */
+/**/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)
+             CHGVAR     VAR(&CRE008) VALUE('Y')
+/**/
+/* call REUPGARS to update the file REGARSPD.                                                     */
+/**/
+             CALL       PGM(REUPGARS) PARM(&CURZSEQ)
+/**/
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(DO)
+             CHGVAR     VAR(&MSG) VALUE('Cash Managment update +
+                          failed')
+             GOTO       CMDLBL(eABNOR)
+/**/
+             ENDDO
+/**/
+             ENDDO
+/**/
+/* Check whether Loan Manager (CLE010) is present.                                                */
+/**/
+             CHGVAR     VAR(&SAR) VALUE('CLE010')
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)
+/**/
+/* If Loan Manager is present,                                                                    */
+/**/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)
+             CHGVAR     VAR(&CLE010) VALUE('Y')
+/**/
+/* update the Loan Manager data area, LEJNSQ, with the current journal sequence number.           */
+/**/
+             CHGDTAARA  DTAARA(LEJNSQ) VALUE(&CURZSEQA)
+/**/
+             ENDDO
+/**/
+/*  Check if the REPLICATION Feature is on.                                                       */
+/**/
+             CHGVAR     VAR(&SAR) VALUE('CRP006')
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)
+/**/
+/*  If the Replication feature is ON,                                                             */
+/**/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)
+/**/
+/*  set the feature flag to 'Y'.                                                                  */
+/**/
+             CHGVAR     VAR(&CRP006) VALUE('Y')
+/**/
+             ENDDO
+/**/
+/*  If the Replication feature is OFF,                                                            */
+/**/
+             ELSE       CMD(DO)
+/**/
+/*  Check whether the Replication library data area exists anyway.                                */
+/**/
+             CHKOBJ     OBJ(RPLIBNAMES) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+             CHGVAR     VAR(&CRP006) VALUE('N')
+             GOTO       CMDLBL(eSKIPPER)
+             ENDDO
+/**/
+/*  If the Replication libraries data area exists,                                                */
+/*  set the feature flag to 'Y'.                                                                  */
+/**/
+             CHGVAR     VAR(&CRP006) VALUE('Y')
+/**/
+             ENDDO
+eSKIPPER:
+/**/
+/*  If the Replication flag is 'Y',                                                               */
+/**/
+             IF         COND(&CRP006 *EQ 'Y') THEN(DO)
+/**/
+/* retrieve the name of the Replication base library.                                             */
+/**/
+                RTVDTAARA  DTAARA(RPLIBNAMES (11 10)) RTNVAR(&RPBASELIB)
+                MONMSG     MSGID(CPF0000)
+/**/
+/* Calculate the name of the journal sequence number data area.                                   */
+/**/
+                CHGVAR     VAR(&RPDTASEQ) VALUE('JD' *CAT &ZOMSYS *CAT +
+                          '1SEQ1 ')
+                CHKOBJ     OBJ(&RPBASELIB/&RPDTASEQ) OBJTYPE(*DTAARA)                   /*AR762171*/
+                MONMSG     MSGID(CPF9801) EXEC(DO)                                      /*AR762171*/
+                CHGVAR     VAR(&RPDTASEQ) VALUE('JDFDR' *CAT &ZOMSYS *CAT +
+                          '11 ')                                                        /*AR762171*/
+                ENDDO                                                                   /*AR762171*/
+/**/
+/* Update the data area with the journal sequence number.                                         */
+/**/
+                CHGDTAARA  DTAARA(&RPBASELIB/&RPDTASEQ (1 10)) +
+                             VALUE(&CURZSEQA)
+                MONMSG     MSGID(CPF0000 MCH0000)
+/**/
+             ENDDO
+/**/
+/*  Determine journal sequence number of next day set up.                                         */
+/*  (Equivalent to beginning of ICRCV001 in previous releases)                                    */
+/**/
+/*           DSPJRN     JRN(ICJRN) FILE((SCJSEQPD)) +                                     /*242235*/
+/*                        RCVRNG(*CURCHAIN) NBRENT(30) ENTTYP(PT) +                       /*242235*/
+/*                        OUTPUT(*OUTFILE) OUTFILFMT(*TYPE1) +                            /*242235*/
+/*                        OUTFILE(QTEMP/JSEQ) ENTDTALEN(*OUTFILFMT)                       /*242235*/
+             DSPJRN     JRN(ICJRN) FILE((SCJSEQPD)) +
+                          RCVRNG(*CURCHAIN) NBRENT(200) ENTTYP(PT) +
+                          OUTPUT(*OUTFILE) OUTFILFMT(*TYPE1) +
+                          OUTFILE(QTEMP/JSEQ) ENTDTALEN(*OUTFILFMT)                       /*242235*/
+             MONMSG     MSGID(CPF7062) EXEC(DO)
+             CHGVAR     VAR(&JSEQSEQ) VALUE(1)
+             ENDDO
+/**/
+/* Call program SCGETNDSU to get the sequence number.                                             */
+/**/
+             OVRDBF     FILE(QADSPJRN) TOFILE(QTEMP/JSEQ)
+             CALL       PGM(SCGETNDSU) PARM(&JSEQSEQ)
+             DLTOVR     FILE(QADSPJRN)
+/**/
+/* If unable to get sequence number, set it to 1.                                                 */
+/**/
+             MONMSG     MSGID(CPF0000) EXEC(DO)
+             CHGVAR     VAR(&JSEQSEQ) VALUE(1)
+             ENDDO
+/**/
+/* Determine the name of the journal receiver that was attached at that time.                     */
+/**/
+             RTVJRNE    JRN(ICJRN) RCVRNG(*CURCHAIN) +
+                          FROMENT(&JSEQSEQ) TOENT(&JSEQSEQ) +
+                          SEARCH(*DESCEND) RTNRCV(&JSEQRCV)
+             MONMSG     MSGID(CPF7062) EXEC(DO)
+             CHGVAR     VAR(&JSEQRCV) VALUE('IR00000001')
+             ENDDO
+/**/
+/* Call SC002471 to write record to SCJSEQPD.                                                     */
+/**/
+             CALLPRC    PRC(SC002471) PARM('NDSUJR              ' 'SCC0405   ' X'00001F' +
+                          ' ' 'Journal receiver changed at next day +
+                          set up       ' &RUND &JSEQRCV &JSEQSEQ 'SCC0405   ' +
+                          '          ' '      ')
+/**/
+/* Check whether Audit Reporting (CGP004) is present.                                             */
+/**/
+             CHGVAR     VAR(&SAR) VALUE('CGP004')
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)
+/**/
+/* If the Audit Reporting feature is present,                                                     */
+/**/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)
+/**/
+/* call program SCHAAUDIT to update the journal receiver directory, GPAUJCPD                      */
+/**/
+             CHGVAR     VAR(&CGP004) VALUE('Y')
+/**/
+             CALL       PGM(SCHAAUDIT)
+/**/
+             ENDDO
+/**/
+eABNOR:
+eENDER:
+             RETURN
+/**/
+             ENDPGM

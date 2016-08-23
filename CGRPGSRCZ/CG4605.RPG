@@ -1,0 +1,429 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Fut and opts actioned today confs- driver')
+/*OVRF*: OVRDBF (CGFFCFLU) (CGFFCFL0)                               : *
+      *****************************************************************
+      *                                                               *
+      *  Midas - User Defined Correspondence                          *
+      *                                                               *
+      *  CG4605    - Future And Options Confirmations - Driver        *
+      *                                                               *
+      *  Function:  For each Future and Option Transaction Input or   *
+      *             Reversed today a Confirmation is extracted.       *
+      *                                                               *
+      *  Called By: CGC2280 - FF Transactions Actioned Today          *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 104683             Date 18DEC97               *  *
+      *                 CFF004             Date 11SEP96               *
+      *                 S01522             DATE 01JAN95               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  104683 - Recompile over amended file CGFFCFL0                *
+      *  CFF004 - Increase in size of Price Fields,(Recompiled Only)  *
+      *  S01522 - User Defined Correspondence                         *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Indicator usage                                              *
+      *  ~~~~~~~~~~~~~~~                                              *
+      *                                                               *
+      *  55   -    EOF indicator                                      *
+      *  90   -    ROLBK indicator                                    *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *................................................................
+     FCGFFCFL0IF  E           K        DISK         KINFSR SRFILE     UC
+      **  Futures and Options Transactions Actioned Today File
+      *
+     FCGFFCFLUUF  E           K        DISK         KINFSR SRFILE     UC
+      **  Futures and Options Transactions Actioned Today File
+      **  (Overridden Version of CGFFCFL0)
+     F            @FFCFL0                           KRENAME@FFCFLU
+     F                                              KCOMIT
+      *
+      /EJECT
+      *
+      **  Copyright array.
+     E                    ##CPY   1   1 80
+      /COPY CGCPYSRC,SRERRE
+      /EJECT
+      *
+     IDSPARM    E DSCNFRPD
+      **  External DS for parameters
+      *
+     ICPYR        DS
+      **  Data Structure for Compilation - Copyright Insertion
+     I                                        1  80 ##CPY
+      *
+     IW0FMT     E DSCGUDTAPD
+      **  Record format of PF/CGUDTAPD for use as a parameter
+      *
+      /COPY CGCPYSRC,CGAUDTI
+      /COPY CGCPYSRC,SRERRI
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *   Index to subroutines                                        *
+      *   --------------------                                        *
+      *                                                               *
+      *   SRMAIN - Main processing                                    *
+      *   SRINZ  - Initialise Fields on Each Invocation               *
+      *   SRINIT - Initial processing - On First Call                 *
+      *   SRAUDT - Audit Report Processing                            *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Process     :  MAINLINE                                       *
+      * Function    :  Mainline processing                            *
+      *                                                               *
+      * Called by   :  None                                           *
+      * Calls       :  SRINIT - Initial Processing - On First Call    *
+      *                SRINZ  - Initialise Fields on Each Invocation  *
+      *                SRMAIN - Main Processing                       *
+      *                SRAUDT - Audit Report Processing               *
+      *****************************************************************
+      *
+      **  Parameter list for current program invocation.
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN
+     C                     PARM           W0CMT   3
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *................................................................
+      *
+      **  Initial processing - Once Only
+     C           ##INIT    IFEQ *BLANK
+     C                     EXSR SRINIT
+     C                     MOVE 'Y'       ##INIT  1
+     C                     ENDIF
+      *
+      **  Initialisation processing
+     C                     EXSR SRINZ
+      *
+      **  Detail process
+     C                     EXSR SRMAIN
+      *
+      **  Audit Process
+     C                     EXSR SRAUDT
+      *
+      *................................................................
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      **  Terminate program
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRMAIN                                         *
+      * Function    :  Main processing                                *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  CG4600 - Futures & Opt Confirmation Extract    *
+      *****************************************************************
+     C           SRMAIN    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRMAIN'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Access the Confirmations driver file .......
+     C           W0CMT     IFEQ 'YES'
+      *
+     C           *LOVAL    SETLLCGFFCFLU
+     C                     READ CGFFCFLU                 55
+      *
+     C                     ELSE
+     C           *LOVAL    SETLLCGFFCFL0
+     C                     READ CGFFCFL0                 55
+     C                     ENDIF
+      *
+      **  For each record found ...
+     C           *IN55     DOWEQ*OFF
+      *
+      **  Only process records which have not been printed.
+     C           XXPRTD    IFEQ 'N'
+      *
+      **  Increment the count of confirmation records read
+     C                     ADD  1         ##SREC  50
+      *
+      **  Set up the Print Type according to the Instrument Processing
+      **  Type and Instrument Indicator:
+      **  - XXISPT = 1, 2 or 3 are Futures
+      **         = 4, 5 or 6 are Options
+      **  - XXISTI = 'Y' signifies an OTC
+      **         = 'N' signifies a Market Instrument
+     C           XXISPT    IFGE 1
+     C           XXISPT    ANDLE3
+     C                     MOVEL'FUTURE'  ##PTYP 10 P
+     C                     ELSE
+     C                     MOVEL'OPTION'  ##PTYP    P
+     C                     ENDIF
+      *
+     C           XXISTI    IFGE 'Y'
+     C                     MOVE '/OTC'    ##PTYP
+     C                     ELSE
+     C                     MOVE '/MKT'    ##PTYP
+     C                     ENDIF
+      *
+      **  Set up the parameters for the Extract program.
+     C                     MOVE XXRECI    RECI
+     C                     MOVE XXBRCA    BRCA
+     C**********           Z-ADDXXCBCD    CBCD                                                CSD027
+     C                     MOVE XXCBCD    CBCD                                                CSD027
+     C                     MOVE XXISCY    ISCY
+     C                     MOVE XXISTT    ISTT
+     C                     Z-ADDXXYRNO    YRNO
+     C                     Z-ADDXXMTHN    MTHN
+     C                     MOVE XXPCAL    PCAL
+     C                     Z-ADDXXSTRP    STRP
+     C                     Z-ADDXXPOCD    POCD
+     C                     MOVE XXPAYI    PAYI
+     C                     Z-ADDXXREVI    REVI
+     C                     Z-ADDXXTNBR    TNBR
+     C                     Z-ADDXXTOCN    TOCN
+     C                     Z-ADDXXTOCM    TOCM
+     C                     Z-ADDXXTOCG    TOCG
+     C                     Z-ADDXXTOPR    TOPR
+     C                     Z-ADDXXSETP    SETP
+     C                     MOVE XXSETA    SETA
+     C                     MOVE XXSEBR    SEBR
+     C                     MOVE XXSBID    SBID
+     C                     MOVE XXFACO    FACO
+     C                     MOVE XXCNOS    CNOS
+      *
+      **  Call the Extract program.
+     C                     CALL 'CG4600'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM W0CMT     ##CMT   3
+     C                     PARM           DSPARM
+     C                     PARM           ##PTYP
+      *
+      **  Error in called program.
+     C           ##RTCD    IFNE *BLANK
+     C                     MOVEL##RTCD    W0KEY
+      *
+     C                     EXSR SRAUDT
+      *                                                    ***************
+     C                     MOVEL'CG4600  'W0FILE           * DB ERROR 01 *
+     C                     Z-ADD01        W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      **  Update driver record for successful extract
+     C                     MOVE 'Y'       XXPRTD
+     C           W0CMT     IFEQ 'YES'
+     C                     UPDAT@FFCFLU
+     C                     COMIT
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Read next Confirmation
+     C           W0CMT     IFEQ 'YES'
+     C                     READ CGFFCFLU                 55
+     C                     ELSE
+     C                     READ CGFFCFL0                 55
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      *................................................................
+      *
+     C           EXMAIN    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRINZ                                          *
+      * Function    :  Initialise Fields on Program Invocation        *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  CGZAUDIT - Audit Processing                    *
+      *****************************************************************
+     C           SRINZ     BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRINZ '  @STK,Q
+      *
+      *................................................................
+      *
+      **  Open the Audit Print File.
+     C                     CLEARI#DTA
+     C                     MOVEL'CG4605AU'I#SPLN
+     C                     MOVEL'CG4605  'I#REF
+     C                     MOVE 'CGD1412' I#TITL
+     C                     MOVE 'CGD1413' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+      *
+     C                     CALL 'CGZAUDIT'
+     C                     PARM *BLANKS   W0RTN   7
+     C                     PARM '*OPEN   'W0ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W0RSQN  5
+      *
+      **  Open the appropriate Driver file.
+     C           W0CMT     IFEQ 'YES'
+     C                     OPEN CGFFCFLU
+     C                     ELSE
+     C                     OPEN CGFFCFL0
+     C                     ENDIF
+      *
+      *................................................................
+      *
+     C           EXINZ     TAG
+      *
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRINIT                                         *
+      * Function    :  Initial processing - First Call Only           *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Initialise work fields
+     C                     Z-ADD*ZEROS    ##SREC
+      *
+      **  Copyright
+     C                     MOVEA##CPY     ##BIS  80
+      *
+      *................................................................
+      *
+     C           EXINIT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRAUDT                                         *
+      * Function    :  Audit Report Processing                        *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  CGZAUDIT - Audit Processing                    *
+      *                CG9020   - Write Data to UDC Data Files        *
+      *****************************************************************
+     C           SRAUDT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRAUDT'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Output the Count of records read
+     C                     CLEARI#DTA
+     C                     MOVEL'CG4605  'I#REF
+     C                     MOVE 'CGD1412' I#TITL
+     C                     MOVE 'CGD1413' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C                     MOVE '*LINE   'W1ACT
+     C                     MOVE *BLANKS   I#SUB
+     C                     MOVEL'CNFRP   'I#SUB
+     C                     MOVEL'CAD1021' I#TEXT
+     C                     Z-ADD##SREC    I#QTY
+     C                     Z-ADD*ZERO     I#DECS
+     C                     MOVE '1'       I#EDIT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN   7
+     C                     PARM           W1ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W1RSQN  5
+      *
+      **  Skip a line.
+     C                     MOVE '*SKIP   'W1ACT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN   7
+     C                     PARM           W1ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W1RSQN  5
+      *
+      **  Produce the Audit Report.
+     C                     CALL 'CG9020'
+     C                     PARM *BLANK    ##RTCD
+     C                     PARM '*AUDIT  'W0ACT
+     C                     PARM *BLANKS   W0PATH256
+     C                     PARM           W0FMT
+     C                     PARM 'CGD1412' W0TITL  7
+     C                     PARM 'CGD1413' W0ULIN  7
+     C                     PARM           W0CMT
+      *
+      **  Close the Audit Print File.
+     C                     CLEARI#DTA
+     C                     MOVEL'CG4605  'I#REF
+     C                     MOVE 'CGD1412' I#TITL
+     C                     MOVE 'CGD1413' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+      *
+     C                     CALL 'CGZAUDIT'
+     C                     PARM *BLANKS   ##RTCD
+     C                     PARM '*CLOSE  'W0ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W0RSQN  5
+      *
+      *................................................................
+      *
+     C           EXAUDT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      /COPY CGCPYSRC,SRERRPSSR
+      /EJECT
+      /COPY CGCPYSRC,SRERRC
+** ##CPY  **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

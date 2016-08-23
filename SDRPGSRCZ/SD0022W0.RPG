@@ -1,0 +1,305 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Currency Code Window')
+      *****************************************************************
+      *                                                               *
+      *  MIDAS¦DBA - Standing Data Module                             *
+      *                                                               *
+      *  SD0022W0  - Currency Code Window                             *
+      *                                                               *
+      *  Function:  This program displays a window containing the     *
+      *             default penalty rate for a currency to be         *
+      *             applied when a penalty termination has been       *
+      *             entered for a Time Deposit deal.                  *
+      *                                                               *
+      *  Called By: SD0022E - Display Currency Code (Treasury)        *
+      *             SD0022R - Edit Currency Code (Treasury)           *
+      *                                                               *
+      *  (C) Copyright Misys International Banking Systems Ltd 2008   *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. 256795   *Create   Date 25Sep08               *
+      *  Prev Amend No. xxxxxx             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  256795 - Penalty Termination of Time Deposits (CDL052).      *
+      *                                                               *
+      *****************************************************************
+      *
+     FSD0022#0CF  E                    WORKSTN
+     FSDCURRX0UF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+      *
+      *-------------------------------------------------------------------
+      *
+      *  F U N C T I O N   O F   I N D I C A T O R S
+      *
+      *   KC - F3  Exit
+      *   KE - F5  Refresh
+      *   KL - F12 Previous
+      *
+      *   10 - SDCURRX0 record missing
+      *   20 - Enquiry Mode
+      *   30 - Error - Interest Rate
+      *
+      *   99 - ZALIGN error indicator
+      *
+      *--------------------------------------------------------------------
+      *
+     E                    CPY@    1   1 80               MKI Copyright array
+     E/COPY ZSRSRC,ZEDITZ1
+      *
+      *--------------------------------------------------------------------
+      *
+      ** Data structure for DATA parameter
+     I/COPY QWINDSRC,SD0020GDTA
+      *
+      ** Program status data structure
+     IPSDS       SDS
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     ILDA       E DSLDA                         256
+      *
+     ISCSARD    E DSSCSARDPD
+      * SAR Details
+      *
+     IDSFDY     E DSDSFDY
+      * Data Structures used by Access Programs
+      *
+      *--------------------------------------------------------------------
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ACTN
+     C                     PARM           DATA
+     C                     PARM           W0RTN
+     C                     PARM           WLEN
+     C                     PARM           WWID
+     C                     PARM           SROW
+     C                     PARM           SCOL
+     C                     PARM           TITLE
+     C                     PARM           SPARE2
+      *
+     C                     EXSR SRINIT
+      *
+      ** Perform initial access of file
+     C                     EXSR SRRSET
+      *
+      ** Re-display until no errors or F3/F12 taken
+     C           *INKC     DOUEQ'1'                        B1
+     C           *INKL     OREQ '1'
+     C           *IN30     OREQ '0'
+     C           *INKE     ANDEQ'0'
+      *
+     C                     EXSR SRDISP
+      *
+     C           *INKC     IFEQ '0'                        B2
+     C           *INKL     ANDEQ'0'
+     C           *IN20     ANDEQ'0'
+     C           *INKE     CASEQ'1'       SRRSET
+     C                     CAS            SRVALD
+     C                     END
+      *
+     C                     END                             E2
+      *
+     C                     END                             E1
+      *
+      ** Process Function keys
+     C   KC                MOVE 'Y2U9999' W0RTN
+     C   KL                MOVE 'USR0790' W0RTN
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *********************************************************************
+      *                                                                   *
+      * SRRSET - Reset File details                                       *
+      *                                                                   *
+      *********************************************************************
+      *
+     C           SRRSET    BEGSR
+      *
+      ** Access file and move rate to screen field
+     C           #1CYCD    CHAINSDCURRX0             10
+      *
+     C           *IN10     IFEQ '1'                        B1
+     C                     MOVE *ZEROS    MDRAT
+     C                     MOVEL#1CYCD    MCURR
+     C                     ENDIF                           E1
+      *
+      ** Convert to Screen amount
+     C                     Z-ADD7         ZADEC
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE MDRAT     ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SDRAT
+      *
+     C                     ENDSR
+      *
+      *********************************************************************
+      *                                                                   *
+      * SRDISP - Display Processing Subroutine                            *
+      *                                                                   *
+      *********************************************************************
+      *
+     C           SRDISP    BEGSR
+      *
+      ** Output screen details
+     C                     WRITEWINDOWF
+     C                     WRITE#CMDTXT
+     C                     WRITE#MSGCTL
+     C                     EXFMTWINDOWF
+      *
+      ** Clear message file and reset indicators
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     ENDSR
+      *
+      *********************************************************************
+      *                                                                   *
+      * SRVALD - Validate Screen Details                                  *
+      *                                                                   *
+      *********************************************************************
+      *
+     C           SRVALD    BEGSR
+      *
+     C                     MOVE '0'       *IN30
+      *
+      ** Validate the Default Penalty Rate
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVELSDRAT     ZFIELD    P
+     C                     Z-ADD4         ZADIG
+     C                     Z-ADD7         ZADEC
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ '1'                        B1
+     C                     MOVEL'SDM5201' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN30
+     C                     ELSE                            X1
+     C                     MOVE ZFIELD    MDRAT
+     C                     ENDIF                           E1
+      *
+      ** If rate is valid, move screen fields to file fields and
+      ** update file
+     C           *IN30     IFEQ '0'                        B1
+      *
+     C           *IN10     IFEQ '0'                        B2
+     C                     UPDATSDCURRD1
+     C                     ELSE                            X2
+     C                     WRITESDCURRD1
+     C                     END                             E2
+      *
+     C                     END                             E1
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * ZASNMS - Send Message to Program Message Queue                  *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+     C           ZAMSGF    IFEQ *BLANKS
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     END
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM            Program queue
+     C                     PARM           ZAPGRL           Rel queue
+     C                     PARM           ZAMSID           Message Id
+     C                     PARM           ZAMSGF           Message file
+     C                     PARM           ZAMSDA           Message data
+     C                     PARM           ZAMSTP           Message type
+      *
+     C                     MOVEL*BLANKS   ZAMSGF
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAPGRL
+      *
+     C                     ENDSR
+      *
+      *********************************************************************
+      *                                                                   *
+      * SRINIT - Initial Program Subroutine                               *
+      *                                                                   *
+      *********************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Define all program work fields
+     C                     MOVE *BLANKS   ZAPGM  10
+     C                     MOVE *BLANKS   ZAPGRL  5
+     C                     MOVE *BLANKS   ZAMSID  7
+     C                     MOVE *BLANKS   ZAMSGF 10
+     C                     MOVE *BLANKS   ZAMSDA132
+     C                     MOVE *BLANKS   ZAMSTP  7
+      *
+      ** Receive the parameters
+     C                     MOVE ACTN      ACTN    1
+     C                     MOVE W0RTN     W0RTN   7
+     C                     Z-ADDWLEN      WLEN    30
+     C                     Z-ADDWWID      WWID    30
+     C                     Z-ADDSROW      SROW    30
+     C                     Z-ADDSCOL      SCOL    30
+     C                     MOVE TITLE     TITLE   7
+     C                     MOVE SPARE2    SPARE2256
+      *
+     C                     MOVELPGM       ZAPGM
+     C                     MOVELPGM       SPGM
+     C                     Z-ADDSROW      SWROW
+     C                     Z-ADDSCOL      SWCOL
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*VERIFY' P@OPTN  7
+     C                     PARM 'CDL052'  P@SARD  6
+     C           SCSARD    PARM *BLANK    DSFDY
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+      ** Set enquiry mode indicator
+     C           ACTN      IFEQ 'E'
+     C                     MOVE '1'       *IN20
+     C                     END
+      *
+      ** Set up copyright
+     C                     MOVEACPY@      MKI@   80
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program Exception Error Routine                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     CALL 'DBERRCTL'
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+     C/COPY ZSRSRC,ZALIGNZ2
+     C/COPY ZSRSRC,ZEDITZ2
+      ********************************************************************
+**  CPY@
+(C) Copyright Misys International Banking Systems Ltd 2008

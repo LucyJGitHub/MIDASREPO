@@ -1,0 +1,409 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Calculate default customer limits')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Dealing Module
+     F*                                                               *
+     F*       DL0131 - CALC DEFAULT CUST LIMIT                        *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Last Amend No. CCB016             Date 07Sep07               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 060636             Date 01OCT93               *
+     F*                 S01433             Date 15SEP93               *
+     F*                     LN0528     DATE   16JUL90                 *
+     F*                     LN0365     DATE   13JUN90                 *
+     F*                NO.  LN0364     DATE   13JUN90                 *
+     F*****************************************************************
+     F*                                                               *
+     F*****************************************************************
+     F*  ANY CHANGES MADE TO THIS PROGRAM SHOULD ALSO BE MADE TO      *
+     F*                    DL0131A                                    *
+     F*****************************************************************
+     F*                                                                  *
+     F*  CCB016 - CoB Performance Enhancements                        *
+     F*           Check if customer has record on LIMITJ before       *
+     F*           processing any further.                             *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*     060636 - IF COMPANY BLANK GO TO END OF SUBR TO PREVENT    *
+     F*              PROGRAM FROM LOOPING                             *
+     F*       S01433 - Enhanced processing to include precious metals    *
+     F*                and money market deals on the report              *
+     F*              (NB. This function is to remain switchable until *
+     F*              after Alpha-site testing, when it will become    *
+     F*              mandatory. At this point DL0131A  will be        *
+     F*              renamed to DL0131 and the old version discarded. *
+     F*              Meanwhile version with SAR = DL0131A, without =  *
+     F*              DL0131).                                         *
+     F*     LN0528 - IF SYSTEM LEVEL REPORT REQUESTED AND DEFAULTS    *   LN0528
+     F*              NEEDED THEN NOT BEING CALCULATED PROPERLY        *   LN0528
+     F*                                                               *
+     F*     LN0365 - IF SYSTEM LEVEL REPORT REQUESTED AND NO LIMIT    *   LN0365
+     F*              EXISTS, DEFAULT LIMIT NOT BEING CALCULATED FOR   *   LN0365
+     F*              FRA/IRS                                          *   LN0365
+     F*                                                               *
+     F*     LN0364 - DEFAULT COMPANY LIMIT NOT BEING WORKED           *   LN0364
+     F*              OUT CORRECTLY FOR FRA/IRS                        *   LN0364
+     F*                                                               *
+     F*****************************************************************
+     F*****************************************************************
+     FSDCOMPL1IF  E           K        DISK
+     FSDBRCHL3IF  E           K        DISK
+     FLIMITJ  IF  E           K        DISK
+     F* 90 AT LEAST ONE FX LIMIT FOUND
+     F* 91 AT LEAST ONE LN LIMIT FOUND
+     F* 97 EOF ON COMPANIES FILE
+     F* 99 WORK IND
+     F/EJECT
+     E                    CPY@    1   1 80
+     I**   DATA STRUCTURES TO LINK FLEP/LLEP, FLPC/LLPC & INPUT FIELDS
+     I            DS
+     I                                        1  18 FLEP
+     I                                        1   3 FLEP1
+     I                                        4   60FLEP2
+     I                                        7   90FLEP3
+     I                                       10  120FLEP4
+     I                                       13  150FLEP5
+     I                                       16  180FLEP6
+     I            DS
+     I                                        1  18 LLEP
+     I                                        1   3 LLEP1
+     I                                        4   60LLEP2
+     I                                        7   90LLEP3
+     I                                       10  120LLEP4
+     I                                       13  150LLEP5
+     I                                       16  180LLEP6
+     I            DS
+     I                                        1  18 FLPC
+     I                                        1   30FLPC1
+     I                                        4   60FLPC2
+     I                                        7   90FLPC3
+     I                                       10  120FLPC4
+     I                                       13  150FLPC5
+     I                                       16  180FLPC6
+     I            DS
+     I                                        1  18 LLPC
+     I                                        1   30LLPC1
+     I                                        4   60LLPC2
+     I                                        7   90LLPC3
+     I                                       10  120LLPC4
+     I                                       13  150LLPC5
+     I                                       16  180LLPC6
+     I/EJECT
+     C                     MOVEACPY@      BIS@   80
+     C           *ENTRY    PLIST
+     C                     PARM           CNUMX   6
+     C                     PARM           LEVEL   1
+     C                     PARM           ENTITY  3
+     C                     PARM           FX      1
+     C                     PARM           LN      1
+     C                     PARM           FRA     1
+     C                     PARM           IRS     1
+     C                     PARM           FXLIM
+     C                     PARM           LNLIM
+     C                     PARM           FRLIM
+     C                     PARM           IRLIM
+     C                     PARM           FXSAME
+     C                     PARM           LNSAME
+     C                     PARM           FXPER
+     C                     PARM           LNPER
+     C                     PARM           FXPC
+     C                     PARM           LNPC
+     C                     PARM           RUND    50
+     C** INITIALISE OUTPUT FIELDS
+     C                     Z-ADD0         FXLIM   90
+     C                     Z-ADD0         LNLIM   90
+     C                     Z-ADD0         FRLIM   90
+     C                     Z-ADD0         IRLIM   90
+     C                     MOVE 'Y'       FXSAME  1
+     C                     MOVE 'Y'       LNSAME  1
+     C                     MOVE *BLANK    FXPER  18
+     C                     MOVE *BLANK    LNPER  18
+     C                     MOVE *BLANK    FXPC   18
+     C                     MOVE *BLANK    LNPC   18
+     C** SET FIRST TIME INDS FX,LN
+     C                     SETON                     9091
+     C** SET UP KEY FOR LIMITJ
+     C           KEY       KLIST
+     C                     KFLD           CUST    6
+     C                     KFLD           LVL     1
+     C                     KFLD           ENT     3
+     C** IF CO LEVEL
+     C           LEVEL     IFEQ 'C'
+     C                     MOVE FX        FX2                             LN0528
+     C                     MOVE LN        LN2                             LN0528
+     C                     MOVE FRA       FRA2                            LN0528
+     C                     MOVE IRS       IRS2                            LN0528
+     C                     MOVE ENTITY    CMPYX   3
+     C                     EXSR DEFC
+     C                     END
+     C** IF SYS LEVEL
+     C           LEVEL     IFEQ 'S'
+     C                     EXSR DEFS
+     C                     END
+     C**
+     C** USE LIMIT PERIOD 1 IF SAME LIMIT TYPE FOUND THROUGHOUT
+     C           FXSAME    IFEQ 'Y'
+     C                     MOVE FLEP      FXPER
+     C                     MOVE FLPC      FXPC
+     C                     END
+     C           LNSAME    IFEQ 'Y'
+     C                     MOVE LLEP      LNPER
+     C                     MOVE LLPC      LNPC
+     C                     END
+     C**
+     C**  IF NONE FOUND, MIDAS DEFINES DEFAULTS
+     C   90                MOVE 'N'       FXSAME
+     C   91                MOVE 'N'       LNSAME
+     C                     RETRN
+     C**
+     C****************************************************************
+     C**  DEFC SR TO CALC DEFAULT COMPANY LIMIT
+     C           DEFC      BEGSR                           ** DEFC **
+     C*  READ BRANCH FILE VIA COMPANY OF BRANCH
+     C           CMPYX     SETLLSDBRCHL3
+     C** FOR EACH BR IN CO
+     C           CMPYX     DOUNEA8CMCD
+     C** ACCESS BRANCH
+     C                     MOVE '   '     A8CMCD
+     C                     READ SDBRCHL3                 99
+     C           CMPYX     CABNEA8CMCD    DEFC9
+     C           A8CMCD    CABEQ*BLANKS   DEFC9                           060636
+     C** ACCESS BR LIMIT
+     C                     MOVE CNUMX     CUST
+     C                     MOVE 'B'       LVL
+     C                     MOVE A8BRCD    ENT
+     C                     SETOF                     99
+     C           KEY       CHAINLIMITJ               99
+     C** IF FOUND
+     C           *IN99     IFNE '1'
+     C** IF FX REQD
+     C***********FX        IFEQ 'Y'                                       LN0528
+     C           FX2       IFEQ 'Y'                                       LN0528
+     C** IF FIRST TIME, SAVE LIMIT TYPE FOR COMPARISON
+     C           *IN90     IFEQ '1'
+     C                     SETOF                     90
+     C                     MOVE DZFXLT    SAVF    3
+     C                     ELSE
+     C** ELSE SEE IF LIMIT TYPE HAS CHANGED
+     C                     EXSR SFX
+     C                     END
+     C** IF FX LIMIT EXISTS, CALC LIMIT
+     C           DZFXLT    IFNE *BLANK
+     C           FLPC1     DIV  100       PCENT   32
+     C           DZFLAM    MULT PCENT     DZFLAM
+     C                     ADD  DZFLAM    FXLIM
+     C                     END
+     C                     END
+     C** IF LN REQD
+     C***********LN        IFEQ 'Y'                                       LN0528
+     C           LN2       IFEQ 'Y'                                       LN0528
+     C** IF FIRST TIME, SAVE LIMIT TYPE FOR COMPARISON
+     C           *IN91     IFEQ '1'
+     C                     SETOF                     91
+     C                     MOVE DZLLTY    SAVL    3
+     C                     ELSE
+     C** ELSE SEE IF LIMIT TYPE HAS CHANGED
+     C                     EXSR SLN
+     C                     END
+     C** IF LN LIMIT EXISTS, CALC LIMIT
+     C           DZLLTY    IFNE *BLANK
+     C           LLPC1     DIV  100       PCENT
+     C           DZLLAM    MULT PCENT     DZLLAM
+     C                     ADD  DZLLAM    LNLIM
+     C                     END
+     C                     END
+     C**
+     C** IF FRA REQD
+     C***********FRA       IFEQ 'Y'                                       LN0528
+     C           FRA2      IFEQ 'Y'                                       LN0528
+     C***IF*FRA*LIMIT*EXISTS**                                            LN0364
+     C** UPDATE DEFAULT LIMIT TOTAL                                       LN0364
+     C           DZFRED    IFGT RUND                                      LN0364
+     C           DZFRED    OREQ 0                                         LN0364
+     C** IF LIVE LIMIT                                                    LN0364
+     C**********           MOVE DZFRLA    FRLIM                           LN0364
+     C                     ADD  DZFRLA    FRLIM                           LN0364
+     C                     END                                            LN0364
+     C                     END
+     C**
+     C**
+     C** IF IRA REQD
+     C***********IRS       IFEQ 'Y'                                       LN0528
+     C           IRS2      IFEQ 'Y'                                       LN0528
+     C***IF*IRA*LIMIT*EXISTS***                                           LN0364
+     C** UPDATE DEFAULT LIMIT TOTAL                                       LN0364
+     C           DZIRED    IFGT RUND                                      LN0364
+     C           DZIRED    OREQ 0                                         LN0364
+     C** IF LIVE LIMIT                                                    LN0364
+     C**********           MOVE DZIRLM    IRLIM                           LN0364
+     C                     ADD  DZIRLM    IRLIM                           LN0364
+     C                     END                                            LN0364
+     C                     END
+     C**
+     C                     END
+     C                     END
+     C           DEFC9     ENDSR                           ** DEFC9 **
+     C*****************************************************************
+     C**  DEFS SR TO CALC DEFAULT SYSTEM LIMIT
+     C           DEFS      BEGSR                           ** DEFS **
+     C**
+     C** CHECK THAT THERE IS AT LEAST ONE RECORD FOR CUSTOMER                                 CCB016
+     C                     MOVE CNUMX     CUST                                                CCB016
+     C           CUST      SETLLLIMITJ               97  97                                   CCB016
+     C           *IN97     IFEQ '1'                                                           CCB016
+     C                     SETOF                     99                                       CCB016
+     C                     GOTO NORECS                                                        CCB016
+     C                     END                                                                CCB016
+      *                                                                                       CCB016
+     C           *LOVAL    SETLLSDCOMPL1
+     C**
+     C           *IN97     DOUEQ'1'
+     C** READ COMPANY FILE
+     C                     READ SDCOMPL1                 97
+     C           *IN97     CABEQ'1'       DEFS9
+     C** IF LIVE CO
+     C                     MOVE ' '       FX2     1
+     C                     MOVE ' '       LN2     1
+     C                     MOVE ' '       FRA2    1                       LN0365
+     C                     MOVE ' '       IRS2    1                       LN0365
+     C** ACCESS CO LIMIT
+     C                     MOVE CNUMX     CUST
+     C                     MOVE 'C'       LVL
+     C                     MOVE APCMCD    ENT
+     C                     SETOF                     99
+     C           KEY       CHAINLIMITJ               99
+     C** IF FOUND
+     C           *IN99     IFNE '1'
+     C** IF FX REQD
+     C           FX        IFEQ 'Y'
+     C** IF FIRST TIME, SAVE LIMIT TYPE FOR COMPARISON
+     C           *IN90     IFEQ '1'
+     C                     SETOF                     90
+     C                     MOVE DZFXLT    SAVF
+     C                     ELSE
+     C** ELSE SEE IF LIMIT TYPE HAS CHANGED
+     C                     EXSR SFX
+     C                     END
+     C** IF FX LIMIT EXISTS, CALC LIMIT
+     C           DZFXLT    IFNE *BLANK
+     C           FLPC1     DIV  100       PCENT   32
+     C           DZFLAM    MULT PCENT     DZFLAM
+     C                     ADD  DZFLAM    FXLIM
+     C                     ELSE
+     C** ELSE  GET CO DEFAULT
+     C                     MOVE 'Y'       FX2
+     C                     END
+     C                     END
+     C** IF LN REQD
+     C           LN        IFEQ 'Y'
+     C** IF FIRST TIME, SAVE LIMIT TYPE FOR COMPARISON
+     C           *IN91     IFEQ '1'
+     C                     SETOF                     91
+     C                     MOVE DZLLTY    SAVL
+     C                     ELSE
+     C** ELSE SEE IF LIMIT TYPE HAS CHANGED
+     C                     EXSR SLN
+     C                     END
+     C** IF LN LIMIT EXISTS, CALC LIMIT
+     C           DZLLTY    IFNE *BLANK
+     C           LLPC1     DIV  100       PCENT
+     C           DZLLAM    MULT PCENT     DZLLAM
+     C                     ADD  DZLLAM    LNLIM
+     C                     EXSR SLN
+     C                     ELSE
+     C** ELSE  GET CO DEFAULT
+     C                     MOVE 'Y'       LN2
+     C                     END
+     C**
+     C                     END
+     C**
+     C** IF FRA REQD
+     C           FRA       IFEQ 'Y'
+     C***IF*FRA*LIMIT*EXISTS***                                           LN0364
+     C** IF FRA LIMIT EXISTS UPDATE LIMIT TOTAL                           LN0364
+     C           DZFRLA    IFGT 0                                         LN0365
+     C           DZFRED    IFGT RUND                                      LN0364
+     C           DZFRED    OREQ 0                                         LN0364
+     C** IF LIVE LIMIT                                                    LN0364
+     C**********           MOVE DZFRLA    FRLIM                           LN0364
+     C                     ADD  DZFRLA    FRLIM                           LN0364
+     C                     END                                            LN0364
+     C** ELSE  GET CO DEFAULT                                             LN0365
+     C                     ELSE                                           LN0365
+     C                     MOVE 'Y'       FRA2                            LN0365
+     C                     END                                            LN0365
+     C**
+     C                     END
+     C**
+     C**
+     C** IF IRS REQD
+     C           IRS       IFEQ 'Y'
+     C***IF*IRA*LIMIT*EXISTS***                                           LN0364
+     C** IF IRS LIMIT EXISTS UPDATE LIMIT TOTAL                           LN0364
+     C           DZIRLM    IFGT 0                                         LN0365
+     C           DZIRED    IFGT RUND                                      LN0364
+     C           DZIRED    OREQ 0                                         LN0364
+     C** IF LIVE LIMIT                                                    LN0364
+     C**********           MOVE DZIRLM    IRLIM                           LN0364
+     C                     ADD  DZIRLM    IRLIM                           LN0364
+     C                     END                                            LN0364
+     C** ELSE  GET CO DEFAULT                                             LN0365
+     C                     ELSE                                           LN0365
+     C                     MOVE 'Y'       IRS2                            LN0365
+     C                     END                                            LN0365
+     C**                                                                  LN0365
+     C                     END
+     C**
+     C* ELSE NO RECORD FOUND - GET COMPANY DEFAULTS                       LN0528
+     C                     ELSE                                           LN0528
+     C           NORECS    TAG                                                                CCB016
+     C                     MOVE FX        FX2                             LN0528
+     C                     MOVE LN        LN2                             LN0528
+     C                     MOVE FRA       FRA2                            LN0528
+     C                     MOVE IRS       IRS2                            LN0528
+     C                     END
+     C***IF*NOT*FOUND**OR*FX2*=Y**OR*LN2=Y**GET*DFT*FOR*THIS*CO**         LN0365
+     C** IF NOT FOUND, OR FX2 =Y, OR LN2=Y, OR FRA2 =Y, OR IRS2 =Y        LN0365
+     C** THEN GET DEFAULT FOR THIS COMPANY                                LN0365
+     C           *IN99     IFEQ '1'
+     C           FX2       OREQ 'Y'
+     C           LN2       OREQ 'Y'
+     C           FRA2      OREQ 'Y'                                       LN0365
+     C           IRS2      OREQ 'Y'                                       LN0365
+     C                     MOVE APCMCD    CMPYX
+     C                     EXSR DEFC
+     C                     END
+     C                     END
+     C**
+     C           DEFS9     ENDSR                           ** DEFS9 **
+     C*****************************************************************
+     C**  SFX  SR TO CHECK IF FX LIMIT TYPE HAS CHANGED
+     C           SFX       BEGSR                           ** SFX  **
+     C**
+     C           FXSAME    IFEQ 'Y'
+     C           DZFXLT    COMP SAVF                 9999
+     C   99                MOVE 'N'       FXSAME
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C**  SLN  SR TO CHECK IF LN LIMIT TYPE HAS CHANGED
+     C           SLN       BEGSR                           ** SLN  **
+     C**
+     C           LNSAME    IFEQ 'Y'
+     C           DZLLTY    COMP SAVL                 9999
+     C   99                MOVE 'N'       LNSAME
+     C                     END
+     C                     ENDSR
+0273 C********************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

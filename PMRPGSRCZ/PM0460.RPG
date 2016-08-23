@@ -1,0 +1,1973 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM T/O by Instrument Type per Department')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module                      *
+     F*                                                               *
+     F*  PM0460  - TURNOVER BY INSTRUMENT TYPE PER DEPARTMENT         *
+     F*                                                               *
+     F*  Function:  This program processes and prints turnover by     *
+     F*   (COB)     instrument type with totals for A/C officer and   *
+     F*             his contracts, totals for instrument type and     *
+     F*             instrument contracts, total turnover in display   *
+     F*             groups with its contracts and totals for depart-  *
+     F*             ment with contracts on department level.          *
+     F*             This can be done for specific department or for   *
+     F*             all departments. Printer files are split for      *
+     F*             different departments.                            *
+     F*                                                               *
+     F*  Called By: PMC0460 - TURNOVER BY INSTRUMENT PER DEPARTMENT   *
+     F*                                                               *
+     F*  Calls:  AOBANKR0                                             *
+     F*          AOCURRR0                                             *
+     F*          AOPLINR0                                             *
+     F*          AODEPTR0                                             *
+     F*          ZSFILE                                               *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01486             Date 07Oct94               *
+      *                 049467             Date 28Jan93               *
+     F*                 33615              DATE 01JUL91               *
+     F*                 R1037              DATE 13DEC90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*  S01486 - Portfolio Management Upgrade to Release 10          *
+     F*  049467 - RECOMPILED FOR RELEASE 3 PTF 02                     *
+     F*  33615  - SUNDRY CORRECTIONS TO TURNOVER REPORTS              *
+     F*           LE NO D'ERREUR NE SE RETOUVE PAS EN REGARD DES      *
+     F*           LIGNES CHANGEES - CES LIGNES SONT PROBABLEMENT      *
+     F*           CELLES ECRITES LE 01/07/91                          *
+     F*  R1037  - ROUND AMOUNTS TO THE UPPER UNIT                     *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F***SDBANKL1IF**E           K        DISK                            S01486
+     F***PREFIX*:*BJ***************************************************   S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F***SDCURRL0IF**E           K        DISK                            S01486
+     F***PREFIX*:*A6***************************************************   S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F***PMHSEXPPIF**E           K        DISK                            S01486
+     F***PREFIX*:*Q8***************************************************   S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F***PMDSPGPPIF**E           K        DISK                            S01486
+     F***PREFIX*:*PA***************************************************   S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F***SDPLINPDIF**E           K        DISK                            S01486
+     F***PREFIX*:*PD***************************************************   S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F***SDDEPTL1IF**E           K        DISK                            S01486
+     F***PREFIX*:*AE***************************************************   S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F***PMTUR1POIF**E           K        DISK                            S01486
+     F***********                                   KINFSR *PSSR          S01486
+     FPMHSEXPDIF  E           K        DISK                               S01486
+     F**  PREFIX : Q8                                                     S01486
+     F                                              KINFSR *PSSR          S01486
+     FPMDSPGPDIF  E           K        DISK                               S01486
+     F**  PREFIX : PA                                                     S01486
+     F                                              KINFSR *PSSR          S01486
+     FPMTUR1Q0IF  E           K        DISK                               S01486
+     F**  PREFIX : AZ,BB,SB                                               S01486
+     F                                              KINFSR *PSSR          S01486
+     FPM0460P1O   E                    PRINTER                        UC
+     F***PREFIX*:*PP***************************************************   S01486
+     F** PREFIX : RR                                                      S01486
+     F                                              KINFSR #NEWP          S01486
+     F                                              KINFDS SPOOL          S01486
+     FPM0460AUO   E                    PRINTER                            S01486
+     F** PREFIX : RR                                                      S01486
+     F                                              KINFDS SPOOLU         S01486
+     F*
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       21         CONTRACT AMOUNT 1 IS GREATER THAN 0
+     F*       22         CONTRACT AMOUNT 2 IS GREATER THAN 0
+     F*       23         CONTRACT AMOUNT 3 IS GREATER THAN 0
+     F*       24         CONTRACT AMOUNT 4 IS GREATER THAN 0
+     F*       25         CONTRACT AMOUNT 5 IS GREATER THAN 0
+     F*       31         AMOUNT 1 IS GREATER THAN 0
+     F*       32         AMOUNT 2 IS GREATER THAN 0
+     F*       33         AMOUNT 3 IS GREATER THAN 0
+     F*       34         AMOUNT 4 IS GREATER THAN 0
+     F*       35         AMOUNT 5 IS GREATER THAN 0
+     F*       61         CONTRACT DISPLAY GROUP 1 GRATER THAN 0           S01486
+     F*       62         CONTRACT DISPLAY GROUP 2 GRATER THAN 0           S01486
+     F*       63         CONTRACT DISPLAY GROUP 3 GRATER THAN 0           S01486
+     F*       64         CONTRACT DISPLAY GROUP 4 GRATER THAN 0           S01486
+     F*       65         CONTRACT DISPLAY GROUP 5 GRATER THAN 0           S01486
+     F*
+     F*       70         NEW INSTRUMENT TYPE
+     F********71*********NEW CURRENCY                                     S01486
+     F********72*********FIRST RECORD HAS BEEN READ                       S01486
+     F*       71         NON-ZERO TURNOVER FOR DEPARTMENT                 S01486
+     F*       72         FIRST RECORD TO WRITE                            S01486
+     F*       73         FILE OPERATIONS INDICATOR - PMDSPGPD             S01486
+     F********81*********FILE OPERATIONS INDICATOR - SDCURRL0             S01486
+     F********82*********FILE OPERATIONS INDICATOR - SDBANKL1             S01486
+     F********83*********FILE OPERATIONS INDICATOR - SDPLINPD             S01486
+     F********84*********FILE OPERATIONS INDICATOR - SDDEPTL1             S01486
+     F*       85         FILE OPERATIONS INDICATOR - PMTUR1PO
+     F*       86         FILE OPERATIONS INDICATOR - PM0460P1
+     F*
+     F*       98         DATE IN FORMAT MMDDYY
+     F*       99         WORK
+     F*
+     F*                Unused indicators
+     F*                -----------------
+     F*       01  02  03  04  05  06  07  08  09  10
+     F*       11  12  13  14  15  16  17  18  19  20
+     F*       ..  ..  ..  ..  ..  ..  ..  ..  ..  30
+     F*       ..  ..  ..  ..  ..  ..  ..  ..  ..  40
+     F*       41  42  43  44  45  46  47  48  49  50
+     F*       51  52  53  54  55  56  57  58  59  60
+     F*       ..  ..  ..  ..  ..  66  67  68  69  ..
+     F*       ..  ..  ..  74  75  76  77  78  79  80
+     F*       ..  ..  ..  ..  ..  ..  87  88  89  90
+     F*       91  92  93  94  95  96  97  ..  ..
+     F*
+     F*
+     F*       U7         DATABASE ERROR
+     F*       U8         PROGRAM  ERROR
+     F*
+     E*=========================================================================
+     E*
+     E** ARRAY FOR COPYRIGHT
+     E*
+     E                    CPY@    1   1 80
+     E***********                                                         S01486
+     E***ARRAY*FOR QCMDEXC - IBM COMMAND                                  S01486
+     E***********                                                         S01486
+     E***********         CMD     1   1 39                                S01486
+     E*
+     E** ARRAYS FOR S/R ZSEDIT
+     E*
+      /COPY ZSRSRC,ZSEDITZ1
+     E*
+     E** ARRAYS FOR S/R ZDATE2
+     E*
+      /COPY ZSRSRC,ZDATE2Z1
+     E*
+     E** ARRAY FOR S/R ZCCYXR
+     E*
+      /COPY ZSRSRC,ZPOWERZ1
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     ILDA         DS                            256
+     I***********                           132 141 WWFILE                S01486
+     I                                      134 183 WWLOT                 S01486
+     I                                      134 141 WWFILE                S01486
+     I                                      142 170 WWKEY
+     I                                      171 180 WWPGM
+     I                                      181 1830WWASE
+     I*                                                                   S01486
+     I*  DS FOR ACCESS PROGRAMS                                           S01486
+     I*                                                                   S01486
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I** EXTERNAL DS FOR BANK DETAILS                                     S01486
+     I*                                                                   S01486
+     ISDCURR    E DSSDCURRPD                                              S01486
+     I** EXTERNAL DS FOR CURRENCY DETAILS                                 S01486
+     I*                                                                   S01486
+     ISDPLIN    E DSSDPLINPD                                              S01486
+     I** EXTERNAL DS FOR PM/LB INSTRUMENT TYPE DETAILS                    S01486
+     I*                                                                   S01486
+     ISDDEPT    E DSSDDEPTPD                                              S01486
+     I** EXTERNAL DS FOR DEPARTMENT DETAILS                               S01486
+     I*                                                                   S01486
+     IDSFDY     E DSDSFDY                                                 S01486
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01486
+     IDSSDY     E DSDSSDY                                                 S01486
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG  DATA STRUCTURE               S01486
+      *                                                                   S01486
+      * INFSR DATA STRUCTURE FOR PRTF/P1                                  S01486
+     ISPOOL       DS                                                      S01486
+     I                                       83  92 SFILE                 S01486
+     I                                    B 123 1240SFNUM                 S01486
+     I                                    B 367 3680LINE                  S01486
+      * INFSR DATA STRUCTURE FOR PRTF/AUDIT                               S01486
+     ISPOOLU      DS                                                      S01486
+     I                                       83  92 SFILEU                S01486
+     I                                    B 123 1240SFNUMU                S01486
+     I                                    B 367 3680LINE1                 S01486
+     I*
+     I** DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      /COPY ZSRSRC,ZSEDITZ2
+     I*
+     I***DATA*STRUCTURE*TO*F0RMAT*AMOUNTS                                 S01486
+     I** DATA STRUCTURE TO FORMAT AMOUNTS                                 S01486
+     I*
+     IZOUT21      DS                             21
+     I                                        1  16 WFIELD
+     I*                                                                   R1037
+     I** DATA STRUCTURE TO ROUND AMOUNTS TO THE UPPER UNIT                R1037
+     I*                                                                   R1037
+     I            DS                                                      R1037
+     I                                        1  150WWAMND                R1037
+     I                                       12  120WWAMNU                R1037
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * INDEX OF SUBROUTINES                                                   *
+      * MAIN     -                                                             *
+      * #INIT    - INITIALIZE STANDARD FIELDS, ACCESS STANDING DATA            *
+      * #PA01    - INITIALIZE PRINTER FILE FIELDS, READ PMTUR1PO               *
+      * #PR01    - PROCESS HEADER PRINTING                                     *
+      * #PR02    - PROCESS A/C OFFICER DETAILS                                 *
+      * #PR03    - PROCESS DEPARTMENT TOTALS                                   *
+      * #PR04    - PROCESS INSTRUMENT TOTALS                                   *
+      * #W02     - FORMAT AND PRINT A/C OFFICER TOTALS                         *
+      * #W03     - FORMAT AND PRINT INSTRUMENT TOTALS                          *
+      * #W05     - FORMAT AND PRINT DEPARTMENT TOTALS                          *
+      * #W06     - FORMAT AND PRINT DISPLAY GROUP TOTALS                       *
+      * #NEWP    - START NEW PAGE                                              *
+      **#OVRP****-*OVERRIDE WITH PRINTER FILE                             S01486
+      * #RIDP    - REMOVE IMPLIED DECIMAL PLACES FOR AMOUNTS                   *
+      * #WRHAU   - PRINT AUDIT HEADER                                     S01486
+      * #WRTAU   - PRINT AUDIT DATABASE ERROR                             S01486
+      * *PSSR    - FILE ERROR HANDLING                                         *
+      * ZCCYXR   - CONVERT AMOUNT IN ANOTHER CURRENCY                          *
+      * ZDATE2   - CONVERT MIDAS DAY NUMBER TO DDMMYY                          *
+      * ZDATE1   - VALIDATE DATES AND CONVERT TO NUMBER OF DAYS           S01486
+      * ZHRATE   - TO DETERMINE FX RATE TO BASE CURRENCY AT EOM           S01486
+      * ZSEDIT   - EDIT AMOUNT FOR PRINTING                                    *
+      * ZZTURN   - CALCULATE RUNNING TOTALS & 'NO. OF CONTRACTS'               *
+      *                                                                        *
+      * EXTERNAL ROUTINES CALLED                                               *
+      **QCMDEXC**-*IBM*PROGRAM******                                      S01486
+      * AOBANKR0 - Midas PROGRAM                                          S01486
+      * AOCURRR0 - Midas PROGRAM                                          S01486
+      * AOPLINR0 - Midas PROGRAM                                          S01486
+      * AODEPTR0 - Midas PROGRAM                                          S01486
+      * ZSFILE   - Midas PROGRAM                                          S01486
+      *                                                                        *
+      **************************************************************************
+     C*================================================================
+     C*
+     C**  D E F I N E   W O R K   F I E L D S
+     C*
+     C************LIKE     DEFN AEPRTL    WWPREF                          S01486
+     C           *LIKE     DEFN MMTDAY    MMPREV
+     C           *LIKE     DEFN YYTDAY    YYPREV
+     C           *LIKE     DEFN SBNUCO    ZZCON
+     C           *LIKE     DEFN SBMTHN    ZZMM
+     C           *LIKE     DEFN SBYRNO    ZZYY
+     C           *LIKE     DEFN ZAMTT     WWAMNT
+     C           *LIKE     DEFN ZAMTT     ZZAMT
+     C           *LIKE     DEFN ZAMTT     ZAMT1
+     C           *LIKE     DEFN ZAMTT     ZAMT2
+     C           *LIKE     DEFN ZAMTT     ZAMT3
+     C           *LIKE     DEFN ZAMTT     ZAMT4
+     C           *LIKE     DEFN ZAMTT     ZAMT5
+     C************LIKE     DEFN ZAMTT     WWAMT1                          S01486
+     C************LIKE     DEFN ZAMTT     WWAMT2                          S01486
+     C************LIKE     DEFN ZAMTT     WWAMT3                          S01486
+     C************LIKE     DEFN ZAMTT     WWAMT4                          S01486
+     C************LIKE     DEFN ZAMTT     WWAMT5                          S01486
+     C           *LIKE     DEFN ZAMTT     WWINS1
+     C           *LIKE     DEFN ZAMTT     WWINS2
+     C           *LIKE     DEFN ZAMTT     WWINS3
+     C           *LIKE     DEFN ZAMTT     WWINS4
+     C           *LIKE     DEFN ZAMTT     WWINS5
+     C           *LIKE     DEFN ZAMTT     WWDPT1
+     C           *LIKE     DEFN ZAMTT     WWDPT2
+     C           *LIKE     DEFN ZAMTT     WWDPT3
+     C           *LIKE     DEFN ZAMTT     WWDPT4
+     C           *LIKE     DEFN ZAMTT     WWDPT5
+     C*================================================================
+      /EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*
+     C** PERFORM SETUP OF STANDARD FIELDS
+     C*
+     C                     EXSR #INIT
+     C                     EXSR #PA01
+     C*
+     C** TERMINATE PROGRAM
+     C*
+     C                     MOVE '1'       *INLR
+     C*================================================================
+     C*  P R O G R A M     E N D
+     C*================================================================
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #INIT    - INITIALIZE STANDARD FIELDS, ACCESS STANDING DATA            *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      * #WRHAU   - PRINT AUDIT HEADER                                     S01486
+      * #WRTAU   - PRINT AUDIT DATABASE ERROR                             S01486
+      * *PSSR    - FILE ERROR HANDLING                                         *
+      * ZDATE2   - CONVERT MIDAS DAY NUMBER TO DDMMYY                          *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * MAIN     -                                                             *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      **WWCMD****-*PARAMETER FOR QCMDEXC                                  S01486
+      **WWPRTL***-*PARAMETER FOR OVRPRTF                                  S01486
+      * SEQ      - PARAMETER FOR ZSFILE                                   S01486
+      *                                                                        *
+      **************************************************************************
+     C           #INIT     BEGSR                           ** #INIT  BSR *
+     C*
+     C                     MOVEL'J'       ZECODE
+     C*
+     C** RECEIVE INPUT PARAMETERS
+     C           *ENTRY    PLIST
+     C                     PARM           SEQ     5                       S01486
+     C***********          PARM           WWDEPT  4                       S01486
+     C*
+     C** PREPARE LDA
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVE *BLANKS   WWLOT                           S01486
+     C***********          MOVEL'PM0460'  DBPGM  10                       S01486
+     C                     MOVEL'PM0460'  WWPGM                           S01486
+     C                     Z-ADD0         WWASE                           S01486
+     C                     OUT  LDA                                       S01486
+     C*
+     C** GET INSTALLATION CONTROL DATA RECORD 1
+     C*
+     C***********          READ SDBANKL1                 82               S01486
+     C***********                                                         S01486
+     C************IN82     IFEQ '1'                                       S01486
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD  7                       S01486
+     C                     PARM '*FIRST ' P@OPTN  7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+     C*                                                                   S01486
+     C** IF RECORD NOT FOUND, ABORT PROGRAM                               S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C                     Z-ADD1         DBASE   30       **DB ERROR 01**
+     C***********          MOVEL'SDBANKL1'DBFILE 10                       S01486
+     C                     MOVE 'SDBANKPD'DBFILE 10                       S01486
+     C                     MOVE *BLANKS   DBKEY  29
+     C                     EXSR #WRHAU                                    S01486
+     C                     EXSR #WRTAU                                    S01486
+     C                     EXSR *PSSR
+     C                     ELSE
+     C*                                                                   S01486
+     C** PRINT HEADER FOR AUDIT                                           S01486
+     C                     EXSR #WRHAU                                    S01486
+     C*
+     C** GET BASE CURRENCY DETAILS
+     C*
+     C***********BJCYCD    CHAINSDCURRL0             81                   S01486
+     C***********                                                         S01486
+     C************IN81     IFEQ '1'                                       S01486
+     C                     CALL 'AOCURRR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD                          S01486
+     C                     PARM '*KEY'    P@OPTN                          S01486
+     C                     PARM BJCYCD    P@KEY3  3                       S01486
+     C           SDCURR    PARM SDCURR    DSSDY                           S01486
+     C*                                                                   S01486
+     C** IF RECORD NOT FOUND, ABORT PROGRAM                               S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C                     Z-ADD2         DBASE            **DB ERROR 02**
+     C***********          MOVEL'SDCURRL0'DBFILE                          S01486
+     C                     MOVE 'SDCURRPD'DBFILE                          S01486
+     C                     MOVE *BLANKS   DBKEY                           S01486
+     C                     MOVELBJCYCD    DBKEY                           S01486
+     C                     EXSR #WRTAU                                    S01486
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     END
+     C*
+     C***INITIALIZE '1ST RECORD' INDICATOR                                S01486
+     C*  INITIALIZE '1ST RECORD TO WRITE' INDICATORS                      S01486
+     C*
+     C                     MOVE '0'       *IN71                           S01486
+     C                     MOVE '0'       *IN72
+     C*
+     C****BUILD*COMMAND EXPRESSION FOR QCMDEXC                            S01486
+     C***********                                                         S01486
+     C***********          MOVELCMD,1     WWCMD  43                       S01486
+     C***********          MOVE ')'       WWPRTL  4                       S01486
+     C*
+     C** SAVE NO. OF DECIMAL PLACES FOR BASE CURRENCY
+     C*
+     C                     MOVELA6NBDP    ZCDPT
+     C                     MOVELBJCYCD    RRCYCD
+     C*
+     C** CALCULATE DATES TO BE USED IN SUBROUTINE ZZTURN
+     C*
+     C                     MOVE '1'       *IN98
+     C                     MOVELBJRDNB    ZDAYNO
+     C                     EXSR ZDATE2
+     C*
+     C                     MOVELZDATE     MMTDAY  20
+     C                     MOVE ZDATE     YYTDAY  20
+     C*
+     C           YYTDAY    IFEQ 0
+     C                     Z-ADD99        YYPREV
+     C                     ELSE
+     C                     MOVE YYTDAY    YYPREV
+     C                     SUB  1         YYPREV
+     C                     END
+     C*
+     C           MMTDAY    IFEQ 1
+     C                     Z-ADD12        MMPREV
+     C                     ELSE
+     C                     MOVE MMTDAY    MMPREV
+     C                     SUB  1         MMPREV
+     C                     END
+     C*
+     C                     ENDSR                           ** #INIT  ESR *
+     C*
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #PA01    - INITIALIZE PRINTER FILE FIELDS, READ PMTUR1PO               *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      **#PR01****-*PROCESS HEADER PRINTING                                S01486
+      * #WRTAU   - PRINT AUDIT DATABASE ERROR                             S01486
+      * *PSSR    - FILE ERROR HANDLING                                    S01486
+      * #PR02    - PROCESS A/C OFFICER DETAILS                                 *
+      * #PR03    - PROCESS DEPARTMENT TOTALS                                   *
+      * #W05     - FORMAT AND PRINT DEPARTMENT TOTALS                          *
+      **#W05*****-*FORMAT*AND*PRINT*DISPLAY GROUP TOTALS                  S01486
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * MAIN     -                                                             *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      **WWPRTL***-*PARAMETER*FOR*OVRPRTF                                  S01486
+      * WWDPT1   - DEPARTMENT TOTAL 1                                          *
+      * WWDPT2   - DEPARTMENT TOTAL 2                                          *
+      * WWDPT3   - DEPARTMENT TOTAL 3                                          *
+      * WWDPT4   - DEPARTMENT TOTAL 4                                          *
+      * WWDPT5   - DEPARTMENT TOTAL 5                                          *
+      *                                                                        *
+      **************************************************************************
+     C           #PA01     BEGSR                           ** #PA01  BSR *
+     C*
+     C***********          READ PMTUR1PO                 85               S01486
+     C                     READ PMTUR1P0                 85               S01486
+     C***********                                                         S01486
+     C***OPEN*PRINTER*FILE*********************************************   S01486
+     C***********                                                         S01486
+     C***********          EXSR #OVRP                                     S01486
+     C*
+     C***PRINT*HEADER*&*'NO*DETAIL*TO*REPORT'**************************   S01486
+     C*
+     C************IN85     IFEQ '1'                                       S01486
+     C***********                                                         S01486
+     C***IF*SPECIFIC DEPARTMENT REQUESTED OBTAIN DEPRTMENT NAME           S01486
+     C***********WWDEPT    IFNE '*ALL'                                    S01486
+     C***********                                                         S01486
+     C***********          MOVELWWDEPT    AEDPCD                          S01486
+     C***********          MOVELAEDPCD    RRDPCD                          S01486
+     C***********AEDPCD    CHAINSDDEPTL1             84                   S01486
+     C***********          MOVELAEDPNM    RRDPNM                          S01486
+     C***********                                                         S01486
+     C***OTHERWISE OUTPUT ALL + TEXT                                      S01486
+     C***********          ELSE                                           S01486
+     C***********          MOVEL'*ALL'    RRDPCD                          S01486
+     C***********          MOVEL'ALL DEPA'WWDPNM 15                       S01486
+     C***********          MOVE 'RTMENTS' WWDPNM                          S01486
+     C***********          MOVELWWDPNM    RRDPNM                          S01486
+     C***********          END                                            S01486
+     C***********                                                         S01486
+     C***********          WRITEHEADRE                                    S01486
+     C***********          WRITEDEPMT                                     S01486
+     C***********          WRITENODET                                     S01486
+     C***********                                                         S01486
+     C***********          MOVE *BLANKS   RRDPCD                          S01486
+     C***********          END                                            S01486
+     C*
+     C*  PROCESSING FOR EXISTING PMTUR1Q0 RECORDS                         S01486
+     C*                                                                   S01486
+     C           *IN85     DOWEQ'0'                        B1
+     C***********          MOVELAEDPCD    RRDPCD                          S01486
+     C***********          MOVELAEDPCD    WWDPCD                          S01486
+     C                     MOVELAEDPCD    WWDPCD  3                       S01486
+     C***********          MOVELAZACOC    RRACOC                          S01486
+     C                     Z-ADD0         WWDSGN                          S01486
+     C                     Z-ADD0         WWNUMB                          S01486
+     C                     MOVE *BLANKS   RRICCY
+     C*
+     C** ZEROISE DEPARTMENT TOTALS
+     C*
+     C                     Z-ADD0         WWDPT1
+     C                     Z-ADD0         WWDPT2
+     C                     Z-ADD0         WWDPT3
+     C                     Z-ADD0         WWDPT4
+     C                     Z-ADD0         WWDPT5
+     C                     Z-ADD0         RRDPC1
+     C                     Z-ADD0         RRDPC2
+     C                     Z-ADD0         RRDPC3
+     C                     Z-ADD0         RRDPC4
+     C                     Z-ADD0         RRDPC5
+     C** ZEROISE DISPLAY GROUP INDICATORS                                 S01486
+     C                     MOVE '0'       *IN61                           S01486
+     C                     MOVE '0'       *IN62                           S01486
+     C                     MOVE '0'       *IN63                           S01486
+     C                     MOVE '0'       *IN64                           S01486
+     C                     MOVE '0'       *IN65                           S01486
+     C***********                                                         S01486
+     C***PROCESS*HEADER PRINTING                                          S01486
+     C***********                                                         S01486
+     C***********          EXSR #PR01                                     S01486
+     C*
+     C** DO WHILE SAME DEPARTMENT                                         S01486
+     C*                                                                   S01486
+     C           AEDPCD    DOWEQWWDPCD                     B2
+     C           *IN85     ANDEQ'0'
+     C*                                                                   S01486
+     C** ACCESS INSTRUMENT DETAIL                                         S01486
+     C                     MOVELSBINNR    RRINNR
+     C***********SBINNR    CHAINSDPLINPD             83                   S01486
+     C                     CALL 'AOPLINR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD                          S01486
+     C                     PARM '*KEY'    P@OPTN                          S01486
+     C                     PARM SBINNR    P@KEY3  3                       S01486
+     C           SDPLIN    PARM SDPLIN    DSFDY                           S01486
+     C*                                                                   S01486
+     C** IF RECORD NOT FOUND, ABORT PROGRAM                               S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C                     Z-ADD5         DBASE            **DB ERROR 05**S01486
+     C                     MOVE 'SDPLINPD'DBFILE                          S01486
+     C                     MOVE *BLANKS   DBKEY                           S01486
+     C                     MOVELSBINNR    DBKEY                           S01486
+     C                     EXSR #WRTAU                                    S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     MOVELPDISTN    RRISTN
+     C*
+     C** PROCESS A/C OFFICER DETAILS
+     C*
+     C                     EXSR #PR02
+     C*
+     C** PROCESS DEPARTMENT TOTALS
+     C*
+     C                     EXSR #PR03
+     C                     END                             E2
+     C*
+     C***********WWDPT1    IFEQ 0                          B2             S01486
+     C***********WWDPT2    ANDEQ0                                         S01486
+     C***********WWDPT3    ANDEQ0                                         S01486
+     C***********WWDPT4    ANDEQ0                                         S01486
+     C***********WWDPT5    ANDEQ0                                         S01486
+     C***********RRDPC1    ANDEQ0                                         S01486
+     C***********RRDPC2    ANDEQ0                                         S01486
+     C***********RRDPC3    ANDEQ0                                         S01486
+     C***********RRDPC4    ANDEQ0                                         S01486
+     C***********RRDPC5    ANDEQ0                                         S01486
+     C***********          WRITENOTRN                                     S01486
+     C***********                                                         S01486
+     C***FORMAT*AND PRINT DEPARTMENT TOTALS                               S01486
+     C***********                                                         S01486
+     C***********          ELSE                            X2             S01486
+     C*                                                                   S01486
+     C** IF SOME TURNOVER WAS WRITTEN                                     S01486
+     C           *IN72     IFEQ '1'                        B2             S01486
+     C*                                                                   S01486
+     C** FORMAT AND PRINT DEPARTMENT TOTALS                               S01486
+     C                     EXSR #W05
+     C** WRITE END OF REPORT FOR DEPARTMENT   + CLOSE PRTF                S01486
+     C                     MOVELWWDPCD    RRRDPM                          S01486
+     C                     WRITEENDRE                  86                 S01486
+     C                     CLOSEPM0460P1                                  S01486
+     C** INITIALIZE '1ST RECORD TO WRITE' INDICATOR                       S01486
+     C                     MOVE '0'       *IN72                           S01486
+     C                     END                             E2
+     C*
+     C***********          MOVELAEDPCD    RRDPCD                          S01486
+     C***********          MOVELAEDPCD    WWDPCD  3                       S01486
+     C                     END                             E1
+     C*
+     C***********          WRITEENDRE                  86                 S01486
+     C*                                                                   S01486
+     C**  WRITE AUDIT RECORD - NO DETAILS TO REPORT                       S01486
+     C           *IN71     IFEQ '0'                                       S01486
+     C                     WRITEPM0460ND               86                 S01486
+     C                     END                                            S01486
+     C*
+     C                     ENDSR                           ** #PA01  ESR *
+     C*
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #PR01    - PROCESS HEADER PRINTING                                     *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      * #WRTAU   - PRINT AUDIT DATABASE ERROR                             S01486
+      * *PSSR    - FILE ERROR HANDLING                                    S01486
+      * #NEWP    - START NEW PAGE                                              *
+      **#OVRP****- OVERRIDE WITH PRINTER FILE                             S01486
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      **#PA01****- INITIALIZE PRINTER FILE FIELDS, READ PMTUR1PO          S01486
+      * #W02     - FORMAT AND PRINT A/C OFFICER TOTALS                    S01486
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      **WWPREF***- STORES PRINTER LOCATION CODE                           S01486
+      *                                                                        *
+      **************************************************************************
+     C           #PR01     BEGSR                           ** #PR01  BSR *
+     C*
+     C************IN72     IFEQ '0'                                       S01486
+     C***********          MOVE '1'       *IN72                           S01486
+     C***********          ELSE                                           S01486
+     C***********                                                         S01486
+     C***OPEN*NEW PRINTER FILE IF NEW PRINTER LOCATION CODE IS READ       S01486
+     C***********                                                         S01486
+     C***********AEPRTL    IFNE WWPREF                                    S01486
+     C***********          WRITEENDRE                                     S01486
+     C***********          CLOSEPM0460P1                                  S01486
+     C***********          EXSR #OVRP                                     S01486
+     C***********          END                                            S01486
+     C***********                                                         S01486
+     C***********          END                                            S01486
+     C*
+     C**  OPEN PRINTER FILE FOR NEW DEPARTMENT                            S01486
+     C                     OPEN PM0460P1                                  S01486
+     C                     MOVE '1'       *IN71                           S01486
+     C                     MOVE '1'       *IN72                           S01486
+     C*                                                                   S01486
+     C**  ENSURE SPOOL FILE RECORDED BY RCF                               S01486
+     C                     Z-ADD0         PAGE                            S01486
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01486
+     C*                                                                   S01486
+     C                     CALL 'ZSFILE'                                  S01486
+     C                     PARM           SEQ                             S01486
+     C                     PARM AEDPCD    SENTY                           S01486
+     C                     PARM           SFILE                           S01486
+     C                     PARM           ZSNUM                           S01486
+     C                     PARM *BLANK    ZSERR                           S01486
+     C*                                                                   S01486
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01486
+     C           ZSERR     IFEQ 'Y'                                       S01486
+     C                     SETON                     U7U8LR               S01486
+     C                     RETRN                                          S01486
+     C                     END                                            S01486
+     C*
+     C***********AEDPCD    CHAINSDDEPTL1             84                   S01486
+     C**                                                                  S01486
+     C** ACCESS DEPARTMENT DETAIL                                         S01486
+     C                     CALL 'AODEPTR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD                          S01486
+     C                     PARM '*KEY'    P@OPTN                          S01486
+     C                     PARM AEDPCD    P@KEY3  3                       S01486
+     C           SDDEPT    PARM SDDEPT    DSFDY                           S01486
+     C*                                                                   S01486
+     C** IF RECORD NOT FOUND, ABORT PROGRAM                               S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C                     Z-ADD3         DBASE            **DB ERROR 03**S01486
+     C                     MOVE 'SDDEPTPD'DBFILE                          S01486
+     C                     MOVE *BLANKS   DBKEY                           S01486
+     C                     MOVELAEDPCD    DBKEY                           S01486
+     C                     EXSR #WRTAU                                    S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C** PRINT HEADER                                                     S01486
+     C                     MOVELAEDPCD    RRDPCD                          S01486
+     C                     MOVELAEDPNM    RRDPNM                          S01486
+     C                     MOVELAEDPCD    RRRDPM                          S01486
+     C                     MOVELAEDPNM    RRRDPN                          S01486
+     C                     EXSR #NEWP
+     C*
+     C** ACCESS DISPLAY GROUP DETAILS FOR INSTRUMENT
+     C***********SBDSPG    CHAINPMDSPGPP             73                   S01486
+     C           SBDSPG    CHAINPMDSPGP0             73                   S01486
+     C           *IN73     IFEQ '1'
+     C**********           Z-ADD21        DBASE   30       **DB ERROR 01**S01486
+     C**********           MOVEL'PMDSPGPP'DBFILE 10                       S01486
+     C**********           MOVELSBDSPG    DBKEY  29                       S01486
+     C                     Z-ADD4         DBASE            **DB ERROR 04**S01486
+     C                     MOVEL'PMDSPGPD'DBFILE                          S01486
+     C                     MOVEL*BLANKS   DBKEY                           S01486
+     C                     MOVELSBDSPG    DBKEY                           S01486
+     C                     EXSR #WRTAU                                    S01486
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     MOVE PADSPG    RRDSPG
+     C                     MOVE PADSPT    RRDSPT
+     C                     END
+     C*
+     C********** *IN86     IFEQ '1'                        B1             S01486
+     C**********           EXSR #NEWP                      E1             S01486
+     C**********           END                             E1             S01486
+     C*
+     C                     WRITEDGHEAD                 86
+     C*
+     C                     ENDSR                           ** #PR01  ESR *
+     C*
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #PR02    - PROCESS A/C OFFICER DETAILS                                 *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      * ZHRATE   - TO DETERMINE FX RATE TO BASE CURRENCY AT EOM           S01486
+      * #WRTAU   - PRINT AUDIT DATABASE ERROR                             S01486
+      * *PSSR    - FILE ERROR HANDLING                                    S01486
+      * ZCCYXR   - CONVERT AMOUNT IN ANOTHER CURRENCY                          *
+      * ZZTURN   - CALCULATE RUNNING TOTALS & 'NO. OF CONTRACTS'               *
+      * #W02     - FORMAT AND PRINT A/C OFFICER TOTALS                         *
+      * #PR04    - PROCESS INSTRUMENT TOTALS                                   *
+      * #W03     - FORMAT AND PRINT INSTRUMENT TOTALS                          *
+      * #W06     - FORMAT AND PRINT DISPLAY GROUP TOTALS                  S01486
+      * #NEWP    - START NEW PAGE                                         S01486
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * #PA01    - INITIALIZE PRINTER FILE FIELDS, READ PMTUR1PO               *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      * WWINS1   - INSTRUMENT TOTAL 1                                          *
+      * WWINS2   - INSTRUMENT TOTAL 2                                          *
+      * WWINS3   - INSTRUMENT TOTAL 3                                          *
+      * WWINS4   - INSTRUMENT TOTAL 4                                          *
+      * WWINS5   - INSTRUMENT TOTAL 5                                          *
+      **WWAMT1***-*PREVIOUS*TURNOVER AMOUNT 1                             S01486
+      **WWAMT2***-*PREVIOUS*TURNOVER AMOUNT 2                             S01486
+      **WWAMT3***-*PREVIOUS*TURNOVER AMOUNT 3                             S01486
+      **WWAMT4***-*PREVIOUS*TURNOVER AMOUNT 4                             S01486
+      **WWAMT5***-*PREVIOUS*TURNOVER AMOUNT 5                             S01486
+      *                                                                        *
+      **************************************************************************
+     C           #PR02     BEGSR                           ** #PR02  BSR *
+     C*
+     C** ZEROISE INSTRUMENT TOTALS
+     C*
+     C                     Z-ADD0         WWINS1
+     C                     Z-ADD0         WWINS2
+     C                     Z-ADD0         WWINS3
+     C                     Z-ADD0         WWINS4
+     C                     Z-ADD0         WWINS5
+     C                     Z-ADD0         RRINC1
+     C                     Z-ADD0         RRINC2
+     C                     Z-ADD0         RRINC3
+     C                     Z-ADD0         RRINC4
+     C                     Z-ADD0         RRINC5
+     C                     MOVE '0'       *IN31
+     C                     MOVE '0'       *IN32
+     C                     MOVE '0'       *IN33
+     C                     MOVE '0'       *IN34
+     C                     MOVE '0'       *IN35
+     C                     MOVE '1'       *IN70
+     C*
+     C** DO WHILE SAME INSTRUMENT
+     C*
+     C           RRINNR    DOWEQSBINNR                     B1
+     C           AEDPCD    ANDEQWWDPCD
+     C           *IN85     ANDEQ'0'
+     C                     MOVE '0'       *IN21
+     C                     MOVE '0'       *IN22
+     C                     MOVE '0'       *IN23
+     C                     MOVE '0'       *IN24
+     C                     MOVE '0'       *IN25
+     C*
+     C** ZEROISE A/C OFFICER AMOUNTS
+     C*
+     C                     Z-ADD0         ZAMT1
+     C                     Z-ADD0         ZAMT2
+     C                     Z-ADD0         ZAMT3
+     C                     Z-ADD0         ZAMT4
+     C                     Z-ADD0         ZAMT5
+     C                     Z-ADD0         ZCONT1
+     C                     Z-ADD0         ZCONT2
+     C                     Z-ADD0         ZCONT3
+     C                     Z-ADD0         ZCONT4
+     C                     Z-ADD0         ZCONT5
+     C                     MOVE AZACOC    RRACOC
+     C*
+     C** ADD AMOUNTS WHILE SAME A/C OFFICER AND SAME INSTRUMENT
+     C*
+     C           RRACOC    DOWEQAZACOC                     B2
+     C           RRINNR    ANDEQSBINNR
+     C           AEDPCD    ANDEQWWDPCD
+     C           *IN85     ANDEQ'0'
+     C           SBTNVF    ADD  SBTNVR    ZAMTF
+     C*
+     C** ACCESS PF/PMHSEXPP TO OBTAIN DETAILS OF INSTRUMENT CURRENCY
+     C*
+     C           SBICCY    IFNE RRICCY                     B3
+     C           SBYRNO    ORNE WWYRNO
+     C           SBMTHN    ORNE WWMTHN
+     C*
+     C** DETERMINE FX RATE TO BASE WHEN TRANSACTION DONE USING SR/ZHRATE
+     C                     Z-ADDSBMTHN    ZMTHN
+     C                     Z-ADDSBYRNO    ZYEARN
+     C                     MOVE SBICCY    ZCCY
+     C                     EXSR ZHRATE
+     C*
+     C** NO RATE FOUND - TERMINATE WITH DATABASE ERROR
+     C           *IN99     IFEQ '1'
+     C***********          Z-ADD19        DBASE   30       **DB ERROR 01**S01486
+     C***********          MOVEL'PMHSEXPP'DBFILE 10                       S01486
+     C***********          MOVELZCCY      DBKEY  29                       S01486
+     C                     Z-ADD6         DBASE            **DB ERROR 06**S01486
+     C                     MOVEL'PMHSEXPD'DBFILE                          S01486
+     C                     MOVEL*BLANKS   DBKEY                           S01486
+     C                     MOVELZCCY      DBKEY                           S01486
+     C                     EXSR #WRTAU                                    S01486
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** SET UP DETAILS
+     C                     MOVELSBICCY    RRICCY  3
+     C                     Z-ADDSBYRNO    WWYRNO  20
+     C                     Z-ADDSBMTHN    WWMTHN  20
+     C                     Z-ADDZFXRT     ZCRSRT
+     C                     MOVELZMDIN     ZCRSMD
+     C                     Z-ADDZCDP      ZCDPF
+     C                     END                             E3
+     C*
+     C** CONVERT AMOUNT TO BASE CURRENCY
+     C*
+     C                     EXSR ZCCYXR
+     C*
+     C***STORE*A/C OFFICER AMOUNTS TO CHECK THAT NEW AMOUNT               S01486
+     C***IS*WITHIN VALID PERIOD                                           S01486
+     C***********                                                         S01486
+     C***********          Z-ADDZAMT1     WWAMT1                          S01486
+     C***********          Z-ADDZAMT2     WWAMT2                          S01486
+     C***********          Z-ADDZAMT3     WWAMT3                          S01486
+     C***********          Z-ADDZAMT4     WWAMT4                          S01486
+     C***********          Z-ADDZAMT5     WWAMT5                          S01486
+     C*
+     C** CALCULATE A/C OFFICER AMOUNTS
+     C*
+     C                     Z-ADDZAMTT     ZZAMT
+     C                     Z-ADDSBNUCO    ZZCON
+     C                     Z-ADDSBYRNO    ZZYY
+     C                     Z-ADDSBMTHN    ZZMM
+     C                     EXSR ZZTURN
+     C*
+     C***********          READ PMTUR1PO                 85               S01486
+     C                     READ PMTUR1P0                 85               S01486
+     C                     END                             E2
+     C*
+     C           ZAMT1     IFNE 0                          B2             S01486
+     C           ZAMT2     ORNE 0
+     C           ZAMT3     ORNE 0
+     C           ZAMT4     ORNE 0
+     C           ZAMT5     ORNE 0
+     C           ZCONT1    ORNE 0
+     C           ZCONT2    ORNE 0
+     C           ZCONT3    ORNE 0
+     C           ZCONT4    ORNE 0
+     C           ZCONT5    ORNE 0
+     C*
+     C** ADD INSTRUMENT TOTALS TO DISPLAY GROUP TOTAL
+     C                     ADD  ZAMT1     WWDST1 150
+     C                     ADD  ZAMT2     WWDST2 150
+     C                     ADD  ZAMT3     WWDST3 150
+     C                     ADD  ZAMT4     WWDST4 150
+     C                     ADD  ZAMT5     WWDST5 150
+     C                     ADD  ZCONT1    RRDGC1
+     C                     ADD  ZCONT2    RRDGC2
+     C                     ADD  ZCONT3    RRDGC3
+     C                     ADD  ZCONT4    RRDGC4
+     C                     ADD  ZCONT5    RRDGC5
+     C*
+     C** FORMAT AND PRINT A/C OFFICER TOTALS
+     C*
+     C                     EXSR #W02
+     C*
+     C** PROCESS INSTRUMENT TOTALS
+     C*
+     C                     EXSR #PR04
+     C                     END                             E2
+     C*
+     C                     END                             E1
+     C***********                                                         S01486
+     C***PRINT*INSTRUMENT TOTALS                                          S01486
+     C*
+     C** IF SOME TURNOVER WAS WRITTEN                                     S01486
+     C           *IN72     IFEQ '1'                        B1             S01486
+     C** IF SOME AMOUNT GREATER THAN 0                                    S01486
+     C***********WWINS1    IFNE 0                          B1             S01486
+     C           WWINS1    IFNE 0                          B2             S01486
+     C           WWINS2    ORNE 0
+     C           WWINS3    ORNE 0
+     C           WWINS4    ORNE 0
+     C           WWINS5    ORNE 0
+     C           RRINC1    ORNE 0
+     C           RRINC2    ORNE 0
+     C           RRINC3    ORNE 0
+     C           RRINC4    ORNE 0
+     C           RRINC5    ORNE 0
+     C** PRINT INSTRUMENT TOTALS                                          S01486
+     C                     EXSR #W03
+     C***********          END                             E1             S01486
+     C                     END                             E2             S01486
+     C*
+     C** IF CHANGE OF DISPLAY GROUP OUTPUT TOTALS
+     C***********SBDSPG    IFNE RRDSPG                                    S01486
+     C           SBDSPG    IFNE RRDSPG                     B2             S01486
+     C           AEDPCD    ANDEQWWDPCD
+     C                     EXSR #W06
+     C***********          END                                            S01486
+     C***********                                                         S01486
+     C***PRINT*DISPLAY GROUP TITLE                                        S01486
+     C***********SBDSPG    IFNE RRDSPGP0                   B1             S01486
+     C***********AEDPCD    ANDEQWWDPCDP0                                  S01486
+     C*
+     C** ACCESS DISPLAY GROUP DETAILS FOR INSTRUMENT
+     C***********SBDSPG    CHAINPMDSPGPP             73                   S01486
+     C           SBDSPG    CHAINPMDSPGP0             73                   S01486
+     C           *IN73     IFEQ '1'                        B2
+     C**********           Z-ADD20        DBASE   30       **DB ERROR 01**S01486
+     C**********           MOVEL'PMDSPGPP'DBFILE 10                       S01486
+     C**********           MOVELSBDSPG    DBKEY  29                       S01486
+     C                     Z-ADD7         DBASE            **DB ERROR 07**S01486
+     C                     MOVEL'PMDSPGPD'DBFILE                          S01486
+     C                     MOVEL*BLANKS   DBKEY                           S01486
+     C                     MOVELSBDSPG    DBKEY                           S01486
+     C                     EXSR #WRTAU                                    S01486
+     C                     EXSR *PSSR
+     C                     ELSE                            X2
+     C                     MOVE PADSPG    RRDSPG
+     C                     MOVE PADSPT    RRDSPT
+     C                     END                             E2
+     C*
+     C           *IN86     IFEQ '1'                        B1
+     C                     EXSR #NEWP
+     C                     END                             E1
+     C*
+     C                     WRITEDGHEAD                 86
+     C***********          END                             E1             S01486
+     C                     END                             E2             S01486
+     C*
+     C                     END                             E1             S01486
+     C*
+     C***********          MOVE SBINNR    RRINNR                          S01486
+     C***********          MOVE AZACOC    RRACOC                          S01486
+     C*
+     C                     ENDSR                           ** #PR02  ESR *
+     C*
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #PR03    - PROCESS DEPARTMENT TOTALS                                   *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * #PA01    - INITIALIZE PRINTER FILE FIELDS, READ PMTUR1PO               *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      * WWDPT1   - DEPARTMENT TOTAL 1                                          *
+      * WWDPT2   - DEPARTMENT TOTAL 2                                          *
+      * WWDPT3   - DEPARTMENT TOTAL 3                                          *
+      * WWDPT4   - DEPARTMENT TOTAL 4                                          *
+      * WWDPT5   - DEPARTMENT TOTAL 5                                          *
+      *                                                                        *
+      **************************************************************************
+     C           #PR03     BEGSR                           ** #PR03  BSR *
+     C*
+     C                     ADD  WWINS1    WWDPT1
+     C                     ADD  WWINS2    WWDPT2
+     C                     ADD  WWINS3    WWDPT3
+     C                     ADD  WWINS4    WWDPT4
+     C                     ADD  WWINS5    WWDPT5
+     C                     ADD  RRINC1    RRDPC1
+     C                     ADD  RRINC2    RRDPC2
+     C                     ADD  RRINC3    RRDPC3
+     C                     ADD  RRINC4    RRDPC4
+     C                     ADD  RRINC5    RRDPC5
+     C*
+     C                     ENDSR                           ** #PR03  ESR *
+     C*
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #PR04    - PROCESS INSTRUMENT TOTALS                                   *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * #PR02    - PROCESS A/C OFFICER DETAILS                                 *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      * WWINS1   - INSTRUMENT TOTAL 1                                          *
+      * WWINS2   - INSTRUMENT TOTAL 2                                          *
+      * WWINS3   - INSTRUMENT TOTAL 3                                          *
+      * WWINS4   - INSTRUMENT TOTAL 4                                          *
+      * WWINS5   - INSTRUMENT TOTAL 5                                          *
+      *                                                                        *
+      **************************************************************************
+     C           #PR04     BEGSR                           ** #PR04  BSR *
+     C*
+     C                     ADD  ZCONT1    RRINC1
+     C                     ADD  ZCONT2    RRINC2
+     C                     ADD  ZCONT3    RRINC3
+     C                     ADD  ZCONT4    RRINC4
+     C                     ADD  ZCONT5    RRINC5
+     C*
+     C                     ENDSR                           ** #PR04  ESR *
+     C*
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #W02     - FORMAT AND PRINT A/C OFFICER TOTALS                         *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      * #RIDP    - REMOVE IMPLIED DECIMAL PLACES FOR AMOUNTS                   *
+      * ZSEDIT   - EDIT AMOUNT FOR PRINTING                                    *
+      * #PR01    - PROCESS HEADER PRINTING                                S01486
+      * #NEWP    - START NEW PAGE                                              *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * #PR02    - PROCESS A/C OFFICER DETAILS                                 *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      * WWAMNT   -                                                             *
+      *                                                                        *
+      **************************************************************************
+     C           #W02      BEGSR                           ** #W02   BSR *
+     C*
+     C** REMOVE IMPLIED DECIMAL PLACES FOR OUTPUT FIELDS
+     C**          AND ADD THOUSANDS SEPARATORS
+     C*
+     C                     Z-ADD0         ZDECS
+     C*
+     C                     Z-ADDZAMT1     WWAMNT
+     C                     EXSR #RIDP
+     C                     ADD  WWAMNT    WWINS1
+     C                     MOVE WWAMNT    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE WFIELD    RRAMT1
+     C*
+     C                     Z-ADDZAMT2     WWAMNT
+     C                     EXSR #RIDP
+     C                     ADD  WWAMNT    WWINS2
+     C                     MOVE WWAMNT    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE WFIELD    RRAMT2
+     C*
+     C                     Z-ADDZAMT3     WWAMNT
+     C                     EXSR #RIDP
+     C                     ADD  WWAMNT    WWINS3
+     C                     MOVE WWAMNT    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE WFIELD    RRAMT3
+     C*
+     C                     Z-ADDZAMT4     WWAMNT
+     C                     EXSR #RIDP
+     C                     ADD  WWAMNT    WWINS4
+     C                     MOVE WWAMNT    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE WFIELD    RRAMT4
+     C*
+     C                     Z-ADDZAMT5     WWAMNT
+     C                     EXSR #RIDP
+     C                     ADD  WWAMNT    WWINS5
+     C                     MOVE WWAMNT    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE WFIELD    RRAMT5
+     C*
+     C** IF 1ST TURNOVER TO BE WRITE - OPEN PRTF + HEADER                 S01486
+     C           *IN72     IFEQ '0'                        B1             S01486
+     C                     EXSR #PR01                                     S01486
+     C                     END                             E1             S01486
+     C*
+     C** PRINT NEW INSTRUMENT TYPE AND NARRATIVE
+     C*
+     C           *IN70     IFEQ '1'                        B1
+     C                     MOVE *IN86     WIND86  1
+     C                     WRITEINSTR                  86
+     C                     MOVE '0'       *IN70
+     C                     END                             E1
+     C*
+     C                     MOVE *IN86     WWIN86  1
+     C                     WRITEAMNTS                  86
+     C                     ADD  1         WWDSGN  50
+     C                     ADD  1         WWNUMB  50                      S01486
+     C*
+     C           *IN86     IFEQ '1'                        B1
+     C           WWIN86    OREQ '1'
+     C           WIND86    OREQ '1'
+     C                     EXSR #NEWP
+     C                     MOVE '0'       WWIN86
+     C                     MOVE '0'       WIND86
+     C                     END                             E1
+     C*
+     C** PRINT NON-ZERO OFFICER CONTRACTS
+     C*
+     C           ZCONT1    IFGT 0                          B1
+     C           ZCONT2    ORGT 0
+     C           ZCONT3    ORGT 0
+     C           ZCONT4    ORGT 0
+     C           ZCONT5    ORGT 0
+     C*
+     C           ZCONT1    IFGT 0                          B2
+     C                     MOVE '1'       *IN21
+     C                     END                             E2
+     C*
+     C           ZCONT2    IFGT 0
+     C                     MOVE '1'       *IN22
+     C                     END
+     C*
+     C           ZCONT3    IFGT 0
+     C                     MOVE '1'       *IN23
+     C                     END
+     C*
+     C           ZCONT4    IFGT 0
+     C                     MOVE '1'       *IN24
+     C                     END
+     C*
+     C           ZCONT5    IFGT 0
+     C                     MOVE '1'       *IN25
+     C                     END
+     C*
+     C                     WRITECONTS                  86
+     C*
+     C           *IN86     IFEQ '1'                        B2
+     C                     EXSR #NEWP
+     C                     END                             E2
+     C*
+     C                     END                             E1
+     C*
+     C                     ENDSR                           ** #W02   ESR *
+     C*
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #W03     - FORMAT AND PRINT INSTRUMENT TOTALS                          *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      * #NEWP    - START NEW PAGE                                              *
+      * ZSEDIT   - EDIT AMOUNT FOR PRINTING                                    *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * #PR02    - PROCESS A/C OFFICER DETAILS                                 *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      * WWINS1   - INSTRUMENT TOTAL 1                                          *
+      * WWINS2   - INSTRUMENT TOTAL 2                                          *
+      * WWINS3   - INSTRUMENT TOTAL 3                                          *
+      * WWINS4   - INSTRUMENT TOTAL 4                                          *
+      * WWINS5   - INSTRUMENT TOTAL 5                                          *
+      *                                                                        *
+      **************************************************************************
+     C           #W03      BEGSR                           ** #W03   BSR *
+     C*
+     C** FORMAT INSTRUMENT TOTALS
+     C*
+     C           WWNUMB    IFGT 1
+     C                     MOVE WWINS1    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE WFIELD    RRINS1
+     C                     MOVE WWINS2    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE WFIELD    RRINS2
+     C                     MOVE WWINS3    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE WFIELD    RRINS3
+     C                     MOVE WWINS4    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE WFIELD    RRINS4
+     C                     MOVE WWINS5    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE WFIELD    RRINS5
+     C*
+     C** SET INDICATORS FOR PRINTER FILE
+     C*
+     C           RRINC1    IFGT 0
+     C                     MOVE '1'       *IN21
+     C                     END
+     C*
+     C           RRINC2    IFGT 0
+     C                     MOVE '1'       *IN22
+     C                     END
+     C*
+     C           RRINC3    IFGT 0
+     C                     MOVE '1'       *IN23
+     C                     END
+     C*
+     C           RRINC4    IFGT 0
+     C                     MOVE '1'       *IN24
+     C                     END
+     C*
+     C           RRINC5    IFGT 0
+     C                     MOVE '1'       *IN25
+     C                     END
+     C*
+     C           RRINS1    IFNE *BLANKS
+     C                     MOVE '1'       *IN31
+     C                     END
+     C*
+     C           RRINS2    IFNE *BLANKS
+     C                     MOVE '1'       *IN32
+     C                     END
+     C*
+     C           RRINS3    IFNE *BLANKS
+     C                     MOVE '1'       *IN33
+     C                     END
+     C*
+     C           RRINS4    IFNE *BLANKS
+     C                     MOVE '1'       *IN34
+     C                     END
+     C*
+     C           RRINS5    IFNE *BLANKS
+     C                     MOVE '1'       *IN35
+     C                     END
+     C*
+     C** PRINT INSTRUMENT TOTALS
+     C*
+     C                     WRITELINES                  86
+     C*
+     C           *IN86     IFEQ '1'
+     C                     EXSR #NEWP
+     C                     END
+     C*
+     C                     WRITETOTIN                  86
+     C*
+     C           *IN86     IFEQ '1'
+     C                     EXSR #NEWP
+     C                     END
+     C*
+     C** PRINT NON-ZERO INSTRUMENT CONTRACTS
+     C*
+     C           RRINC1    IFGT 0
+     C           RRINC2    ORGT 0
+     C           RRINC3    ORGT 0
+     C           RRINC4    ORGT 0
+     C           RRINC5    ORGT 0
+     C                     WRITETOTIC                  86
+     C*
+     C           *IN86     IFEQ '1'
+     C                     EXSR #NEWP
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     WRITELINE2                  86
+     C*
+     C           *IN86     IFEQ '1'
+     C                     EXSR #NEWP
+     C                     END
+     C                     END
+     C*
+     C***********          Z-ADD0         WWNUMB  50                      S01486
+     C                     Z-ADD0         WWNUMB                          S01486
+     C*
+     C                     ENDSR                           ** #W03   ESR *
+     C*
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #W05     - FORMAT AND PRINT DEPARTMENT TOTALS                          *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      * #W06     - FORMAT AND PRINT DISPLAY GROUP TOTALS                  S01486
+      * #NEWP    - START NEW PAGE                                              *
+      * ZSEDIT   - EDIT AMOUNT FOR PRINTING                                    *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * #PA01    - INITIALIZE PRINTER FILE FIELDS, READ PMTUR1PO               *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      * WWDPT1   - DEPARTMENT TOTAL 1                                          *
+      * WWDPT2   - DEPARTMENT TOTAL 2                                          *
+      * WWDPT3   - DEPARTMENT TOTAL 3                                          *
+      * WWDPT4   - DEPARTMENT TOTAL 4                                          *
+      * WWDPT5   - DEPARTMENT TOTAL 5                                          *
+      *                                                                        *
+      **************************************************************************
+     C           #W05      BEGSR                           ** #W05   BSR *
+     C*                                                                   S01486
+     C** OUTPUT TOTAL TURNOVER FOR DISPLAY GROUP                          S01486
+     C                     EXSR #W06                                      S01486
+     C*                                                                   S01486
+     C           *IN86     IFEQ '1'                                       S01486
+     C                     EXSR #NEWP                                     S01486
+     C                     END                                            S01486
+     C*
+     C** FORMAT DEPARTMENT TOTALS
+     C*
+     C                     MOVE WWDPT1    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE WFIELD    RRDPT1
+     C                     MOVE WWDPT2    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE WFIELD    RRDPT2
+     C                     MOVE WWDPT3    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE WFIELD    RRDPT3
+     C                     MOVE WWDPT4    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE WFIELD    RRDPT4
+     C                     MOVE WWDPT5    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE WFIELD    RRDPT5
+     C*
+     C           RRDPC1    IFGT 0
+     C                     MOVE '1'       *IN21
+     C                     END
+     C*
+     C           RRDPC2    IFGT 0
+     C                     MOVE '1'       *IN22
+     C                     END
+     C*
+     C           RRDPC3    IFGT 0
+     C                     MOVE '1'       *IN23
+     C                     END
+     C*
+     C           RRDPC4    IFGT 0
+     C                     MOVE '1'       *IN24
+     C                     END
+     C*
+     C           RRDPC5    IFGT 0
+     C                     MOVE '1'       *IN25
+     C                     END
+     C*
+     C           RRDPT1    IFNE *BLANKS
+     C                     MOVE '1'       *IN31
+     C                     END
+     C*
+     C           RRDPT2    IFNE *BLANKS
+     C                     MOVE '1'       *IN32
+     C                     END
+     C*
+     C           RRDPT3    IFNE *BLANKS
+     C                     MOVE '1'       *IN33
+     C                     END
+     C*
+     C           RRDPT4    IFNE *BLANKS
+     C                     MOVE '1'       *IN34
+     C                     END
+     C*
+     C           RRDPT5    IFNE *BLANKS
+     C                     MOVE '1'       *IN35
+     C                     END
+     C***********                                                         S01486
+     C***OUTPUT*TOTAL TURNOVER FOR DISPLAY GROUP                          S01486
+     C***********          EXSR #W06                                      S01486
+     C***********                                                         S01486
+     C************IN86     IFEQ '1'                                       S01486
+     C***********          EXSR #NEWP                                     S01486
+     C***********          END                                            S01486
+     C*
+     C** PRINT DEPARTMENT TOTALS
+     C*
+     C                     WRITELINES                  86
+     C                     MOVE *IN86     WIND86  1
+     C*
+     C                     WRITETOTDE                  86
+     C                     MOVE *IN86     WWIN86  1
+     C*
+     C** PRINT NON-ZERO DEPARTMENT CONTRACTS
+     C*
+     C           RRDPC1    IFGT 0
+     C           RRDPC2    ORGT 0
+     C           RRDPC3    ORGT 0
+     C           RRDPC4    ORGT 0
+     C           RRDPC5    ORGT 0
+     C                     WRITETOTDC                  86
+     C                     MOVE *IN86     WWIA86  1
+     C                     END
+     C*
+     C                     WRITELINES                  86
+     C*
+     C           *IN86     IFEQ '1'                        B1
+     C           WIND86    OREQ '1'
+     C           WWIN86    OREQ '1'
+     C           WWIA86    OREQ '1'
+     C                     EXSR #NEWP
+     C                     MOVE '0'       WIND86
+     C                     MOVE '0'       WWIN86
+     C                     MOVE '0'       WWIA86
+     C                     END                             E1
+     C*
+     C                     ENDSR                           ** #W05   ESR *
+     C*
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #W06     - FORMAT AND PRINT DISPLAY GROUP TOTALS                       *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      * #RIDP    - REMOVE IMPLIED DECIMAL PLACES FOR AMOUNTS              S01486
+      * ZSEDIT   - EDIT AMOUNT FOR PRINTING                                    *
+      * #NEWP    - START NEW PAGE                                              *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * #PR02    - PROCESS A/C OFFICER DETAILS                            S01486
+      * #W05     - FORMAT AND PRINT DEPARTMENT TOTALS                     S01486
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      * WWDST1   - DEPARTMENT TOTAL 1                                          *
+      * WWDST2   - DEPARTMENT TOTAL 2                                          *
+      * WWDST3   - DEPARTMENT TOTAL 3                                          *
+      * WWDST4   - DEPARTMENT TOTAL 4                                          *
+      * WWDST5   - DEPARTMENT TOTAL 5                                          *
+      *                                                                        *
+      **************************************************************************
+     C           #W06      BEGSR                           ** #W06   BSR *
+     C*
+     C**#FORMAT*DEPARTMENT*TOTALS                                         S01486
+     C**#FORMAT DISPLAY GROUP TOTALS                                      S01486
+     C*
+     C           WWDSGN    IFGT 1
+     C                     Z-ADD0         ZDECS
+     C                     Z-ADDWWDST1    WWAMNT
+     C                     EXSR #RIDP
+     C                     MOVE WWAMNT    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE WFIELD    RRDST1
+     C*
+     C                     Z-ADDWWDST2    WWAMNT
+     C                     EXSR #RIDP
+     C                     MOVE WWAMNT    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE WFIELD    RRDST2
+     C*
+     C                     Z-ADDWWDST3    WWAMNT
+     C                     EXSR #RIDP
+     C                     MOVE WWAMNT    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE WFIELD    RRDST3
+     C*
+     C                     Z-ADDWWDST4    WWAMNT
+     C                     EXSR #RIDP
+     C                     MOVE WWAMNT    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE WFIELD    RRDST4
+     C*
+     C                     Z-ADDWWDST5    WWAMNT
+     C                     EXSR #RIDP
+     C                     MOVE WWAMNT    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE WFIELD    RRDST5
+     C*
+     C           RRDGC1    IFGT 0
+     C***********          MOVE '1'       *IN21                           S01486
+     C                     MOVE '1'       *IN61                           S01486
+     C                     END
+     C*
+     C           RRDGC2    IFGT 0
+     C***********          MOVE '1'       *IN22                           S01486
+     C                     MOVE '1'       *IN62                           S01486
+     C                     END
+     C*
+     C           RRDGC3    IFGT 0
+     C***********          MOVE '1'       *IN23                           S01486
+     C                     MOVE '1'       *IN63                           S01486
+     C                     END
+     C*
+     C           RRDGC4    IFGT 0
+     C***********          MOVE '1'       *IN24                           S01486
+     C                     MOVE '1'       *IN64                           S01486
+     C                     END
+     C*
+     C           RRDGC5    IFGT 0
+     C***********          MOVE '1'       *IN25                           S01486
+     C                     MOVE '1'       *IN65                           S01486
+     C                     END
+     C*
+     C           RRDST1    IFNE *BLANKS
+     C                     MOVE '1'       *IN31
+     C                     END
+     C*
+     C           RRDST2    IFNE *BLANKS
+     C                     MOVE '1'       *IN32
+     C                     END
+     C*
+     C           RRDST3    IFNE *BLANKS
+     C                     MOVE '1'       *IN33
+     C                     END
+     C*
+     C           RRDST4    IFNE *BLANKS
+     C                     MOVE '1'       *IN34
+     C                     END
+     C*
+     C           RRDST5    IFNE *BLANKS
+     C                     MOVE '1'       *IN35
+     C                     END
+     C*
+     C** OUTPUT INDERLINES
+     C*
+     C                     WRITELINES                  86
+     C                     MOVE *IN86     WWIN86
+     C*
+     C                     WRITETOTDG                  86
+     C                     MOVE *IN86     WIND86
+     C*
+     C** PRINT NON-ZERO DEPARTMENT CONTRACTS
+     C*
+     C           RRDGC1    IFGT 0
+     C           RRDGC2    ORGT 0
+     C           RRDGC3    ORGT 0
+     C           RRDGC4    ORGT 0
+     C           RRDGC5    ORGT 0
+     C                     WRITETOTGC                  86
+     C                     MOVE *IN86     WWIA86
+     C                     END
+     C*
+     C                     WRITELINES                  86
+     C*
+     C           *IN86     IFEQ '1'
+     C           WIND86    OREQ '1'
+     C           WWIN86    OREQ '1'
+     C           WWIA86    OREQ '1'
+     C                     EXSR #NEWP
+     C                     MOVE '0'       WIND86
+     C                     MOVE '0'       WWIN86
+     C                     MOVE '0'       WWIA86
+     C                     END
+     C                     END
+     C*
+     C** RESET DISPLAY GROUP TOTALS TO ZERO
+     C                     Z-ADD0         WWDST1
+     C                     Z-ADD0         WWDST2
+     C                     Z-ADD0         WWDST3
+     C                     Z-ADD0         WWDST4
+     C                     Z-ADD0         WWDST5
+     C                     Z-ADD0         RRDGC1
+     C                     Z-ADD0         RRDGC2
+     C                     Z-ADD0         RRDGC3
+     C                     Z-ADD0         RRDGC4
+     C                     Z-ADD0         RRDGC5
+     C                     Z-ADD0         WWDSGN
+     C                     MOVE '0'       *IN61                           S01486
+     C                     MOVE '0'       *IN62                           S01486
+     C                     MOVE '0'       *IN63                           S01486
+     C                     MOVE '0'       *IN64                           S01486
+     C                     MOVE '0'       *IN65                           S01486
+     C*
+     C************         ENDSR                           ** #W05   ESR *S01486
+     C                     ENDSR                           ** #W06   ESR *S01486
+     C*
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #NEWP    - PRINT NEW PAGE                                              *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * #PR01    - PROCESS HEADER PRINTING                                     *
+      * #PR02    - PROCESS A/C OFFICER DETAILS                            S01486
+      * #W02     - FORMAT AND PRINT A/C OFFICER TOTALS                         *
+      * #W03     - FORMAT AND PRINT INSTRUMENT TOTALS                          *
+      * #W05     - FORMAT AND PRINT DEPARTMENT TOTALS                          *
+      * #W06     - FORMAT AND PRINT DISPLAY GROUP TOTALS                  S01486
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      *                                                                        *
+      **************************************************************************
+     C           #NEWP     BEGSR                           ** #NEWP  BSR *
+     C*
+     C                     WRITEHEADRE
+     C                     WRITEDEPMT
+     C                     WRITETRNVR
+     C                     MOVE '1'       *IN70
+     C                     MOVE '0'       *IN86                           S01486
+     C*
+     C                     ENDSR                           ** #NEWP  ESR *
+     C*
+      **************************************************************************
+      /EJECT
+      ********************************************************************S01486
+      ***********                                                         S01486
+      ***********                                                         S01486
+      **#OVRP****- OVERRIDE WITH PRINTER FILE                             S01486
+      ***********                                                         S01486
+      **SUBROUTINE CALLS:                                                 S01486
+      **QCMDEXC**- IBM PROGRAM                                            S01486
+      ***********                                                         S01486
+      **SUBROUTINE CALLED FROM:                                           S01486
+      **#PR01****- PROCESS HEADER PRINTING                                S01486
+      ***********                                                         S01486
+      **ROUTINE*USES VARIABLES:                                           S01486
+      **WWPRTL***- PARAMETER FOR OVRPRTF                                  S01486
+      **WWPREF***- STORES PRINTER LOCATION CODE                           S01486
+      **WWCMD****- PARAMETER FOR QCMDEXC                                  S01486
+      ***********                                                         S01486
+      ********************************************************************S01486
+     C***********#OVRP     BEGSR                           ** #OVRP  BSR *S01486
+     C***********                                                         S01486
+     C****OVRPRTF TO PRINTER FILE PM0460PXXX (XXX = PRINTER LOCATION CODE)S01486
+     C***********                                                         S01486
+     C***********          MOVELAEPRTL    WWPRTL                          S01486
+     C***********          MOVE AEPRTL    WWPREF                          S01486
+     C***********          MOVE WWPRTL    WWCMD                           S01486
+     C***********          CALL 'QCMDEXC'                                 S01486
+     C***********          PARM WWCMD     QCAA   43                       S01486
+     C***********          PARM 43        QCAN   155                      S01486
+     C***********          OPEN PM0460P1                                  S01486
+     C***********                                                         S01486
+     C***********          ENDSR                           ** #OVRP  ESR *S01486
+     C***********                                                         S01486
+     C********************************************************************S01486
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #RIDP    - REMOVE IMPLIED DECIMAL PLACES FOR AMOUNTS                   *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * #W02     - FORMAT AND PRINT A/C OFFICER TOTALS                         *
+      * #W06     - FORMAT AND PRINT DISPLAY GROUP TOTALS                  S01486
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      * WWAMNT   -                                                             *
+      *                                                                        *
+      **************************************************************************
+     C           #RIDP     BEGSR                           ** #RIDP  BSR *
+     C*
+     C                     Z-ADD1         YY      10
+     C*
+     C           YY        DOWLEZCDPT
+     C                     DIV  10        WWAMNT    H
+     C                     ADD  1         YY
+     C*                                                                   R1037
+     C** HALF-ADJUST AMOUNT TO THE UPPER UNIT                             R1037
+     C           YY        IFEQ ZCDPT                                     R1037
+     C                     Z-ADDWWAMNT    WWAMND                          R1037
+     C*                                                                   R1037
+     C           WWAMNU    IFGE 5                                         R1037
+     C                     ADD  10000     WWAMNT                          R1037
+     C                     END                                            R1037
+     C*                                                                   R1037
+     C                     END                                            R1037
+     C*                                                                   R1037
+     C                     END
+     C*
+     C                     ENDSR                           ** #RIDP  ESR *
+     C*
+     C**************************************************************************
+      /EJECT
+      ********************************************************************S01486
+      *                                                                   S01486
+      * #WRHAU   - PRINT AUDIT HEADER                                     S01486
+      *                                                                   S01486
+      * SUBROUTINE CALLS:                                                 S01486
+      *                                                                   S01486
+      * SUBROUTINE CALLED FROM:                                           S01486
+      * #INIT    - INITIALIZE STANDARD FIELDS, ACCESS STANDING DATA       S01486
+      *                                                                   S01486
+      * ROUTINE USES VARIABLES:                                           S01486
+      *                                                                   S01486
+      ********************************************************************S01486
+     C           #WRHAU    BEGSR                           ** #WRHAU BSR *S01486
+     C*                                                                   S01486
+     C**  WRITE AUDIT FILE HEADER                                         S01486
+     C*                                                                   S01486
+     C                     WRITEPM0460Z1                                  S01486
+     C*                                                                   S01486
+     C**  ENSURE AUDIT SPOOL FILE RECORDED BY RCF                         S01486
+     C*                                                                   S01486
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      S01486
+     C*                                                                   S01486
+     C                     CALL 'ZSFILE'                                  S01486
+     C                     PARM           SEQ                             S01486
+     C                     PARM *BLANKS   SENTY   3                       S01486
+     C                     PARM           SFILEU                          S01486
+     C                     PARM           ZSNUMU                          S01486
+     C                     PARM *BLANK    ZSERR   1                       S01486
+     C*                                                                   S01486
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01486
+     C*                                                                   S01486
+     C           ZSERR     IFEQ 'Y'                                       S01486
+     C                     SETON                     U7U8LR               S01486
+     C                     RETRN                                          S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     ENDSR                           ** #WRHAU ESR**S01486
+     C*                                                                   S01486
+      ********************************************************************S01486
+      /EJECT                                                              S01486
+      ********************************************************************S01486
+      *                                                                   S01486
+      * #WRTAU   - PRINT AUDIT DATABASE ERROR                             S01486
+      *                                                                   S01486
+      * SUBROUTINE CALLS:                                                 S01486
+      *                                                                   S01486
+      * SUBROUTINE CALLED FROM:                                           S01486
+      * #INIT    - INITIALIZE STANDARD FIELDS, ACCESS STANDING DATA       S01486
+      * #PA01    - INITIALIZE PRINTER FILE FIELDS, READ PMTUR1PO          S01486
+      * #PR01    - PROCESS HEADER PRINTING                                S01486
+      * #PR02    - PROCESS A/C OFFICER DETAILS                            S01486
+      * #PR05    - FORMAT AND PRINT DISPLAY GROUP TOTALS                  S01486
+      *                                                                   S01486
+      * ROUTINE USES VARIABLES:                                           S01486
+      *                                                                   S01486
+      ********************************************************************S01486
+     C           #WRTAU    BEGSR                           ** #WRTAU BSR *S01486
+     C*                                                                   S01486
+     C**  If printer file is open, output database error reference        S01486
+     C*                                                                   S01486
+     C           *IN72     IFEQ '1'                                       S01486
+     C                     WRITEDBERROR                                   S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     MOVELDBFILE    RRFILE                          S01486
+     C                     MOVELDBKEY     RRKEY                           S01486
+     C                     MOVELWWPGM     RRPGM                           S01486
+     C                     MOVELDBASE     RRBASE                          S01486
+     C*                                                                   S01486
+     C                     WRITEPM0460ER                                  S01486
+     C*                                                                   S01486
+     C                     ENDSR                           ** #WRTAU ESR**S01486
+     C*                                                                   S01486
+      ********************************************************************S01486
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * *PSSR    - FILE ERROR HANDLING                                         *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * #INIT    - INITIALIZE STANDARD FIELDS, ACCESS STANDING DATA            *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      *                                                                        *
+      **************************************************************************
+     C           *PSSR     BEGSR                           ** *PSRR  BSR *
+     C*
+     C** ROLL BACK CHANGES , DUMP AND RETURN TO THE CALLING PROGRAM
+     C*
+     C                     SETON                     LRU7U8
+     C                     DUMP
+     C*
+     C** UPDATE LDA WITH ERROR INFORMATION
+     C*
+     C************NAMVAR   DEFN           LDA                             S01486
+     C           *LOCK     IN   LDA
+     C                     MOVELDBFILE    WWFILE
+     C                     MOVELDBKEY     WWKEY
+     C************         MOVELDBPGM     WWPGM                           S01486
+     C                     MOVELDBASE     WWASE
+     C                     OUT  LDA
+     C                     RETRN
+     C*
+     C                     ENDSR                            ** *PSRR ESR**
+     C*
+     C**************************************************************************
+     C*                                                                        *
+     C*    ZHRATE SR. TO DETERMINE FX RATE TO BASE CURRENCY AT EOM             *
+     C*                                                                        *
+     C*   INPUT  FIELDS                                                        *
+     C*       ZMTHN   20     NUMBER OF MONTH FOR WHICH RATE REQUIRED           *
+     C*       ZYEARN  20     NUMBER OF YEAR FOR WHICH RATE REQUIRED            *
+     C*       ZCCY    3      CURRENCY FOR WHICH RATE REQUIRED                  *
+     C*                                                                        *
+     C*   OUTPUT  FIELDS                                                       *
+     C*       ZFXRT  138     FX RATE TO BASE CURRENCY                          *
+     C*       ZMDIN   1      MULTIPLY/DIVIDE IND TO BASE CURRENCY              *
+     C*       ZCDP    10     CURRENCY DECIMAL PLACES                           *
+     C*                                                                        *
+     C**************************************************************************
+     C*
+     C           ZHRATE    BEGSR                           *** ZHRATE ***
+     C*
+     C**   DEFINE ALL FIELDS
+     C                     Z-ADDZMTHN     ZMTHN   20
+     C                     Z-ADDZYEARN    ZYEARN  20
+     C                     MOVE ZCCY      ZCCY    3
+     C                     Z-ADDZFXRT     ZFXRT  138
+     C                     MOVE ZMDIN     ZMDIN   1
+     C                     Z-ADDZCDP      ZCDP    10
+     C*
+     C** DEFINE KEY LIST USED TO ACCESS PF/PMHSEXPP
+     C           HSEXKY    KLIST
+     C                     KFLD           ZCCY
+     C                     KFLD           ZDAYNO
+     C*
+     C** DETERMINE END OF MONTH DATE
+     C                     MOVELZMTHN     WWWRK4  4
+     C                     MOVE ZYEARN    WWWRK4
+     C                     MOVE WWWRK4    ZDATE
+     C*
+     C                     MOVEL'31'      ZDATE
+     C*
+     C           ZMTHN     IFEQ 4                              B1
+     C           ZMTHN     OREQ 6
+     C           ZMTHN     OREQ 9
+     C           ZMTHN     OREQ 11
+     C                     MOVEL'30'      ZDATE
+     C                     END                             E1
+     C*
+     C** FOR MONTH 2 (FEBRUARY DETERMINE IF LEAP YEAR AND IF SO SET TO 29
+     C           ZMTHN     IFEQ 2                          B1
+     C                     MOVEL'28'      ZDATE
+     C*
+     C           ZYEARN    DIV  4         WWWRK3  30
+     C                     MVR            WWWRK1  10
+     C*
+     C           WWWRK1    IFEQ 0                          B2
+     C                     MOVEL'29'      ZDATE
+     C                     END                             E2
+     C                     END                             E1
+     C*
+     C** CONVERT END OF MONTH DATE TO DAY NUMBER FORMAT
+     C                     MOVE *IN98     WIND98  1
+     C                     MOVE '0'       *IN98
+     C                     EXSR ZDATE1
+     C                     MOVE WIND98    *IN98
+     C*
+     C** DETERMINE RATE APPLYING ON THAT DATE FROM PF/PMHSEXPP
+     C           *IN99     IFEQ '0'                        B1
+     C***********HSEXKY    SETGTPMHSEXPP                                  S01486
+     C***********          READPPMHSEXPP                 90               S01486
+     C           HSEXKY    SETGTPMHSEXP0                                  S01486
+     C                     READPPMHSEXP0                 90               S01486
+     C*
+     C** IF RATE NOT FOUND FOR CURRENCY USE EARLIEST HISTORICAL RATE
+     C           *IN90     IFEQ '1'                            B2
+     C           Q8CCY     ORNE ZCCY
+     C***********HSEXKY    SETLLPMHSEXPP                 90               S01486
+     C***********          READ PMHSEXPP                 90               S01486
+     C           HSEXKY    SETLLPMHSEXP0                 90               S01486
+     C                     READ PMHSEXP0                 90               S01486
+     C*
+     C** IF NO RATE FOUND FOR CURRENCY TERMINATE PROGRAM WITH ERROR
+     C           *IN90     IFEQ '1'                            B3
+     C           Q8CCY     ORNE ZCCY
+     C                     MOVE '1'       *IN99
+     C                     END                                 E3
+     C                     END                                 E2
+     C                     END                                 E1
+     C*
+     C** IF CROSS RATE FOUND FOR CURRENCY SET UP OUTPUT PARAMETERS
+     C           *IN99     IFEQ '0'                            B1
+     C                     Z-ADDQ8SPOT    ZFXRT
+     C                     MOVE Q8MDV1    ZMDIN
+     C                     Z-ADDQ8CDP     ZCDP
+     C                     END                                 E1
+     C*
+     C                     ENDSR
+     C**************************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+      /COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+      /COPY ZSRSRC,ZCCYXR
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * ZZTURN   - CALCULATE RUNNING TOTALS & 'NO. OF CONTRACTS'               *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * #PR02    - PROCESS A/C OFFICER DETAILS                                 *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      *                                                                        *
+      **************************************************************************
+     C           ZZTURN    BEGSR                           *** ZZTURN ***
+     C*
+     C** CALCULATE TOTAL TURNOVER FOR PREVIOUS YEAR
+     C*
+     C           ZZYY      IFEQ YYPREV
+     C                     ADD  ZZAMT     ZAMT1
+     C                     ADD  ZZCON     ZCONT1
+     C                     END
+     C*
+     C** IF PRESENT MONTH IS JANUARY, PREVIOUS MONTH IS DECEMBER
+     C*
+     C           MMTDAY    IFEQ 1
+     C*
+     C           ZZYY      IFEQ YYPREV
+     C           ZZMM      ANDEQ12
+     C                     ADD  ZZAMT     ZAMT2
+     C                     ADD  ZZCON     ZCONT2
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C           ZZYY      IFEQ YYTDAY
+     C           ZZMM      ANDEQMMPREV
+     C                     ADD  ZZAMT     ZAMT2
+     C                     ADD  ZZCON     ZCONT2
+     C                     END
+     C*
+     C                     END
+     C*
+     C** CALCULATE RUNNING YEAR TO DATE
+     C*
+     C           ZZYY      IFEQ YYTDAY
+     C                     ADD  ZZAMT     ZAMT3
+     C                     ADD  ZZCON     ZCONT3
+     C                     END
+     C*
+     C** CALCULATE RUNNING MONTH LAST YEAR
+     C*
+     C           ZZYY      IFEQ YYPREV
+     C           ZZMM      ANDEQMMTDAY
+     C                     ADD  ZZAMT     ZAMT4
+     C                     ADD  ZZCON     ZCONT4
+     C                     END
+     C*
+     C** CALCULATE RUNNING MONTH TO DATE
+     C*
+     C           ZZYY      IFEQ YYTDAY
+     C           ZZMM      ANDEQMMTDAY
+     C                     ADD  ZZAMT     ZAMT5
+     C                     ADD  ZZCON     ZCONT5
+     C                     END
+     C*
+     C           ZZTEND    ENDSR
+     C*=========================================================================
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000

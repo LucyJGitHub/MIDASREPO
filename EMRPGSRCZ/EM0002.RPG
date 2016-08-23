@@ -1,0 +1,193 @@
+0001 H                                                                    EM0002
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas EM Initial File Set-up')                         *
+0002 F*****************************************************************EM0002
+     F*  Midas EXPOSURE MANAGEMENT MODULE                             *EM0002
+0004 F*                                                               *EM0002
+0005 F*              EM0002 - INITIAL FILE SET-UP                     *EM0002
+0006 F*                                                               *EM0002
+     F*  Function: This program writes header and trailer records to  *
+     F*  (IMPL)    the limits and exposure files.                     *
+     F*                                                               *
+     F*  Called By: EMC00                                             *
+     F*                                                               *
+     F*  Calls: None                                                  *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+7008 F*                                                               *EM0002
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027A            Date 05May06               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CTI002 EM / TI Interface 23/09/98             *
+0009  *                    S01332    DATE 19JUL91                     *E13513
+0009  *                    S01314    DATE 10MAR91                     *E13513
+0009  *                    E13513    DATE 22/06/88                    *E13513
+0009  *                    E13501    DATE 22/06/88                    *E13501
+0009  *                    E81034    DATE 28/11/86                    *E81034
+0010  *                                                               *EM0002
+0011 F*****************************************************************
+      *                                                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus                                          *
+      *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
+      *      CTI002 - Recompiled : File EMCEX changed
+     F*      S01332  - EM REL 10 ENHANCEMENTS: DESCRIPTION OF FUNCTION
+     F*                ADDED TO HEADER BOX
+0011 F*      S01314  - CHANGES FOR PTF INCORPORATION                   ***
+0011 F*      E13513  - HEADER RECORD IN EMDEXX4 AND TRAILER RECORD IN  ***E13513
+0011 F*                EMDEXX6 SHOULD BE SET UP                        ***E13513
+0011 F*      E13501  - RECORDS SHOULD ONLY BE WRITTEN TO HEADER AND    ***E13501
+0011 F*                TRAILER FILES EMLIML1 AND EMLIML3 IF THEY ARE   ***E13501
+0011 F*                EMPTY                                           ***E13501
+0011 F*      E81034  - PF/EMCEXX1 & PF/EMCEXX3 CHANGES AND THIS PROGRAM***E81034
+0011 F*                OUTPUT HEADER AND TRAILER RECORDS IN THEM ALSO  ***E81034
+0011 F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+0017 F****EMLIML1 O   E                    DISK                      A    E13501
+     F****EMLIML3 O   E                    DISK                      A    E13501
+0017 FEMLIML1 UF  E                    DISK                      A        E13501
+     FEMLIML3 UF  E                    DISK                      A        E13501
+     F***  ONLINE EXPOSURE HEADER AND TRAILER ADDED AS PER E81034         E81034
+     FEMCEXX1 O   E                    DISK                      A        E81034
+     FEMCEXX3 O   E                    DISK                      A        E81034
+     F***  END OF DAY EXPOSURE HEADER AND TRAILER ADDED AS PER E13513     E13513
+     FEMDEXX4 O   E                    DISK                      A        E13513
+     FEMDEXX6 O   E                    DISK                      A        E13513
+     F***  TABTB10 READ FOR RUN DATE TO INITIALISE FIELD EDDT WITH        E13513
+     F***          A MIDAS DAY NUMBER AND NOT 00000.                      E13513
+     FTABEM   IF  E           K        DISK                               E13513
+     F*           TABTB10F                          KIGNORE               E13513
+     F            TABTB11F                          KIGNORE               E13513
+     F            TABTB36F                          KIGNORE               E13513
+     F            TABTB95F                          KIGNORE               E13513
+     F            TABTE10F                          KIGNORE               E13513
+     F            TABTG10F                          KIGNORE               E13513
+     F            TABLETHF                          KIGNORE               E13513
+     F            TABLETIF                          KIGNORE               E13513
+     F            TABLETNF                          KIGNORE               E13513
+     F            TABLETTF                          KIGNORE               E13513
+     E                    CPY@    1   1 80               COPYRIGHT STATEMENT
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+0055 C********************************************************************EM0002
+0054 C/EJECT                                                              EM0002
+0055 C********************************************************************EM0002
+     C                     MOVEACPY@      BIS@   80
+0063 C*   SET PARAMETERS FOR PACKED OUTPUT FIELDS                         EM0002
+     C*                                                                   EM0002
+0063 C           1         CHAINEMLIML1              99                   E13501
+0063 C           *IN99     IFEQ '1'                                       E13501
+0064 C                     MOVE 'H'       RECI                            E13501
+0067 C                     MOVE ' '       RECJ                            E13501
+0067 C                     MOVE '      '  MLC                             E13501
+     C                     MOVE *BLANKS   ZZ120                           E13501
+     C                     WRITEEMLIML1F                                  E13501
+     C                     END                                            E13501
+     C*                                                                   E13501
+0063 C           1         CHAINEMLIML3              99                   E13501
+0063 C           *IN99     IFEQ '1'                                       E13501
+0066 C                     MOVE 'T'       RECI                            E13501
+0067 C                     MOVE '9'       RECJ                            EM0002
+0067 C                     MOVE '999999'  MLC                             EM0002
+0067 C                     Z-ADD0         MRBU                            EM0002
+0067 C                     Z-ADD0         MNRI                            EM0002
+0067 C                     Z-ADD0         MNLD                            EM0002
+     C                     MOVE *BLANKS   ZZ111                           E13501
+     C                     WRITEEMLIML3F                                  E13501
+     C                     END                                            E13501
+     C*                                                                   EM0002
+     C*  OUTPUT EXPOSURE HEADERS AND TRAILERS                             EM0002
+     C*                                                                   E81034
+     C                     MOVE 'H'       RECI                            E81034
+     C*********************Z-ADD0         MCUO                      E81034S01314
+     C                     MOVE *BLANKS   MCUOA                           S01314
+     C                     MOVE ' '       MDI                             E81034
+     C                     EXCPTEXHEAD                                    E81034
+     C*                                                                   E13513
+     C                     EXSR ZSYSTM                                    E13513
+     C*                                                                   E13513
+     C           *IN99     IFEQ '0'                                       E13513
+     C                     Z-ADDRUND      EDDT                            E13513
+     C                     ELSE                                           E13513
+     C                     Z-ADD1         EDDT                            E13513
+     C                     END                                            E13513
+     C*
+     C*                                                                   E13513
+     C                     MOVE 'H'       RECI                            E13513
+     C                     MOVE '  '      MACO                            E13513
+     C**********           Z-ADD0         MCUN                                        E13513 CSD027A
+     C                     MOVE *BLANKS   MCUN                                               CSD027A
+     C**********           Z-ADD0         EMIND                                        E13513 CER020
+     C                     MOVEL*BLANKS   EMLOIC                                              CER020
+     C                     MOVE '  '      MRGC                            E13513
+     C                     MOVE '  '      MCNC                            E13513
+     C                     MOVE *BLANKS   ZZ109                           E13513
+     C                     EXCPTEXHDR                                     E13513
+     C*                                                                   E81034
+     C                     MOVE 'T'       RECI                            E81034
+     C                     MOVE '999999'  MCUN                            E81034
+     C                     Z-ADD0         MNDR                            E81034
+     C                     MOVE *BLANKS   ZZ118                           E81034
+     C                     EXCPTEXTAIL                                    E81034
+     C*                                                                   EM0002
+     C                     MOVE 'T'       RECI                            E13513
+     C                     MOVE '999999'  MCUN                            E13513
+     C                     Z-ADD1         MNDR                            E13513
+     C                     EXCPTEXTRLR                                    E13513
+     C*
+0098 C                     SETON                     LR                   EM0002
+0103 C*                                                                   EM0002
+1505 C********************************************************************E13513
+0593 C**                                                                  E13513
+1487 C**   ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.   E13513
+1489 C**                                                                  E13513
+1490 C           ZSYSTM    BEGSR                           *** ZSYSTM *** E13513
+1491 C**                                                                  E13513
+1492 C**   SET UP KEY FOR INSTALLATION CONTROL RECORD.                    E13513
+1491 C**                                                                  E13513
+1493 C                     MOVEL'01      'ZTABKY 12                       E13513
+1494 C                     MOVE '  10'    ZTABKY                          E13513
+1495 C*                                                                   E13513
+1496 C           ZTABKY    CHAINTABTB10F             99    ON NOT THERE   E13513
+1497 C  N99      RECI      COMP 'D'                  9999  ON, IS DELETED E13513
+1498 C*                                                                   E13513
+1422 C   99                SETON                     U7U8                 E13513
+1498 C*                                                                   E13513
+1502 C                     ENDSR                                          E13513
+1503 C*                                                                   E13513
+1504 C*****************************************************************   E13513
+0215 C/EJECT                                                              EM0002
+0216 O*****************************************************************   EM0002
+0256 O*                                                                   EM0002
+0257 O*   WRITE HEADER AND TRAILER RECORDS TO EMLIM                       E13501
+0258 O*                                                                   E13501
+0259 O*MLIML1FEADD             HEADER                                     E13501
+0260 O*                        *ALL                                       E13501
+0263 O*MLIML3FEADD             TRAIL                                      E13501
+0264 O*                        *ALL                                       E13501
+0269 O*                                                                   E81034
+0257 O*   WRITE HEADER AND TRAILER RECORDS TO EXPOSURE FILE               E81034
+0258 O*                                                                   E81034
+0259 OEMCEXX1FEADD             EXHEAD                                     E81034
+0260 O                         *ALL                                       E81034
+0259 OEMDEXX4FEADD             EXHDR                                      E13513
+0260 O                         *ALL                                       E13513
+0263 OEMCEXX3FEADD             EXTAIL                                     E81034
+0264 O                         *ALL                                       E81034
+0263 OEMDEXX6FEADD             EXTRLR                                     E13513
+0264 O                         *ALL                                       E13513
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

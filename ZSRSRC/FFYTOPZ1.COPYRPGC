@@ -1,0 +1,170 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standard Subroutine                                  *
+      *                                                               *
+      *  FFYTOPZ1 - Subroutine to calculate price from yield for      *
+      *             Australian Futures Standard contracts             *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4.01 -------------------------------------------*
+      *  Last Amend No. CPK015             Date 17Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *  Prev Amend No. 136056             Date 12Apr00               *
+      *                 126117             Date 12Apr00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 E30416             Date 02Mar93               *
+      *                 E44985             Date 25Sep92               *
+      *                 AUS022             DATE 04FEB91               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CPK015 - Conversion of ZYIELD from PLI to RPG                *
+      *  136056 - Ensure that Bank bill futures of not round to       *
+      *           8 decimal places.                                   *
+      *  126117 - Contract value for Australian future has special    *
+      *           rounding requirements.                              *
+      *  E30416 - Three-year bond futures calculation incorrect for   *
+      *           unrealised profit/loss in Outstanding Holdings by   *
+      *           instrument.  Error occurs due to Incorrect          *
+      *           parameters being passed to program ZYIELD.  To fix  *
+      *           the error, 'X' is being moved to CUMEXF and         *
+      *           NCPDTE is being initialized to 1 in the processing  *
+      *           of trades with Contract Type 2.                     *
+      *  E44985 - ZYIELD has been changed to use 3 new parameters     *
+      *           and need values in coupons per year and period      *
+      *  AUS022 - Australian Product - Futures and Options            *
+      *                                                               *
+      *****************************************************************
+      *                                                               *   AUS022
+      * Any program to use this subroutine will also require the      *   AUS022
+      * use of the /COPY ZSRSRC,ZYLDZ1 command for necessary I-specs  *   AUS022
+      *                                                               *   AUS022
+      *****************************************************************   AUS022
+      *                                                                   AUS022
+     C           FFYTOP    BEGSR                                          AUS022
+      *                                                                   AUS022
+     C           *LIKE     DEFN PRICEC    FFPRC                           AUS022
+      *                                                                   AUS022
+      * Capture date (year) for calculations                              AUS022
+      *                                                                   AUS022
+     C                     TIME           WTIME  120                      AUS022
+     C                     MOVE WTIME     WYEAR   20                      AUS022
+      *                                                                   AUS022
+      * Setup common ZYIELD parameters                                    AUS022
+      *                                                                   AUS022
+     C                     MOVE 'P'       PRCYLD                          AUS022
+     C                     MOVE 'AU'      METHOD                          AUS022
+     C                     MOVE ' '       SEMANN                          AUS022
+     C                     MOVE ' '       ERRIND                          AUS022
+     C                     Z-ADD*ZERO     PRICEC                          AUS022
+     C                     Z-ADDFFYLD     YIELDC                          AUS022
+     C                     Z-ADD*ZERO     KPRICE                          AUS022
+     C                     Z-ADD*ZERO     YISVAL                          AUS022
+     C           FFCNTT    IFEQ 1                                         136056
+     C                     Z-ADD9         ACCRCY                          AUS022
+     C                     ELSE                                           136056
+     C                     Z-ADD8         ACCRCY                          126117
+     C                     ENDIF                                          136056
+     C***********          Z-ADD*ZERO     CPYEAR                    AUS022E44985
+     C                     Z-ADD2         CPYEAR                          E44985
+     C                     Z-ADD1         VALDTE                          AUS022
+     C                     Z-ADD*ZERO     FMAT                            AUS022
+     C                     Z-ADD*ZERO     NMAT                            AUS022
+     C                     Z-ADD*ZERO     DYLSTC                          AUS022
+     C                     Z-ADD*ZERO     DSFCTM                          AUS022
+     C                     Z-ADD*ZERO     DYSTNC                          AUS022
+     C***************      Z-ADD*ZERO     PAYYRS                          AUS022
+     C                     Z-ADD1         PAYYRS                          AUS022
+     C                     Z-ADD*ZERO     PAYDYS                          AUS022
+     C                     Z-ADD*ZERO     PURINT                          AUS022
+     C                     MOVE 'C'       CUMEXF                          AUS022
+      *                                                                   E44985
+      ** Define compounding frequency, discount basis and discount        E44985
+      ** indicator.                                                       E44985
+      *                                                                   E44985
+     C                     Z-ADD2         COMFRQ                          E44985
+     C                     MOVE 2         DSCBSS                          E44985
+     C                     MOVE 'Y'       DLCOUP                          E44985
+      *                                                                   AUS022
+      * Setup ZYIELD parameters according to contract type                AUS022
+      *                                                                   AUS022
+      * Contract type 1 (90 day bank bills)                               AUS022
+      *                                                                   AUS022
+     C           FFCNTT    IFEQ 1                                         AUS022
+     C                     Z-ADD*ZERO     CPRTE                           AUS022
+     C                     Z-ADD91        MATDTE                          AUS022
+     C******************   Z-ADD*ZERO     NCPDTE                          AUS022
+     C                     Z-ADD91        NCPDTE                          AUS022
+     C***********          Z-ADD*ZERO     PERIOD                    AUS022E44985
+     C                     Z-ADD180       PERIOD                          E44985
+     C                     Z-ADD*ZERO     CPTOMT                          AUS022
+     C                     END                             IF FFCNTT=1    AUS022
+      *                                                                   AUS022
+      * Contract type 2 (3 year treasury bonds)                           AUS022
+      *                                                                   AUS022
+     C           FFCNTT    IFEQ 2                                         AUS022
+     C                     MOVE 'X'       CUMEXF                          E30416
+     C                     Z-ADD12        CPRTE                           AUS022
+     C                     Z-ADD1095      MATDTE                          AUS022
+     C***********          Z-ADD183       NCPDTE                    AUS022E30416
+     C                     Z-ADD1         NCPDTE                          E30416
+     C                     Z-ADD182       PERIOD                          AUS022
+     C                     Z-ADD6         CPTOMT                          AUS022
+     C                     END                             IF FFCNTT=2    AUS022
+      *                                                                   AUS022
+      * Contract type 3 (10 year treasury bonds)                          AUS022
+      *                                                                   AUS022
+     C           FFCNTT    IFEQ 3                                         AUS022
+     C                     Z-ADD12        CPRTE                           AUS022
+     C                     Z-ADD3650      MATDTE                          AUS022
+     C                     Z-ADD183       NCPDTE                          AUS022
+     C                     Z-ADD182       PERIOD                          AUS022
+     C                     Z-ADD20        CPTOMT                          AUS022
+     C                     END                             IF FFCNTT=3    AUS022
+      *                                                                   AUS022
+      * Call ZYIELD                                                       AUS022
+      *                                                                   AUS022
+     C********** ZPARM     PLIST                                                       AUS022 CPK015
+     C**********           PARM           ZPARMS                                       AUS022 CPK015
+      *                                                                   AUS022
+     C**********           CALL 'ZYIELD'  ZPARM                                        AUS022 CPK015
+     C                     CALL 'ZYIELD'                                                      CPK015
+     C                     PARM           PRCYLD                                              CPK015
+     C                     PARM           METHOD                                              CPK015
+     C                     PARM           SEMANN                                              CPK015
+     C                     PARM           ERRIND                                              CPK015
+     C                     PARM           PRICEC                                              CPK015
+     C                     PARM           YIELDC                                              CPK015
+     C                     PARM           CPRTE                                               CPK015
+     C                     PARM           NMAT                                                CPK015
+     C                     PARM           FMAT                                                CPK015
+     C                     PARM           KPRICE                                              CPK015
+     C                     PARM           YISVAL                                              CPK015
+     C                     PARM           ACCRCY                                              CPK015
+     C                     PARM           CPYEAR                                              CPK015
+     C                     PARM           DYLSTC                                              CPK015
+     C                     PARM           PERIOD                                              CPK015
+     C                     PARM           PAYYRS                                              CPK015
+     C                     PARM           PAYDYS                                              CPK015
+     C                     PARM           VALDTE                                              CPK015
+     C                     PARM           NCPDTE                                              CPK015
+     C                     PARM           MATDTE                                              CPK015
+     C                     PARM           CPTOMT                                              CPK015
+     C                     PARM           PURINT                                              CPK015
+     C                     PARM           DSFCTM                                              CPK015
+     C                     PARM           DYSTNC                                              CPK015
+     C                     PARM           CUMEXF                                              CPK015
+     C                     PARM           COMFRQ                                              CPK015
+     C                     PARM           DSCBSS                                              CPK015
+     C                     PARM           DLCOUP                                              CPK015
+      *                                                                                       CPK015
+     C                     Z-ADDPRICEC    FFPRC                           AUS022
+      *                                                                   AUS022
+     C                     ENDSR                                          AUS022
+      *****************************************************************
+      * End of /COPY FFYTOPZ1                                         *
+      *****************************************************************

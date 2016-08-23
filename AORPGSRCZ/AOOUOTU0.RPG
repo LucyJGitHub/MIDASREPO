@@ -1,0 +1,793 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AO On-line update for OTC trades')               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Access Objects Module                                *
+     F*                                                               *
+     F*     AOOUOTU0 - On-line Update of Projected Account Movement   *
+     F*                files for OTC Trades                           *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CLE134             Date 01Aug12               *
+      *  Prev Amend No. AR746662           Date 03May11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CAP205             Date 03Mar10               *
+      *                 CAP204             Date 09Feb10               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 247517             Date 09May07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 CPK027             Date 16Apr07               *
+      *                 241147A            Date 07Nov06               *
+      *                 241147             Date 26Oct06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG4919            Date 06Jan05               *
+      *                 CSC022             Date 24Feb04               *
+      *                 CGL029             Date 01Sep03               *
+      *                 215528             Date 21Mar03               *
+      *                 CSE035             Date 22Apr02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CPK015             Date 17Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CPK014             Date 04Oct01               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 109507             Date 19Apr00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.01 Patch E ---------------------------------------*
+      *                 170520             Date 19Nov99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAP004             Date 25Sep98               *
+      *                 CAP003             Date 18Aug98               *
+      *                 CFF004             DATE  13SEP96              *
+      *                 085490             DATE  05APR95              *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *  AR746662 - Discrepancy in premium amount in Currency OTC     *
+      *             screen and Projected Available Balance Enquiry    *
+      *             Applied fix 249171. (Recompile)                   *
+      *             (Child: Artf746663)                               *
+      *  CAP205 - Teller Related APIs - Account Balance Check         *
+      *  CAP204 - Teller Related APIs - Account Transfer              *
+      *  247517 - Reversed fix 241147.                                *
+      *  CPK027 - Errors in compiling MP1_3_TTTS - recompile over     *
+      *           changed FFTVCLZ2.                                   *
+      *  241147A - Recompile.                                         *
+      *  241147 - Recompile.                                          *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG4919- Premium should also include charges and commission  *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  215528 - System is associating a wrong premium amount.       *
+      *           Recompiled only.                                    *
+      *  CSE035 - NX/NNX Coupon Payment Processing.                   *
+      *           Recompile over changed FFYTOPZ1.                    *
+      *  CPK015 - Conversion of ZYIELD from PLI to RPG.               *
+      *           Recompile over changed FFYTOPZ1.                    *
+      *  CPK014 - Release 4 packaging.  Timestamp field is now
+      *           recognised due to change in creation parameters and
+      *           must be renamed for one of the files.
+      *  109507 - If Premium up front is 'N' then set Final Transaction
+      *           Date (FTDT held on INTYPD) to Value date (##VDAT).
+      *  170520 - Recompile over changed TRANSD file                     *
+      *  CAP004 - Conversion of Midas inputs to modular API structure    *
+      *           (phase 3) - I-spec entries added to rename the new     *
+      *           fields on TRSETD.                                      *
+      *  CAP003 - Conversion of Midas inputs to modular API structure    *
+      *           (phase 2) - recompiled                                 *
+     F* CFF004 - Increase in size of Price Fields,(Recompiled Only)      *
+     F* 085490 - New program for redesign of update to PRONO, MEMOS,     *
+     F*          OLPOS & RSACMTPD for OTC trades.                        *
+     F*                                                                  *
+     F********************************************************************
+     FINTYP   IF  E           K        DISK
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*                                                               *
+     F*****************************************************************
+     E/SPACE 5
+     E*
+     E**  (Posting) Naratives
+     E                    ##NAR   1   1 30
+     E*
+     E*  Subroutine stack
+     E                    @STK       20 10
+     E*
+     E**  Copyright array.
+     E                    ##CPY   1   1 80
+      ** Array of Commitment Job Names                                                        CSC022
+     E                    CMTJOB     10 10                                                    CSC022
+     I/SPACE 5
+     IINTYPDF
+     I*    Instrument Types
+     I*
+     I              CTAM                            FFCTAM
+     I              CNTT                            FFCNTT
+     IZ#BSTS    E DSZ#BST
+     IZ#ASTS    E DSZ#AST
+     IZ#WSTS    E DSZ#WST
+     IZ#XSTS    E DSZ#XST
+     I*
+     I@TRANS    E DSTRANSD
+     I@TRSET    E DSTRSETD
+     I              RECI                            XXRECI
+     I              TNBR                            XXTNBR
+      *                                                                   CAP004
+     I              FRNT                            XXFRNT                CAP004
+     I              AFRT                            XXAFRT                CAP004
+     I              REPA                            XXREPA                CAP004
+     I              TMST                            XXTMST                                    CPK014
+      *                                                                   CAP004
+     I##SETD      DS
+      * pay/receive (P/R)
+     I                                        1   1 ##PYRC
+      * settlement method
+     I                                        2   3 ##SETM
+      * settlement account
+     I**********                              4  15 ##SETA                                    CGL029
+     I                                        4  21 ##SETA                                    CGL029
+     I                                        4   5 ##NOSN
+     I                                        4  13 ##ACNO
+     I                                        4   9 ##CNUM
+     I**********                             10  13 ##ACOD                                    CGL029
+     I**********                             14  15 ##ACSQ                                    CGL029
+     I                                       10  19 ##ACOD                                    CGL029
+     I                                       20  21 ##ACSQ                                    CGL029
+      * settlement branch
+     I**********                             16  18 ##BRCA                                    CGL029
+     I                                       22  24 ##BRCA                                    CGL029
+      *
+      *  Calling parameter data structure for AOSPOSU0
+      *
+     IC#DTA       DS                            256
+      *  Account type N=nostro nbr F=Full nostro G=General Ledger
+      *               P=Partial Ledger R= Retail Number  X= no settlement
+     I                                        1   1 C#ATYP
+      *               Full General Ledger - CNUM/CCY/ACOD/ACSQ
+     I                                        2  19 C#ACCT
+     I**********                              2   70C#CNU1                                    CSD027
+     I                                        2   7 C#CNU1                                    CSD027
+     I                                        8  10 C#CCY1
+     I**********                             11  140C#ACO1                                    CGL029
+     I                                       15  160C#ACS1
+     I                                       17  19 C#BRC1
+      *               Nostro number
+     I                                        2   30C#NOSN
+      *               Full Nostro - CCY/NOSN
+     I                                        2   6 C#NOS
+      *               Retail Number
+     I                                        2  110C#ACNO
+      *               Partial Account - CNUM/ACOD/ACSQ
+     I**********                              2   70C#CNUM                                    CSD027
+     I                                        2   7 C#CNUM                                    CSD027
+     I**********                              8  110C#ACOD                                    CGL029
+     I                                       12  130C#ACSQ
+      *               Branch of account if Partial                      '
+     I                                       14  16 C#BRCA
+      *               OLPOS Incoming/Outgoing Indicator 'I' or 'O' or ' '
+      *                     ' ' no OLPOS update
+     I                                       24  24 C#IO
+      *               Currency of transaction
+     I                                       25  27 C#CCY
+      *               Transaction Type
+     I                                       28  29 C#TRYP
+      *               Transaction Narrative
+     I                                       30  59 C#NARR
+      *               Cheque Number
+     I                                       60  670C#CHQN
+      *               FT transaction reference
+     I                                       68  82 C#PREF
+      *               DL/LE/GL/RE transaction reference
+     I                                       83  88 C#TRN
+      *               Movement amount
+     I                                    P  89  960C#AMT
+      *               Processing indicators Not blank = no update
+      *                                     ' ' = Update
+      *               Prono update indicator
+     I                                       97  97 C#PRON
+      *               Olpos update indicator
+     I                                       98  98 C#OLPS
+      *               Memos update indicator
+     I                                       99  99 C#MEMS
+      *               Rsacmtpd write indicator
+     I                                      100 100 C#RSAC
+      *               Module
+     I                                      101 102 C#MOD
+      *               Olpos record number to update
+      *                     '01' for FX
+      *                     '02' for Interest movements
+      *                     '03' for MM loans and deposits
+     I                                      103 104 C#OLRC
+      *               FT Memos ledger balance override
+      *                        'Y' update ledger balance irrespective of
+      *                        posting date
+     I                                      105 105 C#FTOV
+      *               Value date and posting date
+     I                                    P 106 1080C#VDAT
+     I                                    P 109 1110C#PSTD
+      *               Override posting date correction
+      *                        for forward valued items
+      *                        'Y' prevents date being changed
+     I                                      112 112 C#PSTO
+      *               Indicator to show if removal allowed Y, N or " "
+     I                                      113 113 C#RPST
+      *               Removal set number
+     I                                      114 1160C#RPNB
+      *               Removal type "C" = Credit entries
+      *                            "D" = Debit entries
+     I                                      117 117 C#RTYP
+      *               Booking branch
+     I                                      118 120 C#BBRN
+      *                                                                                       CGL029
+      ** Account code for Full Account                                                        CGL029
+      *                                                                                       CGL029
+     I                                      121 1300C#ACO1                                    CGL029
+      *                                                                                       CGL029
+      ** Account code for Partial Account                                                     CGL029
+      *                                                                                       CGL029
+     I                                      131 1400C#ACOD                                    CGL029
+      *                                                                                       CAP204
+      ** Other Transaction Reference                                                          CAP204
+      *                                                                                       CAP204
+     I                                      141 160 C#OTR1                                    CAP204
+      *                                                                                       CAP205
+      ** Movement type                                                                        CAP205
+      *                                                                                       CAP205
+     I                                      161 161 C#MTYP                                    CAP205
+      *                                                                                       CLE134
+      ** Exception Reference Id/Number                                                        CLE134
+      *                                                                                       CLE134
+     I                                      162 164 C#XRFI                                    CLE134
+     I                                      165 1740C#XRFN                                    CLE134
+     ICPYR        DS
+     I**  Data Structure for Compilation - Copyright Insertion
+     I                                        1  80 ##CPY
+     I/COPY ZSRSRC,ZYLDZ1
+     I/COPY ZSRSRC,FFSRDSZ1
+      *                                                                                       CSC022
+     ISCCMT       DS                            256                                           CSC022
+     I                                        1   30CMTNUM                                    CSC022
+     I                                        4 103 CMTARR                                    CSC022
+     IDSFDY     E DSDSFDY                                                                     CSC022
+      *                                                                                       CSC022
+      ** Switchable Features File                                                             CSC022
+     ISCSARD    E DSSCSARDPD                                                                  CSC022
+     I              LCD                             LLCD                                      CSC022
+     I              ZONE                            LZONE                                     CSC022
+      *                                                                                       CSC022
+      *  Program data structure                                                               CSC022
+     IDSPGM     ESDSY2PGDSP                                                                   CSC022
+      *                                                                                       CSC022
+     C/SPACE 5
+      *****************************************************************
+      * Process     :  MAINLINE                                       *
+      * Function    :  Mainline processing                            *
+      *                                                               *
+      * Called by   :  None                                           *
+      * Calls       :  SRMAIN - Main Processing                       *
+      *****************************************************************
+      *
+      **  Parameter list for current program invocation.
+     C           *ENTRY    PLIST
+     C                     PARM           ##RTCD  7
+     C                     PARM           Z#BSTS
+     C                     PARM           Z#ASTS
+     C                     PARM           Z#WSTS
+     C                     PARM           Z#XSTS
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *................................................................
+      *
+      **  Initialise work fields
+     C                     MOVEL*BLANKS   R#RTN   7
+      *
+      **  Copyright
+     C                     MOVEA##CPY     ##BIS  80
+      *
+      *                                                                                       CSC022
+      ** Check if CSC022 is switched *ON.                                                     CSC022
+      *                                                                                       CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   @RTCD   7                                           CSC022
+     C                     PARM '*VERIFY' @OPTN   7                                           CSC022
+     C                     PARM 'CSC022'  @SARD   6                                           CSC022
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSC022
+      *                                                                                       CSC022
+     C           @RTCD     IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022  1                                           CSC022
+     C           *NAMVAR   DEFN SCCMTJOB  SCCMT                                               CSC022
+     C                     IN   SCCMT                                                         CSC022
+     C                     Z-ADD1         C       30                                          CSC022
+     C                     MOVEL*BLANKS   CMTSKP  1                                           CSC022
+     C                     MOVEACMTARR    CMTJOB                                              CSC022
+     C           CMTNUM    IFGT 0                                                             CSC022
+     C           C         DOWLECMTNUM                                                        CSC022
+     C           ##JOB     IFEQ CMTJOB,C                                                      CSC022
+     C                     MOVEL'Y'       CMTSKP                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ADD  1         C                                                   CSC022
+     C                     ENDDO                                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ELSE                                                               CSC022
+     C                     MOVE 'N'       CSC022                                              CSC022
+     C                     ENDIF                                                              CSC022
+      *                                                                                       CAP205
+      ** Check if CAP205 is switched *ON.                                                     CAP205
+      *                                                                                       CAP205
+     C                     CALL 'AOSARDR0'                                                    CAP205
+     C                     PARM *BLANKS   @RTCD                                               CAP205
+     C                     PARM '*VERIFY' @OPTN                                               CAP205
+     C                     PARM 'CAP205'  @SARD                                               CAP205
+     C           SCSARD    PARM SCSARD    DSFDY                                               CAP205
+      *                                                                                       CAP205
+     C           @RTCD     IFEQ *BLANKS                                                       CAP205
+     C                     MOVE 'Y'       CAP205  1                                           CAP205
+     C                     ELSE                                                               CAP205
+     C                     MOVE 'N'       CAP205                                              CAP205
+     C           @RTCD     IFNE '*NRF'                                                        CAP205
+     C                     MOVEL'SCSARDPD'W0FILE                                              CAP205
+     C                     MOVEL'CAP205'  W0KEY                                               CAP205
+     C                     Z-ADD904       W0ERNB                                              CAP205
+     C                     EXSR SRERR                                                         CAP205
+     C                     ENDIF                                                              CAP205
+     C                     ENDIF                                                              CAP205
+      *................................................................
+      *
+      *  Main processing
+     C                     EXSR SRMAIN
+      *
+      *................................................................
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      **  Terminate program
+     C                     RETRN
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRMAIN                                         *
+      * Function    :  Main processing                                *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           SRMAIN    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRMAIN'  @STK,Q
+      *
+      *................................................................
+      *
+      ** Clear down all shadow postings in store (within AOSPOSU0)
+      *
+     C                     EXSR SRCLR
+      *
+     C                     MOVELZ#BSTS    #BRCID  1
+      *
+      ** Generate 'BEFORE STATUS' account movements
+      ** (if not insertion, when #BRCID will be blank)
+      *
+     C           #BRCID    IFNE *BLANK
+      *
+     C                     MOVEL'YES'     ##REVI  3
+      *
+      ** Set up TRANSD & TRSETD data structures.
+     C                     MOVELZ#BSTS    @TRANS
+     C                     MOVELZ#WSTS    @TRSET
+     C                     EXSR SROTC
+      *
+     C                     END                             * Z#BSTS
+      *
+      ** Generate 'AFTER STATUS' account movements
+      ** (if not deletion, when CHTP will be 'D')
+      *
+     C                     MOVEL*BLANK    ##REVI
+      *
+      ** Set up TRANSD & TRSETD data structures.
+     C                     MOVELZ#ASTS    @TRANS
+     C                     MOVELZ#XSTS    @TRSET
+     C           CHTP      IFNE 'D'
+     C                     EXSR SROTC
+     C                     END
+      *
+      ** Update database with shadow postings in store (within AOSPOSU0)
+      *
+     C                     EXSR SRUPD
+      *
+      *................................................................
+      *
+     C           EXMAIN    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SROTC                                          *
+      * Function    :  OTC Processing                                 *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  AOSPOSU0 - On-line Positions Update            *
+      *****************************************************************
+     C           SROTC     BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SROTC '  @STK,Q
+      *
+      *................................................................
+      *
+      **  Store basic transaction details
+      *
+     C                     MOVE TRTY      ##TRYP  1        * tran type
+     C                     MOVELTNBR      ##TRN   6        * transact no.
+     C                     MOVELBRCA      ##BBRN  3        * booking branc
+     C                     Z-ADDVALD      ##VDAT  50       * value date
+     C                     Z-ADDTRSD      ##PDAT  50       * posting date
+      *
+      **  Set up transaction details for premium routine FFPMCL
+      *
+     C                     Z-ADDNUCO      FFNOC            * No of contracts
+     C                     Z-ADDCOPR      FFPRIC           * Contract price
+      *
+      **  Store settlement method, account & branch
+      *
+     C                     MOVELCSLT      ##SETM           * set method
+     C                     MOVELCSLA      ##SETA           * set account
+     C                     MOVELBRSC      ##BRCA           * set branch
+     C*
+     C**   Access INTYP record for instrument details
+     C*
+     C           ISTT      CHAININTYP                71
+     C           *IN71     IFEQ '1'
+     C                     MOVEL'INTYP   'W0FILE
+     C                     MOVEL'ISTT    'W0KEY
+     C                     Z-ADD1         W0ERNB
+     C                     EXSR SRERR
+     C                     END
+      *                                                                   109507
+      **  If premium up front is 'N' then set FTDT to VDAT                109507
+      *                                                                   109507
+     C           PUPF      IFEQ 'N'                                       109507
+     C                     MOVE FTDT      ##VDAT                          109507
+     C                     END                                            109507
+      *
+      **  Set up instrument details for premium routine FFPMCL
+      *
+     C                     MOVE ISCY      ##CCY   3        * Instr ccy
+     C                     Z-ADDTKDM      FFTKDM           * Ticks denominator
+     C                     Z-ADDMNPF      FFMNPF           * Min price fluc
+     C                     Z-ADDTKVL      FFTKVL           * Tick value
+      *
+      **  Calculate premium using standard routine FFPMCL
+      *
+     C                     EXSR FFPMCL
+     C                     Z-ADDFFPREM    ##AMT  150
+     C           ##AMT     ADD  CCMA      ##AMT                                              BUG4919
+     C           ##AMT     ADD  CCHA      ##AMT                                              BUG4919
+      *
+      ** Generate account movement
+      ** =========================
+      *
+      ** Pass movement to write program (with appropriate instructions)
+      *
+     C           ##TRYP    IFEQ 'P'                        * Purchase
+     C                     MOVE 'P'       ##PYRC
+     C                     ELSE
+     C                     MOVE 'R'       ##PYRC           * Sale
+     C                     END
+      *
+     C                     Z-ADD001       ##RPNB  30       * 1=OTC
+     C                     MOVEL##NAR,1   ##NARR 30
+      *
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL'S'       ##MTYP  1                                           CAP205
+     C                     ENDIF                                                              CAP205
+     C                     EXSR SRMOVE
+      *................................................................
+      *
+     C           EXOTC     TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+      /SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRMOVE                                         *
+      * Function    :  Pass Movement To Write Program                 *
+      *                                                               *
+      * Called by   :  Various                                        *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRMOVE    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRMOVE'  @STK,Q
+      *
+      *................................................................
+      *
+      ** Bypass if no amount to post
+      *
+     C           ##AMT     CABEQ*ZERO     EXMOVE
+      *
+      ** Determine account movement settlement details
+      *
+     C                     CLEARC#DTA
+      *
+     C           ##SETM    IFEQ '01'
+     C           ##SETM    OREQ '02'
+     C           ##SETM    OREQ '07'
+     C           ##SETM    OREQ '08'
+     C           ##SETM    OREQ '12'
+     C                     MOVEL'N'       C#ATYP
+     C                     MOVEL##NOSN    C#NOSN
+     C                     ELSE
+     C           ##SETM    IFEQ '14'
+     C                     MOVEL'R'       C#ATYP
+     C                     MOVEL##ACNO    C#ACNO
+     C                     ELSE
+     C           ##SETM    IFEQ '04'
+     C           ##SETM    OREQ '05'
+     C                     MOVEL'P'       C#ATYP
+     C                     MOVEL##CNUM    C#CNUM
+     C                     MOVEL##ACOD    C#ACOD
+     C                     MOVEL##ACSQ    C#ACSQ
+     C                     MOVEL##BRCA    C#BRCA
+     C                     END
+     C                     END
+     C                     END
+      *
+      * OLPOS Incoming/Outgoing Indicator 'I' or 'O'
+     C           ##PYRC    IFEQ 'P'
+     C                     MOVEL'O'       C#IO             * outgoing
+     C                     ELSE
+     C                     MOVEL'I'       C#IO             * incoming
+     C                     END
+      *
+      * Currency of transaction
+     C                     MOVEL##CCY     C#CCY
+      *
+      * Transaction type
+     C                     MOVE ##TRYP    C#TRYP
+      * Transaction Narrative
+     C                     MOVEL##NARR    C#NARR
+     C           ##REVI    IFEQ 'YES'
+     C                     MOVE '*'       C#NARR
+     C                     END
+      *
+      * DL/LE/GL/RE/FF transaction reference
+     C                     MOVEL##TRN     C#TRN
+      *
+      * Movement amount
+     C           ##PYRC    IFEQ 'P'
+     C           ##REVI    ANDNE'YES'
+     C           ##PYRC    OREQ 'R'
+     C           ##REVI    ANDEQ'YES'
+     C                     Z-SUB##AMT     C#AMT            * pay ie credit
+     C                     ELSE
+     C                     Z-ADD##AMT     C#AMT            * rec ie debit
+     C                     END
+      *
+      * Module
+     C                     MOVEL'FF'      C#MOD
+      *
+      * Olpos record number to update
+      * '01' for FX
+      * '02' for Interest movements
+      * '03' for MM loans and deposits
+     C                     MOVE '02'      C#OLRC
+      *
+      * Value date and posting date
+     C                     Z-ADD##VDAT    C#VDAT
+     C                     Z-ADD##PDAT    C#PSTD
+      *
+      * Indicator to show if removal allowed Y, N or " "
+     C                     MOVEL'Y'       C#RPST
+      *
+      * Removal set number
+     C                     Z-ADD##RPNB    C#RPNB
+      *
+      * Removal type "C" = Credit entries
+      *              "D" = Debit entries
+     C                     MOVEL'C'       C#RTYP
+      *
+      * Booking branch
+     C                     MOVEL##BBRN    C#BBRN
+      *
+      *  If settlement details are present
+      *  AOSPOSU0 will be called to update PRONO, MEMOS, RSACMTPD, OLPOS
+      *
+      *  OTHERWISE
+      *
+      *  If no settlement details are present
+      *  AOSPOSU0 will be called to only update OLPOS
+      *
+     C           C#ATYP    IFEQ *BLANK
+      *
+      * Set account type indicator to signify no settlement
+     C                     MOVEL'X'       C#ATYP
+      *
+      * Set update indicators for no update
+     C                     MOVE 'N'       C#PRON
+     C                     MOVE 'N'       C#MEMS
+     C                     MOVE 'N'       C#RSAC
+     C                     END
+      *                                                                                       CAP205
+      ** Set C#MTYP to ##MTYP                                                                 CAP205
+      *                                                                                       CAP205
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL##MTYP    C#MTYP                                              CAP205
+     C                     ENDIF                                                              CAP205
+      *
+      *  Call AOSPOSU0
+      *
+     C                     CALL 'AOSPOSU0'             9090
+     C           R#RTN     PARM *BLANKS   O#RTN   7
+     C                     PARM '*ADD    'W0ACT   8
+     C                     PARM C#DTA     O#DTA 256
+      *
+     C           *IN90     IFEQ '1'
+     C           R#RTN     ORNE *BLANKS
+     C                     MOVEL'*CALL   'W0FILE  8
+     C                     MOVEL'AOSPOSU0'W0KEY  29
+     C                     Z-ADD902       W0ERNB  30
+     C                     EXSR SRERR
+     C                     END
+      *
+      *................................................................
+      *
+     C           EXMOVE    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      *                                                               *
+      *  SRUPD    : Update database with shadow postings in store     *
+      *                                                               *
+      *  CALLED BY: Various                                           *
+      *                                                               *
+      *  CALLS    : SRERR - Report errors                             *
+      *                                                               *
+      *****************************************************************
+     C           SRUPD     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRUPD'   @STK,Q
+      *
+      *................................................................
+      *
+      *  Call AOSPOSU0 to update database
+      *
+     C                     CALL 'AOSPOSU0'             9090
+     C           R#RTN     PARM *BLANKS   O#RTN
+     C                     PARM '*UPDATE 'W0ACT
+     C                     PARM C#DTA     O#DTA
+      *
+     C           *IN90     IFEQ '1'
+     C           R#RTN     ORNE *BLANKS
+     C                     MOVEL'*CALL   'W0FILE
+     C                     MOVEL'AOSPOSU0'W0KEY
+     C                     Z-ADD903       W0ERNB
+     C                     EXSR SRERR
+     C                     END
+      *
+      *................................................................
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXUPD     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      *                                                               *
+      *  SRCLR    : Clear all postings in store                       *
+      *                                                               *
+      *  CALLED BY: UPDATE - Update database                          *
+      *                                                               *
+      *  CALLS    : SRERR - Report errors                             *
+      *                                                               *
+      *****************************************************************
+     C           SRCLR     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRCLR'   @STK,Q
+      *
+      *................................................................
+      *
+      *  Clear arrays in AOSPOSU0
+      *
+     C                     CLEARC#DTA
+     C                     CALL 'AOSPOSU0'             9090
+     C           R#RTN     PARM *BLANKS   O#RTN
+     C                     PARM '*CLEAR  'W0ACT
+     C                     PARM C#DTA     O#DTA
+      *
+     C           *IN90     IFEQ '1'
+     C           R#RTN     ORNE *BLANKS
+     C                     MOVEL'*CALL   'W0FILE
+     C                     MOVEL'AOSPOSU0'W0KEY
+     C                     Z-ADD901       W0ERNB
+     C                     EXSR SRERR
+     C                     END
+      *
+      *................................................................
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXCLR     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      *                                                               *
+      *  SRERR    : Report error and close down program               *
+      *                                                               *
+      *  CALLED BY: Various                                           *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     C           SRERR     BEGSR
+      *
+      *  Dump program
+      *
+     C                     DUMP
+     C           CSC022    IFNE 'Y'                                                           CSC022
+     C                     ROLBK
+     C                     ELSE                                                               CSC022
+     C           CMTSKP    IFNE 'Y'                                                           CSC022
+     C                     ROLBK                                                              CSC022
+     C                     ELSE                                                               CSC022
+     C                     SETON                     U7U8                                     CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+      *
+      *  Close down program
+      *
+     C                     SETON                     LR
+     C                     MOVEL'*ERROR*' ##RTCD
+     C                     RETRN
+      *
+     C           EXERR     ENDSR
+      *****************************************************************
+      /SPACE 5
+     C/COPY ZSRSRC,FFPMCLZ1
+     C/COPY ZSRSRC,FFTVCLZ2
+     C/COPY ZSRSRC,FFYTOPZ1
+** ##NAR  **      NARRATIVES
+OTC Premium
+** ##CPY  **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

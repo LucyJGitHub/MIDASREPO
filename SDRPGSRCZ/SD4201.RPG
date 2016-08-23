@@ -1,0 +1,1189 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD BTS monthly figures update')                  *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Standing Data Module
+     F*                                                               *
+     F*  Business Transactions Statistics Switchable Feature          *
+     F*                                                               *
+     F*  SD4201 - BTS Monthly figures update                          *
+     F*                                                               *
+     F*  Function:  This program produces the monthly statistics for  *
+     F*             PF/SDBTSFPD (current financial year) extracted    *
+     F*             from the daily extracts for transactions on       *
+     F*             PF/SDBTSMPD (BTS master data).                    *
+     F*                                                               *
+     F*  Phase:     Close of Business                                 *
+     F*                                                               *
+     F*  Called By: SDC4200 - BTS Update master file                  *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CLE134             Date 01Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD004             Date 23FEB99               *
+     F*                 115438             Date 24SEP97               *
+     F*                 S01411             DATE 29APR93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  CSD004 - The transaction are now split by branch             *
+     F*  115438 - Removed DB Error validation routine and set         *
+     F*           counter to '0' for E0TTIN and E0TTLV fields         *
+     F*  S01411 - New program for BTS                                 *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FSDBTSML4IF  E           K        DISK
+     F*
+     F** BTS Master data
+     F*
+     FSDBTSFPDO   E                    DISK
+     F*
+     F** BTS Monthly figures
+     F*
+     FSDBTSRPDIT  F      64           EDISK
+     F*
+     F** BTS Cross reference
+     F*
+     FSDBRCHL0IF  E           K        DISK                               CSD004
+     F*                                                                   CSD004
+     F** Branch codes                                                     CSD004
+     F*                                                                   CSD004
+      /EJECT
+     F*****************************************************************
+     F*
+     F*  F U N C T I O N   O F   I N D I C A T O R S
+     F*
+     F*  80       Read indicator for SDBTSML4
+     F*  81       LOKUP array MODFIL successful
+     F*  82       Read indicator for SDBRCHL0                             CSD004
+     F*
+     F*  90 - 99  Standard subroutines
+     F*
+     F*  U7,U8    Standard MIDAS error
+     F*
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*
+     F*  S U B R O U T I N E   I N D E X
+     F*
+     F*  DETAIL - Detail processing
+     F*  CALC   - Calculate filename/transaction type monthly totals
+     F*  WRITEM - Write to BTS Monthly figures PF/SDBTSFPD
+     F*  FX     - Process DEALSDB
+     F*  MM     - Process DEALSDC
+     F*  NAP    - Process DEALSDD
+     F*  NAS    - Process DEALSDE
+     F*  FRAIRS - Process DEALSDG
+     F*  FF     - Process TRANSD
+     F*  FT     - Process Funds Transfer data
+     F*  GL     - Process ACCNTAB
+     F*  LE     - Process CLOANCL
+     F*  DM     - Process DPTMVD
+     F*  TD     - Process TRADSD
+     F*  INIT   - Initial processing
+     F*  FINAL  - Final processing
+     F*  *PSSR  - Program exception error routine
+     F*
+     F*  ZDATE1 - Convert a date to a day number
+     F*  ZDATE2 - Convert a day number to date formats
+     F*
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E*
+     E** Array containing Copyright statement
+     E*
+     E    SDBTSRPD        MODFIL  1  80 12   TTINFO 52   Cross ref
+     E*
+     E** Array containing module/filename/transaction type/information
+     E*
+      /COPY ZSRSRC,ZDATE2Z1
+      /SPACE 3
+     ILDA       E DSLDA                         256
+     I*
+     I** Local data area for database error details
+     I*
+     ISDBANK    E DSSDBANKPD
+     I*
+     I** Bank Details
+     I*
+     ISDMMOD    E DSSDMMODPD
+     I*
+     I** Module Details
+     I*
+     IDSFDY     E DSDSFDY
+     I*
+     I** Data structure for access programs
+     I*
+     I            DS
+     I** Data structure for date in DDMMYY format
+     I*
+     I                                        1   6 U0DMY
+     I                                        1   2 U0DMYD
+     I*
+     I            DS
+     I** Data structure for date in MMDDYY format
+     I*
+     I                                        1   6 U0MDY
+     I                                        3   4 U0MDYD
+     I*
+     IDSMODF      DS
+     I** Data structure for module/filename
+     I*
+     I                                        1   2 U0MMOD
+     I                                        3  12 U0FNME
+     I*
+     IDSTTIN      DS
+     I** Data structure for transaction type/information
+     I*
+     I                                        1   2 U0TNTY
+     I                                        3  52 U0INFO
+     I*
+     I/EJECT
+     C*
+     C**  ----------------------------
+     C**  M A I N  P R O C E S S I N G
+     C**  ----------------------------
+     C*
+     C**  Execute initial processing
+     C*
+     C                     EXSR INIT
+     C*
+     C**  Execute detail processing
+     C*
+     C                     EXSR DETAIL
+     C*
+     C**  Execute final processing
+     C*
+     C                     EXSR FINAL
+     C*
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    DETAIL - Detail processing                                    *
+     C*                                                                  *
+     C*    CALLED BY: MAIN   - Main processing                           *
+     C*    CALLS:     FX     - Process DEALSDB                           *
+     C*               MM     - Process DEALSDC                           *
+     C*               NAP    - Process DEALSDD                           *
+     C*               NAS    - Process DEALSDE                           *
+     C*               FRAIRS - Process DEALSDG                           *
+     C*               FF     - Process TRANSD                            *
+     C*               FT     - Process Funds Transfer data               *
+     C*               GL     - Process ACCNTAB                           *
+     C*               LE     - Process CLOANCL                           *
+     C*               DM     - Process DPTMVD                            *
+     C*               TD     - Process TRADSD                            *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           DETAIL    BEGSR
+     C*
+     C**  If Dealing FX is present in the system, process DEALSDB
+     C*
+     C           BGDLFX    IFEQ 'Y'
+     C                     EXSR FX
+     C                     END
+     C*
+     C**  If Dealing MM is present in the system, process DEALSDC,
+     C**  DEALSDD and DEALSDE
+     C*
+     C           BGDLMM    IFEQ 'Y'
+     C                     EXSR MM
+     C                     EXSR NAP
+     C                     EXSR NAS
+     C                     END
+     C*
+     C**  If FRA/IRS is present in the system, process DEALSDG
+     C*
+     C           BGFIIN    IFEQ 'Y'
+     C                     EXSR FRAIRS
+     C                     END
+     C*
+     C**  If Futures and Options is present in the system, process
+     C**  TRANSD
+     C*
+     C           BGFUOP    IFEQ 'Y'
+     C                     EXSR FF
+     C                     END
+     C*
+     C**  If Funds Transfer is present in the system, process Funds
+     C**  Transfer data
+     C*
+     C           BGFDTR    IFEQ 'Y'
+     C                     EXSR FT
+     C                     END
+     C*
+     C**  If General Ledger is present in the system, process ACCNTAB
+     C*
+     C           BGSDGL    IFEQ 'Y'
+     C                     EXSR GL
+     C                     END
+     C*
+     C**  If Customer Lending is present in the system, process CLOANCL
+     C*
+     C           BGCSLN    IFEQ 'Y'
+     C                     EXSR LE
+     C                     END
+     C*
+     C**  If Securities Trading is present in the system, process
+     C**  DPTMVD and TRADSD
+     C*
+     C           BGSECS    IFEQ 'Y'
+     C                     EXSR DM
+     C                     EXSR TD
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    CALC - Calculate filename/transaction type monthly totals     *
+     C*                                                                  *
+     C*    CALLED BY: FX     - Process DEALSDB                           *
+     C*               MM     - Process DEALSDC                           *
+     C*               NAP    - Process DEALSDD                           *
+     C*               NAS    - Process DEALSDE                           *
+     C*               FRAIRS - Process DEALSDG                           *
+     C*               FF     - Process TRANSD                            *
+     C*               FT     - Process Funds Transfer data               *
+     C*               GL     - Process ACCNTAB                           *
+     C*               LE     - Process CLOANCL                           *
+     C*               DM     - Process DPTMVD                            *
+     C*               TD     - Process TRADSD                            *
+     C*    CALLS:     WRITEM - Write to BTS Monthly figures PF/SDBTSFPD  *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           CALC      BEGSR
+     C                     MOVE 'Y'       WXYX                           XCSD004
+     C           *LOVAL    SETLLSDBRCHL0             8282                 CSD004
+     C                     READ SDBRCHL0                 82               CSD004
+     C           *IN82     IFEQ '1'                                       CSD004
+     C           *LOCK     IN   LDA                                       CSD004
+     C                     SETON                       U7U8               CSD004
+     C                     MOVEL'SD4201'  DBPGM                           CSD004
+     C                     Z-ADD4         DBASE            ***************CSD004
+     C                     MOVEL'SDBRCHPD'DBFILE           * DBERROR 004 *CSD004
+     C                     MOVEL'BRCH'    DBKEY            ***************CSD004
+     C                     OUT  LDA                                       CSD004
+     C                     EXSR *PSSR                                     CSD004
+     C                     END                                            CSD004
+     C*                                                                   CSD004
+     C           *IN82     DOWEQ'0'                                       CSD004
+     C                     MOVELA8CMCD    KCMPY                           CSD004
+     C                     MOVELA8BRCD    KBRCA                           CSD004
+     C*
+     C**  Initialise work fields
+     C*
+     C                     Z-ADD0         U0TTIN           total inserts
+     C                     Z-ADD0         U0TTLV           total live recs
+     C                     Z-ADD0         U0TTAV           avrge live recs
+     C                     Z-ADD0         U0DAYS           days in month
+     C*
+     C**  Set lower limits for filename/transaction type starting from the
+     C**  first day of month (use filename/transaction type/start date
+     C**  as key)
+     C*
+     C           KBTSM4    SETLLSDBTSMD0             8080
+     C*
+     C**  Read all filename/transaction type data for the month
+     C**  (Use filename/transaction type as key)
+     C*
+     C           KBTSMM    READESDBTSMD0                 80
+     C*
+     C**  If the read fails then either no filename/transaction type
+     C**  data have been extracted for the month, or the values of the
+     C**  parameters on the key list KBTSMM do match the values on SDBTSRPD.
+     C**  This is a database error.
+     C*
+     C           *IN80     IFEQ '1'
+     C********   *LOCK     IN   LDA                            ********** 115438
+     C********             SETON                       U7U8    ********** 115438
+     C********             MOVEL'SD4201'  DBPGM                ********** 115438
+     C********             Z-ADD3         DBASE            ************** 115438
+     C********             MOVEL'SDBTSMPD'DBFILE           * DBERROR 003  115438
+     C********             MOVEL*BLANKS   DBKEY            ************** 115438
+     C********             OUT  LDA                            ********** 115438
+     C********             EXSR *PSSR                          ********** 115438
+     C                     Z-ADD0         E0TTIN                          115438
+     C                     Z-ADD0         E0TTLV                          115438
+     C                     MOVELKFNME     E0FNME                          115438
+     C                     MOVELKTNTY     E0TNTY                          115438
+     C                     MOVELU0MMOD    E0MMOD                          115438
+     C                     MOVE '0'       *IN80                           115438
+     C                     END
+     C*
+     C**  Read records from LF/SDBTSML4 for this file name for the month
+     C**
+     C           *IN80     DOWEQ'0'
+     C*
+     C**  Process all records for the month
+     C*
+     C                     ADD  E0TTIN    U0TTIN
+     C                     ADD  E0TTLV    U0TTLV
+     C                     ADD  1         U0DAYS
+     C*
+     C**  Read next from SDBTSML4
+     C*
+     C           KBTSMM    READESDBTSMD0                 80
+     C                     END
+     C*
+     C**  Calculate average number of live records
+     C*
+     C           U0DAYS    IFNE 0
+     C           U0TTLV    DIV  U0DAYS    U0TTAV    H      HALF ADJUSTED
+     C                     END
+     C*
+     C**  Write record to monthly figures file PF/SDBTSFPD
+     C*
+     C                     EXSR WRITEM
+     C*
+     C                     READ SDBRCHL0                 82               CSD004
+     C*
+     C** The following lines can be removed if feature CSD004 is         XCSD004
+     C** installed at least since one month.                             XCSD004
+     C** ( When you removed these lines, you have to removed all the     XCSD004
+     C**  lines wich are annoted with XCSD004)                           XCSD004
+     C           WXYX      IFEQ 'Y'                                      XCSD004
+     C           *IN82     ANDEQ*ON                                      XCSD004
+     C                     MOVE 'XYX'     A8CMCD                         XCSD004
+     C                     MOVE 'ZYX'     A8BRCD                         XCSD004
+     C                     MOVE *BLANKS   A8BRNM                         XCSD004
+     C                     MOVE *OFF      *IN82                          XCSD004
+     C                     MOVE 'N'       WXYX                           XCSD004
+     C                     ENDIF                                         XCSD004
+     C*                                                                   CSD004
+     C                     ENDDO                                          CSD004
+     C*                                                                   CSD004
+     C                     ENDSR
+     C*
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    WRITEM - Write to BTS Monthly figures file PF/SDBTSFPD        *
+     C*                                                                  *
+     C*    CALLED BY: CALC   - Calculate filename/transaction type       *
+     C*                         monthly totals                           *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           WRITEM    BEGSR
+     C*
+     C**  Write record
+     C*
+     C                     MOVELA8CMCD    E1CMPY                          CSD004
+     C                     MOVELA8BRCD    E1BRCA                          CSD004
+     C                     MOVELE0MMOD    E1MMOD
+     C                     MOVELE0FNME    E1FNME
+     C                     MOVELE0TNTY    E1TNTY
+     C                     Z-ADDBJRDNB    E1DATE
+     C                     Z-ADDU0TTIN    E1TTIN
+     C                     Z-ADDU0TTAV    E1TTAV
+     C*
+     C                     WRITESDBTSFD0
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    FX - Process DEALSDB                                          *
+     C*                                                                  *
+     C*    CALLED BY: DETAIL - Detail processing                         *
+     C*    CALLS:     CALC   - Calculate filename/transaction type       *
+     C*                         monthly totals                           *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           FX        BEGSR
+     C*
+     C**  Set up the filename/transaction type combination.
+     C**  (Obtain the combination from input arrays using cross reference
+     C**   file PF/SDBTSRPD)
+     C*
+     C                     MOVEL*BLANKS   U0MMOD
+     C                     MOVEL*BLANKS   U0FNME
+     C*
+     C                     MOVEL'FX'      U0MMOD
+     C                     MOVEL'DEALSDB' U0FNME
+     C                     Z-ADD1         X
+     C*
+     C           DSMODF    LOKUPMODFIL,X                 81
+     C*
+     C           *IN81     DOWEQ'1'
+     C*
+     C**  Set up key fields for LF/SDBTSML4
+     C*
+     C                     MOVELTTINFO,X  DSTTIN
+     C                     MOVEL'DEALSDB' KFNME
+     C                     MOVELU0TNTY    KTNTY
+     C*
+     C**  Calculate monthly totals for filename/transaction type and write
+     C**  to BTS monthly figures file PF/SDBTSFPD
+     C*
+     C                     EXSR CALC
+     C*
+     C**  Get the next module/filename combination
+     C*
+     C                     ADD  1         X
+     C           DSMODF    LOKUPMODFIL,X                 81
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    MM - Process DEALSDC                                          *
+     C*                                                                  *
+     C*    CALLED BY: DETAIL - Detail processing                         *
+     C*    CALLS:     CALC   - Calculate filename/transaction type       *
+     C*                         monthly totals                           *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           MM        BEGSR
+     C*
+     C**  Set up the filename/transaction type combination.
+     C**  (Obtain the combination from input arrays using cross reference
+     C**   file PF/SDBTSRPD)
+     C*
+     C                     MOVEL*BLANKS   U0MMOD
+     C                     MOVEL*BLANKS   U0FNME
+     C*
+     C                     MOVEL'MM'      U0MMOD
+     C                     MOVEL'DEALSDC' U0FNME
+     C                     Z-ADD1         X
+     C*
+     C           DSMODF    LOKUPMODFIL,X                 81
+     C*
+     C           *IN81     DOWEQ'1'
+     C*
+     C**  Set up key fields for LF/SDBTSML4
+     C*
+     C                     MOVELTTINFO,X  DSTTIN
+     C                     MOVEL'DEALSDC' KFNME
+     C                     MOVELU0TNTY    KTNTY
+     C*
+     C**  Calculate monthly totals for filename/transaction type and write
+     C**  to BTS monthly figures file PF/SDBTSFPD
+     C*
+     C                     EXSR CALC
+     C*
+     C**  Get the next module/filename combination
+     C*
+     C                     ADD  1         X
+     C           DSMODF    LOKUPMODFIL,X                 81
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    NAP - Process DEALSDD                                         *
+     C*                                                                  *
+     C*    CALLED BY: DETAIL - Detail processing                         *
+     C*    CALLS:     CALC   - Calculate filename/transaction type       *
+     C*                         monthly totals                           *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           NAP       BEGSR
+     C*
+     C**  Set up the filename/transaction type combination.
+     C**  (Obtain the combination from input arrays using cross reference
+     C**   file PF/SDBTSRPD)
+     C*
+     C                     MOVEL*BLANKS   U0MMOD
+     C                     MOVEL*BLANKS   U0FNME
+     C*
+     C                     MOVEL'MM'      U0MMOD
+     C                     MOVEL'DEALSDD' U0FNME
+     C                     Z-ADD1         X
+     C*
+     C           DSMODF    LOKUPMODFIL,X                 81
+     C*
+     C           *IN81     DOWEQ'1'
+     C*
+     C**  Set up key fields for LF/SDBTSML4
+     C*
+     C                     MOVELTTINFO,X  DSTTIN
+     C                     MOVEL'DEALSDD' KFNME
+     C                     MOVELU0TNTY    KTNTY
+     C*
+     C**  Calculate monthly totals for filename/transaction type and write
+     C**  to BTS monthly figures file PF/SDBTSFPD
+     C*
+     C                     EXSR CALC
+     C*
+     C**  Get the next module/filename combination
+     C*
+     C                     ADD  1         X
+     C           DSMODF    LOKUPMODFIL,X                 81
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    NAS - Process DEALSDE                                         *
+     C*                                                                  *
+     C*    CALLED BY: DETAIL - Detail processing                         *
+     C*    CALLS:     CALC   - Calculate filename/transaction type       *
+     C*                         monthly totals                           *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           NAS       BEGSR
+     C*
+     C**  Set up the filename/transaction type combination.
+     C**  (Obtain the combination from input arrays using cross reference
+     C**   file PF/SDBTSRPD)
+     C*
+     C                     MOVEL*BLANKS   U0MMOD
+     C                     MOVEL*BLANKS   U0FNME
+     C*
+     C                     MOVEL'MM'      U0MMOD
+     C                     MOVEL'DEALSDE' U0FNME
+     C                     Z-ADD1         X
+     C*
+     C           DSMODF    LOKUPMODFIL,X                 81
+     C*
+     C           *IN81     DOWEQ'1'
+     C*
+     C**  Set up key fields for LF/SDBTSML4
+     C*
+     C                     MOVELTTINFO,X  DSTTIN
+     C                     MOVEL'DEALSDE' KFNME
+     C                     MOVELU0TNTY    KTNTY
+     C*
+     C**  Calculate monthly totals for filename/transaction type and write
+     C**  to BTS monthly figures file PF/SDBTSFPD
+     C*
+     C                     EXSR CALC
+     C*
+     C**  Get the next module/filename combination
+     C*
+     C                     ADD  1         X
+     C           DSMODF    LOKUPMODFIL,X                 81
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    FRAIRS - Process DEALSDG                                      *
+     C*                                                                  *
+     C*    CALLED BY: DETAIL - Detail processing                         *
+     C*    CALLS:     CALC   - Calculate filename/transaction type       *
+     C*                         monthly totals                           *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           FRAIRS    BEGSR
+     C*
+     C**  Set up the filename/transaction type combination.
+     C**  (Obtain the combination from input arrays using cross reference
+     C**   file PF/SDBTSRPD)
+     C*
+     C                     MOVEL*BLANKS   U0MMOD
+     C                     MOVEL*BLANKS   U0FNME
+     C*
+     C                     MOVEL'DL'      U0MMOD
+     C                     MOVEL'DEALSDG' U0FNME
+     C                     Z-ADD1         X
+     C*
+     C           DSMODF    LOKUPMODFIL,X                 81
+     C*
+     C           *IN81     DOWEQ'1'
+     C*
+     C**  Set up key fields for LF/SDBTSML4
+     C*
+     C                     MOVELTTINFO,X  DSTTIN
+     C                     MOVEL'DEALSDG' KFNME
+     C                     MOVELU0TNTY    KTNTY
+     C*
+     C**  Calculate monthly totals for filename/transaction type and write
+     C**  to BTS monthly figures file PF/SDBTSFPD
+     C*
+     C                     EXSR CALC
+     C*
+     C**  Get the next module/filename combination
+     C*
+     C                     ADD  1         X
+     C           DSMODF    LOKUPMODFIL,X                 81
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    FF - Process TRANSD                                           *
+     C*                                                                  *
+     C*    CALLED BY: DETAIL - Detail processing                         *
+     C*    CALLS:     CALC   - Calculate filename/transaction type       *
+     C*                         monthly totals                           *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           FF        BEGSR
+     C*
+     C**  Set up the filename/transaction type combination.
+     C**  (Obtain the combination from input arrays using cross reference
+     C**   file PF/SDBTSRPD)
+     C*
+     C                     MOVEL*BLANKS   U0MMOD
+     C                     MOVEL*BLANKS   U0FNME
+     C*
+     C                     MOVEL'FF'      U0MMOD
+     C                     MOVEL'TRANSD ' U0FNME
+     C                     Z-ADD1         X
+     C*
+     C           DSMODF    LOKUPMODFIL,X                 81
+     C*
+     C           *IN81     DOWEQ'1'
+     C*
+     C**  Set up key fields for LF/SDBTSML4
+     C*
+     C                     MOVELTTINFO,X  DSTTIN
+     C                     MOVEL'TRANSD ' KFNME
+     C                     MOVELU0TNTY    KTNTY
+     C*
+     C**  Calculate monthly totals for filename/transaction type and write
+     C**  to BTS monthly figures file PF/SDBTSFPD
+     C*
+     C                     EXSR CALC
+     C*
+     C**  Get the next module/filename combination
+     C*
+     C                     ADD  1         X
+     C           DSMODF    LOKUPMODFIL,X                 81
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    FT - Process Funds Transfer data                              *
+     C*                                                                  *
+     C*    CALLED BY: DETAIL - Detail processing                         *
+     C*    CALLS:     CALC   - Calculate filename/transaction type       *
+     C*                         monthly totals                           *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           FT        BEGSR
+     C*
+     C**  -----------------------------
+     C**  Cheques for Collection Credit
+     C**  -----------------------------
+     C*
+     C**  Set up key fields for LF/SDBTSML4
+     C*
+     C                     MOVEL'CQCOCDD' KFNME
+     C                     MOVEL'CC'      KTNTY
+     C*
+     C**  Calculate monthly totals for filename/transaction type and write
+     C**  to BTS monthly figures file PF/SDBTSFPD
+     C*
+     C                     EXSR CALC
+     C*
+     C**  -----------------------------
+     C**  Cheques for Collection Debit
+     C**  -----------------------------
+     C*
+     C**  Set up key fields for LF/SDBTSML4
+     C*
+     C                     MOVEL'CQCODDD' KFNME
+     C                     MOVEL'CC'      KTNTY
+     C*
+     C**  Calculate monthly totals for filename/transaction type and write
+     C**  to BTS monthly figures file PF/SDBTSFPD
+     C*
+     C                     EXSR CALC
+     C*
+     C**  ----------------------------
+     C**  Cheques to be Paid Credit
+     C**  ----------------------------
+     C*
+     C**  Set up key fields for LF/SDBTSML4
+     C*
+     C                     MOVEL'CQPACDD' KFNME
+     C                     MOVEL'CP'      KTNTY
+     C*
+     C**  Calculate monthly totals for filename/transaction type and write
+     C**  to BTS monthly figures file PF/SDBTSFPD
+     C*
+     C                     EXSR CALC
+     C*
+     C**  ----------------------------
+     C**  Cheques to be Paid Debit
+     C**  ----------------------------
+     C*
+     C**  Set up key fields for LF/SDBTSML4
+     C*
+     C                     MOVEL'CQPADDD' KFNME
+     C                     MOVEL'CP'      KTNTY
+     C*
+     C**  Calculate monthly totals for filename/transaction type and write
+     C**  to BTS monthly figures file PF/SDBTSFPD
+     C*
+     C                     EXSR CALC
+     C*
+     C**  ----------------------------
+     C**  Incoming Payments
+     C**  ----------------------------
+     C*
+     C**  Set up key fields for LF/SDBTSML4
+     C*
+     C                     MOVEL'INPAYDD' KFNME
+     C                     MOVEL'IN'      KTNTY
+     C*
+     C**  Calculate monthly totals for filename/transaction type and write
+     C**  to BTS monthly figures file PF/SDBTSFPD
+     C*
+     C                     EXSR CALC
+     C*
+     C**  ----------------------------
+     C**  Outgoing Payments
+     C**  ----------------------------
+     C*
+     C**  Set up key fields for LF/SDBTSML4
+     C*
+     C                     MOVEL'OTPAYDD' KFNME
+     C                     MOVEL'OP'      KTNTY
+     C*
+     C**  Calculate monthly totals for filename/transaction type and write
+     C**  to BTS monthly figures file PF/SDBTSFPD
+     C*
+     C                     EXSR CALC
+     C*
+     C**  ----------------------------
+     C**  Regular Payments
+     C**  ----------------------------
+     C*
+     C**  Set up key fields for LF/SDBTSML4
+     C*
+     C                     MOVEL'OTPAYDD' KFNME
+     C                     MOVEL'RP'      KTNTY
+     C*
+     C**  Calculate monthly totals for filename/transaction type and write
+     C**  to BTS monthly figures file PF/SDBTSFPD
+     C*
+     C                     EXSR CALC
+     C*
+     C**  ----------------------------
+     C**  Nostro Transfer
+     C**  ----------------------------
+     C*
+     C**  Set up key fields for LF/SDBTSML4
+     C*
+     C                     MOVEL'NTRANDD' KFNME
+     C                     MOVEL'NT'      KTNTY
+     C*
+     C**  Calculate monthly totals for filename/transaction type and write
+     C**  to BTS monthly figures file PF/SDBTSFPD
+     C*
+     C                     EXSR CALC
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    GL - Process ACCNTAB                                          *
+     C*                                                                  *
+     C*    CALLED BY: DETAIL - Detail processing                         *
+     C*    CALLS:     CALC   - Calculate filename/transaction type       *
+     C*                         monthly totals                           *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           GL        BEGSR
+     C*
+     C**  Set up the filename/transaction type combination.
+     C**  (Obtain the combination from input arrays using cross reference
+     C**   file PF/SDBTSRPD)
+     C*
+     C                     MOVEL*BLANKS   U0MMOD
+     C                     MOVEL*BLANKS   U0FNME
+     C*
+     C                     MOVEL'GL'      U0MMOD
+     C                     MOVEL'ACCNTAB' U0FNME
+     C                     Z-ADD1         X
+     C*
+     C           DSMODF    LOKUPMODFIL,X                 81
+     C*
+     C           *IN81     DOWEQ'1'
+     C*
+     C**  Set up key fields for LF/SDBTSML4
+     C*
+     C                     MOVELTTINFO,X  DSTTIN
+     C                     MOVEL'ACCNTAB' KFNME
+     C                     MOVELU0TNTY    KTNTY
+     C*
+     C**  Calculate monthly totals for filename/transaction type and write
+     C**  to BTS monthly figures file PF/SDBTSFPD
+     C*
+     C                     EXSR CALC
+     C*
+     C**  Get the next module/filename combination
+     C*
+     C                     ADD  1         X
+     C           DSMODF    LOKUPMODFIL,X                 81
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    LE - Process CLOANCL                                          *
+     C*                                                                  *
+     C*    CALLED BY: DETAIL - Detail processing                         *
+     C*    CALLS:     CALC   - Calculate filename/transaction type       *
+     C*                         monthly totals                           *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           LE        BEGSR
+     C*
+     C**  Set up the filename/transaction type combination.
+     C**  (Obtain the combination from input arrays using cross reference
+     C**   file PF/SDBTSRPD)
+     C*
+     C                     MOVEL*BLANKS   U0MMOD
+     C                     MOVEL*BLANKS   U0FNME
+     C*
+     C                     MOVEL'LE'      U0MMOD
+     C                     MOVEL'CLOANCL' U0FNME
+     C                     Z-ADD1         X
+     C*
+     C           DSMODF    LOKUPMODFIL,X                 81
+     C*
+     C           *IN81     DOWEQ'1'
+     C*
+     C**  Set up key fields for LF/SDBTSML4
+     C*
+     C                     MOVELTTINFO,X  DSTTIN
+     C                     MOVEL'CLOANCL' KFNME
+     C                     MOVELU0TNTY    KTNTY
+     C*
+     C**  Calculate monthly totals for filename/transaction type and write
+     C**  to BTS monthly figures file PF/SDBTSFPD
+     C*
+     C                     EXSR CALC
+     C*
+     C**  Get the next module/filename combination
+     C*
+     C                     ADD  1         X
+     C           DSMODF    LOKUPMODFIL,X                 81
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    DM - Process DPTMVD                                           *
+     C*                                                                  *
+     C*    CALLED BY: DETAIL - Detail processing                         *
+     C*    CALLS:     CALC   - Calculate filename/transaction type       *
+     C*                         monthly totals                           *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           DM        BEGSR
+     C*
+     C**  Set up the filename/transaction type combination.
+     C**  (Obtain the combination from input arrays using cross reference
+     C**   file PF/SDBTSRPD)
+     C*
+     C                     MOVEL*BLANKS   U0MMOD
+     C                     MOVEL*BLANKS   U0FNME
+     C*
+     C                     MOVEL'SE'      U0MMOD
+     C                     MOVEL'DPTMVD ' U0FNME
+     C                     Z-ADD1         X
+     C*
+     C           DSMODF    LOKUPMODFIL,X                 81
+     C*
+     C           *IN81     DOWEQ'1'
+     C*
+     C**  Set up key fields for LF/SDBTSML4
+     C*
+     C                     MOVELTTINFO,X  DSTTIN
+     C                     MOVEL'DPTMVD ' KFNME
+     C                     MOVELU0TNTY    KTNTY
+     C*
+     C**  Calculate monthly totals for filename/transaction type and write
+     C**  to BTS monthly figures file PF/SDBTSFPD
+     C*
+     C                     EXSR CALC
+     C*
+     C**  Get the next module/filename combination
+     C*
+     C                     ADD  1         X
+     C           DSMODF    LOKUPMODFIL,X                 81
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    TD - Process TRADSD                                           *
+     C*                                                                  *
+     C*    CALLED BY: DETAIL - Detail processing                         *
+     C*    CALLS:     CALC   - Calculate filename/transaction type       *
+     C*                         monthly totals                           *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           TD        BEGSR
+     C*
+     C**  Set up the filename/transaction type combination.
+     C**  (Obtain the combination from input arrays using cross reference
+     C**   file PF/SDBTSRPD)
+     C*
+     C                     MOVEL*BLANKS   U0MMOD
+     C                     MOVEL*BLANKS   U0FNME
+     C*
+     C                     MOVEL'SE'      U0MMOD
+     C                     MOVEL'TRADSD ' U0FNME
+     C                     Z-ADD1         X
+     C*
+     C           DSMODF    LOKUPMODFIL,X                 81
+     C*
+     C           *IN81     DOWEQ'1'
+     C*
+     C**  Set up key fields for LF/SDBTSML4
+     C*
+     C                     MOVELTTINFO,X  DSTTIN
+     C                     MOVEL'TRADSD ' KFNME
+     C                     MOVELU0TNTY    KTNTY
+     C*
+     C**  Calculate monthly totals for filename/transaction type and write
+     C**  to BTS monthly figures file PF/SDBTSFPD
+     C*
+     C                     EXSR CALC
+     C*
+     C**  Get the next module/filename combination
+     C*
+     C                     ADD  1         X
+     C           DSMODF    LOKUPMODFIL,X                 81
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    INIT - Initial processing                                     *
+     C*                                                                  *
+     C*    CALLED BY: MAIN   - Main processing                           *
+     C*    CALLS:     *PSSR  - Program exception error routine           *
+     C*               ZDATE2 - Convert a day number to date formats      *
+     C*               ZDATE1 - Convert a date to a day number            *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+     C**  Set up Copyright parameter
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C**  Deine Local Data area
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C**  Define key lists for LF/SDBTSML4
+     C**  (KBTSM4 is full file key, KBTSMM is partial file key)
+     C*
+     C           KBTSM4    KLIST
+     C                     KFLD           KCMPY   3                       CSD004
+     C                     KFLD           KBRCA   3                       CSD004
+     C                     KFLD           KFNME  10
+     C                     KFLD           KTNTY   2
+     C                     KFLD           KDATE   50
+     C*
+     C           KBTSMM    KLIST
+     C                     KFLD           KCMPY                           CSD004
+     C                     KFLD           KBRCA                           CSD004
+     C                     KFLD           KFNME
+     C                     KFLD           KTNTY
+     C*
+     C**  Access bank details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C**  Process database error on SDBANKPD
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     MOVEL'SD4201'  DBPGM
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           * DBERROR 001 *
+     C                     MOVEL'BANK'    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C**  Access module details
+     C*
+     C                     CALL 'AOMMODR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDMMOD    PARM SDMMOD    DSFDY
+     C*
+     C**  Process database error on SDMMODPD
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     MOVEL'SD4201'  DBPGM
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVEL'SDMMODPD'DBFILE           * DBERROR 002 *
+     C                     MOVEL'MMOD'    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C**  Set date format indicator *IN98 on if date format is MMDDYY
+     C*
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+     C*
+     C**  Determine first day of month :
+     C**  Convert Midas run day number to DDMMYY/MMDDYY format
+     C*
+     C                     Z-ADDBJRDNB    ZDAYNO
+     C                     EXSR ZDATE2
+     C*
+     C**  Zeroise day to be first day of month
+     C*
+     C           *IN98     IFEQ '0'
+     C                     MOVELZDATE     U0DMY
+     C                     MOVEL'01'      U0DMYD
+     C                     MOVELU0DMY     ZDATE
+     C                     ELSE
+     C                     MOVELZDATE     U0MDY
+     C                     MOVEL'01'      U0MDYD
+     C                     MOVELU0MDY     ZDATE
+     C                     END
+     C*
+     C**  Convert DDMMYY/MMDDYY date into run day number for starting date
+     C**  (key date for LF/SDBTSML4)
+     C*
+     C                     EXSR ZDATE1
+     C                     Z-ADDZDAYNO    KDATE
+     C*
+     C**  Initialise work fields
+     C*
+     C                     Z-ADD0         U0TTIN  80       total inserts
+     C                     Z-ADD0         U0TTLV  80       total live recs
+     C                     Z-ADD0         U0TTAV  80       avrge live recs
+     C                     Z-ADD0         U0DAYS  20       days in month
+     C*                                                                  XCSD004
+     C**  Variable WXYX is used for CSD004 installation, it can be       XCSD004
+     C**  removed if this feature is installed since more than           XCSD004
+     C**  one month.                                                     XCSD004
+     C**  ( When you removed these lines, you have to remove all the     XCSD004
+     C**   lines which are annoted with   XCSD004)                       XCSD004
+     C**  ( for more information, please refer to program SD4100 ).      XCSD004
+     C*                                                                  XCSD004
+     C                     MOVE 'Y'       WXYX    1                      XCSD004
+     C*
+     C**  Initialise array index
+     C*
+     C                     Z-ADD0         X       30
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    FINAL - Final processing                                      *
+     C*                                                                  *
+     C*    CALLED BY: MAIN - Main processing                             *
+     C*    CALLS:                                                        *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           FINAL     BEGSR
+     C*
+     C                     SETON                     LR
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR  - Program exception error routine                      *
+     C*          Called automatically if a program error occurs,      *
+     C*          or directly by the program code using EXSR.          *
+     C*          This subroutine DUMPs the program just once.         *
+     C*                                                               *
+     C* CALLED BY: INIT - Initial processing                          *
+     C*                                                               *
+     C* CALLS:                                                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

@@ -1,0 +1,95 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UT User Profile Update')                        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Security Profile                                    */
+/*                                                                   */
+/*       SMUC00400A - Update Midas Users Profile                     */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. MD027435 *RENAMED  Date 09Jun14              */
+/*       Prev Amend No. MD023511 *CREATE   Date 17Nov13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD027435 - UTSF1117 renamed to SMUC00000A for upgrade       */
+/*                  program standards.                               */
+/*       MD023511 - Update initial program on users with LMTCPB *YES */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+             PGM        PARM(&MODE)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2013')
+ 
+             DCLF       FILE(GZMUSERDD)
+ 
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&USRP) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&INLPGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LMTCPB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GENPGM) TYPE(*CHAR) LEN(10) +
+                          VALUE('SMUC00000A')
+             DCL        VAR(&AUDIT) TYPE(*CHAR) LEN(100)
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                        CMDLBL(ABNOR))
+ 
+/** Create temporary file to hold audit log */
+             DLTF       FILE(QTEMP/UPERRMQT)
+             MONMSG     MSGID(CPF2105)
+             CRTPF      FILE(QTEMP/UPERRMQT) RCDLEN(100) +
+                          TEXT('Temporary file for audit log')
+ 
+ READ:       RCVF
+ 
+/** Check for end of file */
+ 
+             MONMSG     MSGID(CPF0864 ) EXEC(GOTO CMDLBL(END))
+ 
+             RTVUSRPRF  USRPRF(&USRP) INLPGM(&INLPGM) LMTCPB(&LMTCPB)
+             MONMSG     MSGID(CPF2204 ) EXEC(GOTO CMDLBL(READ))
+             MONMSG     MSGID(CPF2217 ) EXEC(GOTO CMDLBL(AUTERROR))
+ 
+/** Only Update Midas user profiles with LMTCPB *YES */
+/** and INLPGM not MIDASPLUS */
+             IF         COND((&LMTCPB = '*YES') *AND +
+                          (&INLPGM *NE 'MIDASPLUS')) THEN(DO)
+ 
+/** Write record for audit report */
+                CHGVAR     VAR(&AUDIT) VALUE('USER: ' *CAT &USRP *CAT +
+                             '      ' *CAT 'INLPGM BEFORE UPDATE: '   +
+                               *CAT &INLPGM)
+                CALL       PGM(UP008010) PARM(*WRITE &GENPGM &AUDIT)
+ 
+/** Update user profile for UPDATE mode */
+                IF         COND(&MODE = 'UPDATE') THEN(DO)
+                   CHGUSRPRF  USRPRF(&USRP) INLPGM(MIDASPLUS)
+                   MONMSG     MSGID(CPF2292 ) EXEC(GOTO CMDLBL(AUTERROR))
+                ENDDO
+             ENDDO
+ 
+             GOTO CMDLBL(READ)
+ 
+ AUTERROR:      SNDPGMMSG  MSG('This user is not authorised to update +
+                          User Profiles') TOMSGQ(MOPERQ MRUNQ)
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:      SNDPGMMSG  MSG('SMUC00000A ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+ END:
+ 
+/** Print audit report */
+             CALL       PGM(UP008010) PARM(*REPORT &GENPGM ' ')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+             CHGSPLFA   FILE(UP008010P1) SPLNBR(*LAST) USRDTA(&GENPGM)
+ 
+             ENDPGM

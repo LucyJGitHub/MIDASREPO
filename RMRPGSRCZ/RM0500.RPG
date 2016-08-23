@@ -1,0 +1,312 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IRM Convert Midas Amount to Tmark Amount')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Interest Risk Management Module                  *
+     F*                                                               *
+     F*  RM0500 - Convert Midas Amount to Tmark Amount                *
+     F*                                                               *
+     F*  Function:  This program converts an input numeric amount     *
+     F*  (COB)      field into an alpha field with a decimal place    *
+     F*             and a sign.                                       *
+     F*                                                               *
+     F*  Called By: RM0520 - Write to Transaction Extract File        *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CRM001   *CREATE   Date 06Feb95               *
+      *                 XNNNNN             Date DDMmmYY               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+     F*  CRM001 - Midas/Tmark Interface                               *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   LR  - Last record indicator                                 *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*   #LCNVT - Subroutine to insert a decimal point into a        *
+     F*            numeric field and to blank out leading zeros.      *
+     F*                                                               *
+     F*   *PSSR  - Standard Error Processing                          *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E** Array containing Copyright statement
+     E*
+     E                    WA1        15  1
+     E** Array containing input amount to be converted
+     E*
+     E                    WA2        22  1
+     E** Array containing output amount (alpha w/ decimal point)
+     E*
+     E                    WA3        22  1
+     E** Array containing output amount (left-justified with sign)
+     E*
+     I/EJECT
+     I*
+     ILDA       E DSLDA                         256
+     I**  Local data area for database error details
+     I*
+     ISDCURR    E DSSDCURRPD
+     I**  Data structure for currency details
+     I*
+     IDSSDY     E DSDSSDY
+     I**  Long data structure for access programs
+     I*
+     C/EJECT
+     C*
+     C**  Set up copyright parameter
+     C*
+     C                     MOVEACPY@      ACT@   80
+     C*
+     C**  Entry parameters
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           PAMNT  150       I:Amount
+     C                     PARM           PCYCD   3        I:Currency
+     C                     PARM           PDECP   10       I:Dec. place
+     C                     PARM           PCVAM  22        O:Converted Amount
+     C                     PARM           PRTCD   7        O:Return cde
+     C*
+     C*****************************************************************
+     C**  M A I N   P R O C E S S I N G
+     C*****************************************************************
+     C*
+     C**  Initialise output fields
+     C*
+     C                     MOVE *BLANKS   PCVAM
+     C                     MOVE *BLANKS   PRTCD
+     C*
+     C**  Set up database error details
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'RM0500'  DBPGM
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD*ZEROS    DBASE
+     C                     OUT  LDA
+     C*
+     C**  Get currency details using access object if ccy is not blank
+     C*
+     C           PCYCD     IFNE *BLANK
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*KEY   ' WOPTN   7
+     C                     PARM PCYCD     WCYCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C           WRTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDCURRPD'DBFILE           **************
+     C                     MOVELPCYCD     DBKEY            * DBERROR 01 *
+     C                     Z-ADD1         DBASE            **************
+     C                     OUT  LDA
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C**  Get no. of decimal places
+     C*
+     C                     Z-ADDA6NBDP    PDECP
+     C*
+     C                     ENDIF
+     C*
+     C**  Perform conversion of input amount
+     C*
+     C                     EXSR #LCNVT
+     C*
+     C**  Return to calling program
+     C*
+     C                     RETRN
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #LCNVT - Subroutine to insert a decimal point into a numeric  *
+     C*          field and to blank out leading zeros.                *
+     C*                                                               *
+     C* Called by: Main processing                                    *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LCNVT    BEGSR                           ** #LCNVT SR **
+     C*
+     C**  Calculation to define number structure control fields
+     C*
+     C                     Z-ADDPDECP     WDECP   10
+     C                     MOVE *BLANKS   WAMNT  15
+     C*
+     C**  Set up work fields
+     C*
+     C                     MOVE ' '       WA1
+     C                     MOVE ' '       WA2
+     C                     MOVE ' '       WA3
+     C*
+     C                     Z-ADD15        W1      20
+     C                     Z-ADD22        W2      20
+     C*
+     C**  Check if numeric field is negative
+     C*
+     C           PAMNT     IFLT *ZEROS
+     C                     Z-SUBPAMNT     WAMT   150
+     C                     ELSE
+     C                     Z-ADDPAMNT     WAMT
+     C                     ENDIF
+     C*
+     C                     MOVE WAMT      WAMNT
+     C                     MOVEAWAMNT     WA1
+     C*
+     C**  Check to see if there are any decimal places
+     C*
+     C           WDECP     CABEQ0         WT10
+     C*
+     C**  Set up decimals
+     C*
+     C                     Z-ADD*ZEROS    WCNTR   10
+     C*
+     C           WCNTR     DOUEQWDECP
+     C                     MOVE WA1,W1    WA2,W2
+     C                     SUB  1         W1
+     C                     SUB  1         W2
+     C                     ADD  1         WCNTR
+     C                     ENDDO
+     C*
+     C**  Put in decimal place
+     C*
+     C                     MOVE '.'       WA2,W2
+     C                     SUB  1         W2
+     C*
+     C           WT10      TAG
+     C*
+     C**  Set up integers
+     C*
+     C           W1        DOUEQ*ZEROS
+     C                     MOVE WA1,W1    WA2,W2
+     C                     SUB  1         W1
+     C                     SUB  1         W2
+     C                     ENDDO
+     C*
+     C**  Put in leading blanks
+     C*
+     C                     Z-ADD1         W2
+     C*
+     C           WA2,W2    DOWEQ'0'
+     C           WA2,W2    OREQ ' '
+     C*
+     C                     MOVE ' '       WA2,W2
+     C                     ADD  1         W2
+     C*
+     C           W2        IFGT 22
+     C                     LEAVE
+     C                     ENDIF
+     C*
+     C                     ENDDO
+     C*
+     C**  If no integers, put in leading zero
+     C*
+     C           W2        IFEQ 23
+     C                     SUB  1         W2
+     C                     MOVE '0'       WA2,W2
+     C                     ELSE
+     C*
+     C           WA2,W2    IFEQ '.'
+     C                     SUB  1         W2
+     C                     MOVE '0'       WA2,W2
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C**  Get position of the first non-blank character
+     C*
+     C                     Z-ADD1         W2
+     C           WA2,W2    DOWEQ' '
+     C                     ADD  1         W2
+     C                     ENDDO
+     C*
+     C**  Left adjust output field, put sign on the left
+     C*
+     C**  If no. of dec places = 0 and ccy is blank then this
+     C**  is a day number so do not put in sign
+     C*
+     C           PDECP     IFEQ *ZERO
+     C           PCYCD     ANDEQ*BLANK
+     C                     Z-ADD1         W1
+     C                     ELSE
+     C                     Z-ADD2         W1
+     C*
+     C           PAMNT     IFLT *ZEROS
+     C                     MOVE '-'       WA3,1
+     C                     ELSE
+     C                     MOVE '+'       WA3,1
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C           W2        DOWNE23
+     C                     MOVE WA2,W2    WA3,W1
+     C                     ADD  1         W1
+     C                     ADD  1         W2
+     C                     ENDDO
+     C*
+     C**  Set up output field
+     C*
+     C                     MOVEAWA3       PCVAM
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR  - Program exception error routine                      *
+     C*          Called automatically if a program error occurs,      *
+     C*          or directly by the program code using EXSR.          *
+     C*                                                               *
+     C* Called by: Any file or program errors                         *
+     C*            Main processing                                    *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+     C*
+     C                     DUMP
+     C                     MOVE '*ERROR ' PRTCD
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+**  CPY@ - Copyright Statement
+(c) Misys International Banking Systems Ltd. 2001

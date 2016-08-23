@@ -1,0 +1,78 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    DFTACTGRP(*NO)                                              */
+/*EXI *  TEXT('Midas FRS Extract Process - Copy files')              */
+/*********************************************************************/
+/*                                                                   */
+/*       MidasPlus - FRS Regulatory Reporting                        */
+/*                                                                   */
+/*       RNC000022 - Extract Process - Copy RN_* to T__* files       */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. CRN001  *CREATE    Date 13Dec05              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CRN001 - FRS Regulatory Reporting                           */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM
+ 
+/* Extract file names.                                               */
+/*/COPY RNCPYSRC,RNXTFILNAM                                          */
+ 
+             DCL        VAR(&POS) TYPE(*UINT)
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&T__FILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGTEXT) TYPE(*CHAR) VALUE('RNC000022 - +
+                          Regulatory Reporting post Extract copy')
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2005')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG(&MSGTEXT) TOMSGQ(MRUNQ)
+ 
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Extract files:                                                    */
+/* loop thru variable containing file names;                         */
+/* copy RN_... files to T__... files.                                */
+ 
+             CHGVAR     VAR(&POS) VALUE(1)
+ NXT_XTFIL:
+             CHGVAR     VAR(&FILE) VALUE(%SST(&XTFILNAM &POS 10))
+             MONMSG     MSGID(CPF0804) EXEC(GOTO CMDLBL(END_XTFIL))
+ 
+             IF         COND(%SST(&FILE 1 3) = 'RN_') THEN(DO)
+               CHGVAR   VAR(&T__FILE) VALUE('T__' *CAT %SST(&FILE 4 7))
+               CLRPFM     FILE(&T__FILE)
+               CPYF       FROMFILE(&FILE) TOFILE(&T__FILE) +
+                          FROMMBR(*ALL) MBROPT(*ADD)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2868)
+             ENDDO
+ 
+ BYPAS_XT:
+             CHGVAR     VAR(&POS) VALUE(&POS + 10)
+             GOTO       CMDLBL(NXT_XTFIL)
+ 
+ END_XTFIL:
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+ ENDPGM:
+             RCLACTGRP  ACTGRP(*ELIGIBLE)
+             MONMSG     MSGID(CPF0000)
+ 
+             ENDPGM

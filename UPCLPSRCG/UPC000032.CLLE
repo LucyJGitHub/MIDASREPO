@@ -1,0 +1,143 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP Upgrade field reference file')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC000032 - Upgrade field reference file                    */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. CUP042             Date 26May15              */
+/*       Prev Amend No. CUP041   *CREATE   Date 09Sep13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP042 - Simplification of deliverables list.               */
+/*       CUP041 - New Bridge methodology to combine menu options     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PFX &BRGSRCLIB &OWNER &AUTL &RTNFLAG)
+ 
+             DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&BRGSRCLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&AUTL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTNFLAG) TYPE(*CHAR) LEN(1)
+ 
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TYPE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRCF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DBLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&UPDLVC) TYPE(*CHAR) LEN(800)
+             DCL        VAR(&MFRFLSRC) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MFRFLLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2013')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Check first for the logical; this has to be delivered if any of the */
+/*  physicals are delivered.                                           */
+             CHGVAR     VAR(&FILE) VALUE('MFRFL')
+             CHGVAR     VAR(&TYPE) VALUE('LF')
+             CALLSUBR   SUBR(CHECKDLVC)
+/* If the file has not been delivered then program can be ended. */
+             IF         COND(&RTNCODE *NE ' ') THEN(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+/* Store data for this file. */
+             CHGVAR     VAR(&MFRFLSRC) VALUE(&SRCF)
+             CHGVAR     VAR(&MFRFLLIB) VALUE(&DBLIB)
+ 
+/* Check for physicals one by one. */
+             CHGVAR     VAR(&TYPE) VALUE('PF')
+ 
+SCFRFCPD:
+             CHGVAR     VAR(&FILE) VALUE('SCFRFCPD')
+             CALLSUBR   SUBR(CHECKDLVC)
+SCFRFRPD:
+             CHGVAR     VAR(&FILE) VALUE('SCFRFRPD')
+             CALLSUBR   SUBR(CHECKDLVC)
+SCFRFXPD:
+             CHGVAR     VAR(&FILE) VALUE('SCFRFXPD')
+             CALLSUBR   SUBR(CHECKDLVC)
+SCFRF0PD:
+             CHGVAR     VAR(&FILE) VALUE('SCFRF0PD')
+             CALLSUBR   SUBR(CHECKDLVC)
+SCFRF1PD:
+             CHGVAR     VAR(&FILE) VALUE('SCFRF1PD')
+             CALLSUBR   SUBR(CHECKDLVC)
+SCFRF2PD:
+             CHGVAR     VAR(&FILE) VALUE('SCFRF2PD')
+             CALLSUBR   SUBR(CHECKDLVC)
+SCFRF3PD:
+             CHGVAR     VAR(&FILE) VALUE('SCFRF3PD')
+             CALLSUBR   SUBR(CHECKDLVC)
+SCFRF4PD:
+             CHGVAR     VAR(&FILE) VALUE('SCFRF4PD')
+             CALLSUBR   SUBR(CHECKDLVC)
+SCFRF5PD:
+             CHGVAR     VAR(&FILE) VALUE('SCFRF5PD')
+             CALLSUBR   SUBR(CHECKDLVC)
+SCFRF6PD:
+             CHGVAR     VAR(&FILE) VALUE('SCFRF6PD')
+             CALLSUBR   SUBR(CHECKDLVC)
+ 
+/* Finally recreate MFRFL and free up the driving file. */
+             CHGVAR     VAR(&FILE) VALUE('MFRFL')
+             CHGVAR     VAR(&SRCF) VALUE(&MFRFLSRC)
+             CHGVAR     VAR(&DBLIB) VALUE(&MFRFLLIB)
+             CALLSUBR   SUBR(CRTOBJ)
+ 
+/**********  CALL       PGM(UPDLVCR0) PARM(' ' '*FREE' ' ' ' ' ' ')                   */ /*CUP042*/
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             CHGVAR     VAR(&RTNFLAG) VALUE('E')
+ 
+/******************************************************************************/
+/*                                                                            */
+/* Check if file has been delivered; if it has then delete the file and       */
+/*  update the variables.                                                     */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(CHECKDLVC)
+ 
+             CALL       PGM(UPDLVCR0) PARM(&RTNCODE '*KEY' &FILE +
+                          &TYPE &UPDLVC)
+             IF         COND(&RTNCODE *EQ ' ') THEN(DO)
+                CHGVAR     VAR(&SRCF) VALUE(%SST(&UPDLVC 94 10))
+                CHGVAR     VAR(&DBLIB) VALUE(&PFX *TCAT %SST(&SRCF 9 2) +
+                             *TCAT 'LIB')
+                DLTF       FILE(&FILE)
+                MONMSG     MSGID(CPF0000)
+/* If the file is not the logical then recreate it at this point. */
+                IF         COND(&FILE *NE 'MFRFL') THEN(DO)
+                   CALLSUBR   SUBR(CRTOBJ)
+                ENDDO
+             ENDDO
+ 
+             ENDSUBR
+ 
+/******************************************************************************/
+/*                                                                            */
+/* Create the actual file.                                                    */
+/*                                                                            */
+/******************************************************************************/
+             SUBR       SUBR(CRTOBJ)
+ 
+             CRTOBJ     OBJ(&DBLIB/&FILE) SRCFILE(&BRGSRCLIB/&SRCF) +
+                          SRCMBR(*OBJ) OWNER(&OWNER) AUTL(&AUTL) +
+                          MLSYS(*NO)
+ 
+             ENDSUBR
+ 
+ENDPGM:
+             ENDPGM

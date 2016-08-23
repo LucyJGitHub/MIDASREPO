@@ -1,0 +1,317 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas RE I/C Retail Advice Control Program')          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - Retail Module                                    */
+/*                                                                   */
+/*       REC000881- I/C Retail Advice Control Program                */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*                                                                   */
+/*       Last Amend No. AR1000542          Date 02Jun16              */
+/*       Prev Amend No. AR992022           Date 02Jun16              */
+/*                      MD037112           Date 25May16              */
+/*                      CPK030             Date 11Apr14              */
+/*                      CUT008             Date 08Feb11              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CRE020  *Create    Date 20Jan04              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR1000542 - Retail advice for account transfer transactions */
+/*                   are not generated. Added LF RERSACL4 and call   */
+/*                   to RE000889 for Account Transfer. Additional fix*/
+/*                   patterned after CUT008.                         */
+/*                   Applied for MD033905/MD038922                   */
+/*       AR992022 - On line Retail Advices are not being printed for */
+/*                  journal entries (CRE020). Pattern retail advice  */
+/*                  process after GLC1400 and in other modules.      */
+/*                   Applied for MD033905/MD038922                   */
+/*       MD037112 - Incorrect file names introduced by CPK030.       */
+/*                - Applied for MD-38715                             */
+/*       CPK030 - Clean up of deliverable data library.              */
+/*       CUT008  - CRTOBJ rewrite.                                   */
+/*                 Change of CRTOBJ parameters.                      */
+/*       CRE020 - Midas Plus Online Printing of Advices (GE7         */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PPROG &MODU)
+
+             DCL        VAR(&PPROG) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RPROG) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MODU) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&WPROG) TYPE(*CHAR) LEN(10) +
+                          VALUE('          ')
+             DCL        VAR(&CCG015) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(70)
+             DCL        VAR(&ACTION) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) VALUE('       ')
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7) VALUE('*VERIFY')
+             DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&W0RTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&WCOMT) TYPE(*CHAR) LEN(3) VALUE('YES')
+             DCL        VAR(&LDA)   TYPE(*CHAR)  LEN(256)
+             DCL        VAR(&MEM)    TYPE(*CHAR) LEN(50)
+             DCL        VAR(&CGUSRMSG) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MIDASLG) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MULT) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ERRORC) TYPE(*DEC) LEN(1) VALUE(0)
+             DCL        VAR(&TIMEO) TYPE(*DEC) LEN(5)
+             DCL        VAR(&SLEVEL) TYPE(*DEC) LEN(4)
+             DCL        VAR(&USER) TYPE(*CHAR) LEN(25)
+             DCL        VAR(&GROUP) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&ICTERM) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&DAT) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&SQLSTR) TYPE(*CHAR) LEN(5000)                                /*CPK030*/
+             DCLF       FILE(SDBANKPD)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2004')
+/** Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+             CHGJOB     SWS(XXXXXX00)
+
+             CHGVAR     VAR(&SAR) VALUE('CCG015')
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)
+
+             IF         COND(&RTCD *EQ '       ') THEN(DO)
+                  CHGVAR     VAR(&CCG015) VALUE('Y')
+             ENDDO
+
+             IF         COND(&RTCD *NE '*NRF    ' *AND &RTCD *NE +
+                          '       ') THEN(DO)
+                  CHGVAR     VAR(&MSG) VALUE('Correspondence check  +
+                          Enhancement failed')
+                  GOTO (ABNOR)
+             ENDDO
+
+/**  Attempt to Start Commitment Control. If unable to start  */
+/**  it because it is already active, then indicate that the  */
+/**  program is running in I/C Termination.                   */
+
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
+                          CMTSCOPE(*JOB)
+             MONMSG (CPF8351) EXEC(CHGVAR (&ICTERM) VALUE('Y'))
+
+/**  Override message file, MIDAS, to correct language file  */
+
+             CALL (SF0410) PARM(&GROUP &USER &SLEVEL &TIMEO  +
+                &ERRORC &MULT)
+             IF (&MULT *EQ '  ') (CHGVAR (&MULT) VALUE('GB'))
+             CHGVAR (&MIDASLG) VALUE(&MULT *CAT 'MIDAS     ')
+             OVRMSGF MSGF(MIDAS) TOMSGF(&MIDASLG)
+             CHGVAR     VAR(&CGUSRMSG) VALUE(&MULT *CAT 'CGUSRMSG  ')
+             OVRMSGF    MSGF(CGUSRMSG) TOMSGF(&CGUSRMSG)
+
+/**  Create LDA  */
+
+             CRTDTAARA (QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                TEXT('MIDAS SD AS400 LOCAL DATA AREA EQUIVALENT')
+             MONMSG (CPF0000)
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+
+             RCVF
+             CHGVAR     VAR(&DAT) VALUE(&BJRDNB)
+             CPYF       FROMFILE(*LIBL/RSACMTPD) +
+                          TOFILE(QTEMP/RERSACPD) MBROPT(*REPLACE) +
+                          CRTFILE(*YES) INCREL((*IF VUDT *LE &DAT))
+
+             IF         COND(&PPROG *EQ 'RE0150') THEN(DO)
+                  CPYF       FROMFILE(*LIBL/RSACMTPD) +
+                          TOFILE(QTEMP/RERSACPD) MBROPT(*REPLACE) +
+                          CRTFILE(*YES) INCREL((*IF TRYP *EQ 'CE'))
+             ENDDO
+
+/**********    CRTOBJ     SRCMBR(RERSACL0) SRCFILE(REDDSSRCQT) +                       */ /*CUT008*/
+/**********               PLIB(QTEMP)                                                  */ /*CUT008*/
+
+/**********    CRTOBJ     SRCMBR(RERSACL1) SRCFILE(REDDSSRCQT) +                       */ /*CUT008*/
+/**********               PLIB(QTEMP)                                                  */ /*CUT008*/
+
+/**********    CRTOBJ     SRCMBR(RERSACL2) SRCFILE(REDDSSRCQT) +                       */ /*CUT008*/
+/**********               PLIB(QTEMP)                                                  */ /*CUT008*/
+
+/**********    CRTOBJ     SRCMBR(RERSACL3) SRCFILE(REDDSSRCQT) +                       */ /*CUT008*/
+/**********               PLIB(QTEMP)                                                  */ /*CUT008*/
+
+             RMVLIBLE   LIB(QTEMP)                                                      /*AR992022*/
+             ADDLIBLE   LIB(QTEMP)                                                      /*AR992022*/
+                                                                                        /*AR992022*/
+/**********  CRTOBJ     OBJ(QTEMP/RERSACL0) SRCFILE(REDDSSRCQT) +                      */ /*CPK030*/
+/**********               SRCMBR(*OBJ)                                          */ /*CUT008 CPK030*/
+/**********  CRTOBJ     OBJ(QTEMP/RERSACL1) SRCFILE(REDDSSRCQT) +                      */ /*CPK030*/
+/**********               SRCMBR(*OBJ)                                          */ /*CUT008 CPK030*/
+/**********  CRTOBJ     OBJ(QTEMP/RERSACL2) SRCFILE(REDDSSRCQT) +                      */ /*CPK030*/
+/**********               SRCMBR(*OBJ)                                          */ /*CUT008 CPK030*/
+/**********  CRTOBJ     OBJ(QTEMP/RERSACL3) SRCFILE(REDDSSRCQT) +                      */ /*CPK030*/
+/**********               SRCMBR(*OBJ)                                          */ /*CUT008 CPK030*/
+/**********  CHGVAR     VAR(&SQLSTR) VALUE('create index +
+                          QTEMP/RERSCAL0 on QTEMP/RERSACPD (TNMR, +
+                          TRYP)')                                             */ /*CPK030 MD037112*/
+             CHGVAR     VAR(&SQLSTR) VALUE('create index +
+                          QTEMP/RERSACL0 on QTEMP/RERSACPD (TNMR, +
+                          TRYP)')                                                       /*MD037112*/
+             RUNSQL     SQL(&SQLSTR) COMMIT(*NONE)                                        /*CPK030*/
+/**********  CHGVAR     VAR(&SQLSTR) VALUE('create index +
+                          QTEMP/RERSCAL1 on QTEMP/RERSACPD (FUND)')           */ /*CPK030 MD037112*/
+             CHGVAR     VAR(&SQLSTR) VALUE('create index +
+                          QTEMP/RERSACL1 on QTEMP/RERSACPD (FUND)')                     /*MD037112*/
+             RUNSQL     SQL(&SQLSTR) COMMIT(*NONE)                                        /*CPK030*/
+/**********  CHGVAR     VAR(&SQLSTR) VALUE('create index +
+                          QTEMP/RERSCAL2 on QTEMP/RERSACPD (FUND, +
+                          TNMR, BRCA, VUDT, TRYP)')                           */ /*CPK030 MD037112*/
+             CHGVAR     VAR(&SQLSTR) VALUE('create index +
+                          QTEMP/RERSACL2 on QTEMP/RERSACPD (FUND, +
+                          TNMR, BRCA, VUDT, TRYP)')                                     /*MD037112*/
+             RUNSQL     SQL(&SQLSTR) COMMIT(*NONE)                                        /*CPK030*/
+/********** CHGVAR     VAR(&SQLSTR) VALUE('create index +
+                          QTEMP/RERSCAL3 on QTEMP/RERSACPD ( TNMR, +
+                          TRYP, VUDT)')                                       */ /*CPK030 MD037112*/
+             CHGVAR     VAR(&SQLSTR) VALUE('create index +
+                          QTEMP/RERSACL3 on QTEMP/RERSACPD ( TNMR, +
+                          TRYP, VUDT)')                                                 /*MD037112*/
+             RUNSQL     SQL(&SQLSTR) COMMIT(*NONE)                                        /*CPK030*/
+             CHGVAR     VAR(&SQLSTR) VALUE('create index +
+                          QTEMP/RERSACL4 on QTEMP/RERSACPD (OTR1)')                    /*AR1000542*/
+             RUNSQL     SQL(&SQLSTR) COMMIT(*NONE)                                     /*AR1000542*/
+
+             OVRDBF     FILE(RERSACPD) TOFILE(QTEMP/RERSACPD) +
+                          OVRSCOPE(*JOB) OPNSCOPE(*JOB)
+             OVRDBF     FILE(RERSACL0) TOFILE(QTEMP/RERSACL0) +
+                          OVRSCOPE(*JOB) OPNSCOPE(*JOB)
+             OVRDBF     FILE(RERSACL1) TOFILE(QTEMP/RERSACL1) +
+                          OVRSCOPE(*JOB) OPNSCOPE(*JOB)
+             OVRDBF     FILE(RERSACL2) TOFILE(QTEMP/RERSACL2) +
+                          OVRSCOPE(*JOB) OPNSCOPE(*JOB)
+             OVRDBF     FILE(RERSACL3) TOFILE(QTEMP/RERSACL3) +
+                          OVRSCOPE(*JOB) OPNSCOPE(*JOB)
+             OVRDBF     FILE(RERSACL4) TOFILE(QTEMP/RERSACL4) +
+                          OVRSCOPE(*JOB) OPNSCOPE(*JOB)                                /*AR1000542*/
+
+             IF         COND(&CCG015 *EQ 'Y') THEN(DO)
+
+                  IF     COND(&MODU *EQ 'GL') THEN(CHGVAR VAR(&WPROG) +
+                          VALUE(CG003810))
+                  IF     COND(&MODU *EQ 'RE') THEN(CHGVAR VAR(&WPROG) +
+                          VALUE(CG003820))
+                  IF     COND(&MODU *EQ 'DL') THEN(CHGVAR VAR(&WPROG) +
+                          VALUE(CG003830))
+                  IF     COND(&MODU *EQ 'LE') THEN(CHGVAR VAR(&WPROG) +
+                          VALUE(CG003840))
+                  IF     COND(&MODU *EQ 'SE') THEN(CHGVAR VAR(&WPROG) +
+                          VALUE(CG003850))
+                  IF     COND(&MODU *EQ 'FT') THEN(CHGVAR VAR(&WPROG) +
+                          VALUE(CG003860))
+                  IF     COND(&MODU *EQ 'FF') THEN(CHGVAR VAR(&WPROG) +
+                          VALUE(CG003870))
+
+/** Call Extract File Instance Management */
+                  CHGVAR     VAR(&ACTION) VALUE('*PREPARE')
+                  CALL       PGM(CGC3605) PARM(&ACTION)
+
+
+/**  Call the Retail Advice  Print  */
+
+                  IF         COND(&WPROG *NE *BLANKS) THEN(DO)
+                  CALL   PGM(&WPROG) PARM(&W0RTN &WCOMT &PPROG &CCG015)
+
+                  RCLRSC
+
+                       IF         COND(&W0RTN *NE '       ') THEN(DO)
+                            CHGVAR    VAR(&MSG) VALUE(&WPROG *TCAT '- +
+                                  RetailAdvice Correspondence Extract +
+                                  failure')
+                            GOTO       CMDLBL(ABNOR)
+                       ENDDO
+                  ENDDO
+
+                  CALL       PGM(CGC3604)
+
+                  IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                       RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                       SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) +
+                          MSGDTA(&MEM) TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                       GOTO       CMDLBL(ABNOR)
+                  ENDDO
+             ENDDO
+
+             IF         COND(&CCG015 *EQ 'N') THEN(DO)
+
+/**********       IF     COND(&MODU *EQ 'GL') THEN(CHGVAR VAR(&RPROG) +
+                          VALUE(RE000882))                           */                /*AR1000542*/
+                  IF     COND(&MODU *EQ 'GL' *AND &PPROG *EQ +
+                          'GLBITHUPD') THEN(CHGVAR VAR(&RPROG) +
+                          VALUE(RE000882))                                             /*AR1000542*/
+                  IF     COND(&MODU *EQ 'GL' *AND &PPROG *EQ +
+                          'GLRATMUPD') THEN(CHGVAR VAR(&RPROG) +
+                          VALUE(RE000889))                                             /*AR1000542*/
+                  IF     COND(&MODU *EQ 'RE') THEN(CHGVAR VAR(&RPROG) +
+                          VALUE(RE000883))
+                  IF     COND(&MODU *EQ 'DL') THEN(CHGVAR VAR(&RPROG) +
+                          VALUE(RE000884))
+                  IF     COND(&MODU *EQ 'LE') THEN(CHGVAR VAR(&RPROG) +
+                          VALUE(RE000885))
+                  IF     COND(&MODU *EQ 'SE') THEN(CHGVAR VAR(&RPROG) +
+                          VALUE(RE000886))
+                  IF     COND(&MODU *EQ 'FT') THEN(CHGVAR VAR(&RPROG) +
+                          VALUE(RE000887))
+                  IF     COND(&MODU *EQ 'FF') THEN(CHGVAR VAR(&RPROG) +
+                          VALUE(RE000888))
+
+                  IF         COND(&RPROG *NE *BLANKS) THEN(DO)
+                       CALL       PGM(&RPROG) PARM(&W0RTN &PPROG)
+
+                       IF         COND(&W0RTN *NE '       ') THEN(DO)
+                            CHGVAR    VAR(&MSG) VALUE(&WPROG *TCAT '- +
+                                       Retail Advice Print failure')
+                            GOTO       CMDLBL(ABNOR)
+                       ENDDO
+                  ENDDO
+
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+ABNOR:
+             CHGJOB     SWS(XXXXXXX1)
+
+             IF         COND(&CCG015 *EQ 'Y') THEN(DO)
+                  CHGVAR     VAR(&ACTION) VALUE('*CLEAR  ')
+                  CALL       PGM(CGC3605) PARM(&ACTION)
+             ENDDO
+
+             ROLLBACK
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                  RTVDTAARA (LDA) RTNVAR(&LDA)
+                  MONMSG     MSGID(CPF0000 MCH0000)
+                  CHGVAR (&MEM) VALUE(%SST(&LDA 134 50))
+                  SNDPGMMSG MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                      TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)
+                  MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+
+             SNDPGMMSG MSG(&MSG) TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+END:
+             DLTOVR     FILE(RERSACPD) LVL(*JOB)
+             MONMSG     MSGID(CPF9841)
+             DLTOVR     FILE(RERSACL0) LVL(*JOB)
+             MONMSG     MSGID(CPF9841)
+             DLTOVR     FILE(RERSACL1) LVL(*JOB)
+             MONMSG     MSGID(CPF9841)
+             DLTOVR     FILE(RERSACL2) LVL(*JOB)
+             MONMSG     MSGID(CPF9841)
+             DLTOVR     FILE(RERSACL3) LVL(*JOB)
+             MONMSG     MSGID(CPF9841)
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+
+             ENDPGM

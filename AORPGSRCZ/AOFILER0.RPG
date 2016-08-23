@@ -1,0 +1,205 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AO HF Item File access program')
+      *****************************************************************
+     F*                                                               *
+     F*  Midas - History and Audit Facility Module
+     F*                                                               *
+     F*  AOFILER0 - HAF ITEM FILE ACCESS PROGRAM                      *
+     F*                                                               *
+     F*  Function:  This program chains to the HAF Item file and      *
+     F*  (I/C INT)  checks that the item exists.                      *
+     F*                                                               *
+     F*  Called By: HF0120  - HAF Exit Routines to call.              *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01379             Date 25Sep92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  S01379 - New program for HAF.                                *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      * ID F  C  H  L  FUNCTION OF INDICATORS
+      *
+      *       90       FILE ERROR
+      *       91       OPEN ERROR
+      *       92       CLOSE ERROR
+      *       93       EMPTY FILE
+      *       96       OPTION ERROR
+      *
+      ************************************************************
+      /EJECT
+     FHFFILEL1IF  E           K        DISK                           UC
+     F            HFFILEP0                          KRENAMEHFFILEP1
+      * IN  - HAF FILES TO BE USED BY ITEM
+      *
+     FHFFILEL5IF  E           K        DISK                           UC
+     F            HFFILEP0                          KRENAMEHFFILEP5
+      * IN  - HAF FILES TO BE USED BY ITEM/FILE
+      *
+      ************************************************************
+     E                    @MG     1   1 50
+      ************************************************************
+     E                    CPY@    1   1 80               Copyright
+      * Description     : Copyright notice for inclusion
+      *                    in all programs
+      *****************************************************************
+      /EJECT
+     IP@MGDA      DS
+     I                                        1  50 @MG
+      *
+     IPGMDS      SDS
+      * Program Status data structure
+     I                                        1  10 PGNAME
+     I                                       81  90 PGLIBR
+     I                                      244 253 PGJBNM
+     I                                      254 263 PGUSER
+     I                                      264 2690PGJBNO
+      *
+     ID@FMT     E DSHFFILEPD
+      * HFFILEPD - HAF FILES TO BE USED BY ITEM
+      *
+     IP@FMT     E DSDSFDY
+      * External Data structure to hold the outgoing record format of
+      * the file
+     C                     MOVEACPY@      BIS@   80
+      /EJECT
+      *****************************************************
+     C           *ENTRY    PLIST
+     C           W@RTCD    PARM           P@RTCD  7        B:Return code
+     C                     PARM           P@OPTN  7        I:Option
+     C                     PARM           P@LOGC  1        I:Logical file
+     C                     PARM           P@ITEM 10        I:Item key
+     C                     PARM           P@FILE 10        I:File
+     C                     PARM D@FMT     P@FMT            O:Format
+      *
+     C           W@KEY     KLIST
+     C                     KFLD           P@ITEM
+     C                     KFLD           P@FILE
+      *
+      *****************************************************
+      *MAIN
+     C                     SETOF                     909192 ¦ Reset
+     C                     SETOF                     9396   ¦ error
+     C           P@OPTN    IFEQ '*KEY   '
+     C           P@OPTN    OREQ '*FIRST '
+     C           P@OPTN    OREQ '*LAST  '
+     C           P@OPTN    OREQ '*NEXT  '
+     C           P@OPTN    OREQ '*PREV  '
+     C           P@OPTN    OREQ '*FREE  '
+     C           P@OPTN    OREQ '*SAME  '
+     C           P@OPTN    OREQ '*VERIFY'
+      *
+     C           P@LOGC    IFEQ '1'
+     C                     EXSR FILEL1
+     C                     END
+      *
+     C           P@LOGC    IFEQ '5'
+     C                     EXSR FILEL5
+     C                     END
+      *
+     C           *IN93     CABEQ'1'       T@SKIP             Empty file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C           *IN92     CABEQ'1'       T@SKIP         LR  Close error
+      *
+     C                     SETON                     LR      Set ind.
+      *
+      *
+     C                     ELSE
+     C                     SETON                     96      Parm error
+     C                     END
+      *
+      * No record found or End of file - return error code :
+      *          _____________
+     C           T@SKIP    TAG                             +++ SKIP +++
+      *          ~~~~~~~~~~~~~
+     C                     MOVE *BLANK    P@RTCD           No Errors
+     C   90                MOVE '*ERROR ' P@RTCD           File error
+     C   91                MOVE '*OPEN  ' P@RTCD           Open error
+     C   92                MOVE '*CLOSE ' P@RTCD           Close error
+     C   93                MOVE '*EMPTY ' P@RTCD           Empty file
+     C   96                MOVE '*OPTION' P@RTCD           No selection
+      *
+      * Caller requests message sent to program queue :
+      *
+     C           W@RTCD    IFEQ '*MSG   '                  IF 9 SND MSG
+     C           P@RTCD    ANDNE*BLANK                      AND ERROR
+     C   90                MOVE 'ACO1001' P@MGID             File error
+     C   91                MOVE 'ACO1002' P@MGID             Open error
+     C   92                MOVE 'ACO1003' P@MGID             Close error
+     C   93                MOVE 'ACO1004' P@MGID             Empty file
+     C   96                MOVE 'ACO1007' P@MGID
+     C                     CALL 'ZASNMG'                     <SND MSG>
+     C                     PARM *BLANK    W@RTCD  7          B:Return code
+     C                     PARM PGNAME    P@PGNM 10          I:Prog name
+     C                     PARM '*PRV'    P@DEST  5          I:Destination
+     C                     PARM           P@MGID  7          I:Msg ID
+     C                     PARM *BLANK    P@MSGF 10          I:Msg file
+     C                     PARM *BLANK    P@MGKY  4          O:Msg key
+     C                     PARM           P@MGDA 50          I:Msg data
+     C                     PARM '*DIAG'   P@MGTP  7          I:Msg type
+     C                     END                             FI 9
+      *
+      *      CALLER REQUESTS DB HANDLING
+      *
+     C           W@RTCD    IFEQ '*DBERR'                   IF DB ERROR
+     C           P@RTCD    ANDNE*BLANK                     AND
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     END                             FI
+      *
+      * Return to caller :
+      *
+     C                     RETRN
+      *
+      *****************************************************
+      /EJECT
+      **************************************************************************
+      *
+      *  Subroutine to access HFFILEL1
+      *
+     C           FILEL1    BEGSR
+      *
+     C                     OPEN HFFILEL1               91    Open file
+      *
+     C           *IN91     CABEQ'1'       T@SKIP         LR  Open error
+      *
+     C           P@ITEM    CHAINHFFILEL1             9390
+     C                     CLOSEHFFILEL1               92    Close file
+      *
+     C                     ENDSR
+      *
+      **************************************************************************
+      /EJECT
+      **************************************************************************
+      *
+      *  Subroutine to access HFFILEL5
+      *
+     C           FILEL5    BEGSR
+      *
+     C                     OPEN HFFILEL5               91    Open file
+      *
+     C           *IN91     CABEQ'1'       T@SKIP         LR  Open error
+      *
+     C           W@KEY     CHAINHFFILEL5             9390
+     C                     CLOSEHFFILEL5               92    Close file
+      *
+     C                     ENDSR
+      *
+      **************************************************************************
+**
+HFFILEPD  AOFILER0  HISTORY AND AUDIT FACILITY
+** CPY@     : Copyright notice for inclusion in all programs           gra
+(c) Misys International Banking Systems Ltd. 2001

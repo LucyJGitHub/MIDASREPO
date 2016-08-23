@@ -1,0 +1,325 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FC Clear MPRINT to entered date')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Report Control Facility Module
+     F*                                                                  *
+     F*      FC0050 - CLEAR MPRINT UP TO AND INCLUDING INPUT DATE        *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*      LAST AMEND.NO. LN1186           DATE 06MAR91                *
+     F*      PREV AMEND.NO.                  DATE DDMMMYY                *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                               *
+     F*    LN1186 - SEND NEW MESSAGE ID FROM FCUSRMSG TO FCC0240      *
+     F*
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F****************************************************************
+     FFC0050DFCF  E                    WORKSTN
+     F****************************************************************
+     F*
+     F*           FUNCTION OF INDICATORS
+     F*
+     F*   03      SCREEN EXIT INDICATOR
+     F*   25      SCREEN HELP INDICATOR
+     F*   30      SCREEN FIELD DATE IN ERROR
+     F*   60      END OF ERROR MESSAGE SUBFILE
+     F*   80      ERROR ON SCREEN
+     F*   81      WARNING ERROR
+     F*
+     F*   98      DATE FORMAT INDICATOR
+     F*   99      DATE INVALID FLAG FROM S/R ZDATE2
+     F*
+     F****************************************************************
+     E                    CPY@    1   1 80
+      /COPY ZSRSRC,ZDATE2Z1
+     IRUNDAT      DS
+     I*
+      ** DATA AREA OF BANK DETAILS
+     I*
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     IEDATE       DS
+     I*
+      ** DATA STRUCTURE OF ENTERED DATE IN YYMMDD FORMAT
+     I*
+     I                                        1   2 EYEAR
+     I                                        3   40ZMTH
+     I                                        5   60ZDAY
+     IRDATE       DS
+     I*
+      ** DATA STRUCTURE OF SYSTEM DATE IN YYMMDD FORMAT
+     I*
+     I                                        1   2 Y
+     I                                        3   4 M
+     I                                        5   6 D
+     IYDATE       DS
+     I*
+      ** DATA STRUCTURE OF PREVIOUS DAY'S DATE IN YYMMDD FORMAT
+     I*
+     I                                        1   2 YY
+     I                                        3   4 YM
+     I                                        5   6 YD
+     ISYSDAT      DS
+     I*
+      ** DATA STRUCTURE FOR DISPLAYING SYSTEM DATE IN ALPHA FORM
+     I*
+     I                                        1   2 DA
+     I                                        3   5 MA
+     I                                        6   7 YA
+     IPSDS       SDS
+     I*
+     I** PROGRAM STATUS DATA STRUCTURE FOR USER ETC.
+     I*
+     I                                      244 253 WID
+     I                                      254 263 JUSR
+     I                                      264 269 JBNB
+      /EJECT
+     C********************************************************************
+     C*
+      ** ENTRY LIST: SYSTEM DATE AND SYSTEM DATE FORMAT
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           DATE    6
+     C                     PARM           SUBMIT  1
+     C*
+      ** INITIAL PROCESSING: MOVE DATE FOR TODAY AND FIND YESTERDAY'S
+     C*
+     C                     MOVE DATE      RDATE
+     C                     MOVE D         DAY     20
+     C                     MOVE D         DA
+     C                     MOVE M         MTH     20
+     C                     MOVE ZMNM,MTH  MA
+     C                     MOVE Y         YA
+     C                     SUB  1         DAY
+     C*
+      ** IF PREVIOUS MONTH
+     C*
+     C           DAY       IFEQ 0
+     C                     SUB  1         MTH
+     C*
+      ** IF PREVIOUS YEAR
+     C*
+     C           MTH       IFEQ 0
+     C                     MOVE '12'      YM
+     C                     MOVE Y         YEAR    20
+     C                     SUB  1         YEAR         70
+     C     N70             MOVE YEAR      YY
+     C      70             MOVE '99'      YY
+     C                     ELSE
+     C                     MOVE MTH       YM
+     C                     MOVE Y         YY
+     C                     END
+     C*
+      ** ADJUST DAY NUMBER OF PREVIOUS MONTH END
+     C*
+      ** IF MONTH AFTER 30 DAY MONTH, MOVE 30 TO DAY, ELSE 31
+     C*
+     C           M         IFEQ '10'
+     C           M         OREQ '05'
+     C           M         OREQ '07'
+     C           M         OREQ '12'
+     C                     MOVE '30'      YD
+     C                     ELSE
+     C                     MOVE '31'      YD
+     C                     END
+     C*
+      ** IF MONTH IS MARCH, ADJUST FOR FEBRUARY DEPENDING ON LEAP YEAR
+     C*
+     C           M         IFEQ '03'
+     C                     MOVE Y         YEAR
+     C           YEAR      DIV  4         X       20
+     C                     MVR            LEAPYR  10
+     C           LEAPYR    IFEQ 0
+     C           Y         ANDNE'00'
+     C                     MOVE '29'      YD
+     C                     ELSE
+     C                     MOVE '28'      YD
+     C                     END
+     C                     END
+     C*
+      ** YEAR/MONTH IS THE SAME FOR YESTERDAY
+     C*
+     C                     ELSE
+     C                     MOVE RDATE     YDATE
+     C                     MOVE DAY       YD
+     C                     END
+     C*
+      ** ACCESS RUNDAT DATA AREA FOR DATE FORMAT
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*
+      ** PERFORM DATE FORMAT COMPARION FOR ZDATE ROUTINE
+     C*
+     C           DATF      COMP 'M'                      98
+     C*
+      ** INITIALISE SCREEN SUBFILE FOR ERROR MESSAGES
+     C*
+     C                     MOVEL'*'       SPGMQ
+     C                     CALL 'ZA0250'
+     C                     SETON                     60
+     C*
+      ** PERFORM SCREEN PROCESSING
+     C*
+     C                     EXSR SCREEN
+     C                     SETON                     LR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+     C*               INDEX OF SUBROUTINES
+     C*
+     C*  SCREEN - SCREEN PROCESSING
+     C*  VALID  - VALIDATE SCREEN DATA
+     C*  ZDATE1 - TO VALIDATE DATE
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+     C** S/R SCREEN - SCREEN PROCESSING
+     C*
+     C** CALLED FROM MAIN PROCESSING
+     C** CALLS: VALID, SUBMIT
+     C*
+     C           SCREEN    BEGSR
+     C*
+      ** WRITE SCREEN
+     C*
+     C                     EXFMTFC0050F0
+     C*
+      ** PERFORM WHILE EXIT IS NOT REQUIRED
+     C*
+     C           *IN03     DOWEQ'0'
+     C*
+      ** VALIDATE INPUT
+     C*
+     C                     EXSR VALID
+     C*
+      ** IF INPUT IS VALID, SUBMIT CLEAR AND TERMINATE
+     C*
+     C           *IN80     IFEQ '0'
+     C                     MOVE 'Y'       SUBMIT
+     C                     MOVE EDATE     DATE
+     C                     SETON                     03
+     C                     ELSE
+     C*
+      ** RE-DISPLAY SCREEN
+     C*
+     C                     WRITEFC0050C1
+     C                     EXFMTFC0050F0
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+     C** S/R VALID - VALIDATION OF SCREEN DATA
+     C*
+     C** CALLED FROM: SCREEN
+     C** CALLS:
+     C*
+     C           VALID     BEGSR
+     C*
+     C                     CALL 'ZA0250'
+     C                     SETOF                     308099
+     C*
+      ** PERFORM NO VALIDATION IF SCREEN IS UNCHANGED WHEN WARNING ISSUED
+     C*
+     C           *IN81     IFEQ '0'
+     C           SDATE     ORNE PDATE
+     C*
+     C                     SETOF                     81
+     C*
+      ** EXECUTE DATE VALIDATION ROUTINE
+     C*
+     C                     MOVE SDATE     ZDATE
+     C                     EXSR ZDATE1
+     C                     MOVE ZDATE     EYEAR
+     C*
+      ** IF DATE IS INVALID, INFORM USER
+     C*
+     C           *IN99     IFEQ '1'
+     C                     CALL 'FCC0240'
+     C***********          PARM 'RCF0061' MSGID                           LN1186
+     C                     PARM 'RCF1061' MSGID                           LN1186
+     C                     SETON                     3080
+     C*
+      ** IF DATE IS VALID, COMPARE AGAINST CURRENT DATE
+     C*
+     C                     ELSE
+     C*
+      ** DATE MUST NOT BE TODAY'S/GREATER THAN TODAY'S
+     C*
+     C           EDATE     IFGE RDATE
+     C*
+      ** IF YEAR IS 2000 AND ENTRY IS AFTER 71, THEN IT IS LESS THAN
+      ** TODAY:
+      ** ONE ASSUMES THAT THE OUTPUT QUEUE WILL BE CLEARED DOWN MORE
+      ** FREQUENTLY THAN ONCE A YEAR, SO YEARS AFTER 2000 IN THE NEXT
+      ** CENTURY WILL NOT REQUIRE THIS COMPARISON
+     C*
+     C           Y         IFEQ '00'
+     C           EYEAR     ANDGT'71'
+      * NO ERROR
+     C                     ELSE
+     C                     CALL 'FCC0240'
+     C***********          PARM 'RCF0062' MSGID   7                       LN1186
+     C                     PARM 'RCF1062' MSGID   7                       LN1186
+     C                     SETON                     3080
+     C                     END
+     C*
+     C                     END
+     C*
+      ** DATE CAN BE YESTERDAY'S, BUT ISSUE WARNING
+     C*
+     C           EDATE     IFEQ YDATE
+     C                     CALL 'FCC0240'
+     C***********          PARM 'RCF0063' MSGID                           LN1186
+     C                     PARM 'RCF1063' MSGID                           LN1186
+     C                     SETON                     308081
+     C                     MOVE SDATE     PDATE   6
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      /COPY ZSRSRC,ZDATE1Z2
+     C********************************************************************
+** CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

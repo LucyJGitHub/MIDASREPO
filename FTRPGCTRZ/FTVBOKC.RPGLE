@@ -1,0 +1,229 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+      *****************************************************************
+/*STD *  RPGBASEMOD                                                   *
+/*EXI *  TEXT('Midas FT Nostro Transfer Validate Book Code')          *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Funds Transfer Module                                *
+      *                                                               *
+      *  FTVBOKC - Midas FT Nostro Transfer Validate Book Code        *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *                                                               *
+      *    This source is centrally supported and must ONLY be        *
+      *    amended by Core Development Personnel                      *
+      *                                                               *
+      *    /COPY, Client or Country amendments must not be            *
+      *    applied to this source.                                    *
+      *                                                               *
+      *  Last Amend No. CAP212  *CREATE    Date 15Sep14               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CAP212 - FT Nostro Transfer API                              *
+      *                                                               *
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ F-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ Automatically included D-specs       ¦
+      ** ¦ ==============================       ¦
+      ** +--------------------------------------+
+      **
+      **--------------------------------------------------------------------------------------------
+      ** The following /COPY line includes (among others) the LDA layout
+      ** and the copyright array definition:
+     D/COPY ZACPYSRC,STD_D_SPEC
+      **--------------------------------------------------------------------------------------------
+ 
+      **--------------------------------------------------------------------------------------------
+      ** The following /COPY includes the MM standard declares:
+     D/COPY ZACPYSRC,STDDECLARE
+      **--------------------------------------------------------------------------------------------
+ 
+      **--------------------------------------------------------------------------------------------
+      ** The following /COPY line includes all the defined fields in the
+      ** Program Status Data Structures.  They have meaningful
+      ** names, prefixed by 'PS'.
+     D/COPY ZACPYSRC,PSDS
+      **--------------------------------------------------------------------------------------------
+ 
+      **--------------------------------------------------------------------------------------------
+      ** The following /COPY line includes all the definitions of the
+      ** appended error arrays, including the named constant giving the size
+      ** of the arrays.
+     D/COPY ZACPYSRC,ERR_XARRYS
+      **--------------------------------------------------------------------------------------------
+ 
+      ** +--------------------------------------+
+      ** ¦ End of automatically included D-specs¦
+      ** ¦ =====================================¦
+      ** +--------------------------------------+
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+ 
+      ** +--------------------------------------+
+      ** ¦ Manually included D-specs            ¦
+      ** ¦ =========================            ¦
+      ** +--------------------------------------+
+ 
+      ** +--------------------------------------+
+      ** ¦ Named constants                      ¦
+      ** ¦ ===============                      ¦
+      ** +--------------------------------------+
+ 
+      ** +--------------------------------------+
+      ** ¦ Arrays and Data Structures           ¦
+      ** ¦ ==========================           ¦
+      ** +--------------------------------------+
+ 
+      ** Transfer Details in screen format
+     D TrnDets       E DS                  EXTNAME(FTFTNTPD)
+ 
+      ** Transfer Details OK indicators
+     D OKTrnDets     E DS                  EXTNAME(FTEFTNTPD)
+ 
+      ** Valid Transfer Details layout
+     D ValidNoTr     E DS                  EXTNAME(FTVFTNTPD)
+ 
+      ** External DS for Book Codes
+     D SDBOOK        E DS                  EXTNAME(SDBOOKPD)
+ 
+      **  Short DS for access programs
+     D DSFDY         E DS                  EXTNAME(DSFDY)
+ 
+      ** +--------------------------------------+
+      ** ¦ Declared variables                   ¦
+      ** ¦ ==================                   ¦
+      ** +--------------------------------------+
+ 
+      ** Index for arrays of error message ids etc
+     D Idx             S              3P 0
+     D WIdx            S              3P 0
+ 
+     D PRTCD           S              7
+     D POPTN           S              7
+     D PBOKC           S              2
+ 
+      ** +--------------------------------------+
+      ** ¦ End of D-specs                       ¦
+      ** ¦ ==============                       ¦
+      ** +--------------------------------------+
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     C
+      ** +--- Start of Main processing -----------------------------------+
+      ** ¦                                                                ¦
+      ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
+      ** ¦ executed at program activation.                                ¦
+      ** ¦                                                                ¦
+      ** +----------------------------------------------------------------+
+ 
+      ** Initialization
+ 
+     C                   MOVE      *BLANK        ReturnCode
+ 
+     C                   MOVE      *BLANK        FldNamXAr
+     C                   MOVE      *BLANK        MsgIDXAr
+     C                   MOVE      *BLANK        MsgDtaXAr
+     C                   MOVE      *BLANK        WFldNmXAr
+     C                   MOVE      *BLANK        WMsgIDXAr
+     C                   MOVE      *BLANK        WMsgDtXAr
+     C                   Z-ADD     0             Idx
+     C                   Z-ADD     0             WIdx
+ 
+      *
+      ** VALIDATION
+ 
+      ** Book Code is mandatory
+     C                   IF        NTBOKC = *BLANK
+      *
+     C                   EVAL      OKBOKC = 'N'
+     C                   ADD       1             Idx
+     C                   EVAL      FldNamXAr(Idx) = 'NTBOKC    '
+     C                   EVAL      MsgIdXAr(Idx) = '5047430'
+     C                   GOTO      EMAIN
+      *
+     C                   ENDIF
+ 
+      ** Must be a valid book code
+     C                   CALL      'AOBOOKR0'
+     C                   PARM      *BLANKS       PRTCD
+     C                   PARM      '*KEY'        POPTN
+     C                   PARM      NTBOKC        PBOKC
+     C     SDBOOK        PARM      SDBOOK        DSFDY
+      *
+     C                   IF        PRTCD <> *BLANKS
+      *
+     C                   EVAL      OKBOKC = 'N'
+     C                   ADD       1             Idx
+     C                   EVAL      FldNamXAr(Idx) = 'NTBOKC    '
+     C                   EVAL      MsgIdXAr(Idx) = '5047431'
+     C                   GOTO      EMAIN
+      *
+     C                   ENDIF
+ 
+      ** Move value to valid file
+     C                   EVAL      NVBOKC = NTBOKC
+ 
+      * RETURN
+ 
+     C     EMAIN         TAG
+ 
+     C                   RETURN
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      * *INZSR - Program Initialisation routine                       *
+      *****************************************************************
+     C     *INZSR        BEGSR
+ 
+     C     *ENTRY        PLIST
+      *
+      * INPUTS
+      *
+      ** Return Code
+     C                   PARM                    ReturnCode
+      *
+      ** Screen Fields
+     C                   PARM                    TrnDets
+      *
+      * OUTPUTS
+      *
+      * Error fields/message IDs/message data (arrays) from/to caller
+     C                   PARM                    FldNamXAr
+     C                   PARM                    MsgIDXAr
+     C                   PARM                    MsgDtaXAr
+      *
+      * Warning fields/message IDs/message data (arrays) from/to caller
+     C                   PARM                    WFldNmXAr
+     C                   PARM                    WMsgIDXAr
+     C                   PARM                    WMsgDtXAr
+      *
+      * OK Flags
+     C                   PARM                    OKTrnDets
+      *
+      * Validation Fields
+     C                   PARM                    ValidNoTr
+      *
+      *
+      ** Program, module and procedure names for database error processing.
+      ** =================================================================
+      ** The following /COPY sets these values, and also defines LDA as
+      ** an external data area
+ 
+     C/COPY ZACPYSRC,DBFIELDS
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      ********************************************************************
+      /COPY ZACPYSRC,PSSR_ILE
+      ********************************************************************

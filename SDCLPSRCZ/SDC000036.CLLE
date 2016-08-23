@@ -1,0 +1,96 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SD Re-Submit Compliance Watch Jobs')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - Standing Data Module                             */
+/*                                                                   */
+/*       SDC000036 - Re-submit Compliance Watch Jobs                 */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*                                                                   */
+/*       Last Amend No. CSD083             Date 27May10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. BUG4203 *CREATE    Date 16Sep04              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSD083 - Watch List Compliance Upgrade                      */
+/*       BUG4203 - Locking Problem in SCKOBJLCB during CoB           */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)                                    /*CSD083*/
+             DCL        VAR(&POPTN) TYPE(*CHAR) LEN(7)                                    /*CSD083*/
+             DCL        VAR(&SARD)  TYPE(*CHAR) LEN(6)                                    /*CSD083*/
+             DCL        VAR(&SFMT)  TYPE(*CHAR) LEN(200)                                  /*CSD083*/
+                                                                                          /*CSD083*/
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2003')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Check if Switchable Feature CSD083 is switched on */                                  /*CSD083*/
+                                                                                          /*CSD083*/
+             CHGVAR     VAR(&PRTCD) VALUE('       ')                                      /*CSD083*/
+             CHGVAR     VAR(&POPTN) VALUE('*VERIFY')                                      /*CSD083*/
+             CHGVAR     VAR(&SARD) VALUE('CSD083')                                        /*CSD083*/
+                                                                                          /*CSD083*/
+             CALL       PGM(AOSARDR0) PARM(&PRTCD &POPTN &SARD &SFMT)                     /*CSD083*/
+                                                                                          /*CSD083*/
+/** If error occurred in AOSARDR0, perform abnormal termination */                        /*CSD083*/
+                                                                                          /*CSD083*/
+             IF         COND(&PRTCD *NE '       ' *AND &PRTCD *NE +
+                        '*NRF   ') THEN(DO)                                               /*CSD083*/
+                SNDPGMMSG  MSG('Program error in AOSARDR0') +
+                           TOMSGQ(MOPERQ)                                                 /*CSD083*/
+                GOTO       CMDLBL(ABNOR)                                                  /*CSD083*/
+             ENDDO                                                                        /*CSD083*/
+                                                                                          /*CSD083*/
+             IF         COND(&PRTCD *EQ '       ') THEN(GOTO ECHECK)                      /*CSD083*/
+                                                                                          /*CSD083*/
+/** Allocate dataarea SDWLENGN with a lock state of *EXCL       */
+ 
+            ALCOBJ     OBJ((SDWLENGN *DTAARA *EXCL)) WAIT(1)
+            MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(ECHECK))
+            DLCOBJ     OBJ((SDWLENGN *DTAARA *EXCL))
+            SBMJOB     CMD(CALL PGM(SDCWENGN)) JOB(CWLCHECK) +
+                         JOBD(MBATCH) JOBQ(INTERFACE) USER(*JOBD) +
+                         RTGDTA(*JOBD) INLLIBL(*JOBD)
+ 
+/** Allocate dataarea SDWLMENG with a lock state of *EXCL       */
+ 
+ ECHECK:
+            ALCOBJ     OBJ((SDWLMENG *DTAARA *EXCL)) WAIT(1)
+            MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(ELMENG))
+            DLCOBJ     OBJ((SDWLMENG *DTAARA *EXCL))
+            SBMJOB     CMD(CALL PGM(SDCWMENG)) JOB(CWLMENG) +
+                         JOBD(MEJOBD) JOBQ(INTERFACE) USER(*JOBD) +
+                         RTGDTA(*JOBD) INLLIBL(*JOBD)
+ 
+ ELMENG:
+            GOTO       CMDLBL(END)
+ 
+/* Abnormal termination */
+ 
+ ABNOR:
+ 
+            CHGJOB     SWS(XXXXXX11)
+ 
+            SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                         SDC000036 ended abnormally - see previous +
+                         job log for details') TOMSGQ(MOPERQ)
+            MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/* End program */
+ 
+ END:
+ 
+            ENDPGM

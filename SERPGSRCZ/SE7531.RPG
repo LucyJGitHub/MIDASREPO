@@ -1,0 +1,1112 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Corporate Action Instructions Report')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE7531  - Corporate Action Instructions Report               *
+      *                                                               *
+      * FUNCTION:  This Program produces a report, for audit          *
+      * (COB)      purposes, of all Corporate Action Instr. defined   *
+      * (I/C)      to the system. The report runs on request in I/C   *
+      *            and COB and shows a full list, or automatically    *
+      *            in COB and audits changes made today.              *
+      *                                                               *
+      *  Called By: SEC7531 - Corporate Actions Instructions List     *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *  Prev Amend No. CPB001             Date 13Aug99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAC005             Date 29Dec98               *
+      *                 CSE007  *CREATE    Date  1Dec97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CPB001 - 'Private Banking' Module                            *
+      *  CAC005 - PCA-SE Enhancement.                                 *
+      *  CSE007 - Corporate Actions                                   *
+      *                                                               *
+      *****************************************************************
+     FSECOSIPDIF  E                    DISK
+      **  Corporate Actions Instructions Detail
+      *
+     FSECOSIPAIF  E                    DISK         KINFSR *PSSR
+      **  Corporate Actions Instructions Trailer
+      *
+     FSE7531AUO   E             21     PRINTER      KINFDS ERF1DS
+     F                                              KINFSR *PSSR
+      **  Corporate Actions Instructions Audit Report
+      *
+     FSE7531P1O   E             22     PRINTER      KINFDS ERF2DS     UC
+     F                                              KINFSR *PSSR
+      **  Corporate Actions Instruction Detail Report
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  FUNCTION OF INDICATORS                                       *
+      * ------------------------                                      *
+      *                                                               *
+      *  10 - PRINT *** DIFFERENCE ***                                *
+      *  21 - OVERFLOW INDICATOR ON SE7531AU                          *
+      *  22 - OVERFLOW INDICATOR ON SE7531P1                          *
+      *  45 - CAC005 is on, display profit centre in the display file.*   CAC005
+      *  70 - FILE ERROR                                              *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  INDEX TO SUBROUTINES                                         *
+      * ----------------------                                        *
+      *                                                               *
+      *  #A     - INITIAL PROCESSING                                  *
+      *  #B     - MAIN PROCESSING                                     *
+      *  #BA    - PROCESS FULL GROUPS LIST                            *
+      *  #BB    - PROCESS FULL LIST RUN CONTROLS                      *
+      *  #BC    - PROCESS AUDIT LIST                                  *
+      *  #BD    - PROCESS AUDIT LIST RUN CONTROLS                     *
+      *  #ZA    - DATABASE ERRORS                                     *
+      *  #ZB    - SETUP OUTPUT FIELDS FOR REPORT                      *
+      *  *PSSR  - PROGRAM ERROR HANDLING SUBROUINE                    *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E/COPY ZSRSRC,ZDATE2Z1
+      *
+     E/COPY ZSRSRC,ZEDITZ1
+      *
+     E                    CPY@    1   1 80
+      **   ARRAY FOR COPYRIGHT
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     IPSDS       SDS
+      **  PROGRAM STATUS DATA STRUCTURE
+      *
+     I                                      244 253 JOB
+     I                                      254 263 USER
+      *
+     IERF1DS      DS
+      **   FILE INFORMATION DATA STRUCTURE
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      **   FOR OVERFLOW - RUN CONTROL
+      *
+     I                                    B 367 3680LINE
+      *
+     IERF2DS      DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+      **   FOR OVERFLOW - PRINT
+      *
+     I                                    B 367 3680LINE1
+      *
+     ILDA       E DSLDA                         256
+      **   LOCAL DATA AREA
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     ISDBANK    E DSSDBANKPD
+      **  BANK DETAILS
+      *
+     ISDMMOD    E DSSDMMODPD
+      **  Modules present
+      *
+     ISDPORT    E DSSDPORTPD
+      **  Portfolio Management Details
+      *
+     IDSSDY     E DSDSSDY
+      **  SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+      *
+     ICPYR@$      DS
+      **  DATA STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@$$
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            MAIN   - Main Routine.                             *
+      *                                                               *
+      * CALLS      #A     - Initial Processing.                       *
+      *            #B     - Main Processing.                          *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+      *
+      **   INPUT PARAMETER LIST
+      *
+     C           *ENTRY    PLIST
+      *
+      **   FOR SELECTION OF FULL LIST OR AUDIT LIST
+      *
+     C                     PARM           MODE    1
+     C                     PARM           @RSEQ   5
+      *
+      **   INITIAL PROCESSING
+      *
+     C                     EXSR #A
+      *
+      **   MAIN PROCESSING
+      *
+     C                     EXSR #B
+      *
+     C           WWOPEN    IFEQ 'Y'
+      *
+      ** Call ZSFILE for P1 file
+      *
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           @RSEQ
+     C                     PARM *BLANKS   @PARM   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+     C           ZSERR     IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVELSFILE     DBFILE    P      * DB ERROR 01 *
+     C           'ZSFILE R'CAT  'OUTINE'  DBKEY     P      ***************
+     C                     MOVEL'SE7531'  DBPGM     P
+     C                     OUT  LDA
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     CLOSESE7531P1
+     C                     END
+      *
+      ** Call ZSFILE for AU file
+      *
+     C                     Z-ADDSFNUMU    ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           @RSEQ
+     C                     PARM *BLANKS   @PARM   3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+     C           ZSERR     IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVELSFILEU    DBFILE    P      * DB ERROR 02 *
+     C           'ZSFILE R'CAT  'OUTINE'  DBKEY     P      ***************
+     C                     MOVEL'SE7531'  DBPGM     P
+     C                     OUT  LDA
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+      **   END PROGRAM
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            #A     - INITIAL PROCESSING.                       *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Routine.                             *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           #A        BEGSR
+      *
+     C                     SETOF                     10
+     C                     Z-ADD*ZEROS    LINE
+     C                     Z-ADD*ZEROS    LINE1
+      *
+      ** Initialise DB error fields annd store program name for DB
+      ** error field
+      ** Prepare LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVEL'SE7531'  DBPGM
+     C                     OUT  LDA
+      *
+      ** INITIALISE WORK FIELDS
+     C                     MOVE '1'       WWFTT   1
+      *
+      ** Initialise run controls work fields
+      *
+     C                     Z-ADD*ZEROS    RRPROG
+     C                     Z-ADD*ZEROS    RRFILE
+     C                     MOVE *BLANK    RRACTI
+      *                                                                   CAC005
+      ***  Check if CAC005 - PCA-SE Enhancement is on.                    CAC005
+      *                                                                   CAC005
+     C                     MOVE 'N'       CAC005  1                       CAC005
+     C                     MOVE *OFF      *IN45                           CAC005
+     C                     CALL 'AOSARDR0'                                CAC005
+     C                     PARM *BLANKS   @RTCD   7                       CAC005
+     C                     PARM '*VERIFY' @OPTN   7                       CAC005
+     C                     PARM 'CAC005'  @SARD   6                       CAC005
+      *                                                                   CAC005
+     C           @RTCD     IFEQ *BLANK                                    CAC005
+     C                     MOVE 'Y'       CAC005                          CAC005
+     C                     MOVE *ON       *IN45                           CAC005
+     C                     ENDIF                                          CAC005
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            #B     - Main Processing.                          *
+      *                                                               *
+      * CALLS      #BA    -                                           *
+      *            #BB    -                                           *
+      *            #BC    -                                           *
+      *            #BD    -                                           *
+      *            #ZA    -                                           *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Routine.                             *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           #B        BEGSR
+      *
+      ** Access Bank details file
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @@RTCD  7
+     C                     PARM '*FIRST ' @@OPTN  7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+     C           @@RTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD003       DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 03 *
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           BJDFIN    IFEQ 'D'
+     C                     MOVE *OFF      *IN98
+     C                     ELSE
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+      ** Access MIDAS Modules details via access program
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDMMOD    PARM SDMMOD    DSSDY
+      *
+     C           BGPFMG    IFEQ 'Y'
+      *
+     C                     CALL 'AOPORTR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*FIRST'  @OPTN
+     C           SDPORT    PARM SDPORT    DSSDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     Z-ADD004       DBASE            **************
+     C                     MOVEL'SDPORTPD'DBFILE           * DBERROR 04 *
+     C                     MOVEL@RTCD     DBKEY            **************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ADD  1         RRFILE
+      *
+      ** CHECK INPUT PARAMETER
+      *
+     C           MODE      IFEQ '2'
+      *
+      ** FULL LIST
+      *
+     C                     EXSR #BA
+      *
+      ** FULL LIST RUN CONTROLS PROCESSING
+      *
+     C                     EXSR #BB
+      *
+     C                     ELSE
+      *
+     C           MODE      IFEQ '1'
+      *
+      ** AUDIT LIST
+      *
+     C                     EXSR #BC
+      *
+      ** AUDIT LIST RUN CONTROLS PROCESSING
+      *
+     C                     EXSR #BD
+      *
+     C                     ELSE
+      *
+      ** STANDARD DATABASE ERROR HANDLING
+      *
+     C           *LOCK     IN   LDA
+     C                     Z-ADD005       DBASE
+     C                     MOVEL'MODE'    DBFILE           **************
+     C                     MOVELMODE      DBKEY            * DBERROR 05 *
+     C                     OUT  LDA                        **************
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            #ZA    - Process Database Errors                   *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  #A     -                                           *
+      *            #B     -                                           *
+      *            #BB    -                                           *
+      *            #BD    -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           #ZA       BEGSR
+      *
+      ** Call ZSFILE for AU file
+      *
+     C                     Z-ADDSFNUMU    ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           @RSEQ
+     C                     PARM *BLANKS   @PARM   3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     WRITEHEADER
+      *
+      * WRITE TITLE FOR FULL LIST OR AUDIT LIST
+      *
+     C           MODE      IFEQ '1'
+     C                     WRITEHEAD3
+     C                     ELSE
+     C                     WRITEHEAD2
+     C                     END
+      *
+     C                     WRITEDBERROR
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            #BA    - PROCESS FULL CORP ACTION INSTRUCTIONS LIST*
+      *                                                               *
+      * CALLS      #ZB    -                                           *
+      *                                                               *
+      * CALLED BY  #B     -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           #BA       BEGSR
+      *
+     C           1         SETLLSECOSIPD
+     C                     READ SECOSIPD                 70
+      *
+     C           *IN70     IFEQ '1'
+      *
+      ** SETON FLAG TO INDICATE NULL REPORT
+      *
+     C                     MOVE '1'       WWEMTF  1
+      *
+      ** SHOULD NOT PRODUCE RUN CONTROLS ANYMORE
+      *
+     C                     MOVE 'Y'       WWNPRC  1
+     C                     WRITEHEADER
+     C                     WRITEHEAD2
+     C                     WRITENULL1
+      *
+     C                     ELSE
+      *
+     C                     OPEN SE7531P1
+     C                     MOVE 'Y'       WWOPEN  1
+      *
+      ** WHILE RECORDS ON FILE
+      *
+     C           *IN70     DOWEQ'0'
+      *
+     C           MORECI    IFEQ 'D'
+      *
+      ** ADD 1 TO NUMBER OF RECORDS READ
+      *
+     C                     ADD  1         RRPROG
+      *
+      ** OUTPUT DETAILS TO REPORT
+      *
+     C                     EXSR #ZB
+      *
+     C                     END
+      *
+     C                     READ SECOSIPD                 70
+      *
+     C                     END
+      *
+      ** No live records found on SECOSIPD
+      *
+     C           RRPROG    IFEQ 0
+     C           WWEMTF    ANDNE'1'
+      *
+      ** SHOULD NOT PRODUCE RUN CONTROLS ANYMORE
+      *
+     C                     MOVE 'Y'       WWNPRC  1
+     C                     WRITEHEADER
+     C                     WRITEHEAD2
+     C                     WRITENULL1
+     C                     END
+      *
+     C           LINE1     IFGT 55
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     WRITEHEADER4
+     C                     END
+      *
+     C                     WRITEFOOTING1
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            #ZB    - SETUP OUTPUT FIELDS FOR TABLE LIST        *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  #BA    -                                           *
+      *            #BC    -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           #ZB       BEGSR
+      *
+      ** SET UP BRANCH CODE
+     C                     MOVELMOBRCD    RRBRCD
+      *
+      ** SET UP BOOK CODE
+     C                     MOVELMOBOOK    RRBOOK
+      *                                                                   CAC005
+      ** If CAC005 is on, retrieve user book from AOBKPCR0.               CAC005
+      *                                                                   CAC005
+     C           CAC005    IFEQ 'Y'                                       CAC005
+     C                     CALL 'AOBKPCR0'                                CAC005
+     C                     PARM           PRTCD   7                       CAC005
+     C                     PARM '*USER  ' POPTN   7                       CAC005
+     C           PMBKCD    PARM *BLANKS   PMBKCD  2                       CAC005
+     C           PMPRFC    PARM *BLANKS   PMPRFC  4                       CAC005
+     C                     PARM MOBOOK    PMPSBK  2                       CAC005
+     C           PRTCD     IFEQ *BLANKS                                   CAC005
+     C                     MOVELPMBKCD    RRBOOK                          CAC005
+     C                     MOVELPMPRFC    RRPCTR                          CAC005
+     C                     ELSE                                           CAC005
+     C                     MOVEL*BLANKS   RRPCTR                          CAC005
+     C                     ENDIF                                          CAC005
+     C                     ENDIF                                          CAC005
+      *
+      ** SET UP CUSTOMER
+     C********** MOCNUM    IFNE 0                                                             CSD027
+     C           MOCNUM    IFNE *BLANKS                                                       CSD027
+     C                     MOVELMOCNUM    RRCNUM
+     C                     ELSE
+     C                     MOVEL*BLANKS   RRCNUM
+     C                     ENDIF
+      *
+      ** SET UP PORTFOLIO REFERENCE
+     C           BGPFMG    IFEQ 'Y'
+     C           BGN4ST    OREQ 'Y'                                       CPB001
+      *
+     C           MOPTFR    IFEQ '9997'
+     C           BGN4ST    ANDNE'Y'                                       CPB001
+     C                     MOVE FCR997    RRPTFR
+     C                     ELSE
+     C                     MOVELMOPTFR    RRPTFR
+     C                     END
+      *
+     C                     ELSE
+     C                     MOVE *BLANKS   RRPTFR
+     C                     END
+      *
+      ** SET UP CORPORATION ACTION TYPE
+     C                     MOVELMOCOAT    RRCOAT
+      *
+      ** SET UP SECURITY
+     C                     MOVELMOSESN    RRSESN
+      *
+      ** SET UP CASH PREFERRED
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE MOCAPP    ZFIELD
+     C                     Z-ADD2         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RRCAPP
+      *
+      ** SET UP ROUNDING OPTION
+     C                     MOVE MOROOP    RRROOP
+      *
+      ** SET UP CONVERTIBLE/KEEP
+     C                     MOVE MOCKIN    RRCKIN
+      *
+      ** SET UP LETTER TO BE SENT
+     C                     MOVE MOLTBS    RRLTBS
+      *
+      ** SET UP SETTLEMENT CURRENCY
+     C                     MOVE MOSCCY    RRSCCY
+      *
+      ** SET UP SETTLEMENT METHOD
+     C                     MOVE MOSMET    RRSMET
+      *
+      ** SET UP SETTLEMENT ACCOUNT
+     C                     MOVELMOSACC    RRSACC    P
+      *
+      ** SET UP SETTLEMENT BRANCH CODE
+     C                     MOVE MOSBRC    RRSBRC
+      *
+      ** SET UP LAST ACTION
+     C           MOCHTP    IFEQ 'I'
+     C                     MOVEL'INSERT'  RRACTI
+     C                     END
+      *
+     C           MOCHTP    IFEQ 'A'
+     C                     MOVEL'AMEND '  RRACTI
+     C                     END
+      *
+     C           MOCHTP    IFEQ 'D'
+     C                     MOVEL'DELETE'  RRACTI
+     C                     END
+      *
+      ** SET UP LAST ACTIVITY DATE
+     C                     Z-ADDMOLCD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     RRDATE
+      *
+     C           LINE1     IFGT 56
+     C           WWFTT     OREQ '1'
+     C                     WRITEHEADER1
+      *
+     C           MODE      IFEQ '2'
+     C                     WRITEHEADER2
+     C                     ELSE
+      *
+     C           MODE      IFEQ '1'
+     C                     WRITEHEADER3
+     C                     END
+      *
+     C                     END
+      *
+     C                     WRITEHEADER4
+     C                     MOVE '0'       WWFTT
+      *
+     C                     END
+      *
+     C                     WRITEDETAIL1
+      *
+      ** SET UP NARRATIVES
+     C           MONAR1    IFNE *BLANKS
+     C                     MOVE MONAR1    RRNARR
+      *
+     C           LINE1     IFGT 56
+     C           WWFTT     OREQ '1'
+     C                     WRITEHEADER1
+      *
+     C           MODE      IFEQ '2'
+     C                     WRITEHEADER2
+     C                     ELSE
+      *
+     C           MODE      IFEQ '1'
+     C                     WRITEHEADER3
+     C                     END
+      *
+     C                     END
+      *
+     C                     WRITEHEADER4
+     C                     MOVE '0'       WWFTT
+     C                     END
+      *
+     C                     WRITEDETAIL2
+     C                     ENDIF
+      *
+     C           MONAR2    IFNE *BLANKS
+     C                     MOVE MONAR2    RRNARR
+      *
+     C           LINE1     IFGT 56
+     C           WWFTT     OREQ '1'
+     C                     WRITEHEADER1
+      *
+     C           MODE      IFEQ '2'
+     C                     WRITEHEADER2
+     C                     ELSE
+      *
+     C           MODE      IFEQ '1'
+     C                     WRITEHEADER3
+     C                     END
+      *
+     C                     END
+      *
+     C                     WRITEHEADER4
+     C                     MOVE '0'       WWFTT
+     C                     END
+      *
+     C                     WRITEDETAIL2
+     C                     ENDIF
+      *
+     C           MONAR3    IFNE *BLANKS
+     C                     MOVE MONAR3    RRNARR
+      *
+     C           LINE1     IFGT 56
+     C           WWFTT     OREQ '1'
+     C                     WRITEHEADER1
+      *
+     C           MODE      IFEQ '2'
+     C                     WRITEHEADER2
+     C                     ELSE
+      *
+     C           MODE      IFEQ '1'
+     C                     WRITEHEADER3
+     C                     END
+      *
+     C                     END
+      *
+     C                     WRITEHEADER4
+     C                     MOVE '0'       WWFTT
+     C                     END
+      *
+     C                     WRITEDETAIL2
+     C                     ENDIF
+      *
+     C           MONAR4    IFNE *BLANKS
+     C                     MOVE MONAR4    RRNARR
+      *
+     C           LINE1     IFGT 56
+     C           WWFTT     OREQ '1'
+     C                     WRITEHEADER1
+      *
+     C           MODE      IFEQ '2'
+     C                     WRITEHEADER2
+     C                     ELSE
+      *
+     C           MODE      IFEQ '1'
+     C                     WRITEHEADER3
+     C                     END
+      *
+     C                     END
+      *
+     C                     WRITEHEADER4
+     C                     MOVE '0'       WWFTT
+     C                     END
+      *
+     C                     WRITEDETAIL2
+     C                     ENDIF
+      *
+     C           MONAR5    IFNE *BLANKS
+     C                     MOVE MONAR5    RRNARR
+      *
+     C           LINE1     IFGT 56
+     C           WWFTT     OREQ '1'
+     C                     WRITEHEADER1
+      *
+     C           MODE      IFEQ '2'
+     C                     WRITEHEADER2
+     C                     ELSE
+      *
+     C           MODE      IFEQ '1'
+     C                     WRITEHEADER3
+     C                     END
+      *
+     C                     END
+      *
+     C                     WRITEHEADER4
+     C                     MOVE '0'       WWFTT
+     C                     END
+      *
+     C                     WRITEDETAIL2
+     C                     ENDIF
+      *
+     C           MONAR6    IFNE *BLANKS
+     C                     MOVE MONAR6    RRNARR
+      *
+     C           LINE1     IFGT 56
+     C           WWFTT     OREQ '1'
+     C                     WRITEHEADER1
+      *
+     C           MODE      IFEQ '2'
+     C                     WRITEHEADER2
+     C                     ELSE
+      *
+     C           MODE      IFEQ '1'
+     C                     WRITEHEADER3
+     C                     END
+      *
+     C                     END
+      *
+     C                     WRITEHEADER4
+     C                     MOVE '0'       WWFTT
+     C                     END
+      *
+     C                     WRITEDETAIL2
+     C                     ENDIF
+      *
+     C           MONAR7    IFNE *BLANKS
+     C                     MOVE MONAR7    RRNARR
+      *
+     C           LINE1     IFGT 56
+     C           WWFTT     OREQ '1'
+     C                     WRITEHEADER1
+      *
+     C           MODE      IFEQ '2'
+     C                     WRITEHEADER2
+     C                     ELSE
+      *
+     C           MODE      IFEQ '1'
+     C                     WRITEHEADER3
+     C                     END
+      *
+     C                     END
+      *
+     C                     WRITEHEADER4
+     C                     MOVE '0'       WWFTT
+     C                     END
+      *
+     C                     WRITEDETAIL2
+     C                     ENDIF
+      *
+     C           MONAR8    IFNE *BLANKS
+     C                     MOVE MONAR8    RRNARR
+      *
+     C           LINE1     IFGT 56
+     C           WWFTT     OREQ '1'
+     C                     WRITEHEADER1
+      *
+     C           MODE      IFEQ '2'
+     C                     WRITEHEADER2
+     C                     ELSE
+      *
+     C           MODE      IFEQ '1'
+     C                     WRITEHEADER3
+     C                     END
+      *
+     C                     END
+      *
+     C                     WRITEHEADER4
+     C                     MOVE '0'       WWFTT
+     C                     END
+      *
+     C                     WRITEDETAIL2
+     C                     ENDIF
+      *
+     C           MONAR9    IFNE *BLANKS
+     C                     MOVE MONAR9    RRNARR
+      *
+     C           LINE1     IFGT 56
+     C           WWFTT     OREQ '1'
+     C                     WRITEHEADER1
+      *
+     C           MODE      IFEQ '2'
+     C                     WRITEHEADER2
+     C                     ELSE
+      *
+     C           MODE      IFEQ '1'
+     C                     WRITEHEADER3
+     C                     END
+      *
+     C                     END
+      *
+     C                     WRITEHEADER4
+     C                     MOVE '0'       WWFTT
+     C                     END
+      *
+     C                     WRITEDETAIL2
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            #BC    - PROCESS CORP. ACTION INSTRUCTIONS AUDIT   *
+      *                                                               *
+      * CALLS      #ZB    -                                           *
+      *                                                               *
+      * CALLED BY  #B     -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           #BC       BEGSR
+      *
+     C           1         SETLLSECOSIPD
+     C                     READ SECOSIPD                 70
+      *
+     C           *IN70     IFEQ '1'
+      *
+      ** SETON FLAG TO INDICATE NULL REPORT
+      *
+     C                     MOVE '1'       WWEMTF  1
+      *
+      ** SHOULD NOT PRODUCE RUN CONTROLS ANYMORE
+      *
+     C                     MOVE 'Y'       WWNPRC  1
+     C                     WRITEHEADER
+     C                     WRITEHEAD3
+     C                     WRITENULL1
+      *
+     C                     ELSE
+      *
+     C                     OPEN SE7531P1
+     C                     MOVE 'Y'       WWOPEN
+      *
+     C           *IN70     DOWEQ'0'
+      *
+      ** ADD 1 TO NUMBER OF RECORDS READ
+      *
+     C                     ADD  1         RRPROG
+      *
+      ** ADD 1 TO NUMBER OF INSERTS
+      *
+     C           MOCHTP    IFEQ 'I'
+     C                     ADD  1         RRINSR
+     C                     END
+      *
+      ** ADD 1 TO NUMBER OF AMENDS
+      *
+     C           MOCHTP    IFEQ 'A'
+     C                     ADD  1         RRAMND
+     C                     END
+      *
+      ** ADD 1 TO NUMBER OF DELETES
+      *
+     C           MOCHTP    IFEQ 'D'
+     C                     ADD  1         RRDLET
+     C                     END
+      *
+      ** OUTPUT DETAILS TO REPORT
+      *
+     C                     EXSR #ZB
+     C                     READ SECOSIPD                 70
+     C                     END
+      *
+      ** NO LIVE RECORDS FOUND ON FILE SECOSIPD
+      *
+     C           RRPROG    IFEQ 0
+     C           WWEMTF    ANDNE'1'
+      *
+      ** SHOULD NOT PRODUCE RUN CONTROLS ANYMORE
+      *
+     C                     MOVE 'Y'       WWNPRC  1
+     C                     WRITEHEADER
+     C                     WRITEHEAD3
+     C                     WRITENULL1
+     C                     END
+      *
+     C           LINE1     IFGT 56
+     C                     WRITEHEADER1
+     C                     WRITEHEADER3
+     C                     WRITEHEADER4
+     C                     END
+      *
+     C                     WRITEFOOTING1
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            #BB    - PROCESS FULL LIST RUN CONTROLS            *
+      *                                                               *
+      * CALLS      #ZA    -                                           *
+      *                                                               *
+      * CALLED BY  #B     -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           #BB       BEGSR
+      *
+     C           1         SETLLSECOSIPA
+     C                     READ SECOSIPA                 70
+      *
+     C           *IN70     IFEQ '1'
+     C           MORECI    ORNE 'Z'
+      *
+      ** TRAILER RECORD NOT FOUND - DATABASE ERROR
+      *
+     C           *LOCK     IN   LDA
+     C                     Z-ADD006       DBASE
+     C                     MOVEL'SECOSIPA'DBFILE           **************
+     C                     MOVEL*BLANKS   DBKEY            * DBERROR 06 *
+     C                     OUT  LDA                        **************
+     C                     EXSR *PSSR
+      *
+     C                     ELSE
+      *
+     C           RRPROG    IFNE MONORE
+      *
+      ** RECORDS READ <> RECORDS ON FILE
+      *
+     C                     MOVE '1'       *IN10
+     C                     MOVE '1'       *INU8
+     C                     END
+      *
+     C                     MOVE MONORE    RRFILE
+      *
+      ** OUTPUT RUN CONTROLS REPORT
+      *
+     C           WWNPRC    IFNE 'Y'
+     C                     WRITEHEADER
+     C                     WRITEHEAD2
+     C                     WRITEDETAILA
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            #BD    - PROCESS AUDIT LIST RUN CONTROLS           *
+      *                                                               *
+      * CALLS      #ZA    -                                           *
+      *                                                               *
+      * CALLED BY  #B     -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           #BD       BEGSR
+      *
+     C                     READ SECOSIPA                 70
+      *
+     C           *IN70     IFEQ '1'
+     C           MORECI    ORNE 'Z'
+      *
+      ** TRAILER RECORD NOT FOUND - DATABASE ERROR
+      *
+     C           *LOCK     IN   LDA
+     C                     Z-ADD007       DBASE
+     C                     MOVEL'SECOSIPA'DBFILE           **************
+     C                     MOVEL*BLANKS   DBKEY            * DBERROR 07 *
+     C                     OUT  LDA                        **************
+     C                     EXSR *PSSR
+      *
+     C                     ELSE
+      *
+      ** OUTPUT RUN CONTROLS REPORT
+      *
+     C           WWNPRC    IFNE 'Y'
+     C                     WRITEHEADER
+     C                     WRITEHEAD3
+     C                     WRITEDETAILB
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            *PSSR  - Program error handling routine            *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     MOVE 'Y'       WWOPEN  1        To avoid RCFAU in AUDIT
+     C                     EXSR #ZA
+      *
+      ***  If *PSSR already run, then just end the program here.
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+      *
+      /EJECT
+     C/COPY ZSRSRC,ZEDITZ2
+      *
+      /EJECT
+      *****************************************************************
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

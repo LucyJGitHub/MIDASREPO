@@ -1,0 +1,316 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Int Capit Req,Branch/Accrual Upd')               *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas -  GENERAL LEDGER MODULE
+     F*                                                                  *
+     F*     GL0590 - INTEREST/CAPITALISATION REQUEST                     *
+     F*              BRANCH AND 'ALL' OPTIONS UPDATE                     *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      *  Last Amend No. CRE095             Date 25Apr14               *
+      *  Prev Amend No. MD027052           Date 20May14               *
+      *                 CRE090             Date 14Feb14               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01413             Date 19Jan94               *
+      *                 S01449             Date 07Dec93               *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                                  *
+      *  CRE095 - Rate Fixing for RE Accounts (Recompile)             *
+      *  MD027052 - Demand capitalisation not executed for bulk       *
+      *             request on accounts with either Cr or Dr on delay.*
+      *  CRE090 - Delay Capitalisation of Interest                    *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*  S01413 - When you request a management capitalisation for all   *
+     F*           accounts, the system generates only for debit side     *
+     F*  S01449 - Autorecs II - Recompile for change to ACCNTAB          *
+     F*                                                                  *
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FACCBR   UF  E           K        DISK
+     FRETAG   IF  E                    DISK
+     FGLACNTL4IF  E           K        DISK                                                   CRE090
+     F*       FUNCTION OF INDICATORS
+     F*       U7      DATABASE ERROR
+     F*       11      RETAG RECORD READ
+     F*       12      ACCBR RECORD READ
+     F*       24      SET ON FOR NON RETAIL ACCOUNTS
+     F*       40      CORRECT BRANCH CODE
+     F*       41      MANAGEMENT/STATEMENT INDICATOR
+     F*       50      BRANCH NOT BLANK
+     F*       60      TLGLBT BIT 1 ON
+     F*       61      TLGLBT BIT 0 ON
+     F*       62      DEMAND DEBIT
+     F*       63      DEMAND CREDIT
+     F*       64      MANAGEMENT DEBIT
+     F*       65      MANAGEMENT CREDIT
+     E                    CPY@    1   1 80
+     I*
+     IACCNTABF
+     I              RECI                            MRECI
+     IDSFDY     E DSDSFDY                                                                     CRE090
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                                    CRE090
+     I*                                                                                       CRE090
+     ISDBANK    E DSSDBANKPD                                                                  CRE090
+      ** Bank Details File                                                                    CRE090
+      *                                                                                       CRE090
+     I*                                                                                     MD027052
+     ISCSARD    E DSSCSARDPD                                                                MD027052
+      ** Bank Details File                                                                  MD027052
+     C                     MOVEACPY@      BIS@   80
+     C                     EXSR INIT                                                          CRE090
+     C*
+     C** READ FIRST RETAG RECORD
+     C*
+     C                     READ RETAG                    11
+     C* DO WHILE NOT LAST RETAG RECORD
+     C           *IN11     DOWEQ'0'
+     C*
+     C* IF NOT ACTIVE RECORD GOTO READ NEXT RETAG RECORD
+     C           RECI      IFNE 'D'
+     C                     GOTO NXTTAG
+     C                     END
+     C*
+     C* TEST FOR BLANK BRANCH CODE
+     C*
+     C           TBRCD     COMP '   '                5050
+     C*
+     C**
+     C** SET ON INDICATORS TO SHOW REQUESTS MADE IN GL0298
+     C**
+     C                     TESTB'1'       TLGLBT         60
+     C                     TESTB'0'       TLGLBT         61
+     C           TDDIS     COMP 'D'                      62
+     C           TDDIS     COMP 'M'                      64
+     C           TCDIS     COMP 'D'                      63
+     C           TCDIS     COMP 'M'                      65
+     C*
+     C** IF BRANCH CODE (RETAG) NON BLANK SETLL ON BRANCH (ACCBR)
+     C*
+     C           TBRCD     IFNE *BLANKS
+     C           TBRCD     SETLLACCBR                  12
+     C*
+     C** ELSE SET POINTER TO START OF ACCBR
+     C*
+     C                     ELSE
+     C           *LOVAL    SETLLACCBR                  12
+     C                     END
+     C   12                SETON                       U711
+     C   12                GOTO ERREND
+     C**
+     C* READ FIRST ACCBR RECORD
+     C**
+     C                     READ ACCBR                    12
+     C   12                SETON                       U711
+     C   12                GOTO ERREND
+     C*
+     C* DO WHILE NOT LAST ACCBR RECORD
+     C           *IN12     DOWEQ'0'
+     C*
+     C* IGNORE CLOSED ACCOUNTS,DELETED RECORDS
+     C*
+     C           MRECI     IFNE 'D'
+     C                     GOTO END
+     C                     END
+      *                                                                                       CRE090
+      ** Check Demand Capitalisation Period                                                   CRE090
+      *                                                                                       CRE090
+     C           CRE090    IFEQ 'Y'                                                           CRE090
+     C                     EXSR CHKDCP                                                        CRE090
+     C           SKPFLG    IFEQ 'Y'                                                           CRE090
+     C           SKIPDR    ANDEQ'Y'                                                         MD027052
+     C           SKIPCR    ANDEQ'Y'                                                         MD027052
+     C                     GOTO END                                                           CRE090
+     C                     ENDIF                                                              CRE090
+     C                     ENDIF                                                              CRE090
+     C*
+     C* BRANCH CODE ENTERED,COMPARE WITH RECORD
+     C*
+     C                     SETOF                     40
+     C   50      BRCA      COMP TBRCD                    40
+     C   50N40             GOTO NXTTAG
+     C*
+     C** UPDATE INDICATOR FIELDS FOR O/P TO SELECTED S/ACCBR RECORDS
+     C** -IF DEMAND STMNT/CAP ALREADY REQUESTED,DO NOT OVERRIDE WITH MN MT
+     C*
+     C** BRANCHES EQUAL
+     C*
+     C                     TESTB'1'       GLBT           41
+     C   60                BITON'1'       GLBT
+     C   61N41             BITON'0'       GLBT
+     C           DDIS      COMP 'D'                      41
+     C   62                MOVE 'D'       DDIS
+     C   64N41             MOVE 'M'       DDIS
+     C           CDIS      COMP 'D'                      41
+     C   63                MOVE 'D'       CDIS
+     C   65N41             MOVE 'M'       CDIS
+      *                                                                                     MD027052
+     C           DDIS      IFEQ 'D'                                                         MD027052
+     C           SKIPDR    ANDEQ'Y'                                                         MD027052
+     C                     MOVE *BLANKS   DDIS                                              MD027052
+     C                     ENDIF                                                            MD027052
+      *                                                                                     MD027052
+     C           CDIS      IFEQ 'D'                                                         MD027052
+     C           SKIPCR    ANDEQ'Y'                                                         MD027052
+     C                     MOVE *BLANKS   CDIS                                              MD027052
+     C                     ENDIF                                                            MD027052
+     C*
+     C* DO NOT SET ON CAPITALISATION INDICATORS
+     C* FOR NON-RETAIL ACCOUNTS
+     C*
+     C           ATYP      COMP 'R'                  2424
+     C                     EXCPT
+     C*
+     C           END       TAG                             ** END TAG ****
+     C* SET OFF ACCOUNT LEVEL INDICATORS
+     C                     SETOF                     244041
+     C*
+     C                     READ ACCBR                    12
+     C                     END                                         ***
+     C*
+     C           NXTTAG    TAG
+     C* SET OFF RETAG LEVEL INDICATORS
+     C                     SETOF                     506061
+     C                     SETOF                     626364
+     C                     SETOF                     65
+     C*
+     C                     READ RETAG                    11
+     C*
+     C           ERREND    TAG
+     C                     END                                         ***
+     C*
+     C                     SETON                     LR
+     C*
+      ********************************************************************                    CRE090
+      **   INITIALIZATION SUBROUTINE                                                          CRE090
+     C           INIT      BEGSR                                                              CRE090
+      *                                                                                       CRE090
+     C           *LIKE     DEFN NDID      PNDID                                               CRE090
+     C           *LIKE     DEFN NCID      PNCID                                               CRE090
+      *                                                                                       CRE090
+     C           GLQKEY    KLIST                                                              CRE090
+     C                     KFLD           CNUM                                                CRE090
+     C                     KFLD           CCY                                                 CRE090
+     C                     KFLD           ACOD                                                CRE090
+     C                     KFLD           ACSQ                                                CRE090
+     C                     KFLD           BRCA                                                CRE090
+      *                                                                                       CRE090
+      ** Access the Bank Details                                                              CRE090
+      *                                                                                       CRE090
+     C                     CALL 'AOBANKR0'                                                    CRE090
+     C                     PARM *BLANKS   PRTCD   7                                           CRE090
+     C                     PARM '*FIRST ' POPTN   7                                           CRE090
+     C           SDBANK    PARM SDBANK    DSFDY                                               CRE090
+      *                                                                                       CRE090
+      ** Check if CRE090 is installed                                                         CRE090
+      *                                                                                       CRE090
+     C                     CALL 'AOSARDR0'                                                    CRE090
+     C                     PARM *BLANKS   PRTCD                                               CRE090
+     C                     PARM '*VERIFY' POPTN                                               CRE090
+     C                     PARM 'CRE090'  PSARD   6                                           CRE090
+     C**********           PARM           DSFDY                                      CRE090 MD027052
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD027052
+      *                                                                                       CRE090
+     C           PRTCD     IFNE *BLANKS                                                       CRE090
+     C                     MOVE 'N'       CRE090  1                                           CRE090
+     C                     ELSE                                                               CRE090
+     C                     MOVE 'Y'       CRE090                                              CRE090
+     C                     ENDIF                                                              CRE090
+      *                                                                                       CRE090
+     C                     ENDSR                                                              CRE090
+      ********************************************************************                    CRE090
+      **   Check Demand Capitalisation Period                                                 CRE090
+     C           CHKDCP    BEGSR                                                              CRE090
+      *                                                                                       CRE090
+     C                     Z-ADDNDID      PNDID                                               CRE090
+     C                     Z-ADDNCID      PNCID                                               CRE090
+      ** Get Delay Capitalisation Days                                                        CRE090
+     C                     MOVE 'N'       SKPFLG  1                                           CRE090
+     C                     MOVE 'N'       SKIPDR  1                                         MD027052
+     C                     MOVE 'N'       SKIPCR  1                                         MD027052
+     C           GLQKEY    CHAINGLACNTL4             43                                       CRE090
+     C           *IN43     IFEQ '0'                                                           CRE090
+     C           F1DECD    IFGT 0                                                             CRE090
+     C                     Z-ADDF1DECD    ZNRDYS                                              CRE090
+     C                     MOVELBJSLCD    ZLOC                                                CRE090
+     C                     MOVELCCY       ZCCY                                                CRE090
+     C           NDID      IFGT 0                                                             CRE090
+     C                     Z-ADDNDID      ZDAYNO                                              CRE090
+     C                     CALL 'ZFWDT'                                                       CRE090
+     C                     PARM           ZDAYNO  50                                          CRE090
+     C                     PARM           ZNRDYS  20                                          CRE090
+     C                     PARM *ZERO     ZDYNBR  50                                          CRE090
+     C                     PARM           ZCCY    3                                           CRE090
+     C                     PARM *BLANK    ZLOC    3                                           CRE090
+      *                                                                                       CRE090
+     C                     Z-ADDZDYNBR    PNDID                                               CRE090
+     C                     ENDIF                                                              CRE090
+      *                                                                                       CRE090
+     C           NCID      IFGT 0                                                             CRE090
+     C                     Z-ADDNCID      ZDAYNO                                              CRE090
+     C                     CALL 'ZFWDT'                                                       CRE090
+     C                     PARM           ZDAYNO                                              CRE090
+     C                     PARM           ZNRDYS                                              CRE090
+     C                     PARM *ZERO     ZDYNBR                                              CRE090
+     C                     PARM           ZCCY                                                CRE090
+     C                     PARM *BLANK    ZLOC                                                CRE090
+      *                                                                                       CRE090
+     C                     Z-ADDZDYNBR    PNCID                                               CRE090
+     C                     ENDIF                                                              CRE090
+      *                                                                                       CRE090
+     C                     ENDIF                                                              CRE090
+     C                     ENDIF                                                              CRE090
+      *                                                                                       CRE090
+      ** Check Rundate against Next Cap plus Delay Days                                       CRE090
+     C           TDDIS     IFEQ 'D'                                                           CRE090
+     C           BJRDNB    IFGT NDID                                                          CRE090
+     C           BJRDNB    ANDLEPNDID                                                         CRE090
+     C           NDID      ANDGT0                                                             CRE090
+     C                     MOVE 'Y'       SKPFLG                                              CRE090
+     C                     MOVE 'Y'       SKIPDR                                            MD027052
+     C                     ENDIF                                                              CRE090
+     C                     ENDIF                                                              CRE090
+      ** Check Rundate against Next Cap plus Delay Days                                       CRE090
+     C           TCDIS     IFEQ 'D'                                                           CRE090
+     C           BJRDNB    IFGT NCID                                                          CRE090
+     C********** BJRDNB    ANDGEPNCID                                                CRE090 MD027052
+     C           BJRDNB    ANDLEPNCID                                                       MD027052
+     C           NCID      ANDGT0                                                             CRE090
+     C                     MOVE 'Y'       SKPFLG                                              CRE090
+     C                     MOVE 'Y'       SKIPCR                                            MD027052
+     C                     ENDIF                                                              CRE090
+     C                     ENDIF                                                              CRE090
+      *                                                                                       CRE090
+     C                     ENDSR                                                              CRE090
+     C*
+     OACCNTABFE           50 40
+     O       OR          N50N40
+     O                         GLBT
+     O                      N24DDIS
+     O                      N24CDIS                                       S01413
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

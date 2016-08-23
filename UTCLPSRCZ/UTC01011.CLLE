@@ -1,0 +1,68 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas UT Stack Generation Engine Startup')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities Module                                    */
+/*                                                                   */
+/*       UTC01011 - Midas UT Stack Generation Engine Startup         */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2011           */
+/*                                                                   */
+/*       Last Amend No. CBF011  *CREATE    Date 04Jul11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CBF011 - BF Infrastructure: Error Message Handling          */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&OBJNAM)
+ 
+             DCL        VAR(&OBJNAM) TYPE(*CHAR) LEN(10)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2011')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+ /** Check and clear files for stack generation engine */
+ 
+             CHKOBJ     OBJ(UTPREFDD) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(ABNOR))
+             CLRPFM     FILE(UTPREFDD)
+ 
+             CHKOBJ     OBJ(UTSGENPD) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(ABNOR))
+             CLRPFM     FILE(UTSGENPD)
+ 
+             CHKOBJ     OBJ(UTSG01PD) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(ABNOR))
+             CLRPFM     FILE(UTSG01PD)
+ 
+/** Program Reference Input File */
+ 
+             CALL       PGM(UT00100411)
+ 
+/** Midas UT Stack Generation Hierarchy */
+ 
+             CALL       PGM(UT00100412) PARM(&OBJNAM)
+ 
+/**  Stack Generation Report Input */
+ 
+             CALL       PGM(UT00100413)
+ 
+/** Flag as finished */
+ 
+             CHGDTAARA  DTAARA(UTSGSTAT (2 1)) VALUE('Y')
+             GOTO       CMDLBL(ENDPGM)
+ 
+ABNOR:
+             SNDPGMMSG  MSG('Program UTC01011 ended abnormally - see +
+                          job log') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ENDPGM:
+             ENDPGM

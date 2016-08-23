@@ -1,0 +1,185 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UP RSTGLBLIBS validity checker')                */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas Plus - Bridge                                         */
+/*                                                                   */
+/*       UPC3004_VC - Validity checker for RSTGLBLIBS                */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2007           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Last Amend No. CSC033 *CREATE     DATE 01May07              */
+/*       Prev Amend No. xxxxxx             DATE ddmmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSC033 - Include global libraries in backups                */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&ZONEID &GLOBID &RSTTYPE &DEVICE &VOLID +
+                          &GMSAVF &GTASAVF)
+/**/
+/*           Copyright statement definition                                                       */
+/**/
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2007')
+/**/
+/*   Declare variables                                                                            */
+/**/
+             DCL        VAR(&ZONEID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&GLOBID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RSTTYPE) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&GMSAVF) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&GMSF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GMSFL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GTASAVF) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&GTASF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GTASFL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DEVICE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&VOLID) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1)
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2007')
+/**/
+/*  Global monitor message                                                                        */
+/**/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+/**/
+/*  Validate zone library group.                                                                  */
+/**/
+             CHGVAR     VAR(&DMLIB) VALUE(&ZONEID *CAT 'DMLIB')
+             CHKOBJ     OBJ(QSYS/&DMLIB) OBJTYPE(*LIB) AUT(*USE)
+                MONMSG     MSGID(CPF9801 CPF9802) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                          MSGDTA('0000Library' *BCAT &DMLIB +
+                          *BCAT 'does not exist or you have +
+                          insufficient authority') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+/**/
+/*  Validate global library group.                                                                */
+/**/
+             CHGVAR     VAR(&GMLIB) VALUE(&GLOBID *CAT 'GMLIB')
+             CHKOBJ     OBJ(QSYS/&GMLIB) OBJTYPE(*LIB) AUT(*USE)
+                MONMSG     MSGID(CPF9801 CPF9802) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                          MSGDTA('0000Library' *BCAT &GMLIB +
+                          *BCAT 'does not exist or you have +
+                          insufficient authority') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+/**/
+/*  Validate save files.                                                                          */
+/**/
+             IF         COND(&RSTTYPE *EQ 'SAVF') THEN(DO)
+/**/
+/*  Check that the save files exist.                                                              */
+/**/
+             CHGVAR     VAR(&GMSF) VALUE(%SST(&GMSAVF 1 10))
+             CHGVAR     VAR(&GMSFL) VALUE(%SST(&GMSAVF 11 10))
+             CHGVAR     VAR(&GTASF) VALUE(%SST(&GTASAVF 1 10))
+             CHGVAR     VAR(&GTASFL) VALUE(%SST(&GTASAVF 11 10))
+/**/
+/*  If the save file names or libraries are blank, end program.                                   */
+/**/
+             IF         COND((&GMSF *EQ '          ') *OR (&GMSFL +
+                          *EQ '          ') *OR (&GTASF *EQ +
+                          '          ') *OR (&GTASFL *EQ '          +
+                          ')) THEN(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                          MSGDTA('0000Restore save file name +
+                          is invalid') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ABNOR)
+/**/
+             ENDDO
+/* */
+/* Check that global database library save file exists.                                           */
+/* */
+             CHKOBJ     OBJ(&GMSFL/&GMSF) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF0000) EXEC(DO)
+              SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                          MSGDTA('0000Save file' *BCAT &GMSF *BCAT +
+                          'in library' *BCAT &GMSFL *BCAT 'not +
+                          found') MSGTYPE(*DIAG)
+              CHGVAR     VAR(&ERROR) VALUE('Y')
+              GOTO       CMDLBL(ABNOR)
+/* */
+             ENDDO
+/* */
+/* Check that global GTALIB library save file exists.                                             */
+/* */
+             CHKOBJ     OBJ(&GTASFL/&GTASF) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF0000) EXEC(DO)
+              SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                          MSGDTA('0000Save file' *BCAT &GTASF *BCAT +
+                          'in library' *BCAT &GTASFL *BCAT 'not +
+                          found') MSGTYPE(*DIAG)
+             CHGVAR     VAR(&ERROR) VALUE('Y')
+             GOTO       CMDLBL(ABNOR)
+/**/
+             ENDDO
+/**/
+             ENDDO
+/**/
+             IF         COND(&RSTTYPE *EQ 'TAPE') THEN(DO)
+/**/
+/*  Validate tape device.                                                                         */
+/**/
+             IF         COND(&DEVICE *EQ '          ') THEN(DO)
+/**/
+             SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                          MSGDTA('0000Tape device is required') +
+                          MSGTYPE(*DIAG)
+             CHGVAR     VAR(&ERROR) VALUE('Y')
+             GOTO       CMDLBL(ABNOR)
+/**/
+             ENDDO
+/**/
+             CHKOBJ     OBJ(*LIBL/&DEVICE) OBJTYPE(*DEVD) AUT(*USE)
+             MONMSG     MSGID(CPF0000) EXEC(DO)
+             SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                          MSGDTA('0000Tape device' *BCAT &DEVICE +
+                          *BCAT 'not found') MSGTYPE(*DIAG)
+             CHGVAR     VAR(&ERROR) VALUE('Y')
+             GOTO       CMDLBL(ABNOR)
+/**/
+             ENDDO
+/**/
+/*  Validate tape volume.                                                                         */
+/**/
+             IF         COND(&VOLID *EQ '     ') THEN(DO)
+/**/
+             SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                          MSGDTA('0000Tape volume ID is required') +
+                          MSGTYPE(*DIAG)
+             CHGVAR     VAR(&ERROR) VALUE('Y')
+             GOTO       CMDLBL(ABNOR)
+/**/
+             ENDDO
+/**/
+             ENDDO
+/**/
+             GOTO       CMDLBL(END)
+/**/
+/*  Send message to cause CPF to pass earlier messages back.                                      */
+/**/
+ABNOR:
+            IF  COND(&ERROR *EQ 'Y') THEN(+
+            SNDPGMMSG  MSGID(CPF0002) MSGF(QCPFMSG) MSGTYPE(*ESCAPE))
+/**/
+END:
+/**/
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+             RETURN
+             ENDPGM

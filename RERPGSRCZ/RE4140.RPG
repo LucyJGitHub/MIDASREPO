@@ -1,0 +1,2260 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Extract draft issuance message for IMM')      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *  RE4140 - Extract Draft Issuance Message for IMM.             *
+      *                                                               *
+      *  Function:  This program extracts the Draft Issuance Message  *
+      *  (I/C)      details into IMM.                                 *
+      *                                                               *
+      *  Called By: REC4140                                           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CFT120             Date 28Sep12               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER030             Date 09Jul08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CAP205             Date 23Feb10               *
+      *                 CAP204             Date 09Feb10               *
+      *                 CSW209             Date 01Apr09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 11May06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG3185            Date 21Jun04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CSC022             Date 24Feb04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 194061             Date 04Jun01               *
+      *                 192540             Date 25Apr01               *
+      *                 CRT006             Date 17Apr01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CFT009             Date 30May00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CAP136             Date 15Nov99               *
+      *                 175479             Date 07Feb00               *
+      *                 176443             Date 18Apr00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSW020             Date 11JAN00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 145199             DATE 16OCT98               *
+      *                 122060             Date 13Aug97               *
+      *                 CRT002 *CREATE     Date  1DEC95               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
+      *           (Recompile)                                         *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER030 - Multicash German Feature (Recompile)                *
+      *  CAP205 - Teller Related APIs - Account Balance Check         *
+      *  CAP204 - Teller Related APIs - Account Transfer              *
+      *  CSW209 - SWIFT 2009 Changes (Recompile)                      *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG3185 - Data area length of CASH should be 522.            *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  194061 - Validation error occurred in FT0352 for field CNOST.*
+      *  192540 - Unable to compile due to incomplete fix of 145752.  *
+      *  CRT006 - Cashier Reserve Transactions.                       *
+      *  CFT009 - Addition of fields for FT fees and charges          *
+      *           Recompile                                           *
+      *  CAP136 - Conversion of FT Incoming Payment inputs into       *
+      *           modular structure to use as APIs.                   *
+      *  175479 - Incorporate Fontis : dealer's reference             *
+      *  176443 - Avoid MCH3601 to be sent.                           *
+      *           Pass correct parameter to AOCUSTR0.                 *
+      *  CSW020 - SWIFT Decimal Places                                *
+      *           Add a new parameter for program ZM0040              *
+      *  145199 - Recompile for changes to MEINCRPD and MEINMPPD made *
+      *           in Year 2000 fix 124673.                            *
+      *  122060 - Drafts Issuance.                                    *
+      *  CRT002 - Retail Branch Access.                               *
+      *                                                               *
+      *****************************************************************
+      *
+     F*REPDRIPDUF**E           K        DISK         KINFSR SRFILE        122060
+     F***REPDRIL0UF  E           K        DISK         KINFSR SRFILE                   122060 CRT006
+     FREPDRIL2UF  E           K        DISK         KINFSR SRFILE                             CRT006
+     F                                              KCOMIT
+      ** Draft Issuance Incoming Message File
+      *
+     FINPAY   UF  E           K        DISK         KINFSR SRFILE         122060
+     F                                              KCOMIT                122060
+      **  Incoming Payments Details                                       122060
+      *                                                                   122060
+     FACNUM   IF  E           K        DISK         KINFSR SRFILE         122060
+      ** Account Numbers Cross Reference File                             122060
+      *                                                                   122060
+     FREIAC   IF  E           K        DISK         KINFSR SRFILE         122060
+      ** Retail interest and charges                                      122060
+      *                                                                   122060
+     FREPDRIL1IF  E           K        DISK         KINFSR SRFILE         122060
+     F            REPDRID0                          KRENAMEREPDRILF       122060
+      ** Drafts Issuance Incoming Msg Keyed on Draft No                   122060
+      *                                                                   122060
+     FINPCSHL0UF  E           K        DISK         KINFSR SRFILE         122060
+     F            INPAYDDF                          KRENAMEINPCSHD0       122060
+      ** Incoming Payments thru Cashier by MIR                            122060
+      *                                                                   122060
+     FACCNTL0 IF  E           K        DISK         KINFSR SRFILE         122060
+     F            ACCNTABF                          KRENAMEACCNTLF        122060
+      ** Account Details by Full Account Number                           122060
+      *                                                                   122060
+      *****************************************************************
+      *\EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   40  - Error on call to ZM0040                               *
+     F*   50  - First cycle indicator                                 *
+     F*   60  - REPDRIPD End of File                                  *
+     F*   64  - SHTDN indicator                                       *
+     F*                                                               *
+     F* 90-99 - Standard MIDAS subroutines                            *
+     F* U7-U8 - Database error occurs                                 *
+     F*                                                               *
+      *****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  MAIN   - Main Processing                                     *
+     F*  SRVALD - Validate Draft Message                              *
+     F*  SRDETL - Add Incoming Message Details                        *
+     F*  SRDATE - Format and add tag CDATE                            *
+     F*  SRDCCY - Format and add tag CDCCY                            *
+     F*  SRFCCY - Format and add tag CFCCY                            *
+     F*  SRPOST - Format and add tag CPOST                            *
+     F*  SRFAMT - Format amount in SWIFT format                       *
+     F*  SRCDAT - Convert date to SWIFT format                        *
+     F*  SRUPDT - Add Incoming Message Detail Line                    *
+     F*  SRPART - Add Incoming Message MIDAS Transaction              *
+     F*           Control Record to Database                          *
+     F*  SRHEAD - Add Incoming Message Control Record                 *
+     F*  SRAUTO - Prompt FT Auto Generation                           *
+     F*  SRINIT - Initialise and define fields                        *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+      *****************************************************************
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E                    DLY     1   1 13                                122060
+      *
+      /COPY ZSRSRC,ZEDITZ1                                                122060
+      ** Array for SR.ZEDIT                                               122060
+      *                                                                   122060
+      /COPY ZSRSRC,ZDATE1Z1
+      *
+      ** Array for SR.ZDATE1
+      *
+      /COPY ZSRSRC,ZDATE9Z1
+      *
+      ** Array for SR.ZDATE1
+      *
+     E/COPY MECPYSRC,SRERRE
+      *
+      **  Copysource for error processing
+      *
+      ** Array of Commitment Job Names                                                        CSC022
+     E                    CMTJOB     10 10                                                    CSC022
+      *                                                                                       CSC022
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     IREPDRILF                                                            122060
+      ** Renamed fields in LF/REPDRIL0                                    122060
+      *                                                                   122060
+     I              RNACDE                          L0ACDE                122060
+     I              RNDRNO                          L0DRNO                122060
+     I              RNODRN                          L0ODRN                122060
+     I              RNFDAC                          L0FDAC                122060
+     I              RNTRF1                          L0TRF1                122060
+     I              RNTRF2                          L0TRF2                122060
+     I              RNTRF3                          L0TRF3                122060
+     I              RNTRF4                          L0TRF4                122060
+     I              RNCJDQ                          L0CJDQ                122060
+      *                                                                   122060
+     IDSMEMS    E DSMEMOS                                                 122060
+      **  External data structure for MEMOS Details                       122060
+      *                                                                   122060
+     I*CSHDTA***   DS                            512                                  122060 BUG3185
+     ICSHDTA      DS                            522                                          BUG3185
+      ** Define CASH data area                                            122060
+      *                                                                   122060
+     I                                        9  10 DABOKC                122060
+     I                                       11  12 DADICT                122060
+     I                                       13  14 DADIAT                122060
+     I                                       15  16 DADRPT                122060
+     I                                       17  18 DADCNT                122060
+     I                                       19  19 DAPSUC                122060
+     I                                       20  20 DAPFAI                122060
+     I**********                             21  240DACACD                             122060 CGL029
+     I                                       21  300DACACD                                    CGL029
+      *                                                                   122060
+     I/COPY MECPYSRC,SRERRI
+      *
+      ** End of Program Error Processing copysource
+      *                                                                   CSW020
+     ISCSARD    E DSSCSARDPD                                              CSW020
+      ** SAR file details                                                 CSW020
+      *
+     ISDBRCH    E DSSDBRCHPD                                              122060
+      **  Branch details                                                  122060
+      *                                                                   122060
+     ISDCURR    E DSSDCURRPD                                              122060
+      **  Currency details                                                122060
+      *                                                                   122060
+     ISDCUST    E DSSDCUSTPD                                              122060
+      **  Customer details                                                122060
+     I              QQDFAC                          QQDFC1                                    CGL029
+      *                                                                   122060
+     IDSFDY     E DSDSFDY                                                 122060
+      **  Data Structures used by Access Programs                         122060
+      *                                                                   122060
+     IDSSDY     E DSDSSDY                                                 122060
+      **  Data Structures used by Access Programs                         122060
+      *                                                                   122060
+     IRUNDTA    E DSRUNDAT
+      *
+      ** Define rundat data area
+      *
+     IINCR      E DSMEINCRPD
+      *
+      **  Define Incoming Message Control data structure
+      *
+     IINDT      E DSMEINDTPD
+      *
+      **  Define Incoming Message Detail data structure
+      *
+     IINMP      E DSMEINMPPD
+      *
+      ** Define Incoming Message Part Detail data structure
+      *
+     IINMC      E DSMEINMCPD
+      *
+      ** Define parameters to be passed for message checking
+      *
+     IREPDRO    E DSREPDROPD                                              122060
+      ** Draft Issuance Outgoing Response Message                         122060
+      *                                                                   122060
+     ISCCMT       DS                            256                                           CSC022
+     I                                        1   30CMTNUM                                    CSC022
+     I                                        4 103 CMTARR                                    CSC022
+      *                                                                                       CSC022
+     IW1DATA      DS                            512
+      *
+      **  Define data structure used to pass file data structures
+      *
+     IWUSER       DS
+      *
+      ** Data structure to form CUSER tag
+      *
+     I                                        1   4 RNMSTY
+     I                                        5   8 RNBRNO
+     I                                        9  24 RNUSID
+     I                                       25  25 RNFWST
+     I                                       26  28 RNACDE
+      *
+     IWNOST       DS
+      *
+      ** Data structure to form CNOST tag
+      *
+     I                                        1  13 RNNOSA
+     I**********                             14  19 RNNOST                                    194061
+      *
+     IWDATE       DS
+      *
+      ** Data structure to form CDATE tag
+      *
+     I                                        1   6 WVDAT
+     I                                        7  12 WTDAT
+      *
+     IWCCY        DS
+      *
+      ** Data structure to form CDCCY and CFCCY tags
+      *
+     I                                        1   3 WCCY1
+     I                                        4  20 WAMT
+      *
+     IWTRAN       DS
+      *
+      ** Data structure to form CTRAN tag
+      *
+     I                                        1   3 RNTRC1
+     I                                        4   6 RNTRC2
+      *
+     IWSPCD       DS
+      *
+      ** Data structure to form CSPCD tag
+      *
+     I                                        1   3 RNSPC1
+     I                                        4   6 RNSPC2
+      *
+     IWPOST       DS
+      *
+      ** Data structure to form CPOST tag
+      *
+     I                                        1  17 WPOS1
+     I                                       18  34 WPOS2
+      *
+     IWHOST       DS
+      *
+      ** Data structure to form CHOST tag
+      *
+     I                                        1  14 RNHOS1
+     I                                       15  28 RNHOS2
+     I                                       29  42 RNHOS3
+     I                                       43  56 RNHOS4
+      *
+     IWMOR        DS
+      *
+      ** Data structure to form CRMOR
+      *
+     I                                        1   8 WSDAT
+     I                                        9  14 WSTIM
+      *
+     IWSWDT       DS
+      *
+      ** Data structure to form date in SWIFT format (YYMMDD)
+      *
+     I                                        1   2 YY
+     I                                        3   4 MM
+     I                                        5   6 DD
+      *                                                                   122060
+     IQ#DTA       DS                            256                       122060
+      *                                                                   122060
+      **  Calling parameter data structure for AOSPOSU0                   122060
+      *                                                                   122060
+     I                                        1   1 Q#ATYP                122060
+     I**********                              2  19 Q#ACCT                             122060 CGL029
+     I                                        2   70Q#CNU1                122060
+     I                                        8  10 Q#CCY1                122060
+     I**********                             11  140Q#ACO1                             122060 CGL029
+     I                                       15  160Q#ACS1                122060
+     I                                       17  19 Q#BRC1                122060
+     I                                        2   30Q#NOSN                122060
+     I                                        2   6 Q#NOS                 122060
+     I                                        2  110Q#ACNO                122060
+     I                                        2   70Q#CNUM                122060
+     I**********                              8  110Q#ACOD                             122060 CGL029
+     I                                       12  130Q#ACSQ                122060
+     I                                       14  16 Q#BRCA                122060
+     I                                       24  24 Q#IO                  122060
+     I                                       25  27 Q#CCY                 122060
+     I                                       28  29 Q#TRYP                122060
+     I                                       30  59 Q#NARR                122060
+     I                                       60  670Q#CHQN                122060
+     I                                       68  82 Q#PREF                122060
+     I                                       83  88 Q#TRN                 122060
+     I                                    P  89  960Q#AMT                 122060
+     I                                       97  97 Q#PRON                122060
+     I                                       98  98 Q#OLPS                122060
+     I                                       99  99 Q#MEMS                122060
+     I                                      100 100 Q#RSAC                122060
+     I                                      101 102 Q#MOD                 122060
+     I                                      103 104 Q#OLRC                122060
+     I                                      105 105 Q#FTOV                122060
+     I                                    P 106 1080Q#VDAT                122060
+     I                                    P 109 1110Q#PSTD                122060
+     I                                      112 112 Q#PSTO                122060
+     I                                      121 1300Q#ACO1                                    CGL029
+     I                                      131 1400Q#ACOD                                    CGL029
+     I                                      141 160 Q#OTR1                                    CAP204
+     I                                      161 161 Q#MTYP                                    CAP205
+      *                                                                                       CLE134
+      ** Exception Reference Id/Number                                                        CLE134
+      *                                                                                       CLE134
+     I                                      162 164 Q#XRFI                                    CLE134
+     I                                      165 1740Q#XRFN                                    CLE134
+      *                                                                                       CGL029
+      ** Full General Ledger - CNUM/CCY/ACOD/ACSQ                                             CGL029
+     I            DS                                                                          CGL029
+     I                                        1  240Q#ACCT                                    CGL029
+     I                                        1   60W#CNU1                                    CGL029
+     I                                        7   9 W#CCY1                                    CGL029
+     I                                       10  190W#ACO1                                    CGL029
+     I                                       20  210W#ACS1                                    CGL029
+     I                                       22  24 W#BRC1                                    CGL029
+      *                                                                   122060
+     IP@QDS       DS                           1714                       122060
+      ** Data queue message to be sent                                    122060
+      *                                                                   122060
+     I            DS                                                      122060
+      *                                                                   122060
+      ** Data Structure to hold account number                            122060
+      *                                                                   122060
+     I**********                              1  18 @ACCN                              122060 CGL029
+     I                                        1  24 @ACCN                                     CGL029
+     I**********                              1   60@CNUM                              122060 CSD027
+     I                                        1   6 @CNUM                                     CSD027
+     I                                        7   9 @CCY                  122060
+     I**********                             10  130@ACOD                              122060 CGL029
+     I**********                             14  150@ACSQ                              122060 CGL029
+     I**********                             16  18 @BRCA                              122060 CGL029
+     I                                       10  190@ACOD                                     CGL029
+     I                                       20  210@ACSQ                                     CGL029
+     I                                       22  24 @BRCA                                     CGL029
+      *                                                                   122060
+     I            DS
+      *
+      ** Data structure to get the parts of a date
+      *
+     I                                        1   6 WTMPD
+     I                                        1   2 DAT1
+     I                                        3   4 DAT2
+     I                                        5   6 DAT3
+      *
+      /COPY ZSRSRC,ZDATE9Z2
+      *
+      ** Array for SR.ZDATE1
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            MAIN   - Main Control Processing                   *
+      *                                                               *
+      *  CALLS     SRINIT - Initialise and define fields              *
+      *            SRVALD - Validate Draft Message                    *
+      *            SRDETL - Add Incoming Message Details              *
+      *            SRPART - Add Incoming Message MIDAS Transaction    *
+      *                     Control Record to Database                *
+      *            SRHEAD - Add Incoming Message Control Record       *
+      *            SRAUTO - Prompt FT Auto Generation                 *
+      *                                                               *
+      *  CALLED BY        -                                           *
+      *                                                               *
+      *  FLDS USED        -                                           *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      ** Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+      *
+      ** Initialise program
+      *
+     C           *IN50     IFEQ '0'
+     C                     EXSR SRINIT
+     C                     END
+      *                                                                   122060
+     C           *LOVAL    SETLLREPDRID0                                  122060
+      *
+      ** Read available Draft Issuance messages until EOF
+      *
+     C***********          READ REPDRIPD                 60               122060
+     C                     READ REPDRID0                 60               122060
+      *
+     C           *IN60     DOWEQ'0'
+      *                                                                                       CRT006
+      ** Check if branch is using a TCP/IP connection.                                        CRT006
+      *                                                                                       CRT006
+     C                     CALL 'AOBRCHR1'                                                    CRT006
+     C                     PARM *BLANKS   @RTCD                                               CRT006
+     C                     PARM '*KEY  '  @OPTN                                               CRT006
+     C                     PARM RNBRNO    @BRCD                                               CRT006
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CRT006
+      *                                                                                       CRT006
+      **  If record not found?                                                                CRT006
+      *                                                                                       CRT006
+     C           @RTCD     IFNE *BLANKS                                                       CRT006
+     C           *LOCK     IN   LDA                                                           CRT006
+     C                     Z-ADD21        W0ERNB                                              CRT006
+     C                     MOVEL'SDBRCHPD'W0FILE                                              CRT006
+     C                     MOVELRNBRNO    W0KEY                                               CRT006
+     C                     MOVEL'MEM5002' W0MSGD                                              CRT006
+     C                     MOVEL'MIDAS  ' W0MSGF                                              CRT006
+     C                     EXSR SRERR                                                         CRT006
+     C                     ENDIF                                                              CRT006
+      *                                                                                       CRT006
+      ** Delete record from file if Acknowledged Flag is blank.                               CRT006
+      *                                                                                       CRT006
+     C           A8TCPP    IFNE *ZEROS                                                        CRT006
+     C           RNACKF    IFEQ *BLANKS                                                       CRT006
+     C           RNSTAT    ANDNE*BLANKS                                                       CRT006
+     C                     MOVE '*'       RNRECI                                              CRT006
+     C                     UPDATREPDRID0                                                      CRT006
+     C                     COMIT                                                              CRT006
+     C                     ENDIF                                                              CRT006
+     C                     ENDIF                                                              CRT006
+      *
+      ** For records with record status of blank.
+      *
+     C           RNSTAT    IFEQ *BLANKS
+     C           RNRECI    ANDNE'*'                                                           CRT006
+      *                                                                   122060
+     C                     CALL 'QCMDEXC'                                 122060
+     C                     PARM           DLY    13                       122060
+     C                     PARM           LEN                             122060
+      *                                                                   122060
+     C                     SELEC                                          122060
+      *                                                                   122060
+     C           RNACDE    WHEQ 'DIA'                                     122060
+     C           RNACDE    OREQ 'DIC'                                     122060
+      *
+      ** Verify Draft message
+      *
+     C                     EXSR SRVALD
+      *
+      * If valid message to be used - extract Draft data and update
+      * database
+      *
+     C           W1RTN     IFEQ 'MIN0090'
+      *
+      ** Add Incoming Message Details
+      *
+     C                     EXSR SRDETL
+      *
+      ** Add Incoming Message Part Details
+      *
+     C                     EXSR SRPART
+      *
+      ** Add Incoming Message Control
+      *
+     C                     EXSR SRHEAD
+      *
+      ** Set Incoming Msg Processed Flag to 'P' on MSIXI2LD
+      *
+     C                     MOVEL'I'       RNSTAT
+     C                     UPDATREPDRID0
+     C                     COMIT
+      *
+      ** Prompt FT Auto Generation
+      *
+     C                     EXSR SRAUTO
+      *
+     C                     ENDIF
+      *
+     C           RNACDE    WHEQ 'DCN'                                     122060
+     C                     EXSR SRCNCL                                    122060
+      *                                                                   122060
+     C           RNACDE    WHEQ 'DRP'                                     122060
+     C                     EXSR SRRPRT                                    122060
+      *                                                                   122060
+     C                     ENDSL                                          122060
+      *                                                                   122060
+     C                     ENDIF
+      *
+      ** Get next available Draft record
+      *
+     C***********          READ REPDRIPD                 60               122060
+     C                     READ REPDRID0                 60               122060
+      *
+      ** Check for shut down / cancellation
+      *
+     C                     SHTDN                     64
+      *
+     C           *IN64     IFEQ '1'
+     C                     MOVEL'1'       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     RETRN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRVALD - Validate Draft Message                    *
+      *                                                               *
+      *  CALLS            -                                           *
+      *                                                               *
+      *  CALLED BY  MAIN  - Main Processing                           *
+      *                                                               *
+      *  FLDS USED        -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRVALD    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRVALD'  @STK,Q
+      *
+      ** Set up data structure to be passed as a parameter
+      *
+     C                     MOVEL*BLANKS   W1DATA
+     C                     CLEARINMC
+      *
+     C                     MOVEL'CASHV8'  MCNWRK
+     C                     MOVEL'CASHIER' MCSNDR
+     C                     MOVELRNACDE    MCMTPY
+     C                     MOVEL'*ENTRY ' MCACPT
+     C                     MOVEL##PGM     MCCPGM
+      *
+      ** Verify SWIFT message
+      *
+     C                     MOVELINMC      W1DATA
+      *
+     C                     CALL 'ME1020'               90
+     C                     PARM '*ADDMSG 'W1ACT   8
+     C                     PARM           W1DATA
+     C                     PARM *BLANKS   W1RTN   7
+      *
+      ** If return with an error (LR seton in called program) then
+      ** process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           W1RTN     OREQ '*ERROR*'
+     C                     MOVEL'ME1020  'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD1         W0ERNB           * DB ERROR 01 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      ** If return with invalid message,
+      *
+     C           W1RTN     IFNE 'MIN0090'
+     C                     MOVEL'E'       RNSTAT
+     C                     UPDATREPDRID0
+     C                     COMIT
+      *
+      ** If return with valid message,
+      ** set data structure with returned fields - unique msg ref.
+      *
+     C                     ELSE
+     C                     MOVELW1DATA    INMC
+     C                     END
+      *
+      ** Unwind subroutine stack name
+      *
+     C           EXVALD    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRDETL - Add Incoming Message Details              *
+      *                                                               *
+      *  CALLS     SRUPDT - Add Incoming Message Detail Line          *
+      *            SRDATE - Format and add tag CDATE                  *
+      *            SRDCCY - Format and add tag CDCCY                  *
+      *            SRFCCY - Format and add tag CFCCY                  *
+      *            SRPOST - Format and add tag CPOST                  *
+      *                                                               *
+      *  CALLED BY MAIN   - Main Processing                           *
+      *                                                               *
+      *  FLDS USED        -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRDETL    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRDETL'  @STK,Q
+      *
+      *  Clear Incoming Message Control file data structure
+      *  (other data structures are cleared more frequently)
+      *
+     C                     CLEARINCR
+      *
+     C                     Z-ADD0         WKSEQ
+      *
+      ** Process Message tag CUSER:
+      *
+     C                     MOVEL*BLANKS   WKTAG   5
+     C                     MOVEL*BLANKS   WKDATA
+     C                     MOVEL'CUSER'   WKTAG
+     C                     MOVELWUSER     WKDATA
+     C                     EXSR SRUPDT
+      *
+      ** Process Message tag CNOST:
+      *
+     C                     MOVEL*BLANKS   WKTAG
+     C                     MOVEL*BLANKS   WKDATA
+     C                     MOVEL'CNOST'   WKTAG
+     C                     MOVELWNOST     WKDATA
+     C                     EXSR SRUPDT
+      *
+      ** Process Message tag CDATE:
+      *
+     C                     EXSR SRDATE
+      *
+      ** Process Message tag CDCCY:
+      *
+     C                     EXSR SRDCCY
+      *                                                                   122060
+      ** Process Message tag CCHRG:                                       122060
+      *                                                                   122060
+     C           RNCHAM    IFNE *ZERO                                     122060
+     C                     EXSR SRCHRG                                    122060
+     C                     ENDIF                                          122060
+      *
+      ** Process Message tag CFCCY If action code = 'DIA' (Account Transfer)
+      *
+     C           RNACDE    IFEQ 'DIA'
+     C           RNACDE    OREQ 'DIC'                                     122060
+     C           RNDCCY    ANDNERNFCCY                                    122060
+     C                     EXSR SRFCCY
+     C                     END
+      *
+      ** Process Message tag CTRAN:
+      *
+     C                     MOVEL*BLANKS   WKTAG
+     C                     MOVEL*BLANKS   WKDATA
+     C                     MOVEL'CTRAN'   WKTAG
+     C                     MOVELWTRAN     WKDATA
+     C                     EXSR SRUPDT
+      *
+      ** Process Message tag CSPCD:
+      *
+     C                     MOVEL*BLANKS   WKTAG
+     C                     MOVEL*BLANKS   WKDATA
+     C                     MOVEL'CSPCD'   WKTAG
+     C                     MOVELWSPCD     WKDATA
+     C                     EXSR SRUPDT
+      *
+      ** Process Message tag CFUND if action code = 'DIA' (Account Transfer)
+      *
+     C           RNACDE    IFEQ 'DIA'
+     C                     MOVEL*BLANKS   WKTAG
+     C                     MOVEL*BLANKS   WKDATA
+     C                     MOVEL'CFUND'   WKTAG
+     C                     MOVELRNFDAC    WKDATA
+     C                     EXSR SRUPDT
+     C                     END
+      *
+      ** Process Message tag CDRFT:
+      *
+     C                     MOVEL*BLANKS   WKTAG
+     C                     MOVEL*BLANKS   WKDATA
+     C                     MOVEL'CDRFT'   WKTAG
+     C                     MOVELRNDRNO    WKDATA
+     C                     EXSR SRUPDT
+      *
+      ** Process Message tag CDODF if action code = 'DRP' (Reprint Draft)
+      *
+     C           RNACDE    IFEQ 'DRP'
+     C                     MOVEL*BLANKS   WKTAG
+     C                     MOVEL*BLANKS   WKDATA
+     C                     MOVEL'CDODF'   WKTAG
+     C                     MOVELRNODRN    WKDATA
+     C                     EXSR SRUPDT
+     C                     END
+      *
+      ** Process Message tag CBENF:
+      *
+     C                     MOVEL*BLANKS   WKTAG
+     C                     MOVEL*BLANKS   WKDATA
+     C                     MOVEL'CBENF'   WKTAG
+     C                     MOVELRNBENF    WKDATA
+     C                     EXSR SRUPDT
+      *
+      ** Process Message tag CPOST:
+      *
+     C                     EXSR SRPOST
+      *
+      ** Process Message tag CHOST:
+      *
+     C                     MOVEL*BLANKS   WKTAG
+     C                     MOVEL*BLANKS   WKDATA
+     C                     MOVEL'CHOST'   WKTAG
+     C                     MOVELWHOST     WKDATA
+     C                     EXSR SRUPDT
+      *
+      ** Process Message tag CWKID:
+      *
+     C                     MOVEL*BLANKS   WKTAG
+     C                     MOVEL*BLANKS   WKDATA
+     C                     MOVEL'CWKID'   WKTAG
+     C                     EXSR SRUPDT
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXDETL    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRDATE - Format and add tag CDATE                  *
+      *                                                               *
+      *  CALLS     SRCDAT - Convert date to SWIFT format              *
+      *            SRUPDT - Add Incoming Message Detail Line          *
+      *                                                               *
+      *  CALLED BY SRDETL - Add Incoming Message Details              *
+      *                                                               *
+      *  FLDS USED        -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRDATE    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRDATE'  @STK,Q
+      *
+     C                     MOVEL*BLANKS   WKTAG
+     C                     MOVEL*BLANKS   WKDATA
+     C                     MOVEL*BLANKS   WDATE
+      *
+      ** Value Date
+      *
+     C                     MOVEL*BLANKS   WSWDT
+     C                     MOVEL*BLANKS   WTMPD
+     C                     MOVELRNVDAT    WTMPD
+     C                     EXSR SRCDAT
+     C                     MOVELWSWDT     WVDAT
+      *
+      ** Todays Date
+      *
+     C                     MOVEL*BLANKS   WSWDT
+     C                     MOVEL*BLANKS   WTMPD
+     C                     MOVELRNTDAT    WTMPD
+     C                     EXSR SRCDAT
+     C                     MOVELWSWDT     WTDAT
+     C*
+     C                     MOVEL'CDATE'   WKTAG
+     C                     MOVELWDATE     WKDATA
+      *
+     C                     EXSR SRUPDT
+      *
+      ** Unwind subroutine stack name
+      *
+     C           EXDATE    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRDCCY - Format and add tag CDCCY                  *
+      *                                                               *
+      *  CALLS     SRFAMT - Format amount in SWIFT format             *
+      *            SRUPDT - Add Incoming Message Detail Line
+      *                                                               *
+      *  CALLED BY SRDETL - Add Incoming Message Details              *
+      *                                                               *
+      *  FLDS USED        -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRDCCY    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRDCCY'  @STK,Q
+      *
+     C                     MOVEL*BLANKS   WKTAG
+     C                     MOVEL*BLANKS   WKDATA
+     C                     MOVEL*BLANKS   WCCY
+     C                     MOVEL*BLANKS   WDRAM  17
+      *
+      ** Draft Currency
+      *
+     C                     MOVELRNDCCY    WCCY1
+      *
+      ** Format Draft Amount
+      *
+     C                     Z-ADD0         ZAMNT
+     C                     MOVE RNDRAM    ZAMNT
+     C                     MOVE RNDCCY    ZCCY
+     C                     EXSR SRFAMT
+     C*
+     C                     MOVEL'CDCCY'   WKTAG
+     C                     MOVE ZSAMNT    WDRAM
+     C                     MOVE ZSAMNT    WAMT
+     C                     MOVELWCCY      WKDATA
+      *
+     C                     EXSR SRUPDT
+      *
+      ** Unwind subroutine stack name
+      *
+     C           EXDCCY    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRFCCY - Format and add tag CFCCY                  *
+      *                                                               *
+      *  CALLS     SRFAMT - Format amount in SWIFT format             *
+      *            SRUPDT - Add Incoming Message Detail Line          *
+      *                                                               *
+      *  CALLED BY SRDETL - Add Incoming Message Details              *
+      *                                                               *
+      *  FLDS USED        -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRFCCY    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRFCCY'  @STK,Q
+      *
+     C                     MOVEL*BLANKS   WKTAG
+     C                     MOVEL*BLANKS   WKDATA
+     C                     MOVEL*BLANKS   WCCY
+     C                     MOVEL*BLANKS   WFDAM  17                       122060
+      *
+      ** Funding Currency
+      *
+     C                     MOVELRNFCCY    WCCY1
+      *
+      ** Format Funding Amount
+      *
+     C                     Z-ADD0         ZAMNT
+     C                     MOVE RNFDAM    ZAMNT
+     C           RNCHCY    IFEQ RNFCCY                                    122060
+     C                     SUB  RNCHAM    ZAMNT                           122060
+     C                     ENDIF                                          122060
+     C                     MOVE RNFCCY    ZCCY
+     C                     EXSR SRFAMT
+     C*
+     C                     MOVEL'CFCCY'   WKTAG
+     C                     MOVE ZSAMNT    WFDAM                           122060
+     C                     MOVE ZSAMNT    WAMT
+     C                     MOVELWCCY      WKDATA
+      *
+     C                     EXSR SRUPDT
+      *
+      ** Unwind subroutine stack name
+      *
+     C           EXFCCY    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT                                                              122060
+      *****************************************************************   122060
+      *                                                               *   122060
+      *            SRCHRG - Format and add tag CCHRG                  *   122060
+      *                                                               *   122060
+      *  CALLS     SRFAMT - Format amount in SWIFT format             *   122060
+      *                                                               *   122060
+      *  CALLED BY SRDETL - Add Incoming Message Details              *   122060
+      *                                                               *   122060
+      *  FLDS USED        -                                           *   122060
+      *                                                               *   122060
+      *****************************************************************   122060
+     C           SRCHRG    BEGSR                                          122060
+      *                                                                   122060
+      ** Set up subroutine stack name                                     122060
+      *                                                                   122060
+     C                     ADD  1         Q                               122060
+     C                     MOVEL'SRCHRG'  @STK,Q                          122060
+      *                                                                   122060
+     C                     MOVEL*BLANKS   WKTAG                           122060
+     C                     MOVEL*BLANKS   WKDATA                          122060
+     C                     MOVEL*BLANKS   WCCY                            122060
+     C                     MOVEL*BLANKS   WCHRG  17                       122060
+      *                                                                   122060
+     C                     MOVELRNCHCY    WCCY1                           122060
+     C           WCCY1     IFNE RNDCCY                                    122060
+     C           WCCY1     ANDNERNFCCY                                    122060
+     C                     MOVEL*BLANK    W0FILE                          122060
+     C                     MOVELWCCY1     W0KEY                           122060
+     C                     Z-ADD18        W0ERNB                          122060
+     C                     MOVEL'MEM5007' W0MSGD                          122060
+     C                     MOVEL'MIDAS  ' W0MSGF                          122060
+     C                     EXSR SRERR                                     122060
+     C                     END                                            122060
+      *                                                                   122060
+     C                     Z-ADD0         ZAMNT                           122060
+     C                     Z-ADDRNCHAM    ZAMNT                           122060
+     C                     MOVE RNCHCY    ZCCY                            122060
+     C                     EXSR SRFAMT                                    122060
+      *                                                                   122060
+     C                     MOVEL'CCHRG'   WKTAG                           122060
+     C                     MOVE ZSAMNT    WCHRG                           122060
+     C                     MOVE ZSAMNT    WAMT                            122060
+     C                     MOVELWCCY      WKDATA                          122060
+      *                                                                   122060
+     C                     EXSR SRUPDT                                    122060
+      *                                                                   122060
+      ** Unwind subroutine stack name                                     122060
+      *                                                                   122060
+     C           EXCHRG    TAG                                            122060
+     C                     MOVEA*BLANKS   @STK,Q                          122060
+     C                     SUB  1         Q                               122060
+      *                                                                   122060
+     C                     ENDSR                                          122060
+      *****************************************************************   122060
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRPOST - Format and add tag CPOST                  *
+      *                                                               *
+      *  CALLS     SRFAMT - Format amount in SWIFT format             *
+      *            SRUPDT - Add Incoming Message Detail Line
+      *                                                               *
+      *  CALLED BY SRDETL - Add Incoming Message Details              *
+      *                                                               *
+      *  FLDS USED        -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRPOST    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRPOST'  @STK,Q
+      *
+     C                     MOVEL*BLANKS   WKTAG
+     C                     MOVEL*BLANKS   WKDATA
+     C                     MOVEL*BLANKS   WPOST
+      *
+      ** Format Position Amount 1
+      *
+     C                     Z-ADD0         ZAMNT
+     C                     MOVE RNDPOS    ZAMNT
+     C                     MOVE RNDCCY    ZCCY
+     C                     EXSR SRFAMT
+     C                     MOVE ZSAMNT    WPOS1
+      *
+      ** Format Position Amount 2
+      *
+     C                     Z-ADD0         ZAMNT
+     C                     MOVE RNCPOS    ZAMNT
+     C                     MOVE RNFCCY    ZCCY
+     C                     EXSR SRFAMT
+     C                     MOVE ZSAMNT    WPOS2
+     C*
+     C                     MOVEL'CPOST'   WKTAG
+     C                     MOVELWPOST     WKDATA
+      *
+     C                     EXSR SRUPDT
+      *
+      ** Unwind subroutine stack name
+      *
+     C           EXPOST    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRFAMT - Format amount in SWIFT format             *
+      *                                                               *
+      *  CALLS            -                                           *
+      *                                                               *
+      *  CALLED BY SRDCCY - Format and add tag CDCCY                  *
+      *            SRFCCY - Format and add tag CFCCY                  *
+      *            SRPOST - Format and add tag CPOST                  *
+      *                                                               *
+      *  FLDS USED        -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRFAMT    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRFAMT'  @STK,Q
+      *
+     C                     CALL 'ZM0040'               40
+     C                     PARM           ZAMNT  130
+     C                     PARM           ZCCY    3
+     C                     PARM           ZSAMNT 17
+     C                     PARM           ZSCCY   3
+     C                     PARM           ZERR    1
+     C                     PARM WSWDPC    ZSWDPC  1                       CSW020
+      *
+      ** Call ended in error
+      *
+     C           *IN40     IFEQ '1'
+     C           ZERR      OREQ '1'
+     C                     MOVEL'ZM0040  'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD2         W0ERNB           * DB ERROR 02 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      ** Unwind subroutine stack name
+      *
+     C           EXFAMT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRCDAT - Convert date to SWIFT format              *
+      *                                                               *
+      *  CALLS            -                                           *
+      *                                                               *
+      *  CALLED BY SRDATE - Format and add tag CDATE                  *
+      *                                                               *
+      *  FLDS USED        -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRCDAT    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRCDAT'  @STK,Q
+      *
+     C           AGDFF     IFEQ 'D'
+     C                     MOVE DAT1      DD
+     C                     MOVE DAT2      MM
+     C                     ELSE
+     C                     MOVE DAT1      MM
+     C                     MOVE DAT2      DD
+     C                     END
+     C                     MOVE DAT3      YY
+      *
+      ** Unwind subroutine stack name
+      *
+     C           EXCDAT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRUPDT - Add Incoming Message Detail Line          *
+      *                                                               *
+      *  CALLS            -                                           *
+      *                                                               *
+      *  CALLED BY SRDETL - Add Incoming Message Details              *
+      *            SRDATE - Format and add tag CDATE                  *
+      *            SRDCCY - Format and add tag CDCCY                  *
+      *            SRFCCY - Format and add tag CFCCY                  *
+      *            SRPOST - Format and add tag CPOST                  *
+      *                                                               *
+      *  FLDS USED        -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRUPDT    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRUPDT'  @STK,Q
+      *
+      ** Increment tag message line sequence no.
+      *
+     C                     ADD  1         WKSEQ
+      *
+      ** Move data to record format data structure
+      *
+     C                     CLEARINDT
+     C                     CLEARW1DATA
+      *
+     C                     MOVELMCMSGR    DTMSGR
+     C                     Z-ADDWKSEQ     DTSEQN
+     C                     MOVELWKTAG     DTMTG
+     C                     MOVEL'F'       DTFPID
+     C                     Z-ADD1         DTPART
+     C                     MOVELWKDATA    DTMFLD
+      *
+      * Add Incoming Message Line
+      *
+     C                     MOVELINDT      W1DATA
+      *
+     C                     CALL 'ME1020'               90
+     C                     PARM '*MSGDATA'W1ACT   8
+     C                     PARM           W1DATA
+     C                     PARM *BLANKS   W1RTN   7
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           W1RTN     OREQ '*ERROR*'
+     C                     MOVEL'ME1020  'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD3         W0ERNB           * DB ERROR 03 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      ** Unwind subroutine stack name
+      *
+     C           EXUPDT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRPART - Add Incoming Message MIDAS Transaction    *
+      *                     Control Record to Database                *
+      *                                                               *
+      *  CALLS            -                                           *
+      *                                                               *
+      *  CALLED BY MAIN   - Main Processing                           *
+      *                                                               *
+      *  FLDS USED        -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRPART    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRPART'  @STK,Q
+      *
+     C                     CLEARW1DATA
+     C                     CLEARINMP
+      *
+     C                     MOVELMCMSGR    MPMSGR           Uniq Ref.
+     C                     Z-ADD1         MPKPRT           Part No.Key
+     C                     MOVELRNDRNO    MPTRNO
+     C                     MOVELRNDCCY    MPCYCD
+     C                     MOVELWVDAT     MPSVDT
+     C                     MOVELWDRAM     MPAMTS
+     C                     MOVELRNBENF    MPBENF
+      *
+      ** Add Incoming Message Midas Transaction Control
+      *
+     C                     MOVELINMP      W1DATA
+      *
+     C                     CALL 'ME1020'               90
+     C                     PARM '*MSGPART'W1ACT   8
+     C                     PARM           W1DATA
+     C                     PARM *BLANKS   W1RTN   7
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           W1RTN     OREQ '*ERROR*'
+     C                     MOVEL'ME1020  'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD4         W0ERNB           * DB ERROR 04 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      ** Unwind subroutine stack name
+      *
+     C           EXPART    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRHEAD - Add Incoming Message Control Record       *
+      *                                                               *
+      *  CALLS            -                                           *
+      *                                                               *
+      *  CALLED BY MAIN   - Main Processing                           *
+      *                                                               *
+      *  FLDS USED        -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRHEAD    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRHEAD'  @STK,Q
+      *
+      *  Extract data from the SWIFT message and place in the data
+      *  structure fields of the record format
+      *
+     C                     CLEARW1DATA
+     C                     CLEARINCR
+      *
+      ** Get the century
+      *
+      ** Convert system date to MIDAS day number
+      *
+     C                     MOVE *BLANKS   WMOR
+     C                     MOVE *BLANKS   WTMPD
+     C                     MOVE RNTDAT    WTMPD
+     C           AGDFF     IFEQ 'D'
+     C                     MOVE '0'       *IN98
+     C                     ELSE
+     C                     MOVE '1'       *IN98
+     C                     ENDIF
+     C                     MOVE WTMPD     ZDATE
+     C                     EXSR ZDATE1
+      *
+      **  Convert MIDAS day number to YYYYMMDD format
+      *
+     C           *IN99     IFEQ '0'
+     C                     Z-ADDZDAYNO    @@DAYN  50
+     C                     EXSR ZDATE9
+     C           @@RTN     IFEQ '0'
+     C                     MOVEL@@VDT     WSDAT
+     C                     END
+     C                     END
+      *
+     C                     MOVE ##ETM     WSTIM
+      *
+     C                     MOVELMCMSGR    CRMSGR           Unique Ref.
+     C                     MOVEL'CASHV8'  CRSYTM           System
+     C                     MOVEL'CASHV8'  CRNWRK           Network
+     C                     MOVEL'CASHIER' CRSNDR           Sender
+     C                     MOVELRNDRNO    CRMIR            MIR
+     C                     MOVELWMOR      CRMOR            MOR
+     C                     MOVELRNACDE    CRMTPY           Msg Type
+     C                     MOVEL'N'       CRMPRY           Priority
+     C                     MOVELWTDAT     CRMODE           Received Date
+     C                     MOVEL##ETM     CRMOTM           Received Time
+     C                     MOVELRNDCCY    CRCYCD           Draft Currency
+     C                     MOVELWVDAT     CRSVDT           Value Date
+     C                     MOVELWDRAM     CRAMTS           Draft Amount
+     C                     MOVELRNBRNO    CRBRCA           Branch
+     C                     Z-ADD1         CRNPRT           Part Number
+      *
+      ** Add Incoming Message Control
+      *
+     C                     MOVELINCR      W1DATA
+      *
+     C                     CALL 'ME1020'               90
+     C                     PARM '*MSGHEAD'W1ACT   8
+     C                     PARM           W1DATA
+     C                     PARM *BLANKS   W1RTN   7
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           W1RTN     OREQ '*ERROR*'
+     C                     MOVEL'ME1020  'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD5         W0ERNB           * DB ERROR 05 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      ** Unwind subroutine stack name
+      *
+     C           EXHEAD    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRAUTO - Prompt FT Auto Generation                 *
+      *                                                               *
+      *  CALLS            -                                           *
+      *                                                               *
+      *  CALLED BY MAIN   - Main Processing                           *
+      *                                                               *
+      *  FLDS USED        -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRAUTO    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRAUTO'  @STK,Q
+      *
+     C                     CLEARINMC                       Input Data Str.
+      *
+     C                     MOVEL'CASHV8'  MCNWRK
+     C                     MOVEL'CASHIER' MCSNDR
+     C                     MOVELRNACDE    MCMTPY
+     C                     MOVEL'*AUTO  ' MCACPT
+     C                     MOVEL##PGM     MCCPGM
+      *
+      * Move passed parameter data to relevant data structure
+      * and on to called program's data structure
+      *
+     C                     MOVELINMC      W1DATA
+      *
+      * Verify message
+      *
+     C                     CALL 'ME1030'               90
+     C                     PARM '*AUTO   'W1ACT
+     C                     PARM           W1DATA
+     C                     PARM *BLANKS   W1RTN
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           W1RTN     OREQ '*ERROR*'
+     C                     MOVEL'ME1030  'W0FILE           ***************
+     C                     MOVEL'*CALL'   W0KEY            * DB ERROR 06 *
+     C                     Z-ADD6         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Process for invalid message if return code is 'MIN0091'
+      *
+     C           W1RTN     IFEQ 'MIN0091'
+     C                     GOTO EXAUTO
+     C                     END
+      *
+      *  Set up parameters for prompt
+      *
+     C                     MOVELCRMSGR    O#MSGR
+     C                     MOVEL*BLANKS   O#PRTY
+     C           CRMPRY    IFEQ 'U'
+     C                     MOVEL'HIGH'    O#PRTY
+     C                     ELSE
+     C                     MOVEL'NORMAL'  O#PRTY
+     C                     END
+      *
+      *  Prompt FT Auto Generation
+      *
+     C                     CALL 'MEC1304'              90
+     C                     PARM *BLANKS   W2RTN   7
+     C                     PARM           O#MSGR  8
+     C                     PARM           O#PRTY 10
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           W2RTN     ORNE *BLANKS
+     C           W2RTN     ANDNE'MIN0222'
+     C                     MOVEL'MEC1304 'W0FILE           ***************
+     C                     MOVEL'*CALL'   W0KEY            * DB ERROR 07 *
+     C                     Z-ADD7         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXAUTO    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT                                                              122060
+      *****************************************************************   122060
+      *                                                               *   122060
+      *            SRCNCL - Cancel Draft                              *   122060
+      *                                                               *   122060
+      *  CALLS            -                                           *   122060
+      *                                                               *   122060
+      *  CALLED BY MAIN   - Main Processing                           *   122060
+      *                                                               *   122060
+      *  FLDS USED        -                                           *   122060
+      *                                                               *   122060
+      *****************************************************************   122060
+     C           SRCNCL    BEGSR                                          122060
+      *                                                                   122060
+      **  Set up subroutine stack name                                    122060
+      *                                                                   122060
+     C                     ADD  1         Q       50                      122060
+     C                     MOVEL'SRCNCL'  @STK,Q                          122060
+      *                                                                   122060
+     C                     MOVEL*BLANKS   @WRK15 15                       122060
+     C           RNTRF1    CAT  '0'       KPREF                           122060
+     C           KINPAY    CHAININPAY                11                   122060
+      *                                                                   122060
+     C           *IN11     IFEQ '0'                                       122060
+     C                     MOVEL'C'       RECI                            122060
+     C                     UPDATINPAYDDF                                  122060
+      *                                                                   122060
+     C                     MOVEL'I'       RNSTAT                          122060
+     C                     UPDATREPDRID0                                  122060
+      *                                                                   122060
+      **  Set Details for DTAQ.                                           122060
+      *                                                                   122060
+     C                     MOVELRNDRNO    KDRNO                           122060
+     C                     MOVEL*BLANKS   KODRN                           122060
+     C                     MOVEL'DIA'     KACDE                           122060
+     C           KLPDRI    CHAINREPDRIL1            N12                   122060
+      *                                                                   122060
+     C           *IN12     IFEQ '0'                                       122060
+     C                     MOVEL'DIA'     W#ACDE                          122060
+     C                     ELSE                                           122060
+     C                     MOVEL'DIC'     W#ACDE                          122060
+     C                     ENDIF                                          122060
+      *                                                                   122060
+     C                     MOVELRNDRNO    W#DRNO                          122060
+      *                                                                   122060
+     C           RNACDE    IFEQ 'DIA'                                     122060
+     C                     MOVELRNFDAC    W#FDAC                          122060
+     C                     ELSE                                           122060
+      *                                                                   122060
+     C**********           CALL 'AOBRCHR0'                                122060              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD   7                       122060
+     C                     PARM '*KEY  '  @OPTN   7                       122060
+     C                     PARM RNBRNO    @BRCD   3                       122060
+     C********** SDBRCH    PARM SDBRCH    DSFDY                           122060              CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *                                                                   122060
+      **  If record not found?                                            122060
+      *                                                                   122060
+     C           @RTCD     IFNE *BLANKS                                   122060
+     C           *LOCK     IN   LDA                                       122060
+     C                     Z-ADD19        W0ERNB                          122060
+     C                     MOVEL'SDBRCHPD'W0FILE                          122060
+     C                     MOVELRNBRNO    W0KEY                           122060
+     C                     MOVEL'MEM5002' W0MSGD                          122060
+     C                     MOVEL'MIDAS  ' W0MSGF                          122060
+     C                     EXSR SRERR                                     122060
+     C                     ENDIF                                          122060
+      *                                                                   122060
+     C                     MOVELA8BICN    @CNUM                           122060
+     C                     MOVELRNDCCY    @CCY                            122060
+     C                     Z-ADDDACACD    @ACOD                           122060
+     C                     Z-ADD01        @ACSQ                           122060
+     C                     MOVELRNBRNO    @BRCA                           122060
+      *                                                                   122060
+     C           KLACNT    CHAINACCNTLF              14                   122060
+      *                                                                   122060
+     C           *IN14     IFEQ '0'                                       122060
+     C                     MOVELACNO      W#FDAC                          122060
+     C                     ELSE                                           122060
+     C**********           MOVELDACACD    WRK4    4                                    122060 CGL029
+     C                     MOVELDACACD    WRK4   10                                           CGL029
+     C           A8BICN    CAT  RNDCCY    WRK9    9                       122060
+     C********** WRK4      CAT  '01'      WRK6    6                                    122060 CGL029
+     C********** WRK9      CAT  WRK6      WRK15  15                                    122060 CGL029
+     C           WRK4      CAT  '01'      WRK6   12                                           CGL029
+     C           WRK9      CAT  WRK6      WRK15  21                                           CGL029
+     C           WRK15     CAT  @BRCA     W0KEY                           122060
+     C           *LOCK     IN   LDA                                       122060
+     C                     Z-ADD20        W0ERNB                          122060
+     C                     MOVEL'ACCNTAB 'W0FILE                          122060
+     C                     MOVEL'MEM5002' W0MSGD                          122060
+     C                     MOVEL'MIDAS  ' W0MSGF                          122060
+     C                     EXSR SRERR                                     122060
+     C                     ENDIF                                          122060
+      *                                                                   122060
+     C                     ENDIF                                          122060
+      *                                                                   122060
+     C                     MOVELRNTRF1    W#TRF1                          122060
+     C                     MOVELRNTRF2    W#TRF2                          122060
+     C                     MOVELRNTRF3    W#TRF3                          122060
+     C                     MOVELRNTRF4    W#TRF4                          122060
+     C                     EXSR SRDTLS                                    122060
+      *                                                                   122060
+     C                     MOVEL'R'       Q#ATYP                          122060
+      *                                                                   122060
+     C           RNACDE    IFEQ 'DIA'                                     122060
+     C                     MOVELRNFDAC    Q#ACCT                          122060
+     C                     EXSR SRFLGL                                                        CGL029
+     C                     MOVELRNFCCY    Q#CCY                           122060
+     C                     ELSE                                           122060
+     C                     MOVELACNO      Q#ACNO                          122060
+     C                     ENDIF                                          122060
+      *                                                                   122060
+     C                     MOVEL'I'       Q#IO                            122060
+     C                     MOVEL'IN'      Q#TRYP                          122060
+     C                     MOVELPREF      Q#PREF                          122060
+     C                     Z-SUBSMAM      Q#AMT                           122060
+     C                     MOVEL'Y'       Q#FTOV                          122060
+     C                     Z-ADDPVDT      Q#VDAT                          122060
+     C                     Z-ADDSLDT      Q#PSTD                          122060
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL'FT'      Q#MOD                                               CAP205
+     C                     MOVEL'F'       Q#MTYP                                              CAP205
+     C                     ENDIF                                                              CAP205
+      *                                                                   122060
+      **  Call AOSPOSU0                                                   122060
+      *                                                                   122060
+     C                     CALL 'AOSPOSU0'             9090               122060
+     C                     PARM *BLANKS   W3RTN   7                       122060
+     C                     PARM '*ADD    'W3ACT   8                       122060
+     C                     PARM Q#DTA     O#DTA 256                       122060
+      *                                                                   122060
+     C           *IN90     IFEQ '1'                                       122060
+     C           W3RTN     ORNE *BLANKS                                   122060
+     C                     MOVEL'AOSPOSU0'W0FILE                          122060
+     C                     MOVEL'*CALL   'W0KEY                           122060
+     C                     Z-ADD8         W0ERNB                          122060
+     C                     MOVEL'MEM5003' W0MSGD                          122060
+     C                     MOVEL'MIDAS  ' W0MSGF                          122060
+     C                     EXSR SRERR                                     122060
+     C                     ENDIF                                          122060
+      *                                                                   122060
+     C                     MOVEL'R'       Q#ATYP                          122060
+     C                     MOVELRNNOSA    Q#ACCT                          122060
+     C                     EXSR SRFLGL                                                        CGL029
+     C                     MOVEL'O'       Q#IO                            122060
+     C                     MOVELRNDCCY    Q#CCY                           122060
+     C                     MOVEL'IN'      Q#TRYP                          122060
+     C                     MOVELPREF      Q#PREF                          122060
+     C                     Z-ADDPYAM      Q#AMT                           122060
+     C                     MOVEL'Y'       Q#FTOV                          122060
+     C                     Z-ADDPVDT      Q#VDAT                          122060
+     C                     Z-ADDSLDT      Q#PSTD                          122060
+      *                                                                   122060
+      **  Call AOSPOSU0                                                   122060
+      *                                                                   122060
+     C                     CALL 'AOSPOSU0'             9090               122060
+     C                     PARM *BLANKS   W3RTN   7                       122060
+     C                     PARM '*ADD    'W3ACT   8                       122060
+     C                     PARM Q#DTA     O#DTA 256                       122060
+      *                                                                   122060
+     C           *IN90     IFEQ '1'                                       122060
+     C           W3RTN     ORNE *BLANKS                                   122060
+     C                     MOVEL'AOSPOSU0'W0FILE                          122060
+     C                     MOVEL'*CALL   'W0KEY                           122060
+     C                     Z-ADD9         W0ERNB                          122060
+     C                     MOVEL'MEM5003' W0MSGD                          122060
+     C                     MOVEL'MIDAS  ' W0MSGF                          122060
+     C                     EXSR SRERR                                     122060
+     C                     ENDIF                                          122060
+      *                                                                   122060
+      **  Call AOSPOSU0 to update database                                122060
+      *                                                                   122060
+     C                     CALL 'AOSPOSU0'             9090               122060
+     C                     PARM *BLANKS   W3RTN   7                       122060
+     C                     PARM '*UPDATE 'W3ACT   8                       122060
+     C                     PARM Q#DTA     O#DTA 256                       122060
+      *                                                                   122060
+     C           *IN90     IFEQ '1'                                       122060
+     C           W3RTN     ORNE *BLANKS                                   122060
+     C                     MOVEL'AOSPOSU0'W0FILE                          122060
+     C                     MOVEL'*CALL   'W0KEY                           122060
+     C                     Z-ADD10        W0ERNB                          122060
+     C                     MOVEL'MEM5003' W0MSGD                          122060
+     C                     MOVEL'MIDAS  ' W0MSGF                          122060
+     C                     EXSR SRERR                                     122060
+     C                     ENDIF                                          122060
+      *                                                                   122060
+     C                     COMIT                                          122060
+      *                                                                   122060
+      **  Retrieve After Balance.                                         122060
+      *                                                                   122060
+     C                     EXSR SRRVAB                                    122060
+      *                                                                   122060
+      **  Send response.                                                  122060
+      *                                                                   122060
+     C                     MOVELRNCJDQ    P@QSN                           122060
+     C                     MOVELREPDRO    P@QDS                           122060
+     C                     EXSR SDQMS                                     122060
+     C                     MOVEL*BLANKS   REPDRO                          122060
+      *                                                                   122060
+     C                     ELSE                                           122060
+      *                                                                   122060
+     C                     MOVEL'DIRQ'    ROMSTY                          122060
+     C                     MOVEL'E'       ROHMSS                          122060
+     C                     MOVE '5002'    ROHMSI                          122060
+     C                     MOVEL'INPAYDD' ROHSMS                          122060
+      *                                                                   122060
+      **  Send response.                                                  122060
+      *                                                                   122060
+     C                     MOVELRNCJDQ    P@QSN                           122060
+     C                     MOVELREPDRO    P@QDS                           122060
+     C                     EXSR SDQMS                                     122060
+     C                     MOVEL*BLANKS   REPDRO                          122060
+      *                                                                   122060
+     C                     MOVEL'INPAYDD' W0FILE                          122060
+     C                     MOVELKPREF     W0KEY                           122060
+     C                     Z-ADD17        W0ERNB                          122060
+     C                     MOVEL'MEM5002' W0MSGD                          122060
+     C                     MOVEL'MIDAS  ' W0MSGF                          122060
+     C                     EXSR SRERR                                     122060
+     C                     ENDIF                                          122060
+      *                                                                   122060
+      **  Unwind subroutine stack name                                    122060
+      *                                                                   122060
+     C           EXCNCL    TAG                                            122060
+     C                     MOVEA*BLANKS   @STK,Q                          122060
+     C                     SUB  1         Q                               122060
+      *                                                                   122060
+     C                     ENDSR                                          122060
+      *****************************************************************   122060
+      /EJECT                                                              122060
+      *****************************************************************   122060
+      *                                                               *   122060
+      *            SRRPRT - Reprint Draft                             *   122060
+      *                                                               *   122060
+      *  CALLS            -                                           *   122060
+      *                                                               *   122060
+      *  CALLED BY MAIN   - Main Processing                           *   122060
+      *                                                               *   122060
+      *  FLDS USED        -                                           *   122060
+      *                                                               *   122060
+      *****************************************************************   122060
+     C           SRRPRT    BEGSR                                          122060
+      *                                                                   122060
+      **  Set up subroutine stack name                                    122060
+      *                                                                   122060
+     C                     ADD  1         Q       50                      122060
+     C                     MOVEL'SRRPRT'  @STK,Q                          122060
+      *                                                                   122060
+     C                     MOVELRNODRN    KDRNO                           122060
+     C                     MOVEL*BLANKS   KODRN                           122060
+     C                     MOVEL'DIA'     KACDE                           122060
+     C           KLPDRI    CHAINREPDRIL1            N12                   122060
+      *                                                                   122060
+     C           *IN12     IFEQ '1'                                       122060
+     C                     MOVEL'DIC'     KACDE                           122060
+     C           KLPDRI    CHAINREPDRIL1            N12                   122060
+     C                     ENDIF                                          122060
+     C           *IN12     IFEQ '0'                                       122060
+     C                     MOVELL0ACDE    W#ACDE                          122060
+     C                     MOVELL0DRNO    W#DRNO                          122060
+      *                                                                   122060
+     C                     MOVELL0DRNO    KMIR                            122060
+     C           KLIPCS    CHAININPCSHL0             13                   122060
+      *                                                                   122060
+     C           *IN13     IFEQ '0'                                       122060
+     C                     MOVELRNDRNO    MIR                             122060
+     C                     UPDATINPCSHD0                                  122060
+      *                                                                   122060
+     C                     MOVELPREF      W#TRF1                          122060
+     C                     MOVELPREF      W#TRF2                          122060
+     C                     MOVELPREF      W#TRF3                          122060
+     C                     MOVELPREF      W#TRF4                          122060
+      *                                                                   122060
+     C           L0ACDE    IFEQ 'DIA'                                     122060
+     C                     MOVELRNFDAC    W#FDAC                          122060
+     C                     ENDIF                                          122060
+      *                                                                   122060
+     C                     EXSR SRDTLS                                    122060
+      *                                                                   122060
+     C           L0ACDE    IFEQ 'DIA'                                     122060
+     C                     EXSR SRRVAB                                    122060
+     C                     ENDIF                                          122060
+      *                                                                   122060
+      **  Send response.                                                  122060
+      *                                                                   122060
+     C                     MOVELRNCJDQ    P@QSN                           122060
+     C                     MOVELREPDRO    P@QDS                           122060
+     C                     EXSR SDQMS                                     122060
+     C                     MOVEL*BLANKS   REPDRO                          122060
+      *                                                                   122060
+     C                     ELSE                                           122060
+      *                                                                   122060
+     C                     MOVEL'DIRQ'    ROMSTY                          122060
+     C                     MOVEL'E'       ROHMSS                          122060
+     C                     MOVE '5002'    ROHMSI                          122060
+     C                     MOVEL'INPCSHL0'ROHSMS                          122060
+      *                                                                   122060
+      **  Send response.                                                  122060
+      *                                                                   122060
+     C                     MOVELRNCJDQ    P@QSN                           122060
+     C                     MOVELREPDRO    P@QDS                           122060
+     C                     EXSR SDQMS                                     122060
+     C                     MOVEL*BLANKS   REPDRO                          122060
+      *                                                                   122060
+     C                     MOVEL'INPCSHL0'W0FILE                          122060
+     C                     MOVELKPREF     W0KEY                           122060
+     C                     Z-ADD16        W0ERNB                          122060
+     C                     MOVEL'MEM5002' W0MSGD                          122060
+     C                     MOVEL'MIDAS  ' W0MSGF                          122060
+     C                     EXSR SRERR                                     122060
+     C                     ENDIF                                          122060
+      *                                                                   122060
+     C                     ELSE                                           122060
+      *                                                                   122060
+     C                     MOVEL'DIRQ'    ROMSTY                          122060
+     C                     MOVEL'E'       ROHMSS                          122060
+     C                     MOVE '5002'    ROHMSI                          122060
+     C                     MOVEL'REPDRIL1'ROHSMS                          122060
+      *                                                                   122060
+      **  Send response.                                                  122060
+      *                                                                   122060
+     C                     MOVELRNCJDQ    P@QSN                           122060
+     C                     MOVELREPDRO    P@QDS                           122060
+     C                     EXSR SDQMS                                     122060
+     C                     MOVEL*BLANKS   REPDRO                          122060
+      *                                                                   122060
+     C                     MOVEL'REPDRIL1'W0FILE                          122060
+     C                     MOVELKDRNO     W0KEY                           122060
+     C                     Z-ADD15        W0ERNB                          122060
+     C                     MOVEL'MEM5002' W0MSGD                          122060
+     C                     MOVEL'MIDAS  ' W0MSGF                          122060
+     C                     EXSR SRERR                                     122060
+     C                     ENDIF                                          122060
+      *                                                                   122060
+     C                     MOVEL'I'       RNSTAT                          122060
+     C                     UPDATREPDRID0                                  122060
+     C                     COMIT                                          122060
+      *                                                                   122060
+      **  Unwind subroutine stack name                                    122060
+      *                                                                   122060
+     C           EXRPRT    TAG                                            122060
+     C                     MOVEA*BLANKS   @STK,Q                          122060
+     C                     SUB  1         Q                               122060
+      *                                                                   122060
+     C                     ENDSR                                          122060
+      *****************************************************************   122060
+      /EJECT                                                              122060
+      *****************************************************************   122060
+      *                                                               *   122060
+      *            SRDTLS - Set Details for Response DTAQ             *   122060
+      *                                                               *   122060
+      *  CALLS            -                                           *   122060
+      *                                                               *   122060
+      *  CALLED BY SRCNCL - Cancel Draft                              *   122060
+      *            SRRPRT - Reprint Draft                             *   122060
+      *                                                               *   122060
+      *  FLDS USED        -                                           *   122060
+      *                                                               *   122060
+      *****************************************************************   122060
+     C           SRDTLS    BEGSR                                          122060
+      *                                                                   122060
+      **  Set up subroutine stack name                                    122060
+      *                                                                   122060
+     C                     ADD  1         Q       50                      122060
+     C                     MOVEL'SRDTLS'  @STK,Q                          122060
+      *                                                                   122060
+     C                     MOVEL'DIRQ'    ROMSTY                          122060
+     C                     MOVEL'C'       ROHMSS                          122060
+     C                     MOVEL*BLANKS   ROHMSI                          122060
+     C                     MOVEL*BLANKS   ROHSMS                          122060
+     C                     MOVELW#TRF1    ROHRF1                          122060
+     C                     MOVELW#TRF2    ROHRF2                          122060
+     C                     MOVELW#TRF3    ROHRF3                          122060
+     C                     MOVELW#TRF4    ROHRF4                          122060
+      *                                                                   122060
+     C           W#ACDE    IFEQ 'DIA'                                     122060
+     C                     MOVELW#FDAC    KACNO                           122060
+      *                                                                   122060
+      **  Retrieve Account Details.                                       122060
+      *                                                                   122060
+     C           KLACNO    CHAINACNUM                90                   122060
+      *                                                                   122060
+     C           *IN90     IFEQ '1'                                       122060
+     C                     Z-ADD11        W0ERNB                          122060
+     C                     MOVEL'ACNUM'   W0FILE                          122060
+     C                     MOVELKACNO     W0KEY                           122060
+     C                     MOVEL'MEM5002' W0MSGD                          122060
+     C                     MOVEL'MIDAS  ' W0MSGF                          122060
+     C                     EXSR SRERR                                     122060
+     C                     ENDIF                                          122060
+      *                                                                   122060
+     C                     MOVELANAM      ROFAFN                          122060
+      *                                                                   122060
+      ** Set up account details                                           122060
+      *                                                                   122060
+     C**********           Z-ADDCNUM      @CNUM                                        122060 CSD027
+     C                     MOVE CNUM      @CNUM                                               CSD027
+     C                     MOVELCCY       @CCY                            122060
+     C                     Z-ADDACOD      @ACOD                           122060
+     C                     Z-ADDACSQ      @ACSQ                           122060
+     C                     MOVELBRCA      @BRCA                           122060
+      *                                                                   122060
+      **  Retrieve Passbook Indicator.                                    122060
+      *                                                                   122060
+     C           KLACNT    CHAINREIAC                90                   122060
+      *                                                                   122060
+     C           *IN90     IFEQ '0'                                       122060
+     C           RECI      ANDEQ'D'                                       122060
+      *                                                                   122060
+     C           PBKU      IFEQ 'Y'                                       122060
+     C                     MOVEL'Y'       ROPBFL                          122060
+     C                     ELSE                                           122060
+     C                     MOVEL'N'       ROPBFL                          122060
+     C                     ENDIF                                          122060
+      *                                                                   122060
+     C                     ELSE                                           122060
+     C                     Z-ADD12        W0ERNB                          122060
+     C                     MOVEL'REIAC'   W0FILE                          122060
+     C                     MOVEL@ACCN     W0KEY                           122060
+     C                     MOVEL'MEM5002' W0MSGD                          122060
+     C                     MOVEL'MIDAS  ' W0MSGF                          122060
+     C                     EXSR SRERR                                     122060
+     C                     ENDIF                                          122060
+      *                                                                   122060
+      **  Retrieve Customer Shortname.                                    122060
+      *                                                                   122060
+     C                     MOVELCNUM      @@CNUM  6                       122060
+     C                     CALL 'AOCUSTR0'                                122060
+     C                     PARM *BLANKS   @RTCD   7                       122060
+     C                     PARM '*KEY   ' @OPTN   7                       122060
+     C                     PARM @@CNUM    @KEY1  10                       122060
+     C                     PARM *BLANKS   @KYST   7                       122060
+     C***********SDCUST    PARM SDCUST    DSFDY                     122060176443
+     C           SDCUST    PARM SDCUST    DSSDY                           176443
+      *                                                                   122060
+     C           @RTCD     IFEQ *BLANKS                                   122060
+     C                     MOVELBBCSSN    ROFASN                          122060
+      *                                                                   122060
+     C                     ELSE                                           122060
+     C                     Z-ADD13        W0ERNB                          122060
+     C                     MOVEL'SDCUSTPD'W0FILE                          122060
+     C                     MOVEL@@CNUM    W0KEY                           122060
+     C                     MOVEL'MEM5002' W0MSGD                          122060
+     C                     MOVEL'MIDAS  ' W0MSGF                          122060
+     C                     EXSR SRERR                                     122060
+     C                     ENDIF                                          122060
+      *                                                                   122060
+      **  Get currency details                                            122060
+      *                                                                   122060
+     C                     CALL 'AOCURRR0'                                122060
+     C                     PARM *BLANKS   @RTCD   7                       122060
+     C                     PARM '*KEY   ' @OPTN   7                       122060
+     C                     PARM CCY       @CURR   3                       122060
+     C           SDCURR    PARM SDCURR    DSSDY                           122060
+      *                                                                   122060
+      ** If record found                                                  122060
+      *                                                                   122060
+     C           @RTCD     IFEQ *BLANK                                    122060
+     C                     MOVELA6NBDP    @CYDP                           122060
+     C                     ELSE                                           122060
+     C                     Z-ADD14        W0ERNB                          122060
+     C                     MOVEL'SDCURRPD'W0FILE                          122060
+     C                     MOVELCCY       W0KEY                           122060
+     C                     MOVEL'MEM5002' W0MSGD                          122060
+     C                     MOVEL'MIDAS  ' W0MSGF                          122060
+     C                     EXSR SRERR                                     122060
+     C                     ENDIF                                          122060
+      *                                                                   122060
+     C                     MOVELCCY       @CCY                            122060
+     C                     MOVELCCY       ACCY                                                192540
+     C                     Z-ADDRRNM      @RRNM                           122060
+     C                     Z-ADDODLN      @ODLN                           122060
+     C                     Z-ADDODED      @ODED                           122060
+     C                     Z-ADDHELD      @HELD                           122060
+     C                     EXSR RTBALC                                    122060
+      *                                                                   122060
+     C           *IN80     IFEQ '0'                                       122060
+      *                                                                   122060
+     C                     MOVEL'+'       ROAVBS                          122060
+      *                                                                   122060
+     C           @AVBL     IFLT 0                                         122060
+     C                     Z-SUB@AVBL     @AVBL                           122060
+     C                     MOVEL'-'       ROAVBS                          122060
+     C                     ENDIF                                          122060
+      *                                                                   122060
+     C                     MOVE @AVBL     ZFIELD                          122060
+     C                     Z-ADDA6NBDP    ZADEC                           122060
+     C                     EXSR ZEDIT                                     122060
+     C                     MOVE ZFIELD    ROAVBL                          122060
+      *                                                                   122060
+     C                     ENDIF                                          122060
+      *                                                                   122060
+     C                     ENDIF                                          122060
+      *                                                                   122060
+      **  Unwind subroutine stack name                                    122060
+      *                                                                   122060
+     C           EXDTLS    TAG                                            122060
+     C                     MOVEA*BLANKS   @STK,Q                          122060
+     C                     SUB  1         Q                               122060
+      *                                                                   122060
+     C                     ENDSR                                          122060
+      *****************************************************************   122060
+      /EJECT                                                              122060
+      *****************************************************************   122060
+      *                                                               *   122060
+      *            SRRVAB - Retrieve After Balance.                   *   122060
+      *                                                               *   122060
+      *  CALLS            -                                           *   122060
+      *                                                               *   122060
+      *  CALLED BY SRCNCL - Cancel Draft                              *   122060
+      *            SRRPRT - Reprint Draft                             *   122060
+      *                                                               *   122060
+      *  FLDS USED        -                                           *   122060
+      *                                                               *   122060
+      *****************************************************************   122060
+     C           SRRVAB    BEGSR                                          122060
+      *                                                                   122060
+      **  Set up subroutine stack name                                    122060
+      *                                                                   122060
+     C                     ADD  1         Q       50                      122060
+     C                     MOVEL'SRRVAB'  @STK,Q                          122060
+      *                                                                   122060
+     C                     MOVELCCY       @CCY                            122060
+     C                     MOVELCCY       ACCY                                                192540
+     C                     Z-ADDRRNM      @RRNM                           122060
+     C                     Z-ADDODLN      @ODLN                           122060
+     C                     Z-ADDODED      @ODED                           122060
+     C                     Z-ADDHELD      @HELD                           122060
+     C                     EXSR RTBALC                                    122060
+      *                                                                   122060
+     C           *IN80     IFEQ '0'                                       122060
+      *                                                                   122060
+     C                     MOVEL'+'       ROABS2                          122060
+      *                                                                   122060
+     C           @AVBL     IFLT 0                                         122060
+     C                     Z-SUB@AVBL     @AVBL                           122060
+     C                     MOVEL'-'       ROABS2                          122060
+     C                     ENDIF                                          122060
+      *                                                                   122060
+     C                     MOVE @AVBL     ZFIELD                          122060
+     C                     Z-ADDA6NBDP    ZADEC                           122060
+     C                     EXSR ZEDIT                                     122060
+     C                     MOVE ZFIELD    ROABL2                          122060
+      *                                                                   122060
+     C                     ENDIF                                          122060
+      *                                                                   122060
+      **  Unwind subroutine stack name                                    122060
+      *                                                                   122060
+     C           EXRVAB    TAG                                            122060
+     C                     MOVEA*BLANKS   @STK,Q                          122060
+     C                     SUB  1         Q                               122060
+      *                                                                   122060
+     C                     ENDSR                                          122060
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRINIT - Initialise and define fields              *
+      *                                                               *
+      *  CALLS            -                                           *
+      *                                                               *
+      *  CALLED BY MAIN   - Main Processing                           *
+      *                                                               *
+      *  FLDS USED        -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Define fields
+      *
+     C           *LIKE     DEFN DTSEQN    WKSEQ
+     C           *LIKE     DEFN DTMFLD    WKDATA
+     C           *LIKE     DEFN CCY       ACCY                                                CFT009
+      *
+      ** Set up error processing message defaults
+      *
+     C                     MOVEL*BLANKS   W0MSGD
+     C                     MOVEL'MEMSG   'W0MSGF
+      *
+      ** Get Rundate information
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      *                                                                   122060
+      ** Get CASH information                                             122060
+      *                                                                   122060
+     C           *NAMVAR   DEFN CASH      CSHDTA                          122060
+     C                     IN   CSHDTA                                    122060
+      *                                                                   122060
+     C           KINPAY    KLIST                                          122060
+     C                     KFLD           KPREF  15                       122060
+      *                                                                   122060
+      **  ACNUM Key                                                       122060
+      *                                                                   122060
+     C           KLACNO    KLIST                                          122060
+     C                     KFLD           KACNO  100                      122060
+      *                                                                   122060
+      ** REIAC Key                                                        122060
+      *                                                                   122060
+     C           KLACNT    KLIST                                          122060
+     C                     KFLD           @CNUM                           122060
+     C                     KFLD           @CCY                            122060
+     C                     KFLD           @ACOD                           122060
+     C                     KFLD           @ACSQ                           122060
+     C                     KFLD           @BRCA                           122060
+      *                                                                   122060
+      ** REPDRIL1 Key                                                     122060
+      *                                                                   122060
+     C           KLPDRI    KLIST                                          122060
+     C                     KFLD           KDRNO  16                       122060
+     C                     KFLD           KODRN  16                       122060
+     C                     KFLD           KACDE   3                       122060
+      *                                                                   122060
+      **  INPCSHL0 Key                                                    122060
+      *                                                                   122060
+     C           KLIPCS    KLIST                                          122060
+     C                     KFLD           KMIR   28                       122060
+      *                                                                   122060
+      ** Set length of Delay CMD                                          122060
+      *                                                                   122060
+     C                     Z-ADD13        LEN    155                      122060
+      *                                                                   122060
+     C                     MOVEL*BLANKS   W#ACDE  3                       122060
+     C                     MOVEL*BLANKS   W#DRNO 16                       122060
+     C                     MOVEL*BLANKS   W#FDAC 13                       122060
+     C                     MOVEL*BLANKS   W#TRF1 14                       122060
+     C                     MOVEL*BLANKS   W#TRF2 14                       122060
+     C                     MOVEL*BLANKS   W#TRF3 14                       122060
+     C                     MOVEL*BLANKS   W#TRF4 14                       122060
+      *                                                                   122060
+     C                     MOVEL'*LIBL   'P@QLS                           122060
+     C                     Z-ADD553       P@QNS                           122060
+     C                     MOVEL*BLANKS   P@QRS  10                       122060
+     C                     MOVEL*BLANKS   P@QKY  20                       122060
+     C                     MOVEL*BLANKS   P@QSN                           122060
+      *                                                                   CSW020
+      ** Check whether switchable feature CSW020, SWIFT decimal           CSW020
+      ** places is switched on.                                           CSW020
+     C                     CALL 'AOSARDR0'                                CSW020
+     C                     PARM *BLANKS   @RTCD                           CSW020
+     C                     PARM '*VERIFY' @OPTN                           CSW020
+     C                     PARM 'CSW020'  @SAR    6                       CSW020
+      *                                                                   CSW020
+     C           @RTCD     IFEQ *BLANK                                    CSW020
+     C                     MOVE 'Y'       CSW020  1                       CSW020
+     C                     MOVE 'N'       WSWDPC  1                       CSW020
+     C                     ELSE                                           CSW020
+     C                     MOVE ' '       WSWDPC                          CSW020
+     C                     ENDIF                                          CSW020
+      *                                                                                       CSC022
+      ** Check if CSC022 is switched *ON.                                                     CSC022
+      *                                                                                       CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   @RTCD   7                                           CSC022
+     C                     PARM '*VERIFY' @OPTN   7                                           CSC022
+     C                     PARM 'CSC022'  @SARD   6                                           CSC022
+      *                                                                                       CSC022
+     C           @RTCD     IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022  1                                           CSC022
+     C           *NAMVAR   DEFN SCCMTJOB  SCCMT                                               CSC022
+     C                     IN   SCCMT                                                         CSC022
+     C                     Z-ADD1         C       30                                          CSC022
+     C                     MOVEL'N'       WCMTSK  1                                           CSC022
+     C                     MOVEACMTARR    CMTJOB                                              CSC022
+     C           CMTNUM    IFGT 0                                                             CSC022
+     C           C         DOWLECMTNUM                                                        CSC022
+     C           ##JOB     IFEQ CMTJOB,C                                                      CSC022
+     C                     MOVEL'Y'       WCMTSK                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ADD  1         C                                                   CSC022
+     C                     ENDDO                                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ELSE                                                               CSC022
+     C                     MOVE 'N'       CSC022                                              CSC022
+     C                     ENDIF                                                              CSC022
+      *                                                                                       CAP205
+      ** Access SAR details file to determine if CAP205 is switched ON                        CAP205
+      *                                                                                       CAP205
+     C                     CALL 'AOSARDR0'                                                    CAP205
+     C                     PARM *BLANKS   @RTCD                                               CAP205
+     C                     PARM '*VERIFY' @OPTN                                               CAP205
+     C                     PARM 'CAP205'  @SARD                                               CAP205
+     C                     MOVE 'N'       CAP205  1                                           CAP205
+      *                                                                                       CAP205
+     C           @RTCD     IFEQ *BLANKS                                                       CAP205
+     C                     MOVE 'Y'       CAP205                                              CAP205
+     C                     ENDIF                                                              CAP205
+      *
+      ** Indicate that set up is complete
+      *
+     C                     SETON                     50
+      *
+      ** Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *                                                                                       CGL029
+      *****************************************************************                       CGL029
+     C/EJECT                                                                                  CGL029
+      *****************************************************************                       CGL029
+      *                                                               *                       CGL029
+      *  SRFLGL - Sobroutine to assess full General Ledger.           *                       CGL029
+      *                                                               *                       CGL029
+      *****************************************************************                       CGL029
+      *                                                                                       CGL029
+     C           SRFLGL    BEGSR                                                              CGL029
+      *                                                                                       CGL029
+     C                     MOVELW#CNU1    Q#CNU1                                              CGL029
+     C                     MOVELW#CCY1    Q#CCY1                                              CGL029
+     C                     MOVELW#ACO1    Q#ACO1                                              CGL029
+     C                     MOVELW#ACS1    Q#ACS1                                              CGL029
+     C                     MOVELW#BRC1    Q#BRC1                                              CGL029
+      *                                                                                       CGL029
+     C                     ENDSR                                                              CGL029
+      *                                                                                       CGL029
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      /COPY ZSRSRC,RTBALCC1                                               122060
+      /EJECT                                                              122060
+      *                                                                   122060
+      /COPY ZSRSRC,RBSDQMS                                                122060
+      /EJECT                                                              122060
+      *
+      /COPY ZSRSRC,ZEDITZ2                                                122060
+      /EJECT                                                              122060
+      *                                                                   122060
+      **  SR.ZDATE1 subroutine
+      /COPY ZSRSRC,ZDATE1Z2
+      *
+      **  SR.ZDATE9 subroutine
+      /COPY ZSRSRC,ZDATE9Z3
+      *
+      ** File and Program Error Processing
+     C/COPY MECPYSRC,SRERRC
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+**  CPY@ table
+(c) Misys International Banking Systems Ltd. 2001
+**  DLY      - DELAY JOB                                                  122060
+DLYJOB DLY(3)                                                             122060
+**   ZYDY - Years in days cumulative, four year span
+0366073110961461
+**   ZMDY - Months in days cumulative through year
+000031059090120151181212243273304334365
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365

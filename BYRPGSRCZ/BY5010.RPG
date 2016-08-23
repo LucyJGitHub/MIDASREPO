@@ -1,0 +1,355 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas BoE Update Report/Extract Date')                 *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bank of England                                      *
+      *                                                               *
+      *  BY5010 - Report/Extract Date Control                         *
+      *                                                               *
+      *  Called By: BYC5010 - Report/Extract Date Control             *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 1998            *
+      *                                                               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Last Amend No. 161718             Date 09JUN99               *
+      *  Prev Amend No. LLN012             Date 22APR99               *
+      *                 LLN009             Date 15APR98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  161718 - LR report extract date is not calculated            *
+      *           correctly when it is not end of month.              *
+      *  LLN012 - Financial Services Authority - Liquidity Report     *
+      *  LLN009 - DBA2 Upgrade.                                       *
+      *           BY5010 and BY5020 almagamated.                      *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Extract date details file
+     FBYRPDTPPUF  E                    DISK         KINFSR *PSSR A
+      *
+      *
+      ** E-Specs for ZDATE1 & ZDATE2 Subroutines
+      /COPY ZSRSRC,ZDATE2Z1
+      *
+      ** Array containing Copyright statement
+     E                    @CPY    1   1 80
+      *
+      ** Local data area for database error details
+     ILDA       E DSLDA                         256
+      *
+      ** Data Structure using Bank file format
+     ISDBANK    E DSSDBANKPD
+      *                                                                   LLN012
+      ** Data Structure for Bank of England control data                  LLN012
+     IBYSTAT    E DSBYSTATPP                                              LLN012
+      *                                                                   LLN012
+      ** Data Structure for Date Conversion routines ZDATE1 & ZDATE2      LLN012
+     I                                        1   60WRKDAT                LLN012
+     I                                        1   40WKDDMM                LLN012
+     I                                        1   20WORKDD                LLN012
+     I                                        3   40WORKMM                LLN012
+     I                                        5   60WORKYY                LLN012
+      *
+      ** Program Status Data Structure
+     IPSDS       SDS
+     I                                     *PROGRAM DSPGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * Main Processing                                               *
+      *                                                               *
+      * Calls: SR/#LDETL - Detail Processing                          *
+      *        SR/#LTERM - Termination Processing                     *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Detail Processing
+     C                     EXSR #LDETL
+      *
+      ** Termination Processing
+     C                     EXSR #LTERM
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LDETL - Detail Processing                                    *
+      *                                                               *
+      * Called by:  Main Processing                                   *
+      *                                                               *
+      * Calls:   NONE                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LDETL    BEGSR                                       **
+      *
+      ** Determine if end of month
+     C                     CALL 'SD2000'
+     C                     PARM ' '       EOM     1
+     C                     PARM ' '       EOY     1
+     C                     PARM ' '       RTN     1
+      *
+      ** If end of month determine end of calendar month date
+     C           EOM       IFEQ 'Y'
+     C                     EXSR #LEOM
+     C                     ENDIF
+      *                                                                   LLN012
+      ** Update End of Month indicator                                    LLN012
+     C           *LOCK     IN   BYSTAT                                    LLN012
+     C                     MOVE EOM       LEOMF                           LLN012
+     C                     OUT  BYSTAT                                    LLN012
+      *
+      ** Read Extract date details file
+     C                     READ BYRPDTPP                 90
+      *
+      ** Set up fields for file update, using values from PF/SDBANKPD
+     C                     MOVEL'D'       L0RECI
+     C                     TIME           L0UTIM
+     C                     Z-ADDBJRDNB    L0LCD
+     C                     Z-ADDULRPDT    L0RPDT
+     C                     MOVELULRPDA    L0RPDA    P
+      *                                                                   LLN012
+      **  Calculate LR Extract Control Date                               LLN012
+     C                     EXSR #LLRDT                                    LLN012
+      *
+      ** Update Extract date details file
+     C           *IN90     IFEQ *ON
+     C                     MOVEL'I'       L0CHTP
+     C                     WRITEBYRPDTD0
+     C                     ELSE
+     C                     MOVEL'A'       L0CHTP
+     C                     UPDATBYRPDTD0
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LEOM - Determine End of Month Date                           *
+      *                                                               *
+      * Called by: SR/#LDETL                                          *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LEOM     BEGSR
+      *
+      ** Convert Current Processing Date into DDMMYY & DDMMMYY
+     C                     Z-ADDBJRDNB    ZDAYNO
+     C                     EXSR ZDATE2
+      *
+      ** If Month is 2 calculate actual end of month
+     C           ZMTH      IFEQ 2
+     C                     MOVEL'29'      ZDATE
+     C                     EXSR ZDATE1
+     C                     ENDIF
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'28'      ZDATE
+     C                     EXSR ZDATE1
+     C                     ENDIF
+      *
+      *
+      ** If month = 4, 6, 9, or 11
+     C           ZMTH      IFEQ 4
+     C           ZMTH      OREQ 6
+     C           ZMTH      OREQ 9
+     C           ZMTH      OREQ 11
+     C                     MOVEL'30'      ZDATE
+     C                     EXSR ZDATE1
+     C                     ENDIF
+      *
+      *
+      ** If month = 1, 3, 5, 7, 8, 10 or 12
+     C           ZMTH      IFEQ 1
+     C           ZMTH      OREQ 3
+     C           ZMTH      OREQ 5
+     C           ZMTH      OREQ 7
+     C           ZMTH      OREQ 8
+     C           ZMTH      OREQ 10
+     C           ZMTH      OREQ 12
+     C                     MOVEL'31'      ZDATE
+     C                     EXSR ZDATE1
+     C                     ENDIF
+      *
+      *
+      ** Convert date to DDMMMYY
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDAYNO    ULRPDT  50
+     C                     MOVE ZADATE    ULRPDA  7
+     C                     MOVE ZDATE     ULRDAT  6                       LLN012
+      *
+     C                     ENDSR
+      *
+      *****************************************************************   LLN012
+      *                                                               *   LLN012
+      * #LLRDT - Calculate LR Extract Date                            *   LLN012
+      *                                                               *   LLN012
+      * Called by:  Main Processing                                   *   LLN012
+      *                                                               *   LLN012
+      * Calls: None                                                   *   LLN012
+      *                                                               *   LLN012
+      *****************************************************************   LLN012
+      *                                                                   LLN012
+     C           #LLRDT    BEGSR                                       ** LLN012
+      *                                                                   LLN012
+      ** Convert Report Date to DDMMYY                                    LLN012
+     C***                  MOVE ULRDAT    WRKDAT                    LLN012161718
+     C                     Z-ADDULRPDT    ZDAYNO                          161718
+     C                     EXSR ZDATE2                                    161718
+     C                     MOVE ZDATE     WRKDAT                          161718
+      *                                                                   LLN012
+      ** Increment report date by 6 months                                LLN012
+     C                     ADD  6         WORKMM                          LLN012
+     C           WORKMM    IFGT 12                                        LLN012
+     C                     SUB  12        WORKMM                          LLN012
+     C                     ADD  1         WORKYY                          LLN012
+     C                     END                                            LLN012
+      *                                                                   LLN012
+      ** Validate date                                                    LLN012
+     C                     Z-ADDWRKDAT    ZDATE                           LLN012
+     C                     EXSR ZDATE1                                    LLN012
+     C           *IN99     DOWEQ'1'                                       LLN012
+     C                     SUB  1         WORKDD                          LLN012
+     C                     Z-ADDWRKDAT    ZDATE                           LLN012
+     C                     EXSR ZDATE1                                    LLN012
+     C                     END                                            LLN012
+     C                     Z-ADDZDAYNO    L0LRDT                          LLN012
+      *                                                                   LLN012
+      *                                                                   LLN012
+     C                     ENDSR                                          LLN012
+      *                                                                   LLN012
+      *****************************************************************
+      *                                                               *
+      * #LDEFN - Field Definition Routine                             *
+      *                                                               *
+      * Called by:  None - Contains definitions only                  *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LDEFN    BEGSR                                       **
+      *
+      ** Define external data areas
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           BYSTAT                          LLN012
+      *
+      ** Define and initialise work fields
+     C                     MOVE *BLANK    ULRTCD  1
+     C                     MOVE *BLANK    P@RTCD  7
+     C                     MOVE *BLANK    P@OPTN  7
+      *
+      ** Copyright Message
+     C                     MOVEA@CPY      UCPY    8
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                                       **
+      *
+      ** Check if error has previously been reported
+     C           ULERRI    IFEQ *BLANK
+     C                     MOVE 'Y'       ULERRI  1
+     C                     MOVE 'Y'       ULRTCD
+     C                     DUMP
+     C                     ENDIF
+      *
+      ** Set on external indicators
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+      *
+      ** Terminate program
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LTERM - Termination Processing                               *
+      *                                                               *
+      * Called by:  Main Processing                                   *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LTERM    BEGSR                                       **
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Program Initialisation Routine                       *
+      *                                                               *
+      * Called by:  At program initialisation                         *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR                                       **
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ULRTCD
+      *
+      ** Get Bank Details
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANK    P@RTCD  7
+     C                     PARM '*FIRST ' P@OPTN  7
+     C                     PARM           SDBANK
+      *
+      ** Check Return Code
+     C           P@RTCD    IFNE *BLANKS
+     C           BJTYLC    OREQ 'D'                        ON-DELETED
+     C           *LOCK     IN   LDA
+     C                     MOVELDSPGM     DBPGM            ************
+     C                     MOVEL'*NONE'   DBKEY            * DBERR 01 *
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     Z-ADD1         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Set Date Format Indicator
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ELSE
+     C                     MOVE *OFF      *IN98
+     C                     END
+      *
+      **  Update report extract date
+     C                     Z-ADDBJRDNB    ULRPDT
+     C                     MOVELBJMRDT    ULRPDA
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+      *
+      ** ZDATE1 & ZDATE2 Subroutines for date conversions
+      /COPY ZSRSRC,ZDATE1Z2
+      /COPY ZSRSRC,ZDATE2Z2
+      *
+      ** ZDATE1 & ZDATE2 Arrays for date conversions
+      /COPY ZSRSRC,ZDATE2Z3
+**  @CPY
+(c) Misys International Banking Systems Ltd. 1998
